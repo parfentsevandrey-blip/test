@@ -1,0 +1,852 @@
+{
+ "1343": [
+  {
+   "id": "6b4d3159-5e66-486d-9018-0b5b66d7e4b1",
+   "type": "SECURITY_OBLIGATION",
+   "file": "1343_0_SECURITY_OBLIGATION.pdf",
+   "pages": 24,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:49:42.104431",
+   "size": 4992067
+  },
+  {
+   "id": "f2d41355-54b1-44ab-b412-940aef27f726",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "1343_1_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 10,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:49:21.020093",
+   "size": 6215589
+  },
+  {
+   "id": "24fc5170-fc4c-4586-877e-6ae698d6dd94",
+   "type": "UNSTATISFACTORY_CONDITION_DECISION",
+   "file": "1343_2_UNSTATISFACTORY_CONDITION_DECISION.pdf",
+   "pages": 2,
+   "chars": 2789,
+   "kind": "text",
+   "publishedAt": "2026-08-20T10:49:51.029084",
+   "size": 2042021
+  },
+  {
+   "id": "1efba38e-5c2f-47ce-82dd-1622f8d9e963",
+   "type": "TECHNICAL_CONDITION_REPORT",
+   "file": "1343_3_TECHNICAL_CONDITION_REPORT.pdf",
+   "pages": 23,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-04-20T14:48:47.486703",
+   "size": 2003884
+  },
+  {
+   "id": "1ffa8d41-2a57-4ef1-bd94-2db027938955",
+   "type": "PROTECTION_SUBJECT",
+   "file": "1343_4_PROTECTION_SUBJECT.pdf",
+   "pages": 5,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:48:29.892222",
+   "size": 809318
+  },
+  {
+   "id": "14f81096-9d8f-49e0-b5a2-9887d4b935db",
+   "type": "OBJECT_PASSPORT",
+   "file": "1343_5_OBJECT_PASSPORT.pdf",
+   "pages": 7,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:49:29.411838",
+   "size": 1504393
+  }
+ ],
+ "1344": [
+  {
+   "id": "48ba706f-1235-466c-a5fc-aa1cd587b7d0",
+   "type": "OBJECT_PASSPORT",
+   "file": "1344_0_OBJECT_PASSPORT.pdf",
+   "pages": 7,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:51:14.298998",
+   "size": 1504393
+  },
+  {
+   "id": "fbd77ac7-3a49-45d4-9573-b57c09bb95d7",
+   "type": "SECURITY_OBLIGATION",
+   "file": "1344_1_SECURITY_OBLIGATION.pdf",
+   "pages": 24,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:51:24.910285",
+   "size": 4992067
+  },
+  {
+   "id": "5a508bb4-1db4-44a4-acc1-32bbf278cde8",
+   "type": "UNSTATISFACTORY_CONDITION_DECISION",
+   "file": "1344_2_UNSTATISFACTORY_CONDITION_DECISION.pdf",
+   "pages": 2,
+   "chars": 2807,
+   "kind": "text",
+   "publishedAt": "2026-08-20T10:51:38.184008",
+   "size": 1593770
+  },
+  {
+   "id": "4a30d2e1-fa01-47de-bdb5-b53130f81a19",
+   "type": "PROTECTION_SUBJECT",
+   "file": "1344_3_PROTECTION_SUBJECT.pdf",
+   "pages": 5,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:50:44.061043",
+   "size": 809318
+  },
+  {
+   "id": "aabf3284-c22c-40ab-a7e5-1924626ea125",
+   "type": "TECHNICAL_CONDITION_REPORT",
+   "file": "1344_4_TECHNICAL_CONDITION_REPORT.pdf",
+   "pages": 25,
+   "chars": 20483,
+   "kind": "text",
+   "publishedAt": "2026-08-20T10:50:54.777414",
+   "size": 25155247
+  },
+  {
+   "id": "b9e11d61-90de-4eb2-b193-122bf29184bc",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "1344_5_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 10,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:51:03.853665",
+   "size": 6215589
+  }
+ ],
+ "3529": [
+  {
+   "id": "32a922e6-0d10-479c-bd94-dee39c093fba",
+   "type": "UNSTATISFACTORY_CONDITION_DECISION",
+   "file": "3529_0_UNSTATISFACTORY_CONDITION_DECISION.pdf",
+   "pages": 2,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:54:29.683843",
+   "size": 1333968
+  },
+  {
+   "id": "f64847fa-0f55-4d6f-92f2-efa9b021bac9",
+   "type": "SECURITY_OBLIGATION",
+   "file": "3529_1_SECURITY_OBLIGATION.pdf",
+   "pages": 15,
+   "chars": 33979,
+   "kind": "text",
+   "publishedAt": "2025-11-11T11:18:03.568911",
+   "size": 264564
+  },
+  {
+   "id": "2da63491-d489-4649-b8e6-20e5781e210a",
+   "type": "PROTECTION_SUBJECT",
+   "file": "3529_2_PROTECTION_SUBJECT.pdf",
+   "pages": 10,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-03-16T16:43:00.146634",
+   "size": 4080294
+  },
+  {
+   "id": "3a8b2247-3188-4981-afe1-7ca8eb046807",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "3529_3_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 60,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-03-16T16:43:53.993183",
+   "size": 6314877
+  },
+  {
+   "id": "6afaa61f-a9a4-4b96-a969-c436c4e99e12",
+   "type": "PROTECTION_SUBJECT",
+   "file": "3529_4_PROTECTION_SUBJECT.pdf",
+   "pages": 9,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:54:09.786394",
+   "size": 7136245
+  },
+  {
+   "id": "cd3c7abf-d8f4-4c2d-90e5-5aef53e5c7ba",
+   "type": "OBJECT_PASSPORT",
+   "file": "3529_5_OBJECT_PASSPORT.pdf",
+   "pages": 9,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:54:21.782052",
+   "size": 1580984
+  }
+ ],
+ "3532": [
+  {
+   "id": "6e5673ba-998e-4378-ae72-a40c6f15fd46",
+   "type": "SECURITY_OBLIGATION",
+   "file": "3532_0_SECURITY_OBLIGATION.pdf",
+   "pages": 23,
+   "chars": 5088,
+   "kind": "text",
+   "publishedAt": "2025-11-11T10:35:59.631367",
+   "size": 5072150
+  },
+  {
+   "id": "becad4ea-90c6-43f1-880b-023ce299f2d8",
+   "type": "PROTECTION_SUBJECT",
+   "file": "3532_1_PROTECTION_SUBJECT.pdf",
+   "pages": 10,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-03-17T13:30:17.812325",
+   "size": 4080294
+  },
+  {
+   "id": "168b6aa5-64fe-4323-ac22-537f2d51fcea",
+   "type": "TECHNICAL_CONDITION_REPORT",
+   "file": "3532_2_TECHNICAL_CONDITION_REPORT.pdf",
+   "pages": 9,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-03-17T13:30:34.52023",
+   "size": 7476691
+  },
+  {
+   "id": "2d4a3281-c034-47a4-9c2d-a12423ece40d",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "3532_3_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 2,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:52:46.927578",
+   "size": 1834546
+  },
+  {
+   "id": "3b93407b-732a-4493-b974-5aced621c1e3",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "3532_4_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 4,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:52:36.131194",
+   "size": 2840388
+  },
+  {
+   "id": "338243f5-54aa-40e2-b735-5573a0591808",
+   "type": "OBJECT_PASSPORT",
+   "file": "3532_5_OBJECT_PASSPORT.pdf",
+   "pages": 9,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:52:58.20761",
+   "size": 1568860
+  },
+  {
+   "id": "de7c74f8-10e6-4b84-8bed-f7981f0e6f16",
+   "type": "UNSTATISFACTORY_CONDITION_DECISION",
+   "file": "3532_6_UNSTATISFACTORY_CONDITION_DECISION.pdf",
+   "pages": 2,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:53:07.983699",
+   "size": 1333362
+  }
+ ],
+ "4100": [
+  {
+   "id": "3b2a133c-74c4-4b0f-9abd-152f38ea8164",
+   "type": "PROTECTION_SUBJECT",
+   "file": "4100_0_PROTECTION_SUBJECT.pdf",
+   "pages": 10,
+   "chars": 24166,
+   "kind": "text",
+   "publishedAt": "2026-03-18T19:25:25.867529",
+   "size": 225094
+  },
+  {
+   "id": "c02d587c-ad18-49bf-9e17-557b6c72825b",
+   "type": "TECHNICAL_CONDITION_REPORT",
+   "file": "4100_1_TECHNICAL_CONDITION_REPORT.pdf",
+   "pages": 12,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-09-02T10:34:18.231537",
+   "size": 2746393
+  },
+  {
+   "id": "2ff5db37-e6f2-4a16-b048-3cba7a8e901f",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "4100_2_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 7,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-09-02T10:34:28.482541",
+   "size": 3572298
+  },
+  {
+   "id": "8ec6f2fe-b174-4660-9ef5-78e9f928dac8",
+   "type": "SECURITY_OBLIGATION",
+   "file": "4100_3_SECURITY_OBLIGATION.pdf",
+   "pages": 25,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-09-02T10:34:38.685019",
+   "size": 20880597
+  }
+ ],
+ "4098": [
+  {
+   "id": "d701341e-253b-4722-b2e1-ce3b7965e53c",
+   "type": "PROTECTION_SUBJECT",
+   "file": "4098_0_PROTECTION_SUBJECT.pdf",
+   "pages": 10,
+   "chars": 24166,
+   "kind": "text",
+   "publishedAt": "2026-03-18T19:10:29.159857",
+   "size": 225094
+  },
+  {
+   "id": "c0459e3c-d0bc-4478-a6fc-dc74e0e03c5d",
+   "type": "SECURITY_OBLIGATION",
+   "file": "4098_1_SECURITY_OBLIGATION.pdf",
+   "pages": 25,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-09-02T10:35:35.462323",
+   "size": 20880597
+  },
+  {
+   "id": "5d9b134e-9fb2-4336-be32-601867547a03",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "4098_2_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 7,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-09-02T10:35:21.184929",
+   "size": 3572298
+  },
+  {
+   "id": "7d3581c6-3766-40cf-b567-83123341fcc1",
+   "type": "TECHNICAL_CONDITION_REPORT",
+   "file": "4098_3_TECHNICAL_CONDITION_REPORT.pdf",
+   "pages": 12,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-09-02T10:35:10.652138",
+   "size": 2746393
+  }
+ ],
+ "4101": [
+  {
+   "id": "add17b07-fd10-4c0d-9f3d-79ccd5972f1a",
+   "type": "PROTECTION_SUBJECT",
+   "file": "4101_0_PROTECTION_SUBJECT.pdf",
+   "pages": 10,
+   "chars": 24166,
+   "kind": "text",
+   "publishedAt": "2026-03-18T19:33:45.872407",
+   "size": 225094
+  },
+  {
+   "id": "f9ede84b-8b3e-4e12-a809-5e603a1f7e11",
+   "type": "TECHNICAL_CONDITION_REPORT",
+   "file": "4101_1_TECHNICAL_CONDITION_REPORT.pdf",
+   "pages": 12,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-09-02T10:36:07.341261",
+   "size": 2746393
+  },
+  {
+   "id": "874d4f64-f24e-475a-a1be-4355a17aa811",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "4101_2_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 7,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-09-02T10:36:13.978977",
+   "size": 3572298
+  },
+  {
+   "id": "49232e5a-36b2-4247-bcf8-77f864533a87",
+   "type": "SECURITY_OBLIGATION",
+   "file": "4101_3_SECURITY_OBLIGATION.pdf",
+   "pages": 25,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-09-02T10:36:24.417951",
+   "size": 20880597
+  }
+ ],
+ "4248": [
+  {
+   "id": "b9d38b97-3d35-4740-87c0-d2cf0c1e56c1",
+   "type": "TECHNICAL_CONDITION_REPORT",
+   "file": "4248_0_TECHNICAL_CONDITION_REPORT.pdf",
+   "pages": 10,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:56:01.948817",
+   "size": 2143392
+  },
+  {
+   "id": "eec64ef1-ea75-4340-8d52-528f4c660e05",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "4248_1_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 4,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:56:13.796613",
+   "size": 2840388
+  },
+  {
+   "id": "b6a2c8d2-c963-4f54-9ef1-7a6fa8921370",
+   "type": "UNSTATISFACTORY_CONDITION_DECISION",
+   "file": "4248_2_UNSTATISFACTORY_CONDITION_DECISION.pdf",
+   "pages": 2,
+   "chars": 2799,
+   "kind": "text",
+   "publishedAt": "2026-08-20T10:57:03.375322",
+   "size": 2247508
+  },
+  {
+   "id": "c1563de0-6dc1-4d0f-86f4-a8f8f1c46279",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "4248_3_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 2,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:56:21.037877",
+   "size": 1834546
+  },
+  {
+   "id": "7bb4a9ff-044a-4ca9-925c-0bcd8c4bbdff",
+   "type": "SECURITY_OBLIGATION",
+   "file": "4248_4_SECURITY_OBLIGATION.pdf",
+   "pages": 25,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-04-16T10:16:07.45914",
+   "size": 5359143
+  },
+  {
+   "id": "53ccf6f7-d75e-4a34-bdbb-685a6f56a8d6",
+   "type": "OBJECT_PASSPORT",
+   "file": "4248_5_OBJECT_PASSPORT.pdf",
+   "pages": 9,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:56:33.643085",
+   "size": 1648693
+  },
+  {
+   "id": "995178be-3354-4a1f-b4ab-9635a32a6f6b",
+   "type": "PROTECTION_SUBJECT",
+   "file": "4248_6_PROTECTION_SUBJECT.pdf",
+   "pages": 10,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:55:48.108678",
+   "size": 4080294
+  }
+ ],
+ "4103": [
+  {
+   "id": "01bf751a-ec08-40d0-ae70-5b090483c8e5",
+   "type": "SECURITY_OBLIGATION",
+   "file": "4103_0_SECURITY_OBLIGATION.pdf",
+   "pages": 23,
+   "chars": 5088,
+   "kind": "text",
+   "publishedAt": "2026-03-19T11:25:50.338793",
+   "size": 5072150
+  },
+  {
+   "id": "440138f1-e2b5-4f69-b591-84926ce9d4f7",
+   "type": "PROTECTION_SUBJECT",
+   "file": "4103_1_PROTECTION_SUBJECT.pdf",
+   "pages": 10,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-03-19T11:25:51.013132",
+   "size": 4080294
+  },
+  {
+   "id": "dca164ea-8da3-4bc0-9328-e4247b1ba3c7",
+   "type": "TECHNICAL_CONDITION_REPORT",
+   "file": "4103_2_TECHNICAL_CONDITION_REPORT.pdf",
+   "pages": 9,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-03-19T11:25:46.576629",
+   "size": 7476691
+  },
+  {
+   "id": "c2681d84-e14b-4dbc-abdd-7fbef888c9ed",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "4103_3_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 4,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-24T09:08:12.476154",
+   "size": 2840388
+  }
+ ],
+ "4097": [
+  {
+   "id": "196c24d8-89bf-4e39-9bdb-ca896f89c59e",
+   "type": "PROTECTION_SUBJECT",
+   "file": "4097_0_PROTECTION_SUBJECT.pdf",
+   "pages": 10,
+   "chars": 24166,
+   "kind": "text",
+   "publishedAt": "2026-03-18T18:58:28.96598",
+   "size": 225094
+  },
+  {
+   "id": "c91b1a88-333e-4c03-a8f5-b5354ff60898",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "4097_1_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 7,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-27T11:25:53.153209",
+   "size": 3572298
+  },
+  {
+   "id": "15be34af-437d-4b40-87f7-4a4bdc719229",
+   "type": "TECHNICAL_CONDITION_REPORT",
+   "file": "4097_2_TECHNICAL_CONDITION_REPORT.pdf",
+   "pages": 29,
+   "chars": 15460,
+   "kind": "text",
+   "publishedAt": "2026-08-27T11:25:45.516985",
+   "size": 26947878
+  },
+  {
+   "id": "b42876db-2327-41e7-a3b7-88e0282fd841",
+   "type": "SECURITY_OBLIGATION",
+   "file": "4097_3_SECURITY_OBLIGATION.pdf",
+   "pages": 25,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-27T11:26:04.278937",
+   "size": 20880597
+  }
+ ],
+ "3764": [
+  {
+   "id": "a234d57e-bd48-4ef1-8c0d-0137cb087c89",
+   "type": "PROTECTION_SUBJECT",
+   "file": "3764_0_PROTECTION_SUBJECT.pdf",
+   "pages": 5,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-27T11:27:37.483047",
+   "size": 809318
+  },
+  {
+   "id": "b244a82b-c00a-4ca7-9a98-10dbddfcd2d2",
+   "type": "SECURITY_OBLIGATION",
+   "file": "3764_1_SECURITY_OBLIGATION.pdf",
+   "pages": 15,
+   "chars": 2151,
+   "kind": "text",
+   "publishedAt": "2026-02-27T14:21:43.974418",
+   "size": 19061654
+  },
+  {
+   "id": "f4dc0241-8183-41e9-b5ba-71cbeb14690e",
+   "type": "TECHNICAL_CONDITION_REPORT",
+   "file": "3764_2_TECHNICAL_CONDITION_REPORT.pdf",
+   "pages": 16,
+   "chars": 2294,
+   "kind": "text",
+   "publishedAt": "2026-02-27T14:22:12.407319",
+   "size": 19061676
+  },
+  {
+   "id": "88526639-3e99-4f2d-a7b5-48fb4ffa6814",
+   "type": "OBJECT_PASSPORT",
+   "file": "3764_3_OBJECT_PASSPORT.pdf",
+   "pages": 9,
+   "chars": 1295,
+   "kind": "text",
+   "publishedAt": "2026-02-27T14:22:18.548674",
+   "size": 19061609
+  },
+  {
+   "id": "1d05baa8-4245-4c84-af3e-fa38971f5b76",
+   "type": "UNSTATISFACTORY_CONDITION_DECISION",
+   "file": "3764_4_UNSTATISFACTORY_CONDITION_DECISION.pdf",
+   "pages": 4,
+   "chars": 5606,
+   "kind": "text",
+   "publishedAt": "2026-05-06T09:17:01.008355",
+   "size": 1643971
+  },
+  {
+   "id": "b774a294-2591-42d4-bcac-af19390dcdca",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "3764_5_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 10,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-27T11:27:46.458151",
+   "size": 6215589
+  }
+ ],
+ "1498": [
+  {
+   "id": "6dc38e63-af2e-4dec-863c-cac897ac47c9",
+   "type": "OBJECT_PASSPORT",
+   "file": "1498_0_OBJECT_PASSPORT.pdf",
+   "pages": 4,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T11:04:21.137325",
+   "size": 3416492
+  },
+  {
+   "id": "222a410e-ab9b-4c68-aa10-148fbd5abcf6",
+   "type": "SECURITY_OBLIGATION",
+   "file": "1498_1_SECURITY_OBLIGATION.pdf",
+   "pages": 18,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-03-13T15:01:22.728939",
+   "size": 3625418
+  },
+  {
+   "id": "4ba1da33-fd95-4a41-a015-21a794d16c43",
+   "type": "TECHNICAL_CONDITION_REPORT",
+   "file": "1498_2_TECHNICAL_CONDITION_REPORT.pdf",
+   "pages": 13,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-03-13T15:01:40.923447",
+   "size": 13204072
+  },
+  {
+   "id": "31084690-ac21-405a-8009-b1c6c3739f79",
+   "type": "PROTECTION_SUBJECT",
+   "file": "1498_3_PROTECTION_SUBJECT.pdf",
+   "pages": 3,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-03-13T15:02:00.812803",
+   "size": 2481564
+  },
+  {
+   "id": "54657e35-0787-4b76-b06e-efdf9b93a742",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "1498_4_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 6,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-03-13T15:02:18.177053",
+   "size": 4280232
+  },
+  {
+   "id": "ffc2ebee-a37b-4c7b-a50c-b18700075e7a",
+   "type": "UNSTATISFACTORY_CONDITION_DECISION",
+   "file": "1498_5_UNSTATISFACTORY_CONDITION_DECISION.pdf",
+   "pages": 2,
+   "chars": 2709,
+   "kind": "text",
+   "publishedAt": "2026-05-06T09:01:39.474108",
+   "size": 1675561
+  }
+ ],
+ "4336": [
+  {
+   "id": "9a42d112-6a4a-4f7a-b30d-55e2199141df",
+   "type": "PROTECTION_SUBJECT",
+   "file": "4336_0_PROTECTION_SUBJECT.pdf",
+   "pages": 6,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-24T08:27:02.639486",
+   "size": 1235542
+  },
+  {
+   "id": "27e19077-a6c0-42cf-a414-36aefdc1dfda",
+   "type": "SECURITY_OBLIGATION",
+   "file": "4336_1_SECURITY_OBLIGATION.pdf",
+   "pages": 25,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-24T08:27:30.733154",
+   "size": 20880597
+  },
+  {
+   "id": "72e64b78-317f-41a1-8eec-82b29b92b334",
+   "type": "TECHNICAL_CONDITION_REPORT",
+   "file": "4336_2_TECHNICAL_CONDITION_REPORT.pdf",
+   "pages": 11,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-24T08:27:09.177104",
+   "size": 2426367
+  },
+  {
+   "id": "a1d83ddf-ba86-4585-9668-3cb92fc733f7",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "4336_3_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 7,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-24T08:27:21.761701",
+   "size": 3572298
+  }
+ ],
+ "3530": [
+  {
+   "id": "f8343814-fcf9-4562-8842-e1b48e76dbd5",
+   "type": "SECURITY_OBLIGATION",
+   "file": "3530_0_SECURITY_OBLIGATION.pdf",
+   "pages": 15,
+   "chars": 33947,
+   "kind": "text",
+   "publishedAt": "2025-11-11T11:47:47.352415",
+   "size": 254436
+  },
+  {
+   "id": "b3a2ed45-4e18-4ba4-98b9-3dba8310a6e7",
+   "type": "TECHNICAL_CONDITION_REPORT",
+   "file": "3530_1_TECHNICAL_CONDITION_REPORT.pdf",
+   "pages": 9,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-03-17T13:16:15.720692",
+   "size": 8031641
+  },
+  {
+   "id": "dd4234e0-0898-4f42-9d83-81ad6124bdc0",
+   "type": "PROTECTION_SUBJECT",
+   "file": "3530_2_PROTECTION_SUBJECT.pdf",
+   "pages": 10,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-03-17T13:16:37.020571",
+   "size": 4080294
+  },
+  {
+   "id": "28f46183-d984-49ca-ad6a-e0628bb80899",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "3530_3_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 4,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:59:18.36333",
+   "size": 2840388
+  },
+  {
+   "id": "490ba0d8-be03-461f-a868-7dd5152c6325",
+   "type": "OBJECT_PASSPORT",
+   "file": "3530_4_OBJECT_PASSPORT.pdf",
+   "pages": 5,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:59:36.880409",
+   "size": 12458697
+  },
+  {
+   "id": "ce917c4b-1b81-4443-8adf-d5fe977d8fa3",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "3530_5_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 2,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:59:26.066354",
+   "size": 1834546
+  },
+  {
+   "id": "8a6f4aff-581b-408b-8156-de7cb91e0f1a",
+   "type": "UNSTATISFACTORY_CONDITION_DECISION",
+   "file": "3530_6_UNSTATISFACTORY_CONDITION_DECISION.pdf",
+   "pages": 2,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:59:48.623755",
+   "size": 1319669
+  }
+ ],
+ "3531": [
+  {
+   "id": "306153fc-5307-4e9a-8dde-45d43b0a696c",
+   "type": "SECURITY_OBLIGATION",
+   "file": "3531_0_SECURITY_OBLIGATION.pdf",
+   "pages": 24,
+   "chars": 1478,
+   "kind": "text",
+   "publishedAt": "2025-11-11T10:31:48.803235",
+   "size": 5192918
+  },
+  {
+   "id": "7e9b8583-63a5-4c72-a9c5-848f0f0ca761",
+   "type": "PROTECTION_SUBJECT",
+   "file": "3531_1_PROTECTION_SUBJECT.pdf",
+   "pages": 10,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-03-17T13:25:41.893497",
+   "size": 4080294
+  },
+  {
+   "id": "c3012cd2-eb64-4700-a46d-24ddd0912eb4",
+   "type": "TECHNICAL_CONDITION_REPORT",
+   "file": "3531_2_TECHNICAL_CONDITION_REPORT.pdf",
+   "pages": 9,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-03-17T13:26:11.088116",
+   "size": 8214399
+  },
+  {
+   "id": "89e24ce5-b651-41e7-a5ba-df3ec339778c",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "3531_3_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 2,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:58:16.99111",
+   "size": 1834546
+  },
+  {
+   "id": "84c5e202-d40c-4681-8ced-1724b4103871",
+   "type": "UNSTATISFACTORY_CONDITION_DECISION",
+   "file": "3531_4_UNSTATISFACTORY_CONDITION_DECISION.pdf",
+   "pages": 2,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:58:37.211723",
+   "size": 1325817
+  },
+  {
+   "id": "424779eb-2790-41dd-b934-8bcf88e6a144",
+   "type": "APPROVAL_TERRITORY_BOUNDARIES",
+   "file": "3531_5_APPROVAL_TERRITORY_BOUNDARIES.pdf",
+   "pages": 4,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:58:09.069218",
+   "size": 2840388
+  },
+  {
+   "id": "9ba99cc4-5cf0-48c5-b60b-9fc4a6e08ebe",
+   "type": "OBJECT_PASSPORT",
+   "file": "3531_6_OBJECT_PASSPORT.pdf",
+   "pages": 9,
+   "chars": 0,
+   "kind": "scan",
+   "publishedAt": "2026-08-20T10:58:29.008964",
+   "size": 1534600
+  }
+ ]
+}
