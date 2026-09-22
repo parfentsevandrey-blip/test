@@ -121,3 +121,11 @@ skyline are parameters inside the builder functions in `js/scene.js`.
 
 *Conceptual presentation. Imagery, pricing, and contact details are
 illustrative.*
+
+---
+
+## Papersky — Android weather app
+
+A separate project lives in [`papersky/`](papersky/): an Android 17 weather app with a cut-paper
+diorama sky and fully adaptive home-screen widgets (1×1 up to full screen). See
+[`papersky/README.md`](papersky/README.md).

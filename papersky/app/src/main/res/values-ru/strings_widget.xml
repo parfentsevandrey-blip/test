@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_name">Papersky</string>
+    <string name="widget_description">Бумажное окошко в небо. Растяните на любой размер — он сам перестроится.</string>
+    <string name="widget_now">Сейчас</string>
+    <string name="widget_feels">Ощущ. %1$s</string>
+    <string name="widget_stale">данные от %1$s</string>
+    <string name="widget_refresh">Обновить</string>
+    <string name="widget_a11y">%1$s: %2$s, %3$s</string>
+    <string name="widget_empty_title">Выберите место</string>
+    <string name="widget_loading">Смотрим на небо…</string>
+    <string name="widget_empty_body">Нажмите, чтобы открыть Papersky</string>
+    <string name="here">Здесь</string>
+</resources>

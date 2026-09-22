@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Papersky</string>
+    <string name="widget_name">Papersky</string>
+    <string name="widget_description">A paper window onto the sky. Stretch it to any size — it rearranges itself.</string>
+    <string name="widget_now">Now</string>
+    <string name="widget_feels">Feels %1$s</string>
+    <string name="widget_stale">as of %1$s</string>
+    <string name="widget_refresh">Refresh</string>
+    <string name="widget_a11y">%1$s: %2$s, %3$s</string>
+    <string name="widget_empty_title">Pick a place</string>
+    <string name="widget_loading">Fetching the sky…</string>
+    <string name="widget_empty_body">Tap to open Papersky</string>
+    <string name="here">Here</string>
+</resources>

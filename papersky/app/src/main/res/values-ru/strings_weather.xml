@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cond_clear">Ясно</string>
+    <string name="cond_mostly_clear">Малооблачно</string>
+    <string name="cond_partly_cloudy">Переменная облачность</string>
+    <string name="cond_overcast">Пасмурно</string>
+    <string name="cond_fog">Туман</string>
+    <string name="cond_drizzle">Морось</string>
+    <string name="cond_freezing_drizzle">Ледяная морось</string>
+    <string name="cond_rain">Дождь</string>
+    <string name="cond_heavy_rain">Сильный дождь</string>
+    <string name="cond_freezing_rain">Ледяной дождь</string>
+    <string name="cond_snow">Снег</string>
+    <string name="cond_heavy_snow">Снегопад</string>
+    <string name="cond_snow_grains">Снежная крупа</string>
+    <string name="cond_rain_showers">Ливень</string>
+    <string name="cond_snow_showers">Снежные заряды</string>
+    <string name="cond_thunderstorm">Гроза</string>
+    <string name="cond_thunder_hail">Гроза с градом</string>
+
+    <string name="unit_ms">м/с</string>
+    <string name="unit_kmh">км/ч</string>
+    <string name="unit_mph">миль/ч</string>
+    <string name="unit_kn">уз</string>
+    <string name="unit_hpa">гПа</string>
+    <string name="unit_mmhg">мм рт. ст.</string>
+    <string name="unit_inhg">дюйм рт. ст.</string>
+    <string name="unit_mm">мм</string>
+    <string name="unit_in">дюйм</string>
+    <string name="visibility_km">%1$s км</string>
+    <string name="duration_hm">%1$d ч %2$d мин</string>
+
+    <string name="today">Сегодня</string>
+    <string name="today_short">Сегодня</string>
+    <string name="tomorrow">Завтра</string>
+    <string name="tomorrow_short">Завтра</string>
+
+    <string-array name="compass_points">
+        <item>С</item>
+        <item>СВ</item>
+        <item>В</item>
+        <item>ЮВ</item>
+        <item>Ю</item>
+        <item>ЮЗ</item>
+        <item>З</item>
+        <item>СЗ</item>
+    </string-array>
+
+    <string name="moon_new">Новолуние</string>
+    <string name="moon_waxing_crescent">Молодая луна</string>
+    <string name="moon_first_quarter">Первая четверть</string>
+    <string name="moon_waxing_gibbous">Растущая луна</string>
+    <string name="moon_full">Полнолуние</string>
+    <string name="moon_waning_gibbous">Убывающая луна</string>
+    <string name="moon_last_quarter">Последняя четверть</string>
+    <string name="moon_waning_crescent">Старая луна</string>
+
+    <plurals name="note_rain_in_minutes">
+        <item quantity="one">Дождь начнётся примерно через %d минуту</item>
+        <item quantity="few">Дождь начнётся примерно через %d минуты</item>
+        <item quantity="many">Дождь начнётся примерно через %d минут</item>
+        <item quantity="other">Дождь начнётся примерно через %d минуты</item>
+    </plurals>
+    <plurals name="note_snow_in_minutes">
+        <item quantity="one">Снег пойдёт примерно через %d минуту</item>
+        <item quantity="few">Снег пойдёт примерно через %d минуты</item>
+        <item quantity="many">Снег пойдёт примерно через %d минут</item>
+        <item quantity="other">Снег пойдёт примерно через %d минуты</item>
+    </plurals>
+    <plurals name="note_storm_in_minutes">
+        <item quantity="one">Гроза примерно через %d минуту</item>
+        <item quantity="few">Гроза примерно через %d минуты</item>
+        <item quantity="many">Гроза примерно через %d минут</item>
+        <item quantity="other">Гроза примерно через %d минуты</item>
+    </plurals>
+    <string name="note_rain_at">Дождь около %1$s</string>
+    <string name="note_drizzle_at">Морось около %1$s</string>
+    <string name="note_sleet_at">Ледяной дождь около %1$s — осторожно на ступеньках</string>
+    <string name="note_snow_at">Снег около %1$s</string>
+    <string name="note_storm_later">Возможна гроза около %1$s</string>
+    <string name="note_rain_ends">Дождь стихнет к %1$s</string>
+    <string name="note_snow_ends">Снег закончится к %1$s</string>
+    <string name="note_storm_ends">Гроза уйдёт к %1$s</string>
+    <string name="note_rain_all_day">Дождь зарядил на весь день</string>
+    <string name="note_snow_all_day">Снег будет идти весь день</string>
+    <string name="note_gusts">Порывы ветра до %1$s</string>
+    <string name="note_uv_peak">Яркое солнце: УФ %1$s около %2$s</string>
+    <string name="note_frost">Ночью заморозки до %1$s</string>
+    <string name="note_tomorrow_warmer">Завтра на %1$s теплее</string>
+    <string name="note_tomorrow_colder">Завтра на %1$s холоднее</string>
+    <string name="note_fog">Туманно — не торопитесь в пути</string>
+    <string name="note_stars">Ясная ночь — видно звёзды</string>
+    <string name="note_full_moon">Сегодня полнолуние</string>
+    <string name="note_dry_day">До вечера без осадков</string>
+    <string name="note_sunrise">Рассвет в %1$s</string>
+    <string name="note_sunset">Закат в %1$s</string>
+    <string name="note_feels_like">Ощущается как %1$s</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rotating "whisper" line: the launcher animates it; no updates needed to flip. -->
+<ViewFlipper xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/flipper"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:autoStart="true"
+    android:flipInterval="5200"
+    android:inAnimation="@anim/whisper_in"
+    android:measureAllChildren="false"
+    android:outAnimation="@anim/whisper_out" />

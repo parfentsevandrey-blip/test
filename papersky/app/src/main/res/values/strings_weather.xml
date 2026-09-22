@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cond_clear">Clear</string>
+    <string name="cond_mostly_clear">Mostly clear</string>
+    <string name="cond_partly_cloudy">Partly cloudy</string>
+    <string name="cond_overcast">Overcast</string>
+    <string name="cond_fog">Fog</string>
+    <string name="cond_drizzle">Drizzle</string>
+    <string name="cond_freezing_drizzle">Freezing drizzle</string>
+    <string name="cond_rain">Rain</string>
+    <string name="cond_heavy_rain">Heavy rain</string>
+    <string name="cond_freezing_rain">Freezing rain</string>
+    <string name="cond_snow">Snow</string>
+    <string name="cond_heavy_snow">Heavy snow</string>
+    <string name="cond_snow_grains">Snow grains</string>
+    <string name="cond_rain_showers">Showers</string>
+    <string name="cond_snow_showers">Snow showers</string>
+    <string name="cond_thunderstorm">Thunderstorm</string>
+    <string name="cond_thunder_hail">Storm with hail</string>
+
+    <string name="unit_ms">m/s</string>
+    <string name="unit_kmh">km/h</string>
+    <string name="unit_mph">mph</string>
+    <string name="unit_kn">kn</string>
+    <string name="unit_hpa">hPa</string>
+    <string name="unit_mmhg">mmHg</string>
+    <string name="unit_inhg">inHg</string>
+    <string name="unit_mm">mm</string>
+    <string name="unit_in">in</string>
+    <string name="visibility_km">%1$s km</string>
+    <string name="duration_hm">%1$d h %2$d min</string>
+
+    <string name="today">Today</string>
+    <string name="today_short">Today</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="tomorrow_short">Tmrw</string>
+
+    <string-array name="compass_points">
+        <item>N</item>
+        <item>NE</item>
+        <item>E</item>
+        <item>SE</item>
+        <item>S</item>
+        <item>SW</item>
+        <item>W</item>
+        <item>NW</item>
+    </string-array>
+
+    <string name="moon_new">New moon</string>
+    <string name="moon_waxing_crescent">Waxing crescent</string>
+    <string name="moon_first_quarter">First quarter</string>
+    <string name="moon_waxing_gibbous">Waxing gibbous</string>
+    <string name="moon_full">Full moon</string>
+    <string name="moon_waning_gibbous">Waning gibbous</string>
+    <string name="moon_last_quarter">Last quarter</string>
+    <string name="moon_waning_crescent">Waning crescent</string>
+
+    <plurals name="note_rain_in_minutes">
+        <item quantity="one">Rain in about %d minute</item>
+        <item quantity="other">Rain in about %d minutes</item>
+    </plurals>
+    <plurals name="note_snow_in_minutes">
+        <item quantity="one">Snow in about %d minute</item>
+        <item quantity="other">Snow in about %d minutes</item>
+    </plurals>
+    <plurals name="note_storm_in_minutes">
+        <item quantity="one">Storm in about %d minute</item>
+        <item quantity="other">Storm in about %d minutes</item>
+    </plurals>
+    <string name="note_rain_at">Rain around %1$s</string>
+    <string name="note_drizzle_at">Drizzle around %1$s</string>
+    <string name="note_sleet_at">Icy rain around %1$s — mind the steps</string>
+    <string name="note_snow_at">Snow around %1$s</string>
+    <string name="note_storm_later">Thunder possible around %1$s</string>
+    <string name="note_rain_ends">Rain eases by %1$s</string>
+    <string name="note_snow_ends">Snow stops by %1$s</string>
+    <string name="note_storm_ends">Storm passes by %1$s</string>
+    <string name="note_rain_all_day">Rain has settled in for the day</string>
+    <string name="note_snow_all_day">Snowing on and off all day</string>
+    <string name="note_gusts">Gusts up to %1$s</string>
+    <string name="note_uv_peak">Strong sun: UV %1$s around %2$s</string>
+    <string name="note_frost">Frost tonight, down to %1$s</string>
+    <string name="note_tomorrow_warmer">Tomorrow is %1$s warmer</string>
+    <string name="note_tomorrow_colder">Tomorrow is %1$s colder</string>
+    <string name="note_fog">Foggy — take it slow out there</string>
+    <string name="note_stars">Clear night — the stars are out</string>
+    <string name="note_full_moon">Full moon tonight</string>
+    <string name="note_dry_day">Dry for the rest of the day</string>
+    <string name="note_sunrise">Sunrise at %1$s</string>
+    <string name="note_sunset">Sunset at %1$s</string>
+    <string name="note_feels_like">Feels like %1$s</string>
+</resources>

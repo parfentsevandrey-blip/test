@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="paper">#FFFCF6EA</color>
+    <color name="paper_night">#FF232A45</color>
+    <color name="terracotta">#FFD0603F</color>
+    <color name="splash_bg">#FFF6E9D2</color>
+</resources>

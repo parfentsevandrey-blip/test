@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Live clock: ticks on the home screen without any widget updates. -->
+<TextClock xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/clock"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:fontFamily="@font/display_light"
+    android:fontFeatureSettings="tnum"
+    android:format12Hour="h:mm"
+    android:format24Hour="HH:mm"
+    android:gravity="center_vertical|start"
+    android:includeFontPadding="false"
+    android:letterSpacing="-0.03"
+    android:maxLines="1"
+    android:textColor="#FF1F2530" />
