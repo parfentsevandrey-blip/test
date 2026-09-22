@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """Два графика.
 
-`chart_cohort.png` — цена метра по домам в двух километрах вокруг участка:
-полоса от самого дешёвого лота группы к самому дорогому, засечка — медиана.
-`chart_hist.png` — распределение всех лотов когорты по цене метра: видно,
-где стоит основная масса предложения.
+`chart_cohort.png` — цена метра по домам в радиусе 2,5 км от участка:
+полоса от самого дешёвого лота группы к самому дорогому, засечка на медиане.
+`chart_hist.png` — распределение всех лотов когорты по цене метра.
 
 Данные — выдача Циан, срез 22.09.2026 (см. mg_data.py).
 """
 import os
 from PIL import Image, ImageDraw, ImageFont
 
+import json
 from mg_data import COH_PINS, COH, _coh, MKT_PREM, PPM_LOCAL
 from statistics import median as med
 
@@ -39,7 +39,7 @@ os.makedirs(os.path.join(HERE, 'assets'), exist_ok=True)
 # ── когорта ────────────────────────────────────────────────────────────────
 ROWS = COH_PINS
 MAXV = 2_000_000
-W, H = 1400, 760
+W, H = 1400, 150 + 40 * len(ROWS)
 img = Image.new('RGB', (W * S, H * S), SURFACE)
 dr = ImageDraw.Draw(img)
 L, R, T = 40 * S, 118 * S, 118 * S
@@ -47,9 +47,9 @@ PLOT_L = L + 330 * S
 PLOT_W = W * S - R - PLOT_L
 x_of = lambda v: PLOT_L + PLOT_W * min(v, MAXV) / MAXV
 
-dr.text((L, 30 * S), 'Цена метра в двух километрах вокруг участка', font=fnt(23 * S, True), fill=INK)
-dr.text((L, 66 * S), 'Полоса — от дешёвого лота группы к дорогому, засечка — медиана. '
-        'Бронзовое — строится, тёмное — готово', font=fnt(14 * S), fill=MUTED)
+dr.text((L, 30 * S), 'Цена метра в домах рядом с участком', font=fnt(23 * S, True), fill=INK)
+dr.text((L, 66 * S), 'Полоса от самого дешёвого лота дома до самого дорогого, засечка на медиане. '
+        'Бронзовые строятся, тёмные готовы', font=fnt(14 * S), fill=MUTED)
 
 BOT = H * S - 58 * S
 for g in range(0, MAXV + 1, 250_000):
@@ -63,16 +63,16 @@ dr.text((PLOT_L + PLOT_W - 62 * S, BOT + 30 * S), 'млн ₽ за м²', font=f
 xp = x_of(PPM_LOCAL)
 for y in range(int(T - 8 * S), int(BOT), 12 * S):
     dr.line([(xp, y), (xp, y + 6 * S)], fill=DASH, width=2 * S)
-dr.text((xp + 8 * S, T - 30 * S), f'медиана стройки вокруг, {nf(round(PPM_LOCAL))} ₽',
+dr.text((xp + 8 * S, T - 30 * S), f'медиана новостроек рядом, {nf(round(PPM_LOCAL))} ₽',
         font=fnt(13 * S), fill=DASH)
 
 rowh = (BOT - T) / len(ROWS)
 BH = int(rowh * 0.46)
 for i, r in enumerate(ROWS):
     cy = int(T + rowh * i + rowh / 2)
-    dr.text((L, cy - 19 * S), r['short'], font=fnt(17 * S), fill=INK)
-    dr.text((L, cy + 4 * S), f"{r['dist']} м · {r['what']} · {plural(r['n'])}",
-            font=fnt(12 * S), fill=MUTED)
+    dr.text((L, cy - 17 * S), f"{r['num']}. {r['short']}", font=fnt(15 * S), fill=INK)
+    dr.text((L, cy + 3 * S), f"{r['dist']} м · {r['what']} · {plural(r['n'])}",
+            font=fnt(11 * S), fill=MUTED)
     fill = BRONZE if r['what'] == 'строится' else NAVY
     dr.rectangle([x_of(r['ppmLo']), cy - BH // 2, x_of(r['ppmHi']), cy + BH // 2], fill=fill)
     xm = x_of(r['ppmMed'])
@@ -102,11 +102,11 @@ BOT2 = H2 * S - 76 * S
 PLOT_W2 = W2 * S - 100 * S - L2
 maxn = max(bins.values())
 
-dr.text((L2 - 20 * S, 30 * S), 'Сколько лотов в каком ценовом коридоре',
+dr.text((L2 - 20 * S, 30 * S), 'Сколько лотов в каждом диапазоне цены',
         font=fnt(23 * S, True), fill=INK)
 dr.text((L2 - 20 * S, 66 * S),
-        f"{COH['total']} лотов в продаже в двух километрах вокруг участка, шаг — 100 тыс. ₽ за метр. "
-        f"Бронзовое — дороже медианы строящегося предложения",
+        f"{COH['total']} лотов в радиусе 2,5 км от участка, шаг 100 тыс. ₽ за м². "
+        f"Бронзовые столбцы дороже медианы новостроек",
         font=fnt(14 * S), fill=MUTED)
 
 bw = PLOT_W2 / len(keys)
@@ -124,11 +124,38 @@ for i, k in enumerate(keys):
             lab, font=fnt(13 * S), fill=MUTED)
 
 xm = L2 + bw * (sorted(keys).index(min(int(med([l['ppm'] for l in _coh]) // STEP) * STEP, TOP)) + 0.5)
-dr.line([(xm, T2 - 20 * S), (xm, BOT2)], fill=RED, width=2 * S)
-dr.text((xm + 10 * S, T2 - 62 * S), f"медиана когорты {COH['med']} ₽",
+dr.line([(xm, T2 - 10 * S), (xm, BOT2)], fill=RED, width=2 * S)
+_lab = f"медиана всех лотов {COH['med']} ₽"
+_lw = dr.textlength(_lab, font=fnt(14 * S, True))
+dr.text((xm - _lw - 12 * S if xm + _lw + 12 * S > W2 * S - 40 * S else xm + 12 * S, T2 - 4 * S), _lab,
         font=fnt(14 * S, True), fill=RED)
 
 dr.text((L2 + PLOT_W2 - 62 * S, BOT2 + 34 * S), 'млн ₽ за м²', font=fnt(13 * S), fill=MUTED)
 dr.line([(L2, BOT2), (L2 + PLOT_W2, BOT2)], fill=(200, 197, 190), width=1 * S)
 img.resize((W2, H2), Image.LANCZOS).save(os.path.join(HERE, 'assets', 'chart_hist.png'))
 print('assets/chart_hist.png', (W2, H2))
+
+# ── ценовые ориентиры для «МИГа» ───────────────────────────────────────────
+BENCH = json.load(open(os.path.join(HERE, 'mg_bench.json'), encoding='utf-8'))
+COL = {'mig': RED, 'res': NAVY, 'cg': (120, 80, 150), 'new': BRONZE, 'mkt': (150, 150, 150)}
+W3, H3 = 1400, 120 + 58 * len(BENCH)
+img = Image.new('RGB', (W3 * S, H3 * S), SURFACE)
+dr = ImageDraw.Draw(img)
+L3, T3 = 40 * S, 96 * S
+PL = L3 + 470 * S
+PW = W3 * S - 150 * S - PL
+TOPV = 1_700_000
+dr.text((L3, 26 * S), 'Цена метра: ориентиры для «МИГа»', font=fnt(23 * S, True), fill=INK)
+dr.text((L3, 60 * S), 'Медианы предложения на 22.09.2026 и брокерский ориентир проекта, ₽ за м²',
+        font=fnt(14 * S), fill=MUTED)
+for g in range(0, TOPV + 1, 250_000):
+    x = PL + PW * g / TOPV
+    dr.line([(x, T3 - 6 * S), (x, H3 * S - 30 * S)], fill=GRID, width=1 * S)
+for i, (lab, v, kind) in enumerate(BENCH):
+    cy = T3 + 58 * S * i + 22 * S
+    dr.text((L3, cy - 11 * S), lab, font=fnt(15 * S), fill=INK)
+    x1 = PL + PW * min(v, TOPV) / TOPV
+    dr.rectangle([PL, cy - 15 * S, x1, cy + 15 * S], fill=COL[kind])
+    dr.text((x1 + 12 * S, cy - 11 * S), nf(round(v)), font=fnt(16 * S, True), fill=INK)
+img.resize((W3, H3), Image.LANCZOS).save(os.path.join(HERE, 'assets', 'chart_bench.png'))
+print('assets/chart_bench.png', (W3, H3))

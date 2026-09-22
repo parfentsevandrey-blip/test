@@ -9,8 +9,10 @@ CONVERT = [
     ('map_site.png',     'map_site.jpg',     80),
     ('map_city.png',     'map_city.jpg',     80),
     ('map_peers.png',    'map_peers.jpg',    80),
+    ('map_cska.png',     'map_cska.jpg',     80),
     ('chart_cohort.png', 'chart_cohort.jpg', 86),
     ('chart_hist.png',   'chart_hist.jpg',   86),
+    ('chart_bench.png',  'chart_bench.jpg',  86),
 ]
 
 if __name__ == '__main__':

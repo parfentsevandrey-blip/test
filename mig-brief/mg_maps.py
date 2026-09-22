@@ -4,7 +4,7 @@
 Центр участка взят по карте: территория бывшего авиазавода ограничена
 Ленинградским проспектом, 1-м и 2-м Боткинскими проездами, улицами
 Авиаконструктора Сухого и Маргелова — 63,55 га по договору КРТ.
-Координаты метро и городских объектов — геокодер OpenStreetMap.
+Координаты станций метро — геокодер Яндекса, городских объектов — OpenStreetMap.
 
 Кадры: участок (Z=15), город (Z=12, квартал относительно центра)
 и когорта (Z=14, что продаётся в двух километрах вокруг).
@@ -27,9 +27,9 @@ KREML = (37.617500, 55.752000)
 
 #  подпись, lon, lat, сдвиг подписи, якорь
 AROUND = [
-    ('м. «Динамо»',          37.554900, 55.789830, -62, -30, 'right'),
+    ('м. «Динамо»',          37.558239, 55.789735, -62,  34, 'right'),
     ('м. «Петровский парк»', 37.557093, 55.791922,  62, -96, 'left'),
-    ('м. «ЦСКА»',            37.538412, 55.787243,  62, -96, 'left'),
+    ('м. «ЦСКА»',            37.533283, 55.786597,  62, -96, 'left'),
     ('ВТБ Арена',            37.568919, 55.789925, -62,  40, 'right'),
     ('Петровский парк',      37.555670, 55.794236,  62,  40, 'left'),
     ('Боткинская больница',  37.553058, 55.782898,  62,  40, 'left'),
@@ -82,36 +82,50 @@ if __name__ == '__main__':
     save(img, 'map_city.png')
 
     # ── когорта ──
+    # Домов много и они стоят кучно, поэтому на карте только номера: те же,
+    # что в таблицах и на графике. Станции метро подписаны на самой подложке.
     pins = json.load(open(os.path.join(HERE, 'mg_pins.json'), encoding='utf-8'))
-    # Дома стоят кучно вдоль Ленинградского проспекта: сдвиг и сторона
-    # выноски заданы руками, иначе подписи наезжают друг на друга.
-    SHIFT = {
-        ('Прайм Парк', 'строится'):    (60, -96, 'left'),
-        ('Слава', 'строится'):         (60, -30, 'left'),
-        ('С5', 'строится'):           (-60, -96, 'right'),
-        ('ВТБ Арена парк', 'готов'):  (-62, -96, 'right'),
-        ('Царская площадь', 'готов'): (-60,  34, 'right'),
-        ('Искра-Парк', 'готов'):      (-60, -96, 'right'),
-        ('Alcon Tower', 'готов'):      (62,  44, 'left'),
-    }
-    base, proj = render((37.5620, 55.7845), 14, 920, 700, scale=S)
+    lons = [q['lng'] for q in pins] + [SITE[0]]
+    lats = [q['lat'] for q in pins] + [SITE[1]]
+    ctr = ((min(lons) + max(lons)) / 2, (min(lats) + max(lats)) / 2 + 0.0015)
+    base, proj = render(ctr, 14, 960, 800, scale=S)
     img = base.convert('RGBA'); dr = ImageDraw.Draw(img, 'RGBA')
-    for q in pins:
-        key = (q['short'], q['what'])
-        if key not in SHIFT:
-            continue
+    # сначала дальние пины, чтобы ближние к зрителю номера не перекрывались
+    for q in sorted(pins, key=lambda q: -q['lat']):
         x, y = proj(q['lng'], q['lat'])
         col = BRONZE if q['what'] == 'строится' else NAVY
-        pin(dr, x, y, 19, col)
-        dx, dy, side = SHIFT[key]
-        label(img, dr, x + dx, y + dy, q['short'],
-              f"{q['ppmMed'] / 1e6:.2f} млн ₽/м²".replace('.', ','), side, 22,
-              fg=col, sfg=GREY)
+        pin(dr, x, y, 17, col, num=q['num'])
     x, y = proj(*SITE)
     pin(dr, x, y, 28, RED)
-    label(img, dr, x - 104, y - 44, 'Квартал «МИГ»',
-          'цены не объявлены', 'right', 27, fg=RED, sfg=(120, 70, 70))
+    label(img, dr, x, y + 24, 'Квартал «МИГ»',
+          'цены не объявлены', 'center', 27, fg=RED, sfg=(120, 70, 70))
     save(img, 'map_peers.png')
+
+    # ── дома у «ЦСКА» ──
+    # Крупнее, с подписями: дома не дальше 1,5 км от станции и ближе к ней,
+    # чем к «Динамо» (тот же отбор, что в таблице справки).
+    tab = json.load(open(os.path.join(HERE, 'mg_tables.json'), encoding='utf-8'))
+    nums = {int(r[0]) for r in tab['cskaRows']}
+    near = [q for q in pins if q['num'] in nums]
+    CSKA = (37.533283, 55.786597)
+    lons = [q['lng'] for q in near] + [CSKA[0], SITE[0]]
+    lats = [q['lat'] for q in near] + [CSKA[1], SITE[1]]
+    ctr = ((min(lons) + max(lons)) / 2, (min(lats) + max(lats)) / 2 + 0.0008)
+    base, proj = render(ctr, 15, 960, 640, scale=S)
+    img = base.convert('RGBA'); dr = ImageDraw.Draw(img, 'RGBA')
+    # подписи справа от пина, если справа есть место, иначе слева
+    W = img.size[0]
+    for q in sorted(near, key=lambda q: -q['lat']):
+        x, y = proj(q['lng'], q['lat'])
+        col = BRONZE if q['what'] == 'строится' else NAVY
+        pin(dr, x, y, 17, col, num=q['num'])
+        side, dx = ('left', 30) if x < W * 0.7 else ('right', -30)
+        label(img, dr, x + dx, y - 62, q['short'],
+              f"{q['ppmMed'] / 1e6:.2f} млн ₽/м²".replace('.', ','), side, 20, fg=col, sfg=GREY)
+    x, y = proj(*SITE)
+    pin(dr, x, y, 24, RED)
+    label(img, dr, x, y + 22, 'Квартал «МИГ»', None, 'center', 24, fg=RED)
+    save(img, 'map_cska.png')
 
     for name, lon, lat, *_ in AROUND:
         print(f'  {name:24s} {metres(SITE, (lon, lat)):6.0f} м')

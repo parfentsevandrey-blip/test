@@ -112,7 +112,7 @@ function dataTable(headers, rows, widths, o = {}) {
     tableHeader: true,
     children: headers.map((hd, i) => cell(hd, {
       bold: true, w: widths[i], fill: HEAD, color: 'FFFFFF', size: 16,
-      align: i === 0 ? AlignmentType.LEFT : AlignmentType.CENTER,
+      align: (i === 0 && !o.centerFirst) || (o.leftCols || []).includes(i) ? AlignmentType.LEFT : AlignmentType.CENTER,
       top: { style: BorderStyle.SINGLE, size: 4, color: HEAD },
     })),
   });
@@ -122,9 +122,9 @@ function dataTable(headers, rows, widths, o = {}) {
     return new TableRow({
       children: r.map((c, i) => cell(c, {
         w: widths[i],
-        bold: isTotal || (o.boldFirstCol && i === 0),
+        bold: isTotal || (o.boldFirstCol && i === 0) || o.boldCol === i,
         fill: isTotal ? SOFT : (ri % 2 === 1 ? 'FBFAF8' : undefined),
-        align: (i === 0 || (o.leftCols || []).includes(i)) ? AlignmentType.LEFT : AlignmentType.CENTER,
+        align: ((i === 0 && !o.centerFirst) || (o.leftCols || []).includes(i)) ? AlignmentType.LEFT : AlignmentType.CENTER,
         color: isTotal ? INK : undefined,
       })),
     });
