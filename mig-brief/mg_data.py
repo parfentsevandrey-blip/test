@@ -416,6 +416,77 @@ RISKS = [
      'подтверждения схемы в открытых источниках нет.'],
 ]
 
+# ── сколько рынок просит за ремонт ──────────────────────────────────────────
+# repairType добран из карточек Циан: в поисковой выдаче поля нет. Сравнение
+# идёт внутри одного дома — локация, год и класс у обеих групп совпадают,
+# различается только заявленное состояние квартиры.
+REPAIR_RU = {'design': 'дизайнерский', 'euro': 'евроремонт',
+             'cosmetic': 'косметический', 'no': 'без ремонта'}
+_rep_path = os.path.join(HERE, 'mg_repair_lots.json')
+REPAIR_LOTS = json.load(open(_rep_path, encoding='utf-8')) if os.path.exists(_rep_path) else []
+
+_by_house = {}
+for _l in REPAIR_LOTS:
+    if _l.get('repair'):
+        _by_house.setdefault(SHORT.get(_l['complex'], _l['complex']), {}) \
+                 .setdefault(_l['repair'], []).append(_l['ppm'])
+
+FIN_ROWS, _fpairs = [], []
+for _name, _v in _by_house.items():
+    _a = _v.get('design')
+    _b = [x for r, xs in _v.items() if r != 'design' for x in xs]
+    if not _a or not _b:
+        continue
+    _ma, _mb = med(_a), med(_b)
+    _fpairs.append(((_ma / _mb - 1) * 100))
+    FIN_ROWS.append([_name, str(len(_a)), nf(round(_ma)), str(len(_b)), nf(round(_mb)),
+                     f'{(_ma / _mb - 1) * 100:+.0f} %'.replace('+0 %', '0 %').replace('-', '\u2212')])
+FIN_ROWS.sort(key=lambda r: -float(r[5].replace(' %', '').replace('+', '').replace('\u2212', '-')))
+
+_kinds = {}
+for _l in REPAIR_LOTS:
+    _kinds[_l.get('repair')] = _kinds.get(_l.get('repair'), 0) + 1
+KIND_ROWS = [[REPAIR_RU.get(k, 'не указан'), str(v),
+              nf(round(med([l['ppm'] for l in REPAIR_LOTS if l.get('repair') == k])))]
+             for k, v in sorted(_kinds.items(), key=lambda kv: -kv[1])]
+
+FIN = {}
+if _fpairs:
+    _srt = sorted(_fpairs)
+    FIN = {
+        'houses': len(_fpairs), 'read': len(REPAIR_LOTS),
+        'design': _kinds.get('design', 0),
+        'other': sum(v for k, v in _kinds.items() if k and k != 'design'),
+        'designShare': round(_kinds.get('design', 0) /
+                             sum(v for k, v in _kinds.items() if k) * 100),
+        'med': f'{med(_srt):+.0f}'.replace('+0', '0').replace('-', '\u2212'),
+        'lo': f'{_srt[0]:+.0f}'.replace('-', '\u2212'), 'hi': f'{_srt[-1]:+.0f}',
+        'designMed': nf(round(med([l['ppm'] for l in REPAIR_LOTS if l.get('repair') == 'design']))),
+    }
+
+# Квартиры с дизайнерским ремонтом в выборке крупнее остальных, а крупный лот
+# в этой локации стоит дороже за метр сам по себе. Разрез по площадям проверяет,
+# не сводится ли надбавка к метражу. Срез сквозной по всем домам, поэтому он
+# слабее подомного сравнения выше и стоит рядом с ним, а не вместо него.
+_bands = [('до 60 м²', 0, 60), ('60 – 100 м²', 60, 100), ('от 100 м²', 100, 1e9)]
+BAND_ROWS = []
+for _lab, _lo, _hi in _bands:
+    _a = [l['ppm'] for l in REPAIR_LOTS
+          if l.get('repair') == 'design' and _lo <= l['area'] < _hi]
+    _b = [l['ppm'] for l in REPAIR_LOTS
+          if l.get('repair') and l['repair'] != 'design' and _lo <= l['area'] < _hi]
+    if not _a or not _b:
+        continue
+    _ma, _mb = med(_a), med(_b)
+    BAND_ROWS.append([_lab, str(len(_a)), nf(round(_ma)), str(len(_b)), nf(round(_mb)),
+                      f'{(_ma / _mb - 1) * 100:+.0f} %'.replace('+0 %', '0 %').replace('-', '−')])
+
+if REPAIR_LOTS:
+    _ad = [l['area'] for l in REPAIR_LOTS if l.get('repair') == 'design']
+    _ao = [l['area'] for l in REPAIR_LOTS if l.get('repair') and l['repair'] != 'design']
+    FIN['areaDesign'] = f'{med(_ad):.0f}'
+    FIN['areaOther'] = f'{med(_ao):.0f}'
+
 _cards_path = os.path.join(HERE, 'mg_repair_cards.json')
 REPAIR_CARDS = json.load(open(_cards_path, encoding='utf-8')) if os.path.exists(_cards_path) else []
 
@@ -441,6 +512,11 @@ if __name__ == '__main__':
         'builder': BUILDER,
         'risks': RISKS,
         'cards': REPAIR_CARDS,
+        'finRows': FIN_ROWS,
+        'bandRows': BAND_ROWS,
+        'kindRows': KIND_ROWS,
+        'fin': FIN,
+        'cardsMed': nf(round(med([c['ppmNum'] for c in REPAIR_CARDS]))) if REPAIR_CARDS else '—',
         'coh': COH,
         'nums': {
             'ha': f'{AREA_HA}'.replace('.', ','),
