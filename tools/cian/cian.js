@@ -16,6 +16,7 @@
  *   node tools/cian/cian.js grade  --template 331300080 [--from lots.json]  — заготовка под заполнение
  *   node tools/cian/cian.js grade  --lots lots.json --marks marks.json  — записать оценку отделки
  *   node tools/cian/cian.js grade  --list | --check
+ *   node tools/cian/cian.js grade  --read 331300080,329819607 [--md] [--frames] [--out f.md]  — осмотр словами человека
  *   node tools/cian/cian.js grade  --plan --lots lots.json [--ids]  — кого пересматривать: галереи сверяются по отпечатку
  *   node tools/cian/cian.js report — пересобрать docs/cian/lots.md из оценок и архива
  *   node tools/cian/cian.js refresh [--limit N] [--confirm нет] — что из архива ещё продаётся, а что ушло
@@ -1781,6 +1782,300 @@ function entryPrice(lot, fate, tier = 'бизнес') {
   };
 }
 
+/* ---------- осмотр глазами человека ----------
+   Восемь признаков и буква — язык движка: по ним считаются когорты, цена
+   въезда и судьба ремонта. Покупатель на этом языке не думает. Он заходит
+   в квартиру, за три секунды понимает, «чьё» это жильё и какого года, потом
+   идёт по комнатам и цепляется глазом за то, что выдаёт деньги, возраст и
+   руки: затирку у поддона, глянец на потолке, латунь на ручках, плёнку на
+   дверях. И уходит с одной мыслью — въеду, переделаю или забуду.
+
+   Записи до сих пор шли обратным путём: сначала признаки, потом короткий
+   вывод. Попытка вывести человеческий текст из признаков дала канцелярит —
+   «свет базовый, мебель полная, двери обычные» — и была откачена: признак
+   не знает, как выглядит квартира, он знает только своё значение. Поэтому
+   здесь текст не собирается из записи, а пишется оценщиком по кадрам, в
+   том порядке, в каком квартиру смотрит человек. Движок его не сочиняет —
+   только проверяет, что это наблюдение, а не шаблон, и печатает как есть. */
+const SPACES = ['прихожая', 'кухня', 'кухня-гостиная', 'гостиная', 'комната', 'столовая', 'спальня', 'детская',
+  'кабинет', 'гардеробная', 'санузел', 'постирочная', 'лестница', 'балкон', 'терраса', 'участок',
+  'котельная', 'другое'];
+
+/* Кто и для чего делал ремонт — первое, что опытный глаз читает с порога,
+   и от этого зависит всё остальное: ремонт «под себя» переживает хозяина
+   дольше, чем кажется, а ремонт «под продажу» живёт ровно до первой зимы. */
+const AUTHORS = ['застройщик', 'под себя', 'под продажу', 'под сдачу', 'дизайнер', 'не понять'];
+
+/* Вкус — вопрос не красоты, а того, сколько покупателей этот интерьер
+   примут без переделки. Нейтральный принимают почти все, «на любителя»
+   делит зал пополам, вчерашний не нужен никому, даже если он целый. */
+const TASTES = ['нейтральный', 'на любителя', 'вчерашний'];
+
+/* Кириллица не знает \b: границу слова в JS-регулярках для русского текста
+   даёт только просмотр назад. */
+const RU_WB = '(?<![а-яёa-z])';
+const wordRe = (stems) => new RegExp(`${RU_WB}(?:${stems.join('|')})`, 'iu');
+
+/* Язык движка в тексте для человека. Каждое слово здесь однажды уже
+   просочилось в вывод и читалось как отчёт машины, а не как осмотр. */
+const HUMAN_JARGON = [
+  [/(?<![A-Za-z0-9])[A-E](?![A-Za-z0-9])/u, 'буква отделки (A–E) — это язык движка'],
+  [wordRe(['букв[аеуыой]']), '«буква» — язык движка'],
+  [wordRe(['признак', 'маркер']), '«признаки» — язык движка, человек называет вещи'],
+  [wordRe(['когорт']), '«когорта» — язык аналитика'],
+  [wordRe(['оболочк']), '«оболочка» — скажите прямо: бетон, коробка, белые стены'],
+  [wordRe(['товар']), '«товар» — речь о доме, а не о позиции на полке'],
+  [/контактн\S*\s+лист/iu, '«контактный лист» — внутренняя кухня'],
+  [/в оригинале|исходн\S*\s+разрешени/iu, 'второй шаг проверки — внутренняя кухня'],
+  [/(?<![а-яё])(?:в|по)\s+записи/iu, '«в записи» — внутренняя кухня'],
+  [/кадр\S*\s*(?:№|\d)/iu, 'номера кадров — в поле frames, не в тексте'],
+  [/\d+\s+примет|примет\S*\s+одной\s+эпохи/iu, 'подсчёт примет — внутренняя кухня; скажите, по чему видно'],
+  [/«\s*(?:жить как есть|под замену|освежить|устаревший|жилой|свежий)\s*»/iu,
+    'значение из словаря в кавычках — это ярлык, а не суждение'],
+  [/(?<![A-Za-z])(?:stone|joinery|kitchen|light|furniture|bath|floor|doors|verdict|works|proof|markers)(?![A-Za-z])/u,
+    'имя поля записи в тексте'],
+  /* Главный симптом откаченной сборки: существительное и значение признака
+     после него. Так не говорит никто, кроме таблицы. */
+  [/(?<![а-яё])(?:свет|мебель|двери|кухня|санузлы?|пол|столярка)\s+(?:(?:базов|сценарн|полн|частичн|обычн|скрыт|эконом|встроенн|интегрированн|серийн)[а-яё]*|на заказ)\s*(?=[,.;]|$)/iu,
+    '«свет базовый», «мебель полная» — так пишет таблица, а не человек'],
+];
+
+/* Общие слова — те, что без изменений встают в любое объявление. Именно
+   их пишут продавцы, и именно поэтому они не сообщают ничего. */
+const HUMAN_GENERIC = [
+  /(?:хорош|качественн|современн|отличн)\S*\s+(?:\S+\s+)?(?:ремонт|отделк)/iu,
+  /в\s+(?:хорошем|отличном|идеальном|прекрасном)\s+состоянии/iu,
+  /сделано\s+(?:качественно|на совесть|со вкусом)/iu,
+  wordRe(['уютн', 'шикарн', 'евроремонт', 'роскошн', 'элитн']),
+  /со\s+вкусом/iu,
+  /светл\S*\s+и\s+просторн/iu,
+  /продуман\S*\s+до\s+мелоч/iu,
+  /премиальн\S*\s+материал/iu,
+];
+
+/* Конкретика: вещь, материал или цвет. В каждом описании помещения должна
+   быть хотя бы одна — иначе это впечатление, которое нельзя перепроверить. */
+const HUMAN_CONCRETE = wordRe([
+  'дуб', 'орех', 'ясен', 'бук(?![а-яё])', 'буков', 'вишн', 'венге', 'массив', 'шпон', 'ламинат', 'паркет', 'доск', 'ёлочк', 'елочк',
+  'шеврон', 'плитк', 'керамогранит', 'кафел', 'мрамор', 'травертин', 'оникс', 'гранит', 'кварц', 'камен', 'камн',
+  'бетон', 'микроцемент', 'штукатурк', 'венецианк', 'обо[иямве]', 'краск', 'крашен', 'кирпич', 'стекл', 'зеркал',
+  'латун', 'бронз', 'хром', 'золот', 'кож', 'бархат', 'велюр', 'дерев', 'металл', 'пластик', 'пвх', 'лдсп', 'мдф',
+  'гипс', 'тераццо', 'мозаик', 'кабанчик', 'рейк', 'панел', 'буазери', 'молдинг', 'лепнин', 'карниз', 'багет',
+  'кухн', 'фасад', 'столешниц', 'фартук', 'остров', 'вытяжк', 'мойк', 'плит', 'духов', 'холодильник', 'посудомо',
+  'шкаф', 'гардероб', 'полк', 'стеллаж', 'тумб', 'комод', 'кроват', 'изголов', 'диван', 'кресл', 'стол', 'стул',
+  'люстр', 'светильник', 'бра(?![а-яё])', 'спот', 'трек', 'лент', 'подсветк', 'потол', 'стен', 'пол[аеуыом ]', 'плинтус',
+  'двер', 'наличник', 'окн', 'окон', 'подоконник', 'откос', 'радиатор', 'батаре', 'конвектор', 'ванн', 'душ',
+  'трап', 'поддон', 'кабин', 'унитаз', 'инсталляц', 'биде', 'раковин', 'смесител', 'полотенцесушител', 'затирк',
+  'шов', 'швы', 'шва', 'лестниц', 'ступен', 'перил', 'балясин', 'камин', 'балк', 'арк', 'ниш', 'розетк',
+  'выключател', 'эркер', 'террас', 'балкон', 'газон', 'участ(?:ок|к)', 'двор', 'гараж', 'кот[её]л', 'котл', 'бойлер', 'саун',
+  'бел', 'ч[её]рн', 'сер[аоыу]', 'беж', 'крем', 'кофейн', 'коричнев', 'бордо', 'бордов', 'красн', 'зел[её]н',
+  'оливк', 'изумруд', 'син', 'голуб', 'розов', 'персик', 'охр', 'графит', 'молочн', 'фисташк', 'сиренев',
+  'ж[её]лт', 'оранж', 'терракот', 'глянц', 'матов', 'рендер', 'визуализац',
+  /* Бытовое: то, что человек называет в постирочной, спальне и прихожей. */
+  'стиральн', 'сушильн', 'пылесос', 'кондиционер', 'телевизор', 'техник', 'штор', 'тюл', 'ков[её]р', 'ковр',
+  'картин', 'икон', 'книг', 'вешалк', 'крючк', 'полотенц', 'посуд', 'матрас', 'подушк', 'покрывал',
+]);
+
+const DATED_RE = /(?:19|20)\d\d|\d0-[еx]|нулев|девяност|десят|прошл\S*\s+год|этом\s+году|недавн/iu;
+
+/* Перечень вместо фразы: шесть пунктов через запятую по два-три слова, или пары
+   «ключ: значение». Так выглядит карточка товара, а не рассказ о квартире. */
+function listLike(text) {
+  const t = String(text || '');
+  const pairs = (t.match(/(?<![а-яё])[а-яё]+\s*:\s*(?=[а-яё«"0-9])/giu) || []).length;
+  if (pairs >= 3) return `${pairs} пары «название: значение» — это таблица, а не фраза`;
+  for (const s of t.split(/[.!?;]+/)) {
+    const chunks = s.split(',').map((x) => x.trim()).filter(Boolean);
+    if (chunks.length < 6) continue;
+    const words = chunks.reduce((n, c) => n + c.split(/\s+/).length, 0) / chunks.length;
+    if (words <= 3.5) return `перечень из ${chunks.length} пунктов по ${words.toFixed(1)} слова — это опись, а не осмотр`;
+  }
+  return null;
+}
+
+/* Похожесть двух текстов по словесным тройкам. Непереносимость вывода была
+   правилом без проверки: оценщик сам решал, приложим ли его текст к соседней
+   квартире. Теперь это видно по хранилищу — два вывода, совпадающие на
+   половину троек, писались по одному шаблону. */
+function textSimilarity(a, b) {
+  const grams = (t) => {
+    const w = String(t || '').toLowerCase().replace(/[^а-яёa-z0-9\s-]/giu, ' ').split(/\s+/).filter(Boolean);
+    const s = new Set();
+    for (let i = 0; i + 2 < w.length; i++) s.add(`${w[i]} ${w[i + 1]} ${w[i + 2]}`);
+    return s;
+  };
+  const x = grams(a), y = grams(b);
+  if (!x.size || !y.size) return 0;
+  let common = 0;
+  for (const g of x) if (y.has(g)) common++;
+  return common / (x.size + y.size - common);
+}
+
+/* Проверка осмотра. Ошибки не пускают запись в хранилище — так же, как
+   возраст без вывода: осмотр, написанный языком таблицы, хуже отсутствия
+   осмотра, потому что выглядит сделанным. */
+function humanCheck(h, ctx = {}) {
+  const errors = [];
+  if (!h || typeof h !== 'object') return { errors: ['осмотра нет'], warnings: [] };
+  const need = (k, min) => {
+    const v = h[k];
+    if (v == null || !String(v).trim()) { errors.push(`${k}: не заполнено`); return false; }
+    if (String(v).trim().length < min) { errors.push(`${k}: короче ${min} знаков — это заметка, а не наблюдение`); return false; }
+    return true;
+  };
+  need('first', 30);
+  need('authorWhy', 20);
+  need('dated', 15);
+  need('craft', 30);
+  need('tasteWhy', 20);
+  need('hidden', 20);
+  need('next', 30);
+  if (h.author != null && !AUTHORS.includes(h.author)) errors.push(`author: «${h.author}» не из списка ${AUTHORS.join(' / ')}`);
+  if (h.author == null) errors.push('author: не заполнено — кто и для чего делал ремонт');
+  if (h.taste != null && !TASTES.includes(h.taste)) errors.push(`taste: «${h.taste}» не из списка ${TASTES.join(' / ')}`);
+  if (h.taste == null) errors.push('taste: не заполнено — скольким покупателям это понравится');
+  if (h.dated && !DATED_RE.test(h.dated)) errors.push('dated: нет ни года, ни десятилетия — «какого года ремонт» остался без ответа');
+
+  const rooms = Array.isArray(h.rooms) ? h.rooms : [];
+  const interior = ctx.proof == null || ctx.proof === 'фото' || ctx.proof === 'смешанное';
+  if (h.rooms != null && !Array.isArray(h.rooms)) errors.push('rooms: список помещений, а не текст');
+  if (interior && !rooms.length) errors.push('rooms: квартира на кадрах есть, а обхода по комнатам нет');
+  rooms.forEach((r, i) => {
+    const at = `rooms[${i}]`;
+    if (!r || !SPACES.includes(r.room)) errors.push(`${at}.room: «${r && r.room}» не из списка ${SPACES.join(' / ')}`);
+    if (r && r.frames != null && !Array.isArray(r.frames)) errors.push(`${at}.frames: список номеров кадров`);
+    const t = r ? String(r.text || '').trim() : '';
+    if (t.length < 40) errors.push(`${at} (${r && r.room}): короче 40 знаков — что именно видно?`);
+    else if (!HUMAN_CONCRETE.test(t)) errors.push(`${at} (${r.room}): ни одной вещи, материала или цвета — это впечатление, не осмотр`);
+  });
+  /* Санузел и кухня — две статьи, на которых экономят и которые прячут.
+     Если их нет в обходе, человек об этом скажет вслух; молчание здесь
+     читалось бы как «всё в порядке». */
+  if (interior) {
+    const shown = new Set(rooms.map((r) => r && r.room));
+    const hid = String(h.hidden || '');
+    if (!shown.has('санузел') && !/санузл|ванн|туалет|душ/iu.test(hid)) {
+      errors.push('санузла нет в обходе — скажите об этом в hidden: это самая честная статья сметы');
+    }
+    if (!shown.has('кухня') && !shown.has('кухня-гостиная') && !/кухн/iu.test(hid)) {
+      errors.push('кухни нет в обходе — скажите об этом в hidden');
+    }
+  }
+  if (ctx.proof === 'интерьера нет' && rooms.length) {
+    errors.push('rooms: интерьера на кадрах нет, а обход есть — по чему он написан?');
+  }
+  /* Картинки вместо съёмки — первое, что должен услышать покупатель, а не
+     сноска к описанию нарисованной гостиной. Если нарисована только часть
+     (у 331300080 — санузлы), это тоже говорится вслух: иначе описание
+     дорисованной ванной читается как описание настоящей. */
+  const drawn = /рендер|визуализац|нарисован|дорисован|картинк/iu;
+  if (ctx.proof === 'рендер' && !drawn.test(`${h.first || ''} ${ctx.verdict || ''}`)) {
+    errors.push('в объявлении картинки, а не съёмка — скажите это с порога или в итоге');
+  }
+  if (ctx.proof === 'смешанное' && !drawn.test([h.first, h.hidden, ctx.verdict, ...rooms.map((r) => r && r.text)].join(' '))) {
+    errors.push('часть кадров нарисована — скажите, какая именно: описание картинки читается как описание квартиры');
+  }
+  if (ctx.verdict != null) {
+    const v = String(ctx.verdict).trim();
+    if (v.length < 80) errors.push('verdict: короче 80 знаков — итог для человека не умещается в строку отчёта');
+  }
+
+  /* Язык — по всем полям, где пишет человек. */
+  const texts = [['first', h.first], ['authorWhy', h.authorWhy], ['dated', h.dated], ['craft', h.craft],
+    ['tasteWhy', h.tasteWhy], ['hidden', h.hidden], ['next', h.next], ['verdict', ctx.verdict],
+    ...rooms.map((r, i) => [`rooms[${i}]`, r && r.text])];
+  for (const [k, t] of texts) {
+    if (!t) continue;
+    for (const [re, why] of HUMAN_JARGON) if (re.test(t)) errors.push(`${k}: ${why}`);
+    for (const re of HUMAN_GENERIC) {
+      const m = String(t).match(re);
+      if (m) errors.push(`${k}: «${m[0]}» — общие слова, их можно вставить в любое объявление`);
+    }
+    const l = listLike(t);
+    if (l) errors.push(`${k}: ${l}`);
+  }
+  if (h.first && !HUMAN_CONCRETE.test(h.first)) errors.push('first: первое впечатление без единой вещи или цвета — его нельзя проверить');
+  if (ctx.verdict && !HUMAN_CONCRETE.test(ctx.verdict)) errors.push('verdict: итог без единой вещи — такой вывод подходит к любой квартире');
+
+  const warnings = [];
+  for (let i = 0; i < rooms.length; i++) for (let j = i + 1; j < rooms.length; j++) {
+    if (rooms[i] && rooms[j] && textSimilarity(rooms[i].text, rooms[j].text) >= 0.5) {
+      warnings.push(`${rooms[i].room} и ${rooms[j].room} описаны почти одинаково`);
+    }
+  }
+  return { errors, warnings };
+}
+
+/* Пары похожих текстов по всему хранилищу — непереносимость в цифрах. */
+function humanTwins(rows, threshold = 0.4) {
+  const out = [];
+  const withText = rows.filter((r) => r && r.human);
+  for (let i = 0; i < withText.length; i++) for (let j = i + 1; j < withText.length; j++) {
+    const a = withText[i], b = withText[j];
+    for (const [k, x, y] of [['с порога', a.human.first, b.human.first], ['итог', a.verdict, b.verdict]]) {
+      const s = textSimilarity(x, y);
+      if (s >= threshold) out.push({ a: a.id, b: b.id, what: k, similarity: Math.round(s * 100) / 100 });
+    }
+  }
+  return out;
+}
+
+const AUTHOR_SAY = {
+  'застройщик': 'Отделка застройщика',
+  'под себя': 'Делали под себя',
+  'под продажу': 'Делали под продажу',
+  'под сдачу': 'Делали под сдачу',
+  'дизайнер': 'Работал дизайнер',
+  'не понять': 'По кадрам не понять',
+};
+const TASTE_SAY = {
+  'нейтральный': 'Вкус нейтральный',
+  'на любителя': 'На любителя',
+  'вчерашний': 'Вкус вчерашний',
+};
+
+/* Печать осмотра в том порядке, в каком его прочтёт человек. Заголовки —
+   обычные слова; всё содержимое — слова оценщика, без подстановок из
+   словаря, кроме двух коротких фраз про автора и вкус. Номера кадров по
+   умолчанию не печатаются: они нужны для перепроверки, а не читателю. */
+function humanText(rec, opt = {}) {
+  const h = rec && rec.human;
+  if (!h) return null;
+  const md = !!opt.md;
+  const head = (t) => (md ? `**${t}.**` : `${t}.`);
+  const frames = (r) => (opt.frames && r.frames && r.frames.length ? ` (кадры ${r.frames.join(', ')})` : '');
+  /* Оценщик нередко сам начинает с того же слова, что и заголовок, — «С
+     порога понятно…», «Итог: …». Повтор срезается, чтобы не вышло «С порога.
+     С порога понятно». */
+  const strip = (t, title) => String(t || '').trim()
+    .replace(new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s,:.—-]*`, 'iu'), '');
+  const cap = (s) => String(s || '').trim().replace(/^./u, (c) => c.toUpperCase());
+  const dot = (s) => { const t = String(s || '').trim(); return /[.!?…»]$/.test(t) ? t : `${t}.`; };
+  const lines = [];
+  lines.push(`${head('С порога')} ${dot(cap(strip(h.first, 'с порога')))}`);
+  for (const r of h.rooms || []) lines.push(`${head(cap(r.room) + frames(r))} ${dot(cap(r.text))}`);
+  lines.push(`${head(AUTHOR_SAY[h.author] || cap(h.author))} ${dot(cap(h.authorWhy))}`);
+  lines.push(`${head('Сколько лет ремонту')} ${dot(cap(h.dated))}`);
+  lines.push(`${head('Как сделано')} ${dot(cap(h.craft))}`);
+  lines.push(`${head(TASTE_SAY[h.taste] || cap(h.taste))} ${dot(cap(h.tasteWhy))}`);
+  lines.push(`${head('Чего не показали')} ${dot(cap(h.hidden))}`);
+  lines.push(`${head('Что сделает новый хозяин')} ${dot(cap(h.next))}`);
+  if (rec.verdict) lines.push(`${head('Итог')} ${dot(cap(strip(rec.verdict, 'итог')))}`);
+  return lines.join(md ? '\n\n' : '\n');
+}
+
+function humanRecord(h) {
+  const s = (v) => (v == null ? null : String(v).trim());
+  return {
+    first: s(h.first),
+    rooms: (h.rooms || []).map((r) => ({ room: r.room, frames: r.frames || [], text: s(r.text) })),
+    author: h.author, authorWhy: s(h.authorWhy),
+    dated: s(h.dated), craft: s(h.craft),
+    taste: h.taste, tasteWhy: s(h.tasteWhy),
+    hidden: s(h.hidden), next: s(h.next),
+  };
+}
+
 function gradeRecord(lot, g) {
   if (g.proof && !PROOFS.includes(g.proof)) {
     throw new Error(`подтверждение: «${g.proof}» не из списка ${PROOFS.join(' / ')}`);
@@ -1804,6 +2099,14 @@ function gradeRecord(lot, g) {
      важно для цены, через месяц не поможет никому. */
   if (g.age != null && !(g.verdict && String(g.verdict).trim().length >= 40)) {
     throw new Error('возраст поставлен, а вывода нет: verdict обязателен (и не короче 40 символов)');
+  }
+  /* Осмотр проверяется целиком и возражает всем списком сразу: оценщику,
+     который переписывает текст, нужно знать все претензии, а не первую. */
+  let humanWarnings = [];
+  if (g.human != null) {
+    const hc = humanCheck(g.human, { proof: g.proof, verdict: g.verdict == null ? '' : g.verdict });
+    if (hc.errors.length) throw new Error(`осмотр не принят:\n     - ${hc.errors.join('\n     - ')}`);
+    humanWarnings = hc.warnings;
   }
   if (g.evidence != null) {
     const unknown = Object.keys(g.evidence).filter((k) => !STATE_EVIDENCE.includes(k));
@@ -1889,6 +2192,12 @@ function gradeRecord(lot, g) {
        записи до сих пор приходилось собирать его из буквы и возраста. */
     renoFate: renoFate(g.age ?? null, worksScope(g.works)),
     verdict: g.verdict ? String(g.verdict).trim() : null,
+    /* Осмотр — то, как квартиру увидел бы человек на просмотре. Признаки
+       выше отвечают движку, осмотр — покупателю; вместе они не дублируют
+       друг друга, а проверяют: буква без осмотра не объясняет себя, осмотр
+       без буквы не попадает в сравнение цен. */
+    human: g.human ? humanRecord(g.human) : null,
+    humanWarnings: humanWarnings.length ? humanWarnings : undefined,
     note: g.note || '',
     gradedAt: g.gradedAt,
   };
@@ -3166,12 +3475,14 @@ if (require.main === module) (async () => {
             log(`   СОСТОЯНИЕ ПО КАДРАМ И ПЛАНУ: ${gr.finishState} (уверенность ${p.confidence}, источник ${p.source})`
               + (p.conflict ? `  ! в тексте объявления — «${p.fromText}»` : ''));
           }
-          if (gr.note) log(`   ${gr.note}`);
+          const ht = humanText(gr);
+          if (ht) log(ht.replace(/^/gm, '   '));
+          else if (gr.note) log(`   ${gr.note}`);
           if (gr.worksScope) {
             const w = Object.entries(gr.works || {}).filter(([, v]) => v === 'менять').map(([k]) => k);
             log(`   объём работ: ${gr.worksScope}${w.length ? ` — менять: ${w.join(', ')}` : ''}`);
           }
-          if (gr.verdict) log(`   ВЫВОД: ${gr.verdict}`);
+          if (gr.verdict && !ht) log(`   ВЫВОД: ${gr.verdict}`);
           const grew = galleryGrew(gr, l);
           if (grew) log(`   ГАЛЕРЕЯ ВЫРОСЛА: смотрели ${grew.was} ${grew.of}, сейчас ${grew.now} — оценку надо пересмотреть`);
         }
@@ -3462,6 +3773,24 @@ if (require.main === module) (async () => {
         for (const id of ids) {
           const l = known.find((x) => x.id === id) || {};
           out[id] = {
+            /* Осмотр — первым. Заготовку заполняют сверху вниз, и порядок
+               ключей здесь и есть порядок работы: сначала посмотреть квартиру
+               как человек, потом раскладывать её по признакам. Наоборот
+               получается опись, из которой человеческий текст уже не
+               собрать — это проверено и откачено. */
+            human: {
+              first: '<с порога, одной-двумя фразами: чьё это жильё, какого года, с деньгами или без — как сказали бы другу>',
+              rooms: [{ room: `<${SPACES.join(' | ')}>`, frames: [],
+                text: '<что видно и что это говорит: материал, цвет, вещь — и вывод из них; не список>' }],
+              author: `<${AUTHORS.join(' | ')}>`,
+              authorWhy: '<что выдаёт автора: личные решения, одинаковость, свежая краска при старых дверях>',
+              dated: '<сколько лет ремонту и по чему это видно: потолок, фасады кухни, цвет пола>',
+              craft: '<как сделано: примыкания, затирка, плинтус, откосы, розетки — или почему не разглядеть>',
+              taste: `<${TASTES.join(' | ')}>`,
+              tasteWhy: '<кому это понравится, а кого отпугнёт>',
+              hidden: '<чего не показали и что это, скорее всего, значит; если показали всё — так и скажите>',
+              next: '<что сделает новый хозяин: что оставит, что поменяет первым, сколько на это уйдёт времени>',
+            },
             proof: `<${PROOFS.join(' | ')}>`,
             photosSeen: l.photosCount ?? null,
             photosRoomsSeen: l.photosRooms ?? null,
@@ -3485,13 +3814,34 @@ if (require.main === module) (async () => {
             },
             age: `<${AGES.join(' | ')} | null>`,
             works: Object.fromEntries(WORK_ITEMS.map((k) => [k, `<${WORK_STATES.join(' | ')} | null>`])),
-            verdict: '<обязателен при возрасте: что это за товар, что его продаёт или топит, что сделает следующий владелец>',
+            verdict: '<итог для человека, не короче 80 знаков: можно ли жить, что здесь хорошего, что плохого, стоит ли за это платить>',
             note: '',
           };
         }
         process.stdout.write(JSON.stringify(out, null, 2) + '\n');
-        log('\nЗаполнить по docs/cian/photo.md, null — «на кадрах не видно».');
+        log('\nЗаполнить по docs/cian/photo.md: сначала «Осмотр глазами человека», потом признаки. null — «на кадрах не видно».');
         log(`Кадры в оригинале:  node tools/cian/cian.js verify --ids ${ids.join(',')} --frames 3,6,11 --dir sheets`);
+      } else if (a.read) {
+        /* Оценка словами человека — то, что уходит в разбор для покупателя.
+           Номера кадров только по --frames: читателю они не нужны, а
+           перепроверяющему нужны все до одного. */
+        const want = a.read === true || a.read === 'all' ? null : String(a.read).split(',').map((x) => x.trim());
+        const rows = Object.values(store.flats).filter((r) => !want || want.includes(String(r.id)));
+        const md = a.md === true || a.md === 'да';
+        const out = [];
+        for (const r of rows) {
+          const link = `https://www.cian.ru/sale/flat/${r.id}/`;
+          const t = humanText(r, { md, frames: a.frames === true || a.frames === 'да' });
+          if (md) out.push(`### [${r.address || r.id}](${link})\n\n${t || `_Осмотра нет — записаны только признаки._${r.verdict ? `\n\n**Итог.** ${r.verdict}` : ''}`}\n`);
+          else out.push(`${r.id}  ${r.address || ''}  ${link}\n${t ? t.replace(/^/gm, '  ') : '  осмотра нет — записаны только признаки' + (r.verdict ? `\n  Итог. ${r.verdict}` : '')}\n`);
+        }
+        if (want) {
+          const miss = want.filter((id) => !rows.some((r) => String(r.id) === id));
+          if (miss.length) log(`нет в хранилище: ${miss.join(', ')}`);
+        }
+        const text = out.join('\n');
+        if (a.out) { fs.writeFileSync(a.out, text + '\n'); log(`записано: ${a.out}`); }
+        else process.stdout.write(text + '\n');
       } else if (a.plan) {
         /* Сколько взгляда на самом деле нужно. Пересматривать всю выборку
            каждый свип — платить за то, что не менялось: у Киевской за
@@ -3596,6 +3946,25 @@ if (require.main === module) (async () => {
            исключается по смыслу, а не по забывчивости. */
         const noAge = rows.filter((r) => r.level && r.level !== 'E' && r.proof === 'фото' && !r.age);
         if (noAge.length) log(`возраст ремонта не определён: ${noAge.length} из ${rows.length} — ${noAge.map((r) => r.id).join(', ')}`);
+        /* Осмотр глазами человека. Записи, поставленные до него, остаются в
+           силе для сравнения цен, но объяснить покупателю, что за квартира,
+           они не могут — только перечислить её признаки. */
+        const noHuman = rows.filter((r) => r.age && !r.human);
+        if (noHuman.length) log(`осмотра нет — только признаки: ${noHuman.length} из ${rows.length} — ${noHuman.map((r) => r.id).join(', ')}`);
+        /* Правила языка ужесточаются — прежние осмотры перечитываются по
+           нынешним, иначе старый шаблон так и останется в разборах. */
+        const stale = rows.filter((r) => r.human)
+          .map((r) => ({ r, c: humanCheck(r.human, { proof: r.proof, verdict: r.verdict || '' }) }))
+          .filter((x) => x.c.errors.length);
+        if (stale.length) {
+          log(`\nосмотр не проходит нынешнюю проверку (${stale.length}):`);
+          stale.forEach(({ r, c }) => log(`  ${r.id}: ${c.errors.slice(0, 3).join('; ')}${c.errors.length > 3 ? ` и ещё ${c.errors.length - 3}` : ''}`));
+        }
+        const twins = humanTwins(rows);
+        if (twins.length) {
+          log(`\nпохоже на шаблон — у текстов 40% общих оборотов и больше (${twins.length}):`);
+          twins.forEach((t) => log(`  ${t.a} и ${t.b}: «${t.what}», сходство ${t.similarity}`));
+        }
       } else if (a.list || !a.marks) {
         const rows = Object.values(store.flats).sort((x, y) => (y.pricePerM2 || 0) - (x.pricePerM2 || 0));
         log(`оценок в ${a.store || 'docs/cian/grades.json'}: ${rows.length}` + (store.updated ? `, обновлено ${store.updated}` : ''));
@@ -3611,11 +3980,14 @@ if (require.main === module) (async () => {
         const lots = src.lots || src.flats || (Array.isArray(src) ? src : []);
         const today = new Date().toISOString().slice(0, 10);
         let added = 0, changed = 0;
+        const bare = [];
         for (const [id, g] of Object.entries(marks)) {
           const lot = lots.find((l) => String(l.id) === String(id)) || g.lot || { id: Number(id) };
           let rec;
           try { rec = gradeRecord(lot, { ...g, gradedAt: g.gradedAt || today }); }
           catch (e) { log(`  ! ${id}: ${e.message}`); continue; }
+          if (rec.humanWarnings) rec.humanWarnings.forEach((w) => log(`  ? ${id}: ${w}`));
+          if (rec.age && !rec.human) bare.push(id);
           const prev = store.flats[id];
           if (!prev) added++;
           else if (prev.level !== rec.level || prev.proof !== rec.proof) {
@@ -3636,6 +4008,12 @@ if (require.main === module) (async () => {
         store.updated = today;
         fs.writeFileSync(a.store || 'docs/cian/grades.json', JSON.stringify(store, null, 2) + '\n');
         log(`оценок: +${added} новых, ${changed} пересмотрено, всего ${Object.keys(store.flats).length}`);
+        if (bare.length) log(`без осмотра глазами человека: ${bare.join(', ')} — признаки записаны, объяснить квартиру покупателю нечем`);
+        /* Шаблон виден только на фоне соседей: сверяем новые осмотры со всем
+           хранилищем, а не друг с другом. */
+        const fresh = new Set(Object.keys(marks).map(String));
+        const tw = humanTwins(Object.values(store.flats)).filter((t) => fresh.has(String(t.a)) || fresh.has(String(t.b)));
+        tw.forEach((t) => log(`  ? ${t.a} и ${t.b}: «${t.what}» написаны почти одинаково (сходство ${t.similarity}) — перечитать`));
         const all = Object.values(store.flats);
         const noProof = all.filter((r) => r.proof === 'рендер' || r.proof === 'интерьера нет').length;
         if (noProof) log(`не подтверждено фотографиями: ${noProof} — при сравнении цен это отдельный товар`);
@@ -4003,9 +4381,16 @@ if (require.main === module) (async () => {
       }
       out.push('', `⚠ — текст объявления расходится с фотографиями. Снято с продажи с момента осмотра: ${gone}.`, '');
       out.push('## Заметки по каждому', '');
-      for (const r of rows) if (r.note || r.verdict) {
-        out.push(`**[${r.id}](https://www.cian.ru/sale/flat/${r.id}/)**, ${r.address}. ${r.note || ''}`);
-        if (r.verdict) out.push(`  **Вывод:** ${r.verdict}`);
+      for (const r of rows) if (r.note || r.verdict || r.human) {
+        /* Где есть осмотр, в реестр идёт он: заметка писалась для
+           перепроверки и полна служебных пометок, осмотр — для человека. */
+        if (r.human) {
+          out.push(`**[${r.id}](https://www.cian.ru/sale/flat/${r.id}/)**, ${r.address}.\n`);
+          out.push(humanText(r, { md: true }));
+        } else {
+          out.push(`**[${r.id}](https://www.cian.ru/sale/flat/${r.id}/)**, ${r.address}. ${r.note || ''}`);
+          if (r.verdict) out.push(`  **Вывод:** ${r.verdict}`);
+        }
         out.push('');
       }
       const file = a.out || 'docs/cian/lots.md';
@@ -4237,6 +4622,7 @@ module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, medi
   STATES, STATE_EVIDENCE, stateFromEvidence, stateConfidence, mergeState, withoutRenders, evidenceForLot, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
   expandSimilar, harvest, outputFile, matchesQuery, buildCohort, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
   renoFate, entryPrice, suspectTwins, RENO_FATES, RENO_CARRY, DEMOLITION_SHARE,
+  humanCheck, humanText, humanTwins, textSimilarity, listLike, SPACES, AUTHORS, TASTES,
   houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES,
   metroSummary, metroLine, metroCell, RAIL_LINES, photoKinds,
   photoIdent, galleryKey, galleryDiff, sweepCost, SWEEP,

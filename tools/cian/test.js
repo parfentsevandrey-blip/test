@@ -7,6 +7,7 @@ const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessR
         completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringVerdict,
         gradeLevel, gradeRecord, finishCost, loadedPricePerM2, fairShellPrice, gradeFor, galleryGrew, parseViews, mergedPriceHistory, offersByIds, matchesQuery, expandSimilar, houseClass, profileLot, floorBand, worksScope, buildCohort, metroSummary, metroLine, metroCell, photoKinds, photoIdent, galleryKey, galleryDiff, sweepCost, outputFile, STATES, stateFromEvidence, stateConfidence, mergeState, evidenceForLot,
         renoFate, entryPrice, suspectTwins, RENO_FATES,
+        humanCheck, humanText, humanTwins, textSimilarity, listLike, SPACES, AUTHORS, TASTES,
         distToPathM, distToRingM, skylineAround, nearestOpen, nearestStreet, viewProfile, streetPremium,
         fillBuildYears, houseEra } = require('./cian.js');
 
@@ -1759,4 +1760,150 @@ test('подозрительные двойники: дом и цена ловя
   assert.strictEqual(s[0].sameFloor, true, 'этаж один — догадка не опровергнута');
   assert.ok(!s[0].ids.includes(4), 'цена на 19% выше — это другая квартира');
   assert.ok(!s[0].ids.includes(5), 'другой дом — не двойник, как бы ни совпадали цифры');
+});
+
+process.stdout.write('\nосмотр глазами человека\n');
+
+/* Реальная квартира из посёлка Александровский (330200155): охра, балки,
+   прованс. Текст написан по кадрам — так, как его должен писать оценщик. */
+const goodHuman = () => ({
+  first: 'Здесь долго жили и любили тёплые цвета: охра, персик и розовый на стенах, тёмные балки на потолке, мебель из крашеного массива.',
+  rooms: [
+    { room: 'кухня-гостиная', frames: [1], text: 'Кухня-классика с патиной и гранитной столешницей, фартук «под кирпич», над ней тёмные балки. Всё целое, но это язык начала десятых.' },
+    { room: 'спальня', frames: [9], text: 'Под скатом мансарды белёная вагонка и те же тёмные балки; кровать и шкаф из крашеного массива в духе прованса.' },
+    { room: 'санузел', frames: [11], text: 'Бежево-коричневая плитка шахматкой, тумба-комод под классику с раковиной, полотенцесушитель-лесенка. Чисто, но серийно.' },
+  ],
+  author: 'под себя',
+  authorWhy: 'Цвета, мебель и балки подобраны друг к другу — так делают для своей семьи, а не для продажи.',
+  dated: 'Ремонт 2010–2014 годов: балки, патина на фасадах и шахматка в санузле пришли из одного десятилетия.',
+  craft: 'Стены ровные, балки посажены аккуратно, швы плитки в санузле совпадают по раскладке.',
+  taste: 'вчерашний',
+  tasteWhy: 'Семье, которой нравится прованс, подойдёт как есть; молодой паре — перекрашивать почти всё.',
+  hidden: 'Показали всё, включая санузлы и постирочную; второй санузел виден только частью.',
+  next: 'Перекрасит стены в светлое, покрасит балки в цвет потолка, сменит кухонные фасады — месяц-два работы без демонтажа.',
+});
+const goodVerdict = 'Жить можно сразу, но это чужой вкус начала десятых по цене самого дорогого метра в посёлке: за охру и балки доплачивать не за что.';
+
+test('осмотр, написанный по кадрам, принимается без претензий', () => {
+  const r = humanCheck(goodHuman(), { proof: 'фото', verdict: goodVerdict });
+  assert.deepStrictEqual(r.errors, []);
+});
+
+test('текст откаченной сборки из признаков осмотром не считается', () => {
+  // ровно то, что печатала assessText до отката
+  const h = { ...goodHuman(),
+    first: 'Качественный полный ремонт 2005–2015 годов: плитка, столярка в размер, кухня со встроенной техникой, свет базовый, мебель полная, двери обычные.' };
+  const r = humanCheck(h, { proof: 'фото', verdict: 'Покупать как оболочку и ломать: по кадрам это C с приметами соседней эпохи.' });
+  const all = r.errors.join('\n');
+  assert.match(all, /свет базовый/, 'существительное со значением признака — язык таблицы');
+  assert.match(all, /оболочка/);
+  assert.match(all, /A–E/, 'буква отделки в тексте для человека');
+  assert.match(all, /общие слова/, '«качественный полный ремонт» подходит к любой квартире');
+});
+
+test('общие слова продавца ловятся, конкретика — нет', () => {
+  const h = { ...goodHuman() };
+  h.rooms = [{ room: 'гостиная', frames: [], text: 'Хороший ремонт, всё в отличном состоянии, очень уютно и светло.' }, ...h.rooms.slice(1)];
+  const r = humanCheck(h, { proof: 'фото', verdict: goodVerdict });
+  const all = r.errors.join('\n');
+  assert.match(all, /Хороший ремонт/);
+  assert.match(all, /в отличном состоянии/);
+  assert.match(all, /уютн/);
+  assert.match(all, /ни одной вещи/, 'в описании комнаты нет ни материала, ни цвета, ни вещи');
+});
+
+test('опись вместо фразы: шесть коротких пунктов подряд', () => {
+  assert.ok(listLike('Плитка, ламинат, кухня, свет, мебель, двери, окна.'));
+  assert.ok(listLike('стены: белые, пол: ламинат, кухня: икеа'));
+  // длинный описательный ряд с подробностями — это рассказ, а не опись
+  assert.strictEqual(listLike('Охра, персик и розовый на стенах, тёмные декоративные балки по потолкам, кухня-классика с патиной, гранитной столешницей и фартуком «под кирпич», вагонка на скатах мансарды, массивная лестница с точёными балясинами.'), null);
+});
+
+test('санузел не показан — об этом надо сказать, а не промолчать', () => {
+  const h = goodHuman();
+  h.rooms = h.rooms.filter((r) => r.room !== 'санузел');
+  h.hidden = 'Не показали спальни на втором этаже и участок за домом.';
+  const r = humanCheck(h, { proof: 'фото', verdict: goodVerdict });
+  assert.ok(r.errors.some((e) => /санузла нет в обходе/.test(e)));
+  h.hidden = 'Санузлов нет ни на одном кадре — в доме на 210 м² так прячут то, что стыдно показать.';
+  assert.ok(!humanCheck(h, { proof: 'фото', verdict: goodVerdict }).errors.some((e) => /санузла/.test(e)));
+});
+
+test('рендер надо назвать рендером с порога или в итоге', () => {
+  const h = goodHuman();
+  let r = humanCheck(h, { proof: 'рендер', verdict: goodVerdict });
+  assert.ok(r.errors.some((e) => /картинки, а не съёмка/.test(e)));
+  h.first = 'В объявлении не фотографии, а визуализации дизайн-проекта: серый ар-деко с латунью и хрустальными кольцами.';
+  r = humanCheck(h, { proof: 'рендер', verdict: goodVerdict });
+  assert.ok(!r.errors.some((e) => /картинки/.test(e)));
+});
+
+test('часть кадров нарисована — надо сказать, какая', () => {
+  const h = goodHuman();
+  assert.ok(humanCheck(h, { proof: 'смешанное', verdict: goodVerdict }).errors.some((e) => /часть кадров нарисована/.test(e)));
+  h.hidden = 'Санузлы в объявлении дорисованы — настоящих фотографий ванной нет, только картинки проекта.';
+  assert.ok(!humanCheck(h, { proof: 'смешанное', verdict: goodVerdict }).errors.some((e) => /нарисована/.test(e)));
+});
+
+test('интерьера нет — обход по комнатам писать не по чему', () => {
+  const h = goodHuman();
+  const r = humanCheck(h, { proof: 'интерьера нет', verdict: goodVerdict });
+  assert.ok(r.errors.some((e) => /интерьера на кадрах нет/.test(e)));
+});
+
+test('словари осмотра закрыты: чужое слово в авторе, вкусе и помещении — ошибка', () => {
+  const h = { ...goodHuman(), author: 'хозяин', taste: 'красивый' };
+  h.rooms = [{ room: 'зал', frames: [], text: 'Паркет ёлочкой из светлого дуба, белые стены с молдингами и латунные бра.' }, ...h.rooms];
+  const all = humanCheck(h, { proof: 'фото', verdict: goodVerdict }).errors.join('\n');
+  assert.match(all, /author: «хозяин»/);
+  assert.match(all, /taste: «красивый»/);
+  assert.match(all, /room: «зал»/);
+  assert.ok(AUTHORS.includes('под продажу') && TASTES.includes('на любителя') && SPACES.includes('санузел'));
+});
+
+test('год ремонта — обязательная часть ответа «сколько лет»', () => {
+  const h = { ...goodHuman(), dated: 'давно, видно по потолкам и фасадам кухни' };
+  assert.ok(humanCheck(h, { proof: 'фото', verdict: goodVerdict }).errors.some((e) => /ни года, ни десятилетия/.test(e)));
+});
+
+test('непереносимость в цифрах: одинаковые тексты у двух квартир видны по хранилищу', () => {
+  assert.strictEqual(textSimilarity(goodVerdict, goodVerdict), 1);
+  assert.ok(textSimilarity(goodVerdict, 'Бетонная коробка с приставными лестницами и котлом, до жизни год работ.') < 0.05);
+  const a = { id: 1, human: goodHuman(), verdict: goodVerdict };
+  const b = { id: 2, human: goodHuman(), verdict: goodVerdict.replace('охру', 'бордо') };
+  const c = { id: 3, human: { ...goodHuman(), first: 'Белые стены, светлый дуб, кухня без ручек — застройщик сдал и никто не жил.' },
+    verdict: 'Свежая отделка застройщика без единого личного решения: въехать можно в выходные, переделывать нечего.' };
+  const t = humanTwins([a, b, c]);
+  assert.ok(t.some((x) => x.a === 1 && x.b === 2), 'две записи по одному шаблону');
+  assert.ok(!t.some((x) => x.a === 3 || x.b === 3), 'разные квартиры — разные тексты');
+});
+
+test('запись оценки: плохой осмотр не пускается, и все претензии сразу', () => {
+  const g = { proof: 'фото', markers: { kitchen: 'встроенная', furniture: 'полный', bath: 'плитка', light: 'базовый' },
+    age: 'устаревший', verdict: goodVerdict, human: { ...goodHuman(), craft: 'норм', tasteWhy: 'всем' } };
+  assert.throws(() => gradeRecord(lot({ id: 5 }), g), (e) => /craft/.test(e.message) && /tasteWhy/.test(e.message));
+});
+
+test('запись оценки: хороший осмотр сохраняется целиком, старые записи без осмотра в силе', () => {
+  const g = { proof: 'фото', markers: { kitchen: 'встроенная', furniture: 'полный', bath: 'плитка', light: 'базовый' },
+    age: 'устаревший', verdict: goodVerdict, human: goodHuman() };
+  const rec = gradeRecord(lot({ id: 5 }), g);
+  assert.strictEqual(rec.human.author, 'под себя');
+  assert.strictEqual(rec.human.rooms.length, 3);
+  assert.deepStrictEqual(rec.human.rooms[0].frames, [1]);
+  const old = gradeRecord(lot({ id: 6 }), { ...g, human: undefined });
+  assert.strictEqual(old.human, null, 'осмотр не обязателен задним числом');
+});
+
+test('печать осмотра: порядок обхода, без ключей записи и без номеров кадров', () => {
+  const t = humanText({ human: goodHuman(), verdict: goodVerdict });
+  const order = ['С порога.', 'Кухня-гостиная.', 'Спальня.', 'Санузел.', 'Делали под себя.', 'Сколько лет ремонту.',
+    'Как сделано.', 'Вкус вчерашний.', 'Чего не показали.', 'Что сделает новый хозяин.', 'Итог.'];
+  let at = -1;
+  for (const o of order) { const i = t.indexOf(o); assert.ok(i > at, `«${o}» не на своём месте`); at = i; }
+  assert.ok(!/first|rooms|author|taste|hidden|frames|verdict/.test(t), 'имена полей в тексте для человека');
+  assert.ok(!/кадр/.test(t), 'номера кадров печатаются только по запросу');
+  assert.match(humanText({ human: goodHuman(), verdict: goodVerdict }, { frames: true }), /Санузел \(кадры 11\)/);
+  // печать сама ничего не добавляет из словаря движка
+  assert.deepStrictEqual(humanCheck(goodHuman(), { proof: 'фото', verdict: t }).errors.filter((e) => /язык движка|так пишет таблица|имя поля|внутренняя кухня/.test(e)), []);
 });
