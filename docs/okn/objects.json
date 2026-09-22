@@ -1,0 +1,1993 @@
+{
+ "1343": {
+  "id": 1343,
+  "name": "Главный дом",
+  "complex": false,
+  "address": "г. Москва, вн.тер.г. м.о. Филимонковский, пос. Филимонки, д. 51",
+  "status": "READY",
+  "recoveryStatus": "PREPARATION",
+  "securityCategory": "FEDERAL_IMPORTANCE",
+  "type": "MONUMENT",
+  "constructionPeriod": "1801 г.",
+  "condition": "UNSATISFACTORY",
+  "auctionPeriod": "$D2026-10-01T00:00:00.000Z",
+  "totalArea": 589.3,
+  "images": [
+   "image/89adb2d2-4c13-477d-8685-c20325ab3cc9"
+  ],
+  "parentOkn": null,
+  "relatedOkns": null,
+  "realEstateInfo": [
+   {
+    "id": "54b8df41-3383-439f-b6fd-d43f5462b986",
+    "cadastralNumber": "50:21:0150303:303",
+    "realEstateCost": 19684040.21,
+    "wallMaterial": null,
+    "realEstateRegDate": "2013-01-08",
+    "floors": "3"
+   }
+  ],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "FEDERAL",
+  "auctionInfo": null,
+  "oknInvestorInfo": {
+   "id": 164258,
+   "pdDeadline": null,
+   "restorationDeadline": null
+  },
+  "roadmapInfo": null,
+  "agencyWork": true,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": "https://xn--e1adnd0h.xn--d1aqf.xn--p1ai/auctions/planned/590273/",
+  "egroknNum": "771710798950026",
+  "coordinateLatitude": 55.55446,
+  "coordinateLongitude": 37.352992,
+  "landPlotsParameters": [
+   {
+    "id": 558449,
+    "cadastralNumber": "77:17:0000000:9071",
+    "totalArea": 55069,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "культурное развитие (3.6) (земельные участки, предназначенные для размещения административных зданий, объектов образования, науки, здравоохранения и социального обеспечения, физической культуры и спорта, культуры, искусства, религии (1.2.17))",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 105482466.74,
+    "landPlotRegDate": "2014-12-02",
+    "landPlotAdjacents": "77:17:0150303:23"
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "1801 г.",
+   "owner": "Российская Федерация",
+   "status": "READY",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO",
+   "waterDisposal": "NO",
+   "waterSupply": "NO",
+   "heating": "NO",
+   "gasSupply": "NO"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "6b4d3159-5e66-486d-9018-0b5b66d7e4b1",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 4992067,
+    "publishedAt": "2026-08-20T10:49:42.104431",
+    "category": "OKN"
+   },
+   {
+    "id": "f2d41355-54b1-44ab-b412-940aef27f726",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 6215589,
+    "publishedAt": "2026-08-20T10:49:21.020093",
+    "category": "OKN"
+   },
+   {
+    "id": "24fc5170-fc4c-4586-877e-6ae698d6dd94",
+    "documentType": "UNSTATISFACTORY_CONDITION_DECISION",
+    "documentSize": 2042021,
+    "publishedAt": "2026-08-20T10:49:51.029084",
+    "category": "OKN"
+   },
+   {
+    "id": "1efba38e-5c2f-47ce-82dd-1622f8d9e963",
+    "documentType": "TECHNICAL_CONDITION_REPORT",
+    "documentSize": 2003884,
+    "publishedAt": "2026-04-20T14:48:47.486703",
+    "category": "OKN"
+   },
+   {
+    "id": "1ffa8d41-2a57-4ef1-bd94-2db027938955",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 809318,
+    "publishedAt": "2026-08-20T10:48:29.892222",
+    "category": "OKN"
+   },
+   {
+    "id": "14f81096-9d8f-49e0-b5a2-9887d4b935db",
+    "documentType": "OBJECT_PASSPORT",
+    "documentSize": 1504393,
+    "publishedAt": "2026-08-20T10:49:29.411838",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "Генерал-майор Д. В. Измайлов считается создателем существующего усадебного ансамбля. Именно он в 1801 году построил двухэтажный главный дом в стиле ампир, разбил липовый парк и создал каскад прудов."
+ },
+ "1344": {
+  "id": 1344,
+  "name": "Флигель",
+  "complex": false,
+  "address": "г. Москва, вн.тер.г. м.о. Филимонковский, пос. Филимонки, д. 51, стр. 1",
+  "status": "READY",
+  "recoveryStatus": "PREPARATION",
+  "securityCategory": "FEDERAL_IMPORTANCE",
+  "type": "MONUMENT",
+  "constructionPeriod": "1801 г.",
+  "condition": "UNSATISFACTORY",
+  "auctionPeriod": "$D2026-12-11T00:00:00.000Z",
+  "totalArea": 207.9,
+  "images": [
+   "image/89adb2d2-4c13-477d-8685-c20325ab3cc9"
+  ],
+  "parentOkn": null,
+  "relatedOkns": null,
+  "realEstateInfo": [
+   {
+    "id": "3c6d5f5e-107d-407d-b85f-6868edb1bea4",
+    "cadastralNumber": "77:17:0150309:760",
+    "realEstateCost": 6944361.04,
+    "wallMaterial": null,
+    "realEstateRegDate": "2014-04-18",
+    "floors": "1"
+   }
+  ],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "FEDERAL",
+  "auctionInfo": null,
+  "oknInvestorInfo": null,
+  "roadmapInfo": null,
+  "agencyWork": true,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": "https://xn--e1adnd0h.xn--d1aqf.xn--p1ai/auctions/planned/590273/",
+  "egroknNum": "771710798950036",
+  "coordinateLatitude": 55.554868,
+  "coordinateLongitude": 37.353189,
+  "landPlotsParameters": [
+   {
+    "id": 558446,
+    "cadastralNumber": "77:17:0000000:9071",
+    "totalArea": 55069,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "культурное развитие (3.6) (земельные участки, предназначенные для размещения административных зданий, объектов образования, науки, здравоохранения и социального обеспечения, физической культуры и спорта, культуры, искусства, религии (1.2.17))",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 105482466.74,
+    "landPlotRegDate": "2014-12-02",
+    "landPlotAdjacents": "77:17:0150303:23"
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "1801 г.",
+   "owner": "ПАО ДОМ.РФ",
+   "status": "READY",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO",
+   "waterDisposal": "NO",
+   "waterSupply": "NO",
+   "heating": "NO",
+   "gasSupply": "NO"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "48ba706f-1235-466c-a5fc-aa1cd587b7d0",
+    "documentType": "OBJECT_PASSPORT",
+    "documentSize": 1504393,
+    "publishedAt": "2026-08-20T10:51:14.298998",
+    "category": "OKN"
+   },
+   {
+    "id": "fbd77ac7-3a49-45d4-9573-b57c09bb95d7",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 4992067,
+    "publishedAt": "2026-08-20T10:51:24.910285",
+    "category": "OKN"
+   },
+   {
+    "id": "5a508bb4-1db4-44a4-acc1-32bbf278cde8",
+    "documentType": "UNSTATISFACTORY_CONDITION_DECISION",
+    "documentSize": 1593770,
+    "publishedAt": "2026-08-20T10:51:38.184008",
+    "category": "OKN"
+   },
+   {
+    "id": "4a30d2e1-fa01-47de-bdb5-b53130f81a19",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 809318,
+    "publishedAt": "2026-08-20T10:50:44.061043",
+    "category": "OKN"
+   },
+   {
+    "id": "aabf3284-c22c-40ab-a7e5-1924626ea125",
+    "documentType": "TECHNICAL_CONDITION_REPORT",
+    "documentSize": 25155247,
+    "publishedAt": "2026-08-20T10:50:54.777414",
+    "category": "OKN"
+   },
+   {
+    "id": "b9e11d61-90de-4eb2-b193-122bf29184bc",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 6215589,
+    "publishedAt": "2026-08-20T10:51:03.853665",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "Комплекс усадьбы на высоком берегу реки Ликовы сформировал на рубеже XVIII–XIX веков генерал-майор Дмитрий Васильевич Измайлов. Именно при нем в 1801 году были возведены двухэтажный главный господский дом с бельведером, одноэтажный флигель, разбит липовый парк и вырыты каскадные пруды."
+ },
+ "3529": {
+  "id": 3529,
+  "name": "Каретный двор",
+  "complex": true,
+  "address": "г. Москва, вн.тер.г. муниципальный округ Краснопахорский, поселок Щапово, д. 47, стр. 1",
+  "status": "READY",
+  "recoveryStatus": "PREPARATION",
+  "securityCategory": "REGIONAL_IMPORTANCE",
+  "type": "MONUMENT",
+  "constructionPeriod": "Конец XIX в.",
+  "condition": "UNSATISFACTORY",
+  "auctionPeriod": "$D2026-07-01T00:00:00.000Z",
+  "totalArea": 493.7,
+  "images": [
+   "image/f1b17772-b208-4e37-9388-d8327862f90e"
+  ],
+  "parentOkn": {
+   "externalId": 4103,
+   "name": "Усадьба \"Щапово\"",
+   "image": "image/d8ef7d5e-a6e5-4058-920f-465dc1070d21",
+   "oknId": 4103
+  },
+  "relatedOkns": null,
+  "realEstateInfo": [
+   {
+    "id": "075d4632-6b81-4017-8c25-5ab52a4dd339",
+    "cadastralNumber": "77:22:0020207:42",
+    "realEstateCost": 18319409.93,
+    "wallMaterial": "Бетонные, Деревянные, Из природного камня",
+    "realEstateRegDate": "2013-07-26",
+    "floors": "1"
+   }
+  ],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "RF_SUBJECT",
+  "auctionInfo": null,
+  "oknInvestorInfo": null,
+  "roadmapInfo": null,
+  "agencyWork": false,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": null,
+  "egroknNum": "771710804490105",
+  "coordinateLatitude": 55.416823,
+  "coordinateLongitude": 37.404722,
+  "landPlotsParameters": [
+   {
+    "id": 557884,
+    "cadastralNumber": "77:22:0020207:783",
+    "totalArea": 4991,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "для использования и обслуживания объектов недвижимости",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 6754220.48,
+    "landPlotRegDate": "2016-10-03",
+    "landPlotAdjacents": "77:22:0020207:782"
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "Конец XIX в.",
+   "owner": "Город Москва",
+   "status": "READY",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO",
+   "waterDisposal": "NO",
+   "waterSupply": "NO",
+   "heating": "NO",
+   "gasSupply": "NO"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "32a922e6-0d10-479c-bd94-dee39c093fba",
+    "documentType": "UNSTATISFACTORY_CONDITION_DECISION",
+    "documentSize": 1333968,
+    "publishedAt": "2026-08-20T10:54:29.683843",
+    "category": "OKN"
+   },
+   {
+    "id": "f64847fa-0f55-4d6f-92f2-efa9b021bac9",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 264564,
+    "publishedAt": "2025-11-11T11:18:03.568911",
+    "category": "OKN"
+   },
+   {
+    "id": "2da63491-d489-4649-b8e6-20e5781e210a",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 4080294,
+    "publishedAt": "2026-03-16T16:43:00.146634",
+    "category": "OKN"
+   },
+   {
+    "id": "3a8b2247-3188-4981-afe1-7ca8eb046807",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 6314877,
+    "publishedAt": "2026-03-16T16:43:53.993183",
+    "category": "OKN"
+   },
+   {
+    "id": "6afaa61f-a9a4-4b96-a969-c436c4e99e12",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 7136245,
+    "publishedAt": "2026-08-20T10:54:09.786394",
+    "category": "OKN"
+   },
+   {
+    "id": "cd3c7abf-d8f4-4c2d-90e5-5aef53e5c7ba",
+    "documentType": "OBJECT_PASSPORT",
+    "documentSize": 1580984,
+    "publishedAt": "2026-08-20T10:54:21.782052",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "Здание было возведено в конце XIX века. Строительство велось при последнем владельце усадьбы — текстильном фабриканте и благотворителе Илье Васильевиче Щапове, который приобрел имение в 1889 году. \n\nОдноэтажное кирпичное здание выполнено в характерном для того времени эклектичном стиле с элементами декоративной кирпичной кладки."
+ },
+ "3532": {
+  "id": 3532,
+  "name": "Дом управляющего",
+  "complex": true,
+  "address": "г. Москва, вн.тер.г. муниципальный округ Краснопахорский, поселок Щапово, д. 47, стр. 4",
+  "status": "READY",
+  "recoveryStatus": "PREPARATION",
+  "securityCategory": "REGIONAL_IMPORTANCE",
+  "type": "MONUMENT",
+  "constructionPeriod": "Конец XIX в.",
+  "condition": "UNSATISFACTORY",
+  "auctionPeriod": "$D2026-07-01T00:00:00.000Z",
+  "totalArea": 122.6,
+  "images": [
+   "image/a9ed963b-f8c3-4ba1-9171-17261cc53dd7",
+   "image/05ece7c9-889e-4a36-bf49-4c6b5e7b37bc"
+  ],
+  "parentOkn": {
+   "externalId": 4103,
+   "name": "Усадьба \"Щапово\"",
+   "image": "image/d8ef7d5e-a6e5-4058-920f-465dc1070d21",
+   "oknId": 4103
+  },
+  "relatedOkns": null,
+  "realEstateInfo": [
+   {
+    "id": "9105bea6-0631-4dfe-98de-cdf08fef3fc9",
+    "cadastralNumber": "77:22:0020207:41",
+    "realEstateCost": 9426485.96,
+    "wallMaterial": "Рубленые",
+    "realEstateRegDate": "2013-07-26",
+    "floors": "2"
+   }
+  ],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "RF_SUBJECT",
+  "auctionInfo": null,
+  "oknInvestorInfo": null,
+  "roadmapInfo": null,
+  "agencyWork": false,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": null,
+  "egroknNum": "771710804490015",
+  "coordinateLatitude": 55.4164755663,
+  "coordinateLongitude": 37.4046229233,
+  "landPlotsParameters": [
+   {
+    "id": 557272,
+    "cadastralNumber": "77:22:0020207:783",
+    "totalArea": 4991,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "для использования и обслуживания объектов недвижимости",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 6754220.48,
+    "landPlotRegDate": "2016-10-03",
+    "landPlotAdjacents": "77:22:0020207:782"
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "Конец XIX в.",
+   "owner": "Город Москва",
+   "status": "READY",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO",
+   "waterDisposal": "NO",
+   "waterSupply": "NO",
+   "heating": "NO",
+   "gasSupply": "NO"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "6e5673ba-998e-4378-ae72-a40c6f15fd46",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 5072150,
+    "publishedAt": "2025-11-11T10:35:59.631367",
+    "category": "OKN"
+   },
+   {
+    "id": "becad4ea-90c6-43f1-880b-023ce299f2d8",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 4080294,
+    "publishedAt": "2026-03-17T13:30:17.812325",
+    "category": "OKN"
+   },
+   {
+    "id": "168b6aa5-64fe-4323-ac22-537f2d51fcea",
+    "documentType": "TECHNICAL_CONDITION_REPORT",
+    "documentSize": 7476691,
+    "publishedAt": "2026-03-17T13:30:34.52023",
+    "category": "OKN"
+   },
+   {
+    "id": "2d4a3281-c034-47a4-9c2d-a12423ece40d",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 1834546,
+    "publishedAt": "2026-08-20T10:52:46.927578",
+    "category": "OKN"
+   },
+   {
+    "id": "3b93407b-732a-4493-b974-5aced621c1e3",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 2840388,
+    "publishedAt": "2026-08-20T10:52:36.131194",
+    "category": "OKN"
+   },
+   {
+    "id": "338243f5-54aa-40e2-b735-5573a0591808",
+    "documentType": "OBJECT_PASSPORT",
+    "documentSize": 1568860,
+    "publishedAt": "2026-08-20T10:52:58.20761",
+    "category": "OKN"
+   },
+   {
+    "id": "de7c74f8-10e6-4b84-8bed-f7981f0e6f16",
+    "documentType": "UNSTATISFACTORY_CONDITION_DECISION",
+    "documentSize": 1333362,
+    "publishedAt": "2026-08-20T10:53:07.983699",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "Здание было возведено в конце XIX века. Его появление связано с масштабной перестройкой усадьбы последним владельцем — московским промышленником и меценатом Ильей Васильевичем Щаповым, который приобрел имение в 1889 году. \n\nДом представляет собой характерный для того времени тип постройки: каменный низ и деревянный верх (полукаменный дом). Первый этаж выполнен из кирпича, а второй — в виде деревянного сруба. Такая конструкция считалась практичной: каменный низ обеспечивал долговечность и пожаробезопасность, а деревянный верх — комфортный микроклимат для проживания."
+ },
+ "4100": {
+  "id": 4100,
+  "name": "Западный служебный корпус",
+  "complex": false,
+  "address": "г. Москва, Малый Казенный переулок, дом 5, стр. 2",
+  "status": "READY",
+  "recoveryStatus": "PREPARATION",
+  "securityCategory": "FEDERAL_IMPORTANCE",
+  "type": "MONUMENT",
+  "constructionPeriod": "Конец XVIII - начало XIX вв.",
+  "condition": "SATISFACTORY",
+  "auctionPeriod": "$D2026-11-13T00:00:00.000Z",
+  "totalArea": 376.5,
+  "images": [
+   "image/dd78467f-ffea-4604-96b8-eb8b5e5ac2ea",
+   "image/1083af94-e46a-4ff3-b769-6ea3d920f640",
+   "image/9713e04b-757b-44f2-9add-d8df04cbb8f4",
+   "image/08770588-d907-404d-b542-e92bbc2d05e6",
+   "image/e3380c7b-3733-483f-a415-3fc2d79786a3"
+  ],
+  "parentOkn": {
+   "externalId": 4097,
+   "name": "Усадьба В.С.Нарышкина, П.Н.Ивашева; комплекс Александровской \"полицейской\" больницы",
+   "image": "image/1e1762cb-7cdd-4c31-b296-547a0ee70369",
+   "oknId": 4097
+  },
+  "relatedOkns": null,
+  "realEstateInfo": [
+   {
+    "id": "3fff95ad-2454-433a-b871-7f20e21d02a7",
+    "cadastralNumber": "77:01:0001029:1090",
+    "realEstateCost": 27788749.65,
+    "wallMaterial": "Кирпичные",
+    "realEstateRegDate": "2012-05-22",
+    "floors": "2"
+   }
+  ],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "FEDERAL",
+  "auctionInfo": null,
+  "oknInvestorInfo": null,
+  "roadmapInfo": null,
+  "agencyWork": true,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": "https://xn--e1adnd0h.xn--d1aqf.xn--p1ai/auctions/planned/585155/",
+  "egroknNum": "772310967920026",
+  "coordinateLatitude": 55.760498581,
+  "coordinateLongitude": 37.652806121,
+  "landPlotsParameters": [
+   {
+    "id": 557047,
+    "cadastralNumber": "77:01:0001029:62",
+    "totalArea": 1229,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "эксплуатации зданий историко-культурного назначения",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 46705957.38,
+    "landPlotRegDate": "2007-01-01",
+    "landPlotAdjacents": "77:01:0001029:4572; 77:01:0001029:87; 77:01:0001029:4555"
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "Конец XVIII - начало XIX вв.",
+   "owner": "ПАО ДОМ.РФ",
+   "status": "READY",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO",
+   "waterDisposal": "NO",
+   "waterSupply": "NO",
+   "heating": "NO",
+   "gasSupply": "NO"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "3b2a133c-74c4-4b0f-9abd-152f38ea8164",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 225094,
+    "publishedAt": "2026-03-18T19:25:25.867529",
+    "category": "OKN"
+   },
+   {
+    "id": "c02d587c-ad18-49bf-9e17-557b6c72825b",
+    "documentType": "TECHNICAL_CONDITION_REPORT",
+    "documentSize": 2746393,
+    "publishedAt": "2026-09-02T10:34:18.231537",
+    "category": "OKN"
+   },
+   {
+    "id": "2ff5db37-e6f2-4a16-b048-3cba7a8e901f",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 3572298,
+    "publishedAt": "2026-09-02T10:34:28.482541",
+    "category": "OKN"
+   },
+   {
+    "id": "8ec6f2fe-b174-4660-9ef5-78e9f928dac8",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 20880597,
+    "publishedAt": "2026-09-02T10:34:38.685019",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "Корпус был возведен в период с конца XVIII до начала XIX веков. \n\nОн строился как вспомогательное здание богатой городской усадьбы, принадлежавшей знатному роду Нарышкиных. Здание выполнено в формах классицизма. \n\nЗападный корпус вместе с Южным и Северным флигелями формировал закрытый хозяйственный двор усадьбы. \n\nС 1845 года здесь располагалась Полицейская больница для бесприютных, в которой Гааз жил и работал до самой смерти в 1853 году."
+ },
+ "4098": {
+  "id": 4098,
+  "name": "Южный служебный корпус",
+  "complex": false,
+  "address": "г. Москва, вн.тер.г. м.о. Басманный, пер. Малый Казенный, д. 5, стр. 1",
+  "status": "READY",
+  "recoveryStatus": "PREPARATION",
+  "securityCategory": "FEDERAL_IMPORTANCE",
+  "type": "MONUMENT",
+  "constructionPeriod": "Конец XVIII - первая половина XIX вв.",
+  "condition": "SATISFACTORY",
+  "auctionPeriod": "$D2026-11-13T00:00:00.000Z",
+  "totalArea": 273.2,
+  "images": [
+   "image/1083af94-e46a-4ff3-b769-6ea3d920f640",
+   "image/dd78467f-ffea-4604-96b8-eb8b5e5ac2ea",
+   "image/9713e04b-757b-44f2-9add-d8df04cbb8f4",
+   "image/08770588-d907-404d-b542-e92bbc2d05e6",
+   "image/e3380c7b-3733-483f-a415-3fc2d79786a3"
+  ],
+  "parentOkn": {
+   "externalId": 4097,
+   "name": "Усадьба В.С.Нарышкина, П.Н.Ивашева; комплекс Александровской \"полицейской\" больницы",
+   "image": "image/1e1762cb-7cdd-4c31-b296-547a0ee70369",
+   "oknId": 4097
+  },
+  "relatedOkns": null,
+  "realEstateInfo": [
+   {
+    "id": "cb256d1d-4aae-407a-80d8-28e3e71b3293",
+    "cadastralNumber": "77:01:0001029:1088",
+    "realEstateCost": 59139680.5,
+    "wallMaterial": "Кирпичные",
+    "realEstateRegDate": "2012-05-22",
+    "floors": "1"
+   }
+  ],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "FEDERAL",
+  "auctionInfo": null,
+  "oknInvestorInfo": null,
+  "roadmapInfo": null,
+  "agencyWork": true,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": "https://xn--e1adnd0h.xn--d1aqf.xn--p1ai/auctions/planned/585155/",
+  "egroknNum": "772310967920016",
+  "coordinateLatitude": 55.760415782,
+  "coordinateLongitude": 37.653098475,
+  "landPlotsParameters": [
+   {
+    "id": 557032,
+    "cadastralNumber": "77:01:0001029:62",
+    "totalArea": 1229,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "эксплуатации зданий историко-культурного назначения",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 46705957.38,
+    "landPlotRegDate": "2007-01-01",
+    "landPlotAdjacents": "77:01:0001029:4572; 77:01:0001029:87; 77:01:0001029:4555"
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "Конец XVIII - первая половина XIX вв.",
+   "owner": "ПАО ДОМ.РФ",
+   "status": "READY",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO",
+   "waterDisposal": "NO",
+   "waterSupply": "NO",
+   "heating": "NO",
+   "gasSupply": "NO"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "d701341e-253b-4722-b2e1-ce3b7965e53c",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 225094,
+    "publishedAt": "2026-03-18T19:10:29.159857",
+    "category": "OKN"
+   },
+   {
+    "id": "c0459e3c-d0bc-4478-a6fc-dc74e0e03c5d",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 20880597,
+    "publishedAt": "2026-09-02T10:35:35.462323",
+    "category": "OKN"
+   },
+   {
+    "id": "5d9b134e-9fb2-4336-be32-601867547a03",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 3572298,
+    "publishedAt": "2026-09-02T10:35:21.184929",
+    "category": "OKN"
+   },
+   {
+    "id": "7d3581c6-3766-40cf-b567-83123341fcc1",
+    "documentType": "TECHNICAL_CONDITION_REPORT",
+    "documentSize": 2746393,
+    "publishedAt": "2026-09-02T10:35:10.652138",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "Здание было возведено в период с конца XVIII века по первую половину XIX века. \nУсадьба исторически принадлежала знатному дворянскому роду Нарышкиных. \n\nВ XIX веке на территории владения также располагалась знаменитая больница, где жил и работал «святой доктор» Фёдор Петрович Гааз. В 1883 году Полицейскую больницу преобразовали в городскую больницу имени императора Александра III, предназначенную уже для состоятельных пациентов. \n\nКорпус представляет собой скромное кирпичное строение в стиле классицизма. Его фасады украшены лаконичными наличниками и профилированным карнизом, что характерно для вспомогательных усадебных построек той эпохи."
+ },
+ "4101": {
+  "id": 4101,
+  "name": "Хозяйственный корпус с конюшней",
+  "complex": false,
+  "address": "г. Москва, вн.тер.г. м.о. Басманный, пер. Малый Казенный, д. 5, стр. 4",
+  "status": "READY",
+  "recoveryStatus": "PREPARATION",
+  "securityCategory": "FEDERAL_IMPORTANCE",
+  "type": "MONUMENT",
+  "constructionPeriod": "XIX в.",
+  "condition": "SATISFACTORY",
+  "auctionPeriod": "$D2026-11-13T00:00:00.000Z",
+  "totalArea": 272.3,
+  "images": [
+   "image/e3380c7b-3733-483f-a415-3fc2d79786a3",
+   "image/dd78467f-ffea-4604-96b8-eb8b5e5ac2ea",
+   "image/1083af94-e46a-4ff3-b769-6ea3d920f640",
+   "image/9713e04b-757b-44f2-9add-d8df04cbb8f4",
+   "image/08770588-d907-404d-b542-e92bbc2d05e6"
+  ],
+  "parentOkn": {
+   "externalId": 4097,
+   "name": "Усадьба В.С.Нарышкина, П.Н.Ивашева; комплекс Александровской \"полицейской\" больницы",
+   "image": "image/1e1762cb-7cdd-4c31-b296-547a0ee70369",
+   "oknId": 4097
+  },
+  "relatedOkns": null,
+  "realEstateInfo": [
+   {
+    "id": "4eb2ee67-245c-4bac-b4cd-00094fa087b9",
+    "cadastralNumber": "77:01:0001029:1099",
+    "realEstateCost": 10750390.39,
+    "wallMaterial": "Смешанные",
+    "realEstateRegDate": "2012-05-22",
+    "floors": "2"
+   }
+  ],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "FEDERAL",
+  "auctionInfo": null,
+  "oknInvestorInfo": null,
+  "roadmapInfo": null,
+  "agencyWork": true,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": "https://xn--e1adnd0h.xn--d1aqf.xn--p1ai/auctions/585155/",
+  "egroknNum": "772310967920036",
+  "coordinateLatitude": 55.760722612,
+  "coordinateLongitude": 37.652956979,
+  "landPlotsParameters": [
+   {
+    "id": 556999,
+    "cadastralNumber": "77:01:0001029:4555",
+    "totalArea": 607,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "объекты размещения административно-управленческих учреждений (1.2.17)",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 24740767.63,
+    "landPlotRegDate": "2014-07-30",
+    "landPlotAdjacents": "77:01:0001029:62; 77:01:0001029:87; 77:01:0001029:59; 77:01:0001029:86; 77:01:0001029:114"
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "XIX в.",
+   "owner": "ПАО ДОМ.РФ",
+   "status": "READY",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO",
+   "waterDisposal": "NO",
+   "waterSupply": "NO",
+   "heating": "NO",
+   "gasSupply": "NO"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "add17b07-fd10-4c0d-9f3d-79ccd5972f1a",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 225094,
+    "publishedAt": "2026-03-18T19:33:45.872407",
+    "category": "OKN"
+   },
+   {
+    "id": "f9ede84b-8b3e-4e12-a809-5e603a1f7e11",
+    "documentType": "TECHNICAL_CONDITION_REPORT",
+    "documentSize": 2746393,
+    "publishedAt": "2026-09-02T10:36:07.341261",
+    "category": "OKN"
+   },
+   {
+    "id": "874d4f64-f24e-475a-a1be-4355a17aa811",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 3572298,
+    "publishedAt": "2026-09-02T10:36:13.978977",
+    "category": "OKN"
+   },
+   {
+    "id": "49232e5a-36b2-4247-bcf8-77f864533a87",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 20880597,
+    "publishedAt": "2026-09-02T10:36:24.417951",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "Корпус был возведен в период с конца XVIII до начала XIX веков. \n\nЗдание выполнено в формах классицизма. \n\nХарактерной особенностью фасада являются декоративные арочные ниши на первом этаже, которые имитируют проемы каретных сараев или конюшен, что подчеркивает первоначальное назначение постройки."
+ },
+ "4248": {
+  "id": 4248,
+  "name": "Руины хозяйственной постройки",
+  "complex": true,
+  "address": "г. Москва, вн.тер.г. муниципальный округ Краснопахорский, поселок Щапово, д. 7",
+  "status": "READY",
+  "recoveryStatus": "PREPARATION",
+  "securityCategory": "REGIONAL_IMPORTANCE",
+  "type": "MONUMENT",
+  "constructionPeriod": "Конец XIX в.",
+  "condition": "UNSATISFACTORY",
+  "auctionPeriod": "$D2026-09-02T00:00:00.000Z",
+  "totalArea": 115.6,
+  "images": [
+   "image/2cc56213-e842-4632-94dd-70dfff94dd3b"
+  ],
+  "parentOkn": {
+   "externalId": 4103,
+   "name": "Усадьба \"Щапово\"",
+   "image": "image/d8ef7d5e-a6e5-4058-920f-465dc1070d21",
+   "oknId": 4103
+  },
+  "relatedOkns": null,
+  "realEstateInfo": [
+   {
+    "id": "fb812b80-7bfd-4f88-89af-224d9e00b045",
+    "cadastralNumber": "77:22:0020207:51",
+    "realEstateCost": 3031635.43,
+    "wallMaterial": "Кирпичные",
+    "realEstateRegDate": "2013-08-02",
+    "floors": "2"
+   }
+  ],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "RF_SUBJECT",
+  "auctionInfo": null,
+  "oknInvestorInfo": null,
+  "roadmapInfo": null,
+  "agencyWork": false,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": null,
+  "egroknNum": "771710804490085",
+  "coordinateLatitude": 55.415993,
+  "coordinateLongitude": 37.40486,
+  "landPlotsParameters": [
+   {
+    "id": 556591,
+    "cadastralNumber": "77:22:0020207:1246",
+    "totalArea": 69,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "Историко-культурная деятельность (9.3).",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 100130.73,
+    "landPlotRegDate": "2025-04-02",
+    "landPlotAdjacents": null
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "Конец XIX в.",
+   "owner": "г. Москва",
+   "status": "READY",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO",
+   "waterDisposal": "NO",
+   "waterSupply": "NO",
+   "heating": "NO",
+   "gasSupply": "NO"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "b9d38b97-3d35-4740-87c0-d2cf0c1e56c1",
+    "documentType": "TECHNICAL_CONDITION_REPORT",
+    "documentSize": 2143392,
+    "publishedAt": "2026-08-20T10:56:01.948817",
+    "category": "OKN"
+   },
+   {
+    "id": "eec64ef1-ea75-4340-8d52-528f4c660e05",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 2840388,
+    "publishedAt": "2026-08-20T10:56:13.796613",
+    "category": "OKN"
+   },
+   {
+    "id": "b6a2c8d2-c963-4f54-9ef1-7a6fa8921370",
+    "documentType": "UNSTATISFACTORY_CONDITION_DECISION",
+    "documentSize": 2247508,
+    "publishedAt": "2026-08-20T10:57:03.375322",
+    "category": "OKN"
+   },
+   {
+    "id": "c1563de0-6dc1-4d0f-86f4-a8f8f1c46279",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 1834546,
+    "publishedAt": "2026-08-20T10:56:21.037877",
+    "category": "OKN"
+   },
+   {
+    "id": "7bb4a9ff-044a-4ca9-925c-0bcd8c4bbdff",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 5359143,
+    "publishedAt": "2026-04-16T10:16:07.45914",
+    "category": "OKN"
+   },
+   {
+    "id": "53ccf6f7-d75e-4a34-bdbb-685a6f56a8d6",
+    "documentType": "OBJECT_PASSPORT",
+    "documentSize": 1648693,
+    "publishedAt": "2026-08-20T10:56:33.643085",
+    "category": "OKN"
+   },
+   {
+    "id": "995178be-3354-4a1f-b4ab-9635a32a6f6b",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 4080294,
+    "publishedAt": "2026-08-20T10:55:48.108678",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "На этом месте  исторически располагалась одна из служебных построек усадебного комплекса. В разные годы здесь могли находиться молочная (где делали сливки и масло), конюшня и ледник, обеспечивавшие нужды богатого имения и организованной здесь сельскохозяйственной школы."
+ },
+ "4103": {
+  "id": 4103,
+  "name": "Усадьба \"Щапово\"",
+  "complex": true,
+  "address": "г. Москва, поселение Щаповское, поселок Щапово, д. 2, д. 13; деревня Александрово, д. 8; поселок Щапово, д. 47, стр. 1, 2, 3, 4; д. 7",
+  "status": "READY",
+  "recoveryStatus": "PREPARATION",
+  "securityCategory": "REGIONAL_IMPORTANCE",
+  "type": "ENSEMBLE",
+  "constructionPeriod": "Конец XIX",
+  "condition": "UNSATISFACTORY",
+  "auctionPeriod": "$D2026-09-02T00:00:00.000Z",
+  "totalArea": 792.2,
+  "images": [
+   "image/d8ef7d5e-a6e5-4058-920f-465dc1070d21"
+  ],
+  "parentOkn": null,
+  "relatedOkns": [
+   {
+    "name": "Каретный двор",
+    "status": "READY",
+    "image": "image/f1b17772-b208-4e37-9388-d8327862f90e",
+    "oknId": 3529
+   },
+   {
+    "name": "Склад столовых продуктов",
+    "status": "READY",
+    "image": "image/0ef820cd-8d7c-42a6-b93c-66ae31347656",
+    "oknId": 3531
+   },
+   {
+    "name": "Кузница",
+    "status": "READY",
+    "image": "image/6e316e5b-6f2d-42c5-a500-bc1e8ff0796e",
+    "oknId": 3530
+   },
+   {
+    "name": "Руины хозяйственной постройки",
+    "status": "READY",
+    "image": "image/2cc56213-e842-4632-94dd-70dfff94dd3b",
+    "oknId": 4248
+   },
+   {
+    "name": "Дом управляющего",
+    "status": "READY",
+    "image": "image/a9ed963b-f8c3-4ba1-9171-17261cc53dd7",
+    "oknId": 3532
+   }
+  ],
+  "realEstateInfo": [],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "RF_SUBJECT",
+  "auctionInfo": null,
+  "oknInvestorInfo": null,
+  "roadmapInfo": null,
+  "agencyWork": false,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": null,
+  "egroknNum": "771720804490005",
+  "coordinateLatitude": 55.416537,
+  "coordinateLongitude": 37.404719,
+  "landPlotsParameters": [
+   {
+    "id": 556563,
+    "cadastralNumber": "77:22:0020207:1246",
+    "totalArea": 69,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "Историко-культурная деятельность (9.3).",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 100130.73,
+    "landPlotRegDate": "2025-04-02",
+    "landPlotAdjacents": null
+   },
+   {
+    "id": 556564,
+    "cadastralNumber": "77:22:0020207:783",
+    "totalArea": 4991,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "для использования и обслуживания объектов недвижимости",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 6754220.48,
+    "landPlotRegDate": "2016-10-03",
+    "landPlotAdjacents": "77:22:0020207:782"
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "Конец XIX",
+   "owner": "город Москва",
+   "status": "READY",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO",
+   "waterDisposal": "NO",
+   "waterSupply": "NO",
+   "heating": "NO",
+   "gasSupply": "NO"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "01bf751a-ec08-40d0-ae70-5b090483c8e5",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 5072150,
+    "publishedAt": "2026-03-19T11:25:50.338793",
+    "category": "OKN"
+   },
+   {
+    "id": "440138f1-e2b5-4f69-b591-84926ce9d4f7",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 4080294,
+    "publishedAt": "2026-03-19T11:25:51.013132",
+    "category": "OKN"
+   },
+   {
+    "id": "dca164ea-8da3-4bc0-9328-e4247b1ba3c7",
+    "documentType": "TECHNICAL_CONDITION_REPORT",
+    "documentSize": 7476691,
+    "publishedAt": "2026-03-19T11:25:46.576629",
+    "category": "OKN"
+   },
+   {
+    "id": "c2681d84-e14b-4dbc-abdd-7fbef888c9ed",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 2840388,
+    "publishedAt": "2026-08-24T09:08:12.476154",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "Усадьба была возведена в конце XIX века.  История усадьбы неразрывно связана с последним владельцем усадьбы — текстильным фабрикантом и меценатом Ильей Васильевичем Щаповым, который приобрел имение в 1889 году.  При нем усадьба была полностью перестроена и превращена в образцовое хозяйство. \n\nУсадьба включает каретный сарай, конюшни и сельскохозяйственная школа, кузнецу и сарай-ледник."
+ },
+ "4097": {
+  "id": 4097,
+  "name": "Усадьба В.С.Нарышкина, П.Н.Ивашева; комплекс Александровской \"полицейской\" больницы",
+  "complex": false,
+  "address": "г. Москва, Малый Казенный пер., д. 5, стр. 1, 2, 3, 4, 5",
+  "status": "READY",
+  "recoveryStatus": "PREPARATION",
+  "securityCategory": "FEDERAL_IMPORTANCE",
+  "type": "ENSEMBLE",
+  "constructionPeriod": "Конец XVIII - XX в.",
+  "condition": "UNSATISFACTORY",
+  "auctionPeriod": "$D2026-07-01T00:00:00.000Z",
+  "totalArea": 929.6,
+  "images": [
+   "image/1e1762cb-7cdd-4c31-b296-547a0ee70369"
+  ],
+  "parentOkn": null,
+  "relatedOkns": [
+   {
+    "name": "Южный служебный корпус",
+    "status": "READY",
+    "image": "image/1083af94-e46a-4ff3-b769-6ea3d920f640",
+    "oknId": 4098
+   },
+   {
+    "name": "Западный служебный корпус",
+    "status": "READY",
+    "image": "image/dd78467f-ffea-4604-96b8-eb8b5e5ac2ea",
+    "oknId": 4100
+   },
+   {
+    "name": "Хозяйственный корпус с конюшней",
+    "status": "READY",
+    "image": "image/e3380c7b-3733-483f-a415-3fc2d79786a3",
+    "oknId": 4101
+   }
+  ],
+  "realEstateInfo": [],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "FEDERAL",
+  "auctionInfo": null,
+  "oknInvestorInfo": null,
+  "roadmapInfo": null,
+  "agencyWork": true,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": "https://xn--e1adnd0h.xn--d1aqf.xn--p1ai/auctions/planned/585155/",
+  "egroknNum": "771420967920006",
+  "coordinateLatitude": 55.760444,
+  "coordinateLongitude": 37.653209,
+  "landPlotsParameters": [
+   {
+    "id": 556326,
+    "cadastralNumber": "77:01:0001029:62",
+    "totalArea": 1229,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "эксплуатации зданий историко-культурного назначения",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 46705957.38,
+    "landPlotRegDate": "2007-01-01",
+    "landPlotAdjacents": "77:01:0001029:4572; 77:01:0001029:87; 77:01:0001029:4555"
+   },
+   {
+    "id": 556327,
+    "cadastralNumber": "77:01:0001029:87",
+    "totalArea": 1790,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "благоустройства территории",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 14534.8,
+    "landPlotRegDate": "2007-01-01",
+    "landPlotAdjacents": "77:01:0001029:62; 77:01:0001029:4572; 77:01:0001029:86; 77:01:0001029:40; 77:01:0001029:4555; 77:01:0001029:98"
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "Конец XVIII - XX в.",
+   "owner": "ПАО ДОМ.РФ",
+   "status": "READY",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO",
+   "waterDisposal": "NO",
+   "waterSupply": "NO",
+   "heating": "NO",
+   "gasSupply": "NO"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "196c24d8-89bf-4e39-9bdb-ca896f89c59e",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 225094,
+    "publishedAt": "2026-03-18T18:58:28.96598",
+    "category": "OKN"
+   },
+   {
+    "id": "c91b1a88-333e-4c03-a8f5-b5354ff60898",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 3572298,
+    "publishedAt": "2026-08-27T11:25:53.153209",
+    "category": "OKN"
+   },
+   {
+    "id": "15be34af-437d-4b40-87f7-4a4bdc719229",
+    "documentType": "TECHNICAL_CONDITION_REPORT",
+    "documentSize": 26947878,
+    "publishedAt": "2026-08-27T11:25:45.516985",
+    "category": "OKN"
+   },
+   {
+    "id": "b42876db-2327-41e7-a3b7-88e0282fd841",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 20880597,
+    "publishedAt": "2026-08-27T11:26:04.278937",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "Данный объект является частью ансамбля памятников истории и культуры регионального значения и неразрывно связан с творчеством выдающегося русского скульптора Николая Андреевича Андреева (автора памятника Гоголю на Никитском бульваре).\n\nОбъект представляет собой образец малых архитектурных форм начала XX века, выполненных в стиле модерн с элементами символизма, что характерно для работ Андреева того периода.\n\nС 1845 года здесь располагалась Полицейская больница для бесприютных, в которой Гааз жил и работал до самой смерти в 1853 году."
+ },
+ "3764": {
+  "id": 3764,
+  "name": "Усадьба",
+  "complex": false,
+  "address": "г. Москва, поселение Филимонковское, поселок Филимонки",
+  "status": "READY",
+  "recoveryStatus": "PREPARATION",
+  "securityCategory": "FEDERAL_IMPORTANCE",
+  "type": "MONUMENT",
+  "constructionPeriod": "1801 г.",
+  "condition": "UNSATISFACTORY",
+  "auctionPeriod": "$D2026-10-01T00:00:00.000Z",
+  "totalArea": 797.2,
+  "images": [
+   "image/fb851ae7-7cfb-4df9-801f-4f155d0651c8",
+   "image/1ef1d834-5feb-4cc4-95de-4ba320d36279",
+   "image/13029fd4-7f4a-4680-914c-e6f628a5decf"
+  ],
+  "parentOkn": null,
+  "relatedOkns": null,
+  "realEstateInfo": [
+   {
+    "id": "292184a4-3b01-499c-91a0-a37cb88415b1",
+    "cadastralNumber": "50:21:0150303:303",
+    "realEstateCost": 19684040.21,
+    "wallMaterial": null,
+    "realEstateRegDate": "2013-01-08",
+    "floors": "3"
+   },
+   {
+    "id": "78b07476-9e1f-454e-af46-9a90af0c3057",
+    "cadastralNumber": "77:17:0150309:76",
+    "realEstateCost": 29437797.09,
+    "wallMaterial": null,
+    "realEstateRegDate": "2013-04-30",
+    "floors": null
+   }
+  ],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "FEDERAL",
+  "auctionInfo": null,
+  "oknInvestorInfo": null,
+  "roadmapInfo": null,
+  "agencyWork": true,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": "https://земля.дом.рф/auctions/planned/590273/",
+  "egroknNum": "771720798950006",
+  "coordinateLatitude": 55.554558,
+  "coordinateLongitude": 37.353194,
+  "landPlotsParameters": [
+   {
+    "id": 555652,
+    "cadastralNumber": "77:17:0000000:9071",
+    "totalArea": 55069,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "культурное развитие (3.6) (земельные участки, предназначенные для размещения административных зданий, объектов образования, науки, здравоохранения и социального обеспечения, физической культуры и спорта, культуры, искусства, религии (1.2.17))",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 105482466.74,
+    "landPlotRegDate": "2014-12-02",
+    "landPlotAdjacents": "77:17:0150303:23"
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "1801 г.",
+   "owner": "ПАО ДОМ.РФ",
+   "status": "READY",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO",
+   "waterDisposal": "NO",
+   "waterSupply": "NO",
+   "heating": "NO",
+   "gasSupply": "NO"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "a234d57e-bd48-4ef1-8c0d-0137cb087c89",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 809318,
+    "publishedAt": "2026-08-27T11:27:37.483047",
+    "category": "OKN"
+   },
+   {
+    "id": "b244a82b-c00a-4ca7-9a98-10dbddfcd2d2",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 19061654,
+    "publishedAt": "2026-02-27T14:21:43.974418",
+    "category": "OKN"
+   },
+   {
+    "id": "f4dc0241-8183-41e9-b5ba-71cbeb14690e",
+    "documentType": "TECHNICAL_CONDITION_REPORT",
+    "documentSize": 19061676,
+    "publishedAt": "2026-02-27T14:22:12.407319",
+    "category": "OKN"
+   },
+   {
+    "id": "88526639-3e99-4f2d-a7b5-48fb4ffa6814",
+    "documentType": "OBJECT_PASSPORT",
+    "documentSize": 19061609,
+    "publishedAt": "2026-02-27T14:22:18.548674",
+    "category": "OKN"
+   },
+   {
+    "id": "1d05baa8-4245-4c84-af3e-fa38971f5b76",
+    "documentType": "UNSTATISFACTORY_CONDITION_DECISION",
+    "documentSize": 1643971,
+    "publishedAt": "2026-05-06T09:17:01.008355",
+    "category": "OKN"
+   },
+   {
+    "id": "b774a294-2591-42d4-bcac-af19390dcdca",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 6215589,
+    "publishedAt": "2026-08-27T11:27:46.458151",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "Усадьба Филимонки начала XIX века (известна с 1801 года) была выстроена генерал-майором Дмитрием Васильевичем Измайловым. Он построил дом в стиле классицизма, разбил липовый парк и создал на реке каскад прудов с островами.\n\nВ начале XIX века Д.В. Измайлов полностью перестроил ветхую усадьбу Филимонки, возведя не очень большой, но солидного вида ампирный особняк в два этажа. Дом Измайлова получился внушительным — с массивными стенами, широкими фронтонами, мини-колоннадой в два этажа и бельведером. Выглядел он, как «вырубленный из скалы», хотя на самом деле был деревянным. В таком виде имение к середине XIX века досталось Святополк-Четвертинским. Главный дом усадьбы был утрачен в ходе пожара в 2006 году."
+ },
+ "1498": {
+  "id": 1498,
+  "name": "Здание бывшей Александровской больницы",
+  "complex": false,
+  "address": "г. Москва, Казенный М. пер., д.5 А, стр.1",
+  "status": "NO_SOLUTION",
+  "recoveryStatus": "PLACING",
+  "securityCategory": "REGIONAL_IMPORTANCE",
+  "type": "MONUMENT",
+  "constructionPeriod": "1840 г.",
+  "condition": "UNSATISFACTORY",
+  "auctionPeriod": null,
+  "totalArea": 1183.7,
+  "images": [
+   "image/d822c8a1-0d19-423b-9f6e-20ed2a897308"
+  ],
+  "parentOkn": null,
+  "relatedOkns": null,
+  "realEstateInfo": [
+   {
+    "id": "23ccf824-1f53-4473-ba28-14c353b26e50",
+    "cadastralNumber": "77:01:0001029:1109",
+    "realEstateCost": 70071749.31,
+    "wallMaterial": "Кирпичные",
+    "realEstateRegDate": "2012-05-22",
+    "floors": "2"
+   }
+  ],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "FEDERAL",
+  "auctionInfo": null,
+  "oknInvestorInfo": null,
+  "roadmapInfo": null,
+  "agencyWork": false,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": "https://xn--e1adnd0h.xn--d1aqf.xn--p1ai/auctions/?okn=Y&page=6&page-size=16",
+  "egroknNum": "771510309840005",
+  "coordinateLatitude": 55.76155,
+  "coordinateLongitude": 37.65543,
+  "landPlotsParameters": [
+   {
+    "id": 554970,
+    "cadastralNumber": "77:01:0001029:1",
+    "totalArea": 14647,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "эксплуатации зданий под научно-исследовательские цели и благоустройства территории",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 535004084.91,
+    "landPlotRegDate": "2007-01-01",
+    "landPlotAdjacents": "77:01:0001029:44; 77:01:0001029:61; 77:01:0001029:31; 77:01:0001029:91; 77:01:0001029:40; 77:01:0001029:5332"
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "1840 г.",
+   "owner": "Федеральное государственное бюджетное научное учреждение \"Научно-исследовательский институт вакцин и сывороток им. И.И. Мечникова\"",
+   "status": "NO_SOLUTION",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO",
+   "waterDisposal": "NO",
+   "waterSupply": "NO",
+   "heating": "NO",
+   "gasSupply": "NO"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "6dc38e63-af2e-4dec-863c-cac897ac47c9",
+    "documentType": "OBJECT_PASSPORT",
+    "documentSize": 3416492,
+    "publishedAt": "2026-08-20T11:04:21.137325",
+    "category": "OKN"
+   },
+   {
+    "id": "222a410e-ab9b-4c68-aa10-148fbd5abcf6",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 3625418,
+    "publishedAt": "2026-03-13T15:01:22.728939",
+    "category": "OKN"
+   },
+   {
+    "id": "4ba1da33-fd95-4a41-a015-21a794d16c43",
+    "documentType": "TECHNICAL_CONDITION_REPORT",
+    "documentSize": 13204072,
+    "publishedAt": "2026-03-13T15:01:40.923447",
+    "category": "OKN"
+   },
+   {
+    "id": "31084690-ac21-405a-8009-b1c6c3739f79",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 2481564,
+    "publishedAt": "2026-03-13T15:02:00.812803",
+    "category": "OKN"
+   },
+   {
+    "id": "54657e35-0787-4b76-b06e-efdf9b93a742",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 4280232,
+    "publishedAt": "2026-03-13T15:02:18.177053",
+    "category": "OKN"
+   },
+   {
+    "id": "ffc2ebee-a37b-4c7b-a50c-b18700075e7a",
+    "documentType": "UNSTATISFACTORY_CONDITION_DECISION",
+    "documentSize": 1675561,
+    "publishedAt": "2026-05-06T09:01:39.474108",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "Одноэтажное кирпичное с подвалом и мезонином здание, расположенное вдоль красной линии Малого Казенного переулка. Корпус является одним из основных элементов бывшего больничного комплекса Александровской больницы, сложившегося к концу XIX века. В 1886 г. здесь была открыта «станция для лечения людей, укушенных бешенными животными, по способу Пастера», которая первоначально располагалась в главном корпусе больницы."
+ },
+ "4336": {
+  "id": 4336,
+  "name": "Ограда со сторожкой и пилонами ворот",
+  "complex": false,
+  "address": "г. Москва, вн.тер.г. м.о. Басманный, пер. Малый Казенный, д. 5, стр. 3, ограда вдоль Малого Казенного переулка в северо-восточном направлении от строения 1 дома 5 по Малому Казенному переулку",
+  "status": "READY",
+  "recoveryStatus": "PREPARATION",
+  "securityCategory": "FEDERAL_IMPORTANCE",
+  "type": "MONUMENT",
+  "constructionPeriod": "1820-е гг.",
+  "condition": "SATISFACTORY",
+  "auctionPeriod": "$D2026-11-13T00:00:00.000Z",
+  "totalArea": 7.6,
+  "images": [
+   "image/1083af94-e46a-4ff3-b769-6ea3d920f640",
+   "image/dd78467f-ffea-4604-96b8-eb8b5e5ac2ea",
+   "image/9713e04b-757b-44f2-9add-d8df04cbb8f4",
+   "image/08770588-d907-404d-b542-e92bbc2d05e6",
+   "image/e3380c7b-3733-483f-a415-3fc2d79786a3"
+  ],
+  "parentOkn": null,
+  "relatedOkns": null,
+  "realEstateInfo": [
+   {
+    "id": "d0888860-5dc4-4538-9df7-352dec53cc64",
+    "cadastralNumber": "77:01:0001029:1095",
+    "realEstateCost": 533384.72,
+    "wallMaterial": "Кирпичные",
+    "realEstateRegDate": "2012-05-22",
+    "floors": "1"
+   }
+  ],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "FEDERAL",
+  "auctionInfo": null,
+  "oknInvestorInfo": null,
+  "roadmapInfo": null,
+  "agencyWork": true,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": "https://xn--e1adnd0h.xn--d1aqf.xn--p1ai/auctions/planned/585155/",
+  "egroknNum": "772310967920066",
+  "coordinateLatitude": 55.76058,
+  "coordinateLongitude": 37.653559,
+  "landPlotsParameters": [
+   {
+    "id": 554957,
+    "cadastralNumber": "77:01:0001029:4572",
+    "totalArea": 13,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "склады (6.9) (земельные участки, предназначенные для размещения производственных и административных зданий, строений, сооружений промышленности, коммунального хозяйства, материально-технического, продовольственного снабжения, сбыта и заготовок (1.2.9)); историко-культурная деятельность (9.3) (земельные участки, предназначенные для размещения административных зданий, объектов образования, науки, здравоохранения и социального обеспечения, физической культуры и спорта, культуры, искусства, религии (1.2.17))",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 638360.06,
+    "landPlotRegDate": "2015-02-27",
+    "landPlotAdjacents": "77:01:0001029:62; 77:01:0001029:87"
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "1820-е гг.",
+   "owner": "ПАО ДОМ.РФ",
+   "status": "READY",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO_INFORMATION",
+   "waterDisposal": "NO_INFORMATION",
+   "waterSupply": "NO_INFORMATION",
+   "heating": "NO_INFORMATION",
+   "gasSupply": "NO_INFORMATION"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "9a42d112-6a4a-4f7a-b30d-55e2199141df",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 1235542,
+    "publishedAt": "2026-08-24T08:27:02.639486",
+    "category": "OKN"
+   },
+   {
+    "id": "27e19077-a6c0-42cf-a414-36aefdc1dfda",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 20880597,
+    "publishedAt": "2026-08-24T08:27:30.733154",
+    "category": "OKN"
+   },
+   {
+    "id": "72e64b78-317f-41a1-8eec-82b29b92b334",
+    "documentType": "TECHNICAL_CONDITION_REPORT",
+    "documentSize": 2426367,
+    "publishedAt": "2026-08-24T08:27:09.177104",
+    "category": "OKN"
+   },
+   {
+    "id": "a1d83ddf-ba86-4585-9668-3cb92fc733f7",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 3572298,
+    "publishedAt": "2026-08-24T08:27:21.761701",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "В 1820-е годы сформировались современные границы и фронтальная линия усадьбы вдоль переулка: именно тогда была возведена капитальная каменная ограда с пилонами ворот и небольшим зданием усадебной сторожки (современное строение 3). Ограда и пилоны выполняли как защитную, так и репрезентативную парадную функцию, отделяя парадный двор (курдонер) от линии улицы."
+ },
+ "3530": {
+  "id": 3530,
+  "name": "Кузница",
+  "complex": true,
+  "address": "г. Москва, вн.тер.г. муниципальный округ Краснопахорский, поселок Щапово, д. 47, стр. 2",
+  "status": "READY",
+  "recoveryStatus": "PREPARATION",
+  "securityCategory": "REGIONAL_IMPORTANCE",
+  "type": "MONUMENT",
+  "constructionPeriod": "Конец XIX в.",
+  "condition": "UNSATISFACTORY",
+  "auctionPeriod": "$D2026-07-01T00:00:00.000Z",
+  "totalArea": 22.5,
+  "images": [
+   "image/6e316e5b-6f2d-42c5-a500-bc1e8ff0796e"
+  ],
+  "parentOkn": {
+   "externalId": 4103,
+   "name": "Усадьба \"Щапово\"",
+   "image": "image/d8ef7d5e-a6e5-4058-920f-465dc1070d21",
+   "oknId": 4103
+  },
+  "relatedOkns": null,
+  "realEstateInfo": [
+   {
+    "id": "c9c2b53b-2a2d-4511-b157-b41cb72fe8b9",
+    "cadastralNumber": "77:22:0020207:483",
+    "realEstateCost": 1061008.65,
+    "wallMaterial": "Кирпичные",
+    "realEstateRegDate": "2014-04-18",
+    "floors": "1"
+   }
+  ],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "RF_SUBJECT",
+  "auctionInfo": null,
+  "oknInvestorInfo": null,
+  "roadmapInfo": null,
+  "agencyWork": false,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": null,
+  "egroknNum": "771710804490095",
+  "coordinateLatitude": 55.4166403469,
+  "coordinateLongitude": 37.4041401256,
+  "landPlotsParameters": [
+   {
+    "id": 554791,
+    "cadastralNumber": "77:22:0020207:783",
+    "totalArea": 4991,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "для использования и обслуживания объектов недвижимости",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 6754220.48,
+    "landPlotRegDate": "2016-10-03",
+    "landPlotAdjacents": "77:22:0020207:782"
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "Конец XIX в.",
+   "owner": "Город Москва",
+   "status": "READY",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO",
+   "waterDisposal": "NO",
+   "waterSupply": "NO",
+   "heating": "NO",
+   "gasSupply": "NO"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "f8343814-fcf9-4562-8842-e1b48e76dbd5",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 254436,
+    "publishedAt": "2025-11-11T11:47:47.352415",
+    "category": "OKN"
+   },
+   {
+    "id": "b3a2ed45-4e18-4ba4-98b9-3dba8310a6e7",
+    "documentType": "TECHNICAL_CONDITION_REPORT",
+    "documentSize": 8031641,
+    "publishedAt": "2026-03-17T13:16:15.720692",
+    "category": "OKN"
+   },
+   {
+    "id": "dd4234e0-0898-4f42-9d83-81ad6124bdc0",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 4080294,
+    "publishedAt": "2026-03-17T13:16:37.020571",
+    "category": "OKN"
+   },
+   {
+    "id": "28f46183-d984-49ca-ad6a-e0628bb80899",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 2840388,
+    "publishedAt": "2026-08-20T10:59:18.36333",
+    "category": "OKN"
+   },
+   {
+    "id": "490ba0d8-be03-461f-a868-7dd5152c6325",
+    "documentType": "OBJECT_PASSPORT",
+    "documentSize": 12458697,
+    "publishedAt": "2026-08-20T10:59:36.880409",
+    "category": "OKN"
+   },
+   {
+    "id": "ce917c4b-1b81-4443-8adf-d5fe977d8fa3",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 1834546,
+    "publishedAt": "2026-08-20T10:59:26.066354",
+    "category": "OKN"
+   },
+   {
+    "id": "8a6f4aff-581b-408b-8156-de7cb91e0f1a",
+    "documentType": "UNSTATISFACTORY_CONDITION_DECISION",
+    "documentSize": 1319669,
+    "publishedAt": "2026-08-20T10:59:48.623755",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "Дата постройки усадьбы, в том числе и кузницы, конец XIX века. История здания неразрывно связана с последним владельцем усадьбы — текстильным фабрикантом и меценатом Ильей Васильевичем Щаповым, который приобрел имение в 1889 году. \n\nПри нем усадьба была полностью перестроена и превращена в образцовое хозяйство. Кузница обеспечивала нужды богатого имения, где также располагались каретный сарай, конюшни и сельскохозяйственная школа."
+ },
+ "3531": {
+  "id": 3531,
+  "name": "Склад столовых продуктов",
+  "complex": true,
+  "address": "г. Москва, вн.тер.г. муниципальный округ Краснопахорский, поселок Щапово, д. 47, стр. 3",
+  "status": "READY",
+  "recoveryStatus": "PREPARATION",
+  "securityCategory": "REGIONAL_IMPORTANCE",
+  "type": "MONUMENT",
+  "constructionPeriod": "Конец XIX в.",
+  "condition": "UNSATISFACTORY",
+  "auctionPeriod": "$D2026-07-01T00:00:00.000Z",
+  "totalArea": 37.8,
+  "images": [
+   "image/0ef820cd-8d7c-42a6-b93c-66ae31347656"
+  ],
+  "parentOkn": {
+   "externalId": 4103,
+   "name": "Усадьба \"Щапово\"",
+   "image": "image/d8ef7d5e-a6e5-4058-920f-465dc1070d21",
+   "oknId": 4103
+  },
+  "relatedOkns": null,
+  "realEstateInfo": [
+   {
+    "id": "850897ee-e27b-44e3-9120-21b120133604",
+    "cadastralNumber": "77:22:0020207:40",
+    "realEstateCost": 771521.06,
+    "wallMaterial": "Кирпичные",
+    "realEstateRegDate": "2013-07-26",
+    "floors": "1"
+   }
+  ],
+  "actualUse": "NOT_USED",
+  "photosAfter": [],
+  "photosBefore": [],
+  "ownType": "RF_SUBJECT",
+  "auctionInfo": null,
+  "oknInvestorInfo": null,
+  "roadmapInfo": null,
+  "agencyWork": false,
+  "anchorSettlement": true,
+  "goldenRing": true,
+  "landDomUrl": null,
+  "egroknNum": "771710804490045",
+  "coordinateLatitude": 55.416505,
+  "coordinateLongitude": 37.4051,
+  "landPlotsParameters": [
+   {
+    "id": 554789,
+    "cadastralNumber": "77:22:0020207:783",
+    "totalArea": 4991,
+    "category": "SETTLEMENTS_LANDS",
+    "typeOfPermittedUse": "для использования и обслуживания объектов недвижимости",
+    "forestObjFlg": false,
+    "waterObjFlg": false,
+    "landPlotCost": 6754220.48,
+    "landPlotRegDate": "2016-10-03",
+    "landPlotAdjacents": "77:22:0020207:782"
+   }
+  ],
+  "realEstateParameters": {
+   "purpose": null,
+   "actualUse": "NOT_USED",
+   "constructionPeriod": "Конец XIX в.",
+   "owner": "Город Москва",
+   "status": "READY",
+   "realEstateInfo": "$5:props:okn:realEstateInfo"
+  },
+  "engineeringParameters": {
+   "electricitySupply": "NO",
+   "waterDisposal": "NO",
+   "waterSupply": "NO",
+   "heating": "NO",
+   "gasSupply": "NO"
+  },
+  "govSecurityAgencyInfo": {
+   "id": 75,
+   "name": "Департамент культурного наследия города Москвы",
+   "address": "115035, г. Москва, ул. Пятницкая, д.19",
+   "phone": "8 (495) 951-06-03, 953-23-24",
+   "email": "dkn_info@mos.ru",
+   "region": "город Москва",
+   "regionCodeFias": "77"
+  },
+  "documentsInfo": [
+   {
+    "id": "306153fc-5307-4e9a-8dde-45d43b0a696c",
+    "documentType": "SECURITY_OBLIGATION",
+    "documentSize": 5192918,
+    "publishedAt": "2025-11-11T10:31:48.803235",
+    "category": "OKN"
+   },
+   {
+    "id": "7e9b8583-63a5-4c72-a9c5-848f0f0ca761",
+    "documentType": "PROTECTION_SUBJECT",
+    "documentSize": 4080294,
+    "publishedAt": "2026-03-17T13:25:41.893497",
+    "category": "OKN"
+   },
+   {
+    "id": "c3012cd2-eb64-4700-a46d-24ddd0912eb4",
+    "documentType": "TECHNICAL_CONDITION_REPORT",
+    "documentSize": 8214399,
+    "publishedAt": "2026-03-17T13:26:11.088116",
+    "category": "OKN"
+   },
+   {
+    "id": "89e24ce5-b651-41e7-a5ba-df3ec339778c",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 1834546,
+    "publishedAt": "2026-08-20T10:58:16.99111",
+    "category": "OKN"
+   },
+   {
+    "id": "84c5e202-d40c-4681-8ced-1724b4103871",
+    "documentType": "UNSTATISFACTORY_CONDITION_DECISION",
+    "documentSize": 1325817,
+    "publishedAt": "2026-08-20T10:58:37.211723",
+    "category": "OKN"
+   },
+   {
+    "id": "424779eb-2790-41dd-b934-8bcf88e6a144",
+    "documentType": "APPROVAL_TERRITORY_BOUNDARIES",
+    "documentSize": 2840388,
+    "publishedAt": "2026-08-20T10:58:09.069218",
+    "category": "OKN"
+   },
+   {
+    "id": "9ba99cc4-5cf0-48c5-b60b-9fc4a6e08ebe",
+    "documentType": "OBJECT_PASSPORT",
+    "documentSize": 1534600,
+    "publishedAt": "2026-08-20T10:58:29.008964",
+    "category": "OKN"
+   }
+  ],
+  "roadmapDocumentsInfo": [],
+  "quarterlyReport": [],
+  "objectHistory": "Дата постройки: Конец XIX века. \n\nВ период расцвета усадьбы при меценате Илье Васильевиче Щапове здание использовалось как глубокий ледник. В те времена это был высокотехнологичный «холодильник»: зимой внутрь заносили лед с местных прудов, что позволяло хранить скоропортящиеся продукты. \n\nЗдание выполнено из красного кирпича и побелено."
+ }
+}
