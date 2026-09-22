@@ -25,6 +25,8 @@ import app.papersky.weather.ui.places.PlacesScreen
 import app.papersky.weather.ui.places.PlacesViewModel
 import app.papersky.weather.ui.settings.SettingsScreen
 import app.papersky.weather.ui.settings.SettingsViewModel
+import app.papersky.weather.ui.widgets.WidgetStudioScreen
+import app.papersky.weather.ui.widgets.WidgetStudioViewModel
 import app.papersky.weather.widget.WidgetConfig
 import app.papersky.weather.widget.config.Grid
 import app.papersky.weather.widget.config.WidgetEditor
@@ -63,13 +65,15 @@ class AppScreenshots {
         store.put(forecast.copy(placeId = "om-1"))
     }
 
-    private fun shoot(name: String, content: @Composable () -> Unit, scrollTo: Int? = null) {
+    private fun shoot(name: String, content: @Composable () -> Unit, scrollTo: Int? = null, previews: Int = 1) {
         compose.mainClock.autoAdvance = false
         compose.setContent(content)
         compose.mainClock.advanceTimeBy(2_500)
         // Widget previews compose on a background dispatcher in real time.
-        Thread.sleep(2_500)
-        compose.mainClock.advanceTimeBy(500)
+        repeat(previews) {
+            Thread.sleep(2_500)
+            compose.mainClock.advanceTimeBy(500)
+        }
         if (scrollTo != null) {
             compose.onNode(hasScrollToIndexAction()).performScrollToIndex(scrollTo)
             compose.mainClock.advanceTimeBy(1_500)
@@ -113,6 +117,49 @@ class AppScreenshots {
         shoot("home_sunny", { PaperskyRoot(app.container, MutableStateFlow(null)) {} })
     }
 
+    /** The same forecast with the sun set three hours ago: the desk lamp is on. */
+    private fun atNight(f: Forecast, nowSec: Long): Forecast {
+        val today = f.daily.lastOrNull { it.date <= nowSec } ?: f.daily.first()
+        val delta = (nowSec - 3 * 3600) - today.sunset
+        return f.copy(
+            current = f.current.copy(isDay = false),
+            hourly = f.hourly.map { it.copy(isDay = false) },
+            daily = f.daily.map { it.copy(sunrise = it.sunrise + delta, sunset = it.sunset + delta) },
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "+ru-rRU")
+    fun homeNight() {
+        Shots.assumeEnabled()
+        val now = System.currentTimeMillis()
+        seed(atNight(SampleForecast.build(now).copy(placeId = Place.HERE), now / 1000))
+        shoot("home_night", { PaperskyRoot(app.container, MutableStateFlow(null)) {} })
+    }
+
+    @Test
+    @Config(qualifiers = "+ru-rRU")
+    fun homeNightScrolled() {
+        Shots.assumeEnabled()
+        val now = System.currentTimeMillis()
+        seed(atNight(SampleForecast.build(now).copy(placeId = Place.HERE), now / 1000))
+        shoot("home_night_scrolled", { PaperskyRoot(app.container, MutableStateFlow(null)) {} }, scrollTo = 3)
+    }
+
+    @Test
+    @Config(qualifiers = "+ru-rRU")
+    fun widgets() {
+        Shots.assumeEnabled()
+        seed(Fixtures.moscow(System.currentTimeMillis()))
+        val s = scene()
+        val vm = WidgetStudioViewModel(app.container, app)
+        shoot("widgets", {
+            PaperskyChrome(UserSettings(motion = MotionLevel.Still), s) {
+                WidgetStudioScreen(vm, s, MotionLevel.Still, village = true, onEdit = {}) {}
+            }
+        }, previews = 3)
+    }
+
     @Test
     @Config(qualifiers = "+ru-rRU")
     fun places() {
@@ -123,7 +170,7 @@ class AppScreenshots {
         val units = runBlocking { app.container.settings.current() }.resolvedUnits()
         shoot("places", {
             PaperskyChrome(UserSettings(motion = MotionLevel.Still), s) {
-                PlacesScreen(vm, s, units, MotionLevel.Still) {}
+                PlacesScreen(vm, s, units, MotionLevel.Still, village = true) {}
             }
         })
     }

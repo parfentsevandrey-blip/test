@@ -23,6 +23,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpSize
@@ -48,7 +52,10 @@ import app.papersky.weather.design.Haptics
 import app.papersky.weather.design.LocalHaptics
 import app.papersky.weather.design.LocalSceneClock
 import app.papersky.weather.design.LocalScenePalette
+import app.papersky.weather.design.Light
+import app.papersky.weather.design.Motion
 import app.papersky.weather.design.PaperTheme
+import app.papersky.weather.design.roomLight
 import app.papersky.weather.scene.Palettes
 import app.papersky.weather.scene.SceneState
 import app.papersky.weather.ui.home.HomeScreen
@@ -88,23 +95,32 @@ fun PaperskyChrome(settings: UserSettings, scene: SceneState, content: @Composab
     val haptics = remember { Haptics(context) }
     haptics.enabled = settings.haptics
     haptics.strength = settings.hapticStrength
+    // The system's "remove animations" means Still, whatever the setting says (§9).
+    val systemStill = remember(context) {
+        android.provider.Settings.Global.getFloat(context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+    }
     val clock = rememberSceneClock(
-        when (settings.motion) {
+        if (systemStill) 0f else when (settings.motion) {
             MotionLevel.Full -> 1f
             MotionLevel.Gentle -> 0.45f
             MotionLevel.Still -> 0f
         },
     )
     val palette = remember(scene) { Palettes.forState(scene) }
+    // The room's light follows the sky: window by day, golden hour, the desk lamp at night (§4.3).
+    val light = remember(scene) { Light.of(scene) }
     val activity = LocalActivity.current as? ComponentActivity
     val darkSky = palette.isDarkSky
     LaunchedEffect(darkSky, activity) {
         val style = if (darkSky) SystemBarStyle.dark(AndroidColor.TRANSPARENT) else SystemBarStyle.light(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT)
         activity?.enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
     }
+    val lightState = rememberUpdatedState(light)
     CompositionLocalProvider(LocalHaptics provides haptics, LocalSceneClock provides clock) {
-        PaperTheme(palette) {
-            CompositionLocalProvider(LocalScenePalette provides palette, content = content)
+        PaperTheme(palette, light) {
+            CompositionLocalProvider(LocalScenePalette provides palette) {
+                Box(Modifier.fillMaxSize().roomLight({ lightState.value }, { clock.flash.floatValue })) { content() }
+            }
         }
     }
 }
@@ -131,8 +147,9 @@ fun PaperskyRoot(container: AppContainer, pendingPlace: StateFlow<String?>, onPl
 
     PaperskyChrome(state.settings, scene) {
         val backStack = rememberNavBackStack(HomeRoute)
-        val sheet = spring<androidx.compose.ui.unit.IntOffset>(dampingRatio = 0.88f, stiffness = 360f)
-        val settle = spring<Float>(dampingRatio = 0.9f, stiffness = 360f)
+        // A new sheet comes up from below and settles; the one beneath sinks and falls into shade (§9).
+        val sheet = spring<androidx.compose.ui.unit.IntOffset>(dampingRatio = 0.82f, stiffness = 300f)
+        val settle = Motion.settle<Float>()
         NavDisplay(
             backStack = backStack,
             onBack = { backStack.removeLastOrNull() },
@@ -160,7 +177,7 @@ fun PaperskyRoot(container: AppContainer, pendingPlace: StateFlow<String?>, onPl
                 }
                 entry<PlacesRoute> {
                     val vm: PlacesViewModel = viewModel(factory = factory)
-                    PlacesScreen(vm, scene, units, motion) { backStack.removeLastOrNull() }
+                    PlacesScreen(vm, scene, units, motion, state.settings.village) { backStack.removeLastOrNull() }
                 }
                 entry<SettingsRoute> {
                     val vm: SettingsViewModel = viewModel(factory = factory)
@@ -168,7 +185,7 @@ fun PaperskyRoot(container: AppContainer, pendingPlace: StateFlow<String?>, onPl
                 }
                 entry<WidgetsRoute> {
                     val vm: WidgetStudioViewModel = viewModel(factory = factory)
-                    WidgetStudioScreen(vm, scene, motion, onEdit = { backStack.add(WidgetEditRoute(it)) }) { backStack.removeLastOrNull() }
+                    WidgetStudioScreen(vm, scene, motion, state.settings.village, onEdit = { backStack.add(WidgetEditRoute(it)) }) { backStack.removeLastOrNull() }
                 }
                 entry<WidgetEditRoute> { key ->
                     WidgetEditScreen(container, key.appWidgetId, stringResource(R.string.editor_save)) { backStack.removeLastOrNull() }

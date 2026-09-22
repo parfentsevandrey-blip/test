@@ -9,6 +9,9 @@
     <string name="offline_as_of">Нет сети — небо на %1$s</string>
     <string name="preview_at">%1$s, %2$s · вернуться</string>
     <string name="credits_data">Данные о погоде: Open-Meteo.com</string>
+    <string name="note_title">Заметки дня</string>
+    <string name="cord_tag">потяни</string>
+    <string name="stamp_postmark">АВИА</string>
 
     <string name="hourly_title">По часам</string>
     <string name="hourly_hint">нажмите или зажмите и ведите</string>
@@ -92,9 +95,12 @@
     <string name="motion_still">Замершее</string>
     <string name="settings_tilt">Наклон диорамы</string>
     <string name="settings_tilt_body">Бумажные слои смещаются при наклоне телефона</string>
+    <string name="settings_diorama">Диорама</string>
+    <string name="settings_village">Деревушка в диораме</string>
+    <string name="settings_village_body">Бумажные домики с тёплыми окнами, фонарь и дым из труб</string>
     <string name="settings_about">О приложении</string>
     <string name="settings_language">Язык приложения</string>
-    <string name="settings_fonts">Шрифт: Manrope — SIL Open Font License.</string>
+    <string name="settings_fonts">Шрифты: Manrope и Caveat — SIL Open Font License.</string>
 
     <string name="widgets_title">Виджеты</string>
     <string name="widgets_intro">Каждый виджет — маленькая диорама. Растяните его от одной клетки до целого экрана: он перестроится и использует каждый миллиметр.</string>

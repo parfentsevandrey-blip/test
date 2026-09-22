@@ -19,6 +19,9 @@ class PaperskyApp : Application(), ContainerHost {
         super.onCreate()
         container = AppContainer(this)
 
+        // Paper, kraft, cork and linen are generated once, off the main thread, before first use.
+        container.appScope.launch(kotlinx.coroutines.Dispatchers.Default) { app.papersky.weather.scene.MaterialTextures.warmUp() }
+
         container.appScope.launch {
             val settings = container.settings.current()
             SyncScheduler.ensurePeriodic(this@PaperskyApp, settings.updateIntervalMinutes)
@@ -34,6 +37,15 @@ class PaperskyApp : Application(), ContainerHost {
                     SyncScheduler.ensurePeriodic(this@PaperskyApp, interval, replace = true)
                     WidgetDirectory.updateAll(this@PaperskyApp)
                 }
+        }
+
+        // Turning the village on or off redraws the widgets' dioramas too.
+        container.appScope.launch {
+            container.settings.settings
+                .map { it.village }
+                .distinctUntilChanged()
+                .drop(1)
+                .collect { WidgetDirectory.updateAll(this@PaperskyApp) }
         }
 
         // Wallpaper colours (Material You palette), dark theme, font scale and locale all feed

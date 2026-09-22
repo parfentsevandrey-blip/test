@@ -221,10 +221,10 @@ fun WidgetContent(config: WidgetConfig, data: WidgetData, nowMillis: Long, openA
     val charts = chartsFor(plan, hours)
     val fx = if (config.animate && config.background == WidgetBackground.Scene && plan.mode != Mode.Micro) {
         val hero = plan.heroRect()?.let { android.graphics.RectF(it.left, it.top, it.right, it.bottom) }
-        WidgetFx.plan(scene, palette, plan, WidgetFx.sunDp(scene, plan, WidgetArt.sceneOptions(plan, scene, nowSec).copy(keepClear = listOfNotNull(hero))))
+        WidgetFx.plan(scene, palette, plan, WidgetFx.sunDp(scene, plan, WidgetArt.sceneOptions(plan, scene, nowSec, data.settings.village).copy(keepClear = listOfNotNull(hero))))
     } else FxPlan.None
-    val art = remember(plan, config, scene, palette, charts.size, nowSec / 60) {
-        WidgetArt.background(context, plan, config, scene, palette, charts, nowSec, fx)
+    val art = remember(plan, config, scene, palette, charts.size, nowSec / 60, data.settings.village) {
+        WidgetArt.background(context, plan, config, scene, palette, charts, nowSec, fx, data.settings.village)
     }
 
     var root = GlanceModifier.fillMaxSize().appWidgetBackground()

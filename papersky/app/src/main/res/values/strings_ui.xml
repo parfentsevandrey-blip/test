@@ -9,6 +9,9 @@
     <string name="offline_as_of">No connection — sky as of %1$s</string>
     <string name="preview_at">%1$s, %2$s · back to now</string>
     <string name="credits_data">Weather data by Open-Meteo.com</string>
+    <string name="note_title">Notes for today</string>
+    <string name="cord_tag">pull</string>
+    <string name="stamp_postmark">AIR MAIL</string>
 
     <string name="hourly_title">Hour by hour</string>
     <string name="hourly_hint">tap or hold &amp; slide</string>
@@ -92,9 +95,12 @@
     <string name="motion_still">Still</string>
     <string name="settings_tilt">Diorama tilt</string>
     <string name="settings_tilt_body">Paper layers shift as you tilt the phone</string>
+    <string name="settings_diorama">Diorama</string>
+    <string name="settings_village">Village in the diorama</string>
+    <string name="settings_village_body">Paper houses with warm windows, a lantern and smoke from the chimneys</string>
     <string name="settings_about">About</string>
     <string name="settings_language">App language</string>
-    <string name="settings_fonts">Font: Manrope — SIL Open Font License.</string>
+    <string name="settings_fonts">Fonts: Manrope and Caveat — SIL Open Font License.</string>
 
     <string name="widgets_title">Widgets</string>
     <string name="widgets_intro">Every widget is a little diorama. Stretch it from one cell to the whole screen — it rearranges itself to use every millimetre.</string>

@@ -45,6 +45,8 @@ data class UserSettings(
     val hapticStrength: Float = 1f,
     val motion: MotionLevel = MotionLevel.Full,
     val tiltParallax: Boolean = true,
+    /** The papercraft hamlet on the near meadow of the diorama. */
+    val village: Boolean = true,
     val selectedPlaceId: String = Place.HERE,
     val backgroundLocation: Boolean = false,
     val onboarded: Boolean = false,

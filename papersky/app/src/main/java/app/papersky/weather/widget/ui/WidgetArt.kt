@@ -13,7 +13,7 @@ import app.papersky.weather.scene.ColorMath
 import app.papersky.weather.scene.Glyph
 import app.papersky.weather.scene.GlyphColors
 import app.papersky.weather.scene.GlyphRenderer
-import app.papersky.weather.scene.PaperGrain
+import app.papersky.weather.scene.MaterialTextures
 import app.papersky.weather.scene.PaperSceneRenderer
 import app.papersky.weather.scene.SceneState
 import app.papersky.weather.scene.ScenePalette
@@ -48,7 +48,7 @@ object WidgetArt {
     }
 
     /** Options for the static frame, in dp (scale with [scaled]). */
-    fun sceneOptions(plan: WidgetPlan, scene: SceneState, clockSeconds: Long): PaperSceneRenderer.Options {
+    fun sceneOptions(plan: WidgetPlan, scene: SceneState, clockSeconds: Long, village: Boolean = true): PaperSceneRenderer.Options {
         val textOnLeft = plan.mode == Mode.Card || plan.mode == Mode.Panorama || plan.mode == Mode.Strip
         return PaperSceneRenderer.Options(
             // A slowly advancing "time" so clouds sit somewhere new after each refresh.
@@ -60,6 +60,7 @@ object WidgetArt {
             laneStart = if (textOnLeft) 0.56f else 0.12f,
             laneEnd = if (textOnLeft) 0.93f else 0.88f,
             staticBolt = scene.thunder > 0.5f,
+            village = village,
         )
     }
 
@@ -72,6 +73,7 @@ object WidgetArt {
         charts: List<ChartSpec>,
         clockSeconds: Long,
         fx: FxPlan = FxPlan.None,
+        village: Boolean = true,
     ): Bitmap? {
         val density = context.resources.displayMetrics.density
         val scale = PaperSceneRenderer.scaleFor(plan.width, plan.height, density, MAX_SCENE_PIXELS)
@@ -80,9 +82,9 @@ object WidgetArt {
             WidgetBackground.Paper -> paper(plan, palette, scale, scene.seed)
             WidgetBackground.Scene -> PaperSceneRenderer.renderBitmap(plan.width, plan.height, scale, scene, palette) { k ->
                 fun RectDp.px() = RectF(left * k, top * k, right * k, bottom * k)
-                val base = sceneOptions(plan, scene, clockSeconds)
+                val base = sceneOptions(plan, scene, clockSeconds, village)
                 base.copy(
-                    panels = plan.panels.map { PaperSceneRenderer.Panel(it.px(), alpha = if (palette.isDarkPaper) 0.62f else 0.68f) },
+                    panels = plan.panels.mapIndexed { i, r -> PaperSceneRenderer.Panel(r.px(), tape = i == 0) },
                     charts = charts.map { c ->
                         PaperSceneRenderer.Chart(
                             RectF(c.left * k, c.top * k, (c.left + c.width) * k, (c.top + c.height) * k),
@@ -103,7 +105,7 @@ object WidgetArt {
         }
     }
 
-    /** A cosy sheet: paper, fibres, a tape strip and a faint cut-paper horizon. */
+    /** A cosy sheet: cotton paper, a faint cut-paper horizon and a strip of tape. */
     private fun paper(plan: WidgetPlan, p: ScenePalette, scale: Float, seed: Int): Bitmap {
         val w = (plan.width * scale).roundToInt().coerceAtLeast(1)
         val h = (plan.height * scale).roundToInt().coerceAtLeast(1)
@@ -129,12 +131,11 @@ object WidgetArt {
         paint.color = ColorMath.withAlpha(p.hillMid, 0.16f)
         canvas.drawPath(path, paint)
 
-        paint.shader = PaperGrain.shader()
-        paint.alpha = 80
-        paint.blendMode = android.graphics.BlendMode.OVERLAY
+        // Real cotton fibres, and a strip of washi tape holding the sheet (DESIGN_DOCTRINE §13).
+        paint.shader = android.graphics.BitmapShader(MaterialTextures.cotton, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
         canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
         paint.shader = null
-        paint.blendMode = null
+        if (plan.width >= 90 && plan.height >= 60) PaperSceneRenderer(scale).tape(canvas, w * 0.5f, 5 * scale, p.tape, -3f)
 
         return bmp
     }

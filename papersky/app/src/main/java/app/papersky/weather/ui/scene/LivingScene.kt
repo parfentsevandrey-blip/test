@@ -202,6 +202,7 @@ fun LivingScene(
     laneStart: Float = 0.12f,
     laneEnd: Float = 0.88f,
     glass: Boolean = false,
+    village: Boolean = true,
     /** Scroll of the content above the scene, px; each layer follows at its own depth. */
     scroll: () -> Float = { 0f },
     dim: () -> Float = { 0f },
@@ -224,8 +225,8 @@ fun LivingScene(
     val ripples = remember { mutableStateListOf<Ripple>() }
     var size by remember { mutableStateOf(IntSize.Zero) }
 
-    val base = remember(horizon, depth, detail, laneStart, laneEnd, glass) {
-        PaperSceneRenderer.Options(horizon = horizon, depth = depth, detail = detail, laneStart = laneStart, laneEnd = laneEnd, glass = glass, vignette = 0f)
+    val base = remember(horizon, depth, detail, laneStart, laneEnd, glass, village) {
+        PaperSceneRenderer.Options(horizon = horizon, depth = depth, detail = detail, laneStart = laneStart, laneEnd = laneEnd, glass = glass, vignette = 0f, village = village)
     }
 
     // Thunderstorms: flashes at random, the rumble arrives a moment later (sound is slower).
@@ -242,11 +243,12 @@ fun LivingScene(
                     delay((250 + distance * 1_200).toLong())
                     haptics.thunder(1f - distance * 0.6f)
                 }
+                // The flash lights up the whole room, paper on the table included (§4.4).
                 flash.snapTo(0f)
-                flash.animateTo(1f, tween(55))
-                flash.animateTo(0.25f, tween(90))
-                flash.animateTo(0.8f, tween(45))
-                flash.animateTo(0f, tween(420))
+                flash.animateTo(1f, tween(55)) { clock.flash.floatValue = value }
+                flash.animateTo(0.25f, tween(90)) { clock.flash.floatValue = value }
+                flash.animateTo(0.8f, tween(45)) { clock.flash.floatValue = value }
+                flash.animateTo(0f, tween(420)) { clock.flash.floatValue = value }
             }
         }
     }
@@ -364,6 +366,26 @@ fun LivingScene(
                 .drawBehind { drawIntoCanvas { renderer.drawSkyFx(it.nativeCanvas, scene.value, palette.value, frame()) } },
         )
 
+        // Overcast festoon: one cached strip of scallops sliding with the wind.
+        val period = remember(layoutKey) { renderer.blanketPeriod }
+        Spacer(
+            Modifier
+                .placed(-(period.roundToInt()), 0, size.width + 2 * period.roundToInt(), (renderer.bandTop(0).coerceAtLeast(size.height * 0.3f)).roundToInt())
+                .graphicsLayer {
+                    val s = scene.value
+                    alpha = renderer.blanketAlpha(s)
+                    translationX = renderer.blanketOffset(s, if (motionOn) clock.seconds.floatValue else 0f, gust.value) + shiftX(0.05f)
+                    translationY = shiftY(0.05f)
+                    compositingStrategy = CompositingStrategy.Offscreen
+                }
+                .drawBehind {
+                    drawIntoCanvas {
+                        it.nativeCanvas.translate(period, 0f)
+                        renderer.drawBlanket(it.nativeCanvas, scene.value, palette.value, 1f)
+                    }
+                },
+        )
+
         // Clouds: each one a cached sprite, drifting by translation alone.
         for (i in 0 until renderer.cloudCount) {
             key(layoutKey, i) {
@@ -426,7 +448,19 @@ fun LivingScene(
             }
         }
 
-        // Weather in front of everything: the only layer repainted every frame.
+        // The meadow's life — swaying trees, smoke, flickering windows — moves with the meadow.
+        val meadowDepth = remember(layoutKey) { renderer.bandDepth(renderer.bandCount - 1) }
+        Spacer(
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    translationX = shiftX(meadowDepth)
+                    translationY = shiftY(meadowDepth)
+                }
+                .drawBehind { drawIntoCanvas { renderer.drawProps(it.nativeCanvas, scene.value, palette.value, frame()) } },
+        )
+
+        // Weather in front of everything: the only other layer repainted every frame.
         val nearDepth = remember(layoutKey) { renderer.bandDepth(renderer.bandCount - 1) }
         Spacer(
             Modifier
@@ -447,7 +481,10 @@ fun LivingScene(
             Modifier
                 .fillMaxSize()
                 .drawBehind {
-                    drawIntoCanvas { renderer.drawVignette(it.nativeCanvas, palette.value, 0.7f) }
+                    drawIntoCanvas {
+                        renderer.drawVignette(it.nativeCanvas, palette.value, 0.7f)
+                        if (glass) renderer.drawGlare(it.nativeCanvas)
+                    }
                     val d = dim()
                     if (d > 0.001f) drawRect(Color(ColorMath.darken(palette.value.skyTop, 0.6f)).copy(alpha = d))
                 },
@@ -477,7 +514,7 @@ internal fun isHorizontal(dx: Float, dy: Float) = abs(dx) > abs(dy) * 1.4f
  * cached on the GPU; it costs nothing while the list scrolls.
  */
 @Composable
-fun SceneThumbnail(scene: SceneState, modifier: Modifier = Modifier, mode: PaletteMode = PaletteMode.Auto, time: Float = 8f) {
+fun SceneThumbnail(scene: SceneState, modifier: Modifier = Modifier, mode: PaletteMode = PaletteMode.Auto, time: Float = 8f, village: Boolean = true, horizon: Float = 0.5f) {
     val context = LocalContext.current
     val density = LocalDensity.current.density
     val renderer = remember(density) { PaperSceneRenderer(density) }
@@ -489,7 +526,7 @@ fun SceneThumbnail(scene: SceneState, modifier: Modifier = Modifier, mode: Palet
                 drawIntoCanvas {
                     renderer.draw(
                         it.nativeCanvas, size.width, size.height, scene, palette,
-                        PaperSceneRenderer.Options(time = time, detail = 0.6f, vignette = 0.35f, horizon = 0.5f, staticBolt = scene.thunder > 0.5f),
+                        PaperSceneRenderer.Options(time = time, detail = 0.6f, vignette = 0.35f, horizon = horizon, staticBolt = scene.thunder > 0.5f, village = village),
                     )
                 }
             },

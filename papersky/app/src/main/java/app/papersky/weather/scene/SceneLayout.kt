@@ -55,6 +55,34 @@ internal class SceneLayout(private val dp: Float) {
         val rank: Int,
     )
 
+    /** A paper cottage standing on the meadow. */
+    class House(
+        val x: Float,
+        val w: Float,
+        val h: Float,
+        val roofH: Float,
+        val twoWindows: Boolean,
+        val chimney: Boolean,
+        val door: Boolean,
+        val tone: Float,
+    )
+
+    /** A tree on the meadow; it sways every frame, so it lives outside the cached bands. */
+    class Tree(val x: Float, val h: Float, val pine: Boolean, val tone: Float)
+
+    val houses = ArrayList<House>(6)
+    val trees = ArrayList<Tree>(26)
+
+    /** Street lantern by the village, or NaN. */
+    var lanternX = Float.NaN; private set
+
+    /** Scalloped overcast festoon along the top of the sky; repeats every [blanketPeriod]. */
+    val blanket = Path()
+    var blanketPeriod = 1f; private set
+
+    /** Size factor for props (houses, trees, flakes). */
+    var propScale = 1f; private set
+
     var w = -1f; private set
     var h = -1f; private set
     var horizonY = 0f; private set
@@ -75,6 +103,7 @@ internal class SceneLayout(private val dp: Float) {
     private var horizonFrac = -1f
     private var detail = -1f
     private var requestedDepth = Float.NaN
+    private var village = true
 
     private val specs = arrayOf(
         Spec(-0.60f, 0.52f, 112f, Kind.Peaks, 0f, 0.08f),
@@ -85,9 +114,9 @@ internal class SceneLayout(private val dp: Float) {
     )
 
     /** Rebuilds when anything that shapes the scene changed; returns true if it did. */
-    fun ensure(w: Float, h: Float, seed: Int, horizonFrac: Float, detail: Float, depth: Float = Float.NaN): Boolean {
-        if (w == this.w && h == this.h && seed == this.seed && horizonFrac == this.horizonFrac && detail == this.detail && depth.equals(requestedDepth)) return false
-        this.w = w; this.h = h; this.seed = seed; this.horizonFrac = horizonFrac; this.detail = detail; requestedDepth = depth
+    fun ensure(w: Float, h: Float, seed: Int, horizonFrac: Float, detail: Float, depth: Float = Float.NaN, village: Boolean = true): Boolean {
+        if (w == this.w && h == this.h && seed == this.seed && horizonFrac == this.horizonFrac && detail == this.detail && depth.equals(requestedDepth) && village == this.village) return false
+        this.w = w; this.h = h; this.seed = seed; this.horizonFrac = horizonFrac; this.detail = detail; requestedDepth = depth; this.village = village
         horizonY = h * horizonFrac
         val below = h - horizonY
         depthD = if (!depth.isNaN()) depth else min(below * 0.92f, min(w, h) * 0.46f).coerceAtLeast(18 * dp)
@@ -95,6 +124,8 @@ internal class SceneLayout(private val dp: Float) {
         buildBands()
         buildClouds()
         buildStars()
+        buildVillage()
+        buildBlanket()
         return true
     }
 
@@ -199,7 +230,9 @@ internal class SceneLayout(private val dp: Float) {
         val groups = listOf(0 to 1, 2 to 3, 4 to 4)
         for ((gi, g) in groups.withIndex()) {
             val (a, b) = g
-            val top = (a..b).minOf { ridges[it].top } - 18 * dp
+            var top = (a..b).minOf { ridges[it].top } - 18 * dp
+            // The meadow's band carries the cottages: leave room for roofs and chimneys.
+            if (b == ridges.lastIndex) top -= 34 * dp * (min(w, h) / (dp * 220f)).coerceIn(0.62f, 1.25f)
             val bottom = if (gi < groups.lastIndex) {
                 // Below the next band's lowest edge, nothing of this band can show.
                 ridges[groups[gi + 1].first].bottom + 10 * dp
@@ -216,15 +249,6 @@ internal class SceneLayout(private val dp: Float) {
         clouds.clear()
         val s = (min(w, h) / (dp * 240f)).coerceIn(0.55f, 1.2f)
         val sky = max(horizonY - depthD * 0.35f, h * 0.2f)
-
-        // A ceiling of wide banks for overcast skies.
-        val banks = (w / (dp * 150f)).roundToInt().coerceIn(3, 7)
-        for (i in 0 until banks) {
-            val cw = w * (0.42f + 0.22f * rand(i, seed + 300))
-            val ch = cw * (0.28f + 0.06f * rand(i, seed + 301))
-            val y = -ch * (0.38f + 0.22f * rand(i, seed + 302)) + sky * 0.05f * (i % 2)
-            clouds += cloud(cw, ch, i * 31 + seed, x0 = (i + rand(i, seed + 303) * 0.4f) / banks * (w + cw), y = y, depth = 0.15f + 0.1f * (i % 2), ceiling = true, rank = i)
-        }
 
         val n = (w / (dp * 82f)).roundToInt().coerceIn(3, 9)
         for (i in 0 until n) {
@@ -260,6 +284,68 @@ internal class SceneLayout(private val dp: Float) {
         base.op(puffs, Path.Op.UNION)
         base.op(Path().apply { addRect(-cw, -ch * 2, cw * 2, ch, Path.Direction.CW) }, Path.Op.INTERSECT)
         return base
+    }
+
+
+    // ---- Village, trees, overcast --------------------------------------------------------------
+
+    private fun buildVillage() {
+        houses.clear()
+        trees.clear()
+        lanternX = Float.NaN
+        propScale = (min(w, h) / (dp * 220f)).coerceIn(0.62f, 1.25f)
+        if (detail < 0.5f) return
+        val widthDp = w / dp
+        val s = propScale
+        if (village) {
+            // A hamlet: a few cottages huddled together, not a row of boxes.
+            val n = (widthDp / 110f * detail).roundToInt().coerceIn(2, 5)
+            val hw = 18f * dp * s
+            val span = n * hw * 1.35f
+            var x = (0.14f + 0.72f * rand(seed, 1601)) * (w - span) + hw / 2
+            for (i in 0 until n) {
+                val cw = (14f + rand(i, seed + 203) * 8f) * dp * s
+                houses += House(
+                    x = x,
+                    w = cw,
+                    h = cw * (0.74f + rand(i, seed + 205) * 0.24f),
+                    roofH = cw * (0.5f + rand(i, seed + 207) * 0.22f),
+                    twoWindows = cw > 17 * dp * s && rand(i, seed + 209) > 0.4f,
+                    chimney = rand(i, seed + 211) > 0.25f,
+                    door = rand(i, seed + 213) > 0.35f,
+                    tone = rand(i, seed + 215),
+                )
+                x += cw * (1.08f + 0.35f * rand(i, seed + 217))
+            }
+            val last = houses.last()
+            lanternX = (last.x + last.w * 0.95f).takeIf { it < w - 8 * dp } ?: (houses.first().x - houses.first().w * 0.95f)
+        }
+        val nTrees = (widthDp / 30f * detail).roundToInt().coerceIn(2, 26)
+        for (i in 0 until nTrees) {
+            val tx = (i + 0.5f + (rand(i, seed + 301) - 0.5f) * 0.8f) / nTrees * w
+            if (houses.any { kotlin.math.abs(it.x - tx) < it.w * 0.95f }) continue
+            if (!lanternX.isNaN() && kotlin.math.abs(lanternX - tx) < 8 * dp * s) continue
+            trees += Tree(tx, (15f + rand(i, seed + 303) * 16f) * dp * s, rand(i, seed + 305) < 0.6f, rand(i, seed + 307))
+        }
+    }
+
+    private fun buildBlanket() {
+        blanket.reset()
+        val scallop = 30 * dp * propScale
+        blanketPeriod = scallop * 2
+        val bottom = max(horizonY - depthD * 0.9f, h * 0.12f) * 0.34f
+        val left = -blanketPeriod * 2
+        blanket.moveTo(left, -12 * dp)
+        blanket.lineTo(left, bottom)
+        var bx = left
+        var k = 0
+        while (bx < w + blanketPeriod * 2) {
+            val r = scallop * (0.75f + 0.5f * rand(k++, seed + 401))
+            blanket.quadTo(bx + r * 0.5f, bottom + r * 0.95f, bx + r, bottom)
+            bx += r
+        }
+        blanket.lineTo(bx, -12 * dp)
+        blanket.close()
     }
 
     // ---- Stars ---------------------------------------------------------------------------------

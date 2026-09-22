@@ -76,6 +76,13 @@ data class GlyphColors(
  * [time] animates rays, drops and flakes in the app; widgets pass 0.
  */
 class GlyphRenderer {
+    /** What to draw: the whole glyph, only its static body, or only the parts that move. */
+    enum class Pass { All, Base, Motion }
+
+    private var pass = Pass.All
+    private val base get() = pass != Pass.Motion
+    private val motion get() = pass != Pass.Base
+
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND
@@ -85,7 +92,9 @@ class GlyphRenderer {
     private val cloudPath = Path()
     private var cloudPathUnit = -1f
 
-    fun draw(canvas: Canvas, glyph: Glyph, left: Float, top: Float, size: Float, c: GlyphColors, time: Float = 0f, rotation: Float = 0f) {
+    fun draw(canvas: Canvas, glyph: Glyph, left: Float, top: Float, size: Float, c: GlyphColors, time: Float = 0f, rotation: Float = 0f, pass: Pass = Pass.All) {
+        this.pass = pass
+        if (pass == Pass.Motion && glyph !in ANIMATED) return
         val u = size / 24f
         canvas.save()
         canvas.translate(left, top)
@@ -132,6 +141,17 @@ class GlyphRenderer {
     }
 
     private fun sun(canvas: Canvas, u: Float, cx: Float, cy: Float, s: Float, c: GlyphColors, t: Float) {
+        if (motion) sunRays(canvas, u, cx, cy, s, c, t)
+        if (!base) return
+        fill.color = c.sun
+        shadowOn(c.shadow, u)
+        canvas.drawCircle(cx * u, cy * u, 5.4f * u * s, fill)
+        fill.clearShadowLayer()
+        fill.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.28f)
+        canvas.drawCircle((cx - 1.1f * s) * u, (cy - 1.1f * s) * u, 3.1f * u * s, fill)
+    }
+
+    private fun sunRays(canvas: Canvas, u: Float, cx: Float, cy: Float, s: Float, c: GlyphColors, t: Float) {
         canvas.save()
         canvas.translate(cx * u, cy * u)
         canvas.rotate(t * 18f)
@@ -143,15 +163,15 @@ class GlyphRenderer {
             canvas.rotate(45f)
         }
         canvas.restore()
-        fill.color = c.sun
-        shadowOn(c.shadow, u)
-        canvas.drawCircle(cx * u, cy * u, 5.4f * u * s, fill)
-        fill.clearShadowLayer()
-        fill.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.28f)
-        canvas.drawCircle((cx - 1.1f * s) * u, (cy - 1.1f * s) * u, 3.1f * u * s, fill)
     }
 
     private fun moon(canvas: Canvas, u: Float, cx: Float, cy: Float, s: Float, c: GlyphColors, t: Float) {
+        if (motion) {
+            val tw = if (t == 0f) 1f else 0.6f + 0.4f * sin(t * 2.3f)
+            sparkle(canvas, (cx + 7.5f * s) * u, (cy - 5.5f * s) * u, 1.8f * u * s, ColorMath.withAlpha(c.moon, tw))
+            sparkle(canvas, (cx + 5f * s) * u, (cy + 5.8f * s) * u, 1.1f * u * s, ColorMath.withAlpha(c.moon, (1.6f - tw).coerceIn(0f, 1f)))
+        }
+        if (!base) return
         path.reset()
         path.addCircle(cx * u, cy * u, 7f * u * s, Path.Direction.CW)
         val bite = Path().apply { addCircle((cx + 3.6f * s) * u, (cy - 2.6f * s) * u, 6.2f * u * s, Path.Direction.CW) }
@@ -160,9 +180,6 @@ class GlyphRenderer {
         shadowOn(c.shadow, u)
         canvas.drawPath(path, fill)
         fill.clearShadowLayer()
-        val tw = if (t == 0f) 1f else 0.6f + 0.4f * sin(t * 2.3f)
-        sparkle(canvas, (cx + 7.5f * s) * u, (cy - 5.5f * s) * u, 1.8f * u * s, ColorMath.withAlpha(c.moon, tw))
-        sparkle(canvas, (cx + 5f * s) * u, (cy + 5.8f * s) * u, 1.1f * u * s, ColorMath.withAlpha(c.moon, 1.6f - tw))
     }
 
     private fun sparkle(canvas: Canvas, x: Float, y: Float, r: Float, color: Int) {
@@ -190,6 +207,7 @@ class GlyphRenderer {
     }
 
     private fun cloud(canvas: Canvas, u: Float, dx: Float, dy: Float, s: Float, c: GlyphColors, bob: Float) {
+        if (!base) return
         ensureCloud(u)
         canvas.save()
         canvas.translate(dx * u, (dy + bob) * u)
@@ -207,6 +225,7 @@ class GlyphRenderer {
     }
 
     private fun drops(canvas: Canvas, u: Float, c: GlyphColors, t: Float, count: Int, short: Boolean) {
+        if (!motion) return
         line.color = c.rain
         line.strokeWidth = (if (short) 1.6f else 1.8f) * u
         val len = if (short) 1.6f else 3.6f
@@ -222,6 +241,7 @@ class GlyphRenderer {
     }
 
     private fun flakes(canvas: Canvas, u: Float, c: GlyphColors, t: Float, count: Int, offset: Int) {
+        if (!motion) return
         line.color = c.snow
         line.strokeWidth = 1.1f * u
         for (i in 0 until count) {
@@ -239,6 +259,7 @@ class GlyphRenderer {
     }
 
     private fun hail(canvas: Canvas, u: Float, c: GlyphColors, t: Float) {
+        if (!motion) return
         fill.color = c.snow
         for (i in 0 until 3) {
             val phase = if (t == 0f) i * 0.3f else fract(t * 1.5f + i * 0.33f)
@@ -247,6 +268,7 @@ class GlyphRenderer {
     }
 
     private fun bolt(canvas: Canvas, u: Float, c: GlyphColors, t: Float) {
+        if (!motion) return
         val flick = if (t == 0f) 1f else if (fract(t * 0.6f) < 0.12f) 0.4f else 1f
         path.reset()
         path.moveTo(13f * u, 14f * u)
@@ -265,6 +287,7 @@ class GlyphRenderer {
 
     private fun fog(canvas: Canvas, u: Float, c: GlyphColors, t: Float) {
         cloud(canvas, u, 1f, -3f, 0.85f, c, 0f)
+        if (!motion) return
         line.strokeWidth = 1.8f * u
         val rows = floatArrayOf(15.5f, 18.8f, 22f)
         val lens = floatArrayOf(14f, 17f, 11f)
@@ -277,6 +300,7 @@ class GlyphRenderer {
     }
 
     private fun arrow(canvas: Canvas, u: Float, c: GlyphColors, rotation: Float) {
+        if (!base) return
         canvas.save()
         canvas.rotate(rotation, 12f * u, 12f * u)
         path.reset()
@@ -294,6 +318,7 @@ class GlyphRenderer {
     }
 
     private fun drop(canvas: Canvas, u: Float, c: GlyphColors) {
+        if (!base) return
         path.reset()
         path.moveTo(12f * u, 3f * u)
         path.cubicTo(16f * u, 9f * u, 18.5f * u, 12f * u, 18.5f * u, 15f * u)
@@ -308,6 +333,7 @@ class GlyphRenderer {
     }
 
     private fun umbrella(canvas: Canvas, u: Float, c: GlyphColors) {
+        if (!base) return
         path.reset()
         rect.set(3f * u, 4f * u, 21f * u, 20f * u)
         path.arcTo(rect, 180f, 180f, true)
@@ -324,6 +350,7 @@ class GlyphRenderer {
     }
 
     private fun horizonSun(canvas: Canvas, u: Float, c: GlyphColors, up: Boolean) {
+        if (!base) return
         canvas.save()
         canvas.clipRect(0f, 0f, 24f * u, 16f * u)
         fill.color = c.sun
@@ -348,6 +375,7 @@ class GlyphRenderer {
     }
 
     private fun gauge(canvas: Canvas, u: Float, c: GlyphColors, rotation: Float) {
+        if (!base) return
         line.color = c.ink
         line.strokeWidth = 1.8f * u
         rect.set(3f * u, 5f * u, 21f * u, 23f * u)
@@ -367,6 +395,7 @@ class GlyphRenderer {
     }
 
     private fun eye(canvas: Canvas, u: Float, c: GlyphColors) {
+        if (!base) return
         path.reset()
         path.moveTo(2.5f * u, 12f * u)
         path.quadTo(12f * u, 2.5f * u, 21.5f * u, 12f * u)
@@ -384,6 +413,7 @@ class GlyphRenderer {
     }
 
     private fun thermo(canvas: Canvas, u: Float, c: GlyphColors) {
+        if (!base) return
         line.color = c.ink
         line.strokeWidth = 1.4f * u
         rect.set(9.5f * u, 2.5f * u, 14.5f * u, 17f * u)
@@ -395,6 +425,7 @@ class GlyphRenderer {
     }
 
     private fun refresh(canvas: Canvas, u: Float, c: GlyphColors) {
+        if (!base) return
         line.color = c.ink
         line.strokeWidth = 2f * u
         rect.set(5f * u, 5f * u, 19f * u, 19f * u)
@@ -409,6 +440,7 @@ class GlyphRenderer {
     }
 
     private fun pin(canvas: Canvas, u: Float, c: GlyphColors) {
+        if (!base) return
         path.reset()
         path.moveTo(12f * u, 22f * u)
         path.cubicTo(6f * u, 15f * u, 5f * u, 12f * u, 5f * u, 9.5f * u)
@@ -425,10 +457,51 @@ class GlyphRenderer {
     }
 
     companion object {
+        /** Glyphs with moving parts (DESIGN_DOCTRINE §7). */
+        val ANIMATED = setOf(
+            Glyph.Sun, Glyph.Moon, Glyph.SunCloud, Glyph.MoonCloud, Glyph.Fog, Glyph.Drizzle, Glyph.Rain,
+            Glyph.HeavyRain, Glyph.Sleet, Glyph.Snow, Glyph.Hail, Glyph.Thunder, Glyph.Uv,
+        )
+
+        /** Share of the box a sticker's artwork takes; the rest is its white die-cut border. */
+        const val STICKER_ART = 0.84f
+
         fun bitmap(glyph: Glyph, sizePx: Int, colors: GlyphColors, rotation: Float = 0f): Bitmap {
             val bmp = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
             GlyphRenderer().draw(Canvas(bmp), glyph, 0f, 0f, sizePx.toFloat(), colors, 0f, rotation)
             return bmp
+        }
+
+        /**
+         * The glyph as a die-cut sticker: its static body on a white border that follows the
+         * outline, lifted by a soft shadow. Moving parts are drawn over it per frame with
+         * [Pass.Motion] at [STICKER_ART] scale around the centre.
+         */
+        fun sticker(glyph: Glyph, sizePx: Int, colors: GlyphColors, rotation: Float = 0f, animated: Boolean = true, border: Int = 0xFFFFFCF4.toInt()): Bitmap {
+            val art = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+            val inset = sizePx * (1f - STICKER_ART) / 2f
+            GlyphRenderer().draw(Canvas(art), glyph, inset, inset, sizePx * STICKER_ART, colors, 0f, rotation, if (animated) Pass.Base else Pass.All)
+            val mask = art.extractAlpha()
+            val out = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+            val c = Canvas(out)
+            val r = (sizePx * 0.045f).coerceAtLeast(1.2f)
+            val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
+            // Shadow of the whole sticker, down and slightly right (one light, top-left).
+            p.color = 0x552A1C10
+            p.maskFilter = android.graphics.BlurMaskFilter(r * 1.4f, android.graphics.BlurMaskFilter.Blur.NORMAL)
+            c.drawBitmap(mask, r * 0.35f, r * 1.1f, p)
+            p.maskFilter = null
+            // Border: the silhouette dilated in every direction.
+            p.color = border
+            for (k in 0 until 16) {
+                val a = k * Math.PI * 2 / 16
+                c.drawBitmap(mask, (kotlin.math.cos(a) * r).toFloat(), (kotlin.math.sin(a) * r).toFloat(), p)
+            }
+            c.drawBitmap(mask, 0f, 0f, p)
+            c.drawBitmap(art, 0f, 0f, null)
+            mask.recycle()
+            art.recycle()
+            return out
         }
     }
 }

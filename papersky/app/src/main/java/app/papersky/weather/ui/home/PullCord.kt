@@ -26,18 +26,23 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import app.papersky.weather.design.Ink
 import app.papersky.weather.design.LocalHaptics
 import app.papersky.weather.design.Paper
+import app.papersky.weather.design.Stock
+import app.papersky.weather.design.beechBead
 import app.papersky.weather.design.rememberHaptics
 import kotlinx.coroutines.launch
-import kotlin.math.cos
-import kotlin.math.sin
 
 /**
  * Pull-to-refresh as a lamp cord hanging from the top edge. Drag the bead down: the string
@@ -45,7 +50,7 @@ import kotlin.math.sin
  * and on release it springs back and swings while the sky is being fetched.
  */
 @Composable
-fun PullCord(refreshing: Boolean, onPull: () -> Unit, label: String, modifier: Modifier = Modifier) {
+fun PullCord(refreshing: Boolean, onPull: () -> Unit, label: String, tag: String, modifier: Modifier = Modifier) {
     val density = LocalDensity.current
     val h = rememberHaptics()
     val engine = LocalHaptics.current
@@ -57,7 +62,6 @@ fun PullCord(refreshing: Boolean, onPull: () -> Unit, label: String, modifier: M
     val maxPull = with(density) { 150.dp.toPx() }
     var armed by remember { mutableStateOf(false) }
     var lastTick by remember { mutableIntStateOf(0) }
-    val colors = Paper.colors
     val onPullNow by rememberUpdatedState(onPull)
 
     LaunchedEffect(refreshing) {
@@ -119,47 +123,48 @@ fun PullCord(refreshing: Boolean, onPull: () -> Unit, label: String, modifier: M
                 }
             },
     ) {
+        val measurer = rememberTextMeasurer()
+        val handStyle = Paper.type.handSmall.copy(fontSize = 15.sp, color = Ink.Blue)
+        val light = Paper.light
+        val kraft = light.lit(Stock.Kraft.base)
         Canvas(Modifier.fillMaxSize()) {
             val cx = size.width / 2
             val len = restLen + pull.value
             rotate(swing.value, Offset(cx, 0f)) {
-                // Twisted cotton string.
-                drawLine(colors.onSky.copy(alpha = 0.55f), Offset(cx, 0f), Offset(cx, len), 2.dp.toPx(), StrokeCap.Round)
-                var y = 6.dp.toPx()
-                while (y < len - 6.dp.toPx()) {
-                    drawLine(colors.onSky.copy(alpha = 0.25f), Offset(cx - 1.2.dp.toPx(), y), Offset(cx + 1.2.dp.toPx(), y + 3.dp.toPx()), 1.dp.toPx())
-                    y += 6.dp.toPx()
+                // Twisted cotton string with a shadow on the sky.
+                drawLine(Ink.Shadow.copy(alpha = 0.2f), Offset(cx + 1.5.dp.toPx(), 0f), Offset(cx + 1.5.dp.toPx(), len + 2.dp.toPx()), 2.dp.toPx(), StrokeCap.Round)
+                drawLine(Color(0xFFF1E8D6), Offset(cx, 0f), Offset(cx, len), 2.2.dp.toPx(), StrokeCap.Round)
+                var y = 5.dp.toPx()
+                while (y < len - 5.dp.toPx()) {
+                    drawLine(Color(0xFFB9A889), Offset(cx - 1.1.dp.toPx(), y), Offset(cx + 1.1.dp.toPx(), y + 2.5.dp.toPx()), 0.9.dp.toPx())
+                    y += 5.dp.toPx()
                 }
-                // Wooden bead with a paper tag.
+                // Beech bead.
                 val r = 10.dp.toPx()
-                drawCircle(Color.Black.copy(alpha = 0.18f), r, Offset(cx + 1.dp.toPx(), len + r + 2.dp.toPx()))
-                drawCircle(Color(0xFFC98A56), r, Offset(cx, len + r))
-                drawCircle(Color(0xFFE6B889), r * 0.5f, Offset(cx - r * 0.3f, len + r * 0.7f))
-                drawCircle(Color(0xFF7A4B2A).copy(alpha = 0.35f), r, Offset(cx, len + r), style = Stroke(1.dp.toPx()))
-                val tagTop = len + r * 2 + 3.dp.toPx()
-                val tag = Path().apply {
-                    moveTo(cx - 9.dp.toPx(), tagTop + 4.dp.toPx())
-                    lineTo(cx, tagTop)
-                    lineTo(cx + 9.dp.toPx(), tagTop + 4.dp.toPx())
-                    lineTo(cx + 9.dp.toPx(), tagTop + 24.dp.toPx())
-                    lineTo(cx - 9.dp.toPx(), tagTop + 24.dp.toPx())
+                beechBead(Offset(cx, len + r), r)
+                // Kraft tag hanging from the bead on a short loop, with a word in blue ink.
+                val text = measurer.measure(tag, handStyle.copy(color = if (armed || refreshing) Ink.RedPencil else Ink.Blue))
+                val tagW = (text.size.width + 16.dp.toPx()).coerceAtLeast(38.dp.toPx())
+                val tagH = 24.dp.toPx()
+                val tagTop = len + r * 2 + 6.dp.toPx()
+                drawLine(Color(0xFFB9A889), Offset(cx, len + r * 2 - 1.dp.toPx()), Offset(cx, tagTop + 4.dp.toPx()), 1.dp.toPx())
+                val shape = Path().apply {
+                    moveTo(cx - tagW / 2, tagTop + 6.dp.toPx())
+                    lineTo(cx - tagW / 2 + 6.dp.toPx(), tagTop)
+                    lineTo(cx + tagW / 2 - 6.dp.toPx(), tagTop)
+                    lineTo(cx + tagW / 2, tagTop + 6.dp.toPx())
+                    lineTo(cx + tagW / 2, tagTop + tagH)
+                    lineTo(cx - tagW / 2, tagTop + tagH)
                     close()
                 }
-                drawPath(tag, colors.paper)
-                drawPath(tag, colors.paperInk.copy(alpha = 0.18f), style = Stroke(1.dp.toPx()))
-                // Refresh swirl printed on the tag; spins as you pull.
-                val a = pull.value / threshold * 300f
-                val c = Offset(cx, tagTop + 14.dp.toPx())
-                val rr = 4.5.dp.toPx()
-                for (k in 0 until 10) {
-                    val t0 = Math.toRadians((a + k * 27).toDouble())
-                    val t1 = Math.toRadians((a + k * 27 + 18).toDouble())
-                    drawLine(
-                        (if (armed || refreshing) colors.accent else colors.paperInk).copy(alpha = 0.3f + k * 0.07f),
-                        Offset(c.x + rr * cos(t0).toFloat(), c.y + rr * sin(t0).toFloat()),
-                        Offset(c.x + rr * cos(t1).toFloat(), c.y + rr * sin(t1).toFloat()),
-                        1.6.dp.toPx(), StrokeCap.Round,
-                    )
+                translate(1.dp.toPx(), 2.5.dp.toPx()) { drawPath(shape, Ink.Shadow.copy(alpha = 0.22f)) }
+                drawPath(shape, kraft)
+                drawPath(shape, Stock.Kraft.brush)
+                drawPath(shape, Color.White.copy(alpha = 0.18f), style = Stroke(0.8.dp.toPx()))
+                drawCircle(Color(0xFF3A2A1A).copy(alpha = 0.6f), 1.6.dp.toPx(), Offset(cx, tagTop + 4.dp.toPx()))
+                // Spins a little as you pull, like a tag on a string.
+                rotate((pull.value / threshold) * -6f, Offset(cx, tagTop + tagH / 2)) {
+                    drawText(text, topLeft = Offset(cx - text.size.width / 2, tagTop + (tagH - text.size.height) / 2 + 2.dp.toPx()))
                 }
             }
         }
