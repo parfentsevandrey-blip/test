@@ -81,7 +81,7 @@ def rows_by_month(sel):
     ставки за метр в месяц. Наши помечены флагом ours."""
     rows = [dict(r, ours=False) for r in sel]
     for name, a, fl, fls, rent, title in OURS:
-        rows.append({'id': None, 'ours': True, 'name': name, 'addr': 'ТЦ «Амбар-1», ул. Ленина, 28 — ' + title,
+        rows.append({'id': None, 'ours': True, 'name': name, 'addr': 'ТЦ «Амбар 1», ул. Ленина, 28 — ' + title,
                      'area': a, 'floor': fl, 'floors': fls, 'rent': rent,
                      'rate_m': round(rent / a), 'rate': round(rent * 12 / a),
                      'days': None, 'map': None, 'url': None,
