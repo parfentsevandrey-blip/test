@@ -1,9 +1,9 @@
 """Собирает перечень ОКН: обложка, сводные таблицы, условия, карточки."""
 import json, os
 
-from build_okn import (objs, GROUPS, esc, num, money, fdate, photos, unique_area,
+from build_okn import (objs, GROUPS, esc, num, money, fdate, unique_area,
                        COVERS, ROOTS, STATUS, COND, SEC, OUT)
-from cards import card, role_of, SLUGS, SITE, OWN2, DOCIX
+from cards import card, role_of, SLUGS, SITE, OWN2, photo_files
 from styles import CSS
 
 SHORT = {"Малый Казенный переулок, 5": "М. Казенный, 5",
@@ -55,17 +55,15 @@ def complex_table():
                    for i in ids for p in (objs[str(i)].get("landPlotsParameters") or []))
         cost = sum((b.get("realEstateCost") or 0)
                    for i in ids for b in (objs[str(i)].get("realEstateInfo") or []))
-        docs = sum(len(DOCIX.get(str(i), [])) for i in ids)
         rows.append(f"""<tr>
 <td><b>{esc(gname)}</b><br><span class="cx">{esc(gsub)}</span></td>
 <td class="n">{len(ids)}</td>
 <td class="n">{num(area,'м²',1)}</td>
 <td class="n">{num(land,'м²',0) if land else '—'}</td>
-<td class="n">{money(cost) if cost else '—'}</td>
-<td class="n">{docs}</td></tr>""")
+<td class="n">{money(cost) if cost else '—'}</td></tr>""")
     return f"""<div class="scroll"><table class="sum">
 <thead><tr><th>Комплекс</th><th class="n">Объектов</th><th class="n">Площадь зданий</th>
-<th class="n">Земля</th><th class="n">Кад. стоимость зданий</th><th class="n">Документов</th>
+<th class="n">Земля</th><th class="n">Кад. стоимость зданий</th>
 </tr></thead><tbody>{''.join(rows)}</tbody></table></div>"""
 
 
@@ -181,19 +179,17 @@ def build():
 </section>""")
 
     total = unique_area()
-    naive = sum(o.get("totalArea") or 0 for o in objs.values())
     ready = sum(1 for o in objs.values() if o.get("status") == "READY")
     unsat = sum(1 for o in objs.values() if o.get("condition") == "UNSATISFACTORY")
-    ndocs = sum(len(v) for v in DOCIX.values())
 
     COVER = [(4097, "Малый Казенный, 5 · усадьба Нарышкиных"),
              (3529, "Щапово · каретный двор"),
              (3764, "Филимонки · усадьба, 1801 год")]
     cells = []
     for oid, cap in COVER:
-        ph = photos(oid, 1)
-        if ph:
-            cells.append(f'<figure><img src="{ph[0]}" alt="{esc(cap)}">'
+        pf = photo_files(oid)
+        if pf:
+            cells.append(f'<figure><img src="{pf[0]}" alt="{esc(cap)}">'
                          f'<figcaption>{esc(cap)}</figcaption></figure>')
     strip = f'<div class="strip">{"".join(cells)}</div>' if cells else ""
 
@@ -202,7 +198,7 @@ def build():
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Наследие под инвестора</title>
+<title>Объекты культурного наследия ДОМ.РФ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&family=PT+Sans:wght@400;700&family=PT+Mono&display=swap">
@@ -211,21 +207,20 @@ def build():
 <body>
 <header class="top"><div class="wrap">
   <p class="kicker">ДОМ.РФ · объекты культурного наследия · Москва</p>
-  <h1>Пятнадцать памятников, которые ищут инвестора</h1>
-  <p class="lede">Полный перечень московских ОКН со статусами «Подготовка к торгам»
-  и «Решение отсутствует»: три усадебных комплекса и {num(total,'м²',1)} под реставрацию —
-  от ограды в семь метров до больницы почти на 1 200. С разбором {ndocs} документов,
-  опубликованных порталом по этим объектам.</p>
+  <h1>Объекты культурного наследия ДОМ.РФ</h1>
+  <p class="lede">Пятнадцать московских памятников, которые ДОМ.РФ готовит к передаче
+  инвестору: три усадебных комплекса и {num(total,'м²',1)} под реставрацию —
+  от ограды в семь метров до больницы почти на 1 200. По каждому объекту —
+  расположение, характеристики, предмет охраны и фотографии.</p>
   <dl class="stats">
     <div><dt>Объектов</dt><dd>{len(objs)}</dd></div>
     <div><dt>Готовятся к торгам</dt><dd>{ready}</dd></div>
-    <div><dt>Площадь без двойного счёта</dt><dd>{num(total,'м²',1)}</dd></div>
+    <div><dt>Площадь под реставрацию</dt><dd>{num(total,'м²',1)}</dd></div>
     <div><dt>В неудовл. состоянии</dt><dd>{unsat}</dd></div>
-    <div><dt>Документов разобрано</dt><dd>{ndocs}</dd></div>
   </dl>
   {strip}
-  <p class="meta">Источник: наследие.дом.рф, фильтр «Решение отсутствует, Подготовка к торгам» ·
-  карты: Яндекс Карты · собрано 22.09.2026</p>
+  <p class="meta">Портал ДОМ.РФ «Объекты культурного наследия» · схемы расположения —
+  Яндекс Карты · сведения на 22 сентября 2026 года</p>
 </div></header>
 
 <div class="wrap">
@@ -234,41 +229,22 @@ def build():
 
   <h2>Сводная таблица</h2>
   {summary_table()}
-  <p class="tnote"><b>Про площади.</b> Три строки перечня — ансамбли, и площадь каждого
-  равна сумме его же строений, которые в перечне идут отдельными карточками. Поэтому
-  складывать все пятнадцать строк нельзя: получится {num(naive,'м²',1)} вместо
-  {num(total,'м²',1)}. В шапке — площадь без двойного счёта: три ансамбля плюс
-  отдельно стоящее здание бывшей Александровской больницы.</p>
+  <p class="tnote">Три строки перечня — ансамбли целиком, и площадь каждого уже включает
+  площади его строений, которые идут отдельными карточками. Складывать все пятнадцать
+  строк поэтому не следует: суммарная площадь комплексов — {num(total,'м²',1)}.</p>
 
   <h2>Условия для инвестора</h2>
   {TERMS}
   {''.join(blocks)}
 
   <footer class="src">
-    <b>Как собрано и что перепроверить</b>
-    <ol>
-      <li>Данные карточек — из каталога наследие.дом.рф по фильтру
-        <code>status=NO_SOLUTION,READY</code>, регион «Город Москва»: ровно 15 объектов.</li>
-      <li>Скриншоты расположения сняты по координатам из карточки объекта
-        (map-widget Яндекс Карт, z=16). Метка — точка из карточки, а не геокодирование адреса.</li>
-      <li>Фотографии — из галереи карточки объекта на портале.</li>
-      <li>Выжимка из документов сделана по {ndocs} файлам, которые портал публикует
-        в карточках. Часть из них — сканы без текстового слоя, они распознаны
-        (tesseract, русский), поэтому в цитатах возможны опечатки распознавания;
-        юридически значим оригинал, ссылка на скачивание есть в таблице документов.</li>
-      <li>Один и тот же документ портал вешает на каждое строение ансамбля отдельно:
-        из 82 файлов уникальных 49. Предмет охраны усадьбы Щапово, например, один
-        на все шесть её объектов.</li>
-      <li>Кадастровые стоимости — те, что указаны на портале; это не рыночная оценка
-        и не стартовая цена торгов. Цены объектов портал не публикует.</li>
-      <li>Сроки торгов — плановый квартал из карточки, он двигается.
-        Точную дату смотрите в лоте на земля.дом.рф, где он заведён.</li>
-      <li>Двойной счёт площадей проверен арифметикой: 929,6 = 376,5 + 273,2 + 272,3 + 7,6
-        (Нарышкина), 792,2 = 493,7 + 122,6 + 115,6 + 22,5 + 37,8 (Щапово),
-        797,2 = 589,3 + 207,9 (Филимонки). Связь «ансамбль — строение» портал проставил
-        не везде: у ограды со сторожкой и у обоих объектов Филимонок поле родителя пустое,
-        состав восстановлен по совпадению сумм и адресов.</li>
-    </ol>
+    <p>Сведения об объектах, фотографии и документы — портал ДОМ.РФ
+    «Объекты культурного наследия» (наследие.дом.рф), раздел «Город Москва»,
+    статусы «Подготовка к торгам» и «Решение отсутствует». Схемы расположения —
+    Яндекс Карты. Данные приведены по состоянию на 22 сентября 2026 года.</p>
+    <p>Кадастровая стоимость не является рыночной оценкой и не равна стартовой цене
+    торгов; сроки торгов указаны плановым кварталом и могут измениться. Актуальные
+    сведения и полные тексты охранных документов — в карточке объекта на портале.</p>
   </footer>
 </div>
 </body>
@@ -277,6 +253,6 @@ def build():
 
 if __name__ == "__main__":
     h = build()
-    p = f"{OUT}/okn-moscow.html"
+    p = f"{OUT}/build/okn-moscow.html"
     open(p, "w").write(h)
     print(f"{p}  {len(h)/1048576:.2f} МБ")

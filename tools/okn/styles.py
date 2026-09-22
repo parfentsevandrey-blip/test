@@ -141,6 +141,13 @@ h4{margin:0 0 9px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;co
 .dg ul{margin:0;padding-left:18px}
 .dg li{margin:0 0 5px;color:var(--ink-2);font-size:14.5px;max-width:72ch}
 .dgsrc{margin:12px 0 0;font-family:"PT Sans",Arial,sans-serif;font-size:11px;color:var(--ink-3)}
+.photos{display:block}
+.shot{margin:0 0 18px}
+.shot img{width:100%;height:auto;display:block;background:var(--hair-2)}
+.photos .shot img{background:none}
+.shot figcaption{font-family:"PT Sans",Arial,sans-serif;font-size:11.5px;color:var(--ink-3);
+  padding-top:6px}
+.shot:last-child{margin-bottom:0}
 .hist p{margin:0 0 9px;color:var(--ink-2);font-size:15px;max-width:72ch}
 .hist p:last-child{margin-bottom:0}
 
@@ -170,8 +177,7 @@ a:focus-visible,.btn:focus-visible{outline:2px solid var(--link);outline-offset:
 footer.src{margin-top:44px;padding-top:18px;border-top:1px solid var(--hair);
   font-family:"PT Sans",Arial,sans-serif;font-size:12.5px;color:var(--ink-3)}
 footer.src a{color:var(--link)}
-footer.src ol{padding-left:18px;margin:8px 0 0}
-footer.src li{margin:0 0 5px;max-width:82ch}
+footer.src p{margin:0 0 8px;max-width:84ch}
 
 @media screen and (max-width:760px){
   h1{font-size:28px} .okn{padding:20px 16px} .wrap{padding:0 16px 50px}
@@ -192,7 +198,7 @@ footer.src li{margin:0 0 5px;max-width:82ch}
   header.top h1{font-size:29pt;line-height:1.08;margin-top:6mm}
   header.top .lede{font-size:11.5pt;margin-top:7mm;max-width:none}
   .kicker{font-size:9.5pt;letter-spacing:.2em}
-  .stats{margin-top:11mm;border-color:#d8d3c7;grid-template-columns:repeat(5,1fr)}
+  .stats{margin-top:11mm;border-color:#d8d3c7;grid-template-columns:repeat(4,1fr)}
   .stats div{padding:4mm}
   .stats dt{font-size:6.6pt;letter-spacing:.07em}
   .stats dd{font-size:13.5pt}
@@ -255,13 +261,19 @@ footer.src li{margin:0 0 5px;max-width:82ch}
   .hist{break-inside:auto}
 
   /* кнопки не должны открывать полосу в одиночку */
+  .p3{break-before:page}
+  .photos .shot{margin-bottom:5mm;break-inside:avoid}
+  /* без object-fit: иначе по краю кадра остаётся светлая полоса */
+  .photos .shot img{max-width:100%;max-height:150mm;width:auto;height:auto;
+    background:none}
+  .photos .shot figcaption{font-size:7.6pt}
   .links{margin-top:4mm;padding-top:3mm;break-before:avoid;break-inside:avoid}
   .digest .dg:last-of-type{break-after:avoid}
   .btn{font-size:8.2pt;padding:1.5mm 3.5mm;background:var(--brick) !important;color:#fff !important}
   .btn.alt{background:#fff !important;color:var(--link) !important;border:1px solid #d8d3c7}
 
   footer.src{break-before:page;font-size:8.4pt;margin-top:0;padding-top:0;border-top:none}
-  footer.src li{max-width:none;margin-bottom:2mm}
+  footer.src p{max-width:none;margin-bottom:3mm}
   a{text-decoration:none}
 }
 """
