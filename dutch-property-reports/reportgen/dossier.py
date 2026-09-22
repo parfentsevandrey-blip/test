@@ -64,7 +64,15 @@ CARD_COLUMNS = 3
 # комфортной и текст читается как служебная записка.
 COL_W_MM = 80.0
 COL_GUTTER_MM = S.CONTENT_W_MM - 2 * COL_W_MM   # 10 мм
+# рубрики полос. Подборка объектов называет их «объектом», перечень локаций —
+# «локацией»; отчёт переопределяет их полем labels
+LABELS = {"item": "Объект", "description": "Описание объекта",
+          "gallery": "Объект в кадре", "map_caption": "Расположение объекта"}
+
 FACTS_PHOTO_GAP_MM = 11.0
+# запас под округление LibreOffice: без него кадр, рассчитанный ровно в остаток
+# полосы, срывается на следующую страницу и оставляет треть полосы белой
+FACTS_PHOTO_SLACK_MM = 14.0
 # Предел высоты кадра во всю ширину набора: ниже пропорция уходит в квадрат
 # и от исходного снимка остаётся вырезанная середина.
 PHOTO_CAP_MM = 150.0
@@ -549,10 +557,11 @@ def _facts_height(index: int, obj: dict, title_size: float) -> float:
 
 
 def object_facts(doc, index: int, obj: dict, cache: Path,
-                 closer: Path | None) -> None:
+                 closer: Path | None, labels: dict | None = None) -> None:
     # длинное название сажаем на кегль поменьше, иначе оно уходит на две строки
     title_size = 31 if len(obj["title"]) <= 26 else 25
-    micro(doc, f"Объект {index:02d} · {obj.get('city', '')}", after=6)
+    kicker = (labels or {}).get("item", LABELS["item"])
+    micro(doc, f"{kicker} {index:02d} · {obj.get('city', '')}", after=6)
     display_title(doc, obj["title"], size=title_size, after=8)
     if obj.get("lead"):
         lead_paragraph(doc, obj["lead"], after=11)
@@ -578,7 +587,8 @@ def object_facts(doc, index: int, obj: dict, cache: Path,
     # свободную треть полосы закрывает кадр объекта во всю ширину набора:
     # высота считается по остатку, поэтому полоса заканчивается ровно на поле
     free = (S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM
-            - _facts_height(index, obj, title_size) - FACTS_PHOTO_GAP_MM)
+            - _facts_height(index, obj, title_size)
+            - FACTS_PHOTO_GAP_MM - FACTS_PHOTO_SLACK_MM)
     if closer and free >= 42.0:
         par(doc, after=0, lead=FACTS_PHOTO_GAP_MM * 72 / 25.4)
         framed_photo(doc, closer, cache, width_mm=S.CONTENT_W_MM,
@@ -614,8 +624,9 @@ def _columns_height(texts: list[str]) -> float:
     return height
 
 
-def object_description(doc, obj: dict, cache: Path, portrait: Path | None) -> None:
-    micro(doc, "Описание объекта", after=6)
+def object_description(doc, obj: dict, cache: Path, portrait: Path | None,
+                       labels: dict | None = None) -> None:
+    micro(doc, (labels or {}).get("description", LABELS["description"]), after=6)
     display_title(doc, obj["street"], size=26, after=8)
     rule(doc, color=S.INK, size=S.SZ_RULE, after=11)
 
@@ -660,7 +671,7 @@ def _rows_height(rows: list, columns: int = 2) -> float:
 
 
 def object_location(doc, obj: dict, cache: Path, assets: Path, *,
-                    skip_map: bool = False) -> None:
+                    skip_map: bool = False, labels: dict | None = None) -> None:
     block = next((b for b in obj["sections"] if b.get("type") == "callout"), None)
     if block is None:
         return
@@ -691,7 +702,9 @@ def object_location(doc, obj: dict, cache: Path, assets: Path, *,
         # подпись выключается по центру кадра, а не по левому краю набора
         caption = par(doc, before=3, after=0, lead=S.LH_SMALL,
                       align=WD_ALIGN_PARAGRAPH.CENTER)
-        txt(caption, "Расположение объекта · картографические данные © Google",
+        txt(caption,
+            (labels or {}).get("map_caption", LABELS["map_caption"])
+            + " · картографические данные © Google",
             size=S.FS_CAPTION, color=S.MUTED)
 
     if obj.get("access"):
@@ -912,7 +925,8 @@ def photo_row(doc, paths: list[Path], cache: Path, height_mm: float,
 
 
 def photo_pages(doc, gallery: list[Path], flow: Flow, cache: Path,
-                captions: dict[Path, str] | None = None) -> None:
+                captions: dict[Path, str] | None = None,
+                labels: dict | None = None) -> None:
     """Полосы иллюстраций мозаикой: крупный кадр и ряды мелких.
 
     Высоты рядов растягиваются до нижнего поля, поэтому полоса заполнена
@@ -921,7 +935,7 @@ def photo_pages(doc, gallery: list[Path], flow: Flow, cache: Path,
     if not gallery:
         return
     flow.new_page()
-    micro(doc, "Объект в кадре", after=7)
+    micro(doc, (labels or {}).get("gallery", LABELS["gallery"]), after=7)
 
     head_mm = _mm(S.FS_MICRO + 2 + 7)
     position = 0
@@ -984,6 +998,8 @@ def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> P
         running_footer(section, "")
         return section
 
+    labels = report.get("labels") or {}
+
     flow = Flow(doc)
     started = False
     for index, (obj, images) in enumerate(objects, start=1):
@@ -1003,12 +1019,12 @@ def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> P
         else:
             flow.new_page()
         started = True
-        object_facts(doc, index, obj, cache, plan.closer)
+        object_facts(doc, index, obj, cache, plan.closer, labels)
         flow.new_page()
-        object_description(doc, obj, cache, plan.portrait)
+        object_description(doc, obj, cache, plan.portrait, labels)
         flow.new_page()
         object_location(doc, obj, cache, assets,
-                        skip_map=bool(report.get("skip_map")))
+                        skip_map=bool(report.get("skip_map")), labels=labels)
         chapters = obj.get("chapters", [])
         for chapter in chapters:
             flow.new_page()
@@ -1021,13 +1037,14 @@ def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> P
             named = {path: captions[index]
                      for index, path in enumerate(plan.photos)
                      if index < len(captions)}
-            photo_pages(doc, plan.photos[1:], flow, cache, named)
+            photo_pages(doc, plan.photos[1:], flow, cache, named, labels)
         else:
             # кадр, уже показанный в разборе, в галерее не повторяется
             shown = {plan.photos[index] for chapter in chapters
                      for index in chapter.get("images", [])
                      if 0 <= index < len(plan.photos)}
-            photo_pages(doc, [p for p in plan.gallery if p not in shown], flow, cache)
+            photo_pages(doc, [p for p in plan.gallery if p not in shown],
+                        flow, cache, None, labels)
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(dest))
