@@ -205,9 +205,10 @@ def card(oid, idx):
             f'<figure class="shot"><img src="{u}" alt="{esc(name)} — фотография {i+1}">'
             f'<figcaption>{esc(name)} · фотография {i+1} из {len(pf)}</figcaption></figure>'
             for i, u in enumerate(pf))
+        one = " one" if len(pf) == 1 else ""
         photos_block = f"""<div class="p3">
   <p class="cont">{idx}. {esc(name)} — фотографии</p>
-  <section class="block photos"><h4>Фотографии объекта</h4>{shots}</section>
+  <section class="block photos{one}"><h4>Фотографии объекта</h4>{shots}</section>
 </div>"""
 
     return f"""

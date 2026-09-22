@@ -207,8 +207,7 @@ footer.src p{margin:0 0 8px;max-width:84ch}
   .strip figcaption{font-size:7.4pt}
   .meta{margin-top:8mm;font-size:8.2pt}
 
-  h2{font-size:15pt;margin:0 0 2mm;break-after:avoid;break-before:page}
-  h2:first-of-type{break-before:auto}
+  h2{font-size:15pt;margin:6mm 0 2mm;break-after:avoid;break-before:auto}
   .gsub{break-after:avoid;font-size:7.6pt}
   .gnote{font-size:9.4pt;margin-bottom:5mm;max-width:none;break-before:avoid}
   .tnote{font-size:8.4pt}
@@ -227,11 +226,9 @@ footer.src p{margin:0 0 8px;max-width:84ch}
   /* Разворот на объект: первая полоса — образ и паспорт, вторая — таблицы
      и выжимка. Перелом стоит жёстко, поэтому блоки не свисают сиротами. */
   .okn{box-shadow:none;border:none;border-top:2px solid var(--gold);padding:4mm 0 0;
-    margin:0;break-before:page;break-inside:auto}
-  .p1{break-inside:avoid}
-  .p2{break-before:page}
-  .cont{display:block;font-family:"PT Sans",Arial,sans-serif;font-size:8pt;color:var(--ink-3);
-    margin:0 0 4mm;padding-bottom:1.5mm;border-bottom:1px solid var(--hair)}
+    margin:0 0 6mm;break-before:page;break-inside:auto}
+  .p1,.p2,.p3{break-before:auto;break-inside:auto}
+  .cont{display:none}
   .ohead{margin-bottom:4mm;break-after:avoid}
   .ohead h3{font-size:15pt}
   .addr{font-size:10pt}
@@ -246,6 +243,8 @@ footer.src p{margin:0 0 8px;max-width:84ch}
   .bigmap figcaption{font-size:7.6pt}
 
   .block{margin-bottom:4mm;break-inside:avoid}
+  .block.digest,.block.hist,.block.photos{break-inside:auto}
+  h4{break-after:avoid}
   h4{font-size:7.8pt;margin-bottom:2mm}
   table{font-size:8.6pt}
   .kvwrap{gap:0 7mm}
@@ -261,18 +260,21 @@ footer.src p{margin:0 0 8px;max-width:84ch}
   .hist{break-inside:auto}
 
   /* кнопки не должны открывать полосу в одиночку */
-  .p3{break-before:page}
-  .photos .shot{margin-bottom:5mm;break-inside:avoid}
+  .photos{break-inside:auto}
+  .photos .shot{margin-bottom:4mm;break-inside:avoid}
   /* без object-fit: иначе по краю кадра остаётся светлая полоса */
-  .photos .shot img{max-width:100%;max-height:150mm;width:auto;height:auto;
+  .photos .shot img{max-width:100%;max-height:108mm;width:auto;height:auto;
     background:none}
+  /* единственный кадр не делит полосу ни с чем — даём ему высоту */
+  .photos.one .shot img{max-height:165mm}
   .photos .shot figcaption{font-size:7.6pt}
   .links{margin-top:4mm;padding-top:3mm;break-before:avoid;break-inside:avoid}
   .digest .dg:last-of-type{break-after:avoid}
   .btn{font-size:8.2pt;padding:1.5mm 3.5mm;background:var(--brick) !important;color:#fff !important}
   .btn.alt{background:#fff !important;color:var(--link) !important;border:1px solid #d8d3c7}
 
-  footer.src{break-before:page;font-size:8.4pt;margin-top:0;padding-top:0;border-top:none}
+  footer.src{break-before:auto;font-size:8.4pt;margin-top:6mm;padding-top:3mm;
+    border-top:1px solid var(--hair);break-inside:avoid}
   footer.src p{max-width:none;margin-bottom:3mm}
   a{text-decoration:none}
 }
