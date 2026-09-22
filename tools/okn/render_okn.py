@@ -1,7 +1,7 @@
 """Верстает страницу перечня ОКН из карточек build_okn."""
 import json, os
 from build_okn import (objs, GROUPS, card, esc, num, fdate, STATUS, COND, SEC,
-                       OUT, unique_area, role, COVERS, ROOTS)
+                       OUT, unique_area, role, COVERS, ROOTS, photos)
 
 SLUGS = json.load(open(f"{OUT}/slugs.json"))
 SITE = "https://xn--80aicbopm7a.xn--d1aqf.xn--p1ai"
@@ -48,6 +48,11 @@ h1{margin:0;font-size:36px;line-height:1.15;font-weight:700;text-wrap:balance;le
 .lede{margin:12px 0 0;font-size:17px;color:var(--ink-2);max-width:66ch}
 .meta{margin:18px 0 0;font-family:"PT Sans",Arial,sans-serif;font-size:12.5px;
   color:var(--ink-3);letter-spacing:.02em}
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:26px 0 0}
+.strip figure{margin:0}
+.strip img{width:100%;height:170px;object-fit:cover;display:block;background:var(--hair-2)}
+.strip figcaption{font-family:"PT Sans",Arial,sans-serif;font-size:11px;color:var(--ink-3);
+  padding-top:5px;letter-spacing:.03em}
 
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
   background:var(--hair);border:1px solid var(--hair);margin:26px 0 0}
@@ -159,13 +164,86 @@ footer.src a{color:var(--link)}
 footer.src ol{padding-left:18px;margin:8px 0 0}
 footer.src li{margin:0 0 5px;max-width:78ch}
 
-@media(max-width:720px){
+@media screen and (max-width:720px){
   h1{font-size:27px} .mgrid{grid-template-columns:1fr}
   .okn{padding:20px 16px} .wrap{padding:0 16px 50px}
   .gal img{height:190px} .mgrid img{height:220px}
 }
+@page{size:A4;margin:13mm 12mm 15mm}
 @media print{
-  body{background:#fff} .okn{break-inside:avoid;box-shadow:none;border:1px solid #ccc}
+  :root{--ground:#fff;--paper:#fff}
+  html,body{background:#fff;font-size:9.6pt;line-height:1.5}
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .wrap{max-width:none;padding:0}
+
+  /* обложка отдельной полосой */
+  header.top{border-bottom:none;padding:0;margin:0;break-after:page;
+    min-height:250mm;display:flex;flex-direction:column;justify-content:center}
+  header.top .kicker{font-size:10pt;letter-spacing:.2em}
+  header.top h1{font-size:30pt;line-height:1.1;margin-top:6mm}
+  header.top .lede{font-size:12pt;margin-top:7mm;max-width:none}
+  .stats{margin-top:12mm;border-color:#d8d3c7;grid-template-columns:repeat(5,1fr)}
+  .stats div{border:none;padding:4mm 5mm}
+  .stats dt{font-size:6.8pt;letter-spacing:.07em}
+  .stats dd{font-size:14pt}
+  .meta{margin-top:8mm;font-size:8.5pt}
+  .strip{margin-top:9mm;gap:3mm}
+  .strip img{height:42mm}
+  .strip figcaption{font-size:7.6pt}
+
+  h2{font-size:15pt;margin:0 0 2mm;break-after:avoid;break-before:page}
+  h2:first-of-type{break-before:auto}
+  .gsub{break-after:avoid;font-size:8pt}
+  .gnote{font-size:9.5pt;margin-bottom:5mm;max-width:none;break-before:avoid}
+  .tnote{font-size:8.6pt}
+
+  table.sum{font-size:8.2pt;box-shadow:none;border:1px solid #d8d3c7;break-inside:auto}
+  table.sum th{padding:2.4mm 2mm;font-size:7pt;background:#20242b !important;color:#fff !important}
+  table.sum td{padding:2.1mm 2mm}
+  table.sum tr{break-inside:avoid}
+
+  .terms{box-shadow:none;border:1px solid #d8d3c7;border-left:3px solid var(--brick);
+    padding:6mm 7mm;break-inside:avoid}
+  .terms .sect{break-inside:avoid;margin-top:5mm}
+  .rate b{font-size:19pt}
+  .deadlines{font-size:9pt}
+
+  /* карточка: не рвём внутренние блоки, саму карточку начинаем с новой полосы */
+  .okn{box-shadow:none;border:none;border-top:2px solid var(--gold);
+    padding:5mm 0 0;margin:0 0 6mm;break-before:page;break-inside:auto}
+  .ohead{margin-bottom:4mm;break-after:avoid}
+  .ohead h3{font-size:14.5pt}
+  .addr{font-size:10pt}
+  .oid{width:7mm;height:7mm;font-size:8.5pt}
+  .idtag{font-size:8pt}
+
+  .gal{gap:2.5mm;margin-bottom:4mm;break-inside:avoid;
+    grid-template-columns:repeat(auto-fit,minmax(38mm,1fr))}
+  .gal img{height:44mm}
+  .facts{font-size:9pt;gap:0 8mm;margin-bottom:4mm;break-inside:avoid;
+    grid-template-columns:1fr 1fr}
+  .facts .r{padding:1.5mm 0}
+  .facts dt{font-size:8.4pt}
+  .maps{margin-bottom:4mm;break-inside:avoid}
+  .mgrid{gap:2.5mm;grid-template-columns:1fr 1fr}
+  .mgrid img{height:52mm}
+  .mgrid figcaption{font-size:7.6pt}
+  .coord{font-size:8pt}
+  .block{margin-bottom:3.5mm;break-inside:avoid}
+  h4{font-size:8pt;margin-bottom:1.5mm}
+  .sub{font-size:8.8pt;padding:1.5mm 0}
+  .sub .vri{font-size:8pt}
+  .chip{font-size:8pt;padding:.7mm 2mm}
+  .hist p{font-size:9.4pt;margin-bottom:2mm;max-width:none}
+  .hist{break-inside:auto}
+
+  .links{margin-top:4mm;padding-top:3mm}
+  .btn{font-size:8.5pt;padding:1.6mm 3.5mm;background:var(--brick) !important;color:#fff !important}
+  .btn.alt{background:#fff !important;color:var(--link) !important;border:1px solid #d8d3c7}
+
+  footer.src{break-before:page;font-size:8.6pt;margin-top:0;padding-top:0;border-top:none}
+  footer.src li{max-width:none;margin-bottom:2mm}
+  a{text-decoration:none}
 }
 """
 
@@ -291,6 +369,18 @@ def build():
     ready = sum(1 for o in objs.values() if o.get("status") == "READY")
     unsat = sum(1 for o in objs.values() if o.get("condition") == "UNSATISFACTORY")
 
+    # по одному кадру на комплекс — обложке хватает трёх
+    COVER = [(4097, "Малый Казенный, 5 · усадьба Нарышкиных"),
+             (3529, "Щапово · каретный двор"),
+             (3764, "Филимонки · усадьба, 1801 год")]
+    cells = []
+    for oid, cap in COVER:
+        ph = photos(oid, 1)
+        if ph:
+            cells.append(f'<figure><img src="{ph[0]}" alt="{esc(cap)}">'
+                         f'<figcaption>{esc(cap)}</figcaption></figure>')
+    strip = f'<div class="strip">{"".join(cells)}</div>' if cells else ""
+
     naive_txt = num(naive, 'м²', 1)
     total_txt = num(total, 'м²', 1)
     html = f"""<!DOCTYPE html>
@@ -318,6 +408,7 @@ def build():
     <div><dt>В неудовл. состоянии</dt><dd>{unsat}</dd></div>
     <div><dt>Комплексов</dt><dd>{len(GROUPS)}</dd></div>
   </dl>
+  {strip}
   <p class="meta">Источник: наследие.дом.рф, фильтр «Решение отсутствует, Подготовка к торгам» ·
   карты: Яндекс Карты · собрано 22.09.2026</p>
 </div></header>

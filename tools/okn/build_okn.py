@@ -29,7 +29,17 @@ DOCS = {"PROTECTION_SUBJECT": "Предмет охраны",
         "HISTORICAL_REFERENCE": "Историческая справка",
         "OBJECT_PASSPORT": "Паспорт объекта",
         "INCLUSION_ORDER": "Приказ о включении в реестр",
-        "PHOTO_FIXATION": "Фотофиксация"}
+        "PHOTO_FIXATION": "Фотофиксация",
+        # портал пишет тип с опечаткой в корне слова — держим оба написания
+        "UNSTATISFACTORY_CONDITION_DECISION": "Решение о неудовл. состоянии",
+        "UNSATISFACTORY_CONDITION_DECISION": "Решение о неудовл. состоянии"}
+
+
+def doc_label(t):
+    """Название документа; незнакомый тип не показываем кодом."""
+    if t in DOCS:
+        return DOCS[t]
+    return (t or "").replace("_", " ").capitalize() or "Документ"
 ENG = [("electricitySupply", "Электроснабжение"), ("waterSupply", "Водоснабжение"),
        ("waterDisposal", "Водоотведение"), ("heating", "Отопление"), ("gasSupply", "Газоснабжение")]
 
@@ -122,7 +132,7 @@ def card(oid, idx):
     gal = ""
     if ph:
         gal = '<div class="gal">' + "".join(
-            f'<figure><img src="{u}" alt="{esc(o["name"])} — фото {i+1}" loading="lazy">'
+            f'<figure><img src="{u}" alt="{esc(o["name"])} — фото {i+1}">'
             f'</figure>' for i, u in enumerate(ph)) + '</div>'
 
     mapblock = ""
@@ -130,10 +140,10 @@ def card(oid, idx):
         cells = []
         if "map" in mp:
             cells.append(f'<figure><img src="{mp["map"]}" alt="Схема расположения" '
-                         f'loading="lazy"><figcaption>Схема · Яндекс Карты</figcaption></figure>')
+                         f'><figcaption>Схема · Яндекс Карты</figcaption></figure>')
         if "sat" in mp:
             cells.append(f'<figure><img src="{mp["sat"]}" alt="Спутник" '
-                         f'loading="lazy"><figcaption>Спутник · Яндекс Карты</figcaption></figure>')
+                         f'><figcaption>Спутник · Яндекс Карты</figcaption></figure>')
         mapblock = ('<div class="maps"><h4>Расположение</h4><div class="mgrid">'
                     + "".join(cells) + '</div>'
                     + (f'<p class="coord">{lat}, {lon} · '
@@ -192,7 +202,7 @@ def card(oid, idx):
     if dl:
         seen, items = set(), []
         for d in dl:
-            t = DOCS.get(d.get("documentType"), d.get("documentType"))
+            t = doc_label(d.get("documentType"))
             if t in seen:
                 continue
             seen.add(t)
