@@ -70,7 +70,7 @@ fun Forecast.momentAt(epochSeconds: Long): ForecastMoment {
         cloudCover = cloudCover,
         pressure = blend(c.pressure, hourlyValues?.pressure),
         windSpeed = windSpeed,
-        windGusts = blend(c.windGusts, hourlyValues?.windGusts),
+        windGusts = maxOf(blend(c.windGusts, hourlyValues?.windGusts), windSpeed),
         windDirection = if (weight < 0.5 || nearestHour == null) c.windDirection else nearestHour.windDirection,
         precipitation = precipitation,
         precipitationProbability = nearestHour?.precipitationProbability ?: 0,

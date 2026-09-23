@@ -1,5 +1,6 @@
 package app.rosa.weather.core.designsystem.haptics
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -26,8 +27,10 @@ import kotlin.random.Random
  * touch-feedback setting (view-based effects honour it automatically).
  */
 @Stable
+@SuppressLint("InlinedApi") // API 34 feedback constants are only used via feedback(), which falls back on 13.
 class RosaHaptics(private val view: View, private val vibrator: Vibrator?, var level: HapticsLevel) {
 
+    @SuppressLint("WrongConstant") // The array only holds Composition.PRIMITIVE_* values.
     private val primitives: Set<Int> = runCatching {
         val all = intArrayOf(
             VibrationEffect.Composition.PRIMITIVE_CLICK,
@@ -53,7 +56,7 @@ class RosaHaptics(private val view: View, private val vibrator: Vibrator?, var l
     fun tick() {
         if (!enabled) return
         if (!compose(VibrationEffect.Composition.PRIMITIVE_TICK to if (rich) 0.55f else 0.3f)) {
-            view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_FREQUENT_TICK)
+            feedback(HapticFeedbackConstants.SEGMENT_FREQUENT_TICK, HapticFeedbackConstants.CLOCK_TICK)
         }
     }
 
@@ -61,7 +64,7 @@ class RosaHaptics(private val view: View, private val vibrator: Vibrator?, var l
     fun milestone() {
         if (!enabled) return
         if (!compose(VibrationEffect.Composition.PRIMITIVE_CLICK to 0.85f)) {
-            view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
+            feedback(HapticFeedbackConstants.SEGMENT_TICK, HapticFeedbackConstants.CONTEXT_CLICK)
         }
     }
 
@@ -85,7 +88,7 @@ class RosaHaptics(private val view: View, private val vibrator: Vibrator?, var l
 
     fun toggle(on: Boolean) {
         if (!enabled) return
-        view.performHapticFeedback(if (on) HapticFeedbackConstants.TOGGLE_ON else HapticFeedbackConstants.TOGGLE_OFF)
+        feedback(if (on) HapticFeedbackConstants.TOGGLE_ON else HapticFeedbackConstants.TOGGLE_OFF, HapticFeedbackConstants.VIRTUAL_KEY)
     }
 
     /** Snapping to a grid cell while resizing a widget preview. */
@@ -108,7 +111,7 @@ class RosaHaptics(private val view: View, private val vibrator: Vibrator?, var l
                     .build(),
             )
         } else if (!compose(VibrationEffect.Composition.PRIMITIVE_QUICK_RISE to 0.7f)) {
-            view.performHapticFeedback(HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE)
+            feedback(HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE, HapticFeedbackConstants.LONG_PRESS)
         }
     }
 
@@ -157,6 +160,11 @@ class RosaHaptics(private val view: View, private val vibrator: Vibrator?, var l
         } else if (!composed) {
             view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         }
+    }
+
+    /** View feedback with a fallback for constants introduced in Android 14 (we support 13). */
+    private fun feedback(modern: Int, legacy: Int) {
+        view.performHapticFeedback(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) modern else legacy)
     }
 
     private fun compose(vararg steps: Pair<Int, Float>): Boolean {

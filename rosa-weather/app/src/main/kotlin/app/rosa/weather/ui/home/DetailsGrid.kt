@@ -49,6 +49,7 @@ import app.rosa.weather.core.designsystem.glass.GlassStyle
 import app.rosa.weather.core.designsystem.motion.LocalMotionEnabled
 import app.rosa.weather.core.designsystem.motion.RosaMotion
 import app.rosa.weather.core.designsystem.theme.Rosa
+import app.rosa.weather.core.designsystem.theme.numeralText
 import app.rosa.weather.core.model.AirLevel
 import app.rosa.weather.core.model.Forecast
 import app.rosa.weather.core.model.ForecastMoment
@@ -99,7 +100,7 @@ private fun Tile(title: String, value: String, modifier: Modifier, subtitle: Str
         Column(Modifier.fillMaxSize().padding(16.dp)) {
             Text(title, style = Rosa.type.label, color = colors.inkSoft, maxLines = 1)
             Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center, content = visual)
-            Text(value, style = Rosa.type.numeral, color = colors.ink, maxLines = 1)
+            Text(numeralText(value), style = Rosa.type.numeral, color = colors.ink, maxLines = 1)
             if (subtitle != null) Text(subtitle, style = Rosa.type.caption, color = colors.inkSoft, maxLines = 2)
         }
     }

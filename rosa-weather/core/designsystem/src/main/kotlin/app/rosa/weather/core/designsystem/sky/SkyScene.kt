@@ -1,6 +1,7 @@
 package app.rosa.weather.core.designsystem.sky
 
 import android.graphics.Bitmap
+import androidx.core.graphics.createBitmap
 import android.graphics.BitmapShader
 import android.graphics.Canvas as AndroidCanvas
 import android.graphics.LinearGradient
@@ -65,6 +66,8 @@ data class SkyParams(
     val bodyX: Float,
     val bodyY: Float,
     val isSun: Boolean,
+    /** 0 when the sun/moon is below the horizon, 1 when clearly above it. */
+    val bodyVisible: Float,
     val moonPhase: Float,
     val cloudCover: Float,
     val cloudDark: Float,
@@ -82,7 +85,7 @@ data class SkyParams(
         return SkyParams(
             lerp(zenith, to.zenith, t), lerp(horizon, to.horizon, t), lerp(glow, to.glow, t), lerp(sun, to.sun, t),
             lerp(cloudLight, to.cloudLight, t), lerp(cloudShade, to.cloudShade, t),
-            f(bodyX, to.bodyX), f(bodyY, to.bodyY), if (t < 0.5f) isSun else to.isSun, f(moonPhase, to.moonPhase),
+            f(bodyX, to.bodyX), f(bodyY, to.bodyY), if (t < 0.5f) isSun else to.isSun, f(bodyVisible, to.bodyVisible), f(moonPhase, to.moonPhase),
             f(cloudCover, to.cloudCover), f(cloudDark, to.cloudDark), f(fog, to.fog), f(wind, to.wind), f(stars, to.stars),
             f(rain, to.rain), f(snow, to.snow), f(lightning, to.lightning), f(frost, to.frost), f(condensation, to.condensation),
         )
@@ -99,13 +102,16 @@ data class SkyParams(
             val useSun = moment.sun.elevation > -5
             val body = if (useSun) moment.sun else moment.moon
             val x = (((body.azimuth - 90.0) / 180.0).toFloat()).coerceIn(0.12f, 0.88f)
-            val y = (0.62f - (body.elevation / 70.0).toFloat() * 0.55f).coerceIn(0.08f, 0.9f)
+            // Keep the light source in the upper sky, above the type, rising with elevation.
+            val y = (0.36f - (body.elevation / 70.0).toFloat() * 0.3f).coerceIn(0.05f, 0.7f)
             val night = ((-moment.sun.elevation - 6) / 8.0).toFloat().coerceIn(0f, 1f)
             val humid = ((moment.humidity - 88) / 12f).coerceIn(0f, 1f)
             return SkyParams(
                 zenith = palette.zenith.toColor(), horizon = palette.horizon.toColor(), glow = palette.glow.toColor(),
                 sun = palette.sun.toColor(), cloudLight = palette.cloudLight.toColor(), cloudShade = palette.cloudShade.toColor(),
-                bodyX = x, bodyY = y, isSun = useSun, moonPhase = moment.moonPhase.phase.toFloat(),
+                bodyX = x, bodyY = y, isSun = useSun,
+                bodyVisible = ((body.elevation + 2.0) / 5.0).toFloat().coerceIn(0f, 1f),
+                moonPhase = moment.moonPhase.phase.toFloat(),
                 cloudCover = visual.cloudCover, cloudDark = visual.cloudDarkness, fog = visual.fog, wind = visual.wind,
                 stars = night * (1f - visual.cloudCover * 0.85f), rain = visual.rain, snow = visual.snow,
                 lightning = visual.lightning,
@@ -243,7 +249,7 @@ fun SkyScene(
         sky.setColorUniform("cloudShade", p.cloudShade.toArgb())
         sky.setFloatUniform("sunPos", p.bodyX, p.bodyY)
         sky.setFloatUniform("isSun", if (p.isSun) 1f else 0f)
-        sky.setFloatUniform("bodySize", if (p.isSun) 0.045f else 0.06f)
+        sky.setFloatUniform("bodySize", (if (p.isSun) 0.022f else 0.03f) * p.bodyVisible)
         sky.setFloatUniform("moonPhase", p.moonPhase)
         sky.setFloatUniform("cloudCover", p.cloudCover)
         sky.setFloatUniform("cloudDark", p.cloudDark)
@@ -315,7 +321,7 @@ private class RippleState {
  * (a few hundred pixels), sampled by the window shader, and slowly faded so the mist returns.
  */
 private class WipeMask {
-    private val bitmap: Bitmap = Bitmap.createBitmap(90, 180, Bitmap.Config.ARGB_8888)
+    private val bitmap: Bitmap = createBitmap(90, 180)
     private val canvas = AndroidCanvas(bitmap)
     private val brush = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = android.graphics.Color.WHITE

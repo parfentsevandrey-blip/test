@@ -14,7 +14,6 @@ dependencies {
     api(libs.compose.foundation)
     api(libs.compose.animation)
     api(libs.compose.material3)
-    api(libs.androidx.graphics.shapes)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
 }

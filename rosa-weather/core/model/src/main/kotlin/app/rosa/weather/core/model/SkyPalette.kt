@@ -20,6 +20,8 @@ data class SkyPalette(
     val accent: Argb,
     val warm: Argb,
     val cool: Argb,
+    /** Approximate luminance behind the main type (upper sky, clouds included), 0..1. */
+    val brightness: Double = 0.2,
 ) {
     /** True when the sky is bright enough that text must switch to dark ink. */
     val isLight: Boolean get() = ink.luminance < 0.2
@@ -94,8 +96,11 @@ data class SkyPalette(
             val cloudShade = Argb.hex(0x0D1020).lerp(Argb.hex(0x9AA3B5), daylight)
                 .lerp(Argb.hex(0x3A4150), dark * 0.7f)
 
-            val mid = zenith.lerp(horizon, 0.55f)
-            val light = mid.luminance > 0.42
+            // Judge legibility where the big type sits (upper third) and count the cloud deck,
+            // which the shader paints much lighter than the bare gradient.
+            val behindType = zenith.lerp(horizon, 0.3f).lerp(cloudLight, visual.cloudCover * 0.55f)
+            val brightness = behindType.luminance
+            val light = brightness > 0.36
             val ink = if (light) Argb.hex(0x1B2030) else Argb.hex(0xFFFBF5)
             val inkSoft = if (light) Argb.hex(0x1B2030).withAlpha(0.66f) else Argb.hex(0xFFFBF5).withAlpha(0.72f)
 
@@ -109,7 +114,7 @@ data class SkyPalette(
                 sunElevation < 8 -> Argb.hex(0xFFB48A)
                 else -> Argb.hex(0xFFD37A)
             }
-            return SkyPalette(zenith, horizon, glow, sun, cloudLight, cloudShade, ink, inkSoft, accent, warm, cool)
+            return SkyPalette(zenith, horizon, glow, sun, cloudLight, cloudShade, ink, inkSoft, accent, warm, cool, brightness)
         }
 
         private fun bracket(elevation: Double): Triple<Key, Key, Float> {

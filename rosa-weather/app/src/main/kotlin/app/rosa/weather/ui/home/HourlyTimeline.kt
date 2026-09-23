@@ -98,8 +98,10 @@ fun HourlyTimeline(
     val temps = remember(hours, currentTemperature) {
         hours.mapIndexed { i, h -> if (i == 0) currentTemperature else h.temperature }
     }
-    val minT = temps.min()
-    val maxT = temps.max()
+    // Centre a flat day in the band instead of letting it hug the bottom.
+    val span = (temps.max() - temps.min()).coerceAtLeast(4.0)
+    val minT = (temps.max() + temps.min()) / 2 - span / 2
+    val maxT = minT + span
     val milestones = remember(forecast, hours) { milestoneHours(forecast, hours, format) }
 
     // Report the scrub position continuously; tick on every whole hour crossed.
@@ -118,7 +120,10 @@ fun HourlyTimeline(
     GlassSurface(modifier.fillMaxWidth(), style = GlassStyle.Frosted, cornerRadius = 30.dp) {
         Column(Modifier.padding(vertical = 14.dp)) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(R.string.next_hours), style = Rosa.type.label, color = colors.inkSoft, modifier = Modifier.weight(1f))
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.next_hours), style = Rosa.type.label, color = colors.inkSoft)
+                    Text(stringResource(R.string.scrub_hint), style = Rosa.type.caption, color = colors.inkFaint, maxLines = 1)
+                }
                 AnimatedVisibility(offsetHours > 0.6f, enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
                     GlassButton(
                         onClick = { scope.launch { state.animateScrollToItem(0) } },

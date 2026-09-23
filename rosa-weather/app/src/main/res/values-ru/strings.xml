@@ -5,7 +5,6 @@
     <string name="daily_title">Прогноз на 10 дней</string>
     <string name="details_title">Сейчас подробнее</string>
     <string name="nowcast_title">Ближайшие два часа</string>
-    <string name="updated">Обновлено %1$s</string>
     <string name="data_source">Погода: Open-Meteo.com · CC BY 4.0</string>
     <string name="back_to_now">Вернуться в сейчас</string>
     <string name="at_time">в %1$s</string>
@@ -54,7 +53,6 @@
     <string name="widgets_placed">На рабочем столе</string>
     <string name="widgets_add">Добавить на экран</string>
     <string name="widgets_none">Виджетов пока нет. Выберите стиль ниже — каждый растягивается до любого размера.</string>
-    <string name="widgets_edit">Изменить</string>
     <string name="widgets_pin_unsupported">Лаунчер не умеет добавлять виджеты из приложений — зажмите пустое место на рабочем столе.</string>
     <string name="cd_places">Места</string>
     <string name="cd_settings">Настройки</string>
@@ -62,7 +60,6 @@
     <string name="cd_back">Назад</string>
     <string name="cd_refresh">Обновить</string>
     <string name="cd_add">Добавить</string>
-    <string name="cd_delete">Убрать</string>
     <string name="day_detail_wind">Ветер до %1$s</string>
     <string name="day_detail_rain">%1$s · %2$d%%</string>
     <string name="day_detail_uv">УФ до %1$d</string>
@@ -72,5 +69,4 @@
     <string name="feels_same">Ощущается как есть</string>
     <string name="humidity_dew">Точка росы %1$s</string>
     <string name="visibility_hint">Ясная видимость</string>
-    <string name="pressure_trend_hint">На уровне моря</string>
 </resources>

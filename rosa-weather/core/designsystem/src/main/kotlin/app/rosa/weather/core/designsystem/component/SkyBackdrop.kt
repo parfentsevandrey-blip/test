@@ -42,6 +42,8 @@ fun RosaEnvironment(settings: AppSettings, palette: SkyPalette, content: @Compos
     val tilt = rememberTilt(enabled = settings.tiltLighting && motion)
     val environment = remember { GlassEnvironment() }
     environment.tint = colors.glassTint
+    // Light ink over a fairly bright sky: densify the glass so type keeps its contrast.
+    environment.tintBoost = if (palette.isLight) 0f else ((palette.brightness - 0.12) / 0.24).toFloat().coerceIn(0f, 1f)
     LaunchedEffect(tilt) {
         snapshotFlow { tilt.value }.collect { environment.lightAngle = it.toLightAngle() }
     }

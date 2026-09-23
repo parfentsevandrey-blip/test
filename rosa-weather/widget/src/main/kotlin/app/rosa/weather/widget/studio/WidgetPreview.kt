@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.core.graphics.withScale
 import app.rosa.weather.core.model.WidgetConfig
 import app.rosa.weather.widget.render.DynamicTones
 import app.rosa.weather.widget.render.WidgetContent
@@ -36,11 +37,9 @@ fun WidgetPreview(
         val hDp = size.height / density
         if (wDp < 8f || hDp < 8f) return@Canvas
         drawIntoCanvas { canvas ->
-            val native = canvas.nativeCanvas
-            native.save()
-            native.scale(density, density)
-            renderer.draw(native, WidgetRenderRequest(wDp, hDp, config, content, cornerRadiusDp, systemNight, dynamic))
-            native.restore()
+            canvas.nativeCanvas.withScale(density, density) {
+                renderer.draw(this, WidgetRenderRequest(wDp, hDp, config, content, cornerRadiusDp, systemNight, dynamic))
+            }
         }
     }
 }

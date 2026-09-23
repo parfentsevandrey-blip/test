@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.os.Build
 import android.widget.RemoteViews
+import androidx.core.content.edit
 import app.rosa.weather.core.model.SampleForecast
 import app.rosa.weather.core.model.Units
 import app.rosa.weather.widget.provider.WidgetKind
@@ -62,6 +63,6 @@ object WidgetPreviews {
             }.getOrDefault(false)
             allOk = allOk && ok
         }
-        if (allOk) prefs.edit().putLong(KEY_VERSION, version).apply()
+        if (allOk) prefs.edit { putLong(KEY_VERSION, version) }
     }
 }

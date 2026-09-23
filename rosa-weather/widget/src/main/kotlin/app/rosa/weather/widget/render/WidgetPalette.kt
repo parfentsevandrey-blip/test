@@ -83,7 +83,7 @@ data class WidgetPalette(
                 dark -> 0xFFFFFBF5.toInt()
                 else -> 0xFF1B2030.toInt()
             }
-            val skyAccent = if (dark) sky.accent.value else Argb(sky.accent.value).lerp(Argb.hex(0x1B2030), 0.45f).value
+            val skyAccent = if (dark) sky.accent.value else Argb(sky.accent.value).lerp(Argb.hex(0x1B2030), 0.62f).value
             val accent = when (config.accent) {
                 WidgetAccent.Sky -> if (paper) (if (dark) 0xFFF0A27A.toInt() else 0xFFC4552F.toInt()) else skyAccent
                 WidgetAccent.Temperature -> skyAccent // replaced per-value by the temperature scale

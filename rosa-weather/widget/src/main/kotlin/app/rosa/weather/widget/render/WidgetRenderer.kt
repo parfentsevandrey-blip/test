@@ -13,6 +13,8 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.text.TextUtils
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.withTranslation
 import app.rosa.weather.core.designsystem.format.WeatherFormat
 import app.rosa.weather.core.designsystem.glyph.WeatherGlyphPainter
 import app.rosa.weather.core.model.Forecast
@@ -89,7 +91,7 @@ class WidgetRenderer(private val context: Context) {
     fun render(request: WidgetRenderRequest, pxPerDp: Float): Bitmap {
         val w = (request.widthDp * pxPerDp).roundToInt().coerceAtLeast(1)
         val h = (request.heightDp * pxPerDp).roundToInt().coerceAtLeast(1)
-        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(w, h)
         val canvas = Canvas(bitmap)
         canvas.scale(pxPerDp, pxPerDp)
         draw(canvas, request)
@@ -412,7 +414,7 @@ class WidgetRenderer(private val context: Context) {
     }
 
     private fun glyph(canvas: Canvas, s: Scene, rect: RectF, condition: WeatherCondition = s.moment.condition, isDay: Boolean = s.moment.isDay) {
-        glyphs.draw(canvas, condition, isDay, rect, s.palette.glyphTone, s.palette.ink, s.moment.moonPhase.phase)
+        glyphs.draw(canvas, condition, isDay, rect, s.palette.glyphTone, s.palette.ink, s.moment.moonPhase.phase, onLightBackground = !s.palette.isDark)
     }
 
     // endregion
@@ -819,10 +821,7 @@ class WidgetRenderer(private val context: Context) {
             .setMaxLines(2)
             .setEllipsize(TextUtils.TruncateAt.END)
             .build()
-        canvas.save()
-        canvas.translate(layout.padding, gy + g + 6 * k)
-        staticLayout.draw(canvas)
-        canvas.restore()
+        canvas.withTranslation(layout.padding, gy + g + 6 * k) { staticLayout.draw(this) }
     }
 
     /** Catmull–Rom spline through [points] into [path] (as cubic Béziers). */

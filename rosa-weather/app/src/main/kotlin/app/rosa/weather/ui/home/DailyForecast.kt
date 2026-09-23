@@ -26,7 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -69,7 +69,7 @@ fun DailyForecast(forecast: Forecast, now: Long, currentTemperature: Double, for
     if (days.isEmpty()) return
     val lo = days.minOf { it.temperatureMin }
     val hi = days.maxOf { it.temperatureMax }
-    var expanded by rememberSaveable { mutableStateOf(-1L) }
+    var expanded by rememberSaveable { mutableLongStateOf(-1L) }
     val haptics = LocalHaptics.current
 
     GlassSurface(modifier.fillMaxWidth(), style = GlassStyle.Frosted, cornerRadius = 30.dp) {

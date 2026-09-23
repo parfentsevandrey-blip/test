@@ -102,7 +102,7 @@
     <string name="air_poor">Poor</string>
     <string name="air_very_poor">Very poor</string>
     <string name="air_extremely_poor">Hazardous</string>
-    <string name="air_unknown">—</string>
+    <string name="air_unknown" translatable="false">—</string>
 
     <string name="moon_new">New moon</string>
     <string name="moon_waxing_crescent">Waxing crescent</string>

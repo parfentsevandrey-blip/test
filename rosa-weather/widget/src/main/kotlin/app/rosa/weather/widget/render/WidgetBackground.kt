@@ -10,6 +10,7 @@ import android.graphics.Path
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
+import androidx.core.graphics.withClip
 import app.rosa.weather.core.designsystem.glyph.WeatherGlyphPainter
 import app.rosa.weather.core.model.Argb
 import app.rosa.weather.core.model.WeatherCondition
@@ -70,8 +71,14 @@ internal class WidgetBackground {
         val top = palette.sky.zenith.lerp(base, if (dark) 0.35f else 0.62f)
         val bottom = palette.sky.horizon.lerp(base, if (dark) 0.45f else 0.7f)
 
-        canvas.save()
-        canvas.clipPath(path)
+        canvas.withClip(path) { glassBody(this, rect, radius, config, palette, visual, anchor, seed, dark, opacity, top, bottom) }
+        rim(canvas, rect, radius, palette, strength = 1f)
+    }
+
+    private fun glassBody(
+        canvas: Canvas, rect: RectF, radius: Float, config: WidgetConfig, palette: WidgetPalette, visual: WeatherVisual,
+        anchor: SkyAnchor, seed: Int, dark: Boolean, opacity: Float, top: Argb, bottom: Argb,
+    ) {
         // Body: sky-tinted, translucent.
         paint.color = 0xFFFFFFFF.toInt()
         paint.shader = LinearGradient(
@@ -97,8 +104,6 @@ internal class WidgetBackground {
         canvas.drawRect(rect, paint)
         grain(canvas, rect, if (dark) 0.035f else 0.045f)
         innerGlow(canvas, rect, radius, dark)
-        canvas.restore()
-        rim(canvas, rect, radius, palette, strength = 1f)
     }
 
     private fun ambientLight(canvas: Canvas, rect: RectF, palette: WidgetPalette, anchor: SkyAnchor, opacity: Float) {
@@ -374,8 +379,11 @@ internal class WidgetBackground {
 
     private fun paper(canvas: Canvas, rect: RectF, radius: Float, palette: WidgetPalette) {
         val dark = palette.isDark
-        canvas.save()
-        canvas.clipPath(path)
+        canvas.withClip(path) { paperBody(this, rect, dark) }
+        paperFrame(canvas, rect, radius, palette)
+    }
+
+    private fun paperBody(canvas: Canvas, rect: RectF, dark: Boolean) {
         paint.color = 0xFFFFFFFF.toInt()
         paint.shader = LinearGradient(
             0f, 0f, rect.width() * 0.3f, rect.height(),
@@ -393,7 +401,9 @@ internal class WidgetBackground {
         )
         canvas.drawRect(rect, paint)
         grain(canvas, rect, if (dark) 0.06f else 0.09f)
-        canvas.restore()
+    }
+
+    private fun paperFrame(canvas: Canvas, rect: RectF, radius: Float, palette: WidgetPalette) {
         // Printed frame.
         paint.shader = null
         paint.style = Paint.Style.STROKE

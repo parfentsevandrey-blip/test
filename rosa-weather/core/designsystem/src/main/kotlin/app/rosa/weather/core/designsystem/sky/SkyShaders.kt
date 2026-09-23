@@ -75,7 +75,7 @@ half4 main(float2 fragCoord) {
     float veil = 1.0 - cloudCover * 0.8;
 
     // Atmospheric glow around the light source and along the horizon.
-    col += glow.rgb * half(0.42 * exp(-dist * 2.4) * (0.4 + 0.6 * veil) + 0.18 * pow(h, 3.0));
+    col += glow.rgb * half(0.26 * exp(-dist * 3.2) * (0.35 + 0.65 * veil) + 0.16 * pow(h, 3.0));
 
     // Stars: one per cell, twinkling, hidden by clouds later.
     if (stars > 0.01) {
@@ -92,12 +92,16 @@ half4 main(float2 fragCoord) {
         }
     }
 
-    // Sun or moon.
-    float bodyR = bodySize;
-    if (isSun > 0.5) {
-        float disc = smoothstep(bodyR, bodyR * 0.82, dist);
-        float halo = exp(-dist / (bodyR * 2.2));
-        col += sunColor.rgb * half((halo * 0.55 + disc) * veil);
+    // Sun or moon (bodySize is 0 once it has set).
+    float bodyR = max(bodySize, 0.0001);
+    if (bodySize < 0.0005) {
+        // Below the horizon: nothing to draw.
+    } else if (isSun > 0.5) {
+        // A small, hot disc with a tight bloom; clouds veil it strongly.
+        float v2 = veil * veil;
+        float disc = smoothstep(bodyR, bodyR * 0.7, dist);
+        float bloom = exp(-dist / (bodyR * 1.6)) * 0.45 + exp(-dist / (bodyR * 6.0)) * 0.12;
+        col += sunColor.rgb * half((bloom + disc * 0.9) * v2);
     } else {
         float2 m = dv / bodyR;
         float inside = smoothstep(1.0, 0.94, length(m));
@@ -196,7 +200,7 @@ half4 main(float2 fragCoord) {
             }
             float2 pos = float2(hash(id + 3.1), hash(id + 9.7)) * 0.7 + 0.15;
             float d = length(fract(g) - pos);
-            float r = 0.06 + 0.06 * fi + rnd * 0.05;
+            float r = 0.045 + 0.04 * fi + rnd * 0.035;
             a += smoothstep(r, r * 0.3, d) * (0.45 + 0.25 * fi);
         }
     }
@@ -345,9 +349,14 @@ half4 main(float2 fragCoord) {
         float2 q = fragCoord / resolution;
         float edge = min(min(q.x, 1.0 - q.x) * resolution.x / resolution.y, min(q.y, 1.0 - q.y));
         float f = fbm(fragCoord / resolution.y * 9.0);
-        float growth = smoothstep(0.24 * frost, 0.0, edge - f * 0.12 * frost) * (1.0 - wipeAmount);
-        float crystals = pow(noise(fragCoord / resolution.y * 70.0), 6.0);
-        half3 ice = mix(col.rgb, half3(0.9, 0.95, 1.0), half(0.55 * growth)) + half3(crystals * growth * 0.6);
+        float band = 0.09 * frost;
+        float growth = smoothstep(band, 0.0, edge - (f - 0.5) * band) * (1.0 - wipeAmount);
+        // Sparse glints instead of a noise grid: one possible sparkle per small cell.
+        float2 cell = fragCoord / (resolution.y * 0.012);
+        float2 cid = floor(cell);
+        float rnd = hash(cid);
+        float glint = rnd > 0.86 ? smoothstep(0.35, 0.0, length(fract(cell) - float2(hash(cid + 3.1), hash(cid + 5.7)))) : 0.0;
+        half3 ice = mix(col.rgb, half3(0.9, 0.95, 1.0), half(0.6 * growth)) + half3(glint * growth * 0.7);
         col = half4(ice, col.a);
     }
     return col;

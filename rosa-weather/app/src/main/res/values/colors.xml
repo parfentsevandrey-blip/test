@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="rosa_night">#FF141A3A</color>
-    <color name="rosa_dawn">#FFE88C7A</color>
-    <color name="rosa_icon_background">#FF1C2350</color>
 </resources>

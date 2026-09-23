@@ -12,6 +12,7 @@ import android.graphics.PorterDuffXfermode
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
+import androidx.core.graphics.withTranslation
 import app.rosa.weather.core.model.WeatherCondition
 import kotlin.math.PI
 import kotlin.math.abs
@@ -52,6 +53,7 @@ class WeatherGlyphPainter {
     private var s = 1f
     private var tone = Tone.Color
     private var ink = Color.WHITE
+    private var onLight = false
 
     /**
      * @param time seconds, animates rays, drops and flakes when > 0 (pass 0 for static renders).
@@ -66,6 +68,7 @@ class WeatherGlyphPainter {
         monoColor: Int = Color.WHITE,
         moonPhase: Double = 0.3,
         time: Float = 0f,
+        onLightBackground: Boolean = false,
     ) {
         s = min(bounds.width(), bounds.height())
         if (s <= 1f) return
@@ -73,6 +76,7 @@ class WeatherGlyphPainter {
         top = bounds.centerY() - s / 2
         this.tone = tone
         ink = monoColor
+        onLight = onLightBackground
 
         val layer = if (tone == Tone.Mono) canvas.saveLayer(bounds, null) else canvas.save()
         when (condition) {
@@ -290,13 +294,18 @@ class WeatherGlyphPainter {
         // Soft contact shadow gives the glyph a gentle 3D presence.
         shadow.color = 0x38203050
         shadow.maskFilter = BlurMaskFilter(d(0.045f), BlurMaskFilter.Blur.NORMAL)
-        canvas.save()
-        canvas.translate(0f, d(0.035f))
-        canvas.drawPath(path, shadow)
-        canvas.restore()
+        canvas.withTranslation(0f, d(0.035f)) { drawPath(path, shadow) }
         fill.color = 0xFFFFFFFF.toInt()
-        fill.shader = LinearGradient(0f, y(cy - w * 0.32f), 0f, y(cy + w * 0.3f), shade.top, shade.bottom, Shader.TileMode.CLAMP)
+        // On pale skies white clouds vanish: deepen the underside and add a hairline edge.
+        val bottom = if (onLight) blend(shade.bottom, 0xFF7C879C.toInt(), 0.5f) else shade.bottom
+        fill.shader = LinearGradient(0f, y(cy - w * 0.32f), 0f, y(cy + w * 0.3f), shade.top, bottom, Shader.TileMode.CLAMP)
         canvas.drawPath(path, fill)
+        if (onLight) {
+            stroke.shader = null
+            stroke.color = 0x332A3550
+            stroke.strokeWidth = d(0.012f)
+            canvas.drawPath(path, stroke)
+        }
         // Rim light along the top edge: a hint of the glass language.
         stroke.color = 0xFFFFFFFF.toInt()
         stroke.shader = LinearGradient(0f, y(cy - w * 0.32f), 0f, y(cy + w * 0.05f), 0xB0FFFFFF.toInt(), 0x00FFFFFF, Shader.TileMode.CLAMP)
@@ -369,7 +378,7 @@ class WeatherGlyphPainter {
             else -> floatArrayOf(0.25f, 0.42f, 0.58f, 0.75f)
         }
         stroke.shader = null
-        stroke.color = if (tone == Tone.Color) 0xFFF4F9FF.toInt() else ink
+        stroke.color = if (tone == Tone.Color) (if (onLight) 0xFF7FA9E8.toInt() else 0xFFF4F9FF.toInt()) else ink
         stroke.alpha = 255
         xs.forEachIndexed { i, fx ->
             val sway = if (time > 0f) sin(time * 1.3f + i) * 0.02f else 0f
@@ -454,4 +463,9 @@ class WeatherGlyphPainter {
     }
 
     // endregion
+
+    private fun blend(a: Int, b: Int, t: Float): Int {
+        fun ch(shift: Int) = ((a shr shift and 0xFF) + ((b shr shift and 0xFF) - (a shr shift and 0xFF)) * t).toInt()
+        return (0xFF shl 24) or (ch(16) shl 16) or (ch(8) shl 8) or ch(0)
+    }
 }

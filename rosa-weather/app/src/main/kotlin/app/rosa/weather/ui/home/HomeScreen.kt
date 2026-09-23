@@ -43,7 +43,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -95,6 +94,7 @@ import app.rosa.weather.core.model.Forecast
 import app.rosa.weather.core.model.ForecastMoment
 import app.rosa.weather.core.model.Headline
 import app.rosa.weather.core.model.Headlines
+import app.rosa.weather.core.model.WeatherCondition
 import app.rosa.weather.core.model.momentAt
 import app.rosa.weather.ui.common.LocalSky
 import app.rosa.weather.ui.common.SkyController
@@ -135,17 +135,21 @@ fun HomeScreen(
     onOpenSettings: () -> Unit,
     onOpenWidgets: () -> Unit,
     onOpenSearch: () -> Unit,
+    fixedNow: Long? = null,
 ) {
     val sky = LocalSky.current
     val context = LocalContext.current
-    val now by produceState(System.currentTimeMillis() / 1000) {
+    val liveNow by produceState(System.currentTimeMillis() / 1000) {
         while (true) {
             delay(60_000 - System.currentTimeMillis() % 60_000)
             value = System.currentTimeMillis() / 1000
         }
     }
+    val now = fixedNow ?: liveNow
     val hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    var permissionDenied by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        permissionDenied = !granted
         onLocationPermission(granted)
     }
 
@@ -153,6 +157,7 @@ fun HomeScreen(
         LaunchedEffect(Unit) { sky.show(SkyController.placeholder(now), immediate = false) }
         Onboarding(
             waitingForLocation = hasPermission && state.followDevice,
+            denied = permissionDenied,
             onAllow = { permissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) },
             onChooseCity = onOpenSearch,
         )
@@ -216,7 +221,7 @@ fun HomeScreen(
             title = pages.getOrNull(pagerState.currentPage)?.let { it.place.name.ifBlank { format.currentLocation() } }.orEmpty(),
             isCurrent = pages.getOrNull(pagerState.currentPage)?.place?.isCurrentLocation == true,
             pageCount = pages.size,
-            pagePosition = pagerState.currentPage + pagerState.currentPageOffsetFraction,
+            pagePosition = { pagerState.currentPage + pagerState.currentPageOffsetFraction },
             onOpenPlaces = onOpenPlaces,
             onOpenSettings = onOpenSettings,
             onOpenWidgets = onOpenWidgets,
@@ -321,7 +326,12 @@ private fun Hero(forecast: Forecast, moment: ForecastMoment, format: WeatherForm
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
             )
             Spacer(Modifier.weight(1f))
-            WeatherGlyph(moment.condition, moment.isDay, Modifier.size(92.dp), moonPhase = moment.moonPhase.phase, animated = true)
+            // Under a clear sky the real sun or moon is already up there — no need for an icon.
+            val bodyUp = (if (moment.sun.elevation > -5) moment.sun.elevation else moment.moon.elevation) > 3
+            val clearish = moment.condition == WeatherCondition.Clear || moment.condition == WeatherCondition.MostlyClear
+            if (!(clearish && bodyUp)) {
+                WeatherGlyph(moment.condition, moment.isDay, Modifier.size(92.dp), moonPhase = moment.moonPhase.phase, animated = true)
+            }
         }
         Text(
             format.condition(moment.condition, moment.isDay),
@@ -368,7 +378,7 @@ private fun TopBar(
     title: String,
     isCurrent: Boolean,
     pageCount: Int,
-    pagePosition: Float,
+    pagePosition: () -> Float,
     onOpenPlaces: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenWidgets: () -> Unit,
@@ -575,12 +585,12 @@ private fun RefreshDrop(refresh: LiquidRefresh, refreshing: Boolean, modifier: M
 // endregion
 
 @Composable
-private fun Onboarding(waitingForLocation: Boolean, onAllow: () -> Unit, onChooseCity: () -> Unit) {
+private fun Onboarding(waitingForLocation: Boolean, denied: Boolean, onAllow: () -> Unit, onChooseCity: () -> Unit) {
     val colors = Rosa.colors
     Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
         GlassSurface(Modifier.fillMaxWidth(), style = GlassStyle.Sheet, cornerRadius = 38.dp, contentPadding = PaddingValues(26.dp)) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                WeatherGlyph(app.rosa.weather.core.model.WeatherCondition.PartlyCloudy, true, Modifier.size(96.dp), animated = true)
+                WeatherGlyph(WeatherCondition.PartlyCloudy, true, Modifier.size(96.dp), animated = true)
                 Spacer(Modifier.height(10.dp))
                 Text(
                     stringResource(if (waitingForLocation) R.string.refreshing else R.string.permission_title),
@@ -590,7 +600,12 @@ private fun Onboarding(waitingForLocation: Boolean, onAllow: () -> Unit, onChoos
                 )
                 if (!waitingForLocation) {
                     Spacer(Modifier.height(10.dp))
-                    Text(stringResource(R.string.permission_body), style = Rosa.type.body, color = colors.inkSoft, textAlign = TextAlign.Center)
+                    Text(
+                        stringResource(if (denied) R.string.permission_denied else R.string.permission_body),
+                        style = Rosa.type.body,
+                        color = colors.inkSoft,
+                        textAlign = TextAlign.Center,
+                    )
                     Spacer(Modifier.height(22.dp))
                     GlassButton(onClick = onAllow, modifier = Modifier.fillMaxWidth(), style = GlassStyle.Regular) {
                         Text(stringResource(R.string.permission_allow), style = Rosa.type.headline, color = colors.ink)

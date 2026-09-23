@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -97,7 +98,13 @@ data class GlassStyle(
 @Stable
 class GlassEnvironment {
     var tint by mutableStateOf(Color.White)
-    var lightAngle by mutableStateOf(-2.35f)
+    var lightAngle by mutableFloatStateOf(-2.35f)
+
+    /**
+     * 0..1: how much denser the tint must get to keep light type legible over a bright sky.
+     * Apple's large glass turns more opaque instead of flipping; this is that behaviour.
+     */
+    var tintBoost by mutableFloatStateOf(0f)
 }
 
 val LocalGlassEnvironment = androidx.compose.runtime.staticCompositionLocalOf { GlassEnvironment() }
@@ -105,9 +112,9 @@ val LocalGlassEnvironment = androidx.compose.runtime.staticCompositionLocalOf { 
 /** Per-element state: materialisation progress and the touch glow. */
 @Stable
 class GlassState {
-    var materialize by mutableStateOf(1f)
+    var materialize by mutableFloatStateOf(1f)
     var touch by mutableStateOf(Offset.Unspecified)
-    var touchStrength by mutableStateOf(0f)
+    var touchStrength by mutableFloatStateOf(0f)
 }
 
 @Composable
@@ -203,7 +210,8 @@ private class LiquidGlassNode(
         shader.setFloatUniform("highlight", style.highlight)
         shader.setFloatUniform("saturation", style.saturation)
         shader.setFloatUniform("brightness", style.brightness)
-        shader.setColorUniform("tint", tint.copy(alpha = tint.alpha * style.tintAlpha).toArgb())
+        val boost = 1f + 2.4f * (environment?.tintBoost ?: 0f)
+        shader.setColorUniform("tint", tint.copy(alpha = (tint.alpha * style.tintAlpha * boost).coerceAtMost(0.62f)).toArgb())
         shader.setFloatUniform("materialize", materialize)
         val touch = s?.touch ?: Offset.Unspecified
         if (touch.isSpecified && (s?.touchStrength ?: 0f) > 0f) {
@@ -232,6 +240,11 @@ private class LiquidGlassNode(
 
 private data class BackdropSourceElement(val backdrop: Backdrop) : ModifierNodeElement<BackdropSourceNode>() {
     override fun create() = BackdropSourceNode(backdrop)
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "backdropSource"
+    }
+
     override fun update(node: BackdropSourceNode) {
         node.backdrop = backdrop
         node.invalidateDraw()

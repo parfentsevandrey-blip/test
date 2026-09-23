@@ -131,6 +131,7 @@ fun WeatherGlyph(
     tone: WeatherGlyphPainter.Tone = WeatherGlyphPainter.Tone.Color,
     tint: Color = Color.White,
     contentDescription: String? = null,
+    onLightBackground: Boolean = app.rosa.weather.core.designsystem.theme.Rosa.colors.isLightSky,
 ) {
     val painter = remember { WeatherGlyphPainter() }
     val time = remember { mutableFloatStateOf(0f) }
@@ -143,7 +144,7 @@ fun WeatherGlyph(
     }
     val semantics = if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier
     Canvas(modifier.then(semantics)) {
-        drawGlyph(painter, condition, isDay, moonPhase, tone, tint, if (animated) time.floatValue + 0.001f else 0f)
+        drawGlyph(painter, condition, isDay, moonPhase, tone, tint, if (animated) time.floatValue + 0.001f else 0f, onLightBackground)
     }
 }
 
@@ -155,8 +156,9 @@ private fun DrawScope.drawGlyph(
     tone: WeatherGlyphPainter.Tone,
     tint: Color,
     time: Float,
+    onLight: Boolean,
 ) {
     drawIntoCanvas { canvas ->
-        painter.draw(canvas.nativeCanvas, condition, isDay, RectF(0f, 0f, size.width, size.height), tone, tint.toArgb(), moonPhase, time)
+        painter.draw(canvas.nativeCanvas, condition, isDay, RectF(0f, 0f, size.width, size.height), tone, tint.toArgb(), moonPhase, time, onLight)
     }
 }

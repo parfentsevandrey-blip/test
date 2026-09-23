@@ -108,7 +108,7 @@ fun GlassToggle(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: 
         val knobW = 38.dp
         val travel = 58.dp - knobW - 4.dp
         val knob = Modifier
-            .offset(x = 2.dp + travel * position, y = 2.dp)
+            .offset { IntOffset((2.dp + travel * position).roundToPx(), 2.dp.roundToPx()) }
             .size(width = knobW, height = 28.dp)
             .graphicsLayer {
                 val s = 1f + 0.22f * lift
@@ -241,7 +241,7 @@ fun <T> GlassSegmented(
             val stretch = abs(position.value - index).coerceAtMost(1f)
             Box(
                 Modifier
-                    .offset(x = segment * position.value)
+                    .offset { IntOffset((segment * position.value).roundToPx(), 0) }
                     .width(segment)
                     .fillMaxHeight()
                     .graphicsLayer {
@@ -321,7 +321,7 @@ private fun compareNumeric(a: String, b: String): Int {
  * the neighbours merge through it.
  */
 @Composable
-fun LiquidPageIndicator(count: Int, position: Float, modifier: Modifier = Modifier) {
+fun LiquidPageIndicator(count: Int, position: () -> Float, modifier: Modifier = Modifier) {
     if (count <= 1) return
     val colors = Rosa.colors
     Canvas(modifier.size(width = (count * 14 + 8).dp, height = 10.dp)) {
@@ -332,8 +332,10 @@ fun LiquidPageIndicator(count: Int, position: Float, modifier: Modifier = Modifi
         for (i in 0 until count) {
             drawCircle(colors.inkFaint, r, Offset(startX + i * spacing, y))
         }
-        val base = position.toInt().coerceIn(0, count - 1)
-        val frac = position - base
+        // Read in the draw phase: swiping never recomposes the indicator.
+        val p = position()
+        val base = p.toInt().coerceIn(0, count - 1)
+        val frac = p - base
         val headX = startX + (base + (frac * 2f).coerceAtMost(1f)) * spacing
         val tailX = startX + (base + ((frac - 0.5f) * 2f).coerceIn(0f, 1f)) * spacing
         val left = minOf(headX, tailX) - r * 1.25f
