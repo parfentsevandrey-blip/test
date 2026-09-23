@@ -10,6 +10,6 @@
     android:format24Hour="HH:mm"
     android:gravity="center_vertical|start"
     android:includeFontPadding="false"
-    android:letterSpacing="-0.03"
+    android:letterSpacing="-0.01"
     android:maxLines="1"
     android:textColor="#FF1F2530" />

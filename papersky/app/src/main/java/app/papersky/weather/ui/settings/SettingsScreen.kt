@@ -8,13 +8,13 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,8 +35,8 @@ import app.papersky.weather.core.model.MotionLevel
 import app.papersky.weather.core.model.PrecipUnit
 import app.papersky.weather.core.model.PressureUnit
 import app.papersky.weather.core.model.TempUnit
-import app.papersky.weather.core.model.UserSettings
 import app.papersky.weather.core.model.Units
+import app.papersky.weather.core.model.UserSettings
 import app.papersky.weather.core.model.WindUnit
 import app.papersky.weather.core.sync.SyncScheduler
 import app.papersky.weather.design.Chip
@@ -54,11 +55,11 @@ import app.papersky.weather.scene.SceneState
 import app.papersky.weather.ui.common.PaperIcon
 import app.papersky.weather.ui.common.PaperIconView
 import app.papersky.weather.ui.common.PaperPage
+import java.util.Locale
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 class SettingsViewModel(private val c: AppContainer) : ViewModel() {
     val settings: StateFlow<UserSettings> = c.settings.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UserSettings())
@@ -84,9 +85,9 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
 
     PaperPage(stringResource(R.string.settings_title), scene, s.motion, onBack, village = s.village) {
         item("units") {
-            PaperCard(Modifier.laidDown(0), seed = 41, tape = true) {
+            PaperCard(Modifier.laidDown(0)) {
                 Label(stringResource(R.string.settings_units))
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(16.dp))
                 Caption(stringResource(R.string.settings_temperature))
                 PaperSegmented(listOf("°C", "°F"), units.temperature.ordinal, { i -> vm.units(locale) { it.copy(temperature = TempUnit.entries[i]) } })
                 Gap()
@@ -110,7 +111,7 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
             }
         }
         item("updates") {
-            PaperCard(Modifier.laidDown(1), seed = 42, tilt = 0.4f) {
+            PaperCard(Modifier.laidDown(1)) {
                 Label(stringResource(R.string.settings_updates))
                 Spacer(Modifier.height(8.dp))
                 BasicText(stringResource(R.string.settings_interval), style = Paper.type.body.copy(color = Paper.colors.paperInk))
@@ -140,14 +141,14 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
                 }
                 Spacer(Modifier.height(6.dp))
                 BasicText(
-                    stringResource(R.string.settings_refresh_now),
+                    stringResource(R.string.settings_refresh_now).uppercase(),
                     Modifier.pressable({ SyncScheduler.refreshNow(context) }).padding(vertical = 6.dp),
-                    style = Paper.type.bodyStrong.copy(color = Paper.colors.accent),
+                    style = Paper.type.label.copy(color = Paper.colors.accent, fontSize = 11.sp),
                 )
             }
         }
         item("diorama") {
-            PaperCard(Modifier.laidDown(2), seed = 45, tilt = -0.3f) {
+            PaperCard(Modifier.laidDown(2)) {
                 Label(stringResource(R.string.settings_diorama))
                 SettingRow(stringResource(R.string.settings_village), subtitle = stringResource(R.string.settings_village_body)) {
                     PaperSwitch(s.village, { on -> vm.update { it.copy(village = on) } })
@@ -166,7 +167,7 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
             }
         }
         item("feel") {
-            PaperCard(Modifier.laidDown(3), seed = 43, tilt = -0.5f) {
+            PaperCard(Modifier.laidDown(3)) {
                 Label(stringResource(R.string.settings_feel))
                 SettingRow(stringResource(R.string.settings_haptics), subtitle = stringResource(R.string.settings_haptics_body)) {
                     PaperSwitch(s.haptics, { on -> vm.update { it.copy(haptics = on) } })
@@ -177,7 +178,7 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
             }
         }
         item("about") {
-            PaperCard(Modifier.laidDown(4), seed = 44, tilt = 0.3f) {
+            PaperCard(Modifier.laidDown(4)) {
                 Label(stringResource(R.string.settings_about))
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     LinkRow(PaperIcon.Language, stringResource(R.string.settings_language)) {
@@ -198,11 +199,11 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
 
 @Composable
 private fun Caption(text: String) {
-    BasicText(text, Modifier.padding(bottom = 6.dp), style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft))
+    BasicText(text, Modifier.padding(bottom = 8.dp), style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft))
 }
 
 @Composable
-private fun Gap() = Spacer(Modifier.height(14.dp))
+private fun Gap() = Spacer(Modifier.height(16.dp))
 
 @Composable
 private fun LinkRow(icon: PaperIcon, text: String, onClick: () -> Unit) {
@@ -210,8 +211,8 @@ private fun LinkRow(icon: PaperIcon, text: String, onClick: () -> Unit) {
         Modifier.fillMaxWidth().pressable(onClick).padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PaperIconView(icon, Paper.colors.paperInk, size = 22.dp)
-        Spacer(Modifier.width(10.dp))
+        PaperIconView(icon, Paper.colors.paperInk, size = 20.dp)
+        Spacer(Modifier.width(14.dp))
         BasicText(text, style = Paper.type.body.copy(color = Paper.colors.paperInk))
     }
 }

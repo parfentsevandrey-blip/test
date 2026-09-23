@@ -8,9 +8,8 @@ import app.papersky.weather.scene.Palettes
 import app.papersky.weather.scene.SceneState
 
 /**
- * The light in the room (DESIGN_DOCTRINE §4). The paper already takes its colour from the sky;
- * the light only adds what a real room would: a golden sheen when the sun is low, dusk gathering
- * in the corners at night, frost on the paper in the cold.
+ * The light in the room (DESIGN_DOCTRINE §4.3): a faint golden sheen on the paper when the sun is
+ * low, dusk gathering in the corners at night, frost on the sheets in the cold. Nothing more.
  */
 @Immutable
 data class Light(
@@ -22,13 +21,13 @@ data class Light(
     val frost: Float = 0f,
 ) {
     /** A surface's colour under this light: only the low sun changes it, and only a little. */
-    fun lit(base: Color): Color = if (golden > 0.01f) lerp(base, GOLD, golden * 0.06f) else base
+    fun lit(base: Color): Color = if (golden > 0.01f) lerp(base, GOLD, golden * 0.04f) else base
 
     /** Darkness gathering in the corners of the screen. */
-    val vignette: Float get() = maxOf(0.3f * night, 0.08f * golden)
+    val vignette: Float get() = maxOf(0.24f * night, 0.06f * golden)
 
     companion object {
-        val GOLD = Color(0xFFFFB36B)
+        val GOLD = Color(0xFFF2C48D)
 
         fun of(s: SceneState): Light {
             val night = ramp(0.55f, 0.15f, s.daylight)

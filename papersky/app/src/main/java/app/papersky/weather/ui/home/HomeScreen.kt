@@ -5,7 +5,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -42,7 +41,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -76,6 +74,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -88,9 +87,7 @@ import app.papersky.weather.core.text.Narrator
 import app.papersky.weather.core.text.NoteText
 import app.papersky.weather.core.text.WeatherFormat
 import app.papersky.weather.design.Choreography
-import app.papersky.weather.design.DeckleShape
-import app.papersky.weather.design.GlyphIcon
-import app.papersky.weather.design.HandReveal
+import app.papersky.weather.design.InkReveal
 import app.papersky.weather.design.Label
 import app.papersky.weather.design.LocalChoreography
 import app.papersky.weather.design.Motion
@@ -112,9 +109,9 @@ import app.papersky.weather.ui.scene.LivingScene
 import app.papersky.weather.ui.scene.SceneController
 import app.papersky.weather.ui.scene.SceneThumbnail
 import app.papersky.weather.ui.scene.isHorizontal
+import kotlin.math.abs
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 
 @Composable
 fun HomeScreen(
@@ -188,7 +185,7 @@ fun HomeScreen(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp),
-                verticalArrangement = Arrangement.spacedBy(18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item("hero", contentType = "hero") {
                     Hero(
@@ -198,11 +195,11 @@ fun HomeScreen(
                     )
                 }
                 if (forecast != null && nowMoment != null) {
-                    item("note", contentType = "note") { NoteCard(forecast, fmt, nowSec - nowSec % 900, Modifier.padding(horizontal = 18.dp).laidDown(0)) }
-                    item("hourly", contentType = "hourly") { HourlyCard(forecast, fmt, nowSec, preview, { preview = it }, Modifier.padding(horizontal = 14.dp).laidDown(1)) }
-                    item("daily", contentType = "daily") { DailyCard(forecast, fmt, nowSec, nowMoment.temperature, { preview = it }, Modifier.padding(horizontal = 14.dp).laidDown(2)) }
+                    item("note", contentType = "note") { NoteCard(forecast, fmt, nowSec - nowSec % 900, Modifier.padding(horizontal = 16.dp).laidDown(0)) }
+                    item("hourly", contentType = "hourly") { HourlyCard(forecast, fmt, nowSec, preview, { preview = it }, Modifier.padding(horizontal = 16.dp).laidDown(1)) }
+                    item("daily", contentType = "daily") { DailyCard(forecast, fmt, nowSec, nowMoment.temperature, { preview = it }, Modifier.padding(horizontal = 16.dp).laidDown(2)) }
                     item("details", contentType = "details") { DetailsGrid(forecast, nowMoment, fmt, nowSec, Modifier.padding(horizontal = 16.dp).laidDown(3)) }
-                    item("widgets", contentType = "promo") { WidgetPromo(scene, state.settings.village, onOpenWidgets, Modifier.padding(horizontal = 18.dp).laidDown(4)) }
+                    item("widgets", contentType = "promo") { WidgetPromo(scene, state.settings.village, onOpenWidgets, Modifier.padding(horizontal = 16.dp).laidDown(4)) }
                     item("credits", contentType = "credits") { Credits() }
                 } else if (state.loaded) {
                     item("welcome") {
@@ -211,7 +208,7 @@ fun HomeScreen(
                             hasPlace = state.place != null,
                             onPermission = vm::onLocationPermissionResult,
                             onFindCity = onOpenPlaces,
-                            modifier = Modifier.padding(horizontal = 18.dp).laidDown(0),
+                            modifier = Modifier.padding(horizontal = 16.dp).laidDown(0),
                         )
                     }
                 }
@@ -236,7 +233,7 @@ fun HomeScreen(
             label = stringResource(R.string.refresh),
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .offset { IntOffset((-54).dp.roundToPx(), -scroll.value.toInt().coerceAtMost(260.dp.roundToPx())) }
+                .offset { IntOffset((-50).dp.roundToPx(), -scroll.value.toInt().coerceAtMost(260.dp.roundToPx())) }
                 .graphicsLayer { alpha = 1f - (scroll.value / (heroPx * 0.45f)).coerceIn(0f, 1f) },
         )
     }
@@ -264,8 +261,8 @@ private fun TopScrim() {
 private fun Color.luminance(): Float = 0.2126f * red + 0.7152f * green + 0.0722f * blue
 
 /**
- * The place's paper tag on the left, the widgets and settings icons on the right. When the cards
- * scroll up, a sheet of paper slides in under the bar with the temperature on it.
+ * The place set in the serif on the left, hairline widgets and settings icons on the right (§12).
+ * When the sheets scroll up, a leaf of vellum slides in under the bar with the temperature on it.
  */
 @Composable
 private fun TopBar(
@@ -288,29 +285,29 @@ private fun TopBar(
                     alpha = if (p <= 0.01f) 0f else 1f
                     translationY = -(1f - p) * size.height
                 }
-                .paperSurface(RoundedCornerShape(bottomStart = 22.dp, bottomEnd = 22.dp), level = 3),
+                .paperSurface(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp), level = 2, vellum = true),
         )
         Row(
-            Modifier.fillMaxWidth().statusBarsPadding().padding(start = 16.dp, end = 12.dp, top = 6.dp, bottom = 10.dp),
+            Modifier.fillMaxWidth().statusBarsPadding().padding(start = 14.dp, end = 12.dp, top = 6.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val name = place?.name?.ifBlank { null } ?: stringResource(R.string.here)
+            val lightInk = colors.onSky.luminance() > 0.5f
             Row(
                 Modifier
                     .semantics { contentDescription = name }
-                    .pressable(onOpenPlaces, pressed = 0.94f)
-                    .paperSurface(remember { DeckleShape(seed = 5, corner = 16.dp) }, level = 2, color = colors.paper.copy(alpha = 0.94f))
-                    .widthIn(max = 220.dp)
-                    .padding(start = 10.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+                    .clip(RoundedCornerShape(12.dp))
+                    .pressable(onOpenPlaces, pressed = 0.97f)
+                    .widthIn(max = 240.dp)
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                GlyphIcon(Glyph.Pin, size = 20.dp, animate = false)
-                Spacer(Modifier.width(6.dp))
-                AnimatedContent(name, transitionSpec = { (fadeIn() + slideInVertically { it / 2 }) togetherWith fadeOut() }, label = "place") { n ->
-                    BasicText(n, style = Paper.type.bodyStrong.copy(color = colors.paperInk), maxLines = 1)
+                AnimatedContent(name, transitionSpec = { (fadeIn() + slideInVertically { it / 3 }) togetherWith fadeOut() }, label = "place") { n ->
+                    val style = Paper.type.heading.copy(color = ink, fontSize = 23.sp)
+                    BasicText(n, style = if (solid) style else style.onSky(lightInk), maxLines = 1)
                 }
-                Spacer(Modifier.width(4.dp))
-                PaperIconView(PaperIcon.Chevron, colors.paperInkSoft, size = 16.dp)
+                Spacer(Modifier.width(6.dp))
+                PaperIconView(PaperIcon.Chevron, ink.copy(alpha = 0.7f), size = 16.dp)
             }
             if (compact != null) {
                 Spacer(Modifier.width(12.dp))
@@ -321,7 +318,7 @@ private fun TopBar(
                         alpha = p
                         translationY = (1f - p) * 10.dp.toPx()
                     },
-                    style = Paper.type.title.copy(color = colors.paperInk, fontWeight = androidx.compose.ui.text.font.FontWeight(400)),
+                    style = Paper.type.title.copy(color = colors.paperInk, fontWeight = androidx.compose.ui.text.font.FontWeight(400), fontSize = 24.sp),
                 )
             }
             Spacer(Modifier.weight(1f))
@@ -342,7 +339,7 @@ private fun RoundIcon(icon: PaperIcon, description: String, tint: Color, onClick
             .pressable(onClick, pressed = 0.86f),
         contentAlignment = Alignment.Center,
     ) {
-        PaperIconView(icon, tint, size = 24.dp)
+        PaperIconView(icon, tint, size = 22.dp)
     }
 }
 
@@ -403,14 +400,14 @@ private fun Hero(
         Column(
             Modifier
                 .statusBarsPadding()
-                .padding(start = 24.dp, end = 24.dp, top = 66.dp)
+                .padding(start = 26.dp, end = 24.dp, top = 70.dp)
                 .graphicsLayer {
                     // Drifts up slower than the page and sinks back into the sky.
                     val s = scroll.value
                     val p = (s / heroPx).coerceIn(0f, 1f)
                     translationY = s * 0.42f
                     alpha = (1f - p * 1.7f).coerceIn(0f, 1f)
-                    scaleX = 1f - p * 0.1f
+                    scaleX = 1f - p * 0.06f
                     scaleY = scaleX
                     transformOrigin = TransformOrigin(0f, 0f)
                 }
@@ -423,15 +420,15 @@ private fun Hero(
         ) {
             AnimatedVisibility(
                 preview != null,
-                enter = fadeIn() + scaleIn(Motion.release(), initialScale = 0.9f, transformOrigin = TransformOrigin(0f, 0.5f)),
-                exit = fadeOut() + scaleOut(targetScale = 0.9f),
+                enter = fadeIn() + scaleIn(Motion.release(), initialScale = 0.96f, transformOrigin = TransformOrigin(0f, 0.5f)),
+                exit = fadeOut() + scaleOut(targetScale = 0.96f),
             ) {
                 Row(
                     Modifier
                         .padding(bottom = 6.dp)
                         .pressable({ h.confirm(); onBackToNow() }, pressed = 0.94f)
-                        .paperSurface(PillShape, level = 2)
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                        .paperSurface(PillShape, level = 2, vellum = true)
+                        .padding(horizontal = 14.dp, vertical = 7.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     BasicText(
@@ -446,17 +443,17 @@ private fun Hero(
             val hero = Paper.type.hero.copy(color = colors.onSky).onSky(lightInk)
             Row(verticalAlignment = Alignment.Top, modifier = Modifier.semantics(mergeDescendants = true) { heading() }) {
                 RollingText(tempNumber, hero, numericValue = moment.temperature)
-                BasicText("°", style = hero.copy(fontSize = 80.sp))
+                BasicText("°", Modifier.offset(x = (-6).dp), style = hero)
             }
-            HandReveal(fmt.condition(moment.condition), Paper.type.handLarge.copy(color = colors.onSky, fontSize = 34.sp).onSky(lightInk), maxLines = 1)
-            Spacer(Modifier.height(4.dp))
+            InkReveal(fmt.condition(moment.condition), Paper.type.noteLarge.copy(color = colors.onSky, fontSize = 32.sp).onSky(lightInk), maxLines = 1)
+            Spacer(Modifier.height(10.dp))
             val day = state.forecast?.dayAt(moment.epochSec)
             val line = buildString {
-                if (day != null) append("↑${fmt.temp(day.tempMax)}  ↓${fmt.temp(day.tempMin)}   ·   ")
+                if (day != null) append("${fmt.temp(day.tempMax)} / ${fmt.temp(day.tempMin)}   ·   ")
                 append(stringResource(R.string.feels_like, fmt.temp(moment.feelsLike)))
             }
-            BasicText(line, style = Paper.type.bodyStrong.copy(color = colors.onSkySoft).onSky(lightInk))
-            Spacer(Modifier.height(10.dp))
+            BasicText(line, style = Paper.type.caption.copy(color = colors.onSky, fontSize = 13.5.sp, letterSpacing = 0.03.em).onSky(lightInk))
+            Spacer(Modifier.height(6.dp))
             UpdatedLabel(state, fmt, lightInk, onRefresh)
         }
     }
@@ -476,7 +473,7 @@ private fun UpdatedLabel(state: HomeUiState, fmt: WeatherFormat, lightInk: Boole
     }
 }
 
-/** The day's notes, handwritten on a scrap of paper taped to the sky; tap it and it sways. */
+/** The day's notes in the human voice (§12): a short cinnabar rule, then the italic. */
 @Composable
 private fun NoteCard(forecast: Forecast, fmt: WeatherFormat, instant: Long, modifier: Modifier = Modifier) {
     val resources = LocalResources.current
@@ -485,15 +482,18 @@ private fun NoteCard(forecast: Forecast, fmt: WeatherFormat, instant: Long, modi
     }
     if (notes.isEmpty()) return
     val colors = Paper.colors
-    PaperCard(modifier, seed = 8, tilt = -0.8f, tape = true) {
-        HandReveal(notes.first(), Paper.type.handLarge.copy(color = colors.paperInk))
+    PaperCard(modifier, contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 20.dp)) {
+        val rule = colors.accent
+        Canvas(Modifier.size(28.dp, 1.5.dp)) { drawRect(rule) }
+        Spacer(Modifier.height(12.dp))
+        InkReveal(notes.first(), Paper.type.noteLarge.copy(color = colors.paperInk, fontSize = 27.sp))
         notes.drop(1).take(3).forEach { n ->
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                val dot = colors.accent
-                Canvas(Modifier.size(6.dp)) { drawCircle(dot) }
-                Spacer(Modifier.width(8.dp))
-                HandReveal(n, Paper.type.hand.copy(color = colors.paperInkSoft, fontSize = 20.sp))
+                val dash = colors.accent
+                Canvas(Modifier.size(10.dp, 1.dp)) { drawRect(dash) }
+                Spacer(Modifier.width(10.dp))
+                InkReveal(n, Paper.type.note.copy(color = colors.paperInkSoft, fontSize = 19.sp))
             }
         }
     }
@@ -502,10 +502,10 @@ private fun NoteCard(forecast: Forecast, fmt: WeatherFormat, instant: Long, modi
 /** A card with a little window of today's sky: the way into the widget workshop. */
 @Composable
 private fun WidgetPromo(scene: SceneState, village: Boolean, onOpen: () -> Unit, modifier: Modifier = Modifier) {
-    PaperCard(modifier, seed = 55, tilt = -0.6f, onClick = onOpen) {
+    PaperCard(modifier, onClick = onOpen, contentPadding = PaddingValues(14.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            SceneThumbnail(scene, Modifier.size(96.dp, 72.dp).clip(RoundedCornerShape(16.dp)), village = village)
-            Spacer(Modifier.width(14.dp))
+            SceneThumbnail(scene, Modifier.size(96.dp, 72.dp).clip(RoundedCornerShape(10.dp)), village = village)
+            Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 BasicText(stringResource(R.string.promo_title), style = Paper.type.heading.copy(color = Paper.colors.paperInk))
                 Spacer(Modifier.height(2.dp))
@@ -518,12 +518,12 @@ private fun WidgetPromo(scene: SceneState, village: Boolean, onOpen: () -> Unit,
 @Composable
 private fun Welcome(refreshing: Boolean, hasPlace: Boolean, onPermission: (Boolean) -> Unit, onFindCity: () -> Unit, modifier: Modifier = Modifier) {
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission(), onPermission)
-    PaperCard(modifier, seed = 13, tape = true) {
-        HandReveal(stringResource(if (hasPlace) R.string.welcome_loading else R.string.welcome_title), Paper.type.handLarge.copy(color = Paper.colors.paperInk))
-        Spacer(Modifier.height(6.dp))
+    PaperCard(modifier) {
+        InkReveal(stringResource(if (hasPlace) R.string.welcome_loading else R.string.welcome_title), Paper.type.noteLarge.copy(color = Paper.colors.paperInk))
+        Spacer(Modifier.height(8.dp))
         BasicText(stringResource(R.string.welcome_body), style = Paper.type.body.copy(color = Paper.colors.paperInkSoft))
         Spacer(Modifier.height(16.dp))
-        AnimatedVisibility(!refreshing, enter = fadeIn() + scaleIn(initialScale = 0.9f), exit = fadeOut()) {
+        AnimatedVisibility(!refreshing, enter = fadeIn(), exit = fadeOut()) {
             Column {
                 PaperButton(stringResource(R.string.welcome_locate), { launcher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) }, Modifier.fillMaxWidth(), glyph = Glyph.Pin)
                 Spacer(Modifier.height(10.dp))
@@ -535,7 +535,7 @@ private fun Welcome(refreshing: Boolean, hasPlace: Boolean, onPermission: (Boole
 
 @Composable
 private fun Credits() {
-    Column(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Label(stringResource(R.string.credits_data), color = Paper.colors.onSkySoft)
     }
 }

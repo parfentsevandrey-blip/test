@@ -7,15 +7,15 @@
             android:viewportWidth="100" android:viewportHeight="100">
         <group android:name="r0">
             <path android:pathData="M-0.61,12.7l0.61,5M-12.89,-87.3l0.61,5M-6.08,99.79l0.61,5M-18.36,-0.21l0.61,5M57.29,19.12l0.61,5M45.01,-80.88l0.61,5M75.03,83.22l0.61,5M62.75,-16.78l0.61,5M-2.39,47.09l0.61,5M-14.67,-52.91l0.61,5M47.19,63.57l0.61,5M34.91,-36.43l0.61,5M100.22,68.71l0.61,5M87.95,-31.29l0.61,5" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="0.44" android:strokeAlpha="0.34" android:strokeLineCap="round" />
+                android:strokeWidth="0.33" android:strokeAlpha="0.3" android:strokeLineCap="round" />
         </group>
         <group android:name="r1">
             <path android:pathData="M110.77,57.37l1.02,8.33M98.49,-42.63l1.02,8.33M41.27,36.44l1.02,8.33M29,-63.56l1.02,8.33M45.33,73.47l1.02,8.33M33.05,-26.53l1.02,8.33M72.3,24.33l1.02,8.33M60.02,-75.67l1.02,8.33M116.96,74.24l1.02,8.33M104.68,-25.76l1.02,8.33" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="0.64" android:strokeAlpha="0.5" android:strokeLineCap="round" />
+                android:strokeWidth="0.47" android:strokeAlpha="0.42" android:strokeLineCap="round" />
         </group>
         <group android:name="r2">
             <path android:pathData="M53.56,67.36l1.64,13.33M41.28,-32.64l1.64,13.33M16.83,76.05l1.64,13.33M4.55,-23.95l1.64,13.33M23.67,73.7l1.64,13.33M11.39,-26.3l1.64,13.33M41.73,54.08l1.64,13.33M29.45,-45.92l1.64,13.33" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="0.89" android:strokeAlpha="0.7" android:strokeLineCap="round" />
+                android:strokeWidth="0.61" android:strokeAlpha="0.55" android:strokeLineCap="round" />
         </group>
         </vector>
     </aapt:attr>

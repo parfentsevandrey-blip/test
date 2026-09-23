@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="refresh">Потяните за шнурок, чтобы обновить</string>
+    <string name="refresh">Потяните подвес, чтобы обновить</string>
     <string name="back">Назад</string>
-    <string name="remove">Оторвать</string>
+    <string name="remove">Убрать</string>
     <string name="feels_like">ощущается %1$s</string>
     <string name="refreshing">Смотрим на небо…</string>
     <string name="updated_at">Обновлено в %1$s · нажмите, чтобы обновить</string>
@@ -64,7 +64,7 @@
 
     <string name="places_title">Места</string>
     <string name="places_saved">Сохранённые места</string>
-    <string name="places_hint">Смахните место влево, чтобы оторвать его.</string>
+    <string name="places_hint">Смахните место влево, чтобы убрать его.</string>
     <string name="places_locate_title">Следовать за мной, куда бы я ни поехал</string>
     <string name="search_hint">Найти город…</string>
     <string name="search_failed">Не удалось открыть атлас. Проверьте подключение.</string>
@@ -90,17 +90,17 @@
     <string name="motion_full">Живое</string>
     <string name="motion_gentle">Спокойное</string>
     <string name="motion_still">Замершее</string>
-    <string name="settings_tilt">Наклон диорамы</string>
-    <string name="settings_tilt_body">Бумажные слои смещаются при наклоне телефона</string>
-    <string name="settings_diorama">Диорама</string>
-    <string name="settings_village">Деревушка в диораме</string>
-    <string name="settings_village_body">Бумажные домики с тёплыми окнами, фонарь и дым из труб</string>
+    <string name="settings_tilt">Наклон гравюры</string>
+    <string name="settings_tilt_body">Планы пейзажа смещаются при наклоне телефона</string>
+    <string name="settings_diorama">Гравюра</string>
+    <string name="settings_village">Дома в пейзаже</string>
+    <string name="settings_village_body">Несколько домов силуэтом, в сумерках в окнах загорается свет</string>
     <string name="settings_about">О приложении</string>
     <string name="settings_language">Язык приложения</string>
-    <string name="settings_fonts">Шрифты: Manrope и Caveat — SIL Open Font License.</string>
+    <string name="settings_fonts">Шрифты: Cormorant Garamond и Manrope — SIL Open Font License.</string>
 
     <string name="widgets_title">Виджеты</string>
-    <string name="widgets_intro">Каждый виджет — маленькая диорама. Растяните его от одной клетки до целого экрана: он перестроится и использует каждый миллиметр.</string>
+    <string name="widgets_intro">Каждый виджет — маленькая гравюра неба. Растяните его от одной клетки до целого экрана: он перестроится и использует каждый миллиметр.</string>
     <string name="widgets_on_home">На рабочем столе</string>
     <string name="widgets_tap_to_edit">Нажмите, чтобы настроить</string>
     <string name="widgets_add">Поставить новый</string>
@@ -115,7 +115,7 @@
     <string name="editor_place">Место</string>
     <string name="editor_here">Где я</string>
     <string name="editor_look">Внешний вид</string>
-    <string name="bg_scene">Диорама</string>
+    <string name="bg_scene">Гравюра</string>
     <string name="bg_paper">Бумага</string>
     <string name="bg_clear">Стекло</string>
     <string name="editor_opacity">Прозрачность</string>

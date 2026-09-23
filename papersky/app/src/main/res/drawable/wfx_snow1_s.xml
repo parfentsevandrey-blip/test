@@ -8,49 +8,49 @@
         <group android:name="s0">
             <group android:name="s0w0">
             <path android:pathData="M31.73,25.72l0,0.01M31.73,-74.28l0,0.01M3.58,50.3l0,0.01M3.58,-49.7l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="0.78" android:strokeAlpha="0.6" android:strokeLineCap="round" />
+                android:strokeWidth="0.67" android:strokeAlpha="0.55" android:strokeLineCap="round" />
             </group>
             <group android:name="s0w1">
             <path android:pathData="M22.18,75.63l0,0.01M22.18,-24.37l0,0.01M4.17,78l0,0.01M4.17,-22l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="0.78" android:strokeAlpha="0.6" android:strokeLineCap="round" />
+                android:strokeWidth="0.67" android:strokeAlpha="0.55" android:strokeLineCap="round" />
             </group>
             <group android:name="s0w2">
             <path android:pathData="M10.6,73.45l0,0.01M10.6,-26.55l0,0.01M107.23,82.92l0,0.01M107.23,-17.08l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="0.78" android:strokeAlpha="0.6" android:strokeLineCap="round" />
+                android:strokeWidth="0.67" android:strokeAlpha="0.55" android:strokeLineCap="round" />
             </group>
         </group>
         <group android:name="s1">
             <group android:name="s1w0">
             <path android:pathData="M101.44,98.94l0,0.01M101.44,-1.06l0,0.01M18.61,54.55l0,0.01M18.61,-45.45l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="1.33" android:strokeAlpha="0.82" android:strokeLineCap="round" />
+                android:strokeWidth="1.11" android:strokeAlpha="0.75" android:strokeLineCap="round" />
             </group>
             <group android:name="s1w1">
             <path android:pathData="M79.59,44.48l0,0.01M79.59,-55.52l0,0.01M106.83,15.36l0,0.01M106.83,-84.64l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="1.33" android:strokeAlpha="0.82" android:strokeLineCap="round" />
+                android:strokeWidth="1.11" android:strokeAlpha="0.75" android:strokeLineCap="round" />
             </group>
             <group android:name="s1w2">
             <path android:pathData="M47,55.74l0,0.01M47,-44.26l0,0.01M23.88,53.78l0,0.01M23.88,-46.22l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="1.33" android:strokeAlpha="0.82" android:strokeLineCap="round" />
+                android:strokeWidth="1.11" android:strokeAlpha="0.75" android:strokeLineCap="round" />
             </group>
         </group>
         <group android:name="s2">
             <group android:name="s2w0">
             <path android:pathData="M90.77,38.55l0,0.01M90.77,-61.45l0,0.01M11.23,67.31l0,0.01M11.23,-32.69l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="4.86" android:strokeAlpha="0.2" android:strokeLineCap="round" />
+                android:strokeWidth="3.83" android:strokeAlpha="0.2" android:strokeLineCap="round" />
             <path android:pathData="M90.77,38.55l0,0.01M90.77,-61.45l0,0.01M11.23,67.31l0,0.01M11.23,-32.69l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="2.11" android:strokeAlpha="0.95" android:strokeLineCap="round" />
+                android:strokeWidth="1.67" android:strokeAlpha="0.85" android:strokeLineCap="round" />
             </group>
             <group android:name="s2w1">
             <path android:pathData="M103.21,70.41l0,0.01M103.21,-29.59l0,0.01M52.81,56.22l0,0.01M52.81,-43.78l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="4.86" android:strokeAlpha="0.2" android:strokeLineCap="round" />
+                android:strokeWidth="3.83" android:strokeAlpha="0.2" android:strokeLineCap="round" />
             <path android:pathData="M103.21,70.41l0,0.01M103.21,-29.59l0,0.01M52.81,56.22l0,0.01M52.81,-43.78l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="2.11" android:strokeAlpha="0.95" android:strokeLineCap="round" />
+                android:strokeWidth="1.67" android:strokeAlpha="0.85" android:strokeLineCap="round" />
             </group>
             <group android:name="s2w2">
             <path android:pathData="M23.09,97.22l0,0.01M23.09,-2.78l0,0.01M21.4,56.33l0,0.01M21.4,-43.67l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="4.86" android:strokeAlpha="0.2" android:strokeLineCap="round" />
+                android:strokeWidth="3.83" android:strokeAlpha="0.2" android:strokeLineCap="round" />
             <path android:pathData="M23.09,97.22l0,0.01M23.09,-2.78l0,0.01M21.4,56.33l0,0.01M21.4,-43.67l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="2.11" android:strokeAlpha="0.95" android:strokeLineCap="round" />
+                android:strokeWidth="1.67" android:strokeAlpha="0.85" android:strokeLineCap="round" />
             </group>
         </group>
         </vector>
@@ -58,7 +58,7 @@
     <target android:name="s0">
         <aapt:attr name="android:animation">
                 <objectAnimator android:propertyName="translateY" android:valueFrom="0" android:valueTo="100"
-                    android:duration="9000" android:repeatCount="infinite" android:repeatMode="restart"
+                    android:duration="10000" android:repeatCount="infinite" android:repeatMode="restart"
                     android:valueType="floatType" android:interpolator="@android:anim/linear_interpolator" />
         </aapt:attr>
     </target>
@@ -86,7 +86,7 @@
     <target android:name="s1">
         <aapt:attr name="android:animation">
                 <objectAnimator android:propertyName="translateY" android:valueFrom="0" android:valueTo="100"
-                    android:duration="5294" android:repeatCount="infinite" android:repeatMode="restart"
+                    android:duration="6000" android:repeatCount="infinite" android:repeatMode="restart"
                     android:valueType="floatType" android:interpolator="@android:anim/linear_interpolator" />
         </aapt:attr>
     </target>
@@ -114,7 +114,7 @@
     <target android:name="s2">
         <aapt:attr name="android:animation">
                 <objectAnimator android:propertyName="translateY" android:valueFrom="0" android:valueTo="100"
-                    android:duration="3214" android:repeatCount="infinite" android:repeatMode="restart"
+                    android:duration="3750" android:repeatCount="infinite" android:repeatMode="restart"
                     android:valueType="floatType" android:interpolator="@android:anim/linear_interpolator" />
         </aapt:attr>
     </target>

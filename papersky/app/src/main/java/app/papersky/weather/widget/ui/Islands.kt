@@ -109,8 +109,7 @@ class PaintMeasure private constructor(context: Context) : TextMeasure {
         Paint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = runCatching { ResourcesCompat.getFont(context, id) }.getOrNull() ?: Typeface.DEFAULT
             textSize = 100f
-            if (font == WFont.DisplayLight) letterSpacing = -0.03f
-            if (font == WFont.Display) letterSpacing = -0.01f
+            if (font == WFont.DisplayLight) letterSpacing = -0.01f
             if (font == WFont.BodyBold) letterSpacing = 0.02f
             fontFeatureSettings = "tnum"
         }

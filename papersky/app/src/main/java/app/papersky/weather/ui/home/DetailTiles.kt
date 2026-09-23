@@ -3,19 +3,16 @@ package app.papersky.weather.ui.home
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
@@ -26,7 +23,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
@@ -49,6 +45,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import app.papersky.weather.R
 import app.papersky.weather.core.model.Astro
@@ -61,14 +58,14 @@ import app.papersky.weather.design.Motion
 import app.papersky.weather.design.Paper
 import app.papersky.weather.design.PaperCard
 import app.papersky.weather.design.rememberHaptics
-import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlinx.coroutines.delay
 
-/** Eight paper tiles; each has a little moving illustration and flips over to explain itself. */
+/** Eight tiles of paper; each has a small engraved instrument and flips over to explain itself. */
 @Composable
 fun DetailsGrid(forecast: Forecast, moment: WeatherMoment, fmt: WeatherFormat, nowSec: Long, modifier: Modifier = Modifier) {
     val tiles: List<@Composable (Modifier) -> Unit> = listOf(
@@ -81,9 +78,9 @@ fun DetailsGrid(forecast: Forecast, moment: WeatherMoment, fmt: WeatherFormat, n
         { m -> FeelsTile(moment, fmt, m) },
         { m -> MoonTile(fmt, nowSec, m) },
     )
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         tiles.chunked(2).forEach { pair ->
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 pair.forEach { tile -> tile(Modifier.weight(1f)) }
             }
         }
@@ -91,8 +88,8 @@ fun DetailsGrid(forecast: Forecast, moment: WeatherMoment, fmt: WeatherFormat, n
 }
 
 /**
- * A paper tile (§8): label, a little moving illustration, the value. Tap flips it over (`flip`
- * spring) onto a handwritten note; edge-on it turns away from the light.
+ * A tile (§8): small capitals, an engraved instrument, the value in the serif. Tap flips it over
+ * (`flip` spring) onto an explanation in the italic; edge-on it turns away from the light.
  */
 @Composable
 private fun FlipTile(
@@ -114,7 +111,6 @@ private fun FlipTile(
     val h = rememberHaptics()
     val density = LocalDensity.current.density
     val showBack = rotation.value > 90f
-    val tilt = if (seed % 2 == 0) -0.8f else 0.7f
     Box(
         modifier
             .height(186.dp)
@@ -125,30 +121,30 @@ private fun FlipTile(
             },
     ) {
         if (!showBack) {
-            PaperCard(Modifier.fillMaxSize(), seed = seed, tilt = tilt, onClick = { h.softTick(); flipped = true }, contentPadding = PaddingValues(16.dp)) {
+            PaperCard(Modifier.fillMaxSize(), onClick = { h.softTick(); flipped = true }, contentPadding = PaddingValues(16.dp)) {
                 Label(title)
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(6.dp))
                 Box(Modifier.fillMaxWidth().weight(1f)) { art { appear.value } }
+                Spacer(Modifier.height(4.dp))
                 BasicText(
                     value,
-                    style = Paper.type.title.copy(color = Paper.colors.paperInk),
+                    style = Paper.type.title.copy(color = Paper.colors.paperInk, fontSize = 26.sp, lineHeight = 1.05.em),
                     maxLines = 1,
-                    autoSize = TextAutoSize.StepBased(minFontSize = 13.sp, maxFontSize = 22.sp, stepSize = 1.sp),
+                    autoSize = TextAutoSize.StepBased(minFontSize = 15.sp, maxFontSize = 26.sp, stepSize = 1.sp),
                 )
-                BasicText(caption, style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft), maxLines = 2)
+                BasicText(caption, style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft, fontSize = 12.sp), maxLines = 2)
             }
         } else {
             PaperCard(
                 Modifier.fillMaxSize().graphicsLayer { rotationY = 180f },
-                seed = seed + 7, tilt = -tilt,
                 onClick = { h.softTick(); flipped = false }, contentPadding = PaddingValues(16.dp),
             ) {
                 Label(title)
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(10.dp))
                 BasicText(
                     explanation,
-                    style = Paper.type.hand.copy(color = Paper.colors.paperInk, fontSize = 19.sp),
-                    autoSize = TextAutoSize.StepBased(minFontSize = 14.sp, maxFontSize = 19.sp, stepSize = 0.5.sp),
+                    style = Paper.type.note.copy(color = Paper.colors.paperInk, fontSize = 18.sp),
+                    autoSize = TextAutoSize.StepBased(minFontSize = 15.sp, maxFontSize = 18.sp, stepSize = 0.5.sp),
                 )
             }
         }
@@ -156,7 +152,7 @@ private fun FlipTile(
         Box(
             Modifier.fillMaxSize().drawBehind {
                 val edge = 1f - kotlin.math.abs(90f - rotation.value % 180f) / 90f
-                if (edge > 0.01f) drawRoundRect(Color.Black.copy(alpha = edge * 0.22f), cornerRadius = CornerRadius(18.dp.toPx()))
+                if (edge > 0.01f) drawRoundRect(Color.Black.copy(alpha = edge * 0.18f), cornerRadius = CornerRadius(16.dp.toPx()))
             },
         )
     }
@@ -179,35 +175,28 @@ private fun WindTile(m: WeatherMoment, fmt: WeatherFormat, modifier: Modifier) {
             val appear = appearOf()
             val c = Offset(size.width / 2, size.height / 2)
             val r = size.minDimension / 2 - 4.dp.toPx()
-            drawCircle(colors.paperInk.copy(alpha = 0.12f), r, c, style = Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 4.dp.toPx()))))
+            drawCircle(colors.paperInk.copy(alpha = 0.16f), r, c, style = Stroke(1f))
+            for (k in 0 until 24) {
+                val a = k * 15 * PI / 180
+                val inner = r - (if (k % 6 == 0) 5.dp.toPx() else 2.5.dp.toPx())
+                drawLine(colors.paperInk.copy(alpha = 0.25f), Offset(c.x + inner * cos(a).toFloat(), c.y + inner * sin(a).toFloat()), Offset(c.x + r * cos(a).toFloat(), c.y + r * sin(a).toFloat()), 1f)
+            }
             listOf(0, 2, 4, 6).forEach { k ->
                 val a = (k * 45 - 90) * PI / 180
                 val label = measurer.measure(points[k], captionStyle.copy(fontSize = 10.sp, color = colors.paperInkSoft))
-                drawText(label, topLeft = Offset(c.x + (r - 8.dp.toPx()) * cos(a).toFloat() - label.size.width / 2, c.y + (r - 8.dp.toPx()) * sin(a).toFloat() - label.size.height / 2))
+                drawText(label, topLeft = Offset(c.x + (r - 13.dp.toPx()) * cos(a).toFloat() - label.size.width / 2, c.y + (r - 13.dp.toPx()) * sin(a).toFloat() - label.size.height / 2))
             }
             val t = clock.seconds.floatValue
             val wobble = sin(t * 2.3f) * (2f + gustiness * 9f) + sin(t * 5.1f) * gustiness * 3f
             rotate(((m.windDirection + 180f) % 360f) * appear + wobble, c) {
-                val len = r * 0.72f
-                val p = Path().apply {
-                    moveTo(c.x, c.y - len)
-                    lineTo(c.x + 7.dp.toPx(), c.y - len + 14.dp.toPx())
-                    lineTo(c.x + 2.dp.toPx(), c.y - len + 12.dp.toPx())
-                    lineTo(c.x + 2.dp.toPx(), c.y + len * 0.7f)
-                    lineTo(c.x - 2.dp.toPx(), c.y + len * 0.7f)
-                    lineTo(c.x - 2.dp.toPx(), c.y - len + 12.dp.toPx())
-                    lineTo(c.x - 7.dp.toPx(), c.y - len + 14.dp.toPx())
-                    close()
-                }
-                drawPath(p, colors.accent)
-                // Paper fletching.
-                for (k in 0..1) {
-                    val y = c.y + len * (0.45f + k * 0.18f)
-                    drawLine(colors.accent.copy(alpha = 0.7f), Offset(c.x, y), Offset(c.x - 7.dp.toPx(), y + 7.dp.toPx()), 2.dp.toPx(), StrokeCap.Round)
-                    drawLine(colors.accent.copy(alpha = 0.7f), Offset(c.x, y), Offset(c.x + 7.dp.toPx(), y + 7.dp.toPx()), 2.dp.toPx(), StrokeCap.Round)
-                }
+                val len = r * 0.62f
+                // A hairline needle: the pigment points where the wind goes.
+                drawLine(colors.accent, Offset(c.x, c.y + len * 0.7f), Offset(c.x, c.y - len), 1.5.dp.toPx(), StrokeCap.Round)
+                drawLine(colors.accent, Offset(c.x, c.y - len), Offset(c.x - 4.dp.toPx(), c.y - len + 7.dp.toPx()), 1.5.dp.toPx(), StrokeCap.Round)
+                drawLine(colors.accent, Offset(c.x, c.y - len), Offset(c.x + 4.dp.toPx(), c.y - len + 7.dp.toPx()), 1.5.dp.toPx(), StrokeCap.Round)
             }
-            drawCircle(colors.paperInk, 3.dp.toPx(), c)
+            drawCircle(colors.paper, 3.dp.toPx(), c)
+            drawCircle(colors.paperInk, 3.dp.toPx(), c, style = Stroke(1.2.dp.toPx()))
         }
     }
 }
@@ -216,7 +205,7 @@ private fun WindTile(m: WeatherMoment, fmt: WeatherFormat, modifier: Modifier) {
 private fun HumidityTile(m: WeatherMoment, fmt: WeatherFormat, modifier: Modifier) {
     val clock = LocalSceneClock.current
     val colors = Paper.colors
-    val water = if (colors.isNight) Color(0xFF7FAEE0) else Color(0xFF5B8FC7)
+    val water = colors.rainInk
     FlipTile(
         2, stringResource(R.string.tile_humidity), fmt.percent(m.humidity),
         m.dewPoint?.let { stringResource(R.string.tile_dew_point, fmt.temp(it)) } ?: stringResource(R.string.tile_humidity_caption),
@@ -229,7 +218,7 @@ private fun HumidityTile(m: WeatherMoment, fmt: WeatherFormat, modifier: Modifie
             val top = 6.dp.toPx()
             val bottom = size.height - 4.dp.toPx()
             val jar = Path().apply {
-                addRoundRect(androidx.compose.ui.geometry.RoundRect(left, top, left + w, bottom, CornerRadius(14.dp.toPx())))
+                addRoundRect(androidx.compose.ui.geometry.RoundRect(left, top, left + w, bottom, CornerRadius(10.dp.toPx())))
             }
             val level = bottom - (bottom - top) * (m.humidity / 100f) * appear
             val t = clock.seconds.floatValue
@@ -238,17 +227,19 @@ private fun HumidityTile(m: WeatherMoment, fmt: WeatherFormat, modifier: Modifie
                     moveTo(left, bottom)
                     var x = left
                     while (x <= left + w) {
-                        lineTo(x, level + sin(x / 9f + t * 2.2f) * 3.dp.toPx())
+                        lineTo(x, level + sin(x / 9f + t * 1.6f) * 2.dp.toPx())
                         x += 3f
                     }
                     lineTo(left + w, bottom)
                     close()
                 }
-                drawPath(wave, water.copy(alpha = 0.55f))
-                drawCircle(Color.White.copy(alpha = 0.4f), 2.5.dp.toPx(), Offset(left + w * 0.3f, level + ((t * 18) % (bottom - level + 1))))
+                drawPath(wave, water.copy(alpha = 0.28f))
             }
-            drawPath(jar, colors.paperInk.copy(alpha = 0.5f), style = Stroke(2.dp.toPx()))
-            drawLine(colors.paperInk.copy(alpha = 0.5f), Offset(left + w * 0.2f, top - 3.dp.toPx()), Offset(left + w * 0.8f, top - 3.dp.toPx()), 3.dp.toPx(), StrokeCap.Round)
+            drawPath(jar, colors.paperInk.copy(alpha = 0.45f), style = Stroke(1.2.dp.toPx()))
+            for (k in 1..3) {
+                val y = bottom - (bottom - top) * k / 4f
+                drawLine(colors.paperInk.copy(alpha = 0.3f), Offset(left + w - 6.dp.toPx(), y), Offset(left + w, y), 1f)
+            }
         }
     }
 }
@@ -274,17 +265,17 @@ private fun UvTile(f: Forecast, m: WeatherMoment, nowSec: Long, modifier: Modifi
             // The pointer bead must stay inside the drawing, clear of the value below it.
             val r = minOf(size.width / 2 - 12.dp.toPx(), size.height - 18.dp.toPx())
             val c = Offset(size.width / 2, size.height - 11.dp.toPx())
-            val stops = listOf(Color(0xFF8CC7B5), Color(0xFFE9C46A), Color(0xFFEF8F4E), Color(0xFFD9483B), Color(0xFF9B6BC3))
+            val stops = listOf(Color(0xFF9CB2A2), Color(0xFFCFB073), Color(0xFFC98457), Color(0xFFAE4936), Color(0xFF7A5A8C))
             drawArc(
                 Brush.sweepGradient(listOf(stops[4]) + stops + listOf(stops[0]), center = c),
                 180f, 180f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r),
-                style = Stroke(12.dp.toPx(), cap = StrokeCap.Round),
+                style = Stroke(4.dp.toPx(), cap = StrokeCap.Round),
             )
             val frac = (uv / 11.0).coerceIn(0.0, 1.0).toFloat() * appear
             val a = PI * (1 + frac)
             val p = Offset(c.x + r * cos(a).toFloat(), c.y + r * sin(a).toFloat())
-            drawCircle(colors.paper, 9.dp.toPx(), p)
-            drawCircle(colors.paperInk, 9.dp.toPx(), p, style = Stroke(2.dp.toPx()))
+            drawCircle(colors.paper, 7.dp.toPx(), p)
+            drawCircle(colors.paperInk, 7.dp.toPx(), p, style = Stroke(1.2.dp.toPx()))
         }
     }
 }
@@ -309,16 +300,17 @@ private fun PressureTile(f: Forecast, m: WeatherMoment, fmt: WeatherFormat, nowS
             for (k in 0..16) {
                 val a = PI * (0.75 + k / 16.0 * 1.5)
                 val inner = if (k % 4 == 0) r - 9.dp.toPx() else r - 5.dp.toPx()
-                drawLine(colors.paperInk.copy(alpha = 0.35f), Offset(c.x + inner * cos(a).toFloat(), c.y + inner * sin(a).toFloat()), Offset(c.x + r * cos(a).toFloat(), c.y + r * sin(a).toFloat()), 1.5.dp.toPx())
+                drawLine(colors.paperInk.copy(alpha = 0.35f), Offset(c.x + inner * cos(a).toFloat(), c.y + inner * sin(a).toFloat()), Offset(c.x + r * cos(a).toFloat(), c.y + r * sin(a).toFloat()), 1f)
             }
             val frac = ((m.pressure - 970) / 80.0).coerceIn(0.0, 1.0).toFloat()
             val a = PI * (0.75 + frac * 1.5 * appear)
-            drawLine(colors.accent, c, Offset(c.x + (r - 12.dp.toPx()) * cos(a).toFloat(), c.y + (r - 12.dp.toPx()) * sin(a).toFloat()), 3.dp.toPx(), StrokeCap.Round)
+            drawLine(colors.accent, c, Offset(c.x + (r - 12.dp.toPx()) * cos(a).toFloat(), c.y + (r - 12.dp.toPx()) * sin(a).toFloat()), 1.5.dp.toPx(), StrokeCap.Round)
             // Trend arrow as a small ghost needle.
             val ft = ((later - 970) / 80.0).coerceIn(0.0, 1.0).toFloat()
             val at = PI * (0.75 + ft * 1.5)
-            if (abs(trend) > 0.3) drawLine(colors.accent.copy(alpha = 0.3f), c, Offset(c.x + (r - 16.dp.toPx()) * cos(at).toFloat(), c.y + (r - 16.dp.toPx()) * sin(at).toFloat()), 2.dp.toPx(), StrokeCap.Round)
-            drawCircle(colors.paperInk, 4.dp.toPx(), c)
+            if (abs(trend) > 0.3) drawLine(colors.accent.copy(alpha = 0.3f), c, Offset(c.x + (r - 16.dp.toPx()) * cos(at).toFloat(), c.y + (r - 16.dp.toPx()) * sin(at).toFloat()), 1.dp.toPx(), StrokeCap.Round)
+            drawCircle(colors.paper, 3.dp.toPx(), c)
+            drawCircle(colors.paperInk, 3.dp.toPx(), c, style = Stroke(1.2.dp.toPx()))
         }
     }
 }
@@ -343,18 +335,19 @@ private fun SunTile(f: Forecast, fmt: WeatherFormat, nowSec: Long, modifier: Mod
                 moveTo(left, base)
                 cubicTo(left + (right - left) * 0.2f, top, left + (right - left) * 0.8f, top, right, base)
             }
-            drawPath(arc, colors.paperInk.copy(alpha = 0.3f), style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 5.dp.toPx()))))
-            drawLine(colors.paperInk.copy(alpha = 0.35f), Offset(0f, base), Offset(size.width, base), 1.5.dp.toPx())
+            drawPath(arc, colors.paperInk.copy(alpha = 0.3f), style = Stroke(1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.dp.toPx(), 4.dp.toPx()))))
+            drawLine(colors.paperInk.copy(alpha = 0.35f), Offset(0f, base), Offset(size.width, base), 1f)
             val p = progress.coerceIn(0f, 1f) * appear
             fun bez(t: Float, a: Float, b: Float, c: Float, d: Float) = (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d
             val x = bez(p, left, left + (right - left) * 0.2f, left + (right - left) * 0.8f, right)
             val y = bez(p, base, top, top, base)
             if (isDay) {
-                drawCircle(Color(0xFFF8C76A).copy(alpha = 0.45f), 13.dp.toPx(), Offset(x, y))
-                drawCircle(Color(0xFFF3A23F), 8.dp.toPx(), Offset(x, y))
+                drawCircle(colors.accent.copy(alpha = 0.18f), 11.dp.toPx(), Offset(x, y), style = Stroke(1f))
+                drawCircle(colors.accent, 6.dp.toPx(), Offset(x, y))
             } else {
-                drawCircle(Color(0xFFF4E6C4), 8.dp.toPx(), Offset(size.width / 2, top + 14.dp.toPx()))
-                drawCircle(colors.paper, 7.dp.toPx(), Offset(size.width / 2 + 4.dp.toPx(), top + 11.dp.toPx()))
+                val m = Offset(size.width / 2, top + 14.dp.toPx())
+                drawCircle(colors.paperInk.copy(alpha = 0.8f), 7.dp.toPx(), m)
+                drawCircle(colors.paper, 6.dp.toPx(), Offset(m.x + 3.5.dp.toPx(), m.y - 2.5.dp.toPx()))
             }
         }
     }
@@ -365,7 +358,7 @@ private fun PrecipTile(f: Forecast, fmt: WeatherFormat, nowSec: Long, modifier: 
     val colors = Paper.colors
     val next = f.hoursFrom(nowSec, 12)
     val today = f.dayAt(nowSec)
-    val water = if (colors.isNight) Color(0xFF9CC4EC) else Color(0xFF3F77B3)
+    val water = colors.rainInk
     FlipTile(
         6, stringResource(R.string.tile_precip), fmt.precip(next.sumOf { it.precipitation }),
         stringResource(R.string.tile_precip_caption, fmt.precip(today?.precipSum ?: 0.0)), stringResource(R.string.tile_precip_back), modifier,
@@ -377,8 +370,8 @@ private fun PrecipTile(f: Forecast, fmt: WeatherFormat, nowSec: Long, modifier: 
             next.forEachIndexed { i, h ->
                 val chance = h.precipProbability / 100f
                 val bh = (size.height - 6.dp.toPx()) * chance * appear
-                drawRoundRect(colors.paperInk.copy(alpha = 0.07f), Offset(i * w + w * 0.2f, 0f), Size(w * 0.6f, size.height), CornerRadius(w * 0.3f))
-                if (bh > 0) drawRoundRect(water.copy(alpha = 0.35f + 0.55f * (h.precipitation / 3.0).toFloat().coerceIn(0f, 1f)), Offset(i * w + w * 0.2f, size.height - bh), Size(w * 0.6f, bh), CornerRadius(w * 0.3f))
+                drawLine(colors.paperInk.copy(alpha = 0.1f), Offset(i * w + w / 2, 0f), Offset(i * w + w / 2, size.height), 1f)
+                if (bh > 0) drawRoundRect(water.copy(alpha = 0.35f + 0.5f * (h.precipitation / 3.0).toFloat().coerceIn(0f, 1f)), Offset(i * w + w * 0.34f, size.height - bh), Size(w * 0.32f, bh), CornerRadius(w * 0.16f))
             }
         }
     }
@@ -400,20 +393,21 @@ private fun FeelsTile(m: WeatherMoment, fmt: WeatherFormat, modifier: Modifier) 
         Canvas(Modifier.fillMaxSize()) {
             val appear = appearOf()
             val cx = size.width / 2
-            val tubeW = 12.dp.toPx()
+            val tubeW = 10.dp.toPx()
             val top = 6.dp.toPx()
-            val bulbR = 13.dp.toPx()
+            val bulbR = 10.dp.toPx()
             val bulbY = size.height - bulbR - 2.dp.toPx()
             val frac = ((m.feelsLike + 25) / 65).toFloat().coerceIn(0.05f, 1f) * appear
             val fillTop = bulbY - (bulbY - top) * frac
             val color = tempColor(m.feelsLike)
-            drawRoundRect(colors.paperInk.copy(alpha = 0.1f), Offset(cx - tubeW / 2, top), Size(tubeW, bulbY - top), CornerRadius(tubeW / 2))
-            drawRoundRect(color, Offset(cx - tubeW / 2 + 3.dp.toPx(), fillTop), Size(tubeW - 6.dp.toPx(), bulbY - fillTop), CornerRadius(tubeW / 2))
-            drawCircle(color, bulbR, Offset(cx, bulbY))
-            drawCircle(colors.paperInk.copy(alpha = 0.3f), bulbR, Offset(cx, bulbY), style = Stroke(1.5.dp.toPx()))
+            drawRoundRect(colors.paperInk.copy(alpha = 0.4f), Offset(cx - tubeW / 2, top), Size(tubeW, bulbY - top), CornerRadius(tubeW / 2), style = Stroke(1.2.dp.toPx()))
+            drawRoundRect(color, Offset(cx - 1.5.dp.toPx(), fillTop), Size(3.dp.toPx(), bulbY - fillTop), CornerRadius(1.5.dp.toPx()))
+            drawCircle(colors.paper, bulbR, Offset(cx, bulbY))
+            drawCircle(colors.paperInk.copy(alpha = 0.4f), bulbR, Offset(cx, bulbY), style = Stroke(1.2.dp.toPx()))
+            drawCircle(color, bulbR - 3.5.dp.toPx(), Offset(cx, bulbY))
             for (k in 0..4) {
                 val y = top + 6.dp.toPx() + k * (bulbY - top - 20.dp.toPx()) / 4
-                drawLine(colors.paperInk.copy(alpha = 0.3f), Offset(cx + tubeW / 2 + 4.dp.toPx(), y), Offset(cx + tubeW / 2 + 10.dp.toPx(), y), 1.5.dp.toPx())
+                drawLine(colors.paperInk.copy(alpha = 0.3f), Offset(cx + tubeW / 2 + 4.dp.toPx(), y), Offset(cx + tubeW / 2 + (if (k % 2 == 0) 10 else 7).dp.toPx(), y), 1f)
             }
         }
     }
@@ -430,8 +424,8 @@ private fun MoonTile(fmt: WeatherFormat, nowSec: Long, modifier: Modifier) {
             val c = Offset(size.width / 2, size.height / 2)
             val r = size.minDimension / 2 - 6.dp.toPx()
             // On dark (night) paper the shadow must be darker than the paper, not the light ink.
-            val shade = if (colors.isNight) Color(0xFF0B1022).copy(alpha = 0.82f) else colors.paperInk.copy(alpha = 0.78f)
-            drawMoonPhase(c, r * (0.85f + 0.15f * appear), phase, Color(0xFFF1E4C3), shade)
+            val shade = if (colors.isNight) Color(0xFF0B1022).copy(alpha = 0.82f) else colors.paperInk.copy(alpha = 0.72f)
+            drawMoonPhase(c, r * (0.85f + 0.15f * appear), phase, Color(0xFFEDE4CC), shade)
         }
     }
 }
@@ -439,7 +433,6 @@ private fun MoonTile(fmt: WeatherFormat, nowSec: Long, modifier: Modifier) {
 /** Moon disc with its terminator (lit part light, shadow dark). */
 fun DrawScope.drawMoonPhase(c: Offset, r: Float, phase: Float, light: Color, dark: Color) {
     drawCircle(light, r, c)
-    drawCircle(light.copy(alpha = 0.5f), r * 0.2f, Offset(c.x - r * 0.3f, c.y - r * 0.2f))
     val k = cos(2 * PI * phase).toFloat()
     val waxing = phase < 0.5f
     val path = Path().apply {
@@ -450,5 +443,5 @@ fun DrawScope.drawMoonPhase(c: Offset, r: Float, phase: Float, light: Color, dar
         close()
     }
     if (k > -0.97f) drawPath(path, dark)
-    drawCircle(dark.copy(alpha = 0.3f), r, c, style = Stroke(1.dp.toPx()))
+    drawCircle(dark.copy(alpha = 0.35f), r, c, style = Stroke(1f))
 }

@@ -16,15 +16,15 @@ import kotlin.math.sin
 /**
  * The paper's own texture (DESIGN_DOCTRINE §3), generated procedurally once per process.
  *
- * A seamless 256 px tile of *detail only* — cloudy density, pale and dark specks, long fibres —
- * encoded in alpha, so it lays over the paper's sky-tinted colour with plain source-over blending
- * and reads on cream paper by day and on ink-blue paper at night alike.
+ * A seamless 256 px tile of *detail only* — a soft cloudiness, a fine tooth and long cotton
+ * fibres — encoded in alpha, so it lays over the paper's colour with plain source-over blending
+ * and reads on ivory paper by day and on charcoal at night alike. No specks: good paper is clean.
  */
 object MaterialTextures {
     const val SIZE = 256
 
-    /** Cotton rag paper: cloudy density, fine speckle, long fibres. */
-    val paper: Bitmap by lazy { detail(seed = 11, mottle = 0.07f, grain = 0.06f, fibres = 80, fibreLight = 0.22f, fibreDark = 0.08f) }
+    /** Cotton paper: a soft cloudiness, a fine tooth, long fibres. */
+    val paper: Bitmap by lazy { detail(seed = 11, mottle = 0.05f, grain = 0.04f, fibres = 60, fibreLight = 0.16f, fibreDark = 0.06f) }
 
     /** Ice crystals growing from the top-left corner; mirror it for the other corners. */
     val frost: Bitmap by lazy { frost() }
@@ -72,7 +72,7 @@ object MaterialTextures {
             val bend = (rand(i, seed + 13) - 0.5f) * 12
             val isLight = rand(i, seed + 17) > 0.45f
             paint.color = if (isLight) Color.argb((light * 255).toInt(), 255, 255, 255) else Color.argb((dark * 255).toInt(), 60, 42, 26)
-            paint.strokeWidth = 0.5f + rand(i, seed + 19) * 0.9f
+            paint.strokeWidth = 0.4f + rand(i, seed + 19) * 0.6f
             // Drawn at every wrap offset so the tile stays seamless.
             for (dx in intArrayOf(-SIZE, 0, SIZE)) for (dy in intArrayOf(-SIZE, 0, SIZE)) {
                 path.reset()

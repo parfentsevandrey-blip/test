@@ -103,14 +103,14 @@ private class Look(
             WidgetBackground.Scene -> Look(
                 sky = p.onSky, skySoft = ColorMath.withAlpha(p.onSky, 0.76f),
                 panel = p.paperInk, panelSoft = ColorMath.withAlpha(p.paperInk, 0.62f),
-                accent = p.accent, precip = rainInk(p, onPaper = true), track = ColorMath.withAlpha(p.paperInk, 0.13f),
+                accent = p.accent, precip = rainInk(p, onPaper = true), track = ColorMath.withAlpha(p.paperInk, 0.2f),
                 shadowOnSky = p.isDarkSky,
                 glyphSky = GlyphColors.from(p, onPaper = false), glyphPanel = GlyphColors.from(p, onPaper = true),
             )
             WidgetBackground.Paper -> Look(
                 sky = p.paperInk, skySoft = ColorMath.withAlpha(p.paperInk, 0.62f),
                 panel = p.paperInk, panelSoft = ColorMath.withAlpha(p.paperInk, 0.62f),
-                accent = p.accent, precip = rainInk(p, onPaper = true), track = ColorMath.withAlpha(p.paperInk, 0.13f),
+                accent = p.accent, precip = rainInk(p, onPaper = true), track = ColorMath.withAlpha(p.paperInk, 0.2f),
                 shadowOnSky = false,
                 glyphSky = GlyphColors.from(p, onPaper = true), glyphPanel = GlyphColors.from(p, onPaper = true),
             )
@@ -552,12 +552,14 @@ private fun DailyRows(ctx: Ctx, b: DailyBlock, top: Float) {
     }
 }
 
+/** A hairline track with a short stroke of the pigment from the day's low to its high (§8). */
 @Composable
 private fun RangeBar(width: Float, from: Float, to: Float, look: Look) {
-    val h = 5f
+    val h = 3f
     val start = (from * width).coerceIn(0f, width - h)
     val len = ((to - from) * width).coerceAtLeast(h)
-    Box(GlanceModifier.width(width.dp).height(h.dp).cornerRadius((h / 2).dp).background(ColorProvider(Color(look.track)))) {
+    Box(GlanceModifier.width(width.dp).height(h.dp), contentAlignment = Alignment.CenterStart) {
+        Box(GlanceModifier.fillMaxWidth().height(1.dp).background(ColorProvider(Color(look.track)))) {}
         Row(GlanceModifier.fillMaxSize()) {
             Spacer(GlanceModifier.width(start.dp))
             Box(GlanceModifier.width(len.coerceAtMost(width - start).dp).fillMaxHeight().cornerRadius((h / 2).dp).background(ColorProvider(Color(look.accent)))) {}

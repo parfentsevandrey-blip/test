@@ -125,8 +125,11 @@ object WidgetFx {
 
         if (scene.fog > 0.3f) inSky(R.layout.rv_wfx_fog, ColorMath.lerp(p.cloud, p.skyBottom, 0.3f))
 
-        if (sun != null && clearDay) {
-            // Rays sit on the painted sun: a square island centred on it.
+        val sunUnderPanel = sun != null && plan.panels.any { r ->
+            sun[0] + sun[2] * 1.6f > r.left && sun[0] - sun[2] * 1.6f < r.right && sun[1] + sun[2] * 1.6f > r.top && sun[1] - sun[2] * 1.6f < r.bottom
+        }
+        if (sun != null && clearDay && !sunUnderPanel) {
+            // The halo breathes around the painted sun: a square island centred on it.
             val side = sun[2] * 6.3f
             layers += FxLayer(R.layout.rv_wfx_rays, p.sunRay, false, RectDp(0f, 0f, plan.width, plan.height), sun[0], sun[1], side)
         }

@@ -20,11 +20,11 @@ fun interface TextMeasure {
 object EstimateMeasure : TextMeasure {
     override fun width(text: String, font: WFont, sizeDp: Float): Float {
         val k = when (font) {
-            WFont.DisplayLight -> 0.72f
-            WFont.Display -> 0.74f
+            WFont.DisplayLight -> 0.52f
+            WFont.Display -> 0.55f
             WFont.Body -> 0.56f
             WFont.BodyBold -> 0.6f
-            WFont.Hand -> 0.46f
+            WFont.Hand -> 0.44f
         }
         return text.length * sizeDp * k
     }

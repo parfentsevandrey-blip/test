@@ -1,7 +1,6 @@
 package app.papersky.weather.ui.widgets
 
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -16,7 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -99,13 +97,13 @@ fun WidgetStudioScreen(vm: WidgetStudioViewModel, scene: SceneState, motion: Mot
     }
     PaperPage(stringResource(R.string.widgets_title), scene, motion, onBack, village = village) {
         item("intro") {
-            BasicText(stringResource(R.string.widgets_intro), Modifier.padding(horizontal = 4.dp), style = Paper.type.hand.copy(color = Paper.colors.paperInk))
+            BasicText(stringResource(R.string.widgets_intro), Modifier.padding(horizontal = 4.dp, vertical = 4.dp), style = Paper.type.note.copy(color = Paper.colors.paperInk))
         }
         if (placed.isNotEmpty()) {
             item("placed-title") { SectionTitle(stringResource(R.string.widgets_on_home)) }
             placed.forEachIndexed { i, w ->
                 item("w-${w.appWidgetId}") {
-                    PaperCard(Modifier.laidDown(i), seed = w.appWidgetId, onClick = { onEdit(w.appWidgetId) }) {
+                    PaperCard(Modifier.laidDown(i), onClick = { onEdit(w.appWidgetId) }) {
                         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                             val shown = DpSize(w.size.width.coerceAtMost(320.dp), w.size.height.coerceAtMost(260.dp))
                             WidgetPreview(w.config, shown)
@@ -119,7 +117,7 @@ fun WidgetStudioScreen(vm: WidgetStudioViewModel, scene: SceneState, motion: Mot
         item("presets-title") { SectionTitle(stringResource(R.string.widgets_add)) }
         WidgetPreset.entries.forEach { preset ->
             item("p-${preset.name}") {
-                PaperCard(Modifier.laidDown(1 + preset.ordinal), seed = preset.ordinal * 13 + 5, tilt = if (preset.ordinal % 2 == 0) -0.5f else 0.5f) {
+                PaperCard(Modifier.laidDown(1 + preset.ordinal)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             BasicText(presetName(preset), style = Paper.type.heading.copy(color = Paper.colors.paperInk))
@@ -130,7 +128,7 @@ fun WidgetStudioScreen(vm: WidgetStudioViewModel, scene: SceneState, motion: Mot
                             vm.pin(preset) { android.widget.Toast.makeText(context, R.string.widgets_unsupported, android.widget.Toast.LENGTH_LONG).show() }
                         }, primary = false)
                     }
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(16.dp))
                     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.Center) {
                         WidgetPreview(preset.config, Grid.size(preset.cols, preset.rows).let { DpSize(it.width.coerceAtMost(310.dp), it.height) })
                     }

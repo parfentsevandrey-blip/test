@@ -21,8 +21,9 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Paints the Papersky diorama: a watercolour sky, sun or moon, paper clouds, five layers of cut
- * paper landscape (three soft hills, a hamlet, trees) and the weather moving through it.
+ * Paints the Papersky print (DESIGN_DOCTRINE §10): an aquatint sky, a flat sun or moon, vellum
+ * clouds, five planes of landscape fading into mist like a woodblock print (two mountain ranges,
+ * two hills, the meadow with houses and trees in silhouette) and the weather moving through it.
  *
  * The scene is split into layers so the app can cache the expensive, static ones on the GPU and
  * only redraw what moves ([drawParticles], [drawSkyFx]) each frame. Widgets and thumbnails use
@@ -32,7 +33,7 @@ import kotlin.math.sqrt
  */
 class PaperSceneRenderer(private val density: Float) {
 
-    data class Panel(val rect: RectF, val alpha: Float = 0.96f, val radius: Float = 16f, val tape: Boolean = false)
+    data class Panel(val rect: RectF, val alpha: Float = 0.94f, val radius: Float = 16f)
 
     /** A soft temperature line (and optional precipitation bars) printed on a widget panel. */
     class Chart(
@@ -79,9 +80,9 @@ class PaperSceneRenderer(private val density: Float) {
         val scrimDark: Boolean = true,
         /** Raindrops resting on the glass in front of the scene. */
         val glass: Boolean = false,
-        /** Slowly turning paper petals around the sun (animated widgets draw their own). */
+        /** The sun's halo breathing when tapped (animated widgets draw their own). */
         val rays: Boolean = true,
-        /** The hamlet on the meadow (cottages, lantern, chimney smoke). */
+        /** Houses on the meadow, in silhouette. */
         val village: Boolean = true,
         /** Offset of the nearest ridge relative to the particle layer (app parallax). */
         val groundDx: Float = 0f,
@@ -127,11 +128,11 @@ class PaperSceneRenderer(private val density: Float) {
         prepare(w, h, s, o)
         drawSky(canvas, s, p, o)
         drawSkyFx(canvas, s, p, o)
-        val festoon = blanketAlpha(s)
-        if (festoon > 0.01f) {
+        val veil = blanketAlpha(s)
+        if (veil > 0.01f) {
             canvas.save()
             canvas.translate(blanketOffset(s, o.time, o.gust), 0f)
-            drawBlanket(canvas, s, p, festoon)
+            drawBlanket(canvas, s, p, veil)
             canvas.restore()
         }
         for (i in layout.clouds.indices) {
@@ -203,11 +204,12 @@ class PaperSceneRenderer(private val density: Float) {
             canvas.drawRect(-layout.margin, hy - layout.depthD * 1.4f, w + layout.margin, hy + layout.depthD * 0.3f, shaded)
         }
 
-        // Watercolour blooms, stretched from a tiny texture.
+        // Aquatint: the faintest blooms, stretched from a tiny texture.
         srcRect.set(0, 0, PaperGrain.wash.width, PaperGrain.wash.height)
         tmpRect.set(-layout.margin, -20 * dp, w + layout.margin, hy + layout.depthD * 0.4f)
-        bitmapPaint.alpha = 255
+        bitmapPaint.alpha = 110
         canvas.drawBitmap(PaperGrain.wash, srcRect, tmpRect, bitmapPaint)
+        bitmapPaint.alpha = 255
 
         if (s.rainbow > 0.01f) drawRainbow(canvas, s.rainbow)
         drawGodRays(canvas, s, p, o)
@@ -221,15 +223,15 @@ class PaperSceneRenderer(private val density: Float) {
     }
 
     private fun drawRainbow(canvas: Canvas, amount: Float) {
-        val colors = intArrayOf(0xFFE8766B.toInt(), 0xFFF2A65E.toInt(), 0xFFF2D56B.toInt(), 0xFF8FC38B.toInt(), 0xFF7BA7D6.toInt(), 0xFF9C88C9.toInt())
+        val colors = intArrayOf(0xFFC9776A.toInt(), 0xFFD6A06C.toInt(), 0xFFD9C47E.toInt(), 0xFF97B394.toInt(), 0xFF879FC0.toInt(), 0xFF9A8CB8.toInt())
         val hy = layout.horizonY
         val cx = layout.w * 0.3f
         val radius = min(layout.w * 0.44f, hy * 0.9f)
-        val band = radius * 0.04f
+        val band = radius * 0.028f
         stroke.strokeCap = Paint.Cap.BUTT
         stroke.strokeWidth = band * 0.94f
         colors.forEachIndexed { i, c ->
-            stroke.color = ColorMath.withAlpha(c, 0.45f * amount)
+            stroke.color = ColorMath.withAlpha(c, 0.22f * amount)
             val r = radius - i * band
             tmpRect.set(cx - r, hy - r, cx + r, hy + r)
             canvas.drawArc(tmpRect, 180f, 180f, false, stroke)
@@ -284,58 +286,33 @@ class PaperSceneRenderer(private val density: Float) {
 
         val moonA = moonAlpha(s)
         if (moonA > 0.01f && !arcPosition(s.nightProgress.coerceIn(0.05f, 0.95f), o, pos).let { blocked(o, pos[0], pos[1], r) }) {
-            glow(canvas, pos[0], pos[1], big * 0.42f, ColorMath.scaleAlpha(p.glow, moonA * 1.4f))
-            drawMoon(canvas, pos[0], pos[1], r * 0.86f, s.moonPhase, p, moonA)
+            glow(canvas, pos[0], pos[1], big * 0.36f, ColorMath.scaleAlpha(p.glow, moonA * 1.2f))
+            drawMoon(canvas, pos[0], pos[1], r * 0.82f, s.moonPhase, p, moonA)
         }
 
         val sunA = sunAlpha(s)
         if (sunA > 0.01f && !arcPosition(s.sunProgress, o, pos).let { blocked(o, pos[0], pos[1], r) }) {
             val x = pos[0]
             val y = pos[1]
-            glow(canvas, x, y, big * 0.62f, ColorMath.scaleAlpha(p.glow, sunA * 1.1f))
-            glow(canvas, x, y, r * 3.2f, ColorMath.withAlpha(p.sunRay, 0.35f * sunA))
-            // Halo rings, like circles of tracing paper.
-            stroke.strokeWidth = 1.1f * dp
-            stroke.color = ColorMath.withAlpha(p.sunRay, 0.2f * sunA)
-            canvas.drawCircle(x, y, r * 1.75f, stroke)
-            stroke.color = ColorMath.withAlpha(p.sunRay, 0.11f * sunA)
-            canvas.drawCircle(x, y, r * 2.5f, stroke)
-            // Layered paper discs.
-            fill.color = ColorMath.withAlpha(p.sunRay, 0.55f * sunA)
-            canvas.drawCircle(x, y, r * 1.16f, fill)
-            shaded.shader = RadialGradient(
-                x - r * 0.3f, y - r * 0.35f, r * 1.4f,
-                intArrayOf(ColorMath.lighten(p.sun, 0.35f), p.sun, ColorMath.darken(p.sun, 0.06f)),
-                floatArrayOf(0f, 0.55f, 1f), Shader.TileMode.CLAMP,
-            )
-            shaded.alpha = (sunA * 255).roundToInt()
-            canvas.drawCircle(x, y, r, shaded)
-            shaded.shader = null
-            shaded.alpha = 255
+            glow(canvas, x, y, big * 0.56f, ColorMath.scaleAlpha(p.glow, sunA))
+            glow(canvas, x, y, r * 2.8f, ColorMath.withAlpha(p.sunRay, 0.28f * sunA))
+            // Two rings of tracing paper around a flat disc, as in a woodblock print.
+            stroke.strokeWidth = 0.75f * dp
+            stroke.color = ColorMath.withAlpha(p.sunRay, 0.22f * sunA)
+            canvas.drawCircle(x, y, r * 1.6f, stroke)
+            stroke.color = ColorMath.withAlpha(p.sunRay, 0.12f * sunA)
+            canvas.drawCircle(x, y, r * 2.3f, stroke)
+            fill.color = ColorMath.withAlpha(p.sun, sunA)
+            canvas.drawCircle(x, y, r, fill)
         }
     }
 
     private fun drawMoon(canvas: Canvas, x: Float, y: Float, r: Float, phase: Float, p: ScenePalette, alpha: Float) {
-        // Soft paper shadow below the disc.
-        for (k in 3 downTo 1) {
-            fill.color = ColorMath.scaleAlpha(p.shadow, 0.12f * alpha)
-            canvas.drawCircle(x, y + k * 0.9f * dp, r + k * 0.6f * dp, fill)
-        }
-        shaded.shader = RadialGradient(
-            x - r * 0.3f, y - r * 0.3f, r * 1.3f,
-            intArrayOf(ColorMath.lighten(p.moon, 0.3f), p.moon, ColorMath.darken(p.moon, 0.08f)),
-            null, Shader.TileMode.CLAMP,
-        )
-        shaded.alpha = (alpha * 255).roundToInt()
-        canvas.drawCircle(x, y, r, shaded)
-        shaded.shader = null
-        shaded.alpha = 255
-
-        fill.color = ColorMath.withAlpha(ColorMath.darken(p.moon, 0.3f), 0.14f * alpha)
-        canvas.drawCircle(x - r * 0.3f, y - r * 0.18f, r * 0.2f, fill)
-        canvas.drawCircle(x + r * 0.28f, y + r * 0.3f, r * 0.14f, fill)
-        canvas.drawCircle(x + r * 0.05f, y - r * 0.48f, r * 0.09f, fill)
-        canvas.drawCircle(x - r * 0.05f, y + r * 0.55f, r * 0.07f, fill)
+        stroke.strokeWidth = 0.75f * dp
+        stroke.color = ColorMath.withAlpha(p.moon, 0.14f * alpha)
+        canvas.drawCircle(x, y, r * 1.7f, stroke)
+        fill.color = ColorMath.withAlpha(p.moon, alpha)
+        canvas.drawCircle(x, y, r, fill)
 
         // Terminator: dark side as half-disc plus a half-ellipse.
         val k = cos(2 * PI * phase).toFloat() // 1 new, 0 quarter, -1 full
@@ -349,7 +326,7 @@ class PaperSceneRenderer(private val density: Float) {
             val sweep = if (waxing) (if (k > 0) -180f else 180f) else (if (k > 0) 180f else -180f)
             tmpPath.arcTo(tmpRect, 90f, sweep, false)
             tmpPath.close()
-            fill.color = ColorMath.withAlpha(ColorMath.lerp(p.skyTop, p.moon, 0.18f), 0.84f * alpha)
+            fill.color = ColorMath.withAlpha(ColorMath.lerp(p.skyTop, p.moon, 0.14f), 0.86f * alpha)
             canvas.drawPath(tmpPath, fill)
         }
     }
@@ -371,7 +348,7 @@ class PaperSceneRenderer(private val density: Float) {
 
     fun drawSkyFx(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
         if (o.particles) drawStars(canvas, s, p, o)
-        if (o.rays) drawSunRays(canvas, s, p, o)
+        if (o.rays) drawHalo(canvas, s, p, o)
     }
 
     private fun starVisibility(s: SceneState) = (1f - s.daylight * 1.6f).coerceIn(0f, 1f) * (1f - s.cloudCover * 0.9f) * (1f - s.fog)
@@ -396,7 +373,7 @@ class PaperSceneRenderer(private val density: Float) {
             }
             val tw = 0.5f + 0.5f * sin(t * (0.9f + g * 0.55f) + g * 2.1f)
             lines.color = ColorMath.withAlpha(p.star, vis * (0.35f + 0.55f * tw))
-            lines.strokeWidth = (1.1f + g * 0.45f) * dp
+            lines.strokeWidth = (0.9f + g * 0.35f) * dp
             if (n > 0) canvas.drawPoints(out, 0, n, lines)
         }
         val b = layout.bright
@@ -405,7 +382,7 @@ class PaperSceneRenderer(private val density: Float) {
             val i = k / 3
             val tw = 0.55f + 0.45f * sin(t * (1.3f + rand(i, 77) * 1.6f) + i * 1.7f)
             sprite.tint(p.star, vis * tw)
-            sprite.draw(canvas, SceneSprites.glint, b[k], b[k + 1], b[k + 2] * (0.8f + 0.3f * tw))
+            sprite.draw(canvas, SceneSprites.glint, b[k], b[k + 1], b[k + 2] * (0.6f + 0.2f * tw))
             k += 3
         }
         // A shooting star every so often on clear nights.
@@ -422,7 +399,7 @@ class PaperSceneRenderer(private val density: Float) {
                 val hy = sy + sin(ang) * len * ph
                 val tail = len * 0.35f * sin(ph * PI.toFloat())
                 shaded.shader = LinearGradient(hx, hy, hx - cos(ang) * tail, hy - sin(ang) * tail, ColorMath.withAlpha(p.star, vis), 0, Shader.TileMode.CLAMP)
-                stroke.strokeWidth = 1.6f * dp
+                stroke.strokeWidth = 1f * dp
                 stroke.shader = shaded.shader
                 canvas.drawLine(hx, hy, hx - cos(ang) * tail, hy - sin(ang) * tail, stroke)
                 stroke.shader = null
@@ -432,39 +409,32 @@ class PaperSceneRenderer(private val density: Float) {
     }
 
     /**
-     * The sun's paper petals: twelve rounded slips, long and short, turning once a minute
-     * (DESIGN_DOCTRINE §10). Drawn without shadow so they cost nothing per frame.
+     * The sun's halo breathing (§11): a ring of light that swells and fades while the sun is
+     * touched ([Options.sunSpin] advances in half-turns). Two circles; nothing at rest.
      */
-    private fun drawSunRays(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
+    private fun drawHalo(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
         val a = sunAlpha(s)
         if (a < 0.03f) return
+        val k = ((o.sunSpin % 180f) + 180f) % 180f / 180f
+        val breath = sin(k * PI.toFloat())
+        if (breath < 0.01f) return
         arcPosition(s.sunProgress, o, pos)
         val r = celestialRadius()
         if (blocked(o, pos[0], pos[1], r)) return
-        fill.color = ColorMath.scaleAlpha(p.sunRay, a)
-        canvas.save()
-        canvas.translate(pos[0], pos[1])
-        canvas.rotate(o.time * 6f + o.sunSpin)
-        for (i in 0 until 12) {
-            val long = i % 2 == 0
-            val inner = r * 1.24f
-            val outer = r * if (long) 1.8f else 1.52f
-            val half = r * if (long) 0.17f else 0.13f
-            tmpRect.set(-half, -outer, half, -inner)
-            canvas.drawRoundRect(tmpRect, half, half, fill)
-            canvas.rotate(30f)
-        }
-        canvas.restore()
+        glow(canvas, pos[0], pos[1], r * (2.2f + 1.4f * k), ColorMath.withAlpha(p.sunRay, 0.35f * a * breath))
+        stroke.strokeWidth = 1f * dp
+        stroke.color = ColorMath.withAlpha(p.sunRay, 0.5f * a * breath)
+        canvas.drawCircle(pos[0], pos[1], r * (1.3f + 1.6f * k), stroke)
     }
 
-    /** Soft shafts of light falling from a sun half-hidden by clouds (§4.4). */
+    /** Soft shafts of light falling from a sun half-hidden by clouds (§10). */
     private fun drawGodRays(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
         val cover = s.cloudCover
         val a = sunAlpha(s) * smoothstep(0.25f, 0.45f, cover) * (1f - smoothstep(0.8f, 0.95f, cover)) * (1f - (s.rain + s.snow).coerceIn(0f, 1f))
         if (a < 0.03f) return
         arcPosition(s.sunProgress, o, pos)
         val len = layout.h * 0.9f
-        shaded.shader = RadialGradient(pos[0], pos[1], len, intArrayOf(ColorMath.withAlpha(p.sunRay, 0.22f * a), ColorMath.withAlpha(p.sunRay, 0f)), null, Shader.TileMode.CLAMP)
+        shaded.shader = RadialGradient(pos[0], pos[1], len, intArrayOf(ColorMath.withAlpha(p.sunRay, 0.12f * a), ColorMath.withAlpha(p.sunRay, 0f)), null, Shader.TileMode.CLAMP)
         for (k in 0 until 5) {
             val ang = (PI / 2 + (k - 2) * 0.28f + (rand(k, s.seed + 1701) - 0.5f) * 0.12f).toFloat()
             val half = 0.035f + 0.03f * rand(k, s.seed + 1703)
@@ -514,42 +484,37 @@ class PaperSceneRenderer(private val density: Float) {
         return (count - c.rank).coerceIn(0f, 1f)
     }
 
-    /** Draws cloud [i] with its top-left at the canvas origin. */
+    /** Draws cloud [i] with its top-left at the canvas origin: two sheets of vellum, no outline. */
     fun drawCloud(canvas: Canvas, i: Int, s: SceneState, p: ScenePalette, alpha: Float = 1f) {
         val c = layout.clouds[i]
-        val air = (1f - c.depth) * 0.25f
+        val air = (1f - c.depth) * 0.3f
         val heavy = (s.rain + s.thunder + s.drizzle * 0.5f).coerceIn(0f, 1f) * 0.35f
-        val body = if (c.ceiling) ColorMath.lerp(p.cloudShade, p.cloud, 0.45f - heavy) else ColorMath.lerp(ColorMath.lerp(p.cloud, p.skyBottom, air), p.cloudShade, heavy)
-        val back = ColorMath.lerp(ColorMath.lerp(p.cloudShade, p.skyTop, air * 0.8f), p.cloudShade, heavy)
+        val body = ColorMath.lerp(ColorMath.lerp(p.cloud, p.skyBottom, air), p.cloudShade, heavy)
+        val back = ColorMath.lerp(ColorMath.lerp(p.cloudShade, p.skyTop, air), p.cloudShade, heavy)
 
-        // Back sheet peeking out above, with its own faint shadow.
-        fill.color = ColorMath.withAlpha(back, alpha)
+        fill.color = ColorMath.withAlpha(back, 0.4f * alpha)
         canvas.drawPath(c.back, fill)
-
-        // Soft shadow cast downward by the front sheet.
-        for (k in 4 downTo 1) {
-            fill.color = ColorMath.scaleAlpha(p.shadow, 0.09f * alpha)
+        // The faintest shadow of the front sheet on the sky.
+        for (k in 2 downTo 1) {
+            fill.color = ColorMath.scaleAlpha(p.shadow, 0.05f * alpha)
             canvas.save()
-            canvas.translate(0f, k * 1.3f * dp)
+            canvas.translate(0f, k * 1.2f * dp)
             canvas.drawPath(c.front, fill)
             canvas.restore()
         }
+        // Vellum: denser along the domes, thinning out towards the flat underside.
         shaded.shader = LinearGradient(
             0f, 0f, 0f, c.height,
-            ColorMath.lighten(body, 0.07f), ColorMath.lerp(body, p.cloudShade, 0.3f), Shader.TileMode.CLAMP,
+            ColorMath.withAlpha(ColorMath.lighten(body, 0.04f), 0.9f), ColorMath.withAlpha(ColorMath.lerp(body, p.skyBottom, 0.3f), 0.55f), Shader.TileMode.CLAMP,
         )
         shaded.alpha = (alpha * 255).roundToInt()
         canvas.drawPath(c.front, shaded)
         shaded.shader = null
         shaded.alpha = 255
-        // Light catching the paper edge.
-        stroke.strokeWidth = 1f * dp
-        stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.16f * alpha)
-        canvas.drawPath(c.front, stroke)
     }
 
     // ============================================================================================
-    // Overcast festoon: a scalloped paper band along the top of the sky.
+    // Overcast veil: a soft band of vellum along the top of the sky with a long gentle hem.
     // ============================================================================================
 
     val blanketPeriod: Float get() = layout.blanketPeriod
@@ -557,7 +522,7 @@ class PaperSceneRenderer(private val density: Float) {
     fun blanketAlpha(s: SceneState): Float =
         (smoothstep(0.72f, 1f, s.cloudCover) + (s.rain + s.drizzle + s.thunder).coerceIn(0f, 1f) * 0.35f * smoothstep(0.5f, 0.8f, s.cloudCover)).coerceIn(0f, 1f)
 
-    /** Horizontal drift of the festoon, wrapped to one period. */
+    /** Horizontal drift of the veil, wrapped to one period. */
     fun blanketOffset(s: SceneState, time: Float, gust: Float): Float {
         val wind = s.windX + gust
         val dir = if (wind < 0) -1f else 1f
@@ -565,156 +530,69 @@ class PaperSceneRenderer(private val density: Float) {
         return (time * speed * dir) % layout.blanketPeriod
     }
 
-    /** Draws the festoon in scene coordinates (x from −2 periods to w + 2 periods). */
+    /** Draws the veil in scene coordinates (x from −2 periods to w + 2 periods). */
     fun drawBlanket(canvas: Canvas, s: SceneState, p: ScenePalette, alpha: Float = blanketAlpha(s)) {
         if (alpha <= 0.01f) return
         val heavy = (s.rain + s.thunder).coerceIn(0f, 1f) * 0.3f
         val period = layout.blanketPeriod
-        // Back row, offset half a scallop and a little lower: two sheets of paper.
+        // A second, paler sheet half a wave along and a little lower.
         canvas.save()
-        canvas.translate(period * 0.5f, layout.horizonY * 0.06f)
-        fill.color = ColorMath.withAlpha(ColorMath.lerp(p.cloudShade, p.skyTop, 0.1f), alpha)
+        canvas.translate(period * 0.5f, layout.horizonY * 0.05f)
+        fill.color = ColorMath.withAlpha(ColorMath.lerp(p.cloudShade, p.skyTop, 0.2f), 0.6f * alpha)
         canvas.drawPath(layout.blanket, fill)
         canvas.restore()
-        for (k in 4 downTo 1) {
-            fill.color = ColorMath.scaleAlpha(p.shadow, 0.1f * alpha)
+        for (k in 2 downTo 1) {
+            fill.color = ColorMath.scaleAlpha(p.shadow, 0.05f * alpha)
             canvas.save()
-            canvas.translate(0f, k * 1.4f * dp)
+            canvas.translate(0f, k * 1.3f * dp)
             canvas.drawPath(layout.blanket, fill)
             canvas.restore()
         }
-        val body = ColorMath.lerp(ColorMath.lerp(p.cloudShade, p.cloud, 0.6f), p.cloudShade, heavy)
-        shaded.shader = LinearGradient(0f, 0f, 0f, layout.horizonY * 0.4f, ColorMath.lighten(body, 0.05f), ColorMath.lerp(body, p.cloudShade, 0.25f), Shader.TileMode.CLAMP)
-        shaded.alpha = (alpha * 255).roundToInt()
+        val body = ColorMath.lerp(ColorMath.lerp(p.cloudShade, p.cloud, 0.55f), p.cloudShade, heavy)
+        shaded.shader = LinearGradient(0f, 0f, 0f, layout.horizonY * 0.4f, ColorMath.darken(body, 0.03f), ColorMath.lighten(body, 0.04f), Shader.TileMode.CLAMP)
+        shaded.alpha = (alpha * 0.95f * 255).roundToInt()
         canvas.drawPath(layout.blanket, shaded)
         shaded.shader = null
         shaded.alpha = 255
-        stroke.strokeWidth = 1f * dp
-        stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.14f * alpha)
-        canvas.drawPath(layout.blanket, stroke)
     }
 
     // ============================================================================================
-    // Village: cottages baked into the meadow's band; trees, smoke and lit windows per frame.
+    // Houses and trees in silhouette: houses baked into the meadow's band; trees and the lights
+    // of windows per frame.
     // ============================================================================================
 
     /** How lit the windows are: at dusk, at night, and on dreary days. */
     private fun windowsLit(s: SceneState) = (1f - s.daylight * 1.25f + s.cloudCover * 0.3f + (s.rain + s.snow) * 0.35f).coerceIn(0f, 1f)
 
+    /** Silhouettes are cut from a darker sheet of the nearest plane's colour. */
+    private fun silhouette(p: ScenePalette) = ColorMath.darken(ridgeColor(layout.ridges.last(), p), 0.22f)
+
     private fun drawVillage(canvas: Canvas, s: SceneState, p: ScenePalette) {
         val meadow = layout.ridges.last()
-        val sc = layout.propScale
-        val lit = windowsLit(s)
-        // Soft ground shadows under the trees (the trees themselves sway per frame).
-        for (t in layout.trees) {
-            val gy = layout.edge(meadow, t.x) + 3 * dp
-            fill.color = ColorMath.scaleAlpha(p.shadow, 0.35f)
-            tmpRect.set(t.x - t.h * 0.2f, gy - 1.5f * dp, t.x + t.h * 0.35f, gy + 2.5f * dp)
-            canvas.drawOval(tmpRect, fill)
-        }
-        for ((i, house) in layout.houses.withIndex()) {
-            val gy = layout.edge(meadow, house.x) + 4 * dp
+        val ink = silhouette(p)
+        for (house in layout.houses) {
+            val gy = layout.edge(meadow, house.x) + 3 * dp
             val left = house.x - house.w / 2
             val right = house.x + house.w / 2
             val top = gy - house.h
-            val wall = ColorMath.lerp(p.house, ColorMath.lighten(p.house, 0.2f), house.tone * 0.5f)
             val roofTop = top - house.roofH
-            // Paper shadow cast down-right onto the meadow.
-            for (k in 3 downTo 1) {
-                fill.color = ColorMath.scaleAlpha(p.shadow, 0.12f)
-                canvas.drawRect(left + k * 0.8f * dp, top + k * 1.2f * dp, right + k * 0.8f * dp, gy + 2 * dp, fill)
-            }
-            // Warm light spilling onto the grass from the windows.
-            if (lit > 0.05f) glow(canvas, house.x, gy + 1.5f * dp, house.w * 1.3f, ColorMath.withAlpha(p.window, 0.28f * lit))
-            // Walls: lit front, a darker side face on the right (a folded paper box).
-            shaded.shader = LinearGradient(left, top, right, gy, ColorMath.lighten(wall, 0.06f), ColorMath.darken(wall, 0.05f), Shader.TileMode.CLAMP)
-            canvas.drawRect(left, top, right, gy + 4 * dp, shaded)
-            shaded.shader = null
-            fill.color = ColorMath.withAlpha(ColorMath.darken(wall, 0.25f), 0.55f)
-            canvas.drawRect(right - house.w * 0.18f, top, right, gy + 4 * dp, fill)
-            // Chimney behind the roof.
-            val chX = left + house.w * 0.66f
-            if (house.chimney) {
-                fill.color = ColorMath.darken(p.roof, 0.2f)
-                canvas.drawRect(chX, roofTop + house.roofH * 0.1f, chX + house.w * 0.14f, top - house.roofH * 0.3f, fill)
-                fill.color = ColorMath.darken(p.roof, 0.35f)
-                canvas.drawRect(chX - 0.8f * dp, roofTop + house.roofH * 0.06f, chX + house.w * 0.14f + 0.8f * dp, roofTop + house.roofH * 0.16f, fill)
-            }
-            // Roof with a little overhang, shingle lines and a lit ridge.
             tmpPath.reset()
-            tmpPath.moveTo(left - 2.5f * dp, top + 0.6f * dp)
+            tmpPath.moveTo(left, gy + 4 * dp)
+            tmpPath.lineTo(left, top)
+            tmpPath.lineTo(left - 1.2f * dp, top + 0.4f * dp)
             tmpPath.lineTo(house.x, roofTop)
-            tmpPath.lineTo(right + 2.5f * dp, top + 0.6f * dp)
+            tmpPath.lineTo(right + 1.2f * dp, top + 0.4f * dp)
+            tmpPath.lineTo(right, top)
+            tmpPath.lineTo(right, gy + 4 * dp)
             tmpPath.close()
-            for (k in 3 downTo 1) {
-                fill.color = ColorMath.scaleAlpha(p.shadow, 0.1f)
-                canvas.save(); canvas.translate(0f, k * 0.9f * dp); canvas.drawPath(tmpPath, fill); canvas.restore()
-            }
-            shaded.shader = LinearGradient(left, roofTop, right, top, ColorMath.lighten(p.roof, 0.1f), ColorMath.darken(p.roof, 0.12f), Shader.TileMode.CLAMP)
-            canvas.drawPath(tmpPath, shaded)
-            shaded.shader = null
-            canvas.save()
-            canvas.clipPath(tmpPath)
-            stroke.strokeWidth = 0.7f * dp
-            stroke.color = ColorMath.withAlpha(ColorMath.darken(p.roof, 0.35f), 0.4f)
-            var yy = roofTop + house.roofH * 0.35f
-            while (yy < top) { canvas.drawLine(left - 3 * dp, yy, right + 3 * dp, yy, stroke); yy += house.roofH * 0.26f }
-            canvas.restore()
-            stroke.strokeWidth = 1f * dp
-            stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.22f)
-            canvas.drawLine(left - 2.5f * dp, top + 0.6f * dp, house.x, roofTop, stroke)
-            if (s.snowGround > 0.05f) {
-                tmpPath.reset()
-                val sx = house.w * 0.4f
-                tmpPath.moveTo(house.x - sx - 2 * dp, roofTop + house.roofH * 0.55f)
-                tmpPath.lineTo(house.x, roofTop - 1 * dp)
-                tmpPath.lineTo(house.x + sx + 2 * dp, roofTop + house.roofH * 0.55f)
-                tmpPath.quadTo(house.x, roofTop + house.roofH * 0.7f, house.x - sx - 2 * dp, roofTop + house.roofH * 0.55f)
-                fill.color = ColorMath.withAlpha(p.snowCap, s.snowGround)
-                canvas.drawPath(tmpPath, fill)
-            }
-            // Windows with a cross of mullions; warm when lit.
-            val ws = house.w * 0.24f
-            val wy = top + house.h * 0.28f
-            val glass = ColorMath.lerp(ColorMath.darken(wall, 0.5f), p.window, lit)
-            val frame = ColorMath.darken(wall, 0.3f)
-            for (wx in windowsOf(house)) {
-                fill.color = frame
-                canvas.drawRect(wx - ws / 2 - 0.9f * dp, wy - 0.9f * dp, wx + ws / 2 + 0.9f * dp, wy + ws + 0.9f * dp, fill)
-                fill.color = glass
-                canvas.drawRect(wx - ws / 2, wy, wx + ws / 2, wy + ws, fill)
-                stroke.strokeWidth = 0.7f * dp
-                stroke.color = frame
-                canvas.drawLine(wx, wy, wx, wy + ws, stroke)
-                canvas.drawLine(wx - ws / 2, wy + ws / 2, wx + ws / 2, wy + ws / 2, stroke)
-            }
-            if (house.door) {
-                val dw = house.w * 0.2f
-                val dx = if (house.twoWindows) house.x else house.x + house.w * 0.24f
-                fill.color = ColorMath.darken(p.roof, 0.3f)
-                tmpRect.set(dx - dw / 2, gy - house.h * 0.42f, dx + dw / 2, gy + 1 * dp)
-                canvas.drawRoundRect(tmpRect, dw / 2, dw / 2, fill)
-            }
-        }
-        if (!layout.lanternX.isNaN()) {
-            val lx = layout.lanternX
-            val gy = layout.edge(meadow, lx) + 3 * dp
-            val postH = 22 * dp * sc
-            stroke.strokeWidth = 1.6f * dp
-            stroke.color = ColorMath.darken(p.hillNear, 0.55f)
-            canvas.drawLine(lx, gy, lx, gy - postH, stroke)
-            fill.color = ColorMath.darken(p.hillNear, 0.55f)
-            canvas.drawRect(lx - 3.2f * dp * sc, gy - postH - 1.5f * dp, lx + 3.2f * dp * sc, gy - postH + 0.5f * dp, fill)
-            fill.color = ColorMath.lerp(ColorMath.darken(p.house, 0.4f), p.window, lit)
-            canvas.drawRect(lx - 2.4f * dp * sc, gy - postH - 7 * dp * sc, lx + 2.4f * dp * sc, gy - postH - 1.5f * dp, fill)
-            fill.color = ColorMath.darken(p.hillNear, 0.55f)
-            tmpPath.reset()
-            tmpPath.moveTo(lx - 3.6f * dp * sc, gy - postH - 7 * dp * sc)
-            tmpPath.lineTo(lx, gy - postH - 10.5f * dp * sc)
-            tmpPath.lineTo(lx + 3.6f * dp * sc, gy - postH - 7 * dp * sc)
-            tmpPath.close()
+            fill.color = ColorMath.lerp(ink, ColorMath.darken(ink, 0.1f), house.tone)
             canvas.drawPath(tmpPath, fill)
-            if (lit > 0.05f) glow(canvas, lx, gy, 16 * dp * sc, ColorMath.withAlpha(p.window, 0.25f * lit))
+            if (s.snowGround > 0.05f) {
+                stroke.strokeWidth = 1.4f * dp
+                stroke.color = ColorMath.withAlpha(p.snowCap, s.snowGround * 0.9f)
+                canvas.drawLine(left - 1.2f * dp, top, house.x, roofTop, stroke)
+                canvas.drawLine(house.x, roofTop, right + 1.2f * dp, top, stroke)
+            }
         }
     }
 
@@ -722,103 +600,70 @@ class PaperSceneRenderer(private val density: Float) {
 
     private fun windowsOf(house: SceneLayout.House): FloatArray {
         if (house.twoWindows) { windowXs[0] = house.x - house.w * 0.22f; windowXs[1] = house.x + house.w * 0.22f; return windowXs }
-        return floatArrayOf(house.x - house.w * 0.12f)
+        return floatArrayOf(house.x)
     }
 
     /**
-     * Everything alive on the meadow, redrawn each frame: trees bending in the wind, smoke from
-     * chimneys on cold days, windows and the lantern flickering like candles.
+     * Everything alive on the meadow, redrawn each frame: trees bending in the wind and the warm
+     * points of windows at dusk.
      */
     fun drawProps(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
         if (!o.landscape || layout.ridges.isEmpty()) return
         val meadow = layout.ridges.last()
         val t = o.time
         val wind = s.windX + o.gust
-        val sc = layout.propScale
         val lit = windowsLit(s)
         if (lit > 0.05f) {
             for ((i, house) in layout.houses.withIndex()) {
-                val gy = layout.edge(meadow, house.x) + 4 * dp
-                val ws = house.w * 0.24f
-                val wy = gy - house.h + house.h * 0.28f
-                val flicker = 0.88f + 0.12f * sin(t * 2.7f * 6.283f / 6f + i * 1.3f)
+                val gy = layout.edge(meadow, house.x) + 3 * dp
+                val wy = gy - house.h * 0.55f
+                val ws = house.w * 0.16f
+                val flicker = 0.9f + 0.1f * sin(t * 2.7f * 6.283f / 6f + i * 1.3f)
                 for (wx in windowsOf(house)) {
-                    sprite.tint(p.window, 0.4f * lit * flicker)
-                    sprite.draw(canvas, SceneSprites.glow, wx, wy + ws / 2, ws * 2.6f)
-                }
-            }
-            if (!layout.lanternX.isNaN()) {
-                val lx = layout.lanternX
-                val gy = layout.edge(meadow, lx) + 3 * dp
-                val f = 0.9f + 0.1f * sin(t * 3.1f)
-                sprite.tint(p.window, 0.6f * lit * f)
-                sprite.draw(canvas, SceneSprites.glow, lx, gy - 22 * dp * sc - 4 * dp * sc, 26 * dp * sc)
-            }
-        }
-        // Smoke puffs drift with the wind when it's cold enough to heat the houses.
-        if (s.temperature < 14f && o.village) {
-            for ((i, house) in layout.houses.withIndex()) {
-                if (!house.chimney) continue
-                val gy = layout.edge(meadow, house.x) + 4 * dp
-                val chX = house.x - house.w / 2 + house.w * 0.73f
-                val chTop = gy - house.h - house.roofH * 0.9f
-                for (k in 0 until 5) {
-                    val ph = fract(t * 0.22f + k / 5f + i * 0.37f)
-                    val px = chX + wind.coerceIn(-12f, 12f) * ph * 2.6f * dp + sin(ph * 7f + i) * 2 * dp
-                    val py = chTop - ph * 34 * dp * sc
-                    fill.color = ColorMath.withAlpha(ColorMath.lerp(p.cloud, p.cloudShade, 0.3f), (1f - ph) * 0.55f)
-                    canvas.drawCircle(px, py, (2.2f + ph * 6f) * dp * sc, fill)
+                    fill.color = ColorMath.withAlpha(p.window, lit * flicker)
+                    canvas.drawRect(wx - ws / 2, wy - ws / 2, wx + ws / 2, wy + ws / 2, fill)
+                    sprite.tint(p.window, 0.3f * lit * flicker)
+                    sprite.draw(canvas, SceneSprites.glow, wx, wy, ws * 5f)
                 }
             }
         }
         // Trees sway on their roots, more in the wind and when a gust is flicked across.
-        val swayBase = (1.2f + abs(wind) * 0.8f).coerceAtMost(11f)
+        val swayBase = (0.8f + abs(wind) * 0.6f).coerceAtMost(9f)
+        val ink = silhouette(p)
         for ((i, tree) in layout.trees.withIndex()) {
-            val gy = layout.edge(meadow, tree.x) + 4 * dp
-            val sway = if (t == 0f) wind.coerceIn(-14f, 14f) * 0.35f else sin(t * (1.3f + (i % 5) * 0.12f) + i * 0.9f) * swayBase * 0.5f + wind.coerceIn(-14f, 14f) * 0.35f
-            val color = ColorMath.lerp(p.tree, p.hillNear, 0.12f + tree.tone * 0.3f)
+            val gy = layout.edge(meadow, tree.x) + 3 * dp
+            val sway = if (t == 0f) wind.coerceIn(-14f, 14f) * 0.3f else sin(t * (1.1f + (i % 5) * 0.1f) + i * 0.9f) * swayBase * 0.45f + wind.coerceIn(-14f, 14f) * 0.3f
+            fill.color = ColorMath.lerp(ink, ColorMath.lighten(ink, 0.08f), tree.tone)
             canvas.save()
             canvas.rotate(sway, tree.x, gy)
             if (tree.pine) {
-                val tw = tree.h * 0.52f
-                for (tier in 0..2) {
-                    val tierTop = gy - tree.h + tier * tree.h * 0.24f
-                    val tierW = tw * (0.55f + tier * 0.22f)
-                    tmpPath.reset()
-                    tmpPath.moveTo(tree.x, tierTop)
-                    tmpPath.lineTo(tree.x + tierW / 2, tierTop + tree.h * 0.42f)
-                    tmpPath.lineTo(tree.x - tierW / 2, tierTop + tree.h * 0.42f)
-                    tmpPath.close()
-                    // Each tier is its own slip of paper, shaded at the hem.
-                    fill.color = ColorMath.darken(color, 0.12f)
-                    canvas.save(); canvas.translate(0.6f * dp, 1.2f * dp); canvas.drawPath(tmpPath, fill); canvas.restore()
-                    fill.color = ColorMath.lighten(color, 0.04f * (2 - tier))
-                    canvas.drawPath(tmpPath, fill)
-                    if (s.snowGround > 0.3f) {
-                        fill.color = ColorMath.withAlpha(p.snowCap, s.snowGround * 0.9f)
-                        tmpPath.reset()
-                        tmpPath.moveTo(tree.x, tierTop)
-                        tmpPath.lineTo(tree.x + tierW * 0.22f, tierTop + tree.h * 0.16f)
-                        tmpPath.lineTo(tree.x - tierW * 0.22f, tierTop + tree.h * 0.16f)
-                        tmpPath.close()
-                        canvas.drawPath(tmpPath, fill)
-                    }
-                }
-            } else {
-                fill.color = ColorMath.darken(p.tree, 0.35f)
-                canvas.drawRect(tree.x - tree.h * 0.05f, gy - tree.h * 0.45f, tree.x + tree.h * 0.05f, gy, fill)
-                val cr = tree.h * 0.3f
-                fill.color = ColorMath.darken(color, 0.12f)
-                canvas.drawCircle(tree.x + 0.8f * dp, gy - tree.h * 0.6f + 1.2f * dp, cr, fill)
-                fill.color = color
-                canvas.drawCircle(tree.x, gy - tree.h * 0.62f, cr, fill)
-                fill.color = ColorMath.lighten(color, 0.08f)
-                canvas.drawCircle(tree.x - cr * 0.55f, gy - tree.h * 0.5f, cr * 0.72f, fill)
+                // One slender spire with slightly hollow flanks.
+                val half = tree.h * 0.17f
+                tmpPath.reset()
+                tmpPath.moveTo(tree.x, gy - tree.h)
+                tmpPath.quadTo(tree.x + half * 0.35f, gy - tree.h * 0.45f, tree.x + half, gy - tree.h * 0.08f)
+                tmpPath.lineTo(tree.x + 0.6f * dp, gy - tree.h * 0.08f)
+                tmpPath.lineTo(tree.x + 0.6f * dp, gy + 2 * dp)
+                tmpPath.lineTo(tree.x - 0.6f * dp, gy + 2 * dp)
+                tmpPath.lineTo(tree.x - 0.6f * dp, gy - tree.h * 0.08f)
+                tmpPath.lineTo(tree.x - half, gy - tree.h * 0.08f)
+                tmpPath.quadTo(tree.x - half * 0.35f, gy - tree.h * 0.45f, tree.x, gy - tree.h)
+                tmpPath.close()
+                canvas.drawPath(tmpPath, fill)
                 if (s.snowGround > 0.3f) {
                     fill.color = ColorMath.withAlpha(p.snowCap, s.snowGround * 0.85f)
-                    tmpRect.set(tree.x - cr * 0.8f, gy - tree.h * 0.62f - cr, tree.x + cr * 0.8f, gy - tree.h * 0.62f - cr * 0.2f)
-                    canvas.drawArc(tmpRect, 180f, 180f, true, fill)
+                    tmpPath.reset()
+                    tmpPath.moveTo(tree.x, gy - tree.h)
+                    tmpPath.lineTo(tree.x + half * 0.28f, gy - tree.h * 0.8f)
+                    tmpPath.lineTo(tree.x - half * 0.28f, gy - tree.h * 0.8f)
+                    tmpPath.close()
+                    canvas.drawPath(tmpPath, fill)
                 }
+            } else {
+                // A poplar: a narrow flame of leaves on a hairline trunk.
+                canvas.drawRect(tree.x - 0.6f * dp, gy - tree.h * 0.3f, tree.x + 0.6f * dp, gy + 2 * dp, fill)
+                tmpRect.set(tree.x - tree.h * 0.14f, gy - tree.h, tree.x + tree.h * 0.14f, gy - tree.h * 0.18f)
+                canvas.drawOval(tmpRect, fill)
             }
             canvas.restore()
         }
@@ -835,20 +680,24 @@ class PaperSceneRenderer(private val density: Float) {
     val sceneMargin: Float get() = layout.margin
 
     /** Colour of the nearest ridge below its band; the app fills the rest of the screen with it. */
-    fun bandBodyColor(p: ScenePalette): Int = ColorMath.darken(ridgeColor(layout.ridges.last(), p), 0.07f)
+    fun bandBodyColor(p: ScenePalette): Int = ridgeColor(layout.ridges.last(), p)
 
+    /** Colour of a plane: far → near through the palette's hills, then aerial perspective (§10). */
     private fun ridgeColor(r: SceneLayout.Ridge, p: ScenePalette): Int {
-        val base = when (r.index) {
-            0 -> p.hillFar
-            1 -> p.hillMid
-            else -> p.hillNear
-        }
-        // A breath of aerial perspective: the far hill leans toward the sky.
-        val air = ColorMath.lerp(p.skyTop, p.skyBottom, 0.6f)
-        return ColorMath.lerp(base, air, (1f - r.depth) * (1f - r.depth) * 0.22f)
+        val d = r.depth
+        val base = if (d < 0.5f) ColorMath.lerp(p.hillFar, p.hillMid, d / 0.5f) else ColorMath.lerp(p.hillMid, p.hillNear, (d - 0.5f) / 0.5f)
+        return ColorMath.lerp(base, hazeColor(p), AIR[r.index.coerceIn(0, AIR.lastIndex)])
     }
 
-    private fun hazeColor(p: ScenePalette) = ColorMath.lerp(p.skyBottom, p.cloud, 0.25f)
+    private val AIR = floatArrayOf(0.58f, 0.4f, 0.24f, 0.1f, 0f)
+
+    private fun hazeColor(p: ScenePalette) = ColorMath.lerp(ColorMath.lerp(p.skyTop, p.skyBottom, 0.7f), p.cloud, 0.2f)
+
+    /** How much mist lies at the foot of each plane (bokashi): always a little, more in fog and rain. */
+    private fun mistiness(s: SceneState): Float {
+        val morning = (1f - smoothstep(0.02f, 0.2f, s.sunProgress)) * smoothstep(0.3f, 0.8f, s.daylight)
+        return (0.22f + s.fog * 0.55f + (s.rain + s.drizzle + s.snow).coerceIn(0f, 1f) * 0.18f + morning * 0.15f).coerceIn(0f, 0.85f)
+    }
 
     /** Draws band [b] in scene coordinates. */
     fun drawBand(canvas: Canvas, b: Int, s: SceneState, p: ScenePalette) {
@@ -858,6 +707,7 @@ class PaperSceneRenderer(private val density: Float) {
             val next = layout.ridges.getOrNull(i + 1)
             drawRidge(canvas, r, next, s, p, clipBottom = band.bottom)
         }
+        if (b == layout.bands.lastIndex - 1) drawTreeLine(canvas, layout.ridges[band.last], s, p)
         if (b == layout.bands.lastIndex) drawVillage(canvas, s, p)
     }
 
@@ -868,74 +718,105 @@ class PaperSceneRenderer(private val density: Float) {
         canvas.save()
         canvas.clipRect(left, r.top - 24 * dp, right, clipBottom)
 
-        // The sheet casts a soft shadow onto the one behind it, just above its edge.
-        val step = (1.3f + 1.2f * r.depth) * dp
-        for (k in 7 downTo 1) {
-            fill.color = ColorMath.withAlpha(p.shadow, 0.05f)
+        // The plane casts the faintest shadow onto the one behind it, just above its edge.
+        val step = (0.8f + 1f * r.depth) * dp
+        for (k in 4 downTo 1) {
+            fill.color = ColorMath.withAlpha(p.shadow, 0.035f)
             canvas.save()
             canvas.translate(0f, -k * step)
             canvas.drawPath(r.path, fill)
             canvas.restore()
         }
 
-        // The sheet: a touch lighter along the top where light grazes it.
+        // Bokashi: full colour along the crest, fading into mist towards the foot.
+        val foot = if (next != null) max(next.bottom, r.bottom + r.amp * 0.6f) else r.bottom + r.amp * 1.4f
+        val mist = if (next != null) mistiness(s) else 0f
         shaded.shader = LinearGradient(
-            0f, r.top, 0f, r.bottom + r.amp * 0.8f,
-            intArrayOf(ColorMath.lerp(color, p.skyBottom, 0.08f), color, ColorMath.darken(color, 0.06f)),
-            floatArrayOf(0f, 0.45f, 1f), Shader.TileMode.CLAMP,
+            0f, r.top, 0f, foot,
+            intArrayOf(ColorMath.darken(color, 0.03f), color, ColorMath.lerp(color, hazeColor(p), mist)),
+            floatArrayOf(0f, 0.35f, 1f), Shader.TileMode.CLAMP,
         )
         canvas.drawPath(r.path, shaded)
         shaded.shader = null
 
-        // Paper edge catching the light.
-        stroke.strokeWidth = 1.2f * dp
-        stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.12f)
+        // The cut edge catching the light.
+        stroke.strokeWidth = 0.75f * dp
+        stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.06f)
         canvas.drawPath(r.path, stroke)
 
         if (s.snowGround > 0.02f) drawSnow(canvas, r, p, s.snowGround)
 
-        // Paper texture within the sheet.
+        // Paper texture within the plane.
         canvas.save()
         canvas.clipPath(r.path)
-        grainPaint.alpha = 70
+        grainPaint.alpha = 60
         canvas.drawRect(left, r.top - 4 * dp, right, clipBottom, grainPaint)
         canvas.restore()
-
-        // Fog pools at the foot of the sheet, so the next one stands out.
-        if (next != null && s.fog > 0.02f) {
-            val hazeA = (s.fog * 0.6f).coerceAtMost(0.8f)
-            val y0 = r.base
-            val y1 = next.bottom
-            if (y1 > y0) {
-                val haze = hazeColor(p)
-                shaded.shader = LinearGradient(0f, y0, 0f, y1, ColorMath.withAlpha(haze, 0f), ColorMath.withAlpha(haze, hazeA), Shader.TileMode.CLAMP)
-                canvas.drawRect(left, y0, right, clipBottom, shaded)
-                shaded.shader = null
-            }
-        }
         canvas.restore()
     }
 
-    /** Snow like icing on a cake: thick along the crest, with little drips down the slope. */
+    /** Tiny conifers along the crest of the hill behind the meadow, baked into its band. */
+    private fun drawTreeLine(canvas: Canvas, r: SceneLayout.Ridge, s: SceneState, p: ScenePalette) {
+        val line = layout.treeLine
+        if (line.isEmpty()) return
+        fill.color = ColorMath.darken(ridgeColor(r, p), 0.1f)
+        var k = 0
+        while (k < line.size) {
+            val x = line[k]
+            val th = line[k + 1]
+            val gy = layout.edge(r, x) + 1.5f * dp
+            tmpPath.reset()
+            tmpPath.moveTo(x, gy - th)
+            tmpPath.lineTo(x + th * 0.2f, gy)
+            tmpPath.lineTo(x - th * 0.2f, gy)
+            tmpPath.close()
+            canvas.drawPath(tmpPath, fill)
+            k += 2
+        }
+        if (s.snowGround > 0.3f) {
+            fill.color = ColorMath.withAlpha(p.snowCap, s.snowGround * 0.6f)
+            k = 0
+            while (k < line.size) {
+                val x = line[k]
+                val th = line[k + 1]
+                val gy = layout.edge(r, x) + 1.5f * dp
+                canvas.drawCircle(x, gy - th * 0.8f, th * 0.09f, fill)
+                k += 2
+            }
+        }
+    }
+
+    /**
+     * Snow (§10): on mountains it caps the peaks down to a snowline, with a ragged lower edge; on
+     * hills it is a thin cap along the crest. No icing, no drips.
+     */
     private fun drawSnow(canvas: Canvas, r: SceneLayout.Ridge, p: ScenePalette, amount: Float) {
-        val capH = (5f + 2.5f * r.index) * dp
-        val step = 3 * dp
+        val step = (if (r.sharp) 2f else 3f) * dp
         val a = amount.coerceIn(0f, 1f)
+        val snowline = r.top + (r.bottom - r.top) * 0.62f
+        val capH = (3f + 0.5f * r.index) * dp
         tmpPath.reset()
         var x = -layout.margin
-        tmpPath.moveTo(x, layout.edge(r, x) - 0.6f * dp)
+        tmpPath.moveTo(x, layout.edge(r, x) - 0.5f * dp)
         while (x <= layout.w + layout.margin) {
-            tmpPath.lineTo(x, layout.edge(r, x) - 0.6f * dp)
+            tmpPath.lineTo(x, layout.edge(r, x) - 0.5f * dp)
             x += step
         }
         x = layout.w + layout.margin
         while (x >= -layout.margin) {
-            val drip = max(0f, sin(x / (6.5f * dp) + r.index * 2.1f)).let { it * it * it }
-            tmpPath.lineTo(x, layout.edge(r, x) + capH * (0.45f + 0.9f * drip))
+            val y0 = layout.edge(r, x)
+            val y = if (r.sharp) {
+                // Ragged tongues of snow reaching down the gullies below the snowline.
+                val rag = (sin(x / (5f * dp)) * 0.5f + sin(x / (2.3f * dp) + 1.7f) * 0.5f) * 5f * dp
+                max(y0, min(y0 + 22 * dp, snowline + rag))
+            } else {
+                y0 + capH * (0.6f + 0.4f * sin(x / (23f * dp) + r.index * 2.1f))
+            }
+            tmpPath.lineTo(x, y)
             x -= step
         }
         tmpPath.close()
-        fill.color = ColorMath.withAlpha(p.snowCap, a * (0.82f + 0.08f * r.index))
+        fill.color = ColorMath.withAlpha(p.snowCap, a * (if (r.sharp) 0.72f else 0.78f + 0.04f * r.index))
         canvas.drawPath(tmpPath, fill)
     }
 
@@ -974,8 +855,8 @@ class PaperSceneRenderer(private val density: Float) {
 
     private val rainLen = floatArrayOf(9f, 15f, 24f)
     private val rainSpeed = floatArrayOf(430f, 660f, 950f)
-    private val rainWidth = floatArrayOf(0.8f, 1.15f, 1.6f)
-    private val rainAlpha = floatArrayOf(0.26f, 0.4f, 0.6f)
+    private val rainWidth = floatArrayOf(0.6f, 0.85f, 1.1f)
+    private val rainAlpha = floatArrayOf(0.22f, 0.32f, 0.45f)
     private val layerShare = floatArrayOf(0.45f, 0.33f, 0.22f)
 
     private fun drawRain(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options, wind: Float) {
@@ -1021,8 +902,8 @@ class PaperSceneRenderer(private val density: Float) {
             val x = rand(j, 615) * (layout.w + abs(slant) * h) - (if (slant > 0) slant * h else 0f) + y * slant
             out[k++] = x; out[k++] = y; out[k++] = x + len * slant; out[k++] = y + len
         }
-        lines.strokeWidth = 0.9f * dp
-        lines.color = ColorMath.withAlpha(p.precip, 0.4f)
+        lines.strokeWidth = 0.7f * dp
+        lines.color = ColorMath.withAlpha(p.precip, 0.34f)
         canvas.drawLines(out, 0, k, lines)
     }
 
@@ -1038,23 +919,19 @@ class PaperSceneRenderer(private val density: Float) {
             out[k++] = rand(j, 705) * layout.w + y * slant
             out[k++] = y
         }
-        lines.strokeWidth = 2.6f * dp
-        lines.color = ColorMath.withAlpha(0xFFF4F8FF.toInt(), 0.92f)
+        lines.strokeWidth = 2f * dp
+        lines.color = ColorMath.withAlpha(0xFFF4F8FF.toInt(), 0.85f)
         canvas.drawPoints(out, 0, k, lines)
     }
 
-    private val snowSize = floatArrayOf(1.4f, 2.4f, 0f)
-    private val snowSpeed = floatArrayOf(20f, 34f, 56f)
-    private val snowAlpha = floatArrayOf(0.55f, 0.8f, 0.92f)
+    private val snowSize = floatArrayOf(1.2f, 2f, 0f)
+    private val snowSpeed = floatArrayOf(18f, 30f, 48f)
+    private val snowAlpha = floatArrayOf(0.5f, 0.75f, 0.85f)
 
-    private var flakeLines = FloatArray(0)
-    private var flakeN = 0
-
+    /** Snow falls as points of three sizes; the nearest are soft, out-of-focus flakes (§10). */
     private fun drawSnowfall(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options, wind: Float) {
         val n = ((area() / 1300f).coerceIn(30f, 280f) * s.snow.coerceIn(0f, 1.2f)).toInt()
         if (n <= 0) return
-        if (flakeLines.size < n * 12) flakeLines = FloatArray(n * 12 + 24)
-        flakeN = 0
         val t = o.time
         val xw = layout.w + 24 * dp
         for (layer in 0..2) {
@@ -1071,20 +948,9 @@ class PaperSceneRenderer(private val density: Float) {
                 val x = wrap(rand(i, 807) * xw + drift * t + sin(t * (0.5f + rand(i, 809) * 0.8f) + i) * amp, xw) - 12 * dp
                 if (layer < 2) {
                     out[k++] = x; out[k++] = y
-                } else if (j % 3 == 0) {
-                    // A six-armed paper star, turning as it falls.
-                    val r = (3.4f + rand(i, 811) * 2.4f) * dp * layout.propScale
-                    val rot = Math.toRadians((t * (30f + rand(i, 813) * 40f) + i * 17f).toDouble()).toFloat()
-                    for (arm in 0 until 3) {
-                        val a = rot + arm * PI.toFloat() / 3f
-                        val dx = cos(a) * r
-                        val dy = sin(a) * r
-                        flakeLines[flakeN++] = x - dx; flakeLines[flakeN++] = y - dy
-                        flakeLines[flakeN++] = x + dx; flakeLines[flakeN++] = y + dy
-                    }
                 } else {
                     sprite.tint(p.precip, snowAlpha[2])
-                    sprite.draw(canvas, SceneSprites.soft, x, y, (3.2f + rand(i, 811) * 3f) * dp)
+                    sprite.draw(canvas, SceneSprites.soft, x, y, (2.6f + rand(i, 811) * 2.4f) * dp)
                 }
             }
             if (layer < 2 && k > 0) {
@@ -1092,11 +958,6 @@ class PaperSceneRenderer(private val density: Float) {
                 lines.color = ColorMath.withAlpha(p.precip, snowAlpha[layer])
                 canvas.drawPoints(out, 0, k, lines)
             }
-        }
-        if (flakeN > 0) {
-            lines.strokeWidth = 1.3f * dp * layout.propScale
-            lines.color = ColorMath.withAlpha(p.precip, 0.95f)
-            canvas.drawLines(flakeLines, 0, flakeN, lines)
         }
     }
 
@@ -1117,8 +978,8 @@ class PaperSceneRenderer(private val density: Float) {
             out[k++] = x; out[k++] = y; out[k++] = x - sz * 0.9f; out[k++] = y - sz * (1.1f - ph * 0.6f)
             out[k++] = x; out[k++] = y; out[k++] = x + sz * 0.9f; out[k++] = y - sz * (1.1f - ph * 0.6f)
         }
-        lines.strokeWidth = 1.1f * dp
-        lines.color = ColorMath.withAlpha(p.precip, 0.5f)
+        lines.strokeWidth = 0.8f * dp
+        lines.color = ColorMath.withAlpha(p.precip, 0.35f)
         canvas.drawLines(out, 0, k, lines)
     }
 
@@ -1182,8 +1043,8 @@ class PaperSceneRenderer(private val density: Float) {
             out[k++] = bx; out[k++] = by; out[k++] = bx - sz; out[k++] = tipY
             out[k++] = bx; out[k++] = by; out[k++] = bx + sz; out[k++] = tipY
         }
-        lines.strokeWidth = 1.4f * dp
-        lines.color = ColorMath.withAlpha(ColorMath.darken(p.hillNear, 0.35f), 0.55f)
+        lines.strokeWidth = 1f * dp
+        lines.color = ColorMath.withAlpha(ColorMath.darken(p.hillNear, 0.35f), 0.5f)
         canvas.drawLines(out, 0, k, lines)
     }
 
@@ -1218,7 +1079,7 @@ class PaperSceneRenderer(private val density: Float) {
             val fy = y0 + rand(i, 1305) * (y1 - y0) + sin(t * (0.23f + 0.1f * rand(i, 1307)) + i * 2f) * 12 * dp
             val pulse = max(0f, sin(t * (1.1f + rand(i, 1309) * 0.8f) + i * 1.9f))
             sprite.tint(p.window, a * pulse * pulse)
-            sprite.draw(canvas, SceneSprites.glow, fx + o.groundDx, fy + o.groundDy, 7 * dp)
+            sprite.draw(canvas, SceneSprites.glow, fx + o.groundDx, fy + o.groundDy, 5 * dp)
         }
     }
 
@@ -1235,7 +1096,7 @@ class PaperSceneRenderer(private val density: Float) {
         val strength = smoothstep(6.5f, 14f, abs(wind))
         // Streaks of moving air.
         val period = 1.7f
-        stroke.strokeWidth = 1.2f * dp
+        stroke.strokeWidth = 0.8f * dp
         for (i in 0 until 4) {
             val phase = t / period + rand(i, 1401)
             val cycle = floor(phase).toInt()
@@ -1243,7 +1104,7 @@ class PaperSceneRenderer(private val density: Float) {
             val y = layout.horizonY * (0.2f + 0.7f * rand(i * 13 + cycle, 1403))
             val len = (60f + 70f * rand(i, 1405)) * dp
             val x = if (dir > 0) -len + ph * (layout.w + len * 2) else layout.w + len - ph * (layout.w + len * 2)
-            stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.28f * strength * sin(ph * PI.toFloat()))
+            stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.2f * strength * sin(ph * PI.toFloat()))
             tmpPath.reset()
             tmpPath.moveTo(x, y)
             tmpPath.cubicTo(x + dir * len * 0.33f, y - 5 * dp, x + dir * len * 0.66f, y + 5 * dp, x + dir * len, y)
@@ -1252,22 +1113,24 @@ class PaperSceneRenderer(private val density: Float) {
         // Tumbling leaves when it isn't freezing.
         if (s.temperature < 2f) return
         val n = (layout.w / dp / 45f).toInt().coerceIn(4, 10)
-        val autumn = ColorMath.lerp(p.accent, p.sunRay, 0.3f)
+        val autumn = ColorMath.lerp(silhouetteOrTree(p), 0xFFB9894F.toInt(), 0.55f)
         for (i in 0 until n) {
             val speed = (40f + abs(wind) * 9f) * dp * (0.7f + 0.6f * rand(i, 1411))
             val xw = layout.w + 60 * dp
             val x = wrap(rand(i, 1413) * xw + dir * t * speed, xw) - 30 * dp
             val y = layout.horizonY + layout.depthD * (-0.4f + rand(i, 1415) * 0.9f) + sin(t * (1.1f + rand(i, 1417)) + i) * 18 * dp
-            val size = (3.2f + 2f * rand(i, 1419)) * dp
+            val size = (2.6f + 1.6f * rand(i, 1419)) * dp
             canvas.save()
             canvas.translate(x, y)
             canvas.rotate(t * (160f + 200f * rand(i, 1421)) * dir + i * 40f)
             canvas.scale(size, size * (0.55f + 0.45f * abs(sin(t * 3f + i))))
-            fill.color = ColorMath.withAlpha(if (i % 3 == 0) p.tree else autumn, 0.85f * strength)
+            fill.color = ColorMath.withAlpha(if (i % 3 == 0) silhouetteOrTree(p) else autumn, 0.8f * strength)
             canvas.drawPath(leafPath, fill)
             canvas.restore()
         }
     }
+
+    private fun silhouetteOrTree(p: ScenePalette) = if (layout.ridges.isEmpty()) p.tree else silhouette(p)
 
     private var boltSeedCached = Int.MIN_VALUE
     private var boltW = -1f
@@ -1311,14 +1174,14 @@ class PaperSceneRenderer(private val density: Float) {
         val strength = if (o.staticBolt) 1f else o.flash
         if (strength < 0.12f) return
         if (boltSeedCached != o.boltSeed || boltW != layout.w) buildBolt(o.boltSeed)
-        stroke.color = ColorMath.withAlpha(0xFFB9C4FF.toInt(), 0.16f * strength)
-        stroke.strokeWidth = 11 * dp
+        stroke.color = ColorMath.withAlpha(0xFFB9C4FF.toInt(), 0.12f * strength)
+        stroke.strokeWidth = 7 * dp
         canvas.drawPath(boltPath, stroke)
-        stroke.color = ColorMath.withAlpha(0xFFE4E8FF.toInt(), 0.4f * strength)
-        stroke.strokeWidth = 4.5f * dp
+        stroke.color = ColorMath.withAlpha(0xFFE4E8FF.toInt(), 0.35f * strength)
+        stroke.strokeWidth = 3 * dp
         canvas.drawPath(boltPath, stroke)
         stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), strength)
-        stroke.strokeWidth = 1.8f * dp
+        stroke.strokeWidth = 1.1f * dp
         canvas.drawPath(boltPath, stroke)
     }
 
@@ -1352,7 +1215,7 @@ class PaperSceneRenderer(private val density: Float) {
         bitmapPaint.alpha = 255
     }
 
-    /** A faint diagonal reflection on the diorama's glass (§2). */
+    /** A faint diagonal reflection on the glass over the print. */
     fun drawGlare(canvas: Canvas) {
         val w = layout.w
         val h = layout.h
@@ -1375,7 +1238,7 @@ class PaperSceneRenderer(private val density: Float) {
             vignetteKey = key
             vignetteShader = RadialGradient(
                 w / 2, h * 0.42f, hypot(w, h) * 0.62f,
-                intArrayOf(0, 0, ColorMath.scaleAlpha(p.shadow, 0.5f)),
+                intArrayOf(0, 0, ColorMath.scaleAlpha(p.shadow, 0.4f)),
                 floatArrayOf(0f, 0.6f, 1f), Shader.TileMode.CLAMP,
             )
         }
@@ -1415,20 +1278,22 @@ class PaperSceneRenderer(private val density: Float) {
     }
 
     /**
-     * A sheet of cotton paper laid over the diorama (DESIGN_DOCTRINE §13): deckled edge, the
-     * fibres of the paper, a level-2 shadow falling down-right, light along the top edge and,
-     * on the first sheet, a strip of washi tape holding it.
+     * A sheet of cotton paper laid over the print (DESIGN_DOCTRINE §13): precisely cut, the
+     * fibres of the paper, a soft shadow straight down, light along the top edge and a hairline
+     * cut edge.
      */
     fun drawPanel(canvas: Canvas, panel: Panel, p: ScenePalette) {
         val rect = panel.rect
         val r = (panel.radius * dp).coerceAtMost(min(rect.width(), rect.height()) / 2)
-        deckle(panelPath, rect, r, (rect.left * 7 + rect.top * 13).toInt())
+        panelPath.reset()
+        panelPath.addRoundRect(rect, r, r, Path.Direction.CW)
 
-        // Shadow: a tight contact shadow and a soft wide one, both down and a little right.
+        // Shadow: two tight contact layers and three wide soft ones, straight down.
+        val night = p.isDarkPaper
         for (k in 5 downTo 1) {
-            fill.color = ColorMath.scaleAlpha(p.shadow, if (k <= 2) 0.16f else 0.07f)
+            fill.color = ColorMath.withAlpha(if (night) 0xFF000000.toInt() else 0xFF2B2118.toInt(), (if (k <= 2) 0.1f else 0.05f) * (if (night) 1.6f else 1f))
             canvas.save()
-            canvas.translate(k * 0.3f * dp, k * 0.9f * dp)
+            canvas.translate(0f, if (k <= 2) k * 0.5f * dp else (k - 1) * 1.6f * dp)
             canvas.drawPath(panelPath, fill)
             canvas.restore()
         }
@@ -1436,86 +1301,22 @@ class PaperSceneRenderer(private val density: Float) {
         canvas.clipPath(panelPath)
         fill.color = ColorMath.withAlpha(p.paper, panel.alpha)
         canvas.drawRect(rect, fill)
-        // Fibres read strongly on dark paper; keep them a whisper there.
-        paperPaint.alpha = (255 * panel.alpha * if (p.isDarkPaper) 0.45f else 0.9f).roundToInt()
+        paperPaint.alpha = (255 * panel.alpha * if (night) 0.22f else 0.4f).roundToInt()
         canvas.drawRect(rect, paperPaint)
-        // The sheet catches the light at the top and turns away from it at the bottom.
-        shaded.shader = LinearGradient(0f, rect.top, 0f, rect.bottom, 0x14FFFFFF, 0x0F000000, Shader.TileMode.CLAMP)
+        // Light from above: the sheet brightens at the top and turns away from it at the bottom.
+        shaded.shader = LinearGradient(0f, rect.top, 0f, rect.bottom, 0x0DFFFFFF, 0x08000000, Shader.TileMode.CLAMP)
         canvas.drawRect(rect, shaded)
         shaded.shader = null
         canvas.restore()
 
-        canvas.save()
-        canvas.clipRect(rect.left - dp, rect.top - 2 * dp, rect.right + dp, rect.top + 1.5f * dp)
-        stroke.strokeWidth = 1.2f * dp
-        stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.55f)
+        stroke.strokeWidth = 1f
+        stroke.color = ColorMath.withAlpha(p.paperInk, 0.07f)
         canvas.drawPath(panelPath, stroke)
-        canvas.restore()
-
-        if (panel.tape) tape(canvas, rect.left + min(28 * dp, rect.width() * 0.2f), rect.top, p.tape, -7f)
-    }
-
-    /** Rounded rectangle with edges that wobble every 9 dp, like torn cotton paper. */
-    private fun deckle(path: Path, rect: RectF, r: Float, seed: Int) {
-        path.reset()
-        val j = 0.8f * dp
-        val step = 9 * dp
-        var i = 0
-        fun wob() = (hash(i++, seed) - 0.5f) * 2f * j
-        path.moveTo(rect.left + r, rect.top + wob())
-        var x = rect.left + r
-        while (x < rect.right - r) { x = min(x + step, rect.right - r); path.lineTo(x, rect.top + wob()) }
-        path.quadTo(rect.right, rect.top, rect.right, rect.top + r)
-        var y = rect.top + r
-        while (y < rect.bottom - r) { y = min(y + step, rect.bottom - r); path.lineTo(rect.right + wob(), y) }
-        path.quadTo(rect.right, rect.bottom, rect.right - r, rect.bottom)
-        x = rect.right - r
-        while (x > rect.left + r) { x = max(x - step, rect.left + r); path.lineTo(x, rect.bottom + wob()) }
-        path.quadTo(rect.left, rect.bottom, rect.left, rect.bottom - r)
-        y = rect.bottom - r
-        while (y > rect.top + r) { y = max(y - step, rect.top + r); path.lineTo(rect.left + wob(), y) }
-        path.quadTo(rect.left, rect.top, rect.left + r, rect.top)
-        path.close()
-    }
-
-    private fun hash(i: Int, s: Int): Float {
-        var v = i * 374_761_393 + s * 668_265_263
-        v = (v xor (v ushr 13)) * 1_274_126_177
-        v = v xor (v ushr 16)
-        return (v and 0xFFFFFF) / 16_777_216f
-    }
-
-    private val tapePath = Path()
-
-    /** A strip of washi tape centred on (x, y): translucent, torn at both ends, dotted. */
-    fun tape(canvas: Canvas, x: Float, y: Float, color: Int, angle: Float) {
-        val w = 44 * dp
-        val h = 13 * dp
-        val tooth = 1.5f * dp
-        tapePath.reset()
-        tapePath.moveTo(-w / 2, -h / 2)
-        tapePath.lineTo(w / 2, -h / 2)
-        for (k in 1..5) tapePath.lineTo(w / 2 + if (k % 2 == 1) tooth else 0f, -h / 2 + h * k / 5)
-        tapePath.lineTo(-w / 2, h / 2)
-        for (k in 4 downTo 0) tapePath.lineTo(-w / 2 + if (k % 2 == 1) -tooth else 0f, -h / 2 + h * k / 5)
-        tapePath.close()
         canvas.save()
-        canvas.translate(x, y)
-        canvas.rotate(angle)
-        fill.color = 0x1F2A1C10
-        canvas.save(); canvas.translate(0.5f * dp, 1f * dp); canvas.drawPath(tapePath, fill); canvas.restore()
-        fill.color = ColorMath.withAlpha(color, 0.82f)
-        canvas.drawPath(tapePath, fill)
-        canvas.clipPath(tapePath)
-        fill.color = 0x66FFFFFF
-        var dx = -w / 2 + 4 * dp
-        while (dx < w / 2) {
-            canvas.drawCircle(dx, -h * 0.2f, 1.2f * dp, fill)
-            canvas.drawCircle(dx + 3 * dp, h * 0.22f, 1.2f * dp, fill)
-            dx += 6 * dp
-        }
-        paperPaint.alpha = 80
-        canvas.drawRect(-w, -h, w, h, paperPaint)
+        canvas.clipRect(rect.left, rect.top - dp, rect.right, rect.top + 1f * dp)
+        stroke.strokeWidth = 1f * dp
+        stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), if (night) 0.06f else 0.5f)
+        canvas.drawPath(panelPath, stroke)
         canvas.restore()
     }
 
@@ -1530,10 +1331,10 @@ class PaperSceneRenderer(private val density: Float) {
                 val v = bars[i].coerceIn(0f, 1f)
                 if (v < 0.3f) continue
                 val cx = rect.left + colW * (i + 0.5f)
-                val bw = min(colW * 0.3f, 7 * dp)
+                val bw = min(colW * 0.18f, 4 * dp)
                 val bh = max(3 * dp, maxH * v)
                 tmpRect.set(cx - bw / 2, rect.bottom - bh, cx + bw / 2, rect.bottom)
-                fill.color = ColorMath.withAlpha(p.precip, 0.25f + 0.4f * v)
+                fill.color = ColorMath.withAlpha(p.precip, 0.2f + 0.35f * v)
                 canvas.drawRoundRect(tmpRect, bw / 2, bw / 2, fill)
             }
         }
@@ -1556,17 +1357,17 @@ class PaperSceneRenderer(private val density: Float) {
             lineTo(xs.first(), lowest + 14 * dp)
             close()
         }
-        shaded.shader = LinearGradient(0f, ys.min(), 0f, lowest + 14 * dp, ColorMath.withAlpha(p.accent, 0.2f), ColorMath.withAlpha(p.accent, 0f), Shader.TileMode.CLAMP)
+        shaded.shader = LinearGradient(0f, ys.min(), 0f, lowest + 14 * dp, ColorMath.withAlpha(p.accent, 0.12f), ColorMath.withAlpha(p.accent, 0f), Shader.TileMode.CLAMP)
         canvas.drawPath(washPath, shaded)
         shaded.shader = null
-        stroke.strokeWidth = 2f * dp
+        stroke.strokeWidth = 1.4f * dp
         stroke.color = ColorMath.withAlpha(p.accent, 0.9f)
         canvas.drawPath(tmpPath, stroke)
         for (i in 0 until n) {
             fill.color = p.paper
-            canvas.drawCircle(xs[i], ys[i], 2.6f * dp, fill)
-            stroke.strokeWidth = 1.5f * dp
-            canvas.drawCircle(xs[i], ys[i], 2.6f * dp, stroke)
+            canvas.drawCircle(xs[i], ys[i], 2.4f * dp, fill)
+            stroke.strokeWidth = 1f * dp
+            canvas.drawCircle(xs[i], ys[i], 2.4f * dp, stroke)
         }
     }
 

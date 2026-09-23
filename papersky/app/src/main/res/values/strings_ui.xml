@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="refresh">Pull the cord to refresh</string>
+    <string name="refresh">Pull the pendant to refresh</string>
     <string name="back">Back</string>
-    <string name="remove">Tear off</string>
+    <string name="remove">Remove</string>
     <string name="feels_like">feels like %1$s</string>
     <string name="refreshing">Looking at the sky…</string>
     <string name="updated_at">Updated at %1$s · tap to refresh</string>
@@ -64,7 +64,7 @@
 
     <string name="places_title">Places</string>
     <string name="places_saved">Saved places</string>
-    <string name="places_hint">Swipe a place left to tear it off.</string>
+    <string name="places_hint">Swipe a place to the left to remove it.</string>
     <string name="places_locate_title">Follow me wherever I go</string>
     <string name="search_hint">Find a city…</string>
     <string name="search_failed">Couldn\'t reach the atlas. Check the connection.</string>
@@ -90,17 +90,17 @@
     <string name="motion_full">Alive</string>
     <string name="motion_gentle">Gentle</string>
     <string name="motion_still">Still</string>
-    <string name="settings_tilt">Diorama tilt</string>
-    <string name="settings_tilt_body">Paper layers shift as you tilt the phone</string>
-    <string name="settings_diorama">Diorama</string>
-    <string name="settings_village">Village in the diorama</string>
-    <string name="settings_village_body">Paper houses with warm windows, a lantern and smoke from the chimneys</string>
+    <string name="settings_tilt">Print tilt</string>
+    <string name="settings_tilt_body">The planes of the landscape shift as you tilt the phone</string>
+    <string name="settings_diorama">The print</string>
+    <string name="settings_village">Houses in the landscape</string>
+    <string name="settings_village_body">A few houses in silhouette, with lit windows at dusk</string>
     <string name="settings_about">About</string>
     <string name="settings_language">App language</string>
-    <string name="settings_fonts">Fonts: Manrope and Caveat — SIL Open Font License.</string>
+    <string name="settings_fonts">Fonts: Cormorant Garamond and Manrope — SIL Open Font License.</string>
 
     <string name="widgets_title">Widgets</string>
-    <string name="widgets_intro">Every widget is a little diorama. Stretch it from one cell to the whole screen — it rearranges itself to use every millimetre.</string>
+    <string name="widgets_intro">Every widget is a small print of the sky. Stretch it from one cell to the whole screen — it resets itself to use every millimetre.</string>
     <string name="widgets_on_home">On your home screen</string>
     <string name="widgets_tap_to_edit">Tap to fine-tune</string>
     <string name="widgets_add">Put a new one</string>
@@ -115,7 +115,7 @@
     <string name="editor_place">Place</string>
     <string name="editor_here">Where I am</string>
     <string name="editor_look">Look</string>
-    <string name="bg_scene">Diorama</string>
+    <string name="bg_scene">Print</string>
     <string name="bg_paper">Paper</string>
     <string name="bg_clear">Glass</string>
     <string name="editor_opacity">Opacity</string>

@@ -8,49 +8,49 @@
         <group android:name="s0">
             <group android:name="s0w0">
             <path android:pathData="M18.51,28.56l0,0.01M18.51,-71.44l0,0.01M62.2,43.13l0,0.01M62.2,-56.87l0,0.01M35.96,93.95l0,0.01M35.96,-6.05l0,0.01M68.44,49.31l0,0.01M68.44,-50.69l0,0.01M97.47,2.8l0,0.01M97.47,-97.2l0,0.01M21.11,93.62l0,0.01M21.11,-6.38l0,0.01M63.23,56.81l0,0.01M63.23,-43.19l0,0.01M36.54,52.75l0,0.01M36.54,-47.25l0,0.01M12.2,44.21l0,0.01M12.2,-55.79l0,0.01M32.49,2.32l0,0.01M32.49,-97.68l0,0.01M105.44,76.41l0,0.01M105.44,-23.59l0,0.01M88.62,78.29l0,0.01M88.62,-21.71l0,0.01M84.81,35.63l0,0.01M84.81,-64.37l0,0.01M32.12,50.66l0,0.01M32.12,-49.34l0,0.01M-3.79,98.77l0,0.01M-3.79,-1.23l0,0.01M42.1,54.64l0,0.01M42.1,-45.36l0,0.01M35.89,9.43l0,0.01M35.89,-90.57l0,0.01M83.53,60.84l0,0.01M83.53,-39.16l0,0.01M35.25,23.66l0,0.01M35.25,-76.34l0,0.01M93.28,88.07l0,0.01M93.28,-11.93l0,0.01M3.34,15.8l0,0.01M3.34,-84.2l0,0.01M42.96,16.28l0,0.01M42.96,-83.72l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="0.41" android:strokeAlpha="0.6" android:strokeLineCap="round" />
+                android:strokeWidth="0.35" android:strokeAlpha="0.55" android:strokeLineCap="round" />
             </group>
             <group android:name="s0w1">
             <path android:pathData="M84.36,38.23l0,0.01M84.36,-61.77l0,0.01M106.66,46.33l0,0.01M106.66,-53.67l0,0.01M71.2,17.75l0,0.01M71.2,-82.25l0,0.01M40.72,84.97l0,0.01M40.72,-15.03l0,0.01M16.7,52.73l0,0.01M16.7,-47.27l0,0.01M7.09,70.32l0,0.01M7.09,-29.68l0,0.01M75.03,79.43l0,0.01M75.03,-20.57l0,0.01M68.26,6.18l0,0.01M68.26,-93.82l0,0.01M55.62,80.02l0,0.01M55.62,-19.98l0,0.01M29.15,54.59l0,0.01M29.15,-45.41l0,0.01M98.35,23.48l0,0.01M98.35,-76.52l0,0.01M26.44,89.94l0,0.01M26.44,-10.06l0,0.01M4.05,95.88l0,0.01M4.05,-4.12l0,0.01M56.25,47.07l0,0.01M56.25,-52.93l0,0.01M46.61,8.18l0,0.01M46.61,-91.82l0,0.01M93.93,21.58l0,0.01M93.93,-78.42l0,0.01M-7.67,71.87l0,0.01M-7.67,-28.13l0,0.01M75.7,18.15l0,0.01M75.7,-81.85l0,0.01M37.09,1.65l0,0.01M37.09,-98.35l0,0.01M19.48,90.69l0,0.01M19.48,-9.31l0,0.01M-6.28,21.37l0,0.01M-6.28,-78.63l0,0.01M34.56,88.34l0,0.01M34.56,-11.66l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="0.41" android:strokeAlpha="0.6" android:strokeLineCap="round" />
+                android:strokeWidth="0.35" android:strokeAlpha="0.55" android:strokeLineCap="round" />
             </group>
             <group android:name="s0w2">
             <path android:pathData="M15.42,65.53l0,0.01M15.42,-34.47l0,0.01M81.78,23.64l0,0.01M81.78,-76.36l0,0.01M-3.31,11.83l0,0.01M-3.31,-88.17l0,0.01M-5.51,90.29l0,0.01M-5.51,-9.71l0,0.01M12.56,90.94l0,0.01M12.56,-9.06l0,0.01M28.35,48.98l0,0.01M28.35,-51.02l0,0.01M59.57,58.95l0,0.01M59.57,-41.05l0,0.01M59.99,38.42l0,0.01M59.99,-61.58l0,0.01M30.55,60.51l0,0.01M30.55,-39.49l0,0.01M-7.31,99.66l0,0.01M-7.31,-0.34l0,0.01M62.63,34.72l0,0.01M62.63,-65.28l0,0.01M104.87,98.4l0,0.01M104.87,-1.6l0,0.01M-5.66,23.35l0,0.01M-5.66,-76.65l0,0.01M78.47,0.56l0,0.01M78.47,-99.44l0,0.01M52.39,67.49l0,0.01M52.39,-32.51l0,0.01M41.17,39.67l0,0.01M41.17,-60.33l0,0.01M25.58,41.03l0,0.01M25.58,-58.97l0,0.01M18.28,54.3l0,0.01M18.28,-45.7l0,0.01M63.37,90.32l0,0.01M63.37,-9.68l0,0.01M90.28,50.81l0,0.01M90.28,-49.19l0,0.01M0.89,20.23l0,0.01M0.89,-79.77l0,0.01M77.76,47.59l0,0.01M77.76,-52.41l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="0.41" android:strokeAlpha="0.6" android:strokeLineCap="round" />
+                android:strokeWidth="0.35" android:strokeAlpha="0.55" android:strokeLineCap="round" />
             </group>
         </group>
         <group android:name="s1">
             <group android:name="s1w0">
             <path android:pathData="M92.04,80.23l0,0.01M92.04,-19.77l0,0.01M71.64,93.52l0,0.01M71.64,-6.48l0,0.01M39.53,9.46l0,0.01M39.53,-90.54l0,0.01M66.54,94.2l0,0.01M66.54,-5.8l0,0.01M105.5,39.24l0,0.01M105.5,-60.76l0,0.01M42.87,24.97l0,0.01M42.87,-75.03l0,0.01M92.38,9.06l0,0.01M92.38,-90.94l0,0.01M21.42,40.47l0,0.01M21.42,-59.53l0,0.01M69.04,71.01l0,0.01M69.04,-28.99l0,0.01M93.41,31.68l0,0.01M93.41,-68.32l0,0.01M22.13,37.05l0,0.01M22.13,-62.95l0,0.01M12.19,37.6l0,0.01M12.19,-62.4l0,0.01M18.3,66.24l0,0.01M18.3,-33.76l0,0.01M6.93,92.58l0,0.01M6.93,-7.42l0,0.01M63.6,41.36l0,0.01M63.6,-58.64l0,0.01M92.6,52.06l0,0.01M92.6,-47.94l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="0.71" android:strokeAlpha="0.82" android:strokeLineCap="round" />
+                android:strokeWidth="0.59" android:strokeAlpha="0.75" android:strokeLineCap="round" />
             </group>
             <group android:name="s1w1">
             <path android:pathData="M21.16,16.25l0,0.01M21.16,-83.75l0,0.01M72.24,27.73l0,0.01M72.24,-72.27l0,0.01M26.44,65.81l0,0.01M26.44,-34.19l0,0.01M11.67,98.41l0,0.01M11.67,-1.59l0,0.01M-2.24,72.54l0,0.01M-2.24,-27.46l0,0.01M57.19,0.12l0,0.01M57.19,-99.88l0,0.01M82.83,15.01l0,0.01M82.83,-84.99l0,0.01M11.95,57.91l0,0.01M11.95,-42.09l0,0.01M2.53,14.37l0,0.01M2.53,-85.63l0,0.01M48.24,31.92l0,0.01M48.24,-68.08l0,0.01M80.47,80.16l0,0.01M80.47,-19.84l0,0.01M85.13,30.08l0,0.01M85.13,-69.92l0,0.01M69.81,24.9l0,0.01M69.81,-75.1l0,0.01M92.74,44.94l0,0.01M92.74,-55.06l0,0.01M43.8,46.84l0,0.01M43.8,-53.16l0,0.01M105.75,86.87l0,0.01M105.75,-13.13l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="0.71" android:strokeAlpha="0.82" android:strokeLineCap="round" />
+                android:strokeWidth="0.59" android:strokeAlpha="0.75" android:strokeLineCap="round" />
             </group>
             <group android:name="s1w2">
             <path android:pathData="M46.99,67.27l0,0.01M46.99,-32.73l0,0.01M91.78,73.03l0,0.01M91.78,-26.97l0,0.01M36.76,52.91l0,0.01M36.76,-47.09l0,0.01M99.63,65.46l0,0.01M99.63,-34.54l0,0.01M64.62,91.05l0,0.01M64.62,-8.95l0,0.01M19.75,91.18l0,0.01M19.75,-8.82l0,0.01M102.83,18.07l0,0.01M102.83,-81.93l0,0.01M101.08,87.23l0,0.01M101.08,-12.77l0,0.01M86.24,5.81l0,0.01M86.24,-94.19l0,0.01M68.31,22.45l0,0.01M68.31,-77.55l0,0.01M47.82,29.98l0,0.01M47.82,-70.02l0,0.01M16.13,77.65l0,0.01M16.13,-22.35l0,0.01M47.61,66.01l0,0.01M47.61,-33.99l0,0.01M82.76,50.37l0,0.01M82.76,-49.63l0,0.01M83.3,92.19l0,0.01M83.3,-7.81l0,0.01M35.34,67.11l0,0.01M35.34,-32.89l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="0.71" android:strokeAlpha="0.82" android:strokeLineCap="round" />
+                android:strokeWidth="0.59" android:strokeAlpha="0.75" android:strokeLineCap="round" />
             </group>
         </group>
         <group android:name="s2">
             <group android:name="s2w0">
             <path android:pathData="M38.97,3.76l0,0.01M38.97,-96.24l0,0.01M32.89,1.29l0,0.01M32.89,-98.71l0,0.01M32.62,41.87l0,0.01M32.62,-58.13l0,0.01M91.62,82.8l0,0.01M91.62,-17.2l0,0.01M0.73,81.81l0,0.01M0.73,-18.19l0,0.01M79.9,78.95l0,0.01M79.9,-21.05l0,0.01M37.29,33.92l0,0.01M37.29,-66.08l0,0.01M29.67,44.82l0,0.01M29.67,-55.18l0,0.01M45.61,66.15l0,0.01M45.61,-33.85l0,0.01M2.97,60.34l0,0.01M2.97,-39.66l0,0.01M81.57,88.45l0,0.01M81.57,-11.55l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="2.57" android:strokeAlpha="0.2" android:strokeLineCap="round" />
+                android:strokeWidth="2.03" android:strokeAlpha="0.2" android:strokeLineCap="round" />
             <path android:pathData="M38.97,3.76l0,0.01M38.97,-96.24l0,0.01M32.89,1.29l0,0.01M32.89,-98.71l0,0.01M32.62,41.87l0,0.01M32.62,-58.13l0,0.01M91.62,82.8l0,0.01M91.62,-17.2l0,0.01M0.73,81.81l0,0.01M0.73,-18.19l0,0.01M79.9,78.95l0,0.01M79.9,-21.05l0,0.01M37.29,33.92l0,0.01M37.29,-66.08l0,0.01M29.67,44.82l0,0.01M29.67,-55.18l0,0.01M45.61,66.15l0,0.01M45.61,-33.85l0,0.01M2.97,60.34l0,0.01M2.97,-39.66l0,0.01M81.57,88.45l0,0.01M81.57,-11.55l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="1.12" android:strokeAlpha="0.95" android:strokeLineCap="round" />
+                android:strokeWidth="0.88" android:strokeAlpha="0.85" android:strokeLineCap="round" />
             </group>
             <group android:name="s2w1">
             <path android:pathData="M54.77,26.66l0,0.01M54.77,-73.34l0,0.01M49.05,2.66l0,0.01M49.05,-97.34l0,0.01M81.72,96.95l0,0.01M81.72,-3.05l0,0.01M41.18,70.45l0,0.01M41.18,-29.55l0,0.01M94.11,96.73l0,0.01M94.11,-3.27l0,0.01M60.26,26.35l0,0.01M60.26,-73.65l0,0.01M32.95,12.42l0,0.01M32.95,-87.58l0,0.01M89.58,63.47l0,0.01M89.58,-36.53l0,0.01M29.35,20.28l0,0.01M29.35,-79.72l0,0.01M73.84,32.62l0,0.01M73.84,-67.38l0,0.01M22.98,4.86l0,0.01M22.98,-95.14l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="2.57" android:strokeAlpha="0.2" android:strokeLineCap="round" />
+                android:strokeWidth="2.03" android:strokeAlpha="0.2" android:strokeLineCap="round" />
             <path android:pathData="M54.77,26.66l0,0.01M54.77,-73.34l0,0.01M49.05,2.66l0,0.01M49.05,-97.34l0,0.01M81.72,96.95l0,0.01M81.72,-3.05l0,0.01M41.18,70.45l0,0.01M41.18,-29.55l0,0.01M94.11,96.73l0,0.01M94.11,-3.27l0,0.01M60.26,26.35l0,0.01M60.26,-73.65l0,0.01M32.95,12.42l0,0.01M32.95,-87.58l0,0.01M89.58,63.47l0,0.01M89.58,-36.53l0,0.01M29.35,20.28l0,0.01M29.35,-79.72l0,0.01M73.84,32.62l0,0.01M73.84,-67.38l0,0.01M22.98,4.86l0,0.01M22.98,-95.14l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="1.12" android:strokeAlpha="0.95" android:strokeLineCap="round" />
+                android:strokeWidth="0.88" android:strokeAlpha="0.85" android:strokeLineCap="round" />
             </group>
             <group android:name="s2w2">
             <path android:pathData="M68.71,36.21l0,0.01M68.71,-63.79l0,0.01M66.09,18.55l0,0.01M66.09,-81.45l0,0.01M30.38,31.59l0,0.01M30.38,-68.41l0,0.01M-0.46,95.93l0,0.01M-0.46,-4.07l0,0.01M36.09,1.79l0,0.01M36.09,-98.21l0,0.01M107.47,62.17l0,0.01M107.47,-37.83l0,0.01M60.14,78.62l0,0.01M60.14,-21.38l0,0.01M64.76,76.87l0,0.01M64.76,-23.13l0,0.01M105.02,15.94l0,0.01M105.02,-84.06l0,0.01M54.96,56.48l0,0.01M54.96,-43.52l0,0.01M33.84,85.95l0,0.01M33.84,-14.05l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="2.57" android:strokeAlpha="0.2" android:strokeLineCap="round" />
+                android:strokeWidth="2.03" android:strokeAlpha="0.2" android:strokeLineCap="round" />
             <path android:pathData="M68.71,36.21l0,0.01M68.71,-63.79l0,0.01M66.09,18.55l0,0.01M66.09,-81.45l0,0.01M30.38,31.59l0,0.01M30.38,-68.41l0,0.01M-0.46,95.93l0,0.01M-0.46,-4.07l0,0.01M36.09,1.79l0,0.01M36.09,-98.21l0,0.01M107.47,62.17l0,0.01M107.47,-37.83l0,0.01M60.14,78.62l0,0.01M60.14,-21.38l0,0.01M64.76,76.87l0,0.01M64.76,-23.13l0,0.01M105.02,15.94l0,0.01M105.02,-84.06l0,0.01M54.96,56.48l0,0.01M54.96,-43.52l0,0.01M33.84,85.95l0,0.01M33.84,-14.05l0,0.01" android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="1.12" android:strokeAlpha="0.95" android:strokeLineCap="round" />
+                android:strokeWidth="0.88" android:strokeAlpha="0.85" android:strokeLineCap="round" />
             </group>
         </group>
         </vector>
@@ -58,7 +58,7 @@
     <target android:name="s0">
         <aapt:attr name="android:animation">
                 <objectAnimator android:propertyName="translateY" android:valueFrom="0" android:valueTo="100"
-                    android:duration="17000" android:repeatCount="infinite" android:repeatMode="restart"
+                    android:duration="18888" android:repeatCount="infinite" android:repeatMode="restart"
                     android:valueType="floatType" android:interpolator="@android:anim/linear_interpolator" />
         </aapt:attr>
     </target>
@@ -86,7 +86,7 @@
     <target android:name="s1">
         <aapt:attr name="android:animation">
                 <objectAnimator android:propertyName="translateY" android:valueFrom="0" android:valueTo="100"
-                    android:duration="10000" android:repeatCount="infinite" android:repeatMode="restart"
+                    android:duration="11333" android:repeatCount="infinite" android:repeatMode="restart"
                     android:valueType="floatType" android:interpolator="@android:anim/linear_interpolator" />
         </aapt:attr>
     </target>
@@ -114,7 +114,7 @@
     <target android:name="s2">
         <aapt:attr name="android:animation">
                 <objectAnimator android:propertyName="translateY" android:valueFrom="0" android:valueTo="100"
-                    android:duration="6071" android:repeatCount="infinite" android:repeatMode="restart"
+                    android:duration="7083" android:repeatCount="infinite" android:repeatMode="restart"
                     android:valueType="floatType" android:interpolator="@android:anim/linear_interpolator" />
         </aapt:attr>
     </target>

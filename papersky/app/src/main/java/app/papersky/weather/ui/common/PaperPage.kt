@@ -33,22 +33,25 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.papersky.weather.R
 import app.papersky.weather.core.model.MotionLevel
 import app.papersky.weather.design.Choreography
+import app.papersky.weather.design.Label
 import app.papersky.weather.design.LocalChoreography
 import app.papersky.weather.design.Paper
 import app.papersky.weather.design.PaperDisc
+import app.papersky.weather.design.PaperRule
 import app.papersky.weather.design.onSky
 import app.papersky.weather.design.paperSurface
 import app.papersky.weather.scene.SceneState
 import app.papersky.weather.ui.scene.LivingScene
 
-private val SheetShape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
+private val PageShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
 
 /**
- * Secondary screens (DESIGN_DOCTRINE §12): a strip of the living sky on top and a large sheet of
- * the same paper laid over it, holding the screen's cards.
+ * Secondary screens (DESIGN_DOCTRINE §12): a strip of the living print on top, the title set in
+ * the serif on it, and a large sheet of cotton paper laid over it (level 4, radius 24 dp).
  */
 @Composable
 fun PaperPage(
@@ -67,12 +70,12 @@ fun PaperPage(
     Box(modifier.fillMaxSize().background(colors.sky)) {
         LivingScene(scene, Modifier.fillMaxWidth().height(300.dp), horizon = 0.72f, motion = motion, tilt = false, detail = 0.7f, laneStart = 0.6f, laneEnd = 0.94f, glass = true, village = village)
         Row(
-            Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp),
+            Modifier.fillMaxWidth().statusBarsPadding().padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (onBack != null) {
                 PaperDisc(PaperIcon.Back, stringResource(R.string.back), onBack)
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(14.dp))
             }
             BasicText(
                 title,
@@ -87,17 +90,17 @@ fun PaperPage(
                 .fillMaxSize()
                 .padding(top = 118.dp)
                 .statusBarsPadding()
-                .paperSurface(SheetShape, level = 4),
+                .paperSurface(PageShape, level = 4),
         ) {
             CompositionLocalProvider(LocalChoreography provides remember { Choreography() }) {
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
-                        start = 18.dp, end = 18.dp, top = 22.dp,
+                        start = 16.dp, end = 16.dp, top = 24.dp,
                         bottom = WindowInsets.navigationBars.union(WindowInsets.ime).asPaddingValues().calculateBottomPadding() + 28.dp,
                     ),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                     content = content,
                 )
             }
@@ -105,16 +108,23 @@ fun PaperPage(
     }
 }
 
-/** A section title written by hand on the sheet, in the accent ink. */
+/** A section title: small capitals and a hairline rule running out to the margin (§8). */
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
-    BasicText(text, modifier.padding(top = 10.dp, start = 4.dp).semantics { heading() }, style = Paper.type.hand.copy(color = Paper.colors.accent))
+    Row(
+        modifier.fillMaxWidth().padding(top = 16.dp, bottom = 2.dp, start = 4.dp, end = 4.dp).semantics { heading() },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Label(text, color = Paper.colors.paperInk)
+        Spacer(Modifier.width(12.dp))
+        PaperRule(Modifier.weight(1f))
+    }
 }
 
-/** A short handwritten hint on the sheet. */
+/** A short hint in the human voice: the italic, quiet (§6 `note`). */
 @Composable
 fun Hint(text: String, modifier: Modifier = Modifier) {
-    BasicText(text, modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp), style = Paper.type.hand.copy(color = Paper.colors.paperInkSoft, fontSize = Paper.type.hand.fontSize * 0.9f))
+    BasicText(text, modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp), style = Paper.type.note.copy(color = Paper.colors.paperInkSoft, fontSize = 18.sp))
 }
 
 @Composable

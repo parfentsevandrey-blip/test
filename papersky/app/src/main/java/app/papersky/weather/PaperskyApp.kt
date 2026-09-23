@@ -39,7 +39,7 @@ class PaperskyApp : Application(), ContainerHost {
                 }
         }
 
-        // Turning the village on or off redraws the widgets' dioramas too.
+        // Turning the houses on or off redraws the widgets' prints too.
         container.appScope.launch {
             container.settings.settings
                 .map { it.village }

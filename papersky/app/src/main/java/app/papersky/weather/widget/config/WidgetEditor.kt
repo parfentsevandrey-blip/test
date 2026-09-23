@@ -1,7 +1,6 @@
 package app.papersky.weather.widget.config
 
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -55,23 +54,23 @@ import app.papersky.weather.R
 import app.papersky.weather.core.model.Place
 import app.papersky.weather.design.Chip
 import app.papersky.weather.design.Label
+import app.papersky.weather.design.Motion
 import app.papersky.weather.design.Paper
 import app.papersky.weather.design.PaperButton
 import app.papersky.weather.design.PaperCard
 import app.papersky.weather.design.PaperDisc
-import app.papersky.weather.design.paperSurface
-import app.papersky.weather.design.onSky
 import app.papersky.weather.design.PaperSegmented
 import app.papersky.weather.design.PaperSlider
 import app.papersky.weather.design.PaperSwitch
 import app.papersky.weather.design.SettingRow
+import app.papersky.weather.design.onSky
+import app.papersky.weather.design.paperSurface
 import app.papersky.weather.design.pressable
 import app.papersky.weather.design.rememberHaptics
 import app.papersky.weather.scene.PaletteMode
 import app.papersky.weather.scene.Palettes
 import app.papersky.weather.scene.SceneState
 import app.papersky.weather.ui.common.PaperIcon
-import app.papersky.weather.ui.common.PaperIconView
 import app.papersky.weather.widget.TapAction
 import app.papersky.weather.widget.WidgetBackground
 import app.papersky.weather.widget.WidgetConfig
@@ -122,7 +121,7 @@ fun WidgetEditor(
         // The options lie on a large sheet of paper, each group on its own card (§12).
         LazyColumn(
             Modifier.fillMaxWidth().weight(1f)
-                .paperSurface(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp), level = 4),
+                .paperSurface(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp), level = 4),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 22.dp, bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -224,13 +223,13 @@ private fun Desk(config: WidgetConfig, widgetSize: DpSize, onResize: (DpSize) ->
         val shown = DpSize(widgetSize.width.coerceIn(40.dp, maxW), widgetSize.height.coerceIn(40.dp, maxH))
         var lastCells by remember { mutableIntStateOf(Grid.cols(shown.width) * 100 + Grid.rows(shown.height)) }
         // Home-screen cell dots under the widget.
-        Canvas(Modifier.fillMaxSize().clip(RoundedCornerShape(22.dp)).background(Brush.linearGradient(listOf(Color(0xFF2F4858), Color(0xFF5B6C8F), Color(0xFFB38B91))))) {
+        Canvas(Modifier.fillMaxSize().clip(RoundedCornerShape(22.dp)).background(Brush.linearGradient(listOf(Color(0xFF2E3640), Color(0xFF5E6B76), Color(0xFFA0958C))))) {
             val cw = Grid.CELL_W.dp.toPx()
             val ch = Grid.CELL_H.dp.toPx()
             var x = cw
             while (x < size.width) {
                 var y = ch
-                while (y < size.height) { drawCircle(Color.White.copy(alpha = 0.25f), 2.dp.toPx(), Offset(x - 6.dp.toPx(), y - 8.dp.toPx())); y += ch }
+                while (y < size.height) { drawCircle(Color.White.copy(alpha = 0.2f), 1.5.dp.toPx(), Offset(x - 6.dp.toPx(), y - 8.dp.toPx())); y += ch }
                 x += cw
             }
         }
@@ -263,16 +262,16 @@ private fun Desk(config: WidgetConfig, widgetSize: DpSize, onResize: (DpSize) ->
                         onResize(DpSize(w, hh))
                     }
                 }
-                .paperSurface(CircleShape, level = 3),
+                .paperSurface(CircleShape, level = 2),
             contentAlignment = Alignment.Center,
         ) {
             Canvas(Modifier.size(16.dp)) {
                 val c = colors.paperInk
-                drawLine(c, Offset(size.width * 0.2f, size.height * 0.8f), Offset(size.width * 0.8f, size.height * 0.2f), 2.dp.toPx())
-                drawLine(c, Offset(size.width * 0.55f, size.height * 0.2f), Offset(size.width * 0.8f, size.height * 0.2f), 2.dp.toPx())
-                drawLine(c, Offset(size.width * 0.8f, size.height * 0.2f), Offset(size.width * 0.8f, size.height * 0.45f), 2.dp.toPx())
-                drawLine(c, Offset(size.width * 0.2f, size.height * 0.55f), Offset(size.width * 0.2f, size.height * 0.8f), 2.dp.toPx())
-                drawLine(c, Offset(size.width * 0.2f, size.height * 0.8f), Offset(size.width * 0.45f, size.height * 0.8f), 2.dp.toPx())
+                drawLine(c, Offset(size.width * 0.2f, size.height * 0.8f), Offset(size.width * 0.8f, size.height * 0.2f), 1.4.dp.toPx())
+                drawLine(c, Offset(size.width * 0.55f, size.height * 0.2f), Offset(size.width * 0.8f, size.height * 0.2f), 1.4.dp.toPx())
+                drawLine(c, Offset(size.width * 0.8f, size.height * 0.2f), Offset(size.width * 0.8f, size.height * 0.45f), 1.4.dp.toPx())
+                drawLine(c, Offset(size.width * 0.2f, size.height * 0.55f), Offset(size.width * 0.2f, size.height * 0.8f), 1.4.dp.toPx())
+                drawLine(c, Offset(size.width * 0.2f, size.height * 0.8f), Offset(size.width * 0.45f, size.height * 0.8f), 1.4.dp.toPx())
             }
         }
         BasicText(
@@ -285,9 +284,9 @@ private fun Desk(config: WidgetConfig, widgetSize: DpSize, onResize: (DpSize) ->
 
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {
-    PaperCard(seed = title.hashCode()) {
+    PaperCard {
         Label(title)
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(12.dp))
         content()
     }
 }
@@ -311,16 +310,18 @@ private fun PaletteSwatch(mode: PaletteMode, selected: Boolean, onClick: () -> U
     val context = LocalContext.current
     val day = remember(mode) { Palettes.resolve(mode, SceneState(daylight = 1f), context) }
     val night = remember(mode) { Palettes.resolve(mode, SceneState(daylight = 0f, sunProgress = -0.5f), context) }
-    val ring by animateDpAsState(if (selected) 3.dp else 0.dp, spring(dampingRatio = 0.5f), label = "ring")
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.pressable(onClick, pressed = 0.9f)) {
+    val ring by animateDpAsState(if (selected) 3.dp else 0.dp, Motion.snap(), label = "ring")
+    val ink = Paper.colors.paperInk
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.pressable(onClick, pressed = 0.95f)) {
         Canvas(Modifier.size(52.dp)) {
             val r = size.minDimension / 2
-            if (ring > 0.dp) drawCircle(Color(day.accent), r)
+            if (ring > 0.dp) drawCircle(ink, r - 0.75.dp.toPx(), style = androidx.compose.ui.graphics.drawscope.Stroke(1.5.dp.toPx()))
             val inner = r - ring.toPx() - 2.dp.toPx()
             drawArc(Brush.verticalGradient(listOf(Color(day.skyTop), Color(day.skyBottom))), 90f, 180f, true, Offset(center.x - inner, center.y - inner), androidx.compose.ui.geometry.Size(inner * 2, inner * 2))
             drawArc(Brush.verticalGradient(listOf(Color(night.skyTop), Color(night.skyBottom))), -90f, 180f, true, Offset(center.x - inner, center.y - inner), androidx.compose.ui.geometry.Size(inner * 2, inner * 2))
-            drawCircle(Color(day.hillMid), inner * 0.32f, Offset(center.x - inner * 0.35f, center.y + inner * 0.35f))
-            drawCircle(Color(night.window), inner * 0.14f, Offset(center.x + inner * 0.35f, center.y + inner * 0.3f))
+            drawCircle(Color(day.accent), inner * 0.2f, Offset(center.x - inner * 0.4f, center.y - inner * 0.1f))
+            drawCircle(Color(night.moon), inner * 0.14f, Offset(center.x + inner * 0.4f, center.y - inner * 0.1f))
+            drawCircle(ink.copy(alpha = 0.12f), inner, style = androidx.compose.ui.graphics.drawscope.Stroke(1f))
         }
         Spacer(Modifier.height(4.dp))
         BasicText(paletteName(mode), style = Paper.type.caption.copy(color = Paper.colors.paperInk))

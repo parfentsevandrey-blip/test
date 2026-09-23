@@ -12,19 +12,18 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/** Hand-inked UI icons on a 24-unit grid (the weather icons live in GlyphRenderer). */
+/** Hairline UI icons on a 24-unit grid, stroke 1.5 u (DESIGN_DOCTRINE §7); weather glyphs live in GlyphRenderer. */
 enum class PaperIcon { Back, Close, Plus, Search, Settings, Widgets, Trash, Check, Chevron, Location, Refresh, Language, Info }
 
 @Composable
 fun PaperIconView(icon: PaperIcon, color: Color, modifier: Modifier = Modifier, size: Dp = 24.dp) {
     Canvas(modifier.size(size)) {
         val u = this.size.minDimension / 24f
-        val stroke = Stroke(width = 2f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        fun line(x1: Float, y1: Float, x2: Float, y2: Float) = drawLine(color, Offset(x1 * u, y1 * u), Offset(x2 * u, y2 * u), 2f * u, StrokeCap.Round)
+        val stroke = Stroke(width = 1.5f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        fun line(x1: Float, y1: Float, x2: Float, y2: Float) = drawLine(color, Offset(x1 * u, y1 * u), Offset(x2 * u, y2 * u), 1.5f * u, StrokeCap.Round)
         when (icon) {
             PaperIcon.Back -> { line(19f, 12f, 5f, 12f); line(5f, 12f, 11f, 6f); line(5f, 12f, 11f, 18f) }
             PaperIcon.Close -> { line(6f, 6f, 18f, 18f); line(18f, 6f, 6f, 18f) }
@@ -37,11 +36,10 @@ fun PaperIconView(icon: PaperIcon, color: Color, modifier: Modifier = Modifier, 
             }
             PaperIcon.Settings -> settings(u, color, stroke)
             PaperIcon.Widgets -> {
-                val r = 2.2f * u
-                listOf(Offset(4f, 4f), Offset(13.5f, 4f), Offset(4f, 13.5f)).forEach { o ->
+                val r = 1.6f * u
+                listOf(Offset(4f, 4f), Offset(13.5f, 4f), Offset(4f, 13.5f), Offset(13.5f, 13.5f)).forEach { o ->
                     drawRoundRect(color, Offset(o.x * u, o.y * u), Size(6.5f * u, 6.5f * u), androidx.compose.ui.geometry.CornerRadius(r), style = stroke)
                 }
-                drawRoundRect(color, Offset(13.5f * u, 13.5f * u), Size(6.5f * u, 6.5f * u), androidx.compose.ui.geometry.CornerRadius(r))
             }
             PaperIcon.Trash -> {
                 line(4.5f, 7f, 19.5f, 7f)
@@ -59,7 +57,7 @@ fun PaperIconView(icon: PaperIcon, color: Color, modifier: Modifier = Modifier, 
                     close()
                 }
                 drawPath(p, color, style = stroke)
-                drawCircle(color, 2.2f * u, Offset(12f * u, 9.5f * u))
+                drawCircle(color, 2.2f * u, Offset(12f * u, 9.5f * u), style = stroke)
             }
             PaperIcon.Refresh -> {
                 drawArc(color, -60f, 290f, false, Offset(5f * u, 5f * u), Size(14f * u, 14f * u), style = stroke)
@@ -80,11 +78,14 @@ fun PaperIconView(icon: PaperIcon, color: Color, modifier: Modifier = Modifier, 
 }
 
 private fun DrawScope.settings(u: Float, color: Color, stroke: Stroke) {
-    // A little paper flower instead of a mechanical gear.
-    for (i in 0 until 6) {
-        rotate(i * 60f, Offset(12f * u, 12f * u)) {
-            drawOval(color, Offset(9.6f * u, 2.5f * u), Size(4.8f * u, 7f * u), style = stroke)
-        }
+    // Three rules with a bead on each: the printer's adjustment, not a mechanical gear.
+    val rows = floatArrayOf(6.5f, 12f, 17.5f)
+    val knobs = floatArrayOf(15f, 8.5f, 13f)
+    for (i in rows.indices) {
+        val y = rows[i] * u
+        val k = knobs[i] * u
+        drawLine(color, Offset(4f * u, y), Offset(k - 2.2f * u, y), 1.5f * u, StrokeCap.Round)
+        drawLine(color, Offset(k + 2.2f * u, y), Offset(20f * u, y), 1.5f * u, StrokeCap.Round)
+        drawCircle(color, 2.2f * u, Offset(k, y), style = stroke)
     }
-    drawCircle(color, 2.6f * u, Offset(12f * u, 12f * u))
 }

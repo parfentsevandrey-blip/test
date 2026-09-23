@@ -15,8 +15,8 @@ import app.papersky.weather.scene.GlyphColors
 import app.papersky.weather.scene.GlyphRenderer
 import app.papersky.weather.scene.MaterialTextures
 import app.papersky.weather.scene.PaperSceneRenderer
-import app.papersky.weather.scene.SceneState
 import app.papersky.weather.scene.ScenePalette
+import app.papersky.weather.scene.SceneState
 import app.papersky.weather.widget.WidgetBackground
 import app.papersky.weather.widget.WidgetConfig
 import app.papersky.weather.widget.layout.Mode
@@ -84,7 +84,7 @@ object WidgetArt {
                 fun RectDp.px() = RectF(left * k, top * k, right * k, bottom * k)
                 val base = sceneOptions(plan, scene, clockSeconds, village)
                 base.copy(
-                    panels = plan.panels.mapIndexed { i, r -> PaperSceneRenderer.Panel(r.px(), tape = i == 0) },
+                    panels = plan.panels.map { r -> PaperSceneRenderer.Panel(r.px()) },
                     charts = charts.map { c ->
                         PaperSceneRenderer.Chart(
                             RectF(c.left * k, c.top * k, (c.left + c.width) * k, (c.top + c.height) * k),
@@ -105,14 +105,14 @@ object WidgetArt {
         }
     }
 
-    /** A cosy sheet: cotton paper, a faint cut-paper horizon and a strip of tape. */
+    /** A plain sheet of cotton paper with the faintest printed horizon (DESIGN_DOCTRINE §13). */
     private fun paper(plan: WidgetPlan, p: ScenePalette, scale: Float, seed: Int): Bitmap {
         val w = (plan.width * scale).roundToInt().coerceAtLeast(1)
         val h = (plan.height * scale).roundToInt().coerceAtLeast(1)
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        paint.shader = LinearGradient(0f, 0f, 0f, h.toFloat(), p.paper, ColorMath.lerp(p.paper, p.tape, 0.12f), Shader.TileMode.CLAMP)
+        paint.shader = LinearGradient(0f, 0f, 0f, h.toFloat(), p.paper, ColorMath.darken(p.paper, 0.025f), Shader.TileMode.CLAMP)
         canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
         paint.shader = null
 
@@ -128,14 +128,15 @@ object WidgetArt {
         }
         path.lineTo(w.toFloat(), h.toFloat())
         path.close()
-        paint.color = ColorMath.withAlpha(p.hillMid, 0.16f)
+        paint.color = ColorMath.withAlpha(p.hillMid, 0.12f)
         canvas.drawPath(path, paint)
 
-        // Real cotton fibres, and a strip of washi tape holding the sheet (DESIGN_DOCTRINE §13).
+        // Cotton fibres, and a hairline cut edge around the sheet.
         paint.shader = android.graphics.BitmapShader(MaterialTextures.paper, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
+        paint.alpha = if (p.isDarkPaper) 56 else 102
         canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
         paint.shader = null
-        if (plan.width >= 90 && plan.height >= 60) PaperSceneRenderer(scale).tape(canvas, w * 0.5f, 5 * scale, p.tape, -3f)
+        paint.alpha = 255
 
         return bmp
     }

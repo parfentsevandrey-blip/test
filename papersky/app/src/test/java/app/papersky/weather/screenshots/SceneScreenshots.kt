@@ -4,6 +4,9 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.papersky.weather.TestApp
+import app.papersky.weather.scene.Glyph
+import app.papersky.weather.scene.GlyphColors
+import app.papersky.weather.scene.GlyphRenderer
 import app.papersky.weather.scene.PaperSceneRenderer
 import app.papersky.weather.scene.Palettes
 import app.papersky.weather.scene.SceneState
@@ -41,6 +44,31 @@ class SceneScreenshots {
             PaperSceneRenderer(density).draw(Canvas(bmp), w.toFloat(), h.toFloat(), s, Palettes.forState(s), PaperSceneRenderer.Options(time = 12.5f, staticBolt = s.thunder > 0.5f))
             Shots.save("scene_$name", bmp)
         }
+    }
+
+    /** Every glyph on day paper, night paper and a day sky: a proof sheet for the icon set. */
+    @Test
+    fun renderGlyphSheet() {
+        Shots.assumeEnabled()
+        val cell = 96
+        val glyphs = Glyph.entries
+        val rows = listOf(
+            Triple(Palettes.ClearDay, true, Palettes.ClearDay.paper),
+            Triple(Palettes.ClearNight, true, Palettes.ClearNight.paper),
+            Triple(Palettes.ClearDay, false, Palettes.ClearDay.skyMid),
+        )
+        val bmp = Bitmap.createBitmap(cell * glyphs.size, cell * rows.size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bmp)
+        val renderer = GlyphRenderer()
+        rows.forEachIndexed { r, (palette, onPaper, bg) ->
+            canvas.save()
+            canvas.clipRect(0, r * cell, bmp.width, (r + 1) * cell)
+            canvas.drawColor(bg)
+            canvas.restore()
+            val colors = GlyphColors.from(palette, onPaper)
+            glyphs.forEachIndexed { i, g -> renderer.draw(canvas, g, i * cell + 12f, r * cell + 12f, cell - 24f, colors, 0f, 30f) }
+        }
+        Shots.save("glyphs", bmp)
     }
 
     /** The phone hero: tall canvas, horizon high, sun kept to the right of the temperature. */

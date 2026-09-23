@@ -34,7 +34,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.asComposePath
@@ -46,9 +45,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.drawText
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.papersky.weather.R
@@ -108,7 +107,7 @@ fun HourlyCard(
     val reveal = remember { Animatable(0f) }
     LaunchedEffect(Unit) { reveal.animateTo(1f, tween(1300)) }
 
-    PaperCard(modifier, seed = 21, tilt = -0.4f, contentPadding = PaddingValues(vertical = 16.dp)) {
+    PaperCard(modifier, contentPadding = PaddingValues(vertical = 18.dp)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
             Label(stringResource(R.string.hourly_title))
             Spacer(Modifier.weight(1f))
@@ -116,13 +115,13 @@ fun HourlyCard(
                 BasicText(
                     stringResource(R.string.back_to_now),
                     Modifier.pressable({ h.confirm(); onPreviewNow(null) }).padding(horizontal = 8.dp, vertical = 2.dp),
-                    style = Paper.type.caption.copy(color = colors.accent, fontWeight = FontWeight(700)),
+                    style = Paper.type.caption.copy(color = colors.accent, fontWeight = FontWeight(600)),
                 )
             } else {
                 BasicText(stringResource(R.string.hourly_hint), style = Paper.type.caption.copy(color = colors.paperInkSoft))
             }
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(10.dp))
         Box(Modifier.fillMaxWidth().horizontalScroll(scroll)) {
             Box(
                 Modifier
@@ -155,17 +154,14 @@ fun HourlyCard(
                         }
                     },
             ) {
-                // Selection: a lifted strip of paper — its own tiny layer, redrawn while scrubbing.
+                // Selection: a faint wash of the pigment and a hairline — its own tiny layer, redrawn while scrubbing.
                 Box(
                     Modifier.matchParentSize().drawBehind {
                         val s = selection.value
                         if (s < 0f) return@drawBehind
                         val x = s * colPx
-                        drawRoundRect(colors.accent.copy(alpha = 0.12f), Offset(x, 0f), Size(colPx, size.height), CornerRadius(14.dp.toPx()))
-                        drawLine(
-                            colors.accent, Offset(x + colPx / 2, 4.dp.toPx()), Offset(x + colPx / 2, size.height - 4.dp.toPx()), 1.5.dp.toPx(),
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f)),
-                        )
+                        drawRoundRect(colors.accent.copy(alpha = 0.07f), Offset(x, 0f), Size(colPx, size.height), CornerRadius(10.dp.toPx()))
+                        drawLine(colors.accent, Offset(x + colPx / 2, 4.dp.toPx()), Offset(x + colPx / 2, size.height - 4.dp.toPx()), 1.dp.toPx())
                     },
                 )
                 HourlyChart(hours, fmt, colors, Paper.type, stringResource(R.string.widget_now), reveal)
@@ -244,19 +240,19 @@ private fun HourlyChart(hours: List<Hour>, fmt: WeatherFormat, colors: PaperColo
                     lineTo(pts.first().x, floor)
                     close()
                 }
-                val washBrush = Brush.verticalGradient(listOf(colors.accent.copy(alpha = 0.18f), colors.accent.copy(alpha = 0f)), startY = curveTop, endY = floor)
+                val washBrush = Brush.verticalGradient(listOf(colors.accent.copy(alpha = 0.1f), colors.accent.copy(alpha = 0f)), startY = curveTop, endY = floor)
                 val measure = PathMeasure(curve.asAndroidPath(), false)
                 val length = measure.length
                 val partial = android.graphics.Path()
 
                 val labelStyle = type.caption.copy(fontSize = 12.sp, color = colors.paperInkSoft)
-                val nowStyle = labelStyle.copy(color = colors.paperInk, fontWeight = FontWeight(700))
+                val nowStyle = labelStyle.copy(color = colors.paperInk, fontWeight = FontWeight(600))
                 val labels = List(n) { i -> measurer.measure(if (i == 0) nowText else fmt.hour(hours[i].time), if (i == 0) nowStyle else labelStyle) }
-                val tempStyle = type.number.copy(fontSize = 15.sp, color = colors.paperInk)
+                val tempStyle = type.number.copy(fontSize = 18.sp, color = colors.paperInk)
                 val tempLabels = List(n) { i -> measurer.measure(fmt.temp(hours[i].temperature), tempStyle) }
                 val pctStyle = type.caption.copy(fontSize = 10.sp, color = rainInk)
                 val pct = List(n) { i -> hours[i].precipProbability.takeIf { it >= 30 }?.let { measurer.measure("$it%", pctStyle) } }
-                val dayStyle = type.label.copy(fontSize = 10.sp, color = colors.accent)
+                val dayStyle = type.label.copy(fontSize = 9.5.sp, color = colors.accent)
                 val days = List(n) { i ->
                     if (i > 0 && fmt.localDate(hours[i].time) != fmt.localDate(hours[i - 1].time)) measurer.measure(fmt.weekdayShort(hours[i].time + 60).uppercase(), dayStyle) else null
                 }
@@ -267,23 +263,22 @@ private fun HourlyChart(hours: List<Hour>, fmt: WeatherFormat, colors: PaperColo
                         glyphImage(g, glyphPx, gc, base = g in GlyphRenderer.ANIMATED)
                     }
                 }
-                val dash = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 5.dp.toPx()))
 
                 onDrawBehind {
                     val r = reveal.value
                     days.forEachIndexed { i, label ->
                         if (label == null) return@forEachIndexed
                         val x = i * w
-                        drawLine(colors.paperInk.copy(alpha = 0.18f), Offset(x, 0f), Offset(x, size.height), 1.dp.toPx(), pathEffect = dash)
+                        drawLine(colors.paperInk.copy(alpha = 0.12f), Offset(x, 0f), Offset(x, size.height), 1f)
                         drawText(label, topLeft = Offset(x + 5.dp.toPx(), size.height - label.size.height - 2.dp.toPx()))
                     }
                     drawPath(wash, washBrush, alpha = r)
                     if (r < 1f) {
                         partial.reset()
                         measure.getSegment(0f, length * r, partial, true)
-                        drawPath(partial.asComposePath(), colors.accent, style = Stroke(2.4.dp.toPx(), cap = StrokeCap.Round))
+                        drawPath(partial.asComposePath(), colors.accent, style = Stroke(1.5.dp.toPx(), cap = StrokeCap.Round))
                     } else {
-                        drawPath(curve, colors.accent, style = Stroke(2.4.dp.toPx(), cap = StrokeCap.Round))
+                        drawPath(curve, colors.accent, style = Stroke(1.5.dp.toPx(), cap = StrokeCap.Round))
                     }
                     for (i in 0 until n) {
                         // Each column settles in as the line reaches it.
@@ -295,8 +290,8 @@ private fun HourlyChart(hours: List<Hour>, fmt: WeatherFormat, colors: PaperColo
                         drawText(label, topLeft = Offset(cx - label.size.width / 2, 4.dp.toPx()), alpha = a)
                         glyphs?.let { drawImage(it[i], Offset(cx - glyphPx / 2f, GlyphTop.toPx() + lift), alpha = a) }
                         val p = pts[i]
-                        drawCircle(colors.paper, 4.dp.toPx(), p, alpha = a)
-                        drawCircle(colors.accent, 4.dp.toPx(), p, style = Stroke(2.dp.toPx()), alpha = a)
+                        drawCircle(colors.paper, 3.dp.toPx(), p, alpha = a)
+                        drawCircle(colors.accent, 3.dp.toPx(), p, style = Stroke(1.2.dp.toPx()), alpha = a)
                         val t = tempLabels[i]
                         drawText(t, topLeft = Offset(cx - t.size.width / 2, p.y - t.size.height - 5.dp.toPx() + lift), alpha = a)
                         val chance = hours[i].precipProbability
@@ -304,7 +299,7 @@ private fun HourlyChart(hours: List<Hour>, fmt: WeatherFormat, colors: PaperColo
                             val barMax = 18.dp.toPx()
                             val bh = max(3.dp.toPx(), barMax * chance / 100f) * a
                             val by = 162.dp.toPx() - bh
-                            drawRoundRect(rainInk.copy(alpha = 0.25f + chance / 180f), Offset(cx - 5.dp.toPx(), by), Size(10.dp.toPx(), bh), CornerRadius(4.dp.toPx()))
+                            drawRoundRect(rainInk.copy(alpha = 0.22f + chance / 200f), Offset(cx - 2.dp.toPx(), by), Size(4.dp.toPx(), bh), CornerRadius(2.dp.toPx()))
                             pct[i]?.let { pl -> drawText(pl, topLeft = Offset(cx - pl.size.width / 2, by - pl.size.height - 1.dp.toPx()), alpha = a) }
                         }
                     }

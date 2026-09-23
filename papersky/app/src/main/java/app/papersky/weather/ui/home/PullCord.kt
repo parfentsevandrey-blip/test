@@ -2,6 +2,7 @@ package app.papersky.weather.ui.home
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseInOutSine
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -21,12 +22,10 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
@@ -34,18 +33,19 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.papersky.weather.design.LocalHaptics
+import app.papersky.weather.design.Motion
 import app.papersky.weather.design.Paper
-import app.papersky.weather.design.PaperFibres
-import app.papersky.weather.design.beechBead
+import app.papersky.weather.design.paperThumb
 import app.papersky.weather.design.rememberHaptics
-import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlinx.coroutines.launch
 
 /**
- * Pull-to-refresh as a lamp cord hanging from the top edge. Drag the bead down: the string
- * stretches with rubber-band resistance and ticks under the finger; past the notch it clicks,
- * and on release it springs back and swings while the sky is being fetched.
+ * Pull-to-refresh as a pendant (DESIGN_DOCTRINE §8): a paper disc hanging on a hairline thread
+ * from the top edge. Drag it down: the thread stretches with rubber-band resistance and ticks
+ * under the finger; past the notch it clicks, and on release it springs back while the arc
+ * printed on the disc turns until the sky has been fetched.
  */
 @Composable
 fun PullCord(refreshing: Boolean, onPull: () -> Unit, label: String, modifier: Modifier = Modifier) {
@@ -62,14 +62,20 @@ fun PullCord(refreshing: Boolean, onPull: () -> Unit, label: String, modifier: M
     var lastTick by remember { mutableIntStateOf(0) }
     val onPullNow by rememberUpdatedState(onPull)
 
+    val turn = remember { Animatable(0f) }
     LaunchedEffect(refreshing) {
         if (refreshing) {
+            launch {
+                while (true) {
+                    swing.animateTo(4f, tween(1100, easing = EaseInOutSine))
+                    swing.animateTo(-4f, tween(1100, easing = EaseInOutSine))
+                }
+            }
             while (true) {
-                swing.animateTo(12f, tween(650, easing = EaseInOutSine))
-                swing.animateTo(-12f, tween(650, easing = EaseInOutSine))
+                turn.animateTo(turn.value + 360f, tween(1400, easing = LinearEasing))
             }
         } else {
-            swing.animateTo(0f, spring(dampingRatio = 0.25f, stiffness = 40f))
+            swing.animateTo(0f, spring(dampingRatio = 0.6f, stiffness = 40f))
         }
     }
 
@@ -82,11 +88,11 @@ fun PullCord(refreshing: Boolean, onPull: () -> Unit, label: String, modifier: M
             }
             .pointerInput(Unit) {
                 detectTapGestures(onTap = {
-                    // A tap gives the bead a little nudge.
+                    // A tap gives the disc a little nudge.
                     h.softTick()
                     scope.launch {
-                        swing.animateTo(18f, spring(stiffness = 300f))
-                        swing.animateTo(0f, spring(dampingRatio = 0.2f, stiffness = 30f))
+                        swing.animateTo(6f, spring(stiffness = 300f))
+                        swing.animateTo(0f, Motion.string())
                     }
                 })
             }
@@ -101,13 +107,13 @@ fun PullCord(refreshing: Boolean, onPull: () -> Unit, label: String, modifier: M
                             h.gestureEnd()
                         }
                         armed = false
-                        scope.launch { pull.animateTo(0f, spring(dampingRatio = 0.28f, stiffness = 260f)) }
+                        scope.launch { pull.animateTo(0f, spring(dampingRatio = 0.55f, stiffness = 260f)) }
                         scope.launch {
-                            swing.animateTo(if (swing.value >= 0) -16f else 16f, spring(stiffness = 200f))
-                            if (!refreshing) swing.animateTo(0f, spring(dampingRatio = 0.2f, stiffness = 30f))
+                            swing.animateTo(if (swing.value >= 0) -5f else 5f, spring(stiffness = 200f))
+                            if (!refreshing) swing.animateTo(0f, Motion.string())
                         }
                     },
-                    onDragCancel = { scope.launch { pull.animateTo(0f, spring(dampingRatio = 0.3f)) } },
+                    onDragCancel = { scope.launch { pull.animateTo(0f, spring(dampingRatio = 0.6f)) } },
                 ) { change, dy ->
                     change.consume()
                     val resistance = 1f - (pull.value / maxPull) * 0.7f
@@ -126,43 +132,19 @@ fun PullCord(refreshing: Boolean, onPull: () -> Unit, label: String, modifier: M
             val cx = size.width / 2
             val len = restLen + pull.value
             rotate(swing.value, Offset(cx, 0f)) {
-                // Twisted cotton string.
-                drawLine(colors.onSky.copy(alpha = 0.55f), Offset(cx, 0f), Offset(cx, len), 2.dp.toPx(), StrokeCap.Round)
-                var y = 6.dp.toPx()
-                while (y < len - 6.dp.toPx()) {
-                    drawLine(colors.onSky.copy(alpha = 0.25f), Offset(cx - 1.2.dp.toPx(), y), Offset(cx + 1.2.dp.toPx(), y + 3.dp.toPx()), 1.dp.toPx())
-                    y += 6.dp.toPx()
-                }
-                // Wooden bead with a paper tag.
-                val r = 10.dp.toPx()
-                beechBead(Offset(cx, len + r), r)
-                val tagTop = len + r * 2 + 3.dp.toPx()
-                val tag = Path().apply {
-                    moveTo(cx - 9.dp.toPx(), tagTop + 4.dp.toPx())
-                    lineTo(cx, tagTop)
-                    lineTo(cx + 9.dp.toPx(), tagTop + 4.dp.toPx())
-                    lineTo(cx + 9.dp.toPx(), tagTop + 24.dp.toPx())
-                    lineTo(cx - 9.dp.toPx(), tagTop + 24.dp.toPx())
-                    close()
-                }
-                translate(0.8.dp.toPx(), 2.dp.toPx()) { drawPath(tag, Color.Black.copy(alpha = 0.18f)) }
-                drawPath(tag, colors.paper)
-                drawPath(tag, PaperFibres, alpha = 0.8f)
-                drawPath(tag, colors.paperInk.copy(alpha = 0.18f), style = Stroke(1.dp.toPx()))
-                // Refresh swirl printed on the tag; it spins as you pull.
-                val a = pull.value / threshold * 300f
-                val c = Offset(cx, tagTop + 14.dp.toPx())
-                val rr = 4.5.dp.toPx()
-                for (k in 0 until 10) {
-                    val t0 = Math.toRadians((a + k * 27).toDouble())
-                    val t1 = Math.toRadians((a + k * 27 + 18).toDouble())
-                    drawLine(
-                        (if (armed || refreshing) colors.accent else colors.paperInk).copy(alpha = 0.3f + k * 0.07f),
-                        Offset(c.x + rr * cos(t0).toFloat(), c.y + rr * sin(t0).toFloat()),
-                        Offset(c.x + rr * cos(t1).toFloat(), c.y + rr * sin(t1).toFloat()),
-                        1.6.dp.toPx(), StrokeCap.Round,
-                    )
-                }
+                // A hairline thread.
+                drawLine(colors.onSky.copy(alpha = 0.5f), Offset(cx, 0f), Offset(cx, len), 1.dp.toPx())
+                // The paper disc, with an arc printed on it that turns as you pull.
+                val r = 13.dp.toPx()
+                val c = Offset(cx, len + r)
+                paperThumb(c, r, pull.value / maxPull, colors.paper, colors.paperInk, colors.shadow)
+                val a = pull.value / threshold * 300f + turn.value
+                val rr = 5.5.dp.toPx()
+                val ink = if (armed || refreshing) colors.accent else colors.paperInk
+                drawArc(ink, a, 270f, false, Offset(c.x - rr, c.y - rr), Size(rr * 2, rr * 2), style = Stroke(1.2.dp.toPx(), cap = StrokeCap.Round))
+                val end = Math.toRadians((a + 270f).toDouble())
+                val tip = Offset(c.x + rr * cos(end).toFloat(), c.y + rr * sin(end).toFloat())
+                drawCircle(ink, 1.4.dp.toPx(), tip)
             }
         }
     }

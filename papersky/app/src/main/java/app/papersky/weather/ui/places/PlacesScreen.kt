@@ -38,9 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -48,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,14 +56,14 @@ import app.papersky.weather.core.model.Place
 import app.papersky.weather.core.model.Units
 import app.papersky.weather.core.model.momentAt
 import app.papersky.weather.core.text.WeatherFormat
-import app.papersky.weather.design.DeckleShape
+import app.papersky.weather.design.ControlShape
 import app.papersky.weather.design.GlyphIcon
 import app.papersky.weather.design.Motion
 import app.papersky.weather.design.Paper
 import app.papersky.weather.design.PaperButton
 import app.papersky.weather.design.PaperCard
+import app.papersky.weather.design.debossed
 import app.papersky.weather.design.laidDown
-import app.papersky.weather.design.paperSurface
 import app.papersky.weather.design.pressable
 import app.papersky.weather.design.rememberHaptics
 import app.papersky.weather.scene.Glyph
@@ -76,8 +74,8 @@ import app.papersky.weather.ui.common.PaperIconView
 import app.papersky.weather.ui.common.PaperPage
 import app.papersky.weather.ui.common.SectionTitle
 import app.papersky.weather.ui.scene.SceneThumbnail
-import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 @Composable
 fun PlacesScreen(vm: PlacesViewModel, scene: SceneState, units: Units, motion: MotionLevel, village: Boolean, onBack: () -> Unit) {
@@ -108,9 +106,9 @@ fun PlacesScreen(vm: PlacesViewModel, scene: SceneState, units: Units, motion: M
         if (search !is SearchState.Results) {
             if (rows.none { it.place.id == Place.HERE }) {
                 item("locate") {
-                    PaperCard(Modifier.laidDown(1), seed = 3, tape = true) {
-                        BasicText(stringResource(R.string.places_locate_title), style = Paper.type.hand.copy(color = Paper.colors.paperInk))
-                        Spacer(Modifier.height(10.dp))
+                    PaperCard(Modifier.laidDown(1)) {
+                        BasicText(stringResource(R.string.places_locate_title), style = Paper.type.note.copy(color = Paper.colors.paperInk, fontSize = 23.sp))
+                        Spacer(Modifier.height(14.dp))
                         PaperButton(stringResource(R.string.welcome_locate), { launcher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) }, Modifier.fillMaxWidth(), glyph = Glyph.Pin)
                     }
                 }
@@ -133,19 +131,19 @@ fun PlacesScreen(vm: PlacesViewModel, scene: SceneState, units: Units, motion: M
     }
 }
 
-/** A strip of slightly darker paper to write a town's name on. */
+/** A field pressed into the sheet (§3 deboss) to set a town's name in. */
 @Composable
 private fun SearchField(state: TextFieldState, modifier: Modifier = Modifier) {
     val colors = Paper.colors
     Row(
         modifier
             .fillMaxWidth()
-            .paperSurface(remember { DeckleShape(seed = 77, corner = 20.dp) }, level = 1, color = colors.paperInk.copy(alpha = 0.05f).compositeOver(colors.paper))
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .debossed(ControlShape)
+            .padding(horizontal = 16.dp, vertical = 15.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PaperIconView(PaperIcon.Search, colors.paperInkSoft, size = 22.dp)
-        Spacer(Modifier.width(10.dp))
+        PaperIconView(PaperIcon.Search, colors.paperInkSoft, size = 20.dp)
+        Spacer(Modifier.width(12.dp))
         Box(Modifier.weight(1f)) {
             if (state.text.isEmpty()) {
                 BasicText(stringResource(R.string.search_hint), style = Paper.type.body.copy(color = colors.paperInkSoft))
@@ -180,11 +178,11 @@ private fun SearchResult(place: Place, modifier: Modifier, onPick: () -> Unit) {
             BasicText(place.name, style = Paper.type.heading.copy(color = colors.paperInk))
             place.subtitle?.let { BasicText(it, style = Paper.type.caption.copy(color = colors.paperInkSoft)) }
         }
-        PaperIconView(PaperIcon.Plus, colors.accent, size = 22.dp)
+        PaperIconView(PaperIcon.Plus, colors.accent, size = 20.dp)
     }
 }
 
-/** A place on its own card: a little window of its sky, its name, its weather in a few words. */
+/** A place on its own sheet: a small print of its sky, its name, its weather in the italic. */
 @Composable
 private fun PlaceCard(row: PlaceRow, units: Units, village: Boolean, onClick: () -> Unit) {
     val context = LocalContext.current
@@ -194,10 +192,9 @@ private fun PlaceCard(row: PlaceRow, units: Units, village: Boolean, onClick: ()
     val moment = f?.momentAt(now)
     val scene = moment?.let { SceneState.from(it, SceneState.seedFor(f.placeId), f) }
     val fmt = remember(f?.timezone, units) { WeatherFormat(context, units, f?.zone ?: java.time.ZoneId.systemDefault()) }
-    val seed = row.place.id.hashCode()
-    PaperCard(seed = seed, tilt = if (seed % 2 == 0) 0.4f else -0.4f, level = if (row.selected) 3 else 2, onClick = onClick, contentPadding = androidx.compose.foundation.layout.PaddingValues(10.dp)) {
+    PaperCard(level = if (row.selected) 2 else 1, onClick = onClick, contentPadding = androidx.compose.foundation.layout.PaddingValues(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(width = 104.dp, height = 84.dp).clip(RoundedCornerShape(16.dp))) {
+            Box(Modifier.size(width = 96.dp, height = 80.dp).clip(RoundedCornerShape(10.dp))) {
                 if (scene != null) SceneThumbnail(scene, Modifier.matchParentSize(), village = village)
             }
             Spacer(Modifier.width(14.dp))
@@ -211,16 +208,16 @@ private fun PlaceCard(row: PlaceRow, units: Units, village: Boolean, onClick: ()
                         row.place.name.ifBlank { stringResource(R.string.here) },
                         style = Paper.type.heading.copy(color = colors.paperInk),
                         maxLines = 1,
-                        autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = 15.sp, stepSize = 0.5.sp),
+                        autoSize = TextAutoSize.StepBased(minFontSize = 14.sp, maxFontSize = 21.sp, stepSize = 0.5.sp),
                     )
                 }
                 row.place.subtitle?.let { BasicText(it, style = Paper.type.caption.copy(color = colors.paperInkSoft), maxLines = 1) }
                 if (moment != null) {
-                    BasicText(fmt.condition(moment.condition), style = Paper.type.hand.copy(color = colors.paperInkSoft, fontSize = 20.sp), maxLines = 1)
+                    BasicText(fmt.condition(moment.condition), style = Paper.type.note.copy(color = colors.paperInkSoft, fontSize = 17.sp), maxLines = 1)
                 }
             }
             if (moment != null) {
-                BasicText(fmt.temp(moment.temperature), style = Paper.type.display.copy(color = colors.paperInk, fontSize = 30.sp))
+                BasicText(fmt.temp(moment.temperature), style = Paper.type.display.copy(color = colors.paperInk, fontSize = 34.sp, fontWeight = FontWeight(300)))
             }
             if (row.selected) {
                 Spacer(Modifier.width(4.dp))
@@ -230,7 +227,7 @@ private fun PlaceCard(row: PlaceRow, units: Units, village: Boolean, onClick: ()
     }
 }
 
-/** Swipe left to tear a place off: it tilts, rustles at the tear line, flies away. */
+/** Swipe left to take a place away: the sheet slides off with a rustle past the threshold. */
 @Composable
 private fun SwipeToTear(onRemove: () -> Unit, content: @Composable () -> Unit) {
     val offset = remember { Animatable(0f) }
@@ -248,15 +245,11 @@ private fun SwipeToTear(onRemove: () -> Unit, content: @Composable () -> Unit) {
         ) {
             PaperIconView(PaperIcon.Trash, if (armed) Paper.colors.accent else Paper.colors.paperInkSoft, size = 22.dp)
             Spacer(Modifier.width(6.dp))
-            BasicText(removeLabel, style = Paper.type.hand.copy(color = if (armed) Paper.colors.accent else Paper.colors.paperInkSoft, fontSize = 20.sp))
+            BasicText(removeLabel.uppercase(), style = Paper.type.label.copy(color = if (armed) Paper.colors.accent else Paper.colors.paperInkSoft))
         }
         Box(
             Modifier
                 .offset { IntOffset(offset.value.roundToInt(), 0) }
-                .graphicsLayer {
-                    rotationZ = offset.value / threshold * -2.5f
-                    transformOrigin = TransformOrigin(1f, 0f)
-                }
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures(
                         onDragStart = { h.dragStart() },

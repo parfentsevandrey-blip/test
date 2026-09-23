@@ -6,7 +6,7 @@ import app.papersky.weather.core.model.WeatherMoment
 import app.papersky.weather.core.model.momentAt
 
 /**
- * Everything the paper diorama needs, as continuous numbers. Continuous on purpose: the app
+ * Everything the print needs, as continuous numbers. Continuous on purpose: the app
  * animates between states (e.g. while scrubbing the hourly ribbon) by interpolating each field.
  */
 data class SceneState(

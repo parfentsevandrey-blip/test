@@ -61,11 +61,11 @@ import app.papersky.weather.design.rememberHaptics
 import app.papersky.weather.scene.Glyph
 import kotlin.math.roundToInt
 
-/** Temperature → colour on a cold-to-warm paint strip. */
+/** Temperature → a pigment on the cold-to-warm scale of DESIGN_DOCTRINE §5. */
 fun tempColor(celsius: Double): Color {
     val stops = listOf(
-        -20.0 to Color(0xFF6C7FD8), -5.0 to Color(0xFF7FB2E5), 5.0 to Color(0xFF8CC7B5),
-        15.0 to Color(0xFFE9C46A), 25.0 to Color(0xFFEF8F4E), 35.0 to Color(0xFFD9483B),
+        -20.0 to Color(0xFF56699A), -5.0 to Color(0xFF7F9BB6), 5.0 to Color(0xFF9CB2A2),
+        15.0 to Color(0xFFCFB073), 25.0 to Color(0xFFC98457), 35.0 to Color(0xFFAE4936),
     )
     if (celsius <= stops.first().first) return stops.first().second
     if (celsius >= stops.last().first) return stops.last().second
@@ -80,7 +80,7 @@ fun tempColor(celsius: Double): Color {
     )
 }
 
-/** Ten days on a taped card; tap a day and it unfolds like a folded note. */
+/** Ten days set like a table of contents; tap a day and it unfolds along a crease. */
 @Composable
 fun DailyCard(
     forecast: Forecast,
@@ -98,9 +98,9 @@ fun DailyCard(
     var expanded by rememberSaveable { mutableLongStateOf(-1L) }
     val h = rememberHaptics()
 
-    PaperCard(modifier, seed = 34, tilt = 0.5f, tape = true, wiggleOnTap = false) {
+    PaperCard(modifier) {
         Label(stringResource(R.string.daily_title))
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(8.dp))
         days.forEachIndexed { index, day ->
             val open = expanded == day.date
             val arrow = animateFloatAsState(if (open) 180f else 0f, Motion.snap(), label = "arrow")
@@ -111,32 +111,32 @@ fun DailyCard(
                     .pressable({
                         h.toggle(!open)
                         expanded = if (open) -1L else day.date
-                    }, haptic = false, pressed = 0.985f),
+                    }, haptic = false, pressed = 0.99f),
             ) {
-                Row(Modifier.fillMaxWidth().height(52.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().height(56.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.width(92.dp)) {
                         BasicText(
                             fmt.dayName(day.date + 43_200, nowSec),
-                            style = Paper.type.bodyStrong.copy(color = colors.paperInk, fontWeight = FontWeight(if (index == 0) 800 else 700)),
+                            style = Paper.type.heading.copy(color = colors.paperInk, fontSize = 19.sp, fontWeight = FontWeight(if (index == 0) 600 else 500)),
                             maxLines = 1,
-                            autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = 15.sp, stepSize = 0.5.sp),
+                            autoSize = TextAutoSize.StepBased(minFontSize = 13.sp, maxFontSize = 19.sp, stepSize = 0.5.sp),
                         )
-                        BasicText(fmt.date(day.date + 43_200), style = Paper.type.caption.copy(color = colors.paperInkSoft), maxLines = 1)
+                        BasicText(fmt.date(day.date + 43_200), style = Paper.type.caption.copy(color = colors.paperInkSoft, fontSize = 11.5.sp), maxLines = 1)
                     }
                     // Only today's glyph moves; the rest stay still (few live canvases at a time).
-                    GlyphIcon(Glyph.of(Condition.fromWmo(day.code), true), size = 30.dp, animate = index == 0)
+                    GlyphIcon(Glyph.of(Condition.fromWmo(day.code), true), size = 28.dp, animate = index == 0)
                     BasicText(
                         if (day.precipProbability >= 20) "${day.precipProbability}%" else "",
                         Modifier.width(42.dp).padding(start = 4.dp),
                         style = Paper.type.caption.copy(color = colors.rainInk),
                     )
                     BasicText(fmt.temp(day.tempMin), Modifier.width(40.dp), style = Paper.type.number.copy(color = colors.paperInkSoft, textAlign = TextAlign.End))
-                    RangeStrip(day, lo, hi, if (index == 0) currentTemp else null, Modifier.weight(1f).padding(horizontal = 10.dp).height(10.dp))
+                    RangeStrip(day, lo, hi, if (index == 0) currentTemp else null, Modifier.weight(1f).padding(horizontal = 10.dp).height(8.dp))
                     BasicText(fmt.temp(day.tempMax), Modifier.width(40.dp), style = Paper.type.number.copy(color = colors.paperInk))
                     Canvas(Modifier.width(14.dp).height(14.dp).graphicsLayer { rotationZ = arrow.value }) {
                         val c = colors.paperInkSoft
-                        drawLine(c, Offset(size.width * 0.2f, size.height * 0.4f), Offset(size.width / 2, size.height * 0.65f), 1.6.dp.toPx(), StrokeCap.Round)
-                        drawLine(c, Offset(size.width / 2, size.height * 0.65f), Offset(size.width * 0.8f, size.height * 0.4f), 1.6.dp.toPx(), StrokeCap.Round)
+                        drawLine(c, Offset(size.width * 0.2f, size.height * 0.4f), Offset(size.width / 2, size.height * 0.65f), 1.2.dp.toPx(), StrokeCap.Round)
+                        drawLine(c, Offset(size.width / 2, size.height * 0.65f), Offset(size.width * 0.8f, size.height * 0.4f), 1.2.dp.toPx(), StrokeCap.Round)
                     }
                 }
                 AnimatedVisibility(
@@ -162,24 +162,25 @@ fun DailyCard(
     }
 }
 
-/** A strip of paint from the cold end to the warm end of the ten days; a dot marks now. */
+/** A hairline track with a stroke of pigment from the day's low to its high; a ring marks now. */
 @Composable
 private fun RangeStrip(day: Day, lo: Double, hi: Double, current: Double?, modifier: Modifier) {
     val colors = Paper.colors
     val span = (hi - lo).coerceAtLeast(1.0)
     Canvas(modifier.semantics { contentDescription = "" }) {
-        val r = size.height / 2
-        drawRoundRect(colors.paperInk.copy(alpha = 0.08f), cornerRadius = CornerRadius(r))
+        val cy = size.height / 2
+        val th = 3.dp.toPx()
+        drawLine(colors.paperInk.copy(alpha = 0.1f), Offset(0f, cy), Offset(size.width, cy), 1f)
         val x0 = ((day.tempMin - lo) / span * size.width).toFloat()
-        val x1 = ((day.tempMax - lo) / span * size.width).toFloat().coerceAtLeast(x0 + size.height)
+        val x1 = ((day.tempMax - lo) / span * size.width).toFloat().coerceAtLeast(x0 + th)
         drawRoundRect(
             Brush.horizontalGradient(listOf(tempColor(day.tempMin), tempColor(day.tempMax)), startX = x0, endX = x1),
-            topLeft = Offset(x0, 0f), size = Size(x1 - x0, size.height), cornerRadius = CornerRadius(r),
+            topLeft = Offset(x0, cy - th / 2), size = Size(x1 - x0, th), cornerRadius = CornerRadius(th / 2),
         )
         if (current != null) {
-            val cx = ((current - lo) / span * size.width).toFloat().coerceIn(x0 + r, x1 - r)
-            drawCircle(colors.paper, r * 1.25f, Offset(cx, r))
-            drawCircle(colors.paperInk, r * 0.6f, Offset(cx, r))
+            val cx = ((current - lo) / span * size.width).toFloat().coerceIn(x0, x1)
+            drawCircle(colors.paper, 4.dp.toPx(), Offset(cx, cy))
+            drawCircle(colors.paperInk, 4.dp.toPx(), Offset(cx, cy), style = androidx.compose.ui.graphics.drawscope.Stroke(1.2.dp.toPx()))
         }
     }
 }
@@ -188,7 +189,7 @@ private fun RangeStrip(day: Day, lo: Double, hi: Double, current: Double?, modif
 private fun DayDetails(day: Day, fmt: WeatherFormat, onPreview: () -> Unit, modifier: Modifier = Modifier) {
     val colors = Paper.colors
     Column(modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (day.sunrise > 0) Stat(Glyph.Sunrise, fmt.time(day.sunrise))
             if (day.sunset > 0) Stat(Glyph.Sunset, fmt.time(day.sunset))
             Stat(Glyph.Wind, "${fmt.wind(day.windMax)} · ${fmt.compass(day.windDirection)}", rotation = (day.windDirection + 180f) % 360f)
@@ -196,11 +197,11 @@ private fun DayDetails(day: Day, fmt: WeatherFormat, onPreview: () -> Unit, modi
             if (day.uvMax >= 1) Stat(Glyph.Uv, "UV ${day.uvMax.roundToInt()}")
             if (day.daylightSeconds > 0) Stat(Glyph.Sun, fmt.duration(day.daylightSeconds.toLong()))
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(12.dp))
         BasicText(
-            stringResource(R.string.show_in_sky),
-            Modifier.pressable(onPreview).padding(vertical = 4.dp),
-            style = Paper.type.bodyStrong.copy(color = colors.accent),
+            stringResource(R.string.show_in_sky).uppercase(),
+            Modifier.pressable(onPreview).padding(vertical = 6.dp),
+            style = Paper.type.label.copy(color = colors.accent, fontSize = 11.sp),
         )
     }
 }

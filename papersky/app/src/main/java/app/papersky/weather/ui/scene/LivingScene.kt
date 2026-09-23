@@ -106,7 +106,7 @@ fun rememberAnimatedScene(target: SceneState, durationMillis: Int = 1100): State
     return remember { derivedStateOf { from.value.lerp(to.value, progress.value) } }
 }
 
-/** Device tilt → gentle parallax of the paper layers (like a real shadow-box diorama). */
+/** Device tilt → gentle parallax of the planes of the print. */
 @Composable
 fun rememberTiltParallax(enabled: Boolean): State<Offset> {
     val context = LocalContext.current
@@ -136,7 +136,7 @@ private class TiltListener(private val out: MutableState<Offset>) : SensorEventL
         val pitch = ori[1]
         val roll = ori[2]
         if (basePitch.isNaN()) { basePitch = pitch; baseRoll = roll }
-        // Slowly re-centre so the diorama settles wherever the phone is held.
+        // Slowly re-centre so the print settles wherever the phone is held.
         basePitch += (pitch - basePitch) * 0.01f
         baseRoll += (roll - baseRoll) * 0.01f
         val x = ((roll - baseRoll) / 0.35f).coerceIn(-1f, 1f)
@@ -179,7 +179,7 @@ private fun Modifier.placed(x: Int, y: Int, width: Int, height: Int) = layout { 
 }
 
 /**
- * The living paper diorama.
+ * The living print (DESIGN_DOCTRINE §10).
  *
  * Built as a stack of GPU layers. Sky, clouds and the three landscape bands are cached render
  * nodes: while the scene plays, only their *positions* change (drift, parallax, scroll), which
@@ -243,7 +243,7 @@ fun LivingScene(
                     delay((250 + distance * 1_200).toLong())
                     haptics.thunder(1f - distance * 0.6f)
                 }
-                // The flash lights up the whole room, paper on the table included (§4.4).
+                // The flash lights up the whole room, paper on the table included (§4.3).
                 flash.snapTo(0f)
                 flash.animateTo(1f, tween(55)) { clock.flash.floatValue = value }
                 flash.animateTo(0.25f, tween(90)) { clock.flash.floatValue = value }
@@ -332,7 +332,7 @@ fun LivingScene(
         if (size.width == 0 || size.height == 0) return@Box
         val w = size.width.toFloat()
         val h = size.height.toFloat()
-        // Lay the diorama out synchronously so the number of cloud and band layers is known.
+        // Lay the print out synchronously so the number of cloud and band layers is known.
         val layoutKey = remember(size, target.seed, base) {
             renderer.prepare(w, h, target, base)
             Any()
@@ -366,7 +366,7 @@ fun LivingScene(
                 .drawBehind { drawIntoCanvas { renderer.drawSkyFx(it.nativeCanvas, scene.value, palette.value, frame()) } },
         )
 
-        // Overcast festoon: one cached strip of scallops sliding with the wind.
+        // Overcast veil: one cached strip of vellum sliding with the wind.
         val period = remember(layoutKey) { renderer.blanketPeriod }
         Spacer(
             Modifier
@@ -411,7 +411,7 @@ fun LivingScene(
             }
         }
 
-        // Landscape: three cached bands, each with its own parallax.
+        // Landscape: five cached planes, each with its own parallax.
         for (b in 0 until renderer.bandCount) {
             key(layoutKey, b) {
                 val top = renderer.bandTop(b)
@@ -448,7 +448,7 @@ fun LivingScene(
             }
         }
 
-        // The meadow's life — swaying trees, smoke, flickering windows — moves with the meadow.
+        // The meadow's life — swaying trees, lit windows — moves with the meadow.
         val meadowDepth = remember(layoutKey) { renderer.bandDepth(renderer.bandCount - 1) }
         Spacer(
             Modifier
@@ -510,7 +510,7 @@ private fun DrawScope.drawRipples(ripples: List<Ripple>, t: Float, ink: Int, dp:
 internal fun isHorizontal(dx: Float, dy: Float) = abs(dx) > abs(dy) * 1.4f
 
 /**
- * A still frame of the diorama for thumbnails (place cards, the widget promo). Recorded once and
+ * A still frame of the print for thumbnails (place cards, the widget promo). Recorded once and
  * cached on the GPU; it costs nothing while the list scrolls.
  */
 @Composable

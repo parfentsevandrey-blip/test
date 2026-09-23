@@ -121,10 +121,10 @@ def radial(cx, cy, r, stops):
 
 # ---- Precipitation --------------------------------------------------------------------------
 
-RAIN_LAYERS = [  # len dp, width dp, alpha, speed dp/s, share
-    (9, 0.8, 0.34, 430, 0.45),
-    (15, 1.15, 0.5, 660, 0.33),
-    (24, 1.6, 0.7, 950, 0.22),
+RAIN_LAYERS = [  # len dp, width dp, alpha, speed dp/s, share — hairlines (DESIGN_DOCTRINE §10)
+    (9, 0.6, 0.3, 430, 0.45),
+    (15, 0.85, 0.42, 660, 0.33),
+    (24, 1.1, 0.55, 950, 0.22),
 ]
 
 
@@ -152,9 +152,9 @@ def rain_layers(avd, rng, cls, density, slant, prefix="r"):
 
 
 SNOW_LAYERS = [  # diameter dp, alpha, speed dp/s, share
-    (1.4, 0.6, 20, 0.45),
-    (2.4, 0.82, 34, 0.33),
-    (3.8, 0.95, 56, 0.22),
+    (1.2, 0.55, 18, 0.45),
+    (2.0, 0.75, 30, 0.33),
+    (3.0, 0.85, 48, 0.22),
 ]
 
 
@@ -236,11 +236,11 @@ def stars(avd, rng, cls):
             v = rng.random()
             dots.append(f"M{f(rng.uniform(2, 98))},{f(2 + v * v * 74)}l0,0.01")
         name = f"tw{g}"
-        avd.body.append(stroke_path("".join(dots), (1.2 + 0.35 * g) / u, 0.9, name=name))
+        avd.body.append(stroke_path("".join(dots), (0.9 + 0.3 * g) / u, 0.9, name=name))
         avd.target(name, [anim("strokeAlpha", 0.18, 0.95, 1500 + 520 * g, repeat="reverse", interp=EASE, offset=380 * g)])
     for b in range(3 if cls == "l" else 2):
         name = f"sp{b}"
-        r = (4.5 + rng.random() * 2.5) / u
+        r = (3.2 + rng.random() * 1.8) / u
         avd.body.append(fill_path(sparkle(rng.uniform(8, 92), rng.uniform(4, 50), r), 0.9, name=name))
         avd.target(name, [anim("fillAlpha", 0.1, 1, 1900 + 700 * b, repeat="reverse", interp=EASE, offset=500 * b)])
 
@@ -289,23 +289,14 @@ def flash(avd):
 
 
 def rays(avd):
-    grad = radial(50, 50, 50, [(0, "#FFFFFFFF"), (0.46, "#CCFFFFFF"), (1, "#00FFFFFF")])
+    """The sun's halo breathing: a soft glow and two hairline rings of tracing paper."""
     glow = radial(50, 50, 34, [(0, "#88FFFFFF"), (0.5, "#33FFFFFF"), (1, "#00FFFFFF")])
     avd.body.append(fill_path("M16,50a34,34 0 1,0 68,0a34,34 0 1,0 -68,0", 0.8, name="glow", gradient=glow))
-    avd.target("glow", [anim("fillAlpha", 0.45, 1, 3600, repeat="reverse", interp=EASE)])
-    wedges = []
-    for i in range(16):
-        a = i * 2 * math.pi / 16
-        long = i % 2 == 0
-        inner, outer = 23.0, (47.0 if long else 39.0)
-        half = 0.085 if long else 0.065
-        p = lambda r, ang: (50 + r * math.cos(ang), 50 + r * math.sin(ang))
-        x1, y1 = p(inner, a - half)
-        x2, y2 = p(outer, a)
-        x3, y3 = p(inner, a + half)
-        wedges.append(f"M{f(x1)},{f(y1)}L{f(x2)},{f(y2)}L{f(x3)},{f(y3)}Z")
-    avd.group("spin", fill_path("".join(wedges), 0.85, gradient=grad), pivotX="50", pivotY="50")
-    avd.target("spin", [anim("rotation", 0, 360, 110000)])
+    avd.target("glow", [anim("fillAlpha", 0.4, 0.9, 4200, repeat="reverse", interp=EASE)])
+    rings = stroke_path("M50,26a24,24 0 1,0 0.01,0ZM50,14a36,36 0 1,0 0.01,0Z", 0.5, 0.5, name="rings")
+    avd.group("breath", rings, pivotX="50", pivotY="50")
+    avd.target("breath", [anim("scaleX", 0.94, 1.06, 4200, repeat="reverse", interp=EASE), anim("scaleY", 0.94, 1.06, 4200, repeat="reverse", interp=EASE)])
+    avd.target("rings", [anim("strokeAlpha", 0.2, 0.55, 4200, repeat="reverse", interp=EASE)])
 
 
 # ---- Layouts --------------------------------------------------------------------------------

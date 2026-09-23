@@ -5,6 +5,7 @@ import android.util.LruCache
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -15,6 +16,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -31,6 +33,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -46,7 +49,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -55,20 +57,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
@@ -82,16 +80,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import app.papersky.weather.scene.Glyph
 import app.papersky.weather.scene.GlyphColors
 import app.papersky.weather.scene.GlyphRenderer
 import app.papersky.weather.scene.ScenePalette
 import app.papersky.weather.ui.common.PaperIcon
 import app.papersky.weather.ui.common.PaperIconView
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
 
 // ---- Time --------------------------------------------------------------------------------------
 
@@ -111,12 +110,12 @@ val PillShape = RoundedCornerShape(50)
 
 // ---- Touch -------------------------------------------------------------------------------------
 
-/** Pressing sinks a sheet a little (spring `press`); letting go bounces it back (`release`). */
+/** Pressing debosses a sheet a little (spring `press`); letting go lifts it back (`release`). */
 @Composable
 fun Modifier.pressable(
     onClick: (() -> Unit)?,
     haptic: Boolean = true,
-    pressed: Float = 0.965f,
+    pressed: Float = 0.985f,
     role: Role = Role.Button,
     onLongClick: (() -> Unit)? = null,
 ): Modifier {
@@ -151,8 +150,8 @@ class Choreography {
 val LocalChoreography = staticCompositionLocalOf { Choreography() }
 
 /**
- * A sheet laid down onto the diorama (§9): it drifts in from a little above, slightly turned,
- * and settles on the `settle` spring, [order] × 70 ms after the screen opens.
+ * A sheet laid down (§9): it rises 14 dp into place and its ink comes up, on the `settle` spring,
+ * [order] × 60 ms after the screen opens. No turning, no scaling.
  */
 @Composable
 fun Modifier.laidDown(order: Int): Modifier {
@@ -164,126 +163,57 @@ fun Modifier.laidDown(order: Int): Modifier {
             progress.animateTo(1f, Motion.settle())
         }
     }
-    val drop = with(LocalDensity.current) { 18.dp.toPx() }
+    val rise = with(LocalDensity.current) { 14.dp.toPx() }
     return graphicsLayer {
         val p = progress.value
         if (p != 1f) {
-            val q = 1f - p
-            alpha = (p * 3.5f).coerceIn(0f, 1f)
-            scaleX = 1f + 0.03f * q
-            scaleY = scaleX
-            rotationZ = 2f * q
-            translationY = -drop * q
+            alpha = (p * 1.6f).coerceIn(0f, 1f)
+            translationY = rise * (1f - p)
         }
     }
 }
 
 // ---- Paper -------------------------------------------------------------------------------------
 
+/** Radii of §8: controls, sheets, and the big page sheet. */
+val ControlShape = RoundedCornerShape(12.dp)
+val SheetShape = RoundedCornerShape(16.dp)
+
 /**
- * A card of the diorama's paper (§8): torn edge, fibres, a soft shadow, sometimes a strip of
- * washi tape holding it — and then it sways on the tape when tapped.
+ * A sheet of cotton paper (§8): precisely cut, radius 16 dp, laid on the page (level 1) with
+ * 20 dp margins. Tappable sheets deboss under the finger.
  */
 @Composable
 fun PaperCard(
     modifier: Modifier = Modifier,
-    seed: Int = 1,
-    tilt: Float = 0f,
-    tape: Boolean = false,
-    tapeColor: Color = Paper.colors.tape,
     color: Color? = null,
-    level: Int = 2,
+    level: Int = 1,
     onClick: (() -> Unit)? = null,
-    wiggleOnTap: Boolean = onClick == null && tape,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 18.dp),
+    contentPadding: PaddingValues = PaddingValues(20.dp),
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val shape = remember(seed) { DeckleShape(seed) }
-    val sway = remember { Animatable(0f) }
-    val scope = rememberCoroutineScope()
-    val h = rememberHaptics()
-    val tapeX = 22.dp + ((((seed % 5) + 5) % 5) * 9).dp
-    val click: (() -> Unit)? = when {
-        onClick != null -> onClick
-        wiggleOnTap -> {
-            {
-                h.softTick()
-                scope.launch {
-                    sway.snapTo(if (sway.value > 0f) -2.2f else 2.2f)
-                    sway.animateTo(0f, Motion.wiggle())
-                }
-            }
-        }
-        else -> null
-    }
-    Box(
-        modifier.graphicsLayer {
-            rotationZ = tilt + sway.value
-            // A taped sheet swings around its tape.
-            if (tape && size.width > 0f) transformOrigin = TransformOrigin(((tapeX.toPx() + 29.dp.toPx()) / size.width).coerceIn(0f, 1f), 0f)
-        },
-    ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .pressable(click, haptic = onClick != null, pressed = 0.985f)
-                .paperSurface(shape, level, color)
-                .padding(contentPadding),
-            content = content,
-        )
-        if (tape) {
-            WashiTape(
-                Modifier.align(Alignment.TopStart).offset(x = tapeX, y = (-7).dp),
-                color = tapeColor,
-                angle = if (seed % 2 == 0) -8f else 6f,
-            )
-        }
-    }
+    Column(
+        modifier
+            .fillMaxWidth()
+            .pressable(onClick)
+            .paperSurface(SheetShape, level, color)
+            .padding(contentPadding),
+        content = content,
+    )
 }
 
-/** Washi tape: translucent, dotted, torn at both ends; the paper shows through it. */
-@Composable
-fun WashiTape(modifier: Modifier = Modifier, color: Color = Paper.colors.tape, angle: Float = -6f, length: Dp = 58.dp) {
-    Canvas(modifier.size(length, 16.dp)) {
-        rotate(angle) {
-            val th = size.height * 0.8f
-            val top = (size.height - th) / 2
-            val tooth = 2.dp.toPx()
-            val path = Path().apply {
-                moveTo(0f, top)
-                lineTo(size.width, top)
-                for (k in 1..5) lineTo(size.width + if (k % 2 == 1) tooth else 0f, top + th * k / 5)
-                lineTo(0f, top + th)
-                for (k in 4 downTo 0) lineTo(if (k % 2 == 1) -tooth else 0f, top + th * k / 5)
-                close()
-            }
-            translate(0.5.dp.toPx(), 1.dp.toPx()) { drawPath(path, Color.Black.copy(alpha = 0.1f)) }
-            drawPath(path, color.copy(alpha = 0.85f))
-            clipPath(path) {
-                var x = 5.dp.toPx()
-                while (x < size.width - 3.dp.toPx()) {
-                    drawCircle(Color.White.copy(alpha = 0.38f), 1.3.dp.toPx(), Offset(x, top + th * 0.32f))
-                    drawCircle(Color.White.copy(alpha = 0.38f), 1.3.dp.toPx(), Offset(x + 3.5.dp.toPx(), top + th * 0.7f))
-                    x += 7.dp.toPx()
-                }
-                drawRect(PaperFibres, alpha = 0.35f)
-            }
-        }
-    }
-}
-
-/** A faint pencil line between rows on a card. */
+/** A hairline rule printed in ink (§8). */
 @Composable
 fun PaperRule(modifier: Modifier = Modifier) {
-    val c = Paper.colors.paperInk.copy(alpha = 0.08f)
+    val c = Paper.colors.rule
     Canvas(modifier.fillMaxWidth().height(1.dp)) {
-        drawLine(c, Offset.Zero, Offset(size.width, 0f), 1.dp.toPx())
+        drawLine(c, Offset(0f, 0.5f), Offset(size.width, 0.5f), 1f)
     }
 }
 
 // ---- Text --------------------------------------------------------------------------------------
 
-/** Small caps over a card. */
+/** Small capitals over a section, widely tracked (§6 `label`). */
 @Composable
 fun Label(text: String, modifier: Modifier = Modifier, color: Color = Paper.colors.paperInkSoft) {
     BasicText(text.uppercase(), modifier, style = Paper.type.label.copy(color = color))
@@ -310,21 +240,33 @@ fun RollingText(text: String, style: TextStyle, modifier: Modifier = Modifier, n
     }
 }
 
-/** Handwriting that writes itself from left to right whenever it changes (§9). */
+/**
+ * The human voice, coming up like ink soaking into paper (§9): a soft-edged wipe from left to
+ * right whenever the text changes, 420–1200 ms depending on its length.
+ */
 @Composable
-fun HandReveal(text: String, style: TextStyle, modifier: Modifier = Modifier, maxLines: Int = 3) {
+fun InkReveal(text: String, style: TextStyle, modifier: Modifier = Modifier, maxLines: Int = 3) {
     val progress = remember { Animatable(0f) }
     LaunchedEffect(text) {
         progress.snapTo(0f)
-        progress.animateTo(1f, tween(durationMillis = (380 + text.length * 22).coerceAtMost(1400)))
+        progress.animateTo(1f, tween(durationMillis = (420 + text.length * 18).coerceAtMost(1200), easing = FastOutSlowInEasing))
     }
+    val feather = with(LocalDensity.current) { 24.dp.toPx() }
     BasicText(
         text,
         modifier
             .semantics { contentDescription = text }
+            .graphicsLayer { compositingStrategy = if (progress.value < 1f) CompositingStrategy.Offscreen else CompositingStrategy.Auto }
             .drawWithContent {
+                drawContent()
                 val p = progress.value
-                if (p >= 1f) drawContent() else clipRect(right = size.width * min(1f, p * 1.15f)) { this@drawWithContent.drawContent() }
+                if (p < 1f) {
+                    val edge = (size.width + feather) * p
+                    drawRect(
+                        Brush.horizontalGradient(0f to Color.Black, 1f to Color.Transparent, startX = edge - feather, endX = edge),
+                        blendMode = BlendMode.DstIn,
+                    )
+                }
             },
         style = style,
         maxLines = maxLines,
@@ -353,8 +295,8 @@ fun glyphImage(glyph: Glyph, px: Int, colors: GlyphColors, base: Boolean, rotati
     GlyphCache.get(glyph, px, colors, rotation, base)
 
 /**
- * A paper-cut weather glyph (§7). Its body (with its shadow) is baked once; while [animate], only
- * its moving parts — rays, drops, flakes, sparkles, the bolt, mist — are drawn over it per frame.
+ * An engraved weather glyph (§7). Its body is baked once; while [animate], only its moving parts —
+ * rays, drops, flakes, the star by the moon, the bolt, mist — are drawn over it per frame.
  */
 @Composable
 fun GlyphIcon(
@@ -386,7 +328,10 @@ fun GlyphIcon(
 
 // ---- Controls ----------------------------------------------------------------------------------
 
-/** A paper button with a torn edge: the accent colour for the main action, plain paper otherwise. */
+/**
+ * A button (§8): the main action is printed in solid ink with the paper's colour for its words;
+ * the others are a hairline frame. 50 dp tall, radius 12 dp, Manrope 600 capitals.
+ */
 @Composable
 fun PaperButton(
     text: String,
@@ -396,66 +341,69 @@ fun PaperButton(
     primary: Boolean = true,
 ) {
     val colors = Paper.colors
-    val fg = if (primary) Color(0xFFFFF8EE) else colors.paperInk
-    val shape = remember(text) { DeckleShape(seed = text.hashCode(), corner = 22.dp, roughness = 0.6.dp) }
+    val fg = if (primary) colors.paper else colors.paperInk
     Row(
         modifier
-            .pressable(onClick, pressed = 0.94f)
-            .paperSurface(shape, level = if (primary) 3 else 2, color = if (primary) colors.accent else null)
-            .padding(horizontal = 20.dp, vertical = 13.dp),
+            .pressable(onClick, pressed = 0.97f)
+            .heightIn(min = 50.dp)
+            .then(
+                if (primary) Modifier.shadowOf(ControlShape, Elevation.Raised, colors.shadow, if (colors.isNight) 1.6f else 1f).clip(ControlShape).background(colors.paperInk)
+                else Modifier.clip(ControlShape).border(1.dp, colors.paperInk.copy(alpha = 0.28f), ControlShape),
+            )
+            .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
         if (glyph != null) {
             GlyphIcon(glyph, size = 20.dp, onPaper = !primary, animate = false)
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(10.dp))
         }
-        BasicText(text, style = Paper.type.bodyStrong.copy(color = fg, textAlign = TextAlign.Center))
+        BasicText(text.uppercase(), style = Paper.type.label.copy(fontSize = 13.sp, letterSpacing = 0.08.em, color = fg, textAlign = TextAlign.Center))
     }
 }
 
-/** A round paper button with an inked icon (back, close, the corner handle). */
+/** A round button of paper with a hairline icon (back, close, the corner handle). */
 @Composable
 fun PaperDisc(icon: PaperIcon, description: String, onClick: () -> Unit, modifier: Modifier = Modifier, size: Dp = 44.dp) {
     val colors = Paper.colors
     Box(
         modifier
             .semantics { contentDescription = description }
-            .pressable(onClick, pressed = 0.88f)
+            .pressable(onClick, pressed = 0.92f)
             .size(size)
             .paperSurface(CircleShape, level = 2),
         contentAlignment = Alignment.Center,
     ) {
-        PaperIconView(icon, colors.paperInk, size = size * 0.5f)
+        PaperIconView(icon, colors.paperInk, size = size * 0.45f)
     }
 }
 
-/** A paper tab sliding in a slot; the slot shows the accent when on. */
+/** A paper disc sliding in a debossed slot; the slot fills with ink when on (§8). */
 @Composable
 fun PaperSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
     val colors = Paper.colors
     val h = rememberHaptics()
-    val offset by animateDpAsState(if (checked) 22.dp else 0.dp, Motion.snap(), label = "switch")
-    val track by animateColorAsState(if (checked) colors.accent else colors.paperInk.copy(alpha = 0.16f), label = "track")
+    val offset by animateDpAsState(if (checked) 18.dp else 0.dp, Motion.snap(), label = "switch")
+    val ink by animateColorAsState(if (checked) colors.paperInk else colors.paperInk.copy(alpha = 0f), Motion.snap(), label = "track")
     Box(
         modifier
             .semantics { stateDescription = if (checked) "on" else "off" }
-            .size(52.dp, 30.dp)
-            .clip(RoundedCornerShape(15.dp))
-            .background(track)
+            .size(46.dp, 28.dp)
+            .debossed(PillShape)
+            .background(ink, PillShape)
             .clickable(role = Role.Switch) { h.toggle(!checked); onCheckedChange(!checked) }
             .padding(3.dp),
     ) {
         Box(
             Modifier
                 .offset { IntOffset(offset.roundToPx(), 0) }
-                .size(24.dp)
+                .size(22.dp)
                 .paperSurface(CircleShape, level = 1),
         )
     }
 }
 
-/** Paper tabs in a shallow slot; the chosen one is a lifted sheet that slides on the `snap` spring. */
+/** Options in a debossed slot; the chosen one is a sheet laid into it, sliding on `snap` (§8). */
 @Composable
 fun PaperSegmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     val colors = Paper.colors
@@ -463,9 +411,8 @@ fun PaperSegmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit
     BoxWithConstraints(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(colors.paperInk.copy(alpha = 0.08f))
-            .padding(4.dp),
+            .debossed(ControlShape)
+            .padding(3.dp),
     ) {
         val segW = maxWidth / options.size
         val x by animateDpAsState(segW * selected, Motion.snap(), label = "seg")
@@ -474,7 +421,7 @@ fun PaperSegmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit
                 .offset { IntOffset(x.roundToPx(), 0) }
                 .width(segW)
                 .height(38.dp)
-                .paperSurface(RoundedCornerShape(12.dp), level = 1),
+                .paperSurface(RoundedCornerShape(10.dp), level = 1),
         )
         Row(Modifier.fillMaxWidth()) {
             options.forEachIndexed { i, label ->
@@ -482,7 +429,7 @@ fun PaperSegmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit
                     Modifier
                         .weight(1f)
                         .height(38.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(10.dp))
                         .clickable(role = Role.RadioButton) { if (i != selected) { h.tick(); onSelect(i) } },
                     contentAlignment = Alignment.Center,
                 ) {
@@ -497,7 +444,10 @@ fun PaperSegmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit
     }
 }
 
-/** A ribbon with a wooden bead; it ticks under the finger on every step and lifts while held. */
+/**
+ * A hairline track with a paper disc on it (§8); the travelled part is inked. The disc ticks
+ * under the finger on every step and lifts (level 3) while held.
+ */
 @Composable
 fun PaperSlider(
     value: Float,
@@ -512,7 +462,7 @@ fun PaperSlider(
     val fraction = ((value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
     val shown = animateFloatAsState(fraction, Motion.snap(), label = "slider")
     var dragging by remember { mutableStateOf(false) }
-    val lift = animateFloatAsState(if (dragging) 1f else 0f, Motion.lift(), label = "bead")
+    val lift = animateFloatAsState(if (dragging) 1f else 0f, Motion.lift(), label = "thumb")
     fun quantize(f: Float): Float {
         val raw = range.start + f.coerceIn(0f, 1f) * (range.endInclusive - range.start)
         if (steps <= 0) return raw
@@ -546,27 +496,25 @@ fun PaperSlider(
         val cy = size.height / 2
         val r = 11.dp.toPx()
         val x = r + (size.width - 2 * r) * shown.value
-        drawLine(colors.paperInk.copy(alpha = 0.14f), Offset(r, cy), Offset(size.width - r, cy), 6.dp.toPx(), cap = StrokeCap.Round)
-        drawLine(colors.accent, Offset(r, cy), Offset(x, cy), 6.dp.toPx(), cap = StrokeCap.Round)
+        drawLine(colors.paperInk.copy(alpha = 0.15f), Offset(r, cy), Offset(size.width - r, cy), 2.dp.toPx(), cap = StrokeCap.Round)
+        drawLine(colors.paperInk, Offset(r, cy), Offset(x, cy), 2.dp.toPx(), cap = StrokeCap.Round)
         if (steps > 0) {
             for (i in 0..steps + 1) {
                 val sx = r + (size.width - 2 * r) * i / (steps + 1)
-                drawCircle(colors.paperInk.copy(alpha = 0.25f), 1.6.dp.toPx(), Offset(sx, cy))
+                drawLine(colors.paperInk.copy(alpha = 0.3f), Offset(sx, cy - 4.dp.toPx()), Offset(sx, cy + 4.dp.toPx()), 1f)
             }
         }
-        val l = lift.value
-        if (l > 0.01f) drawCircle(Color.Black.copy(alpha = 0.16f * l), r * 1.1f, Offset(x + r * 0.3f * l, cy + r * 0.7f * l))
-        beechBead(Offset(x, cy - 2.dp.toPx() * l), r * (1f + 0.08f * l))
+        paperThumb(Offset(x, cy - 1.5.dp.toPx() * lift.value), r, lift.value, colors.paper, colors.paperInk, colors.shadow)
     }
 }
 
-/** A beech bead: growth rings, a glint top-left, a shadow down-right. */
-fun DrawScope.beechBead(c: Offset, r: Float) {
-    drawCircle(Color.Black.copy(alpha = 0.25f), r, c + Offset(r * 0.15f, r * 0.28f))
-    drawCircle(Brush.radialGradient(listOf(Color(0xFFE9BE8C), Color(0xFFC98A56), Color(0xFF8C5A30)), center = c - Offset(r * 0.35f, r * 0.4f), radius = r * 1.6f), r, c)
-    for (k in 1..3) drawCircle(Color(0xFF7A4B2A).copy(alpha = 0.12f), r * (0.35f + k * 0.2f), c + Offset(r * 0.25f, r * 0.2f), style = Stroke(0.8.dp.toPx()))
-    drawCircle(Color.White.copy(alpha = 0.55f), r * 0.26f, c - Offset(r * 0.38f, r * 0.42f))
-    drawCircle(Color(0xFF5A3418).copy(alpha = 0.35f), r, c, style = Stroke(0.8.dp.toPx()))
+/** A paper disc with a hairline ring of ink, resting (lift 0) or held up (lift 1). */
+fun DrawScope.paperThumb(c: Offset, r: Float, lift: Float, paper: Color, ink: Color, shadow: Color) {
+    val drop = (1.5f + 4f * lift) * density
+    drawCircle(Brush.radialGradient(listOf(shadow.copy(alpha = 0.22f - 0.06f * lift), shadow.copy(alpha = 0f)), center = c + Offset(0f, drop), radius = r * (1.35f + 0.35f * lift)), r * (1.35f + 0.35f * lift), c + Offset(0f, drop))
+    drawCircle(paper, r, c)
+    drawCircle(Color.White.copy(alpha = 0.35f), r - 1.dp.toPx(), c, style = Stroke(1.dp.toPx()))
+    drawCircle(ink.copy(alpha = 0.55f), r, c, style = Stroke(1.dp.toPx()))
 }
 
 @Composable
@@ -579,8 +527,8 @@ fun SettingRow(
 ) {
     Row(modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         if (glyph != null) {
-            GlyphIcon(glyph, size = 26.dp, animate = false)
-            Spacer(Modifier.width(12.dp))
+            GlyphIcon(glyph, size = 24.dp, animate = false)
+            Spacer(Modifier.width(14.dp))
         }
         Column(Modifier.weight(1f)) {
             BasicText(title, style = Paper.type.bodyStrong.copy(color = Paper.colors.paperInk))
@@ -591,30 +539,32 @@ fun SettingRow(
     }
 }
 
-/** A paper pill to choose from; the chosen one is turned over (ink-coloured) and lifted. */
+/** A pill with a hairline frame (§8); the chosen one is printed in solid ink. */
 @Composable
 fun Chip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, swatch: Color? = null) {
     val colors = Paper.colors
     val h = rememberHaptics()
-    val bg by animateColorAsState(if (selected) colors.paperInk else colors.paper, label = "chipBg")
-    val fg by animateColorAsState(if (selected) colors.paper else colors.paperInk, label = "chipFg")
+    val bg by animateColorAsState(if (selected) colors.paperInk else colors.paperInk.copy(alpha = 0f), Motion.snap(), label = "chipBg")
+    val fg by animateColorAsState(if (selected) colors.paper else colors.paperInk, Motion.snap(), label = "chipFg")
     Row(
         modifier
-            .pressable({ h.tick(); onClick() }, haptic = false, pressed = 0.93f, role = Role.RadioButton)
-            .paperSurface(PillShape, level = if (selected) 3 else 1, color = bg)
+            .pressable({ h.tick(); onClick() }, haptic = false, pressed = 0.95f, role = Role.RadioButton)
+            .clip(PillShape)
+            .background(bg)
+            .border(1.dp, colors.paperInk.copy(alpha = if (selected) 0f else 0.22f), PillShape)
             .widthIn(min = 44.dp)
             .padding(horizontal = 14.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (swatch != null) {
-            Box(Modifier.size(14.dp).clip(CircleShape).background(swatch))
+            Box(Modifier.size(12.dp).clip(CircleShape).background(swatch))
             Spacer(Modifier.width(8.dp))
         }
         BasicText(text, style = Paper.type.caption.copy(color = fg), maxLines = 1)
     }
 }
 
-/** The room around the diorama (§4): dusk gathering in the corners at night, lightning flashes. */
+/** The room around the print (§4.3): dusk gathering in the corners at night, lightning flashes. */
 fun Modifier.roomLight(light: () -> Light, flash: () -> Float): Modifier = drawWithContent {
     drawContent()
     val v = light().vignette
@@ -627,5 +577,5 @@ fun Modifier.roomLight(light: () -> Light, flash: () -> Float): Modifier = drawW
         )
     }
     val f = flash()
-    if (f > 0.01f) drawRect(Color(0xFFF4F2FF).copy(alpha = 0.16f * f))
+    if (f > 0.01f) drawRect(Color(0xFFF4F2FF).copy(alpha = 0.12f * f))
 }
