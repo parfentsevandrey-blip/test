@@ -55,6 +55,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import app.papersky.weather.core.model.MotionLevel
 import app.papersky.weather.design.LocalHaptics
 import app.papersky.weather.design.LocalSceneClock
+import app.papersky.weather.design.LocalSceneMode
 import app.papersky.weather.design.SceneClock
 import app.papersky.weather.scene.ColorMath
 import app.papersky.weather.scene.PaletteMode
@@ -181,7 +182,7 @@ private fun Modifier.placed(x: Int, y: Int, width: Int, height: Int) = layout { 
 /**
  * The living print (DESIGN_DOCTRINE §10).
  *
- * Built as a stack of GPU layers. Sky, clouds and the three landscape bands are cached render
+ * Built as a stack of GPU layers. Sky, clouds and the five landscape bands are cached render
  * nodes: while the scene plays, only their *positions* change (drift, parallax, scroll), which
  * costs nothing to redraw. Only rain, snow, stars and other particles are repainted each frame,
  * and they are batched into a handful of draw calls. Nothing here recomposes per frame.
@@ -190,7 +191,7 @@ private fun Modifier.placed(x: Int, y: Int, width: Int, height: Int) = layout { 
 fun LivingScene(
     target: SceneState,
     modifier: Modifier = Modifier,
-    mode: PaletteMode = PaletteMode.Auto,
+    mode: PaletteMode = LocalSceneMode.current,
     horizon: Float = 0.5f,
     /** Height of the landscape in px; NaN fits it below the horizon. */
     depth: Float = Float.NaN,
@@ -225,8 +226,8 @@ fun LivingScene(
     val ripples = remember { mutableStateListOf<Ripple>() }
     var size by remember { mutableStateOf(IntSize.Zero) }
 
-    val base = remember(horizon, depth, detail, laneStart, laneEnd, glass, village) {
-        PaperSceneRenderer.Options(horizon = horizon, depth = depth, detail = detail, laneStart = laneStart, laneEnd = laneEnd, glass = glass, vignette = 0f, village = village)
+    val base = remember(horizon, depth, detail, laneStart, laneEnd, glass, village, mode) {
+        PaperSceneRenderer.Options(horizon = horizon, depth = depth, detail = detail, laneStart = laneStart, laneEnd = laneEnd, glass = glass, vignette = 0f, village = village, variant = mode.variant)
     }
 
     // Thunderstorms: flashes at random, the rumble arrives a moment later (sound is slower).
@@ -448,17 +449,23 @@ fun LivingScene(
             }
         }
 
-        // The meadow's life — swaying trees, lit windows — moves with the meadow.
-        val meadowDepth = remember(layoutKey) { renderer.bandDepth(renderer.bandCount - 1) }
-        Spacer(
-            Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    translationX = shiftX(meadowDepth)
-                    translationY = shiftY(meadowDepth)
-                }
-                .drawBehind { drawIntoCanvas { renderer.drawProps(it.nativeCanvas, scene.value, palette.value, frame()) } },
-        )
+        // What lives on a plane — trees and lit windows on the meadow; the willow's fronds, flowers
+        // adrift and the reeds on Ophelia's river — moves with its plane, redrawn each frame.
+        for (b in 0 until renderer.bandCount) {
+            if (!renderer.bandHasLife(b)) continue
+            key(layoutKey, "life", b) {
+                val depth = renderer.bandDepth(b)
+                Spacer(
+                    Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            translationX = shiftX(depth)
+                            translationY = shiftY(depth)
+                        }
+                        .drawBehind { drawIntoCanvas { renderer.drawLife(it.nativeCanvas, b, scene.value, palette.value, frame()) } },
+                )
+            }
+        }
 
         // Weather in front of everything: the only other layer repainted every frame.
         val nearDepth = remember(layoutKey) { renderer.bandDepth(renderer.bandCount - 1) }
@@ -514,7 +521,7 @@ internal fun isHorizontal(dx: Float, dy: Float) = abs(dx) > abs(dy) * 1.4f
  * cached on the GPU; it costs nothing while the list scrolls.
  */
 @Composable
-fun SceneThumbnail(scene: SceneState, modifier: Modifier = Modifier, mode: PaletteMode = PaletteMode.Auto, time: Float = 8f, village: Boolean = true, horizon: Float = 0.5f) {
+fun SceneThumbnail(scene: SceneState, modifier: Modifier = Modifier, mode: PaletteMode = LocalSceneMode.current, time: Float = 8f, village: Boolean = true, horizon: Float = 0.5f) {
     val context = LocalContext.current
     val density = LocalDensity.current.density
     val renderer = remember(density) { PaperSceneRenderer(density) }
@@ -526,7 +533,7 @@ fun SceneThumbnail(scene: SceneState, modifier: Modifier = Modifier, mode: Palet
                 drawIntoCanvas {
                     renderer.draw(
                         it.nativeCanvas, size.width, size.height, scene, palette,
-                        PaperSceneRenderer.Options(time = time, detail = 0.6f, vignette = 0.35f, horizon = horizon, staticBolt = scene.thunder > 0.5f, village = village),
+                        PaperSceneRenderer.Options(time = time, detail = 0.6f, vignette = 0.35f, horizon = horizon, staticBolt = scene.thunder > 0.5f, village = village, variant = mode.variant),
                     )
                 }
             },

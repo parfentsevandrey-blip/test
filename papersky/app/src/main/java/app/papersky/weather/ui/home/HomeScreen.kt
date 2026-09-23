@@ -70,6 +70,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.invisibleToUser
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -90,6 +91,7 @@ import app.papersky.weather.design.Choreography
 import app.papersky.weather.design.InkReveal
 import app.papersky.weather.design.Label
 import app.papersky.weather.design.LocalChoreography
+import app.papersky.weather.design.LocalSceneMode
 import app.papersky.weather.design.Motion
 import app.papersky.weather.design.Paper
 import app.papersky.weather.design.PaperButton
@@ -101,7 +103,9 @@ import app.papersky.weather.design.onSky
 import app.papersky.weather.design.paperSurface
 import app.papersky.weather.design.pressable
 import app.papersky.weather.design.rememberHaptics
+import app.papersky.weather.design.sceneWindowShape
 import app.papersky.weather.scene.Glyph
+import app.papersky.weather.scene.PaletteMode
 import app.papersky.weather.scene.SceneState
 import app.papersky.weather.ui.common.PaperIcon
 import app.papersky.weather.ui.common.PaperIconView
@@ -483,9 +487,15 @@ private fun NoteCard(forecast: Forecast, fmt: WeatherFormat, instant: Long, modi
     if (notes.isEmpty()) return
     val colors = Paper.colors
     PaperCard(modifier, contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 20.dp)) {
-        val rule = colors.accent
-        Canvas(Modifier.size(28.dp, 1.5.dp)) { drawRect(rule) }
-        Spacer(Modifier.height(12.dp))
+        if (LocalSceneMode.current == PaletteMode.Ophelia) {
+            // Ophelia's notes open with a printer's flower, as in a Pre-Raphaelite book (§16).
+            BasicText("❦", Modifier.semantics { invisibleToUser() }, style = Paper.type.title.copy(color = colors.accent, fontSize = 36.sp, lineHeight = 1.em))
+            Spacer(Modifier.height(6.dp))
+        } else {
+            val rule = colors.accent
+            Canvas(Modifier.size(28.dp, 1.5.dp)) { drawRect(rule) }
+            Spacer(Modifier.height(12.dp))
+        }
         InkReveal(notes.first(), Paper.type.noteLarge.copy(color = colors.paperInk, fontSize = 27.sp))
         notes.drop(1).take(3).forEach { n ->
             Spacer(Modifier.height(8.dp))
@@ -504,7 +514,7 @@ private fun NoteCard(forecast: Forecast, fmt: WeatherFormat, instant: Long, modi
 private fun WidgetPromo(scene: SceneState, village: Boolean, onOpen: () -> Unit, modifier: Modifier = Modifier) {
     PaperCard(modifier, onClick = onOpen, contentPadding = PaddingValues(14.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            SceneThumbnail(scene, Modifier.size(96.dp, 72.dp).clip(RoundedCornerShape(10.dp)), village = village)
+            SceneThumbnail(scene, Modifier.size(96.dp, 72.dp).clip(sceneWindowShape(LocalSceneMode.current)), village = village)
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 BasicText(stringResource(R.string.promo_title), style = Paper.type.heading.copy(color = Paper.colors.paperInk))

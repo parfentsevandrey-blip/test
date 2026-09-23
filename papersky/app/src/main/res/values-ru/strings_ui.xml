@@ -93,6 +93,11 @@
     <string name="settings_tilt">Наклон гравюры</string>
     <string name="settings_tilt_body">Планы пейзажа смещаются при наклоне телефона</string>
     <string name="settings_diorama">Гравюра</string>
+    <string name="settings_theme">Тема</string>
+    <string name="theme_sky">Живое небо</string>
+    <string name="theme_sky_body">Горы в дымке, краски следуют за погодой</string>
+    <string name="theme_ophelia">Офелия</string>
+    <string name="theme_ophelia_body">Меланхоличная тема по мотивам картины Милле: тёмная вода, ивы, цветы, плывущие по реке</string>
     <string name="settings_village">Дома в пейзаже</string>
     <string name="settings_village_body">Несколько домов силуэтом, в сумерках в окнах загорается свет</string>
     <string name="settings_about">О приложении</string>
@@ -150,6 +155,7 @@
     <string name="palette_riso">Ризограф</string>
     <string name="palette_moss">Мох</string>
     <string name="palette_wallpaper">Обои</string>
+    <string name="palette_ophelia">Офелия</string>
 
     <string name="preset_living">Живое окно</string>
     <string name="preset_pocket">Карманный</string>
@@ -159,4 +165,5 @@
     <string name="preset_night">Ночник</string>
     <string name="preset_glass">Стекло</string>
     <string name="preset_riso">Ризограф</string>
+    <string name="preset_ophelia">Офелия</string>
 </resources>

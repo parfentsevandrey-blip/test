@@ -17,6 +17,7 @@ import app.papersky.weather.scene.MaterialTextures
 import app.papersky.weather.scene.PaperSceneRenderer
 import app.papersky.weather.scene.ScenePalette
 import app.papersky.weather.scene.SceneState
+import app.papersky.weather.scene.SceneVariant
 import app.papersky.weather.widget.WidgetBackground
 import app.papersky.weather.widget.WidgetConfig
 import app.papersky.weather.widget.layout.Mode
@@ -48,7 +49,7 @@ object WidgetArt {
     }
 
     /** Options for the static frame, in dp (scale with [scaled]). */
-    fun sceneOptions(plan: WidgetPlan, scene: SceneState, clockSeconds: Long, village: Boolean = true): PaperSceneRenderer.Options {
+    fun sceneOptions(plan: WidgetPlan, scene: SceneState, clockSeconds: Long, village: Boolean = true, variant: SceneVariant = SceneVariant.Mountains): PaperSceneRenderer.Options {
         val textOnLeft = plan.mode == Mode.Card || plan.mode == Mode.Panorama || plan.mode == Mode.Strip
         return PaperSceneRenderer.Options(
             // A slowly advancing "time" so clouds sit somewhere new after each refresh.
@@ -61,6 +62,7 @@ object WidgetArt {
             laneEnd = if (textOnLeft) 0.93f else 0.88f,
             staticBolt = scene.thunder > 0.5f,
             village = village,
+            variant = variant,
         )
     }
 
@@ -82,7 +84,7 @@ object WidgetArt {
             WidgetBackground.Paper -> paper(plan, palette, scale, scene.seed)
             WidgetBackground.Scene -> PaperSceneRenderer.renderBitmap(plan.width, plan.height, scale, scene, palette) { k ->
                 fun RectDp.px() = RectF(left * k, top * k, right * k, bottom * k)
-                val base = sceneOptions(plan, scene, clockSeconds, village)
+                val base = sceneOptions(plan, scene, clockSeconds, village, config.palette.variant)
                 base.copy(
                     panels = plan.panels.map { r -> PaperSceneRenderer.Panel(r.px()) },
                     charts = charts.map { c ->

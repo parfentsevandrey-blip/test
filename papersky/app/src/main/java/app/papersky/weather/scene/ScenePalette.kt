@@ -1,6 +1,7 @@
 package app.papersky.weather.scene
 
 import android.content.Context
+import app.papersky.weather.core.model.AppTheme
 import kotlin.math.abs
 import kotlinx.serialization.Serializable
 
@@ -22,8 +23,10 @@ class ScenePalette private constructor(internal val c: IntArray) {
     val hillMid get() = c[HILL_MID]
     val hillNear get() = c[HILL_NEAR]
     val snowCap get() = c[SNOW_CAP]
-    val house get() = c[HOUSE]
-    val roof get() = c[ROOF]
+    /** The river of the Ophelia print (unused by the mountains). */
+    val water get() = c[WATER]
+    /** The moss of the Ophelia print's near bank (unused by the mountains). */
+    val moss get() = c[MOSS]
     val window get() = c[WINDOW]
     val tree get() = c[TREE]
     val precip get() = c[PRECIP]
@@ -64,7 +67,7 @@ class ScenePalette private constructor(internal val c: IntArray) {
         const val SKY_TOP = 0; const val SKY_BOTTOM = 1; const val GLOW = 2; const val SUN = 3
         const val SUN_RAY = 4; const val MOON = 5; const val STAR = 6; const val CLOUD = 7
         const val CLOUD_SHADE = 8; const val HILL_FAR = 9; const val HILL_MID = 10; const val HILL_NEAR = 11
-        const val SNOW_CAP = 12; const val HOUSE = 13; const val ROOF = 14; const val WINDOW = 15
+        const val SNOW_CAP = 12; const val WATER = 13; const val MOSS = 14; const val WINDOW = 15
         const val TREE = 16; const val PRECIP = 17; const val PAPER = 18; const val PAPER_INK = 19
         const val ACCENT = 20; const val TAPE = 21; const val SHADOW = 22
         private const val SIZE = 23
@@ -98,9 +101,24 @@ class ScenePalette private constructor(internal val c: IntArray) {
     }
 }
 
-/** Colour themes offered for widgets (and previewed in the app). */
+/** Colour themes offered for widgets (and, through [AppTheme], for the app). */
 @Serializable
-enum class PaletteMode { Auto, Linen, Ink, Riso, Moss, Wallpaper }
+enum class PaletteMode {
+    Auto, Linen, Ink, Riso, Moss, Wallpaper,
+
+    /** Millais's river (DESIGN_DOCTRINE §16): its own palette and its own print. */
+    Ophelia;
+
+    val variant: SceneVariant get() = if (this == Ophelia) SceneVariant.River else SceneVariant.Mountains
+}
+
+/** Which print the scene is: the mountains in mist, or Ophelia's river. */
+enum class SceneVariant { Mountains, River }
+
+fun AppTheme.paletteMode(): PaletteMode = when (this) {
+    AppTheme.Sky -> PaletteMode.Auto
+    AppTheme.Ophelia -> PaletteMode.Ophelia
+}
 
 /**
  * Muted pigment palettes, as in a woodblock print (DESIGN_DOCTRINE §5). Every mood has a day and a
@@ -108,7 +126,7 @@ enum class PaletteMode { Auto, Linen, Ink, Riso, Moss, Wallpaper }
  * paper is ivory by day and charcoal by night in every mood, tinted by a few per cent at most.
  */
 object Palettes {
-    //                                skyTop      skyBottom   glow        sun         sunRay      moon        star        cloud       cloudShade  hillFar     hillMid     hillNear    snowCap     house       roof        window      tree        precip      paper       paperInk    accent      tape        shadow
+    //                                skyTop      skyBottom   glow        sun         sunRay      moon        star        cloud       cloudShade  hillFar     hillMid     hillNear    snowCap     water       moss        window      tree        precip      paper       paperInk    accent      tape        shadow
     val ClearDay = ScenePalette.of(0xFF8DAAC0, 0xFFECE3D2, 0x55FFF0D0, 0xFFF1DDB0, 0xFFF6E7C4, 0xFFEFE8D6, 0xFFFFF8EA, 0xFFF7F4EE, 0xFFD9D6D0, 0xFFA6B5BC, 0xFF7E948B, 0xFF4A5D53, 0xFFFBFBF8, 0xFF3F5048, 0xFF34443C, 0xFFF2C77E, 0xFF3A4C43, 0xFF52708E, 0xFFF4EFE6, 0xFF22201D, 0xFFB04A32, 0xFFD9CDB8, 0x552B2118)
     val GoldenDay = ScenePalette.of(0xFFA3A6BC, 0xFFF0CFA8, 0x77F6C89A, 0xFFD9653B, 0xFFEDA77A, 0xFFF3E8D2, 0xFFFFF3DC, 0xFFF6E4D2, 0xFFD9B8A2, 0xFFC0A89C, 0xFF957C72, 0xFF5B4A45, 0xFFFCF3EA, 0xFF4E3E39, 0xFF43342F, 0xFFF4C27A, 0xFF4A3B36, 0xFF6A5A78, 0xFFF5EDE2, 0xFF26201B, 0xFFB04A32, 0xFFE4C9AE, 0x662B1810)
     val Twilight = ScenePalette.of(0xFF4D5680, 0xFFD9A9A3, 0x55E7A7A0, 0xFFD8674A, 0xFFE89C84, 0xFFF3E6CF, 0xFFFFF1DA, 0xFFD9BDC2, 0xFFA88C9E, 0xFF8C86A3, 0xFF625C7C, 0xFF3A3652, 0xFFE6E0EE, 0xFF312E46, 0xFF2A273D, 0xFFF4C37A, 0xFF2E2B44, 0xFF4C4670, 0xFFF3ECE6, 0xFF25212A, 0xFFB04A32, 0xFFE4C1C4, 0x662A1633)
@@ -127,6 +145,32 @@ object Palettes {
     val RisoNight = ScenePalette.of(0xFF17224A, 0xFF3B4675, 0x33D5553B, 0xFFD5553B, 0xFFE9927C, 0xFFF3E9D8, 0xFFF6E7DE, 0xFF3D4878, 0xFF2A3460, 0xFF34437A, 0xFF273467, 0xFF18224A, 0xFFE8D8D8, 0xFF121A3A, 0xFFD5553B, 0xFFF2C07A, 0xFF111838, 0xFFE9C0B6, 0xFF1B2244, 0xFFF3EDE6, 0xFFE07A5F, 0xFF5D6CA0, 0x99000000)
     val MossDay = ScenePalette.of(0xFFA9BAA3, 0xFFECE6D3, 0x44FFF6D0, 0xFFE7CF9A, 0xFFEEDCB2, 0xFFF4EEDC, 0xFFFFF7E0, 0xFFF5F3E8, 0xFFD2D3BE, 0xFFA3B69A, 0xFF778F6E, 0xFF455E45, 0xFFFFFFFF, 0xFF3A503A, 0xFF324632, 0xFFF2CB86, 0xFF334A34, 0xFF4E6E5A, 0xFFF3F0E4, 0xFF1F2A1E, 0xFFA2632F, 0xFFD9C38E, 0x55202A1A)
     val MossNight = ScenePalette.of(0xFF101C16, 0xFF2A4436, 0x33C8FFD6, 0xFFE3B04B, 0xFFEDCB7A, 0xFFF2EAD2, 0xFFF4F0D8, 0xFF2F4A3D, 0xFF1F3329, 0xFF28453A, 0xFF1C342B, 0xFF11231C, 0xFFD6E2D6, 0xFF0D1B15, 0xFF0B1712, 0xFFF0C36A, 0xFF0C1812, 0xFFB3CFBE, 0xFF1B2721, 0xFFEDEADC, 0xFFD6B070, 0xFF4F6E5C, 0x99000000)
+
+    // Ophelia (after J. E. Millais, 1851–52): a green shade over dark water, white roses, a poppy.
+    // In the river print hillFar / hillMid / hillNear are the far trees, the near trees and the rose
+    // bank; water and moss are the river and the near bank; tree is the reeds and the willow.
+    val OpheliaDay = ScenePalette.of(0xFF8C9A85, 0xFFD8D8C3, 0x44E8E2C0, 0xFFE9DDB4, 0xFFEFE6C8, 0xFFECE8D8, 0xFFF4F1E4, 0xFFE3E5D7, 0xFFB5BCA7, 0xFF73846A, 0xFF4A6340, 0xFF2F472B, 0xFFF3F4EC, 0xFF1E2A21, 0xFF42602F, 0xFFE9C98A, 0xFF1B2619, 0xFF5E6F63, 0xFFECEDE3, 0xFF1C241D, 0xFFA2372B, 0xFFC9CDB8, 0x551A2418)
+    val OpheliaNight = ScenePalette.of(0xFF0C1310, 0xFF223029, 0x22C8D8C0, 0xFFB5A58A, 0xFFB5A58A, 0xFFE4E2D2, 0xFFE8E6D6, 0xFF2E3A31, 0xFF1E2821, 0xFF25322A, 0xFF1A261D, 0xFF111A13, 0xFFCDD5CC, 0xFF0A100C, 0xFF1A2917, 0xFFE0BE78, 0xFF090F0A, 0xFF9AAA9C, 0xFF161E19, 0xFFE4E6D8, 0xFFC9918A, 0xFF3E4A40, 0x99000000)
+
+    /**
+     * Ophelia under the current weather: her own greens and paper, with a third of the weather's
+     * sky (so dusk still warms it and rain still greys it), darker leaves in the rain and a
+     * frosting of snow on them in winter.
+     */
+    fun ophelia(s: SceneState): ScenePalette {
+        val weather = forState(s)
+        val own = ScenePalette.lerp(OpheliaNight, OpheliaDay, s.daylight.coerceIn(0f, 1f))
+        val sky = intArrayOf(ScenePalette.SKY_TOP, ScenePalette.SKY_BOTTOM, ScenePalette.GLOW, ScenePalette.SUN, ScenePalette.SUN_RAY, ScenePalette.CLOUD, ScenePalette.CLOUD_SHADE, ScenePalette.PRECIP)
+        val dark = ((s.rain + s.thunder) * 0.28f).coerceIn(0f, 0.3f)
+        val frost = (s.snowGround * 0.4f).coerceIn(0f, 0.4f)
+        val pairs = ArrayList<Pair<Int, Int>>()
+        for (k in sky) pairs += k to ColorMath.lerp(own.c[k], weather.c[k], 0.33f)
+        for (k in intArrayOf(ScenePalette.HILL_FAR, ScenePalette.HILL_MID, ScenePalette.HILL_NEAR, ScenePalette.MOSS)) {
+            pairs += k to ColorMath.lerp(ColorMath.darken(own.c[k], dark), 0xFFC9CFC6.toInt(), frost)
+        }
+        val paper = if (s.daylight >= 0.45f) OpheliaDay else OpheliaNight
+        return own.copyWith(*pairs.toTypedArray()).withPaperOf(paper)
+    }
 
     /** Weights of the four time-of-day sheets for a daylight level and sun position. */
     fun timeWeights(daylight: Float, sunProgress: Float): FloatArray {
@@ -184,6 +228,7 @@ object Palettes {
         PaletteMode.Moss -> fixed(MossDay, MossNight, s.daylight)
         PaletteMode.Wallpaper -> context?.let { fixed(wallpaper(it, night = false), wallpaper(it, night = true), s.daylight) }
             ?: forState(s)
+        PaletteMode.Ophelia -> ophelia(s)
     }
 
     private fun fixed(day: ScenePalette, night: ScenePalette, daylight: Float): ScenePalette =

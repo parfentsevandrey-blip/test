@@ -1,15 +1,19 @@
 package app.papersky.weather.design
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.ImageShader
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TileMode
@@ -19,11 +23,15 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import app.papersky.weather.scene.MaterialTextures
+import app.papersky.weather.scene.PaletteMode
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -116,3 +124,30 @@ private fun DrawScope.frostCorners(s: Float, amount: Float) {
     scale(1f, -1f) { drawImage(frostImage, IntOffset.Zero, src, IntOffset.Zero, IntSize(px, px), alpha * 0.8f) }
     scale(-1f, -1f) { drawImage(frostImage, IntOffset.Zero, src, IntOffset.Zero, IntSize(px, px), alpha * 0.8f) }
 }
+
+/**
+ * The arched top of Millais's canvas (DESIGN_DOCTRINE §16): the top edge is half an ellipse
+ * spanning the full width; the bottom corners are cut round at [corner].
+ */
+class ArchShape(private val corner: Dp = 10.dp) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val r = with(density) { corner.toPx() }.coerceAtMost(min(size.width, size.height) / 2)
+        val rise = min(size.height * 0.34f, size.width * 0.5f)
+        val path = Path().apply {
+            moveTo(0f, rise)
+            arcTo(Rect(0f, 0f, size.width, rise * 2), 180f, 180f, false)
+            lineTo(size.width, size.height - r)
+            quadraticTo(size.width, size.height, size.width - r, size.height)
+            lineTo(r, size.height)
+            quadraticTo(0f, size.height, 0f, size.height - r)
+            close()
+        }
+        return Outline.Generic(path)
+    }
+
+    override fun equals(other: Any?) = other is ArchShape && other.corner == corner
+    override fun hashCode() = corner.hashCode()
+}
+
+/** The frame of a small print of the sky: arched for Ophelia, a plain cut otherwise. */
+fun sceneWindowShape(mode: PaletteMode): Shape = if (mode == PaletteMode.Ophelia) ArchShape() else RoundedCornerShape(10.dp)

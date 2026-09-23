@@ -84,6 +84,8 @@ class PaperSceneRenderer(private val density: Float) {
         val rays: Boolean = true,
         /** Houses on the meadow, in silhouette. */
         val village: Boolean = true,
+        /** The mountains, or Ophelia's river (§16). */
+        val variant: SceneVariant = SceneVariant.Mountains,
         /** Offset of the nearest ridge relative to the particle layer (app parallax). */
         val groundDx: Float = 0f,
         val groundDy: Float = 0f,
@@ -116,7 +118,7 @@ class PaperSceneRenderer(private val density: Float) {
 
     /** Lays the scene out for this size; cheap when nothing changed. */
     fun prepare(w: Float, h: Float, s: SceneState, o: Options) {
-        layout.ensure(w, h, s.seed, horizonFor(w, h, o), o.detail, o.depth, o.village)
+        layout.ensure(w, h, s.seed, horizonFor(w, h, o), o.detail, o.depth, o.village, o.variant)
     }
 
     // ============================================================================================
@@ -165,11 +167,14 @@ class PaperSceneRenderer(private val density: Float) {
                 }
                 canvas.restore()
             }
-            canvas.save()
-            val near = layout.bands.last()
-            canvas.translate(o.parallaxX * 10 * dp * near.depth, o.parallaxY * 6 * dp * near.depth)
-            drawProps(canvas, s, p, o)
-            canvas.restore()
+            for (b in layout.bands.indices) {
+                if (!bandHasLife(b)) continue
+                val band = layout.bands[b]
+                canvas.save()
+                canvas.translate(o.parallaxX * 10 * dp * band.depth, o.parallaxY * 6 * dp * band.depth)
+                drawLife(canvas, b, s, p, o)
+                canvas.restore()
+            }
         }
         drawParticles(canvas, s, p, o.copy(vignette = 0f))
         o.scrim?.let { drawScrim(canvas, it, o.scrimDark) }
@@ -603,12 +608,31 @@ class PaperSceneRenderer(private val density: Float) {
         return floatArrayOf(house.x)
     }
 
+    /** Whether band [b] has details that live and move, drawn by [drawLife] every frame. */
+    fun bandHasLife(b: Int): Boolean = when (layout.variant) {
+        SceneVariant.Mountains -> b == layout.bands.lastIndex
+        SceneVariant.River -> b >= 2
+    }
+
     /**
-     * Everything alive on the meadow, redrawn each frame: trees bending in the wind and the warm
-     * points of windows at dusk.
+     * The living details of band [b], in scene coordinates, redrawn each frame: on the mountains'
+     * meadow, trees and lit windows; on Ophelia's river, the willow's fronds, the flowers adrift
+     * and the rings of rain on the water, and the reeds.
      */
-    fun drawProps(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
+    fun drawLife(canvas: Canvas, b: Int, s: SceneState, p: ScenePalette, o: Options) {
         if (!o.landscape || layout.ridges.isEmpty()) return
+        when (layout.variant) {
+            SceneVariant.Mountains -> drawMeadowLife(canvas, s, p, o)
+            SceneVariant.River -> when (b) {
+                2 -> drawFronds(canvas, s, p, o)
+                3 -> drawRiverLife(canvas, s, p, o)
+                else -> drawReeds(canvas, s, p, o)
+            }
+        }
+    }
+
+    /** Trees bending in the wind and the warm points of windows at dusk. */
+    private fun drawMeadowLife(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
         val meadow = layout.ridges.last()
         val t = o.time
         val wind = s.windX + o.gust
@@ -680,10 +704,21 @@ class PaperSceneRenderer(private val density: Float) {
     val sceneMargin: Float get() = layout.margin
 
     /** Colour of the nearest ridge below its band; the app fills the rest of the screen with it. */
-    fun bandBodyColor(p: ScenePalette): Int = ridgeColor(layout.ridges.last(), p)
+    fun bandBodyColor(p: ScenePalette): Int = ridgeColor(layout.ridges.last(), p).let {
+        if (layout.variant == SceneVariant.River) ColorMath.darken(it, 0.2f) else it
+    }
 
     /** Colour of a plane: far → near through the palette's hills, then aerial perspective (§10). */
     private fun ridgeColor(r: SceneLayout.Ridge, p: ScenePalette): Int {
+        if (layout.variant == SceneVariant.River) {
+            return when (r.index) {
+                0 -> ColorMath.lerp(p.hillFar, hazeColor(p), 0.4f)
+                1 -> ColorMath.lerp(p.hillMid, hazeColor(p), 0.14f)
+                2 -> p.hillNear
+                3 -> p.water
+                else -> p.moss
+            }
+        }
         val d = r.depth
         val base = if (d < 0.5f) ColorMath.lerp(p.hillFar, p.hillMid, d / 0.5f) else ColorMath.lerp(p.hillMid, p.hillNear, (d - 0.5f) / 0.5f)
         return ColorMath.lerp(base, hazeColor(p), AIR[r.index.coerceIn(0, AIR.lastIndex)])
@@ -707,11 +742,22 @@ class PaperSceneRenderer(private val density: Float) {
             val next = layout.ridges.getOrNull(i + 1)
             drawRidge(canvas, r, next, s, p, clipBottom = band.bottom)
         }
+        if (layout.variant == SceneVariant.River) {
+            when (b) {
+                2 -> { drawRoses(canvas, s, p); drawLoosestrife(canvas, s, p); drawWillow(canvas, s, p) }
+                4 -> drawDaisies(canvas, s, p)
+            }
+            return
+        }
         if (b == layout.bands.lastIndex - 1) drawTreeLine(canvas, layout.ridges[band.last], s, p)
         if (b == layout.bands.lastIndex) drawVillage(canvas, s, p)
     }
 
     private fun drawRidge(canvas: Canvas, r: SceneLayout.Ridge, next: SceneLayout.Ridge?, s: SceneState, p: ScenePalette, clipBottom: Float) {
+        if (r.contour == SceneLayout.Contour.Flat) {
+            drawWater(canvas, r, s, p, clipBottom)
+            return
+        }
         val left = -layout.margin
         val right = layout.w + layout.margin
         val color = ridgeColor(r, p)
@@ -728,12 +774,14 @@ class PaperSceneRenderer(private val density: Float) {
             canvas.restore()
         }
 
-        // Bokashi: full colour along the crest, fading into mist towards the foot.
+        // Bokashi: full colour along the crest, fading into mist towards the foot. Ophelia's near
+        // bank instead darkens away from the light, into the shade under the trees.
         val foot = if (next != null) max(next.bottom, r.bottom + r.amp * 0.6f) else r.bottom + r.amp * 1.4f
         val mist = if (next != null) mistiness(s) else 0f
+        val shadeBank = next == null && layout.variant == SceneVariant.River
         shaded.shader = LinearGradient(
-            0f, r.top, 0f, foot,
-            intArrayOf(ColorMath.darken(color, 0.03f), color, ColorMath.lerp(color, hazeColor(p), mist)),
+            0f, r.top, 0f, if (shadeBank) layout.bands.last().bottom else foot,
+            intArrayOf(if (shadeBank) ColorMath.lighten(color, 0.05f) else ColorMath.darken(color, 0.03f), color, if (shadeBank) ColorMath.darken(color, 0.2f) else ColorMath.lerp(color, hazeColor(p), mist)),
             floatArrayOf(0f, 0.35f, 1f), Shader.TileMode.CLAMP,
         )
         canvas.drawPath(r.path, shaded)
@@ -794,7 +842,7 @@ class PaperSceneRenderer(private val density: Float) {
         val step = (if (r.sharp) 2f else 3f) * dp
         val a = amount.coerceIn(0f, 1f)
         val snowline = r.top + (r.bottom - r.top) * 0.62f
-        val capH = (3f + 0.5f * r.index) * dp
+        val capH = (if (r.contour == SceneLayout.Contour.Crowns) 2f else 3f + 0.5f * r.index) * dp
         tmpPath.reset()
         var x = -layout.margin
         tmpPath.moveTo(x, layout.edge(r, x) - 0.5f * dp)
@@ -816,8 +864,383 @@ class PaperSceneRenderer(private val density: Float) {
             x -= step
         }
         tmpPath.close()
-        fill.color = ColorMath.withAlpha(p.snowCap, a * (if (r.sharp) 0.72f else 0.78f + 0.04f * r.index))
+        val crowns = r.contour == SceneLayout.Contour.Crowns
+        fill.color = ColorMath.withAlpha(p.snowCap, a * (if (r.sharp) 0.72f else if (crowns) 0.5f else 0.78f + 0.04f * r.index))
         canvas.drawPath(tmpPath, fill)
+    }
+
+    // ============================================================================================
+    // Ophelia's river (§16). Baked into bands: the water with the bank mirrored in it, roses,
+    // loosestrife, the willow, daisies. Alive each frame: fronds, reeds, flowers adrift, rain rings.
+    // ============================================================================================
+
+    /** The river: dark water mirroring the bank, a pale breath of sky further out, still glints. */
+    private fun drawWater(canvas: Canvas, r: SceneLayout.Ridge, s: SceneState, p: ScenePalette, clipBottom: Float) {
+        val left = -layout.margin
+        val right = layout.w + layout.margin
+        val bank = layout.ridges[2]
+        val near = layout.ridges.last()
+        canvas.save()
+        canvas.clipRect(left, r.top - 24 * dp, right, clipBottom)
+        shaded.shader = LinearGradient(
+            0f, r.top, 0f, near.bottom,
+            intArrayOf(ColorMath.darken(ColorMath.lerp(p.water, p.hillNear, 0.4f), 0.04f), p.water, ColorMath.lerp(p.water, p.skyBottom, 0.16f)),
+            floatArrayOf(0f, 0.45f, 1f), Shader.TileMode.CLAMP,
+        )
+        canvas.drawPath(r.path, shaded)
+        shaded.shader = null
+
+        canvas.save()
+        canvas.clipPath(r.path)
+        // The bank upside down in the water, shortened and darker.
+        val step = 3 * dp
+        tmpPath.reset()
+        var x = left
+        tmpPath.moveTo(x, layout.edge(r, x))
+        while (x <= right) {
+            val wy = layout.edge(r, x)
+            tmpPath.lineTo(x, wy + (wy - layout.edge(bank, x)) * 0.55f)
+            x += step
+        }
+        x = right
+        while (x >= left) {
+            tmpPath.lineTo(x, layout.edge(r, x))
+            x -= step
+        }
+        tmpPath.close()
+        fill.color = ColorMath.withAlpha(ColorMath.darken(p.hillNear, 0.25f), 0.5f)
+        canvas.drawPath(tmpPath, fill)
+        // Mist lying on the water along the far bank.
+        val haze = hazeColor(p)
+        val mistBottom = r.base + 16 * dp
+        shaded.shader = LinearGradient(0f, r.base - r.amp - 2 * dp, 0f, mistBottom, ColorMath.withAlpha(haze, mistiness(s) * 0.7f), ColorMath.withAlpha(haze, 0f), Shader.TileMode.CLAMP)
+        canvas.drawRect(left, r.top - 4 * dp, right, mistBottom, shaded)
+        shaded.shader = null
+        // Still glints.
+        val g = layout.glints
+        lines.strokeWidth = 0.75f * dp
+        lines.color = ColorMath.withAlpha(ColorMath.lerp(p.skyBottom, p.cloud, 0.5f), 0.14f)
+        var k = 0
+        while (k < g.size) {
+            canvas.drawLine(g[k], g[k + 1], g[k] + g[k + 2], g[k + 1], lines)
+            k += 3
+        }
+        grainPaint.alpha = 50
+        canvas.drawRect(left, r.top - 4 * dp, right, clipBottom, grainPaint)
+        canvas.restore()
+        canvas.restore()
+    }
+
+    /** How far the night has dimmed the flowers: whites go grey-green in the dark. */
+    private fun dusk(s: SceneState) = (1f - s.daylight).coerceIn(0f, 1f)
+
+    /** Dog roses: five white petals around a yellow heart. */
+    private fun drawRoses(canvas: Canvas, s: SceneState, p: ScenePalette) {
+        val r = layout.roses
+        if (r.isEmpty()) return
+        val dim = dusk(s)
+        val petal = ColorMath.lerp(0xFFF7F3E8.toInt(), p.hillNear, 0.08f + 0.55f * dim)
+        val heart = ColorMath.lerp(0xFFD8B64A.toInt(), p.hillNear, 0.1f + 0.5f * dim)
+        var k = 0
+        while (k < r.size) {
+            val x = r[k]
+            val y = r[k + 1]
+            val size = r[k + 2]
+            fill.color = petal
+            for (i in 0 until 5) {
+                val a = i * 1.2566f + x
+                canvas.drawCircle(x + cos(a) * size * 0.7f, y + sin(a) * size * 0.7f, size * 0.62f, fill)
+            }
+            fill.color = heart
+            canvas.drawCircle(x, y, size * 0.32f, fill)
+            k += 3
+        }
+    }
+
+    /** Purple loosestrife: a hairline stem and a spike of small flowers tapering upwards. */
+    private fun drawLoosestrife(canvas: Canvas, s: SceneState, p: ScenePalette) {
+        val l = layout.loosestrife
+        if (l.isEmpty()) return
+        val bank = layout.ridges[2]
+        val purple = ColorMath.lerp(0xFF8E5A9A.toInt(), p.hillNear, 0.1f + 0.5f * dusk(s))
+        var k = 0
+        while (k < l.size) {
+            val x = l[k]
+            val height = l[k + 1]
+            val base = layout.edge(bank, x) + 6 * dp
+            lines.strokeWidth = 0.8f * dp
+            lines.color = ColorMath.darken(p.hillNear, 0.1f)
+            canvas.drawLine(x, base, x, base - height, lines)
+            fill.color = purple
+            var y = base - height * 0.3f
+            var i = 0
+            while (y > base - height) {
+                val rr = (1.5f - (base - y) / height * 0.8f) * dp
+                canvas.drawCircle(x + (if (i % 2 == 0) -rr * 0.6f else rr * 0.6f), y, rr, fill)
+                y -= rr * 1.25f
+                i++
+            }
+            k += 2
+        }
+    }
+
+    /** The willow's tapered trunk leaning over the water and the soft masses of its crown. */
+    private fun drawWillow(canvas: Canvas, s: SceneState, p: ScenePalette) {
+        if (layout.willow.isEmpty) return
+        fill.color = ColorMath.lerp(p.tree, p.water, 0.3f)
+        canvas.drawPath(layout.willow, fill)
+        val c = layout.willowCrown
+        val leaf = ColorMath.lerp(p.hillMid, p.hillFar, 0.45f)
+        // Two passes: a darker body, then lighter leaves catching the light from above.
+        for (pass in 0..1) {
+            fill.color = if (pass == 0) ColorMath.withAlpha(ColorMath.darken(leaf, 0.08f), 0.9f) else ColorMath.withAlpha(ColorMath.lighten(leaf, 0.05f), 0.4f)
+            var k = 0
+            while (k < c.size) {
+                val shrink = if (pass == 0) 1f else 0.55f
+                val lift = if (pass == 0) 0f else c[k + 3] * 0.3f
+                tmpRect.set(c[k] - c[k + 2] * shrink, c[k + 1] - c[k + 3] * shrink - lift, c[k] + c[k + 2] * shrink, c[k + 1] + c[k + 3] * shrink - lift)
+                canvas.drawOval(tmpRect, fill)
+                k += 4
+            }
+        }
+        if (s.snowGround > 0.3f) {
+            fill.color = ColorMath.withAlpha(p.snowCap, s.snowGround * 0.6f)
+            var k = 0
+            while (k < c.size) {
+                tmpRect.set(c[k] - c[k + 2] * 0.6f, c[k + 1] - c[k + 3], c[k] + c[k + 2] * 0.6f, c[k + 1] - c[k + 3] * 0.55f)
+                canvas.drawOval(tmpRect, fill)
+                k += 4
+            }
+        }
+    }
+
+    /** Daisies in the moss of the near bank. */
+    private fun drawDaisies(canvas: Canvas, s: SceneState, p: ScenePalette) {
+        val d = layout.daisies
+        if (d.isEmpty()) return
+        val dim = dusk(s)
+        val white = ColorMath.lerp(0xFFF4F2E8.toInt(), p.moss, 0.1f + 0.6f * dim)
+        val yellow = ColorMath.lerp(0xFFE0BE45.toInt(), p.moss, 0.1f + 0.6f * dim)
+        val r = 1.4f * dp * layout.propScale
+        var k = 0
+        while (k < d.size) {
+            fill.color = white
+            canvas.drawCircle(d[k], d[k + 1], r, fill)
+            fill.color = yellow
+            canvas.drawCircle(d[k], d[k + 1], r * 0.4f, fill)
+            k += 2
+        }
+    }
+
+    /** Willow fronds hanging towards the water, swaying from their tips (hairlines, one batch). */
+    private fun drawFronds(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
+        val f = layout.fronds
+        if (f.isEmpty()) return
+        val t = o.time
+        val wind = (s.windX + o.gust).coerceIn(-14f, 14f)
+        val segs = 7
+        val out = ensureBuf(3, (f.size / 4) * segs * 4)
+        val leaves = ensureBuf(2, (f.size / 4) * segs * 2)
+        var n = 0
+        var m = 0
+        var k = 0
+        while (k < f.size) {
+            val ax = f[k]
+            val ay = f[k + 1]
+            val len = f[k + 2]
+            val ph = f[k + 3]
+            val sway = (sin(t * 0.55f + ph) * (3f + abs(wind) * 0.4f) + wind * 0.8f) * dp
+            var px = ax
+            var py = ay
+            for (i in 1..segs) {
+                val q = i.toFloat() / segs
+                val x = ax + sway * q * q + sin(ph * 3f + q * 2f) * 2 * dp
+                val y = ay + len * q
+                out[n++] = px; out[n++] = py; out[n++] = x; out[n++] = y
+                leaves[m++] = x; leaves[m++] = y
+                px = x
+                py = y
+            }
+            k += 4
+        }
+        val leaf = ColorMath.lerp(p.hillMid, p.hillFar, 0.5f)
+        lines.strokeWidth = 1.2f * dp
+        lines.color = ColorMath.withAlpha(ColorMath.darken(leaf, 0.06f), 0.85f)
+        canvas.drawLines(out, 0, n, lines)
+        lines.strokeWidth = 2.6f * dp
+        lines.color = ColorMath.withAlpha(leaf, 0.75f)
+        canvas.drawPoints(leaves, 0, m, lines)
+    }
+
+    /** Reeds and iris leaves on the near bank, bending in the wind. */
+    private fun drawReeds(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
+        val r = layout.reeds
+        if (r.isEmpty()) return
+        val near = layout.ridges.last()
+        val t = o.time
+        val wind = (s.windX + o.gust).coerceIn(-14f, 14f)
+        val bw = 1.6f * dp * layout.propScale
+        var k = 0
+        var i = 0
+        while (k < r.size) {
+            val x = r[k]
+            val height = r[k + 1]
+            val lean = r[k + 2]
+            val ph = r[k + 3]
+            val gy = layout.edge(near, x) + 8 * dp
+            val sway = if (t == 0f) wind * 0.6f * dp else (sin(t * 0.9f + ph) * (1.5f + abs(wind) * 0.3f) + wind * 0.6f) * dp
+            val tipX = x + lean + sway
+            val tipY = gy - height
+            tmpPath.reset()
+            tmpPath.moveTo(x - bw, gy)
+            tmpPath.quadTo(x - bw * 0.5f + lean * 0.2f, gy - height * 0.55f, tipX, tipY)
+            tmpPath.quadTo(x + bw * 0.5f + lean * 0.25f, gy - height * 0.5f, x + bw, gy)
+            tmpPath.close()
+            fill.color = ColorMath.lerp(p.moss, p.tree, 0.2f + 0.4f * ((i % 3) / 2f))
+            canvas.drawPath(tmpPath, fill)
+            k += 4
+            i++
+        }
+    }
+
+    /** On the river each frame: the path of the moon (or a low sun), rings of rain, flowers adrift. */
+    private fun drawRiverLife(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
+        val water = layout.ridges[layout.waterIndex]
+        val near = layout.ridges.last()
+        val t = o.time
+        drawLightPath(canvas, s, p, o, water, near)
+        if (s.rain + s.drizzle > 0.08f) drawRainRings(canvas, s, p, o, water, near)
+        val f = layout.flowers
+        val span = layout.w + 40 * dp
+        val drift = 1f + (s.windX + o.gust).coerceIn(-6f, 6f) * 0.08f
+        var k = 0
+        while (k < f.size) {
+            val x = wrap(f[k] * span + t * f[k + 2] * drift, span) - 20 * dp
+            val top = layout.edge(water, x) + 5 * dp
+            val bottom = layout.edge(near, x) - 4 * dp
+            if (bottom > top) {
+                val y = top + (bottom - top) * f[k + 1] + sin(t * 0.7f + k) * 0.8f * dp
+                drawAdrift(canvas, x, y, f[k + 3].toInt(), f[k + 4] * dp, s, p)
+            }
+            k += 5
+        }
+    }
+
+    /** One flower lying on the water, on a leaf, seen at a low angle. */
+    private fun drawAdrift(canvas: Canvas, x: Float, y: Float, kind: Int, u: Float, s: SceneState, p: ScenePalette) {
+        val dim = dusk(s) * 0.6f
+        fun c(v: Int) = ColorMath.lerp(v, p.water, dim)
+        fill.color = c(ColorMath.lerp(p.moss, p.hillMid, 0.4f))
+        tmpRect.set(x - 4.5f * u, y - 0.9f * u, x + 1.5f * u, y + 1.3f * u)
+        canvas.drawOval(tmpRect, fill)
+        when (kind) {
+            0 -> { // poppy
+                fill.color = c(0xFFB3362A.toInt())
+                canvas.drawCircle(x - 1.1f * u, y, 1.9f * u, fill)
+                canvas.drawCircle(x + 1.1f * u, y, 1.9f * u, fill)
+                canvas.drawCircle(x, y - 0.8f * u, 1.8f * u, fill)
+                fill.color = c(0xFF2A1A18.toInt())
+                canvas.drawCircle(x, y - 0.3f * u, 0.7f * u, fill)
+            }
+            1 -> { // dog rose
+                fill.color = c(0xFFF4EFE4.toInt())
+                for (i in 0 until 5) {
+                    val a = i * 1.2566f
+                    canvas.drawCircle(x + cos(a) * 1.3f * u, y + sin(a) * 0.8f * u, 1.1f * u, fill)
+                }
+                fill.color = c(0xFFD8B64A.toInt())
+                canvas.drawCircle(x, y, 0.55f * u, fill)
+            }
+            2 -> { // forget-me-nots
+                fill.color = c(0xFF7DA2D8.toInt())
+                canvas.drawCircle(x - 1.4f * u, y, 0.9f * u, fill)
+                canvas.drawCircle(x + 0.6f * u, y - 0.5f * u, 0.9f * u, fill)
+                canvas.drawCircle(x + 1.6f * u, y + 0.4f * u, 0.8f * u, fill)
+            }
+            3 -> { // buttercup
+                fill.color = c(0xFFE3BC3F.toInt())
+                canvas.drawCircle(x, y, 1.4f * u, fill)
+            }
+            else -> { // violet
+                fill.color = c(0xFF7B5AA0.toInt())
+                canvas.drawCircle(x - 0.8f * u, y, 1.1f * u, fill)
+                canvas.drawCircle(x + 0.8f * u, y, 1.1f * u, fill)
+                canvas.drawCircle(x, y + 0.6f * u, 1f * u, fill)
+            }
+        }
+    }
+
+    /** The moon (or a low sun) laid on the water as a trembling column of short glints. */
+    private fun drawLightPath(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options, water: SceneLayout.Ridge, near: SceneLayout.Ridge) {
+        val moonA = moonAlpha(s)
+        val lowSun = sunAlpha(s) * (1f - smoothstep(0.18f, 0.35f, min(s.sunProgress, 1f - s.sunProgress)))
+        val a: Float
+        val color: Int
+        when {
+            moonA > 0.1f -> { arcPosition(s.nightProgress.coerceIn(0.05f, 0.95f), o, pos); a = moonA; color = p.moon }
+            lowSun > 0.1f -> { arcPosition(s.sunProgress, o, pos); a = lowSun; color = p.sunRay }
+            else -> return
+        }
+        if (blocked(o, pos[0], pos[1], celestialRadius())) return
+        val x = pos[0]
+        val top = layout.edge(water, x) + 3 * dp
+        val bottom = layout.edge(near, x)
+        if (bottom <= top) return
+        lines.strokeWidth = 1f * dp
+        var y = top
+        var i = 0
+        while (y < bottom) {
+            val q = (y - top) / (bottom - top)
+            val half = (5f + 16f * q) * dp * (0.6f + 0.4f * sin(o.time * 1.3f + i * 1.7f))
+            val dx = sin(o.time * 0.8f + i * 2.3f) * 3 * dp
+            lines.color = ColorMath.withAlpha(color, a * 0.4f * (1f - q * 0.5f))
+            canvas.drawLine(x - half + dx, y, x + half + dx, y, lines)
+            y += (2.2f + 2.5f * q) * dp
+            i++
+        }
+    }
+
+    /** Rain falling on the river: flattened rings spreading and fading. */
+    private fun drawRainRings(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options, water: SceneLayout.Ridge, near: SceneLayout.Ridge) {
+        val n = ((layout.w / dp / 14f) * (s.rain + s.drizzle * 0.5f).coerceAtMost(1f)).toInt().coerceIn(0, 40)
+        stroke.strokeWidth = 0.8f * dp
+        val ink = ColorMath.lerp(p.skyBottom, p.cloud, 0.5f)
+        for (i in 0 until n) {
+            val phase = o.time / 1.1f + rand(i, 1601)
+            val cycle = floor(phase).toInt()
+            val ph = phase - cycle
+            val x = rand(i * 31 + cycle, 1603) * layout.w
+            val top = layout.edge(water, x) + 4 * dp
+            val bottom = layout.edge(near, x) - 2 * dp
+            if (bottom <= top) continue
+            val y = top + rand(i * 31 + cycle, 1605) * (bottom - top)
+            val rr = (1f + ph * 9f) * dp
+            stroke.color = ColorMath.withAlpha(ink, 0.4f * (1f - ph))
+            tmpRect.set(x - rr, y - rr * 0.32f, x + rr, y + rr * 0.32f)
+            canvas.drawOval(tmpRect, stroke)
+        }
+    }
+
+    /** Petals of the dog roses drifting down, turning as they fall. */
+    private fun drawPetals(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options, wind: Float) {
+        val wet = (s.rain + s.snow + s.drizzle).coerceIn(0f, 1f)
+        if (wet > 0.4f) return
+        val a = (1f - wet * 2f) * (0.35f + 0.65f * s.daylight.coerceIn(0f, 1f))
+        val n = (layout.w / dp / 60f).toInt().coerceIn(3, 8)
+        val t = o.time
+        val spanY = layout.h * 0.9f
+        for (i in 0 until n) {
+            val fall = (8f + 6f * rand(i, 1701)) * dp
+            val y = wrap(rand(i, 1703) * spanY + t * fall, spanY) + layout.h * 0.05f
+            val x = wrap(rand(i, 1705) * layout.w + t * (wind * 0.8f + 3f) * dp + sin(t * 0.7f + i) * 12 * dp, layout.w)
+            canvas.save()
+            canvas.translate(x, y)
+            canvas.rotate(t * (40f + 50f * rand(i, 1707)) + i * 50f)
+            canvas.scale(1f, 0.55f + 0.45f * abs(sin(t * 1.3f + i)))
+            fill.color = ColorMath.withAlpha(if (i % 3 == 0) 0xFFF1D6D6.toInt() else 0xFFF6F2EA.toInt(), 0.85f * a)
+            canvas.drawOval(-2.4f * dp, -1.4f * dp, 2.4f * dp, 1.4f * dp, fill)
+            canvas.restore()
+        }
     }
 
     // ============================================================================================
@@ -834,7 +1257,8 @@ class PaperSceneRenderer(private val density: Float) {
             if (s.rain > 0.01f) drawRain(canvas, s, p, o, wind)
             if (s.hail > 0.01f) drawHail(canvas, s, p, o, wind)
             if (s.snow > 0.01f) drawSnowfall(canvas, s, p, o, wind)
-            if (s.rain > 0.15f && o.landscape) drawSplashes(canvas, s, p, o)
+            if (s.rain > 0.15f && o.landscape && layout.variant == SceneVariant.Mountains) drawSplashes(canvas, s, p, o)
+            if (layout.variant == SceneVariant.River) drawPetals(canvas, s, p, o, wind)
             drawFireflies(canvas, s, p, o)
             if (abs(wind) > 6.5f && s.snow < 0.2f) drawWind(canvas, s, p, o, wind)
         }

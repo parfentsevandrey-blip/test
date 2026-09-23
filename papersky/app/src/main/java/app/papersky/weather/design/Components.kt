@@ -85,6 +85,7 @@ import androidx.compose.ui.unit.sp
 import app.papersky.weather.scene.Glyph
 import app.papersky.weather.scene.GlyphColors
 import app.papersky.weather.scene.GlyphRenderer
+import app.papersky.weather.scene.PaletteMode
 import app.papersky.weather.scene.ScenePalette
 import app.papersky.weather.ui.common.PaperIcon
 import app.papersky.weather.ui.common.PaperIconView
@@ -105,6 +106,9 @@ class SceneClock {
 
 val LocalSceneClock = staticCompositionLocalOf { SceneClock() }
 val LocalScenePalette = staticCompositionLocalOf<ScenePalette?> { null }
+
+/** The theme's palette mode: which print the scenes paint and which inks the sheets use (§16). */
+val LocalSceneMode = staticCompositionLocalOf { PaletteMode.Auto }
 
 val PillShape = RoundedCornerShape(50)
 

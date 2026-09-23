@@ -7,7 +7,11 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,8 +24,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
@@ -31,6 +39,7 @@ import androidx.lifecycle.viewModelScope
 import app.papersky.weather.AppContainer
 import app.papersky.weather.BuildConfig
 import app.papersky.weather.R
+import app.papersky.weather.core.model.AppTheme
 import app.papersky.weather.core.model.MotionLevel
 import app.papersky.weather.core.model.PrecipUnit
 import app.papersky.weather.core.model.PressureUnit
@@ -41,6 +50,7 @@ import app.papersky.weather.core.model.WindUnit
 import app.papersky.weather.core.sync.SyncScheduler
 import app.papersky.weather.design.Chip
 import app.papersky.weather.design.Label
+import app.papersky.weather.design.Motion
 import app.papersky.weather.design.Paper
 import app.papersky.weather.design.PaperCard
 import app.papersky.weather.design.PaperRule
@@ -50,11 +60,15 @@ import app.papersky.weather.design.PaperSwitch
 import app.papersky.weather.design.SettingRow
 import app.papersky.weather.design.laidDown
 import app.papersky.weather.design.pressable
+import app.papersky.weather.design.rememberHaptics
+import app.papersky.weather.design.sceneWindowShape
 import app.papersky.weather.scene.Glyph
 import app.papersky.weather.scene.SceneState
+import app.papersky.weather.scene.paletteMode
 import app.papersky.weather.ui.common.PaperIcon
 import app.papersky.weather.ui.common.PaperIconView
 import app.papersky.weather.ui.common.PaperPage
+import app.papersky.weather.ui.scene.SceneThumbnail
 import java.util.Locale
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -84,8 +98,19 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
     }
 
     PaperPage(stringResource(R.string.settings_title), scene, s.motion, onBack, village = s.village) {
-        item("units") {
+        item("theme") {
             PaperCard(Modifier.laidDown(0)) {
+                Label(stringResource(R.string.settings_theme))
+                Spacer(Modifier.height(14.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    AppTheme.entries.forEach { theme ->
+                        ThemeOption(theme, scene, s.theme == theme, Modifier.weight(1f)) { vm.update { it.copy(theme = theme) } }
+                    }
+                }
+            }
+        }
+        item("units") {
+            PaperCard(Modifier.laidDown(1)) {
                 Label(stringResource(R.string.settings_units))
                 Spacer(Modifier.height(16.dp))
                 Caption(stringResource(R.string.settings_temperature))
@@ -111,7 +136,7 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
             }
         }
         item("updates") {
-            PaperCard(Modifier.laidDown(1)) {
+            PaperCard(Modifier.laidDown(2)) {
                 Label(stringResource(R.string.settings_updates))
                 Spacer(Modifier.height(8.dp))
                 BasicText(stringResource(R.string.settings_interval), style = Paper.type.body.copy(color = Paper.colors.paperInk))
@@ -148,7 +173,7 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
             }
         }
         item("diorama") {
-            PaperCard(Modifier.laidDown(2)) {
+            PaperCard(Modifier.laidDown(3)) {
                 Label(stringResource(R.string.settings_diorama))
                 SettingRow(stringResource(R.string.settings_village), subtitle = stringResource(R.string.settings_village_body)) {
                     PaperSwitch(s.village, { on -> vm.update { it.copy(village = on) } })
@@ -167,7 +192,7 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
             }
         }
         item("feel") {
-            PaperCard(Modifier.laidDown(3)) {
+            PaperCard(Modifier.laidDown(4)) {
                 Label(stringResource(R.string.settings_feel))
                 SettingRow(stringResource(R.string.settings_haptics), subtitle = stringResource(R.string.settings_haptics_body)) {
                     PaperSwitch(s.haptics, { on -> vm.update { it.copy(haptics = on) } })
@@ -178,7 +203,7 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
             }
         }
         item("about") {
-            PaperCard(Modifier.laidDown(4)) {
+            PaperCard(Modifier.laidDown(5)) {
                 Label(stringResource(R.string.settings_about))
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     LinkRow(PaperIcon.Language, stringResource(R.string.settings_language)) {
@@ -194,6 +219,46 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
                 BasicText("Papersky ${BuildConfig.VERSION_NAME}", style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft))
             }
         }
+    }
+}
+
+/** A theme to choose: a small print of today's sky in it, its name and a line about it. */
+@Composable
+private fun ThemeOption(theme: AppTheme, scene: SceneState, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val colors = Paper.colors
+    val h = rememberHaptics()
+    val mode = theme.paletteMode()
+    val shape = sceneWindowShape(mode)
+    val ring by animateColorAsState(if (selected) colors.paperInk else colors.paperInk.copy(alpha = 0f), Motion.snap(), label = "themeRing")
+    Column(
+        modifier
+            .semantics { this.selected = selected }
+            .pressable({ if (!selected) { h.toggle(true); onClick() } }, haptic = false, role = Role.RadioButton),
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(104.dp)
+                .border(1.5.dp, ring, shape)
+                .padding(4.dp)
+                .clip(shape),
+        ) {
+            SceneThumbnail(scene, Modifier.matchParentSize(), mode = mode, horizon = 0.46f)
+        }
+        Spacer(Modifier.height(10.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            BasicText(
+                stringResource(if (theme == AppTheme.Ophelia) R.string.theme_ophelia else R.string.theme_sky),
+                Modifier.weight(1f),
+                style = Paper.type.heading.copy(color = colors.paperInk, fontSize = 19.sp),
+                maxLines = 1,
+            )
+            if (selected) PaperIconView(PaperIcon.Check, colors.accent, size = 16.dp)
+        }
+        BasicText(
+            stringResource(if (theme == AppTheme.Ophelia) R.string.theme_ophelia_body else R.string.theme_sky_body),
+            style = Paper.type.caption.copy(color = colors.paperInkSoft, fontSize = 11.5.sp),
+        )
     }
 }
 

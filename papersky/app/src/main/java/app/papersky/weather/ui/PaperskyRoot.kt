@@ -51,12 +51,14 @@ import app.papersky.weather.core.model.momentAt
 import app.papersky.weather.design.Haptics
 import app.papersky.weather.design.LocalHaptics
 import app.papersky.weather.design.LocalSceneClock
+import app.papersky.weather.design.LocalSceneMode
 import app.papersky.weather.design.LocalScenePalette
 import app.papersky.weather.design.Light
 import app.papersky.weather.design.Motion
 import app.papersky.weather.design.PaperTheme
 import app.papersky.weather.design.roomLight
 import app.papersky.weather.scene.Palettes
+import app.papersky.weather.scene.paletteMode
 import app.papersky.weather.scene.SceneState
 import app.papersky.weather.ui.home.HomeScreen
 import app.papersky.weather.ui.home.HomeViewModel
@@ -106,7 +108,8 @@ fun PaperskyChrome(settings: UserSettings, scene: SceneState, content: @Composab
             MotionLevel.Still -> 0f
         },
     )
-    val palette = remember(scene) { Palettes.forState(scene) }
+    val mode = settings.theme.paletteMode()
+    val palette = remember(scene, mode) { Palettes.resolve(mode, scene, context) }
     // The room's light follows the sky: window by day, golden hour, the desk lamp at night (§4.3).
     val light = remember(scene) { Light.of(scene) }
     val activity = LocalActivity.current as? ComponentActivity
@@ -118,7 +121,7 @@ fun PaperskyChrome(settings: UserSettings, scene: SceneState, content: @Composab
     val lightState = rememberUpdatedState(light)
     CompositionLocalProvider(LocalHaptics provides haptics, LocalSceneClock provides clock) {
         PaperTheme(palette, light) {
-            CompositionLocalProvider(LocalScenePalette provides palette) {
+            CompositionLocalProvider(LocalScenePalette provides palette, LocalSceneMode provides mode) {
                 Box(Modifier.fillMaxSize().roomLight({ lightState.value }, { clock.flash.floatValue })) { content() }
             }
         }

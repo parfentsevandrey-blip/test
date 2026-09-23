@@ -7,9 +7,11 @@ import app.papersky.weather.TestApp
 import app.papersky.weather.scene.Glyph
 import app.papersky.weather.scene.GlyphColors
 import app.papersky.weather.scene.GlyphRenderer
+import app.papersky.weather.scene.PaletteMode
 import app.papersky.weather.scene.PaperSceneRenderer
 import app.papersky.weather.scene.Palettes
 import app.papersky.weather.scene.SceneState
+import app.papersky.weather.scene.SceneVariant
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
@@ -43,6 +45,21 @@ class SceneScreenshots {
             val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
             PaperSceneRenderer(density).draw(Canvas(bmp), w.toFloat(), h.toFloat(), s, Palettes.forState(s), PaperSceneRenderer.Options(time = 12.5f, staticBolt = s.thunder > 0.5f))
             Shots.save("scene_$name", bmp)
+        }
+    }
+
+    /** Ophelia's river (§17) under the same weathers. */
+    @Test
+    fun renderOphelia() {
+        Shots.assumeEnabled()
+        val density = 2.5f
+        for ((name, s) in states) {
+            val w = (412 * density).toInt()
+            val h = (560 * density).toInt()
+            val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            val o = PaperSceneRenderer.Options(time = 12.5f, staticBolt = s.thunder > 0.5f, variant = SceneVariant.River)
+            PaperSceneRenderer(density).draw(Canvas(bmp), w.toFloat(), h.toFloat(), s, Palettes.resolve(PaletteMode.Ophelia, s), o)
+            Shots.save("ophelia_$name", bmp)
         }
     }
 

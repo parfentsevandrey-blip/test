@@ -337,6 +337,7 @@ fun paletteName(mode: PaletteMode): String = stringResource(
         PaletteMode.Riso -> R.string.palette_riso
         PaletteMode.Moss -> R.string.palette_moss
         PaletteMode.Wallpaper -> R.string.palette_wallpaper
+        PaletteMode.Ophelia -> R.string.palette_ophelia
     },
 )
 
@@ -351,5 +352,6 @@ fun presetName(preset: WidgetPreset): String = stringResource(
         WidgetPreset.NightLight -> R.string.preset_night
         WidgetPreset.Glass -> R.string.preset_glass
         WidgetPreset.Riso -> R.string.preset_riso
+        WidgetPreset.Ophelia -> R.string.preset_ophelia
     },
 )

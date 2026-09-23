@@ -93,6 +93,11 @@
     <string name="settings_tilt">Print tilt</string>
     <string name="settings_tilt_body">The planes of the landscape shift as you tilt the phone</string>
     <string name="settings_diorama">The print</string>
+    <string name="settings_theme">Theme</string>
+    <string name="theme_sky">Living sky</string>
+    <string name="theme_sky_body">Mountains in mist; the colours follow the weather</string>
+    <string name="theme_ophelia">Ophelia</string>
+    <string name="theme_ophelia_body">A melancholy theme after Millais’s painting: dark water, willows, flowers adrift on the river</string>
     <string name="settings_village">Houses in the landscape</string>
     <string name="settings_village_body">A few houses in silhouette, with lit windows at dusk</string>
     <string name="settings_about">About</string>
@@ -150,6 +155,7 @@
     <string name="palette_riso">Riso</string>
     <string name="palette_moss">Moss</string>
     <string name="palette_wallpaper">Wallpaper</string>
+    <string name="palette_ophelia">Ophelia</string>
 
     <string name="preset_living">Living window</string>
     <string name="preset_pocket">Pocket</string>
@@ -159,4 +165,5 @@
     <string name="preset_night">Night light</string>
     <string name="preset_glass">Glass</string>
     <string name="preset_riso">Riso print</string>
+    <string name="preset_ophelia">Ophelia</string>
 </resources>

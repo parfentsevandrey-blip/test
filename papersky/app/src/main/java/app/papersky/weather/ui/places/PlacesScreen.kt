@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.TextAutoSize
@@ -58,6 +57,7 @@ import app.papersky.weather.core.model.momentAt
 import app.papersky.weather.core.text.WeatherFormat
 import app.papersky.weather.design.ControlShape
 import app.papersky.weather.design.GlyphIcon
+import app.papersky.weather.design.LocalSceneMode
 import app.papersky.weather.design.Motion
 import app.papersky.weather.design.Paper
 import app.papersky.weather.design.PaperButton
@@ -66,6 +66,7 @@ import app.papersky.weather.design.debossed
 import app.papersky.weather.design.laidDown
 import app.papersky.weather.design.pressable
 import app.papersky.weather.design.rememberHaptics
+import app.papersky.weather.design.sceneWindowShape
 import app.papersky.weather.scene.Glyph
 import app.papersky.weather.scene.SceneState
 import app.papersky.weather.ui.common.Hint
@@ -194,7 +195,7 @@ private fun PlaceCard(row: PlaceRow, units: Units, village: Boolean, onClick: ()
     val fmt = remember(f?.timezone, units) { WeatherFormat(context, units, f?.zone ?: java.time.ZoneId.systemDefault()) }
     PaperCard(level = if (row.selected) 2 else 1, onClick = onClick, contentPadding = androidx.compose.foundation.layout.PaddingValues(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(width = 96.dp, height = 80.dp).clip(RoundedCornerShape(10.dp))) {
+            Box(Modifier.size(width = 96.dp, height = 80.dp).clip(sceneWindowShape(LocalSceneMode.current))) {
                 if (scene != null) SceneThumbnail(scene, Modifier.matchParentSize(), village = village)
             }
             Spacer(Modifier.width(14.dp))

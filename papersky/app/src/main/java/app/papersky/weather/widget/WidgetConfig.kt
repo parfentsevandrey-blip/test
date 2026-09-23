@@ -64,4 +64,5 @@ enum class WidgetPreset(val config: WidgetConfig, val cols: Int, val rows: Int) 
     NightLight(WidgetConfig(palette = PaletteMode.Ink, showDetails = false), 4, 3),
     Glass(WidgetConfig(background = WidgetBackground.Clear, showDetails = false, showWhisper = false, opacity = 0f), 4, 2),
     Riso(WidgetConfig(palette = PaletteMode.Riso, showWhisper = true), 2, 2),
+    Ophelia(WidgetConfig(palette = PaletteMode.Ophelia, showWhisper = true, showDetails = false), 4, 3),
 }

@@ -13,6 +13,7 @@ import app.papersky.weather.TestApp
 import app.papersky.weather.container
 import app.papersky.weather.core.data.ForecastStore
 import app.papersky.weather.core.model.Forecast
+import app.papersky.weather.core.model.AppTheme
 import app.papersky.weather.core.model.MotionLevel
 import app.papersky.weather.core.model.Place
 import app.papersky.weather.core.model.SampleForecast
@@ -92,6 +93,41 @@ class AppScreenshots {
         Shots.assumeEnabled()
         seed(Fixtures.moscow(System.currentTimeMillis()))
         shoot("home_rain", { PaperskyRoot(app.container, MutableStateFlow(null)) {} })
+    }
+
+    @Test
+    @Config(qualifiers = "+ru-rRU")
+    fun homeOphelia() {
+        Shots.assumeEnabled()
+        seed(Fixtures.moscow(System.currentTimeMillis())) { it.copy(theme = AppTheme.Ophelia) }
+        shoot("home_ophelia", { PaperskyRoot(app.container, MutableStateFlow(null)) {} })
+    }
+
+    @Test
+    @Config(qualifiers = "+ru-rRU")
+    fun homeOpheliaScrolled() {
+        Shots.assumeEnabled()
+        seed(Fixtures.moscow(System.currentTimeMillis())) { it.copy(theme = AppTheme.Ophelia) }
+        shoot("home_ophelia_scrolled", { PaperskyRoot(app.container, MutableStateFlow(null)) {} }, scrollTo = 2)
+    }
+
+    @Test
+    @Config(qualifiers = "+ru-rRU")
+    fun homeOpheliaNight() {
+        Shots.assumeEnabled()
+        val now = System.currentTimeMillis()
+        seed(atNight(SampleForecast.build(now).copy(placeId = Place.HERE), now / 1000)) { it.copy(theme = AppTheme.Ophelia) }
+        shoot("home_ophelia_night", { PaperskyRoot(app.container, MutableStateFlow(null)) {} })
+    }
+
+    @Test
+    @Config(qualifiers = "+ru-rRU")
+    fun settingsOphelia() {
+        Shots.assumeEnabled()
+        seed(Fixtures.moscow(System.currentTimeMillis())) { it.copy(theme = AppTheme.Ophelia) }
+        val s = scene()
+        val vm = SettingsViewModel(app.container)
+        shoot("settings_ophelia", { PaperskyChrome(UserSettings(motion = MotionLevel.Still, theme = AppTheme.Ophelia), s) { SettingsScreen(vm, s) {} } })
     }
 
     @Test

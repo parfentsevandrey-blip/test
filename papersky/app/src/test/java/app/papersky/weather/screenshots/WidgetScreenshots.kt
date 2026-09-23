@@ -25,6 +25,7 @@ import app.papersky.weather.core.model.Units
 import app.papersky.weather.core.model.WindUnit
 import app.papersky.weather.core.model.SampleForecast
 import app.papersky.weather.widget.PaperskyWidget
+import app.papersky.weather.scene.PaletteMode
 import app.papersky.weather.widget.WidgetConfig
 import app.papersky.weather.widget.WidgetPreset
 import androidx.glance.appwidget.compose
@@ -118,6 +119,7 @@ class WidgetScreenshots {
         sheet("rain_living", WidgetPreset.LivingWindow.config)
         sheet("rain_paper", WidgetPreset.PaperNote.config)
         sheet("rain_glass", WidgetPreset.Glass.config)
+        sheet("rain_ophelia", WidgetPreset.LivingWindow.config.copy(palette = PaletteMode.Ophelia))
     }
 
     @Test
@@ -128,5 +130,6 @@ class WidgetScreenshots {
         sheet("sun_living", WidgetPreset.LivingWindow.config)
         sheet("sun_riso", WidgetPreset.Riso.config)
         sheet("sun_ink", WidgetPreset.NightLight.config.copy(showClock = true))
+        sheet("sun_ophelia", WidgetPreset.LivingWindow.config.copy(palette = PaletteMode.Ophelia))
     }
 }
