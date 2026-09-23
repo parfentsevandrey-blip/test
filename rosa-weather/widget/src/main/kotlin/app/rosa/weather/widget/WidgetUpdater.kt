@@ -99,13 +99,11 @@ class WidgetUpdater @Inject constructor(
             val cache = weather.forecasts.first()
             val inFlight = weather.refreshing.value
             val now = clock.nowEpochSeconds()
-            val stored = configs.snapshot()
-            var nextTick = now + 30 * 60
 
             for (id in targets) {
                 val info = manager.getAppWidgetInfo(id) ?: continue
-                val config = stored.byId[id] ?: WidgetKind.forProvider(info.provider.className).defaultConfig
-                    .also { configs.put(id, it) }
+                // Atomic put-if-absent: never clobber a config the studio saved meanwhile.
+                val config = configs.getOrPut(id, WidgetKind.forProvider(info.provider.className).defaultConfig)
                 val place = resolvePlace(config, saved)
                 val forecast = place?.let { cache[it.id] }
                 val refreshing = (place != null && place.id in inFlight) ||
@@ -125,9 +123,14 @@ class WidgetUpdater @Inject constructor(
                 )
                 val views = runCatching { remoteViews(id, manager, info.provider, config, content) }.getOrNull() ?: continue
                 runCatching { manager.updateAppWidget(id, views) }
-                if (forecast != null) nextTick = min(nextTick, nextMeaningfulChange(forecast, now))
             }
-            scheduler.scheduleRenderTick((nextTick - now) * 1000)
+            // The next tick serves *every* placed widget, not just the ones redrawn now — otherwise
+            // resizing one widget could postpone another's "rain in 5 min" update.
+            val stored = configs.snapshot()
+            val nextTick = allWidgetIds(context).asList().mapNotNull { id ->
+                resolvePlace(stored[id], saved)?.let { cache[it.id] }?.let { nextMeaningfulChange(it, now) }
+            }.minOrNull() ?: (now + 30 * 60)
+            scheduler.scheduleRenderTick(nextTick * 1000)
         }
     }
 
@@ -217,7 +220,9 @@ class WidgetUpdater @Inject constructor(
      * nowcast sentences need ~5-minute ticks; otherwise the next hour boundary or sun event.
      */
     private fun nextMeaningfulChange(forecast: Forecast, now: Long): Long {
-        val candidates = mutableListOf(now + 30 * 60, (now / 3600 + 1) * 3600 + 60)
+        // Hour boundaries come from the data: in UTC+5:30 or +9:30 zones local hours start at :30.
+        val nextHour = forecast.hourly.firstOrNull { it.time > now }?.time ?: ((now / 3600 + 1) * 3600)
+        val candidates = mutableListOf(now + 30 * 60, nextHour + 60)
         val headline = Headlines.pick(forecast, forecast.momentAt(now))
         if (headline is Headline.PrecipitationStarts || headline is Headline.PrecipitationEnds) candidates += now + 5 * 60
         forecast.dayAt(now)?.let { day ->

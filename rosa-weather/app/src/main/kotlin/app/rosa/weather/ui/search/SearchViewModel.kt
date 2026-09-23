@@ -4,10 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.rosa.weather.core.data.repository.PlaceSearchRepository
 import app.rosa.weather.core.data.repository.PlacesRepository
-import app.rosa.weather.core.data.repository.WeatherRepository
+import app.rosa.weather.core.data.di.ApplicationScope
+import app.rosa.weather.core.data.sync.SyncReason
+import app.rosa.weather.core.data.sync.WeatherSyncer
 import app.rosa.weather.core.model.Place
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +32,8 @@ sealed interface SearchResults {
 class SearchViewModel @Inject constructor(
     private val search: PlaceSearchRepository,
     private val places: PlacesRepository,
-    private val weather: WeatherRepository,
+    private val syncer: WeatherSyncer,
+    @param:ApplicationScope private val appScope: CoroutineScope,
 ) : ViewModel() {
     val query = MutableStateFlow("")
 
@@ -53,7 +57,9 @@ class SearchViewModel @Inject constructor(
         viewModelScope.launch {
             places.add(place)
             onDone()
-            weather.refresh(place)
+            // The screen closes right away; the download (and the widgets that follow the new
+            // city) must not be cancelled with it.
+            appScope.launch { syncer.sync(SyncReason.UserRequest, force = false, inBackground = false) }
         }
     }
 }

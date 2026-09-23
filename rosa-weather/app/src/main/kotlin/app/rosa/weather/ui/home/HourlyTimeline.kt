@@ -82,7 +82,8 @@ fun HourlyTimeline(
     onScrub: (offsetHours: Float, dragging: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val hours = remember(forecast, now / 3600) { forecast.hoursFrom(now).take(HOURS) }
+    val firstIndex = forecast.firstHourIndexFrom(now)
+    val hours = remember(forecast, firstIndex) { forecast.hoursFrom(now).take(HOURS) }
     if (hours.size < 2) return
     val colors = Rosa.colors
     val haptics = LocalHaptics.current
@@ -160,6 +161,7 @@ fun HourlyTimeline(
                             maxT = maxT,
                             format = format,
                             milestone = i in milestones,
+                            chance = forecast.chanceForHourStarting(firstIndex + i),
                         )
                     }
                 }
@@ -179,6 +181,7 @@ private fun HourCell(
     maxT: Double,
     format: WeatherFormat,
     milestone: Boolean,
+    chance: Int,
 ) {
     val colors = Rosa.colors
     val condition = WeatherCondition.fromWmo(hour.weatherCode)
@@ -244,7 +247,7 @@ private fun HourCell(
                 drawText(layout, topLeft = Offset((size.width - layout.size.width) / 2, cy - layout.size.height - 5.dp.toPx()))
 
                 // Precipitation chance as a small bar along the bottom.
-                val p = hour.precipitationProbability / 100f
+                val p = chance / 100f
                 if (p >= 0.1f) {
                     val bw = 14.dp.toPx()
                     val bh = 10.dp.toPx() * p + 2.dp.toPx()

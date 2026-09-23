@@ -40,6 +40,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -345,20 +346,29 @@ private fun ModulesEditor(config: WidgetConfig, viewModel: WidgetStudioViewModel
     )
     val ordered = config.modules + WidgetModule.entries.filter { it !in config.modules }
     ordered.forEach { module ->
-        val enabled = module in config.modules
-        val index = config.modules.indexOf(module)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(names.getValue(module), style = Rosa.type.body, color = if (enabled) Rosa.colors.ink else Rosa.colors.inkSoft, modifier = Modifier.weight(1f))
-            if (enabled && index > 0) {
-                ArrowButton(RosaIcon.Back, stringResource(R.string.studio_move_up), rotated = true) {
-                    viewModel.update { c -> c.copy(modules = c.modules.toMutableList().apply { add(index - 1, removeAt(index)) }) }
+        // Keyed by module: rows move when toggled, and each must keep its own handlers.
+        key(module) { ModuleRow(module, names.getValue(module), config, viewModel) }
+    }
+}
+
+@Composable
+private fun ModuleRow(module: WidgetModule, name: String, config: WidgetConfig, viewModel: WidgetStudioViewModel) {
+    val enabled = module in config.modules
+    val index = config.modules.indexOf(module)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(name, style = Rosa.type.body, color = if (enabled) Rosa.colors.ink else Rosa.colors.inkSoft, modifier = Modifier.weight(1f))
+        if (enabled && index > 0) {
+            ArrowButton(RosaIcon.Back, stringResource(R.string.studio_move_up), rotated = true) {
+                viewModel.update { c ->
+                    val i = c.modules.indexOf(module)
+                    if (i <= 0) c else c.copy(modules = c.modules.toMutableList().apply { add(i - 1, removeAt(i)) })
                 }
             }
-            Spacer(Modifier.width(8.dp))
-            GlassToggle(enabled, { on ->
-                viewModel.update { c -> c.copy(modules = if (on) c.modules + module else c.modules - module) }
-            })
         }
+        Spacer(Modifier.width(8.dp))
+        GlassToggle(enabled, { on ->
+            viewModel.update { c -> c.copy(modules = if (on) c.modules + module else c.modules - module) }
+        })
     }
 }
 

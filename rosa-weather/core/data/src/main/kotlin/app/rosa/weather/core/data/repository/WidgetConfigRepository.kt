@@ -20,6 +20,12 @@ class WidgetConfigRepository @Inject constructor(private val store: DataStore<Wi
 
     suspend fun snapshot(): WidgetConfigs = store.data.first()
 
+    /** Returns the stored config, atomically storing [default] first if there is none. */
+    suspend fun getOrPut(widgetId: Int, default: WidgetConfig): WidgetConfig =
+        store.updateData { configs ->
+            if (widgetId in configs.byId) configs else configs.copy(byId = configs.byId + (widgetId to default))
+        }[widgetId]
+
     suspend fun put(widgetId: Int, config: WidgetConfig) {
         store.updateData { it.copy(byId = it.byId + (widgetId to config)) }
     }

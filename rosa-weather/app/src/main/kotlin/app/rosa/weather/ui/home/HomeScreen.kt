@@ -47,6 +47,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -101,7 +102,9 @@ import app.rosa.weather.ui.common.SkyController
 import kotlin.math.floor
 import kotlin.math.min
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 @Composable
 fun HomeRoute(
@@ -112,9 +115,11 @@ fun HomeRoute(
     onOpenSearch: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val userRefreshing by viewModel.userRefreshing.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.onVisible() }
     HomeScreen(
         state = state,
+        userRefreshing = userRefreshing,
         onRefresh = viewModel::refresh,
         onSelect = viewModel::select,
         onLocationPermission = viewModel::onLocationPermission,
@@ -135,6 +140,7 @@ fun HomeScreen(
     onOpenSettings: () -> Unit,
     onOpenWidgets: () -> Unit,
     onOpenSearch: () -> Unit,
+    userRefreshing: Boolean = false,
     fixedNow: Long? = null,
 ) {
     val sky = LocalSky.current
@@ -167,6 +173,8 @@ fun HomeScreen(
 
     val pages = state.pages
     val pagerState = rememberPagerState(initialPage = state.selectedIndex) { pages.size }
+    val currentPages by rememberUpdatedState(pages)
+    val selectedId by rememberUpdatedState(state.selectedId)
     val scrub = remember { mutableStateMapOf<String, Float>() }
     var scrubbing by remember { mutableStateOf(false) }
 
@@ -190,8 +198,13 @@ fun HomeScreen(
     }
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }.collect { page ->
-            pages.getOrNull(page)?.let { if (it.place.id != state.selectedId) onSelect(it.place.id) }
+            currentPages.getOrNull(page)?.let { if (it.place.id != selectedId) onSelect(it.place.id) }
         }
+    }
+    // Follow selection made elsewhere (Places list, a new city from Search, a widget tap).
+    LaunchedEffect(state.selectedId, pages.size) {
+        val target = state.selectedIndex
+        if (target != pagerState.settledPage && !pagerState.isScrollInProgress) pagerState.animateScrollToPage(target)
     }
 
     val format = remember(state.units, context) { WeatherFormat(context, state.units) }
@@ -202,7 +215,7 @@ fun HomeScreen(
                 page = page,
                 now = now,
                 format = format,
-                refreshing = page.place.id in state.refreshing,
+                refreshing = userRefreshing || page.place.id in state.refreshing,
                 online = state.online,
                 scrubHours = scrub[page.place.id] ?: 0f,
                 onScrub = { hours, dragging ->
@@ -247,8 +260,8 @@ private fun PlaceContent(
     val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val listState = rememberLazyListState()
-    val refresh = rememberLiquidRefresh(onRefresh)
-    LaunchedEffect(refreshing) { if (!refreshing) refresh.finish() }
+    val isRefreshing by rememberUpdatedState(refreshing)
+    val refresh = rememberLiquidRefresh(onRefresh) { isRefreshing }
 
     Box(Modifier.fillMaxSize().nestedScroll(refresh.connection)) {
         LazyColumn(
@@ -299,7 +312,7 @@ private fun PlaceContent(
             item(key = "details") { DetailsGrid(forecast, forecast.momentAt(now), zoneFormat) }
             item(key = "footer") { Footer(forecast, now, zoneFormat, onRefresh) }
         }
-        RefreshDrop(refresh, refreshing, Modifier.align(Alignment.TopCenter).padding(top = top + 68.dp))
+        RefreshDrop(refresh, Modifier.align(Alignment.TopCenter).padding(top = top + 68.dp))
     }
 }
 
@@ -312,7 +325,7 @@ private fun Hero(forecast: Forecast, moment: ForecastMoment, format: WeatherForm
     Column(modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp)) {
         AnimatedVisibility(scrubHours > 0.5f, enter = fadeIn() + slideInVertically(), exit = fadeOut() + slideOutVertically()) {
             Text(
-                stringResource(R.string.at_time, format.time(moment.epochSeconds - moment.epochSeconds % 3600)),
+                stringResource(R.string.at_time, format.time(forecast.hourly.lastOrNull { it.time <= moment.epochSeconds }?.time ?: moment.epochSeconds)),
                 style = Rosa.type.label,
                 color = colors.accent,
                 modifier = Modifier.padding(start = 6.dp),
@@ -491,7 +504,12 @@ private fun Footer(forecast: Forecast, now: Long, format: WeatherFormat, onRefre
 
 // region Liquid pull-to-refresh
 
-private class LiquidRefresh(private val onRefresh: () -> Unit, private val thresholdPx: Float, private val haptics: app.rosa.weather.core.designsystem.haptics.RosaHaptics?) {
+private class LiquidRefresh(
+    private val onRefresh: () -> Unit,
+    private val thresholdPx: Float,
+    private val haptics: app.rosa.weather.core.designsystem.haptics.RosaHaptics?,
+    private val isRefreshing: () -> Boolean,
+) {
     val pull = Animatable(0f)
     var armed = false
     var active by mutableStateOf(false)
@@ -531,6 +549,12 @@ private class LiquidRefresh(private val onRefresh: () -> Unit, private val thres
                 active = true
                 haptics?.splash()
                 onRefresh()
+                // Settle the drop once the refresh is over, whatever its outcome (offline too).
+                scope.launch {
+                    delay(700)
+                    withTimeoutOrNull(20_000) { snapshotFlow { isRefreshing() }.first { !it } }
+                    finish()
+                }
                 pull.animateTo(thresholdPx * 0.7f, RosaMotion.gel())
             } else {
                 pull.animateTo(0f, RosaMotion.gel())
@@ -548,21 +572,22 @@ private class LiquidRefresh(private val onRefresh: () -> Unit, private val thres
 }
 
 @Composable
-private fun rememberLiquidRefresh(onRefresh: () -> Unit): LiquidRefresh {
+private fun rememberLiquidRefresh(onRefresh: () -> Unit, isRefreshing: () -> Boolean): LiquidRefresh {
     val threshold = with(LocalDensity.current) { 96.dp.toPx() }
     val haptics = LocalHaptics.current
     val scope = rememberCoroutineScope()
-    return remember(threshold) { LiquidRefresh(onRefresh, threshold, haptics) }.also { it.scope = scope }
+    val refresh by rememberUpdatedState(onRefresh)
+    return remember(threshold) { LiquidRefresh({ refresh() }, threshold, haptics, isRefreshing) }.also { it.scope = scope }
 }
 
 /** A glass drop that swells as you pull, detaches at the threshold and breathes while refreshing. */
 @Composable
-private fun RefreshDrop(refresh: LiquidRefresh, refreshing: Boolean, modifier: Modifier) {
+private fun RefreshDrop(refresh: LiquidRefresh, modifier: Modifier) {
     val p = refresh.progress
     val breathe by rememberInfiniteTransition(label = "breathe").animateFloat(
         0.92f, 1.08f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "b",
     )
-    if (p <= 0.02f && !(refresh.active && refreshing)) return
+    if (p <= 0.02f && !refresh.active) return
     val size = (18 + 30 * min(p, 1f)).dp
     val stretch = if (p > 1f) 1f + (p - 1f) * 0.5f else 1f
     GlassSurface(

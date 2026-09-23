@@ -81,6 +81,7 @@ fun GlassToggle(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: 
     val position by animateFloatAsState(if (checked) 1f else 0f, RosaMotion.gel(), label = "toggle")
     val lift by animateFloatAsState(if (pressed) 1f else 0f, spring(1f, 1000f), label = "lift")
     val current by rememberUpdatedState(checked)
+    val onChange by rememberUpdatedState(onCheckedChange)
     Box(
         modifier
             .size(width = 58.dp, height = 32.dp)
@@ -96,7 +97,7 @@ fun GlassToggle(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: 
                     pressed = false
                     if (up) {
                         haptics?.toggle(!current)
-                        onCheckedChange(!current)
+                        onChange(!current)
                     }
                 }
             },
@@ -149,6 +150,7 @@ fun GlassSlider(
     val squash = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val currentValue by rememberUpdatedState(value)
+    val onChange by rememberUpdatedState(onValueChange)
     val fraction = ((value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
 
     BoxWithConstraints(
@@ -171,7 +173,7 @@ fun GlassSlider(
                         }
                         if (v != currentValue) {
                             if (steps > 0) haptics?.tick()
-                            onValueChange(v)
+                            onChange(v)
                         }
                     }
                     update(down.position.x)
@@ -233,6 +235,8 @@ fun <T> GlassSegmented(
     val haptics = LocalHaptics.current
     val colors = Rosa.colors
     val index = options.indexOf(selected).coerceAtLeast(0)
+    val currentIndex by rememberUpdatedState(index)
+    val select by rememberUpdatedState(onSelect)
     val position = remember { Animatable(index.toFloat()) }
     LaunchedEffect(index) { position.animateTo(index.toFloat(), RosaMotion.gel()) }
     GlassSurface(modifier.height(44.dp), cornerRadius = 22.dp) {
@@ -263,9 +267,9 @@ fun <T> GlassSegmented(
                             }
                             .pointerInput(option) {
                                 detectTapGestures {
-                                    if (i != index) {
+                                    if (i != currentIndex) {
                                         haptics?.tick()
-                                        onSelect(option)
+                                        select(option)
                                     }
                                 }
                             },

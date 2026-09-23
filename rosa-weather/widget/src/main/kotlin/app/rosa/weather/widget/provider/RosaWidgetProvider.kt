@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import app.rosa.weather.core.data.repository.SettingsRepository
 import app.rosa.weather.core.data.repository.WidgetConfigRepository
 import app.rosa.weather.core.data.sync.SyncReason
@@ -15,6 +16,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -39,6 +41,11 @@ internal fun BroadcastReceiver.launchAsync(block: suspend CoroutineScope.() -> U
     CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
         try {
             withTimeoutOrNull(9_000) { block() }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // A broken render must never take the process down; the next tick retries.
+            Log.w("RosaWidget", "Widget update failed", e)
         } finally {
             pending.finish()
         }

@@ -5,6 +5,7 @@ import android.content.ComponentCallbacks2
 import android.content.res.Configuration
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration as WorkConfiguration
+import app.rosa.weather.core.data.di.ApplicationScope
 import app.rosa.weather.core.data.repository.SettingsRepository
 import app.rosa.weather.core.data.sync.SyncScheduler
 import app.rosa.weather.widget.WidgetPreviews
@@ -12,8 +13,6 @@ import app.rosa.weather.widget.WidgetUpdater
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 @HiltAndroidApp
@@ -23,7 +22,8 @@ class RosaApplication : Application(), WorkConfiguration.Provider {
     @Inject lateinit var scheduler: SyncScheduler
     @Inject lateinit var settings: SettingsRepository
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    @Inject @ApplicationScope lateinit var scope: CoroutineScope
+
     private var lastUiMode = 0
 
     override val workManagerConfiguration: WorkConfiguration

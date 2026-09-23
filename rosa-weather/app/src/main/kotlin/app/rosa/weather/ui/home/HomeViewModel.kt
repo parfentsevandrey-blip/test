@@ -16,9 +16,12 @@ import app.rosa.weather.core.model.Place
 import app.rosa.weather.core.model.Units
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -69,25 +72,43 @@ class HomeViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     private var refreshJob: Job? = null
+    private val _userRefreshing = MutableStateFlow(false)
+
+    /** True while a refresh the user asked for (pull, button) is running — whatever its outcome. */
+    val userRefreshing: StateFlow<Boolean> = _userRefreshing.asStateFlow()
 
     /** Called when the screen becomes visible: cheap if data is fresh (the syncer skips it). */
-    fun onVisible() = sync(force = false, reason = SyncReason.AppForeground)
+    fun onVisible() {
+        sync(force = false, reason = SyncReason.AppForeground)
+    }
 
-    fun refresh() = sync(force = true, reason = SyncReason.UserRequest)
+    fun refresh() {
+        _userRefreshing.value = true
+        sync(force = true, reason = SyncReason.UserRequest).invokeOnCompletion {
+            // A second pull may have started meanwhile; the drop settles when the last one ends.
+            if (refreshJob?.isActive != true) _userRefreshing.value = false
+        }
+    }
 
     fun onLocationPermission(granted: Boolean) {
-        if (granted) sync(force = true, reason = SyncReason.UserRequest)
+        if (granted) refresh()
     }
 
     fun select(placeId: String) {
         viewModelScope.launch { places.select(placeId) }
     }
 
-    private fun sync(force: Boolean, reason: SyncReason) {
-        if (refreshJob?.isActive == true && !force) return
-        refreshJob = viewModelScope.launch {
-            currentPlace.resolve(inBackground = false)
-            syncer.sync(reason, force = force, inBackground = false)
-        }
+    private fun sync(force: Boolean, reason: SyncReason): Job {
+        refreshJob?.takeIf { it.isActive && !force }?.let { return it }
+        return viewModelScope.launch {
+            try {
+                currentPlace.resolve(inBackground = false)
+                syncer.sync(reason, force = force, inBackground = false)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Offline or storage hiccup: the cached forecast stays on screen.
+            }
+        }.also { refreshJob = it }
     }
 }

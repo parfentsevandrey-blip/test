@@ -73,7 +73,7 @@ fun Forecast.momentAt(epochSeconds: Long): ForecastMoment {
         windGusts = maxOf(blend(c.windGusts, hourlyValues?.windGusts), windSpeed),
         windDirection = if (weight < 0.5 || nearestHour == null) c.windDirection else nearestHour.windDirection,
         precipitation = precipitation,
-        precipitationProbability = nearestHour?.precipitationProbability ?: 0,
+        precipitationProbability = chanceForHourStarting(hourIndexAt(epochSeconds)),
         uvIndex = blend(c.uvIndex, hourlyValues?.uvIndex).coerceAtLeast(0.0),
         visibility = c.visibility,
         sun = Astronomy.sun(epochSeconds, latitude, longitude),

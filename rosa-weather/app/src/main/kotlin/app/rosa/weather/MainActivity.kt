@@ -1,6 +1,7 @@
 package app.rosa.weather
 
 import android.animation.ObjectAnimator
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.animation.PathInterpolator
@@ -8,11 +9,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
+import app.rosa.weather.core.data.repository.PlacesRepository
 import app.rosa.weather.ui.RosaAppRoot
+import app.rosa.weather.widget.WidgetUpdater
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject lateinit var places: PlacesRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
         // The splash dissolves by zooming *into* the drop, as if you fell through the glass.
@@ -33,6 +41,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent { RosaAppRoot() }
+        // Only a fresh launch: after recreation the intent would drag the user back to that city.
+        if (savedInstanceState == null) openPlaceFrom(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        openPlaceFrom(intent)
+    }
+
+    /** A tap on a widget pinned to a city opens that city, not whichever one was last viewed. */
+    private fun openPlaceFrom(intent: Intent?) {
+        val placeId = intent?.getStringExtra(WidgetUpdater.EXTRA_PLACE_ID) ?: return
+        lifecycleScope.launch { places.select(placeId) }
     }
 }
 

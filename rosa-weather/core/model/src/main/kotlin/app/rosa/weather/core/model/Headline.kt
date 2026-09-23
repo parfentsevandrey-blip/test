@@ -80,7 +80,10 @@ object Headlines {
         }
         if (laterHour != null) {
             val laterCondition = WeatherCondition.fromWmo(laterHour.weatherCode)
-            return Headline.PrecipitationLater(laterHour.time - 3600, kindFor(laterCondition, laterHour.temperature))
+            // Hourly values describe the *preceding* hour; never announce a start in the past.
+            val nextQuarter = (now / 900 + 1) * 900
+            val start = (laterHour.time - 3600).coerceAtLeast(nextQuarter)
+            return Headline.PrecipitationLater(start, kindFor(laterCondition, laterHour.temperature))
         }
         return null
     }

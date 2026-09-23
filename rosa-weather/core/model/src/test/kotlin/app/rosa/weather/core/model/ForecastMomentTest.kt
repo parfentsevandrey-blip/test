@@ -41,6 +41,33 @@ class ForecastMomentTest {
     }
 
     @Test
+    fun `chance for an hour comes from the following slot`() {
+        // Open-Meteo reports precipitation for the *preceding* hour.
+        val start = forecast.firstHourIndexFrom(now + 1200)
+        assertThat(forecast.hoursFrom(now + 1200).first()).isEqualTo(forecast.hourly[start])
+        assertThat(forecast.chanceForHourStarting(start)).isEqualTo(forecast.hourly[start + 1].precipitationProbability)
+        val last = forecast.hourly.lastIndex
+        assertThat(forecast.chanceForHourStarting(last)).isEqualTo(forecast.hourly[last].precipitationProbability)
+    }
+
+    @Test
+    fun `later precipitation is never announced in the past`() {
+        val moment = forecast.momentAt(now)
+        val headline = Headlines.pick(forecast, moment)
+        if (headline is Headline.PrecipitationLater) assertThat(headline.atEpochSeconds).isGreaterThan(now)
+    }
+
+    @Test
+    fun `days start with today even on a 25-hour day`() {
+        val days = forecast.daysFrom(now)
+        assertThat(days.first()).isEqualTo(forecast.dayAt(now))
+        // Just before the next local midnight we are still on the same day.
+        val nextMidnight = forecast.daily[forecast.daily.indexOf(days.first()) + 1].time
+        assertThat(forecast.daysFrom(nextMidnight - 1).first()).isEqualTo(days.first())
+        assertThat(forecast.daysFrom(nextMidnight).first().time).isEqualTo(nextMidnight)
+    }
+
+    @Test
     fun `day lookup returns the local calendar day`() {
         val day = forecast.dayAt(now)!!
         assertThat(day.time).isAtMost(now)

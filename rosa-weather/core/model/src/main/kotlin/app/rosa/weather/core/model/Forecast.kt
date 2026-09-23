@@ -38,17 +38,31 @@ data class Forecast(
     fun dayAt(epochSeconds: Long): DailyPoint? =
         daily.lastOrNull { it.time <= epochSeconds } ?: daily.firstOrNull()
 
+    /** Index of the first slot [hoursFrom] returns, or -1 when the data has run out. */
+    fun firstHourIndexFrom(epochSeconds: Long): Int = hourly.indexOfFirst { it.time + 3600 > epochSeconds }
+
     /** Hours from [epochSeconds] onward (the current, partially elapsed hour included). */
     fun hoursFrom(epochSeconds: Long): List<HourlyPoint> {
-        val start = hourly.indexOfFirst { it.time + 3600 > epochSeconds }
+        val start = firstHourIndexFrom(epochSeconds)
         return if (start < 0) emptyList() else hourly.subList(start, hourly.size)
     }
 
-    /** Days starting with the local "today" for [epochSeconds]. */
+    /**
+     * Days starting with the local "today" for [epochSeconds]. Day boundaries come from the data
+     * (local midnights), so 23- and 25-hour DST days are handled correctly.
+     */
     fun daysFrom(epochSeconds: Long): List<DailyPoint> {
-        val start = daily.indexOfFirst { it.time + 86_400 > epochSeconds }
-        return if (start < 0) emptyList() else daily.subList(start, daily.size)
+        if (daily.isEmpty()) return emptyList()
+        val start = daily.indexOfLast { it.time <= epochSeconds }.coerceAtLeast(0)
+        return daily.subList(start, daily.size)
     }
+
+    /**
+     * Chance of precipitation during the hour that *starts* at [hourIndex]. Open-Meteo reports
+     * hourly precipitation for the preceding hour, so it lives in the next slot.
+     */
+    fun chanceForHourStarting(hourIndex: Int): Int =
+        hourly.getOrNull(hourIndex + 1)?.precipitationProbability ?: hourly.getOrNull(hourIndex)?.precipitationProbability ?: 0
 }
 
 @Serializable

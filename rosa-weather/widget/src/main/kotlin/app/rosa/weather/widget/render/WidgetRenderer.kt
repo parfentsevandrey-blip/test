@@ -426,6 +426,8 @@ class WidgetRenderer(private val context: Context) {
         val k = s.k
         val hours = s.forecast.hoursFrom(s.now).take(block.count)
         if (hours.isEmpty()) return
+        val firstIndex = s.forecast.firstHourIndexFrom(s.now)
+        fun chance(i: Int) = s.forecast.chanceForHourStarting(firstIndex + i)
         val colW = box.w / hours.size
         val labelSize = min(11f * k, colW * 0.3f)
         val tempSize = min(13.5f * k, colW * 0.34f)
@@ -450,8 +452,8 @@ class WidgetRenderer(private val context: Context) {
                 }
                 val temp = if (i == 0) s.moment.temperature else hour.temperature
                 WidgetType.draw(canvas, s.format.temperature(temp), cx + tempSize * 0.1f, box.bottom - 3 * k, type.text(tempSize, s.palette.ink, 620), colW, Paint.Align.CENTER, s.shadow)
-                if (hour.precipitationProbability >= 30 && box.h - (glyphTop - box.y) - glyphSize > tempSize * 2.2f) {
-                    WidgetType.draw(canvas, "${hour.precipitationProbability}%", cx, glyphTop + glyphSize + 10 * k, type.text(9.5f * k, s.palette.rain, 600), colW, Paint.Align.CENTER, s.shadow)
+                if (chance(i) >= 30 && box.h - (glyphTop - box.y) - glyphSize > tempSize * 2.2f) {
+                    WidgetType.draw(canvas, "${chance(i)}%", cx, glyphTop + glyphSize + 10 * k, type.text(9.5f * k, s.palette.rain, 600), colW, Paint.Align.CENTER, s.shadow)
                 }
             }
             return
@@ -520,7 +522,7 @@ class WidgetRenderer(private val context: Context) {
         if (precipH > 0f) {
             val maxBar = precipH
             hours.forEachIndexed { i, hour ->
-                val p = hour.precipitationProbability / 100f
+                val p = chance(i) / 100f
                 if (p < 0.05f) return@forEachIndexed
                 val cx = points[i].first
                 val bw = min(colW * 0.34f, 10 * k)

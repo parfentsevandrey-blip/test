@@ -6,6 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltWorker
 class WeatherSyncWorker @AssistedInject constructor(
@@ -18,6 +19,7 @@ class WeatherSyncWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         val mode = inputData.getString(KEY_MODE) ?: MODE_PERIODIC
         if (mode == MODE_RENDER) {
+            scheduler.onRenderTickStarted()
             syncer.render(SyncReason.Render)
             return Result.success()
         }
@@ -27,7 +29,14 @@ class WeatherSyncWorker @AssistedInject constructor(
                 ?: SyncReason.UserRequest
             else -> SyncReason.Periodic
         }
-        val outcome = syncer.sync(reason, force = inputData.getBoolean(KEY_FORCE, false), inBackground = true)
+        val outcome = try {
+            syncer.sync(reason, force = inputData.getBoolean(KEY_FORCE, false), inBackground = true)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // Storage or location failures must not crash the process; try again later.
+            return if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
+        }
         return when (outcome) {
             SyncOutcome.Offline -> {
                 scheduler.scheduleCatchUp()
