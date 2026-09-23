@@ -1,5 +1,8 @@
 # Кутузовский 12 — Club House landing (concept)
 
+> Also in this repository: **[Роса](rosa-weather/README.md)** — an Android 17 weather app with
+> Liquid Glass UI and home-screen widgets that adapt to any grid size (`rosa-weather/`).
+
 A premium, single-page site for the real **«Кутузовский 12»** deluxe club house
 on Kutuzovsky Prospekt, Moscow (architecture by Tsimailo, Lyashenko & Partners).
 The hero is a full-screen **Three.js** reconstruction of the actual building —

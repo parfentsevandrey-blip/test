@@ -65,3 +65,8 @@ dependencies {
     testImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.test.manifest)
 }
+
+tasks.withType<Test>().configureEach {
+    // Opt-in export of documentation images (README) from the screen snapshot tests.
+    if (project.hasProperty("rosa.docs")) systemProperty("rosa.docs", rootProject.file("docs/images").absolutePath)
+}

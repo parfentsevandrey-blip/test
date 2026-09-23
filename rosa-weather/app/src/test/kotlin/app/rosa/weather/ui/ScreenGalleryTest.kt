@@ -41,6 +41,7 @@ class ScreenGalleryTest {
         val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
         val out = File("build/screens").apply { mkdirs() }
         File(out, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        exportDocImage(bitmap, name, 540)
     }
 
     private fun home(scenario: SampleForecast.Scenario, now: Long, name: String) {
@@ -77,4 +78,18 @@ class ScreenGalleryTest {
 
     @Test
     fun homeSunny() = home(SampleForecast.Scenario.SunnyMild, 1_758_621_600L, "home-sunny")
+}
+
+/** Writes a downscaled JPEG for the README when run with `-Prosa.docs`. */
+internal fun exportDocImage(bitmap: android.graphics.Bitmap, name: String, width: Int) {
+    val dir = System.getProperty("rosa.docs") ?: return
+    val scale = width.toFloat() / bitmap.width
+    val scaled = android.graphics.Bitmap.createScaledBitmap(bitmap, width, (bitmap.height * scale).toInt(), true)
+    val opaque = android.graphics.Bitmap.createBitmap(scaled.width, scaled.height, android.graphics.Bitmap.Config.ARGB_8888)
+    android.graphics.Canvas(opaque).apply {
+        drawColor(0xFF141A3A.toInt())
+        drawBitmap(scaled, 0f, 0f, null)
+    }
+    java.io.File(dir).mkdirs()
+    java.io.File(dir, "$name.jpg").outputStream().use { opaque.compress(android.graphics.Bitmap.CompressFormat.JPEG, 86, it) }
 }

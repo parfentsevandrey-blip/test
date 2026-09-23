@@ -84,6 +84,7 @@ class WidgetGalleryTest {
                 }
             }
             File(out, "scenarios-${style.name.lowercase()}.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            exportDocImage(bmp, "widgets-scenarios-${style.name.lowercase()}", 1000)
         }
     }
 
@@ -124,6 +125,7 @@ class WidgetGalleryTest {
             canvas.drawText(text, pos.first, pos.second + size.second + 11f, label)
         }
         File(out, "$name.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        exportDocImage(bmp, "widgets-$name", 1100)
     }
 
     private fun wallpaper(canvas: Canvas, w: Float, h: Float) {
@@ -135,4 +137,18 @@ class WidgetGalleryTest {
         p.shader = RadialGradient(w * 0.2f, h * 0.8f, w * 0.4f, 0x6633CCAA, 0x00000000, Shader.TileMode.CLAMP)
         canvas.drawRect(0f, 0f, w, h, p)
     }
+}
+
+/** Writes a downscaled JPEG for the README when run with `-Prosa.docs`. */
+internal fun exportDocImage(bitmap: android.graphics.Bitmap, name: String, width: Int) {
+    val dir = System.getProperty("rosa.docs") ?: return
+    val scale = width.toFloat() / bitmap.width
+    val scaled = android.graphics.Bitmap.createScaledBitmap(bitmap, width, (bitmap.height * scale).toInt(), true)
+    val opaque = android.graphics.Bitmap.createBitmap(scaled.width, scaled.height, android.graphics.Bitmap.Config.ARGB_8888)
+    android.graphics.Canvas(opaque).apply {
+        drawColor(0xFF141A3A.toInt())
+        drawBitmap(scaled, 0f, 0f, null)
+    }
+    java.io.File(dir).mkdirs()
+    java.io.File(dir, "$name.jpg").outputStream().use { opaque.compress(android.graphics.Bitmap.CompressFormat.JPEG, 86, it) }
 }

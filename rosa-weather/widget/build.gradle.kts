@@ -30,4 +30,6 @@ dependencies {
 tasks.withType<Test>().configureEach {
     // Opt-in regeneration of the static picker previews from the real renderer.
     if (project.hasProperty("rosa.previews")) systemProperty("rosa.previews", "true")
+    // Opt-in export of documentation images (README) from the gallery tests.
+    if (project.hasProperty("rosa.docs")) systemProperty("rosa.docs", rootProject.file("docs/images").absolutePath)
 }
