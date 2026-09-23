@@ -7,7 +7,7 @@ import android.util.SizeF
 import androidx.core.os.BundleCompat
 
 /** Every exact size (dp) a launcher may show this widget at — usually portrait and landscape. */
-internal object WidgetSizes {
+object WidgetSizes {
     fun from(options: Bundle, info: AppWidgetProviderInfo?): List<SizeF> {
         val exact = BundleCompat.getParcelableArrayList(options, AppWidgetManager.OPTION_APPWIDGET_SIZES, SizeF::class.java)
             ?.filter { it.width > 0 && it.height > 0 }

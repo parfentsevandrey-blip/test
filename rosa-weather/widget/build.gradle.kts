@@ -26,3 +26,8 @@ dependencies {
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)
 }
+
+tasks.withType<Test>().configureEach {
+    // Opt-in regeneration of the static picker previews from the real renderer.
+    if (project.hasProperty("rosa.previews")) systemProperty("rosa.previews", "true")
+}
