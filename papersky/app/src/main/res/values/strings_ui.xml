@@ -9,9 +9,6 @@
     <string name="offline_as_of">No connection — sky as of %1$s</string>
     <string name="preview_at">%1$s, %2$s · back to now</string>
     <string name="credits_data">Weather data by Open-Meteo.com</string>
-    <string name="note_title">Notes for today</string>
-    <string name="cord_tag">pull</string>
-    <string name="stamp_postmark">AIR MAIL</string>
 
     <string name="hourly_title">Hour by hour</string>
     <string name="hourly_hint">tap or hold &amp; slide</string>

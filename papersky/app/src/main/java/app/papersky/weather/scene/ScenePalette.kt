@@ -139,25 +139,14 @@ object Palettes {
     }
 
     /**
-     * Sky and landscape blend continuously. Paper never turns dark (DESIGN_DOCTRINE §1.4): it is
-     * always the day sheet's paper, and as night falls the desk lamp warms it.
+     * Sky and landscape blend continuously, but paper must stay clearly light or dark — a half-way
+     * grey sheet would make ink unreadable — so it comes from the pure day or night sheet.
      */
     fun forState(s: SceneState): ScenePalette {
         val sky = blend(s)
-        return sky.withPaperOf(lampLit(blend(s.copy(daylight = 1f, sunProgress = 0.5f)), s.daylight))
+        val paperSide = if (s.daylight >= 0.45f) s.copy(daylight = 1f, sunProgress = 0.5f) else s.copy(daylight = 0f, sunProgress = -0.5f)
+        return sky.withPaperOf(blend(paperSide))
     }
-
-    /** [sheet]'s paper under the desk lamp: #FFC78A at 18% and 5% dimmer at full night (§4.3). */
-    fun lampLit(sheet: ScenePalette, daylight: Float): ScenePalette {
-        val lamp = smoothstep(0f, 1f, ((0.55f - daylight) / 0.35f).coerceIn(0f, 1f))
-        if (lamp <= 0.01f) return sheet
-        val warm = ColorMath.lerp(sheet.paper, LAMP, lamp * 0.18f)
-        val k = 1f - 0.05f * lamp
-        val paper = ColorMath.argb(255, (ColorMath.r(warm) * k).toInt(), (ColorMath.g(warm) * k).toInt(), (ColorMath.b(warm) * k).toInt())
-        return sheet.copyWith(ScenePalette.PAPER to paper)
-    }
-
-    private const val LAMP = 0xFFFFC78A.toInt()
 
     private fun blend(s: SceneState): ScenePalette {
         val tw = timeWeights(s.daylight, s.sunProgress)
@@ -197,7 +186,7 @@ object Palettes {
     }
 
     private fun fixed(day: ScenePalette, night: ScenePalette, daylight: Float): ScenePalette =
-        ScenePalette.lerp(night, day, daylight).withPaperOf(lampLit(day, daylight))
+        ScenePalette.lerp(night, day, daylight).withPaperOf(if (daylight >= 0.45f) day else night)
 
     /** Material You: build a paper scene from the system's wallpaper-derived tonal palettes. */
     fun wallpaper(context: Context, night: Boolean): ScenePalette {

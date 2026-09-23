@@ -9,7 +9,7 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 /** Fonts available to widget text (each backed by a RemoteViews layout). */
-enum class WFont { DisplayLight, Display, Body, BodyBold }
+enum class WFont { DisplayLight, Display, Body, BodyBold, Hand }
 
 fun interface TextMeasure {
     /** Width in dp of [text] set in [font] at [sizeDp]. */
@@ -24,6 +24,7 @@ object EstimateMeasure : TextMeasure {
             WFont.Display -> 0.74f
             WFont.Body -> 0.56f
             WFont.BodyBold -> 0.6f
+            WFont.Hand -> 0.46f
         }
         return text.length * sizeDp * k
     }

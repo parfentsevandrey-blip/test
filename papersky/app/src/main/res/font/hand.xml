@@ -3,8 +3,8 @@
      cannot set variation settings at runtime. -->
 <font-family xmlns:android="http://schemas.android.com/apk/res/android">
     <font
-        android:font="@font/unbounded"
+        android:font="@font/caveat"
         android:fontStyle="normal"
-        android:fontVariationSettings="'wght' 500"
-        android:fontWeight="500" />
+        android:fontVariationSettings="'wght' 600"
+        android:fontWeight="600" />
 </font-family>

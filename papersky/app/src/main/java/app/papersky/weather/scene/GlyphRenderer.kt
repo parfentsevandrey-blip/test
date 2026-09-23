@@ -463,45 +463,11 @@ class GlyphRenderer {
             Glyph.HeavyRain, Glyph.Sleet, Glyph.Snow, Glyph.Hail, Glyph.Thunder, Glyph.Uv,
         )
 
-        /** Share of the box a sticker's artwork takes; the rest is its white die-cut border. */
-        const val STICKER_ART = 0.84f
-
-        fun bitmap(glyph: Glyph, sizePx: Int, colors: GlyphColors, rotation: Float = 0f): Bitmap {
+        /** The glyph baked into a bitmap; with [Pass.Base] its moving parts are left out. */
+        fun bitmap(glyph: Glyph, sizePx: Int, colors: GlyphColors, rotation: Float = 0f, pass: Pass = Pass.All): Bitmap {
             val bmp = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
-            GlyphRenderer().draw(Canvas(bmp), glyph, 0f, 0f, sizePx.toFloat(), colors, 0f, rotation)
+            GlyphRenderer().draw(Canvas(bmp), glyph, 0f, 0f, sizePx.toFloat(), colors, 0f, rotation, pass)
             return bmp
-        }
-
-        /**
-         * The glyph as a die-cut sticker: its static body on a white border that follows the
-         * outline, lifted by a soft shadow. Moving parts are drawn over it per frame with
-         * [Pass.Motion] at [STICKER_ART] scale around the centre.
-         */
-        fun sticker(glyph: Glyph, sizePx: Int, colors: GlyphColors, rotation: Float = 0f, animated: Boolean = true, border: Int = 0xFFFFFCF4.toInt()): Bitmap {
-            val art = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
-            val inset = sizePx * (1f - STICKER_ART) / 2f
-            GlyphRenderer().draw(Canvas(art), glyph, inset, inset, sizePx * STICKER_ART, colors, 0f, rotation, if (animated) Pass.Base else Pass.All)
-            val mask = art.extractAlpha()
-            val out = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
-            val c = Canvas(out)
-            val r = (sizePx * 0.045f).coerceAtLeast(1.2f)
-            val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
-            // Shadow of the whole sticker, down and slightly right (one light, top-left).
-            p.color = 0x552A1C10
-            p.maskFilter = android.graphics.BlurMaskFilter(r * 1.4f, android.graphics.BlurMaskFilter.Blur.NORMAL)
-            c.drawBitmap(mask, r * 0.35f, r * 1.1f, p)
-            p.maskFilter = null
-            // Border: the silhouette dilated in every direction.
-            p.color = border
-            for (k in 0 until 16) {
-                val a = k * Math.PI * 2 / 16
-                c.drawBitmap(mask, (kotlin.math.cos(a) * r).toFloat(), (kotlin.math.sin(a) * r).toFloat(), p)
-            }
-            c.drawBitmap(mask, 0f, 0f, p)
-            c.drawBitmap(art, 0f, 0f, null)
-            mask.recycle()
-            art.recycle()
-            return out
         }
     }
 }

@@ -157,7 +157,7 @@ class AppScreenshots {
             PaperskyChrome(UserSettings(motion = MotionLevel.Still), s) {
                 WidgetStudioScreen(vm, s, MotionLevel.Still, village = true, onEdit = {}) {}
             }
-        }, previews = 3)
+        }, previews = 6)
     }
 
     @Test

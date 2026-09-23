@@ -20,24 +20,14 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import app.papersky.weather.R
+import app.papersky.weather.scene.ColorMath
 import app.papersky.weather.scene.Palettes
 import app.papersky.weather.scene.ScenePalette
 
-/** Inks and papers of DESIGN_DOCTRINE §3 and §5. */
-object Ink {
-    val Graphite = Color(0xFF2B2824)
-    val Sepia = Color(0xFF6E5B49)
-    val Blue = Color(0xFF2F4F86)
-    val RedPencil = Color(0xFFC8483B)
-    val Terracotta = Color(0xFFC9573A)
-    val RainOnPaper = Color(0xFF3F77B3)
-    val Shadow = Color(0xFF2A1C10)
-    val Tapes = listOf(Color(0xFFE9A79A), Color(0xFFF2D38B), Color(0xFFA9C9B8), Color(0xFFAFC3E0), Color(0xFFD8B8E0))
-}
-
 /**
- * Sky colours come from the living palette; paper colours come from the materials under the
- * room's [Light] — paper never turns into a "dark theme".
+ * Every colour of the app comes from the sky (DESIGN_DOCTRINE §3): the paper is cut from the same
+ * sheet as the diorama, so it is cream on a sunny day, peach at golden hour and deep ink-blue on a
+ * rainy night — and the whole interface glides from one to the other with the weather.
  */
 @Immutable
 data class PaperColors(
@@ -49,36 +39,49 @@ data class PaperColors(
     val paperInk: Color,
     val paperInkSoft: Color,
     val accent: Color,
-    val handInk: Color,
-    val redPencil: Color,
+    val tape: Color,
     val shadow: Color,
     val precip: Color,
     val sun: Color,
     val isNight: Boolean,
 ) {
-    companion object {
-        fun from(p: ScenePalette, light: Light): PaperColors = PaperColors(
-            sky = Color(p.skyTop),
-            skyBottom = Color(p.skyBottom),
-            onSky = Color(p.onSky),
-            onSkySoft = Color(p.onSkySoft),
-            paper = light.lit(Stock.Cotton.base),
-            paperInk = Ink.Graphite,
-            paperInkSoft = Ink.Sepia,
-            accent = Ink.Terracotta,
-            handInk = Ink.Blue,
-            redPencil = Ink.RedPencil,
-            shadow = Ink.Shadow,
-            precip = Color(p.precip),
-            sun = Color(p.sun),
-            isNight = light.isLamp,
-        )
+    /** Ink for precipitation printed on this paper. */
+    val rainInk: Color get() = if (isNight) Color(0xFF9CC4EC) else Color(0xFF3F77B3)
 
-        val Default = from(Palettes.ClearDay, Light())
+    companion object {
+        fun from(p: ScenePalette): PaperColors {
+            val ink = Color(p.paperInk)
+            return PaperColors(
+                sky = Color(p.skyTop),
+                skyBottom = Color(p.skyBottom),
+                onSky = Color(p.onSky),
+                onSkySoft = Color(p.onSkySoft),
+                paper = Color(p.paper),
+                paperInk = ink,
+                paperInkSoft = ink.copy(alpha = 0.62f),
+                accent = Color(p.accent),
+                tape = Color(p.tape),
+                shadow = Color(ColorMath.withAlpha(p.shadow, (ColorMath.a(p.shadow) / 255f).coerceAtLeast(0.3f))),
+                precip = Color(p.precip),
+                sun = Color(p.sun),
+                isNight = p.isDarkPaper,
+            )
+        }
+
+        val Default = from(Palettes.ClearDay)
     }
 }
 
+/**
+ * Three voices, each with one job (DESIGN_DOCTRINE §6): Unbounded speaks the numbers and the
+ * titles, Manrope explains, Caveat is what a person wrote by hand.
+ */
 object PaperFonts {
+    private fun unbounded(weight: Int) = Font(
+        R.font.unbounded, FontWeight(weight),
+        variationSettings = FontVariation.Settings(FontVariation.weight(weight)),
+    )
+
     private fun manrope(weight: Int) = Font(
         R.font.manrope, FontWeight(weight),
         variationSettings = FontVariation.Settings(FontVariation.weight(weight)),
@@ -89,58 +92,57 @@ object PaperFonts {
         variationSettings = FontVariation.Settings(FontVariation.weight(weight)),
     )
 
-    /** The dominant: every number, label, heading and button. */
-    val Manrope = FontFamily(manrope(400), manrope(500), manrope(600), manrope(700), manrope(800))
-
-    /** The only accent: things a person wrote by hand (DESIGN_DOCTRINE §6). */
+    val Display = FontFamily(unbounded(250), unbounded(300), unbounded(400), unbounded(500), unbounded(600), unbounded(700))
+    val Body = FontFamily(manrope(400), manrope(500), manrope(600), manrope(700), manrope(800))
     val Hand = FontFamily(caveat(500), caveat(600), caveat(700))
 }
 
 @Immutable
 data class PaperType(
-    /** Temperature, cut from card. */
+    /** The temperature: large and light, standing in the sky. */
     val hero: TextStyle,
+    /** Screen titles. */
     val display: TextStyle,
+    /** Values on tiles, big temperatures on cards. */
     val title: TextStyle,
+    /** Names: places, card titles. */
     val heading: TextStyle,
     val body: TextStyle,
     val bodyStrong: TextStyle,
+    /** Small caps over a card. */
     val label: TextStyle,
     val caption: TextStyle,
+    /** Temperatures in lists and charts. */
     val number: TextStyle,
     val hand: TextStyle,
-    val handSmall: TextStyle,
+    val handLarge: TextStyle,
 ) {
     companion object {
         private val tight = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both)
-        private val M = PaperFonts.Manrope
+        private val D = PaperFonts.Display
+        private val B = PaperFonts.Body
+        private val H = PaperFonts.Hand
 
         val Default = PaperType(
-            hero = TextStyle(fontFamily = M, fontWeight = FontWeight(800), fontSize = 112.sp, letterSpacing = (-0.04).em, lineHeight = 1.0.em, lineHeightStyle = tight, fontFeatureSettings = "tnum"),
-            display = TextStyle(fontFamily = M, fontWeight = FontWeight(800), fontSize = 34.sp, letterSpacing = (-0.02).em, lineHeight = 1.1.em),
-            title = TextStyle(fontFamily = M, fontWeight = FontWeight(700), fontSize = 22.sp, letterSpacing = (-0.01).em, lineHeight = 1.2.em),
-            heading = TextStyle(fontFamily = M, fontWeight = FontWeight(700), fontSize = 16.sp, lineHeight = 1.3.em),
-            body = TextStyle(fontFamily = M, fontWeight = FontWeight(500), fontSize = 15.sp, lineHeight = 1.45.em),
-            bodyStrong = TextStyle(fontFamily = M, fontWeight = FontWeight(700), fontSize = 15.sp, lineHeight = 1.4.em),
-            label = TextStyle(fontFamily = M, fontWeight = FontWeight(800), fontSize = 11.sp, letterSpacing = 0.12.em),
-            caption = TextStyle(fontFamily = M, fontWeight = FontWeight(600), fontSize = 12.5.sp, lineHeight = 1.35.em),
-            number = TextStyle(fontFamily = M, fontWeight = FontWeight(700), fontSize = 16.sp, fontFeatureSettings = "tnum"),
-            hand = TextStyle(fontFamily = PaperFonts.Hand, fontWeight = FontWeight(600), fontSize = 23.sp, lineHeight = 1.18.em),
-            handSmall = TextStyle(fontFamily = PaperFonts.Hand, fontWeight = FontWeight(600), fontSize = 19.sp, lineHeight = 1.2.em),
+            hero = TextStyle(fontFamily = D, fontWeight = FontWeight(300), fontSize = 112.sp, letterSpacing = (-0.04).em, lineHeight = 1.0.em, lineHeightStyle = tight),
+            display = TextStyle(fontFamily = D, fontWeight = FontWeight(500), fontSize = 34.sp, letterSpacing = (-0.02).em, lineHeight = 1.1.em),
+            title = TextStyle(fontFamily = D, fontWeight = FontWeight(600), fontSize = 22.sp, letterSpacing = (-0.01).em, lineHeight = 1.2.em),
+            heading = TextStyle(fontFamily = D, fontWeight = FontWeight(500), fontSize = 15.sp, lineHeight = 1.3.em),
+            body = TextStyle(fontFamily = B, fontWeight = FontWeight(500), fontSize = 15.sp, lineHeight = 1.45.em),
+            bodyStrong = TextStyle(fontFamily = B, fontWeight = FontWeight(700), fontSize = 15.sp, lineHeight = 1.4.em),
+            label = TextStyle(fontFamily = B, fontWeight = FontWeight(800), fontSize = 11.sp, letterSpacing = 0.12.em),
+            caption = TextStyle(fontFamily = B, fontWeight = FontWeight(600), fontSize = 12.sp, lineHeight = 1.35.em),
+            number = TextStyle(fontFamily = D, fontWeight = FontWeight(500), fontSize = 16.sp, fontFeatureSettings = "tnum"),
+            hand = TextStyle(fontFamily = H, fontWeight = FontWeight(600), fontSize = 22.sp, lineHeight = 1.15.em),
+            handLarge = TextStyle(fontFamily = H, fontWeight = FontWeight(600), fontSize = 30.sp, lineHeight = 1.1.em),
         )
     }
 }
 
-/** Letterpress (§4.5): ink pressed into a light material catches a pale rim below. */
-fun TextStyle.pressed(onDark: Boolean = false): TextStyle = copy(
-    shadow = if (onDark) Shadow(Color.Black.copy(alpha = 0.45f), Offset(0f, -2.5f), 0f)
-    else Shadow(Color.White.copy(alpha = 0.7f), Offset(0f, 2.5f), 0f),
-)
-
-/** Text laid straight onto the sky gets a soft shadow (or glow, if the ink is dark). */
+/** Text standing straight on the sky gets a soft shadow (or a pale glow, if the ink is dark). */
 fun TextStyle.onSky(lightInk: Boolean): TextStyle = copy(
-    shadow = if (lightInk) Shadow(Color.Black.copy(alpha = 0.35f), Offset(0f, 4f), 16f)
-    else Shadow(Color.White.copy(alpha = 0.45f), Offset(0f, 2f), 12f),
+    shadow = if (lightInk) Shadow(Color.Black.copy(alpha = 0.3f), Offset(0f, 3f), 14f)
+    else Shadow(Color.White.copy(alpha = 0.4f), Offset(0f, 2f), 12f),
 )
 
 // Dynamic (not static): colours animate, and only readers should recompose.
@@ -153,19 +155,27 @@ object Paper {
     val light: Light @Composable get() = LocalLight.current
 }
 
-/** Provides colours that glide (rather than snap) whenever the sky or the light changes. */
+/** Provides colours that glide (rather than snap) whenever the sky changes. */
 @Composable
 fun PaperTheme(palette: ScenePalette, light: Light, content: @Composable () -> Unit) {
-    val target = PaperColors.from(palette, light)
+    val target = PaperColors.from(palette)
     val spec = tween<Color>(durationMillis = 900)
     val sky by animateColorAsState(target.sky, spec, label = "sky")
     val skyBottom by animateColorAsState(target.skyBottom, spec, label = "skyBottom")
     val onSky by animateColorAsState(target.onSky, spec, label = "onSky")
     val onSkySoft by animateColorAsState(target.onSkySoft, spec, label = "onSkySoft")
-    val paper by animateColorAsState(target.paper, spec, label = "paper")
+    val paper by animateColorAsState(light.lit(target.paper), spec, label = "paper")
+    val ink by animateColorAsState(target.paperInk, spec, label = "ink")
+    val accent by animateColorAsState(target.accent, spec, label = "accent")
+    val tape by animateColorAsState(target.tape, spec, label = "tape")
+    val shadow by animateColorAsState(target.shadow, spec, label = "shadow")
     val precip by animateColorAsState(target.precip, spec, label = "precip")
     val sun by animateColorAsState(target.sun, spec, label = "sun")
-    val colors = target.copy(sky = sky, skyBottom = skyBottom, onSky = onSky, onSkySoft = onSkySoft, paper = paper, precip = precip, sun = sun)
+    val colors = PaperColors(
+        sky = sky, skyBottom = skyBottom, onSky = onSky, onSkySoft = onSkySoft, paper = paper,
+        paperInk = ink, paperInkSoft = ink.copy(alpha = 0.62f), accent = accent, tape = tape,
+        shadow = shadow, precip = precip, sun = sun, isNight = target.isNight,
+    )
     CompositionLocalProvider(
         LocalPaperColors provides colors,
         LocalPaperType provides PaperType.Default,

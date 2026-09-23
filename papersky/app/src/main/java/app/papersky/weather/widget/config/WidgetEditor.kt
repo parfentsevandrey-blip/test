@@ -57,11 +57,9 @@ import app.papersky.weather.design.Chip
 import app.papersky.weather.design.Label
 import app.papersky.weather.design.Paper
 import app.papersky.weather.design.PaperButton
-import app.papersky.weather.design.DeckleShape
-import app.papersky.weather.design.DiscButton
-import app.papersky.weather.design.PaperSheet
-import app.papersky.weather.design.Stock
-import app.papersky.weather.design.material
+import app.papersky.weather.design.PaperCard
+import app.papersky.weather.design.PaperDisc
+import app.papersky.weather.design.paperSurface
 import app.papersky.weather.design.onSky
 import app.papersky.weather.design.PaperSegmented
 import app.papersky.weather.design.PaperSlider
@@ -112,7 +110,7 @@ fun WidgetEditor(
 
     Column(Modifier.fillMaxSize().background(colors.sky)) {
         Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            DiscButton(PaperIcon.Close, stringResource(R.string.back), onClose)
+            PaperDisc(PaperIcon.Close, stringResource(R.string.back), onClose)
             Spacer(Modifier.width(12.dp))
             BasicText(
                 title, Modifier.weight(1f), style = Paper.type.title.copy(color = colors.onSky).onSky(colors.onSky.red + colors.onSky.green + colors.onSky.blue > 1.5f), maxLines = 1,
@@ -121,10 +119,10 @@ fun WidgetEditor(
             PaperButton(doneLabel, { h.confirm(); onDone(config) })
         }
         Desk(config, size, onResize = { size = it })
-        // The options lie on a linen cloth, each group on its own sheet of cotton paper (§12).
+        // The options lie on a large sheet of paper, each group on its own card (§12).
         LazyColumn(
             Modifier.fillMaxWidth().weight(1f)
-                .material(Stock.Linen, DeckleShape(seed = 5, corner = 26.dp, roughness = 1.2.dp), level = 3),
+                .paperSurface(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp), level = 4),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 22.dp, bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -265,7 +263,7 @@ private fun Desk(config: WidgetConfig, widgetSize: DpSize, onResize: (DpSize) ->
                         onResize(DpSize(w, hh))
                     }
                 }
-                .material(Stock.Cotton, CircleShape, level = 3),
+                .paperSurface(CircleShape, level = 3),
             contentAlignment = Alignment.Center,
         ) {
             Canvas(Modifier.size(16.dp)) {
@@ -287,7 +285,7 @@ private fun Desk(config: WidgetConfig, widgetSize: DpSize, onResize: (DpSize) ->
 
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {
-    PaperSheet(seed = title.hashCode()) {
+    PaperCard(seed = title.hashCode()) {
         Label(title)
         Spacer(Modifier.height(10.dp))
         content()

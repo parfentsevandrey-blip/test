@@ -9,9 +9,6 @@
     <string name="offline_as_of">Нет сети — небо на %1$s</string>
     <string name="preview_at">%1$s, %2$s · вернуться</string>
     <string name="credits_data">Данные о погоде: Open-Meteo.com</string>
-    <string name="note_title">Заметки дня</string>
-    <string name="cord_tag">потяни</string>
-    <string name="stamp_postmark">АВИА</string>
 
     <string name="hourly_title">По часам</string>
     <string name="hourly_hint">нажмите или зажмите и ведите</string>

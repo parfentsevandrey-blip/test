@@ -132,7 +132,7 @@ object WidgetArt {
         canvas.drawPath(path, paint)
 
         // Real cotton fibres, and a strip of washi tape holding the sheet (DESIGN_DOCTRINE §13).
-        paint.shader = android.graphics.BitmapShader(MaterialTextures.cotton, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
+        paint.shader = android.graphics.BitmapShader(MaterialTextures.paper, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
         canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
         paint.shader = null
         if (plan.width >= 90 && plan.height >= 60) PaperSceneRenderer(scale).tape(canvas, w * 0.5f, 5 * scale, p.tape, -3f)

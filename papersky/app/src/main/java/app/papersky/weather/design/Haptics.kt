@@ -94,13 +94,7 @@ class Haptics(context: Context) {
 
     // --- Materials (DESIGN_DOCTRINE §1.8) ----------------------------------------------------
 
-    /** Chipboard landing after a flip: a dull knock. */
-    fun cardboard(view: View) {
-        if (!primitives) return tick(view)
-        compose { if (thud) add(Composition.PRIMITIVE_THUD, 0.45f * strength) else add(Composition.PRIMITIVE_LOW_TICK, 0.6f * strength) }
-    }
-
-    /** A push pin going into cork: a short "tock". */
+    /** Pinning a place: a short "tock". */
     fun pin(view: View) {
         if (!primitives) return press(view)
         compose { add(Composition.PRIMITIVE_CLICK, 0.55f * strength) }
@@ -190,7 +184,6 @@ class ViewHaptics(val engine: Haptics, private val view: View) {
     fun threshold() = engine.threshold(view)
     fun dragStart() = engine.dragStart(view)
     fun gestureEnd() = engine.gestureEnd(view)
-    fun cardboard() = engine.cardboard(view)
     fun pin() = engine.pin(view)
     fun rustle() = engine.rustle(view)
 }

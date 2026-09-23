@@ -7,18 +7,15 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 /**
- * Geometry of one paper diorama: layered ridges (mountains, forested hills, meadows), cloud
- * cut-outs and star positions. Built once per size / place and reused for every frame — nothing
- * here is recomputed while the scene animates.
+ * Geometry of one paper diorama: three soft rolling hills cut from paper (far, middle, near
+ * meadow), cloud cut-outs, the hamlet and trees, star positions. Built once per size / place and
+ * reused for every frame — nothing here is recomputed while the scene animates.
  */
 internal class SceneLayout(private val dp: Float) {
 
-    enum class Kind { Peaks, Forest, Rolling }
-
-    private class Spec(val offset: Float, val amp: Float, val wavelengthDp: Float, val kind: Kind, val treeScale: Float, val depth: Float)
+    private class Spec(val offset: Float, val amp: Float, val wavelengthDp: Float, val depth: Float)
 
     class Ridge(
         val index: Int,
@@ -31,11 +28,8 @@ internal class SceneLayout(private val dp: Float) {
         val amp: Float,
         /** 0 = farthest, 1 = nearest; drives colour, haze and parallax. */
         val depth: Float,
-        val kind: Kind,
         internal val phases: FloatArray,
         internal val wavelength: Float,
-        /** Trees standing on the ridge line, cut from a slightly darker sheet. */
-        val forest: Path? = null,
     )
 
     /** Ridges grouped for compositing: each band is one cached layer with its own parallax. */
@@ -105,12 +99,11 @@ internal class SceneLayout(private val dp: Float) {
     private var requestedDepth = Float.NaN
     private var village = true
 
+    // Far hill, middle hill, near meadow — gentle sums of sines, like the first Papersky.
     private val specs = arrayOf(
-        Spec(-0.60f, 0.52f, 112f, Kind.Peaks, 0f, 0.08f),
-        Spec(-0.28f, 0.30f, 150f, Kind.Forest, 0.8f, 0.3f),
-        Spec(0.04f, 0.27f, 190f, Kind.Rolling, 0f, 0.52f),
-        Spec(0.34f, 0.23f, 215f, Kind.Forest, 1.1f, 0.74f),
-        Spec(0.64f, 0.17f, 290f, Kind.Rolling, 0f, 1f),
+        Spec(-0.32f, 0.19f, 150f, 0.3f),
+        Spec(0.02f, 0.15f, 111f, 0.62f),
+        Spec(0.62f, 0.11f, 88f, 1f),
     )
 
     /** Rebuilds when anything that shapes the scene changed; returns true if it did. */
@@ -131,26 +124,12 @@ internal class SceneLayout(private val dp: Float) {
 
     // ---- Ridges --------------------------------------------------------------------------------
 
-    fun edge(r: Ridge, x: Float): Float = edgeOf(r.kind, r.base, r.amp, r.wavelength, r.phases, x)
+    fun edge(r: Ridge, x: Float): Float = edgeOf(r.base, r.amp, r.wavelength, r.phases, x)
 
-    private fun edgeOf(kind: Kind, base: Float, amp: Float, wavelength: Float, ph: FloatArray, x: Float): Float {
+    private fun edgeOf(base: Float, amp: Float, wavelength: Float, ph: FloatArray, x: Float): Float {
         val xd = x / wavelength
-        val n = when (kind) {
-            Kind.Peaks -> {
-                // Ridged noise: rounded summits, sharp saddles — reads as distant mountains.
-                val a = peak(xd * 1.0f + ph[0])
-                val b = peak(xd * 2.3f + ph[1])
-                val swell = sin(xd * 0.37f + ph[2]) * 0.28f
-                a * 0.7f + b * 0.3f + swell - 0.35f
-            }
-            else -> sin(xd * 0.8f + ph[0]) * 0.55f + sin(xd * 1.9f + ph[1]) * 0.3f + sin(xd * 4.1f + ph[2]) * 0.15f
-        }
+        val n = sin(xd * 0.8f + ph[0]) * 0.55f + sin(xd * 1.9f + ph[1]) * 0.3f + sin(xd * 4.3f + ph[2]) * 0.15f
         return base - n * amp
-    }
-
-    private fun peak(v: Float): Float {
-        val s = sin(v)
-        return 1f - sqrt(s * s + 0.018f)
     }
 
     private fun buildRidges() {
@@ -163,71 +142,29 @@ internal class SceneLayout(private val dp: Float) {
             val base = horizonY + depthD * spec.offset
             val amp = depthD * spec.amp
             val wavelength = spec.wavelengthDp * dp * (0.85f + 0.3f * rand(seed, 40 + i))
-            val ph = FloatArray(4) { k -> rand(seed, i * 7 + k + 1) * 6.283f }
+            val ph = FloatArray(3) { k -> rand(seed, i * 7 + k + 1) * 6.283f }
             val path = Path()
-            path.fillType = Path.FillType.WINDING
             path.moveTo(left, bottom)
             var x = left
             var top = Float.MAX_VALUE
             var low = -Float.MAX_VALUE
             while (x <= right) {
-                val y = edgeOf(spec.kind, base, amp, wavelength, ph, x)
+                val y = edgeOf(base, amp, wavelength, ph, x)
                 path.lineTo(x, y)
                 top = min(top, y); low = max(low, y)
                 x += step
             }
-            val yEnd = edgeOf(spec.kind, base, amp, wavelength, ph, right)
-            path.lineTo(right, yEnd)
+            path.lineTo(right, edgeOf(base, amp, wavelength, ph, right))
             path.lineTo(right, bottom)
             path.close()
-
-            var forest: Path? = null
-            if (spec.kind == Kind.Forest && detail >= 0.5f) {
-                forest = Path().apply { fillType = Path.FillType.WINDING }
-                top = min(top, addForest(forest, spec, i, base, amp, wavelength, ph))
-            }
-            ridges += Ridge(i, path, top, low, base, amp, spec.depth, spec.kind, ph, wavelength, forest)
+            ridges += Ridge(i, path, top, low, base, amp, spec.depth, ph, wavelength)
         }
-    }
-
-    /** Conifers in loose clusters along the ridge line, as extra contours of the same sheet. */
-    private fun addForest(path: Path, spec: Spec, i: Int, base: Float, amp: Float, wavelength: Float, ph: FloatArray): Float {
-        val treeH = (depthD * 0.1f * spec.treeScale).coerceIn(6 * dp, 26 * dp)
-        var x = -margin
-        var k = 0
-        var top = Float.MAX_VALUE
-        while (x < w + margin) {
-            val cluster = sin(x / (47 * dp * (1 + spec.treeScale)) + ph[3]) + 0.3f * sin(x / (17 * dp) + ph[2] * 2)
-            // Woods thin out towards their edges instead of stopping like a wall.
-            val density = smoothstep(-0.1f, 0.55f, cluster)
-            if (density > 0.05f && rand(k, seed + 930 + i) < 0.35f + 0.65f * density) {
-                val th = treeH * (0.45f + 0.55f * density) * (0.7f + 0.5f * rand(k, seed + 900 + i))
-                val tw = th * (0.5f + 0.12f * rand(k, seed + 910 + i))
-                val gy = edgeOf(spec.kind, base, amp, wavelength, ph, x) + th * 0.12f
-                // Two tiers read as a fir rather than a triangle.
-                path.moveTo(x, gy - th)
-                path.lineTo(x + tw * 0.32f, gy - th * 0.46f)
-                path.lineTo(x + tw * 0.16f, gy - th * 0.48f)
-                path.lineTo(x + tw * 0.5f, gy - th * 0.04f)
-                path.lineTo(x + tw * 0.06f, gy)
-                path.lineTo(x - tw * 0.06f, gy)
-                path.lineTo(x - tw * 0.5f, gy - th * 0.04f)
-                path.lineTo(x - tw * 0.16f, gy - th * 0.48f)
-                path.lineTo(x - tw * 0.32f, gy - th * 0.46f)
-                path.close()
-                top = min(top, gy - th)
-                x += tw * (0.5f + 0.7f * rand(k, seed + 920 + i))
-            } else {
-                x += treeH * 0.45f
-            }
-            k++
-        }
-        return top
     }
 
     private fun buildBands() {
         bands.clear()
-        val groups = listOf(0 to 1, 2 to 3, 4 to 4)
+        // One cached layer per hill, each with its own parallax.
+        val groups = ridges.indices.map { it to it }
         for ((gi, g) in groups.withIndex()) {
             val (a, b) = g
             var top = (a..b).minOf { ridges[it].top } - 18 * dp

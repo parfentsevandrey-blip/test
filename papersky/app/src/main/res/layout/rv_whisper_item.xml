@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:ellipsize="end"
-    android:fontFamily="@font/body_medium"
+    android:fontFamily="@font/hand"
     android:gravity="center_vertical|start"
     android:includeFontPadding="false"
     android:maxLines="1"

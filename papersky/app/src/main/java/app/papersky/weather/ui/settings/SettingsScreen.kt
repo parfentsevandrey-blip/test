@@ -8,7 +8,6 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.FlowRow
@@ -21,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -41,25 +39,21 @@ import app.papersky.weather.core.model.Units
 import app.papersky.weather.core.model.WindUnit
 import app.papersky.weather.core.sync.SyncScheduler
 import app.papersky.weather.design.Chip
-import app.papersky.weather.design.Deboss
-import app.papersky.weather.design.pressed
 import app.papersky.weather.design.Label
 import app.papersky.weather.design.Paper
-import app.papersky.weather.design.PaperSheet
+import app.papersky.weather.design.PaperCard
+import app.papersky.weather.design.PaperRule
 import app.papersky.weather.design.PaperSegmented
 import app.papersky.weather.design.PaperSlider
 import app.papersky.weather.design.PaperSwitch
 import app.papersky.weather.design.SettingRow
-import app.papersky.weather.design.pressable
-import app.papersky.weather.design.PencilRule
-import app.papersky.weather.design.Stock
 import app.papersky.weather.design.laidDown
+import app.papersky.weather.design.pressable
 import app.papersky.weather.scene.Glyph
 import app.papersky.weather.scene.SceneState
 import app.papersky.weather.ui.common.PaperIcon
 import app.papersky.weather.ui.common.PaperIconView
 import app.papersky.weather.ui.common.PaperPage
-import app.papersky.weather.ui.common.SectionTitle
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -88,11 +82,11 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
         vm.update { it.copy(backgroundLocation = granted) }
     }
 
-    // A linen tablecloth with sheets of cotton paper laid on it, like iOS 6 Settings (§12).
-    PaperPage(stringResource(R.string.settings_title), scene, s.motion, onBack, table = Stock.Linen, village = s.village) {
-        item("units-title") { SectionTitle(stringResource(R.string.settings_units)) }
+    PaperPage(stringResource(R.string.settings_title), scene, s.motion, onBack, village = s.village) {
         item("units") {
-            PaperSheet(Modifier.laidDown(0), seed = 21, tape = true) {
+            PaperCard(Modifier.laidDown(0), seed = 41, tape = true) {
+                Label(stringResource(R.string.settings_units))
+                Spacer(Modifier.height(12.dp))
                 Caption(stringResource(R.string.settings_temperature))
                 PaperSegmented(listOf("°C", "°F"), units.temperature.ordinal, { i -> vm.units(locale) { it.copy(temperature = TempUnit.entries[i]) } })
                 Gap()
@@ -115,11 +109,13 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
                 )
             }
         }
-        item("updates-title") { SectionTitle(stringResource(R.string.settings_updates)) }
         item("updates") {
-            PaperSheet(Modifier.laidDown(1), seed = 34) {
-                Caption(stringResource(R.string.settings_interval))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            PaperCard(Modifier.laidDown(1), seed = 42, tilt = 0.4f) {
+                Label(stringResource(R.string.settings_updates))
+                Spacer(Modifier.height(8.dp))
+                BasicText(stringResource(R.string.settings_interval), style = Paper.type.body.copy(color = Paper.colors.paperInk))
+                Spacer(Modifier.height(8.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     UserSettings.IntervalChoices.forEach { m ->
                         Chip(
                             if (m < 60) stringResource(R.string.minutes_short, m) else stringResource(R.string.hours_short, m / 60),
@@ -128,8 +124,7 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
                         )
                     }
                 }
-                Spacer(Modifier.height(12.dp))
-                PencilRule()
+                Spacer(Modifier.height(10.dp))
                 SettingRow(
                     stringResource(R.string.settings_bg_location),
                     subtitle = stringResource(R.string.settings_bg_location_body),
@@ -143,32 +138,36 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
                         }
                     })
                 }
-                PencilRule()
-                LinkRow(PaperIcon.Refresh, stringResource(R.string.settings_refresh_now), accent = true) { SyncScheduler.refreshNow(context) }
+                Spacer(Modifier.height(6.dp))
+                BasicText(
+                    stringResource(R.string.settings_refresh_now),
+                    Modifier.pressable({ SyncScheduler.refreshNow(context) }).padding(vertical = 6.dp),
+                    style = Paper.type.bodyStrong.copy(color = Paper.colors.accent),
+                )
             }
         }
-        item("diorama-title") { SectionTitle(stringResource(R.string.settings_diorama)) }
         item("diorama") {
-            PaperSheet(Modifier.laidDown(2), seed = 47, tape = true) {
+            PaperCard(Modifier.laidDown(2), seed = 45, tilt = -0.3f) {
+                Label(stringResource(R.string.settings_diorama))
                 SettingRow(stringResource(R.string.settings_village), subtitle = stringResource(R.string.settings_village_body)) {
                     PaperSwitch(s.village, { on -> vm.update { it.copy(village = on) } })
                 }
-                PencilRule()
+                PaperRule()
                 SettingRow(stringResource(R.string.settings_tilt), subtitle = stringResource(R.string.settings_tilt_body)) {
                     PaperSwitch(s.tiltParallax, { on -> vm.update { it.copy(tiltParallax = on) } })
                 }
-                PencilRule()
+                Spacer(Modifier.height(10.dp))
+                BasicText(stringResource(R.string.settings_motion), style = Paper.type.body.copy(color = Paper.colors.paperInk))
                 Spacer(Modifier.height(8.dp))
-                Caption(stringResource(R.string.settings_motion))
                 PaperSegmented(
                     listOf(stringResource(R.string.motion_full), stringResource(R.string.motion_gentle), stringResource(R.string.motion_still)),
                     s.motion.ordinal, { i -> vm.update { it.copy(motion = MotionLevel.entries[i]) } },
                 )
             }
         }
-        item("feel-title") { SectionTitle(stringResource(R.string.settings_feel)) }
         item("feel") {
-            PaperSheet(Modifier.laidDown(3), seed = 58) {
+            PaperCard(Modifier.laidDown(3), seed = 43, tilt = -0.5f) {
+                Label(stringResource(R.string.settings_feel))
                 SettingRow(stringResource(R.string.settings_haptics), subtitle = stringResource(R.string.settings_haptics_body)) {
                     PaperSwitch(s.haptics, { on -> vm.update { it.copy(haptics = on) } })
                 }
@@ -177,22 +176,21 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
                 }
             }
         }
-        item("about-title") { SectionTitle(stringResource(R.string.settings_about)) }
         item("about") {
-            PaperSheet(Modifier.laidDown(4), seed = 63, pin = true) {
+            PaperCard(Modifier.laidDown(4), seed = 44, tilt = 0.3f) {
+                Label(stringResource(R.string.settings_about))
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     LinkRow(PaperIcon.Language, stringResource(R.string.settings_language)) {
                         context.startActivity(Intent(Settings.ACTION_APP_LOCALE_SETTINGS, Uri.fromParts("package", context.packageName, null)))
                     }
-                    PencilRule()
                 }
                 LinkRow(PaperIcon.Info, stringResource(R.string.credits_data)) {
                     context.startActivity(Intent(Intent.ACTION_VIEW, "https://open-meteo.com/".toUri()))
                 }
-                Spacer(Modifier.height(8.dp))
-                BasicText(stringResource(R.string.settings_fonts), style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft).pressed())
-                Spacer(Modifier.height(2.dp))
-                BasicText("Papersky ${BuildConfig.VERSION_NAME}", style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft).pressed())
+                Spacer(Modifier.height(6.dp))
+                BasicText(stringResource(R.string.settings_fonts), style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft))
+                Spacer(Modifier.height(4.dp))
+                BasicText("Papersky ${BuildConfig.VERSION_NAME}", style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft))
             }
         }
     }
@@ -200,22 +198,20 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
 
 @Composable
 private fun Caption(text: String) {
-    BasicText(text, Modifier.padding(bottom = 8.dp), style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft).pressed())
+    BasicText(text, Modifier.padding(bottom = 6.dp), style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft))
 }
 
 @Composable
-private fun Gap() = Spacer(Modifier.height(16.dp))
+private fun Gap() = Spacer(Modifier.height(14.dp))
 
 @Composable
-private fun LinkRow(icon: PaperIcon, text: String, accent: Boolean = false, onClick: () -> Unit) {
-    val colors = Paper.colors
+private fun LinkRow(icon: PaperIcon, text: String, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().pressable(onClick, pressed = 0.98f).padding(vertical = 12.dp),
+        Modifier.fillMaxWidth().pressable(onClick).padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Deboss(icon, if (accent) colors.accent else colors.paperInk, 22.dp)
-        Spacer(Modifier.width(12.dp))
-        BasicText(text, Modifier.weight(1f), style = Paper.type.bodyStrong.copy(color = if (accent) colors.accent else colors.paperInk).pressed())
-        PaperIconView(PaperIcon.Chevron, colors.paperInkSoft, size = 14.dp, modifier = Modifier.graphicsLayer { rotationZ = -90f })
+        PaperIconView(icon, Paper.colors.paperInk, size = 22.dp)
+        Spacer(Modifier.width(10.dp))
+        BasicText(text, style = Paper.type.body.copy(color = Paper.colors.paperInk))
     }
 }

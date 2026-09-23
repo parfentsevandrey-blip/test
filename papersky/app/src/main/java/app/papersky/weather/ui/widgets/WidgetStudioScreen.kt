@@ -9,14 +9,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -38,17 +33,10 @@ import app.papersky.weather.R
 import app.papersky.weather.core.model.MotionLevel
 import app.papersky.weather.design.Paper
 import app.papersky.weather.design.PaperButton
-import app.papersky.weather.design.PaperSheet
-import app.papersky.weather.design.Postcard
-import app.papersky.weather.design.Stock
-import app.papersky.weather.design.WashiTape
+import app.papersky.weather.design.PaperCard
 import app.papersky.weather.design.laidDown
-import app.papersky.weather.design.pressable
-import app.papersky.weather.design.pressed
 import app.papersky.weather.design.rememberHaptics
-import app.papersky.weather.design.vellum
 import app.papersky.weather.scene.SceneState
-import app.papersky.weather.ui.scene.SceneThumbnail
 import app.papersky.weather.ui.common.PaperPage
 import app.papersky.weather.ui.common.SectionTitle
 import app.papersky.weather.widget.PaperskyWidget
@@ -109,34 +97,21 @@ fun WidgetStudioScreen(vm: WidgetStudioViewModel, scene: SceneState, motion: Mot
         vm.reload()
         onPauseOrDispose { }
     }
-    val postmark = stringResource(R.string.stamp_postmark)
-    // A kraft workbench: placed widgets lie under tracing paper, presets are postcards (§12).
-    PaperPage(stringResource(R.string.widgets_title), scene, motion, onBack, table = Stock.Kraft, village = village) {
+    PaperPage(stringResource(R.string.widgets_title), scene, motion, onBack, village = village) {
         item("intro") {
-            PaperSheet(Modifier.laidDown(0), stock = Stock.Cotton, seed = 71, tape = true) {
-                BasicText(stringResource(R.string.widgets_intro), style = Paper.type.body.copy(color = Paper.colors.paperInk).pressed())
-            }
+            BasicText(stringResource(R.string.widgets_intro), Modifier.padding(horizontal = 4.dp), style = Paper.type.hand.copy(color = Paper.colors.paperInk))
         }
         if (placed.isNotEmpty()) {
             item("placed-title") { SectionTitle(stringResource(R.string.widgets_on_home)) }
             placed.forEachIndexed { i, w ->
                 item("w-${w.appWidgetId}") {
-                    Box(Modifier.laidDown(1 + i)) {
-                        Column(
-                            Modifier
-                                .fillMaxWidth()
-                                .pressable({ onEdit(w.appWidgetId) }, pressed = 0.98f)
-                                .vellum(RoundedCornerShape(6.dp))
-                                .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
+                    PaperCard(Modifier.laidDown(i), seed = w.appWidgetId, onClick = { onEdit(w.appWidgetId) }) {
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                             val shown = DpSize(w.size.width.coerceAtMost(320.dp), w.size.height.coerceAtMost(260.dp))
                             WidgetPreview(w.config, shown)
-                            Spacer(Modifier.height(10.dp))
-                            BasicText(stringResource(R.string.widgets_tap_to_edit), style = Paper.type.caption.copy(color = Paper.colors.paperInk).pressed())
                         }
-                        WashiTape(Modifier.align(Alignment.TopStart).offset(x = (-10).dp, y = (-6).dp), seed = w.appWidgetId, angle = -32f)
-                        WashiTape(Modifier.align(Alignment.TopEnd).offset(x = 10.dp, y = (-6).dp), seed = w.appWidgetId + 1, angle = 32f)
+                        Spacer(Modifier.height(10.dp))
+                        BasicText(stringResource(R.string.widgets_tap_to_edit), style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft))
                     }
                 }
             }
@@ -144,32 +119,26 @@ fun WidgetStudioScreen(vm: WidgetStudioViewModel, scene: SceneState, motion: Mot
         item("presets-title") { SectionTitle(stringResource(R.string.widgets_add)) }
         WidgetPreset.entries.forEach { preset ->
             item("p-${preset.name}") {
-                Postcard(
-                    Modifier.laidDown(2 + preset.ordinal),
-                    seed = 90 + preset.ordinal,
-                    postmark = postmark,
-                    stamp = { SceneThumbnail(scene, Modifier.fillMaxSize(), mode = preset.config.palette, time = 4f + preset.ordinal, village = village) },
-                    body = {
-                        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.Center) {
-                            WidgetPreview(preset.config, Grid.size(preset.cols, preset.rows).let { DpSize(it.width.coerceAtMost(310.dp), it.height) })
+                PaperCard(Modifier.laidDown(1 + preset.ordinal), seed = preset.ordinal * 13 + 5, tilt = if (preset.ordinal % 2 == 0) -0.5f else 0.5f) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            BasicText(presetName(preset), style = Paper.type.heading.copy(color = Paper.colors.paperInk))
+                            BasicText("${preset.cols} × ${preset.rows}", style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft))
                         }
-                        Spacer(Modifier.height(14.dp))
                         PaperButton(stringResource(R.string.widgets_place), {
                             h.confirm()
                             vm.pin(preset) { android.widget.Toast.makeText(context, R.string.widgets_unsupported, android.widget.Toast.LENGTH_LONG).show() }
-                        }, Modifier.fillMaxWidth(), primary = false)
-                    },
-                ) {
-                    BasicText(presetName(preset), style = Paper.type.title.copy(color = Paper.colors.paperInk).pressed())
-                    Spacer(Modifier.height(2.dp))
-                    BasicText("${preset.cols} × ${preset.rows}", style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft).pressed())
+                        }, primary = false)
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.Center) {
+                        WidgetPreview(preset.config, Grid.size(preset.cols, preset.rows).let { DpSize(it.width.coerceAtMost(310.dp), it.height) })
+                    }
                 }
             }
         }
         item("tip") {
-            PaperSheet(Modifier.padding(top = 4.dp), stock = Stock.Cotton, seed = 77, level = 1, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp)) {
-                BasicText(stringResource(R.string.widgets_tip), style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft).pressed())
-            }
+            BasicText(stringResource(R.string.widgets_tip), Modifier.padding(horizontal = 4.dp), style = Paper.type.caption.copy(color = Paper.colors.paperInkSoft))
         }
     }
 }
