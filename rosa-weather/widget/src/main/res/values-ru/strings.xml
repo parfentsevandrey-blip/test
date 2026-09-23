@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_loading">Обновляем небо…</string>
+    <string name="widget_needs_location">Нажмите, чтобы выбрать место</string>
+    <string name="widget_no_data">Пока нет данных · нажмите, чтобы обновить</string>
+    <string name="widget_a11y">%1$s: %2$s, %3$s. %4$s. %5$s</string>
+    <string name="widget_glass_label">Роса · Стекло</string>
+    <string name="widget_glass_description">Жидкое стекло, подкрашенное небом. Растягивается от 1×1 до целого экрана.</string>
+    <string name="widget_sky_label">Роса · Живое небо</string>
+    <string name="widget_sky_description">Окно в настоящее небо: солнце, луна, облака и дождь там, где они сейчас.</string>
+    <string name="widget_almanac_label">Роса · Альманах</string>
+    <string name="widget_almanac_description">Уютная бумажная страница: неделя вперёд, восход и закат.</string>
+    <string name="widget_preview_place">Москва</string>
+</resources>

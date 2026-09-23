@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_loading">Updating the sky…</string>
+    <string name="widget_needs_location">Tap to choose a place</string>
+    <string name="widget_no_data">No data yet · tap to refresh</string>
+    <string name="widget_a11y">%1$s: %2$s, %3$s. %4$s. %5$s</string>
+    <string name="widget_glass_label">Rosa · Glass</string>
+    <string name="widget_glass_description">Liquid glass tinted by the sky. Resize it to anything from 1×1 to a full page.</string>
+    <string name="widget_sky_label">Rosa · Living sky</string>
+    <string name="widget_sky_description">A window onto the real sky: sun, moon, clouds and rain where they actually are.</string>
+    <string name="widget_almanac_label">Rosa · Almanac</string>
+    <string name="widget_almanac_description">A cosy paper page with the week ahead, sunrise and sunset.</string>
+    <string name="widget_preview_place">Moscow</string>
+</resources>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Conditions -->
+    <string name="condition_clear">Clear</string>
+    <string name="condition_clear_day">Sunny</string>
+    <string name="condition_mostly_clear">Mostly clear</string>
+    <string name="condition_partly_cloudy">Partly cloudy</string>
+    <string name="condition_overcast">Overcast</string>
+    <string name="condition_fog">Fog</string>
+    <string name="condition_rime_fog">Freezing fog</string>
+    <string name="condition_drizzle">Drizzle</string>
+    <string name="condition_freezing_drizzle">Freezing drizzle</string>
+    <string name="condition_light_rain">Light rain</string>
+    <string name="condition_rain">Rain</string>
+    <string name="condition_heavy_rain">Heavy rain</string>
+    <string name="condition_freezing_rain">Freezing rain</string>
+    <string name="condition_light_snow">Light snow</string>
+    <string name="condition_snow">Snow</string>
+    <string name="condition_heavy_snow">Heavy snow</string>
+    <string name="condition_snow_grains">Snow grains</string>
+    <string name="condition_rain_showers">Showers</string>
+    <string name="condition_heavy_showers">Heavy showers</string>
+    <string name="condition_snow_showers">Snow showers</string>
+    <string name="condition_thunderstorm">Thunderstorm</string>
+    <string name="condition_thunderstorm_hail">Thunderstorm with hail</string>
+
+    <!-- Precipitation kinds -->
+    <string name="kind_rain">Rain</string>
+    <string name="kind_snow">Snow</string>
+    <string name="kind_sleet">Sleet</string>
+    <string name="kind_storm">Storm</string>
+
+    <!-- Headlines -->
+    <string name="headline_starts">%1$s in %2$s</string>
+    <string name="headline_ends">%1$s ends in %2$s</string>
+    <string name="headline_later">%1$s from %2$s</string>
+    <string name="headline_continuing">%1$s for a while</string>
+    <string name="headline_tomorrow_warmer">Tomorrow %1$s warmer</string>
+    <string name="headline_tomorrow_colder">Tomorrow %1$s colder</string>
+    <string name="headline_strong_wind">Gusts up to %1$s</string>
+    <string name="headline_high_uv">High UV · %1$d</string>
+    <string name="headline_sunrise">Sunrise at %1$s</string>
+    <string name="headline_sunset">Sunset at %1$s</string>
+    <string name="headline_feels_like">Feels like %1$s</string>
+
+    <!-- Durations -->
+    <plurals name="minutes_short">
+        <item quantity="one">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
+    <string name="hours_minutes_short">%1$d h %2$d min</string>
+    <string name="updated_just_now">Updated just now</string>
+    <string name="updated_ago">Updated %1$s ago</string>
+    <string name="updated_at">Updated %1$s</string>
+    <string name="hours_short">%d h</string>
+
+    <!-- Days -->
+    <string name="today">Today</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="now">Now</string>
+
+    <!-- Units -->
+    <string name="unit_ms">m/s</string>
+    <string name="unit_kmh">km/h</string>
+    <string name="unit_mph">mph</string>
+    <string name="unit_knots">kn</string>
+    <string name="unit_beaufort">Bft</string>
+    <string name="unit_mmhg">mmHg</string>
+    <string name="unit_hpa">hPa</string>
+    <string name="unit_inhg">inHg</string>
+    <string name="unit_mm">mm</string>
+    <string name="unit_in">in</string>
+    <string name="unit_km">km</string>
+    <string name="unit_mi">mi</string>
+
+    <!-- Details -->
+    <string name="detail_feels_like">Feels like</string>
+    <string name="detail_humidity">Humidity</string>
+    <string name="detail_wind">Wind</string>
+    <string name="detail_gusts">Gusts %1$s</string>
+    <string name="detail_uv">UV index</string>
+    <string name="detail_pressure">Pressure</string>
+    <string name="detail_visibility">Visibility</string>
+    <string name="detail_precipitation">Precipitation</string>
+    <string name="detail_sunrise">Sunrise</string>
+    <string name="detail_sunset">Sunset</string>
+    <string name="detail_daylight">Daylight</string>
+    <string name="detail_dew_point">Dew point %1$s</string>
+    <string name="detail_air">Air quality</string>
+    <string name="detail_moon">Moon</string>
+    <string name="detail_chance">Chance</string>
+
+    <string name="uv_low">Low</string>
+    <string name="uv_moderate">Moderate</string>
+    <string name="uv_high">High</string>
+    <string name="uv_very_high">Very high</string>
+    <string name="uv_extreme">Extreme</string>
+
+    <string name="air_good">Good</string>
+    <string name="air_fair">Fair</string>
+    <string name="air_moderate">Moderate</string>
+    <string name="air_poor">Poor</string>
+    <string name="air_very_poor">Very poor</string>
+    <string name="air_extremely_poor">Hazardous</string>
+    <string name="air_unknown">—</string>
+
+    <string name="moon_new">New moon</string>
+    <string name="moon_waxing_crescent">Waxing crescent</string>
+    <string name="moon_first_quarter">First quarter</string>
+    <string name="moon_waxing_gibbous">Waxing gibbous</string>
+    <string name="moon_full">Full moon</string>
+    <string name="moon_waning_gibbous">Waning gibbous</string>
+    <string name="moon_last_quarter">Last quarter</string>
+    <string name="moon_waning_crescent">Waning crescent</string>
+
+    <string-array name="compass_points">
+        <item>N</item><item>NNE</item><item>NE</item><item>ENE</item>
+        <item>E</item><item>ESE</item><item>SE</item><item>SSE</item>
+        <item>S</item><item>SSW</item><item>SW</item><item>WSW</item>
+        <item>W</item><item>WNW</item><item>NW</item><item>NNW</item>
+    </string-array>
+
+    <string name="current_location">My location</string>
+    <string name="high_low">H %1$s · L %2$s</string>
+</resources>

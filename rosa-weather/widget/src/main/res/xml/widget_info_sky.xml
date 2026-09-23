@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Resizable down to a single cell and up without limit: the adaptive engine lays out whatever
+    size the launcher grants. updatePeriodMillis is 0 because WorkManager owns refresh timing.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:configure="app.rosa.weather.widget.studio.WidgetStudioActivity"
+    android:description="@string/widget_sky_description"
+    android:initialLayout="@layout/widget_loading"
+    android:minWidth="110dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="40dp"
+    android:minResizeHeight="40dp"
+    android:previewImage="@drawable/widget_preview_sky"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen|keyguard"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

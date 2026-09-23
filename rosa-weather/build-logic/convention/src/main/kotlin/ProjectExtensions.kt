@@ -53,6 +53,16 @@ internal fun Project.configureAndroidLibrary(extension: LibraryExtension) {
         }
         testOptions {
             unitTests.isIncludeAndroidResources = true
+            unitTests.all { test ->
+                // Robolectric needs reflective access to JDK internals on Java 17+.
+                test.jvmArgs(
+                    "--add-opens=java.base/java.io=ALL-UNNAMED",
+                    "--add-opens=java.base/java.lang=ALL-UNNAMED",
+                    "--add-opens=java.base/java.nio=ALL-UNNAMED",
+                    "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
+                )
+                test.maxHeapSize = "3g"
+            }
         }
     }
     configureKotlin()
