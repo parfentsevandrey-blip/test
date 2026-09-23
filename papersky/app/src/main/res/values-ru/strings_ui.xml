@@ -94,6 +94,8 @@
     <string name="settings_tilt_body">Планы пейзажа смещаются при наклоне телефона</string>
     <string name="settings_diorama">Гравюра</string>
     <string name="settings_theme">Тема</string>
+    <string name="theme_hearth">Камин</string>
+    <string name="theme_hearth_body">Огонь горит в камине, погода — за окном; огонь можно пошевелить</string>
     <string name="theme_sky">Живое небо</string>
     <string name="theme_sky_body">Горы в дымке, краски следуют за погодой</string>
     <string name="theme_ophelia">Офелия</string>
@@ -156,6 +158,7 @@
     <string name="palette_moss">Мох</string>
     <string name="palette_wallpaper">Обои</string>
     <string name="palette_ophelia">Офелия</string>
+    <string name="palette_hearth">Камин</string>
 
     <string name="preset_living">Живое окно</string>
     <string name="preset_pocket">Карманный</string>
@@ -166,4 +169,5 @@
     <string name="preset_glass">Стекло</string>
     <string name="preset_riso">Ризограф</string>
     <string name="preset_ophelia">Офелия</string>
+    <string name="preset_hearth">У камина</string>
 </resources>

@@ -154,7 +154,9 @@ fun HomeScreen(
 
     BoxWithConstraints(Modifier.fillMaxSize().background(colors.sky)) {
         val screenH = maxHeight
-        val heroH = (screenH * 0.6f).coerceIn(440.dp, 620.dp)
+        // By the fire the hero is taller: the fire burns below the words, above the first sheet.
+        val hearth = LocalSceneMode.current == PaletteMode.Hearth
+        val heroH = if (hearth) (screenH * 0.78f).coerceIn(520.dp, 780.dp) else (screenH * 0.6f).coerceIn(440.dp, 620.dp)
         val depth = (screenH * 0.22f).coerceIn(150.dp, 220.dp)
         val horizon = ((heroH - 34.dp - depth * 0.62f) / screenH).coerceIn(0.3f, 0.7f)
         val heroPx = with(density) { heroH.toPx() }
@@ -366,7 +368,9 @@ private fun Hero(
     var origin by remember { mutableStateOf(Offset.Zero) }
     val scope = rememberCoroutineScope()
     val lightInk = colors.onSky.luminance() > 0.5f
-    val scrim = if (lightInk) Color.Black.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.22f)
+    // A wash behind the words so they read over any sky, trees or water: stronger than the
+    // sky alone would need, because the print can rise behind them.
+    val scrim = if (lightInk) Color.Black.copy(alpha = 0.24f) else colors.paper.copy(alpha = 0.42f)
     Box(
         Modifier
             .fillMaxWidth()
@@ -404,6 +408,8 @@ private fun Hero(
         Column(
             Modifier
                 .statusBarsPadding()
+                // By the fire the words keep to the wall, clear of the window.
+                .fillMaxWidth(if (LocalSceneMode.current == PaletteMode.Hearth) 0.58f else 1f)
                 .padding(start = 26.dp, end = 24.dp, top = 70.dp)
                 .graphicsLayer {
                     // Drifts up slower than the page and sinks back into the sky.
@@ -449,7 +455,7 @@ private fun Hero(
                 RollingText(tempNumber, hero, numericValue = moment.temperature)
                 BasicText("°", Modifier.offset(x = (-6).dp), style = hero)
             }
-            InkReveal(fmt.condition(moment.condition), Paper.type.noteLarge.copy(color = colors.onSky, fontSize = 32.sp).onSky(lightInk), maxLines = 1)
+            InkReveal(fmt.condition(moment.condition), Paper.type.noteLarge.copy(color = colors.onSky, fontSize = 32.sp).onSky(lightInk), maxLines = 2)
             Spacer(Modifier.height(10.dp))
             val day = state.forecast?.dayAt(moment.epochSec)
             val line = buildString {

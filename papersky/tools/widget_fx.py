@@ -80,11 +80,12 @@ def anim(prop, frm, to, ms, repeat="restart", interp=LINEAR, offset=0):
     )
 
 
-def keyframes(prop, ms, frames):
+def keyframes(prop, ms, frames, offset=0):
     kf = "".join(f'                        <keyframe android:fraction="{f(fr)}" android:value="{f(v)}" />\n' for fr, v in frames)
+    o = f' android:startOffset="{offset}"' if offset else ""
     return (
         f'                <objectAnimator android:duration="{int(ms)}" android:repeatCount="infinite"\n'
-        f'                    android:interpolator="{LINEAR}">\n'
+        f'                    android:interpolator="{LINEAR}"{o}>\n'
         f'                    <propertyValuesHolder android:propertyName="{prop}" android:valueType="floatType">\n'
         f"{kf}"
         f"                    </propertyValuesHolder>\n"
@@ -299,6 +300,27 @@ def rays(avd):
     avd.target("rings", [anim("strokeAlpha", 0.2, 0.55, 4200, repeat="reverse", interp=EASE)])
 
 
+def hearth(avd):
+    """Firelight: a warm glow flickering at two unrelated rates, and sparks rising from the logs."""
+    glow = radial(50, 58, 42, [(0, "#AAFFFFFF"), (0.45, "#44FFFFFF"), (1, "#00FFFFFF")])
+    avd.body.append(fill_path("M8,58a42,42 0 1,0 84,0a42,42 0 1,0 -84,0", 0.7, name="glow", gradient=glow))
+    avd.target("glow", [keyframes("fillAlpha", 1900, [(0, 0.55), (0.13, 0.8), (0.21, 0.5), (0.37, 0.9), (0.5, 0.62),
+                                                      (0.63, 0.85), (0.78, 0.5), (0.9, 0.75), (1, 0.55)])])
+    core = radial(50, 66, 20, [(0, "#CCFFFFFF"), (1, "#00FFFFFF")])
+    avd.body.append(fill_path("M30,66a20,20 0 1,0 40,0a20,20 0 1,0 -40,0", 0.6, name="core", gradient=core))
+    avd.target("core", [keyframes("fillAlpha", 1300, [(0, 0.5), (0.2, 0.85), (0.35, 0.45), (0.6, 0.8), (0.8, 0.55), (1, 0.5)])])
+    rng = random.Random("hearth")
+    for i in range(7):
+        x = rng.uniform(38, 62)
+        name, dot = f"sp{i}", f"spd{i}"
+        ms = rng.uniform(1500, 2600)
+        off = int(rng.uniform(0, 2400))
+        avd.group(name, stroke_path(f"M{f(x)},66l0,0.01", 1.4, 0, name=dot))
+        drift = rng.uniform(-6, 6)
+        avd.target(name, [anim("translateY", 0, -44, ms, offset=off, interp=EASE), anim("translateX", 0, drift, ms, offset=off)])
+        avd.target(dot, [keyframes("strokeAlpha", ms, [(0, 0), (0.08, 0.95), (0.6, 0.5), (1, 0)], offset=off)])
+
+
 # ---- Layouts --------------------------------------------------------------------------------
 
 def layout(name):
@@ -362,6 +384,7 @@ def main():
     emit("wfx_fog", lambda a, r: fog(a))
     emit("wfx_flash", lambda a, r: flash(a))
     emit("wfx_rays", lambda a, r: rays(a))
+    emit("wfx_hearth", lambda a, r: hearth(a))
     print(f"{len(names)} effects written")
 
 

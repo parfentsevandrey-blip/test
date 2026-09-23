@@ -120,6 +120,7 @@ class WidgetScreenshots {
         sheet("rain_paper", WidgetPreset.PaperNote.config)
         sheet("rain_glass", WidgetPreset.Glass.config)
         sheet("rain_ophelia", WidgetPreset.LivingWindow.config.copy(palette = PaletteMode.Ophelia))
+        sheet("rain_hearth", WidgetPreset.LivingWindow.config.copy(palette = PaletteMode.Hearth))
     }
 
     @Test
@@ -131,5 +132,6 @@ class WidgetScreenshots {
         sheet("sun_riso", WidgetPreset.Riso.config)
         sheet("sun_ink", WidgetPreset.NightLight.config.copy(showClock = true))
         sheet("sun_ophelia", WidgetPreset.LivingWindow.config.copy(palette = PaletteMode.Ophelia))
+        sheet("sun_hearth", WidgetPreset.Hearth.config)
     }
 }

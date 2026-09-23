@@ -94,6 +94,8 @@
     <string name="settings_tilt_body">The planes of the landscape shift as you tilt the phone</string>
     <string name="settings_diorama">The print</string>
     <string name="settings_theme">Theme</string>
+    <string name="theme_hearth">Hearth</string>
+    <string name="theme_hearth_body">A fire burning in the hearth and the weather in the window; poke the fire</string>
     <string name="theme_sky">Living sky</string>
     <string name="theme_sky_body">Mountains in mist; the colours follow the weather</string>
     <string name="theme_ophelia">Ophelia</string>
@@ -156,6 +158,7 @@
     <string name="palette_moss">Moss</string>
     <string name="palette_wallpaper">Wallpaper</string>
     <string name="palette_ophelia">Ophelia</string>
+    <string name="palette_hearth">Hearth</string>
 
     <string name="preset_living">Living window</string>
     <string name="preset_pocket">Pocket</string>
@@ -166,4 +169,5 @@
     <string name="preset_glass">Glass</string>
     <string name="preset_riso">Riso print</string>
     <string name="preset_ophelia">Ophelia</string>
+    <string name="preset_hearth">By the fire</string>
 </resources>

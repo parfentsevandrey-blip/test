@@ -17,6 +17,7 @@ import app.papersky.weather.R
 import app.papersky.weather.scene.ColorMath
 import app.papersky.weather.scene.PaperSceneRenderer
 import app.papersky.weather.scene.SceneState
+import app.papersky.weather.scene.HearthRenderer
 import app.papersky.weather.scene.ScenePalette
 import app.papersky.weather.widget.layout.RectDp
 import app.papersky.weather.widget.layout.WidgetPlan
@@ -82,13 +83,22 @@ object WidgetFx {
         return if (above.width * above.height >= left.width * left.height) above else left
     }
 
-    fun plan(scene: SceneState, p: ScenePalette, plan: WidgetPlan, sun: FloatArray?): FxPlan {
-        val sky = skyRegion(plan)
-        if (sky.width < 24f || sky.height < 24f) return FxPlan.None
+    /**
+     * The moving layers for a scene. With [hearth] (the room by the fire) the weather stays in
+     * the window, and the fire's light flickers over the room.
+     */
+    fun plan(scene: SceneState, p: ScenePalette, plan: WidgetPlan, sun: FloatArray?, hearth: HearthRenderer.Geometry? = null): FxPlan {
+        val layers = mutableListOf<FxLayer>()
+        if (hearth != null) {
+            val f = hearth.fire
+            val side = max(hearth.opening.width(), hearth.opening.height()) * 1.9f
+            layers += FxLayer(R.layout.rv_wfx_hearth, 0xFFFF9A40.toInt(), false, RectDp(0f, 0f, plan.width, plan.height), f.centerX(), f.centerY() - f.height() * 0.1f, side)
+        }
+        val sky = hearth?.window?.let { RectDp(it.left, it.top + hearth.arch * 0.55f, it.width(), it.height() - hearth.arch * 0.55f) } ?: skyRegion(plan)
+        if (sky.width < 24f || sky.height < 24f) return FxPlan(layers)
         val big = max(sky.width, sky.height)
         val large = big >= 240f
         val sz = if (large) 1 else 0
-        val layers = mutableListOf<FxLayer>()
         fun inSky(layout: Int, tint: Int, mirrored: Boolean = false) {
             layers += FxLayer(layout, tint, mirrored, sky, sky.width / 2, sky.height / 2, big)
         }
@@ -128,7 +138,7 @@ object WidgetFx {
         val sunUnderPanel = sun != null && plan.panels.any { r ->
             sun[0] + sun[2] * 1.6f > r.left && sun[0] - sun[2] * 1.6f < r.right && sun[1] + sun[2] * 1.6f > r.top && sun[1] - sun[2] * 1.6f < r.bottom
         }
-        if (sun != null && clearDay && !sunUnderPanel) {
+        if (sun != null && clearDay && !sunUnderPanel && hearth == null) {
             // The halo breathes around the painted sun: a square island centred on it.
             val side = sun[2] * 6.3f
             layers += FxLayer(R.layout.rv_wfx_rays, p.sunRay, false, RectDp(0f, 0f, plan.width, plan.height), sun[0], sun[1], side)

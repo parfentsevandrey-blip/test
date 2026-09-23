@@ -159,8 +159,8 @@ internal class SceneLayout(private val dp: Float) {
 
     // Far trees, near trees, the rose bank, the river, the mossy near bank (§16).
     private val river = arrayOf(
-        Spec(-0.48f, 0.2f, 62f, 0.1f, Contour.Crowns),
-        Spec(-0.24f, 0.16f, 44f, 0.3f, Contour.Crowns),
+        Spec(-0.34f, 0.17f, 62f, 0.1f, Contour.Crowns),
+        Spec(-0.16f, 0.14f, 44f, 0.3f, Contour.Crowns),
         Spec(0.02f, 0.09f, 26f, 0.52f, Contour.Crowns),
         Spec(0.14f, 0.012f, 160f, 0.76f, Contour.Flat),
         Spec(0.84f, 0.05f, 140f, 1f, Contour.Rolling),
@@ -275,7 +275,7 @@ internal class SceneLayout(private val dp: Float) {
         // Purple loosestrife at the right-hand end of the bank.
         out.clear()
         for (i in 0 until 4) {
-            out += w * (0.84f + 0.035f * i + rand(i, seed + 711) * 0.02f); out += (14f + rand(i, seed + 713) * 12f) * dp * s
+            out += w * (0.06f + 0.035f * i + rand(i, seed + 711) * 0.02f); out += (14f + rand(i, seed + 713) * 12f) * dp * s
         }
         loosestrife = out.toFloatArray()
 
@@ -290,9 +290,10 @@ internal class SceneLayout(private val dp: Float) {
 
         // The willow grows from the left bank and leans out over the water: a tapered trunk, a
         // crown of soft masses along its upper half, fronds hanging from the crown to the water.
-        val wy = edge(water, 0f)
+        // (On the right, so the temperature and its words stand over open sky.)
+        val wy = edge(water, w)
         val lean = depthD * 0.36f
-        val px = floatArrayOf(-8 * dp, w * 0.05f, w * 0.14f, w * 0.34f)
+        val px = floatArrayOf(w + 8 * dp, w * 0.95f, w * 0.86f, w * 0.66f)
         val py = floatArrayOf(wy + 4 * dp, wy - lean * 0.45f, wy - lean * 0.88f, wy - lean)
         val n = 24
         val xs = FloatArray(n + 1)
@@ -329,7 +330,7 @@ internal class SceneLayout(private val dp: Float) {
         for (m in 0 until masses) {
             val t = 0.45f + 0.62f * m / (masses - 1)
             val droop = max(0f, t - 0.85f) * 3.2f
-            out += cubic(t.coerceAtMost(1f), px[0], px[1], px[2], px[3]) + max(0f, t - 1f) * w * 0.4f + (rand(m, seed + 729) - 0.5f) * 14 * dp * s
+            out += cubic(t.coerceAtMost(1f), px[0], px[1], px[2], px[3]) - max(0f, t - 1f) * w * 0.4f + (rand(m, seed + 729) - 0.5f) * 14 * dp * s
             out += cubic(t.coerceAtMost(1f), py[0], py[1], py[2], py[3]) + (droop * 26f - 10f + rand(m, seed + 727) * 12f) * dp * s
             out += (13f + rand(m, seed + 725) * 8f) * dp * s
             out += (11f + rand(m, seed + 723) * 6f) * dp * s

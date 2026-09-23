@@ -102,7 +102,7 @@ fun SettingsScreen(vm: SettingsViewModel, scene: SceneState, onBack: () -> Unit)
             PaperCard(Modifier.laidDown(0)) {
                 Label(stringResource(R.string.settings_theme))
                 Spacer(Modifier.height(14.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     AppTheme.entries.forEach { theme ->
                         ThemeOption(theme, scene, s.theme == theme, Modifier.weight(1f)) { vm.update { it.copy(theme = theme) } }
                     }
@@ -238,7 +238,7 @@ private fun ThemeOption(theme: AppTheme, scene: SceneState, selected: Boolean, m
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(104.dp)
+                .height(96.dp)
                 .border(1.5.dp, ring, shape)
                 .padding(4.dp)
                 .clip(shape),
@@ -248,16 +248,28 @@ private fun ThemeOption(theme: AppTheme, scene: SceneState, selected: Boolean, m
         Spacer(Modifier.height(10.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             BasicText(
-                stringResource(if (theme == AppTheme.Ophelia) R.string.theme_ophelia else R.string.theme_sky),
+                stringResource(
+                    when (theme) {
+                        AppTheme.Hearth -> R.string.theme_hearth
+                        AppTheme.Sky -> R.string.theme_sky
+                        AppTheme.Ophelia -> R.string.theme_ophelia
+                    },
+                ),
                 Modifier.weight(1f),
-                style = Paper.type.heading.copy(color = colors.paperInk, fontSize = 19.sp),
+                style = Paper.type.heading.copy(color = colors.paperInk, fontSize = 18.sp),
                 maxLines = 1,
             )
             if (selected) PaperIconView(PaperIcon.Check, colors.accent, size = 16.dp)
         }
         BasicText(
-            stringResource(if (theme == AppTheme.Ophelia) R.string.theme_ophelia_body else R.string.theme_sky_body),
-            style = Paper.type.caption.copy(color = colors.paperInkSoft, fontSize = 11.5.sp),
+            stringResource(
+                when (theme) {
+                    AppTheme.Hearth -> R.string.theme_hearth_body
+                    AppTheme.Sky -> R.string.theme_sky_body
+                    AppTheme.Ophelia -> R.string.theme_ophelia_body
+                },
+            ),
+            style = Paper.type.caption.copy(color = colors.paperInkSoft, fontSize = 11.sp),
         )
     }
 }

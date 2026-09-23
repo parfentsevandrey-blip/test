@@ -107,15 +107,23 @@ enum class PaletteMode {
     Auto, Linen, Ink, Riso, Moss, Wallpaper,
 
     /** Millais's river (DESIGN_DOCTRINE §16): its own palette and its own print. */
-    Ophelia;
+    Ophelia,
 
-    val variant: SceneVariant get() = if (this == Ophelia) SceneVariant.River else SceneVariant.Mountains
+    /** A room with a fire burning and the weather in the window (§16). */
+    Hearth;
+
+    val variant: SceneVariant get() = when (this) {
+        Ophelia -> SceneVariant.River
+        Hearth -> SceneVariant.Hearth
+        else -> SceneVariant.Mountains
+    }
 }
 
-/** Which print the scene is: the mountains in mist, or Ophelia's river. */
-enum class SceneVariant { Mountains, River }
+/** Which print the scene is: the mountains in mist, Ophelia's river, or the room by the fire. */
+enum class SceneVariant { Mountains, River, Hearth }
 
 fun AppTheme.paletteMode(): PaletteMode = when (this) {
+    AppTheme.Hearth -> PaletteMode.Hearth
     AppTheme.Sky -> PaletteMode.Auto
     AppTheme.Ophelia -> PaletteMode.Ophelia
 }
@@ -170,6 +178,19 @@ object Palettes {
         }
         val paper = if (s.daylight >= 0.45f) OpheliaDay else OpheliaNight
         return own.copyWith(*pairs.toTypedArray()).withPaperOf(paper)
+    }
+
+    // The room by the fire. Here the sky slots are the wall (skyTop high up in the shadows,
+    // skyBottom where the fire lights it), sun / sunRay / glow the flames and their light, hills the
+    // stone of the chimney-piece (far, mid) and the oak mantel (near), water the soot of the
+    // firebox, moss the hearthstone, tree the logs, window the firelight.
+    val HearthDay = ScenePalette.of(0xFF5E4A3E, 0xFF7A5A45, 0x66FF9A48, 0xFFFFE2A0, 0xFFFF9A3C, 0xFFEFE8D6, 0xFFFFF8EA, 0xFFE9DFD0, 0xFF6B5446, 0xFF9C8B7A, 0xFF76665A, 0xFF4E3223, 0xFFF6F4EE, 0xFF140D0A, 0xFF4A3A30, 0xFFFFB25C, 0xFF3A2416, 0xFF52708E, 0xFFF3EADB, 0xFF251B15, 0xFFB4532A, 0xFFD9C3A8, 0x662B1810)
+    val HearthNight = ScenePalette.of(0xFF18110E, 0xFF3A2216, 0x88FF8A3A, 0xFFFFE2A0, 0xFFFF9A3C, 0xFFEFE8D6, 0xFFFFF8EA, 0xFF3A2C24, 0xFF22170F, 0xFF6E5A4A, 0xFF4E3E32, 0xFF2E1D14, 0xFFCFD8EA, 0xFF0B0706, 0xFF261A14, 0xFFFFA24A, 0xFF24160D, 0xFF9FB0CC, 0xFF1C1511, 0xFFF0E4D2, 0xFFDFA35A, 0xFF5A4636, 0xAA000000)
+
+    /** The room: darker as the day goes, its paper day or night like every other sheet. */
+    fun hearth(s: SceneState): ScenePalette {
+        val own = ScenePalette.lerp(HearthNight, HearthDay, smoothstep(0.15f, 0.85f, s.daylight))
+        return own.withPaperOf(if (s.daylight >= 0.45f) HearthDay else HearthNight)
     }
 
     /** Weights of the four time-of-day sheets for a daylight level and sun position. */
@@ -229,6 +250,7 @@ object Palettes {
         PaletteMode.Wallpaper -> context?.let { fixed(wallpaper(it, night = false), wallpaper(it, night = true), s.daylight) }
             ?: forState(s)
         PaletteMode.Ophelia -> ophelia(s)
+        PaletteMode.Hearth -> hearth(s)
     }
 
     private fun fixed(day: ScenePalette, night: ScenePalette, daylight: Float): ScenePalette =

@@ -18,9 +18,12 @@ enum class PrecipUnit { Millimeters, Inches }
 @Serializable
 enum class MotionLevel { Full, Gentle, Still }
 
-/** The app's theme (DESIGN_DOCTRINE §16): the living sky over the mountains, or Ophelia's river. */
+/**
+ * The app's theme (DESIGN_DOCTRINE §16): a room with a fire burning and the weather in the window,
+ * the living sky over the mountains, or Ophelia's river.
+ */
 @Serializable
-enum class AppTheme { Sky, Ophelia }
+enum class AppTheme { Hearth, Sky, Ophelia }
 
 @Serializable
 data class Units(
@@ -51,7 +54,7 @@ data class UserSettings(
     val tiltParallax: Boolean = true,
     /** Houses in silhouette on the meadow of the print. */
     val village: Boolean = true,
-    val theme: AppTheme = AppTheme.Sky,
+    val theme: AppTheme = AppTheme.Hearth,
     val selectedPlaceId: String = Place.HERE,
     val backgroundLocation: Boolean = false,
     val onboarded: Boolean = false,

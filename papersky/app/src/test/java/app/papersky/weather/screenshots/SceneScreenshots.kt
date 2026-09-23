@@ -7,6 +7,7 @@ import app.papersky.weather.TestApp
 import app.papersky.weather.scene.Glyph
 import app.papersky.weather.scene.GlyphColors
 import app.papersky.weather.scene.GlyphRenderer
+import app.papersky.weather.scene.HearthRenderer
 import app.papersky.weather.scene.PaletteMode
 import app.papersky.weather.scene.PaperSceneRenderer
 import app.papersky.weather.scene.Palettes
@@ -60,6 +61,23 @@ class SceneScreenshots {
             val o = PaperSceneRenderer.Options(time = 12.5f, staticBolt = s.thunder > 0.5f, variant = SceneVariant.River)
             PaperSceneRenderer(density).draw(Canvas(bmp), w.toFloat(), h.toFloat(), s, Palettes.resolve(PaletteMode.Ophelia, s), o)
             Shots.save("ophelia_$name", bmp)
+        }
+    }
+
+    /** The room by the fire (§16) under the same weathers, phone-tall and thumbnail-wide. */
+    @Test
+    fun renderHearth() {
+        Shots.assumeEnabled()
+        val density = 2f
+        for ((name, s) in states) {
+            for ((suffix, wDp, hDp) in listOf(Triple("", 412, 900), Triple("_wide", 412, 300))) {
+                val w = (wDp * density).toInt()
+                val h = (hDp * density).toInt()
+                val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+                val frost = if (s.temperature < -2f) 0.8f else 0f
+                HearthRenderer(density).draw(Canvas(bmp), w.toFloat(), h.toFloat(), s, Palettes.hearth(s), Palettes.forState(s), 12.5f, true, frost)
+                Shots.save("hearth_$name$suffix", bmp)
+            }
         }
     }
 

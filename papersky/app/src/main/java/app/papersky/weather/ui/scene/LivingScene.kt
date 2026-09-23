@@ -54,14 +54,17 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import app.papersky.weather.core.model.MotionLevel
 import app.papersky.weather.design.LocalHaptics
+import app.papersky.weather.design.LocalLight
 import app.papersky.weather.design.LocalSceneClock
 import app.papersky.weather.design.LocalSceneMode
 import app.papersky.weather.design.SceneClock
 import app.papersky.weather.scene.ColorMath
+import app.papersky.weather.scene.HearthRenderer
 import app.papersky.weather.scene.PaletteMode
 import app.papersky.weather.scene.Palettes
 import app.papersky.weather.scene.PaperSceneRenderer
 import app.papersky.weather.scene.SceneState
+import app.papersky.weather.scene.SceneVariant
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -208,6 +211,10 @@ fun LivingScene(
     scroll: () -> Float = { 0f },
     dim: () -> Float = { 0f },
 ) {
+    if (mode.variant == SceneVariant.Hearth) {
+        HearthScene(target, modifier, motion, tilt, controller, transitionMillis, village, scroll, dim)
+        return
+    }
     val context = LocalContext.current
     val density = LocalDensity.current.density
     val renderer = remember(density) { PaperSceneRenderer(density) }
@@ -524,6 +531,18 @@ internal fun isHorizontal(dx: Float, dy: Float) = abs(dx) > abs(dy) * 1.4f
 fun SceneThumbnail(scene: SceneState, modifier: Modifier = Modifier, mode: PaletteMode = LocalSceneMode.current, time: Float = 8f, village: Boolean = true, horizon: Float = 0.5f) {
     val context = LocalContext.current
     val density = LocalDensity.current.density
+    val frost = LocalLight.current.frost
+    if (mode.variant == SceneVariant.Hearth) {
+        val hearth = remember(density) { HearthRenderer(density) }
+        val room = remember(scene) { Palettes.hearth(scene) }
+        val outside = remember(scene) { Palettes.forState(scene) }
+        Spacer(
+            modifier
+                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                .drawBehind { drawIntoCanvas { hearth.draw(it.nativeCanvas, size.width, size.height, scene, room, outside, time, village, frost) } },
+        )
+        return
+    }
     val renderer = remember(density) { PaperSceneRenderer(density) }
     val palette = remember(scene, mode) { Palettes.resolve(mode, scene, context) }
     Spacer(

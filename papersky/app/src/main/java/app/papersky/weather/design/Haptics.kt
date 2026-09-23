@@ -86,6 +86,16 @@ class Haptics(context: Context) {
     }
 
     /** Releasing the pull-cord: a click with a little spring-back. */
+    /** Poking the fire: a few dry, uneven cracks of burning wood. */
+    fun crackle() = compose {
+        var delay = 0
+        repeat(3 + Random.nextInt(3)) {
+            add(if (Random.nextFloat() < 0.3f) Composition.PRIMITIVE_CLICK else Composition.PRIMITIVE_TICK, (0.18f + Random.nextFloat() * 0.3f) * strength, delay)
+            delay = 25 + Random.nextInt(110)
+        }
+        add(Composition.PRIMITIVE_LOW_TICK, 0.35f * strength, 40)
+    }
+
     fun cordRelease() = compose {
         add(Composition.PRIMITIVE_CLICK, 0.8f * strength)
         add(Composition.PRIMITIVE_TICK, 0.3f * strength, 70)

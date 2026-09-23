@@ -9,6 +9,7 @@ import android.graphics.RadialGradient
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Shader
+import android.os.Build
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
@@ -610,8 +611,8 @@ class PaperSceneRenderer(private val density: Float) {
 
     /** Whether band [b] has details that live and move, drawn by [drawLife] every frame. */
     fun bandHasLife(b: Int): Boolean = when (layout.variant) {
-        SceneVariant.Mountains -> b == layout.bands.lastIndex
         SceneVariant.River -> b >= 2
+        else -> b == layout.bands.lastIndex
     }
 
     /**
@@ -622,7 +623,7 @@ class PaperSceneRenderer(private val density: Float) {
     fun drawLife(canvas: Canvas, b: Int, s: SceneState, p: ScenePalette, o: Options) {
         if (!o.landscape || layout.ridges.isEmpty()) return
         when (layout.variant) {
-            SceneVariant.Mountains -> drawMeadowLife(canvas, s, p, o)
+            SceneVariant.Mountains, SceneVariant.Hearth -> drawMeadowLife(canvas, s, p, o)
             SceneVariant.River -> when (b) {
                 2 -> drawFronds(canvas, s, p, o)
                 3 -> drawRiverLife(canvas, s, p, o)
@@ -712,8 +713,8 @@ class PaperSceneRenderer(private val density: Float) {
     private fun ridgeColor(r: SceneLayout.Ridge, p: ScenePalette): Int {
         if (layout.variant == SceneVariant.River) {
             return when (r.index) {
-                0 -> ColorMath.lerp(p.hillFar, hazeColor(p), 0.4f)
-                1 -> ColorMath.lerp(p.hillMid, hazeColor(p), 0.14f)
+                0 -> ColorMath.lerp(p.hillFar, hazeColor(p), 0.55f)
+                1 -> ColorMath.lerp(p.hillMid, hazeColor(p), 0.22f)
                 2 -> p.hillNear
                 3 -> p.water
                 else -> p.moss
@@ -1104,10 +1105,13 @@ class PaperSceneRenderer(private val density: Float) {
     }
 
     /** On the river each frame: the path of the moon (or a low sun), rings of rain, flowers adrift. */
+    private val waterRt by lazy { Shaders.create(Shaders.WATER) }
+
     private fun drawRiverLife(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
         val water = layout.ridges[layout.waterIndex]
         val near = layout.ridges.last()
         val t = o.time
+        drawShimmer(canvas, s, p, o, water, near)
         drawLightPath(canvas, s, p, o, water, near)
         if (s.rain + s.drizzle > 0.08f) drawRainRings(canvas, s, p, o, water, near)
         val f = layout.flowers
@@ -1168,6 +1172,34 @@ class PaperSceneRenderer(private val density: Float) {
                 canvas.drawCircle(x, y + 0.6f * u, 1f * u, fill)
             }
         }
+    }
+
+    /**
+     * The sky caught on the moving surface of the river: long slow ripples that flash pale where
+     * they tilt to the sky and darken in their troughs (GPU only; paper keeps its still glints).
+     */
+    private fun drawShimmer(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options, water: SceneLayout.Ridge, near: SceneLayout.Ridge) {
+        val rt = if (canvas.isHardwareAccelerated) waterRt else null
+        if (rt == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val top = water.top - 2 * dp
+        val bottom = near.bottom
+        if (bottom <= top) return
+        val wind = abs(s.windX + o.gust).coerceAtMost(12f)
+        val strength = (0.55f + wind * 0.04f) * (1f - (s.rain + s.drizzle * 0.5f).coerceIn(0f, 1f) * 0.5f)
+        val light = ColorMath.lerp(p.skyBottom, p.cloud, 0.35f)
+        val shade = ColorMath.darken(p.water, 0.3f)
+        rt.setFloatUniform("size", layout.w, bottom - top)
+        rt.setFloatUniform("time", o.time * (1f + wind * 0.06f))
+        rt.setFloatUniform("strength", strength)
+        rt.setFloatUniform("light", android.graphics.Color.red(light) / 255f, android.graphics.Color.green(light) / 255f, android.graphics.Color.blue(light) / 255f, 0.32f)
+        rt.setFloatUniform("shade", android.graphics.Color.red(shade) / 255f, android.graphics.Color.green(shade) / 255f, android.graphics.Color.blue(shade) / 255f, 0.22f)
+        canvas.save()
+        canvas.clipPath(water.path)
+        canvas.translate(0f, top)
+        shaderPaint.shader = rt
+        canvas.drawRect(0f, 0f, layout.w, bottom - top, shaderPaint)
+        shaderPaint.shader = null
+        canvas.restore()
     }
 
     /** The moon (or a low sun) laid on the water as a trembling column of short glints. */
@@ -1283,16 +1315,24 @@ class PaperSceneRenderer(private val density: Float) {
     private val rainAlpha = floatArrayOf(0.22f, 0.32f, 0.45f)
     private val layerShare = floatArrayOf(0.45f, 0.33f, 0.22f)
 
+    /**
+     * Rain in three depths. Each streak is a faint tail and a brighter head, the way a drop smears
+     * across one exposure; gusts drive curtains of heavier rain across the scene, downwind; in a
+     * downpour a few drops pass right in front of the eye, long and out of focus.
+     */
     private fun drawRain(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options, wind: Float) {
-        val n = ((area() / 900f).coerceIn(40f, 440f) * s.rain.coerceIn(0f, 1.2f)).toInt()
+        val n = ((area() / 700f).coerceIn(50f, 560f) * s.rain.coerceIn(0f, 1.2f)).toInt()
         if (n <= 0) return
         val w = layout.w
         val h = layout.h
         val slant = (wind / 20f).coerceIn(-0.7f, 0.7f)
+        val heavy = s.rain.coerceAtMost(1f)
+        val sweep = o.time * (0.35f + abs(wind) * 0.05f) * (if (wind < 0f) -1f else 1f)
         for (layer in 0..2) {
             val count = (n * layerShare[layer]).toInt()
-            val out = ensureBuf(layer, count * 4)
-            val len = rainLen[layer] * dp * (0.8f + 0.4f * s.rain.coerceAtMost(1f))
+            val tails = ensureBuf(layer, count * 4)
+            val heads = ensureBuf(3, count * 4)
+            val len = rainLen[layer] * dp * (0.8f + 0.4f * heavy)
             val speed = rainSpeed[layer] * dp
             val span = h + len * 2
             val spread = w + abs(slant) * h
@@ -1302,12 +1342,42 @@ class PaperSceneRenderer(private val density: Float) {
                 val y = wrap(rand(i, 603) * span + o.time * speed, span) - len
                 val x0 = rand(i, 605) * spread - (if (slant > 0) slant * h else 0f)
                 val x = x0 + y * slant
-                out[k++] = x; out[k++] = y
-                out[k++] = x + len * slant; out[k++] = y + len
+                val curtain = 0.5f + 0.5f * sin(x / w * 4.2f - sweep + layer * 1.3f)
+                if (rand(i, 609) > 0.35f + 0.65f * curtain) continue
+                val ex = x + len * slant
+                val ey = y + len
+                tails[k] = x; tails[k + 1] = y; tails[k + 2] = ex; tails[k + 3] = ey
+                heads[k] = x + len * 0.62f * slant; heads[k + 1] = y + len * 0.62f; heads[k + 2] = ex; heads[k + 3] = ey
+                k += 4
             }
-            lines.strokeWidth = rainWidth[layer] * dp
-            lines.color = ColorMath.withAlpha(p.precip, rainAlpha[layer] * (0.75f + 0.25f * s.rain.coerceAtMost(1f)))
-            if (k > 0) canvas.drawLines(out, 0, k, lines)
+            if (k == 0) continue
+            val a = rainAlpha[layer] * (0.75f + 0.25f * heavy)
+            lines.strokeWidth = rainWidth[layer] * dp * 0.75f
+            lines.color = ColorMath.withAlpha(p.precip, a * 0.45f)
+            canvas.drawLines(tails, 0, k, lines)
+            lines.strokeWidth = rainWidth[layer] * dp * 1.15f
+            lines.color = ColorMath.withAlpha(p.precip, a)
+            canvas.drawLines(heads, 0, k, lines)
+        }
+        if (heavy > 0.3f && o.detail >= 0.8f) drawLensRain(canvas, s, p, o, slant)
+    }
+
+    /** Drops passing just in front of the eye: long, soft, out of focus. */
+    private fun drawLensRain(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options, slant: Float) {
+        val n = (2 + s.rain.coerceAtMost(1.2f) * 6).toInt()
+        val len = 80 * dp
+        val span = layout.h + len * 2
+        val angle = -Math.toDegrees(kotlin.math.atan(slant.toDouble())).toFloat()
+        sprite.tint(p.precip, 0.12f)
+        for (i in 0 until n) {
+            val y = wrap(rand(i, 621) * span + o.time * 1700f * dp * (0.85f + 0.3f * rand(i, 623)), span) - len
+            val x = rand(i, 625) * (layout.w + abs(slant) * layout.h) - (if (slant > 0) slant * layout.h else 0f) + y * slant
+            val r = (2.5f + 2.5f * rand(i, 627)) * dp
+            canvas.save()
+            canvas.rotate(angle, x, y)
+            tmpRect.set(x - r, y - len / 2, x + r, y + len / 2)
+            canvas.drawBitmap(SceneSprites.soft, null, tmpRect, sprite.paint)
+            canvas.restore()
         }
     }
 
@@ -1373,14 +1443,27 @@ class PaperSceneRenderer(private val density: Float) {
                 if (layer < 2) {
                     out[k++] = x; out[k++] = y
                 } else {
-                    sprite.tint(p.precip, snowAlpha[2])
-                    sprite.draw(canvas, SceneSprites.soft, x, y, (2.6f + rand(i, 811) * 2.4f) * dp)
+                    // Near flakes tumble: their face to us, then their edge.
+                    val tumble = 0.8f + 0.2f * sin(t * (2f + 2.5f * rand(i, 813)) + i)
+                    sprite.tint(p.precip, snowAlpha[2] * (0.75f + 0.25f * tumble))
+                    sprite.draw(canvas, SceneSprites.soft, x, y, (2.6f + rand(i, 811) * 2.4f) * dp * tumble)
                 }
             }
             if (layer < 2 && k > 0) {
                 lines.strokeWidth = snowSize[layer] * dp
                 lines.color = ColorMath.withAlpha(p.precip, snowAlpha[layer])
                 canvas.drawPoints(out, 0, k, lines)
+            }
+        }
+        // A few flakes right by the eye: large, faint and out of focus, drifting fast.
+        if (s.snow > 0.25f && o.detail >= 0.8f) {
+            val m = (2 + s.snow.coerceAtMost(1.2f) * 5).toInt()
+            val span = layout.h + 60 * dp
+            sprite.tint(p.precip, 0.2f)
+            for (j in 0 until m) {
+                val y = wrap(rand(j, 821) * span + t * 120f * dp * (0.8f + 0.4f * rand(j, 823)), span) - 30 * dp
+                val x = wrap(rand(j, 825) * xw + wind * 7f * dp * t + sin(t * 0.9f + j) * 22 * dp, xw) - 12 * dp
+                sprite.draw(canvas, SceneSprites.soft, x, y, (9f + 8f * rand(j, 827)) * dp)
             }
         }
     }
@@ -1407,8 +1490,28 @@ class PaperSceneRenderer(private val density: Float) {
         canvas.drawLines(out, 0, k, lines)
     }
 
+    private val fogRt by lazy { Shaders.create(Shaders.FOG) }
+    private val shaderPaint = Paint(Paint.DITHER_FLAG)
+
+    /**
+     * Mist lying along the valleys. On the GPU it is real drifting, rolling fog (Shaders.FOG);
+     * elsewhere a few broad soft banks sliding slowly across.
+     */
     private fun drawFog(canvas: Canvas, s: SceneState, p: ScenePalette, o: Options) {
         val color = ColorMath.lerp(p.cloud, p.skyBottom, 0.35f)
+        val rt = if (canvas.isHardwareAccelerated) fogRt else null
+        if (rt != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            rt.setFloatUniform("size", layout.w, layout.h)
+            rt.setFloatUniform("time", o.time)
+            rt.setFloatUniform("density", s.fog.coerceIn(0f, 1f) * 0.85f)
+            rt.setFloatUniform("horizon", layout.horizonY)
+            rt.setFloatUniform("depth", layout.depthD)
+            rt.setFloatUniform("tint", android.graphics.Color.red(color) / 255f, android.graphics.Color.green(color) / 255f, android.graphics.Color.blue(color) / 255f, 1f)
+            shaderPaint.shader = rt
+            canvas.drawRect(0f, 0f, layout.w, layout.h, shaderPaint)
+            shaderPaint.shader = null
+            return
+        }
         val hy = layout.horizonY
         for (i in 0 until 4) {
             val cy = hy + (i - 1.6f) * layout.depthD * 0.32f
@@ -1559,80 +1662,134 @@ class PaperSceneRenderer(private val density: Float) {
     private var boltSeedCached = Int.MIN_VALUE
     private var boltW = -1f
     private val boltPath = Path()
+    private val boltForks = Path()
+    private val boltEnds = FloatArray(4)
 
+    /** A channel that zigzags at two scales, as real ones do, and a few thinner forks off it. */
     private fun buildBolt(seed: Int) {
         boltSeedCached = seed
         boltW = layout.w
         boltPath.reset()
+        boltForks.reset()
         val x0 = layout.w * (0.2f + rand(seed, 1101) * 0.6f)
         val y0 = layout.horizonY * 0.1f
         val y1 = layout.ridges.getOrNull(1)?.let { layout.edge(it, x0) } ?: layout.horizonY
-        val seg = 10
+        val seg = 12
+        val xs = FloatArray(seg + 1)
+        val ys = FloatArray(seg + 1)
         var x = x0
         var y = y0
         boltPath.moveTo(x, y)
-        val xs = FloatArray(seg + 1)
-        val ys = FloatArray(seg + 1)
         xs[0] = x; ys[0] = y
         for (i in 1..seg) {
-            y += (y1 - y0) / seg
-            x += (rand(seed + i, 1103) - 0.5f) * 30 * dp
-            boltPath.lineTo(x, y)
+            val nx = x + (rand(seed + i, 1103) - 0.5f) * 34 * dp
+            val ny = y + (y1 - y0) / seg
+            // Two small kinks inside every stride.
+            for (k in 1..2) {
+                val f = k / 3f
+                boltPath.lineTo(x + (nx - x) * f + (rand(seed + i * 3 + k, 1111) - 0.5f) * 9 * dp, y + (ny - y) * f)
+            }
+            boltPath.lineTo(nx, ny)
+            x = nx; y = ny
             xs[i] = x; ys[i] = y
         }
-        repeat(2) { b ->
-            val from = 2 + (rand(seed + b, 1105) * (seg - 5)).toInt()
+        boltEnds[0] = x0; boltEnds[1] = y0; boltEnds[2] = x; boltEnds[3] = y
+        repeat(3) { b ->
+            val from = 1 + (rand(seed + b, 1105) * (seg - 4)).toInt()
             var bx = xs[from]
             var by = ys[from]
             val dir = if (rand(seed + b, 1107) > 0.5f) 1f else -1f
-            boltPath.moveTo(bx, by)
-            for (i in 0 until 4) {
-                bx += dir * (8f + rand(seed + b * 5 + i, 1109) * 14f) * dp
-                by += (y1 - y0) / seg * 0.8f
-                boltPath.lineTo(bx, by)
+            boltForks.moveTo(bx, by)
+            val steps = 3 + (rand(seed + b, 1113) * 4).toInt()
+            for (i in 0 until steps) {
+                bx += dir * (5f + rand(seed + b * 7 + i, 1109) * 13f) * dp
+                by += (y1 - y0) / seg * (0.5f + 0.5f * rand(seed + b * 7 + i, 1115))
+                boltForks.lineTo(bx, by)
             }
         }
     }
 
+    private val boltGlow by lazy { android.graphics.BlurMaskFilter(7 * dp, android.graphics.BlurMaskFilter.Blur.NORMAL) }
+
+    /**
+     * Lightning: the cloud it leaves lit from inside, a wide blurred glow of ionised air, the
+     * forks, and a white-hot channel; where it strikes, the ground flashes.
+     */
     private fun drawBolt(canvas: Canvas, o: Options) {
         val strength = if (o.staticBolt) 1f else o.flash
         if (strength < 0.12f) return
         if (boltSeedCached != o.boltSeed || boltW != layout.w) buildBolt(o.boltSeed)
-        stroke.color = ColorMath.withAlpha(0xFFB9C4FF.toInt(), 0.12f * strength)
-        stroke.strokeWidth = 7 * dp
+        sprite.tint(0xFFD9DEFF.toInt(), 0.45f * strength)
+        sprite.draw(canvas, SceneSprites.glow, boltEnds[0], boltEnds[1], layout.w * 0.45f)
+        sprite.tint(0xFFE8ECFF.toInt(), 0.35f * strength)
+        sprite.draw(canvas, SceneSprites.glow, boltEnds[2], boltEnds[3], 26 * dp)
+        stroke.maskFilter = boltGlow
+        stroke.color = ColorMath.withAlpha(0xFFB9C4FF.toInt(), 0.5f * strength)
+        stroke.strokeWidth = 9 * dp
         canvas.drawPath(boltPath, stroke)
-        stroke.color = ColorMath.withAlpha(0xFFE4E8FF.toInt(), 0.35f * strength)
-        stroke.strokeWidth = 3 * dp
+        stroke.maskFilter = null
+        stroke.color = ColorMath.withAlpha(0xFFDDE3FF.toInt(), 0.55f * strength)
+        stroke.strokeWidth = 1.2f * dp
+        canvas.drawPath(boltForks, stroke)
+        stroke.color = ColorMath.withAlpha(0xFFE4E8FF.toInt(), 0.45f * strength)
+        stroke.strokeWidth = 3.2f * dp
         canvas.drawPath(boltPath, stroke)
         stroke.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), strength)
-        stroke.strokeWidth = 1.1f * dp
+        stroke.strokeWidth = 1.3f * dp
         canvas.drawPath(boltPath, stroke)
     }
 
-    /** Raindrops on the glass: they bead, sit a while, then run down and re-form elsewhere. */
+    /**
+     * Rain on the glass. A fine mist of beads sits all over it; bigger drops gather, sit a while,
+     * then give way and run down in a wavering line, leaving a trail of tiny beads behind them.
+     */
     private fun drawGlass(canvas: Canvas, s: SceneState, o: Options) {
         val wet = (s.rain + s.drizzle * 0.6f).coerceIn(0f, 1f)
-        val n = (4 + wet * 8).toInt()
         val t = o.time
+        srcRect.set(0, 0, SceneSprites.drop.width, SceneSprites.drop.height)
+        // The mist of beads.
+        val mist = (area() / 260f * wet).toInt().coerceAtMost(160)
+        for (i in 0 until mist) {
+            val r = (0.8f + 1.4f * rand(i, 1521)) * dp
+            val x = rand(i, 1523) * layout.w
+            val y = rand(i, 1525) * layout.h
+            bitmapPaint.alpha = (255 * wet * (0.35f + 0.4f * rand(i, 1527))).roundToInt()
+            tmpRect.set(x - r, y - r, x + r, y + r)
+            canvas.drawBitmap(SceneSprites.drop, srcRect, tmpRect, bitmapPaint)
+        }
+        val n = (4 + wet * 8).toInt()
         for (i in 0 until n) {
             val life = 6f + 5f * rand(i, 1501)
             val phase = t / life + rand(i, 1503)
             val cycle = floor(phase).toInt()
             val ph = phase - cycle
-            val x = rand(i * 17 + cycle, 1505) * layout.w
+            val x0 = rand(i * 17 + cycle, 1505) * layout.w
             val y0 = rand(i * 17 + cycle, 1507) * layout.horizonY * 0.95f
             val r = (3.5f + 4.5f * rand(i * 17 + cycle, 1509)) * dp
             val grow = smoothstep(0f, 0.08f, ph)
             val slide = smoothstep(0.72f, 1f, ph)
             val y = y0 + slide * slide * layout.h * 0.35f
+            fun wobble(yy: Float) = x0 + sin(yy / (11 * dp) + i) * 1.6f * dp
             val a = grow * (1f - smoothstep(0.9f, 1f, ph))
             if (slide > 0.01f) {
-                lines.strokeWidth = r * 0.5f
-                lines.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.1f * a)
-                canvas.drawLine(x, y0, x, y - r, lines)
+                // The wet track, and the beads it leaves.
+                lines.strokeWidth = r * 0.45f
+                lines.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), 0.08f * a)
+                canvas.drawLine(wobble(y0), y0, wobble(y - r), y - r, lines)
+                var by = y0 + r
+                var b = 0
+                while (by < y - r * 1.5f) {
+                    val br = r * (0.18f + 0.14f * rand(i * 31 + b, 1511))
+                    bitmapPaint.alpha = (255 * a * 0.8f).roundToInt()
+                    val bx = wobble(by) + (rand(i * 31 + b, 1513) - 0.5f) * r * 0.5f
+                    tmpRect.set(bx - br, by - br, bx + br, by + br)
+                    canvas.drawBitmap(SceneSprites.drop, srcRect, tmpRect, bitmapPaint)
+                    by += r * (1.1f + 1.4f * rand(i * 31 + b, 1515))
+                    b++
+                }
             }
             bitmapPaint.alpha = (a * 255).roundToInt()
-            srcRect.set(0, 0, SceneSprites.drop.width, SceneSprites.drop.height)
+            val x = wobble(y)
             tmpRect.set(x - r, y - r * 1.05f, x + r, y + r * (1.05f + slide * 0.3f))
             canvas.drawBitmap(SceneSprites.drop, srcRect, tmpRect, bitmapPaint)
         }

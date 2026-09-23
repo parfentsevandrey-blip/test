@@ -97,6 +97,14 @@ class AppScreenshots {
 
     @Test
     @Config(qualifiers = "+ru-rRU")
+    fun homeSky() {
+        Shots.assumeEnabled()
+        seed(Fixtures.moscow(System.currentTimeMillis())) { it.copy(theme = AppTheme.Sky) }
+        shoot("home_sky", { PaperskyRoot(app.container, MutableStateFlow(null)) {} })
+    }
+
+    @Test
+    @Config(qualifiers = "+ru-rRU")
     fun homeOphelia() {
         Shots.assumeEnabled()
         seed(Fixtures.moscow(System.currentTimeMillis())) { it.copy(theme = AppTheme.Ophelia) }

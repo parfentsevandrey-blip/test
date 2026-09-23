@@ -50,6 +50,7 @@ import app.papersky.weather.scene.Glyph
 import app.papersky.weather.scene.GlyphColors
 import app.papersky.weather.scene.Palettes
 import app.papersky.weather.scene.SceneState
+import app.papersky.weather.scene.SceneVariant
 import app.papersky.weather.scene.ScenePalette
 import app.papersky.weather.widget.RefreshAction
 import app.papersky.weather.widget.TapAction
@@ -221,7 +222,8 @@ fun WidgetContent(config: WidgetConfig, data: WidgetData, nowMillis: Long, openA
     val charts = chartsFor(plan, hours)
     val fx = if (config.animate && config.background == WidgetBackground.Scene && plan.mode != Mode.Micro) {
         val hero = plan.heroRect()?.let { android.graphics.RectF(it.left, it.top, it.right, it.bottom) }
-        WidgetFx.plan(scene, palette, plan, WidgetFx.sunDp(scene, plan, WidgetArt.sceneOptions(plan, scene, nowSec, data.settings.village, config.palette.variant).copy(keepClear = listOfNotNull(hero))))
+        val hearth = if (config.palette.variant == SceneVariant.Hearth) WidgetArt.hearthGeometry(plan) else null
+        WidgetFx.plan(scene, palette, plan, WidgetFx.sunDp(scene, plan, WidgetArt.sceneOptions(plan, scene, nowSec, data.settings.village, config.palette.variant).copy(keepClear = listOfNotNull(hero))), hearth)
     } else FxPlan.None
     val art = remember(plan, config, scene, palette, charts.size, nowSec / 60, data.settings.village) {
         WidgetArt.background(context, plan, config, scene, palette, charts, nowSec, fx, data.settings.village)

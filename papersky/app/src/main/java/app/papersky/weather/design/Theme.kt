@@ -139,7 +139,7 @@ data class PaperType(
 /** Text printed on the sky gets a soft shadow (or a pale glow, if the ink is dark) (§4.4). */
 fun TextStyle.onSky(lightInk: Boolean): TextStyle = copy(
     shadow = if (lightInk) Shadow(Color.Black.copy(alpha = 0.22f), Offset(0f, 2f), 12f)
-    else Shadow(Color.White.copy(alpha = 0.35f), Offset(0f, 2f), 12f),
+    else Shadow(Color.White.copy(alpha = 0.5f), Offset(0f, 1f), 14f),
 )
 
 // Dynamic (not static): colours animate, and only readers should recompose.

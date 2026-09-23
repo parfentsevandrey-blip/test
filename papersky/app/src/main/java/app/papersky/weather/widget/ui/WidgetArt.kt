@@ -13,8 +13,10 @@ import app.papersky.weather.scene.ColorMath
 import app.papersky.weather.scene.Glyph
 import app.papersky.weather.scene.GlyphColors
 import app.papersky.weather.scene.GlyphRenderer
+import app.papersky.weather.scene.HearthRenderer
 import app.papersky.weather.scene.MaterialTextures
 import app.papersky.weather.scene.PaperSceneRenderer
+import app.papersky.weather.scene.Palettes
 import app.papersky.weather.scene.ScenePalette
 import app.papersky.weather.scene.SceneState
 import app.papersky.weather.scene.SceneVariant
@@ -82,7 +84,9 @@ object WidgetArt {
         return when (config.background) {
             WidgetBackground.Clear -> null
             WidgetBackground.Paper -> paper(plan, palette, scale, scene.seed)
-            WidgetBackground.Scene -> PaperSceneRenderer.renderBitmap(plan.width, plan.height, scale, scene, palette) { k ->
+            WidgetBackground.Scene -> if (config.palette.variant == SceneVariant.Hearth) {
+                hearth(plan, scene, palette, charts, clockSeconds, village, scale, particles = !fx.hasPrecipitation)
+            } else PaperSceneRenderer.renderBitmap(plan.width, plan.height, scale, scene, palette) { k ->
                 fun RectDp.px() = RectF(left * k, top * k, right * k, bottom * k)
                 val base = sceneOptions(plan, scene, clockSeconds, village, config.palette.variant)
                 base.copy(
@@ -105,6 +109,49 @@ object WidgetArt {
                 )
             }
         }
+    }
+
+    /** Height of the room in dp: it is fitted above the panels, so the fire is never under them. */
+    fun hearthRoomHeight(plan: WidgetPlan): Float {
+        val panelTop = plan.panels.minOfOrNull { it.top } ?: return plan.height
+        return if (panelTop > plan.height * 0.4f) min(plan.height, panelTop + 6f) else plan.height
+    }
+
+    /** The room's layout in widget dp, for the animated layers laid over it. */
+    fun hearthGeometry(plan: WidgetPlan): HearthRenderer.Geometry = HearthRenderer(1f).geometry(plan.width, hearthRoomHeight(plan))
+
+    /**
+     * The room by the fire as a widget: the whole room drawn in one pass, the weather in its
+     * window, the fire caught mid-flicker; then the same scrim, panels and charts as the print.
+     */
+    private fun hearth(plan: WidgetPlan, scene: SceneState, palette: ScenePalette, charts: List<ChartSpec>, clockSeconds: Long, village: Boolean, scale: Float, particles: Boolean): Bitmap {
+        val w = (plan.width * scale).roundToInt().coerceAtLeast(1)
+        val h = (plan.height * scale).roundToInt().coerceAtLeast(1)
+        val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bmp)
+        val o = sceneOptions(plan, scene, clockSeconds, village, SceneVariant.Hearth)
+        val roomH = hearthRoomHeight(plan) * scale
+        HearthRenderer(scale).draw(
+            canvas, w.toFloat(), roomH, scene, palette, Palettes.forState(scene), o.time, village,
+            frost = if (scene.temperature < -2f) 0.6f else 0f, extraBelow = h - roomH, particles = particles,
+        )
+        fun RectDp.px() = RectF(left * scale, top * scale, right * scale, bottom * scale)
+        val chrome = PaperSceneRenderer(scale)
+        plan.textRect()?.px()?.let { chrome.drawScrim(canvas, it, palette.isDarkSky) }
+        for (r in plan.panels) chrome.drawPanel(canvas, PaperSceneRenderer.Panel(r.px()), palette)
+        for (c in charts) {
+            chrome.drawChart(
+                canvas,
+                PaperSceneRenderer.Chart(
+                    RectF(c.left * scale, c.top * scale, (c.left + c.width) * scale, (c.top + c.height) * scale),
+                    FloatArray(c.pointsY.size) { c.pointsY[it] * scale },
+                    c.bars,
+                    c.barsTop * scale,
+                ),
+                palette,
+            )
+        }
+        return bmp
     }
 
     /** A plain sheet of cotton paper with the faintest printed horizon (DESIGN_DOCTRINE §13). */
