@@ -4,6 +4,7 @@ import com.android.build.api.dsl.CommonExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
@@ -33,6 +34,25 @@ internal fun Project.configureAndroid(extension: CommonExtension) {
         testOptions.unitTests.isReturnDefaultValues = true
     }
     configureKotlin()
+    configureRobolectric()
+}
+
+/** JVM settings for Robolectric tests (SDK 36 runtime on JDK 21, screenshot capture). */
+private fun Project.configureRobolectric() {
+    tasks.withType<Test>().configureEach {
+        // Hardware-accelerated capture: RenderEffect blur, shadows and AGSL show up in screenshots.
+        systemProperty("robolectric.pixelCopyRenderMode", "hardware")
+        // Optional mirror for Robolectric's own android-all download (~/.gradle/gradle.properties).
+        providers.gradleProperty("robolectricRepoUrl").orNull?.let {
+            systemProperty("robolectric.dependency.repo.url", it)
+        }
+        maxHeapSize = "2g"
+        // Robolectric's SDK 36 runtime reaches into FileDescriptor internals (JDK 21 module rules).
+        jvmArgs(
+            "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
+            "--add-exports=java.base/jdk.internal.access=ALL-UNNAMED",
+        )
+    }
 }
 
 /** Kotlin compiler flags shared by Android and JVM modules. */

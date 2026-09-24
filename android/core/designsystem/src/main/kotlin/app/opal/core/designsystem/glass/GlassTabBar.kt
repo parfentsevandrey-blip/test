@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -44,7 +45,13 @@ import com.kyant.shapes.Capsule
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
-data class TabItem(val label: String, val icon: ImageVector, val selectedIcon: ImageVector)
+data class TabItem(
+    val label: String,
+    val icon: ImageVector,
+    val selectedIcon: ImageVector,
+    /** Stable id for UI automation (baseline profile generator, benchmarks). */
+    val testTag: String = label,
+)
 
 /**
  * Floating glass tab bar. The selection pill slides with a spring; while content scrolls down
@@ -92,17 +99,21 @@ fun GlassTabBar(
                 items.forEachIndexed { index, item ->
                     val selected = index == selectedIndex
                     Column(
-                        Modifier.weight(1f).fillMaxHeight().clip(Capsule()).selectable(
-                            selected = selected,
-                            role = Role.Tab,
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                        ) {
-                            if (!selected) {
-                                haptics?.tap()
-                                onSelect(index)
-                            }
-                        },
+                        Modifier.weight(1f)
+                            .fillMaxHeight()
+                            .testTag(item.testTag)
+                            .clip(Capsule())
+                            .selectable(
+                                selected = selected,
+                                role = Role.Tab,
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                            ) {
+                                if (!selected) {
+                                    haptics?.tap()
+                                    onSelect(index)
+                                }
+                            },
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {

@@ -31,6 +31,9 @@ android {
                     )
                 // JNI registration target for hev (see HevNative.kt).
                 cFlags += listOf("-DPKGNAME=app/opal/core/tunnel/hev", "-DCLSNAME=HevNative")
+                // lwIP asserts embed __FILE__: strip the checkout location so the library is
+                // byte-identical wherever it is built (and leaks no local paths).
+                cFlags += "-ffile-prefix-map=${file("src/main/cpp").absolutePath}/="
             }
         }
     }
@@ -60,6 +63,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
+    testImplementation(libs.robolectric)
 }
 
 val extractTorNatives =
@@ -75,6 +79,10 @@ androidComponents {
             extractTorNatives,
             ExtractJniLibsTask::outputDir,
         )
+        // Release: no DWARF at all. It is stripped from the APK anyway, but the ELF build-id is
+        // hashed over it and it records the build directory — without it the library is
+        // byte-identical wherever it is built (reproducible APKs).
+        if (variant.buildType == "release") variant.externalNativeBuild?.cFlags?.add("-g0")
     }
 }
 

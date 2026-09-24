@@ -49,7 +49,11 @@ internal class TunnelRuntime private constructor(context: Context) {
             engine = CTorEngine(files, scope, debuggable),
             transports = transports,
             hev = HevTunnel(app),
-            catalog = BridgeCatalog(bundledBridges),
+            catalog =
+                BridgeCatalog(bundledBridges) {
+                    // adb shell run-as app.opal.debug touch files/debug_break_snowflake
+                    debuggable && java.io.File(app.filesDir, "debug_break_snowflake").exists()
+                },
             moat = MoatClient(transports),
             files = files,
             network = network,

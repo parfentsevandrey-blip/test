@@ -54,8 +54,8 @@ internal class TorFiles(private val context: Context) {
                 return@withContext true
             }
             try {
-                unpack("geoip.gz", geoIp)
-                unpack("geoip6.gz", geoIp6)
+                unpack("geoip", geoIp)
+                unpack("geoip6", geoIp6)
                 marker.writeText(versionCode.toString())
                 true
             } catch (_: java.io.IOException) {
@@ -63,16 +63,27 @@ internal class TorFiles(private val context: Context) {
             }
         }
 
+    /**
+     * The repository keeps `assets/geoip{,6}.gz`, but APK packaging unpacks `.gz` assets and stores
+     * them deflated under the plain name (verified in the release APK). Read the plain name; fall
+     * back to the gzip name in case a build keeps it.
+     */
     private fun unpack(asset: String, target: File) {
         val tmp = File(target.parentFile, target.name + ".tmp")
-        context.assets.open(asset).use { input ->
-            GZIPInputStream(input, 64 * 1024).use { gz ->
-                tmp.outputStream().use { gz.copyTo(it, 64 * 1024) }
+        val input =
+            try {
+                context.assets.open(asset)
+            } catch (_: java.io.FileNotFoundException) {
+                GZIPInputStream(context.assets.open("$asset.gz"), BUFFER)
             }
-        }
+        input.use { source -> tmp.outputStream().use { source.copyTo(it, BUFFER) } }
         if (!tmp.renameTo(target)) {
             tmp.delete()
             throw java.io.IOException("Cannot move $tmp to $target")
         }
+    }
+
+    private companion object {
+        const val BUFFER = 64 * 1024
     }
 }

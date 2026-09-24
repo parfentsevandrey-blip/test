@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -157,10 +158,11 @@ fun OnboardingRoute(
             }
             val last = pager.currentPage == PAGES - 1
             GlassButton(
+                modifier = Modifier.testTag("onboarding_next"),
                 onClick = {
                     if (last) onFinish()
                     else scope.launch { pager.animateScrollToPage(pager.currentPage + 1) }
-                }
+                },
             ) {
                 Text(
                     stringResource(if (last) R.string.onb_start else R.string.onb_next),

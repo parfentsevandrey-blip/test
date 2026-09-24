@@ -17,6 +17,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
     targetProjectPath = ":app"
+    // Macrobenchmarks instrument another app: the test APK runs in its own process.
+    experimentalProperties["android.experimental.self-instrumenting"] = true
 }
 
 // Generate on a connected device or a Gradle Managed Device:

@@ -13,15 +13,35 @@ import app.opal.core.model.settings.TunnelMemory
  * - the user's own lines (Custom mode only). Within a transport, bridges are ordered by their
  *   success statistics.
  */
-internal class BridgeCatalog(private val bundled: BuiltinBridges) {
+internal class BridgeCatalog(
+    private val bundled: BuiltinBridges,
+    /**
+     * Test hook, debug builds only (see TunnelRuntime): points every Snowflake line at a broker
+     * that cannot exist, to check that the race wins through another transport.
+     */
+    private val breakSnowflake: () -> Boolean = { false },
+) {
 
     fun builtin(memory: TunnelMemory): BuiltinBridges {
         val fresh = memory.circumvention?.builtin.orEmpty()
-        if (fresh.isEmpty()) return bundled
-        val parsed = BuiltinBridges.fromMap(fresh)
-        // Keep bundled transports the API did not mention (e.g. meek if absent from /builtin).
-        return BuiltinBridges(bundled.byTransport + parsed.byTransport)
+        val merged =
+            if (fresh.isEmpty()) {
+                bundled
+            } else {
+                // Keep bundled transports the API did not mention (e.g. meek if absent from
+                // /builtin).
+                BuiltinBridges(bundled.byTransport + BuiltinBridges.fromMap(fresh).byTransport)
+            }
+        if (!breakSnowflake()) return merged
+        return BuiltinBridges(merged.byTransport.mapValues { (_, lines) -> lines.map(::sabotaged) })
     }
+
+    private fun sabotaged(line: BridgeLine): BridgeLine =
+        if (line.transport == TransportKind.Snowflake) {
+            line.copy(args = line.args + ("url" to BROKEN_BROKER))
+        } else {
+            line
+        }
 
     fun custom(settings: AppSettings): List<BridgeLine> =
         settings.customBridges.mapNotNull(BridgeLine::parseOrNull).distinctBy { it.raw }
@@ -55,15 +75,18 @@ internal class BridgeCatalog(private val bundled: BuiltinBridges) {
                         builtin[kind])
                     .distinctBy { it.raw }
             if (lines.isEmpty()) continue
+            val usable = if (breakSnowflake()) lines.map(::sabotaged) else lines
             val cap = CAPS[kind] ?: DEFAULT_CAP
             // Snowflake lines are all needed (different bridges behind the same broker).
             result[kind] =
-                if (kind == TransportKind.Snowflake) lines.take(cap) else rank(lines).take(cap)
+                if (kind == TransportKind.Snowflake) usable.take(cap) else rank(usable).take(cap)
         }
         return result
     }
 
     private companion object {
+        /** RFC 2606 `.invalid`: guaranteed never to resolve or be served by the CDN front. */
+        const val BROKEN_BROKER = "https://broker.invalid/"
         const val DEFAULT_CAP = 4
         val CAPS =
             mapOf(

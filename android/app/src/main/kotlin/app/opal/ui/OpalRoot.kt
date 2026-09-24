@@ -40,6 +40,8 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -291,7 +293,12 @@ fun OpalScaffold(
         LocalSheetHost provides sheets,
         LocalToastState provides toast,
     ) {
-        Box(modifier.fillMaxSize().background(OpalTheme.colors.background)) {
+        Box(
+            modifier.fillMaxSize().background(OpalTheme.colors.background).semantics {
+                // Test tags become resource ids for UiAutomator (baseline profile, benchmarks).
+                testTagsAsResourceId = true
+            }
+        ) {
             AuroraBackground(
                 mood = mood,
                 modifier = Modifier.fillMaxSize().layerBackdrop(auroraLayer),
@@ -313,21 +320,25 @@ fun OpalScaffold(
                             stringResource(R.string.tab_home),
                             OpalIcons.Home,
                             OpalIcons.HomeFilled,
+                            testTag = "tab_home",
                         ),
                         TabItem(
                             stringResource(R.string.tab_apps),
                             OpalIcons.Apps,
                             OpalIcons.AppsFilled,
+                            testTag = "tab_apps",
                         ),
                         TabItem(
                             stringResource(R.string.tab_connection),
                             OpalIcons.Route,
                             OpalIcons.RouteFilled,
+                            testTag = "tab_connection",
                         ),
                         TabItem(
                             stringResource(R.string.tab_settings),
                             OpalIcons.Settings,
                             OpalIcons.SettingsFilled,
+                            testTag = "tab_settings",
                         ),
                     )
                 GlassTabBar(

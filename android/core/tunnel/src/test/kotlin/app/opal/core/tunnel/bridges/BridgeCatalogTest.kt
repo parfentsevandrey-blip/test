@@ -79,4 +79,20 @@ class BridgeCatalogTest {
         assertEquals(listOf("192.0.2.77"), c[TransportKind.Obfs4]!!.map { it.host })
         assertEquals(2, c[TransportKind.Snowflake]!!.size) // other transports stay bundled
     }
+
+    @Test
+    fun `debug sabotage points every snowflake line at an invalid broker only`() {
+        val broken = BridgeCatalog(bundled) { true }
+        val c = broken.candidates(TunnelMemory())
+        assertTrue(c[TransportKind.Snowflake]!!.all { it.args["url"] == "https://broker.invalid/" })
+        assertEquals(
+            catalog.candidates(TunnelMemory())[TransportKind.Obfs4],
+            c[TransportKind.Obfs4],
+        )
+        assertTrue(
+            broken.builtin(TunnelMemory())[TransportKind.Snowflake].all {
+                it.args["url"] == "https://broker.invalid/"
+            }
+        )
+    }
 }

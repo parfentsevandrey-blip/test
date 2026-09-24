@@ -1,0 +1,20 @@
+# Hand-written Baseline Profile for the app's own code (libraries such as Compose, Navigation 3
+# and kotlinx ship their own profiles, merged automatically). Covers the cold-start path and the
+# main screens; replace with the generated profile (:app:generateBaselineProfile) when a device is
+# available. Syntax: https://developer.android.com/topic/performance/baselineprofiles/manually-create-measure
+HSPLapp/opal/OpalApp;->**(**)**
+HSPLapp/opal/AppGraph;->**(**)**
+HSPLapp/opal/MainActivity**;->**(**)**
+HSPLapp/opal/PrepareOnOpen;->**(**)**
+HSPLapp/opal/ui/**;->**(**)**
+HSPLapp/opal/core/designsystem/**;->**(**)**
+HSPLapp/opal/core/data/**;->**(**)**
+HSPLapp/opal/core/model/**;->**(**)**
+HSPLapp/opal/core/tunnel/ipc/**;->**(**)**
+HSPLapp/opal/core/tunnel/Labels;->**(**)**
+HSPLapp/opal/feature/home/**;->**(**)**
+HSPLapp/opal/feature/onboarding/**;->**(**)**
+PLapp/opal/feature/apps/**;->**(**)**
+PLapp/opal/feature/connection/**;->**(**)**
+PLapp/opal/feature/settings/**;->**(**)**
+Lapp/opal/**;

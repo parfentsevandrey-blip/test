@@ -22,6 +22,8 @@ val supportedAbis = listOf("arm64-v8a", "armeabi-v7a", "x86_64")
 
 android {
     namespace = "app.opal"
+    // Same NDK as the native build: used to strip debug symbols from every .so at packaging.
+    ndkVersion = libs.versions.ndk.get()
 
     defaultConfig {
         applicationId = "app.opal"
@@ -96,6 +98,9 @@ android {
     androidResources {
         // Generates the LocaleConfig for per-app language (ru default, en).
         generateLocaleConfig = true
+        // Only the app's languages: library translations for other locales would mix languages
+        // in the UI and add size.
+        localeFilters += listOf("ru", "en")
     }
 
     buildFeatures { buildConfig = true }
@@ -150,20 +155,6 @@ dependencies {
 }
 
 // Screenshot goldens live next to the tests and are committed (verifyRoborazziDebug compares).
-roborazzi { outputDir.set(layout.projectDirectory.dir("src/test/screenshots")) }
-
-tasks.withType<Test>().configureEach {
-    // Hardware-accelerated capture: RenderEffect blur, shadows and AGSL show up in screenshots.
-    systemProperty("robolectric.pixelCopyRenderMode", "hardware")
-    // Optional mirror for Robolectric's own android-all download (e.g. in
-    // ~/.gradle/gradle.properties).
-    providers.gradleProperty("robolectricRepoUrl").orNull?.let {
-        systemProperty("robolectric.dependency.repo.url", it)
-    }
-    maxHeapSize = "2g"
-    // Robolectric's SDK 36 runtime reaches into FileDescriptor internals (JDK 21 module rules).
-    jvmArgs(
-        "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
-        "--add-exports=java.base/jdk.internal.access=ALL-UNNAMED",
-    )
+roborazzi {
+    outputDir.set(layout.projectDirectory.dir("src/test/screenshots"))
 }

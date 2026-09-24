@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The profiled app must be visible to the instrumentation (package visibility, API 30+). -->
+    <queries>
+        <package android:name="app.opal" />
+    </queries>
+</manifest>

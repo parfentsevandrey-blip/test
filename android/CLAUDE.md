@@ -29,6 +29,7 @@ NDK 30.0.16248370). Путь к SDK — в `local.properties` (`sdk.dir=...`, ф
 | Макробенчмарки (нужно устройство) | `./gradlew :baselineprofile:connectedBenchmarkReleaseAndroidTest` |
 | Тест нативного моста hev на Linux-хосте | `sudo tools/hev-host-test/run.sh` |
 | Обновить встроенные мосты из tor-browser-build | `./gradlew :core:tunnel:updateBuiltinBridges` |
+| Перегенерировать проверку зависимостей | `./gradlew --write-verification-metadata sha256 assembleDebug assembleRelease testDebugUnitTest lintDebug detekt spotlessCheck` |
 
 В песочнице разработки Maven Central отвечал 429; локально использовался init-скрипт
 `~/.gradle/init.d/maven-central-mirror.init.gradle.kts` (зеркало Google). В репозиторий он не
@@ -187,6 +188,19 @@ build-logic           Convention-плагины opal.android.application|library
     `robolectricRepoUrl` в `~/.gradle/gradle.properties`.
 26. **Иконки** — Material Symbols Rounded (Apache-2.0), сгенерированы из официальных SVG в
     `ImageVector` (`OpalIcons`, ленивая сборка): без шрифта-иконок и без material-icons-extended.
+27. **Воспроизводимость и цепочка поставки.** `gradle/verification-metadata.xml` (SHA-256 всех
+    артефактов; для aapt2 добавлены варианты osx/windows — Gradle пишет только текущую ОС),
+    SHA-256 дистрибутива Gradle, `vcsInfo`/`dependenciesInfo` выключены. hev собирается с
+    `-ffile-prefix-map` (ассерты lwIP встраивали `__FILE__`) и без DWARF в release (`-g0`:
+    build-id хешируется по отладочной информации с путём сборки). Проверено: две чистые сборки
+    из разных каталогов дают побайтно одинаковые APK. Любая новая зависимость → перегенерировать
+    метаданные (команда в README).
+28. **Ассеты `*.gz`** упаковщик APK распаковывает и кладёт без расширения: в репозитории
+    `geoip.gz`, в APK — `assets/geoip` (сжатый zip-записью). `TorFiles` открывает простое имя,
+    `.gz` — запасной путь (он же работает в Robolectric-тесте).
+29. **Отладочные переключатели** — только в debuggable-сборках: файл
+    `files/debug_break_snowflake` подменяет брокер Snowflake на `https://broker.invalid/` (проверка
+    гонки транспортов). В release-сборке условие `debuggable` ложно всегда.
 
 ## Стек
 
@@ -279,4 +293,7 @@ onBackPressed, Accompanist, Google Play Services / Firebase / ML Kit, телем
 - [x] Фаза 3 — дизайн-система Liquid Glass, экраны, скриншот-тесты (27 эталонов, JVM).
 - [x] Фаза 4 — раздельное туннелирование (+ пресет), свои мосты (вставка, QR с камеры и из
       картинки), новая личность, страна выхода, плитка (собрано, на устройстве не проверено).
-- [ ] Фаза 5 — профили, замеры, размер, dependency verification, подписанный релиз, README.
+- [x] Фаза 5 — генератор Baseline/Startup Profile и Macrobenchmark (запуск — на устройстве),
+      рукописный профиль, размер (strip, только ru/en), dependency verification,
+      воспроизводимость (проверена), подписанный релиз, README, CI, отчёт `docs/test-report.md`.
+      Замеры на устройстве не выполнялись.

@@ -1,0 +1,85 @@
+# Opal (android/): format, static analysis, unit + screenshot tests, APKs.
+name: Android
+
+on:
+  push:
+    paths: ["android/**", ".github/workflows/android.yml"]
+  pull_request:
+    paths: ["android/**", ".github/workflows/android.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      # Secrets cannot be tested in `if:` directly; expose only whether signing is configured.
+      HAS_SIGNING_KEY: ${{ secrets.OPAL_KEYSTORE_BASE64 != '' }}
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: android-actions/setup-android@v4
+
+      - name: Android SDK packages
+        run: sdkmanager --install "platforms;android-37.0" "build-tools;37.0.0" "ndk;30.0.16248370"
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - name: Format, detekt, lint
+        run: ./gradlew spotlessCheck detekt lintDebug
+
+      - name: Unit, UI and screenshot tests
+        run: ./gradlew testDebugUnitTest :core:model:test :app:verifyRoborazziDebug
+
+      - name: Debug APKs
+        run: ./gradlew :app:assembleDebug
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: opal-debug-apks
+          path: android/app/build/outputs/apk/debug/*.apk
+
+      # Signed release only when the repository has signing secrets (the key never lives in git).
+      - name: Release APKs
+        if: ${{ github.event_name != 'pull_request' && env.HAS_SIGNING_KEY == 'true' }}
+        env:
+          OPAL_KEYSTORE_BASE64: ${{ secrets.OPAL_KEYSTORE_BASE64 }}
+          OPAL_KEYSTORE_PASSWORD: ${{ secrets.OPAL_KEYSTORE_PASSWORD }}
+          OPAL_KEY_ALIAS: ${{ secrets.OPAL_KEY_ALIAS }}
+          OPAL_KEY_PASSWORD: ${{ secrets.OPAL_KEY_PASSWORD }}
+        run: |
+          echo "$OPAL_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/opal-release.jks"
+          OPAL_KEYSTORE_FILE="$RUNNER_TEMP/opal-release.jks" ./gradlew :app:assembleRelease
+          rm -f "$RUNNER_TEMP/opal-release.jks"
+
+      - if: ${{ github.event_name != 'pull_request' && hashFiles('android/app/build/outputs/apk/release/*.apk') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: opal-release-apks
+          path: android/app/build/outputs/apk/release/*.apk
+
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            android/**/build/reports/**
+            android/app/build/outputs/roborazzi/**
