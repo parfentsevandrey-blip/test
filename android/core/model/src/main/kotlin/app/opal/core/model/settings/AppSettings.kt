@@ -22,7 +22,6 @@ data class AppSettings(
     val dataSaver: Boolean = false,
     val theme: ThemeMode = ThemeMode.System,
     val simplifiedGraphics: Boolean = false,
-    val language: AppLanguage = AppLanguage.System,
     val splitTunnel: SplitTunnelSettings = SplitTunnelSettings(),
 )
 
@@ -45,6 +44,11 @@ enum class ThemeMode {
     Dark,
 }
 
+/**
+ * App language. Not part of [AppSettings]: on Android 13+ the system owns it (per-app language,
+ * also editable in system settings); below that it lives in a tiny file read before the first frame
+ * (`AppLocaleStore` in :core:data).
+ */
 @Serializable
 enum class AppLanguage(val tag: String?) {
     System(null),

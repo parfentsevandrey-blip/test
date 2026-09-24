@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connection_title">Подключение</string>
+    <string name="connection_section_method">Способ подключения</string>
+    <string name="connection_auto">Авто</string>
+    <string name="connection_auto_desc">Рекомендуется. Пробует транспорты параллельно и запоминает, какой сработал в этой сети</string>
+    <string name="connection_snowflake_desc">Через волонтёрские прокси WebRTC. Хорошо проходит блокировки, но медленнее</string>
+    <string name="connection_webtunnel_desc">Выглядит как обычный HTTPS-сайт. Мосты — из Circumvention Settings API</string>
+    <string name="connection_obfs4_desc">Трафик без узнаваемых признаков. Публичные мосты часто заблокированы — лучше свои</string>
+    <string name="connection_meek_desc">Через CDN (domain fronting). Надёжно, но медленно</string>
+    <string name="connection_custom">Свои мосты</string>
+    <string name="connection_custom_none">Не добавлены — нажмите, чтобы добавить</string>
+    <string name="connection_custom_edit">Изменить</string>
+    <string name="connection_now">Сейчас работает: %1$s</string>
+    <string name="connection_section_api">Мосты из Settings API</string>
+    <string name="connection_api_fetched">Получены %1$s</string>
+    <string name="connection_api_country">для страны: %1$s</string>
+    <string name="connection_api_types">Типы: %1$s</string>
+    <string name="connection_api_never">Ещё не запрашивались — запрос будет при первом подключении</string>
+    <string name="connection_api_note">Чтобы подобрать мосты для вашей сети, приложение обращается к серверу Tor Project (Circumvention Settings API). До подключения — напрямую, замаскировавшись под обращение к CDN: сервер видит ваш IP-адрес, как и в Tor Browser. После подключения — только через Tor.</string>
+    <string name="connection_section_winners">Что сработало раньше</string>
+    <string name="connection_winner_row">%1$s: %2$s</string>
+    <string name="connection_winners_none">Пока нет данных — появятся после первого подключения</string>
+    <string name="connection_network_wifi">Wi-Fi</string>
+    <string name="connection_network_cellular">Мобильная сеть</string>
+    <string name="connection_network_ethernet">Ethernet</string>
+    <string name="connection_network_other">Другая сеть</string>
+    <string name="connection_apply_note">Новый способ применяется сразу — Tor переподключится сам.</string>
+
+    <string name="bridges_title">Свои мосты</string>
+    <string name="bridges_back">Назад</string>
+    <string name="bridges_placeholder">obfs4 192.0.2.1:443 FINGERPRINT cert=… iat-mode=0</string>
+    <string name="bridges_paste">Вставить</string>
+    <string name="bridges_scan">Сканировать QR</string>
+    <string name="bridges_image">QR из картинки</string>
+    <string name="bridges_clear">Очистить</string>
+    <string name="bridges_save">Сохранить и использовать</string>
+    <string name="bridges_saved">Мосты сохранены, способ — «Свои мосты»</string>
+    <string name="bridges_removed">Свои мосты удалены, способ — «Авто»</string>
+    <string name="bridges_invalid_line">Строка %1$d: %2$s</string>
+    <string name="bridges_reason_transport">неизвестный транспорт</string>
+    <string name="bridges_reason_address">неверный адрес</string>
+    <string name="bridges_reason_port">неверный порт</string>
+    <string name="bridges_reason_fingerprint">неверный отпечаток</string>
+    <string name="bridges_reason_argument">неверный параметр</string>
+    <string name="bridges_reason_missing">не хватает параметров (cert, url…)</string>
+    <string name="bridges_nothing_found">Мостов не найдено</string>
+    <string name="bridges_qr_none">На картинке нет QR-кода с мостами</string>
+    <string name="bridges_where_title">Где взять мосты</string>
+    <string name="bridges_where_body">• Telegram-бот @GetBridgesBot\n• сайт bridges.torproject.org (можно отсканировать QR-код)\n• письмо на bridges@torproject.org — отвечает на адреса Gmail и Riseup\nСвои мосты надёжнее публичных: их труднее заблокировать.</string>
+    <string name="bridges_camera_denied">Без доступа к камере QR-код не отсканировать — вставьте мосты текстом или выберите картинку</string>
+    <string name="bridges_scanner_hint">Наведите камеру на QR-код с мостами</string>
+    <string name="bridges_scanner_close">Закрыть сканер</string>
+    <string name="bridges_camera_unavailable">Камера недоступна</string>
+    <plurals name="connection_custom_count">
+        <item quantity="one">%d мост</item>
+        <item quantity="few">%d моста</item>
+        <item quantity="many">%d мостов</item>
+        <item quantity="other">%d моста</item>
+    </plurals>
+    <plurals name="bridges_recognized">
+        <item quantity="one">Распознан %d мост</item>
+        <item quantity="few">Распознано %d моста</item>
+        <item quantity="many">Распознано %d мостов</item>
+        <item quantity="other">Распознано %d моста</item>
+    </plurals>
+    <plurals name="bridges_qr_added">
+        <item quantity="one">Добавлен %d мост</item>
+        <item quantity="few">Добавлено %d моста</item>
+        <item quantity="many">Добавлено %d мостов</item>
+        <item quantity="other">Добавлено %d моста</item>
+    </plurals>
+</resources>

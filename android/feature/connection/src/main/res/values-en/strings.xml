@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connection_title">Connection</string>
+    <string name="connection_section_method">Connection method</string>
+    <string name="connection_auto">Auto</string>
+    <string name="connection_auto_desc">Recommended. Tries transports in parallel and remembers what worked on this network</string>
+    <string name="connection_snowflake_desc">Through volunteer WebRTC proxies. Gets past blocking well, but slower</string>
+    <string name="connection_webtunnel_desc">Looks like an ordinary HTTPS website. Bridges come from the Circumvention Settings API</string>
+    <string name="connection_obfs4_desc">Traffic without recognisable patterns. Public bridges are often blocked — your own are better</string>
+    <string name="connection_meek_desc">Through a CDN (domain fronting). Reliable but slow</string>
+    <string name="connection_custom">Own bridges</string>
+    <string name="connection_custom_none">None yet — tap to add</string>
+    <string name="connection_custom_edit">Edit</string>
+    <string name="connection_now">In use now: %1$s</string>
+    <string name="connection_section_api">Bridges from the Settings API</string>
+    <string name="connection_api_fetched">Received %1$s</string>
+    <string name="connection_api_country">for country: %1$s</string>
+    <string name="connection_api_types">Types: %1$s</string>
+    <string name="connection_api_never">Not requested yet — the request happens on the first connection</string>
+    <string name="connection_api_note">To pick bridges for your network the app asks the Tor Project server (Circumvention Settings API). Before connecting the request goes directly, disguised as a CDN request: the server sees your IP address, as in Tor Browser. After connecting — only through Tor.</string>
+    <string name="connection_section_winners">What worked before</string>
+    <string name="connection_winner_row">%1$s: %2$s</string>
+    <string name="connection_winners_none">No data yet — it appears after the first connection</string>
+    <string name="connection_network_wifi">Wi-Fi</string>
+    <string name="connection_network_cellular">Mobile network</string>
+    <string name="connection_network_ethernet">Ethernet</string>
+    <string name="connection_network_other">Other network</string>
+    <string name="connection_apply_note">A new method applies immediately — Tor reconnects by itself.</string>
+
+    <string name="bridges_title">Own bridges</string>
+    <string name="bridges_back">Back</string>
+    <string name="bridges_placeholder">obfs4 192.0.2.1:443 FINGERPRINT cert=… iat-mode=0</string>
+    <string name="bridges_paste">Paste</string>
+    <string name="bridges_scan">Scan QR</string>
+    <string name="bridges_image">QR from image</string>
+    <string name="bridges_clear">Clear</string>
+    <string name="bridges_save">Save and use</string>
+    <string name="bridges_saved">Bridges saved; method set to \"Own bridges\"</string>
+    <string name="bridges_removed">Own bridges removed; method set to \"Auto\"</string>
+    <string name="bridges_invalid_line">Line %1$d: %2$s</string>
+    <string name="bridges_reason_transport">unknown transport</string>
+    <string name="bridges_reason_address">invalid address</string>
+    <string name="bridges_reason_port">invalid port</string>
+    <string name="bridges_reason_fingerprint">invalid fingerprint</string>
+    <string name="bridges_reason_argument">invalid parameter</string>
+    <string name="bridges_reason_missing">missing parameters (cert, url…)</string>
+    <string name="bridges_nothing_found">No bridges found</string>
+    <string name="bridges_qr_none">No QR code with bridges in the image</string>
+    <string name="bridges_where_title">Where to get bridges</string>
+    <string name="bridges_where_body">• Telegram bot @GetBridgesBot\n• bridges.torproject.org (you can scan the QR code)\n• an email to bridges@torproject.org — answers Gmail and Riseup addresses\nYour own bridges are more reliable than public ones: they are harder to block.</string>
+    <string name="bridges_camera_denied">Without camera access the QR code cannot be scanned — paste the bridges as text or pick an image</string>
+    <string name="bridges_scanner_hint">Point the camera at a QR code with bridges</string>
+    <string name="bridges_scanner_close">Close scanner</string>
+    <string name="bridges_camera_unavailable">Camera unavailable</string>
+    <plurals name="connection_custom_count">
+        <item quantity="one">%d bridge</item>
+        <item quantity="other">%d bridges</item>
+    </plurals>
+    <plurals name="bridges_recognized">
+        <item quantity="one">%d bridge recognised</item>
+        <item quantity="other">%d bridges recognised</item>
+    </plurals>
+    <plurals name="bridges_qr_added">
+        <item quantity="one">%d bridge added</item>
+        <item quantity="other">%d bridges added</item>
+    </plurals>
+</resources>

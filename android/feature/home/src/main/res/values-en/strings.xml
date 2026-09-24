@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_action_connect">Connect</string>
+    <string name="home_action_disconnect">Disconnect</string>
+
+    <string name="home_status_off">Not protected</string>
+    <string name="home_status_off_cold">All traffic will go through the Tor network</string>
+    <string name="home_status_off_warming">Getting Tor ready in advance</string>
+    <string name="home_status_off_ready">Tor is ready — connecting takes a second</string>
+    <string name="home_status_standby">Tor on standby</string>
+    <string name="home_status_standby_detail">VPN is off · connecting is instant</string>
+    <string name="home_status_connecting">Connecting…</string>
+    <string name="home_status_reconnecting">Reconnecting…</string>
+    <string name="home_status_no_network">No network</string>
+    <string name="home_status_no_network_detail">Traffic is held in the tunnel until the network is back</string>
+    <string name="home_status_connected">Protected</string>
+    <string name="home_status_connected_detail">All traffic goes through Tor</string>
+    <string name="home_status_blocked">The network blocks every way to connect</string>
+    <string name="home_status_stopping">Disconnecting…</string>
+    <string name="home_status_error">Tunnel stopped</string>
+
+    <string name="home_reason_network_changed">Network changed — restoring the connection</string>
+    <string name="home_reason_stalled">Connection stalled — trying another path</string>
+    <string name="home_reason_circuit_lost">Circuit lost — building a new one</string>
+    <string name="home_reason_transport_switch">Trying another transport</string>
+    <string name="home_reason_restart">Restarting Tor</string>
+
+    <string name="home_error_permission">VPN permission needed — tap to grant it</string>
+    <string name="home_error_revoked">The VPN was turned off by another app or the system</string>
+    <string name="home_error_establish">The system refused to create the VPN (a work profile policy, perhaps)</string>
+    <string name="home_error_tor">Tor did not start — try again</string>
+    <string name="home_error_native">The installation is damaged: a native library is missing. Reinstall the app</string>
+    <string name="home_consent_denied">Connecting requires the VPN permission</string>
+
+    <string name="home_problem_bridges">Bridges do not respond — trying others</string>
+    <string name="home_problem_frozen">The connection is frozen — switching to another path</string>
+    <string name="home_problem_snowflake">Snowflake is unavailable right now — trying other transports</string>
+    <string name="home_problem_clock">The device clock disagrees with the Tor network — check date and time</string>
+    <string name="home_problem_settings_api">Could not get bridges from the Settings API — using built-in and saved ones</string>
+
+    <string name="home_blocked_body">This happens on networks with allow-lists. What to try:\n• another network — Wi-Fi instead of mobile data or vice versa;\n• your own bridges — get them from @GetBridgesBot on Telegram or bridges.torproject.org.</string>
+    <string name="home_blocked_custom_bridges">Own bridges</string>
+
+    <string name="home_racing">Trying: %1$s</string>
+    <string name="home_mode_auto">Auto</string>
+    <string name="home_mode_custom">Own bridges</string>
+
+    <string name="home_section_circuit">Circuit</string>
+    <string name="home_section_speed">Speed</string>
+    <string name="home_hop_bridge">Bridge</string>
+    <string name="home_hop_guard">Guard</string>
+    <string name="home_hop_middle">Middle relay</string>
+    <string name="home_hop_exit">Exit relay</string>
+    <string name="home_country_unknown">Country unknown</string>
+    <string name="home_exit_address">Websites see %1$s</string>
+    <string name="home_circuit_pending">The circuit appears after the first connection through Tor</string>
+    <string name="home_speed_down">Download</string>
+    <string name="home_speed_up">Upload</string>
+    <string name="home_speed_totals">This session: ↓ %1$s · ↑ %2$s</string>
+    <string name="home_speed_graph">Speed graph: download %1$s, upload %2$s</string>
+    <string name="home_session">Session time</string>
+    <string name="home_new_identity">New identity</string>
+    <string name="home_new_identity_wait">New identity · %1$d s</string>
+    <string name="home_new_identity_done">New connections will use different relays</string>
+    <string name="home_network_wifi">Wi-Fi</string>
+    <string name="home_network_cellular">Mobile network</string>
+    <string name="home_network_ethernet">Ethernet</string>
+    <string name="home_network_other">Network</string>
+</resources>

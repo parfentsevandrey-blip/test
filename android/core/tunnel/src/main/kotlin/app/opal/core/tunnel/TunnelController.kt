@@ -288,7 +288,8 @@ internal class TunnelController(
     // --- internals ----------------------------------------------------------------------------
 
     private suspend fun setVpnWanted(wanted: Boolean) {
-        if (memoryRepo.current().vpnWanted != wanted) memoryRepo.update { it.copy(vpnWanted = wanted) }
+        if (memoryRepo.current().vpnWanted != wanted)
+            memoryRepo.update { it.copy(vpnWanted = wanted) }
     }
 
     private fun hold(reason: Hold) {

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Settings</string>
+    <string name="settings_back">Back</string>
+
+    <string name="settings_section_connection">Connection</string>
+    <string name="settings_exit_country">Exit country</string>
+    <string name="settings_exit_any">Any</string>
+    <string name="settings_exit_after_connect">Available after connecting</string>
+    <string name="settings_hot_standby">Hot standby</string>
+    <string name="settings_hot_standby_desc">Tor stays connected while the VPN is off — turning it on takes under a second</string>
+    <string name="settings_hot_standby_sheet_title">Turn on hot standby?</string>
+    <string name="settings_hot_standby_sheet_body">• Tor keeps its bridge connection alive all the time — this uses battery, especially with Snowflake.\n• Your provider can see the bridge connection even while the VPN is off.\n• A permanent \"Tor on standby\" notification stays in the shade.</string>
+    <string name="settings_hot_standby_enable">Turn on</string>
+    <string name="settings_cancel">Cancel</string>
+    <string name="settings_prepare">Prepare on open</string>
+    <string name="settings_prepare_desc">Tor starts connecting as soon as the app opens. If \"Connect\" is not tapped within a minute, it stops</string>
+    <string name="settings_refresh">Background directory refresh</string>
+    <string name="settings_refresh_desc">About every 12 h on Wi-Fi or while charging: the next connection is faster</string>
+    <string name="settings_data_saver">Data saver</string>
+    <string name="settings_data_saver_desc">Less Tor overhead traffic (ReducedConnectionPadding). Slightly weaker protection against traffic analysis</string>
+
+    <string name="settings_section_protection">Protection and background</string>
+    <string name="settings_kill_switch">Kill switch and always-on VPN</string>
+    <string name="settings_kill_switch_desc">Turn on \"Always-on VPN\" and \"Block connections without VPN\" in system settings: the tunnel starts by itself, and on failure no traffic bypasses Tor</string>
+    <string name="settings_always_on_state">Always-on VPN: %1$s · Block without VPN: %2$s</string>
+    <string name="settings_on">on</string>
+    <string name="settings_off">off</string>
+    <string name="settings_battery">Background activity</string>
+    <string name="settings_battery_ok">No restrictions</string>
+    <string name="settings_battery_limited">The system may restrict the app — tap to lift it</string>
+    <string name="settings_autostart">Autostart on Xiaomi, Huawei, Samsung…</string>
+    <string name="settings_autostart_desc">Instructions for firmwares that close background apps</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_notifications_on">Status and speed in the notification</string>
+    <string name="settings_notifications_off">Off — tap to allow</string>
+    <string name="settings_tile">Quick Settings tile</string>
+    <string name="settings_tile_desc">Turn Tor on and off from the shade</string>
+    <string name="settings_tile_manual">Add the \"Opal\" tile by hand: open the shade, tap \"Edit\" and drag the tile in</string>
+    <string name="settings_tile_added">Tile added</string>
+
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">Auto</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_simplified">Simplified graphics</string>
+    <string name="settings_simplified_desc">No glass refraction or background motion — lighter load and battery use. Turns on by itself in battery saver</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">System</string>
+    <string name="settings_language_ru">Русский</string>
+    <string name="settings_language_en">English</string>
+
+    <string name="settings_section_about">About</string>
+    <string name="settings_diagnostics">Diagnostics</string>
+    <string name="settings_diagnostics_desc">A log for bug reports — only on request, editable before sending</string>
+    <string name="settings_licenses">Open source licenses</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_license_app">Opal is distributed under the GNU GPL v3 or later. No telemetry, no analytics.</string>
+
+    <string name="exit_title">Exit country</string>
+    <string name="exit_warning">The exit country does not help against blocking — bridges do that. It only chooses which country websites see your traffic from. A narrow choice can slow the connection down; if the country has no suitable relays, Tor picks another.</string>
+    <string name="exit_not_connected">You can choose a country after connecting: Tor learns relay countries from its database once online.</string>
+    <string name="exit_any">Any country</string>
+    <string name="exit_any_desc">Recommended: Tor picks fast relays by itself</string>
+    <string name="exit_popular">Many exit relays</string>
+    <string name="exit_all">All countries</string>
+    <string name="exit_search">Search countries</string>
+    <string name="exit_search_clear">Clear search</string>
+    <string name="exit_applied">Exit country: %1$s</string>
+
+    <string name="diag_title">Diagnostics</string>
+    <string name="diag_note">The log lives only in the memory of the tunnel process and contains no addresses or domains that apps connected to. Check and, if needed, edit the text before sending — it can only be sent by you.</string>
+    <string name="diag_loading">Collecting the log…</string>
+    <string name="diag_unavailable">The tunnel is not running — the log is empty. It appears after connecting.</string>
+    <string name="diag_share">Share</string>
+    <string name="diag_copy">Copy</string>
+    <string name="diag_copied">Copied</string>
+    <string name="diag_share_title">Opal diagnostics</string>
+
+    <string name="licenses_title">Licenses</string>
+    <string name="licenses_intro">Opal is built on free software. Tap a component to read its license.</string>
+
+    <string name="autostart_title">Autostart and background</string>
+    <string name="autostart_intro">Some firmwares close background apps even when they show a permanent notification. If the tunnel disappears by itself, allow Opal to run in the background:</string>
+    <string name="autostart_xiaomi">Xiaomi, Redmi, POCO (MIUI / HyperOS): Settings → Apps → Opal → Autostart — on; Battery saver — \"No restrictions\".</string>
+    <string name="autostart_huawei">Huawei (EMUI / HarmonyOS): Settings → Battery → App launch → Opal — \"Manage manually\", turn on all three switches.</string>
+    <string name="autostart_honor">Honor (MagicOS): Settings → Apps → App launch → Opal — \"Manage manually\", allow autostart and background activity.</string>
+    <string name="autostart_samsung">Samsung (One UI): Settings → Battery → Background usage limits — remove Opal from \"Sleeping\" and \"Deep sleeping\" apps; set Opal to \"Unrestricted\".</string>
+    <string name="autostart_oppo">OPPO, realme, OnePlus (ColorOS / OxygenOS): Settings → Battery → Opal — \"Allow background activity\"; in Apps → Opal — allow autostart.</string>
+    <string name="autostart_vivo">vivo (OriginOS / Funtouch): i Manager → App management → Autostart → Opal — on; allow high background power use in battery settings.</string>
+    <string name="autostart_other">Menu names depend on the firmware version. To check: turn the tunnel on, lock the screen for half an hour and see whether it is still connected.</string>
+    <string name="autostart_open_app_settings">Open app settings</string>
+</resources>

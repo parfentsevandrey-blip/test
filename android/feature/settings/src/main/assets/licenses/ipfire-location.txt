@@ -1,0 +1,11 @@
+GeoIP data (geoip, geoip6) — IPFire Location Database
+
+This product includes data from the IPFire Location Database, converted with Tor's
+geoip-db-tool and shipped with the Tor source code (tor revision 7aa3dff, export of
+2026-09-08).
+
+Vendor:  IPFire Project, https://location.ipfire.org/
+License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+         https://creativecommons.org/licenses/by-sa/4.0/
+
+The data is used unmodified.

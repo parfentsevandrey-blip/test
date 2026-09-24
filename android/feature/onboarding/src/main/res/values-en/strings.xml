@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onb_next">Next</string>
+    <string name="onb_back">Back</string>
+    <string name="onb_start">Get started</string>
+    <string name="onb_page">Step %1$d of %2$d</string>
+
+    <string name="onb_intro_title">All traffic through Tor</string>
+    <string name="onb_intro_does">Opal routes the traffic of every app through the Tor network. Websites do not see your IP address, and your provider does not see where you go: to it, this is a connection to a Tor bridge. Bridges help where Tor is blocked.</string>
+    <string name="onb_intro_cannot_title">What Tor cannot do</string>
+    <string name="onb_intro_cannot">• It does not carry UDP: calls and games may not work, QUIC falls back to TCP.\n• Many services block Tor or show captchas — banks, government services, streaming. You can let them connect directly on the \"Apps\" tab.\n• It is slower than a regular connection.\n• It does not make apps anonymous: your accounts still identify you.</string>
+    <string name="onb_intro_api_title">One request outside Tor</string>
+    <string name="onb_intro_api">To pick bridges for your network, the app asks the Tor Project server (Circumvention Settings API) directly — just like Tor Browser. The request is disguised as a CDN request, but the Tor Project server sees your IP address.</string>
+
+    <string name="onb_vpn_title">VPN permission</string>
+    <string name="onb_vpn_body">Android will ask whether Opal may create a VPN. Traffic only goes into Tor — the app has no servers of its own.</string>
+    <string name="onb_vpn_grant">Allow VPN</string>
+    <string name="onb_vpn_granted">Permission granted</string>
+    <string name="onb_vpn_denied">Connecting is impossible without the permission — you can grant it later</string>
+    <string name="onb_always_on_title">Always-on VPN</string>
+    <string name="onb_always_on_body">We recommend turning on \"Always-on VPN\" and \"Block connections without VPN\" in system settings: the tunnel then starts by itself after reboots and network changes, and if something breaks, no traffic bypasses Tor.</string>
+    <string name="onb_always_on_open">Open VPN settings</string>
+
+    <string name="onb_bg_title">Notifications and battery</string>
+    <string name="onb_notif_body">The notification shows the status and speed and lets you disconnect with one tap.</string>
+    <string name="onb_notif_allow">Allow notifications</string>
+    <string name="onb_notif_done">Notifications allowed</string>
+    <string name="onb_battery_body">So that the system does not put the tunnel to sleep, lift background restrictions for Opal. Optional, but on many phones the connection drops otherwise.</string>
+    <string name="onb_battery_allow">Do not restrict in background</string>
+    <string name="onb_battery_done">No restrictions</string>
+    <string name="onb_autostart_hint">On Xiaomi, Huawei, Honor and some others, autostart must be allowed too.</string>
+    <string name="onb_autostart_open">How to do it</string>
+</resources>

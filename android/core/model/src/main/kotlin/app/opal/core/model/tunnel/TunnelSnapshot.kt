@@ -106,4 +106,9 @@ data class TrafficSample(
     val written: Long,
     val totalRead: Long,
     val totalWritten: Long,
+    /**
+     * Monotonic sequence number of the sample. Two idle seconds carry identical byte counts; the
+     * sequence keeps them distinct so state flows do not swallow the second one.
+     */
+    val seq: Long = 0,
 )

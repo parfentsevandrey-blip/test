@@ -5,7 +5,8 @@ build:
 complexity:
   LongParameterList:
     functionThreshold: 8
-    constructorThreshold: 10
+    # Manual DI (ADR 15): orchestrators receive their collaborators through the constructor.
+    constructorThreshold: 16
     ignoreDefaultParameters: true
     ignoreAnnotated: ['Composable']
   LongMethod:
@@ -14,6 +15,8 @@ complexity:
   CyclomaticComplexMethod:
     threshold: 20
     ignoreAnnotated: ['Composable']
+    # Reducers and event dispatchers are flat `when`s over sealed types.
+    ignoreSimpleWhenEntries: true
   TooManyFunctions:
     thresholdInFiles: 30
     thresholdInClasses: 30
@@ -41,7 +44,16 @@ style:
   MaxLineLength:
     maxLineLength: 120
     excludeCommentStatements: true
+    # Generated icon path data and test fixtures (bridge lines) are long literals by nature.
+    excludes: ['**/icon/OpalIcons.kt', '**/src/test/**']
+  LoopWithTooManyJumpStatements:
+    # Protocol parsers and supervision loops use break/continue idiomatically.
+    maxJumpCount: 3
   ReturnCount:
+    max: 4
+    excludeGuardClauses: true
+  ThrowsCount:
+    # Protocol code (control port, SOCKS5, HTTP) maps each failure to its own exception.
     max: 4
   ForbiddenComment:
     active: false
@@ -74,12 +86,15 @@ Compose:
   CompositionLocalAllowlist:
     active: true
     allowedCompositionLocals:
-      - LocalGlassBackdrop
+      - LocalGlassBackdrops
       - LocalGlassQuality
       - LocalOpalColors
       - LocalOpalTypography
       - LocalReducedMotion
       - LocalHaptics
+      - LocalScreenCornerRadius
+      - LocalSheetHost
+      - LocalToastState
   ParameterNaming:
     active: true
   UnstableCollections:

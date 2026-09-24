@@ -91,6 +91,7 @@ data class BridgeLine(
                 TransportKind.Snowflake to listOf(emptyList()),
             )
 
+        @Suppress("ReturnCount") // One early return per rejection reason reads best here.
         fun parse(input: String): ParseResult {
             val text = input.trim().removePrefix("Bridge ").removePrefix("bridge ").trim()
             if (text.isEmpty()) return ParseResult.Invalid(Reason.Empty, input)
@@ -155,6 +156,7 @@ data class BridgeLine(
 
         private fun looksLikeAddress(token: String): Boolean = splitAddress(token) != null
 
+        @Suppress("ReturnCount")
         private fun splitAddress(token: String): Pair<String, Int>? {
             if (token.startsWith("[")) {
                 val end = token.indexOf(']')

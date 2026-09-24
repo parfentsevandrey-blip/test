@@ -35,7 +35,8 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Opal.Starting">
+        android:theme="@style/Theme.Opal.Starting"
+        tools:targetApi="33">
 
         <activity
             android:name=".MainActivity"

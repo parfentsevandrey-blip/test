@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.opal.android.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.baselineprofile)
+    alias(libs.plugins.roborazzi)
 }
 
 // Release signing: keystore.properties (git-ignored) or environment variables (CI).
@@ -89,12 +90,17 @@ android {
         }
     }
 
+    // Per-app language switching needs every language in every install.
+    bundle { language { enableSplit = false } }
+
     androidResources {
         // Generates the LocaleConfig for per-app language (ru default, en).
         generateLocaleConfig = true
     }
 
     buildFeatures { buildConfig = true }
+
+    testOptions { unitTests { isIncludeAndroidResources = true } }
 
     dependenciesInfo {
         // No Google-encrypted dependency metadata blob in APKs meant for sideloading.
@@ -135,4 +141,29 @@ dependencies {
     debugImplementation(libs.leakcanary)
 
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.roborazzi.junit.rule)
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+// Screenshot goldens live next to the tests and are committed (verifyRoborazziDebug compares).
+roborazzi { outputDir.set(layout.projectDirectory.dir("src/test/screenshots")) }
+
+tasks.withType<Test>().configureEach {
+    // Hardware-accelerated capture: RenderEffect blur, shadows and AGSL show up in screenshots.
+    systemProperty("robolectric.pixelCopyRenderMode", "hardware")
+    // Optional mirror for Robolectric's own android-all download (e.g. in
+    // ~/.gradle/gradle.properties).
+    providers.gradleProperty("robolectricRepoUrl").orNull?.let {
+        systemProperty("robolectric.dependency.repo.url", it)
+    }
+    maxHeapSize = "2g"
+    // Robolectric's SDK 36 runtime reaches into FileDescriptor internals (JDK 21 module rules).
+    jvmArgs(
+        "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
+        "--add-exports=java.base/jdk.internal.access=ALL-UNNAMED",
+    )
 }

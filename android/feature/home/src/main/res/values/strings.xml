@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_action_connect">Подключить</string>
+    <string name="home_action_disconnect">Отключить</string>
+
+    <string name="home_status_off">Не защищено</string>
+    <string name="home_status_off_cold">Весь трафик пойдёт через сеть Tor</string>
+    <string name="home_status_off_warming">Tor готовится заранее</string>
+    <string name="home_status_off_ready">Tor готов — подключение займёт секунду</string>
+    <string name="home_status_standby">Tor в режиме ожидания</string>
+    <string name="home_status_standby_detail">VPN выключен · подключение мгновенное</string>
+    <string name="home_status_connecting">Подключение…</string>
+    <string name="home_status_reconnecting">Переподключение…</string>
+    <string name="home_status_no_network">Нет сети</string>
+    <string name="home_status_no_network_detail">Трафик удерживается в туннеле, пока сеть не вернётся</string>
+    <string name="home_status_connected">Защищено</string>
+    <string name="home_status_connected_detail">Весь трафик идёт через Tor</string>
+    <string name="home_status_blocked">Сеть блокирует все способы подключения</string>
+    <string name="home_status_stopping">Отключение…</string>
+    <string name="home_status_error">Туннель остановлен</string>
+
+    <string name="home_reason_network_changed">Сеть сменилась — восстанавливаем соединение</string>
+    <string name="home_reason_stalled">Соединение зависло — пробуем другой путь</string>
+    <string name="home_reason_circuit_lost">Цепочка потеряна — строим новую</string>
+    <string name="home_reason_transport_switch">Пробуем другой транспорт</string>
+    <string name="home_reason_restart">Перезапуск Tor</string>
+
+    <string name="home_error_permission">Нужно разрешение на VPN — нажмите, чтобы выдать</string>
+    <string name="home_error_revoked">VPN отключён: его забрало другое приложение или система</string>
+    <string name="home_error_establish">Система не дала создать VPN (возможно, ограничение рабочего профиля)</string>
+    <string name="home_error_tor">Tor не запустился — попробуйте ещё раз</string>
+    <string name="home_error_native">Установка повреждена: нет нативной библиотеки. Переустановите приложение</string>
+    <string name="home_consent_denied">Без разрешения VPN подключиться нельзя</string>
+
+    <string name="home_problem_bridges">Мосты не отвечают — пробуем другие</string>
+    <string name="home_problem_frozen">Соединение «заморожено» — переключаемся на другой путь</string>
+    <string name="home_problem_snowflake">Snowflake сейчас недоступен — пробуем другие транспорты</string>
+    <string name="home_problem_clock">Время на устройстве расходится с сетью Tor — проверьте дату и время</string>
+    <string name="home_problem_settings_api">Не удалось получить мосты из Settings API — используем встроенные и сохранённые</string>
+
+    <string name="home_blocked_body">Так бывает в сетях с «белыми списками». Что попробовать:\n• другую сеть — Wi-Fi вместо мобильной или наоборот;\n• свои мосты — их выдаёт бот @GetBridgesBot в Telegram и сайт bridges.torproject.org.</string>
+    <string name="home_blocked_custom_bridges">Свои мосты</string>
+
+    <string name="home_racing">Пробуем: %1$s</string>
+    <string name="home_mode_auto">Авто</string>
+    <string name="home_mode_custom">Свои мосты</string>
+
+    <string name="home_section_circuit">Цепочка</string>
+    <string name="home_section_speed">Скорость</string>
+    <string name="home_hop_bridge">Мост</string>
+    <string name="home_hop_guard">Входной узел</string>
+    <string name="home_hop_middle">Промежуточный узел</string>
+    <string name="home_hop_exit">Выходной узел</string>
+    <string name="home_country_unknown">Страна неизвестна</string>
+    <string name="home_exit_address">Сайты видят адрес %1$s</string>
+    <string name="home_circuit_pending">Цепочка появится после первого соединения через Tor</string>
+    <string name="home_speed_down">Загрузка</string>
+    <string name="home_speed_up">Отдача</string>
+    <string name="home_speed_totals">За сессию: ↓ %1$s · ↑ %2$s</string>
+    <string name="home_speed_graph">График скорости: загрузка %1$s, отдача %2$s</string>
+    <string name="home_session">Время сессии</string>
+    <string name="home_new_identity">Новая личность</string>
+    <string name="home_new_identity_wait">Новая личность · %1$d с</string>
+    <string name="home_new_identity_done">Новые соединения пойдут через другие узлы</string>
+    <string name="home_network_wifi">Wi-Fi</string>
+    <string name="home_network_cellular">Мобильная сеть</string>
+    <string name="home_network_ethernet">Ethernet</string>
+    <string name="home_network_other">Сеть</string>
+</resources>

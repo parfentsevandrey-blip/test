@@ -14,7 +14,9 @@ dependencies {
     api(libs.kyant.shapes)
     api(libs.androidx.graphics.shapes)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.window.core)
+    api(libs.androidx.navigationevent.compose)
     implementation(libs.kotlinx.collections.immutable)
 
     testImplementation(libs.junit)

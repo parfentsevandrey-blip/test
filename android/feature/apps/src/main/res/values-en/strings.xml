@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="apps_title">Apps</string>
+    <string name="apps_mode_all_except">All except selected</string>
+    <string name="apps_mode_only_selected">Only selected</string>
+    <string name="apps_hint_all_except">All apps go through Tor. Checked apps connect directly, without Tor.</string>
+    <string name="apps_hint_only_selected">Only checked apps go through Tor; the rest connect directly.</string>
+    <string name="apps_hint_apply">Changes apply immediately, no reconnect needed.</string>
+    <string name="apps_preset_title">Russian banks and Gosuslugi — direct</string>
+    <string name="apps_preset_found" tools:ignore="PluralsCandidate">%1$d of %2$d preset apps are installed</string>
+    <string name="apps_preset_none">None of the preset apps is installed</string>
+    <string name="apps_preset_apply">Apply</string>
+    <string name="apps_preset_remove">Remove</string>
+    <string name="apps_preset_why">Banks and government services often block Tor exit relays or show captchas.</string>
+    <string name="apps_lockdown_warning">\"Block connections without VPN\" is on: apps that connect directly will have no network.</string>
+    <string name="apps_lockdown_note">If \"Block connections without VPN\" is on in the system, apps that connect directly will have no network.</string>
+    <string name="apps_search">Search apps</string>
+    <string name="apps_search_clear">Clear search</string>
+    <string name="apps_show_system">Show system apps</string>
+    <string name="apps_selected_direct">Direct: %1$d</string>
+    <string name="apps_selected_tor">Through Tor: %1$d</string>
+    <string name="apps_loading">Loading apps…</string>
+    <string name="apps_empty">Nothing found</string>
+    <string name="apps_system_label">system</string>
+    <string name="apps_only_selected_empty">Nothing is checked — all apps go through Tor for now.</string>
+</resources>

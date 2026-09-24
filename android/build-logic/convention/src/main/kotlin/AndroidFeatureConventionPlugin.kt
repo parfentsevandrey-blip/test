@@ -15,6 +15,7 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                 add("implementation", project(":core:designsystem"))
                 add("implementation", libs.lib("androidx-lifecycle-runtime-compose"))
                 add("implementation", libs.lib("androidx-lifecycle-viewmodel-compose"))
+                add("implementation", libs.lib("androidx-activity-compose"))
                 add("implementation", libs.lib("kotlinx-collections-immutable"))
                 add("testImplementation", libs.lib("junit"))
                 add("testImplementation", libs.lib("kotlinx-coroutines-test"))

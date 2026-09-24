@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_back">Назад</string>
+
+    <string name="settings_section_connection">Подключение</string>
+    <string name="settings_exit_country">Страна выхода</string>
+    <string name="settings_exit_any">Любая</string>
+    <string name="settings_exit_after_connect">Доступно после подключения</string>
+    <string name="settings_hot_standby">Горячий резерв</string>
+    <string name="settings_hot_standby_desc">Tor остаётся подключённым и при выключенном VPN — включение занимает меньше секунды</string>
+    <string name="settings_hot_standby_sheet_title">Включить горячий резерв?</string>
+    <string name="settings_hot_standby_sheet_body">• Tor будет постоянно поддерживать соединение с мостом — это расходует батарею, особенно со Snowflake.\n• Соединение с мостом видно вашему провайдеру и тогда, когда VPN выключен.\n• В шторке будет постоянное уведомление «Tor в режиме ожидания».</string>
+    <string name="settings_hot_standby_enable">Включить</string>
+    <string name="settings_cancel">Отмена</string>
+    <string name="settings_prepare">Подготовка при открытии</string>
+    <string name="settings_prepare_desc">Tor начинает подключаться, как только открыто приложение. Если за минуту не нажать «Подключить» — останавливается</string>
+    <string name="settings_refresh">Фоновое обновление каталога</string>
+    <string name="settings_refresh_desc">Примерно раз в 12 ч на Wi-Fi или при зарядке: следующее подключение пройдёт быстрее</string>
+    <string name="settings_data_saver">Экономия трафика</string>
+    <string name="settings_data_saver_desc">Меньше служебного трафика Tor (ReducedConnectionPadding). Защита от анализа трафика чуть слабее</string>
+
+    <string name="settings_section_protection">Защита и работа в фоне</string>
+    <string name="settings_kill_switch">Kill switch и постоянная VPN</string>
+    <string name="settings_kill_switch_desc">Включите в системных настройках «Постоянная VPN» и «Блокировать соединения без VPN»: туннель поднимается сам, а при сбое трафик не уходит мимо Tor</string>
+    <string name="settings_always_on_state">Постоянная VPN: %1$s · Блокировка без VPN: %2$s</string>
+    <string name="settings_on">вкл.</string>
+    <string name="settings_off">выкл.</string>
+    <string name="settings_battery">Работа в фоне</string>
+    <string name="settings_battery_ok">Ограничений нет</string>
+    <string name="settings_battery_limited">Система может ограничивать приложение — нажмите, чтобы снять</string>
+    <string name="settings_autostart">Автозапуск на Xiaomi, Huawei, Samsung…</string>
+    <string name="settings_autostart_desc">Инструкции для прошивок, которые закрывают фоновые приложения</string>
+    <string name="settings_notifications">Уведомления</string>
+    <string name="settings_notifications_on">Статус и скорость в уведомлении</string>
+    <string name="settings_notifications_off">Выключены — нажмите, чтобы разрешить</string>
+    <string name="settings_tile">Плитка в быстрых настройках</string>
+    <string name="settings_tile_desc">Включать и выключать Tor из шторки</string>
+    <string name="settings_tile_manual">Добавьте плитку «Opal» вручную: откройте шторку, нажмите «Изменить» и перетащите плитку</string>
+    <string name="settings_tile_added">Плитка добавлена</string>
+
+    <string name="settings_section_appearance">Оформление</string>
+    <string name="settings_theme">Тема</string>
+    <string name="settings_theme_system">Авто</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_theme_dark">Тёмная</string>
+    <string name="settings_simplified">Упрощённая графика</string>
+    <string name="settings_simplified_desc">Без преломления стекла и движения фона — меньше нагрузка и расход батареи. Включается сама в режиме энергосбережения</string>
+    <string name="settings_language">Язык</string>
+    <string name="settings_language_system">Системный</string>
+    <string name="settings_language_ru">Русский</string>
+    <string name="settings_language_en">English</string>
+
+    <string name="settings_section_about">О приложении</string>
+    <string name="settings_diagnostics">Диагностика</string>
+    <string name="settings_diagnostics_desc">Журнал для отчёта об ошибке — только по кнопке, с правкой перед отправкой</string>
+    <string name="settings_licenses">Лицензии открытого ПО</string>
+    <string name="settings_version">Версия %1$s</string>
+    <string name="settings_license_app">Opal распространяется под GNU GPL v3 или новее. Никакой телеметрии и аналитики.</string>
+
+    <string name="exit_title">Страна выхода</string>
+    <string name="exit_warning">Страна выхода не помогает обходить блокировки — для этого нужны мосты. Она лишь выбирает, из какой страны сайты видят ваш трафик. Узкий выбор может замедлить соединение; если в стране нет подходящих узлов, Tor выберет другую.</string>
+    <string name="exit_not_connected">Выбрать страну можно после подключения: Tor узнаёт страны узлов из своей базы уже в сети.</string>
+    <string name="exit_any">Любая страна</string>
+    <string name="exit_any_desc">Рекомендуется: Tor сам выбирает быстрые узлы</string>
+    <string name="exit_popular">Много выходных узлов</string>
+    <string name="exit_all">Все страны</string>
+    <string name="exit_search">Поиск страны</string>
+    <string name="exit_search_clear">Очистить поиск</string>
+    <string name="exit_applied">Страна выхода: %1$s</string>
+
+    <string name="diag_title">Диагностика</string>
+    <string name="diag_note">Журнал хранится только в памяти процесса туннеля и не содержит адресов и доменов, к которым обращались приложения. Перед отправкой проверьте и при необходимости отредактируйте текст — отправить его можно только вручную.</string>
+    <string name="diag_loading">Собираем журнал…</string>
+    <string name="diag_unavailable">Туннель не запущен — журнал пуст. Он появится после подключения.</string>
+    <string name="diag_share">Поделиться</string>
+    <string name="diag_copy">Копировать</string>
+    <string name="diag_copied">Скопировано</string>
+    <string name="diag_share_title">Диагностика Opal</string>
+
+    <string name="licenses_title">Лицензии</string>
+    <string name="licenses_intro">Opal построен на свободном ПО. Нажмите на компонент, чтобы прочитать лицензию.</string>
+
+    <string name="autostart_title">Автозапуск и фон</string>
+    <string name="autostart_intro">Некоторые прошивки закрывают фоновые приложения, даже если у них есть постоянное уведомление. Если туннель пропадает сам собой, разрешите Opal работать в фоне:</string>
+    <string name="autostart_xiaomi">Xiaomi, Redmi, POCO (MIUI / HyperOS): Настройки → Приложения → Opal → Автозапуск — включить; «Контроль активности» (Батарея) — «Нет ограничений».</string>
+    <string name="autostart_huawei">Huawei (EMUI / HarmonyOS): Настройки → Батарея → Запуск приложений → Opal — «Управлять вручную», включить все три переключателя.</string>
+    <string name="autostart_honor">Honor (MagicOS): Настройки → Приложения → Запуск приложений → Opal — «Управлять вручную», разрешить автозапуск и работу в фоне.</string>
+    <string name="autostart_samsung">Samsung (One UI): Настройки → Батарея → Ограничения фонового использования — убрать Opal из «Спящих» и «Глубоко спящих» приложений; для Opal выбрать «Без ограничений».</string>
+    <string name="autostart_oppo">OPPO, realme, OnePlus (ColorOS / OxygenOS): Настройки → Батарея → Opal — «Разрешить фоновую активность», в «Приложения» → Opal — разрешить автозапуск.</string>
+    <string name="autostart_vivo">vivo (OriginOS / Funtouch): i Manager → Управление приложениями → Автозапуск → Opal — включить; в настройках батареи разрешить высокий фоновый расход.</string>
+    <string name="autostart_other">Названия пунктов зависят от версии прошивки. Проверить результат просто: включите туннель, заблокируйте экран на полчаса и посмотрите, остался ли он подключён.</string>
+    <string name="autostart_open_app_settings">Открыть настройки приложения</string>
+</resources>

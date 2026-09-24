@@ -2,6 +2,8 @@
 <!-- 240dp splash icon; the drop sits in the inner 160dp circle. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="VectorRaster"
     android:width="240dp"
     android:height="240dp"
     android:viewportWidth="240"

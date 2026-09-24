@@ -1,5 +1,6 @@
 package app.opal.core.data
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
@@ -8,6 +9,8 @@ import android.os.Build
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+// Visibility is declared by the app manifest's <queries> (LAUNCHER intent + named packages).
+@SuppressLint("QueryPermissionsNeeded")
 private fun PackageManager.queryLauncherActivities(intent: Intent) =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         queryIntentActivities(intent, PackageManager.ResolveInfoFlags.of(0L))
@@ -15,6 +18,7 @@ private fun PackageManager.queryLauncherActivities(intent: Intent) =
         @Suppress("DEPRECATION") queryIntentActivities(intent, 0)
     }
 
+@SuppressLint("QueryPermissionsNeeded")
 private fun PackageManager.applicationInfoOrNull(packageName: String): ApplicationInfo? =
     try {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

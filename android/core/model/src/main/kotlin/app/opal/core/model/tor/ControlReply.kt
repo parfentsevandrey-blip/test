@@ -164,9 +164,10 @@ object ControlArgs {
     }
 
     /** Quotes a value for SETCONF / commands when needed (spaces, quotes, backslashes, empty). */
+    private fun needsQuoting(c: Char): Boolean = c == ' ' || c == '"' || c == '\\' || c < ' '
+
     fun quote(value: String): String {
-        if (value.isNotEmpty() && value.none { it == ' ' || it == '"' || it == '\\' || it < ' ' })
-            return value
+        if (value.isNotEmpty() && value.none(::needsQuoting)) return value
         val sb = StringBuilder("\"")
         for (c in value) {
             when (c) {

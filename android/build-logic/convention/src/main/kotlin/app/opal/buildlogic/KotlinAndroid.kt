@@ -25,6 +25,9 @@ internal fun Project.configureAndroid(extension: CommonExtension) {
             // Obsolete dependency checks need network access to Maven metadata; versions are
             // pinned deliberately in the catalog and reviewed there instead.
             disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
+            // False positive: the ABI list is a variable (arm64-v8a, armeabi-v7a, x86_64 — x86_64
+            // is built and shipped, see the APK splits); lint only reads literal filters.
+            disable += "ChromeOsAbiSupport"
         }
         testOptions.unitTests.isIncludeAndroidResources = true
         testOptions.unitTests.isReturnDefaultValues = true

@@ -2,7 +2,8 @@
 
 Рабочее название **Opal / Опал** (опал — аморфный кремнезём, «жидкое стекло» с игрой цветов,
 как фон-аврора). Альтернативы: **Сквозь / Skvoz**, **Туман / Tuman**. Переименование: `app_name`
-в `core/designsystem/src/main/res/values*/strings.xml` и `applicationId` в `app/build.gradle.kts`.
+в `app/src/main/res/values/strings.xml`, `tile_label`/`vpn_session_name` в `core/tunnel`, строки
+с «Opal» в `feature/*/res` и `applicationId` в `app/build.gradle.kts`.
 
 Приложение заворачивает весь трафик устройства в Tor (C-tor) через VpnService; по умолчанию
 подключается через мосты (Snowflake + гонка транспортов + мосты из Circumvention Settings API).
@@ -159,6 +160,33 @@ build-logic           Convention-плагины opal.android.application|library
     Слияние соседних диапазонов проверено — выигрыш <1 %, поэтому файлы не трогаем.
 20. **Лицензия приложения — GPL-3.0-or-later**: IPtProxy содержит Lyrebird под GPL-3 (см. POM
     IPtProxy), совместимость требует GPL для распространяемого APK.
+21. **Слои стекла.** Три слоя (`OpalScaffold`): аврора (LayerBackdrop №1) → контент (LayerBackdrop
+    №2, сосед, а не родитель авроры — ничего не записывается дважды) → парящее стекло. Стекло внутри
+    контента (сфера, чипы, сегменты) преломляет только аврору; таб-бар, шторка и тост — аврору и
+    контент (`rememberCombinedBackdrop`). Не больше 4 живых стеклянных поверхностей на экране:
+    второстепенные действия в контенте — не стекло (`PanelButton`), списки и карточки — панели.
+22. **Аврора** — AGSL-шейдер (API 33+) из четырёх дрейфующих пятен + тонкое зерно против бандинга;
+    ниже 33 — радиальные градиенты. `MeshGradientPainter` в Compose 1.12 нет (проверено по
+    исходникам). 30 кадров/с через `preferredFrameRate`, пауза вне RESUMED, статичная при
+    «Упрощённой графике», энергосбережении и отключённых анимациях. Палитры заданы в Display P3, но
+    окно не переводится в wide-color-gamut: на многих устройствах это F16-буферы и лишняя нагрузка
+    на GPU при blur; P3 аккуратно обрезается до sRGB. Пересмотреть после замеров на устройстве.
+23. **Язык приложения** — `AppLocaleStore` (:core:data): Android 13+ — системный `LocaleManager`
+    (виден в системных настройках, применяется ко всем процессам); ниже — файл в
+    `noBackupFilesDir` + `attachBaseContext` в активити, VPN-сервисе и плитке (процесс `:tunnel`
+    подхватывает язык при следующем запуске). По умолчанию — русский (`values/`).
+24. **Навигация (Navigation 3)** — один бэкстек, Главная всегда в корне: вкладка = `[Home, Tab]`,
+    вложенные экраны кладутся сверху, таб-бар на них скрыт. Вкладки сменяются кросс-фейдом
+    (метаданные entry), переходы вперёд/назад — сдвиг; predictive back даёт `NavDisplay`.
+    ViewModel привязаны к entry (`rememberViewModelStoreNavEntryDecorator`), создаются фабриками из
+    `AppGraph`.
+25. **Скриншот-тесты** — Roborazzi на Robolectric (SDK 36, `pixelCopyRenderMode=hardware`, чтобы
+    blur/тени/AGSL попадали в снимок; для JDK 21 — `--add-opens java.base/jdk.internal.access`).
+    Эталоны — `app/src/test/screenshots` (ru, 60 % масштаба), варианты: светлая, тёмная,
+    упрощённая графика. Зеркало для загрузки android-all — необязательное свойство
+    `robolectricRepoUrl` в `~/.gradle/gradle.properties`.
+26. **Иконки** — Material Symbols Rounded (Apache-2.0), сгенерированы из официальных SVG в
+    `ImageVector` (`OpalIcons`, ленивая сборка): без шрифта-иконок и без material-icons-extended.
 
 ## Стек
 
@@ -189,10 +217,10 @@ build-logic           Convention-плагины opal.android.application|library
 | IPtProxy | 5.5.1 | Snowflake 2.14.1, Lyrebird (obfs4/meek/webtunnel) | отдельные бинарники PT |
 | hev-socks5-tunnel | e802f02 (vendored + патч) | TUN → SOCKS, MapDNS | tun2socks (Go) |
 | profileinstaller / baselineprofile / benchmark | 1.4.1 / 1.5.0 / 1.5.0 | Baseline+Startup Profile, Macrobenchmark | — |
-| metrics-performance (JankStats) | 1.0.0 | доля подтормаживающих кадров | — |
+| metrics-performance (JankStats) | 1.0.0 | доля подтормаживающих кадров (только debug, в logcat) | — |
 | window-core | 1.5.1 | WindowSizeClass | собственные брейкпоинты |
 | JUnit4 / Turbine / Robolectric / Roborazzi | 4.13.2 / 1.2.1 / 4.17 / 1.75.0 | юнит-, Flow-, скриншот-тесты | — |
-| detekt + compose-rules | 1.23.8 + 0.6.7 | статанализ | — |
+| detekt + compose-rules | 1.23.8 + 0.4.28 | статанализ (compose-rules 0.5+ собраны под detekt 2.0-alpha; 0.4.28 — последняя под стабильный 1.23.8) | — |
 | Spotless + ktfmt | 8.10.2 + 0.64 | форматирование | ktlint |
 | LeakCanary (debug) | 2.14 | утечки памяти | — |
 
@@ -224,6 +252,11 @@ onBackPressed, Accompanist, Google Play Services / Firebase / ML Kit, телем
 - Robolectric 4.17 и API 37 — скриншот-тесты запускаются на SDK 36 (`@Config(sdk = [36])`).
 - Baseline/Startup Profile генерируется только на устройстве; в репозитории — рукописный профиль
   для стартового пути, заменить сгенерированным.
+- Техдолг: `TorSession` (~870 строк) — единственный владелец состояния сессии Tor; разнести гонку,
+  watchdog и Settings API по отдельным классам, когда появится проверка на устройстве.
+- Glass на реальном GPU (lens/blur, 60/120 fps, доля подтормаживающих кадров) не измерен: нет
+  устройства. В debug-сборке JankStats пишет долю в logcat (`OpalJank`), для замеров —
+  Macrobenchmark из `:baselineprofile`.
 
 ## Соглашения
 
@@ -243,6 +276,7 @@ onBackPressed, Accompanist, Google Play Services / Firebase / ML Kit, телем
 - [x] Фаза 1 — сетевое ядро: VpnService + hev + Tor + Snowflake (собрано, на устройстве не проверено).
 - [x] Фаза 2 — стабильность и скорость: гонка, moat, тёплый кеш (+ WorkManager), резерв, сеть,
       watchdog, подготовка при открытии (собрано, на устройстве не проверено).
-- [ ] Фаза 3 — дизайн-система Liquid Glass, экраны, скриншот-тесты.
-- [ ] Фаза 4 — раздельное туннелирование, свои мосты, новая личность, страна выхода, плитка.
+- [x] Фаза 3 — дизайн-система Liquid Glass, экраны, скриншот-тесты (27 эталонов, JVM).
+- [x] Фаза 4 — раздельное туннелирование (+ пресет), свои мосты (вставка, QR с камеры и из
+      картинки), новая личность, страна выхода, плитка (собрано, на устройстве не проверено).
 - [ ] Фаза 5 — профили, замеры, размер, dependency verification, подписанный релиз, README.

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="apps_title">Приложения</string>
+    <string name="apps_mode_all_except">Все, кроме выбранных</string>
+    <string name="apps_mode_only_selected">Только выбранные</string>
+    <string name="apps_hint_all_except">Через Tor идут все приложения. Отмеченные работают напрямую, без Tor.</string>
+    <string name="apps_hint_only_selected">Через Tor идут только отмеченные приложения, остальные — напрямую.</string>
+    <string name="apps_hint_apply">Изменения применяются сразу, переподключаться не нужно.</string>
+    <string name="apps_preset_title">Российские банки и Госуслуги — напрямую</string>
+    <string name="apps_preset_found" tools:ignore="PluralsCandidate">Установлено %1$d из %2$d приложений пресета</string>
+    <string name="apps_preset_none">Ни одно приложение пресета не установлено</string>
+    <string name="apps_preset_apply">Применить</string>
+    <string name="apps_preset_remove">Убрать</string>
+    <string name="apps_preset_why">Банки и госсервисы часто блокируют выходные узлы Tor или показывают капчу.</string>
+    <string name="apps_lockdown_warning">В системе включено «Блокировать соединения без VPN»: приложения, работающие напрямую, останутся без сети.</string>
+    <string name="apps_lockdown_note">Если в системе включено «Блокировать соединения без VPN», приложения, работающие напрямую, останутся без сети.</string>
+    <string name="apps_search">Поиск приложений</string>
+    <string name="apps_search_clear">Очистить поиск</string>
+    <string name="apps_show_system">Показывать системные</string>
+    <string name="apps_selected_direct">Напрямую: %1$d</string>
+    <string name="apps_selected_tor">Через Tor: %1$d</string>
+    <string name="apps_loading">Загружаем список приложений…</string>
+    <string name="apps_empty">Ничего не найдено</string>
+    <string name="apps_system_label">системное</string>
+    <string name="apps_only_selected_empty">Ничего не отмечено — пока через Tor идут все приложения.</string>
+</resources>

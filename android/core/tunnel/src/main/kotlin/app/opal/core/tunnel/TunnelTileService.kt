@@ -1,6 +1,7 @@
 package app.opal.core.tunnel
 
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.net.VpnService
 import android.os.Build
@@ -8,6 +9,7 @@ import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import androidx.core.service.quicksettings.PendingIntentActivityWrapper
 import androidx.core.service.quicksettings.TileServiceCompat
+import app.opal.core.data.AppLocaleStore
 import app.opal.core.model.tunnel.TunnelState
 import app.opal.core.model.tunnel.isTunnelActive
 import kotlinx.coroutines.CoroutineScope
@@ -19,6 +21,11 @@ import kotlinx.coroutines.launch
 
 /** Quick Settings tile in the `:tunnel` process: reads the controller state directly. */
 class TunnelTileService : TileService() {
+
+    // Per-app language below Android 13 (the system applies it itself on 13+).
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLocaleStore.wrap(newBase))
+    }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var observer: Job? = null

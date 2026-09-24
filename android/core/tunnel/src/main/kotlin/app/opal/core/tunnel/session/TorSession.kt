@@ -57,6 +57,9 @@ import kotlinx.coroutines.withContext
  * dispatcher, so no locks are needed; blocking work always hops to IO.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
+// Single owner of one Tor session's mutable state (race, watchdog, Settings API, runtime options),
+// driven from one coroutine context; splitting it is tracked in CLAUDE.md (tech debt).
+@Suppress("LargeClass")
 internal class TorSession(
     private val engine: TorEngine,
     private val transports: Transports,
@@ -136,6 +139,7 @@ internal class TorSession(
     private var lastNetwork: Network? = null
     private var totalRead = 0L
     private var totalWritten = 0L
+    private var trafficSeq = 0L
     private var newIdentityReadyAt = 0L
     private var crashes = 0
 
@@ -284,7 +288,7 @@ internal class TorSession(
                 totalRead += event.read
                 totalWritten += event.written
                 listener.onTraffic(
-                    TrafficSample(event.read, event.written, totalRead, totalWritten)
+                    TrafficSample(event.read, event.written, totalRead, totalWritten, ++trafficSeq)
                 )
                 watchdog.onEvent(event)
                 // Bytes arriving during bootstrap (e.g. a long consensus download) count as
@@ -441,29 +445,35 @@ internal class TorSession(
     private suspend fun raceLoop() {
         while (true) {
             delay(1_000)
-            if (ready || stopping || engine.state.value !is EngineState.Running) continue
-            if (!network.status.value.isConnected) {
+            raceTick()
+        }
+    }
+
+    /**
+     * One step of the race supervisor: widen the race, ask the Settings API, or give up a round.
+     */
+    private suspend fun raceTick() {
+        if (ready || stopping || engine.state.value !is EngineState.Running) return
+        if (!network.status.value.isConnected) {
+            resetProgress()
+            return
+        }
+        val t = now()
+        val quiet = t - lastProgressAt
+        if (!expanded && quiet >= EXPAND_AFTER_MS) {
+            expand()
+            return
+        }
+        if (quiet < GIVE_UP_AFTER_QUIET_MS || t - attemptStartedAt < MIN_ATTEMPT_MS) return
+        val canAskApi = plan?.settingsApiAllowed == true && !settingsApiTried
+        if (canAskApi) {
+            settingsApiTried = true
+            if (fetchSettingsApi(MoatClient.Route.DomainFronted, addToRace = true)) {
                 resetProgress()
-                continue
-            }
-            val t = now()
-            val quiet = t - lastProgressAt
-            if (!expanded && quiet >= EXPAND_AFTER_MS) {
-                expand()
-                continue
-            }
-            if (quiet >= GIVE_UP_AFTER_QUIET_MS && t - attemptStartedAt >= MIN_ATTEMPT_MS) {
-                val canAskApi = plan?.settingsApiAllowed == true && !settingsApiTried
-                if (canAskApi) {
-                    settingsApiTried = true
-                    if (fetchSettingsApi(MoatClient.Route.DomainFronted, addToRace = true)) {
-                        resetProgress()
-                        continue
-                    }
-                }
-                roundFailed()
+                return
             }
         }
+        roundFailed()
     }
 
     private suspend fun expand() {

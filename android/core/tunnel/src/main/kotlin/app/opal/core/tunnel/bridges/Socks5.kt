@@ -13,6 +13,7 @@ import java.net.Socket
  */
 internal object Socks5 {
 
+    @Suppress("ThrowsCount") // One distinct error per failed handshake step (RFC 1928/1929).
     fun connect(socket: Socket, host: String, port: Int, username: String?, password: String?) {
         val out = socket.getOutputStream()
         val input = DataInputStream(socket.getInputStream())

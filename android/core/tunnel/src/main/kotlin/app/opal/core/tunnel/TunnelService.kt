@@ -13,6 +13,7 @@ import android.os.ParcelFileDescriptor
 import android.os.Process
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import app.opal.core.data.AppLocaleStore
 import app.opal.core.model.settings.SplitTunnelMode
 import app.opal.core.model.settings.SplitTunnelSettings
 import app.opal.core.model.tunnel.TunnelSnapshot
@@ -36,6 +37,11 @@ import kotlinx.coroutines.launch
  * and delegates everything else to [TunnelController].
  */
 class TunnelService : VpnService() {
+
+    // Per-app language below Android 13 (the system applies it itself on 13+).
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLocaleStore.wrap(newBase))
+    }
 
     private val runtime by lazy { TunnelRuntime.get(this) }
     private val controller: TunnelController

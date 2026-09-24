@@ -39,6 +39,7 @@ class TunnelClient(context: Context) {
     val traffic: StateFlow<TrafficSample?> = _traffic.asStateFlow()
 
     private val service = MutableStateFlow<ITunnelService?>(null)
+    @Volatile private var trafficSeq = 0L
     private var users = 0
     private var bound = false
 
@@ -50,7 +51,7 @@ class TunnelClient(context: Context) {
             }
 
             override fun onTraffic(read: Long, written: Long, totalRead: Long, totalWritten: Long) {
-                _traffic.value = TrafficSample(read, written, totalRead, totalWritten)
+                _traffic.value = TrafficSample(read, written, totalRead, totalWritten, ++trafficSeq)
             }
         }
 
