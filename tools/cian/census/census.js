@@ -26,6 +26,7 @@
      node tools/cian/census/census.js init   --dir D [--okrugs 4,5,6] [--groups resale|all|none]
      node tools/cian/census/census.js step   --dir D [--budget 120] [--gap 2000] [--jitter 1500]
      node tools/cian/census/census.js status --dir D
+     node tools/cian/census/census.js report --dir D   — без сети: МКАД, поля, медианы
 
    Коды выхода step: 0 — перепись закончена, 2 — кончился бюджет (продолжить
    следующим step), 3 — антибот (STOP, выдержка), 1 — прочее. */
@@ -274,6 +275,62 @@ function status(st, store) {
   return { rows, lots: store.index.size, requests: rows.reduce((n, r) => n + r.requests, 0) };
 }
 
+/* Отчёт по собранному: реальная картина против плана. Читает полные записи
+   (lots.jsonl), относит каждый лот к МКАД по координатам и считает, какие
+   поля Циан на самом деле заполняет. */
+function report(st, lots, verdictFn) {
+  const pct = (n, d) => (d ? Math.round((1000 * n) / d) / 10 : null);
+  const med = (xs) => { const s = xs.filter((x) => x != null && Number.isFinite(x)).sort((a, b) => a - b); return s.length ? s[Math.floor(s.length / 2)] : null; };
+  const zone = (l) => {
+    const v = verdictFn(l.lat, l.lng);
+    if (!v) return 'без координат';
+    if (!v.sure) return 'у кольца';
+    return v.inside ? 'внутри' : 'снаружи';
+  };
+  const withZone = lots.map((l) => ({ l, z: zone(l) }));
+  const zones = {};
+  for (const { z } of withZone) zones[z] = (zones[z] || 0) + 1;
+  const inside = withZone.filter(({ z }) => z === 'внутри' || z === 'у кольца').map(({ l }) => l);
+  const ppm = (l) => (l.priceRub && l.totalArea ? l.priceRub / l.totalArea : null);
+  const units = st.units.map((u) => {
+    const mine = lots.filter((l) => l.unit === u.id);
+    const page = mine.filter((l) => l.via === 'page').length;
+    return {
+      name: u.name, phase: u.phase, declared: u.declared, aggregated: u.aggregated, listed: page,
+      fromGroups: mine.length - page, coveragePct: pct(page, u.aggregated), holes: u.holes.length, requests: u.requests,
+      requestsPer1000: mine.length ? Math.round((1000 * u.requests) / mine.length) : null,
+      slices: u.slices.length,
+      groupsExpanded: u.grp ? u.grp.expanded : 0, groupsSkipped: u.grp ? u.grp.skipped : 0,
+      hiddenBehindLeaders: mine.filter((l) => l.via === 'page').reduce((n, l) => n + (l.similarCount || 0), 0),
+    };
+  });
+  const n = inside.length;
+  const field = (f) => pct(inside.filter(f).length, n);
+  return {
+    at: new Date().toISOString(),
+    lots: lots.length,
+    zones,
+    units,
+    insideMkad: {
+      lots: n,
+      primaryPct: field(isPrimary),
+      apartmentsPct: field((l) => l.isApartments),
+      flatType: inside.reduce((m, l) => ((m[l.flatType || '—'] = (m[l.flatType || '—'] || 0) + 1), m), {}),
+      fieldsPct: {
+        houseId: field((l) => l.houseId), buildYear: field((l) => l.buildYear), coords: field((l) => l.lat && l.lng),
+        cadastral: field((l) => l.x && l.x.cad), buildingCadastral: field((l) => l.x && l.x.bcad),
+        minhash: field((l) => l.x && l.x.minhash), demolished: field((l) => l.x && l.x.demolished),
+        newbuildingId: field((l) => l.x && l.x.nbId),
+      },
+      medianPricePerM2: {
+        resale: med(inside.filter((l) => !isPrimary(l) && !l.isApartments).map(ppm)),
+        primary: med(inside.filter((l) => isPrimary(l) && !l.isApartments).map(ppm)),
+        apartments: med(inside.filter((l) => l.isApartments).map(ppm)),
+      },
+    },
+  };
+}
+
 /* ---------- командная строка ---------- */
 
 function args(argv) {
@@ -331,6 +388,23 @@ async function main() {
     return 0;
   }
 
+  if (cmd === 'report') {
+    const { mkadVerdict } = require('./mkad');
+    const lots = fs.existsSync(LOTS) ? fs.readFileSync(LOTS, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : [];
+    const r = report(st, lots, mkadVerdict);
+    writeJson(path.join(dir, 'report.json'), r);
+    for (const u of r.units) {
+      log(`${u.name}: заявлено ${u.declared ?? '—'}, перечислимо ${u.aggregated ?? '—'}, прочитано ${u.listed} (${u.coveragePct ?? '—'}%) + из групп ${u.fromGroups}; ` +
+        `за лидерами обещано ${u.hiddenBehindLeaders}, групп раскрыто ${u.groupsExpanded} (пропущено ${u.groupsSkipped}); ломтиков ${u.slices}, дыр ${u.holes}; запросов ${u.requests} (${u.requestsPer1000 ?? '—'} на 1000 лотов)`);
+    }
+    const i = r.insideMkad;
+    log(`\nвсего ${r.lots}; по МКАД: ${Object.entries(r.zones).map(([k, v]) => `${k} ${v}`).join(', ')}`);
+    log(`внутри МКАД ${i.lots}: первичка ${i.primaryPct}%, апартаменты ${i.apartmentsPct}%; типы ${JSON.stringify(i.flatType)}`);
+    log(`поля, %: ${Object.entries(i.fieldsPct).map(([k, v]) => `${k} ${v}`).join(', ')}`);
+    log(`медиана ₽/м²: вторичка ${Math.round(i.medianPricePerM2.resale || 0)}, первичка ${Math.round(i.medianPricePerM2.primary || 0)}, апартаменты ${Math.round(i.medianPricePerM2.apartments || 0)}`);
+    return 0;
+  }
+
   if (cmd === 'step') {
     const { openSession, careful, stopGuard } = require('./client');
     const { record } = require('./pilot');
@@ -374,5 +448,5 @@ if (require.main === module) {
   main().then((code) => process.exit(code || 0), (e) => { log(e.stack || String(e)); process.exit(1); });
 }
 
-module.exports = { priceSlice, slicePages, isPrimary, unitQuery, newState, makeStore, stepUnit, run, status,
+module.exports = { priceSlice, slicePages, isPrimary, unitQuery, newState, makeStore, stepUnit, run, status, report,
   DEPTH, PAGE_SIZE, SLICE_CAP, CURSOR_PAGE, ROOMS, OLD_OKRUGS };
