@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_channel_status">Connection status</string>
+    <string name="notif_channel_status_desc">Tor tunnel status and speed</string>
+    <string name="notif_connecting">Connecting to Tor…</string>
+    <string name="notif_reconnecting">Reconnecting…</string>
+    <string name="notif_connected">Protected by Tor</string>
+    <string name="notif_no_network">No network</string>
+    <string name="notif_no_network_text">Traffic is blocked until the network is back</string>
+    <string name="notif_blocked">This network blocks every way to connect</string>
+    <string name="notif_blocked_text">Try another network or your own bridges</string>
+    <string name="notif_standby">Tor on standby</string>
+    <string name="notif_standby_text">VPN is off, connecting will be instant</string>
+    <string name="notif_stopping">Disconnecting…</string>
+    <string name="notif_error">Tunnel stopped</string>
+    <string name="notif_action_disconnect">Disconnect</string>
+    <string name="notif_action_new_identity">New identity</string>
+    <string name="notif_action_connect">Connect</string>
+    <string name="notif_action_turn_off">Turn Tor off</string>
+    <string name="notif_speed">↓ %1$s · ↑ %2$s</string>
+    <string name="notif_racing">Trying: %1$s</string>
+
+    <string name="phase_starting">Starting Tor</string>
+    <string name="phase_connecting_bridge">Connecting to a bridge</string>
+    <string name="phase_handshake">Securing the connection</string>
+    <string name="phase_loading_directory">Loading the network directory</string>
+    <string name="phase_loading_relays">Loading relay information</string>
+    <string name="phase_connecting_network">Joining the Tor network</string>
+    <string name="phase_building_circuit">Building a circuit</string>
+    <string name="phase_done">Done</string>
+
+    <string name="transport_vanilla">Bridge</string>
+
+    <string name="unit_bytes_per_second">%1$s B/s</string>
+    <string name="unit_kilobytes_per_second">%1$s KB/s</string>
+    <string name="unit_megabytes_per_second">%1$s MB/s</string>
+
+    <string name="tile_connected">Protected</string>
+    <string name="tile_connecting">Connecting…</string>
+    <string name="tile_off">Off</string>
+    <string name="tile_standby">Standby</string>
+</resources>

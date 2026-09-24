@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vpn_session_name" translatable="false">Opal · Tor</string>
+
+    <string name="notif_channel_status">Состояние подключения</string>
+    <string name="notif_channel_status_desc">Статус туннеля Tor и скорость</string>
+    <string name="notif_connecting">Подключение к Tor…</string>
+    <string name="notif_reconnecting">Переподключение…</string>
+    <string name="notif_connected">Защищено через Tor</string>
+    <string name="notif_no_network">Нет сети</string>
+    <string name="notif_no_network_text">Трафик заблокирован, пока сеть не вернётся</string>
+    <string name="notif_blocked">Сеть блокирует все способы подключения</string>
+    <string name="notif_blocked_text">Попробуйте другую сеть или свои мосты</string>
+    <string name="notif_standby">Tor в режиме ожидания</string>
+    <string name="notif_standby_text">VPN выключен, подключение будет мгновенным</string>
+    <string name="notif_stopping">Отключение…</string>
+    <string name="notif_error">Туннель остановлен</string>
+    <string name="notif_action_disconnect">Отключить</string>
+    <string name="notif_action_new_identity">Новая личность</string>
+    <string name="notif_action_connect">Подключить</string>
+    <string name="notif_action_turn_off">Выключить Tor</string>
+    <string name="notif_speed">↓ %1$s · ↑ %2$s</string>
+    <string name="notif_racing">Пробуем: %1$s</string>
+
+    <string name="phase_starting">Запуск Tor</string>
+    <string name="phase_connecting_bridge">Подключение к мосту</string>
+    <string name="phase_handshake">Защищённое соединение</string>
+    <string name="phase_loading_directory">Загрузка каталога сети</string>
+    <string name="phase_loading_relays">Сведения об узлах</string>
+    <string name="phase_connecting_network">Вход в сеть Tor</string>
+    <string name="phase_building_circuit">Построение цепочки</string>
+    <string name="phase_done">Готово</string>
+
+    <string name="transport_snowflake" translatable="false">Snowflake</string>
+    <string name="transport_webtunnel" translatable="false">WebTunnel</string>
+    <string name="transport_obfs4" translatable="false">obfs4</string>
+    <string name="transport_meek" translatable="false">meek</string>
+    <string name="transport_vanilla">Мост</string>
+
+    <string name="unit_bytes_per_second">%1$s Б/с</string>
+    <string name="unit_kilobytes_per_second">%1$s КБ/с</string>
+    <string name="unit_megabytes_per_second">%1$s МБ/с</string>
+
+    <string name="tile_label" translatable="false">Opal</string>
+    <string name="tile_connected">Защищено</string>
+    <string name="tile_connecting">Подключение…</string>
+    <string name="tile_off">Выключено</string>
+    <string name="tile_standby">Ожидание</string>
+</resources>

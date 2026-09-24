@@ -1,0 +1,187 @@
+From: Opal <opal@localhost>
+Subject: [PATCH] UDP 'reject' mode and DNS hijack for Tor
+
+Tor relays TCP only. In 'reject' mode (socks5.udp: 'reject') every UDP flow that is
+not DNS gets an ICMP/ICMPv6 port-unreachable reply sourced from the original
+destination, so sockets fail immediately with ECONNREFUSED (QUIC falls back to TCP
+without waiting for a timeout). Plain DNS to any resolver on port 53 is answered by
+the mapped DNS, so names are resolved by Tor exits and never leave the tunnel.
+
+Upstream: https://github.com/heiher/hev-socks5-tunnel @ e802f02
+---
+--- a/src/hev-config.h
++++ b/src/hev-config.h
+@@ -18,6 +18,7 @@
+     const char *pass;
+     unsigned int mark;
+     short udp_in_udp;
++    unsigned char udp_reject;
+     unsigned short port;
+     unsigned char pipeline;
+     unsigned char fastopen;
+--- a/src/hev-config.c
++++ b/src/hev-config.c
+@@ -254,6 +254,11 @@
+     if (udpm && (strcasecmp (udpm, "udp") == 0))
+         srv.udp_in_udp = 1;
+ 
++    /* Opal: 'reject' answers every non-DNS UDP flow with ICMP port
++     * unreachable (the upstream SOCKS server cannot relay UDP). */
++    if (udpm && (strcasecmp (udpm, "reject") == 0))
++        srv.udp_reject = 1;
++
+     if (udpa)
+         strncpy (srv.udp_addr, udpa, 256 - 1);
+ 
+--- a/src/hev-socks5-tunnel.c
++++ b/src/hev-socks5-tunnel.c
+@@ -16,6 +16,14 @@
+ 
+ #include <lwip/tcp.h>
+ #include <lwip/udp.h>
++#include <lwip/ip.h>
++#include <lwip/icmp.h>
++#include <lwip/inet_chksum.h>
++#include <lwip/prot/icmp.h>
++#include <lwip/prot/icmp6.h>
++#include <lwip/prot/ip4.h>
++#include <lwip/prot/ip6.h>
++#include <lwip/prot/udp.h>
+ #include <lwip/nd6.h>
+ #include <lwip/netif.h>
+ #include <lwip/ip4_frag.h>
+@@ -234,6 +242,115 @@
+     udp_remove (pcb);
+ }
+ 
++/*
++ * Opal: fast UDP rejection.
++ *
++ * Tor carries TCP only, so UDP other than DNS (answered by the mapped DNS
++ * resolver) can never be delivered. Instead of silently dropping it (apps
++ * would wait for a timeout, e.g. QUIC before falling back to TCP), answer
++ * with ICMP/ICMPv6 port unreachable. The error is sourced from the original
++ * destination so the kernel accepts it and fails the socket immediately
++ * with ECONNREFUSED.
++ */
++#define OPAL_ICMP_QUOTE_LEN 8
++
++static void
++opal_icmp4_port_unreach (struct pbuf *p, struct netif *inp)
++{
++    const struct ip_hdr *iphdr;
++    struct icmp_echo_hdr *icmphdr;
++    ip4_addr_t src, dst;
++    struct pbuf *q;
++    u16_t quote;
++
++    if (p->len < IP_HLEN)
++        return;
++
++    iphdr = (const struct ip_hdr *)p->payload;
++    quote = IPH_HL_BYTES (iphdr) + OPAL_ICMP_QUOTE_LEN;
++    if (quote > p->tot_len)
++        quote = p->tot_len;
++
++    q = pbuf_alloc (PBUF_IP, sizeof (struct icmp_echo_hdr) + quote, PBUF_RAM);
++    if (!q)
++        return;
++
++    icmphdr = (struct icmp_echo_hdr *)q->payload;
++    icmphdr->type = ICMP_DUR;
++    icmphdr->code = ICMP_DUR_PORT;
++    icmphdr->id = 0;
++    icmphdr->seqno = 0;
++    pbuf_copy_partial (p, (u8_t *)q->payload + sizeof (struct icmp_echo_hdr),
++                       quote, 0);
++    icmphdr->chksum = 0;
++    icmphdr->chksum = inet_chksum (q->payload, q->len);
++
++    ip4_addr_copy (src, iphdr->dest);
++    ip4_addr_copy (dst, iphdr->src);
++    ip4_output_if (q, &src, &dst, ICMP_TTL, 0, IP_PROTO_ICMP, inp);
++    pbuf_free (q);
++}
++
++static void
++opal_icmp6_port_unreach (struct pbuf *p, struct netif *inp)
++{
++    const struct ip6_hdr *ip6hdr;
++    struct icmp6_hdr *icmp6hdr;
++    ip6_addr_t src, dst;
++    struct pbuf *q;
++    u16_t quote;
++
++    if (p->len < IP6_HLEN)
++        return;
++
++    ip6hdr = (const struct ip6_hdr *)p->payload;
++    quote = IP6_HLEN + OPAL_ICMP_QUOTE_LEN;
++    if (quote > p->tot_len)
++        quote = p->tot_len;
++
++    q = pbuf_alloc (PBUF_IP, sizeof (struct icmp6_hdr) + quote, PBUF_RAM);
++    if (!q)
++        return;
++
++    icmp6hdr = (struct icmp6_hdr *)q->payload;
++    icmp6hdr->type = ICMP6_TYPE_DUR;
++    icmp6hdr->code = ICMP6_DUR_PORT;
++    icmp6hdr->data = 0;
++    pbuf_copy_partial (p, (u8_t *)q->payload + sizeof (struct icmp6_hdr),
++                       quote, 0);
++
++    ip6_addr_copy_from_packed (src, ip6hdr->dest);
++    ip6_addr_copy_from_packed (dst, ip6hdr->src);
++    ip6_addr_clear_zone (&src);
++    ip6_addr_clear_zone (&dst);
++
++    icmp6hdr->chksum = 0;
++    icmp6hdr->chksum =
++        ip6_chksum_pseudo (q, IP6_NEXTH_ICMP6, q->tot_len, &src, &dst);
++    ip6_output_if (q, &src, &dst, 255, 0, IP6_NEXTH_ICMP6, inp);
++    pbuf_free (q);
++}
++
++static void
++udp_reject_handler (void *arg, struct udp_pcb *pcb, struct pbuf *p,
++                    const ip_addr_t *addr, u16_t port)
++{
++    struct netif *inp = ip_current_input_netif ();
++
++    /* Move the payload pointer back to the IP header of the datagram. */
++    if (inp && !pbuf_header_force (p, (s16_t)(ip_current_header_tot_len () +
++                                              UDP_HLEN))) {
++        if (ip_current_is_v6 ())
++            opal_icmp6_port_unreach (p, inp);
++        else
++            opal_icmp4_port_unreach (p, inp);
++    }
++
++    pbuf_free (p);
++    udp_recv (pcb, NULL, NULL);
++    udp_remove (pcb);
++}
++
+ static void
+ udp_recv_handler (void *arg, struct udp_pcb *pcb, struct pbuf *p,
+                   const ip_addr_t *addr, u16_t port)
+@@ -259,6 +376,18 @@
+         }
+     }
+ 
++    /* Opal: in reject mode, plain DNS to any resolver is answered by the
++     * mapped DNS (names are resolved by Tor exits later) and everything
++     * else is refused immediately. */
++    if (hev_config_get_socks5_server ()->udp_reject) {
++        if (dns && port == 53) {
++            udp_recv (pcb, dns_recv_handler, dns);
++            return;
++        }
++        udp_recv (pcb, udp_reject_handler, NULL);
++        return;
++    }
++
+     udp = hev_socks5_session_udp_new (pcb, &mutex);
+     if (!udp) {
+         udp_remove (pcb);

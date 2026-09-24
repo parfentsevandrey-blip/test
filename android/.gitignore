@@ -1,0 +1,19 @@
+# Gradle / IDE
+.gradle/
+.kotlin/
+build/
+local.properties
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Secrets: release signing
+keystore.properties
+*.jks
+*.keystore
+signing/
+
+# OS
+.DS_Store

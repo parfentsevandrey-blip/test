@@ -1,0 +1,51 @@
+package app.opal.buildlogic
+
+import com.android.build.api.dsl.CommonExtension
+import org.gradle.api.JavaVersion
+import org.gradle.api.Project
+import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+
+/** Shared Android configuration: SDK levels, Java 21 bytecode, lint policy. */
+internal fun Project.configureAndroid(extension: CommonExtension) {
+    extension.apply {
+        compileSdk = libs.version("compileSdk").toInt()
+        compileSdkMinor = 0
+        defaultConfig.minSdk = libs.version("minSdk").toInt()
+        compileOptions.sourceCompatibility = JavaVersion.VERSION_21
+        compileOptions.targetCompatibility = JavaVersion.VERSION_21
+        lint.apply {
+            abortOnError = true
+            checkDependencies = true
+            warningsAsErrors = false
+            // Obsolete dependency checks need network access to Maven metadata; versions are
+            // pinned deliberately in the catalog and reviewed there instead.
+            disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
+        }
+        testOptions.unitTests.isIncludeAndroidResources = true
+        testOptions.unitTests.isReturnDefaultValues = true
+    }
+    configureKotlin()
+}
+
+/** Kotlin compiler flags shared by Android and JVM modules. */
+internal fun Project.configureKotlin() {
+    tasks.withType<KotlinJvmCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_21)
+            freeCompilerArgs.addAll(
+                "-Xjsr305=strict",
+            )
+        }
+    }
+}
+
+internal fun Project.configureJvmToolchain() {
+    extensions.configure<JavaPluginExtension> {
+        toolchain.languageVersion.set(JavaLanguageVersion.of(libs.version("jvmToolchain").toInt()))
+    }
+}

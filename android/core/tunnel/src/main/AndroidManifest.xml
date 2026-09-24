@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Tor, transports and the Settings API. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Default-network callbacks: soft reconnect on Wi-Fi ↔ cellular, winner per network type. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- The VPN service runs in the foreground while connected or in hot standby. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Foreground type for VPN apps with user consent (Android 14+). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
+    <!-- Fallback type for hot standby if systemExempted is refused (no 6 h/day limit as dataSync). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Status notification (Android 13+ asks at runtime). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Live Update while connecting (Android 16). -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+
+    <application>
+        <!-- systemExempted: VPN apps with user consent are an exempted category; lint only knows the
+             exact-alarm exemption. If refused at runtime we fall back to specialUse. -->
+        <service
+            android:name=".TunnelService"
+            android:exported="true"
+            tools:ignore="ForegroundServicePermission"
+            android:foregroundServiceType="systemExempted|specialUse"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:process=":tunnel"
+            android:stopWithTask="false">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Tor hot standby: keeps an established Tor connection so the VPN can start instantly" />
+            <!-- Always-on VPN is supported (no opt-out). -->
+            <meta-data
+                android:name="android.net.VpnService.SUPPORTS_ALWAYS_ON"
+                android:value="true" />
+        </service>
+
+        <service
+            android:name=".TunnelTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_stat_opal"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:process=":tunnel">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+    </application>
+</manifest>
