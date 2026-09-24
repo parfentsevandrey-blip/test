@@ -200,6 +200,125 @@ test('пустые деления кольца заполняются между
   assert.ok(Math.abs(ringRadius(ring, Math.PI / 4) - 15000) < 50);
 });
 
+process.stdout.write('перепись на игрушечной выдаче\n');
+
+const census = require('./census');
+
+/* Игрушечный Циан: видимые лоты (одиночки и лидеры групп) в ценовой
+   сортировке с потолком выдачи 1 500, члены групп — только по multi_id,
+   который не уважает остальные фильтры. Цены с повторами — как в жизни. */
+function toyCian(opts = {}) {
+  let seed = opts.seed || 7;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  const lots = [];
+  let id = 1;
+  for (let i = 0; i < (opts.visible || 5000); i++) {
+    lots.push({ id: id++, priceRub: Math.round(5e6 + rnd() * 95e6 / 1e5) * 1e5 + (rnd() < 0.2 ? 0 : Math.round(rnd() * 9e4)), group: null, similarCount: 0 });
+  }
+  const leaders = lots.filter((_, i) => i % 25 === 0);
+  for (const L of leaders) {
+    const n = 2 + Math.floor(rnd() * 30);
+    const primary = L.id % 2 === 0;
+    L.similarCount = n;
+    if (primary) { L.fromDeveloper = true; L.saleType = 'fz214'; }
+    for (let k = 0; k < n; k++) {
+      lots.push({ id: id++, priceRub: L.priceRub + k * 1e5, group: L.id, similarCount: 0, fromDeveloper: primary, saleType: primary ? 'fz214' : 'free' });
+    }
+  }
+  const calls = [];
+  const api = {
+    calls,
+    async search(q, page) {
+      if (opts.failAfter != null && calls.length >= opts.failAfter) { const e = new Error('бюджет'); e.code = 'BUDGET'; throw e; }
+      calls.push({ q, page });
+      let pool, count, aggregated;
+      if (q.multi_id) {
+        pool = lots.filter((l) => l.id === q.multi_id.value || l.group === q.multi_id.value).sort((a, b) => a.priceRub - b.priceRub || a.id - b.id);
+        count = aggregated = pool.length;
+      } else {
+        const pr = (q.price && q.price.value) || {};
+        const vis = lots.filter((l) => l.group == null && (pr.gte == null || l.priceRub >= pr.gte) && (pr.lte == null || l.priceRub <= pr.lte))
+          .sort((a, b) => a.priceRub - b.priceRub || a.id - b.id);
+        aggregated = vis.length;
+        count = vis.length + vis.reduce((n, l) => n + l.similarCount, 0);
+        pool = vis.slice(0, 1500);
+      }
+      return { count, aggregated, offers: pool.slice((page - 1) * 28, page * 28).map((l) => ({ ...l })) };
+    },
+  };
+  return { api, lots };
+}
+const toLot = (o) => o;
+const oneUnit = (groups) => census.newState([{ id: 11, name: 'ЗАО', q: census.unitQuery(11) }], { groups });
+
+test('перепись находит все видимые лоты и группы вторички, сток застройщика берёт с лидера', async () => {
+  const { api, lots } = toyCian();
+  const st = oneUnit('resale');
+  const store = census.makeStore(null);
+  const done = await census.run(st, store, api, toLot);
+  assert.ok(done);
+  const visible = lots.filter((l) => l.group == null);
+  const resaleMembers = lots.filter((l) => l.group != null && !l.fromDeveloper);
+  const primaryMembers = lots.filter((l) => l.group != null && l.fromDeveloper);
+  for (const l of visible) assert.ok(store.index.has(l.id), `видимый ${l.id} потерян`);
+  for (const l of resaleMembers) assert.ok(store.index.has(l.id), `член группы вторички ${l.id} потерян`);
+  assert.ok(primaryMembers.every((l) => !store.index.has(l.id)), 'группы новостроек при resale не раскрываются');
+  assert.ok(st.units[0].slices.length >= 4, `ломтиков ${st.units[0].slices.length}`);
+  assert.strictEqual(st.units[0].holes.length, 0);
+});
+test('с политикой all раскрываются и группы новостроек', async () => {
+  const { api, lots } = toyCian({ visible: 1200 });
+  const st = oneUnit('all');
+  const store = census.makeStore(null);
+  await census.run(st, store, api, toLot);
+  assert.strictEqual(store.index.size, lots.length);
+});
+test('нарезка только сужает: ни один запрос не выходит за ценовой фильтр округа', async () => {
+  const { api } = toyCian({ visible: 3000 });
+  const st = census.newState([{ id: 11, name: 'ЗАО', q: census.unitQuery(11, { price: { type: 'range', value: { gte: 20e6, lte: 60e6 } } }) }], { groups: 'none' });
+  await census.run(st, census.makeStore(null), api, toLot);
+  for (const c of api.calls.filter((x) => !x.q.multi_id)) {
+    const v = c.q.price.value;
+    assert.ok(v.gte >= 20e6 && v.lte <= 60e6, JSON.stringify(v));
+  }
+});
+test('обрыв по бюджету и продолжение: ничего не теряется, лишних запросов почти нет', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'census-'));
+  const LOTS = path.join(dir, 'lots.jsonl');
+  const full = toyCian({ visible: 2500 });
+  const ref = census.makeStore(null);
+  await census.run(oneUnit('resale'), ref, full.api, toLot);
+  const need = full.api.calls.length;
+  let st = oneUnit('resale');
+  let total = 0;
+  for (let round = 0; round < 50; round++) {
+    const { api } = toyCian({ visible: 2500, failAfter: 17 });
+    const store = census.makeStore(LOTS);
+    let done = false;
+    try { done = await census.run(st, store, api, toLot, { save: (x) => { st = JSON.parse(JSON.stringify(x)); } }); } catch (e) { assert.strictEqual(e.code, 'BUDGET'); }
+    total += api.calls.length;
+    if (done) break;
+  }
+  const store = census.makeStore(LOTS);
+  assert.strictEqual(store.index.size, ref.index.size);
+  assert.ok(total <= need + 2, `запросов ${total} при ${need} без обрывов`);
+});
+test('сбой страницы — дыра в учёте, а не остановка переписи', async () => {
+  const { api } = toyCian({ visible: 400 });
+  const inner = api.search.bind(api);
+  let n = 0;
+  api.search = async (q, page) => { if (++n === 3) { const e = new Error('не ответил'); e.code = 'FAILED'; throw e; } return inner(q, page); };
+  const st = oneUnit('none');
+  const done = await census.run(st, census.makeStore(null), api, toLot);
+  assert.ok(done);
+  assert.strictEqual(st.units[0].holes.length, 1);
+});
+test('антибот останавливает перепись сразу и пробрасывается наверх', async () => {
+  const { api } = toyCian({ visible: 400 });
+  api.search = async () => { const e = new Error('капча'); e.code = 'ANTIBOT'; throw e; };
+  await assert.rejects(census.run(oneUnit('none'), census.makeStore(null), api, toLot), (e) => e.code === 'ANTIBOT');
+});
+
 process.stdout.write('поля пилота\n');
 
 test('extra берёт размер группы, кадастр, реновацию и отпечаток текста', () => {

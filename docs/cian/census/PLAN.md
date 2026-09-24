@@ -68,7 +68,7 @@
 |---|---|---|
 | 0 | Агент в ветку сессии, план в репозиторий | готово 24.09 |
 | 1 | Замер антибота: пробный запрос, медленный разгон | темп и дневной бюджет |
-| 2 | Осторожный клиент, пилот, тесты без сети | клиент и пилот готовы 24.09 |
+| 2 | Осторожный клиент, пилот, ядро переписи, тесты без сети | готово 24.09: `client.js`, `pilot.js`, `census.js` |
 | 3 | Контур МКАД; пилот на одном районе | контур готов 24.09; пилот — ждёт антибот |
 | 4 | Расписание и первая полная перепись | реестр с нашими id |
 | 5 | Ежедневное слежение | журнал событий |
@@ -89,6 +89,12 @@ node tools/cian/census/pilot.js counts --dir $D --set outside --budget 20
 node tools/cian/census/pilot.js read   --dir $D --name R --query q.json --budget 60
 node tools/cian/census/pilot.js groups --dir $D --name R --n 12 --budget 30
 node tools/cian/census/pilot.js photos --dir $D --name R --n 3 --budget 8
+
+# перепись: автомат с состоянием на диске, короткими шагами
+C=census-data
+node tools/cian/census/census.js init   --dir $C [--okrugs 4,5] [--groups resale|all|none]
+node tools/cian/census/census.js step   --dir $C --budget 120      # повторять до кода 0
+node tools/cian/census/census.js status --dir $C
 
 # контур МКАД из выгрузки OSM (Overpass из сессии недоступен, API OSM — да)
 node tools/cian/census/build-mkad.js --osm relation-2094222-full.json

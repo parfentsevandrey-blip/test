@@ -344,4 +344,4 @@ if (require.main === module) {
   main().then((code) => process.exit(code || 0), (e) => { log(e.stack || String(e)); process.exit(1); });
 }
 
-module.exports = { extra, summarizeLots, OUTSIDE, PARTLY, OLD_OKRUGS };
+module.exports = { extra, record, summarizeLots, OUTSIDE, PARTLY, OLD_OKRUGS };
