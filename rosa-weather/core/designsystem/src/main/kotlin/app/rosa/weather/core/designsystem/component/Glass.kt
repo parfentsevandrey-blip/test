@@ -1,8 +1,6 @@
 package app.rosa.weather.core.designsystem.component
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.geometry.Offset
@@ -95,7 +93,7 @@ fun GlassSurface(
     shadow: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     contentAlignment: Alignment = Alignment.TopStart,
-    /** Light up under the finger and send a wave on tap (never consumes the touch). */
+    /** Light up under the finger (never consumes the touch). */
     touchResponsive: Boolean = true,
     /** The primary action: set into other glass, it stands out as a denser, brighter platter. */
     prominent: Boolean = false,
@@ -240,7 +238,6 @@ fun GlassButton(
                     }
                     if (up != null) {
                         up.consume()
-                        scope.sendWave(state, up.position)
                         currentOnClick()
                     }
                 }
@@ -332,9 +329,8 @@ fun rememberPressScale(pressed: Boolean): Float {
 }
 
 /**
- * Glow under the finger for any glass surface, and a light wave when it is tapped. Observes the
- * gesture without consuming it, so content inside keeps working, and backs off as soon as the
- * finger starts scrolling.
+ * Glow under the finger for any glass surface. Observes the gesture without consuming it, so
+ * content inside keeps working, and backs off as soon as the finger starts scrolling.
  */
 private fun Modifier.glassTouch(state: GlassState, scope: kotlinx.coroutines.CoroutineScope): Modifier =
     pointerInput(state) {
@@ -345,33 +341,17 @@ private fun Modifier.glassTouch(state: GlassState, scope: kotlinx.coroutines.Cor
                 delay(70) // a scroll that starts right away never lights up
                 Animatable(state.touchStrength).animateTo(0.75f, tween(180)) { state.touchStrength = value }
             }
-            var last = down.position
-            var tapped = false
             while (true) {
                 val event = awaitPointerEvent(PointerEventPass.Initial)
                 val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                last = change.position
-                if (!change.pressed) {
-                    tapped = change.uptimeMillis - down.uptimeMillis < 600
-                    break
-                }
-                if ((last - down.position).getDistance() > viewConfiguration.touchSlop) break
-                state.touch = last
+                if (!change.pressed) break
+                if ((change.position - down.position).getDistance() > viewConfiguration.touchSlop) break
+                state.touch = change.position
             }
             glow.cancel()
             scope.launch { Animatable(state.touchStrength).animateTo(0f, tween(380)) { state.touchStrength = value } }
-            if (tapped) scope.sendWave(state, last)
         }
     }
-
-/** Sends the release wave across [state]'s glass from [at]. */
-private fun kotlinx.coroutines.CoroutineScope.sendWave(state: GlassState, at: Offset) {
-    launch {
-        state.waveOrigin = at
-        animate(0f, 1f, animationSpec = tween(720, easing = LinearOutSlowInEasing)) { v, _ -> state.waveProgress = v }
-        state.waveProgress = 0f
-    }
-}
 
 /**
  * Like `waitForUpOrCancellation`, but reports every move to [onMove]. Returns the up change, or

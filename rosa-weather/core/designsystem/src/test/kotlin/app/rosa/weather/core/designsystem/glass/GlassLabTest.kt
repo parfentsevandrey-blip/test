@@ -113,8 +113,6 @@ class GlassLabTest {
             Light("touch", false, listOf(Color(0xFF2F7FEA), Color(0xFF8CC8FF)), Offset(0.82f, 0.08f), Color(0xFFFFFBF0), 1f, state = {
                 it.touch = Offset(260f, 150f)
                 it.touchStrength = 1f
-                it.waveOrigin = Offset(260f, 150f)
-                it.waveProgress = 0.35f
             }),
             Light("materialise", false, listOf(Color(0xFF2F7FEA), Color(0xFF8CC8FF)), Offset(0.82f, 0.08f), Color(0xFFFFFBF0), 1f, state = { it.materialize = 0.5f }),
         )

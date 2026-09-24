@@ -27,8 +27,7 @@ import org.intellij.lang.annotations.Language
  *  - **Weather on the glass**: lightning lights the whole pane, its rim most; on a freezing day
  *    frost creeps in from the rim in white veins.
  *  - **Liquid touch**: a finger presses the glass into a lens that swells what is under it and
- *    catches the light; a tap sends a damped train of ripples that bend the scene and glint on
- *    their crests.
+ *    catches the light.
  *  - **Materialisation**: appearing grows the lensing (never plain alpha) while a sweep of light
  *    crosses the pane as it forms.
  *  - **Chromatic dispersion** at the bezel, strongest at the corners.
@@ -51,7 +50,6 @@ uniform float brightness;
 layout(color) uniform half4 tint;
 uniform float materialize;
 uniform float3 touch;
-uniform float4 wave;
 uniform float grain;
 uniform float darkness;
 layout(color) uniform half4 lightColor;
@@ -165,18 +163,6 @@ half4 main(float2 coord) {
         s -= tv * press * 0.2;
     }
 
-    // Ripples from a tap: a damped train of waves bending what is behind them.
-    float crest = 0.0;
-    if (wave.w > 0.0) {
-        float2 wv = coord - origin - wave.xy;
-        float r = length(wv);
-        float k = r - wave.z;
-        float envelope = exp(-(k * k) / (900.0 * px * px)) * wave.w;
-        float w = sin(k / (4.0 * px)) * envelope;
-        s += (wv / max(r, 1.0)) * w * 7.0 * px;
-        crest = max(w, 0.0);
-    }
-
     half4 col;
     // Dispersion only where the bezel actually bends light: the flat middle takes one sample.
     if (dispersion > 0.0 && m > 0.3) {
@@ -234,8 +220,8 @@ half4 main(float2 coord) {
     float mirror = exp(-za * za) + 0.55 * exp(-zc * zc);
     col.rgb += reflection * half(mirror * 0.045 * (1.0 - 0.45 * darkness) * materialize * (0.4 + 0.6 * t));
 
-    // The pressed swell and the ripple crests catch the light.
-    col.rgb += shine * half(press * 0.1 + crest * 0.22);
+    // The pressed swell catches the light.
+    col.rgb += shine * half(press * 0.1);
 
     // Lightning: the whole pane lights up, its rim most.
     if (flash > 0.0) {

@@ -215,18 +215,12 @@ internal fun GlassEnvironment.lightFor(center: Offset, falloffPx: Float): Elemen
     return ElementLight(DEFAULT_LIGHT_ANGLE + delta * follow + swing, lightPower * (0.45f + 0.55f * near))
 }
 
-/** Per-element state: materialisation progress, the touch glow and the release wave. */
+/** Per-element state: materialisation progress and the finger pressing the glass. */
 @Stable
 class GlassState {
     var materialize by mutableFloatStateOf(1f)
     var touch by mutableStateOf(Offset.Unspecified)
     var touchStrength by mutableFloatStateOf(0f)
-
-    /** Where the last tap let go; the light wave spreads from here. */
-    var waveOrigin by mutableStateOf(Offset.Zero)
-
-    /** 0 → 1 while the wave crosses the glass; 0 or 1 means no wave. */
-    var waveProgress by mutableFloatStateOf(0f)
 }
 
 @Composable
@@ -331,8 +325,6 @@ private class LiquidGlassNode(
         val tilt = env?.tilt ?: Offset.Zero
         val touch = s?.touch ?: Offset.Unspecified
         val touchOn = touch.isSpecified && (s?.touchStrength ?: 0f) > 0f
-        val wave = s?.waveProgress ?: 0f
-        val waveOn = wave > 0f && wave < 1f
         val key = LensKey(
             width = size.width,
             height = size.height,
@@ -345,8 +337,6 @@ private class LiquidGlassNode(
             materialize = materialize,
             touch = if (touchOn) touch else Offset.Zero,
             touchStrength = if (touchOn) s!!.touchStrength else 0f,
-            waveOrigin = if (waveOn) s!!.waveOrigin else Offset.Zero,
-            wave = if (waveOn) wave else 0f,
             blur = blur * materialize,
             darkness = darkness,
             lightPower = quantize(light.power, 0.01f),
@@ -386,13 +376,6 @@ private class LiquidGlassNode(
             shader.setFloatUniform("sheen", tilt.x * SHEEN_TRAVEL.toPx(), tilt.y * SHEEN_TRAVEL.toPx() * 0.7f)
             shader.setFloatUniform("px", density)
             shader.setFloatUniform("touch", key.touch.x, key.touch.y, key.touchStrength)
-            if (waveOn) {
-                val reach = maxOf(size.width, size.height) * 1.3f
-                val fade = 1f - wave
-                shader.setFloatUniform("wave", key.waveOrigin.x, key.waveOrigin.y, reach * wave, fade * fade)
-            } else {
-                shader.setFloatUniform("wave", 0f, 0f, 0f, 0f)
-            }
             val lens = RenderEffect.createRuntimeShaderEffect(shader, "content")
             effect = if (key.blur > 0.5f) {
                 RenderEffect.createChainEffect(lens, RenderEffect.createBlurEffect(key.blur, key.blur, Shader.TileMode.CLAMP))
@@ -433,8 +416,6 @@ private data class LensKey(
     val materialize: Float,
     val touch: Offset,
     val touchStrength: Float,
-    val waveOrigin: Offset,
-    val wave: Float,
     val blur: Float,
     val darkness: Float,
     val lightPower: Float,
