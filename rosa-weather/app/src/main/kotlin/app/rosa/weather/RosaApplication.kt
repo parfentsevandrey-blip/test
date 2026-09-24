@@ -38,6 +38,7 @@ class RosaApplication : Application(), WorkConfiguration.Provider {
             }
             WidgetPreviews.publish(this@RosaApplication)
         }
+        widgetUpdater.followPlaceChanges(scope)
         // Widgets are bitmaps: when the system theme flips while we're alive, redraw them now
         // instead of waiting for the next scheduled tick.
         registerComponentCallbacks(object : ComponentCallbacks2 {

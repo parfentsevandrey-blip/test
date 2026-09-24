@@ -55,12 +55,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -71,9 +76,11 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.toSize
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -90,6 +97,7 @@ import app.rosa.weather.core.designsystem.format.WeatherFormat
 import app.rosa.weather.core.designsystem.glass.GlassStyle
 import app.rosa.weather.core.designsystem.haptics.LocalHaptics
 import app.rosa.weather.core.designsystem.motion.RosaMotion
+import app.rosa.weather.core.designsystem.sky.SkyStage
 import app.rosa.weather.core.designsystem.theme.Rosa
 import app.rosa.weather.core.model.Forecast
 import app.rosa.weather.core.model.ForecastMoment
@@ -100,6 +108,7 @@ import app.rosa.weather.core.model.momentAt
 import app.rosa.weather.ui.common.LocalSky
 import app.rosa.weather.ui.common.SkyController
 import kotlin.math.floor
+import kotlin.math.max
 import kotlin.math.min
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -206,6 +215,12 @@ fun HomeScreen(
         val target = state.selectedIndex
         if (target != pagerState.settledPage && !pagerState.isScrollInProgress) pagerState.animateScrollToPage(target)
     }
+    // Every city measures the free sky beside its numerals; the one on screen places the sun.
+    val bodyStages = remember { mutableStateMapOf<String, SkyStage>() }
+    LaunchedEffect(pagerState) {
+        snapshotFlow { currentPages.getOrNull(pagerState.settledPage)?.let { bodyStages[it.place.id] } }
+            .collect { stage -> if (stage != null) sky.placeBody(stage) }
+    }
 
     val format = remember(state.units, context) { WeatherFormat(context, state.units) }
     Box(Modifier.fillMaxSize()) {
@@ -228,6 +243,7 @@ fun HomeScreen(
                     }
                 },
                 onRefresh = onRefresh,
+                onBodyStage = { stage -> if (bodyStages[page.place.id] != stage) bodyStages[page.place.id] = stage },
             )
         }
         TopBar(
@@ -252,6 +268,7 @@ private fun PlaceContent(
     scrubHours: Float,
     onScrub: (Float, Boolean) -> Unit,
     onRefresh: () -> Unit,
+    onBodyStage: (SkyStage) -> Unit,
 ) {
     val forecast = page.forecast
     val zoneFormat = remember(format, forecast?.timezone) {
@@ -262,8 +279,17 @@ private fun PlaceContent(
     val listState = rememberLazyListState()
     val isRefreshing by rememberUpdatedState(refreshing)
     val refresh = rememberLiquidRefresh(onRefresh) { isRefreshing }
+    val density = LocalDensity.current
+    val stageSink by rememberUpdatedState(onBodyStage)
+    val probe = remember(density, listState) {
+        HeroProbe(
+            density = density,
+            atRest = { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 },
+            onStage = { stageSink(it) },
+        )
+    }
 
-    Box(Modifier.fillMaxSize().nestedScroll(refresh.connection)) {
+    Box(Modifier.fillMaxSize().onPlaced { probe.page = it }.nestedScroll(refresh.connection)) {
         LazyColumn(
             state = listState,
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = top + 76.dp, bottom = bottom + 28.dp),
@@ -287,7 +313,7 @@ private fun PlaceContent(
             }
             val moment = forecast.momentAt(now + (scrubHours * 3600).toLong())
             item(key = "hero") {
-                Hero(forecast, moment, zoneFormat, scrubHours, Modifier.graphicsLayer {
+                Hero(forecast, moment, zoneFormat, scrubHours, probe, Modifier.graphicsLayer {
                     // Gentle parallax: the numerals drift up slower than the cards and fade out.
                     val offset = if (listState.firstVisibleItemIndex == 0) listState.firstVisibleItemScrollOffset.toFloat() else 1000f
                     translationY = offset * 0.35f
@@ -317,7 +343,14 @@ private fun PlaceContent(
 }
 
 @Composable
-private fun Hero(forecast: Forecast, moment: ForecastMoment, format: WeatherFormat, scrubHours: Float, modifier: Modifier) {
+private fun Hero(
+    forecast: Forecast,
+    moment: ForecastMoment,
+    format: WeatherFormat,
+    scrubHours: Float,
+    probe: HeroProbe,
+    modifier: Modifier,
+) {
     val colors = Rosa.colors
     val headline = remember(forecast, moment.epochSeconds / 60) { Headlines.pick(forecast, moment) }
     val shadow = if (colors.isLightSky) null else Shadow(Color.Black.copy(alpha = 0.28f), Offset(0f, 4f), 28f)
@@ -331,19 +364,31 @@ private fun Hero(forecast: Forecast, moment: ForecastMoment, format: WeatherForm
                 modifier = Modifier.padding(start = 6.dp),
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.onGloballyPositioned {
+                probe.row = it
+                probe.report()
+            },
+        ) {
             Odometer(
                 text = format.temperature(moment.temperature),
                 style = Rosa.type.hero.copy(shadow = shadow),
                 color = colors.ink,
-                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                modifier = Modifier
+                    .semantics { liveRegion = LiveRegionMode.Polite }
+                    .onGloballyPositioned {
+                        probe.numeral = it
+                        probe.report()
+                    },
             )
             Spacer(Modifier.weight(1f))
-            // Under a clear sky the real sun or moon is already up there — no need for an icon.
+            // Under a clear sky the real sun or moon takes this very spot (see HeroProbe), so the
+            // icon steps aside for it.
             val bodyUp = (if (moment.sun.elevation > -5) moment.sun.elevation else moment.moon.elevation) > 3
             val clearish = moment.condition == WeatherCondition.Clear || moment.condition == WeatherCondition.MostlyClear
             if (!(clearish && bodyUp)) {
-                WeatherGlyph(moment.condition, moment.isDay, Modifier.size(92.dp), moonPhase = moment.moonPhase.phase, animated = true)
+                WeatherGlyph(moment.condition, moment.isDay, Modifier.size(HERO_GLYPH), moonPhase = moment.moonPhase.phase, animated = true)
             }
         }
         Text(
@@ -499,6 +544,54 @@ private fun Footer(forecast: Forecast, now: Long, format: WeatherFormat, onRefre
         }
         Spacer(Modifier.height(10.dp))
         Text(stringResource(R.string.data_source), style = Rosa.type.caption.copy(fontSize = 11.sp), color = colors.inkFaint)
+    }
+}
+
+private val HERO_GLYPH = 92.dp
+
+/**
+ * Finds the free sky beside the big numerals — the slot the weather glyph uses — so the real sun
+ * and moon travel there instead of behind the temperature. Measured only at rest (list at the
+ * top) and in page coordinates, so scrolling and swiping between cities don't disturb it.
+ */
+private class HeroProbe(
+    private val density: Density,
+    private val atRest: () -> Boolean,
+    private val onStage: (SkyStage) -> Unit,
+) {
+    var page: LayoutCoordinates? = null
+    var row: LayoutCoordinates? = null
+    var numeral: LayoutCoordinates? = null
+
+    fun report() {
+        val page = page ?: return
+        val row = row ?: return
+        val numeral = numeral ?: return
+        if (!atRest() || !page.isAttached || !row.isAttached || !numeral.isAttached) return
+        val stage = heroBodyStage(
+            row = page.localBoundingBoxOf(row, clipBounds = false),
+            numeral = page.localBoundingBoxOf(numeral, clipBounds = false),
+            page = page.size.toSize(),
+            density = density,
+        )
+        if (stage != null) onStage(stage)
+    }
+}
+
+/**
+ * The box the centre of the sun or moon may travel in: around the glyph slot at the end of the
+ * numeral row, kept clear of the numerals (however wide the temperature gets) and of the edge.
+ */
+internal fun heroBodyStage(row: Rect, numeral: Rect, page: Size, density: Density): SkyStage? {
+    if (page.width <= 0f || page.height <= 0f || row.width <= 0f || row.height <= 0f) return null
+    return with(density) {
+        val radius = page.height * SkyStage.BODY_RADIUS
+        val slot = row.right - HERO_GLYPH.toPx() / 2
+        val right = min(slot + 40.dp.toPx(), page.width - radius - 12.dp.toPx())
+        val left = max(slot - 40.dp.toPx(), numeral.right + radius + 36.dp.toPx()).coerceAtMost(right)
+        val top = row.top + radius
+        val bottom = max(top, row.bottom - radius)
+        SkyStage(left / page.width, top / page.height, right / page.width, bottom / page.height)
     }
 }
 

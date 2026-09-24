@@ -54,6 +54,8 @@ data class WidgetContent(
     val units: Units,
     val refreshing: Boolean = false,
     val status: Status = Status.Ready,
+    /** The place actually shown (a tap opens the app on it); null when there is none yet. */
+    val placeId: String? = null,
 ) {
     enum class Status { Ready, Loading, NeedsLocation, NoData }
 

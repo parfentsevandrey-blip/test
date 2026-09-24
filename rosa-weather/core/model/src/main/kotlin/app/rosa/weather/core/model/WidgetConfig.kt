@@ -39,7 +39,8 @@ enum class WidgetTapAction { OpenApp, Refresh }
 
 @Serializable
 data class WidgetConfig(
-    val placeId: String = Place.CURRENT_ID,
+    /** A place id, [Place.CURRENT_ID], or [Place.FOLLOW_APP_ID] (the default). */
+    val placeId: String = Place.FOLLOW_APP_ID,
     val style: WidgetStyle = WidgetStyle.Glass,
     val theme: WidgetTheme = WidgetTheme.Auto,
     val accent: WidgetAccent = WidgetAccent.Sky,

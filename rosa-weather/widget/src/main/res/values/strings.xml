@@ -25,6 +25,8 @@
     <string name="studio_density">Spacing</string>
     <string name="studio_content">Content, in order of importance</string>
     <string name="studio_place">Place</string>
+    <string name="studio_place_follow_app">Same as app</string>
+    <string name="studio_place_follow_app_hint">Now: %1$s. Switches together with the city open in Rosa.</string>
     <string name="studio_tap">Tap opens</string>
     <string name="studio_extras">Details</string>
     <string name="style_glass">Glass</string>

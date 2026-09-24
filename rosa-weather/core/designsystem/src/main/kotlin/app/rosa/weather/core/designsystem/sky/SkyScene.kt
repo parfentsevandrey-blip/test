@@ -13,6 +13,9 @@ import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
 import android.graphics.Shader
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateValueAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -49,6 +52,7 @@ import app.rosa.weather.core.model.SkyPalette
 import app.rosa.weather.core.model.WeatherVisual
 import kotlin.math.max
 import kotlin.math.roundToInt
+import kotlin.math.sin
 import kotlin.random.Random
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -63,8 +67,10 @@ data class SkyParams(
     val sun: Color,
     val cloudLight: Color,
     val cloudShade: Color,
-    val bodyX: Float,
-    val bodyY: Float,
+    /** Where the sun/moon is on its daily path: 0 rising in the east … 1 setting in the west. */
+    val bodyPath: Float,
+    /** Its height: 0 on the horizon … 1 high in the sky (negative while it sinks below). */
+    val bodyLift: Float,
     val isSun: Boolean,
     /** 0 when the sun/moon is below the horizon, 1 when clearly above it. */
     val bodyVisible: Float,
@@ -85,7 +91,7 @@ data class SkyParams(
         return SkyParams(
             lerp(zenith, to.zenith, t), lerp(horizon, to.horizon, t), lerp(glow, to.glow, t), lerp(sun, to.sun, t),
             lerp(cloudLight, to.cloudLight, t), lerp(cloudShade, to.cloudShade, t),
-            f(bodyX, to.bodyX), f(bodyY, to.bodyY), if (t < 0.5f) isSun else to.isSun, f(bodyVisible, to.bodyVisible), f(moonPhase, to.moonPhase),
+            f(bodyPath, to.bodyPath), f(bodyLift, to.bodyLift), if (t < 0.5f) isSun else to.isSun, f(bodyVisible, to.bodyVisible), f(moonPhase, to.moonPhase),
             f(cloudCover, to.cloudCover), f(cloudDark, to.cloudDark), f(fog, to.fog), f(wind, to.wind), f(stars, to.stars),
             f(rain, to.rain), f(snow, to.snow), f(lightning, to.lightning), f(frost, to.frost), f(condensation, to.condensation),
         )
@@ -93,23 +99,24 @@ data class SkyParams(
 
     companion object {
         /**
-         * Builds the scene for a moment: the sun (or moon) at its true azimuth/elevation mapped onto
-         * the screen, the palette for that elevation and weather, window effects from temperature
-         * and humidity.
+         * Builds the scene for a moment: the sun (or moon) where it really is on its daily path,
+         * the palette for that elevation and weather, window effects from temperature and
+         * humidity. Where that path is drawn on screen is up to the [SkyStage].
          */
         fun from(moment: ForecastMoment, palette: SkyPalette): SkyParams {
             val visual: WeatherVisual = moment.visual
             val useSun = moment.sun.elevation > -5
             val body = if (useSun) moment.sun else moment.moon
-            val x = (((body.azimuth - 90.0) / 180.0).toFloat()).coerceIn(0.12f, 0.88f)
-            // Keep the light source in the upper sky, above the type, rising with elevation.
-            val y = (0.36f - (body.elevation / 70.0).toFloat() * 0.3f).coerceIn(0.05f, 0.7f)
+            // The east–west component of the azimuth: rising bodies are east, setting ones west,
+            // at any latitude — and it never jumps when the azimuth wraps through north.
+            val path = ((1.0 - sin(Math.toRadians(body.azimuth))) / 2.0).toFloat()
+            val lift = (body.elevation / 50.0).toFloat().coerceIn(-0.25f, 1f)
             val night = ((-moment.sun.elevation - 6) / 8.0).toFloat().coerceIn(0f, 1f)
             val humid = ((moment.humidity - 88) / 12f).coerceIn(0f, 1f)
             return SkyParams(
                 zenith = palette.zenith.toColor(), horizon = palette.horizon.toColor(), glow = palette.glow.toColor(),
                 sun = palette.sun.toColor(), cloudLight = palette.cloudLight.toColor(), cloudShade = palette.cloudShade.toColor(),
-                bodyX = x, bodyY = y, isSun = useSun,
+                bodyPath = path, bodyLift = lift, isSun = useSun,
                 bodyVisible = ((body.elevation + 2.0) / 5.0).toFloat().coerceIn(0f, 1f),
                 moonPhase = moment.moonPhase.phase.toFloat(),
                 cloudCover = visual.cloudCover, cloudDark = visual.cloudDarkness, fog = visual.fog, wind = visual.wind,
@@ -138,6 +145,7 @@ enum class SceneQuality(val scale: Float, val windowEffects: Boolean) {
 fun SkyScene(
     params: SkyParams,
     modifier: Modifier = Modifier,
+    stage: SkyStage = SkyStage.Default,
     quality: SceneQuality = SceneQuality.Balanced,
     tilt: State<Offset>? = null,
     animate: Boolean = true,
@@ -156,6 +164,8 @@ fun SkyScene(
     val ripple = remember { RippleState() }
     val wipe = remember { WipeMask() }
     val currentHaptics by rememberUpdatedState(haptics)
+    // A newly measured stage (another city's wider numerals, rotation) glides, never jumps.
+    val stageState = animateValueAsState(stage, SkyStage.VectorConverter, spring(stiffness = Spring.StiffnessVeryLow), label = "stage")
 
     // Interpolate between weather/time states instead of cutting.
     val from = remember { mutableParams(params) }
@@ -247,9 +257,10 @@ fun SkyScene(
         sky.setColorUniform("sunColor", p.sun.toArgb())
         sky.setColorUniform("cloudLight", p.cloudLight.toArgb())
         sky.setColorUniform("cloudShade", p.cloudShade.toArgb())
-        sky.setFloatUniform("sunPos", p.bodyX, p.bodyY)
+        val body = stageState.value.at(p.bodyPath, p.bodyLift)
+        sky.setFloatUniform("sunPos", body.x, body.y)
         sky.setFloatUniform("isSun", if (p.isSun) 1f else 0f)
-        sky.setFloatUniform("bodySize", (if (p.isSun) 0.022f else 0.03f) * p.bodyVisible)
+        sky.setFloatUniform("bodySize", (if (p.isSun) SUN_RADIUS else SkyStage.BODY_RADIUS) * p.bodyVisible)
         sky.setFloatUniform("moonPhase", p.moonPhase)
         sky.setFloatUniform("cloudCover", p.cloudCover)
         sky.setFloatUniform("cloudDark", p.cloudDark)
@@ -295,6 +306,8 @@ fun SkyScene(
         scale(1f / s, 1f / s, pivot = Offset.Zero) { drawLayer(layer) }
     }
 }
+
+private const val SUN_RADIUS = 0.022f
 
 private class MutableParams(start: SkyParams, target: SkyParams) {
     var start by mutableStateOf(start)

@@ -50,7 +50,7 @@ fun RosaAppRoot() {
 
     CompositionLocalProvider(LocalSky provides sky) {
         RosaEnvironment(settings, sky.palette) {
-            SkyBackdrop(sky.params, settings.effects, transitionMillis = sky.transitionMillis) {
+            SkyBackdrop(sky.params, settings.effects, stage = sky.stage, transitionMillis = sky.transitionMillis) {
                 NavDisplay(
                     backStack = backStack,
                     onBack = { backStack.removeLastOrNull() },

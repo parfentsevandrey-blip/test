@@ -54,7 +54,10 @@ class MainActivity : ComponentActivity() {
     /** A tap on a widget pinned to a city opens that city, not whichever one was last viewed. */
     private fun openPlaceFrom(intent: Intent?) {
         val placeId = intent?.getStringExtra(WidgetUpdater.EXTRA_PLACE_ID) ?: return
-        lifecycleScope.launch { places.select(placeId) }
+        lifecycleScope.launch {
+            // Never select a city that is gone: the pager would lose track of what is open.
+            if (places.snapshot().all.any { it.id == placeId }) places.select(placeId)
+        }
     }
 }
 

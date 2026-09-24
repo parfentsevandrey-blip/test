@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import app.rosa.weather.core.designsystem.sky.SkyParams
+import app.rosa.weather.core.designsystem.sky.SkyStage
 import app.rosa.weather.core.model.ForecastMoment
 import app.rosa.weather.core.model.SampleForecast
 import app.rosa.weather.core.model.SkyPalette
@@ -25,6 +26,14 @@ class SkyController(initial: ForecastMoment) {
         private set
     var transitionMillis by mutableIntStateOf(1400)
         private set
+
+    /** The free sky the sun and moon travel in, measured by the home screen beside its numerals. */
+    var stage by mutableStateOf(SkyStage.Default)
+        private set
+
+    fun placeBody(stage: SkyStage) {
+        if (stage != this.stage) this.stage = stage
+    }
 
     /** @param immediate true while the user is dragging (pager, timeline): follow the finger exactly. */
     fun show(moment: ForecastMoment, immediate: Boolean) {

@@ -11,6 +11,7 @@ import app.rosa.weather.core.designsystem.component.RosaEnvironment
 import app.rosa.weather.core.designsystem.component.SkyBackdrop
 import app.rosa.weather.core.model.AppSettings
 import app.rosa.weather.core.model.EffectsQuality
+import app.rosa.weather.core.model.Forecast
 import app.rosa.weather.core.model.Place
 import app.rosa.weather.core.model.SampleForecast
 import app.rosa.weather.core.model.Units
@@ -44,8 +45,8 @@ class ScreenGalleryTest {
         exportDocImage(bitmap, name, 540)
     }
 
-    private fun home(scenario: SampleForecast.Scenario, now: Long, name: String) {
-        val forecast = SampleForecast.create(scenario, nowEpochSeconds = now, placeId = "geo:1")
+    private fun home(scenario: SampleForecast.Scenario, now: Long, name: String, shiftCelsius: Double = 0.0) {
+        val forecast = SampleForecast.create(scenario, nowEpochSeconds = now, placeId = "geo:1").shifted(shiftCelsius)
         val state = HomeUiState(
             loaded = true,
             pages = listOf(PlacePage(Place("geo:1", "Москва", 55.75, 37.62), forecast)),
@@ -58,7 +59,7 @@ class ScreenGalleryTest {
             val sky = remember { SkyController(forecast.momentAt(now)) }
             CompositionLocalProvider(LocalSky provides sky) {
                 RosaEnvironment(state.settings, sky.palette) {
-                    SkyBackdrop(sky.params, state.settings.effects, transitionMillis = 0) {
+                    SkyBackdrop(sky.params, state.settings.effects, stage = sky.stage, transitionMillis = 0) {
                         HomeScreen(state, {}, {}, {}, {}, {}, {}, {}, fixedNow = now)
                     }
                 }
@@ -78,7 +79,25 @@ class ScreenGalleryTest {
 
     @Test
     fun homeSunny() = home(SampleForecast.Scenario.SunnyMild, 1_758_621_600L, "home-sunny")
+
+    /** 09:13 in Moscow, mostly clear: the low eastern sun used to sit right behind the numerals. */
+    @Test
+    fun homeMorning() = home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-morning")
+
+    /** Same morning at −12°: the widest numerals must still keep the sun clear of them. */
+    @Test
+    fun homeMorningFrost() = home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-morning-frost", shiftCelsius = -30.0)
+
+    /** 17:40, the sun low in the west. */
+    @Test
+    fun homeEvening() = home(SampleForecast.Scenario.SunnyMild, 1_758_638_400L, "home-evening")
 }
+
+private fun Forecast.shifted(celsius: Double): Forecast = if (celsius == 0.0) this else copy(
+    current = current.copy(temperature = current.temperature + celsius, apparentTemperature = current.apparentTemperature + celsius),
+    hourly = hourly.map { it.copy(temperature = it.temperature + celsius, apparentTemperature = it.apparentTemperature + celsius) },
+    daily = daily.map { it.copy(temperatureMax = it.temperatureMax + celsius, temperatureMin = it.temperatureMin + celsius) },
+)
 
 /** Writes a downscaled JPEG for the README when run with `-Prosa.docs`. */
 internal fun exportDocImage(bitmap: android.graphics.Bitmap, name: String, width: Int) {

@@ -25,6 +25,8 @@
     <string name="studio_density">Воздух</string>
     <string name="studio_content">Содержимое — по важности</string>
     <string name="studio_place">Место</string>
+    <string name="studio_place_follow_app">Как в приложении</string>
+    <string name="studio_place_follow_app_hint">Сейчас: %1$s. Меняется вместе с городом, открытым в Росе.</string>
     <string name="studio_tap">Нажатие открывает</string>
     <string name="studio_extras">Детали</string>
     <string name="style_glass">Стекло</string>

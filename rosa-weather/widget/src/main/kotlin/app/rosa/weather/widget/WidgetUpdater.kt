@@ -23,6 +23,7 @@ import app.rosa.weather.core.model.Forecast
 import app.rosa.weather.core.model.Headline
 import app.rosa.weather.core.model.Headlines
 import app.rosa.weather.core.model.Place
+import app.rosa.weather.core.model.SavedPlaces
 import app.rosa.weather.core.model.WidgetConfig
 import app.rosa.weather.core.model.WidgetStyle
 import app.rosa.weather.core.model.WidgetTapAction
@@ -40,8 +41,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.min
 import kotlin.math.sqrt
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -110,7 +118,8 @@ class WidgetUpdater @Inject constructor(
                     synchronized(manuallyRefreshing) { id in manuallyRefreshing }
                 val content = WidgetContent(
                     placeName = place?.name.orEmpty(),
-                    isCurrentLocation = place?.isCurrentLocation ?: (config.placeId == Place.CURRENT_ID),
+                    isCurrentLocation = place?.isCurrentLocation == true,
+                    placeId = place?.id,
                     forecast = forecast,
                     nowEpochSeconds = now,
                     units = units,
@@ -134,8 +143,24 @@ class WidgetUpdater @Inject constructor(
         }
     }
 
-    private fun resolvePlace(config: WidgetConfig, saved: app.rosa.weather.core.model.SavedPlaces): Place? =
-        saved.find(config.placeId) ?: if (config.placeId == Place.CURRENT_ID) null else saved.all.firstOrNull()
+    private fun resolvePlace(config: WidgetConfig, saved: SavedPlaces): Place? = saved.forWidget(config.placeId)
+
+    /**
+     * Widgets that follow the app switch city together with it, and every widget notices a city
+     * being added or removed — without waiting for the next sync. Call once per process.
+     */
+    fun followPlaceChanges(scope: CoroutineScope) {
+        scope.launch {
+            places.saved
+                .map { saved -> saved.selected?.id to saved.all.map { it.id } }
+                .distinctUntilChanged()
+                .drop(1)
+                .collectLatest {
+                    delay(250) // let a swipe through several cities settle first
+                    if (hasWidgets(context)) update()
+                }
+        }
+    }
 
     private fun remoteViews(
         widgetId: Int,
@@ -210,7 +235,7 @@ class WidgetUpdater @Inject constructor(
         val launch = (context.packageManager.getLaunchIntentForPackage(context.packageName) ?: Intent())
             .setPackage(context.packageName)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            .putExtra(EXTRA_PLACE_ID, config.placeId)
+            .putExtra(EXTRA_PLACE_ID, content.placeId)
             .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
         return PendingIntent.getActivity(context, widgetId, launch, flags)
     }

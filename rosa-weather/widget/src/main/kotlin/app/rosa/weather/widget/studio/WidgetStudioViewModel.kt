@@ -34,6 +34,8 @@ import kotlinx.coroutines.launch
 data class StudioState(
     val config: WidgetConfig,
     val places: List<Place>,
+    /** The city open in the app — what "same as app" currently means. */
+    val appPlace: Place?,
     val content: WidgetContent,
     val settings: AppSettings,
     val forecast: Forecast?,
@@ -68,12 +70,14 @@ class WidgetStudioViewModel @Inject constructor(
 
     val state: StateFlow<StudioState?> = combine(config, places.saved, weather.forecasts, settings.settings) { cfg, saved, forecasts, s ->
         val now = System.currentTimeMillis() / 1000
-        val place = saved.find(cfg.placeId) ?: saved.all.firstOrNull()
+        // Exactly the rule the widget itself uses, so the preview never promises something else.
+        val place = saved.forWidget(cfg.placeId)
         val real = place?.let { forecasts[it.id] }
         val forecast = real ?: SampleForecast.create(SampleForecast.Scenario.RainyAfternoon, nowEpochSeconds = now)
         StudioState(
             config = cfg,
             places = saved.all,
+            appPlace = saved.selected,
             content = WidgetContent(
                 placeName = place?.name ?: context.getString(app.rosa.weather.widget.R.string.widget_preview_place),
                 isCurrentLocation = place?.isCurrentLocation ?: true,

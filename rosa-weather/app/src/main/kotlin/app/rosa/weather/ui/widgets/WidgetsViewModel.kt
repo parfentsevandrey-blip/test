@@ -46,7 +46,7 @@ class WidgetsViewModel @Inject constructor(
         val manager = AppWidgetManager.getInstance(context)
         val now = System.currentTimeMillis() / 1000
         val units = s.resolvedUnits()
-        val fallbackPlace = saved.all.firstOrNull()
+        val fallbackPlace = saved.selected
         fun contentFor(place: Place?) = WidgetContent(
             placeName = place?.name.orEmpty(),
             isCurrentLocation = place?.isCurrentLocation ?: true,
@@ -60,7 +60,7 @@ class WidgetsViewModel @Inject constructor(
             val config = cfgs.byId[id] ?: kind.defaultConfig
             val options = manager.getAppWidgetOptions(id)
             val size = runCatching { app.rosa.weather.widget.provider.WidgetSizes.from(options, info).first() }.getOrNull()
-            PlacedWidget(id, kind, config, size, contentFor(saved.find(config.placeId) ?: fallbackPlace))
+            PlacedWidget(id, kind, config, size, contentFor(saved.forWidget(config.placeId)))
         }
         WidgetsUiState(placed, contentFor(fallbackPlace))
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), WidgetsUiState())

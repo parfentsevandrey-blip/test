@@ -75,6 +75,7 @@ import app.rosa.weather.core.designsystem.haptics.LocalHaptics
 import app.rosa.weather.core.designsystem.motion.RosaMotion
 import app.rosa.weather.core.designsystem.sky.SkyParams
 import app.rosa.weather.core.designsystem.theme.Rosa
+import app.rosa.weather.core.model.Place
 import app.rosa.weather.core.model.SkyPalette
 import app.rosa.weather.core.model.WidgetAccent
 import app.rosa.weather.core.model.WidgetConfig
@@ -386,30 +387,46 @@ private fun ArrowButton(icon: RosaIcon, description: String, rotated: Boolean, o
 
 @Composable
 private fun PlacePicker(state: StudioState, viewModel: WidgetStudioViewModel) {
-    val haptics = LocalHaptics.current
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        state.places.forEach { place ->
-            val selected = place.id == state.config.placeId
-            GlassButton(
-                onClick = {
-                    haptics?.tick()
-                    viewModel.update { it.copy(placeId = place.id) }
-                },
-                style = if (selected) GlassStyle.Regular else GlassStyle.Clear,
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (place.isCurrentLocation) {
-                        RosaIconView(RosaIcon.Location, Rosa.colors.ink, size = 14.dp)
-                        Spacer(Modifier.width(6.dp))
-                    }
-                    Text(
-                        place.name.ifBlank { stringResource(app.rosa.weather.core.designsystem.R.string.current_location) },
-                        style = if (selected) Rosa.type.headline else Rosa.type.body,
-                        color = Rosa.colors.ink,
-                    )
-                }
+    val currentLocation = stringResource(app.rosa.weather.core.designsystem.R.string.current_location)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            PlaceChip(
+                label = stringResource(R.string.studio_place_follow_app),
+                icon = RosaIcon.Sparkle,
+                selected = state.config.placeId == Place.FOLLOW_APP_ID,
+            ) { viewModel.update { it.copy(placeId = Place.FOLLOW_APP_ID) } }
+            state.places.forEach { place ->
+                PlaceChip(
+                    label = place.name.ifBlank { currentLocation },
+                    icon = if (place.isCurrentLocation) RosaIcon.Location else null,
+                    selected = place.id == state.config.placeId,
+                ) { viewModel.update { it.copy(placeId = place.id) } }
             }
+        }
+        if (state.config.placeId == Place.FOLLOW_APP_ID) {
+            val city = state.appPlace?.let { it.name.ifBlank { currentLocation } }
+            if (city != null) Label(stringResource(R.string.studio_place_follow_app_hint, city))
+        }
+    }
+}
+
+@Composable
+private fun PlaceChip(label: String, icon: RosaIcon?, selected: Boolean, onClick: () -> Unit) {
+    val haptics = LocalHaptics.current
+    GlassButton(
+        onClick = {
+            haptics?.tick()
+            onClick()
+        },
+        style = if (selected) GlassStyle.Regular else GlassStyle.Clear,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (icon != null) {
+                RosaIconView(icon, Rosa.colors.ink, size = 14.dp)
+                Spacer(Modifier.width(6.dp))
+            }
+            Text(label, style = if (selected) Rosa.type.headline else Rosa.type.body, color = Rosa.colors.ink)
         }
     }
 }

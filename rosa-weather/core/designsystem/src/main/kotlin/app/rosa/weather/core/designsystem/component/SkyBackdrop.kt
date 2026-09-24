@@ -24,6 +24,7 @@ import app.rosa.weather.core.designsystem.sensor.toLightAngle
 import app.rosa.weather.core.designsystem.sky.SceneQuality
 import app.rosa.weather.core.designsystem.sky.SkyParams
 import app.rosa.weather.core.designsystem.sky.SkyScene
+import app.rosa.weather.core.designsystem.sky.SkyStage
 import app.rosa.weather.core.designsystem.theme.RosaTheme
 import app.rosa.weather.core.designsystem.theme.animatedRosaColors
 import app.rosa.weather.core.model.AppSettings
@@ -69,6 +70,7 @@ fun SkyBackdrop(
     params: SkyParams,
     effects: EffectsQuality,
     modifier: Modifier = Modifier,
+    stage: SkyStage = SkyStage.Default,
     interactive: Boolean = true,
     transitionMillis: Int = 1400,
     content: @Composable BoxScope.() -> Unit,
@@ -80,6 +82,7 @@ fun SkyBackdrop(
         SkyScene(
             params = params,
             modifier = Modifier.fillMaxSize().backdropSource(backdrop),
+            stage = stage,
             quality = quality,
             tilt = LocalTilt.current,
             animate = motion,
