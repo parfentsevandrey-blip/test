@@ -56,6 +56,7 @@
     <string name="toggle_location">Place name</string>
     <string name="toggle_feels">Feels-like when it differs a lot</string>
     <string name="toggle_art">Weather art inside the glass</string>
+    <string name="toggle_live">Live rain, snow and lightning</string>
     <string name="toggle_updated">Update time</string>
     <string name="studio_move_up">Move up</string>
     <string name="studio_move_down">Move down</string>

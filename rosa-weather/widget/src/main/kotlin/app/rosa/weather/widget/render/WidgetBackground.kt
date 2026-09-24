@@ -49,11 +49,13 @@ internal class WidgetBackground {
         dynamic: DynamicTones,
         seed: Int,
         pane: Pane = Pane.Dry,
+        live: Boolean = false,
     ) {
         val rect = RectF(0f, 0f, w, h)
         path.reset()
         path.addRoundRect(rect, radius, radius, Path.Direction.CW)
         this.pane = pane
+        weather.live = live
         when (config.style) {
             WidgetStyle.Glass -> glass(canvas, rect, radius, config, palette, visual, anchor, seed)
             WidgetStyle.Sky -> sky(canvas, rect, radius, config, palette, visual, anchor, seed)
@@ -315,7 +317,7 @@ internal class WidgetBackground {
         clouds(canvas, rect, palette, visual, seed)
         fog(canvas, rect, palette, visual)
         weather.behind(canvas, rect, visual, sky.horizon.lerp(Argb.White, 0.55f), strength = 1f, seed = seed)
-        if (visual.lightning > 0f) lightning(canvas, rect, seed)
+        if (visual.lightning > 0f && !weather.live) lightning(canvas, rect, seed)
 
         // Legibility: light type gets a dimmed, sky-coloured veil, dark type a milky one — like
         // Apple's advice to dim bright content under clear glass (≈35%).

@@ -18,11 +18,12 @@ import kotlin.random.Random
 
 /**
  * The weather on a widget's own glass — the same scene the app's window shows, from the same
- * moment of the same forecast, so when it rains in the app it rains on the widget. The launcher
- * shows a still picture, so this is a photograph of that scene: rain streaks and snow behind the
- * glass, beads of water on it (each a tiny lens showing the sky upside down, with a dark rim, a
- * caustic at its foot and a glint), drops sliding down with wet trails, frost growing in from the
- * frame, mist on a humid day. All of it sits under the widget's content, which stays legible.
+ * moment of the same forecast, so when it rains in the app it rains on the widget. This is the
+ * picture of that scene: rain streaks and snow behind the glass, beads of water on it (each a
+ * tiny lens showing the sky upside down, with a dark rim, a caustic at its foot and a glint),
+ * drops sliding down with wet trails, frost growing in from the frame, mist on a humid day. All of
+ * it sits under the widget's content, which stays legible. What moves — falling rain and snow,
+ * running drops, lightning — the launcher animates over the picture when it can ([live]).
  *
  * Geometry is in dp; the canvas is pre-scaled. Seeded per widget, so a widget keeps its drops
  * between renders instead of reshuffling them.
@@ -32,10 +33,17 @@ internal class WidgetWeather {
     private val path = Path()
 
     /**
+     * The launcher animates falling rain and snow and running drops over this picture (see
+     * LiveWeather): the picture then keeps only what stays put.
+     */
+    var live = false
+
+    /**
      * What is behind the glass: falling rain in three depths, snow from specks to soft flakes.
      * [strength] scales it for how much of the scene a style shows.
      */
     fun behind(canvas: Canvas, rect: RectF, visual: WeatherVisual, light: Argb, strength: Float, seed: Int) {
+        if (live) return
         if (visual.rain > 0.05f) streaks(canvas, rect, visual, light, strength, seed)
         if (visual.snow > 0.05f || visual.hail > 0.05f) snow(canvas, rect, visual, strength, seed)
     }
@@ -161,7 +169,7 @@ internal class WidgetWeather {
             bead(canvas, rnd.nextFloat() * w, rnd.nextFloat() * h, r, 1f, top, bottom, dark, refract)
         }
         // Heavier rain runs: a few drops slide down, leaving a wet trail of droplets.
-        val sliders = (rain * area / 9000f).toInt().coerceIn(if (rain > 0.3f) 1 else 0, 6)
+        val sliders = if (live) 0 else (rain * area / 9000f).toInt().coerceIn(if (rain > 0.3f) 1 else 0, 6)
         repeat(sliders) {
             val x = rnd.nextFloat() * w
             val y = h * (0.35f + rnd.nextFloat() * 0.6f)

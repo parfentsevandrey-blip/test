@@ -56,6 +56,7 @@
     <string name="toggle_location">Название места</string>
     <string name="toggle_feels">«Ощущается», если сильно отличается</string>
     <string name="toggle_art">Погодные эффекты внутри стекла</string>
+    <string name="toggle_live">Живые дождь, снег и молнии</string>
     <string name="toggle_updated">Время обновления</string>
     <string name="studio_move_up">Выше</string>
     <string name="studio_move_down">Ниже</string>

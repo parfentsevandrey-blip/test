@@ -32,4 +32,6 @@ tasks.withType<Test>().configureEach {
     if (project.hasProperty("rosa.previews")) systemProperty("rosa.previews", "true")
     // Opt-in export of documentation images (README) from the gallery tests.
     if (project.hasProperty("rosa.docs")) systemProperty("rosa.docs", rootProject.file("docs/images").absolutePath)
+    // Opt-in regeneration of the live weather tiles (res/drawable|layout|color/motion_*).
+    if (project.hasProperty("rosa.motion")) systemProperty("rosa.motion", "true")
 }

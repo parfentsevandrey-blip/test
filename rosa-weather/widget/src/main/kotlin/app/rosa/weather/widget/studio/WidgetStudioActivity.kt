@@ -207,6 +207,9 @@ private fun StudioScreen(state: StudioState, viewModel: WidgetStudioViewModel, o
                 ToggleLine(stringResource(R.string.toggle_location), config.showLocation) { v -> viewModel.update { it.copy(showLocation = v) } }
                 ToggleLine(stringResource(R.string.toggle_feels), config.showFeelsLike) { v -> viewModel.update { it.copy(showFeelsLike = v) } }
                 ToggleLine(stringResource(R.string.toggle_art), config.showWeatherArt) { v -> viewModel.update { it.copy(showWeatherArt = v) } }
+                if (config.showWeatherArt && config.style != WidgetStyle.Paper) {
+                    ToggleLine(stringResource(R.string.toggle_live), config.liveWeather) { v -> viewModel.update { it.copy(liveWeather = v) } }
+                }
                 if (config.style != WidgetStyle.Paper) {
                     ToggleLine(stringResource(R.string.toggle_glass_rim), config.glassRim) { v -> viewModel.update { it.copy(glassRim = v) } }
                 }
@@ -258,6 +261,7 @@ private fun ResizeStage(state: StudioState, initialDp: Pair<Float, Float>?) {
                     Modifier.offset(gap / 2, gap / 2).size(w, h),
                     cornerRadiusDp = if (state.config.cornerRadiusDp >= 0) state.config.cornerRadiusDp else 24f,
                     resizing = dragging || animW != snappedW || animH != snappedH,
+                    live = true,
                 )
                 // Resize handle: a small glass lens at the widget's corner.
                 GlassSurface(

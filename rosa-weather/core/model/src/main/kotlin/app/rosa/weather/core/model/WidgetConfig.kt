@@ -55,6 +55,8 @@ data class WidgetConfig(
     val showFeelsLike: Boolean = true,
     val showUpdatedTime: Boolean = false,
     val showWeatherArt: Boolean = true,
+    /** Rain, snow and lightning move on the home screen while they happen (with [showWeatherArt]). */
+    val liveWeather: Boolean = true,
     /** A thick, lit glass bezel around the pane (not drawn for [WidgetStyle.Paper]). */
     val glassRim: Boolean = true,
     val tapAction: WidgetTapAction = WidgetTapAction.OpenApp,

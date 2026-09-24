@@ -38,6 +38,7 @@ import app.rosa.weather.widget.layout.HeroVariant
 import app.rosa.weather.widget.layout.LayoutContent
 import app.rosa.weather.widget.layout.WidgetLayout
 import app.rosa.weather.widget.layout.WidgetLayoutEngine
+import app.rosa.weather.widget.motion.LiveWeather
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.max
@@ -76,6 +77,11 @@ data class WidgetRenderRequest(
     val systemNight: Boolean,
     val dynamic: DynamicTones = DynamicTones.Fallback,
     val seed: Int = 0,
+    /**
+     * Falling rain or snow and lightning are animated over the picture ([LiveWeather]), so the
+     * picture leaves them out and keeps only what stays put: drops resting on the glass, frost, mist.
+     */
+    val live: Boolean = false,
 )
 
 /**
@@ -126,6 +132,7 @@ class WidgetRenderer(private val context: Context) {
             canvas, request.widthDp, request.heightDp, request.cornerRadiusDp, request.config, palette,
             visual, anchor, request.dynamic, request.seed,
             pane = moment?.let { WidgetBackground.Pane(it.paneFrost, it.paneMist) } ?: WidgetBackground.Pane.Dry,
+            live = request.live,
         )
 
         val headline = if (forecast != null && moment != null) Headlines.pick(forecast, moment) else null
