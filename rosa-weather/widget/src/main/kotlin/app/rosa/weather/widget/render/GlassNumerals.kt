@@ -9,6 +9,10 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Shader
 import android.text.TextPaint
+import app.rosa.weather.core.model.Argb
+import kotlin.math.cos
+import kotlin.math.hypot
+import kotlin.math.sin
 
 /**
  * The colours of a glass temperature: its body from [top] to [bottom], the light caught on its
@@ -28,13 +32,23 @@ data class GlassInk(
  * The widget's temperature drawn as a piece of glass, the Canvas counterpart of the app's liquid
  * numerals. It is plain 2D drawing into the widget bitmap, so it costs nothing between renders.
  * Edges come from the glyphs themselves: the part of the text that a small shift uncovers is a
- * crescent along one side of every stroke.
+ * crescent along one side of every stroke. Like the pane, the digits catch the sky's [WidgetLight]:
+ * lit on the side of the sun or moon, in its colour, brighter in real sunlight.
  */
 internal object GlassNumerals {
     /** Below this size an edge would be a pixel wide and only blur the digits: draw them flat. */
     private const val MIN_SIZE = 26f
 
-    fun draw(canvas: Canvas, text: String, left: Float, baseline: Float, base: TextPaint, ink: GlassInk, strongShadow: Boolean) {
+    fun draw(
+        canvas: Canvas,
+        text: String,
+        left: Float,
+        baseline: Float,
+        base: TextPaint,
+        ink: GlassInk,
+        strongShadow: Boolean,
+        light: WidgetLight = WidgetLight.Resting,
+    ) {
         val size = base.textSize
         val paint = TextPaint(base)
         val glyphs = Rect().also { paint.getTextBounds(text, 0, text.length, it) }
@@ -62,9 +76,12 @@ internal object GlassNumerals {
         canvas.drawText(text, left, baseline, paint)
         paint.shader = null
 
-        val e = size * 0.016f
-        edge(canvas, text, left, baseline, paint, bounds, ink.rim, dx = e * 0.4f, dy = e)
-        edge(canvas, text, left, baseline, paint, bounds, ink.foot, dx = -e * 0.4f, dy = -e)
+        // Lit along the edges facing the light, gathering colour along those facing away.
+        val e = size * 0.017f
+        val lx = cos(light.overall)
+        val ly = sin(light.overall)
+        edge(canvas, text, left, baseline, paint, bounds, lit(ink.rim, light), dx = -lx * e, dy = -ly * e)
+        edge(canvas, text, left, baseline, paint, bounds, ink.foot, dx = lx * e, dy = ly * e)
 
         if (ink.sheen ushr 24 != 0) {
             // A band of light across the upper half, kept inside the glyphs.
@@ -94,10 +111,17 @@ internal object GlassNumerals {
         canvas.drawText(text, x, y, paint)
         paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_OUT)
         paint.color = 0xFF000000.toInt()
-        paint.maskFilter = BlurMaskFilter(maxOf(dy, -dy) * 0.6f, BlurMaskFilter.Blur.NORMAL)
+        paint.maskFilter = BlurMaskFilter(hypot(dx, dy) * 0.56f, BlurMaskFilter.Blur.NORMAL)
         canvas.drawText(text, x + dx, y + dy, paint)
         paint.maskFilter = null
         paint.xfermode = null
         canvas.restoreToCount(layer)
+    }
+
+    /** The rim takes the light's colour, and brightens in real sunlight. */
+    private fun lit(rim: Int, light: WidgetLight): Int {
+        if (rim ushr 24 == 0) return rim
+        val alpha = ((rim ushr 24) / 255f * (1f + 0.2f * light.power)).coerceAtMost(1f)
+        return Argb(rim or 0xFF000000.toInt()).lerp(light.color, light.share).withAlpha(alpha).value
     }
 }

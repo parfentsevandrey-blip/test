@@ -128,11 +128,14 @@ class WidgetRenderer(private val context: Context) {
             WidgetBackground.anchorFor(moment.moon.elevation, moment.moon.azimuth, false, moment.moonPhase.phase)
         }
 
+        // The sky's light on the glass: the pane's rim and the glass digits catch it alike.
+        val light = WidgetLight.of(anchor, visual, palette.sky, request.widthDp, request.heightDp)
         background.draw(
             canvas, request.widthDp, request.heightDp, request.cornerRadiusDp, request.config, palette,
             visual, anchor, request.dynamic, request.seed,
             pane = moment?.let { WidgetBackground.Pane(it.paneFrost, it.paneMist) } ?: WidgetBackground.Pane.Dry,
             live = request.live,
+            light = light,
         )
 
         val headline = if (forecast != null && moment != null) Headlines.pick(forecast, moment) else null
@@ -143,7 +146,7 @@ class WidgetRenderer(private val context: Context) {
             drawEmptyState(canvas, request, palette, layout)
             return layout
         }
-        val scene = Scene(request, palette, format, forecast, moment, headline, layout.scale)
+        val scene = Scene(request, palette, format, forecast, moment, headline, layout.scale, light)
         layout.blocks.forEach { block ->
             when (block) {
                 is Block.Hero -> hero(canvas, block, scene)
@@ -185,6 +188,7 @@ class WidgetRenderer(private val context: Context) {
         val moment: ForecastMoment,
         val headline: Headline?,
         val k: Float,
+        val light: WidgetLight,
     ) {
         val config: WidgetConfig get() = request.config
         val now: Long get() = moment.epochSeconds
@@ -368,7 +372,7 @@ class WidgetRenderer(private val context: Context) {
             Paint.Align.CENTER -> x - width / 2
             Paint.Align.RIGHT -> x - width
         }
-        GlassNumerals.draw(canvas, text, left, baseline, paint, glass, strongShadow = s.shadow)
+        GlassNumerals.draw(canvas, text, left, baseline, paint, glass, strongShadow = s.shadow, light = s.light)
         return width
     }
 

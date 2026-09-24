@@ -88,6 +88,49 @@ class WidgetGalleryTest {
         }
     }
 
+    /**
+     * The sky lights the widget's glass as it lights the app's: a clear day from sunrise to the
+     * golden hour (the rim lit and the glint on the sun's side, in its colour), a full moon's
+     * silver, and the soft resting light of an overcast sky.
+     */
+    @Test
+    fun light() {
+        val scenes = listOf(
+            Triple("07:30", SampleForecast.Scenario.SunnyMild, 1_758_601_800L),
+            Triple("10:00", SampleForecast.Scenario.SunnyMild, 1_758_610_800L),
+            Triple("12:20", SampleForecast.Scenario.SunnyMild, 1_758_619_200L),
+            Triple("16:00", SampleForecast.Scenario.SunnyMild, 1_758_632_400L),
+            Triple("18:20", SampleForecast.Scenario.SunnyMild, 1_758_640_800L),
+            Triple("полнолуние", SampleForecast.Scenario.ClearNight, 1_759_784_400L),
+            Triple("пасмурно", SampleForecast.Scenario.RainyAfternoon, 1_758_628_800L),
+        )
+        val density = 2f
+        val (w, h) = 314f to 162f
+        val gap = 16f
+        val columns = 4
+        val rows = (scenes.size + columns - 1) / columns
+        val sheetW = gap + columns * (w + gap)
+        val sheetH = gap + rows * (h + gap + 14f)
+        val bmp = Bitmap.createBitmap((sheetW * density).toInt(), (sheetH * density).toInt(), Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bmp)
+        canvas.scale(density, density)
+        wallpaper(canvas, sheetW, sheetH)
+        val label = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xCCFFFFFF.toInt(); textSize = 10f }
+        scenes.forEachIndexed { i, (name, scenario, now) ->
+            val x = gap + (i % columns) * (w + gap)
+            val y = gap + (i / columns) * (h + gap + 14f)
+            val forecast = SampleForecast.create(scenario, nowEpochSeconds = now)
+            val content = WidgetContent("Москва", true, forecast, now, Units())
+            canvas.save()
+            canvas.translate(x, y)
+            renderer.draw(canvas, WidgetRenderRequest(w, h, WidgetConfig(style = WidgetStyle.Glass, opacity = 0.72f), content, 22f, systemNight = false, seed = 3))
+            canvas.restore()
+            canvas.drawText(name, x, y + h + 12f, label)
+        }
+        File(out, "light.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        exportDocImage(bmp, "widgets-light", 1400)
+    }
+
     /** When it rains in the app it rains on the widget: every style, in rain, a storm, snow and fog. */
     @Test
     fun weather() {

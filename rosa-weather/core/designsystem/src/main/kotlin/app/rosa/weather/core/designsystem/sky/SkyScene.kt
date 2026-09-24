@@ -300,12 +300,15 @@ fun SkyScene(
         sky.setFloatUniform("boltX", bolt.x)
         sky.setFloatUniform("tilt", tiltValue.x, tiltValue.y)
         light?.let { env ->
-            // The sun lights the glass by its colour, dimmed by cloud; the moon softly, by its phase.
+            // The sun lights the glass by its colour, the moon softly, by its phase. Scattered cloud
+            // lets their light through; an overcast sky leaves only its own soft light.
             val moonlight = (1f - kotlin.math.cos(2f * kotlin.math.PI.toFloat() * p.moonPhase)) / 2f
+            val overcast = ((p.cloudCover - 0.3f) / 0.65f).coerceIn(0f, 1f)
+            val clear = 1f - overcast * overcast * (3f - 2f * overcast)
             val power = if (p.isSun) {
-                p.bodyVisible * (1f - 0.72f * p.cloudCover)
+                p.bodyVisible * clear
             } else {
-                p.bodyVisible * (0.55f - 0.4f * p.cloudCover) * (0.35f + 0.65f * moonlight)
+                p.bodyVisible * 0.55f * clear * (0.35f + 0.65f * moonlight)
             }
             env.publishScene(
                 position = origin.value + Offset(body.x * size.width, body.y * size.height),
