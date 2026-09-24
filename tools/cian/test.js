@@ -9,7 +9,8 @@ const { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessR
         renoFate, entryPrice, suspectTwins, RENO_FATES,
         humanCheck, humanText, humanTwins, textSimilarity, listLike, SPACES, AUTHORS, TASTES,
         distToPathM, distToRingM, skylineAround, nearestOpen, nearestStreet, viewProfile, streetPremium,
-        fillBuildYears, houseEra } = require('./cian.js');
+        fillBuildYears, houseEra,
+        looksLikeCaptcha, parseApiBody, isCaptchaError } = require('./cian.js');
 
 let passed = 0;
 const pending = [];
@@ -831,9 +832,13 @@ process.stdout.write('запрос по номерам\n');
 
 /* offersByIds ходит в сеть, поэтому проверяем его разбор входа и учёт
    потерь на поддельном контексте — без сети, но на настоящей функции. */
+/* Заглушка отдаёт text(), как настоящий ответ Playwright: тело читается
+   текстом, потому что у капчи код 200 и HTML внутри, и отличить её можно
+   только по телу. Шаг с body подставляет это самое тело. */
 const fakeCtx = (plan) => ({ request: { post: async () => {
   const step = plan.shift();
-  return { status: () => step.status, json: async () => ({ offersSerialized: step.offers || [] }) };
+  const body = step.body != null ? step.body : JSON.stringify({ offersSerialized: step.offers || [] });
+  return { status: () => step.status, text: async () => body, json: async () => JSON.parse(body) };
 } } });
 
 test('мусор во входе не выдаётся за снятые объявления', async () => {
@@ -865,7 +870,8 @@ process.stdout.write('раскрытие схлопнутых групп\n');
    контексте. Страницы поиска раздаются по кругу из плана. */
 const fakeSearch = (pages) => ({ request: { post: async (url, opt) => {
   const p = opt.data.jsonQuery.page.value;
-  return { status: () => 200, json: async () => ({ data: { offersSerialized: pages[p - 1] || [] } }) };
+  const body = JSON.stringify({ data: { offersSerialized: pages[p - 1] || [] } });
+  return { status: () => 200, text: async () => body, json: async () => JSON.parse(body) };
 } } });
 
 const groupOffer = (id) => ({ cianId: id, roomsCount: 2, totalArea: 60, bargainTerms: { priceRur: 10e6 },
@@ -1906,4 +1912,46 @@ test('печать осмотра: порядок обхода, без ключ�
   assert.match(humanText({ human: goodHuman(), verdict: goodVerdict }, { frames: true }), /Санузел \(кадры 11\)/);
   // печать сама ничего не добавляет из словаря движка
   assert.deepStrictEqual(humanCheck(goodHuman(), { proof: 'фото', verdict: t }).errors.filter((e) => /язык движка|так пишет таблица|имя поля|внутренняя кухня/.test(e)), []);
+});
+
+/* Антибот отвечает страницей с кодом 200, а не ошибкой. Пока это не
+   распознавалось, сбор падал разбором JSON — «Unexpected token '<'» — и
+   причина выглядела как поломка клиента. Отличать капчу от поломки важнее,
+   чем кажется: сеть повторяют, капчу — нет. */
+test('капча: страница с кодом 200 опознаётся, а нормальный ответ не задевается', () => {
+  assert.ok(looksLikeCaptcha('<!doctype html><html lang="ru"><head><title>Captcha'));
+  assert.ok(looksLikeCaptcha('\n  <html><body>Подтвердите, что вы не робот</body></html>'));
+  assert.ok(!looksLikeCaptcha('{"data":{"offerCount":722}}'), 'обычный ответ принят за капчу');
+  assert.ok(!looksLikeCaptcha('  [1,2,3]'), 'массив принят за капчу');
+  assert.ok(!looksLikeCaptcha(''), 'пустое тело — это не капча, а пустое тело');
+  assert.ok(!looksLikeCaptcha(null));
+});
+
+test('капча: разбор тела говорит, что случилось, а не падает синтаксисом', () => {
+  assert.deepStrictEqual(parseApiBody('{"data":{"offerCount":722}}', 'страница 1').data.offerCount, 722);
+  assert.throws(() => parseApiBody('<!doctype html><html>', 'страница 1'), /капча Циан/);
+  // мусор — это не капча: его нельзя молча свести к ней, причина разная
+  assert.throws(() => parseApiBody('не json и не html', 'страница 1'), /не разбирается как JSON/);
+  assert.ok(!isCaptchaError(new Error('не разбирается как JSON (страница 1)')));
+  assert.ok(isCaptchaError(new Error('капча Циан вместо выдачи (страница 1)')));
+});
+
+test('капча в пачке по номерам: номера не проверены, а не сняты с продажи', async () => {
+  const ctx = fakeCtx([{ status: 200, body: '<!doctype html><html><head><title>Captcha' }]);
+  const r = await offersByIds(ctx, [111, 222]);
+  assert.deepStrictEqual(r.failed, [111, 222], 'капча — это «не знаем», а не «их нет»');
+  assert.deepStrictEqual(r.missing, [], 'под капчей пропавших не бывает');
+  assert.strictEqual(r.offers.length, 0);
+});
+
+test('капча в поиске: сбор останавливается, а не выдаёт пустую выдачу за ответ', async () => {
+  const ctx = { request: { post: async () => {
+    const body = '<!doctype html><html lang="ru"><head><title>Captcha';
+    return { status: () => 200, text: async () => body, json: async () => JSON.parse(body) };
+  } } };
+  const lots = [{ id: 7, similarCount: 2, rooms: 2, totalArea: 60, priceRub: 10e6 }];
+  const r = await expandSimilar(ctx, { _type: 'flatsale' }, lots, 1);
+  assert.strictEqual(r.added.length, 0);
+  assert.strictEqual(r.failed.length, 1, 'группа под капчей обязана попасть в отчёт');
+  assert.match(r.failed[0].why, /капча/, 'причина названа капчей, а не синтаксисом JSON');
 });

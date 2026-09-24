@@ -40,9 +40,36 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 
 const log = (...a) => process.stdout.write(a.join(' ') + '\n');
 
+/* Антибот отвечает не ошибкой, а страницей: HTTP 200 и HTML капчи вместо
+   JSON. Пока это не распознавалось, разбор падал с «Unexpected token '<'»
+   в самом неожиданном месте, и причина выглядела как поломка клиента.
+   Разница важна: сеть можно перепробовать, капчу — нет. */
+const CAPTCHA_URL_RE = /cian-captcha|showcaptcha|captcha/i;
+
+function looksLikeCaptcha(text) {
+  if (typeof text !== 'string') return false;
+  const t = text.trimStart();
+  if (t.startsWith('{') || t.startsWith('[')) return false;   // нормальный ответ
+  return /<!doctype|<html/i.test(t.slice(0, 200));
+}
+
+/* Единственное место, где решается «это капча». Возвращает разобранный JSON
+   или бросает ошибку, по которой сразу видно, что произошло. */
+function parseApiBody(text, where) {
+  if (looksLikeCaptcha(text)) throw new Error(`капча Циан вместо выдачи (${where})`);
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    throw new Error(`ответ не разбирается как JSON (${where}): ${String(text).trim().slice(0, 60)}`);
+  }
+}
+
+const isCaptchaError = (e) => /капча/.test((e && e.message) || '');
+
 /* Через MITM-прокси Chromium с TLS 1.3 получает ERR_CONNECTION_RESET,
    поэтому потолок протокола опускаем до 1.2. */
-async function open() {
+async function open(opts = {}) {
+  const { warmTries = 3 } = opts;
   const browser = await chromium.launch({
     executablePath: CHROME,
     headless: true,
@@ -56,9 +83,26 @@ async function open() {
     userAgent: UA, ignoreHTTPSErrors: true,
   });
   const page = await ctx.newPage();
-  // Прогрев: без куки cian.ru отдаёт капчу.
-  await page.goto('https://www.cian.ru/', { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await page.waitForTimeout(2500);
+  /* Прогрев: без куки cian.ru отдаёт капчу. Но и сам прогрев может на неё
+     сесть — и тогда бессмысленна вся дальнейшая работа: сессии нет, API
+     отвечает 403, а команда падает где-то в середине сбора. Проверяем
+     прогрев сразу и пару раз перезагружаем страницу, как это сделал бы
+     человек. Не пробилось — говорим прямо, а не уходим в сбор вслепую. */
+  let warm = false;
+  for (let t = 1; t <= warmTries && !warm; t++) {
+    await page.goto('https://www.cian.ru/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.waitForTimeout(2500);
+    warm = !CAPTCHA_URL_RE.test(page.url());
+    if (!warm && t < warmTries) {
+      log(`прогрев сел на капчу (попытка ${t} из ${warmTries}) — перезагружаю страницу`);
+      await page.waitForTimeout(4000);
+    }
+  }
+  if (!warm) {
+    await browser.close();
+    throw new Error('капча Циан на входе: главная страница не открывается без разгадывания. '
+      + 'Это ограничение на стороне Циан, обойти его нельзя — остаётся подождать, пока метка спадёт.');
+  }
   return { browser, ctx, page };
 }
 
@@ -90,7 +134,11 @@ async function searchPage(ctx, jsonQuery, pageNumber, attempt = 1) {
     return retry(e.message.split('\n')[0]);
   }
   if (res.status() !== 200) return retry(`http ${res.status()}`);
-  const j = await res.json();
+  /* Тело читаем текстом и разбираем сами: у капчи код 200, и res.json()
+     падал бы на ней разбором, а не говорил, что случилось. Повторять её
+     нет смысла — метка живёт минутами, а не миллисекундами, и серия
+     повторов её только продлевает. */
+  const j = parseApiBody(await res.text(), `страница ${pageNumber}`);
   const d = j.data || {};
   return {
     count: d.offerCount ?? null,
@@ -155,7 +203,14 @@ async function offersByIds(ctx, ids, dealType = 'flatsale') {
           data: { cianOfferIds: chunk, jsonQuery: { _type: dealType } },
           timeout: 60000,
         });
-        if (r.status() === 200) { res = r; break; }
+        if (r.status() === 200) {
+          const text = await r.text();
+          /* Та же подмена, что и в поиске: код 200, тело — страница капчи.
+             Без этой проверки пачка «приходила», а разбор падал позже и в
+             другом месте. */
+          if (looksLikeCaptcha(text)) { why = 'капча Циан вместо выдачи'; break; }
+          res = { text }; break;
+        }
         why = `http ${r.status()}`;
         /* 400 «Too many cianOfferIds» и прочие клиентские отказы повторять
            бессмысленно — сдаёмся сразу. */
@@ -171,7 +226,7 @@ async function offersByIds(ctx, ids, dealType = 'flatsale') {
       log(`  ! пачка из ${chunk.length} не ответила (${why}) — эти номера не проверены`);
       continue;
     }
-    offers.push(...((await res.json()).offersSerialized || []));
+    offers.push(...(parseApiBody(res.text, `пачка из ${chunk.length} номеров`).offersSerialized || []));
     if (i + BY_IDS_LIMIT < asked.length) await sleep(1100);
   }
   /* Сопоставлять только по cianId: длина ответа не равна длине запроса —
@@ -4614,7 +4669,17 @@ if (require.main === module) (async () => {
   } finally {
     await browser.close();
   }
-})();
+})().catch((e) => {
+  /* Капча — не поломка клиента, и показывать её стектрейсом значит посылать
+     читателя чинить то, что не сломано. Остальные ошибки остаются со
+     стектрейсом: там он и нужен. */
+  if (isCaptchaError(e)) {
+    log(`\n${e.message}`);
+    log('Сбор остановлен: собранного нет, выдуманного тоже. Повторять сериями бессмысленно — метка от этого живёт дольше.');
+    process.exit(2);
+  }
+  throw e;
+});
 
 /* Чистые функции наружу — чтобы их можно было проверить без сети. */
 module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, median, assessRepair, mergeArchive, archiveStat, completeness, comparabilityGaps, features, readiness, finishEvidence, buildingYear, insideGardenRing, ringMargin, ringVerdict, pointInPolygon,
@@ -4628,4 +4693,5 @@ module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, medi
   photoIdent, galleryKey, galleryDiff, sweepCost, SWEEP,
   distToPathM, distToRingM, skylineAround, nearestOpen, nearestStreet, viewProfile,
   streetPremium, loadGeo, GEO_FILE, OPEN_M, GREEN_MIN_HA, MIN_STREET_N, VIEWS, mergeView,
-  fillBuildYears, houseEra };
+  fillBuildYears, houseEra,
+  looksLikeCaptcha, parseApiBody, isCaptchaError };
