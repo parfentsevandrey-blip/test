@@ -170,6 +170,7 @@ fun SkyScene(
     val skyBrush = remember { ShaderBrush(sky) }
     val precipBrush = remember { ShaderBrush(precip) }
     val layer = rememberGraphicsLayer()
+    val baked = rememberGraphicsLayer()
     // Ambient motion runs on the shared, unhurried clock; only a tap ripple, a lightning flash and
     // weather transitions animate at the display's full rate, and only while they last.
     val clock = LocalAmbientClock.current
@@ -315,7 +316,17 @@ fun SkyScene(
             drawRect(skyBrush)
             if (precipitating) drawRect(precipBrush)
         }
-        scale(1f / s, 1f / s, pivot = Offset.Zero) { drawLayer(layer) }
+        // The pane effect is baked once per sky frame into a layer of its own. Left on the sky's
+        // node it would be re-applied wherever that node is drawn: under every glass element,
+        // for its own region, on every frame of a scroll.
+        val picture = if (windowOn) {
+            baked.compositingStrategy = CompositingStrategy.Offscreen
+            baked.record(IntSize(w, h)) { drawLayer(layer) }
+            baked
+        } else {
+            layer
+        }
+        scale(1f / s, 1f / s, pivot = Offset.Zero) { drawLayer(picture) }
     }
 }
 

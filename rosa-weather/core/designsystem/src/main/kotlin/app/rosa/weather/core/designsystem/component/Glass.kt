@@ -32,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -89,12 +90,16 @@ fun GlassSurface(
     val environment = LocalGlassEnvironment.current
     val motion = LocalMotionEnabled.current
     val scope = rememberCoroutineScope()
+    // Materialise once. Lists dispose cards that scroll away and recreate them on the way back;
+    // saveable state survives that, so scrolling never replays the appearance.
+    var appeared by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(state) {
-        if (motion && state.materialize == 1f) {
+        if (motion && !appeared && state.materialize == 1f) {
             val a = Animatable(0f)
             a.animateTo(1f, RosaMotion.gel()) { state.materialize = value.coerceIn(0f, 1.2f) }
             state.materialize = 1f
         }
+        appeared = true
     }
     val shape = RoundedCornerShape(cornerRadius)
     val base = if (shadow) {

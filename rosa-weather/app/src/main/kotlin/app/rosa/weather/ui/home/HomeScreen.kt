@@ -8,6 +8,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -43,12 +44,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -58,6 +60,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -69,11 +72,11 @@ import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
@@ -91,9 +94,9 @@ import app.rosa.weather.core.designsystem.component.GlassSurface
 import app.rosa.weather.core.designsystem.component.LiquidPageIndicator
 import app.rosa.weather.core.designsystem.component.RosaIcon
 import app.rosa.weather.core.designsystem.component.RosaIconView
+import app.rosa.weather.core.designsystem.component.WeatherGlyph
 import app.rosa.weather.core.designsystem.component.hop
 import app.rosa.weather.core.designsystem.component.rememberHop
-import app.rosa.weather.core.designsystem.component.WeatherGlyph
 import app.rosa.weather.core.designsystem.format.WeatherFormat
 import app.rosa.weather.core.designsystem.glass.GlassStyle
 import app.rosa.weather.core.designsystem.glass.GlassText
@@ -117,6 +120,7 @@ import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -291,6 +295,13 @@ private fun PlaceContent(
     val refresh = rememberLiquidRefresh(onRefresh) { isRefreshing }
     val density = LocalDensity.current
     val seen = remember { mutableSetOf<String>() }
+    // Cards rise in only while the page first appears; whatever scrolls in later is simply there.
+    var settled by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(ENTRANCE_WINDOW_MS)
+        settled = true
+    }
+    val fresh = { !settled }
     val stageSink by rememberUpdatedState(onBodyStage)
     val probe = remember(density, listState) {
         HeroProbe(
@@ -324,24 +335,27 @@ private fun PlaceContent(
             }
             val moment = forecast.momentAt(now + (scrubHours * 3600).toLong())
             item(key = "hero") {
-                Entrance("hero", 0, seen) {
+                Entrance("hero", 0, seen, fresh) {
                     Hero(forecast, moment, zoneFormat, scrubHours, probe, realSky, Modifier.graphicsLayer {
                         // Gentle parallax: the numerals drift up slower than the cards and fade out.
                         val offset = if (listState.firstVisibleItemIndex == 0) listState.firstVisibleItemScrollOffset.toFloat() else 1000f
                         translationY = offset * 0.35f
                         alpha = (1f - offset / 700f).coerceIn(0f, 1f)
+                        // Fade each element as it draws: no offscreen copy of the whole hero on
+                        // every frame of the scroll.
+                        compositingStrategy = CompositingStrategy.ModulateAlpha
                     })
                 }
             }
             item(key = "timeline") {
-                Entrance("timeline", 1, seen) { HourlyTimeline(forecast, now, forecast.momentAt(now).temperature, zoneFormat, onScrub) }
+                Entrance("timeline", 1, seen, fresh) { HourlyTimeline(forecast, now, forecast.momentAt(now).temperature, zoneFormat, onScrub) }
             }
             if (forecast.nowcast.any { it.time > now && it.precipitation > 0.02 }) {
-                item(key = "nowcast") { Entrance("nowcast", 2, seen) { NowcastCard(forecast, now, zoneFormat) } }
+                item(key = "nowcast") { Entrance("nowcast", 2, seen, fresh) { NowcastCard(forecast, now, zoneFormat) } }
             }
-            item(key = "daily") { Entrance("daily", 3, seen) { DailyForecast(forecast, now, forecast.momentAt(now).temperature, zoneFormat) } }
+            item(key = "daily") { Entrance("daily", 3, seen, fresh) { DailyForecast(forecast, now, forecast.momentAt(now).temperature, zoneFormat) } }
             item(key = "details-title") {
-                Entrance("details-title", 4, seen) {
+                Entrance("details-title", 4, seen, fresh) {
                     Text(
                         stringResource(R.string.details_title),
                         style = Rosa.type.label,
@@ -350,8 +364,11 @@ private fun PlaceContent(
                     )
                 }
             }
-            item(key = "details") { Entrance("details", 5, seen) { DetailsGrid(forecast, forecast.momentAt(now), zoneFormat) } }
-            item(key = "footer") { Entrance("footer", 6, seen) { Footer(forecast, now, zoneFormat, onRefresh) } }
+            // One row per item: rows compose as they come into view, not all ten tiles at once.
+            detailRows(forecast, forecast.momentAt(now), zoneFormat).forEachIndexed { i, row ->
+                item(key = "details-$i") { Entrance("details-$i", 5 + i, seen, fresh) { DetailRow(row) } }
+            }
+            item(key = "footer") { Entrance("footer", 9, seen, fresh) { Footer(forecast, now, zoneFormat, onRefresh) } }
         }
         RefreshDrop(refresh, Modifier.align(Alignment.TopCenter).padding(top = top + 68.dp))
     }
@@ -551,13 +568,13 @@ private fun BarIcon(icon: RosaIcon, description: String, onClick: () -> Unit) {
 }
 
 /**
- * Cards rise into place one after another the first time a city is shown — once per visit, not
- * on every scroll back.
+ * Cards rise into place one after another when a city is first shown — once per visit, never on
+ * a scroll back, and never for cards that only arrive by scrolling (they'd appear late).
  */
 @Composable
-private fun Entrance(key: String, order: Int, seen: MutableSet<String>, content: @Composable () -> Unit) {
+private fun Entrance(key: String, order: Int, seen: MutableSet<String>, fresh: () -> Boolean, content: @Composable () -> Unit) {
     val motion = LocalMotionEnabled.current
-    val animate = remember { motion && seen.add(key) }
+    val animate = remember { seen.add(key) && motion && fresh() }
     if (!animate) {
         content()
         return
@@ -639,6 +656,9 @@ private fun Footer(forecast: Forecast, now: Long, format: WeatherFormat, onRefre
 
 private val HERO_GLYPH = 92.dp
 
+/** How long after a page first appears its cards still rise in. */
+private const val ENTRANCE_WINDOW_MS = 900L
+
 /**
  * Finds the free sky beside the big numerals — the slot the weather glyph uses — so the real sun
  * and moon travel there instead of behind the temperature. Measured only at rest (list at the
@@ -687,37 +707,54 @@ internal fun heroBodyStage(row: Rect, numeral: Rect, page: Size, density: Densit
 
 // region Liquid pull-to-refresh
 
-private class LiquidRefresh(
+internal class LiquidRefresh(
     private val onRefresh: () -> Unit,
     private val thresholdPx: Float,
     private val haptics: app.rosa.weather.core.designsystem.haptics.RosaHaptics?,
     private val isRefreshing: () -> Boolean,
 ) {
-    val pull = Animatable(0f)
-    var armed = false
+    /**
+     * How far the drop is pulled, in px. Plain state, written synchronously as the finger moves:
+     * every scroll event must see the value the previous one left, or the drop would keep eating
+     * deltas (and whole flings) that belong to the list.
+     */
+    var pull by mutableFloatStateOf(0f)
+        private set
+    private var armed = false
     var active by mutableStateOf(false)
+    private var settling: Job? = null
     lateinit var scope: kotlinx.coroutines.CoroutineScope
 
-    val progress: Float get() = (pull.value / thresholdPx).coerceIn(0f, 1.6f)
+    val progress: Float get() = (pull / thresholdPx).coerceIn(0f, 1.6f)
+
+    private fun settleTo(target: Float) {
+        settling?.cancel()
+        settling = scope.launch {
+            animate(pull, target, animationSpec = RosaMotion.gel()) { value, _ -> pull = value }
+        }
+    }
 
     val connection = object : NestedScrollConnection {
         override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-            if (available.y < 0 && pull.value > 0f) {
-                val consumed = maxOf(available.y, -pull.value)
-                scope.launch { pull.snapTo(pull.value + consumed) }
+            // Pushing back up first shrinks the drop, then scrolls the list. While refreshing,
+            // the list is free: the drop just waits at the top.
+            if (available.y < 0f && pull > 0f && !active) {
+                settling?.cancel()
+                val consumed = maxOf(available.y, -pull)
+                pull += consumed
                 return Offset(0f, consumed)
             }
             return Offset.Zero
         }
 
         override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-            if (source == NestedScrollSource.UserInput && available.y > 0f) {
-                val next = pull.value + available.y * 0.45f
-                scope.launch { pull.snapTo(next) }
-                if (!armed && next >= thresholdPx) {
+            if (source == NestedScrollSource.UserInput && available.y > 0f && !active) {
+                settling?.cancel()
+                pull += available.y * 0.45f
+                if (!armed && pull >= thresholdPx) {
                     armed = true
                     haptics?.thresholdReached()
-                } else if (armed && next < thresholdPx) {
+                } else if (armed && pull < thresholdPx) {
                     armed = false
                 }
                 return Offset(0f, available.y)
@@ -726,7 +763,11 @@ private class LiquidRefresh(
         }
 
         override suspend fun onPreFling(available: Velocity): Velocity {
-            if (pull.value <= 0f) return Velocity.Zero
+            // A drop that isn't really out never swallows a fling.
+            if (active || pull < 1f) {
+                if (!active && pull > 0f) pull = 0f
+                return Velocity.Zero
+            }
             if (armed) {
                 armed = false
                 active = true
@@ -738,18 +779,18 @@ private class LiquidRefresh(
                     withTimeoutOrNull(20_000) { snapshotFlow { isRefreshing() }.first { !it } }
                     finish()
                 }
-                pull.animateTo(thresholdPx * 0.7f, RosaMotion.gel())
+                settleTo(thresholdPx * 0.7f)
             } else {
-                pull.animateTo(0f, RosaMotion.gel())
+                settleTo(0f)
             }
             return available
         }
     }
 
-    suspend fun finish() {
+    fun finish() {
         if (active) {
             active = false
-            pull.animateTo(0f, RosaMotion.gel())
+            settleTo(0f)
         }
     }
 }
@@ -779,7 +820,7 @@ private fun RefreshDrop(refresh: LiquidRefresh, modifier: Modifier) {
                 val s = if (refresh.active) 1f + 0.08f * sin(clock.seconds * PI.toFloat() / 0.7f) else 1f
                 scaleX = s / stretch
                 scaleY = s * stretch
-                translationY = refresh.pull.value * 0.35f
+                translationY = refresh.pull * 0.35f
             },
         style = GlassStyle.Lens,
         cornerRadius = size / 2,

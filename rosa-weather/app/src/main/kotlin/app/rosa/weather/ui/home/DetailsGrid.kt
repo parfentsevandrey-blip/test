@@ -57,10 +57,10 @@ import kotlin.math.sin
 /**
  * "Right now, in detail": a grid of frosted tiles, each with its own small living instrument —
  * a compass whose needle swings into the wind, humidity as liquid that sloshes, a UV arc, a
- * barometer, the sun's path with today's position and the moon in its real phase.
+ * barometer, the sun's path with today's position and the moon in its real phase. Returned as
+ * rows of two, so a list can compose them one row at a time as they scroll into view.
  */
-@Composable
-fun DetailsGrid(forecast: Forecast, moment: ForecastMoment, format: WeatherFormat, modifier: Modifier = Modifier) {
+fun detailRows(forecast: Forecast, moment: ForecastMoment, format: WeatherFormat): List<List<@Composable (Modifier) -> Unit>> {
     val today = forecast.dayAt(moment.epochSeconds)
     val tiles = buildList<@Composable (Modifier) -> Unit> {
         add { m -> FeelsLikeTile(moment, format, m) }
@@ -74,13 +74,14 @@ fun DetailsGrid(forecast: Forecast, moment: ForecastMoment, format: WeatherForma
         if (moment.visibility != null) add { m -> VisibilityTile(moment, format, m) }
         if (today != null) add { m -> PrecipitationTile(today.precipitationSum, today.precipitationProbabilityMax, format, m) }
     }
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        tiles.chunked(2).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                row.forEach { tile -> tile(Modifier.weight(1f).aspectRatio(1f)) }
-                if (row.size == 1) Spacer(Modifier.weight(1f))
-            }
-        }
+    return tiles.chunked(2)
+}
+
+@Composable
+fun DetailRow(tiles: List<@Composable (Modifier) -> Unit>, modifier: Modifier = Modifier) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        tiles.forEach { tile -> tile(Modifier.weight(1f).aspectRatio(1f)) }
+        if (tiles.size == 1) Spacer(Modifier.weight(1f))
     }
 }
 

@@ -19,7 +19,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
@@ -34,19 +36,27 @@ import androidx.compose.ui.node.requireGraphicsContext
 import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.toIntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toIntSize
 import kotlin.math.ceil
 
 /**
  * What the glass sees. [Modifier.backdropSource] records the living sky (or any content) into
  * [layer] every frame; every glass element then draws that same RenderNode through its own lens.
  * Because RenderNodes are shared by reference, the sky is rendered once no matter how many glass
- * surfaces refract it. [frosted] is the same backdrop blurred once, shared by every frosted card:
- * the blur costs one pass per sky frame instead of one per card per frame (per scroll frame, too).
+ * surfaces refract it.
+ *
+ * [frosted] is the same backdrop blurred once per sky frame and shared by every frosted card. The
+ * blur runs at [FROST_SCALE] of the resolution ([frostBlur]) and is baked into [frosted], a layer
+ * of its own: a render effect is otherwise re-applied every time and everywhere its node is drawn,
+ * i.e. once per card per frame, and on every frame of a scroll.
  */
 @Stable
-class Backdrop internal constructor(internal val layer: GraphicsLayer, internal val frosted: GraphicsLayer) {
+class Backdrop internal constructor(
+    internal val layer: GraphicsLayer,
+    internal val frostBlur: GraphicsLayer,
+    internal val frosted: GraphicsLayer,
+) {
     internal var positionInRoot by mutableStateOf(Offset.Zero)
     internal var frostRadiusPx = -1f
 }
@@ -54,13 +64,17 @@ class Backdrop internal constructor(internal val layer: GraphicsLayer, internal 
 @Composable
 fun rememberBackdrop(): Backdrop {
     val layer = rememberGraphicsLayer()
+    val frostBlur = rememberGraphicsLayer()
     val frosted = rememberGraphicsLayer()
-    return remember(layer, frosted) { Backdrop(layer, frosted) }
+    return remember(layer, frostBlur, frosted) { Backdrop(layer, frostBlur, frosted) }
 }
 
 /** Blur of the shared frosted backdrop; materials at least [SHARED_FROST_MIN] frosty use it. */
 private val SHARED_FROST = 18.dp
 private val SHARED_FROST_MIN = 12.dp
+
+/** The frost is blurred this much smaller: at 18 dp of blur, a quarter resolution looks the same. */
+internal const val FROST_SCALE = 0.25f
 
 /** Records this element's drawing into [backdrop] (and still draws it normally). */
 fun Modifier.backdropSource(backdrop: Backdrop): Modifier = this.then(BackdropSourceElement(backdrop))
@@ -185,6 +199,10 @@ private class LiquidGlassNode(
     private var position = Offset.Zero
     private val shader = RuntimeShader(LIQUID_GLASS_SHADER)
 
+    /** The lens effect is rebuilt only when it would look different, not for every scroll frame. */
+    private var effect: androidx.compose.ui.graphics.RenderEffect? = null
+    private var effectKey: LensKey? = null
+
     override fun onAttach() {
         layer = requireGraphicsContext().createGraphicsLayer()
     }
@@ -192,6 +210,8 @@ private class LiquidGlassNode(
     override fun onDetach() {
         layer?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
         layer = null
+        effect = null
+        effectKey = null
     }
 
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
@@ -211,63 +231,102 @@ private class LiquidGlassNode(
         val s = state
         val materialize = s?.materialize ?: 1f
         val refraction = style.refraction.toPx()
-        // Frosted materials refract the shared, pre-blurred backdrop once fully materialised;
-        // while appearing, the frost grows with their own blur.
-        val shared = style.blur >= SHARED_FROST_MIN && materialize >= 0.999f
+        // Frosted materials always refract the shared, pre-blurred backdrop; while they
+        // materialise their lensing grows, the frost is simply there. (A blur of their own, even
+        // for a moment, costs a full blur per card per frame — as cards scroll in, all at once.)
+        val shared = style.blur >= SHARED_FROST_MIN
         val blur = if (shared) 0f else style.blur.toPx()
         // Sample a larger area than the glass itself (outward lensing + blur spill).
         val margin = ceil(refraction + blur * 2f + 2f)
         val radius = cornerRadius.toPx().coerceAtMost(size.minDimension / 2f)
         val tint = environment?.tint ?: Color.White
-
-        shader.setFloatUniform("size", size.width, size.height)
-        shader.setFloatUniform("origin", margin, margin)
-        shader.setFloatUniform("radius", radius)
-        shader.setFloatUniform("bezel", style.bezel.toPx().coerceAtMost(size.minDimension / 2f))
-        shader.setFloatUniform("amount", refraction)
-        shader.setFloatUniform("dispersion", style.dispersion)
-        shader.setFloatUniform("depth", style.depth)
-        shader.setFloatUniform("lightAngle", environment?.lightAngle ?: -2.35f)
-        shader.setFloatUniform("highlight", style.highlight)
-        shader.setFloatUniform("saturation", style.saturation)
-        shader.setFloatUniform("brightness", style.brightness)
         val boost = 1f + 2.4f * (environment?.tintBoost ?: 0f)
-        shader.setColorUniform("tint", tint.copy(alpha = (tint.alpha * style.tintAlpha * boost).coerceAtMost(0.62f)).toArgb())
-        shader.setFloatUniform("materialize", materialize)
         val touch = s?.touch ?: Offset.Unspecified
-        if (touch.isSpecified && (s?.touchStrength ?: 0f) > 0f) {
-            shader.setFloatUniform("touch", touch.x, touch.y, s!!.touchStrength)
-        } else {
-            shader.setFloatUniform("touch", 0f, 0f, 0f)
-        }
+        val touchOn = touch.isSpecified && (s?.touchStrength ?: 0f) > 0f
         val wave = s?.waveProgress ?: 0f
-        if (wave > 0f && wave < 1f) {
-            val origin = s!!.waveOrigin
-            val reach = maxOf(size.width, size.height) * 1.3f
-            val fade = 1f - wave
-            shader.setFloatUniform("wave", origin.x, origin.y, reach * wave, fade * fade)
-        } else {
-            shader.setFloatUniform("wave", 0f, 0f, 0f, 0f)
+        val waveOn = wave > 0f && wave < 1f
+        val key = LensKey(
+            width = size.width,
+            height = size.height,
+            margin = margin,
+            radius = radius,
+            style = style,
+            density = density,
+            lightAngle = environment?.lightAngle ?: -2.35f,
+            tint = tint.copy(alpha = (tint.alpha * style.tintAlpha * boost).coerceAtMost(0.62f)).toArgb(),
+            materialize = materialize,
+            touch = if (touchOn) touch else Offset.Zero,
+            touchStrength = if (touchOn) s!!.touchStrength else 0f,
+            waveOrigin = if (waveOn) s!!.waveOrigin else Offset.Zero,
+            wave = if (waveOn) wave else 0f,
+            blur = blur * materialize,
+        )
+        if (key != effectKey) {
+            shader.setFloatUniform("size", size.width, size.height)
+            shader.setFloatUniform("origin", margin, margin)
+            shader.setFloatUniform("radius", radius)
+            shader.setFloatUniform("bezel", style.bezel.toPx().coerceAtMost(size.minDimension / 2f))
+            shader.setFloatUniform("amount", refraction)
+            shader.setFloatUniform("dispersion", style.dispersion)
+            shader.setFloatUniform("depth", style.depth)
+            shader.setFloatUniform("lightAngle", key.lightAngle)
+            shader.setFloatUniform("highlight", style.highlight)
+            shader.setFloatUniform("saturation", style.saturation)
+            shader.setFloatUniform("brightness", style.brightness)
+            shader.setColorUniform("tint", key.tint)
+            shader.setFloatUniform("materialize", materialize)
+            shader.setFloatUniform("touch", key.touch.x, key.touch.y, key.touchStrength)
+            if (waveOn) {
+                val reach = maxOf(size.width, size.height) * 1.3f
+                val fade = 1f - wave
+                shader.setFloatUniform("wave", key.waveOrigin.x, key.waveOrigin.y, reach * wave, fade * fade)
+            } else {
+                shader.setFloatUniform("wave", 0f, 0f, 0f, 0f)
+            }
+            val lens = RenderEffect.createRuntimeShaderEffect(shader, "content")
+            effect = if (key.blur > 0.5f) {
+                RenderEffect.createChainEffect(lens, RenderEffect.createBlurEffect(key.blur, key.blur, Shader.TileMode.CLAMP))
+            } else {
+                lens
+            }.asComposeRenderEffect()
+            effectKey = key
         }
-
-        val lens = RenderEffect.createRuntimeShaderEffect(shader, "content")
-        val effectiveBlur = blur * materialize
-        glassLayer.renderEffect = if (effectiveBlur > 0.5f) {
-            RenderEffect.createChainEffect(lens, RenderEffect.createBlurEffect(effectiveBlur, effectiveBlur, Shader.TileMode.CLAMP))
-        } else {
-            lens
-        }.asComposeRenderEffect()
+        glassLayer.renderEffect = effect
 
         val layerSize = IntSize((size.width + margin * 2).toInt(), (size.height + margin * 2).toInt())
         val offset = backdrop.positionInRoot - position + Offset(margin, margin)
-        val source = if (shared) backdrop.frosted else backdrop.layer
+        val b = backdrop
         glassLayer.record(layerSize) {
-            translate(offset.x, offset.y) { drawLayer(source) }
+            translate(offset.x, offset.y) {
+                if (shared) {
+                    scale(1f / FROST_SCALE, 1f / FROST_SCALE, pivot = Offset.Zero) { drawLayer(b.frosted) }
+                } else {
+                    drawLayer(b.layer)
+                }
+            }
         }
         translate(-margin, -margin) { drawLayer(glassLayer) }
         drawContent()
     }
 }
+
+/** Everything the lens effect depends on; positions don't, so scrolling reuses the effect. */
+private data class LensKey(
+    val width: Float,
+    val height: Float,
+    val margin: Float,
+    val radius: Float,
+    val style: GlassStyle,
+    val density: Float,
+    val lightAngle: Float,
+    val tint: Int,
+    val materialize: Float,
+    val touch: Offset,
+    val touchStrength: Float,
+    val waveOrigin: Offset,
+    val wave: Float,
+    val blur: Float,
+)
 
 private data class BackdropSourceElement(val backdrop: Backdrop) : ModifierNodeElement<BackdropSourceNode>() {
     override fun create() = BackdropSourceNode(backdrop)
@@ -293,13 +352,17 @@ private class BackdropSourceNode(var backdrop: Backdrop) :
         val scope = this
         val b = backdrop
         b.layer.record(size.toIntSize()) { scope.drawContent() }
-        // Only rendered when some frosted glass actually draws it.
-        val radius = SHARED_FROST.toPx()
+        // Only rendered when some frosted glass actually draws it: blurred small, then baked into
+        // a layer of its own so the cards reuse the result (see Backdrop).
+        val radius = SHARED_FROST.toPx() * FROST_SCALE
         if (radius != b.frostRadiusPx) {
-            b.frosted.renderEffect = BlurEffect(radius, radius, TileMode.Clamp)
+            b.frostBlur.renderEffect = BlurEffect(radius, radius, TileMode.Clamp)
+            b.frosted.compositingStrategy = CompositingStrategy.Offscreen
             b.frostRadiusPx = radius
         }
-        b.frosted.record(size.toIntSize()) { drawLayer(b.layer) }
+        val small = IntSize(ceil(size.width * FROST_SCALE).toInt().coerceAtLeast(1), ceil(size.height * FROST_SCALE).toInt().coerceAtLeast(1))
+        b.frostBlur.record(small) { scale(FROST_SCALE, FROST_SCALE, pivot = Offset.Zero) { drawLayer(b.layer) } }
+        b.frosted.record(small) { drawLayer(b.frostBlur) }
         drawLayer(b.layer)
     }
 }
