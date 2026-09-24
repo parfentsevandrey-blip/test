@@ -6,28 +6,34 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import app.rosa.weather.core.designsystem.glyph.GlyphRaster
 import app.rosa.weather.core.designsystem.glyph.WeatherGlyphPainter
 import app.rosa.weather.core.designsystem.motion.LocalAmbientClock
 import app.rosa.weather.core.model.WeatherCondition
+import kotlin.math.roundToInt
 
 /**
  * The app's icon set, drawn as glass: closed shapes get a translucent body, every line a crisp
@@ -162,8 +168,12 @@ private class GlassIconScope(val scope: DrawScope, val u: Float, val tint: Color
 }
 
 /**
- * The shared weather glyph in Compose. When [animated], rays turn, drops fall and flakes drift on
- * the shared ambient clock (still when the system disables animations).
+ * The shared weather glyph in Compose. A still glyph is a cached bitmap ([GlyphRaster]), so lists
+ * of them scroll for free. When [animated], only what moves — the sun's rays, falling drops and
+ * flakes — is drawn live on the shared ambient clock (still when the system disables animations),
+ * under the cached clouds, inside the glyph's own layer so scrolling never redraws it.
+ *
+ * @param rasterScale renders the cached bitmap this much larger, for glyphs that get magnified.
  */
 @Composable
 fun WeatherGlyph(
@@ -176,26 +186,48 @@ fun WeatherGlyph(
     tint: Color = Color.White,
     contentDescription: String? = null,
     onLightBackground: Boolean = app.rosa.weather.core.designsystem.theme.Rosa.colors.isLightSky,
+    rasterScale: Float = 1f,
 ) {
+    val semantics = if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier
+    val argb = tint.toArgb()
+    if (!animated || !WeatherGlyphPainter.moves(condition, isDay)) {
+        Canvas(modifier.then(semantics)) {
+            drawRaster(condition, isDay, moonPhase, tone, argb, onLightBackground, WeatherGlyphPainter.Part.Whole, rasterScale)
+        }
+        return
+    }
     val painter = remember { WeatherGlyphPainter() }
     val clock = LocalAmbientClock.current
-    val semantics = if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier
-    Canvas(modifier.then(semantics)) {
-        drawGlyph(painter, condition, isDay, moonPhase, tone, tint, if (animated) clock.seconds + 0.001f else 0f, onLightBackground)
+    // Mono glyphs knock gaps out of what lies beneath their clouds, so they can't be split.
+    val split = tone == WeatherGlyphPainter.Tone.Color
+    Canvas(modifier.then(semantics).graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
+        val time = clock.seconds + 0.001f
+        drawIntoCanvas { canvas ->
+            painter.draw(
+                canvas.nativeCanvas, condition, isDay, RectF(0f, 0f, size.width, size.height), tone, argb, moonPhase, time,
+                onLightBackground, if (split) WeatherGlyphPainter.Part.Beneath else WeatherGlyphPainter.Part.Whole,
+            )
+        }
+        if (split) drawRaster(condition, isDay, moonPhase, tone, argb, onLightBackground, WeatherGlyphPainter.Part.Clouds, 1f)
     }
 }
 
-private fun DrawScope.drawGlyph(
-    painter: WeatherGlyphPainter,
+private fun DrawScope.drawRaster(
     condition: WeatherCondition,
     isDay: Boolean,
     moonPhase: Double,
     tone: WeatherGlyphPainter.Tone,
-    tint: Color,
-    time: Float,
+    tint: Int,
     onLight: Boolean,
+    part: WeatherGlyphPainter.Part,
+    scale: Float,
 ) {
-    drawIntoCanvas { canvas ->
-        painter.draw(canvas.nativeCanvas, condition, isDay, RectF(0f, 0f, size.width, size.height), tone, tint.toArgb(), moonPhase, time, onLight)
-    }
+    val width = size.width.roundToInt()
+    val height = size.height.roundToInt()
+    if (width <= 0 || height <= 0) return
+    val image = GlyphRaster.get(
+        condition, isDay, moonPhase, tone, tint, onLight, part,
+        (width * scale).roundToInt(), (height * scale).roundToInt(),
+    )
+    drawImage(image, dstSize = IntSize(width, height), filterQuality = FilterQuality.Low)
 }

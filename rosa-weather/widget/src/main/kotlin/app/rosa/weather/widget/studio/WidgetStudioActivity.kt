@@ -257,6 +257,7 @@ private fun ResizeStage(state: StudioState, initialDp: Pair<Float, Float>?) {
                     state.content,
                     Modifier.offset(gap / 2, gap / 2).size(w, h),
                     cornerRadiusDp = if (state.config.cornerRadiusDp >= 0) state.config.cornerRadiusDp else 24f,
+                    resizing = dragging || animW != snappedW || animH != snappedH,
                 )
                 // Resize handle: a small glass lens at the widget's corner.
                 GlassSurface(

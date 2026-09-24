@@ -39,6 +39,30 @@ import kotlin.math.sin
 class WeatherGlyphPainter {
     enum class Tone { Color, Mono }
 
+    /**
+     * Which part of a glyph to draw. Everything that moves — the sun and its rays, falling drops,
+     * flakes and hail — sits beneath the clouds, and the clouds never move. So an animated glyph
+     * can draw its [Beneath] part live and lay its [Clouds], rendered once, on top.
+     */
+    enum class Part {
+        Whole,
+
+        /** The sun or moon, precipitation and the bolt: everything under the clouds. */
+        Beneath,
+
+        /** The clouds and fog bars, always on top and never animated. */
+        Clouds,
+    }
+
+    companion object {
+        /** Whether anything in this glyph moves with time: sun rays, drops, flakes or hail. */
+        fun moves(condition: WeatherCondition, isDay: Boolean): Boolean = when (condition) {
+            WeatherCondition.Clear, WeatherCondition.MostlyClear, WeatherCondition.PartlyCloudy -> isDay
+            WeatherCondition.Overcast, WeatherCondition.Fog, WeatherCondition.RimeFog -> false
+            else -> true
+        }
+    }
+
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
     private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
@@ -51,6 +75,8 @@ class WeatherGlyphPainter {
     }
     private val path = Path()
     private val tmp = Path()
+    private var blurRadius = -1f
+    private var blur: BlurMaskFilter? = null
 
     private var left = 0f
     private var top = 0f
@@ -58,6 +84,8 @@ class WeatherGlyphPainter {
     private var tone = Tone.Color
     private var ink = Color.WHITE
     private var onLight = false
+    private var beneath = true
+    private var clouds = true
 
     /**
      * @param time seconds, animates rays, drops and flakes when > 0 (pass 0 for static renders).
@@ -73,6 +101,7 @@ class WeatherGlyphPainter {
         moonPhase: Double = 0.3,
         time: Float = 0f,
         onLightBackground: Boolean = false,
+        part: Part = Part.Whole,
     ) {
         s = min(bounds.width(), bounds.height())
         if (s <= 1f) return
@@ -82,15 +111,19 @@ class WeatherGlyphPainter {
         ink = monoColor
         onLight = onLightBackground
 
+        beneath = part != Part.Clouds
+        clouds = part != Part.Beneath
         val layer = if (tone == Tone.Mono) canvas.saveLayer(bounds, null) else canvas.save()
         when (condition) {
-            WeatherCondition.Clear -> if (isDay) sun(canvas, 0.5f, 0.5f, 0.2f, time) else moon(canvas, 0.5f, 0.5f, 0.25f, moonPhase, stars = true)
+            WeatherCondition.Clear -> if (beneath) {
+                if (isDay) sun(canvas, 0.5f, 0.5f, 0.2f, time) else moon(canvas, 0.5f, 0.5f, 0.25f, moonPhase, stars = true)
+            }
             WeatherCondition.MostlyClear -> {
-                celestial(canvas, isDay, 0.43f, 0.41f, 0.19f, moonPhase, time)
+                if (beneath) celestial(canvas, isDay, 0.43f, 0.41f, 0.19f, moonPhase, time)
                 cloud(canvas, 0.63f, 0.64f, 0.44f, CloudShade.Light)
             }
             WeatherCondition.PartlyCloudy -> {
-                celestial(canvas, isDay, 0.37f, 0.35f, 0.17f, moonPhase, time)
+                if (beneath) celestial(canvas, isDay, 0.37f, 0.35f, 0.17f, moonPhase, time)
                 cloud(canvas, 0.55f, 0.57f, 0.62f, CloudShade.Light)
             }
             WeatherCondition.Overcast -> {
@@ -99,7 +132,7 @@ class WeatherGlyphPainter {
             }
             WeatherCondition.Fog, WeatherCondition.RimeFog -> {
                 cloud(canvas, 0.5f, 0.34f, 0.58f, CloudShade.Back)
-                fog(canvas)
+                if (clouds) fog(canvas)
             }
             WeatherCondition.Drizzle -> precipitationCloud(canvas, CloudShade.Light) { drizzle(canvas, time) }
             WeatherCondition.FreezingDrizzle -> precipitationCloud(canvas, CloudShade.Light) {
@@ -117,13 +150,13 @@ class WeatherGlyphPainter {
             WeatherCondition.Snow -> precipitationCloud(canvas, CloudShade.Light) { flakes(canvas, 3, time) }
             WeatherCondition.HeavySnow -> precipitationCloud(canvas, CloudShade.Mid) { flakes(canvas, 4, time) }
             WeatherCondition.RainShowers, WeatherCondition.HeavyShowers -> {
-                celestial(canvas, isDay, 0.34f, 0.28f, 0.14f, moonPhase, time)
+                if (beneath) celestial(canvas, isDay, 0.34f, 0.28f, 0.14f, moonPhase, time)
                 precipitationCloud(canvas, if (condition == WeatherCondition.HeavyShowers) CloudShade.Mid else CloudShade.Light) {
                     drops(canvas, if (condition == WeatherCondition.HeavyShowers) 3 else 2, time)
                 }
             }
             WeatherCondition.SnowShowers -> {
-                celestial(canvas, isDay, 0.34f, 0.28f, 0.14f, moonPhase, time)
+                if (beneath) celestial(canvas, isDay, 0.34f, 0.28f, 0.14f, moonPhase, time)
                 precipitationCloud(canvas, CloudShade.Light) { flakes(canvas, 2, time) }
             }
             WeatherCondition.Thunderstorm -> precipitationCloud(canvas, CloudShade.Dark) {
@@ -147,7 +180,7 @@ class WeatherGlyphPainter {
     }
 
     private inline fun precipitationCloud(canvas: Canvas, shade: CloudShade, below: () -> Unit) {
-        below()
+        if (beneath) below()
         cloud(canvas, 0.5f, 0.40f, 0.68f, shade)
     }
 
@@ -180,16 +213,17 @@ class WeatherGlyphPainter {
         // Rays: glass shards, bright at the root and thinning into light at the tip.
         stroke.strokeWidth = pr * 0.21f
         stroke.alpha = 255
+        // One radial gradient lights all eight rays from the root out.
+        stroke.shader = RadialGradient(
+            px, py, pr * 1.84f,
+            intArrayOf(0xFFFFD66E.toInt(), 0xFFFFD66E.toInt(), 0x66FFB347),
+            floatArrayOf(0f, 1.4f / 1.84f, 1f), Shader.TileMode.CLAMP,
+        )
         for (i in 0 until 8) {
             val a = rotation + i * (PI / 4).toFloat()
             val inner = pr * 1.4f
             val outer = pr * (if (i % 2 == 0) 1.84f else 1.68f)
-            val x0 = px + cos(a) * inner
-            val y0 = py + sin(a) * inner
-            val x1 = px + cos(a) * outer
-            val y1 = py + sin(a) * outer
-            stroke.shader = LinearGradient(x0, y0, x1, y1, 0xFFFFD66E.toInt(), 0x66FFB347, Shader.TileMode.CLAMP)
-            canvas.drawLine(x0, y0, x1, y1, stroke)
+            canvas.drawLine(px + cos(a) * inner, py + sin(a) * inner, px + cos(a) * outer, py + sin(a) * outer, stroke)
         }
         stroke.shader = null
         // The orb: a glowing glass marble.
@@ -334,6 +368,7 @@ class WeatherGlyphPainter {
     }
 
     private fun cloud(canvas: Canvas, cx: Float, cy: Float, w: Float, shade: CloudShade) {
+        if (!clouds) return
         cloudPath(cx, cy, w)
         if (tone == Tone.Mono) {
             // Knock out a gap so the cloud reads cleanly over the sun / drops beneath it.
@@ -354,7 +389,7 @@ class WeatherGlyphPainter {
 
         // Cast shadow: soft and cool, so the glass floats.
         shadow.color = if (onLight) 0x42324060 else 0x36101830
-        shadow.maskFilter = BlurMaskFilter(d(0.05f), BlurMaskFilter.Blur.NORMAL)
+        shadow.maskFilter = blur(d(0.05f))
         canvas.withTranslation(0f, d(0.045f)) { drawPath(path, shadow) }
 
         // Frosted body; on pale skies the underside deepens so white glass doesn't vanish.
@@ -522,9 +557,12 @@ class WeatherGlyphPainter {
         val pr = d(r)
         stroke.strokeWidth = pr * 0.32f
         if (tone == Tone.Color) {
-            shadow.color = 0x5580B8FF
-            shadow.maskFilter = BlurMaskFilter(pr * 0.6f, BlurMaskFilter.Blur.NORMAL)
-            canvas.drawCircle(px, py, pr, shadow)
+            // A soft icy glow, as a gradient: flakes move every frame, a blurred mask would be
+            // re-rasterised each time.
+            fill.color = 0xFFFFFFFF.toInt()
+            fill.shader = RadialGradient(px, py, pr * 1.6f, intArrayOf(0x5580B8FF, 0x2B80B8FF, 0x0080B8FF), floatArrayOf(0f, 0.55f, 1f), Shader.TileMode.CLAMP)
+            canvas.drawCircle(px, py, pr * 1.6f, fill)
+            fill.shader = null
             // Crystal: white at the heart, icy at the tips.
             val tipColor = if (onLight) 0xFF5E8FD8.toInt() else 0xFFB7DBFF.toInt()
             stroke.shader = RadialGradient(px, py, pr * 1.05f, if (onLight) 0xFF8DB4EE.toInt() else 0xFFFFFFFF.toInt(), tipColor, Shader.TileMode.CLAMP)
@@ -583,7 +621,7 @@ class WeatherGlyphPainter {
         fill.pathEffect = CornerPathEffect(d(0.02f))
         if (tone == Tone.Color) {
             shadow.color = 0x88FFC43D.toInt()
-            shadow.maskFilter = BlurMaskFilter(d(0.05f), BlurMaskFilter.Blur.NORMAL)
+            shadow.maskFilter = blur(d(0.05f))
             canvas.drawPath(path, shadow)
             fill.color = 0xFFFFFFFF.toInt()
             fill.shader = LinearGradient(0f, y(0.52f), 0f, y(0.97f), 0xFFFFF4A8.toInt(), 0xFFFFA92E.toInt(), Shader.TileMode.CLAMP)
@@ -635,6 +673,15 @@ class WeatherGlyphPainter {
             canvas.drawLine(x(x0 + 0.02f), y(ly - 0.018f), x(x1 - 0.02f), y(ly - 0.018f), stroke)
         }
         stroke.shader = null
+    }
+
+    /** One mask filter per radius instead of a new native object on every draw. */
+    private fun blur(radius: Float): BlurMaskFilter {
+        if (radius != blurRadius || blur == null) {
+            blur = BlurMaskFilter(radius, BlurMaskFilter.Blur.NORMAL)
+            blurRadius = radius
+        }
+        return blur!!
     }
 
     private fun blendAlpha(color: Int, alpha: Float): Int = ((alpha.coerceIn(0f, 1f) * 255).toInt() shl 24) or (color and 0xFFFFFF)

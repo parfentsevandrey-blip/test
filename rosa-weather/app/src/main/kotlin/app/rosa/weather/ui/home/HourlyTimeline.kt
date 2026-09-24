@@ -222,6 +222,8 @@ private fun HourCell(
                 scaleY = 1f + 0.3f * f
                 translationY = -3.dp.toPx() * f
             },
+            // Rendered at the lens's magnification, so it stays crisp under it.
+            rasterScale = 1.3f,
         )
         Box(Modifier.fillMaxWidth().weight(1f)) {
             val span = (maxT - minT).coerceAtLeast(3.0)

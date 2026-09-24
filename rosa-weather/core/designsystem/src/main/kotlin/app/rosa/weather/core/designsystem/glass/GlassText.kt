@@ -211,6 +211,12 @@ private class GlassTextNode(
     private val shader = RuntimeShader(GLASS_TEXT_SHADER)
     private val shaders = HashMap<Bitmap, BitmapShader>()
 
+    /** The effect is rebuilt only when what it looks like changes, not on every scroll frame. */
+    private var effect: androidx.compose.ui.graphics.RenderEffect? = null
+    private var effectKey: EffectKey? = null
+
+    private data class EffectKey(val a: GlassMasks, val b: GlassMasks, val mix: Float, val lightAngle: Float, val tint: Int)
+
     override fun onAttach() {
         layer = requireGraphicsContext().createGraphicsLayer()
     }
@@ -219,6 +225,8 @@ private class GlassTextNode(
         layer?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
         layer = null
         shaders.clear()
+        effect = null
+        effectKey = null
     }
 
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
@@ -247,17 +255,24 @@ private class GlassTextNode(
             return
         }
         val a = if (t >= 1f) to else from
-        shader.setInputShader("sharpA", shaderOf(a.sharp))
-        shader.setInputShader("softA", shaderOf(a.soft))
-        shader.setInputShader("sharpB", shaderOf(to.sharp))
-        shader.setInputShader("softB", shaderOf(to.soft))
-        shader.setFloatUniform("mixT", if (a === to) 1f else t)
-        shader.setFloatUniform("refraction", to.softRadius * 1.6f)
-        shader.setFloatUniform("lightAngle", environment.lightAngle)
-        shader.setColorUniform("tint", ink.copy(alpha = tintStrength).toArgb())
-        shader.setFloatUniform("shadowOffset", 0f, to.softRadius * 0.55f)
-        shader.setFloatUniform("shadowAlpha", 0.3f)
-        glass.renderEffect = RenderEffect.createRuntimeShaderEffect(shader, "content").asComposeRenderEffect()
+        val mix = if (a === to) 1f else t
+        val tint = ink.copy(alpha = tintStrength).toArgb()
+        val key = EffectKey(a, to, mix, environment.lightAngle, tint)
+        if (key != effectKey) {
+            shader.setInputShader("sharpA", shaderOf(a.sharp))
+            shader.setInputShader("softA", shaderOf(a.soft))
+            shader.setInputShader("sharpB", shaderOf(to.sharp))
+            shader.setInputShader("softB", shaderOf(to.soft))
+            shader.setFloatUniform("mixT", mix)
+            shader.setFloatUniform("refraction", to.softRadius * 1.6f)
+            shader.setFloatUniform("lightAngle", key.lightAngle)
+            shader.setColorUniform("tint", tint)
+            shader.setFloatUniform("shadowOffset", 0f, to.softRadius * 0.55f)
+            shader.setFloatUniform("shadowAlpha", 0.3f)
+            effect = RenderEffect.createRuntimeShaderEffect(shader, "content").asComposeRenderEffect()
+            effectKey = key
+        }
+        glass.renderEffect = effect
 
         val w = max(from.sharp.width, to.sharp.width)
         val h = max(from.sharp.height, to.sharp.height)

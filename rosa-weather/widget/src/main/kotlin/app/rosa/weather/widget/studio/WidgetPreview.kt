@@ -2,23 +2,35 @@ package app.rosa.weather.widget.studio
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.core.graphics.withScale
+import androidx.compose.ui.unit.IntSize
 import app.rosa.weather.core.model.WidgetConfig
 import app.rosa.weather.widget.render.DynamicTones
 import app.rosa.weather.widget.render.WidgetContent
 import app.rosa.weather.widget.render.WidgetRenderRequest
 import app.rosa.weather.widget.render.WidgetRenderer
+import kotlin.math.roundToInt
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
- * Live, pixel-identical widget preview: the exact renderer the home screen uses, drawn straight
- * onto a Compose canvas at whatever size the modifier gives it.
+ * Live, pixel-identical widget preview: the exact renderer the home screen uses, rendered into a
+ * bitmap off the main thread, just as the launcher gets it. The preview only draws that bitmap, so
+ * a list of previews scrolls for free. While it is being resized ([resizing]) it renders at half
+ * resolution and the last picture stretches along until the next is ready, a frame or two later.
  */
 @Composable
 fun WidgetPreview(
@@ -27,19 +39,31 @@ fun WidgetPreview(
     modifier: Modifier = Modifier,
     cornerRadiusDp: Float = 24f,
     systemNight: Boolean = false,
+    resizing: Boolean = false,
 ) {
     val context = LocalContext.current
     val renderer = remember(context) { WidgetRenderer(context) }
     val dynamic = remember(context) { runCatching { DynamicTones.from(context) }.getOrDefault(DynamicTones.Fallback) }
     val description = remember(content) { renderer.describe(content) }
-    Canvas(modifier.semantics { contentDescription = description }) {
-        val wDp = size.width / density
-        val hDp = size.height / density
-        if (wDp < 8f || hDp < 8f) return@Canvas
-        drawIntoCanvas { canvas ->
-            canvas.nativeCanvas.withScale(density, density) {
-                renderer.draw(this, WidgetRenderRequest(wDp, hDp, config, content, cornerRadiusDp, systemNight, dynamic))
-            }
-        }
+    val density = LocalDensity.current.density
+    // The renderer isn't thread-safe: one render at a time per preview, the latest request wins.
+    val worker = remember { Dispatchers.Default.limitedParallelism(1) }
+    var pixels by remember { mutableStateOf(IntSize.Zero) }
+    var picture by remember { mutableStateOf<ImageBitmap?>(null) }
+    LaunchedEffect(pixels, config, content, cornerRadiusDp, systemNight, resizing) {
+        val widthDp = pixels.width / density
+        val heightDp = pixels.height / density
+        if (widthDp < 8f || heightDp < 8f) return@LaunchedEffect
+        val request = WidgetRenderRequest(widthDp, heightDp, config, content, cornerRadiusDp, systemNight, dynamic)
+        val scale = if (resizing) density / 2 else density
+        picture = withContext(worker) { renderer.render(request, scale).asImageBitmap() }
+    }
+    Canvas(modifier.onSizeChanged { pixels = it }.semantics { contentDescription = description }) {
+        val image = picture ?: return@Canvas
+        drawImage(
+            image,
+            dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
+            filterQuality = FilterQuality.Low,
+        )
     }
 }
