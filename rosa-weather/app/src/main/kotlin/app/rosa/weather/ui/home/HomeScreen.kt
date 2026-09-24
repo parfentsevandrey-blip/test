@@ -6,11 +6,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -96,6 +91,7 @@ import app.rosa.weather.core.designsystem.component.WeatherGlyph
 import app.rosa.weather.core.designsystem.format.WeatherFormat
 import app.rosa.weather.core.designsystem.glass.GlassStyle
 import app.rosa.weather.core.designsystem.haptics.LocalHaptics
+import app.rosa.weather.core.designsystem.motion.LocalAmbientClock
 import app.rosa.weather.core.designsystem.motion.RosaMotion
 import app.rosa.weather.core.designsystem.sky.SkyStage
 import app.rosa.weather.core.designsystem.theme.Rosa
@@ -107,9 +103,11 @@ import app.rosa.weather.core.model.WeatherCondition
 import app.rosa.weather.core.model.momentAt
 import app.rosa.weather.ui.common.LocalSky
 import app.rosa.weather.ui.common.SkyController
+import kotlin.math.PI
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -422,10 +420,9 @@ private fun Hero(
 
 @Composable
 private fun PulsingDot(color: Color) {
-    val pulse by rememberInfiniteTransition(label = "dot").animateFloat(
-        0.6f, 1f, infiniteRepeatable(tween(1100), RepeatMode.Reverse), label = "pulse",
-    )
+    val clock = LocalAmbientClock.current
     Canvas(Modifier.size(10.dp)) {
+        val pulse = 0.8f + 0.2f * sin(clock.seconds * PI.toFloat() / 1.1f)
         drawCircle(color.copy(alpha = 0.3f * pulse), size.minDimension / 2)
         drawCircle(color, size.minDimension / 4)
     }
@@ -677,17 +674,16 @@ private fun rememberLiquidRefresh(onRefresh: () -> Unit, isRefreshing: () -> Boo
 @Composable
 private fun RefreshDrop(refresh: LiquidRefresh, modifier: Modifier) {
     val p = refresh.progress
-    val breathe by rememberInfiniteTransition(label = "breathe").animateFloat(
-        0.92f, 1.08f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "b",
-    )
     if (p <= 0.02f && !refresh.active) return
+    val clock = LocalAmbientClock.current
     val size = (18 + 30 * min(p, 1f)).dp
     val stretch = if (p > 1f) 1f + (p - 1f) * 0.5f else 1f
     GlassSurface(
         modifier
             .size(size)
             .graphicsLayer {
-                val s = if (refresh.active) breathe else 1f
+                // Breathes while refreshing; the clock is only read (and redraws) meanwhile.
+                val s = if (refresh.active) 1f + 0.08f * sin(clock.seconds * PI.toFloat() / 0.7f) else 1f
                 scaleX = s / stretch
                 scaleY = s * stretch
                 translationY = refresh.pull.value * 0.35f

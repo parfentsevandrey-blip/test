@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -17,7 +18,10 @@ import app.rosa.weather.core.designsystem.glass.backdropSource
 import app.rosa.weather.core.designsystem.glass.rememberBackdrop
 import app.rosa.weather.core.designsystem.haptics.LocalHaptics
 import app.rosa.weather.core.designsystem.haptics.rememberRosaHaptics
+import app.rosa.weather.core.designsystem.motion.LocalAmbientClock
 import app.rosa.weather.core.designsystem.motion.LocalMotionEnabled
+import app.rosa.weather.core.designsystem.motion.rememberAmbientClock
+import app.rosa.weather.core.designsystem.motion.rememberFrameStruggle
 import app.rosa.weather.core.designsystem.motion.rememberSystemMotionEnabled
 import app.rosa.weather.core.designsystem.sensor.rememberTilt
 import app.rosa.weather.core.designsystem.sensor.toLightAngle
@@ -30,6 +34,7 @@ import app.rosa.weather.core.designsystem.theme.animatedRosaColors
 import app.rosa.weather.core.model.AppSettings
 import app.rosa.weather.core.model.EffectsQuality
 import app.rosa.weather.core.model.SkyPalette
+import kotlin.math.abs
 
 /**
  * Root of every Rosa screen: theme coloured by the sky, haptics, motion preferences and the
@@ -40,18 +45,23 @@ fun RosaEnvironment(settings: AppSettings, palette: SkyPalette, content: @Compos
     val colors = animatedRosaColors(palette)
     val haptics = rememberRosaHaptics(settings.haptics)
     val motion = rememberSystemMotionEnabled()
+    val clock = rememberAmbientClock(running = motion)
     val tilt = rememberTilt(enabled = settings.tiltLighting && motion)
     val environment = remember { GlassEnvironment() }
     environment.tint = colors.glassTint
     // Light ink over a fairly bright sky: densify the glass so type keeps its contrast.
     environment.tintBoost = if (palette.isLight) 0f else ((palette.brightness - 0.12) / 0.24).toFloat().coerceIn(0f, 1f)
     LaunchedEffect(tilt) {
-        snapshotFlow { tilt.value }.collect { environment.lightAngle = it.toLightAngle() }
+        // Every change redraws all glass on screen: move the light only when it visibly moves.
+        snapshotFlow { tilt.value.toLightAngle() }.collect { angle ->
+            if (abs(angle - environment.lightAngle) > 0.015f) environment.lightAngle = angle
+        }
     }
     RosaTheme(colors) {
         CompositionLocalProvider(
             LocalHaptics provides haptics,
             LocalMotionEnabled provides motion,
+            LocalAmbientClock provides clock,
             LocalGlassEnvironment provides environment,
             LocalTilt provides tilt,
         ) {
@@ -99,7 +109,9 @@ fun SkyBackdrop(
 @Composable
 private fun rememberSceneQuality(effects: EffectsQuality): SceneQuality {
     val context = LocalContext.current
-    return remember(effects) {
+    // "Auto" also watches real frame times: a device that keeps missing frames gets the light sky.
+    val struggling by rememberFrameStruggle(enabled = effects == EffectsQuality.Auto)
+    return remember(effects, struggling) {
         when (effects) {
             EffectsQuality.Battery -> SceneQuality.Battery
             EffectsQuality.Balanced -> SceneQuality.Balanced
@@ -108,7 +120,7 @@ private fun rememberSceneQuality(effects: EffectsQuality): SceneQuality {
                 val power = context.getSystemService(PowerManager::class.java)
                 val saver = power?.isPowerSaveMode == true
                 val hot = (power?.currentThermalStatus ?: 0) >= PowerManager.THERMAL_STATUS_MODERATE
-                if (saver || hot) SceneQuality.Battery else SceneQuality.Balanced
+                if (saver || hot || struggling) SceneQuality.Battery else SceneQuality.Balanced
             }
         }
     }

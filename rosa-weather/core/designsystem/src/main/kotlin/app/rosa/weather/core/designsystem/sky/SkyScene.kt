@@ -13,6 +13,7 @@ import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
 import android.graphics.Shader
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateValueAsState
 import androidx.compose.animation.core.spring
@@ -25,13 +26,13 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -46,6 +47,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntSize
 import app.rosa.weather.core.designsystem.haptics.RosaHaptics
+import app.rosa.weather.core.designsystem.motion.LocalAmbientClock
 import app.rosa.weather.core.designsystem.theme.toColor
 import app.rosa.weather.core.model.ForecastMoment
 import app.rosa.weather.core.model.SkyPalette
@@ -159,9 +161,13 @@ fun SkyScene(
     val skyBrush = remember { ShaderBrush(sky) }
     val precipBrush = remember { ShaderBrush(precip) }
     val layer = rememberGraphicsLayer()
-    val time = remember { mutableFloatStateOf(0f) }
+    // Ambient motion runs on the shared, unhurried clock; only a tap ripple, a lightning flash and
+    // weather transitions animate at the display's full rate, and only while they last.
+    val clock = LocalAmbientClock.current
     val flash = remember { Animatable(0f) }
     val ripple = remember { RippleState() }
+    val rippleAge = remember { Animatable(RIPPLE_SECONDS) }
+    val scope = rememberCoroutineScope()
     val wipe = remember { WipeMask() }
     val currentHaptics by rememberUpdatedState(haptics)
     // A newly measured stage (another city's wider numerals, rotation) glides, never jumps.
@@ -181,15 +187,6 @@ fun SkyScene(
                 progress.snapTo(0f)
                 progress.animateTo(1f, tween(transitionMillis))
             }
-        }
-    }
-
-    LaunchedEffect(animate) {
-        if (!animate) return@LaunchedEffect
-        val start = withFrameNanos { it }
-        val offset = time.floatValue
-        while (isActive) {
-            withFrameNanos { now -> time.floatValue = offset + (now - start) / 1_000_000_000f }
         }
     }
 
@@ -222,7 +219,11 @@ fun SkyScene(
         Modifier.pointerInput(Unit) {
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
-                ripple.trigger(down.position, time.floatValue)
+                ripple.position = down.position
+                scope.launch {
+                    rippleAge.snapTo(0f)
+                    rippleAge.animateTo(RIPPLE_SECONDS, tween((RIPPLE_SECONDS * 1000).toInt(), easing = LinearEasing))
+                }
                 currentHaptics?.raindrop()
                 var last = down.position
                 wipe.stroke(last, last, size)
@@ -246,8 +247,9 @@ fun SkyScene(
         val s = quality.scale
         val w = max(1, (size.width * s).roundToInt())
         val h = max(1, (size.height * s).roundToInt())
-        val t = time.floatValue
-        val tiltValue = tilt?.value ?: Offset.Zero
+        val t = clock.seconds
+        // Sampled, not observed: tilt shows up on the next tick instead of forcing extra redraws.
+        val tiltValue = tilt?.let { Snapshot.withoutReadObservation { it.value } } ?: Offset.Zero
 
         sky.setFloatUniform("resolution", w.toFloat(), h.toFloat())
         sky.setFloatUniform("time", t)
@@ -280,7 +282,8 @@ fun SkyScene(
             precip.setFloatUniform("tilt", tiltValue.x, tiltValue.y)
         }
 
-        val rippleActive = t - ripple.startTime < 2.5f
+        val age = rippleAge.value
+        val rippleActive = age < RIPPLE_SECONDS
         val windowOn = quality.windowEffects &&
             (p.rain > 0.05f || p.frost > 0.02f || p.condensation > 0.05f || rippleActive)
         if (windowOn) {
@@ -291,7 +294,7 @@ fun SkyScene(
             window.setFloatUniform("fogged", p.condensation)
             window.setFloatUniform(
                 "ripple",
-                ripple.position.x * s, ripple.position.y * s, ripple.startTime, if (rippleActive) ripple.strength else 0f,
+                ripple.position.x * s, ripple.position.y * s, t - age, if (rippleActive) ripple.strength else 0f,
             )
             window.setInputShader("wipe", wipe.shader(w, h))
             layer.renderEffect = RenderEffect.createRuntimeShaderEffect(window, "content").asComposeRenderEffect()
@@ -318,15 +321,11 @@ private class MutableParams(start: SkyParams, target: SkyParams) {
 
 private fun mutableParams(p: SkyParams) = MutableParams(p, p)
 
+private const val RIPPLE_SECONDS = 2.5f
+
 private class RippleState {
     var position = Offset.Zero
-    var startTime = -100f
     var strength = 1f
-
-    fun trigger(at: Offset, now: Float) {
-        position = at
-        startTime = now
-    }
 }
 
 /**
@@ -350,6 +349,7 @@ private class WipeMask {
     private val matrix = Matrix()
     private val empty = LinearGradient(0f, 0f, 1f, 1f, 0, 0, Shader.TileMode.CLAMP)
     private var dirty = false
+    private var fades = 0
     private val version = mutableLongStateOf(0L)
 
     fun stroke(from: Offset, to: Offset, size: IntSize) {
@@ -358,12 +358,18 @@ private class WipeMask {
         val sy = bitmap.height / size.height.toFloat()
         canvas.drawLine(from.x * sx, from.y * sy, to.x * sx, to.y * sy, brush)
         dirty = true
+        fades = 0
         version.longValue++
     }
 
     fun fade() {
         if (!dirty) return
         canvas.drawRect(0f, 0f, bitmap.width.toFloat(), bitmap.height.toFloat(), fader)
+        // 5/255 per step: after ~52 steps the mist is fully back; stop redrawing for it.
+        if (++fades > 55) {
+            bitmap.eraseColor(android.graphics.Color.TRANSPARENT)
+            dirty = false
+        }
         version.longValue++
     }
 

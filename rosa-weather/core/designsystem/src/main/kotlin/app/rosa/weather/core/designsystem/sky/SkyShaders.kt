@@ -31,6 +31,33 @@ float fbm(float2 p) {
     }
     return v;
 }
+
+// fbm that also returns its coarse part (first 3 octaves) — for cheap gradients.
+float2 fbmCoarse(float2 p) {
+    float v = 0.0;
+    float coarse = 0.0;
+    float a = 0.5;
+    for (int i = 0; i < 5; i++) {
+        v += a * noise(p);
+        if (i == 2) {
+            coarse = v;
+        }
+        p = p * 2.03 + float2(1.7, 9.2);
+        a *= 0.5;
+    }
+    return float2(v, coarse);
+}
+
+float fbm3(float2 p) {
+    float v = 0.0;
+    float a = 0.5;
+    for (int i = 0; i < 3; i++) {
+        v += a * noise(p);
+        p = p * 2.03 + float2(1.7, 9.2);
+        a *= 0.5;
+    }
+    return v;
+}
 """
 
 /**
@@ -114,23 +141,29 @@ half4 main(float2 fragCoord) {
         col += half3(0.55, 0.58, 0.75) * half(exp(-dist / (bodyR * 2.5)) * 0.18 * veil * (0.3 + moonPhase * (1.0 - moonPhase) * 2.8));
     }
 
-    // Two cloud decks with parallax; lit on the side facing the sun.
+    // Two cloud decks with parallax; lit on the side facing the sun. Noise is evaluated only
+    // where clouds can show: a clear sky skips it, the lit side is sampled only inside a cloud,
+    // and it compares coarse octaves (the fine ones would only add grain to the shading).
     float drift = time * (0.006 + wind * 0.02);
-    float2 cp = float2(uv.x * aspect, uv.y * 1.6) * 1.8 + float2(drift, time * 0.002) + tilt * 0.04;
-    float n = fbm(cp);
-    float threshold = mix(0.74, 0.22, cloudCover);
-    float mask = smoothstep(threshold, threshold + 0.26, n);
-    float2 toSun = normalize(sp - uv + 0.0001) * 0.09;
-    float n2 = fbm(cp + toSun);
-    float lit2 = clamp(0.55 + (n - n2) * 3.2, 0.0, 1.0);
-    half3 cloudCol = mix(cloudShade.rgb, cloudLight.rgb, half(lit2 * (1.0 - cloudDark * 0.55)));
-    float lowFade = 1.0 - smoothstep(0.62, 1.05, h) * 0.35;
-    col = mix(col, cloudCol, half(mask * (0.5 + cloudCover * 0.5) * lowFade));
-
-    float2 cp2 = float2(uv.x * aspect, uv.y * 2.4) * 3.2 + float2(drift * 1.8, 0.0) + tilt * 0.08;
-    float n3 = fbm(cp2 + 11.0);
-    float mask2 = smoothstep(threshold + 0.06, threshold + 0.3, n3) * cloudCover;
-    col = mix(col, mix(cloudShade.rgb, cloudLight.rgb, half(0.35 + 0.4 * (1.0 - cloudDark))), half(mask2 * 0.55));
+    float mask = 0.0;
+    if (cloudCover > 0.02) {
+        float2 cp = float2(uv.x * aspect, uv.y * 1.6) * 1.8 + float2(drift, time * 0.002) + tilt * 0.04;
+        float2 nc = fbmCoarse(cp);
+        float threshold = mix(0.74, 0.22, cloudCover);
+        mask = smoothstep(threshold, threshold + 0.26, nc.x);
+        if (mask > 0.001) {
+            float2 toSun = normalize(sp - uv + 0.0001) * 0.09;
+            float lit2 = clamp(0.55 + (nc.y - fbm3(cp + toSun)) * 3.2, 0.0, 1.0);
+            half3 cloudCol = mix(cloudShade.rgb, cloudLight.rgb, half(lit2 * (1.0 - cloudDark * 0.55)));
+            float lowFade = 1.0 - smoothstep(0.62, 1.05, h) * 0.35;
+            col = mix(col, cloudCol, half(mask * (0.5 + cloudCover * 0.5) * lowFade));
+        }
+        if (cloudCover > 0.05) {
+            float2 cp2 = float2(uv.x * aspect, uv.y * 2.4) * 3.2 + float2(drift * 1.8, 0.0) + tilt * 0.08;
+            float mask2 = smoothstep(threshold + 0.06, threshold + 0.3, fbm(cp2 + 11.0)) * cloudCover;
+            col = mix(col, mix(cloudShade.rgb, cloudLight.rgb, half(0.35 + 0.4 * (1.0 - cloudDark))), half(mask2 * 0.55));
+        }
+    }
 
     // Fog banks rolling low.
     if (fog > 0.01) {

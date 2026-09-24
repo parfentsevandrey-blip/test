@@ -16,4 +16,7 @@ dependencies {
     api(libs.compose.material3)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.truth)
 }

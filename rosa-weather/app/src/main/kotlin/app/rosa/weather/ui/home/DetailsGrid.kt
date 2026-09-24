@@ -1,12 +1,6 @@
 package app.rosa.weather.ui.home
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +40,7 @@ import app.rosa.weather.core.designsystem.component.GlassSurface
 import app.rosa.weather.core.designsystem.component.WeatherGlyph
 import app.rosa.weather.core.designsystem.format.WeatherFormat
 import app.rosa.weather.core.designsystem.glass.GlassStyle
+import app.rosa.weather.core.designsystem.motion.LocalAmbientClock
 import app.rosa.weather.core.designsystem.motion.LocalMotionEnabled
 import app.rosa.weather.core.designsystem.motion.RosaMotion
 import app.rosa.weather.core.designsystem.theme.Rosa
@@ -135,9 +130,9 @@ private fun WindTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier) {
     val needle = remember { Animatable(m.windDirection.toFloat() - 60f) }
     LaunchedEffect(m.windDirection) { needle.animateTo(m.windDirection.toFloat(), RosaMotion.gel()) }
     val motion = LocalMotionEnabled.current
-    val flutter by rememberInfiniteTransition(label = "wind").animateFloat(
-        -1f, 1f, infiniteRepeatable(tween((1600 - m.windSpeed * 60).toInt().coerceAtLeast(300), easing = LinearEasing), RepeatMode.Reverse), label = "flutter",
-    )
+    val clock = LocalAmbientClock.current
+    // Stronger wind, quicker flutter (one swing every 0.3–1.6 s), on the shared ambient clock.
+    val swing = ((1600 - m.windSpeed * 60) / 1000.0).toFloat().coerceAtLeast(0.3f)
     Tile(
         stringResource(DsR.string.detail_wind),
         "${f.wind(m.windSpeed)} ${f.compass(m.windDirection)}",
@@ -159,6 +154,7 @@ private fun WindTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier) {
                     1.2.dp.toPx(),
                 )
             }
+            val flutter = sin(clock.seconds * PI.toFloat() / swing)
             val wobble = if (motion) flutter * (1.5f + m.windGusts.toFloat() * 0.25f) else 0f
             // The needle points where the wind blows *to*.
             rotate(needle.value + 180f + wobble, c) {
@@ -180,9 +176,7 @@ private fun WindTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier) {
 @Composable
 private fun HumidityTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier) {
     val motion = LocalMotionEnabled.current
-    val phase by rememberInfiniteTransition(label = "water").animateFloat(
-        0f, (2 * PI).toFloat(), infiniteRepeatable(tween(2600, easing = LinearEasing)), label = "wave",
-    )
+    val clock = LocalAmbientClock.current
     val level = remember { Animatable(0f) }
     LaunchedEffect(m.humidity) { level.animateTo(m.humidity / 100f, RosaMotion.gel()) }
     Tile(
@@ -210,6 +204,7 @@ private fun HumidityTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier
                 moveTo(0f, h)
                 var x = 0f
                 lineTo(0f, surface)
+                val phase = clock.seconds * 2f * PI.toFloat() / 2.6f
                 while (x <= w) {
                     val y = surface + if (motion) sin(phase + x / w * 2f * PI.toFloat()) * 2.5.dp.toPx() else 0f
                     lineTo(x, y)

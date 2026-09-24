@@ -14,7 +14,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.isSpecified
+import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.translate
@@ -40,18 +42,25 @@ import kotlin.math.ceil
  * What the glass sees. [Modifier.backdropSource] records the living sky (or any content) into
  * [layer] every frame; every glass element then draws that same RenderNode through its own lens.
  * Because RenderNodes are shared by reference, the sky is rendered once no matter how many glass
- * surfaces refract it.
+ * surfaces refract it. [frosted] is the same backdrop blurred once, shared by every frosted card:
+ * the blur costs one pass per sky frame instead of one per card per frame (per scroll frame, too).
  */
 @Stable
-class Backdrop internal constructor(internal val layer: GraphicsLayer) {
+class Backdrop internal constructor(internal val layer: GraphicsLayer, internal val frosted: GraphicsLayer) {
     internal var positionInRoot by mutableStateOf(Offset.Zero)
+    internal var frostRadiusPx = -1f
 }
 
 @Composable
 fun rememberBackdrop(): Backdrop {
     val layer = rememberGraphicsLayer()
-    return remember(layer) { Backdrop(layer) }
+    val frosted = rememberGraphicsLayer()
+    return remember(layer, frosted) { Backdrop(layer, frosted) }
 }
+
+/** Blur of the shared frosted backdrop; materials at least [SHARED_FROST_MIN] frosty use it. */
+private val SHARED_FROST = 18.dp
+private val SHARED_FROST_MIN = 12.dp
 
 /** Records this element's drawing into [backdrop] (and still draws it normally). */
 fun Modifier.backdropSource(backdrop: Backdrop): Modifier = this.then(BackdropSourceElement(backdrop))
@@ -79,8 +88,11 @@ data class GlassStyle(
         /** Permanently more transparent; for controls over rich media, with bold content only. */
         val Clear = GlassStyle(1.dp, 16.dp, 26.dp, 0.8f, 0f, 1.2f, 0f, 0.6f, 0.03f)
 
-        /** Content layer (cards): mostly frosted, gentle lensing — Apple keeps real glass off content. */
-        val Frosted = GlassStyle(18.dp, 10.dp, 10.dp, 0.25f, 0f, 1.35f, 0.02f, 0.35f, 0.16f)
+        /**
+         * Content layer (cards): mostly frosted, gentle lensing — Apple keeps real glass off
+         * content. No dispersion: invisible through frost, and it would triple the samples.
+         */
+        val Frosted = GlassStyle(18.dp, 10.dp, 10.dp, 0f, 0f, 1.35f, 0.02f, 0.35f, 0.16f)
 
         /** Active knobs and indicators while touched: pure lens, strong dispersion, no frost. */
         val Lens = GlassStyle(0.dp, 10.dp, 16.dp, 1f, 0f, 1.1f, 0.02f, 0.7f, 0f)
@@ -193,7 +205,10 @@ private class LiquidGlassNode(
         val s = state
         val materialize = s?.materialize ?: 1f
         val refraction = style.refraction.toPx()
-        val blur = style.blur.toPx()
+        // Frosted materials refract the shared, pre-blurred backdrop once fully materialised;
+        // while appearing, the frost grows with their own blur.
+        val shared = style.blur >= SHARED_FROST_MIN && materialize >= 0.999f
+        val blur = if (shared) 0f else style.blur.toPx()
         // Sample a larger area than the glass itself (outward lensing + blur spill).
         val margin = ceil(refraction + blur * 2f + 2f)
         val radius = cornerRadius.toPx().coerceAtMost(size.minDimension / 2f)
@@ -230,8 +245,9 @@ private class LiquidGlassNode(
 
         val layerSize = IntSize((size.width + margin * 2).toInt(), (size.height + margin * 2).toInt())
         val offset = backdrop.positionInRoot - position + Offset(margin, margin)
+        val source = if (shared) backdrop.frosted else backdrop.layer
         glassLayer.record(layerSize) {
-            translate(offset.x, offset.y) { drawLayer(backdrop.layer) }
+            translate(offset.x, offset.y) { drawLayer(source) }
         }
         translate(-margin, -margin) { drawLayer(glassLayer) }
         drawContent()
@@ -260,7 +276,15 @@ private class BackdropSourceNode(var backdrop: Backdrop) :
 
     override fun ContentDrawScope.draw() {
         val scope = this
-        backdrop.layer.record(size.toIntSize()) { scope.drawContent() }
-        drawLayer(backdrop.layer)
+        val b = backdrop
+        b.layer.record(size.toIntSize()) { scope.drawContent() }
+        // Only rendered when some frosted glass actually draws it.
+        val radius = SHARED_FROST.toPx()
+        if (radius != b.frostRadiusPx) {
+            b.frosted.renderEffect = BlurEffect(radius, radius, TileMode.Clamp)
+            b.frostRadiusPx = radius
+        }
+        b.frosted.record(size.toIntSize()) { drawLayer(b.layer) }
+        drawLayer(b.layer)
     }
 }

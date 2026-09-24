@@ -34,10 +34,12 @@ fun rememberTilt(enabled: Boolean): State<Offset> {
             return@LaunchedEffect
         }
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            var smooth = state.value
             listen(context) { x, y ->
-                val prev = state.value
                 // Low-pass filter: glass light should drift, not jitter.
-                state.value = Offset(prev.x + (x - prev.x) * 0.12f, prev.y + (y - prev.y) * 0.12f)
+                smooth = Offset(smooth.x + (x - smooth.x) * 0.12f, smooth.y + (y - smooth.y) * 0.12f)
+                // Publish only visible moves: a phone lying still (or a steady hand) redraws nothing.
+                if ((smooth - state.value).getDistance() > 0.004f) state.value = smooth
             }
         }
     }

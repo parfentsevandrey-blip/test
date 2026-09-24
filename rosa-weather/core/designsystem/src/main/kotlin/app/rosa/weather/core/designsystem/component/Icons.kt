@@ -4,10 +4,7 @@ import android.graphics.RectF
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -24,9 +21,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.rosa.weather.core.designsystem.glyph.WeatherGlyphPainter
-import app.rosa.weather.core.designsystem.motion.LocalMotionEnabled
+import app.rosa.weather.core.designsystem.motion.LocalAmbientClock
 import app.rosa.weather.core.model.WeatherCondition
-import kotlinx.coroutines.isActive
 
 /** A small, consistent stroke icon set (rounded caps, 1.8 px on a 24 grid). */
 enum class RosaIcon { Search, Plus, Settings, Location, Close, Back, Widgets, Refresh, Check, Trash, Drag, Chevron, Sparkle }
@@ -118,8 +114,8 @@ fun RosaIconView(icon: RosaIcon, tint: Color, modifier: Modifier = Modifier, siz
 }
 
 /**
- * The shared weather glyph in Compose. When [animated], rays turn, drops fall and flakes drift
- * (paused automatically when the system disables animations).
+ * The shared weather glyph in Compose. When [animated], rays turn, drops fall and flakes drift on
+ * the shared ambient clock (still when the system disables animations).
  */
 @Composable
 fun WeatherGlyph(
@@ -134,17 +130,10 @@ fun WeatherGlyph(
     onLightBackground: Boolean = app.rosa.weather.core.designsystem.theme.Rosa.colors.isLightSky,
 ) {
     val painter = remember { WeatherGlyphPainter() }
-    val time = remember { mutableFloatStateOf(0f) }
-    val motion = LocalMotionEnabled.current
-    if (animated && motion) {
-        LaunchedEffect(Unit) {
-            val start = withFrameNanos { it }
-            while (isActive) withFrameNanos { time.floatValue = (it - start) / 1e9f }
-        }
-    }
+    val clock = LocalAmbientClock.current
     val semantics = if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier
     Canvas(modifier.then(semantics)) {
-        drawGlyph(painter, condition, isDay, moonPhase, tone, tint, if (animated) time.floatValue + 0.001f else 0f, onLightBackground)
+        drawGlyph(painter, condition, isDay, moonPhase, tone, tint, if (animated) clock.seconds + 0.001f else 0f, onLightBackground)
     }
 }
 
