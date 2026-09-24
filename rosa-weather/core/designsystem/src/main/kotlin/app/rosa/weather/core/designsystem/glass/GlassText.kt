@@ -48,6 +48,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.createBitmap
 import app.rosa.weather.core.designsystem.R
@@ -289,7 +290,17 @@ private class GlassTextNode(
     private var effect: androidx.compose.ui.graphics.RenderEffect? = null
     private var effectKey: EffectKey? = null
 
-    private data class EffectKey(val a: GlassMasks, val b: GlassMasks, val mix: Float, val lightAngle: Float, val tint: Int, val edge: Int)
+    private data class EffectKey(
+        val a: GlassMasks,
+        val b: GlassMasks,
+        val mix: Float,
+        val lightAngle: Float,
+        val tint: Int,
+        val edge: Int,
+        val lightColor: Int,
+        val lightPower: Float,
+        val flash: Float,
+    )
 
     override fun onAttach() {
         layer = requireGraphicsContext().createGraphicsLayer()
@@ -353,7 +364,17 @@ private class GlassTextNode(
         val tint = ink.copy(alpha = tintStrength).toArgb()
         // Over pale skies a darker line defines the glass; over deep ones a faint light one.
         val edge = if (ink.luminance() < 0.5f) ink.copy(alpha = 0.5f).toArgb() else ink.copy(alpha = 0.22f).toArgb()
-        val key = EffectKey(a, to, mix, environment.lightAngle, tint, edge)
+        // The numerals catch the scene's light like every other pane: from the sun's side, in its colour.
+        val light = environment.lightFor(position + Offset(size.width / 2f, size.height / 2f), 640.dp.toPx())
+        val key = EffectKey(
+            a, to, mix,
+            lightAngle = Math.round(light.angle / 0.004f) * 0.004f,
+            tint = tint,
+            edge = edge,
+            lightColor = environment.lightColor.toArgb(),
+            lightPower = Math.round(light.power / 0.01f) * 0.01f,
+            flash = Math.round(environment.flash / 0.01f) * 0.01f,
+        )
         if (key != effectKey) {
             shader.setInputShader("fieldA", shaderOf(a.field))
             shader.setInputShader("fieldB", shaderOf(to.field))
@@ -365,6 +386,9 @@ private class GlassTextNode(
             shader.setFloatUniform("lightAngle", key.lightAngle)
             shader.setColorUniform("tint", tint)
             shader.setColorUniform("edge", edge)
+            shader.setColorUniform("lightColor", key.lightColor)
+            shader.setFloatUniform("lightPower", key.lightPower)
+            shader.setFloatUniform("flash", key.flash)
             shader.setFloatUniform("shadowOffset", 0f, to.sizePx * 0.022f)
             shader.setFloatUniform("shadowAlpha", 0.3f)
             effect = RenderEffect.createRuntimeShaderEffect(shader, "content").asComposeRenderEffect()
@@ -395,6 +419,9 @@ uniform float dispersion;
 uniform float lightAngle;
 layout(color) uniform half4 tint;
 layout(color) uniform half4 edge;
+layout(color) uniform half4 lightColor;
+uniform float lightPower;
+uniform float flash;
 uniform float2 shadowOffset;
 uniform float shadowAlpha;
 
@@ -449,11 +476,16 @@ half4 main(float2 p) {
     float spec = pow(max(dot(N, normalize(normalize(float3(L2, 0.8)) + V)), 0.0), 30.0);
     float spec2 = pow(max(dot(N, normalize(normalize(float3(-L2, 0.8)) + V)), 0.0), 30.0);
     float fresnel = x * x * x;
+    // The light's own colour: gold low in the sky, silver from the moon; stronger in full sun.
+    half3 sun = mix(half3(1.0), lightColor.rgb, 0.6);
+    float power = 0.8 + 0.5 * lightPower;
     c += half3(fresnel * (0.2 + 0.5 * max(facing, 0.0)));
-    c += half3(spec * 0.95 + spec2 * 0.35);
+    c += sun * half((spec * 0.95 + spec2 * 0.35) * power);
     float band = smoothstep(0.2, 0.6, x) * (1.0 - smoothstep(0.75, 0.98, x));
     c += half3(0.24 * band * max(-facing, 0.0));
     c *= half(1.0 - 0.22 * smoothstep(0.8, 1.0, x) * max(-facing, 0.0));
+    // Lightning flashes in the glass.
+    c += half3(0.8, 0.86, 1.0) * half(flash * (0.1 + 0.6 * fresnel));
 
     // Where glass meets air: a crisp line that keeps the digits legible over any sky.
     float line = 1.0 - smoothstep(0.0, 1.4, abs(d - 0.35));

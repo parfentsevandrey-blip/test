@@ -45,7 +45,10 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.unit.IntSize
+import app.rosa.weather.core.designsystem.glass.GlassEnvironment
 import app.rosa.weather.core.designsystem.haptics.RosaHaptics
 import app.rosa.weather.core.designsystem.motion.LocalAmbientClock
 import app.rosa.weather.core.designsystem.theme.toColor
@@ -166,8 +169,11 @@ fun SkyScene(
     haptics: RosaHaptics? = null,
     interactive: Boolean = true,
     transitionMillis: Int = 1400,
+    /** Glass that the scene lights: it learns where the sun or moon is, its colour, the flashes. */
+    light: GlassEnvironment? = null,
 ) {
     val sky = remember { RuntimeShader(SKY_SHADER) }
+    val origin = remember { RootOrigin() }
     val precip = remember { RuntimeShader(PRECIPITATION_SHADER) }
     val window = remember { RuntimeShader(WINDOW_SHADER) }
     val skyBrush = remember { ShaderBrush(sky) }
@@ -261,7 +267,7 @@ fun SkyScene(
         Modifier
     }
 
-    Canvas(modifier.then(input)) {
+    Canvas(modifier.then(input).onGloballyPositioned { origin.value = it.positionInRoot() }) {
         val p = from.current(progress.value)
         val s = quality.scale
         val w = max(1, (size.width * s).roundToInt())
@@ -293,6 +299,23 @@ fun SkyScene(
         sky.setFloatUniform("boltSeed", bolt.seed)
         sky.setFloatUniform("boltX", bolt.x)
         sky.setFloatUniform("tilt", tiltValue.x, tiltValue.y)
+        light?.let { env ->
+            // The sun lights the glass by its colour, dimmed by cloud; the moon softly, by its phase.
+            val moonlight = (1f - kotlin.math.cos(2f * kotlin.math.PI.toFloat() * p.moonPhase)) / 2f
+            val power = if (p.isSun) {
+                p.bodyVisible * (1f - 0.72f * p.cloudCover)
+            } else {
+                p.bodyVisible * (0.55f - 0.4f * p.cloudCover) * (0.35f + 0.65f * moonlight)
+            }
+            env.publishScene(
+                position = origin.value + Offset(body.x * size.width, body.y * size.height),
+                color = if (p.isSun) p.sun else MOONLIGHT,
+                power = power.coerceIn(0f, 1f),
+                sky = p.zenith,
+                flash = flash.value,
+                frost = p.frost,
+            )
+        }
 
         val precipitating = p.rain > 0.02f || p.snow > 0.02f
         val age = rippleAge.value
@@ -349,6 +372,13 @@ fun SkyScene(
 }
 
 private const val SUN_RADIUS = 0.022f
+
+private val MOONLIGHT = Color(0xFFD3DCF0)
+
+/** Where the scene sits on screen: the sun's position is handed to the glass in root pixels. */
+private class RootOrigin {
+    var value = Offset.Zero
+}
 
 /** The lightning channel of the current flash: where it strikes and its random shape. */
 private class BoltState {

@@ -39,6 +39,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toIntSize
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.atan2
 import kotlin.math.ceil
 
 /**
@@ -124,13 +127,53 @@ data class GlassStyle(
 
 /**
  * Shared lighting for every glass element on screen: the adaptive tint (dark smoky glass over
- * night skies, milky glass over bright ones) and the light angle driven by device tilt. Read in
- * the draw phase only, so tilting never recomposes anything.
+ * night skies, milky glass over bright ones), the tilt of the device, and the light of the scene
+ * itself — the sun or moon where it is on screen, its colour and strength, lightning, frost —
+ * published by the sky as it draws. Read in the draw phase only, so none of it recomposes anything.
  */
 @Stable
 class GlassEnvironment {
     var tint by mutableStateOf(Color.White)
-    var lightAngle by mutableFloatStateOf(-2.35f)
+
+    /** The tilt-driven light angle used when nothing in the scene gives light a direction. */
+    var lightAngle by mutableFloatStateOf(DEFAULT_LIGHT_ANGLE)
+
+    /** Device tilt, -1..1: the scene behind the glass shifts with it, reflections slide across. */
+    var tilt by mutableStateOf(Offset.Zero)
+
+    /** Where the sun or moon is on screen, in root pixels; unspecified when neither shows. */
+    var lightPosition by mutableStateOf(Offset.Unspecified)
+
+    /** Its light: white at noon, gold low in the sky, silver from the moon. */
+    var lightColor by mutableStateOf(Color.White)
+
+    /** 0..1: how strongly it lights the glass — a clear sun fully, a veiled one softly. */
+    var lightPower by mutableFloatStateOf(0f)
+
+    /** What the glass reflects: the sky overhead. */
+    var skyColor by mutableStateOf(Color.White)
+
+    /** 0..1: the lightning flash lighting the scene right now. */
+    var flash by mutableFloatStateOf(0f)
+
+    /** 0..1: frost creeping over the glass on a freezing day. */
+    var frost by mutableFloatStateOf(0f)
+
+    /**
+     * Called by the sky on every frame it draws; writes (and so redraws the glass) only what
+     * visibly changed.
+     */
+    fun publishScene(position: Offset, color: Color, power: Float, sky: Color, flash: Float, frost: Float) {
+        if (!lightPosition.isSpecified || (position - lightPosition).getDistance() > 1.5f) lightPosition = position
+        if (color.distanceTo(lightColor) > 0.01f) lightColor = color
+        if (abs(power - lightPower) > 0.01f) lightPower = power
+        if (sky.distanceTo(skyColor) > 0.01f) skyColor = sky
+        if (abs(flash - this.flash) > 0.01f || (flash == 0f && this.flash != 0f)) this.flash = flash
+        if (abs(frost - this.frost) > 0.01f) this.frost = frost
+    }
+
+    private fun Color.distanceTo(other: Color) =
+        abs(red - other.red) + abs(green - other.green) + abs(blue - other.blue)
 
     /**
      * 0..1: how much denser the tint must get to keep light type legible over a bright sky.
@@ -146,6 +189,31 @@ class GlassEnvironment {
 }
 
 val LocalGlassEnvironment = androidx.compose.runtime.staticCompositionLocalOf { GlassEnvironment() }
+
+/** Apple's resting light: from the upper left, highlights on the 45° / −135° corners. */
+const val DEFAULT_LIGHT_ANGLE = -2.35f
+
+/** How one glass element is lit: the direction the light comes from, and how strongly. */
+internal data class ElementLight(val angle: Float, val power: Float)
+
+/**
+ * The scene's light as this element sees it: toward the sun or moon from where the element is —
+ * so every pane catches it on its own side, and the highlights slide as it scrolls — stronger the
+ * nearer it is, and swung by the device's tilt. Without a light in the scene, the resting light.
+ */
+internal fun GlassEnvironment.lightFor(center: Offset, falloffPx: Float): ElementLight {
+    val swing = lightAngle - DEFAULT_LIGHT_ANGLE
+    val source = lightPosition
+    if (!source.isSpecified || lightPower <= 0.001f) return ElementLight(DEFAULT_LIGHT_ANGLE + swing, 0f)
+    val toward = atan2(source.y - center.y, source.x - center.x)
+    val follow = (lightPower * 1.6f).coerceIn(0f, 1f)
+    var delta = toward - DEFAULT_LIGHT_ANGLE
+    while (delta > PI) delta -= (2 * PI).toFloat()
+    while (delta < -PI) delta += (2 * PI).toFloat()
+    val distance = (source - center).getDistance() / falloffPx
+    val near = 1f / (1f + distance * distance)
+    return ElementLight(DEFAULT_LIGHT_ANGLE + delta * follow + swing, lightPower * (0.45f + 0.55f * near))
+}
 
 /** Per-element state: materialisation progress, the touch glow and the release wave. */
 @Stable
@@ -256,6 +324,11 @@ private class LiquidGlassNode(
         val boost = (1f + 2.4f * (environment?.tintBoost ?: 0f)) * (1f + 2.2f * contrast)
         // Milky glass over bright skies, smoky over dark: the rim is lit accordingly.
         val darkness = 1f - tint.luminance()
+        // The scene's light as this pane sees it, from where it is on screen right now.
+        val env = environment
+        val light = env?.lightFor(position + Offset(size.width / 2f, size.height / 2f), LIGHT_FALLOFF.toPx())
+            ?: ElementLight(DEFAULT_LIGHT_ANGLE, 0f)
+        val tilt = env?.tilt ?: Offset.Zero
         val touch = s?.touch ?: Offset.Unspecified
         val touchOn = touch.isSpecified && (s?.touchStrength ?: 0f) > 0f
         val wave = s?.waveProgress ?: 0f
@@ -267,7 +340,7 @@ private class LiquidGlassNode(
             radius = radius,
             style = style,
             density = density,
-            lightAngle = environment?.lightAngle ?: -2.35f,
+            lightAngle = quantize(light.angle, 0.004f),
             tint = tint.copy(alpha = (tint.alpha * style.tintAlpha * boost).coerceAtMost(0.62f + 0.2f * contrast)).toArgb(),
             materialize = materialize,
             touch = if (touchOn) touch else Offset.Zero,
@@ -276,6 +349,13 @@ private class LiquidGlassNode(
             wave = if (waveOn) wave else 0f,
             blur = blur * materialize,
             darkness = darkness,
+            lightPower = quantize(light.power, 0.01f),
+            lightColor = (env?.lightColor ?: Color.White).toArgb(),
+            skyColor = (env?.skyColor ?: Color.White).toArgb(),
+            flash = env?.flash ?: 0f,
+            frost = env?.frost ?: 0f,
+            tilt = tilt,
+            root = position,
         )
         if (key != effectKey) {
             shader.setFloatUniform("size", size.width, size.height)
@@ -293,6 +373,18 @@ private class LiquidGlassNode(
             shader.setFloatUniform("materialize", materialize)
             shader.setFloatUniform("grain", style.grain)
             shader.setFloatUniform("darkness", darkness)
+            shader.setColorUniform("lightColor", key.lightColor)
+            shader.setFloatUniform("lightPower", key.lightPower)
+            shader.setColorUniform("skyColor", key.skyColor)
+            shader.setFloatUniform("flash", key.flash)
+            shader.setFloatUniform("frost", key.frost)
+            // The scene lies deeper than the glass: it shifts a little behind it as the phone tilts,
+            // and the world's reflections slide across.
+            val depthPx = PARALLAX.toPx()
+            shader.setFloatUniform("parallax", -tilt.x * depthPx, -tilt.y * depthPx)
+            shader.setFloatUniform("root", position.x, position.y)
+            shader.setFloatUniform("sheen", tilt.x * SHEEN_TRAVEL.toPx(), tilt.y * SHEEN_TRAVEL.toPx() * 0.7f)
+            shader.setFloatUniform("px", density)
             shader.setFloatUniform("touch", key.touch.x, key.touch.y, key.touchStrength)
             if (waveOn) {
                 val reach = maxOf(size.width, size.height) * 1.3f
@@ -345,7 +437,25 @@ private data class LensKey(
     val wave: Float,
     val blur: Float,
     val darkness: Float,
+    val lightPower: Float,
+    val lightColor: Int,
+    val skyColor: Int,
+    val flash: Float,
+    val frost: Float,
+    val tilt: Offset,
+    val root: Offset,
 )
+
+private fun quantize(value: Float, step: Float) = Math.round(value / step) * step
+
+/** How far from the sun its light fades to half strength on a pane. */
+private val LIGHT_FALLOFF = 640.dp
+
+/** How much the scene behind the glass shifts with a full tilt. */
+private val PARALLAX = 5.dp
+
+/** How far the world's reflections slide across the glass with a full tilt. */
+private val SHEEN_TRAVEL = 260.dp
 
 private data class BackdropSourceElement(val backdrop: Backdrop) : ModifierNodeElement<BackdropSourceNode>() {
     override fun create() = BackdropSourceNode(backdrop)

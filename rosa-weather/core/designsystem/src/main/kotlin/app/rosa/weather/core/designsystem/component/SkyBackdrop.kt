@@ -59,8 +59,10 @@ fun RosaEnvironment(settings: AppSettings, palette: SkyPalette, content: @Compos
     environment.tintBoost = if (palette.isLight) 0f else ((palette.brightness - 0.12) / 0.24).toFloat().coerceIn(0f, 1f)
     LaunchedEffect(tilt) {
         // Every change redraws all glass on screen: move the light only when it visibly moves.
-        snapshotFlow { tilt.value.toLightAngle() }.collect { angle ->
+        snapshotFlow { tilt.value }.collect { t ->
+            val angle = t.toLightAngle()
             if (abs(angle - environment.lightAngle) > 0.015f) environment.lightAngle = angle
+            if ((t - environment.tilt).getDistance() > 0.012f) environment.tilt = t
         }
     }
     RosaTheme(colors) {
@@ -120,6 +122,7 @@ fun SkyBackdrop(
             haptics = LocalHaptics.current,
             interactive = interactive,
             transitionMillis = transitionMillis,
+            light = LocalGlassEnvironment.current,
         )
         CompositionLocalProvider(LocalBackdrop provides backdrop) {
             content()

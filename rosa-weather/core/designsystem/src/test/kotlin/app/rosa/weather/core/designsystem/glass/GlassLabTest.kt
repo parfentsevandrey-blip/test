@@ -26,6 +26,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
@@ -80,6 +82,105 @@ class GlassLabTest {
         val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
         val dir = File("build/glass-lab").apply { mkdirs() }
         File(dir, "lab.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** One moment of the scene's light, as the sky would publish it. */
+    private class Light(
+        val name: String,
+        val light: Boolean,
+        val sky: List<Color>,
+        val sun: Offset?,
+        val sunColor: Color = Color.White,
+        val power: Float = 0f,
+        val flash: Float = 0f,
+        val frost: Float = 0f,
+        val state: (GlassState) -> Unit = {},
+    )
+
+    /**
+     * Glass 2.0 is lit by the scene: the same panes under a noon sun, a low gold one, the moon,
+     * cloud, a lightning flash, frost — and pressed, rippling and materialising.
+     */
+    @Test
+    fun dynamic() {
+        val lights = listOf(
+            Light("noon", false, listOf(Color(0xFF2F7FEA), Color(0xFF8CC8FF)), Offset(0.82f, 0.08f), Color(0xFFFFFBF0), 1f),
+            Light("golden", false, listOf(Color(0xFF3A3F7A), Color(0xFFE0786A), Color(0xFFFFB36B)), Offset(0.06f, 0.55f), Color(0xFFFFB35C), 0.9f),
+            Light("moon", false, listOf(Color(0xFF070B1E), Color(0xFF22305A)), Offset(0.8f, 0.1f), Color(0xFFD3DCF0), 0.45f),
+            Light("overcast", true, listOf(Color(0xFF9AA6B8), Color(0xFFC7CED9)), null),
+            Light("lightning", false, listOf(Color(0xFF1A1F33), Color(0xFF3B4260)), null, flash = 0.85f),
+            Light("frost", true, listOf(Color(0xFFB9D3F0), Color(0xFFE6F0FA)), Offset(0.75f, 0.12f), Color(0xFFFFFFFF), 0.6f, frost = 0.85f),
+            Light("touch", false, listOf(Color(0xFF2F7FEA), Color(0xFF8CC8FF)), Offset(0.82f, 0.08f), Color(0xFFFFFBF0), 1f, state = {
+                it.touch = Offset(260f, 150f)
+                it.touchStrength = 1f
+                it.waveOrigin = Offset(260f, 150f)
+                it.waveProgress = 0.35f
+            }),
+            Light("materialise", false, listOf(Color(0xFF2F7FEA), Color(0xFF8CC8FF)), Offset(0.82f, 0.08f), Color(0xFFFFFBF0), 1f, state = { it.materialize = 0.5f }),
+        )
+        compose.setContent {
+            CompositionLocalProvider(LocalMotionEnabled provides false) {
+                Column(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    lights.chunked(4).forEach { row ->
+                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            row.forEach { l -> LitPanel(l, Modifier.weight(1f).fillMaxHeight()) }
+                        }
+                    }
+                }
+            }
+        }
+        compose.waitForIdle()
+        val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
+        File(File("build/glass-lab").apply { mkdirs() }, "dynamic.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    @Composable
+    private fun LitPanel(l: Light, modifier: Modifier) {
+        val backdrop = rememberBackdrop()
+        val colors = colorsFor(l.light)
+        val environment = remember { GlassEnvironment() }
+        environment.tint = colors.glassTint
+        environment.flash = l.flash
+        environment.frost = l.frost
+        environment.lightColor = l.sunColor
+        environment.lightPower = if (l.sun != null) l.power else 0f
+        environment.skyColor = l.sky.first()
+        val state = remember { GlassState().also(l.state) }
+        RosaTheme(colors) {
+            Box(modifier.onGloballyPositioned { c ->
+                val sun = l.sun ?: return@onGloballyPositioned
+                val at = c.positionInRoot() + Offset(sun.x * c.size.width, sun.y * c.size.height)
+                if (environment.lightPosition != at) environment.lightPosition = at
+            }) {
+                Canvas(Modifier.fillMaxSize().backdropSource(backdrop)) {
+                    drawRect(Brush.verticalGradient(l.sky))
+                    if (l.flash > 0f) drawRect(Color.White.copy(alpha = l.flash * 0.25f))
+                    l.sun?.let { sun ->
+                        val c = Offset(sun.x * size.width, sun.y * size.height)
+                        drawCircle(Brush.radialGradient(listOf(l.sunColor, l.sunColor.copy(alpha = 0f)), c, size.width * 0.22f), size.width * 0.22f, c)
+                        drawCircle(l.sunColor, size.width * 0.035f, c)
+                    }
+                }
+                CompositionLocalProvider(LocalBackdrop provides backdrop, LocalGlassEnvironment provides environment) {
+                    Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(l.name, color = colors.ink, fontSize = 13.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            GlassSurface(Modifier.width(118.dp).height(44.dp), cornerRadius = 22.dp, state = state) {
+                                Text("Москва", color = colors.ink, fontSize = 15.sp, modifier = Modifier.align(Alignment.Center))
+                            }
+                            GlassSurface(Modifier.size(48.dp), cornerRadius = 24.dp, state = state) {}
+                        }
+                        GlassSurface(Modifier.fillMaxWidth().height(150.dp), style = GlassStyle.Frosted, cornerRadius = 28.dp, state = state) {
+                            Text("Ближайшие 48 часов", color = colors.ink, fontSize = 13.sp, modifier = Modifier.padding(16.dp))
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            GlassSurface(Modifier.width(60.dp).height(90.dp), style = GlassStyle.Lens, cornerRadius = 22.dp, shadow = false, state = state) {}
+                            GlassSurface(Modifier.width(150.dp).height(90.dp), style = GlassStyle.Clear, cornerRadius = 30.dp, state = state) {}
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /** Big plain shapes on a flat backdrop: the optics alone, nothing to hide artefacts behind. */
