@@ -123,7 +123,6 @@ data class SkyParams(
                 Appearance.Evening -> 0.3f // the first stars of the blue hour
                 Appearance.Light -> 0f
             }
-            val humid = ((moment.humidity - 88) / 12f).coerceIn(0f, 1f)
             return SkyParams(
                 zenith = palette.zenith.toColor(), horizon = palette.horizon.toColor(), glow = palette.glow.toColor(),
                 sun = palette.sun.toColor(), cloudLight = palette.cloudLight.toColor(), cloudShade = palette.cloudShade.toColor(),
@@ -133,18 +132,22 @@ data class SkyParams(
                 cloudCover = visual.cloudCover, cloudDark = visual.cloudDarkness, fog = visual.fog, wind = visual.wind,
                 stars = night * (1f - visual.cloudCover * 0.85f), rain = visual.rain, snow = visual.snow,
                 lightning = visual.lightning,
-                frost = ((0.5 - moment.temperature) / 8.0).toFloat().coerceIn(0f, 0.9f),
-                condensation = maxOf(visual.fog * 0.8f, humid * 0.6f, if (visual.rain > 0.2f) 0.25f else 0f),
+                frost = moment.paneFrost,
+                condensation = moment.paneMist,
             )
         }
     }
 }
 
-/** How much GPU the scene may spend: the render scale of the offscreen sky. */
-enum class SceneQuality(val scale: Float, val windowEffects: Boolean) {
-    Battery(0.33f, false),
-    Balanced(0.5f, true),
-    Cinematic(0.75f, true),
+/**
+ * How much GPU the scene may spend: the render scale of the offscreen sky, and of the window pane
+ * (raindrops, frost, mist) over it — finer, since beads and ice need crisp edges the soft sky
+ * doesn't.
+ */
+enum class SceneQuality(val scale: Float, val windowEffects: Boolean, val windowScale: Float) {
+    Battery(0.33f, false, 0.33f),
+    Balanced(0.5f, true, 0.75f),
+    Cinematic(0.75f, true, 1f),
 }
 
 /**
@@ -170,11 +173,13 @@ fun SkyScene(
     val skyBrush = remember { ShaderBrush(sky) }
     val precipBrush = remember { ShaderBrush(precip) }
     val layer = rememberGraphicsLayer()
+    val pane = rememberGraphicsLayer()
     val baked = rememberGraphicsLayer()
     // Ambient motion runs on the shared, unhurried clock; only a tap ripple, a lightning flash and
     // weather transitions animate at the display's full rate, and only while they last.
     val clock = LocalAmbientClock.current
     val flash = remember { Animatable(0f) }
+    val bolt = remember { BoltState() }
     val ripple = remember { RippleState() }
     val rippleAge = remember { Animatable(RIPPLE_SECONDS) }
     val scope = rememberCoroutineScope()
@@ -206,6 +211,10 @@ fun SkyScene(
         while (isActive) {
             delay(Random.nextLong(3_500, 11_000))
             val distance = Random.nextFloat()
+            // A near strike shows its channel; a distant one only lights the clouds.
+            bolt.visible = distance < 0.55f
+            bolt.seed = Random.nextFloat() * 100f
+            bolt.x = 0.15f + Random.nextFloat() * 0.7f
             launch {
                 delay((250 + distance * 2200).toLong())
                 currentHaptics?.thunder(distance)
@@ -280,57 +289,73 @@ fun SkyScene(
         sky.setFloatUniform("wind", p.wind)
         sky.setFloatUniform("stars", p.stars)
         sky.setFloatUniform("flash", flash.value)
+        sky.setFloatUniform("bolt", if (bolt.visible) flash.value else 0f)
+        sky.setFloatUniform("boltSeed", bolt.seed)
+        sky.setFloatUniform("boltX", bolt.x)
         sky.setFloatUniform("tilt", tiltValue.x, tiltValue.y)
 
         val precipitating = p.rain > 0.02f || p.snow > 0.02f
+        val age = rippleAge.value
+        val rippleActive = age < RIPPLE_SECONDS
+        val windowOn = quality.windowEffects &&
+            (p.rain > 0.05f || p.frost > 0.02f || p.condensation > 0.05f || rippleActive)
+        // The pane (and the rain, whose streaks it refracts) is drawn finer than the soft sky.
+        val ws = if (windowOn) max(quality.windowScale, s) else s
+        val pw = max(1, (size.width * ws).roundToInt())
+        val ph = max(1, (size.height * ws).roundToInt())
+
         if (precipitating) {
-            precip.setFloatUniform("resolution", w.toFloat(), h.toFloat())
+            precip.setFloatUniform("resolution", pw.toFloat(), ph.toFloat())
             precip.setFloatUniform("time", t)
             precip.setFloatUniform("rain", p.rain)
             precip.setFloatUniform("snow", p.snow)
             precip.setFloatUniform("wind", p.wind)
             precip.setFloatUniform("tilt", tiltValue.x, tiltValue.y)
+            precip.setColorUniform("tint", lerp(p.horizon, p.cloudLight, 0.5f).toArgb())
         }
 
-        val age = rippleAge.value
-        val rippleActive = age < RIPPLE_SECONDS
-        val windowOn = quality.windowEffects &&
-            (p.rain > 0.05f || p.frost > 0.02f || p.condensation > 0.05f || rippleActive)
+        layer.renderEffect = null
+        layer.compositingStrategy = CompositingStrategy.Offscreen
+        layer.record(IntSize(w, h)) {
+            drawRect(skyBrush)
+            if (precipitating && !windowOn) drawRect(precipBrush)
+        }
         if (windowOn) {
-            window.setFloatUniform("resolution", w.toFloat(), h.toFloat())
+            window.setFloatUniform("resolution", pw.toFloat(), ph.toFloat())
             window.setFloatUniform("time", t)
             window.setFloatUniform("drops", (p.rain * 1.1f).coerceAtMost(1f))
             window.setFloatUniform("frost", p.frost)
             window.setFloatUniform("fogged", p.condensation)
             window.setFloatUniform(
                 "ripple",
-                ripple.position.x * s, ripple.position.y * s, t - age, if (rippleActive) ripple.strength else 0f,
+                ripple.position.x * ws, ripple.position.y * ws, t - age, if (rippleActive) ripple.strength else 0f,
             )
-            window.setInputShader("wipe", wipe.shader(w, h))
-            layer.renderEffect = RenderEffect.createRuntimeShaderEffect(window, "content").asComposeRenderEffect()
-        } else {
-            layer.renderEffect = null
-        }
-        layer.compositingStrategy = CompositingStrategy.Offscreen
-        layer.record(IntSize(w, h)) {
-            drawRect(skyBrush)
-            if (precipitating) drawRect(precipBrush)
-        }
-        // The pane effect is baked once per sky frame into a layer of its own. Left on the sky's
-        // node it would be re-applied wherever that node is drawn: under every glass element,
-        // for its own region, on every frame of a scroll.
-        val picture = if (windowOn) {
+            window.setInputShader("wipe", wipe.shader(pw, ph))
+            pane.renderEffect = RenderEffect.createRuntimeShaderEffect(window, "content").asComposeRenderEffect()
+            pane.record(IntSize(pw, ph)) {
+                scale(ws / s, ws / s, pivot = Offset.Zero) { drawLayer(layer) }
+                if (precipitating) drawRect(precipBrush)
+            }
+            // The pane effect is baked once per sky frame into a layer of its own. Left on its
+            // node it would be re-applied wherever that node is drawn: under every glass element,
+            // for its own region, on every frame of a scroll.
             baked.compositingStrategy = CompositingStrategy.Offscreen
-            baked.record(IntSize(w, h)) { drawLayer(layer) }
-            baked
+            baked.record(IntSize(pw, ph)) { drawLayer(pane) }
+            scale(1f / ws, 1f / ws, pivot = Offset.Zero) { drawLayer(baked) }
         } else {
-            layer
+            scale(1f / s, 1f / s, pivot = Offset.Zero) { drawLayer(layer) }
         }
-        scale(1f / s, 1f / s, pivot = Offset.Zero) { drawLayer(picture) }
     }
 }
 
 private const val SUN_RADIUS = 0.022f
+
+/** The lightning channel of the current flash: where it strikes and its random shape. */
+private class BoltState {
+    var visible = false
+    var seed = 0f
+    var x = 0.5f
+}
 
 private class MutableParams(start: SkyParams, target: SkyParams) {
     var start by mutableStateOf(start)

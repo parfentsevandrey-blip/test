@@ -36,6 +36,56 @@ data class ForecastMoment(
 ) {
     val dayPhase: DayPhase get() = DayPhase.fromSunElevation(sun.elevation)
     val isDay: Boolean get() = sun.elevation > -0.83
+
+    /**
+     * How much frost has grown on a window pane (0..0.9), from just below freezing on. The app's
+     * window and the widgets' glass both read it, so they always agree.
+     */
+    val paneFrost: Float get() = ((0.5 - temperature) / 8.0).toFloat().coerceIn(0f, 0.9f)
+
+    /** How fogged a window pane is (0..1): mist outside, humid air, or rain running down it. */
+    val paneMist: Float
+        get() {
+            val humid = ((humidity - 88) / 12f).coerceIn(0f, 1f)
+            return maxOf(visual.fog * 0.8f, humid * 0.6f, if (visual.rain > 0.2f) 0.25f else 0f)
+        }
+
+    /**
+     * What falls or flashes right now, as the scene shows it: when this changes, the picture
+     * changes (rain starts or stops, snow, a storm, fog), and every surface showing the weather
+     * must be redrawn.
+     */
+    val sceneKind: Int
+        get() = (if (visual.rain > 0.05f) 1 else 0) or
+            (if (visual.snow > 0.05f || visual.hail > 0.05f) 2 else 0) or
+            (if (visual.lightning > 0.1f) 4 else 0) or
+            (if (visual.fog > 0.3f) 8 else 0)
+}
+
+/**
+ * When the weather in the picture next changes after [from] — rain starts or stops, snow, a storm,
+ * fog ([ForecastMoment.sceneKind]) — to within half a minute, or null if it holds for
+ * [horizonSeconds]. Everything that draws the weather (the app's sky, the widgets) reads the same
+ * moments, so redrawing at this instant keeps them all in step.
+ */
+fun Forecast.nextSceneChange(from: Long, horizonSeconds: Long = 4 * 3600L, stepSeconds: Long = 300L): Long? {
+    val kind = momentAt(from).sceneKind
+    var before = from
+    var t = from + stepSeconds
+    while (t <= from + horizonSeconds) {
+        if (momentAt(t).sceneKind != kind) {
+            var lo = before
+            var hi = t
+            while (hi - lo > 30) {
+                val mid = (lo + hi) / 2
+                if (momentAt(mid).sceneKind != kind) hi = mid else lo = mid
+            }
+            return hi
+        }
+        before = t
+        t += stepSeconds
+    }
+    return null
 }
 
 /** How long a direct "current" observation stays more trustworthy than the hourly model. */

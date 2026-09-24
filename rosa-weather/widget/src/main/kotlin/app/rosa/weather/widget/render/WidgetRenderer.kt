@@ -125,6 +125,7 @@ class WidgetRenderer(private val context: Context) {
         background.draw(
             canvas, request.widthDp, request.heightDp, request.cornerRadiusDp, request.config, palette,
             visual, anchor, request.dynamic, request.seed,
+            pane = moment?.let { WidgetBackground.Pane(it.paneFrost, it.paneMist) } ?: WidgetBackground.Pane.Dry,
         )
 
         val headline = if (forecast != null && moment != null) Headlines.pick(forecast, moment) else null

@@ -29,6 +29,7 @@ import app.rosa.weather.core.model.WidgetStyle
 import app.rosa.weather.core.model.WidgetTapAction
 import app.rosa.weather.core.model.WidgetTheme
 import app.rosa.weather.core.model.momentAt
+import app.rosa.weather.core.model.nextSceneChange
 import app.rosa.weather.widget.provider.RosaWidgetProvider
 import app.rosa.weather.widget.provider.WidgetKind
 import app.rosa.weather.widget.provider.WidgetSizes
@@ -253,6 +254,9 @@ class WidgetUpdater @Inject constructor(
         forecast.dayAt(now)?.let { day ->
             listOfNotNull(day.sunrise, day.sunset).filter { it > now }.forEach { candidates += it + 30 }
         }
+        // Rain starting or stopping, snow, a storm: the widget turns with the app's sky, not up to
+        // half an hour later.
+        forecast.nextSceneChange(now)?.let { candidates += it + 30 }
         return candidates.min().coerceAtLeast(now + 60)
     }
 

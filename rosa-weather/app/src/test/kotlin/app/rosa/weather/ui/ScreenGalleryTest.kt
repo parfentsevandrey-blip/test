@@ -69,8 +69,9 @@ class ScreenGalleryTest {
         shiftCelsius: Double = 0.0,
         doc: Boolean = true,
         appearance: Appearance = Appearance.Auto,
+        forecastAgeSeconds: Long = 0,
     ) {
-        val forecast = SampleForecast.create(scenario, nowEpochSeconds = now, placeId = "geo:1").shifted(shiftCelsius)
+        val forecast = SampleForecast.create(scenario, nowEpochSeconds = now - forecastAgeSeconds, placeId = "geo:1").shifted(shiftCelsius)
         val state = HomeUiState(
             loaded = true,
             pages = listOf(PlacePage(Place("geo:1", "Москва", 55.75, 37.62), forecast)),
@@ -92,8 +93,9 @@ class ScreenGalleryTest {
         capture(name, doc)
     }
 
+    /** 17:30 in Moscow, light rain on the pane. */
     @Test
-    fun homeRainy() = home(SampleForecast.Scenario.RainyAfternoon, 1_758_628_800L, "home-rainy")
+    fun homeRainy() = home(SampleForecast.Scenario.RainyAfternoon, 1_758_637_800L, "home-rainy", forecastAgeSeconds = 2_400)
 
     @Test
     fun homeNight() = home(SampleForecast.Scenario.ClearNight, 1_758_664_800L, "home-night")

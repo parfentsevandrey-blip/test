@@ -88,6 +88,41 @@ class WidgetGalleryTest {
         }
     }
 
+    /** When it rains in the app it rains on the widget: every style, in rain, a storm, snow and fog. */
+    @Test
+    fun weather() {
+        // (scenario, the moment shown, how long before it the forecast was fetched)
+        val scenes = listOf(
+            Triple(SampleForecast.Scenario.RainyAfternoon, 1_758_637_800L, 2_400L),
+            Triple(SampleForecast.Scenario.StormyWarm, 1_758_637_800L, 0L),
+            Triple(SampleForecast.Scenario.SnowyCold, 1_758_610_800L, 0L),
+            Triple(SampleForecast.Scenario.FoggyMorning, 1_758_598_200L, 0L),
+        )
+        val styles = WidgetStyle.entries
+        val density = 2.625f
+        val (w, h) = 150f to 162f
+        val gap = 14f
+        val sheetW = gap + styles.size * (w + gap)
+        val sheetH = gap + scenes.size * (h + gap)
+        val bmp = Bitmap.createBitmap((sheetW * density).toInt(), (sheetH * density).toInt(), Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bmp)
+        canvas.scale(density, density)
+        wallpaper(canvas, sheetW, sheetH)
+        scenes.forEachIndexed { row, (scenario, now, age) ->
+            val forecast = SampleForecast.create(scenario, nowEpochSeconds = now - age)
+            val content = WidgetContent("Москва", true, forecast, now, Units())
+            styles.forEachIndexed { column, style ->
+                canvas.save()
+                canvas.translate(gap + column * (w + gap), gap + row * (h + gap))
+                val config = WidgetConfig(style = style, opacity = if (style == WidgetStyle.Sky) 1f else 0.72f)
+                renderer.draw(canvas, WidgetRenderRequest(w, h, config, content, 22f, systemNight = false, seed = 5 + row))
+                canvas.restore()
+            }
+        }
+        File(out, "weather.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        exportDocImage(bmp, "widgets-weather", 1100)
+    }
+
     private fun sheet(name: String, scenario: SampleForecast.Scenario, config: WidgetConfig, now: Long, subset: Boolean = false) {
         val density = 2.625f
         val forecast = SampleForecast.create(scenario, nowEpochSeconds = now)

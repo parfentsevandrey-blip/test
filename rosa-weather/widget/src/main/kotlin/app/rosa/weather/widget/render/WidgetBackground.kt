@@ -35,6 +35,7 @@ internal class WidgetBackground {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val path = Path()
     private val glyphs = WeatherGlyphPainter()
+    private val weather = WidgetWeather()
 
     fun draw(
         canvas: Canvas,
@@ -47,21 +48,47 @@ internal class WidgetBackground {
         anchor: SkyAnchor,
         dynamic: DynamicTones,
         seed: Int,
+        pane: Pane = Pane.Dry,
     ) {
         val rect = RectF(0f, 0f, w, h)
         path.reset()
         path.addRoundRect(rect, radius, radius, Path.Direction.CW)
+        this.pane = pane
         when (config.style) {
             WidgetStyle.Glass -> glass(canvas, rect, radius, config, palette, visual, anchor, seed)
             WidgetStyle.Sky -> sky(canvas, rect, radius, config, palette, visual, anchor, seed)
-            WidgetStyle.Clear -> if (config.glassRim) glassBezel(canvas, rect, radius, palette, strength = 0.65f)
+            WidgetStyle.Clear -> {
+                // Over the wallpaper: rain and beads with nothing known behind them to refract.
+                if (config.showWeatherArt) {
+                    canvas.withClip(path) {
+                        weather.behind(this, rect, visual, Argb.White, strength = 0.7f, seed = seed)
+                        weather.onGlass(this, rect, radius, visual, pane.frost, 0f, Argb.White, Argb.White, palette.isDark, refract = false, seed = seed)
+                    }
+                }
+                if (config.glassRim) glassBezel(canvas, rect, radius, palette, strength = 0.65f)
+            }
             WidgetStyle.Tonal -> {
-                tonal(canvas, rect, radius, config, palette, dynamic)
+                val (a, b) = tonal(canvas, rect, radius, config, palette, dynamic)
+                if (config.showWeatherArt) {
+                    canvas.withClip(path) {
+                        weather.behind(this, rect, visual, a.lerp(Argb.White, 0.6f), strength = 0.5f, seed = seed)
+                        weather.onGlass(this, rect, radius, visual, pane.frost, pane.mist * 0.6f, a, b, palette.isDark, refract = true, seed = seed)
+                    }
+                }
                 if (config.glassRim) glassBezel(canvas, rect, radius, palette, strength = 0.7f)
             }
             WidgetStyle.Paper -> paper(canvas, rect, radius, palette)
         }
     }
+
+    /** The state of the widget's glass at this moment, as the app's window shows it. */
+    data class Pane(val frost: Float, val mist: Float) {
+        companion object {
+            val Dry = Pane(0f, 0f)
+        }
+    }
+
+    private var pane = Pane.Dry
 
     // region Glass
 
@@ -95,7 +122,7 @@ internal class WidgetBackground {
 
         if (config.showWeatherArt) {
             ambientLight(canvas, rect, palette, anchor, opacity)
-            precipitation(canvas, rect, visual, alpha = 0.22f, seed = seed)
+            weather.behind(canvas, rect, visual, palette.sky.horizon.lerp(Argb.White, 0.55f), strength = 0.55f + 0.3f * opacity, seed = seed)
             if (!anchor.isSun && visual.cloudCover < 0.6f) stars(canvas, rect, (1f - visual.cloudCover) * 0.5f, seed)
         }
 
@@ -107,6 +134,9 @@ internal class WidgetBackground {
         )
         canvas.drawRect(rect, paint)
         grain(canvas, rect, if (dark) 0.035f else 0.045f)
+        if (config.showWeatherArt) {
+            weather.onGlass(canvas, rect, radius, visual, pane.frost, pane.mist, top, bottom, dark, refract = true, seed = seed)
+        }
         if (!config.glassRim) innerGlow(canvas, rect, radius, dark)
     }
 
@@ -284,7 +314,7 @@ internal class WidgetBackground {
         celestialBody(canvas, rect, anchor, palette, visual)
         clouds(canvas, rect, palette, visual, seed)
         fog(canvas, rect, palette, visual)
-        precipitation(canvas, rect, visual, alpha = 0.55f, seed = seed)
+        weather.behind(canvas, rect, visual, sky.horizon.lerp(Argb.White, 0.55f), strength = 1f, seed = seed)
         if (visual.lightning > 0f) lightning(canvas, rect, seed)
 
         // Legibility: light type gets a dimmed, sky-coloured veil, dark type a milky one — like
@@ -300,6 +330,9 @@ internal class WidgetBackground {
         )
         canvas.drawRect(rect, paint)
         grain(canvas, rect, 0.035f)
+        if (config.showWeatherArt) {
+            weather.onGlass(canvas, rect, radius, visual, pane.frost, pane.mist, sky.zenith, sky.horizon.lerp(sky.glow, 0.25f), palette.isDark, refract = true, seed = seed)
+        }
         canvas.restore()
         if (config.glassRim) glassBezel(canvas, rect, radius, palette, strength = 0.85f) else rim(canvas, rect, radius, palette, strength = 0.75f)
     }
@@ -378,39 +411,6 @@ internal class WidgetBackground {
         paint.maskFilter = null
     }
 
-    private fun precipitation(canvas: Canvas, rect: RectF, visual: WeatherVisual, alpha: Float, seed: Int) {
-        val w = rect.width()
-        val h = rect.height()
-        val rnd = Random(seed * 17 + 3)
-        if (visual.rain > 0.05f) {
-            paint.shader = null
-            paint.style = Paint.Style.STROKE
-            paint.strokeCap = Paint.Cap.ROUND
-            paint.strokeWidth = 0.9f
-            val slant = 0.18f + visual.wind * 0.35f
-            val n = (w * h / 400f * visual.rain).toInt().coerceIn(6, 220)
-            repeat(n) {
-                val x = rnd.nextFloat() * w * 1.2f
-                val y = rnd.nextFloat() * h
-                val len = 5f + rnd.nextFloat() * 9f * (0.5f + visual.rain)
-                paint.color = Argb.White.withAlpha(alpha * (0.35f + rnd.nextFloat() * 0.65f)).value
-                canvas.drawLine(x, y, x - len * slant, y + len, paint)
-            }
-            paint.style = Paint.Style.FILL
-        }
-        if (visual.snow > 0.05f || visual.hail > 0.05f) {
-            paint.shader = null
-            val n = (w * h / 520f * max(visual.snow, visual.hail)).toInt().coerceIn(8, 160)
-            repeat(n) {
-                val x = rnd.nextFloat() * w
-                val y = rnd.nextFloat() * h
-                val r = if (visual.hail > visual.snow) 0.9f + rnd.nextFloat() * 0.8f else 0.7f + rnd.nextFloat() * 1.8f
-                paint.color = Argb.White.withAlpha(alpha * 1.4f * (0.4f + rnd.nextFloat() * 0.6f)).value
-                canvas.drawCircle(x, y, r, paint)
-            }
-        }
-    }
-
     private fun stars(canvas: Canvas, rect: RectF, strength: Float, seed: Int) {
         if (strength <= 0.02f) return
         val rnd = Random(seed * 13 + 1)
@@ -455,7 +455,8 @@ internal class WidgetBackground {
 
     // region Tonal & paper
 
-    private fun tonal(canvas: Canvas, rect: RectF, radius: Float, config: WidgetConfig, palette: WidgetPalette, dynamic: DynamicTones) {
+    /** Draws the tonal body; returns its colours at the top-left and bottom-right. */
+    private fun tonal(canvas: Canvas, rect: RectF, radius: Float, config: WidgetConfig, palette: WidgetPalette, dynamic: DynamicTones): Pair<Argb, Argb> {
         val opacity = config.opacity.coerceIn(0.2f, 1f).let { 0.55f + it * 0.45f }
         val (a, b) = if (palette.isDark) {
             Argb(dynamic.neutralDark).lerp(Argb(dynamic.accentDark), 0.35f) to Argb(dynamic.accentDark).lerp(Argb(dynamic.neutralDark), 0.4f)
@@ -466,6 +467,7 @@ internal class WidgetBackground {
         paint.shader = LinearGradient(0f, 0f, rect.width(), rect.height(), a.withAlpha(opacity).value, b.withAlpha(opacity).value, Shader.TileMode.CLAMP)
         canvas.drawPath(path, paint)
         paint.shader = null
+        return a to b
     }
 
     private fun paper(canvas: Canvas, rect: RectF, radius: Float, palette: WidgetPalette) {

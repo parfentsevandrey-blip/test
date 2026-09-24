@@ -2,7 +2,7 @@ package app.rosa.weather.core.designsystem.glass
 
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
-import android.graphics.BlurMaskFilter
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RenderEffect
@@ -16,17 +16,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.positionInRoot
@@ -40,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.TextUnit
 import androidx.core.content.res.ResourcesCompat
@@ -47,17 +53,23 @@ import androidx.core.graphics.createBitmap
 import app.rosa.weather.core.designsystem.R
 import app.rosa.weather.core.designsystem.component.LocalBackdrop
 import app.rosa.weather.core.designsystem.motion.LocalMotionEnabled
-import org.intellij.lang.annotations.Language
 import kotlin.math.ceil
 import kotlin.math.max
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.intellij.lang.annotations.Language
 
 /**
  * Numerals made of liquid glass — the signature of the home screen, after the glass clock of
- * iOS 26. The text becomes two masks: its exact shape, and a soft height field (the same shape,
- * blurred) whose slope gives every point of every glyph a surface normal. An AGSL lens then
- * refracts the sky through the digits (most at their rounded edges), lights the rims from the
- * tilt-driven light, shades the far side, tints the body with the ink colour so the number reads
- * over any sky, and casts a soft shadow. A new value melts out of the old one instead of cutting.
+ * iOS 26. Each value becomes a signed distance field, so every stroke — hairline or stem — gets a
+ * real rounded bevel measured from its own edge. An AGSL lens bends the sky through that bevel
+ * (splitting it into colour at the very rim), reflects light along the edges, puts a sharp glint
+ * where the bevel faces the tilt-driven light, gathers a caustic inside the far edge and casts a
+ * soft shadow; a crisp edge line keeps the number legible on any sky. A new value melts out of
+ * the old one: their distance fields are blended, so the shapes flow into each other.
+ *
+ * Fields are built off the main thread, and [prefetch] (say, the next hours' temperatures) is
+ * prepared ahead, so scrubbing through time never waits for one.
  */
 @Composable
 fun GlassText(
@@ -65,9 +77,10 @@ fun GlassText(
     fontSize: TextUnit,
     color: Color,
     modifier: Modifier = Modifier,
-    weight: Int = 500,
+    weight: Int = 600,
     letterSpacingEm: Float = -0.012f,
-    tintStrength: Float = 0.34f,
+    tintStrength: Float = 0.2f,
+    prefetch: List<String> = emptyList(),
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
@@ -78,21 +91,30 @@ fun GlassText(
     val px = with(density) { fontSize.toPx() }
     val font = remember(typeface, px, weight, letterSpacingEm) { GlassFont(typeface, px, weight, letterSpacingEm) }
 
-    val current = remember(font, text) { font.masks(text) }
+    // The first value is built right away (the hero is never empty); later ones in the background.
+    var current by remember(font) { mutableStateOf(font.masks(text)) }
+    LaunchedEffect(font, text) {
+        current = font.cached(text) ?: withContext(Dispatchers.Default) { font.masks(text) }
+    }
+    LaunchedEffect(font, prefetch) {
+        withContext(Dispatchers.Default) { prefetch.forEach { font.masks(it) } }
+    }
+
     val melt = remember { Animatable(1f) }
-    val morph = remember { MorphState(current, current) }
+    val morph = remember(font) { MorphState(current, current) }
     LaunchedEffect(current) {
         if (morph.to === current) return@LaunchedEffect
         morph.from = if (motion) morph.to else current
         morph.to = current
         if (motion) {
             melt.snapTo(0f)
-            melt.animateTo(1f, tween(520, easing = FastOutSlowInEasing))
+            melt.animateTo(1f, tween(560, easing = FastOutSlowInEasing))
         }
     }
 
-    val widthDp = with(density) { current.width.toDp() }
-    val heightDp = with(density) { current.height.toDp() }
+    val shown = current
+    val widthDp = with(density) { shown.width.toDp() }
+    val heightDp = with(density) { shown.height.toDp() }
     Box(
         modifier
             .size(widthDp, heightDp)
@@ -110,21 +132,24 @@ fun GlassText(
     )
 }
 
-/** The glyph masks of one value. [margin] surrounds the text on every side (shadow, refraction). */
+/**
+ * The distance field of one value, encoded in alpha as `0.5 + d / (2 * range)` (d in px, positive
+ * inside). [margin] surrounds the text on every side, for the shadow and the refraction.
+ */
 internal class GlassMasks(
-    val sharp: Bitmap,
-    val soft: Bitmap,
+    val field: Bitmap,
     val width: Int,
     val height: Int,
     val margin: Int,
-    val softRadius: Float,
+    val range: Float,
+    val sizePx: Float,
 )
 
 internal class MorphState(var from: GlassMasks, var to: GlassMasks)
 
-/** Rasterises text into the two masks, with fixed vertical metrics so values don't jump. */
+/** Rasterises text into distance fields, with fixed vertical metrics so values don't jump. */
 internal class GlassFont(typeface: Typeface, private val sizePx: Float, weight: Int, letterSpacingEm: Float) {
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    private val template = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         this.typeface = typeface
         textSize = sizePx
         color = android.graphics.Color.WHITE
@@ -137,39 +162,88 @@ internal class GlassFont(typeface: Typeface, private val sizePx: Float, weight: 
 
     init {
         val bounds = Rect()
-        paint.getTextBounds(REFERENCE, 0, REFERENCE.length, bounds)
+        template.getTextBounds(REFERENCE, 0, REFERENCE.length, bounds)
         top = bounds.top
         bottom = bounds.bottom
     }
 
-    /** Recent values: scrubbing the timeline back and forth reuses them instead of re-rasterising. */
+    /** Recent and prefetched values: scrubbing the timeline reuses them. */
     private val recent = object : LinkedHashMap<String, GlassMasks>(RECENT, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, GlassMasks>) = size > RECENT
     }
 
-    fun masks(text: String): GlassMasks = recent.getOrPut(text) { rasterise(text) }
+    @Synchronized
+    fun cached(text: String): GlassMasks? = recent[text]
+
+    fun masks(text: String): GlassMasks {
+        cached(text)?.let { return it }
+        val built = rasterise(text)
+        synchronized(this) { recent[text] = built }
+        return built
+    }
 
     private fun rasterise(text: String): GlassMasks {
+        val paint = Paint(template)
         val width = max(1, ceil(paint.measureText(text)).toInt())
         // Air above and below the digits, like the line spacing of a normal numeral line.
         val pad = (sizePx * 0.1f).toInt()
         val height = max(1, bottom - top + pad * 2)
-        val softRadius = sizePx * 0.034f
-        val margin = ceil(sizePx * 0.13f).toInt()
-        val baseline = (margin + pad - top).toFloat()
-        fun render(blur: Float): Bitmap {
-            val bitmap = createBitmap(width + margin * 2, height + margin * 2)
-            paint.maskFilter = if (blur > 0f) BlurMaskFilter(blur, BlurMaskFilter.Blur.NORMAL) else null
-            android.graphics.Canvas(bitmap).drawText(text, margin.toFloat(), baseline, paint)
-            paint.maskFilter = null
-            return bitmap
+        val range = sizePx * RANGE
+        val margin = ceil(range + sizePx * REFRACTION + 2f).toInt()
+        // Measured at full resolution (at half, the transform's pixel steps would ripple through
+        // the bevel), then stored at half: a distance field is smooth, and linear filtering reads
+        // it back with crisp edges — a quarter of the memory.
+        val fw = width + margin * 2
+        val fh = height + margin * 2
+        val coverage = createBitmap(fw, fh)
+        android.graphics.Canvas(coverage).drawText(text, margin.toFloat(), (margin + pad - top).toFloat(), paint)
+        val full = IntArray(fw * fh)
+        coverage.getPixels(full, 0, fw, 0, 0, fw, fh)
+        coverage.recycle()
+        for (i in full.indices) full[i] = full[i] ushr 24
+        val distance = GlyphDistance.signed(full, fw, fh)
+        val w = ceil(fw * FIELD_SCALE).toInt()
+        val h = ceil(fh * FIELD_SCALE).toInt()
+        val pixels = IntArray(w * h)
+        for (y in 0 until h) {
+            for (x in 0 until w) {
+                // 2 × 2 average: the half-size field, a little smoother still.
+                var sum = 0f
+                var count = 0
+                for (dy in 0..1) for (dx in 0..1) {
+                    val sx = x * 2 + dx
+                    val sy = y * 2 + dy
+                    if (sx < fw && sy < fh) {
+                        sum += distance[sy * fw + sx]
+                        count++
+                    }
+                }
+                val d = sum / count
+                val a = ((0.5f + d / (2f * range)).coerceIn(0f, 1f) * 255f + 0.5f).toInt()
+                pixels[y * w + x] = a shl 24
+            }
         }
-        return GlassMasks(render(0f), render(softRadius), width, height, margin, softRadius)
+        val field = Bitmap.createBitmap(pixels, w, h, Bitmap.Config.ARGB_8888)
+        return GlassMasks(field, width, height, margin, range, sizePx)
     }
 
-    private companion object {
+    internal companion object {
         const val REFERENCE = "0123456789−°"
-        const val RECENT = 8
+        const val RECENT = 40
+        const val FIELD_SCALE = 0.5f
+
+        /**
+         * How far from the edge the field reaches, as a share of the font size. Kept tight: the
+         * field has 8 bits, and the narrower its range, the finer its steps (and the smoother the
+         * surface normals read from it).
+         */
+        const val RANGE = 0.055f
+
+        /** The rounded bevel of every stroke; thick stems keep a flat top between their bevels. */
+        const val BEVEL = 0.036f
+
+        /** How far the rim reaches out for what lies beyond the glyph. */
+        const val REFRACTION = 0.07f
     }
 }
 
@@ -215,7 +289,7 @@ private class GlassTextNode(
     private var effect: androidx.compose.ui.graphics.RenderEffect? = null
     private var effectKey: EffectKey? = null
 
-    private data class EffectKey(val a: GlassMasks, val b: GlassMasks, val mix: Float, val lightAngle: Float, val tint: Int)
+    private data class EffectKey(val a: GlassMasks, val b: GlassMasks, val mix: Float, val lightAngle: Float, val tint: Int, val edge: Int)
 
     override fun onAttach() {
         layer = requireGraphicsContext().createGraphicsLayer()
@@ -238,8 +312,13 @@ private class GlassTextNode(
     }
 
     private fun shaderOf(bitmap: Bitmap): BitmapShader {
-        if (shaders.size > 8) shaders.keys.retainAll(setOf(morph.from.sharp, morph.from.soft, morph.to.sharp, morph.to.soft))
-        return shaders.getOrPut(bitmap) { BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP) }
+        if (shaders.size > 8) shaders.keys.retainAll(setOf(morph.from.field, morph.to.field))
+        return shaders.getOrPut(bitmap) {
+            BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
+                filterMode = BitmapShader.FILTER_MODE_LINEAR
+                setLocalMatrix(Matrix().apply { setScale(1f / GlassFont.FIELD_SCALE, 1f / GlassFont.FIELD_SCALE) })
+            }
+        }
     }
 
     override fun ContentDrawScope.draw() {
@@ -250,32 +329,51 @@ private class GlassTextNode(
         val back = backdrop
         val margin = to.margin.toFloat()
         if (glass == null || back == null) {
-            // No sky to refract (previews): plain ink numerals.
-            drawImage(to.sharp.asImageBitmap(), topLeft = Offset(-margin, -margin), colorFilter = ColorFilter.tint(ink))
+            // No sky to refract (previews): the glyphs in plain ink. The matrix turns the field
+            // back into coverage, one pixel of anti-aliasing wide at the edge.
+            val k = 2f * to.range
+            val threshold = ColorMatrix(
+                floatArrayOf(
+                    0f, 0f, 0f, 0f, ink.red * 255f,
+                    0f, 0f, 0f, 0f, ink.green * 255f,
+                    0f, 0f, 0f, 0f, ink.blue * 255f,
+                    0f, 0f, 0f, k, 127.5f - 255f * to.range,
+                ),
+            )
+            drawImage(
+                to.field.asImageBitmap(),
+                dstOffset = IntOffset(-to.margin, -to.margin),
+                dstSize = IntSize(to.width + to.margin * 2, to.height + to.margin * 2),
+                colorFilter = ColorFilter.colorMatrix(threshold),
+            )
             return
         }
         val a = if (t >= 1f) to else from
         val mix = if (a === to) 1f else t
         val tint = ink.copy(alpha = tintStrength).toArgb()
-        val key = EffectKey(a, to, mix, environment.lightAngle, tint)
+        // Over pale skies a darker line defines the glass; over deep ones a faint light one.
+        val edge = if (ink.luminance() < 0.5f) ink.copy(alpha = 0.5f).toArgb() else ink.copy(alpha = 0.22f).toArgb()
+        val key = EffectKey(a, to, mix, environment.lightAngle, tint, edge)
         if (key != effectKey) {
-            shader.setInputShader("sharpA", shaderOf(a.sharp))
-            shader.setInputShader("softA", shaderOf(a.soft))
-            shader.setInputShader("sharpB", shaderOf(to.sharp))
-            shader.setInputShader("softB", shaderOf(to.soft))
+            shader.setInputShader("fieldA", shaderOf(a.field))
+            shader.setInputShader("fieldB", shaderOf(to.field))
             shader.setFloatUniform("mixT", mix)
-            shader.setFloatUniform("refraction", to.softRadius * 1.6f)
+            shader.setFloatUniform("range", to.range)
+            shader.setFloatUniform("bevel", to.sizePx * GlassFont.BEVEL)
+            shader.setFloatUniform("refraction", to.sizePx * GlassFont.REFRACTION)
+            shader.setFloatUniform("dispersion", 0.22f)
             shader.setFloatUniform("lightAngle", key.lightAngle)
             shader.setColorUniform("tint", tint)
-            shader.setFloatUniform("shadowOffset", 0f, to.softRadius * 0.55f)
+            shader.setColorUniform("edge", edge)
+            shader.setFloatUniform("shadowOffset", 0f, to.sizePx * 0.022f)
             shader.setFloatUniform("shadowAlpha", 0.3f)
             effect = RenderEffect.createRuntimeShaderEffect(shader, "content").asComposeRenderEffect()
             effectKey = key
         }
         glass.renderEffect = effect
 
-        val w = max(from.sharp.width, to.sharp.width)
-        val h = max(from.sharp.height, to.sharp.height)
+        val w = max(from.width, to.width) + to.margin * 2
+        val h = max(from.height, to.height) + to.margin * 2
         val offset = back.positionInRoot - position + Offset(margin, margin)
         glass.record(IntSize(w, h)) {
             translate(offset.x, offset.y) { drawLayer(back.layer) }
@@ -287,58 +385,81 @@ private class GlassTextNode(
 @Language("AGSL")
 private const val GLASS_TEXT_SHADER = """
 uniform shader content;
-uniform shader sharpA;
-uniform shader softA;
-uniform shader sharpB;
-uniform shader softB;
+uniform shader fieldA;
+uniform shader fieldB;
 uniform float mixT;
+uniform float range;
+uniform float bevel;
 uniform float refraction;
+uniform float dispersion;
 uniform float lightAngle;
 layout(color) uniform half4 tint;
+layout(color) uniform half4 edge;
 uniform float2 shadowOffset;
 uniform float shadowAlpha;
 
-float field(float2 p) {
-    return mix(softA.eval(p).a, softB.eval(p).a, mixT);
+// Signed distance to the glyph edge in px (positive inside), blended between the two values.
+float sd(float2 p) {
+    float a = mix(fieldA.eval(p).a, fieldB.eval(p).a, mixT);
+    return (a - 0.5) * 2.0 * range;
+}
+
+half3 vibrance(half3 c, float s) {
+    half l = dot(c, half3(0.2126, 0.7152, 0.0722));
+    return mix(half3(l), c, half(s));
 }
 
 half4 main(float2 p) {
-    // Coverage: the exact glyphs at rest; mid-morph the soft fields melt into each other.
-    float sharp = mix(sharpA.eval(p).a, sharpB.eval(p).a, mixT);
-    float goo = smoothstep(0.42, 0.58, field(p));
-    float melt = 4.0 * mixT * (1.0 - mixT);
-    float cov = mix(sharp, max(sharp, goo), melt);
-
-    // Soft shadow beneath the glass.
-    float sh = smoothstep(0.04, 0.7, field(p - shadowOffset));
-    half4 shadow = half4(0.0, 0.0, 0.0, half(shadowAlpha * sh));
-    if (cov < 0.003) {
-        return shadow;
+    float d = sd(p);
+    float shadow = shadowAlpha * smoothstep(-range * 0.85, range * 0.3, sd(p - shadowOffset));
+    float cov = smoothstep(-0.75, 0.75, d);
+    if (cov < 0.002) {
+        return half4(0.0, 0.0, 0.0, half(shadow));
     }
 
-    // Surface normal from the slope of the height field.
-    float h = field(p);
-    float e = 1.5;
-    float2 g = float2(field(p + float2(e, 0.0)) - field(p - float2(e, 0.0)), field(p + float2(0.0, e)) - field(p - float2(0.0, e)));
+    // The outward normal: the distance falls fastest toward the nearest edge. Left unnormalised
+    // (a distance field's slope is 1), it fades to nothing on the crest of a thin stroke, where
+    // the two edges meet, instead of flipping into a crease.
+    float2 g = float2(sd(p + float2(2.0, 0.0)) - sd(p - float2(2.0, 0.0)), sd(p + float2(0.0, 2.0)) - sd(p - float2(0.0, 2.0))) * 0.25;
     float gl = length(g);
-    float2 n = gl > 0.0001 ? -g / gl : float2(0.0);
-    float edge = clamp((1.0 - h) * 1.7, 0.0, 1.0);
+    float2 n = -g / max(gl, 1.0);
 
-    // Refraction: the rounded rims bend the sky outward.
-    half4 c = content.eval(p + n * refraction * edge * edge);
-    half l = dot(c.rgb, half3(0.2126, 0.7152, 0.0722));
-    c.rgb = mix(half3(l), c.rgb, 1.4) + 0.04;
-    c.rgb = mix(c.rgb, tint.rgb, tint.a);
+    // A round bevel: vertical at the rim, flat where a stroke is thick enough to have a top.
+    float x = (1.0 - clamp(d / bevel, 0.0, 1.0)) * min(gl, 1.0);
+    float nz = sqrt(max(0.0, 1.0 - x * x));
+    float3 N = float3(n * (1.0 - clamp(d / bevel, 0.0, 1.0)), nz);
+    N = normalize(N);
+    float bend = 1.0 - nz;
 
-    // Light: bright rims facing the light, a crest glint, shade where the surface turns away.
-    float2 L = float2(cos(lightAngle), sin(lightAngle));
-    float facing = dot(n, L);
-    float rim = pow(edge, 2.2);
-    c.rgb += half3(0.5 * rim * max(facing, 0.0) + 0.16 * rim);
-    c.rgb *= half(1.0 - 0.3 * rim * max(-facing, 0.0));
-    c.rgb += half3(0.3 * pow(max(facing, 0.0), 8.0) * edge);
+    // Refraction: the rim reaches out for the sky beyond the glyph, and splits it into colour.
+    float2 disp = n * refraction * bend;
+    half3 c = content.eval(p + disp).rgb;
+    if (bend > 0.02) {
+        c.r = content.eval(p + disp * (1.0 + dispersion)).r;
+        c.b = content.eval(p + disp * (1.0 - dispersion)).b;
+    }
+    c = vibrance(c, 1.35) + 0.03;
+    c = mix(c, tint.rgb, tint.a);
 
-    half4 glass = half4(clamp(c.rgb, 0.0, 1.0), 1.0) * half(cov);
-    return glass + shadow * half(1.0 - cov);
+    // Light: reflections along the rim, a sharp glint where the bevel faces the light (and a
+    // weaker one opposite), a caustic gathered inside the far edge, the far rim in shade.
+    float2 L2 = float2(cos(lightAngle), sin(lightAngle));
+    float facing = dot(n, L2);
+    float3 V = float3(0.0, 0.0, 1.0);
+    float spec = pow(max(dot(N, normalize(normalize(float3(L2, 0.8)) + V)), 0.0), 30.0);
+    float spec2 = pow(max(dot(N, normalize(normalize(float3(-L2, 0.8)) + V)), 0.0), 30.0);
+    float fresnel = x * x * x;
+    c += half3(fresnel * (0.2 + 0.5 * max(facing, 0.0)));
+    c += half3(spec * 0.95 + spec2 * 0.35);
+    float band = smoothstep(0.2, 0.6, x) * (1.0 - smoothstep(0.75, 0.98, x));
+    c += half3(0.24 * band * max(-facing, 0.0));
+    c *= half(1.0 - 0.22 * smoothstep(0.8, 1.0, x) * max(-facing, 0.0));
+
+    // Where glass meets air: a crisp line that keeps the digits legible over any sky.
+    float line = 1.0 - smoothstep(0.0, 1.4, abs(d - 0.35));
+    c = mix(c, edge.rgb, half(line * edge.a));
+
+    half4 glass = half4(clamp(c, 0.0, 1.0), 1.0) * half(cov);
+    return glass + half4(0.0, 0.0, 0.0, half(shadow)) * half(1.0 - cov);
 }
 """

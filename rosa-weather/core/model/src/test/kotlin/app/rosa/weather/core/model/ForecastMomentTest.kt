@@ -73,4 +73,32 @@ class ForecastMomentTest {
         assertThat(day.time).isAtMost(now)
         assertThat(day.time + 86_400).isGreaterThan(now)
     }
+
+    @Test
+    fun `the picture changes when the rain starts, to within half a minute`() {
+        // Overcast now, rain in the hourly forecast from the afternoon.
+        val start = forecast.nextSceneChange(now)!!
+        assertThat(forecast.momentAt(now).sceneKind and 1).isEqualTo(0)
+        assertThat(forecast.momentAt(start).sceneKind and 1).isEqualTo(1)
+        assertThat(forecast.momentAt(start - 30).sceneKind and 1).isEqualTo(0)
+        // …and again when it stops, in the evening.
+        val stop = forecast.nextSceneChange(start, horizonSeconds = 8 * 3600)!!
+        assertThat(stop).isGreaterThan(start)
+        assertThat(forecast.momentAt(stop).sceneKind and 1).isEqualTo(0)
+    }
+
+    @Test
+    fun `a steady sky has no change to wait for`() {
+        val night = SampleForecast.create(SampleForecast.Scenario.ClearNight, nowEpochSeconds = now)
+        assertThat(night.nextSceneChange(now, horizonSeconds = 3600)).isNull()
+    }
+
+    @Test
+    fun `frost grows below freezing and mist with rain`() {
+        val snowy = SampleForecast.create(SampleForecast.Scenario.SnowyCold, nowEpochSeconds = now)
+        assertThat(snowy.momentAt(now).paneFrost).isGreaterThan(0.5f)
+        assertThat(forecast.momentAt(now).paneFrost).isEqualTo(0f)
+        val raining = forecast.nextSceneChange(now)!!
+        assertThat(forecast.momentAt(raining).paneMist).isAtLeast(0.25f)
+    }
 }

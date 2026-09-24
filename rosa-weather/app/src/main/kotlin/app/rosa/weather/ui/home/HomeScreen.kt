@@ -116,6 +116,7 @@ import app.rosa.weather.core.model.momentAt
 import app.rosa.weather.ui.common.LocalSky
 import app.rosa.weather.ui.common.SkyController
 import kotlin.math.PI
+import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
@@ -420,12 +421,25 @@ private fun Hero(
         ) {
             val feelsLabel = stringResource(R.string.feels_like_label)
             // The number itself is liquid glass: the sky refracts through it and values melt.
+            // Every temperature the timeline can scrub to (it interpolates between hours, so the
+            // whole range), prepared before it is needed.
+            val upcoming = remember(forecast, format) {
+                val hours = forecast.hourly.filter { it.time >= forecast.current.time - 3600 }.take(49)
+                val values = hours.flatMap { listOf(it.temperature, it.apparentTemperature) } +
+                    listOf(forecast.current.temperature, forecast.current.apparentTemperature)
+                if (values.isEmpty()) {
+                    emptyList()
+                } else {
+                    (floor(values.min()).toInt()..ceil(values.max()).toInt()).map { format.temperature(it.toDouble()) }.distinct()
+                }
+            }
             GlassText(
                 text = format.temperature(if (feels) moment.apparentTemperature else moment.temperature),
                 fontSize = Rosa.type.hero.fontSize,
                 color = colors.ink,
-                // Smoky glass over pale skies needs a denser tint than milky glass over deep ones.
-                tintStrength = if (colors.isLightSky) 0.48f else 0.36f,
+                // Clear glass: just enough of the ink in it to read, more over pale skies.
+                tintStrength = if (colors.isLightSky) 0.3f else 0.16f,
+                prefetch = upcoming,
                 modifier = Modifier
                     .semantics { liveRegion = LiveRegionMode.Polite }
                     .onGloballyPositioned {
