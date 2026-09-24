@@ -8,6 +8,7 @@
  *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
  *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--all] [--dedupe] [--resolve 0]
+ *   node tools/cian/cian.js mass   --query q.json --out lots.json [--report r.md] [--csv r.csv] [--resume] [--rate 1] [--max-rate 2.5] [--sockets 4]  — округ целиком
  *   node tools/cian/cian.js verify --ids 1,2 [--photos 12] [--cols 4] [--frames 5,13] [--skip-layout]  — лист, затем кадры в оригинале
  *   node tools/cian/cian.js snapshot --query q.json | --queries watchlist.json | --from a.json,b.json
  *   node tools/cian/cian.js archive   — что накоплено: даты снимков, запросы, движение цен
@@ -32,6 +33,7 @@
 const { chromium } = require('/opt/node22/lib/node_modules/playwright');
 const fs = require('fs');
 const crypto = require('crypto');
+const tls = require('tls');
 
 const SEARCH_API = 'https://api.cian.ru/search-offers/v2/search-offers-desktop/';
 const GEO_API = 'https://www.cian.ru/api/geo/get-districts-tree/?locationId=1';
@@ -43,6 +45,13 @@ const log = (...a) => process.stdout.write(a.join(' ') + '\n');
 /* Через MITM-прокси Chromium с TLS 1.3 получает ERR_CONNECTION_RESET,
    поэтому потолок протокола опускаем до 1.2. */
 async function open() {
+  /* То же лечение для запросов со стороны Node (ctx.request): OpenSSL 3.5
+     кладёт в ClientHello постквантовый ключ, и новый туннель через прокси с
+     таким приветствием время от времени повисает на 11 секунд и рвётся
+     (ECONNRESET). С обычными кривыми таких повисаний в разы меньше: 2 из 80
+     против 42 из 150 (traps.md, п. 45). Затрагивает только TLS
+     этого процесса; у браузера свой стек. */
+  tls.DEFAULT_ECDH_CURVE = SMALL_CURVES;
   const browser = await chromium.launch({
     executablePath: CHROME,
     headless: true,
@@ -810,6 +819,657 @@ function finishSweep(seen, top) {
     log(`\n! собрано ${seen.size} при заявленных ${top.count}: дробление расширило запрос, результату верить нельзя`);
   }
   return { declared: top.count, lots: [...seen.values()] };
+}
+
+/* ---------- массовый свип ----------
+   Округ целиком прежний sweep собирал часами, и не из-за объёма, а из-за
+   способа: запросы шли строго по одному с паузой, каждая ось дробления
+   тратила запросы на подсчёт, четыре сортировки умножали страницы, группы
+   раскрывались по лидеру за раз. Всё ниже построено на замерах по ЗАО
+   целиком (13 728 объявлений, сентябрь 2026) — см. docs/cian/mass.md.
+
+   1. Глубина выдачи — ровно 1 500 офферов на запрос: 53 страницы по 28 и
+      16 на 54-й, дальше пусто при любом offerCount.
+   2. Сортировка по умолчанию нестабильна: на ломтике 20–25 млн она отдала
+      664 уникальных из 953 — одни лоты повторяются на соседних страницах,
+      другие не приходят вовсе. Сортировка по цене на том же ломтике —
+      915 из 968. Поэтому режем по цене и читаем только в ней.
+   3. Цена первого лота на 50-й странице ценовой сортировки — готовая
+      граница следующего ломтика. Курсор вместо деления пополам: ни одного
+      запроса «только посчитать».
+   4. Одновременные запросы выдерживаются: восемь в полёте отвечают так же
+      быстро, как один. Прежний sweep ждал ответа и ещё 0,8 с после него —
+      0,35 запроса в секунду при запасе впятеро.
+   5. Новый туннель с большим ClientHello (постквантовый ключ OpenSSL 3.5)
+      повисает на 11 с и рвётся; с обычными кривыми — в разы реже.
+   6. Предел ставит не сеть, а антибот. Он считает по адресу выхода, у
+      прокси адресов несколько, и отвечает тремя способами: 429, редиректом
+      на капчу и капчей С КОДОМ 200 — HTML вместо JSON. Раз разогнавшись до
+      5–10 запросов в секунду, адрес ловит капчу на десятки минут, и тогда
+      не открывается даже главная. Поэтому темп ровный, растёт медленно и
+      падает при первом отказе. */
+const DEPTH = 1500;                  // офферов на один запрос, не больше
+const PAGE_SIZE = 28;
+const SLICE_CAP = 1400;              // запас: за время свипа выдача подрастает
+const CURSOR_PAGE = 50;              // ранг 1373 — граница следующего ломтика
+const PRICE_SORT = 'price_object_order';
+const SMALL_CURVES = 'X25519:prime256v1:secp384r1';
+
+/* Темп: медленно вверх, резко вниз. Каждые `every` удачных ответов подряд
+   темп растёт на `step`, каждая капча или 429 режет его на `cut` и ставит
+   паузу, которая удваивается, пока отказы идут подряд. Время передаётся
+   снаружи — чтобы поведение проверялось без сети и без часов. */
+function pacer(o = {}) {
+  const p = {
+    rate: o.rate ?? 1, min: o.min ?? 0.2, max: o.max ?? 2.5, step: o.step ?? 0.1, every: o.every ?? 25,
+    cut: o.cut ?? 0.5, pause0: o.pause ?? 10000, pauseMax: o.pauseMax ?? 300000,
+    streak: 0, throttles: 0, next: 0, pauseUntil: 0,
+  };
+  /* Сколько ждать до отправки. Слоты раздаются по очереди, поэтому
+     параллельные запросы сами выстраиваются в ровный поток. */
+  p.wait = (now) => {
+    const at = Math.max(now, p.next, p.pauseUntil);
+    p.next = at + 1000 / p.rate;
+    return at - now;
+  };
+  p.ok = () => {
+    p.throttles = 0;
+    if (++p.streak >= p.every) { p.streak = 0; p.rate = Math.min(p.max, +(p.rate + p.step).toFixed(3)); }
+  };
+  p.throttle = (now) => {
+    p.streak = 0;
+    p.throttles++;
+    p.rate = Math.max(p.min, +(p.rate * p.cut).toFixed(3));
+    const pause = Math.min(p.pauseMax, p.pause0 * 2 ** (p.throttles - 1));
+    p.pauseUntil = Math.max(p.pauseUntil, now + pause);
+    return pause;
+  };
+  return p;
+}
+
+/* Отказ антибота. 429 и 403 — явные; капча приходит с кодом 200 и видна
+   только по содержимому: HTML вместо JSON. */
+function isBlockPage(status, type, head) {
+  if (status === 429 || status === 403) return true;
+  if (status !== 200) return false;
+  return !(/json/i.test(type || '') && String(head || '').trimStart().startsWith('{'));
+}
+
+/* Ломтик по цене внутри собственного ценового фильтра запроса: дробление
+   обязано сужать (traps.md, п. 10), поэтому границы пересекаются, а не
+   затираются. */
+function priceSlice(q, lo, hi) {
+  const own = (q.price && q.price.value) || {};
+  const gte = Math.max(lo || 0, own.gte || 0);
+  const lte = hi == null ? own.lte : (own.lte == null ? hi : Math.min(hi, own.lte));
+  const value = {};
+  if (gte > 0) value.gte = gte;
+  if (lte != null) value.lte = lte;
+  const out = { ...q };
+  if (Object.keys(value).length) out.price = { type: 'range', value };
+  else delete out.price;
+  return out;
+}
+
+/* Сколько страниц читать у ломтика: по его перечислимому числу, плюс одна
+   на прирост, и не глубже потолка выдачи. */
+function slicePages(aggregated) {
+  if (aggregated == null) return CURSOR_PAGE + 1;
+  return Math.min(Math.ceil(DEPTH / PAGE_SIZE), Math.ceil(aggregated / PAGE_SIZE) + 1);
+}
+
+/* Ключ запроса для журнала: одинаковый jsonQuery при любом порядке ключей. */
+function stableJson(v) {
+  if (Array.isArray(v)) return `[${v.map(stableJson).join(',')}]`;
+  if (v && typeof v === 'object') {
+    return `{${Object.keys(v).filter((k) => v[k] !== undefined).sort()
+      .map((k) => `${JSON.stringify(k)}:${stableJson(v[k])}`).join(',')}}`;
+  }
+  return JSON.stringify(v);
+}
+function journalKey(q, page) {
+  return crypto.createHash('sha1').update(`${stableJson(q)}#${page}`).digest('hex').slice(0, 20);
+}
+
+/* Журнал свипа: два файла рядом. В `.req.jsonl` — по строке на ответ
+   (ключ, заявлено, перечислимо, номера лотов), в `.lots.jsonl` — каждый лот
+   один раз. Оборванный свип продолжается с того места, где встал: ответы
+   берутся из журнала, в сеть идёт только недочитанное. */
+function openJournal(base, resume) {
+  const reqFile = `${base}.req.jsonl`, lotFile = `${base}.lots.jsonl`;
+  const reqs = new Map(), lots = new Map();
+  if (resume) {
+    if (fs.existsSync(lotFile)) {
+      for (const line of fs.readFileSync(lotFile, 'utf8').split('\n')) {
+        if (!line) continue;
+        try { const l = JSON.parse(line); lots.set(l.id, l); } catch (e) { /* недописанная строка обрыва */ }
+      }
+    }
+    if (fs.existsSync(reqFile)) {
+      for (const line of fs.readFileSync(reqFile, 'utf8').split('\n')) {
+        if (!line) continue;
+        try { const r = JSON.parse(line); if (r.ids.every((id) => lots.has(id))) reqs.set(r.k, r); } catch (e) { /* то же */ }
+      }
+    }
+  }
+  const fr = fs.openSync(reqFile, resume ? 'a' : 'w');
+  const fl = fs.openSync(lotFile, resume ? 'a' : 'w');
+  return {
+    size: () => reqs.size,
+    lots: () => lots.size,
+    get: (k) => {
+      const r = reqs.get(k);
+      return r ? { count: r.c, aggregated: r.a, lots: r.ids.map((id) => lots.get(id)) } : null;
+    },
+    put: (k, res) => {
+      for (const l of res.lots) if (!lots.has(l.id)) { lots.set(l.id, l); fs.writeSync(fl, JSON.stringify(l) + '\n'); }
+      const r = { k, c: res.count, a: res.aggregated, ids: res.lots.map((l) => l.id) };
+      reqs.set(k, r);
+      fs.writeSync(fr, JSON.stringify(r) + '\n');
+    },
+    close: () => { fs.closeSync(fr); fs.closeSync(fl); },
+  };
+}
+
+/* Клиент массового свипа. Запросы идут тем же ctx.request, что и у всего
+   движка: он сам хранит куки контекста и принимает те, что антибот
+   переставляет ответами, — свой HTTP-клиент их терял, и сессия быстрее
+   попадала под капчу. От прежнего способа отличается порядком работы:
+   несколько запросов в полёте, ровный темп вместо пауз после каждого
+   ответа, отказ антибота сбавляет темп и ставит паузу, а не валит свип.
+   Капча трижды подряд — браузер заходит на главную заново за свежими
+   куками. */
+async function massClient(opts = {}) {
+  const say = opts.log || log;
+  const session = await open();
+  const sockets = opts.sockets || 4;
+  const pace = pacer(opts.pace || {});
+  const journal = opts.journal ? openJournal(opts.journal, !!opts.resume) : null;
+  const st = { sent: 0, ok: 0, throttled: 0, failed: 0, cached: 0, bytes: 0, t0: Date.now(), why: {} };
+  const bump = (k) => { st.why[k] = (st.why[k] || 0) + 1; };
+  let lastWarn = 0, warming = null;
+  const rewarm = () => {
+    if (!warming) {
+      warming = (async () => {
+        try {
+          await session.page.goto('https://www.cian.ru/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+          await session.page.waitForTimeout(2500);
+          if (/captcha/i.test(session.page.url())) bump('главная тоже под капчей');
+        } catch (e) { bump('прогрев не удался'); }
+      })().finally(() => { warming = null; });
+    }
+    return warming;
+  };
+
+  /* Сколько терпеть антибот подряд. Отказ антибота попыткой не считается —
+     капча может держаться полчаса, и за это время любая страница исчерпала
+     бы попытки и стала дырой. Вместо этого свип целиком останавливается,
+     когда отказы идут дольше giveUp: прочитанное лежит в журнале, и
+     `--resume` продолжит, когда адрес остынет. */
+  const giveUp = opts.giveUpMs ?? 25 * 60000;
+  let blockedSince = null;
+
+  async function call(q, page, attempts = 10) {
+    const key = journalKey(q, page);
+    const hit = journal && journal.get(key);
+    if (hit) { st.cached++; return hit; }
+    let lastWhy = null;
+    for (let a = 1; a <= attempts; a++) {
+      if (blockedSince && Date.now() - blockedSince > giveUp) {
+        const e = new Error(`антибот не отпускает ${Math.round((Date.now() - blockedSince) / 60000)} мин`);
+        e.code = 'ANTIBOT';
+        throw e;
+      }
+      const w = pace.wait(Date.now());
+      if (w > 0) await sleep(w);
+      if (warming) await warming;
+      st.sent++;
+      let res;
+      try {
+        res = await session.ctx.request.post(SEARCH_API, {
+          headers: API_HEADERS, timeout: 45000, maxRedirects: 0,
+          data: { jsonQuery: { ...q, page: { type: 'term', value: page } } },
+        });
+      } catch (e) {
+        st.failed++; lastWhy = String(e.message || e).split('\n')[0].replace(/^apiRequestContext\.post: /, '').slice(0, 40);
+        bump(lastWhy);
+        await sleep(Math.min(20000, 1000 * 2 ** (a - 1)));
+        continue;
+      }
+      const status = res.status();
+      const type = res.headers()['content-type'] || '';
+      const loc = res.headers().location || '';
+      const body = await res.body();
+      st.bytes += body.length;
+      const head = body.subarray(0, 32).toString('utf8');
+      /* Антибот: 429/403, редирект на капчу или капча с кодом 200. */
+      if (isBlockPage(status, type, head) || (status >= 300 && status < 400 && /captcha/i.test(loc))) {
+        st.throttled++;
+        lastWhy = status === 200 ? 'капча' : status >= 300 && status < 400 ? 'редирект на капчу' : `http ${status}`;
+        bump(lastWhy);
+        if (!blockedSince) blockedSince = Date.now();
+        a--;                                   // отказ антибота — не попытка
+        const pause = pace.throttle(Date.now());
+        if (pace.throttles % 3 === 0) rewarm();
+        if (Date.now() - lastWarn > 15000) {
+          lastWarn = Date.now();
+          say(`  ! ${lastWhy}: темп ${pace.rate}/с, пауза ${Math.round(pause / 1000)} с (отказов подряд ${pace.throttles})`);
+        }
+        continue;
+      }
+      if (status !== 200) {
+        st.failed++; lastWhy = `http ${status}`; bump(lastWhy);
+        await sleep(Math.min(20000, 1000 * 2 ** (a - 1)));
+        continue;
+      }
+      let d;
+      try { d = JSON.parse(body.toString('utf8')).data || {}; } catch (e) { st.failed++; lastWhy = 'битый JSON'; bump(lastWhy); continue; }
+      pace.ok();
+      blockedSince = null;
+      st.ok++;
+      const out = { count: d.offerCount ?? null, aggregated: d.aggregatedCount ?? null,
+        lots: (d.offersSerialized || d.offers || []).map(normalize) };
+      if (journal) journal.put(key, out);
+      return out;
+    }
+    throw new Error(`стр.${page}: не ответила за ${attempts} попыток (последнее: ${lastWhy})`);
+  }
+
+  const report = () => {
+    const sec = (Date.now() - st.t0) / 1000;
+    return `запросов ${st.sent} (ответов ${st.ok}, из журнала ${st.cached}), антибот ${st.throttled}, сбоев ${st.failed}; ` +
+      `${sec.toFixed(0)} с, ${(st.ok / Math.max(1, sec)).toFixed(2)} ответа/с, темп сейчас ${pace.rate}/с, JSON ${(st.bytes / 1e6).toFixed(0)} МБ` +
+      (Object.keys(st.why).length ? `; причины: ${Object.entries(st.why).map(([k, v]) => `${k} ${v}`).join(', ')}` : '');
+  };
+  const close = async () => { if (journal) journal.close(); await session.browser.close(); };
+  return { call, st, pace, report, close, journal, sockets };
+}
+
+/* Пул исполнителей над списком заданий; задание может сняться само. */
+async function runPool(n, jobs, fn) {
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.max(1, n) }, async () => {
+    while (i < jobs.length) {
+      const j = jobs[i++];
+      if (j.skip && j.skip()) continue;
+      await fn(j);
+    }
+  }));
+}
+
+/* Массовый свип: ломтики курсором по цене, страницы ломтиков параллельно,
+   затем группы — тоже параллельно, крупные первыми, уже покрытые не
+   запрашиваются. Возвращает лоты и полный учёт: что заявлено, что прочитано,
+   какие куски не ответили. */
+async function massSweep(api, q, opts = {}) {
+  const say = opts.log || log;
+  const cap = opts.cap || SLICE_CAP;
+  if (q.sort) say(`сортировка запроса заменена на ${PRICE_SORT}: по умолчанию выдача нестабильна (traps.md, п. 42)`);
+  const base = { ...q, sort: { type: 'term', value: PRICE_SORT } };
+  const seen = new Map();
+  const add = (lots) => { for (const l of lots) if (!seen.has(l.id)) seen.set(l.id, l); };
+  const holes = [];
+  const t0 = Date.now();
+
+  /* 1. Ломтики. Курсор идёт по цене вверх: у хвоста [lo, hi] читается
+     первая страница (она же первая страница нового ломтика) и, если хвост
+     больше потолка, 50-я — цена её первого лота и есть граница. */
+  const own = (q.price && q.price.value) || {};
+  const top = await api.call(priceSlice(base, own.gte || 0, own.lte ?? null), 1);
+  add(top.lots);
+  say(`заявлено ${top.count}, перечислимо за проход ${top.aggregated} при потолке выдачи ${DEPTH}`);
+  const slices = [];
+  let lo = own.gte || 0;
+  const hi = own.lte ?? null;
+  let first = top;
+  for (;;) {
+    const tail = priceSlice(base, lo, hi);
+    if (!first) { first = await api.call(tail, 1); add(first.lots); }
+    if (first.aggregated == null || first.aggregated <= cap) {
+      slices.push({ q: tail, lo, hi, aggregated: first.aggregated, pages: slicePages(first.aggregated) });
+      break;
+    }
+    const cur = await api.call(tail, CURSOR_PAGE);
+    add(cur.lots);
+    /* Пятидесятая страница пуста — хвост читается меньше, чем Циан насчитал
+       (схлопывание съело разницу), и он сам по себе последний ломтик. */
+    if (!cur.lots.length) {
+      slices.push({ q: tail, lo, hi, aggregated: first.aggregated, pages: slicePages(first.aggregated) });
+      break;
+    }
+    const edge = (cur.lots.find((l) => l.priceRub != null) || {}).priceRub;
+    if (!edge || edge <= lo) {
+      /* Больше 1 373 лотов по одной цене — ценой не режется. Не бывает, но
+         если бывает, это дыра, и о ней надо сказать, а не молчать. */
+      holes.push({ where: `ломтик от ${lo}`, why: 'не режется ценой: курсор не сдвинулся' });
+      slices.push({ q: tail, lo, hi, aggregated: first.aggregated, pages: Math.ceil(DEPTH / PAGE_SIZE) });
+      break;
+    }
+    slices.push({ q: priceSlice(base, lo, edge - 1), lo, hi: edge - 1, aggregated: null, pages: CURSOR_PAGE + 1 });
+    lo = edge;
+    first = null;
+    if (slices.length % 5 === 0) say(`  ломтиков ${slices.length}, курсор на ${(lo / 1e6).toFixed(1)} млн`);
+  }
+  say(`ломтиков по цене: ${slices.length} — ${slices.map((s) => `${(s.lo / 1e6).toFixed(1)}–${s.hi == null ? '∞' : (s.hi / 1e6).toFixed(1)}`).join(', ')}`);
+
+  /* 2. Страницы ломтиков. Первая у каждого уже прочитана курсором; дальше —
+     параллельно, до первой пустой страницы. */
+  const jobs = [];
+  for (const s of slices) {
+    s.end = Infinity;
+    for (let p = 2; p <= s.pages; p++) jobs.push({ s, p, skip: () => p > s.end });
+  }
+  let done = 0;
+  const tPages = Date.now();
+  await runPool(api.sockets, jobs, async (j) => {
+    try {
+      const r = await api.call(j.s.q, j.p);
+      add(r.lots);
+      /* Перечислимое число ломтика узнаётся из любой его страницы: курсор
+         спрашивал хвост, а не сам ломтик. */
+      if (j.s.aggregated == null && r.aggregated != null) j.s.aggregated = r.aggregated;
+      if (!r.lots.length) j.s.end = Math.min(j.s.end, j.p);
+    } catch (e) { if (e.code === 'ANTIBOT') throw e; holes.push({ where: `ломтик ${j.s.lo}–${j.s.hi ?? '∞'}, стр.${j.p}`, why: e.message }); }
+    if (++done % 100 === 0) say(`  страниц ${done} из ~${jobs.length}, лотов ${seen.size}; ${api.report()}`);
+  });
+  say(`страницы: ${seen.size} лотов за ${((Date.now() - tPages) / 1000).toFixed(0)} с`);
+
+  /* Полнота ломтика: сколько лотов с его ценами прочитано против того, что
+     Циан считает перечислимым. Ценовая сортировка стабильнее умолчательной,
+     но не идеальна — на соседних страницах бывают повторы, и тогда кто-то
+     не приходит. Второй проход другой сортировкой ловит таких. */
+  const inSlice = (sl) => [...seen.values()].filter((l) => l.priceRub != null
+    && l.priceRub >= (sl.lo || 0) && (sl.hi == null || l.priceRub <= sl.hi)).length;
+  for (const sl of slices) { sl.read = inSlice(sl); sl.coverage = sl.aggregated ? +(sl.read / sl.aggregated).toFixed(3) : null; }
+  const thin = slices.filter((sl) => sl.coverage != null && sl.coverage < 0.97);
+  if (thin.length) {
+    say(`ломтиков прочитано меньше 97% от перечислимого: ${thin.length} — ` +
+      thin.map((sl) => `${(sl.lo / 1e6).toFixed(1)}–${sl.hi == null ? '∞' : (sl.hi / 1e6).toFixed(1)}: ${sl.read}/${sl.aggregated}`).join(', '));
+    if (opts.secondPass) {
+      const second = [];
+      for (const sl of thin) {
+        const q2 = { ...sl.q, sort: { type: 'term', value: 'area_order' } };
+        sl.end2 = Infinity;
+        for (let p2 = 1; p2 <= slicePages(sl.aggregated); p2++) second.push({ sl, q2, p2, skip: () => p2 > sl.end2 });
+      }
+      const before = seen.size;
+      await runPool(api.sockets, second, async (j) => {
+        try {
+          const r = await api.call(j.q2, j.p2);
+          add(r.lots);
+          if (!r.lots.length) j.sl.end2 = Math.min(j.sl.end2, j.p2);
+        } catch (e) { if (e.code === 'ANTIBOT') throw e; holes.push({ where: `второй проход ${j.sl.lo}–${j.sl.hi ?? '∞'}, стр.${j.p2}`, why: e.message }); }
+      });
+      for (const sl of thin) { sl.read = inSlice(sl); sl.coverage = +(sl.read / sl.aggregated).toFixed(3); }
+      say(`второй проход по площади: +${seen.size - before} лотов`);
+    }
+  }
+  const listed = seen.size;
+
+  /* 3. Группы. Лидер прячет за собой другие квартиры той же планировки
+     (в новостройках — сток застройщика по этажам), и достать их можно
+     только ключом multi_id. Крупные группы первыми: их члены чаще всего
+     оказываются лидерами соседних ломтиков, и тех уже не надо спрашивать. */
+  let groups = 0, skipped = 0;
+  if (opts.groups !== false) {
+    const covered = new Set();
+    const leaders = [...seen.values()].filter((l) => l.similarCount > 0)
+      .sort((x, y) => y.similarCount - x.similarCount);
+    const tGroups = Date.now();
+    say(`групп к раскрытию: ${leaders.length}, за ними обещано ${leaders.reduce((n, l) => n + l.similarCount, 0)}`);
+    const gq = (id) => ({ ...base, multi_id: { type: 'term', value: id } });
+    const gJobs = leaders.map((l) => ({ l, skip: () => { if (covered.has(l.id)) { skipped++; return true; } return false; } }));
+    let gDone = 0;
+    await runPool(api.sockets, gJobs, async ({ l }) => {
+      groups++;
+      const pages = Math.min(Math.ceil(DEPTH / PAGE_SIZE), Math.ceil((l.similarCount + 1) / PAGE_SIZE) + 1);
+      for (let p = 1; p <= pages; p++) {
+        let r;
+        try { r = await api.call(gq(l.id), p); }
+        catch (e) { if (e.code === 'ANTIBOT') throw e; holes.push({ where: `группа ${l.id}, стр.${p}`, why: e.message }); break; }
+        for (const m of r.lots) covered.add(m.id);
+        /* multi_id не уважает остальные фильтры (traps.md, п. 27): всё из
+           группы сверяется с запросом позже, общим отсевом. */
+        add(r.lots);
+        if (r.lots.length < PAGE_SIZE) break;
+      }
+      if (++gDone % 200 === 0) say(`  групп ${gDone} (пропущено покрытых ${skipped}), лотов ${seen.size}; ${api.report()}`);
+    });
+    say(`группы: +${seen.size - listed} лотов, раскрыто ${groups}, пропущено как уже покрытые ${skipped}, ` +
+      `${((Date.now() - tGroups) / 1000).toFixed(0)} с`);
+  }
+
+  /* 4. Сверка с собственным запросом: фильтры текут (п. 28), multi_id их не
+     уважает вовсе. */
+  const all = [...seen.values()];
+  const lots = all.filter((l) => matchesQuery(l, q));
+  const leaked = all.length - lots.length;
+  return {
+    lots, holes, slices: slices.map(({ lo, hi, aggregated, read, coverage }) => ({ lo, hi, aggregated, read, coverage })),
+    declared: top.count, aggregated: top.aggregated, listed, expanded: all.length, leaked,
+    groups, skipped, seconds: Math.round((Date.now() - t0) / 1000),
+  };
+}
+
+/* ---------- раскладка большой выдачи по полкам ----------
+   Десять тысяч лотов глазами не пересмотреть, и оценка отделки по кадрам
+   для них — дело второго шага. Первый — разложить всё по тому, что видно
+   из полей и текста: рынок, район, метро, возраст дома, отделка, метраж,
+   цена. Каждая полка называет, откуда взята, и «неизвестно» остаётся
+   «неизвестно»: пустое поле — не ноль и не «нет». */
+
+/* Эпоха дома — мельче, чем houseEra: для разбора целого округа советский
+   фонд одной полкой не годится, хрущёвка и дом 1985 года — разный товар. */
+function eraOf(lot) {
+  if (readiness(lot).startsWith('строится')) return 'строится';
+  const y = lot.year ?? buildingYear(lot);
+  if (!y) return 'год неизвестен';
+  if (y < 1917) return 'до 1917';
+  if (y < 1955) return '1917–1954';
+  if (y < 1971) return '1955–1970';
+  if (y < 1991) return '1971–1990';
+  if (y < 2010) return '1991–2009';
+  if (y < 2020) return '2010–2019';
+  return '2020 и новее';
+}
+
+/* Первичный рынок — всё, что продаётся по ДДУ, переуступкой или от
+   застройщика, и всё в недостроенном доме. Остальное — вторичка. */
+function marketOf(lot) {
+  const primary = lot.fromDeveloper === true || lot.saleType === 'fz214' || lot.saleType === 'dupt'
+    || lot.houseFinished === false;
+  return primary ? 'новостройка' : 'вторичка';
+}
+
+function metroBand(lot) {
+  const m = lot.metro;
+  if (!m || m.minutes == null) return 'нет данных';
+  if (!m.byFoot) return 'только транспортом';
+  if (m.minutes <= 5) return 'до 5 мин пешком';
+  if (m.minutes <= 10) return '6–10 мин';
+  if (m.minutes <= 15) return '11–15 мин';
+  if (m.minutes <= 20) return '16–20 мин';
+  return 'дальше 20 мин';
+}
+
+/* Отделка — из полей и текста, без кадров. Для новостроек решает поле
+   decoration и метка фильтра отделки; для вторички — только отрицание в
+   тексте и прямые слова про мебель и технику (см. completeness). */
+function finishOf(lot) {
+  const c = lot.completeness || completeness(lot);
+  if (marketOf(lot) === 'новостройка') {
+    const d = lot.decorFilter || lot.decoration;
+    if (d === 'without' || d === 'rough') return 'без отделки';
+    if (d === 'preFine') return 'предчистовая';
+    if (d === 'fine') return 'чистовая';
+    if (d === 'fineWithFurniture' || d === 'turnkey') return 'с мебелью';
+  }
+  if (c === 'оболочка') return 'без отделки';
+  if (c === 'ремонт не сдан') return 'ремонт не закончен';
+  if (c === 'под ключ') return 'с ремонтом и мебелью';
+  return 'по тексту не понять';
+}
+
+const bandOf = (v, edges, unit) => {
+  if (v == null) return 'нет данных';
+  for (let i = 0; i < edges.length; i++) {
+    if (v < edges[i]) return i === 0 ? `до ${edges[0]}${unit}` : `${edges[i - 1]}–${edges[i]}${unit}`;
+  }
+  return `${edges[edges.length - 1]}${unit} и больше`;
+};
+const AREA_EDGES = [30, 45, 60, 80, 100, 150];
+const PRICE_EDGES = [10, 15, 20, 30, 50, 100];
+
+function roomsOf(lot) {
+  if (lot.flatType === 'studio' || lot.rooms === 9) return 'студия';
+  if (lot.flatType === 'openPlan') return 'свободная';
+  if (lot.rooms == null) return 'нет данных';
+  return lot.rooms >= 5 ? '5+' : `${lot.rooms}`;
+}
+
+/* Все полки лота разом — одна запись, из которой строятся и таблицы, и CSV. */
+function shelves(lot) {
+  return {
+    market: marketOf(lot),
+    okrug: lot.okrug || 'нет данных',
+    district: lot.district || 'нет данных',
+    metro: (lot.metro && lot.metro.name) || 'нет данных',
+    metroBand: metroBand(lot),
+    era: eraOf(lot),
+    finish: finishOf(lot),
+    rooms: roomsOf(lot),
+    area: bandOf(lot.totalArea, AREA_EDGES, ' м²'),
+    price: bandOf(lot.priceRub == null ? null : lot.priceRub / 1e6, PRICE_EDGES, ' млн'),
+    kind: lot.isApartments ? 'апартаменты' : 'квартира',
+  };
+}
+
+/* Сводка по одной оси: сколько, медиана цены метра, цены и площади. */
+function tally(lots, key, order) {
+  const groups = new Map();
+  for (const l of lots) {
+    const k = key(l);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(l);
+  }
+  const ppm = (l) => (l.priceRub && l.totalArea ? l.priceRub / l.totalArea : null);
+  const rows = [...groups.entries()].map(([k, xs]) => ({
+    key: k, n: xs.length,
+    ppm: median(xs.map(ppm).filter((v) => v != null)),
+    price: median(xs.map((l) => l.priceRub).filter((v) => v != null)),
+    area: median(xs.map((l) => l.totalArea).filter((v) => v != null)),
+  }));
+  if (order) rows.sort((a, b) => (order.indexOf(a.key) + 1 || 999) - (order.indexOf(b.key) + 1 || 999));
+  else rows.sort((a, b) => b.n - a.n);
+  return rows;
+}
+
+const ERA_ORDER = ['до 1917', '1917–1954', '1955–1970', '1971–1990', '1991–2009', '2010–2019', '2020 и новее', 'строится', 'год неизвестен'];
+const METRO_ORDER = ['до 5 мин пешком', '6–10 мин', '11–15 мин', '16–20 мин', 'дальше 20 мин', 'только транспортом', 'нет данных'];
+const FINISH_ORDER = ['с мебелью', 'с ремонтом и мебелью', 'чистовая', 'предчистовая', 'без отделки', 'ремонт не закончен', 'по тексту не понять'];
+const ROOMS_ORDER = ['студия', '1', '2', '3', '4', '5+', 'свободная', 'нет данных'];
+const bandOrder = (edges, unit) => [`до ${edges[0]}${unit}`, ...edges.slice(1).map((e, i) => `${edges[i]}–${e}${unit}`),
+  `${edges[edges.length - 1]}${unit} и больше`, 'нет данных'];
+
+function categorize(lots) {
+  const sh = new Map(lots.map((l) => [l.id, shelves(l)]));
+  const by = (k) => (l) => sh.get(l.id)[k];
+  return {
+    total: lots.length,
+    market: tally(lots, by('market'), ['вторичка', 'новостройка']),
+    district: tally(lots, by('district')),
+    metroBand: tally(lots, by('metroBand'), METRO_ORDER),
+    metro: tally(lots, by('metro')).slice(0, 30),
+    era: tally(lots, by('era'), ERA_ORDER),
+    finish: tally(lots, by('finish'), FINISH_ORDER),
+    rooms: tally(lots, by('rooms'), ROOMS_ORDER),
+    area: tally(lots, by('area'), bandOrder(AREA_EDGES, ' м²')),
+    price: tally(lots, by('price'), bandOrder(PRICE_EDGES, ' млн')),
+    kind: tally(lots, by('kind')),
+    /* Два перекрёстных разреза, ради которых всё и затевается: где какой
+       возраст домов и где какая отделка. */
+    districtEra: crossTab(lots, by('district'), by('era'), ERA_ORDER),
+    districtFinish: crossTab(lots, by('district'), by('finish'), FINISH_ORDER),
+    shelvesOf: (id) => sh.get(id),
+  };
+}
+
+function crossTab(lots, rowKey, colKey, colOrder) {
+  const rows = new Map(), cols = new Set();
+  for (const l of lots) {
+    const r = rowKey(l), c = colKey(l);
+    cols.add(c);
+    if (!rows.has(r)) rows.set(r, new Map());
+    const m = rows.get(r);
+    m.set(c, (m.get(c) || 0) + 1);
+  }
+  const colList = colOrder.filter((c) => cols.has(c)).concat([...cols].filter((c) => !colOrder.includes(c)));
+  const out = [...rows.entries()].map(([r, m]) => ({ key: r, n: [...m.values()].reduce((a, b) => a + b, 0),
+    cells: colList.map((c) => m.get(c) || 0) }));
+  out.sort((a, b) => b.n - a.n);
+  return { cols: colList, rows: out };
+}
+
+function categoryReport(cat, meta = {}) {
+  const f = (v) => (v == null ? '—' : Math.round(v).toLocaleString('ru-RU'));
+  const mln = (v) => (v == null ? '—' : (v / 1e6).toFixed(1).replace('.', ','));
+  const table = (title, rows, what = 'объявлений') => {
+    const L = [`## ${title}`, '', `| | ${what} | доля | ₽ за м², медиана | цена, млн, медиана | площадь, медиана |`, '|---|--:|--:|--:|--:|--:|'];
+    const dec = (v) => v.toFixed(1).replace('.', ',');
+    for (const r of rows) L.push(`| ${r.key} | ${r.n} | ${dec(r.n / cat.total * 100)}% | ${f(r.ppm)} | ${mln(r.price)} | ${r.area == null ? '—' : dec(r.area)} |`);
+    return L.join('\n');
+  };
+  const cross = (title, t) => {
+    const L = [`## ${title}`, '', `| | всего | ${t.cols.join(' | ')} |`, `|---|--:|${t.cols.map(() => '--:').join('|')}|`];
+    for (const r of t.rows) L.push(`| ${r.key} | ${r.n} | ${r.cells.map((c) => c || '').join(' | ')} |`);
+    return L.join('\n');
+  };
+  const head = [`# ${meta.title || 'Массовый свип'}`, ...(meta.lines ? ['', meta.lines.join('\n\n')] : [])].join('\n');
+  return [head,
+    table('Рынок', cat.market),
+    table('Район', cat.district),
+    table('Эпоха дома', cat.era),
+    cross('Район × эпоха дома', cat.districtEra),
+    table('Отделка — по полям и тексту, без фотографий', cat.finish),
+    cross('Район × отделка', cat.districtFinish),
+    table('Пешком до метро', cat.metroBand),
+    table('Ближайшая станция (30 самых частых)', cat.metro),
+    table('Комнатность', cat.rooms),
+    table('Площадь', cat.area),
+    table('Цена', cat.price),
+    table('Тип жилья', cat.kind),
+  ].join('\n\n') + '\n';
+}
+
+/* CSV для Excel: точка с запятой и BOM — иначе русская Excel склеит
+   столбцы и покажет кракозябры. */
+function categoryCsv(lots, cat) {
+  const cols = [
+    ['id', (l) => l.id], ['ссылка', (l) => l.url || `https://www.cian.ru/sale/flat/${l.id}/`],
+    ['рынок', (l, s) => s.market], ['округ', (l) => l.okrug], ['район', (l) => l.district],
+    ['улица', (l) => l.street], ['дом', (l) => l.house], ['ЖК', (l) => l.complex],
+    ['метро', (l) => l.metro && l.metro.name], ['минут', (l) => l.metro && l.metro.minutes],
+    ['пешком', (l) => (l.metro ? (l.metro.byFoot ? 'да' : 'нет') : '')], ['до метро', (l, s) => s.metroBand],
+    ['год дома', (l) => l.year ?? buildingYear(l)], ['откуда год', (l) => l.yearFrom], ['эпоха', (l, s) => s.era],
+    ['готовность', (l) => readiness(l)], ['отделка', (l, s) => s.finish],
+    ['комнат', (l, s) => s.rooms], ['площадь', (l) => l.totalArea], ['кухня', (l) => l.kitchenArea],
+    ['этаж', (l) => l.floor], ['этажей', (l) => l.floors],
+    ['цена', (l) => l.priceRub], ['₽ за м²', (l) => (l.priceRub && l.totalArea ? Math.round(l.priceRub / l.totalArea) : '')],
+    ['к медиане дома, %', (l) => l.vsBuildingPct], ['к медиане района, %', (l) => l.vsCohortPct],
+    ['тип', (l, s) => s.kind], ['продавец', (l) => l.sellerType], ['дней в продаже', (l) => l.daysOnMarket],
+    ['похожих за ним', (l) => l.similarCount],
+  ];
+  const esc = (v) => {
+    if (v == null) return '';
+    const t = String(v);
+    return /[;"\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+  };
+  const lines = [cols.map(([h]) => h).join(';')];
+  for (const l of lots) {
+    const s = cat.shelvesOf(l.id) || shelves(l);
+    lines.push(cols.map(([, fn]) => esc(fn(l, s))).join(';'));
+  }
+  return '﻿' + lines.join('\r\n') + '\r\n';
 }
 
 /* ---------- проверка заявленного ремонта ----------
@@ -2900,7 +3560,17 @@ function withMarket(lots, minCohort = 4) {
     const ck = `${l.district}|${l.rooms}|${l.completeness}|${l.readiness}`;
     (groups.cohort.get(ck) || groups.cohort.set(ck, []).get(ck)).push(v);
   }
-  const med = (m, k, n) => { const xs = m.get(k); return xs && xs.length >= n ? median(xs) : null; };
+  /* Медиана — один раз на группу. Пока она считалась заново для каждого
+     лота, на десяти тысячах лотов районная группа в тысячу цен сортировалась
+     тысячу раз. */
+  const memo = new Map();
+  const med = (m, k, n) => {
+    const xs = m.get(k);
+    if (!xs || xs.length < n) return null;
+    const mk = (m === groups.house ? 'h|' : 'c|') + k;
+    if (!memo.has(mk)) memo.set(mk, median(xs));
+    return memo.get(mk);
+  };
   return enriched.map((l) => {
     const v = ppm(l);
     const hk = `${l.houseId}|${l.completeness}|${l.readiness}`, ck = `${l.district}|${l.rooms}|${l.completeness}|${l.readiness}`;
@@ -2942,18 +3612,21 @@ function groupSameFlat(lots, areaTol = 0.6) {
       else { groups.push(cur); cur = [l]; }
     }
     groups.push(cur);
-    /* Совпали дом, этаж и площадь — но если комнатность указана у разных
-       объявлений по-разному, это разные квартиры зеркальных планировок.
-       Пустая комнатность ничему не противоречит и остаётся с группой. */
-    for (let i = groups.length - 1; i >= 0; i--) {
-      const g = groups[i];
-      /* Вид жилья берём из flatType (rooms/studio/openPlan) — он заполнен
-         всегда, в отличие от roomsCount, пустого у студий. */
-      const kind = (x) => (x.flatType && x.flatType !== 'rooms' ? x.flatType : x.rooms);
-      const kinds = [...new Set(g.map(kind).filter((r) => r != null))];
-      if (kinds.length <= 1) continue;
-      groups.splice(i, 1, ...kinds.map((r) => g.filter((x) => kind(x) === r || kind(x) == null)));
-    }
+  }
+  /* Совпали дом, этаж и площадь — но если комнатность указана у разных
+     объявлений по-разному, это разные квартиры зеркальных планировок.
+     Пустая комнатность ничему не противоречит и остаётся с группой.
+     Проход один, после всех корзин: внутри цикла по корзинам он пересматривал
+     все накопленные группы заново, и на десяти тысячах лотов это было
+     квадратично. */
+  for (let i = groups.length - 1; i >= 0; i--) {
+    const g = groups[i];
+    /* Вид жилья берём из flatType (rooms/studio/openPlan) — он заполнен
+       всегда, в отличие от roomsCount, пустого у студий. */
+    const kind = (x) => (x.flatType && x.flatType !== 'rooms' ? x.flatType : x.rooms);
+    const kinds = [...new Set(g.map(kind).filter((r) => r != null))];
+    if (kinds.length <= 1) continue;
+    groups.splice(i, 1, ...kinds.map((r) => g.filter((x) => kind(x) === r || kind(x) == null)));
   }
   return { groups, loose };
 }
@@ -3193,6 +3866,68 @@ if (require.main === module) (async () => {
         `  (${((m.to - m.from) / m.from * 100).toFixed(1)}%)  ${m.seen}  ${m.address}`));
     } else log('\nдвижения цен пока не видно: для этого нужны два снимка одной и той же квартиры');
     process.exit(0);
+  }
+
+  /* Массовый свип держит браузер сам: он нужен ему только для кук, а
+     запросы идут своим клиентом. */
+  if (cmd === 'mass') {
+    const q = loadQuery(a.query);
+    const out = a.out && a.out !== true ? a.out : 'mass.json';
+    const journal = a.journal && a.journal !== true ? a.journal : out.replace(/\.json$/, '') + '.journal';
+    const api = await massClient({
+      sockets: parseInt(a.sockets || '4', 10),
+      journal, resume: !!a.resume,
+      giveUpMs: parseFloat(a['give-up'] || '25') * 60000,
+      pace: { rate: parseFloat(a.rate || '1'), max: parseFloat(a['max-rate'] || '2.5') },
+    });
+    if (a.resume) log(`продолжаю по журналу ${journal}: ответов ${api.journal.size()}, лотов ${api.journal.lots()}`);
+    let r;
+    try {
+      r = await massSweep(api, q, { cap: parseInt(a.cap || String(SLICE_CAP), 10), groups: a.groups !== 'нет',
+        secondPass: a['second-pass'] === true || a['second-pass'] === 'да' });
+    } catch (e) {
+      if (e.code !== 'ANTIBOT') { log(api.report()); await api.close(); throw e; }
+      log(`\n${e.message}. Прочитанное лежит в журнале ${journal}: ответов ${api.journal.size()}, лотов ${api.journal.lots()}.`);
+      log(`Продолжить, когда адрес остынет (обычно через полчаса-час):\n  node tools/cian/cian.js mass --query ${a.query} --out ${out} --resume` +
+        (a.report ? ` --report ${a.report}` : '') + (a.csv ? ` --csv ${a.csv}` : ''));
+      log(api.report());
+      await api.close();
+      process.exit(3);
+    }
+    log(api.report());
+    await api.close();
+    const fill = fillBuildYears(r.lots);
+    const lots = withMarket(r.lots);
+    const { flats, loose } = dedupe(lots);
+    const lines = [
+      `Собрано ${new Date().toISOString().slice(0, 10)} за ${Math.round(r.seconds / 60)} мин.`,
+      `Циан заявляет ${r.declared}, за один проход перечислимо ${r.aggregated}; прочитано страницами ${r.listed}, ` +
+        `после раскрытия групп ${r.expanded}, не подошло под запрос ${r.leaked}, осталось **${lots.length} объявлений** ` +
+        `— это ${r.declared ? Math.round(lots.length / r.declared * 100) : '?'}% от заявленного.`,
+      `Одна квартира в нескольких объявлениях схлопнута: **${flats.length + loose.length} квартир** ` +
+        `(${loose.length} без корпуса в адресе не схлопнуть).`,
+      `Год дома: из поля или срока сдачи ${fill.own}, по соседям по дому ${fill.house}, по ЖК ${fill.complex}, неизвестен ${fill.none}.`,
+      `Отделка разложена по полям и тексту объявления, без фотографий: это первый проход, кадры — второй.`,
+    ];
+    if (r.holes.length) lines.push(`Не прочитано ${r.holes.length} кусков выдачи — список в файле, поле holes.`);
+    log('\n' + lines.join('\n'));
+    const cat = categorize(flats.concat(loose));
+    const res = outputFile(q, lots, { declared: r.declared, aggregated: r.aggregated, enumerated: r.expanded });
+    Object.assign(res, { flats: flats.length + loose.length, slices: r.slices, holes: r.holes, seconds: r.seconds });
+    fs.writeFileSync(out, JSON.stringify(res) + '\n');
+    log(`-> ${out}`);
+    if (a.report) {
+      fs.writeFileSync(a.report, categoryReport(cat, { title: a.title && a.title !== true ? a.title : 'Массовый свип', lines }));
+      log(`-> ${a.report}`);
+    }
+    if (a.csv) { fs.writeFileSync(a.csv, categoryCsv(flats.concat(loose), cat)); log(`-> ${a.csv}`); }
+    const show = (t, rows) => log(`\n${t}:\n` + rows.map((x) => `  ${String(x.n).padStart(6)}  ${x.key}` +
+      (x.ppm ? `  ${Math.round(x.ppm / 1000)} тыс/м²` : '')).join('\n'));
+    show('рынок', cat.market);
+    show('эпоха дома', cat.era);
+    show('отделка по полям и тексту', cat.finish);
+    show('районы', cat.district.slice(0, 20));
+    process.exit(r.holes.length ? 2 : 0);
   }
 
   const { browser, ctx, page } = await open();
@@ -4622,6 +5357,8 @@ module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, medi
   STATES, STATE_EVIDENCE, stateFromEvidence, stateConfidence, mergeState, withoutRenders, evidenceForLot, parseViews, REPAIR_RU, offersByIds, mergedPriceHistory, worksScope, AGES, WORK_ITEMS,
   expandSimilar, harvest, outputFile, matchesQuery, buildCohort, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
   renoFate, entryPrice, suspectTwins, RENO_FATES, RENO_CARRY, DEMOLITION_SHARE,
+  pacer, isBlockPage, priceSlice, slicePages, journalKey, stableJson, openJournal, massSweep, massClient, DEPTH, PAGE_SIZE, SLICE_CAP, CURSOR_PAGE,
+  eraOf, marketOf, metroBand, finishOf, roomsOf, shelves, tally, categorize, crossTab, categoryReport, categoryCsv,
   humanCheck, humanText, humanTwins, textSimilarity, listLike, SPACES, AUTHORS, TASTES,
   houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES,
   metroSummary, metroLine, metroCell, RAIL_LINES, photoKinds,

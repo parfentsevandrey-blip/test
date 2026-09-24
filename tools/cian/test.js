@@ -1907,3 +1907,182 @@ test('печать осмотра: порядок обхода, без ключ�
   // печать сама ничего не добавляет из словаря движка
   assert.deepStrictEqual(humanCheck(goodHuman(), { proof: 'фото', verdict: t }).errors.filter((e) => /язык движка|так пишет таблица|имя поля|внутренняя кухня/.test(e)), []);
 });
+
+process.stdout.write('\nмассовый свип\n');
+
+const { pacer, isBlockPage, priceSlice, slicePages, journalKey, openJournal, massSweep, DEPTH, PAGE_SIZE,
+  eraOf, marketOf, metroBand, finishOf, roomsOf, categorize, categoryCsv, categoryReport } = require('./cian.js');
+
+/* Выдача Циан в миниатюре: потолок 1 500 на запрос, группы похожих
+   схлопываются в самого дешёвого в выбранном диапазоне, multi_id отдаёт
+   группу целиком и не смотрит на фильтры. Цены — с повторами, как в жизни. */
+function fakeCian(n, { groupEvery = 7, groupSize = 4, seed = 7 } = {}) {
+  let x = seed;
+  const rnd = () => { x = (x * 1103515245 + 12345) % 2147483648; return x / 2147483648; };
+  const offers = [];
+  let gid = 0;
+  for (let i = 0; i < n; i++) {
+    const price = Math.round(Math.exp(15.5 + rnd() * 2.5) / 1e5) * 1e5;   // ~5–60 млн, круглые, с повторами
+    const g = i % groupEvery === 0 ? ++gid : null;
+    offers.push({ id: 100000 + i, priceRub: price, group: g, totalArea: 30 + Math.round(rnd() * 100), rooms: 1 + (i % 4), houseId: 1 + (i % 300), floor: 1 + (i % 20) });
+    if (g) for (let k = 1; k < groupSize; k++) {
+      offers.push({ id: 900000 + gid * 10 + k, priceRub: price + k * 1e5, group: g, totalArea: 40, rooms: 2, houseId: 5000 + gid, floor: k });
+      i++;
+    }
+  }
+  const byGroup = new Map();
+  offers.forEach((o) => { if (o.group) (byGroup.get(o.group) || byGroup.set(o.group, []).get(o.group)).push(o); });
+  const calls = { n: 0 };
+  const call = async (q, page) => {
+    calls.n++;
+    const toLot = (o, sc = 0) => ({ id: o.id, priceRub: o.priceRub, totalArea: o.totalArea, rooms: o.rooms, houseId: o.houseId, floor: o.floor, similarCount: sc });
+    if (q.multi_id) {
+      const own = offers.find((o) => o.id === q.multi_id.value);
+      const g = own && own.group ? byGroup.get(own.group) : [];
+      const list = [...g].sort((a, b) => a.priceRub - b.priceRub || a.id - b.id);
+      return { count: list.length, aggregated: list.length, lots: list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((o) => toLot(o)) };
+    }
+    const r = (q.price && q.price.value) || {};
+    const inRange = offers.filter((o) => (r.gte == null || o.priceRub >= r.gte) && (r.lte == null || o.priceRub <= r.lte));
+    const seenG = new Set(), shown = [];
+    for (const o of [...inRange].sort((a, b) => a.priceRub - b.priceRub || a.id - b.id)) {
+      if (o.group) { if (seenG.has(o.group)) continue; seenG.add(o.group); shown.push(toLot(o, byGroup.get(o.group).length - 1)); }
+      else shown.push(toLot(o));
+    }
+    const from = (page - 1) * PAGE_SIZE;
+    const lots = from >= DEPTH ? [] : shown.slice(from, Math.min(from + PAGE_SIZE, DEPTH));
+    return { count: inRange.length, aggregated: shown.length, lots };
+  };
+  return { offers, call, calls };
+}
+
+test('массовый свип находит всё за потолком выдачи и за лидерами групп', async () => {
+  const cian = fakeCian(9000);
+  const api = { call: cian.call, sockets: 4, report: () => '' };
+  const q = { _type: 'flatsale', region: { type: 'terms', value: [1] } };
+  const r = await massSweep(api, q, { log: () => {} });
+  const got = new Set(r.lots.map((l) => l.id));
+  const missing = cian.offers.filter((o) => !got.has(o.id));
+  assert.strictEqual(missing.length, 0, `потеряно ${missing.length} из ${cian.offers.length}`);
+  assert.ok(r.slices.length >= Math.ceil(r.aggregated / 1400), 'каждый ломтик под потолком');
+  assert.deepStrictEqual(r.holes, []);
+  // запросов порядка «страниц столько, сколько лотов на виду, плюс по одному на группу»
+  const pages = Math.ceil(r.aggregated / PAGE_SIZE);
+  assert.ok(cian.calls.n < pages + r.groups + r.slices.length * 3 + 10, `запросов ${cian.calls.n}`);
+});
+
+test('массовый свип уважает собственный ценовой фильтр запроса', async () => {
+  const cian = fakeCian(6000);
+  const api = { call: cian.call, sockets: 3, report: () => '' };
+  const q = { _type: 'flatsale', price: { type: 'range', value: { gte: 10e6, lte: 30e6 } } };
+  const r = await massSweep(api, q, { log: () => {} });
+  assert.ok(r.lots.every((l) => l.priceRub >= 10e6 && l.priceRub <= 30e6), 'ломтики вылезли за цену запроса');
+  const want = cian.offers.filter((o) => o.priceRub >= 10e6 && o.priceRub <= 30e6).length;
+  assert.strictEqual(r.lots.length, want);
+  assert.ok(r.leaked > 0, 'члены групп вне цены отсеяны сверкой, а не молча');
+});
+
+test('ломтик по цене сужает, а не затирает фильтр запроса', () => {
+  const q = { _type: 'flatsale', price: { type: 'range', value: { gte: 5e6, lte: 50e6 } } };
+  assert.deepStrictEqual(priceSlice(q, 0, null).price.value, { gte: 5e6, lte: 50e6 });
+  assert.deepStrictEqual(priceSlice(q, 20e6, 60e6).price.value, { gte: 20e6, lte: 50e6 });
+  assert.deepStrictEqual(priceSlice({ _type: 'flatsale' }, 0, null).price, undefined);
+  assert.deepStrictEqual(priceSlice({ _type: 'flatsale' }, 7e6, null).price.value, { gte: 7e6 });
+  assert.strictEqual(slicePages(1400), 51);
+  assert.strictEqual(slicePages(5000), Math.ceil(DEPTH / PAGE_SIZE), 'глубже 54 страниц читать нечего');
+});
+
+test('темп: медленно вверх, резко вниз, паузы растут при отказах подряд', () => {
+  const p = pacer({ rate: 2, max: 3, step: 0.5, every: 2, cut: 0.5, pause: 1000 });
+  assert.strictEqual(p.wait(0), 0);
+  assert.strictEqual(p.wait(0), 500, 'второй слот — через 1/темп');
+  p.ok(); p.ok();
+  assert.strictEqual(p.rate, 2.5);
+  assert.strictEqual(p.throttle(10000), 1000);
+  assert.strictEqual(p.rate, 1.25);
+  assert.strictEqual(p.throttle(10000), 2000, 'второй отказ подряд — пауза вдвое');
+  assert.ok(p.wait(10000) >= 2000, 'до конца паузы запросов нет');
+  p.ok();
+  assert.strictEqual(p.throttles, 0, 'удачный ответ обнуляет счёт отказов');
+  const q = pacer({ rate: 0.5, min: 0.4, cut: 0.5 });
+  q.throttle(0);
+  assert.strictEqual(q.rate, 0.4, 'ниже пола темп не падает');
+});
+
+test('капча с кодом 200 распознаётся по содержимому', () => {
+  assert.strictEqual(isBlockPage(200, 'application/json; charset=utf-8', '{"data":{}}'), false);
+  assert.strictEqual(isBlockPage(200, 'text/html; charset=UTF-8', '<!doctype html>'), true);
+  assert.strictEqual(isBlockPage(200, 'application/json', '<html>'), true, 'заголовок врёт — решает тело');
+  assert.strictEqual(isBlockPage(429, 'text/html', '<!DOCTYPE'), true);
+  assert.strictEqual(isBlockPage(500, 'text/html', ''), false, '5xx — сбой, а не антибот');
+});
+
+test('журнал: ключ не зависит от порядка полей, оборванный свип продолжается', () => {
+  const a = { _type: 'flatsale', price: { type: 'range', value: { gte: 1, lte: 2 } }, sort: { type: 'term', value: 'x' } };
+  const b = { sort: { value: 'x', type: 'term' }, price: { value: { lte: 2, gte: 1 }, type: 'range' }, _type: 'flatsale' };
+  assert.strictEqual(journalKey(a, 3), journalKey(b, 3));
+  assert.notStrictEqual(journalKey(a, 3), journalKey(a, 4));
+  const base = require('path').join(require('os').tmpdir(), `mass-test-${process.pid}`);
+  const j = openJournal(base, false);
+  j.put('k1', { count: 5, aggregated: 3, lots: [{ id: 1, priceRub: 10 }, { id: 2, priceRub: 20 }] });
+  j.close();
+  // обрыв посреди строки
+  require('fs').appendFileSync(`${base}.req.jsonl`, '{"k":"k2","c":1,"a":1,"ids":[');
+  const r = openJournal(base, true);
+  assert.deepStrictEqual(r.get('k1'), { count: 5, aggregated: 3, lots: [{ id: 1, priceRub: 10 }, { id: 2, priceRub: 20 }] });
+  assert.strictEqual(r.get('k2'), null, 'недописанный ответ считается непрочитанным');
+  r.close();
+  for (const f of [`${base}.req.jsonl`, `${base}.lots.jsonl`]) require('fs').unlinkSync(f);
+});
+
+test('полки: эпоха, рынок, метро, отделка, комнатность', () => {
+  assert.strictEqual(eraOf({ buildYear: 1962 }), '1955–1970');
+  assert.strictEqual(eraOf({ buildYear: 2021, houseFinished: true }), '2020 и новее');
+  assert.strictEqual(eraOf({ houseFinished: false, deadline: { year: 2028 } }), 'строится');
+  assert.strictEqual(eraOf({}), 'год неизвестен', 'пустой год — не ноль');
+  assert.strictEqual(marketOf({ saleType: 'fz214' }), 'новостройка');
+  assert.strictEqual(marketOf({ saleType: 'free', buildYear: 1975 }), 'вторичка');
+  assert.strictEqual(metroBand({ metro: { minutes: 4, byFoot: true } }), 'до 5 мин пешком');
+  assert.strictEqual(metroBand({ metro: { minutes: 4, byFoot: false } }), 'только транспортом');
+  assert.strictEqual(metroBand({}), 'нет данных');
+  assert.strictEqual(finishOf({ saleType: 'fz214', decoration: 'without' }), 'без отделки');
+  assert.strictEqual(finishOf({ saleType: 'fz214', decorFilter: 'preFine' }), 'предчистовая');
+  assert.strictEqual(finishOf({ saleType: 'free', description: 'полностью укомплектована мебелью и техникой' }), 'с ремонтом и мебелью');
+  assert.strictEqual(finishOf({ saleType: 'free', description: 'светлая, окна во двор' }), 'по тексту не понять');
+  assert.strictEqual(roomsOf({ flatType: 'studio' }), 'студия');
+  assert.strictEqual(roomsOf({ rooms: 6 }), '5+');
+});
+
+test('раскладка по полкам: таблицы сходятся, CSV открывается в Excel', () => {
+  const lots = [
+    { id: 1, district: 'Раменки', buildYear: 1962, priceRub: 20e6, totalArea: 50, rooms: 2, saleType: 'free' },
+    { id: 2, district: 'Раменки', buildYear: 2021, houseFinished: true, priceRub: 40e6, totalArea: 80, rooms: 3, saleType: 'free' },
+    { id: 3, district: 'Кунцево', houseFinished: false, deadline: { year: 2028 }, priceRub: 15e6, totalArea: 40, rooms: 1, saleType: 'fz214', decoration: 'without' },
+  ];
+  const cat = categorize(lots);
+  assert.strictEqual(cat.total, 3);
+  assert.strictEqual(cat.district.reduce((n, r) => n + r.n, 0), 3);
+  assert.strictEqual(cat.market.find((r) => r.key === 'новостройка').n, 1);
+  const ram = cat.districtEra.rows.find((r) => r.key === 'Раменки');
+  assert.strictEqual(ram.n, 2);
+  assert.deepStrictEqual(cat.districtEra.cols.slice(0, 2), ['1955–1970', '2020 и новее'], 'эпохи по порядку лет');
+  const csv = categoryCsv(lots, cat);
+  assert.ok(csv.startsWith('﻿'), 'BOM для Excel');
+  assert.strictEqual(csv.trim().split('\r\n').length, 4);
+  assert.ok(csv.split('\r\n')[0].includes(';'), 'разделитель — точка с запятой');
+  assert.match(categoryReport(cat, { title: 'т' }), /## Район × эпоха дома/);
+});
+
+test('массовый свип: пустая пятидесятая страница — хвост последний, а не дыра', async () => {
+  // Циан насчитал 1 450 перечислимых, а читается меньше 1 373: схлопывание
+  const lots = Array.from({ length: 1300 }, (_, i) => ({ id: i + 1, priceRub: 1e6 + i * 1000 }));
+  const call = async (q, page) => {
+    const r = (q.price && q.price.value) || {};
+    const xs = lots.filter((l) => (r.gte == null || l.priceRub >= r.gte) && (r.lte == null || l.priceRub <= r.lte));
+    return { count: 1500, aggregated: 1450, lots: xs.slice((page - 1) * 28, page * 28).map((l) => ({ ...l, similarCount: 0 })) };
+  };
+  const r = await massSweep({ call, sockets: 2, report: () => '' }, { _type: 'flatsale' }, { log: () => {} });
+  assert.deepStrictEqual(r.holes, []);
+  assert.strictEqual(r.lots.length, 1300);
+  assert.strictEqual(r.slices.length, 1);
+});
