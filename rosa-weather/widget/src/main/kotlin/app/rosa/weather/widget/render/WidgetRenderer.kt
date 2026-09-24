@@ -435,11 +435,16 @@ class WidgetRenderer(private val context: Context) {
         val tempSize = min(13.5f * k, colW * 0.34f)
         val labelBaseline = box.y + labelSize + 1 * k
 
-        // "Now" gets a soft fill capsule (content on glass uses fills, never more glass).
+        // "Now" gets a soft fill capsule (content on glass uses fills, never more glass). It
+        // reaches a little past its column, and the word is sized to keep air on both sides.
         paint.shader = null
         paint.color = s.palette.fill
         val pillR = min(colW * 0.42f, 14 * k)
-        canvas.drawRoundRect(RectF(box.x + 1.5f * k, box.y - 3 * k, box.x + colW - 1.5f * k, box.bottom + 2 * k), pillR, pillR, paint)
+        val overhang = 3 * k
+        canvas.drawRoundRect(RectF(box.x - overhang, box.y - 3 * k, box.x + colW + overhang, box.bottom + 2 * k), pillR, pillR, paint)
+        val nowLabel = s.format.now()
+        val nowSize = type.fitSize(nowLabel, colW + 2 * overhang - 14 * k, 7f * k, labelSize) { type.text(it, s.palette.inkSoft, 500) }
+        fun labelPaint(i: Int) = type.text(if (i == 0) nowSize else labelSize, s.palette.inkSoft, 500)
 
         val glyphSize = if (block.withGlyph) min(colW * 0.62f, 26f * k).coerceAtMost(box.h * 0.32f) else 0f
         val glyphTop = labelBaseline + 5 * k
@@ -447,8 +452,8 @@ class WidgetRenderer(private val context: Context) {
         if (!block.withCurve) {
             hours.forEachIndexed { i, hour ->
                 val cx = box.x + colW * (i + 0.5f)
-                val label = if (i == 0) s.format.now() else s.format.hour(hour.time)
-                WidgetType.draw(canvas, label, cx, labelBaseline, type.text(labelSize, s.palette.inkSoft, 500), colW - 2 * k, Paint.Align.CENTER, s.shadow)
+                val label = if (i == 0) nowLabel else s.format.hour(hour.time)
+                WidgetType.draw(canvas, label, cx, labelBaseline, labelPaint(i), colW + 2 * overhang, Paint.Align.CENTER, s.shadow)
                 if (block.withGlyph) {
                     glyph(canvas, s, RectF(cx - glyphSize / 2, glyphTop, cx + glyphSize / 2, glyphTop + glyphSize), WeatherCondition.fromWmo(hour.weatherCode), hour.isDay)
                 }
@@ -475,8 +480,8 @@ class WidgetRenderer(private val context: Context) {
 
         hours.forEachIndexed { i, hour ->
             val cx = points[i].first
-            val label = if (i == 0) s.format.now() else s.format.hour(hour.time)
-            WidgetType.draw(canvas, label, cx, labelBaseline, type.text(labelSize, s.palette.inkSoft, 500), colW - 2 * k, Paint.Align.CENTER, s.shadow)
+            val label = if (i == 0) nowLabel else s.format.hour(hour.time)
+            WidgetType.draw(canvas, label, cx, labelBaseline, labelPaint(i), colW + 2 * overhang, Paint.Align.CENTER, s.shadow)
             glyph(canvas, s, RectF(cx - glyphSize / 2, glyphTop, cx + glyphSize / 2, glyphTop + glyphSize), WeatherCondition.fromWmo(hour.weatherCode), hour.isDay)
         }
 

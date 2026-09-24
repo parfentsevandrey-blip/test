@@ -67,7 +67,10 @@ import kotlin.math.floor
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
-private val ItemWidth = 58.dp
+private val ItemWidth = 62.dp
+
+/** The lens reaches a little past its hour on both sides, so "Now" has air around it. */
+private val LensOverhang = 7.dp
 private const val HOURS = 48
 
 /**
@@ -142,9 +145,9 @@ fun HourlyTimeline(
             Box(Modifier.fillMaxWidth().height(158.dp)) {
                 // The fixed lens under the ribbon: real glass, so the sky bends through it.
                 GlassSurface(
-                    Modifier.padding(start = 12.dp).width(ItemWidth).fillMaxHeight(),
+                    Modifier.padding(start = 12.dp - LensOverhang).width(ItemWidth + LensOverhang * 2).fillMaxHeight(),
                     style = GlassStyle.Lens,
-                    cornerRadius = 26.dp,
+                    cornerRadius = 22.dp,
                     shadow = false,
                 ) {}
                 LazyRow(
@@ -204,7 +207,7 @@ private fun HourCell(
             color = if (milestone) colors.accent else colors.inkSoft,
             maxLines = 1,
             modifier = Modifier.graphicsLayer {
-                val s = 1f + 0.12f * focus()
+                val s = 1f + 0.05f * focus()
                 scaleX = s
                 scaleY = s
             },
