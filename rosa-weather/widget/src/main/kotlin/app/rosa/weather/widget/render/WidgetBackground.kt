@@ -28,8 +28,18 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.random.Random
 
-/** Where the sun or moon sits inside the widget, 0..1 on both axes (y grows downward). */
-data class SkyAnchor(val x: Float, val y: Float, val isSun: Boolean, val elevation: Double, val moonPhase: Double)
+/**
+ * Where the sun or moon sits inside the widget, 0..1 on both axes (y grows downward), and where it
+ * really is in the sky ([elevation], [azimuth], degrees).
+ */
+data class SkyAnchor(
+    val x: Float,
+    val y: Float,
+    val isSun: Boolean,
+    val elevation: Double,
+    val moonPhase: Double,
+    val azimuth: Double = 180.0,
+)
 
 /**
  * Paints widget panes. Launchers can't run a backdrop shader, so Liquid Glass is approximated
@@ -66,8 +76,6 @@ internal class WidgetBackground {
         this.pane = pane
         this.light = light
         outline = PaneRim(rect, radius)
-        val inset = 1.2f
-        catchOutline = PaneRim(RectF(inset, inset, w - inset, h - inset), max(radius - inset, 0f))
         weather.live = live
         when (config.style) {
             WidgetStyle.Glass -> glass(canvas, rect, radius, config, palette, visual, anchor, seed)
@@ -112,10 +120,8 @@ internal class WidgetBackground {
     private var pane = Pane.Dry
     private var light = WidgetLight.Resting
 
-    /** The pane's outline, and one just inside it where catch-lights run. */
+    /** The pane's outline, sampled for the light laid along it. */
     private var outline: PaneRim? = null
-    private var catchOutline: PaneRim? = null
-    private val segment = Path()
 
     // region Glass
 
@@ -204,52 +210,20 @@ internal class WidgetBackground {
     }
 
     /**
-     * The glass edge, kept to what light really does on a pane: a hairline rim that catches the
-     * light where it faces the sun or moon (and, weaker, across the pane) and all but vanishes
-     * along the sides, a soft glow pooling just inside there, a whisper of dispersion, catch-lights
-     * hugging the rim, and in real sunlight a glint. No band around the whole pane — at widget
-     * scale that reads as a frame.
+     * The glass edge: a thick slab's curved rim shaded by the scene's light ([GlassBevel]) — a
+     * catch-light all the way round, brightest where it faces the light, a finer streak inside
+     * it, the sky's reflection along the top and the far side in shadow — and in real sunlight a
+     * glint. A darker outer hairline under it keeps the pane crisp on bright wallpapers.
      */
     private fun glassBezel(canvas: Canvas, rect: RectF, radius: Float, palette: WidgetPalette, strength: Float) {
-        val color = palette.sky.glow.lerp(Argb.White, 0.7f).lerp(light.color, light.share)
-        val lit = strength * (0.85f + 0.35f * light.power)
-        canvas.withClip(path) {
-            paint.style = Paint.Style.STROKE
-            // Light pooling inside the lit side.
-            paint.shader = rimLight(color, peak = 0.42f * lit, side = 0.015f * lit)
-            paint.strokeWidth = 8f
-            paint.maskFilter = BlurMaskFilter(4.5f, BlurMaskFilter.Blur.NORMAL)
-            drawRoundRect(rect, radius, radius, paint)
-            paint.maskFilter = null
-            // A whisper of dispersion where the light is strongest.
-            paint.strokeWidth = 0.8f
-            for ((inset, tone, alpha) in listOf(Triple(1.6f, Argb.hex(0x8FEAFF), 0.26f), Triple(2.4f, Argb.hex(0xFFB3DE), 0.18f))) {
-                val r = RectF(rect.left + inset, rect.top + inset, rect.right - inset, rect.bottom - inset)
-                paint.shader = rimLight(tone, peak = alpha * lit, side = 0f)
-                drawRoundRect(r, radius - inset, radius - inset, paint)
-            }
-        }
-        // Hairline rim: bright where the light hits, barely there along the sides.
-        paint.style = Paint.Style.STROKE
-        val inset = 0.5f
-        paint.shader = rimLight(color, peak = 0.9f * lit, side = 0.12f * lit)
-        paint.strokeWidth = 1f
-        canvas.drawRoundRect(RectF(rect.left + inset, rect.top + inset, rect.right - inset, rect.bottom - inset), radius - inset, radius - inset, paint)
-        // Catch-lights where the rim faces the sun or moon and the sky, each with a weaker twin across.
-        val share = light.share
-        val twin = 0.4f * strength * (1f - 0.4f * light.power)
-        catchLight(canvas, radius, light.angle, alpha = 0.75f * strength * share)
-        catchLight(canvas, radius, light.angle + PI.toFloat(), alpha = twin * share)
-        catchLight(canvas, radius, WidgetLight.RESTING_ANGLE, alpha = 0.75f * strength * (1f - share))
-        catchLight(canvas, radius, WidgetLight.RESTING_ANGLE + PI.toFloat(), alpha = twin * (1f - share))
-        glint(canvas, rect, strength)
-        // A darker outer hairline keeps the pane crisp on bright wallpapers.
         paint.shader = null
         paint.style = Paint.Style.STROKE
         paint.color = if (palette.isDark) 0x2E000000 else 0x1F000000
         paint.strokeWidth = 0.6f
         canvas.drawRoundRect(RectF(rect.left + 0.3f, rect.top + 0.3f, rect.right - 0.3f, rect.bottom - 0.3f), radius, radius, paint)
         paint.style = Paint.Style.FILL
+        GlassBevel.draw(canvas, rect, radius, light, palette.isDark, strength)
+        glint(canvas, rect, strength)
     }
 
     /**
@@ -273,28 +247,6 @@ internal class WidgetBackground {
         return outline!!.sweep(color) { nx, ny, dx, dy ->
             share * lobe(nx * sx + ny * sy, dx * sx + dy * sy) + (1f - share) * lobe(nx * rx + ny * ry, dx * rx + dy * ry)
         }
-    }
-
-    /** A catch-light hugging the rim where it faces the light at [angle]. */
-    private fun catchLight(canvas: Canvas, radius: Float, angle: Float, alpha: Float) {
-        val rim = catchOutline ?: return
-        if (alpha <= 0.01f) return
-        val at = rim.facing(angle)
-        val r = max(radius, 8f)
-        val tone = Argb.White.lerp(light.color, light.share)
-        paint.shader = null
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.ROUND
-        paint.color = tone.withAlpha(alpha * 0.7f).value
-        paint.strokeWidth = 1.8f
-        paint.maskFilter = BlurMaskFilter(1.4f, BlurMaskFilter.Blur.NORMAL)
-        canvas.drawPath(rim.segment(at, r * 0.44f, segment), paint)
-        paint.maskFilter = null
-        paint.color = tone.withAlpha(alpha).value
-        paint.strokeWidth = 0.9f
-        canvas.drawPath(rim.segment(at, r * 0.19f, segment), paint)
-        paint.strokeCap = Paint.Cap.BUTT
-        paint.style = Paint.Style.FILL
     }
 
     /**
@@ -453,7 +405,10 @@ internal class WidgetBackground {
         val cx = w * anchor.x
         val cy = h * anchor.y
         val size = min(w, h)
-        val veil = 1f - visual.cloudCover * 0.75f
+        // Scattered cloud veils the sun or moon; an overcast sky hides it, as it hides its light.
+        val overcast = ((visual.cloudCover - 0.3f) / 0.65f).coerceIn(0f, 1f)
+        val veil = 1f - overcast * overcast * (3f - 2f * overcast)
+        if (veil < 0.02f) return
         if (anchor.isSun) {
             if (cy > h * 1.15f) return
             val r = size * 0.075f
@@ -646,7 +601,7 @@ internal class WidgetBackground {
         fun anchorFor(elevation: Double, azimuth: Double, isSun: Boolean, moonPhase: Double): SkyAnchor {
             val x = (((azimuth - 90.0) / 180.0).toFloat()).coerceIn(0.08f, 0.92f)
             val y = (1f - ((elevation + 6.0) / 60.0).toFloat()).coerceIn(0.1f, 1.2f)
-            return SkyAnchor(x, y, isSun, elevation, moonPhase)
+            return SkyAnchor(x, y, isSun, elevation, moonPhase, azimuth)
         }
     }
 }

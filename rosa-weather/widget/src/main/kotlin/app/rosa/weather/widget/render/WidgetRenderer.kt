@@ -121,7 +121,7 @@ class WidgetRenderer(private val context: Context) {
         val zone = WeatherFormat.zoneOf(forecast?.timezone, forecast?.utcOffsetSeconds ?: 0)
         val format = WeatherFormat(context, content.units, zone)
         val anchor = if (moment == null) {
-            SkyAnchor(0.8f, 0.2f, true, 40.0, 0.5)
+            SkyAnchor(0.8f, 0.2f, true, 40.0, 0.5, azimuth = 225.0)
         } else if (moment.sun.elevation > -4) {
             WidgetBackground.anchorFor(moment.sun.elevation, moment.sun.azimuth, true, moment.moonPhase.phase)
         } else {
@@ -129,7 +129,7 @@ class WidgetRenderer(private val context: Context) {
         }
 
         // The sky's light on the glass: the pane's rim and the glass digits catch it alike.
-        val light = WidgetLight.of(anchor, visual, palette.sky, request.widthDp, request.heightDp)
+        val light = WidgetLight.of(anchor, visual, palette.sky)
         background.draw(
             canvas, request.widthDp, request.heightDp, request.cornerRadiusDp, request.config, palette,
             visual, anchor, request.dynamic, request.seed,

@@ -22,7 +22,7 @@ import kotlin.math.sin
  * real sun moves on, and so does the light.
  */
 internal data class WidgetLight(
-    /** Where the sun or moon lies, seen from the pane's centre: radians, y down. */
+    /** Where the light comes from across the pane: radians, y down. */
     val angle: Float,
     /** 0..1: how strongly it lights the glass. */
     val power: Float,
@@ -57,7 +57,7 @@ internal data class WidgetLight(
 
         private val MOONLIGHT = Argb.hex(0xD3DCF0)
 
-        fun of(anchor: SkyAnchor, visual: WeatherVisual, sky: SkyPalette, width: Float, height: Float): WidgetLight {
+        fun of(anchor: SkyAnchor, visual: WeatherVisual, sky: SkyPalette): WidgetLight {
             val visible = ((anchor.elevation + 2.0) / 5.0).toFloat().coerceIn(0f, 1f)
             val moonlight = ((1.0 - cos(2.0 * PI * anchor.moonPhase)) / 2.0).toFloat()
             // Scattered cloud lets the light through; an overcast sky leaves only its own soft light.
@@ -68,8 +68,12 @@ internal data class WidgetLight(
             } else {
                 visible * 0.55f * clear * (0.35f + 0.65f * moonlight)
             }.coerceIn(0f, 1f)
+            // The sun's own direction, as the app's sky lays it out: east on the left, west on the
+            // right, and from above for as long as it is up.
+            val elevation = Math.toRadians(anchor.elevation.coerceAtLeast(0.0))
+            val across = -sin(Math.toRadians(anchor.azimuth)) * cos(elevation)
             return WidgetLight(
-                angle = atan2(anchor.y * height - height / 2f, anchor.x * width - width / 2f),
+                angle = atan2(-sin(elevation), across).toFloat(),
                 power = power,
                 color = Argb.White.lerp(if (anchor.isSun) sky.sun else MOONLIGHT, 0.65f),
                 sky = sky.zenith,
@@ -83,12 +87,10 @@ internal data class WidgetLight(
  * it lies around the centre, so light can be laid along the real rim at any proportions.
  */
 internal class PaneRim(rect: RectF, radius: Float) {
-    private val path = Path().apply { addRoundRect(rect, radius, radius, Path.Direction.CW) }
-    private val measure = PathMeasure(path, true)
+    private val measure = PathMeasure(Path().apply { addRoundRect(rect, radius, radius, Path.Direction.CW) }, true)
     private val cx = rect.centerX()
     private val cy = rect.centerY()
-    private val length = measure.length
-    private val count = (length / 1.5f).toInt().coerceIn(64, 480)
+    private val count = (measure.length / 1.5f).toInt().coerceIn(64, 480)
 
     val x = FloatArray(count)
     val y = FloatArray(count)
@@ -101,9 +103,6 @@ internal class PaneRim(rect: RectF, radius: Float) {
     private val dx = FloatArray(count)
     private val dy = FloatArray(count)
 
-    /** Distance along the outline. */
-    private val along = FloatArray(count)
-
     /** Where the point lies around the centre, 0..1 clockwise from three o'clock (a SweepGradient's turn). */
     private val turn = FloatArray(count)
 
@@ -114,8 +113,7 @@ internal class PaneRim(rect: RectF, radius: Float) {
         val pos = FloatArray(2)
         val tan = FloatArray(2)
         for (i in 0 until count) {
-            along[i] = length * i / count
-            measure.getPosTan(along[i], pos, tan)
+            measure.getPosTan(measure.length * i / count, pos, tan)
             var ox = tan[1]
             var oy = -tan[0]
             if (ox * (pos[0] - cx) + oy * (pos[1] - cy) < 0f) {
@@ -177,16 +175,5 @@ internal class PaneRim(rect: RectF, radius: Float) {
         colors[count + 1] = wrap
         stops[count + 1] = 1f
         return SweepGradient(cx, cy, colors, stops)
-    }
-
-    /** The stretch of rim [reach] either side of point [i], into [into]. */
-    fun segment(i: Int, reach: Float, into: Path): Path {
-        into.reset()
-        val start = along[i] - reach
-        val end = along[i] + reach
-        if (start < 0f) measure.getSegment(start + length, length, into, true)
-        if (end > length) measure.getSegment(0f, end - length, into, true)
-        measure.getSegment(start.coerceAtLeast(0f), end.coerceAtMost(length), into, true)
-        return into
     }
 }

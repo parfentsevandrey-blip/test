@@ -91,18 +91,26 @@ class WidgetGalleryTest {
     /**
      * The sky lights the widget's glass as it lights the app's: a clear day from sunrise to the
      * golden hour (the rim lit and the glint on the sun's side, in its colour), a full moon's
-     * silver, and the soft resting light of an overcast sky.
+     * silver, and the soft light of an overcast sky, by day and by night (the moon hidden too).
      */
     @Test
     fun light() {
+        fun at(scenario: SampleForecast.Scenario, now: Long) = SampleForecast.create(scenario, nowEpochSeconds = now) to now
+        val overcastNight = at(SampleForecast.Scenario.RainyAfternoon, 1_790_281_200L).let { (forecast, now) ->
+            forecast.copy(
+                current = forecast.current.copy(weatherCode = 3, cloudCover = 95),
+                hourly = forecast.hourly.map { it.copy(weatherCode = 3, cloudCover = 95) },
+            ) to now
+        }
         val scenes = listOf(
-            Triple("07:30", SampleForecast.Scenario.SunnyMild, 1_758_601_800L),
-            Triple("10:00", SampleForecast.Scenario.SunnyMild, 1_758_610_800L),
-            Triple("12:20", SampleForecast.Scenario.SunnyMild, 1_758_619_200L),
-            Triple("16:00", SampleForecast.Scenario.SunnyMild, 1_758_632_400L),
-            Triple("18:20", SampleForecast.Scenario.SunnyMild, 1_758_640_800L),
-            Triple("полнолуние", SampleForecast.Scenario.ClearNight, 1_759_784_400L),
-            Triple("пасмурно", SampleForecast.Scenario.RainyAfternoon, 1_758_628_800L),
+            "07:30" to at(SampleForecast.Scenario.SunnyMild, 1_758_601_800L),
+            "10:00" to at(SampleForecast.Scenario.SunnyMild, 1_758_610_800L),
+            "12:20" to at(SampleForecast.Scenario.SunnyMild, 1_758_619_200L),
+            "16:00" to at(SampleForecast.Scenario.SunnyMild, 1_758_632_400L),
+            "18:20" to at(SampleForecast.Scenario.SunnyMild, 1_758_640_800L),
+            "полнолуние" to at(SampleForecast.Scenario.ClearNight, 1_759_784_400L),
+            "пасмурно" to at(SampleForecast.Scenario.RainyAfternoon, 1_758_628_800L),
+            "облачная ночь" to overcastNight,
         )
         val density = 2f
         val (w, h) = 314f to 162f
@@ -116,10 +124,10 @@ class WidgetGalleryTest {
         canvas.scale(density, density)
         wallpaper(canvas, sheetW, sheetH)
         val label = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xCCFFFFFF.toInt(); textSize = 10f }
-        scenes.forEachIndexed { i, (name, scenario, now) ->
+        scenes.forEachIndexed { i, (name, scene) ->
+            val (forecast, now) = scene
             val x = gap + (i % columns) * (w + gap)
             val y = gap + (i / columns) * (h + gap + 14f)
-            val forecast = SampleForecast.create(scenario, nowEpochSeconds = now)
             val content = WidgetContent("Москва", true, forecast, now, Units())
             canvas.save()
             canvas.translate(x, y)
