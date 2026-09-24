@@ -46,6 +46,7 @@ import app.rosa.weather.core.model.HapticsLevel
 import app.rosa.weather.core.model.PrecipitationUnit
 import app.rosa.weather.core.model.PressureUnit
 import app.rosa.weather.core.model.TemperatureUnit
+import app.rosa.weather.core.model.Units
 import app.rosa.weather.core.model.WindUnit
 import app.rosa.weather.ui.common.GlassScreen
 
@@ -53,11 +54,35 @@ import app.rosa.weather.ui.common.GlassScreen
 fun SettingsRoute(viewModel: SettingsViewModel, onBack: () -> Unit) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val units = settings.resolvedUnits()
-    val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val backgroundLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         viewModel.update { it.copy(backgroundLocation = granted) }
     }
+    SettingsScreen(
+        settings = settings,
+        onUpdate = { viewModel.update(it) },
+        onUpdateUnits = { viewModel.updateUnits(it) },
+        onBackgroundLocation = { on ->
+            val coarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            if (on && coarse) {
+                backgroundLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            } else {
+                viewModel.update { it.copy(backgroundLocation = false) }
+            }
+        },
+        onBack = onBack,
+    )
+}
+
+@Composable
+fun SettingsScreen(
+    settings: AppSettings,
+    onUpdate: ((AppSettings) -> AppSettings) -> Unit,
+    onUpdateUnits: ((Units) -> Units) -> Unit,
+    onBackgroundLocation: (Boolean) -> Unit,
+    onBack: () -> Unit,
+) {
+    val units = settings.resolvedUnits()
+    val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     val windLabels = WindUnit.entries.associateWith { windLabel(it) }
     val pressureLabels = PressureUnit.entries.associateWith { pressureLabel(it) }
@@ -74,12 +99,12 @@ fun SettingsRoute(viewModel: SettingsViewModel, onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Section(stringResource(R.string.settings_appearance)) {
-                AppearancePicker(settings.appearance) { mode -> viewModel.update { it.copy(appearance = mode) } }
+                AppearancePicker(settings.appearance) { mode -> onUpdate { it.copy(appearance = mode) } }
                 Text(stringResource(R.string.appearance_hint), style = Rosa.type.caption, color = Rosa.colors.inkSoft)
             }
             Section(stringResource(R.string.settings_units)) {
                 Labeled(stringResource(R.string.settings_temperature)) {
-                    GlassSegmented(TemperatureUnit.entries, units.temperature, { v -> viewModel.updateUnits { it.copy(temperature = v) } }, {
+                    GlassSegmented(TemperatureUnit.entries, units.temperature, { v -> onUpdateUnits { it.copy(temperature = v) } }, {
                         if (it == TemperatureUnit.Celsius) "°C" else "°F"
                     })
                 }
@@ -87,38 +112,31 @@ fun SettingsRoute(viewModel: SettingsViewModel, onBack: () -> Unit) {
                     GlassSegmented(
                         listOf(WindUnit.MetersPerSecond, WindUnit.KilometersPerHour, WindUnit.MilesPerHour, WindUnit.Knots),
                         units.wind,
-                        { v -> viewModel.updateUnits { it.copy(wind = v) } },
+                        { v -> onUpdateUnits { it.copy(wind = v) } },
                         { windLabels.getValue(it) },
                     )
                 }
                 Labeled(stringResource(R.string.settings_pressure)) {
-                    GlassSegmented(PressureUnit.entries, units.pressure, { v -> viewModel.updateUnits { it.copy(pressure = v) } }, { pressureLabels.getValue(it) })
+                    GlassSegmented(PressureUnit.entries, units.pressure, { v -> onUpdateUnits { it.copy(pressure = v) } }, { pressureLabels.getValue(it) })
                 }
                 Labeled(stringResource(R.string.settings_precipitation)) {
-                    GlassSegmented(PrecipitationUnit.entries, units.precipitation, { v -> viewModel.updateUnits { it.copy(precipitation = v) } }, { precipLabels.getValue(it) })
+                    GlassSegmented(PrecipitationUnit.entries, units.precipitation, { v -> onUpdateUnits { it.copy(precipitation = v) } }, { precipLabels.getValue(it) })
                 }
             }
             Section(stringResource(R.string.settings_refresh)) {
-                GlassSegmented(AppSettings.RefreshChoices, settings.refreshIntervalMinutes, { v -> viewModel.update { it.copy(refreshIntervalMinutes = v) } }, { refreshLabels.getValue(it) })
+                GlassSegmented(AppSettings.RefreshChoices, settings.refreshIntervalMinutes, { v -> onUpdate { it.copy(refreshIntervalMinutes = v) } }, { refreshLabels.getValue(it) })
             }
             Section(stringResource(R.string.settings_haptics)) {
-                GlassSegmented(HapticsLevel.entries, settings.haptics, { v -> viewModel.update { it.copy(haptics = v) } }, { hapticLabels.getValue(it) })
+                GlassSegmented(HapticsLevel.entries, settings.haptics, { v -> onUpdate { it.copy(haptics = v) } }, { hapticLabels.getValue(it) })
             }
             Section(stringResource(R.string.settings_effects)) {
-                GlassSegmented(EffectsQuality.entries, settings.effects, { v -> viewModel.update { it.copy(effects = v) } }, { effectLabels.getValue(it) })
+                GlassSegmented(EffectsQuality.entries, settings.effects, { v -> onUpdate { it.copy(effects = v) } }, { effectLabels.getValue(it) })
                 ToggleRow(stringResource(R.string.settings_tilt), stringResource(R.string.settings_tilt_hint), settings.tiltLighting) { on ->
-                    viewModel.update { it.copy(tiltLighting = on) }
+                    onUpdate { it.copy(tiltLighting = on) }
                 }
             }
             Section(stringResource(R.string.settings_background_location)) {
-                ToggleRow(stringResource(R.string.settings_background_location), stringResource(R.string.settings_background_location_hint), settings.backgroundLocation) { on ->
-                    val coarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                    if (on && coarse) {
-                        backgroundLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                    } else {
-                        viewModel.update { it.copy(backgroundLocation = false) }
-                    }
-                }
+                ToggleRow(stringResource(R.string.settings_background_location), stringResource(R.string.settings_background_location_hint), settings.backgroundLocation, onBackgroundLocation)
             }
             Section(stringResource(R.string.settings_about)) {
                 Text(stringResource(R.string.settings_licenses), style = Rosa.type.caption, color = Rosa.colors.inkSoft)

@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -81,7 +82,11 @@ fun Modifier.backdropSource(backdrop: Backdrop): Modifier = this.then(BackdropSo
 
 /**
  * Physical parameters of a glass material (dp values are converted at draw time). Presets follow
- * the proportions measured from Apple's implementation and the Kyant/kube reimplementations.
+ * the proportions measured from Apple's implementation and the Kyant/kube reimplementations:
+ * [bezel] is how far in from the edge the surface curves, [refraction] how far the rim reaches
+ * outside the shape for what it shows, [saturation] its vibrancy, [brightness] how much it glows,
+ * [highlight] the strength of its lit rim, [tintAlpha] how much of its own tone (milky or smoky)
+ * it has and [grain] the tooth of its surface.
  */
 @Immutable
 data class GlassStyle(
@@ -94,25 +99,26 @@ data class GlassStyle(
     val brightness: Float,
     val highlight: Float,
     val tintAlpha: Float,
+    val grain: Float = 0f,
 ) {
     companion object {
         /** Floating controls: capsule buttons, bars, the city switcher. */
-        val Regular = GlassStyle(2.dp, 20.dp, 30.dp, 0.9f, 0f, 1.6f, 0.04f, 0.85f, 0.1f)
+        val Regular = GlassStyle(2.dp, 20.dp, 28.dp, 0.7f, 0f, 1.25f, 0.035f, 1f, 0.13f, grain = 0.012f)
 
         /** Permanently more transparent; for controls over rich media, with bold content only. */
-        val Clear = GlassStyle(1.dp, 20.dp, 34.dp, 1.1f, 0f, 1.25f, 0f, 0.9f, 0.03f)
+        val Clear = GlassStyle(1.dp, 18.dp, 30.dp, 0.9f, 0f, 1.1f, 0.015f, 1f, 0.05f, grain = 0.008f)
 
         /**
          * Content layer (cards): mostly frosted — Apple keeps real glass off content — but with a
          * clearly lensing, lit rim; dispersion stays in that rim, the frosted middle is one sample.
          */
-        val Frosted = GlassStyle(18.dp, 16.dp, 18.dp, 0.45f, 0f, 1.45f, 0.02f, 0.6f, 0.14f)
+        val Frosted = GlassStyle(18.dp, 14.dp, 16.dp, 0.35f, 0f, 1.3f, 0.03f, 0.85f, 0.18f, grain = 0.02f)
 
         /** Active knobs and indicators while touched: pure lens, strong dispersion, no frost. */
-        val Lens = GlassStyle(0.dp, 12.dp, 22.dp, 1.3f, 0f, 1.1f, 0.02f, 1f, 0f)
+        val Lens = GlassStyle(0.dp, 12.dp, 22.dp, 1.2f, 0f, 1.05f, 0.02f, 1.1f, 0f)
 
         /** Large sheets and menus: "thicker" glass — deeper lensing, dome depth, softer frost. */
-        val Sheet = GlassStyle(16.dp, 30.dp, 52.dp, 0.6f, 0.2f, 1.5f, 0.03f, 0.75f, 0.2f)
+        val Sheet = GlassStyle(16.dp, 26.dp, 44.dp, 0.5f, 0.2f, 1.2f, 0.04f, 0.9f, 0.22f, grain = 0.02f)
     }
 }
 
@@ -131,6 +137,12 @@ class GlassEnvironment {
      * Apple's large glass turns more opaque instead of flipping; this is that behaviour.
      */
     var tintBoost by mutableFloatStateOf(0f)
+
+    /**
+     * 0..1: the system's Contrast setting (Android 14+, medium ≈ 0.5, high = 1). More contrast
+     * makes every pane denser and calmer, like Apple's "Reduce Transparency".
+     */
+    var contrast by mutableFloatStateOf(0f)
 }
 
 val LocalGlassEnvironment = androidx.compose.runtime.staticCompositionLocalOf { GlassEnvironment() }
@@ -240,7 +252,10 @@ private class LiquidGlassNode(
         val margin = ceil(refraction + blur * 2f + 2f)
         val radius = cornerRadius.toPx().coerceAtMost(size.minDimension / 2f)
         val tint = environment?.tint ?: Color.White
-        val boost = 1f + 2.4f * (environment?.tintBoost ?: 0f)
+        val contrast = environment?.contrast ?: 0f
+        val boost = (1f + 2.4f * (environment?.tintBoost ?: 0f)) * (1f + 2.2f * contrast)
+        // Milky glass over bright skies, smoky over dark: the rim is lit accordingly.
+        val darkness = 1f - tint.luminance()
         val touch = s?.touch ?: Offset.Unspecified
         val touchOn = touch.isSpecified && (s?.touchStrength ?: 0f) > 0f
         val wave = s?.waveProgress ?: 0f
@@ -253,13 +268,14 @@ private class LiquidGlassNode(
             style = style,
             density = density,
             lightAngle = environment?.lightAngle ?: -2.35f,
-            tint = tint.copy(alpha = (tint.alpha * style.tintAlpha * boost).coerceAtMost(0.62f)).toArgb(),
+            tint = tint.copy(alpha = (tint.alpha * style.tintAlpha * boost).coerceAtMost(0.62f + 0.2f * contrast)).toArgb(),
             materialize = materialize,
             touch = if (touchOn) touch else Offset.Zero,
             touchStrength = if (touchOn) s!!.touchStrength else 0f,
             waveOrigin = if (waveOn) s!!.waveOrigin else Offset.Zero,
             wave = if (waveOn) wave else 0f,
             blur = blur * materialize,
+            darkness = darkness,
         )
         if (key != effectKey) {
             shader.setFloatUniform("size", size.width, size.height)
@@ -275,6 +291,8 @@ private class LiquidGlassNode(
             shader.setFloatUniform("brightness", style.brightness)
             shader.setColorUniform("tint", key.tint)
             shader.setFloatUniform("materialize", materialize)
+            shader.setFloatUniform("grain", style.grain)
+            shader.setFloatUniform("darkness", darkness)
             shader.setFloatUniform("touch", key.touch.x, key.touch.y, key.touchStrength)
             if (waveOn) {
                 val reach = maxOf(size.width, size.height) * 1.3f
@@ -326,6 +344,7 @@ private data class LensKey(
     val waveOrigin: Offset,
     val wave: Float,
     val blur: Float,
+    val darkness: Float,
 )
 
 private data class BackdropSourceElement(val backdrop: Backdrop) : ModifierNodeElement<BackdropSourceNode>() {

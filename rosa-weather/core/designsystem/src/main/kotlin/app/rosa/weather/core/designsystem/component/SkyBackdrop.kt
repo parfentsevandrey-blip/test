@@ -1,12 +1,17 @@
 package app.rosa.weather.core.designsystem.component
 
+import android.app.UiModeManager
+import android.os.Build
 import android.os.PowerManager
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
@@ -49,6 +54,7 @@ fun RosaEnvironment(settings: AppSettings, palette: SkyPalette, content: @Compos
     val tilt = rememberTilt(enabled = settings.tiltLighting && motion)
     val environment = remember { GlassEnvironment() }
     environment.tint = colors.glassTint
+    environment.contrast = rememberSystemContrast()
     // Light ink over a fairly bright sky: densify the glass so type keeps its contrast.
     environment.tintBoost = if (palette.isLight) 0f else ((palette.brightness - 0.12) / 0.24).toFloat().coerceIn(0f, 1f)
     LaunchedEffect(tilt) {
@@ -71,6 +77,21 @@ fun RosaEnvironment(settings: AppSettings, palette: SkyPalette, content: @Compos
 }
 
 val LocalTilt = androidx.compose.runtime.staticCompositionLocalOf<androidx.compose.runtime.State<androidx.compose.ui.geometry.Offset>?> { null }
+
+/** The system Contrast setting, 0 (standard) to 1 (high); Android 14 and later, live. */
+@Composable
+private fun rememberSystemContrast(): Float {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return 0f
+    val context = LocalContext.current
+    val manager = remember(context) { context.getSystemService(UiModeManager::class.java) } ?: return 0f
+    var contrast by remember(manager) { mutableFloatStateOf(manager.contrast) }
+    DisposableEffect(manager) {
+        val listener = UiModeManager.ContrastChangeListener { contrast = it }
+        manager.addContrastChangeListener(context.mainExecutor, listener)
+        onDispose { manager.removeContrastChangeListener(listener) }
+    }
+    return contrast.coerceIn(0f, 1f)
+}
 
 /**
  * Paints the living sky and makes it the backdrop that all glass on top refracts.

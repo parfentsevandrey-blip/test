@@ -11,6 +11,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -54,7 +55,10 @@ fun animatedRosaColors(palette: SkyPalette): RosaColors {
     val zenith by animateColorAsState(palette.zenith.toColor(), spec, label = "zenith")
     val horizon by animateColorAsState(palette.horizon.toColor(), spec, label = "horizon")
     val light = palette.isLight
-    val glass by animateColorAsState(if (light) Color(0xFFFFFFFF) else Color(0xFF0B1020), spec, label = "glass")
+    // Milky glass over bright skies; over dark ones smoky glass that keeps the sky's own hue —
+    // deep blue by day, violet at dusk, ink at night — instead of turning grey.
+    val smoke = lerp(palette.zenith.toColor(), Color(0xFF0B1020), 0.72f)
+    val glass by animateColorAsState(if (light) Color(0xFFFFFFFF) else smoke, spec, label = "glass")
     return RosaColors(
         ink = ink,
         inkSoft = ink.copy(alpha = 0.72f),

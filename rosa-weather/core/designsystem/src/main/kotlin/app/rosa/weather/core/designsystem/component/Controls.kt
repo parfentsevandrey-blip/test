@@ -5,9 +5,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.foundation.layout.Box
@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
@@ -44,6 +45,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -214,8 +216,9 @@ fun GlassSlider(
 }
 
 /**
- * Segmented control on glass. The selection is a lens that *flows* to the new option — it
- * stretches toward the target while moving and settles with a gel spring.
+ * Segmented control on glass. The selection rests as a raised pill; touched or moving it lifts
+ * into a Liquid Glass lens that *flows* to the new option — stretching toward it and settling with
+ * a gel spring — and it can be dragged across the options, ticking at each.
  */
 @Composable
 fun <T> GlassSegmented(
@@ -227,28 +230,80 @@ fun <T> GlassSegmented(
 ) {
     val haptics = LocalHaptics.current
     val colors = Rosa.colors
+    val scope = rememberCoroutineScope()
     val index = options.indexOf(selected).coerceAtLeast(0)
     val currentIndex by rememberUpdatedState(index)
     val select by rememberUpdatedState(onSelect)
     val position = remember { Animatable(index.toFloat()) }
     LaunchedEffect(index) { position.animateTo(index.toFloat(), RosaMotion.gel()) }
+    var pressed by remember { mutableStateOf(false) }
+    val moving = abs(position.value - index) > 0.02f
+    val lift by animateFloatAsState(if (pressed || moving) 1f else 0f, spring(0.8f, 700f), label = "lift")
+    val rest = if (colors.isLightSky) Color.White.copy(alpha = 0.86f) else Color.White.copy(alpha = 0.24f)
+    val lip = Color.White.copy(alpha = if (colors.isLightSky) 0.9f else 0.32f)
     GlassSurface(modifier.height(44.dp), cornerRadius = 22.dp) {
         BoxWithConstraints(Modifier.fillMaxWidth().fillMaxHeight().padding(4.dp)) {
             val segment = maxWidth / options.size
             val stretch = abs(position.value - index).coerceAtMost(1f)
+            val pill = Modifier
+                .offset { IntOffset((segment * position.value).roundToPx(), 0) }
+                .width(segment)
+                .fillMaxHeight()
+                .graphicsLayer {
+                    scaleX = (1f + stretch * 0.3f) * (1f + 0.08f * lift)
+                    scaleY = (1f - stretch * 0.1f) * (1f + 0.16f * lift)
+                }
             Box(
-                Modifier
-                    .offset { IntOffset((segment * position.value).roundToPx(), 0) }
-                    .width(segment)
-                    .fillMaxHeight()
-                    .graphicsLayer {
-                        scaleX = 1f + stretch * 0.35f
-                        scaleY = 1f - stretch * 0.12f
-                    }
+                pill
+                    .graphicsLayer { alpha = 1f - lift }
+                    .dropShadow(RoundedCornerShape(18.dp), Shadow(radius = 5.dp, color = Color.Black, offset = DpOffset(0.dp, 1.5.dp), alpha = if (colors.isLightSky) 0.1f else 0.12f))
                     .clip(RoundedCornerShape(18.dp))
-                    .background(colors.ink.copy(alpha = if (colors.isLightSky) 0.12f else 0.18f)),
+                    .background(rest)
+                    .border(0.8.dp, Brush.verticalGradient(0f to lip, 0.5f to lip.copy(alpha = 0f)), RoundedCornerShape(18.dp)),
             )
-            Row(Modifier.fillMaxWidth().fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
+            if (lift > 0.02f) GlassSurface(pill, style = GlassStyle.Lens, cornerRadius = 18.dp, shadow = false) {}
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .pointerInput(options.size) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown()
+                            pressed = true
+                            val width = size.width / options.size.toFloat()
+                            var dragging = false
+                            var target = currentIndex
+                            var last = down.position
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                if (!change.pressed) break
+                                last = change.position
+                                if (!dragging && abs(last.x - down.position.x) > viewConfiguration.touchSlop) dragging = true
+                                if (dragging) {
+                                    change.consume()
+                                    // The lens follows the finger; the option under it is the one.
+                                    val at = (last.x / width - 0.5f).coerceIn(0f, options.size - 1f)
+                                    scope.launch { position.snapTo(at) }
+                                    val nearest = at.roundToInt()
+                                    if (nearest != target) {
+                                        target = nearest
+                                        haptics?.tick()
+                                    }
+                                }
+                            }
+                            pressed = false
+                            val chosen = if (dragging) target else (last.x / width).toInt().coerceIn(0, options.size - 1)
+                            if (chosen != currentIndex) {
+                                if (!dragging) haptics?.tick()
+                                select(options[chosen])
+                            } else {
+                                scope.launch { position.animateTo(chosen.toFloat(), RosaMotion.gel()) }
+                            }
+                        }
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 options.forEachIndexed { i, option ->
                     Box(
                         Modifier
@@ -257,13 +312,9 @@ fun <T> GlassSegmented(
                             .semantics {
                                 role = Role.Tab
                                 this.selected = i == index
-                            }
-                            .pointerInput(option) {
-                                detectTapGestures {
-                                    if (i != currentIndex) {
-                                        haptics?.tick()
-                                        select(option)
-                                    }
+                                onClick {
+                                    if (i != currentIndex) select(option)
+                                    true
                                 }
                             },
                         contentAlignment = Alignment.Center,

@@ -36,7 +36,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.geometry.isSpecified
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
@@ -70,8 +75,16 @@ import kotlinx.coroutines.launch
 val LocalBackdrop = androidx.compose.runtime.staticCompositionLocalOf<Backdrop?> { null }
 
 /**
+ * How many glass surfaces the content here already sits on. Glass never refracts glass (Apple's
+ * rule): a surface placed on another becomes a platter set into it instead of a hole through it.
+ */
+val LocalGlassLevel = androidx.compose.runtime.staticCompositionLocalOf { 0 }
+
+/**
  * A Liquid Glass surface. It *materialises* when it first appears — lensing and highlights grow
- * in — rather than fading, and carries a soft contact shadow so it floats above the sky.
+ * in — rather than fading, and floats above the sky on a soft shadow (controls also on a tight
+ * contact shadow). Placed on other glass it becomes a platter: a tinted inset with a lit upper lip
+ * that still lights up under the finger. Lenses ([GlassStyle.Lens]) stay lenses anywhere.
  */
 @Composable
 fun GlassSurface(
@@ -84,12 +97,19 @@ fun GlassSurface(
     contentAlignment: Alignment = Alignment.TopStart,
     /** Light up under the finger and send a wave on tap (never consumes the touch). */
     touchResponsive: Boolean = true,
+    /** The primary action: set into other glass, it stands out as a denser, brighter platter. */
+    prominent: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val backdrop = LocalBackdrop.current
     val environment = LocalGlassEnvironment.current
     val motion = LocalMotionEnabled.current
     val scope = rememberCoroutineScope()
+    val level = LocalGlassLevel.current
+    if (level > 0 && style != GlassStyle.Lens) {
+        Platter(modifier, cornerRadius, state, contentPadding, contentAlignment, touchResponsive && motion, level, prominent, content)
+        return
+    }
     // Materialise once. Lists dispose cards that scroll away and recreate them on the way back;
     // saveable state survives that, so scrolling never replays the appearance.
     var appeared by rememberSaveable { mutableStateOf(false) }
@@ -102,10 +122,14 @@ fun GlassSurface(
         appeared = true
     }
     val shape = RoundedCornerShape(cornerRadius)
-    val base = if (shadow) {
-        modifier.dropShadow(shape, Shadow(radius = 28.dp, color = Color.Black, offset = DpOffset(0.dp, 8.dp), alpha = 0.16f))
-    } else {
-        modifier
+    val card = style == GlassStyle.Frosted || style == GlassStyle.Sheet
+    val base = when {
+        !shadow -> modifier
+        // Cards lie on a broad, soft shadow; floating controls also on a tight contact one.
+        card -> modifier.dropShadow(shape, Shadow(radius = 30.dp, color = Color.Black, offset = DpOffset(0.dp, 10.dp), alpha = 0.13f))
+        else -> modifier
+            .dropShadow(shape, Shadow(radius = 22.dp, color = Color.Black, offset = DpOffset(0.dp, 8.dp), alpha = 0.14f))
+            .dropShadow(shape, Shadow(radius = 3.dp, color = Color.Black, offset = DpOffset(0.dp, 1.dp), alpha = 0.08f))
     }
     val glass = if (backdrop != null) {
         base.liquidGlass(backdrop, style, cornerRadius, state, environment)
@@ -113,8 +137,48 @@ fun GlassSurface(
     } else {
         base.then(Modifier.graphicsLayer { clip = true; this.shape = shape })
     }
-    CompositionLocalProvider(LocalContentColor provides Rosa.colors.ink) {
+    CompositionLocalProvider(LocalContentColor provides Rosa.colors.ink, LocalGlassLevel provides level + 1) {
         Box(glass.padding(contentPadding), contentAlignment = contentAlignment, content = content)
+    }
+}
+
+/** A surface set into the glass it sits on: tinted inset, lit upper lip, a glow under the finger. */
+@Composable
+private fun Platter(
+    modifier: Modifier,
+    cornerRadius: Dp,
+    state: GlassState,
+    contentPadding: PaddingValues,
+    contentAlignment: Alignment,
+    touchResponsive: Boolean,
+    level: Int,
+    prominent: Boolean,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val colors = Rosa.colors
+    val scope = rememberCoroutineScope()
+    val shape = RoundedCornerShape(cornerRadius)
+    val fill = if (prominent) {
+        (if (colors.isLightSky) Color.White.copy(alpha = 0.72f) else Color.White.copy(alpha = 0.26f))
+    } else {
+        colors.fill.copy(alpha = colors.fill.alpha * if (colors.isLightSky) 1.2f else 1f)
+    }
+    val lip = Color.White.copy(alpha = if (colors.isLightSky) 0.55f else if (prominent) 0.42f else 0.2f)
+    val surface = modifier
+        .clip(shape)
+        .drawBehind {
+            drawRect(fill)
+            val touch = state.touch
+            val strength = state.touchStrength
+            if (touch.isSpecified && strength > 0f) {
+                val reach = size.maxDimension * 0.8f
+                drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.18f * strength), Color.Transparent), touch, reach), reach, touch)
+            }
+        }
+        .border(0.8.dp, Brush.verticalGradient(0f to lip, 0.55f to lip.copy(alpha = 0f), 1f to Color.Black.copy(alpha = 0.04f)), shape)
+        .then(if (touchResponsive) Modifier.glassTouch(state, scope) else Modifier)
+    CompositionLocalProvider(LocalContentColor provides colors.ink, LocalGlassLevel provides level + 1) {
+        Box(surface.padding(contentPadding), contentAlignment = contentAlignment, content = content)
     }
 }
 
@@ -131,6 +195,8 @@ fun GlassButton(
     contentDescription: String? = null,
     contentPadding: PaddingValues = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
     enabled: Boolean = true,
+    /** The primary action among its neighbours. */
+    prominent: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val haptics = LocalHaptics.current
@@ -185,6 +251,7 @@ fun GlassButton(
         contentPadding = contentPadding,
         contentAlignment = Alignment.Center,
         touchResponsive = false,
+        prominent = prominent,
         content = content,
     )
 }

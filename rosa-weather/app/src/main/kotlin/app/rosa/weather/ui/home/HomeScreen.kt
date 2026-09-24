@@ -91,6 +91,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.rosa.weather.R
 import app.rosa.weather.core.designsystem.component.GlassButton
 import app.rosa.weather.core.designsystem.component.GlassSurface
+import app.rosa.weather.core.designsystem.component.SkyScrollEdge
 import app.rosa.weather.core.designsystem.component.LiquidPageIndicator
 import app.rosa.weather.core.designsystem.component.RosaIcon
 import app.rosa.weather.core.designsystem.component.RosaIconView
@@ -259,6 +260,9 @@ fun HomeScreen(
                 realSky = state.settings.appearance == Appearance.Auto,
             )
         }
+        // Cards scrolling up fade into the sky before they reach the bar, as under Apple's toolbars.
+        val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        SkyScrollEdge(height = top + 76.dp, solid = top + 46.dp)
         TopBar(
             title = pages.getOrNull(pagerState.currentPage)?.let { it.place.name.ifBlank { format.currentLocation() } }.orEmpty(),
             isCurrent = pages.getOrNull(pagerState.currentPage)?.place?.isCurrentLocation == true,
@@ -869,7 +873,7 @@ private fun Onboarding(waitingForLocation: Boolean, denied: Boolean, onAllow: ()
                         textAlign = TextAlign.Center,
                     )
                     Spacer(Modifier.height(22.dp))
-                    GlassButton(onClick = onAllow, modifier = Modifier.fillMaxWidth(), style = GlassStyle.Regular) {
+                    GlassButton(onClick = onAllow, modifier = Modifier.fillMaxWidth(), style = GlassStyle.Regular, prominent = true) {
                         Text(stringResource(R.string.permission_allow), style = Rosa.type.headline, color = colors.ink)
                     }
                 }

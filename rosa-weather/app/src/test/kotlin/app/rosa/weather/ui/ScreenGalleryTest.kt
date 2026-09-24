@@ -6,7 +6,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipe
 import app.rosa.weather.core.designsystem.component.RosaEnvironment
 import app.rosa.weather.core.designsystem.component.SkyBackdrop
 import androidx.compose.foundation.background
@@ -26,6 +29,7 @@ import app.rosa.weather.core.designsystem.glass.GlassStyle
 import app.rosa.weather.core.model.AppSettings
 import app.rosa.weather.core.model.Appearance
 import app.rosa.weather.ui.settings.AppearancePicker
+import app.rosa.weather.ui.settings.SettingsScreen
 import app.rosa.weather.core.model.EffectsQuality
 import app.rosa.weather.core.model.Forecast
 import app.rosa.weather.core.model.Place
@@ -70,6 +74,7 @@ class ScreenGalleryTest {
         doc: Boolean = true,
         appearance: Appearance = Appearance.Auto,
         forecastAgeSeconds: Long = 0,
+        scrollPx: Float = 0f,
     ) {
         val forecast = SampleForecast.create(scenario, nowEpochSeconds = now - forecastAgeSeconds, placeId = "geo:1").shifted(shiftCelsius)
         val state = HomeUiState(
@@ -90,8 +95,67 @@ class ScreenGalleryTest {
                 }
             }
         }
+        if (scrollPx > 0f) {
+            compose.mainClock.advanceTimeBy(1_500)
+            // A slow drag, so the list stops where the finger does.
+            compose.onRoot().performTouchInput {
+                val from = Offset(centerX, centerY + 500f)
+                swipe(from, from - Offset(0f, scrollPx), durationMillis = 1_200)
+            }
+        }
         capture(name, doc)
     }
+
+    /** First launch: the sheet, and its buttons set into it (never glass on glass). */
+    @Test
+    fun onboarding() {
+        val now = 1_758_621_600L
+        val forecast = SampleForecast.create(SampleForecast.Scenario.SunnyMild, nowEpochSeconds = now, placeId = "geo:1")
+        val state = HomeUiState(loaded = true, pages = emptyList(), settings = AppSettings(effects = EffectsQuality.Balanced))
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            val sky = remember { SkyController(forecast.momentAt(now)) }
+            CompositionLocalProvider(LocalSky provides sky) {
+                RosaEnvironment(state.settings, sky.palette) {
+                    SkyBackdrop(sky.params, state.settings.effects, stage = sky.stage, transitionMillis = 0) {
+                        HomeScreen(state, {}, {}, {}, {}, {}, {}, {}, fixedNow = now)
+                    }
+                }
+            }
+        }
+        capture("onboarding", doc = false)
+    }
+
+    /** Settings over the day sky and at night: frosted sections, controls set into them. */
+    @Test
+    fun settingsDay() = settings(SampleForecast.Scenario.SunnyMild, 1_758_621_600L, "settings-day")
+
+    @Test
+    fun settingsNight() = settings(SampleForecast.Scenario.ClearNight, 1_758_664_800L, "settings-night")
+
+    private fun settings(scenario: SampleForecast.Scenario, now: Long, name: String) {
+        val forecast = SampleForecast.create(scenario, nowEpochSeconds = now, placeId = "geo:1")
+        val settings = AppSettings(effects = EffectsQuality.Balanced)
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            val sky = remember { SkyController(forecast.momentAt(now)) }
+            CompositionLocalProvider(LocalSky provides sky) {
+                RosaEnvironment(settings, sky.palette) {
+                    SkyBackdrop(sky.params, settings.effects, stage = sky.stage, transitionMillis = 0) {
+                        SettingsScreen(settings, {}, {}, {}, {})
+                    }
+                }
+            }
+        }
+        capture(name, doc = false)
+    }
+
+    /** Scrolled: the cards fade into the sky under the floating bar (scroll edge effect). */
+    @Test
+    fun homeScrolled() = home(SampleForecast.Scenario.SunnyMild, 1_758_621_600L, "home-scrolled", doc = false, scrollPx = 820f)
+
+    @Test
+    fun homeScrolledNight() = home(SampleForecast.Scenario.ClearNight, 1_758_664_800L, "home-scrolled-night", doc = false, scrollPx = 820f)
 
     /** 17:30 in Moscow, light rain on the pane. */
     @Test
