@@ -81,28 +81,29 @@ val LocalRosaColors = staticCompositionLocalOf {
 }
 
 object RosaFonts {
-    private fun onest(weight: Int) = Font(
-        R.font.onest,
+    private fun manrope(weight: Int) = Font(
+        R.font.manrope,
         FontWeight(weight),
         variationSettings = FontVariation.Settings(FontVariation.weight(weight)),
     )
 
-    private fun fraunces(weight: Int, soft: Float = 100f) = Font(
-        R.font.fraunces,
+    private fun cormorant(weight: Int) = Font(
+        R.font.cormorant,
         FontWeight(weight),
-        variationSettings = FontVariation.Settings(
-            FontVariation.weight(weight),
-            FontVariation.Setting("SOFT", soft),
-            FontVariation.Setting("opsz", 144f),
-            FontVariation.Setting("WONK", 0f),
-        ),
+        variationSettings = FontVariation.Settings(FontVariation.weight(weight)),
     )
 
-    /** UI face with full Cyrillic. */
-    val Onest = FontFamily(onest(400), onest(500), onest(600), onest(700), onest(800))
+    /** UI face: an airy modern grotesque with full Cyrillic. */
+    val Manrope = FontFamily(manrope(400), manrope(500), manrope(600), manrope(700), manrope(800))
 
-    /** Soft optical-size serif for the big numerals — the cosy signature of the app. */
-    val Fraunces = FontFamily(fraunces(300), fraunces(400), fraunces(500), fraunces(600))
+    /**
+     * A high-contrast Garamond for the numerals — refined rather than loud. Its default figures
+     * are old-style, so every numeral style asks for [LINING_FIGURES].
+     */
+    val Cormorant = FontFamily(cormorant(300), cormorant(400), cormorant(500), cormorant(600))
+
+    /** OpenType feature: digits on the cap height, like a temperature should be. */
+    const val LINING_FIGURES = "lnum"
 }
 
 @Immutable
@@ -119,14 +120,20 @@ data class RosaType(
     companion object {
         private val trim = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both)
         val Default = RosaType(
-            hero = TextStyle(fontFamily = RosaFonts.Fraunces, fontWeight = FontWeight(400), fontSize = 124.sp, lineHeight = 124.sp, letterSpacing = (-4).sp, lineHeightStyle = trim),
-            display = TextStyle(fontFamily = RosaFonts.Fraunces, fontWeight = FontWeight(400), fontSize = 44.sp, lineHeight = 46.sp, letterSpacing = (-1).sp),
-            numeral = TextStyle(fontFamily = RosaFonts.Fraunces, fontWeight = FontWeight(500), fontSize = 22.sp, lineHeight = 24.sp),
-            title = TextStyle(fontFamily = RosaFonts.Onest, fontWeight = FontWeight.Bold, fontSize = 26.sp, lineHeight = 30.sp, letterSpacing = (-0.3).sp),
-            headline = TextStyle(fontFamily = RosaFonts.Onest, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, lineHeight = 22.sp),
-            body = TextStyle(fontFamily = RosaFonts.Onest, fontWeight = FontWeight.Medium, fontSize = 15.sp, lineHeight = 21.sp),
-            label = TextStyle(fontFamily = RosaFonts.Onest, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, lineHeight = 17.sp),
-            caption = TextStyle(fontFamily = RosaFonts.Onest, fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 15.sp),
+            hero = TextStyle(
+                fontFamily = RosaFonts.Cormorant, fontWeight = FontWeight.Light, fontSize = 124.sp, lineHeight = 124.sp,
+                letterSpacing = (-2).sp, fontFeatureSettings = RosaFonts.LINING_FIGURES, lineHeightStyle = trim,
+            ),
+            display = TextStyle(
+                fontFamily = RosaFonts.Cormorant, fontWeight = FontWeight.Normal, fontSize = 44.sp, lineHeight = 46.sp,
+                letterSpacing = (-0.5).sp, fontFeatureSettings = RosaFonts.LINING_FIGURES,
+            ),
+            numeral = TextStyle(fontFamily = RosaFonts.Manrope, fontWeight = FontWeight.Medium, fontSize = 22.sp, lineHeight = 24.sp),
+            title = TextStyle(fontFamily = RosaFonts.Manrope, fontWeight = FontWeight.SemiBold, fontSize = 26.sp, lineHeight = 30.sp, letterSpacing = (-0.3).sp),
+            headline = TextStyle(fontFamily = RosaFonts.Manrope, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, lineHeight = 22.sp),
+            body = TextStyle(fontFamily = RosaFonts.Manrope, fontWeight = FontWeight.Medium, fontSize = 15.sp, lineHeight = 21.sp),
+            label = TextStyle(fontFamily = RosaFonts.Manrope, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, lineHeight = 17.sp),
+            caption = TextStyle(fontFamily = RosaFonts.Manrope, fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 15.sp),
         )
     }
 }

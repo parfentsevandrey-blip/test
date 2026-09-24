@@ -10,9 +10,8 @@ import androidx.compose.ui.unit.em
 private val numeralChars = "0123456789\u2212+-.,:°%′ "
 
 /**
- * Sets digits in the soft Fraunces numerals and everything else (units, compass points, Cyrillic)
- * in Onest — Fraunces has no Cyrillic, and mixed values like "5 м/с ЮЗ" must never fall back to
- * the system font.
+ * Sets a value like "5 м/с ЮЗ" as the number at full size and its unit (compass points, Cyrillic)
+ * smaller and semibold, so readings scan as numbers first.
  */
 fun numeralText(text: String, unitScale: Float = 0.72f): AnnotatedString = buildAnnotatedString {
     var i = 0
@@ -24,7 +23,7 @@ fun numeralText(text: String, unitScale: Float = 0.72f): AnnotatedString = build
         if (numeric) {
             append(run)
         } else {
-            withStyle(SpanStyle(fontFamily = RosaFonts.Onest, fontWeight = FontWeight.SemiBold, fontSize = unitScale.em)) {
+            withStyle(SpanStyle(fontFamily = RosaFonts.Manrope, fontWeight = FontWeight.SemiBold, fontSize = unitScale.em)) {
                 append(run)
             }
         }

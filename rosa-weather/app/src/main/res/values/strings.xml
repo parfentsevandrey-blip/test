@@ -39,7 +39,7 @@
     <string name="settings_background_location">Update location in background</string>
     <string name="settings_background_location_hint">Lets widgets follow you while Rosa is closed. Android will ask for “Allow all the time”.</string>
     <string name="settings_about">About</string>
-    <string name="settings_licenses">Typefaces Fraunces and Onest (SIL Open Font License). Weather data by Open-Meteo.com (CC BY 4.0).</string>
+    <string name="settings_licenses">Typefaces Cormorant Garamond and Manrope (SIL Open Font License). Weather data by Open-Meteo.com (CC BY 4.0).</string>
     <string name="haptics_off">Off</string>
     <string name="haptics_subtle">Subtle</string>
     <string name="haptics_rich">Rich</string>

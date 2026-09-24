@@ -36,16 +36,17 @@ import org.robolectric.annotation.GraphicsMode
 class ScreenGalleryTest {
     @get:Rule val compose = createComposeRule()
 
-    private fun capture(name: String) {
+    private fun capture(name: String, doc: Boolean) {
         compose.mainClock.advanceTimeBy(2_500)
         compose.waitForIdle()
         val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
         val out = File("build/screens").apply { mkdirs() }
         File(out, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        exportDocImage(bitmap, name, 540)
+        if (doc) exportDocImage(bitmap, name, 540)
     }
 
-    private fun home(scenario: SampleForecast.Scenario, now: Long, name: String, shiftCelsius: Double = 0.0) {
+    /** @param doc also export the render as a README image (with `-Prosa.docs`). */
+    private fun home(scenario: SampleForecast.Scenario, now: Long, name: String, shiftCelsius: Double = 0.0, doc: Boolean = true) {
         val forecast = SampleForecast.create(scenario, nowEpochSeconds = now, placeId = "geo:1").shifted(shiftCelsius)
         val state = HomeUiState(
             loaded = true,
@@ -65,7 +66,7 @@ class ScreenGalleryTest {
                 }
             }
         }
-        capture(name)
+        capture(name, doc)
     }
 
     @Test
@@ -82,15 +83,15 @@ class ScreenGalleryTest {
 
     /** 09:13 in Moscow, mostly clear: the low eastern sun used to sit right behind the numerals. */
     @Test
-    fun homeMorning() = home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-morning")
+    fun homeMorning() = home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-morning", doc = false)
 
     /** Same morning at −12°: the widest numerals must still keep the sun clear of them. */
     @Test
-    fun homeMorningFrost() = home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-morning-frost", shiftCelsius = -30.0)
+    fun homeMorningFrost() = home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-morning-frost", shiftCelsius = -30.0, doc = false)
 
     /** 17:40, the sun low in the west. */
     @Test
-    fun homeEvening() = home(SampleForecast.Scenario.SunnyMild, 1_758_638_400L, "home-evening")
+    fun homeEvening() = home(SampleForecast.Scenario.SunnyMild, 1_758_638_400L, "home-evening", doc = false)
 }
 
 private fun Forecast.shifted(celsius: Double): Forecast = if (celsius == 0.0) this else copy(

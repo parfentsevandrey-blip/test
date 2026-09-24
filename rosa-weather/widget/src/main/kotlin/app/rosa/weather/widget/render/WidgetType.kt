@@ -10,8 +10,8 @@ import app.rosa.weather.core.designsystem.R
 import kotlin.math.min
 
 /**
- * Typefaces for Canvas rendering. Fraunces (soft, optical-size aware) carries the big numerals;
- * Onest carries everything else and has full Cyrillic support.
+ * Typefaces for Canvas rendering, the same pair as the app: Cormorant Garamond (with lining
+ * figures) carries the big numerals, Manrope everything else, with full Cyrillic support.
  */
 class WidgetFonts(val numerals: Typeface, val text: Typeface) {
     companion object {
@@ -19,8 +19,8 @@ class WidgetFonts(val numerals: Typeface, val text: Typeface) {
 
         fun get(context: Context): WidgetFonts = cached ?: synchronized(this) {
             cached ?: WidgetFonts(
-                numerals = runCatching { context.resources.getFont(R.font.fraunces) }.getOrDefault(Typeface.SERIF),
-                text = runCatching { context.resources.getFont(R.font.onest) }.getOrDefault(Typeface.SANS_SERIF),
+                numerals = runCatching { context.resources.getFont(R.font.cormorant) }.getOrDefault(Typeface.SERIF),
+                text = runCatching { context.resources.getFont(R.font.manrope) }.getOrDefault(Typeface.SANS_SERIF),
             ).also { cached = it }
         }
     }
@@ -30,22 +30,28 @@ class WidgetFonts(val numerals: Typeface, val text: Typeface) {
 class WidgetType(private val fonts: WidgetFonts) {
     private val paint = TextPaint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG)
 
-    fun numerals(size: Float, color: Int, weight: Int = 420, soft: Int = 100): TextPaint = configure(
+    /**
+     * Numeral paint. A touch heavier than the app's hero (Light): widgets sit on any wallpaper and
+     * are often small, where Garamond hairlines would thin out.
+     */
+    fun numerals(size: Float, color: Int, weight: Int = 450): TextPaint = configure(
         typeface = fonts.numerals,
         size = size,
         color = color,
-        variation = "'opsz' ${size.coerceIn(9f, 144f).toInt()}, 'wght' $weight, 'SOFT' $soft, 'WONK' 0",
+        variation = "'wght' $weight",
+        features = "'lnum'",
     )
 
     fun text(size: Float, color: Int, weight: Int = 500): TextPaint =
         configure(fonts.text, size, color, "'wght' $weight")
 
-    private fun configure(typeface: Typeface, size: Float, color: Int, variation: String): TextPaint {
+    private fun configure(typeface: Typeface, size: Float, color: Int, variation: String, features: String? = null): TextPaint {
         paint.reset()
         paint.flags = Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG
         paint.typeface = typeface
         paint.textSize = size
         paint.color = color
+        paint.fontFeatureSettings = features
         runCatching { paint.fontVariationSettings = variation }
         return paint
     }

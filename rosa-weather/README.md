@@ -139,7 +139,7 @@ rosa-weather/
 ├── core/data/          Open-Meteo (Ktor), DataStore (JSON), местоположение без Play Services,
 │                       синхронизация, WorkManager-воркер и планировщик
 ├── core/designsystem/  Liquid Glass (Modifier.Node + RuntimeShader), живое небо и оконное стекло
-│                       (AGSL), глифы погоды, тактильность, тема, шрифты Fraunces + Onest
+│                       (AGSL), глифы погоды, тактильность, тема, шрифты Cormorant + Manrope
 ├── widget/             движок раскладки, Canvas-рендерер, провайдеры, студия виджета
 └── app/                Navigation 3, экраны, ViewModel'и, Hilt
 ```
@@ -151,7 +151,8 @@ rosa-weather/
   из настроек, чтобы виджеты следовали за вами при закрытом приложении
 - Данные: [Open-Meteo](https://open-meteo.com) (без ключа, CC BY 4.0) — прогноз, 15-минутный
   наукаст, качество воздуха, геокодинг
-- Шрифты: Fraunces (мягкие цифры с оптическим размером) и Onest (кириллица), SIL OFL
+- Шрифты: Cormorant Garamond (контрастные цифры, лайнинговые цифры включены) и Manrope
+  (интерфейс, кириллица), SIL OFL
 - Per-app language (RU/EN), бэкап настроек и мест, splash с анимированной каплей, тематическая
   монохромная иконка
 

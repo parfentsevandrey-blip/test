@@ -39,7 +39,7 @@
     <string name="settings_background_location">Местоположение в фоне</string>
     <string name="settings_background_location_hint">Виджеты будут следовать за вами, даже когда Роса закрыта. Android попросит разрешение «Разрешить в любом режиме».</string>
     <string name="settings_about">О приложении</string>
-    <string name="settings_licenses">Шрифты Fraunces и Onest (SIL Open Font License). Данные о погоде — Open-Meteo.com (CC BY 4.0).</string>
+    <string name="settings_licenses">Шрифты Cormorant Garamond и Manrope (SIL Open Font License). Данные о погоде — Open-Meteo.com (CC BY 4.0).</string>
     <string name="haptics_off">Выкл</string>
     <string name="haptics_subtle">Мягко</string>
     <string name="haptics_rich">Богато</string>
