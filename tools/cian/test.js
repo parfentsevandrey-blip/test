@@ -2086,3 +2086,24 @@ test('массовый свип: пустая пятидесятая стран�
   assert.strictEqual(r.lots.length, 1300);
   assert.strictEqual(r.slices.length, 1);
 });
+
+test('хвост массового свипа: квартиры, полки и сводка из игрушечной выдачи', async () => {
+  const { massFinish, categoryCsv: csvOf } = require('./cian.js');
+  const cian = fakeCian(3000);
+  // добавим адресные поля, как у настоящих лотов
+  const call = async (q, page) => {
+    const r = await cian.call(q, page);
+    r.lots = r.lots.map((l) => ({ ...l, district: l.id % 2 ? 'Раменки' : 'Кунцево', buildYear: 1960 + (l.id % 60),
+      saleType: l.id % 3 ? 'free' : 'fz214', fingerprint: null }));
+    return r;
+  };
+  const r = await massSweep({ call, sockets: 3, report: () => '' }, { _type: 'flatsale' }, { log: () => {} });
+  const fin = massFinish({ _type: 'flatsale' }, r, '2026-09-24');
+  assert.strictEqual(fin.lots.length, cian.offers.length);
+  assert.ok(fin.flats.length <= fin.lots.length, 'квартир не больше объявлений');
+  assert.strictEqual(fin.cat.total, fin.flats.length);
+  assert.strictEqual(fin.file.kept, fin.lots.length);
+  assert.match(fin.lines[1], new RegExp(`осталось \\*\\*${fin.lots.length} объявлений`));
+  assert.ok(fin.cat.era.every((x) => x.key !== 'год неизвестен'), 'год есть у всех — неизвестных нет');
+  assert.strictEqual(csvOf(fin.flats, fin.cat).trim().split('\r\n').length, fin.flats.length + 1);
+});

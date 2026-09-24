@@ -8,7 +8,7 @@
  *   node tools/cian/cian.js url    --query q.json      — каноническая ссылка cat.php
  *   node tools/cian/cian.js probe  --query q.json --with '{"loggia":{"type":"term","value":true}}'
  *   node tools/cian/cian.js sweep  --query q.json [--limit 250] [--all] [--dedupe] [--resolve 0]
- *   node tools/cian/cian.js mass   --query q.json --out lots.json [--report r.md] [--csv r.csv] [--resume] [--rate 1] [--max-rate 2.5] [--sockets 4]  — округ целиком
+ *   node tools/cian/cian.js mass   --query q.json --out lots.json [--report r.md] [--csv r.csv] [--resume] [--rate 1] [--max-rate 2] [--sockets 4]  — округ целиком
  *   node tools/cian/cian.js verify --ids 1,2 [--photos 12] [--cols 4] [--frames 5,13] [--skip-layout]  — лист, затем кадры в оригинале
  *   node tools/cian/cian.js snapshot --query q.json | --queries watchlist.json | --from a.json,b.json
  *   node tools/cian/cian.js archive   — что накоплено: даты снимков, запросы, движение цен
@@ -80,9 +80,13 @@ const API_HEADERS = {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/* Счётчик запросов к выдаче: без него цену свипа приходилось угадывать. */
+const searchCalls = { n: 0, t0: Date.now() };
+
 /* Частые подряд запросы получают то 5xx, то обрыв соединения — отступаем
    и повторяем в обоих случаях. */
 async function searchPage(ctx, jsonQuery, pageNumber, attempt = 1) {
+  searchCalls.n++;
   const retry = async (why) => {
     if (attempt > 3) throw new Error(`search API: ${why} (страница ${pageNumber})`);
     await sleep(2500 * attempt);
@@ -714,6 +718,9 @@ async function sweep(ctx, q, limit, maxPages, allSorts) {
   log(`заявлено ${top.count}, перечислимо за один проход ${top.aggregated ?? '?'}` +
       (top.aggregated && top.count > top.aggregated
         ? ` — разницу в ${top.count - top.aggregated} подряд не добрать, только дроблением` : ''));
+  /* На выдаче крупнее нескольких тысяч этот способ тратит часы: запросы по
+     одному, подсчёт на каждой оси, четыре сортировки. */
+  if (top.count > 3000) log(`выдача большая — быстрее командой mass (docs/cian/mass.md)`);
   let buckets = [{ q, count: top.count, label: 'всё' }];
   /* Порядок осей — от самой «чистой» к самой грубой. География делит без
      остатка и первой; отделка на вторичке бесполезна (см. traps.md, п. 15),
@@ -861,7 +868,7 @@ const SMALL_CURVES = 'X25519:prime256v1:secp384r1';
    снаружи — чтобы поведение проверялось без сети и без часов. */
 function pacer(o = {}) {
   const p = {
-    rate: o.rate ?? 1, min: o.min ?? 0.2, max: o.max ?? 2.5, step: o.step ?? 0.1, every: o.every ?? 25,
+    rate: o.rate ?? 1, min: o.min ?? 0.2, max: o.max ?? 2, step: o.step ?? 0.1, every: o.every ?? 25,
     cut: o.cut ?? 0.5, pause0: o.pause ?? 10000, pauseMax: o.pauseMax ?? 300000,
     streak: 0, throttles: 0, next: 0, pauseUntil: 0,
   };
@@ -982,6 +989,15 @@ function openJournal(base, resume) {
 async function massClient(opts = {}) {
   const say = opts.log || log;
   const session = await open();
+  /* Если главная уже под капчей, свип не начинается: адрес помечен, и
+     любой запрос только продлит метку. Решать капчу за человека движок не
+     будет — ждать. */
+  if (/captcha/i.test(session.page.url())) {
+    await session.browser.close();
+    const e = new Error('главная cian.ru открывается капчей — адрес выхода помечен антиботом');
+    e.code = 'ANTIBOT';
+    throw e;
+  }
   const sockets = opts.sockets || 4;
   const pace = pacer(opts.pace || {});
   const journal = opts.journal ? openJournal(opts.journal, !!opts.resume) : null;
@@ -1249,6 +1265,30 @@ async function massSweep(api, q, opts = {}) {
     declared: top.count, aggregated: top.aggregated, listed, expanded: all.length, leaked,
     groups, skipped, seconds: Math.round((Date.now() - t0) / 1000),
   };
+}
+
+/* Хвост массового свипа без сети: год дома, рынок, схлопывание объявлений
+   в квартиры, полки и сводка словами. Вынесен из команды, чтобы его можно
+   было проверить на игрушечной выдаче. */
+function massFinish(q, r, today = new Date().toISOString().slice(0, 10)) {
+  const fill = fillBuildYears(r.lots);
+  const lots = withMarket(r.lots);
+  const { flats, loose } = dedupe(lots);
+  const all = flats.concat(loose);
+  const pct = r.declared ? Math.round(lots.length / r.declared * 100) : '?';
+  const lines = [
+    `Собрано ${today} за ${Math.max(1, Math.round(r.seconds / 60))} мин.`,
+    `Циан заявляет ${r.declared}, за один проход перечислимо ${r.aggregated}; прочитано страницами ${r.listed}, ` +
+      `после раскрытия групп ${r.expanded}, не подошло под запрос ${r.leaked}, осталось **${lots.length} объявлений** — ${pct}% от заявленного.`,
+    `Объявления одной квартиры схлопнуты: **${all.length} квартир** (${loose.length} без корпуса в адресе схлопнуть нельзя).`,
+    `Год дома: из поля или срока сдачи ${fill.own}, по соседям по дому ${fill.house}, по ЖК ${fill.complex}, неизвестен ${fill.none}.`,
+    'Отделка разложена по полям и тексту объявления, без фотографий: это первый проход, кадры — второй.',
+  ];
+  if (r.holes.length) lines.push(`Не прочитано ${r.holes.length} кусков выдачи — список в файле выдачи, поле holes.`);
+  const cat = categorize(all);
+  const file = outputFile(q, lots, { declared: r.declared, aggregated: r.aggregated, enumerated: r.expanded });
+  Object.assign(file, { flats: all.length, slices: r.slices, holes: r.holes, seconds: r.seconds });
+  return { lots, flats: all, cat, lines, file };
 }
 
 /* ---------- раскладка большой выдачи по полкам ----------
@@ -3874,12 +3914,19 @@ if (require.main === module) (async () => {
     const q = loadQuery(a.query);
     const out = a.out && a.out !== true ? a.out : 'mass.json';
     const journal = a.journal && a.journal !== true ? a.journal : out.replace(/\.json$/, '') + '.journal';
-    const api = await massClient({
-      sockets: parseInt(a.sockets || '4', 10),
-      journal, resume: !!a.resume,
-      giveUpMs: parseFloat(a['give-up'] || '25') * 60000,
-      pace: { rate: parseFloat(a.rate || '1'), max: parseFloat(a['max-rate'] || '2.5') },
-    });
+    let api;
+    try {
+      api = await massClient({
+        sockets: parseInt(a.sockets || '4', 10),
+        journal, resume: !!a.resume,
+        giveUpMs: parseFloat(a['give-up'] || '25') * 60000,
+        pace: { rate: parseFloat(a.rate || '1'), max: parseFloat(a['max-rate'] || '2') },
+      });
+    } catch (e) {
+      if (e.code !== 'ANTIBOT') throw e;
+      log(`${e.message}. Свип не начат; повторить через полчаса-час той же командой.`);
+      process.exit(3);
+    }
     if (a.resume) log(`продолжаю по журналу ${journal}: ответов ${api.journal.size()}, лотов ${api.journal.lots()}`);
     let r;
     try {
@@ -3896,31 +3943,16 @@ if (require.main === module) (async () => {
     }
     log(api.report());
     await api.close();
-    const fill = fillBuildYears(r.lots);
-    const lots = withMarket(r.lots);
-    const { flats, loose } = dedupe(lots);
-    const lines = [
-      `Собрано ${new Date().toISOString().slice(0, 10)} за ${Math.round(r.seconds / 60)} мин.`,
-      `Циан заявляет ${r.declared}, за один проход перечислимо ${r.aggregated}; прочитано страницами ${r.listed}, ` +
-        `после раскрытия групп ${r.expanded}, не подошло под запрос ${r.leaked}, осталось **${lots.length} объявлений** ` +
-        `— это ${r.declared ? Math.round(lots.length / r.declared * 100) : '?'}% от заявленного.`,
-      `Одна квартира в нескольких объявлениях схлопнута: **${flats.length + loose.length} квартир** ` +
-        `(${loose.length} без корпуса в адресе не схлопнуть).`,
-      `Год дома: из поля или срока сдачи ${fill.own}, по соседям по дому ${fill.house}, по ЖК ${fill.complex}, неизвестен ${fill.none}.`,
-      `Отделка разложена по полям и тексту объявления, без фотографий: это первый проход, кадры — второй.`,
-    ];
-    if (r.holes.length) lines.push(`Не прочитано ${r.holes.length} кусков выдачи — список в файле, поле holes.`);
+    const fin = massFinish(q, r);
+    const { flats, cat, lines } = fin;
     log('\n' + lines.join('\n'));
-    const cat = categorize(flats.concat(loose));
-    const res = outputFile(q, lots, { declared: r.declared, aggregated: r.aggregated, enumerated: r.expanded });
-    Object.assign(res, { flats: flats.length + loose.length, slices: r.slices, holes: r.holes, seconds: r.seconds });
-    fs.writeFileSync(out, JSON.stringify(res) + '\n');
+    fs.writeFileSync(out, JSON.stringify(fin.file) + '\n');
     log(`-> ${out}`);
     if (a.report) {
       fs.writeFileSync(a.report, categoryReport(cat, { title: a.title && a.title !== true ? a.title : 'Массовый свип', lines }));
       log(`-> ${a.report}`);
     }
-    if (a.csv) { fs.writeFileSync(a.csv, categoryCsv(flats.concat(loose), cat)); log(`-> ${a.csv}`); }
+    if (a.csv) { fs.writeFileSync(a.csv, categoryCsv(flats, cat)); log(`-> ${a.csv}`); }
     const show = (t, rows) => log(`\n${t}:\n` + rows.map((x) => `  ${String(x.n).padStart(6)}  ${x.key}` +
       (x.ppm ? `  ${Math.round(x.ppm / 1000)} тыс/м²` : '')).join('\n'));
     show('рынок', cat.market);
@@ -4079,6 +4111,7 @@ if (require.main === module) (async () => {
       });
       log(`\nзаявлено ${declared}, за один проход перечислимо ${aggregated ?? '?'}, ` +
           `дроблением ${split}, после раскрытия групп ${lots.length}`);
+      log(`запросов к выдаче: ${searchCalls.n} за ${Math.round((Date.now() - searchCalls.t0) / 1000)} с`);
       if (declared && lots.length < declared * 0.9) {
         log(`! собрано ${Math.round(lots.length / declared * 100)}% от заявленного — ` +
             `${declared - lots.length} лотов не достались. Пробуйте --limit меньше и --similar-pages больше.`);
@@ -5358,7 +5391,7 @@ module.exports = { normalize, groupSameFlat, dedupe, findTwins, withMarket, medi
   expandSimilar, harvest, outputFile, matchesQuery, buildCohort, finishCost, loadedPricePerM2, fairShellPrice, MARKERS, PROOFS,
   renoFate, entryPrice, suspectTwins, RENO_FATES, RENO_CARRY, DEMOLITION_SHARE,
   pacer, isBlockPage, priceSlice, slicePages, journalKey, stableJson, openJournal, massSweep, massClient, DEPTH, PAGE_SIZE, SLICE_CAP, CURSOR_PAGE,
-  eraOf, marketOf, metroBand, finishOf, roomsOf, shelves, tally, categorize, crossTab, categoryReport, categoryCsv,
+  eraOf, marketOf, metroBand, finishOf, roomsOf, shelves, tally, categorize, crossTab, categoryReport, categoryCsv, massFinish,
   humanCheck, humanText, humanTwins, textSimilarity, listLike, SPACES, AUTHORS, TASTES,
   houseClass, houseFor, houseRecord, profileLot, floorBand, HOUSE_MARKERS, HOUSE_CLASSES,
   metroSummary, metroLine, metroCell, RAIL_LINES, photoKinds,
