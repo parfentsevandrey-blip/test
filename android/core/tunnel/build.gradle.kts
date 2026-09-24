@@ -1,4 +1,5 @@
 import app.opal.buildlogic.ExtractJniLibsTask
+import app.opal.buildlogic.UpdateBuiltinBridgesTask
 
 plugins {
     alias(libs.plugins.opal.android.library)
@@ -75,4 +76,19 @@ androidComponents {
             ExtractJniLibsTask::outputDir,
         )
     }
+}
+
+// Manual maintenance task: ./gradlew :core:tunnel:updateBuiltinBridges (see CLAUDE.md ADR 11).
+tasks.register<UpdateBuiltinBridgesTask>("updateBuiltinBridges") {
+    group = "opal"
+    description = "Downloads the current built-in bridges (pt_config.json) from tor-browser-build."
+    url.set(
+        providers
+            .gradleProperty("ptConfigUrl")
+            .orElse(
+                "https://gitlab.torproject.org/tpo/applications/tor-browser-build/-/raw/main/" +
+                    "projects/tor-expert-bundle/pt_config.json"
+            )
+    )
+    target.set(layout.projectDirectory.file("src/main/assets/pt_config.json"))
 }

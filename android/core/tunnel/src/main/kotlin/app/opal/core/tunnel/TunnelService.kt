@@ -66,11 +66,7 @@ class TunnelService : VpnService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_DISCONNECT ->
-                scope.launch {
-                    runtime.memory.update { it.copy(vpnWanted = false) }
-                    controller.disconnect()
-                }
+            ACTION_DISCONNECT -> scope.launch { controller.disconnect() }
             ACTION_STOP_STANDBY ->
                 scope.launch { runtime.settings.update { it.copy(hotStandby = false) } }
             ACTION_NEW_IDENTITY -> scope.launch { controller.newIdentity() }
@@ -97,10 +93,7 @@ class TunnelService : VpnService() {
             scope.launch { controller.revoked() }
             return
         }
-        scope.launch {
-            runtime.memory.update { it.copy(vpnWanted = true) }
-            controller.connect()
-        }
+        scope.launch { controller.connect() }
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -110,10 +103,7 @@ class TunnelService : VpnService() {
 
     override fun onRevoke() {
         controller.log.w(TAG, "VPN revoked by the system")
-        scope.launch {
-            runtime.memory.update { it.copy(vpnWanted = false) }
-            controller.revoked()
-        }
+        scope.launch { controller.revoked() }
     }
 
     override fun onDestroy() {
@@ -133,6 +123,13 @@ class TunnelService : VpnService() {
             }
 
             override fun onHoldsChanged(holds: Set<TunnelController.Hold>) = updateForeground(holds)
+
+            override fun alwaysOn(): AlwaysOnFlags? =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    AlwaysOnFlags(alwaysOn = isAlwaysOn, lockdown = isLockdownEnabled)
+                } else {
+                    null
+                }
 
             override fun restartProcess() {
                 // START_STICKY (and always-on, if enabled) bring the service back; vpnWanted

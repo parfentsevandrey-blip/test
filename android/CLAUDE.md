@@ -151,9 +151,12 @@ build-logic           Convention-плагины opal.android.application|library
     энергосбережение → статичный фон, без lens.
 18. **Упаковка .so** — сжатые (`useLegacyPackaging = true`): для APK под ручную установку размер
     скачивания важнее (Go-библиотека IPtProxy ~24 МБ несжатой на ABI). x86 исключён.
-19. **GeoIP** — `geoip`/`geoip6` из исходников tor (IPFire Location DB) как `assets/*.gz`, распаковка
-    в `filesDir/tor` после первого подключения, загрузка в Tor через `SETCONF GeoIPFile/GeoIPv6File`
+19. **GeoIP** — `geoip`/`geoip6` дословно из исходников tor той ревизии, что закреплена в
+    tor-android 0.4.9.12 (`external/tor` @ 7aa3dff, выгрузка IPFire Location DB от 2026-09-08,
+    лицензия CC BY-SA 4.0 — указана на экране лицензий), как `assets/*.gz`; распаковка в
+    `filesDir/tor` после первого подключения, загрузка в Tor через `SETCONF GeoIPFile/GeoIPv6File`
     уже после bootstrap (парсинг 26 МБ не тормозит старт). ExitNodes {cc} включается только после.
+    Слияние соседних диапазонов проверено — выигрыш <1 %, поэтому файлы не трогаем.
 20. **Лицензия приложения — GPL-3.0-or-later**: IPtProxy содержит Lyrebird под GPL-3 (см. POM
     IPtProxy), совместимость требует GPL для распространяемого APK.
 
@@ -237,8 +240,9 @@ onBackPressed, Accompanist, Google Play Services / Firebase / ML Kit, телем
 ## План и статус фаз
 
 - [x] Фаза 0 — разведка, версии, риски, этот файл.
-- [ ] Фаза 1 — сетевое ядро: VpnService + hev + Tor + Snowflake.
-- [ ] Фаза 2 — стабильность и скорость: гонка, moat, тёплый кеш, резерв, сеть, watchdog.
+- [x] Фаза 1 — сетевое ядро: VpnService + hev + Tor + Snowflake (собрано, на устройстве не проверено).
+- [x] Фаза 2 — стабильность и скорость: гонка, moat, тёплый кеш (+ WorkManager), резерв, сеть,
+      watchdog, подготовка при открытии (собрано, на устройстве не проверено).
 - [ ] Фаза 3 — дизайн-система Liquid Glass, экраны, скриншот-тесты.
 - [ ] Фаза 4 — раздельное туннелирование, свои мосты, новая личность, страна выхода, плитка.
 - [ ] Фаза 5 — профили, замеры, размер, dependency verification, подписанный релиз, README.

@@ -52,6 +52,11 @@
             </intent-filter>
         </activity>
 
+        <!-- WorkManager's debug receiver is exported (DUMP-protected); we do not need it. -->
+        <receiver
+            android:name="androidx.work.impl.diagnostics.DiagnosticsReceiver"
+            tools:node="remove" />
+
         <!-- EmojiCompat would look up a downloadable font through Google Play services: not used. -->
         <provider
             android:name="androidx.startup.InitializationProvider"

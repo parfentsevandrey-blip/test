@@ -59,7 +59,12 @@ internal interface VpnHost {
     fun onHoldsChanged(holds: Set<TunnelController.Hold>)
 
     fun restartProcess()
+
+    /** System "Always-on VPN" and "Block connections without VPN" flags; null below API 29. */
+    fun alwaysOn(): AlwaysOnFlags?
 }
+
+internal data class AlwaysOnFlags(val alwaysOn: Boolean, val lockdown: Boolean)
 
 internal data class VpnSpec(val splitTunnel: SplitTunnelSettings, val underlying: Network?)
 
@@ -108,6 +113,7 @@ internal class TunnelController(
         val network: NetworkKind? = null,
         val problem: TunnelProblem? = null,
         val exitCountry: String? = null,
+        val alwaysOn: AlwaysOnFlags? = null,
     )
 
     private val machine = MutableStateFlow(MachineState())
@@ -135,6 +141,8 @@ internal class TunnelController(
                     network = d.network,
                     problem = d.problem,
                     exitCountry = d.exitCountry,
+                    alwaysOn = d.alwaysOn?.alwaysOn,
+                    lockdown = d.alwaysOn?.lockdown,
                 )
             }
             .stateIn(scope, SharingStarted.Eagerly, TunnelSnapshot())
@@ -193,6 +201,9 @@ internal class TunnelController(
     suspend fun connect() = ops.withLock {
         prewarmTimeout?.cancel()
         prewarmTimeout = null
+        // Remembered so that a system restart of the process (START_STICKY, always-on at boot)
+        // restores the user's choice.
+        setVpnWanted(true)
         dispatch(ConnectionEvent.Connect)
         if (!establishTun()) return@withLock
         hold(Hold.Vpn)
@@ -204,6 +215,7 @@ internal class TunnelController(
     }
 
     suspend fun disconnect() = ops.withLock {
+        setVpnWanted(false)
         val keepTor = settingsRepo.current().hotStandby && session != null
         dispatch(ConnectionEvent.Disconnect(keepTor))
         hev.stop()
@@ -214,6 +226,7 @@ internal class TunnelController(
 
     /** The system revoked the VPN (another VPN app, or the user in Settings). */
     suspend fun revoked() = ops.withLock {
+        setVpnWanted(false)
         hev.stop()
         tun = null // already closed by the system
         tunSpec = null
@@ -274,6 +287,10 @@ internal class TunnelController(
 
     // --- internals ----------------------------------------------------------------------------
 
+    private suspend fun setVpnWanted(wanted: Boolean) {
+        if (memoryRepo.current().vpnWanted != wanted) memoryRepo.update { it.copy(vpnWanted = wanted) }
+    }
+
     private fun hold(reason: Hold) {
         _holds.update { it + reason }
         host?.onHoldsChanged(_holds.value)
@@ -305,6 +322,7 @@ internal class TunnelController(
         val old = tun
         tun = fd
         tunSpec = spec
+        host?.alwaysOn()?.let { flags -> details.update { it.copy(alwaysOn = flags) } }
         // The new interface replaced the old one atomically; move hev over, then drop the old fd.
         socksPort?.let { startHev(it) }
         old?.closeQuietly()
@@ -356,11 +374,16 @@ internal class TunnelController(
 
     private suspend fun stopSession() {
         val s = session ?: return
+        // A connected Tor keeps its directory current by itself; stopping now leaves the freshest
+        // possible cache behind, so the background refresh can skip the next cycle.
+        if (machine.value.torReady) memoryRepo.update { it.copy(lastDirectoryRefreshAt = now()) }
         session = null
         socksPort = null
         hev.stop()
         s.stop()
-        details.update { Details(network = it.network, exitCountry = it.exitCountry) }
+        details.update {
+            Details(network = it.network, exitCountry = it.exitCountry, alwaysOn = it.alwaysOn)
+        }
         _traffic.value = null
     }
 
@@ -407,6 +430,8 @@ internal class TunnelController(
                 dispatch(ConnectionEvent.Fatal(error))
                 scope.launch {
                     ops.withLock {
+                        // Needs the user; a system restart must not loop into the same failure.
+                        setVpnWanted(false)
                         hev.stop()
                         closeTun()
                         _holds.value = emptySet()

@@ -4,6 +4,7 @@ import android.content.Context
 import app.opal.core.data.InstalledAppsRepository
 import app.opal.core.data.OpalStores
 import app.opal.core.data.SettingsRepository
+import app.opal.core.data.TunnelMemoryRepository
 import app.opal.core.tunnel.ipc.TunnelClient
 
 /**
@@ -20,9 +21,14 @@ object AppGraph {
     lateinit var apps: InstalledAppsRepository
         private set
 
+    /** Read-only here: written by the `:tunnel` process. */
+    lateinit var memory: TunnelMemoryRepository
+        private set
+
     fun init(context: Context) {
         settings = SettingsRepository(OpalStores.settings(context))
         tunnel = TunnelClient(context)
         apps = InstalledAppsRepository(context)
+        memory = TunnelMemoryRepository(OpalStores.tunnelMemory(context))
     }
 }

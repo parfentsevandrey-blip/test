@@ -26,6 +26,10 @@ data class TunnelSnapshot(
     /** The last bootstrap/transport problem worth showing (localized in UI). */
     val problem: TunnelProblem? = null,
     val exitCountry: String? = null,
+    /** System "Always-on VPN" for this app (API 29+; known once the VPN was established). */
+    val alwaysOn: Boolean? = null,
+    /** System "Block connections without VPN": excluded apps then have no network at all. */
+    val lockdown: Boolean? = null,
 ) {
     fun toJson(): String = json.encodeToString(serializer(), this)
 

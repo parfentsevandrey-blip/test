@@ -12,6 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,9 +31,11 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         AppGraph.tunnel.acquire()
+        lifecycleScope.launch { PrepareOnOpen.onAppVisible() }
     }
 
     override fun onStop() {
+        if (!isChangingConfigurations) PrepareOnOpen.onAppHidden()
         AppGraph.tunnel.release()
         super.onStop()
     }
