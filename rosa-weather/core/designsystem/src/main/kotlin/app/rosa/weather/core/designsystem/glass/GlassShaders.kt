@@ -13,7 +13,10 @@ import org.intellij.lang.annotations.Language
  *  - **Dual specular rim.** Two highlights on opposite corners follow a light angle driven by the
  *    device's tilt; the rim colour is the saturated backdrop, not flat white.
  *  - **Chromatic dispersion** at the bezel, strongest at the corners.
- *  - **Touch illumination** that starts under the finger and spreads.
+ *  - **Touch illumination** that starts under the finger and spreads; the rim flares while held,
+ *    and letting go sends a **wave** of light across the glass that bends the backdrop as it passes.
+ *  - **Fresnel and thickness**: the bezel reflects more the closer it is to the edge, and dims
+ *    slightly where it turns away from the light; a soft gloss lies across the lit half.
  *  - **Materialisation**: appearing and disappearing modulates lensing, never plain alpha.
  */
 @Language("AGSL")
@@ -34,6 +37,7 @@ uniform float brightness;
 layout(color) uniform half4 tint;
 uniform float materialize;
 uniform float3 touch;
+uniform float4 wave;
 
 float sdRoundRect(float2 p, float2 b, float r) {
     float2 q = abs(p) - b + r;
@@ -75,8 +79,18 @@ half4 main(float2 coord) {
     }
     float2 s = coord + n * m;
 
+    // Tap wave: a ring of light that bends what is behind it as it sweeps across.
+    float ring = 0.0;
+    if (wave.w > 0.0) {
+        float2 wv = coord - origin - wave.xy;
+        float k = (length(wv) - wave.z) / 16.0;
+        ring = exp(-k * k) * wave.w;
+        s += normalize(wv + 0.0001) * ring * 8.0;
+    }
+
     half4 col;
-    if (dispersion > 0.0) {
+    // Dispersion only where the bezel actually bends light: the flat middle takes one sample.
+    if (dispersion > 0.0 && m > 0.3) {
         float corner = abs(p.x * p.y) / max(hs.x * hs.y, 1.0);
         float2 dv = n * m * dispersion * (0.12 + 0.35 * corner);
         half4 g = content.eval(s);
@@ -91,17 +105,25 @@ half4 main(float2 coord) {
     // Two opposite rim highlights: |dot| lights both the light-facing and the far corner.
     float2 L = float2(cos(lightAngle), sin(lightAngle));
     float facing = pow(abs(dot(n, L)), 1.6);
-    float rim = smoothstep(2.4, 0.0, -d);
+    float hl = highlight * materialize * (1.0 + touch.z * 0.8);
     half3 rimColor = mix(half3(1.0), clamp(vibrance(col.rgb, 2.0) * 1.45 + 0.05, 0.0, 1.0), 0.5);
-    col.rgb += rimColor * half(rim * facing * highlight * materialize);
-    // Bezel sheen: a whisper of extra light across the curved band.
-    col.rgb += half3(0.05 * x * x * facing * materialize);
+    float rim = smoothstep(3.0, 0.0, -d);
+    col.rgb += rimColor * half(rim * facing * hl);
+    // Fresnel band: the curved bezel reflects more the closer it gets to the edge.
+    float fresnel = x * x * x;
+    col.rgb += rimColor * half(fresnel * (0.25 + 0.75 * facing) * hl * 0.34);
+    // Thickness: the band dims a little where it turns away from the light.
+    col.rgb *= half(1.0 - 0.12 * x * x * (1.0 - facing) * materialize);
+    // Gloss: a broad, soft reflection lying over the lit half of the surface.
+    float gloss = smoothstep(0.1, 1.0, dot(normalize(p / max(hs, float2(1.0)) + 0.0001), L));
+    col.rgb += half3(0.045 * gloss * hl);
 
     if (touch.z > 0.0) {
         float reach = max(size.x, size.y) * 0.85;
         float glow = 1.0 - smoothstep(0.0, reach, length(coord - origin - touch.xy));
         col.rgb += half3(0.16 * glow * glow * touch.z + 0.05 * touch.z);
     }
+    col.rgb += half3(0.22 * ring);
 
     float alpha = 1.0 - smoothstep(-0.75, 0.75, d);
     return half4(col.rgb * half(alpha), col.a * half(alpha));

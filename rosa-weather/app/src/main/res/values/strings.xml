@@ -7,6 +7,7 @@
     <string name="nowcast_title">Next two hours</string>
     <string name="data_source">Weather: Open-Meteo.com · CC BY 4.0</string>
     <string name="back_to_now">Back to now</string>
+    <string name="feels_like_label">Feels like</string>
     <string name="at_time">at %1$s</string>
     <string name="offline">Offline — showing the saved forecast</string>
     <string name="refreshing">Refreshing the sky…</string>
@@ -33,6 +34,12 @@
     <string name="settings_precipitation">Precipitation</string>
     <string name="settings_refresh">Refresh widgets every</string>
     <string name="settings_haptics">Haptics</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="appearance_auto">Auto</string>
+    <string name="appearance_light">Light</string>
+    <string name="appearance_evening">Evening</string>
+    <string name="appearance_dark">Dark</string>
+    <string name="appearance_hint">Auto follows the real sky from dawn to night. In the other modes the weather stays real — only the light changes.</string>
     <string name="settings_effects">Sky effects</string>
     <string name="settings_tilt">Light follows tilt</string>
     <string name="settings_tilt_hint">Glass highlights move as you tilt the phone.</string>

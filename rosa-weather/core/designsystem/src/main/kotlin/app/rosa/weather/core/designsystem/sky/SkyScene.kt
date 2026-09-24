@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.IntSize
 import app.rosa.weather.core.designsystem.haptics.RosaHaptics
 import app.rosa.weather.core.designsystem.motion.LocalAmbientClock
 import app.rosa.weather.core.designsystem.theme.toColor
+import app.rosa.weather.core.model.Appearance
 import app.rosa.weather.core.model.ForecastMoment
 import app.rosa.weather.core.model.SkyPalette
 import app.rosa.weather.core.model.WeatherVisual
@@ -105,21 +106,29 @@ data class SkyParams(
          * the palette for that elevation and weather, window effects from temperature and
          * humidity. Where that path is drawn on screen is up to the [SkyStage].
          */
-        fun from(moment: ForecastMoment, palette: SkyPalette): SkyParams {
+        fun from(moment: ForecastMoment, palette: SkyPalette, appearance: Appearance = Appearance.Auto): SkyParams {
             val visual: WeatherVisual = moment.visual
+            // Fixed moods keep real weather but no real sun or moon: a noon sun in "Dark" (or the
+            // moon over a porcelain sky) would contradict the light they set.
+            val realSky = appearance == Appearance.Auto
             val useSun = moment.sun.elevation > -5
             val body = if (useSun) moment.sun else moment.moon
             // The east–west component of the azimuth: rising bodies are east, setting ones west,
             // at any latitude — and it never jumps when the azimuth wraps through north.
             val path = ((1.0 - sin(Math.toRadians(body.azimuth))) / 2.0).toFloat()
             val lift = (body.elevation / 50.0).toFloat().coerceIn(-0.25f, 1f)
-            val night = ((-moment.sun.elevation - 6) / 8.0).toFloat().coerceIn(0f, 1f)
+            val night = when (appearance) {
+                Appearance.Auto -> ((-moment.sun.elevation - 6) / 8.0).toFloat().coerceIn(0f, 1f)
+                Appearance.Dark -> 1f
+                Appearance.Evening -> 0.3f // the first stars of the blue hour
+                Appearance.Light -> 0f
+            }
             val humid = ((moment.humidity - 88) / 12f).coerceIn(0f, 1f)
             return SkyParams(
                 zenith = palette.zenith.toColor(), horizon = palette.horizon.toColor(), glow = palette.glow.toColor(),
                 sun = palette.sun.toColor(), cloudLight = palette.cloudLight.toColor(), cloudShade = palette.cloudShade.toColor(),
                 bodyPath = path, bodyLift = lift, isSun = useSun,
-                bodyVisible = ((body.elevation + 2.0) / 5.0).toFloat().coerceIn(0f, 1f),
+                bodyVisible = if (realSky) ((body.elevation + 2.0) / 5.0).toFloat().coerceIn(0f, 1f) else 0f,
                 moonPhase = moment.moonPhase.phase.toFloat(),
                 cloudCover = visual.cloudCover, cloudDark = visual.cloudDarkness, fog = visual.fog, wind = visual.wind,
                 stars = night * (1f - visual.cloudCover * 0.85f), rain = visual.rain, snow = visual.snow,

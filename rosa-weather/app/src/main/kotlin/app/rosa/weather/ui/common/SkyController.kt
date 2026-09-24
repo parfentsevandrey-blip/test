@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import app.rosa.weather.core.designsystem.sky.SkyParams
 import app.rosa.weather.core.designsystem.sky.SkyStage
+import app.rosa.weather.core.model.Appearance
 import app.rosa.weather.core.model.ForecastMoment
 import app.rosa.weather.core.model.SampleForecast
 import app.rosa.weather.core.model.SkyPalette
@@ -20,7 +21,10 @@ import app.rosa.weather.core.model.momentAt
  */
 @Stable
 class SkyController(initial: ForecastMoment) {
-    var palette by mutableStateOf(paletteOf(initial))
+    /** Real sky or a fixed mood (Settings → Appearance); weather stays real either way. */
+    var appearance by mutableStateOf(Appearance.Auto)
+        private set
+    var palette by mutableStateOf(paletteOf(initial, Appearance.Auto))
         private set
     var params by mutableStateOf(SkyParams.from(initial, palette))
         private set
@@ -31,29 +35,57 @@ class SkyController(initial: ForecastMoment) {
     var stage by mutableStateOf(SkyStage.Default)
         private set
 
+    // What is on screen now, so a change of mood can relight it.
+    private var shownA = initial
+    private var shownB: ForecastMoment? = null
+    private var fraction = 0f
+
     fun placeBody(stage: SkyStage) {
         if (stage != this.stage) this.stage = stage
     }
 
+    /** Switch the mood; the sky melts into the new light instead of cutting. */
+    fun applyAppearance(mode: Appearance) {
+        if (mode == appearance) return
+        appearance = mode
+        transitionMillis = 900
+        relight()
+    }
+
     /** @param immediate true while the user is dragging (pager, timeline): follow the finger exactly. */
     fun show(moment: ForecastMoment, immediate: Boolean) {
-        val p = paletteOf(moment)
+        shownA = moment
+        shownB = null
         transitionMillis = if (immediate) 0 else 1400
-        palette = p
-        params = SkyParams.from(moment, p)
+        relight()
     }
 
     /** Blend two moments (e.g. two cities while swiping between them). */
     fun blend(a: ForecastMoment, b: ForecastMoment, fraction: Float) {
-        val pa = paletteOf(a)
-        val pb = paletteOf(b)
+        shownA = a
+        shownB = b
+        this.fraction = fraction
         transitionMillis = 0
-        palette = if (fraction < 0.5f) pa else pb
-        params = SkyParams.from(a, pa).lerp(SkyParams.from(b, pb), fraction)
+        relight()
+    }
+
+    private fun relight() {
+        val a = shownA
+        val pa = paletteOf(a, appearance)
+        val b = shownB
+        if (b == null) {
+            palette = pa
+            params = SkyParams.from(a, pa, appearance)
+        } else {
+            val pb = paletteOf(b, appearance)
+            palette = if (fraction < 0.5f) pa else pb
+            params = SkyParams.from(a, pa, appearance).lerp(SkyParams.from(b, pb, appearance), fraction)
+        }
     }
 
     companion object {
-        fun paletteOf(m: ForecastMoment) = SkyPalette.of(m.sun.elevation, m.visual, m.moonPhase.illumination)
+        fun paletteOf(m: ForecastMoment, appearance: Appearance = Appearance.Auto) =
+            SkyPalette.of(appearance, m.sun.elevation, m.visual, m.moonPhase.illumination)
 
         /** A calm dusk sky shown before any forecast exists. */
         fun placeholder(nowEpochSeconds: Long): ForecastMoment =

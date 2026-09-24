@@ -9,7 +9,17 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import app.rosa.weather.core.designsystem.component.RosaEnvironment
 import app.rosa.weather.core.designsystem.component.SkyBackdrop
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import app.rosa.weather.core.designsystem.component.GlassSurface
+import app.rosa.weather.core.designsystem.glass.GlassStyle
 import app.rosa.weather.core.model.AppSettings
+import app.rosa.weather.core.model.Appearance
+import app.rosa.weather.ui.settings.AppearancePicker
 import app.rosa.weather.core.model.EffectsQuality
 import app.rosa.weather.core.model.Forecast
 import app.rosa.weather.core.model.Place
@@ -46,18 +56,25 @@ class ScreenGalleryTest {
     }
 
     /** @param doc also export the render as a README image (with `-Prosa.docs`). */
-    private fun home(scenario: SampleForecast.Scenario, now: Long, name: String, shiftCelsius: Double = 0.0, doc: Boolean = true) {
+    private fun home(
+        scenario: SampleForecast.Scenario,
+        now: Long,
+        name: String,
+        shiftCelsius: Double = 0.0,
+        doc: Boolean = true,
+        appearance: Appearance = Appearance.Auto,
+    ) {
         val forecast = SampleForecast.create(scenario, nowEpochSeconds = now, placeId = "geo:1").shifted(shiftCelsius)
         val state = HomeUiState(
             loaded = true,
             pages = listOf(PlacePage(Place("geo:1", "Москва", 55.75, 37.62), forecast)),
             selectedId = "geo:1",
             units = Units(),
-            settings = AppSettings(effects = EffectsQuality.Balanced),
+            settings = AppSettings(effects = EffectsQuality.Balanced, appearance = appearance),
         )
         compose.mainClock.autoAdvance = false
         compose.setContent {
-            val sky = remember { SkyController(forecast.momentAt(now)) }
+            val sky = remember { SkyController(forecast.momentAt(now)).apply { applyAppearance(appearance) } }
             CompositionLocalProvider(LocalSky provides sky) {
                 RosaEnvironment(state.settings, sky.palette) {
                     SkyBackdrop(sky.params, state.settings.effects, stage = sky.stage, transitionMillis = 0) {
@@ -88,6 +105,33 @@ class ScreenGalleryTest {
     /** Same morning at −12°: the widest numerals must still keep the sun clear of them. */
     @Test
     fun homeMorningFrost() = home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-morning-frost", shiftCelsius = -30.0, doc = false)
+
+    @Test
+    fun homeLight() = home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-mode-light", doc = false, appearance = Appearance.Light)
+
+    @Test
+    fun homeEveningMode() = home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-mode-evening", doc = false, appearance = Appearance.Evening)
+
+    @Test
+    fun homeDarkMode() = home(SampleForecast.Scenario.RainyAfternoon, 1_758_628_800L, "home-mode-dark", doc = false, appearance = Appearance.Dark)
+
+    @Test
+    fun appearancePicker() {
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            val sky = remember { SkyController(SampleForecast.create(SampleForecast.Scenario.SunnyMild).momentAt(1_758_628_800L)) }
+            RosaEnvironment(AppSettings(), sky.palette) {
+                SkyBackdrop(sky.params, EffectsQuality.Balanced, transitionMillis = 0) {
+                    Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                        GlassSurface(Modifier.fillMaxWidth(), style = GlassStyle.Frosted, contentPadding = PaddingValues(18.dp)) {
+                            AppearancePicker(Appearance.Evening) {}
+                        }
+                    }
+                }
+            }
+        }
+        capture("settings-appearance", doc = false)
+    }
 
     /** 17:40, the sun low in the west. */
     @Test

@@ -11,6 +11,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -47,6 +48,7 @@ fun RosaAppRoot() {
     val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
     val sky = remember { SkyController(SkyController.placeholder(System.currentTimeMillis() / 1000)) }
     val backStack = rememberNavBackStack(Home)
+    LaunchedEffect(settings.appearance) { sky.applyAppearance(settings.appearance) }
 
     CompositionLocalProvider(LocalSky provides sky) {
         RosaEnvironment(settings, sky.palette) {

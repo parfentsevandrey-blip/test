@@ -7,6 +7,7 @@
     <string name="nowcast_title">Ближайшие два часа</string>
     <string name="data_source">Погода: Open-Meteo.com · CC BY 4.0</string>
     <string name="back_to_now">Вернуться в сейчас</string>
+    <string name="feels_like_label">Ощущается</string>
     <string name="at_time">в %1$s</string>
     <string name="offline">Нет сети — показываем сохранённый прогноз</string>
     <string name="refreshing">Обновляем небо…</string>
@@ -33,6 +34,12 @@
     <string name="settings_precipitation">Осадки</string>
     <string name="settings_refresh">Обновлять виджеты каждые</string>
     <string name="settings_haptics">Тактильный отклик</string>
+    <string name="settings_appearance">Оформление</string>
+    <string name="appearance_auto">Авто</string>
+    <string name="appearance_light">Светлый</string>
+    <string name="appearance_evening">Вечерний</string>
+    <string name="appearance_dark">Тёмный</string>
+    <string name="appearance_hint">«Авто» следует за настоящим небом — от рассвета до ночи. В остальных режимах погода остаётся настоящей, меняется только свет.</string>
     <string name="settings_effects">Эффекты неба</string>
     <string name="settings_tilt">Свет от наклона</string>
     <string name="settings_tilt_hint">Блики на стекле двигаются, когда вы наклоняете телефон.</string>

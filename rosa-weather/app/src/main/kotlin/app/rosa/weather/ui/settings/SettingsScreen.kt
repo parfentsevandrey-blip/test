@@ -73,6 +73,10 @@ fun SettingsRoute(viewModel: SettingsViewModel, onBack: () -> Unit) {
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = bottom + 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            Section(stringResource(R.string.settings_appearance)) {
+                AppearancePicker(settings.appearance) { mode -> viewModel.update { it.copy(appearance = mode) } }
+                Text(stringResource(R.string.appearance_hint), style = Rosa.type.caption, color = Rosa.colors.inkSoft)
+            }
             Section(stringResource(R.string.settings_units)) {
                 Labeled(stringResource(R.string.settings_temperature)) {
                     GlassSegmented(TemperatureUnit.entries, units.temperature, { v -> viewModel.updateUnits { it.copy(temperature = v) } }, {

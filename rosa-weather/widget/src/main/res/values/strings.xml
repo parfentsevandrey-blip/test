@@ -52,6 +52,7 @@
     <string name="module_sunpath">Sun path</string>
     <string name="tap_app">App</string>
     <string name="tap_refresh">Refresh</string>
+    <string name="toggle_glass_rim">Glass edge</string>
     <string name="toggle_location">Place name</string>
     <string name="toggle_feels">Feels-like when it differs a lot</string>
     <string name="toggle_art">Weather art inside the glass</string>

@@ -10,8 +10,8 @@ android {
 
     defaultConfig {
         applicationId = "app.rosa.weather"
-        versionCode = 4
-        versionName = "1.0.3"
+        versionCode = 5
+        versionName = "1.1.0"
     }
 
     testOptions {

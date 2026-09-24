@@ -9,6 +9,13 @@ enum class HapticsLevel { Off, Subtle, Rich }
 @Serializable
 enum class EffectsQuality { Auto, Battery, Balanced, Cinematic }
 
+/**
+ * How the app is lit. [Auto] follows the real sky — dawn, day, dusk, night; the others hold one
+ * mood all day. Weather (clouds, rain, snow, fog) stays real in every mode.
+ */
+@Serializable
+enum class Appearance { Auto, Light, Evening, Dark }
+
 @Serializable
 data class AppSettings(
     /** `null` until the user picks units explicitly: then regional defaults apply. */
@@ -16,6 +23,7 @@ data class AppSettings(
     val refreshIntervalMinutes: Int = DEFAULT_REFRESH_MINUTES,
     val haptics: HapticsLevel = HapticsLevel.Rich,
     val effects: EffectsQuality = EffectsQuality.Auto,
+    val appearance: Appearance = Appearance.Auto,
     val tiltLighting: Boolean = true,
     val backgroundLocation: Boolean = false,
     val onboardingDone: Boolean = false,

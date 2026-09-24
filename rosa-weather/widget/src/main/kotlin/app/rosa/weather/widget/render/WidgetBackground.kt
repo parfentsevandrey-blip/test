@@ -10,6 +10,7 @@ import android.graphics.Path
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
+import android.graphics.SweepGradient
 import androidx.core.graphics.withClip
 import app.rosa.weather.core.designsystem.glyph.WeatherGlyphPainter
 import app.rosa.weather.core.model.Argb
@@ -53,8 +54,11 @@ internal class WidgetBackground {
         when (config.style) {
             WidgetStyle.Glass -> glass(canvas, rect, radius, config, palette, visual, anchor, seed)
             WidgetStyle.Sky -> sky(canvas, rect, radius, config, palette, visual, anchor, seed)
-            WidgetStyle.Clear -> Unit
-            WidgetStyle.Tonal -> tonal(canvas, rect, radius, config, palette, dynamic)
+            WidgetStyle.Clear -> if (config.glassRim) glassBezel(canvas, rect, radius, palette, strength = 0.65f)
+            WidgetStyle.Tonal -> {
+                tonal(canvas, rect, radius, config, palette, dynamic)
+                if (config.glassRim) glassBezel(canvas, rect, radius, palette, strength = 0.7f)
+            }
             WidgetStyle.Paper -> paper(canvas, rect, radius, palette)
         }
     }
@@ -72,7 +76,7 @@ internal class WidgetBackground {
         val bottom = palette.sky.horizon.lerp(base, if (dark) 0.45f else 0.7f)
 
         canvas.withClip(path) { glassBody(this, rect, radius, config, palette, visual, anchor, seed, dark, opacity, top, bottom) }
-        rim(canvas, rect, radius, palette, strength = 1f)
+        if (config.glassRim) glassBezel(canvas, rect, radius, palette, strength = 1f) else rim(canvas, rect, radius, palette, strength = 1f)
     }
 
     private fun glassBody(
@@ -149,6 +153,110 @@ internal class WidgetBackground {
         paint.style = Paint.Style.FILL
     }
 
+    /**
+     * A thick glass edge. Launchers can't refract the wallpaper, so the bezel is painted the way
+     * light behaves on one: a Fresnel band welling up inside the edge, brightest on the lit
+     * corners (Apple's 45° / −135° pair); a faint shadow band where the glass turns away; warm and
+     * cool dispersion fringes a hair apart; a crisp rim line and two specular glints.
+     */
+    private fun glassBezel(canvas: Canvas, rect: RectF, radius: Float, palette: WidgetPalette, strength: Float) {
+        val bevel = (min(rect.width(), rect.height()) * 0.08f).coerceIn(6f, 14f)
+        val cx = rect.centerX()
+        val cy = rect.centerY()
+        val light = palette.sky.glow.lerp(Argb.White, 0.65f)
+        canvas.withClip(path) {
+            paint.style = Paint.Style.STROKE
+            // Fresnel band.
+            paint.shader = litSweep(cx, cy, light, peak = 0.92f * strength, side = 0.4f * strength, low = 0.1f * strength)
+            paint.strokeWidth = bevel * 2f
+            paint.maskFilter = BlurMaskFilter(bevel * 0.7f, BlurMaskFilter.Blur.NORMAL)
+            drawRoundRect(rect, radius, radius, paint)
+            // Sharper light right at the edge, where the bevel is steepest.
+            paint.strokeWidth = bevel * 0.8f
+            paint.maskFilter = BlurMaskFilter(bevel * 0.25f, BlurMaskFilter.Blur.NORMAL)
+            drawRoundRect(rect, radius, radius, paint)
+            // Thickness: the inner edge of the bevel, shaded most where no light reaches.
+            val inner = RectF(rect.left + bevel, rect.top + bevel, rect.right - bevel, rect.bottom - bevel)
+            val innerRadius = max(0f, radius - bevel)
+            paint.shader = litSweep(cx, cy, Argb.Black, peak = 0.03f * strength, side = 0.1f * strength, low = 0.22f * strength)
+            paint.strokeWidth = bevel * 0.9f
+            paint.maskFilter = BlurMaskFilter(bevel * 0.6f, BlurMaskFilter.Blur.NORMAL)
+            drawRoundRect(inner, innerRadius, innerRadius, paint)
+            paint.maskFilter = null
+            // Where the curved bevel meets the flat face: the second edge of a glass slab.
+            val face = RectF(rect.left + bevel * 0.95f, rect.top + bevel * 0.95f, rect.right - bevel * 0.95f, rect.bottom - bevel * 0.95f)
+            val faceRadius = max(0f, radius - bevel * 0.95f)
+            paint.shader = litSweep(cx, cy, light, peak = 0.55f * strength, side = 0.2f * strength, low = 0.05f * strength)
+            paint.strokeWidth = 0.9f
+            drawRoundRect(face, faceRadius, faceRadius, paint)
+            // Dispersion fringes.
+            paint.strokeWidth = 1f
+            for ((inset, color, alpha) in listOf(Triple(1.8f, Argb.hex(0x7FE6FF), 0.62f), Triple(3f, Argb.hex(0xFFA6D8), 0.48f))) {
+                val r = RectF(rect.left + inset, rect.top + inset, rect.right - inset, rect.bottom - inset)
+                paint.shader = litSweep(cx, cy, color, peak = alpha * strength, side = alpha * 0.25f * strength, low = 0f)
+                drawRoundRect(r, radius - inset, radius - inset, paint)
+            }
+        }
+        // Crisp rim line.
+        paint.style = Paint.Style.STROKE
+        val inset = 0.6f
+        paint.shader = litSweep(cx, cy, light, peak = strength, side = 0.35f * strength, low = 0.12f * strength)
+        paint.strokeWidth = 1.2f
+        canvas.drawRoundRect(RectF(rect.left + inset, rect.top + inset, rect.right - inset, rect.bottom - inset), radius - inset, radius - inset, paint)
+        // Specular glints where the light meets the corners.
+        glint(canvas, rect, radius, topLeft = true, alpha = 0.95f * strength)
+        glint(canvas, rect, radius, topLeft = false, alpha = 0.6f * strength)
+        // A darker outer hairline keeps the pane crisp on bright wallpapers.
+        paint.shader = null
+        paint.color = if (palette.isDark) 0x33000000 else 0x24000000
+        paint.strokeWidth = 0.6f
+        canvas.drawRoundRect(RectF(rect.left + 0.3f, rect.top + 0.3f, rect.right - 0.3f, rect.bottom - 0.3f), radius, radius, paint)
+        paint.style = Paint.Style.FILL
+    }
+
+    /**
+     * Light around the pane, clockwise from 3 o'clock: [peak] at the top-left (225°) and a little
+     * less at the bottom-right (45°), [low] where the edge turns away (135°, 315°), [side] between.
+     */
+    private fun litSweep(cx: Float, cy: Float, color: Argb, peak: Float, side: Float, low: Float) = SweepGradient(
+        cx, cy,
+        intArrayOf(
+            color.withAlpha(side).value,
+            color.withAlpha(peak * 0.8f).value,
+            color.withAlpha(side).value,
+            color.withAlpha(low).value,
+            color.withAlpha(side).value,
+            color.withAlpha(peak).value,
+            color.withAlpha(side).value,
+            color.withAlpha(low).value,
+            color.withAlpha(side).value,
+        ),
+        floatArrayOf(0f, 0.125f, 0.25f, 0.375f, 0.5f, 0.625f, 0.75f, 0.875f, 1f),
+    )
+
+    private fun glint(canvas: Canvas, rect: RectF, radius: Float, topLeft: Boolean, alpha: Float) {
+        val r = max(radius, 8f)
+        val inset = 1.4f
+        val oval = if (topLeft) {
+            RectF(rect.left + inset, rect.top + inset, rect.left + r * 2 - inset, rect.top + r * 2 - inset)
+        } else {
+            RectF(rect.right - r * 2 + inset, rect.bottom - r * 2 + inset, rect.right - inset, rect.bottom - inset)
+        }
+        val start = if (topLeft) 195f else 15f
+        paint.shader = null
+        paint.style = Paint.Style.STROKE
+        paint.strokeCap = Paint.Cap.ROUND
+        paint.color = Argb.White.withAlpha(alpha * 0.8f).value
+        paint.strokeWidth = 2.4f
+        paint.maskFilter = BlurMaskFilter(1.8f, BlurMaskFilter.Blur.NORMAL)
+        canvas.drawArc(oval, start, 60f, false, paint)
+        paint.maskFilter = null
+        paint.color = Argb.White.withAlpha(alpha).value
+        paint.strokeWidth = 1f
+        canvas.drawArc(oval, start + 16f, 28f, false, paint)
+        paint.strokeCap = Paint.Cap.BUTT
+    }
+
     /** Soft brightening just inside the edge, the visual cue of a thick, curved bezel. */
     private fun innerGlow(canvas: Canvas, rect: RectF, radius: Float, dark: Boolean) {
         paint.shader = null
@@ -210,7 +318,7 @@ internal class WidgetBackground {
         canvas.drawRect(rect, paint)
         grain(canvas, rect, 0.035f)
         canvas.restore()
-        rim(canvas, rect, radius, palette, strength = 0.75f)
+        if (config.glassRim) glassBezel(canvas, rect, radius, palette, strength = 0.85f) else rim(canvas, rect, radius, palette, strength = 0.75f)
     }
 
     private fun celestialBody(canvas: Canvas, rect: RectF, anchor: SkyAnchor, palette: WidgetPalette, visual: WeatherVisual) {

@@ -1,5 +1,8 @@
 package app.rosa.weather.ui.home
 
+import kotlin.math.abs
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -162,6 +165,8 @@ fun HourlyTimeline(
                             format = format,
                             milestone = i in milestones,
                             chance = forecast.chanceForHourStarting(firstIndex + i),
+                            // Magnifier: hours swell as they glide under the lens.
+                            focus = { (1f - abs(i - offsetHours) / 1.6f).coerceIn(0f, 1f) },
                         )
                     }
                 }
@@ -182,6 +187,7 @@ private fun HourCell(
     format: WeatherFormat,
     milestone: Boolean,
     chance: Int,
+    focus: () -> Float,
 ) {
     val colors = Rosa.colors
     val condition = WeatherCondition.fromWmo(hour.weatherCode)
@@ -192,9 +198,28 @@ private fun HourCell(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(Modifier.height(10.dp))
-        Text(label, style = Rosa.type.caption, color = if (milestone) colors.accent else colors.inkSoft, maxLines = 1)
+        Text(
+            label,
+            style = Rosa.type.caption,
+            color = if (milestone) colors.accent else colors.inkSoft,
+            maxLines = 1,
+            modifier = Modifier.graphicsLayer {
+                val s = 1f + 0.12f * focus()
+                scaleX = s
+                scaleY = s
+            },
+        )
         Spacer(Modifier.height(6.dp))
-        WeatherGlyph(condition, hour.isDay, Modifier.size(30.dp))
+        WeatherGlyph(
+            condition,
+            hour.isDay,
+            Modifier.size(30.dp).graphicsLayer {
+                val f = focus()
+                scaleX = 1f + 0.3f * f
+                scaleY = 1f + 0.3f * f
+                translationY = -3.dp.toPx() * f
+            },
+        )
         Box(Modifier.fillMaxWidth().weight(1f)) {
             val span = (maxT - minT).coerceAtLeast(3.0)
             val lineColor = TemperatureScale.colorFor(temp).toColor()
@@ -241,10 +266,16 @@ private fun HourCell(
                 if (prev != null && next != null) {
                     drawPath(fill, Brush.verticalGradient(listOf(lineColor.copy(alpha = 0.22f), Color.Transparent), startY = top, endY = size.height))
                 }
-                drawCircle(ink, 3.4.dp.toPx(), Offset(size.width / 2, cy))
-                drawCircle(lineColor, 2.2.dp.toPx(), Offset(size.width / 2, cy))
+                val f = focus()
+                val dot = Offset(size.width / 2, cy)
+                if (f > 0.01f) drawCircle(lineColor.copy(alpha = 0.28f * f), (6.dp + 5.dp * f).toPx(), dot)
+                drawCircle(ink, (3.4.dp + 1.4.dp * f).toPx(), dot)
+                drawCircle(lineColor, (2.2.dp + 1.dp * f).toPx(), dot)
                 val layout = measurer.measure(tempText, labelStyle)
-                drawText(layout, topLeft = Offset((size.width - layout.size.width) / 2, cy - layout.size.height - 5.dp.toPx()))
+                val textTop = cy - layout.size.height - (5.dp + 3.dp * f).toPx()
+                scale(1f + 0.14f * f, pivot = Offset(size.width / 2, textTop + layout.size.height)) {
+                    drawText(layout, topLeft = Offset((size.width - layout.size.width) / 2, textTop))
+                }
 
                 // Precipitation chance as a small bar along the bottom.
                 val p = chance / 100f

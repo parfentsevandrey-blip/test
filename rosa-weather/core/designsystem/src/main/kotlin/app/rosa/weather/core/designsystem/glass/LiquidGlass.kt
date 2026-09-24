@@ -83,22 +83,22 @@ data class GlassStyle(
 ) {
     companion object {
         /** Floating controls: capsule buttons, bars, the city switcher. */
-        val Regular = GlassStyle(3.dp, 16.dp, 22.dp, 0.6f, 0f, 1.5f, 0.04f, 0.55f, 0.1f)
+        val Regular = GlassStyle(2.dp, 20.dp, 30.dp, 0.9f, 0f, 1.6f, 0.04f, 0.85f, 0.1f)
 
         /** Permanently more transparent; for controls over rich media, with bold content only. */
-        val Clear = GlassStyle(1.dp, 16.dp, 26.dp, 0.8f, 0f, 1.2f, 0f, 0.6f, 0.03f)
+        val Clear = GlassStyle(1.dp, 20.dp, 34.dp, 1.1f, 0f, 1.25f, 0f, 0.9f, 0.03f)
 
         /**
-         * Content layer (cards): mostly frosted, gentle lensing — Apple keeps real glass off
-         * content. No dispersion: invisible through frost, and it would triple the samples.
+         * Content layer (cards): mostly frosted — Apple keeps real glass off content — but with a
+         * clearly lensing, lit rim; dispersion stays in that rim, the frosted middle is one sample.
          */
-        val Frosted = GlassStyle(18.dp, 10.dp, 10.dp, 0f, 0f, 1.35f, 0.02f, 0.35f, 0.16f)
+        val Frosted = GlassStyle(18.dp, 16.dp, 18.dp, 0.45f, 0f, 1.45f, 0.02f, 0.6f, 0.14f)
 
         /** Active knobs and indicators while touched: pure lens, strong dispersion, no frost. */
-        val Lens = GlassStyle(0.dp, 10.dp, 16.dp, 1f, 0f, 1.1f, 0.02f, 0.7f, 0f)
+        val Lens = GlassStyle(0.dp, 12.dp, 22.dp, 1.3f, 0f, 1.1f, 0.02f, 1f, 0f)
 
         /** Large sheets and menus: "thicker" glass — deeper lensing, dome depth, softer frost. */
-        val Sheet = GlassStyle(16.dp, 26.dp, 44.dp, 0.4f, 0.2f, 1.5f, 0.03f, 0.5f, 0.2f)
+        val Sheet = GlassStyle(16.dp, 30.dp, 52.dp, 0.6f, 0.2f, 1.5f, 0.03f, 0.75f, 0.2f)
     }
 }
 
@@ -121,12 +121,18 @@ class GlassEnvironment {
 
 val LocalGlassEnvironment = androidx.compose.runtime.staticCompositionLocalOf { GlassEnvironment() }
 
-/** Per-element state: materialisation progress and the touch glow. */
+/** Per-element state: materialisation progress, the touch glow and the release wave. */
 @Stable
 class GlassState {
     var materialize by mutableFloatStateOf(1f)
     var touch by mutableStateOf(Offset.Unspecified)
     var touchStrength by mutableFloatStateOf(0f)
+
+    /** Where the last tap let go; the light wave spreads from here. */
+    var waveOrigin by mutableStateOf(Offset.Zero)
+
+    /** 0 → 1 while the wave crosses the glass; 0 or 1 means no wave. */
+    var waveProgress by mutableFloatStateOf(0f)
 }
 
 @Composable
@@ -233,6 +239,15 @@ private class LiquidGlassNode(
             shader.setFloatUniform("touch", touch.x, touch.y, s!!.touchStrength)
         } else {
             shader.setFloatUniform("touch", 0f, 0f, 0f)
+        }
+        val wave = s?.waveProgress ?: 0f
+        if (wave > 0f && wave < 1f) {
+            val origin = s!!.waveOrigin
+            val reach = maxOf(size.width, size.height) * 1.3f
+            val fade = 1f - wave
+            shader.setFloatUniform("wave", origin.x, origin.y, reach * wave, fade * fade)
+        } else {
+            shader.setFloatUniform("wave", 0f, 0f, 0f, 0f)
         }
 
         val lens = RenderEffect.createRuntimeShaderEffect(shader, "content")

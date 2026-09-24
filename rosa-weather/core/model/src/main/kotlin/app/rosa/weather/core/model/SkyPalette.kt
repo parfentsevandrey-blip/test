@@ -26,7 +26,38 @@ data class SkyPalette(
     /** True when the sky is bright enough that text must switch to dark ink. */
     val isLight: Boolean get() = ink.luminance < 0.2
 
+    /** A porcelain version for the Light appearance: pale sky, milky clouds, dark ink. */
+    private fun bleached(): SkyPalette {
+        val ink = Argb.hex(0x1B2030)
+        return copy(
+            zenith = zenith.lerp(Argb.hex(0xF3F6FC), 0.5f),
+            horizon = horizon.lerp(Argb.White, 0.62f),
+            glow = glow.lerp(Argb.White, 0.4f),
+            cloudLight = cloudLight.lerp(Argb.White, 0.55f),
+            cloudShade = cloudShade.lerp(Argb.hex(0xDDE3EE), 0.45f),
+            ink = ink,
+            inkSoft = ink.withAlpha(0.66f),
+            // Yellow accents vanish on a pale sky; a deeper amber keeps them readable.
+            accent = Argb.hex(0xC46F1E),
+            brightness = maxOf(brightness, 0.62),
+        )
+    }
+
     companion object {
+        /** Sun elevation each fixed mood is lit by: a bright late morning, the blue hour, deep night. */
+        private const val LIGHT_ELEVATION = 30.0
+        private const val EVENING_ELEVATION = -1.5
+        private const val DARK_ELEVATION = -16.0
+
+        /** The palette for an [Appearance]; [Appearance.Auto] is the real sky at [sunElevation]. */
+        fun of(appearance: Appearance, sunElevation: Double, visual: WeatherVisual, moonIllumination: Double = 0.5): SkyPalette =
+            when (appearance) {
+                Appearance.Auto -> of(sunElevation, visual, moonIllumination)
+                Appearance.Light -> of(LIGHT_ELEVATION, visual, moonIllumination).bleached()
+                Appearance.Evening -> of(EVENING_ELEVATION, visual, moonIllumination)
+                Appearance.Dark -> of(DARK_ELEVATION, visual, maxOf(moonIllumination, 0.4))
+            }
+
         private class Key(val elevation: Double, val zenith: Long, val horizon: Long, val glow: Long, val sun: Long)
 
         // Sun elevation (deg) → clear-sky colours.

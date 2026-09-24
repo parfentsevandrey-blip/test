@@ -4,12 +4,17 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -87,14 +92,18 @@ import app.rosa.weather.core.designsystem.component.LiquidPageIndicator
 import app.rosa.weather.core.designsystem.component.Odometer
 import app.rosa.weather.core.designsystem.component.RosaIcon
 import app.rosa.weather.core.designsystem.component.RosaIconView
+import app.rosa.weather.core.designsystem.component.hop
+import app.rosa.weather.core.designsystem.component.rememberHop
 import app.rosa.weather.core.designsystem.component.WeatherGlyph
 import app.rosa.weather.core.designsystem.format.WeatherFormat
 import app.rosa.weather.core.designsystem.glass.GlassStyle
 import app.rosa.weather.core.designsystem.haptics.LocalHaptics
 import app.rosa.weather.core.designsystem.motion.LocalAmbientClock
+import app.rosa.weather.core.designsystem.motion.LocalMotionEnabled
 import app.rosa.weather.core.designsystem.motion.RosaMotion
 import app.rosa.weather.core.designsystem.sky.SkyStage
 import app.rosa.weather.core.designsystem.theme.Rosa
+import app.rosa.weather.core.model.Appearance
 import app.rosa.weather.core.model.Forecast
 import app.rosa.weather.core.model.ForecastMoment
 import app.rosa.weather.core.model.Headline
@@ -242,11 +251,13 @@ fun HomeScreen(
                 },
                 onRefresh = onRefresh,
                 onBodyStage = { stage -> if (bodyStages[page.place.id] != stage) bodyStages[page.place.id] = stage },
+                realSky = state.settings.appearance == Appearance.Auto,
             )
         }
         TopBar(
             title = pages.getOrNull(pagerState.currentPage)?.let { it.place.name.ifBlank { format.currentLocation() } }.orEmpty(),
             isCurrent = pages.getOrNull(pagerState.currentPage)?.place?.isCurrentLocation == true,
+            pageIndex = pagerState.currentPage,
             pageCount = pages.size,
             pagePosition = { pagerState.currentPage + pagerState.currentPageOffsetFraction },
             onOpenPlaces = onOpenPlaces,
@@ -267,6 +278,7 @@ private fun PlaceContent(
     onScrub: (Float, Boolean) -> Unit,
     onRefresh: () -> Unit,
     onBodyStage: (SkyStage) -> Unit,
+    realSky: Boolean,
 ) {
     val forecast = page.forecast
     val zoneFormat = remember(format, forecast?.timezone) {
@@ -278,6 +290,7 @@ private fun PlaceContent(
     val isRefreshing by rememberUpdatedState(refreshing)
     val refresh = rememberLiquidRefresh(onRefresh) { isRefreshing }
     val density = LocalDensity.current
+    val seen = remember { mutableSetOf<String>() }
     val stageSink by rememberUpdatedState(onBodyStage)
     val probe = remember(density, listState) {
         HeroProbe(
@@ -311,30 +324,34 @@ private fun PlaceContent(
             }
             val moment = forecast.momentAt(now + (scrubHours * 3600).toLong())
             item(key = "hero") {
-                Hero(forecast, moment, zoneFormat, scrubHours, probe, Modifier.graphicsLayer {
-                    // Gentle parallax: the numerals drift up slower than the cards and fade out.
-                    val offset = if (listState.firstVisibleItemIndex == 0) listState.firstVisibleItemScrollOffset.toFloat() else 1000f
-                    translationY = offset * 0.35f
-                    alpha = (1f - offset / 700f).coerceIn(0f, 1f)
-                })
+                Entrance("hero", 0, seen) {
+                    Hero(forecast, moment, zoneFormat, scrubHours, probe, realSky, Modifier.graphicsLayer {
+                        // Gentle parallax: the numerals drift up slower than the cards and fade out.
+                        val offset = if (listState.firstVisibleItemIndex == 0) listState.firstVisibleItemScrollOffset.toFloat() else 1000f
+                        translationY = offset * 0.35f
+                        alpha = (1f - offset / 700f).coerceIn(0f, 1f)
+                    })
+                }
             }
             item(key = "timeline") {
-                HourlyTimeline(forecast, now, forecast.momentAt(now).temperature, zoneFormat, onScrub)
+                Entrance("timeline", 1, seen) { HourlyTimeline(forecast, now, forecast.momentAt(now).temperature, zoneFormat, onScrub) }
             }
             if (forecast.nowcast.any { it.time > now && it.precipitation > 0.02 }) {
-                item(key = "nowcast") { NowcastCard(forecast, now, zoneFormat) }
+                item(key = "nowcast") { Entrance("nowcast", 2, seen) { NowcastCard(forecast, now, zoneFormat) } }
             }
-            item(key = "daily") { DailyForecast(forecast, now, forecast.momentAt(now).temperature, zoneFormat) }
+            item(key = "daily") { Entrance("daily", 3, seen) { DailyForecast(forecast, now, forecast.momentAt(now).temperature, zoneFormat) } }
             item(key = "details-title") {
-                Text(
-                    stringResource(R.string.details_title),
-                    style = Rosa.type.label,
-                    color = Rosa.colors.inkSoft,
-                    modifier = Modifier.padding(start = 6.dp, top = 6.dp).semantics { heading() },
-                )
+                Entrance("details-title", 4, seen) {
+                    Text(
+                        stringResource(R.string.details_title),
+                        style = Rosa.type.label,
+                        color = Rosa.colors.inkSoft,
+                        modifier = Modifier.padding(start = 6.dp, top = 6.dp).semantics { heading() },
+                    )
+                }
             }
-            item(key = "details") { DetailsGrid(forecast, forecast.momentAt(now), zoneFormat) }
-            item(key = "footer") { Footer(forecast, now, zoneFormat, onRefresh) }
+            item(key = "details") { Entrance("details", 5, seen) { DetailsGrid(forecast, forecast.momentAt(now), zoneFormat) } }
+            item(key = "footer") { Entrance("footer", 6, seen) { Footer(forecast, now, zoneFormat, onRefresh) } }
         }
         RefreshDrop(refresh, Modifier.align(Alignment.TopCenter).padding(top = top + 68.dp))
     }
@@ -347,12 +364,24 @@ private fun Hero(
     format: WeatherFormat,
     scrubHours: Float,
     probe: HeroProbe,
+    realSky: Boolean,
     modifier: Modifier,
 ) {
     val colors = Rosa.colors
+    val haptics = LocalHaptics.current
+    val scope = rememberCoroutineScope()
     val headline = remember(forecast, moment.epochSeconds / 60) { Headlines.pick(forecast, moment) }
     val shadow = if (colors.isLightSky) null else Shadow(Color.Black.copy(alpha = 0.28f), Offset(0f, 4f), 28f)
     val today = forecast.dayAt(moment.epochSeconds)
+    // Tap the numerals: they roll to how it feels, then back after a few seconds.
+    var feels by remember { mutableStateOf(false) }
+    LaunchedEffect(feels) {
+        if (feels) {
+            delay(4_500)
+            feels = false
+        }
+    }
+    val squash = remember { Animatable(0f) }
     Column(modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp)) {
         AnimatedVisibility(scrubHours > 0.5f, enter = fadeIn() + slideInVertically(), exit = fadeOut() + slideOutVertically()) {
             Text(
@@ -362,6 +391,9 @@ private fun Hero(
                 modifier = Modifier.padding(start = 6.dp),
             )
         }
+        AnimatedVisibility(feels, enter = fadeIn() + slideInVertically(), exit = fadeOut() + slideOutVertically()) {
+            Text(stringResource(R.string.feels_like_label), style = Rosa.type.label, color = colors.accent, modifier = Modifier.padding(start = 6.dp))
+        }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.onGloballyPositioned {
@@ -369,8 +401,9 @@ private fun Hero(
                 probe.report()
             },
         ) {
+            val feelsLabel = stringResource(R.string.feels_like_label)
             Odometer(
-                text = format.temperature(moment.temperature),
+                text = format.temperature(if (feels) moment.apparentTemperature else moment.temperature),
                 style = Rosa.type.hero.copy(shadow = shadow),
                 color = colors.ink,
                 modifier = Modifier
@@ -378,14 +411,27 @@ private fun Hero(
                     .onGloballyPositioned {
                         probe.numeral = it
                         probe.report()
+                    }
+                    .graphicsLayer {
+                        val v = squash.value
+                        scaleX = 1f + 0.05f * v
+                        scaleY = 1f - 0.04f * v
+                    }
+                    .clickable(remember { MutableInteractionSource() }, indication = null, onClickLabel = feelsLabel) {
+                        haptics?.tick()
+                        feels = !feels
+                        scope.launch {
+                            squash.snapTo(1f)
+                            squash.animateTo(0f, spring(dampingRatio = 0.35f, stiffness = 420f))
+                        }
                     },
             )
             Spacer(Modifier.weight(1f))
-            // Under a clear sky the real sun or moon takes this very spot (see HeroProbe), so the
-            // icon steps aside for it.
+            // Under a clear real sky the sun or moon takes this very spot (see HeroProbe), so the
+            // icon steps aside for it. Fixed moods draw no bodies: the icon always stays.
             val bodyUp = (if (moment.sun.elevation > -5) moment.sun.elevation else moment.moon.elevation) > 3
             val clearish = moment.condition == WeatherCondition.Clear || moment.condition == WeatherCondition.MostlyClear
-            if (!(clearish && bodyUp)) {
+            if (!(realSky && clearish && bodyUp)) {
                 WeatherGlyph(moment.condition, moment.isDay, Modifier.size(HERO_GLYPH), moonPhase = moment.moonPhase.phase, animated = true)
             }
         }
@@ -432,6 +478,7 @@ private fun PulsingDot(color: Color) {
 private fun TopBar(
     title: String,
     isCurrent: Boolean,
+    pageIndex: Int,
     pageCount: Int,
     pagePosition: () -> Float,
     onOpenPlaces: () -> Unit,
@@ -446,12 +493,24 @@ private fun TopBar(
                 contentDescription = stringResource(R.string.cd_places),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 11.dp),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (isCurrent) {
-                        RosaIconView(RosaIcon.Location, colors.ink, size = 15.dp)
-                        Spacer(Modifier.width(6.dp))
+                // The name rolls up or down with the swipe direction instead of cutting.
+                AnimatedContent(
+                    targetState = Triple(pageIndex, title, isCurrent),
+                    transitionSpec = {
+                        val forward = targetState.first >= initialState.first
+                        (slideInVertically(RosaMotion.gelOffset) { if (forward) it else -it } + fadeIn(tween(220))) togetherWith
+                            (slideOutVertically(RosaMotion.gelOffset) { if (forward) -it else it } + fadeOut(tween(160))) using
+                            SizeTransform(clip = true)
+                    },
+                    label = "city",
+                ) { (_, name, current) ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (current) {
+                            RosaIconView(RosaIcon.Location, colors.ink, size = 15.dp)
+                            Spacer(Modifier.width(6.dp))
+                        }
+                        Text(name, style = Rosa.type.headline, color = colors.ink, maxLines = 1, modifier = Modifier.semantics { heading() })
                     }
-                    Text(title, style = Rosa.type.headline, color = colors.ink, maxLines = 1, modifier = Modifier.semantics { heading() })
                 }
             }
             Spacer(Modifier.weight(1f))
@@ -472,18 +531,49 @@ private fun TopBar(
 @Composable
 private fun BarIcon(icon: RosaIcon, description: String, onClick: () -> Unit) {
     val haptics = LocalHaptics.current
+    val hop = rememberHop()
     Box(
         Modifier
             .size(48.dp)
             .clickable(remember { MutableInteractionSource() }, indication = null, role = Role.Button, onClickLabel = description) {
                 haptics?.press()
+                hop.play()
                 onClick()
             }
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
-        RosaIconView(icon, Rosa.colors.ink, size = 21.dp)
+        RosaIconView(icon, Rosa.colors.ink, size = 21.dp, modifier = Modifier.hop(hop))
     }
+}
+
+/**
+ * Cards rise into place one after another the first time a city is shown — once per visit, not
+ * on every scroll back.
+ */
+@Composable
+private fun Entrance(key: String, order: Int, seen: MutableSet<String>, content: @Composable () -> Unit) {
+    val motion = LocalMotionEnabled.current
+    val animate = remember { motion && seen.add(key) }
+    if (!animate) {
+        content()
+        return
+    }
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        delay(order * 70L)
+        progress.animateTo(1f, RosaMotion.gel())
+    }
+    Box(
+        Modifier.graphicsLayer {
+            val p = progress.value
+            alpha = p.coerceIn(0f, 1f)
+            translationY = (1f - p) * 36.dp.toPx()
+            val scale = 0.96f + 0.04f * p
+            scaleX = scale
+            scaleY = scale
+        },
+    ) { content() }
 }
 
 @Composable

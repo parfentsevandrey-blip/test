@@ -124,9 +124,10 @@ private fun StudioRoot(viewModel: WidgetStudioViewModel, onClose: () -> Unit, on
     val s = state ?: return
     val forecast = s.content.forecast ?: return
     val moment = remember(forecast, s.content.nowEpochSeconds / 60) { forecast.momentAt(s.content.nowEpochSeconds) }
-    val palette = remember(moment) { SkyPalette.of(moment.sun.elevation, moment.visual, moment.moonPhase.illumination) }
+    val appearance = s.settings.appearance
+    val palette = remember(moment, appearance) { SkyPalette.of(appearance, moment.sun.elevation, moment.visual, moment.moonPhase.illumination) }
     RosaEnvironment(s.settings, palette) {
-        SkyBackdrop(SkyParams.from(moment, palette), s.settings.effects, interactive = false) {
+        SkyBackdrop(SkyParams.from(moment, palette, appearance), s.settings.effects, interactive = false) {
             StudioScreen(s, viewModel, onClose, onSaved)
         }
     }
@@ -206,6 +207,9 @@ private fun StudioScreen(state: StudioState, viewModel: WidgetStudioViewModel, o
                 ToggleLine(stringResource(R.string.toggle_location), config.showLocation) { v -> viewModel.update { it.copy(showLocation = v) } }
                 ToggleLine(stringResource(R.string.toggle_feels), config.showFeelsLike) { v -> viewModel.update { it.copy(showFeelsLike = v) } }
                 ToggleLine(stringResource(R.string.toggle_art), config.showWeatherArt) { v -> viewModel.update { it.copy(showWeatherArt = v) } }
+                if (config.style != WidgetStyle.Paper) {
+                    ToggleLine(stringResource(R.string.toggle_glass_rim), config.glassRim) { v -> viewModel.update { it.copy(glassRim = v) } }
+                }
                 Label(stringResource(R.string.studio_tap))
                 val tapLabels = mapOf(WidgetTapAction.OpenApp to stringResource(R.string.tap_app), WidgetTapAction.Refresh to stringResource(R.string.tap_refresh))
                 GlassSegmented(WidgetTapAction.entries, config.tapAction, { t -> viewModel.update { it.copy(tapAction = t) } }, { tapLabels.getValue(it) })
