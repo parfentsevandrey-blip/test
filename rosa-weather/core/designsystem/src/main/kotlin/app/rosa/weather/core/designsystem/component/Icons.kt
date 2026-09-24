@@ -7,6 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -24,90 +29,133 @@ import app.rosa.weather.core.designsystem.glyph.WeatherGlyphPainter
 import app.rosa.weather.core.designsystem.motion.LocalAmbientClock
 import app.rosa.weather.core.model.WeatherCondition
 
-/** A small, consistent stroke icon set (rounded caps, 1.8 px on a 24 grid). */
+/**
+ * The app's icon set, drawn as glass: closed shapes get a translucent body, every line a crisp
+ * edge that dims slightly toward the bottom, and the pieces you touch (slider knobs, the search
+ * lens) carry a specular glint. Rounded caps on a 24-unit grid, legible from 14 to 28 dp.
+ */
 enum class RosaIcon { Search, Plus, Settings, Location, Close, Back, Widgets, Refresh, Check, Trash, Drag, Chevron, Sparkle }
 
 @Composable
 fun RosaIconView(icon: RosaIcon, tint: Color, modifier: Modifier = Modifier, size: Dp = 22.dp) {
     Canvas(modifier.size(size)) {
         val u = this.size.minDimension / 24f
-        val stroke = Stroke(width = 1.9f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        fun p(block: Path.() -> Unit) = drawPath(Path().apply(block), tint, style = stroke)
+        GlassIconScope(this, u, tint).draw(icon)
+    }
+}
+
+private class GlassIconScope(val scope: DrawScope, val u: Float, val tint: Color) {
+    private val line = Brush.verticalGradient(listOf(tint, tint.copy(alpha = tint.alpha * 0.78f)))
+    private val body = Brush.verticalGradient(listOf(tint.copy(alpha = tint.alpha * 0.3f), tint.copy(alpha = tint.alpha * 0.1f)))
+    private val stroke = Stroke(width = 1.9f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+    private fun p(x: Float, y: Float) = Offset(x * u, y * u)
+
+    private fun path(block: Path.() -> Unit) = Path().apply(block)
+
+    /** A translucent body with a lit edge. */
+    private fun glass(shape: Path, closed: Boolean = true) = with(scope) {
+        if (closed) drawPath(shape, body)
+        drawPath(shape, line, style = stroke)
+    }
+
+    private fun lines(vararg segments: Pair<Offset, Offset>) = with(scope) {
+        segments.forEach { (a, b) -> drawLine(line, a, b, stroke.width, StrokeCap.Round) }
+    }
+
+    private fun glint(at: Offset, r: Float = 1.05f) = with(scope) {
+        drawCircle(Color.White.copy(alpha = 0.85f), r * u, at)
+    }
+
+    /** A small glass orb: bright core, tinted body, crisp ring, glint. */
+    private fun orb(center: Offset, r: Float) = with(scope) {
+        drawCircle(
+            Brush.radialGradient(listOf(Color.White.copy(alpha = 0.95f), tint.copy(alpha = 0.85f)), center = center - Offset(r * 0.35f * u, r * 0.35f * u), radius = r * 1.3f * u),
+            r * u,
+            center,
+        )
+        drawCircle(tint, r * u, center, style = Stroke(1.1f * u))
+        drawCircle(Color.White.copy(alpha = 0.9f), r * 0.28f * u, center - Offset(r * 0.38f * u, r * 0.38f * u))
+    }
+
+    fun draw(icon: RosaIcon) = with(scope) {
         when (icon) {
             RosaIcon.Search -> {
-                drawCircle(tint, 7f * u, Offset(10.5f * u, 10.5f * u), style = stroke)
-                drawLine(tint, Offset(15.8f * u, 15.8f * u), Offset(20.5f * u, 20.5f * u), stroke.width, StrokeCap.Round)
+                glass(path { addOval(Rect(p(4f, 4f), p(17f, 17f))) })
+                // The lens catches the light.
+                drawArc(Color.White.copy(alpha = 0.75f), 200f, 60f, false, p(6.8f, 6.8f), Size(7.4f * u, 7.4f * u), style = Stroke(1.2f * u, cap = StrokeCap.Round))
+                drawLine(line, p(15.6f, 15.6f), p(20.3f, 20.3f), 2.5f * u, StrokeCap.Round)
             }
-            RosaIcon.Plus -> {
-                drawLine(tint, Offset(12f * u, 5f * u), Offset(12f * u, 19f * u), stroke.width, StrokeCap.Round)
-                drawLine(tint, Offset(5f * u, 12f * u), Offset(19f * u, 12f * u), stroke.width, StrokeCap.Round)
-            }
+            RosaIcon.Plus -> lines(p(12f, 5f) to p(12f, 19f), p(5f, 12f) to p(19f, 12f))
             RosaIcon.Settings -> {
-                // Three sliders: calmer than a gear and readable at 20 dp.
-                listOf(6f to 15f, 12f to 8f, 18f to 13f).forEach { (y, knob) ->
-                    drawLine(tint, Offset(4f * u, y * u), Offset(20f * u, y * u), stroke.width, StrokeCap.Round)
-                    drawCircle(tint, 2.4f * u, Offset(knob * u, y * u))
+                // Three tracks with glass knobs — calmer than a gear and readable at 20 dp.
+                listOf(6f to 15.5f, 12f to 8.5f, 18f to 13.5f).forEach { (y, knob) ->
+                    drawLine(tint.copy(alpha = tint.alpha * 0.55f), p(4f, y), p(20f, y), 1.7f * u, StrokeCap.Round)
+                    orb(p(knob, y), 2.6f)
                 }
             }
-            RosaIcon.Location -> p {
-                moveTo(20f * u, 4f * u)
-                lineTo(12.5f * u, 20f * u)
-                lineTo(11f * u, 13f * u)
-                lineTo(4f * u, 11.5f * u)
-                close()
+            RosaIcon.Location -> {
+                glass(
+                    path {
+                        moveTo(20f * u, 4f * u)
+                        lineTo(12.5f * u, 20f * u)
+                        lineTo(11f * u, 13f * u)
+                        lineTo(4f * u, 11.5f * u)
+                        close()
+                    },
+                )
+                glint(p(16.6f, 7.6f), 0.8f)
             }
-            RosaIcon.Close -> {
-                drawLine(tint, Offset(6f * u, 6f * u), Offset(18f * u, 18f * u), stroke.width, StrokeCap.Round)
-                drawLine(tint, Offset(18f * u, 6f * u), Offset(6f * u, 18f * u), stroke.width, StrokeCap.Round)
-            }
-            RosaIcon.Back -> p {
-                moveTo(15f * u, 5f * u)
-                lineTo(8f * u, 12f * u)
-                lineTo(15f * u, 19f * u)
-            }
-            RosaIcon.Chevron -> p {
-                moveTo(9f * u, 5f * u)
-                lineTo(16f * u, 12f * u)
-                lineTo(9f * u, 19f * u)
-            }
+            RosaIcon.Close -> lines(p(6f, 6f) to p(18f, 18f), p(18f, 6f) to p(6f, 18f))
+            RosaIcon.Back -> glass(path { moveTo(15f * u, 5f * u); lineTo(8f * u, 12f * u); lineTo(15f * u, 19f * u) }, closed = false)
+            RosaIcon.Chevron -> glass(path { moveTo(9f * u, 5f * u); lineTo(16f * u, 12f * u); lineTo(9f * u, 19f * u) }, closed = false)
             RosaIcon.Widgets -> {
-                listOf(Offset(4f, 4f), Offset(13f, 4f), Offset(4f, 13f)).forEach {
-                    drawRoundRect(
-                        tint, Offset(it.x * u, it.y * u), androidx.compose.ui.geometry.Size(7f * u, 7f * u),
-                        androidx.compose.ui.geometry.CornerRadius(2.2f * u), style = stroke,
-                    )
+                // Four glass tiles, one of them round.
+                listOf(Offset(3.8f, 3.8f), Offset(13.2f, 3.8f), Offset(3.8f, 13.2f)).forEach { o ->
+                    glass(path { addRoundRect(RoundRect(Rect(p(o.x, o.y), Size(7f * u, 7f * u)), CornerRadius(2.3f * u))) })
+                    glint(p(o.x + 1.9f, o.y + 1.9f), 0.7f)
                 }
-                drawCircle(tint, 3.6f * u, Offset(16.5f * u, 16.5f * u), style = stroke)
+                glass(path { addOval(Rect(p(13.2f, 13.2f), Size(7f * u, 7f * u))) })
+                glint(p(15.1f, 15.1f), 0.7f)
             }
             RosaIcon.Refresh -> {
-                drawArc(tint, -60f, 290f, false, Offset(5f * u, 5f * u), androidx.compose.ui.geometry.Size(14f * u, 14f * u), style = stroke)
-                p {
-                    moveTo(19.5f * u, 4.5f * u)
-                    lineTo(19f * u, 9f * u)
-                    lineTo(14.5f * u, 8.2f * u)
-                }
+                drawArc(line, -60f, 290f, false, p(5f, 5f), Size(14f * u, 14f * u), style = stroke)
+                drawPath(
+                    path {
+                        moveTo(20.3f * u, 3.8f * u)
+                        lineTo(19.6f * u, 9.6f * u)
+                        lineTo(13.9f * u, 8.6f * u)
+                        close()
+                    },
+                    tint,
+                )
             }
-            RosaIcon.Check -> p {
-                moveTo(5f * u, 12.5f * u)
-                lineTo(10f * u, 17.5f * u)
-                lineTo(19f * u, 6.5f * u)
-            }
+            RosaIcon.Check -> glass(path { moveTo(5f * u, 12.5f * u); lineTo(10f * u, 17.5f * u); lineTo(19f * u, 6.5f * u) }, closed = false)
             RosaIcon.Trash -> {
-                p {
-                    moveTo(5f * u, 7f * u); lineTo(19f * u, 7f * u)
-                    moveTo(9.5f * u, 7f * u); lineTo(10f * u, 4.5f * u); lineTo(14f * u, 4.5f * u); lineTo(14.5f * u, 7f * u)
-                    moveTo(6.5f * u, 7f * u); lineTo(7.5f * u, 19.5f * u); lineTo(16.5f * u, 19.5f * u); lineTo(17.5f * u, 7f * u)
+                lines(p(4.5f, 7f) to p(19.5f, 7f))
+                drawPath(path { moveTo(9.5f * u, 7f * u); lineTo(10f * u, 4.5f * u); lineTo(14f * u, 4.5f * u); lineTo(14.5f * u, 7f * u) }, line, style = stroke)
+                glass(
+                    path {
+                        moveTo(6.5f * u, 7f * u)
+                        lineTo(7.5f * u, 19.5f * u)
+                        lineTo(16.5f * u, 19.5f * u)
+                        lineTo(17.5f * u, 7f * u)
+                    },
+                )
+                glint(p(9f, 9.6f), 0.7f)
+            }
+            RosaIcon.Drag -> lines(p(6f, 8f) to p(18f, 8f), p(6f, 12f) to p(18f, 12f), p(6f, 16f) to p(18f, 16f))
+            RosaIcon.Sparkle -> {
+                val star = path {
+                    moveTo(12f * u, 3f * u)
+                    quadraticTo(12f * u, 12f * u, 21f * u, 12f * u)
+                    quadraticTo(12f * u, 12f * u, 12f * u, 21f * u)
+                    quadraticTo(12f * u, 12f * u, 3f * u, 12f * u)
+                    quadraticTo(12f * u, 12f * u, 12f * u, 3f * u)
+                    close()
                 }
-            }
-            RosaIcon.Drag -> listOf(8f, 12f, 16f).forEach { y ->
-                drawLine(tint, Offset(6f * u, y * u), Offset(18f * u, y * u), stroke.width, StrokeCap.Round)
-            }
-            RosaIcon.Sparkle -> p {
-                moveTo(12f * u, 3f * u)
-                quadraticTo(12f * u, 12f * u, 21f * u, 12f * u)
-                quadraticTo(12f * u, 12f * u, 12f * u, 21f * u)
-                quadraticTo(12f * u, 12f * u, 3f * u, 12f * u)
-                quadraticTo(12f * u, 12f * u, 12f * u, 3f * u)
+                drawPath(star, Brush.radialGradient(listOf(Color.White, tint.copy(alpha = tint.alpha * 0.55f)), center = p(12f, 12f), radius = 9f * u))
+                drawPath(star, line, style = Stroke(1.2f * u, join = StrokeJoin.Round))
             }
         }
     }

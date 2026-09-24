@@ -1,14 +1,8 @@
 package app.rosa.weather.core.designsystem.component
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -56,7 +50,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
@@ -287,37 +280,6 @@ fun <T> GlassSegmented(
             }
         }
     }
-}
-
-/**
- * Numbers that roll like a mechanical counter when they change — each character slides in the
- * direction of change.
- */
-@Composable
-fun Odometer(text: String, style: TextStyle, color: Color, modifier: Modifier = Modifier) {
-    var previous by remember { mutableStateOf(text) }
-    val increasing = remember(text) { compareNumeric(text, previous) >= 0 }
-    LaunchedEffect(text) { previous = text }
-    Row(modifier) {
-        text.forEachIndexed { i, ch ->
-            AnimatedContent(
-                targetState = ch,
-                transitionSpec = {
-                    val dir = if (increasing) 1 else -1
-                    (slideInVertically(RosaMotion.gelOffset) { h -> dir * h / 2 } + fadeIn()) togetherWith
-                        (slideOutVertically(RosaMotion.gelOffset) { h -> -dir * h / 2 } + fadeOut())
-                },
-                label = "digit$i",
-            ) { c ->
-                Text(c.toString(), style = style, color = color, maxLines = 1)
-            }
-        }
-    }
-}
-
-private fun compareNumeric(a: String, b: String): Int {
-    fun parse(s: String) = s.replace('−', '-').filter { it.isDigit() || it == '-' }.toIntOrNull() ?: 0
-    return parse(a).compareTo(parse(b))
 }
 
 /**

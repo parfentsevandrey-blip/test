@@ -235,7 +235,7 @@ class WidgetRenderer(private val context: Context) {
         val size = type.fitSize(text, box.w * 0.96f, 10f, box.h * 0.9f) { type.numerals(it, s.palette.ink) }
         val p = type.numerals(size, s.palette.ink)
         val baseline = box.y + box.h / 2 + WidgetType.capHeight(p) / 2
-        WidgetType.draw(canvas, text, box.x + box.w / 2, baseline, p, align = Paint.Align.CENTER, shadow = s.shadow)
+        numerals(canvas, text, box.x + box.w / 2, baseline, p, s, Paint.Align.CENTER)
         if (box.w >= 44 && box.h >= 44) {
             val g = min(box.w, box.h) * 0.34f
             glyph(canvas, s, RectF(box.right - g, box.y - g * 0.1f, box.right + g * 0.1f, box.y + g))
@@ -265,7 +265,7 @@ class WidgetRenderer(private val context: Context) {
         val size = type.fitSize(text, box.w, 14f, ((tempBottom - tempTop) * 1.05f).coerceAtLeast(14f)) { type.numerals(it, s.palette.ink) }
         val p = type.numerals(size, s.palette.ink)
         val baseline = tempBottom - (tempBottom - tempTop - WidgetType.capHeight(p)) / 2 - 2 * k
-        WidgetType.draw(canvas, text, box.x - size * 0.03f, baseline, p, shadow = s.shadow)
+        numerals(canvas, text, box.x - size * 0.03f, baseline, p, s)
 
         lines.forEachIndexed { i, (line, style) ->
             val paint = paintFor(style, 12.5f * k, s)
@@ -285,7 +285,7 @@ class WidgetRenderer(private val context: Context) {
         val p = type.numerals(size, s.palette.ink)
         val tempX = box.x + g + 2 * k
         val baseline = box.y + box.h / 2 + WidgetType.capHeight(p) / 2
-        val tempW = WidgetType.draw(canvas, text, tempX, baseline, p, shadow = s.shadow)
+        val tempW = numerals(canvas, text, tempX, baseline, p, s)
         if (!block.showCondition) {
             statusMark(canvas, s, box.right, box.y + 6 * k)
             return
@@ -337,7 +337,7 @@ class WidgetRenderer(private val context: Context) {
         val size = type.fitSize(text, box.w - g - 6 * k, 18f, (available * 1.1f).coerceAtMost(104 * k)) { type.numerals(it, s.palette.ink) }
         val p = type.numerals(size, s.palette.ink)
         val baseline = tempTop + available / 2 + WidgetType.capHeight(p) / 2
-        WidgetType.draw(canvas, text, box.x - size * 0.035f, baseline, p, shadow = s.shadow)
+        numerals(canvas, text, box.x - size * 0.035f, baseline, p, s)
 
         lines.forEachIndexed { i, (line, style) ->
             val paint = paintFor(style, if (style == TextStyle.Primary) 14f * k else 12.5f * k, s)
@@ -349,6 +349,19 @@ class WidgetRenderer(private val context: Context) {
                 WidgetType.draw(canvas, line, box.x, tempBottom + (i + 1) * lineH - 4 * k, paint, box.w, shadow = s.shadow)
             }
         }
+    }
+
+    /** The big temperature: glass where the style allows, flat ink otherwise. Returns its width. */
+    private fun numerals(canvas: Canvas, text: String, x: Float, baseline: Float, paint: TextPaint, s: Scene, align: Paint.Align = Paint.Align.LEFT): Float {
+        val glass = s.palette.glass ?: return WidgetType.draw(canvas, text, x, baseline, paint, align = align, shadow = s.shadow)
+        val width = paint.measureText(text)
+        val left = when (align) {
+            Paint.Align.LEFT -> x
+            Paint.Align.CENTER -> x - width / 2
+            Paint.Align.RIGHT -> x - width
+        }
+        GlassNumerals.draw(canvas, text, left, baseline, paint, glass, strongShadow = s.shadow)
+        return width
     }
 
     private enum class TextStyle { Primary, Secondary, Accent }

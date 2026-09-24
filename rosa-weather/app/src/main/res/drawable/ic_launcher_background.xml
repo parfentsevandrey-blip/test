@@ -12,12 +12,16 @@
             </gradient>
         </aapt:attr>
     </path>
-    <path android:pathData="M54,108m-60,0a60,26 0,1 1,120 0a60,26 0,1 1,-120 0">
-        <aapt:attr name="android:fillColor">
-            <gradient android:type="radial" android:centerX="54" android:centerY="108" android:gradientRadius="60">
-                <item android:offset="0" android:color="#66FFD29A" />
-                <item android:offset="1" android:color="#00FFD29A" />
-            </gradient>
-        </aapt:attr>
-    </path>
+    <!-- The last light of the sun below the horizon; a scaled circle so it fades out on every side. -->
+    <group android:pivotX="54" android:pivotY="108" android:scaleY="0.5">
+        <path android:pathData="M54,108m-64,0a64,64 0,1 1,128 0a64,64 0,1 1,-128 0">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="radial" android:centerX="54" android:centerY="108" android:gradientRadius="64">
+                    <item android:offset="0" android:color="#73FFD29A" />
+                    <item android:offset="0.5" android:color="#29FFC29A" />
+                    <item android:offset="1" android:color="#00FFC29A" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
 </vector>

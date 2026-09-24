@@ -89,7 +89,6 @@ import app.rosa.weather.R
 import app.rosa.weather.core.designsystem.component.GlassButton
 import app.rosa.weather.core.designsystem.component.GlassSurface
 import app.rosa.weather.core.designsystem.component.LiquidPageIndicator
-import app.rosa.weather.core.designsystem.component.Odometer
 import app.rosa.weather.core.designsystem.component.RosaIcon
 import app.rosa.weather.core.designsystem.component.RosaIconView
 import app.rosa.weather.core.designsystem.component.hop
@@ -97,6 +96,7 @@ import app.rosa.weather.core.designsystem.component.rememberHop
 import app.rosa.weather.core.designsystem.component.WeatherGlyph
 import app.rosa.weather.core.designsystem.format.WeatherFormat
 import app.rosa.weather.core.designsystem.glass.GlassStyle
+import app.rosa.weather.core.designsystem.glass.GlassText
 import app.rosa.weather.core.designsystem.haptics.LocalHaptics
 import app.rosa.weather.core.designsystem.motion.LocalAmbientClock
 import app.rosa.weather.core.designsystem.motion.LocalMotionEnabled
@@ -402,10 +402,13 @@ private fun Hero(
             },
         ) {
             val feelsLabel = stringResource(R.string.feels_like_label)
-            Odometer(
+            // The number itself is liquid glass: the sky refracts through it and values melt.
+            GlassText(
                 text = format.temperature(if (feels) moment.apparentTemperature else moment.temperature),
-                style = Rosa.type.hero.copy(shadow = shadow),
+                fontSize = Rosa.type.hero.fontSize,
                 color = colors.ink,
+                // Smoky glass over pale skies needs a denser tint than milky glass over deep ones.
+                tintStrength = if (colors.isLightSky) 0.48f else 0.36f,
                 modifier = Modifier
                     .semantics { liveRegion = LiveRegionMode.Polite }
                     .onGloballyPositioned {

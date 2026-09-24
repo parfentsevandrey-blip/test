@@ -9,7 +9,13 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import app.rosa.weather.core.designsystem.component.RosaEnvironment
 import app.rosa.weather.core.designsystem.component.SkyBackdrop
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.graphics.Color
+import app.rosa.weather.core.designsystem.component.RosaIcon
+import app.rosa.weather.core.designsystem.component.RosaIconView
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -131,6 +137,28 @@ class ScreenGalleryTest {
             }
         }
         capture("settings-appearance", doc = false)
+    }
+
+    /** Every UI icon at 16, 22 and 28 dp, in light ink on night and dark ink on day. */
+    @Test
+    fun iconSheet() {
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            Column {
+                listOf(Color(0xFF141A3A) to Color(0xFFFFFBF5), Color(0xFFDDE7F7) to Color(0xFF1B2030)).forEach { (background, ink) ->
+                    Column(Modifier.fillMaxWidth().background(background).padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        listOf(16.dp, 22.dp, 28.dp).forEach { size ->
+                            RosaIcon.entries.chunked(7).forEach { row ->
+                                Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                                    row.forEach { RosaIconView(it, ink, size = size) }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        capture("icons", doc = false)
     }
 
     /** 17:40, the sun low in the west. */

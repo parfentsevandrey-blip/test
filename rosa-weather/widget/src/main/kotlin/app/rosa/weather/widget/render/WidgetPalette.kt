@@ -55,6 +55,8 @@ data class WidgetPalette(
     val glyphTone: WeatherGlyphPainter.Tone,
     val textShadow: Boolean,
     val sky: SkyPalette,
+    /** How the big temperature is drawn; null draws it as flat ink (Paper is printed, not glass). */
+    val glass: GlassInk?,
 ) {
     companion object {
         fun resolve(
@@ -90,6 +92,33 @@ data class WidgetPalette(
                 WidgetAccent.Dynamic -> if (dark) dynamic.tertiary else dynamic.accentMid
                 WidgetAccent.Mono -> ink
             }
+            // What the glass numerals refract: the sky behind the pane, or the wallpaper's tones.
+            val refract = when {
+                config.accent == WidgetAccent.Mono -> Argb(ink).lerp(if (dark) Argb.hex(0x40485C) else Argb.hex(0x8A93A6), 0.6f)
+                tonal -> Argb(dynamic.accentMid)
+                else -> sky.zenith
+            }
+            val glass = when {
+                paper -> null
+                // Clear crystal: a white body whose lower edges take on the colour behind it.
+                dark -> GlassInk(
+                    top = withAlpha(Argb(ink).lerp(refract, 0.04f).value, 0.97f),
+                    bottom = withAlpha(Argb(ink).lerp(refract, 0.22f).value, 0.9f),
+                    rim = 0xFFFFFFFF.toInt(),
+                    foot = withAlpha(refract.lerp(Argb(ink), 0.3f).value, 0.6f),
+                    shadow = 0x5A050815,
+                    sheen = 0,
+                )
+                // Smoked glass: a translucent body, light along its upper edges, depth along the lower.
+                else -> GlassInk(
+                    top = withAlpha(ink, 0.84f),
+                    bottom = withAlpha(Argb(ink).lerp(refract, 0.3f).value, 0.7f),
+                    rim = 0xD8FFFFFF.toInt(),
+                    foot = withAlpha(Argb(ink).lerp(Argb.hex(0x000000), 0.4f).value, 0.5f),
+                    shadow = withAlpha(ink, 0.2f),
+                    sheen = 0x3CFFFFFF,
+                )
+            }
             return WidgetPalette(
                 isDark = dark,
                 ink = ink,
@@ -104,6 +133,7 @@ data class WidgetPalette(
                 },
                 textShadow = config.style == WidgetStyle.Clear || (config.style == WidgetStyle.Sky && dark),
                 sky = sky,
+                glass = glass,
             )
         }
 
