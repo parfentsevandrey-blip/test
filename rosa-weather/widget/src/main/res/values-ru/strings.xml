@@ -77,6 +77,63 @@
     <string name="toggle_forecast_days">Погода в днях</string>
     <string name="toggle_events">События из ваших календарей</string>
     <string name="events_permission_hint">Чтобы показать события, Росе нужен доступ к календарям.</string>
-    <string name="toggle_live_season">Живые снег, листья и лепестки</string>
+    <string name="toggle_live_season">Живая сцена недели</string>
     <string name="style_season">Сезон</string>
+
+    <!-- The pictures of the 52 weeks of the year, in order: the calendar says which one it shows. -->
+    <string-array name="calendar_weeks">
+        <item>Рождество</item>
+        <item>Мороз и солнце</item>
+        <item>Крещенские морозы</item>
+        <item>Вечер в избе</item>
+        <item>Лыжня</item>
+        <item>Метель</item>
+        <item>Февральская лазурь</item>
+        <item>Масленица</item>
+        <item>Капель</item>
+        <item>Мимоза</item>
+        <item>Грачи прилетели</item>
+        <item>Ручьи</item>
+        <item>Подснежники</item>
+        <item>Ледоход</item>
+        <item>Большая вода</item>
+        <item>Пасха</item>
+        <item>Дачный сезон</item>
+        <item>Весенняя гроза</item>
+        <item>Черёмуха</item>
+        <item>Сад в цвету</item>
+        <item>Сирень</item>
+        <item>Воздушный змей</item>
+        <item>Цветущий луг</item>
+        <item>Тополиный пух</item>
+        <item>Белые ночи</item>
+        <item>Сенокос</item>
+        <item>Иван Купала</item>
+        <item>Рожь</item>
+        <item>Море</item>
+        <item>На даче</item>
+        <item>Костёр в лесу</item>
+        <item>Звездопад</item>
+        <item>Яблочный Спас</item>
+        <item>Туман над озером</item>
+        <item>Подсолнухи</item>
+        <item>Журавли</item>
+        <item>Грибная пора</item>
+        <item>Золотая осень</item>
+        <item>Кафе у окна</item>
+        <item>Багрянец</item>
+        <item>Листопад в парке</item>
+        <item>Камин в замке</item>
+        <item>Осенний дождь</item>
+        <item>Первый иней</item>
+        <item>Предзимье</item>
+        <item>Вечер с книгой</item>
+        <item>Первый снег</item>
+        <item>Снегири</item>
+        <item>Каток</item>
+        <item>Деревня в снегах</item>
+        <item>Морозное окно</item>
+        <item>Новогодняя ночь</item>
+    </string-array>
+    <string name="calendar_week_scene">Неделя %1$d: %2$s</string>
 </resources>

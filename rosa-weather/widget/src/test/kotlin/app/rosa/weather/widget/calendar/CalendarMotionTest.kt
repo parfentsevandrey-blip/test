@@ -28,6 +28,7 @@ import app.rosa.weather.widget.render.WidgetContent
 import app.rosa.weather.widget.render.WidgetRenderRequest
 import app.rosa.weather.widget.render.WidgetRenderer
 import app.rosa.weather.widget.render.calendar.CalendarView
+import app.rosa.weather.widget.render.calendar.SeasonClock
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.time.LocalDate
@@ -42,7 +43,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * The season moving over the calendar as the launcher plays it: the widget's own RemoteViews
+ * Each week's motion over the calendar as the launcher plays it: the widget's own RemoteViews
  * inflated, its tiles run frame by frame. Frames land in `build/widget-gallery/`.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -53,30 +54,47 @@ class CalendarMotionTest {
     private val out = File("build/widget-gallery").apply { mkdirs() }
 
     @Test
-    fun leavesFallInOctober() = film("calendar-october", 10, LiveWeather.LeavesRed)
+    fun rainOnTheCafeWindow() = film("calendar-w39-rain", LocalDate.of(2026, 9, 25), LiveWeather.RainLight)
 
     @Test
-    fun petalsDriftInMay() = film("calendar-may", 5, LiveWeather.Petals)
+    fun leavesFallInThePark() = film("calendar-w41-leaves", LocalDate.of(2026, 10, 10), LiveWeather.LeavesOrange)
 
     @Test
-    fun firefliesGlowInJuly() = film("calendar-july", 7, LiveWeather.Fireflies)
+    fun sparksFlyFromTheHearth() = film("calendar-w42-embers", LocalDate.of(2026, 10, 16), LiveWeather.Embers)
 
     @Test
-    fun starsFallInAugust() = film("calendar-august", 8, LiveWeather.Night)
+    fun theBlizzardDrives() = film("calendar-w06-blizzard", LocalDate.of(2026, 2, 8), LiveWeather.Blizzard)
 
     @Test
-    fun frostGlintsInJanuary() = film("calendar-january", 1, LiveWeather.Frost)
+    fun theEavesDrip() = film("calendar-w09-drips", LocalDate.of(2026, 3, 1), LiveWeather.Drips)
 
     @Test
-    fun fluffDriftsInJune() = film("calendar-june", 6, LiveWeather.Fluff)
+    fun motesInTheSun() = film("calendar-w10-motes", LocalDate.of(2026, 3, 8), LiveWeather.Motes)
 
-    private fun film(name: String, month: Int, expected: LiveWeather) {
+    @Test
+    fun rooksWheel() = film("calendar-w11-birds", LocalDate.of(2026, 3, 15), LiveWeather.Birds)
+
+    @Test
+    fun lilacFalls() = film("calendar-w21-lilac", LocalDate.of(2026, 5, 24), LiveWeather.Lilac)
+
+    @Test
+    fun butterfliesOverTheMeadow() = film("calendar-w23-butterflies", LocalDate.of(2026, 6, 7), LiveWeather.Butterflies)
+
+    @Test
+    fun mistOnTheLake() = film("calendar-w34-mist", LocalDate.of(2026, 8, 23), LiveWeather.Mist)
+
+    @Test
+    fun starsFallInAugust() = film("calendar-w32-stars", LocalDate.of(2026, 8, 10), LiveWeather.Night)
+
+    @Test
+    fun lightsTwinkleOnNewYearsEve() = film("calendar-w52-twinkle", LocalDate.of(2026, 12, 29), LiveWeather.Twinkle)
+
+    private fun film(name: String, today: LocalDate, expected: LiveWeather) {
         val config = WidgetKind.Calendar.defaultConfig
-        assertThat(LiveWeather.ofSeason(config, month)).isEqualTo(expected)
+        assertThat(LiveWeather.ofSeason(config, SeasonClock.weekOf(today))).isEqualTo(expected)
         val (w, h) = 314f to 252f
         val radius = 22f
         val density = context.resources.displayMetrics.density
-        val today = LocalDate.of(2026, month, 16)
         val now = today.atTime(12, 0).toEpochSecond(ZoneOffset.ofHours(3))
         val content = WidgetContent("Москва", true, SampleForecast.create(SampleForecast.Scenario.SunnyMild, nowEpochSeconds = now), now, Units())
         val view = CalendarView(YearMonth.from(today), today, locale = Locale.forLanguageTag("ru-RU"))

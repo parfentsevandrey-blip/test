@@ -71,7 +71,8 @@ class LiveWeatherTest {
             val columns = weather.columns(w)
             val rows = weather.rows(h)
             assertThat(columns * weather.tileWidth).isAtLeast(w)
-            assertThat(rows * weather.tileHeight).isAtLeast(h)
+            // Birds keep to the sky along the top; everything else covers the widget.
+            if (weather.skyOnly) assertThat(rows).isEqualTo(1) else assertThat(rows * weather.tileHeight).isAtLeast(h)
             if (weather.isSingleTile) continue
             for (row in 0 until rows) for (column in 0 until columns) {
                 val tile = weather.tileAt(column, row)
@@ -108,8 +109,9 @@ class LiveWeatherTest {
                     a.setCurrentFraction(0.99999f)
                     val end = a.getAnimatedValue(holder.propertyName) as Float
                     val jump = end - start
+                    // Down or up: snow falls, sparks rise.
                     val tile = holder.propertyName == "translateX" && kotlin.math.abs(jump - 180f) < 0.1f ||
-                        holder.propertyName == "translateY" && (kotlin.math.abs(jump - 90f) < 0.1f || kotlin.math.abs(jump - 180f) < 0.1f)
+                        holder.propertyName == "translateY" && (kotlin.math.abs(jump - 90f) < 0.1f || kotlin.math.abs(kotlin.math.abs(jump) - 180f) < 0.1f)
                     val turns = holder.propertyName == "rotation" && kotlin.math.abs(jump) > 1f && kotlin.math.abs(jump / 360f - kotlin.math.round(jump / 360f)) < 0.001f
                     if (!tile && !turns) assertWithMessage("${context.resources.getResourceEntryName(id)} ${holder.propertyName}").that(jump).isWithin(0.02f).of(0f)
                 }

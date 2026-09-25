@@ -11,6 +11,7 @@ import app.rosa.weather.core.model.WidgetConfig
 import app.rosa.weather.core.model.WidgetFace
 import app.rosa.weather.core.model.WidgetStyle
 import app.rosa.weather.widget.R
+import app.rosa.weather.widget.render.calendar.WeekArt
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -30,6 +31,8 @@ enum class LiveWeather(
     private val sky: IntArray? = null,
     /** The calendar's seasons: taller tiles, a variant per column, the rows of a column joining. */
     private val seasonal: Boolean = false,
+    /** Only along the top, where the sky is: birds. */
+    val skyOnly: Boolean = false,
 ) {
     RainLight(intArrayOf(R.layout.motion_rain_light_a, R.layout.motion_rain_light_b, R.layout.motion_rain_light_c, R.layout.motion_rain_light_d)),
     RainHeavy(intArrayOf(R.layout.motion_rain_heavy_a, R.layout.motion_rain_heavy_b, R.layout.motion_rain_heavy_c, R.layout.motion_rain_heavy_d)),
@@ -65,6 +68,36 @@ enum class LiveWeather(
 
     /** June's poplar fluff, wandering on the air. */
     Fluff(intArrayOf(R.layout.motion_season_fluff_a, R.layout.motion_season_fluff_b, R.layout.motion_season_fluff_c, R.layout.motion_season_fluff_d), seasonal = true),
+
+    /** A blizzard: snow driven slantwise across in streaks and gusts. */
+    Blizzard(intArrayOf(R.layout.motion_season_blizzard), seasonal = true),
+
+    /** Sparks from a fire going up, flickering out as they rise: a hearth, a campfire, Maslenitsa. */
+    Embers(intArrayOf(R.layout.motion_season_embers_a, R.layout.motion_season_embers_b, R.layout.motion_season_embers_c, R.layout.motion_season_embers_d), seasonal = true),
+
+    /** Drops falling from the eaves and the trees in the thaw, each catching the sun. */
+    Drips(intArrayOf(R.layout.motion_season_drips_a, R.layout.motion_season_drips_b, R.layout.motion_season_drips_c, R.layout.motion_season_drips_d), seasonal = true),
+
+    /** Dust in the sunlight of a room, or pollen on a warm evening: motes drifting and glinting. */
+    Motes(intArrayOf(R.layout.motion_season_motes_a, R.layout.motion_season_motes_b, R.layout.motion_season_motes_c, R.layout.motion_season_motes_d), seasonal = true),
+
+    /** Birds wheeling in the sky: rooks, gulls, cranes — in the top row alone, where the sky is. */
+    Birds(intArrayOf(R.layout.motion_season_birds_a, R.layout.motion_season_birds_b, R.layout.motion_season_birds_c, R.layout.motion_season_birds_d), seasonal = true, skyOnly = true),
+
+    /** Lilac's small purple and white florets, coming down. */
+    Lilac(intArrayOf(R.layout.motion_season_lilac_a, R.layout.motion_season_lilac_b, R.layout.motion_season_lilac_c, R.layout.motion_season_lilac_d), seasonal = true),
+
+    /** Butterflies over a summer meadow, fluttering on their wandering ways. */
+    Butterflies(intArrayOf(R.layout.motion_season_butterflies_a, R.layout.motion_season_butterflies_b, R.layout.motion_season_butterflies_c, R.layout.motion_season_butterflies_d), seasonal = true),
+
+    /** Mist drifting slowly over water, thickening and thinning. */
+    Mist(intArrayOf(R.layout.motion_season_mist_a, R.layout.motion_season_mist_b, R.layout.motion_season_mist_c, R.layout.motion_season_mist_d), seasonal = true),
+
+    /** The orange of a maple alley in October, falling thick. */
+    LeavesOrange(intArrayOf(R.layout.motion_season_leaves_orange_a, R.layout.motion_season_leaves_orange_b, R.layout.motion_season_leaves_orange_c, R.layout.motion_season_leaves_orange_d), seasonal = true),
+
+    /** Lights twinkling: the New Year's garlands and the glints of the ice. */
+    Twinkle(intArrayOf(R.layout.motion_season_twinkle_a, R.layout.motion_season_twinkle_b, R.layout.motion_season_twinkle_c, R.layout.motion_season_twinkle_d), seasonal = true),
     ;
 
     /** One tile repeated everywhere: snow, whose pattern never shows a seam. */
@@ -88,7 +121,7 @@ enum class LiveWeather(
 
     fun columns(widthDp: Float): Int = ceil((widthDp + SLACK_DP) / tileWidth).toInt().coerceAtLeast(1)
 
-    fun rows(heightDp: Float): Int = ceil((heightDp + SLACK_DP) / tileHeight).toInt().coerceAtLeast(1)
+    fun rows(heightDp: Float): Int = if (skyOnly) 1 else ceil((heightDp + SLACK_DP) / tileHeight).toInt().coerceAtLeast(1)
 
     companion object {
         const val TILE_WIDTH_DP = 180f
@@ -111,27 +144,15 @@ enum class LiveWeather(
         }
 
         /**
-         * What moves over a calendar's painting of [month]: January's glinting frost, February's
-         * and November's snow, December's heavier, April's rain, May's petals, June's poplar fluff,
-         * the fireflies of July's dusk, August's falling stars, the leaves of September and October.
-         * March stands still, thawing.
+         * What moves over a calendar's picture of [week] (1..52): each week's own — the frost
+         * glinting in January's sun, the blizzard, sparks going up from the fire, drops from the
+         * eaves, rooks and cranes crossing the sky, petals, fluff, butterflies, fireflies, falling
+         * stars, mist on the water, the leaves of September and October, the New Year's lights.
          */
-        fun ofSeason(config: WidgetConfig, month: Int): LiveWeather? {
+        internal fun ofSeason(config: WidgetConfig, week: Int): LiveWeather? {
             if (config.face != WidgetFace.Calendar || !config.liveWeather) return null
             if (config.style != WidgetStyle.Sky && config.style != WidgetStyle.Glass) return null
-            return when (month) {
-                1 -> Frost
-                2, 11 -> SnowLight
-                12 -> SnowHeavy
-                4 -> RainLight
-                5 -> Petals
-                6 -> Fluff
-                7 -> Fireflies
-                8 -> Night
-                9 -> LeavesGold
-                10 -> LeavesRed
-                else -> null
-            }
+            return WeekArt.of(week).motion
         }
     }
 }

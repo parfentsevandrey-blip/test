@@ -77,6 +77,63 @@
     <string name="toggle_forecast_days">Weather in the days</string>
     <string name="toggle_events">Events from your calendars</string>
     <string name="events_permission_hint">To show events, Rosa needs access to your calendars.</string>
-    <string name="toggle_live_season">Snow, leaves and petals in motion</string>
+    <string name="toggle_live_season">The week\'s scene in motion</string>
     <string name="style_season">Season</string>
+
+    <!-- The pictures of the 52 weeks of the year, in order: the calendar says which one it shows. -->
+    <string-array name="calendar_weeks">
+        <item>Christmas night</item>
+        <item>Frost and sun</item>
+        <item>Epiphany frosts</item>
+        <item>An evening in the log house</item>
+        <item>The ski track</item>
+        <item>Blizzard</item>
+        <item>February azure</item>
+        <item>Maslenitsa</item>
+        <item>Drops from the eaves</item>
+        <item>Mimosa</item>
+        <item>The rooks are back</item>
+        <item>Streams</item>
+        <item>Snowdrops</item>
+        <item>The ice breaks</item>
+        <item>High water</item>
+        <item>Easter</item>
+        <item>The dacha opens</item>
+        <item>A storm in early May</item>
+        <item>Bird cherry</item>
+        <item>The orchard in blossom</item>
+        <item>Lilac</item>
+        <item>A kite</item>
+        <item>The meadow in flower</item>
+        <item>Poplar fluff</item>
+        <item>White nights</item>
+        <item>Haymaking</item>
+        <item>Ivan Kupala</item>
+        <item>Rye</item>
+        <item>The sea</item>
+        <item>At the dacha</item>
+        <item>A campfire in the woods</item>
+        <item>Falling stars</item>
+        <item>The apple feast</item>
+        <item>Mist on the lake</item>
+        <item>Sunflowers</item>
+        <item>Cranes</item>
+        <item>Mushroom time</item>
+        <item>Golden autumn</item>
+        <item>The café window</item>
+        <item>Crimson woods</item>
+        <item>Leaf fall in the park</item>
+        <item>A fire in the castle</item>
+        <item>Autumn rain</item>
+        <item>First hoarfrost</item>
+        <item>Before the winter</item>
+        <item>An evening with a book</item>
+        <item>First snow</item>
+        <item>Bullfinches</item>
+        <item>The skating rink</item>
+        <item>A village under snow</item>
+        <item>The frosted window</item>
+        <item>New Year\'s night</item>
+    </string-array>
+    <string name="calendar_week_scene">Week %1$d: %2$s</string>
 </resources>

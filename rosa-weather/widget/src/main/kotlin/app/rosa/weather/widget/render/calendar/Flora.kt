@@ -8,6 +8,7 @@ import android.graphics.Shader
 import androidx.core.graphics.withClip
 import androidx.core.graphics.withRotation
 import kotlin.math.PI
+import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.pow
@@ -49,11 +50,34 @@ internal fun Painting.limb(
     val bend = r.range(-0.3f, 0.3f)
     val ex = x + cos(angle) * length
     val ey = y + sin(angle) * length + droop * length * 0.25f
-    val s = stroke(color, max(0.12f, width))
-    path.reset()
-    path.moveTo(x, y)
-    path.quadTo(x + cos(angle + bend) * length * 0.55f, y + sin(angle + bend) * length * 0.55f, ex, ey)
-    canvas.drawPath(path, s)
+    val cx = x + cos(angle + bend) * length * 0.55f
+    val cy = y + sin(angle + bend) * length * 0.55f
+    val w0 = max(0.12f, width)
+    if (w0 <= 0.6f) {
+        // A twig: a plain line is enough.
+        path.reset()
+        path.moveTo(x, y)
+        path.quadTo(cx, cy, ex, ey)
+        canvas.drawPath(path, stroke(color, w0))
+    } else {
+        // A limb tapers from its full width at the fork to its twigs' width at the end.
+        val w1 = max(0.12f, width * 0.62f)
+        val a0 = atan2(cy - y, cx - x)
+        val a1 = atan2(ey - cy, ex - cx)
+        val am = atan2(ey - y, ex - x)
+        val h0 = w0 / 2f
+        val h1 = w1 / 2f
+        val hm = (w0 + w1) / 4f
+        path.reset()
+        path.moveTo(x - sin(a0) * h0, y + cos(a0) * h0)
+        path.quadTo(cx - sin(am) * hm, cy + cos(am) * hm, ex - sin(a1) * h1, ey + cos(a1) * h1)
+        path.lineTo(ex + sin(a1) * h1, ey - cos(a1) * h1)
+        path.quadTo(cx + sin(am) * hm, cy - cos(am) * hm, x + sin(a0) * h0, y - cos(a0) * h0)
+        path.close()
+        val p = pen(color)
+        canvas.drawPath(path, p)
+        canvas.drawCircle(ex, ey, h1, p)
+    }
     if (depth <= 0 || length < 0.9f) {
         tips += ex
         tips += ey
@@ -168,7 +192,9 @@ internal fun Painting.birch(
 /**
  * A broad-leaved tree — oak, maple, lime, apple: a trunk forking into limbs, and a crown of lit
  * leaf clumps ([foliage]) built round [crownW] × [crownH]; [blossom] flowers it (an orchard in May),
- * [variety] mixes autumn hues, [back] makes it glow where the light is behind it.
+ * [variety] mixes autumn hues, [back] makes it glow where the light is behind it. With fewer
+ * [leaves] the crown thins into scattered clumps and the limbs show through, reaching out and
+ * forking into twigs, until a bare tree stands in its full branching.
  */
 internal fun Painting.broadleaf(
     x: Float,
@@ -186,8 +212,10 @@ internal fun Painting.broadleaf(
     back: Float = 0f,
     lumps: Int = 16,
     holes: Float = 0.45f,
+    leaves: Float = 1f,
 ) {
     val r = Random(seed)
+    val bare = 1f - leaves.coerceIn(0f, 1f)
     val cy = ground - height + crownH * 0.5f
     val base = crownW * 0.07f
     val fork = cy + crownH * 0.18f
@@ -206,14 +234,22 @@ internal fun Painting.broadleaf(
         val bx = x + r.range(-base * 0.8f, base * 0.8f)
         canvas.drawLine(bx, ground, bx + r.range(-0.3f, 0.3f) * base, fork + (ground - fork) * r.range(0.1f, 0.6f), bark)
     }
-    // Limbs spreading into the crown, short enough to stay inside it.
+    // Limbs spreading into the crown, short enough to stay inside it while it is full; as the
+    // leaves go they show, longer and forking further, to the bare tree's whole reach.
     val tips = ArrayList<Float>()
-    repeat(4 + r.nextInt(3)) {
-        val a = -PI.toFloat() / 2f + r.range(-0.9f, 0.9f)
-        limb(x, fork, a, crownH * r.range(0.14f, 0.22f), base * 0.55f, 1, r, Tone.shade(trunk, -0.15f), 0.5f, tips)
+    val reach = 1f + bare * 1.5f
+    val forks = 1 + (bare * 2.6f).roundToInt()
+    repeat(4 + r.nextInt(3) + (bare * 3f).roundToInt()) {
+        val a = -PI.toFloat() / 2f + r.range(-0.9f, 0.9f) * (1f + bare * 0.15f)
+        limb(x, fork, a, crownH * r.range(0.14f, 0.22f) * reach, base * (0.55f - bare * 0.17f), forks, r, Tone.shade(trunk, -0.15f), 0.5f + bare * 0.08f, tips)
     }
-    val blobs = crownBlobs(x, cy, crownW, crownH, lumps, seed)
-    foliage(blobs, tones, seed, leaf, holes = holes, variety = variety, back = back, flowers = blossom, flowerAmount = blossomAmount)
+    if (leaves <= 0.02f) return
+    val pick = Random(seed + 101)
+    val blobs = crownBlobs(x, cy, crownW, crownH, lumps, seed).let { all ->
+        if (bare <= 0f) all else all.filterIndexed { i, _ -> pick.nextFloat() < leaves || (i == 0 && leaves > 0.6f) }
+            .map { Blob(it.x, it.y, it.rx * (0.55f + 0.45f * leaves), it.ry * (0.55f + 0.45f * leaves)) }
+    }
+    foliage(blobs, tones, seed, leaf, holes = holes + bare * 0.35f, variety = variety, back = back, flowers = blossom, flowerAmount = blossomAmount)
 }
 
 /**
@@ -297,6 +333,9 @@ internal enum class Bloom(val petals: Int, val petal: Int, val heart: Int, val r
     Poppy(5, Tone.of(0xE0332B), Tone.of(0x2A1A1A)),
     Clover(0, Tone.of(0xE58BC0), Tone.of(0xC0628F), round = true),
     Buttercup(5, Tone.of(0xFFE14A), Tone.of(0xE0A800)),
+
+    /** A dandelion gone to seed: a white puff. */
+    Puff(0, Tone.of(0xF4F4EE), Tone.of(0xD8D8CE), round = true),
 }
 
 /**

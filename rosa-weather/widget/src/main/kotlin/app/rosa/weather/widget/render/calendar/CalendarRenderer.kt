@@ -23,6 +23,7 @@ import app.rosa.weather.core.model.WeatherCondition
 import app.rosa.weather.core.model.WeatherVisual
 import app.rosa.weather.core.model.WidgetConfig
 import app.rosa.weather.core.model.WidgetStyle
+import app.rosa.weather.core.model.WidgetTheme
 import app.rosa.weather.core.model.momentAt
 import app.rosa.weather.widget.render.GlassBevel
 import app.rosa.weather.widget.render.GlassNumerals
@@ -103,6 +104,16 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
     private val background = WidgetBackground()
     private val glyphs = WeatherGlyphPainter()
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    /**
+     * The shared paint, reset: a gradient drawn with a paint that still holds the alpha of the
+     * last line drawn with it comes out that much fainter — glass that measured thick enough for
+     * its type would lie thin.
+     */
+    private fun clean(): Paint = paint.apply {
+        reset()
+        flags = Paint.ANTI_ALIAS_FLAG or Paint.DITHER_FLAG
+    }
     private val filter = Paint(Paint.FILTER_BITMAP_FLAG)
     private val exact = Paint()
     private val path = Path()
@@ -111,12 +122,19 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         val view = request.calendar ?: CalendarView.at(request.content.nowEpochSeconds)
         val w = request.widthDp
         val h = request.heightDp
-        val art = MonthArt.of(view.month.monthValue)
+        // The month's painting as it looks in the week shown: today's, or the middle of another month.
+        val art = WeekArt.of(SeasonClock.weekFor(view.month, view.today))
         val radius = request.cornerRadiusDp.coerceIn(0f, min(w, h) / 2f)
-        val look = Look.of(request, art)
+        // The dark theme: chosen, or the phone's in Auto — then the painting is by moonlight.
+        val night = when (request.config.theme) {
+            WidgetTheme.Dark -> true
+            WidgetTheme.Light -> false
+            WidgetTheme.Auto -> request.systemNight
+        }
+        val look = Look.of(request, art, night)
         @Suppress("DEPRECATION")
         val px = canvas.matrix.mapRadius(1f).coerceIn(0.25f, 6f)
-        val s = Sheet(px, request, view, art, look, w, h, radius)
+        val s = Sheet(px, request, view, art, look, w, h, radius, night)
         return when (Layout.of(w, h)) {
             Layout.TallTile -> tile(canvas, s, vertical = true)
             Layout.FlatTile -> tile(canvas, s, vertical = false)
@@ -142,6 +160,10 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
     }
 
     companion object {
+        /** How many pixels per dp the frost behind a sheet, and behind a whole pane of glass, is made at. */
+        private const val SHEET_FROST = 0.34f
+        private const val GLASS_FROST = 0.32f
+
         /**
          * Everything of the weather a calendar page of [view] shows at [sizes], as text: the
          * light of the sky (the palette follows day and night), today's weather where today is drawn
@@ -188,8 +210,8 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         }
         val inset = if (s.style == WidgetStyle.Sky) (min(s.w, s.h) * 0.035f).coerceIn(5f, 9f) else 0f
         val grid = RectF(inset, pictureH + headerH, s.w - inset, s.h - inset)
-        drawBackground(c, s, sheet = if (s.style == WidgetStyle.Sky) grid else null, picture = if (paperPicture) RectF(0f, 0f, s.w, pictureH) else null)
         val header = RectF(0f, pictureH, s.w, pictureH + headerH)
+        drawBackground(c, s, sheet = if (s.style == WidgetStyle.Sky) grid else null, picture = if (paperPicture) RectF(0f, 0f, s.w, pictureH) else null, header = header)
         val targets = header(c, s, header, compact = false)
         val pad = if (inset > 0f) (grid.width() * 0.025f).coerceIn(4f, 9f) else (s.w * 0.035f).coerceIn(6f, 12f)
         val days = grid(c, s, RectF(grid.left + pad, grid.top + pad * 0.6f, grid.right - pad, grid.bottom - pad * 0.8f), k)
@@ -237,7 +259,7 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         days.forEachIndexed { i, date ->
             val cx = area.left + cellW * (i + 0.5f)
             val weekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
-            val label = type.text(labelSize, if (weekend) s.look.weekend(0.9f) else s.look.inkSoft, 600)
+            val label = type.text(labelSize, if (weekend) s.inks.labelWeekend else s.inks.label, 600)
             WidgetType.draw(c, weekdayName(date.dayOfWeek, s.view.locale, narrow = cellW < 30f), cx, area.top + labelSize, label, align = Paint.Align.CENTER, shadow = s.look.shadow)
             val cy = area.top + labelSize + (area.height() - labelSize) * 0.38f
             val day = CalendarDay(date, inMonth = true, isToday = date == s.view.today, isWeekend = weekend)
@@ -278,16 +300,16 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         val maxTitle = box.width() - pad * 2 - buttonsW - 8f
         // With a subtitle, title and subtitle share the header as one block, centred.
         val maxSize = if (withSubtitle) (box.height() - subtitleSize * 1.7f) * 0.9f else box.height() * (if (compact) 0.62f else 0.6f)
-        val size = type.fitSize(title + year, maxTitle, 11f, maxSize * s.k) { type.numerals(it, s.look.headerInk, 600) }
-        val titlePaint = type.numerals(size, s.look.headerInk, 600)
+        val size = type.fitSize(title + year, maxTitle, 11f, maxSize * s.k) { type.numerals(it, s.header.ink, 600) }
+        val titlePaint = type.numerals(size, s.header.ink, 600)
         val cap = WidgetType.capHeight(titlePaint)
         val block = if (withSubtitle) cap + subtitleSize * 1.55f else cap
         val baseline = box.top + (box.height() - block) / 2f + cap
         val cy = baseline - cap / 2f
-        val titleW = WidgetType.draw(c, title, box.left + pad, baseline, titlePaint, maxTitle, shadow = s.look.headerShadow)
+        val titleW = WidgetType.draw(c, title, box.left + pad, baseline, titlePaint, maxTitle, shadow = s.header.shadow)
         if (year.isNotEmpty()) {
-            val yp = type.text(size * 0.48f, s.look.headerInkSoft, 500)
-            WidgetType.draw(c, year, box.left + pad + titleW, baseline, yp, shadow = s.look.headerShadow)
+            val yp = type.text(size * 0.48f, s.header.soft, 500)
+            WidgetType.draw(c, year, box.left + pad + titleW, baseline, yp, shadow = s.header.shadow)
         }
         if (withSubtitle) subtitle(c, s, box.left + pad, baseline + subtitleSize * 1.55f, subtitleSize, maxTitle + buttonsW)
 
@@ -312,16 +334,16 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
     /** Under the month: today's weekday and date, and its weather. */
     private fun subtitle(c: Canvas, s: Sheet, x: Float, baseline: Float, size: Float, maxWidth: Float) {
         if (!s.view.isCurrentMonth) return
-        val p = type.text(size, s.look.headerInkSoft, 500)
+        val p = type.text(size, s.header.soft, 500)
         val date = s.view.today
         val text = weekdayFull(date.dayOfWeek, s.view.locale) + ", " + date.dayOfMonth + " " + monthGenitive(date, s.view.locale)
-        val drawn = WidgetType.draw(c, text, x, baseline, p, maxWidth * 0.62f, shadow = s.look.headerShadow)
+        val drawn = WidgetType.draw(c, text, x, baseline, p, maxWidth * 0.62f, shadow = s.header.shadow)
         val moment = s.request.content.forecast?.momentAt(s.request.content.nowEpochSeconds) ?: return
         val g = size * 1.35f
         val gx = x + drawn + size * 0.8f
-        glyphs.draw(c, moment.condition, moment.isDay, RectF(gx, baseline - g * 0.8f, gx + g, baseline + g * 0.2f), WeatherGlyphPainter.Tone.Color, s.look.ink, moment.moonPhase.phase, onLightBackground = !s.look.dark)
+        glyphs.draw(c, moment.condition, moment.isDay, RectF(gx, baseline - g * 0.8f, gx + g, baseline + g * 0.2f), WeatherGlyphPainter.Tone.Color, s.header.ink, moment.moonPhase.phase, onLightBackground = !s.header.dark)
         val temp = s.format.temperature(moment.temperature)
-        WidgetType.draw(c, temp, gx + g + size * 0.25f, baseline, type.text(size, s.look.headerInk, 600), shadow = s.look.headerShadow)
+        WidgetType.draw(c, temp, gx + g + size * 0.25f, baseline, type.text(size, s.header.ink, 600), shadow = s.header.shadow)
     }
 
     /** Weekday names, then six weeks of days; returns where each day is. */
@@ -334,7 +356,7 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         val labelSize = min(labelH * 0.72f, cellW * 0.34f).coerceIn(7.5f, 12f) * k
         month.columns.forEachIndexed { i, day ->
             val weekend = day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY
-            val p = type.text(labelSize, if (weekend) s.look.weekend(0.85f) else s.look.inkSoft, 600)
+            val p = type.text(labelSize, if (weekend) s.inks.labelWeekend else s.inks.label, 600)
             val cx = area.left + weekCol + cellW * (i + 0.5f)
             WidgetType.draw(c, weekdayName(day, s.view.locale, narrow = cellW < 26f), cx, area.top + labelH * 0.72f, p, align = Paint.Align.CENTER, shadow = s.look.shadow)
         }
@@ -344,7 +366,7 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         month.weeks.forEachIndexed { row, week ->
             val top = area.top + labelH + row * cellH
             if (weekCol > 0f) {
-                val wp = type.text(min(labelSize, numberSize * 0.62f), s.look.inkFaint, 500)
+                val wp = type.text(min(labelSize, numberSize * 0.62f), s.inks.faint, 500)
                 WidgetType.draw(c, month.weekNumbers[row].toString(), area.left + weekCol * 0.45f, top + cellH * (if (showGlyphs) 0.4f else 0.5f) + wp.textSize * 0.36f, wp, align = Paint.Align.CENTER, shadow = s.look.shadow)
             }
             week.forEachIndexed { col, day ->
@@ -373,10 +395,10 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         }
         val past = day.inMonth && day.date.isBefore(s.view.today)
         val color = when {
-            !day.inMonth -> s.look.inkFaint
-            day.isWeekend -> s.look.weekend(if (past) 0.6f else 1f)
-            past -> WidgetPalette.withAlpha(s.look.ink, 0.62f)
-            else -> s.look.ink
+            !day.inMonth -> s.inks.faint
+            day.isWeekend -> if (past) s.inks.pastWeekend else s.inks.weekend
+            past -> s.inks.past
+            else -> s.inks.day
         }
         val p = type.text(size, color, if (day.inMonth) 600 else 500)
         WidgetType.draw(c, text, cx, cy + WidgetType.capHeight(p) / 2f + size * 0.02f, p, align = Paint.Align.CENTER, shadow = s.look.shadow && day.inMonth)
@@ -405,15 +427,15 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         if (date.isBefore(s.view.today)) return
         val condition = WeatherCondition.fromWmo(day.weatherCode)
         if (withTemperature) {
-            val tp = type.text((size * 0.62f).coerceIn(7f, 11f), s.look.inkSoft, 600)
+            val tp = type.text((size * 0.62f).coerceIn(7f, 11f), s.inks.label, 600)
             val temp = s.format.temperatureNumber(day.temperatureMax) + "°"
             val tw = tp.measureText(temp)
             val total = size + size * 0.12f + tw
             val left = cx - total / 2f
-            glyphs.draw(c, condition, true, RectF(left, cy - size / 2, left + size, cy + size / 2), s.look.glyphTone, s.look.ink, onLightBackground = !s.look.dark)
+            glyphs.draw(c, condition, true, RectF(left, cy - size / 2, left + size, cy + size / 2), s.look.glyphTone, s.inks.day, onLightBackground = !s.ground.dark)
             WidgetType.draw(c, temp, left + size * 1.12f, cy + WidgetType.capHeight(tp) / 2f, tp, shadow = s.look.shadow)
         } else {
-            glyphs.draw(c, condition, true, RectF(cx - size / 2, cy - size / 2, cx + size / 2, cy + size / 2), s.look.glyphTone, s.look.ink, onLightBackground = !s.look.dark)
+            glyphs.draw(c, condition, true, RectF(cx - size / 2, cy - size / 2, cx + size / 2, cy + size / 2), s.look.glyphTone, s.inks.day, onLightBackground = !s.ground.dark)
         }
     }
 
@@ -428,10 +450,10 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         val moment = s.request.content.forecast?.momentAt(s.request.content.nowEpochSeconds)
         // Straight on the painting the type is white over a shade, like a cover's; elsewhere the style's.
         val painted = s.style == WidgetStyle.Sky
-        val ink = if (painted) 0xFFFFFFFF.toInt() else s.look.headerInk
-        val soft = if (painted) 0xE6FFFFFF.toInt() else s.look.headerInkSoft
-        val dayInk = if (painted) Argb.White.lerp(Argb(s.look.accent), 0.25f).value else s.look.weekend(1f)
-        val shadow = painted || s.look.headerShadow
+        val ink = if (painted) 0xFFFFFFFF.toInt() else s.header.ink
+        val soft = if (painted) 0xEEFFFFFF.toInt() else s.header.soft
+        val dayInk = if (painted) Argb.White.lerp(Argb(s.look.accent), 0.2f).value else s.inks.weekend
+        val shadow = painted || s.header.shadow
         if (compact && box.width() > box.height() * 1.4f) {
             // Side by side: the big date, then the weekday over the month.
             val size = (box.height() * 0.62f).coerceAtMost(box.width() * 0.34f)
@@ -461,7 +483,7 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         if (weatherRoom > 0f && moment != null) {
             val g = (weatherRoom * 0.62f).coerceAtMost(26f)
             val y = box.bottom - pad - g / 2f
-            glyphs.draw(c, moment.condition, moment.isDay, RectF(box.left + pad, y - g / 2, box.left + pad + g, y + g / 2), WeatherGlyphPainter.Tone.Color, s.look.ink, moment.moonPhase.phase, onLightBackground = !painted && !s.look.headerDark)
+            glyphs.draw(c, moment.condition, moment.isDay, RectF(box.left + pad, y - g / 2, box.left + pad + g, y + g / 2), WeatherGlyphPainter.Tone.Color, ink, moment.moonPhase.phase, onLightBackground = !painted && !s.header.dark)
             val tp = type.text(g * 0.62f, ink, 600)
             WidgetType.draw(c, s.format.temperature(moment.temperature), box.left + pad + g * 1.15f, y + WidgetType.capHeight(tp) / 2f, tp, shadow = shadow)
         }
@@ -471,10 +493,10 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         // Glass numerals need calm glass behind them; on the painting they'd vanish into it.
         val ink = if (s.style == WidgetStyle.Sky) null else s.look.glassInk
         return if (ink != null) {
-            GlassNumerals.draw(c, text, left, baseline, paint, ink, strongShadow = s.look.headerShadow, light = s.light)
+            GlassNumerals.draw(c, text, left, baseline, paint, ink, strongShadow = s.header.shadow, light = s.light)
             paint.measureText(text)
         } else {
-            WidgetType.draw(c, text, left, baseline, paint, shadow = s.look.headerShadow)
+            WidgetType.draw(c, text, left, baseline, paint, shadow = s.header.shadow)
         }
     }
 
@@ -487,12 +509,19 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
      * frosted glass over the painting ([WidgetStyle.Glass]), or the weather widgets' own clear,
      * tonal and paper panes — paper with the painting as the page's picture ([picture]).
      */
-    private fun drawBackground(c: Canvas, s: Sheet, sheet: RectF?, picture: RectF?) {
+    private fun drawBackground(c: Canvas, s: Sheet, sheet: RectF?, picture: RectF?, header: RectF? = null) {
         val rect = RectF(0f, 0f, s.w, s.h)
         when (s.style) {
             WidgetStyle.Sky, WidgetStyle.Glass -> {
-                // Built once per month, size and look, then only drawn: the numbers are all that change.
-                val pane = CalendarArt.pane(paneKey(s, sheet), s.widthPx, s.heightPx, s.px) { pane(it, s, sheet) }
+                val key = paneKey(s, sheet)
+                // How thick the glass must be for the type, and how the header must stand on the
+                // painting: measured from the painting once, kept with the pane.
+                val tone = CalendarArt.tone(key) { measure(s, sheet, header) }
+                s.ground = tone.ground
+                s.inks = Inks.of(s.look.ink, s.look.accent, tone.ground)
+                s.header = tone.header ?: HeaderTone.on(s.inks, tone.ground, s.look.shadow)
+                // Built once per week, size and look, then only drawn: the numbers are all that change.
+                val pane = CalendarArt.pane(key, s.widthPx, s.heightPx, s.px) { pane(it, s, sheet, tone) }
                 c.drawBitmap(pane, null, rect, exact)
             }
             else -> {
@@ -509,34 +538,35 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
     /** Everything a [pane] depends on, so a kept one is only reused where it would look the same. */
     private fun paneKey(s: Sheet, sheet: RectF?): String = buildString {
         fun f(v: Float) = (v * 10f).roundToInt()
-        append(s.style.name).append("|m").append(s.art.month).append("|r").append(f(s.radius))
+        append(s.style.name).append("|w").append(s.art.week).append("|n").append(s.night).append("|r").append(f(s.radius))
+        // The painting under it is drawn and measured at this size and density.
+        append("|z").append(f(s.w)).append('x').append(f(s.h)).append('@').append(f(s.px))
         if (sheet != null) append("|s").append(f(sheet.left)).append(',').append(f(sheet.top)).append(',').append(f(sheet.right)).append(',').append(f(sheet.bottom))
         append("|o").append(f(s.request.config.opacity)).append("|g").append(s.request.config.glassRim)
-        append("|d").append(s.look.dark).append(s.look.headerDark).append("|l").append(s.request.live).append("|h").append(s.scrim)
+        append("|d").append(s.look.dark).append("|l").append(s.request.live).append("|h").append(s.scrim)
     }
 
     /**
      * A pane: the month's painting under a frosted sheet for the grid ([WidgetStyle.Sky]) or frosted
      * all over ([WidgetStyle.Glass]), with its glass edge.
      */
-    private fun pane(c: Canvas, s: Sheet, sheet: RectF?) {
+    private fun pane(c: Canvas, s: Sheet, sheet: RectF?, tone: PaneTone) {
         val rect = RectF(0f, 0f, s.w, s.h)
         val clip = Path().apply { addRoundRect(rect, s.radius, s.radius, Path.Direction.CW) }
-        val painting = CalendarArt.painting(context, s.art.month, s.widthPx, s.heightPx, s.px, s.request.live)
+        val painting = CalendarArt.painting(context, s.art, s.widthPx, s.heightPx, s.px, s.request.live, s.night)
         if (s.style == WidgetStyle.Sky) {
             c.withClip(clip) {
                 drawBitmap(painting, null, rect, filter)
-                if (s.scrim) headerScrim(this, s)
+                tone.header?.let { headerScrim(this, s, it) }
             }
-            if (sheet != null) frostedSheet(c, s, sheet, painting)
+            if (sheet != null) frostedSheet(c, s, sheet, painting, tone.alpha)
             if (s.request.config.glassRim) GlassBevel.draw(c, rect, s.radius, s.light, s.look.dark, strength = 0.8f)
         } else {
-            val frost = Frost.of(painting, s.px, 0.32f, 2)
+            val frost = Frost.of(painting, s.px, GLASS_FROST, 2)
             c.withClip(clip) {
                 drawBitmap(frost, null, rect, filter)
-                val opacity = s.request.config.opacity.coerceIn(0.15f, 1f)
-                val tint = if (s.look.dark) s.art.zenith.lerp(Argb.hex(0x0B0F1C), 0.55f) else Argb.hex(0xF4F6FB)
-                paint.shader = LinearGradient(0f, 0f, 0f, s.h, tint.withAlpha(opacity * 0.5f).value, tint.withAlpha(opacity * 0.62f).value, Shader.TileMode.CLAMP)
+                val tint = Argb(glassTint(s))
+                clean().shader = LinearGradient(0f, 0f, 0f, s.h, tint.withAlpha(tone.alpha).value, tint.withAlpha((tone.alpha + 0.08f).coerceAtMost(0.95f)).value, Shader.TileMode.CLAMP)
                 drawRect(rect, paint)
                 paint.shader = null
             }
@@ -545,17 +575,40 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         }
     }
 
+    /** The glass's tint: smoky, of the sky's own blue, under light type; milky under dark. */
+    private fun glassTint(s: Sheet): Int =
+        if (s.look.dark) s.art.zenith.lerp(Argb.hex(0x0A0E1A), 0.55f).value else Argb.hex(0xF4F6FB).value
+
+    /**
+     * Measures [s]'s painting for its type: how thick the glass over the grid ([sheet], or the
+     * whole pane of frosted glass) must lie for the days to keep their contrast however light or
+     * busy the picture behind is — never thinner than the opacity chosen — and, where the header
+     * stands on the painting, which type and how much shade under it.
+     */
+    private fun measure(s: Sheet, sheet: RectF?, header: RectF?): PaneTone {
+        val painting = CalendarArt.painting(context, s.art, s.widthPx, s.heightPx, s.px, s.request.live, s.night)
+        val sky = s.style == WidgetStyle.Sky
+        val scale = if (sky) SHEET_FROST else GLASS_FROST
+        val frost = Frost.of(painting, s.px, scale, 2)
+        val opacity = s.request.config.opacity.coerceIn(if (sky) 0.3f else 0.15f, 1f)
+        val least = opacity * (if (sky) (if (s.look.dark) 0.34f else 0.3f) else 0.5f)
+        val (alpha, ground) = Backing.under(frost, scale, sheet ?: RectF(0f, 0f, s.w, s.h), glassTint(s), s.look.ink, least)
+        frost.recycle()
+        val tone = if (sky && s.scrim && header != null) HeaderTone.over(painting, s.px, header, s.night) else null
+        return PaneTone(alpha, ground, tone)
+    }
+
     /** The grid's sheet: the painting behind it frosted and tinted, a glass edge round it. */
-    private fun frostedSheet(c: Canvas, s: Sheet, sheet: RectF, painting: Bitmap) {
+    private fun frostedSheet(c: Canvas, s: Sheet, sheet: RectF, painting: Bitmap, alpha: Float) {
         val radius = if (sheet.left <= 0f && sheet.top <= 0f) s.radius else (s.radius - (s.w - sheet.right)).coerceIn(8f, sheet.height() / 2f)
-        val frost = Frost.of(painting, s.px, 0.34f, 2)
+        val frost = Frost.of(painting, s.px, SHEET_FROST, 2)
         path.reset()
         path.addRoundRect(sheet, radius, radius, Path.Direction.CW)
         c.withClip(path) {
             drawBitmap(frost, null, RectF(0f, 0f, s.w, s.h), filter)
-            val opacity = s.request.config.opacity.coerceIn(0.3f, 1f)
-            val tint = if (s.look.dark) s.art.zenith.lerp(Argb.hex(0x0A0E1A), 0.5f) else Argb.White
-            paint.shader = LinearGradient(0f, sheet.top, 0f, sheet.bottom, tint.withAlpha(opacity * (if (s.look.dark) 0.34f else 0.3f)).value, tint.withAlpha(opacity * (if (s.look.dark) 0.46f else 0.44f)).value, Shader.TileMode.CLAMP)
+            // As thick as the type needs over this picture: a touch more towards the foot for depth.
+            val tint = Argb(glassTint(s))
+            clean().shader = LinearGradient(0f, sheet.top, 0f, sheet.bottom, tint.withAlpha(alpha).value, tint.withAlpha((alpha + 0.08f).coerceAtMost(0.95f)).value, Shader.TileMode.CLAMP)
             drawRect(sheet, paint)
             paint.shader = null
         }
@@ -563,24 +616,41 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         GlassBevel.draw(c, sheet, radius, s.light, s.look.dark, strength = 0.9f)
     }
 
-    /** Under today's date over the painting: a shade rising from the foot, so the glass digits read. */
+    /**
+     * Under today's date over the painting: a shade rising from the foot, dense enough — measured
+     * over the picture there — for the white type in each part of the panel to read.
+     */
     private fun dateScrim(c: Canvas, s: Sheet, box: RectF) {
-        val color = if (s.style == WidgetStyle.Sky || s.look.headerDark) Argb.hex(0x0A0E1C).withAlpha(0.62f) else Argb.White.withAlpha(0.6f)
+        val painting = CalendarArt.painting(context, s.art, s.widthPx, s.heightPx, s.px, s.request.live, s.night)
+        val night = 0xFF0A0E1C.toInt()
+        val soft = 0xEEFFFFFF.toInt() or 0xFF000000.toInt()
+        val split = box.top + box.height() * 0.45f
+        val top = Backing.shade(painting, s.px, RectF(box.left, box.top, box.right, split), night, soft, least = 0.2f, most = 0.72f)
+        val foot = Backing.shade(painting, s.px, RectF(box.left, split, box.right, box.bottom), night, soft, least = 0.45f, most = 0.8f)
+        val color = Argb(night)
         path.reset()
         path.addRoundRect(RectF(0f, 0f, s.w, s.h), s.radius, s.radius, Path.Direction.CW)
         c.withClip(path) {
-            paint.shader = LinearGradient(0f, box.bottom, 0f, box.top, intArrayOf(color.value, color.withAlpha(color.alpha / 255f * 0.7f).value, color.withAlpha(color.alpha / 255f * 0.35f).value), floatArrayOf(0f, 0.6f, 1f), Shader.TileMode.CLAMP)
+            clean().shader = LinearGradient(0f, box.bottom, 0f, box.top, intArrayOf(color.withAlpha(foot).value, color.withAlpha(max(foot * 0.7f, top)).value, color.withAlpha(top).value), floatArrayOf(0f, 0.55f, 1f), Shader.TileMode.CLAMP)
             drawRect(box, paint)
             paint.shader = null
         }
     }
 
-    /** Over a bright sky the header's type gets a soft shade to stand on, over a pale one a veil. */
-    private fun headerScrim(c: Canvas, s: Sheet) {
-        val h = (s.h * 0.34f).coerceAtMost(110f)
-        val color = if (s.look.headerDark) Argb.hex(0x0A0E1C).withAlpha(0.28f) else Argb.White.withAlpha(0.3f)
-        paint.shader = LinearGradient(0f, 0f, 0f, h, color.value, 0, Shader.TileMode.CLAMP)
-        c.drawRect(0f, 0f, s.w, h, paint)
+    /**
+     * The header's type gets what it needs to stand on the painting: a shade under light type, a
+     * veil under dark — only as dense as this sky needs — over the header, fading out below it.
+     */
+    private fun headerScrim(c: Canvas, s: Sheet, tone: HeaderTone) {
+        val bottom = (s.h * 0.24f).coerceIn(34f, 80f)
+        val end = bottom + 18f
+        val color = Argb(tone.shade)
+        clean().shader = LinearGradient(
+            0f, 0f, 0f, end,
+            intArrayOf(color.withAlpha(tone.scrim).value, color.withAlpha(tone.scrim * 0.9f).value, color.withAlpha(0f).value),
+            floatArrayOf(0f, bottom / end, 1f), Shader.TileMode.CLAMP,
+        )
+        c.drawRect(0f, 0f, s.w, end, paint)
         paint.shader = null
     }
 
@@ -591,7 +661,7 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         val r = (s.radius - inset).coerceIn(4f, 16f)
         path.reset()
         path.addRoundRect(frame, r, r, Path.Direction.CW)
-        val picture = CalendarArt.painting(context, s.art.month, max(1, (frame.width() * s.px).roundToInt()), max(1, (frame.height() * s.px).roundToInt()), s.px, live = false)
+        val picture = CalendarArt.painting(context, s.art, max(1, (frame.width() * s.px).roundToInt()), max(1, (frame.height() * s.px).roundToInt()), s.px, live = false, night = s.night)
         c.withClip(path) { drawBitmap(picture, null, frame, filter) }
         paint.shader = null
         paint.style = Paint.Style.STROKE
@@ -604,7 +674,7 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
     /** Today's bead: a drop of the season's colour, lit from above, with a crisp rim. */
     private fun bead(c: Canvas, cx: Float, cy: Float, r: Float, color: Int) {
         val base = Argb(color or 0xFF000000.toInt())
-        paint.shader = RadialGradient(cx, cy + r * 0.25f, r * 1.6f, intArrayOf(0x33000000, 0), null, Shader.TileMode.CLAMP)
+        clean().shader = RadialGradient(cx, cy + r * 0.25f, r * 1.6f, intArrayOf(0x33000000, 0), null, Shader.TileMode.CLAMP)
         c.drawCircle(cx, cy + r * 0.2f, r * 1.25f, paint)
         paint.shader = RadialGradient(cx - r * 0.3f, cy - r * 0.45f, r * 1.5f, intArrayOf(base.lerp(Argb.White, 0.35f).value, base.value, base.lerp(Argb.Black, 0.18f).value), floatArrayOf(0f, 0.55f, 1f), Shader.TileMode.CLAMP)
         c.drawCircle(cx, cy, r, paint)
@@ -629,16 +699,18 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         val r = box.width() / 2f
         val cx = box.centerX()
         val cy = box.centerY()
-        val fill = if (s.look.headerDark) Argb.White.withAlpha(0.16f) else Argb.White.withAlpha(0.5f)
+        val fill = if (s.header.dark) Argb.White.withAlpha(0.18f) else Argb.White.withAlpha(0.55f)
         paint.shader = null
         paint.color = fill.value
         c.drawCircle(cx, cy, r, paint)
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = 0.8f
-        paint.shader = LinearGradient(0f, cy - r, 0f, cy + r, Argb.White.withAlpha(if (s.look.headerDark) 0.55f else 0.9f).value, Argb.White.withAlpha(0.08f).value, Shader.TileMode.CLAMP)
+        // Opaque, so the gradient's own alphas hold rather than the fill's.
+        paint.alpha = 255
+        paint.shader = LinearGradient(0f, cy - r, 0f, cy + r, Argb.White.withAlpha(if (s.header.dark) 0.55f else 0.9f).value, Argb.White.withAlpha(0.08f).value, Shader.TileMode.CLAMP)
         c.drawCircle(cx, cy, r - 0.4f, paint)
         paint.shader = null
-        paint.color = s.look.headerInk
+        paint.color = s.header.ink
         paint.strokeWidth = (r * 0.13f).coerceIn(1.3f, 2f)
         paint.strokeCap = Paint.Cap.ROUND
         paint.strokeJoin = Paint.Join.ROUND
@@ -694,11 +766,13 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         val pxPerDp: Float,
         val request: WidgetRenderRequest,
         val view: CalendarView,
-        val art: MonthArt,
+        val art: WeekArt,
         val look: Look,
         val w: Float,
         val h: Float,
         val radius: Float,
+        /** The dark theme: the painting by moonlight under smoky glass. */
+        val night: Boolean,
     ) {
         val style: WidgetStyle get() = request.config.style
 
@@ -709,6 +783,13 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
 
         /** Whether the painting under the header gets a shade for the type (a pane with a header). */
         var scrim: Boolean = true
+
+        /** What the grid's type stands on — measured once the painting is at hand — and its inks. */
+        var ground: Backing = look.ground
+        var inks: Inks = Inks.of(look.ink, look.accent, look.ground)
+
+        /** The header's type: on the ground like the grid, or measured over the painting. */
+        var header: HeaderTone = HeaderTone.on(inks, ground, look.shadow)
         val k: Float get() = request.config.textScale
         val firstDay: DayOfWeek = CalendarMonth.firstDayFor(request.config.calendar.weekStart, view.locale)
         val light: WidgetLight = art.light(w, h)
@@ -732,59 +813,70 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
      */
     internal class Look(
         val palette: WidgetPalette,
+        /** Light type on dark: smoky glass, dark paper, a dark tonal pane, or the wallpaper. */
         val dark: Boolean,
         val ink: Int,
-        val inkSoft: Int,
-        val inkFaint: Int,
         val accent: Int,
         val shadow: Boolean,
-        val headerInk: Int,
-        val headerInkSoft: Int,
-        val headerShadow: Boolean,
-        /** The header's type is light, standing over a darker painting. */
-        val headerDark: Boolean,
         val glyphTone: WeatherGlyphPainter.Tone,
         val glassInk: app.rosa.weather.widget.render.GlassInk?,
+        /** What the type stands on where nothing needs measuring: paper, a tonal pane, the wallpaper. */
+        val ground: Backing,
     ) {
-        fun weekend(alpha: Float): Int = WidgetPalette.withAlpha(Argb(accent).lerp(Argb(ink), 0.2f).value, alpha)
-
         companion object {
-            fun of(request: WidgetRenderRequest, art: MonthArt): Look {
+            /**
+             * The theme: dark when chosen, or in Auto when the phone is in its dark theme — then the
+             * painting is by moonlight too ([night]). In Auto by day the glass follows the painting:
+             * smoky over a dark one, milky over a light one. Paper and tonal panes follow the theme;
+             * over the wallpaper the type is always light, with a shadow.
+             */
+            fun of(request: WidgetRenderRequest, art: WeekArt, night: Boolean): Look {
                 val light = Argb.hex(0xFFFBF5)
                 val darkInk = Argb.hex(0x1B2030)
+                val style = request.config.style
+                val dark = when (style) {
+                    WidgetStyle.Clear -> true
+                    WidgetStyle.Paper, WidgetStyle.Tonal -> night
+                    WidgetStyle.Sky, WidgetStyle.Glass -> night || (request.config.theme == WidgetTheme.Auto && art.dark)
+                }
                 val sky = SkyPalette(
                     zenith = art.zenith, horizon = art.horizon, glow = art.bodyColor, sun = art.bodyColor,
                     cloudLight = Argb.White, cloudShade = Argb.hex(0x8A93A6),
-                    ink = if (art.dark) light else darkInk,
-                    inkSoft = (if (art.dark) light else darkInk).withAlpha(0.72f),
+                    ink = if (dark) light else darkInk,
+                    inkSoft = (if (dark) light else darkInk).withAlpha(0.72f),
                     accent = art.accent, warm = art.accent, cool = art.zenith,
-                    brightness = if (art.dark) 0.15 else 0.6,
+                    brightness = if (dark) 0.15 else 0.6,
                 )
                 val daylight = request.content.forecast?.momentAt(request.content.nowEpochSeconds)?.isDay ?: !request.systemNight
-                val palette = WidgetPalette.resolve(request.config, sky, request.systemNight, isDaylight = daylight, dynamic = request.dynamic)
-                val style = request.config.style
-                // The header stands straight on the painting in these two styles.
-                val onPainting = style == WidgetStyle.Sky
-                val headerDark = if (onPainting) art.sky[0].luminance < 0.42 || art.dark else palette.isDark
-                val headerInk = if (onPainting) (if (headerDark) light.value else darkInk.value) else palette.ink
+                val themed = request.config.copy(theme = if (dark) WidgetTheme.Dark else WidgetTheme.Light)
+                val palette = WidgetPalette.resolve(themed, sky, request.systemNight, isDaylight = daylight, dynamic = request.dynamic)
                 val accent = when (request.config.accent) {
                     app.rosa.weather.core.model.WidgetAccent.Sky, app.rosa.weather.core.model.WidgetAccent.Temperature -> art.accent.value
                     else -> palette.accent
                 }
+                val dynamic = request.dynamic
+                val ground = when (style) {
+                    // Paper's gradient and the shade its vignette puts in the corners.
+                    WidgetStyle.Paper -> if (dark) Backing.between(0xFF26231F.toInt(), 0xFF14120F.toInt()) else Backing.between(0xFFF8F1E4.toInt(), 0xFFE0D2BA.toInt())
+                    WidgetStyle.Tonal -> if (dark) {
+                        Backing.between(Argb(dynamic.neutralDark).lerp(Argb(dynamic.accentDark), 0.35f).value, Argb(dynamic.accentDark).lerp(Argb(dynamic.neutralDark), 0.4f).value)
+                    } else {
+                        Backing.between(dynamic.accentLight, Argb(dynamic.neutralLight).lerp(Argb(dynamic.accentLight), 0.45f).value)
+                    }
+                    // Over the wallpaper nothing is known: a darkish one is assumed, the shadow does the rest.
+                    WidgetStyle.Clear -> Backing(0f, 0.12f, 0xFF26262C.toInt())
+                    // Measured once the painting is at hand; until then, the glass's own tone.
+                    WidgetStyle.Sky, WidgetStyle.Glass -> Backing.flat(if (dark) 0xFF1A2030.toInt() else 0xFFF0F2F6.toInt())
+                }
                 return Look(
                     palette = palette,
-                    dark = palette.isDark,
+                    dark = dark,
                     ink = palette.ink,
-                    inkSoft = palette.inkSoft,
-                    inkFaint = WidgetPalette.withAlpha(palette.ink, 0.34f),
                     accent = accent,
                     shadow = palette.textShadow,
-                    headerInk = headerInk,
-                    headerInkSoft = WidgetPalette.withAlpha(headerInk, 0.78f),
-                    headerShadow = onPainting || palette.textShadow,
-                    headerDark = headerDark,
                     glyphTone = palette.glyphTone,
                     glassInk = palette.glass,
+                    ground = ground,
                 )
             }
         }

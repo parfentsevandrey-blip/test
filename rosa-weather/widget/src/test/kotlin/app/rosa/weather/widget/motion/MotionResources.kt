@@ -124,7 +124,7 @@ internal object MotionResources {
      * May's apple petals fluttering, the fireflies of July's dusk and August's night, January's
      * glittering frost in the air, June's poplar fluff, and August's falling stars.
      */
-    enum class Season(val id: String, val seed: Int, val colors: List<String>) {
+    enum class Season(val id: String, val seed: Int, val colors: List<String>, val variants: Int = VARIANTS) {
         LeavesGold("season_leaves_gold", 91, listOf("#F6C443", "#E8A62E", "#FFD75E", "#D98E26", "#F2B53A")),
         LeavesRed("season_leaves_red", 97, listOf("#E8632B", "#F28C38", "#D24A2A", "#B8342A", "#F6B04A")),
         Petals("season_petals", 101, listOf("#FFFFFF", "#FFF4F7", "#FDE3EA", "#F9D0DC")),
@@ -133,12 +133,22 @@ internal object MotionResources {
         Glitter("season_glitter", 113, listOf("#FFFFFF", "#FFF6DC", "#E2ECFF")),
         Fluff("season_fluff", 127, listOf("#FFFFFF")),
         Meteors("season_meteors", 131, listOf("#FFFFFF", "#E4F7A8")),
+        Blizzard("season_blizzard", 137, listOf("#FFFFFF", "#EEF4FF"), variants = 1),
+        Embers("season_embers", 139, listOf("#FFF2C8", "#FFD27A", "#FFE8A0")),
+        Drips("season_drips", 149, listOf("#E4F0FC")),
+        Motes("season_motes", 151, listOf("#FFF4D0", "#FFE39A")),
+        Birds("season_birds", 157, listOf("#23232E")),
+        Lilac("season_lilac", 163, listOf("#C8A0E0", "#B88ADA", "#E8D8F4", "#FFFFFF")),
+        Butterflies("season_butterflies", 167, listOf("#F6F4EA", "#F29A3A", "#6A9AE8", "#F2D24A")),
+        Mist("season_mist", 173, listOf("#FFFFFF")),
+        LeavesOrange("season_leaves_orange", 179, listOf("#F28C38", "#F6A640", "#E8702A", "#FFB84A", "#D85A2A")),
+        Twinkle("season_twinkle", 181, listOf("gold", "red", "blue", "green", "white")),
     }
 
     const val SEASON_W = 180f
     const val SEASON_H = 180f
 
-    fun tileName(kind: Season, variant: Int) = "motion_${kind.id}_${'a' + variant}"
+    fun tileName(kind: Season, variant: Int) = if (kind.variants == 1) "motion_${kind.id}" else "motion_${kind.id}_${'a' + variant}"
 
     fun tileName(kind: Rain, variant: Int) = "motion_${kind.id}_${'a' + variant}"
 
@@ -164,23 +174,40 @@ internal object MotionResources {
         put("color/motion_glow_fluff.xml", radial(listOf(0f to "#F2FFFFFF", 0.35f to "#B3FFFFFF", 0.7f to "#33FFFFFF", 1f to "#00FFFFFF"), "A tuft of poplar fluff"))
         put("color/motion_glow_frost.xml", radial(listOf(0f to "#FFFFFFFF", 0.2f to "#99FFF6DC", 1f to "#00DDE8FF"), "A glint of frost in the air"))
         put("color/motion_meteor.xml", linear(listOf(0f to "#00CFE0FF", 0.7f to "#99E8F0FF", 1f to "#FFFFFFFF"), 0f, METEOR, "A falling star, faint at its tail"))
+        put("color/motion_glow_ember.xml", radial(listOf(0f to "#FFFFF4D0", 0.2f to "#CCFFC870", 0.5f to "#40FF8A30", 1f to "#00FF7020"), "A spark from the fire"))
+        put("color/motion_glow_mote.xml", radial(listOf(0f to "#FFFFF4D0", 0.3f to "#99FFD27A", 1f to "#00FFC860"), "A mote of dust in the sunlight"))
+        put("color/motion_glow_mist.xml", radial(listOf(0f to "#80FFF8F2", 0.5f to "#40FFF8F2", 1f to "#00FFF8F2"), "A wisp of mist"))
+        for ((name, color) in TWINKLE) {
+            put("color/motion_glow_twinkle_$name.xml", radial(listOf(0f to "#FFFFFFFF", 0.14f to "#F2$color", 0.42f to "#59$color", 1f to "#00$color"), "A light twinkling"))
+        }
         for (kind in Season.entries) {
-            repeat(VARIANTS) { variant ->
+            repeat(kind.variants) { variant ->
                 val name = tileName(kind, variant)
                 val tile = when (kind) {
-                    Season.LeavesGold, Season.LeavesRed -> leavesTile(kind, variant)
-                    Season.Petals -> petalsTile(kind, variant)
+                    Season.LeavesGold, Season.LeavesRed, Season.LeavesOrange -> leavesTile(kind, variant)
+                    Season.Petals, Season.Lilac -> petalsTile(kind, variant)
                     Season.Fireflies -> firefliesTile(kind, variant, top = 6f)
                     Season.FirefliesLow -> firefliesTile(kind, variant, top = SEASON_H * 0.55f)
                     Season.Glitter -> glitterTile(kind, variant)
                     Season.Fluff -> fluffTile(kind, variant)
                     Season.Meteors -> meteorsTile(kind, variant)
+                    Season.Blizzard -> blizzardTile(kind, variant)
+                    Season.Embers -> embersTile(kind, variant)
+                    Season.Drips -> dripsTile(kind, variant)
+                    Season.Motes -> motesTile(kind, variant)
+                    Season.Birds -> birdsTile(kind, variant)
+                    Season.Butterflies -> butterfliesTile(kind, variant)
+                    Season.Mist -> mistTile(kind, variant)
+                    Season.Twinkle -> twinkleTile(kind, variant)
                 }
                 put("drawable/$name.xml", tile)
                 put("layout/$name.xml", tileLayout(name, SEASON_W, SEASON_H))
             }
         }
     }
+
+    /** The New Year's lights: each colour's glow, by name. */
+    private val TWINKLE = listOf("gold" to "FFD56A", "red" to "FF7A5A", "blue" to "8AD0FF", "green" to "B8FF8A", "white" to "FFF4D8")
 
     // region Rain
 
@@ -585,11 +612,13 @@ internal object MotionResources {
     private fun leavesTile(kind: Season, variant: Int): String {
         val v = Vector()
         val rnd = Random(kind.seed * 101 + variant * 13 + 5)
-        val maple = kind == Season.LeavesRed
+        val maple = kind != Season.LeavesGold
+        // An alley of maples in October lets its leaves go thickest.
+        val thick = if (kind == Season.LeavesOrange) 2 else 0
         val layers = listOf(
-            Layer(4, 3f..3.8f, fall = 8f, sway = 5f, alpha = 0.75f),
-            Layer(3, 4.4f..5.6f, fall = 12f, sway = 8f, alpha = 0.92f),
-            Layer(2, 6.5f..8f, fall = 18f, sway = 11f, alpha = 0.96f),
+            Layer(4 + thick, 3f..3.8f, fall = 8f, sway = 5f, alpha = 0.75f),
+            Layer(3 + thick, 4.4f..5.6f, fall = 12f, sway = 8f, alpha = 0.92f),
+            Layer(2 + thick / 2, 6.5f..8f, fall = 18f, sway = 11f, alpha = 0.96f),
         )
         layers.forEachIndexed { layer, spec ->
             val fall = group("leaves$layer")
@@ -627,8 +656,12 @@ internal object MotionResources {
         return animatedVector(v, "Live ${kind.id.replace('_', ' ')}", SEASON_W, SEASON_H)
     }
 
-    /** Apple petals on the wind: pink at the heart, fluttering as they drift down, in three depths. */
+    /**
+     * Petals on the wind — the apple's, pink at the heart, or the lilac's florets — fluttering as
+     * they drift down, in three depths.
+     */
     private fun petalsTile(kind: Season, variant: Int): String {
+        val heart = if (kind == Season.Lilac) "#8A5AB8" else "#F29BB4"
         val v = Vector()
         val rnd = Random(kind.seed * 101 + variant * 13 + 5)
         val layers = listOf(
@@ -653,7 +686,7 @@ internal object MotionResources {
                     val name = "petal${layer}_${i}_$copy"
                     val body = group("${name}_t", scaleX = size, scaleY = size)
                         .add(path(PETAL, fill = color, fillAlpha = spec.alpha))
-                        .add(path(PETAL_HEART, fill = "#F29BB4", fillAlpha = 0.55f * spec.alpha))
+                        .add(path(PETAL_HEART, fill = heart, fillAlpha = 0.55f * spec.alpha))
                     fall.add(group(name, x, y - copy * SEASON_H).add(body))
                     val sideways = (0..12).map { k -> Key(k / 12f, x + spec.sway * sin(2 * PI.toFloat() * (k / 12f + phase))) }
                     val turning = listOf(Key(0f, base), Key(1f, base + spin * 360f))
@@ -807,6 +840,260 @@ internal object MotionResources {
         return animatedVector(v, "Live ${kind.id.replace('_', ' ')}", SEASON_W, SEASON_H)
     }
 
+    /**
+     * A blizzard: snow driven slantwise in three depths, the near flakes drawn out by their speed.
+     * One tile wrapping round all four edges, so tiles side by side and one above another join
+     * into one storm.
+     */
+    private fun blizzardTile(kind: Season, variant: Int): String {
+        val v = Vector()
+        // The same storm in every variant, so the columns join.
+        val rnd = Random(kind.seed * 101 + 5)
+        val layers = listOf(
+            Triple(16, 0.45f..0.8f, 1f),
+            Triple(9, 0.9f..1.4f, 1.6f),
+            Triple(4, 1.6f..2.3f, 2.4f),
+        )
+        layers.forEachIndexed { layer, (count, radius, pace) ->
+            val across = group("drift$layer")
+            val down = group("fall$layer").add(across)
+            repeat(count) { i ->
+                val x = rnd.nextFloat() * SEASON_W
+                val y = rnd.nextFloat() * SEASON_H
+                val r = rnd.range(radius)
+                val color = kind.colors[rnd.nextInt(kind.colors.size)]
+                val alpha = rnd.range(0.55f, 0.9f)
+                // A flake stretched along the wind, with a faint dark rim so it reads on pale glass.
+                for (cx in 0..1) for (cy in 0..1) {
+                    val px = x - cx * SEASON_W
+                    val py = y - cy * SEASON_H
+                    val g = group("flake${layer}_${i}_$cx$cy", px, py).attr("android:rotation", "24")
+                    g.add(path(ellipse(0f, 0f, r * (1.6f + layer * 0.6f), r), fill = INK, fillAlpha = 0.12f * alpha))
+                    g.add(path(ellipse(0f, 0f, r * (1.4f + layer * 0.6f), r * 0.8f), fill = color, fillAlpha = alpha))
+                    across.add(g)
+                }
+            }
+            v.body += down
+            v.animate("drift$layer", Anim(ms(SEASON_W / (70f * pace)), listOf(Ramp("translateX", 0f, SEASON_W))))
+            v.animate("fall$layer", Anim(ms(SEASON_H / (32f * pace)), listOf(Ramp("translateY", 0f, SEASON_H))))
+        }
+        return animatedVector(v, "Live ${kind.id.replace('_', ' ')}", SEASON_W, SEASON_H)
+    }
+
+    /**
+     * Sparks from a fire: rising in a wavering line, flaring and dimming as they go, winking out
+     * before they reach the top; each has a twin a tile below, so the rise loops without a seam.
+     */
+    private fun embersTile(kind: Season, variant: Int): String {
+        val v = Vector()
+        val rnd = Random(kind.seed * 101 + variant * 13 + 5)
+        val rise = group("rise")
+        repeat(12) { i ->
+            val sway = rnd.range(4f, 10f)
+            val x = rnd.range(sway + 6f, SEASON_W - sway - 6f)
+            val y = rnd.nextFloat() * SEASON_H
+            val size = rnd.range(2.2f, 4f)
+            val core = kind.colors[rnd.nextInt(kind.colors.size)]
+            val period = rnd.range(1.6f, 3.2f)
+            val phase = rnd.nextFloat()
+            val flicker = rnd.range(0.35f, 0.7f)
+            val beat = (0..8).map { k -> Key(k / 8f, (0.55f + 0.45f * sin(2 * PI.toFloat() * (k / 8f + phase))).coerceIn(0.1f, 1f)) }
+            for (copy in 0..1) {
+                val name = "spark${i}_$copy"
+                rise.add(
+                    group(name, x, y + copy * SEASON_H, scaleX = size, scaleY = size)
+                        .add(path(circle(0f, 0f, 1f), name = "${name}_glow", fill = "@color/motion_glow_ember", fillAlpha = 0.6f))
+                        .add(path(circle(0f, 0f, 0.2f), name = "${name}_core", fill = core, fillAlpha = 0.9f)),
+                )
+                val sideways = (0..12).map { k -> Key(k / 12f, x + sway * sin(2 * PI.toFloat() * (k / 12f + phase)) * (0.6f + 0.4f * cos(4 * PI.toFloat() * k / 12f))) }
+                v.animate(name, Anim(ms(period), listOf(Keys("translateX", sideways))))
+                v.animate("${name}_glow", Anim(ms(flicker), listOf(Keys("fillAlpha", beat.scaled(0.7f)))))
+                v.animate("${name}_core", Anim(ms(flicker), listOf(Keys("fillAlpha", beat))))
+            }
+        }
+        v.body += rise
+        v.animate("rise", Anim(ms(SEASON_H / 14f), listOf(Ramp("translateY", 0f, -SEASON_H))))
+        return animatedVector(v, "Live ${kind.id.replace('_', ' ')}", SEASON_W, SEASON_H)
+    }
+
+    /**
+     * The thaw's drops: each gathers, hangs, swells — then lets go, falling faster and faster
+     * with a glint of the sun in it, and is gone; each in its own time.
+     */
+    private fun dripsTile(kind: Season, variant: Int): String {
+        val v = Vector()
+        val rnd = Random(kind.seed * 101 + variant * 13 + 5)
+        repeat(7) { i ->
+            val x = rnd.range(8f, SEASON_W - 8f)
+            val y = rnd.range(6f, SEASON_H * 0.55f)
+            val size = rnd.range(1.9f, 2.8f)
+            val period = rnd.range(3.2f, 5.6f)
+            val at = rnd.nextFloat() * period * 0.5f
+            val drop = rnd.range(55f, 80f)
+            val name = "drip$i"
+            v.body += group(name, x, y).add(
+                group("${name}_s", scaleX = size, scaleY = size)
+                    .add(path(TEAR, name = "${name}_body", fill = kind.colors[0], fillAlpha = 0f, stroke = INK, strokeWidth = 0.22f, strokeAlpha = 0f))
+                    .add(path(circle(-0.3f, -0.9f, 0.22f), name = "${name}_glint", fill = WHITE, fillAlpha = 0f)),
+            )
+            // Hanging and swelling for most of a second, then falling as a stone falls.
+            val fallAt = 1.2f
+            val fall = loop(period, 0f, at to listOf(0f to 0f, fallAt to 0f, fallAt + 0.25f to drop * 0.3f, fallAt + 0.5f to drop, fallAt + 0.52f to 0f))
+            val show = loop(period, 0f, at to listOf(0f to 0f, 0.4f to 0.8f, fallAt + 0.3f to 0.8f, fallAt + 0.5f to 0f))
+            val swell = loop(period, 1f, at to listOf(0f to 1f, 0.2f to 0.5f, fallAt to 1.15f, fallAt + 0.1f to 1f))
+            v.animate(name, Anim(ms(period), listOf(Keys("translateY", fall.map { Key(it.fraction, y + it.value) }))))
+            v.animate("${name}_s", Anim(ms(period), listOf(Keys("scaleY", swell.scaled(size)), Keys("scaleX", swell.map { Key(it.fraction, size * (0.9f + it.value * 0.1f)) }))))
+            v.animate("${name}_body", Anim(ms(period), listOf(Keys("fillAlpha", show), Keys("strokeAlpha", show.scaled(0.55f)))))
+            v.animate("${name}_glint", Anim(ms(period), listOf(Keys("fillAlpha", show))))
+        }
+        return animatedVector(v, "Live ${kind.id.replace('_', ' ')}", SEASON_W, SEASON_H)
+    }
+
+    /** Dust in a sunbeam, pollen on a warm evening: motes wandering slowly, glinting as they turn. */
+    private fun motesTile(kind: Season, variant: Int): String {
+        val v = Vector()
+        val rnd = Random(kind.seed * 101 + variant * 13 + 5)
+        repeat(12) { i ->
+            val a = rnd.range(5f, 12f)
+            val b = rnd.range(4f, 9f)
+            val x0 = rnd.range(a + 6f, SEASON_W - a - 6f)
+            val y0 = rnd.range(b + 6f, SEASON_H - b - 6f)
+            val p = List(3) { rnd.nextFloat() * 2f * PI.toFloat() }
+            val period = rnd.range(14f, 24f)
+            val keys = 12
+            val xs = (0..keys).map { k -> Key(k / keys.toFloat(), x0 + a * sin(2 * PI.toFloat() * k / keys + p[0])) }
+            val ys = (0..keys).map { k -> Key(k / keys.toFloat(), y0 + b * sin(4 * PI.toFloat() * k / keys + p[1]) - b * 0.4f * cos(2 * PI.toFloat() * k / keys + p[2])) }
+            val size = rnd.range(2.2f, 3.6f)
+            val name = "mote$i"
+            v.body += group(name, x0, y0).add(
+                group("${name}_s", scaleX = size, scaleY = size)
+                    .add(path(circle(0f, 0f, 0.34f), fill = INK, fillAlpha = 0.12f))
+                    .add(path(circle(0f, 0f, 1f), name = "${name}_halo", fill = "@color/motion_glow_mote", fillAlpha = 0.5f))
+                    .add(path(circle(0f, 0f, 0.14f), name = "${name}_speck", fill = kind.colors[i % kind.colors.size], fillAlpha = 0.8f)),
+            )
+            v.animate(name, Anim(ms(period), listOf(Keys("translateX", xs), Keys("translateY", ys))))
+            val blink = rnd.range(2.4f, 4.8f)
+            val glint = loop(blink, 0.35f, rnd.nextFloat() * blink * 0.5f to listOf(0f to 0.35f, 0.3f to 1f, 0.9f to 0.35f))
+            v.animate("${name}_halo", Anim(ms(blink), listOf(Keys("fillAlpha", glint.scaled(0.8f)))))
+            v.animate("${name}_speck", Anim(ms(blink), listOf(Keys("fillAlpha", glint))))
+        }
+        return animatedVector(v, "Live ${kind.id.replace('_', ' ')}", SEASON_W, SEASON_H)
+    }
+
+    /**
+     * Birds high in the sky, for the top row alone: rooks, gulls or cranes wheeling on wide loops,
+     * beating their wings and gliding by turns.
+     */
+    private fun birdsTile(kind: Season, variant: Int): String {
+        val v = Vector()
+        val rnd = Random(kind.seed * 101 + variant * 13 + 5)
+        repeat(4) { i ->
+            val a = rnd.range(18f, 34f)
+            val b = rnd.range(6f, 12f)
+            val x0 = rnd.range(a + 10f, SEASON_W - a - 10f)
+            val y0 = rnd.range(b + 12f, 74f - b)
+            val period = rnd.range(16f, 26f)
+            val p = rnd.nextFloat() * 2f * PI.toFloat()
+            val dir = if (rnd.nextBoolean()) 1f else -1f
+            val size = rnd.range(4.4f, 6.2f)
+            val xs = (0..16).map { k -> Key(k / 16f, x0 + a * cos(dir * 2 * PI.toFloat() * k / 16f + p)) }
+            val ys = (0..16).map { k -> Key(k / 16f, y0 + b * sin(dir * 2 * PI.toFloat() * k / 16f + p)) }
+            val name = "bird$i"
+            v.body += group(name, x0, y0).add(
+                group("${name}_w", scaleX = size, scaleY = size)
+                    .add(path(WINGS, stroke = WHITE, strokeWidth = 0.55f, strokeAlpha = 0.18f, cap = true, join = true))
+                    .add(path(WINGS, stroke = kind.colors[0], strokeWidth = 0.3f, strokeAlpha = 0.85f, cap = true, join = true)),
+            )
+            v.animate(name, Anim(ms(period), listOf(Keys("translateX", xs), Keys("translateY", ys))))
+            // Beating, then gliding with the wings held level.
+            val beat = rnd.range(0.32f, 0.44f)
+            val flaps = 3 + rnd.nextInt(3)
+            val cycle = beat * flaps + rnd.range(1.4f, 2.6f)
+            val wing = mutableListOf<Key>()
+            for (k in 0 until flaps * 4) {
+                val t = k * beat / 4f
+                wing += Key(t / cycle, size * (if (k % 4 == 0 || k % 4 == 2) 0.35f else if (k % 4 == 1) 1f else -0.55f))
+            }
+            wing += Key(flaps * beat / cycle, size * 0.35f)
+            wing += Key(1f, size * 0.35f)
+            v.animate("${name}_w", Anim(ms(cycle), listOf(Keys("scaleY", wing))))
+        }
+        return animatedVector(v, "Live ${kind.id.replace('_', ' ')}", SEASON_W, SEASON_H)
+    }
+
+    /** Butterflies over a summer meadow: fluttering wings, wandering this way and that. */
+    private fun butterfliesTile(kind: Season, variant: Int): String {
+        val v = Vector()
+        val rnd = Random(kind.seed * 101 + variant * 13 + 5)
+        repeat(3) { i ->
+            val a = rnd.range(14f, 26f)
+            val b = rnd.range(8f, 16f)
+            val x0 = rnd.range(a + 10f, SEASON_W - a - 10f)
+            val y0 = rnd.range(SEASON_H * 0.3f + b, SEASON_H - b - 10f)
+            val p = List(4) { rnd.nextFloat() * 2f * PI.toFloat() }
+            val period = rnd.range(12f, 20f)
+            val keys = 16
+            val xs = (0..keys).map { k -> Key(k / keys.toFloat(), x0 + a * sin(2 * PI.toFloat() * k / keys + p[0]) + a * 0.3f * sin(6 * PI.toFloat() * k / keys + p[1])) }
+            val ys = (0..keys).map { k -> Key(k / keys.toFloat(), y0 + b * cos(2 * PI.toFloat() * k / keys + p[2]) + b * 0.5f * sin(8 * PI.toFloat() * k / keys + p[3])) }
+            val color = kind.colors[(i + variant) % kind.colors.size]
+            val size = rnd.range(4.6f, 6.2f)
+            val name = "butterfly$i"
+            v.body += group(name, x0, y0).add(
+                group("${name}_w", scaleX = size, scaleY = size)
+                    .add(path(BUTTERFLY, fill = INK, fillAlpha = 0.3f))
+                    .add(path(BUTTERFLY_WINGS, fill = color, fillAlpha = 0.95f))
+                    .add(path(BUTTERFLY_TIPS, fill = INK, fillAlpha = 0.55f)),
+            )
+            v.animate(name, Anim(ms(period), listOf(Keys("translateX", xs), Keys("translateY", ys))))
+            val beat = rnd.range(0.22f, 0.3f)
+            v.animate("${name}_w", Anim(ms(beat), listOf(Keys("scaleX", listOf(Key(0f, size), Key(0.5f, size * 0.18f), Key(1f, size))))))
+        }
+        return animatedVector(v, "Live ${kind.id.replace('_', ' ')}", SEASON_W, SEASON_H)
+    }
+
+    /** Mist over water: soft banks of it drifting to and fro, thickening and thinning. */
+    private fun mistTile(kind: Season, variant: Int): String {
+        val v = Vector()
+        val rnd = Random(kind.seed * 101 + variant * 13 + 5)
+        repeat(5) { i ->
+            val rx = rnd.range(40f, 64f)
+            val ry = rnd.range(11f, 18f)
+            val drift = rnd.range(10f, 18f)
+            val x0 = rnd.range(rx * 0.6f + drift, SEASON_W - rx * 0.6f - drift)
+            val y0 = rnd.range(SEASON_H * 0.35f, SEASON_H - ry)
+            val period = rnd.range(18f, 30f)
+            val p = rnd.nextFloat() * 2f * PI.toFloat()
+            val name = "mist$i"
+            v.body += group(name, x0, y0).add(group("${name}_s", scaleX = rx, scaleY = ry).add(path(circle(0f, 0f, 1f), name = "${name}_bank", fill = "@color/motion_glow_mist", fillAlpha = 0.6f)))
+            v.animate(name, Anim(ms(period), listOf(Keys("translateX", (0..12).map { k -> Key(k / 12f, x0 + drift * sin(2 * PI.toFloat() * k / 12f + p)) }))))
+            val breathe = rnd.range(8f, 14f)
+            v.animate("${name}_bank", Anim(ms(breathe), listOf(Keys("fillAlpha", (0..8).map { k -> Key(k / 8f, 0.7f + 0.3f * sin(2 * PI.toFloat() * k / 8f + p)) }))))
+        }
+        return animatedVector(v, "Live ${kind.id.replace('_', ' ')}", SEASON_W, SEASON_H)
+    }
+
+    /** The New Year's lights: soft round glows in gold, red, blue and green, twinkling in their own rhythms. */
+    private fun twinkleTile(kind: Season, variant: Int): String {
+        val v = Vector()
+        val rnd = Random(kind.seed * 101 + variant * 13 + 5)
+        repeat(11) { i ->
+            val x = rnd.range(8f, SEASON_W - 8f)
+            val y = rnd.range(8f, SEASON_H - 8f)
+            val size = rnd.range(3.2f, 7f)
+            val color = kind.colors[rnd.nextInt(kind.colors.size)]
+            val period = rnd.range(1.8f, 4.2f)
+            val at = rnd.nextFloat() * period * 0.6f
+            val name = "light$i"
+            v.body += group(name, x, y, scaleX = size, scaleY = size)
+                .add(path(circle(0f, 0f, 1f), name = "${name}_glow", fill = "@color/motion_glow_twinkle_$color", fillAlpha = 0.25f))
+            val twinkle = loop(period, 0.25f, at to listOf(0f to 0.25f, 0.25f to 0.95f, 0.5f to 0.7f, 0.9f to 0.25f))
+            v.animate("${name}_glow", Anim(ms(period), listOf(Keys("fillAlpha", twinkle))))
+            val drift = rnd.range(1.5f, 3f)
+            v.animate(name, Anim(ms(rnd.range(6f, 10f)), listOf(Keys("translateY", (0..8).map { k -> Key(k / 8f, y + drift * sin(2 * PI.toFloat() * k / 8f)) }))))
+        }
+        return animatedVector(v, "Live ${kind.id.replace('_', ' ')}", SEASON_W, SEASON_H)
+    }
+
     private class Layer(val count: Int, val sizes: ClosedFloatingPointRange<Float>, val fall: Float, val sway: Float, val alpha: Float)
 
     // endregion
@@ -832,6 +1119,18 @@ internal object MotionResources {
     private const val PETAL = "M-1,0C-1,-0.64 -0.2,-0.86 0.52,-0.56C0.86,-0.42 1.02,-0.2 0.8,0C1.02,0.2 0.86,0.42 0.52,0.56C-0.2,0.86 -1,0.64 -1,0Z"
 
     private const val PETAL_HEART = "M-1,0C-1,-0.34 -0.62,-0.44 -0.22,-0.26C-0.34,-0.08 -0.34,0.08 -0.22,0.26C-0.62,0.44 -1,0.34 -1,0Z"
+
+    /** A bird's wings seen from below, a unit to each tip: the tips raised, the body at the origin. */
+    private const val WINGS = "M-1,-0.3Q-0.55,-0.5 -0.12,0.06L0,0.12L0.12,0.06Q0.55,-0.5 1,-0.3"
+
+    /** A butterfly from above: its body. */
+    private const val BUTTERFLY = "M-0.1,-0.7L0.1,-0.7L0.08,0.7L-0.08,0.7Z"
+
+    /** A butterfly's four wings, the fore larger than the hind. */
+    private const val BUTTERFLY_WINGS = "M0,-0.2C-0.4,-1.1 -1.2,-0.9 -1,-0.2C-0.9,0.1 -0.4,0.1 0,0C-0.35,0.2 -0.9,0.5 -0.6,0.9C-0.3,1.1 -0.1,0.5 0,0.1C0.1,0.5 0.3,1.1 0.6,0.9C0.9,0.5 0.35,0.2 0,0C0.4,0.1 0.9,0.1 1,-0.2C1.2,-0.9 0.4,-1.1 0,-0.2Z"
+
+    /** The dark tips of its forewings. */
+    private const val BUTTERFLY_TIPS = "M-0.72,-0.72C-0.95,-0.62 -1.04,-0.4 -1,-0.2L-0.82,-0.36Z M0.72,-0.72C0.95,-0.62 1.04,-0.4 1,-0.2L0.82,-0.36Z"
 
     /** A glint: a four-pointed star of light, a unit to each point. */
     private const val SPARK = "M0,-1L0.09,-0.09L1,0L0.09,0.09L0,1L-0.09,0.09L-1,0L-0.09,-0.09Z"

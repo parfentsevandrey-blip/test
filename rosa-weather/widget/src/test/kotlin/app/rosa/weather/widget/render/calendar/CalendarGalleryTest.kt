@@ -58,7 +58,7 @@ class CalendarGalleryTest {
             val y = gap + ((m - 1) / columns) * (h + gap + 12f)
             canvas.save()
             canvas.clipRect(x, y, x + w, y + h)
-            scene.draw(canvas, RectF(x, y, x + w, y + h), MonthArt.of(m))
+            scene.draw(canvas, RectF(x, y, x + w, y + h), WeekArt.ofMonth(m))
             canvas.restore()
             canvas.drawText("$m", x, y + h + 10f, label)
         }
@@ -138,6 +138,37 @@ class CalendarGalleryTest {
         )
         sheet("calendar-sizes", sizes.map { (label, size) ->
             Triple(label, size, WidgetRenderRequest(size.first, size.second, calendar, content, 22f, systemNight = false, calendar = view))
+        }, columns = 4)
+    }
+
+    /** The dark theme: every style by night, the painting by moonlight under smoky glass. */
+    @Test
+    fun dark() {
+        val (content, view) = scene(10, 12)
+        val size = 314f to 252f
+        val night = calendar.copy(theme = WidgetTheme.Dark)
+        val configs = listOf(
+            "Сезон" to calendar.copy(theme = WidgetTheme.Light),
+            "Сезон, тёмная" to night,
+            "Стекло" to calendar.copy(style = WidgetStyle.Glass, opacity = 0.72f, theme = WidgetTheme.Light),
+            "Стекло, тёмная" to night.copy(style = WidgetStyle.Glass, opacity = 0.72f),
+            "Бумага" to calendar.copy(style = WidgetStyle.Paper, theme = WidgetTheme.Light),
+            "Бумага, тёмная" to night.copy(style = WidgetStyle.Paper),
+            "Тональный" to calendar.copy(style = WidgetStyle.Tonal, opacity = 0.85f, theme = WidgetTheme.Light),
+            "Тональный, тёмная" to night.copy(style = WidgetStyle.Tonal, opacity = 0.85f),
+        )
+        sheet("calendar-dark", configs.map { (label, config) ->
+            Triple(label, size, WidgetRenderRequest(size.first, size.second, config, content, 22f, systemNight = false, calendar = view))
+        }, columns = 4)
+    }
+
+    /** The year by night. */
+    @Test
+    fun monthsDark() {
+        val size = 314f to 252f
+        sheet("calendar-months-dark", (1..12).map { m ->
+            val (content, view) = scene(m)
+            Triple("$m", size, WidgetRenderRequest(size.first, size.second, calendar.copy(theme = WidgetTheme.Dark), content, 22f, systemNight = true, calendar = view))
         }, columns = 4)
     }
 

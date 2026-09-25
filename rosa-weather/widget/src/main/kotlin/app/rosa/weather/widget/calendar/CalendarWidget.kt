@@ -19,6 +19,7 @@ import app.rosa.weather.widget.R
 import app.rosa.weather.widget.motion.setLiveWeather
 import app.rosa.weather.widget.render.calendar.CalendarTargets
 import app.rosa.weather.widget.render.calendar.CalendarView
+import app.rosa.weather.widget.render.calendar.SeasonClock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -226,7 +227,10 @@ internal fun RemoteViews.setCalendarTargets(context: Context, clicks: CalendarCl
 internal fun CalendarPages.Page.views(context: Context, provider: ComponentName, widgetId: Int, locale: Locale): RemoteViews {
     val view = CalendarView(month, today, locale = locale)
     val clicks = CalendarClicks(context, provider, widgetId, view)
-    val description = view.spoken
+    // What it says: the month, the day, and the week's picture by name.
+    val week = SeasonClock.weekFor(month, today)
+    val scene = context.resources.getStringArray(R.array.calendar_weeks).getOrNull(week - 1)
+    val description = if (scene == null) view.spoken else view.spoken + ". " + context.getString(R.string.calendar_week_scene, week, scene)
     val bySize = sizes.associate { s ->
         s.size to RemoteViews(context.packageName, R.layout.widget_calendar).apply {
             setImageViewBitmap(R.id.widget_image, s.bitmap)

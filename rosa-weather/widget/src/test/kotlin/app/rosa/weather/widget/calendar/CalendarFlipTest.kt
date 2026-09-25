@@ -113,7 +113,7 @@ class CalendarFlipTest {
             updater.update(intArrayOf(id))
             updater.settle()
         }
-        assertThat(shown()).isEqualTo("Сентябрь 2026. Пятница, 25")
+        assertThat(shown()).isEqualTo("Сентябрь 2026. Пятница, 25. Неделя 39: Кафе у окна")
         // On show, the months either side, and one more on: two quick taps forward are both ready.
         assertThat(pages()).containsExactly("w7-2026-08.page", "w7-2026-09.page", "w7-2026-10.page", "w7-2026-11.page")
 
@@ -121,12 +121,12 @@ class CalendarFlipTest {
         val started = System.nanoTime()
         assertThat(updater.flip(id)).isTrue()
         println("CalendarFlipTest: flip %.1f ms".format((System.nanoTime() - started) / 1e6))
-        assertThat(shown()).isEqualTo("Октябрь 2026. Пятница, 25")
+        assertThat(shown()).isEqualTo("Октябрь 2026. Пятница, 25. Неделя 42: Камин в замке")
         move(1)
         val again = System.nanoTime()
         assertThat(updater.flip(id)).isTrue()
         println("CalendarFlipTest: second flip %.1f ms (Robolectric inflates the launcher's views in-process)".format((System.nanoTime() - again) / 1e6))
-        assertThat(shown()).isEqualTo("Ноябрь 2026. Пятница, 25")
+        assertThat(shown()).isEqualTo("Ноябрь 2026. Пятница, 25. Неделя 46: Вечер с книгой")
 
         // After the flips, the months around November; August is too far off to keep.
         withTimeout(120_000) {
@@ -138,7 +138,7 @@ class CalendarFlipTest {
         // The title's way home is ready too.
         move(0)
         assertThat(updater.flip(id)).isTrue()
-        assertThat(shown()).isEqualTo("Сентябрь 2026. Пятница, 25")
+        assertThat(shown()).isEqualTo("Сентябрь 2026. Пятница, 25. Неделя 39: Кафе у окна")
     }
 
     @Test
@@ -156,7 +156,7 @@ class CalendarFlipTest {
             updater.update(intArrayOf(id))
             updater.settle()
         }
-        assertThat(shown()).isEqualTo("Октябрь 2026. Пятница, 25")
+        assertThat(shown()).isEqualTo("Октябрь 2026. Пятница, 25. Неделя 42: Камин в замке")
         move(1)
         assertThat(updater.flip(id)).isTrue()
     }

@@ -38,6 +38,7 @@ import app.rosa.weather.widget.render.WidgetContent
 import app.rosa.weather.widget.render.WidgetRenderRequest
 import app.rosa.weather.widget.render.WidgetRenderer
 import app.rosa.weather.widget.render.calendar.CalendarView
+import app.rosa.weather.widget.render.calendar.SeasonClock
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -65,7 +66,7 @@ fun WidgetPreview(
     val description = remember(content) { renderer.describe(content) }
     val weather = remember(config, content, live) {
         if (config.face == WidgetFace.Calendar) {
-            if (live) LiveWeather.ofSeason(config, CalendarView.at(content.nowEpochSeconds).month.monthValue) else null
+            if (live) CalendarView.at(content.nowEpochSeconds).let { LiveWeather.ofSeason(config, SeasonClock.weekFor(it.month, it.today)) } else null
         } else {
             val moment = content.forecast?.takeIf { live && content.status == WidgetContent.Status.Ready }?.momentAt(content.nowEpochSeconds)
             LiveWeather.of(config, moment)

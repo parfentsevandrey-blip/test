@@ -19,6 +19,7 @@ import app.rosa.weather.widget.render.WidgetRenderRequest
 import app.rosa.weather.widget.render.WidgetRenderer
 import app.rosa.weather.widget.render.calendar.CalendarRenderer
 import app.rosa.weather.widget.render.calendar.CalendarView
+import app.rosa.weather.widget.render.calendar.SeasonClock
 import com.google.common.truth.Truth.assertThat
 import java.time.LocalDate
 import java.time.YearMonth
@@ -67,7 +68,7 @@ class CalendarPagesTest {
             )
             CalendarPages.Size(size, bitmap, targets)
         }
-        return CalendarPages.Page(month, today, stamp, shows, LiveWeather.ofSeason(config, month.monthValue), 22f, drawn)
+        return CalendarPages.Page(month, today, stamp, shows, LiveWeather.ofSeason(config, SeasonClock.weekFor(month, today)), 22f, drawn)
     }
 
     @Test
@@ -106,7 +107,7 @@ class CalendarPagesTest {
         host.measure(View.MeasureSpec.makeMeasureSpec(pw, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(ph, View.MeasureSpec.EXACTLY))
         host.layout(0, 0, pw, ph)
         assertThat(root.findViewById<ViewGroup>(R.id.widget_targets).childCount).isEqualTo(46)
-        assertThat(root.findViewById<View>(R.id.widget_image).contentDescription.toString()).isEqualTo("Октябрь 2026. Пятница, 25")
+        assertThat(root.findViewById<View>(R.id.widget_image).contentDescription.toString()).isEqualTo("Октябрь 2026. Пятница, 25. Неделя 42: Камин в замке")
     }
 
     @Test

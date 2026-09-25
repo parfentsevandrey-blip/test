@@ -222,10 +222,10 @@ internal class Painting(val w: Float, val h: Float, pxPerDp: Float, seed: Int) {
     }
 
     /** A meteor: a thin streak from ([x], [y]) along [angle], brightest at its head, fading behind. */
-    fun meteor(x: Float, y: Float, length: Float, angle: Float, strength: Float) {
+    fun meteor(x: Float, y: Float, length: Float, angle: Float, strength: Float, width: Float = 0.55f) {
         val ex = x - cos(angle) * length
         val ey = y - sin(angle) * length
-        val p = stroke(0xFFFFFFFF.toInt(), 0.55f)
+        val p = stroke(0xFFFFFFFF.toInt(), width)
         p.shader = LinearGradient(x, y, ex, ey, intArrayOf(Tone.alpha(0xFFFFFFFF.toInt(), strength), Tone.alpha(0xFFCFE0FF.toInt(), strength * 0.4f), 0), floatArrayOf(0f, 0.35f, 1f), Shader.TileMode.CLAMP)
         canvas.drawLine(x, y, ex, ey, p)
         glow(x, y, 3.5f, 0xFFFFFFFF.toInt(), 0.6f * strength)
@@ -714,6 +714,53 @@ internal class Painting(val w: Float, val h: Float, pxPerDp: Float, seed: Int) {
                 ((if (r < 0) 0 else if (r > 255) 255 else r) shl 16) or
                 ((if (gg < 0) 0 else if (gg > 255) 255 else gg) shl 8) or
                 (if (b < 0) 0 else if (b > 255) 255 else b)
+        }
+        bitmap.setPixels(pixels, 0, widthPx, 0, 0, widthPx, heightPx)
+    }
+
+    /**
+     * The same place by moonlight, for the dark theme: the light falls away from the sky down (the
+     * ground keeps a little more), colours cool and pale towards the moon's silver, shadows sink
+     * into deep blue — while what glows (the sun's disc, lit windows, a bright rim of cloud) keeps
+     * its light, so the sun reads as the moon and the windows as windows. [strength] 0..1: a
+     * painting that is already night takes only a touch of it.
+     */
+    fun nightfall(strength: Float) {
+        val k = strength.coerceIn(0f, 1f)
+        if (k <= 0f) return
+        val n = widthPx * heightPx
+        val pixels = IntArray(n)
+        bitmap.getPixels(pixels, 0, widthPx, 0, 0, widthPx, heightPx)
+        for (y in 0 until heightPx) {
+            val exposure = 1f - k * (1f - (0.24f + 0.2f * Tone.smooth(0f, 0.72f, y / heightPx.toFloat())))
+            val row = y * widthPx
+            for (x in 0 until widthPx) {
+                val c = pixels[row + x]
+                val r0 = (c shr 16 and 0xFF) / 255f
+                val g0 = (c shr 8 and 0xFF) / 255f
+                val b0 = (c and 0xFF) / 255f
+                val l = r0 * 0.2126f + g0 * 0.7152f + b0 * 0.0722f
+                val grey = 0.3f * k
+                var r = (r0 + (l - r0) * grey) * (1f - 0.24f * k) * exposure
+                var g = (g0 + (l - g0) * grey) * (1f - 0.08f * k) * exposure
+                var b = (b0 + (l - b0) * grey) * (1f + 0.1f * k) * exposure
+                // The night's own blue in the shadows.
+                val dark = (1f - l) * k
+                r += 0.012f * dark
+                g += 0.02f * dark
+                b += 0.05f * dark
+                // Lights keep their glow.
+                val glow = Tone.smooth(0.8f, 0.97f, l) * 0.6f * k
+                if (glow > 0f) {
+                    r += (r0 * 0.96f - r) * glow
+                    g += (g0 * 0.96f - g) * glow
+                    b += (b0 - b) * glow
+                }
+                pixels[row + x] = (0xFF shl 24) or
+                    ((r.coerceIn(0f, 1f) * 255f).roundToInt() shl 16) or
+                    ((g.coerceIn(0f, 1f) * 255f).roundToInt() shl 8) or
+                    (b.coerceIn(0f, 1f) * 255f).roundToInt()
+            }
         }
         bitmap.setPixels(pixels, 0, widthPx, 0, 0, widthPx, heightPx)
     }

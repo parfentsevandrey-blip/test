@@ -51,6 +51,7 @@ import app.rosa.weather.widget.render.WidgetRenderRequest
 import app.rosa.weather.widget.render.WidgetRenderer
 import app.rosa.weather.widget.render.calendar.CalendarRenderer
 import app.rosa.weather.widget.render.calendar.CalendarView
+import app.rosa.weather.widget.render.calendar.SeasonClock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
@@ -385,8 +386,8 @@ class WidgetUpdater @Inject constructor(
 
     /** [view]'s page as the launcher gets it, at every size of [frame]. */
     private suspend fun renderPage(renderer: WidgetRenderer, frame: Frame, config: WidgetConfig, content: WidgetContent, view: CalendarView): CalendarPages.Page {
-        // The season moves over its painting: snow, rain, petals, fireflies, leaves.
-        val live = LiveWeather.ofSeason(config, view.month.monthValue)
+        // The week's own motion over its picture: snow, sparks, petals, birds, leaves, lights.
+        val live = LiveWeather.ofSeason(config, SeasonClock.weekFor(view.month, view.today))
         val sizes = frame.sizes.mapIndexed { i, size ->
             currentCoroutineContext().ensureActive()
             val request = WidgetRenderRequest(

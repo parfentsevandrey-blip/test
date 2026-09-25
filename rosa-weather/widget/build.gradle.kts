@@ -35,4 +35,6 @@ tasks.withType<Test>().configureEach {
     if (project.hasProperty("rosa.docs")) systemProperty("rosa.docs", rootProject.file("docs/images").absolutePath)
     // Opt-in regeneration of the live weather tiles (res/drawable|layout|color/motion_*).
     if (project.hasProperty("rosa.motion")) systemProperty("rosa.motion", "true")
+    if (project.hasProperty("rosa.legibility.debug")) systemProperty("rosa.legibility.debug", "true")
+    project.findProperty("rosa.legibility.weeks")?.let { systemProperty("rosa.legibility.weeks", it.toString()) }
 }

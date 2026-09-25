@@ -36,25 +36,25 @@ class CalendarArtTest {
 
     @Test
     fun `a month is painted the same way every time, and once`() {
-        val first = CalendarArt.painting(null, 9, 220, 176, 2f, live = false)
-        assertThat(CalendarArt.painting(null, 9, 220, 176, 2f, live = false)).isSameInstanceAs(first)
+        val first = CalendarArt.painting(null, WeekArt.ofMonth(9), 220, 176, 2f, live = false)
+        assertThat(CalendarArt.painting(null, WeekArt.ofMonth(9), 220, 176, 2f, live = false)).isSameInstanceAs(first)
         CalendarArt.clear()
-        val again = CalendarArt.painting(null, 9, 220, 176, 2f, live = false)
+        val again = CalendarArt.painting(null, WeekArt.ofMonth(9), 220, 176, 2f, live = false)
         assertThat(again).isNotSameInstanceAs(first)
         assertThat(again.sameAs(first)).isTrue()
         // Without the falling leaves when the live tiles bring them.
-        assertThat(CalendarArt.painting(null, 9, 220, 176, 2f, live = true).sameAs(first)).isFalse()
+        assertThat(CalendarArt.painting(null, WeekArt.ofMonth(9), 220, 176, 2f, live = true).sameAs(first)).isFalse()
     }
 
     @Test
     fun `the disk keeps a painting for after the process is gone`() {
-        val painted = CalendarArt.painting(context, 12, 200, 160, 2f, live = false)
-        val file = File(context.cacheDir, "calendar-art/m12-200x160-still-v${CalendarArt.VERSION}.png")
+        val painted = CalendarArt.painting(context, WeekArt.ofMonth(12), 200, 160, 2f, live = false)
+        val file = File(context.cacheDir, "calendar-art/w${WeekArt.ofMonth(12).week}-200x160@200-still-v${CalendarArt.VERSION}.png")
         val deadline = System.currentTimeMillis() + 10_000
         while (!file.exists() && System.currentTimeMillis() < deadline) Thread.sleep(20)
         assertThat(file.exists()).isTrue()
         CalendarArt.clear()
-        val restored = CalendarArt.painting(context, 12, 200, 160, 2f, live = false)
+        val restored = CalendarArt.painting(context, WeekArt.ofMonth(12), 200, 160, 2f, live = false)
         assertThat(restored).isNotSameInstanceAs(painted)
         assertThat(restored.sameAs(painted)).isTrue()
     }
