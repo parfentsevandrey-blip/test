@@ -54,6 +54,7 @@ import app.rosa.weather.core.designsystem.theme.RosaTheme
 import java.io.File
 import kotlin.random.Random
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -245,9 +246,77 @@ class GlassLabTest {
     }
 
     /**
+     * The rim reads all the way round. Under the resting light (no sun on screen, as on most
+     * screens), by day and by night, a pill and a card each keep a lit edge on every side — not
+     * only on the corner the light comes from: every side's rim stands out from the glass inside
+     * it, and the dimmest side keeps a good part of the brightest one's light.
+     */
+    @Test
+    fun rimReadsAllTheWayRound() {
+        compose.setContent {
+            CompositionLocalProvider(LocalMotionEnabled provides false) {
+                Row(Modifier.fillMaxSize()) {
+                    listOf(true, false).forEach { light ->
+                        val backdrop = rememberBackdrop()
+                        val colors = colorsFor(light)
+                        val environment = remember { GlassEnvironment() }
+                        environment.tint = colors.glassTint
+                        environment.skyColor = if (light) Color(0xFF3E8EF7) else Color(0xFF0B1330)
+                        RosaTheme(colors) {
+                            Box(Modifier.width(500.dp).fillMaxHeight()) {
+                                Canvas(Modifier.fillMaxSize().backdropSource(backdrop)) {
+                                    drawRect(Brush.verticalGradient(if (light) listOf(Color(0xFF3E8EF7), Color(0xFF8CC8FF)) else listOf(Color(0xFF070B22), Color(0xFF1A2350))))
+                                }
+                                CompositionLocalProvider(LocalBackdrop provides backdrop, LocalGlassEnvironment provides environment) {
+                                    GlassSurface(Modifier.padding(start = 40.dp, top = 40.dp).size(width = 240.dp, height = 56.dp), style = GlassStyle.Regular, cornerRadius = 28.dp, shadow = false) {}
+                                    GlassSurface(Modifier.padding(start = 40.dp, top = 140.dp).size(width = 320.dp, height = 170.dp), style = GlassStyle.Frosted, cornerRadius = 30.dp, shadow = false) {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        compose.waitForIdle()
+        val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
+        File(File("build/glass-lab").apply { mkdirs() }, "rim.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        val px = 2
+        fun luma(x: Int, y: Int) = bitmap.getPixel(x, y).let { 0.2126f * android.graphics.Color.red(it) + 0.7152f * android.graphics.Color.green(it) + 0.0722f * android.graphics.Color.blue(it) }
+        // Each side: the brightest of the outer 4 dp of the glass against the glass 14 dp in.
+        fun sides(left: Int, top: Int, w: Int, h: Int): Map<String, Float> {
+            val x0 = left * px
+            val y0 = top * px
+            val x1 = (left + w) * px - 1
+            val y1 = (top + h) * px - 1
+            val cx = (x0 + x1) / 2
+            val cy = (y0 + y1) / 2
+            val rim = 4 * px
+            val inside = 14 * px
+            return mapOf(
+                "top" to (0 until rim).maxOf { luma(cx, y0 + it) } - luma(cx, y0 + inside),
+                "bottom" to (0 until rim).maxOf { luma(cx, y1 - it) } - luma(cx, y1 - inside),
+                "left" to (0 until rim).maxOf { luma(x0 + it, cy) } - luma(x0 + inside, cy),
+                "right" to (0 until rim).maxOf { luma(x1 - it, cy) } - luma(x1 - inside, cy),
+            )
+        }
+        val report = StringBuilder()
+        for (light in listOf(true, false)) {
+            val scene = if (light) "day" else "night"
+            val shift = if (light) 0 else 500
+            for ((name, s) in listOf("pill" to sides(shift + 40, 40, 240, 56), "card" to sides(shift + 40, 140, 320, 170))) {
+                report.append("%s %s: %s%n".format(scene, name, s.entries.joinToString { (k, v) -> "%s %.1f".format(java.util.Locale.ROOT, k, v) }))
+                val floor = if (light) 14f else 10f
+                s.forEach { (side, contrast) -> assertWithMessage("$scene $name, $side rim\n$report").that(contrast).isAtLeast(floor) }
+                assertWithMessage("$scene $name, dimmest side against the brightest\n$report").that(s.values.min()).isAtLeast(0.3f * s.values.max())
+            }
+        }
+        println(report)
+    }
+
+    /**
      * The optics alone, over a ruled grid and lit by a low sun: straight lines must bend and crowd
-     * into the rim while the flat middle stays true; the rim mirrors what lies beside it, the lit
-     * bevel carries a crisp highlight (a weaker one opposite), and a caustic falls on the far side.
+     * into the rim while the flat middle stays true; the rim carries a crisp catch-light and a
+     * luminous band all the way round, brightest on the lit corner and the one opposite.
      */
     @Test
     fun optics() {

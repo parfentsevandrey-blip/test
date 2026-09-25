@@ -312,8 +312,8 @@ private class LiquidGlassNode(
         // for a moment, costs a full blur per card per frame — as cards scroll in, all at once.)
         val shared = style.blur >= SHARED_FROST_MIN
         val blur = if (shared) 0f else style.blur.toPx()
-        // Sample a larger area than the glass itself: outward lensing (blue, bent most, reaches a
-        // little further), the rim's reflection of what lies beside it, the caustic, blur spill.
+        // Sample a larger area than the glass itself: outward lensing (its dispersed colours reach
+        // a little further), blur spill.
         val margin = ceil(refraction * (1f + DISPERSION_REACH * style.dispersion) + blur * 2f + 2f)
         val radius = cornerRadius.toPx().coerceAtMost(size.minDimension / 2f)
         val tint = environment?.tint ?: Color.White
@@ -381,7 +381,6 @@ private class LiquidGlassNode(
             shader.setFloatUniform("root", position.x, position.y)
             shader.setFloatUniform("sheen", tilt.x * SHEEN_TRAVEL.toPx(), tilt.y * SHEEN_TRAVEL.toPx() * 0.7f)
             shader.setFloatUniform("px", density)
-            shader.setFloatUniform("reach", margin - 1f)
             shader.setFloatUniform("bounds", key.bounds.left, key.bounds.top, key.bounds.right, key.bounds.bottom)
             shader.setFloatUniform("touch", key.touch.x, key.touch.y, key.touchStrength)
             val lens = RenderEffect.createRuntimeShaderEffect(shader, "content")
@@ -450,10 +449,11 @@ private fun sceneBounds(offset: Offset, scene: IntSize, layer: IntSize): Rect {
 }
 
 /**
- * How much further than [GlassStyle.refraction] blue reaches per unit of dispersion: bent most,
- * it samples the scene farthest past the edge (the shader's `IOR_SPREAD` sets how much).
+ * How much further than [GlassStyle.refraction] the dispersed colours reach per unit of
+ * dispersion along the sides. At the corners they reach further still; there the shader holds
+ * them at the layer's edge.
  */
-private const val DISPERSION_REACH = 0.1f
+private const val DISPERSION_REACH = 0.12f
 
 /** How far from the sun its light fades to half strength on a pane. */
 private val LIGHT_FALLOFF = 640.dp

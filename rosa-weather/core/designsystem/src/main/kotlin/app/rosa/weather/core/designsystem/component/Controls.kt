@@ -390,8 +390,8 @@ private suspend fun AwaitPointerEventScope.waitForUpOrCancellationCompat(): Bool
     waitForUpOrCancellation() != null
 
 /**
- * The trailing edge of the segmented control's drop: softer and bouncier than the gel spring its
- * leading edge rides, so it lags by about a quarter of an option per step and, arriving,
- * overshoots once before it settles.
+ * The trailing edge of the segmented control's drop: a little softer and bouncier than the gel
+ * spring its leading edge rides, so it lags a little behind and, arriving, overshoots once before
+ * it settles — within about two thirds of a second, not lingering stretched.
  */
-private val DropTail = spring<Float>(dampingRatio = 0.5f, stiffness = 60f)
+private val DropTail = spring<Float>(dampingRatio = 0.55f, stiffness = 110f)
