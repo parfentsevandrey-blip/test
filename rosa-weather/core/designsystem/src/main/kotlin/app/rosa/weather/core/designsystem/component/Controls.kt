@@ -217,8 +217,10 @@ fun GlassSlider(
 
 /**
  * Segmented control on glass. The selection rests as a raised pill; touched or moving it lifts
- * into a Liquid Glass lens that *flows* to the new option — stretching toward it and settling with
- * a gel spring — and it can be dragged across the options, ticking at each.
+ * into a Liquid Glass lens that *flows* to the new option like a drop — its leading edge runs
+ * ahead on the gel spring while its trailing edge follows on a softer one, so it stretches toward
+ * the option the faster it goes, then its tail catches up, overshoots and it settles with a
+ * wobble — and it can be dragged across the options, ticking at each.
  */
 @Composable
 fun <T> GlassSegmented(
@@ -234,24 +236,39 @@ fun <T> GlassSegmented(
     val index = options.indexOf(selected).coerceAtLeast(0)
     val currentIndex by rememberUpdatedState(index)
     val select by rememberUpdatedState(onSelect)
+    // The drop's two edges, in options: the leading one and the one trailing behind it.
     val position = remember { Animatable(index.toFloat()) }
-    LaunchedEffect(index) { position.animateTo(index.toFloat(), RosaMotion.gel()) }
+    val trail = remember { Animatable(index.toFloat()) }
+    LaunchedEffect(index) {
+        launch { position.animateTo(index.toFloat(), RosaMotion.gel()) }
+        trail.animateTo(index.toFloat(), DropTail)
+    }
     var pressed by remember { mutableStateOf(false) }
-    val moving = abs(position.value - index) > 0.02f
+    val moving = abs(position.value - index) > 0.02f || abs(trail.value - index) > 0.02f
     val lift by animateFloatAsState(if (pressed || moving) 1f else 0f, spring(0.8f, 700f), label = "lift")
     val rest = if (colors.isLightSky) Color.White.copy(alpha = 0.86f) else Color.White.copy(alpha = 0.24f)
     val lip = Color.White.copy(alpha = if (colors.isLightSky) 0.9f else 0.32f)
     GlassSurface(modifier.height(44.dp), cornerRadius = 22.dp) {
         BoxWithConstraints(Modifier.fillMaxWidth().fillMaxHeight().padding(4.dp)) {
             val segment = maxWidth / options.size
-            val stretch = abs(position.value - index).coerceAtMost(1f)
+            // The drop spans both edges and stays inside the control: overshooting at the last
+            // option, it squashes against the wall. Stretched, it thins a little, as liquid keeps
+            // its volume.
+            val count = options.size.toFloat()
             val pill = Modifier
-                .offset { IntOffset((segment * position.value).roundToPx(), 0) }
+                .offset {
+                    val from = minOf(position.value, trail.value).coerceAtLeast(0f)
+                    val to = (maxOf(position.value, trail.value) + 1f).coerceAtMost(count)
+                    IntOffset((segment * ((from + to - 1f) / 2f)).roundToPx(), 0)
+                }
                 .width(segment)
                 .fillMaxHeight()
                 .graphicsLayer {
-                    scaleX = (1f + stretch * 0.3f) * (1f + 0.08f * lift)
-                    scaleY = (1f - stretch * 0.1f) * (1f + 0.16f * lift)
+                    val from = minOf(position.value, trail.value).coerceAtLeast(0f)
+                    val to = (maxOf(position.value, trail.value) + 1f).coerceAtMost(count)
+                    val stretch = to - from - 1f
+                    scaleX = (1f + stretch) * (1f + 0.08f * lift)
+                    scaleY = (1f - 0.14f * stretch.coerceIn(0f, 1f)) * (1f + 0.16f * lift)
                 }
             Box(
                 pill
@@ -282,9 +299,11 @@ fun <T> GlassSegmented(
                                 if (!dragging && abs(last.x - down.position.x) > viewConfiguration.touchSlop) dragging = true
                                 if (dragging) {
                                     change.consume()
-                                    // The lens follows the finger; the option under it is the one.
+                                    // The lens follows the finger, its tail a little behind; the
+                                    // option under it is the one.
                                     val at = (last.x / width - 0.5f).coerceIn(0f, options.size - 1f)
                                     scope.launch { position.snapTo(at) }
+                                    scope.launch { trail.animateTo(at, DropTail) }
                                     val nearest = at.roundToInt()
                                     if (nearest != target) {
                                         target = nearest
@@ -299,6 +318,7 @@ fun <T> GlassSegmented(
                                 select(options[chosen])
                             } else {
                                 scope.launch { position.animateTo(chosen.toFloat(), RosaMotion.gel()) }
+                                scope.launch { trail.animateTo(chosen.toFloat(), DropTail) }
                             }
                         }
                     },
@@ -368,3 +388,10 @@ fun LiquidPageIndicator(count: Int, position: () -> Float, modifier: Modifier = 
 
 private suspend fun AwaitPointerEventScope.waitForUpOrCancellationCompat(): Boolean =
     waitForUpOrCancellation() != null
+
+/**
+ * The trailing edge of the segmented control's drop: softer and bouncier than the gel spring its
+ * leading edge rides, so it lags by about a quarter of an option per step and, arriving,
+ * overshoots once before it settles.
+ */
+private val DropTail = spring<Float>(dampingRatio = 0.5f, stiffness = 60f)

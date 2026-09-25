@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Color
@@ -87,9 +88,10 @@ fun Modifier.backdropSource(backdrop: Backdrop): Modifier = this.then(BackdropSo
  * Physical parameters of a glass material (dp values are converted at draw time). Presets follow
  * the proportions measured from Apple's implementation and the Kyant/kube reimplementations:
  * [bezel] is how far in from the edge the surface curves, [refraction] how far the rim reaches
- * outside the shape for what it shows, [saturation] its vibrancy, [brightness] how much it glows,
- * [highlight] the strength of its lit rim, [tintAlpha] how much of its own tone (milky or smoky)
- * it has and [grain] the tooth of its surface.
+ * outside the shape for what it shows, [dispersion] how far apart the colours' indices of
+ * refraction lie (how finely the rim fringes), [saturation] its vibrancy, [brightness] how much
+ * it glows, [highlight] the strength of its lit rim, [tintAlpha] how much of its own tone (milky
+ * or smoky) it has and [grain] the tooth of its surface.
  */
 @Immutable
 data class GlassStyle(
@@ -310,8 +312,9 @@ private class LiquidGlassNode(
         // for a moment, costs a full blur per card per frame — as cards scroll in, all at once.)
         val shared = style.blur >= SHARED_FROST_MIN
         val blur = if (shared) 0f else style.blur.toPx()
-        // Sample a larger area than the glass itself (outward lensing + blur spill).
-        val margin = ceil(refraction + blur * 2f + 2f)
+        // Sample a larger area than the glass itself: outward lensing (blue, bent most, reaches a
+        // little further), the rim's reflection of what lies beside it, the caustic, blur spill.
+        val margin = ceil(refraction * (1f + DISPERSION_REACH * style.dispersion) + blur * 2f + 2f)
         val radius = cornerRadius.toPx().coerceAtMost(size.minDimension / 2f)
         val tint = environment?.tint ?: Color.White
         val contrast = environment?.contrast ?: 0f
@@ -325,6 +328,8 @@ private class LiquidGlassNode(
         val tilt = env?.tilt ?: Offset.Zero
         val touch = s?.touch ?: Offset.Unspecified
         val touchOn = touch.isSpecified && (s?.touchStrength ?: 0f) > 0f
+        val layerSize = IntSize((size.width + margin * 2).toInt(), (size.height + margin * 2).toInt())
+        val offset = backdrop.positionInRoot - position + Offset(margin, margin)
         val key = LensKey(
             width = size.width,
             height = size.height,
@@ -346,6 +351,7 @@ private class LiquidGlassNode(
             frost = env?.frost ?: 0f,
             tilt = tilt,
             root = position,
+            bounds = sceneBounds(offset, backdrop.layer.size, layerSize),
         )
         if (key != effectKey) {
             shader.setFloatUniform("size", size.width, size.height)
@@ -375,6 +381,8 @@ private class LiquidGlassNode(
             shader.setFloatUniform("root", position.x, position.y)
             shader.setFloatUniform("sheen", tilt.x * SHEEN_TRAVEL.toPx(), tilt.y * SHEEN_TRAVEL.toPx() * 0.7f)
             shader.setFloatUniform("px", density)
+            shader.setFloatUniform("reach", margin - 1f)
+            shader.setFloatUniform("bounds", key.bounds.left, key.bounds.top, key.bounds.right, key.bounds.bottom)
             shader.setFloatUniform("touch", key.touch.x, key.touch.y, key.touchStrength)
             val lens = RenderEffect.createRuntimeShaderEffect(shader, "content")
             effect = if (key.blur > 0.5f) {
@@ -386,8 +394,6 @@ private class LiquidGlassNode(
         }
         glassLayer.renderEffect = effect
 
-        val layerSize = IntSize((size.width + margin * 2).toInt(), (size.height + margin * 2).toInt())
-        val offset = backdrop.positionInRoot - position + Offset(margin, margin)
         val b = backdrop
         glassLayer.record(layerSize) {
             translate(offset.x, offset.y) {
@@ -403,7 +409,7 @@ private class LiquidGlassNode(
     }
 }
 
-/** Everything the lens effect depends on; positions don't, so scrolling reuses the effect. */
+/** Everything the lens effect depends on: it is rebuilt only when one of these changes. */
 private data class LensKey(
     val width: Float,
     val height: Float,
@@ -425,9 +431,29 @@ private data class LensKey(
     val frost: Float,
     val tilt: Offset,
     val root: Offset,
+    val bounds: Rect,
 )
 
 private fun quantize(value: Float, step: Float) = Math.round(value / step) * step
+
+/**
+ * Where the glass's layer holds the scene, in its own pixels (drawn at [offset], [scene] large):
+ * all of it, unless the pane sits near the scene's edge — a bar at the top of the screen — and
+ * its margin reaches past it. The lens never samples beyond, so its rim never reads the empty,
+ * transparent layer there.
+ */
+private fun sceneBounds(offset: Offset, scene: IntSize, layer: IntSize): Rect {
+    val full = Rect(0.5f, 0.5f, layer.width - 0.5f, layer.height - 0.5f)
+    if (scene.width <= 0 || scene.height <= 0) return full
+    val held = Rect(offset.x + 0.5f, offset.y + 0.5f, offset.x + scene.width - 0.5f, offset.y + scene.height - 0.5f)
+    return if (full.overlaps(held)) full.intersect(held) else full
+}
+
+/**
+ * How much further than [GlassStyle.refraction] blue reaches per unit of dispersion: bent most,
+ * it samples the scene farthest past the edge (the shader's `IOR_SPREAD` sets how much).
+ */
+private const val DISPERSION_REACH = 0.1f
 
 /** How far from the sun its light fades to half strength on a pane. */
 private val LIGHT_FALLOFF = 640.dp

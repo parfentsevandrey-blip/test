@@ -18,7 +18,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -28,8 +31,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -237,6 +242,135 @@ class GlassLabTest {
             previous = c
         }
         assertThat(worst).isAtMost(8)
+    }
+
+    /**
+     * The optics alone, over a ruled grid and lit by a low sun: straight lines must bend and crowd
+     * into the rim while the flat middle stays true; the rim mirrors what lies beside it, the lit
+     * bevel carries a crisp highlight (a weaker one opposite), and a caustic falls on the far side.
+     */
+    @Test
+    fun optics() {
+        compose.setContent {
+            CompositionLocalProvider(LocalMotionEnabled provides false) {
+                Row(Modifier.fillMaxSize().padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    listOf(true, false).forEach { light ->
+                        val backdrop = rememberBackdrop()
+                        val colors = colorsFor(light)
+                        val environment = remember { GlassEnvironment() }
+                        val sunColor = if (light) Color(0xFFFFF4DC) else Color(0xFFD3DCF0)
+                        environment.tint = colors.glassTint
+                        environment.lightColor = sunColor
+                        environment.lightPower = if (light) 1f else 0.5f
+                        environment.skyColor = if (light) Color(0xFF3E8EF7) else Color(0xFF0B1330)
+                        RosaTheme(colors) {
+                            Box(
+                                Modifier.weight(1f).fillMaxHeight().onGloballyPositioned { c ->
+                                    val at = c.positionInRoot() + Offset(c.size.width * 0.04f, c.size.height * 0.05f)
+                                    if (environment.lightPosition != at) environment.lightPosition = at
+                                },
+                            ) {
+                                Canvas(Modifier.fillMaxSize().backdropSource(backdrop)) { grid(light, sunColor) }
+                                CompositionLocalProvider(LocalBackdrop provides backdrop, LocalGlassEnvironment provides environment) {
+                                    Column(Modifier.fillMaxSize().padding(start = 60.dp, top = 50.dp), verticalArrangement = Arrangement.spacedBy(36.dp)) {
+                                        Row(horizontalArrangement = Arrangement.spacedBy(36.dp)) {
+                                            GlassSurface(Modifier.size(width = 330.dp, height = 210.dp), style = GlassStyle.Lens, cornerRadius = 44.dp, shadow = false) {}
+                                            GlassSurface(Modifier.size(150.dp), style = GlassStyle.Regular, cornerRadius = 75.dp) {}
+                                        }
+                                        Row(horizontalArrangement = Arrangement.spacedBy(36.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            GlassSurface(Modifier.size(width = 240.dp, height = 56.dp), style = GlassStyle.Regular, cornerRadius = 28.dp) {
+                                                Text("Москва", color = colors.ink, fontSize = 17.sp, fontWeight = FontWeight.Medium, modifier = Modifier.align(Alignment.Center))
+                                            }
+                                            GlassSurface(Modifier.size(width = 240.dp, height = 56.dp), style = GlassStyle.Clear, cornerRadius = 28.dp) {}
+                                        }
+                                        GlassSurface(Modifier.size(width = 516.dp, height = 170.dp), style = GlassStyle.Frosted, cornerRadius = 30.dp) {
+                                            Column(Modifier.padding(18.dp)) {
+                                                Text("Ближайшие 48 часов", color = colors.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                                                Text("Потяните ленту времени", color = colors.inkSoft, fontSize = 12.sp)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        compose.waitForIdle()
+        val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
+        File(File("build/glass-lab").apply { mkdirs() }, "optics.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        // The flat middle stays true: across the day lens, away from its bevel, every line of the
+        // grid shows exactly where it lies behind the glass (3 px wide, every 48 px from x = 20).
+        fun luma(x: Int, y: Int) = bitmap.getPixel(x, y).let { android.graphics.Color.red(it) + android.graphics.Color.green(it) + android.graphics.Color.blue(it) } / 3
+        val y = (10 + 50 + 105) * 2
+        val lines = (0..20).map { 21 + 48 * it }.filter { it in (10 + 60 + 12) * 2 + 8..(10 + 60 + 330 - 12) * 2 - 8 }
+        assertThat(lines.size).isAtLeast(10)
+        lines.forEach { x ->
+            assertThat(luma(x, y) - maxOf(luma(x - 3, y), luma(x + 3, y))).isAtLeast(15)
+        }
+    }
+
+    /**
+     * The segmented control's selection moving like a drop: frames of one change of option, top to
+     * bottom — it stretches toward the option, its tail catches up and overshoots, it settles.
+     */
+    @Test
+    fun segmentedFlows() {
+        var selected by mutableStateOf("Авто")
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            CompositionLocalProvider(LocalMotionEnabled provides false) {
+                val backdrop = rememberBackdrop()
+                val colors = colorsFor(true)
+                RosaTheme(colors) {
+                    Box(Modifier.size(width = 460.dp, height = 84.dp).testTag("drop")) {
+                        Canvas(Modifier.fillMaxSize().backdropSource(backdrop)) {
+                            drawRect(Brush.horizontalGradient(listOf(Color(0xFF2F7FEA), Color(0xFF8CC8FF))))
+                        }
+                        CompositionLocalProvider(LocalBackdrop provides backdrop) {
+                            GlassSegmented(listOf("Авто", "Светлый", "Тёмный"), selected, { selected = it }, { it }, Modifier.padding(20.dp).fillMaxWidth())
+                        }
+                    }
+                }
+            }
+        }
+        compose.mainClock.advanceTimeBy(200)
+        compose.runOnIdle { selected = "Тёмный" }
+        val frames = listOf(16L, 64, 64, 64, 80, 96, 112, 144, 192, 800).map { step ->
+            compose.mainClock.advanceTimeBy(step)
+            compose.onNodeWithTag("drop").captureToImage().asAndroidBitmap()
+        }
+        val sheet = Bitmap.createBitmap(frames[0].width, frames[0].height * frames.size, Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(sheet)
+        frames.forEachIndexed { i, frame -> canvas.drawBitmap(frame, 0f, (frame.height * i).toFloat(), null) }
+        File(File("build/glass-lab").apply { mkdirs() }, "drop.png").outputStream().use { sheet.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** A ruled sheet: a fine grid, bold bars and blocks of colour, a sun in the corner. */
+    private fun androidx.compose.ui.graphics.drawscope.DrawScope.grid(light: Boolean, sun: Color) {
+        drawRect(if (light) Color(0xFF6FA4E6) else Color(0xFF141C38))
+        val line = if (light) Color.White.copy(alpha = 0.75f) else Color(0xFFB8C6EE).copy(alpha = 0.45f)
+        val step = 24.dp.toPx()
+        var x = 0f
+        while (x < size.width) {
+            drawRect(line, Offset(x, 0f), Size(1.5.dp.toPx(), size.height))
+            x += step
+        }
+        var y = 0f
+        while (y < size.height) {
+            drawRect(line, Offset(0f, y), Size(size.width, 1.5.dp.toPx()))
+            y += step
+        }
+        val hues = listOf(Color(0xFFE4572E), Color(0xFFFFC914), Color(0xFF17BEBB), Color(0xFF2E282A))
+        hues.forEachIndexed { i, c ->
+            drawRect(c, Offset(size.width * (0.08f + 0.22f * i), size.height * 0.36f), Size(10.dp.toPx(), size.height * 0.3f))
+        }
+        drawRect(hues[0], Offset(0f, size.height * 0.83f), Size(size.width, 8.dp.toPx()))
+        drawRect(hues[2], Offset(size.width * 0.66f, size.height * 0.02f), Size(size.width * 0.12f, size.height * 0.1f))
+        val at = Offset(size.width * 0.04f, size.height * 0.05f)
+        drawCircle(Brush.radialGradient(listOf(sun, sun.copy(alpha = 0f)), at, size.width * 0.2f), size.width * 0.2f, at)
+        drawCircle(sun, 16.dp.toPx(), at)
     }
 
     /** Glass never refracts glass: set into a card, a surface is a platter, not a hole to the sky. */
