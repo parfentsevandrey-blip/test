@@ -66,6 +66,29 @@ import kotlinx.coroutines.launch
 @Composable
 fun PlacesRoute(viewModel: PlacesViewModel, onBack: () -> Unit, onAdd: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    PlacesScreen(
+        state,
+        onBack = onBack,
+        onAdd = onAdd,
+        onFollow = { viewModel.setFollowDevice(it) },
+        onSelect = { id -> viewModel.select(id); onBack() },
+        onRemove = { viewModel.remove(it) },
+        onMove = { from, to -> viewModel.move(from, to) },
+    )
+}
+
+/** The saved places, each a small window onto its own sky; [now] is when the cards show them. */
+@Composable
+fun PlacesScreen(
+    state: PlacesUiState,
+    onBack: () -> Unit,
+    onAdd: () -> Unit,
+    onFollow: (Boolean) -> Unit,
+    onSelect: (String) -> Unit,
+    onRemove: (String) -> Unit,
+    onMove: (Int, Int) -> Unit,
+    now: Long = System.currentTimeMillis() / 1000,
+) {
     val context = LocalContext.current
     val format = remember(state.units) { WeatherFormat(context, state.units) }
     val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -88,13 +111,13 @@ fun PlacesRoute(viewModel: PlacesViewModel, onBack: () -> Unit, onAdd: () -> Uni
                             Text(stringResource(R.string.places_follow), style = Rosa.type.headline, color = Rosa.colors.ink)
                             Text(stringResource(R.string.places_follow_hint), style = Rosa.type.caption, color = Rosa.colors.inkSoft)
                         }
-                        GlassToggle(state.followDevice, viewModel::setFollowDevice)
+                        GlassToggle(state.followDevice, onFollow)
                     }
                 }
             }
             state.device?.takeIf { state.followDevice }?.let { device ->
                 item(key = device.id) {
-                    PlaceCard(device, state.forecasts[device.id], format, onClick = { viewModel.select(device.id); onBack() }, onDelete = null)
+                    PlaceCard(device, state.forecasts[device.id], format, now, onClick = { onSelect(device.id) }, onDelete = null)
                 }
             }
             itemsIndexed(state.places, key = { _, p -> p.id }) { index, place ->
@@ -102,10 +125,11 @@ fun PlacesRoute(viewModel: PlacesViewModel, onBack: () -> Unit, onAdd: () -> Uni
                     place,
                     state.forecasts[place.id],
                     format,
-                    onClick = { viewModel.select(place.id); onBack() },
-                    onDelete = { viewModel.remove(place.id) },
-                    onMoveUp = if (index > 0) ({ viewModel.move(index, index - 1) }) else null,
-                    onMoveDown = if (index < state.places.lastIndex) ({ viewModel.move(index, index + 1) }) else null,
+                    now,
+                    onClick = { onSelect(place.id) },
+                    onDelete = { onRemove(place.id) },
+                    onMoveUp = if (index > 0) ({ onMove(index, index - 1) }) else null,
+                    onMoveDown = if (index < state.places.lastIndex) ({ onMove(index, index + 1) }) else null,
                 )
             }
             if (state.places.isEmpty()) {
@@ -136,12 +160,12 @@ private fun PlaceCard(
     place: Place,
     forecast: Forecast?,
     format: WeatherFormat,
+    now: Long,
     onClick: () -> Unit,
     onDelete: (() -> Unit)?,
     onMoveUp: (() -> Unit)? = null,
     onMoveDown: (() -> Unit)? = null,
 ) {
-    val now = System.currentTimeMillis() / 1000
     val moment = remember(forecast, now / 300) { forecast?.momentAt(now) }
     val palette = moment?.let { SkyPalette.of(it.sun.elevation, it.visual, it.moonPhase.illumination) }
     val zoned = remember(format, forecast) { format.withZone(WeatherFormat.zoneOf(forecast?.timezone, forecast?.utcOffsetSeconds ?: 0)) }

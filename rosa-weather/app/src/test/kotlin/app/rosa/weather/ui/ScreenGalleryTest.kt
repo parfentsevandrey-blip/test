@@ -30,6 +30,8 @@ import app.rosa.weather.core.model.AppSettings
 import app.rosa.weather.core.model.Appearance
 import app.rosa.weather.ui.settings.AppearancePicker
 import app.rosa.weather.ui.settings.SettingsScreen
+import app.rosa.weather.ui.places.PlacesScreen
+import app.rosa.weather.ui.places.PlacesUiState
 import app.rosa.weather.core.model.EffectsQuality
 import app.rosa.weather.core.model.Forecast
 import app.rosa.weather.core.model.Place
@@ -148,6 +150,43 @@ class ScreenGalleryTest {
             }
         }
         capture(name, doc = false)
+    }
+
+    /**
+     * Places, each card tinted with its own city's sky: the tint keeps to the card's rounded
+     * corners (it once drew a full rectangle whose square corners poked out past the glass).
+     */
+    @Test
+    fun places() {
+        val now = 1_758_621_600L
+        fun place(id: String, name: String, region: String, scenario: SampleForecast.Scenario, lat: Double, lon: Double, offset: Int) =
+            Place(id, name, lat, lon, region = region) to SampleForecast.create(scenario, nowEpochSeconds = now, latitude = lat, longitude = lon, utcOffsetSeconds = offset * 3600, placeId = id)
+        val entries = listOf(
+            place("msk", "Москва", "Москва", SampleForecast.Scenario.RainyAfternoon, 55.76, 37.62, 3),
+            place("rix", "Рига", "Рига", SampleForecast.Scenario.RainyAfternoon, 56.95, 24.11, 3),
+            place("ams", "Амстердам", "Северная Голландия", SampleForecast.Scenario.SunnyMild, 52.37, 4.9, 2),
+            place("nyc", "Нью-Йорк", "Нью-Йорк", SampleForecast.Scenario.ClearNight, 40.71, -74.0, -4),
+            place("jnb", "Йоханнесбург", "Гаутенг", SampleForecast.Scenario.SunnyMild, -26.2, 28.05, 2),
+        )
+        val state = PlacesUiState(
+            followDevice = true,
+            places = entries.map { it.first },
+            forecasts = entries.associate { (p, f) -> p.id to f },
+        )
+        val settings = AppSettings(effects = EffectsQuality.Balanced)
+        val forecast = entries.first().second
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            val sky = remember { SkyController(forecast.momentAt(now)) }
+            CompositionLocalProvider(LocalSky provides sky) {
+                RosaEnvironment(settings, sky.palette) {
+                    SkyBackdrop(sky.params, settings.effects, stage = sky.stage, transitionMillis = 0) {
+                        PlacesScreen(state, {}, {}, {}, {}, {}, { _, _ -> }, now = now)
+                    }
+                }
+            }
+        }
+        capture("places", doc = false)
     }
 
     /** Scrolled: the cards fade into the sky under the floating bar (scroll edge effect). */

@@ -132,6 +132,9 @@ fun GlassSurface(
     val glass = if (backdrop != null) {
         base.liquidGlass(backdrop, style, cornerRadius, state, environment)
             .then(if (touchResponsive && motion) Modifier.glassTouch(state, scope) else Modifier)
+            // What lies on the glass keeps to its shape (a card's own tint or picture has its
+            // rounded corners); the glass itself, drawn before, still blooms past its edge.
+            .clip(shape)
     } else {
         base.then(Modifier.graphicsLayer { clip = true; this.shape = shape })
     }
