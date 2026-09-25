@@ -3,7 +3,6 @@ package app.opal.core.tunnel.pt
 import IPtProxy.Controller
 import IPtProxy.IPtProxy
 import IPtProxy.OnTransportEvents
-import app.opal.core.model.bridge.BridgeLine
 import app.opal.core.model.bridge.TransportKind
 import java.io.File
 import kotlinx.coroutines.channels.BufferOverflow
@@ -73,16 +72,13 @@ internal class Transports(stateDir: File, debuggable: Boolean) {
         get() = "Lyrebird ${IPtProxy.lyrebirdVersion()}, Snowflake ${IPtProxy.snowflakeVersion()}"
 
     /**
-     * Snowflake defaults for bridge lines that omit rendezvous parameters (e.g. custom lines).
-     * Values come from the bundled/updated built-in Snowflake line, never from memory.
+     * Snowflake settings shared by all lines. Rendezvous arguments (url, fronts, ice, ampcache) are
+     * deliberately not set here: IPtProxy adds these globals to every line that lacks the key,
+     * which would give AMP cache lines (`front=`) the fronts of the domain-fronted lines. Lines are
+     * completed individually instead (BridgeCatalog.custom).
      */
     @Synchronized
-    fun configureSnowflakeDefaults(reference: BridgeLine?) {
-        val args = reference?.args ?: return
-        args["url"]?.let { controller.snowflakeBrokerUrl = it }
-        (args["fronts"] ?: args["front"])?.let { controller.snowflakeFrontDomains = it }
-        args["ice"]?.let { controller.snowflakeIceServers = it }
-        args["ampcache"]?.let { controller.snowflakeAmpCacheUrl = it }
+    fun configureSnowflake() {
         // One active proxy plus none held idle, as in Tor Browser: extra idle peers speed up
         // failover but occupy scarce volunteer proxies (see CLAUDE.md).
         controller.snowflakeMaxPeers = 1L

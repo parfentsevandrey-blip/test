@@ -5,7 +5,7 @@
     <string name="connection_auto">Авто</string>
     <string name="connection_auto_desc">Если Snowflake заблокирован: пробует параллельно obfs4, meek и WebTunnel и спрашивает мосты у сервера Tor Project (напрямую — он увидит ваш IP)</string>
     <string name="connection_snowflake_default">Snowflake — по умолчанию</string>
-    <string name="connection_snowflake_desc">Как в Tor Browser: через волонтёрские прокси WebRTC. Первое подключение может занять 1–2 минуты</string>
+    <string name="connection_snowflake_desc">Как в Tor Browser: через волонтёрские прокси WebRTC. В России — настройки Tor Project для РФ: другие домены и резерв через AMP. Первое подключение может занять 1–2 минуты</string>
     <string name="connection_webtunnel_desc">Выглядит как обычный HTTPS-сайт. Мосты — из Circumvention Settings API</string>
     <string name="connection_obfs4_desc">Трафик без узнаваемых признаков. Публичные мосты часто заблокированы — лучше свои</string>
     <string name="connection_meek_desc">Через CDN (domain fronting). Надёжно, но медленно</string>

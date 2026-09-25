@@ -34,7 +34,7 @@
 
     <string name="home_problem_bridges">Мосты пока не отвечают — продолжаем попытки</string>
     <string name="home_problem_frozen">Соединение подвисло — восстанавливаем</string>
-    <string name="home_problem_snowflake">Snowflake долго ищет прокси — продолжаем. Если так и не подключится, попробуйте другую сеть или «Подключение» → «Авто»</string>
+    <string name="home_problem_snowflake">Snowflake долго ищет прокси — продолжаем. При «белых списках» в мобильной сети Tor может не работать совсем — попробуйте Wi‑Fi или «Подключение» → «Авто»</string>
     <string name="home_problem_clock">Время на устройстве расходится с сетью Tor — проверьте дату и время</string>
     <string name="home_problem_settings_api">Не удалось получить мосты из Settings API — используем встроенные и сохранённые</string>
 

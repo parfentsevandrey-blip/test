@@ -217,6 +217,23 @@ build-logic           Convention-плагины opal.android.application|library
 31. **hev `connect-timeout` = 120 с** (было 15 с): hev ждёт ответ SOCKS CONNECT, то есть пока Tor
     дойдёт до сервера через exit-узел; через Snowflake это часто дольше 15 с, и соединения
     приложений рвались. 120 с = `SocksTimeout` Tor.
+32. **Snowflake для России — набор Tor Project для "ru"** (`assets/snowflake_regional.json`,
+    дословно из `POST bridges.torproject.org/moat/circumvention/settings {"country":"ru"}`,
+    2026-09-25). Tor Browser получает его через Connection Assist; встроенные строки
+    (`pt_config.json`) для России хуже: фронты `app.datapacket.com,www.datapacket.com` и STUN
+    voipgate/mixvoip (по OONI заблокированы в РФ). Набор "ru": CDN77 с фронтами
+    `cdn.zk.mk,img.icons8.com,cdn.kde.org` + две строки через AMP cache (`front=www.google.com`).
+    Страна — `countryHint`: сеть → SIM → часовой пояс РФ (tzdata `zone1970.tab`, для устройств без
+    SIM) → локаль. Наборы Snowflake не смешиваются (API → региональный → встроенный): у них общие
+    адреса-заглушки 192.0.2.3/4, а Tor оставляет один мост на адрес (`bridge_resolve_conflicts`).
+    Проверено из среды сборки: рандеву с реальным брокером через новые фронты и через AMP cache —
+    200 OK, ответы прокси получены; WebRTC здесь невозможен (нет UDP), из России — не проверено.
+33. **Никаких глобальных Snowflake-параметров IPtProxy** (`snowflakeFrontDomains`, `…IceServers`,
+    `…BrokerUrl`, `…AmpCacheUrl`): `addExtraArgs` дописывает их в каждую строку без такого ключа, а
+    `fronts` у клиента Snowflake важнее `front` — AMP-строки набора "ru" ушли бы на чужие фронты.
+    Глобально задаётся только `snowflakeMaxPeers = 1`; строки пользователя без способа рандеву
+    (нет url/ampcache/sqsqueue) дополняются аргументами текущего набора поштучно
+    (`BridgeCatalog.custom`).
 
 ## Стек
 

@@ -34,7 +34,7 @@
 
     <string name="home_problem_bridges">Bridges do not respond yet — still trying</string>
     <string name="home_problem_frozen">The connection stalled — recovering</string>
-    <string name="home_problem_snowflake">Snowflake is taking long to find a proxy — still trying. If it never connects, try another network or Connection → Auto</string>
+    <string name="home_problem_snowflake">Snowflake is taking long to find a proxy — still trying. Under mobile network whitelists Tor may not work at all — try Wi‑Fi or Connection → Auto</string>
     <string name="home_problem_clock">The device clock disagrees with the Tor network — check date and time</string>
     <string name="home_problem_settings_api">Could not get bridges from the Settings API — using built-in and saved ones</string>
 

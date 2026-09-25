@@ -1,8 +1,8 @@
 # Opal — весь трафик Android через Tor
 
 Opal — VPN-приложение для Android, которое заворачивает трафик всех приложений в сеть Tor
-(C-tor) и по умолчанию подключается через мост **Snowflake** — с теми же встроенными строками, что
-Tor Browser. Для сетей, где Snowflake заблокирован, есть режим «Авто» (гонка WebTunnel, obfs4,
+(C-tor) и по умолчанию подключается через мост **Snowflake** — с теми же строками, что Tor
+Browser (в России — набор Tor Project для РФ: другие домены и резерв через AMP cache). Для сетей, где Snowflake заблокирован, есть режим «Авто» (гонка WebTunnel, obfs4,
 meek и мосты из Circumvention Settings API) и свои мосты — их включают вручную. Своих серверов у
 приложения нет — только инфраструктура Tor Project. Интерфейс — «жидкое стекло» (Liquid Glass)
 на Jetpack Compose.
@@ -144,9 +144,18 @@ release собирается неподписанным. Обновить уст
 (`tor-browser-build/projects/tor-expert-bundle/pt_config.json`). Обновление:
 `./gradlew :core:tunnel:updateBuiltinBridges`, затем проверить diff и закоммитить.
 
+`core/tunnel/src/main/assets/snowflake_regional.json` — строки Snowflake, которые Circumvention
+Settings API выдаёт для страны (сейчас `ru`). Обновление — вручную:
+`curl -X POST https://bridges.torproject.org/moat/circumvention/settings -H 'Content-Type:
+application/vnd.api+json' -d '{"country":"ru"}'`, строки `snowflake` → в файл, дата — в `_fetched`.
+Страну приложение определяет локально (сеть → SIM → часовой пояс → локаль), никуда её не
+отправляя в режиме Snowflake.
+
 ## Мосты: где взять свои
 
-Если не справляются ни Snowflake, ни «Авто» (сеть с «белыми списками», агрессивная блокировка):
+Если не справляются ни Snowflake, ни «Авто» (агрессивная блокировка). При «белых списках» в
+мобильной сети (отключения по регионам РФ) ни один транспорт Tor, по данным Tor Project, не
+работает — остаётся Wi‑Fi/проводной интернет:
 
 - Telegram-бот **@GetBridgesBot**;
 - сайт **bridges.torproject.org** (QR-код можно отсканировать в приложении);

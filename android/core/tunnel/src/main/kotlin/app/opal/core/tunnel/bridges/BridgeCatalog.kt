@@ -12,9 +12,18 @@ import app.opal.core.model.settings.TunnelMemory
  * - lines from the Settings API for the user's country (private `bridgedb` ones first);
  * - the user's own lines (Custom mode only). Within a transport, bridges are ordered by their
  *   success statistics.
+ *
+ * Snowflake is the exception: its lines are one coherent set and are never mixed (see [snowflake]).
  */
 internal class BridgeCatalog(
     private val bundled: BuiltinBridges,
+    /**
+     * Snowflake lines the Settings API serves per country (snowflake_regional.json), e.g. other
+     * domain fronts, a STUN list without servers blocked there and an AMP cache fallback for "ru".
+     */
+    private val regionalSnowflake: Map<String, List<BridgeLine>> = emptyMap(),
+    /** Lowercase ISO 3166-1 country the device is in, when known (see TunnelRuntime). */
+    private val country: () -> String? = { null },
     /**
      * Test hook, debug builds only (see TunnelRuntime): points every Snowflake line at a broker
      * that cannot exist, to check that the race wins through another transport.
@@ -43,8 +52,48 @@ internal class BridgeCatalog(
             line
         }
 
-    fun custom(settings: AppSettings): List<BridgeLine> =
-        settings.customBridges.mapNotNull(BridgeLine::parseOrNull).distinctBy { it.raw }
+    /**
+     * The Snowflake set to use, as a whole: Settings API lines for the user's country, else the
+     * bundled set for the country, else the built-in lines. Sets are not mixed: they reuse the same
+     * placeholder addresses (192.0.2.3/4) with different arguments, and Tor keeps only the last
+     * bridge per address.
+     */
+    fun snowflake(memory: TunnelMemory): List<BridgeLine> {
+        val api =
+            memory.circumvention
+                ?.settings
+                .orEmpty()
+                .filter { it.type == TransportKind.Snowflake.ptName }
+                .flatMap { set -> set.lines.mapNotNull(BridgeLine::parseOrNull) }
+                .filter { it.transport == TransportKind.Snowflake }
+        val lines =
+            api.ifEmpty { country()?.let { regionalSnowflake[it] }.orEmpty() }
+                .ifEmpty { builtin(memory)[TransportKind.Snowflake] }
+                .distinctBy { it.raw }
+                .take(SNOWFLAKE_CAP)
+        return if (breakSnowflake()) lines.map(::sabotaged) else lines
+    }
+
+    /**
+     * The user's lines. A Snowflake line without any rendezvous method (url, ampcache or sqsqueue)
+     * gets the missing broker, fronts, STUN and uTLS arguments of the current Snowflake set. This
+     * is done per line on purpose: IPtProxy's global Snowflake defaults would also be added to
+     * every other line lacking them (for example `fronts=` to AMP cache lines that use `front=`).
+     */
+    fun custom(settings: AppSettings, memory: TunnelMemory): List<BridgeLine> {
+        val reference = snowflake(memory).firstOrNull { "url" in it.args && "ampcache" !in it.args }
+        return settings.customBridges
+            .mapNotNull(BridgeLine::parseOrNull)
+            .map { line -> if (reference != null) completed(line, reference) else line }
+            .distinctBy { it.raw }
+    }
+
+    private fun completed(line: BridgeLine, reference: BridgeLine): BridgeLine {
+        if (line.transport != TransportKind.Snowflake) return line
+        if (RENDEZVOUS_KEYS.any { it in line.args }) return line
+        val extra = reference.args.filterKeys { it in COMPLETION_KEYS && it !in line.args }
+        return line.copy(args = line.args + extra)
+    }
 
     fun candidates(memory: TunnelMemory): Map<TransportKind, List<BridgeLine>> {
         val builtin = builtin(memory)
@@ -69,17 +118,17 @@ internal class BridgeCatalog(
 
         val result = LinkedHashMap<TransportKind, List<BridgeLine>>()
         for (kind in TransportKind.entries) {
+            if (kind == TransportKind.Snowflake) {
+                snowflake(memory).takeIf { it.isNotEmpty() }?.let { result[kind] = it }
+                continue
+            }
             val lines =
                 (privateLines.filter { it.transport == kind } +
                         apiBuiltin.filter { it.transport == kind } +
                         builtin[kind])
                     .distinctBy { it.raw }
             if (lines.isEmpty()) continue
-            val usable = if (breakSnowflake()) lines.map(::sabotaged) else lines
-            val cap = CAPS[kind] ?: DEFAULT_CAP
-            // Snowflake lines are all needed (different bridges behind the same broker).
-            result[kind] =
-                if (kind == TransportKind.Snowflake) usable.take(cap) else rank(usable).take(cap)
+            result[kind] = rank(lines).take(CAPS[kind] ?: DEFAULT_CAP)
         }
         return result
     }
@@ -88,9 +137,13 @@ internal class BridgeCatalog(
         /** RFC 2606 `.invalid`: guaranteed never to resolve or be served by the CDN front. */
         const val BROKEN_BROKER = "https://broker.invalid/"
         const val DEFAULT_CAP = 4
+
+        /** Whole sets: 2 built-in lines, or 4 for "ru" (2 domain-fronted + 2 AMP cache). */
+        const val SNOWFLAKE_CAP = 4
+        val RENDEZVOUS_KEYS = setOf("url", "ampcache", "sqsqueue")
+        val COMPLETION_KEYS = setOf("url", "fronts", "front", "ice", "utls-imitate")
         val CAPS =
             mapOf(
-                TransportKind.Snowflake to 2,
                 TransportKind.Obfs4 to 8,
                 TransportKind.WebTunnel to 4,
                 TransportKind.Meek to 1,

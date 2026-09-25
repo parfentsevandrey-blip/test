@@ -203,7 +203,7 @@ internal class TorSession(
                 memory,
                 network.status.value.kind,
                 candidates,
-                catalog.custom(settings),
+                catalog.custom(settings, memory),
             )
         plan = newPlan
         var initial = newPlan.initial
@@ -228,9 +228,7 @@ internal class TorSession(
         }
         configured = initial
         expanded = newPlan.expansion.isEmpty()
-        transports.configureSnowflakeDefaults(
-            catalog.builtin(memory)[TransportKind.Snowflake].firstOrNull()
-        )
+        transports.configureSnowflake()
         val running =
             try {
                 val ports = transports.ensure(configured.map { it.transport })
@@ -535,7 +533,7 @@ internal class TorSession(
                 memory,
                 network.status.value.kind,
                 catalog.candidates(memory),
-                catalog.custom(settings),
+                catalog.custom(settings, memory),
             )
         plan = p
         expanded = true
@@ -719,7 +717,7 @@ internal class TorSession(
                 memoryRepo.current(),
                 network.status.value.kind,
                 catalog.candidates(memoryRepo.current()),
-                catalog.custom(settings),
+                catalog.custom(settings, memoryRepo.current()),
             )
         val lines = p.all.filter { it.id != current }.ifEmpty { p.all }
         plan = p
@@ -781,7 +779,7 @@ internal class TorSession(
                     memory,
                     network.status.value.kind,
                     catalog.candidates(memory),
-                    catalog.custom(new),
+                    catalog.custom(new, memory),
                 )
             plan = p
             if (p.initial.isNotEmpty()) {

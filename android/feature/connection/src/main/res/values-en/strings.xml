@@ -5,7 +5,7 @@
     <string name="connection_auto">Auto</string>
     <string name="connection_auto_desc">If Snowflake is blocked: tries obfs4, meek and WebTunnel in parallel and asks the Tor Project server for bridges (directly — it sees your IP)</string>
     <string name="connection_snowflake_default">Snowflake — default</string>
-    <string name="connection_snowflake_desc">As in Tor Browser: through volunteer WebRTC proxies. The first connection can take 1–2 minutes</string>
+    <string name="connection_snowflake_desc">As in Tor Browser: through volunteer WebRTC proxies. In Russia, the Tor Project settings for Russia: other domains and an AMP fallback. The first connection can take 1–2 minutes</string>
     <string name="connection_webtunnel_desc">Looks like an ordinary HTTPS website. Bridges come from the Circumvention Settings API</string>
     <string name="connection_obfs4_desc">Traffic without recognisable patterns. Public bridges are often blocked — your own are better</string>
     <string name="connection_meek_desc">Through a CDN (domain fronting). Reliable but slow</string>

@@ -17,6 +17,7 @@ import app.opal.core.tunnel.tor.CTorEngine
 import app.opal.core.tunnel.tor.TorFiles
 import app.opal.core.tunnel.util.LogBuffer
 import java.util.Locale
+import java.util.TimeZone
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -40,6 +41,10 @@ internal class TunnelRuntime private constructor(context: Context) {
         app.assets.open("pt_config.json").use {
             BuiltinBridges.parsePtConfig(it.readBytes().decodeToString())
         }
+    private val regionalSnowflake =
+        app.assets.open("snowflake_regional.json").use {
+            BuiltinBridges.parseRegionalSnowflake(it.readBytes().decodeToString())
+        }
 
     val controller =
         TunnelController(
@@ -50,7 +55,7 @@ internal class TunnelRuntime private constructor(context: Context) {
             transports = transports,
             hev = HevTunnel(app),
             catalog =
-                BridgeCatalog(bundledBridges) {
+                BridgeCatalog(bundledBridges, regionalSnowflake, { countryHint(app) }) {
                     // adb shell run-as app.opal.debug touch files/debug_break_snowflake
                     debuggable && java.io.File(app.filesDir, "debug_break_snowflake").exists()
                 },
@@ -79,12 +84,49 @@ internal class TunnelRuntime private constructor(context: Context) {
             else @Suppress("DEPRECATION") info.versionCode.toLong()
         }
 
-        /** Country for the Settings API when asking through Tor (no permission needed). */
+        /**
+         * Country for the Settings API and the regional Snowflake set (no permission needed):
+         * mobile network, else SIM, else a Russian time zone (Wi-Fi-only devices), else locale.
+         */
         private fun countryHint(context: Context): String? {
             val tm = context.getSystemService(TelephonyManager::class.java)
-            val candidates =
-                listOf(tm?.networkCountryIso, tm?.simCountryIso, Locale.getDefault().country)
-            return candidates.firstOrNull { !it.isNullOrBlank() && it.length == 2 }?.lowercase()
+            fun valid(cc: String?) = cc?.takeIf { it.length == 2 }?.lowercase()
+            return valid(tm?.networkCountryIso)
+                ?: valid(tm?.simCountryIso)
+                ?: "ru".takeIf { TimeZone.getDefault().id in RUSSIAN_TIME_ZONES }
+                ?: valid(Locale.getDefault().country)
         }
+
+        /** tzdata zone1970.tab entries whose country codes include RU. */
+        private val RUSSIAN_TIME_ZONES =
+            setOf(
+                "Europe/Kaliningrad",
+                "Europe/Moscow",
+                "Europe/Kirov",
+                "Europe/Volgograd",
+                "Europe/Astrakhan",
+                "Europe/Saratov",
+                "Europe/Ulyanovsk",
+                "Europe/Samara",
+                "Europe/Simferopol",
+                "Asia/Yekaterinburg",
+                "Asia/Omsk",
+                "Asia/Novosibirsk",
+                "Asia/Barnaul",
+                "Asia/Tomsk",
+                "Asia/Novokuznetsk",
+                "Asia/Krasnoyarsk",
+                "Asia/Irkutsk",
+                "Asia/Chita",
+                "Asia/Yakutsk",
+                "Asia/Khandyga",
+                "Asia/Vladivostok",
+                "Asia/Ust-Nera",
+                "Asia/Magadan",
+                "Asia/Sakhalin",
+                "Asia/Srednekolymsk",
+                "Asia/Kamchatka",
+                "Asia/Anadyr",
+            )
     }
 }

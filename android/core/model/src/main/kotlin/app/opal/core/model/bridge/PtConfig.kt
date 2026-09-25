@@ -27,6 +27,25 @@ data class BuiltinBridges(val byTransport: Map<TransportKind, List<BridgeLine>>)
             )
         }
 
+        /**
+         * Parses snowflake_regional.json: country code → the Snowflake lines the Settings API
+         * serves for that country. Keys starting with `_` are provenance notes; bad lines and
+         * non-Snowflake lines are skipped.
+         */
+        fun parseRegionalSnowflake(text: String): Map<String, List<BridgeLine>> {
+            val root = json.parseToJsonElement(text) as JsonObject
+            return root
+                .filterKeys { !it.startsWith("_") }
+                .mapKeys { it.key.lowercase() }
+                .mapValues { (_, v) ->
+                    (v as? JsonArray)
+                        ?.mapNotNull { BridgeLine.parseOrNull(it.jsonPrimitive.content) }
+                        ?.filter { it.transport == TransportKind.Snowflake }
+                        .orEmpty()
+                }
+                .filterValues { it.isNotEmpty() }
+        }
+
         /** Same shape as the Settings API `/builtin` response: transport name → lines. */
         fun fromMap(map: Map<String, List<String>>): BuiltinBridges {
             val result = LinkedHashMap<TransportKind, MutableList<BridgeLine>>()
