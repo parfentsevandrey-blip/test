@@ -12,9 +12,12 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import app.rosa.weather.core.data.repository.PlacesRepository
 import app.rosa.weather.ui.RosaAppRoot
+import app.rosa.weather.widget.WidgetPreviews
 import app.rosa.weather.widget.WidgetUpdater
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -42,7 +45,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent { RosaAppRoot() }
         // Only a fresh launch: after recreation the intent would drag the user back to that city.
-        if (savedInstanceState == null) openPlaceFrom(intent)
+        if (savedInstanceState == null) {
+            openPlaceFrom(intent)
+            // The widget picker's previews are drawn while the app is open anyway, once it has
+            // settled — not whenever a widget wakes the app, where a tap would wait behind them.
+            lifecycleScope.launch(Dispatchers.Default) {
+                delay(3_000)
+                WidgetPreviews.publish(applicationContext)
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

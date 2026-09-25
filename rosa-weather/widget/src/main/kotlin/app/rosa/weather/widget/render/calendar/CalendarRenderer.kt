@@ -10,6 +10,7 @@ import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
 import android.text.TextPaint
+import android.util.SizeF
 import androidx.core.graphics.withClip
 import app.rosa.weather.core.designsystem.format.WeatherFormat
 import app.rosa.weather.core.designsystem.glyph.WeatherGlyphPainter
@@ -20,12 +21,14 @@ import app.rosa.weather.core.model.DailyPoint
 import app.rosa.weather.core.model.SkyPalette
 import app.rosa.weather.core.model.WeatherCondition
 import app.rosa.weather.core.model.WeatherVisual
+import app.rosa.weather.core.model.WidgetConfig
 import app.rosa.weather.core.model.WidgetStyle
 import app.rosa.weather.core.model.momentAt
 import app.rosa.weather.widget.render.GlassBevel
 import app.rosa.weather.widget.render.GlassNumerals
 import app.rosa.weather.widget.render.SkyAnchor
 import app.rosa.weather.widget.render.WidgetBackground
+import app.rosa.weather.widget.render.WidgetContent
 import app.rosa.weather.widget.render.WidgetFonts
 import app.rosa.weather.widget.render.WidgetLight
 import app.rosa.weather.widget.render.WidgetPalette
@@ -52,6 +55,14 @@ data class CalendarView(
     val locale: Locale = Locale.getDefault(),
 ) {
     val isCurrentMonth: Boolean get() = month == YearMonth.from(today)
+
+    /** What the widget says to accessibility services, to which it is one picture: "Октябрь 2026. Пятница, 25". */
+    val spoken: String
+        get() {
+            val name = month.month.getDisplayName(TextStyle.FULL_STANDALONE, locale).replaceFirstChar { it.titlecase(locale) }
+            val weekday = today.dayOfWeek.getDisplayName(TextStyle.FULL, locale).replaceFirstChar { it.titlecase(locale) }
+            return "$name ${month.year}. $weekday, ${today.dayOfMonth}"
+        }
 
     companion object {
         /** Today where the phone is, and the month [offset] months from this one. */
@@ -106,20 +117,62 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         @Suppress("DEPRECATION")
         val px = canvas.matrix.mapRadius(1f).coerceIn(0.25f, 6f)
         val s = Sheet(px, request, view, art, look, w, h, radius)
-        return when {
-            w < 130f && h >= 100f || w < 100f -> tile(canvas, s, vertical = true)
-            h < 100f && w < 210f -> tile(canvas, s, vertical = false)
-            h < 100f -> week(canvas, s)
-            w >= h * 1.7f -> wide(canvas, s)
-            else -> full(canvas, s)
+        return when (Layout.of(w, h)) {
+            Layout.TallTile -> tile(canvas, s, vertical = true)
+            Layout.FlatTile -> tile(canvas, s, vertical = false)
+            Layout.Week -> week(canvas, s)
+            Layout.Wide -> wide(canvas, s)
+            Layout.Full -> full(canvas, s)
         }
     }
 
-    /** Spoken summary: the widget is one picture to accessibility services. */
-    fun describe(view: CalendarView): String {
-        val weekday = view.today.dayOfWeek.getDisplayName(TextStyle.FULL, view.locale)
-        val month = monthName(view.month, view.locale)
-        return "$month ${view.month.year}. ${weekday.replaceFirstChar { it.titlecase(view.locale) }}, ${view.today.dayOfMonth}"
+    /** How a calendar of a size is laid out: a date tile, today and its week, or the month. */
+    internal enum class Layout {
+        TallTile, FlatTile, Week, Wide, Full;
+
+        companion object {
+            fun of(w: Float, h: Float): Layout = when {
+                w < 130f && h >= 100f || w < 100f -> TallTile
+                h < 100f && w < 210f -> FlatTile
+                h < 100f -> Week
+                w >= h * 1.7f -> Wide
+                else -> Full
+            }
+        }
+    }
+
+    companion object {
+        /**
+         * Everything of the weather a calendar page of [view] shows at [sizes], as text: the
+         * light of the sky (the palette follows day and night), today's weather where today is drawn
+         * large or under this month's name, the forecast on the days still to come. Pages whose
+         * text is the same show the same weather — a page drawn ahead is still good.
+         */
+        fun weatherShown(view: CalendarView, content: WidgetContent, config: WidgetConfig, sizes: List<SizeF>): String {
+            val forecast = content.forecast ?: return "-"
+            val units = content.units
+            val moment = forecast.momentAt(content.nowEpochSeconds)
+            val out = StringBuilder().append(units).append('|').append(moment.isDay)
+            val layouts = sizes.mapTo(HashSet()) { Layout.of(it.width, it.height) }
+            val now = Layout.TallTile in layouts || Layout.Wide in layouts || (Layout.Full in layouts && view.isCurrentMonth)
+            if (now) {
+                out.append('|').append(moment.condition).append(' ').append(units.roundedTemperature(moment.temperature))
+                if (!moment.isDay) out.append(' ').append((moment.moonPhase.phase * 40).roundToInt())
+            }
+            if (config.calendar.forecastInDays) {
+                val zone = WeatherFormat.zoneOf(forecast.timezone, forecast.utcOffsetSeconds)
+                val days = forecast.daily.associateBy { Instant.ofEpochSecond(it.time + 3600).atZone(zone).toLocalDate() }
+                val firstDay = CalendarMonth.firstDayFor(config.calendar.weekStart, view.locale)
+                val dates = HashSet<LocalDate>()
+                if (Layout.Full in layouts || Layout.Wide in layouts) CalendarMonth.of(view.month, view.today, firstDay).days.mapTo(dates) { it.date }
+                if (Layout.Week in layouts) view.today.with(TemporalAdjusters.previousOrSame(firstDay)).let { start -> (0L until 7L).mapTo(dates) { start.plusDays(it) } }
+                dates.filter { !it.isBefore(view.today) }.sorted().forEach { date ->
+                    val day = days[date] ?: return@forEach
+                    out.append('|').append(date.dayOfMonth).append(':').append(day.weatherCode).append(':').append(units.roundedTemperature(day.temperatureMax))
+                }
+            }
+            return out.toString()
+        }
     }
 
     // region Layouts

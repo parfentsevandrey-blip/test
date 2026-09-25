@@ -13,10 +13,12 @@ import app.rosa.weather.core.data.repository.WidgetConfigRepository
 import app.rosa.weather.core.data.sync.SyncReason
 import app.rosa.weather.core.data.sync.SyncScheduler
 import app.rosa.weather.widget.WidgetUpdater
+import app.rosa.weather.widget.calendar.CalendarAhead
 import app.rosa.weather.widget.calendar.CalendarAlarm
 import app.rosa.weather.widget.calendar.CalendarChanges
 import app.rosa.weather.widget.calendar.CalendarIntents
 import app.rosa.weather.widget.calendar.CalendarNavigation
+import app.rosa.weather.widget.calendar.CalendarPages
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -72,13 +74,17 @@ abstract class RosaWidgetProvider : AppWidgetProvider() {
             if (graph.updater().anyStale(appWidgetIds)) {
                 graph.scheduler().refreshNow(force = false, reason = SyncReason.SystemEvent)
             }
+            graph.updater().settle()
         }
     }
 
     override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, appWidgetId: Int, newOptions: Bundle) {
         // Resized, rotated or moved: re-layout for the new exact sizes straight from cache.
         val graph = context.widgetGraph()
-        launchAsync { graph.updater().update(intArrayOf(appWidgetId)) }
+        launchAsync {
+            graph.updater().update(intArrayOf(appWidgetId))
+            graph.updater().settle()
+        }
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
@@ -102,6 +108,7 @@ abstract class RosaWidgetProvider : AppWidgetProvider() {
         launchAsync {
             graph.configs().remap(oldWidgetIds, newWidgetIds)
             graph.updater().update(newWidgetIds)
+            graph.updater().settle()
         }
     }
 
@@ -112,6 +119,7 @@ abstract class RosaWidgetProvider : AppWidgetProvider() {
             launchAsync {
                 graph.updater().markRefreshing(id)
                 graph.scheduler().refreshNow(force = true, reason = SyncReason.UserRequest)
+                graph.updater().settle()
             }
             return
         }
@@ -139,13 +147,24 @@ class CalendarWidgetProvider : RosaWidgetProvider() {
                 val graph = context.widgetGraph()
                 launchAsync {
                     CalendarNavigation(context).move(id, delta, LocalDate.now())
-                    graph.updater().update(intArrayOf(id))
+                    val updater = graph.updater()
+                    if (updater.flip(id)) {
+                        // Drawn ahead: it only went to the launcher. The months around it are drawn
+                        // in a job, so the broadcast ends now and a next tap is taken at once.
+                        CalendarAhead.request(context, id)
+                    } else {
+                        updater.update(intArrayOf(id))
+                        updater.settle()
+                    }
                 }
             }
             CalendarIntents.ACTION_NEW_DAY -> {
                 val graph = context.widgetGraph()
                 val ids = AppWidgetManager.getInstance(context).getAppWidgetIds(ComponentName(context, CalendarWidgetProvider::class.java))
-                launchAsync { graph.updater().update(ids) }
+                launchAsync {
+                    graph.updater().update(ids)
+                    graph.updater().settle()
+                }
             }
             else -> super.onReceive(context, intent)
         }
@@ -153,6 +172,7 @@ class CalendarWidgetProvider : RosaWidgetProvider() {
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         CalendarNavigation(context).forget(appWidgetIds)
+        CalendarPages.forget(context, appWidgetIds)
         super.onDeleted(context, appWidgetIds)
     }
 

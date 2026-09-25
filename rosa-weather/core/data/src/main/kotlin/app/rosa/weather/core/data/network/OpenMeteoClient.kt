@@ -17,7 +17,13 @@ import kotlinx.coroutines.coroutineScope
  * air quality and geocoding.
  */
 @Singleton
-class OpenMeteoClient @Inject internal constructor(private val http: HttpClient) {
+class OpenMeteoClient @Inject internal constructor(
+    // Built on first use: a widget woken to draw from the cache never pays for the network stack.
+    private val client: dagger.Lazy<HttpClient>,
+) {
+    internal constructor(http: HttpClient) : this(dagger.Lazy { http })
+
+    private val http: HttpClient get() = client.get()
 
     suspend fun forecast(place: Place, fetchedAt: Long): Forecast = coroutineScope {
         val air = async { runCatching { airQuality(place) }.getOrNull() }

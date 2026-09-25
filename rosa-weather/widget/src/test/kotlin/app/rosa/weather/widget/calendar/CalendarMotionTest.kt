@@ -87,7 +87,7 @@ class CalendarMotionTest {
         val views = RemoteViews(context.packageName, R.layout.widget_calendar).apply {
             setImageViewBitmap(R.id.widget_image, picture)
             setLiveWeather(context.packageName, expected, w, h, radius)
-            setCalendarTargets(context, ComponentName(context, CalendarWidgetProvider::class.java), 1, view, targets)
+            setCalendarTargets(context, CalendarClicks(context, ComponentName(context, CalendarWidgetProvider::class.java), 1, view), targets)
         }
         val host = FrameLayout(context)
         val root = views.apply(context, host)

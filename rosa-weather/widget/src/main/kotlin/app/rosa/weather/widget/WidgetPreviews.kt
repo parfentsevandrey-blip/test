@@ -18,11 +18,14 @@ import app.rosa.weather.widget.render.WidgetRenderer
 /**
  * Android 15+ generated previews: the widget picker shows each style rendered by the real
  * engine rather than a static screenshot. The platform rate-limits these calls, so we publish
- * once per app version (and on package replacement).
+ * once per app version (and on package replacement), trying again at most once an hour when the
+ * platform turned some away.
  */
 object WidgetPreviews {
     private const val PREFS = "widget_previews"
     private const val KEY_VERSION = "published_version"
+    private const val KEY_ATTEMPT = "last_attempt"
+    private const val RETRY_MILLIS = 60 * 60 * 1000L
 
     fun publish(context: Context, force: Boolean = false) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
@@ -31,16 +34,19 @@ object WidgetPreviews {
             context.packageManager.getPackageInfo(context.packageName, 0).longVersionCode
         }.getOrDefault(0L)
         if (!force && prefs.getLong(KEY_VERSION, -1) == version) return
+        val now = System.currentTimeMillis()
+        if (!force && now - prefs.getLong(KEY_ATTEMPT, 0L) in 0 until RETRY_MILLIS) return
+        prefs.edit { putLong(KEY_ATTEMPT, now) }
 
         val manager = AppWidgetManager.getInstance(context) ?: return
         val renderer = WidgetRenderer(context)
-        val now = System.currentTimeMillis() / 1000
-        val forecast = SampleForecast.create(SampleForecast.Scenario.RainyAfternoon, nowEpochSeconds = now)
+        val seconds = now / 1000
+        val forecast = SampleForecast.create(SampleForecast.Scenario.RainyAfternoon, nowEpochSeconds = seconds)
         val content = WidgetContent(
             placeName = context.getString(R.string.widget_preview_place),
             isCurrentLocation = true,
             forecast = forecast,
-            nowEpochSeconds = now,
+            nowEpochSeconds = seconds,
             units = Units.forCountry(java.util.Locale.getDefault().country),
         )
         val density = context.resources.displayMetrics.density

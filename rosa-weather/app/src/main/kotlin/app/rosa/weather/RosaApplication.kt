@@ -8,7 +8,6 @@ import androidx.work.Configuration as WorkConfiguration
 import app.rosa.weather.core.data.di.ApplicationScope
 import app.rosa.weather.core.data.repository.SettingsRepository
 import app.rosa.weather.core.data.sync.SyncScheduler
-import app.rosa.weather.widget.WidgetPreviews
 import app.rosa.weather.widget.WidgetUpdater
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -36,7 +35,6 @@ class RosaApplication : Application(), WorkConfiguration.Provider {
             if (WidgetUpdater.hasWidgets(this@RosaApplication)) {
                 scheduler.ensurePeriodic(settings.current().refreshIntervalMinutes)
             }
-            WidgetPreviews.publish(this@RosaApplication)
         }
         widgetUpdater.followPlaceChanges(scope)
         // Widgets are bitmaps: when the system theme flips while we're alive, redraw them now

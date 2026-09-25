@@ -16,12 +16,14 @@ import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import app.rosa.weather.widget.R
+import app.rosa.weather.widget.motion.setLiveWeather
 import app.rosa.weather.widget.render.calendar.CalendarTargets
 import app.rosa.weather.widget.render.calendar.CalendarView
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.util.Locale
 
 /**
  * Which month each calendar widget shows. Arrows move it a month at a time; tomorrow every
@@ -122,6 +124,10 @@ internal object CalendarIntents {
 
     private const val FLAGS = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
 
+    /** Whether a calendar app takes these intents: asked once, not for every day of every size. */
+    @Volatile private var canView: Boolean? = null
+    @Volatile private var canInsert: Boolean? = null
+
     fun month(context: Context, provider: ComponentName, widgetId: Int, delta: Int): PendingIntent {
         // A tap someone is waiting on: delivered and run at foreground priority, not queued behind
         // the background's broadcasts.
@@ -138,8 +144,8 @@ internal object CalendarIntents {
         val view = Intent(Intent.ACTION_VIEW)
             .setData(CalendarContract.CONTENT_URI.buildUpon().appendPath("time").appendPath(millis.toString()).build())
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        val intent = if (view.resolveActivity(context.packageManager) != null) view else app(context)
-        return PendingIntent.getActivity(context, widgetId, intent, FLAGS)
+        val ok = canView ?: (view.resolveActivity(context.packageManager) != null).also { canView = it }
+        return PendingIntent.getActivity(context, widgetId, if (ok) view else app(context), FLAGS)
     }
 
     /** A new event in the phone's calendar, starting at the next full hour of [date]. */
@@ -155,8 +161,8 @@ internal object CalendarIntents {
             .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, begin.toInstant().toEpochMilli())
             .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, begin.plusHours(1).toInstant().toEpochMilli())
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        val intent = if (insert.resolveActivity(context.packageManager) != null) insert else app(context)
-        return PendingIntent.getActivity(context, widgetId, intent, FLAGS)
+        val ok = canInsert ?: (insert.resolveActivity(context.packageManager) != null).also { canInsert = it }
+        return PendingIntent.getActivity(context, widgetId, if (ok) insert else app(context), FLAGS)
     }
 
     private fun app(context: Context): Intent =
@@ -166,16 +172,24 @@ internal object CalendarIntents {
 }
 
 /**
+ * The taps of one widget's picture, made once and shared by all its sizes: every size lays its
+ * targets where its own picture put them, but the same day opens the same thing.
+ */
+internal class CalendarClicks(private val context: Context, private val provider: ComponentName, private val widgetId: Int, val view: CalendarView) {
+    private val days = HashMap<LocalDate, PendingIntent>()
+    private val months = HashMap<Int, PendingIntent>()
+    val add: PendingIntent by lazy { CalendarIntents.add(context, widgetId, if (view.isCurrentMonth) view.today else view.month.atDay(1), view.today) }
+
+    fun day(date: LocalDate): PendingIntent = days.getOrPut(date) { CalendarIntents.day(context, widgetId, date) }
+
+    fun month(delta: Int): PendingIntent = months.getOrPut(delta) { CalendarIntents.month(context, provider, widgetId, delta) }
+}
+
+/**
  * Lays the calendar's tap targets over its picture: invisible views where the picture shows
  * the arrows, the month's name, the new-event button and each day.
  */
-internal fun RemoteViews.setCalendarTargets(
-    context: Context,
-    provider: ComponentName,
-    widgetId: Int,
-    view: CalendarView,
-    targets: CalendarTargets,
-) {
+internal fun RemoteViews.setCalendarTargets(context: Context, clicks: CalendarClicks, targets: CalendarTargets) {
     removeAllViews(R.id.widget_targets)
     fun add(rect: RectF, click: PendingIntent, description: String, id: Int) {
         val target = RemoteViews(context.packageName, R.layout.calendar_target)
@@ -187,23 +201,39 @@ internal fun RemoteViews.setCalendarTargets(
         target.setContentDescription(R.id.calendar_target, description)
         addStableView(R.id.widget_targets, target, id)
     }
-    val today = view.today
+    val view = clicks.view
     val dayFormat = java.time.format.DateTimeFormatter.ofPattern("d MMMM", view.locale)
     targets.days.forEachIndexed { i, (date, rect) ->
-        add(rect, CalendarIntents.day(context, widgetId, date), dayFormat.format(date), 100 + i)
+        add(rect, clicks.day(date), dayFormat.format(date), 100 + i)
     }
-    targets.previous?.let { add(it, CalendarIntents.month(context, provider, widgetId, -1), context.getString(R.string.calendar_previous), 1) }
-    targets.next?.let { add(it, CalendarIntents.month(context, provider, widgetId, 1), context.getString(R.string.calendar_next), 2) }
+    targets.previous?.let { add(it, clicks.month(-1), context.getString(R.string.calendar_previous), 1) }
+    targets.next?.let { add(it, clicks.month(1), context.getString(R.string.calendar_next), 2) }
     targets.title?.let {
         // On this month the name opens the calendar; elsewhere it brings you back.
         if (view.isCurrentMonth) {
-            add(it, CalendarIntents.day(context, widgetId, today), context.getString(R.string.calendar_open), 3)
+            add(it, clicks.day(view.today), context.getString(R.string.calendar_open), 3)
         } else {
-            add(it, CalendarIntents.month(context, provider, widgetId, 0), context.getString(R.string.calendar_today), 3)
+            add(it, clicks.month(0), context.getString(R.string.calendar_today), 3)
         }
     }
-    targets.add?.let {
-        val date = if (view.isCurrentMonth) today else view.month.atDay(1)
-        add(it, CalendarIntents.add(context, widgetId, date, today), context.getString(R.string.calendar_add), 4)
+    targets.add?.let { add(it, clicks.add, context.getString(R.string.calendar_add), 4) }
+}
+
+/**
+ * The widget as the launcher gets it from a drawn page: at each size its picture, what it says
+ * to accessibility, the season moving over it and its tap targets. Nothing is drawn here.
+ */
+internal fun CalendarPages.Page.views(context: Context, provider: ComponentName, widgetId: Int, locale: Locale): RemoteViews {
+    val view = CalendarView(month, today, locale = locale)
+    val clicks = CalendarClicks(context, provider, widgetId, view)
+    val description = view.spoken
+    val bySize = sizes.associate { s ->
+        s.size to RemoteViews(context.packageName, R.layout.widget_calendar).apply {
+            setImageViewBitmap(R.id.widget_image, s.bitmap)
+            setContentDescription(R.id.widget_image, description)
+            setLiveWeather(context.packageName, live, s.size.width, s.size.height, radius)
+            setCalendarTargets(context, clicks, s.targets)
+        }
     }
+    return if (bySize.size == 1) bySize.values.first() else RemoteViews(bySize)
 }

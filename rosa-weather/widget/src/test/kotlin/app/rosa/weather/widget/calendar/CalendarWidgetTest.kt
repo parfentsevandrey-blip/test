@@ -83,7 +83,7 @@ class CalendarWidgetTest {
         val (bitmap, targets) = render(314f, 252f)
         val views = RemoteViews(context.packageName, R.layout.widget_calendar).apply {
             setImageViewBitmap(R.id.widget_image, bitmap)
-            setCalendarTargets(context, provider, 7, view, targets)
+            setCalendarTargets(context, CalendarClicks(context, provider, 7, view), targets)
         }
         val host = FrameLayout(context)
         val root = views.apply(context, host)

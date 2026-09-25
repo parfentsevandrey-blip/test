@@ -119,9 +119,6 @@ class WidgetRenderer(private val context: Context) {
         return bitmap to targets
     }
 
-    /** Spoken summary of a calendar widget. */
-    fun describe(view: CalendarView): String = calendar.describe(view)
-
     /**
      * Draws in dp units; callers scale the canvas. Returns the weather layout used (for hit
      * regions), or null for a calendar.

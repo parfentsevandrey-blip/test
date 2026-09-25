@@ -59,7 +59,10 @@ class CalendarChangesWorker(context: Context, params: WorkerParameters) : Corout
         if (!CalendarChanges.wanted(context, ids)) return Result.success()
         // Armed before the redraw reads the events, so a change made meanwhile is not missed.
         CalendarChanges.watch(context)
-        context.widgetGraph().updater().update(ids)
+        val updater = context.widgetGraph().updater()
+        updater.update(ids)
+        // The months around each calendar may carry the edited events too.
+        updater.settle()
         return Result.success()
     }
 }
