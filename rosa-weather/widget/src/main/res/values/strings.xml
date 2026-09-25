@@ -60,4 +60,23 @@
     <string name="toggle_updated">Update time</string>
     <string name="studio_move_up">Move up</string>
     <string name="studio_move_down">Move down</string>
+    <string name="widget_calendar_label">Rosa · Calendar</string>
+    <string name="widget_calendar_description">The month over a painting of its season, with the weather in its days.</string>
+    <string name="calendar_previous">Previous month</string>
+    <string name="calendar_next">Next month</string>
+    <string name="calendar_add">New event</string>
+    <string name="calendar_today">Back to this month</string>
+    <string name="calendar_open">Open the calendar</string>
+    <string name="studio_calendar">Calendar</string>
+    <string name="studio_week_start">Weeks begin on</string>
+    <string name="week_start_auto">Auto</string>
+    <string name="week_start_monday">Mon</string>
+    <string name="week_start_sunday">Sun</string>
+    <string name="week_start_saturday">Sat</string>
+    <string name="toggle_week_numbers">Week numbers</string>
+    <string name="toggle_forecast_days">Weather in the days</string>
+    <string name="toggle_events">Events from your calendars</string>
+    <string name="events_permission_hint">To show events, Rosa needs access to your calendars.</string>
+    <string name="toggle_live_season">Snow, leaves and petals in motion</string>
+    <string name="style_season">Season</string>
 </resources>

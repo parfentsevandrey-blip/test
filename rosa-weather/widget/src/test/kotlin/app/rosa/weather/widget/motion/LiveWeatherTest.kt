@@ -72,7 +72,7 @@ class LiveWeatherTest {
             val rows = LiveWeather.rows(h)
             assertThat(columns * LiveWeather.TILE_WIDTH_DP).isAtLeast(w)
             assertThat(rows * LiveWeather.TILE_HEIGHT_DP).isAtLeast(h)
-            if (weather == LiveWeather.SnowLight || weather == LiveWeather.SnowHeavy) continue
+            if (weather.isSingleTile) continue
             for (row in 0 until rows) for (column in 0 until columns) {
                 val tile = weather.tileAt(column, row)
                 if (column > 0) assertThat(weather.tileAt(column - 1, row)).isNotEqualTo(tile)

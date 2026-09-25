@@ -24,12 +24,19 @@ import app.rosa.weather.core.model.Headline
 import app.rosa.weather.core.model.Headlines
 import app.rosa.weather.core.model.Place
 import app.rosa.weather.core.model.SavedPlaces
+import app.rosa.weather.core.model.CalendarMonth
 import app.rosa.weather.core.model.WidgetConfig
+import app.rosa.weather.core.model.WidgetFace
 import app.rosa.weather.core.model.WidgetStyle
 import app.rosa.weather.core.model.WidgetTapAction
 import app.rosa.weather.core.model.WidgetTheme
 import app.rosa.weather.core.model.momentAt
 import app.rosa.weather.core.model.nextSceneChange
+import app.rosa.weather.widget.calendar.CalendarAlarm
+import app.rosa.weather.widget.calendar.CalendarChanges
+import app.rosa.weather.widget.calendar.CalendarEvents
+import app.rosa.weather.widget.calendar.CalendarNavigation
+import app.rosa.weather.widget.calendar.setCalendarTargets
 import app.rosa.weather.widget.motion.LiveWeather
 import app.rosa.weather.widget.motion.setLiveWeather
 import app.rosa.weather.widget.provider.RosaWidgetProvider
@@ -39,6 +46,11 @@ import app.rosa.weather.widget.render.DynamicTones
 import app.rosa.weather.widget.render.WidgetContent
 import app.rosa.weather.widget.render.WidgetRenderRequest
 import app.rosa.weather.widget.render.WidgetRenderer
+import app.rosa.weather.widget.render.calendar.CalendarView
+import java.time.Instant
+import java.time.YearMonth
+import java.time.ZoneId
+import java.util.Locale
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -74,6 +86,7 @@ class WidgetUpdater @Inject constructor(
 ) : WeatherSyncListener {
     private val mutex = Mutex()
     private val renderer by lazy { WidgetRenderer(context) }
+    private val navigation by lazy { CalendarNavigation(context) }
     private val manuallyRefreshing = mutableSetOf<Int>()
 
     override suspend fun onWeatherChanged(reason: SyncReason) {
@@ -133,7 +146,10 @@ class WidgetUpdater @Inject constructor(
                         else -> WidgetContent.Status.Ready
                     },
                 )
-                val views = runCatching { remoteViews(id, manager, info.provider, config, content) }.getOrNull() ?: continue
+                val views = runCatching {
+                    if (config.face == WidgetFace.Calendar) calendarViews(id, manager, info.provider, config, content)
+                    else remoteViews(id, manager, info.provider, config, content)
+                }.getOrNull() ?: continue
                 runCatching { manager.updateAppWidget(id, views) }
             }
             // The next tick serves *every* placed widget, not just the ones redrawn now — otherwise
@@ -204,6 +220,54 @@ class WidgetUpdater @Inject constructor(
                 setLiveWeather(context.packageName, live, size.width, size.height, radius)
             }
         }
+        return if (bySize.size == 1) bySize.values.first() else RemoteViews(bySize)
+    }
+
+    /**
+     * A calendar: the month on display (the arrows may have moved it), its days' events when they
+     * are wanted and allowed, and at each size a picture with tap targets laid over it.
+     */
+    private suspend fun calendarViews(
+        widgetId: Int,
+        manager: AppWidgetManager,
+        provider: ComponentName,
+        config: WidgetConfig,
+        content: WidgetContent,
+    ): RemoteViews {
+        val sizes = WidgetSizes.from(manager.getAppWidgetOptions(widgetId), manager.getAppWidgetInfo(widgetId))
+        val budget = bitmapPixelBudget() / sizes.size
+        val systemNight = (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+            Configuration.UI_MODE_NIGHT_YES
+        val dynamic = runCatching { DynamicTones.from(context) }.getOrDefault(DynamicTones.Fallback)
+        val radius = cornerRadius(config)
+        val locale = Locale.getDefault()
+        val today = Instant.ofEpochSecond(content.nowEpochSeconds).atZone(ZoneId.systemDefault()).toLocalDate()
+        val month = YearMonth.from(today).plusMonths(navigation.offset(widgetId, today).toLong())
+        val grid = CalendarMonth.of(month, today, CalendarMonth.firstDayFor(config.calendar.weekStart, locale))
+        val events = if (config.calendar.events && CalendarEvents.granted(context)) {
+            // Watching the phone's calendars first, so an edit made while this draws still lands.
+            runCatching { CalendarChanges.watch(context) }
+            CalendarEvents.read(context, grid.first, grid.last)
+        } else {
+            emptyMap()
+        }
+        val view = CalendarView(month, today, events, locale)
+        val description = renderer.describe(view)
+        // The season moves over its painting: snow, rain, petals, fireflies, leaves.
+        val live = LiveWeather.ofSeason(config, month.monthValue)
+        val bySize = sizes.associateWith { size ->
+            val (bitmap, targets) = renderer.renderCalendar(
+                WidgetRenderRequest(size.width, size.height, config, content, radius, systemNight, dynamic, seed = widgetId, live = live != null, calendar = view),
+                densityFor(size, budget),
+            )
+            RemoteViews(context.packageName, R.layout.widget_calendar).apply {
+                setImageViewBitmap(R.id.widget_image, bitmap)
+                setContentDescription(R.id.widget_image, description)
+                setLiveWeather(context.packageName, live, size.width, size.height, radius)
+                setCalendarTargets(context, provider, widgetId, view, targets)
+            }
+        }
+        CalendarAlarm.scheduleMidnight(context, provider)
         return if (bySize.size == 1) bySize.values.first() else RemoteViews(bySize)
     }
 

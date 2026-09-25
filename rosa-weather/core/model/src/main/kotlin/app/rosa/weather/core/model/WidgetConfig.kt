@@ -2,6 +2,16 @@ package app.rosa.weather.core.model
 
 import kotlinx.serialization.Serializable
 
+/** What a home-screen widget shows. */
+@Serializable
+enum class WidgetFace {
+    /** The weather: the adaptive layout of hero, hours, days and details. */
+    Weather,
+
+    /** The month as a grid, over a painting of its season. */
+    Calendar,
+}
+
 /** Visual treatment of a home-screen widget. */
 @Serializable
 enum class WidgetStyle {
@@ -39,6 +49,7 @@ enum class WidgetTapAction { OpenApp, Refresh }
 
 @Serializable
 data class WidgetConfig(
+    val face: WidgetFace = WidgetFace.Weather,
     /** A place id, [Place.CURRENT_ID], or [Place.FOLLOW_APP_ID] (the default). */
     val placeId: String = Place.FOLLOW_APP_ID,
     val style: WidgetStyle = WidgetStyle.Glass,
@@ -60,6 +71,8 @@ data class WidgetConfig(
     /** A thick, lit glass bezel around the pane (not drawn for [WidgetStyle.Paper]). */
     val glassRim: Boolean = true,
     val tapAction: WidgetTapAction = WidgetTapAction.OpenApp,
+    /** For a [WidgetFace.Calendar] widget. */
+    val calendar: CalendarOptions = CalendarOptions(),
 ) {
     fun has(module: WidgetModule) = module in modules
 

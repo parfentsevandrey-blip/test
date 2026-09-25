@@ -8,6 +8,7 @@ import android.widget.RemoteViews
 import androidx.annotation.LayoutRes
 import app.rosa.weather.core.model.ForecastMoment
 import app.rosa.weather.core.model.WidgetConfig
+import app.rosa.weather.core.model.WidgetFace
 import app.rosa.weather.core.model.WidgetStyle
 import app.rosa.weather.widget.R
 import kotlin.math.ceil
@@ -30,7 +31,16 @@ enum class LiveWeather(private val tiles: IntArray, private val storm: Boolean =
     Storm(intArrayOf(R.layout.motion_storm_a, R.layout.motion_storm_b, R.layout.motion_storm_c, R.layout.motion_storm_d), storm = true),
     SnowLight(intArrayOf(R.layout.motion_snow_light)),
     SnowHeavy(intArrayOf(R.layout.motion_snow_heavy)),
+
+    /** The calendar's seasons: September's golden leaves, October's red, May's petals, summer's fireflies. */
+    LeavesGold(intArrayOf(R.layout.motion_season_leaves_gold)),
+    LeavesRed(intArrayOf(R.layout.motion_season_leaves_red)),
+    Petals(intArrayOf(R.layout.motion_season_petals)),
+    Fireflies(intArrayOf(R.layout.motion_season_fireflies)),
     ;
+
+    /** One tile repeated everywhere: snow, and the calendar's seasons, whose patterns never show a seam. */
+    val isSingleTile: Boolean get() = tiles.size == 1
 
     /** The tile at [column], [row]: never the same drops as a neighbour, bolts only along the top. */
     @LayoutRes
@@ -49,12 +59,31 @@ enum class LiveWeather(private val tiles: IntArray, private val storm: Boolean =
 
         /** What moves on a widget with [config] at [moment], or null when nothing falls or flashes. */
         fun of(config: WidgetConfig, moment: ForecastMoment?): LiveWeather? {
-            if (moment == null || !config.liveWeather || !config.showWeatherArt || config.style == WidgetStyle.Paper) return null
+            if (moment == null || config.face != WidgetFace.Weather || !config.liveWeather || !config.showWeatherArt || config.style == WidgetStyle.Paper) return null
             val visual = moment.visual
             return when {
                 visual.lightning > 0.1f -> Storm
                 visual.snow > 0.05f && visual.snow >= visual.rain -> if (visual.snow >= 0.55f) SnowHeavy else SnowLight
                 visual.rain > 0.05f || visual.hail > 0.05f -> if (max(visual.rain, visual.hail) >= 0.5f) RainHeavy else RainLight
+                else -> null
+            }
+        }
+
+        /**
+         * What moves over a calendar's painting of [month]: snow in winter and November's first,
+         * April's rain, May's petals, summer nights' fireflies, the leaves of September and October.
+         */
+        fun ofSeason(config: WidgetConfig, month: Int): LiveWeather? {
+            if (config.face != WidgetFace.Calendar || !config.liveWeather) return null
+            if (config.style != WidgetStyle.Sky && config.style != WidgetStyle.Glass) return null
+            return when (month) {
+                1, 2, 11 -> SnowLight
+                12 -> SnowHeavy
+                4 -> RainLight
+                5 -> Petals
+                7, 8 -> Fireflies
+                9 -> LeavesGold
+                10 -> LeavesRed
                 else -> null
             }
         }

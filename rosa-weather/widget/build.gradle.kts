@@ -18,6 +18,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.hilt.work)
+    implementation(libs.androidx.work.runtime)
     ksp(libs.androidx.hilt.compiler)
 
     testImplementation(libs.junit)

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The calendar widget: one exact-size bitmap drawn by CalendarRenderer, invisible tap targets laid
+    over the arrows, the month's name, the new-event button and each day (setCalendarTargets), and
+    the season moving over it all (widget_motion), cut to the widget's rounded corners.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/widget_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="yes"
+        android:scaleType="fitXY"
+        tools:ignore="ContentDescription" /><!-- Set per render with a spoken summary of the month. -->
+
+    <FrameLayout
+        android:id="@+id/widget_motion"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="true"
+        android:clipToOutline="true"
+        android:importantForAccessibility="noHideDescendants"
+        android:visibility="gone" />
+
+    <FrameLayout
+        android:id="@+id/widget_targets"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</FrameLayout>

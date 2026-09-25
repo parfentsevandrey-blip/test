@@ -50,6 +50,7 @@ object WidgetPreviews {
                 WidgetKind.Glass -> 320f to 170f
                 WidgetKind.Sky -> 170f to 170f
                 WidgetKind.Almanac -> 250f to 260f
+                WidgetKind.Calendar -> 300f to 270f
             }
             val bitmap = renderer.render(
                 WidgetRenderRequest(w, h, kind.defaultConfig, content, cornerRadiusDp = 24f, systemNight = false, dynamic = DynamicTones.Fallback),

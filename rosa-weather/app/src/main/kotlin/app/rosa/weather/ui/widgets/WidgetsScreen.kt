@@ -105,6 +105,7 @@ fun WidgetsRoute(viewModel: WidgetsViewModel, onBack: () -> Unit) {
                                 WidgetKind.Glass -> 300f to 150f
                                 WidgetKind.Sky -> 160f to 160f
                                 WidgetKind.Almanac -> 230f to 240f
+                                WidgetKind.Calendar -> 300f to 270f
                             }
                             WidgetPreview(kind.defaultConfig, sample, Modifier.size(w.dp, h.dp))
                         }

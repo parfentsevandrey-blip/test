@@ -60,4 +60,23 @@
     <string name="toggle_updated">Время обновления</string>
     <string name="studio_move_up">Выше</string>
     <string name="studio_move_down">Ниже</string>
+    <string name="widget_calendar_label">Роса · Календарь</string>
+    <string name="widget_calendar_description">Месяц над картиной своего сезона, с погодой в днях.</string>
+    <string name="calendar_previous">Предыдущий месяц</string>
+    <string name="calendar_next">Следующий месяц</string>
+    <string name="calendar_add">Новое событие</string>
+    <string name="calendar_today">К текущему месяцу</string>
+    <string name="calendar_open">Открыть календарь</string>
+    <string name="studio_calendar">Календарь</string>
+    <string name="studio_week_start">Неделя начинается с</string>
+    <string name="week_start_auto">Авто</string>
+    <string name="week_start_monday">Пн</string>
+    <string name="week_start_sunday">Вс</string>
+    <string name="week_start_saturday">Сб</string>
+    <string name="toggle_week_numbers">Номера недель</string>
+    <string name="toggle_forecast_days">Погода в днях</string>
+    <string name="toggle_events">События из ваших календарей</string>
+    <string name="events_permission_hint">Чтобы показать события, Росе нужен доступ к календарям.</string>
+    <string name="toggle_live_season">Живые снег, листья и лепестки</string>
+    <string name="style_season">Сезон</string>
 </resources>

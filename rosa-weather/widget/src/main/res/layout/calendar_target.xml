@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    An invisible tap target; its size and place come from the renderer (setCalendarTargets). A
+    FrameLayout, because launchers inflate only the widget classes RemoteViews allows. Placed from
+    the left edge in every language: the picture it sits on is drawn in absolute coordinates.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/calendar_target"
+    android:layout_width="0dp"
+    android:layout_height="0dp"
+    android:layout_gravity="top|left"
+    android:focusable="true"
+    tools:ignore="RtlHardcoded" />

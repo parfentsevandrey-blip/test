@@ -3,6 +3,7 @@ package app.rosa.weather.widget.provider
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -12,10 +13,15 @@ import app.rosa.weather.core.data.repository.WidgetConfigRepository
 import app.rosa.weather.core.data.sync.SyncReason
 import app.rosa.weather.core.data.sync.SyncScheduler
 import app.rosa.weather.widget.WidgetUpdater
+import app.rosa.weather.widget.calendar.CalendarAlarm
+import app.rosa.weather.widget.calendar.CalendarChanges
+import app.rosa.weather.widget.calendar.CalendarIntents
+import app.rosa.weather.widget.calendar.CalendarNavigation
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import java.time.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -122,3 +128,38 @@ class GlassWidgetProvider : RosaWidgetProvider()
 class SkyWidgetProvider : RosaWidgetProvider()
 
 class AlmanacWidgetProvider : RosaWidgetProvider()
+
+/** The calendar: arrows move its month, midnight brings a new day. */
+class CalendarWidgetProvider : RosaWidgetProvider() {
+    override fun onReceive(context: Context, intent: Intent) {
+        when (intent.action) {
+            CalendarIntents.ACTION_MONTH -> {
+                val id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+                val delta = intent.getIntExtra(CalendarIntents.EXTRA_DELTA, 0)
+                val graph = context.widgetGraph()
+                launchAsync {
+                    CalendarNavigation(context).move(id, delta, LocalDate.now())
+                    graph.updater().update(intArrayOf(id))
+                }
+            }
+            CalendarIntents.ACTION_NEW_DAY -> {
+                val graph = context.widgetGraph()
+                val ids = AppWidgetManager.getInstance(context).getAppWidgetIds(ComponentName(context, CalendarWidgetProvider::class.java))
+                launchAsync { graph.updater().update(ids) }
+            }
+            else -> super.onReceive(context, intent)
+        }
+    }
+
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        CalendarNavigation(context).forget(appWidgetIds)
+        super.onDeleted(context, appWidgetIds)
+    }
+
+    override fun onDisabled(context: Context) {
+        // The last calendar is gone: nothing to wake up for at midnight or on calendar edits.
+        CalendarChanges.stop(context)
+        CalendarAlarm.cancel(context, ComponentName(context, CalendarWidgetProvider::class.java))
+        super.onDisabled(context)
+    }
+}

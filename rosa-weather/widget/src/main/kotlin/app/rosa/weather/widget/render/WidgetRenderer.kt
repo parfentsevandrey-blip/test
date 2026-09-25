@@ -28,6 +28,7 @@ import app.rosa.weather.core.model.WeatherCondition
 import app.rosa.weather.core.model.WeatherVisual
 import app.rosa.weather.core.model.WidgetAccent
 import app.rosa.weather.core.model.WidgetConfig
+import app.rosa.weather.core.model.WidgetFace
 import app.rosa.weather.core.model.momentAt
 import app.rosa.weather.widget.R
 import app.rosa.weather.core.designsystem.R as DsR
@@ -39,6 +40,9 @@ import app.rosa.weather.widget.layout.LayoutContent
 import app.rosa.weather.widget.layout.WidgetLayout
 import app.rosa.weather.widget.layout.WidgetLayoutEngine
 import app.rosa.weather.widget.motion.LiveWeather
+import app.rosa.weather.widget.render.calendar.CalendarRenderer
+import app.rosa.weather.widget.render.calendar.CalendarTargets
+import app.rosa.weather.widget.render.calendar.CalendarView
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.max
@@ -82,6 +86,8 @@ data class WidgetRenderRequest(
      * picture leaves them out and keeps only what stays put: drops resting on the glass, frost, mist.
      */
     val live: Boolean = false,
+    /** For a calendar widget: the month on display, today and the events; this month when null. */
+    val calendar: CalendarView? = null,
 )
 
 /**
@@ -93,21 +99,38 @@ class WidgetRenderer(private val context: Context) {
     private val type = WidgetType(fonts)
     private val glyphs = WeatherGlyphPainter()
     private val background = WidgetBackground()
+    private val calendar = CalendarRenderer(context, fonts)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val path = Path()
 
-    fun render(request: WidgetRenderRequest, pxPerDp: Float): Bitmap {
+    fun render(request: WidgetRenderRequest, pxPerDp: Float): Bitmap = renderCalendar(request, pxPerDp).first
+
+    /** The widget's picture, and for a calendar where it answers taps ([CalendarTargets.None] otherwise). */
+    fun renderCalendar(request: WidgetRenderRequest, pxPerDp: Float): Pair<Bitmap, CalendarTargets> {
         val w = (request.widthDp * pxPerDp).roundToInt().coerceAtLeast(1)
         val h = (request.heightDp * pxPerDp).roundToInt().coerceAtLeast(1)
         val bitmap = createBitmap(w, h)
         val canvas = Canvas(bitmap)
         canvas.scale(pxPerDp, pxPerDp)
-        draw(canvas, request)
-        return bitmap
+        val targets = if (request.config.face == WidgetFace.Calendar) calendar.draw(canvas, request) else {
+            draw(canvas, request)
+            CalendarTargets.None
+        }
+        return bitmap to targets
     }
 
-    /** Draws in dp units; callers scale the canvas. Returns the layout used (for hit regions). */
-    fun draw(canvas: Canvas, request: WidgetRenderRequest): WidgetLayout {
+    /** Spoken summary of a calendar widget. */
+    fun describe(view: CalendarView): String = calendar.describe(view)
+
+    /**
+     * Draws in dp units; callers scale the canvas. Returns the weather layout used (for hit
+     * regions), or null for a calendar.
+     */
+    fun draw(canvas: Canvas, request: WidgetRenderRequest): WidgetLayout? {
+        if (request.config.face == WidgetFace.Calendar) {
+            calendar.draw(canvas, request)
+            return null
+        }
         val content = request.content
         val forecast = content.forecast
         val now = content.nowEpochSeconds

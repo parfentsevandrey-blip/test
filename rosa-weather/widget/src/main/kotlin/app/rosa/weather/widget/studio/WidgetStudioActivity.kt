@@ -1,12 +1,15 @@
 package app.rosa.weather.widget.studio
 
+import android.Manifest
 import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -51,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -75,17 +79,21 @@ import app.rosa.weather.core.designsystem.haptics.LocalHaptics
 import app.rosa.weather.core.designsystem.motion.RosaMotion
 import app.rosa.weather.core.designsystem.sky.SkyParams
 import app.rosa.weather.core.designsystem.theme.Rosa
+import app.rosa.weather.core.model.CalendarOptions
 import app.rosa.weather.core.model.Place
+import app.rosa.weather.core.model.WeekStart
 import app.rosa.weather.core.model.SkyPalette
 import app.rosa.weather.core.model.WidgetAccent
 import app.rosa.weather.core.model.WidgetConfig
 import app.rosa.weather.core.model.WidgetDensity
+import app.rosa.weather.core.model.WidgetFace
 import app.rosa.weather.core.model.WidgetModule
 import app.rosa.weather.core.model.WidgetStyle
 import app.rosa.weather.core.model.WidgetTapAction
 import app.rosa.weather.core.model.WidgetTheme
 import app.rosa.weather.core.model.momentAt
 import app.rosa.weather.widget.R
+import app.rosa.weather.widget.calendar.CalendarEvents
 import dagger.hilt.android.AndroidEntryPoint
 import kotlin.math.roundToInt
 
@@ -136,6 +144,7 @@ private fun StudioRoot(viewModel: WidgetStudioViewModel, onClose: () -> Unit, on
 @Composable
 private fun StudioScreen(state: StudioState, viewModel: WidgetStudioViewModel, onClose: () -> Unit, onSaved: () -> Unit) {
     val config = state.config
+    val calendar = config.face == WidgetFace.Calendar
     val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val haptics = LocalHaptics.current
     Column(Modifier.fillMaxSize()) {
@@ -170,12 +179,14 @@ private fun StudioScreen(state: StudioState, viewModel: WidgetStudioViewModel, o
                 GlassSegmented(WidgetTheme.entries, config.theme, { t -> viewModel.update { it.copy(theme = t) } }, { themeLabels.getValue(it) })
                 Label(stringResource(R.string.studio_accent))
                 val accentLabels = mapOf(
-                    WidgetAccent.Sky to stringResource(R.string.accent_sky),
+                    WidgetAccent.Sky to stringResource(if (calendar) R.string.style_season else R.string.accent_sky),
                     WidgetAccent.Temperature to stringResource(R.string.accent_temperature),
                     WidgetAccent.Dynamic to stringResource(R.string.accent_dynamic),
                     WidgetAccent.Mono to stringResource(R.string.accent_mono),
                 )
-                GlassSegmented(WidgetAccent.entries, config.accent, { a -> viewModel.update { it.copy(accent = a) } }, { accentLabels.getValue(it) })
+                // A calendar's colours come from its season, the wallpaper, or none: temperature has no say.
+                val accents = if (calendar) WidgetAccent.entries - WidgetAccent.Temperature else WidgetAccent.entries
+                GlassSegmented(accents, config.accent.takeIf { it in accents } ?: WidgetAccent.Sky, { a -> viewModel.update { it.copy(accent = a) } }, { accentLabels.getValue(it) })
             }
             Section(stringResource(R.string.studio_glass)) {
                 GlassSlider(config.opacity, { v -> viewModel.update { it.copy(opacity = v) } }, range = 0.15f..1f, stateDescription = "${(config.opacity * 100).roundToInt()}%")
@@ -191,6 +202,7 @@ private fun StudioScreen(state: StudioState, viewModel: WidgetStudioViewModel, o
             }
             Section(stringResource(R.string.studio_text)) {
                 GlassSlider(config.textScale, { v -> viewModel.update { it.copy(textScale = v) } }, range = 0.85f..1.3f, steps = 8, stateDescription = "${(config.textScale * 100).roundToInt()}%")
+                if (calendar) return@Section
                 Label(stringResource(R.string.studio_density))
                 val densityLabels = mapOf(
                     WidgetDensity.Compact to stringResource(R.string.density_compact),
@@ -199,9 +211,24 @@ private fun StudioScreen(state: StudioState, viewModel: WidgetStudioViewModel, o
                 )
                 GlassSegmented(WidgetDensity.entries, config.density, { d -> viewModel.update { it.copy(density = d) } }, { densityLabels.getValue(it) })
             }
-            Section(stringResource(R.string.studio_content)) { ModulesEditor(config, viewModel) }
-            if (state.places.isNotEmpty()) {
+            if (calendar) {
+                Section(stringResource(R.string.studio_calendar)) { CalendarOptionsEditor(config, viewModel) }
+            } else {
+                Section(stringResource(R.string.studio_content)) { ModulesEditor(config, viewModel) }
+            }
+            if (state.places.isNotEmpty() && (!calendar || config.calendar.forecastInDays)) {
                 Section(stringResource(R.string.studio_place)) { PlacePicker(state, viewModel) }
+            }
+            if (calendar) {
+                if (config.style != WidgetStyle.Paper) {
+                    Section(stringResource(R.string.studio_extras)) {
+                        if (config.style == WidgetStyle.Sky || config.style == WidgetStyle.Glass) {
+                            ToggleLine(stringResource(R.string.toggle_live_season), config.liveWeather) { v -> viewModel.update { it.copy(liveWeather = v) } }
+                        }
+                        ToggleLine(stringResource(R.string.toggle_glass_rim), config.glassRim) { v -> viewModel.update { it.copy(glassRim = v) } }
+                    }
+                }
+                return@Column
             }
             Section(stringResource(R.string.studio_extras)) {
                 ToggleLine(stringResource(R.string.toggle_location), config.showLocation) { v -> viewModel.update { it.copy(showLocation = v) } }
@@ -307,12 +334,47 @@ private fun ResizeStage(state: StudioState, initialDp: Pair<Float, Float>?) {
     }
 }
 
+/**
+ * What a calendar shows besides its month: where weeks begin, their numbers, the weather in the
+ * days, and the phone's events (asking for calendar access the first time they are turned on).
+ */
+@Composable
+private fun CalendarOptionsEditor(config: WidgetConfig, viewModel: WidgetStudioViewModel) {
+    val context = LocalContext.current
+    val options = config.calendar
+    fun set(transform: (CalendarOptions) -> CalendarOptions) = viewModel.update { it.copy(calendar = transform(it.calendar)) }
+    Label(stringResource(R.string.studio_week_start))
+    val weekLabels = mapOf(
+        WeekStart.Auto to stringResource(R.string.week_start_auto),
+        WeekStart.Monday to stringResource(R.string.week_start_monday),
+        WeekStart.Sunday to stringResource(R.string.week_start_sunday),
+        WeekStart.Saturday to stringResource(R.string.week_start_saturday),
+    )
+    GlassSegmented(WeekStart.entries, options.weekStart, { v -> set { it.copy(weekStart = v) } }, { weekLabels.getValue(it) })
+    ToggleLine(stringResource(R.string.toggle_week_numbers), options.weekNumbers) { v -> set { it.copy(weekNumbers = v) } }
+    ToggleLine(stringResource(R.string.toggle_forecast_days), options.forecastInDays) { v -> set { it.copy(forecastInDays = v) } }
+    var denied by remember { mutableStateOf(false) }
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        denied = !granted
+        if (granted) set { it.copy(events = true) }
+    }
+    ToggleLine(stringResource(R.string.toggle_events), options.events) { on ->
+        when {
+            !on -> set { it.copy(events = false) }
+            CalendarEvents.granted(context) -> set { it.copy(events = true) }
+            else -> permission.launch(Manifest.permission.READ_CALENDAR)
+        }
+    }
+    if (denied) Text(stringResource(R.string.events_permission_hint), style = Rosa.type.caption, color = Rosa.colors.inkSoft)
+}
+
 @Composable
 private fun StylePicker(state: StudioState, onPick: (WidgetStyle) -> Unit) {
     val haptics = LocalHaptics.current
+    val calendar = state.config.face == WidgetFace.Calendar
     val labels = mapOf(
         WidgetStyle.Glass to stringResource(R.string.style_glass),
-        WidgetStyle.Sky to stringResource(R.string.style_sky),
+        WidgetStyle.Sky to stringResource(if (calendar) R.string.style_season else R.string.style_sky),
         WidgetStyle.Clear to stringResource(R.string.style_clear),
         WidgetStyle.Tonal to stringResource(R.string.style_tonal),
         WidgetStyle.Paper to stringResource(R.string.style_paper),

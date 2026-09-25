@@ -38,6 +38,7 @@ class WidgetPreviewImagesTest {
                 WidgetKind.Glass -> 320f to 170f
                 WidgetKind.Sky -> 170f to 170f
                 WidgetKind.Almanac -> 250f to 260f
+                WidgetKind.Calendar -> 300f to 270f
             }
             val bitmap = renderer.render(WidgetRenderRequest(w, h, kind.defaultConfig, content, 24f, systemNight = false), 2f)
             File(out, "widget_preview_${kind.name.lowercase()}.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
