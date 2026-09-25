@@ -32,9 +32,9 @@
     <string name="home_error_native">Установка повреждена: нет нативной библиотеки. Переустановите приложение</string>
     <string name="home_consent_denied">Без разрешения VPN подключиться нельзя</string>
 
-    <string name="home_problem_bridges">Мосты не отвечают — пробуем другие</string>
-    <string name="home_problem_frozen">Соединение «заморожено» — переключаемся на другой путь</string>
-    <string name="home_problem_snowflake">Snowflake сейчас недоступен — пробуем другие транспорты</string>
+    <string name="home_problem_bridges">Мосты пока не отвечают — продолжаем попытки</string>
+    <string name="home_problem_frozen">Соединение подвисло — восстанавливаем</string>
+    <string name="home_problem_snowflake">Snowflake долго ищет прокси — продолжаем. Если так и не подключится, попробуйте другую сеть или «Подключение» → «Авто»</string>
     <string name="home_problem_clock">Время на устройстве расходится с сетью Tor — проверьте дату и время</string>
     <string name="home_problem_settings_api">Не удалось получить мосты из Settings API — используем встроенные и сохранённые</string>
 

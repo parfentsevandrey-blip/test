@@ -69,7 +69,7 @@ class CustomBridgesViewModel(private val settings: SettingsRepository) : ViewMod
                     connectionMode =
                         when {
                             lines.isNotEmpty() -> ConnectionMode.Custom
-                            s.connectionMode == ConnectionMode.Custom -> ConnectionMode.Auto
+                            s.connectionMode == ConnectionMode.Custom -> ConnectionMode.Snowflake
                             else -> s.connectionMode
                         },
                 )

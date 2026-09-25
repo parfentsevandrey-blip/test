@@ -96,14 +96,14 @@ fun ConnectionScreen(
                 val modes =
                     listOf(
                         Triple(
+                            ConnectionMode.Snowflake,
+                            stringResource(R.string.connection_snowflake_default),
+                            stringResource(R.string.connection_snowflake_desc),
+                        ),
+                        Triple(
                             ConnectionMode.Auto,
                             stringResource(R.string.connection_auto),
                             stringResource(R.string.connection_auto_desc),
-                        ),
-                        Triple(
-                            ConnectionMode.Snowflake,
-                            stringResource(Labels.transport(TransportKind.Snowflake)),
-                            stringResource(R.string.connection_snowflake_desc),
                         ),
                         Triple(
                             ConnectionMode.WebTunnel,

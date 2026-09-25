@@ -84,9 +84,9 @@ class InteractionTest {
                 ConnectionScreen(ConnectionUiState(), PaddingValues(), onAction = { actions += it })
             }
         }
-        compose.onNodeWithText("Snowflake").performClick()
+        compose.onNodeWithText("obfs4").performClick()
         assertEquals(
-            listOf<ConnectionAction>(ConnectionAction.SetMode(ConnectionMode.Snowflake)),
+            listOf<ConnectionAction>(ConnectionAction.SetMode(ConnectionMode.Obfs4)),
             actions,
         )
     }

@@ -3,8 +3,9 @@
     <string name="connection_title">Connection</string>
     <string name="connection_section_method">Connection method</string>
     <string name="connection_auto">Auto</string>
-    <string name="connection_auto_desc">Recommended. Tries transports in parallel and remembers what worked on this network</string>
-    <string name="connection_snowflake_desc">Through volunteer WebRTC proxies. Gets past blocking well, but slower</string>
+    <string name="connection_auto_desc">If Snowflake is blocked: tries obfs4, meek and WebTunnel in parallel and asks the Tor Project server for bridges (directly — it sees your IP)</string>
+    <string name="connection_snowflake_default">Snowflake — default</string>
+    <string name="connection_snowflake_desc">As in Tor Browser: through volunteer WebRTC proxies. The first connection can take 1–2 minutes</string>
     <string name="connection_webtunnel_desc">Looks like an ordinary HTTPS website. Bridges come from the Circumvention Settings API</string>
     <string name="connection_obfs4_desc">Traffic without recognisable patterns. Public bridges are often blocked — your own are better</string>
     <string name="connection_meek_desc">Through a CDN (domain fronting). Reliable but slow</string>
@@ -17,7 +18,7 @@
     <string name="connection_api_country">for country: %1$s</string>
     <string name="connection_api_types">Types: %1$s</string>
     <string name="connection_api_never">Not requested yet — the request happens on the first connection</string>
-    <string name="connection_api_note">To pick bridges for your network the app asks the Tor Project server (Circumvention Settings API). Before connecting the request goes directly, disguised as a CDN request: the server sees your IP address, as in Tor Browser. After connecting — only through Tor.</string>
+    <string name="connection_api_note">In Auto, WebTunnel and obfs4 modes the app asks the Tor Project server for bridges (Circumvention Settings API). Before connecting the request goes directly, disguised as a CDN request: the server sees your IP address, as in Tor Browser. Snowflake mode makes no such request.</string>
     <string name="connection_section_winners">What worked before</string>
     <string name="connection_winner_row">%1$s: %2$s</string>
     <string name="connection_winners_none">No data yet — it appears after the first connection</string>

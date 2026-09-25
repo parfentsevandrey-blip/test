@@ -29,7 +29,7 @@ data class HomeUiState(
     val down: ImmutableList<Long> = persistentListOf(),
     val up: ImmutableList<Long> = persistentListOf(),
     val traffic: TrafficSample? = null,
-    val mode: ConnectionMode = ConnectionMode.Auto,
+    val mode: ConnectionMode = ConnectionMode.Snowflake,
 )
 
 class HomeViewModel(private val tunnel: TunnelClient, settings: SettingsRepository) : ViewModel() {

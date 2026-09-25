@@ -32,9 +32,9 @@
     <string name="home_error_native">The installation is damaged: a native library is missing. Reinstall the app</string>
     <string name="home_consent_denied">Connecting requires the VPN permission</string>
 
-    <string name="home_problem_bridges">Bridges do not respond — trying others</string>
-    <string name="home_problem_frozen">The connection is frozen — switching to another path</string>
-    <string name="home_problem_snowflake">Snowflake is unavailable right now — trying other transports</string>
+    <string name="home_problem_bridges">Bridges do not respond yet — still trying</string>
+    <string name="home_problem_frozen">The connection stalled — recovering</string>
+    <string name="home_problem_snowflake">Snowflake is taking long to find a proxy — still trying. If it never connects, try another network or Connection → Auto</string>
     <string name="home_problem_clock">The device clock disagrees with the Tor network — check date and time</string>
     <string name="home_problem_settings_api">Could not get bridges from the Settings API — using built-in and saved ones</string>
 

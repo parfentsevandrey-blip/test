@@ -142,6 +142,10 @@ internal class TorSession(
     private var trafficSeq = 0L
     private var newIdentityReadyAt = 0L
     private var crashes = 0
+    private var slowHintShown = false
+
+    private val policy: ModePolicy
+        get() = ModePolicy.of(settings.connectionMode)
 
     val isReady: Boolean
         get() = ready
@@ -335,6 +339,10 @@ internal class TorSession(
         if (event.progress > lastProgress) {
             lastProgress = event.progress
             lastProgressAt = now()
+            if (slowHintShown) {
+                slowHintShown = false
+                listener.onProblem(null)
+            }
         }
         if (!ready)
             listener.onBootstrap(BootstrapInfo(event.progress, BootstrapPhase.fromTag(event.tag)))
@@ -350,16 +358,9 @@ internal class TorSession(
 
     private fun onTransportEvent(event: TransportEvent) {
         when (event) {
-            is TransportEvent.Error -> {
-                log.d(TAG, "Transport ${event.transport}: ${event.message}")
-                if (
-                    !ready &&
-                        event.transport == "snowflake" &&
-                        configured.all { it.transport == TransportKind.Snowflake }
-                ) {
-                    listener.onProblem(TunnelProblem.SnowflakeUnavailable)
-                }
-            }
+            // Broker/rendezvous errors are routine while Snowflake looks for a proxy (it retries);
+            // the user hears about it only if nothing progresses for a while (see waitTick).
+            is TransportEvent.Error -> log.d(TAG, "Transport ${event.transport}: ${event.message}")
             is TransportEvent.Stopped ->
                 event.message?.let { log.d(TAG, "Transport ${event.transport} stopped: $it") }
             is TransportEvent.Connected -> Unit
@@ -460,6 +461,10 @@ internal class TorSession(
         }
         val t = now()
         val quiet = t - lastProgressAt
+        if (!policy.race) {
+            waitTick(quiet)
+            return
+        }
         if (!expanded && quiet >= EXPAND_AFTER_MS) {
             expand()
             return
@@ -474,6 +479,29 @@ internal class TorSession(
             }
         }
         roundFailed()
+    }
+
+    /**
+     * Single-transport modes (Snowflake by default): Tor and the transport keep retrying on their
+     * own, so nothing is torn down here — no DisableNetwork toggles, no bridge changes, no
+     * "blocked" verdict. The user only hears when it takes long; where the mode allows it, fresh
+     * bridges of this transport are fetched once.
+     */
+    private suspend fun waitTick(quiet: Long) {
+        if (quiet >= SLOW_HINT_MS && !slowHintShown) {
+            slowHintShown = true
+            listener.onProblem(
+                if (settings.connectionMode == ConnectionMode.Snowflake)
+                    TunnelProblem.SnowflakeUnavailable
+                else TunnelProblem.CannotReachBridges
+            )
+        }
+        if (
+            quiet >= GIVE_UP_AFTER_QUIET_MS && plan?.settingsApiAllowed == true && !settingsApiTried
+        ) {
+            settingsApiTried = true
+            if (fetchSettingsApi(MoatClient.Route.DomainFronted, addToRace = true)) resetProgress()
+        }
     }
 
     private suspend fun expand() {
@@ -627,41 +655,53 @@ internal class TorSession(
     private suspend fun watchdogLoop() {
         while (true) {
             delay(2_000)
-            if (!ready || stopping) continue
-            val t = now()
-            val stall = watchdog.evaluate()
-            if (stall == null) {
-                if (escalation > 0 && t - healthySince >= HEALTHY_RESET_MS) {
-                    escalation = 0
-                    listener.onProblem(null)
-                }
-                continue
-            }
-            if (t < nextEscalationAt) continue
-            escalation++
-            nextEscalationAt =
-                t + min(ESCALATION_BASE_MS shl (escalation - 1).coerceAtMost(4), ESCALATION_MAX_MS)
-            log.w(TAG, "Watchdog: $stall, escalation level $escalation")
-            listener.onProblem(TunnelProblem.ConnectionFrozen)
-            when (escalation) {
-                1 -> {
-                    // New circuits and fresh connections to the bridge (a frozen TCP session dies).
-                    onNotReady(ReconnectReason.Stalled)
-                    runCatching { engine.signal(TorSignal.NewIdentity) }
-                    toggleNetwork()
-                }
-                2 -> {
-                    onNotReady(ReconnectReason.TransportSwitch)
-                    switchBridge()
-                }
-                else -> {
-                    onNotReady(ReconnectReason.Restart)
-                    restartTor("watchdog escalation $escalation")
-                }
-            }
-            watchdog.arm()
-            healthySince = now()
+            if (ready && !stopping) watchdogTick()
         }
+    }
+
+    private suspend fun watchdogTick() {
+        val t = now()
+        val stall = watchdog.evaluate()
+        if (stall == null) {
+            if (escalation > 0 && t - healthySince >= HEALTHY_RESET_MS) {
+                escalation = 0
+                listener.onProblem(null)
+            }
+            return
+        }
+        if (t < nextEscalationAt) return
+        if (!policy.watchdogMayReconnect) {
+            // Snowflake replaces a dead proxy by itself; a teardown would only restart its proxy
+            // search. Ask Tor for fresh circuits for new streams, nothing more.
+            nextEscalationAt = t + NEWNYM_ONLY_INTERVAL_MS
+            log.w(TAG, "Watchdog: $stall (new circuits only)")
+            runCatching { engine.signal(TorSignal.NewIdentity) }
+            watchdog.arm()
+            return
+        }
+        escalation++
+        nextEscalationAt =
+            t + min(ESCALATION_BASE_MS shl (escalation - 1).coerceAtMost(4), ESCALATION_MAX_MS)
+        log.w(TAG, "Watchdog: $stall, escalation level $escalation")
+        listener.onProblem(TunnelProblem.ConnectionFrozen)
+        when (escalation) {
+            1 -> {
+                // New circuits and fresh connections to the bridge (a frozen TCP session dies).
+                onNotReady(ReconnectReason.Stalled)
+                runCatching { engine.signal(TorSignal.NewIdentity) }
+                toggleNetwork()
+            }
+            2 -> {
+                onNotReady(ReconnectReason.TransportSwitch)
+                switchBridge()
+            }
+            else -> {
+                onNotReady(ReconnectReason.Restart)
+                restartTor("watchdog escalation $escalation")
+            }
+        }
+        watchdog.arm()
+        healthySince = now()
     }
 
     /** Stops trusting the current bridge and races all other candidates. */
@@ -839,6 +879,9 @@ internal class TorSession(
     private companion object {
         const val TAG = "session"
         const val EXPAND_AFTER_MS = 10_000L
+        /** First bootstrap through Snowflake often takes 1–2 minutes: hint only after that. */
+        const val SLOW_HINT_MS = 120_000L
+        const val NEWNYM_ONLY_INTERVAL_MS = 2 * 60_000L
         const val GIVE_UP_AFTER_QUIET_MS = 60_000L
         const val MIN_ATTEMPT_MS = 90_000L
         const val RETRY_BASE_MS = 30_000L

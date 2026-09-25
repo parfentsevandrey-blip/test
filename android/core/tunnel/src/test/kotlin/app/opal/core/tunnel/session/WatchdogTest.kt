@@ -32,7 +32,8 @@ class WatchdogTest {
     fun `waiting streams with no bytes read is a freeze`() {
         dog.onEvent(TorEvent.Bandwidth(100_000, 1_000))
         dog.onEvent(stream("1", StreamStatus.SENTCONNECT))
-        time += 19_000
+        // Tor retries a stream on other circuits for a while: 44 s of waiting is not a freeze yet.
+        time += 44_000
         assertNull(dog.evaluate())
         time += 2_000
         assertEquals(Watchdog.Stall.Frozen, dog.evaluate())

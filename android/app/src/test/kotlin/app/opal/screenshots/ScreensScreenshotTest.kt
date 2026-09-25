@@ -263,7 +263,7 @@ class ScreensScreenshotTest(private val variant: Variant) {
         shot("connection", AuroraMood.Idle, 2) { padding ->
             ConnectionScreen(
                 ConnectionUiState(
-                    mode = ConnectionMode.Auto,
+                    mode = ConnectionMode.Snowflake,
                     customCount = 0,
                     settingsApi =
                         SettingsApiInfo(

@@ -7,7 +7,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AppSettings(
     val onboardingCompleted: Boolean = false,
-    val connectionMode: ConnectionMode = ConnectionMode.Auto,
+    /** Snowflake by default, as in Tor Browser; Auto (race + Settings API) is opt-in. */
+    val connectionMode: ConnectionMode = ConnectionMode.Snowflake,
     /** Raw bridge lines entered by the user (validated before saving). */
     val customBridges: List<String> = emptyList(),
     /** ISO 3166-1 alpha-2, lowercase; null = let Tor choose. */
@@ -27,8 +28,12 @@ data class AppSettings(
 
 @Serializable
 enum class ConnectionMode(val transport: TransportKind?) {
-    /** Race transports; start with the last winner for the current network type. */
+    /**
+     * Race transports (Snowflake, WebTunnel, obfs4, meek, Settings API bridges); start with the
+     * last winner for the current network type. Opt-in: for networks where Snowflake is blocked.
+     */
     Auto(null),
+    /** Default: only the built-in Snowflake bridges, like Tor Browser. */
     Snowflake(TransportKind.Snowflake),
     WebTunnel(TransportKind.WebTunnel),
     Obfs4(TransportKind.Obfs4),

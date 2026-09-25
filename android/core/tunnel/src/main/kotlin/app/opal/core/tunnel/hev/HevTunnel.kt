@@ -69,6 +69,13 @@ internal class HevTunnel(context: Context) {
         const val FAKE_NETMASK = "255.192.0.0"
         const val MTU = 8500
 
+        /**
+         * hev waits this long for the SOCKS CONNECT reply, i.e. until Tor reached the destination
+         * through an exit. Over Snowflake that often takes longer than hev's 10 s default; Tor
+         * itself retries on other circuits for up to SocksTimeout (120 s), so we match it.
+         */
+        const val CONNECT_TIMEOUT_MS = 120_000
+
         internal fun config(socksPort: Int, mtu: Int, debug: Boolean): String =
             """
             |tunnel:
@@ -84,7 +91,7 @@ internal class HevTunnel(context: Context) {
             |  netmask: $FAKE_NETMASK
             |  cache-size: 10000
             |misc:
-            |  connect-timeout: 15000
+            |  connect-timeout: $CONNECT_TIMEOUT_MS
             |  log-level: ${if (debug) "warn" else "error"}
             |  log-file: ${if (debug) "stderr" else "null"}
             |"""

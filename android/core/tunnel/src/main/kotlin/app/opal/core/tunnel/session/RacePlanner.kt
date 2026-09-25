@@ -62,7 +62,11 @@ internal object RacePlanner {
             }
             else -> {
                 val kind = requireNotNull(mode.transport)
-                BridgePlan(candidates[kind].orEmpty(), emptyList(), settingsApiAllowed = true)
+                BridgePlan(
+                    candidates[kind].orEmpty(),
+                    emptyList(),
+                    settingsApiAllowed = ModePolicy.of(mode).settingsApiBeforeConnect,
+                )
             }
         }
     }

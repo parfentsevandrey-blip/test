@@ -14,7 +14,8 @@ import app.opal.core.model.tor.TorEvent
  */
 internal class Watchdog(
     private val now: () -> Long,
-    private val freezeMillis: Long = 20_000,
+    /** Long enough for Tor's own stream retries over a slow first hop (Snowflake, meek). */
+    private val freezeMillis: Long = 45_000,
     private val windowMillis: Long = 60_000,
 ) {
     enum class Stall {

@@ -32,7 +32,7 @@ data class SettingsApiInfo(
 
 @Immutable
 data class ConnectionUiState(
-    val mode: ConnectionMode = ConnectionMode.Auto,
+    val mode: ConnectionMode = ConnectionMode.Snowflake,
     val customCount: Int = 0,
     val settingsApi: SettingsApiInfo? = null,
     val winners: ImmutableMap<NetworkKind, TransportKind> = persistentMapOf(),

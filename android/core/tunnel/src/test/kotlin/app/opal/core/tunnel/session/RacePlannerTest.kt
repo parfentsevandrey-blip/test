@@ -29,13 +29,46 @@ class RacePlannerTest {
             TransportKind.Meek to listOf(meek),
         )
 
+    private val auto = AppSettings(connectionMode = ConnectionMode.Auto)
+
     private fun line(raw: String) = BridgeLine.parseOrNull(raw)!!
+
+    @Test
+    fun `default is Snowflake only, without racing or asking the Settings API`() {
+        val plan =
+            RacePlanner.plan(
+                AppSettings(),
+                TunnelMemory(),
+                NetworkKind.Cellular,
+                candidates,
+                emptyList(),
+            )
+        assertEquals(listOf(snowflake), plan.initial)
+        assertTrue(plan.expansion.isEmpty())
+        assertFalse(plan.settingsApiAllowed)
+    }
+
+    @Test
+    fun `obfs4 and WebTunnel may fetch bridges from the Settings API, meek may not`() {
+        fun api(mode: ConnectionMode) =
+            RacePlanner.plan(
+                    AppSettings(connectionMode = mode),
+                    TunnelMemory(),
+                    null,
+                    candidates,
+                    emptyList(),
+                )
+                .settingsApiAllowed
+        assertTrue(api(ConnectionMode.Obfs4))
+        assertTrue(api(ConnectionMode.WebTunnel))
+        assertFalse(api(ConnectionMode.Meek))
+    }
 
     @Test
     fun `first run races everything at once`() {
         val plan =
             RacePlanner.plan(
-                AppSettings(),
+                auto,
                 TunnelMemory(),
                 NetworkKind.Wifi,
                 candidates,
@@ -59,8 +92,7 @@ class RacePlannerTest {
                         NetworkKind.Wifi to TransportKind.Snowflake,
                     )
             )
-        val plan =
-            RacePlanner.plan(AppSettings(), memory, NetworkKind.Cellular, candidates, emptyList())
+        val plan = RacePlanner.plan(auto, memory, NetworkKind.Cellular, candidates, emptyList())
         assertEquals(setOf(TransportKind.Obfs4), plan.initialKinds)
         assertEquals(
             setOf(TransportKind.Snowflake, TransportKind.Meek),
@@ -75,8 +107,7 @@ class RacePlannerTest {
                 winners = mapOf(NetworkKind.Wifi to TransportKind.Obfs4),
                 lastWorkingBridge = mapOf(NetworkKind.Wifi to obfs4b.id),
             )
-        val plan =
-            RacePlanner.plan(AppSettings(), memory, NetworkKind.Wifi, candidates, emptyList())
+        val plan = RacePlanner.plan(auto, memory, NetworkKind.Wifi, candidates, emptyList())
         assertEquals(obfs4b, plan.initial.first())
     }
 
@@ -111,8 +142,7 @@ class RacePlannerTest {
     @Test
     fun `stale winner that is no longer available falls back to a full race`() {
         val memory = TunnelMemory(winners = mapOf(NetworkKind.Wifi to TransportKind.WebTunnel))
-        val plan =
-            RacePlanner.plan(AppSettings(), memory, NetworkKind.Wifi, candidates, emptyList())
+        val plan = RacePlanner.plan(auto, memory, NetworkKind.Wifi, candidates, emptyList())
         assertEquals(3, plan.initialKinds.size)
     }
 }

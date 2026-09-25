@@ -14,4 +14,11 @@ class HevConfigTest {
         assertTrue(yaml.contains("network: 100.64.0.0"))
         assertTrue(yaml.contains("log-file: null"))
     }
+
+    @Test
+    fun `hev waits as long as Tor for the CONNECT reply`() {
+        // hev's 10 s default cut off connections that Tor was still retrying over Snowflake.
+        val yaml = HevTunnel.config(socksPort = 45678, mtu = 8500, debug = false)
+        assertTrue(yaml, yaml.contains("connect-timeout: 120000"))
+    }
 }

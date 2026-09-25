@@ -9,8 +9,8 @@
     <string name="onb_intro_does">Opal заворачивает трафик всех приложений в сеть Tor. Сайты не видят ваш IP-адрес, провайдер не видит, куда вы ходите: для него это соединение с мостом Tor. Мосты помогают, когда Tor заблокирован.</string>
     <string name="onb_intro_cannot_title">Чего Tor не умеет</string>
     <string name="onb_intro_cannot">• Не переносит UDP: звонки и игры могут не работать, QUIC откатывается на TCP.\n• Многие сервисы блокируют Tor или показывают капчу — банки, госсервисы, стриминги. Их можно пустить напрямую на вкладке «Приложения».\n• Медленнее обычного соединения.\n• Не делает приложения анонимными: вас по-прежнему узнают по аккаунтам.</string>
-    <string name="onb_intro_api_title">Один запрос не через Tor</string>
-    <string name="onb_intro_api">Чтобы подобрать мосты для вашей сети, приложение обращается к серверу Tor Project (Circumvention Settings API) напрямую — так же, как Tor Browser. Запрос замаскирован под обращение к CDN, но сервер Tor Project видит ваш IP-адрес.</string>
+    <string name="onb_intro_api_title">Подключение через Snowflake</string>
+    <string name="onb_intro_api">По умолчанию Opal подключается через мост Snowflake, как Tor Browser. Первое подключение может занять 1–2 минуты. Если в вашей сети Snowflake заблокирован, в разделе «Подключение» есть режим «Авто»: он спрашивает мосты у сервера Tor Project напрямую, и этот сервер видит ваш IP-адрес.</string>
 
     <string name="onb_vpn_title">Разрешение VPN</string>
     <string name="onb_vpn_body">Android спросит, можно ли Opal создать VPN. Трафик уходит только в Tor — своих серверов у приложения нет.</string>
