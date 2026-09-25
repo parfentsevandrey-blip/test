@@ -61,6 +61,15 @@ class CalendarMotionTest {
     @Test
     fun firefliesGlowInJuly() = film("calendar-july", 7, LiveWeather.Fireflies)
 
+    @Test
+    fun starsFallInAugust() = film("calendar-august", 8, LiveWeather.Night)
+
+    @Test
+    fun frostGlintsInJanuary() = film("calendar-january", 1, LiveWeather.Frost)
+
+    @Test
+    fun fluffDriftsInJune() = film("calendar-june", 6, LiveWeather.Fluff)
+
     private fun film(name: String, month: Int, expected: LiveWeather) {
         val config = WidgetKind.Calendar.defaultConfig
         assertThat(LiveWeather.ofSeason(config, month)).isEqualTo(expected)
@@ -89,7 +98,7 @@ class CalendarMotionTest {
         host.layout(0, 0, pw, ph)
         val tiles = root.findViewById<ViewGroup>(R.id.widget_motion)
         assertThat(tiles.visibility).isEqualTo(View.VISIBLE)
-        assertThat(tiles.childCount).isEqualTo(LiveWeather.columns(w) * LiveWeather.rows(h))
+        assertThat(tiles.childCount).isEqualTo(expected.columns(w) * expected.rows(h))
 
         val clip = Path().apply { addRoundRect(RectF(0f, 0f, pw.toFloat(), ph.toFloat()), radius * density, radius * density, Path.Direction.CW) }
         val frames = File(out, "$name-frames").apply { deleteRecursively(); mkdirs() }

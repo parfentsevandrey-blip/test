@@ -23,7 +23,14 @@ import kotlin.math.roundToInt
  * seamlessly side by side, in variants that never repeat a neighbour. The tiles themselves are
  * generated (MotionResources, in the widget's tests).
  */
-enum class LiveWeather(private val tiles: IntArray, private val storm: Boolean = false) {
+enum class LiveWeather(
+    private val tiles: IntArray,
+    private val storm: Boolean = false,
+    /** Tiles for the top row alone, where the sky is: falling stars above the fireflies. */
+    private val sky: IntArray? = null,
+    /** The calendar's seasons: taller tiles, a variant per column, the rows of a column joining. */
+    private val seasonal: Boolean = false,
+) {
     RainLight(intArrayOf(R.layout.motion_rain_light_a, R.layout.motion_rain_light_b, R.layout.motion_rain_light_c, R.layout.motion_rain_light_d)),
     RainHeavy(intArrayOf(R.layout.motion_rain_heavy_a, R.layout.motion_rain_heavy_b, R.layout.motion_rain_heavy_c, R.layout.motion_rain_heavy_d)),
 
@@ -32,27 +39,61 @@ enum class LiveWeather(private val tiles: IntArray, private val storm: Boolean =
     SnowLight(intArrayOf(R.layout.motion_snow_light)),
     SnowHeavy(intArrayOf(R.layout.motion_snow_heavy)),
 
-    /** The calendar's seasons: September's golden leaves, October's red, May's petals, summer's fireflies. */
-    LeavesGold(intArrayOf(R.layout.motion_season_leaves_gold)),
-    LeavesRed(intArrayOf(R.layout.motion_season_leaves_red)),
-    Petals(intArrayOf(R.layout.motion_season_petals)),
-    Fireflies(intArrayOf(R.layout.motion_season_fireflies)),
+    /** September's birch leaves and October's maple leaves, swinging down and turning over. */
+    LeavesGold(intArrayOf(R.layout.motion_season_leaves_gold_a, R.layout.motion_season_leaves_gold_b, R.layout.motion_season_leaves_gold_c, R.layout.motion_season_leaves_gold_d), seasonal = true),
+    LeavesRed(intArrayOf(R.layout.motion_season_leaves_red_a, R.layout.motion_season_leaves_red_b, R.layout.motion_season_leaves_red_c, R.layout.motion_season_leaves_red_d), seasonal = true),
+
+    /** May's apple petals, fluttering on the wind. */
+    Petals(intArrayOf(R.layout.motion_season_petals_a, R.layout.motion_season_petals_b, R.layout.motion_season_petals_c, R.layout.motion_season_petals_d), seasonal = true),
+
+    /** July's dusk: fireflies over the rye, kept low in the top row so the sky stays clear. */
+    Fireflies(
+        intArrayOf(R.layout.motion_season_fireflies_a, R.layout.motion_season_fireflies_b, R.layout.motion_season_fireflies_c, R.layout.motion_season_fireflies_d),
+        sky = intArrayOf(R.layout.motion_season_fireflies_low_a, R.layout.motion_season_fireflies_low_b, R.layout.motion_season_fireflies_low_c, R.layout.motion_season_fireflies_low_d),
+        seasonal = true,
+    ),
+
+    /** August's night: stars falling in the sky of the top row, fireflies below. */
+    Night(
+        intArrayOf(R.layout.motion_season_fireflies_a, R.layout.motion_season_fireflies_b, R.layout.motion_season_fireflies_c, R.layout.motion_season_fireflies_d),
+        sky = intArrayOf(R.layout.motion_season_meteors_a, R.layout.motion_season_meteors_b, R.layout.motion_season_meteors_c, R.layout.motion_season_meteors_d),
+        seasonal = true,
+    ),
+
+    /** January's frost in the sunlit air: ice crystals glinting as they sink. */
+    Frost(intArrayOf(R.layout.motion_season_glitter_a, R.layout.motion_season_glitter_b, R.layout.motion_season_glitter_c, R.layout.motion_season_glitter_d), seasonal = true),
+
+    /** June's poplar fluff, wandering on the air. */
+    Fluff(intArrayOf(R.layout.motion_season_fluff_a, R.layout.motion_season_fluff_b, R.layout.motion_season_fluff_c, R.layout.motion_season_fluff_d), seasonal = true),
     ;
 
-    /** One tile repeated everywhere: snow, and the calendar's seasons, whose patterns never show a seam. */
+    /** One tile repeated everywhere: snow, whose pattern never shows a seam. */
     val isSingleTile: Boolean get() = tiles.size == 1
+
+    /** Whether a column's tiles repeat down it, so what falls runs on from one into the next. */
+    val joinsDown: Boolean get() = seasonal
+
+    val tileWidth: Float get() = TILE_WIDTH_DP
+    val tileHeight: Float get() = if (seasonal) SEASON_TILE_HEIGHT_DP else TILE_HEIGHT_DP
 
     /** The tile at [column], [row]: never the same drops as a neighbour, bolts only along the top. */
     @LayoutRes
     fun tileAt(column: Int, row: Int): Int = when {
+        sky != null && row == 0 -> sky[column % sky.size]
         tiles.size == 1 -> tiles[0]
         storm -> if (row == 0) tiles[column % 2] else tiles[2 + (column + row) % 2]
+        seasonal -> tiles[column % tiles.size]
         else -> tiles[(column + 2 * row + row / 2) % 4]
     }
+
+    fun columns(widthDp: Float): Int = ceil((widthDp + SLACK_DP) / tileWidth).toInt().coerceAtLeast(1)
+
+    fun rows(heightDp: Float): Int = ceil((heightDp + SLACK_DP) / tileHeight).toInt().coerceAtLeast(1)
 
     companion object {
         const val TILE_WIDTH_DP = 180f
         const val TILE_HEIGHT_DP = 90f
+        const val SEASON_TILE_HEIGHT_DP = 180f
 
         /** Launchers may show a widget a little larger than the size it was drawn for. */
         private const val SLACK_DP = 12f
@@ -70,27 +111,28 @@ enum class LiveWeather(private val tiles: IntArray, private val storm: Boolean =
         }
 
         /**
-         * What moves over a calendar's painting of [month]: snow in winter and November's first,
-         * April's rain, May's petals, summer nights' fireflies, the leaves of September and October.
+         * What moves over a calendar's painting of [month]: January's glinting frost, February's
+         * and November's snow, December's heavier, April's rain, May's petals, June's poplar fluff,
+         * the fireflies of July's dusk, August's falling stars, the leaves of September and October.
+         * March stands still, thawing.
          */
         fun ofSeason(config: WidgetConfig, month: Int): LiveWeather? {
             if (config.face != WidgetFace.Calendar || !config.liveWeather) return null
             if (config.style != WidgetStyle.Sky && config.style != WidgetStyle.Glass) return null
             return when (month) {
-                1, 2, 11 -> SnowLight
+                1 -> Frost
+                2, 11 -> SnowLight
                 12 -> SnowHeavy
                 4 -> RainLight
                 5 -> Petals
-                7, 8 -> Fireflies
+                6 -> Fluff
+                7 -> Fireflies
+                8 -> Night
                 9 -> LeavesGold
                 10 -> LeavesRed
                 else -> null
             }
         }
-
-        fun columns(widthDp: Float): Int = ceil((widthDp + SLACK_DP) / TILE_WIDTH_DP).toInt().coerceAtLeast(1)
-
-        fun rows(heightDp: Float): Int = ceil((heightDp + SLACK_DP) / TILE_HEIGHT_DP).toInt().coerceAtLeast(1)
     }
 }
 
@@ -106,11 +148,11 @@ internal fun RemoteViews.setLiveWeather(packageName: String, weather: LiveWeathe
     }
     setViewVisibility(R.id.widget_motion, View.VISIBLE)
     setViewOutlinePreferredRadius(R.id.widget_motion, cornerRadiusDp, TypedValue.COMPLEX_UNIT_DIP)
-    for (row in 0 until LiveWeather.rows(heightDp)) {
-        for (column in 0 until LiveWeather.columns(widthDp)) {
+    for (row in 0 until weather.rows(heightDp)) {
+        for (column in 0 until weather.columns(widthDp)) {
             val tile = RemoteViews(packageName, weather.tileAt(column, row))
-            tile.setViewLayoutMargin(R.id.motion_tile, RemoteViews.MARGIN_LEFT, column * LiveWeather.TILE_WIDTH_DP, TypedValue.COMPLEX_UNIT_DIP)
-            tile.setViewLayoutMargin(R.id.motion_tile, RemoteViews.MARGIN_TOP, row * LiveWeather.TILE_HEIGHT_DP, TypedValue.COMPLEX_UNIT_DIP)
+            tile.setViewLayoutMargin(R.id.motion_tile, RemoteViews.MARGIN_LEFT, column * weather.tileWidth, TypedValue.COMPLEX_UNIT_DIP)
+            tile.setViewLayoutMargin(R.id.motion_tile, RemoteViews.MARGIN_TOP, row * weather.tileHeight, TypedValue.COMPLEX_UNIT_DIP)
             addStableView(R.id.widget_motion, tile, row * 64 + column + 1)
         }
     }
@@ -122,12 +164,12 @@ internal fun FrameLayout.showLiveWeather(weather: LiveWeather?, widthDp: Float, 
     if (weather == null) return
     val inflater = LayoutInflater.from(context)
     val density = resources.displayMetrics.density
-    for (row in 0 until LiveWeather.rows(heightDp)) {
-        for (column in 0 until LiveWeather.columns(widthDp)) {
+    for (row in 0 until weather.rows(heightDp)) {
+        for (column in 0 until weather.columns(widthDp)) {
             val tile = inflater.inflate(weather.tileAt(column, row), this, false)
             (tile.layoutParams as FrameLayout.LayoutParams).apply {
-                leftMargin = (column * LiveWeather.TILE_WIDTH_DP * density).roundToInt()
-                topMargin = (row * LiveWeather.TILE_HEIGHT_DP * density).roundToInt()
+                leftMargin = (column * weather.tileWidth * density).roundToInt()
+                topMargin = (row * weather.tileHeight * density).roundToInt()
             }
             addView(tile)
         }

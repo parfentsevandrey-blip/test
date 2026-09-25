@@ -1,6 +1,7 @@
 package app.rosa.weather.widget.render.calendar
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Paint
@@ -40,6 +41,7 @@ import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 /** What a calendar widget shows at this moment: the month on display, today, the events. */
 data class CalendarView(
@@ -87,11 +89,11 @@ data class CalendarTargets(
  */
 internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts) {
     private val type = WidgetType(fonts)
-    private val scene = SeasonScene()
     private val background = WidgetBackground()
     private val glyphs = WeatherGlyphPainter()
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val filter = Paint(Paint.FILTER_BITMAP_FLAG)
+    private val exact = Paint()
     private val path = Path()
 
     fun draw(canvas: Canvas, request: WidgetRenderRequest): CalendarTargets {
@@ -101,7 +103,9 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         val art = MonthArt.of(view.month.monthValue)
         val radius = request.cornerRadiusDp.coerceIn(0f, min(w, h) / 2f)
         val look = Look.of(request, art)
-        val s = Sheet(request, view, art, look, w, h, radius)
+        @Suppress("DEPRECATION")
+        val px = canvas.matrix.mapRadius(1f).coerceIn(0.25f, 6f)
+        val s = Sheet(px, request, view, art, look, w, h, radius)
         return when {
             w < 130f && h >= 100f || w < 100f -> tile(canvas, s, vertical = true)
             h < 100f && w < 210f -> tile(canvas, s, vertical = false)
@@ -144,6 +148,7 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         val panelW = s.w * 0.36f
         val inset = if (s.style == WidgetStyle.Sky) (s.h * 0.045f).coerceIn(5f, 9f) else 0f
         val sheet = RectF(panelW, inset, s.w - inset, s.h - inset)
+        s.scrim = false
         drawBackground(c, s, sheet = if (s.style == WidgetStyle.Sky) sheet else null, picture = null)
         if (s.style == WidgetStyle.Sky) dateScrim(c, s, RectF(0f, 0f, panelW, s.h))
         today(c, s, RectF(0f, 0f, panelW, s.h))
@@ -162,8 +167,12 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
 
     /** A short, wide widget: today, then this week in a row. */
     private fun week(c: Canvas, s: Sheet): CalendarTargets {
-        drawBackground(c, s, sheet = if (s.style == WidgetStyle.Sky) RectF(0f, 0f, s.w, s.h) else null, picture = null)
         val left = (s.w * 0.24f).coerceIn(70f, 120f)
+        val inset = (s.h * 0.07f).coerceIn(4f, 7f)
+        // Today over the painting on the left; the week on a frosted sheet beside it.
+        s.scrim = false
+        drawBackground(c, s, sheet = if (s.style == WidgetStyle.Sky) RectF(left - 2f, inset, s.w - inset, s.h - inset) else null, picture = null)
+        if (s.style == WidgetStyle.Sky) dateScrim(c, s, RectF(0f, 0f, left, s.h))
         today(c, s, RectF(0f, 0f, left, s.h), compact = true)
         val area = RectF(left + 4f, s.h * 0.12f, s.w - (s.w * 0.03f).coerceIn(6f, 12f), s.h * 0.9f)
         val start = s.view.today.with(TemporalAdjusters.previousOrSame(s.firstDay))
@@ -188,7 +197,10 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
 
     /** The smallest widgets: today's date as a tile. */
     private fun tile(c: Canvas, s: Sheet, vertical: Boolean): CalendarTargets {
-        drawBackground(c, s, sheet = if (s.style == WidgetStyle.Sky) RectF(0f, 0f, s.w, s.h) else null, picture = null)
+        // The painting itself, as a postcard: the date over it, a shade under the date.
+        s.scrim = false
+        drawBackground(c, s, sheet = null, picture = null)
+        if (s.style == WidgetStyle.Sky) dateScrim(c, s, RectF(0f, 0f, s.w, s.h))
         today(c, s, RectF(0f, 0f, s.w, s.h), compact = !vertical)
         return CalendarTargets(days = listOf(s.view.today to RectF(0f, 0f, s.w, s.h)))
     }
@@ -361,39 +373,50 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         val k = s.k
         val pad = (min(box.width(), box.height()) * 0.1f).coerceIn(6f, 14f)
         val moment = s.request.content.forecast?.momentAt(s.request.content.nowEpochSeconds)
+        // Straight on the painting the type is white over a shade, like a cover's; elsewhere the style's.
+        val painted = s.style == WidgetStyle.Sky
+        val ink = if (painted) 0xFFFFFFFF.toInt() else s.look.headerInk
+        val soft = if (painted) 0xE6FFFFFF.toInt() else s.look.headerInkSoft
+        val dayInk = if (painted) Argb.White.lerp(Argb(s.look.accent), 0.25f).value else s.look.weekend(1f)
+        val shadow = painted || s.look.headerShadow
         if (compact && box.width() > box.height() * 1.4f) {
             // Side by side: the big date, then the weekday over the month.
             val size = (box.height() * 0.62f).coerceAtMost(box.width() * 0.34f)
-            val baseline = box.centerY() + WidgetType.capHeight(type.numerals(size, s.look.headerInk)) / 2f
-            val numberW = bigNumber(c, s, date.dayOfMonth.toString(), box.left + pad, baseline, type.numerals(size, s.look.headerInk))
+            val baseline = box.centerY() + WidgetType.capHeight(type.numerals(size, ink)) / 2f
+            val numberW = bigNumber(c, s, date.dayOfMonth.toString(), box.left + pad, baseline, type.numerals(size, ink))
             val tx = box.left + pad + numberW + pad * 0.6f
             val lineSize = (box.height() * 0.17f).coerceIn(9f, 13f) * k
-            WidgetType.draw(c, weekdayFull(date.dayOfWeek, s.view.locale), tx, box.centerY() - lineSize * 0.2f, type.text(lineSize, s.look.weekend(1f), 700), box.right - tx - 4f, shadow = s.look.headerShadow)
-            WidgetType.draw(c, monthGenitive(date, s.view.locale), tx, box.centerY() + lineSize * 0.97f, type.text(lineSize * 0.92f, s.look.headerInkSoft, 500), box.right - tx - 4f, shadow = s.look.headerShadow)
+            WidgetType.draw(c, weekdayFull(date.dayOfWeek, s.view.locale), tx, box.centerY() - lineSize * 0.2f, type.text(lineSize, dayInk, 700), box.right - tx - 4f, shadow = shadow)
+            WidgetType.draw(c, monthGenitive(date, s.view.locale), tx, box.centerY() + lineSize * 0.97f, type.text(lineSize * 0.92f, soft, 500), box.right - tx - 4f, shadow = shadow)
             return
         }
-        val weekdaySize = (box.height() * 0.085f).coerceIn(9f, 14f) * k
+        val weekday = weekdayFull(date.dayOfWeek, s.view.locale)
+        val room = box.width() - pad * 2
+        // Narrow tiles shrink the words a little before they'd have to cut them.
+        val weekdaySize = type.fitSize(weekday, room, (box.height() * 0.085f).coerceIn(9f, 14f) * k * 0.72f, (box.height() * 0.085f).coerceIn(9f, 14f) * k) { type.text(it, dayInk, 700) }
         val monthSize = (box.height() * 0.075f).coerceIn(9f, 13f) * k
         val top = box.top + pad + weekdaySize
-        WidgetType.draw(c, weekdayFull(date.dayOfWeek, s.view.locale), box.left + pad, top, type.text(weekdaySize, s.look.weekend(1f), 700), box.width() - pad * 2, shadow = s.look.headerShadow)
+        WidgetType.draw(c, weekday, box.left + pad, top, type.text(weekdaySize, dayInk, 700), room, shadow = shadow)
         val weatherRoom = if (moment != null && box.height() >= 110f) box.height() * 0.2f else 0f
         val numberRoom = box.bottom - pad - weatherRoom - monthSize * 1.6f - top
         val size = min(numberRoom * 1.18f, (box.width() - pad * 2) * 0.62f).coerceAtLeast(14f)
-        val baseline = top + (numberRoom + WidgetType.capHeight(type.numerals(size, s.look.headerInk))) / 2f + size * 0.04f
-        bigNumber(c, s, date.dayOfMonth.toString(), box.left + pad - size * 0.03f, baseline, type.numerals(size, s.look.headerInk))
+        val baseline = top + (numberRoom + WidgetType.capHeight(type.numerals(size, ink))) / 2f + size * 0.04f
+        bigNumber(c, s, date.dayOfMonth.toString(), box.left + pad - size * 0.03f, baseline, type.numerals(size, ink))
         val monthLine = monthGenitive(date, s.view.locale) + if (box.width() >= 110f) " ${date.year}" else ""
-        WidgetType.draw(c, monthLine, box.left + pad, baseline + monthSize * 1.55f, type.text(monthSize, s.look.headerInkSoft, 500), box.width() - pad * 2, shadow = s.look.headerShadow)
+        val monthFit = type.fitSize(monthLine, room, monthSize * 0.72f, monthSize) { type.text(it, soft, 500) }
+        WidgetType.draw(c, monthLine, box.left + pad, baseline + monthSize * 1.55f, type.text(monthFit, soft, 500), room, shadow = shadow)
         if (weatherRoom > 0f && moment != null) {
             val g = (weatherRoom * 0.62f).coerceAtMost(26f)
             val y = box.bottom - pad - g / 2f
-            glyphs.draw(c, moment.condition, moment.isDay, RectF(box.left + pad, y - g / 2, box.left + pad + g, y + g / 2), WeatherGlyphPainter.Tone.Color, s.look.ink, moment.moonPhase.phase, onLightBackground = !s.look.headerDark)
-            val tp = type.text(g * 0.62f, s.look.headerInk, 600)
-            WidgetType.draw(c, s.format.temperature(moment.temperature), box.left + pad + g * 1.15f, y + WidgetType.capHeight(tp) / 2f, tp, shadow = s.look.headerShadow)
+            glyphs.draw(c, moment.condition, moment.isDay, RectF(box.left + pad, y - g / 2, box.left + pad + g, y + g / 2), WeatherGlyphPainter.Tone.Color, s.look.ink, moment.moonPhase.phase, onLightBackground = !painted && !s.look.headerDark)
+            val tp = type.text(g * 0.62f, ink, 600)
+            WidgetType.draw(c, s.format.temperature(moment.temperature), box.left + pad + g * 1.15f, y + WidgetType.capHeight(tp) / 2f, tp, shadow = shadow)
         }
     }
 
     private fun bigNumber(c: Canvas, s: Sheet, text: String, left: Float, baseline: Float, paint: TextPaint): Float {
-        val ink = s.look.glassInk
+        // Glass numerals need calm glass behind them; on the painting they'd vanish into it.
+        val ink = if (s.style == WidgetStyle.Sky) null else s.look.glassInk
         return if (ink != null) {
             GlassNumerals.draw(c, text, left, baseline, paint, ink, strongShadow = s.look.headerShadow, light = s.light)
             paint.measureText(text)
@@ -413,29 +436,11 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
      */
     private fun drawBackground(c: Canvas, s: Sheet, sheet: RectF?, picture: RectF?) {
         val rect = RectF(0f, 0f, s.w, s.h)
-        path.reset()
-        path.addRoundRect(rect, s.radius, s.radius, Path.Direction.CW)
         when (s.style) {
-            WidgetStyle.Sky -> {
-                c.withClip(path) {
-                    scene.draw(this, rect, s.art, live = s.request.live)
-                    headerScrim(this, s)
-                }
-                if (sheet != null) frostedSheet(c, s, sheet)
-                if (s.request.config.glassRim) GlassBevel.draw(c, rect, s.radius, s.light, s.look.dark, strength = 0.8f)
-            }
-            WidgetStyle.Glass -> {
-                val frost = Frost.render(s.w, s.h, 0.32f, 2) { scene.draw(it, RectF(0f, 0f, s.w, s.h), s.art, live = s.request.live) }
-                c.withClip(path) {
-                    drawBitmap(frost, null, rect, filter)
-                    val opacity = s.request.config.opacity.coerceIn(0.15f, 1f)
-                    val tint = if (s.look.dark) s.art.zenith.lerp(Argb.hex(0x0B0F1C), 0.55f) else Argb.hex(0xF4F6FB)
-                    paint.shader = LinearGradient(0f, 0f, 0f, s.h, tint.withAlpha(opacity * 0.5f).value, tint.withAlpha(opacity * 0.62f).value, Shader.TileMode.CLAMP)
-                    drawRect(rect, paint)
-                    paint.shader = null
-                }
-                frost.recycle()
-                if (s.request.config.glassRim) GlassBevel.draw(c, rect, s.radius, s.light, s.look.dark, strength = 1f)
+            WidgetStyle.Sky, WidgetStyle.Glass -> {
+                // Built once per month, size and look, then only drawn: the numbers are all that change.
+                val pane = CalendarArt.pane(paneKey(s, sheet), s.widthPx, s.heightPx, s.px) { pane(it, s, sheet) }
+                c.drawBitmap(pane, null, rect, exact)
             }
             else -> {
                 background.draw(
@@ -448,10 +453,49 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         }
     }
 
+    /** Everything a [pane] depends on, so a kept one is only reused where it would look the same. */
+    private fun paneKey(s: Sheet, sheet: RectF?): String = buildString {
+        fun f(v: Float) = (v * 10f).roundToInt()
+        append(s.style.name).append("|m").append(s.art.month).append("|r").append(f(s.radius))
+        if (sheet != null) append("|s").append(f(sheet.left)).append(',').append(f(sheet.top)).append(',').append(f(sheet.right)).append(',').append(f(sheet.bottom))
+        append("|o").append(f(s.request.config.opacity)).append("|g").append(s.request.config.glassRim)
+        append("|d").append(s.look.dark).append(s.look.headerDark).append("|l").append(s.request.live).append("|h").append(s.scrim)
+    }
+
+    /**
+     * A pane: the month's painting under a frosted sheet for the grid ([WidgetStyle.Sky]) or frosted
+     * all over ([WidgetStyle.Glass]), with its glass edge.
+     */
+    private fun pane(c: Canvas, s: Sheet, sheet: RectF?) {
+        val rect = RectF(0f, 0f, s.w, s.h)
+        val clip = Path().apply { addRoundRect(rect, s.radius, s.radius, Path.Direction.CW) }
+        val painting = CalendarArt.painting(context, s.art.month, s.widthPx, s.heightPx, s.px, s.request.live)
+        if (s.style == WidgetStyle.Sky) {
+            c.withClip(clip) {
+                drawBitmap(painting, null, rect, filter)
+                if (s.scrim) headerScrim(this, s)
+            }
+            if (sheet != null) frostedSheet(c, s, sheet, painting)
+            if (s.request.config.glassRim) GlassBevel.draw(c, rect, s.radius, s.light, s.look.dark, strength = 0.8f)
+        } else {
+            val frost = Frost.of(painting, s.px, 0.32f, 2)
+            c.withClip(clip) {
+                drawBitmap(frost, null, rect, filter)
+                val opacity = s.request.config.opacity.coerceIn(0.15f, 1f)
+                val tint = if (s.look.dark) s.art.zenith.lerp(Argb.hex(0x0B0F1C), 0.55f) else Argb.hex(0xF4F6FB)
+                paint.shader = LinearGradient(0f, 0f, 0f, s.h, tint.withAlpha(opacity * 0.5f).value, tint.withAlpha(opacity * 0.62f).value, Shader.TileMode.CLAMP)
+                drawRect(rect, paint)
+                paint.shader = null
+            }
+            frost.recycle()
+            if (s.request.config.glassRim) GlassBevel.draw(c, rect, s.radius, s.light, s.look.dark, strength = 1f)
+        }
+    }
+
     /** The grid's sheet: the painting behind it frosted and tinted, a glass edge round it. */
-    private fun frostedSheet(c: Canvas, s: Sheet, sheet: RectF) {
+    private fun frostedSheet(c: Canvas, s: Sheet, sheet: RectF, painting: Bitmap) {
         val radius = if (sheet.left <= 0f && sheet.top <= 0f) s.radius else (s.radius - (s.w - sheet.right)).coerceIn(8f, sheet.height() / 2f)
-        val frost = Frost.render(s.w, s.h, 0.62f, 2) { scene.draw(it, RectF(0f, 0f, s.w, s.h), s.art, live = s.request.live) }
+        val frost = Frost.of(painting, s.px, 0.34f, 2)
         path.reset()
         path.addRoundRect(sheet, radius, radius, Path.Direction.CW)
         c.withClip(path) {
@@ -468,7 +512,7 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
 
     /** Under today's date over the painting: a shade rising from the foot, so the glass digits read. */
     private fun dateScrim(c: Canvas, s: Sheet, box: RectF) {
-        val color = if (s.look.headerDark) Argb.hex(0x0A0E1C).withAlpha(0.6f) else Argb.White.withAlpha(0.6f)
+        val color = if (s.style == WidgetStyle.Sky || s.look.headerDark) Argb.hex(0x0A0E1C).withAlpha(0.62f) else Argb.White.withAlpha(0.6f)
         path.reset()
         path.addRoundRect(RectF(0f, 0f, s.w, s.h), s.radius, s.radius, Path.Direction.CW)
         c.withClip(path) {
@@ -494,7 +538,8 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         val r = (s.radius - inset).coerceIn(4f, 16f)
         path.reset()
         path.addRoundRect(frame, r, r, Path.Direction.CW)
-        c.withClip(path) { scene.draw(this, frame, s.art) }
+        val picture = CalendarArt.painting(context, s.art.month, max(1, (frame.width() * s.px).roundToInt()), max(1, (frame.height() * s.px).roundToInt()), s.px, live = false)
+        c.withClip(path) { drawBitmap(picture, null, frame, filter) }
         paint.shader = null
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = 0.7f
@@ -593,6 +638,7 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
 
     /** Everything one render needs, worked out once. */
     private inner class Sheet(
+        val pxPerDp: Float,
         val request: WidgetRenderRequest,
         val view: CalendarView,
         val art: MonthArt,
@@ -602,6 +648,14 @@ internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts
         val radius: Float,
     ) {
         val style: WidgetStyle get() = request.config.style
+
+        /** Pixels per dp of the canvas being drawn on, and the picture's size in pixels. */
+        val px: Float = pxPerDp
+        val widthPx: Int = max(1, (w * px).roundToInt())
+        val heightPx: Int = max(1, (h * px).roundToInt())
+
+        /** Whether the painting under the header gets a shade for the type (a pane with a header). */
+        var scrim: Boolean = true
         val k: Float get() = request.config.textScale
         val firstDay: DayOfWeek = CalendarMonth.firstDayFor(request.config.calendar.weekStart, view.locale)
         val light: WidgetLight = art.light(w, h)

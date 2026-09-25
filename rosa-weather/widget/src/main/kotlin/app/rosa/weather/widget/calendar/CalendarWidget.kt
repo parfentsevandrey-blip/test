@@ -123,9 +123,12 @@ internal object CalendarIntents {
     private const val FLAGS = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
 
     fun month(context: Context, provider: ComponentName, widgetId: Int, delta: Int): PendingIntent {
+        // A tap someone is waiting on: delivered and run at foreground priority, not queued behind
+        // the background's broadcasts.
         val intent = Intent(ACTION_MONTH).setComponent(provider)
             .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
             .putExtra(EXTRA_DELTA, delta)
+            .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
         return PendingIntent.getBroadcast(context, widgetId * 4 + delta + 1, intent, FLAGS)
     }
 

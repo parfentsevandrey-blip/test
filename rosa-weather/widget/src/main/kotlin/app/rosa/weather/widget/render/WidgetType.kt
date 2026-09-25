@@ -7,6 +7,7 @@ import android.graphics.Typeface
 import android.text.TextPaint
 import android.text.TextUtils
 import app.rosa.weather.core.designsystem.R
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.min
 
 /**
@@ -14,6 +15,19 @@ import kotlin.math.min
  * figures) carries the big numerals, Manrope everything else, with full Cyrillic support.
  */
 class WidgetFonts(val numerals: Typeface, val text: Typeface) {
+    private val variations = ConcurrentHashMap<Pair<Typeface, String>, Typeface>()
+
+    /**
+     * [base] at the axis values of [variation], made once. A paint's own variation settings build
+     * a new typeface on every call — about a millisecond per label, dozens of labels per widget.
+     */
+    fun varied(base: Typeface, variation: String): Typeface = variations.getOrPut(base to variation) {
+        val probe = TextPaint()
+        probe.typeface = base
+        runCatching { probe.fontVariationSettings = variation }
+        probe.typeface ?: base
+    }
+
     companion object {
         @Volatile private var cached: WidgetFonts? = null
 
@@ -48,11 +62,10 @@ class WidgetType(private val fonts: WidgetFonts) {
     private fun configure(typeface: Typeface, size: Float, color: Int, variation: String, features: String? = null): TextPaint {
         paint.reset()
         paint.flags = Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG
-        paint.typeface = typeface
+        paint.typeface = fonts.varied(typeface, variation)
         paint.textSize = size
         paint.color = color
         paint.fontFeatureSettings = features
-        runCatching { paint.fontVariationSettings = variation }
         return paint
     }
 

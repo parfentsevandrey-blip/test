@@ -104,8 +104,8 @@ fun WidgetPreview(
             )
         }
         if (weather != null && pixels.width > 0) {
-            val columns = LiveWeather.columns(pixels.width / density)
-            val rows = LiveWeather.rows(pixels.height / density)
+            val columns = weather.columns(pixels.width / density)
+            val rows = weather.rows(pixels.height / density)
             // New tiles only when the grid changes: resizing within it keeps the rain falling.
             key(weather, columns, rows) {
                 AndroidView(

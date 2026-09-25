@@ -58,7 +58,10 @@ import kotlin.math.min
 import kotlin.math.sqrt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -87,6 +90,12 @@ class WidgetUpdater @Inject constructor(
     private val mutex = Mutex()
     private val renderer by lazy { WidgetRenderer(context) }
     private val navigation by lazy { CalendarNavigation(context) }
+
+    /** Paints the months either side of each calendar ahead of the arrows, on a renderer of its own. */
+    private val prefetcher by lazy { WidgetRenderer(context) }
+    private val prefetchScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var prefetch: Job? = null
+    private val ahead = mutableListOf<Pair<WidgetRenderRequest, Float>>()
     private val manuallyRefreshing = mutableSetOf<Int>()
 
     override suspend fun onWeatherChanged(reason: SyncReason) {
@@ -152,6 +161,7 @@ class WidgetUpdater @Inject constructor(
                 }.getOrNull() ?: continue
                 runCatching { manager.updateAppWidget(id, views) }
             }
+            paintAhead()
             // The next tick serves *every* placed widget, not just the ones redrawn now — otherwise
             // resizing one widget could postpone another's "rain in 5 min" update.
             val stored = configs.snapshot()
@@ -268,7 +278,30 @@ class WidgetUpdater @Inject constructor(
             }
         }
         CalendarAlarm.scheduleMidnight(context, provider)
+        // The months either side, painted after this update is out: the arrows then only redraw numbers.
+        if (config.style == WidgetStyle.Sky || config.style == WidgetStyle.Glass || config.style == WidgetStyle.Paper) {
+            for (delta in longArrayOf(1L, -1L)) {
+                val next = CalendarView(month.plusMonths(delta), today, emptyMap(), locale)
+                for (size in sizes) {
+                    ahead += WidgetRenderRequest(size.width, size.height, config, content, radius, systemNight, dynamic, seed = widgetId, live = LiveWeather.ofSeason(config, next.month.monthValue) != null, calendar = next) to densityFor(size, budget)
+                }
+            }
+        }
         return if (bySize.size == 1) bySize.values.first() else RemoteViews(bySize)
+    }
+
+    /** Renders what [calendarViews] queued, dropping the pictures: what's kept is the painted panes. */
+    private fun paintAhead() {
+        if (ahead.isEmpty()) return
+        val work = ahead.toList()
+        ahead.clear()
+        prefetch?.cancel()
+        prefetch = prefetchScope.launch {
+            for ((request, density) in work) {
+                ensureActive()
+                runCatching { prefetcher.renderCalendar(request, density).first.recycle() }
+            }
+        }
     }
 
     /**

@@ -1,24 +1,19 @@
 package app.rosa.weather.widget.render.calendar
 
+import android.graphics.Bitmap
 import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
-import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
-import androidx.core.graphics.withRotation
-import androidx.core.graphics.withTranslation
 import app.rosa.weather.core.model.Argb
 import app.rosa.weather.widget.render.WidgetLight
 import kotlin.math.PI
 import kotlin.math.atan2
-import kotlin.math.cos
 import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.sin
-import kotlin.math.sqrt
+import kotlin.math.roundToInt
 import kotlin.random.Random
 
 /**
@@ -54,30 +49,30 @@ internal data class MonthArt(
         fun of(month: Int): MonthArt = ARTS[(month - 1).mod(12)]
 
         private val ARTS = listOf(
-            // January: a snowbound pine forest in the blue hour, a young moon, stars.
-            MonthArt(1, hex(0x0B1433, 0x1B2A5C, 0x3B4D8A, 0x8393C9), Argb.hex(0x9CC2FF), dark = true, bodyX = 0.52f, bodyY = 0.1f, bodyPower = 0.35f, bodyColor = Argb.hex(0xDCE4FF), isMoon = true),
-            // February: a birch grove in snow at dawn, pink over the drifts.
-            MonthArt(2, hex(0x5E7DBE, 0x9FB0DF, 0xEBC3CC, 0xFFE0C6), Argb.hex(0xFF8FA6), dark = false, bodyX = 0.3f, bodyY = 0.5f, bodyPower = 0.6f, bodyColor = Argb.hex(0xFFD7B8)),
-            // March: the thaw — high sun, snow going grey, puddles of sky.
-            MonthArt(3, hex(0x3F7FD0, 0x78AAE6, 0xBCD6F1, 0xE9F0F2), Argb.hex(0x2FA38F), dark = false, bodyX = 0.52f, bodyY = 0.1f, bodyPower = 0.9f, bodyColor = Argb.hex(0xFFF3D6)),
-            // April: green hills after rain, a rainbow.
-            MonthArt(4, hex(0x5E9BD6, 0x9CC7EB, 0xD6ECF2, 0xF1F5E4), Argb.hex(0x3FAE55), dark = false, bodyX = 0.2f, bodyY = 0.16f, bodyPower = 0.7f, bodyColor = Argb.hex(0xFFF1CF)),
-            // May: orchards in blossom, petals on the wind.
-            MonthArt(5, hex(0x7AB2E4, 0xB6D6EF, 0xF4D8E4, 0xFFF1E2), Argb.hex(0xE8618C), dark = false, bodyX = 0.5f, bodyY = 0.12f, bodyPower = 0.85f, bodyColor = Argb.hex(0xFFEBC9)),
-            // June: a flowering meadow, an oak, fair-weather clouds.
-            MonthArt(6, hex(0x2F86DE, 0x6DAEEE, 0xBADBF5, 0xE8F4F7), Argb.hex(0x2E7FD9), dark = false, bodyX = 0.52f, bodyY = 0.09f, bodyPower = 1f, bodyColor = Argb.hex(0xFFF6DE)),
-            // July: wheat at sunset, poplars, the first fireflies.
-            MonthArt(7, hex(0x5F6CB8, 0xC98CA8, 0xFFB98A, 0xFFE0A0), Argb.hex(0xFFA23A), dark = true, bodyX = 0.36f, bodyY = 0.52f, bodyPower = 0.8f, bodyColor = Argb.hex(0xFFC77A)),
-            // August: a starry night over the stubble, the Milky Way, the Perseids.
-            MonthArt(8, hex(0x080D26, 0x141D4A, 0x28316B, 0x474C84), Argb.hex(0xC4B4FF), dark = true, bodyX = 0.52f, bodyY = 0.1f, bodyPower = 0.25f, bodyColor = Argb.hex(0xD8DEFF), isMoon = true),
-            // September: golden birches, a warm, clear light.
-            MonthArt(9, hex(0x568FD2, 0x8FB9E6, 0xD4E1EB, 0xF6E8CF), Argb.hex(0xE6A21E), dark = false, bodyX = 0.52f, bodyY = 0.12f, bodyPower = 0.85f, bodyColor = Argb.hex(0xFFE7B5)),
-            // October: maples ablaze in the mist, leaves falling.
-            MonthArt(10, hex(0x7F7FAA, 0xCF9C8E, 0xEFBF9C, 0xF7DABD), Argb.hex(0xF26A2E), dark = true, bodyX = 0.3f, bodyY = 0.4f, bodyPower = 0.45f, bodyColor = Argb.hex(0xFFC89A)),
-            // November: bare trees in fog, the first snow on the ground.
-            MonthArt(11, hex(0x566477, 0x8793A3, 0xB5BCC5, 0xD3D6D9), Argb.hex(0x86B3D6), dark = true, bodyX = 0.5f, bodyY = 0.2f, bodyPower = 0f, bodyColor = Argb.White),
-            // December: firs under snow, warm lights, a full moon.
-            MonthArt(12, hex(0x0D1636, 0x1C2A5B, 0x33457E, 0x5B6BA5), Argb.hex(0xFF8A70), dark = true, bodyX = 0.52f, bodyY = 0.1f, bodyPower = 0.4f, bodyColor = Argb.hex(0xE8EEFF), isMoon = true),
+            // January, «Мороз и солнце»: a frosty morning, snowbound spruces, a low sun, smoke rising straight.
+            MonthArt(1, hex(0x24569E, 0x4F86C9, 0x9DBFE6, 0xF3DCC4), Argb.hex(0x5A9BFF), dark = true, bodyX = 0.58f, bodyY = 0.3f, bodyPower = 0.9f, bodyColor = Argb.hex(0xFFE3B5)),
+            // February, after Grabar's «Февральская лазурь»: white birches against a deep azure sky.
+            MonthArt(2, hex(0x1B4FA8, 0x3E80D8, 0x9CC4EE, 0xE6EFF8), Argb.hex(0x3C8CFF), dark = true, bodyX = 0.12f, bodyY = 0.06f, bodyPower = 0.8f, bodyColor = Argb.hex(0xFFF4DC)),
+            // March: the thaw — rooks back in the birches, snow melting into puddles of sky.
+            MonthArt(3, hex(0x3C78CC, 0x7FB0E6, 0xC4DCF2, 0xEDF1F2), Argb.hex(0x2FA38F), dark = false, bodyX = 0.62f, bodyY = 0.14f, bodyPower = 0.95f, bodyColor = Argb.hex(0xFFF3D6)),
+            // April, after Levitan's «Весна. Большая вода»: flood water mirroring birches, a shower passing.
+            MonthArt(4, hex(0x6A95C8, 0xA3C3E4, 0xD8E6EE, 0xEEF1E8), Argb.hex(0x3FAE55), dark = false, bodyX = 0.66f, bodyY = 0.16f, bodyPower = 0.75f, bodyColor = Argb.hex(0xFFF1CF)),
+            // May: an apple orchard in blossom, dandelions in the grass.
+            MonthArt(5, hex(0x5C9BE0, 0x9FC8EE, 0xDCE8F2, 0xF6E6E2), Argb.hex(0xE8618C), dark = false, bodyX = 0.7f, bodyY = 0.14f, bodyPower = 0.9f, bodyColor = Argb.hex(0xFFEBC9)),
+            // June: an old oak on a flowering meadow under towering summer clouds.
+            MonthArt(6, hex(0x2A6ACC, 0x69A2E6, 0xB9D8F2, 0xE4EFF4), Argb.hex(0x2E7FD9), dark = true, bodyX = 0.74f, bodyY = 0.1f, bodyPower = 1f, bodyColor = Argb.hex(0xFFF6DE)),
+            // July, after Shishkin's «Рожь»: rye at sunset, tall pines standing in the field.
+            MonthArt(7, hex(0x4A5FA8, 0xB7809D, 0xFFAE78, 0xFFD89A), Argb.hex(0xFF9A2E), dark = true, bodyX = 0.6f, bodyY = 0.5f, bodyPower = 0.9f, bodyColor = Argb.hex(0xFFC77A)),
+            // August: falling stars over a still lake, the Milky Way, haystacks on the shore.
+            MonthArt(8, hex(0x060A22, 0x101944, 0x232D66, 0x3A4278), Argb.hex(0xB9A8FF), dark = true, bodyX = 0.8f, bodyY = 0.34f, bodyPower = 0.3f, bodyColor = Argb.hex(0xFFE9C4), isMoon = true),
+            // September, after Levitan's «Золотая осень»: golden birches by a blue river.
+            MonthArt(9, hex(0x3F7ED0, 0x7FB0E6, 0xC8DCEC, 0xEEEDE2), Argb.hex(0xE6A21E), dark = false, bodyX = 0.7f, bodyY = 0.13f, bodyPower = 0.9f, bodyColor = Argb.hex(0xFFE7B5)),
+            // October: a misty morning in a red and gold forest, the sun's rays through the trees.
+            MonthArt(10, hex(0x6F7BA6, 0xB99A96, 0xEBBF9E, 0xF6D7B4), Argb.hex(0xF26A2E), dark = true, bodyX = 0.6f, bodyY = 0.34f, bodyPower = 0.75f, bodyColor = Argb.hex(0xFFD2A0)),
+            // November: first snow by a dark river at dusk, bare trees, crows.
+            MonthArt(11, hex(0x46526A, 0x77849A, 0xB1B3B6, 0xD9CDB5), Argb.hex(0x86B3D6), dark = true, bodyX = 0.55f, bodyY = 0.5f, bodyPower = 0.25f, bodyColor = Argb.hex(0xFFE2B8)),
+            // December: a village asleep under a full moon, warm windows, snow falling.
+            MonthArt(12, hex(0x0A1230, 0x1A2A5C, 0x31467E, 0x566CA6), Argb.hex(0xFF8A70), dark = true, bodyX = 0.64f, bodyY = 0.2f, bodyPower = 0.45f, bodyColor = Argb.hex(0xE8EEFF), isMoon = true),
         )
 
         private fun hex(vararg colors: Long) = colors.map { Argb.hex(it) }
@@ -85,823 +80,556 @@ internal data class MonthArt(
 }
 
 /**
- * Paints a month's scene into a rect of any proportions, in dp: sky, the sun or moon, hills in
- * three planes paling into the distance, the season's trees and ground, and what moves in the air.
- * Deterministic: the same month always paints the same picture at the same size.
+ * Paints a month's landscape at any proportions ([Painting]). Deterministic: the same month at the
+ * same size is always the same picture. With [live] the things that fall — snow, leaves, petals,
+ * fireflies — are left to the tiles that animate them.
  */
 internal class SeasonScene {
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val path = Path()
+    fun paint(art: MonthArt, widthDp: Float, heightDp: Float, pxPerDp: Float, live: Boolean = false): Bitmap {
+        val p = Painting(widthDp, heightDp, pxPerDp, art.month * 7919)
+        p.lightX = art.bodyX * widthDp
+        p.lightY = art.bodyY * heightDp
+        when (art.month) {
+            1 -> p.january(art, live)
+            2 -> p.february(art, live)
+            3 -> p.march(art, live)
+            4 -> p.april(art, live)
+            5 -> p.may(art, live)
+            6 -> p.june(art, live)
+            7 -> p.july(art, live)
+            8 -> p.august(art, live)
+            9 -> p.september(art, live)
+            10 -> p.october(art, live)
+            11 -> p.november(art, live)
+            else -> p.december(art, live)
+        }
+        return p.bitmap
+    }
 
-    /** Whether the season's falling things are left to the live tiles that animate them. */
-    private var moving = false
-
+    /** Paints into [rect] of [canvas] at the canvas's own resolution. */
     fun draw(canvas: Canvas, rect: RectF, art: MonthArt, live: Boolean = false) {
-        moving = live
-        val w = rect.width()
-        val h = rect.height()
-        canvas.withTranslation(rect.left, rect.top) {
-            val r = Random(art.month * 7919)
-            sky(this, w, h, art)
-            when (art.month) {
-                1 -> january(this, w, h, art, r)
-                2 -> february(this, w, h, art, r)
-                3 -> march(this, w, h, art, r)
-                4 -> april(this, w, h, art, r)
-                5 -> may(this, w, h, art, r)
-                6 -> june(this, w, h, art, r)
-                7 -> july(this, w, h, art, r)
-                8 -> august(this, w, h, art, r)
-                9 -> september(this, w, h, art, r)
-                10 -> october(this, w, h, art, r)
-                11 -> november(this, w, h, art, r)
-                else -> december(this, w, h, art, r)
-            }
-        }
-        paint.reset()
-        paint.isAntiAlias = true
+        @Suppress("DEPRECATION")
+        val scale = canvas.matrix.mapRadius(1f).coerceIn(0.25f, 4f)
+        val bitmap = paint(art, rect.width(), rect.height(), scale, live)
+        canvas.drawBitmap(bitmap, null, rect, Paint(Paint.FILTER_BITMAP_FLAG))
+        bitmap.recycle()
     }
+}
 
-    // region Months
+private fun c(rgb: Long) = Tone.of(rgb)
 
-    private fun january(c: Canvas, w: Float, h: Float, art: MonthArt, r: Random) {
-        stars(c, w, h * 0.55f, 0.9f, r)
-        moon(c, w, h, art, crescent = 0.35f)
-        hill(c, w, h, 0.5f, 0.05f, 1.3f, Argb.hex(0x6C7CB8), Argb.hex(0x4B5A94), r, haze = art.horizon, hazeAmount = 0.35f)
-        pines(c, w, h, baseline = 0.55f, count = 16, height = 0.14f, Argb.hex(0x24315E), snow = Argb.hex(0xC9D5F5), r, haze = art.horizon, hazeAmount = 0.3f)
-        hill(c, w, h, 0.6f, 0.05f, 1.8f, Argb.hex(0x3E4B80), Argb.hex(0x2D3866), r)
-        pines(c, w, h, baseline = 0.66f, count = 9, height = 0.24f, Argb.hex(0x16203F), snow = Argb.hex(0xDDE6FA), r)
-        ground(c, w, h, 0.7f, Argb.hex(0xCBD6F4), Argb.hex(0x8C9AD0), r, wave = 0.025f)
-        snowShadows(c, w, h, 0.7f, Argb.hex(0x7684BD), r)
-        snowfall(c, w, h, 80, 1f, r)
+private fun tones(vararg rgb: Long) = IntArray(rgb.size) { Tone.of(rgb[it]) }
+
+private fun Painting.sky(vararg stops: Pair<Float, Int>, to: Float = h) =
+    sky(IntArray(stops.size) { c(stops[it].second.toLong()) }, FloatArray(stops.size) { stops[it].first }, to)
+
+/** The area under [line] down to [bottom], for clipping the ground's pixels. */
+private fun Painting.under(line: Painting.Line, bottom: Float = h + 1f): Path = Path().apply {
+    moveTo(-1f, bottom)
+    lineTo(-1f, line.ys[0])
+    for (i in line.ys.indices) lineTo(i * line.step, line.ys[i])
+    lineTo(w + 1f, line.ys.last())
+    lineTo(w + 1f, bottom)
+    close()
+}
+
+/** A tree's shadow thrown on snow or grass, away from the light and towards the viewer. */
+private fun Painting.castShadow(x: Float, ground: Float, length: Float, width: Float, color: Int, strength: Float) {
+    val away = if (lightX > x) -1f else 1f
+    val p = pen()
+    p.color = Tone.alpha(color, strength)
+    p.maskFilter = BlurMaskFilter(max(0.6f, width * 0.3f), BlurMaskFilter.Blur.NORMAL)
+    path.reset()
+    path.moveTo(x - width * 0.5f, ground)
+    path.quadTo(x + away * length * 0.5f, ground + length * 0.18f, x + away * length, ground + length * 0.26f)
+    path.quadTo(x + away * length * 0.55f, ground + length * 0.06f, x + width * 0.5f, ground)
+    path.close()
+    canvas.drawPath(path, p)
+}
+
+/**
+ * Snow lying in soft drifts, per pixel: bright where the drifts face the light, blue in their
+ * troughs, the pattern shrinking and flattening into the distance, where it takes the air's [far].
+ */
+private fun Painting.snowfield(line: Painting.Line, horizon: Float, lit: Int, shade: Int, far: Int, seed: Int, relief: Float = 1f) {
+    val g = Ground(w, h, horizon)
+    val dir = if (lightX >= w / 2f) 1f else -1f
+    // Snow is soft: half resolution, drawn up; the clip keeps its edge crisp.
+    field(RectF(0f, line.top, w, h), kx * 0.5f, under(line)) { x, y ->
+        g.at(x, y)
+        val u = g.across * 0.5f
+        val v = g.away * 0.2f
+        val n = Noise.fbm(u, v, seed, 3)
+        val nd = Noise.fbm(u + 0.06f * dir, v, seed, 2)
+        val facing = (nd - n) * 16f * relief
+        val depth = ((y - horizon) / (h - horizon)).coerceIn(0f, 1f)
+        val k = (0.66f + facing + (n - 0.5f) * 0.3f - depth * 0.12f).coerceIn(0f, 1f)
+        Tone.mix(far, Tone.mix(shade, lit, k), Tone.smooth(0f, 0.3f, depth))
     }
+}
 
-    private fun february(c: Canvas, w: Float, h: Float, art: MonthArt, r: Random) {
-        sun(c, w, h, art, size = 0.07f, halo = 0.55f)
-        hill(c, w, h, 0.52f, 0.04f, 1.1f, Argb.hex(0xC0BDE0), Argb.hex(0xA7A6D6), r, haze = art.horizon, hazeAmount = 0.45f)
-        birches(c, w, h, baseline = 0.6f, count = 11, height = 0.3f, crown = null, r, haze = art.horizon, hazeAmount = 0.35f)
-        hill(c, w, h, 0.62f, 0.04f, 1.6f, Argb.hex(0xE6E3F6), Argb.hex(0xC8C6E8), r)
-        birches(c, w, h, baseline = 0.7f, count = 6, height = 0.5f, crown = null, r)
-        ground(c, w, h, 0.72f, Argb.hex(0xF7F3FB), Argb.hex(0xCFCBEA), r, wave = 0.03f)
-        snowShadows(c, w, h, 0.72f, Argb.hex(0xB9B3DE), r)
-        drift(c, w, h, r)
-        snowfall(c, w, h, 45, 0.7f, r)
-    }
-
-    private fun march(c: Canvas, w: Float, h: Float, art: MonthArt, r: Random) {
-        sun(c, w, h, art, size = 0.06f, halo = 0.45f)
-        clouds(c, w, h, 3, 0.22f, Argb.hex(0xFFFFFF), 0.75f, r)
-        hill(c, w, h, 0.52f, 0.04f, 1.2f, Argb.hex(0xA8BCCB), Argb.hex(0x93A8B9), r, haze = art.horizon, hazeAmount = 0.4f)
-        birches(c, w, h, baseline = 0.58f, count = 10, height = 0.24f, crown = Argb.hex(0xB9CF9A).withAlpha(0.35f), r, haze = art.horizon, hazeAmount = 0.35f)
-        hill(c, w, h, 0.62f, 0.05f, 1.7f, Argb.hex(0x84946F), Argb.hex(0x6C7A58), r)
-        snowPatches(c, w, h, 0.6f, 0.68f, Argb.hex(0xEEF3F4), 7, r)
-        birches(c, w, h, baseline = 0.72f, count = 5, height = 0.42f, crown = Argb.hex(0xC4D8A2).withAlpha(0.45f), r)
-        ground(c, w, h, 0.74f, Argb.hex(0x8E9C68), Argb.hex(0x6B6A4C), r, wave = 0.02f)
-        snowPatches(c, w, h, 0.76f, 1f, Argb.hex(0xE9EFF1), 9, r)
-        puddles(c, w, h, art, r)
-    }
-
-    private fun april(c: Canvas, w: Float, h: Float, art: MonthArt, r: Random) {
-        rainbow(c, w, h)
-        sun(c, w, h, art, size = 0.05f, halo = 0.4f)
-        clouds(c, w, h, 4, 0.2f, Argb.hex(0xFFFFFF), 0.85f, r)
-        hill(c, w, h, 0.54f, 0.05f, 1.2f, Argb.hex(0xA9CFA3), Argb.hex(0x92C28C), r, haze = art.horizon, hazeAmount = 0.35f)
-        crowns(c, w, h, baseline = 0.6f, count = 9, height = 0.16f, listOf(Argb.hex(0x9ED06E), Argb.hex(0x7FBE5A), Argb.hex(0xB9DE8A)), r, haze = art.horizon, hazeAmount = 0.3f)
-        hill(c, w, h, 0.64f, 0.05f, 1.6f, Argb.hex(0x7FC064), Argb.hex(0x5E9E4B), r)
-        crowns(c, w, h, baseline = 0.72f, count = 4, height = 0.28f, listOf(Argb.hex(0x8ACB62), Argb.hex(0x67AE4B), Argb.hex(0xA9DA7C)), r)
-        ground(c, w, h, 0.74f, Argb.hex(0x7EC45E), Argb.hex(0x4C8D3C), r, wave = 0.02f)
-        flowers(c, w, h, 0.76f, 40, listOf(Argb.hex(0xFFFFFF), Argb.hex(0xFFE066)), r)
-        rain(c, w, h, 26, r)
-    }
-
-    private fun may(c: Canvas, w: Float, h: Float, art: MonthArt, r: Random) {
-        sun(c, w, h, art, size = 0.06f, halo = 0.5f)
-        clouds(c, w, h, 2, 0.18f, Argb.hex(0xFFF8FB), 0.7f, r)
-        hill(c, w, h, 0.54f, 0.05f, 1.3f, Argb.hex(0xBBD7B4), Argb.hex(0xA3C89C), r, haze = art.horizon, hazeAmount = 0.4f)
-        crowns(c, w, h, baseline = 0.6f, count = 9, height = 0.15f, listOf(Argb.hex(0xF7C3D2), Argb.hex(0xFBE1E8), Argb.hex(0xE8A5BC)), r, haze = art.horizon, hazeAmount = 0.3f)
-        hill(c, w, h, 0.65f, 0.05f, 1.7f, Argb.hex(0x8DC77A), Argb.hex(0x67A956), r)
-        crowns(c, w, h, baseline = 0.74f, count = 4, height = 0.3f, listOf(Argb.hex(0xF9C9D6), Argb.hex(0xFFFFFF), Argb.hex(0xF2A7BF), Argb.hex(0xFDE3EA)), r)
-        ground(c, w, h, 0.76f, Argb.hex(0x88C76B), Argb.hex(0x5A9C4A), r, wave = 0.02f)
-        flowers(c, w, h, 0.78f, 55, listOf(Argb.hex(0xFFE066), Argb.hex(0xFFFFFF), Argb.hex(0xFFF3A0)), r)
-        petals(c, w, h, 40, r)
-    }
-
-    private fun june(c: Canvas, w: Float, h: Float, art: MonthArt, r: Random) {
-        sun(c, w, h, art, size = 0.055f, halo = 0.5f)
-        clouds(c, w, h, 4, 0.26f, Argb.hex(0xFFFFFF), 0.95f, r)
-        hill(c, w, h, 0.56f, 0.04f, 1.1f, Argb.hex(0x8DB9CB), Argb.hex(0x7CAFC2), r, haze = art.horizon, hazeAmount = 0.35f)
-        hill(c, w, h, 0.62f, 0.05f, 1.5f, Argb.hex(0x74B25E), Argb.hex(0x5E9E4A), r)
-        oak(c, w * 0.72f, h * 0.64f, h * 0.36f, r)
-        ground(c, w, h, 0.72f, Argb.hex(0x80C45E), Argb.hex(0x4A8A3A), r, wave = 0.025f)
-        flowers(c, w, h, 0.74f, 80, listOf(Argb.hex(0xFFFFFF), Argb.hex(0xFFE066), Argb.hex(0x6C8CFF), Argb.hex(0xE8514A), Argb.hex(0xFFFFFF)), r)
-    }
-
-    private fun july(c: Canvas, w: Float, h: Float, art: MonthArt, r: Random) {
-        sun(c, w, h, art, size = 0.09f, halo = 0.8f)
-        hill(c, w, h, 0.56f, 0.03f, 1.0f, Argb.hex(0xC98E86), Argb.hex(0xB37A73), r, haze = art.horizon, hazeAmount = 0.45f)
-        poplars(c, w, h, baseline = 0.6f, count = 7, height = 0.26f, Argb.hex(0x6A4A5C), r, haze = art.horizon, hazeAmount = 0.3f)
-        hill(c, w, h, 0.62f, 0.03f, 1.4f, Argb.hex(0xE0A34E), Argb.hex(0xC8883A), r)
-        field(c, w, h, 0.64f, Argb.hex(0xF0C060), Argb.hex(0xB07633), r)
-        fireflies(c, w, h, 0.62f, 22, Argb.hex(0xFFE9A0), r)
-    }
-
-    private fun august(c: Canvas, w: Float, h: Float, art: MonthArt, r: Random) {
-        milkyWay(c, w, h, r)
-        stars(c, w, h * 0.7f, 1.3f, r)
-        meteors(c, w, h, r)
-        moon(c, w, h, art, crescent = 0.25f)
-        hill(c, w, h, 0.62f, 0.03f, 1.1f, Argb.hex(0x252C58), Argb.hex(0x1D2349), r)
-        hill(c, w, h, 0.68f, 0.03f, 1.5f, Argb.hex(0x171D40), Argb.hex(0x121733), r)
-        haystacks(c, w, h, 0.72f, Argb.hex(0x0E122B), r)
-        ground(c, w, h, 0.74f, Argb.hex(0x151B3C), Argb.hex(0x0B0F26), r, wave = 0.015f)
-        fireflies(c, w, h, 0.7f, 14, Argb.hex(0xD9F59A), r)
-    }
-
-    private fun september(c: Canvas, w: Float, h: Float, art: MonthArt, r: Random) {
-        sun(c, w, h, art, size = 0.06f, halo = 0.55f)
-        clouds(c, w, h, 2, 0.18f, Argb.hex(0xFFFFFF), 0.6f, r)
-        hill(c, w, h, 0.54f, 0.04f, 1.2f, Argb.hex(0xAFBDC6), Argb.hex(0x9CAAB6), r, haze = art.horizon, hazeAmount = 0.4f)
-        birches(c, w, h, baseline = 0.6f, count = 11, height = 0.22f, crown = Argb.hex(0xE9B83E), r, haze = art.horizon, hazeAmount = 0.35f)
-        hill(c, w, h, 0.64f, 0.04f, 1.6f, Argb.hex(0xB6A049), Argb.hex(0x947F35), r)
-        birches(c, w, h, baseline = 0.74f, count = 5, height = 0.44f, crown = Argb.hex(0xF4C84A), r)
-        ground(c, w, h, 0.75f, Argb.hex(0xBBA65A), Argb.hex(0x7C6A35), r, wave = 0.02f)
-        litter(c, w, h, 0.76f, 60, listOf(Argb.hex(0xF2C94C), Argb.hex(0xE5A93A), Argb.hex(0xFFE08A)), r)
-        leaves(c, w, h, 16, listOf(Argb.hex(0xF4C84A), Argb.hex(0xE8A93A), Argb.hex(0xFFD86A)), r)
-    }
-
-    private fun october(c: Canvas, w: Float, h: Float, art: MonthArt, r: Random) {
-        sun(c, w, h, art, size = 0.08f, halo = 0.75f)
-        hill(c, w, h, 0.52f, 0.04f, 1.2f, Argb.hex(0xC19C98), Argb.hex(0xB18C8A), r, haze = art.horizon, hazeAmount = 0.5f)
-        crowns(c, w, h, baseline = 0.58f, count = 10, height = 0.16f, listOf(Argb.hex(0xD9794A), Argb.hex(0xC9573A), Argb.hex(0xE89A55)), r, haze = art.horizon, hazeAmount = 0.45f)
-        fog(c, w, h, 0.56f, 0.35f, art.horizon)
-        hill(c, w, h, 0.64f, 0.04f, 1.6f, Argb.hex(0x9C5534), Argb.hex(0x7A3C25), r)
-        crowns(c, w, h, baseline = 0.74f, count = 4, height = 0.34f, listOf(Argb.hex(0xE8632B), Argb.hex(0xF28C38), Argb.hex(0xC83F2A), Argb.hex(0xF6A24A)), r)
-        ground(c, w, h, 0.75f, Argb.hex(0xA3532C), Argb.hex(0x5E2E1C), r, wave = 0.02f)
-        litter(c, w, h, 0.76f, 90, listOf(Argb.hex(0xE8632B), Argb.hex(0xF28C38), Argb.hex(0xC83F2A), Argb.hex(0xF6B04A)), r)
-        leaves(c, w, h, 22, listOf(Argb.hex(0xE8632B), Argb.hex(0xF28C38), Argb.hex(0xD24A2A), Argb.hex(0xF6B04A)), r)
-    }
-
-    private fun november(c: Canvas, w: Float, h: Float, art: MonthArt, r: Random) {
-        hill(c, w, h, 0.52f, 0.04f, 1.2f, Argb.hex(0x9DA6B1), Argb.hex(0x8E97A3), r, haze = art.horizon, hazeAmount = 0.5f)
-        bareTrees(c, w, h, baseline = 0.58f, count = 9, height = 0.2f, Argb.hex(0x6D7582), r, haze = art.horizon, hazeAmount = 0.45f)
-        fog(c, w, h, 0.55f, 0.45f, art.horizon)
-        hill(c, w, h, 0.64f, 0.04f, 1.5f, Argb.hex(0x5F6773), Argb.hex(0x4B525D), r)
-        bareTrees(c, w, h, baseline = 0.74f, count = 4, height = 0.42f, Argb.hex(0x2F343C), r)
-        ground(c, w, h, 0.75f, Argb.hex(0x6E675C), Argb.hex(0x48433C), r, wave = 0.02f)
-        snowPatches(c, w, h, 0.75f, 1f, Argb.hex(0xDCE0E6), 14, r)
-        litter(c, w, h, 0.78f, 18, listOf(Argb.hex(0xA0643A), Argb.hex(0x8B5A34)), r)
-        fog(c, w, h, 0.78f, 0.25f, Argb.hex(0xD9DCE0))
-        snowfall(c, w, h, 24, 0.6f, r)
-    }
-
-    private fun december(c: Canvas, w: Float, h: Float, art: MonthArt, r: Random) {
-        stars(c, w, h * 0.5f, 0.8f, r)
-        moon(c, w, h, art, crescent = 0f)
-        hill(c, w, h, 0.54f, 0.04f, 1.2f, Argb.hex(0x5C6DA7), Argb.hex(0x4A5A93), r, haze = art.horizon, hazeAmount = 0.3f)
-        pines(c, w, h, baseline = 0.6f, count = 14, height = 0.16f, Argb.hex(0x223058), snow = Argb.hex(0xD3DDF7), r, haze = art.horizon, hazeAmount = 0.25f)
-        hill(c, w, h, 0.66f, 0.04f, 1.6f, Argb.hex(0x3A4A80), Argb.hex(0x2A366A), r)
-        lights(c, w, h, r)
-        pines(c, w, h, baseline = 0.72f, count = 7, height = 0.3f, Argb.hex(0x12203D), snow = Argb.hex(0xE8EEFF), r)
-        ground(c, w, h, 0.74f, Argb.hex(0xD6DEF6), Argb.hex(0x98A6D6), r, wave = 0.025f)
-        snowShadows(c, w, h, 0.74f, Argb.hex(0x7D8BC4), r)
-        snowfall(c, w, h, 110, 1.1f, r)
-    }
-
-    // endregion
-
-    // region Sky and lights
-
-    private fun sky(c: Canvas, w: Float, h: Float, art: MonthArt) {
-        paint.shader = LinearGradient(0f, 0f, 0f, h * 0.78f, art.sky.map { it.value }.toIntArray(), floatArrayOf(0f, 0.38f, 0.72f, 1f), Shader.TileMode.CLAMP)
-        c.drawRect(0f, 0f, w, h, paint)
-        paint.shader = null
-    }
-
-    private fun sun(c: Canvas, w: Float, h: Float, art: MonthArt, size: Float, halo: Float) {
-        val x = art.bodyX * w
-        val y = art.bodyY * h
-        val s = min(w, h)
-        val r = s * size
-        paint.shader = RadialGradient(
-            x, y, max(w, h) * halo,
-            intArrayOf(art.bodyColor.withAlpha(0.55f).value, art.bodyColor.withAlpha(0.18f).value, 0),
-            floatArrayOf(0f, 0.3f, 1f), Shader.TileMode.CLAMP,
-        )
-        c.drawRect(0f, 0f, w, h, paint)
-        paint.shader = RadialGradient(x, y, r * 1.6f, intArrayOf(Argb.White.value, art.bodyColor.value, art.bodyColor.withAlpha(0f).value), floatArrayOf(0f, 0.55f, 1f), Shader.TileMode.CLAMP)
-        c.drawCircle(x, y, r * 1.6f, paint)
-        paint.shader = null
-    }
-
-    private fun moon(c: Canvas, w: Float, h: Float, art: MonthArt, crescent: Float) {
-        val x = art.bodyX * w
-        val y = art.bodyY * h
-        val r = min(w, h) * 0.045f
-        paint.shader = RadialGradient(x, y, r * 9f, intArrayOf(art.bodyColor.withAlpha(0.28f).value, art.bodyColor.withAlpha(0.06f).value, 0), floatArrayOf(0f, 0.35f, 1f), Shader.TileMode.CLAMP)
-        c.drawCircle(x, y, r * 9f, paint)
-        paint.shader = RadialGradient(x - r * 0.3f, y - r * 0.3f, r * 1.3f, intArrayOf(Argb.White.value, art.bodyColor.value), null, Shader.TileMode.CLAMP)
-        if (crescent > 0f) {
-            // The lit limb only: the moon minus a disc shifted into the dark.
-            val lit = Path().apply { addCircle(x, y, r, Path.Direction.CW) }
-            val shade = Path().apply { addCircle(x + r * (1f - crescent) * 1.1f, y - r * 0.15f, r * 0.95f, Path.Direction.CW) }
-            lit.op(shade, Path.Op.DIFFERENCE)
-            c.drawPath(lit, paint)
-        } else {
-            c.drawCircle(x, y, r, paint)
-            // Maria: a few soft, darker seas.
-            paint.shader = null
-            paint.color = art.sky[2].withAlpha(0.18f).value
-            c.drawCircle(x - r * 0.25f, y - r * 0.15f, r * 0.32f, paint)
-            c.drawCircle(x + r * 0.2f, y + r * 0.25f, r * 0.22f, paint)
-            c.drawCircle(x + r * 0.3f, y - r * 0.3f, r * 0.15f, paint)
-        }
-        paint.shader = null
-    }
-
-    private fun stars(c: Canvas, w: Float, h: Float, density: Float, r: Random) {
-        val n = (w * h / 380f * density).toInt().coerceIn(12, 260)
-        paint.shader = null
-        repeat(n) {
-            val x = r.nextFloat() * w
-            val y = r.nextFloat() * h
-            val size = 0.3f + r.nextFloat() * r.nextFloat() * 1.1f
-            paint.color = Argb.White.withAlpha(0.3f + r.nextFloat() * 0.6f).value
-            c.drawCircle(x, y, size, paint)
-            if (size > 1.05f) {
-                // The brightest twinkle with four short rays.
-                paint.color = Argb.White.withAlpha(0.35f).value
-                c.drawRect(x - size * 3f, y - 0.2f, x + size * 3f, y + 0.2f, paint)
-                c.drawRect(x - 0.2f, y - size * 3f, x + 0.2f, y + size * 3f, paint)
-            }
-        }
-    }
-
-    private fun milkyWay(c: Canvas, w: Float, h: Float, r: Random) {
-        c.withRotation(-28f, w / 2, h * 0.3f) {
-            val band = RectF(-w * 0.3f, h * 0.18f, w * 1.3f, h * 0.42f)
-            paint.shader = LinearGradient(0f, band.top, 0f, band.bottom, intArrayOf(0, Argb.hex(0xB9B6F0).withAlpha(0.22f).value, Argb.hex(0xE7D9FF).withAlpha(0.3f).value, Argb.hex(0xB9B6F0).withAlpha(0.2f).value, 0), null, Shader.TileMode.CLAMP)
-            paint.maskFilter = BlurMaskFilter(min(w, h) * 0.04f, BlurMaskFilter.Blur.NORMAL)
-            drawRect(band, paint)
-            paint.maskFilter = null
-            paint.shader = null
-            // Dense dust of faint stars along the band.
-            repeat((w * 1.4f).toInt().coerceIn(60, 400)) {
-                val x = band.left + r.nextFloat() * band.width()
-                val y = band.centerY() + (r.nextFloat() + r.nextFloat() - 1f) * band.height() * 0.45f
-                paint.color = Argb.White.withAlpha(0.2f + r.nextFloat() * 0.45f).value
-                drawCircle(x, y, 0.25f + r.nextFloat() * 0.45f, paint)
-            }
-        }
-    }
-
-    private fun meteors(c: Canvas, w: Float, h: Float, r: Random) {
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.ROUND
-        repeat(3) { i ->
-            val x = w * (0.18f + i * 0.28f + r.nextFloat() * 0.1f)
-            val y = h * (0.08f + r.nextFloat() * 0.25f)
-            val len = min(w, h) * (0.12f + r.nextFloat() * 0.1f)
-            val dx = len * 0.85f
-            val dy = len * 0.5f
-            paint.shader = LinearGradient(x, y, x - dx, y - dy, Argb.White.withAlpha(0.9f).value, Argb.hex(0xB9C4FF).withAlpha(0f).value, Shader.TileMode.CLAMP)
-            paint.strokeWidth = 1.1f
-            c.drawLine(x, y, x - dx, y - dy, paint)
-        }
-        paint.shader = null
-        paint.style = Paint.Style.FILL
-    }
-
-    private fun clouds(c: Canvas, w: Float, h: Float, count: Int, top: Float, color: Argb, alpha: Float, r: Random) {
-        val s = min(w, h)
-        paint.shader = null
-        repeat(count) { i ->
-            val cx = w * (0.08f + (i + 0.2f + r.nextFloat() * 0.6f) / count * 0.9f)
-            val base = h * top * (0.45f + r.nextFloat() * 0.7f)
-            val cw = w * (0.13f + r.nextFloat() * 0.1f)
-            // Cumulus: puffs heaped on a flat base, lit from above, grey beneath.
-            val puffs = 5 + r.nextInt(3)
-            val shade = color.lerp(Argb.hex(0x8C9CB8), 0.4f)
-            paint.maskFilter = BlurMaskFilter(s * 0.004f, BlurMaskFilter.Blur.NORMAL)
-            for (pass in 0..1) {
-                repeat(puffs) { p ->
-                    val t = p / (puffs - 1f)
-                    val bx = cx - cw / 2 + t * cw
-                    val bulge = sin(t * PI.toFloat())
-                    val br = cw * (0.13f + 0.13f * bulge) * (0.85f + r.nextFloat() * 0.3f)
-                    val by = base - br * (0.6f + bulge * 0.7f)
-                    paint.color = (if (pass == 0) shade else color).withAlpha(alpha * (if (pass == 0) 0.9f else 1f)).value
-                    c.drawCircle(bx, by + (if (pass == 0) br * 0.25f else 0f), br, paint)
+/**
+ * A meadow, per pixel: blades streaking upright, finer with the distance, clumps and the shadows
+ * of passing clouds lying on the ground plane, lit towards the sun; [speckle] colours dot it with
+ * flowers in drifts, sized by the distance.
+ */
+private fun Painting.meadow(line: Painting.Line, horizon: Float, ramp: IntArray, far: Int, seed: Int, speckle: IntArray? = null, speckleAmount: Float = 0f) {
+    val g = Ground(w, h, horizon)
+    pixels(RectF(0f, line.top, w, h), under(line)) { x, y ->
+        g.at(x, y)
+        val depth = ((y - horizon) / (h - horizon)).coerceIn(0f, 1f)
+        val near = Tone.smooth(0.02f, 0.45f, depth)
+        val blade = 0.18f + depth * 1.3f
+        val blades = Noise.value(x / blade, y / (blade * 3f), seed)
+        val fine = Noise.value(x / (blade * 0.45f), y / (blade * 2f), seed + 4)
+        val clumps = Noise.fbm(g.across * 0.7f, g.away * 0.7f, seed + 1, 2)
+        val shadow = Noise.fbm(x / (w * 0.5f), y / (h * 0.2f), seed + 2, 2)
+        val sun = 1f - kotlin.math.abs(x - lightX) / (w * 1.2f)
+        val v = 0.5f + (blades - 0.5f) * 0.55f * near + (fine - 0.5f) * 0.3f * near + (clumps - 0.5f) * 0.6f * near +
+            (Tone.smooth(0.45f, 0.65f, shadow) - 0.5f) * 0.22f + sun * 0.12f
+        var color = ramp(ramp, v.coerceIn(0f, 1f))
+        if (speckle != null && speckleAmount > 0f && depth > 0.08f) {
+            val cell = 0.5f + depth * 2.6f
+            val cu = x / cell
+            val cv = y / (cell * 0.7f)
+            val ci = kotlin.math.floor(cu).toInt()
+            val cj = kotlin.math.floor(cv).toInt()
+            val pick = Noise.rand(ci, cj, seed + 7)
+            if (pick > 1f - speckleAmount && pick > 1f - speckleAmount * Tone.smooth(0.42f, 0.68f, Noise.fbm(g.across * 0.5f + 3f, g.away * 0.5f, seed + 8, 2))) {
+                val du = cu - ci - 0.3f - Noise.rand(ci, cj, seed + 10) * 0.4f
+                val dv = cv - cj - 0.3f - Noise.rand(ci, cj, seed + 11) * 0.4f
+                val d2 = du * du + dv * dv
+                if (d2 < 0.09f) {
+                    val hue = speckle[(Noise.rand(ci, cj, seed + 9) * speckle.size).toInt().coerceIn(0, speckle.size - 1)]
+                    color = Tone.mix(color, Tone.shade(hue, -d2 * 3f), Tone.smooth(0.09f, 0.05f, d2))
                 }
             }
-            paint.maskFilter = null
         }
+        Tone.mix(far, color, Tone.smooth(0f, 0.25f, depth))
     }
-
-    private fun rainbow(c: Canvas, w: Float, h: Float) {
-        val cx = w * 0.62f
-        val cy = h * 0.66f
-        val radius = max(w, h) * 0.52f
-        val bands = listOf(0xE85A5A, 0xF29A4A, 0xF5D65A, 0x7CC96A, 0x5AA8E8, 0x7A6CD6)
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = radius * 0.035f
-        paint.maskFilter = BlurMaskFilter(radius * 0.02f, BlurMaskFilter.Blur.NORMAL)
-        bands.forEachIndexed { i, rgb ->
-            paint.color = Argb.hex(rgb.toLong()).withAlpha(0.28f).value
-            val rr = radius - i * paint.strokeWidth * 0.9f
-            c.drawArc(RectF(cx - rr, cy - rr, cx + rr, cy + rr), 190f, 160f, false, paint)
-        }
-        paint.maskFilter = null
-        paint.style = Paint.Style.FILL
-    }
-
-    private fun lights(c: Canvas, w: Float, h: Float, r: Random) {
-        // Windows and garlands far off in the snow: warm bokeh along the valley.
-        val colors = listOf(0xFFD27A, 0xFF9E5E, 0xFF6B6B, 0xFFE9B0, 0x9AD7FF)
-        val s = min(w, h)
-        repeat(26) {
-            val x = r.nextFloat() * w
-            val y = h * (0.6f + r.nextFloat() * 0.08f)
-            val rr = s * (0.006f + r.nextFloat() * 0.018f)
-            val color = Argb.hex(colors[r.nextInt(colors.size)].toLong())
-            paint.shader = RadialGradient(x, y, rr * 3f, intArrayOf(color.withAlpha(0.95f).value, color.withAlpha(0.35f).value, 0), floatArrayOf(0f, 0.25f, 1f), Shader.TileMode.CLAMP)
-            c.drawCircle(x, y, rr * 3f, paint)
-        }
-        paint.shader = null
-    }
-
-    private fun fog(c: Canvas, w: Float, h: Float, y: Float, alpha: Float, color: Argb) {
-        paint.maskFilter = BlurMaskFilter(h * 0.04f, BlurMaskFilter.Blur.NORMAL)
-        paint.shader = null
-        for (i in 0 until 3) {
-            paint.color = color.withAlpha(alpha * (0.6f + i * 0.2f)).value
-            val top = h * (y + i * 0.04f)
-            c.drawRect(-w * 0.1f, top, w * 1.1f, top + h * 0.06f, paint)
-        }
-        paint.maskFilter = null
-    }
-
-    // endregion
-
-    // region Land
-
-    /** A range of hills: smooth, seeded ridges with a gradient from the crest down. */
-    private fun hill(
-        c: Canvas, w: Float, h: Float, base: Float, amp: Float, freq: Float, top: Argb, bottom: Argb, r: Random,
-        haze: Argb? = null, hazeAmount: Float = 0f,
-    ) {
-        val phase = r.nextFloat() * 6.28f
-        val phase2 = r.nextFloat() * 6.28f
-        path.reset()
-        path.moveTo(0f, h)
-        val steps = 48
-        for (i in 0..steps) {
-            val t = i / steps.toFloat()
-            val y = h * (base - amp * (0.6f * sin(t * PI.toFloat() * 2f * freq + phase) + 0.4f * sin(t * PI.toFloat() * 5.3f * freq + phase2)))
-            path.lineTo(t * w, y)
-        }
-        path.lineTo(w, h)
-        path.close()
-        val t = if (haze != null) top.lerp(haze, hazeAmount) else top
-        val b = if (haze != null) bottom.lerp(haze, hazeAmount * 0.6f) else bottom
-        paint.shader = LinearGradient(0f, h * (base - amp), 0f, h, t.value, b.value, Shader.TileMode.CLAMP)
-        c.drawPath(path, paint)
-        paint.shader = null
-    }
-
-    private fun ground(c: Canvas, w: Float, h: Float, top: Float, light: Argb, dark: Argb, r: Random, wave: Float) {
-        val phase = r.nextFloat() * 6.28f
-        path.reset()
-        path.moveTo(0f, h)
-        for (i in 0..40) {
-            val t = i / 40f
-            path.lineTo(t * w, h * (top - wave * sin(t * 6.28f * 0.8f + phase)))
-        }
-        path.lineTo(w, h)
-        path.close()
-        paint.shader = LinearGradient(0f, h * top, 0f, h, light.value, dark.value, Shader.TileMode.CLAMP)
-        c.drawPath(path, paint)
-        paint.shader = null
-    }
-
-    private fun snowShadows(c: Canvas, w: Float, h: Float, top: Float, color: Argb, r: Random) {
-        paint.maskFilter = BlurMaskFilter(h * 0.02f, BlurMaskFilter.Blur.NORMAL)
-        repeat(5) {
-            val x = r.nextFloat() * w
-            val y = h * (top + 0.06f + r.nextFloat() * (0.9f - top))
-            paint.color = color.withAlpha(0.28f).value
-            c.drawOval(RectF(x - w * 0.18f, y - h * 0.012f, x + w * 0.18f, y + h * 0.018f), paint)
-        }
-        paint.maskFilter = null
-    }
-
-    private fun drift(c: Canvas, w: Float, h: Float, r: Random) {
-        // Snow blown across the drifts: long, faint streaks low over the ground.
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.ROUND
-        repeat(14) {
-            val x = r.nextFloat() * w
-            val y = h * (0.66f + r.nextFloat() * 0.3f)
-            val len = w * (0.08f + r.nextFloat() * 0.14f)
-            paint.shader = LinearGradient(x, y, x + len, y - len * 0.08f, Argb.White.withAlpha(0f).value, Argb.White.withAlpha(0.5f).value, Shader.TileMode.MIRROR)
-            paint.strokeWidth = 0.7f + r.nextFloat() * 0.6f
-            c.drawLine(x, y, x + len, y - len * 0.08f, paint)
-        }
-        paint.shader = null
-        paint.style = Paint.Style.FILL
-    }
-
-    private fun snowPatches(c: Canvas, w: Float, h: Float, from: Float, to: Float, color: Argb, count: Int, r: Random) {
-        // Snow lying in patches: each a cluster of flat lobes, smaller and fainter toward the horizon.
-        paint.maskFilter = BlurMaskFilter(min(w, h) * 0.003f, BlurMaskFilter.Blur.NORMAL)
-        repeat(count) {
-            val depth = r.nextFloat()
-            val x = r.nextFloat() * w
-            val y = h * (from + depth * (to - from))
-            val size = w * (0.02f + depth * 0.06f) * (0.6f + r.nextFloat() * 0.6f)
-            paint.color = color.withAlpha(0.55f + depth * 0.4f).value
-            repeat(4 + r.nextInt(3)) {
-                val lx = x + (r.nextFloat() - 0.5f) * size * 1.6f
-                val ly = y + (r.nextFloat() - 0.5f) * size * 0.16f
-                val lw = size * (0.35f + r.nextFloat() * 0.45f)
-                c.drawOval(RectF(lx - lw, ly - lw * 0.1f, lx + lw, ly + lw * 0.12f), paint)
-            }
-        }
-        paint.maskFilter = null
-    }
-
-    private fun puddles(c: Canvas, w: Float, h: Float, art: MonthArt, r: Random) {
-        repeat(4) {
-            val x = r.nextFloat() * w
-            val y = h * (0.8f + r.nextFloat() * 0.16f)
-            val pw = w * (0.06f + r.nextFloat() * 0.08f)
-            val oval = RectF(x - pw, y - pw * 0.12f, x + pw, y + pw * 0.12f)
-            paint.shader = LinearGradient(0f, oval.top, 0f, oval.bottom, art.sky[1].value, art.sky[2].value, Shader.TileMode.CLAMP)
-            c.drawOval(oval, paint)
-            paint.shader = null
-            paint.style = Paint.Style.STROKE
-            paint.strokeWidth = 0.6f
-            paint.color = Argb.White.withAlpha(0.5f).value
-            c.drawArc(oval, 200f, 70f, false, paint)
-            paint.style = Paint.Style.FILL
-        }
-    }
-
-    private fun field(c: Canvas, w: Float, h: Float, top: Float, light: Argb, dark: Argb, r: Random) {
-        ground(c, w, h, top, light, dark, r, wave = 0.012f)
-        // Rows of wheat running to the horizon, and stalks catching the low sun.
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.ROUND
-        repeat((w * 1.6f).toInt().coerceIn(80, 520)) {
-            val x = r.nextFloat() * w
-            val depth = r.nextFloat()
-            val y = h * (top + 0.02f + depth * depth * (1f - top))
-            val len = h * (0.01f + depth * 0.04f)
-            paint.strokeWidth = 0.4f + depth * 0.8f
-            paint.color = (if (r.nextBoolean()) light.lerp(Argb.White, 0.35f) else dark).withAlpha(0.25f + depth * 0.45f).value
-            c.drawLine(x, y, x + len * 0.15f, y - len, paint)
-        }
-        paint.style = Paint.Style.FILL
-    }
-
-    private fun haystacks(c: Canvas, w: Float, h: Float, base: Float, color: Argb, r: Random) {
-        paint.shader = null
-        paint.color = color.value
-        repeat(3) { i ->
-            val x = w * (0.18f + i * 0.3f + r.nextFloat() * 0.08f)
-            val sw = w * (0.05f + r.nextFloat() * 0.03f)
-            val y = h * (base + r.nextFloat() * 0.03f)
-            c.drawOval(RectF(x - sw, y - sw * 1.1f, x + sw, y + sw * 0.6f), paint)
-            c.drawRect(x - sw, y - sw * 0.1f, x + sw, y + sw * 0.2f, paint)
-        }
-    }
-
-    // endregion
-
-    // region Trees
-
-    private fun pines(
-        c: Canvas, w: Float, h: Float, baseline: Float, count: Int, height: Float, color: Argb, snow: Argb, r: Random,
-        haze: Argb? = null, hazeAmount: Float = 0f,
-    ) {
-        val body = if (haze != null) color.lerp(haze, hazeAmount) else color
-        val cap = if (haze != null) snow.lerp(haze, hazeAmount * 0.8f) else snow
-        repeat(count) {
-            val x = w * (it + r.nextFloat() * 0.8f) / count
-            val th = h * height * (0.65f + r.nextFloat() * 0.5f)
-            val y = h * baseline + r.nextFloat() * h * 0.02f
-            val tw = th * 0.42f
-            // Tiers of a fir, widest at the foot, each dusted with snow along its upper edge.
-            val tiers = 4
-            for (t in 0 until tiers) {
-                val k = t / tiers.toFloat()
-                val tierTop = y - th * (1f - k * 0.78f)
-                val tierBottom = y - th * (0.62f - k * 0.62f)
-                val half = tw * (0.35f + k * 0.65f) / 2f
-                path.reset()
-                path.moveTo(x, tierTop)
-                path.lineTo(x + half, tierBottom)
-                path.quadTo(x, tierBottom - th * 0.03f, x - half, tierBottom)
-                path.close()
-                paint.color = body.value
-                c.drawPath(path, paint)
-                path.reset()
-                path.moveTo(x, tierTop)
-                path.lineTo(x + half * 0.55f, tierTop + (tierBottom - tierTop) * 0.55f)
-                path.quadTo(x, tierTop + (tierBottom - tierTop) * 0.4f, x - half * 0.7f, tierTop + (tierBottom - tierTop) * 0.62f)
-                path.close()
-                paint.color = cap.withAlpha(0.9f).value
-                c.drawPath(path, paint)
-            }
-            paint.color = body.lerp(Argb.Black, 0.3f).value
-            c.drawRect(x - tw * 0.04f, y - th * 0.05f, x + tw * 0.04f, y + h * 0.01f, paint)
-        }
-    }
-
-    private fun birches(
-        c: Canvas, w: Float, h: Float, baseline: Float, count: Int, height: Float, crown: Argb?, r: Random,
-        haze: Argb? = null, hazeAmount: Float = 0f,
-    ) {
-        val bark = Argb.hex(0xF3F0EA).let { if (haze != null) it.lerp(haze, hazeAmount) else it }
-        val mark = Argb.hex(0x3E3A40).let { if (haze != null) it.lerp(haze, hazeAmount) else it }
-        val twig = Argb.hex(0x6E6478).let { if (haze != null) it.lerp(haze, hazeAmount) else it }
-        repeat(count) {
-            val x = w * (it + r.nextFloat() * 0.8f) / count
-            val th = h * height * (0.7f + r.nextFloat() * 0.45f)
-            val y = h * baseline + r.nextFloat() * h * 0.02f
-            val lean = (r.nextFloat() - 0.5f) * th * 0.08f
-            val trunk = max(0.8f, th * 0.022f)
-            // A bare crown is a haze of fine twigs, then a few boughs, then the white trunk.
-            if (crown == null) {
-                paint.maskFilter = BlurMaskFilter(max(0.6f, th * 0.04f), BlurMaskFilter.Blur.NORMAL)
-                paint.color = twig.withAlpha(0.32f).value
-                c.drawOval(RectF(x + lean - th * 0.16f, y - th * 1.02f, x + lean + th * 0.16f, y - th * 0.42f), paint)
-                paint.maskFilter = null
-            }
-            paint.style = Paint.Style.STROKE
-            paint.strokeCap = Paint.Cap.ROUND
-            paint.strokeWidth = max(0.35f, trunk * 0.3f)
-            paint.color = twig.withAlpha(0.6f).value
-            repeat(4) { b ->
-                val t = 0.55f + b * 0.1f
-                val bx = x + lean * t
-                val by = y - th * t
-                val side = if (b % 2 == 0) 1f else -1f
-                val bl = th * (0.12f - b * 0.015f)
-                path.reset()
-                path.moveTo(bx, by)
-                path.quadTo(bx + side * bl * 0.7f, by - bl * 0.5f, bx + side * bl, by + bl * 0.15f)
-                c.drawPath(path, paint)
-            }
-            paint.strokeWidth = trunk
-            paint.color = bark.value
-            c.drawLine(x, y, x + lean, y - th, paint)
-            paint.style = Paint.Style.FILL
-            // Black lenticels across the bark.
-            paint.color = mark.withAlpha(0.8f).value
-            repeat(5) { m ->
-                val t = 0.1f + m * 0.17f + r.nextFloat() * 0.05f
-                val mx = x + lean * t
-                c.drawRect(mx - trunk * 0.5f, y - th * t, mx + trunk * 0.3f, y - th * t + max(0.5f, trunk * 0.35f), paint)
-            }
-            if (crown != null) {
-                val cc = if (haze != null) crown.lerp(haze, hazeAmount) else crown
-                foliage(c, x + lean, y - th * 0.72f, th * 0.26f, th * 0.3f, listOf(cc, cc.lerp(Argb.White, 0.25f), cc.lerp(Argb.Black, 0.15f)), r)
-            }
-        }
-    }
-
-    /** Round crowns: deciduous trees, young in April, in blossom in May, ablaze in October. */
-    private fun crowns(
-        c: Canvas, w: Float, h: Float, baseline: Float, count: Int, height: Float, colors: List<Argb>, r: Random,
-        haze: Argb? = null, hazeAmount: Float = 0f,
-    ) {
-        val tones = colors.map { if (haze != null) it.lerp(haze, hazeAmount) else it }
-        val bark = Argb.hex(0x5A4638).let { if (haze != null) it.lerp(haze, hazeAmount) else it }
-        repeat(count) {
-            val x = w * (it + r.nextFloat() * 0.8f) / count
-            val th = h * height * (0.7f + r.nextFloat() * 0.5f)
-            val y = h * baseline + r.nextFloat() * h * 0.02f
-            paint.style = Paint.Style.STROKE
-            paint.strokeCap = Paint.Cap.ROUND
-            paint.strokeWidth = max(0.8f, th * 0.05f)
-            paint.color = bark.value
-            c.drawLine(x, y, x, y - th * 0.55f, paint)
-            paint.strokeWidth = max(0.5f, th * 0.025f)
-            c.drawLine(x, y - th * 0.35f, x + th * 0.14f, y - th * 0.58f, paint)
-            c.drawLine(x, y - th * 0.4f, x - th * 0.12f, y - th * 0.62f, paint)
-            paint.style = Paint.Style.FILL
-            foliage(c, x, y - th * 0.68f, th * 0.36f, th * 0.3f, tones, r)
-        }
-    }
-
-    private fun foliage(c: Canvas, cx: Float, cy: Float, rx: Float, ry: Float, tones: List<Argb>, r: Random) {
-        // Many small clusters heaped into a crown: shaded below, lit on top, a few loose leaves.
-        val base = tones.first()
-        val dark = base.lerp(Argb.Black, 0.28f)
-        val light = tones.last().lerp(Argb.White, 0.18f)
-        paint.color = dark.value
-        c.drawOval(RectF(cx - rx * 0.92f, cy - ry * 0.7f, cx + rx * 0.92f, cy + ry * 0.92f), paint)
-        val clusters = 26
-        repeat(clusters) {
-            val a = r.nextFloat() * 6.28f
-            val d = sqrt(r.nextFloat()) * 0.82f
-            val bx = cx + cos(a) * rx * d
-            val by = cy + sin(a) * ry * d
-            // Height in the crown decides the light: 0 at the foot, 1 at the top.
-            val lit = ((cy + ry - by) / (2 * ry)).coerceIn(0f, 1f)
-            val tone = tones[r.nextInt(tones.size)]
-            paint.color = dark.lerp(tone, 0.55f + lit * 0.45f).lerp(light, max(0f, lit - 0.55f) * 0.9f).value
-            c.drawCircle(bx, by, min(rx, ry) * (0.2f + r.nextFloat() * 0.16f), paint)
-        }
-        repeat(10) {
-            val a = r.nextFloat() * 6.28f
-            val d = 0.85f + r.nextFloat() * 0.25f
-            paint.color = tones[r.nextInt(tones.size)].lerp(Argb.White, 0.1f).value
-            c.drawCircle(cx + cos(a) * rx * d, cy + sin(a) * ry * d, max(0.5f, min(rx, ry) * 0.07f), paint)
-        }
-    }
-
-    private fun oak(c: Canvas, x: Float, y: Float, th: Float, r: Random) {
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.ROUND
-        paint.color = Argb.hex(0x4A3A2C).value
-        paint.strokeWidth = max(1.5f, th * 0.07f)
-        c.drawLine(x, y, x, y - th * 0.5f, paint)
-        paint.strokeWidth = max(1f, th * 0.035f)
-        c.drawLine(x, y - th * 0.4f, x + th * 0.25f, y - th * 0.62f, paint)
-        c.drawLine(x, y - th * 0.45f, x - th * 0.22f, y - th * 0.66f, paint)
-        paint.style = Paint.Style.FILL
-        // Its shadow on the grass.
-        paint.maskFilter = BlurMaskFilter(th * 0.05f, BlurMaskFilter.Blur.NORMAL)
-        paint.color = Argb.hex(0x2F5A22).withAlpha(0.45f).value
-        c.drawOval(RectF(x - th * 0.5f, y - th * 0.02f, x + th * 0.3f, y + th * 0.06f), paint)
-        paint.maskFilter = null
-        foliage(c, x, y - th * 0.7f, th * 0.5f, th * 0.36f, listOf(Argb.hex(0x5C9A45), Argb.hex(0x75B254), Argb.hex(0x4A8338), Argb.hex(0x8DC565)), r)
-    }
-
-    private fun poplars(
-        c: Canvas, w: Float, h: Float, baseline: Float, count: Int, height: Float, color: Argb, r: Random,
-        haze: Argb? = null, hazeAmount: Float = 0f,
-    ) {
-        val tone = if (haze != null) color.lerp(haze, hazeAmount) else color
-        paint.color = tone.value
-        repeat(count) {
-            val x = w * (it + r.nextFloat() * 0.8f) / count
-            val th = h * height * (0.7f + r.nextFloat() * 0.5f)
-            val y = h * baseline + r.nextFloat() * h * 0.015f
-            val tw = th * 0.16f
-            c.drawOval(RectF(x - tw, y - th, x + tw, y - th * 0.05f), paint)
-            c.drawRect(x - tw * 0.08f, y - th * 0.1f, x + tw * 0.08f, y, paint)
-        }
-    }
-
-    private fun bareTrees(
-        c: Canvas, w: Float, h: Float, baseline: Float, count: Int, height: Float, color: Argb, r: Random,
-        haze: Argb? = null, hazeAmount: Float = 0f,
-    ) {
-        val tone = if (haze != null) color.lerp(haze, hazeAmount) else color
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.ROUND
-        paint.color = tone.value
-        repeat(count) {
-            val x = w * (it + r.nextFloat() * 0.8f) / count
-            val th = h * height * (0.7f + r.nextFloat() * 0.45f)
-            val y = h * baseline + r.nextFloat() * h * 0.02f
-            branch(c, x, y, -90f + (r.nextFloat() - 0.5f) * 8f, th * 0.42f, max(0.6f, th * 0.045f), 0, r)
-        }
-        paint.style = Paint.Style.FILL
-    }
-
-    private fun branch(c: Canvas, x: Float, y: Float, angle: Float, length: Float, width: Float, depth: Int, r: Random) {
-        val rad = Math.toRadians(angle.toDouble())
-        val x1 = x + (cos(rad) * length).toFloat()
-        val y1 = y + (sin(rad) * length).toFloat()
-        paint.strokeWidth = width
-        c.drawLine(x, y, x1, y1, paint)
-        if (depth >= 4 || length < 2f) return
-        val spread = 22f + r.nextFloat() * 14f
-        branch(c, x1, y1, angle - spread, length * (0.62f + r.nextFloat() * 0.12f), width * 0.62f, depth + 1, r)
-        branch(c, x1, y1, angle + spread, length * (0.62f + r.nextFloat() * 0.12f), width * 0.62f, depth + 1, r)
-        if (depth < 2 && r.nextFloat() < 0.5f) branch(c, x1, y1, angle + (r.nextFloat() - 0.5f) * 12f, length * 0.55f, width * 0.55f, depth + 1, r)
-    }
-
-    // endregion
-
-    // region In the air and on the ground
-
-    private fun snowfall(c: Canvas, w: Float, h: Float, count: Int, size: Float, r: Random) {
-        if (moving) return
-        val n = (count * (w * h) / (320f * 250f)).toInt().coerceIn(count / 3, count * 3)
-        repeat(n) {
-            val depth = r.nextFloat()
-            val x = r.nextFloat() * w
-            val y = r.nextFloat() * h
-            val rr = (0.4f + depth * depth * 1.6f) * size
-            paint.maskFilter = if (depth > 0.8f) BlurMaskFilter(rr * 0.6f, BlurMaskFilter.Blur.NORMAL) else null
-            paint.color = Argb.White.withAlpha(0.45f + depth * 0.45f).value
-            c.drawCircle(x, y, rr, paint)
-        }
-        paint.maskFilter = null
-    }
-
-    private fun rain(c: Canvas, w: Float, h: Float, count: Int, r: Random) {
-        if (moving) return
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.ROUND
-        repeat(count) {
-            val x = r.nextFloat() * w
-            val y = r.nextFloat() * h * 0.8f
-            val len = h * (0.03f + r.nextFloat() * 0.04f)
-            paint.strokeWidth = 0.5f + r.nextFloat() * 0.4f
-            paint.shader = LinearGradient(x, y, x + len * 0.15f, y + len, Argb.White.withAlpha(0f).value, Argb.White.withAlpha(0.45f).value, Shader.TileMode.CLAMP)
-            c.drawLine(x, y, x + len * 0.15f, y + len, paint)
-        }
-        paint.shader = null
-        paint.style = Paint.Style.FILL
-    }
-
-    private fun flowers(c: Canvas, w: Float, h: Float, top: Float, count: Int, colors: List<Argb>, r: Random) {
-        val n = (count * w / 320f).toInt().coerceIn(count / 3, count * 2)
-        repeat(n) {
-            val depth = r.nextFloat()
-            val x = r.nextFloat() * w
-            val y = h * (top + 0.02f + depth * (0.98f - top))
-            val rr = 0.5f + depth * 1.6f
-            val color = colors[r.nextInt(colors.size)]
-            paint.color = color.withAlpha(0.7f + depth * 0.3f).value
-            c.drawCircle(x, y, rr, paint)
-            if (rr > 1.2f) {
-                paint.color = Argb.hex(0xFFD23A).withAlpha(0.9f).value
-                c.drawCircle(x, y, rr * 0.35f, paint)
-            }
-        }
-    }
-
-    private fun litter(c: Canvas, w: Float, h: Float, top: Float, count: Int, colors: List<Argb>, r: Random) {
-        val n = (count * w / 320f).toInt().coerceIn(count / 3, count * 2)
-        repeat(n) {
-            val depth = r.nextFloat()
-            val x = r.nextFloat() * w
-            val y = h * (top + 0.02f + depth * (0.98f - top))
-            val size = 0.8f + depth * 2.2f
-            leaf(c, x, y, size, r.nextFloat() * 360f, colors[r.nextInt(colors.size)].withAlpha(0.6f + depth * 0.4f))
-        }
-    }
-
-    private fun leaves(c: Canvas, w: Float, h: Float, count: Int, colors: List<Argb>, r: Random) {
-        if (moving) return
-        val n = (count * (w * h) / (320f * 250f)).toInt().coerceIn(count / 2, count * 3)
-        repeat(n) {
-            val depth = r.nextFloat()
-            val size = 1.5f + depth * 3.2f
-            leaf(c, r.nextFloat() * w, r.nextFloat() * h, size, r.nextFloat() * 360f, colors[r.nextInt(colors.size)].withAlpha(0.75f + depth * 0.25f))
-        }
-    }
-
-    private fun leaf(c: Canvas, x: Float, y: Float, size: Float, angle: Float, color: Argb) {
-        c.withRotation(angle, x, y) {
-            path.reset()
-            path.moveTo(x - size, y)
-            path.quadTo(x - size * 0.2f, y - size * 0.62f, x + size, y)
-            path.quadTo(x - size * 0.2f, y + size * 0.62f, x - size, y)
-            path.close()
-            paint.color = color.value
-            drawPath(path, paint)
-            paint.color = color.lerp(Argb.Black, 0.3f).withAlpha(0.5f).value
-            drawRect(x - size, y - 0.15f, x + size * 0.8f, y + 0.15f, paint)
-        }
-    }
-
-    private fun petals(c: Canvas, w: Float, h: Float, count: Int, r: Random) {
-        if (moving) return
-        val colors = listOf(Argb.hex(0xFBD3DF), Argb.hex(0xF7B8CB), Argb.hex(0xFFFFFF))
-        val n = (count * (w * h) / (320f * 250f)).toInt().coerceIn(count / 2, count * 3)
-        repeat(n) {
-            val depth = r.nextFloat()
-            val size = 1f + depth * 2.2f
-            val x = r.nextFloat() * w
-            val y = r.nextFloat() * h
-            // Drawn in the same order as before: the angle first, then the colour.
-            val angle = r.nextFloat() * 360f
-            paint.color = colors[r.nextInt(colors.size)].withAlpha(0.7f + depth * 0.3f).value
-            c.withRotation(angle, x, y) {
-                drawOval(RectF(x - size, y - size * 0.6f, x + size, y + size * 0.6f), paint)
-            }
-        }
-    }
-
-    private fun fireflies(c: Canvas, w: Float, h: Float, top: Float, count: Int, color: Argb, r: Random) {
-        if (moving) return
-        val n = (count * w / 320f).toInt().coerceIn(count / 2, count * 2)
-        repeat(n) {
-            val x = r.nextFloat() * w
-            val y = h * (top + r.nextFloat() * (0.97f - top))
-            val rr = 0.7f + r.nextFloat() * 0.9f
-            paint.shader = RadialGradient(x, y, rr * 5f, intArrayOf(color.withAlpha(0.95f).value, color.withAlpha(0.3f).value, 0), floatArrayOf(0f, 0.22f, 1f), Shader.TileMode.CLAMP)
-            c.drawCircle(x, y, rr * 5f, paint)
-        }
-        paint.shader = null
-    }
-
-    // endregion
 }
+
+/** Ripe rye, per pixel: stalks standing upright, the wind's waves running over it, glowing towards the sun. */
+private fun Painting.rye(line: Painting.Line, horizon: Float, ramp: IntArray, far: Int, glow: Int, seed: Int) {
+    val g = Ground(w, h, horizon)
+    pixels(RectF(0f, line.top, w, h), under(line)) { x, y ->
+        g.at(x, y)
+        val depth = ((y - horizon) / (h - horizon)).coerceIn(0f, 1f)
+        val near = Tone.smooth(0.02f, 0.4f, depth)
+        val stalk = 0.2f + depth * 1.2f
+        val stalks = Noise.value(x / stalk, y / (stalk * 6f), seed)
+        val ears = Noise.value(x / (stalk * 0.8f), y / (stalk * 1.2f), seed + 3)
+        val waves = Noise.fbm(g.across * 0.35f + g.away * 0.2f, g.away * 0.35f, seed + 1, 3)
+        val v = 0.52f + (stalks - 0.5f) * 0.6f * near + (ears - 0.5f) * 0.3f * near + (Tone.smooth(0.38f, 0.68f, waves) - 0.5f) * 0.4f * (0.4f + near)
+        var color = ramp(ramp, v.coerceIn(0f, 1f))
+        val sun = kotlin.math.exp(-((x - lightX) / (w * 0.25f)).let { it * it }) * (1f - depth * 0.6f)
+        color = Tone.mix(color, glow, (sun * 0.45f * (0.5f + stalks * 0.5f)).coerceIn(0f, 1f))
+        Tone.mix(far, color, Tone.smooth(0f, 0.2f, depth))
+    }
+}
+
+/**
+ * Ground in the thaw, per pixel: snow going in patches, wet earth between, puddles holding the
+ * sky and darkened rims round them.
+ */
+private fun Painting.thaw(line: Painting.Line, horizon: Float, snow: Int, snowShade: Int, earth: Int, wet: Int, skyNear: Int, skyFar: Int, far: Int, seed: Int) {
+    val g = Ground(w, h, horizon)
+    field(RectF(0f, line.top, w, h), kx * 0.7f, under(line)) { x, y ->
+        g.at(x, y)
+        val depth = ((y - horizon) / (h - horizon)).coerceIn(0f, 1f)
+        val cover = Noise.fbm(g.across * 1.3f, g.away * 0.5f, seed, 4)
+        val pool = Noise.fbm(g.across * 0.7f + 11f, g.away * 0.3f, seed + 5, 3)
+        val grain = Noise.value(g.across * 12f, g.away * 2f, seed + 2)
+        val snowLine = 0.44f - depth * 0.12f
+        var color = if (cover > snowLine) {
+            val k = Tone.smooth(snowLine, snowLine + 0.06f, cover)
+            Tone.mix(Tone.mix(earth, wet, grain * 0.5f), Tone.mix(snowShade, snow, 0.5f + (cover - 0.55f) * 2f + (grain - 0.5f) * 0.2f), k)
+        } else {
+            Tone.shade(Tone.mix(earth, wet, 0.3f + grain * 0.5f), (grain - 0.5f) * 0.25f)
+        }
+        if (pool > 0.58f) {
+            val rim = Tone.smooth(0.58f, 0.62f, pool)
+            color = Tone.mix(color, wet, rim * 0.7f)
+            if (pool > 0.62f) {
+                val sky = Tone.mix(skyFar, skyNear, depth)
+                val ripple = (Noise.value(g.across * 3f, g.away * 8f, seed + 6) - 0.5f) * 0.1f
+                color = Tone.mix(color, Tone.shade(sky, ripple), Tone.smooth(0.62f, 0.65f, pool))
+            }
+        }
+        Tone.mix(far, color, Tone.smooth(0f, 0.25f, depth))
+    }
+}
+
+/** A forest floor under fallen leaves, per pixel: leaves in [colors] lying in drifts, darker between. */
+private fun Painting.litter(line: Painting.Line, horizon: Float, colors: IntArray, earth: Int, far: Int, seed: Int) {
+    val g = Ground(w, h, horizon)
+    pixels(RectF(0f, line.top, w, h), under(line)) { x, y ->
+        g.at(x, y)
+        val depth = ((y - horizon) / (h - horizon)).coerceIn(0f, 1f)
+        val near = Tone.smooth(0.02f, 0.4f, depth)
+        val leaf = 0.3f + depth * 1.8f
+        val pick = Noise.value(x / leaf, y / (leaf * 0.6f), seed)
+        val hue = ramp(colors, pick)
+        val gaps = Noise.fbm(x / (leaf * 0.7f), y / (leaf * 0.45f), seed + 2, 2)
+        val light = Noise.fbm(g.across * 0.6f, g.away * 0.6f, seed + 1, 3)
+        var color = Tone.shade(hue, (light - 0.5f) * 0.5f + (gaps - 0.5f) * 0.4f * near)
+        color = Tone.mix(color, earth, Tone.smooth(0.3f, 0.12f, gaps) * 0.8f * near)
+        Tone.mix(far, color, Tone.smooth(0f, 0.3f, depth))
+    }
+}
+
+private fun Painting.done(bloom: Float, vignette: Float, grain: Float = 0.016f, threshold: Float = 0.78f) {
+    if (bloom > 0f) bloom(threshold, bloom, h * 0.05f)
+    if (vignette > 0f) vignette(vignette)
+    finish(grain, 17)
+}
+
+// region Winter
+
+/** «Мороз и солнце»: the snowfield glittering, spruces bowed under snow, smoke rising straight. */
+private fun Painting.january(art: MonthArt, live: Boolean) {
+    sky(0f to 0x1F4E96, 0.32f to 0x4B82C6, 0.62f to 0x9CBEE4, 0.86f to 0xE8D9CB, 1f to 0xF6D5B2, to = h * 0.6f)
+    sun(lightX, lightY, h * 0.032f, c(0xFFE6BC), power = 1f, streak = 0.28f)
+    val far = ridge(h * 0.5f, h * 0.07f, h * 0.8f, 11, sharp = 0.25f)
+    land(far, h, c(0xB0BADB), c(0xD4DAEC), texture = 0.05f, rim = c(0xFFF1DC), rimStrength = 0.45f, shading = 0.25f)
+    haze(h * 0.53f, h * 0.42f, c(0xF1DFD0), 0.55f)
+    val forestLine = treeLine(ridge(h * 0.57f, h * 0.02f, h * 0.5f, 12), h * 0.045f..h * 0.1f, h * 0.026f, conifers = 0.92f, seed = 13)
+    forest(forestLine, h * 0.6f, tones(0x223656, 0x3A5278, 0x5E769C, 0x9AAACA, 0xE8ECF6), 14, leaf = h * 0.012f, depth = h * 0.05f, rim = 0.45f)
+    haze(h * 0.59f, h * 0.5f, c(0xEDE3E6), 0.35f)
+    house(w * 0.2f, h * 0.578f, h * 0.055f, c(0x5E4234), c(0x6F5242), 30, snowRoof = c(0xF4F2F8), window = c(0xFFC46B), smoke = c(0xEEE8EE))
+    val field = flat(h * 0.578f, wave = h * 0.006f, seed = 15)
+    snowfield(field, h * 0.56f, c(0xFFF8EE), c(0xA6BAE4), c(0xE6E2EE), 16, relief = 0.6f)
+    // Spruces on the right, the nearest cut by the frame; their shadows reach across the snow.
+    val spruceTones = tones(0x0C1D1C, 0x17332E, 0x28503F, 0x40705A, 0x6A9274)
+    val trees = listOf(Triple(0.99f, 1.02f, 0.92f), Triple(0.86f, 0.94f, 0.62f), Triple(0.76f, 0.8f, 0.36f), Triple(0.69f, 0.72f, 0.2f))
+    for ((i, t) in trees.withIndex().reversed()) {
+        val (fx, fy, fh) = t
+        castShadow(w * fx, h * fy, h * fh * 0.9f, h * fh * 0.26f, c(0x7F9BD4), 0.4f)
+        conifer(w * fx, h * fy, h * fh, h * fh * 0.42f, spruceTones, 20 + i, snow = c(0xFFFFFF), snowShade = c(0x9DB2DE), snowLoad = 0.55f)
+    }
+    conifer(w * 0.06f, h * 0.7f, h * 0.2f, h * 0.085f, spruceTones, 27, snow = c(0xFFFFFF), snowShade = c(0x9DB2DE))
+    conifer(w * 0.13f, h * 0.66f, h * 0.12f, h * 0.05f, spruceTones, 28, snow = c(0xFFFFFF), snowShade = c(0x9DB2DE))
+    sparkles(h * 0.6f, h, (w * h / 60f).roundToInt(), c(0xFFFFFF), 31, 0.26f)
+    if (!live) sparkles(h * 0.15f, h * 0.56f, (w * h / 380f).roundToInt(), c(0xFFF6E0), 32, 0.2f)
+    done(bloom = 0.55f, vignette = 0.2f)
+}
+
+/** After Grabar's «Февральская лазурь»: birches rising white into a deep azure sky. */
+private fun Painting.february(art: MonthArt, live: Boolean) {
+    sky(0f to 0x1A4DA6, 0.4f to 0x3B7ED6, 0.75f to 0x99C2EC, 1f to 0xE4EEF8, to = h * 0.85f)
+    glow(lightX, lightY, h * 1.3f, c(0xFFF4DC), 0.45f)
+    val forestLine = treeLine(flat(h * 0.8f, h * 0.006f, seed = 2), h * 0.03f..h * 0.07f, h * 0.022f, conifers = 0.75f, seed = 3)
+    forest(forestLine, h * 0.83f, tones(0x4A5C8C, 0x6478A6, 0x8496C0, 0xB4C2E0, 0xE4EAF6), 4, leaf = h * 0.01f, depth = h * 0.04f, rim = 0.35f)
+    haze(h * 0.82f, h * 0.74f, c(0xDCE7F6), 0.45f)
+    val field = flat(h * 0.815f, h * 0.008f, seed = 5)
+    snowfield(field, h * 0.8f, c(0xFFFFFF), c(0x86A6DE), c(0xD8E4F4), 6, relief = 0.8f)
+    // The birches: a clump rising out of frame, leaning apart, their crowns a lace of reddish twigs.
+    val xs = listOf(0.47f, 0.56f, 0.64f, 0.7f, 0.8f, 0.9f, 0.99f)
+    val heights = listOf(0.98f, 1.25f, 1.15f, 1.3f, 1.12f, 1.2f, 1.18f)
+    for ((i, fx) in xs.withIndex()) castShadow(w * fx, h * (0.9f + (i % 3) * 0.03f), h * 0.55f, h * 0.02f, c(0x6F92D6), 0.35f)
+    for ((i, fx) in xs.withIndex()) {
+        val ground = h * (0.9f + (i % 3) * 0.03f)
+        birch(
+            w * fx, ground, h * heights[i], h * (0.028f + (i % 2) * 0.012f), 40 + i,
+            lean = (fx - 0.72f) * 0.22f,
+            bark = c(0xFFFCF4), barkShade = c(0x93A7CF), twig = c(0x7E4E4A), weeping = 0.35f,
+        )
+    }
+    if (!live) snowfall((w * h / 900f).roundToInt(), 7, size = 0.5f)
+    sparkles(h * 0.83f, h, (w * h / 110f).roundToInt(), c(0xFFFFFF), 8, 0.24f)
+    done(bloom = 0.35f, vignette = 0.18f)
+}
+
+/** A moonlit village asleep in the snow, smoke from the chimneys, the moon in its halo. */
+private fun Painting.december(art: MonthArt, live: Boolean) {
+    sky(0f to 0x08102C, 0.35f to 0x172659, 0.7f to 0x2E437C, 1f to 0x51679F, to = h * 0.62f)
+    stars(h * 0.55f, (w * h / 55f).roundToInt(), 3, brightness = 0.8f)
+    moon(lightX, lightY, h * 0.055f, 1f, c(0xF4F1E6), c(0xBFD0FF), 1f)
+    clouds(h * 0.28f, h * 0.5f, 0.32f, h * 0.12f, 5, c(0x7D8DC0), c(0x2A3868), opacity = 0.55f, silver = 0.8f)
+    val far = ridge(h * 0.56f, h * 0.06f, h * 0.7f, 6)
+    land(far, h, c(0x4A5E96), c(0x6A7FB6), texture = 0.08f, rim = c(0xC9D8FF), rimStrength = 0.5f, shading = 0.25f)
+    val forestLine = treeLine(ridge(h * 0.6f, h * 0.02f, h * 0.4f, 7), h * 0.04f..h * 0.09f, h * 0.024f, conifers = 0.95f, seed = 8)
+    forest(forestLine, h * 0.66f, tones(0x0C1430, 0x16224A, 0x24345E, 0x5A6C9C, 0xC8D4F4), 9, leaf = h * 0.011f, depth = h * 0.05f, rim = 0.4f)
+    haze(h * 0.63f, h * 0.55f, c(0x6E82B8), 0.4f)
+    val hill = ridge(h * 0.68f, h * 0.05f, h * 0.9f, 10)
+    snowfield(hill, h * 0.62f, c(0xD4DEF8), c(0x5E72AC), c(0x7F92C4), 11)
+    for ((i, fx) in listOf(0.14f, 0.3f, 0.42f, 0.88f).withIndex()) {
+        val gx = w * fx
+        house(gx, hill.at(gx) + h * 0.012f, h * (0.07f - i * 0.006f), c(0x3A2A26), c(0x2E2426), 50 + i, snowRoof = c(0xDCE4FA), window = c(0xFFB85C), smoke = c(0x9AA8CE))
+    }
+    val spruceTones = tones(0x060C1A, 0x0E1A30, 0x1C2E4C, 0x33496C, 0x566C90)
+    for ((i, fx) in listOf(0.55f, 0.7f, 0.78f, 0.05f).withIndex()) {
+        val gx = w * fx
+        conifer(gx, hill.at(gx) + h * 0.02f, h * (0.16f + i * 0.02f), h * 0.07f, spruceTones, 60 + i, snow = c(0xE6EEFF), snowShade = c(0x7F93C8))
+    }
+    val field = flat(h * 0.8f, h * 0.02f, seed = 12)
+    snowfield(field, h * 0.62f, c(0xC4D2F2), c(0x4C5E98), c(0x6E82B8), 13)
+    fence(w * 0.02f, w * 0.5f, h * 0.84f, h * 0.05f, c(0x2E2A34), 14, snow = c(0xE0E8FF))
+    conifer(w * 0.93f, h * 1.02f, h * 0.58f, h * 0.24f, spruceTones, 15, snow = c(0xF0F4FF), snowShade = c(0x8295CC), snowLoad = 0.6f)
+    sparkles(h * 0.7f, h, (w * h / 80f).roundToInt(), c(0xDDE6FF), 16, 0.24f)
+    if (!live) snowfall((w * h / 110f).roundToInt(), 17, size = 0.7f)
+    done(bloom = 0.6f, vignette = 0.3f, threshold = 0.6f)
+}
+
+// endregion
+
+// region Spring
+
+/** The thaw: rooks back in the birches, snow going in patches, puddles full of sky. */
+private fun Painting.march(art: MonthArt, live: Boolean) {
+    sky(0f to 0x3874C8, 0.4f to 0x78AAE4, 0.8f to 0xC4DCF2, 1f to 0xEDF1F2, to = h * 0.62f)
+    sun(lightX, lightY, h * 0.03f, c(0xFFF4DA), power = 0.9f, streak = 0.2f)
+    clouds(h * 0.05f, h * 0.45f, 0.4f, h * 0.13f, 21, c(0xFFFFFF), c(0xAFC0D8), opacity = 0.9f)
+    val forestLine = treeLine(ridge(h * 0.57f, h * 0.02f, h * 0.6f, 22), h * 0.03f..h * 0.07f, h * 0.02f, conifers = 0.5f, seed = 23)
+    forest(forestLine, h * 0.62f, tones(0x4A4458, 0x645C70, 0x8A8296, 0xB4AEBC, 0xE4E0E4), 24, leaf = h * 0.01f, depth = h * 0.04f, rim = 0.3f)
+    church(w * 0.3f, forestLine.at(w * 0.3f) + h * 0.03f, h * 0.06f, c(0xF4F0E8), c(0xE0B24A))
+    haze(h * 0.6f, h * 0.52f, c(0xE3EAF0), 0.45f)
+    val ground = flat(h * 0.6f, h * 0.008f, seed = 25)
+    thaw(ground, h * 0.58f, c(0xF6F8FA), c(0xB4C4DC), c(0x7A6A5A), c(0x4A3E36), c(0x5E96DA), c(0xC8DCF0), c(0xE0E4EA), 26)
+    // Birches with rooks' nests, and the rooks circling.
+    for ((i, fx) in listOf(0.08f, 0.16f, 0.83f, 0.92f).withIndex()) {
+        val gy = h * (0.92f - (i % 2) * 0.04f)
+        castShadow(w * fx, gy, h * 0.3f, h * 0.02f, c(0x8FA3C8), 0.3f)
+        birch(w * fx, gy, h * (0.95f - (i % 2) * 0.12f), h * 0.028f, 70 + i, lean = if (fx < 0.5f) 0.04f else -0.04f, bark = c(0xFBF8F0), barkShade = c(0x9EA9BC), twig = c(0x7A4E48), weeping = 0.3f)
+    }
+    val nest = pen(c(0x2A2220))
+    for ((nx, ny) in listOf(0.1f to 0.22f, 0.15f to 0.3f, 0.86f to 0.18f, 0.9f to 0.27f)) {
+        canvas.drawOval(w * nx - h * 0.016f, h * ny - h * 0.009f, w * nx + h * 0.016f, h * ny + h * 0.011f, nest)
+    }
+    birds(w * 0.5f, h * 0.2f, 7, w * 0.15f, h * 0.018f, c(0x22201E), 27)
+    grass(h * 0.9f, h * 1.02f, (w / 3f).roundToInt(), h * 0.05f, tones(0x9C8E5E, 0x7F7550, 0xB4A06A), 28, lean = 0.2f)
+    sparkles(h * 0.62f, h, (w * h / 160f).roundToInt(), c(0xFFFFFF), 29, 0.24f)
+    done(bloom = 0.4f, vignette = 0.16f)
+}
+
+/** After Levitan's «Весна. Большая вода»: flood water to the horizon, birches standing in it. */
+private fun Painting.april(art: MonthArt, live: Boolean) {
+    sky(0f to 0x6690C4, 0.4f to 0x9FBFE2, 0.8f to 0xD6E4EE, 1f to 0xEEF1E6, to = h * 0.56f)
+    sun(lightX, lightY, h * 0.028f, c(0xFFF3D8), power = 0.75f, streak = 0.15f)
+    clouds(0f, h * 0.42f, 0.5f, h * 0.14f, 31, c(0xFFFFFF), c(0x8D9DB6), opacity = 0.92f, stretch = 2.6f)
+    rainbow(w * 0.28f, h * 0.62f, h * 0.42f, h * 0.035f, 0.32f, h * 0.55f)
+    val forestLine = treeLine(flat(h * 0.53f, h * 0.006f, seed = 32), h * 0.03f..h * 0.06f, h * 0.022f, conifers = 0.35f, seed = 33)
+    forest(forestLine, h * 0.61f, tones(0x4C5A52, 0x66746A, 0x869484, 0xB2BCA6, 0xE0E6D4), 34, leaf = h * 0.01f, depth = h * 0.035f, rim = 0.3f)
+    haze(h * 0.555f, h * 0.47f, c(0xE3EAEA), 0.45f)
+    val crown = tones(0x6E8A4A, 0x8EAA5A, 0xB2CC78, 0xD2E6A0, 0xEEF6C8)
+    val trees = listOf(0.12f to 0.62f, 0.2f to 0.72f, 0.27f to 0.58f, 0.62f to 0.6f, 0.7f to 0.66f, 0.78f to 0.56f, 0.88f to 0.7f)
+    for ((i, t) in trees.withIndex()) {
+        val (fx, fh) = t
+        birch(w * fx, h * 0.6f, h * fh * 0.9f, h * 0.018f, 80 + i, lean = (fx - 0.5f) * 0.06f, bark = c(0xF4F1E8), barkShade = c(0xA3ABB6), twig = c(0x6E5A50), crown = crown, leaves = 0.3f, leafSize = h * 0.0035f, weeping = 0.4f)
+    }
+    val shore = flat(h * 0.6f, 0f)
+    land(shore, h * 0.605f, c(0x6C745A), c(0x5A624C), texture = 0.2f)
+    water(h * 0.603f, h, c(0x55708E), 0.26f, ripple = 0.6f, seed = 35, glint = c(0xFFF8E0), glintStrength = 0.5f)
+    if (!live) {
+        val p = stroke(Tone.alpha(c(0xE8F0F8), 0.3f), 0.2f)
+        val r = Random(36)
+        repeat((w * h / 200f).roundToInt()) {
+            val x = r.nextFloat() * w
+            val y = r.nextFloat() * h * 0.9f
+            canvas.drawLine(x, y, x - h * 0.008f, y + h * 0.04f, p)
+        }
+    }
+    done(bloom = 0.35f, vignette = 0.14f)
+}
+
+/** An apple orchard in blossom: white and pink crowns, the grass new and full of dandelions. */
+private fun Painting.may(art: MonthArt, live: Boolean) {
+    sky(0f to 0x5896DC, 0.4f to 0x98C4EC, 0.8f to 0xDCE8F2, 1f to 0xF6E4E0, to = h * 0.58f)
+    sun(lightX, lightY, h * 0.03f, c(0xFFEFD2), power = 0.95f, streak = 0.2f)
+    clouds(h * 0.02f, h * 0.4f, 0.36f, h * 0.12f, 41, c(0xFFFFFF), c(0xB8C4DA), opacity = 0.9f)
+    val far = ridge(h * 0.52f, h * 0.05f, h * 0.8f, 42)
+    land(far, h, c(0x9CB8A4), c(0xB0C6B0), texture = 0.08f, rim = c(0xFFF6DA), rimStrength = 0.35f, shading = 0.15f)
+    haze(h * 0.54f, h * 0.45f, c(0xEDE8EA), 0.45f)
+    val forestLine = treeLine(ridge(h * 0.575f, h * 0.02f, h * 0.5f, 43), h * 0.04f..h * 0.08f, h * 0.028f, conifers = 0.1f, seed = 44)
+    forest(forestLine, h * 0.62f, tones(0x3E6A38, 0x55834A, 0x77A060, 0xA8C688, 0xE8F0D8), 45, leaf = h * 0.01f, depth = h * 0.04f, variety = tones(0xF2F0F0, 0xF4D8E2, 0x8CB870), varietyScale = h * 0.025f, rim = 0.3f)
+    haze(h * 0.6f, h * 0.53f, c(0xF2E6EC), 0.3f)
+    val meadowLine = flat(h * 0.6f, h * 0.008f, seed = 46)
+    meadow(meadowLine, h * 0.58f, tones(0x2E5A24, 0x4A7E34, 0x6EA044, 0x98C45A, 0xC4DE7E), c(0xB9CCA4), 47, speckle = tones(0xFFD42E, 0xFFE35A, 0xFFFFFF), speckleAmount = 0.28f)
+    // The orchard, receding: smaller trees further off.
+    val leaves = tones(0x2E4E24, 0x456E32, 0x628E44, 0x86AE5A, 0xB2CC7E)
+    val blossom = tones(0xFFFFFF, 0xFBE3EA, 0xF5C6D6, 0xFFF4F6)
+    val rows = listOf(
+        Triple(0.64f, 0.14f, listOf(0.06f, 0.28f, 0.5f, 0.72f, 0.94f)),
+        Triple(0.72f, 0.24f, listOf(0.18f, 0.62f)),
+        Triple(0.9f, 0.46f, listOf(0.0f, 0.92f)),
+    )
+    var seed = 400
+    for ((ground, size, xs) in rows) {
+        for (fx in xs) {
+            val gx = w * fx
+            castShadow(gx, h * ground, h * size * 0.5f, h * size * 0.6f, c(0x2E5A22), 0.3f)
+            broadleaf(gx, h * ground, h * size, h * size * 1.05f, h * size * 0.72f, c(0x5A4636), leaves, seed++, leaf = h * size * 0.035f, blossom = blossom, blossomAmount = 0.85f, lumps = 12)
+        }
+    }
+    flowers(h * 0.84f, h, (w * 0.35f).roundToInt(), listOf(Bloom.Dandelion, Bloom.Dandelion, Bloom.Chamomile), 48, size = h * 0.012f)
+    if (!live) fallingPetals((w * h / 300f).roundToInt(), tones(0xFFFFFF, 0xFBDDE6, 0xF7C3D2), 49, size = h * 0.006f)
+    done(bloom = 0.35f, vignette = 0.12f)
+}
+
+// endregion
+
+// region Summer
+
+/** An old oak on a flowering meadow, clouds towering in a deep blue sky. */
+private fun Painting.june(art: MonthArt, live: Boolean) {
+    sky(0f to 0x2766C8, 0.45f to 0x64A0E6, 0.8f to 0xB6D6F2, 1f to 0xE4EFF4, to = h * 0.6f)
+    sun(lightX, lightY, h * 0.03f, c(0xFFF8E6), power = 1f, streak = 0.2f)
+    clouds(h * 0.04f, h * 0.55f, 0.46f, h * 0.17f, 51, c(0xFFFFFF), c(0x8FA3C4), opacity = 0.97f, stretch = 1.6f, softness = 0.12f)
+    val far = ridge(h * 0.55f, h * 0.045f, h * 0.9f, 52)
+    land(far, h, c(0x86A6C0), c(0x9AB8C8), texture = 0.08f, shading = 0.2f)
+    haze(h * 0.56f, h * 0.47f, c(0xDDEBF2), 0.5f)
+    val forestLine = treeLine(ridge(h * 0.6f, h * 0.02f, h * 0.5f, 53), h * 0.05f..h * 0.1f, h * 0.03f, conifers = 0.3f, seed = 54)
+    forest(forestLine, h * 0.66f, tones(0x1E3A24, 0x2E5232, 0x4A7042, 0x7A9A5E, 0xC8DAB0), 55, leaf = h * 0.011f, depth = h * 0.05f, rim = 0.35f)
+    haze(h * 0.625f, h * 0.56f, c(0xCFE2EA), 0.3f)
+    val meadowLine = ridge(h * 0.64f, h * 0.03f, w * 0.9f, 56, lift = h * 0.03f, liftX = w * 0.32f, liftWidth = w * 0.3f)
+    meadow(meadowLine, h * 0.6f, tones(0x2A5A1E, 0x467E2E, 0x6CA23E, 0x98C654, 0xC8E27A), c(0xA6C8B0), 57, speckle = tones(0xFFFFFF, 0xFFFFFF, 0x6C8CFF, 0xE58BC0, 0xFFE14A), speckleAmount = 0.35f)
+    // The oak, and its pool of shade.
+    val ox = w * 0.3f
+    val oy = meadowLine.at(ox) + h * 0.03f
+    castShadow(ox, oy, h * 0.22f, h * 0.4f, c(0x1E4A16), 0.5f)
+    broadleaf(ox, oy, h * 0.54f, h * 0.64f, h * 0.42f, c(0x4A3A2E), tones(0x0E2410, 0x1C3C1A, 0x2E5A26, 0x4C7C34, 0x76A24A, 0xA8C868), 58, leaf = h * 0.014f, lumps = 22)
+    grass(h * 0.8f, h * 1.02f, (w * 0.9f).roundToInt(), h * 0.05f, tones(0x5E9A3E, 0x78B44C, 0x96C95C, 0x4A8534), 59)
+    flowers(h * 0.82f, h, (w * 0.7f).roundToInt(), listOf(Bloom.Chamomile, Bloom.Chamomile, Bloom.Cornflower, Bloom.Clover, Bloom.Buttercup), 60, size = h * 0.012f)
+    done(bloom = 0.35f, vignette = 0.12f)
+}
+
+/** After Shishkin's «Рожь»: ripe rye at sunset, a road through it, pines standing tall. */
+private fun Painting.july(art: MonthArt, live: Boolean) {
+    sky(0f to 0x42559E, 0.3f to 0x9E7A9E, 0.6f to 0xF5A273, 0.85f to 0xFFC98C, 1f to 0xFFE0A6, to = h * 0.56f)
+    sun(lightX, lightY, h * 0.045f, c(0xFFD08A), power = 1f, streak = 0.45f)
+    clouds(h * 0.02f, h * 0.44f, 0.38f, h * 0.12f, 61, c(0xFFC89A), c(0x7E5E86), opacity = 0.9f, stretch = 3f, silver = 0.9f)
+    val forestLine = treeLine(ridge(h * 0.535f, h * 0.012f, h * 0.6f, 62), h * 0.025f..h * 0.055f, h * 0.018f, conifers = 0.6f, seed = 63)
+    forest(forestLine, h * 0.58f, tones(0x3A2A4A, 0x5A4062, 0x7E5E7E, 0xB88A8A, 0xFFC090), 64, leaf = h * 0.009f, depth = h * 0.03f, rim = 0.5f)
+    haze(h * 0.55f, h * 0.44f, c(0xFFC895), 0.5f)
+    val field = flat(h * 0.55f, h * 0.004f, seed = 65)
+    rye(field, h * 0.54f, tones(0x6E3E1A, 0xA0602A, 0xD08E3E, 0xF0B45A, 0xFFD88A), c(0xF2B888), c(0xFFE0A0), 66)
+    // The road: a paler track winding into the distance.
+    val road = pen()
+    road.shader = LinearGradient(0f, h * 0.55f, 0f, h, Tone.alpha(c(0xE8C08A), 0.55f), Tone.alpha(c(0xB88A5A), 0.85f), Shader.TileMode.CLAMP)
+    path.reset()
+    path.moveTo(w * 0.47f, h * 0.552f)
+    path.quadTo(w * 0.42f, h * 0.7f, w * 0.18f, h * 1.01f)
+    path.lineTo(w * 0.5f, h * 1.01f)
+    path.quadTo(w * 0.5f, h * 0.7f, w * 0.49f, h * 0.552f)
+    path.close()
+    canvas.drawPath(path, road)
+    rays(lightX, lightY, h * 0.9f, PI.toFloat() * 0.5f, 1.8f, 9, c(0xFFD9A0), 0.14f, 67)
+    for ((i, t) in listOf(0.2f to 0.75f, 0.28f to 0.62f, 0.8f to 0.82f, 0.88f to 0.66f).withIndex()) {
+        val (fx, fh) = t
+        pine(w * fx, h * (0.6f + fh * 0.06f), h * fh, 70 + i, tones(0x141E14, 0x22301C, 0x3A4024, 0x6A5A30, 0xC08A4A), c(0x3A2418), c(0xE08A4A))
+    }
+    wheat(h * 0.78f, h * 1.02f, (w * 1.6f).roundToInt(), 68, c(0xB07A36), c(0xD89A4A), c(0xFFD890), h * 0.09f)
+    flowers(h * 0.82f, h, (w * 0.25f).roundToInt(), listOf(Bloom.Cornflower), 69, size = h * 0.011f)
+    if (!live) fireflies(h * 0.5f, h * 0.95f, (w * h / 900f).roundToInt(), c(0xFFE9A0), 71, size = 0.45f)
+    done(bloom = 0.6f, vignette = 0.24f, threshold = 0.7f)
+}
+
+/** Falling stars over a still lake: the Milky Way, a young moon setting, haystacks on the shore. */
+private fun Painting.august(art: MonthArt, live: Boolean) {
+    sky(0f to 0x050920, 0.4f to 0x0F1842, 0.8f to 0x222C63, 1f to 0x3C4478, to = h * 0.62f)
+    glow(w * 0.5f, h * 0.64f, w * 0.8f, c(0x6A5A9A), 0.35f, squash = 0.3f)
+    milkyWay(w * 0.02f, h * 0.02f, w * 0.95f, h * 0.62f, h * 0.18f, h * 0.6f, 0.9f)
+    stars(h * 0.6f, (w * h / 40f).roundToInt(), 81)
+    meteor(w * 0.34f, h * 0.2f, h * 0.2f, 2.6f, 0.9f)
+    meteor(w * 0.62f, h * 0.1f, h * 0.14f, 2.5f, 0.7f)
+    meteor(w * 0.16f, h * 0.36f, h * 0.1f, 2.7f, 0.5f)
+    moon(lightX, lightY, h * 0.035f, 0.3f, c(0xFFF1D8), c(0xFFD9A8), 0.7f)
+    val forestLine = treeLine(ridge(h * 0.6f, h * 0.02f, h * 0.6f, 82), h * 0.035f..h * 0.08f, h * 0.024f, conifers = 0.7f, seed = 83)
+    forest(forestLine, h * 0.63f, tones(0x05070F, 0x080B18, 0x0C1022, 0x161C36, 0x3A4270), 84, leaf = h * 0.01f, depth = h * 0.04f, rim = 0.25f)
+    water(h * 0.625f, h * 0.86f, c(0x0A1030), 0.35f, ripple = 0.35f, seed = 85)
+    val near = ridge(h * 0.86f, h * 0.03f, w * 0.7f, 86)
+    land(near, h, c(0x14192E), c(0x0A0D1C), texture = 0.12f, rim = c(0x4A5288), rimStrength = 0.3f)
+    for ((i, fx) in listOf(0.18f, 0.3f, 0.78f).withIndex()) {
+        val gx = w * fx
+        haystack(gx, near.at(gx) + h * 0.02f, h * (0.12f - i * 0.02f), h * (0.12f - i * 0.02f), c(0x3A3656), c(0x14142A), 87 + i)
+    }
+    grass(h * 0.9f, h * 1.02f, (w * 0.8f).roundToInt(), h * 0.06f, tones(0x10142A, 0x1A2036, 0x232A44), 88)
+    if (!live) fireflies(h * 0.72f, h * 0.98f, (w * h / 700f).roundToInt(), c(0xD9F59A), 89, size = 0.45f)
+    done(bloom = 0.5f, vignette = 0.3f, threshold = 0.55f, grain = 0.02f)
+}
+
+// endregion
+
+// region Autumn
+
+/** After Levitan's «Золотая осень»: golden birches along a blue river, the meadow fading to rust. */
+private fun Painting.september(art: MonthArt, live: Boolean) {
+    sky(0f to 0x3A78CC, 0.45f to 0x7BAEE6, 0.85f to 0xC8DCEC, 1f to 0xEEEDE2, to = h * 0.56f)
+    sun(lightX, lightY, h * 0.03f, c(0xFFF0D0), power = 0.95f, streak = 0.2f)
+    clouds(h * 0.02f, h * 0.42f, 0.4f, h * 0.14f, 91, c(0xFFFFFF), c(0xA8B6CC), opacity = 0.92f)
+    val forestLine = treeLine(ridge(h * 0.5f, h * 0.02f, h * 0.7f, 92), h * 0.03f..h * 0.06f, h * 0.02f, conifers = 0.4f, seed = 93)
+    forest(forestLine, h * 0.58f, tones(0x3E4A30, 0x5E6A3E, 0x8A8A4A, 0xC4B060, 0xF0E4B0), 94, leaf = h * 0.01f, depth = h * 0.04f, variety = tones(0xE8B43A, 0x6A7A3A, 0xD8963A), varietyScale = h * 0.02f, rim = 0.3f)
+    haze(h * 0.52f, h * 0.44f, c(0xE6E8E2), 0.45f)
+    val bankLine = ridge(h * 0.56f, h * 0.015f, w * 0.6f, 95)
+    meadow(bankLine, h * 0.52f, tones(0x5E5A24, 0x7E7A30, 0xA69A40, 0xC8B45A, 0xE2CC80), c(0xD8D4B8), 96)
+    // The river: from far left sweeping to the near right, mirroring the sky and the birches.
+    val river = Path().apply {
+        moveTo(-1f, h * 0.575f)
+        cubicTo(w * 0.3f, h * 0.57f, w * 0.55f, h * 0.6f, w * 0.52f, h * 0.7f)
+        cubicTo(w * 0.5f, h * 0.8f, w * 0.7f, h * 0.9f, w * 1.01f, h * 0.92f)
+        lineTo(w * 1.01f, h * 1.01f)
+        lineTo(w * 0.62f, h * 1.01f)
+        cubicTo(w * 0.4f, h * 0.9f, w * 0.3f, h * 0.76f, w * 0.34f, h * 0.68f)
+        cubicTo(w * 0.36f, h * 0.62f, w * 0.2f, h * 0.595f, -1f, h * 0.595f)
+        close()
+    }
+    val golds = tones(0x7A4A12, 0xB8741E, 0xE0A232, 0xF6C84E, 0xFFE68A)
+    val trees = listOf(0.6f to 0.56f, 0.66f to 0.66f, 0.72f to 0.6f, 0.8f to 0.72f, 0.88f to 0.64f, 0.95f to 0.7f, 0.1f to 0.5f, 0.04f to 0.46f)
+    for ((i, t) in trees.withIndex()) {
+        val (fx, fh) = t
+        val ground = h * (if (fx > 0.5f) 0.58f + (fx - 0.6f) * 0.12f else 0.6f)
+        birch(w * fx, ground, h * fh, h * 0.02f, 100 + i, lean = (i % 3 - 1) * 0.03f, crown = golds, leaves = 0.9f, leafSize = h * 0.007f, twig = c(0x5B463A), weeping = 0.45f)
+    }
+    water(h * 0.57f, h, c(0x2F5E98), 0.35f, ripple = 0.5f, seed = 97, glint = c(0xFFFFFF), glintStrength = 0.4f, clip = river)
+    grass(h * 0.86f, h * 1.02f, (w * 0.5f).roundToInt(), h * 0.04f, tones(0x9E9A4A, 0x7E8A3E, 0xB8A95A, 0x6E7A3A), 98)
+    if (!live) fallingLeaves((w * h / 500f).roundToInt(), golds, 99, size = h * 0.008f)
+    done(bloom = 0.4f, vignette = 0.14f)
+}
+
+/** A misty morning in a red and gold forest: the low sun's rays through the trees. */
+private fun Painting.october(art: MonthArt, live: Boolean) {
+    sky(0f to 0x6A77A2, 0.35f to 0xB39896, 0.7f to 0xEBBF9E, 1f to 0xF7DAB8, to = h * 0.6f)
+    sun(lightX, lightY, h * 0.04f, c(0xFFDAA8), power = 0.9f, streak = 0.3f)
+    val farLine = treeLine(ridge(h * 0.48f, h * 0.03f, h * 0.6f, 101), h * 0.05f..h * 0.1f, h * 0.028f, conifers = 0.45f, seed = 102)
+    forest(farLine, h * 0.62f, tones(0x8A6A6A, 0xA88480, 0xC4A094, 0xDEBCA8, 0xF6DCC4), 103, leaf = h * 0.012f, depth = h * 0.05f, rim = 0.3f)
+    fog(h * 0.36f, h * 0.62f, c(0xFBE3CA), 0.8f, h * 0.08f, 104)
+    val midLine = treeLine(ridge(h * 0.58f, h * 0.03f, h * 0.5f, 105), h * 0.08f..h * 0.16f, h * 0.032f, conifers = 0.25f, seed = 106)
+    forest(midLine, h * 0.78f, tones(0x3A1A14, 0x6A2A1C, 0xA8442A, 0xDC7A3A, 0xFFC27A), 107, leaf = h * 0.013f, depth = h * 0.1f, variety = tones(0xD9573A, 0xE88A3A, 0xF2B64A, 0x4A4A30, 0xC0402E), varietyScale = h * 0.03f, rim = 0.4f)
+    fog(h * 0.5f, h * 0.78f, c(0xF6D8BE), 0.65f, h * 0.07f, 108)
+    rays(lightX, lightY, h * 1.1f, PI.toFloat() * 0.6f, 1.6f, 11, c(0xFFE3B8), 0.2f, 109)
+    val groundLine = flat(h * 0.74f, h * 0.015f, seed = 110)
+    val reds = tones(0x6E1E14, 0xA8321E, 0xD2502A, 0xEE7A36, 0xFFB04E)
+    litter(groundLine, h * 0.66f, tones(0xC0402E, 0xE06A2E, 0xF0A03A, 0xD8C04A, 0x9A3A22), c(0x4A2A1A), c(0xE8C0A0), 111)
+    castShadow(w * 0.15f, h * 0.9f, h * 0.3f, h * 0.3f, c(0x3A1E14), 0.4f)
+    broadleaf(w * 0.15f, h * 0.9f, h * 0.72f, h * 0.58f, h * 0.46f, c(0x3A2A22), reds, 112, leaf = h * 0.013f, back = 0.8f, lumps = 18)
+    broadleaf(w * 0.86f, h * 0.84f, h * 0.56f, h * 0.46f, h * 0.36f, c(0x3A2A22), tones(0x6A3A0E, 0xA8641A, 0xDC9A2E, 0xF6C44A, 0xFFE490), 113, leaf = h * 0.012f, back = 0.6f, lumps = 16)
+    conifer(w * 0.72f, h * 0.8f, h * 0.42f, h * 0.15f, tones(0x0E1612, 0x1A261E, 0x2A3A2A, 0x405236, 0x6A7A4A), 114)
+    if (!live) fallingLeaves((w * h / 450f).roundToInt(), reds, 115, size = h * 0.009f)
+    done(bloom = 0.55f, vignette = 0.22f, threshold = 0.72f)
+}
+
+/** First snow at dusk: a dark river, bare trees, the last light low under the clouds, crows. */
+private fun Painting.november(art: MonthArt, live: Boolean) {
+    sky(0f to 0x3E4A62, 0.4f to 0x6E7C94, 0.75f to 0xA9ADB2, 0.92f to 0xDCCFB2, 1f to 0xE8D4AE, to = h * 0.56f)
+    glow(lightX, lightY, w * 0.6f, c(0xFFE0B0), 0.35f, squash = 0.25f)
+    clouds(0f, h * 0.45f, 0.72f, h * 0.16f, 121, c(0x9BA3B4), c(0x3E4658), opacity = 0.9f, stretch = 3.4f, silver = 0.6f)
+    val forestLine = treeLine(flat(h * 0.53f, h * 0.006f, seed = 122), h * 0.03f..h * 0.06f, h * 0.018f, conifers = 0.5f, seed = 123)
+    forest(forestLine, h * 0.57f, tones(0x22262E, 0x323842, 0x4A505C, 0x6E7480, 0xB0B4BC), 124, leaf = h * 0.009f, depth = h * 0.03f, rim = 0.25f)
+    church(w * 0.78f, h * 0.535f, h * 0.05f, c(0xBFC2C8), c(0x6A7080))
+    haze(h * 0.54f, h * 0.47f, c(0xB9B8B4), 0.4f)
+    val bank = flat(h * 0.555f, h * 0.004f, seed = 125)
+    snowfield(bank, h * 0.54f, c(0xE0E4EA), c(0x8A92A4), c(0xB8BCC4), 126, relief = 0.5f)
+    water(h * 0.565f, h * 0.8f, c(0x262C3A), 0.45f, ripple = 0.3f, seed = 127, glint = c(0xFFE8C0), glintStrength = 0.35f)
+    val near = ridge(h * 0.8f, h * 0.025f, w * 0.6f, 128)
+    thaw(near, h * 0.7f, c(0xE8EBF0), c(0x9AA2B4), c(0x3A342E), c(0x2A2622), c(0x7A8494), c(0xB8BCC2), c(0xC0C4CA), 129)
+    for ((i, t) in listOf(0.08f to 0.6f, 0.16f to 0.5f, 0.9f to 0.62f).withIndex()) {
+        val (fx, fh) = t
+        birch(w * fx, h * (0.86f + i * 0.03f), h * fh, h * 0.022f, 130 + i, lean = (0.5f - fx) * 0.05f, bark = c(0xE4E4E2), barkShade = c(0x7C8290), twig = c(0x3A3230), weeping = 0.5f)
+    }
+    birds(w * 0.42f, h * 0.3f, 5, w * 0.12f, h * 0.02f, c(0x1A1A20), 133)
+    reeds(w * 0.3f, w * 0.7f, h * 0.81f, (w / 4f).roundToInt(), h * 0.06f, c(0x8A7A5A), c(0x5A4A32), 134)
+    if (!live) snowfall((w * h / 260f).roundToInt(), 135, size = 0.55f)
+    done(bloom = 0.3f, vignette = 0.26f)
+}
+
+// endregion

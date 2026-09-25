@@ -68,15 +68,16 @@ class LiveWeatherTest {
     fun tilesCoverTheWidgetWithoutRepeatingANeighbour() {
         for (weather in LiveWeather.entries) {
             val (w, h) = 314f to 342f
-            val columns = LiveWeather.columns(w)
-            val rows = LiveWeather.rows(h)
-            assertThat(columns * LiveWeather.TILE_WIDTH_DP).isAtLeast(w)
-            assertThat(rows * LiveWeather.TILE_HEIGHT_DP).isAtLeast(h)
+            val columns = weather.columns(w)
+            val rows = weather.rows(h)
+            assertThat(columns * weather.tileWidth).isAtLeast(w)
+            assertThat(rows * weather.tileHeight).isAtLeast(h)
             if (weather.isSingleTile) continue
             for (row in 0 until rows) for (column in 0 until columns) {
                 val tile = weather.tileAt(column, row)
                 if (column > 0) assertThat(weather.tileAt(column - 1, row)).isNotEqualTo(tile)
-                if (row > 0) assertThat(weather.tileAt(column, row - 1)).isNotEqualTo(tile)
+                // What falls through a season's column runs on into the tile below: the same one.
+                if (row > 0 && !weather.joinsDown) assertThat(weather.tileAt(column, row - 1)).isNotEqualTo(tile)
             }
         }
     }
@@ -99,7 +100,8 @@ class LiveWeatherTest {
                 }
                 assertThat(a.duration).isGreaterThan(0L)
                 assertThat(a.interpolator.javaClass.simpleName).isEqualTo("LinearInterpolator")
-                // Ramps move a pattern by exactly one tile; everything else ends where it began.
+                // Ramps move a pattern by exactly one tile, spins by whole turns; everything else ends
+                // where it began.
                 for (holder in a.values) {
                     a.setCurrentPlayTime(0)
                     val start = a.getAnimatedValue(holder.propertyName) as Float
@@ -107,8 +109,9 @@ class LiveWeatherTest {
                     val end = a.getAnimatedValue(holder.propertyName) as Float
                     val jump = end - start
                     val tile = holder.propertyName == "translateX" && kotlin.math.abs(jump - 180f) < 0.1f ||
-                        holder.propertyName == "translateY" && kotlin.math.abs(jump - 90f) < 0.1f
-                    if (!tile) assertWithMessage("${context.resources.getResourceEntryName(id)} ${holder.propertyName}").that(jump).isWithin(0.02f).of(0f)
+                        holder.propertyName == "translateY" && (kotlin.math.abs(jump - 90f) < 0.1f || kotlin.math.abs(jump - 180f) < 0.1f)
+                    val turns = holder.propertyName == "rotation" && kotlin.math.abs(jump) > 1f && kotlin.math.abs(jump / 360f - kotlin.math.round(jump / 360f)) < 0.001f
+                    if (!tile && !turns) assertWithMessage("${context.resources.getResourceEntryName(id)} ${holder.propertyName}").that(jump).isWithin(0.02f).of(0f)
                 }
             }
         }
@@ -148,8 +151,8 @@ class LiveWeatherTest {
         host.layout(0, 0, pw, ph)
         val tiles = root.findViewById<ViewGroup>(R.id.widget_motion)
         assertThat(tiles.visibility).isEqualTo(View.VISIBLE)
-        assertThat(tiles.childCount).isEqualTo(LiveWeather.columns(w) * LiveWeather.rows(h))
-        assertThat(tiles.getChildAt(1).left).isEqualTo((LiveWeather.TILE_WIDTH_DP * density).toInt())
+        assertThat(tiles.childCount).isEqualTo(weather.columns(w) * weather.rows(h))
+        assertThat(tiles.getChildAt(1).left).isEqualTo((weather.tileWidth * density).toInt())
 
         val clip = Path().apply { addRoundRect(RectF(0f, 0f, pw.toFloat(), ph.toFloat()), radius * density, radius * density, Path.Direction.CW) }
         val frames = File(out, "$name-frames").apply { deleteRecursively(); mkdirs() }
@@ -177,14 +180,14 @@ class LiveWeatherTest {
     @Test
     fun tileSheets() {
         val density = 2f
-        val w = (2 * LiveWeather.TILE_WIDTH_DP * density).roundToInt()
-        val h = (2 * LiveWeather.TILE_HEIGHT_DP * density).roundToInt()
         for (weather in LiveWeather.entries) {
+            val w = (2 * weather.tileWidth * density).roundToInt()
+            val h = (2 * weather.tileHeight * density).roundToInt()
             val times = listOf(900L, 1_700L, 2_300L, 4_100L, 6_000L, 7_500L)
             val sheet = createBitmap(w * 2 + 12, (h + 12) * times.size)
             val canvas = Canvas(sheet)
             val frame = FrameLayout(context)
-            frame.showLiveWeather(weather, 360f, 180f - 12f)
+            frame.showLiveWeather(weather, 2 * weather.tileWidth, 2 * weather.tileHeight - 12f)
             frame.measure(View.MeasureSpec.makeMeasureSpec((w / density * context.resources.displayMetrics.density).roundToInt(), View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec((h / density * context.resources.displayMetrics.density).roundToInt(), View.MeasureSpec.EXACTLY))
             frame.layout(0, 0, frame.measuredWidth, frame.measuredHeight)
             times.forEachIndexed { row, t ->
@@ -211,12 +214,9 @@ class LiveWeatherTest {
         }
     }
 
-    private fun tileDrawables(): List<Int> = listOf(
-        R.drawable.motion_rain_light_a, R.drawable.motion_rain_light_b, R.drawable.motion_rain_light_c, R.drawable.motion_rain_light_d,
-        R.drawable.motion_rain_heavy_a, R.drawable.motion_rain_heavy_b, R.drawable.motion_rain_heavy_c, R.drawable.motion_rain_heavy_d,
-        R.drawable.motion_storm_a, R.drawable.motion_storm_b, R.drawable.motion_storm_c, R.drawable.motion_storm_d,
-        R.drawable.motion_snow_light, R.drawable.motion_snow_heavy,
-    )
+    /** Every generated tile: the weather's and the calendar's seasons'. */
+    private fun tileDrawables(): List<Int> =
+        R.drawable::class.java.fields.filter { it.name.startsWith("motion_") }.map { it.getInt(null) }.also { assertThat(it.size).isAtLeast(40) }
 
     /** Puts every tile under [view] where its loops are [ms] after they all started together. */
     private fun seek(view: View, ms: Long) {
