@@ -35,11 +35,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.shadow.Shadow as DropShadow
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
@@ -48,6 +50,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import app.rosa.weather.core.designsystem.glass.GlassStyle
@@ -113,11 +116,21 @@ fun GlassTabBar(
 
     BoxWithConstraints(modifier.fillMaxWidth().height(GlassTabBarHeight)) {
         val segment = (maxWidth - Inset * 2) / count
+        // A layer of its own above the content: a deep shadow that still shows over a night sky
+        // or a dark card, so the bar never reads as part of what lies under it.
+        Box(Modifier.fillMaxSize().dropShadow(shape, DropShadow(radius = 26.dp, color = Color.Black, offset = DpOffset(0.dp, 8.dp), alpha = if (colors.isLightSky) 0.2f else 0.45f)))
         // The capsule itself: denser than a button's glass, so its names read over the bright
         // horizon at the bottom of the sky.
         GlassSurface(Modifier.fillMaxSize(), style = BarGlass, cornerRadius = GlassTabBarHeight / 2, touchResponsive = false) {}
-        // Past the densest the glass may get, a bright blue day dims it a little more.
-        if (bright > 0f) Box(Modifier.fillMaxSize().clip(shape).background(Color.Black.copy(alpha = 0.12f * bright)))
+        // Its own tone: by night a little lighter than the dark glass of the cards, on a bright
+        // blue day a little darker than the glass may get on its own; and a crisp edge all round.
+        val tone = if (colors.isLightSky) Color.Transparent else lerp(Color.White.copy(alpha = 0.08f), Color.Black.copy(alpha = 0.12f), bright)
+        val edge = if (colors.isLightSky) {
+            Brush.verticalGradient(0f to Color.White.copy(alpha = 0.95f), 1f to Color.Black.copy(alpha = 0.12f))
+        } else {
+            Brush.verticalGradient(0f to Color.White.copy(alpha = 0.4f), 1f to Color.White.copy(alpha = 0.12f))
+        }
+        Box(Modifier.fillMaxSize().clip(shape).background(tone).border(1.dp, edge, shape))
         // The drop spans both of its edges and stays inside the bar: at the last tab it squashes
         // against the wall. Stretched, it thins a little, as liquid keeps its volume.
         val drop = Modifier

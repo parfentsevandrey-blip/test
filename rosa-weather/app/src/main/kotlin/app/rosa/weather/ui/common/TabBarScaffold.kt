@@ -75,7 +75,9 @@ fun TabBarScaffold(selected: RosaTab?, onSelect: (RosaTab) -> Unit, content: @Co
     var last by remember { mutableStateOf(selected ?: RosaTab.Weather) }
     SideEffect { if (selected != null) last = selected }
     val shown = selected ?: last
-    val inset = if (selected != null) navigation + GlassTabBarHeight + BarGap + 10.dp else 0.dp
+    // Room for the bar and for the band of clear sky above it, so the last card can scroll into
+    // full view above the fade.
+    val inset = if (selected != null) navigation + BarGap + GlassTabBarHeight + ClearAbove else 0.dp
     val tabs = RosaTab.entries.map { GlassTab(it.icon, stringResource(it.label)) }
     CompositionLocalProvider(LocalTabBarInset provides inset) {
         Box(Modifier.fillMaxSize()) {
@@ -87,9 +89,11 @@ fun TabBarScaffold(selected: RosaTab?, onSelect: (RosaTab) -> Unit, content: @Co
                 exit = slideOutVertically(RosaMotion.gelOffset) { it } + fadeOut(),
             ) {
                 Box(contentAlignment = Alignment.BottomCenter) {
+                    // The bar floats in a band of clear sky: whatever scrolls down toward it has
+                    // faded out before it gets there, so the two never run together.
                     SkyScrollEdge(
-                        height = navigation + BarGap + GlassTabBarHeight + 34.dp,
-                        solid = navigation + BarGap + GlassTabBarHeight / 2,
+                        height = navigation + BarGap + GlassTabBarHeight + ClearAbove + 10.dp,
+                        solid = navigation + BarGap + GlassTabBarHeight + 6.dp,
                         atBottom = true,
                     )
                     GlassTabBar(
@@ -106,3 +110,6 @@ fun TabBarScaffold(selected: RosaTab?, onSelect: (RosaTab) -> Unit, content: @Co
 
 /** Between the tab bar and the bottom of the screen (or the system's navigation bar). */
 private val BarGap = 10.dp
+
+/** The clear sky kept above the bar, where content fades out. */
+private val ClearAbove = 40.dp

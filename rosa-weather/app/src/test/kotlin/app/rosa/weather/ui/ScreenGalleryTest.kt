@@ -60,13 +60,35 @@ import org.robolectric.annotation.GraphicsMode
 class ScreenGalleryTest {
     @get:Rule val compose = createComposeRule()
 
-    private fun capture(name: String, doc: Boolean) {
+    private fun capture(name: String, doc: Boolean): Bitmap {
         compose.mainClock.advanceTimeBy(2_500)
         compose.waitForIdle()
         val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
         val out = File("build/screens").apply { mkdirs() }
         File(out, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         if (doc) exportDocImage(bitmap, name, 540)
+        return bitmap
+    }
+
+    /**
+     * The tab bar reads as a layer of its own, not as part of the card under it: its glass stands
+     * apart in tone from the band just above it, where whatever scrolls toward the bar has faded
+     * into the sky. (It ran together with the dark glass of the cards at night in 2.6.0: 1.29:1.)
+     */
+    private fun assertBarStandsApart(bitmap: Bitmap, name: String) {
+        val d = 3
+        // The bar: 64 dp tall, 10 dp above the bottom (no system bar here).
+        val top = bitmap.height - (10 + 64) * d
+        fun lum(c: Int): Double {
+            fun ch(v: Int): Double = (v / 255.0).let { if (it <= 0.03928) it / 12.92 else Math.pow((it + 0.055) / 1.055, 2.4) }
+            return 0.2126 * ch(android.graphics.Color.red(c)) + 0.7152 * ch(android.graphics.Color.green(c)) + 0.0722 * ch(android.graphics.Color.blue(c))
+        }
+        val xs = 40 * d until bitmap.width - 40 * d step 3
+        val bar = xs.map { lum(bitmap.getPixel(it, top + 8 * d)) }.average()
+        val above = (top - 30 * d until top - 6 * d step 3).flatMap { y -> xs.map { lum(bitmap.getPixel(it, y)) } }.average()
+        val ratio = (maxOf(bar, above) + 0.05) / (minOf(bar, above) + 0.05)
+        println("$name: tab bar %.3f, above it %.3f, %.2f:1".format(java.util.Locale.ROOT, bar, above, ratio))
+        com.google.common.truth.Truth.assertWithMessage("$name: the tab bar against what lies just above it").that(ratio).isAtLeast(1.5)
     }
 
     /** @param doc also export the render as a README image (with `-Prosa.docs`). */
@@ -79,7 +101,7 @@ class ScreenGalleryTest {
         appearance: Appearance = Appearance.Auto,
         forecastAgeSeconds: Long = 0,
         scrollPx: Float = 0f,
-    ) {
+    ): Bitmap {
         val forecast = SampleForecast.create(scenario, nowEpochSeconds = now - forecastAgeSeconds, placeId = "geo:1").shifted(shiftCelsius)
         val state = HomeUiState(
             loaded = true,
@@ -109,7 +131,7 @@ class ScreenGalleryTest {
                 swipe(from, from - Offset(0f, scrollPx), durationMillis = 1_200)
             }
         }
-        capture(name, doc)
+        return capture(name, doc)
     }
 
     /** First launch: the sheet, and its buttons set into it (never glass on glass). */
@@ -201,40 +223,56 @@ class ScreenGalleryTest {
 
     /** Scrolled: the cards fade into the sky under the floating bar (scroll edge effect). */
     @Test
-    fun homeScrolled() = home(SampleForecast.Scenario.SunnyMild, 1_758_621_600L, "home-scrolled", doc = false, scrollPx = 820f)
+    fun homeScrolled() {
+        home(SampleForecast.Scenario.SunnyMild, 1_758_621_600L, "home-scrolled", doc = false, scrollPx = 820f)
+    }
 
     @Test
-    fun homeScrolledNight() = home(SampleForecast.Scenario.ClearNight, 1_758_664_800L, "home-scrolled-night", doc = false, scrollPx = 820f)
+    fun homeScrolledNight() {
+        home(SampleForecast.Scenario.ClearNight, 1_758_664_800L, "home-scrolled-night", doc = false, scrollPx = 820f)
+    }
 
     /** 17:30 in Moscow, light rain on the pane. */
     @Test
-    fun homeRainy() = home(SampleForecast.Scenario.RainyAfternoon, 1_758_637_800L, "home-rainy", forecastAgeSeconds = 2_400)
+    fun homeRainy() = assertBarStandsApart(home(SampleForecast.Scenario.RainyAfternoon, 1_758_637_800L, "home-rainy", forecastAgeSeconds = 2_400), "home-rainy")
 
     @Test
-    fun homeNight() = home(SampleForecast.Scenario.ClearNight, 1_758_664_800L, "home-night")
+    fun homeNight() = assertBarStandsApart(home(SampleForecast.Scenario.ClearNight, 1_758_664_800L, "home-night"), "home-night")
 
     @Test
-    fun homeSnow() = home(SampleForecast.Scenario.SnowyCold, 1_758_610_800L, "home-snow")
+    fun homeSnow() {
+        home(SampleForecast.Scenario.SnowyCold, 1_758_610_800L, "home-snow")
+    }
 
     @Test
-    fun homeSunny() = home(SampleForecast.Scenario.SunnyMild, 1_758_621_600L, "home-sunny")
+    fun homeSunny() = assertBarStandsApart(home(SampleForecast.Scenario.SunnyMild, 1_758_621_600L, "home-sunny"), "home-sunny")
 
     /** 09:13 in Moscow, mostly clear: the low eastern sun used to sit right behind the numerals. */
     @Test
-    fun homeMorning() = home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-morning", doc = false)
+    fun homeMorning() {
+        home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-morning", doc = false)
+    }
 
     /** Same morning at −12°: the widest numerals must still keep the sun clear of them. */
     @Test
-    fun homeMorningFrost() = home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-morning-frost", shiftCelsius = -30.0, doc = false)
+    fun homeMorningFrost() {
+        home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-morning-frost", shiftCelsius = -30.0, doc = false)
+    }
 
     @Test
-    fun homeLight() = home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-mode-light", doc = false, appearance = Appearance.Light)
+    fun homeLight() {
+        home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-mode-light", doc = false, appearance = Appearance.Light)
+    }
 
     @Test
-    fun homeEveningMode() = home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-mode-evening", doc = false, appearance = Appearance.Evening)
+    fun homeEveningMode() {
+        home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-mode-evening", doc = false, appearance = Appearance.Evening)
+    }
 
     @Test
-    fun homeDarkMode() = home(SampleForecast.Scenario.RainyAfternoon, 1_758_628_800L, "home-mode-dark", doc = false, appearance = Appearance.Dark)
+    fun homeDarkMode() {
+        home(SampleForecast.Scenario.RainyAfternoon, 1_758_628_800L, "home-mode-dark", doc = false, appearance = Appearance.Dark)
+    }
 
     @Test
     fun appearancePicker() {
@@ -278,7 +316,9 @@ class ScreenGalleryTest {
 
     /** 17:40, the sun low in the west. */
     @Test
-    fun homeEvening() = home(SampleForecast.Scenario.SunnyMild, 1_758_638_400L, "home-evening", doc = false)
+    fun homeEvening() {
+        home(SampleForecast.Scenario.SunnyMild, 1_758_638_400L, "home-evening", doc = false)
+    }
 }
 
 private fun Forecast.shifted(celsius: Double): Forecast = if (celsius == 0.0) this else copy(
