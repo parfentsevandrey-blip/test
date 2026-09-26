@@ -21,7 +21,9 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.opal.core.designsystem.glass.GlassQuality
+import app.opal.core.designsystem.glass.LocalGlassLight
 import app.opal.core.designsystem.glass.LocalGlassQuality
+import app.opal.core.designsystem.glass.rememberGlassLight
 import app.opal.core.designsystem.util.Haptics
 import app.opal.core.designsystem.util.rememberScreenCornerRadius
 
@@ -67,6 +69,8 @@ fun OpalTheme(dark: Boolean, simplifiedGraphics: Boolean, content: @Composable (
     val colors = if (dark) DarkColors else LightColors
     val view = LocalView.current
     val haptics = remember(view) { Haptics(view) }
+    // Tilt turns the light on glass; not with simplified graphics or reduced motion.
+    val light = rememberGlassLight(enabled = quality == GlassQuality.Full && !reducedMotion)
     val material =
         if (dark)
             darkColorScheme(
@@ -88,6 +92,7 @@ fun OpalTheme(dark: Boolean, simplifiedGraphics: Boolean, content: @Composable (
             LocalGlassQuality provides quality,
             LocalScreenCornerRadius provides rememberScreenCornerRadius(),
             LocalHaptics provides haptics,
+            LocalGlassLight provides light,
             LocalIndication provides ripple(),
             content = content,
         )

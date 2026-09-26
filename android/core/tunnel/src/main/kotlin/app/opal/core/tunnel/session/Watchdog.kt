@@ -17,6 +17,11 @@ internal class Watchdog(
     /** Long enough for Tor's own stream retries over a slow first hop (Snowflake, meek). */
     private val freezeMillis: Long = 45_000,
     private val windowMillis: Long = 60_000,
+    /**
+     * Silence that outlasts Snowflake's replacement of a silent proxy (about 20 s to notice, up to
+     * ~45 s until the next proxy carries data), see [deadSession].
+     */
+    private val deadAfterMillis: Long = 60_000,
 ) {
     enum class Stall {
         Frozen,
@@ -31,6 +36,21 @@ internal class Watchdog(
     private var lastStreamSucceededAt = 0L
     private var lastReadAt = 0L
     private var armedAt = 0L
+
+    private var lastTickAt = 0L
+
+    /**
+     * Called every [tickMillis]. A tick that comes much later means the process was not running
+     * (Doze, a suspended device) or the clock jumped: that time says nothing about the connection,
+     * so observation starts over. Returns false then.
+     */
+    fun onTick(tickMillis: Long): Boolean {
+        val t = now()
+        val asleep = lastTickAt != 0L && t - lastTickAt > tickMillis + ASLEEP_SLACK_MILLIS
+        lastTickAt = t
+        if (asleep) arm()
+        return !asleep
+    }
 
     /** Starts (or restarts) observation; earlier events are forgotten. */
     fun arm() {
@@ -93,7 +113,21 @@ internal class Watchdog(
         }
     }
 
+    /**
+     * A stall during which Tor read nothing at all for [deadAfterMillis]. A bridge pads an idle
+     * connection that carries user traffic (Tor's defaults: every 1.5–9.5 s, 9–14 s with reduced
+     * padding), and Snowflake has long replaced a silent proxy by then: the session behind the
+     * proxies is gone.
+     */
+    fun deadSession(): Stall? = evaluate()?.takeIf { silentMillis() >= deadAfterMillis }
+
+    /** Milliseconds since Tor last read a byte from the network (counted from [arm] at most). */
+    fun silentMillis(): Long = now() - lastReadAt
+
     private fun prune(times: ArrayDeque<Long>, t: Long) {
         while (times.isNotEmpty() && t - times.first() > windowMillis) times.removeFirst()
     }
 }
+
+/** A tick this much later than due means the process was asleep (see [Watchdog.onTick]). */
+private const val ASLEEP_SLACK_MILLIS = 30_000L

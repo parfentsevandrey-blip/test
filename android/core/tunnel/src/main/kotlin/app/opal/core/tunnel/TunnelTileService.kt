@@ -10,6 +10,7 @@ import android.net.VpnService
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
+import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.core.service.quicksettings.PendingIntentActivityWrapper
 import androidx.core.service.quicksettings.TileServiceCompat
 import app.opal.core.data.AppLocaleStore
@@ -109,8 +110,8 @@ class TunnelTileService : TileService() {
 
     companion object {
         /** Android 13+ can add the tile for the user after a system confirmation dialog. */
-        val canRequestAdd: Boolean
-            get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.TIRAMISU)
+        fun canRequestAdd(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 
         /**
          * Asks the system to add the tile to Quick Settings (Android 13+, app in the foreground).

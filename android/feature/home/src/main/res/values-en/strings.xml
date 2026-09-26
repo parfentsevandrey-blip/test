@@ -2,6 +2,7 @@
 <resources>
     <string name="home_action_connect">Connect</string>
     <string name="home_action_disconnect">Disconnect</string>
+    <string name="home_action_stopping">Disconnecting…</string>
 
     <string name="home_status_off">Not protected</string>
     <string name="home_status_off_cold">All traffic will go through the Tor network</string>

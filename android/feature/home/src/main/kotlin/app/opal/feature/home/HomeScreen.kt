@@ -10,10 +10,18 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.withInfiniteAnimationFrameNanos
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -30,18 +38,33 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
@@ -62,10 +85,16 @@ import app.opal.core.designsystem.component.Panel
 import app.opal.core.designsystem.component.SectionHeader
 import app.opal.core.designsystem.component.SpeedGraph
 import app.opal.core.designsystem.component.SphereMode
+import app.opal.core.designsystem.glass.BottomAccessory
+import app.opal.core.designsystem.glass.GlassActionButton
 import app.opal.core.designsystem.glass.GlassButton
 import app.opal.core.designsystem.glass.GlassChip
+import app.opal.core.designsystem.glass.GlassOrbButton
+import app.opal.core.designsystem.glass.LocalGlassLight
 import app.opal.core.designsystem.icon.OpalIcons
 import app.opal.core.designsystem.theme.LocalHaptics
+import app.opal.core.designsystem.theme.LocalReducedMotion
+import app.opal.core.designsystem.theme.LocalWallClock
 import app.opal.core.designsystem.theme.OpalTheme
 import app.opal.core.model.bridge.TransportKind
 import app.opal.core.model.settings.ConnectionMode
@@ -74,12 +103,14 @@ import app.opal.core.model.tunnel.CircuitInfo
 import app.opal.core.model.tunnel.HopRole
 import app.opal.core.model.tunnel.NetworkKind
 import app.opal.core.model.tunnel.ReconnectReason
+import app.opal.core.model.tunnel.TrafficSample
 import app.opal.core.model.tunnel.TunnelError
 import app.opal.core.model.tunnel.TunnelProblem
 import app.opal.core.model.tunnel.TunnelState
 import app.opal.core.model.tunnel.WarmState
 import app.opal.core.model.tunnel.isTunnelActive
 import app.opal.core.tunnel.Labels
+import kotlin.math.log10
 import kotlinx.coroutines.delay
 
 sealed interface HomeAction {
@@ -149,21 +180,29 @@ private fun needsNotificationPermission(context: Context): Boolean =
         ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
 
-/** Tactile confirmation of state changes (not of taps: the controls give their own tick). */
+/**
+ * Tactile confirmation of state changes (not of taps: the controls give their own tick); once
+ * protected, the light also runs once around all glass.
+ */
 @Composable
 private fun StateHaptics(state: TunnelState) {
-    val haptics = LocalHaptics.current ?: return
+    val haptics = LocalHaptics.current
+    val light = LocalGlassLight.current
+    val reduced = LocalReducedMotion.current
     val previous = remember { arrayOfNulls<TunnelState>(1) }
     LaunchedEffect(state) {
         val before = previous[0]
         previous[0] = state
         if (before == null || before::class == state::class) return@LaunchedEffect
         when (state) {
-            TunnelState.Connected -> haptics.connected()
+            TunnelState.Connected -> {
+                haptics?.connected()
+                if (!reduced) light.sweep()
+            }
             TunnelState.Off,
-            TunnelState.Standby -> if (before.isTunnelActive) haptics.disconnected()
+            TunnelState.Standby -> if (before.isTunnelActive) haptics?.disconnected()
             TunnelState.Blocked,
-            is TunnelState.Error -> haptics.error()
+            is TunnelState.Error -> haptics?.error()
             else -> Unit
         }
     }
@@ -176,6 +215,7 @@ fun HomeScreen(
     onAction: (HomeAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    PowerAccessory(state, onAction)
     BoxWithConstraints(modifier.fillMaxSize()) {
         val wide = maxWidth >= 760.dp
         val scroll = rememberScrollState()
@@ -220,6 +260,67 @@ fun HomeScreen(
         }
     }
 }
+
+/**
+ * The main action again, above the tab bar: on a large phone the sphere (or, once connected, the
+ * status capsule at the top) is out of the thumb's reach.
+ */
+@Composable
+private fun PowerAccessory(state: HomeUiState, onAction: (HomeAction) -> Unit) {
+    BottomAccessory {
+        val snapshot = state.snapshot
+        val tunnelState = snapshot.state
+        val active = tunnelState.isTunnelActive
+        val stopping = tunnelState == TunnelState.Stopping
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            // Once connected a second drop splits off the main one — a new identity, also under the
+            // thumb — and merges back when the tunnel goes down.
+            AnimatedVisibility(
+                visible = tunnelState == TunnelState.Connected,
+                enter =
+                    expandHorizontally(spring(0.8f, 320f), expandFrom = Alignment.Start) +
+                        scaleIn(spring(0.45f, 380f), initialScale = 0.3f) +
+                        fadeIn(),
+                exit =
+                    shrinkHorizontally(spring(0.9f, 380f), shrinkTowards = Alignment.Start) +
+                        scaleOut(targetScale = 0.3f) +
+                        fadeOut(),
+            ) {
+                NewIdentityOrb(
+                    snapshot.newIdentityReadyAt,
+                    onClick = { onAction(HomeAction.NewIdentity) },
+                    modifier = Modifier.padding(end = 12.dp),
+                )
+            }
+            GlassActionButton(
+                label =
+                    stringResource(
+                        when {
+                            stopping -> R.string.home_action_stopping
+                            active -> R.string.home_action_disconnect
+                            else -> R.string.home_action_connect
+                        }
+                    ),
+                icon = OpalIcons.PowerSettingsNew,
+                emphasized = !active && !stopping,
+                enabled = !stopping,
+                progress =
+                    when (tunnelState) {
+                        is TunnelState.Connecting,
+                        is TunnelState.Reconnecting ->
+                            (state.snapshot.bootstrap?.progress ?: 0) / 100f
+                        else -> null
+                    },
+                stateDescription = statusText(state).title,
+                onClick = { onAction(HomeAction.Toggle) },
+                modifier = Modifier.weight(1f).testTag(POWER_BUTTON_TAG),
+            )
+        }
+    }
+}
+
+/** Test tag of the bottom power button (UI tests, baseline profile). */
+const val POWER_BUTTON_TAG = "power_button"
 
 @Composable
 private fun ColumnScope.Hero(state: HomeUiState, onAction: (HomeAction) -> Unit) {
@@ -465,15 +566,9 @@ private fun ColumnScope.Details(state: HomeUiState, onAction: (HomeAction) -> Un
                 stringResource(R.string.home_section_circuit),
                 Modifier.padding(top = 12.dp),
             )
-            CircuitPanel(snapshot.circuit)
+            CircuitPanel(snapshot.circuit, state.traffic)
             SectionHeader(stringResource(R.string.home_section_speed))
             SpeedPanel(state)
-            Spacer(Modifier.height(16.dp))
-            NewIdentityButton(
-                snapshot.newIdentityReadyAt,
-                onClick = { onAction(HomeAction.NewIdentity) },
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-            )
         }
     }
     snapshot.network?.let { network ->
@@ -515,31 +610,146 @@ private fun networkLabel(kind: NetworkKind) =
     }
 
 @Composable
-private fun CircuitPanel(circuit: CircuitInfo?) {
+private fun CircuitPanel(circuit: CircuitInfo?, traffic: TrafficSample?) {
     val hops = circuit?.hops.orEmpty()
     Panel(Modifier.fillMaxWidth()) {
         if (hops.isEmpty()) {
             Note(stringResource(R.string.home_circuit_pending))
             return@Panel
         }
-        hops.forEachIndexed { index, hop ->
-            HopRow(hop, last = index == hops.lastIndex)
+        // Vertical centres of the node icons, to run the rail from the first to the last.
+        val centers = remember(hops.size) { mutableStateListOf(*Array(hops.size) { 0f }) }
+        val flow = rememberCircuitFlow(traffic)
+        val colors = OpalTheme.colors
+        Column(
+            Modifier.fillMaxWidth().drawBehind {
+                drawCircuitRail(
+                    centers,
+                    flow,
+                    colors.onBackgroundMuted,
+                    colors.download,
+                    colors.upload,
+                )
+            }
+        ) {
+            hops.forEachIndexed { index, hop ->
+                HopRow(
+                    hop,
+                    last = index == hops.lastIndex,
+                    modifier =
+                        Modifier.onPlaced {
+                            centers[index] = it.positionInParent().y + it.size.height / 2f
+                        },
+                )
+            }
         }
     }
 }
 
+/**
+ * Where the particles on the circuit rail are: [phase] runs 0→1 along the rail, [down] and [up] are
+ * how many download (towards you, upwards) and upload particles to draw. Still when there is no
+ * traffic or with reduced motion (then the particles just sit on the rail).
+ */
+@Stable
+private class CircuitFlow {
+    var phase by mutableFloatStateOf(0f)
+    var down by mutableIntStateOf(0)
+    var up by mutableIntStateOf(0)
+}
+
 @Composable
-private fun HopRow(hop: CircuitHop, last: Boolean) {
+private fun rememberCircuitFlow(traffic: TrafficSample?): CircuitFlow {
+    val flow = remember { CircuitFlow() }
+    val reduced = LocalReducedMotion.current
+    val read = traffic?.read ?: 0L
+    val written = traffic?.written ?: 0L
+    SideEffect {
+        flow.down = particlesFor(read)
+        flow.up = particlesFor(written)
+    }
+    val speed = railSpeed(maxOf(read, written))
+    val moving = speed > 0f && !reduced
+    LaunchedEffect(moving, speed) {
+        if (!moving) return@LaunchedEffect
+        var last = 0L
+        while (true) {
+            withInfiniteAnimationFrameNanos { now ->
+                if (last != 0L) flow.phase = (flow.phase + speed * (now - last) / 1e9f) % 1f
+                last = now
+            }
+        }
+    }
+    return flow
+}
+
+/** 0–3 particles per direction, more for more traffic (bytes per second). */
+private fun particlesFor(bytesPerSecond: Long): Int =
+    when {
+        bytesPerSecond < 256 -> 0
+        bytesPerSecond < 16_000 -> 1
+        bytesPerSecond < 256_000 -> 2
+        else -> 3
+    }
+
+/** Rail lengths per second: faster traffic, faster particles (log scale). */
+private fun railSpeed(bytesPerSecond: Long): Float {
+    if (bytesPerSecond < 256) return 0f
+    val level = (log10(bytesPerSecond / 256.0) / 4.0).coerceIn(0.0, 1.0).toFloat()
+    return 0.18f + 0.42f * level
+}
+
+private fun DrawScope.drawCircuitRail(
+    centers: List<Float>,
+    flow: CircuitFlow,
+    rail: Color,
+    download: Color,
+    upload: Color,
+) {
+    if (centers.size < 2) return
+    val top = centers.first()
+    val bottom = centers.last()
+    if (bottom <= top) return
+    val x = RAIL_X.toPx()
+    drawLine(
+        rail.copy(alpha = 0.28f),
+        Offset(x, top),
+        Offset(x, bottom),
+        strokeWidth = 2.dp.toPx(),
+        cap = StrokeCap.Round,
+    )
+    fun particle(t: Float, color: Color) {
+        val y = top + (bottom - top) * t
+        // Fade in and out near the nodes at both ends.
+        val edge = (minOf(t, 1f - t) * 6f).coerceIn(0f, 1f)
+        drawCircle(color.copy(alpha = 0.22f * edge), radius = 7.dp.toPx(), center = Offset(x, y))
+        drawCircle(color.copy(alpha = 0.95f * edge), radius = 3.dp.toPx(), center = Offset(x, y))
+    }
+    // Download flows up (exit → bridge → you), upload down; evenly spaced along the rail.
+    for (i in 0 until flow.down) particle(1f - (flow.phase + i / 3f) % 1f, download)
+    for (i in 0 until flow.up) particle((flow.phase + 0.5f + i / 3f) % 1f, upload)
+}
+
+private val RAIL_X = 34.dp
+
+@Composable
+private fun HopRow(hop: CircuitHop, last: Boolean, modifier: Modifier = Modifier) {
     val colors = OpalTheme.colors
     val country = hop.country
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp).semantics(
+        modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp).semantics(
             mergeDescendants = true
         ) {},
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) {
+        // A node on the rail: a disc that hides the rail behind the flag.
+        Box(
+            Modifier.size(36.dp)
+                .background(colors.panel, CircleShape)
+                .border(1.dp, colors.panelStroke, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
             if (country != null) {
                 Text(Countries.flag(country), style = OpalTheme.type.headline)
             } else {
@@ -576,13 +786,6 @@ private fun HopRow(hop: CircuitHop, last: Boolean) {
                     color = colors.onBackgroundMuted,
                 )
         }
-        if (!last)
-            Icon(
-                OpalIcons.ArrowDownward,
-                contentDescription = null,
-                tint = colors.onBackgroundMuted,
-                modifier = Modifier.size(16.dp),
-            )
     }
 }
 
@@ -665,13 +868,14 @@ private fun SpeedFigure(
 /** Session duration, ticking once per second while the screen is resumed. */
 @Composable
 private fun SessionClock(since: Long?) {
-    val now = remember { mutableLongStateOf(System.currentTimeMillis()) }
+    val clock = LocalWallClock.current
+    val now = remember { mutableLongStateOf(clock()) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(since, lifecycle) {
         if (since == null) return@LaunchedEffect
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             while (true) {
-                now.longValue = System.currentTimeMillis()
+                now.longValue = clock()
                 delay(1_000L - now.longValue % 1_000L)
             }
         }
@@ -686,23 +890,30 @@ private fun SessionClock(since: Long?) {
 }
 
 @Composable
-private fun NewIdentityButton(readyAt: Long?, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val now = remember { mutableLongStateOf(System.currentTimeMillis()) }
+private fun NewIdentityOrb(readyAt: Long?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val clock = LocalWallClock.current
+    val now = remember { mutableLongStateOf(clock()) }
     val currentReadyAt by rememberUpdatedState(readyAt)
     LaunchedEffect(readyAt) {
-        while ((currentReadyAt ?: 0L) > System.currentTimeMillis()) {
-            now.longValue = System.currentTimeMillis()
+        while ((currentReadyAt ?: 0L) > clock()) {
+            now.longValue = clock()
             delay(250)
         }
-        now.longValue = System.currentTimeMillis()
+        now.longValue = clock()
     }
+    // Tor accepts a new identity at most every few seconds: the orb spins until it may again.
     val wait = readyAt?.let { ((it - now.longValue + 999) / 1_000).toInt() }?.takeIf { it > 0 }
-    GlassButton(onClick = onClick, enabled = wait == null, modifier = modifier) {
-        Icon(OpalIcons.Autorenew, contentDescription = null, modifier = Modifier.size(20.dp))
-        Text(
+    GlassOrbButton(
+        icon = OpalIcons.Autorenew,
+        contentDescription =
             if (wait == null) stringResource(R.string.home_new_identity)
             else stringResource(R.string.home_new_identity_wait, wait),
-            style = OpalTheme.type.bodyStrong,
-        )
-    }
+        onClick = onClick,
+        enabled = wait == null,
+        busy = wait != null,
+        modifier = modifier.testTag(NEW_IDENTITY_TAG),
+    )
 }
+
+/** Test tag of the new identity orb next to the power button. */
+const val NEW_IDENTITY_TAG = "new_identity"

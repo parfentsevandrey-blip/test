@@ -56,11 +56,13 @@ internal class CTorEngine(
         (_state.value as? EngineState.Running)?.let {
             return@withLock it
         }
-        // A previous instance must be completely gone: tor_api allows one Tor per process.
+        // A previous instance must be completely gone: tor_api allows one Tor per process. One
+        // that is still loading its cache notices its closed controller only when done (minutes
+        // on a slow device, see launch); giving up sooner means replacing the whole process.
         exited?.let { previous ->
             if (
                 !previous.isCompleted &&
-                    withTimeoutOrNull(STOP_TIMEOUT_MS) { previous.await() } == null
+                    withTimeoutOrNull(PREVIOUS_EXIT_TIMEOUT_MS) { previous.await() } == null
             ) {
                 _state.value = EngineState.Failed("previous Tor instance did not exit")
                 throw TorControlException("Previous Tor instance is still running")
@@ -251,6 +253,7 @@ internal class CTorEngine(
         private const val START_TIMEOUT_MS = 15_000L
         private const val STARTUP_COMMAND_TIMEOUT_MS = 120_000L
         private const val STOP_TIMEOUT_MS = 10_000L
+        private const val PREVIOUS_EXIT_TIMEOUT_MS = 120_000L
         private const val TOR_THREAD_STACK_BYTES = 4L * 1024 * 1024
     }
 }

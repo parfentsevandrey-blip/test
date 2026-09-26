@@ -83,7 +83,7 @@ class MainActivity : ComponentActivity() {
      * hand).
      */
     private suspend fun offerTile() {
-        if (!TunnelTileService.canRequestAdd) return
+        if (!TunnelTileService.canRequestAdd()) return
         delay(TILE_OFFER_DELAY_MS) // "Protected" first, then the question.
         if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
         TunnelTileService.requestAdd(this) {

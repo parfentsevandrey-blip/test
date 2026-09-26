@@ -110,17 +110,47 @@ class SnowflakeConfigTest {
     }
 
     @Test
+    fun `over Snowflake a stream waits out a proxy swap before Tor moves it`() {
+        // Tor's 10 s would retire every waiting circuit while a new proxy is being connected.
+        assertTrue(defaultTorrc(null).contains("CircuitStreamTimeout 30"))
+        assertTrue(defaultTorrc("ru").contains("CircuitStreamTimeout 30"))
+    }
+
+    @Test
+    fun `other transports keep Tor's stream timeouts, also after a switch`() {
+        val snowflake = bundled[TransportKind.Snowflake]
+        val obfs4 = bundled[TransportKind.Obfs4]
+        val ports = mapOf("snowflake" to 41234, "obfs4" to 41235)
+        val options = TorConfigFactory.BRIDGE_OPTIONS
+        assertTrue(
+            TorConfigFactory.bridges(snowflake, ports)
+                .toSetConf(options)
+                .contains("CircuitStreamTimeout=30")
+        )
+        for (lines in listOf(obfs4, snowflake + obfs4)) {
+            val setConf = TorConfigFactory.bridges(lines, ports).toSetConf(options)
+            // Listed without a value: Tor goes back to its own schedule.
+            assertTrue(setConf, setConf.endsWith(" CircuitStreamTimeout"))
+            assertFalse(
+                TorConfigFactory.startup(lines, ports, AppSettings(), socksPort = 41000)
+                    .render()
+                    .contains("CircuitStreamTimeout")
+            )
+        }
+    }
+
+    @Test
     fun `other countries get Tor Browser's built-in lines`() {
         assertEquals(defaultTorrc(null), defaultTorrc("de"))
         assertEquals(2, defaultTorrc("de").count { it.startsWith("Bridge snowflake ") })
     }
 
     @Test
-    fun `Snowflake mode never tears connections down on its own`() {
+    fun `Snowflake mode never races, switches bridges or restarts Tor`() {
         val policy = ModePolicy.of(ConnectionMode.Snowflake)
         assertFalse(policy.race)
         assertFalse(policy.settingsApiBeforeConnect)
-        assertFalse(policy.watchdogMayReconnect)
+        assertFalse(policy.watchdogEscalates)
         assertEquals(ConnectionMode.Snowflake, AppSettings().connectionMode)
     }
 
@@ -145,11 +175,11 @@ class SnowflakeConfigTest {
     fun `Snowflake lines are never torn down, whatever mode brought them`() {
         val snowflake = bundled[TransportKind.Snowflake]
         val obfs4 = bundled[TransportKind.Obfs4]
-        assertFalse(ModePolicy.of(ConnectionMode.Custom, snowflake).watchdogMayReconnect)
-        assertFalse(ModePolicy.of(ConnectionMode.Auto, snowflake.take(1)).watchdogMayReconnect)
+        assertFalse(ModePolicy.of(ConnectionMode.Custom, snowflake).watchdogEscalates)
+        assertFalse(ModePolicy.of(ConnectionMode.Auto, snowflake.take(1)).watchdogEscalates)
         // Auto still races; only the teardown is off while Snowflake carries the connection.
         assertTrue(ModePolicy.of(ConnectionMode.Auto, snowflake).race)
-        assertTrue(ModePolicy.of(ConnectionMode.Custom, obfs4).watchdogMayReconnect)
-        assertTrue(ModePolicy.of(ConnectionMode.Auto, snowflake + obfs4).watchdogMayReconnect)
+        assertTrue(ModePolicy.of(ConnectionMode.Custom, obfs4).watchdogEscalates)
+        assertTrue(ModePolicy.of(ConnectionMode.Auto, snowflake + obfs4).watchdogEscalates)
     }
 }

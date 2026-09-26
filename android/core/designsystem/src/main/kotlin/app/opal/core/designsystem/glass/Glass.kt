@@ -155,6 +155,7 @@ fun GlassSurface(
         if (layer == GlassLayer.Floating) it.floating else it.aurora
     }
     val baseTint = if (style.strongTint) colors.glassTintStrong else colors.glassTint
+    val light = LocalGlassLight.current
     val scope = rememberCoroutineScope()
     val reducedMotion = LocalReducedMotion.current
     val press =
@@ -201,7 +202,11 @@ fun GlassSurface(
                         )
                     }
                 },
-                highlight = { Highlight.Default.copy(alpha = if (colors.isDark) 0.55f else 0.9f) },
+                highlight = {
+                    light.highlight(
+                        Highlight.Default.copy(alpha = if (colors.isDark) 0.55f else 0.9f)
+                    )
+                },
                 shadow = {
                     Shadow(
                         radius = style.shadowRadius,

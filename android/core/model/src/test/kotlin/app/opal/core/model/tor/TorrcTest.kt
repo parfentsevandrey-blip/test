@@ -92,6 +92,14 @@ class TorrcTest {
         assertThrows(IllegalArgumentException::class.java) {
             torrc { log("notice", "file /x\nExitNodes {ru}") }
         }
+        // Tor raises anything below 10 s to 10 s with a warning; ours never asks for less.
+        assertThrows(IllegalArgumentException::class.java) { torrc { circuitStreamTimeout(5) } }
+    }
+
+    @Test
+    fun `stream timeout is set only when asked for`() {
+        assertEquals("CircuitStreamTimeout 30\n", torrc { circuitStreamTimeout(30) }.render())
+        assertEquals("", torrc { circuitStreamTimeout(null) }.render())
     }
 
     @Test

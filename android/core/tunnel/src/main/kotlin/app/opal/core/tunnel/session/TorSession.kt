@@ -654,8 +654,8 @@ internal class TorSession(
 
     private suspend fun watchdogLoop() {
         while (true) {
-            delay(2_000)
-            if (ready && !stopping) watchdogTick()
+            delay(WATCHDOG_TICK_MS)
+            if (watchdog.onTick(WATCHDOG_TICK_MS) && ready && !stopping) watchdogTick()
         }
     }
 
@@ -670,13 +670,8 @@ internal class TorSession(
             return
         }
         if (t < nextEscalationAt) return
-        if (!policy.watchdogMayReconnect) {
-            // Snowflake replaces a dead proxy by itself; a teardown would only restart its proxy
-            // search. Ask Tor for fresh circuits for new streams, nothing more.
-            nextEscalationAt = t + NEWNYM_ONLY_INTERVAL_MS
-            log.w(TAG, "Watchdog: $stall (new circuits only)")
-            runCatching { engine.signal(TorSignal.NewIdentity) }
-            watchdog.arm()
+        if (!policy.watchdogEscalates) {
+            renewDeadSnowflakeSession(t)
             return
         }
         escalation++
@@ -702,6 +697,30 @@ internal class TorSession(
         }
         watchdog.arm()
         healthySince = now()
+    }
+
+    /**
+     * Snowflake replaces a silent proxy by itself (about 20 s to notice, up to ~45 s until the next
+     * one carries data), and the circuits work again right after: a stall alone is left alone.
+     * NEWNYM would only retire those circuits, a teardown restart the proxy search.
+     *
+     * A minute without a single byte while Tor has work waiting outlasts any swap: the session
+     * behind the proxies is gone. The Snowflake server forgets a client after 4 minutes without it
+     * (a phone asleep or out of coverage), while the client keeps writing into that session for
+     * minutes more. Closing Tor's connections makes the client start a new session.
+     */
+    private suspend fun renewDeadSnowflakeSession(t: Long) {
+        val stall = watchdog.deadSession() ?: return
+        nextEscalationAt = t + SNOWFLAKE_RENEW_INTERVAL_MS
+        log.w(
+            TAG,
+            "Watchdog: $stall, nothing read for ${watchdog.silentMillis() / 1000}s: " +
+                "new Snowflake session",
+        )
+        listener.onProblem(TunnelProblem.ConnectionFrozen)
+        onNotReady(ReconnectReason.Stalled)
+        toggleNetwork()
+        watchdog.arm()
     }
 
     /** Stops trusting the current bridge and races all other candidates. */
@@ -896,7 +915,8 @@ internal class TorSession(
         const val EXPAND_AFTER_MS = 10_000L
         /** First bootstrap through Snowflake often takes 1–2 minutes: hint only after that. */
         const val SLOW_HINT_MS = 120_000L
-        const val NEWNYM_ONLY_INTERVAL_MS = 2 * 60_000L
+        const val SNOWFLAKE_RENEW_INTERVAL_MS = 3 * 60_000L
+        const val WATCHDOG_TICK_MS = 2_000L
         const val GIVE_UP_AFTER_QUIET_MS = 60_000L
         const val MIN_ATTEMPT_MS = 90_000L
         const val RETRY_BASE_MS = 30_000L

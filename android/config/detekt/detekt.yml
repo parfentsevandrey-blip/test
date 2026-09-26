@@ -95,6 +95,9 @@ Compose:
       - LocalScreenCornerRadius
       - LocalSheetHost
       - LocalToastState
+      - LocalBottomAccessory
+      - LocalGlassLight
+      - LocalWallClock
   ParameterNaming:
     active: true
   UnstableCollections:

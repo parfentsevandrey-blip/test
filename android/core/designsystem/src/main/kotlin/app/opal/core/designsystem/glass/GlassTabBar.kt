@@ -284,6 +284,7 @@ private fun GlassLens(
     veil: Color,
     reduced: Boolean,
 ) {
+    val light = LocalGlassLight.current
     Box(Modifier.fillMaxSize()) {
         GlassSurface(
             shape = Capsule(),
@@ -325,7 +326,9 @@ private fun GlassLens(
                             )
                         }
                     },
-                    highlight = { Highlight.Default.copy(alpha = tabLens.pressProgress) },
+                    highlight = {
+                        light.highlight(Highlight.Default.copy(alpha = tabLens.pressProgress))
+                    },
                     shadow = { Shadow(alpha = tabLens.pressProgress) },
                     innerShadow = {
                         InnerShadow(

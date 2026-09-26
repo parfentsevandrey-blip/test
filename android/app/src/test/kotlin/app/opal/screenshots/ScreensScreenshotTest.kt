@@ -3,6 +3,7 @@ package app.opal.screenshots
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.lerp
@@ -14,6 +15,7 @@ import androidx.compose.ui.test.performTouchInput
 import app.opal.core.designsystem.component.SheetHost
 import app.opal.core.designsystem.glass.ToastState
 import app.opal.core.designsystem.theme.AuroraMood
+import app.opal.core.designsystem.theme.LocalWallClock
 import app.opal.core.designsystem.theme.OpalTheme
 import app.opal.core.model.bridge.TransportKind
 import app.opal.core.model.settings.AppLanguage
@@ -97,17 +99,19 @@ class ScreensScreenshotTest(private val variant: Variant) {
     ) {
         compose.setContent {
             OpalTheme(dark = variant.dark, simplifiedGraphics = variant.simplified) {
-                OpalScaffold(
-                    mood = mood,
-                    tabIndex = tab,
-                    compact = false,
-                    onSelectTab = {},
-                    onScroll = {},
-                    sheets = remember { SheetHost() },
-                    toast = remember { ToastState() },
-                    animateAurora = false,
-                    content = content,
-                )
+                CompositionLocalProvider(LocalWallClock provides { NOW }) {
+                    OpalScaffold(
+                        mood = mood,
+                        tabIndex = tab,
+                        compact = false,
+                        onSelectTab = {},
+                        onScroll = {},
+                        sheets = remember { SheetHost() },
+                        toast = remember { ToastState() },
+                        animateAurora = false,
+                        content = content,
+                    )
+                }
             }
         }
         if (touch != null) {
@@ -221,7 +225,7 @@ class ScreensScreenshotTest(private val variant: Variant) {
                                     ),
                                 )
                             ),
-                        connectedSince = System.currentTimeMillis() - 754_000,
+                        connectedSince = NOW - 754_000,
                         network = NetworkKind.Wifi,
                     ),
                 down = down.toImmutableList(),
@@ -384,5 +388,8 @@ class ScreensScreenshotTest(private val variant: Variant) {
         fun variants() = Variant.entries.map { arrayOf<Any>(it) }
 
         private val TAB_TAGS = listOf("tab_home", "tab_apps", "tab_connection", "tab_settings")
+
+        /** The clock of every screenshot: tickers show the same time however slow the run is. */
+        private const val NOW = 1_790_000_000_000L
     }
 }

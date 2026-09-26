@@ -2,6 +2,7 @@
 <resources>
     <string name="home_action_connect">Подключить</string>
     <string name="home_action_disconnect">Отключить</string>
+    <string name="home_action_stopping">Отключение…</string>
 
     <string name="home_status_off">Не защищено</string>
     <string name="home_status_off_cold">Весь трафик пойдёт через сеть Tor</string>

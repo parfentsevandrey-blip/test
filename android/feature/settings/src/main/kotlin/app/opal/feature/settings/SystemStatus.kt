@@ -48,7 +48,7 @@ object SystemIntents {
                     ?.isIgnoringBatteryOptimizations(context.packageName) == true,
             notificationsEnabled =
                 NotificationManagerCompat.from(context).areNotificationsEnabled(),
-            canRequestTile = TunnelTileService.canRequestAdd,
+            canRequestTile = TunnelTileService.canRequestAdd(),
         )
 
     fun openVpnSettings(context: Context) = start(context, Intent(Settings.ACTION_VPN_SETTINGS))

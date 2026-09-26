@@ -1,6 +1,8 @@
 package app.opal.core.tunnel
 
+import android.app.AlarmManager
 import android.app.ForegroundServiceStartNotAllowedException
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -14,6 +16,7 @@ import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.os.PowerManager
 import android.os.Process
+import android.os.SystemClock
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import app.opal.core.data.AppLocaleStore
@@ -126,6 +129,15 @@ class TunnelService : VpnService() {
                 }
             ACTION_CONNECT,
             SERVICE_INTERFACE -> startTunnel()
+            ACTION_RESTORE -> {
+                // Our own restart after the process was replaced (see restartProcess). Started as
+                // a foreground service, so foreground before anything else.
+                goForeground(controller.snapshot.value)
+                scope.launch {
+                    if (runtime.memory.current().vpnWanted) startTunnel()
+                    else updateForeground(controller.holds.value)
+                }
+            }
             null -> {
                 // Restarted by the system (START_STICKY / always-on): restore the user's intent.
                 scope.launch {
@@ -187,11 +199,32 @@ class TunnelService : VpnService() {
                 }
 
             override fun restartProcess() {
-                // START_STICKY (and always-on, if enabled) bring the service back; vpnWanted
-                // decides.
+                // START_STICKY is not enough: with the app in the background Android 17 did not
+                // schedule the restart at all and a minute later stopped the service as idle — the
+                // VPN was simply gone. So the service asks for its own restart first (the VPN
+                // consent lets the app start its foreground service from the background);
+                // vpnWanted decides what it restores.
+                scheduleRestore()
                 Process.killProcess(Process.myPid())
             }
         }
+
+    private fun scheduleRestore() {
+        val alarms = getSystemService(AlarmManager::class.java) ?: return
+        val restore =
+            PendingIntent.getForegroundService(
+                this,
+                0,
+                Intent(this, TunnelService::class.java).setAction(ACTION_RESTORE),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+        // Inexact, so no exact-alarm permission; "while idle" so Doze does not hold it back.
+        alarms.setAndAllowWhileIdle(
+            AlarmManager.ELAPSED_REALTIME_WAKEUP,
+            SystemClock.elapsedRealtime() + RESTORE_DELAY_MS,
+            restore,
+        )
+    }
 
     private fun establishInterface(spec: VpnSpec): ParcelFileDescriptor? {
         if (prepare(this) != null) return null
@@ -319,12 +352,15 @@ class TunnelService : VpnService() {
         private const val TAG = "service"
         private const val FOREGROUND_LEGACY = -1
         private val SPEED_REFRESH = 1.seconds
+        private const val RESTORE_DELAY_MS = 2_000L
 
         const val ACTION_CONNECT = "app.opal.tunnel.CONNECT"
         const val ACTION_DISCONNECT = "app.opal.tunnel.DISCONNECT"
         const val ACTION_RECONNECT = "app.opal.tunnel.RECONNECT"
         const val ACTION_NOTIFICATION_DISMISSED = "app.opal.tunnel.NOTIFICATION_DISMISSED"
         const val ACTION_STOP_STANDBY = "app.opal.tunnel.STOP_STANDBY"
+        /** The service's own restart after replacing its process (see restartProcess). */
+        const val ACTION_RESTORE = "app.opal.tunnel.RESTORE"
         /** Binding action for the AIDL control interface (anything but SERVICE_INTERFACE). */
         const val ACTION_BIND_CONTROL = "app.opal.tunnel.BIND_CONTROL"
 

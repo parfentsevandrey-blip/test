@@ -26,6 +26,7 @@ enum class TorOption(val key: String, val isList: Boolean = false) {
     SafeLogging("SafeLogging"),
     AvoidDiskWrites("AvoidDiskWrites"),
     DormantCanceledByStartup("DormantCanceledByStartup"),
+    CircuitStreamTimeout("CircuitStreamTimeout"),
 }
 
 /** SOCKS listener flags that do not weaken Tor's default stream isolation. */
@@ -133,6 +134,17 @@ class TorrcBuilder internal constructor() {
     }
 
     fun log(level: String, destination: String) = set(TorOption.Log, "$level $destination")
+
+    /**
+     * Seconds a stream waits for its circuit to answer before Tor detaches it, stops using that
+     * circuit for new streams and tries another; `null` keeps Tor's schedule (10 s, 10 s, then 15
+     * s). Changes when a stream moves on, not which relays are chosen. Tor's minimum is 10 s.
+     */
+    fun circuitStreamTimeout(seconds: Int?) {
+        if (seconds == null) return
+        require(seconds in 10..600) { "Bad CircuitStreamTimeout $seconds" }
+        set(TorOption.CircuitStreamTimeout, seconds.toString())
+    }
 
     /** Whether starting Tor wakes it from dormant mode (default 0 would keep it asleep). */
     fun dormantCanceledByStartup() = set(TorOption.DormantCanceledByStartup, "1")

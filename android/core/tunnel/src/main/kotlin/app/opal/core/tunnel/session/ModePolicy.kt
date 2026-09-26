@@ -23,13 +23,14 @@ internal data class ModePolicy(
     /**
      * On a detected freeze the watchdog may tear connections down, switch bridges and restart Tor.
      * Useful against DPI freezing TCP sessions (obfs4, WebTunnel, meek); harmful for Snowflake,
-     * which replaces a dead proxy by itself.
+     * which replaces a dead proxy by itself. Without it the watchdog only renews a Snowflake
+     * session that has been silent far longer than a proxy swap takes (see TorSession).
      */
-    val watchdogMayReconnect: Boolean,
+    val watchdogEscalates: Boolean,
 ) {
     companion object {
         private val SNOWFLAKE =
-            ModePolicy(race = false, settingsApiBeforeConnect = false, watchdogMayReconnect = false)
+            ModePolicy(race = false, settingsApiBeforeConnect = false, watchdogEscalates = false)
 
         /**
          * The policy for [mode] with the bridges Tor currently uses. Snowflake lines are left alone
@@ -38,9 +39,7 @@ internal data class ModePolicy(
          */
         fun of(mode: ConnectionMode, active: List<BridgeLine>): ModePolicy {
             val base = of(mode)
-            val snowflakeOnly =
-                active.isNotEmpty() && active.all { it.transport == TransportKind.Snowflake }
-            return if (snowflakeOnly) base.copy(watchdogMayReconnect = false) else base
+            return if (active.isSnowflakeOnly()) base.copy(watchdogEscalates = false) else base
         }
 
         fun of(mode: ConnectionMode): ModePolicy =
@@ -50,7 +49,7 @@ internal data class ModePolicy(
                     ModePolicy(
                         race = true,
                         settingsApiBeforeConnect = true,
-                        watchdogMayReconnect = true,
+                        watchdogEscalates = true,
                     )
                 // Public obfs4 bridges are blocked first; the API hands out private ones. WebTunnel
                 // bridges exist only in the API.
@@ -59,15 +58,19 @@ internal data class ModePolicy(
                     ModePolicy(
                         race = false,
                         settingsApiBeforeConnect = true,
-                        watchdogMayReconnect = true,
+                        watchdogEscalates = true,
                     )
                 ConnectionMode.Meek,
                 ConnectionMode.Custom ->
                     ModePolicy(
                         race = false,
                         settingsApiBeforeConnect = false,
-                        watchdogMayReconnect = true,
+                        watchdogEscalates = true,
                     )
             }
     }
 }
+
+/** Tor would use Snowflake and nothing else. */
+internal fun List<BridgeLine>.isSnowflakeOnly(): Boolean =
+    isNotEmpty() && all { it.transport == TransportKind.Snowflake }

@@ -32,6 +32,7 @@ import app.opal.core.tunnel.util.LogBuffer
 import java.io.IOException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -46,6 +47,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /** What the VPN service does for the controller (the controller never touches Android services). */
@@ -246,7 +248,11 @@ internal class TunnelController(
         prewarmTimeout?.cancel()
         prewarmTimeout = scope.launch {
             delay(timeoutMillis)
-            ops.withLock { release(Hold.Prewarm) }
+            ops.withLock {
+                // This very job: release() must not cancel it halfway through stopping Tor.
+                prewarmTimeout = null
+                release(Hold.Prewarm)
+            }
         }
     }
 
@@ -391,13 +397,19 @@ internal class TunnelController(
 
     private suspend fun stopSession() {
         val s = session ?: return
-        // A connected Tor keeps its directory current by itself; stopping now leaves the freshest
-        // possible cache behind, so the background refresh can skip the next cycle.
-        if (machine.value.torReady) memoryRepo.update { it.copy(lastDirectoryRefreshAt = now()) }
-        session = null
-        socksPort = null
-        hev.stop()
-        s.stop()
+        // Once begun, the teardown finishes even if the caller is cancelled meanwhile. Otherwise
+        // the session is dropped here but keeps running, and the next one works on the same Tor
+        // next to it: two watchdogs, runtime options and traffic counts for one connection.
+        withContext(NonCancellable) {
+            // A connected Tor keeps its directory current by itself; stopping now leaves the
+            // freshest possible cache behind, so the background refresh can skip the next cycle.
+            if (machine.value.torReady)
+                memoryRepo.update { it.copy(lastDirectoryRefreshAt = now()) }
+            session = null
+            socksPort = null
+            hev.stop()
+            s.stop()
+        }
         details.update {
             Details(network = it.network, exitCountry = it.exitCountry, alwaysOn = it.alwaysOn)
         }

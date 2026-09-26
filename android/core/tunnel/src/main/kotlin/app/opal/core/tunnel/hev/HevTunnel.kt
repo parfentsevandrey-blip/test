@@ -75,11 +75,26 @@ internal class HevTunnel(context: Context) {
         const val MTU = 8500
 
         /**
-         * hev waits this long for the SOCKS CONNECT reply, i.e. until Tor reached the destination
-         * through an exit. Over Snowflake that often takes longer than hev's 10 s default; Tor
-         * itself retries on other circuits for up to SocksTimeout (120 s), so we match it.
+         * Only hev's TCP connect to Tor's SOCKS port, which is local and immediate (hev's default
+         * is 10 s). The wait for Tor's CONNECT reply is under [TCP_IDLE_TIMEOUT_MS]: hev arms that
+         * timer for the SOCKS handshake too.
          */
         const val CONNECT_TIMEOUT_MS = 120_000
+
+        /**
+         * hev closes a TCP connection that moved no byte either way for this long (a timer per wait
+         * for I/O: the SOCKS handshake, then the data). Its default of 5 minutes closed quiet
+         * long-lived connections — push services, messengers between their pings — and every
+         * reconnect costs a new Tor stream and TLS handshake over a slow first hop. Connections
+         * that end are closed by the app or by Tor, not by this timer.
+         */
+        const val TCP_IDLE_TIMEOUT_MS = 30 * 60_000
+
+        /**
+         * Bounds the memory of idle connections kept that long: past it hev closes the one that has
+         * been quiet the longest (hev's default is unlimited).
+         */
+        const val MAX_SESSIONS = 1024
 
         internal fun config(socksPort: Int, mtu: Int, debug: Boolean): String =
             """
@@ -97,6 +112,8 @@ internal class HevTunnel(context: Context) {
             |  cache-size: 10000
             |misc:
             |  connect-timeout: $CONNECT_TIMEOUT_MS
+            |  tcp-read-write-timeout: $TCP_IDLE_TIMEOUT_MS
+            |  max-session-count: $MAX_SESSIONS
             |  log-level: ${if (debug) "warn" else "error"}
             |  log-file: ${if (debug) "stderr" else "null"}
             |"""

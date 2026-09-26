@@ -4,7 +4,9 @@ import app.opal.core.model.tor.CircuitStatus
 import app.opal.core.model.tor.StreamStatus
 import app.opal.core.model.tor.TorEvent
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WatchdogTest {
@@ -63,6 +65,65 @@ class WatchdogTest {
             dog.onEvent(stream("t$it", StreamStatus.FAILED, "TIMEOUT"))
         }
         assertEquals(Watchdog.Stall.StreamsTimingOut, dog.evaluate())
+    }
+
+    @Test
+    fun `a Snowflake proxy swap is not a dead session`() {
+        dog.onEvent(stream("1", StreamStatus.SENTCONNECT))
+        time += 46_000
+        // A freeze, but Snowflake is still replacing the silent proxy.
+        assertEquals(Watchdog.Stall.Frozen, dog.evaluate())
+        assertNull(dog.deadSession())
+        // The new proxy carries data again.
+        time += 4_000
+        dog.onEvent(TorEvent.Bandwidth(20_000, 1_000))
+        time += 30_000
+        assertNull(dog.deadSession())
+    }
+
+    @Test
+    fun `a minute of silence with work waiting is a dead session`() {
+        dog.onEvent(stream("1", StreamStatus.SENTCONNECT))
+        time += 59_000
+        assertNull(dog.deadSession())
+        time += 1_000
+        assertEquals(Watchdog.Stall.Frozen, dog.deadSession())
+        assertEquals(60_000L, dog.silentMillis())
+    }
+
+    @Test
+    fun `failures while the bridge still talks are no dead session`() {
+        time += 61_000
+        repeat(4) {
+            time += 1_000
+            dog.onEvent(TorEvent.Bandwidth(600, 0))
+            dog.onEvent(circuit(CircuitStatus.FAILED, "TIMEOUT"))
+        }
+        assertEquals(Watchdog.Stall.CircuitsFailing, dog.evaluate())
+        assertNull(dog.deadSession())
+    }
+
+    @Test
+    fun `silence without work waiting is no dead session`() {
+        // A phone nobody uses: nothing to recover, and the next stream shows whether it works.
+        time += 10 * 60_000
+        assertNull(dog.deadSession())
+    }
+
+    @Test
+    fun `time asleep is not silence`() {
+        dog.onEvent(stream("1", StreamStatus.SENTCONNECT))
+        assertTrue(dog.onTick(2_000))
+        // Doze: the next tick comes five minutes later, with the stream still waiting.
+        time += 5 * 60_000
+        assertFalse(dog.onTick(2_000))
+        assertNull(dog.deadSession())
+        // From here on it counts again.
+        time += 2_000
+        assertTrue(dog.onTick(2_000))
+        dog.onEvent(stream("2", StreamStatus.SENTCONNECT))
+        time += 60_000
+        assertEquals(Watchdog.Stall.Frozen, dog.deadSession())
     }
 
     @Test

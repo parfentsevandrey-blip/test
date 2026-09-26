@@ -3,8 +3,12 @@ package app.opal.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
@@ -12,6 +16,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -57,10 +62,13 @@ import app.opal.core.designsystem.aurora.AuroraBackground
 import app.opal.core.designsystem.component.LocalSheetHost
 import app.opal.core.designsystem.component.LocalToastState
 import app.opal.core.designsystem.component.SheetHost
+import app.opal.core.designsystem.glass.ACTION_HEIGHT
+import app.opal.core.designsystem.glass.BottomAccessoryHost
 import app.opal.core.designsystem.glass.GlassQuality
 import app.opal.core.designsystem.glass.GlassSheet
 import app.opal.core.designsystem.glass.GlassTabBar
 import app.opal.core.designsystem.glass.GlassToast
+import app.opal.core.designsystem.glass.LocalBottomAccessory
 import app.opal.core.designsystem.glass.LocalGlassBackdrops
 import app.opal.core.designsystem.glass.LocalGlassQuality
 import app.opal.core.designsystem.glass.TabItem
@@ -277,7 +285,9 @@ fun OpalScaffold(
     val backdrops = rememberGlassBackdrops(auroraLayer, contentLayer)
     val quality = LocalGlassQuality.current
     val showTabs = tabIndex != null
-    val padding = contentPadding(showTabs)
+    val accessory = remember { BottomAccessoryHost() }
+    val showAccessory = showTabs && accessory.content != null
+    val padding = contentPadding(showTabs, showAccessory)
     val currentOnScroll by rememberUpdatedState(onScroll)
     val scrollWatcher = remember {
         object : NestedScrollConnection {
@@ -292,6 +302,7 @@ fun OpalScaffold(
         LocalGlassBackdrops provides backdrops,
         LocalSheetHost provides sheets,
         LocalToastState provides toast,
+        LocalBottomAccessory provides accessory,
     ) {
         Box(
             modifier.fillMaxSize().background(OpalTheme.colors.background).semantics {
@@ -308,60 +319,98 @@ fun OpalScaffold(
                 content(padding)
             }
 
-            AnimatedVisibility(
-                visible = showTabs,
-                enter = slideInVertically { it } + fadeIn(),
-                exit = slideOutVertically { it } + fadeOut(),
-                modifier = Modifier.align(Alignment.BottomCenter),
+            Column(
+                Modifier.align(Alignment.BottomCenter),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                val items =
-                    persistentListOf(
-                        TabItem(
-                            stringResource(R.string.tab_home),
-                            OpalIcons.Home,
-                            OpalIcons.HomeFilled,
-                            testTag = "tab_home",
-                        ),
-                        TabItem(
-                            stringResource(R.string.tab_apps),
-                            OpalIcons.Apps,
-                            OpalIcons.AppsFilled,
-                            testTag = "tab_apps",
-                        ),
-                        TabItem(
-                            stringResource(R.string.tab_connection),
-                            OpalIcons.Route,
-                            OpalIcons.RouteFilled,
-                            testTag = "tab_connection",
-                        ),
-                        TabItem(
-                            stringResource(R.string.tab_settings),
-                            OpalIcons.Settings,
-                            OpalIcons.SettingsFilled,
-                            testTag = "tab_settings",
-                        ),
+                AccessoryLayer(accessory, visible = showAccessory)
+                AnimatedVisibility(
+                    visible = showTabs,
+                    enter = slideInVertically { it } + fadeIn(),
+                    exit = slideOutVertically { it } + fadeOut(),
+                ) {
+                    val items =
+                        persistentListOf(
+                            TabItem(
+                                stringResource(R.string.tab_home),
+                                OpalIcons.Home,
+                                OpalIcons.HomeFilled,
+                                testTag = "tab_home",
+                            ),
+                            TabItem(
+                                stringResource(R.string.tab_apps),
+                                OpalIcons.Apps,
+                                OpalIcons.AppsFilled,
+                                testTag = "tab_apps",
+                            ),
+                            TabItem(
+                                stringResource(R.string.tab_connection),
+                                OpalIcons.Route,
+                                OpalIcons.RouteFilled,
+                                testTag = "tab_connection",
+                            ),
+                            TabItem(
+                                stringResource(R.string.tab_settings),
+                                OpalIcons.Settings,
+                                OpalIcons.SettingsFilled,
+                                testTag = "tab_settings",
+                            ),
+                        )
+                    GlassTabBar(
+                        items = items,
+                        selectedIndex = tabIndex ?: 0,
+                        onSelect = onSelectTab,
+                        compact = compact,
+                        modifier =
+                            Modifier.navigationBarsPadding()
+                                .padding(horizontal = 20.dp, vertical = TAB_BAR_MARGIN)
+                                .widthIn(max = 440.dp)
+                                .fillMaxWidth(),
                     )
-                GlassTabBar(
-                    items = items,
-                    selectedIndex = tabIndex ?: 0,
-                    onSelect = onSelectTab,
-                    compact = compact,
-                    modifier =
-                        Modifier.navigationBarsPadding()
-                            .padding(horizontal = 20.dp, vertical = TAB_BAR_MARGIN)
-                            .widthIn(max = 440.dp)
-                            .fillMaxWidth(),
-                )
+                }
             }
             GlassToast(
                 toast,
                 Modifier.align(Alignment.BottomCenter)
                     .navigationBarsPadding()
                     .padding(
-                        bottom = if (showTabs) TAB_BAR_HEIGHT + TAB_BAR_MARGIN * 2 + 8.dp else 24.dp
+                        bottom =
+                            if (showTabs) {
+                                TAB_BAR_HEIGHT +
+                                    TAB_BAR_MARGIN * 2 +
+                                    8.dp +
+                                    if (showAccessory) ACTION_HEIGHT else 0.dp
+                            } else {
+                                24.dp
+                            }
                     ),
             )
             SheetLayer(sheets)
+        }
+    }
+}
+
+/**
+ * The screen's bottom accessory above the tab bar. The last content is kept while it animates out,
+ * so leaving the screen does not cut it off mid-animation.
+ */
+@Composable
+private fun AccessoryLayer(host: BottomAccessoryHost, visible: Boolean) {
+    var last by remember { mutableStateOf(host.content) }
+    host.content?.let { last = it }
+    AnimatedVisibility(
+        visible = visible,
+        enter =
+            fadeIn() +
+                scaleIn(initialScale = 0.92f) +
+                expandVertically(expandFrom = Alignment.Bottom),
+        exit =
+            fadeOut() +
+                scaleOut(targetScale = 0.92f) +
+                shrinkVertically(shrinkTowards = Alignment.Bottom),
+    ) {
+        Box(Modifier.padding(horizontal = 20.dp).widthIn(max = 440.dp).fillMaxWidth()) {
+            last?.invoke()
         }
     }
 }
@@ -422,10 +471,12 @@ private fun moodFor(state: TunnelState): AuroraMood =
     }
 
 @Composable
-private fun contentPadding(tabBar: Boolean): PaddingValues {
+private fun contentPadding(tabBar: Boolean, accessory: Boolean): PaddingValues {
     val insets = WindowInsets.systemBars.union(WindowInsets.displayCutout).asPaddingValues()
     val direction = LocalLayoutDirection.current
-    val bottomBar = if (tabBar) TAB_BAR_HEIGHT + TAB_BAR_MARGIN * 2 else 0.dp
+    val bottomBar =
+        if (tabBar) TAB_BAR_HEIGHT + TAB_BAR_MARGIN * 2 + if (accessory) ACTION_HEIGHT else 0.dp
+        else 0.dp
     return PaddingValues(
         start = insets.calculateStartPadding(direction),
         end = insets.calculateEndPadding(direction),
