@@ -119,12 +119,38 @@ class BridgeCatalogTest {
                 circumvention =
                     CircumventionCache(
                         fetchedAt = 1,
+                        country = "ru",
                         settings = listOf(BridgeSet("snowflake", "bridgedb", listOf(apiLine))),
                     )
             )
         val lines =
             BridgeCatalog(bundled, regional, { "ru" }).candidates(memory)[TransportKind.Snowflake]!!
         assertEquals(listOf(apiLine), lines.map { it.raw })
+    }
+
+    @Test
+    fun `a cached answer that is not for the user's country keeps the regional Snowflake set`() {
+        // What /defaults serves when the server cannot tell the country (checked 2026-09-26):
+        // the built-in lines, with fronts that work poorly in Russia. 1.0.0 cached it as is.
+        val builtinLines = bundled[TransportKind.Snowflake].map { it.raw }
+        val builtinSets = listOf(BridgeSet("snowflake", "builtin", builtinLines))
+        val ru = BridgeCatalog(bundled, regional, { "ru" })
+        for (answered in listOf(null, "us")) {
+            val memory =
+                TunnelMemory(
+                    circumvention =
+                        CircumventionCache(
+                            fetchedAt = 1,
+                            country = answered,
+                            settings = builtinSets,
+                        )
+                )
+            assertEquals(
+                "cached answer for $answered",
+                regional.getValue("ru"),
+                ru.candidates(memory)[TransportKind.Snowflake],
+            )
+        }
     }
 
     @Test

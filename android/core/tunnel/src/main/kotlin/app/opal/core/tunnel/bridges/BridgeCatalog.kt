@@ -4,6 +4,7 @@ import app.opal.core.model.bridge.BridgeLine
 import app.opal.core.model.bridge.BuiltinBridges
 import app.opal.core.model.bridge.TransportKind
 import app.opal.core.model.settings.AppSettings
+import app.opal.core.model.settings.CircumventionCache
 import app.opal.core.model.settings.TunnelMemory
 
 /**
@@ -59,19 +60,32 @@ internal class BridgeCatalog(
      * bridge per address.
      */
     fun snowflake(memory: TunnelMemory): List<BridgeLine> {
+        val country = country()
         val api =
             memory.circumvention
+                ?.takeIf { it.isFor(country) }
                 ?.settings
                 .orEmpty()
                 .filter { it.type == TransportKind.Snowflake.ptName }
                 .flatMap { set -> set.lines.mapNotNull(BridgeLine::parseOrNull) }
                 .filter { it.transport == TransportKind.Snowflake }
         val lines =
-            api.ifEmpty { country()?.let { regionalSnowflake[it] }.orEmpty() }
+            api.ifEmpty { country?.let { regionalSnowflake[it] }.orEmpty() }
                 .ifEmpty { builtin(memory)[TransportKind.Snowflake] }
                 .distinctBy { it.raw }
                 .take(SNOWFLAKE_CAP)
         return if (breakSnowflake()) lines.map(::sabotaged) else lines
+    }
+
+    /**
+     * Whether a cached Settings API answer holds the Snowflake set for [country]. An answer without
+     * a country is the `/defaults` fallback (the server could not tell the country), whose
+     * Snowflake lines are the built-in ones, and an answer for another country is stale after
+     * travelling: neither may replace the regional set.
+     */
+    private fun CircumventionCache.isFor(country: String?): Boolean {
+        val answered = this.country ?: return false
+        return country == null || answered.equals(country, ignoreCase = true)
     }
 
     /**
