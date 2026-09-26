@@ -9,9 +9,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import app.opal.core.data.AppLocaleStore
@@ -19,9 +21,12 @@ import app.opal.core.designsystem.theme.OpalTheme
 import app.opal.core.model.settings.AppLanguage
 import app.opal.core.model.settings.AppSettings
 import app.opal.core.model.settings.ThemeMode
+import app.opal.core.model.tunnel.TunnelState
+import app.opal.core.tunnel.TunnelTileService
 import app.opal.feature.settings.SystemIntents
 import app.opal.ui.OpalRoot
 import app.opal.ui.ShellHost
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -58,6 +63,10 @@ class MainActivity : ComponentActivity() {
                 enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
                 onDispose {}
             }
+            val connected = snapshot.state == TunnelState.Connected
+            LaunchedEffect(connected, settings.tileOffered) {
+                if (connected && !settings.tileOffered) offerTile()
+            }
             OpalTheme(dark = dark, simplifiedGraphics = settings.simplifiedGraphics) {
                 OpalRoot(
                     startWithOnboarding = !first.onboardingCompleted,
@@ -65,6 +74,20 @@ class MainActivity : ComponentActivity() {
                     host = shellHost,
                 )
             }
+        }
+    }
+
+    /**
+     * The first connection is when the Quick Settings tile becomes useful: offer it once through
+     * the system dialog (Android 13+; below that the settings screen explains how to add it by
+     * hand).
+     */
+    private suspend fun offerTile() {
+        if (!TunnelTileService.canRequestAdd) return
+        delay(TILE_OFFER_DELAY_MS) // "Protected" first, then the question.
+        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
+        TunnelTileService.requestAdd(this) {
+            lifecycleScope.launch { AppGraph.settings.update { s -> s.copy(tileOffered = true) } }
         }
     }
 
@@ -118,4 +141,8 @@ class MainActivity : ComponentActivity() {
             override fun isIgnoringBatteryOptimizations(): Boolean =
                 SystemIntents.read(this@MainActivity).ignoringBatteryOptimizations
         }
+
+    private companion object {
+        const val TILE_OFFER_DELAY_MS = 1_500L
+    }
 }

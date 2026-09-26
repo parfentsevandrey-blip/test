@@ -8,7 +8,7 @@ import app.opal.core.tunnel.pt.Transports
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -80,8 +80,10 @@ internal class MoatClient(private val transports: Transports) {
             throw MoatException("Bad settings response", e)
         }
 
+    // A timeout is a failure (MoatException), not a cancellation: callers rethrow cancellations,
+    // and a slow Settings API must end up in "unreachable", not end the caller silently.
     private suspend fun post(route: Route, endpoint: String, json: String): String =
-        withTimeout(REQUEST_TIMEOUT_MS) {
+        withTimeoutOrNull(REQUEST_TIMEOUT_MS) {
             runInterruptible(Dispatchers.IO) {
                 val http =
                     when (route) {
@@ -107,7 +109,7 @@ internal class MoatClient(private val transports: Transports) {
                     throw MoatException("HTTP ${response.status} from $endpoint")
                 response.body
             }
-        }
+        } ?: throw MoatException("No answer from $endpoint within ${REQUEST_TIMEOUT_MS / 1000} s")
 
     private companion object {
         const val MEEK = "meek_lite"

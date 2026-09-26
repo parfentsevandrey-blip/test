@@ -16,7 +16,7 @@
     <string name="notif_stopping">Отключение…</string>
     <string name="notif_error">Туннель остановлен</string>
     <string name="notif_action_disconnect">Отключить</string>
-    <string name="notif_action_new_identity">Новая личность</string>
+    <string name="notif_action_reconnect">Переподключить</string>
     <string name="notif_action_connect">Подключить</string>
     <string name="notif_action_turn_off">Выключить Tor</string>
     <string name="notif_speed">↓ %1$s · ↑ %2$s</string>

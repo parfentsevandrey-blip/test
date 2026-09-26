@@ -23,6 +23,14 @@ class Haptics(private val view: View) {
         )
     }
 
+    /** The lightest tick: the tab bar lens crossing into another tab while dragged. */
+    fun tick() {
+        view.performHapticFeedback(
+            if (Build.VERSION.SDK_INT >= 34) HapticFeedbackConstants.SEGMENT_FREQUENT_TICK
+            else HapticFeedbackConstants.CLOCK_TICK
+        )
+    }
+
     /** Connection established: a soft rising "click-tick". */
     fun connected() {
         if (

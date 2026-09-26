@@ -24,6 +24,7 @@
     <string name="home_reason_circuit_lost">Цепочка потеряна — строим новую</string>
     <string name="home_reason_transport_switch">Пробуем другой транспорт</string>
     <string name="home_reason_restart">Перезапуск Tor</string>
+    <string name="home_reason_user">Переподключаемся по вашему запросу</string>
 
     <string name="home_error_permission">Нужно разрешение на VPN — нажмите, чтобы выдать</string>
     <string name="home_error_revoked">VPN отключён: его забрало другое приложение или система</string>

@@ -20,7 +20,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import org.torproject.jni.TorService
 
@@ -118,7 +117,10 @@ internal class CTorEngine(
             )
         thread.start()
 
-        val fd = withTimeout(START_TIMEOUT_MS) { fdReady.await() }
+        // A failure, not a cancellation (see awaitReply): the caller must learn that Tor is stuck.
+        val fd =
+            withTimeoutOrNull(START_TIMEOUT_MS) { fdReady.await() }
+                ?: throw TorControlException("Tor did not open its control socket in time")
         val client = ControlClient.open(fd, scope)
         control = client
         jobs =

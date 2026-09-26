@@ -274,6 +274,22 @@ internal class TunnelController(
 
     suspend fun newIdentity(): Long? = session?.newIdentity()
 
+    /**
+     * The user asked to reconnect (notification action): a fresh Tor session, with new transports,
+     * a new Snowflake proxy and new circuits. The VPN interface stays up meanwhile, so apps'
+     * connections wait inside the tunnel instead of going around it.
+     */
+    suspend fun reconnect() = ops.withLock {
+        val state = machine.value.state
+        if (tun == null || !state.isTunnelActive || state == TunnelState.WaitingForNetwork) {
+            return@withLock
+        }
+        log.i(TAG, "Reconnect requested")
+        stopSession()
+        dispatch(ConnectionEvent.Reconnect)
+        ensureSession()
+    }
+
     fun exportDiagnostics(): String = buildString {
         appendLine("state: ${snapshot.value.state}")
         appendLine("holds: ${_holds.value}")

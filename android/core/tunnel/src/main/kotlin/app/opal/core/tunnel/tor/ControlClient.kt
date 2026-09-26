@@ -20,6 +20,7 @@ import java.io.OutputStream
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
@@ -29,7 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 
 class TorControlException(message: String, val reply: ControlReply? = null) : IOException(message)
 
@@ -109,7 +110,7 @@ private constructor(
                 output.flush()
             }
         }
-        val reply = withTimeout(timeoutMillis) { waiter.await() }
+        val reply = awaitReply(waiter, command, timeoutMillis)
         if (!reply.isSuccess) throw TorControlException("${reply.code} ${reply.message}", reply)
         return reply
     }
@@ -161,3 +162,20 @@ private constructor(
         }
     }
 }
+
+/**
+ * Waits for the reply to [command]. A timeout is a failure of Tor, not a cancellation:
+ * withTimeout's TimeoutCancellationException is a CancellationException, and every caller rethrows
+ * those, so a stalled Tor used to end the waiting coroutine silently (a session start stuck at 0 %
+ * forever, found in the Android 17 emulator). The waiter stays queued: a late reply still pairs
+ * with its own command, and replies to later commands keep their order.
+ */
+internal suspend fun awaitReply(
+    waiter: Deferred<ControlReply>,
+    command: String,
+    timeoutMillis: Long,
+): ControlReply =
+    withTimeoutOrNull(timeoutMillis) { waiter.await() }
+        ?: throw TorControlException(
+            "No reply to ${command.substringBefore(' ')} within ${timeoutMillis / 1000} s"
+        )

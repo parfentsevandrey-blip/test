@@ -7,6 +7,12 @@ sealed interface ConnectionEvent {
     /** Bring the VPN up (user tap, always-on, tile). */
     data object Connect : ConnectionEvent
 
+    /**
+     * The user asked for a fresh Tor connection while the VPN stays up (new transports, a new
+     * Snowflake proxy, new circuits).
+     */
+    data object Reconnect : ConnectionEvent
+
     /** Take the VPN down. With [keepTor] Tor stays connected (hot standby). */
     data class Disconnect(val keepTor: Boolean) : ConnectionEvent
 
@@ -67,6 +73,20 @@ object ConnectionMachine {
                     current.torReady ->
                         current.copy(state = TunnelState.Connected, sessionConnected = true)
                     else -> current.copy(state = TunnelState.Connecting(), sessionConnected = false)
+                }
+
+            ConnectionEvent.Reconnect ->
+                when (s) {
+                    TunnelState.Connected,
+                    is TunnelState.Connecting,
+                    is TunnelState.Reconnecting,
+                    TunnelState.Blocked ->
+                        current.copy(
+                            state = recovering(current, ReconnectReason.User),
+                            torReady = false,
+                        )
+                    // Nothing to reconnect without a network, or with the VPN off.
+                    else -> current
                 }
 
             is ConnectionEvent.Disconnect ->

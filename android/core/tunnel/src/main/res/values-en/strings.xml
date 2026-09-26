@@ -14,7 +14,7 @@
     <string name="notif_stopping">Disconnecting…</string>
     <string name="notif_error">Tunnel stopped</string>
     <string name="notif_action_disconnect">Disconnect</string>
-    <string name="notif_action_new_identity">New identity</string>
+    <string name="notif_action_reconnect">Reconnect</string>
     <string name="notif_action_connect">Connect</string>
     <string name="notif_action_turn_off">Turn Tor off</string>
     <string name="notif_speed">↓ %1$s · ↑ %2$s</string>

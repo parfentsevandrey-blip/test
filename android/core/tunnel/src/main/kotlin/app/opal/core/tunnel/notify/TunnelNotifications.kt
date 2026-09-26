@@ -19,6 +19,7 @@ import app.opal.core.tunnel.TunnelService
  * The foreground notification. While connecting/reconnecting it is an Android 16 Live Update
  * (ProgressStyle, promoted ongoing); once connected it becomes an ordinary, silent ongoing
  * notification with speed and actions. NotificationCompat falls back to a progress bar before 16.
+ * Every state with a live VPN offers "Reconnect" (except without a network) and "Disconnect".
  */
 internal class TunnelNotifications(private val context: Context) {
 
@@ -51,6 +52,8 @@ internal class TunnelNotifications(private val context: Context) {
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
                 .setContentIntent(openApp())
+                // Android 14+ lets the user swipe a foreground notification away: put it back.
+                .setDeleteIntent(action(TunnelService.ACTION_NOTIFICATION_DISMISSED))
         when (val state = snapshot.state) {
             is TunnelState.Connecting,
             is TunnelState.Reconnecting -> {
@@ -77,11 +80,7 @@ internal class TunnelNotifications(private val context: Context) {
                             .setProgressIndeterminate(progress == 0)
                             .setStyledByProgress(true)
                     )
-                    .addAction(
-                        0,
-                        context.getString(R.string.notif_action_disconnect),
-                        action(TunnelService.ACTION_DISCONNECT),
-                    )
+                    .addReconnectAndDisconnect()
             }
             TunnelState.Connected -> {
                 val transport = snapshot.transport?.let { context.getString(Labels.transport(it)) }
@@ -94,16 +93,7 @@ internal class TunnelNotifications(private val context: Context) {
                 }
                 b.setContentTitle(context.getString(R.string.notif_connected))
                     .setContentText(listOfNotNull(speed, transport).joinToString(" · "))
-                    .addAction(
-                        0,
-                        context.getString(R.string.notif_action_new_identity),
-                        action(TunnelService.ACTION_NEW_IDENTITY),
-                    )
-                    .addAction(
-                        0,
-                        context.getString(R.string.notif_action_disconnect),
-                        action(TunnelService.ACTION_DISCONNECT),
-                    )
+                    .addReconnectAndDisconnect()
             }
             TunnelState.WaitingForNetwork ->
                 b.setContentTitle(context.getString(R.string.notif_no_network))
@@ -116,11 +106,7 @@ internal class TunnelNotifications(private val context: Context) {
             TunnelState.Blocked ->
                 b.setContentTitle(context.getString(R.string.notif_blocked))
                     .setContentText(context.getString(R.string.notif_blocked_text))
-                    .addAction(
-                        0,
-                        context.getString(R.string.notif_action_disconnect),
-                        action(TunnelService.ACTION_DISCONNECT),
-                    )
+                    .addReconnectAndDisconnect()
             TunnelState.Standby ->
                 b.setContentTitle(context.getString(R.string.notif_standby))
                     .setContentText(context.getString(R.string.notif_standby_text))
@@ -150,6 +136,18 @@ internal class TunnelNotifications(private val context: Context) {
             }
         }
     }
+
+    private fun NotificationCompat.Builder.addReconnectAndDisconnect(): NotificationCompat.Builder =
+        addAction(
+                0,
+                context.getString(R.string.notif_action_reconnect),
+                action(TunnelService.ACTION_RECONNECT),
+            )
+            .addAction(
+                0,
+                context.getString(R.string.notif_action_disconnect),
+                action(TunnelService.ACTION_DISCONNECT),
+            )
 
     private fun openApp(): PendingIntent? {
         val launch =

@@ -49,6 +49,8 @@ enum class ReconnectReason {
     CircuitLost,
     TransportSwitch,
     Restart,
+    /** The user asked for a fresh connection (notification action). */
+    User,
 }
 
 @Serializable

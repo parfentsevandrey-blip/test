@@ -4,8 +4,13 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.lerp
+import androidx.compose.ui.test.TouchInjectionScope
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performTouchInput
 import app.opal.core.designsystem.component.SheetHost
 import app.opal.core.designsystem.glass.ToastState
 import app.opal.core.designsystem.theme.AuroraMood
@@ -86,6 +91,8 @@ class ScreensScreenshotTest(private val variant: Variant) {
         name: String,
         mood: AuroraMood,
         tab: Int?,
+        /** A finger still on the screen when the picture is taken (tab centers by test tag). */
+        touch: (TouchInjectionScope.(tabCenter: (String) -> Offset) -> Unit)? = null,
         content: @Composable (PaddingValues) -> Unit,
     ) {
         compose.setContent {
@@ -102,6 +109,13 @@ class ScreensScreenshotTest(private val variant: Variant) {
                     content = content,
                 )
             }
+        }
+        if (touch != null) {
+            val centers = TAB_TAGS.associateWith {
+                compose.onNodeWithTag(it).fetchSemanticsNode().boundsInRoot.center
+            }
+            compose.onRoot().performTouchInput { touch(centers::getValue) }
+            compose.waitForIdle()
         }
         compose
             .onRoot()
@@ -153,53 +167,71 @@ class ScreensScreenshotTest(private val variant: Variant) {
 
     @Test
     fun homeConnected() =
-        shot("home_connected", AuroraMood.Protected, 0) { padding ->
-            val down =
-                List(60) { i ->
-                    (180_000 + 140_000 * sin(i / 60.0 * 4 * PI)).toLong().coerceAtLeast(0)
-                }
-            val up =
-                List(60) { i ->
-                    (24_000 + 18_000 * sin(i / 60.0 * 3 * PI + 1)).toLong().coerceAtLeast(0)
-                }
-            HomeScreen(
-                HomeUiState(
-                    snapshot =
-                        TunnelSnapshot(
-                            state = TunnelState.Connected,
-                            transport = TransportKind.Snowflake,
-                            circuit =
-                                CircuitInfo(
-                                    listOf(
-                                        CircuitHop(
-                                            HopRole.Bridge,
-                                            nickname = "flakey",
-                                            country = null,
-                                        ),
-                                        CircuitHop(
-                                            HopRole.Middle,
-                                            nickname = "relayMiddle",
-                                            country = "de",
-                                        ),
-                                        CircuitHop(
-                                            HopRole.Exit,
-                                            nickname = "relayExit",
-                                            country = "nl",
-                                            address = "192.0.2.44",
-                                        ),
-                                    )
-                                ),
-                            connectedSince = System.currentTimeMillis() - 754_000,
-                            network = NetworkKind.Wifi,
-                        ),
-                    down = down.toImmutableList(),
-                    up = up.toImmutableList(),
-                    traffic = TrafficSample(down.last(), up.last(), 48_300_000, 3_900_000, 60),
-                ),
-                padding,
-                {},
-            )
+        shot("home_connected", AuroraMood.Protected, 0) { padding -> ConnectedHome(padding) }
+
+    /** The tab bar lens lifted and dragged between two tabs, the finger still down. */
+    @Test
+    fun tabBarDragging() =
+        shot(
+            "tab_bar_dragging",
+            AuroraMood.Protected,
+            0,
+            touch = { tabCenter ->
+                down(tabCenter("tab_home"))
+                moveTo(lerp(tabCenter("tab_apps"), tabCenter("tab_connection"), 0.35f))
+            },
+        ) { padding ->
+            ConnectedHome(padding)
         }
+
+    @Composable
+    private fun ConnectedHome(padding: PaddingValues) {
+        val down =
+            List(60) { i ->
+                (180_000 + 140_000 * sin(i / 60.0 * 4 * PI)).toLong().coerceAtLeast(0)
+            }
+        val up =
+            List(60) { i ->
+                (24_000 + 18_000 * sin(i / 60.0 * 3 * PI + 1)).toLong().coerceAtLeast(0)
+            }
+        HomeScreen(
+            HomeUiState(
+                snapshot =
+                    TunnelSnapshot(
+                        state = TunnelState.Connected,
+                        transport = TransportKind.Snowflake,
+                        circuit =
+                            CircuitInfo(
+                                listOf(
+                                    CircuitHop(
+                                        HopRole.Bridge,
+                                        nickname = "flakey",
+                                        country = null,
+                                    ),
+                                    CircuitHop(
+                                        HopRole.Middle,
+                                        nickname = "relayMiddle",
+                                        country = "de",
+                                    ),
+                                    CircuitHop(
+                                        HopRole.Exit,
+                                        nickname = "relayExit",
+                                        country = "nl",
+                                        address = "192.0.2.44",
+                                    ),
+                                )
+                            ),
+                        connectedSince = System.currentTimeMillis() - 754_000,
+                        network = NetworkKind.Wifi,
+                    ),
+                down = down.toImmutableList(),
+                up = up.toImmutableList(),
+                traffic = TrafficSample(down.last(), up.last(), 48_300_000, 3_900_000, 60),
+            ),
+            padding,
+            {},
+        )
+    }
 
     @Test
     fun homeBlocked() =
@@ -350,5 +382,7 @@ class ScreensScreenshotTest(private val variant: Variant) {
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
         fun variants() = Variant.entries.map { arrayOf<Any>(it) }
+
+        private val TAB_TAGS = listOf("tab_home", "tab_apps", "tab_connection", "tab_settings")
     }
 }

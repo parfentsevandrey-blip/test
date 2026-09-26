@@ -6,6 +6,7 @@ import app.opal.core.model.tunnel.ConnectionEvent.Disconnect
 import app.opal.core.model.tunnel.ConnectionEvent.Fatal
 import app.opal.core.model.tunnel.ConnectionEvent.NetworkAvailable
 import app.opal.core.model.tunnel.ConnectionEvent.NetworkLost
+import app.opal.core.model.tunnel.ConnectionEvent.Reconnect
 import app.opal.core.model.tunnel.ConnectionEvent.Retry
 import app.opal.core.model.tunnel.ConnectionEvent.Revoked
 import app.opal.core.model.tunnel.ConnectionEvent.Stalled
@@ -122,6 +123,30 @@ class ConnectionMachineTest {
         assertEquals(off, ConnectionMachine.reduce(off, Stalled))
         assertEquals(off, ConnectionMachine.reduce(off, Disconnect(keepTor = false)))
         assertEquals(off, ConnectionMachine.reduce(off, Retry))
+    }
+
+    @Test
+    fun `reconnect on request starts a fresh attempt and ends connected`() {
+        val reconnecting = run(Connect, TorReady, Reconnect)
+        assertEquals(TunnelState.Reconnecting(ReconnectReason.User), reconnecting.state)
+        assertFalse(reconnecting.torReady)
+        assertEquals(TunnelState.Connected, ConnectionMachine.reduce(reconnecting, TorReady).state)
+        // Still connecting: the next attempt.
+        assertEquals(TunnelState.Connecting(2), run(Connect, Reconnect).state)
+        // Blocked on a first connection: back to connecting.
+        assertEquals(
+            TunnelState.Connecting(2),
+            run(Connect, AllTransportsFailed, Reconnect).state,
+        )
+    }
+
+    @Test
+    fun `reconnect is ignored without a network or with the vpn off`() {
+        val waiting = run(Connect, TorReady, NetworkLost)
+        assertEquals(waiting, ConnectionMachine.reduce(waiting, Reconnect))
+        assertEquals(MachineState(), run(Reconnect))
+        val standby = run(Connect, TorReady, Disconnect(keepTor = true))
+        assertEquals(standby, ConnectionMachine.reduce(standby, Reconnect))
     }
 
     @Test

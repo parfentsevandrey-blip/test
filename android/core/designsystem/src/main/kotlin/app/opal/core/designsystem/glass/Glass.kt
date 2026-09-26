@@ -19,12 +19,14 @@ import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.ImageShader
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow as ComposeShadow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
@@ -131,7 +133,8 @@ data class GlassStyle(
 
 /**
  * The single place where glass is rendered. [interactive] adds the "jelly" press response and a
- * highlight that follows the finger.
+ * highlight that follows the finger; [layerBlock] transforms the whole surface (e.g. a swell driven
+ * by a gesture elsewhere).
  */
 @Composable
 fun GlassSurface(
@@ -142,6 +145,7 @@ fun GlassSurface(
     tint: Color = Color.Unspecified,
     interactive: Boolean = false,
     contentAlignment: Alignment = Alignment.Center,
+    layerBlock: (GraphicsLayerScope.() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val quality = LocalGlassQuality.current
@@ -157,17 +161,30 @@ fun GlassSurface(
         if (interactive)
             remember(scope, reducedMotion) { InteractiveHighlight(scope, jelly = !reducedMotion) }
         else null
+    val transform: (GraphicsLayerScope.() -> Unit)? =
+        when {
+            press == null -> layerBlock
+            layerBlock == null -> press.layerBlock
+            else -> {
+                {
+                    layerBlock()
+                    press.layerBlock(this)
+                }
+            }
+        }
 
     val surface =
         if (quality == GlassQuality.Fallback || backdrop == null) {
-            modifier.fallbackGlass(
-                shape,
-                style,
-                colors.glassTintStrong,
-                tint,
-                colors.glassRim,
-                colors.isDark,
-            )
+            modifier
+                .then(transform?.let { Modifier.graphicsLayer(it) } ?: Modifier)
+                .fallbackGlass(
+                    shape,
+                    style,
+                    colors.glassTintStrong,
+                    tint,
+                    colors.glassRim,
+                    colors.isDark,
+                )
         } else {
             modifier.drawBackdrop(
                 backdrop = backdrop,
@@ -191,7 +208,7 @@ fun GlassSurface(
                         color = Color.Black.copy(alpha = if (colors.isDark) 0.28f else 0.12f),
                     )
                 },
-                layerBlock = press?.layerBlock,
+                layerBlock = transform,
                 onDrawSurface = {
                     drawRect(baseTint)
                     if (tint != Color.Unspecified) drawRect(tint)

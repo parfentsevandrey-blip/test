@@ -1,8 +1,11 @@
 package app.opal.core.tunnel
 
 import android.app.PendingIntent
+import android.app.StatusBarManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.Icon
 import android.net.VpnService
 import android.os.Build
 import android.service.quicksettings.Tile
@@ -50,9 +53,8 @@ class TunnelTileService : TileService() {
     override fun onClick() {
         val state = controller.snapshot.value.state
         if (state.isTunnelActive) {
-            startService(
-                Intent(this, TunnelService::class.java).setAction(TunnelService.ACTION_DISCONNECT)
-            )
+            // Whoever holds a locked phone must not be able to switch the protection off.
+            if (isLocked && isSecure) unlockAndRun(::disconnect) else disconnect()
             return
         }
         if (VpnService.prepare(this) != null) {
@@ -66,6 +68,12 @@ class TunnelTileService : TileService() {
             // Background start not allowed on this device state: let the app do it.
             openApp()
         }
+    }
+
+    private fun disconnect() {
+        startService(
+            Intent(this, TunnelService::class.java).setAction(TunnelService.ACTION_DISCONNECT)
+        )
     }
 
     private fun openApp() {
@@ -97,5 +105,33 @@ class TunnelTileService : TileService() {
                 )
         }
         tile.updateTile()
+    }
+
+    companion object {
+        /** Android 13+ can add the tile for the user after a system confirmation dialog. */
+        val canRequestAdd: Boolean
+            get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+
+        /**
+         * Asks the system to add the tile to Quick Settings (Android 13+, app in the foreground).
+         * [onResult] gets `true` if the tile is there afterwards and `false` if the user declined;
+         * it is not called when the system refused to ask (e.g. app not in the foreground).
+         */
+        fun requestAdd(context: Context, onResult: (added: Boolean) -> Unit) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+            val statusBar = context.getSystemService(StatusBarManager::class.java) ?: return
+            statusBar.requestAddTileService(
+                ComponentName(context, TunnelTileService::class.java),
+                context.getString(R.string.tile_label),
+                Icon.createWithResource(context, R.drawable.ic_stat_opal),
+                context.mainExecutor,
+            ) { result ->
+                when (result) {
+                    StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ADDED,
+                    StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ALREADY_ADDED -> onResult(true)
+                    StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_NOT_ADDED -> onResult(false)
+                }
+            }
+        }
     }
 }

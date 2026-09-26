@@ -1,13 +1,9 @@
 package app.opal.feature.settings
 
 import android.annotation.SuppressLint
-import android.app.StatusBarManager
 import android.content.ActivityNotFoundException
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Icon
-import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.compose.runtime.Composable
@@ -20,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import app.opal.core.tunnel.TunnelTileService
 
 /** Device state the settings screen shows; re-read whenever the screen resumes. */
 @Immutable
@@ -51,7 +48,7 @@ object SystemIntents {
                     ?.isIgnoringBatteryOptimizations(context.packageName) == true,
             notificationsEnabled =
                 NotificationManagerCompat.from(context).areNotificationsEnabled(),
-            canRequestTile = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU,
+            canRequestTile = TunnelTileService.canRequestAdd,
         )
 
     fun openVpnSettings(context: Context) = start(context, Intent(Settings.ACTION_VPN_SETTINGS))
@@ -91,20 +88,6 @@ object SystemIntents {
                 "package:${context.packageName}".toUri(),
             ),
         )
-
-    /** Asks the system to add our Quick Settings tile (API 33+). */
-    fun requestTile(context: Context, label: String, onAdded: () -> Unit) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
-        val sbm = context.getSystemService(StatusBarManager::class.java) ?: return
-        sbm.requestAddTileService(
-            ComponentName(context, app.opal.core.tunnel.TunnelTileService::class.java),
-            label,
-            Icon.createWithResource(context, app.opal.core.tunnel.R.drawable.ic_stat_opal),
-            context.mainExecutor,
-        ) { result ->
-            if (result == StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ADDED) onAdded()
-        }
-    }
 
     private fun start(context: Context, intent: Intent): Boolean =
         try {

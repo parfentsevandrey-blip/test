@@ -1,8 +1,10 @@
 package app.opal.core.tunnel
 
 import android.app.ForegroundServiceStartNotAllowedException
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.Network
@@ -10,6 +12,7 @@ import android.net.VpnService
 import android.os.Build
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
+import android.os.PowerManager
 import android.os.Process
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -23,11 +26,16 @@ import app.opal.core.tunnel.notify.TunnelNotifications
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 
@@ -52,17 +60,43 @@ class TunnelService : VpnService() {
     private var binder: TunnelBinder? = null
     private var foregroundType = 0
 
+    /** Screen on: only then is the speed in the notification worth refreshing every second. */
+    private val interactive = MutableStateFlow(true)
+    private val screenReceiver =
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                interactive.value = intent.action == Intent.ACTION_SCREEN_ON
+            }
+        }
+
     override fun onCreate() {
         super.onCreate()
         notifications = TunnelNotifications(this).also { it.ensureChannel() }
         controller.host = vpnHost
+        interactive.value = getSystemService(PowerManager::class.java)?.isInteractive != false
+        ContextCompat.registerReceiver(
+            this,
+            screenReceiver,
+            IntentFilter().apply {
+                addAction(Intent.ACTION_SCREEN_ON)
+                addAction(Intent.ACTION_SCREEN_OFF)
+            },
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
         scope.launch { observeNotification() }
     }
 
-    @OptIn(FlowPreview::class)
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     private suspend fun observeNotification() {
-        // Speed changes every second; the notification is refreshed at most every 3 s.
-        combine(controller.snapshot, controller.traffic.sample(3.seconds)) { s, t -> s to t }
+        // The speed changes every second and is refreshed as often while the screen is on; with
+        // the screen off nobody sees it. State changes are shown immediately either way.
+        val speed =
+            interactive
+                .flatMapLatest { on ->
+                    if (on) controller.traffic.sample(SPEED_REFRESH) else emptyFlow()
+                }
+                .onStart { emit(controller.traffic.value) }
+        combine(controller.snapshot, speed) { s, t -> s to t }
             .distinctUntilChanged()
             .collect { (snapshot, traffic) ->
                 if (foregroundType != 0)
@@ -75,7 +109,21 @@ class TunnelService : VpnService() {
             ACTION_DISCONNECT -> scope.launch { controller.disconnect() }
             ACTION_STOP_STANDBY ->
                 scope.launch { runtime.settings.update { it.copy(hotStandby = false) } }
-            ACTION_NEW_IDENTITY -> scope.launch { controller.newIdentity() }
+            ACTION_RECONNECT ->
+                scope.launch {
+                    controller.reconnect()
+                    // Tapped in a leftover notification after the tunnel was gone.
+                    if (controller.holds.value.isEmpty()) stopSelf()
+                }
+            ACTION_NOTIFICATION_DISMISSED ->
+                if (foregroundType != 0) {
+                    // Swiped away (Android 14+ allows it): the VPN is still on, so show it again.
+                    notifications.notify(
+                        notifications.build(controller.snapshot.value, controller.traffic.value)
+                    )
+                } else if (controller.holds.value.isEmpty()) {
+                    stopSelf()
+                }
             ACTION_CONNECT,
             SERVICE_INTERFACE -> startTunnel()
             null -> {
@@ -114,6 +162,7 @@ class TunnelService : VpnService() {
 
     override fun onDestroy() {
         if (controller.host === vpnHost) controller.host = null
+        unregisterReceiver(screenReceiver)
         scope.cancel()
         super.onDestroy()
     }
@@ -269,10 +318,12 @@ class TunnelService : VpnService() {
     companion object {
         private const val TAG = "service"
         private const val FOREGROUND_LEGACY = -1
+        private val SPEED_REFRESH = 1.seconds
 
         const val ACTION_CONNECT = "app.opal.tunnel.CONNECT"
         const val ACTION_DISCONNECT = "app.opal.tunnel.DISCONNECT"
-        const val ACTION_NEW_IDENTITY = "app.opal.tunnel.NEW_IDENTITY"
+        const val ACTION_RECONNECT = "app.opal.tunnel.RECONNECT"
+        const val ACTION_NOTIFICATION_DISMISSED = "app.opal.tunnel.NOTIFICATION_DISMISSED"
         const val ACTION_STOP_STANDBY = "app.opal.tunnel.STOP_STANDBY"
         /** Binding action for the AIDL control interface (anything but SERVICE_INTERFACE). */
         const val ACTION_BIND_CONTROL = "app.opal.tunnel.BIND_CONTROL"

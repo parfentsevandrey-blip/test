@@ -7,6 +7,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AppSettings(
     val onboardingCompleted: Boolean = false,
+    /** The system "add the Quick Settings tile" dialog was shown once (after a connection). */
+    val tileOffered: Boolean = false,
     /** Snowflake by default, as in Tor Browser; Auto (race + Settings API) is opt-in. */
     val connectionMode: ConnectionMode = ConnectionMode.Snowflake,
     /** Raw bridge lines entered by the user (validated before saving). */

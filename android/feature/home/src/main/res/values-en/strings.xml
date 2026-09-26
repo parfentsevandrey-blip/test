@@ -24,6 +24,7 @@
     <string name="home_reason_circuit_lost">Circuit lost — building a new one</string>
     <string name="home_reason_transport_switch">Trying another transport</string>
     <string name="home_reason_restart">Restarting Tor</string>
+    <string name="home_reason_user">Reconnecting as you asked</string>
 
     <string name="home_error_permission">VPN permission needed — tap to grant it</string>
     <string name="home_error_revoked">The VPN was turned off by another app or the system</string>

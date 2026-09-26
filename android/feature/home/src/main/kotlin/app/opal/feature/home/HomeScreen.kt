@@ -1,6 +1,10 @@
 package app.opal.feature.home
 
+import android.Manifest
 import android.app.Activity
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.text.format.Formatter
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,6 +49,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -105,6 +110,13 @@ fun HomeRoute(
             if (result.resultCode == Activity.RESULT_OK) viewModel.connect()
             else toast.show(deniedText, OpalIcons.VpnLock)
         }
+    val connect = { viewModel.consentIntent()?.let(consent::launch) ?: viewModel.connect() }
+    // The status notification (speed, Reconnect, Disconnect) needs this permission on Android 13+.
+    // Asked here if it was skipped in onboarding; the system stops asking after two refusals.
+    // Connecting does not depend on the answer.
+    val notifications =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { connect() }
+    val context = LocalContext.current
     StateHaptics(state.snapshot.state)
     HomeScreen(
         state = state,
@@ -116,8 +128,9 @@ fun HomeRoute(
                     when {
                         current == TunnelState.Stopping -> Unit
                         current.isTunnelActive -> viewModel.disconnect()
-                        else ->
-                            viewModel.consentIntent()?.let(consent::launch) ?: viewModel.connect()
+                        needsNotificationPermission(context) ->
+                            notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        else -> connect()
                     }
                 }
                 HomeAction.NewIdentity -> {
@@ -130,6 +143,11 @@ fun HomeRoute(
         },
     )
 }
+
+private fun needsNotificationPermission(context: Context): Boolean =
+    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
 
 /** Tactile confirmation of state changes (not of taps: the controls give their own tick). */
 @Composable
@@ -381,6 +399,7 @@ private fun reasonText(reason: ReconnectReason): String =
             ReconnectReason.CircuitLost -> R.string.home_reason_circuit_lost
             ReconnectReason.TransportSwitch -> R.string.home_reason_transport_switch
             ReconnectReason.Restart -> R.string.home_reason_restart
+            ReconnectReason.User -> R.string.home_reason_user
         }
     )
 

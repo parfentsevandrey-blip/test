@@ -28,6 +28,7 @@ import app.opal.core.designsystem.glass.GlassLayer
 import app.opal.core.designsystem.icon.OpalIcons
 import app.opal.core.designsystem.theme.OpalTheme
 import app.opal.core.model.settings.AppLanguage
+import app.opal.core.tunnel.TunnelTileService
 
 /** Navigation targets of the settings screen, implemented by the app shell. */
 interface SettingsNavigator {
@@ -55,7 +56,6 @@ fun SettingsRoute(
     val context = LocalContext.current
     val sheets = LocalSheetHost.current
     val toast = LocalToastState.current
-    val tileLabel = stringResource(app.opal.core.tunnel.R.string.tile_label)
     val tileAdded = stringResource(R.string.settings_tile_added)
     val tileManual = stringResource(R.string.settings_tile_manual)
     val standbyTitle = stringResource(R.string.settings_hot_standby_sheet_title)
@@ -133,8 +133,8 @@ fun SettingsRoute(
                     }
                 SettingsAction.AddTile ->
                     if (system.canRequestTile)
-                        SystemIntents.requestTile(context, tileLabel) {
-                            toast.show(tileAdded, OpalIcons.CheckCircle)
+                        TunnelTileService.requestAdd(context) { added ->
+                            if (added) toast.show(tileAdded, OpalIcons.CheckCircle)
                         }
                     else toast.show(tileManual, OpalIcons.Info)
                 is SettingsAction.SetTheme -> viewModel.setTheme(action.mode)
