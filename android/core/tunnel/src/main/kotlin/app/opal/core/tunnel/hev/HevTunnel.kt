@@ -62,7 +62,12 @@ internal class HevTunnel(context: Context) {
     }
 
     companion object {
-        const val TUN_ADDRESS_V4 = "198.18.0.1"
+        /**
+         * Private (RFC 1918) on purpose: the Snowflake client in this process gathers WebRTC host
+         * candidates from every non-private interface address, and 198.18.0.1 made it offer the
+         * tunnel's address to proxies and send ICE checks from it.
+         */
+        const val TUN_ADDRESS_V4 = "10.111.222.1"
         const val TUN_ADDRESS_V6 = "fdfe:dcba:9876::1"
         const val DNS_ADDRESS = "198.18.0.2"
         const val FAKE_NETWORK = "100.64.0.0"

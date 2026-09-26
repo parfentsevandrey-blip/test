@@ -35,6 +35,7 @@ import app.opal.core.tunnel.tor.TorEngine
 import app.opal.core.tunnel.tor.TorFiles
 import app.opal.core.tunnel.tor.TorSignal
 import app.opal.core.tunnel.util.LogBuffer
+import app.opal.core.tunnel.util.LoopbackPorts
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.min
 import kotlinx.coroutines.CoroutineName
@@ -145,7 +146,7 @@ internal class TorSession(
     private var slowHintShown = false
 
     private val policy: ModePolicy
-        get() = ModePolicy.of(settings.connectionMode)
+        get() = ModePolicy.of(settings.connectionMode, configured)
 
     val isReady: Boolean
         get() = ready
@@ -237,6 +238,7 @@ internal class TorSession(
                         configured,
                         ports,
                         settings,
+                        socksPort = LoopbackPorts.free(),
                         networkUp = network.status.value.isConnected,
                     )
                 engine.start(config)
@@ -746,7 +748,7 @@ internal class TorSession(
                 resetProgress()
             }
             previous != status.network -> {
-                log.i(TAG, "Network changed (${status.kind})")
+                log.i(TAG, "Network changed (${status.kind}, $previous → ${status.network})")
                 // Soft reconnect: close stale connections on the old network, keep Tor running.
                 onNotReady(ReconnectReason.NetworkChanged)
                 toggleNetwork()
@@ -840,6 +842,20 @@ internal class TorSession(
             )
         }
             .onFailure { log.w(TAG, "DisableNetwork=$disabled failed: ${it.message}") }
+        if (!disabled) ensureSocksListener()
+    }
+
+    /**
+     * `DisableNetwork 1` closes the SOCKS listener; `0` reopens it on the same fixed port, which
+     * hev keeps using. If Tor could not bind it again (the port was taken meanwhile), restart Tor
+     * on a new port: the listener's `onSocksPort` then moves hev over.
+     */
+    private suspend fun ensureSocksListener() {
+        val expected = (engine.state.value as? EngineState.Running)?.socksPort ?: return
+        val listeners =
+            runCatching { engine.getInfo(SOCKS_LISTENERS)[SOCKS_LISTENERS] }.getOrNull() ?: return
+        if (Regex("127\\.0\\.0\\.1:$expected\\b").containsMatchIn(listeners)) return
+        restartTor("SOCKS listener did not reopen on port $expected")
     }
 
     private suspend fun toggleNetwork() {
@@ -875,6 +891,7 @@ internal class TorSession(
             .joinToString { "${it.key}×${it.value}" }
 
     private companion object {
+        const val SOCKS_LISTENERS = "net/listeners/socks"
         const val TAG = "session"
         const val EXPAND_AFTER_MS = 10_000L
         /** First bootstrap through Snowflake often takes 1–2 minutes: hint only after that. */

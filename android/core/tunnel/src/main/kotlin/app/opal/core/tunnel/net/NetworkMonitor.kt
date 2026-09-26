@@ -29,7 +29,15 @@ internal class NetworkMonitor(context: Context, scope: CoroutineScope) {
     val status: StateFlow<Status> = callbackFlow {
         val callback =
             object : ConnectivityManager.NetworkCallback() {
+                private var current: Network? = null
+
                 override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
+                    // Our process is excluded from our VPN, yet while the VPN is being set up
+                    // Android can briefly report it here (its capabilities also carry the
+                    // underlying CELLULAR/WIFI transport). A VPN is never the underlying network:
+                    // treating it as one made every connect look like a network change.
+                    if (caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) return
+                    current = network
                     trySend(
                         Status(
                             network,
@@ -40,6 +48,8 @@ internal class NetworkMonitor(context: Context, scope: CoroutineScope) {
                 }
 
                 override fun onLost(network: Network) {
+                    if (network != current) return
+                    current = null
                     trySend(Status(null, null, false))
                 }
             }
@@ -54,6 +64,8 @@ internal class NetworkMonitor(context: Context, scope: CoroutineScope) {
         val caps =
             connectivity.getNetworkCapabilities(network)
                 ?: return Status(network, NetworkKind.Other, false)
+        // Same as in the callback: wait for the real underlying network instead.
+        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) return Status(null, null, false)
         return Status(
             network,
             kindOf(caps),

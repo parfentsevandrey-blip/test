@@ -32,7 +32,12 @@ class SnowflakeConfigTest {
                 catalog.candidates(TunnelMemory()),
                 emptyList(),
             )
-        return TorConfigFactory.startup(plan.initial, mapOf("snowflake" to 41234), AppSettings())
+        return TorConfigFactory.startup(
+                plan.initial,
+                mapOf("snowflake" to 41234),
+                AppSettings(),
+                socksPort = 41000,
+            )
             .render()
             .lines()
     }
@@ -48,7 +53,12 @@ class SnowflakeConfigTest {
                 emptyList(),
             )
         val torrc =
-            TorConfigFactory.startup(plan.initial, mapOf("snowflake" to 41234), AppSettings())
+            TorConfigFactory.startup(
+                    plan.initial,
+                    mapOf("snowflake" to 41234),
+                    AppSettings(),
+                    socksPort = 41000,
+                )
                 .render()
         val lines = torrc.lines()
         assertTrue(lines.contains("UseBridges 1"))
@@ -129,5 +139,17 @@ class SnowflakeConfigTest {
             val args = line.args.entries.joinToString(";") { "${it.key}=${it.value}" }
             assertTrue("${args.length} bytes", args.length <= 510)
         }
+    }
+
+    @Test
+    fun `Snowflake lines are never torn down, whatever mode brought them`() {
+        val snowflake = bundled[TransportKind.Snowflake]
+        val obfs4 = bundled[TransportKind.Obfs4]
+        assertFalse(ModePolicy.of(ConnectionMode.Custom, snowflake).watchdogMayReconnect)
+        assertFalse(ModePolicy.of(ConnectionMode.Auto, snowflake.take(1)).watchdogMayReconnect)
+        // Auto still races; only the teardown is off while Snowflake carries the connection.
+        assertTrue(ModePolicy.of(ConnectionMode.Auto, snowflake).race)
+        assertTrue(ModePolicy.of(ConnectionMode.Custom, obfs4).watchdogMayReconnect)
+        assertTrue(ModePolicy.of(ConnectionMode.Auto, snowflake + obfs4).watchdogMayReconnect)
     }
 }

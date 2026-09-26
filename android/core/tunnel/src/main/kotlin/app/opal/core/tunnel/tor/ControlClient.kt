@@ -114,12 +114,18 @@ private constructor(
         return reply
     }
 
-    suspend fun setEvents(types: Collection<TorEventType>) {
-        send("SETEVENTS " + types.joinToString(" ") { it.keyword })
+    suspend fun setEvents(
+        types: Collection<TorEventType>,
+        timeoutMillis: Long = COMMAND_TIMEOUT_MS,
+    ) {
+        send("SETEVENTS " + types.joinToString(" ") { it.keyword }, timeoutMillis)
     }
 
     suspend fun getInfo(vararg keys: String): Map<String, String> =
-        GetInfoParser.parse(send("GETINFO " + keys.joinToString(" ")))
+        getInfo(keys.toList(), COMMAND_TIMEOUT_MS)
+
+    suspend fun getInfo(keys: List<String>, timeoutMillis: Long): Map<String, String> =
+        GetInfoParser.parse(send("GETINFO " + keys.joinToString(" "), timeoutMillis))
 
     /** `SETCONF` with pre-rendered arguments (see [app.opal.core.model.tor.Torrc.toSetConf]). */
     suspend fun setConf(arguments: String) {

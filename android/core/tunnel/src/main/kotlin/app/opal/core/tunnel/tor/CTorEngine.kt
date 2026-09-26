@@ -137,16 +137,17 @@ internal class CTorEngine(
         }
         val info =
             try {
-                client.setEvents(TorEventType.entries)
-                client.getInfo("net/listeners/socks", "version")
+                // Right after start Tor may be busy for a long while loading its cached consensus
+                // and descriptors (seconds on a phone, minutes on a slow one). It is alive; giving
+                // up here would only kill it and make the next start load the same cache again.
+                client.setEvents(TorEventType.entries, STARTUP_COMMAND_TIMEOUT_MS)
+                client.getInfo(listOf("net/listeners/socks", "version"), STARTUP_COMMAND_TIMEOUT_MS)
             } finally {
                 earlyExit.cancel()
             }
         val port =
-            SOCKS_PORT.find(info["net/listeners/socks"].orEmpty())
-                ?.groupValues
-                ?.get(1)
-                ?.toIntOrNull() ?: throw TorControlException("Tor opened no SOCKS listener")
+            socksPortOf(info["net/listeners/socks"], config)
+                ?: throw TorControlException("Tor opened no SOCKS listener")
         return EngineState.Running(socksPort = port, version = info["version"].orEmpty()).also {
             _state.value = it
         }
@@ -228,7 +229,25 @@ internal class CTorEngine(
 
     companion object {
         private val SOCKS_PORT = Regex("127\\.0\\.0\\.1:(\\d+)")
+
+        /**
+         * The SOCKS port to hand to hev: the one Tor listens on, or, while `DisableNetwork 1` keeps
+         * every listener but the controller closed, the configured fixed port (Tor opens it there
+         * once the network is enabled). Null means Tor failed to open it.
+         */
+        internal fun socksPortOf(listeners: String?, config: Torrc): Int? {
+            SOCKS_PORT.find(listeners.orEmpty())?.let {
+                return it.groupValues[1].toInt()
+            }
+            val networkDisabled =
+                config.entries.any { it.option == TorOption.DisableNetwork && it.value == "1" }
+            if (!networkDisabled) return null
+            val configured = config.entries.firstOrNull { it.option == TorOption.SocksPort }
+            return configured?.let { SOCKS_PORT.find(it.value) }?.groupValues?.get(1)?.toInt()
+        }
+
         private const val START_TIMEOUT_MS = 15_000L
+        private const val STARTUP_COMMAND_TIMEOUT_MS = 120_000L
         private const val STOP_TIMEOUT_MS = 10_000L
         private const val TOR_THREAD_STACK_BYTES = 4L * 1024 * 1024
     }

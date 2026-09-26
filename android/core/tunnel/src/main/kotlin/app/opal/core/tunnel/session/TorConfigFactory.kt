@@ -14,13 +14,19 @@ internal object TorConfigFactory {
     val BRIDGE_OPTIONS =
         listOf(TorOption.UseBridges, TorOption.ClientTransportPlugin, TorOption.Bridge)
 
+    /**
+     * [socksPort] is fixed for the lifetime of this Tor process (a free loopback port picked by the
+     * session), not `auto`: `DisableNetwork 1` closes the SOCKS listener and `0` reopens it, and an
+     * `auto` listener would come back on a different port than the one hev uses.
+     */
     fun startup(
         bridges: List<BridgeLine>,
         transportPorts: Map<String, Int>,
         settings: AppSettings,
+        socksPort: Int,
         networkUp: Boolean = true,
     ): Torrc = torrc {
-        socksPort(flags = setOf(SocksFlag.IPv6Traffic))
+        socksPort(port = socksPort, flags = setOf(SocksFlag.IPv6Traffic))
         // Without a network Tor would burn through its bridge list; it is enabled on reconnect.
         disableNetwork(!networkUp)
         noExtraListeners()

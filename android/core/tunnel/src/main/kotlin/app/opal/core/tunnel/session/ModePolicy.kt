@@ -1,5 +1,7 @@
 package app.opal.core.tunnel.session
 
+import app.opal.core.model.bridge.BridgeLine
+import app.opal.core.model.bridge.TransportKind
 import app.opal.core.model.settings.ConnectionMode
 
 /**
@@ -26,14 +28,24 @@ internal data class ModePolicy(
     val watchdogMayReconnect: Boolean,
 ) {
     companion object {
+        private val SNOWFLAKE =
+            ModePolicy(race = false, settingsApiBeforeConnect = false, watchdogMayReconnect = false)
+
+        /**
+         * The policy for [mode] with the bridges Tor currently uses. Snowflake lines are left alone
+         * whichever mode brought them (the user's own Snowflake lines, or Snowflake winning the
+         * Auto race): tearing them down helps no more there than in Snowflake mode.
+         */
+        fun of(mode: ConnectionMode, active: List<BridgeLine>): ModePolicy {
+            val base = of(mode)
+            val snowflakeOnly =
+                active.isNotEmpty() && active.all { it.transport == TransportKind.Snowflake }
+            return if (snowflakeOnly) base.copy(watchdogMayReconnect = false) else base
+        }
+
         fun of(mode: ConnectionMode): ModePolicy =
             when (mode) {
-                ConnectionMode.Snowflake ->
-                    ModePolicy(
-                        race = false,
-                        settingsApiBeforeConnect = false,
-                        watchdogMayReconnect = false,
-                    )
+                ConnectionMode.Snowflake -> SNOWFLAKE
                 ConnectionMode.Auto ->
                     ModePolicy(
                         race = true,
