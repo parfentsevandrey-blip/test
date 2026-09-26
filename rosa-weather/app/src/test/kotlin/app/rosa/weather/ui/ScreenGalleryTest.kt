@@ -39,7 +39,9 @@ import app.rosa.weather.core.model.SampleForecast
 import app.rosa.weather.core.model.Units
 import app.rosa.weather.core.model.momentAt
 import app.rosa.weather.ui.common.LocalSky
+import app.rosa.weather.ui.common.RosaTab
 import app.rosa.weather.ui.common.SkyController
+import app.rosa.weather.ui.common.TabBarScaffold
 import app.rosa.weather.ui.home.HomeScreen
 import app.rosa.weather.ui.home.HomeUiState
 import app.rosa.weather.ui.home.PlacePage
@@ -92,7 +94,9 @@ class ScreenGalleryTest {
             CompositionLocalProvider(LocalSky provides sky) {
                 RosaEnvironment(state.settings, sky.palette) {
                     SkyBackdrop(sky.params, state.settings.effects, stage = sky.stage, transitionMillis = 0) {
-                        HomeScreen(state, {}, {}, {}, {}, {}, {}, {}, fixedNow = now)
+                        TabBarScaffold(RosaTab.Weather, {}) {
+                            HomeScreen(state, {}, {}, {}, {}, {}, fixedNow = now)
+                        }
                     }
                 }
             }
@@ -120,7 +124,9 @@ class ScreenGalleryTest {
             CompositionLocalProvider(LocalSky provides sky) {
                 RosaEnvironment(state.settings, sky.palette) {
                     SkyBackdrop(sky.params, state.settings.effects, stage = sky.stage, transitionMillis = 0) {
-                        HomeScreen(state, {}, {}, {}, {}, {}, {}, {}, fixedNow = now)
+                        TabBarScaffold(RosaTab.Weather, {}) {
+                            HomeScreen(state, {}, {}, {}, {}, {}, fixedNow = now)
+                        }
                     }
                 }
             }
@@ -144,7 +150,9 @@ class ScreenGalleryTest {
             CompositionLocalProvider(LocalSky provides sky) {
                 RosaEnvironment(settings, sky.palette) {
                     SkyBackdrop(sky.params, settings.effects, stage = sky.stage, transitionMillis = 0) {
-                        SettingsScreen(settings, {}, {}, {}, {})
+                        TabBarScaffold(RosaTab.Settings, {}) {
+                            SettingsScreen(settings, {}, {}, {})
+                        }
                     }
                 }
             }
@@ -181,7 +189,9 @@ class ScreenGalleryTest {
             CompositionLocalProvider(LocalSky provides sky) {
                 RosaEnvironment(settings, sky.palette) {
                     SkyBackdrop(sky.params, settings.effects, stage = sky.stage, transitionMillis = 0) {
-                        PlacesScreen(state, {}, {}, {}, {}, {}, { _, _ -> }, now = now)
+                        TabBarScaffold(RosaTab.Places, {}) {
+                            PlacesScreen(state, {}, {}, {}, {}, { _, _ -> }, now = now)
+                        }
                     }
                 }
             }

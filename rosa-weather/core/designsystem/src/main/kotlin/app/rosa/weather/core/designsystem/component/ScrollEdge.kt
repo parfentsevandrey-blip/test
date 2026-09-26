@@ -29,20 +29,22 @@ import app.rosa.weather.core.designsystem.glass.Backdrop
  * Apple's scroll edge effect: content scrolling up under the floating bar fades into the sky
  * instead of sliding under the glass, so the bar stays legible and its glass keeps showing what is
  * really behind it. The live sky itself is laid over the band — solid down to [solid], gone by
- * [height] — as one small offscreen strip drawn from the sky's own layer.
+ * [height] — as one small offscreen strip drawn from the sky's own layer. [atBottom] turns the band
+ * round for a bar at the bottom of the screen: solid for [solid] up from the bottom edge.
  */
 @Composable
-fun SkyScrollEdge(height: Dp, solid: Dp, modifier: Modifier = Modifier) {
+fun SkyScrollEdge(height: Dp, solid: Dp, modifier: Modifier = Modifier, atBottom: Boolean = false) {
     val backdrop = LocalBackdrop.current ?: return
-    Box(modifier.fillMaxWidth().height(height).then(ScrollEdgeElement(backdrop, solid)))
+    Box(modifier.fillMaxWidth().height(height).then(ScrollEdgeElement(backdrop, solid, atBottom)))
 }
 
-private data class ScrollEdgeElement(val backdrop: Backdrop, val solid: Dp) : ModifierNodeElement<ScrollEdgeNode>() {
-    override fun create() = ScrollEdgeNode(backdrop, solid)
+private data class ScrollEdgeElement(val backdrop: Backdrop, val solid: Dp, val atBottom: Boolean) : ModifierNodeElement<ScrollEdgeNode>() {
+    override fun create() = ScrollEdgeNode(backdrop, solid, atBottom)
 
     override fun update(node: ScrollEdgeNode) {
         node.backdrop = backdrop
         node.solid = solid
+        node.atBottom = atBottom
         node.invalidateDraw()
     }
 
@@ -51,7 +53,7 @@ private data class ScrollEdgeElement(val backdrop: Backdrop, val solid: Dp) : Mo
     }
 }
 
-private class ScrollEdgeNode(var backdrop: Backdrop, var solid: Dp) :
+private class ScrollEdgeNode(var backdrop: Backdrop, var solid: Dp, var atBottom: Boolean) :
     Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode {
     private var layer: GraphicsLayer? = null
     private var position = Offset.Zero
@@ -82,7 +84,11 @@ private class ScrollEdgeNode(var backdrop: Backdrop, var solid: Dp) :
             strip.record {
                 translate(offset.x, offset.y) { drawLayer(b.layer) }
                 drawRect(
-                    Brush.verticalGradient(0f to Color.Black, fadeFrom to Color.Black, 1f to Color.Transparent),
+                    if (atBottom) {
+                        Brush.verticalGradient(0f to Color.Transparent, (1f - fadeFrom) to Color.Black, 1f to Color.Black)
+                    } else {
+                        Brush.verticalGradient(0f to Color.Black, fadeFrom to Color.Black, 1f to Color.Transparent)
+                    },
                     blendMode = BlendMode.DstIn,
                 )
             }

@@ -15,11 +15,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
@@ -40,7 +43,7 @@ import kotlin.math.roundToInt
  * edge that dims slightly toward the bottom, and the pieces you touch (slider knobs, the search
  * lens) carry a specular glint. Rounded caps on a 24-unit grid, legible from 14 to 28 dp.
  */
-enum class RosaIcon { Search, Plus, Settings, Location, Close, Back, Widgets, Refresh, Check, Trash, Drag, Chevron, Sparkle }
+enum class RosaIcon { Search, Plus, Settings, Location, Close, Back, Widgets, Refresh, Check, Trash, Drag, Chevron, Sparkle, Weather, Pin }
 
 @Composable
 fun RosaIconView(icon: RosaIcon, tint: Color, modifier: Modifier = Modifier, size: Dp = 22.dp) {
@@ -151,6 +154,36 @@ private class GlassIconScope(val scope: DrawScope, val u: Float, val tint: Color
                 glint(p(9f, 9.6f), 0.7f)
             }
             RosaIcon.Drag -> lines(p(6f, 8f) to p(18f, 8f), p(6f, 12f) to p(18f, 12f), p(6f, 16f) to p(18f, 16f))
+            RosaIcon.Weather -> {
+                // A glass sun behind a glass cloud.
+                val cloud = listOf(
+                    path { addOval(Rect(p(8f, 8f), p(17f, 17f))) },
+                    path { addOval(Rect(p(13.5f, 11.5f), p(20.5f, 18.5f))) },
+                    path { addRoundRect(RoundRect(Rect(p(3.5f, 13f), p(20.5f, 19.5f)), CornerRadius(3.25f * u))) },
+                ).reduce { a, b -> Path.combine(PathOperation.Union, a, b) }
+                clipPath(cloud, ClipOp.Difference) {
+                    orb(p(15.5f, 7.5f), 3.4f)
+                    listOf(0f, 60f, 120f, 300f).forEach { deg ->
+                        val a = Math.toRadians(deg.toDouble() - 90.0)
+                        val c = p(15.5f, 7.5f)
+                        val dir = Offset(kotlin.math.cos(a).toFloat(), kotlin.math.sin(a).toFloat())
+                        drawLine(line, c + dir * (5f * u), c + dir * (6.6f * u), 1.5f * u, StrokeCap.Round)
+                    }
+                }
+                glass(cloud)
+                glint(p(10.5f, 10.8f), 0.8f)
+            }
+            RosaIcon.Pin -> {
+                // A glass map pin with a bright bead in its head.
+                glass(
+                    path {
+                        moveTo(12f * u, 21.2f * u)
+                        arcTo(Rect(p(5.5f, 3.5f), p(18.5f, 16.5f)), 145f, 250f, false)
+                        close()
+                    },
+                )
+                orb(p(12f, 10f), 2.4f)
+            }
             RosaIcon.Sparkle -> {
                 val star = path {
                     moveTo(12f * u, 3f * u)

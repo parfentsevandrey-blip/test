@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -73,7 +72,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
@@ -96,8 +94,6 @@ import app.rosa.weather.core.designsystem.component.LiquidPageIndicator
 import app.rosa.weather.core.designsystem.component.RosaIcon
 import app.rosa.weather.core.designsystem.component.RosaIconView
 import app.rosa.weather.core.designsystem.component.WeatherGlyph
-import app.rosa.weather.core.designsystem.component.hop
-import app.rosa.weather.core.designsystem.component.rememberHop
 import app.rosa.weather.core.designsystem.format.WeatherFormat
 import app.rosa.weather.core.designsystem.glass.GlassStyle
 import app.rosa.weather.core.designsystem.glass.GlassText
@@ -115,7 +111,9 @@ import app.rosa.weather.core.model.Headlines
 import app.rosa.weather.core.model.WeatherCondition
 import app.rosa.weather.core.model.momentAt
 import app.rosa.weather.ui.common.LocalSky
+import app.rosa.weather.ui.common.LocalTabBarInset
 import app.rosa.weather.ui.common.SkyController
+import app.rosa.weather.ui.common.bottomContentInset
 import kotlin.math.PI
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -132,8 +130,6 @@ import kotlinx.coroutines.withTimeoutOrNull
 fun HomeRoute(
     viewModel: HomeViewModel,
     onOpenPlaces: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenWidgets: () -> Unit,
     onOpenSearch: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -146,8 +142,6 @@ fun HomeRoute(
         onSelect = viewModel::select,
         onLocationPermission = viewModel::onLocationPermission,
         onOpenPlaces = onOpenPlaces,
-        onOpenSettings = onOpenSettings,
-        onOpenWidgets = onOpenWidgets,
         onOpenSearch = onOpenSearch,
     )
 }
@@ -159,8 +153,6 @@ fun HomeScreen(
     onSelect: (String) -> Unit,
     onLocationPermission: (Boolean) -> Unit,
     onOpenPlaces: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenWidgets: () -> Unit,
     onOpenSearch: () -> Unit,
     userRefreshing: Boolean = false,
     fixedNow: Long? = null,
@@ -270,8 +262,6 @@ fun HomeScreen(
             pageCount = pages.size,
             pagePosition = { pagerState.currentPage + pagerState.currentPageOffsetFraction },
             onOpenPlaces = onOpenPlaces,
-            onOpenSettings = onOpenSettings,
-            onOpenWidgets = onOpenWidgets,
         )
     }
 }
@@ -294,7 +284,7 @@ private fun PlaceContent(
         format.withZone(WeatherFormat.zoneOf(forecast?.timezone, forecast?.utcOffsetSeconds ?: 0))
     }
     val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val bottom = bottomContentInset()
     val listState = rememberLazyListState()
     val isRefreshing by rememberUpdatedState(refreshing)
     val refresh = rememberLiquidRefresh(onRefresh) { isRefreshing }
@@ -319,7 +309,7 @@ private fun PlaceContent(
     Box(Modifier.fillMaxSize().onPlaced { probe.page = it }.nestedScroll(refresh.connection)) {
         LazyColumn(
             state = listState,
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = top + 76.dp, bottom = bottom + 28.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = top + 76.dp, bottom = bottom + 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
@@ -520,8 +510,6 @@ private fun TopBar(
     pageCount: Int,
     pagePosition: () -> Float,
     onOpenPlaces: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenWidgets: () -> Unit,
 ) {
     val colors = Rosa.colors
     Column(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -551,37 +539,10 @@ private fun TopBar(
                     }
                 }
             }
-            Spacer(Modifier.weight(1f))
-            // Related actions share one glass capsule (Apple groups bar items by function).
-            GlassSurface(cornerRadius = 24.dp) {
-                Row {
-                    BarIcon(RosaIcon.Widgets, stringResource(R.string.cd_widgets), onOpenWidgets)
-                    BarIcon(RosaIcon.Settings, stringResource(R.string.cd_settings), onOpenSettings)
-                }
-            }
         }
         if (pageCount > 1) {
             LiquidPageIndicator(pageCount, pagePosition, Modifier.padding(start = 12.dp, top = 8.dp))
         }
-    }
-}
-
-@Composable
-private fun BarIcon(icon: RosaIcon, description: String, onClick: () -> Unit) {
-    val haptics = LocalHaptics.current
-    val hop = rememberHop()
-    Box(
-        Modifier
-            .size(48.dp)
-            .clickable(remember { MutableInteractionSource() }, indication = null, role = Role.Button, onClickLabel = description) {
-                haptics?.press()
-                hop.play()
-                onClick()
-            }
-            .semantics { contentDescription = description },
-        contentAlignment = Alignment.Center,
-    ) {
-        RosaIconView(icon, Rosa.colors.ink, size = 21.dp, modifier = Modifier.hop(hop))
     }
 }
 
@@ -853,7 +814,7 @@ private fun RefreshDrop(refresh: LiquidRefresh, modifier: Modifier) {
 @Composable
 private fun Onboarding(waitingForLocation: Boolean, denied: Boolean, onAllow: () -> Unit, onChooseCity: () -> Unit) {
     val colors = Rosa.colors
-    Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxSize().padding(bottom = LocalTabBarInset.current).padding(24.dp), contentAlignment = Alignment.Center) {
         GlassSurface(Modifier.fillMaxWidth(), style = GlassStyle.Sheet, cornerRadius = 38.dp, contentPadding = PaddingValues(26.dp)) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                 WeatherGlyph(WeatherCondition.PartlyCloudy, true, Modifier.size(96.dp), animated = true)

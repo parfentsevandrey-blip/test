@@ -17,6 +17,7 @@
     <string name="permission_allow">Разрешить</string>
     <string name="permission_choose">Выбрать город</string>
     <string name="permission_denied">Геолокация выключена. Выберите город — переключиться можно позже.</string>
+    <string name="tab_weather">Погода</string>
     <string name="places_title">Места</string>
     <string name="places_add">Добавить место</string>
     <string name="places_follow">Следовать за мной</string>
@@ -62,8 +63,6 @@
     <string name="widgets_none">Виджетов пока нет. Выберите стиль ниже — каждый растягивается до любого размера.</string>
     <string name="widgets_pin_unsupported">Лаунчер не умеет добавлять виджеты из приложений — зажмите пустое место на рабочем столе.</string>
     <string name="cd_places">Места</string>
-    <string name="cd_settings">Настройки</string>
-    <string name="cd_widgets">Виджеты</string>
     <string name="cd_back">Назад</string>
     <string name="cd_refresh">Обновить</string>
     <string name="cd_add">Добавить</string>

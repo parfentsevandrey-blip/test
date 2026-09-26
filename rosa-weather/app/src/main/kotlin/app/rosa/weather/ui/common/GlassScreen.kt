@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -23,22 +24,29 @@ import app.rosa.weather.core.designsystem.component.GlassIconButton
 import app.rosa.weather.core.designsystem.component.RosaIcon
 import app.rosa.weather.core.designsystem.theme.Rosa
 
-/** Secondary screens: a floating glass back button and a large title over the shared sky. */
+/**
+ * A screen over the shared sky under a large title. A screen pushed over a tab ([onBack] given)
+ * also has a floating glass back button; the tabs themselves are reached from the bar below.
+ */
 @Composable
 fun GlassScreen(
     title: String,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     modifier: Modifier = Modifier,
     actions: @Composable () -> Unit = {},
     content: @Composable BoxScope.() -> Unit,
 ) {
     Column(modifier.fillMaxSize()) {
         Row(
-            Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
+            Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp).heightIn(min = 48.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            GlassIconButton(RosaIcon.Back, stringResource(R.string.cd_back), onBack)
-            Spacer(Modifier.width(14.dp))
+            if (onBack != null) {
+                GlassIconButton(RosaIcon.Back, stringResource(R.string.cd_back), onBack)
+                Spacer(Modifier.width(14.dp))
+            } else {
+                Spacer(Modifier.width(6.dp))
+            }
             Text(
                 title,
                 style = Rosa.type.title,

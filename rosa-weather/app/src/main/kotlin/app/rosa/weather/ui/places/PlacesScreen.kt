@@ -11,12 +11,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -60,18 +57,18 @@ import app.rosa.weather.core.model.Place
 import app.rosa.weather.core.model.SkyPalette
 import app.rosa.weather.core.model.momentAt
 import app.rosa.weather.ui.common.GlassScreen
+import app.rosa.weather.ui.common.bottomContentInset
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
 @Composable
-fun PlacesRoute(viewModel: PlacesViewModel, onBack: () -> Unit, onAdd: () -> Unit) {
+fun PlacesRoute(viewModel: PlacesViewModel, onShowWeather: () -> Unit, onAdd: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     PlacesScreen(
         state,
-        onBack = onBack,
         onAdd = onAdd,
         onFollow = { viewModel.setFollowDevice(it) },
-        onSelect = { id -> viewModel.select(id); onBack() },
+        onSelect = { id -> viewModel.select(id); onShowWeather() },
         onRemove = { viewModel.remove(it) },
         onMove = { from, to -> viewModel.move(from, to) },
     )
@@ -81,7 +78,6 @@ fun PlacesRoute(viewModel: PlacesViewModel, onBack: () -> Unit, onAdd: () -> Uni
 @Composable
 fun PlacesScreen(
     state: PlacesUiState,
-    onBack: () -> Unit,
     onAdd: () -> Unit,
     onFollow: (Boolean) -> Unit,
     onSelect: (String) -> Unit,
@@ -91,10 +87,10 @@ fun PlacesScreen(
 ) {
     val context = LocalContext.current
     val format = remember(state.units) { WeatherFormat(context, state.units) }
-    val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val bottom = bottomContentInset()
     GlassScreen(
         title = stringResource(R.string.places_title),
-        onBack = onBack,
+        onBack = null,
         actions = { GlassIconButton(RosaIcon.Plus, stringResource(R.string.cd_add), onAdd) },
     ) {
         LazyColumn(

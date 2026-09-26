@@ -17,6 +17,7 @@
     <string name="permission_allow">Allow</string>
     <string name="permission_choose">Choose a city</string>
     <string name="permission_denied">Location is off. Pick a city instead — you can switch later.</string>
+    <string name="tab_weather">Weather</string>
     <string name="places_title">Places</string>
     <string name="places_add">Add a place</string>
     <string name="places_follow">Follow my location</string>
@@ -62,8 +63,6 @@
     <string name="widgets_none">No widgets yet. Pick a style below — every one stretches to any size.</string>
     <string name="widgets_pin_unsupported">Your launcher doesn’t support adding widgets from apps — long-press the home screen instead.</string>
     <string name="cd_places">Places</string>
-    <string name="cd_settings">Settings</string>
-    <string name="cd_widgets">Widgets</string>
     <string name="cd_back">Back</string>
     <string name="cd_refresh">Refresh</string>
     <string name="cd_add">Add</string>

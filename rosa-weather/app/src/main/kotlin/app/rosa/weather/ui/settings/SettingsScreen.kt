@@ -10,12 +10,9 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -49,9 +46,10 @@ import app.rosa.weather.core.model.TemperatureUnit
 import app.rosa.weather.core.model.Units
 import app.rosa.weather.core.model.WindUnit
 import app.rosa.weather.ui.common.GlassScreen
+import app.rosa.weather.ui.common.bottomContentInset
 
 @Composable
-fun SettingsRoute(viewModel: SettingsViewModel, onBack: () -> Unit) {
+fun SettingsRoute(viewModel: SettingsViewModel) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val backgroundLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -69,7 +67,6 @@ fun SettingsRoute(viewModel: SettingsViewModel, onBack: () -> Unit) {
                 viewModel.update { it.copy(backgroundLocation = false) }
             }
         },
-        onBack = onBack,
     )
 }
 
@@ -79,10 +76,9 @@ fun SettingsScreen(
     onUpdate: ((AppSettings) -> AppSettings) -> Unit,
     onUpdateUnits: ((Units) -> Units) -> Unit,
     onBackgroundLocation: (Boolean) -> Unit,
-    onBack: () -> Unit,
 ) {
     val units = settings.resolvedUnits()
-    val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val bottom = bottomContentInset()
 
     val windLabels = WindUnit.entries.associateWith { windLabel(it) }
     val pressureLabels = PressureUnit.entries.associateWith { pressureLabel(it) }
@@ -93,7 +89,7 @@ fun SettingsScreen(
         if (m < 60) stringResource(R.string.minutes_value, m) else stringResource(R.string.hours_value, m / 60)
     }
 
-    GlassScreen(stringResource(R.string.settings_title), onBack) {
+    GlassScreen(stringResource(R.string.settings_title), onBack = null) {
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = bottom + 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
