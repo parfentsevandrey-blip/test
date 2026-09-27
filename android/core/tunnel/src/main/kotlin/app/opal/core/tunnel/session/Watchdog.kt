@@ -35,6 +35,7 @@ internal class Watchdog(
     private var lastCircuitBuiltAt = 0L
     private var lastStreamSucceededAt = 0L
     private var lastReadAt = 0L
+    private var lastReportAt = 0L
     private var armedAt = 0L
 
     private var lastTickAt = 0L
@@ -67,7 +68,14 @@ internal class Watchdog(
     fun onEvent(event: TorEvent) {
         val t = now()
         when (event) {
-            is TorEvent.Bandwidth -> if (event.read > 0) lastReadAt = t
+            is TorEvent.Bandwidth -> {
+                // Tor reports every second while its main loop runs. A long gap means Tor itself
+                // was busy (loading GeoIP or its cache on a slow device): that time says nothing
+                // about the network, so observation starts over.
+                if (lastReportAt != 0L && t - lastReportAt > TOR_BUSY_MILLIS) arm()
+                lastReportAt = t
+                if (event.read > 0) lastReadAt = t
+            }
             is TorEvent.Stream ->
                 when (event.status) {
                     StreamStatus.NEW,
@@ -117,12 +125,17 @@ internal class Watchdog(
      * A stall during which Tor read nothing at all for [deadAfterMillis]. A bridge pads an idle
      * connection that carries user traffic (Tor's defaults: every 1.5–9.5 s, 9–14 s with reduced
      * padding), and Snowflake has long replaced a silent proxy by then: the session behind the
-     * proxies is gone.
+     * proxies is gone. Only while Tor keeps reporting: silence from a busy Tor is not the
+     * network's.
      */
-    fun deadSession(): Stall? = evaluate()?.takeIf { silentMillis() >= deadAfterMillis }
+    fun deadSession(): Stall? =
+        evaluate()?.takeIf { torReporting() && silentMillis() >= deadAfterMillis }
 
     /** Milliseconds since Tor last read a byte from the network (counted from [arm] at most). */
     fun silentMillis(): Long = now() - lastReadAt
+
+    private fun torReporting(): Boolean =
+        lastReportAt != 0L && now() - lastReportAt <= TOR_BUSY_MILLIS
 
     private fun prune(times: ArrayDeque<Long>, t: Long) {
         while (times.isNotEmpty() && t - times.first() > windowMillis) times.removeFirst()
@@ -131,3 +144,6 @@ internal class Watchdog(
 
 /** A tick this much later than due means the process was asleep (see [Watchdog.onTick]). */
 private const val ASLEEP_SLACK_MILLIS = 30_000L
+
+/** No bandwidth report from Tor for this long: Tor's main loop is busy (see [Watchdog.onEvent]). */
+private const val TOR_BUSY_MILLIS = 10_000L

@@ -19,6 +19,14 @@ class WatchdogTest {
     private fun circuit(status: CircuitStatus, reason: String? = null) =
         TorEvent.Circuit("7", status, emptyList(), "GENERAL", emptySet(), reason, null)
 
+    /** Tor reports bandwidth every second; with nothing arriving it reports zero bytes read. */
+    private fun silence(millis: Long) {
+        repeat((millis / 1_000).toInt()) {
+            time += 1_000
+            dog.onEvent(TorEvent.Bandwidth(0, 0))
+        }
+    }
+
     @Test
     fun `healthy traffic is not a stall`() {
         repeat(30) {
@@ -70,30 +78,48 @@ class WatchdogTest {
     @Test
     fun `a Snowflake proxy swap is not a dead session`() {
         dog.onEvent(stream("1", StreamStatus.SENTCONNECT))
-        time += 46_000
+        silence(46_000)
         // A freeze, but Snowflake is still replacing the silent proxy.
         assertEquals(Watchdog.Stall.Frozen, dog.evaluate())
         assertNull(dog.deadSession())
         // The new proxy carries data again.
-        time += 4_000
+        silence(3_000)
+        time += 1_000
         dog.onEvent(TorEvent.Bandwidth(20_000, 1_000))
-        time += 30_000
+        silence(30_000)
         assertNull(dog.deadSession())
     }
 
     @Test
     fun `a minute of silence with work waiting is a dead session`() {
         dog.onEvent(stream("1", StreamStatus.SENTCONNECT))
-        time += 59_000
+        silence(59_000)
         assertNull(dog.deadSession())
-        time += 1_000
+        silence(1_000)
         assertEquals(Watchdog.Stall.Frozen, dog.deadSession())
         assertEquals(60_000L, dog.silentMillis())
     }
 
     @Test
+    fun `a busy Tor is not a dead session`() {
+        dog.onEvent(stream("1", StreamStatus.SENTCONNECT))
+        silence(30_000)
+        // Tor parses GeoIP or its cache and reports nothing for 40 s: its silence, not the
+        // network's.
+        time += 40_000
+        assertNull(dog.deadSession())
+        // Reports resume: observation starts over.
+        silence(1_000)
+        assertNull(dog.deadSession())
+        assertEquals(0L, dog.silentMillis())
+        dog.onEvent(stream("2", StreamStatus.SENTCONNECT))
+        silence(60_000)
+        assertEquals(Watchdog.Stall.Frozen, dog.deadSession())
+    }
+
+    @Test
     fun `failures while the bridge still talks are no dead session`() {
-        time += 61_000
+        silence(61_000)
         repeat(4) {
             time += 1_000
             dog.onEvent(TorEvent.Bandwidth(600, 0))
@@ -122,7 +148,7 @@ class WatchdogTest {
         time += 2_000
         assertTrue(dog.onTick(2_000))
         dog.onEvent(stream("2", StreamStatus.SENTCONNECT))
-        time += 60_000
+        silence(60_000)
         assertEquals(Watchdog.Stall.Frozen, dog.deadSession())
     }
 

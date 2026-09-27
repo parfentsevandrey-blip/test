@@ -23,6 +23,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -104,8 +105,11 @@ private constructor(
         val waiter = CompletableDeferred<ControlReply>()
         writeLock.withLock {
             if (closed.isCompleted) throw TorControlException("Tor control connection closed")
-            synchronized(pendingLock) { pending.addLast(waiter) }
-            withContext(Dispatchers.IO) {
+            // Queueing and writing are one step: cancelled in between, a queued waiter whose
+            // command was never sent would take the next reply, and every later command the reply
+            // meant for the one before it.
+            withContext(NonCancellable + Dispatchers.IO) {
+                synchronized(pendingLock) { pending.addLast(waiter) }
                 output.write((command + "\r\n").toByteArray(Charsets.UTF_8))
                 output.flush()
             }

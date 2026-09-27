@@ -9,13 +9,14 @@ import app.opal.core.model.tunnel.CircuitHop
 import app.opal.core.model.tunnel.CircuitInfo
 import app.opal.core.model.tunnel.HopRole
 import app.opal.core.tunnel.tor.TorEngine
+import app.opal.core.tunnel.util.LogBuffer
 
 /**
  * Describes the circuit currently used by the user's traffic — bridge → middle → exit with
  * countries and the exit address — from Tor's own data (circuit-status, consensus, GeoIP), never
  * from external "what is my IP" services.
  */
-internal class CircuitInspector(private val engine: TorEngine) {
+internal class CircuitInspector(private val engine: TorEngine, private val log: LogBuffer? = null) {
 
     suspend fun inspect(
         bridges: List<BridgeLine>,
@@ -23,19 +24,34 @@ internal class CircuitInspector(private val engine: TorEngine) {
         geoIpLoaded: Boolean,
     ): CircuitInfo? {
         val status = engine.getInfo("circuit-status")["circuit-status"].orEmpty()
-        val circuits =
+        val built =
             status
                 .lineSequence()
                 .filter { it.isNotBlank() }
                 .mapNotNull { TorEventParser.parse("CIRC", it) as? TorEvent.Circuit }
-                .filter { it.status == CircuitStatus.BUILT && it.path.size >= 2 }
-                .filter { it.purpose == null || it.purpose == "GENERAL" }
-                .filterNot { "ONEHOP_TUNNEL" in it.buildFlags || "IS_INTERNAL" in it.buildFlags }
+                .filter { it.status == CircuitStatus.BUILT }
                 .toList()
+        val circuits =
+            built
+                .filter { it.path.size >= 2 }
+                .filter { it.purpose == null || it.purpose in USER_TRAFFIC_PURPOSES }
+                .filterNot { "ONEHOP_TUNNEL" in it.buildFlags || "IS_INTERNAL" in it.buildFlags }
         val circuit =
             circuits.firstOrNull { it.id == preferredCircuitId }
                 ?: circuits.firstOrNull()
-                ?: return null
+                ?: run {
+                    // Purposes and counts only: no relays, no addresses.
+                    val purposes =
+                        built
+                            .groupingBy { it.purpose ?: "?" }
+                            .eachCount()
+                            .entries
+                            .joinToString {
+                                "${it.key}×${it.value}"
+                            }
+                    log?.d(TAG, "No circuit for traffic yet; built: ${purposes.ifEmpty { "none" }}")
+                    return null
+                }
         val hops =
             circuit.path.mapIndexed { index, relay ->
                 val last = index == circuit.path.lastIndex
@@ -83,4 +99,16 @@ internal class CircuitInspector(private val engine: TorEngine) {
         .getOrNull()
         ?.lowercase()
         ?.takeIf { it.length == 2 && it != "??" }
+
+    private companion object {
+        const val TAG = "circuit"
+
+        /**
+         * Circuits that carry the user's streams. Tor 0.4.8+ puts general streams on a linked
+         * conflux set first (`circuit_get_best`), plain general circuits only when none fits, so
+         * the stream's circuit is usually `CONFLUX_LINKED`. Legs still being linked
+         * (`CONFLUX_UNLINKED`) carry nothing yet.
+         */
+        val USER_TRAFFIC_PURPOSES = setOf("GENERAL", "CONFLUX_LINKED")
+    }
 }

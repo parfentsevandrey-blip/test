@@ -13,6 +13,7 @@ import app.opal.core.model.settings.ConnectionMode
 import app.opal.core.model.tor.CircuitStatus
 import app.opal.core.model.tor.LogSeverity
 import app.opal.core.model.tor.OrConnStatus
+import app.opal.core.model.tor.RelayRef
 import app.opal.core.model.tor.StreamStatus
 import app.opal.core.model.tor.TorEvent
 import app.opal.core.model.tor.TorEventParser
@@ -36,6 +37,7 @@ import app.opal.core.tunnel.tor.TorFiles
 import app.opal.core.tunnel.tor.TorSignal
 import app.opal.core.tunnel.util.LogBuffer
 import app.opal.core.tunnel.util.LoopbackPorts
+import java.io.IOException
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.min
 import kotlinx.coroutines.CoroutineName
@@ -113,7 +115,10 @@ internal class TorSession(
             parentScope.coroutineContext + job + dispatcher + CoroutineName("tor-session")
         )
 
-    private val inspector = CircuitInspector(engine)
+    private val inspector = CircuitInspector(engine, log)
+
+    /** Bridges Tor currently skips (GUARD DOWN without UP since), for the log only. */
+    private val unreachableBridges = HashSet<String>()
     private val tracker = BridgeUsageTracker()
     private val watchdog = Watchdog(now)
 
@@ -274,6 +279,7 @@ internal class TorSession(
         ready = false
         runCatching { engine.stop() }
         tracker.reset()
+        unreachableBridges.clear()
         settings = settingsRepo.current()
         startTor()
     }
@@ -331,8 +337,27 @@ internal class TorSession(
                 }
             is TorEvent.NetworkLiveness ->
                 log.d(TAG, "Tor network liveness: ${if (event.up) "up" else "down"}")
+            is TorEvent.Guard -> onGuard(event)
             else -> Unit
         }
+    }
+
+    /**
+     * For the diagnostics log. Tor blames a bridge when a circuit gets no answer from it (with
+     * Snowflake: while the proxy changes) and skips it for new circuits until it is retried: after
+     * 10 minutes, or right away once no bridge is left and an app needs a new circuit.
+     */
+    private fun onGuard(event: TorEvent.Guard) {
+        val fingerprint = RelayRef.parse(event.name).fingerprint
+        val bridge = configured.firstOrNull { it.fingerprint == fingerprint } ?: return
+        // Tor repeats DOWN for every circuit that fails: log changes only.
+        val change =
+            when (event.status) {
+                "DOWN" -> "marked unreachable by Tor".takeIf { unreachableBridges.add(fingerprint) }
+                "UP" -> "reachable again".takeIf { unreachableBridges.remove(fingerprint) }
+                else -> null
+            } ?: return
+        log.i(TAG, "Bridge (${bridge.transport}) $change")
     }
 
     private fun onBootstrap(event: TorEvent.Bootstrap) {
@@ -438,7 +463,7 @@ internal class TorSession(
             )
         }
         applyRuntimeOptions()
-        refreshCircuit()
+        scheduleCircuitRefresh(delayMs = 0)
     }
 
     // --- race ---------------------------------------------------------------------------------
@@ -889,17 +914,26 @@ internal class TorSession(
         circuitRefresh?.cancel()
         circuitRefresh = scope.launch {
             delay(delayMs)
-            refreshCircuit()
+            // Nothing else asks again while streams keep using the same circuit.
+            while (!refreshCircuit()) delay(CIRCUIT_RETRY_MS)
         }
     }
 
-    private suspend fun refreshCircuit() {
-        if (!ready) return
+    /** Returns false when Tor did not answer (worth asking again). */
+    private suspend fun refreshCircuit(): Boolean {
+        if (!ready) return true
+        // A cancelled refresh (a newer one replaces it) must not publish anything, and a failed
+        // query says nothing about the circuit: the panel keeps what it shows.
         val info = runCatching {
             inspector.inspect(configured, preferredCircuit, geoIpLoaded)
         }
-            .getOrNull()
+            .getOrElse { e ->
+                if (e is CancellationException) throw e
+                log.d(TAG, "Circuit info unavailable: ${e.message}")
+                return e !is IOException
+            }
         listener.onCircuit(info)
+        return true
     }
 
     private fun describe(lines: List<BridgeLine>): String =
@@ -917,6 +951,7 @@ internal class TorSession(
         const val SLOW_HINT_MS = 120_000L
         const val SNOWFLAKE_RENEW_INTERVAL_MS = 3 * 60_000L
         const val WATCHDOG_TICK_MS = 2_000L
+        const val CIRCUIT_RETRY_MS = 10_000L
         const val GIVE_UP_AFTER_QUIET_MS = 60_000L
         const val MIN_ATTEMPT_MS = 90_000L
         const val RETRY_BASE_MS = 30_000L
