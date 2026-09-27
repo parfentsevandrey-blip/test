@@ -52,6 +52,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import app.rosa.weather.R
 import app.rosa.weather.core.designsystem.component.GlassSurface
@@ -226,7 +227,8 @@ private fun HueStrip(hue: Int, onHue: (Int) -> Unit, nameOf: (Int) -> String?) {
         }
         val travel = maxWidth - KnobSize
         val knob = Modifier
-            .offset(x = travel * (shown / MAX_HUE))
+            // Placed in the layout phase: the knob follows the finger without recomposing the strip.
+            .offset { IntOffset((travel.toPx() * (shown / MAX_HUE)).roundToInt(), 0) }
             .size(KnobSize)
             .graphicsLayer {
                 val s = 1f + 0.3f * lift
