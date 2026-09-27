@@ -91,6 +91,11 @@ data class SkyParams(
     val lightning: Float,
     val frost: Float,
     val condensation: Float,
+    /**
+     * 0..1: how far the sky has gone out ([Appearance.Amoled]). At 1 it is true black, and only
+     * what glows on its own is left: stars, rain and snow, the lightning's channel.
+     */
+    val black: Float = 0f,
 ) {
     fun lerp(to: SkyParams, t: Float): SkyParams {
         fun f(a: Float, b: Float) = a + (b - a) * t
@@ -100,6 +105,7 @@ data class SkyParams(
             f(bodyPath, to.bodyPath), f(bodyLift, to.bodyLift), if (t < 0.5f) isSun else to.isSun, f(bodyVisible, to.bodyVisible), f(moonPhase, to.moonPhase),
             f(cloudCover, to.cloudCover), f(cloudDark, to.cloudDark), f(fog, to.fog), f(wind, to.wind), f(stars, to.stars),
             f(rain, to.rain), f(snow, to.snow), f(lightning, to.lightning), f(frost, to.frost), f(condensation, to.condensation),
+            f(black, to.black),
         )
     }
 
@@ -112,8 +118,8 @@ data class SkyParams(
         fun from(moment: ForecastMoment, palette: SkyPalette, appearance: Appearance = Appearance.Auto): SkyParams {
             val visual: WeatherVisual = moment.visual
             // Fixed moods keep real weather but no real sun or moon: a noon sun in "Dark" (or the
-            // moon over a porcelain sky) would contradict the light they set.
-            val realSky = appearance == Appearance.Auto
+            // moon over a porcelain sky) would contradict the light they set. Black has none either.
+            val realSky = appearance.followsRealSky
             val useSun = moment.sun.elevation > -5
             val body = if (useSun) moment.sun else moment.moon
             // The east–west component of the azimuth: rising bodies are east, setting ones west,
@@ -121,7 +127,8 @@ data class SkyParams(
             val path = ((1.0 - sin(Math.toRadians(body.azimuth))) / 2.0).toFloat()
             val lift = (body.elevation / 50.0).toFloat().coerceIn(-0.25f, 1f)
             val night = when (appearance) {
-                Appearance.Auto -> ((-moment.sun.elevation - 6) / 8.0).toFloat().coerceIn(0f, 1f)
+                // Black keeps the real time: its stars come out when the night does.
+                Appearance.Auto, Appearance.Tinted, Appearance.Amoled -> ((-moment.sun.elevation - 6) / 8.0).toFloat().coerceIn(0f, 1f)
                 Appearance.Dark -> 1f
                 Appearance.Evening -> 0.3f // the first stars of the blue hour
                 Appearance.Light -> 0f
@@ -137,6 +144,7 @@ data class SkyParams(
                 lightning = visual.lightning,
                 frost = moment.paneFrost,
                 condensation = moment.paneMist,
+                black = if (appearance == Appearance.Amoled) 1f else 0f,
             )
         }
     }
@@ -299,6 +307,7 @@ fun SkyScene(
         sky.setFloatUniform("boltSeed", bolt.seed)
         sky.setFloatUniform("boltX", bolt.x)
         sky.setFloatUniform("tilt", tiltValue.x, tiltValue.y)
+        sky.setFloatUniform("black", p.black)
         light?.let { env ->
             // The sun lights the glass by its colour, the moon softly, by its phase. Scattered cloud
             // lets their light through; an overcast sky leaves only its own soft light.
@@ -323,8 +332,12 @@ fun SkyScene(
         val precipitating = p.rain > 0.02f || p.snow > 0.02f
         val age = rippleAge.value
         val rippleActive = age < RIPPLE_SECONDS
+        // On a black sky the pane stays clear: a milky mist or frost over it would be grey, not black.
+        // Beads of rain stay, catching the light.
+        val paneFrost = p.frost * (1f - p.black)
+        val paneMist = p.condensation * (1f - p.black)
         val windowOn = quality.windowEffects &&
-            (p.rain > 0.05f || p.frost > 0.02f || p.condensation > 0.05f || rippleActive)
+            (p.rain > 0.05f || paneFrost > 0.02f || paneMist > 0.05f || rippleActive)
         // The pane (and the rain, whose streaks it refracts) is drawn finer than the soft sky.
         val ws = if (windowOn) max(quality.windowScale, s) else s
         val pw = max(1, (size.width * ws).roundToInt())
@@ -338,6 +351,7 @@ fun SkyScene(
             precip.setFloatUniform("wind", p.wind)
             precip.setFloatUniform("tilt", tiltValue.x, tiltValue.y)
             precip.setColorUniform("tint", lerp(p.horizon, p.cloudLight, 0.5f).toArgb())
+            precip.setFloatUniform("black", p.black)
         }
 
         layer.renderEffect = null
@@ -350,8 +364,8 @@ fun SkyScene(
             window.setFloatUniform("resolution", pw.toFloat(), ph.toFloat())
             window.setFloatUniform("time", t)
             window.setFloatUniform("drops", (p.rain * 1.1f).coerceAtMost(1f))
-            window.setFloatUniform("frost", p.frost)
-            window.setFloatUniform("fogged", p.condensation)
+            window.setFloatUniform("frost", paneFrost)
+            window.setFloatUniform("fogged", paneMist)
             window.setFloatUniform(
                 "ripple",
                 ripple.position.x * ws, ripple.position.y * ws, t - age, if (rippleActive) ripple.strength else 0f,

@@ -36,6 +36,10 @@ import org.intellij.lang.annotations.Language
  *  - **Materialisation**: appearing grows the lensing (never plain alpha) while a sweep of light
  *    crosses the pane as it forms.
  *  - **Chromatic dispersion** at the bezel, strongest at the corners.
+ *  - **Coloured glass** ([stain]): the scene seen through it keeps its light and shade but takes
+ *    the glass's hue; the tone deepens toward the rim, where the light crosses the most glass, and
+ *    the light held inside the glass glows in its own hue. Reflections — the catch-light, the sky
+ *    in the rim, the glint — stay the colour of the light they reflect.
  */
 @Language("AGSL")
 internal const val LIQUID_GLASS_SHADER = """
@@ -67,6 +71,8 @@ uniform float2 root;
 uniform float2 sheen;
 uniform float px;
 uniform float4 bounds;
+uniform float stain;
+layout(color) uniform half4 stainGlow;
 
 // How much of its light the rim keeps along the sides, away from both lit corners.
 const float RIM_FLOOR = 0.4;
@@ -191,7 +197,18 @@ half4 main(float2 coord) {
 
     // The body: restrained vibrancy, the glass's own tone, a little brighter toward the light.
     col.rgb = vibrance(col.rgb, mix(1.0, saturation, materialize));
-    col.rgb = mix(col.rgb, tint.rgb, tint.a * half(materialize));
+    // Through coloured glass the scene keeps its light and shade, but in the glass's own hue — a
+    // blue sky doesn't turn rose glass violet.
+    if (stain > 0.0) {
+        half3 luma = half3(0.2126, 0.7152, 0.0722);
+        half lum = dot(col.rgb, luma);
+        half glowLum = max(dot(stainGlow.rgb, luma), 0.02);
+        half3 seen = lum <= glowLum ? stainGlow.rgb * (lum / glowLum) : mix(stainGlow.rgb, half3(1.0), (lum - glowLum) / (1.0 - glowLum));
+        col.rgb = mix(col.rgb, seen, half(stain * 0.75 * materialize));
+    }
+    // Coloured glass is deepest at its rim, where the light crosses the most of it.
+    float body = tint.a * materialize * (1.0 + stain * 0.8 * (1.0 - h));
+    col.rgb = mix(col.rgb, tint.rgb, half(min(body, 0.92)));
     float up = clamp(0.5 - dot(p / max(hs, float2(1.0)), L) * 0.5, 0.0, 1.0);
     col.rgb += half(brightness * materialize * (0.55 + 0.9 * (1.0 - up)));
     // A broad sheen across the glass from the side the light falls on.
@@ -222,7 +239,9 @@ half4 main(float2 coord) {
     // Light held in the glass glows in a band just inside the rim: thickness, all the way round.
     float zg = (t - 0.1) / 0.09;
     float held = exp(-zg * zg);
-    col.rgb += mix(shine, reflection, 0.6) * half(held * lit * (0.07 + 0.22 * pow(facing, 1.3) + 0.12 * pow(opposite, 1.5)));
+    // In coloured glass that light takes the glass's own hue.
+    half3 heldLight = mix(mix(shine, reflection, 0.6), stainGlow.rgb, half(stain * 0.8));
+    col.rgb += heldLight * half(held * lit * (0.07 + 0.22 * pow(facing, 1.3) + 0.12 * pow(opposite, 1.5)) * (1.0 + stain * 0.9));
     // The specular streak along the bevel just inside the rim, and its twin on the far side.
     float z = (x - 0.8) / 0.14;
     float band = exp(-z * z);

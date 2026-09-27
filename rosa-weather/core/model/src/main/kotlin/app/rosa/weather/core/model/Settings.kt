@@ -10,11 +10,25 @@ enum class HapticsLevel { Off, Subtle, Rich }
 enum class EffectsQuality { Auto, Battery, Balanced, Cinematic }
 
 /**
- * How the app is lit. [Auto] follows the real sky — dawn, day, dusk, night; the others hold one
- * mood all day. Weather (clouds, rain, snow, fog) stays real in every mode.
+ * How the app is lit, and what its glass is like. [Auto] follows the real sky — dawn, day, dusk,
+ * night; [Light], [Evening] and [Dark] hold one mood all day. [Amoled] puts the sky out for OLED
+ * screens: true black, on which only the weather itself glows — stars, rain, snow, lightning.
+ * [Tinted] keeps the real sky and colours the glass in a hue of the user's choice
+ * ([AppSettings.glassHue]). Weather (clouds, rain, snow, fog) stays real in every mode.
  */
 @Serializable
-enum class Appearance { Auto, Light, Evening, Dark }
+enum class Appearance {
+    Auto,
+    Light,
+    Evening,
+    Dark,
+    Amoled,
+    Tinted,
+    ;
+
+    /** The real sky: its time of day, its sun and moon where they really are. */
+    val followsRealSky: Boolean get() = this == Auto || this == Tinted
+}
 
 @Serializable
 data class AppSettings(
@@ -24,6 +38,8 @@ data class AppSettings(
     val haptics: HapticsLevel = HapticsLevel.Rich,
     val effects: EffectsQuality = EffectsQuality.Auto,
     val appearance: Appearance = Appearance.Auto,
+    /** The hue of the glass in [Appearance.Tinted], in degrees (see [GlassTint]). */
+    val glassHue: Int = GlassTint.DEFAULT_HUE,
     val tiltLighting: Boolean = true,
     val backgroundLocation: Boolean = false,
     val onboardingDone: Boolean = false,

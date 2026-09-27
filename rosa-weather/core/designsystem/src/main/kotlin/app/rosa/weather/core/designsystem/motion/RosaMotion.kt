@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 
 /**
  * Motion tokens. Apple's reference spring for Liquid Glass is `duration 0.5, bounce 0.3`, i.e.
@@ -27,6 +28,8 @@ object RosaMotion {
     fun <T> lazy(): FiniteAnimationSpec<T> = spring(1f, Spring.StiffnessVeryLow)
 
     val gelOffset = spring(GelDamping, GelStiffness, IntOffset(1, 1))
+
+    val gelSize = spring(GelDamping, GelStiffness, IntSize(1, 1))
 }
 
 /** False when the user disabled animations system-wide (Remove animations / scale 0). */

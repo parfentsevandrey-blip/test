@@ -1,5 +1,8 @@
 package app.rosa.weather.ui
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.tween
@@ -15,6 +18,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -56,6 +62,7 @@ fun RosaAppRoot() {
     val sky = remember { SkyController(SkyController.placeholder(System.currentTimeMillis() / 1000)) }
     val backStack = rememberNavBackStack(Home)
     LaunchedEffect(settings.appearance) { sky.applyAppearance(settings.appearance) }
+    SystemBarsFollowSky(sky)
     fun open(tab: RosaTab) {
         if (backStack.lastOrNull() == tab.key) return
         while (backStack.size > 1) backStack.removeLastOrNull()
@@ -101,6 +108,30 @@ fun RosaAppRoot() {
             }
         }
     }
+}
+
+/**
+ * The clock, battery and navigation icons follow the sky, not the system's dark mode: dark over a
+ * bright sky, light over a dark one — and over the black of AMOLED, where dark icons would vanish.
+ * Watched outside composition: the sky changes on every frame of a scrub, its lightness rarely.
+ */
+@Composable
+private fun SystemBarsFollowSky(sky: SkyController) {
+    val view = LocalView.current
+    LaunchedEffect(view, sky) {
+        val window = view.context.findActivity()?.window ?: return@LaunchedEffect
+        val bars = WindowCompat.getInsetsController(window, view)
+        snapshotFlow { sky.palette.isLight }.collect { light ->
+            bars.isAppearanceLightStatusBars = light
+            bars.isAppearanceLightNavigationBars = light
+        }
+    }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
 
 /** Marks the screens that are tabs, so going from one to another is a switch, not a push. */

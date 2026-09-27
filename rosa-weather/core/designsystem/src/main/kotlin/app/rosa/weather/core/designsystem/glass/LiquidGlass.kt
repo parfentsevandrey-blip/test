@@ -188,6 +188,17 @@ class GlassEnvironment {
      * makes every pane denser and calmer, like Apple's "Reduce Transparency".
      */
     var contrast by mutableFloatStateOf(0f)
+
+    /**
+     * 0..1: how far the glass is coloured glass ([tint] is then its colour): the scene through it
+     * keeps its light and shade but takes the glass's hue, the glass holds more of its tone —
+     * deepest at the rim, where the light crosses the most glass — and the light held inside it
+     * glows in [stainGlow]. 0 is the clear glass of every other appearance.
+     */
+    var stain by mutableFloatStateOf(0f)
+
+    /** The light held in coloured glass: its own hue, luminous. */
+    var stainGlow by mutableStateOf(Color.White)
 }
 
 val LocalGlassEnvironment = androidx.compose.runtime.staticCompositionLocalOf { GlassEnvironment() }
@@ -318,7 +329,10 @@ private class LiquidGlassNode(
         val radius = cornerRadius.toPx().coerceAtMost(size.minDimension / 2f)
         val tint = environment?.tint ?: Color.White
         val contrast = environment?.contrast ?: 0f
-        val boost = (1f + 2.4f * (environment?.tintBoost ?: 0f)) * (1f + 2.2f * contrast)
+        // Lenses, with no tone of their own, take a lighter touch of the colour than the panes.
+        val stain = (environment?.stain ?: 0f) * (LENS_STAIN + (1f - LENS_STAIN) * (style.tintAlpha / FULL_STAIN_TONE).coerceIn(0f, 1f))
+        // Coloured glass holds its tone: more than twice as much of it as clear glass does.
+        val boost = (1f + 2.4f * (environment?.tintBoost ?: 0f)) * (1f + 2.2f * contrast) * (1f + STAIN_DENSITY * stain)
         // Milky glass over bright skies, smoky over dark: the rim is lit accordingly.
         val darkness = 1f - tint.luminance()
         // The scene's light as this pane sees it, from where it is on screen right now.
@@ -352,6 +366,8 @@ private class LiquidGlassNode(
             tilt = tilt,
             root = position,
             bounds = sceneBounds(offset, backdrop.layer.size, layerSize),
+            stain = stain,
+            stainGlow = if (stain > 0f) (env?.stainGlow ?: Color.White).toArgb() else 0,
         )
         if (key != effectKey) {
             shader.setFloatUniform("size", size.width, size.height)
@@ -383,6 +399,8 @@ private class LiquidGlassNode(
             shader.setFloatUniform("px", density)
             shader.setFloatUniform("bounds", key.bounds.left, key.bounds.top, key.bounds.right, key.bounds.bottom)
             shader.setFloatUniform("touch", key.touch.x, key.touch.y, key.touchStrength)
+            shader.setFloatUniform("stain", key.stain)
+            shader.setColorUniform("stainGlow", key.stainGlow)
             val lens = RenderEffect.createRuntimeShaderEffect(shader, "content")
             effect = if (key.blur > 0.5f) {
                 RenderEffect.createChainEffect(lens, RenderEffect.createBlurEffect(key.blur, key.blur, Shader.TileMode.CLAMP))
@@ -431,6 +449,8 @@ private data class LensKey(
     val tilt: Offset,
     val root: Offset,
     val bounds: Rect,
+    val stain: Float,
+    val stainGlow: Int,
 )
 
 private fun quantize(value: Float, step: Float) = Math.round(value / step) * step
@@ -447,6 +467,15 @@ private fun sceneBounds(offset: Offset, scene: IntSize, layer: IntSize): Rect {
     val held = Rect(offset.x + 0.5f, offset.y + 0.5f, offset.x + scene.width - 0.5f, offset.y + scene.height - 0.5f)
     return if (full.overlaps(held)) full.intersect(held) else full
 }
+
+/** How much denser coloured glass is than clear: 1 + this, times the material's own tone. */
+private const val STAIN_DENSITY = 1.5f
+
+/** Materials with at least this much tone of their own are fully coloured... */
+private const val FULL_STAIN_TONE = 0.1f
+
+/** ...and lenses, with none, this much. */
+private const val LENS_STAIN = 0.6f
 
 /**
  * How much further than [GlassStyle.refraction] the dispersed colours reach per unit of

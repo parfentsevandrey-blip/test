@@ -43,19 +43,29 @@ data class SkyPalette(
         )
     }
 
+    /**
+     * True black for OLED screens: the sky goes out, pixels and all. Ink and accents stay those of
+     * the night; the clouds keep their colour for what still falls through the dark, rain and snow.
+     */
+    private fun blackened(): SkyPalette = copy(zenith = Argb.Black, horizon = Argb.Black, glow = Argb.Black, brightness = 0.0)
+
     companion object {
         /** Sun elevation each fixed mood is lit by: a bright late morning, the blue hour, deep night. */
         private const val LIGHT_ELEVATION = 30.0
         private const val EVENING_ELEVATION = -1.5
         private const val DARK_ELEVATION = -16.0
 
-        /** The palette for an [Appearance]; [Appearance.Auto] is the real sky at [sunElevation]. */
+        /**
+         * The palette for an [Appearance]; [Appearance.Auto] and [Appearance.Tinted] (whose glass
+         * alone is coloured) are the real sky at [sunElevation].
+         */
         fun of(appearance: Appearance, sunElevation: Double, visual: WeatherVisual, moonIllumination: Double = 0.5): SkyPalette =
             when (appearance) {
-                Appearance.Auto -> of(sunElevation, visual, moonIllumination)
+                Appearance.Auto, Appearance.Tinted -> of(sunElevation, visual, moonIllumination)
                 Appearance.Light -> of(LIGHT_ELEVATION, visual, moonIllumination).bleached()
                 Appearance.Evening -> of(EVENING_ELEVATION, visual, moonIllumination)
                 Appearance.Dark -> of(DARK_ELEVATION, visual, maxOf(moonIllumination, 0.4))
+                Appearance.Amoled -> of(DARK_ELEVATION, visual, maxOf(moonIllumination, 0.4)).blackened()
             }
 
         private class Key(val elevation: Double, val zenith: Long, val horizon: Long, val glow: Long, val sun: Long)

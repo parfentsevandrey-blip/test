@@ -102,8 +102,8 @@ import app.rosa.weather.core.designsystem.motion.LocalAmbientClock
 import app.rosa.weather.core.designsystem.motion.LocalMotionEnabled
 import app.rosa.weather.core.designsystem.motion.RosaMotion
 import app.rosa.weather.core.designsystem.sky.SkyStage
+import app.rosa.weather.core.designsystem.theme.GlassFinish
 import app.rosa.weather.core.designsystem.theme.Rosa
-import app.rosa.weather.core.model.Appearance
 import app.rosa.weather.core.model.Forecast
 import app.rosa.weather.core.model.ForecastMoment
 import app.rosa.weather.core.model.Headline
@@ -249,7 +249,7 @@ fun HomeScreen(
                 },
                 onRefresh = onRefresh,
                 onBodyStage = { stage -> if (bodyStages[page.place.id] != stage) bodyStages[page.place.id] = stage },
-                realSky = state.settings.appearance == Appearance.Auto,
+                realSky = state.settings.appearance.followsRealSky,
             )
         }
         // Cards scrolling up fade into the sky before they reach the bar, as under Apple's toolbars.
@@ -430,9 +430,16 @@ private fun Hero(
             GlassText(
                 text = format.temperature(if (feels) moment.apparentTemperature else moment.temperature),
                 fontSize = Rosa.type.hero.fontSize,
-                color = colors.ink,
-                // Clear glass: just enough of the ink in it to read, more over pale skies.
-                tintStrength = if (colors.isLightSky) 0.3f else 0.16f,
+                // Coloured glass in the accent's tone, deep over pale skies and light over dark ones.
+                color = if (colors.finish == GlassFinish.Tinted) colors.accent else colors.ink,
+                // Clear glass: just enough of the ink in it to read, more over pale skies. On a
+                // black sky there is nothing to refract: the glass lights up with its ink.
+                tintStrength = when {
+                    colors.finish == GlassFinish.Black -> 0.52f
+                    colors.finish == GlassFinish.Tinted -> if (colors.isLightSky) 0.42f else 0.46f
+                    colors.isLightSky -> 0.3f
+                    else -> 0.16f
+                },
                 prefetch = upcoming,
                 modifier = Modifier
                     .semantics { liveRegion = LiveRegionMode.Polite }
