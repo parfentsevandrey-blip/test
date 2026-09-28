@@ -22,6 +22,16 @@
       ]
     },
     {
+      "slug": "aalsmeerderweg-753a-rijsenhout",
+      "title": "Aalsmeerderweg 753 A, Rijsenhout",
+      "city": "Rijsenhout",
+      "price": "€ 750.000",
+      "url": "https://www.fundainbusiness.nl/onderwijs/rijsenhout/object-80972437-aalsmeerderweg/",
+      "reports": [
+        "report-2026-09-28-schiphol-den-haag.json"
+      ]
+    },
+    {
       "slug": "agriport-9-21-middenmeer",
       "title": "Agriport 9-21, Middenmeer",
       "city": "Middenmeer",
@@ -232,6 +242,16 @@
       "url": "https://www.fundainbusiness.nl/en/belegging/boesingheliede/object-43208985-ijweg-459-463/",
       "reports": [
         "report-2026-08-17-schiphol.json"
+      ]
+    },
+    {
+      "slug": "ilsy-plantsoen-1bis-den-haag",
+      "title": "ILSY-plantsoen 1 BIS, Den Haag",
+      "city": "Den Haag",
+      "price": "€ 895.000",
+      "url": "https://www.fundainbusiness.nl/belegging/den-haag/object-44518732-ilsy-plantsoen-1-bis/",
+      "reports": [
+        "report-2026-09-28-schiphol-den-haag.json"
       ]
     },
     {
@@ -544,6 +564,16 @@
       ]
     },
     {
+      "slug": "tokyostraat-19g-lijnden",
+      "title": "Tokyostraat 19-G, Lijnden",
+      "city": "Lijnden",
+      "price": "€ 325.000",
+      "url": "https://www.fundainbusiness.nl/belegging/lijnden/object-44511791-tokyostraat-19-g/",
+      "reports": [
+        "report-2026-09-28-schiphol-den-haag.json"
+      ]
+    },
+    {
       "slug": "tuinweg-12-hoofddorp",
       "title": "Tuinweg 12, Hoofddorp",
       "city": "Hoofddorp",
@@ -624,5 +654,5 @@
       ]
     }
   ],
-  "updated": "2026-09-22"
+  "updated": "2026-09-28"
 }

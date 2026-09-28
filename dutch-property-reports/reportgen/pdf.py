@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -44,7 +45,13 @@ def convert(docx_path: Path, out_dir: Path | None = None, timeout: int = 600) ->
     # (например, без пакета libreoffice-writer), а лежащий рядом старый файл
     # выдаёт себя за результат — и в отчёт уходит вчерашняя вёрстка
     pdf_path.unlink(missing_ok=True)
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    # имена отчётов кириллические, а в свежем контейнере локаль POSIX: под
+    # ней LibreOffice не открывает такой путь и пишет «source file could not
+    # be loaded». Кодировка задаётся явно, чтобы сборка не зависела от среды
+    env = dict(os.environ)
+    if "utf" not in (env.get("LC_ALL") or env.get("LANG") or "").lower():
+        env.update(LC_ALL="C.UTF-8", LANG="C.UTF-8")
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env)
     if result.returncode != 0 or not pdf_path.exists():
         raise RuntimeError(
             f"LibreOffice не смог конвертировать файл:\n{result.stdout}\n{result.stderr}"

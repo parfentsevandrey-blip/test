@@ -140,7 +140,11 @@ python generate_report.py check "output/Отчёт.pdf"
 
 ```bash
 pip install -r requirements.txt
-# для PDF дополнительно нужен LibreOffice (пакет libreoffice-writer)
+# для PDF нужен LibreOffice именно с модулем Writer: в облачном контейнере
+# стоят только libreoffice-core и -common, и без Writer конвертация падает
+# с невнятным «source file could not be loaded»
+apt-get install -y --no-install-recommends libreoffice-writer
+mkdir -p ~/.fonts && cp assets/fonts/*.ttf ~/.fonts/ && fc-cache -f
 ```
 
 ## Сборка отчёта
