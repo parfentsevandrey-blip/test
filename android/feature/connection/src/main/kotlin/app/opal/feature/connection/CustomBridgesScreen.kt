@@ -97,10 +97,11 @@ fun CustomBridgesRoute(
 
     Box(modifier.fillMaxSize()) {
         CustomBridgesScreen(
+            text = viewModel.text,
             state = state,
             contentPadding = contentPadding,
             onBack = onBack,
-            onTextChange = viewModel::setText,
+            onTextChange = viewModel::updateText,
             onPaste = {
                 val clip = context.getSystemService(ClipboardManager::class.java)?.primaryClip
                 val text =
@@ -125,7 +126,7 @@ fun CustomBridgesRoute(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                 )
             },
-            onClear = { viewModel.setText("") },
+            onClear = { viewModel.updateText("") },
             onSave = {
                 viewModel.save { custom ->
                     toast.show(if (custom) savedText else removedText, OpalIcons.CheckCircle)
@@ -147,6 +148,7 @@ fun CustomBridgesRoute(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CustomBridgesScreen(
+    text: String,
     state: CustomBridgesUiState,
     contentPadding: PaddingValues,
     onBack: () -> Unit,
@@ -174,7 +176,7 @@ fun CustomBridgesScreen(
                 onBack,
             )
             CodeEditor(
-                value = state.text,
+                value = text,
                 onValueChange = onTextChange,
                 placeholder = stringResource(R.string.bridges_placeholder),
                 modifier = Modifier.padding(top = 8.dp),
@@ -199,7 +201,7 @@ fun CustomBridgesScreen(
                     onPickImage,
                     icon = OpalIcons.Image,
                 )
-                if (state.text.isNotEmpty())
+                if (text.isNotEmpty())
                     PanelButton(
                         stringResource(R.string.bridges_clear),
                         onClear,
@@ -236,9 +238,7 @@ fun CustomBridgesScreen(
                 onClick = onSave,
                 // Unparsable lines are listed above and left out; valid ones can always be saved.
                 enabled =
-                    state.loaded &&
-                        !state.saved &&
-                        (state.valid.isNotEmpty() || state.text.isBlank()),
+                    state.loaded && !state.saved && (state.valid.isNotEmpty() || text.isBlank()),
                 modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 16.dp),
             ) {
                 Icon(OpalIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp))

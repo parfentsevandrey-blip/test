@@ -4,7 +4,12 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import app.opal.core.model.tunnel.NetworkKind
+import app.opal.core.tunnel.util.LogBuffer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,10 +19,21 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 
 /**
- * The device's default *underlying* network. This process is excluded from its own VPN, so the
- * default network seen here is Wi-Fi/cellular, never our tunnel.
+ * The device's *underlying* network: the one this process's own sockets use (it is excluded from
+ * its own VPN), Wi-Fi or cellular, never our tunnel.
+ *
+ * Android 12+: the best network that is not a VPN, ranked as the system ranks its default. The
+ * default network callback cannot be used there while our VPN runs: Android hands the VPN to its
+ * owner as default network although the owner is excluded from it (seen on Android 17, the VPN
+ * satisfies the owner's default request), so that callback reported only the VPN — ignored below —
+ * and Wi-Fi ↔ mobile switches, losses and Android's validation of the new network went unseen.
+ * Older versions keep the default network callback.
  */
-internal class NetworkMonitor(context: Context, scope: CoroutineScope) {
+internal class NetworkMonitor(
+    context: Context,
+    scope: CoroutineScope,
+    private val log: LogBuffer? = null,
+) {
 
     data class Status(val network: Network?, val kind: NetworkKind?, val validated: Boolean) {
         val isConnected: Boolean
@@ -30,30 +46,48 @@ internal class NetworkMonitor(context: Context, scope: CoroutineScope) {
         val callback =
             object : ConnectivityManager.NetworkCallback() {
                 private var current: Network? = null
+                private var last: Status? = null
 
                 override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
-                    // Our process is excluded from our VPN, yet while the VPN is being set up
-                    // Android can briefly report it here (its capabilities also carry the
-                    // underlying CELLULAR/WIFI transport). A VPN is never the underlying network:
-                    // treating it as one made every connect look like a network change.
+                    // Only the default network callback (before Android 12) reports our VPN (its
+                    // capabilities also carry the underlying CELLULAR/WIFI transport). A VPN is
+                    // never the underlying network: treating it as one made every connect look
+                    // like a network change.
                     if (caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) return
-                    current = network
-                    trySend(
+                    val status =
                         Status(
                             network,
                             kindOf(caps),
                             caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED),
                         )
-                    )
+                    if (status != last) {
+                        log?.d(
+                            TAG,
+                            "Network $network: ${status.kind}, validated=${status.validated}",
+                        )
+                    }
+                    current = network
+                    last = status
+                    trySend(status)
                 }
 
                 override fun onLost(network: Network) {
                     if (network != current) return
+                    log?.d(TAG, "Network $network lost")
                     current = null
+                    last = null
                     trySend(Status(null, null, false))
                 }
             }
-        connectivity.registerDefaultNetworkCallback(callback)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            connectivity.registerBestMatchingNetworkCallback(
+                UNDERLYING,
+                callback,
+                Handler(Looper.getMainLooper()),
+            )
+        } else {
+            connectivity.registerDefaultNetworkCallback(callback)
+        }
         awaitClose { connectivity.unregisterNetworkCallback(callback) }
     }
         .distinctUntilChanged()
@@ -71,6 +105,16 @@ internal class NetworkMonitor(context: Context, scope: CoroutineScope) {
             kindOf(caps),
             caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED),
         )
+    }
+
+    internal companion object {
+        private const val TAG = "network"
+
+        /** Internet, not a VPN (`NetworkRequest.Builder` adds NOT_VPN, TRUSTED, NOT_RESTRICTED). */
+        val UNDERLYING: NetworkRequest =
+            NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build()
     }
 
     private fun kindOf(caps: NetworkCapabilities): NetworkKind =

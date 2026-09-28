@@ -28,7 +28,9 @@ import app.opal.core.model.tunnel.CircuitHop
 import app.opal.core.model.tunnel.CircuitInfo
 import app.opal.core.model.tunnel.HopRole
 import app.opal.core.model.tunnel.NetworkKind
+import app.opal.core.model.tunnel.ReconnectReason
 import app.opal.core.model.tunnel.TrafficSample
+import app.opal.core.model.tunnel.TunnelProblem
 import app.opal.core.model.tunnel.TunnelSnapshot
 import app.opal.core.model.tunnel.TunnelState
 import app.opal.core.model.tunnel.WarmState
@@ -251,6 +253,42 @@ class ScreensScreenshotTest(private val variant: Variant) {
         }
 
     @Test
+    fun homeRestricted() =
+        shot("home_restricted", AuroraMood.Alert, 0) { padding ->
+            HomeScreen(
+                HomeUiState(
+                    snapshot =
+                        TunnelSnapshot(
+                            state = TunnelState.Connecting(),
+                            network = NetworkKind.Cellular,
+                            problem = TunnelProblem.NetworkRestricted,
+                        )
+                ),
+                padding,
+                {},
+            )
+        }
+
+    /** Whitelisted mobile network while already on dnstt: the hint no longer suggests dnstt. */
+    @Test
+    fun homeRestrictedDnstt() =
+        shot("home_restricted_dnstt", AuroraMood.Alert, 0) { padding ->
+            HomeScreen(
+                HomeUiState(
+                    snapshot =
+                        TunnelSnapshot(
+                            state = TunnelState.Reconnecting(ReconnectReason.Stalled),
+                            network = NetworkKind.Cellular,
+                            transport = TransportKind.Dnstt,
+                            problem = TunnelProblem.NetworkRestricted,
+                        )
+                ),
+                padding,
+                {},
+            )
+        }
+
+    @Test
     fun apps() =
         shot("apps", AuroraMood.Idle, 1) { padding ->
             AppsScreen(
@@ -326,6 +364,7 @@ class ScreensScreenshotTest(private val variant: Variant) {
                     "webtunnel [2001:db8::1]:443 89ABCDEF0123456789ABCDEF0123456789ABCDEF url=https://example.com/path ver=0.0.1\n" +
                     "obfs4 192.0.2.300:443"
             CustomBridgesScreen(
+                text = text,
                 state = CustomBridgesViewModel.validate(text).copy(loaded = true, saved = false),
                 contentPadding = padding,
                 onBack = {},

@@ -44,11 +44,11 @@
     <string name="bridges_reason_port">неверный порт</string>
     <string name="bridges_reason_fingerprint">неверный отпечаток</string>
     <string name="bridges_reason_argument">неверный параметр</string>
-    <string name="bridges_reason_missing">не хватает параметров (cert, url…)</string>
+    <string name="bridges_reason_missing">не хватает параметров (cert, url, pubkey…)</string>
     <string name="bridges_nothing_found">Мостов не найдено</string>
     <string name="bridges_qr_none">На картинке нет QR-кода с мостами</string>
     <string name="bridges_where_title">Где взять мосты</string>
-    <string name="bridges_where_body">• Telegram-бот @GetBridgesBot\n• сайт bridges.torproject.org (можно отсканировать QR-код)\n• письмо на bridges@torproject.org — отвечает на адреса Gmail и Riseup\nСвои мосты надёжнее публичных: их труднее заблокировать.</string>
+    <string name="bridges_where_body">• Telegram-бот @GetBridgesBot\n• сайт bridges.torproject.org (можно отсканировать QR-код)\n• письмо на bridges@torproject.org — отвечает на адреса Gmail и Riseup\n• мосты dnstt (туннель через DNS) — у поддержки Tor Project, frontdesk@torproject.org; добавляйте 2–3 строки. Они медленные, но могут работать, когда мобильная сеть пропускает только разрешённые сайты.\nСвои мосты надёжнее публичных: их труднее заблокировать.</string>
     <string name="bridges_camera_denied">Без доступа к камере QR-код не отсканировать — вставьте мосты текстом или выберите картинку</string>
     <string name="bridges_scanner_hint">Наведите камеру на QR-код с мостами</string>
     <string name="bridges_scanner_close">Закрыть сканер</string>

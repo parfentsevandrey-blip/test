@@ -96,6 +96,11 @@ enum class TunnelProblem {
     ClockSkew,
     /** The Settings API could not be reached; using built-in and cached bridges. */
     SettingsApiUnreachable,
+    /**
+     * Android cannot reach the internet over the network and Tor makes no progress: a mobile
+     * network in "whitelist" mode or shut down, a captive portal, an outage. Tor retries sparingly.
+     */
+    NetworkRestricted,
 }
 
 @Serializable

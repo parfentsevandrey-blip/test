@@ -9,6 +9,11 @@ enum class TransportKind(val ptName: String?) {
     WebTunnel("webtunnel"),
     Obfs4("obfs4"),
     Meek("meek_lite"),
+    /**
+     * DNS tunnel (dnstt, via IPtProxy): Tor over DNS queries to a DoH, DoT or plain DNS resolver.
+     * Slow, but DNS keeps working where mobile networks let through only allowed addresses.
+     */
+    Dnstt("dnstt"),
     Vanilla(null);
 
     companion object {
@@ -21,6 +26,7 @@ enum class TransportKind(val ptName: String?) {
                 "obfs4" -> Obfs4
                 "meek_lite",
                 "meek" -> Meek
+                "dnstt" -> Dnstt
                 else -> null
             }
     }
@@ -79,6 +85,8 @@ data class BridgeLine(
 
     companion object {
         private val FINGERPRINT = Regex("^[0-9A-Fa-f]{40}$")
+        /** dnstt server public key: 32 bytes as hex (dnstt's `noise.DecodeKey`). */
+        private val DNSTT_PUBKEY = Regex("^[0-9A-Fa-f]{64}$")
         private val IPV4 = Regex("^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$")
         private val IPV6 = Regex("^[0-9A-Fa-f:.]+$")
 
@@ -89,6 +97,10 @@ data class BridgeLine(
                 TransportKind.WebTunnel to listOf(listOf("url")),
                 TransportKind.Meek to listOf(listOf("url"), listOf("targets")),
                 TransportKind.Snowflake to listOf(emptyList()),
+                // The resolver (exactly what dnstt-client/lib reads), the server key and the
+                // tunnel domain.
+                TransportKind.Dnstt to
+                    listOf("doh", "dot", "udp").map { listOf(it, "pubkey", "domain") },
             )
 
         @Suppress("ReturnCount") // One early return per rejection reason reads best here.
@@ -132,6 +144,11 @@ data class BridgeLine(
             if (alternatives != null && alternatives.none { set -> set.all { it in args } }) {
                 return ParseResult.Invalid(Reason.MissingRequiredArgument, input)
             }
+            if (
+                transport == TransportKind.Dnstt && !DNSTT_PUBKEY.matches(args.getValue("pubkey"))
+            ) {
+                return ParseResult.Invalid(Reason.BadArgument, input)
+            }
             return ParseResult.Ok(BridgeLine(transport, host, port, fingerprint, args))
         }
 
@@ -148,7 +165,7 @@ data class BridgeLine(
 
         private val CANDIDATE =
             Regex(
-                "(?:(?:obfs4|webtunnel|snowflake|meek_lite|meek)\\s+)?" +
+                "(?:(?:obfs4|webtunnel|snowflake|meek_lite|meek|dnstt)\\s+)?" +
                     "(?:\\d{1,3}(?:\\.\\d{1,3}){3}|\\[[0-9A-Fa-f:.]+\\]):\\d{1,5}" +
                     "(?:\\s+[0-9A-Fa-f]{40})?" +
                     "(?:\\s+[A-Za-z0-9_-]+=[^\\s'\",\\]]+(?:,[^\\s'\",\\]]+)*)*"

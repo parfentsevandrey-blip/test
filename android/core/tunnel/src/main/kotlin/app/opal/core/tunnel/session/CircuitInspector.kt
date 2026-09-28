@@ -57,12 +57,9 @@ internal class CircuitInspector(private val engine: TorEngine, private val log: 
                 val last = index == circuit.path.lastIndex
                 if (index == 0) {
                     val bridge = bridges.firstOrNull { it.fingerprint == relay.fingerprint }
-                    // Fronted transports use placeholder addresses (192.0.2.0/24): no country for
-                    // those.
-                    val real = bridge?.takeIf {
-                        it.transport != TransportKind.Snowflake &&
-                            it.transport != TransportKind.Meek
-                    }
+                    // Fronted and tunnelled transports use placeholder addresses (192.0.2.0/24):
+                    // no country for those.
+                    val real = bridge?.takeIf { it.transport !in PLACEHOLDER_ADDRESSES }
                     CircuitHop(
                         role = if (bridges.isEmpty()) HopRole.Guard else HopRole.Bridge,
                         nickname = relay.nickname,
@@ -102,6 +99,9 @@ internal class CircuitInspector(private val engine: TorEngine, private val log: 
 
     private companion object {
         const val TAG = "circuit"
+
+        val PLACEHOLDER_ADDRESSES =
+            setOf(TransportKind.Snowflake, TransportKind.Meek, TransportKind.Dnstt)
 
         /**
          * Circuits that carry the user's streams. Tor 0.4.8+ puts general streams on a linked

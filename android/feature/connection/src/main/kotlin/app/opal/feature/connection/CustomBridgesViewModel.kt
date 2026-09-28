@@ -1,6 +1,9 @@
 package app.opal.feature.connection
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.opal.core.data.SettingsRepository
@@ -19,7 +22,6 @@ import kotlinx.coroutines.launch
 
 @Immutable
 data class CustomBridgesUiState(
-    val text: String = "",
     val valid: ImmutableList<BridgeLine> = persistentListOf(),
     val invalid: ImmutableList<InvalidLine> = persistentListOf(),
     val loaded: Boolean = false,
@@ -31,28 +33,38 @@ class CustomBridgesViewModel(private val settings: SettingsRepository) : ViewMod
     private val _state = MutableStateFlow(CustomBridgesUiState())
     val state: StateFlow<CustomBridgesUiState> = _state.asStateFlow()
 
+    /**
+     * The editor's text — Compose state, read by the field directly, not part of [state]. A text
+     * field fed from a StateFlow gets its own edits back a frame late, and keys typed in between
+     * land on the old text: lines came out scrambled (seen in the emulator; the same happens on a
+     * slow phone or with a fast keyboard).
+     */
+    var text by mutableStateOf("")
+        private set
+
     init {
         viewModelScope.launch {
-            val lines = settings.current().customBridges
-            _state.value = validate(lines.joinToString("\n")).copy(loaded = true, saved = true)
+            val joined = settings.current().customBridges.joinToString("\n")
+            text = joined
+            _state.value = validate(joined).copy(loaded = true, saved = true)
         }
     }
 
-    fun setText(text: String) {
+    fun updateText(text: String) {
+        this.text = text
         _state.update { validate(text).copy(loaded = true, saved = false) }
     }
 
     /** Appends bridges found in scanned or pasted content; returns how many were new. */
     fun addFrom(content: String): Int {
         val found = BridgeLine.extractAll(content)
-        val current = _state.value
-        val known = current.valid.map { it.raw }.toSet()
+        val known = _state.value.valid.map { it.raw }.toSet()
         val fresh = found.filter { it.raw !in known }
         if (fresh.isNotEmpty()) {
-            val text =
-                (current.text.trimEnd().lines().filter { it.isNotBlank() } + fresh.map { it.raw })
+            updateText(
+                (text.trimEnd().lines().filter { it.isNotBlank() } + fresh.map { it.raw })
                     .joinToString("\n")
-            setText(text)
+            )
         }
         return fresh.size
     }
@@ -93,7 +105,6 @@ class CustomBridgesViewModel(private val settings: SettingsRepository) : ViewMod
                 }
             }
             return CustomBridgesUiState(
-                text = text,
                 valid = valid.toImmutableList(),
                 invalid = invalid.toImmutableList(),
             )

@@ -24,12 +24,13 @@ internal object TorConfigFactory {
         )
 
     /**
-     * Stream timeout while only Snowflake carries the connection. When a volunteer proxy goes away,
-     * the Snowflake client needs about 20 s to notice and up to ~45 s until the next proxy carries
-     * data; meanwhile nothing moves on any circuit. With Tor's 10 s every stream waiting then
-     * retires its circuit (and the circuit's conflux set) for new streams, so after the swap Tor
-     * first builds new circuits over the slow first hop instead of using the ones that work again.
-     * 30 s rides out most swaps; Tor's manual suggests values like 60 for slow networks.
+     * Stream timeout while only Snowflake (or dnstt) carries the connection. When a volunteer proxy
+     * goes away, the Snowflake client needs about 20 s to notice and up to ~45 s until the next
+     * proxy carries data; meanwhile nothing moves on any circuit. With Tor's 10 s every stream
+     * waiting then retires its circuit (and the circuit's conflux set) for new streams, so after
+     * the swap Tor first builds new circuits over the slow first hop instead of using the ones that
+     * work again. 30 s rides out most swaps; Tor's manual suggests values like 60 for slow
+     * networks. dnstt's first hop (every cell a DNS round trip through a resolver) is slower still.
      */
     const val SNOWFLAKE_STREAM_TIMEOUT_S = 30
 
@@ -66,6 +67,6 @@ internal object TorConfigFactory {
         transportPorts: Map<String, Int>,
     ) {
         bridges(bridges, transportPorts)
-        circuitStreamTimeout(SNOWFLAKE_STREAM_TIMEOUT_S.takeIf { bridges.isSnowflakeOnly() })
+        circuitStreamTimeout(SNOWFLAKE_STREAM_TIMEOUT_S.takeIf { bridges.isSessionOnly() })
     }
 }

@@ -35,6 +35,7 @@
     <string name="transport_webtunnel" translatable="false">WebTunnel</string>
     <string name="transport_obfs4" translatable="false">obfs4</string>
     <string name="transport_meek" translatable="false">meek</string>
+    <string name="transport_dnstt" translatable="false">dnstt</string>
     <string name="transport_vanilla">Мост</string>
 
     <string name="unit_bytes_per_second">%1$s Б/с</string>

@@ -44,11 +44,11 @@
     <string name="bridges_reason_port">invalid port</string>
     <string name="bridges_reason_fingerprint">invalid fingerprint</string>
     <string name="bridges_reason_argument">invalid parameter</string>
-    <string name="bridges_reason_missing">missing parameters (cert, url…)</string>
+    <string name="bridges_reason_missing">missing parameters (cert, url, pubkey…)</string>
     <string name="bridges_nothing_found">No bridges found</string>
     <string name="bridges_qr_none">No QR code with bridges in the image</string>
     <string name="bridges_where_title">Where to get bridges</string>
-    <string name="bridges_where_body">• Telegram bot @GetBridgesBot\n• bridges.torproject.org (you can scan the QR code)\n• an email to bridges@torproject.org — answers Gmail and Riseup addresses\nYour own bridges are more reliable than public ones: they are harder to block.</string>
+    <string name="bridges_where_body">• Telegram bot @GetBridgesBot\n• bridges.torproject.org (you can scan the QR code)\n• an email to bridges@torproject.org — answers Gmail and Riseup addresses\n• dnstt bridges (a tunnel over DNS) — from Tor Project support, frontdesk@torproject.org; add 2–3 lines. They are slow but may work when a mobile network lets through only approved sites.\nYour own bridges are more reliable than public ones: they are harder to block.</string>
     <string name="bridges_camera_denied">Without camera access the QR code cannot be scanned — paste the bridges as text or pick an image</string>
     <string name="bridges_scanner_hint">Point the camera at a QR code with bridges</string>
     <string name="bridges_scanner_close">Close scanner</string>

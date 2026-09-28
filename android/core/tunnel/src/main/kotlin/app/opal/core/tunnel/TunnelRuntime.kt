@@ -35,7 +35,7 @@ internal class TunnelRuntime private constructor(context: Context) {
     val files = TorFiles(app)
     val settings = SettingsRepository(OpalStores.settings(app))
     val memory = TunnelMemoryRepository(OpalStores.tunnelMemory(app))
-    val network = NetworkMonitor(app, scope)
+    val network = NetworkMonitor(app, scope, log)
     private val transports = Transports(files.transportState, debuggable)
     private val bundledBridges =
         app.assets.open("pt_config.json").use {

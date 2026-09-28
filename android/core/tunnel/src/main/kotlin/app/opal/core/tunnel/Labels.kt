@@ -31,6 +31,7 @@ object Labels {
             TransportKind.WebTunnel -> R.string.transport_webtunnel
             TransportKind.Obfs4 -> R.string.transport_obfs4
             TransportKind.Meek -> R.string.transport_meek
+            TransportKind.Dnstt -> R.string.transport_dnstt
             TransportKind.Vanilla -> R.string.transport_vanilla
         }
 

@@ -106,6 +106,7 @@ import app.opal.core.model.tunnel.ReconnectReason
 import app.opal.core.model.tunnel.TrafficSample
 import app.opal.core.model.tunnel.TunnelError
 import app.opal.core.model.tunnel.TunnelProblem
+import app.opal.core.model.tunnel.TunnelSnapshot
 import app.opal.core.model.tunnel.TunnelState
 import app.opal.core.model.tunnel.WarmState
 import app.opal.core.model.tunnel.isTunnelActive
@@ -435,15 +436,31 @@ internal fun transportIcon(kind: TransportKind) =
         TransportKind.WebTunnel -> OpalIcons.Public
         TransportKind.Obfs4 -> OpalIcons.Key
         TransportKind.Meek -> OpalIcons.Cloud
+        TransportKind.Dnstt -> OpalIcons.Dns
         TransportKind.Vanilla -> OpalIcons.Hub
     }
 
 private data class StatusText(val title: String, val detail: String?)
 
+/** Tor is trying to connect over a network that does not reach the internet. */
+private val TunnelSnapshot.isRestricted: Boolean
+    get() =
+        problem == TunnelProblem.NetworkRestricted &&
+            (state is TunnelState.Connecting || state is TunnelState.Reconnecting)
+
 @Composable
 private fun statusText(state: HomeUiState): StatusText {
     val s = state.snapshot
     val phase = s.bootstrap?.let { "${stringResource(Labels.phase(it.phase))} · ${it.progress}%" }
+    if (s.isRestricted) {
+        return StatusText(
+            stringResource(R.string.home_status_restricted),
+            stringResource(
+                if (s.network == NetworkKind.Cellular) R.string.home_restricted_cellular
+                else R.string.home_restricted_other
+            ),
+        )
+    }
     return when (val t = s.state) {
         TunnelState.Off ->
             StatusText(
@@ -525,6 +542,7 @@ private fun problemText(problem: TunnelProblem?): String? = problem?.let {
             TunnelProblem.SnowflakeUnavailable -> R.string.home_problem_snowflake
             TunnelProblem.ClockSkew -> R.string.home_problem_clock
             TunnelProblem.SettingsApiUnreachable -> R.string.home_problem_settings_api
+            TunnelProblem.NetworkRestricted -> R.string.home_restricted_other
         }
     )
 }
@@ -532,15 +550,26 @@ private fun problemText(problem: TunnelProblem?): String? = problem?.let {
 @Composable
 private fun ColumnScope.Details(state: HomeUiState, onAction: (HomeAction) -> Unit) {
     val snapshot = state.snapshot
+    val restricted = snapshot.isRestricted
     AnimatedVisibility(
-        snapshot.state == TunnelState.Blocked,
+        snapshot.state == TunnelState.Blocked || restricted,
         enter = fadeIn() + expandVertically(),
         exit = fadeOut() + shrinkVertically(),
     ) {
         Column(Modifier.padding(top = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Panel(Modifier.fillMaxWidth()) {
                 Note(
-                    stringResource(R.string.home_blocked_body),
+                    stringResource(
+                        when {
+                            !restricted -> R.string.home_blocked_body
+                            snapshot.network != NetworkKind.Cellular ->
+                                R.string.home_restricted_other_body
+                            // Already on the DNS tunnel: suggesting it again would not help.
+                            snapshot.transport == TransportKind.Dnstt ->
+                                R.string.home_restricted_dnstt_body
+                            else -> R.string.home_restricted_cellular_body
+                        }
+                    ),
                     icon = OpalIcons.Warning,
                     tint = OpalTheme.colors.warning,
                 )

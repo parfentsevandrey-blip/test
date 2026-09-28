@@ -126,4 +126,61 @@ class BridgeLineTest {
                 .toList()
         assertEquals(raw.size, builtin.byTransport.values.sumOf { it.size })
     }
+
+    // Synthetic dnstt lines (documentation addresses, made-up key and domain): the format only.
+    private val dnsttKey = "0123456789abcdef".repeat(4)
+    private val dnsttFingerprint = "0123456789ABCDEF0123456789ABCDEF01234567"
+
+    @Test
+    fun `dnstt lines with each kind of resolver`() {
+        for (resolver in
+            listOf(
+                "doh=https://doh.example/dns-query",
+                "dot=dot.example:853",
+                "udp=192.0.2.53:53",
+            )) {
+            val raw =
+                "dnstt 192.0.2.5:1 $dnsttFingerprint $resolver pubkey=$dnsttKey domain=t.example.com"
+            val line = ok(raw)
+            assertEquals(TransportKind.Dnstt, line.transport)
+            assertEquals(dnsttKey, line.args["pubkey"])
+            assertEquals("t.example.com", line.args["domain"])
+            assertEquals(raw, line.raw)
+        }
+    }
+
+    @Test
+    fun `dnstt needs a resolver, the server key and the domain`() {
+        val base = "dnstt 192.0.2.5:1 $dnsttFingerprint"
+        assertEquals(
+            BridgeLine.Reason.MissingRequiredArgument,
+            invalid("$base pubkey=$dnsttKey domain=t.example.com"),
+        )
+        assertEquals(
+            BridgeLine.Reason.MissingRequiredArgument,
+            invalid("$base doh=https://doh.example/dns-query domain=t.example.com"),
+        )
+        assertEquals(
+            BridgeLine.Reason.MissingRequiredArgument,
+            invalid("$base doh=https://doh.example/dns-query pubkey=$dnsttKey"),
+        )
+        // dnstt-client rejects a key that is not 32 bytes of hex; so do we, with a clear reason.
+        assertEquals(
+            BridgeLine.Reason.BadArgument,
+            invalid("$base doh=https://doh.example/dns-query pubkey=abc domain=t.example.com"),
+        )
+    }
+
+    @Test
+    fun `dnstt lines are found in free text`() {
+        val text =
+            "Your bridges:\n" +
+                "dnstt 192.0.2.5:1 $dnsttFingerprint doh=https://doh.example/dns-query " +
+                "pubkey=$dnsttKey domain=t.example.com\n" +
+                "dnstt 192.0.2.5:2 ${dnsttFingerprint.reversed()} dot=dot.example:853 " +
+                "pubkey=$dnsttKey domain=t2.example.com"
+        val lines = BridgeLine.extractAll(text)
+        assertEquals(2, lines.size)
+        assertTrue(lines.all { it.transport == TransportKind.Dnstt })
+    }
 }

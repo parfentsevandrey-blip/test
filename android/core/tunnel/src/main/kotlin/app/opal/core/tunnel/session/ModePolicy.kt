@@ -33,13 +33,13 @@ internal data class ModePolicy(
             ModePolicy(race = false, settingsApiBeforeConnect = false, watchdogEscalates = false)
 
         /**
-         * The policy for [mode] with the bridges Tor currently uses. Snowflake lines are left alone
-         * whichever mode brought them (the user's own Snowflake lines, or Snowflake winning the
+         * The policy for [mode] with the bridges Tor currently uses. Snowflake and dnstt lines are
+         * left alone whichever mode brought them (the user's own lines, or Snowflake winning the
          * Auto race): tearing them down helps no more there than in Snowflake mode.
          */
         fun of(mode: ConnectionMode, active: List<BridgeLine>): ModePolicy {
             val base = of(mode)
-            return if (active.isSnowflakeOnly()) base.copy(watchdogEscalates = false) else base
+            return if (active.isSessionOnly()) base.copy(watchdogEscalates = false) else base
         }
 
         fun of(mode: ConnectionMode): ModePolicy =
@@ -71,6 +71,13 @@ internal data class ModePolicy(
     }
 }
 
-/** Tor would use Snowflake and nothing else. */
-internal fun List<BridgeLine>.isSnowflakeOnly(): Boolean =
-    isNotEmpty() && all { it.transport == TransportKind.Snowflake }
+/**
+ * Transports that carry Tor inside a session of their own (Turbo Tunnel: KCP and smux) and recover
+ * a lost path by themselves: Snowflake replaces a silent proxy, dnstt keeps polling its resolver.
+ * Their first hop is slow, and closing Tor's connection only throws their session away.
+ */
+private val SESSION_TRANSPORTS = setOf(TransportKind.Snowflake, TransportKind.Dnstt)
+
+/** Tor would use only Snowflake and/or dnstt. */
+internal fun List<BridgeLine>.isSessionOnly(): Boolean =
+    isNotEmpty() && all { it.transport in SESSION_TRANSPORTS }
