@@ -291,7 +291,7 @@ def text_columns(doc, texts: list[str], *, after: float = 8.0):
 def lead_paragraph(doc, text: str, *, after: float = 12.0):
     """Лид — курсив антиквы: в еженедельнике это Source Serif 4 Italic 12,5 pt."""
     paragraph = par(doc, after=after, lead=S.LH_LEAD)
-    txt(paragraph, text, font=S.SERIF, size=S.FS_LEAD, color=S.INK_SOFT, italic=True)
+    txt(paragraph, _nbsp(text), font=S.SERIF, size=S.FS_LEAD, color=S.INK_SOFT, italic=True)
     return paragraph
 
 
@@ -299,7 +299,7 @@ def pull_quote(doc, text: str, *, before: float = 13.0, after: float = 13.0):
     """Врезка-цитата курсивом дисплейной антиквы — главный тезис полосы."""
     rule(doc, color=S.BRASS, size=S.SZ_ACCENT, before=before, after=8)
     paragraph = par(doc, after=8, lead=27, right=24)
-    txt(paragraph, text, font=S.SERIF, size=22, color=S.INK, italic=True)
+    txt(paragraph, _nbsp(text), font=S.SERIF, size=22, color=S.INK, italic=True)
     rule(doc, color=S.RULE, size=S.SZ_HAIRLINE, after=after)
 
 
