@@ -86,7 +86,8 @@ def tick(v, fmt):
     if abs(v) < 1e-9:
         v = 0.0                                 # иначе на шкале появляется «−0,0»
     s = fmt.format(v)
-    return s.replace(',', ' ').replace('.', ',') if ',' in fmt else s.replace('.', ',')
+    s = s.replace(',', ' ').replace('.', ',') if ',' in fmt else s.replace('.', ',')
+    return s.replace('-', '−')                 # типографский минус, а не дефис
 
 
 def indicators(title, rows, source):
@@ -98,6 +99,12 @@ def indicators(title, rows, source):
     return (f'<div class="ind"><div class="ind-head"><div class="lab">{esc(title)}</div>'
             f'<div class="c">г/г</div><div class="c">12 мес.</div></div>{body}'
             f'<div class="src">{esc(source)}</div></div>')
+
+
+def minus(t):
+    """Подпись значения: ведущий дефис заменяется типографским минусом."""
+    t = str(t)
+    return '−' + t[1:] if t.startswith('-') else t
 
 
 def chart(spec, accent, num=None, H=168, W=520):
@@ -150,7 +157,7 @@ def chart(spec, accent, num=None, H=168, W=520):
                      f'fill="{accent if last else PAPER}" stroke="{accent}" stroke-width="1.4"/>')
             if p.get('t'):
                 g.append(f'<text x="{x:.1f}" y="{y-8:.1f}" text-anchor="middle" font-size="9" '
-                         f'font-weight="700" fill="{INK}">{esc(p["t"])}</text>')
+                         f'font-weight="700" fill="{INK}">{esc(minus(p["t"]))}</text>')
     else:
         bw = step * 0.6
         y0 = y_of(0)
@@ -161,7 +168,7 @@ def chart(spec, accent, num=None, H=168, W=520):
             g.append(f'<rect x="{x:.1f}" y="{min(y, y0):.1f}" width="{bw:.1f}" '
                      f'height="{max(abs(y0 - y), 1):.1f}" fill="{fill}" stroke="{INK}" stroke-width=".8"/>')
             g.append(f'<text x="{x+bw/2:.1f}" y="{min(y, y0)-4:.1f}" text-anchor="middle" '
-                     f'font-size="9" font-weight="700" fill="{INK}">{esc(p.get("t", ""))}</text>')
+                     f'font-size="9" font-weight="700" fill="{INK}">{esc(minus(p.get("t", "")))}</text>')
     for i, p in enumerate(pts):
         if p.get('k'):
             g.append(f'<text x="{L + i*step + step/2:.1f}" y="{H-7}" text-anchor="middle" '
