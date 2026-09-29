@@ -263,7 +263,12 @@ const {{ chromium }} = require('/opt/node22/lib/node_modules/playwright');
         s.classList.add('compact');
         if (H() <= PAGE - 8) {{}}                                    // влезло плотными строками
         else if (H() <= PAGE * 1.12) s.style.zoom = ((PAGE - 3) / H()).toFixed(4);
-        else if (pages() >= before) s.classList.remove('compact');   // многостраничный: плотно не помогло
+        else {{
+          /* многостраничный: плотные строки, при нужде ещё ужатие на 10% — но только если
+             это снимает страницу; иначе печатаем как было */
+          if (pages() >= before) s.style.zoom = '0.9';
+          if (pages() >= before) {{ s.style.zoom = ''; s.classList.remove('compact'); }}
+        }}
       }}
       const h = H();
       console.log(`${{s.querySelector('h2').textContent}}: ${{(h / PAGE).toFixed(2)}} стр.` +
