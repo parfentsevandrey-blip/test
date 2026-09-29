@@ -58,7 +58,6 @@ import app.rosa.weather.core.designsystem.glass.LocalGlassEnvironment
 import app.rosa.weather.core.designsystem.haptics.LocalHaptics
 import app.rosa.weather.core.designsystem.motion.LocalMotionEnabled
 import app.rosa.weather.core.designsystem.motion.RosaMotion
-import app.rosa.weather.core.designsystem.theme.GlassFinish
 import app.rosa.weather.core.designsystem.theme.Rosa
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -125,7 +124,7 @@ fun GlassTabBar(
         GlassSurface(Modifier.fillMaxSize(), style = BarGlass, cornerRadius = GlassTabBarHeight / 2, touchResponsive = false) {}
         // Its own tone: by night a little lighter than the dark glass of the cards, on a bright
         // blue day a little darker than the glass may get on its own; and a crisp edge all round.
-        val tone = if (colors.isLightSky) Color.Transparent else lerp(Color.White.copy(alpha = if (colors.finish == GlassFinish.Black) BlackBarTone else 0.08f), Color.Black.copy(alpha = 0.12f), bright)
+        val tone = if (colors.isLightSky) Color.Transparent else lerp(Color.White.copy(alpha = 0.08f), Color.Black.copy(alpha = 0.12f), bright)
         val edge = if (colors.isLightSky) {
             Brush.verticalGradient(0f to Color.White.copy(alpha = 0.95f), 1f to Color.Black.copy(alpha = 0.12f))
         } else {
@@ -212,20 +211,9 @@ fun GlassTabBar(
             tabs.forEachIndexed { i, tab ->
                 val lit = if (pressed) i == underLens else i == selected
                 // The selected tab in the accent over dark skies; over bright ones, where the
-                // accent's gold would fade into the milky glass, in a deep blue — unless the glass
-                // is coloured, whose accent is already deep enough there. On dark coloured glass,
-                // which is the accent's own hue, it is a pale wash of it, to stand out.
-                val tinted = colors.finish == GlassFinish.Tinted
-                val selectedTint = when {
-                    colors.isLightSky -> if (tinted) colors.accent else SelectedOnLight
-                    tinted -> lerp(colors.accent, colors.ink, 0.35f)
-                    else -> colors.accent
-                }
-                val selectedLabel = when {
-                    colors.isLightSky -> if (tinted) colors.accent else SelectedOnLight
-                    tinted -> lerp(colors.accent, colors.ink, maxOf(bright, 0.65f))
-                    else -> lerp(colors.accent, colors.ink, bright)
-                }
+                // accent's gold would fade into the milky glass, in a deep blue.
+                val selectedTint = if (colors.isLightSky) SelectedOnLight else colors.accent
+                val selectedLabel = if (colors.isLightSky) SelectedOnLight else lerp(colors.accent, colors.ink, bright)
                 Column(
                     Modifier
                         .width(segment)
@@ -271,9 +259,6 @@ private val Inset = 4.dp
 private val BarGlass = GlassStyle.Regular.copy(tintAlpha = 0.26f)
 
 private val SelectedOnLight = Color(0xFF1F5FC0)
-
-/** On a black sky the bar's own tone is all that sets it apart: a little more of it. */
-private const val BlackBarTone = 0.1f
 
 private val LabelShadow = Shadow(Color.Black.copy(alpha = 0.3f), Offset(0f, 1.5f), 8f)
 

@@ -34,7 +34,6 @@ import app.rosa.weather.ui.places.PlacesScreen
 import app.rosa.weather.ui.places.PlacesUiState
 import app.rosa.weather.core.model.EffectsQuality
 import app.rosa.weather.core.model.Forecast
-import app.rosa.weather.core.model.GlassTint
 import app.rosa.weather.core.model.Place
 import app.rosa.weather.core.model.SampleForecast
 import app.rosa.weather.core.model.Units
@@ -102,7 +101,6 @@ class ScreenGalleryTest {
         appearance: Appearance = Appearance.Auto,
         forecastAgeSeconds: Long = 0,
         scrollPx: Float = 0f,
-        glassHue: Int = GlassTint.DEFAULT_HUE,
     ): Bitmap {
         val forecast = SampleForecast.create(scenario, nowEpochSeconds = now - forecastAgeSeconds, placeId = "geo:1").shifted(shiftCelsius)
         val state = HomeUiState(
@@ -110,7 +108,7 @@ class ScreenGalleryTest {
             pages = listOf(PlacePage(Place("geo:1", "Москва", 55.75, 37.62), forecast)),
             selectedId = "geo:1",
             units = Units(),
-            settings = AppSettings(effects = EffectsQuality.Balanced, appearance = appearance, glassHue = glassHue),
+            settings = AppSettings(effects = EffectsQuality.Balanced, appearance = appearance),
         )
         compose.mainClock.autoAdvance = false
         compose.setContent {
@@ -165,29 +163,12 @@ class ScreenGalleryTest {
     @Test
     fun settingsNight() = settings(SampleForecast.Scenario.ClearNight, 1_758_664_800L, "settings-night")
 
-    /** AMOLED chosen: the settings on true black. */
-    @Test
-    fun settingsAmoled() = settings(SampleForecast.Scenario.SunnyMild, 1_758_621_600L, "settings-amoled", Appearance.Amoled)
-
-    /** Tinted glass chosen, in mint: its colours open under the tiles, and every pane takes the hue. */
-    @Test
-    fun settingsTinted() = settings(SampleForecast.Scenario.SunnyMild, 1_758_621_600L, "settings-tinted", Appearance.Tinted, glassHue = 150)
-
-    @Test
-    fun settingsTintedNight() = settings(SampleForecast.Scenario.ClearNight, 1_758_664_800L, "settings-tinted-night", Appearance.Tinted, glassHue = 274)
-
-    private fun settings(
-        scenario: SampleForecast.Scenario,
-        now: Long,
-        name: String,
-        appearance: Appearance = Appearance.Auto,
-        glassHue: Int = GlassTint.DEFAULT_HUE,
-    ) {
+    private fun settings(scenario: SampleForecast.Scenario, now: Long, name: String) {
         val forecast = SampleForecast.create(scenario, nowEpochSeconds = now, placeId = "geo:1")
-        val settings = AppSettings(effects = EffectsQuality.Balanced, appearance = appearance, glassHue = glassHue)
+        val settings = AppSettings(effects = EffectsQuality.Balanced)
         compose.mainClock.autoAdvance = false
         compose.setContent {
-            val sky = remember { SkyController(forecast.momentAt(now)).apply { applyAppearance(appearance) } }
+            val sky = remember { SkyController(forecast.momentAt(now)) }
             CompositionLocalProvider(LocalSky provides sky) {
                 RosaEnvironment(settings, sky.palette) {
                     SkyBackdrop(sky.params, settings.effects, stage = sky.stage, transitionMillis = 0) {
@@ -206,16 +187,7 @@ class ScreenGalleryTest {
      * corners (it once drew a full rectangle whose square corners poked out past the glass).
      */
     @Test
-    fun places() = places("places")
-
-    /** On black the cities' own skies are the only colour left: small windows onto them. */
-    @Test
-    fun placesAmoled() = places("places-amoled", Appearance.Amoled)
-
-    @Test
-    fun placesTinted() = places("places-tinted", Appearance.Tinted, glassHue = 234)
-
-    private fun places(name: String, appearance: Appearance = Appearance.Auto, glassHue: Int = GlassTint.DEFAULT_HUE) {
+    fun places() {
         val now = 1_758_621_600L
         fun place(id: String, name: String, region: String, scenario: SampleForecast.Scenario, lat: Double, lon: Double, offset: Int) =
             Place(id, name, lat, lon, region = region) to SampleForecast.create(scenario, nowEpochSeconds = now, latitude = lat, longitude = lon, utcOffsetSeconds = offset * 3600, placeId = id)
@@ -231,11 +203,11 @@ class ScreenGalleryTest {
             places = entries.map { it.first },
             forecasts = entries.associate { (p, f) -> p.id to f },
         )
-        val settings = AppSettings(effects = EffectsQuality.Balanced, appearance = appearance, glassHue = glassHue)
+        val settings = AppSettings(effects = EffectsQuality.Balanced)
         val forecast = entries.first().second
         compose.mainClock.autoAdvance = false
         compose.setContent {
-            val sky = remember { SkyController(forecast.momentAt(now)).apply { applyAppearance(appearance) } }
+            val sky = remember { SkyController(forecast.momentAt(now)) }
             CompositionLocalProvider(LocalSky provides sky) {
                 RosaEnvironment(settings, sky.palette) {
                     SkyBackdrop(sky.params, settings.effects, stage = sky.stage, transitionMillis = 0) {
@@ -246,7 +218,7 @@ class ScreenGalleryTest {
                 }
             }
         }
-        capture(name, doc = false)
+        capture("places", doc = false)
     }
 
     /** Scrolled: the cards fade into the sky under the floating bar (scroll edge effect). */
@@ -302,42 +274,6 @@ class ScreenGalleryTest {
         home(SampleForecast.Scenario.RainyAfternoon, 1_758_628_800L, "home-mode-dark", doc = false, appearance = Appearance.Dark)
     }
 
-    /** AMOLED by day: true black, black glass lit at its edges. */
-    @Test
-    fun homeAmoledDay() {
-        assertBarStandsApart(home(SampleForecast.Scenario.SunnyMild, 1_758_621_600L, "home-amoled-day", doc = false, appearance = Appearance.Amoled), "home-amoled-day")
-    }
-
-    /** AMOLED at night: the stars out on the black. */
-    @Test
-    fun homeAmoledNight() {
-        assertBarStandsApart(home(SampleForecast.Scenario.ClearNight, 1_758_664_800L, "home-amoled-night", doc = false, appearance = Appearance.Amoled), "home-amoled-night")
-    }
-
-    /** AMOLED in the rain: streaks and beads on the pane catch the light; no grey veil. */
-    @Test
-    fun homeAmoledRain() {
-        assertBarStandsApart(home(SampleForecast.Scenario.RainyAfternoon, 1_758_637_800L, "home-amoled-rain", doc = false, forecastAgeSeconds = 2_400, appearance = Appearance.Amoled), "home-amoled-rain")
-    }
-
-    /** Tinted glass in rose, the default, over a bright day. */
-    @Test
-    fun homeTintedDay() {
-        assertBarStandsApart(home(SampleForecast.Scenario.SunnyMild, 1_758_621_600L, "home-tinted-day", doc = false, appearance = Appearance.Tinted), "home-tinted-day")
-    }
-
-    /** Tinted glass in azure at night: deep glass under light type. */
-    @Test
-    fun homeTintedNight() {
-        assertBarStandsApart(home(SampleForecast.Scenario.ClearNight, 1_758_664_800L, "home-tinted-night", doc = false, appearance = Appearance.Tinted, glassHue = 205), "home-tinted-night")
-    }
-
-    /** Tinted glass in amber in the rain. */
-    @Test
-    fun homeTintedRain() {
-        assertBarStandsApart(home(SampleForecast.Scenario.RainyAfternoon, 1_758_637_800L, "home-tinted-rain", doc = false, forecastAgeSeconds = 2_400, appearance = Appearance.Tinted, glassHue = 36), "home-tinted-rain")
-    }
-
     @Test
     fun appearancePicker() {
         compose.mainClock.autoAdvance = false
@@ -347,7 +283,7 @@ class ScreenGalleryTest {
                 SkyBackdrop(sky.params, EffectsQuality.Balanced, transitionMillis = 0) {
                     Column(Modifier.fillMaxWidth().padding(16.dp)) {
                         GlassSurface(Modifier.fillMaxWidth(), style = GlassStyle.Frosted, contentPadding = PaddingValues(18.dp)) {
-                            AppearancePicker(Appearance.Tinted, {}, glassHue = 340)
+                            AppearancePicker(Appearance.Evening) {}
                         }
                     }
                 }

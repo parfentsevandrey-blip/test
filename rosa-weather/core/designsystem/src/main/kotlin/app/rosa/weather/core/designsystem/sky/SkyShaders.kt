@@ -64,9 +64,7 @@ float fbm3(float2 p) {
  * The living sky: gradient from the shared [app.rosa.weather.core.model.SkyPalette], the real
  * sun or a phase-correct moon at its true position, twinkling stars, two drifting fbm cloud decks
  * lit from the sun's side, fog banks and lightning. Rendered at reduced resolution and upscaled —
- * the sky is soft by nature, so this costs nothing visually. As [black] goes to 1 the sky goes
- * out, down to true black, and only what glows on its own is left: the stars and the lightning's
- * channel (rain and snow fall over it in their own layer). At 1 nothing else is computed at all.
+ * the sky is soft by nature, so this costs nothing visually.
  */
 @Language("AGSL")
 internal const val SKY_SHADER = """
@@ -92,7 +90,6 @@ uniform float bolt;
 uniform float boltSeed;
 uniform float boltX;
 uniform float2 tilt;
-uniform float black;
 $NOISE
 
 // Horizontal offset of a lightning channel at height y: jagged at every scale, like the real thing.
@@ -107,9 +104,17 @@ half4 main(float2 fragCoord) {
     float aspect = resolution.x / resolution.y;
     float h = clamp(uv.y, 0.0, 1.0);
 
-    // What glows on its own is kept apart: on a black sky it is all there is.
+    half3 col = mix(zenith.rgb, horizon.rgb, half(pow(h, 1.25)));
+
+    float2 sp = sunPos + tilt * float2(0.02, 0.012);
+    float2 dv = (uv - sp) * float2(aspect, 1.0);
+    float dist = length(dv);
+    float veil = 1.0 - cloudCover * 0.8;
+
+    // Atmospheric glow around the light source and along the horizon.
+    col += glow.rgb * half(0.26 * exp(-dist * 3.2) * (0.35 + 0.65 * veil) + 0.16 * pow(h, 3.0));
+
     // Stars: one per cell, twinkling, hidden by clouds later.
-    half3 starLight = half3(0.0);
     if (stars > 0.01) {
         float cell = 26.0;
         float2 g = (fragCoord + tilt * 18.0) / cell;
@@ -120,42 +125,9 @@ half4 main(float2 fragCoord) {
             float d = length(fract(g) - pos) * cell;
             float tw = 0.55 + 0.45 * sin(time * (1.2 + r * 2.0) + r * 60.0);
             float big = step(0.97, r);
-            starLight = half3(stars * tw * (smoothstep(1.3 + big, 0.0, d) + big * 0.35 * smoothstep(4.0, 0.0, d)) * (1.0 - h * 0.6));
+            col += half3(stars * tw * (smoothstep(1.3 + big, 0.0, d) + big * 0.35 * smoothstep(4.0, 0.0, d)) * (1.0 - h * 0.6));
         }
     }
-    // A near strike shows its channel, forked and jagged, glowing through the rain.
-    half3 boltLight = half3(0.0);
-    if (bolt > 0.01) {
-        float2 bp = float2(uv.x * aspect, uv.y);
-        float x0 = boltX * aspect;
-        float end = 0.55 + 0.3 * fract(boltSeed * 7.31);
-        float reach = smoothstep(end, end - 0.12, bp.y);
-        float dx = abs(bp.x - x0 - channel(bp.y, boltSeed));
-        float core = exp(-dx * resolution.y * 0.8);
-        float halo = exp(-dx * 55.0) * 0.4;
-        // One fork leaves the channel and wanders off to the side.
-        float yb = 0.16 + 0.22 * fract(boltSeed * 3.13);
-        float side = fract(boltSeed * 5.71) > 0.5 ? 1.0 : -1.0;
-        float fx = x0 + channel(yb, boltSeed) + side * (bp.y - yb) * 0.45 + (channel(bp.y, boltSeed + 9.0)) * 0.5;
-        float onFork = step(yb, bp.y) * smoothstep(yb + 0.2, yb + 0.04, bp.y);
-        float df = abs(bp.x - fx);
-        float fork = (exp(-df * resolution.y * 1.1) + exp(-df * 80.0) * 0.25) * onFork * 0.75;
-        boltLight = half3(0.86, 0.9, 1.0) * half(((core + halo) * reach + fork) * bolt);
-    }
-    if (black > 0.999) {
-        return half4(starLight + boltLight, 1.0);
-    }
-
-    half3 col = mix(zenith.rgb, horizon.rgb, half(pow(h, 1.25)));
-
-    float2 sp = sunPos + tilt * float2(0.02, 0.012);
-    float2 dv = (uv - sp) * float2(aspect, 1.0);
-    float dist = length(dv);
-    float veil = 1.0 - cloudCover * 0.8;
-
-    // Atmospheric glow around the light source and along the horizon.
-    col += glow.rgb * half(0.26 * exp(-dist * 3.2) * (0.35 + 0.65 * veil) + 0.16 * pow(h, 3.0));
-    col += starLight;
 
     // Sun or moon (bodySize is 0 once it has set).
     float bodyR = max(bodySize, 0.0001);
@@ -220,14 +192,29 @@ half4 main(float2 fragCoord) {
         col = mix(col, mix(horizon.rgb, half3(0.93), 0.4), half(fog * density * 0.86));
     }
 
-    // Lightning lights the clouds from within, and its channel shows.
+    // Lightning lights the clouds from within; a near strike shows its channel, forked and
+    // jagged, glowing through the rain.
     col += half3(0.7, 0.72, 1.0) * half(flash * (0.25 + 0.75 * mask));
-    col += boltLight;
+    if (bolt > 0.01) {
+        float2 bp = float2(uv.x * aspect, uv.y);
+        float x0 = boltX * aspect;
+        float end = 0.55 + 0.3 * fract(boltSeed * 7.31);
+        float reach = smoothstep(end, end - 0.12, bp.y);
+        float dx = abs(bp.x - x0 - channel(bp.y, boltSeed));
+        float core = exp(-dx * resolution.y * 0.8);
+        float halo = exp(-dx * 55.0) * 0.4;
+        // One fork leaves the channel and wanders off to the side.
+        float yb = 0.16 + 0.22 * fract(boltSeed * 3.13);
+        float side = fract(boltSeed * 5.71) > 0.5 ? 1.0 : -1.0;
+        float fx = x0 + channel(yb, boltSeed) + side * (bp.y - yb) * 0.45 + (channel(bp.y, boltSeed + 9.0)) * 0.5;
+        float onFork = step(yb, bp.y) * smoothstep(yb + 0.2, yb + 0.04, bp.y);
+        float df = abs(bp.x - fx);
+        float fork = (exp(-df * resolution.y * 1.1) + exp(-df * 80.0) * 0.25) * onFork * 0.75;
+        col += half3(0.86, 0.9, 1.0) * half(((core + halo) * reach + fork) * bolt);
+    }
 
     // Film grain keeps gradients silky on 8-bit displays.
     col += half((hash(fragCoord + fract(time) * 100.0) - 0.5) * 0.018);
-    // Going out: the sky fades to black, leaving what glows.
-    col = mix(col, starLight + boltLight, half(black));
     return half4(col, 1.0);
 }
 """
@@ -247,7 +234,6 @@ uniform float snow;
 uniform float wind;
 uniform float2 tilt;
 layout(color) uniform half4 tint;
-uniform float black;
 $NOISE
 
 // Rain streaks at one depth (0 far … 1 near), in screen heights.
@@ -331,8 +317,7 @@ half4 main(float2 fragCoord) {
     }
     a = clamp(a, 0.0, 1.0);
     half3 haze = mix(tint.rgb, half3(0.9), 0.4);
-    // On a black sky only the rain and the snow themselves show, never a grey veil.
-    float v = clamp(veil, 0.0, 0.3) * (1.0 - a) * (1.0 - black);
+    float v = clamp(veil, 0.0, 0.3) * (1.0 - a);
     return half4(rgb + haze * half(v), half(a + v));
 }
 """

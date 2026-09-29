@@ -4,11 +4,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -41,10 +36,8 @@ import app.rosa.weather.core.designsystem.component.GlassSegmented
 import app.rosa.weather.core.designsystem.component.GlassSurface
 import app.rosa.weather.core.designsystem.component.GlassToggle
 import app.rosa.weather.core.designsystem.glass.GlassStyle
-import app.rosa.weather.core.designsystem.motion.RosaMotion
 import app.rosa.weather.core.designsystem.theme.Rosa
 import app.rosa.weather.core.model.AppSettings
-import app.rosa.weather.core.model.Appearance
 import app.rosa.weather.core.model.EffectsQuality
 import app.rosa.weather.core.model.HapticsLevel
 import app.rosa.weather.core.model.PrecipitationUnit
@@ -102,28 +95,8 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Section(stringResource(R.string.settings_appearance)) {
-                AppearancePicker(settings.appearance, { mode -> onUpdate { it.copy(appearance = mode) } }, settings.glassHue)
-                AnimatedVisibility(
-                    visible = settings.appearance == Appearance.Tinted,
-                    enter = expandVertically(RosaMotion.gelSize) + fadeIn(),
-                    exit = shrinkVertically(RosaMotion.gelSize) + fadeOut(),
-                ) {
-                    Column(Modifier.padding(top = 4.dp)) {
-                        Text(stringResource(R.string.glass_color), style = Rosa.type.label, color = Rosa.colors.ink, modifier = Modifier.padding(start = 2.dp, bottom = 10.dp))
-                        GlassHuePicker(settings.glassHue, { hue -> onUpdate { it.copy(glassHue = hue) } })
-                    }
-                }
-                Text(
-                    stringResource(
-                        when (settings.appearance) {
-                            Appearance.Amoled -> R.string.appearance_amoled_hint
-                            Appearance.Tinted -> R.string.appearance_tinted_hint
-                            else -> R.string.appearance_hint
-                        },
-                    ),
-                    style = Rosa.type.caption,
-                    color = Rosa.colors.inkSoft,
-                )
+                AppearancePicker(settings.appearance) { mode -> onUpdate { it.copy(appearance = mode) } }
+                Text(stringResource(R.string.appearance_hint), style = Rosa.type.caption, color = Rosa.colors.inkSoft)
             }
             Section(stringResource(R.string.settings_units)) {
                 Labeled(stringResource(R.string.settings_temperature)) {

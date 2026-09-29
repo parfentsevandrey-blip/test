@@ -112,8 +112,8 @@ fun RosaAppRoot() {
 
 /**
  * The clock, battery and navigation icons follow the sky, not the system's dark mode: dark over a
- * bright sky, light over a dark one — and over the black of AMOLED, where dark icons would vanish.
- * Watched outside composition: the sky changes on every frame of a scrub, its lightness rarely.
+ * bright sky, light over a dark one, so they never vanish into a night sky under a light system
+ * theme. Watched outside composition: the sky changes on every frame of a scrub, its lightness rarely.
  */
 @Composable
 private fun SystemBarsFollowSky(sky: SkyController) {

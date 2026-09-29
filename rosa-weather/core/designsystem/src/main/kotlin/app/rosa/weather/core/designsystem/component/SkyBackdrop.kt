@@ -3,9 +3,6 @@ package app.rosa.weather.core.designsystem.component
 import android.app.UiModeManager
 import android.os.Build
 import android.os.PowerManager
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,13 +34,10 @@ import app.rosa.weather.core.designsystem.sky.SceneQuality
 import app.rosa.weather.core.designsystem.sky.SkyParams
 import app.rosa.weather.core.designsystem.sky.SkyScene
 import app.rosa.weather.core.designsystem.sky.SkyStage
-import app.rosa.weather.core.designsystem.theme.GlassFinish
 import app.rosa.weather.core.designsystem.theme.RosaTheme
 import app.rosa.weather.core.designsystem.theme.animatedRosaColors
-import app.rosa.weather.core.designsystem.theme.toColor
 import app.rosa.weather.core.model.AppSettings
 import app.rosa.weather.core.model.EffectsQuality
-import app.rosa.weather.core.model.GlassTint
 import app.rosa.weather.core.model.SkyPalette
 import kotlin.math.abs
 
@@ -53,18 +47,13 @@ import kotlin.math.abs
  */
 @Composable
 fun RosaEnvironment(settings: AppSettings, palette: SkyPalette, content: @Composable () -> Unit) {
-    val colors = animatedRosaColors(palette, settings.appearance, settings.glassHue)
+    val colors = animatedRosaColors(palette)
     val haptics = rememberRosaHaptics(settings.haptics)
     val motion = rememberSystemMotionEnabled()
     val clock = rememberAmbientClock(running = motion)
     val tilt = rememberTilt(enabled = settings.tiltLighting && motion)
     val environment = remember { GlassEnvironment() }
     environment.tint = colors.glassTint
-    // Coloured glass grows into its colour, and back out of it, as the mood changes.
-    val stain by animateFloatAsState(if (colors.finish == GlassFinish.Tinted) 1f else 0f, tween(1200), label = "stain")
-    val stainGlow by animateColorAsState(GlassTint.glow(settings.glassHue).toColor(), tween(1200), label = "stainGlow")
-    environment.stain = stain
-    environment.stainGlow = stainGlow
     environment.contrast = rememberSystemContrast()
     // Light ink over a fairly bright sky: densify the glass so type keeps its contrast.
     environment.tintBoost = if (palette.isLight) 0f else ((palette.brightness - 0.12) / 0.24).toFloat().coerceIn(0f, 1f)

@@ -67,8 +67,7 @@ import org.intellij.lang.annotations.Language
  * (splitting it into colour at the very rim), reflects light along the edges, puts a sharp glint
  * where the bevel faces the tilt-driven light, gathers a caustic inside the far edge and casts a
  * soft shadow; a crisp edge line keeps the number legible on any sky. A new value melts out of
- * the old one: their distance fields are blended, so the shapes flow into each other. When the
- * app's glass is coloured ([GlassEnvironment.stain]), so are the numerals.
+ * the old one: their distance fields are blended, so the shapes flow into each other.
  *
  * Fields are built off the main thread, and [prefetch] (say, the next hours' temperatures) is
  * prepared ahead, so scrubbing through time never waits for one.
@@ -301,8 +300,6 @@ private class GlassTextNode(
         val lightColor: Int,
         val lightPower: Float,
         val flash: Float,
-        val stain: Float,
-        val stainGlow: Int,
     )
 
     override fun onAttach() {
@@ -377,8 +374,6 @@ private class GlassTextNode(
             lightColor = environment.lightColor.toArgb(),
             lightPower = Math.round(light.power / 0.01f) * 0.01f,
             flash = Math.round(environment.flash / 0.01f) * 0.01f,
-            stain = environment.stain,
-            stainGlow = if (environment.stain > 0f) environment.stainGlow.toArgb() else 0,
         )
         if (key != effectKey) {
             shader.setInputShader("fieldA", shaderOf(a.field))
@@ -394,8 +389,6 @@ private class GlassTextNode(
             shader.setColorUniform("lightColor", key.lightColor)
             shader.setFloatUniform("lightPower", key.lightPower)
             shader.setFloatUniform("flash", key.flash)
-            shader.setFloatUniform("stain", key.stain)
-            shader.setColorUniform("stainGlow", key.stainGlow)
             shader.setFloatUniform("shadowOffset", 0f, to.sizePx * 0.022f)
             shader.setFloatUniform("shadowAlpha", 0.3f)
             effect = RenderEffect.createRuntimeShaderEffect(shader, "content").asComposeRenderEffect()
@@ -429,8 +422,6 @@ layout(color) uniform half4 edge;
 layout(color) uniform half4 lightColor;
 uniform float lightPower;
 uniform float flash;
-uniform float stain;
-layout(color) uniform half4 stainGlow;
 uniform float2 shadowOffset;
 uniform float shadowAlpha;
 
@@ -475,14 +466,6 @@ half4 main(float2 p) {
         c.b = content.eval(p + disp * (1.0 - dispersion)).b;
     }
     c = vibrance(c, 1.35) + 0.03;
-    // Coloured glass (the tinted appearance): the sky keeps its light and shade, in the glass's hue.
-    if (stain > 0.0) {
-        half3 luma = half3(0.2126, 0.7152, 0.0722);
-        half lum = dot(c, luma);
-        half glowLum = max(dot(stainGlow.rgb, luma), 0.02);
-        half3 seen = lum <= glowLum ? stainGlow.rgb * (lum / glowLum) : mix(stainGlow.rgb, half3(1.0), (lum - glowLum) / (1.0 - glowLum));
-        c = mix(c, seen, half(stain * 0.75));
-    }
     c = mix(c, tint.rgb, tint.a);
 
     // Light: reflections along the rim, a sharp glint where the bevel faces the light (and a

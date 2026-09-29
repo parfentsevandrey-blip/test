@@ -20,31 +20,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.sp
 import app.rosa.weather.core.designsystem.R
-import app.rosa.weather.core.model.Appearance
 import app.rosa.weather.core.model.Argb
-import app.rosa.weather.core.model.GlassTint
 import app.rosa.weather.core.model.SkyPalette
 
 fun Argb.toColor(): Color = Color(value)
-
-/**
- * What the glass is made of: [Clear] glass that shows the sky, [Black] glass on the black sky of
- * [Appearance.Amoled], or [Tinted] glass coloured in the user's hue ([Appearance.Tinted]).
- */
-enum class GlassFinish {
-    Clear,
-    Black,
-    Tinted,
-    ;
-
-    companion object {
-        fun of(appearance: Appearance): GlassFinish = when (appearance) {
-            Appearance.Amoled -> Black
-            Appearance.Tinted -> Tinted
-            else -> Clear
-        }
-    }
-}
 
 /**
  * Colours derived live from the sky: the whole UI re-tints as the sky changes (and animates
@@ -64,41 +43,22 @@ data class RosaColors(
     val isLightSky: Boolean,
     val zenith: Color,
     val horizon: Color,
-    val finish: GlassFinish = GlassFinish.Clear,
 )
 
-/**
- * @param appearance only its glass matters here (the sky is already in [palette]): black glass,
- * or coloured glass in [glassHue] — with the accent in that hue too.
- */
 @Composable
-fun animatedRosaColors(palette: SkyPalette, appearance: Appearance = Appearance.Auto, glassHue: Int = GlassTint.DEFAULT_HUE): RosaColors {
+fun animatedRosaColors(palette: SkyPalette): RosaColors {
     val spec = tween<Color>(1200)
-    val finish = GlassFinish.of(appearance)
-    val light = palette.isLight
     val ink by animateColorAsState(palette.ink.toColor(), spec, label = "ink")
-    val accent by animateColorAsState(
-        if (finish == GlassFinish.Tinted) GlassTint.accent(glassHue, light).toColor() else palette.accent.toColor(),
-        spec,
-        label = "accent",
-    )
+    val accent by animateColorAsState(palette.accent.toColor(), spec, label = "accent")
     val warm by animateColorAsState(palette.warm.toColor(), spec, label = "warm")
     val cool by animateColorAsState(palette.cool.toColor(), spec, label = "cool")
     val zenith by animateColorAsState(palette.zenith.toColor(), spec, label = "zenith")
     val horizon by animateColorAsState(palette.horizon.toColor(), spec, label = "horizon")
+    val light = palette.isLight
     // Milky glass over bright skies; over dark ones smoky glass that keeps the sky's own hue —
-    // deep blue by day, violet at dusk, ink at night — instead of turning grey. Coloured glass is
-    // pale over bright skies and deep over dark ones, whatever its hue.
+    // deep blue by day, violet at dusk, ink at night — instead of turning grey.
     val smoke = lerp(palette.zenith.toColor(), Color(0xFF0B1020), 0.72f)
-    val glass by animateColorAsState(
-        when (finish) {
-            GlassFinish.Clear -> if (light) Color(0xFFFFFFFF) else smoke
-            GlassFinish.Black -> BlackGlass
-            GlassFinish.Tinted -> GlassTint.glass(glassHue, light).toColor()
-        },
-        spec,
-        label = "glass",
-    )
+    val glass by animateColorAsState(if (light) Color(0xFFFFFFFF) else smoke, spec, label = "glass")
     return RosaColors(
         ink = ink,
         inkSoft = ink.copy(alpha = 0.72f),
@@ -112,12 +72,8 @@ fun animatedRosaColors(palette: SkyPalette, appearance: Appearance = Appearance.
         isLightSky = light,
         zenith = zenith,
         horizon = horizon,
-        finish = finish,
     )
 }
-
-/** The tone of black glass: neutral, not the blue of the night's smoky glass. */
-private val BlackGlass = Color(0xFF050507)
 
 val LocalRosaColors = staticCompositionLocalOf {
     RosaColors(

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,7 +30,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
@@ -49,33 +47,23 @@ import app.rosa.weather.core.designsystem.motion.RosaMotion
 import app.rosa.weather.core.designsystem.theme.Rosa
 import app.rosa.weather.core.designsystem.theme.toColor
 import app.rosa.weather.core.model.Appearance
-import app.rosa.weather.core.model.GlassTint
 import app.rosa.weather.core.model.SkyPalette
 import app.rosa.weather.core.model.WeatherVisual
 import kotlin.math.PI
 import kotlin.math.sin
 
-/**
- * Six little living skies to choose the app's light and glass from, three to a row: the four
- * moods, true black, and glass in [glassHue].
- */
+/** Four little living skies to choose the app's light from. */
 @Composable
-internal fun AppearancePicker(selected: Appearance, onSelect: (Appearance) -> Unit, glassHue: Int = GlassTint.DEFAULT_HUE) {
+internal fun AppearancePicker(selected: Appearance, onSelect: (Appearance) -> Unit) {
     val labels = mapOf(
         Appearance.Auto to stringResource(R.string.appearance_auto),
         Appearance.Light to stringResource(R.string.appearance_light),
         Appearance.Evening to stringResource(R.string.appearance_evening),
         Appearance.Dark to stringResource(R.string.appearance_dark),
-        Appearance.Amoled to stringResource(R.string.appearance_amoled),
-        Appearance.Tinted to stringResource(R.string.appearance_tinted),
     )
-    Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Appearance.entries.chunked(3).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                row.forEach { mode ->
-                    MoodTile(mode, labels.getValue(mode), mode == selected, glassHue, Modifier.weight(1f)) { onSelect(mode) }
-                }
-            }
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Appearance.entries.forEach { mode ->
+            MoodTile(mode, labels.getValue(mode), mode == selected, Modifier.weight(1f)) { onSelect(mode) }
         }
     }
 }
@@ -88,7 +76,7 @@ private fun moodColors(mode: Appearance, elevation: Double): MoodColors {
 }
 
 @Composable
-private fun MoodTile(mode: Appearance, label: String, selected: Boolean, glassHue: Int, modifier: Modifier, onClick: () -> Unit) {
+private fun MoodTile(mode: Appearance, label: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val haptics = LocalHaptics.current
     val clock = LocalAmbientClock.current
     val colors = Rosa.colors
@@ -102,7 +90,7 @@ private fun MoodTile(mode: Appearance, label: String, selected: Boolean, glassHu
         Canvas(
             Modifier
                 .fillMaxWidth()
-                .aspectRatio(0.9f)
+                .aspectRatio(0.78f)
                 .graphicsLayer {
                     // The chosen sky rises towards you; pressing sinks it a little.
                     val s = press * (0.94f + 0.06f * lift)
@@ -139,11 +127,9 @@ private fun MoodTile(mode: Appearance, label: String, selected: Boolean, glassHu
                     Appearance.Light -> lightSky(sky, t)
                     Appearance.Evening -> eveningSky(sky, t)
                     Appearance.Dark -> darkSky(sky, t)
-                    Appearance.Amoled -> blackSky(t)
-                    Appearance.Tinted -> tintedSky(sky, glassHue, t)
                 }
-                // Glass sheen across the top, as on every pane in the app — on black only a breath of it.
-                drawRect(Brush.verticalGradient(0f to Color.White.copy(alpha = if (mode == Appearance.Amoled) 0.06f else 0.22f), 0.45f to Color.Transparent))
+                // Glass sheen across the top, as on every pane in the app.
+                drawRect(Brush.verticalGradient(0f to Color.White.copy(alpha = 0.22f), 0.45f to Color.Transparent))
             }
             // Glass rim; the chosen tile gets a bright double edge.
             drawRoundRect(
@@ -215,46 +201,6 @@ private fun DrawScope.darkSky(night: MoodColors, t: Float) {
     crescent(Offset(size.width * 0.68f, size.height * 0.3f), size.minDimension * 0.14f, lerp(night.top, night.bottom, 0.3f))
 }
 
-/** True black: only the stars glow on it, and rain falls through it, catching the light. */
-private fun DrawScope.blackSky(t: Float) {
-    stars(t, count = 9, fromY = 0.04f, toY = 0.5f)
-    val length = size.height * 0.16f
-    val slant = length * 0.14f
-    repeat(6) { i ->
-        val fall = (t * (0.42f + 0.07f * (i % 3)) + i * 0.29f) % 1f
-        val x = size.width * (0.12f + 0.155f * i) + slant * fall * 4f
-        val y = size.height * (fall * 1.25f - 0.2f)
-        drawLine(
-            Brush.linearGradient(listOf(Color.Transparent, Color.White.copy(alpha = 0.5f)), start = Offset(x, y), end = Offset(x - slant, y + length)),
-            start = Offset(x, y),
-            end = Offset(x - slant, y + length),
-            strokeWidth = 1.1.dp.toPx(),
-            cap = StrokeCap.Round,
-        )
-    }
-}
-
-/**
- * The real sky through a pane of coloured glass: the sun behind it, the colour deepest at its
- * rim, lit along its top edge.
- */
-private fun DrawScope.tintedSky(sky: MoodColors, hue: Int, t: Float) {
-    sun(Offset(size.width * 0.7f, size.height * 0.3f), size.minDimension * 0.11f, sky.sun, Color.White, t)
-    val color = GlassTint.swatch(hue).toColor()
-    val pane = RoundRect(size.width * 0.14f, size.height * 0.4f, size.width * 0.86f, size.height * 0.86f, CornerRadius(12.dp.toPx()))
-    val path = Path().apply { addRoundRect(pane) }
-    drawPath(path, color.copy(alpha = 0.62f))
-    drawPath(path, lerp(color, Color.Black, 0.25f).copy(alpha = 0.45f), style = Stroke(3.dp.toPx()))
-    clipPath(path) {
-        drawRect(Brush.verticalGradient(0f to Color.White.copy(alpha = 0.34f), 0.4f to Color.Transparent, startY = pane.top, endY = pane.bottom))
-    }
-    drawPath(
-        path,
-        Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.85f), Color.White.copy(alpha = 0.15f)), startY = pane.top, endY = pane.bottom),
-        style = Stroke(1.dp.toPx()),
-    )
-}
-
 private fun DrawScope.sun(center: Offset, radius: Float, core: Color, glow: Color, t: Float) {
     val breathe = 1f + 0.06f * sin(t * PI.toFloat() / 1.8f)
     drawCircle(
@@ -294,6 +240,5 @@ private fun DrawScope.checkBadge(lift: Float, accent: Color) {
         lineTo(c.x - r * 0.1f, c.y + r * 0.36f)
         lineTo(c.x + r * 0.48f, c.y - r * 0.32f)
     }
-    // Dark on a light accent, white on a deep one (coloured glass over a bright sky).
-    drawPath(tick, if (accent.luminance() > 0.3f) Color(0xFF14172A) else Color.White, style = Stroke(1.8.dp.toPx() * lift, cap = StrokeCap.Round))
+    drawPath(tick, Color(0xFF14172A), style = Stroke(1.8.dp.toPx() * lift, cap = StrokeCap.Round))
 }
