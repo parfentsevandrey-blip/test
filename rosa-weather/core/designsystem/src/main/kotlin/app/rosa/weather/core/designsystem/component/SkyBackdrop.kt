@@ -54,6 +54,7 @@ fun RosaEnvironment(settings: AppSettings, palette: SkyPalette, content: @Compos
     val tilt = rememberTilt(enabled = settings.tiltLighting && motion)
     val environment = remember { GlassEnvironment() }
     environment.tint = colors.glassTint
+    environment.clock = clock
     environment.contrast = rememberSystemContrast()
     // Light ink over a fairly bright sky: densify the glass so type keeps its contrast.
     environment.tintBoost = if (palette.isLight) 0f else ((palette.brightness - 0.12) / 0.24).toFloat().coerceIn(0f, 1f)
@@ -111,6 +112,9 @@ fun SkyBackdrop(
     val backdrop = rememberBackdrop()
     val quality = rememberSceneQuality(effects)
     val motion = LocalMotionEnabled.current
+    // The glass lives with the sky: light at play in it, the weather on it moving — unless motion
+    // is off or the sky is kept light for the battery.
+    LocalGlassEnvironment.current.alive = if (motion && quality != SceneQuality.Battery) 1f else 0f
     Box(modifier.fillMaxSize()) {
         SkyScene(
             params = params,

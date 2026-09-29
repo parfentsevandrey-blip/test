@@ -28,8 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import app.rosa.weather.core.model.WidgetConfig
 import app.rosa.weather.core.model.momentAt
-import app.rosa.weather.widget.motion.LiveWeather
-import app.rosa.weather.widget.motion.showLiveWeather
+import app.rosa.weather.widget.motion.LiveScene
+import app.rosa.weather.widget.motion.showLiveScene
 import app.rosa.weather.widget.render.DynamicTones
 import app.rosa.weather.widget.render.WidgetContent
 import app.rosa.weather.widget.render.WidgetRenderRequest
@@ -43,7 +43,8 @@ import kotlinx.coroutines.withContext
  * bitmap off the main thread, just as the launcher gets it. The preview only draws that bitmap, so
  * a list of previews scrolls for free. While it is being resized ([resizing]) it renders at half
  * resolution and the last picture stretches along until the next is ready, a frame or two later.
- * With [live], rain, snow and lightning move over it on the same tiles the launcher plays.
+ * With [live], the weather moves over it on the same tiles the launcher plays: rain, snow and
+ * lightning, or the sky itself — the sun's rays, clouds, stars, fog.
  */
 @Composable
 fun WidgetPreview(
@@ -61,7 +62,7 @@ fun WidgetPreview(
     val description = remember(content) { renderer.describe(content) }
     val weather = remember(config, content, live) {
         val moment = content.forecast?.takeIf { live && content.status == WidgetContent.Status.Ready }?.momentAt(content.nowEpochSeconds)
-        LiveWeather.of(config, moment)
+        LiveScene.of(config, moment)
     }
     val density = LocalDensity.current.density
     // The renderer isn't thread-safe: one render at a time per preview, the latest request wins.
@@ -72,7 +73,7 @@ fun WidgetPreview(
         val widthDp = pixels.width / density
         val heightDp = pixels.height / density
         if (widthDp < 8f || heightDp < 8f) return@LaunchedEffect
-        val request = WidgetRenderRequest(widthDp, heightDp, config, content, cornerRadiusDp, systemNight, dynamic, live = weather != null)
+        val request = WidgetRenderRequest(widthDp, heightDp, config, content, cornerRadiusDp, systemNight, dynamic, live = weather?.falls == true)
         val scale = if (resizing) density / 2 else density
         picture = withContext(worker) { renderer.render(request, scale).asImageBitmap() }
     }
@@ -86,15 +87,14 @@ fun WidgetPreview(
             )
         }
         if (weather != null && pixels.width > 0) {
-            val columns = weather.columns(pixels.width / density)
-            val rows = weather.rows(pixels.height / density)
-            // New tiles only when the grid changes: resizing within it keeps the rain falling.
-            key(weather, columns, rows) {
+            // New tiles only when the widget has grown or shrunk by a step: resizing within one
+            // keeps the rain falling and the rays turning.
+            key(weather, (pixels.width / density / 24f).toInt(), (pixels.height / density / 24f).toInt()) {
                 AndroidView(
                     factory = { ctx ->
                         FrameLayout(ctx).apply {
                             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
-                            showLiveWeather(weather, pixels.width / density, pixels.height / density)
+                            showLiveScene(weather, pixels.width / density, pixels.height / density)
                         }
                     },
                     modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(cornerRadiusDp.dp)),

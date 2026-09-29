@@ -27,6 +27,9 @@ import kotlin.random.Random
  *  - In a storm, lightning: every tile flashes at the same instants; tiles along the top carry the
  *    bolts.
  *  - Snow in three depths, drifting with the wind and swaying.
+ *  - And in every other weather, the sky itself ([Sky]): the sun's rays turning slowly round it
+ *    and its glow breathing, clouds drifting across, stars twinkling with now and then a falling
+ *    one, the moon's halo breathing, fog rolling by — so a widget is never still.
  *
  * Every timeline is a loop that ends where it began. Drops come in four variants with their own
  * places and timings, so neighbouring tiles never repeat each other; the streaks are the same in
@@ -148,6 +151,32 @@ internal object MotionResources {
     const val SEASON_W = 180f
     const val SEASON_H = 180f
 
+    /** Clouds and fog drift sideways across tiles this wide, one pattern repeating along the row. */
+    const val WIDE_W = 360f
+    const val WIDE_H = 180f
+
+    /** The sun's rays and glow, laid once where the sun is. */
+    const val SUN_SIZE = 260f
+
+    /** The moon's halo, laid once where the moon is. */
+    const val MOON_SIZE = 150f
+
+    /**
+     * The sky in motion for the weather widget, in every weather that has no rain or snow: laid
+     * over the picture where its sky is.
+     */
+    enum class Sky(val id: String, val seed: Int, val width: Float, val height: Float, val variants: Int = 1) {
+        Sun("sky_sun", 191, SUN_SIZE, SUN_SIZE),
+        Moon("sky_moon", 193, MOON_SIZE, MOON_SIZE),
+        Clouds("sky_clouds", 197, WIDE_W, WIDE_H),
+        CloudsNight("sky_clouds_night", 199, WIDE_W, WIDE_H),
+        Overcast("sky_overcast", 211, WIDE_W, WIDE_H),
+        Stars("sky_stars", 223, SEASON_W, SEASON_H, variants = VARIANTS),
+        Fog("sky_fog", 227, WIDE_W, WIDE_H),
+    }
+
+    fun tileName(kind: Sky, variant: Int) = if (kind.variants == 1) "motion_${kind.id}" else "motion_${kind.id}_${'a' + variant}"
+
     fun tileName(kind: Season, variant: Int) = if (kind.variants == 1) "motion_${kind.id}" else "motion_${kind.id}_${'a' + variant}"
 
     fun tileName(kind: Rain, variant: Int) = "motion_${kind.id}_${'a' + variant}"
@@ -179,6 +208,29 @@ internal object MotionResources {
         put("color/motion_glow_mist.xml", radial(listOf(0f to "#80FFF8F2", 0.5f to "#40FFF8F2", 1f to "#00FFF8F2"), "A wisp of mist"))
         for ((name, color) in TWINKLE) {
             put("color/motion_glow_twinkle_$name.xml", radial(listOf(0f to "#FFFFFFFF", 0.14f to "#F2$color", 0.42f to "#59$color", 1f to "#00$color"), "A light twinkling"))
+        }
+        put("color/motion_glow_sun.xml", radial(listOf(0f to "#33FFF8E4", 0.35f to "#17FFEFC8", 0.7f to "#06FFE6B0", 1f to "#00FFE6B0"), "The sun's glow"))
+        put("color/motion_sun_ray.xml", radial(listOf(0f to "#00FFF6DC", 0.12f to "#2EFFF6DC", 0.5f to "#12FFF2D2", 1f to "#00FFF2D2"), "A beam of sunlight, fading outward"))
+        put("color/motion_glow_moon.xml", radial(listOf(0f to "#59E6ECFF", 0.35f to "#29D2DCF5", 1f to "#00D2DCF5"), "The moon's halo"))
+        put("color/motion_cloud.xml", radial(listOf(0f to "#4DFFFFFF", 0.5f to "#29FFFFFF", 1f to "#00FFFFFF"), "A wisp of cloud"))
+        put("color/motion_cloud_night.xml", radial(listOf(0f to "#38C3CCE4", 0.5f to "#1FC3CCE4", 1f to "#00C3CCE4"), "A cloud by night"))
+        put("color/motion_cloud_grey.xml", radial(listOf(0f to "#40F2F4F8", 0.5f to "#24EEF1F6", 1f to "#00EEF1F6"), "A low grey cloud"))
+        put("color/motion_glow_star.xml", radial(listOf(0f to "#FFFFFFFF", 0.18f to "#CCF0F4FF", 0.45f to "#33DCE6FF", 1f to "#00DCE6FF"), "A star's glow"))
+        for (kind in Sky.entries) {
+            repeat(kind.variants) { variant ->
+                val name = tileName(kind, variant)
+                val tile = when (kind) {
+                    Sky.Sun -> sunTile(kind)
+                    Sky.Moon -> moonTile(kind)
+                    Sky.Clouds -> cloudsTile(kind, "@color/motion_cloud", count = 5, sizes = 0.8f..1.2f, period = 190f)
+                    Sky.CloudsNight -> cloudsTile(kind, "@color/motion_cloud_night", count = 5, sizes = 0.8f..1.2f, period = 220f)
+                    Sky.Overcast -> cloudsTile(kind, "@color/motion_cloud_grey", count = 7, sizes = 1f..1.5f, period = 260f)
+                    Sky.Stars -> starsTile(kind, variant)
+                    Sky.Fog -> fogTile(kind)
+                }
+                put("drawable/$name.xml", tile)
+                put("layout/$name.xml", tileLayout(name, kind.width, kind.height))
+            }
         }
         for (kind in Season.entries) {
             repeat(kind.variants) { variant ->
@@ -1095,6 +1147,186 @@ internal object MotionResources {
     }
 
     private class Layer(val count: Int, val sizes: ClosedFloatingPointRange<Float>, val fall: Float, val sway: Float, val alpha: Float)
+
+    // endregion
+
+    // region Sky
+
+    /**
+     * The sun: its glow breathing, and two fans of broad, faint beams turning slowly round it, one
+     * each way at its own pace, so the light seems to shimmer — never bright enough to cover the
+     * type under it; a few glints near it wink.
+     */
+    private fun sunTile(kind: Sky): String {
+        val v = Vector()
+        val rnd = Random(kind.seed * 101 + 5)
+        val c = SUN_SIZE / 2
+        val reach = SUN_SIZE / 2 - 2f
+        v.body += group("sun", c, c)
+            .add(fan("rays_a", rnd, rays = 7, width = 0.08f..0.14f, length = 0.72f..1f, scale = reach, alpha = 0.9f))
+            .add(fan("rays_b", rnd, rays = 6, width = 0.05f..0.09f, length = 0.55f..0.85f, scale = reach, alpha = 0.7f))
+            .add(group("glow", scaleX = 70f, scaleY = 70f).add(path(circle(0f, 0f, 1f), name = "glow_disc", fill = "@color/motion_glow_sun", fillAlpha = 0.9f)))
+        v.animate("rays_a", Anim(ms(150f), listOf(Ramp("rotation", 0f, 360f))))
+        v.animate("rays_b", Anim(ms(230f), listOf(Ramp("rotation", 0f, -360f))))
+        v.animate("rays_b_path", Anim(ms(11f), listOf(Keys("fillAlpha", (0..8).map { k -> Key(k / 8f, 0.55f + 0.3f * sin(2 * PI.toFloat() * k / 8f)) }))))
+        val breath = (0..8).map { k -> Key(k / 8f, 70f * (1f + 0.07f * sin(2 * PI.toFloat() * k / 8f))) }
+        v.animate("glow", Anim(ms(7f), listOf(Keys("scaleX", breath), Keys("scaleY", breath))))
+        v.animate("glow_disc", Anim(ms(9f), listOf(Keys("fillAlpha", (0..8).map { k -> Key(k / 8f, 0.82f + 0.14f * sin(2 * PI.toFloat() * k / 8f + 1f)) }))))
+        repeat(5) { i ->
+            val angle = rnd.range(0f, 2 * PI.toFloat())
+            val r = rnd.range(34f, 92f)
+            val size = rnd.range(3f, 5.5f)
+            val period = rnd.range(2.6f, 4.8f)
+            val at = rnd.nextFloat() * period * 0.6f
+            val name = "glint$i"
+            v.body += group(name, c + kotlin.math.cos(angle) * r, c + sin(angle) * r, scaleX = size, scaleY = size)
+                .add(path(SPARK, name = "${name}_spark", fill = "#FFFDF0", fillAlpha = 0f))
+            v.animate("${name}_spark", Anim(ms(period), listOf(Keys("fillAlpha", loop(period, 0f, at to listOf(0f to 0f, 0.3f to 0.65f, 0.9f to 0f))))))
+        }
+        return animatedVector(v, "Live sun: beams turning, glow breathing", SUN_SIZE, SUN_SIZE)
+    }
+
+    /** A fan of [rays] soft rays round the origin, unit long, scaled to [scale]; one path. */
+    private fun fan(name: String, rnd: Random, rays: Int, width: ClosedFloatingPointRange<Float>, length: ClosedFloatingPointRange<Float>, scale: Float, alpha: Float): El {
+        val data = StringBuilder()
+        val step = 2 * PI.toFloat() / rays
+        repeat(rays) { i ->
+            val a = i * step + rnd.range(-0.2f, 0.2f) * step
+            val w = rnd.range(width)
+            val l = rnd.range(length)
+            val r0 = 0.12f
+            fun at(r: Float, angle: Float) = "${f(r * kotlin.math.cos(angle))},${f(r * sin(angle))}"
+            data.append("M${at(r0, a - w * 0.4f)}L${at(l, a - w)}L${at(l * 1.02f, a)}L${at(l, a + w)}L${at(r0, a + w * 0.4f)}Z")
+        }
+        return group(name).add(
+            group("${name}_s", scaleX = scale, scaleY = scale).add(path(data.toString(), name = "${name}_path", fill = "@color/motion_sun_ray", fillAlpha = alpha)),
+        )
+    }
+
+    /** The moon's halo, breathing slowly, and a few glints winking near it. */
+    private fun moonTile(kind: Sky): String {
+        val v = Vector()
+        val rnd = Random(kind.seed * 101 + 5)
+        val c = MOON_SIZE / 2
+        v.body += group("moon", c, c).add(group("halo", scaleX = 56f, scaleY = 56f).add(path(circle(0f, 0f, 1f), name = "halo_disc", fill = "@color/motion_glow_moon", fillAlpha = 0.85f)))
+        val breath = (0..8).map { k -> Key(k / 8f, 56f * (1f + 0.1f * sin(2 * PI.toFloat() * k / 8f))) }
+        v.animate("halo", Anim(ms(9f), listOf(Keys("scaleX", breath), Keys("scaleY", breath))))
+        v.animate("halo_disc", Anim(ms(13f), listOf(Keys("fillAlpha", (0..8).map { k -> Key(k / 8f, 0.75f + 0.2f * sin(2 * PI.toFloat() * k / 8f + 0.7f)) }))))
+        repeat(4) { i ->
+            val angle = rnd.range(0f, 2 * PI.toFloat())
+            val r = rnd.range(26f, 62f)
+            val size = rnd.range(2.4f, 4f)
+            val period = rnd.range(3f, 5.5f)
+            val at = rnd.nextFloat() * period * 0.6f
+            val name = "glint$i"
+            v.body += group(name, c + kotlin.math.cos(angle) * r, c + sin(angle) * r, scaleX = size, scaleY = size)
+                .add(path(SPARK, name = "${name}_spark", fill = "#EEF3FF", fillAlpha = 0f))
+            v.animate("${name}_spark", Anim(ms(period), listOf(Keys("fillAlpha", loop(period, 0f, at to listOf(0f to 0f, 0.35f to 0.75f, 1.1f to 0f))))))
+        }
+        return animatedVector(v, "Live moon: its halo breathing", MOON_SIZE, MOON_SIZE)
+    }
+
+    /**
+     * Clouds drifting across the sky: soft wisps, each a long blob and a rounder one on top,
+     * breathing as they go (thickening, thinning). The pattern repeats along the row, one tile
+     * across, so the drift never shows a seam; a farther, fainter layer drifts slower.
+     */
+    private fun cloudsTile(kind: Sky, color: String, count: Int, sizes: ClosedFloatingPointRange<Float>, period: Float): String {
+        val v = Vector()
+        val rnd = Random(kind.seed * 101 + 5)
+        listOf(period * 1.7f to 0.55f, period to 1f).forEachIndexed { layer, (pace, strength) ->
+            val drift = group("drift$layer")
+            repeat(if (layer == 0) count - 2 else count) { i ->
+                val k = rnd.range(sizes) * (if (layer == 0) 0.8f else 1f)
+                val x = rnd.nextFloat() * WIDE_W
+                val y = rnd.range(14f, 118f)
+                val rx = 58f * k
+                val ry = 17f * k
+                val breathe = rnd.range(16f, 28f)
+                val phase = rnd.nextFloat() * 2f * PI.toFloat()
+                val alpha = (0..8).map { j -> Key(j / 8f, strength * (0.78f + 0.22f * sin(2 * PI.toFloat() * j / 8f + phase))) }
+                for (copy in 0..1) {
+                    val name = "cloud${layer}_${i}_$copy"
+                    drift.add(
+                        group(name, x - copy * WIDE_W, y)
+                            .add(group("${name}_body", scaleX = rx, scaleY = ry).add(path(circle(0f, 0f, 1f), name = "${name}_b", fill = color, fillAlpha = alpha.first().value)))
+                            .add(group("${name}_top", x = rx * 0.18f, y = -ry * 0.55f, scaleX = rx * 0.5f, scaleY = ry * 1.05f).add(path(circle(0f, 0f, 1f), name = "${name}_t", fill = color, fillAlpha = alpha.first().value))),
+                    )
+                    v.animate("${name}_b", Anim(ms(breathe), listOf(Keys("fillAlpha", alpha))))
+                    v.animate("${name}_t", Anim(ms(breathe), listOf(Keys("fillAlpha", alpha))))
+                }
+            }
+            v.body += drift
+            v.animate("drift$layer", Anim(ms(pace), listOf(Ramp("translateX", 0f, WIDE_W))))
+        }
+        return animatedVector(v, "Live ${kind.id.replace('_', ' ')}: clouds drifting", WIDE_W, WIDE_H)
+    }
+
+    /**
+     * A clear night: stars twinkling, each in its own rhythm, the brightest flashing a cross of
+     * light; in two of the four variants, now and then a star falls.
+     */
+    private fun starsTile(kind: Sky, variant: Int): String {
+        val v = Vector()
+        val rnd = Random(kind.seed * 101 + variant * 13 + 5)
+        repeat(15) { i ->
+            val x = rnd.range(6f, SEASON_W - 6f)
+            val y = rnd.range(6f, SEASON_H - 6f)
+            val bright = i < 2
+            val size = if (bright) rnd.range(3.8f, 5f) else rnd.range(2.2f, 3.6f)
+            val period = rnd.range(2.2f, 5.5f)
+            val at = rnd.nextFloat() * period * 0.6f
+            val low = if (bright) 0.35f else 0.2f
+            val name = "star$i"
+            val star = group(name, x, y, scaleX = size, scaleY = size)
+                .add(path(circle(0f, 0f, 1f), name = "${name}_glow", fill = "@color/motion_glow_star", fillAlpha = low))
+            val twinkle = loop(period, low, at to listOf(0f to low, 0.35f to 1f, 0.7f to 0.7f, 1.3f to low))
+            v.animate("${name}_glow", Anim(ms(period), listOf(Keys("fillAlpha", twinkle))))
+            if (bright) {
+                star.add(path(SPARK, name = "${name}_spark", fill = "#F4F7FF", fillAlpha = 0f))
+                v.animate("${name}_spark", Anim(ms(period), listOf(Keys("fillAlpha", loop(period, 0f, at to listOf(0f to 0f, 0.35f to 0.9f, 0.9f to 0f))))))
+            }
+            v.body += star
+        }
+        if (variant % 2 == 0) {
+            val period = 13f + variant * 1.9f
+            val x = rnd.range(70f, SEASON_W - 12f)
+            val y = rnd.range(10f, 70f)
+            val at = rnd.range(1f, period - 2f)
+            v.body += group("meteor", x, y, scaleX = 1.1f, scaleY = 1.1f).attr("android:rotation", f(rnd.range(145f, 162f)))
+                .add(path("M0,0L${f(METEOR)},0", name = "meteor_streak", stroke = "@color/motion_meteor", strokeWidth = 0.9f, cap = true, trimEnd = 0f))
+            val head = loop(period, 0f, at to listOf(0f to 0f, 0.28f to 1f, 0.9f to 1f, 0.92f to 0f))
+            val tail = loop(period, 0f, at to listOf(0f to 0f, 0.12f to 0f, 0.62f to 1f, 0.9f to 1f, 0.92f to 0f))
+            v.animate("meteor_streak", Anim(ms(period), listOf(Keys("trimPathEnd", head), Keys("trimPathStart", tail))))
+        }
+        return animatedVector(v, "Live ${kind.id.replace('_', ' ')}, variant ${'a' + variant}", SEASON_W, SEASON_H)
+    }
+
+    /** Fog: soft banks of mist rolling by, thickening and thinning, in two depths. */
+    private fun fogTile(kind: Sky): String {
+        val v = Vector()
+        val rnd = Random(kind.seed * 101 + 5)
+        listOf(210f to 0.7f, 130f to 1f).forEachIndexed { layer, (pace, strength) ->
+            val drift = group("fog$layer")
+            repeat(4) { i ->
+                val rx = rnd.range(80f, 130f)
+                val ry = rnd.range(18f, 30f)
+                val x = rnd.nextFloat() * WIDE_W
+                val y = rnd.range(20f, WIDE_H - 20f)
+                val breathe = rnd.range(9f, 16f)
+                val phase = rnd.nextFloat() * 2f * PI.toFloat()
+                val alpha = (0..8).map { j -> Key(j / 8f, strength * (0.62f + 0.3f * sin(2 * PI.toFloat() * j / 8f + phase))) }
+                for (copy in 0..1) {
+                    val name = "bank${layer}_${i}_$copy"
+                    drift.add(group(name, x - copy * WIDE_W, y, scaleX = rx, scaleY = ry).add(path(circle(0f, 0f, 1f), name = "${name}_m", fill = "@color/motion_glow_mist", fillAlpha = alpha.first().value)))
+                    v.animate("${name}_m", Anim(ms(breathe), listOf(Keys("fillAlpha", alpha))))
+                }
+            }
+            v.body += drift
+            v.animate("fog$layer", Anim(ms(pace), listOf(Ramp("translateX", 0f, WIDE_W))))
+        }
+        return animatedVector(v, "Live fog, rolling by", WIDE_W, WIDE_H)
+    }
 
     // endregion
 

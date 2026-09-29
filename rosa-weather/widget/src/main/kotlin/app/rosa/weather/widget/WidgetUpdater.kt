@@ -29,8 +29,8 @@ import app.rosa.weather.core.model.WidgetTapAction
 import app.rosa.weather.core.model.WidgetTheme
 import app.rosa.weather.core.model.momentAt
 import app.rosa.weather.core.model.nextSceneChange
-import app.rosa.weather.widget.motion.LiveWeather
-import app.rosa.weather.widget.motion.setLiveWeather
+import app.rosa.weather.widget.motion.LiveScene
+import app.rosa.weather.widget.motion.setLiveScene
 import app.rosa.weather.widget.provider.RosaWidgetProvider
 import app.rosa.weather.widget.provider.WidgetKind
 import app.rosa.weather.widget.provider.WidgetSizes
@@ -184,14 +184,15 @@ class WidgetUpdater @Inject constructor(
         val radius = WidgetPixels.cornerRadius(context, config)
         val description = renderer.describe(content)
         val click = clickIntent(widgetId, provider, config, content)
-        // Rain, snow or a storm right now: the launcher animates it over the picture.
+        // The weather moving right now — rain, snow, a storm, or the sky itself: the sun's rays,
+        // drifting clouds, stars, fog. The launcher animates it over the picture.
         val moment = content.forecast?.takeIf { content.status == WidgetContent.Status.Ready }?.momentAt(content.nowEpochSeconds)
-        val live = LiveWeather.of(config, moment)
+        val live = LiveScene.of(config, moment)
 
         val bySize = sizes.associateWith { size ->
             val density = WidgetPixels.density(context, size, budget)
             fun render(night: Boolean): Bitmap = renderer.render(
-                WidgetRenderRequest(size.width, size.height, config, content, radius, night, dynamic, seed = widgetId, live = live != null),
+                WidgetRenderRequest(size.width, size.height, config, content, radius, night, dynamic, seed = widgetId, live = live?.falls == true),
                 density,
             )
             RemoteViews(context.packageName, R.layout.widget_canvas).apply {
@@ -202,7 +203,7 @@ class WidgetUpdater @Inject constructor(
                 }
                 setContentDescription(R.id.widget_image, description)
                 setOnClickPendingIntent(R.id.widget_root, click)
-                setLiveWeather(context.packageName, live, size.width, size.height, radius)
+                setLiveScene(context.packageName, live, size.width, size.height, radius)
             }
         }
         return if (bySize.size == 1) bySize.values.first() else RemoteViews(bySize)

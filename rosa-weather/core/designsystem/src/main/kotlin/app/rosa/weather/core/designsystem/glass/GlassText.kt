@@ -300,6 +300,8 @@ private class GlassTextNode(
         val lightColor: Int,
         val lightPower: Float,
         val flash: Float,
+        val time: Float,
+        val alive: Float,
     )
 
     override fun onAttach() {
@@ -374,6 +376,9 @@ private class GlassTextNode(
             lightColor = environment.lightColor.toArgb(),
             lightPower = Math.round(light.power / 0.01f) * 0.01f,
             flash = Math.round(environment.flash / 0.01f) * 0.01f,
+            // Between sweeps of light nothing moves: the effect is rebuilt only while one crosses.
+            time = environment.livingTime().let { t -> if (((t + SWEEP_LEAD) / SWEEP_PERIOD) % 1f < SWEEP_SHARE) t else 0f },
+            alive = environment.alive,
         )
         if (key != effectKey) {
             shader.setInputShader("fieldA", shaderOf(a.field))
@@ -391,6 +396,9 @@ private class GlassTextNode(
             shader.setFloatUniform("flash", key.flash)
             shader.setFloatUniform("shadowOffset", 0f, to.sizePx * 0.022f)
             shader.setFloatUniform("shadowAlpha", 0.3f)
+            shader.setFloatUniform("time", key.time)
+            shader.setFloatUniform("alive", key.alive)
+            shader.setFloatUniform("extent", (max(from.width, to.width) + to.margin * 2).toFloat(), (to.height + to.margin * 2).toFloat())
             effect = RenderEffect.createRuntimeShaderEffect(shader, "content").asComposeRenderEffect()
             effectKey = key
         }
@@ -405,6 +413,11 @@ private class GlassTextNode(
         translate(-margin, -margin) { drawLayer(glass) }
     }
 }
+
+/** A sweep of light crosses the numerals every [SWEEP_PERIOD] s, for [SWEEP_SHARE] of it; see the shader. */
+private const val SWEEP_PERIOD = 9f
+private const val SWEEP_LEAD = 6.5f
+private const val SWEEP_SHARE = 0.2f
 
 @Language("AGSL")
 private const val GLASS_TEXT_SHADER = """
@@ -424,6 +437,9 @@ uniform float lightPower;
 uniform float flash;
 uniform float2 shadowOffset;
 uniform float shadowAlpha;
+uniform float time;
+uniform float alive;
+uniform float2 extent;
 
 // Signed distance to the glyph edge in px (positive inside), blended between the two values.
 float sd(float2 p) {
@@ -486,6 +502,16 @@ half4 main(float2 p) {
     c *= half(1.0 - 0.22 * smoothstep(0.8, 1.0, x) * max(-facing, 0.0));
     // Lightning flashes in the glass.
     c += half3(0.8, 0.86, 1.0) * half(flash * (0.1 + 0.6 * fresnel));
+    // Living: every few seconds a band of light glides across the numerals, slantwise, as if
+    // they turned in the light — brightest along their bevels.
+    if (alive > 0.0 && time > 0.0) {
+        float k = fract((time + 6.5) / 9.0);
+        float pos = mix(-0.35, 1.35, smoothstep(0.0, 0.2, k));
+        float across = p.x / max(extent.x, 1.0) + (0.5 - p.y / max(extent.y, 1.0)) * 0.3;
+        float zs = (across - pos) / 0.075;
+        float sweep = exp(-zs * zs) * step(k, 0.2) * alive;
+        c += sun * half(sweep * (0.12 + 0.55 * fresnel + 0.35 * band));
+    }
 
     // Where glass meets air: a crisp line that keeps the digits legible over any sky.
     float line = 1.0 - smoothstep(0.0, 1.4, abs(d - 0.35));

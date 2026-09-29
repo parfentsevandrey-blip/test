@@ -12,6 +12,7 @@ import androidx.compose.ui.input.pointer.isOutOfBounds
 import kotlinx.coroutines.delay
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -204,6 +205,7 @@ fun GlassButton(
     val state = rememberGlassState()
     val scope = rememberCoroutineScope()
     val press = remember { Animatable(0f) }
+    val light = remember(state, scope) { GlassTouchLight(state, scope) }
     var size by remember { mutableStateOf(IntSize.Zero) }
     val currentOnClick by rememberUpdatedState(onClick)
     val grow = if (size.height > 0) 1f + 8f / size.height else 1.04f
@@ -230,15 +232,12 @@ fun GlassButton(
                     haptics?.press()
                     state.touch = down.position
                     scope.launch { press.animateTo(1f, RosaMotion.press()) }
-                    scope.launch {
-                        Animatable(state.touchStrength).animateTo(1f, tween(160)) { state.touchStrength = value }
-                    }
+                    light.press(1f)
                     // The light follows the finger across the glass until it lets go.
                     val up = trackUntilUp { state.touch = it }
-                    scope.launch { press.animateTo(0f, RosaMotion.gel()) }
-                    scope.launch {
-                        Animatable(state.touchStrength).animateTo(0f, tween(420)) { state.touchStrength = value }
-                    }
+                    // Let go, the button settles like a gel: a small swing past its size and back.
+                    scope.launch { press.animateTo(0f, spring(dampingRatio = 0.5f, stiffness = RosaMotion.GelStiffness * 1.4f)) }
+                    light.release(420)
                     if (up != null) {
                         up.consume()
                         currentOnClick()
@@ -335,14 +334,17 @@ fun rememberPressScale(pressed: Boolean): Float {
  * Glow under the finger for any glass surface. Observes the gesture without consuming it, so
  * content inside keeps working, and backs off as soon as the finger starts scrolling.
  */
-private fun Modifier.glassTouch(state: GlassState, scope: kotlinx.coroutines.CoroutineScope): Modifier =
-    pointerInput(state) {
+private fun Modifier.glassTouch(state: GlassState, scope: kotlinx.coroutines.CoroutineScope): Modifier {
+    val light = GlassTouchLight(state, scope)
+    return pointerInput(state) {
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
             state.touch = down.position
+            var lit = false
             val glow = scope.launch {
                 delay(70) // a scroll that starts right away never lights up
-                Animatable(state.touchStrength).animateTo(0.75f, tween(180)) { state.touchStrength = value }
+                lit = true
+                light.press(0.75f)
             }
             while (true) {
                 val event = awaitPointerEvent(PointerEventPass.Initial)
@@ -352,9 +354,43 @@ private fun Modifier.glassTouch(state: GlassState, scope: kotlinx.coroutines.Cor
                 state.touch = change.position
             }
             glow.cancel()
-            scope.launch { Animatable(state.touchStrength).animateTo(0f, tween(380)) { state.touchStrength = value } }
+            if (lit) light.release(380)
         }
     }
+}
+
+/**
+ * The finger's light on the glass. Pressed: the light comes up under it and runs round the rim
+ * from there, both ways, while the glass swells into a lens. Let go: the light fades, and the lens
+ * springs back like a gel — past flat into a slight dimple and back, twice, calmly.
+ */
+private class GlassTouchLight(private val state: GlassState, private val scope: kotlinx.coroutines.CoroutineScope) {
+    private var glow: kotlinx.coroutines.Job? = null
+    private var lens: kotlinx.coroutines.Job? = null
+    private var spread: kotlinx.coroutines.Job? = null
+
+    fun press(strength: Float) {
+        glow?.cancel()
+        lens?.cancel()
+        spread?.cancel()
+        glow = scope.launch { Animatable(state.touchStrength).animateTo(strength, tween(160)) { state.touchStrength = value } }
+        lens = scope.launch { Animatable(state.lens).animateTo(strength, RosaMotion.press()) { state.lens = value } }
+        spread = scope.launch {
+            state.spread = 0f
+            Animatable(0f).animateTo(1f, tween(620, easing = FastOutSlowInEasing)) { state.spread = value }
+        }
+    }
+
+    fun release(fadeMillis: Int) {
+        glow?.cancel()
+        lens?.cancel()
+        glow = scope.launch { Animatable(state.touchStrength).animateTo(0f, tween(fadeMillis)) { state.touchStrength = value } }
+        lens = scope.launch {
+            Animatable(state.lens).animateTo(0f, spring(dampingRatio = 0.3f, stiffness = 230f)) { state.lens = value }
+            state.lens = 0f
+        }
+    }
+}
 
 /**
  * Like `waitForUpOrCancellation`, but reports every move to [onMove]. Returns the up change, or

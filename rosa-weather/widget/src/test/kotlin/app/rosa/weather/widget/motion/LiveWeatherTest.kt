@@ -64,9 +64,46 @@ class LiveWeatherTest {
         assertThat(at(SampleForecast.Scenario.StormyWarm, STORM, WidgetConfig(style = WidgetStyle.Paper))).isNull()
     }
 
+    /** The calendar keeps its pages on disk with these ordinals: new kinds only ever go last. */
+    @Test
+    fun ordinalsNeverMove() {
+        val released = listOf(
+            "RainLight", "RainHeavy", "Storm", "SnowLight", "SnowHeavy", "LeavesGold", "LeavesRed", "Petals", "Fireflies", "Night", "Frost",
+            "Fluff", "Blizzard", "Embers", "Drips", "Motes", "Birds", "Lilac", "Butterflies", "Mist", "LeavesOrange", "Twinkle",
+        )
+        assertThat(LiveWeather.entries.take(released.size).map { it.name }).containsExactlyElementsIn(released).inOrder()
+    }
+
+    /** In every weather, at every hour, the widget moves: rain, snow, a storm — or the sky itself. */
+    @Test
+    fun everyWeatherMoves() {
+        for (scenario in SampleForecast.Scenario.entries) {
+            for (hour in 0 until 24) {
+                val now = DAY + hour * 3600L
+                val scene = LiveScene.of(WidgetConfig(), SampleForecast.create(scenario, nowEpochSeconds = now).momentAt(now))
+                assertWithMessage("$scenario at $hour:00 UTC").that(scene?.layers.orEmpty()).isNotEmpty()
+            }
+        }
+        fun at(scenario: SampleForecast.Scenario, now: Long, config: WidgetConfig = WidgetConfig()) =
+            LiveScene.of(config, SampleForecast.create(scenario, nowEpochSeconds = now).momentAt(now))
+        // By day the sun turns its rays where the picture has it; by night the stars twinkle.
+        val day = at(SampleForecast.Scenario.SunnyMild, SUNNY)!!
+        assertThat(day.layers).contains(LiveWeather.Sun)
+        assertThat(day.falls).isFalse()
+        assertThat(at(SampleForecast.Scenario.ClearNight, NIGHT)!!.layers).contains(LiveWeather.Stars)
+        assertThat(at(SampleForecast.Scenario.FoggyMorning, FOG)!!.layers).contains(LiveWeather.Fog)
+        // Rain, snow and storms keep their own motion, and the picture leaves them out.
+        assertThat(at(SampleForecast.Scenario.StormyWarm, STORM)!!.layers).containsExactly(LiveWeather.Storm)
+        assertThat(at(SampleForecast.Scenario.StormyWarm, STORM)!!.falls).isTrue()
+        // Switched off, or on paper, nothing moves.
+        assertThat(at(SampleForecast.Scenario.SunnyMild, SUNNY, WidgetConfig(liveWeather = false))).isNull()
+        assertThat(at(SampleForecast.Scenario.SunnyMild, SUNNY, WidgetConfig(style = WidgetStyle.Paper))).isNull()
+        assertThat(at(SampleForecast.Scenario.SunnyMild, SUNNY, WidgetConfig(showWeatherArt = false))).isNull()
+    }
+
     @Test
     fun tilesCoverTheWidgetWithoutRepeatingANeighbour() {
-        for (weather in LiveWeather.entries) {
+        for (weather in LiveWeather.entries.filterNot { it.anchored }) {
             val (w, h) = 314f to 342f
             val columns = weather.columns(w)
             val rows = weather.rows(h)
@@ -88,9 +125,13 @@ class LiveWeatherTest {
     fun everyTileAnimatesOnTheRenderThread() {
         val groupProps = setOf("translateX", "translateY", "scaleX", "scaleY", "rotation")
         val pathProps = setOf("fillAlpha", "strokeAlpha", "trimPathStart", "trimPathEnd", "strokeWidth")
+        val density = context.resources.displayMetrics.density
         for (id in tileDrawables()) {
             val drawable = context.getDrawable(id) as AnimatedVectorDrawable
             val animators = animators(drawable)
+            // A pattern drifting across its tile moves by exactly the tile's own width or height.
+            val tileW = drawable.intrinsicWidth / density
+            val tileH = drawable.intrinsicHeight / density
             assertWithMessage(context.resources.getResourceEntryName(id)).that(animators).isNotEmpty()
             for (a in animators) {
                 val target = (a as ObjectAnimator).target!!
@@ -110,8 +151,8 @@ class LiveWeatherTest {
                     val end = a.getAnimatedValue(holder.propertyName) as Float
                     val jump = end - start
                     // Down or up: snow falls, sparks rise.
-                    val tile = holder.propertyName == "translateX" && kotlin.math.abs(jump - 180f) < 0.1f ||
-                        holder.propertyName == "translateY" && (kotlin.math.abs(jump - 90f) < 0.1f || kotlin.math.abs(kotlin.math.abs(jump) - 180f) < 0.1f)
+                    val tile = holder.propertyName == "translateX" && kotlin.math.abs(jump - tileW) < 0.6f ||
+                        holder.propertyName == "translateY" && kotlin.math.abs(kotlin.math.abs(jump) - tileH) < 0.6f
                     val turns = holder.propertyName == "rotation" && kotlin.math.abs(jump) > 1f && kotlin.math.abs(jump / 360f - kotlin.math.round(jump / 360f)) < 0.001f
                     if (!tile && !turns) assertWithMessage("${context.resources.getResourceEntryName(id)} ${holder.propertyName}").that(jump).isWithin(0.02f).of(0f)
                 }
@@ -132,17 +173,55 @@ class LiveWeatherTest {
     @Test
     fun snowOnTheWidget() = film("snow", SampleForecast.Scenario.SnowyCold, SNOW, age = 0L, WidgetStyle.Glass, LiveWeather.SnowHeavy)
 
+    /** A clear day: the sun's rays turning round it over the sky, its glow breathing. */
+    @Test
+    fun sunOnTheWidget() = film("sun", SampleForecast.Scenario.SunnyMild, SUNNY, age = 0L, WidgetStyle.Sky)
+
+    @Test
+    fun sunOnTheGlass() = film("sun-glass", SampleForecast.Scenario.SunnyMild, SUNNY, age = 0L, WidgetStyle.Glass)
+
+    /** Grey skies before the rain: clouds drifting by. */
+    @Test
+    fun cloudsOnTheWidget() = film("clouds", SampleForecast.Scenario.RainyAfternoon, CLOUDY, age = 0L, WidgetStyle.Sky)
+
+    /** Scattered cloud by day: the sun's beams turning behind clouds drifting by. */
+    @Test
+    fun partlyCloudyOnTheWidget() {
+        val forecast = SampleForecast.create(SampleForecast.Scenario.SunnyMild, nowEpochSeconds = SUNNY)
+        film("sun-clouds", forecast, SUNNY, WidgetStyle.Sky, LiveScene(listOf(LiveWeather.Sun, LiveWeather.Clouds), 0.56f, 0.28f), seconds = 9f, fps = 8)
+    }
+
+    /** A clear night: stars twinkling, the moon's halo breathing. */
+    @Test
+    fun starsOnTheWidget() = film("stars", SampleForecast.Scenario.ClearNight, NIGHT, age = 0L, WidgetStyle.Sky)
+
+    @Test
+    fun fogOnTheWidget() = film("fog", SampleForecast.Scenario.FoggyMorning, FOG, age = 0L, WidgetStyle.Glass)
+
     private fun film(name: String, scenario: SampleForecast.Scenario, now: Long, age: Long, style: WidgetStyle, weather: LiveWeather) {
+        val forecast = SampleForecast.create(scenario, nowEpochSeconds = now - age)
+        val scene = LiveScene(listOf(weather), 0.5f, 0.2f)
+        film(name, forecast, now, style, scene)
+    }
+
+    /** The sky's own motion is slow — beams turning, clouds drifting: filmed longer, fewer frames a second. */
+    private fun film(name: String, scenario: SampleForecast.Scenario, now: Long, age: Long, style: WidgetStyle) {
+        val forecast = SampleForecast.create(scenario, nowEpochSeconds = now - age)
+        val config = WidgetConfig(style = style, opacity = if (style == WidgetStyle.Sky) 1f else 0.72f)
+        val scene = LiveScene.of(config, forecast.momentAt(now))!!
+        film(name, forecast, now, style, scene, seconds = 9f, fps = 8)
+    }
+
+    private fun film(name: String, forecast: app.rosa.weather.core.model.Forecast, now: Long, style: WidgetStyle, scene: LiveScene, seconds: Float? = null, fps: Int = 25) {
         val (w, h) = 314f to 162f
         val density = context.resources.displayMetrics.density
         val radius = 24f
-        val forecast = SampleForecast.create(scenario, nowEpochSeconds = now - age)
         val content = WidgetContent("Москва", true, forecast, now, Units())
         val config = WidgetConfig(style = style, opacity = if (style == WidgetStyle.Sky) 1f else 0.72f)
-        val picture = WidgetRenderer(context).render(WidgetRenderRequest(w, h, config, content, radius, systemNight = false, seed = 5, live = true), density)
+        val picture = WidgetRenderer(context).render(WidgetRenderRequest(w, h, config, content, radius, systemNight = false, seed = 5, live = scene.falls), density)
         val views = RemoteViews(context.packageName, R.layout.widget_canvas).apply {
             setImageViewBitmap(R.id.widget_image, picture)
-            setLiveWeather(context.packageName, weather, w, h, radius)
+            setLiveScene(context.packageName, scene, w, h, radius)
         }
         val host = FrameLayout(context)
         val root = views.apply(context, host)
@@ -153,14 +232,24 @@ class LiveWeatherTest {
         host.layout(0, 0, pw, ph)
         val tiles = root.findViewById<ViewGroup>(R.id.widget_motion)
         assertThat(tiles.visibility).isEqualTo(View.VISIBLE)
-        assertThat(tiles.childCount).isEqualTo(weather.columns(w) * weather.rows(h))
-        assertThat(tiles.getChildAt(1).left).isEqualTo((weather.tileWidth * density).toInt())
+        assertThat(tiles.childCount).isEqualTo(scene.layers.sumOf { if (it.anchored) 1 else it.columns(w) * it.rows(h) })
+        scene.layers.firstOrNull { !it.anchored && it.columns(w) > 1 }?.let { weather ->
+            val first = scene.layers.takeWhile { it != weather }.sumOf { if (it.anchored) 1 else it.columns(w) * it.rows(h) }
+            assertThat(tiles.getChildAt(first + 1).left).isEqualTo((weather.tileWidth * density).toInt())
+        }
+        // The sun's rays and the moon's halo turn round the sun or moon, where the picture has it.
+        scene.layers.indexOfFirst { it.anchored }.takeIf { it >= 0 }?.let { index ->
+            val first = scene.layers.take(index).sumOf { if (it.anchored) 1 else it.columns(w) * it.rows(h) }
+            val body = tiles.getChildAt(first)
+            assertThat((body.left + body.width / 2f) / density).isWithin(1.5f).of(scene.bodyX * w)
+            assertThat((body.top + body.height / 2f) / density).isWithin(1.5f).of(scene.bodyY * h)
+        }
 
         val clip = Path().apply { addRoundRect(RectF(0f, 0f, pw.toFloat(), ph.toFloat()), radius * density, radius * density, Path.Direction.CW) }
         val frames = File(out, "$name-frames").apply { deleteRecursively(); mkdirs() }
-        val fps = 25
-        val seconds = if (weather == LiveWeather.Storm) 4.4f else 3.2f
-        val from = if (weather == LiveWeather.Storm) 0.6f else 0.8f
+        val storm = LiveWeather.Storm in scene.layers
+        val seconds = seconds ?: if (storm) 4.4f else 3.2f
+        val from = if (storm) 0.6f else 0.8f
         val strip = createBitmap(pw, ph * 6)
         val stripCanvas = Canvas(strip)
         val count = (seconds * fps).toInt()
@@ -249,5 +338,12 @@ class LiveWeatherTest {
         const val RAIN = 1_758_637_800L
         const val STORM = 1_758_637_800L
         const val SNOW = 1_758_610_800L
+        const val SUNNY = 1_758_621_600L
+        const val CLOUDY = 1_758_628_800L
+        const val NIGHT = 1_758_664_800L
+        const val FOG = 1_758_598_200L
+
+        /** 2025-09-23, midnight UTC. */
+        const val DAY = 1_758_585_600L
     }
 }

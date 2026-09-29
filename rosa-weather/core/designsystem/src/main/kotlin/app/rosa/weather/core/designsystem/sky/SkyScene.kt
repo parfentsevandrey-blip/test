@@ -320,6 +320,9 @@ fun SkyScene(
                 frost = p.frost,
                 rain = p.rain,
                 snow = p.snow,
+                stars = p.stars,
+                clouds = p.cloudCover,
+                wind = p.wind,
             )
         }
 

@@ -185,6 +185,56 @@ class ScreenGalleryTest {
         exportDocImage(strip, "home-entrance", 1600)
     }
 
+    /**
+     * The glass alive on the real screen, frame by frame (10 a second, at 2×), for the README's
+     * animations: rain landing on the cards and running down them; a finger on the 10-day card —
+     * its light running round the rim, the lens springing back like a gel when it lets go.
+     */
+    @Test
+    @Config(qualifiers = "ru-w411dp-h891dp-xhdpi")
+    fun homeAliveRain() = aliveFrames("alive-rain", SampleForecast.Scenario.RainyAfternoon, 1_758_637_800L, age = 2_400, frames = 30)
+
+    /** At night, where the light of a touch shows best: near the hourly card's edge, off its hours. */
+    @Test
+    @Config(qualifiers = "ru-w411dp-h891dp-xhdpi")
+    fun homeAliveTouch() = aliveFrames("alive-touch", SampleForecast.Scenario.ClearNight, 1_758_664_800L, frames = 30, touchDp = Offset(382f, 372f))
+
+    private fun aliveFrames(name: String, scenario: SampleForecast.Scenario, now: Long, age: Long = 0, frames: Int, touchDp: Offset? = null) {
+        val forecast = SampleForecast.create(scenario, nowEpochSeconds = now - age, placeId = "geo:1")
+        val state = HomeUiState(
+            loaded = true,
+            pages = listOf(PlacePage(Place("geo:1", "Москва", 55.75, 37.62), forecast)),
+            selectedId = "geo:1",
+            units = Units(),
+            settings = AppSettings(effects = EffectsQuality.Balanced),
+        )
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            val sky = remember { SkyController(forecast.momentAt(now)) }
+            CompositionLocalProvider(LocalSky provides sky) {
+                RosaEnvironment(state.settings, sky.palette) {
+                    SkyBackdrop(sky.params, state.settings.effects, stage = sky.stage, transitionMillis = 0) {
+                        TabBarScaffold(RosaTab.Weather, {}) {
+                            HomeScreen(state, {}, {}, {}, {}, {}, fixedNow = now)
+                        }
+                    }
+                }
+            }
+        }
+        // The cards have risen into place.
+        compose.mainClock.advanceTimeBy(2_000)
+        val density = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>().resources.displayMetrics.density
+        val dir = File("build/screens/$name").apply { deleteRecursively(); mkdirs() }
+        repeat(frames) { i ->
+            if (touchDp != null && i == 3) compose.onRoot().performTouchInput { down(touchDp * density) }
+            if (touchDp != null && i == 16) compose.onRoot().performTouchInput { up() }
+            compose.mainClock.advanceTimeBy(100)
+            compose.waitForIdle()
+            val frame = compose.onRoot().captureToImage().asAndroidBitmap()
+            File(dir, "%03d.png".format(i)).outputStream().use { frame.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        }
+    }
+
     /** First launch: the sheet, and its buttons set into it (never glass on glass). */
     @Test
     fun onboarding() {

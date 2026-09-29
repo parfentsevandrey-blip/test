@@ -3,6 +3,9 @@ package app.rosa.weather.core.designsystem.glass
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
 import android.graphics.Shader
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
@@ -34,16 +37,22 @@ import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.GlobalPositionAwareModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.invalidateDraw
+import androidx.compose.ui.node.requireDensity
 import androidx.compose.ui.node.requireGraphicsContext
 import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toIntSize
+import app.rosa.weather.core.designsystem.motion.AmbientClock
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.ceil
+import kotlin.math.sin
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * What the glass sees. [Modifier.backdropSource] records the living sky (or any content) into
@@ -167,11 +176,46 @@ class GlassEnvironment {
     /** 0..1: how hard it snows: snow settles on the tops of the cards. */
     var snow by mutableFloatStateOf(0f)
 
+    /** 0..1: how starry the night is: stars glint along the rims. */
+    var stars by mutableFloatStateOf(0f)
+
+    /** 0..1: how much cloud the glass reflects drifting past. */
+    var clouds by mutableFloatStateOf(0f)
+
+    /** 0..1: the wind: reflections drift faster, drops run slantwise. */
+    var wind by mutableFloatStateOf(0f)
+
+    /**
+     * 0..1: how alive the glass is. Alive, light plays in it and the weather on it moves: sun
+     * rippling through it, the sky's clouds drifting across it, stars glinting in its rim, drops
+     * landing and running down, snowflakes settling and melting, frost glittering. 0 keeps it
+     * still (no motion, the Battery sky).
+     */
+    var alive by mutableFloatStateOf(0f)
+
+    /** The clock the living glass keeps time by: the scene's own ambient clock. */
+    var clock: AmbientClock? = null
+
+    /** Seconds on [clock] while the glass is alive (observed: the glass redraws on every tick), else 0. */
+    internal fun livingTime(): Float = if (alive > 0f) clock?.seconds ?: 0f else 0f
+
     /**
      * Called by the sky on every frame it draws; writes (and so redraws the glass) only what
      * visibly changed.
      */
-    fun publishScene(position: Offset, color: Color, power: Float, sky: Color, flash: Float, frost: Float, rain: Float = 0f, snow: Float = 0f) {
+    fun publishScene(
+        position: Offset,
+        color: Color,
+        power: Float,
+        sky: Color,
+        flash: Float,
+        frost: Float,
+        rain: Float = 0f,
+        snow: Float = 0f,
+        stars: Float = 0f,
+        clouds: Float = 0f,
+        wind: Float = 0f,
+    ) {
         if (!lightPosition.isSpecified || (position - lightPosition).getDistance() > 1.5f) lightPosition = position
         if (color.distanceTo(lightColor) > 0.01f) lightColor = color
         if (abs(power - lightPower) > 0.01f) lightPower = power
@@ -180,6 +224,9 @@ class GlassEnvironment {
         if (abs(frost - this.frost) > 0.01f) this.frost = frost
         if (abs(rain - this.rain) > 0.02f || (rain == 0f && this.rain != 0f)) this.rain = rain
         if (abs(snow - this.snow) > 0.02f || (snow == 0f && this.snow != 0f)) this.snow = snow
+        if (abs(stars - this.stars) > 0.02f || (stars == 0f && this.stars != 0f)) this.stars = stars
+        if (abs(clouds - this.clouds) > 0.02f) this.clouds = clouds
+        if (abs(wind - this.wind) > 0.02f) this.wind = wind
     }
 
     private fun Color.distanceTo(other: Color) =
@@ -212,7 +259,11 @@ internal data class ElementLight(val angle: Float, val power: Float)
  * nearer it is, and swung by the device's tilt. Without a light in the scene, the resting light.
  */
 internal fun GlassEnvironment.lightFor(center: Offset, falloffPx: Float): ElementLight {
-    val swing = lightAngle - DEFAULT_LIGHT_ANGLE
+    // Living glass: the light never quite holds still — it sways a few degrees, slowly, the way
+    // sunlight on glass shifts with the air — so the highlights drift along the rims.
+    val t = livingTime()
+    val sway = if (t > 0f) alive * (0.1f * sin(t * 0.52f) + 0.045f * sin(t * 1.31f + 1.7f)) else 0f
+    val swing = lightAngle - DEFAULT_LIGHT_ANGLE + sway
     val source = lightPosition
     if (!source.isSpecified || lightPower <= 0.001f) return ElementLight(DEFAULT_LIGHT_ANGLE + swing, 0f)
     val toward = atan2(source.y - center.y, source.x - center.x)
@@ -230,7 +281,18 @@ internal fun GlassEnvironment.lightFor(center: Offset, falloffPx: Float): Elemen
 class GlassState {
     var materialize by mutableFloatStateOf(1f)
     var touch by mutableStateOf(Offset.Unspecified)
+
+    /** 0..1: the light under the finger. */
     var touchStrength by mutableFloatStateOf(0f)
+
+    /**
+     * How far the glass is pressed into a lens under the finger: 1 held down; let go, it springs
+     * back like a gel — past flat into a slight dimple and back, a couple of times.
+     */
+    var lens by mutableFloatStateOf(0f)
+
+    /** 0..1: the light of the touch running round the rim from the finger, both ways. */
+    var spread by mutableFloatStateOf(0f)
 }
 
 @Composable
@@ -287,6 +349,16 @@ private class LiquidGlassNode(
     private var effect: androidx.compose.ui.graphics.RenderEffect? = null
     private var effectKey: LensKey? = null
 
+    /**
+     * Living glass is liquid: moved (a scroll, a swipe to the next city, arriving on screen), what
+     * it holds lags behind the motion, piling up at the leading edge; stopped, it catches up,
+     * overshoots a little and settles. In px, pointing where the liquid lags.
+     */
+    private val flow = Animatable(Offset.Zero, Offset.VectorConverter)
+    private var lastMove = Offset.Unspecified
+    private var lastMoveNanos = 0L
+    private var settle: Job? = null
+
     override fun onAttach() {
         layer = requireGraphicsContext().createGraphicsLayer()
     }
@@ -296,13 +368,40 @@ private class LiquidGlassNode(
         layer = null
         effect = null
         effectKey = null
+        settle = null
+        lastMove = Offset.Unspecified
     }
 
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
         val p = coordinates.positionInRoot()
         if (p != position) {
+            follow(p)
             position = p
             invalidateDraw()
+        }
+    }
+
+    private fun follow(p: Offset) {
+        val now = System.nanoTime()
+        val last = lastMove
+        val then = lastMoveNanos
+        lastMove = p
+        lastMoveNanos = now
+        val env = environment
+        if (env == null || env.alive <= 0f || !last.isSpecified) return
+        val dt = (now - then) / 1_000_000_000f
+        // A jump (the first layout, a re-layout after a long pause) is not a motion.
+        if (dt <= 0.0005f || dt > 0.25f) return
+        val limit = with(requireDensity()) { FLOW_LIMIT.toPx() }
+        var lag = (last - p) / dt * FLOW_SECONDS * env.alive
+        val length = lag.getDistance()
+        if (length > limit) lag *= limit / length
+        coroutineScope.launch { flow.animateTo(lag, spring(dampingRatio = 0.7f, stiffness = 420f)) }
+        settle?.cancel()
+        settle = coroutineScope.launch {
+            delay(64)
+            // Stopped: the liquid catches up, overshoots and settles — a gel, not a spring toy.
+            flow.animateTo(Offset.Zero, spring(dampingRatio = 0.38f, stiffness = 190f))
         }
     }
 
@@ -335,7 +434,14 @@ private class LiquidGlassNode(
             ?: ElementLight(DEFAULT_LIGHT_ANGLE, 0f)
         val tilt = env?.tilt ?: Offset.Zero
         val touch = s?.touch ?: Offset.Unspecified
-        val touchOn = touch.isSpecified && (s?.touchStrength ?: 0f) > 0f
+        val pressLens = s?.lens ?: 0f
+        val spread = s?.spread ?: 0f
+        val touchOn = touch.isSpecified && ((s?.touchStrength ?: 0f) > 0f || abs(pressLens) > 0.002f || spread > 0f)
+        // The living glass: its clock, and the liquid lagging behind the pane's motion.
+        val alive = env?.alive ?: 0f
+        val time = env?.livingTime() ?: 0f
+        val lag = if (alive > 0f) flow.value else Offset.Zero
+        val flowLimit = FLOW_LIMIT.toPx()
         val layerSize = IntSize((size.width + margin * 2).toInt(), (size.height + margin * 2).toInt())
         val offset = backdrop.positionInRoot - position + Offset(margin, margin)
         val key = LensKey(
@@ -350,6 +456,14 @@ private class LiquidGlassNode(
             materialize = materialize,
             touch = if (touchOn) touch else Offset.Zero,
             touchStrength = if (touchOn) s!!.touchStrength else 0f,
+            lens = if (touchOn) pressLens else 0f,
+            spread = if (touchOn) spread else 0f,
+            time = time,
+            alive = alive,
+            flow = lag,
+            stars = env?.stars ?: 0f,
+            clouds = env?.clouds ?: 0f,
+            wind = env?.wind ?: 0f,
             blur = blur * materialize,
             darkness = darkness,
             lightPower = quantize(light.power, 0.01f),
@@ -395,6 +509,13 @@ private class LiquidGlassNode(
             shader.setFloatUniform("px", density)
             shader.setFloatUniform("bounds", key.bounds.left, key.bounds.top, key.bounds.right, key.bounds.bottom)
             shader.setFloatUniform("touch", key.touch.x, key.touch.y, key.touchStrength)
+            shader.setFloatUniform("gel", key.lens, key.spread)
+            shader.setFloatUniform("time", key.time)
+            shader.setFloatUniform("alive", key.alive)
+            shader.setFloatUniform("flow", key.flow.x, key.flow.y, (key.flow.getDistance() / flowLimit).coerceIn(0f, 1f))
+            shader.setFloatUniform("stars", key.stars)
+            shader.setFloatUniform("clouds", key.clouds)
+            shader.setFloatUniform("wind", key.wind)
             val lens = RenderEffect.createRuntimeShaderEffect(shader, "content")
             effect = if (key.blur > 0.5f) {
                 RenderEffect.createChainEffect(lens, RenderEffect.createBlurEffect(key.blur, key.blur, Shader.TileMode.CLAMP))
@@ -433,6 +554,14 @@ private data class LensKey(
     val materialize: Float,
     val touch: Offset,
     val touchStrength: Float,
+    val lens: Float,
+    val spread: Float,
+    val time: Float,
+    val alive: Float,
+    val flow: Offset,
+    val stars: Float,
+    val clouds: Float,
+    val wind: Float,
     val blur: Float,
     val darkness: Float,
     val lightPower: Float,
@@ -477,6 +606,12 @@ private val PARALLAX = 5.dp
 
 /** How far the world's reflections slide across the glass with a full tilt. */
 private val SHEEN_TRAVEL = 260.dp
+
+/** How far the liquid in the glass lags behind a fast motion, at most. */
+private val FLOW_LIMIT = 9.dp
+
+/** How much of its motion the liquid lags: at 1000 px/s, 12 px. */
+private const val FLOW_SECONDS = 0.012f
 
 private data class BackdropSourceElement(val backdrop: Backdrop) : ModifierNodeElement<BackdropSourceNode>() {
     override fun create() = BackdropSourceNode(backdrop)
