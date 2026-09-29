@@ -30,7 +30,11 @@ import org.intellij.lang.annotations.Language
  *  - **Reflections of the surroundings**, fixed in the world: soft bands of a window's light that
  *    stay put while the pane scrolls past them, and slide across it as the phone tilts.
  *  - **Weather on the glass**: lightning lights the whole pane, its rim most; on a freezing day
- *    frost creeps in from the rim in white veins.
+ *    frost creeps in from the rim in white veins. While it rains, water beads along the top edge of
+ *    every card — little lenses with a dark rim, a glint toward the light and a caustic at their
+ *    foot, some grown heavy and about to drip; while it snows, a lumpy cap of snow settles on top.
+ *  - **Colour in the rim that moves**: the faint rainbow the bevel splits the light into slides
+ *    along the edge as the phone tilts.
  *  - **Liquid touch**: a finger presses the glass into a lens that swells what is under it and
  *    catches the light.
  *  - **Materialisation**: appearing grows the lensing (never plain alpha) while a sweep of light
@@ -62,6 +66,8 @@ uniform float lightPower;
 layout(color) uniform half4 skyColor;
 uniform float flash;
 uniform float frost;
+uniform float wet;
+uniform float snowCap;
 uniform float2 parallax;
 uniform float2 root;
 uniform float2 sheen;
@@ -213,7 +219,8 @@ half4 main(float2 coord) {
     float fresnel = pow(1.0 - h, 2.4);
     // The bevel splits the light it bends: a faint rainbow runs across the band, from the edge in.
     float u = clamp(t / 0.22, 0.0, 1.0);
-    half3 prism = half3(0.5 + 0.5 * cos(6.2832 * (u * 0.8 + float3(0.0, 0.33, 0.67))));
+    float slide = (parallax.x - parallax.y) / max(px, 1.0) * 0.06;
+    half3 prism = half3(0.5 + 0.5 * cos(6.2832 * (u * 0.8 + slide + float3(0.0, 0.33, 0.67))));
     half3 edgeLight = mix(reflection, reflection * (0.7 + 0.6 * prism), half(0.4 * min(dispersion, 1.0)));
     col.rgb += edgeLight * half(fresnel * rimLight * lit * mix(0.7, 0.5, darkness));
     // Catch-light on the very edge: a fine line all the way round, brightest where the rim meets the light.
@@ -262,6 +269,64 @@ half4 main(float2 coord) {
         if (reachIn > 0.0) {
             float veins = smoothstep(0.62, 0.95, ridged(coord / (7.0 * px)));
             col.rgb = mix(col.rgb, half3(0.92, 0.95, 1.0), half(frost * reachIn * (0.18 + 0.55 * veins)));
+        }
+    }
+
+    // Rain: water beads along the top edge of a card. Each is a little lens: it shows what is
+    // behind it upside down, darkens toward its rim, catches a glint toward the light and gathers
+    // a caustic at its foot. Some have grown heavy and hang long, about to drip.
+    float wide = smoothstep(96.0 * px, 150.0 * px, size.x);
+    if (wet > 0.01 && wide > 0.0 && p.y < -hs.y + 16.0 * px) {
+        float cellW = 15.0 * px;
+        float gx = (p.x + hs.x) / cellW;
+        float gi = floor(gx);
+        for (int k = -1; k <= 1; k++) {
+            float i = gi + float(k);
+            float seed = hash21(float2(i, 7.3));
+            if (seed > 0.25 + 0.55 * wet) {
+                continue;
+            }
+            float cx = (i + 0.5 + (hash21(float2(i, 3.1)) - 0.5) * 0.6) * cellW - hs.x;
+            // Never on the rounded corners: only along the straight top edge.
+            if (abs(cx) > hs.x - radius - 3.0 * px) {
+                continue;
+            }
+            float r = mix(1.8, 4.4, hash21(float2(i, 1.7))) * px * (0.75 + 0.45 * wet);
+            float hang = 1.0 + 0.8 * step(0.82, hash21(float2(i, 9.9)));
+            float2 c = float2(cx, -hs.y + r * hang * 0.95 + 1.2 * px);
+            float2 v = (p - c) / float2(r, r * hang);
+            float rho = length(v);
+            float cover = (1.0 - smoothstep(0.86, 1.0, rho)) * wide;
+            if (cover > 0.0) {
+                half4 seen = content.eval(clamp(coord - v * r * 1.7, lo, hi));
+                half3 bead = mix(seen.rgb, seen.rgb * 0.5, half(smoothstep(0.45, 1.0, rho) * 0.75));
+                float glintB = exp(-dot(v - L * 0.42, v - L * 0.42) / 0.035);
+                float causticB = exp(-dot(v + L * 0.5, v + L * 0.5) / 0.06);
+                bead += sun * half(glintB * 0.95 + causticB * 0.28);
+                col.rgb = mix(col.rgb, clamp(bead, half3(0.0), half3(1.0)) * col.a, half(cover * 0.92));
+            }
+        }
+    }
+
+    // Snow settling on the top of a card: a lumpy white cap, lit on top and bluish in its depth,
+    // glittering here and there, casting a soft shadow on the glass just under it.
+    if (snowCap > 0.01 && p.y < -hs.y + 18.0 * px) {
+        float capW = smoothstep(56.0 * px, 96.0 * px, size.x);
+        float depthCap = snowCap * capW * px * (3.0 + 4.6 * vnoise(float2(p.x / (12.0 * px), 1.3)) + 1.6 * vnoise(float2(p.x / (3.8 * px), 7.1)));
+        float upward = smoothstep(-0.15, -0.65, n.y);
+        float below = -d - depthCap;
+        if (depthCap > 0.3 * px && upward > 0.0) {
+            float inCap = (1.0 - smoothstep(-0.7 * px, 0.7 * px, below)) * upward;
+            float shade = (1.0 - smoothstep(0.0, 3.5 * px, below)) * step(0.0, below) * upward;
+            col.rgb *= half(1.0 - 0.18 * shade * snowCap);
+            if (inCap > 0.0) {
+                float into = clamp(-d / max(depthCap, 0.001), 0.0, 1.0);
+                half3 snowCol = mix(half3(1.0), half3(0.74, 0.8, 0.92), half(pow(into, 1.4) * 0.85));
+                snowCol += half3(0.08) * half(1.0 - smoothstep(0.0, 0.35, into));
+                float glitter = step(0.982, hash21(floor(coord / (1.4 * px)))) * 0.4;
+                snowCol += half3(glitter);
+                col.rgb = mix(col.rgb, clamp(snowCol, half3(0.0), half3(1.0)) * col.a, half(inCap * 0.97));
+            }
         }
     }
 

@@ -161,17 +161,25 @@ class GlassEnvironment {
     /** 0..1: frost creeping over the glass on a freezing day. */
     var frost by mutableFloatStateOf(0f)
 
+    /** 0..1: how hard it rains: water beads along the tops of the cards. */
+    var rain by mutableFloatStateOf(0f)
+
+    /** 0..1: how hard it snows: snow settles on the tops of the cards. */
+    var snow by mutableFloatStateOf(0f)
+
     /**
      * Called by the sky on every frame it draws; writes (and so redraws the glass) only what
      * visibly changed.
      */
-    fun publishScene(position: Offset, color: Color, power: Float, sky: Color, flash: Float, frost: Float) {
+    fun publishScene(position: Offset, color: Color, power: Float, sky: Color, flash: Float, frost: Float, rain: Float = 0f, snow: Float = 0f) {
         if (!lightPosition.isSpecified || (position - lightPosition).getDistance() > 1.5f) lightPosition = position
         if (color.distanceTo(lightColor) > 0.01f) lightColor = color
         if (abs(power - lightPower) > 0.01f) lightPower = power
         if (sky.distanceTo(skyColor) > 0.01f) skyColor = sky
         if (abs(flash - this.flash) > 0.01f || (flash == 0f && this.flash != 0f)) this.flash = flash
         if (abs(frost - this.frost) > 0.01f) this.frost = frost
+        if (abs(rain - this.rain) > 0.02f || (rain == 0f && this.rain != 0f)) this.rain = rain
+        if (abs(snow - this.snow) > 0.02f || (snow == 0f && this.snow != 0f)) this.snow = snow
     }
 
     private fun Color.distanceTo(other: Color) =
@@ -349,6 +357,8 @@ private class LiquidGlassNode(
             skyColor = (env?.skyColor ?: Color.White).toArgb(),
             flash = env?.flash ?: 0f,
             frost = env?.frost ?: 0f,
+            wet = env?.rain ?: 0f,
+            snow = env?.snow ?: 0f,
             tilt = tilt,
             root = position,
             bounds = sceneBounds(offset, backdrop.layer.size, layerSize),
@@ -374,6 +384,8 @@ private class LiquidGlassNode(
             shader.setColorUniform("skyColor", key.skyColor)
             shader.setFloatUniform("flash", key.flash)
             shader.setFloatUniform("frost", key.frost)
+            shader.setFloatUniform("wet", key.wet)
+            shader.setFloatUniform("snowCap", key.snow)
             // The scene lies deeper than the glass: it shifts a little behind it as the phone tilts,
             // and the world's reflections slide across.
             val depthPx = PARALLAX.toPx()
@@ -428,6 +440,8 @@ private data class LensKey(
     val skyColor: Int,
     val flash: Float,
     val frost: Float,
+    val wet: Float,
+    val snow: Float,
     val tilt: Offset,
     val root: Offset,
     val bounds: Rect,

@@ -14,9 +14,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.layer.drawLayer
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.rememberGraphicsLayer
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
@@ -68,40 +66,20 @@ class WeatherShaderGalleryTest {
         val p = scene.change(SkyParams.from(moment, palette))
         println("${scene.name}: ${moment.condition} rain=${p.rain} snow=${p.snow} fog=${p.fog} frost=${p.frost} mist=${p.condensation} wind=${p.wind} cover=${p.cloudCover}")
         val t = scene.time
+        val bolt = BoltState().apply {
+            visible = scene.bolt > 0f
+            seed = 42.7f
+            x = 0.62f
+            channel = if (visible) LightningChannel(7, x, 0.72f) else null
+            flashAt = Offset(0.62f, 0.12f)
+        }
+        val flash = scene.bolt * 0.7f
         val sky = RuntimeShader(SKY_SHADER).apply {
-            setFloatUniform("resolution", skyW.toFloat(), skyH.toFloat())
-            setFloatUniform("time", t)
-            setColorUniform("zenith", p.zenith.toArgb())
-            setColorUniform("horizon", p.horizon.toArgb())
-            setColorUniform("glow", p.glow.toArgb())
-            setColorUniform("sunColor", p.sun.toArgb())
-            setColorUniform("cloudLight", p.cloudLight.toArgb())
-            setColorUniform("cloudShade", p.cloudShade.toArgb())
-            val body = SkyStage.Default.at(p.bodyPath, p.bodyLift)
-            setFloatUniform("sunPos", body.x, body.y)
-            setFloatUniform("isSun", if (p.isSun) 1f else 0f)
-            setFloatUniform("bodySize", (if (p.isSun) 0.022f else SkyStage.BODY_RADIUS) * p.bodyVisible)
-            setFloatUniform("moonPhase", p.moonPhase)
-            setFloatUniform("cloudCover", p.cloudCover)
-            setFloatUniform("cloudDark", p.cloudDark)
-            setFloatUniform("fog", p.fog)
-            setFloatUniform("wind", p.wind)
-            setFloatUniform("stars", p.stars)
-            setFloatUniform("flash", scene.bolt * 0.7f)
-            setFloatUniform("bolt", scene.bolt)
-            setFloatUniform("boltSeed", 42.7f)
-            setFloatUniform("boltX", 0.62f)
-            setFloatUniform("tilt", 0f, 0f)
+            setSkyUniforms(p, SkyStage.Default.at(p.bodyPath, p.bodyLift), skyW, skyH, t, flash, bolt, Offset.Zero)
         }
         val precipitating = p.rain > 0.02f || p.snow > 0.02f
         val precip = RuntimeShader(PRECIPITATION_SHADER).apply {
-            setFloatUniform("resolution", paneW.toFloat(), paneH.toFloat())
-            setFloatUniform("time", t)
-            setFloatUniform("rain", p.rain)
-            setFloatUniform("snow", p.snow)
-            setFloatUniform("wind", p.wind)
-            setFloatUniform("tilt", 0f, 0f)
-            setColorUniform("tint", lerp(p.horizon, p.cloudLight, 0.5f).toArgb())
+            setPrecipitationUniforms(p, paneW, paneH, t, flash, Offset.Zero)
         }
         val window = RuntimeShader(WINDOW_SHADER).apply {
             setInputShader("wipe", LinearGradient(0f, 0f, 1f, 1f, 0, 0, Shader.TileMode.CLAMP))
@@ -123,6 +101,7 @@ class WeatherShaderGalleryTest {
                     if (precipitating) drawRect(ShaderBrush(precip))
                 }
                 drawLayer(pane)
+                bolt.channel?.let { drawLightning(it, flash) }
             }
         }
         compose.waitForIdle()
@@ -148,6 +127,13 @@ class WeatherShaderGalleryTest {
         Scene("snow", SampleForecast.Scenario.SnowyCold, 1_758_610_800L),
         Scene("fog", SampleForecast.Scenario.FoggyMorning, 1_758_600_000L),
         Scene("frost", SampleForecast.Scenario.SnowyCold, 1_758_610_800L, { it.copy(frost = 0.85f, snow = 0.3f) }),
+        // 18:10 in Moscow in late September: the sun a few degrees up, in broken cloud.
+        Scene("golden", SampleForecast.Scenario.SunnyMild, 1_758_640_200L, { it.copy(cloudCover = 0.4f, cloudDark = 0.1f) }),
+        // A shower passing at 17:00, the sun low behind you.
+        Scene("rainbow", SampleForecast.Scenario.RainyAfternoon, 1_758_636_000L, { it.copy(rain = 0.3f, cloudCover = 0.55f, cloudDark = 0.25f, rainbow = 1f, condensation = 0f, fog = 0f) }),
+        // A clear moonless night: the Milky Way, and a meteor mid-flight.
+        Scene("night", SampleForecast.Scenario.ClearNight, 1_758_664_800L, { it.copy(stars = 1f, bodyVisible = 0f, cloudCover = 0.05f) }, time = 7.0f * 17 + 0.45f),
+        Scene("moonlit", SampleForecast.Scenario.ClearNight, 1_758_664_800L, { it.copy(cloudCover = 0.45f, cloudDark = 0.1f, moonPhase = 0.5f, isSun = false, bodyVisible = 1f, bodyPath = 0.75f, bodyLift = 0.6f, stars = 0.6f) }),
     )
 
     @Test fun rain() = scenes[0].let { save("weather-${it.name}", render(it)) }
@@ -161,4 +147,12 @@ class WeatherShaderGalleryTest {
     @Test fun fog() = scenes[4].let { save("weather-${it.name}", render(it)) }
 
     @Test fun frost() = scenes[5].let { save("weather-${it.name}", render(it)) }
+
+    @Test fun golden() = scenes[6].let { save("weather-${it.name}", render(it)) }
+
+    @Test fun rainbow() = scenes[7].let { save("weather-${it.name}", render(it)) }
+
+    @Test fun night() = scenes[8].let { save("weather-${it.name}", render(it)) }
+
+    @Test fun moonlit() = scenes[9].let { save("weather-${it.name}", render(it)) }
 }

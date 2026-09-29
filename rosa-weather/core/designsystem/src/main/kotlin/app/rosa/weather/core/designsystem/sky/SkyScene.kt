@@ -55,6 +55,7 @@ import app.rosa.weather.core.designsystem.theme.toColor
 import app.rosa.weather.core.model.Appearance
 import app.rosa.weather.core.model.ForecastMoment
 import app.rosa.weather.core.model.SkyPalette
+import app.rosa.weather.core.model.WeatherCondition
 import app.rosa.weather.core.model.WeatherVisual
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -91,6 +92,8 @@ data class SkyParams(
     val lightning: Float,
     val frost: Float,
     val condensation: Float,
+    /** A rainbow opposite the sun after a shower (0..1). */
+    val rainbow: Float = 0f,
 ) {
     fun lerp(to: SkyParams, t: Float): SkyParams {
         fun f(a: Float, b: Float) = a + (b - a) * t
@@ -100,6 +103,7 @@ data class SkyParams(
             f(bodyPath, to.bodyPath), f(bodyLift, to.bodyLift), if (t < 0.5f) isSun else to.isSun, f(bodyVisible, to.bodyVisible), f(moonPhase, to.moonPhase),
             f(cloudCover, to.cloudCover), f(cloudDark, to.cloudDark), f(fog, to.fog), f(wind, to.wind), f(stars, to.stars),
             f(rain, to.rain), f(snow, to.snow), f(lightning, to.lightning), f(frost, to.frost), f(condensation, to.condensation),
+            f(rainbow, to.rainbow),
         )
     }
 
@@ -137,7 +141,22 @@ data class SkyParams(
                 lightning = visual.lightning,
                 frost = moment.paneFrost,
                 condensation = moment.paneMist,
+                rainbow = if (realSky) rainbowFor(moment) else 0f,
             )
+        }
+
+        /**
+         * A rainbow needs rain falling opposite a sun that shines through broken cloud, and stands
+         * about 42° from the point opposite it: only while the sun is lower than that.
+         */
+        private fun rainbowFor(moment: ForecastMoment): Float {
+            val visual = moment.visual
+            val elevation = moment.sun.elevation
+            val showery = moment.condition == WeatherCondition.RainShowers || (visual.rain in 0.02f..0.6f && visual.cloudCover <= 0.8f)
+            if (!showery || visual.lightning > 0.1f) return 0f
+            val sunLow = ((40.0 - elevation) / 8.0).coerceIn(0.0, 1.0) * ((elevation - 2.0) / 4.0).coerceIn(0.0, 1.0)
+            val broken = ((0.92f - visual.cloudCover) / 0.2f).coerceIn(0f, 1f)
+            return (sunLow.toFloat() * broken).coerceIn(0f, 1f)
         }
     }
 }
@@ -221,6 +240,9 @@ fun SkyScene(
             bolt.visible = distance < 0.55f
             bolt.seed = Random.nextFloat() * 100f
             bolt.x = 0.15f + Random.nextFloat() * 0.7f
+            bolt.channel = if (bolt.visible) LightningChannel(Random.nextInt(), bolt.x, 0.5f + Random.nextFloat() * 0.32f) else null
+            // A near strike lights the clouds above it; a far one somewhere in the deck.
+            bolt.flashAt = if (bolt.visible) Offset(bolt.x, 0.12f) else Offset(0.15f + Random.nextFloat() * 0.7f, 0.08f + Random.nextFloat() * 0.3f)
             launch {
                 delay((250 + distance * 2200).toLong())
                 currentHaptics?.thunder(distance)
@@ -276,29 +298,8 @@ fun SkyScene(
         // Sampled, not observed: tilt shows up on the next tick instead of forcing extra redraws.
         val tiltValue = tilt?.let { Snapshot.withoutReadObservation { it.value } } ?: Offset.Zero
 
-        sky.setFloatUniform("resolution", w.toFloat(), h.toFloat())
-        sky.setFloatUniform("time", t)
-        sky.setColorUniform("zenith", p.zenith.toArgb())
-        sky.setColorUniform("horizon", p.horizon.toArgb())
-        sky.setColorUniform("glow", p.glow.toArgb())
-        sky.setColorUniform("sunColor", p.sun.toArgb())
-        sky.setColorUniform("cloudLight", p.cloudLight.toArgb())
-        sky.setColorUniform("cloudShade", p.cloudShade.toArgb())
         val body = stageState.value.at(p.bodyPath, p.bodyLift)
-        sky.setFloatUniform("sunPos", body.x, body.y)
-        sky.setFloatUniform("isSun", if (p.isSun) 1f else 0f)
-        sky.setFloatUniform("bodySize", (if (p.isSun) SUN_RADIUS else SkyStage.BODY_RADIUS) * p.bodyVisible)
-        sky.setFloatUniform("moonPhase", p.moonPhase)
-        sky.setFloatUniform("cloudCover", p.cloudCover)
-        sky.setFloatUniform("cloudDark", p.cloudDark)
-        sky.setFloatUniform("fog", p.fog)
-        sky.setFloatUniform("wind", p.wind)
-        sky.setFloatUniform("stars", p.stars)
-        sky.setFloatUniform("flash", flash.value)
-        sky.setFloatUniform("bolt", if (bolt.visible) flash.value else 0f)
-        sky.setFloatUniform("boltSeed", bolt.seed)
-        sky.setFloatUniform("boltX", bolt.x)
-        sky.setFloatUniform("tilt", tiltValue.x, tiltValue.y)
+        sky.setSkyUniforms(p, body, w, h, t, flash.value, bolt, tiltValue)
         light?.let { env ->
             // The sun lights the glass by its colour, the moon softly, by its phase. Scattered cloud
             // lets their light through; an overcast sky leaves only its own soft light.
@@ -317,6 +318,8 @@ fun SkyScene(
                 sky = p.zenith,
                 flash = flash.value,
                 frost = p.frost,
+                rain = p.rain,
+                snow = p.snow,
             )
         }
 
@@ -330,15 +333,7 @@ fun SkyScene(
         val pw = max(1, (size.width * ws).roundToInt())
         val ph = max(1, (size.height * ws).roundToInt())
 
-        if (precipitating) {
-            precip.setFloatUniform("resolution", pw.toFloat(), ph.toFloat())
-            precip.setFloatUniform("time", t)
-            precip.setFloatUniform("rain", p.rain)
-            precip.setFloatUniform("snow", p.snow)
-            precip.setFloatUniform("wind", p.wind)
-            precip.setFloatUniform("tilt", tiltValue.x, tiltValue.y)
-            precip.setColorUniform("tint", lerp(p.horizon, p.cloudLight, 0.5f).toArgb())
-        }
+        if (precipitating) precip.setPrecipitationUniforms(p, pw, ph, t, flash.value, tiltValue)
 
         layer.renderEffect = null
         layer.compositingStrategy = CompositingStrategy.Offscreen
@@ -371,7 +366,51 @@ fun SkyScene(
         } else {
             scale(1f / s, 1f / s, pivot = Offset.Zero) { drawLayer(layer) }
         }
+        // A near strike's channel, crisp: drawn at the display's resolution over the soft sky.
+        bolt.channel?.let { channel -> if (bolt.visible) drawLightning(channel, flash.value) }
     }
+}
+
+/** The sky shader's uniforms for [p] with the sun or moon at [body], at [w] × [h] pixels. */
+internal fun RuntimeShader.setSkyUniforms(p: SkyParams, body: Offset, w: Int, h: Int, time: Float, flash: Float, bolt: BoltState, tilt: Offset) {
+    setFloatUniform("resolution", w.toFloat(), h.toFloat())
+    setFloatUniform("time", time)
+    setColorUniform("zenith", p.zenith.toArgb())
+    setColorUniform("horizon", p.horizon.toArgb())
+    setColorUniform("glow", p.glow.toArgb())
+    setColorUniform("sunColor", p.sun.toArgb())
+    setColorUniform("cloudLight", p.cloudLight.toArgb())
+    setColorUniform("cloudShade", p.cloudShade.toArgb())
+    setFloatUniform("sunPos", body.x, body.y)
+    setFloatUniform("isSun", if (p.isSun) 1f else 0f)
+    setFloatUniform("bodySize", (if (p.isSun) SUN_RADIUS else SkyStage.BODY_RADIUS) * p.bodyVisible)
+    setFloatUniform("moonPhase", p.moonPhase)
+    setFloatUniform("cloudCover", p.cloudCover)
+    setFloatUniform("cloudDark", p.cloudDark)
+    setFloatUniform("fog", p.fog)
+    setFloatUniform("wind", p.wind)
+    setFloatUniform("stars", p.stars)
+    setFloatUniform("flash", flash)
+    // The channel itself is drawn crisp over the scene ([drawLightning]), not in the soft sky.
+    setFloatUniform("bolt", 0f)
+    setFloatUniform("boltSeed", bolt.seed)
+    setFloatUniform("boltX", bolt.x)
+    setFloatUniform("flashAt", bolt.flashAt.x, bolt.flashAt.y)
+    setFloatUniform("lift", p.bodyLift)
+    setFloatUniform("rainbow", p.rainbow * p.bodyVisible)
+    setFloatUniform("tilt", tilt.x, tilt.y)
+}
+
+/** The precipitation shader's uniforms for [p] at [w] × [h] pixels. */
+internal fun RuntimeShader.setPrecipitationUniforms(p: SkyParams, w: Int, h: Int, time: Float, flash: Float, tilt: Offset) {
+    setFloatUniform("resolution", w.toFloat(), h.toFloat())
+    setFloatUniform("time", time)
+    setFloatUniform("rain", p.rain)
+    setFloatUniform("snow", p.snow)
+    setFloatUniform("wind", p.wind)
+    setFloatUniform("flash", flash)
+    setFloatUniform("tilt", tilt.x, tilt.y)
+    setColorUniform("tint", lerp(p.horizon, p.cloudLight, 0.5f).toArgb())
 }
 
 private const val SUN_RADIUS = 0.022f
@@ -383,11 +422,13 @@ private class RootOrigin {
     var value = Offset.Zero
 }
 
-/** The lightning channel of the current flash: where it strikes and its random shape. */
-private class BoltState {
+/** The lightning of the current flash: where it strikes, its channel, where it lights the clouds. */
+internal class BoltState {
     var visible = false
     var seed = 0f
     var x = 0.5f
+    var channel: LightningChannel? = null
+    var flashAt = Offset(0.5f, 0.15f)
 }
 
 private class MutableParams(start: SkyParams, target: SkyParams) {

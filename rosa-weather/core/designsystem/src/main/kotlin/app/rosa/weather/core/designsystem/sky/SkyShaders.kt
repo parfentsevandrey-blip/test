@@ -65,6 +65,12 @@ float fbm3(float2 p) {
  * sun or a phase-correct moon at its true position, twinkling stars, two drifting fbm cloud decks
  * lit from the sun's side, fog banks and lightning. Rendered at reduced resolution and upscaled —
  * the sky is soft by nature, so this costs nothing visually.
+ *
+ * Light is directed like a film's: a low sun swells, turns gold and fills the sky around it with
+ * a warm haze, and throws rays through the gaps in the clouds; clouds catch the moon's light as
+ * well as the sun's; on a clear night the Milky Way crosses the sky and now and then a meteor
+ * falls; lightning lights the clouds from within where it strikes; after a shower, with the sun
+ * behind you, a rainbow stands opposite it, its faint twin outside and the darker band between.
  */
 @Language("AGSL")
 internal const val SKY_SHADER = """
@@ -89,8 +95,18 @@ uniform float flash;
 uniform float bolt;
 uniform float boltSeed;
 uniform float boltX;
+uniform float2 flashAt;
+uniform float lift;
+uniform float rainbow;
 uniform float2 tilt;
 $NOISE
+
+// A rainbow's colours across its band, t from 0 (inside: violet) to 1 (outside: red).
+half3 spectrum(float t) {
+    float hue = mix(0.76, 0.0, clamp(t, 0.0, 1.0));
+    half3 k = half3(clamp(abs(fract(hue + float3(1.0, 0.6666667, 0.3333333)) * 6.0 - 3.0) - 1.0, 0.0, 1.0));
+    return mix(half3(1.0), k, 0.8);
+}
 
 // Horizontal offset of a lightning channel at height y: jagged at every scale, like the real thing.
 float channel(float y, float seed) {
@@ -110,22 +126,67 @@ half4 main(float2 fragCoord) {
     float2 dv = (uv - sp) * float2(aspect, 1.0);
     float dist = length(dv);
     float veil = 1.0 - cloudCover * 0.8;
+    float sunUp = isSun * step(0.0005, bodySize);
+    // Golden hour: the lower the sun, the larger, warmer and wider its light.
+    float low = sunUp * (1.0 - smoothstep(0.02, 0.5, lift));
+    half3 gold = half3(1.0, 0.62, 0.33);
+    half3 warm = mix(sunColor.rgb, gold, half(low * 0.8));
 
     // Atmospheric glow around the light source and along the horizon.
-    col += glow.rgb * half(0.26 * exp(-dist * 3.2) * (0.35 + 0.65 * veil) + 0.16 * pow(h, 3.0));
+    col += mix(glow.rgb, gold, half(low * 0.6)) * half(0.26 * exp(-dist * mix(3.2, 1.8, low)) * (0.35 + 0.65 * veil) * (1.0 + low * 0.7) + 0.16 * pow(h, 3.0));
 
-    // Stars: one per cell, twinkling, hidden by clouds later.
+    // Stars: one per cell, twinkling, hidden by clouds later — blue-white and gold, a finer
+    // dust of faint ones behind them, and on a clear night the Milky Way across the sky.
     if (stars > 0.01) {
+        float2 q = float2(uv.x * aspect, uv.y) + tilt * 0.01;
+        // The galaxy's band, rising from the lower left, with dark lanes of dust along it.
+        float2 axis = normalize(float2(0.35, -0.94));
+        float across = dot(q - float2(0.16, 0.35), float2(-axis.y, axis.x));
+        float band = exp(-across * across / 0.03);
+        float galaxy = 0.0;
+        if (band > 0.02) {
+            float along = dot(q, axis);
+            float cloud = fbm3(float2(along * 3.1, across * 7.0) + 2.3);
+            float lane = smoothstep(0.45, 0.7, fbm3(float2(along * 5.3 + 7.1, across * 16.0))) * exp(-(across - 0.012) * (across - 0.012) / 0.0016);
+            galaxy = band * (0.35 + 0.9 * cloud) * (1.0 - 0.75 * lane) * smoothstep(1.05, 0.35, h);
+            col += mix(half3(0.5, 0.58, 0.86), half3(0.95, 0.86, 0.74), half(band * cloud * cloud)) * half(stars * galaxy * 0.36);
+        }
         float cell = 26.0;
         float2 g = (fragCoord + tilt * 18.0) / cell;
         float2 id = floor(g);
         float r = hash(id);
-        if (r > 0.72) {
+        if (r > 0.72 - galaxy * 0.18) {
             float2 pos = float2(hash(id + 1.3), hash(id + 7.1));
             float d = length(fract(g) - pos) * cell;
             float tw = 0.55 + 0.45 * sin(time * (1.2 + r * 2.0) + r * 60.0);
             float big = step(0.97, r);
-            col += half3(stars * tw * (smoothstep(1.3 + big, 0.0, d) + big * 0.35 * smoothstep(4.0, 0.0, d)) * (1.0 - h * 0.6));
+            float kind = hash(id + 5.5);
+            half3 tone = kind < 0.2 ? half3(1.0, 0.86, 0.7) : (kind > 0.75 ? half3(0.78, 0.86, 1.0) : half3(1.0));
+            col += tone * half(stars * tw * (smoothstep(1.3 + big, 0.0, d) + big * 0.35 * smoothstep(4.0, 0.0, d)) * (1.0 - h * 0.6));
+        }
+        float2 g2 = (fragCoord + tilt * 9.0) / 11.0;
+        float2 id2 = floor(g2);
+        float r2 = hash(id2 + 31.7);
+        if (r2 > 0.86 - galaxy * 0.3) {
+            float d2 = length(fract(g2) - float2(hash(id2 + 2.9), hash(id2 + 4.4))) * 11.0;
+            col += half3(stars * (0.22 + 0.2 * galaxy) * smoothstep(1.0, 0.0, d2) * (1.0 - h * 0.7));
+        }
+        // Now and then a meteor: a streak that flares and burns out in under a second.
+        float cycle = 7.0;
+        float k = floor(time / cycle);
+        float into = time - k * cycle;
+        if (stars > 0.25 && into < 0.85 && hash(float2(k, 3.7)) > 0.3) {
+            float prog = into / 0.85;
+            float2 start = float2((0.15 + 0.7 * hash(float2(k, 1.1))) * aspect, 0.04 + 0.24 * hash(float2(k, 2.3)));
+            float2 dir = normalize(float2(hash(float2(k, 5.9)) > 0.5 ? 1.0 : -1.0, 0.35 + 0.45 * hash(float2(k, 7.7))));
+            float2 head = start + dir * prog * 0.42;
+            float2 rel = q - head;
+            float behind = dot(rel, -dir);
+            float off = abs(dot(rel, float2(-dir.y, dir.x)));
+            float life = sin(3.14159 * prog);
+            float trail = step(0.0, behind) * (1.0 - smoothstep(0.0, 0.16 * life + 0.02, behind)) * exp(-off * resolution.y * 0.7);
+            float spark = exp(-length(rel) * resolution.y * 0.18);
+            col += half3(0.9, 0.95, 1.0) * half((trail * 0.85 + spark * 0.7) * life * stars);
         }
     }
 
@@ -134,11 +195,19 @@ half4 main(float2 fragCoord) {
     if (bodySize < 0.0005) {
         // Below the horizon: nothing to draw.
     } else if (isSun > 0.5) {
-        // A small, hot disc with a tight bloom; clouds veil it strongly.
+        // A small, hot disc with a tight bloom; clouds veil it strongly. Low in the sky it swells
+        // and turns gold, its bloom spreading wide.
         float v2 = veil * veil;
-        float disc = smoothstep(bodyR, bodyR * 0.7, dist);
-        float bloom = exp(-dist / (bodyR * 1.6)) * 0.45 + exp(-dist / (bodyR * 6.0)) * 0.12;
-        col += sunColor.rgb * half((bloom + disc * 0.9) * v2);
+        float sunR = bodyR * (1.0 + 0.45 * low);
+        float disc = smoothstep(sunR, sunR * 0.7, dist);
+        float bloom = exp(-dist / (sunR * 1.6)) * 0.45 + exp(-dist / (sunR * mix(6.0, 11.0, low))) * mix(0.12, 0.3, low);
+        col += warm * half(bloom * v2 * (1.0 - low * 0.35));
+        // The disc itself: white-hot at noon, a deep gold low down — laid over, not added, so it
+        // keeps its colour instead of burning out to white.
+        half3 face = mix(half3(1.0), half3(1.0, 0.82, 0.55), half(low * 0.85));
+        // Through broken cloud the disc still shows whole; an overcast sky hides it.
+        float through = smoothstep(0.95, 0.5, cloudCover);
+        col = mix(col, face, half(disc * 0.97 * mix(v2, 1.0, 0.55) * through));
     } else {
         float2 m = dv / bodyR;
         float inside = smoothstep(1.0, 0.94, length(m));
@@ -156,7 +225,8 @@ half4 main(float2 fragCoord) {
     // and it compares coarse octaves (the fine ones would only add grain to the shading).
     float drift = time * (0.006 + wind * 0.02);
     float mask = 0.0;
-    float sunUp = isSun * step(0.0005, bodySize);
+    float moonUp = (1.0 - isSun) * step(0.0005, bodySize);
+    float moonLight = 0.5 - 0.5 * cos(6.2831853 * moonPhase);
     if (cloudCover > 0.02) {
         float2 cp = float2(uv.x * aspect, uv.y * 1.6) * 1.8 + float2(drift, time * 0.002) + tilt * 0.04;
         // Domain warp: billows curl and slowly change shape instead of sliding by as a rigid sheet.
@@ -171,9 +241,12 @@ half4 main(float2 fragCoord) {
             half3 cloudCol = mix(cloudShade.rgb, cloudLight.rgb, half(lit2 * (1.0 - cloudDark * 0.55)));
             float lowFade = 1.0 - smoothstep(0.62, 1.05, h) * 0.35;
             col = mix(col, cloudCol, half(mask * (0.5 + cloudCover * 0.5) * lowFade));
-            // Silver lining: thin cloud edges near the sun light up with it.
+            // Silver lining: thin cloud edges near the sun light up with it — gold when it is low —
+            // and near the moon, silver, as bright as its phase.
             float thin = mask * (1.0 - mask) * 4.0;
-            col += (sunColor.rgb * 0.7 + glow.rgb * 0.5) * half(thin * exp(-dist * 2.6) * 0.45 * sunUp * (1.0 - cloudDark));
+            half3 lining = isSun > 0.5 ? warm * 0.7 + glow.rgb * 0.5 : half3(0.6, 0.66, 0.84);
+            float liningPower = sunUp * (1.0 + low * 0.8) + moonUp * 0.6 * moonLight;
+            col += lining * half(thin * exp(-dist * 2.6) * 0.45 * liningPower * (1.0 - cloudDark));
         }
         if (cloudCover > 0.05) {
             float2 cp2 = float2(uv.x * aspect, uv.y * 2.4) * 3.2 + float2(drift * 1.8, 0.0) + tilt * 0.08;
@@ -189,12 +262,52 @@ half4 main(float2 fragCoord) {
         float bank = smoothstep(0.18, 0.92, h + fb * 0.38 - 0.08);
         float wisps = smoothstep(0.42, 0.78, wisp) * smoothstep(0.1, 0.7, h);
         float density = clamp(bank * 0.88 + wisps * 0.3, 0.0, 1.0);
-        col = mix(col, mix(horizon.rgb, half3(0.93), 0.4), half(fog * density * 0.86));
+        // Fog glows toward the sun: the light scatters in it and warms it on that side.
+        half3 fogCol = mix(mix(horizon.rgb, half3(0.93), 0.4), warm, half(exp(-dist * 2.2) * 0.42 * sunUp * veil));
+        col = mix(col, fogCol, half(fog * density * 0.86));
     }
 
-    // Lightning lights the clouds from within; a near strike shows its channel, forked and
-    // jagged, glowing through the rain.
-    col += half3(0.7, 0.72, 1.0) * half(flash * (0.25 + 0.75 * mask));
+    // Crepuscular rays: shafts of light fanning out from the sun through the gaps between clouds —
+    // only where there are clouds to cast them, broad and soft, most below the sun, in the haze
+    // over the ground, and richest at golden hour.
+    if (sunUp > 0.5 && dist > 0.001) {
+        float want = smoothstep(0.12, 0.35, cloudCover) * (1.0 - smoothstep(0.78, 0.96, cloudCover)) + fog * 0.5;
+        if (want > 0.01) {
+            float2 dir = dv / dist;
+            float fan = noise(dir * 2.3 + float2(time * 0.015, 1.7)) * 0.7 + noise(dir * 5.1 + float2(4.1, time * 0.025)) * 0.3;
+            float shafts = smoothstep(0.5, 0.88, fan);
+            float reach = exp(-dist * 1.1) * smoothstep(bodyR * 2.0, bodyR * 7.0, dist);
+            float below = 0.35 + 0.65 * smoothstep(-0.05, 0.35, uv.y - sp.y);
+            col += warm * half(shafts * reach * below * min(want, 1.0) * (1.0 - mask * 0.85) * veil * (0.16 + 0.12 * low));
+        }
+    }
+
+    // After a shower, with the sun at your back: the bow opposite it — violet inside, red outside —
+    // the sky brighter within it, its faint reversed twin outside and Alexander's dark band between.
+    if (rainbow > 0.01) {
+        float2 q = float2(uv.x * aspect, uv.y);
+        float2 centre = float2((1.0 - sp.x) * aspect, 1.3 + lift * 0.25);
+        float rr = length(q - centre);
+        float radius = 0.98;
+        float w = 0.05;
+        float t = (rr - (radius - w)) / (2.0 * w);
+        float bow = smoothstep(0.0, 0.18, t) * smoothstep(1.0, 0.82, t);
+        float second = (rr - (radius * 1.23 - w * 1.4)) / (2.8 * w);
+        float bow2 = smoothstep(0.0, 0.2, second) * smoothstep(1.0, 0.8, second);
+        float clearOf = (1.0 - mask * 0.85) * rainbow * smoothstep(0.05, 0.3, 1.0 - abs(q.x - centre.x) / 1.1);
+        col += spectrum(t) * half(bow * 0.2 * clearOf);
+        col += spectrum(1.0 - second) * half(bow2 * 0.07 * clearOf);
+        float inside = smoothstep(radius - w, radius - w - 0.25, rr) * step(rr, radius - w);
+        col += half3(0.06) * half(inside * clearOf);
+        float dark = smoothstep(radius + w, radius + w + 0.03, rr) * smoothstep(radius * 1.23 - w * 1.4, radius * 1.23 - w * 1.4 - 0.03, rr);
+        col *= half(1.0 - 0.06 * dark * clearOf);
+    }
+
+    // Lightning lights the clouds from within, brightest around where it strikes; a near strike
+    // shows its channel, forked and jagged, glowing through the rain.
+    float2 fd = (uv - flashAt) * float2(aspect, 1.0);
+    float within = exp(-length(fd) * 2.6);
+    col += half3(0.72, 0.76, 1.0) * half(flash * (0.12 + 0.34 * mask + within * (0.2 + 0.45 * mask)));
     if (bolt > 0.01) {
         float2 bp = float2(uv.x * aspect, uv.y);
         float x0 = boltX * aspect;
@@ -224,6 +337,10 @@ half4 main(float2 fragCoord) {
  * — dense faint drizzle far away, long soft streaks up close, out of focus — slanted by a wind
  * that gusts, in sheets that sweep across; heavy rain veils the distance. Snow falls the same way,
  * from sharp specks far off to large soft bokeh flakes close to the glass, each swaying on its own.
+ *
+ * A downpour is its own weather, not just more rain: longer streaks, curtains of it marching
+ * across on the wind, and spray rising where it hammers the ground. Heavy snow gusts into
+ * whiteouts that sweep past. Lightning lights the rain and the snow in mid-air.
  */
 @Language("AGSL")
 internal const val PRECIPITATION_SHADER = """
@@ -232,13 +349,14 @@ uniform float time;
 uniform float rain;
 uniform float snow;
 uniform float wind;
+uniform float flash;
 uniform float2 tilt;
 layout(color) uniform half4 tint;
 $NOISE
 
-// Rain streaks at one depth (0 far … 1 near), in screen heights.
-float streaks(float2 uv, float depth, float t, float slant, float density) {
-    float2 cell = float2(mix(0.0065, 0.03, depth), mix(0.12, 0.42, depth));
+// Rain streaks at one depth (0 far … 1 near), in screen heights; [stretch] lengthens them.
+float streaks(float2 uv, float depth, float t, float slant, float density, float stretch) {
+    float2 cell = float2(mix(0.0065, 0.03, depth), mix(0.12, 0.42, depth) * stretch);
     float2 p = float2(uv.x - uv.y * slant, uv.y - t * mix(0.85, 2.4, depth));
     float2 g = p / cell;
     float2 id = floor(g);
@@ -287,23 +405,37 @@ half4 main(float2 fragCoord) {
     float2 uv = fragCoord / resolution.y + tilt * 0.015;
     float a = 0.0;
     float veil = 0.0;
+    float veilCap = 0.3;
+    float downpour = 0.0;
     if (rain > 0.01) {
         // Sheets of heavier rain sweep across; the wind gusts.
         float sheet = noise(float2(uv.x * 1.3 - time * (0.3 + wind * 0.5), uv.y * 0.7 - time * 0.8));
         float slant = 0.1 + wind * 0.32 + (noise(float2(time * 0.25, 4.0)) - 0.5) * 0.12;
-        float density = rain * (0.55 + 0.75 * sheet);
+        // A downpour marches across in curtains: broad bands of it, driven by the wind.
+        float heavy = smoothstep(0.55, 0.95, rain);
+        float curtain = smoothstep(0.3, 0.78, noise(float2((uv.x - uv.y * slant) * 1.15 - time * (0.16 + wind * 0.3), time * 0.04 + 2.0)));
+        float density = rain * (0.55 + 0.75 * sheet) * (1.0 + heavy * (curtain - 0.35));
+        float stretch = 1.0 + heavy * 0.45;
         for (int i = 0; i < 4; i++) {
             float depth = float(i) / 3.0;
-            a += streaks(uv, depth, time, slant, density * mix(1.0, 0.75, depth)) * mix(0.2, 0.42, depth);
+            a += streaks(uv, depth, time, slant, density * mix(1.0, 0.75, depth), stretch) * mix(0.2, 0.42, depth) * (1.0 + heavy * 0.55);
         }
         // Rain shafts veil the distance, denser where a sheet passes.
         float shaft = noise(float2((uv.x - uv.y * slant) * 5.0, time * 0.15));
         veil = rain * (0.04 + 0.07 * sheet) * (0.7 + 0.6 * shaft);
+        // In a downpour the curtains grey the air, and spray boils up where it hits the ground.
+        float spray = smoothstep(0.58, 1.02, uv.y) * (0.55 + 0.45 * fbm3(float2(uv.x * 3.2 - time * (0.2 + wind * 0.3), uv.y * 5.0 - time * 0.45)));
+        veil += heavy * (curtain * 0.16 + spray * 0.26 + 0.08);
+        veilCap = mix(0.3, 0.55, heavy);
+        downpour = heavy;
     }
-    half3 light = mix(tint.rgb, half3(1.0), 0.5);
+    // Lightning lights the falling rain and snow in mid-air.
+    half3 light = mix(tint.rgb, half3(1.0), 0.5) * half(1.0 + flash * 1.3);
     half3 rgb = light * half(clamp(a, 0.0, 1.0));
     if (snow > 0.01) {
-        float drift = 0.4 + wind * 1.6 + (noise(float2(time * 0.2, 9.0)) - 0.5) * 0.8;
+        // Heavy snow gusts: the flakes are driven sideways and whiteouts sweep past.
+        float gust = smoothstep(0.5, 0.85, noise(float2(time * 0.13, 9.5))) * smoothstep(0.45, 0.9, snow);
+        float drift = 0.4 + wind * 1.6 + (noise(float2(time * 0.2, 9.0)) - 0.5) * 0.8 + gust * 2.2;
         half3 lit = half3(0.98, 0.985, 1.0);
         half3 shaded = mix(tint.rgb, half3(0.62, 0.66, 0.74), 0.6);
         for (int i = 0; i < 4; i++) {
@@ -314,10 +446,14 @@ half4 main(float2 fragCoord) {
             a += fa;
         }
         veil = max(veil, snow * 0.05);
+        float whiteout = fbm3(float2(uv.x * 1.6 - time * (0.25 + drift * 0.08), uv.y * 2.2 + time * 0.05));
+        veil += gust * smoothstep(0.35, 0.8, whiteout) * 0.26;
+        veilCap = max(veilCap, 0.3 + gust * 0.14);
     }
     a = clamp(a, 0.0, 1.0);
-    half3 haze = mix(tint.rgb, half3(0.9), 0.4);
-    float v = clamp(veil, 0.0, 0.3) * (1.0 - a);
+    // The air of a downpour is dark with water; lighter rain only greys the distance.
+    half3 haze = mix(mix(tint.rgb, half3(0.9), 0.4), tint.rgb * 0.62, half(downpour * 0.75)) * half(1.0 + flash * 0.6);
+    float v = clamp(veil, 0.0, veilCap) * (1.0 - a);
     return half4(rgb + haze * half(v), half(a + v));
 }
 """
