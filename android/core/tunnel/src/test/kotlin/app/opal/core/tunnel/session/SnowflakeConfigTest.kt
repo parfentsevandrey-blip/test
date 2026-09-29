@@ -130,11 +130,60 @@ class SnowflakeConfigTest {
         for (lines in listOf(obfs4, snowflake + obfs4)) {
             val setConf = TorConfigFactory.bridges(lines, ports).toSetConf(options)
             // Listed without a value: Tor goes back to its own schedule.
-            assertTrue(setConf, setConf.endsWith(" CircuitStreamTimeout"))
+            assertTrue(setConf, "CircuitStreamTimeout" in setConf.split(' '))
             assertFalse(
                 TorConfigFactory.startup(lines, ports, AppSettings(), socksPort = 41000)
                     .render()
                     .contains("CircuitStreamTimeout")
+            )
+        }
+    }
+
+    @Test
+    fun `over Snowflake conflux is off, so the first bytes travel with BEGIN`() {
+        // On conflux sets Tor holds the application's first bytes until the exit has connected.
+        assertTrue(defaultTorrc(null).contains("ConfluxEnabled 0"))
+        assertTrue(defaultTorrc("ru").contains("ConfluxEnabled 0"))
+    }
+
+    @Test
+    fun `a single bridge gets no conflux either, whatever the transport`() {
+        val meek = bundled[TransportKind.Meek]
+        val obfs4 = bundled[TransportKind.Obfs4]
+        val ports = mapOf("meek_lite" to 41236, "obfs4" to 41235)
+        assertEquals(1, meek.size)
+        assertTrue(
+            TorConfigFactory.startup(meek, ports, AppSettings(), socksPort = 41000)
+                .render()
+                .contains("ConfluxEnabled 0")
+        )
+        assertTrue(
+            TorConfigFactory.startup(obfs4.take(1), ports, AppSettings(), socksPort = 41000)
+                .render()
+                .contains("ConfluxEnabled 0")
+        )
+    }
+
+    @Test
+    fun `other transports keep Tor's conflux, also after a switch`() {
+        val snowflake = bundled[TransportKind.Snowflake]
+        val obfs4 = bundled[TransportKind.Obfs4]
+        val ports = mapOf("snowflake" to 41234, "obfs4" to 41235)
+        val options = TorConfigFactory.BRIDGE_OPTIONS
+        assertTrue(
+            TorConfigFactory.bridges(snowflake, ports)
+                .toSetConf(options)
+                .split(' ')
+                .contains("ConfluxEnabled=0")
+        )
+        for (lines in listOf(obfs4, snowflake + obfs4)) {
+            // Listed without a value: back to Tor's default (auto, from the consensus).
+            val setConf = TorConfigFactory.bridges(lines, ports).toSetConf(options)
+            assertTrue(setConf, "ConfluxEnabled" in setConf.split(' '))
+            assertFalse(
+                TorConfigFactory.startup(lines, ports, AppSettings(), socksPort = 41000)
+                    .render()
+                    .contains("ConfluxEnabled")
             )
         }
     }

@@ -41,6 +41,8 @@ class DnsttConfigTest {
         assertTrue(torrc, torrc.contains("ClientTransportPlugin dnstt socks5 127.0.0.1:41236"))
         assertTrue(torrc, torrc.contains("Bridge ${dnstt.raw}"))
         assertTrue(torrc, torrc.contains("CircuitStreamTimeout 30"))
+        // One bridge: conflux legs would share the tunnel; without it, data rides with BEGIN.
+        assertTrue(torrc, torrc.contains("ConfluxEnabled 0"))
     }
 
     @Test

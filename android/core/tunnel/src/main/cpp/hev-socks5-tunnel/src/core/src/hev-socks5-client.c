@@ -7,6 +7,7 @@
  ============================================================================
  */
 
+#include <errno.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -398,6 +399,104 @@ hev_socks5_client_handshake_pipeline (HevSocks5Client *self)
         return -1;
 
     return 0;
+}
+
+int
+hev_socks5_client_handshake_request (HevSocks5Client *self)
+{
+    int timeout;
+    int res;
+
+    LOG_D ("%p socks5 client handshake request", self);
+
+    timeout = hev_socks5_get_tcp_timeout ();
+    hev_socks5_set_timeout (HEV_SOCKS5 (self), timeout);
+
+    res = hev_socks5_client_write_auth_methods (self);
+    if (res < 0)
+        return -1;
+
+    res = hev_socks5_client_write_auth_creds (self);
+    if (res < 0)
+        return -1;
+
+    return hev_socks5_client_write_request (self);
+}
+
+int
+hev_socks5_client_handshake_reply (HevSocks5Client *self)
+{
+    /* method (2) + credentials (2) + reply header (4) + name (1 + 255) + port (2) */
+    unsigned char buf[266];
+    int user, off, need, len;
+    ssize_t n;
+
+    n = recv (HEV_SOCKS5 (self)->fd, buf, sizeof (buf), MSG_PEEK | MSG_DONTWAIT);
+    if (n < 0)
+        return (errno == EAGAIN || errno == EWOULDBLOCK) ? 0 : -1;
+    if (n == 0) {
+        LOG_I ("%p socks5 client reply eof", self);
+        return -1;
+    }
+
+    user = self->auth.user && self->auth.pass;
+    off = user ? 4 : 2;
+    if (n < off + 4)
+        return 0;
+
+    if (buf[0] != HEV_SOCKS5_VERSION_5 ||
+        buf[1] != (user ? HEV_SOCKS5_AUTH_METHOD_USER
+                        : HEV_SOCKS5_AUTH_METHOD_NONE)) {
+        LOG_I ("%p socks5 client auth method %u", self, buf[1]);
+        return -1;
+    }
+
+    if (user && (buf[2] != HEV_SOCKS5_AUTH_VERSION_1 ||
+                 buf[3] != HEV_SOCKS5_RES_REP_SUCC)) {
+        LOG_I ("%p socks5 client auth.res.rep %u", self, buf[3]);
+        return -1;
+    }
+
+    if (buf[off] != HEV_SOCKS5_VERSION_5) {
+        LOG_I ("%p socks5 client res.ver %u", self, buf[off]);
+        return -1;
+    }
+
+    if (buf[off + 1] != HEV_SOCKS5_RES_REP_SUCC) {
+        LOG_I ("%p socks5 client res.rep %u", self, buf[off + 1]);
+        return -1;
+    }
+
+    switch (buf[off + 3]) {
+    case HEV_SOCKS5_ADDR_TYPE_IPV4:
+        need = off + 4 + 4 + 2;
+        break;
+    case HEV_SOCKS5_ADDR_TYPE_IPV6:
+        need = off + 4 + 16 + 2;
+        break;
+    case HEV_SOCKS5_ADDR_TYPE_NAME:
+        if (n < off + 5)
+            return 0;
+        need = off + 5 + buf[off + 4] + 2;
+        break;
+    default:
+        LOG_I ("%p socks5 client res.atype %u", self, buf[off + 3]);
+        return -1;
+    }
+
+    if (n < need)
+        return 0;
+
+    /* Only the replies: what follows is the server's data. */
+    len = recv (HEV_SOCKS5 (self)->fd, buf, need, MSG_DONTWAIT);
+    if (len != need) {
+        LOG_I ("%p socks5 client read reply", self);
+        return -1;
+    }
+
+    LOG_D ("%p socks5 client handshake reply done", self);
+
+    return 1;
 }
 
 int

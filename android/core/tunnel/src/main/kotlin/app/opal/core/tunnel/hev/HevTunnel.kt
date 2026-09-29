@@ -14,6 +14,10 @@ import kotlinx.coroutines.withContext
  *   the original *name* to Tor, so resolution happens at the exit and DNS never leaves the tunnel.
  * - `udp: reject` (our patch): non-DNS UDP gets ICMP port unreachable, so QUIC etc. fail fast and
  *   apps fall back to TCP.
+ * - `optimistic-data` (our patch): the app's first bytes (a TLS ClientHello, an MTProto request) go
+ *   to Tor right after the CONNECT request instead of after Tor's reply. On circuits that allow it
+ *   Tor sends them with the BEGIN cell: a new connection gets its first answer one round trip
+ *   through the circuit sooner (Tor's SOCKS extension; CLAUDE.md, ADR 56).
  *
  * The TUN descriptor is borrowed, not owned: hev can be restarted (e.g. new Tor SOCKS port) while
  * the VPN interface stays up, so nothing leaks in between.
@@ -104,6 +108,7 @@ internal class HevTunnel(context: Context) {
             |  port: $socksPort
             |  address: 127.0.0.1
             |  udp: 'reject'
+            |  optimistic-data: true
             |mapdns:
             |  address: $DNS_ADDRESS
             |  port: 53

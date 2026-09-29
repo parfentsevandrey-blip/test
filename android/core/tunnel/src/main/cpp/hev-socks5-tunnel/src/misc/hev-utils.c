@@ -98,6 +98,22 @@ set_sock_tcp_fastopen (int fd, int enable)
 #endif
 }
 
+/* <netinet/tcp.h> would clash with lwIP's TCP_MSS; the value is 1 on Linux. */
+#ifndef TCP_NODELAY
+#define TCP_NODELAY 1
+#endif
+
+void
+set_sock_tcp_nodelay (int fd)
+{
+    int one = 1;
+
+    /* Opal: no Nagle towards Tor. The SOCKS port is local and Tor answers
+     * no data soon: small writes (TLS records, MTProto messages) would wait
+     * for a delayed ACK, 40 ms. Fails harmlessly on datagram sockets. */
+    setsockopt (fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof (one));
+}
+
 int
 hev_socks5_addr_from_lwip (HevSocks5Addr *addr, const ip_addr_t *ip, u16_t port)
 {

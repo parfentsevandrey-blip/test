@@ -27,6 +27,7 @@ enum class TorOption(val key: String, val isList: Boolean = false) {
     AvoidDiskWrites("AvoidDiskWrites"),
     DormantCanceledByStartup("DormantCanceledByStartup"),
     CircuitStreamTimeout("CircuitStreamTimeout"),
+    ConfluxEnabled("ConfluxEnabled"),
 }
 
 /** SOCKS listener flags that do not weaken Tor's default stream isolation. */
@@ -144,6 +145,16 @@ class TorrcBuilder internal constructor() {
         if (seconds == null) return
         require(seconds in 10..600) { "Bad CircuitStreamTimeout $seconds" }
         set(TorOption.CircuitStreamTimeout, seconds.toString())
+    }
+
+    /**
+     * `false` turns conflux off: streams then use single circuits, on which Tor sends the
+     * application's first bytes with the BEGIN cell (optimistic data; it does not on conflux sets).
+     * `true` is Tor's own default (`auto`, set by the consensus) and writes nothing. Changes how
+     * traffic is spread over circuits, not which relays are chosen.
+     */
+    fun conflux(enabled: Boolean) {
+        if (!enabled) set(TorOption.ConfluxEnabled, "0")
     }
 
     /** Whether starting Tor wakes it from dormant mode (default 0 would keep it asleep). */

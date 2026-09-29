@@ -16,6 +16,16 @@ class HevConfigTest {
     }
 
     @Test
+    fun `the first bytes go to Tor with the request`() {
+        // Tor's optimistic data: without it every new connection waits one more circuit round trip.
+        val socks =
+            HevTunnel.config(socksPort = 45678, mtu = 8500, debug = false)
+                .substringAfter("socks5:")
+                .substringBefore("mapdns:")
+        assertTrue(socks, socks.contains("\n  optimistic-data: true\n"))
+    }
+
+    @Test
     fun `hev outwaits Tor's CONNECT reply`() {
         // The reply falls under hev's read-write timer, which must outlast SocksTimeout (120 s).
         val yaml = HevTunnel.config(socksPort = 45678, mtu = 8500, debug = false)

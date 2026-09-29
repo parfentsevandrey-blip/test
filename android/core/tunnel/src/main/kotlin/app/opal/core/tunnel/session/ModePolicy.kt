@@ -82,6 +82,13 @@ private val SESSION_TRANSPORTS = setOf(TransportKind.Snowflake, TransportKind.Dn
 internal fun List<BridgeLine>.isSessionOnly(): Boolean =
     isNotEmpty() && all { it.transport in SESSION_TRANSPORTS }
 
+/**
+ * Every line leads to the same bridge (a single line, or lines with one fingerprint): Tor keeps one
+ * connection to a bridge, so conflux legs would all share it.
+ */
+internal fun List<BridgeLine>.leadToOneBridge(): Boolean =
+    isNotEmpty() && map { it.fingerprint ?: it.id }.distinct().size == 1
+
 /** The Snowflake server drops a client's session after 4 minutes without it (smux keepalive). */
 internal const val SNOWFLAKE_SESSION_EXPIRY_MS = 4 * 60_000L
 

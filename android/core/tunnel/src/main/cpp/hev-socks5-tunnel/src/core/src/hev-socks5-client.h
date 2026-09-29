@@ -52,6 +52,17 @@ int hev_socks5_client_connect (HevSocks5Client *self, const char *addr,
 
 int hev_socks5_client_handshake (HevSocks5Client *self, int pipeline);
 
+/*
+ * Opal: optimistic data. hev_socks5_client_handshake_request () sends the
+ * whole handshake at once (auth methods, credentials, request) and returns
+ * without waiting for replies, so the caller can pass the application's first
+ * bytes on right away; Tor forwards them with the stream's BEGIN cell.
+ * hev_socks5_client_handshake_reply () then consumes exactly the replies, never
+ * blocking: 1 once connected, 0 while they are incomplete, -1 on failure.
+ */
+int hev_socks5_client_handshake_request (HevSocks5Client *self);
+int hev_socks5_client_handshake_reply (HevSocks5Client *self);
+
 void hev_socks5_client_set_auth (HevSocks5Client *self, const char *user,
                                  const char *pass);
 

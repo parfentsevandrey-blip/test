@@ -130,6 +130,36 @@ tcp_splice_b (HevSocks5SessionTCP *self)
     return res;
 }
 
+/*
+ * Opal: optimistic data. The request is out; until Tor answers it (once the
+ * exit has connected), the application's first bytes (a TLS ClientHello, an
+ * MTProto request) go to Tor as they arrive, and Tor sends them along with the
+ * BEGIN cell: one round trip through the circuit less for every connection.
+ * An end of input waits for the reply, as before.
+ */
+static int
+hev_socks5_session_tcp_early_data (HevSocks5Session *base)
+{
+    HevSocks5SessionTCP *self = HEV_SOCKS5_SESSION_TCP (base);
+
+    for (;;) {
+        HevTaskYieldType type = HEV_TASK_WAITIO;
+        int res;
+
+        if (self->queue && tcp_splice_f (self) > 0)
+            type = HEV_TASK_YIELD;
+
+        res = hev_socks5_client_handshake_reply (HEV_SOCKS5_CLIENT (self));
+        if (res > 0)
+            return 0;
+        if (res < 0)
+            return -1;
+
+        if (!self->pcb || task_io_yielder (type, base) < 0)
+            return -1;
+    }
+}
+
 static err_t
 tcp_recv_handler (void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 {
@@ -278,6 +308,9 @@ hev_socks5_session_tcp_construct (HevSocks5SessionTCP *self,
 
     HEV_OBJECT (self)->klass = HEV_SOCKS5_SESSION_TCP_TYPE;
 
+    /* Opal: no Nagle towards the application either: its kernel may delay
+     * its ACK by 40 ms, and a small reply would wait for it. */
+    tcp_nagle_disable (pcb);
     tcp_arg (pcb, self);
     tcp_recv (pcb, tcp_recv_handler);
     tcp_sent (pcb, tcp_sent_handler);
@@ -347,6 +380,7 @@ hev_socks5_session_tcp_class (void)
 
         siptr = &kptr->session;
         siptr->splicer = hev_socks5_session_tcp_splice;
+        siptr->early_data = hev_socks5_session_tcp_early_data;
         siptr->get_task = hev_socks5_session_tcp_get_task;
         siptr->set_task = hev_socks5_session_tcp_set_task;
         siptr->get_node = hev_socks5_session_tcp_get_node;

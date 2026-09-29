@@ -40,13 +40,21 @@ hev_socks5_session_run (HevSocks5Session *self)
         LOG_D ("%p socks5 client auth %s:%s", self, srv->user, srv->pass);
     }
 
-    res = hev_socks5_client_handshake (HEV_SOCKS5_CLIENT (self), srv->pipeline);
+    iface = HEV_OBJECT_GET_IFACE (self, HEV_SOCKS5_SESSION_TYPE);
+    if (srv->optimistic && iface->early_data) {
+        /* Opal: optimistic data, see hev_socks5_client_handshake_request (). */
+        res = hev_socks5_client_handshake_request (HEV_SOCKS5_CLIENT (self));
+        if (res >= 0)
+            res = iface->early_data (self);
+    } else {
+        res = hev_socks5_client_handshake (HEV_SOCKS5_CLIENT (self),
+                                           srv->pipeline);
+    }
     if (res < 0) {
         LOG_I ("%p socks5 session handshake", self);
         return;
     }
 
-    iface = HEV_OBJECT_GET_IFACE (self, HEV_SOCKS5_SESSION_TYPE);
     iface->splicer (self);
 }
 
@@ -100,6 +108,7 @@ hev_socks5_session_bind (HevSocks5 *self, int fd, const struct sockaddr *dest)
     }
 
     set_sock_tcp_fastopen (fd, srv->fastopen);
+    set_sock_tcp_nodelay (fd);
 
     return 0;
 }

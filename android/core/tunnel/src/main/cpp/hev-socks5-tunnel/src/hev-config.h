@@ -21,6 +21,7 @@ struct _HevConfigServer
     unsigned char udp_reject;
     unsigned short port;
     unsigned char pipeline;
+    unsigned char optimistic;
     unsigned char fastopen;
     char udp_addr[256];
     char addr[256];

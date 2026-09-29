@@ -6,6 +6,7 @@ socks5:
   port: 1080
   address: 127.0.0.1
   udp: 'reject'
+  optimistic-data: true
 mapdns:
   address: 198.18.0.2
   port: 53

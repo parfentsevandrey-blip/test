@@ -1,0 +1,279 @@
+From: Opal <opal@localhost>
+Subject: [PATCH] Optimistic data: the application's first bytes leave with the CONNECT request
+
+With 'socks5.optimistic-data: true' a TCP session sends its whole handshake at once (auth
+methods, credentials, request) and, instead of waiting for the replies, passes whatever the
+application has sent (a TLS ClientHello, an MTProto request) straight on. Tor accepts data
+after the request (tor-spec socks-extensions: "optimistic data") and, on circuits that allow it,
+sends it with the stream's BEGIN cell, so the first answer arrives one round trip through the
+circuit sooner. The replies are consumed exactly (MSG_PEEK, then the reply length only), so
+nothing that follows them is lost; a failed request still resets the connection, and an end of
+input from the application is held back until the reply, as before.
+
+Applies on top of 0001-udp-reject-and-dns-hijack.patch.
+Upstream: https://github.com/heiher/hev-socks5-tunnel @ e802f02
+---
+--- a/src/core/src/hev-socks5-client.c
++++ b/src/core/src/hev-socks5-client.c
+@@ -7,6 +7,7 @@
+  ============================================================================
+  */
+ 
++#include <errno.h>
+ #include <string.h>
+ #include <unistd.h>
+ 
+@@ -401,6 +402,104 @@
+ }
+ 
+ int
++hev_socks5_client_handshake_request (HevSocks5Client *self)
++{
++    int timeout;
++    int res;
++
++    LOG_D ("%p socks5 client handshake request", self);
++
++    timeout = hev_socks5_get_tcp_timeout ();
++    hev_socks5_set_timeout (HEV_SOCKS5 (self), timeout);
++
++    res = hev_socks5_client_write_auth_methods (self);
++    if (res < 0)
++        return -1;
++
++    res = hev_socks5_client_write_auth_creds (self);
++    if (res < 0)
++        return -1;
++
++    return hev_socks5_client_write_request (self);
++}
++
++int
++hev_socks5_client_handshake_reply (HevSocks5Client *self)
++{
++    /* method (2) + credentials (2) + reply header (4) + name (1 + 255) + port (2) */
++    unsigned char buf[266];
++    int user, off, need, len;
++    ssize_t n;
++
++    n = recv (HEV_SOCKS5 (self)->fd, buf, sizeof (buf), MSG_PEEK | MSG_DONTWAIT);
++    if (n < 0)
++        return (errno == EAGAIN || errno == EWOULDBLOCK) ? 0 : -1;
++    if (n == 0) {
++        LOG_I ("%p socks5 client reply eof", self);
++        return -1;
++    }
++
++    user = self->auth.user && self->auth.pass;
++    off = user ? 4 : 2;
++    if (n < off + 4)
++        return 0;
++
++    if (buf[0] != HEV_SOCKS5_VERSION_5 ||
++        buf[1] != (user ? HEV_SOCKS5_AUTH_METHOD_USER
++                        : HEV_SOCKS5_AUTH_METHOD_NONE)) {
++        LOG_I ("%p socks5 client auth method %u", self, buf[1]);
++        return -1;
++    }
++
++    if (user && (buf[2] != HEV_SOCKS5_AUTH_VERSION_1 ||
++                 buf[3] != HEV_SOCKS5_RES_REP_SUCC)) {
++        LOG_I ("%p socks5 client auth.res.rep %u", self, buf[3]);
++        return -1;
++    }
++
++    if (buf[off] != HEV_SOCKS5_VERSION_5) {
++        LOG_I ("%p socks5 client res.ver %u", self, buf[off]);
++        return -1;
++    }
++
++    if (buf[off + 1] != HEV_SOCKS5_RES_REP_SUCC) {
++        LOG_I ("%p socks5 client res.rep %u", self, buf[off + 1]);
++        return -1;
++    }
++
++    switch (buf[off + 3]) {
++    case HEV_SOCKS5_ADDR_TYPE_IPV4:
++        need = off + 4 + 4 + 2;
++        break;
++    case HEV_SOCKS5_ADDR_TYPE_IPV6:
++        need = off + 4 + 16 + 2;
++        break;
++    case HEV_SOCKS5_ADDR_TYPE_NAME:
++        if (n < off + 5)
++            return 0;
++        need = off + 5 + buf[off + 4] + 2;
++        break;
++    default:
++        LOG_I ("%p socks5 client res.atype %u", self, buf[off + 3]);
++        return -1;
++    }
++
++    if (n < need)
++        return 0;
++
++    /* Only the replies: what follows is the server's data. */
++    len = recv (HEV_SOCKS5 (self)->fd, buf, need, MSG_DONTWAIT);
++    if (len != need) {
++        LOG_I ("%p socks5 client read reply", self);
++        return -1;
++    }
++
++    LOG_D ("%p socks5 client handshake reply done", self);
++
++    return 1;
++}
++
++int
+ hev_socks5_client_handshake (HevSocks5Client *self, int pipeline)
+ {
+     int timeout;
+--- a/src/core/src/hev-socks5-client.h
++++ b/src/core/src/hev-socks5-client.h
+@@ -52,6 +52,17 @@
+ 
+ int hev_socks5_client_handshake (HevSocks5Client *self, int pipeline);
+ 
++/*
++ * Opal: optimistic data. hev_socks5_client_handshake_request () sends the
++ * whole handshake at once (auth methods, credentials, request) and returns
++ * without waiting for replies, so the caller can pass the application's first
++ * bytes on right away; Tor forwards them with the stream's BEGIN cell.
++ * hev_socks5_client_handshake_reply () then consumes exactly the replies, never
++ * blocking: 1 once connected, 0 while they are incomplete, -1 on failure.
++ */
++int hev_socks5_client_handshake_request (HevSocks5Client *self);
++int hev_socks5_client_handshake_reply (HevSocks5Client *self);
++
+ void hev_socks5_client_set_auth (HevSocks5Client *self, const char *user,
+                                  const char *pass);
+ 
+--- a/src/hev-config.c
++++ b/src/hev-config.c
+@@ -187,6 +187,7 @@
+     const char *pass = NULL;
+     const char *mark = NULL;
+     const char *pipe = NULL;
++    const char *opti = NULL;
+     const char *tfso = NULL;
+ 
+     if (!base || YAML_MAPPING_NODE != base->type)
+@@ -220,6 +221,8 @@
+             udpa = value;
+         else if (0 == strcmp (key, "pipeline"))
+             pipe = value;
++        else if (0 == strcmp (key, "optimistic-data"))
++            opti = value;
+         else if (0 == strcmp (key, "username"))
+             user = value;
+         else if (0 == strcmp (key, "password"))
+@@ -251,6 +254,11 @@
+     if (pipe && (strcasecmp (pipe, "true") == 0))
+         srv.pipeline = 1;
+ 
++    /* Opal: send the application's first bytes right after the request
++     * (Tor's optimistic data), see hev_socks5_client_handshake_request (). */
++    if (opti && (strcasecmp (opti, "true") == 0))
++        srv.optimistic = 1;
++
+     if (udpm && (strcasecmp (udpm, "udp") == 0))
+         srv.udp_in_udp = 1;
+ 
+--- a/src/hev-config.h
++++ b/src/hev-config.h
+@@ -21,6 +21,7 @@
+     unsigned char udp_reject;
+     unsigned short port;
+     unsigned char pipeline;
++    unsigned char optimistic;
+     unsigned char fastopen;
+     char udp_addr[256];
+     char addr[256];
+--- a/src/hev-socks5-session-tcp.c
++++ b/src/hev-socks5-session-tcp.c
+@@ -130,6 +130,36 @@
+     return res;
+ }
+ 
++/*
++ * Opal: optimistic data. The request is out; until Tor answers it (once the
++ * exit has connected), the application's first bytes (a TLS ClientHello, an
++ * MTProto request) go to Tor as they arrive, and Tor sends them along with the
++ * BEGIN cell: one round trip through the circuit less for every connection.
++ * An end of input waits for the reply, as before.
++ */
++static int
++hev_socks5_session_tcp_early_data (HevSocks5Session *base)
++{
++    HevSocks5SessionTCP *self = HEV_SOCKS5_SESSION_TCP (base);
++
++    for (;;) {
++        HevTaskYieldType type = HEV_TASK_WAITIO;
++        int res;
++
++        if (self->queue && tcp_splice_f (self) > 0)
++            type = HEV_TASK_YIELD;
++
++        res = hev_socks5_client_handshake_reply (HEV_SOCKS5_CLIENT (self));
++        if (res > 0)
++            return 0;
++        if (res < 0)
++            return -1;
++
++        if (!self->pcb || task_io_yielder (type, base) < 0)
++            return -1;
++    }
++}
++
+ static err_t
+ tcp_recv_handler (void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
+ {
+@@ -347,6 +377,7 @@
+ 
+         siptr = &kptr->session;
+         siptr->splicer = hev_socks5_session_tcp_splice;
++        siptr->early_data = hev_socks5_session_tcp_early_data;
+         siptr->get_task = hev_socks5_session_tcp_get_task;
+         siptr->set_task = hev_socks5_session_tcp_set_task;
+         siptr->get_node = hev_socks5_session_tcp_get_node;
+--- a/src/hev-socks5-session.c
++++ b/src/hev-socks5-session.c
+@@ -40,13 +40,21 @@
+         LOG_D ("%p socks5 client auth %s:%s", self, srv->user, srv->pass);
+     }
+ 
+-    res = hev_socks5_client_handshake (HEV_SOCKS5_CLIENT (self), srv->pipeline);
++    iface = HEV_OBJECT_GET_IFACE (self, HEV_SOCKS5_SESSION_TYPE);
++    if (srv->optimistic && iface->early_data) {
++        /* Opal: optimistic data, see hev_socks5_client_handshake_request (). */
++        res = hev_socks5_client_handshake_request (HEV_SOCKS5_CLIENT (self));
++        if (res >= 0)
++            res = iface->early_data (self);
++    } else {
++        res = hev_socks5_client_handshake (HEV_SOCKS5_CLIENT (self),
++                                           srv->pipeline);
++    }
+     if (res < 0) {
+         LOG_I ("%p socks5 session handshake", self);
+         return;
+     }
+ 
+-    iface = HEV_OBJECT_GET_IFACE (self, HEV_SOCKS5_SESSION_TYPE);
+     iface->splicer (self);
+ }
+ 
+--- a/src/hev-socks5-session.h
++++ b/src/hev-socks5-session.h
+@@ -32,6 +32,12 @@
+ struct _HevSocks5SessionIface
+ {
+     void (*splicer) (HevSocks5Session *self);
++    /*
++     * Opal, optional: waits for the replies to a request sent without waiting
++     * (socks5.optimistic-data), passing the application's data on meanwhile.
++     * Returns 0 once connected, -1 on failure.
++     */
++    int (*early_data) (HevSocks5Session *self);
+     HevTask *(*get_task) (HevSocks5Session *self);
+     void (*set_task) (HevSocks5Session *self, HevTask *task);
+     HevListNode *(*get_node) (HevSocks5Session *self);

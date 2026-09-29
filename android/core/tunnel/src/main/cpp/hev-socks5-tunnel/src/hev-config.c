@@ -187,6 +187,7 @@ hev_config_parse_socks5 (yaml_document_t *doc, yaml_node_t *base)
     const char *pass = NULL;
     const char *mark = NULL;
     const char *pipe = NULL;
+    const char *opti = NULL;
     const char *tfso = NULL;
 
     if (!base || YAML_MAPPING_NODE != base->type)
@@ -220,6 +221,8 @@ hev_config_parse_socks5 (yaml_document_t *doc, yaml_node_t *base)
             udpa = value;
         else if (0 == strcmp (key, "pipeline"))
             pipe = value;
+        else if (0 == strcmp (key, "optimistic-data"))
+            opti = value;
         else if (0 == strcmp (key, "username"))
             user = value;
         else if (0 == strcmp (key, "password"))
@@ -250,6 +253,11 @@ hev_config_parse_socks5 (yaml_document_t *doc, yaml_node_t *base)
 
     if (pipe && (strcasecmp (pipe, "true") == 0))
         srv.pipeline = 1;
+
+    /* Opal: send the application's first bytes right after the request
+     * (Tor's optimistic data), see hev_socks5_client_handshake_request (). */
+    if (opti && (strcasecmp (opti, "true") == 0))
+        srv.optimistic = 1;
 
     if (udpm && (strcasecmp (udpm, "udp") == 0))
         srv.udp_in_udp = 1;

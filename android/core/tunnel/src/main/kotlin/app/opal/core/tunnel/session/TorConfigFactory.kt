@@ -21,6 +21,7 @@ internal object TorConfigFactory {
             TorOption.ClientTransportPlugin,
             TorOption.Bridge,
             TorOption.CircuitStreamTimeout,
+            TorOption.ConfluxEnabled,
         )
 
     /**
@@ -33,6 +34,19 @@ internal object TorConfigFactory {
      * networks. dnstt's first hop (every cell a DNS round trip through a resolver) is slower still.
      */
     const val SNOWFLAKE_STREAM_TIMEOUT_S = 30
+
+    /*
+     * Conflux is off while only Snowflake or dnstt carries the connection, or when all bridges are
+     * one bridge (CLAUDE.md, ADR 57). Tor 0.4.8+ puts streams on conflux sets, and on those it does
+     * not send the application's first bytes with the BEGIN cell, so hev's optimistic data saves
+     * nothing: every new connection (Telegram reconnecting, Instagram's many hosts) waits one more
+     * round trip through the circuit. Measured through a real Tor 0.4.9.12 over a slow bridge
+     * (medians): first answer of a Telegram-like request 2.1 s with conflux, 1.15 s without it plus
+     * optimistic data; TLS and first HTTPS byte 3.8 s and 2.6 s.
+     * Legs through one bridge share its single connection; over Snowflake each leg also depends on a
+     * volunteer proxy, and a proxy change on either one holds up every stream of the set until it
+     * recovers (in-order delivery).
+     */
 
     /**
      * [socksPort] is fixed for the lifetime of this Tor process (a free loopback port picked by the
@@ -68,5 +82,6 @@ internal object TorConfigFactory {
     ) {
         bridges(bridges, transportPorts)
         circuitStreamTimeout(SNOWFLAKE_STREAM_TIMEOUT_S.takeIf { bridges.isSessionOnly() })
+        conflux(enabled = !bridges.isSessionOnly() && !bridges.leadToOneBridge())
     }
 }

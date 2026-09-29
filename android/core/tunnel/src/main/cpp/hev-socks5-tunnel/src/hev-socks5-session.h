@@ -32,6 +32,12 @@ struct _HevSocks5SessionData
 struct _HevSocks5SessionIface
 {
     void (*splicer) (HevSocks5Session *self);
+    /*
+     * Opal, optional: waits for the replies to a request sent without waiting
+     * (socks5.optimistic-data), passing the application's data on meanwhile.
+     * Returns 0 once connected, -1 on failure.
+     */
+    int (*early_data) (HevSocks5Session *self);
     HevTask *(*get_task) (HevSocks5Session *self);
     void (*set_task) (HevSocks5Session *self, HevTask *task);
     HevListNode *(*get_node) (HevSocks5Session *self);

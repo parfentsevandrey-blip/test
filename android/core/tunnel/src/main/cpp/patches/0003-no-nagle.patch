@@ -1,0 +1,69 @@
+From: Opal <opal@localhost>
+Subject: [PATCH] No Nagle on either side of the relay
+
+hev relayed with Nagle's algorithm on its socket to the SOCKS server and on lwIP's side towards
+the application. Tor answers no data for a while after a write, so its kernel delays the ACK
+(40 ms), and every small write behind an unacknowledged one waited for it: nine 1-byte writes
+2 ms apart reached the server after 41 ms instead of 18 ms (tools/hev-host-test). The endpoints
+already decide how to batch their writes; the relay passes them on as they come
+(TCP_NODELAY on the upstream socket, tcp_nagle_disable () on the lwIP pcb).
+
+Applies on top of 0002-optimistic-data.patch.
+---
+--- a/src/hev-socks5-session-tcp.c
++++ b/src/hev-socks5-session-tcp.c
+@@ -308,6 +308,9 @@
+ 
+     HEV_OBJECT (self)->klass = HEV_SOCKS5_SESSION_TCP_TYPE;
+ 
++    /* Opal: no Nagle towards the application either: its kernel may delay
++     * its ACK by 40 ms, and a small reply would wait for it. */
++    tcp_nagle_disable (pcb);
+     tcp_arg (pcb, self);
+     tcp_recv (pcb, tcp_recv_handler);
+     tcp_sent (pcb, tcp_sent_handler);
+--- a/src/hev-socks5-session.c
++++ b/src/hev-socks5-session.c
+@@ -108,6 +108,7 @@
+     }
+ 
+     set_sock_tcp_fastopen (fd, srv->fastopen);
++    set_sock_tcp_nodelay (fd);
+ 
+     return 0;
+ }
+--- a/src/misc/hev-utils.c
++++ b/src/misc/hev-utils.c
+@@ -98,6 +98,22 @@
+ #endif
+ }
+ 
++/* <netinet/tcp.h> would clash with lwIP's TCP_MSS; the value is 1 on Linux. */
++#ifndef TCP_NODELAY
++#define TCP_NODELAY 1
++#endif
++
++void
++set_sock_tcp_nodelay (int fd)
++{
++    int one = 1;
++
++    /* Opal: no Nagle towards Tor. The SOCKS port is local and Tor answers
++     * no data soon: small writes (TLS records, MTProto messages) would wait
++     * for a delayed ACK, 40 ms. Fails harmlessly on datagram sockets. */
++    setsockopt (fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof (one));
++}
++
+ int
+ hev_socks5_addr_from_lwip (HevSocks5Addr *addr, const ip_addr_t *ip, u16_t port)
+ {
+--- a/src/misc/hev-utils.h
++++ b/src/misc/hev-utils.h
+@@ -17,6 +17,7 @@
+ int set_limit_nofile (int limit_nofile);
+ int set_sock_mark (int fd, unsigned int mark);
+ void set_sock_tcp_fastopen (int fd, int enable);
++void set_sock_tcp_nodelay (int fd);
+ 
+ int hev_socks5_addr_from_lwip (HevSocks5Addr *addr, const ip_addr_t *ip,
+                                u16_t port);
