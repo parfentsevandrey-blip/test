@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.rosa.calendar.data.Occurrence
 import app.rosa.calendar.ui.WeatherState
+import app.rosa.calendar.ui.currentLocale
 import app.rosa.weather.core.designsystem.component.GlassSurface
 import app.rosa.weather.core.designsystem.component.WeatherGlyph
 import app.rosa.weather.core.designsystem.format.WeatherFormat
@@ -68,7 +69,6 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
-import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
@@ -89,14 +89,15 @@ internal fun MonthGrid(
     onSelect: (LocalDate) -> Unit,
 ) {
     val context = LocalContext.current
-    val locale = Locale.getDefault()
+    val locale = currentLocale()
     val haptics = LocalHaptics.current
     val motion = LocalMotionEnabled.current
     val density = LocalDensity.current
     val grid = remember(month, today, firstDay) { CalendarMonth.of(month, today, firstDay) }
     val lent = (weather as? WeatherState.Lent)?.weather
     val format = remember(lent?.units, lent?.zone) { lent?.let { WeatherFormat(context, it.units, it.zone) } }
-    val showWeather = lent != null && lent.days.keys.any { it in grid.first..grid.last && !it.isBefore(today) }
+    // Weather or not on its days, every month keeps the same rows: the pages don't jump as they turn.
+    val showWeather = lent != null
     val cellHeight: Dp = if (showWeather) 60.dp else 48.dp
     val dayFormat = remember(locale) { DateTimeFormatter.ofPattern("EEEE, d MMMM", locale) }
     val select by rememberUpdatedState(onSelect)
@@ -176,7 +177,7 @@ internal fun MonthGrid(
                                 today = today,
                                 selected = day.date == selected,
                                 events = events[day.date].orEmpty(),
-                                glyph = if (showWeather && day.inMonth && !day.date.isBefore(today)) lent?.days?.get(day.date) else null,
+                                glyph = if (showWeather && day.inMonth && !day.date.isBefore(today)) lent.days[day.date] else null,
                                 temperature = { celsius -> format?.temperature(celsius).orEmpty() },
                                 roomy = cellWidth >= 46.dp,
                                 modifier = Modifier.weight(1f).fillMaxSize(),

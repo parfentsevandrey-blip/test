@@ -35,6 +35,7 @@ import app.rosa.calendar.ui.CalendarScreen
 import app.rosa.calendar.ui.CalendarViewModel
 import app.rosa.calendar.ui.LocalTabBarInset
 import app.rosa.calendar.ui.WeatherState
+import app.rosa.calendar.ui.currentLocale
 import app.rosa.calendar.ui.month.EventRow
 import app.rosa.calendar.ui.month.PermissionLine
 import app.rosa.weather.core.designsystem.component.GlassSurface
@@ -47,30 +48,50 @@ import app.rosa.weather.core.model.WeatherCondition
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
-import java.util.Locale
 
 /**
  * The month ahead as a list: each day that has something on it, on its own pane of glass, with
  * the forecast's weather beside its name. A day's name opens it on the month.
  */
 @Composable
-fun EventsScreen(viewModel: CalendarViewModel, today: LocalDate, onOpenDay: (LocalDate) -> Unit) {
+fun EventsRoute(viewModel: CalendarViewModel, today: LocalDate, onOpenDay: (LocalDate) -> Unit) {
     val settings = viewModel.settings.collectAsStateWithLifecycle().value ?: return
     val upcoming by viewModel.upcoming.collectAsStateWithLifecycle()
     val allowed by viewModel.eventsAllowed.collectAsStateWithLifecycle()
     val weather by viewModel.weatherState.collectAsStateWithLifecycle()
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { viewModel.resumed() }
+    EventsScreen(
+        showEvents = settings.showEvents,
+        upcoming = upcoming,
+        allowed = allowed,
+        weather = weather,
+        today = today,
+        onOpenDay = onOpenDay,
+        onAllowEvents = { permission.launch(Manifest.permission.READ_CALENDAR) },
+    )
+}
+
+@Composable
+fun EventsScreen(
+    showEvents: Boolean,
+    upcoming: Map<LocalDate, List<Occurrence>>?,
+    allowed: Boolean,
+    weather: WeatherState,
+    today: LocalDate,
+    onOpenDay: (LocalDate) -> Unit,
+    onAllowEvents: () -> Unit,
+) {
     val bottom = LocalTabBarInset.current
     CalendarScreen(stringResource(R.string.events_title)) {
         val days = upcoming
         when {
-            !settings.showEvents -> Note(stringResource(R.string.events_off))
+            !showEvents -> Note(stringResource(R.string.events_off))
             !allowed -> GlassSurface(
                 Modifier.padding(horizontal = 12.dp).fillMaxWidth(),
                 style = GlassStyle.Frosted,
                 cornerRadius = 28.dp,
                 contentPadding = PaddingValues(18.dp),
-            ) { PermissionLine { permission.launch(Manifest.permission.READ_CALENDAR) } }
+            ) { PermissionLine(onAllowEvents) }
             days == null -> Unit
             days.isEmpty() -> Note(stringResource(R.string.events_empty))
             else -> LazyColumn(
@@ -89,7 +110,7 @@ fun EventsScreen(viewModel: CalendarViewModel, today: LocalDate, onOpenDay: (Loc
 private fun DayGroup(date: LocalDate, today: LocalDate, occurrences: List<Occurrence>, weather: WeatherState, onOpenDay: (LocalDate) -> Unit) {
     val context = LocalContext.current
     val haptics = LocalHaptics.current
-    val locale = Locale.getDefault()
+    val locale = currentLocale()
     val lent = (weather as? WeatherState.Lent)?.weather
     val format = remember(lent?.units, lent?.zone) { lent?.let { WeatherFormat(context, it.units, it.zone) } }
     val forecast = lent?.days?.get(date)

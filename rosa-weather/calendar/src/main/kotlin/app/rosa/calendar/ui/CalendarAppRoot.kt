@@ -42,10 +42,10 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.rosa.calendar.R
 import app.rosa.calendar.data.PaintingLight
-import app.rosa.calendar.ui.events.EventsScreen
-import app.rosa.calendar.ui.month.MonthScreen
-import app.rosa.calendar.ui.settings.SettingsScreen
-import app.rosa.calendar.ui.widget.WidgetScreen
+import app.rosa.calendar.ui.events.EventsRoute
+import app.rosa.calendar.ui.month.MonthRoute
+import app.rosa.calendar.ui.settings.SettingsRoute
+import app.rosa.calendar.ui.widget.WidgetRoute
 import app.rosa.weather.core.designsystem.component.GlassTab
 import app.rosa.weather.core.designsystem.component.GlassTabBar
 import app.rosa.weather.core.designsystem.component.GlassTabBarHeight
@@ -106,7 +106,7 @@ fun CalendarAppRoot(viewModel: CalendarViewModel = hiltViewModel()) {
             TabScaffold(tab, onSelect = { tab = it }) {
                 AnimatedContent(tab, transitionSpec = { tabSwitch() }, label = "tab") { current ->
                     when (current) {
-                        CalendarTab.Month -> MonthScreen(
+                        CalendarTab.Month -> MonthRoute(
                             viewModel = viewModel,
                             month = month,
                             today = today,
@@ -114,13 +114,13 @@ fun CalendarAppRoot(viewModel: CalendarViewModel = hiltViewModel()) {
                             onMonth = { monthIndex = it.index },
                             onSelect = { selectedDay = it.toEpochDay() },
                         )
-                        CalendarTab.Events -> EventsScreen(viewModel, today) { date ->
+                        CalendarTab.Events -> EventsRoute(viewModel, today) { date ->
                             selectedDay = date.toEpochDay()
                             monthIndex = YearMonth.from(date).index
                             tab = CalendarTab.Month
                         }
-                        CalendarTab.Widget -> WidgetScreen()
-                        CalendarTab.Settings -> SettingsScreen(viewModel)
+                        CalendarTab.Widget -> WidgetRoute()
+                        CalendarTab.Settings -> SettingsRoute(viewModel)
                     }
                 }
             }
@@ -142,7 +142,7 @@ private fun tabSwitch(): ContentTransform =
  * scrolls to just above it and fades into the painting before it reaches the glass.
  */
 @Composable
-private fun TabScaffold(selected: CalendarTab, onSelect: (CalendarTab) -> Unit, content: @Composable () -> Unit) {
+internal fun TabScaffold(selected: CalendarTab, onSelect: (CalendarTab) -> Unit, content: @Composable () -> Unit) {
     val navigation = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val inset = navigation + BarGap + GlassTabBarHeight + ClearAbove
     val tabs = CalendarTab.entries.map { GlassTab(it.icon, stringResource(it.label)) }

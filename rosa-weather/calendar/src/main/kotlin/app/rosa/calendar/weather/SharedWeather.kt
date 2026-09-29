@@ -3,6 +3,7 @@ package app.rosa.calendar.weather
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.core.net.toUri
 import app.rosa.weather.core.model.WeatherShare
 import app.rosa.weather.core.model.WeatherSnapshot
 import app.rosa.weather.widget.WidgetUpdater
@@ -23,7 +24,7 @@ import kotlinx.coroutines.withContext
  */
 @Singleton
 class SharedWeather @Inject constructor(@ApplicationContext private val context: Context) {
-    private val uri: Uri = Uri.parse("content://${WeatherShare.AUTHORITY}")
+    private val uri: Uri = "content://${WeatherShare.AUTHORITY}".toUri()
 
     @Volatile private var lastRefresh = 0L
 

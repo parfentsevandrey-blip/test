@@ -26,7 +26,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.rosa.calendar.R
+import app.rosa.calendar.data.CalendarSettings
 import app.rosa.calendar.data.PaintingLight
+import app.rosa.calendar.ui.WeatherState
 import app.rosa.calendar.ui.CalendarScreen
 import app.rosa.calendar.ui.CalendarViewModel
 import app.rosa.calendar.ui.LocalTabBarInset
@@ -41,7 +43,7 @@ import app.rosa.weather.core.model.WeekStart
 
 /** How the calendar looks and what it shows: the week, the events, the weather, the painting. */
 @Composable
-fun SettingsScreen(viewModel: CalendarViewModel) {
+fun SettingsRoute(viewModel: CalendarViewModel) {
     val settings = viewModel.settings.collectAsStateWithLifecycle().value ?: return
     val allowed by viewModel.eventsAllowed.collectAsStateWithLifecycle()
     val weather by viewModel.weatherState.collectAsStateWithLifecycle()
@@ -49,6 +51,17 @@ fun SettingsScreen(viewModel: CalendarViewModel) {
         viewModel.resumed()
         if (granted) viewModel.update { it.copy(showEvents = true) }
     }
+    SettingsScreen(settings, allowed, weather, viewModel::update) { permission.launch(Manifest.permission.READ_CALENDAR) }
+}
+
+@Composable
+fun SettingsScreen(
+    settings: CalendarSettings,
+    allowed: Boolean,
+    weather: WeatherState,
+    update: ((CalendarSettings) -> CalendarSettings) -> Unit,
+    onAllowEvents: () -> Unit,
+) {
     CalendarScreen(stringResource(R.string.settings_title)) {
         Column(
             Modifier
@@ -65,21 +78,21 @@ fun SettingsScreen(viewModel: CalendarViewModel) {
                     WeekStart.Sunday to stringResource(R.string.week_start_sunday),
                     WeekStart.Saturday to stringResource(R.string.week_start_saturday),
                 )
-                GlassSegmented(WeekStart.entries, settings.weekStart, { v -> viewModel.update { it.copy(weekStart = v) } }, { weekLabels.getValue(it) })
-                ToggleLine(stringResource(R.string.toggle_week_numbers), settings.weekNumbers) { v -> viewModel.update { it.copy(weekNumbers = v) } }
+                GlassSegmented(WeekStart.entries, settings.weekStart, { v -> update { it.copy(weekStart = v) } }, { weekLabels.getValue(it) })
+                ToggleLine(stringResource(R.string.toggle_week_numbers), settings.weekNumbers) { v -> update { it.copy(weekNumbers = v) } }
             }
             Section(stringResource(R.string.settings_events)) {
                 ToggleLine(stringResource(R.string.toggle_events), settings.showEvents && allowed) { on ->
                     when {
-                        !on -> viewModel.update { it.copy(showEvents = false) }
-                        allowed -> viewModel.update { it.copy(showEvents = true) }
-                        else -> permission.launch(Manifest.permission.READ_CALENDAR)
+                        !on -> update { it.copy(showEvents = false) }
+                        allowed -> update { it.copy(showEvents = true) }
+                        else -> onAllowEvents()
                     }
                 }
                 Label(stringResource(R.string.settings_events_hint))
             }
             Section(stringResource(R.string.settings_weather)) {
-                ToggleLine(stringResource(R.string.settings_show_weather), settings.showWeather) { v -> viewModel.update { it.copy(showWeather = v) } }
+                ToggleLine(stringResource(R.string.settings_show_weather), settings.showWeather) { v -> update { it.copy(showWeather = v) } }
                 WeatherSource(weather)
             }
             Section(stringResource(R.string.settings_painting)) {
@@ -89,10 +102,10 @@ fun SettingsScreen(viewModel: CalendarViewModel) {
                     PaintingLight.Day to stringResource(R.string.painting_day),
                     PaintingLight.Night to stringResource(R.string.painting_night),
                 )
-                GlassSegmented(PaintingLight.entries, settings.light, { v -> viewModel.update { it.copy(light = v) } }, { lightLabels.getValue(it) })
-                ToggleLine(stringResource(R.string.settings_live), settings.livePainting) { v -> viewModel.update { it.copy(livePainting = v) } }
+                GlassSegmented(PaintingLight.entries, settings.light, { v -> update { it.copy(light = v) } }, { lightLabels.getValue(it) })
+                ToggleLine(stringResource(R.string.settings_live), settings.livePainting) { v -> update { it.copy(livePainting = v) } }
                 Label(stringResource(R.string.settings_live_hint))
-                ToggleLine(stringResource(R.string.settings_tilt), settings.tiltLighting) { v -> viewModel.update { it.copy(tiltLighting = v) } }
+                ToggleLine(stringResource(R.string.settings_tilt), settings.tiltLighting) { v -> update { it.copy(tiltLighting = v) } }
                 Label(stringResource(R.string.settings_tilt_hint))
             }
             Section(stringResource(R.string.settings_haptics)) {
@@ -101,7 +114,7 @@ fun SettingsScreen(viewModel: CalendarViewModel) {
                     HapticsLevel.Subtle to stringResource(R.string.haptics_subtle),
                     HapticsLevel.Rich to stringResource(R.string.haptics_rich),
                 )
-                GlassSegmented(HapticsLevel.entries, settings.haptics, { v -> viewModel.update { it.copy(haptics = v) } }, { hapticLabels.getValue(it) })
+                GlassSegmented(HapticsLevel.entries, settings.haptics, { v -> update { it.copy(haptics = v) } }, { hapticLabels.getValue(it) })
             }
             Section(stringResource(R.string.settings_about)) {
                 Text(stringResource(R.string.settings_licenses), style = Rosa.type.caption, color = Rosa.colors.inkSoft)

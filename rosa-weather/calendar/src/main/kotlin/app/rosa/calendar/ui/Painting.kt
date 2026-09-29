@@ -74,9 +74,11 @@ object PaintingPalette {
             accent = legible(art.accent, dark),
             warm = art.accent,
             cool = zenith,
+            // A painting is never as even as a sky: its lamps, snow and cups are bright under light type.
+            // The glass over a dark one is made as dense as over the brightest sky, so type reads anywhere.
             brightness = when {
-                night -> 0.1
-                dark -> 0.18
+                night -> 0.3
+                dark -> 0.38
                 else -> 0.62
             },
         )
@@ -119,22 +121,15 @@ fun PaintingBackdrop(
     BoxWithConstraints(modifier.fillMaxSize()) {
         val widthDp = maxWidth.value
         val heightDp = maxHeight.value
-        // Painted a little larger than the screen, so it can sway with the tilt without an edge showing.
         val bleed = if (motion) PARALLAX_BLEED else 0f
-        val paintWidth = widthDp * (1f + bleed * 2f)
-        val paintHeight = heightDp * (1f + bleed * 2f)
-        // A painting is soft: two pixels a dp are plenty, and keep it in the painting cache.
-        val pxPerDp = min(density.density, 2f)
+        val pixels = paintingPixels(widthDp, heightDp, density.density, sways = motion)
         val fade = remember { Animatable(1f) }
         var shown by remember { mutableStateOf<Painted?>(null) }
         var previous by remember { mutableStateOf<Painted?>(null) }
-        LaunchedEffect(art.week, night, weather != null, paintWidth.roundToInt(), paintHeight.roundToInt()) {
-            if (paintWidth < 1f || paintHeight < 1f) return@LaunchedEffect
+        LaunchedEffect(art.week, night, weather != null, pixels) {
+            if (pixels.width < 1 || pixels.height < 1) return@LaunchedEffect
             val painted = withContext(Dispatchers.Default) {
-                val bitmap = CalendarArt.painting(
-                    context, art, (paintWidth * pxPerDp).roundToInt(), (paintHeight * pxPerDp).roundToInt(), pxPerDp,
-                    live = weather != null, night = night,
-                )
+                val bitmap = CalendarArt.painting(context, art, pixels.width, pixels.height, pixels.pxPerDp, live = weather != null, night = night)
                 Painted(art.week, night, bitmap.asImageBitmap())
             }
             if (shown == null || !motion) {
@@ -212,6 +207,19 @@ fun PaintingBackdrop(
 }
 
 private class Painted(val week: Int, val night: Boolean, val image: ImageBitmap)
+
+/** The pixels of the painting behind a screen of [widthDp] × [heightDp]. */
+internal data class PaintingPixels(val width: Int, val height: Int, val pxPerDp: Float)
+
+/**
+ * A screen's painting: a little larger than the screen when it [sways] with the tilt, so no edge
+ * ever shows, and at two pixels a dp at most — a painting is soft, and so it stays in the cache.
+ */
+internal fun paintingPixels(widthDp: Float, heightDp: Float, density: Float, sways: Boolean): PaintingPixels {
+    val grow = 1f + (if (sways) PARALLAX_BLEED else 0f) * 2f
+    val pxPerDp = min(density, 2f)
+    return PaintingPixels((widthDp * grow * pxPerDp).roundToInt(), (heightDp * grow * pxPerDp).roundToInt(), pxPerDp)
+}
 
 /** How much bigger than the screen the painting is on each side, for the tilt to sway it. */
 private const val PARALLAX_BLEED = 0.025f

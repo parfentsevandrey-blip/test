@@ -37,15 +37,19 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.rosa.calendar.R
+import app.rosa.calendar.data.CalendarSettings
+import app.rosa.calendar.data.Occurrence
 import app.rosa.calendar.ui.CalendarViewModel
 import app.rosa.calendar.ui.LocalTabBarInset
+import app.rosa.calendar.ui.WeatherState
+import app.rosa.calendar.ui.currentLocale
 import app.rosa.weather.core.designsystem.component.GlassButton
 import app.rosa.weather.core.designsystem.component.GlassIconButton
 import app.rosa.weather.core.designsystem.component.GlassSurface
@@ -60,7 +64,6 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
-import java.util.Locale
 import kotlinx.coroutines.launch
 
 /**
@@ -69,7 +72,7 @@ import kotlinx.coroutines.launch
  * is chosen with a tap, or by holding it and sliding: a lens follows the finger across the days.
  */
 @Composable
-fun MonthScreen(
+fun MonthRoute(
     viewModel: CalendarViewModel,
     month: YearMonth,
     today: LocalDate,
@@ -81,9 +84,37 @@ fun MonthScreen(
     val events by viewModel.monthEvents.collectAsStateWithLifecycle()
     val weather by viewModel.weatherState.collectAsStateWithLifecycle()
     val allowed by viewModel.eventsAllowed.collectAsStateWithLifecycle()
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { viewModel.resumed() }
+    MonthScreen(
+        month = month,
+        today = today,
+        selected = selected,
+        settings = settings,
+        events = events,
+        weather = weather,
+        eventsAllowed = allowed,
+        onMonth = onMonth,
+        onSelect = onSelect,
+        onAllowEvents = { permission.launch(Manifest.permission.READ_CALENDAR) },
+    )
+}
+
+@Composable
+fun MonthScreen(
+    month: YearMonth,
+    today: LocalDate,
+    selected: LocalDate,
+    settings: CalendarSettings,
+    events: Map<LocalDate, List<Occurrence>>,
+    weather: WeatherState,
+    eventsAllowed: Boolean,
+    onMonth: (YearMonth) -> Unit,
+    onSelect: (LocalDate) -> Unit,
+    onAllowEvents: () -> Unit,
+) {
     val haptics = LocalHaptics.current
     val scope = rememberCoroutineScope()
-    val locale = Locale.getDefault()
+    val locale = currentLocale()
     val firstDay = CalendarMonth.firstDayFor(settings.weekStart, locale)
 
     // Page CENTER is the month the screen opened on; the others lie either side of it.
@@ -104,7 +135,6 @@ fun MonthScreen(
         scope.launch { pager.animateScrollToPage(CENTER + monthsBetween(base, to)) }
     }
 
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { viewModel.resumed() }
     Column(
         Modifier
             .fillMaxSize()
@@ -152,8 +182,8 @@ fun MonthScreen(
             events = events[selected].orEmpty(),
             weather = weather,
             showEvents = settings.showEvents,
-            eventsAllowed = allowed,
-            onAllowEvents = { permission.launch(Manifest.permission.READ_CALENDAR) },
+            eventsAllowed = eventsAllowed,
+            onAllowEvents = onAllowEvents,
             modifier = Modifier.padding(horizontal = 12.dp),
         )
     }
@@ -168,10 +198,10 @@ private fun MonthHeader(
     onNext: () -> Unit,
     onToday: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val locale = Locale.getDefault()
+    val resources = LocalResources.current
+    val locale = currentLocale()
     val week = SeasonClock.weekFor(month, today)
-    val scenes = remember { context.resources.getStringArray(app.rosa.weather.widget.R.array.calendar_weeks) }
+    val scenes = remember(resources) { resources.getStringArray(app.rosa.weather.widget.R.array.calendar_weeks) }
     val scene = scenes.getOrNull(week - 1)
     Row(
         Modifier

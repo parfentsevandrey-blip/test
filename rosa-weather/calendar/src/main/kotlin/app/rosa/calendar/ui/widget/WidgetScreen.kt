@@ -109,15 +109,20 @@ class WidgetTabViewModel @Inject constructor(
  * then the ones already placed, each opening its studio.
  */
 @Composable
-fun WidgetScreen(viewModel: WidgetTabViewModel = hiltViewModel()) {
-    val context = LocalContext.current
-    val haptics = LocalHaptics.current
+fun WidgetRoute(viewModel: WidgetTabViewModel = hiltViewModel()) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
-    var unsupported by remember { mutableStateOf(false) }
     LifecycleResumeEffect(Unit) {
         viewModel.refresh()
         onPauseOrDispose { }
     }
+    WidgetScreen(state)
+}
+
+@Composable
+fun WidgetScreen(state: WidgetTabState?) {
+    val context = LocalContext.current
+    val haptics = LocalHaptics.current
+    var unsupported by remember { mutableStateOf(false) }
     CalendarScreen(stringResource(R.string.widget_title)) {
         Column(
             Modifier

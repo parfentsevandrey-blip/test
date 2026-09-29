@@ -6,13 +6,11 @@
     <string name="tab_widget">Виджет</string>
     <string name="tab_settings">Настройки</string>
     <string name="month_today">Сегодня</string>
-    <string name="month_week">Неделя %1$d</string>
     <string name="day_no_events">Ничего не запланировано</string>
     <string name="day_all_day">Весь день</string>
     <string name="day_until">до %1$s</string>
     <string name="day_open">Открыть в календаре</string>
     <string name="day_add">Новое событие</string>
-    <string name="day_weather">%1$s, %2$s … %3$s</string>
     <string name="events_permission_title">Ваши события</string>
     <string name="events_permission_body">Разрешите доступ к календарям, чтобы видеть свои события на месяце и в списке. Они не покидают телефон.</string>
     <string name="events_permission_allow">Разрешить</string>
@@ -52,7 +50,6 @@
     <string name="day_now">Сейчас %1$s</string>
     <string name="day_precipitation">Осадки %1$d%%</string>
     <string name="weather_waiting">Жду погоду из «Роса Погода»…</string>
-    <string name="weather_off">Погода выключена в настройках.</string>
     <string name="settings_light">Свет</string>
     <string name="painting_auto">Как в системе</string>
     <string name="painting_day">Днём</string>

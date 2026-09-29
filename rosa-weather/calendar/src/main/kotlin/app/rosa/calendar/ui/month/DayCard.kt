@@ -41,6 +41,7 @@ import app.rosa.calendar.data.Occurrence
 import app.rosa.calendar.ui.CalendarActions
 import app.rosa.calendar.ui.CalendarWeather
 import app.rosa.calendar.ui.WeatherState
+import app.rosa.calendar.ui.currentLocale
 import app.rosa.weather.core.designsystem.component.GlassButton
 import app.rosa.weather.core.designsystem.component.GlassSurface
 import app.rosa.weather.core.designsystem.component.RosaIcon
@@ -55,7 +56,6 @@ import app.rosa.weather.core.model.WeatherCondition
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
-import java.util.Locale
 
 /**
  * The chosen day on its own pane of glass: its name, its weather from the forecast, its events —
@@ -134,7 +134,7 @@ internal fun DayCard(
 @Composable
 private fun DayTitle(date: LocalDate, today: LocalDate, weather: WeatherState) {
     val context = LocalContext.current
-    val locale = Locale.getDefault()
+    val locale = currentLocale()
     val lent = (weather as? WeatherState.Lent)?.weather
     val format = remember(lent?.units, lent?.zone) { lent?.let { WeatherFormat(context, it.units, it.zone) } }
     val day = lent?.days?.get(date)
@@ -147,11 +147,13 @@ private fun DayTitle(date: LocalDate, today: LocalDate, weather: WeatherState) {
                 maxLines = 1,
                 modifier = Modifier.semantics { heading() },
             )
-            val dateLine = remember(date, today, locale) {
+            val todayWord = stringResource(R.string.events_today)
+            val tomorrowWord = stringResource(R.string.events_tomorrow)
+            val dateLine = remember(date, today, locale, todayWord) {
                 val text = DateTimeFormatter.ofPattern("d MMMM", locale).format(date)
                 when (date) {
-                    today -> context.getString(R.string.events_today) + ", " + text
-                    today.plusDays(1) -> context.getString(R.string.events_tomorrow) + ", " + text
+                    today -> "$todayWord, $text"
+                    today.plusDays(1) -> "$tomorrowWord, $text"
                     else -> text
                 }
             }
@@ -167,9 +169,9 @@ private fun DayTitle(date: LocalDate, today: LocalDate, weather: WeatherState) {
                     Text(" / " + format.temperature(day.temperatureMin), style = Rosa.type.body, color = Rosa.colors.inkSoft)
                 }
                 val detail = if (date == today) {
-                    context.getString(R.string.day_now, format.temperature(lent.now.temperature))
+                    stringResource(R.string.day_now, format.temperature(lent.now.temperature))
                 } else if (day.precipitationProbabilityMax >= 20) {
-                    context.getString(R.string.day_precipitation, day.precipitationProbabilityMax)
+                    stringResource(R.string.day_precipitation, day.precipitationProbabilityMax)
                 } else {
                     format.condition(condition)
                 }

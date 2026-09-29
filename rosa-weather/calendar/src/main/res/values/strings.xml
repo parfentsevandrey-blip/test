@@ -6,13 +6,11 @@
     <string name="tab_widget">Widget</string>
     <string name="tab_settings">Settings</string>
     <string name="month_today">Today</string>
-    <string name="month_week">Week %1$d</string>
     <string name="day_no_events">Nothing planned</string>
     <string name="day_all_day">All day</string>
     <string name="day_until">until %1$s</string>
     <string name="day_open">Open in your calendar</string>
     <string name="day_add">New event</string>
-    <string name="day_weather">%1$s, %2$s … %3$s</string>
     <string name="events_permission_title">Your events</string>
     <string name="events_permission_body">Allow access to your calendars to see your events on the month and in the list. They stay on the phone.</string>
     <string name="events_permission_allow">Allow</string>
@@ -52,7 +50,6 @@
     <string name="day_now">%1$s now</string>
     <string name="day_precipitation">Rain %1$d%%</string>
     <string name="weather_waiting">Waiting for the weather from Rosa Weather…</string>
-    <string name="weather_off">Weather is off in Settings.</string>
     <string name="settings_light">Light</string>
     <string name="painting_auto">As the phone</string>
     <string name="painting_day">By day</string>
