@@ -11,7 +11,6 @@ import app.rosa.weather.core.model.WidgetStyle
 import app.rosa.weather.core.model.WidgetTheme
 import app.rosa.weather.widget.render.WidgetContent
 import app.rosa.weather.widget.render.WidgetRenderRequest
-import app.rosa.weather.widget.render.WidgetRenderer
 import com.google.common.truth.Truth.assertWithMessage
 import java.time.LocalDate
 import java.time.YearMonth
@@ -36,7 +35,7 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [36], qualifiers = "ru-rXX-w411dp-h891dp-xxhdpi")
 class CalendarLegibilityTest {
-    private val renderer = WidgetRenderer(ApplicationProvider.getApplicationContext())
+    private val renderer = CalendarPageRenderer(ApplicationProvider.getApplicationContext())
     private val ru = Locale.forLanguageTag("ru-RU")
 
     @Test

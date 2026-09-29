@@ -18,7 +18,7 @@ import kotlin.math.roundToInt
  * in memory too, so a widget whose week is already painted redraws in a few milliseconds: only its
  * numbers are new.
  */
-internal object CalendarArt {
+object CalendarArt {
     /** Bump whenever the paintings change, so no old picture is taken from disk. */
     const val VERSION = 4
 
@@ -87,7 +87,7 @@ internal object CalendarArt {
      * What the pane identified by [key] needs to be for its type to read — measured from its
      * painting by [measure] the first time, then kept with it.
      */
-    fun tone(key: String, measure: () -> PaneTone): PaneTone {
+    internal fun tone(key: String, measure: () -> PaneTone): PaneTone {
         tones.get(key)?.let { return it }
         return measure().also { tones.put(key, it) }
     }

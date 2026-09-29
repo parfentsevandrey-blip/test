@@ -15,7 +15,6 @@ import app.rosa.weather.core.model.WidgetStyle
 import app.rosa.weather.core.model.WidgetTheme
 import app.rosa.weather.widget.render.WidgetContent
 import app.rosa.weather.widget.render.WidgetRenderRequest
-import app.rosa.weather.widget.render.WidgetRenderer
 import app.rosa.weather.widget.render.exportDocImage
 import java.io.File
 import java.time.LocalDate
@@ -65,7 +64,7 @@ class CalendarGalleryTest {
         File(out, "calendar-scenes.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
-    private val renderer = WidgetRenderer(ApplicationProvider.getApplicationContext())
+    private val renderer = CalendarPageRenderer(ApplicationProvider.getApplicationContext())
     private val calendar = WidgetConfig(face = WidgetFace.Calendar, style = WidgetStyle.Sky, opacity = 1f)
     private val ru = Locale.forLanguageTag("ru-RU")
 

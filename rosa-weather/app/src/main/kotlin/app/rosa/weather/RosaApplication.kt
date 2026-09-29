@@ -8,6 +8,7 @@ import androidx.work.Configuration as WorkConfiguration
 import app.rosa.weather.core.data.di.ApplicationScope
 import app.rosa.weather.core.data.repository.SettingsRepository
 import app.rosa.weather.core.data.sync.SyncScheduler
+import app.rosa.weather.share.CalendarCompanion
 import app.rosa.weather.widget.WidgetUpdater
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 class RosaApplication : Application(), WorkConfiguration.Provider {
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var widgetUpdater: WidgetUpdater
+    @Inject lateinit var calendar: CalendarCompanion
     @Inject lateinit var scheduler: SyncScheduler
     @Inject lateinit var settings: SettingsRepository
 
@@ -37,6 +39,7 @@ class RosaApplication : Application(), WorkConfiguration.Provider {
             }
         }
         widgetUpdater.followPlaceChanges(scope)
+        calendar.followPlaceChanges(scope)
         // Widgets are bitmaps: when the system theme flips while we're alive, redraw them now
         // instead of waiting for the next scheduled tick.
         registerComponentCallbacks(object : ComponentCallbacks2 {

@@ -28,7 +28,6 @@ class SystemEventReceiver : BroadcastReceiver() {
                 Intent.ACTION_BOOT_COMPLETED ->
                     graph.scheduler().refreshNow(force = false, reason = SyncReason.SystemEvent)
             }
-            graph.updater().settle()
         }
     }
 }

@@ -4,10 +4,11 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import app.rosa.weather.core.model.SampleForecast
 import app.rosa.weather.core.model.Units
-import app.rosa.weather.widget.provider.WidgetKind
+import app.rosa.weather.core.model.WidgetConfig
+import app.rosa.weather.core.model.WidgetFace
+import app.rosa.weather.core.model.WidgetStyle
 import app.rosa.weather.widget.render.WidgetContent
 import app.rosa.weather.widget.render.WidgetRenderRequest
-import app.rosa.weather.widget.render.WidgetRenderer
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.time.LocalDate
@@ -61,12 +62,12 @@ class CalendarArtTest {
 
     @Test
     fun `a month already painted redraws in a moment`() {
-        val renderer = WidgetRenderer(context)
+        val renderer = CalendarPageRenderer(context)
         val today = LocalDate.of(2026, 10, 12)
         val now = today.atTime(12, 0).toEpochSecond(ZoneOffset.ofHours(3))
         val content = WidgetContent("Москва", true, SampleForecast.create(nowEpochSeconds = now), now, Units())
         val view = CalendarView(YearMonth.from(today), today, locale = Locale.forLanguageTag("ru-RU"))
-        val request = WidgetRenderRequest(314f, 252f, WidgetKind.Calendar.defaultConfig, content, 22f, systemNight = false, calendar = view)
+        val request = WidgetRenderRequest(314f, 252f, WidgetConfig(face = WidgetFace.Calendar, style = WidgetStyle.Sky, opacity = 1f), content, 22f, systemNight = false, calendar = view)
         val cold = System.nanoTime().also { renderer.renderCalendar(request, 2.75f) }.let { System.nanoTime() - it }
         val warm = System.nanoTime().also { renderer.renderCalendar(request, 2.75f) }.let { System.nanoTime() - it }
         println("calendar render: cold ${cold / 1_000_000} ms, warm ${warm / 1_000_000} ms")

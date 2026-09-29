@@ -75,4 +75,8 @@
     <string name="feels_same">Ощущается как есть</string>
     <string name="humidity_dew">Точка росы %1$s</string>
     <string name="visibility_hint">Ясная видимость</string>
+    <string name="widgets_calendar_title">Календарь</string>
+    <string name="widgets_calendar_moved">Календарь над картинами недель теперь отдельное приложение — «Роса Календарь». Погоду он берёт отсюда.</string>
+    <string name="widgets_calendar_missing">Виджет календаря переехал в отдельное приложение «Роса Календарь». Установите его, чтобы вернуть календарь; погоду он берёт отсюда.</string>
+    <string name="widgets_calendar_open">Открыть «Роса Календарь»</string>
 </resources>

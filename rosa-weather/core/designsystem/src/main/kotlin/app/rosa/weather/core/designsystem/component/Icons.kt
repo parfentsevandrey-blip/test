@@ -43,7 +43,7 @@ import kotlin.math.roundToInt
  * edge that dims slightly toward the bottom, and the pieces you touch (slider knobs, the search
  * lens) carry a specular glint. Rounded caps on a 24-unit grid, legible from 14 to 28 dp.
  */
-enum class RosaIcon { Search, Plus, Settings, Location, Close, Back, Widgets, Refresh, Check, Trash, Drag, Chevron, Sparkle, Weather, Pin }
+enum class RosaIcon { Search, Plus, Settings, Location, Close, Back, Widgets, Refresh, Check, Trash, Drag, Chevron, Sparkle, Weather, Pin, Calendar, Agenda }
 
 @Composable
 fun RosaIconView(icon: RosaIcon, tint: Color, modifier: Modifier = Modifier, size: Dp = 22.dp) {
@@ -183,6 +183,21 @@ private class GlassIconScope(val scope: DrawScope, val u: Float, val tint: Color
                     },
                 )
                 orb(p(12f, 10f), 2.4f)
+            }
+            RosaIcon.Calendar -> {
+                // A glass page on two rings, its days in a grid and today a bright bead.
+                glass(path { addRoundRect(RoundRect(Rect(p(3.6f, 5.2f), p(20.4f, 20.4f)), CornerRadius(3.2f * u))) })
+                lines(p(8f, 3.2f) to p(8f, 7.2f), p(16f, 3.2f) to p(16f, 7.2f))
+                drawLine(tint.copy(alpha = tint.alpha * 0.55f), p(3.8f, 9.8f), p(20.2f, 9.8f), 1.3f * u, StrokeCap.Round)
+                listOf(8f to 13.4f, 12f to 13.4f, 16f to 13.4f, 8f to 17f).forEach { (x, y) -> drawCircle(tint, 1.05f * u, p(x, y)) }
+                orb(p(12.6f, 17f), 1.9f)
+            }
+            RosaIcon.Agenda -> {
+                // Events in a column: a bead for each, and its line of text.
+                listOf(6.5f, 12f, 17.5f).forEachIndexed { i, y ->
+                    if (i == 0) orb(p(6f, y), 2f) else drawCircle(tint, 1.4f * u, p(6f, y))
+                    drawLine(line, p(10.5f, y), p(if (i == 1) 16.5f else 19.5f, y), 1.9f * u, StrokeCap.Round)
+                }
             }
             RosaIcon.Sparkle -> {
                 val star = path {

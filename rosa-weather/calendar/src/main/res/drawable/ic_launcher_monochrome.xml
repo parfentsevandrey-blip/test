@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The themed icon: the page, its rings, its days and today's drop, in one colour. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="3"
+        android:pathData="M40,37.5h28a6.5,6.5 0,0 1,6.5 6.5v26a6.5,6.5 0,0 1,-6.5 6.5h-28a6.5,6.5 0,0 1,-6.5 -6.5v-26a6.5,6.5 0,0 1,6.5 -6.5z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M33.5,44a6.5,6.5 0,0 1,6.5 -6.5h28a6.5,6.5 0,0 1,6.5 6.5v2h-41z" />
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="3" android:strokeLineCap="round" android:pathData="M45,31v9M63,31v9" />
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M41,53m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M49.7,53m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M58.3,53m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M67,53m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M41,61.5m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M49.7,61.5m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M67,61.5m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M41,70m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M49.7,70m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M58.3,56.2C58.3,56.2 54.2,61 54.2,63.7a4.1,4.1 0,0 0,8.2 0C62.4,61 58.3,56.2 58.3,56.2z" />
+</vector>

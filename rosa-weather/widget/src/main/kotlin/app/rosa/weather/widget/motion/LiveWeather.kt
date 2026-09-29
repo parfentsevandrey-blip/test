@@ -149,7 +149,7 @@ enum class LiveWeather(
          * eaves, rooks and cranes crossing the sky, petals, fluff, butterflies, fireflies, falling
          * stars, mist on the water, the leaves of September and October, the New Year's lights.
          */
-        internal fun ofSeason(config: WidgetConfig, week: Int): LiveWeather? {
+        fun ofSeason(config: WidgetConfig, week: Int): LiveWeather? {
             if (config.face != WidgetFace.Calendar || !config.liveWeather) return null
             if (config.style != WidgetStyle.Sky && config.style != WidgetStyle.Glass) return null
             return WeekArt.of(week).motion
@@ -161,7 +161,7 @@ enum class LiveWeather(
  * Lays [weather]'s tiles over the widget (or takes them away), cut to the widget's rounded corners.
  * Tiles carry stable ids, so an update showing the same weather keeps them — drops mid-run and all.
  */
-internal fun RemoteViews.setLiveWeather(packageName: String, weather: LiveWeather?, widthDp: Float, heightDp: Float, cornerRadiusDp: Float) {
+fun RemoteViews.setLiveWeather(packageName: String, weather: LiveWeather?, widthDp: Float, heightDp: Float, cornerRadiusDp: Float) {
     removeAllViews(R.id.widget_motion)
     if (weather == null) {
         setViewVisibility(R.id.widget_motion, View.GONE)
@@ -180,7 +180,7 @@ internal fun RemoteViews.setLiveWeather(packageName: String, weather: LiveWeathe
 }
 
 /** The same tiles as views of our own, for previews inside the app. */
-internal fun FrameLayout.showLiveWeather(weather: LiveWeather?, widthDp: Float, heightDp: Float) {
+fun FrameLayout.showLiveWeather(weather: LiveWeather?, widthDp: Float, heightDp: Float) {
     removeAllViews()
     if (weather == null) return
     val inflater = LayoutInflater.from(context)

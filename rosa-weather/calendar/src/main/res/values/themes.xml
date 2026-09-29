@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.RosaCalendar" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/rosa_calendar_night</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">always</item>
+    </style>
+
+    <style name="Theme.RosaCalendar.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/rosa_calendar_night</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenAnimationDuration">700</item>
+        <item name="postSplashScreenTheme">@style/Theme.RosaCalendar</item>
+    </style>
+</resources>

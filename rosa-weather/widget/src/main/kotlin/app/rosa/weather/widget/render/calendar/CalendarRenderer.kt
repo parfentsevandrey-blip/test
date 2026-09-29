@@ -99,7 +99,7 @@ data class CalendarTargets(
  * in any of the widget styles, at any size from a date tile to a wall calendar. All geometry is in
  * dp; the canvas is pre-scaled. Returns where the widget answers taps.
  */
-internal class CalendarRenderer(private val context: Context, fonts: WidgetFonts) {
+class CalendarRenderer(private val context: Context, fonts: WidgetFonts) {
     private val type = WidgetType(fonts)
     private val background = WidgetBackground()
     private val glyphs = WeatherGlyphPainter()

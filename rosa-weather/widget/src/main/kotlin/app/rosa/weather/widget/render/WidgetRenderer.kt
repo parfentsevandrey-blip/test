@@ -28,7 +28,6 @@ import app.rosa.weather.core.model.WeatherCondition
 import app.rosa.weather.core.model.WeatherVisual
 import app.rosa.weather.core.model.WidgetAccent
 import app.rosa.weather.core.model.WidgetConfig
-import app.rosa.weather.core.model.WidgetFace
 import app.rosa.weather.core.model.momentAt
 import app.rosa.weather.widget.R
 import app.rosa.weather.core.designsystem.R as DsR
@@ -40,8 +39,6 @@ import app.rosa.weather.widget.layout.LayoutContent
 import app.rosa.weather.widget.layout.WidgetLayout
 import app.rosa.weather.widget.layout.WidgetLayoutEngine
 import app.rosa.weather.widget.motion.LiveWeather
-import app.rosa.weather.widget.render.calendar.CalendarRenderer
-import app.rosa.weather.widget.render.calendar.CalendarTargets
 import app.rosa.weather.widget.render.calendar.CalendarView
 import kotlin.math.abs
 import kotlin.math.cos
@@ -86,48 +83,38 @@ data class WidgetRenderRequest(
      * picture leaves them out and keeps only what stays put: drops resting on the glass, frost, mist.
      */
     val live: Boolean = false,
-    /** For a calendar widget: the month on display, today and the events; this month when null. */
+    /**
+     * For a calendar ([app.rosa.weather.widget.render.calendar.CalendarPageRenderer]): the month on
+     * display, today and the events; this month when null.
+     */
     val calendar: CalendarView? = null,
 )
 
 /**
- * Renders a widget of any size into a bitmap (or straight onto a canvas, which is how the widget
- * studio shows a live, pixel-identical preview). All geometry is in dp; the canvas is pre-scaled.
+ * Renders a weather widget of any size into a bitmap (or straight onto a canvas, which is how the
+ * widget studio shows a live, pixel-identical preview). All geometry is in dp; the canvas is
+ * pre-scaled. A calendar is drawn by [app.rosa.weather.widget.render.calendar.CalendarPageRenderer].
  */
 class WidgetRenderer(private val context: Context) {
     private val fonts = WidgetFonts.get(context)
     private val type = WidgetType(fonts)
     private val glyphs = WeatherGlyphPainter()
     private val background = WidgetBackground()
-    private val calendar = CalendarRenderer(context, fonts)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val path = Path()
 
-    fun render(request: WidgetRenderRequest, pxPerDp: Float): Bitmap = renderCalendar(request, pxPerDp).first
-
-    /** The widget's picture, and for a calendar where it answers taps ([CalendarTargets.None] otherwise). */
-    fun renderCalendar(request: WidgetRenderRequest, pxPerDp: Float): Pair<Bitmap, CalendarTargets> {
+    fun render(request: WidgetRenderRequest, pxPerDp: Float): Bitmap {
         val w = (request.widthDp * pxPerDp).roundToInt().coerceAtLeast(1)
         val h = (request.heightDp * pxPerDp).roundToInt().coerceAtLeast(1)
         val bitmap = createBitmap(w, h)
         val canvas = Canvas(bitmap)
         canvas.scale(pxPerDp, pxPerDp)
-        val targets = if (request.config.face == WidgetFace.Calendar) calendar.draw(canvas, request) else {
-            draw(canvas, request)
-            CalendarTargets.None
-        }
-        return bitmap to targets
+        draw(canvas, request)
+        return bitmap
     }
 
-    /**
-     * Draws in dp units; callers scale the canvas. Returns the weather layout used (for hit
-     * regions), or null for a calendar.
-     */
-    fun draw(canvas: Canvas, request: WidgetRenderRequest): WidgetLayout? {
-        if (request.config.face == WidgetFace.Calendar) {
-            calendar.draw(canvas, request)
-            return null
-        }
+    /** Draws in dp units; callers scale the canvas. Returns the layout used (for hit regions). */
+    fun draw(canvas: Canvas, request: WidgetRenderRequest): WidgetLayout {
         val content = request.content
         val forecast = content.forecast
         val now = content.nowEpochSeconds

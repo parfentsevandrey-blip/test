@@ -75,4 +75,8 @@
     <string name="feels_same">Feels just as it is</string>
     <string name="humidity_dew">Dew point %1$s</string>
     <string name="visibility_hint">Clear view</string>
+    <string name="widgets_calendar_title">Calendar</string>
+    <string name="widgets_calendar_moved">The calendar over the paintings of its weeks is an app of its own now, Rosa Calendar. It takes its weather from here.</string>
+    <string name="widgets_calendar_missing">The calendar widget has moved to an app of its own, Rosa Calendar. Install it to have the calendar back; it takes its weather from here.</string>
+    <string name="widgets_calendar_open">Open Rosa Calendar</string>
 </resources>

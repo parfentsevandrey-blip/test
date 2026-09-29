@@ -11,7 +11,7 @@ import kotlin.math.min
  * is a little further on than the one before — October's first week still red and gold, its last
  * bare and white with frost.
  */
-internal data class Season(
+data class Season(
     /** 1..52: the week of the year. */
     val week: Int,
     /** Ground under snow, 0..1. */
@@ -101,7 +101,7 @@ internal data class Season(
 }
 
 /** The weeks of the year and the season in each: the calendar's clock. */
-internal object SeasonClock {
+object SeasonClock {
     const val WEEKS = 52
 
     /** 1..52: the week [date] falls in, counted from 1 January; the year's last days join week 52. */

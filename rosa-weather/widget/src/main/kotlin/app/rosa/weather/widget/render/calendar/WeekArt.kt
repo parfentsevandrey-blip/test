@@ -20,7 +20,7 @@ import kotlin.math.atan2
  * light type reads over it. In the dark theme the picture is taken toward night by [nightfall]:
  * all the way for a day scene, a touch for one already at night. [motion] is what moves over it.
  */
-internal data class WeekArt(
+data class WeekArt(
     /** 1..52: the week of the year. */
     val week: Int,
     val sky: List<Argb>,
@@ -42,7 +42,7 @@ internal data class WeekArt(
     val horizon: Argb get() = sky.last()
 
     /** The painted light as the glass sees it, from the centre of a [w] × [h] pane. */
-    fun light(w: Float, h: Float): WidgetLight = WidgetLight(
+    internal fun light(w: Float, h: Float): WidgetLight = WidgetLight(
         angle = atan2(bodyY * h - h / 2f, bodyX * w - w / 2f),
         power = bodyPower,
         color = Argb.White.lerp(bodyColor, 0.65f),

@@ -43,6 +43,7 @@ import app.rosa.weather.core.designsystem.component.RosaIconView
 import app.rosa.weather.core.designsystem.glass.GlassStyle
 import app.rosa.weather.core.designsystem.haptics.LocalHaptics
 import app.rosa.weather.core.designsystem.theme.Rosa
+import app.rosa.weather.core.model.WeatherShare
 import app.rosa.weather.ui.common.GlassScreen
 import app.rosa.weather.ui.common.bottomContentInset
 import app.rosa.weather.widget.provider.WidgetKind
@@ -103,7 +104,6 @@ fun WidgetsRoute(viewModel: WidgetsViewModel) {
                                 WidgetKind.Glass -> 300f to 150f
                                 WidgetKind.Sky -> 160f to 160f
                                 WidgetKind.Almanac -> 230f to 240f
-                                WidgetKind.Calendar -> 300f to 270f
                             }
                             WidgetPreview(kind.defaultConfig, sample, Modifier.size(w.dp, h.dp))
                         }
@@ -124,6 +124,40 @@ fun WidgetsRoute(viewModel: WidgetsViewModel) {
                             }
                         }
                     }
+                }
+            }
+            CalendarAppCard()
+        }
+    }
+}
+
+/**
+ * The calendar widget has moved to an app of its own, Rosa Calendar, which takes its weather from
+ * here: a way there when it's installed, and word of it when it isn't.
+ */
+@Composable
+private fun CalendarAppCard() {
+    val context = LocalContext.current
+    val haptics = LocalHaptics.current
+    val launch = remember(context) { context.packageManager.getLaunchIntentForPackage(WeatherShare.CALENDAR_PACKAGE) }
+    GlassSurface(Modifier.fillMaxWidth(), style = GlassStyle.Frosted, cornerRadius = 30.dp, contentPadding = PaddingValues(18.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RosaIconView(RosaIcon.Calendar, Rosa.colors.ink, size = 20.dp)
+                Spacer(Modifier.width(10.dp))
+                Text(stringResource(R.string.widgets_calendar_title), style = Rosa.type.headline, color = Rosa.colors.ink, modifier = Modifier.semantics { heading() })
+            }
+            Text(
+                stringResource(if (launch != null) R.string.widgets_calendar_moved else R.string.widgets_calendar_missing),
+                style = Rosa.type.caption,
+                color = Rosa.colors.inkSoft,
+            )
+            if (launch != null) {
+                GlassButton(onClick = {
+                    haptics?.confirm()
+                    context.startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                }) {
+                    Text(stringResource(R.string.widgets_calendar_open), style = Rosa.type.label, color = Rosa.colors.ink)
                 }
             }
         }

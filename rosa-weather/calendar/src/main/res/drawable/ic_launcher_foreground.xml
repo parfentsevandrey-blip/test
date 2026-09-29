@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Rosa's calendar: a page of liquid glass hanging on two rings, its month strip warm with the
+    dusk behind it, the days as small beads — and today a dewdrop, the drop of Rosa Weather.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+
+    <!-- The glow the glass gathers around itself. -->
+    <path android:pathData="M54,57m-33,0a33,33 0,1 1,66 0a33,33 0,1 1,-66 0">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="54" android:centerY="57" android:gradientRadius="33">
+                <item android:offset="0" android:color="#40FFDDEB" />
+                <item android:offset="0.6" android:color="#12FFDDEB" />
+                <item android:offset="1" android:color="#00FFDDEB" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Its shadow. -->
+    <group android:pivotX="54" android:pivotY="80" android:scaleY="0.18">
+        <path android:pathData="M54,80m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="radial" android:centerX="54" android:centerY="80" android:gradientRadius="22">
+                    <item android:offset="0" android:color="#66140B30" />
+                    <item android:offset="1" android:color="#00140B30" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
+
+    <!-- The page: frosted glass, the dusk seen through it. -->
+    <path android:pathData="M40,36h28a8,8 0,0 1,8 8v26a8,8 0,0 1,-8 8h-28a8,8 0,0 1,-8 -8v-26a8,8 0,0 1,8 -8z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="54" android:startY="36" android:endX="54" android:endY="78">
+                <item android:offset="0" android:color="#E6FFF4F6" />
+                <item android:offset="0.5" android:color="#D6EFE2F4" />
+                <item android:offset="1" android:color="#CCD6C8EE" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- The month's strip along its top. -->
+    <path android:pathData="M40,36h28a8,8 0,0 1,8 8v2h-44v-2a8,8 0,0 1,8 -8z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="32" android:startY="36" android:endX="76" android:endY="46">
+                <item android:offset="0" android:color="#F2F48FA8" />
+                <item android:offset="1" android:color="#F2F7B48C" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Its lit rim. -->
+    <path android:strokeWidth="1.4"
+        android:pathData="M40,36h28a8,8 0,0 1,8 8v26a8,8 0,0 1,-8 8h-28a8,8 0,0 1,-8 -8v-26a8,8 0,0 1,8 -8z">
+        <aapt:attr name="android:strokeColor">
+            <gradient android:type="linear" android:startX="32" android:startY="36" android:endX="76" android:endY="78">
+                <item android:offset="0" android:color="#FFFFFFFF" />
+                <item android:offset="0.5" android:color="#59FFFFFF" />
+                <item android:offset="1" android:color="#B3FFFFFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- The two rings it hangs on. -->
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="3" android:strokeLineCap="round"
+        android:pathData="M45,31v9M63,31v9" />
+    <path android:strokeColor="#664A3F8C" android:strokeWidth="1" android:strokeLineCap="round"
+        android:pathData="M46.2,33v6M64.2,33v6" />
+
+    <!-- The days. -->
+    <path android:fillColor="#99594E96"
+        android:pathData="M41,53m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M49.7,53m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M58.3,53m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M67,53m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M41,61.5m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M49.7,61.5m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M67,61.5m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M41,70m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0M49.7,70m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0" />
+
+    <!-- Today: Rosa's dewdrop. -->
+    <path android:pathData="M58.3,56.2C58.3,56.2 54.2,61 54.2,63.7a4.1,4.1 0,0 0,8.2 0C62.4,61 58.3,56.2 58.3,56.2z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="58.3" android:startY="56.2" android:endX="58.3" android:endY="67.8">
+                <item android:offset="0" android:color="#FFFFE6D9" />
+                <item android:offset="0.35" android:color="#FFF4BCC8" />
+                <item android:offset="0.7" android:color="#FF907ECB" />
+                <item android:offset="1" android:color="#FF403A8C" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:fillColor="#E6FFFFFF" android:pathData="M56.8,62.4m-0.9,0a0.9,0.9 0,1 1,1.8 0a0.9,0.9 0,1 1,-1.8 0" />
+
+    <!-- A glint where the light meets the glass. -->
+    <path android:strokeColor="#CCFFFFFF" android:strokeWidth="1.2" android:strokeLineCap="round"
+        android:pathData="M35.5,50.5a6.5,6.5 0,0 1,3.5 -4.4" />
+</vector>

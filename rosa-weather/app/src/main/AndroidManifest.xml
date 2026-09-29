@@ -10,6 +10,11 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- Rosa Calendar borrows the weather from here: it has to be seen to be told it changed. -->
+    <queries>
+        <package android:name="app.rosa.calendar" />
+    </queries>
+
     <application
         android:name=".RosaApplication"
         android:allowBackup="true"
@@ -33,6 +38,76 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- The weather widgets (the engine is in :widget; the calendar is Rosa Calendar's). -->
+        <receiver
+            android:name="app.rosa.weather.widget.provider.GlassWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_glass_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_glass" />
+        </receiver>
+
+        <receiver
+            android:name="app.rosa.weather.widget.provider.SkyWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_sky_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_sky" />
+        </receiver>
+
+        <receiver
+            android:name="app.rosa.weather.widget.provider.AlmanacWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_almanac_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_almanac" />
+        </receiver>
+
+        <receiver
+            android:name="app.rosa.weather.widget.provider.SystemEventReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name="app.rosa.weather.widget.studio.WidgetStudioActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Rosa.Studio">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            Lends the weather to Rosa Calendar. Exported, but it answers only an app signed with
+            the same key (WeatherShareProvider.requireSameSigner), and only through call().
+        -->
+        <provider
+            android:name=".share.WeatherShareProvider"
+            android:authorities="app.rosa.weather.share"
+            android:exported="true"
+            tools:ignore="ExportedContentProvider" />
 
         <!-- WorkManager is initialised on demand with the Hilt worker factory. -->
         <provider
