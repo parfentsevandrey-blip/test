@@ -91,6 +91,8 @@ internal class TunnelController(
     private val versionCode: Long,
     private val debuggable: Boolean,
     private val now: () -> Long = System::currentTimeMillis,
+    /** The screen is on (see TorSession: a new session after a long sleep waits for it). */
+    private val interactive: () -> Boolean = { true },
 ) {
     /** Reasons for Tor to run. Tor stops when the set becomes empty. */
     enum class Hold {
@@ -156,6 +158,8 @@ internal class TunnelController(
 
     private val ops = Mutex()
     private var tun: ParcelFileDescriptor? = null
+    /** The network last handed to the VPN as underlying (see the network collector below). */
+    private var underlying: Network? = null
     private var tunSpec: VpnSpec? = null
     private var session: TorSession? = null
     private var socksPort: Int? = null
@@ -165,7 +169,12 @@ internal class TunnelController(
         scope.launch {
             network.status.collect { status ->
                 details.update { it.copy(network = status.kind) }
-                if (tun != null) host?.setUnderlyingNetwork(status.network)
+                // Only when the network itself changes, not on each change of its status (such as
+                // Android validating it).
+                if (tun != null && status.network != underlying) {
+                    underlying = status.network
+                    host?.setUnderlyingNetwork(status.network)
+                }
                 dispatch(
                     if (status.isConnected) ConnectionEvent.NetworkAvailable
                     else ConnectionEvent.NetworkLost
@@ -345,6 +354,7 @@ internal class TunnelController(
         val old = tun
         tun = fd
         tunSpec = spec
+        underlying = spec.underlying
         host?.alwaysOn()?.let { flags -> details.update { it.copy(alwaysOn = flags) } }
         // The new interface replaced the old one atomically; move hev over, then drop the old fd.
         socksPort?.let { startHev(it) }
@@ -391,6 +401,7 @@ internal class TunnelController(
                     versionCode = versionCode,
                     now = now,
                     parentScope = scope,
+                    interactive = interactive,
                 )
                 .also { it.start() }
     }

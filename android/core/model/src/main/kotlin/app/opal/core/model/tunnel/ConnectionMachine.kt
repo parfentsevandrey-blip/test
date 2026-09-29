@@ -126,9 +126,15 @@ object ConnectionMachine {
                 else current
 
             ConnectionEvent.NetworkAvailable ->
-                if (s == TunnelState.WaitingForNetwork)
-                    current.copy(state = recovering(current, ReconnectReason.NetworkChanged))
-                else current
+                when {
+                    s != TunnelState.WaitingForNetwork -> current
+                    // Tor kept its circuits through the gap (Snowflake and dnstt sessions outlive
+                    // a short one): connected again, as before the gap.
+                    current.torReady && current.sessionConnected ->
+                        current.copy(state = TunnelState.Connected)
+                    else ->
+                        current.copy(state = recovering(current, ReconnectReason.NetworkChanged))
+                }
 
             ConnectionEvent.Stalled ->
                 if (s == TunnelState.Connected)

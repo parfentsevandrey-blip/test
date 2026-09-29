@@ -43,9 +43,9 @@
     <string name="home_status_restricted">The network does not reach the internet</string>
     <string name="home_restricted_cellular">Looks like mobile internet allow-lists or a shutdown</string>
     <string name="home_restricted_other">Android cannot reach the internet over this network</string>
-    <string name="home_restricted_cellular_body">While the mobile network lets through only approved sites, Tor bridges are out of reach. What helps:\n• Wi‑Fi;\n• a dnstt bridge (a tunnel over DNS) in Own bridges — slow, but it may work despite the restrictions.\nOpal saves battery: it tries again every few minutes and right away when the network works.</string>
-    <string name="home_restricted_dnstt_body">The DNS tunnel does not get through either: mobile internet is off entirely, or the network blocks the resolver in the bridge line. What helps:\n• Wi‑Fi;\n• other dnstt lines with a different resolver (Tor Project support provides them).\nOpal saves battery: it tries again every few minutes and right away when the network works.</string>
-    <string name="home_restricted_other_body">If this is Wi‑Fi with a sign-in page, sign in to the network. Opal saves battery: it tries again every few minutes and right away when the network works.</string>
+    <string name="home_restricted_cellular_body">While the mobile network lets through only approved sites, Tor bridges are out of reach. What helps:\n• Wi‑Fi;\n• a dnstt bridge (a tunnel over DNS) in Own bridges — slow, but it may work despite the restrictions.\nOpal keeps trying and connects by itself as soon as the network lets it through.</string>
+    <string name="home_restricted_dnstt_body">The DNS tunnel does not get through either: mobile internet is off entirely, or the network blocks the resolver in the bridge line. What helps:\n• Wi‑Fi;\n• other dnstt lines with a different resolver (Tor Project support provides them).\nOpal keeps trying and connects by itself as soon as the network lets it through.</string>
+    <string name="home_restricted_other_body">If this is Wi‑Fi with a sign-in page, sign in to the network. Opal keeps trying and connects by itself as soon as the network lets it through.</string>
     <string name="home_blocked_body">This happens on networks with allow-lists. What to try:\n• another network — Wi-Fi instead of mobile data or vice versa;\n• your own bridges — get them from @GetBridgesBot on Telegram or bridges.torproject.org.</string>
     <string name="home_blocked_custom_bridges">Own bridges</string>
 

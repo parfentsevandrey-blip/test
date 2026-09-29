@@ -60,12 +60,20 @@ class ConnectionMachineTest {
     }
 
     @Test
-    fun `network loss and recovery after being connected is a reconnect`() {
-        val lost = run(Connect, TorReady, NetworkLost)
+    fun `a network loss that cost Tor its circuits is a reconnect`() {
+        val lost = run(Connect, TorReady, NetworkLost, TorNotReady(ReconnectReason.NetworkChanged))
         assertEquals(TunnelState.WaitingForNetwork, lost.state)
         val back = ConnectionMachine.reduce(lost, NetworkAvailable)
         assertEquals(TunnelState.Reconnecting(ReconnectReason.NetworkChanged), back.state)
         assertEquals(TunnelState.Connected, ConnectionMachine.reduce(back, TorReady).state)
+    }
+
+    /** Snowflake and dnstt sessions outlive a short gap: Tor never stopped being ready. */
+    @Test
+    fun `a network gap Tor kept its circuits through ends connected`() {
+        val lost = run(Connect, TorReady, NetworkLost)
+        assertEquals(TunnelState.WaitingForNetwork, lost.state)
+        assertEquals(TunnelState.Connected, ConnectionMachine.reduce(lost, NetworkAvailable).state)
     }
 
     @Test

@@ -81,3 +81,19 @@ private val SESSION_TRANSPORTS = setOf(TransportKind.Snowflake, TransportKind.Dn
 /** Tor would use only Snowflake and/or dnstt. */
 internal fun List<BridgeLine>.isSessionOnly(): Boolean =
     isNotEmpty() && all { it.transport in SESSION_TRANSPORTS }
+
+/** The Snowflake server drops a client's session after 4 minutes without it (smux keepalive). */
+internal const val SNOWFLAKE_SESSION_EXPIRY_MS = 4 * 60_000L
+
+/** dnstt client and server close a session after 2 minutes without traffic (`idleTimeout`). */
+internal const val DNSTT_SESSION_EXPIRY_MS = 2 * 60_000L
+
+/**
+ * How long without the phone the servers keep the session of these (session) transports: a gap this
+ * long ends it for all of them.
+ */
+internal fun List<BridgeLine>.sessionExpiryMillis(): Long =
+    maxOfOrNull {
+        if (it.transport == TransportKind.Dnstt) DNSTT_SESSION_EXPIRY_MS
+        else SNOWFLAKE_SESSION_EXPIRY_MS
+    } ?: SNOWFLAKE_SESSION_EXPIRY_MS

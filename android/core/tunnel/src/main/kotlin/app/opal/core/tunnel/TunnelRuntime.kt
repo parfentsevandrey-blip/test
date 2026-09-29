@@ -3,6 +3,7 @@ package app.opal.core.tunnel
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.os.Build
+import android.os.PowerManager
 import android.telephony.TelephonyManager
 import app.opal.core.data.OpalStores
 import app.opal.core.data.SettingsRepository
@@ -66,6 +67,9 @@ internal class TunnelRuntime private constructor(context: Context) {
             countryHint = { countryHint(app) },
             versionCode = versionCode(app),
             debuggable = debuggable,
+            interactive = {
+                app.getSystemService(PowerManager::class.java)?.isInteractive ?: true
+            },
         )
 
     companion object {

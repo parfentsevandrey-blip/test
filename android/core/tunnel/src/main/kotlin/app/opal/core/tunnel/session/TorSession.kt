@@ -1,6 +1,7 @@
 package app.opal.core.tunnel.session
 
 import android.net.Network
+import android.os.SystemClock
 import app.opal.core.data.SettingsRepository
 import app.opal.core.data.TunnelMemoryRepository
 import app.opal.core.model.bridge.BridgeLine
@@ -78,6 +79,12 @@ internal class TorSession(
     private val versionCode: Long,
     private val now: () -> Long,
     parentScope: CoroutineScope,
+    /** Time the device has spent suspended since boot: stops only while the CPU is asleep. */
+    private val deepSleepMillis: () -> Long = {
+        SystemClock.elapsedRealtime() - SystemClock.uptimeMillis()
+    },
+    /** The screen is on: someone is about to use the network. */
+    private val interactive: () -> Boolean = { true },
 ) {
     interface Listener {
         fun onSocksPort(port: Int)
@@ -157,6 +164,16 @@ internal class TorSession(
      * another one has turned the network off (or on) meanwhile.
      */
     private var networkWanted = false
+
+    /** When the network went away (0: it did not); session transports may outlive a short gap. */
+    private var lostAt = 0L
+
+    private val sleepWatch = SleepWatch()
+
+    /** When Tor last became ready, and when traffic was last heavy (see loadGeoIpWhenQuiet). */
+    private var readyAt = 0L
+    private var lastBusyAt = 0L
+    private var geoIpJob: Job? = null
 
     private val policy: ModePolicy
         get() = ModePolicy.of(settings.connectionMode, configured)
@@ -289,8 +306,8 @@ internal class TorSession(
         runCatching { engine.stop() }
         tracker.reset()
         unreachableBridges.clear()
-        // A new Tor starts with its network on (if there is one): a pause from before is over.
-        restricted.reset()
+        // A new Tor starts over: so do the hint and its clock.
+        if (restricted.reset()) listener.onProblem(null)
         resetProgress()
         settings = settingsRepo.current()
         startTor()
@@ -306,17 +323,7 @@ internal class TorSession(
                 log.i(TAG, "Circuits not established: ${event.reason}")
                 onNotReady(ReconnectReason.CircuitLost)
             }
-            is TorEvent.Bandwidth -> {
-                totalRead += event.read
-                totalWritten += event.written
-                listener.onTraffic(
-                    TrafficSample(event.read, event.written, totalRead, totalWritten, ++trafficSeq)
-                )
-                watchdog.onEvent(event)
-                // Bytes arriving during bootstrap (e.g. a long consensus download) count as
-                // progress.
-                if (!ready && event.read >= PROGRESS_BYTES_PER_SECOND) lastProgressAt = now()
-            }
+            is TorEvent.Bandwidth -> onBandwidth(event)
             is TorEvent.OrConn -> {
                 tracker.onOrConn(event)
                 if (!ready && event.status == OrConnStatus.CONNECTED) lastProgressAt = now()
@@ -352,6 +359,20 @@ internal class TorSession(
             is TorEvent.Guard -> onGuard(event)
             else -> Unit
         }
+    }
+
+    private fun onBandwidth(event: TorEvent.Bandwidth) {
+        totalRead += event.read
+        totalWritten += event.written
+        listener.onTraffic(
+            TrafficSample(event.read, event.written, totalRead, totalWritten, ++trafficSeq)
+        )
+        watchdog.onEvent(event)
+        // Bytes arriving during bootstrap (e.g. a long consensus download) count as progress.
+        if (!ready && event.read >= PROGRESS_BYTES_PER_SECOND) lastProgressAt = now()
+        if (event.read + event.written >= BUSY_BYTES_PER_SECOND) lastBusyAt = now()
+        // The bridge answers: the session survived the sleep after all.
+        if (event.read > 0) sleepWatch.clear()
     }
 
     /**
@@ -407,6 +428,7 @@ internal class TorSession(
     private suspend fun onReady() {
         if (ready) return
         ready = true
+        readyAt = now()
         failedRounds = 0
         healthySince = now()
         watchdog.arm()
@@ -419,6 +441,7 @@ internal class TorSession(
     private fun onNotReady(reason: ReconnectReason) {
         if (!ready) return
         ready = false
+        sleepWatch.clear()
         resetProgress()
         listener.onNotReady(reason)
     }
@@ -493,8 +516,12 @@ internal class TorSession(
      */
     private suspend fun raceTick() {
         if (ready || stopping || engine.state.value !is EngineState.Running) return
-        if (waitingForNetwork()) return
+        if (!network.status.value.isConnected) {
+            resetProgress()
+            return
+        }
         val t = now()
+        restrictedTick(t)
         val quiet = t - lastProgressAt
         if (!policy.race) {
             waitTick(quiet)
@@ -516,25 +543,14 @@ internal class TorSession(
         roundFailed()
     }
 
-    /** True without a network or with one that does not reach the internet: nothing to race. */
-    private suspend fun waitingForNetwork(): Boolean {
-        if (!network.status.value.isConnected) {
-            resetProgress()
-            return true
-        }
-        return restrictedTick(now())
-    }
-
     /**
-     * The network does not reach the internet (see [RestrictedNetwork]). Returns true while that
-     * lasts: races, Settings API requests and failure verdicts wait — they would only blame bridges
-     * for the network.
+     * Tells the user when the network does not reach the internet (see [RestrictedNetwork]). Only a
+     * hint: races, retries and the transports go on exactly as without it.
      */
-    private suspend fun restrictedTick(t: Long): Boolean {
+    private fun restrictedTick(t: Long) {
         val status = network.status.value
         when (restricted.tick(t, status.validated, lastProgressAt)) {
-            RestrictedNetwork.Action.None -> Unit
-            RestrictedNetwork.Action.ShowHint -> {
+            RestrictedNetwork.Change.Show -> {
                 log.i(
                     TAG,
                     "No progress for ${(t - lastProgressAt) / 1000}s and Android does not " +
@@ -542,28 +558,12 @@ internal class TorSession(
                 )
                 listener.onProblem(TunnelProblem.NetworkRestricted)
             }
-            RestrictedNetwork.Action.Pause -> {
-                log.i(TAG, "Network still restricted: Tor paused until the next try")
-                setDisableNetwork(true)
+            RestrictedNetwork.Change.Hide -> {
+                log.i(TAG, "Progress again or the network validated: hint cleared")
+                listener.onProblem(null)
             }
-            RestrictedNetwork.Action.Resume -> {
-                log.i(TAG, "Network restricted: trying again")
-                setDisableNetwork(false)
-            }
-            RestrictedNetwork.Action.Recovered -> onUnrestricted(wasPaused = false)
-            RestrictedNetwork.Action.RecoveredFromPause -> onUnrestricted(wasPaused = true)
+            null -> Unit
         }
-        return restricted.active
-    }
-
-    private suspend fun onUnrestricted(wasPaused: Boolean) {
-        log.i(TAG, "Android validates the network again: new attempt")
-        listener.onProblem(null)
-        resetProgress()
-        // Restart at once: whatever the transport is waiting on began while nothing got through
-        // (a paused Tor starts fresh anyway).
-        if (wasPaused) setDisableNetwork(false) else toggleNetwork()
-        resetProgress()
     }
 
     /**
@@ -573,7 +573,7 @@ internal class TorSession(
      * bridges of this transport are fetched once.
      */
     private suspend fun waitTick(quiet: Long) {
-        if (quiet >= SLOW_HINT_MS && !slowHintShown) {
+        if (quiet >= SLOW_HINT_MS && !slowHintShown && !restricted.shown) {
             slowHintShown = true
             listener.onProblem(
                 if (settings.connectionMode == ConnectionMode.Snowflake)
@@ -738,10 +738,39 @@ internal class TorSession(
     // --- watchdog -----------------------------------------------------------------------------
 
     private suspend fun watchdogLoop() {
+        var asleep = deepSleepMillis()
         while (true) {
             delay(WATCHDOG_TICK_MS)
-            if (watchdog.onTick(WATCHDOG_TICK_MS) && ready && !stopping) watchdogTick()
+            val total = deepSleepMillis()
+            noteSleep(total - asleep)
+            asleep = total
+            // Silence without a network says nothing about the session (see onNetwork).
+            if (!network.status.value.isConnected) continue
+            val awake = watchdog.onTick(WATCHDOG_TICK_MS)
+            if (!ready || stopping) continue
+            if (sleepWatch.renewNow(interactive)) renewAfterSleep() else if (awake) watchdogTick()
         }
+    }
+
+    /** See [SleepWatch]: the phone slept [sleptMillis] since the last tick. */
+    private fun noteSleep(sleptMillis: Long) {
+        val watching = ready && configured.isSessionOnly()
+        if (sleepWatch.onTick(sleptMillis, configured.sessionExpiryMillis(), watching)) {
+            log.i(
+                TAG,
+                "Asleep for ${sleptMillis / 1000}s: the ${describe(configured)} session expired",
+            )
+        }
+    }
+
+    /** The screen came on after such a sleep: a new session now, before apps ask for data. */
+    private suspend fun renewAfterSleep() {
+        log.i(TAG, "Screen on after a long sleep: new ${describe(configured)} session")
+        onNotReady(ReconnectReason.Stalled)
+        toggleNetwork()
+        resetProgress()
+        watchdog.arm()
+        nextEscalationAt = now() + SESSION_RENEW_INTERVAL_MS
     }
 
     private suspend fun watchdogTick() {
@@ -839,31 +868,77 @@ internal class TorSession(
     private suspend fun onNetwork(status: NetworkMonitor.Status) {
         val previous = lastNetwork
         lastNetwork = status.network
-        if (engine.state.value !is EngineState.Running) return
-        if (status.network != previous) {
-            // A network that appears, goes or changes starts the story over — the clock too, and
-            // before anything below waits for Tor: the race tick runs meanwhile and would judge
-            // the new network by the old one's silence (seen in the emulator: "restricted" a
-            // second after a switch to Wi-Fi, then a pause in the middle of the toggle). The
-            // branches below set Tor's network themselves.
-            resetProgress()
-            if (restricted.active) {
-                restricted.reset()
-                listener.onProblem(null)
+        if (engine.state.value !is EngineState.Running || status.network == previous) return
+        // A network that appears, goes or changes starts the clock over — before anything below
+        // waits for Tor: the race tick runs meanwhile and would judge the new network by the old
+        // one's silence (seen in the emulator: "restricted" a second after a switch to Wi-Fi).
+        resetProgress()
+        if (restricted.reset()) listener.onProblem(null)
+        if (configured.isSessionOnly()) onSessionNetwork(status, previous)
+        else onTcpNetwork(status, previous)
+    }
+
+    /**
+     * Snowflake and dnstt carry Tor inside a session of their own that outlives a change of
+     * network: the transport finds a new path by itself (Snowflake a new proxy, dnstt its resolver
+     * over the new network) and Tor's circuits stay. Closing Tor's connections here — 1.0.5 did it
+     * on every switch and every gap — threw that session away, and on mobile networks connections
+     * got worse. Only a gap longer than the servers keep a silent session calls for a new one; the
+     * watchdog still renews a session that died anyway.
+     */
+    private suspend fun onSessionNetwork(status: NetworkMonitor.Status, previous: Network?) {
+        val network = status.network
+        if (network == null) {
+            log.i(TAG, "Network lost: the ${describe(configured)} session waits for it")
+            lostAt = now()
+            return
+        }
+        val gap = if (lostAt != 0L) now() - lostAt else 0L
+        lostAt = 0L
+        when {
+            // Tor was started without a network (DisableNetwork 1).
+            !networkWanted -> {
+                log.i(TAG, "Network available (${status.kind})")
+                setDisableNetwork(false)
+            }
+            ready && gap >= configured.sessionExpiryMillis() -> {
+                log.i(
+                    TAG,
+                    "Network back (${status.kind}) after ${gap / 1000}s: " +
+                        "new ${describe(configured)} session",
+                )
+                onNotReady(ReconnectReason.NetworkChanged)
+                toggleNetwork()
+                resetProgress()
+            }
+            else -> {
+                val what =
+                    when {
+                        gap > 0 -> "back after ${gap / 1000}s"
+                        previous == null -> "available"
+                        else -> "changed"
+                    }
+                log.i(TAG, "Network $what (${status.kind}): the session carries on")
+                // A fresh minute for the transport to find its new path before any verdict.
+                watchdog.arm()
             }
         }
+    }
+
+    /** obfs4, WebTunnel, meek: their TCP connections to the bridge die with the old network. */
+    private suspend fun onTcpNetwork(status: NetworkMonitor.Status, previous: Network?) {
         when {
             status.network == null -> {
                 log.i(TAG, "Network lost")
-                setDisableNetwork(true)
                 onNotReady(ReconnectReason.NetworkChanged)
+                setDisableNetwork(true)
             }
             previous == null -> {
                 log.i(TAG, "Network available (${status.kind})")
                 setDisableNetwork(false)
                 resetProgress()
             }
-            previous != status.network -> {
+            else -> {
                 log.i(TAG, "Network changed (${status.kind}, $previous → ${status.network})")
                 // Soft reconnect: close stale connections on the old network, keep Tor running.
                 onNotReady(ReconnectReason.NetworkChanged)
@@ -907,10 +982,7 @@ internal class TorSession(
                 onNotReady(ReconnectReason.TransportSwitch)
                 // New bridges (a dnstt line added on a restricted network, say) get a fresh start;
                 // the toggle below leaves Tor's network on.
-                if (restricted.active) {
-                    restricted.reset()
-                    listener.onProblem(null)
-                }
+                if (restricted.reset()) listener.onProblem(null)
                 resetProgress()
                 toggleNetwork()
                 resetProgress()
@@ -925,13 +997,11 @@ internal class TorSession(
      */
     private suspend fun applyRuntimeOptions() {
         try {
-            if (!geoIpLoaded && files.ensureGeoIp(versionCode)) {
-                engine.reconfigure(
-                    torrc { geoIp(files.geoIp.absolutePath, files.geoIp6.absolutePath) },
-                    listOf(TorOption.GeoIpFile, TorOption.GeoIpv6File),
-                )
-                geoIpLoaded = true
-            }
+            // Tor parses GeoIP in its main loop and serves nothing meanwhile (seconds on a phone,
+            // minutes in the emulator) — right after connecting, that is when apps load their
+            // first pages. Only an exit country needs it at once; the countries on the circuit
+            // panel wait for a quiet moment.
+            if (settings.exitCountry != null) loadGeoIp() else loadGeoIpWhenQuiet()
             val country = settings.exitCountry?.takeIf { geoIpLoaded }
             if (country != appliedExitCountry) {
                 engine.reconfigure(
@@ -954,6 +1024,38 @@ internal class TorSession(
             throw e
         } catch (e: Exception) {
             log.w(TAG, "Cannot apply runtime options: ${e.message}")
+        }
+    }
+
+    private suspend fun loadGeoIp() {
+        if (geoIpLoaded || !files.ensureGeoIp(versionCode)) return
+        engine.reconfigure(
+            torrc { geoIp(files.geoIp.absolutePath, files.geoIp6.absolutePath) },
+            listOf(TorOption.GeoIpFile, TorOption.GeoIpv6File),
+        )
+        geoIpLoaded = true
+    }
+
+    /**
+     * GeoIP once traffic has been light for a few seconds after connecting (at the latest a few
+     * minutes in), then the circuit panel gets its countries.
+     */
+    private fun loadGeoIpWhenQuiet() {
+        if (geoIpLoaded || geoIpJob?.isActive == true) return
+        geoIpJob = scope.launch {
+            while (true) {
+                delay(1_000)
+                if (!ready) continue
+                val t = now()
+                val settled = t - readyAt >= GEOIP_AFTER_READY_MS && t - lastBusyAt >= QUIET_MS
+                if (settled || t - readyAt >= GEOIP_AT_LATEST_MS) break
+            }
+            runCatching { loadGeoIp() }
+                .onFailure {
+                    if (it is CancellationException) throw it
+                    log.w(TAG, "Cannot load GeoIP: ${it.message}")
+                }
+            if (geoIpLoaded) scheduleCircuitRefresh(delayMs = 0)
         }
     }
 
@@ -1033,6 +1135,13 @@ internal class TorSession(
         /** First bootstrap through Snowflake often takes 1–2 minutes: hint only after that. */
         const val SLOW_HINT_MS = 120_000L
         const val SESSION_RENEW_INTERVAL_MS = 3 * 60_000L
+        /** GeoIP: not before this long after connecting, and only after this long of quiet… */
+        const val GEOIP_AFTER_READY_MS = 15_000L
+        const val QUIET_MS = 5_000L
+        /** …but at the latest this long after connecting. */
+        const val GEOIP_AT_LATEST_MS = 3 * 60_000L
+        /** Traffic above this (read + written per second) is not "quiet". */
+        const val BUSY_BYTES_PER_SECOND = 32 * 1024L
         const val WATCHDOG_TICK_MS = 2_000L
         const val CIRCUIT_RETRY_MS = 10_000L
         const val GIVE_UP_AFTER_QUIET_MS = 60_000L

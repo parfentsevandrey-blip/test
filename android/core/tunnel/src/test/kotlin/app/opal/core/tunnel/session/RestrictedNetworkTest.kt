@@ -1,79 +1,53 @@
 package app.opal.core.tunnel.session
 
-import app.opal.core.tunnel.session.RestrictedNetwork.Action
+import app.opal.core.tunnel.session.RestrictedNetwork.Change
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RestrictedNetworkTest {
-    private val guard = RestrictedNetwork()
-    private var time = 1_000_000L
+    private val hint = RestrictedNetwork()
+    private var time = START
     private var progressAt = time
 
-    /** Ticks once a second for [seconds]; returns the actions that were not [Action.None]. */
-    private fun run(seconds: Int, validated: Boolean = false): List<Pair<Long, Action>> =
+    /** Ticks once a second for [seconds]; returns the changes with their second. */
+    private fun run(seconds: Int, validated: Boolean = false): List<Pair<Long, Change>> =
         (1..seconds).mapNotNull {
             time += 1_000
-            guard
-                .tick(time, validated, progressAt)
-                .takeIf { it != Action.None }
-                ?.let {
-                    (time - START) / 1_000 to it
-                }
+            hint.tick(time, validated, progressAt)?.let { (time - START) / 1_000 to it }
         }
 
     @Test
-    fun `a validated network is never restricted`() {
-        assertEquals(emptyList<Pair<Long, Action>>(), run(30 * 60, validated = true))
-        assertFalse(guard.active)
+    fun `a validated network never gets the hint`() {
+        assertEquals(emptyList<Pair<Long, Change>>(), run(30 * 60, validated = true))
+        assertFalse(hint.shown)
+    }
+
+    /** Only a hint: nothing else happens however long it lasts (1.0.5 paused Tor here). */
+    @Test
+    fun `no progress without internet shows the hint once`() {
+        assertEquals(listOf(60L to Change.Show), run(30 * 60))
+        assertTrue(hint.shown)
     }
 
     @Test
-    fun `no progress without internet - hint, pause, then sparse tries`() {
-        val actions = run(15 * 60)
-        assertEquals(
-            listOf(
-                45L to Action.ShowHint,
-                180L to Action.Pause,
-                480L to Action.Resume,
-                570L to Action.Pause,
-                870L to Action.Resume,
-            ),
-            actions,
-        )
-        assertTrue(guard.active)
-    }
-
-    @Test
-    fun `progress during a try keeps Tor running`() {
-        run(8 * 60) // paused at 180 s, trying again at 480 s
-        progressAt = time + 10_000
-        val actions = run(120)
-        // No pause at the end of the try: Tor gets somewhere, whatever Android says.
-        assertEquals(emptyList<Pair<Long, Action>>(), actions)
-        assertFalse(guard.paused)
-    }
-
-    @Test
-    fun `the network working again ends it at once`() {
-        run(60)
-        assertEquals(listOf(61L to Action.Recovered), run(1, validated = true))
-        assertFalse(guard.active)
+    fun `progress or a validated network takes it down`() {
+        run(61)
         progressAt = time
-        run(5 * 60)
-        assertTrue(guard.paused)
-        assertEquals(listOf(362L to Action.RecoveredFromPause), run(1, validated = true))
+        assertEquals(listOf(62L to Change.Hide), run(1))
+        assertEquals(listOf(121L to Change.Show), run(60))
+        assertEquals(listOf(123L to Change.Hide), run(1, validated = true))
     }
 
     @Test
-    fun `reset reports whether Tor was paused`() {
-        run(60)
-        assertFalse(guard.reset())
-        progressAt = time
-        run(4 * 60)
-        assertTrue(guard.reset())
-        assertFalse(guard.active)
+    fun `reset reports whether the hint was shown`() {
+        assertFalse(hint.reset())
+        run(61)
+        assertTrue(hint.reset())
+        assertFalse(hint.shown)
+        // The clock is the caller's: with no progress since, the next tick shows it again.
+        assertEquals(listOf(62L to Change.Show), run(1))
     }
 
     private companion object {
