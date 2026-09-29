@@ -134,6 +134,57 @@ class ScreenGalleryTest {
         return capture(name, doc)
     }
 
+    /**
+     * A city's first moments on screen, frame by frame: the cards rise one after another, the
+     * hourly line draws itself with each hour's dot popping in, the days' ranges grow down the
+     * card. Six frames side by side to `build/screens/home-entrance.png`.
+     */
+    @Test
+    fun homeEntrance() {
+        val now = 1_758_621_600L
+        val forecast = SampleForecast.create(SampleForecast.Scenario.SunnyMild, nowEpochSeconds = now, placeId = "geo:1")
+        val state = HomeUiState(
+            loaded = true,
+            pages = listOf(PlacePage(Place("geo:1", "Москва", 55.75, 37.62), forecast)),
+            selectedId = "geo:1",
+            units = Units(),
+            settings = AppSettings(effects = EffectsQuality.Balanced),
+        )
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            val sky = remember { SkyController(forecast.momentAt(now)) }
+            CompositionLocalProvider(LocalSky provides sky) {
+                RosaEnvironment(state.settings, sky.palette) {
+                    SkyBackdrop(sky.params, state.settings.effects, stage = sky.stage, transitionMillis = 0) {
+                        TabBarScaffold(RosaTab.Weather, {}) {
+                            HomeScreen(state, {}, {}, {}, {}, {}, fixedNow = now)
+                        }
+                    }
+                }
+            }
+        }
+        val times = listOf(120L, 260L, 420L, 640L, 900L, 1_500L)
+        var elapsed = 0L
+        val frames = times.map { t ->
+            compose.mainClock.advanceTimeBy(t - elapsed)
+            elapsed = t
+            compose.waitForIdle()
+            compose.onRoot().captureToImage().asAndroidBitmap()
+        }
+        val w = frames[0].width / 3
+        val h = frames[0].height / 3
+        val strip = Bitmap.createBitmap(w * frames.size + 8 * (frames.size - 1), h, Bitmap.Config.ARGB_8888)
+        android.graphics.Canvas(strip).apply {
+            drawColor(android.graphics.Color.rgb(20, 20, 24))
+            frames.forEachIndexed { i, frame ->
+                drawBitmap(Bitmap.createScaledBitmap(frame, w, h, true), (i * (w + 8)).toFloat(), 0f, null)
+            }
+        }
+        val out = File("build/screens").apply { mkdirs() }
+        File(out, "home-entrance.png").outputStream().use { strip.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        exportDocImage(strip, "home-entrance", 1600)
+    }
+
     /** First launch: the sheet, and its buttons set into it (never glass on glass). */
     @Test
     fun onboarding() {

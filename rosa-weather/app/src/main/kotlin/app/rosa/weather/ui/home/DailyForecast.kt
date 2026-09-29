@@ -12,9 +12,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -58,6 +59,7 @@ import app.rosa.weather.core.model.Forecast
 import app.rosa.weather.core.model.TemperatureScale
 import app.rosa.weather.core.model.WeatherCondition
 import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
 
 /**
  * Ten days as temperature capsules on a shared scale, so warm and cold spells read at a glance.
@@ -78,6 +80,7 @@ fun DailyForecast(forecast: Forecast, now: Long, currentTemperature: Double, for
             days.forEachIndexed { i, day ->
                 DayRow(
                     day = day,
+                    index = i,
                     isToday = i == 0,
                     label = format.dayLabel(day.time, now),
                     lo = lo,
@@ -99,6 +102,7 @@ fun DailyForecast(forecast: Forecast, now: Long, currentTemperature: Double, for
 @Composable
 private fun DayRow(
     day: DailyPoint,
+    index: Int,
     isToday: Boolean,
     label: String,
     lo: Double,
@@ -135,7 +139,7 @@ private fun DayRow(
                 }
             }
             Text(format.temperature(day.temperatureMin), style = Rosa.type.body, color = colors.inkSoft, modifier = Modifier.width(38.dp), textAlign = TextAlign.End)
-            RangeCapsule(lo, hi, day.temperatureMin, day.temperatureMax, current, Modifier.weight(1f).padding(horizontal = 10.dp))
+            RangeCapsule(lo, hi, day.temperatureMin, day.temperatureMax, current, index, Modifier.weight(1f).padding(horizontal = 10.dp))
             Text(format.temperature(day.temperatureMax), style = Rosa.type.headline.copy(fontSize = Rosa.type.body.fontSize), color = colors.ink, modifier = Modifier.width(38.dp))
         }
         AnimatedVisibility(
@@ -149,12 +153,20 @@ private fun DayRow(
 }
 
 @Composable
-private fun RangeCapsule(lo: Double, hi: Double, min: Double, max: Double, current: Double?, modifier: Modifier) {
+private fun RangeCapsule(lo: Double, hi: Double, min: Double, max: Double, current: Double?, index: Int, modifier: Modifier) {
     val track = Rosa.colors.ink.copy(alpha = 0.14f)
     val cold = TemperatureScale.colorFor(min).toColor()
     val warm = TemperatureScale.colorFor(max).toColor()
-    val grow = remember { Animatable(0f) }
-    LaunchedEffect(Unit) { grow.animateTo(1f, RosaMotion.gel()) }
+    // The days' ranges grow from their middles one after another, down the card, the first time
+    // it is shown; scrolled back to, they are simply there.
+    var grown by rememberSaveable { mutableStateOf(false) }
+    val grow = remember { Animatable(if (grown) 1f else 0f) }
+    LaunchedEffect(Unit) {
+        if (grown) return@LaunchedEffect
+        delay(120L + index * 55L)
+        grow.animateTo(1f, RosaMotion.gel())
+        grown = true
+    }
     Canvas(modifier.height(8.dp)) {
         val span = (hi - lo).coerceAtLeast(1.0)
         fun x(t: Double) = ((t - lo) / span).toFloat().coerceIn(0f, 1f) * size.width
@@ -170,8 +182,8 @@ private fun RangeCapsule(lo: Double, hi: Double, min: Double, max: Double, curre
             size = Size(half * 2, size.height),
             cornerRadius = r,
         )
-        if (current != null) {
-            val cx = x(current)
+        if (current != null && grow.value > 0.3f) {
+            val cx = mid + (x(current) - mid) * grow.value.coerceAtMost(1.1f)
             drawCircle(Color.Black.copy(alpha = 0.25f), size.height * 0.95f, Offset(cx, size.height / 2))
             drawCircle(Color.White, size.height * 0.7f, Offset(cx, size.height / 2))
         }

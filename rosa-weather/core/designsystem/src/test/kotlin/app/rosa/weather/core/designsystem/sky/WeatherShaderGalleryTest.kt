@@ -1,6 +1,7 @@
 package app.rosa.weather.core.designsystem.sky
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.LinearGradient
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
@@ -26,9 +27,11 @@ import app.rosa.weather.core.model.SampleForecast
 import app.rosa.weather.core.model.SkyPalette
 import app.rosa.weather.core.model.momentAt
 import java.io.File
+import org.junit.FixMethodOrder
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runners.MethodSorters
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
@@ -38,6 +41,7 @@ import org.robolectric.annotation.GraphicsMode
  * layers them — for moments the app can't be caught in on demand (a lightning strike), to
  * `build/weather/`.
  */
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [36], qualifiers = "w810dp-h1755dp-mdpi")
@@ -155,4 +159,26 @@ class WeatherShaderGalleryTest {
     @Test fun night() = scenes[8].let { save("weather-${it.name}", render(it)) }
 
     @Test fun moonlit() = scenes[9].let { save("weather-${it.name}", render(it)) }
+
+    /**
+     * The README's strip of the sky's new light — golden hour, a rainbow after a shower, the Milky
+     * Way with a meteor, a storm's channel, a downpour — from this run's renders (the tests run in
+     * name order, this one last). Written only with `-Prosa.docs`.
+     */
+    @Test
+    fun zCinematicSheet() {
+        val dir = System.getProperty("rosa.docs") ?: return
+        val names = listOf("golden", "rainbow", "night", "storm", "downpour")
+        val shots = names.mapNotNull { n -> File("build/weather/weather-$n.png").takeIf { it.exists() }?.let { BitmapFactory.decodeFile(it.path) } }
+        if (shots.size != names.size) return
+        val tileW = 324
+        val tileH = 702
+        val gap = 10
+        val sheet = createBitmap(tileW * shots.size + gap * (shots.size - 1), tileH)
+        val canvas = android.graphics.Canvas(sheet)
+        canvas.drawColor(android.graphics.Color.rgb(20, 26, 58))
+        shots.forEachIndexed { i, shot -> canvas.drawBitmap(shot.scale(tileW, tileH), (i * (tileW + gap)).toFloat(), 0f, null) }
+        File(dir).mkdirs()
+        File(dir, "weather-cinematic.jpg").outputStream().use { sheet.compress(Bitmap.CompressFormat.JPEG, 86, it) }
+    }
 }

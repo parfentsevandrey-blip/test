@@ -1,6 +1,8 @@
 package app.rosa.weather.ui.home
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +20,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -53,6 +58,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlinx.coroutines.delay
 
 /**
  * "Right now, in detail": a grid of frosted tiles, each with its own small living instrument —
@@ -85,6 +91,33 @@ fun DetailRow(tiles: List<@Composable (Modifier) -> Unit>, modifier: Modifier = 
     }
 }
 
+/**
+ * The whole number [value] begins with, counted up from zero the first time its tile is shown
+ * ("68%" runs 0 → 68) while the tile's gauge sweeps to it; scrolled back to, or with motion off,
+ * simply the value. Decimals are shown as they are.
+ */
+@Composable
+private fun countingUp(value: String): String {
+    val motion = LocalMotionEnabled.current
+    val match = remember(value) { LeadingNumber.find(value) }
+    var counted by rememberSaveable { mutableStateOf(!motion || match == null) }
+    val progress = remember { Animatable(if (counted) 1f else 0f) }
+    LaunchedEffect(Unit) {
+        if (counted) return@LaunchedEffect
+        delay(200)
+        progress.animateTo(1f, tween(950, easing = FastOutSlowInEasing))
+        counted = true
+    }
+    if (match == null || progress.value >= 1f) return value
+    val target = match.groupValues[2].toIntOrNull() ?: return value
+    val n = (target * progress.value).roundToInt()
+    val sign = if (n == 0) "" else match.groupValues[1]
+    return sign + n + value.substring(match.range.last + 1)
+}
+
+/** A whole number at the start of a reading, with its sign: not the start of a decimal. */
+private val LeadingNumber = Regex("^([\u2212-]?)(\\d+)(?![.,]\\d)")
+
 @Composable
 private fun Tile(title: String, value: String, modifier: Modifier, subtitle: String? = null, visual: @Composable BoxScope.() -> Unit) {
     val colors = Rosa.colors
@@ -96,7 +129,7 @@ private fun Tile(title: String, value: String, modifier: Modifier, subtitle: Str
         Column(Modifier.fillMaxSize().padding(16.dp)) {
             Text(title, style = Rosa.type.label, color = colors.inkSoft, maxLines = 1)
             Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center, content = visual)
-            Text(numeralText(value), style = Rosa.type.numeral, color = colors.ink, maxLines = 1)
+            Text(numeralText(countingUp(value)), style = Rosa.type.numeral, color = colors.ink, maxLines = 1)
             if (subtitle != null) Text(subtitle, style = Rosa.type.caption, color = colors.inkSoft, maxLines = 2)
         }
     }

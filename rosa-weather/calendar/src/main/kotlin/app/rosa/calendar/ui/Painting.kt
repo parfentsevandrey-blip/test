@@ -159,6 +159,17 @@ fun PaintingBackdrop(
                 sky = PaintingPalette.of(art, night).zenith.toColor(),
                 flash = 0f,
                 frost = (art.season.frost * 0.7f).coerceIn(0f, 1f),
+                // The week's weather settles on the glass too: beads in its rain, a cap of its snow.
+                rain = when (art.motion) {
+                    LiveWeather.RainLight, LiveWeather.Drips -> 0.4f
+                    LiveWeather.RainHeavy, LiveWeather.Storm -> 0.8f
+                    else -> 0f
+                },
+                snow = when (art.motion) {
+                    LiveWeather.SnowLight -> 0.45f
+                    LiveWeather.SnowHeavy, LiveWeather.Blizzard -> 0.85f
+                    else -> 0f
+                },
             )
         }
         val placeholder = remember(art.week, night) { art.sky.map { (if (night) it.lerp(Argb.hex(0x0A1024), 0.6f) else it).toColor() } }

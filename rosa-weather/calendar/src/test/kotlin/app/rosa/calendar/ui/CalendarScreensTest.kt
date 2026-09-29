@@ -32,17 +32,23 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.util.Locale
 import org.junit.Before
+import org.junit.FixMethodOrder
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runners.MethodSorters
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-/** Renders the calendar's screens over their paintings to `build/screens/` for visual review. */
+/**
+ * Renders the calendar's screens over their paintings to `build/screens/` for visual review.
+ * In name order, so the README's strip ([zSheet]) is made from this run's renders.
+ */
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [36], qualifiers = "ru-w411dp-h891dp-xxhdpi", application = android.app.Application::class)
+@Config(sdk = [36], qualifiers = "ru-rRU-w411dp-h891dp-xxhdpi", application = android.app.Application::class)
 class CalendarScreensTest {
     @get:Rule val compose = createComposeRule()
 
@@ -96,6 +102,20 @@ class CalendarScreensTest {
     }
 
     /** Waits [seconds] of real time too: pictures drawn off the main thread (the widget's) land meanwhile. */
+    /** The README's strip of the calendar app; written only with `-Prosa.docs`. */
+    private fun exportSheet(name: String, shots: List<Bitmap>) {
+        val dir = System.getProperty("rosa.docs") ?: return
+        val w = 411
+        val h = shots[0].height * w / shots[0].width
+        val sheet = Bitmap.createBitmap(w * shots.size + 10 * (shots.size - 1), h, Bitmap.Config.ARGB_8888)
+        android.graphics.Canvas(sheet).apply {
+            drawColor(0xFF141A3A.toInt())
+            shots.forEachIndexed { i, shot -> drawBitmap(Bitmap.createScaledBitmap(shot, w, h, true), (i * (w + 10)).toFloat(), 0f, null) }
+        }
+        File(dir).mkdirs()
+        File(dir, "$name.jpg").outputStream().use { sheet.compress(Bitmap.CompressFormat.JPEG, 86, it) }
+    }
+
     private fun capture(name: String, seconds: Int = 1): Bitmap {
         repeat(6 + seconds * 4) {
             compose.mainClock.advanceTimeBy(250)
@@ -154,6 +174,16 @@ class CalendarScreensTest {
 
     @Test
     fun springMonth() = month("calendar-month-spring", YearMonth.of(2027, 5), LocalDate.of(2027, 5, 9))
+
+    /** The README's strip: the rendered screens side by side (run after the others). */
+    @Test
+    fun zSheet() {
+        if (System.getProperty("rosa.docs") == null) return
+        val out = File("build/screens")
+        val names = listOf("calendar-month", "calendar-month-night", "calendar-month-winter", "calendar-month-spring", "calendar-events")
+        val shots = names.mapNotNull { n -> File(out, "$n.png").takeIf { it.exists() }?.let { android.graphics.BitmapFactory.decodeFile(it.path) } }
+        if (shots.size == names.size) exportSheet("calendar-app", shots)
+    }
 
     @Test
     fun eventsList() {

@@ -2,7 +2,7 @@
 <!--
     The month over a painting of its season. Resizable from a date tile to a wall calendar. It
     redraws at midnight (CalendarAlarm), when your events or the weather change, and every hour
-    (updatePeriodMillis), when it also asks Rosa Weather for fresher weather if its has grown old.
+    (updatePeriodMillis), when it also asks Rosa Weather for fresher weather if it has grown old.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:configure="app.rosa.calendar.widget.studio.CalendarStudioActivity"

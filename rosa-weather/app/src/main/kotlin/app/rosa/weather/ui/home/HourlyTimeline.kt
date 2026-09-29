@@ -1,9 +1,9 @@
 package app.rosa.weather.ui.home
 
-import kotlin.math.abs
-import androidx.compose.ui.graphics.drawscope.scale
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -30,9 +30,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +46,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -57,13 +63,16 @@ import app.rosa.weather.core.designsystem.component.WeatherGlyph
 import app.rosa.weather.core.designsystem.format.WeatherFormat
 import app.rosa.weather.core.designsystem.glass.GlassStyle
 import app.rosa.weather.core.designsystem.haptics.LocalHaptics
+import app.rosa.weather.core.designsystem.motion.LocalMotionEnabled
 import app.rosa.weather.core.designsystem.theme.Rosa
 import app.rosa.weather.core.designsystem.theme.toColor
 import app.rosa.weather.core.model.Forecast
 import app.rosa.weather.core.model.HourlyPoint
 import app.rosa.weather.core.model.TemperatureScale
 import app.rosa.weather.core.model.WeatherCondition
+import kotlin.math.abs
 import kotlin.math.floor
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -110,6 +119,18 @@ fun HourlyTimeline(
     val minT = (temps.max() + temps.min()) / 2 - span / 2
     val maxT = minT + span
     val milestones = remember(forecast, hours) { milestoneHours(forecast, hours, format) }
+    // The first time the card is shown the temperature line draws itself from now onward, each
+    // hour's dot and reading popping in as the line reaches it. Scrolled back to, it is just there.
+    val motion = LocalMotionEnabled.current
+    var drawn by rememberSaveable { mutableStateOf(!motion) }
+    val reveal = remember { Animatable(if (drawn) 1f else 0f) }
+    LaunchedEffect(Unit) {
+        if (drawn) return@LaunchedEffect
+        delay(160)
+        reveal.animateTo(1f, tween(1150, easing = FastOutSlowInEasing))
+        drawn = true
+    }
+    val revealCells = { if (reveal.value >= 1f) Float.MAX_VALUE else reveal.value * REVEAL_CELLS }
 
     // Report the scrub position continuously; tick on every whole hour crossed.
     LaunchedEffect(state) {
@@ -158,6 +179,8 @@ fun HourlyTimeline(
                 ) {
                     itemsIndexed(hours, key = { _, h -> h.time }) { i, hour ->
                         HourCell(
+                            index = i,
+                            revealed = revealCells,
                             hour = hour,
                             label = if (i == 0) format.now() else format.hour(hour.time),
                             prev = temps.getOrNull(i - 1),
@@ -180,6 +203,8 @@ fun HourlyTimeline(
 
 @Composable
 private fun HourCell(
+    index: Int,
+    revealed: () -> Float,
     hour: HourlyPoint,
     label: String,
     prev: Double?,
@@ -235,6 +260,10 @@ private fun HourCell(
             val labelStyle = Rosa.type.label.copy(color = colors.ink)
             val tempText = format.temperature(temp)
             Canvas(Modifier.fillMaxWidth().fillMaxHeight()) {
+                // How much of this hour the line has reached as it draws itself (1 once drawn).
+                val shown = (revealed() - index).coerceIn(0f, 1f)
+                if (shown <= 0f) return@Canvas
+                val pop = ((shown - 0.35f) / 0.4f).coerceIn(0f, 1f)
                 val top = 22.dp.toPx()
                 val bottom = size.height - 18.dp.toPx()
                 fun y(t: Double) = (bottom - ((t - minT) / span).toFloat() * (bottom - top))
@@ -256,37 +285,42 @@ private fun HourCell(
                     path.moveTo(0f, ly)
                     path.quadraticTo(size.width * 0.25f, (ly + cy) / 2, size.width / 2, cy)
                 }
-                drawPath(
-                    path,
-                    Brush.horizontalGradient(listOf(lerpColor(prevColor, lineColor), lineColor, lerpColor(nextColor, lineColor))),
-                    style = Stroke(2.4.dp.toPx(), cap = StrokeCap.Round),
-                )
-                // Soft glow under the ribbon.
-                val fill = Path().apply {
-                    addPath(path)
-                    lineTo(size.width, size.height)
-                    lineTo(0f, size.height)
-                    close()
+                clipRect(right = size.width * shown) {
+                    drawPath(
+                        path,
+                        Brush.horizontalGradient(listOf(lerpColor(prevColor, lineColor), lineColor, lerpColor(nextColor, lineColor))),
+                        style = Stroke(2.4.dp.toPx(), cap = StrokeCap.Round),
+                    )
+                    // Soft glow under the ribbon.
+                    val fill = Path().apply {
+                        addPath(path)
+                        lineTo(size.width, size.height)
+                        lineTo(0f, size.height)
+                        close()
+                    }
+                    if (prev != null && next != null) {
+                        drawPath(fill, Brush.verticalGradient(listOf(lineColor.copy(alpha = 0.22f), Color.Transparent), startY = top, endY = size.height))
+                    }
                 }
-                if (prev != null && next != null) {
-                    drawPath(fill, Brush.verticalGradient(listOf(lineColor.copy(alpha = 0.22f), Color.Transparent), startY = top, endY = size.height))
-                }
+                if (pop <= 0f) return@Canvas
                 val f = focus()
                 val dot = Offset(size.width / 2, cy)
-                if (f > 0.01f) drawCircle(lineColor.copy(alpha = 0.28f * f), (6.dp + 5.dp * f).toPx(), dot)
-                drawCircle(ink, (3.4.dp + 1.4.dp * f).toPx(), dot)
-                drawCircle(lineColor, (2.2.dp + 1.dp * f).toPx(), dot)
+                // The dot springs into place as the line reaches it.
+                val swell = 1f + 0.5f * (1f - pop) * pop * 4f
+                if (f > 0.01f) drawCircle(lineColor.copy(alpha = 0.28f * f * pop), (6.dp + 5.dp * f).toPx(), dot)
+                drawCircle(ink.copy(alpha = ink.alpha * pop), (3.4.dp + 1.4.dp * f).toPx() * swell, dot)
+                drawCircle(lineColor.copy(alpha = pop), (2.2.dp + 1.dp * f).toPx() * swell, dot)
                 val layout = measurer.measure(tempText, labelStyle)
-                val textTop = cy - layout.size.height - (5.dp + 3.dp * f).toPx()
+                val textTop = cy - layout.size.height - (5.dp + 3.dp * f).toPx() + (1f - pop) * 6.dp.toPx()
                 scale(1f + 0.14f * f, pivot = Offset(size.width / 2, textTop + layout.size.height)) {
-                    drawText(layout, topLeft = Offset((size.width - layout.size.width) / 2, textTop))
+                    drawText(layout, topLeft = Offset((size.width - layout.size.width) / 2, textTop), alpha = pop)
                 }
 
-                // Precipitation chance as a small bar along the bottom.
+                // Precipitation chance as a small bar along the bottom, rising as the line passes.
                 val p = chance / 100f
                 if (p >= 0.1f) {
                     val bw = 14.dp.toPx()
-                    val bh = 10.dp.toPx() * p + 2.dp.toPx()
+                    val bh = (10.dp.toPx() * p + 2.dp.toPx()) * pop
                     drawRoundRect(
                         colors.rain.copy(alpha = 0.35f + p * 0.6f),
                         topLeft = Offset(size.width / 2 - bw / 2, size.height - bh),
@@ -300,6 +334,9 @@ private fun HourCell(
 }
 
 private fun lerpColor(a: Color, b: Color) = androidx.compose.ui.graphics.lerp(a, b, 0.5f)
+
+/** How many hours the line crosses as it draws itself: about those on screen at once. */
+private const val REVEAL_CELLS = 7f
 
 /** Indices of hours that deserve a firmer haptic: sunrise, sunset, midnight. */
 private fun milestoneHours(forecast: Forecast, hours: List<HourlyPoint>, format: WeatherFormat): Set<Int> {
