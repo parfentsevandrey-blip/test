@@ -46,7 +46,13 @@ import kotlin.math.abs
  * shared glass lighting (tint adapts to the sky; highlights follow device tilt).
  */
 @Composable
-fun RosaEnvironment(settings: AppSettings, palette: SkyPalette, content: @Composable () -> Unit) {
+fun RosaEnvironment(
+    settings: AppSettings,
+    palette: SkyPalette,
+    /** The weather app's rich glass (see [LocalRichGlass]); the calendar keeps the plainer one. */
+    richGlass: Boolean = false,
+    content: @Composable () -> Unit,
+) {
     val colors = animatedRosaColors(palette)
     val haptics = rememberRosaHaptics(settings.haptics)
     val motion = rememberSystemMotionEnabled()
@@ -55,6 +61,7 @@ fun RosaEnvironment(settings: AppSettings, palette: SkyPalette, content: @Compos
     val environment = remember { GlassEnvironment() }
     environment.tint = colors.glassTint
     environment.clock = clock
+    environment.rich = richGlass
     environment.contrast = rememberSystemContrast()
     // Light ink over a fairly bright sky: densify the glass so type keeps its contrast.
     environment.tintBoost = if (palette.isLight) 0f else ((palette.brightness - 0.12) / 0.24).toFloat().coerceIn(0f, 1f)
@@ -73,6 +80,7 @@ fun RosaEnvironment(settings: AppSettings, palette: SkyPalette, content: @Compos
             LocalAmbientClock provides clock,
             LocalGlassEnvironment provides environment,
             LocalTilt provides tilt,
+            LocalRichGlass provides richGlass,
         ) {
             content()
         }

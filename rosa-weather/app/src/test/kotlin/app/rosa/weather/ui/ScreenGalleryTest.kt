@@ -101,6 +101,7 @@ class ScreenGalleryTest {
         appearance: Appearance = Appearance.Auto,
         forecastAgeSeconds: Long = 0,
         scrollPx: Float = 0f,
+        swipes: Int = 1,
     ): Bitmap {
         val forecast = SampleForecast.create(scenario, nowEpochSeconds = now - forecastAgeSeconds, placeId = "geo:1").shifted(shiftCelsius)
         val state = HomeUiState(
@@ -114,7 +115,7 @@ class ScreenGalleryTest {
         compose.setContent {
             val sky = remember { SkyController(forecast.momentAt(now)).apply { applyAppearance(appearance) } }
             CompositionLocalProvider(LocalSky provides sky) {
-                RosaEnvironment(state.settings, sky.palette) {
+                RosaEnvironment(state.settings, sky.palette, richGlass = true) {
                     SkyBackdrop(sky.params, state.settings.effects, stage = sky.stage, transitionMillis = 0) {
                         TabBarScaffold(RosaTab.Weather, {}) {
                             HomeScreen(state, {}, {}, {}, {}, {}, fixedNow = now)
@@ -126,9 +127,12 @@ class ScreenGalleryTest {
         if (scrollPx > 0f) {
             compose.mainClock.advanceTimeBy(1_500)
             // A slow drag, so the list stops where the finger does.
-            compose.onRoot().performTouchInput {
-                val from = Offset(centerX, centerY + 500f)
-                swipe(from, from - Offset(0f, scrollPx), durationMillis = 1_200)
+            repeat(swipes) {
+                compose.onRoot().performTouchInput {
+                    val from = Offset(centerX, centerY + 500f)
+                    swipe(from, from - Offset(0f, scrollPx), durationMillis = 1_200)
+                }
+                compose.mainClock.advanceTimeBy(600)
             }
         }
         return capture(name, doc)
@@ -154,7 +158,7 @@ class ScreenGalleryTest {
         compose.setContent {
             val sky = remember { SkyController(forecast.momentAt(now)) }
             CompositionLocalProvider(LocalSky provides sky) {
-                RosaEnvironment(state.settings, sky.palette) {
+                RosaEnvironment(state.settings, sky.palette, richGlass = true) {
                     SkyBackdrop(sky.params, state.settings.effects, stage = sky.stage, transitionMillis = 0) {
                         TabBarScaffold(RosaTab.Weather, {}) {
                             HomeScreen(state, {}, {}, {}, {}, {}, fixedNow = now)
@@ -199,7 +203,30 @@ class ScreenGalleryTest {
     @Config(qualifiers = "ru-w411dp-h891dp-xhdpi")
     fun homeAliveTouch() = aliveFrames("alive-touch", SampleForecast.Scenario.ClearNight, 1_758_664_800L, frames = 30, touchDp = Offset(382f, 372f))
 
-    private fun aliveFrames(name: String, scenario: SampleForecast.Scenario, now: Long, age: Long = 0, frames: Int, touchDp: Offset? = null) {
+    /** The screen arriving: cards rise into place and a wave of light washes down their glass. */
+    @Test
+    @Config(qualifiers = "ru-w411dp-h891dp-xhdpi")
+    fun homeArrive() = aliveFrames("arrive", SampleForecast.Scenario.SunnyMild, 1_758_621_600L, frames = 28, settle = 0, stepMs = 80)
+
+    /**
+     * A finger drawing the hourly ribbon along: the lens stretches along the hours' way and the
+     * hour under it comes alive; let go, the ribbon snaps to an hour and the lens springs back.
+     */
+    @Test
+    @Config(qualifiers = "ru-w411dp-h891dp-xhdpi")
+    fun homeScrub() = aliveFrames("scrub", SampleForecast.Scenario.RainyAfternoon, 1_758_637_800L, age = 2_400, frames = 22, stepMs = 50, scrub = true)
+
+    private fun aliveFrames(
+        name: String,
+        scenario: SampleForecast.Scenario,
+        now: Long,
+        age: Long = 0,
+        frames: Int,
+        touchDp: Offset? = null,
+        settle: Long = 2_000,
+        stepMs: Long = 100,
+        scrub: Boolean = false,
+    ) {
         val forecast = SampleForecast.create(scenario, nowEpochSeconds = now - age, placeId = "geo:1")
         val state = HomeUiState(
             loaded = true,
@@ -212,7 +239,7 @@ class ScreenGalleryTest {
         compose.setContent {
             val sky = remember { SkyController(forecast.momentAt(now)) }
             CompositionLocalProvider(LocalSky provides sky) {
-                RosaEnvironment(state.settings, sky.palette) {
+                RosaEnvironment(state.settings, sky.palette, richGlass = true) {
                     SkyBackdrop(sky.params, state.settings.effects, stage = sky.stage, transitionMillis = 0) {
                         TabBarScaffold(RosaTab.Weather, {}) {
                             HomeScreen(state, {}, {}, {}, {}, {}, fixedNow = now)
@@ -221,14 +248,23 @@ class ScreenGalleryTest {
                 }
             }
         }
-        // The cards have risen into place.
-        compose.mainClock.advanceTimeBy(2_000)
+        // The cards have risen into place (unless their arrival is what is filmed).
+        if (settle > 0) compose.mainClock.advanceTimeBy(settle)
         val density = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>().resources.displayMetrics.density
         val dir = File("build/screens/$name").apply { deleteRecursively(); mkdirs() }
+        // The hourly ribbon, under the finger: drawn along for the first frames, then let go.
+        val ribbon = Offset(300f, 450f) * density
         repeat(frames) { i ->
             if (touchDp != null && i == 3) compose.onRoot().performTouchInput { down(touchDp * density) }
             if (touchDp != null && i == 16) compose.onRoot().performTouchInput { up() }
-            compose.mainClock.advanceTimeBy(100)
+            if (scrub) {
+                when (i) {
+                    1 -> compose.onRoot().performTouchInput { down(ribbon) }
+                    in 2..9 -> compose.onRoot().performTouchInput { moveBy(Offset(-26f * density, 0f)) }
+                    10 -> compose.onRoot().performTouchInput { up() }
+                }
+            }
+            compose.mainClock.advanceTimeBy(stepMs)
             compose.waitForIdle()
             val frame = compose.onRoot().captureToImage().asAndroidBitmap()
             File(dir, "%03d.png".format(i)).outputStream().use { frame.compress(Bitmap.CompressFormat.PNG, 100, it) }
@@ -245,7 +281,7 @@ class ScreenGalleryTest {
         compose.setContent {
             val sky = remember { SkyController(forecast.momentAt(now)) }
             CompositionLocalProvider(LocalSky provides sky) {
-                RosaEnvironment(state.settings, sky.palette) {
+                RosaEnvironment(state.settings, sky.palette, richGlass = true) {
                     SkyBackdrop(sky.params, state.settings.effects, stage = sky.stage, transitionMillis = 0) {
                         TabBarScaffold(RosaTab.Weather, {}) {
                             HomeScreen(state, {}, {}, {}, {}, {}, fixedNow = now)
@@ -271,7 +307,7 @@ class ScreenGalleryTest {
         compose.setContent {
             val sky = remember { SkyController(forecast.momentAt(now)) }
             CompositionLocalProvider(LocalSky provides sky) {
-                RosaEnvironment(settings, sky.palette) {
+                RosaEnvironment(settings, sky.palette, richGlass = true) {
                     SkyBackdrop(sky.params, settings.effects, stage = sky.stage, transitionMillis = 0) {
                         TabBarScaffold(RosaTab.Settings, {}) {
                             SettingsScreen(settings, {}, {}, {})
@@ -310,7 +346,7 @@ class ScreenGalleryTest {
         compose.setContent {
             val sky = remember { SkyController(forecast.momentAt(now)) }
             CompositionLocalProvider(LocalSky provides sky) {
-                RosaEnvironment(settings, sky.palette) {
+                RosaEnvironment(settings, sky.palette, richGlass = true) {
                     SkyBackdrop(sky.params, settings.effects, stage = sky.stage, transitionMillis = 0) {
                         TabBarScaffold(RosaTab.Places, {}) {
                             PlacesScreen(state, {}, {}, {}, {}, { _, _ -> }, now = now)
@@ -326,6 +362,12 @@ class ScreenGalleryTest {
     @Test
     fun homeScrolled() {
         home(SampleForecast.Scenario.SunnyMild, 1_758_621_600L, "home-scrolled", doc = false, scrollPx = 820f)
+    }
+
+    /** Further down: the details, each tile with its own instrument. */
+    @Test
+    fun homeDetails() {
+        home(SampleForecast.Scenario.SunnyMild, 1_758_621_600L, "home-details", doc = false, scrollPx = 1_500f, swipes = 2)
     }
 
     @Test
@@ -380,7 +422,7 @@ class ScreenGalleryTest {
         compose.mainClock.autoAdvance = false
         compose.setContent {
             val sky = remember { SkyController(SampleForecast.create(SampleForecast.Scenario.SunnyMild).momentAt(1_758_628_800L)) }
-            RosaEnvironment(AppSettings(), sky.palette) {
+            RosaEnvironment(AppSettings(), sky.palette, richGlass = true) {
                 SkyBackdrop(sky.params, EffectsQuality.Balanced, transitionMillis = 0) {
                     Column(Modifier.fillMaxWidth().padding(16.dp)) {
                         GlassSurface(Modifier.fillMaxWidth(), style = GlassStyle.Frosted, contentPadding = PaddingValues(18.dp)) {

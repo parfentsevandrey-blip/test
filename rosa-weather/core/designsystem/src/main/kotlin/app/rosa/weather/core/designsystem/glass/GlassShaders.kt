@@ -90,6 +90,11 @@ uniform float3 flow;
 uniform float stars;
 uniform float clouds;
 uniform float wind;
+// Where a band of light sweeping across the pane as it arrives is, 0..1 (0: none).
+uniform float sweep;
+// Rich glass (the weather app): brighter reflections of the world sliding across it, and more
+// colour in its rim, flowing along the edge as it scrolls.
+uniform float rich;
 
 // How much of its light the rim keeps along the sides, away from both lit corners.
 const float RIM_FLOOR = 0.4;
@@ -292,9 +297,10 @@ half4 main(float2 coord) {
     // The bevel splits the light it bends: a faint rainbow runs across the band, from the edge in.
     float u = clamp(t / 0.22, 0.0, 1.0);
     // It slides as the phone tilts, and while the glass lives it flows slowly on its own.
-    float slide = (parallax.x - parallax.y) / max(px, 1.0) * 0.06 + time * 0.02 * alive;
+    // Rich glass shows its colours more, and they flow along the rim as the pane scrolls.
+    float slide = (parallax.x - parallax.y) / max(px, 1.0) * 0.06 + time * 0.02 * alive + rich * (root.y + root.x * 0.5) / (px * 700.0);
     half3 prism = half3(0.5 + 0.5 * cos(6.2832 * (u * 0.8 + slide + float3(0.0, 0.33, 0.67))));
-    half3 edgeLight = mix(reflection, reflection * (0.7 + 0.6 * prism), half(0.4 * min(dispersion, 1.0)));
+    half3 edgeLight = mix(reflection, reflection * (0.7 + 0.6 * prism), half(0.4 * min(dispersion, 1.0) * (1.0 + 0.8 * rich)));
     col.rgb += edgeLight * half(fresnel * rimLight * lit * mix(0.7, 0.5, darkness));
     // Catch-light on the very edge: a fine line all the way round, brightest where the rim meets the light.
     float edge = 1.0 - smoothstep(0.1, max(1.4, 0.55 * px), -d);
@@ -323,7 +329,17 @@ half4 main(float2 coord) {
     float za = (phase - 0.32) / 0.07;
     float zc = (phase - 0.43) / 0.018;
     float mirror = exp(-za * za) + 0.55 * exp(-zc * zc);
-    col.rgb += reflection * half(mirror * 0.045 * (1.0 - 0.45 * darkness) * materialize * (0.4 + 0.6 * t));
+    col.rgb += reflection * half(mirror * (0.045 + 0.04 * rich) * (1.0 - 0.45 * darkness) * materialize * (0.4 + 0.6 * t));
+
+    // Arriving, the pane catches a band of light that sweeps across it once, slantwise, as if it
+    // turned in the light: brightest in the bevel, where the glass is steepest.
+    if (sweep > 0.0 && sweep < 1.0) {
+        float2 q = (p + hs) / max(size, float2(1.0));
+        float across = q.x + (0.5 - q.y) * 0.35 * size.y / max(size.x, 1.0);
+        float zs = (across - mix(-0.3, 1.3, sweep)) / 0.12;
+        float passing = exp(-zs * zs) * sin(3.14159 * sweep);
+        col.rgb += shine * half(passing * (0.13 + 0.75 * fresnel + 0.4 * held) * (1.0 - 0.3 * darkness));
+    }
 
     // Living glass: light at play in it.
     if (alive > 0.0) {

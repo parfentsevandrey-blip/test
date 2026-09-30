@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -58,10 +59,13 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -89,6 +93,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.rosa.weather.R
 import app.rosa.weather.core.designsystem.component.GlassButton
 import app.rosa.weather.core.designsystem.component.GlassSurface
+import app.rosa.weather.core.designsystem.component.LocalTilt
 import app.rosa.weather.core.designsystem.component.SkyScrollEdge
 import app.rosa.weather.core.designsystem.component.LiquidPageIndicator
 import app.rosa.weather.core.designsystem.component.RosaIcon
@@ -343,12 +348,14 @@ private fun PlaceContent(
                 }
             }
             item(key = "timeline") {
-                Entrance("timeline", 1, seen, fresh) { HourlyTimeline(forecast, now, forecast.momentAt(now).temperature, zoneFormat, onScrub) }
+                Recede(listState, "timeline") {
+                    Entrance("timeline", 1, seen, fresh) { HourlyTimeline(forecast, now, forecast.momentAt(now).temperature, zoneFormat, onScrub) }
+                }
             }
             if (forecast.nowcast.any { it.time > now && it.precipitation > 0.02 }) {
-                item(key = "nowcast") { Entrance("nowcast", 2, seen, fresh) { NowcastCard(forecast, now, zoneFormat) } }
+                item(key = "nowcast") { Recede(listState, "nowcast") { Entrance("nowcast", 2, seen, fresh) { NowcastCard(forecast, now, zoneFormat) } } }
             }
-            item(key = "daily") { Entrance("daily", 3, seen, fresh) { DailyForecast(forecast, now, forecast.momentAt(now).temperature, zoneFormat) } }
+            item(key = "daily") { Recede(listState, "daily") { Entrance("daily", 3, seen, fresh) { DailyForecast(forecast, now, forecast.momentAt(now).temperature, zoneFormat) } } }
             item(key = "details-title") {
                 Entrance("details-title", 4, seen, fresh) {
                     Text(
@@ -361,7 +368,7 @@ private fun PlaceContent(
             }
             // One row per item: rows compose as they come into view, not all ten tiles at once.
             detailRows(forecast, forecast.momentAt(now), zoneFormat).forEachIndexed { i, row ->
-                item(key = "details-$i") { Entrance("details-$i", 5 + i, seen, fresh) { DetailRow(row) } }
+                item(key = "details-$i") { Recede(listState, "details-$i") { Entrance("details-$i", 5 + i, seen, fresh) { DetailRow(row) } } }
             }
             item(key = "footer") { Entrance("footer", 9, seen, fresh) { Footer(forecast, now, zoneFormat, onRefresh) } }
         }
@@ -394,6 +401,7 @@ private fun Hero(
         }
     }
     val squash = remember { Animatable(0f) }
+    val tilt = LocalTilt.current
     Column(modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp)) {
         AnimatedVisibility(scrubHours > 0.5f, enter = fadeIn() + slideInVertically(), exit = fadeOut() + slideOutVertically()) {
             Text(
@@ -444,6 +452,11 @@ private fun Hero(
                         val v = squash.value
                         scaleX = 1f + 0.05f * v
                         scaleY = 1f - 0.04f * v
+                        // Depth: the numerals float above the sky and drift against it as the
+                        // phone tilts.
+                        val t = tilt?.value ?: Offset.Zero
+                        translationX = t.x * HERO_PARALLAX.toPx()
+                        translationY = t.y * HERO_PARALLAX.toPx() * 0.7f
                     }
                     .clickable(remember { MutableInteractionSource() }, indication = null, onClickLabel = feelsLabel) {
                         haptics?.tick()
@@ -460,7 +473,18 @@ private fun Hero(
             val bodyUp = (if (moment.sun.elevation > -5) moment.sun.elevation else moment.moon.elevation) > 3
             val clearish = moment.condition == WeatherCondition.Clear || moment.condition == WeatherCondition.MostlyClear
             if (!(realSky && clearish && bodyUp)) {
-                WeatherGlyph(moment.condition, moment.isDay, Modifier.size(HERO_GLYPH), moonPhase = moment.moonPhase.phase, animated = true)
+                // Nearer still: the glyph drifts further than the numerals.
+                WeatherGlyph(
+                    moment.condition,
+                    moment.isDay,
+                    Modifier.size(HERO_GLYPH).graphicsLayer {
+                        val t = tilt?.value ?: Offset.Zero
+                        translationX = t.x * GLYPH_PARALLAX.toPx()
+                        translationY = t.y * GLYPH_PARALLAX.toPx() * 0.7f
+                    },
+                    moonPhase = moment.moonPhase.phase,
+                    animated = true,
+                )
             }
         }
         Text(
@@ -575,6 +599,32 @@ private fun Entrance(key: String, order: Int, seen: MutableSet<String>, fresh: (
     ) { content() }
 }
 
+/**
+ * Depth while scrolling: a card sliding up under the top of the screen tips back and shrinks a
+ * little, as if it rolled away into the sky, while the sky's edge fades it out.
+ */
+@Composable
+private fun Recede(state: LazyListState, key: Any, content: @Composable () -> Unit) {
+    if (!LocalMotionEnabled.current) {
+        content()
+        return
+    }
+    Box(
+        Modifier.graphicsLayer {
+            val info = state.layoutInfo.visibleItemsInfo.firstOrNull { it.key == key } ?: return@graphicsLayer
+            // Items sit at offset 0 and more below the top edge; above it they pass under the bar.
+            val gone = (-info.offset / (info.size * 0.9f).coerceAtLeast(1f)).coerceIn(0f, 1f)
+            if (gone <= 0f) return@graphicsLayer
+            transformOrigin = TransformOrigin(0.5f, 1f)
+            rotationX = RECEDE_TILT * gone
+            val s = 1f - 0.06f * gone
+            scaleX = s
+            scaleY = s
+            cameraDistance = 14f * density
+        },
+    ) { content() }
+}
+
 @Composable
 private fun StatusPill(text: String) {
     GlassSurface(style = GlassStyle.Clear, cornerRadius = 18.dp, contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)) {
@@ -598,13 +648,23 @@ private fun NowcastCard(forecast: Forecast, now: Long, format: WeatherFormat) {
             val maxMm = slots.maxOf { it.precipitation }.coerceAtLeast(0.4)
             Canvas(Modifier.fillMaxWidth().height(64.dp)) {
                 val w = size.width / slots.size
+                val corner = CornerRadius(10f)
                 slots.forEachIndexed { i, slot ->
-                    val x = i * w
-                    drawRoundRect(colors.ink.copy(alpha = 0.08f), Offset(x + 3f, 0f), androidx.compose.ui.geometry.Size(w - 6f, size.height), CornerRadius(10f))
+                    val x = i * w + 3f
+                    val bw = w - 6f
+                    // Each slot a well cut into the glass, the rain in it a glossy column.
+                    drawRoundRect(colors.ink.copy(alpha = 0.08f), Offset(x, 0f), androidx.compose.ui.geometry.Size(bw, size.height), corner)
+                    drawRoundRect(Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.1f), 0.2f to Color.Transparent), Offset(x, 0f), androidx.compose.ui.geometry.Size(bw, size.height), corner)
                     val v = (slot.precipitation / maxMm).toFloat().coerceIn(0f, 1f) * grow.value
                     if (v > 0.01f) {
                         val h = size.height * v
-                        drawRoundRect(colors.rain.copy(alpha = 0.5f + v * 0.5f), Offset(x + 3f, size.height - h), androidx.compose.ui.geometry.Size(w - 6f, h), CornerRadius(10f))
+                        val top = Offset(x, size.height - h)
+                        val column = androidx.compose.ui.geometry.Size(bw, h)
+                        drawRoundRect(
+                            Brush.verticalGradient(listOf(lerp(colors.rain, Color.White, 0.14f).copy(alpha = 0.6f + v * 0.4f), colors.rain.copy(alpha = 0.5f + v * 0.5f)), startY = top.y, endY = size.height),
+                            top, column, corner,
+                        )
+                        drawRoundRect(Brush.horizontalGradient(0f to Color.White.copy(alpha = 0.3f), 0.3f to Color.Transparent, 0.85f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.08f), startX = x, endX = x + bw), top, column, corner)
                     }
                 }
             }
@@ -634,6 +694,13 @@ private fun Footer(forecast: Forecast, now: Long, format: WeatherFormat, onRefre
 }
 
 private val HERO_GLYPH = 92.dp
+
+/** How far back, in degrees, a card has tipped by the time it is gone under the top edge. */
+private const val RECEDE_TILT = 14f
+
+/** How far the hero numerals and its glyph drift against the sky at full tilt: depth in layers. */
+private val HERO_PARALLAX = 6.dp
+private val GLYPH_PARALLAX = 11.dp
 
 /** How long after a page first appears its cards still rise in. */
 private const val ENTRANCE_WINDOW_MS = 900L

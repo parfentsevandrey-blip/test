@@ -70,7 +70,7 @@ fun RosaAppRoot() {
     }
 
     CompositionLocalProvider(LocalSky provides sky) {
-        RosaEnvironment(settings, sky.palette) {
+        RosaEnvironment(settings, sky.palette, richGlass = true) {
             SkyBackdrop(sky.params, settings.effects, stage = sky.stage, transitionMillis = sky.transitionMillis) {
                 TabBarScaffold(selected = RosaTab.of(backStack.lastOrNull()), onSelect = ::open) {
                     NavDisplay(

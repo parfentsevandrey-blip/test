@@ -170,25 +170,44 @@ private fun RangeCapsule(lo: Double, hi: Double, min: Double, max: Double, curre
     Canvas(modifier.height(8.dp)) {
         val span = (hi - lo).coerceAtLeast(1.0)
         fun x(t: Double) = ((t - lo) / span).toFloat().coerceIn(0f, 1f) * size.width
-        val r = CornerRadius(size.height / 2)
+        val h = size.height
+        val r = CornerRadius(h / 2)
+        // The track is cut into the glass: shaded along its top, lit along its bottom.
         drawRoundRect(track, cornerRadius = r)
+        drawRoundRect(Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.14f), 0.5f to Color.Transparent, 0.85f to Color.Transparent, 1f to Color.White.copy(alpha = 0.1f)), cornerRadius = r)
         val x0 = x(min)
-        val x1 = maxOf(x(max), x0 + size.height)
+        val x1 = maxOf(x(max), x0 + h)
         val mid = (x0 + x1) / 2
         val half = (x1 - x0) / 2 * grow.value
-        drawRoundRect(
-            Brush.horizontalGradient(listOf(cold, warm), startX = x0, endX = x1),
-            topLeft = Offset(mid - half, 0f),
-            size = Size(half * 2, size.height),
-            cornerRadius = r,
-        )
+        if (half > 0.5f) {
+            val at = Offset(mid - half, 0f)
+            val bar = Size(half * 2, h)
+            val colours = Brush.horizontalGradient(listOf(cold, warm), startX = x0, endX = x1)
+            // A glossy rod of the days' colours lying in it: a soft glow of its own colour, the
+            // colour, then a highlight along its top and a shade underneath, round like glass.
+            for ((reach, alpha) in Glow) {
+                drawRoundRect(colours, topLeft = at - Offset(h * reach, h * reach), size = Size(bar.width + h * reach * 2, h * (1f + reach * 2)), cornerRadius = CornerRadius(h * (0.5f + reach)), alpha = alpha)
+            }
+            drawRoundRect(colours, topLeft = at, size = bar, cornerRadius = r)
+            drawRoundRect(
+                Brush.verticalGradient(0f to Color.White.copy(alpha = 0.5f), 0.45f to Color.White.copy(alpha = 0.08f), 0.7f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.14f)),
+                topLeft = at,
+                size = bar,
+                cornerRadius = r,
+            )
+        }
         if (current != null && grow.value > 0.3f) {
-            val cx = mid + (x(current) - mid) * grow.value.coerceAtMost(1.1f)
-            drawCircle(Color.Black.copy(alpha = 0.25f), size.height * 0.95f, Offset(cx, size.height / 2))
-            drawCircle(Color.White, size.height * 0.7f, Offset(cx, size.height / 2))
+            // Now, as a glossy bead on the day's rod.
+            val c = Offset(mid + (x(current) - mid) * grow.value.coerceAtMost(1.1f), h / 2)
+            drawCircle(Color.Black.copy(alpha = 0.26f), h * 0.9f, c + Offset(0f, h * 0.1f))
+            drawCircle(Brush.radialGradient(listOf(Color.White, Color(0xFFE6ECF7)), c - Offset(h * 0.2f, h * 0.25f), h * 0.9f), h * 0.72f, c)
+            drawCircle(Color.White, h * 0.2f, c - Offset(h * 0.2f, h * 0.24f))
         }
     }
 }
+
+/** The rod's glow: soft layers, each reaching further out (a share of its height) and fainter. */
+private val Glow = listOf(0.55f to 0.05f, 0.32f to 0.07f, 0.14f to 0.1f)
 
 @Composable
 private fun DayDetails(day: DailyPoint, forecast: Forecast, format: WeatherFormat) {

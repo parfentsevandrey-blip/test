@@ -196,6 +196,12 @@ class GlassEnvironment {
     /** The clock the living glass keeps time by: the scene's own ambient clock. */
     var clock: AmbientClock? = null
 
+    /**
+     * Rich glass (the weather app): the world's reflections slide across it more brightly as it
+     * moves, and a band of light sweeps across each pane as it arrives.
+     */
+    var rich by mutableStateOf(false)
+
     /** Seconds on [clock] while the glass is alive (observed: the glass redraws on every tick), else 0. */
     internal fun livingTime(): Float = if (alive > 0f) clock?.seconds ?: 0f else 0f
 
@@ -293,6 +299,9 @@ class GlassState {
 
     /** 0..1: the light of the touch running round the rim from the finger, both ways. */
     var spread by mutableFloatStateOf(0f)
+
+    /** Where a band of light sweeping across the pane is, 0..1 (0: none). */
+    var sweep by mutableFloatStateOf(0f)
 }
 
 @Composable
@@ -436,6 +445,7 @@ private class LiquidGlassNode(
         val touch = s?.touch ?: Offset.Unspecified
         val pressLens = s?.lens ?: 0f
         val spread = s?.spread ?: 0f
+        val sweep = s?.sweep ?: 0f
         val touchOn = touch.isSpecified && ((s?.touchStrength ?: 0f) > 0f || abs(pressLens) > 0.002f || spread > 0f)
         // The living glass: its clock, and the liquid lagging behind the pane's motion.
         val alive = env?.alive ?: 0f
@@ -458,6 +468,8 @@ private class LiquidGlassNode(
             touchStrength = if (touchOn) s!!.touchStrength else 0f,
             lens = if (touchOn) pressLens else 0f,
             spread = if (touchOn) spread else 0f,
+            sweep = sweep,
+            rich = env?.rich == true,
             time = time,
             alive = alive,
             flow = lag,
@@ -510,6 +522,8 @@ private class LiquidGlassNode(
             shader.setFloatUniform("bounds", key.bounds.left, key.bounds.top, key.bounds.right, key.bounds.bottom)
             shader.setFloatUniform("touch", key.touch.x, key.touch.y, key.touchStrength)
             shader.setFloatUniform("gel", key.lens, key.spread)
+            shader.setFloatUniform("sweep", key.sweep)
+            shader.setFloatUniform("rich", if (key.rich) 1f else 0f)
             shader.setFloatUniform("time", key.time)
             shader.setFloatUniform("alive", key.alive)
             shader.setFloatUniform("flow", key.flow.x, key.flow.y, (key.flow.getDistance() / flowLimit).coerceIn(0f, 1f))
@@ -556,6 +570,8 @@ private data class LensKey(
     val touchStrength: Float,
     val lens: Float,
     val spread: Float,
+    val sweep: Float,
+    val rich: Boolean,
     val time: Float,
     val alive: Float,
     val flow: Offset,

@@ -94,6 +94,10 @@ data class SkyParams(
     val condensation: Float,
     /** A rainbow opposite the sun after a shower (0..1). */
     val rainbow: Float = 0f,
+    /** 0..1: clear sunshine: motes glinting in the air, the sun flaring in the lens. */
+    val sunlitAir: Float = 0f,
+    /** 0..1: a frosty clear day's diamond dust, ice crystals flashing in the air. */
+    val diamondDust: Float = 0f,
 ) {
     fun lerp(to: SkyParams, t: Float): SkyParams {
         fun f(a: Float, b: Float) = a + (b - a) * t
@@ -103,7 +107,7 @@ data class SkyParams(
             f(bodyPath, to.bodyPath), f(bodyLift, to.bodyLift), if (t < 0.5f) isSun else to.isSun, f(bodyVisible, to.bodyVisible), f(moonPhase, to.moonPhase),
             f(cloudCover, to.cloudCover), f(cloudDark, to.cloudDark), f(fog, to.fog), f(wind, to.wind), f(stars, to.stars),
             f(rain, to.rain), f(snow, to.snow), f(lightning, to.lightning), f(frost, to.frost), f(condensation, to.condensation),
-            f(rainbow, to.rainbow),
+            f(rainbow, to.rainbow), f(sunlitAir, to.sunlitAir), f(diamondDust, to.diamondDust),
         )
     }
 
@@ -142,7 +146,16 @@ data class SkyParams(
                 frost = moment.paneFrost,
                 condensation = moment.paneMist,
                 rainbow = if (realSky) rainbowFor(moment) else 0f,
+                sunlitAir = if (realSky && useSun) clearAir(visual) * ((moment.sun.elevation - 1.0) / 6.0).toFloat().coerceIn(0f, 1f) else 0f,
+                // Diamond dust needs a hard frost: it begins about −6°, and is thick by −14°.
+                diamondDust = clearAir(visual) * ((-6.0 - moment.temperature) / 8.0).toFloat().coerceIn(0f, 1f),
             )
+        }
+
+        /** How clear and dry the air is: no precipitation, little cloud or fog. */
+        private fun clearAir(visual: WeatherVisual): Float {
+            if (visual.rain + visual.snow > 0.02f) return 0f
+            return ((0.7f - visual.cloudCover) / 0.4f).coerceIn(0f, 1f) * (1f - visual.fog).coerceIn(0f, 1f)
         }
 
         /**
@@ -401,6 +414,8 @@ internal fun RuntimeShader.setSkyUniforms(p: SkyParams, body: Offset, w: Int, h:
     setFloatUniform("flashAt", bolt.flashAt.x, bolt.flashAt.y)
     setFloatUniform("lift", p.bodyLift)
     setFloatUniform("rainbow", p.rainbow * p.bodyVisible)
+    setFloatUniform("sunlitAir", p.sunlitAir * p.bodyVisible)
+    setFloatUniform("diamondDust", p.diamondDust)
     setFloatUniform("tilt", tilt.x, tilt.y)
 }
 

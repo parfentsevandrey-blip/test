@@ -126,7 +126,7 @@ private fun StudioRoot(viewModel: WidgetStudioViewModel, onClose: () -> Unit, on
     val moment = remember(forecast, s.content.nowEpochSeconds / 60) { forecast.momentAt(s.content.nowEpochSeconds) }
     val appearance = s.settings.appearance
     val palette = remember(moment, appearance) { SkyPalette.of(appearance, moment.sun.elevation, moment.visual, moment.moonPhase.illumination) }
-    RosaEnvironment(s.settings, palette) {
+    RosaEnvironment(s.settings, palette, richGlass = true) {
         SkyBackdrop(SkyParams.from(moment, palette, appearance), s.settings.effects, interactive = false) {
             StudioScreen(s, viewModel, onClose, onSaved)
         }

@@ -1,6 +1,7 @@
 package app.rosa.weather.core.designsystem.component
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.geometry.Offset
@@ -27,12 +28,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.border
@@ -43,9 +46,13 @@ import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -65,6 +72,7 @@ import app.rosa.weather.core.designsystem.haptics.LocalHaptics
 import app.rosa.weather.core.designsystem.motion.LocalMotionEnabled
 import app.rosa.weather.core.designsystem.motion.RosaMotion
 import app.rosa.weather.core.designsystem.theme.Rosa
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -72,6 +80,14 @@ import kotlinx.coroutines.launch
  * don't have to thread it through every call.
  */
 val LocalBackdrop = androidx.compose.runtime.staticCompositionLocalOf<Backdrop?> { null }
+
+/**
+ * Whether glass here is rich (the weather app): it floats on layered shadows in the sky's own
+ * colour, catches a band of light as it arrives, and the world's reflections and the colours in
+ * its rim slide along it as it scrolls. Otherwise (the calendar) it is the plainer glass, on soft
+ * grey shadows.
+ */
+val LocalRichGlass = androidx.compose.runtime.staticCompositionLocalOf { false }
 
 /**
  * How many glass surfaces the content here already sits on. Glass never refracts glass (Apple's
@@ -112,8 +128,22 @@ fun GlassSurface(
     // Materialise once. Lists dispose cards that scroll away and recreate them on the way back;
     // saveable state survives that, so scrolling never replays the appearance.
     var appeared by rememberSaveable { mutableStateOf(false) }
+    val rich = LocalRichGlass.current
+    // Where the pane first stands on screen (dp from the top), for the sweep's cascade.
+    val arrivedAt = remember { mutableFloatStateOf(Float.NaN) }
+    val density = LocalDensity.current.density
     LaunchedEffect(state) {
         if (motion && !appeared && state.materialize == 1f) {
+            // Rich glass catches a band of light as it arrives, sweeping across it once — a wave
+            // washing down the screen: the lower a pane, the later the light reaches it.
+            if (rich) {
+                launch {
+                    val top = snapshotFlow { arrivedAt.floatValue }.first { !it.isNaN() }
+                    delay(SWEEP_DELAY + (top.coerceIn(0f, 900f) * SWEEP_CASCADE).toLong())
+                    animate(0f, 1f, animationSpec = tween(SWEEP_MILLIS, easing = FastOutSlowInEasing)) { v, _ -> state.sweep = v }
+                    state.sweep = 0f
+                }
+            }
             val a = Animatable(0f)
             a.animateTo(1f, RosaMotion.gel()) { state.materialize = value.coerceIn(0f, 1.2f) }
             state.materialize = 1f
@@ -122,16 +152,32 @@ fun GlassSurface(
     }
     val shape = RoundedCornerShape(cornerRadius)
     val card = style == GlassStyle.Frosted || style == GlassStyle.Sheet
+    val colors = Rosa.colors
+    // Rich glass casts its shadows in the sky's own deep colour rather than grey — navy under a
+    // blue day, violet at dusk — as light through tinted air does: it floats in the scene.
+    val deep = lerp(colors.zenith, Color.Black, 0.55f)
     val base = when {
         !shadow -> modifier
-        // Cards lie on a broad, soft shadow; floating controls also on a tight contact one.
+        // Cards lie on a broad, soft shadow (rich: a broad ambient one well below, and a tighter
+        // one that grounds the edge); floating controls also on a tight contact one.
+        card && rich -> modifier
+            .dropShadow(shape, Shadow(radius = 44.dp, color = deep, offset = DpOffset(0.dp, 18.dp), alpha = if (colors.isLightSky) 0.2f else 0.3f))
+            .dropShadow(shape, Shadow(radius = 10.dp, color = deep, offset = DpOffset(0.dp, 4.dp), alpha = if (colors.isLightSky) 0.12f else 0.18f))
         card -> modifier.dropShadow(shape, Shadow(radius = 30.dp, color = Color.Black, offset = DpOffset(0.dp, 10.dp), alpha = 0.13f))
+        rich -> modifier
+            .dropShadow(shape, Shadow(radius = 24.dp, color = deep, offset = DpOffset(0.dp, 10.dp), alpha = if (colors.isLightSky) 0.18f else 0.26f))
+            .dropShadow(shape, Shadow(radius = 4.dp, color = deep, offset = DpOffset(0.dp, 1.5.dp), alpha = 0.12f))
         else -> modifier
             .dropShadow(shape, Shadow(radius = 22.dp, color = Color.Black, offset = DpOffset(0.dp, 8.dp), alpha = 0.14f))
             .dropShadow(shape, Shadow(radius = 3.dp, color = Color.Black, offset = DpOffset(0.dp, 1.dp), alpha = 0.08f))
     }
+    val placed = if (rich && motion && !appeared) {
+        Modifier.onGloballyPositioned { if (arrivedAt.floatValue.isNaN()) arrivedAt.floatValue = it.positionInRoot().y / density }
+    } else {
+        Modifier
+    }
     val glass = if (backdrop != null) {
-        base.liquidGlass(backdrop, style, cornerRadius, state, environment)
+        base.then(placed).liquidGlass(backdrop, style, cornerRadius, state, environment)
             .then(if (touchResponsive && motion) Modifier.glassTouch(state, scope) else Modifier)
             // What lies on the glass keeps to its shape (a card's own tint or picture has its
             // rounded corners); the glass itself, drawn before, still blooms past its edge.
@@ -143,6 +189,14 @@ fun GlassSurface(
         Box(glass.padding(contentPadding), contentAlignment = contentAlignment, content = content)
     }
 }
+
+/**
+ * When the band of light crosses glass that has just arrived, how much later per dp further down
+ * the screen, and how long it takes.
+ */
+private const val SWEEP_DELAY = 120L
+private const val SWEEP_CASCADE = 0.45f
+private const val SWEEP_MILLIS = 1500
 
 /** A surface set into the glass it sits on: tinted inset, lit upper lip, a glow under the finger. */
 @Composable

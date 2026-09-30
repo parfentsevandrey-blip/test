@@ -99,6 +99,9 @@ uniform float2 flashAt;
 uniform float lift;
 uniform float rainbow;
 uniform float2 tilt;
+// Clear sunshine (motes in the air, the lens's flare) and diamond dust (a frosty clear day), 0..1.
+uniform float sunlitAir;
+uniform float diamondDust;
 $NOISE
 
 // A rainbow's colours across its band, t from 0 (inside: violet) to 1 (outside: red).
@@ -106,6 +109,28 @@ half3 spectrum(float t) {
     float hue = mix(0.76, 0.0, clamp(t, 0.0, 1.0));
     half3 k = half3(clamp(abs(fract(hue + float3(1.0, 0.6666667, 0.3333333)) * 6.0 - 3.0) - 1.0, 0.0, 1.0));
     return mix(half3(1.0), k, 0.8);
+}
+
+// A glint in the cell of a grid laid over the sky that [g] falls in (0 where the cell holds none:
+// only [share] of them do). It wanders about its cell; a soft disc [radius] of a cell wide.
+float moteAt(float2 g, float seed, float share, float radius, float t) {
+    float2 id = floor(g);
+    float h = hash(id + seed);
+    if (h > share) {
+        return 0.0;
+    }
+    float2 at = (float2(hash(id + seed + 1.7), hash(id + seed + 3.1)) - 0.5) * 0.6
+        + 0.12 * float2(sin(t * (0.23 + h) + h * 40.0), cos(t * (0.19 + h * 0.7) + h * 17.0));
+    float2 f = fract(g) - 0.5 - at;
+    return exp(-dot(f, f) / (radius * radius));
+}
+
+// A lens ghost: a soft disc, a little brighter at its rim.
+half3 ghost(float2 q, float2 at, float r, half3 tint) {
+    float d = length(q - at);
+    float disc = smoothstep(r, r * 0.75, d);
+    float z = (d - r * 0.85) / (r * 0.12);
+    return tint * half(disc * 0.7 + exp(-z * z) * 0.5);
 }
 
 // Horizontal offset of a lightning channel at height y: jagged at every scale, like the real thing.
@@ -301,6 +326,52 @@ half4 main(float2 fragCoord) {
         col += half3(0.06) * half(inside * clearOf);
         float dark = smoothstep(radius + w, radius + w + 0.03, rr) * smoothstep(radius * 1.23 - w * 1.4, radius * 1.23 - w * 1.4 - 0.03, rr);
         col *= half(1.0 - 0.06 * dark * clearOf);
+    }
+
+    // Light in the air. Clear sunshine lights motes of dust drifting in it — thickest about the
+    // sun, a few large and out of focus near the glass; on a frosty clear day, diamond dust: ice
+    // crystals hanging in the air, flashing as they turn, now and then in a colour.
+    if (sunlitAir > 0.01 || diamondDust > 0.01) {
+        float2 q = float2(uv.x * aspect, uv.y) + tilt * float2(0.012, 0.008);
+        float nearSun = exp(-dist * 1.7);
+        float openSky = 1.0 - mask * 0.9;
+        if (sunlitAir > 0.01) {
+            // Only in the sun's own glow: out in the open blue, dust is not seen.
+            float glowOf = nearSun * nearSun * nearSun;
+            float2 up = float2(time * 0.006 * (0.4 + wind), -time * 0.012);
+            float2 gf = (q + up) * 22.0;
+            float hf = hash(floor(gf) + 11.0);
+            float fine = moteAt(gf, 11.0, 0.35, 0.05, time) * (0.5 + 0.5 * sin(time * (0.8 + 2.6 * hf) + hf * 60.0));
+            float bokeh = moteAt((q + up * 0.6) * 6.0, 23.0, 0.3, 0.16, time * 0.7);
+            half3 dust = mix(half3(1.0, 0.86, 0.62), warm, 0.4);
+            col += dust * half((fine * 0.26 + bokeh * 0.07) * glowOf * sunlitAir * openSky);
+        }
+        if (diamondDust > 0.01) {
+            float2 gd = (q + float2(time * 0.004 * (0.3 + wind), time * 0.006)) * 30.0;
+            float hd = hash(floor(gd) + 41.0);
+            float crystal = moteAt(gd, 41.0, 0.28, 0.04, time * 0.5);
+            float turn = pow(0.5 + 0.5 * sin(time * (1.1 + 2.5 * hd) + hd * 80.0), 14.0);
+            half3 hue = mix(half3(0.92, 0.96, 1.0), spectrum(fract(hd * 7.3)), 0.35);
+            col += hue * half(crystal * turn * (0.25 + 0.9 * nearSun) * diamondDust * openSky);
+        }
+    }
+
+    // A clear sun flares in the lens: a faint anamorphic streak through it, a thin halo about it,
+    // and ghosts along the line from it through the middle of the picture, each tinted by the
+    // coatings — sliding across the other way as the phone tilts.
+    if (sunlitAir > 0.01 && sunUp > 0.5) {
+        float clearSun = sunlitAir * veil * veil;
+        float streak = exp(-abs(dv.y) * 110.0) * exp(-abs(dv.x) * 2.2);
+        col += mix(warm, half3(0.8, 0.88, 1.0), 0.45) * half(streak * 0.1 * clearSun);
+        float ring = (dist - 0.22) / 0.016;
+        col += spectrum(clamp(0.5 + ring * 0.25, 0.0, 1.0)) * half(exp(-ring * ring) * 0.042 * clearSun);
+        float2 s = float2(sp.x * aspect, sp.y);
+        float2 axis = float2(0.5 * aspect, 0.55) - s;
+        float2 q = float2(uv.x * aspect, uv.y);
+        col += ghost(q, s + axis * 0.5, 0.022, half3(1.0, 0.78, 0.45)) * half(0.08 * clearSun);
+        col += ghost(q, s + axis * 0.9, 0.055, half3(0.55, 0.85, 1.0)) * half(0.05 * clearSun);
+        col += ghost(q, s + axis * 1.3, 0.03, half3(0.8, 0.6, 1.0)) * half(0.07 * clearSun);
+        col += ghost(q, s + axis * 1.75, 0.085, half3(0.6, 1.0, 0.75)) * half(0.035 * clearSun);
     }
 
     // Lightning lights the clouds from within, brightest around where it strikes; a near strike
