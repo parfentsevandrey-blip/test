@@ -396,7 +396,7 @@ def _map_image(map_spec: dict, size: tuple[int, int], sheet: dict, geo: dict, ki
 def render_sheet(spec: dict, sheet: dict, geo_dir: Path) -> Image.Image:
     W, H = _px(PAGE_MM[0]), _px(PAGE_MM[1])
     frame_px = _px(FRAME_MM)
-    panel_w = _px(PANEL_W_MM)
+    panel_w = _px(sheet.get("panel_mm", PANEL_W_MM))
     map_box = (frame_px, frame_px, W - frame_px - panel_w, H - frame_px)
     kinds = spec["kinds"]
     page = Image.new("RGB", (W, H), WHITE)
