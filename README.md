@@ -66,6 +66,16 @@ Any static server works (`npx serve`, VS Code Live Server, etc.).
 > sky and everything else still works. (Google Fonts are still loaded from a CDN
 > and fall back to system serif/sans if blocked.)
 
+## Host it on your own computer
+
+To put the site online from a home laptop, see **[deploy/README.md](deploy/README.md)**
+(in Russian). It's a double-click control panel for Windows 10/11
+(«Домашний сервер»): it installs Caddy as a service with automatic HTTPS, keeps
+the site in sync with this repository, disables sleep, opens router ports via
+UPnP (or shows how to do it by hand), connects a free DuckDNS or custom domain
+and checks that the site opens from the internet. A one-command setup script for
+Ubuntu / Debian / Linux Mint is included as well.
+
 ## Single-file download
 
 `kutuzovsky-12.html` is a **fully self-contained build** — CSS, the UI
@@ -98,6 +108,7 @@ kutuzovsky-12.html  Self-contained single-file build (downloadable)
 build-text-video.js    Generates the "video-as-text" experiment
 text-video.html        Plays footage with no <video>/<img> — pure colored text
 docs/preview.svg       Static preview (earlier concept)
+deploy/                Self-hosting: Windows control panel + Linux setup script
 ```
 
 ## Experiment: video without a video player
