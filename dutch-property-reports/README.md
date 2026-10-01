@@ -280,8 +280,8 @@ python3 -m reportgen.poster data/poster-2026-10-01-ai-datacenters.json
 промзон слева и описания зон справа.
 
 ```bash
-python3 -m reportgen.zonemap fetch data/zonemap-2026-10-01-ai.json   # контуры
-python3 -m reportgen.zonemap build data/zonemap-2026-10-01-ai.json   # листы
+python3 -m reportgen.zonemap fetch data/zonemap-2026-10-01-ai-all.json   # контуры
+python3 -m reportgen.zonemap build data/zonemap-2026-10-01-ai-all.json   # листы
 ```
 
 Контуры берутся из трёх источников и сохраняются в `data/zones/`, чтобы
