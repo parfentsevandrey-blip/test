@@ -454,16 +454,18 @@ def build(spec_path: Path) -> tuple[Path, Path]:
     return pdf, png
 
 
-def _to_pdf(page: Image.Image, path: Path) -> None:
-    """PDF ровно A3: растр 300 dpi во всю страницу, JPEG высокого качества."""
+def _to_pdf(pages, path: Path, quality: int = 92) -> None:
+    """PDF ровно A3: растр 300 dpi во всю страницу, JPEG высокого качества.
+    Принимает один лист или список листов — тогда PDF многостраничный."""
     import pymupdf
 
-    buf = BytesIO()
-    page.save(buf, "JPEG", quality=92, subsampling=0, dpi=(DPI, DPI))
     doc = pymupdf.open()
     w_pt, h_pt = PAGE_MM[0] / 25.4 * 72, PAGE_MM[1] / 25.4 * 72
-    sheet = doc.new_page(width=w_pt, height=h_pt)
-    sheet.insert_image(sheet.rect, stream=buf.getvalue())
+    for page in pages if isinstance(pages, list) else [pages]:
+        buf = BytesIO()
+        page.save(buf, "JPEG", quality=quality, subsampling=0, dpi=(DPI, DPI))
+        sheet = doc.new_page(width=w_pt, height=h_pt)
+        sheet.insert_image(sheet.rect, stream=buf.getvalue())
     doc.save(path, deflate=True)
 
 
