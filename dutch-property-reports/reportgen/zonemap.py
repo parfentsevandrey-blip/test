@@ -109,7 +109,7 @@ def fetch(spec_path: Path) -> None:
     out_dir = spec_path.parent / "zones"
     out_dir.mkdir(exist_ok=True)
     for sheet in spec["sheets"]:
-        items = sheet["entries"] + sheet.get("sites", [])
+        items = [e for e in sheet["entries"] if "geom" in e] + sheet.get("sites", [])
         ways = [r["osm"] for item in items for r in item["geom"] if "osm" in r]
         osm_cache = _osm(ways) if ways else {}
         feats = []
@@ -324,9 +324,12 @@ def _legend(page, kinds: dict, spec: dict, f: PanelFonts, corner: str, box) -> N
     draw.rectangle((x, y, x + w, y + h), fill=(*PAPER, 240), outline=(0xD9, 0xD3, 0xC4), width=2)
     cy = y + pad
     for kind in kinds.values():
-        sw = (x + pad, cy + _px(0.6), x + pad + _px(7), cy + _px(4.4))
-        fill = (*_rgb(kind["fill"]), max(kind["alpha"], 90))
-        draw.rectangle(sw, fill=fill, outline=_rgb(kind["outline"]), width=_px(0.4))
+        if kind.get("dot"):
+            _marker(draw, x + pad + _px(3.5), cy + _px(2.5), _px(1.7), _rgb(kind["fill"]), None, None)
+        else:
+            sw = (x + pad, cy + _px(0.6), x + pad + _px(7), cy + _px(4.4))
+            fill = (*_rgb(kind["fill"]), max(kind["alpha"], 90))
+            draw.rectangle(sw, fill=fill, outline=_rgb(kind["outline"]), width=_px(0.4))
         draw.text((x + pad + _px(9.5), cy + _px(2.5)), kind["label"], font=f.legend, fill=INK, anchor="lm")
         cy += row
     cy += _px(1.5)
@@ -348,8 +351,9 @@ def _map_image(map_spec: dict, size: tuple[int, int], sheet: dict, geo: dict, ki
     print(f"{sheet['key']}: масштаб подписей ×{frame.scale * frame.k:.2f}", file=sys.stderr)
     img = frame.render()
 
-    # зоны: сначала крупные, чтобы мелкие лежали сверху
-    for entry in sorted(sheet["entries"], key=lambda e: -geo[e["n"]].area):
+    # зоны: сначала крупные, чтобы мелкие лежали сверху; у точечной записи контура нет
+    zoned = [e for e in sheet["entries"] if e["n"] in geo]
+    for entry in sorted(zoned, key=lambda e: -geo[e["n"]].area):
         _paint(img, frame, geo[entry["n"]], kinds[entry["kind"]])
     for site in sheet.get("sites", []):
         _paint(img, frame, geo[site["label"]], kinds["site"])
@@ -362,9 +366,21 @@ def _map_image(map_spec: dict, size: tuple[int, int], sheet: dict, geo: dict, ki
         px, py = frame.to_page(lat, lon)
         if inside(px, py):
             _label(draw, (px, py), site["label"], f.site_label, INK, site.get("side", "right"), 1.5)
+    # точки компаний: офисы, склады, отдельные здания
+    dot = kinds.get("point", {})
+    for point in sheet.get("points", []):
+        px, py = frame.to_page(*point["at"])
+        if not inside(px, py):
+            continue
+        r = _px(1.7)
+        _marker(draw, px, py, r, _rgb(dot.get("fill", "16233A")), None, None)
+        _label(draw, (px, py), point["label"], f.site_label, INK, point.get("side", "right"), 2.6)
     for entry in sheet["entries"]:
-        g = geo[entry["n"]]
-        lat, lon = entry.get("at") or (g.representative_point().y, g.representative_point().x)
+        if entry.get("at") or entry.get("point"):
+            lat, lon = entry.get("at") or entry["point"]
+        else:
+            g = geo[entry["n"]]
+            lat, lon = g.representative_point().y, g.representative_point().x
         px, py = frame.to_page(lat, lon)
         if not inside(px, py):
             continue
@@ -388,7 +404,8 @@ def render_sheet(spec: dict, sheet: dict, geo_dir: Path) -> Image.Image:
     geo = {f["properties"]["key"]: shape(f["geometry"])
            for f in json.loads((geo_dir / f"{sheet['key']}.geojson").read_text())["features"]}
     for entry in sheet["entries"]:
-        entry["meta_text"] = entry["meta"].replace("{ha}", _area_text(_hectares(geo[entry["n"]])))
+        area = _area_text(_hectares(geo[entry["n"]])) if entry["n"] in geo else ""
+        entry["meta_text"] = entry["meta"].replace("{ha}", area)
 
     f = PanelFonts()
     size = (map_box[2] - map_box[0], map_box[3] - map_box[1])
