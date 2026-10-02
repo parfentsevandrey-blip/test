@@ -115,7 +115,7 @@ pub async fn run(
 pub struct Node {
     endpoint: Endpoint,
     tasks: JoinSet<Result<()>>,
-    status: StatusHandle,
+    handle: NodeHandle,
 }
 
 impl Node {
@@ -188,21 +188,22 @@ impl Node {
         if let Some(interval) = config.stats_interval {
             tasks.spawn(log_stats(stats, interval));
         }
-        let status = StatusHandle {
+        let handle = NodeHandle {
             me,
             my_ip,
             peers: Arc::new(peers),
+            endpoint: endpoint.clone(),
         };
         Ok(Self {
             endpoint,
             tasks,
-            status,
+            handle,
         })
     }
 
-    /// A view of the node's state that stays valid while the node runs.
-    pub fn status(&self) -> StatusHandle {
-        self.status.clone()
+    /// A handle for user interfaces and the platform, valid while the node runs.
+    pub fn handle(&self) -> NodeHandle {
+        self.handle.clone()
     }
 
     /// Runs until `shutdown` completes or a node task fails, then closes the endpoint.
@@ -221,12 +222,13 @@ impl Node {
     }
 }
 
-/// A cheap, cloneable view of a running node, for user interfaces.
+/// A cheap, cloneable handle to a running node, for user interfaces and the platform.
 #[derive(Clone)]
-pub struct StatusHandle {
+pub struct NodeHandle {
     me: EndpointId,
     my_ip: Ipv4Addr,
     peers: Arc<Vec<Arc<Peer>>>,
+    endpoint: Endpoint,
 }
 
 /// A snapshot of a node's state.
@@ -248,7 +250,19 @@ pub struct PeerStatus {
     pub rtt: Option<Duration>,
 }
 
-impl StatusHandle {
+impl NodeHandle {
+    /// Tells the node the network changed: Wi-Fi to mobile, a new Wi-Fi, back online.
+    ///
+    /// iroh watches interfaces itself on desktops, but not on Android, where the app
+    /// has to pass on what `ConnectivityManager` reports. Every link redials at once
+    /// instead of waiting out its backoff.
+    pub async fn network_changed(&self) {
+        self.endpoint.network_change().await;
+        for peer in self.peers.iter() {
+            peer.wake.notify_one();
+        }
+    }
+
     pub fn snapshot(&self) -> NodeStatus {
         let peers = self
             .peers

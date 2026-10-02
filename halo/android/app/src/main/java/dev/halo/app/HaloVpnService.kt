@@ -1,6 +1,8 @@
 package dev.halo.app
 
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.Network
 import android.net.VpnService
 import android.net.wifi.WifiManager
 import android.os.Build
@@ -23,6 +25,10 @@ import kotlinx.coroutines.launch
  * Only the addresses of member devices are routed into the tunnel, so the rest of
  * the phone's traffic never touches it. The app itself is excluded from the VPN:
  * its own sockets carry the tunnel and must not go through it.
+ *
+ * iroh cannot watch the network on Android, so the service passes on every change
+ * of the default network (Wi-Fi to mobile and back) and tells the system which
+ * network the VPN runs over.
  */
 class HaloVpnService : VpnService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -30,6 +36,7 @@ class HaloVpnService : VpnService() {
     private var node: HaloNode? = null
     private var poller: Job? = null
     private var multicast: WifiManager.MulticastLock? = null
+    private var networkWatch: ConnectivityManager.NetworkCallback? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
@@ -87,6 +94,7 @@ class HaloVpnService : VpnService() {
             Halo.reportError(null)
             Halo.setRunning(true)
             poller = scope.launch { poll(started) }
+            watchNetwork()
             Log.i(TAG, "up: ${me.ip}, ${members.size} devices")
         } catch (e: Exception) {
             Log.e(TAG, "failed to start", e)
@@ -109,7 +117,26 @@ class HaloVpnService : VpnService() {
         }
     }
 
+    private fun watchNetwork() {
+        val connectivity = getSystemService(ConnectivityManager::class.java) ?: return
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) = changed(arrayOf(network))
+
+            override fun onLost(network: Network) = changed(null)
+
+            private fun changed(underlying: Array<Network>?) {
+                setUnderlyingNetworks(underlying)
+                synchronized(lock) { node?.networkChanged() }
+            }
+        }
+        // The app is outside its own VPN, so its default network is Wi-Fi or mobile.
+        connectivity.registerDefaultNetworkCallback(callback)
+        networkWatch = callback
+    }
+
     private fun stopNode(): Unit = synchronized(lock) {
+        networkWatch?.let { getSystemService(ConnectivityManager::class.java)?.unregisterNetworkCallback(it) }
+        networkWatch = null
         poller?.cancel()
         poller = null
         node?.let {

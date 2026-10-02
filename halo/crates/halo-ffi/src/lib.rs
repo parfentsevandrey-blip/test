@@ -11,7 +11,7 @@ use std::{
 };
 
 use halo_core::{
-    Node, NodeConfig, PeerConfig, StatusHandle,
+    Node, NodeConfig, NodeHandle, PeerConfig,
     addr::overlay_ipv4,
     members::{Member, parse_addrs},
     state::State,
@@ -161,11 +161,11 @@ fn state(dir: String) -> Result<State, HaloError> {
 /// A running node.
 #[derive(uniffi::Object)]
 pub struct HaloNode {
-    status: StatusHandle,
+    handle: NodeHandle,
     stop: Mutex<Option<oneshot::Sender<()>>>,
     done: Mutex<mpsc::Receiver<()>>,
     // Dropped last: it owns the tasks above.
-    _runtime: Runtime,
+    runtime: Runtime,
 }
 
 #[uniffi::export]
@@ -178,8 +178,7 @@ impl HaloNode {
     pub fn start(state_dir: String, tun_fd: i32, mtu: u16) -> Result<Arc<Self>, HaloError> {
         // SAFETY: the app hands over a valid, open fd from VpnService and gives up
         // ownership of it (ParcelFileDescriptor.detachFd()).
-        let tun_fd =
-            unsafe { <std::os::fd::OwnedFd as std::os::fd::FromRawFd>::from_raw_fd(tun_fd) };
+        let tun_fd = unsafe { TunFd::adopt(tun_fd) };
         let state = state(state_dir)?;
         let secret_key = state.key()?;
         let peers: Vec<PeerConfig> = state
@@ -206,12 +205,10 @@ impl HaloNode {
             stats_interval: None,
         };
         let node = runtime.block_on(async {
-            let fd = std::os::fd::IntoRawFd::into_raw_fd(tun_fd);
-            // SAFETY: `fd` is open and owned; from_fd takes over closing it.
-            let tun = unsafe { tun_rs::AsyncDevice::from_fd(fd) }?;
+            let tun = tun_fd.into_device()?;
             Node::start(config, tun).await
         })?;
-        let status = node.status();
+        let handle = node.handle();
         let (stop_tx, stop_rx) = oneshot::channel();
         let (done_tx, done_rx) = mpsc::channel();
         runtime.spawn(async move {
@@ -224,16 +221,16 @@ impl HaloNode {
             let _ = done_tx.send(());
         });
         Ok(Arc::new(Self {
-            status,
+            handle,
             stop: Mutex::new(Some(stop_tx)),
             done: Mutex::new(done_rx),
-            _runtime: runtime,
+            runtime,
         }))
     }
 
     /// The member devices and how they are connected.
     pub fn peers(&self) -> Vec<PeerState> {
-        self.status
+        self.handle
             .snapshot()
             .peers
             .into_iter()
@@ -247,6 +244,13 @@ impl HaloNode {
                     .map(|rtt| u32::try_from(rtt.as_millis()).unwrap_or(u32::MAX)),
             })
             .collect()
+    }
+
+    /// Call when Android reports a network change; iroh cannot see them there.
+    pub fn network_changed(&self) {
+        let handle = self.handle.clone();
+        self.runtime
+            .spawn(async move { handle.network_changed().await });
     }
 
     /// Whether the node is still running: it stops on a fatal error.
@@ -267,5 +271,43 @@ impl HaloNode {
                 .expect("poisoned")
                 .recv_timeout(STOP_TIMEOUT);
         }
+    }
+}
+
+/// A TUN file descriptor handed over by the platform (Android, iOS).
+#[cfg(unix)]
+struct TunFd(std::os::fd::OwnedFd);
+
+#[cfg(unix)]
+impl TunFd {
+    /// # Safety
+    /// `fd` must be open, and the caller must give up ownership of it.
+    unsafe fn adopt(fd: i32) -> Self {
+        Self(unsafe { std::os::fd::FromRawFd::from_raw_fd(fd) })
+    }
+
+    /// Must run inside the tokio runtime: the device registers with its reactor.
+    fn into_device(self) -> std::io::Result<tun_rs::AsyncDevice> {
+        let fd = std::os::fd::IntoRawFd::into_raw_fd(self.0);
+        // SAFETY: `fd` is open and owned; from_fd takes over closing it.
+        unsafe { tun_rs::AsyncDevice::from_fd(fd) }
+    }
+}
+
+/// Elsewhere the desktop CLI creates its own TUN device.
+#[cfg(not(unix))]
+struct TunFd;
+
+#[cfg(not(unix))]
+impl TunFd {
+    unsafe fn adopt(_fd: i32) -> Self {
+        Self
+    }
+
+    fn into_device(self) -> std::io::Result<tun_rs::AsyncDevice> {
+        Err(std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            "a TUN file descriptor from the platform is only supported on Android and iOS",
+        ))
     }
 }
