@@ -116,23 +116,63 @@ pub struct Pending {
 }
 
 impl Pending {
-    /// Sends this side's answer and waits for the other side's.
+    /// Sends this side's answer and, after a yes, waits for the other side's.
     ///
-    /// Returns true when both sides confirmed: then each adds the other.
-    pub async fn confirm(mut self, accept: bool) -> Result<bool> {
-        self.send.write_all(&[u8::from(accept)]).await?;
-        self.send.finish()?;
-        let mut answer = [0u8; 1];
-        let answered = tokio::time::timeout(STEP_TIMEOUT, self.recv.read_exact(&mut answer))
-            .await
-            .context("the other device did not answer")?;
-        // A refusal may close the connection before the byte arrives.
-        let other = answered.is_ok() && answer[0] == 1;
+    /// Returns true when both sides confirmed: then each adds the other. A device
+    /// that declined or went away means false, not an error.
+    pub async fn confirm(self, accept: bool) -> Result<bool> {
+        self.confirm_unless(accept, std::future::pending()).await
+    }
+
+    /// Like [`Pending::confirm`], but stops waiting for the other side's answer
+    /// once `cancel` resolves, and then does not pair.
+    ///
+    /// Both sides come to the same result, unless one of them goes away in the
+    /// moment its answer arrives.
+    pub async fn confirm_unless(
+        mut self,
+        accept: bool,
+        cancel: impl Future<Output = ()>,
+    ) -> Result<bool> {
+        // A device that is gone cannot learn our answer, so it cannot pair: then
+        // sending fails, and this side does not pair either.
+        let sent =
+            self.send.write_all(&[u8::from(accept)]).await.is_ok() && self.send.finish().is_ok();
+        let answer = if accept && sent {
+            let answered = tokio::select! {
+                answer = tokio::time::timeout(STEP_TIMEOUT, self.their_answer()) => Some(answer),
+                () = cancel => None,
+            };
+            let Some(answer) = answered else {
+                // Our yes is out already: leave at once, so that a yes from the
+                // other side can no longer arrive and make it pair alone.
+                self.conn.close(0u32.into(), b"cancelled");
+                return Ok(false);
+            };
+            answer.ok()
+        } else {
+            Some(false)
+        };
         // A QUIC close discards whatever the other side has not read yet, so give
         // it time to read our answer, unless it closes first.
         let _ = tokio::time::timeout(CLOSE_GRACE, self.conn.closed()).await;
         self.conn.close(0u32.into(), b"done");
-        Ok(accept && other)
+        answer.context("the other device did not answer")
+    }
+
+    /// Resolves when the other device ends the pairing: it declined, cancelled
+    /// or went away. Lets a side that waits for its user stop waiting.
+    pub async fn closed(&self) {
+        self.conn.closed().await;
+    }
+
+    /// Whether the other side said yes. It counts once our own answer has
+    /// arrived there too: otherwise the other side cannot pair.
+    async fn their_answer(&mut self) -> bool {
+        let mut answer = [0u8; 1];
+        self.recv.read_exact(&mut answer).await.is_ok()
+            && answer[0] == 1
+            && matches!(self.send.stopped().await, Ok(None))
     }
 }
 
@@ -176,6 +216,16 @@ impl Host {
 
     pub fn ticket(&self) -> &Ticket {
         &self.ticket
+    }
+
+    /// The UDP port the pairing endpoint listens on, for IPv4 if it can.
+    pub fn port(&self) -> u16 {
+        let sockets = self.endpoint.bound_sockets();
+        sockets
+            .iter()
+            .find(|addr| addr.is_ipv4())
+            .or(sockets.first())
+            .map_or(0, SocketAddr::port)
     }
 
     /// Waits for a device that knows the secret. Devices that do not are dropped.
@@ -400,6 +450,14 @@ mod tests {
         SecretKey::from_bytes(&[seed; 32])
     }
 
+    /// A host whose ticket points at loopback, which works in every test environment.
+    async fn loopback_host() -> (Host, Ticket) {
+        let host = Host::bind(key(1), "laptop", 7777).await.unwrap();
+        let mut ticket = host.ticket().clone();
+        ticket.addrs = vec![SocketAddr::from(([127, 0, 0, 1], host.port()))];
+        (host, ticket)
+    }
+
     #[test]
     fn ticket_roundtrip_is_qr_alphanumeric() {
         let ticket = Ticket {
@@ -482,16 +540,7 @@ mod tests {
     /// Two devices pair over loopback: same emoji on both sides, both confirm.
     #[tokio::test]
     async fn pairing_over_loopback() {
-        let host = Host::bind(key(1), "laptop", 7777).await.unwrap();
-        let mut ticket = host.ticket().clone();
-        // Loopback works in every test environment.
-        let port = ticket
-            .addrs
-            .first()
-            .map(SocketAddr::port)
-            .unwrap_or_else(|| host.endpoint.bound_sockets().first().unwrap().port());
-        ticket.addrs = vec![SocketAddr::from(([127, 0, 0, 1], port))];
-
+        let (host, ticket) = loopback_host().await;
         let scanner = tokio::spawn(async move {
             let (endpoint, pending) = join(key(2), "phone", 0, &ticket).await.unwrap();
             assert_eq!(
@@ -526,10 +575,7 @@ mod tests {
     /// A device without the secret never gets to the emoji.
     #[tokio::test]
     async fn wrong_secret_is_refused() {
-        let host = Host::bind(key(1), "laptop", 7777).await.unwrap();
-        let port = host.endpoint.bound_sockets().first().unwrap().port();
-        let mut ticket = host.ticket().clone();
-        ticket.addrs = vec![SocketAddr::from(([127, 0, 0, 1], port))];
+        let (host, mut ticket) = loopback_host().await;
         ticket.secret = [0xAA; SECRET_LEN];
         let accept = tokio::spawn(async move {
             let _ = tokio::time::timeout(Duration::from_secs(5), host.accept()).await;
@@ -541,10 +587,7 @@ mod tests {
     /// A refusal on one side means no pairing on both.
     #[tokio::test]
     async fn refusal_on_one_side_cancels() {
-        let host = Host::bind(key(1), "laptop", 7777).await.unwrap();
-        let port = host.endpoint.bound_sockets().first().unwrap().port();
-        let mut ticket = host.ticket().clone();
-        ticket.addrs = vec![SocketAddr::from(([127, 0, 0, 1], port))];
+        let (host, ticket) = loopback_host().await;
         let scanner = tokio::spawn(async move {
             let (endpoint, pending) = join(key(2), "phone", 0, &ticket).await.unwrap();
             let confirmed = pending.confirm(true).await.unwrap();
@@ -554,6 +597,49 @@ mod tests {
         let pending = host.accept().await.unwrap();
         assert!(!pending.confirm(false).await.unwrap());
         assert!(!scanner.await.unwrap());
+        host.close().await;
+    }
+
+    /// Declining does not wait for the other user: their side sees the pairing end.
+    #[tokio::test]
+    async fn declining_does_not_wait_for_the_other_side() {
+        let (host, ticket) = loopback_host().await;
+        let scanner = tokio::spawn(async move {
+            let (endpoint, pending) = join(key(2), "phone", 0, &ticket).await.unwrap();
+            // Its user is still comparing the emoji when the host declines.
+            tokio::time::timeout(Duration::from_secs(10), pending.closed())
+                .await
+                .expect("the scanner did not see the pairing end");
+            let confirmed = pending.confirm(true).await.unwrap();
+            endpoint.close().await;
+            confirmed
+        });
+        let pending = host.accept().await.unwrap();
+        let declined = tokio::time::timeout(Duration::from_secs(5), pending.confirm(false))
+            .await
+            .expect("declining waited for the other side");
+        assert!(!declined.unwrap());
+        assert!(!scanner.await.unwrap());
+        host.close().await;
+    }
+
+    /// A device that goes away without answering ends the pairing on the other
+    /// side: no error, nothing added, and a waiting user hears about it.
+    #[tokio::test]
+    async fn leaving_ends_the_pairing() {
+        let (host, ticket) = loopback_host().await;
+        let scanner = tokio::spawn(async move {
+            let (endpoint, pending) = join(key(2), "phone", 0, &ticket).await.unwrap();
+            // The user gives up instead of answering.
+            drop(pending);
+            endpoint.close().await;
+        });
+        let pending = host.accept().await.unwrap();
+        tokio::time::timeout(Duration::from_secs(5), pending.closed())
+            .await
+            .expect("the host did not see the scanner leave");
+        assert!(!pending.confirm(true).await.unwrap());
+        scanner.await.unwrap();
         host.close().await;
     }
 }

@@ -145,7 +145,7 @@ async fn main() -> Result<()> {
                     let ticket: Ticket = code.parse()?;
                     println!("Connecting to the other device...");
                     let (endpoint, pending) = pair::join(secret_key, &name, port, &ticket).await?;
-                    let paired = confirm(pending).await;
+                    let paired = unless_interrupted(confirm(pending)).await;
                     endpoint.close().await;
                     paired?
                 }
@@ -156,25 +156,26 @@ async fn main() -> Result<()> {
                     println!("Scan it in the Halo app (Add device), or on another computer run:");
                     println!("  halo pair --join {code}\n");
                     println!("Waiting for a device... (Ctrl+C to cancel)");
-                    let pending = host.accept().await;
-                    let paired = match pending {
-                        Ok(pending) => confirm(pending).await,
-                        Err(err) => Err(err),
-                    };
+                    let paired = unless_interrupted(async {
+                        let pending = host.accept().await?;
+                        confirm(pending).await
+                    })
+                    .await;
                     host.close().await;
                     paired?
                 }
             };
-            let Some((peer, peer_name)) = paired else {
+            let Some((peer, peer_name, peer_addrs)) = paired else {
                 println!("Not paired.");
                 return Ok(());
             };
             let mut members = state.members()?;
             let name = members.free_name(&member_name(&peer_name), &peer);
+            // Where its node listens, so it is found even where mDNS does not reach.
             members.upsert(Member {
                 id: peer,
                 name: name.clone(),
-                addrs: Vec::new(),
+                addrs: peer_addrs,
             })?;
             state.save_members(&members)?;
             println!(
@@ -253,7 +254,20 @@ async fn main() -> Result<()> {
 }
 
 /// Shows the emoji, asks the user and returns the other device when both sides said yes.
-async fn confirm(pending: Pending) -> Result<Option<(EndpointId, String)>> {
+/// Runs a pairing step until Ctrl+C. Then the pairing ends as if the user said
+/// no, and the caller still closes the connection: the other device learns at
+/// once instead of after a timeout.
+async fn unless_interrupted<T>(step: impl Future<Output = Result<Option<T>>>) -> Result<Option<T>> {
+    tokio::select! {
+        result = step => result,
+        _ = tokio::signal::ctrl_c() => {
+            println!("\nCancelled.");
+            Ok(None)
+        }
+    }
+}
+
+async fn confirm(pending: Pending) -> Result<Option<(EndpointId, String, Vec<SocketAddr>)>> {
     println!(
         "\n{} wants to pair. Check that its screen shows:\n\n    {}\n",
         pending.peer_name,
@@ -261,16 +275,29 @@ async fn confirm(pending: Pending) -> Result<Option<(EndpointId, String)>> {
     );
     print!("Do they match? [y/N] ");
     std::io::Write::flush(&mut std::io::stdout())?;
-    let line = tokio::task::spawn_blocking(|| {
+    // A plain thread rather than spawn_blocking: when the other device leaves,
+    // the exit must not wait for this read.
+    let (line_tx, line_rx) = tokio::sync::oneshot::channel();
+    std::thread::spawn(move || {
         let mut line = String::new();
-        std::io::stdin().read_line(&mut line).map(|_| line)
-    })
-    .await??;
+        let _ = line_tx.send(std::io::stdin().read_line(&mut line).map(|_| line));
+    });
+    let line = tokio::select! {
+        line = line_rx => line??,
+        () = pending.closed() => {
+            println!("\nThe other device ended the pairing.");
+            return Ok(None);
+        }
+    };
     let accept = matches!(
         line.trim().to_lowercase().as_str(),
         "y" | "yes" | "д" | "да"
     );
-    let peer = (pending.peer, pending.peer_name.clone());
+    let peer = (
+        pending.peer,
+        pending.peer_name.clone(),
+        pending.peer_addrs.clone(),
+    );
     if !accept {
         pending.confirm(false).await?;
         return Ok(None);

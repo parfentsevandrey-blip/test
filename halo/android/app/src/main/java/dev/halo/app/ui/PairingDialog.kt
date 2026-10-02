@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.sp
 import dev.halo.app.Halo
 import dev.halo.app.R
 import dev.halo.core.MemberInfo
-import dev.halo.core.Pairing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -38,37 +37,41 @@ private sealed interface Stage {
     data class Failed(val message: String) : Stage
 }
 
-/** Joins the pairing behind `code`: the user compares four emoji, both sides confirm. */
+/**
+ * Joins the pairing behind `code`: the user compares four emoji, both sides confirm.
+ *
+ * Leaving the dialog at any point ends the pairing on both devices.
+ */
 @Composable
 fun PairingDialog(code: String, onFinished: (MemberInfo?) -> Unit) {
-    var stage by remember { mutableStateOf<Stage>(Stage.Connecting) }
-    var pairing by remember { mutableStateOf<Pairing?>(null) }
+    // Only reads the code: the network work happens in connect() and confirm().
+    val pairing = remember(code) { runCatching { Halo.pairing(code) } }
+    var stage by remember(code) {
+        mutableStateOf<Stage>(pairing.fold({ Stage.Connecting }, { Stage.Failed(it.message.orEmpty()) }))
+    }
     val scope = rememberCoroutineScope()
     val declined = stringResource(R.string.pairing_declined)
 
-    LaunchedEffect(code) {
-        runCatching { withContext(Dispatchers.IO) { Halo.pairJoin(code) } }
-            .onSuccess {
-                pairing = it
-                stage = Stage.Compare(it.peerName(), it.emoji())
-            }
+    DisposableEffect(pairing) { onDispose { pairing.getOrNull()?.let(Halo::release) } }
+    LaunchedEffect(pairing) {
+        val current = pairing.getOrNull() ?: return@LaunchedEffect
+        runCatching { withContext(Dispatchers.IO) { current.connect() } }
+            .onSuccess { stage = Stage.Compare(it.name, it.emoji) }
             .onFailure { stage = Stage.Failed(it.message.orEmpty()) }
     }
-    DisposableEffect(Unit) { onDispose { pairing?.close() } }
 
-    fun answer(accept: Boolean) {
-        val current = pairing ?: return
-        val peer = current.peerName()
+    fun confirm(peer: String) {
+        val current = pairing.getOrNull() ?: return
         stage = Stage.Waiting(peer)
         scope.launch {
-            runCatching { withContext(Dispatchers.IO) { Halo.pairConfirm(current, accept) } }
+            runCatching { withContext(Dispatchers.IO) { Halo.pairConfirm(current, accept = true) } }
                 .onSuccess { member -> stage = if (member != null) Stage.Done(member) else Stage.Failed(declined) }
                 .onFailure { stage = Stage.Failed(it.message.orEmpty()) }
         }
     }
 
     AlertDialog(
-        // Only the buttons end a pairing: the other device waits for an answer.
+        // Only the buttons end a pairing: a stray tap must not cancel it.
         onDismissRequest = {},
         title = { Text(stringResource(R.string.pairing)) },
         text = {
@@ -86,15 +89,24 @@ fun PairingDialog(code: String, onFinished: (MemberInfo?) -> Unit) {
         },
         confirmButton = {
             when (val current = stage) {
-                is Stage.Compare -> TextButton(onClick = { answer(true) }) { Text(stringResource(R.string.pairing_match)) }
+                is Stage.Compare -> TextButton(onClick = { confirm(current.peer) }) {
+                    Text(stringResource(R.string.pairing_match))
+                }
                 is Stage.Done -> TextButton(onClick = { onFinished(current.member) }) { Text(stringResource(R.string.ok)) }
                 is Stage.Failed -> TextButton(onClick = { onFinished(null) }) { Text(stringResource(R.string.ok)) }
                 else -> {}
             }
         },
         dismissButton = {
-            if (stage is Stage.Compare) {
-                TextButton(onClick = { answer(false) }) { Text(stringResource(R.string.pairing_mismatch), color = Danger) }
+            when (stage) {
+                // Leaving tells the other device: it stops waiting and adds nothing.
+                is Stage.Compare -> TextButton(onClick = { onFinished(null) }) {
+                    Text(stringResource(R.string.pairing_mismatch), color = Danger)
+                }
+                Stage.Connecting, is Stage.Waiting -> TextButton(onClick = { onFinished(null) }) {
+                    Text(stringResource(R.string.cancel))
+                }
+                else -> {}
             }
         },
     )

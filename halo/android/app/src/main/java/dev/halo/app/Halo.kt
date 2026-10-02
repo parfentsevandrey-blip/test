@@ -13,6 +13,7 @@ import dev.halo.core.removeMember
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlin.concurrent.thread
 
 /**
  * Process-wide state shared by the VPN service and the UI.
@@ -51,14 +52,23 @@ object Halo {
         return member
     }
 
-    /** Connects to a device showing a pairing code; blocks until both show the emoji. */
-    fun pairJoin(code: String): Pairing = Pairing.join(stateDir, code, Build.MODEL)
+    /** Prepares to join a device showing a pairing code. Instant; throws on a malformed code. */
+    fun pairing(code: String): Pairing = Pairing(stateDir, code, Build.MODEL)
 
     /** Answers the emoji question; returns the added device when both sides said yes. */
     fun pairConfirm(pairing: Pairing, accept: Boolean): MemberInfo? {
         val member = pairing.confirm(accept)
         reloadMembers()
         return member
+    }
+
+    /**
+     * Ends a pairing wherever it is and frees it. Returns at once: telling the
+     * other device takes a moment, so that happens on a background thread.
+     */
+    fun release(pairing: Pairing) {
+        pairing.cancel()
+        thread(name = "halo-pair-close") { pairing.close() }
     }
 
     fun removeDevice(name: String) {

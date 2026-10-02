@@ -19,6 +19,7 @@ use halo_core::{
 };
 use iroh::{Endpoint, EndpointId};
 use tokio::{runtime::Runtime, sync::oneshot};
+use tokio_util::sync::CancellationToken;
 
 uniffi::setup_scaffolding!();
 
@@ -315,85 +316,281 @@ impl TunFd {
 
 /// Pairing with a device that shows a code (`halo pair`): one scan, both devices
 /// add each other.
+///
+/// Creating one only reads the code. [`Pairing::connect`] and
+/// [`Pairing::confirm`] block; [`Pairing::cancel`] ends either one from another
+/// thread. Dropping the object tells the other device that the pairing is over,
+/// so drop it off the main thread.
 #[derive(uniffi::Object)]
 pub struct Pairing {
     state_dir: String,
-    peer: EndpointId,
-    peer_name: String,
-    peer_addrs: Vec<std::net::SocketAddr>,
-    emoji: Vec<String>,
-    pending: Mutex<Option<Pending>>,
-    endpoint: Mutex<Option<Endpoint>>,
+    name: String,
+    ticket: Ticket,
+    cancel: CancellationToken,
+    session: Mutex<Option<Session>>,
     // Dropped last: it owns the tasks above.
     runtime: Runtime,
 }
 
+/// A connection to the other device, waiting for the user's answer.
+struct Session {
+    endpoint: Endpoint,
+    pending: Pending,
+}
+
+/// The other device, as the user should see it before confirming.
+#[derive(Debug, uniffi::Record)]
+pub struct PairingPeer {
+    /// How the other device calls itself.
+    pub name: String,
+    /// The four emoji to compare with the other device's screen.
+    pub emoji: Vec<String>,
+}
+
 #[uniffi::export]
 impl Pairing {
-    /// Connects to the device showing `code`. Blocks until both show the emoji.
+    /// Prepares to join the device showing `code`; fails on a malformed code.
+    /// Touches neither the disk nor the network.
     ///
     /// `name` is how the other device will call this one, e.g. the phone model.
     #[uniffi::constructor]
-    pub fn join(state_dir: String, code: String, name: String) -> Result<Arc<Self>, HaloError> {
-        let secret_key = state(state_dir.clone())?.key()?;
+    pub fn new(state_dir: String, code: String, name: String) -> Result<Arc<Self>, HaloError> {
         let ticket: Ticket = code.parse()?;
         let runtime = tokio::runtime::Builder::new_multi_thread()
             .worker_threads(1)
             .thread_name("halo-pair")
             .enable_all()
             .build()?;
-        // A phone's node has no fixed port to announce.
-        let (endpoint, pending) =
-            runtime.block_on(pair::join(secret_key, &member_name(&name), 0, &ticket))?;
         Ok(Arc::new(Self {
             state_dir,
-            peer: pending.peer,
-            peer_name: pending.peer_name.clone(),
-            peer_addrs: pending.peer_addrs.clone(),
-            emoji: pending.emoji.iter().map(ToString::to_string).collect(),
-            pending: Mutex::new(Some(pending)),
-            endpoint: Mutex::new(Some(endpoint)),
+            name: member_name(&name),
+            ticket,
+            cancel: CancellationToken::new(),
+            session: Mutex::new(None),
             runtime,
         }))
     }
 
-    /// How the other device calls itself.
-    pub fn peer_name(&self) -> String {
-        self.peer_name.clone()
+    /// Connects to the other device. Blocks until both show the emoji.
+    pub fn connect(&self) -> Result<PairingPeer, HaloError> {
+        let secret_key = state(self.state_dir.clone())?.key()?;
+        // A phone's node has no fixed port to announce.
+        let join = pair::join(secret_key, &self.name, 0, &self.ticket);
+        let (endpoint, pending) = self
+            .runtime
+            .block_on(self.cancel.run_until_cancelled(join))
+            .ok_or_else(cancelled)??;
+        let peer = PairingPeer {
+            name: pending.peer_name.clone(),
+            emoji: pending.emoji.iter().map(ToString::to_string).collect(),
+        };
+        *self.session.lock().expect("poisoned") = Some(Session { endpoint, pending });
+        Ok(peer)
     }
 
-    /// The four emoji to compare with the other device's screen.
-    pub fn emoji(&self) -> Vec<String> {
-        self.emoji.clone()
-    }
-
-    /// Answers whether the emoji match and waits for the other side's answer.
+    /// Answers whether the emoji match; after a yes, waits for the other side's
+    /// answer.
     ///
-    /// Returns the added device when both said yes.
+    /// Returns the added device when both said yes, and nothing when either
+    /// said no, went away or cancelled.
     pub fn confirm(&self, accept: bool) -> Result<Option<MemberInfo>, HaloError> {
-        let pending = self
-            .pending
+        let Session { endpoint, pending } = self
+            .session
             .lock()
             .expect("poisoned")
             .take()
-            .ok_or_else(|| HaloError::Failed("already answered".into()))?;
-        let paired = self.runtime.block_on(pending.confirm(accept));
-        if let Some(endpoint) = self.endpoint.lock().expect("poisoned").take() {
-            self.runtime.block_on(endpoint.close());
-        }
-        if !paired? {
+            .ok_or_else(|| HaloError::Failed("not connected".into()))?;
+        let peer = (
+            pending.peer,
+            pending.peer_name.clone(),
+            pending.peer_addrs.clone(),
+        );
+        let paired = self.runtime.block_on(async {
+            let paired = pending
+                .confirm_unless(accept, self.cancel.cancelled())
+                .await;
+            close(endpoint).await;
+            paired
+        })?;
+        if !paired {
             return Ok(None);
         }
+        let (id, name, addrs) = peer;
         let state = state(self.state_dir.clone())?;
         let mut members = state.members()?;
         let member = Member {
-            id: self.peer,
-            name: members.free_name(&member_name(&self.peer_name), &self.peer),
-            addrs: self.peer_addrs.clone(),
+            id,
+            name: members.free_name(&member_name(&name), &id),
+            addrs,
         };
         let info = MemberInfo::from(&member);
         members.upsert(member)?;
         state.save_members(&members)?;
         Ok(Some(info))
+    }
+
+    /// Ends the pairing from any thread and returns at once: a blocked
+    /// [`Pairing::connect`] fails, a blocked [`Pairing::confirm`] adds nothing.
+    pub fn cancel(&self) {
+        self.cancel.cancel();
+    }
+}
+
+impl Drop for Pairing {
+    fn drop(&mut self) {
+        // Left before answering: tell the other device instead of letting it
+        // wait for a timeout.
+        if let Some(Session { endpoint, pending }) =
+            self.session.get_mut().expect("poisoned").take()
+        {
+            drop(pending);
+            self.runtime.block_on(close(endpoint));
+        }
+    }
+}
+
+fn cancelled() -> HaloError {
+    HaloError::Failed("cancelled".into())
+}
+
+async fn close(endpoint: Endpoint) {
+    let _ = tokio::time::timeout(STOP_TIMEOUT, endpoint.close()).await;
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{net::UdpSocket, time::Instant};
+
+    use iroh::SecretKey;
+
+    use super::*;
+
+    /// A fresh state directory. Created up front, so no platform ACL step runs.
+    fn state_dir(name: &str) -> String {
+        let dir = std::env::temp_dir().join(format!("halo-ffi-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir.to_string_lossy().into_owned()
+    }
+
+    /// A laptop running `halo pair`, with a code that points at loopback.
+    fn laptop(runtime: &Runtime, key: &SecretKey) -> (pair::Host, String) {
+        let host = runtime
+            .block_on(pair::Host::bind(key.clone(), "laptop", 7777))
+            .unwrap();
+        let mut ticket = host.ticket().clone();
+        ticket.addrs = vec![std::net::SocketAddr::from(([127, 0, 0, 1], host.port()))];
+        (host, ticket.to_string())
+    }
+
+    fn assert_cancelled<T: std::fmt::Debug>(result: Result<T, HaloError>) {
+        assert!(
+            matches!(&result, Err(HaloError::Failed(message)) if message == "cancelled"),
+            "{result:?}"
+        );
+    }
+
+    /// The phone's side: one code, the same emoji, and the laptop is added with
+    /// the address of its node.
+    #[test]
+    fn pairing_adds_the_other_device() {
+        let runtime = Runtime::new().unwrap();
+        let key = SecretKey::generate();
+        let (host, code) = laptop(&runtime, &key);
+        let laptop_side = runtime.spawn(async move {
+            let pending = host.accept().await.unwrap();
+            let emoji = pending.emoji.map(String::from).to_vec();
+            let paired = pending.confirm(true).await.unwrap();
+            host.close().await;
+            (emoji, paired)
+        });
+
+        let dir = state_dir("pair");
+        let pairing = Pairing::new(dir.clone(), code, "Pixel 9 Pro".into()).unwrap();
+        let peer = pairing.connect().unwrap();
+        assert_eq!(peer.name, "laptop");
+        let member = pairing.confirm(true).unwrap().expect("not paired");
+        let (emoji, paired) = runtime.block_on(laptop_side).unwrap();
+        assert!(paired);
+        assert_eq!(peer.emoji, emoji);
+        assert_eq!(member.id, key.public().to_string());
+        assert_eq!(member.name, "laptop");
+        assert_eq!(member.addrs, vec!["127.0.0.1:7777".to_string()]);
+        assert_eq!(list_members(dir).unwrap().len(), 1);
+    }
+
+    /// The code points at a device that never answers: cancel ends the wait.
+    #[test]
+    fn cancel_ends_a_stuck_connect() {
+        let silent = UdpSocket::bind("127.0.0.1:0").unwrap();
+        let code = Ticket {
+            id: SecretKey::generate().public(),
+            secret: [0; 16],
+            addrs: vec![silent.local_addr().unwrap()],
+        }
+        .to_string();
+        let pairing = Pairing::new(state_dir("stuck"), code, "phone".into()).unwrap();
+        let connecting = {
+            let pairing = pairing.clone();
+            std::thread::spawn(move || pairing.connect())
+        };
+        std::thread::sleep(Duration::from_millis(300));
+        let cancelled_at = Instant::now();
+        pairing.cancel();
+        assert_cancelled(connecting.join().unwrap());
+        assert!(cancelled_at.elapsed() < Duration::from_secs(2));
+    }
+
+    /// Cancelled while waiting for the laptop's answer: the laptop learns at once.
+    #[test]
+    fn cancel_while_waiting_ends_the_pairing_on_both_sides() {
+        let runtime = Runtime::new().unwrap();
+        let (host, code) = laptop(&runtime, &SecretKey::generate());
+        let accepting = runtime.spawn(async move {
+            let pending = host.accept().await.unwrap();
+            (host, pending)
+        });
+        let pairing = Pairing::new(state_dir("waiting"), code, "phone".into()).unwrap();
+        pairing.connect().unwrap();
+        let (host, pending) = runtime.block_on(accepting).unwrap();
+
+        // The laptop's user has not answered yet.
+        let confirming = {
+            let pairing = pairing.clone();
+            std::thread::spawn(move || pairing.confirm(true))
+        };
+        std::thread::sleep(Duration::from_millis(300));
+        pairing.cancel();
+        assert!(confirming.join().unwrap().unwrap().is_none());
+        runtime.block_on(async {
+            tokio::time::timeout(Duration::from_secs(5), pending.closed())
+                .await
+                .expect("the laptop did not see the pairing end");
+            assert!(!pending.confirm(true).await.unwrap());
+            host.close().await;
+        });
+    }
+
+    /// Leaving while the emoji are on screen tells the laptop at once.
+    #[test]
+    fn dropping_before_answering_ends_the_pairing() {
+        let runtime = Runtime::new().unwrap();
+        let (host, code) = laptop(&runtime, &SecretKey::generate());
+        let accepting = runtime.spawn(async move {
+            let pending = host.accept().await.unwrap();
+            (host, pending)
+        });
+        let pairing = Pairing::new(state_dir("drop"), code, "phone".into()).unwrap();
+        pairing.connect().unwrap();
+        let (host, pending) = runtime.block_on(accepting).unwrap();
+
+        drop(pairing);
+        runtime.block_on(async {
+            tokio::time::timeout(Duration::from_secs(5), pending.closed())
+                .await
+                .expect("the laptop did not see the pairing end");
+            assert!(!pending.confirm(true).await.unwrap());
+            host.close().await;
+        });
     }
 }

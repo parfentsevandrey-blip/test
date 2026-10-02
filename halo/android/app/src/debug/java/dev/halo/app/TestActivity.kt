@@ -84,14 +84,15 @@ class TestActivity : Activity() {
 
     private fun pair(code: String) {
         try {
-            val pairing = Halo.pairJoin(code)
-            Log.i(TAG, "HALO_PAIR_EMOJI ${pairing.peerName()} ${pairing.emoji().joinToString(" ")}")
-            val member = Halo.pairConfirm(pairing, accept = true)
-            pairing.close()
-            if (member != null) {
-                Log.i(TAG, "HALO_PAIRED ${member.name} ${member.ip} ${member.addrs.joinToString(",")}")
-            } else {
-                Log.e(TAG, "HALO_ERROR the other device declined")
+            Halo.pairing(code).use { pairing ->
+                val peer = pairing.connect()
+                Log.i(TAG, "HALO_PAIR_EMOJI ${peer.name} ${peer.emoji.joinToString(" ")}")
+                val member = Halo.pairConfirm(pairing, accept = true)
+                if (member != null) {
+                    Log.i(TAG, "HALO_PAIRED ${member.name} ${member.ip} ${member.addrs.joinToString(",")}")
+                } else {
+                    Log.e(TAG, "HALO_ERROR the other device declined")
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "HALO_ERROR ${e.message}", e)
