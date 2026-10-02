@@ -1,21 +1,20 @@
 //! `halo`: run a Halo node on a desktop (Linux, macOS, Windows).
 
-use std::{
-    fs,
-    io::IsTerminal,
-    net::SocketAddr,
-    path::{Path, PathBuf},
-    str::FromStr,
-    time::Duration,
-};
+mod members;
+mod state;
+
+use std::{io::IsTerminal, net::SocketAddr, path::PathBuf, str::FromStr, time::Duration};
 
 use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
 use halo_core::{DEFAULT_MTU, NodeConfig, PeerConfig, addr::overlay_ipv4};
-use iroh::{EndpointId, SecretKey};
+use iroh::EndpointId;
 use tracing_subscriber::EnvFilter;
 
-const KEY_FILE: &str = "secret.key";
+use crate::{
+    members::{Member, parse_addrs},
+    state::State,
+};
 
 #[derive(Parser)]
 #[command(
@@ -23,7 +22,7 @@ const KEY_FILE: &str = "secret.key";
     about = "A private network of your own devices, without servers"
 )]
 struct Cli {
-    /// Directory with this device's key (default: the platform config dir).
+    /// Directory with this device's key and member list.
     #[arg(long, global = true, env = "HALO_STATE_DIR")]
     state_dir: Option<PathBuf>,
     #[command(subcommand)]
@@ -32,12 +31,27 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    /// Print this device's id and overlay address, creating a key on first use.
+    /// Print this device's id and address in the network, creating a key on first use.
     Id,
-    /// Bring the tunnel up and connect to member devices.
+    /// Add a device to the network of this device, or update it.
+    Add {
+        /// The device id, as printed by `halo id` on that device.
+        id: EndpointId,
+        /// A short name: lowercase latin letters, digits and dashes.
+        #[arg(long)]
+        name: String,
+        /// Known address of the device, `ip:port`. Not needed on the same local network.
+        #[arg(long = "addr", value_name = "ADDR", value_parser = parse_addrs)]
+        addrs: Vec<Vec<SocketAddr>>,
+    },
+    /// Remove a device by name or id.
+    Remove { device: String },
+    /// List the devices of this network.
+    Members,
+    /// Bring the network up and connect to the member devices.
     Up {
-        /// Member device: `ID` or `ID@ADDR[,ADDR...]`, e.g. `3f2a…@192.168.1.20:7777`.
-        #[arg(long = "peer", value_name = "PEER", required = true)]
+        /// Extra device for this run: `ID` or `ID@ADDR[,ADDR...]`.
+        #[arg(long = "peer", value_name = "PEER")]
         peers: Vec<PeerSpec>,
         /// UDP port to listen on (0 = random).
         #[arg(long, default_value_t = 7777)]
@@ -48,6 +62,9 @@ enum Command {
         /// MTU of the TUN device.
         #[arg(long, default_value_t = DEFAULT_MTU)]
         mtu: u16,
+        /// Do not look for devices on the local network (mDNS).
+        #[arg(long)]
+        no_lan: bool,
         /// Log traffic counters every N seconds.
         #[arg(long, value_name = "SECONDS")]
         stats: Option<u64>,
@@ -62,17 +79,10 @@ impl FromStr for PeerSpec {
 
     fn from_str(s: &str) -> Result<Self> {
         let (id, addrs) = match s.split_once('@') {
-            Some((id, addrs)) => (id, Some(addrs)),
-            None => (s, None),
+            Some((id, addrs)) => (id, parse_addrs(addrs)?),
+            None => (s, Vec::new()),
         };
         let id = EndpointId::from_str(id).context("invalid device id")?;
-        let addrs = addrs
-            .into_iter()
-            .flat_map(|addrs| addrs.split(','))
-            .map(|addr| {
-                SocketAddr::from_str(addr).with_context(|| format!("invalid address {addr}"))
-            })
-            .collect::<Result<_>>()?;
         Ok(Self(PeerConfig { id, addrs }))
     }
 }
@@ -89,19 +99,53 @@ async fn main() -> Result<()> {
         .init();
 
     let cli = Cli::parse();
-    let state_dir = match cli.state_dir {
-        Some(dir) => dir,
-        None => dirs::config_dir()
-            .context("no config directory on this platform; pass --state-dir")?
-            .join("halo"),
-    };
-    let secret_key = load_or_create_key(&state_dir)?;
-    let id = secret_key.public();
-
+    let state = State::new(cli.state_dir)?;
     match cli.command {
         Command::Id => {
+            let id = state.key()?.public();
             println!("id: {id}");
             println!("ip: {}", overlay_ipv4(&id));
+            Ok(())
+        }
+        Command::Add { id, name, addrs } => {
+            if id == state.key()?.public() {
+                bail!("this is the id of this device; add it on the other device instead");
+            }
+            let mut members = state.members()?;
+            let addrs = addrs.into_iter().flatten().collect();
+            members.upsert(Member {
+                id,
+                name: name.clone(),
+                addrs,
+            })?;
+            state.save_members(&members)?;
+            println!("added {name}: {}", overlay_ipv4(&id));
+            Ok(())
+        }
+        Command::Remove { device } => {
+            let mut members = state.members()?;
+            let removed = members
+                .remove(&device)
+                .with_context(|| format!("no device {device}"))?;
+            state.save_members(&members)?;
+            println!("removed {}", removed.name);
+            Ok(())
+        }
+        Command::Members => {
+            let members = state.members()?;
+            if members.0.is_empty() {
+                println!("no devices yet: add one with `halo add <id> --name <name>`");
+            }
+            for member in &members.0 {
+                let addrs: Vec<String> = member.addrs.iter().map(ToString::to_string).collect();
+                println!(
+                    "{:<16} {:<16} {} {}",
+                    member.name,
+                    overlay_ipv4(&member.id),
+                    member.id.fmt_short(),
+                    addrs.join(",")
+                );
+            }
             Ok(())
         }
         Command::Up {
@@ -109,18 +153,40 @@ async fn main() -> Result<()> {
             port,
             tun,
             mtu,
+            no_lan,
             stats,
         } => {
-            let peers: Vec<PeerConfig> = peers.into_iter().map(|spec| spec.0).collect();
-            if peers.iter().any(|peer| peer.id == id) {
+            let secret_key = state.key()?;
+            let id = secret_key.public();
+            let mut all: Vec<PeerConfig> = state
+                .members()?
+                .0
+                .into_iter()
+                .map(|member| PeerConfig {
+                    id: member.id,
+                    addrs: member.addrs,
+                })
+                .collect();
+            for PeerSpec(peer) in peers {
+                match all.iter_mut().find(|known| known.id == peer.id) {
+                    Some(known) => known.addrs.extend(peer.addrs),
+                    None => all.push(peer),
+                }
+            }
+            if all.is_empty() {
+                bail!("no devices to connect to: add one with `halo add <id> --name <name>`");
+            }
+            if all.iter().any(|peer| peer.id == id) {
                 bail!("a device cannot be its own peer");
             }
-            let tun = halo_core::create_tun(tun.as_deref(), overlay_ipv4(&id), mtu)?;
+            let name = tun.as_deref().or(default_tun_name());
+            let tun = halo_core::create_tun(name, overlay_ipv4(&id), mtu)?;
             let config = NodeConfig {
                 secret_key,
                 port,
                 mtu,
-                peers,
+                peers: all,
+                lan_discovery: !no_lan,
                 stats_interval: stats.map(Duration::from_secs),
             };
             halo_core::run(config, tun, shutdown_signal()).await
@@ -128,31 +194,15 @@ async fn main() -> Result<()> {
     }
 }
 
-fn load_or_create_key(dir: &Path) -> Result<SecretKey> {
-    let path = dir.join(KEY_FILE);
-    match fs::read_to_string(&path) {
-        Ok(contents) => SecretKey::from_str(contents.trim())
-            .with_context(|| format!("invalid key in {}", path.display())),
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
-            fs::create_dir_all(dir).with_context(|| format!("cannot create {}", dir.display()))?;
-            let key = SecretKey::generate();
-            let hex: String = key.to_bytes().iter().map(|b| format!("{b:02x}")).collect();
-            write_private(&path, &hex)
-                .with_context(|| format!("cannot write {}", path.display()))?;
-            Ok(key)
-        }
-        Err(err) => Err(err).with_context(|| format!("cannot read {}", path.display())),
+/// macOS names TUN devices `utunN` itself.
+fn default_tun_name() -> Option<&'static str> {
+    if cfg!(target_os = "macos") {
+        None
+    } else if cfg!(windows) {
+        Some("Halo")
+    } else {
+        Some("halo0")
     }
-}
-
-/// Writes a file only the current user can read.
-fn write_private(path: &Path, contents: &str) -> std::io::Result<()> {
-    use std::io::Write;
-    let mut options = fs::OpenOptions::new();
-    options.write(true).create_new(true);
-    #[cfg(unix)]
-    std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
-    options.open(path)?.write_all(contents.as_bytes())
 }
 
 async fn shutdown_signal() {

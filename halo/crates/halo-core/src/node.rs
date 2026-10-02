@@ -1,9 +1,11 @@
 //! A Halo node: the TUN device on one side, encrypted links to member devices on the other.
 //!
-//! There are no servers: relays and address lookup services are disabled, so a
-//! node only talks to the member devices it is configured with, directly.
+//! There are no servers: relays and internet address lookup are disabled. A node
+//! talks directly to its member devices, using addresses it was given or finds
+//! on the local network over mDNS.
 
 use std::{
+    borrow::Cow,
     collections::{HashMap, HashSet},
     future::Future,
     net::{Ipv4Addr, Ipv6Addr, SocketAddr},
@@ -17,16 +19,22 @@ use std::{
 use anyhow::{Context, Result, anyhow};
 use bytes::{Bytes, BytesMut};
 use iroh::{
-    Endpoint, EndpointAddr, EndpointId, RelayMode, SecretKey,
+    Endpoint, EndpointAddr, EndpointId, RelayMode, SecretKey, TransportAddr,
+    address_lookup::AddrFilter,
     endpoint::{AfterHandshakeOutcome, BindOpts, Connection, EndpointHooks, Side, VarInt, presets},
 };
-use tokio::{sync::mpsc, task::JoinSet};
+use iroh_mdns_address_lookup::{DiscoveryEvent, MdnsAddressLookup};
+use n0_future::StreamExt;
+use tokio::{
+    sync::{Notify, mpsc},
+    task::JoinSet,
+};
 use tracing::{debug, info, warn};
 use tun_rs::AsyncDevice;
 
 use crate::{
     ALPN,
-    addr::{OVERLAY_PREFIX, overlay_ipv4},
+    addr::{OVERLAY_PREFIX, is_overlay, overlay_ipv4},
     frame,
 };
 
@@ -42,6 +50,9 @@ const MAX_BACKOFF: Duration = Duration::from_secs(30);
 /// Two connections to the same peer created this close together are a simultaneous dial.
 const RACE_WINDOW: Duration = Duration::from_secs(5);
 
+/// mDNS service name, so Halo devices do not mix with other iroh apps on the network.
+const MDNS_SERVICE: &str = "halo";
+
 const CLOSE_NOT_MEMBER: VarInt = VarInt::from_u32(1);
 const CLOSE_DUPLICATE: VarInt = VarInt::from_u32(2);
 
@@ -50,7 +61,8 @@ const CLOSE_DUPLICATE: VarInt = VarInt::from_u32(2);
 pub struct PeerConfig {
     /// The device key.
     pub id: EndpointId,
-    /// Known direct addresses. Empty means the peer is expected to dial us.
+    /// Known direct addresses. May be empty: the peer is then found on the local
+    /// network, or dials us itself.
     pub addrs: Vec<SocketAddr>,
 }
 
@@ -65,6 +77,8 @@ pub struct NodeConfig {
     pub mtu: u16,
     /// Member devices. Connections from any other key are rejected during the handshake.
     pub peers: Vec<PeerConfig>,
+    /// Find member devices on the local network over mDNS.
+    pub lan_discovery: bool,
     /// Log traffic counters at this interval.
     pub stats_interval: Option<Duration>,
 }
@@ -98,6 +112,10 @@ pub async fn run(
     for addr in endpoint.addr().ip_addrs() {
         info!(%addr, "listening");
     }
+    let lan = config
+        .lan_discovery
+        .then(|| start_lan_discovery(&endpoint))
+        .flatten();
 
     let tun = Arc::new(tun);
     let stats = Arc::new(Stats::default());
@@ -115,6 +133,7 @@ pub async fn run(
             outbound: outbound_tx,
             incoming: incoming_tx,
             connected: AtomicBool::new(false),
+            wake: Notify::new(),
         });
         info!(peer = %peer.id.fmt_short(), %ip, "member");
         by_ip.insert(ip, state.clone());
@@ -134,7 +153,11 @@ pub async fn run(
         .iter()
         .map(SocketAddr::port)
         .collect();
-    tasks.spawn(accept_loop(endpoint.clone(), Arc::new(by_id)));
+    let by_id = Arc::new(by_id);
+    if let Some(lan) = lan {
+        tasks.spawn(watch_lan(lan, by_id.clone()));
+    }
+    tasks.spawn(accept_loop(endpoint.clone(), by_id));
     tasks.spawn(tun_loop(
         tun,
         Arc::new(by_ip),
@@ -165,9 +188,11 @@ async fn bind_endpoint(config: &NodeConfig, members: HashSet<EndpointId>) -> Res
     let endpoint = Endpoint::builder(presets::Minimal)
         .secret_key(config.secret_key.clone())
         .alpns(vec![ALPN.to_vec()])
-        // No servers: no relays and no address lookup services.
+        // No servers: no relays and no internet address lookup.
         .relay_mode(RelayMode::Disabled)
         .clear_address_lookup()
+        // Never advertise the tunnel's own address as a way to reach this device.
+        .addr_filter(without_overlay())
         .hooks(MembersOnly(members))
         .clear_ip_transports()
         .bind_addr(v4)?
@@ -176,6 +201,61 @@ async fn bind_endpoint(config: &NodeConfig, members: HashSet<EndpointId>) -> Res
         .await
         .context("failed to bind the endpoint")?;
     Ok(endpoint)
+}
+
+fn without_overlay() -> AddrFilter {
+    AddrFilter::new(|addrs| {
+        Cow::Owned(
+            addrs
+                .iter()
+                .filter(|addr| match addr {
+                    TransportAddr::Ip(SocketAddr::V4(addr)) => !is_overlay(*addr.ip()),
+                    TransportAddr::Ip(SocketAddr::V6(_)) => true,
+                    _ => false,
+                })
+                .cloned()
+                .collect(),
+        )
+    })
+}
+
+/// Publishes this device on the local network and finds members there.
+///
+/// Optional: without multicast the node still works with known addresses.
+fn start_lan_discovery(endpoint: &Endpoint) -> Option<MdnsAddressLookup> {
+    let lan = MdnsAddressLookup::builder()
+        .service_name(MDNS_SERVICE)
+        .build(endpoint.id())
+        .map_err(anyhow::Error::from)
+        .and_then(|lan| {
+            endpoint.address_lookup()?.add(lan.clone());
+            Ok(lan)
+        });
+    match lan {
+        Ok(lan) => Some(lan),
+        Err(err) => {
+            warn!("local network discovery is unavailable: {err:#}");
+            None
+        }
+    }
+}
+
+/// Dials a member as soon as it shows up on the local network.
+async fn watch_lan(
+    lan: MdnsAddressLookup,
+    peers: Arc<HashMap<EndpointId, Arc<Peer>>>,
+) -> Result<()> {
+    let mut events = lan.subscribe().await;
+    while let Some(event) = events.next().await {
+        if let DiscoveryEvent::Discovered { endpoint_info, .. } = event
+            && let Some(peer) = peers.get(&endpoint_info.endpoint_id)
+        {
+            debug!(peer = %peer.id.fmt_short(), "seen on the local network");
+            peer.wake.notify_one();
+        }
+    }
+    warn!("local network discovery stopped");
+    std::future::pending().await
 }
 
 /// Rejects every key that is not a member, right after the TLS handshake.
@@ -210,6 +290,8 @@ struct Peer {
     /// Connections from this peer, handed over by the accept loop.
     incoming: mpsc::Sender<Connection>,
     connected: AtomicBool,
+    /// Cuts the redial backoff short, e.g. when the peer appears on the local network.
+    wake: Notify,
 }
 
 #[derive(Debug, Default)]
@@ -309,11 +391,12 @@ impl Link {
             let conn = match next.take() {
                 Some(conn) => conn,
                 None => {
+                    // Without known addresses iroh asks local network discovery.
                     let dial = async {
-                        if self.peer.addrs.is_empty() {
-                            std::future::pending::<()>().await;
+                        tokio::select! {
+                            () = tokio::time::sleep(delay) => {}
+                            () = self.peer.wake.notified() => {}
                         }
-                        tokio::time::sleep(delay).await;
                         self.dial().await
                     };
                     tokio::select! {

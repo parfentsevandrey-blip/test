@@ -1,0 +1,126 @@
+name: halo
+
+on:
+  push:
+    paths: ["halo/**", ".github/workflows/halo.yml"]
+  pull_request:
+    paths: ["halo/**", ".github/workflows/halo.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: halo
+
+env:
+  CARGO_TERM_COLOR: always
+  WINTUN_URL: https://www.wintun.net/builds/wintun-0.14.1.zip
+  WINTUN_SHA256: 07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51
+
+jobs:
+  check:
+    name: check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: halo
+      - name: Format
+        if: runner.os == 'Linux'
+        run: cargo fmt --check
+      - name: Lint
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Unit tests
+        run: cargo test
+
+  e2e:
+    name: end-to-end (network namespaces)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: halo
+      - name: Install iperf3
+        run: sudo DEBIAN_FRONTEND=noninteractive apt-get install -y iperf3
+      - name: Build
+        run: cargo build --release
+      - name: Three nodes in network namespaces
+        run: sudo HALO="$PWD/target/release/halo" scripts/netns-test.sh
+
+  build:
+    name: build (${{ matrix.name }})
+    needs: check
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos-universal
+            os: macos-latest
+            targets: aarch64-apple-darwin,x86_64-apple-darwin
+          - name: windows-x64
+            os: windows-latest
+          - name: linux-x64
+            os: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.targets }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: halo
+          key: ${{ matrix.name }}
+
+      - name: Build (macOS, Apple Silicon + Intel)
+        if: runner.os == 'macOS'
+        run: |
+          cargo build --release --target aarch64-apple-darwin
+          cargo build --release --target x86_64-apple-darwin
+          mkdir -p dist
+          lipo -create -output dist/halo \
+            target/aarch64-apple-darwin/release/halo \
+            target/x86_64-apple-darwin/release/halo
+          lipo -info dist/halo
+          # Artifacts are zipped without file modes; a tarball keeps the executable bit.
+          tar -czf dist/halo-macos.tar.gz -C dist halo
+          rm dist/halo
+
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cargo build --release
+          mkdir -p dist
+          tar -czf dist/halo-linux-x64.tar.gz -C target/release halo
+
+      - name: Build (Windows, with Wintun)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cargo build --release
+          Invoke-WebRequest -Uri $env:WINTUN_URL -OutFile wintun.zip
+          $hash = (Get-FileHash wintun.zip -Algorithm SHA256).Hash.ToLower()
+          if ($hash -ne $env:WINTUN_SHA256) { throw "Wintun checksum mismatch: $hash" }
+          Expand-Archive wintun.zip -DestinationPath wintun
+          New-Item -ItemType Directory dist | Out-Null
+          Copy-Item target/release/halo.exe dist/
+          Copy-Item wintun/wintun/bin/amd64/wintun.dll dist/
+          Copy-Item wintun/wintun/LICENSE.txt dist/wintun-LICENSE.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: halo-${{ matrix.name }}
+          path: halo/dist
+          if-no-files-found: error
