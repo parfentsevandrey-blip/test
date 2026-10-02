@@ -7,12 +7,17 @@
 //! With a member journal, members come and go while the node runs: connected
 //! members exchange journal entries, and the node follows the journal file that
 //! commands like `halo pair` and `halo remove` write.
+//!
+//! The node also asks the router for a port that forwards to it (UPnP, NAT-PMP,
+//! PCP) and tells the members where it can be reached from anywhere, so they
+//! find it from other networks too.
 
 use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
     future::Future,
-    net::{Ipv4Addr, Ipv6Addr, SocketAddr},
+    net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4},
+    num::NonZeroU16,
     sync::{
         Arc, Mutex, RwLock, Weak,
         atomic::{AtomicBool, AtomicU64, Ordering::Relaxed},
@@ -23,7 +28,7 @@ use std::{
 use anyhow::{Context, Result, anyhow};
 use bytes::{Bytes, BytesMut};
 use iroh::{
-    Endpoint, EndpointAddr, EndpointId, RelayMode, SecretKey, TransportAddr,
+    Endpoint, EndpointAddr, EndpointId, RelayMode, SecretKey, TransportAddr, Watcher,
     address_lookup::AddrFilter,
     endpoint::{
         AfterHandshakeOutcome, BindOpts, Connection, EndpointHooks, Side, VarInt,
@@ -44,8 +49,9 @@ use crate::{
     addr::{is_overlay, overlay_ipv4},
     frame,
     journal::{Entry, Journal, View},
+    presence::{Presence, Presences, is_public},
     state::State,
-    sync,
+    sync::{self, Kind},
 };
 
 /// Default tunnel MTU: the IPv6 minimum, so the same tunnel can carry IPv6 later.
@@ -61,12 +67,17 @@ const MAX_BACKOFF: Duration = Duration::from_secs(30);
 const RACE_WINDOW: Duration = Duration::from_secs(5);
 /// How often the node looks for changes other programs made to the journal file.
 const JOURNAL_POLL: Duration = Duration::from_secs(2);
+/// How long a new node waits for a port mapping before saying where it can be reached.
+const MAPPING_GRACE: Duration = Duration::from_secs(10);
+/// How often the node checks where it can be reached, besides on every change.
+const REACH_RECHECK: Duration = Duration::from_secs(300);
 
 /// mDNS service name, so Halo devices do not mix with other iroh apps on the network.
 const MDNS_SERVICE: &str = "halo";
 
 const CLOSE_NOT_MEMBER: VarInt = VarInt::from_u32(1);
 const CLOSE_DUPLICATE: VarInt = VarInt::from_u32(2);
+const CLOSE_MOVED: VarInt = VarInt::from_u32(3);
 
 /// A member device this node talks to.
 #[derive(Debug, Clone)]
@@ -136,15 +147,19 @@ impl Node {
     pub async fn start(config: NodeConfig, tun: AsyncDevice) -> Result<Self> {
         let me = config.secret_key.public();
         let my_ip = overlay_ipv4(&me);
-        let journal = match &config.journal {
+        let (journal, presences) = match &config.journal {
             Some(state) => {
                 let state = state.clone();
-                Some(tokio::task::spawn_blocking(move || state.journal()).await??)
+                let (journal, presences) = tokio::task::spawn_blocking(move || {
+                    anyhow::Ok((state.journal()?, state.presences()?))
+                })
+                .await??;
+                (Some(journal), presences)
             }
-            None => None,
+            None => (None, Presences::default()),
         };
         let view = journal.as_ref().map(|journal| journal.view(me));
-        let members = members_of(view.as_ref(), &config.peers);
+        let members = members_of(view.as_ref(), &presences, &config.peers);
         let allowed = Arc::new(RwLock::new(members.iter().map(|peer| peer.id).collect()));
         let endpoint = bind_endpoint(&config, allowed.clone()).await?;
         info!(id = %me, ip = %my_ip, "node up");
@@ -156,9 +171,16 @@ impl Node {
             .then(|| start_lan_discovery(&endpoint))
             .flatten();
 
+        let v4_port = endpoint
+            .bound_sockets()
+            .iter()
+            .find(|addr| addr.is_ipv4())
+            .map_or(0, SocketAddr::port);
         let shared = Arc::new(Shared {
+            key: config.secret_key.clone(),
             me,
             my_ip,
+            v4_port,
             endpoint: endpoint.clone(),
             tun: Arc::new(tun),
             stats: Arc::new(Stats::default()),
@@ -170,6 +192,8 @@ impl Node {
             membership: config.journal.map(|state| Membership {
                 state,
                 journal: Mutex::new(journal.unwrap_or_default()),
+                presences: Mutex::new(presences),
+                mapper: portmapper::Client::new(portmapper::Config::default()),
             }),
             removed: AtomicBool::new(false),
         });
@@ -191,6 +215,7 @@ impl Node {
         tasks.spawn(tun_loop(shared.clone(), transport_ports, config.mtu));
         if shared.membership.is_some() {
             tasks.spawn(follow_journal(shared.clone()));
+            tasks.spawn(announce_reach(shared.clone()));
         }
         if let Some(interval) = config.stats_interval {
             tasks.spawn(log_stats(shared.stats.clone(), interval));
@@ -223,17 +248,26 @@ impl Node {
     }
 }
 
-/// The member devices to connect to: the journal's members and the extra peers,
-/// except removed devices.
-fn members_of(view: Option<&View>, extra: &[PeerConfig]) -> Vec<PeerConfig> {
+/// The member devices to connect to: the journal's members, at the addresses
+/// the journal and their presences give, and the extra peers, except removed
+/// devices.
+fn members_of(view: Option<&View>, presences: &Presences, extra: &[PeerConfig]) -> Vec<PeerConfig> {
     let mut peers: Vec<PeerConfig> = view
         .map(|view| {
             view.members
                 .0
                 .iter()
-                .map(|member| PeerConfig {
-                    id: member.id,
-                    addrs: member.addrs.clone(),
+                .map(|member| {
+                    let mut addrs = member.addrs.clone();
+                    for addr in presences.addrs(&member.id) {
+                        if !addrs.contains(&addr) {
+                            addrs.push(addr);
+                        }
+                    }
+                    PeerConfig {
+                        id: member.id,
+                        addrs,
+                    }
                 })
                 .collect()
         })
@@ -252,8 +286,11 @@ fn members_of(view: Option<&View>, extra: &[PeerConfig]) -> Vec<PeerConfig> {
 
 /// State shared by the node's tasks and handles.
 struct Shared {
+    key: SecretKey,
     me: EndpointId,
     my_ip: Ipv4Addr,
+    /// The UDP port of the IPv4 socket: the one to map on the router.
+    v4_port: u16,
     endpoint: Endpoint,
     tun: Arc<AsyncDevice>,
     stats: Arc<Stats>,
@@ -269,11 +306,14 @@ struct Shared {
     removed: AtomicBool,
 }
 
-/// The member journal as the node keeps it.
+/// The member journal and presences as the node keeps them.
 struct Membership {
     state: State,
     /// What the journal file said last.
     journal: Mutex<Journal>,
+    presences: Mutex<Presences>,
+    /// Maps a port on the router to this node, where the router lets it.
+    mapper: portmapper::Client,
 }
 
 impl Shared {
@@ -353,10 +393,208 @@ impl Shared {
             }
             *current = journal.clone();
         }
-        let view = journal.view(self.me);
-        self.note_removal(&view);
-        self.set_members(members_of(Some(&view), &self.extra_peers));
+        self.refresh();
         self.push();
+        // New members may have presences the peers can tell.
+        self.push_presences();
+    }
+
+    /// Works out the members and their addresses again, from the journal and
+    /// the presences.
+    fn refresh(self: &Arc<Self>) {
+        let Some(membership) = &self.membership else {
+            return;
+        };
+        let view = membership.journal.lock().expect("poisoned").view(self.me);
+        self.note_removal(&view);
+        let members = {
+            let presences = membership.presences.lock().expect("poisoned");
+            members_of(Some(&view), &presences, &self.extra_peers)
+        };
+        self.set_members(members);
+    }
+
+    /// Keeps the presences from another member that are new here.
+    async fn learn_presences(self: &Arc<Self>, presences: Vec<Presence>) {
+        let Some(membership) = &self.membership else {
+            return;
+        };
+        // Only members' presences matter, and this device's own.
+        let presences: Vec<Presence> = {
+            let allowed = self.allowed.read().expect("poisoned");
+            presences
+                .into_iter()
+                .filter(|presence| {
+                    presence.device() == self.me || allowed.contains(&presence.device())
+                })
+                .collect()
+        };
+        let changed = {
+            let mut known = membership.presences.lock().expect("poisoned");
+            let mut changed = false;
+            for presence in &presences {
+                changed |= known.insert(presence.clone());
+            }
+            changed
+        };
+        if !changed {
+            return;
+        }
+        let state = membership.state.clone();
+        let saved = tokio::task::spawn_blocking(move || {
+            state.update_presences(|known| {
+                for presence in presences {
+                    known.insert(presence);
+                }
+                Ok(())
+            })
+        })
+        .await;
+        if !matches!(saved, Ok(Ok(()))) {
+            warn!("failed to save the presences of members");
+        }
+        self.refresh();
+        self.push_presences();
+    }
+
+    /// Signs and spreads where this device can be reached, if that changed.
+    async fn announce(self: &Arc<Self>, reach: Vec<SocketAddr>) {
+        let Some(membership) = &self.membership else {
+            return;
+        };
+        let unchanged = membership
+            .presences
+            .lock()
+            .expect("poisoned")
+            .get(&self.me)
+            .map_or(reach.is_empty(), |presence| presence.addrs() == reach);
+        if unchanged {
+            return;
+        }
+        let state = membership.state.clone();
+        let key = self.key.clone();
+        let addrs = reach.clone();
+        let signed = tokio::task::spawn_blocking(move || {
+            state.update_presences(|presences| Ok(presences.announce(&key, addrs)))
+        })
+        .await;
+        let presence = match signed {
+            Ok(Ok(Some(presence))) => presence,
+            Ok(Ok(None)) => return,
+            Ok(Err(err)) => return warn!("failed to save this device's presence: {err:#}"),
+            Err(err) => return warn!("failed to save this device's presence: {err}"),
+        };
+        membership
+            .presences
+            .lock()
+            .expect("poisoned")
+            .insert(presence);
+        if reach.is_empty() {
+            info!("not reachable from the internet: no port mapping on this network");
+        } else {
+            let addrs: Vec<String> = reach.iter().map(ToString::to_string).collect();
+            info!(addrs = %addrs.join(","), "reachable from the internet");
+        }
+        self.push_presences();
+    }
+
+    /// Offers the presences to every connected member.
+    fn push_presences(self: &Arc<Self>) {
+        for peer in self.peers.read().expect("poisoned").values() {
+            if let Some(conn) = peer.connection() {
+                tokio::spawn(self.clone().exchange_presences(conn));
+            }
+        }
+    }
+
+    /// One presence exchange with the member at the other end of `conn`.
+    async fn exchange_presences(self: Arc<Self>, conn: Connection) {
+        let Some(membership) = &self.membership else {
+            return;
+        };
+        let ours: Vec<Presence> = membership
+            .presences
+            .lock()
+            .expect("poisoned")
+            .iter()
+            .cloned()
+            .collect();
+        match sync::initiate_presences(&conn, &ours).await {
+            Ok(theirs) => self.learn_presences(theirs).await,
+            Err(err) => {
+                debug!(peer = %conn.remote_id().fmt_short(), "presence exchange failed: {err:#}")
+            }
+        }
+    }
+
+    /// Connects to `peer` at every address known for it.
+    async fn dial(&self, peer: &Peer) -> Result<Connection> {
+        let addrs = peer.addrs.lock().expect("poisoned").clone();
+        let addr = addrs.iter().fold(EndpointAddr::new(peer.id), |addr, ip| {
+            addr.with_ip_addr(*ip)
+        });
+        let conn = tokio::time::timeout(DIAL_TIMEOUT, self.endpoint.connect(addr, ALPN))
+            .await
+            .context("timed out")??;
+        Ok(conn)
+    }
+
+    /// This device moved to another network. Connections over the old one may
+    /// be dead without anyone noticing for half a minute, and while one lives,
+    /// iroh keeps sending a new connection's first packets along its path only.
+    /// So they are closed, and every link dials again at once, at all the
+    /// addresses it knows: the public ones from presences reach home from
+    /// anywhere.
+    fn moved(self: &Arc<Self>) {
+        info!("the network changed: reconnecting");
+        for peer in self.peers.read().expect("poisoned").values() {
+            if let Some(conn) = peer.connection() {
+                conn.close(CLOSE_MOVED, b"network changed");
+            }
+            peer.wake.notify_one();
+        }
+    }
+
+    /// Asks the router for a mapping again: after a network change the old one
+    /// belongs to another network. Finds out first which of UPnP, NAT-PMP and
+    /// PCP the router speaks; without that, only UPnP would be tried.
+    async fn remap(&self) {
+        let Some(membership) = &self.membership else {
+            return;
+        };
+        let Some(port) = NonZeroU16::new(self.v4_port) else {
+            return;
+        };
+        match membership.mapper.probe().await {
+            Ok(Ok(found)) if found.upnp || found.pcp || found.nat_pmp => {
+                debug!(%found, "port mapping protocols")
+            }
+            Ok(Ok(_)) => info!(
+                "the router maps no ports (UPnP, NAT-PMP, PCP): other networks reach this \
+                 device only through a port forwarded by hand"
+            ),
+            Ok(Err(err)) => debug!("no port mapping here: {err}"),
+            Err(_) => return,
+        }
+        membership.mapper.deactivate();
+        membership.mapper.update_local_port(port);
+    }
+
+    /// Where this device can be reached from anywhere: the port the router maps
+    /// to it, and public addresses of its own (global IPv6, mostly).
+    fn reachable(&self, mapped: Option<SocketAddrV4>) -> Vec<SocketAddr> {
+        let mut addrs: Vec<SocketAddr> = mapped
+            .map(SocketAddr::V4)
+            .into_iter()
+            .filter(|addr| is_public(addr.ip()))
+            .collect();
+        for addr in self.endpoint.addr().ip_addrs() {
+            if is_public(addr.ip()) && !addrs.contains(addr) {
+                addrs.push(*addr);
+            }
+        }
+        addrs.sort();
+        addrs
     }
 
     /// Keeps the entries from another member that are new here, and acts on them.
@@ -421,19 +659,39 @@ impl Shared {
     /// Answers the journal exchanges a member starts, for as long as its
     /// connection lives.
     async fn answer_exchanges(self: Arc<Self>, conn: Connection) {
-        while let Ok((send, recv)) = conn.accept_bi().await {
+        while let Ok((send, mut recv)) = conn.accept_bi().await {
             let shared = self.clone();
             let remote = conn.remote_id();
             tokio::spawn(async move {
                 let Some(membership) = &shared.membership else {
                     return;
                 };
-                let journal = membership.journal.lock().expect("poisoned").clone();
-                match sync::respond(send, recv, &journal).await {
-                    Ok(entries) => shared.learn(entries).await,
-                    Err(err) => {
-                        debug!(peer = %remote.fmt_short(), "journal exchange failed: {err:#}")
+                match sync::kind(&mut recv).await {
+                    Ok(Kind::Journal) => {
+                        let journal = membership.journal.lock().expect("poisoned").clone();
+                        match sync::respond(send, recv, &journal).await {
+                            Ok(entries) => shared.learn(entries).await,
+                            Err(err) => {
+                                debug!(peer = %remote.fmt_short(), "journal exchange failed: {err:#}")
+                            }
+                        }
                     }
+                    Ok(Kind::Presences) => {
+                        let ours: Vec<Presence> = membership
+                            .presences
+                            .lock()
+                            .expect("poisoned")
+                            .iter()
+                            .cloned()
+                            .collect();
+                        match sync::respond_presences(send, recv, &ours).await {
+                            Ok(theirs) => shared.learn_presences(theirs).await,
+                            Err(err) => {
+                                debug!(peer = %remote.fmt_short(), "presence exchange failed: {err:#}")
+                            }
+                        }
+                    }
+                    Err(err) => debug!(peer = %remote.fmt_short(), "unknown exchange: {err:#}"),
                 }
             });
         }
@@ -471,6 +729,54 @@ async fn follow_journal(shared: Arc<Shared>) -> Result<()> {
     }
 }
 
+/// Asks the router for a port that forwards to this node, and tells the members
+/// where the node can be reached from anywhere whenever that changes.
+async fn announce_reach(shared: Arc<Shared>) -> Result<()> {
+    let Some(membership) = &shared.membership else {
+        return std::future::pending().await;
+    };
+    let mut mapped = membership.mapper.watch_external_address();
+    let mut addrs = shared.endpoint.watch_addr();
+    let mut local: Vec<SocketAddr> = shared.endpoint.addr().ip_addrs().copied().collect();
+    shared.remap().await;
+    // Give the router a moment, so a restart does not first announce nothing.
+    let _ = tokio::time::timeout(MAPPING_GRACE, mapped.changed()).await;
+    loop {
+        let reach = shared.reachable(*mapped.borrow());
+        shared.announce(reach).await;
+        tokio::select! {
+            changed = mapped.changed() => {
+                if changed.is_err() {
+                    warn!("port mapping stopped");
+                    return std::future::pending().await;
+                }
+            }
+            updated = addrs.updated() => {
+                let Ok(addr) = updated else {
+                    return std::future::pending().await;
+                };
+                let now: Vec<SocketAddr> = addr.ip_addrs().copied().collect();
+                if now != local {
+                    // An address gone means another network: connections over
+                    // it need renewing. A new address alone (another IPv6
+                    // address, say) leaves the old paths working.
+                    if local.iter().any(|addr| !now.contains(addr)) {
+                        shared.moved();
+                    }
+                    local = now;
+                    shared.remap().await;
+                }
+            }
+            () = tokio::time::sleep(REACH_RECHECK) => {
+                // The router may have come round, or rebooted and lost the mapping.
+                if mapped.borrow().is_none() {
+                    shared.remap().await;
+                }
+            }
+        }
+    }
+}
+
 /// A cheap, cloneable handle to a running node, for user interfaces and the platform.
 ///
 /// Weak: once the node stops, its TUN device closes whatever handles remain.
@@ -487,6 +793,8 @@ pub struct NodeStatus {
     pub peers: Vec<PeerStatus>,
     /// The member journal says this device was removed from the network.
     pub removed: bool,
+    /// Where other devices can reach this one from anywhere, as last announced.
+    pub reachable: Vec<SocketAddr>,
 }
 
 /// A snapshot of one member device.
@@ -511,9 +819,8 @@ impl NodeHandle {
             return;
         };
         shared.endpoint.network_change().await;
-        for peer in shared.peers.read().expect("poisoned").values() {
-            peer.wake.notify_one();
-        }
+        shared.moved();
+        shared.remap().await;
     }
 
     /// The node's state, while it runs.
@@ -542,11 +849,22 @@ impl NodeHandle {
             })
             .collect();
         peers.sort_by_key(|peer| peer.ip);
+        let reachable = shared
+            .membership
+            .as_ref()
+            .and_then(|membership| {
+                let presences = membership.presences.lock().expect("poisoned");
+                presences
+                    .get(&shared.me)
+                    .map(|presence| presence.addrs().to_vec())
+            })
+            .unwrap_or_default();
         Some(NodeStatus {
             id: shared.me,
             ip: shared.my_ip,
             peers,
             removed: shared.removed.load(Relaxed),
+            reachable,
         })
     }
 }
@@ -812,16 +1130,7 @@ impl Link {
     }
 
     async fn dial(&self) -> Result<Connection> {
-        let addrs = self.peer.addrs.lock().expect("poisoned").clone();
-        let addr = addrs
-            .iter()
-            .fold(EndpointAddr::new(self.peer.id), |addr, ip| {
-                addr.with_ip_addr(*ip)
-            });
-        let conn = tokio::time::timeout(DIAL_TIMEOUT, self.shared.endpoint.connect(addr, ALPN))
-            .await
-            .context("timed out")??;
-        Ok(conn)
+        self.shared.dial(&self.peer).await
     }
 
     /// Pumps packets over `conn` until it closes or a better connection to the same
@@ -847,6 +1156,7 @@ impl Link {
         if self.shared.membership.is_some() {
             tokio::spawn(self.shared.clone().answer_exchanges(conn.clone()));
             tokio::spawn(self.shared.clone().exchange(conn.clone()));
+            tokio::spawn(self.shared.clone().exchange_presences(conn.clone()));
         }
 
         let receive = self.receive(&conn);

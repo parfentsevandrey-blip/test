@@ -57,6 +57,9 @@ pub struct MemberInfo {
     pub name: String,
     pub ip: String,
     pub addrs: Vec<String>,
+    /// Where it said it can be reached from anywhere: away from home, the
+    /// phone finds it there.
+    pub public_addrs: Vec<String>,
 }
 
 #[derive(Debug, uniffi::Record)]
@@ -76,6 +79,7 @@ impl From<&Member> for MemberInfo {
             name: member.name.clone(),
             ip: overlay_ipv4(&member.id).to_string(),
             addrs: member.addrs.iter().map(ToString::to_string).collect(),
+            public_addrs: Vec::new(),
         }
     }
 }
@@ -106,13 +110,21 @@ pub fn device_info(state_dir: String) -> Result<DeviceInfo, HaloError> {
 pub fn list_members(state_dir: String) -> Result<Vec<MemberInfo>, HaloError> {
     let state = state(state_dir)?;
     let me = state.key()?.public();
+    let presences = state.presences()?;
     Ok(state
         .journal()?
         .view(me)
         .members
         .0
         .iter()
-        .map(MemberInfo::from)
+        .map(|member| MemberInfo {
+            public_addrs: presences
+                .addrs(&member.id)
+                .iter()
+                .map(ToString::to_string)
+                .collect(),
+            ..MemberInfo::from(member)
+        })
         .collect())
 }
 

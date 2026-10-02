@@ -48,6 +48,7 @@
     <string name="pairing_declined">Сопряжение отменено</string>
     <string name="ok">OK</string>
 
+    <string name="reachable_outside">доступен и вне дома</string>
     <string name="error_no_devices">Сначала добавь хотя бы одно устройство</string>
     <string name="error_vpn_denied">Без разрешения на VPN сеть не включить</string>
     <string name="error_removed">Это устройство удалили из сети. Чтобы вернуться, сотри данные приложения и сопряги его заново</string>

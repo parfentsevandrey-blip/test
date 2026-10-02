@@ -1,4 +1,4 @@
-//! Where this device keeps its key and member journal.
+//! Where this device keeps its key, member journal and the presences of members.
 //!
 //! The key belongs to the device, not to a user, so it lives in a system-wide
 //! directory that only root / administrators can read.
@@ -16,6 +16,7 @@ use iroh::SecretKey;
 use crate::{
     journal::{Action, Journal},
     members::Members,
+    presence::Presences,
 };
 
 const KEY_FILE: &str = "secret.key";
@@ -24,6 +25,8 @@ const JOURNAL_FILE: &str = "journal";
 const JOURNAL_LOCK: &str = "journal.lock";
 /// The member list before the journal, moved into the journal on first use.
 const MEMBERS_FILE: &str = "members";
+const PRESENCE_FILE: &str = "presence";
+const PRESENCE_LOCK: &str = "presence.lock";
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -77,39 +80,77 @@ impl State {
     /// Changes the journal: reads the latest file, applies `change` and saves the
     /// result, all under a lock, so concurrent writers keep each other's entries.
     pub fn update_journal<T>(&self, change: impl FnOnce(&mut Journal) -> Result<T>) -> Result<T> {
+        self.locked(JOURNAL_LOCK, || {
+            let path = self.dir.join(JOURNAL_FILE);
+            let (mut journal, exists) = match fs::read_to_string(&path) {
+                Ok(text) => (
+                    Journal::parse(&text).with_context(|| format!("in {}", path.display()))?,
+                    true,
+                ),
+                Err(err) if err.kind() == io::ErrorKind::NotFound => (self.migrate()?, false),
+                Err(err) => return Err(explain(err, &path)),
+            };
+            let before = journal.clone();
+            let result = change(&mut journal)?;
+            if !exists || journal != before {
+                self.replace(JOURNAL_FILE, &journal.render())?;
+            }
+            if !exists {
+                // The journal holds the old member list now.
+                let members = self.dir.join(MEMBERS_FILE);
+                let _ = fs::rename(&members, self.dir.join(format!("{MEMBERS_FILE}.old")));
+            }
+            Ok(result)
+        })
+    }
+
+    /// The latest known presences of members, this device's own included.
+    pub fn presences(&self) -> Result<Presences> {
+        let path = self.dir.join(PRESENCE_FILE);
+        match fs::read_to_string(&path) {
+            Ok(text) => Ok(Presences::parse(&text)),
+            Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(Presences::default()),
+            Err(err) => Err(explain(err, &path)),
+        }
+    }
+
+    /// Changes the presences under a lock, like [`State::update_journal`].
+    pub fn update_presences<T>(
+        &self,
+        change: impl FnOnce(&mut Presences) -> Result<T>,
+    ) -> Result<T> {
+        self.locked(PRESENCE_LOCK, || {
+            let mut presences = self.presences()?;
+            let before = presences.clone();
+            let result = change(&mut presences)?;
+            if presences != before {
+                self.replace(PRESENCE_FILE, &presences.render())?;
+            }
+            Ok(result)
+        })
+    }
+
+    /// Runs `body` holding the lock file `lock`: other processes wait.
+    fn locked<T>(&self, lock: &str, body: impl FnOnce() -> Result<T>) -> Result<T> {
         self.ensure_dir()?;
-        let lock_path = self.dir.join(JOURNAL_LOCK);
+        let path = self.dir.join(lock);
         let lock = fs::OpenOptions::new()
             .create(true)
             .truncate(false)
             .write(true)
-            .open(&lock_path)
-            .map_err(|err| explain(err, &lock_path))?;
-        lock.lock().map_err(|err| explain(err, &lock_path))?;
+            .open(&path)
+            .map_err(|err| explain(err, &path))?;
+        lock.lock().map_err(|err| explain(err, &path))?;
+        body()
+    }
 
-        let path = self.dir.join(JOURNAL_FILE);
-        let (mut journal, exists) = match fs::read_to_string(&path) {
-            Ok(text) => (
-                Journal::parse(&text).with_context(|| format!("in {}", path.display()))?,
-                true,
-            ),
-            Err(err) if err.kind() == io::ErrorKind::NotFound => (self.migrate()?, false),
-            Err(err) => return Err(explain(err, &path)),
-        };
-        let before = journal.clone();
-        let result = change(&mut journal)?;
-        if !exists || journal != before {
-            let tmp = self.dir.join(format!("{JOURNAL_FILE}.tmp"));
-            let _ = fs::remove_file(&tmp);
-            write_new(&tmp, &journal.render()).map_err(|err| explain(err, &tmp))?;
-            fs::rename(&tmp, &path).map_err(|err| explain(err, &path))?;
-        }
-        if !exists {
-            // The journal holds the old member list now.
-            let members = self.dir.join(MEMBERS_FILE);
-            let _ = fs::rename(&members, self.dir.join(format!("{MEMBERS_FILE}.old")));
-        }
-        Ok(result)
+    /// Replaces `file` at once: readers see the old or the new text, never half.
+    fn replace(&self, file: &str, text: &str) -> Result<()> {
+        let path = self.dir.join(file);
+        let tmp = self.dir.join(format!("{file}.tmp"));
+        let _ = fs::remove_file(&tmp);
+        write_new(&tmp, text).map_err(|err| explain(err, &tmp))?;
+        fs::rename(&tmp, &path).map_err(|err| explain(err, &path))
     }
 
     /// A journal holding the member list from before the journal, if any.

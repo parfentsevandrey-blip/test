@@ -10,8 +10,10 @@ pub mod journal;
 pub mod members;
 pub mod node;
 pub mod pair;
+pub mod presence;
 pub mod state;
 pub mod sync;
+mod wire;
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub use node::create_tun;

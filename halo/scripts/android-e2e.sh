@@ -101,7 +101,7 @@ log "pairing: A shows a code, the phone joins"
 echo y | desk pair --port 7777 >"$WORK/pair.log" 2>&1 &
 pair_pid=$!
 deadline=$((SECONDS + 30))
-until grep -q 'halo pair --join' "$WORK/pair.log"; do
+until grep -q 'halo pair --join' "$WORK/pair.log" 2>/dev/null; do
     ((SECONDS < deadline)) || fail "the desktop shows no pairing code"
     sleep 0.5
 done

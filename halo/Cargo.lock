@@ -1274,6 +1274,7 @@ dependencies = [
  "iroh",
  "iroh-mdns-address-lookup",
  "n0-future",
+ "portmapper",
  "tokio",
  "tracing",
  "tun-rs",

@@ -13,8 +13,12 @@
 #   journal  b and c are paired with a only and find each other through a's
 #            member journal; then a removes c while everything runs, and the
 #            removal reaches b.
+#   outside  a and b at home behind a router that maps ports over NAT-PMP; c
+#            meets them there, then moves to a mobile network behind another
+#            NAT and still reaches both, at the public addresses they announced.
 #
-# Needs root, iproute2, iputils-ping and iperf3. Usage: sudo scripts/netns-test.sh
+# Needs root, iproute2, iputils-ping, iperf3, iptables and python3.
+# Usage: sudo scripts/netns-test.sh [suite...]
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -27,10 +31,10 @@ declare -A IP ID OVERLAY
 log() { printf '\n== %s\n' "$*"; }
 fail() {
     printf 'FAIL: %s\n' "$*" >&2
-    for ns in a b c; do
+    for ns in a b c hr; do
         if [[ -f "$WORK/$ns.log" ]]; then
             echo "--- $ns.log" >&2
-            tail -20 "$WORK/$ns.log" >&2
+            grep -v ' stats ' "$WORK/$ns.log" | tail -25 >&2
         fi
     done
     exit 1
@@ -40,11 +44,15 @@ halo() { local ns=$1; shift; "$HALO" --state-dir "$WORK/$ns" "$@"; }
 
 teardown() {
     pkill -INT -f "$WORK/" 2>/dev/null || true
+    if [[ -n ${ROUTER:-} ]]; then
+        kill "$ROUTER" 2>/dev/null || true
+        ROUTER=
+    fi
     sleep 0.5
     pkill -KILL -f "$WORK/" 2>/dev/null || true
-    for ns in a b c sw; do ip netns del "halo-$ns" 2>/dev/null || true; done
+    for ns in a b c sw hr mr; do ip netns del "halo-$ns" 2>/dev/null || true; done
 }
-trap 'teardown; rm -rf "$WORK"' EXIT
+trap 'teardown; [[ -n ${KEEP:-} ]] && cp -r "$WORK" "$KEEP"; rm -rf "$WORK"' EXIT
 
 setup() {
     local mtu=$1 i=1
@@ -63,9 +71,10 @@ setup() {
         ip -n "halo-$ns" link set "${ns}0" up
         # Real machines have a default route; mDNS needs a route for multicast.
         ip -n "halo-$ns" route add 224.0.0.0/4 dev "${ns}0"
+        # A fresh device for every suite: key, journal and presences.
+        rm -rf "${WORK:?}/$ns"
         ID[$ns]=$(halo "$ns" id | awk '/^id:/ {print $2}')
         OVERLAY[$ns]=$(halo "$ns" id | awk '/^ip:/ {print $2}')
-        rm -f "$WORK/$ns/members"
         : >"$WORK/$ns.log"
         i=$((i + 1))
     done
@@ -192,9 +201,121 @@ journal_suite() {
     teardown
 }
 
+# outside: a home network behind router hr, which masquerades and maps ports
+# over NAT-PMP, and a mobile network behind router mr, which only masquerades.
+# The routers meet on 203.0.113.0/24, the internet of this test.
+outside_setup() {
+    local ns i=2
+    for ns in a b c hr mr; do
+        ip netns add "halo-$ns"
+        ip -n "halo-$ns" link set lo up
+    done
+    ip -n halo-hr link add br0 type bridge
+    ip -n halo-hr addr add 10.10.0.1/24 dev br0
+    ip -n halo-hr link set br0 up
+    for ns in a b c; do
+        ip link add "${ns}0" type veth peer name "${ns}1"
+        ip link set "${ns}0" netns "halo-$ns"
+        ip link set "${ns}1" netns halo-hr
+        ip -n halo-hr link set "${ns}1" master br0 up
+        IP[$ns]=10.10.0.$i
+        ip -n "halo-$ns" addr add "${IP[$ns]}/24" dev "${ns}0"
+        ip -n "halo-$ns" link set "${ns}0" up
+        ip -n "halo-$ns" route add default via 10.10.0.1
+        rm -rf "${WORK:?}/$ns"
+        ID[$ns]=$(halo "$ns" id | awk '/^id:/ {print $2}')
+        OVERLAY[$ns]=$(halo "$ns" id | awk '/^ip:/ {print $2}')
+        : >"$WORK/$ns.log"
+        i=$((i + 1))
+    done
+    # c's mobile link stays down while c is at home.
+    ip link add cm0 type veth peer name cm1
+    ip link set cm0 netns halo-c
+    ip link set cm1 netns halo-mr
+    ip -n halo-mr addr add 10.20.0.1/24 dev cm1
+    ip -n halo-mr link set cm1 up
+    ip link add hw type veth peer name mw
+    ip link set hw netns halo-hr
+    ip link set mw netns halo-mr
+    ip -n halo-hr addr add 203.0.113.1/24 dev hw
+    ip -n halo-hr link set hw up
+    ip -n halo-mr addr add 203.0.113.2/24 dev mw
+    ip -n halo-mr link set mw up
+    for ns in hr mr; do
+        in_ns "$ns" sysctl -qw net.ipv4.ip_forward=1
+    done
+    in_ns hr iptables -t nat -A POSTROUTING -o hw -j MASQUERADE
+    in_ns mr iptables -t nat -A POSTROUTING -o mw -j MASQUERADE
+    # Not through in_ns: $! has to be the router itself, for teardown to stop it.
+    ip netns exec halo-hr python3 "$ROOT/scripts/natpmp-router.py" 10.10.0.1 203.0.113.1 hw \
+        >"$WORK/hr.log" 2>&1 &
+    ROUTER=$!
+}
+
+# Waits until <ns> lists <addr> among the addresses of its members.
+wait_member_addr() {
+    local ns=$1 addr=$2 deadline=$((SECONDS + 60))
+    until halo "$ns" members | grep -q "$addr"; do
+        ((SECONDS < deadline)) || fail "$ns never learned the address $addr"
+        sleep 1
+    done
+}
+
+outside_suite() {
+    log "suite outside: c meets a and b at home, then leaves for a mobile network"
+    outside_setup
+    add a b with-address
+    add b a with-address
+    add a c with-address
+    add c a with-address
+    start a
+    start b
+    start c
+    wait_ping c a 30
+    wait_ping c b 30
+    echo "at home: ok"
+
+    log "the home router maps a port to every device"
+    local deadline=$((SECONDS + 30))
+    until grep -qe "-> ${IP[a]}:$PORT" "$WORK/hr.log" && grep -qe "-> ${IP[b]}:$PORT" "$WORK/hr.log"; do
+        ((SECONDS < deadline)) || fail "no port mappings for a and b"
+        sleep 0.5
+    done
+    grep mapped "$WORK/hr.log"
+    local a_public b_public
+    a_public=$(grep -o "203.0.113.1:[0-9]* -> ${IP[a]}:$PORT" "$WORK/hr.log" | head -1 | cut -d' ' -f1)
+    b_public=$(grep -o "203.0.113.1:[0-9]* -> ${IP[b]}:$PORT" "$WORK/hr.log" | head -1 | cut -d' ' -f1)
+    wait_member_addr c "$a_public"
+    wait_member_addr c "$b_public"
+    halo a id | grep public
+    echo "c knows where a and b are from outside: ok"
+
+    log "c leaves home for the mobile network"
+    ip -n halo-c link set c0 down
+    ip -n halo-c addr add 10.20.0.2/24 dev cm0
+    ip -n halo-c link set cm0 up
+    ip -n halo-c route add default via 10.20.0.1
+    local moved=$SECONDS
+    wait_ping c a 90
+    wait_ping c b 90
+    echo "back in touch after $((SECONDS - moved)) s"
+    in_ns c ping -c5 -i0.2 -q "${OVERLAY[a]}" | tail -1
+    wait_ping a c 30
+    echo "c reaches a and b from the mobile network: ok"
+    teardown
+}
+
 [[ -x "$HALO" ]] || fail "build first: cargo build (expected $HALO)"
-suite 1500 1500 with-address
-suite 1300 1300 with-address
-suite lan 1500
-journal_suite
+suites=("$@")
+((${#suites[@]})) || suites=(1500 1300 lan journal outside)
+for name in "${suites[@]}"; do
+    case $name in
+        1500) suite 1500 1500 with-address ;;
+        1300) suite 1300 1300 with-address ;;
+        lan) suite lan 1500 ;;
+        journal) journal_suite ;;
+        outside) outside_suite ;;
+        *) fail "unknown suite $name" ;;
+    esac
+done
 log "all good"

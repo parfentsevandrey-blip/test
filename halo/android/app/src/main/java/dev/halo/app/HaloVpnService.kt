@@ -114,7 +114,10 @@ class HaloVpnService : VpnService() {
     }
 
     private suspend fun poll(started: HaloNode) {
+        var round = 0
         while (scope.isActive) {
+            // Members' public addresses arrive while the node runs.
+            if (round++ % MEMBERS_EVERY == 0) Halo.reloadMembers()
             if (!started.isRunning()) {
                 Halo.reportError("node stopped")
                 stopNode()
@@ -177,6 +180,7 @@ class HaloVpnService : VpnService() {
         const val ACTION_RESTART = "dev.halo.app.RESTART"
         const val MTU = 1280
         private const val POLL_MS = 1000L
+        private const val MEMBERS_EVERY = 10
         private const val TAG = "halo"
     }
 }

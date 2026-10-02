@@ -286,6 +286,9 @@ private fun MemberRow(member: MemberInfo, peer: PeerState?, running: Boolean, on
                 Text(member.name, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Medium)
                 Text(member.ip, color = Accent, fontSize = 14.sp, fontFamily = FontFamily.Monospace)
                 Text(status, color = if (online) Online else Muted, fontSize = 13.sp)
+                if (member.publicAddrs.isNotEmpty()) {
+                    Text(stringResource(R.string.reachable_outside), color = Muted, fontSize = 12.sp)
+                }
             }
             TextButton(onClick = onRemove) { Text("✕", color = Muted) }
         }

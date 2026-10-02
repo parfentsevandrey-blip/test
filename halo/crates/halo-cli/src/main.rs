@@ -124,6 +124,15 @@ async fn main() -> Result<()> {
             let id = state.key()?.public();
             println!("id: {id}");
             println!("ip: {}", overlay_ipv4(&id));
+            // What `halo up` last told the other devices.
+            let presences = state.presences()?;
+            if let Some(presence) = presences
+                .get(&id)
+                .filter(|presence| !presence.addrs().is_empty())
+            {
+                let addrs: Vec<String> = presence.addrs().iter().map(ToString::to_string).collect();
+                println!("public: {}", addrs.join(","));
+            }
             Ok(())
         }
         Command::Add { id, name, addrs } => {
@@ -246,6 +255,7 @@ async fn main() -> Result<()> {
         Command::Members => {
             let me = state.key()?.public();
             let view = state.journal()?.view(me);
+            let presences = state.presences()?;
             if view.removed.contains(&me) {
                 println!("this device was removed from the network");
                 return Ok(());
@@ -260,7 +270,14 @@ async fn main() -> Result<()> {
                 None => id.fmt_short().to_string(),
             };
             for member in &view.members.0 {
-                let addrs: Vec<String> = member.addrs.iter().map(ToString::to_string).collect();
+                // Addresses from the journal, then the public ones from its presence.
+                let mut addrs: Vec<String> = member.addrs.iter().map(ToString::to_string).collect();
+                for addr in presences.addrs(&member.id) {
+                    let addr = addr.to_string();
+                    if !addrs.contains(&addr) {
+                        addrs.push(addr);
+                    }
+                }
                 let added_by: Vec<String> = view.added_by[&member.id]
                     .iter()
                     .map(|id| name_of(*id))
