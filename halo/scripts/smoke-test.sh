@@ -56,11 +56,13 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Waits up to $1 seconds for `halo status` to match $2.
+# Waits up to $1 seconds for `halo status` to match $2. The output is read
+# whole first: `grep -q` stops reading at a match, and the pipe would fail.
 wait_status() {
-  local seconds=$1 pattern=$2
+  local seconds=$1 pattern=$2 out
   for _ in $(seq "$seconds"); do
-    if halo status 2>/dev/null | grep -qE "$pattern"; then
+    out=$(halo status 2>/dev/null || true)
+    if grep -qE "$pattern" <<<"$out"; then
       return 0
     fi
     sleep 1
