@@ -46,8 +46,11 @@
 GitHub → вкладка **Actions** → workflow **halo** → последний зелёный запуск →
 блок **Artifacts** (нужно войти в GitHub):
 
-- `halo-macos-universal`: архив `halo-macos.tar.gz`, работает на Apple Silicon и Intel;
-- `halo-windows-x64`: `halo.exe` и `wintun.dll`, их нужно держать в одной папке.
+- `halo-macos-universal`: zip, внутри `halo-macos.tar.gz`, работает на Apple
+  Silicon и Intel. Сам бинарник лежит в tar, потому что zip-архивы GitHub теряют
+  флаг «исполняемый»;
+- `halo-windows-x64`: zip с `halo.exe` и `wintun.dll`, их нужно держать в одной
+  папке.
 
 Или собрать самому: `cargo build --release` в каталоге `halo/`
 (нужен [Rust](https://rustup.rs)). На Windows `wintun.dll` берётся с
@@ -55,15 +58,16 @@ GitHub → вкладка **Actions** → workflow **halo** → последни
 
 ### 2. Подготовить
 
-macOS, в Терминале, в папке со скачанным архивом:
+macOS, в Терминале, в папке со скачанным zip:
 
 ```sh
-tar -xzf halo-macos.tar.gz
+unzip halo-macos-universal.zip && tar -xzf halo-macos.tar.gz
 xattr -d com.apple.quarantine halo 2>/dev/null   # снять карантин Gatekeeper
 sudo ./halo id
 ```
 
-Windows, в PowerShell **от имени администратора**, в папке с `halo.exe`:
+Windows: распакуй zip, затем в PowerShell **от имени администратора**, в папке с
+`halo.exe`:
 
 ```powershell
 Unblock-File .\halo.exe, .\wintun.dll            # снять пометку «скачано из интернета»

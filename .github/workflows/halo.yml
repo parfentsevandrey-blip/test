@@ -2,10 +2,15 @@ name: halo
 
 on:
   push:
-    paths: ["halo/**", ".github/workflows/halo.yml"]
+    paths: ["halo/**", "!halo/**/*.md", ".github/workflows/halo.yml"]
   pull_request:
-    paths: ["halo/**", ".github/workflows/halo.yml"]
+    paths: ["halo/**", "!halo/**/*.md", ".github/workflows/halo.yml"]
   workflow_dispatch:
+
+# A newer push to the same branch supersedes the running checks.
+concurrency:
+  group: halo-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
