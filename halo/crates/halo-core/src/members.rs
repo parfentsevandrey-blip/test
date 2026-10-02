@@ -80,6 +80,20 @@ impl Members {
         Ok(())
     }
 
+    /// A name based on `base` that no other device has: `base`, `base-2`, `base-3`…
+    pub fn free_name(&self, base: &str, id: &EndpointId) -> String {
+        let taken = |name: &str| self.0.iter().any(|m| m.name == name && m.id != *id);
+        if !taken(base) {
+            return base.to_string();
+        }
+        // Leave room for the suffix within the 32-character limit.
+        let base = base[..base.len().min(28)].trim_end_matches('-');
+        (2..)
+            .map(|n| format!("{base}-{n}"))
+            .find(|name| !taken(name))
+            .expect("some suffix is free")
+    }
+
     /// Removes a member by name or id.
     pub fn remove(&mut self, key: &str) -> Option<Member> {
         let position = self
@@ -192,6 +206,22 @@ mod tests {
             Some(member(2, "windows"))
         );
         assert_eq!(members.remove("nobody"), None);
+    }
+
+    #[test]
+    fn free_names_get_a_suffix() {
+        let mut members = Members::default();
+        assert_eq!(members.free_name("phone", &id(1)), "phone");
+        members.upsert(member(1, "phone")).unwrap();
+        // Same device keeps its name; another one gets a suffix.
+        assert_eq!(members.free_name("phone", &id(1)), "phone");
+        assert_eq!(members.free_name("phone", &id(2)), "phone-2");
+        members.upsert(member(2, "phone-2")).unwrap();
+        assert_eq!(members.free_name("phone", &id(3)), "phone-3");
+        let long = "a".repeat(32);
+        members.upsert(member(4, &long)).unwrap();
+        let name = members.free_name(&long, &id(5));
+        assert!(validate_name(&name).is_ok(), "{name}");
     }
 
     #[test]

@@ -14,8 +14,9 @@ import android.util.Log
  *   adb shell am start -W -n dev.halo.app/.TestActivity --es cmd connect
  *   adb shell am start -W -n dev.halo.app/.TestActivity --es cmd status
  *
- * Results go to logcat under the `halo-test` tag. Grant the VPN first:
- * `adb shell appops set dev.halo.app ACTIVATE_VPN allow`.
+ * Results go to logcat under the `halo-test` tag. `connect` opens the system VPN
+ * consent dialog when the app has no consent yet, like the app itself does; the
+ * test then taps OK.
  */
 class TestActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,9 +37,15 @@ class TestActivity : Activity() {
                     Log.i(TAG, "HALO_ADDED ${member.name} ${member.ip}")
                 }
                 "connect" -> {
-                    check(VpnService.prepare(this) == null) { "VPN is not allowed for the app" }
-                    startService(Intent(this, HaloVpnService::class.java))
-                    Log.i(TAG, "HALO_CONNECTING")
+                    val consent = VpnService.prepare(this)
+                    if (consent != null) {
+                        Log.i(TAG, "HALO_CONSENT")
+                        // Finishes in onActivityResult.
+                        @Suppress("DEPRECATION")
+                        startActivityForResult(consent, CONSENT)
+                        return
+                    }
+                    connect()
                 }
                 "disconnect" -> {
                     startService(Intent(this, HaloVpnService::class.java).setAction(HaloVpnService.ACTION_STOP))
@@ -56,7 +63,25 @@ class TestActivity : Activity() {
         finish()
     }
 
+    @Deprecated("Activity result API; fine for a debug hook")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == CONSENT && resultCode == RESULT_OK) {
+            connect()
+        } else {
+            Log.e(TAG, "HALO_ERROR the VPN consent was declined")
+        }
+        finish()
+    }
+
+    private fun connect() {
+        startService(Intent(this, HaloVpnService::class.java))
+        Log.i(TAG, "HALO_CONNECTING")
+    }
+
     private companion object {
         const val TAG = "halo-test"
+        const val CONSENT = 1
     }
 }

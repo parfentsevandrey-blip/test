@@ -8,6 +8,7 @@ use halo_core::{
     DEFAULT_MTU, NodeConfig, PeerConfig,
     addr::overlay_ipv4,
     members::{Member, parse_addrs},
+    pair::{self, Pending, Ticket, member_name},
     state::State,
 };
 use iroh::EndpointId;
@@ -40,6 +41,21 @@ enum Command {
         /// Known address of the device, `ip:port`. Not needed on the same local network.
         #[arg(long = "addr", value_name = "ADDR", value_parser = parse_addrs)]
         addrs: Vec<Vec<SocketAddr>>,
+    },
+    /// Pair with another device: one QR scan adds the two devices to each other.
+    ///
+    /// Shows a QR code and a text code for the Halo app or another computer.
+    Pair {
+        /// Join the pairing another device shows (its text code) instead.
+        #[arg(long, value_name = "CODE")]
+        join: Option<String>,
+        /// How the other device will call this one (default: the host name).
+        #[arg(long)]
+        name: Option<String>,
+        /// The UDP port `halo up` listens on, so the other device can find it
+        /// where mDNS does not reach.
+        #[arg(long, default_value_t = 7777)]
+        port: u16,
     },
     /// Remove a device by name or id.
     Remove { device: String },
@@ -119,6 +135,54 @@ async fn main() -> Result<()> {
             println!("added {name}: {}", overlay_ipv4(&id));
             Ok(())
         }
+        Command::Pair { join, name, port } => {
+            let secret_key = state.key()?;
+            let raw =
+                name.unwrap_or_else(|| gethostname::gethostname().to_string_lossy().into_owned());
+            let name = member_name(&raw);
+            let paired = match join {
+                Some(code) => {
+                    let ticket: Ticket = code.parse()?;
+                    println!("Connecting to the other device...");
+                    let (endpoint, pending) = pair::join(secret_key, &name, port, &ticket).await?;
+                    let paired = confirm(pending).await;
+                    endpoint.close().await;
+                    paired?
+                }
+                None => {
+                    let host = pair::Host::bind(secret_key, &name, port).await?;
+                    let code = host.ticket().to_string();
+                    print_qr(&code)?;
+                    println!("Scan it in the Halo app (Add device), or on another computer run:");
+                    println!("  halo pair --join {code}\n");
+                    println!("Waiting for a device... (Ctrl+C to cancel)");
+                    let pending = host.accept().await;
+                    let paired = match pending {
+                        Ok(pending) => confirm(pending).await,
+                        Err(err) => Err(err),
+                    };
+                    host.close().await;
+                    paired?
+                }
+            };
+            let Some((peer, peer_name)) = paired else {
+                println!("Not paired.");
+                return Ok(());
+            };
+            let mut members = state.members()?;
+            let name = members.free_name(&member_name(&peer_name), &peer);
+            members.upsert(Member {
+                id: peer,
+                name: name.clone(),
+                addrs: Vec::new(),
+            })?;
+            state.save_members(&members)?;
+            println!(
+                "Paired with {name} ({}). Restart `halo up` to connect.",
+                overlay_ipv4(&peer)
+            );
+            Ok(())
+        }
         Command::Remove { device } => {
             let mut members = state.members()?;
             let removed = members
@@ -186,6 +250,44 @@ async fn main() -> Result<()> {
             halo_core::run(config, tun, shutdown_signal()).await
         }
     }
+}
+
+/// Shows the emoji, asks the user and returns the other device when both sides said yes.
+async fn confirm(pending: Pending) -> Result<Option<(EndpointId, String)>> {
+    println!(
+        "\n{} wants to pair. Check that its screen shows:\n\n    {}\n",
+        pending.peer_name,
+        pending.emoji.join("  ")
+    );
+    print!("Do they match? [y/N] ");
+    std::io::Write::flush(&mut std::io::stdout())?;
+    let line = tokio::task::spawn_blocking(|| {
+        let mut line = String::new();
+        std::io::stdin().read_line(&mut line).map(|_| line)
+    })
+    .await??;
+    let accept = matches!(
+        line.trim().to_lowercase().as_str(),
+        "y" | "yes" | "д" | "да"
+    );
+    let peer = (pending.peer, pending.peer_name.clone());
+    if !accept {
+        pending.confirm(false).await?;
+        return Ok(None);
+    }
+    println!("Waiting for the other device to confirm...");
+    Ok(pending.confirm(true).await?.then_some(peer))
+}
+
+/// Prints a QR code black on white, readable on dark and light terminals alike.
+fn print_qr(text: &str) -> Result<()> {
+    use qrcode::render::unicode::Dense1x2;
+    let code = qrcode::QrCode::new(text.as_bytes())?;
+    let image = code.render::<Dense1x2>().quiet_zone(true).build();
+    for line in image.lines() {
+        anstream::println!("\x1b[30;47m{line}\x1b[0m");
+    }
+    Ok(())
 }
 
 /// macOS names TUN devices `utunN` itself.

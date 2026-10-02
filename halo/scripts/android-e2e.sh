@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # End-to-end test on an Android emulator: the phone joins a desktop node on the host.
 #
-#   1. Install the debug APK, allow its VPN without the consent dialog.
+#   1. Install the debug APK.
 #   2. The desktop node on the host adds the phone and comes up.
 #   3. The phone adds the desktop at 10.0.2.2 (the host, seen from the emulator)
-#      and turns the network on.
+#      and turns the network on, tapping OK in the system VPN consent dialog.
 #   4. Ping both ways through the tunnel.
 #
 # Needs a booted emulator (adb), root on the host for the TUN device, a built
@@ -37,6 +37,17 @@ phone() {
     adb shell am start -W -n "$PKG/.TestActivity" --es cmd "$cmd" "$@" >/dev/null
 }
 
+# Taps the button with the given text, if it is on screen.
+tap() {
+    local bounds
+    adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 || return 0
+    bounds=$(adb shell cat /sdcard/ui.xml | sed 's/>/>\n/g' | grep -iE "text=\"$1\"" |
+        grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | head -1) || true
+    [[ -n $bounds ]] || return 0
+    read -r x1 y1 x2 y2 <<<"$(sed 's/[^0-9]/ /g' <<<"$bounds")"
+    adb shell input tap $(((x1 + x2) / 2)) $(((y1 + y2) / 2))
+}
+
 wait_log() {
     local pattern=$1 deadline=$((SECONDS + ${2:-30}))
     until adb logcat -d -s halo-test | grep -q "$pattern"; do
@@ -47,7 +58,6 @@ wait_log() {
 
 log "install the app"
 adb install -r "$APK" >/dev/null
-adb shell appops set "$PKG" ACTIVATE_VPN allow
 adb logcat -c
 
 log "the phone's identity"
@@ -70,7 +80,12 @@ log "the phone joins"
 phone add --es id "$DESK_ID" --es name desktop --es addr 10.0.2.2:7777
 wait_log HALO_ADDED
 phone connect
-wait_log HALO_CONNECTING
+deadline=$((SECONDS + 60))
+until adb logcat -d -s halo-test | grep -q HALO_CONNECTING; do
+    ((SECONDS < deadline)) || fail "the VPN consent dialog did not go through"
+    tap OK
+    sleep 1
+done
 
 log "desktop -> phone"
 deadline=$((SECONDS + 90))

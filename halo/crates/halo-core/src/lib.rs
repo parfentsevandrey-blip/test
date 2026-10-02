@@ -8,6 +8,7 @@ pub mod addr;
 pub mod frame;
 pub mod members;
 pub mod node;
+pub mod pair;
 pub mod state;
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
