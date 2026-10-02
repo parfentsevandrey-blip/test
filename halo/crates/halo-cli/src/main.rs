@@ -1,11 +1,21 @@
 //! `halo`: run a Halo node on a desktop (Linux, macOS, Windows).
 
-use std::{io::IsTerminal, net::SocketAddr, path::PathBuf, str::FromStr, time::Duration};
+mod logfile;
+mod service;
+mod status;
+
+use std::{
+    io::IsTerminal,
+    net::SocketAddr,
+    path::{Path, PathBuf},
+    str::FromStr,
+    time::{Duration, Instant},
+};
 
 use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
 use halo_core::{
-    DEFAULT_MTU, NodeConfig, PeerConfig,
+    DEFAULT_MTU, Node, NodeConfig, NodeHandle, PeerConfig,
     addr::overlay_ipv4,
     journal::Action,
     members::{parse_addrs, validate_name},
@@ -13,7 +23,13 @@ use halo_core::{
     state::State,
 };
 use iroh::EndpointId;
+use tracing::{error, info, warn};
 use tracing_subscriber::EnvFilter;
+
+use crate::{
+    service::{Installed, Setup},
+    status::Link,
+};
 
 #[derive(Parser)]
 #[command(
@@ -67,27 +83,55 @@ enum Command {
     Remove { device: String },
     /// List the devices of the network.
     Members,
-    /// Bring the network up and connect to the member devices.
-    Up {
-        /// Extra device for this run: `ID` or `ID@ADDR[,ADDR...]`.
-        #[arg(long = "peer", value_name = "PEER")]
-        peers: Vec<PeerSpec>,
-        /// UDP port to listen on (0 = random).
+    /// Show whether the network is on and how each device is connected.
+    Status,
+    /// Bring the network up in this terminal and connect to the member devices.
+    Up(UpArgs),
+    /// Run the network as a system service: on now and after every restart.
+    ///
+    /// Copies this program to a system location (/usr/local/bin, or
+    /// C:\Program Files\Halo with wintun.dll) and starts it with the computer.
+    /// Run it again to update the service to this version.
+    Install {
+        /// UDP port to listen on.
         #[arg(long, default_value_t = 7777)]
         port: u16,
-        /// TUN device name.
-        #[arg(long)]
-        tun: Option<String>,
-        /// MTU of the TUN device.
-        #[arg(long, default_value_t = DEFAULT_MTU)]
-        mtu: u16,
         /// Do not look for devices on the local network (mDNS).
         #[arg(long)]
         no_lan: bool,
-        /// Log traffic counters every N seconds.
-        #[arg(long, value_name = "SECONDS")]
-        stats: Option<u64>,
     },
+    /// Stop the service and remove it. The key and the devices stay.
+    Uninstall,
+    /// The node as Windows starts it: `halo install` sets this up.
+    #[cfg(windows)]
+    #[command(hide = true)]
+    Service(UpArgs),
+}
+
+#[derive(clap::Args)]
+struct UpArgs {
+    /// Extra device for this run: `ID` or `ID@ADDR[,ADDR...]`.
+    #[arg(long = "peer", value_name = "PEER")]
+    peers: Vec<PeerSpec>,
+    /// UDP port to listen on (0 = random).
+    #[arg(long, default_value_t = 7777)]
+    port: u16,
+    /// TUN device name.
+    #[arg(long)]
+    tun: Option<String>,
+    /// MTU of the TUN device.
+    #[arg(long, default_value_t = DEFAULT_MTU)]
+    mtu: u16,
+    /// Do not look for devices on the local network (mDNS).
+    #[arg(long)]
+    no_lan: bool,
+    /// Log traffic counters every N seconds.
+    #[arg(long, value_name = "SECONDS")]
+    stats: Option<u64>,
+    /// Write the log to this file instead of the terminal. It never grows past
+    /// a megabyte; the previous one is kept as `<file>.1`.
+    #[arg(long, value_name = "FILE")]
+    log_file: Option<PathBuf>,
 }
 
 #[derive(Clone, Debug)]
@@ -106,19 +150,53 @@ impl FromStr for PeerSpec {
     }
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("halo=info,halo_core=info")),
-        )
-        .with_writer(std::io::stderr)
-        .with_ansi(std::io::stderr().is_terminal())
-        .init();
-
+fn main() -> Result<()> {
     let cli = Cli::parse();
-    let state = State::new(cli.state_dir)?;
+    let state = State::new(cli.state_dir.clone())?;
+    let log_file = match &cli.command {
+        Command::Up(args) => args.log_file.clone(),
+        #[cfg(windows)]
+        Command::Service(args) => Some(args.log_file.clone().unwrap_or_else(|| state.log_path())),
+        _ => None,
+    };
+    init_logging(log_file.as_deref())?;
+    #[cfg(windows)]
+    if let Command::Service(args) = cli.command {
+        return service::windows::run_service(state, args);
+    }
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?
+        .block_on(run(cli, state))
+}
+
+fn init_logging(log_file: Option<&Path>) -> Result<()> {
+    let filter = EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| EnvFilter::new("halo=info,halo_core=info"));
+    let Some(path) = log_file else {
+        tracing_subscriber::fmt()
+            .with_env_filter(filter)
+            .with_writer(std::io::stderr)
+            .with_ansi(std::io::stderr().is_terminal())
+            .init();
+        return Ok(());
+    };
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir).with_context(|| format!("cannot create {}", dir.display()))?;
+    }
+    let log = logfile::LogFile::open(path)
+        .with_context(|| format!("cannot open the log file {}", path.display()))?;
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_writer(log)
+        .with_ansi(false)
+        .init();
+    // A service has no terminal for a panic message to go to.
+    std::panic::set_hook(Box::new(|panic| error!("{panic}")));
+    Ok(())
+}
+
+async fn run(cli: Cli, state: State) -> Result<()> {
     match cli.command {
         Command::Id => {
             let id = state.key()?.public();
@@ -293,41 +371,210 @@ async fn main() -> Result<()> {
             }
             Ok(())
         }
-        Command::Up {
-            peers,
-            port,
-            tun,
-            mtu,
-            no_lan,
-            stats,
-        } => {
-            let secret_key = state.key()?;
-            let id = secret_key.public();
-            let extra: Vec<PeerConfig> = peers.into_iter().map(|PeerSpec(peer)| peer).collect();
-            if extra.iter().any(|peer| peer.id == id) {
-                bail!("a device cannot be its own peer");
+        Command::Status => show_status(&state),
+        Command::Up(args) => up(state, args, shutdown_signal()).await,
+        Command::Install { port, no_lan } => install(&state, cli.state_dir, port, no_lan).await,
+        Command::Uninstall => {
+            if service::uninstall()? {
+                println!("Removed the Halo service: the network is off on this computer.");
+            } else {
+                println!("The Halo service is not installed.");
             }
-            let view = state.journal()?.view(id);
-            if view.removed.contains(&id) {
-                bail!("this device was removed from the network");
+            println!(
+                "The key and the devices stay in {}: `halo install` brings the network back.",
+                state.dir().display()
+            );
+            Ok(())
+        }
+        #[cfg(windows)]
+        Command::Service(_) => unreachable!("Windows starts the service in main"),
+    }
+}
+
+/// Runs the node until `shutdown`: in a terminal (`halo up`) or as a service.
+async fn up(state: State, args: UpArgs, shutdown: impl Future<Output = ()>) -> Result<()> {
+    let secret_key = state.key()?;
+    let id = secret_key.public();
+    let extra: Vec<PeerConfig> = args.peers.into_iter().map(|PeerSpec(peer)| peer).collect();
+    if extra.iter().any(|peer| peer.id == id) {
+        bail!("a device cannot be its own peer");
+    }
+    let view = state.journal()?.view(id);
+    if view.removed.contains(&id) {
+        // Not something a restart fixes: a service stays stopped.
+        error!(
+            "this device was removed from the network for good; to come back, it needs a new \
+             key: delete {}, then pair it again",
+            state.dir().display()
+        );
+        return Ok(());
+    }
+    if view.members.0.is_empty() && extra.is_empty() {
+        info!("no devices yet: pair one with `halo pair`; it connects as soon as they are paired");
+    }
+    let name = args.tun.as_deref().or(default_tun_name());
+    let tun = halo_core::create_tun(name, overlay_ipv4(&id), args.mtu)
+        .map_err(|err| if_running(&state, err))?;
+    let config = NodeConfig {
+        secret_key,
+        port: args.port,
+        mtu: args.mtu,
+        peers: extra,
+        journal: Some(state.clone()),
+        lan_discovery: !args.no_lan,
+        stats_interval: args.stats.map(Duration::from_secs),
+    };
+    let node = Node::start(config, tun)
+        .await
+        .map_err(|err| if_running(&state, err))?;
+    let reporting = tokio::spawn(report_status(state.clone(), node.handle()));
+    let result = node.run_until(shutdown).await;
+    reporting.abort();
+    if running_report(&state).is_some_and(|report| report.pid == std::process::id()) {
+        state.remove_status();
+    }
+    result
+}
+
+/// Keeps the status report for `halo status` fresh while the node runs.
+async fn report_status(state: State, handle: NodeHandle) {
+    let mut ticker = tokio::time::interval(status::INTERVAL);
+    let mut warned = false;
+    loop {
+        ticker.tick().await;
+        let Some(snapshot) = handle.snapshot() else {
+            return;
+        };
+        let text = status::render(&snapshot);
+        let state = state.clone();
+        match tokio::task::spawn_blocking(move || state.write_status(&text)).await {
+            Ok(Ok(())) => {}
+            Ok(Err(err)) if !warned => {
+                warned = true;
+                warn!("cannot write the status for `halo status`: {err:#}");
             }
-            if view.members.0.is_empty() && extra.is_empty() {
-                bail!("no devices to connect to: pair one with `halo pair`");
-            }
-            let name = tun.as_deref().or(default_tun_name());
-            let tun = halo_core::create_tun(name, overlay_ipv4(&id), mtu)?;
-            let config = NodeConfig {
-                secret_key,
-                port,
-                mtu,
-                peers: extra,
-                journal: Some(state),
-                lan_discovery: !no_lan,
-                stats_interval: stats.map(Duration::from_secs),
-            };
-            halo_core::run(config, tun, shutdown_signal()).await
+            Ok(Err(_)) => {}
+            Err(_) => return,
         }
     }
+}
+
+/// The report of the node running now, if one is.
+fn running_report(state: &State) -> Option<status::Report> {
+    let (text, written) = state.status().ok()??;
+    status::parse(&text, written)
+}
+
+/// Explains a failure to start when another node already runs here.
+fn if_running(state: &State, err: anyhow::Error) -> anyhow::Error {
+    match running_report(state) {
+        Some(report) if report.pid != std::process::id() => err.context(format!(
+            "halo already runs here (process {}), as the service or in another terminal: \
+             see `halo status`",
+            report.pid
+        )),
+        _ => err,
+    }
+}
+
+async fn install(state: &State, state_dir: Option<PathBuf>, port: u16, no_lan: bool) -> Result<()> {
+    // The key exists before the service starts, in a directory made for administrators.
+    let me = state.key()?.public();
+    let before = running_report(state).map(|report| report.pid);
+    let setup = Setup {
+        port,
+        no_lan,
+        state_dir,
+        log_file: state.log_path(),
+    };
+    service::install(&setup)?;
+    // The node writes its first report as soon as it is up.
+    let deadline = Instant::now() + Duration::from_secs(20);
+    let started = loop {
+        if let Some(report) = running_report(state).filter(|report| Some(report.pid) != before) {
+            break Some(report);
+        }
+        if Instant::now() > deadline {
+            break None;
+        }
+        tokio::time::sleep(Duration::from_millis(250)).await;
+    };
+    if started.is_none() {
+        bail!(
+            "the service is installed, but the network did not come up; its log: {}",
+            service::log_hint(&state.log_path())
+        );
+    }
+    println!("Halo runs as a service: the network is on, now and after every restart.");
+    println!("This device: {} ({})", overlay_ipv4(&me), me.fmt_short());
+    if state.journal()?.view(me).members.0.is_empty() {
+        println!("Next: pair your other devices with `halo pair`.");
+    }
+    println!("`halo status` shows the devices; `halo uninstall` turns it off for good.");
+    Ok(())
+}
+
+fn show_status(state: &State) -> Result<()> {
+    let installed = service::state();
+    match &installed {
+        Ok(Installed::Running) => println!("service:  running, starts with the computer"),
+        Ok(Installed::Stopped) => println!("service:  installed, but not running"),
+        Ok(Installed::No) => {
+            println!("service:  not installed (`halo install` keeps the network on)")
+        }
+        Err(err) => println!("service:  unknown ({err:#})"),
+    }
+    let Some(key) = state.existing_key()? else {
+        println!("This device has no key yet: pair it with `halo pair`.");
+        return Ok(());
+    };
+    let me = key.public();
+    println!("device:   {} ({})", overlay_ipv4(&me), me.fmt_short());
+    let view = state.journal()?.view(me);
+    let report = running_report(state);
+    if view.removed.contains(&me) || report.as_ref().is_some_and(|report| report.removed) {
+        println!("This device was removed from the network for good.");
+    }
+    let Some(report) = report else {
+        println!("network:  off");
+        if matches!(installed, Ok(Installed::Running | Installed::Stopped)) {
+            println!("log:      {}", service::log_hint(&state.log_path()));
+        }
+        return Ok(());
+    };
+    println!("network:  on (process {})", report.pid);
+    if report.reachable.is_empty() {
+        println!("internet: not reachable from other networks (no port mapping)");
+    } else {
+        println!("internet: reachable at {}", report.reachable.join(", "));
+    }
+    if view.members.0.is_empty() {
+        println!("No devices yet: pair one with `halo pair`.");
+    }
+    let name_of = |id: &EndpointId| {
+        view.members
+            .0
+            .iter()
+            .find(|member| member.id == *id)
+            .map_or_else(|| id.fmt_short().to_string(), |member| member.name.clone())
+    };
+    for member in &view.members.0 {
+        let link = match report.peers.get(&member.id) {
+            Some(Link::Direct {
+                path,
+                rtt_ms: Some(rtt),
+            }) => format!("direct {path}, {rtt} ms"),
+            Some(Link::Direct { path, rtt_ms: None }) => format!("direct {path}"),
+            Some(Link::Via(via)) => format!("through {}", name_of(via)),
+            Some(Link::Down) | None => "not connected".to_string(),
+        };
+        println!(
+            "  {:<16} {:<16} {link}",
+            member.name,
+            overlay_ipv4(&member.id).to_string()
+        );
+    }
+    Ok(())
 }
 
 /// Runs a pairing step until Ctrl+C. Then the pairing ends as if the user said

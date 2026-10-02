@@ -142,12 +142,21 @@ class HaloVpnService : VpnService() {
     private fun watchNetwork() {
         val connectivity = getSystemService(ConnectivityManager::class.java) ?: return
         val callback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) = changed(arrayOf(network))
+            /** The network the node runs over: the one it started on, at first. */
+            private var current: Network? = connectivity.activeNetwork
 
-            override fun onLost(network: Network) = changed(null)
+            override fun onAvailable(network: Network) {
+                setUnderlyingNetworks(arrayOf(network))
+                // Registering reports the network the node just started on:
+                // nothing moved, and its fresh connections should stay.
+                if (network == current) return
+                current = network
+                synchronized(lock) { node?.networkChanged() }
+            }
 
-            private fun changed(underlying: Array<Network>?) {
-                setUnderlyingNetworks(underlying)
+            override fun onLost(network: Network) {
+                setUnderlyingNetworks(null)
+                current = null
                 synchronized(lock) { node?.networkChanged() }
             }
         }

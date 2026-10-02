@@ -6,6 +6,11 @@ on:
   pull_request:
     paths: ["halo/**", "!halo/**/*.md", ".github/workflows/halo.yml"]
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: "Publish a GitHub Release (halo-v<version>) once every check passes"
+        type: boolean
+        default: false
 
 # A newer push to the same branch supersedes the running checks.
 concurrency:
@@ -87,9 +92,9 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;29.0.14206865" "platforms;android-36" >/dev/null
       - name: Build the desktop node (the host side of the test)
         run: cargo build --release -p halo
-      - name: Build the APK (arm64 phones + x86_64 emulator)
+      - name: Build the APKs (arm64 phones + x86_64 emulator)
         working-directory: halo/android
-        run: ./gradlew assembleDebug --console=plain
+        run: ./gradlew assembleDebug assembleRelease --console=plain
       - name: Android Lint
         working-directory: halo/android
         run: ./gradlew lintDebug --console=plain
@@ -97,6 +102,12 @@ jobs:
         with:
           name: halo-android-apk
           path: halo/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+      # Signed only when a release is published: the key is not for every push.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: halo-android-release-unsigned
+          path: halo/android/app/build/outputs/apk/release/app-release-unsigned.apk
           if-no-files-found: error
       - name: Enable KVM
         run: |
@@ -149,16 +160,18 @@ jobs:
             target/aarch64-apple-darwin/release/halo \
             target/x86_64-apple-darwin/release/halo
           lipo -info dist/halo
-          # Artifacts are zipped without file modes; a tarball keeps the executable bit.
-          tar -czf dist/halo-macos.tar.gz -C dist halo
-          rm dist/halo
+          dist/halo --version
+          cargo build --release --target aarch64-apple-darwin -p halo-core --example echo-peer
+          cp target/aarch64-apple-darwin/release/examples/echo-peer echo-peer
 
       - name: Build (Linux)
         if: runner.os == 'Linux'
         run: |
           cargo build --release
           mkdir -p dist
-          tar -czf dist/halo-linux-x64.tar.gz -C target/release halo
+          cp target/release/halo dist/
+          cargo build --release -p halo-core --example echo-peer
+          cp target/release/examples/echo-peer echo-peer
 
       - name: Build (Windows, with Wintun)
         if: runner.os == 'Windows'
@@ -173,9 +186,69 @@ jobs:
           Copy-Item target/release/halo.exe dist/
           Copy-Item wintun/wintun/bin/amd64/wintun.dll dist/
           Copy-Item wintun/wintun/LICENSE.txt dist/wintun-LICENSE.txt
+          cargo build --release -p halo-core --example echo-peer
+          Copy-Item target/release/examples/echo-peer.exe echo-peer.exe
+
+      # What users get: installed as a service, it must reach another device
+      # through the system's own tunnel, update in place and uninstall cleanly.
+      - name: Smoke test (service, tunnel, update, uninstall)
+        shell: bash
+        run: |
+          if [[ $RUNNER_OS == Windows ]]; then
+            bash scripts/smoke-test.sh dist/halo.exe ./echo-peer.exe
+          else
+            bash scripts/smoke-test.sh dist/halo ./echo-peer
+          fi
+
+      # Artifacts are zipped without file modes; a tarball keeps the executable bit.
+      - name: Package (macOS, Linux)
+        if: runner.os != 'Windows'
+        run: |
+          tar -czf dist/halo-${{ matrix.name == 'macos-universal' && 'macos' || matrix.name }}.tar.gz -C dist halo
+          rm dist/halo
 
       - uses: actions/upload-artifact@v4
         with:
           name: halo-${{ matrix.name }}
           path: halo/dist
           if-no-files-found: error
+
+  release:
+    name: release
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_release
+    needs: [check, e2e, android, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          path: halo/artifacts
+      - name: Version
+        id: version
+        run: |
+          version=$(sed -n '/^\[workspace.package\]/,/^\[/s/^version = "\(.*\)"/\1/p' Cargo.toml)
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Sign the APK with the Halo key
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist
+          bash scripts/sign-apk.sh artifacts/halo-android-release-unsigned/app-release-unsigned.apk dist/halo-android.apk
+      - name: Package
+        run: |
+          cp artifacts/halo-macos-universal/halo-macos.tar.gz dist/
+          cp artifacts/halo-linux-x64/halo-linux-x64.tar.gz dist/
+          (cd artifacts/halo-windows-x64 && zip -9 ../../dist/halo-windows-x64.zip halo.exe wintun.dll wintun-LICENSE.txt)
+          (cd dist && sha256sum -- * > SHA256SUMS)
+          cat dist/SHA256SUMS
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: halo-v${{ steps.version.outputs.version }}
+          name: Ореол ${{ steps.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          body_path: halo/docs/RELEASE_NOTES.md
+          files: halo/dist/*
+          fail_on_unmatched_files: true

@@ -81,6 +81,10 @@ const LINKS_REFRESH: Duration = Duration::from_secs(15);
 /// mDNS service name, so Halo devices do not mix with other iroh apps on the network.
 const MDNS_SERVICE: &str = "halo";
 
+/// The GUID of the Wintun adapter: fixed, a node runs once per machine.
+#[cfg(windows)]
+const WINDOWS_ADAPTER_GUID: u128 = 0x6861_6c6f_0001_4e00_8000_6f72_656f_6c00;
+
 const CLOSE_NOT_MEMBER: VarInt = VarInt::from_u32(1);
 const CLOSE_DUPLICATE: VarInt = VarInt::from_u32(2);
 const CLOSE_MOVED: VarInt = VarInt::from_u32(3);
@@ -127,6 +131,19 @@ pub fn create_tun(name: Option<&str>, ip: Ipv4Addr, mtu: u16) -> Result<AsyncDev
         .mtu(mtu);
     if let Some(name) = name {
         builder = builder.name(name);
+    }
+    #[cfg(windows)]
+    {
+        // The same adapter every time, so Windows does not count a new network
+        // on each start; and Wintun from next to the program, wherever it runs.
+        builder = builder.device_guid(WINDOWS_ADAPTER_GUID);
+        if let Some(dll) = std::env::current_exe()
+            .ok()
+            .and_then(|exe| Some(exe.parent()?.join("wintun.dll")))
+            .filter(|dll| dll.is_file())
+        {
+            builder = builder.wintun_file(dll.to_string_lossy().into_owned());
+        }
     }
     builder
         .build_async()
@@ -912,6 +929,8 @@ pub struct PeerStatus {
     /// The network path in use, e.g. `192.168.1.20:7777`.
     pub path: Option<String>,
     pub rtt: Option<Duration>,
+    /// Without a direct connection: the member that passes packets on to it.
+    pub via: Option<EndpointId>,
 }
 
 impl NodeHandle {
@@ -932,11 +951,15 @@ impl NodeHandle {
     /// The node's state, while it runs.
     pub fn snapshot(&self) -> Option<NodeStatus> {
         let shared = self.shared.upgrade()?;
-        let mut peers: Vec<PeerStatus> = shared
+        let peers: Vec<Arc<Peer>> = shared
             .peers
             .read()
             .expect("poisoned")
             .values()
+            .cloned()
+            .collect();
+        let mut peers: Vec<PeerStatus> = peers
+            .iter()
             .map(|peer| {
                 let conn = peer.connection();
                 let selected = conn.as_ref().and_then(|conn| {
@@ -945,12 +968,16 @@ impl NodeHandle {
                     Some((describe(path.remote_addr()), conn.rtt(path.id())))
                 });
                 let (path, rtt) = selected.unzip();
+                let connected = peer.connected.load(Relaxed);
                 PeerStatus {
                     id: peer.id,
                     ip: peer.ip,
-                    connected: peer.connected.load(Relaxed),
+                    connected,
                     path,
                     rtt: rtt.flatten(),
+                    via: (!connected)
+                        .then(|| shared.relay_for(&peer.id).map(|relay| relay.id))
+                        .flatten(),
                 }
             })
             .collect();
@@ -1012,7 +1039,7 @@ async fn bind_endpoint(
         .bind_addr_with_opts(v6, BindOpts::default().set_is_required(false))?
         .bind()
         .await
-        .context("failed to bind the endpoint")?;
+        .with_context(|| format!("failed to listen on UDP port {}", config.port))?;
     Ok(endpoint)
 }
 
@@ -1361,14 +1388,8 @@ impl Link {
                 continue;
             };
             let deliver = if dst == self.shared.my_ip {
-                // From the peer itself, or from another member it passes on.
-                src == self.peer.ip
-                    || self
-                        .shared
-                        .by_ip
-                        .read()
-                        .expect("poisoned")
-                        .contains_key(&src)
+                // From the peer itself, or from a member it passes packets on for.
+                src == self.peer.ip || self.passes_on_from(src)
             } else {
                 // The peer's own packet for a member it cannot reach: pass it on,
                 // one hop only, to a member connected here.
@@ -1391,6 +1412,28 @@ impl Link {
                 Err(err) => debug!(%err, "TUN write failed"),
             }
         }
+    }
+
+    /// Whether this link's peer may pass on packets from the member at `src`:
+    /// it said it is connected to that member. Any other member's address in a
+    /// packet from it is a forgery.
+    fn passes_on_from(&self, src: Ipv4Addr) -> bool {
+        let Some(origin) = self
+            .shared
+            .by_ip
+            .read()
+            .expect("poisoned")
+            .get(&src)
+            .map(|peer| peer.id)
+        else {
+            return false;
+        };
+        self.shared
+            .neighbors
+            .read()
+            .expect("poisoned")
+            .get(&self.peer.id)
+            .is_some_and(|links| links.contains(&origin))
     }
 
     /// Passes a packet from this link's peer on to the member at `dst`, if it is

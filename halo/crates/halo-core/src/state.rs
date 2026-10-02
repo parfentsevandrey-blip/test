@@ -27,6 +27,10 @@ const JOURNAL_LOCK: &str = "journal.lock";
 const MEMBERS_FILE: &str = "members";
 const PRESENCE_FILE: &str = "presence";
 const PRESENCE_LOCK: &str = "presence.lock";
+/// What the running node last said about itself, for `halo status`.
+const STATUS_FILE: &str = "status";
+/// The node's log when it runs as a service without a system journal.
+const LOG_FILE: &str = "halo.log";
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -55,6 +59,54 @@ impl State {
                 write_new(&path, &hex).map_err(|err| explain(err, &path))?;
                 Ok(key)
             }
+            Err(err) => Err(explain(err, &path)),
+        }
+    }
+
+    /// The directory itself.
+    pub fn dir(&self) -> &Path {
+        &self.dir
+    }
+
+    /// Where a node running as a service writes its log, where the system
+    /// keeps no journal of its own (macOS, Windows).
+    pub fn log_path(&self) -> PathBuf {
+        self.dir.join(LOG_FILE)
+    }
+
+    /// Replaces the running node's status report.
+    pub fn write_status(&self, text: &str) -> Result<()> {
+        self.ensure_dir()?;
+        self.replace(STATUS_FILE, text)
+    }
+
+    /// The running node's status report and when it was written, if there is one.
+    pub fn status(&self) -> Result<Option<(String, std::time::SystemTime)>> {
+        let path = self.dir.join(STATUS_FILE);
+        let read = fs::read_to_string(&path).and_then(|text| {
+            let modified = fs::metadata(&path)?.modified()?;
+            Ok((text, modified))
+        });
+        match read {
+            Ok(status) => Ok(Some(status)),
+            Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(None),
+            Err(err) => Err(explain(err, &path)),
+        }
+    }
+
+    /// Removes the status report of a node that stopped.
+    pub fn remove_status(&self) {
+        let _ = fs::remove_file(self.dir.join(STATUS_FILE));
+    }
+
+    /// The device key, if it was created already.
+    pub fn existing_key(&self) -> Result<Option<SecretKey>> {
+        let path = self.dir.join(KEY_FILE);
+        match fs::read_to_string(&path) {
+            Ok(text) => SecretKey::from_str(text.trim())
+                .map(Some)
+                .with_context(|| format!("invalid key in {}", path.display())),
+            Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(None),
             Err(err) => Err(explain(err, &path)),
         }
     }

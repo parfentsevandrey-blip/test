@@ -70,6 +70,9 @@ pub struct PeerState {
     /// The network path in use, e.g. `192.168.1.20:7777`.
     pub path: Option<String>,
     pub rtt_ms: Option<u32>,
+    /// Without a direct connection: the id of the member that passes packets
+    /// on to it.
+    pub via: Option<String>,
 }
 
 impl From<&Member> for MemberInfo {
@@ -295,6 +298,7 @@ impl HaloNode {
                 rtt_ms: peer
                     .rtt
                     .map(|rtt| u32::try_from(rtt.as_millis()).unwrap_or(u32::MAX)),
+                via: peer.via.map(|via| via.to_string()),
             })
             .collect()
     }

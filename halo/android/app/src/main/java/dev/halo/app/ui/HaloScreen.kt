@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -53,9 +54,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.halo.app.BuildConfig
 import dev.halo.app.Halo
 import dev.halo.app.R
 import dev.halo.core.DeviceInfo
@@ -83,6 +86,7 @@ fun HaloScreen(onConnect: () -> Unit, onDisconnect: () -> Unit, onMembersChanged
     var adding by remember { mutableStateOf<Adding?>(null) }
     val context = LocalContext.current
     var removing by remember { mutableStateOf<MemberInfo?>(null) }
+    var explainingAlwaysOn by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
@@ -112,7 +116,9 @@ fun HaloScreen(onConnect: () -> Unit, onDisconnect: () -> Unit, onMembersChanged
                 item { Hint(stringResource(R.string.no_devices)) }
             }
             items(members, key = { it.id }) { member ->
-                MemberRow(member, peers.find { it.id == member.id }, running) { removing = member }
+                val peer = peers.find { it.id == member.id }
+                val anchor = peer?.via?.let { via -> members.find { it.id == via }?.name }
+                MemberRow(member, peer, anchor, running) { removing = member }
             }
             item {
                 OutlinedButton(onClick = { adding = Adding.Choose }, modifier = Modifier.fillMaxWidth()) {
@@ -120,10 +126,42 @@ fun HaloScreen(onConnect: () -> Unit, onDisconnect: () -> Unit, onMembersChanged
                 }
             }
             error?.let { message -> item { Text(message, color = Danger, fontSize = 14.sp) } }
+            item {
+                TextButton(onClick = { explainingAlwaysOn = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.always_on), color = Muted)
+                }
+            }
+            item {
+                Text(
+                    stringResource(R.string.version, BuildConfig.VERSION_NAME),
+                    color = Muted.copy(alpha = 0.6f),
+                    fontSize = 12.sp,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
         if (adding == Adding.Scan) {
             QrScanner(onCode = { adding = Adding.Pair(it) }, onClose = { adding = null })
         }
+    }
+
+    if (explainingAlwaysOn) {
+        AlertDialog(
+            onDismissRequest = { explainingAlwaysOn = false },
+            title = { Text(stringResource(R.string.always_on)) },
+            text = { Text(stringResource(R.string.always_on_how)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    explainingAlwaysOn = false
+                    // The list of VPN apps; the gear next to this one has the switch.
+                    runCatching { context.startActivity(Intent(Settings.ACTION_VPN_SETTINGS)) }
+                }) { Text(stringResource(R.string.open_settings)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { explainingAlwaysOn = false }) { Text(stringResource(R.string.cancel)) }
+            },
+        )
     }
 
     when (val step = adding) {
@@ -264,13 +302,23 @@ private fun DeviceCard(device: DeviceInfo) {
 }
 
 @Composable
-private fun MemberRow(member: MemberInfo, peer: PeerState?, running: Boolean, onRemove: () -> Unit) {
-    val online = running && peer?.connected == true
+private fun MemberRow(
+    member: MemberInfo,
+    peer: PeerState?,
+    anchor: String?,
+    running: Boolean,
+    onRemove: () -> Unit,
+) {
+    val direct = running && peer?.connected == true
+    // No direct connection, but another device of the network passes packets on.
+    val relayed = running && !direct && anchor != null
+    val online = direct || relayed
     val status = when {
         !running -> stringResource(R.string.offline)
-        online && peer?.path != null && peer.rttMs != null ->
+        direct && peer?.path != null && peer.rttMs != null ->
             stringResource(R.string.online_direct_rtt, peer.path!!, peer.rttMs!!.toInt())
-        online && peer?.path != null -> stringResource(R.string.online_direct, peer.path!!)
+        direct && peer?.path != null -> stringResource(R.string.online_direct, peer.path!!)
+        relayed -> stringResource(R.string.online_via, anchor!!)
         else -> stringResource(R.string.searching)
     }
     Panel {

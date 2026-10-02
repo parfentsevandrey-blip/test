@@ -11,6 +11,15 @@ val haloAbis = (findProperty("haloAbis") as String? ?: "arm64-v8a,x86_64").split
 val haloRoot: File = rootDir.parentFile
 val rustOut = layout.buildDirectory.dir("generated/halo")
 
+// One version for the whole project: the workspace's, in Cargo.toml.
+val haloVersion: String = haloRoot.resolve("Cargo.toml").readLines()
+    .dropWhile { it.trim() != "[workspace.package]" }
+    .first { it.trim().startsWith("version") }
+    .substringAfter('"')
+    .substringBefore('"')
+val haloVersionCode: Int = haloVersion.split(".").map { it.toInt() }
+    .let { (major, minor, patch) -> major * 10_000 + minor * 100 + patch }
+
 android {
     namespace = "dev.halo.app"
     compileSdk = 36
@@ -20,8 +29,8 @@ android {
         applicationId = "dev.halo.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = haloVersionCode
+        versionName = haloVersion
         ndk { abiFilters += haloAbis }
     }
 
@@ -39,6 +48,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     // Compressed native libraries: a much smaller download for sideloading.

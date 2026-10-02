@@ -28,6 +28,7 @@
 
     <string name="online_direct">напрямую %1$s</string>
     <string name="online_direct_rtt">напрямую %1$s · %2$d мс</string>
+    <string name="online_via">через %1$s</string>
     <string name="searching">ищу…</string>
     <string name="offline">не в сети</string>
 
@@ -49,6 +50,10 @@
     <string name="ok">OK</string>
 
     <string name="reachable_outside">доступен и вне дома</string>
+    <string name="always_on">Включать вместе с телефоном</string>
+    <string name="always_on_how">В настройках VPN нажми ⚙ рядом с «Ореол» и включи «Постоянная VPN». Тогда Android сам включает сеть после перезагрузки и обновления приложения.\n\n«Блокировать соединения без VPN» не включай: через Ореол идут только адреса твоих устройств, и с этой опцией у телефона пропадёт остальной интернет.</string>
+    <string name="open_settings">Открыть настройки</string>
+    <string name="version">Ореол %1$s</string>
     <string name="error_no_devices">Сначала добавь хотя бы одно устройство</string>
     <string name="error_vpn_denied">Без разрешения на VPN сеть не включить</string>
     <string name="error_removed">Это устройство удалили из сети. Чтобы вернуться, сотри данные приложения и сопряги его заново</string>
