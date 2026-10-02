@@ -11,9 +11,10 @@ use std::{
 };
 
 use halo_core::{
-    Node, NodeConfig, NodeHandle, PeerConfig,
+    Node, NodeConfig, NodeHandle,
     addr::overlay_ipv4,
-    members::{Member, parse_addrs},
+    journal::Action,
+    members::{Member, parse_addrs, validate_name},
     pair::{self, Pending, Ticket, member_name},
     state::State,
 };
@@ -100,17 +101,30 @@ pub fn device_info(state_dir: String) -> Result<DeviceInfo, HaloError> {
     })
 }
 
+/// The member devices, as this device's journal sees them.
 #[uniffi::export]
 pub fn list_members(state_dir: String) -> Result<Vec<MemberInfo>, HaloError> {
-    Ok(state(state_dir)?
-        .members()?
+    let state = state(state_dir)?;
+    let me = state.key()?.public();
+    Ok(state
+        .journal()?
+        .view(me)
+        .members
         .0
         .iter()
         .map(MemberInfo::from)
         .collect())
 }
 
-/// Adds a device, or updates the one with the same id.
+/// Whether the member journal says this device was removed from the network.
+#[uniffi::export]
+pub fn is_removed(state_dir: String) -> Result<bool, HaloError> {
+    let state = state(state_dir)?;
+    let me = state.key()?.public();
+    Ok(state.journal()?.view(me).removed.contains(&me))
+}
+
+/// Adds a device to the network, or updates its name and addresses.
 #[uniffi::export]
 pub fn add_member(
     state_dir: String,
@@ -119,12 +133,15 @@ pub fn add_member(
     addrs: Vec<String>,
 ) -> Result<MemberInfo, HaloError> {
     let state = state(state_dir)?;
+    let key = state.key()?;
     let id = EndpointId::from_str(id.trim())
         .map_err(|err| HaloError::Failed(format!("invalid device id: {err}")))?;
-    if id == state.key()?.public() {
+    if id == key.public() {
         return Err(HaloError::Failed("this is the id of this device".into()));
     }
-    let addrs = addrs
+    let name = name.trim().to_string();
+    validate_name(&name)?;
+    let addrs: Vec<std::net::SocketAddr> = addrs
         .iter()
         .filter(|addr| !addr.trim().is_empty())
         .map(|addr| parse_addrs(addr.trim()))
@@ -132,27 +149,45 @@ pub fn add_member(
         .into_iter()
         .flatten()
         .collect();
-    let member = Member {
-        id,
-        name: name.trim().to_string(),
-        addrs,
-    };
-    let info = MemberInfo::from(&member);
-    let mut members = state.members()?;
-    members.upsert(member)?;
-    state.save_members(&members)?;
-    Ok(info)
+    let view = state.update_journal(|journal| {
+        anyhow::ensure!(
+            !journal.view(key.public()).removed.contains(&id),
+            "this device was removed from the network for good"
+        );
+        journal.append(
+            &key,
+            Action::Add {
+                id,
+                name: name.clone(),
+                addrs: addrs.clone(),
+            },
+        );
+        Ok(journal.view(key.public()))
+    })?;
+    let member = view
+        .members
+        .0
+        .iter()
+        .find(|member| member.id == id)
+        .cloned()
+        .unwrap_or(Member { id, name, addrs });
+    Ok(MemberInfo::from(&member))
 }
 
-/// Removes a device by name or id.
+/// Removes a device from the network for good, by name or id.
 #[uniffi::export]
 pub fn remove_member(state_dir: String, device: String) -> Result<(), HaloError> {
     let state = state(state_dir)?;
-    let mut members = state.members()?;
-    members
-        .remove(&device)
-        .ok_or_else(|| HaloError::Failed(format!("no device {device}")))?;
-    state.save_members(&members)?;
+    let key = state.key()?;
+    state.update_journal(|journal| {
+        let id = journal
+            .view(key.public())
+            .find(&device)
+            .map(|member| member.id)
+            .ok_or_else(|| anyhow::anyhow!("no device {device}"))?;
+        journal.remove(&key, id);
+        Ok(())
+    })?;
     Ok(())
 }
 
@@ -183,13 +218,13 @@ impl HaloNode {
         let tun_fd = unsafe { TunFd::adopt(tun_fd) };
         let state = state(state_dir)?;
         let secret_key = state.key()?;
-        let peers: Vec<PeerConfig> = state
-            .members()?
-            .0
-            .into_iter()
-            .map(PeerConfig::from)
-            .collect();
-        if peers.is_empty() {
+        let view = state.journal()?.view(secret_key.public());
+        if view.removed.contains(&secret_key.public()) {
+            return Err(HaloError::Failed(
+                "this device was removed from the network".into(),
+            ));
+        }
+        if view.members.0.is_empty() {
             return Err(HaloError::Failed("no devices to connect to".into()));
         }
         let runtime = tokio::runtime::Builder::new_multi_thread()
@@ -202,7 +237,9 @@ impl HaloNode {
             // Phones mostly dial out; peers learn the port over mDNS.
             port: 0,
             mtu,
-            peers,
+            peers: Vec::new(),
+            // Members come and go while it runs: the journal says who they are.
+            journal: Some(state),
             lan_discovery: true,
             stats_interval: None,
         };
@@ -230,11 +267,13 @@ impl HaloNode {
         }))
     }
 
-    /// The member devices and how they are connected.
+    /// The member devices and how they are connected. Changes when devices join
+    /// or leave the network.
     pub fn peers(&self) -> Vec<PeerState> {
         self.handle
             .snapshot()
-            .peers
+            .map(|status| status.peers)
+            .unwrap_or_default()
             .into_iter()
             .map(|peer| PeerState {
                 id: peer.id.to_string(),
@@ -417,16 +456,26 @@ impl Pairing {
         }
         let (id, name, addrs) = peer;
         let state = state(self.state_dir.clone())?;
-        let mut members = state.members()?;
-        let member = Member {
-            id,
-            name: members.free_name(&member_name(&name), &id),
-            addrs,
-        };
-        let info = MemberInfo::from(&member);
-        members.upsert(member)?;
-        state.save_members(&members)?;
-        Ok(Some(info))
+        let key = state.key()?;
+        let view = state.update_journal(|journal| {
+            journal.set_name(&key, &self.name);
+            journal.append(
+                &key,
+                Action::Add {
+                    id,
+                    name: member_name(&name),
+                    addrs: addrs.clone(),
+                },
+            );
+            Ok(journal.view(key.public()))
+        })?;
+        // Not a member if it was removed from the network before.
+        Ok(view
+            .members
+            .0
+            .iter()
+            .find(|member| member.id == id)
+            .map(MemberInfo::from))
     }
 
     /// Ends the pairing from any thread and returns at once: a blocked

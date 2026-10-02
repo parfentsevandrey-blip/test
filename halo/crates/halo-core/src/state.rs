@@ -1,4 +1,4 @@
-//! Where this device keeps its key and member list.
+//! Where this device keeps its key and member journal.
 //!
 //! The key belongs to the device, not to a user, so it lives in a system-wide
 //! directory that only root / administrators can read.
@@ -13,11 +13,19 @@ use std::{
 use anyhow::{Context, Result};
 use iroh::SecretKey;
 
-use crate::members::Members;
+use crate::{
+    journal::{Action, Journal},
+    members::Members,
+};
 
 const KEY_FILE: &str = "secret.key";
+const JOURNAL_FILE: &str = "journal";
+/// Held while the journal file changes: the node and CLI commands both write it.
+const JOURNAL_LOCK: &str = "journal.lock";
+/// The member list before the journal, moved into the journal on first use.
 const MEMBERS_FILE: &str = "members";
 
+#[derive(Debug, Clone)]
 pub struct State {
     dir: PathBuf,
 }
@@ -48,22 +56,90 @@ impl State {
         }
     }
 
-    pub fn members(&self) -> Result<Members> {
+    /// Where the member journal lives.
+    pub fn journal_path(&self) -> PathBuf {
+        self.dir.join(JOURNAL_FILE)
+    }
+
+    /// The member journal, as last saved.
+    pub fn journal(&self) -> Result<Journal> {
+        let path = self.dir.join(JOURNAL_FILE);
+        match fs::read_to_string(&path) {
+            Ok(text) => Journal::parse(&text).with_context(|| format!("in {}", path.display())),
+            // Creates it, moving an old member list in.
+            Err(err) if err.kind() == io::ErrorKind::NotFound => {
+                self.update_journal(|journal| Ok(journal.clone()))
+            }
+            Err(err) => Err(explain(err, &path)),
+        }
+    }
+
+    /// Changes the journal: reads the latest file, applies `change` and saves the
+    /// result, all under a lock, so concurrent writers keep each other's entries.
+    pub fn update_journal<T>(&self, change: impl FnOnce(&mut Journal) -> Result<T>) -> Result<T> {
+        self.ensure_dir()?;
+        let lock_path = self.dir.join(JOURNAL_LOCK);
+        let lock = fs::OpenOptions::new()
+            .create(true)
+            .truncate(false)
+            .write(true)
+            .open(&lock_path)
+            .map_err(|err| explain(err, &lock_path))?;
+        lock.lock().map_err(|err| explain(err, &lock_path))?;
+
+        let path = self.dir.join(JOURNAL_FILE);
+        let (mut journal, exists) = match fs::read_to_string(&path) {
+            Ok(text) => (
+                Journal::parse(&text).with_context(|| format!("in {}", path.display()))?,
+                true,
+            ),
+            Err(err) if err.kind() == io::ErrorKind::NotFound => (self.migrate()?, false),
+            Err(err) => return Err(explain(err, &path)),
+        };
+        let before = journal.clone();
+        let result = change(&mut journal)?;
+        if !exists || journal != before {
+            let tmp = self.dir.join(format!("{JOURNAL_FILE}.tmp"));
+            let _ = fs::remove_file(&tmp);
+            write_new(&tmp, &journal.render()).map_err(|err| explain(err, &tmp))?;
+            fs::rename(&tmp, &path).map_err(|err| explain(err, &path))?;
+        }
+        if !exists {
+            // The journal holds the old member list now.
+            let members = self.dir.join(MEMBERS_FILE);
+            let _ = fs::rename(&members, self.dir.join(format!("{MEMBERS_FILE}.old")));
+        }
+        Ok(result)
+    }
+
+    /// A journal holding the member list from before the journal, if any.
+    fn migrate(&self) -> Result<Journal> {
+        let mut journal = Journal::default();
+        let members = self.members()?;
+        if !members.0.is_empty() {
+            let key = self.key()?;
+            for member in members.0 {
+                journal.append(
+                    &key,
+                    Action::Add {
+                        id: member.id,
+                        name: member.name,
+                        addrs: member.addrs,
+                    },
+                );
+            }
+        }
+        Ok(journal)
+    }
+
+    /// The member list from before the journal.
+    fn members(&self) -> Result<Members> {
         let path = self.dir.join(MEMBERS_FILE);
         match fs::read_to_string(&path) {
             Ok(text) => Members::parse(&text).with_context(|| format!("in {}", path.display())),
             Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(Members::default()),
             Err(err) => Err(explain(err, &path)),
         }
-    }
-
-    pub fn save_members(&self, members: &Members) -> Result<()> {
-        self.ensure_dir()?;
-        let path = self.dir.join(MEMBERS_FILE);
-        let tmp = self.dir.join(format!("{MEMBERS_FILE}.tmp"));
-        let _ = fs::remove_file(&tmp);
-        write_new(&tmp, &members.render()).map_err(|err| explain(err, &tmp))?;
-        fs::rename(&tmp, &path).map_err(|err| explain(err, &path))
     }
 
     fn ensure_dir(&self) -> Result<()> {
@@ -141,5 +217,80 @@ fn create_private_dir(dir: &Path) -> io::Result<()> {
             "icacls failed to restrict {}",
             dir.display()
         )))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use iroh::EndpointId;
+
+    use super::*;
+    use crate::members::Member;
+
+    /// A fresh directory, created up front so no platform ACL step runs.
+    fn dir(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("halo-state-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn the_old_member_list_moves_into_the_journal() {
+        let dir = dir("migrate");
+        let state = State::new(Some(dir.clone())).unwrap();
+        let me = state.key().unwrap().public();
+        let phone = SecretKey::from_bytes(&[7; 32]).public();
+        let old = Members(vec![Member {
+            id: phone,
+            name: "phone".into(),
+            addrs: vec!["192.168.1.20:7777".parse().unwrap()],
+        }]);
+        fs::write(dir.join(MEMBERS_FILE), old.render()).unwrap();
+
+        let view = state.journal().unwrap().view(me);
+        assert_eq!(view.members, old);
+        assert!(!dir.join(MEMBERS_FILE).exists());
+        assert!(dir.join("members.old").exists());
+        // Read back from the file this time.
+        assert_eq!(state.journal().unwrap().view(me).members, old);
+    }
+
+    #[test]
+    fn concurrent_writers_keep_each_others_entries() {
+        let dir = dir("concurrent");
+        let state = State::new(Some(dir.clone())).unwrap();
+        let key = state.key().unwrap();
+        let writers: Vec<_> = (0..4u8)
+            .map(|writer| {
+                let (dir, key) = (dir.clone(), key.clone());
+                std::thread::spawn(move || {
+                    let state = State::new(Some(dir)).unwrap();
+                    for i in 0..25u8 {
+                        let id: EndpointId =
+                            SecretKey::from_bytes(&[writer * 25 + i + 1; 32]).public();
+                        state
+                            .update_journal(|journal| {
+                                journal.append(
+                                    &key,
+                                    Action::Add {
+                                        id,
+                                        name: String::new(),
+                                        addrs: vec![],
+                                    },
+                                );
+                                Ok(())
+                            })
+                            .unwrap();
+                    }
+                })
+            })
+            .collect();
+        for writer in writers {
+            writer.join().unwrap();
+        }
+        let journal = state.journal().unwrap();
+        assert_eq!(journal.len(), 100);
+        assert_eq!(journal.view(key.public()).members.0.len(), 100);
     }
 }

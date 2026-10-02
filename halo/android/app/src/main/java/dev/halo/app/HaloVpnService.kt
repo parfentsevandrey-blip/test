@@ -9,6 +9,7 @@ import android.os.Build
 import android.util.Log
 import dev.halo.core.HaloNode
 import dev.halo.core.deviceInfo
+import dev.halo.core.isRemoved
 import dev.halo.core.listMembers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,10 @@ import kotlinx.coroutines.launch
  * iroh cannot watch the network on Android, so the service passes on every change
  * of the default network (Wi-Fi to mobile and back) and tells the system which
  * network the VPN runs over.
+ *
+ * Members come and go while the node runs (the member journal travels between
+ * devices), and each one needs its own route: when they change, the tunnel
+ * restarts with the new routes.
  */
 class HaloVpnService : VpnService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -37,6 +42,8 @@ class HaloVpnService : VpnService() {
     private var poller: Job? = null
     private var multicast: WifiManager.MulticastLock? = null
     private var networkWatch: ConnectivityManager.NetworkCallback? = null
+    /** The member addresses routed into the current tunnel. */
+    private var routed: Set<String> = emptySet()
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
@@ -73,6 +80,7 @@ class HaloVpnService : VpnService() {
         try {
             val dir = Halo.stateDir
             val me = deviceInfo(dir)
+            check(!isRemoved(dir)) { getString(R.string.error_removed) }
             val members = listMembers(dir)
             check(members.isNotEmpty()) { getString(R.string.error_no_devices) }
             val builder = Builder()
@@ -91,6 +99,7 @@ class HaloVpnService : VpnService() {
                 }
             val started = HaloNode.start(dir, tun.detachFd(), MTU.toUShort())
             node = started
+            routed = members.map { it.ip }.toSet()
             Halo.reportError(null)
             Halo.setRunning(true)
             poller = scope.launch { poll(started) }
@@ -112,7 +121,17 @@ class HaloVpnService : VpnService() {
                 stopSelf()
                 return
             }
-            Halo.publish(started.peers())
+            val peers = started.peers()
+            Halo.publish(peers)
+            if (peers.map { it.ip }.toSet() != routed) {
+                Log.i(TAG, "the members changed; restarting the tunnel with their routes")
+                Halo.reloadMembers()
+                scope.launch {
+                    stopNode()
+                    startNode()
+                }
+                return
+            }
             delay(POLL_MS)
         }
     }

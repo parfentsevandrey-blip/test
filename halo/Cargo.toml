@@ -12,3 +12,10 @@ license = "MIT OR Apache-2.0"
 lto = true
 codegen-units = 1
 strip = true
+
+# Signature checks in debug builds and tests are otherwise a hundred times slower.
+[profile.dev.package.curve25519-dalek]
+opt-level = 3
+
+[profile.dev.package.ed25519-dalek]
+opt-level = 3

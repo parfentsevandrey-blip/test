@@ -3,6 +3,10 @@
 //! There are no servers: relays and internet address lookup are disabled. A node
 //! talks directly to its member devices, using addresses it was given or finds
 //! on the local network over mDNS.
+//!
+//! With a member journal, members come and go while the node runs: connected
+//! members exchange journal entries, and the node follows the journal file that
+//! commands like `halo pair` and `halo remove` write.
 
 use std::{
     borrow::Cow,
@@ -10,10 +14,10 @@ use std::{
     future::Future,
     net::{Ipv4Addr, Ipv6Addr, SocketAddr},
     sync::{
-        Arc, Mutex,
+        Arc, Mutex, RwLock, Weak,
         atomic::{AtomicBool, AtomicU64, Ordering::Relaxed},
     },
-    time::{Duration, Instant},
+    time::{Duration, Instant, SystemTime},
 };
 
 use anyhow::{Context, Result, anyhow};
@@ -27,7 +31,7 @@ use iroh::{
     },
 };
 use iroh_mdns_address_lookup::{DiscoveryEvent, MdnsAddressLookup};
-use n0_future::StreamExt;
+use n0_future::{StreamExt, task::AbortOnDropHandle};
 use tokio::{
     sync::{Notify, mpsc},
     task::JoinSet,
@@ -39,6 +43,9 @@ use crate::{
     ALPN,
     addr::{is_overlay, overlay_ipv4},
     frame,
+    journal::{Entry, Journal, View},
+    state::State,
+    sync,
 };
 
 /// Default tunnel MTU: the IPv6 minimum, so the same tunnel can carry IPv6 later.
@@ -52,6 +59,8 @@ const MIN_BACKOFF: Duration = Duration::from_secs(1);
 const MAX_BACKOFF: Duration = Duration::from_secs(30);
 /// Two connections to the same peer created this close together are a simultaneous dial.
 const RACE_WINDOW: Duration = Duration::from_secs(5);
+/// How often the node looks for changes other programs made to the journal file.
+const JOURNAL_POLL: Duration = Duration::from_secs(2);
 
 /// mDNS service name, so Halo devices do not mix with other iroh apps on the network.
 const MDNS_SERVICE: &str = "halo";
@@ -78,8 +87,13 @@ pub struct NodeConfig {
     pub port: u16,
     /// MTU of the TUN device.
     pub mtu: u16,
-    /// Member devices. Connections from any other key are rejected during the handshake.
+    /// Devices to connect to besides the members in the journal, or all of them
+    /// without a journal. Connections from any other key are rejected during
+    /// the handshake.
     pub peers: Vec<PeerConfig>,
+    /// The state directory whose member journal the node follows and shares
+    /// with the other members. Without one, the members stay as given.
+    pub journal: Option<State>,
     /// Find member devices on the local network over mDNS.
     pub lan_discovery: bool,
     /// Log traffic counters at this interval.
@@ -113,9 +127,8 @@ pub async fn run(
 
 /// A running node.
 pub struct Node {
-    endpoint: Endpoint,
+    shared: Arc<Shared>,
     tasks: JoinSet<Result<()>>,
-    handle: NodeHandle,
 }
 
 impl Node {
@@ -123,8 +136,17 @@ impl Node {
     pub async fn start(config: NodeConfig, tun: AsyncDevice) -> Result<Self> {
         let me = config.secret_key.public();
         let my_ip = overlay_ipv4(&me);
-        let members: HashSet<EndpointId> = config.peers.iter().map(|peer| peer.id).collect();
-        let endpoint = bind_endpoint(&config, members).await?;
+        let journal = match &config.journal {
+            Some(state) => {
+                let state = state.clone();
+                Some(tokio::task::spawn_blocking(move || state.journal()).await??)
+            }
+            None => None,
+        };
+        let view = journal.as_ref().map(|journal| journal.view(me));
+        let members = members_of(view.as_ref(), &config.peers);
+        let allowed = Arc::new(RwLock::new(members.iter().map(|peer| peer.id).collect()));
+        let endpoint = bind_endpoint(&config, allowed.clone()).await?;
         info!(id = %me, ip = %my_ip, "node up");
         for addr in endpoint.addr().ip_addrs() {
             info!(%addr, "listening");
@@ -134,76 +156,53 @@ impl Node {
             .then(|| start_lan_discovery(&endpoint))
             .flatten();
 
-        let tun = Arc::new(tun);
-        let stats = Arc::new(Stats::default());
-        let mut peers = Vec::new();
-        let mut by_ip = HashMap::new();
-        let mut by_id = HashMap::new();
-        let mut tasks = JoinSet::new();
-        for peer in config.peers {
-            let (outbound_tx, outbound_rx) = mpsc::channel(QUEUE_LEN);
-            let (incoming_tx, incoming_rx) = mpsc::channel(4);
-            let ip = overlay_ipv4(&peer.id);
-            let state = Arc::new(Peer {
-                id: peer.id,
-                ip,
-                addrs: peer.addrs,
-                outbound: outbound_tx,
-                incoming: incoming_tx,
-                connected: AtomicBool::new(false),
-                conn: Mutex::new(None),
-                wake: Notify::new(),
-            });
-            info!(peer = %peer.id.fmt_short(), %ip, "member");
-            peers.push(state.clone());
-            by_ip.insert(ip, state.clone());
-            by_id.insert(peer.id, state.clone());
-            let link = Link {
-                me,
-                my_ip,
-                peer: state,
-                endpoint: endpoint.clone(),
-                tun: tun.clone(),
-                stats: stats.clone(),
-            };
-            tasks.spawn(link.run(outbound_rx, incoming_rx));
+        let shared = Arc::new(Shared {
+            me,
+            my_ip,
+            endpoint: endpoint.clone(),
+            tun: Arc::new(tun),
+            stats: Arc::new(Stats::default()),
+            peers: RwLock::new(HashMap::new()),
+            by_ip: RwLock::new(HashMap::new()),
+            links: Mutex::new(HashMap::new()),
+            allowed,
+            extra_peers: config.peers,
+            membership: config.journal.map(|state| Membership {
+                state,
+                journal: Mutex::new(journal.unwrap_or_default()),
+            }),
+            removed: AtomicBool::new(false),
+        });
+        if let Some(view) = &view {
+            shared.note_removal(view);
         }
+        shared.set_members(members);
+
+        let mut tasks = JoinSet::new();
+        if let Some(lan) = lan {
+            tasks.spawn(watch_lan(lan, shared.clone()));
+        }
+        tasks.spawn(accept_loop(shared.clone()));
         let transport_ports = endpoint
             .bound_sockets()
             .iter()
             .map(SocketAddr::port)
             .collect();
-        let by_id = Arc::new(by_id);
-        if let Some(lan) = lan {
-            tasks.spawn(watch_lan(lan, by_id.clone()));
+        tasks.spawn(tun_loop(shared.clone(), transport_ports, config.mtu));
+        if shared.membership.is_some() {
+            tasks.spawn(follow_journal(shared.clone()));
         }
-        tasks.spawn(accept_loop(endpoint.clone(), by_id));
-        tasks.spawn(tun_loop(
-            tun,
-            Arc::new(by_ip),
-            transport_ports,
-            stats.clone(),
-            config.mtu,
-        ));
         if let Some(interval) = config.stats_interval {
-            tasks.spawn(log_stats(stats, interval));
+            tasks.spawn(log_stats(shared.stats.clone(), interval));
         }
-        let handle = NodeHandle {
-            me,
-            my_ip,
-            peers: Arc::new(peers),
-            endpoint: endpoint.clone(),
-        };
-        Ok(Self {
-            endpoint,
-            tasks,
-            handle,
-        })
+        Ok(Self { shared, tasks })
     }
 
     /// A handle for user interfaces and the platform, valid while the node runs.
     pub fn handle(&self) -> NodeHandle {
-        self.handle.clone()
+        NodeHandle {
+            shared: Arc::downgrade(&self.shared),
+        }
     }
 
     /// Runs until `shutdown` completes or a node task fails, then closes the endpoint.
@@ -217,18 +216,267 @@ impl Node {
             () = shutdown => Ok(()),
         };
         self.tasks.shutdown().await;
-        self.endpoint.close().await;
+        // Handles may outlive the node: stop the links now.
+        self.shared.links.lock().expect("poisoned").clear();
+        self.shared.endpoint.close().await;
         result
     }
 }
 
-/// A cheap, cloneable handle to a running node, for user interfaces and the platform.
-#[derive(Clone)]
-pub struct NodeHandle {
+/// The member devices to connect to: the journal's members and the extra peers,
+/// except removed devices.
+fn members_of(view: Option<&View>, extra: &[PeerConfig]) -> Vec<PeerConfig> {
+    let mut peers: Vec<PeerConfig> = view
+        .map(|view| {
+            view.members
+                .0
+                .iter()
+                .map(|member| PeerConfig {
+                    id: member.id,
+                    addrs: member.addrs.clone(),
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    for peer in extra {
+        if view.is_some_and(|view| view.removed.contains(&peer.id)) {
+            continue;
+        }
+        match peers.iter_mut().find(|known| known.id == peer.id) {
+            Some(known) => known.addrs.extend(peer.addrs.iter().copied()),
+            None => peers.push(peer.clone()),
+        }
+    }
+    peers
+}
+
+/// State shared by the node's tasks and handles.
+struct Shared {
     me: EndpointId,
     my_ip: Ipv4Addr,
-    peers: Arc<Vec<Arc<Peer>>>,
     endpoint: Endpoint,
+    tun: Arc<AsyncDevice>,
+    stats: Arc<Stats>,
+    peers: RwLock<HashMap<EndpointId, Arc<Peer>>>,
+    by_ip: RwLock<HashMap<Ipv4Addr, Arc<Peer>>>,
+    /// The task of each peer's link; dropping one stops it.
+    links: Mutex<HashMap<EndpointId, AbortOnDropHandle<Result<()>>>>,
+    /// Who may connect: read by the handshake hook.
+    allowed: Arc<RwLock<HashSet<EndpointId>>>,
+    extra_peers: Vec<PeerConfig>,
+    membership: Option<Membership>,
+    /// The journal says this device was removed from the network.
+    removed: AtomicBool,
+}
+
+/// The member journal as the node keeps it.
+struct Membership {
+    state: State,
+    /// What the journal file said last.
+    journal: Mutex<Journal>,
+}
+
+impl Shared {
+    /// Makes `wanted` the member devices: links to new ones start, links to
+    /// devices that are no longer members end.
+    fn set_members(self: &Arc<Self>, wanted: Vec<PeerConfig>) {
+        let ids: HashSet<EndpointId> = wanted.iter().map(|peer| peer.id).collect();
+        *self.allowed.write().expect("poisoned") = ids.clone();
+        let mut peers = self.peers.write().expect("poisoned");
+        let mut by_ip = self.by_ip.write().expect("poisoned");
+        let mut links = self.links.lock().expect("poisoned");
+        peers.retain(|id, peer| {
+            if ids.contains(id) {
+                return true;
+            }
+            info!(peer = %id.fmt_short(), ip = %peer.ip, "no longer a member");
+            by_ip.remove(&peer.ip);
+            links.remove(id);
+            if let Some(conn) = peer.connection() {
+                conn.close(CLOSE_NOT_MEMBER, b"not a member");
+            }
+            false
+        });
+        for config in wanted {
+            if let Some(peer) = peers.get(&config.id) {
+                let mut addrs = peer.addrs.lock().expect("poisoned");
+                if *addrs != config.addrs {
+                    *addrs = config.addrs;
+                    peer.wake.notify_one();
+                }
+                continue;
+            }
+            let (outbound_tx, outbound_rx) = mpsc::channel(QUEUE_LEN);
+            let (incoming_tx, incoming_rx) = mpsc::channel(4);
+            let ip = overlay_ipv4(&config.id);
+            let peer = Arc::new(Peer {
+                id: config.id,
+                ip,
+                addrs: Mutex::new(config.addrs),
+                outbound: outbound_tx,
+                incoming: incoming_tx,
+                connected: AtomicBool::new(false),
+                conn: Mutex::new(None),
+                wake: Notify::new(),
+            });
+            info!(peer = %config.id.fmt_short(), %ip, "member");
+            let link = Link {
+                shared: self.clone(),
+                peer: peer.clone(),
+            };
+            links.insert(
+                config.id,
+                AbortOnDropHandle::new(tokio::spawn(link.run(outbound_rx, incoming_rx))),
+            );
+            by_ip.insert(ip, peer.clone());
+            peers.insert(config.id, peer);
+        }
+    }
+
+    fn note_removal(&self, view: &View) {
+        let removed = view.removed.contains(&self.me);
+        if removed && !self.removed.swap(true, Relaxed) {
+            warn!("this device was removed from the network");
+        }
+    }
+
+    /// Switches to `journal` if it says something new: updates the members and
+    /// tells the connected members.
+    fn adopt(self: &Arc<Self>, journal: Journal) {
+        let Some(membership) = &self.membership else {
+            return;
+        };
+        {
+            let mut current = membership.journal.lock().expect("poisoned");
+            if *current == journal {
+                return;
+            }
+            *current = journal.clone();
+        }
+        let view = journal.view(self.me);
+        self.note_removal(&view);
+        self.set_members(members_of(Some(&view), &self.extra_peers));
+        self.push();
+    }
+
+    /// Keeps the entries from another member that are new here, and acts on them.
+    async fn learn(self: &Arc<Self>, entries: Vec<Entry>) {
+        let Some(membership) = &self.membership else {
+            return;
+        };
+        let new: Vec<Entry> = {
+            let heads = membership.journal.lock().expect("poisoned").heads();
+            entries
+                .into_iter()
+                .filter(|entry| heads.get(&entry.author()).copied().unwrap_or(0) < entry.seq())
+                .collect()
+        };
+        if new.is_empty() {
+            return;
+        }
+        let state = membership.state.clone();
+        let me = self.me;
+        let merged = tokio::task::spawn_blocking(move || {
+            state.update_journal(|journal| {
+                for entry in new {
+                    if let Err(err) = journal.insert(entry) {
+                        warn!("journal entry skipped: {err:#}");
+                    }
+                }
+                journal.retain_reachable(me);
+                Ok(journal.clone())
+            })
+        })
+        .await;
+        match merged {
+            Ok(Ok(journal)) => self.adopt(journal),
+            Ok(Err(err)) => warn!("failed to save the member journal: {err:#}"),
+            Err(err) => warn!("failed to save the member journal: {err}"),
+        }
+    }
+
+    /// Offers the journal to every connected member.
+    fn push(self: &Arc<Self>) {
+        for peer in self.peers.read().expect("poisoned").values() {
+            if let Some(conn) = peer.connection() {
+                tokio::spawn(self.clone().exchange(conn));
+            }
+        }
+    }
+
+    /// One journal exchange with the member at the other end of `conn`.
+    async fn exchange(self: Arc<Self>, conn: Connection) {
+        let Some(membership) = &self.membership else {
+            return;
+        };
+        let journal = membership.journal.lock().expect("poisoned").clone();
+        match sync::initiate(&conn, &journal).await {
+            Ok(entries) => self.learn(entries).await,
+            Err(err) => {
+                debug!(peer = %conn.remote_id().fmt_short(), "journal exchange failed: {err:#}")
+            }
+        }
+    }
+
+    /// Answers the journal exchanges a member starts, for as long as its
+    /// connection lives.
+    async fn answer_exchanges(self: Arc<Self>, conn: Connection) {
+        while let Ok((send, recv)) = conn.accept_bi().await {
+            let shared = self.clone();
+            let remote = conn.remote_id();
+            tokio::spawn(async move {
+                let Some(membership) = &shared.membership else {
+                    return;
+                };
+                let journal = membership.journal.lock().expect("poisoned").clone();
+                match sync::respond(send, recv, &journal).await {
+                    Ok(entries) => shared.learn(entries).await,
+                    Err(err) => {
+                        debug!(peer = %remote.fmt_short(), "journal exchange failed: {err:#}")
+                    }
+                }
+            });
+        }
+    }
+}
+
+/// Follows the journal file: `halo pair`, `halo remove` and the app change it
+/// while the node runs.
+async fn follow_journal(shared: Arc<Shared>) -> Result<()> {
+    let Some(membership) = &shared.membership else {
+        return std::future::pending().await;
+    };
+    let path = membership.state.journal_path();
+    let stamp = |path: &std::path::Path| {
+        std::fs::metadata(path).ok().map(|meta| {
+            (
+                meta.modified().unwrap_or(SystemTime::UNIX_EPOCH),
+                meta.len(),
+            )
+        })
+    };
+    let mut seen = stamp(&path);
+    loop {
+        tokio::time::sleep(JOURNAL_POLL).await;
+        let now = stamp(&path);
+        if now == seen {
+            continue;
+        }
+        seen = now;
+        let state = membership.state.clone();
+        match tokio::task::spawn_blocking(move || state.journal()).await? {
+            Ok(journal) => shared.adopt(journal),
+            Err(err) => warn!("failed to read the member journal: {err:#}"),
+        }
+    }
+}
+
+/// A cheap, cloneable handle to a running node, for user interfaces and the platform.
+///
+/// Weak: once the node stops, its TUN device closes whatever handles remain.
+#[derive(Clone)]
+pub struct NodeHandle {
+    shared: Weak<Shared>,
 }
 
 /// A snapshot of a node's state.
@@ -237,6 +485,8 @@ pub struct NodeStatus {
     pub id: EndpointId,
     pub ip: Ipv4Addr,
     pub peers: Vec<PeerStatus>,
+    /// The member journal says this device was removed from the network.
+    pub removed: bool,
 }
 
 /// A snapshot of one member device.
@@ -257,23 +507,25 @@ impl NodeHandle {
     /// has to pass on what `ConnectivityManager` reports. Every link redials at once
     /// instead of waiting out its backoff.
     pub async fn network_changed(&self) {
-        self.endpoint.network_change().await;
-        for peer in self.peers.iter() {
+        let Some(shared) = self.shared.upgrade() else {
+            return;
+        };
+        shared.endpoint.network_change().await;
+        for peer in shared.peers.read().expect("poisoned").values() {
             peer.wake.notify_one();
         }
     }
 
-    pub fn snapshot(&self) -> NodeStatus {
-        let peers = self
+    /// The node's state, while it runs.
+    pub fn snapshot(&self) -> Option<NodeStatus> {
+        let shared = self.shared.upgrade()?;
+        let mut peers: Vec<PeerStatus> = shared
             .peers
-            .iter()
+            .read()
+            .expect("poisoned")
+            .values()
             .map(|peer| {
-                let conn = peer
-                    .conn
-                    .lock()
-                    .expect("poisoned")
-                    .as_ref()
-                    .and_then(WeakConnectionHandle::upgrade);
+                let conn = peer.connection();
                 let selected = conn.as_ref().and_then(|conn| {
                     let paths = conn.paths();
                     let path = paths.iter().find(|path| path.is_selected())?;
@@ -289,11 +541,13 @@ impl NodeHandle {
                 }
             })
             .collect();
-        NodeStatus {
-            id: self.me,
-            ip: self.my_ip,
+        peers.sort_by_key(|peer| peer.ip);
+        Some(NodeStatus {
+            id: shared.me,
+            ip: shared.my_ip,
             peers,
-        }
+            removed: shared.removed.load(Relaxed),
+        })
     }
 }
 
@@ -304,7 +558,10 @@ fn describe(addr: &TransportAddr) -> String {
     }
 }
 
-async fn bind_endpoint(config: &NodeConfig, members: HashSet<EndpointId>) -> Result<Endpoint> {
+async fn bind_endpoint(
+    config: &NodeConfig,
+    allowed: Arc<RwLock<HashSet<EndpointId>>>,
+) -> Result<Endpoint> {
     let v4 = SocketAddr::from((Ipv4Addr::UNSPECIFIED, config.port));
     let v6 = SocketAddr::from((Ipv6Addr::UNSPECIFIED, config.port));
     let endpoint = Endpoint::builder(presets::Minimal)
@@ -315,7 +572,7 @@ async fn bind_endpoint(config: &NodeConfig, members: HashSet<EndpointId>) -> Res
         .clear_address_lookup()
         // Never advertise the tunnel's own address as a way to reach this device.
         .addr_filter(without_overlay())
-        .hooks(MembersOnly(members))
+        .hooks(MembersOnly(allowed))
         .clear_ip_transports()
         .bind_addr(v4)?
         .bind_addr_with_opts(v6, BindOpts::default().set_is_required(false))?
@@ -363,14 +620,15 @@ fn start_lan_discovery(endpoint: &Endpoint) -> Option<MdnsAddressLookup> {
 }
 
 /// Dials a member as soon as it shows up on the local network.
-async fn watch_lan(
-    lan: MdnsAddressLookup,
-    peers: Arc<HashMap<EndpointId, Arc<Peer>>>,
-) -> Result<()> {
+async fn watch_lan(lan: MdnsAddressLookup, shared: Arc<Shared>) -> Result<()> {
     let mut events = lan.subscribe().await;
     while let Some(event) = events.next().await {
         if let DiscoveryEvent::Discovered { endpoint_info, .. } = event
-            && let Some(peer) = peers.get(&endpoint_info.endpoint_id)
+            && let Some(peer) = shared
+                .peers
+                .read()
+                .expect("poisoned")
+                .get(&endpoint_info.endpoint_id)
         {
             debug!(peer = %peer.id.fmt_short(), "seen on the local network");
             peer.wake.notify_one();
@@ -382,7 +640,7 @@ async fn watch_lan(
 
 /// Rejects every key that is not a member, right after the TLS handshake.
 #[derive(Debug)]
-struct MembersOnly(HashSet<EndpointId>);
+struct MembersOnly(Arc<RwLock<HashSet<EndpointId>>>);
 
 impl EndpointHooks for MembersOnly {
     fn after_handshake<'a>(
@@ -390,7 +648,7 @@ impl EndpointHooks for MembersOnly {
         conn: &'a Connection,
     ) -> impl Future<Output = AfterHandshakeOutcome> + Send + 'a {
         let remote = conn.remote_id();
-        let outcome = if self.0.contains(&remote) {
+        let outcome = if self.0.read().expect("poisoned").contains(&remote) {
             AfterHandshakeOutcome::accept()
         } else {
             warn!(remote = %remote.fmt_short(), "rejected a device that is not a member");
@@ -406,7 +664,7 @@ impl EndpointHooks for MembersOnly {
 struct Peer {
     id: EndpointId,
     ip: Ipv4Addr,
-    addrs: Vec<SocketAddr>,
+    addrs: Mutex<Vec<SocketAddr>>,
     /// Frames from the TUN device waiting to be sent to this peer.
     outbound: mpsc::Sender<Bytes>,
     /// Connections from this peer, handed over by the accept loop.
@@ -416,6 +674,16 @@ struct Peer {
     conn: Mutex<Option<WeakConnectionHandle>>,
     /// Cuts the redial backoff short, e.g. when the peer appears on the local network.
     wake: Notify,
+}
+
+impl Peer {
+    fn connection(&self) -> Option<Connection> {
+        self.conn
+            .lock()
+            .expect("poisoned")
+            .as_ref()
+            .and_then(WeakConnectionHandle::upgrade)
+    }
 }
 
 #[derive(Debug, Default)]
@@ -434,17 +702,16 @@ struct Stats {
 /// iroh advertises every local address to peers, the tunnel's own included, so it
 /// may try to reach a peer through the tunnel itself. Such packets come from our
 /// transport's UDP port and are dropped: a path inside the tunnel never validates.
-async fn tun_loop(
-    tun: Arc<AsyncDevice>,
-    peers: Arc<HashMap<Ipv4Addr, Arc<Peer>>>,
-    transport_ports: Vec<u16>,
-    stats: Arc<Stats>,
-    mtu: u16,
-) -> Result<()> {
+async fn tun_loop(shared: Arc<Shared>, transport_ports: Vec<u16>, mtu: u16) -> Result<()> {
+    let stats = &shared.stats;
     loop {
         // One byte of headroom for the frame tag, so whole packets go out without a copy.
         let mut buf = BytesMut::zeroed(usize::from(mtu) + 1);
-        let len = tun.recv(&mut buf[1..]).await.context("TUN read failed")?;
+        let len = shared
+            .tun
+            .recv(&mut buf[1..])
+            .await
+            .context("TUN read failed")?;
         buf.truncate(len + 1);
         buf[0] = frame::WHOLE;
         stats.from_tun.fetch_add(1, Relaxed);
@@ -455,7 +722,8 @@ async fn tun_loop(
             stats.dropped_loop.fetch_add(1, Relaxed);
             continue;
         }
-        match peers.get(&dst) {
+        let peer = shared.by_ip.read().expect("poisoned").get(&dst).cloned();
+        match peer {
             Some(peer) if peer.connected.load(Relaxed) => {
                 if peer.outbound.try_send(buf.freeze()).is_err() {
                     stats.dropped_queue_full.fetch_add(1, Relaxed);
@@ -469,9 +737,9 @@ async fn tun_loop(
 }
 
 /// Routes incoming connections to the link of the peer they come from.
-async fn accept_loop(endpoint: Endpoint, peers: Arc<HashMap<EndpointId, Arc<Peer>>>) -> Result<()> {
-    while let Some(incoming) = endpoint.accept().await {
-        let peers = peers.clone();
+async fn accept_loop(shared: Arc<Shared>) -> Result<()> {
+    while let Some(incoming) = shared.endpoint.accept().await {
+        let shared = shared.clone();
         tokio::spawn(async move {
             let accepting = match incoming.accept() {
                 Ok(accepting) => accepting,
@@ -481,9 +749,15 @@ async fn accept_loop(endpoint: Endpoint, peers: Arc<HashMap<EndpointId, Arc<Peer
                 Ok(conn) => conn,
                 Err(err) => return debug!(%err, "handshake failed"),
             };
-            match peers.get(&conn.remote_id()) {
+            let peer = shared
+                .peers
+                .read()
+                .expect("poisoned")
+                .get(&conn.remote_id())
+                .cloned();
+            match peer {
                 Some(peer) => {
-                    // The link is gone only during shutdown.
+                    // The link is gone only during shutdown or a removal.
                     let _ = peer.incoming.send(conn).await;
                 }
                 None => conn.close(CLOSE_NOT_MEMBER, b"not a member"),
@@ -495,12 +769,8 @@ async fn accept_loop(endpoint: Endpoint, peers: Arc<HashMap<EndpointId, Arc<Peer
 
 /// Keeps one connection to one peer alive and pumps packets over it.
 struct Link {
-    me: EndpointId,
-    my_ip: Ipv4Addr,
+    shared: Arc<Shared>,
     peer: Arc<Peer>,
-    endpoint: Endpoint,
-    tun: Arc<AsyncDevice>,
-    stats: Arc<Stats>,
 }
 
 impl Link {
@@ -542,14 +812,13 @@ impl Link {
     }
 
     async fn dial(&self) -> Result<Connection> {
-        let addr = self
-            .peer
-            .addrs
+        let addrs = self.peer.addrs.lock().expect("poisoned").clone();
+        let addr = addrs
             .iter()
             .fold(EndpointAddr::new(self.peer.id), |addr, ip| {
                 addr.with_ip_addr(*ip)
             });
-        let conn = tokio::time::timeout(DIAL_TIMEOUT, self.endpoint.connect(addr, ALPN))
+        let conn = tokio::time::timeout(DIAL_TIMEOUT, self.shared.endpoint.connect(addr, ALPN))
             .await
             .context("timed out")??;
         Ok(conn)
@@ -575,6 +844,10 @@ impl Link {
         self.peer.connected.store(true, Relaxed);
         *self.peer.conn.lock().expect("poisoned") = Some(conn.weak_handle());
         let established = Instant::now();
+        if self.shared.membership.is_some() {
+            tokio::spawn(self.shared.clone().answer_exchanges(conn.clone()));
+            tokio::spawn(self.shared.clone().exchange(conn.clone()));
+        }
 
         let receive = self.receive(&conn);
         let send = self.send(&conn, outbound);
@@ -614,12 +887,13 @@ impl Link {
         if current_age > RACE_WINDOW {
             return true;
         }
+        let me = self.shared.me;
         let dialer = |conn: &Connection| match conn.side() {
-            Side::Client => self.me,
+            Side::Client => me,
             Side::Server => self.peer.id,
         };
         let (candidate, current) = (dialer(candidate), dialer(current));
-        candidate == current || candidate == self.me.min(self.peer.id)
+        candidate == current || candidate == me.min(self.peer.id)
     }
 
     async fn receive(&self, conn: &Connection) -> anyhow::Error {
@@ -634,17 +908,17 @@ impl Link {
             };
             // A peer may only send packets from its own address, and only to us.
             match frame::ipv4_endpoints(&packet) {
-                Some((src, dst)) if src == self.peer.ip && dst == self.my_ip => {
-                    match self.tun.send(&packet).await {
+                Some((src, dst)) if src == self.peer.ip && dst == self.shared.my_ip => {
+                    match self.shared.tun.send(&packet).await {
                         Ok(_) => {
-                            self.stats.to_tun.fetch_add(1, Relaxed);
+                            self.shared.stats.to_tun.fetch_add(1, Relaxed);
                         }
                         // The kernel rejects malformed packets; that is the sender's problem.
                         Err(err) => debug!(%err, "TUN write failed"),
                     }
                 }
                 _ => {
-                    self.stats.dropped_spoofed.fetch_add(1, Relaxed);
+                    self.shared.stats.dropped_spoofed.fetch_add(1, Relaxed);
                 }
             }
         }
@@ -664,7 +938,7 @@ impl Link {
             };
             if datagrams.len() > 1 {
                 next_id = next_id.wrapping_add(1);
-                self.stats.fragmented.fetch_add(1, Relaxed);
+                self.shared.stats.fragmented.fetch_add(1, Relaxed);
             }
             for datagram in datagrams {
                 if let Err(err) = conn.send_datagram_wait(datagram).await {

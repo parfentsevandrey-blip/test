@@ -6,10 +6,13 @@
 #   c     has a in its member list, but a does not have c: must be rejected.
 #
 # Suites:
-#   1500  members added with their addresses, 1500-byte links.
-#   1300  the same on 1300-byte links: a full tunnel packet no longer fits into
-#         one QUIC datagram and must be fragmented.
-#   lan   members added by id only: nodes find each other over mDNS.
+#   1500     members added with their addresses, 1500-byte links.
+#   1300     the same on 1300-byte links: a full tunnel packet no longer fits into
+#            one QUIC datagram and must be fragmented.
+#   lan      members added by id only: nodes find each other over mDNS.
+#   journal  b and c are paired with a only and find each other through a's
+#            member journal; then a removes c while everything runs, and the
+#            removal reaches b.
 #
 # Needs root, iproute2, iputils-ping and iperf3. Usage: sudo scripts/netns-test.sh
 set -euo pipefail
@@ -152,8 +155,46 @@ suite() {
     teardown
 }
 
+unreachable() {
+    local from=$1 to=$2
+    ! in_ns "$from" ping -c3 -W1 -q "${OVERLAY[$to]}" >/dev/null 2>&1
+}
+
+journal_suite() {
+    log "suite journal: b and c are paired with a only"
+    setup 1500
+    add a b with-address
+    add b a with-address
+    add a c with-address
+    add c a with-address
+    start a
+    start b
+    start c
+    wait_ping b c 30
+    wait_ping c b 30
+    echo "b and c found each other through a: ok"
+    halo b members
+
+    log "a removes c while everything runs"
+    halo a remove dev-c
+    local deadline=$((SECONDS + 20))
+    until grep -q "no longer a member.*${OVERLAY[c]}" "$WORK/b.log"; do
+        ((SECONDS < deadline)) || fail "the removal did not reach b"
+        sleep 0.5
+    done
+    echo "b dropped c: ok"
+    unreachable c a || fail "c still reaches a"
+    unreachable c b || fail "c still reaches b"
+    unreachable b c || fail "b still reaches c"
+    wait_ping b a
+    echo "c is out, a and b still talk: ok"
+    halo b members
+    teardown
+}
+
 [[ -x "$HALO" ]] || fail "build first: cargo build (expected $HALO)"
 suite 1500 1500 with-address
 suite 1300 1300 with-address
 suite lan 1500
+journal_suite
 log "all good"

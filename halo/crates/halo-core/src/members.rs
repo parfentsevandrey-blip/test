@@ -27,7 +27,7 @@ impl From<Member> for PeerConfig {
     }
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Members(pub Vec<Member>);
 
 impl Members {

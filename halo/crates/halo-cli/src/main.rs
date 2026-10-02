@@ -7,7 +7,8 @@ use clap::{Parser, Subcommand};
 use halo_core::{
     DEFAULT_MTU, NodeConfig, PeerConfig,
     addr::overlay_ipv4,
-    members::{Member, parse_addrs},
+    journal::Action,
+    members::{parse_addrs, validate_name},
     pair::{self, Pending, Ticket, member_name},
     state::State,
 };
@@ -20,7 +21,7 @@ use tracing_subscriber::EnvFilter;
     about = "A private network of your own devices, without servers"
 )]
 struct Cli {
-    /// Directory with this device's key and member list.
+    /// Directory with this device's key and member journal.
     #[arg(long, global = true, env = "HALO_STATE_DIR")]
     state_dir: Option<PathBuf>,
     #[command(subcommand)]
@@ -31,7 +32,9 @@ struct Cli {
 enum Command {
     /// Print this device's id and address in the network, creating a key on first use.
     Id,
-    /// Add a device to the network of this device, or update it.
+    /// Add a device to the network, or update its name and addresses.
+    ///
+    /// The other members learn about it from this device.
     Add {
         /// The device id, as printed by `halo id` on that device.
         id: EndpointId,
@@ -57,9 +60,12 @@ enum Command {
         #[arg(long, default_value_t = 7777)]
         port: u16,
     },
-    /// Remove a device by name or id.
+    /// Remove a device from the network for good, by name or id.
+    ///
+    /// The other members learn it from this device; the removed device can no
+    /// longer connect to any of them.
     Remove { device: String },
-    /// List the devices of this network.
+    /// List the devices of the network.
     Members,
     /// Bring the network up and connect to the member devices.
     Up {
@@ -121,17 +127,29 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Command::Add { id, name, addrs } => {
-            if id == state.key()?.public() {
+            let key = state.key()?;
+            if id == key.public() {
                 bail!("this is the id of this device; add it on the other device instead");
             }
-            let mut members = state.members()?;
+            validate_name(&name)?;
             let addrs = addrs.into_iter().flatten().collect();
-            members.upsert(Member {
-                id,
-                name: name.clone(),
-                addrs,
+            state.update_journal(|journal| {
+                if journal.view(key.public()).removed.contains(&id) {
+                    bail!(
+                        "this device was removed from the network for good; to come back, it \
+                         needs a new key: delete its state directory, then pair again"
+                    );
+                }
+                journal.append(
+                    &key,
+                    Action::Add {
+                        id,
+                        name: name.clone(),
+                        addrs,
+                    },
+                );
+                Ok(())
             })?;
-            state.save_members(&members)?;
             println!("added {name}: {}", overlay_ipv4(&id));
             Ok(())
         }
@@ -169,43 +187,91 @@ async fn main() -> Result<()> {
                 println!("Not paired.");
                 return Ok(());
             };
-            let mut members = state.members()?;
-            let name = members.free_name(&member_name(&peer_name), &peer);
-            // Where its node listens, so it is found even where mDNS does not reach.
-            members.upsert(Member {
-                id: peer,
-                name: name.clone(),
-                addrs: peer_addrs,
+            let key = state.key()?;
+            let me = key.public();
+            let view = state.update_journal(|journal| {
+                journal.set_name(&key, &name);
+                // Where its node listens, so it is found even where mDNS does not reach.
+                journal.append(
+                    &key,
+                    Action::Add {
+                        id: peer,
+                        name: member_name(&peer_name),
+                        addrs: peer_addrs,
+                    },
+                );
+                Ok(journal.view(me))
             })?;
-            state.save_members(&members)?;
-            println!(
-                "Paired with {name} ({}). Restart `halo up` to connect.",
-                overlay_ipv4(&peer)
-            );
+            match view.members.0.iter().find(|member| member.id == peer) {
+                Some(member) => println!(
+                    "Paired with {} ({}). A running `halo up` connects to it by itself.",
+                    member.name,
+                    overlay_ipv4(&peer)
+                ),
+                None => println!(
+                    "Paired, but that device was removed from the network for good: it needs a \
+                     new key to come back (delete its state directory, then pair again)."
+                ),
+            }
             Ok(())
         }
         Command::Remove { device } => {
-            let mut members = state.members()?;
-            let removed = members
-                .remove(&device)
-                .with_context(|| format!("no device {device}"))?;
-            state.save_members(&members)?;
-            println!("removed {}", removed.name);
+            let key = state.key()?;
+            let me = key.public();
+            let (name, kept) = state.update_journal(|journal| {
+                let view = journal.view(me);
+                let member = view
+                    .find(&device)
+                    .with_context(|| format!("no device {device}"))?;
+                // What it added stays: say so, in case those should go too.
+                let kept: Vec<String> = view
+                    .members
+                    .0
+                    .iter()
+                    .filter(|other| view.added_by[&other.id] == [member.id])
+                    .map(|other| other.name.clone())
+                    .collect();
+                journal.remove(&key, member.id);
+                Ok((member.name.clone(), kept))
+            })?;
+            println!("removed {name} for good; the other devices learn it when they connect");
+            if !kept.is_empty() {
+                println!(
+                    "devices that only {name} added stay: {} (remove them too if they should go)",
+                    kept.join(", ")
+                );
+            }
             Ok(())
         }
         Command::Members => {
-            let members = state.members()?;
-            if members.0.is_empty() {
-                println!("no devices yet: add one with `halo add <id> --name <name>`");
+            let me = state.key()?.public();
+            let view = state.journal()?.view(me);
+            if view.removed.contains(&me) {
+                println!("this device was removed from the network");
+                return Ok(());
             }
-            for member in &members.0 {
+            if view.members.0.is_empty() {
+                println!("no devices yet: pair one with `halo pair`");
+            }
+            let name_of = |id: EndpointId| match view.members.0.iter().find(|m| m.id == id) {
+                Some(member) => member.name.clone(),
+                None if id == me => "this device".to_string(),
+                None if view.removed.contains(&id) => format!("{} (removed)", id.fmt_short()),
+                None => id.fmt_short().to_string(),
+            };
+            for member in &view.members.0 {
                 let addrs: Vec<String> = member.addrs.iter().map(ToString::to_string).collect();
+                let added_by: Vec<String> = view.added_by[&member.id]
+                    .iter()
+                    .map(|id| name_of(*id))
+                    .collect();
                 println!(
-                    "{:<16} {:<16} {} {}",
+                    "{:<16} {:<16} {} {:<24} added by {}",
                     member.name,
                     overlay_ipv4(&member.id),
                     member.id.fmt_short(),
-                    addrs.join(",")
+                    addrs.join(","),
+                    added_by.join(", ")
                 );
             }
             Ok(())
@@ -220,23 +286,16 @@ async fn main() -> Result<()> {
         } => {
             let secret_key = state.key()?;
             let id = secret_key.public();
-            let mut all: Vec<PeerConfig> = state
-                .members()?
-                .0
-                .into_iter()
-                .map(PeerConfig::from)
-                .collect();
-            for PeerSpec(peer) in peers {
-                match all.iter_mut().find(|known| known.id == peer.id) {
-                    Some(known) => known.addrs.extend(peer.addrs),
-                    None => all.push(peer),
-                }
-            }
-            if all.is_empty() {
-                bail!("no devices to connect to: add one with `halo add <id> --name <name>`");
-            }
-            if all.iter().any(|peer| peer.id == id) {
+            let extra: Vec<PeerConfig> = peers.into_iter().map(|PeerSpec(peer)| peer).collect();
+            if extra.iter().any(|peer| peer.id == id) {
                 bail!("a device cannot be its own peer");
+            }
+            let view = state.journal()?.view(id);
+            if view.removed.contains(&id) {
+                bail!("this device was removed from the network");
+            }
+            if view.members.0.is_empty() && extra.is_empty() {
+                bail!("no devices to connect to: pair one with `halo pair`");
             }
             let name = tun.as_deref().or(default_tun_name());
             let tun = halo_core::create_tun(name, overlay_ipv4(&id), mtu)?;
@@ -244,7 +303,8 @@ async fn main() -> Result<()> {
                 secret_key,
                 port,
                 mtu,
-                peers: all,
+                peers: extra,
+                journal: Some(state),
                 lan_discovery: !no_lan,
                 stats_interval: stats.map(Duration::from_secs),
             };
@@ -253,7 +313,6 @@ async fn main() -> Result<()> {
     }
 }
 
-/// Shows the emoji, asks the user and returns the other device when both sides said yes.
 /// Runs a pairing step until Ctrl+C. Then the pairing ends as if the user said
 /// no, and the caller still closes the connection: the other device learns at
 /// once instead of after a timeout.
@@ -267,6 +326,7 @@ async fn unless_interrupted<T>(step: impl Future<Output = Result<Option<T>>>) ->
     }
 }
 
+/// Shows the emoji, asks the user and returns the other device when both sides said yes.
 async fn confirm(pending: Pending) -> Result<Option<(EndpointId, String, Vec<SocketAddr>)>> {
     println!(
         "\n{} wants to pair. Check that its screen shows:\n\n    {}\n",

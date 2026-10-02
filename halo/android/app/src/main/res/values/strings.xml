@@ -21,7 +21,7 @@
     <string name="add">Добавить</string>
     <string name="cancel">Отмена</string>
     <string name="remove">Удалить</string>
-    <string name="remove_question">Удалить %1$s из сети?</string>
+    <string name="remove_question">Удалить %1$s из сети насовсем? Остальные устройства узнают об этом и тоже перестанут его пускать. Вернуть его можно только сопряжением заново, со стёртыми данными</string>
     <string name="name_hint">Имя: латиница, цифры, дефис</string>
     <string name="address_hint">Адрес ip:порт (не нужен в той же Wi-Fi)</string>
     <string name="paste">Вставить</string>
@@ -50,4 +50,5 @@
 
     <string name="error_no_devices">Сначала добавь хотя бы одно устройство</string>
     <string name="error_vpn_denied">Без разрешения на VPN сеть не включить</string>
+    <string name="error_removed">Это устройство удалили из сети. Чтобы вернуться, сотри данные приложения и сопряги его заново</string>
 </resources>
