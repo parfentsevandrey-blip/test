@@ -49,6 +49,7 @@ else
 fi
 
 build_tools=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)
+# No v4 signature: it is a separate .idsig file, only for `adb install --incremental`.
 "$build_tools/apksigner" sign --ks "$work/$KEY_FILE" --ks-pass "pass:$PASS" \
-    --ks-key-alias "$ALIAS" --out "$SIGNED" "$UNSIGNED"
+    --ks-key-alias "$ALIAS" --v4-signing-enabled false --out "$SIGNED" "$UNSIGNED"
 "$build_tools/apksigner" verify --print-certs "$SIGNED"
