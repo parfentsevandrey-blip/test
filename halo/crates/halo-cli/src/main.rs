@@ -1,20 +1,17 @@
 //! `halo`: run a Halo node on a desktop (Linux, macOS, Windows).
 
-mod members;
-mod state;
-
 use std::{io::IsTerminal, net::SocketAddr, path::PathBuf, str::FromStr, time::Duration};
 
 use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
-use halo_core::{DEFAULT_MTU, NodeConfig, PeerConfig, addr::overlay_ipv4};
-use iroh::EndpointId;
-use tracing_subscriber::EnvFilter;
-
-use crate::{
+use halo_core::{
+    DEFAULT_MTU, NodeConfig, PeerConfig,
+    addr::overlay_ipv4,
     members::{Member, parse_addrs},
     state::State,
 };
+use iroh::EndpointId;
+use tracing_subscriber::EnvFilter;
 
 #[derive(Parser)]
 #[command(
@@ -162,10 +159,7 @@ async fn main() -> Result<()> {
                 .members()?
                 .0
                 .into_iter()
-                .map(|member| PeerConfig {
-                    id: member.id,
-                    addrs: member.addrs,
-                })
+                .map(PeerConfig::from)
                 .collect();
             for PeerSpec(peer) in peers {
                 match all.iter_mut().find(|known| known.id == peer.id) {

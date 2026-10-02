@@ -1,8 +1,14 @@
 [workspace]
 resolver = "2"
-members = ["crates/halo-core", "crates/halo-cli"]
+members = ["crates/halo-core", "crates/halo-cli", "crates/halo-ffi"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
+
+[profile.release]
+# Smaller binaries and app libraries; the core is small enough for full LTO to be cheap.
+lto = true
+codegen-units = 1
+strip = true

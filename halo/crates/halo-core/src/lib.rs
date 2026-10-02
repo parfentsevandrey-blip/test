@@ -6,9 +6,15 @@
 
 pub mod addr;
 pub mod frame;
+pub mod members;
 pub mod node;
+pub mod state;
 
-pub use node::{DEFAULT_MTU, NodeConfig, PeerConfig, create_tun, run};
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub use node::create_tun;
+pub use node::{
+    DEFAULT_MTU, Node, NodeConfig, NodeStatus, PeerConfig, PeerStatus, StatusHandle, run,
+};
 
 /// ALPN of the Halo tunnel protocol.
 pub const ALPN: &[u8] = b"halo/0";

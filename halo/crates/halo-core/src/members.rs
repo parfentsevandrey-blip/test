@@ -7,6 +7,8 @@ use std::{net::SocketAddr, str::FromStr};
 use anyhow::{Context, Result, bail, ensure};
 use iroh::EndpointId;
 
+use crate::node::PeerConfig;
+
 const HEADER: &str = "# Halo members: <id> <name> [addr,addr...]\n";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,6 +16,15 @@ pub struct Member {
     pub id: EndpointId,
     pub name: String,
     pub addrs: Vec<SocketAddr>,
+}
+
+impl From<Member> for PeerConfig {
+    fn from(member: Member) -> Self {
+        Self {
+            id: member.id,
+            addrs: member.addrs,
+        }
+    }
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]

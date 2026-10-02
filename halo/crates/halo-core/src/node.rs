@@ -10,7 +10,7 @@ use std::{
     future::Future,
     net::{Ipv4Addr, Ipv6Addr, SocketAddr},
     sync::{
-        Arc,
+        Arc, Mutex,
         atomic::{AtomicBool, AtomicU64, Ordering::Relaxed},
     },
     time::{Duration, Instant},
@@ -21,7 +21,10 @@ use bytes::{Bytes, BytesMut};
 use iroh::{
     Endpoint, EndpointAddr, EndpointId, RelayMode, SecretKey, TransportAddr,
     address_lookup::AddrFilter,
-    endpoint::{AfterHandshakeOutcome, BindOpts, Connection, EndpointHooks, Side, VarInt, presets},
+    endpoint::{
+        AfterHandshakeOutcome, BindOpts, Connection, EndpointHooks, Side, VarInt,
+        WeakConnectionHandle, presets,
+    },
 };
 use iroh_mdns_address_lookup::{DiscoveryEvent, MdnsAddressLookup};
 use n0_future::StreamExt;
@@ -34,7 +37,7 @@ use tun_rs::AsyncDevice;
 
 use crate::{
     ALPN,
-    addr::{OVERLAY_PREFIX, is_overlay, overlay_ipv4},
+    addr::{is_overlay, overlay_ipv4},
     frame,
 };
 
@@ -86,9 +89,10 @@ pub struct NodeConfig {
 /// Creates the TUN device for a node on desktop platforms.
 ///
 /// On Android the device comes from `VpnService` instead.
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn create_tun(name: Option<&str>, ip: Ipv4Addr, mtu: u16) -> Result<AsyncDevice> {
     let mut builder = tun_rs::DeviceBuilder::new()
-        .ipv4(ip, OVERLAY_PREFIX, None)
+        .ipv4(ip, crate::addr::OVERLAY_PREFIX, None)
         .mtu(mtu);
     if let Some(name) = name {
         builder = builder.name(name);
@@ -104,82 +108,186 @@ pub async fn run(
     tun: AsyncDevice,
     shutdown: impl Future<Output = ()>,
 ) -> Result<()> {
-    let me = config.secret_key.public();
-    let my_ip = overlay_ipv4(&me);
-    let members: HashSet<EndpointId> = config.peers.iter().map(|peer| peer.id).collect();
-    let endpoint = bind_endpoint(&config, members).await?;
-    info!(id = %me, ip = %my_ip, "node up");
-    for addr in endpoint.addr().ip_addrs() {
-        info!(%addr, "listening");
-    }
-    let lan = config
-        .lan_discovery
-        .then(|| start_lan_discovery(&endpoint))
-        .flatten();
+    Node::start(config, tun).await?.run_until(shutdown).await
+}
 
-    let tun = Arc::new(tun);
-    let stats = Arc::new(Stats::default());
-    let mut by_ip = HashMap::new();
-    let mut by_id = HashMap::new();
-    let mut tasks = JoinSet::new();
-    for peer in config.peers {
-        let (outbound_tx, outbound_rx) = mpsc::channel(QUEUE_LEN);
-        let (incoming_tx, incoming_rx) = mpsc::channel(4);
-        let ip = overlay_ipv4(&peer.id);
-        let state = Arc::new(Peer {
-            id: peer.id,
-            ip,
-            addrs: peer.addrs,
-            outbound: outbound_tx,
-            incoming: incoming_tx,
-            connected: AtomicBool::new(false),
-            wake: Notify::new(),
-        });
-        info!(peer = %peer.id.fmt_short(), %ip, "member");
-        by_ip.insert(ip, state.clone());
-        by_id.insert(peer.id, state.clone());
-        let link = Link {
+/// A running node.
+pub struct Node {
+    endpoint: Endpoint,
+    tasks: JoinSet<Result<()>>,
+    status: StatusHandle,
+}
+
+impl Node {
+    /// Binds the endpoint and starts connecting to the member devices.
+    pub async fn start(config: NodeConfig, tun: AsyncDevice) -> Result<Self> {
+        let me = config.secret_key.public();
+        let my_ip = overlay_ipv4(&me);
+        let members: HashSet<EndpointId> = config.peers.iter().map(|peer| peer.id).collect();
+        let endpoint = bind_endpoint(&config, members).await?;
+        info!(id = %me, ip = %my_ip, "node up");
+        for addr in endpoint.addr().ip_addrs() {
+            info!(%addr, "listening");
+        }
+        let lan = config
+            .lan_discovery
+            .then(|| start_lan_discovery(&endpoint))
+            .flatten();
+
+        let tun = Arc::new(tun);
+        let stats = Arc::new(Stats::default());
+        let mut peers = Vec::new();
+        let mut by_ip = HashMap::new();
+        let mut by_id = HashMap::new();
+        let mut tasks = JoinSet::new();
+        for peer in config.peers {
+            let (outbound_tx, outbound_rx) = mpsc::channel(QUEUE_LEN);
+            let (incoming_tx, incoming_rx) = mpsc::channel(4);
+            let ip = overlay_ipv4(&peer.id);
+            let state = Arc::new(Peer {
+                id: peer.id,
+                ip,
+                addrs: peer.addrs,
+                outbound: outbound_tx,
+                incoming: incoming_tx,
+                connected: AtomicBool::new(false),
+                conn: Mutex::new(None),
+                wake: Notify::new(),
+            });
+            info!(peer = %peer.id.fmt_short(), %ip, "member");
+            peers.push(state.clone());
+            by_ip.insert(ip, state.clone());
+            by_id.insert(peer.id, state.clone());
+            let link = Link {
+                me,
+                my_ip,
+                peer: state,
+                endpoint: endpoint.clone(),
+                tun: tun.clone(),
+                stats: stats.clone(),
+            };
+            tasks.spawn(link.run(outbound_rx, incoming_rx));
+        }
+        let transport_ports = endpoint
+            .bound_sockets()
+            .iter()
+            .map(SocketAddr::port)
+            .collect();
+        let by_id = Arc::new(by_id);
+        if let Some(lan) = lan {
+            tasks.spawn(watch_lan(lan, by_id.clone()));
+        }
+        tasks.spawn(accept_loop(endpoint.clone(), by_id));
+        tasks.spawn(tun_loop(
+            tun,
+            Arc::new(by_ip),
+            transport_ports,
+            stats.clone(),
+            config.mtu,
+        ));
+        if let Some(interval) = config.stats_interval {
+            tasks.spawn(log_stats(stats, interval));
+        }
+        let status = StatusHandle {
             me,
             my_ip,
-            peer: state,
-            endpoint: endpoint.clone(),
-            tun: tun.clone(),
-            stats: stats.clone(),
+            peers: Arc::new(peers),
         };
-        tasks.spawn(link.run(outbound_rx, incoming_rx));
-    }
-    let transport_ports = endpoint
-        .bound_sockets()
-        .iter()
-        .map(SocketAddr::port)
-        .collect();
-    let by_id = Arc::new(by_id);
-    if let Some(lan) = lan {
-        tasks.spawn(watch_lan(lan, by_id.clone()));
-    }
-    tasks.spawn(accept_loop(endpoint.clone(), by_id));
-    tasks.spawn(tun_loop(
-        tun,
-        Arc::new(by_ip),
-        transport_ports,
-        stats.clone(),
-        config.mtu,
-    ));
-    if let Some(interval) = config.stats_interval {
-        tasks.spawn(log_stats(stats, interval));
+        Ok(Self {
+            endpoint,
+            tasks,
+            status,
+        })
     }
 
-    let result = tokio::select! {
-        Some(done) = tasks.join_next() => match done {
-            Ok(Ok(())) => Err(anyhow!("a node task stopped unexpectedly")),
-            Ok(Err(err)) => Err(err),
-            Err(err) => Err(err.into()),
-        },
-        () = shutdown => Ok(()),
-    };
-    tasks.shutdown().await;
-    endpoint.close().await;
-    result
+    /// A view of the node's state that stays valid while the node runs.
+    pub fn status(&self) -> StatusHandle {
+        self.status.clone()
+    }
+
+    /// Runs until `shutdown` completes or a node task fails, then closes the endpoint.
+    pub async fn run_until(mut self, shutdown: impl Future<Output = ()>) -> Result<()> {
+        let result = tokio::select! {
+            Some(done) = self.tasks.join_next() => match done {
+                Ok(Ok(())) => Err(anyhow!("a node task stopped unexpectedly")),
+                Ok(Err(err)) => Err(err),
+                Err(err) => Err(err.into()),
+            },
+            () = shutdown => Ok(()),
+        };
+        self.tasks.shutdown().await;
+        self.endpoint.close().await;
+        result
+    }
+}
+
+/// A cheap, cloneable view of a running node, for user interfaces.
+#[derive(Clone)]
+pub struct StatusHandle {
+    me: EndpointId,
+    my_ip: Ipv4Addr,
+    peers: Arc<Vec<Arc<Peer>>>,
+}
+
+/// A snapshot of a node's state.
+#[derive(Debug, Clone)]
+pub struct NodeStatus {
+    pub id: EndpointId,
+    pub ip: Ipv4Addr,
+    pub peers: Vec<PeerStatus>,
+}
+
+/// A snapshot of one member device.
+#[derive(Debug, Clone)]
+pub struct PeerStatus {
+    pub id: EndpointId,
+    pub ip: Ipv4Addr,
+    pub connected: bool,
+    /// The network path in use, e.g. `192.168.1.20:7777`.
+    pub path: Option<String>,
+    pub rtt: Option<Duration>,
+}
+
+impl StatusHandle {
+    pub fn snapshot(&self) -> NodeStatus {
+        let peers = self
+            .peers
+            .iter()
+            .map(|peer| {
+                let conn = peer
+                    .conn
+                    .lock()
+                    .expect("poisoned")
+                    .as_ref()
+                    .and_then(WeakConnectionHandle::upgrade);
+                let selected = conn.as_ref().and_then(|conn| {
+                    let paths = conn.paths();
+                    let path = paths.iter().find(|path| path.is_selected())?;
+                    Some((describe(path.remote_addr()), conn.rtt(path.id())))
+                });
+                let (path, rtt) = selected.unzip();
+                PeerStatus {
+                    id: peer.id,
+                    ip: peer.ip,
+                    connected: peer.connected.load(Relaxed),
+                    path,
+                    rtt: rtt.flatten(),
+                }
+            })
+            .collect();
+        NodeStatus {
+            id: self.me,
+            ip: self.my_ip,
+            peers,
+        }
+    }
+}
+
+fn describe(addr: &TransportAddr) -> String {
+    match addr {
+        TransportAddr::Ip(addr) => addr.to_string(),
+        other => format!("{other:?}"),
+    }
 }
 
 async fn bind_endpoint(config: &NodeConfig, members: HashSet<EndpointId>) -> Result<Endpoint> {
@@ -290,6 +398,8 @@ struct Peer {
     /// Connections from this peer, handed over by the accept loop.
     incoming: mpsc::Sender<Connection>,
     connected: AtomicBool,
+    /// The connection in use, for status snapshots. Weak, so it never keeps one alive.
+    conn: Mutex<Option<WeakConnectionHandle>>,
     /// Cuts the redial backoff short, e.g. when the peer appears on the local network.
     wake: Notify,
 }
@@ -449,6 +559,7 @@ impl Link {
         // Whatever was queued before the connection came up is stale by now.
         while outbound.try_recv().is_ok() {}
         self.peer.connected.store(true, Relaxed);
+        *self.peer.conn.lock().expect("poisoned") = Some(conn.weak_handle());
         let established = Instant::now();
 
         let receive = self.receive(&conn);
@@ -474,6 +585,7 @@ impl Link {
             }
         };
         self.peer.connected.store(false, Relaxed);
+        *self.peer.conn.lock().expect("poisoned") = None;
         next
     }
 

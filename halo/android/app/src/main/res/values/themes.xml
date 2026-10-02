@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The UI is Compose; this only sets the window before the first frame. -->
+    <style name="Theme.Halo" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/halo_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <color name="halo_background">#0B0D12</color>
+</resources>

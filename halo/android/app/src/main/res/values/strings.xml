@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ореол</string>
+    <string name="tagline">Частная сеть твоих устройств. Без серверов.</string>
+
+    <string name="connected">Сеть включена</string>
+    <string name="disconnected">Сеть выключена</string>
+    <string name="connect">Включить</string>
+    <string name="disconnect">Выключить</string>
+
+    <string name="this_device">Это устройство</string>
+    <string name="address">Адрес в сети</string>
+    <string name="device_id">ID устройства</string>
+    <string name="copy">Копировать</string>
+    <string name="share">Поделиться</string>
+    <string name="copied">ID скопирован</string>
+    <string name="share_text">Мой ID в Ореоле: %1$s</string>
+
+    <string name="devices">Устройства</string>
+    <string name="no_devices">Пока нет устройств. Добавь ноутбук по его ID из `halo id`.</string>
+    <string name="add_device">Добавить устройство</string>
+    <string name="add">Добавить</string>
+    <string name="cancel">Отмена</string>
+    <string name="remove">Удалить</string>
+    <string name="remove_question">Удалить %1$s из сети?</string>
+    <string name="name_hint">Имя: латиница, цифры, дефис</string>
+    <string name="address_hint">Адрес ip:порт (не нужен в той же Wi-Fi)</string>
+    <string name="paste">Вставить</string>
+
+    <string name="online_direct">напрямую %1$s</string>
+    <string name="online_direct_rtt">напрямую %1$s · %2$d мс</string>
+    <string name="searching">ищу…</string>
+    <string name="offline">не в сети</string>
+
+    <string name="error_no_devices">Сначала добавь хотя бы одно устройство</string>
+    <string name="error_vpn_denied">Без разрешения на VPN сеть не включить</string>
+</resources>
