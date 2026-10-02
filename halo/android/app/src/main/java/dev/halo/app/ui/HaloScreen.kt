@@ -65,6 +65,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/** The steps of adding a device. */
+private sealed interface Adding {
+    data object Choose : Adding
+    data object Scan : Adding
+    data class Pair(val code: String) : Adding
+    data object Manual : Adding
+}
+
 @Composable
 fun HaloScreen(onConnect: () -> Unit, onDisconnect: () -> Unit, onMembersChanged: () -> Unit) {
     val running by Halo.running.collectAsStateWithLifecycle()
@@ -72,7 +80,8 @@ fun HaloScreen(onConnect: () -> Unit, onDisconnect: () -> Unit, onMembersChanged
     val members by Halo.members.collectAsStateWithLifecycle()
     val error by Halo.error.collectAsStateWithLifecycle()
     var device by remember { mutableStateOf<DeviceInfo?>(null) }
-    var adding by remember { mutableStateOf(false) }
+    var adding by remember { mutableStateOf<Adding?>(null) }
+    val context = LocalContext.current
     var removing by remember { mutableStateOf<MemberInfo?>(null) }
     val scope = rememberCoroutineScope()
 
@@ -106,22 +115,53 @@ fun HaloScreen(onConnect: () -> Unit, onDisconnect: () -> Unit, onMembersChanged
                 MemberRow(member, peers.find { it.id == member.id }, running) { removing = member }
             }
             item {
-                OutlinedButton(onClick = { adding = true }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = { adding = Adding.Choose }, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.add_device))
                 }
             }
             error?.let { message -> item { Text(message, color = Danger, fontSize = 14.sp) } }
         }
+        if (adding == Adding.Scan) {
+            QrScanner(onCode = { adding = Adding.Pair(it) }, onClose = { adding = null })
+        }
     }
 
-    if (adding) {
-        AddDeviceDialog(
-            onDismiss = { adding = false },
+    when (val step = adding) {
+        Adding.Choose -> AlertDialog(
+            onDismissRequest = { adding = null },
+            title = { Text(stringResource(R.string.add_device)) },
+            text = {
+                Column {
+                    Text(stringResource(R.string.add_how), color = Muted, fontSize = 14.sp)
+                    TextButton(onClick = { adding = Adding.Scan }) { Text(stringResource(R.string.scan_qr)) }
+                    TextButton(onClick = {
+                        val code = paste(context)
+                        if (code.startsWith("HALO/1/", ignoreCase = true)) {
+                            adding = Adding.Pair(code)
+                        } else {
+                            Toast.makeText(context, R.string.no_code_in_clipboard, Toast.LENGTH_SHORT).show()
+                        }
+                    }) { Text(stringResource(R.string.paste_code)) }
+                    TextButton(onClick = { adding = Adding.Manual }) { Text(stringResource(R.string.enter_id)) }
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton(onClick = { adding = null }) { Text(stringResource(R.string.cancel)) } },
+        )
+        is Adding.Pair -> PairingDialog(step.code) { member ->
+            adding = null
+            if (member != null) {
+                Halo.reportError(null)
+                onMembersChanged()
+            }
+        }
+        Adding.Manual -> AddDeviceDialog(
+            onDismiss = { adding = null },
             onAdd = { id, name, address ->
                 scope.launch {
                     runCatching { withContext(Dispatchers.IO) { Halo.addDevice(id, name, address) } }
                         .onSuccess {
-                            adding = false
+                            adding = null
                             Halo.reportError(null)
                             onMembersChanged()
                         }
@@ -129,6 +169,7 @@ fun HaloScreen(onConnect: () -> Unit, onDisconnect: () -> Unit, onMembersChanged
                 }
             },
         )
+        Adding.Scan, null -> {}
     }
     removing?.let { member ->
         AlertDialog(

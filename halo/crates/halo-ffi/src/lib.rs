@@ -14,9 +14,10 @@ use halo_core::{
     Node, NodeConfig, NodeHandle, PeerConfig,
     addr::overlay_ipv4,
     members::{Member, parse_addrs},
+    pair::{self, Pending, Ticket, member_name},
     state::State,
 };
-use iroh::EndpointId;
+use iroh::{Endpoint, EndpointId};
 use tokio::{runtime::Runtime, sync::oneshot};
 
 uniffi::setup_scaffolding!();
@@ -309,5 +310,90 @@ impl TunFd {
             std::io::ErrorKind::Unsupported,
             "a TUN file descriptor from the platform is only supported on Android and iOS",
         ))
+    }
+}
+
+/// Pairing with a device that shows a code (`halo pair`): one scan, both devices
+/// add each other.
+#[derive(uniffi::Object)]
+pub struct Pairing {
+    state_dir: String,
+    peer: EndpointId,
+    peer_name: String,
+    peer_addrs: Vec<std::net::SocketAddr>,
+    emoji: Vec<String>,
+    pending: Mutex<Option<Pending>>,
+    endpoint: Mutex<Option<Endpoint>>,
+    // Dropped last: it owns the tasks above.
+    runtime: Runtime,
+}
+
+#[uniffi::export]
+impl Pairing {
+    /// Connects to the device showing `code`. Blocks until both show the emoji.
+    ///
+    /// `name` is how the other device will call this one, e.g. the phone model.
+    #[uniffi::constructor]
+    pub fn join(state_dir: String, code: String, name: String) -> Result<Arc<Self>, HaloError> {
+        let secret_key = state(state_dir.clone())?.key()?;
+        let ticket: Ticket = code.parse()?;
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(1)
+            .thread_name("halo-pair")
+            .enable_all()
+            .build()?;
+        // A phone's node has no fixed port to announce.
+        let (endpoint, pending) =
+            runtime.block_on(pair::join(secret_key, &member_name(&name), 0, &ticket))?;
+        Ok(Arc::new(Self {
+            state_dir,
+            peer: pending.peer,
+            peer_name: pending.peer_name.clone(),
+            peer_addrs: pending.peer_addrs.clone(),
+            emoji: pending.emoji.iter().map(ToString::to_string).collect(),
+            pending: Mutex::new(Some(pending)),
+            endpoint: Mutex::new(Some(endpoint)),
+            runtime,
+        }))
+    }
+
+    /// How the other device calls itself.
+    pub fn peer_name(&self) -> String {
+        self.peer_name.clone()
+    }
+
+    /// The four emoji to compare with the other device's screen.
+    pub fn emoji(&self) -> Vec<String> {
+        self.emoji.clone()
+    }
+
+    /// Answers whether the emoji match and waits for the other side's answer.
+    ///
+    /// Returns the added device when both said yes.
+    pub fn confirm(&self, accept: bool) -> Result<Option<MemberInfo>, HaloError> {
+        let pending = self
+            .pending
+            .lock()
+            .expect("poisoned")
+            .take()
+            .ok_or_else(|| HaloError::Failed("already answered".into()))?;
+        let paired = self.runtime.block_on(pending.confirm(accept));
+        if let Some(endpoint) = self.endpoint.lock().expect("poisoned").take() {
+            self.runtime.block_on(endpoint.close());
+        }
+        if !paired? {
+            return Ok(None);
+        }
+        let state = state(self.state_dir.clone())?;
+        let mut members = state.members()?;
+        let member = Member {
+            id: self.peer,
+            name: members.free_name(&member_name(&self.peer_name), &self.peer),
+            addrs: self.peer_addrs.clone(),
+        };
+        let info = MemberInfo::from(&member);
+        members.upsert(member)?;
+        state.save_members(&members)?;
+        Ok(Some(info))
     }
 }

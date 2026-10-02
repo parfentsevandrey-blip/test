@@ -2,9 +2,11 @@
 # End-to-end test on an Android emulator: the phone joins a desktop node on the host.
 #
 #   1. Install the debug APK.
-#   2. The desktop node on the host adds the phone and comes up.
-#   3. The phone adds the desktop at 10.0.2.2 (the host, seen from the emulator)
-#      and turns the network on, tapping OK in the system VPN consent dialog.
+#   2. Pairing: the desktop shows a code (`halo pair`), the phone joins it, both
+#      confirm the emoji and add each other. The phone learns the desktop's
+#      addresses from the code: no mDNS in the emulator, no manual ids.
+#   3. The desktop node comes up; the phone turns the network on, tapping OK in
+#      the system VPN consent dialog.
 #   4. Ping both ways through the tunnel.
 #
 # Needs a booted emulator (adb), root on the host for the TUN device, a built
@@ -22,6 +24,8 @@ fail() {
     printf 'FAIL: %s\n' "$*" >&2
     echo "--- phone" >&2
     adb logcat -d -s halo halo-test AndroidRuntime | tail -60 >&2 || true
+    echo "--- desktop pairing" >&2
+    tail -20 "$WORK/pair.log" >&2 || true
     echo "--- desktop" >&2
     tail -40 "$WORK/desktop.log" >&2 || true
     exit 1
@@ -66,19 +70,33 @@ wait_log HALO_INFO
 info=$(adb logcat -d -s halo-test | grep -o 'HALO_INFO id=[0-9a-f]* ip=[0-9.]*' | tail -1)
 PHONE_ID=$(sed 's/.*id=\([0-9a-f]*\).*/\1/' <<<"$info")
 PHONE_IP=$(sed 's/.*ip=\([0-9.]*\).*/\1/' <<<"$info")
-echo "phone: $PHONE_IP"
+echo "phone: $PHONE_IP ($PHONE_ID)"
 
-log "the desktop node on the host"
+log "pairing: the desktop shows a code, the phone joins"
 desk() { "$HALO" --state-dir "$WORK/desk" "$@"; }
-desk add "$PHONE_ID" --name phone
 DESK_ID=$(desk id | awk '/^id:/ {print $2}')
 DESK_IP=$(desk id | awk '/^ip:/ {print $2}')
-sudo "$HALO" --state-dir "$WORK/desk" up --port 7777 --stats 5 >"$WORK/desktop.log" 2>&1 &
-echo "desktop: $DESK_IP"
+echo y | desk pair --port 7777 >"$WORK/pair.log" 2>&1 &
+pair_pid=$!
+deadline=$((SECONDS + 30))
+until grep -q 'halo pair --join' "$WORK/pair.log"; do
+    ((SECONDS < deadline)) || fail "the desktop shows no pairing code"
+    sleep 0.5
+done
+CODE=$(grep -o 'halo pair --join [A-Z0-9/:.+]*' "$WORK/pair.log" | awk '{print $4}')
+phone pair --es code "$CODE"
+wait_log HALO_PAIRED 90
+adb logcat -d -s halo-test | grep -o 'HALO_PAIR_EMOJI.*' | tail -1
+adb logcat -d -s halo-test | grep -o 'HALO_PAIRED.*' | tail -1
+wait "$pair_pid" || fail "the desktop did not pair"
+grep -E 'wants to pair|Paired' -A3 "$WORK/pair.log" | grep -v '^--' | sed -n '1,8p'
+desk members | grep -q "$PHONE_IP" || fail "the desktop did not add the phone"
 
-log "the phone joins"
-phone add --es id "$DESK_ID" --es name desktop --es addr 10.0.2.2:7777
-wait_log HALO_ADDED
+log "the desktop node comes up"
+sudo "$HALO" --state-dir "$WORK/desk" up --port 7777 --stats 5 >"$WORK/desktop.log" 2>&1 &
+echo "desktop: $DESK_IP ($DESK_ID)"
+
+log "the phone turns the network on"
 phone connect
 deadline=$((SECONDS + 60))
 until adb logcat -d -s halo-test | grep -q HALO_CONNECTING; do

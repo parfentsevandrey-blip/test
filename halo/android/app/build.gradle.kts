@@ -86,4 +86,11 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("net.java.dev.jna:jna:5.17.0@aar")
+    // Scanning pairing QR codes: CameraX for the preview, ML Kit with the model
+    // bundled in the app, so it works offline and without Google Play services.
+    val camerax = "1.5.3"
+    implementation("androidx.camera:camera-camera2:$camerax")
+    implementation("androidx.camera:camera-lifecycle:$camerax")
+    implementation("androidx.camera:camera-view:$camerax")
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
 }

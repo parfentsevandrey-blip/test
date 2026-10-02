@@ -31,6 +31,23 @@
     <string name="searching">ищу…</string>
     <string name="offline">не в сети</string>
 
+    <string name="scan_qr">Сканировать QR</string>
+    <string name="scan_hint">Наведи камеру на QR из `halo pair` на ноутбуке</string>
+    <string name="paste_code">Вставить код HALO/1/…</string>
+    <string name="enter_id">Ввести ID вручную</string>
+    <string name="add_how">Проще всего: на ноутбуке `halo pair`, здесь — сканировать QR.</string>
+    <string name="camera_needed">Нужен доступ к камере, чтобы сканировать QR. Можно вставить код вместо этого.</string>
+    <string name="no_code_in_clipboard">В буфере обмена нет кода HALO/1/…</string>
+    <string name="pairing">Сопряжение</string>
+    <string name="pairing_connecting">Подключаюсь…</string>
+    <string name="pairing_compare">Проверь, что на экране %1$s те же эмодзи:</string>
+    <string name="pairing_match">Совпадают</string>
+    <string name="pairing_mismatch">Не совпадают</string>
+    <string name="pairing_waiting">Жду подтверждения на %1$s…</string>
+    <string name="pairing_done">Готово: %1$s добавлен</string>
+    <string name="pairing_declined">Сопряжение отменено</string>
+    <string name="ok">OK</string>
+
     <string name="error_no_devices">Сначала добавь хотя бы одно устройство</string>
     <string name="error_vpn_denied">Без разрешения на VPN сеть не включить</string>
 </resources>

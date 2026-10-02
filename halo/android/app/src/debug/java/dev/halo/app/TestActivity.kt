@@ -11,6 +11,7 @@ import android.util.Log
  *
  *   adb shell am start -W -n dev.halo.app/.TestActivity --es cmd info
  *   adb shell am start -W -n dev.halo.app/.TestActivity --es cmd add --es id <ID> --es name pc --es addr 10.0.2.2:7777
+ *   adb shell am start -W -n dev.halo.app/.TestActivity --es cmd pair --es code HALO/1/...
  *   adb shell am start -W -n dev.halo.app/.TestActivity --es cmd connect
  *   adb shell am start -W -n dev.halo.app/.TestActivity --es cmd status
  *
@@ -35,6 +36,12 @@ class TestActivity : Activity() {
                         intent.getStringExtra("addr"),
                     )
                     Log.i(TAG, "HALO_ADDED ${member.name} ${member.ip}")
+                }
+                "pair" -> {
+                    val code = requireNotNull(intent.getStringExtra("code"))
+                    // Pairing blocks on the network and on the other side; finishes when done.
+                    Thread { pair(code) }.start()
+                    return
                 }
                 "connect" -> {
                     val consent = VpnService.prepare(this)
@@ -73,6 +80,23 @@ class TestActivity : Activity() {
             Log.e(TAG, "HALO_ERROR the VPN consent was declined")
         }
         finish()
+    }
+
+    private fun pair(code: String) {
+        try {
+            val pairing = Halo.pairJoin(code)
+            Log.i(TAG, "HALO_PAIR_EMOJI ${pairing.peerName()} ${pairing.emoji().joinToString(" ")}")
+            val member = Halo.pairConfirm(pairing, accept = true)
+            pairing.close()
+            if (member != null) {
+                Log.i(TAG, "HALO_PAIRED ${member.name} ${member.ip} ${member.addrs.joinToString(",")}")
+            } else {
+                Log.e(TAG, "HALO_ERROR the other device declined")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "HALO_ERROR ${e.message}", e)
+        }
+        runOnUiThread { finish() }
     }
 
     private fun connect() {

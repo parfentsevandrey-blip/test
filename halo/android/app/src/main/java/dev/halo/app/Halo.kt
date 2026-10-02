@@ -1,8 +1,10 @@
 package dev.halo.app
 
 import android.content.Context
+import android.os.Build
 import dev.halo.core.DeviceInfo
 import dev.halo.core.MemberInfo
+import dev.halo.core.Pairing
 import dev.halo.core.PeerState
 import dev.halo.core.addMember
 import dev.halo.core.deviceInfo
@@ -45,6 +47,16 @@ object Halo {
 
     fun addDevice(id: String, name: String, address: String?): MemberInfo {
         val member = addMember(stateDir, id, name, listOfNotNull(address?.takeIf { it.isNotBlank() }))
+        reloadMembers()
+        return member
+    }
+
+    /** Connects to a device showing a pairing code; blocks until both show the emoji. */
+    fun pairJoin(code: String): Pairing = Pairing.join(stateDir, code, Build.MODEL)
+
+    /** Answers the emoji question; returns the added device when both sides said yes. */
+    fun pairConfirm(pairing: Pairing, accept: Boolean): MemberInfo? {
+        val member = pairing.confirm(accept)
         reloadMembers()
         return member
     }
