@@ -90,6 +90,9 @@ jobs:
       - name: Build the APK (arm64 phones + x86_64 emulator)
         working-directory: halo/android
         run: ./gradlew assembleDebug --console=plain
+      - name: Android Lint
+        working-directory: halo/android
+        run: ./gradlew lintDebug --console=plain
       - uses: actions/upload-artifact@v4
         with:
           name: halo-android-apk
