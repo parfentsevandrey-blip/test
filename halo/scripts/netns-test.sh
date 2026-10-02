@@ -16,6 +16,11 @@
 #   outside  a and b at home behind a router that maps ports over NAT-PMP; c
 #            meets them there, then moves to a mobile network behind another
 #            NAT and still reaches both, at the public addresses they announced.
+#   punch    b in a café and c on a mobile network, both behind NATs without
+#            port mapping, reach a at home. a tells each where it sees them, so
+#            they can dial each other through their NATs; where the NATs do not
+#            let that through (these Linux ones do not), a passes their packets
+#            on.
 #
 # Needs root, iproute2, iputils-ping, iperf3, iptables and python3.
 # Usage: sudo scripts/netns-test.sh [suite...]
@@ -35,6 +40,7 @@ fail() {
         if [[ -f "$WORK/$ns.log" ]]; then
             echo "--- $ns.log" >&2
             grep -v ' stats ' "$WORK/$ns.log" | tail -25 >&2
+            grep ' stats ' "$WORK/$ns.log" | tail -1 >&2
         fi
     done
     exit 1
@@ -50,7 +56,7 @@ teardown() {
     fi
     sleep 0.5
     pkill -KILL -f "$WORK/" 2>/dev/null || true
-    for ns in a b c sw hr mr; do ip netns del "halo-$ns" 2>/dev/null || true; done
+    for ns in a b c sw hr mr cr net; do ip netns del "halo-$ns" 2>/dev/null || true; done
 }
 trap 'teardown; [[ -n ${KEEP:-} ]] && cp -r "$WORK" "$KEEP"; rm -rf "$WORK"' EXIT
 
@@ -250,6 +256,16 @@ outside_setup() {
     ip netns exec halo-hr python3 "$ROOT/scripts/natpmp-router.py" 10.10.0.1 203.0.113.1 hw \
         >"$WORK/hr.log" 2>&1 &
     ROUTER=$!
+    wait_router
+}
+
+# The nodes ask the router at start: it has to listen by then.
+wait_router() {
+    local deadline=$((SECONDS + 10))
+    until grep -q 'NAT-PMP on' "$WORK/hr.log" 2>/dev/null; do
+        ((SECONDS < deadline)) || fail "the NAT-PMP router did not start"
+        sleep 0.1
+    done
 }
 
 # Waits until <ns> lists <addr> among the addresses of its members.
@@ -305,9 +321,89 @@ outside_suite() {
     teardown
 }
 
+# punch: three networks behind their own routers, which meet on 203.0.113.0/24:
+# home (hr, NAT with NAT-PMP, a), café (cr, NAT only, b) and mobile (mr, NAT
+# only, c). Each router masquerades the way home routers do.
+punch_setup() {
+    local ns
+    for ns in a b c hr cr mr net; do
+        ip netns add "halo-$ns"
+        ip -n "halo-$ns" link set lo up
+    done
+    ip -n halo-net link add br0 type bridge
+    ip -n halo-net link set br0 up
+    local router lan wan device i=1
+    for router in hr:10.10.0:a cr:10.30.0:b mr:10.20.0:c; do
+        IFS=: read -r ns lan device <<<"$router"
+        wan=203.0.113.$i
+        ip link add "${ns}w" type veth peer name "${ns}n"
+        ip link set "${ns}w" netns "halo-$ns"
+        ip link set "${ns}n" netns halo-net
+        ip -n halo-net link set "${ns}n" master br0 up
+        ip -n "halo-$ns" addr add "$wan/24" dev "${ns}w"
+        ip -n "halo-$ns" link set "${ns}w" up
+        ip link add "${device}0" type veth peer name "${device}1"
+        ip link set "${device}0" netns "halo-$device"
+        ip link set "${device}1" netns "halo-$ns"
+        ip -n "halo-$ns" addr add "$lan.1/24" dev "${device}1"
+        ip -n "halo-$ns" link set "${device}1" up
+        IP[$device]=$lan.2
+        ip -n "halo-$device" addr add "${IP[$device]}/24" dev "${device}0"
+        ip -n "halo-$device" link set "${device}0" up
+        ip -n "halo-$device" route add default via "$lan.1"
+        in_ns "$ns" sysctl -qw net.ipv4.ip_forward=1
+        in_ns "$ns" iptables -t nat -A POSTROUTING -o "${ns}w" -j MASQUERADE
+        rm -rf "${WORK:?}/$device"
+        ID[$device]=$(halo "$device" id | awk '/^id:/ {print $2}')
+        OVERLAY[$device]=$(halo "$device" id | awk '/^ip:/ {print $2}')
+        : >"$WORK/$device.log"
+        i=$((i + 1))
+    done
+    ip netns exec halo-hr python3 "$ROOT/scripts/natpmp-router.py" 10.10.0.1 203.0.113.1 hrw \
+        >"$WORK/hr.log" 2>&1 &
+    ROUTER=$!
+    wait_router
+}
+
+punch_suite() {
+    log "suite punch: b in a café and c on a mobile network, both behind NATs"
+    punch_setup
+    # Paired with a at home earlier: they know where it is from outside.
+    add a b
+    add a c
+    halo b add "${ID[a]}" --name dev-a --addr "203.0.113.1:$PORT" >/dev/null
+    halo c add "${ID[a]}" --name dev-a --addr "203.0.113.1:$PORT" >/dev/null
+    start a
+    local deadline=$((SECONDS + 30))
+    until grep -qe "-> ${IP[a]}:$PORT" "$WORK/hr.log"; do
+        ((SECONDS < deadline)) || fail "no port mapping for a"
+        sleep 0.5
+    done
+    start b
+    start c
+    wait_ping b a 30
+    wait_ping c a 30
+    echo "b and c reach a at home: ok"
+
+    log "b and c reach each other: directly through their NATs, or through a"
+    wait_ping b c 30
+    wait_ping c b 30
+    in_ns b ping -c5 -i0.2 -q "${OVERLAY[c]}" | tail -1
+    if grep -qE "connected peer=${ID[c]:0:10}.*path=Ip\\(203\\.0\\.113\\.3:" "$WORK/b.log"; then
+        echo "b and c talk directly through their NATs: ok"
+    else
+        sleep 1.5
+        local relayed
+        relayed=$(last_stat a relayed)
+        ((relayed > 0)) || fail "b and c talk, but neither directly nor through a"
+        echo "b and c talk through a, $relayed packets passed on: ok"
+    fi
+    teardown
+}
+
 [[ -x "$HALO" ]] || fail "build first: cargo build (expected $HALO)"
 suites=("$@")
-((${#suites[@]})) || suites=(1500 1300 lan journal outside)
+((${#suites[@]})) || suites=(1500 1300 lan journal outside punch)
 for name in "${suites[@]}"; do
     case $name in
         1500) suite 1500 1500 with-address ;;
@@ -315,6 +411,7 @@ for name in "${suites[@]}"; do
         lan) suite lan 1500 ;;
         journal) journal_suite ;;
         outside) outside_suite ;;
+        punch) punch_suite ;;
         *) fail "unknown suite $name" ;;
     esac
 done

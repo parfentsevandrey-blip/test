@@ -7,12 +7,15 @@
 //! other side answers with the entries the first one lacks and how far its own
 //! feeds go; the first side then sends what the other one lacks.
 //!
-//! Presences: both sides send the presences they know; each keeps the newer ones.
+//! Presences: both sides send the presences they know, and the address they see
+//! the other side at; each keeps the newer presences. A device behind a NAT
+//! learns its public address that way, and once others know it, two devices
+//! behind NATs can dial each other at the same time and get through.
 //!
 //! Everything is checked as it arrives: signatures, chains, and limits on size
 //! and count, so a peer cannot make this side do unbounded work.
 
-use std::time::Duration;
+use std::{net::SocketAddr, time::Duration};
 
 use anyhow::{Context, Result, ensure};
 use iroh::{
@@ -23,10 +26,12 @@ use iroh::{
 use crate::{
     journal::{Entry, Heads, Journal},
     presence::Presence,
+    wire::{Reader, put_addrs},
 };
 
 const JOURNAL: &[u8; 4] = b"HJS1";
 const PRESENCES: &[u8; 4] = b"HPR1";
+const LINKS: &[u8; 4] = b"HLK1";
 const MAX_FEEDS: usize = 4096;
 const MAX_ENTRIES: usize = 65_536;
 const MAX_ENTRY: usize = 2048;
@@ -38,6 +43,8 @@ const TIMEOUT: Duration = Duration::from_secs(30);
 pub enum Kind {
     Journal,
     Presences,
+    /// The members the other side is connected to right now.
+    Links,
 }
 
 /// Reads the first bytes of a stream the other side opened.
@@ -49,6 +56,7 @@ pub async fn kind(recv: &mut RecvStream) -> Result<Kind> {
     match &magic {
         JOURNAL => Ok(Kind::Journal),
         PRESENCES => Ok(Kind::Presences),
+        LINKS => Ok(Kind::Links),
         _ => anyhow::bail!("unknown exchange"),
     }
 }
@@ -88,15 +96,24 @@ pub async fn respond(
     .context("journal exchange timed out")?
 }
 
-/// Starts a presence exchange on `conn`. Returns the presences the other side sent.
+/// What the other side of a presence exchange said.
+pub struct Heard {
+    pub presences: Vec<Presence>,
+    /// Where it sees this side, if it could tell.
+    pub seen_at: Option<SocketAddr>,
+}
+
+/// Starts a presence exchange on `conn`. `seen_at` is where this side sees the
+/// other one.
 pub async fn initiate_presences(
     conn: &Connection,
     presences: &[Presence],
-) -> Result<Vec<Presence>> {
+    seen_at: Option<SocketAddr>,
+) -> Result<Heard> {
     tokio::time::timeout(TIMEOUT, async {
         let (mut send, mut recv) = conn.open_bi().await?;
         send.write_all(PRESENCES).await?;
-        write_presences(&mut send, presences).await?;
+        write_presences(&mut send, presences, seen_at).await?;
         send.finish()?;
         read_presences(&mut recv).await
     })
@@ -105,35 +122,40 @@ pub async fn initiate_presences(
 }
 
 /// Answers a presence exchange the other side started, once [`kind`] said so.
-/// Returns the presences it sent.
 pub async fn respond_presences(
     mut send: SendStream,
     mut recv: RecvStream,
     presences: &[Presence],
-) -> Result<Vec<Presence>> {
+    seen_at: Option<SocketAddr>,
+) -> Result<Heard> {
     tokio::time::timeout(TIMEOUT, async {
-        let theirs = read_presences(&mut recv).await?;
-        write_presences(&mut send, presences).await?;
+        let heard = read_presences(&mut recv).await?;
+        write_presences(&mut send, presences, seen_at).await?;
         send.finish()?;
-        Ok(theirs)
+        Ok(heard)
     })
     .await
     .context("presence exchange timed out")?
 }
 
-async fn write_presences(send: &mut SendStream, presences: &[Presence]) -> Result<()> {
+async fn write_presences(
+    send: &mut SendStream,
+    presences: &[Presence],
+    seen_at: Option<SocketAddr>,
+) -> Result<()> {
     let presences = &presences[..presences.len().min(MAX_PRESENCES)];
-    send.write_all(&(presences.len() as u16).to_be_bytes())
-        .await?;
+    let mut bytes = (presences.len() as u16).to_be_bytes().to_vec();
     for presence in presences {
-        let bytes = presence.to_bytes();
-        send.write_all(&(bytes.len() as u16).to_be_bytes()).await?;
-        send.write_all(&bytes).await?;
+        let presence = presence.to_bytes();
+        bytes.extend_from_slice(&(presence.len() as u16).to_be_bytes());
+        bytes.extend_from_slice(&presence);
     }
+    put_addrs(&mut bytes, seen_at.as_slice());
+    send.write_all(&bytes).await?;
     Ok(())
 }
 
-async fn read_presences(recv: &mut RecvStream) -> Result<Vec<Presence>> {
+async fn read_presences(recv: &mut RecvStream) -> Result<Heard> {
     let mut count = [0u8; 2];
     recv.read_exact(&mut count).await?;
     let count = usize::from(u16::from_be_bytes(count));
@@ -148,7 +170,62 @@ async fn read_presences(recv: &mut RecvStream) -> Result<Vec<Presence>> {
         recv.read_exact(&mut buf[..len]).await?;
         presences.push(Presence::from_bytes(&buf[..len])?);
     }
-    Ok(presences)
+    // Zero or one address: count, then family, address and port.
+    let mut seen = [0u8; 1 + 1 + 16 + 2];
+    recv.read_exact(&mut seen[..1]).await?;
+    let len = match seen[0] {
+        0 => 1,
+        1 => {
+            recv.read_exact(&mut seen[1..2]).await?;
+            let len = if seen[1] == 4 { 2 + 4 + 2 } else { 2 + 16 + 2 };
+            recv.read_exact(&mut seen[2..len]).await?;
+            len
+        }
+        _ => anyhow::bail!("too many addresses"),
+    };
+    let seen_at = Reader(&seen[..len]).addrs()?.pop();
+    Ok(Heard { presences, seen_at })
+}
+
+/// Tells the other side of `conn` which members this side is connected to, so
+/// it can send packets for them through this side.
+pub async fn send_links(conn: &Connection, links: &[EndpointId]) -> Result<()> {
+    tokio::time::timeout(TIMEOUT, async {
+        let (mut send, mut recv) = conn.open_bi().await?;
+        let links = &links[..links.len().min(MAX_FEEDS)];
+        let mut bytes = LINKS.to_vec();
+        bytes.extend_from_slice(&(links.len() as u16).to_be_bytes());
+        for id in links {
+            bytes.extend_from_slice(id.as_bytes());
+        }
+        send.write_all(&bytes).await?;
+        send.finish()?;
+        // The other side only reads; its end of the stream closes empty.
+        let _ = recv.read_to_end(0).await;
+        Ok(())
+    })
+    .await
+    .context("links report timed out")?
+}
+
+/// Reads a links report, once [`kind`] said so.
+pub async fn read_links(mut send: SendStream, mut recv: RecvStream) -> Result<Vec<EndpointId>> {
+    tokio::time::timeout(TIMEOUT, async {
+        let mut count = [0u8; 2];
+        recv.read_exact(&mut count).await?;
+        let count = usize::from(u16::from_be_bytes(count));
+        ensure!(count <= MAX_FEEDS, "too many links");
+        let mut links = Vec::with_capacity(count);
+        for _ in 0..count {
+            let mut id = [0u8; 32];
+            recv.read_exact(&mut id).await?;
+            links.push(EndpointId::from_bytes(&id).context("invalid device key")?);
+        }
+        send.finish()?;
+        Ok(links)
+    })
+    .await
+    .context("links report timed out")?
 }
 
 async fn write_heads(send: &mut SendStream, heads: &Heads) -> Result<()> {

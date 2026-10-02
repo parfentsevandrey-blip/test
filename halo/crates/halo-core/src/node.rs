@@ -69,8 +69,14 @@ const RACE_WINDOW: Duration = Duration::from_secs(5);
 const JOURNAL_POLL: Duration = Duration::from_secs(2);
 /// How long a new node waits for a port mapping before saying where it can be reached.
 const MAPPING_GRACE: Duration = Duration::from_secs(10);
+/// How soon the node asks the router again after it mapped nothing; doubling
+/// up to [`REACH_RECHECK`]. A laptop may boot before its router does.
+const REMAP_FIRST: Duration = Duration::from_secs(15);
 /// How often the node checks where it can be reached, besides on every change.
 const REACH_RECHECK: Duration = Duration::from_secs(300);
+/// How often connected members hear again whom this node is connected to,
+/// besides on every change: a report lost in a reconnection heals by then.
+const LINKS_REFRESH: Duration = Duration::from_secs(15);
 
 /// mDNS service name, so Halo devices do not mix with other iroh apps on the network.
 const MDNS_SERVICE: &str = "halo";
@@ -196,6 +202,8 @@ impl Node {
                 mapper: portmapper::Client::new(portmapper::Config::default()),
             }),
             removed: AtomicBool::new(false),
+            seen_as: Mutex::new(HashMap::new()),
+            neighbors: RwLock::new(HashMap::new()),
         });
         if let Some(view) = &view {
             shared.note_removal(view);
@@ -213,6 +221,7 @@ impl Node {
             .map(SocketAddr::port)
             .collect();
         tasks.spawn(tun_loop(shared.clone(), transport_ports, config.mtu));
+        tasks.spawn(refresh_links(shared.clone()));
         if shared.membership.is_some() {
             tasks.spawn(follow_journal(shared.clone()));
             tasks.spawn(announce_reach(shared.clone()));
@@ -304,6 +313,11 @@ struct Shared {
     membership: Option<Membership>,
     /// The journal says this device was removed from the network.
     removed: AtomicBool,
+    /// Where members see this device, by member: behind a NAT, its public side.
+    seen_as: Mutex<HashMap<EndpointId, SocketAddr>>,
+    /// The members each connected member is connected to: packets for a member
+    /// this device cannot reach go through one of them.
+    neighbors: RwLock<HashMap<EndpointId, HashSet<EndpointId>>>,
 }
 
 /// The member journal and presences as the node keeps them.
@@ -519,11 +533,26 @@ impl Shared {
             .iter()
             .cloned()
             .collect();
-        match sync::initiate_presences(&conn, &ours).await {
-            Ok(theirs) => self.learn_presences(theirs).await,
+        match sync::initiate_presences(&conn, &ours, remote_addr(&conn)).await {
+            Ok(heard) => self.heard(conn.remote_id(), heard).await,
             Err(err) => {
                 debug!(peer = %conn.remote_id().fmt_short(), "presence exchange failed: {err:#}")
             }
+        }
+    }
+
+    /// Takes what a member said in a presence exchange.
+    async fn heard(self: &Arc<Self>, from: EndpointId, heard: sync::Heard) {
+        self.learn_presences(heard.presences).await;
+        // Its view of this device's address: public, it is where this device's
+        // NAT lets others in once this device has dialed them too.
+        let Some(seen_at) = heard.seen_at.filter(|addr| is_public(addr.ip())) else {
+            return;
+        };
+        let changed = self.seen_as.lock().expect("poisoned").insert(from, seen_at) != Some(seen_at);
+        if changed && let Some(membership) = &self.membership {
+            let mapped = *membership.mapper.watch_external_address().borrow();
+            self.announce(self.reachable(mapped)).await;
         }
     }
 
@@ -547,12 +576,51 @@ impl Shared {
     /// anywhere.
     fn moved(self: &Arc<Self>) {
         info!("the network changed: reconnecting");
+        // Where members saw this device belongs to the old network.
+        self.seen_as.lock().expect("poisoned").clear();
         for peer in self.peers.read().expect("poisoned").values() {
             if let Some(conn) = peer.connection() {
                 conn.close(CLOSE_MOVED, b"network changed");
             }
             peer.wake.notify_one();
         }
+    }
+
+    /// Tells every connected member which members this device is connected to.
+    fn report_links(self: &Arc<Self>) {
+        let connected: Vec<Arc<Peer>> = self
+            .peers
+            .read()
+            .expect("poisoned")
+            .values()
+            .filter(|peer| peer.connected.load(Relaxed))
+            .cloned()
+            .collect();
+        let ids: Vec<EndpointId> = connected.iter().map(|peer| peer.id).collect();
+        for peer in connected {
+            let Some(conn) = peer.connection() else {
+                continue;
+            };
+            let ids = ids.clone();
+            tokio::spawn(async move {
+                if let Err(err) = sync::send_links(&conn, &ids).await {
+                    debug!(peer = %conn.remote_id().fmt_short(), "links report failed: {err:#}");
+                }
+            });
+        }
+    }
+
+    /// A connected member that is connected to `target`, to pass packets on.
+    fn relay_for(&self, target: &EndpointId) -> Option<Arc<Peer>> {
+        let neighbors = self.neighbors.read().expect("poisoned");
+        let peers = self.peers.read().expect("poisoned");
+        neighbors
+            .iter()
+            .filter(|(relay, reached)| *relay != target && reached.contains(target))
+            .filter_map(|(relay, _)| peers.get(relay))
+            .filter(|relay| relay.connected.load(Relaxed))
+            .min_by_key(|relay| relay.id)
+            .cloned()
     }
 
     /// Asks the router for a mapping again: after a network change the old one
@@ -588,9 +656,16 @@ impl Shared {
             .into_iter()
             .filter(|addr| is_public(addr.ip()))
             .collect();
-        for addr in self.endpoint.addr().ip_addrs() {
-            if is_public(addr.ip()) && !addrs.contains(addr) {
-                addrs.push(*addr);
+        let seen = self
+            .seen_as
+            .lock()
+            .expect("poisoned")
+            .values()
+            .copied()
+            .collect::<Vec<_>>();
+        for addr in self.endpoint.addr().ip_addrs().copied().chain(seen) {
+            if is_public(addr.ip()) && !addrs.contains(&addr) {
+                addrs.push(addr);
             }
         }
         addrs.sort();
@@ -662,11 +737,28 @@ impl Shared {
         while let Ok((send, mut recv)) = conn.accept_bi().await {
             let shared = self.clone();
             let remote = conn.remote_id();
+            let seen_at = remote_addr(&conn);
             tokio::spawn(async move {
+                let kind = sync::kind(&mut recv).await;
+                if let Ok(Kind::Links) = kind {
+                    match sync::read_links(send, recv).await {
+                        Ok(links) => {
+                            shared
+                                .neighbors
+                                .write()
+                                .expect("poisoned")
+                                .insert(remote, links.into_iter().collect());
+                        }
+                        Err(err) => {
+                            debug!(peer = %remote.fmt_short(), "links report failed: {err:#}")
+                        }
+                    }
+                    return;
+                }
                 let Some(membership) = &shared.membership else {
                     return;
                 };
-                match sync::kind(&mut recv).await {
+                match kind {
                     Ok(Kind::Journal) => {
                         let journal = membership.journal.lock().expect("poisoned").clone();
                         match sync::respond(send, recv, &journal).await {
@@ -684,13 +776,14 @@ impl Shared {
                             .iter()
                             .cloned()
                             .collect();
-                        match sync::respond_presences(send, recv, &ours).await {
-                            Ok(theirs) => shared.learn_presences(theirs).await,
+                        match sync::respond_presences(send, recv, &ours, seen_at).await {
+                            Ok(heard) => shared.heard(remote, heard).await,
                             Err(err) => {
                                 debug!(peer = %remote.fmt_short(), "presence exchange failed: {err:#}")
                             }
                         }
                     }
+                    Ok(Kind::Links) => {}
                     Err(err) => debug!(peer = %remote.fmt_short(), "unknown exchange: {err:#}"),
                 }
             });
@@ -729,6 +822,14 @@ async fn follow_journal(shared: Arc<Shared>) -> Result<()> {
     }
 }
 
+/// Tells the connected members whom this node is connected to, now and then.
+async fn refresh_links(shared: Arc<Shared>) -> Result<()> {
+    loop {
+        tokio::time::sleep(LINKS_REFRESH).await;
+        shared.report_links();
+    }
+}
+
 /// Asks the router for a port that forwards to this node, and tells the members
 /// where the node can be reached from anywhere whenever that changes.
 async fn announce_reach(shared: Arc<Shared>) -> Result<()> {
@@ -741,6 +842,7 @@ async fn announce_reach(shared: Arc<Shared>) -> Result<()> {
     shared.remap().await;
     // Give the router a moment, so a restart does not first announce nothing.
     let _ = tokio::time::timeout(MAPPING_GRACE, mapped.changed()).await;
+    let mut recheck = REMAP_FIRST;
     loop {
         let reach = shared.reachable(*mapped.borrow());
         shared.announce(reach).await;
@@ -764,13 +866,17 @@ async fn announce_reach(shared: Arc<Shared>) -> Result<()> {
                         shared.moved();
                     }
                     local = now;
+                    recheck = REMAP_FIRST;
                     shared.remap().await;
                 }
             }
-            () = tokio::time::sleep(REACH_RECHECK) => {
+            () = tokio::time::sleep(recheck) => {
                 // The router may have come round, or rebooted and lost the mapping.
                 if mapped.borrow().is_none() {
                     shared.remap().await;
+                    recheck = (recheck * 2).min(REACH_RECHECK);
+                } else {
+                    recheck = REACH_RECHECK;
                 }
             }
         }
@@ -866,6 +972,16 @@ impl NodeHandle {
             removed: shared.removed.load(Relaxed),
             reachable,
         })
+    }
+}
+
+/// The address the other side of `conn` sends from, on the path in use.
+fn remote_addr(conn: &Connection) -> Option<SocketAddr> {
+    let paths = conn.paths();
+    let path = paths.iter().find(|path| path.is_selected())?;
+    match path.remote_addr() {
+        TransportAddr::Ip(addr) => Some(*addr),
+        _ => None,
     }
 }
 
@@ -1013,6 +1129,10 @@ struct Stats {
     dropped_queue_full: AtomicU64,
     dropped_spoofed: AtomicU64,
     dropped_loop: AtomicU64,
+    /// Packets sent through another member, for want of a direct connection.
+    via_relay: AtomicU64,
+    /// Packets passed on between two other members.
+    relayed: AtomicU64,
 }
 
 /// Reads packets from the TUN device and queues them for the peer that owns the destination.
@@ -1041,13 +1161,21 @@ async fn tun_loop(shared: Arc<Shared>, transport_ports: Vec<u16>, mtu: u16) -> R
             continue;
         }
         let peer = shared.by_ip.read().expect("poisoned").get(&dst).cloned();
-        match peer {
-            Some(peer) if peer.connected.load(Relaxed) => {
-                if peer.outbound.try_send(buf.freeze()).is_err() {
+        let next_hop = match peer {
+            Some(peer) if peer.connected.load(Relaxed) => Some(peer),
+            // No direct connection (yet): through a member connected to it.
+            Some(peer) => shared.relay_for(&peer.id).inspect(|_| {
+                stats.via_relay.fetch_add(1, Relaxed);
+            }),
+            None => None,
+        };
+        match next_hop {
+            Some(hop) => {
+                if hop.outbound.try_send(buf.freeze()).is_err() {
                     stats.dropped_queue_full.fetch_add(1, Relaxed);
                 }
             }
-            _ => {
+            None => {
                 stats.dropped_no_route.fetch_add(1, Relaxed);
             }
         }
@@ -1153,11 +1281,12 @@ impl Link {
         self.peer.connected.store(true, Relaxed);
         *self.peer.conn.lock().expect("poisoned") = Some(conn.weak_handle());
         let established = Instant::now();
+        tokio::spawn(self.shared.clone().answer_exchanges(conn.clone()));
         if self.shared.membership.is_some() {
-            tokio::spawn(self.shared.clone().answer_exchanges(conn.clone()));
             tokio::spawn(self.shared.clone().exchange(conn.clone()));
             tokio::spawn(self.shared.clone().exchange_presences(conn.clone()));
         }
+        self.shared.report_links();
 
         let receive = self.receive(&conn);
         let send = self.send(&conn, outbound);
@@ -1183,6 +1312,17 @@ impl Link {
         };
         self.peer.connected.store(false, Relaxed);
         *self.peer.conn.lock().expect("poisoned") = None;
+        if next.is_none() {
+            // Gone rather than replaced: what it said about its links is over.
+            // (On a replacement, its report may already have come over the new
+            // connection.)
+            self.shared
+                .neighbors
+                .write()
+                .expect("poisoned")
+                .remove(&self.peer.id);
+            self.shared.report_links();
+        }
         next
     }
 
@@ -1216,21 +1356,64 @@ impl Link {
             let Some(packet) = reassembler.push(datagram) else {
                 continue;
             };
-            // A peer may only send packets from its own address, and only to us.
-            match frame::ipv4_endpoints(&packet) {
-                Some((src, dst)) if src == self.peer.ip && dst == self.shared.my_ip => {
-                    match self.shared.tun.send(&packet).await {
-                        Ok(_) => {
-                            self.shared.stats.to_tun.fetch_add(1, Relaxed);
-                        }
-                        // The kernel rejects malformed packets; that is the sender's problem.
-                        Err(err) => debug!(%err, "TUN write failed"),
-                    }
-                }
-                _ => {
+            let Some((src, dst)) = frame::ipv4_endpoints(&packet) else {
+                self.shared.stats.dropped_spoofed.fetch_add(1, Relaxed);
+                continue;
+            };
+            let deliver = if dst == self.shared.my_ip {
+                // From the peer itself, or from another member it passes on.
+                src == self.peer.ip
+                    || self
+                        .shared
+                        .by_ip
+                        .read()
+                        .expect("poisoned")
+                        .contains_key(&src)
+            } else {
+                // The peer's own packet for a member it cannot reach: pass it on,
+                // one hop only, to a member connected here.
+                if src == self.peer.ip {
+                    self.pass_on(dst, &packet);
+                } else {
                     self.shared.stats.dropped_spoofed.fetch_add(1, Relaxed);
                 }
+                continue;
+            };
+            if !deliver {
+                self.shared.stats.dropped_spoofed.fetch_add(1, Relaxed);
+                continue;
             }
+            match self.shared.tun.send(&packet).await {
+                Ok(_) => {
+                    self.shared.stats.to_tun.fetch_add(1, Relaxed);
+                }
+                // The kernel rejects malformed packets; that is the sender's problem.
+                Err(err) => debug!(%err, "TUN write failed"),
+            }
+        }
+    }
+
+    /// Passes a packet from this link's peer on to the member at `dst`, if it is
+    /// connected here directly.
+    fn pass_on(&self, dst: Ipv4Addr, packet: &Bytes) {
+        let target = self
+            .shared
+            .by_ip
+            .read()
+            .expect("poisoned")
+            .get(&dst)
+            .cloned();
+        let Some(target) = target.filter(|target| target.connected.load(Relaxed)) else {
+            self.shared.stats.dropped_no_route.fetch_add(1, Relaxed);
+            return;
+        };
+        let mut frame = BytesMut::with_capacity(packet.len() + 1);
+        frame.extend_from_slice(&[frame::WHOLE]);
+        frame.extend_from_slice(packet);
+        if target.outbound.try_send(frame.freeze()).is_ok() {
+            self.shared.stats.relayed.fetch_add(1, Relaxed);
+        } else {
+            self.shared.stats.dropped_queue_full.fetch_add(1, Relaxed);
         }
     }
 
@@ -1277,6 +1460,8 @@ async fn log_stats(stats: Arc<Stats>, interval: Duration) -> Result<()> {
             dropped_queue_full = stats.dropped_queue_full.load(Relaxed),
             dropped_spoofed = stats.dropped_spoofed.load(Relaxed),
             dropped_loop = stats.dropped_loop.load(Relaxed),
+            via_relay = stats.via_relay.load(Relaxed),
+            relayed = stats.relayed.load(Relaxed),
             "stats"
         );
     }
