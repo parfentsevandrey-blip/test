@@ -1,3 +1,6 @@
 [bindings.kotlin]
 package_name = "dev.halo.core"
 cdylib_name = "halo_ffi"
+# java.lang.ref.Cleaner exists only from API 33; on Android the bindings use the
+# system cleaner from API 34 and JNA's cleaner below it (minSdk is 26).
+android = true
