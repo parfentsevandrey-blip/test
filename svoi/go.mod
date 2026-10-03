@@ -1,6 +1,6 @@
 module github.com/parfentsevandrey-blip/test/svoi
 
-go 1.26.0
+go 1.26.8
 
 require (
 	filippo.io/edwards25519 v1.2.0
