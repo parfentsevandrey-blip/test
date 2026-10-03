@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Метка The Mesh без плитки: на заставке и в верхней полосе окна. Цвет задаётся в коде (setColorFilter). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <path
+        android:pathData="M256,150 L150,338 L362,338 Z"
+        android:strokeColor="#4FE0B0"
+        android:strokeAlpha="0.55"
+        android:strokeWidth="22"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#4FE0B0"
+        android:pathData="M208,150 a48,48 0 1,0 96,0 a48,48 0 1,0 -96,0 Z" />
+    <path
+        android:fillColor="#4FE0B0"
+        android:pathData="M102,338 a48,48 0 1,0 96,0 a48,48 0 1,0 -96,0 Z" />
+    <path
+        android:fillColor="#4FE0B0"
+        android:pathData="M314,338 a48,48 0 1,0 96,0 a48,48 0 1,0 -96,0 Z" />
+</vector>

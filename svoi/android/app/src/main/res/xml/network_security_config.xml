@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Обычный HTTP разрешён только для петлевого адреса: веб-интерфейс узла слушает 127.0.0.1 и никуда
+     не выходит. Всё остальное — только HTTPS (приложение само в сеть, кроме узла, не ходит). -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Одноцветный значок для «тематических» значков Android 13+: учитывается только прозрачность. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <group
+        android:pivotX="256"
+        android:pivotY="256"
+        android:scaleX="0.9"
+        android:scaleY="0.9"
+        android:translateY="-18">
+        <path
+            android:pathData="M256,150 L150,338 L362,338 Z"
+            android:strokeColor="#FFFFFF"
+            android:strokeAlpha="0.7"
+            android:strokeWidth="22"
+            android:strokeLineJoin="round" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M208,150 a48,48 0 1,0 96,0 a48,48 0 1,0 -96,0 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M102,338 a48,48 0 1,0 96,0 a48,48 0 1,0 -96,0 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M314,338 a48,48 0 1,0 96,0 a48,48 0 1,0 -96,0 Z" />
+    </group>
+</vector>

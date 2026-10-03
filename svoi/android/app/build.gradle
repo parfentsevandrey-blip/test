@@ -1,0 +1,93 @@
+plugins {
+    id 'com.android.application'
+}
+
+// ABI, для которых в APK кладётся ядро (программа themesh на Go, см. tools/build-core.sh).
+def coreAbis = ['arm64-v8a', 'x86_64', 'armeabi-v7a']
+
+android {
+    namespace 'app.themesh.mobile'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'app.themesh.mobile'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '0.1.0'
+
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+
+        ndk {
+            abiFilters(*coreAbis)
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packaging {
+        jniLibs {
+            // libthemesh.so — не библиотека, а исполняемый файл: его запускает ProcessBuilder из
+            // ApplicationInfo.nativeLibraryDir. Поэтому он обязан быть распакован при установке.
+            useLegacyPackaging = true
+        }
+    }
+
+    lint {
+        abortOnError true
+    }
+}
+
+dependencies {
+    // ComponentActivity: ActivityResultLauncher, OnBackPressedDispatcher, EdgeToEdge.
+    implementation 'androidx.activity:activity:1.10.1'
+
+    testImplementation 'junit:junit:4.13.2'
+    // org.json из android.jar в модульных тестах на JVM — заглушка; здесь настоящая.
+    testImplementation 'org.json:json:20250517'
+
+    androidTestImplementation 'androidx.test:core:1.6.1'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+}
+
+// ---- ядро ------------------------------------------------------------------------------------
+
+// Собирает libthemesh.so для всех ABI (нужен Go, см. tools/build-core.sh).
+tasks.register('buildCore', Exec) {
+    group = 'build'
+    description = 'Собирает ядро (программу themesh на Go) для arm64-v8a, x86_64 и armeabi-v7a'
+    workingDir rootDir
+    commandLine 'sh', 'tools/build-core.sh'
+}
+
+// Не даёт собрать APK без ядра: приложение без него ничего не умеет, а ошибка была бы видна
+// только на телефоне.
+tasks.register('checkCore') {
+    group = 'verification'
+    description = 'Проверяет, что libthemesh.so собран для всех ABI'
+    def libs = coreAbis.collect { abi -> file("src/main/jniLibs/${abi}/libthemesh.so") }
+    doLast {
+        if (project.hasProperty('noCoreCheck')) return
+        libs.each { f ->
+            def ok = f.isFile() && f.length() > 1_000_000
+            if (ok) {
+                f.withInputStream { s ->
+                    def magic = new byte[4]
+                    ok = s.read(magic) == 4 && magic[0] == 0x7f && magic[1] == (byte) 'E' && magic[2] == (byte) 'L' && magic[3] == (byte) 'F'
+                }
+            }
+            if (!ok) {
+                throw new GradleException("Нет ядра: ${f}\nСоберите его: sh tools/build-core.sh (или ./gradlew buildCore). " +
+                        "Без него приложение ничего не умеет; для сборки без ядра: -PnoCoreCheck.")
+            }
+        }
+    }
+}
+
+tasks.matching { it.name ==~ /merge.*JniLibFolders/ }.configureEach {
+    dependsOn 'checkCore'
+}

@@ -1,0 +1,5 @@
+// The Mesh для Android. Подробности сборки — в README.md.
+plugins {
+    // AGP 8.13.x требует Gradle 8.13+ и JDK 17+ (см. gradle/wrapper/gradle-wrapper.properties).
+    id 'com.android.application' version '8.13.2' apply false
+}

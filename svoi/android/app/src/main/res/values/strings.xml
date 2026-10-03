@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Русский — язык по умолчанию; английский — в values-en/strings.xml. Названия строк в обоих файлах совпадают. -->
+<resources>
+    <string name="app_name">The Mesh</string>
+
+    <!-- Строка о состоянии сети (в уведомлении службы и в верхней полосе окна) -->
+    <string name="status_starting">Запускаем…</string>
+    <string name="status_no_network">Сеть ещё не создана</string>
+    <string name="status_alone">Пока только это устройство</string>
+    <string name="status_online">На связи %1$d из %2$d</string>
+    <string name="status_stopped">Не работает</string>
+
+    <!-- Уведомление службы -->
+    <string name="fgs_title">The Mesh работает</string>
+    <string name="action_open">Открыть</string>
+    <string name="action_quit">Выйти</string>
+
+    <!-- Каналы уведомлений -->
+    <string name="channel_node_name">Работа в фоне</string>
+    <string name="channel_node_desc">Постоянное уведомление: пока оно есть, устройство остаётся в вашей сети.</string>
+    <string name="channel_events_name">Файлы, сообщения и письма</string>
+    <string name="channel_events_desc">Когда вам предлагают файл, присылают сообщение или письмо.</string>
+    <string name="channel_downloads_name">Загрузки</string>
+    <string name="channel_downloads_desc">Файлы, сохранённые из The Mesh в папку «Загрузки».</string>
+
+    <!-- Уведомления о событиях -->
+    <string name="notif_offer_body">хочет отправить вам файл «%1$s»</string>
+    <string name="notif_received_title">Файл получен</string>
+    <string name="notif_received_body">«%1$s» — от устройства %2$s</string>
+    <string name="notif_chat_attachment">Прислал вложение</string>
+    <string name="notif_mail_title">Новое письмо от %1$s</string>
+    <string name="notif_mail_title_unknown">Новое письмо</string>
+    <string name="notif_no_subject">(без темы)</string>
+    <string name="notif_saved_title">Файл сохранён</string>
+
+    <!-- Главное окно -->
+    <string name="splash_starting">Запускаем The Mesh…</string>
+    <string name="error_title">The Mesh не удалось запустить</string>
+    <string name="error_hint">Приложение попробует ещё раз само. Если не помогает — пришлите журнал, он поможет разобраться.</string>
+    <string name="error_restart">Запустить ещё раз</string>
+    <string name="error_show_log">Показать журнал</string>
+    <string name="err_binary_missing">В приложении нет программы для этого процессора (%1$s).</string>
+    <string name="err_not_executable">Системе не удаётся запустить файл программы: %1$s</string>
+    <string name="err_no_port">Не нашёлся свободный порт для интерфейса.</string>
+    <string name="err_spawn_failed">Не удалось запустить программу: %1$s</string>
+    <string name="err_exited_at_start">Программа не запустилась (код %1$d).</string>
+    <string name="err_no_answer">Программа не ответила за 40 секунд.</string>
+    <string name="err_crashed">Программа остановилась (код %1$d).</string>
+    <string name="err_stopped">Программа остановлена.</string>
+    <string name="err_page">Не удалось открыть интерфейс: %1$s</string>
+    <string name="err_page_timeout">Интерфейс не загрузился за 30 секунд.</string>
+    <string name="err_webview_crash">Встроенный браузер системы (WebView) постоянно останавливается. Обновите «Android System WebView» или перезагрузите телефон.</string>
+
+    <!-- Меню -->
+    <string name="menu_more">Ещё</string>
+    <string name="menu_autostart">Запускать при включении телефона</string>
+    <string name="menu_battery">В фоне без ограничений батареи</string>
+    <string name="menu_log">Журнал</string>
+    <string name="menu_about">О программе</string>
+    <string name="toast_autostart_on">The Mesh будет запускаться при включении телефона</string>
+    <string name="toast_autostart_off">The Mesh не будет запускаться автоматически</string>
+
+    <!-- О программе -->
+    <string name="about_title">О программе The Mesh</string>
+    <string name="about_text">The Mesh %1$s\nЯдро: %2$s\nWebView: %3$s\n\nЧастная сеть ваших устройств: файлы, почта и чат напрямую, без облака и без аккаунта.\nЭто рабочий прототип без независимого аудита безопасности.</string>
+    <string name="webview_old_title">Старый WebView</string>
+    <string name="webview_old_text">Встроенный браузер системы (WebView) устарел: интерфейсу нужен Chromium %1$d или новее, иначе страницы могут выглядеть неправильно. Обновите «Android System WebView» (или Chrome).</string>
+    <string name="about_core_unknown">—</string>
+    <string name="about_close">Закрыть</string>
+
+    <!-- Разрешение на уведомления -->
+    <string name="perm_notif_title">Показывать уведомления?</string>
+    <string name="perm_notif_text">Тогда вы узнаете, когда вам присылают файл, сообщение или письмо, даже если окно закрыто. Без уведомлений The Mesh всё равно работает, но молча.</string>
+    <string name="perm_notif_allow">Разрешить</string>
+    <string name="perm_notif_later">Не сейчас</string>
+
+    <!-- Файлы -->
+    <string name="toast_download_started">Скачиваем «%1$s»…</string>
+    <string name="toast_download_failed">Не удалось сохранить файл: %1$s</string>
+    <string name="toast_download_unsupported">Этот файл приложение сохранить не может</string>
+    <string name="toast_no_storage_permission">Нет разрешения сохранять файлы в «Загрузки»</string>
+    <string name="toast_no_browser">Не нашлось программы, которая откроет эту ссылку</string>
+
+    <!-- Журнал -->
+    <string name="log_title">Журнал</string>
+    <string name="log_empty">Журнал пока пуст.</string>
+    <string name="log_copy">Копировать</string>
+    <string name="log_share">Поделиться</string>
+    <string name="log_refresh">Обновить</string>
+    <string name="log_copied">Журнал скопирован</string>
+    <string name="log_share_title">Журнал The Mesh</string>
+</resources>

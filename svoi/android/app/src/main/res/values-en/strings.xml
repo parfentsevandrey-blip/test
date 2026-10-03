@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English: the second language. The Russian text (the default) is in values/strings.xml. -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">The Mesh</string>
+
+    <!-- The sentence about the network (in the service notification and in the strip at the top of the window) -->
+    <string name="status_starting">Starting…</string>
+    <string name="status_no_network">No network yet</string>
+    <string name="status_alone">Only this device so far</string>
+    <string name="status_online" tools:ignore="PluralsCandidate">%1$d of %2$d online</string>
+    <string name="status_stopped">Not running</string>
+
+    <!-- The service notification -->
+    <string name="fgs_title">The Mesh is running</string>
+    <string name="action_open">Open</string>
+    <string name="action_quit">Quit</string>
+
+    <!-- Notification channels -->
+    <string name="channel_node_name">Running in the background</string>
+    <string name="channel_node_desc">An ongoing notification: while it is there, this device stays on your network.</string>
+    <string name="channel_events_name">Files, messages and mail</string>
+    <string name="channel_events_desc">When someone offers you a file or sends you a message or a letter.</string>
+    <string name="channel_downloads_name">Downloads</string>
+    <string name="channel_downloads_desc">Files saved from The Mesh to the Downloads folder.</string>
+
+    <!-- Event notifications -->
+    <string name="notif_offer_body">wants to send you the file “%1$s”</string>
+    <string name="notif_received_title">File received</string>
+    <string name="notif_received_body">“%1$s” — from %2$s</string>
+    <string name="notif_chat_attachment">Sent an attachment</string>
+    <string name="notif_mail_title">New mail from %1$s</string>
+    <string name="notif_mail_title_unknown">New mail</string>
+    <string name="notif_no_subject">(no subject)</string>
+    <string name="notif_saved_title">File saved</string>
+
+    <!-- Main window -->
+    <string name="splash_starting">Starting The Mesh…</string>
+    <string name="error_title">The Mesh could not start</string>
+    <string name="error_hint">The app will try again by itself. If that does not help, send the log: it shows what went wrong.</string>
+    <string name="error_restart">Try again</string>
+    <string name="error_show_log">Show the log</string>
+    <string name="err_binary_missing">The app has no program for this processor (%1$s).</string>
+    <string name="err_not_executable">The system cannot run the program file: %1$s</string>
+    <string name="err_no_port">No free port was found for the interface.</string>
+    <string name="err_spawn_failed">Could not start the program: %1$s</string>
+    <string name="err_exited_at_start">The program did not start (code %1$d).</string>
+    <string name="err_no_answer">The program did not answer within 40 seconds.</string>
+    <string name="err_crashed">The program stopped (code %1$d).</string>
+    <string name="err_stopped">The program is stopped.</string>
+    <string name="err_page">Could not open the interface: %1$s</string>
+    <string name="err_page_timeout">The interface did not load within 30 seconds.</string>
+    <string name="err_webview_crash">The system web view (WebView) keeps stopping. Update “Android System WebView” or restart the phone.</string>
+
+    <!-- Menu -->
+    <string name="menu_more">More options</string>
+    <string name="menu_autostart">Start when the phone turns on</string>
+    <string name="menu_battery">Background without battery limits</string>
+    <string name="menu_log">Log</string>
+    <string name="menu_about">About</string>
+    <string name="toast_autostart_on">The Mesh will start when the phone turns on</string>
+    <string name="toast_autostart_off">The Mesh will not start by itself</string>
+
+    <!-- About -->
+    <string name="about_title">About The Mesh</string>
+    <string name="about_text">The Mesh %1$s\nCore: %2$s\nWebView: %3$s\n\nA private network of your own devices: files, mail and chat directly, with no cloud and no account.\nThis is a working prototype without an independent security audit.</string>
+    <string name="webview_old_title">Outdated WebView</string>
+    <string name="webview_old_text">The system web view (WebView) is outdated: the interface needs Chromium %1$d or newer, otherwise pages may look broken. Update “Android System WebView” (or Chrome).</string>
+    <string name="about_core_unknown">—</string>
+    <string name="about_close">Close</string>
+
+    <!-- Notification permission -->
+    <string name="perm_notif_title">Show notifications?</string>
+    <string name="perm_notif_text">Then you will know when someone sends you a file, a message or a letter, even when the window is closed. Without notifications The Mesh still works, but silently.</string>
+    <string name="perm_notif_allow">Allow</string>
+    <string name="perm_notif_later">Not now</string>
+
+    <!-- Files -->
+    <string name="toast_download_started">Downloading “%1$s”…</string>
+    <string name="toast_download_failed">Could not save the file: %1$s</string>
+    <string name="toast_download_unsupported">The app cannot save this file</string>
+    <string name="toast_no_storage_permission">No permission to save files to Downloads</string>
+    <string name="toast_no_browser">No app can open this link</string>
+
+    <!-- Log -->
+    <string name="log_title">Log</string>
+    <string name="log_empty">The log is empty so far.</string>
+    <string name="log_copy">Copy</string>
+    <string name="log_share">Share</string>
+    <string name="log_refresh">Refresh</string>
+    <string name="log_copied">Log copied</string>
+    <string name="log_share_title">The Mesh log</string>
+</resources>

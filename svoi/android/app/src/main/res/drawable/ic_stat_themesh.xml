@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Маленький значок уведомлений: система красит его сама, нужна только форма (прозрачность). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <group
+        android:pivotX="256"
+        android:pivotY="244"
+        android:scaleX="1.45"
+        android:scaleY="1.45"
+        android:translateY="12">
+        <path
+            android:pathData="M256,150 L150,338 L362,338 Z"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="22"
+            android:strokeLineJoin="round" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M208,150 a48,48 0 1,0 96,0 a48,48 0 1,0 -96,0 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M102,338 a48,48 0 1,0 96,0 a48,48 0 1,0 -96,0 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M314,338 a48,48 0 1,0 96,0 a48,48 0 1,0 -96,0 Z" />
+    </group>
+</vector>

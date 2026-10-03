@@ -1,0 +1,21 @@
+# Сборка
+build/
+.gradle/
+local.properties
+.kotlin/
+
+# Ядро (программа themesh на Go) собирается tools/build-core.sh и в репозиторий не попадает
+*.so
+
+# Готовые пакеты и ключи
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+captures/
+.cxx/

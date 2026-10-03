@@ -1,0 +1,130 @@
+name: The Mesh Android
+
+# Builds the phone app (a WebView window around the `themesh` program, svoi/android), runs its unit tests and
+# lint, builds the APK and runs the smoke test on an emulator (Android 14, x86_64).
+# The APK is kept as a build artifact; a tag themesh-v* also attaches it to a release.
+on:
+  push:
+    branches: ["**"]
+    tags: ["themesh-v*"] # path filters are not applied to tag pushes
+    paths: ["svoi/android/**", "svoi/cmd/**", "svoi/internal/**", "svoi/go.mod", "svoi/go.sum", ".github/workflows/themesh-android.yml"]
+  pull_request:
+    paths: ["svoi/android/**", "svoi/cmd/**", "svoi/internal/**", "svoi/go.mod", "svoi/go.sum", ".github/workflows/themesh-android.yml"]
+  workflow_dispatch:
+    inputs:
+      emulator:
+        description: "run the smoke test on an emulator"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: svoi/go.mod
+          cache-dependency-path: svoi/go.sum
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: The program for the three phone processors (libthemesh.so)
+        working-directory: svoi/android
+        run: sh tools/build-core.sh
+
+      - name: Build the app, run the unit tests and the lint, build the smoke test
+        working-directory: svoi/android
+        run: ./gradlew --no-daemon assembleDebug testDebugUnitTest lintDebug assembleDebugAndroidTest
+
+      - name: What was built
+        run: |
+          ls -la svoi/android/app/build/outputs/apk/debug/ svoi/android/app/build/outputs/apk/androidTest/debug/
+          cp svoi/android/app/build/outputs/apk/debug/app-debug.apk TheMesh-0.1.0-android-debug.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: themesh-android-apk
+          path: TheMesh-0.1.0-android-debug.apk
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: themesh-android-reports
+          path: |
+            svoi/android/app/build/reports/**
+            svoi/android/app/build/test-results/**
+          if-no-files-found: ignore
+          retention-days: 7
+
+  emulator:
+    # The smoke test: the app starts, its program answers and proves it knows the app's token, the window shows the
+    # interface, the service runs in the foreground, "Выйти" stops the program.
+    needs: build
+    if: github.event_name != 'workflow_dispatch' || inputs.emulator
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: svoi/go.mod
+          cache-dependency-path: svoi/go.sum
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+      - name: Let the emulator use hardware acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: The program for the emulator (x86_64)
+        working-directory: svoi/android
+        run: sh tools/build-core.sh x86_64
+      - name: The smoke test on an Android 14 emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          emulator-boot-timeout: 600
+          working-directory: svoi/android
+          script: ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.waitSeconds=240
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: themesh-android-emulator-reports
+          path: |
+            svoi/android/app/build/reports/androidTests/**
+            svoi/android/app/build/outputs/androidTest-results/**
+          if-no-files-found: ignore
+          retention-days: 7
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/themesh-v')
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: themesh-android-apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: TheMesh-*-android-debug.apk

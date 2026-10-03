@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_autostart"
+        android:checkable="true"
+        android:title="@string/menu_autostart" />
+    <item
+        android:id="@+id/menu_battery"
+        android:checkable="true"
+        android:title="@string/menu_battery" />
+    <item
+        android:id="@+id/menu_log"
+        android:title="@string/menu_log" />
+    <item
+        android:id="@+id/menu_about"
+        android:title="@string/menu_about" />
+</menu>
