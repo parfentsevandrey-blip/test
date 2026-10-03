@@ -183,7 +183,33 @@ func New(node *mesh.Node, db *store.DB, blobs *blob.Store, emit func(Event)) (*M
 	if err != nil {
 		return nil, err
 	}
+	// Attachments are served only to the people a message was written to (and its
+	// author); knowing a hash is not enough.
+	blobs.SetAuthorizer(m.MayFetchBlob)
 	return m, nil
+}
+
+// MayFetchBlob reports whether peer is the author or a recipient of a message
+// that carries the attachment with this hash.
+func (m *Manager) MayFetchBlob(peer identity.ID, sha string) bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, r := range m.msgs {
+		for _, a := range r.Core.Attach {
+			if a.SHA256 != sha {
+				continue
+			}
+			if r.Core.From == peer {
+				return true
+			}
+			for _, to := range r.Core.To {
+				if to == peer {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func (m *Manager) fire(e Event) {

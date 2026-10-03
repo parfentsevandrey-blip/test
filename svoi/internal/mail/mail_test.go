@@ -298,18 +298,72 @@ func TestBlobFetchRejectsCorruptedContent(t *testing.T) {
 	ma, mb := newBox(t, a), newBox(t, b)
 	data := bytes.Repeat([]byte("genuine"), 1000)
 	sha := ma.upload(t, "x", data)
-	// Corrupt the stored blob on alpha: serving it must not poison beta's store.
+	// Corrupt the stored blob on alpha (same length): serving it must not poison beta's store.
 	if err := os.WriteFile(ma.blobs.Path(sha), bytes.Repeat([]byte("tamper!"), 1000), 0o600); err != nil {
 		t.Fatal(err)
 	}
+	// A message makes beta a legitimate recipient of the attachment.
+	id, err := ma.m.Send(SendInput{Kind: "mail", To: []identity.ID{b.ID()}, Subject: "x", Body: "x", Attach: []string{sha}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	meshtest.WaitFor(t, 10*time.Second, "the message arrives", func() bool { _, ok := mb.m.Get(id); return ok })
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	err := mb.blobs.Fetch(ctx, mb.node.Peer(a.ID()), sha, int64(len(data)), nil)
+	err = mb.blobs.Fetch(ctx, mb.node.Peer(a.ID()), sha, int64(len(data)), nil)
 	if err == nil {
 		t.Fatal("corrupted blob accepted")
 	}
 	if _, ok := mb.blobs.Has(sha); ok {
 		t.Fatal("corrupted blob was stored")
+	}
+}
+
+// Knowing a hash is not enough: attachments are served to the author and the
+// recipients of the message that carries them, and everybody else gets the same
+// "no such blob" as for a file that does not exist (so it cannot even be probed).
+func TestBlobsAreOnlyServedToTheParticipantsOfAMessage(t *testing.T) {
+	h := meshtest.New(t)
+	a := h.Public("alpha", "198.51.100.1")
+	b := h.Public("beta", "198.51.100.2")
+	c := h.Public("gamma", "198.51.100.3")
+	h.Mesh(a, b, c)
+	ma, mb, mc := newBox(t, a), newBox(t, b), newBox(t, c)
+
+	secret := bytes.Repeat([]byte("for beta only "), 500)
+	sha := ma.upload(t, "private.txt", secret)
+	id, err := ma.m.Send(SendInput{Kind: "mail", To: []identity.ID{b.ID()}, Subject: "private", Body: "x", Attach: []string{sha}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	meshtest.WaitFor(t, 15*time.Second, "beta has the attachment", func() bool {
+		msg, ok := mb.m.Get(id)
+		return ok && len(msg.Attachments) == 1 && msg.Attachments[0].State == AttReady
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	// A member that was not addressed cannot get it, from the author or from a recipient...
+	errFromAuthor := mc.blobs.Fetch(ctx, mc.node.Peer(a.ID()), sha, int64(len(secret)), nil)
+	errFromRecipient := mc.blobs.Fetch(ctx, mc.node.Peer(b.ID()), sha, int64(len(secret)), nil)
+	if errFromAuthor == nil || errFromRecipient == nil {
+		t.Fatalf("a member that was not addressed fetched the attachment (author: %v, recipient: %v)", errFromAuthor, errFromRecipient)
+	}
+	if _, ok := mc.blobs.Has(sha); ok {
+		t.Fatal("the attachment ended up in a stranger's store")
+	}
+	// ...and cannot tell it from a blob that does not exist at all.
+	errMissing := mc.blobs.Fetch(ctx, mc.node.Peer(a.ID()), strings.Repeat("cd", 32), 10, nil)
+	if errMissing == nil || errMissing.Error() != errFromAuthor.Error() {
+		t.Fatalf("existing and missing blobs are distinguishable: %v / %v", errFromAuthor, errMissing)
+	}
+	// The recipient still can (say it lost its copy), and so can the author's side.
+	mb.blobs.Remove(sha)
+	if err := mb.blobs.Fetch(ctx, mb.node.Peer(a.ID()), sha, int64(len(secret)), nil); err != nil {
+		t.Fatalf("the recipient was refused its own attachment: %v", err)
+	}
+	if !ma.m.MayFetchBlob(b.ID(), sha) || !ma.m.MayFetchBlob(a.ID(), sha) || ma.m.MayFetchBlob(c.ID(), sha) {
+		t.Fatal("MayFetchBlob disagrees with the message's participants")
 	}
 }
 

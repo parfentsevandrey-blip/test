@@ -50,7 +50,10 @@ func (s *selfState) init() {
 	s.observed = map[netip.AddrPort]*obsInfo{}
 }
 
-const observedTTL = 3 * time.Minute
+const (
+	observedTTL = 3 * time.Minute
+	maxObserved = 32 // addresses remembered at a time
+)
 
 // noteObserved records that peer `by` saw our packets coming from ap.
 func (c *Conn) noteObserved(ap netip.AddrPort, by identity.ID) {
@@ -58,18 +61,55 @@ func (c *Conn) noteObserved(ap netip.AddrPort, by identity.ID) {
 	if !usableCandidate(ap) {
 		return
 	}
-	now := time.Now()
 	s := &c.self
 	s.mu.Lock()
+	s.recordObservedLocked(ap, by, time.Now())
+	s.mu.Unlock()
+	c.refreshEndpoints()
+}
+
+// recordObservedLocked notes that `by` saw us at ap and keeps the table small: a
+// member that reports endless made-up addresses must not make it grow for ever.
+func (s *selfState) recordObservedLocked(ap netip.AddrPort, by identity.ID, now time.Time) {
 	o := s.observed[ap]
 	if o == nil {
+		if len(s.observed) >= maxObserved {
+			s.evictObservedLocked(now)
+		}
 		o = &obsInfo{reporters: map[identity.ID]time.Time{}}
 		s.observed[ap] = o
 	}
 	o.last = now
 	o.reporters[by] = now
-	s.mu.Unlock()
-	c.refreshEndpoints()
+}
+
+// evictObservedLocked drops what has gone stale and, if that is not enough, the
+// address vouched for by the fewest members (then the oldest): a real address
+// is seen by several peers, a made-up one by one.
+func (s *selfState) evictObservedLocked(now time.Time) {
+	for ap, o := range s.observed {
+		if now.Sub(o.last) > observedTTL {
+			delete(s.observed, ap)
+		}
+	}
+	for len(s.observed) >= maxObserved {
+		var victim netip.AddrPort
+		var vv int
+		var vl time.Time
+		first := true
+		for ap, o := range s.observed {
+			votes := 0
+			for _, t := range o.reporters {
+				if now.Sub(t) <= observedTTL {
+					votes++
+				}
+			}
+			if first || votes < vv || (votes == vv && o.last.Before(vl)) {
+				victim, vv, vl, first = ap, votes, o.last, false
+			}
+		}
+		delete(s.observed, victim)
+	}
 }
 
 // Endpoints returns our current reachable-at addresses, best first.

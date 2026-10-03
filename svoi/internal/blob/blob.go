@@ -16,6 +16,7 @@ import (
 	"sync"
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/diskfree"
+	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/mesh"
 )
 
@@ -35,6 +36,17 @@ type Store struct {
 	mu  sync.Mutex
 	// inflight prevents two goroutines fetching the same blob at once.
 	inflight map[string]chan struct{}
+	// mayServe, when set, decides whether a member may be sent a blob. Without it
+	// the hash alone would be the key to a file, and asking for one would reveal
+	// whether this device holds it.
+	mayServe func(peer identity.ID, sha string) bool
+}
+
+// SetAuthorizer limits who blob.get serves to whoever fn approves.
+func (s *Store) SetAuthorizer(fn func(peer identity.ID, sha string) bool) {
+	s.mu.Lock()
+	s.mayServe = fn
+	s.mu.Unlock()
 }
 
 // Open creates the store directory if needed.
@@ -122,6 +134,13 @@ func (s *Store) RegisterRPC(n *mesh.Node) {
 		}
 		if err := c.Decode(&a); err != nil {
 			return err
+		}
+		s.mu.Lock()
+		allowed := s.mayServe
+		s.mu.Unlock()
+		// The answer is the same for "not yours" and "not here": no existence oracle.
+		if allowed != nil && !allowed(c.Peer.ID, a.SHA) {
+			return mesh.Errf(mesh.CodeNotFound, "no such blob")
 		}
 		f, err := s.Open(a.SHA)
 		if err != nil {

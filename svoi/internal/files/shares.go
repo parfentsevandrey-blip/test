@@ -223,7 +223,7 @@ func (m *Manager) List(actor Actor, shareID, rel string) (*ListResult, error) {
 		return nil, mesh.Errf(mesh.CodeNotFound, "the shared folder is not available on that device")
 	}
 	defer root.Close()
-	f, err := root.Open(c)
+	f, err := root.OpenFile(c, os.O_RDONLY|oNonblock, 0)
 	if err != nil {
 		return nil, mapFSError(err)
 	}
@@ -235,8 +235,10 @@ func (m *Manager) List(actor Actor, shareID, rel string) (*ListResult, error) {
 	if !st.IsDir() {
 		return nil, mesh.Errf(mesh.CodeInvalid, "not a directory")
 	}
-	des, err := f.ReadDir(-1)
-	if err != nil {
+	// Never read more entries than we would return: one request for a folder
+	// with millions of files must not allocate them all.
+	des, err := f.ReadDir(maxListEntries + 1)
+	if err != nil && !errors.Is(err, io.EOF) {
 		return nil, mapFSError(err)
 	}
 	res := &ListResult{Path: "/", CanWrite: s.Mode == "rw"}
@@ -301,7 +303,7 @@ func (m *Manager) OpenRead(actor Actor, shareID, rel string) (*os.File, FileMeta
 		return nil, FileMeta{}, mesh.Errf(mesh.CodeNotFound, "the shared folder is not available on that device")
 	}
 	defer root.Close() // the file handle stays valid after the root is closed
-	f, err := root.Open(c)
+	f, err := root.OpenFile(c, os.O_RDONLY|oNonblock, 0)
 	if err != nil {
 		return nil, FileMeta{}, mapFSError(err)
 	}
@@ -313,6 +315,10 @@ func (m *Manager) OpenRead(actor Actor, shareID, rel string) (*os.File, FileMeta
 	if st.IsDir() {
 		f.Close()
 		return nil, FileMeta{}, mesh.Errf(mesh.CodeInvalid, "this is a folder, not a file")
+	}
+	if !st.Mode().IsRegular() { // a pipe, a socket, a device: never read those for strangers
+		f.Close()
+		return nil, FileMeta{}, mesh.Errf(mesh.CodeInvalid, "this is not a regular file")
 	}
 	return f, FileMeta{Name: path.Base(c), Size: st.Size(), MTime: st.ModTime().Unix(), Mime: MimeFor(path.Base(c))}, nil
 }

@@ -3,6 +3,8 @@ package mesh
 import (
 	"bytes"
 	"crypto/rand"
+	"net"
+	"net/netip"
 	"testing"
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
@@ -90,4 +92,63 @@ func TestBeaconRejectsDamage(t *testing.T) {
 	if _, _, ok := decodeBeacon(key, old); ok {
 		t.Fatal("an old-format beacon was accepted")
 	}
+}
+
+func TestOnLink(t *testing.T) {
+	_, home, _ := net.ParseCIDR("192.168.1.5/24")
+	home.IP = net.ParseIP("192.168.1.5") // an interface address keeps its host bits
+	_, lo, _ := net.ParseCIDR("127.0.0.1/8")
+	_, v6, _ := net.ParseCIDR("2001:db8::5/64")
+	addrs := []net.Addr{home, lo, v6, &net.UnixAddr{Name: "x"}}
+	for ip, want := range map[string]bool{
+		"192.168.1.77":       true,
+		"192.168.2.77":       false,
+		"8.8.8.8":            false, // a routed or spoofed source
+		"127.0.0.1":          true,  // several nodes on one machine
+		"::ffff:192.168.1.9": true,  // the same address in its IPv6 spelling
+		"10.0.0.1":           false,
+	} {
+		if got := onLink(netip.MustParseAddr(ip), addrs); got != want {
+			t.Errorf("onLink(%s) = %v, want %v", ip, got, want)
+		}
+	}
+	if onLink(netip.MustParseAddr("192.168.1.9"), nil) {
+		t.Error("with no interfaces nothing is on-link")
+	}
+}
+
+// Against the real interfaces of this machine: its own addresses are on-link,
+// and a far-away public address is not.
+func TestOnLinkWithRealInterfaces(t *testing.T) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		t.Skip(err)
+	}
+	checked := 0
+	for _, a := range addrs {
+		ipn, ok := a.(*net.IPNet)
+		if !ok || ipn.IP.To4() == nil {
+			continue
+		}
+		ip, _ := netip.AddrFromSlice(ipn.IP)
+		if !fromLocalNetwork(ip.Unmap()) {
+			t.Errorf("the interface's own address %v is not on-link", ip.Unmap())
+		}
+		checked++
+	}
+	if checked == 0 {
+		t.Skip("no IPv4 interface addresses here")
+	}
+	if fromLocalNetwork(netip.MustParseAddr("203.0.113.200")) && !hasNet(addrs, "203.0.113.") {
+		t.Error("an address on no local network is on-link")
+	}
+}
+
+func hasNet(addrs []net.Addr, prefix string) bool {
+	for _, a := range addrs {
+		if ipn, ok := a.(*net.IPNet); ok && len(ipn.IP.String()) >= len(prefix) && ipn.IP.String()[:len(prefix)] == prefix {
+			return true
+		}
+	}
+	return false
 }

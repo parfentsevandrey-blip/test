@@ -178,7 +178,7 @@ type Node struct {
 	subID int
 
 	kickDial   chan struct{}
-	joinGate   tokenGate
+	joinLimit  *joinLimiter
 	joinActive atomic.Int32
 
 	// relayOn is whether we forward traffic for other members; it can change
@@ -214,7 +214,7 @@ func Open(cfg Config) (*Node, error) {
 		helloProviders: map[string]func() any{},
 		subs:           map[int]chan Event{},
 		kickDial:       make(chan struct{}, 1),
-		joinGate:       newTokenGate(3, 6),
+		joinLimit:      newJoinLimiter(),
 	}
 	n.registerCoreHandlers()
 	if err := n.loadState(); err != nil {
@@ -577,7 +577,11 @@ func (n *Node) serverTLS() *tls.Config {
 		GetConfigForClient: func(chi *tls.ClientHelloInfo) (*tls.Config, error) {
 			for _, p := range chi.SupportedProtos {
 				if p == ALPNJoin {
-					if !n.joinOpen() || !n.joinGate.allow() {
+					var from netip.Addr
+					if chi.Conn != nil {
+						from = remoteAddr(chi.Conn.RemoteAddr())
+					}
+					if !n.joinOpen() || !n.joinLimit.allow(from) {
 						return nil, errors.New("not accepting new devices")
 					}
 					return join, nil

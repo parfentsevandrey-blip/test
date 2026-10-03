@@ -341,31 +341,41 @@ func (m *Manager) onDatagram(p *mesh.Peer, data []byte) {
 type hostEntry struct{ ip, name string }
 
 const (
-	hostsPath  = "/etc/hosts"
 	hostsBegin = "# BEGIN svoi"
 	hostsEnd   = "# END svoi"
 )
 
-// writeHosts replaces the svoi block of /etc/hosts (nil removes it).
+// hostsPath is a variable only so tests can point it elsewhere.
+var hostsPath = "/etc/hosts"
+
+// writeHosts replaces the svoi block of /etc/hosts (nil removes it). Everything
+// outside the block stays byte for byte as it was, and when there is nothing to
+// change the file is not written at all (not even to tidy it up).
 func writeHosts(entries []hostEntry) error {
 	raw, err := os.ReadFile(hostsPath)
 	if err != nil {
 		return err
 	}
-	var kept []string
-	skipping := false
-	for _, line := range strings.Split(string(raw), "\n") {
-		switch {
-		case strings.TrimSpace(line) == hostsBegin:
-			skipping = true
-		case strings.TrimSpace(line) == hostsEnd:
+	var kept []string // lines outside our block, each with its line ending
+	hadBlock, skipping := false, false
+	for _, line := range strings.SplitAfter(string(raw), "\n") {
+		switch trimmed := strings.TrimSpace(line); {
+		case trimmed == hostsBegin:
+			hadBlock, skipping = true, true
+		case trimmed == hostsEnd:
 			skipping = false
-		case !skipping:
+		case !skipping && line != "":
 			kept = append(kept, line)
 		}
 	}
-	text := strings.TrimRight(strings.Join(kept, "\n"), "\n") + "\n"
+	if len(entries) == 0 && !hadBlock {
+		return nil // never ours, never touched
+	}
+	text := strings.Join(kept, "")
 	if len(entries) > 0 {
+		if text != "" && !strings.HasSuffix(text, "\n") {
+			text += "\n"
+		}
 		sort.Slice(entries, func(i, j int) bool { return entries[i].name+entries[i].ip < entries[j].name+entries[j].ip })
 		var b strings.Builder
 		b.WriteString(hostsBegin + "\n")

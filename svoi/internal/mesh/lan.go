@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/netip"
 	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
@@ -212,10 +213,55 @@ func isClosedErr(err error) bool {
 	return false
 }
 
+// onLink reports whether ip lies inside a network one of addrs is attached to.
+// A beacon is a local-network affair: one that claims to come from anywhere else
+// (a spoofed source, a routed packet) is not allowed to make us probe that address.
+func onLink(ip netip.Addr, addrs []net.Addr) bool {
+	ip = ip.Unmap()
+	for _, a := range addrs {
+		ipn, ok := a.(*net.IPNet)
+		if !ok {
+			continue
+		}
+		base, ok := netip.AddrFromSlice(ipn.IP)
+		if !ok {
+			continue
+		}
+		ones, bits := ipn.Mask.Size()
+		if bits == 0 {
+			continue
+		}
+		if bits == 32 && base.Is4In6() {
+			base = base.Unmap()
+		}
+		if netip.PrefixFrom(base.Unmap(), ones).Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+// localNetworks is the cached list of addresses of this machine's interfaces.
+var localNetworks struct {
+	mu    sync.Mutex
+	at    time.Time
+	addrs []net.Addr
+}
+
+func fromLocalNetwork(ip netip.Addr) bool {
+	localNetworks.mu.Lock()
+	defer localNetworks.mu.Unlock()
+	if time.Since(localNetworks.at) > 2*time.Second {
+		localNetworks.addrs, _ = net.InterfaceAddrs()
+		localNetworks.at = time.Now()
+	}
+	return onLink(ip, localNetworks.addrs)
+}
+
 // lanHeard handles one received beacon.
 func (n *Node) lanHeard(b []byte, from netip.AddrPort) {
 	root := n.Root()
-	if root == nil {
+	if root == nil || !fromLocalNetwork(from.Addr()) {
 		return
 	}
 	id, port, ok := decodeBeacon(root.LANKey(), b)
