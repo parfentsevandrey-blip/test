@@ -466,13 +466,20 @@ func (n *Node) startMember() error {
 func (n *Node) openMagic(port int, listen func(int) (net.PacketConn, error)) (*magic.Conn, error) {
 	n.relayOn.Store(!n.cfg.NoRelay)
 	return magic.New(magic.Config{
-		Device:          n.device(),
-		Port:            port,
-		Listen:          listen,
-		LocalAddrs:      n.cfg.LocalAddrs,
-		STUN:            n.cfg.STUN,
-		PortMap:         n.cfg.PortMap,
-		SelfCert:        func() []byte { n.mu.RLock(); defer n.mu.RUnlock(); return n.self.CertDER },
+		Device:     n.device(),
+		Port:       port,
+		Listen:     listen,
+		LocalAddrs: n.cfg.LocalAddrs,
+		STUN:       n.cfg.STUN,
+		PortMap:    n.cfg.PortMap,
+		SelfCert: func() []byte {
+			n.mu.RLock()
+			defer n.mu.RUnlock()
+			if n.self == nil { // the device left the mesh while a packet was being built
+				return nil
+			}
+			return n.self.CertDER
+		},
 		AcceptUnknown:   n.acceptUnknown,
 		AllowRelay:      n.relayOn.Load,
 		OnPath:          n.onPath,
@@ -986,6 +993,10 @@ func (n *Node) PeerByIP(a netip.Addr) *Peer {
 // (nil for ourselves or a revoked device).
 func (n *Node) learnMember(m *identity.Member) *Peer {
 	n.mu.Lock()
+	if n.root == nil { // a handler that started before Leave must not bring a member back into a mesh this device left
+		n.mu.Unlock()
+		return nil
+	}
 	if _, rev := n.revoked[m.ID]; rev {
 		n.mu.Unlock()
 		return nil
@@ -1188,6 +1199,10 @@ func (n *Node) Reissue(id identity.ID, name string, admin bool) error {
 		existing = append(existing, n.self)
 	}
 	var owner string
+	if n.self == nil { // not in a mesh (any more)
+		n.mu.RUnlock()
+		return ErrNotConfigured
+	}
 	if id == n.device().ID {
 		owner = n.self.Owner
 	} else if p := n.peers[id]; p != nil {

@@ -100,17 +100,24 @@ type endpointHint struct {
 
 func (n *Node) buildSync(to *Peer) syncMsg {
 	msg := syncMsg{Hello: n.buildHello()}
-	n.mu.RLock()
-	msg.Certs = append(msg.Certs, n.self.CertDER)
-	for _, rv := range n.revoked {
-		msg.Revoked = append(msg.Revoked, rv)
-	}
-	peers := make([]*Peer, 0, len(n.peers))
-	for _, p := range n.peers {
-		peers = append(peers, p)
-	}
-	mg := n.magic
-	n.mu.RUnlock()
+	var peers []*Peer
+	var mg *magic.Conn
+	func() {
+		// (deferred: a panic here must never leave the node's lock taken — the RPC layer swallows it)
+		n.mu.RLock()
+		defer n.mu.RUnlock()
+		if n.self != nil { // a device that has just left the mesh has nothing to vouch for
+			msg.Certs = append(msg.Certs, n.self.CertDER)
+		}
+		for _, rv := range n.revoked {
+			msg.Revoked = append(msg.Revoked, rv)
+		}
+		peers = make([]*Peer, 0, len(n.peers))
+		for _, p := range n.peers {
+			peers = append(peers, p)
+		}
+		mg = n.magic
+	}()
 	for _, p := range peers {
 		msg.Certs = append(msg.Certs, p.Member().CertDER)
 		if p == to || mg == nil {
@@ -235,6 +242,9 @@ func (n *Node) registerCoreHandlers() {
 		var req syncMsg
 		if err := c.Decode(&req); err != nil {
 			return nil, err
+		}
+		if !n.Configured() { // left the mesh while the request was on its way
+			return nil, ErrNotConfigured
 		}
 		n.applySync(c.Peer, req)
 		return n.buildSync(c.Peer), nil
