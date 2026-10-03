@@ -236,3 +236,67 @@ coreTest('if the core dies by itself the shell is told', async () => {
     fs.rmSync(s.dir, { recursive: true, force: true });
   }
 });
+
+// ---- the window's way of loading the interface (Electron itself is replaced by a stand-in) ----
+
+function loadWindowModule() {
+  const M = require('node:module');
+  const original = M._load;
+  const fake = { BrowserWindow: class {}, Menu: {}, Notification: class {}, app: { isPackaged: true, getPath: () => os.tmpdir() }, clipboard: {}, nativeTheme: {}, screen: { getAllDisplays: () => [] }, session: {}, shell: {} };
+  M._load = function (request, parent, isMain) {
+    return request === 'electron' ? fake : original.call(this, request, parent, isMain);
+  };
+  try {
+    delete require.cache[require.resolve('../src/window.js')];
+    return require('../src/window.js');
+  } finally {
+    M._load = original;
+  }
+}
+
+function windowWith(loadURL, links) {
+  const { MainWindow } = loadWindowModule();
+  const mw = new MainWindow({ t: {}, core: { loginURL: async () => `http://127.0.0.1:1/?t=${++links.n}` }, settings: {}, root: '', locale: 'en' });
+  mw.win = { webContents: { session: { clearStorageData: async () => {} } }, loadURL };
+  return mw;
+}
+
+test('the interface is not asked for while the start-up page is loading; an aborted navigation is tried again with a fresh link', async () => {
+  const events = [];
+  const links = { n: 0 };
+  let attempts = 0;
+  const mw = windowWith(async (url) => {
+    events.push('load ' + url);
+    if (++attempts === 1) throw new Error("ERR_ABORTED (-3) loading 'file:///splash.html'");
+  }, links);
+  let splashDone;
+  mw.pageLoading = new Promise((r) => (splashDone = r)).then(() => events.push('splash done'));
+  const done = mw.loadUI();
+  await sleep(60);
+  assert.deepEqual(events, [], 'nothing is loaded while the start-up page is');
+  splashDone();
+  await done;
+  assert.deepEqual(events, ['splash done', 'load http://127.0.0.1:1/?t=1', 'load http://127.0.0.1:1/?t=2']);
+});
+
+test('a real failure to load the interface is reported, not retried', async () => {
+  const links = { n: 0 };
+  let attempts = 0;
+  const mw = windowWith(async () => {
+    attempts++;
+    throw new Error('ERR_CONNECTION_REFUSED (-102)');
+  }, links);
+  await assert.rejects(mw.loadUI(), /ERR_CONNECTION_REFUSED/);
+  assert.equal(attempts, 1);
+});
+
+test('an interrupted navigation is retried only a couple of times', async () => {
+  const links = { n: 0 };
+  let attempts = 0;
+  const mw = windowWith(async () => {
+    attempts++;
+    throw new Error('ERR_ABORTED (-3)');
+  }, links);
+  await assert.rejects(mw.loadUI(), /ERR_ABORTED/);
+  assert.equal(attempts, 3);
+});

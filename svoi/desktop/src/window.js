@@ -203,8 +203,9 @@ class MainWindow {
   }
 
   page(name, query = {}) {
-    if (!this.win) return;
-    this.win.loadFile(path.join(this.root, 'src', name), { query: { lang: this.locale, ...query } }).catch((e) => log.warn('window: cannot load', name, e.message));
+    if (!this.win) return Promise.resolve();
+    this.pageLoading = this.win.loadFile(path.join(this.root, 'src', name), { query: { lang: this.locale, ...query } }).catch((e) => log.warn('window: cannot load', name, e.message));
+    return this.pageLoading;
   }
 
   showSplash() {
@@ -217,11 +218,24 @@ class MainWindow {
 
   /** Sign in with a fresh one-time link and show the interface. */
   async loadUI(route = '') {
-    const url = await this.core.loginURL();
-    if (!this.win) return;
-    // (a worker left over from an older version of this app could still be there: forget it)
-    await this.win.webContents.session.clearStorageData({ storages: ['serviceworkers', 'cachestorage'] }).catch(() => {});
-    await this.win.loadURL(url);
+    for (let attempt = 0; ; attempt++) {
+      const url = await this.core.loginURL();
+      if (!this.win) return;
+      // (a worker left over from an older version of this app could still be there: forget it)
+      await this.win.webContents.session.clearStorageData({ storages: ['serviceworkers', 'cachestorage'] }).catch(() => {});
+      // The start-up page may still be loading (slow disk, a node that answered at once): Electron fails the
+      // new navigation with the old one's "aborted" error, and the window would end on the error page.
+      await this.pageLoading;
+      try {
+        await this.win.loadURL(url);
+        break;
+      } catch (e) {
+        // ERR_ABORTED (-3): another navigation took over; try again with a fresh one-time link
+        if (attempt >= 2 || !/ERR_ABORTED|\(-3\)/.test(String((e && e.message) || e))) throw e;
+        log.warn('window: the page load was interrupted, trying again');
+        await new Promise((r) => setTimeout(r, 200));
+      }
+    }
     if (route) this.goto(route);
   }
 
