@@ -36,6 +36,29 @@ android {
         }
     }
 
+    // Подпись своим ключом. Без него `assembleDebug` подписывает APK отладочным ключом, который у каждого компьютера (и у
+    // каждого прогона CI) свой: Android не ставит такую сборку поверх прежней, пока ту не удалят (а с ней — ключи устройства).
+    // Ключ и пароли берутся только из окружения, в репозитории их нет: THEMESH_KEYSTORE (путь к файлу .jks или .p12),
+    // THEMESH_KEYSTORE_PASSWORD, THEMESH_KEY_ALIAS, THEMESH_KEY_PASSWORD. С ними `assembleRelease` даёт подписанный APK.
+    signingConfigs {
+        own {
+            def path = System.getenv('THEMESH_KEYSTORE')
+            if (path) {
+                storeFile file(path)
+                storePassword System.getenv('THEMESH_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('THEMESH_KEY_ALIAS')
+                keyPassword System.getenv('THEMESH_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (System.getenv('THEMESH_KEYSTORE')) {
+                signingConfig signingConfigs.own
+            }
+        }
+    }
+
     lint {
         abortOnError true
     }

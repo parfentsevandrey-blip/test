@@ -114,6 +114,25 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 Пример для CI (не проверялся здесь): шаг сборки ядра `sh android/tools/build-core.sh`, затем
 `reactivecircus/android-emulator-runner` (API 34, `x86_64`) с командой `cd android && ./gradlew connectedDebugAndroidTest`.
 
+### Подпись своим ключом
+
+`assembleDebug` подписывает APK отладочным ключом `~/.android/debug.keystore`, который у каждого компьютера и у каждого прогона CI
+свой: Android не ставит такую сборку поверх прежней («конфликт подписей»), пока ту не удалят, а вместе с ней пропадают ключи
+устройства. Чтобы обновления ставились поверх, подписывайте сборки одним и тем же своим ключом:
+
+```sh
+keytool -genkeypair -keystore themesh.jks -alias themesh -keyalg RSA -keysize 2048 -validity 36500 -dname "CN=The Mesh"
+THEMESH_KEYSTORE=$PWD/themesh.jks THEMESH_KEYSTORE_PASSWORD=… THEMESH_KEY_ALIAS=themesh THEMESH_KEY_PASSWORD=… \
+  ./gradlew assembleRelease            # → app/build/outputs/apk/release/app-release.apk (подписан этим ключом)
+```
+
+В GitHub Actions: Settings → Secrets and variables → Actions → New repository secret: `ANDROID_KEYSTORE_BASE64` (вывод
+`base64 -w0 themesh.jks`), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`. При следующем прогоне
+«The Mesh Android» в артефакте `themesh-android-apk` появится ещё и подписанный `TheMesh-0.1.0-android.apk`. Файл ключа и
+пароли не кладите в репозиторий и не теряйте: обновление ставится только поверх сборки, подписанной тем же ключом.
+Проверялось здесь: `assembleRelease` без ключа (APK не подписан) и с временным ключом (`apksigner verify` проходит); шаг в
+Actions с секретами ещё не запускался.
+
 ## Что где лежит
 
 ```
