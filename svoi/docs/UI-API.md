@@ -25,9 +25,17 @@ and the UI mock server (`web-dev/mock-server.mjs`) must implement exactly this t
   API calls without a valid session get `401 {"error":{"code":"unauthorized",…}}` — the UI then shows a
   full-screen "Session expired — run `svoi open` and open the new link" page (a refresh does not help;
   the old link is used up).
-  State-changing requests (anything but GET/HEAD) must send header `X-Svoi: 1`.
+  The link the node hands to a browser **started on the same machine** (`svoi open`, the browser
+  `svoi up` launches) passes through a command line, where other users of the machine can read it; such
+  a link is tied to the user who asked for it (Linux: the owner of the client socket, from
+  `/proc/net/tcp`). Opening it as another user gives `403` (plain text, the code is *not* used up);
+  the UI will not normally see this page. A link printed for copying (`svoi url`) is not tied to anyone.
+  State-changing requests (anything but GET/HEAD) must send header `X-Svoi: 1`; only a request that
+  carries the real master token is exempt (any other `Authorization` header does not turn the check off).
+  The event stream (below) ends when the session does.
   Auth endpoints (all but `logout` are for the command line, the UI never calls them):
-  `POST /api/login/code` (Bearer only) → `{"code","url","expiresIn":600,"singleUse":true,"sessionTtl"}`;
+  `POST /api/login/code` (Bearer only; optional body `{"local": true}` = for a browser on this machine, tied to
+  the asking user) → `{"code","url","expiresIn":600,"singleUse":true,"sessionTtl","bound":false}`;
   `POST /api/logout` ends this browser's session (the UI may offer "Sign out"; `?all=1` — Bearer only —
   ends every session and cancels unused links, it is `svoi signout`);
   `GET /api/handshake?n=<16–128 chars>` (no auth) → `{"proof": hex(HMAC-SHA256(token, "svoi-handshake/v1\0"+n))}` —
@@ -58,7 +66,8 @@ and the UI mock server (`web-dev/mock-server.mjs`) must implement exactly this t
 ## Live updates — Server-Sent Events
 
 `GET /api/events` → `text/event-stream`. Each message is `event: <type>` + `data: <json>`.
-The UI keeps one `EventSource`; on (re)connect it first calls `GET /api/state`.
+The UI keeps one `EventSource`; on (re)connect it first calls `GET /api/state`. After a sign-out (or when
+the session ends) the node closes the stream; the reconnect then gets `401`.
 A browser tab that is hidden may drop the connection; that is fine.
 
 | event       | data                                                                                   |
