@@ -31,6 +31,89 @@ jobs:
           mkdir -p probe
           go build -o probe/svoi.exe ./cmd/svoi
           ls -la probe
+      - name: raw UDP between two sockets of one machine
+        run: |
+          mkdir -p "$RUNNER_TEMP/udpcheck" && cd "$RUNNER_TEMP/udpcheck"
+          cat > main.go <<'GO'
+          package main
+
+          import (
+          	"fmt"
+          	"net"
+          	"time"
+          )
+
+          func localIPv4s() []string {
+          	var out []string
+          	ifs, _ := net.Interfaces()
+          	for _, ifc := range ifs {
+          		addrs, _ := ifc.Addrs()
+          		for _, a := range addrs {
+          			if ipn, ok := a.(*net.IPNet); ok && ipn.IP.To4() != nil {
+          				out = append(out, ipn.IP.String())
+          			}
+          		}
+          	}
+          	return out
+          }
+
+          func try(network string, hosts []string) {
+          	a, err := net.ListenPacket(network, ":0")
+          	if err != nil {
+          		fmt.Println(network, "listen A:", err)
+          		return
+          	}
+          	defer a.Close()
+          	b, err := net.ListenPacket(network, ":0")
+          	if err != nil {
+          		fmt.Println(network, "listen B:", err)
+          		return
+          	}
+          	defer b.Close()
+          	pa := a.LocalAddr().(*net.UDPAddr).Port
+          	fmt.Printf("%s: A=%v B=%v\n", network, a.LocalAddr(), b.LocalAddr())
+          	for _, h := range hosts {
+          		dst := &net.UDPAddr{IP: net.ParseIP(h), Port: pa}
+          		_, werr := b.WriteTo([]byte("ping"), dst)
+          		_ = a.SetReadDeadline(time.Now().Add(1500 * time.Millisecond))
+          		buf := make([]byte, 100)
+          		n, from, rerr := a.ReadFrom(buf)
+          		fmt.Printf("  B -> %s: write err=%v; A read n=%d from=%v err=%v\n", dst, werr, n, from, rerr)
+          		if rerr == nil {
+          			_, werr = a.WriteTo([]byte("pong"), from)
+          			_ = b.SetReadDeadline(time.Now().Add(1500 * time.Millisecond))
+          			n, from2, rerr := b.ReadFrom(buf)
+          			fmt.Printf("     A -> %v: write err=%v; B read n=%d from=%v err=%v\n", from, werr, n, from2, rerr)
+          		}
+          	}
+          }
+
+          func main() {
+          	hosts := append([]string{"127.0.0.1"}, localIPv4s()...)
+          	fmt.Println("addresses:", hosts)
+          	for _, n := range []string{"udp", "udp4"} {
+          		try(n, hosts)
+          	}
+          	a, err := net.ListenPacket("udp", ":41999")
+          	fmt.Println("first bind of :41999:", err)
+          	b, err := net.ListenPacket("udp", ":41999")
+          	fmt.Println("second bind of :41999 (another socket, same port):", err)
+          	if a != nil {
+          		a.Close()
+          	}
+          	if b != nil {
+          		b.Close()
+          	}
+          }
+          GO
+          go mod init udpcheck > /dev/null 2>&1
+          go run .
+      - name: the real-socket tests of the program, with the program's own log
+        env:
+          SVOI_TEST_DEBUG: "1"
+        run: |
+          go test ./internal/magic -run TestAnonymousTrafficOverRealSockets -count=1 -v 2>&1 | tail -40
+          go test ./internal/mesh -run TestJoinOverRealSockets -count=1 -v 2>&1 | tail -120
       - name: two nodes on one machine - join through the API of a running node (what the app test does)
         run: |
           set +e
@@ -63,12 +146,10 @@ jobs:
           "$BIN" init --dir "$A" --mesh Home --name alpha --owner t
           "$BIN" up --no-browser --no-stun --no-portmap --loopback --debug --ui 127.0.0.1:0 --dir "$A" > "$P/a.log" 2>&1 &
           for i in $(seq 1 40); do [ -f "$A/ui.addr" ] && break; sleep 0.5; done
-          CODE=$("$BIN" invite --dir "$A" --ttl 5m | grep -o 'SVOI1-[A-Z0-9-]*')
+          CODE=$("$BIN" invite --dir "$A" --ttl 5m | grep -o 'SVOI1-[A-Z0-9-]*' | head -1)
           echo "code: ${CODE:0:40}..."
           "$BIN" join "$CODE" --dir "$B" --name beta; echo "join exit code: $?"
           sleep 2
           echo "=== alpha log"; tail -60 "$P/a.log"
           taskkill //F //IM svoi.exe > /dev/null 2>&1
           exit 0
-      - name: the Go tests of the internals on this machine (no process-control tests)
-        run: go test ./internal/... -count=1 -timeout 15m 2>&1 | tail -150
