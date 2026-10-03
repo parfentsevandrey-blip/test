@@ -169,7 +169,8 @@ jobs:
           exe=$(dpkg -L svoi-desktop | grep -E '/Svoi$' | head -1)
           test -x "$exe" || { dpkg -L svoi-desktop | head -30; echo "no installed executable"; exit 1; }
           echo "installed at $exe"
-          test -f /usr/share/applications/*.desktop && echo "menu entry: $(ls /usr/share/applications/*.desktop | head -1)"
+          entry=$(dpkg -L svoi-desktop | grep -E '\.desktop$' | head -1)
+          test -n "$entry" && echo "menu entry: $entry" || { echo "no menu entry"; exit 1; }
           unset SVOI_CORE
           SVOI_APP_EXE="$exe" xvfb-run -a -s "-screen 0 1280x900x24" node test/smoke.mjs
 
@@ -177,11 +178,11 @@ jobs:
         if: runner.os == 'Linux'
         working-directory: svoi/desktop
         shell: bash
-        env:
-          APPIMAGE_EXTRACT_AND_RUN: "1" # (the runner has no FUSE)
         run: |
+          # an AppImage is mounted through FUSE (Ubuntu 22.04 and later do not ship the library it needs)
+          sudo apt-get install -y -qq libfuse2t64 >/dev/null 2>&1 || sudo apt-get install -y -qq libfuse2 >/dev/null 2>&1 || true
           appimage=$(ls "$PWD"/dist/*.AppImage | head -1)
-          echo "running $appimage"
+          echo "running $appimage (FUSE: $(test -e /dev/fuse && echo yes || echo no))"
           unset SVOI_CORE
           SVOI_APP_EXE="$appimage" xvfb-run -a -s "-screen 0 1280x900x24" node test/smoke.mjs
 
