@@ -103,6 +103,49 @@ jobs:
           docker logs tm | tail -5
           test "$code" = 0
 
+  systemd:
+    # The service of the headless variant (deploy/themesh.service) on a machine that runs systemd, installed the way the README
+    # says: it starts, answers, hands out a sign-in link, comes back after being killed, and ends cleanly when stopped.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: svoi/go.mod
+          cache-dependency-path: svoi/go.sum
+      - name: Install it as a service
+        run: |
+          go build -trimpath -ldflags "-s -w" -o themesh ./cmd/themesh
+          sudo useradd --system --home-dir /var/lib/themesh --no-create-home --shell /usr/sbin/nologin themesh
+          sudo install -d -o themesh -g themesh -m 700 /var/lib/themesh
+          sudo install -m755 themesh /usr/local/bin/themesh
+          sudo install -m644 deploy/themesh.service /etc/systemd/system/
+          sudo systemd-analyze verify /etc/systemd/system/themesh.service
+          sudo systemctl daemon-reload
+          sudo -u themesh themesh init --mesh Home --name nas --owner ci --dir /var/lib/themesh
+          sudo systemctl enable --now themesh
+      - name: It runs and answers, a killed one comes back, a stopped one ends cleanly
+        run: |
+          up() { for i in $(seq 1 40); do sudo -u themesh themesh status --dir /var/lib/themesh > status.txt 2>&1 && return 0; sleep 1; done; return 1; }
+          up || { cat status.txt; sudo journalctl -u themesh --no-pager | tail -30; exit 1; }
+          cat status.txt
+          systemctl is-active themesh
+          sudo -u themesh themesh url --dir /var/lib/themesh | tee url.txt
+          grep -Eq '^http://127\.0\.0\.1:8777/\?t=[0-9a-f]+$' url.txt
+          old=$(systemctl show -p MainPID --value themesh)
+          sudo kill -9 "$old"
+          new=0
+          for i in $(seq 1 30); do new=$(systemctl show -p MainPID --value themesh); if [ "$new" != 0 ] && [ "$new" != "$old" ]; then break; fi; sleep 1; done
+          echo "killed process $old, the service now runs process $new"
+          test "$new" != 0 && test "$new" != "$old"
+          up || { sudo journalctl -u themesh --no-pager | tail -30; exit 1; }
+          sudo systemctl stop themesh
+          state=$(systemctl is-active themesh || true)
+          echo "after stop: $state"
+          test "$state" = inactive
+          sudo journalctl -u themesh --no-pager | tail -12
+
   lab:
     # Real NAT behaviour: cone / symmetric NATs and firewalls built from network
     # namespaces + iptables/conntrack. Needs privileges, so run it on demand.
