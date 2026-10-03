@@ -307,6 +307,7 @@ func (a *App) SaveShare(id string, in files.Share) (ShareView, error) {
 		return ShareView{}, err
 	}
 	a.hub.Publish("shares", a.Shares())
+	a.notifyPeers()
 	return ShareView{Share: saved, Exists: true}, nil
 }
 
@@ -323,6 +324,7 @@ func (a *App) DeleteShare(id string) error {
 	})
 	if err == nil {
 		a.hub.Publish("shares", a.Shares())
+		a.notifyPeers()
 	}
 	return err
 }
@@ -370,12 +372,15 @@ func (a *App) SaveService(id string, in services.Service) (services.Service, err
 		}
 		return mesh.Errf(mesh.CodeNotFound, "no such service")
 	})
+	if err == nil {
+		a.notifyPeers()
+	}
 	return saved, err
 }
 
 // DeleteService stops publishing a service.
 func (a *App) DeleteService(id string) error {
-	return a.cfg.Update(func(c *Config) error {
+	err := a.cfg.Update(func(c *Config) error {
 		for i := range c.Services {
 			if c.Services[i].ID == id {
 				c.Services = append(c.Services[:i], c.Services[i+1:]...)
@@ -384,6 +389,10 @@ func (a *App) DeleteService(id string) error {
 		}
 		return mesh.Errf(mesh.CodeNotFound, "no such service")
 	})
+	if err == nil {
+		a.notifyPeers()
+	}
+	return err
 }
 
 // RemoteServices lists the services a device offers us.

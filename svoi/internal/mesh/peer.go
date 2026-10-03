@@ -279,9 +279,10 @@ type RelayedInfo struct {
 func (n *Node) Self() SelfInfo {
 	n.mu.RLock()
 	defer n.mu.RUnlock()
+	hos, harch := n.platform()
 	info := SelfInfo{
 		ID: n.dev.ID.String(), Short: n.dev.ID.Short(),
-		Version: Version, OS: osName(), Arch: archName(),
+		Version: Version, OS: hos, Arch: harch,
 		Configured: n.root != nil,
 	}
 	if n.root == nil {

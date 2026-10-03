@@ -94,3 +94,26 @@ func (e *extrasCache) run(ctx context.Context) {
 		}
 	}
 }
+
+// notifyPeers tells every online peer that what this device offers changed
+// (shared folders, published services) so their device lists update at once.
+func (a *App) notifyPeers() {
+	for _, p := range a.node.Peers() {
+		if !p.Online() {
+			continue
+		}
+		go func(p *mesh.Peer) {
+			ctx, cancel := context.WithTimeout(a.ctx, 8*time.Second)
+			defer cancel()
+			_ = p.Call(ctx, "app.changed", nil, nil)
+		}(p)
+	}
+}
+
+// registerExtrasRPC lets peers tell us that their offerings changed.
+func (a *App) registerExtrasRPC() {
+	a.node.Handle("app.changed", func(ctx context.Context, c *mesh.Call) (any, error) {
+		go a.extra.refresh(a.ctx, c.Peer)
+		return map[string]bool{"ok": true}, nil
+	})
+}

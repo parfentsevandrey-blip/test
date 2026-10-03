@@ -149,6 +149,7 @@ func Open(opts Options) (*App, error) {
 	a.svc.RegisterRPC()
 	a.fwd = services.NewForwarder(a.svc, a.forwardsChanged)
 	a.extra = newExtrasCache(a)
+	a.registerExtrasRPC()
 	a.tun = tun.New(a.node, "", c.TUN.ManageHosts)
 
 	a.start()

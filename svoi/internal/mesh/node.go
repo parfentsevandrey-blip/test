@@ -71,6 +71,9 @@ type Config struct {
 	NoRelay bool
 	Logger  *slog.Logger
 
+	// Platform overrides the reported "os/arch" (used by the demo to show a
+	// phone and a NAS in one process).
+	Platform string
 	// Loopback adds 127.0.0.1 to the advertised addresses: for running several
 	// nodes on one machine (demos, tests).
 	Loopback bool

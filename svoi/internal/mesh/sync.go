@@ -15,6 +15,19 @@ import (
 func osName() string   { return runtime.GOOS }
 func archName() string { return runtime.GOARCH }
 
+// platform returns the (os, arch) this node reports.
+func (n *Node) platform() (string, string) {
+	if p := n.cfg.Platform; p != "" {
+		for i := 0; i < len(p); i++ {
+			if p[i] == '/' {
+				return p[:i], p[i+1:]
+			}
+		}
+		return p, ""
+	}
+	return osName(), archName()
+}
+
 // AddHelloProvider lets an application publish a small piece of state in the
 // hello message other devices see (for example the list of exposed services).
 func (n *Node) AddHelloProvider(key string, f func() any) {
@@ -29,9 +42,10 @@ func (n *Node) buildHello() Hello {
 	started := n.started
 	mg := n.magic
 	n.mu.RUnlock()
+	hos, harch := n.platform()
 	h := Hello{
-		OS:      osName(),
-		Arch:    archName(),
+		OS:      hos,
+		Arch:    harch,
 		Version: Version,
 		Proto:   1,
 		Started: started.Unix(),
