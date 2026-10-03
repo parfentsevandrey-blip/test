@@ -171,6 +171,26 @@ func (s *Server) hostAllowed(r *http.Request) bool {
 	return false
 }
 
+// localPath makes a path safe to put in a redirect: it stays on this site whatever
+// the request asked for. Browsers read "//host", "/\host" (and these with tabs or
+// line breaks in between, which they drop) as another site, so anything but plain
+// path characters becomes "/".
+func localPath(p string) string {
+	if p == "" || p[0] != '/' || strings.HasPrefix(p, "//") {
+		return "/"
+	}
+	for i := 0; i < len(p); i++ {
+		c := p[i]
+		switch {
+		case c >= 'a' && c <= 'z', c >= 'A' && c <= 'Z', c >= '0' && c <= '9':
+		case c == '/', c == '-', c == '.', c == '_', c == '~':
+		default:
+			return "/"
+		}
+	}
+	return p
+}
+
 // bearerOK: the command line, with the master token. Browsers never hold it.
 func (s *Server) bearerOK(r *http.Request) bool {
 	h := r.Header.Get("Authorization")
@@ -214,7 +234,7 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 			http.SetCookie(w, s.sessionCookie(id))
 			q := r.URL.Query()
 			q.Del("t")
-			target := "/" + strings.TrimLeft(r.URL.Path, "/") // never "//host": that would leave the site
+			target := localPath(r.URL.Path)
 			if enc := q.Encode(); enc != "" {
 				target += "?" + enc
 			}
@@ -232,7 +252,7 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions {
-			if r.Header.Get("Authorization") == "" { // bearer-token clients (CLI) are not browsers
+			if !s.bearerOK(r) { // only a valid master token marks a client that is not a browser
 				if r.Header.Get("X-Svoi") != "1" {
 					writeError(w, errCode("denied", "missing X-Svoi header"))
 					return

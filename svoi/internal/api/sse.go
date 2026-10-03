@@ -20,6 +20,15 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	h.Set("X-Accel-Buffering", "no")
 	w.WriteHeader(http.StatusOK)
 
+	// A stream is authorised when it is opened, but a sign-out (or the end of the
+	// session) must end it too: a browser's stream is checked against its session
+	// before every event and at every keepalive. The command line has no session.
+	session := ""
+	if c, err := r.Cookie(s.cookieName()); err == nil && !s.bearerOK(r) {
+		session = c.Value
+	}
+	signedOut := func() bool { return session != "" && !s.sess.alive(session) }
+
 	ch, cancel := s.app.Hub().Subscribe()
 	defer cancel()
 	fmt.Fprintf(w, "retry: 2000\n\n")
@@ -33,12 +42,15 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 		case <-r.Context().Done():
 			return
 		case msg, open := <-ch:
-			if !open {
-				return // too slow: the browser reconnects and re-fetches the state
+			if !open || signedOut() {
+				return // too slow (the browser reconnects and re-fetches the state), or signed out
 			}
 			fmt.Fprintf(w, "event: %s\ndata: %s\n\n", msg.Event, msg.Data)
 			fl.Flush()
 		case <-keepalive.C:
+			if signedOut() {
+				return
+			}
 			fmt.Fprint(w, ": keepalive\n\n")
 			fl.Flush()
 		}

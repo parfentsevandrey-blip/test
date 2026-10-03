@@ -166,6 +166,17 @@ func (s *sessions) check(id string) (ok, renewed bool) {
 	return true, false
 }
 
+// alive reports whether id is a live session, without extending it.
+func (s *sessions) alive(id string) bool {
+	if len(id) != sessionIDLen {
+		return false
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	exp, found := s.sess[hashOf(id)]
+	return found && s.now().Unix() < exp
+}
+
 // drop ends one session.
 func (s *sessions) drop(id string) {
 	s.mu.Lock()
