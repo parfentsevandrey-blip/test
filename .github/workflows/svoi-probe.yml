@@ -1,0 +1,74 @@
+name: svoi probe
+
+# A scratch workflow: what the program does on a real Windows machine (two nodes on one machine).
+on:
+  push:
+    paths: [".github/workflows/svoi-probe.yml"]
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: svoi
+    shell: bash
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: svoi/go.mod
+          cache-dependency-path: svoi/go.sum
+      - name: facts about the machine
+        run: |
+          ipconfig | head -60 || true
+          netsh advfirewall show allprofiles state || true
+          systeminfo | head -8 || true
+      - name: build
+        run: |
+          mkdir -p probe
+          go build -o probe/svoi.exe ./cmd/svoi
+          ls -la probe
+      - name: two nodes on one machine - join through the API of a running node (what the app test does)
+        run: |
+          set +e
+          BIN="$PWD/probe/svoi.exe"
+          P="$RUNNER_TEMP/probe1"; mkdir -p "$P"; A="$P/a"; B="$P/b"; mkdir -p "$A" "$B"
+          "$BIN" init --dir "$A" --mesh Home --name alpha --owner t
+          "$BIN" up --no-browser --no-stun --no-portmap --loopback --debug --ui 127.0.0.1:0 --dir "$A" > "$P/a.log" 2>&1 &
+          "$BIN" up --no-browser --no-stun --no-portmap --loopback --debug --ui 127.0.0.1:0 --dir "$B" > "$P/b.log" 2>&1 &
+          for i in $(seq 1 40); do [ -f "$A/ui.addr" ] && [ -f "$B/ui.addr" ] && break; sleep 0.5; done
+          echo "--- listening sockets"; netstat -ano -p UDP | grep -v "\*:\*.*0$" | head -30; netstat -ano -p UDP | head -40
+          api() { # dir method path [body]
+            local d="$1" m="$2" p="$3" b="$4"
+            curl -s -X "$m" -H "Authorization: Bearer $(cat "$d/ui.token")" -H "X-Svoi: 1" -H "Content-Type: application/json" ${b:+-d "$b"} "http://$(cat "$d/ui.addr")$p"
+          }
+          INV=$(api "$A" POST /api/invites '{"admin":false,"ttlMinutes":15}')
+          echo "invite response: $INV" | cut -c1-200
+          CODE=$(echo "$INV" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).code))')
+          echo "join through the API of the running node B:"
+          api "$B" POST /api/mesh/join "{\"invite\":\"$CODE\",\"deviceName\":\"beta\"}"; echo
+          sleep 2
+          echo "=== alpha log"; cat "$P/a.log" | tail -60
+          echo "=== beta log"; cat "$P/b.log" | tail -60
+          taskkill //F //IM svoi.exe > /dev/null 2>&1
+          exit 0
+      - name: two nodes on one machine - join with the command line (what the Go end-to-end test does on Linux)
+        run: |
+          set +e
+          BIN="$PWD/probe/svoi.exe"
+          P="$RUNNER_TEMP/probe2"; mkdir -p "$P"; A="$P/a"; B="$P/b"; mkdir -p "$A" "$B"
+          "$BIN" init --dir "$A" --mesh Home --name alpha --owner t
+          "$BIN" up --no-browser --no-stun --no-portmap --loopback --debug --ui 127.0.0.1:0 --dir "$A" > "$P/a.log" 2>&1 &
+          for i in $(seq 1 40); do [ -f "$A/ui.addr" ] && break; sleep 0.5; done
+          CODE=$("$BIN" invite --dir "$A" --ttl 5m | grep -o 'SVOI1-[A-Z0-9-]*')
+          echo "code: ${CODE:0:40}..."
+          "$BIN" join "$CODE" --dir "$B" --name beta; echo "join exit code: $?"
+          sleep 2
+          echo "=== alpha log"; tail -60 "$P/a.log"
+          taskkill //F //IM svoi.exe > /dev/null 2>&1
+          exit 0
+      - name: the Go tests of the internals on this machine (no process-control tests)
+        run: go test ./internal/... -count=1 -timeout 15m 2>&1 | tail -150

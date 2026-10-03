@@ -9,7 +9,26 @@ on:
     paths: ["svoi/**", ".github/workflows/svoi.yml"]
   workflow_dispatch:
     inputs:
-      lab:
+      portable:
+    # The program also runs on Windows and macOS (the desktop app carries it): the same tests on real machines
+    # of those systems (no race detector there: it needs a C compiler on Windows).
+    name: tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: svoi/go.mod
+          cache-dependency-path: svoi/go.sum
+      - run: go vet ./...
+      - run: go test ./... -count=1 -timeout 20m
+
+  lab:
         description: "also run the real-NAT lab (network namespaces, needs sudo)"
         type: boolean
         default: false
