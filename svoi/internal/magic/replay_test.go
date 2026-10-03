@@ -350,3 +350,105 @@ func TestUnknownSendersOfOneNetworkDoNotStarveOthers(t *testing.T) {
 		t.Fatalf("relayed unknown-sender packets are not rationed: %d passed", ok)
 	}
 }
+
+// A flood of replayed disco packets, each from another "spoofed" source, must not take
+// down a direct path that works (the review saw an established path vanish under such a
+// flood with 20 ms of latency, probably because the unanswered probes it provoked
+// pushed the real ones out of the table of pending pings).
+func TestAReplayFloodDoesNotTakeDownADirectPath(t *testing.T) {
+	nw := netsim.New()
+	nw.SetLatency(20 * time.Millisecond)
+	hostA := nw.Internet().NewHost(ip("1.1.1.1"))
+	hostB := nw.Internet().NewHost(ip("2.2.2.2"))
+	a := newNode(t, hostA, nodeOpts{port: 41000})
+
+	bDev := identity.GenerateDevice()
+	rec := &recConn{from: netip.AddrPortFrom(ip("1.1.1.1"), 41000)}
+	bc, err := New(Config{
+		Device: bDev, Port: 41000,
+		Listen: func(port int) (net.PacketConn, error) {
+			s, err := hostB.ListenPacket(uint16(port))
+			if err != nil {
+				return nil, err
+			}
+			rec.PacketConn = s
+			return rec, nil
+		},
+		LocalAddrs: func() []netip.Addr { return hostB.Addrs() },
+		Timing:     fastTiming,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer bc.Close()
+	if err := a.conn.AddPeer(bDev.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := bc.AddPeer(a.dev.ID); err != nil {
+		t.Fatal(err)
+	}
+	a.conn.AddCandidates(bDev.ID, []netip.AddrPort{netip.AddrPortFrom(ip("2.2.2.2"), 41000)}, SrcGossip)
+	bc.AddCandidates(a.dev.ID, []netip.AddrPort{netip.AddrPortFrom(ip("1.1.1.1"), 41000)}, SrcGossip)
+	waitFor(t, 15*time.Second, "direct path", func() bool {
+		return a.conn.PathInfo(bDev.ID).Kind == PathDirect && bc.PathInfo(a.dev.ID).Kind == PathDirect
+	})
+	time.Sleep(time.Second)
+	rec.mu.Lock()
+	var discos [][]byte
+	for _, p := range rec.data {
+		if p[0] == typeDisco {
+			discos = append(discos, p)
+		}
+	}
+	rec.mu.Unlock()
+	if len(discos) == 0 {
+		t.Fatal("captured nothing")
+	}
+
+	// The attacker: many source addresses, every captured packet replayed from each of them,
+	// over and over, for several seconds.
+	const sources = 120
+	var socks []*netsim.Socket
+	for i := 0; i < sources; i++ {
+		h := nw.Internet().NewHost(netip.AddrFrom4([4]byte{9, 9, byte(i >> 8), byte(i + 1)}))
+		s, err := h.ListenPacket(7777)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer s.Close()
+		socks = append(socks, s)
+	}
+	bAddr := net.UDPAddrFromAddrPort(netip.AddrPortFrom(ip("2.2.2.2"), 41000))
+	stop := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		tick := time.NewTicker(25 * time.Millisecond)
+		defer tick.Stop()
+		for i := 0; ; i++ {
+			select {
+			case <-stop:
+				return
+			case <-tick.C:
+			}
+			s := socks[i%sources]
+			for _, d := range discos {
+				_, _ = s.WriteTo(d, bAddr)
+			}
+		}
+	}()
+	up, samples := 0, 0
+	for end := time.Now().Add(6 * time.Second); time.Now().Before(end); time.Sleep(50 * time.Millisecond) {
+		samples++
+		if bc.PathInfo(a.dev.ID).Kind == PathDirect && a.conn.PathInfo(bDev.ID).Kind == PathDirect {
+			up++
+		}
+	}
+	close(stop)
+	wg.Wait()
+	t.Logf("direct path up in %d of %d samples", up, samples)
+	if up*100 < samples*95 {
+		t.Fatalf("the direct path was up in only %d of %d samples during a replay flood", up, samples)
+	}
+}
