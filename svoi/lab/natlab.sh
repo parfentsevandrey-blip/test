@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # natlab.sh — a miniature Internet with real NAT, built from Linux network
-# namespaces, for testing svoi's hole punching against the kernel's conntrack.
+# namespaces, for testing themesh's hole punching against the kernel's conntrack.
 #
 #   svl-anchor (203.0.113.100)   public host: a VPS / home server with an open port
 #   svl-rA     NAT router A  wan 203.0.113.1   lan 192.168.1.0/24  -> svl-A  192.168.1.10

@@ -12,7 +12,7 @@ func TestLocalAddrsFromTheAppsFile(t *testing.T) {
 	if err := os.WriteFile(f, []byte(body), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("SVOI_LOCAL_ADDRS_FILE", f)
+	t.Setenv("THEMESH_LOCAL_ADDRS_FILE", f)
 	got := map[string]bool{}
 	for _, a := range DefaultLocalAddrs() {
 		got[a.String()] = true
@@ -27,6 +27,6 @@ func TestLocalAddrsFromTheAppsFile(t *testing.T) {
 			t.Errorf("%s must not be offered as an endpoint", bad)
 		}
 	}
-	t.Setenv("SVOI_LOCAL_ADDRS_FILE", filepath.Join(t.TempDir(), "missing"))
+	t.Setenv("THEMESH_LOCAL_ADDRS_FILE", filepath.Join(t.TempDir(), "missing"))
 	_ = DefaultLocalAddrs() // a missing file is just an empty list
 }

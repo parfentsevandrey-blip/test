@@ -15,12 +15,12 @@ import (
 type DB struct{ db *bolt.DB }
 
 // Open opens (creating if needed) the database file. It fails fast if another
-// process already holds it, which usually means svoi is already running.
+// process already holds it, which usually means themesh is already running.
 func Open(path string) (*DB, error) {
 	db, err := bolt.Open(path, 0o600, &bolt.Options{Timeout: 3 * time.Second})
 	if err != nil {
 		if errors.Is(err, bolt.ErrTimeout) {
-			return nil, fmt.Errorf("store: %s is locked by another process (is svoi already running?)", path)
+			return nil, fmt.Errorf("store: %s is locked by another process (is themesh already running?)", path)
 		}
 		return nil, err
 	}

@@ -32,7 +32,7 @@ func TestAnAuthorizationHeaderDoesNotSkipTheCSRFChecks(t *testing.T) {
 			r.Header.Set("Origin", "http://evil.example")
 			r.Header.Set("Authorization", "Bearer nope")
 		},
-		"no X-Svoi and a Basic header": func(r *http.Request) { r.Header.Set("Authorization", "Basic Zm9vOmJhcg==") },
+		"no X-Themesh and a Basic header": func(r *http.Request) { r.Header.Set("Authorization", "Basic Zm9vOmJhcg==") },
 	} {
 		if code := post(mod); code != 403 {
 			t.Errorf("%s: HTTP %d, want 403", name, code)

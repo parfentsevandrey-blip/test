@@ -82,7 +82,7 @@ func Start(ctx context.Context, opts Options) (*Demo, error) {
 		opts.UIPort = 8777
 	}
 	if opts.Dir == "" {
-		dir, err := os.MkdirTemp("", "svoi-demo-")
+		dir, err := os.MkdirTemp("", "themesh-demo-")
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +148,7 @@ func Start(ctx context.Context, opts Options) (*Demo, error) {
 			return nil, fmt.Errorf("cannot start the interface of %s: %w", name, err)
 		}
 		go srv.Serve(ln)
-		// Like `svoi up`: `svoi open --dir <this data dir>` finds the device.
+		// Like `themesh up`: `themesh open --dir <this data dir>` finds the device.
 		_ = os.WriteFile(filepath.Join(a.Dir(), "ui.addr"), []byte(ln.Addr().String()+"\n"), 0o600)
 		d.Devices[name] = &Device{Name: name, App: a, UI: srv}
 	}
@@ -206,7 +206,7 @@ func (d *Demo) seed(ctx context.Context, opts Options) error {
 		}
 	}
 	// A few real TCP services on this machine, published by the home server and the NAS.
-	sshAddr, err := d.serve(banner("SSH-2.0-svoi-demo\r\n"))
+	sshAddr, err := d.serve(banner("SSH-2.0-themesh-demo\r\n"))
 	if err != nil {
 		return err
 	}
@@ -337,7 +337,7 @@ func webPage(title string) func(net.Conn) {
 		_ = c.SetDeadline(time.Now().Add(10 * time.Second))
 		buf := make([]byte, 2048)
 		_, _ = c.Read(buf)
-		body := fmt.Sprintf("<!doctype html><meta charset=utf-8><title>%s</title><body style=\"font:20px system-ui;margin:3rem\"><h1>%s</h1><p>Эту страницу отдал сервис, опубликованный через svoi.</p></body>", title, title)
+		body := fmt.Sprintf("<!doctype html><meta charset=utf-8><title>%s</title><body style=\"font:20px system-ui;margin:3rem\"><h1>%s</h1><p>Эту страницу отдал сервис, опубликованный через themesh.</p></body>", title, title)
 		fmt.Fprintf(c, "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: %d\r\nConnection: close\r\n\r\n%s", len(body), body)
 	}
 }

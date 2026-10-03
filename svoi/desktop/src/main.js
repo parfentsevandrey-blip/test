@@ -1,5 +1,5 @@
 'use strict';
-// Свои — the desktop app. It starts the `svoi` node in the background (no terminal), shows its
+// The Mesh — the desktop app. It starts the `themesh` node in the background (no terminal), shows its
 // interface in a window of its own, stays in the tray when the window is closed, and tells you
 // about incoming files and messages with system notifications.
 const fs = require('node:fs');
@@ -18,16 +18,16 @@ const { AppTray } = require('./tray');
 const { MainWindow } = require('./window');
 
 const root = path.resolve(__dirname, '..');
-const testMode = !!process.env.SVOI_DESKTOP_TEST;
+const testMode = !!process.env.THEMESH_DESKTOP_TEST;
 
 // The Chromium profile of the app is kept apart from the node's data (keys, mail, settings):
 // the profile can be thrown away, the data is the identity of this device.
 const appData = app.getPath('appData');
-const userData = process.env.SVOI_DESKTOP_USERDATA || path.join(appData, 'svoi-desktop');
+const userData = process.env.THEMESH_DESKTOP_USERDATA || path.join(appData, 'themesh-desktop');
 app.setPath('userData', userData);
-const dataDir = process.env.SVOI_DIR || path.join(appData, 'svoi');
+const dataDir = process.env.THEMESH_DIR || path.join(appData, 'themesh');
 
-app.setName('Свои');
+app.setName('The Mesh');
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -47,8 +47,8 @@ let lastError = '';
 const restarts = [];
 
 function coreBinary() {
-  if (process.env.SVOI_CORE) return process.env.SVOI_CORE;
-  const exe = process.platform === 'win32' ? 'svoi.exe' : 'svoi';
+  if (process.env.THEMESH_CORE) return process.env.THEMESH_CORE;
+  const exe = process.platform === 'win32' ? 'themesh.exe' : 'themesh';
   if (app.isPackaged) return path.join(process.resourcesPath, 'bin', exe);
   const key = `${process.platform === 'win32' ? 'win' : process.platform === 'darwin' ? 'mac' : 'linux'}-${process.arch}`;
   for (const p of [path.join(root, 'bin', key, exe), path.join(root, '..', exe)]) if (fs.existsSync(p)) return p;
@@ -56,16 +56,16 @@ function coreBinary() {
 }
 
 function coreArgs() {
-  if (!testMode || !process.env.SVOI_CORE_ARGS) return [];
+  if (!testMode || !process.env.THEMESH_CORE_ARGS) return [];
   try {
-    return JSON.parse(process.env.SVOI_CORE_ARGS);
+    return JSON.parse(process.env.THEMESH_CORE_ARGS);
   } catch {
     return [];
   }
 }
 
 function logFile() {
-  return path.join(userData, 'logs', 'svoi.log');
+  return path.join(userData, 'logs', 'themesh.log');
 }
 
 function updateTray() {
@@ -137,7 +137,7 @@ async function doStartCore() {
     watcher = new Watcher(core);
     notifier = new Notifier({ t, core, watcher, windowActive: () => mainWin.isActive(), onClick: (route) => showWindow(route), Notification, icon: path.join(root, 'assets', 'icon.png') });
     notifier.attach();
-    if (testMode) notifier.onNotify = (n) => global.__svoiTest.notes.push(n);
+    if (testMode) notifier.onNotify = (n) => global.__themeshTest.notes.push(n);
     watcher.on('state', () => {
       updateTray();
       maybeAskAutostart();
@@ -190,9 +190,9 @@ async function onCrashed() {
 
 async function main() {
   log.init(path.join(userData, 'logs'));
-  log.info('Свои', app.getVersion(), process.platform, process.arch, 'electron', process.versions.electron, 'packaged', app.isPackaged);
-  if (process.platform === 'win32') app.setAppUserModelId('ru.svoi.app');
-  const locale = process.env.SVOI_DESKTOP_LOCALE || app.getLocale();
+  log.info('The Mesh', app.getVersion(), process.platform, process.arch, 'electron', process.versions.electron, 'packaged', app.isPackaged);
+  if (process.platform === 'win32') app.setAppUserModelId('app.themesh.desktop');
+  const locale = process.env.THEMESH_DESKTOP_LOCALE || app.getLocale();
   t = texts(locale);
   settings = new Settings(path.join(userData, 'settings.json'));
   core = new Core({ binary: coreBinary(), dataDir, logFile: logFile(), preferredPort: settings.get('port', DEFAULT_PORT), extraArgs: coreArgs() });
@@ -227,7 +227,7 @@ async function main() {
       updateTray();
     },
   });
-  if (!testMode || process.env.SVOI_DESKTOP_TRAY) tray.create();
+  if (!testMode || process.env.THEMESH_DESKTOP_TRAY) tray.create();
 
   ipcMain.handle('shell:info', (e) => {
     if (!e.senderFrame || !String(e.senderFrame.url).startsWith('file://')) return null;
@@ -255,7 +255,7 @@ async function main() {
   });
 
   if (testMode) {
-    global.__svoiTest = {
+    global.__themeshTest = {
       core,
       get tray() {
         return !!(tray && tray.tray);
@@ -272,7 +272,7 @@ async function main() {
   }
 
   await startCore();
-  if (hidden && process.platform === 'linux') toast('Свои', t.startedHiddenBody, () => showWindow());
+  if (hidden && process.platform === 'linux') toast('The Mesh', t.startedHiddenBody, () => showWindow());
 }
 
 app.on('second-instance', () => showWindow());
@@ -305,6 +305,6 @@ for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => app.quit());
 
 app.whenReady().then(main).catch((e) => {
   log.error('fatal', e);
-  dialog.showErrorBox('Свои', String(e && e.message ? e.message : e));
+  dialog.showErrorBox('The Mesh', String(e && e.message ? e.message : e));
   app.exit(1);
 });

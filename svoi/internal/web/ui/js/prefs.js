@@ -3,8 +3,8 @@
 import { setLang } from "./i18n.js";
 import { setState } from "./store.js";
 
-const K_THEME = "svoi.theme";
-const K_LANG = "svoi.lang";
+const K_THEME = "themesh.theme";
+const K_LANG = "themesh.lang";
 
 export function load(key, fallback) {
   try {
@@ -21,11 +21,11 @@ export function save(key, value) {
 // another device's folders, having sent something) are remembered per browser.
 // `name`: "browsed" | "sent" | "startDismissed".
 export function startFlag(name) {
-  return load("svoi.home." + name, false) === true;
+  return load("themesh.home." + name, false) === true;
 }
 
 export function setStartFlag(name) {
-  if (!startFlag(name)) save("svoi.home." + name, true);
+  if (!startFlag(name)) save("themesh.home." + name, true);
 }
 
 function raw(key, fallback) {

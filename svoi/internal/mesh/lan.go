@@ -40,7 +40,7 @@ const (
 	lanVersion     = 3
 	beaconBody     = 32 + 2 + ed25519.SignatureSize // device id, udp port, signature
 	beaconLen      = 1 + chacha20poly1305.NonceSizeX + beaconBody + chacha20poly1305.Overhead
-	beaconSigLabel = "svoi-lan-beacon/v3\x00"
+	beaconSigLabel = "themesh-lan-beacon/v3\x00"
 )
 
 var lanGroup = net.IPv4(239, 255, 77, 77)

@@ -180,8 +180,8 @@ function UploadPanel({ uploads, onClear }) {
 function FolderView({ dev, share, segs }) {
   const d = useDevice(dev);
   const path = "/" + segs.join("/");
-  const [view, setView] = usePersistent("svoi.files.view", "list");
-  const [sort, setSort] = usePersistent("svoi.files.sort", { key: "name", dir: "asc" });
+  const [view, setView] = usePersistent("themesh.files.view", "list");
+  const [sort, setSort] = usePersistent("themesh.files.sort", { key: "name", dir: "asc" });
   const [query, setQuery] = useState("");
   const [preview, setPreview] = useState(-1);
   const [uploads, setUploads] = useState([]);

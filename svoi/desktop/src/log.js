@@ -34,7 +34,7 @@ function write(level, args) {
       /* the log is best effort */
     }
   }
-  if (process.env.SVOI_DESKTOP_VERBOSE) process.stderr.write(line);
+  if (process.env.THEMESH_DESKTOP_VERBOSE) process.stderr.write(line);
 }
 
 module.exports = {

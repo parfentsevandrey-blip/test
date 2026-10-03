@@ -110,7 +110,7 @@ func TestAnonymousHandshakeFloodCostsNothing(t *testing.T) {
 			// A client that never completes address validation (it "spoofs" its source:
 			// here it simply does not follow the Retry because it gives up after 150 ms).
 			_, _ = tr.Dial(ctx, &net.UDPAddr{IP: net.IPv4(10, 0, 0, 2), Port: 2}, &tls.Config{
-				InsecureSkipVerify: true, NextProtos: []string{"svoi/1"}, ServerName: "svoi", MinVersion: tls.VersionTLS13,
+				InsecureSkipVerify: true, NextProtos: []string{"themesh/1"}, ServerName: "themesh", MinVersion: tls.VersionTLS13,
 			}, &quic.Config{HandshakeIdleTimeout: 200 * time.Millisecond})
 		}()
 	}

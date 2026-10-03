@@ -34,7 +34,7 @@ group("device management", () => {
     await tid(page, "confirm-ok").click();
     await until(async () => (await dev.phone.api("GET", "/api/state")).self.admin === true, 20000, "the phone to become an administrator");
     const after = await dev.phone.api("POST", "/api/invites", { admin: false });
-    assert(/^SVOI1-/.test(after.code), "the new administrator can create invitations");
+    assert(/^MESH1-/.test(after.code), "the new administrator can create invitations");
     // everyone else sees the admin flag on the phone
     await until(async () => (await dev.nas.api("GET", "/api/state")).peers.find((p) => p.deviceName === "phone")?.admin === true, 20000, "the NAS to see the flag");
     eq(page.problems, [], "console / network problems");

@@ -120,7 +120,7 @@ function JoinForm({ self, onBack }) {
     e.preventDefault();
     const dn = normalizeName(name || placeholder);
     const er = {
-      code: !cleanCode ? t("common.required") : !cleanCode.startsWith("SVOI1-") ? t("onb.codeBad") : "",
+      code: !cleanCode ? t("common.required") : !cleanCode.startsWith("MESH1-") ? t("onb.codeBad") : "",
       name: validateName(dn),
     };
     setErrs(er);
@@ -168,7 +168,7 @@ function JoinForm({ self, onBack }) {
     <div class="form-grid">
       <${Field} label=${t("onb.code")} hint=${t("onb.codeHint")} error=${errs.code}>
         ${(id, d) => html`<textarea id=${id} class="input textarea mono onb-code" value=${code} rows="3" autofocus data-testid="onb-code"
-          placeholder="SVOI1-AEAWVQFQ-…" spellcheck="false" autocapitalize="characters" autocomplete="off"
+          placeholder="MESH1-AEAWVQFQ-…" spellcheck="false" autocapitalize="characters" autocomplete="off"
           aria-describedby=${d} aria-invalid=${errs.code ? "true" : undefined} onInput=${(e) => setCode(e.target.value)}></textarea>`}
       </${Field}>
       <${Field} label=${t("onb.deviceName")} error=${errs.name} hint=${t("onb.deviceNameHintJoin")}
@@ -222,7 +222,7 @@ export function OnboardingView() {
         <li><${Icon} name="zap" size=${18} /><span>${t("onb.fact2")}</span></li>
         <li><${Icon} name="key" size=${18} /><span>${t("onb.fact3")}</span></li>
       </ul>
-      ${self && self.id && html`<p class="onb__id faint xsmall">${t("onb.deviceId")} <span class="mono">${self.short || self.id.slice(0, 8)}</span> · svoi ${self.version || ""}</p>`}
+      ${self && self.id && html`<p class="onb__id faint xsmall">${t("onb.deviceId")} <span class="mono">${self.short || self.id.slice(0, 8)}</span> · The Mesh ${self.version || ""}</p>`}
     </main>
   </div>`;
 }

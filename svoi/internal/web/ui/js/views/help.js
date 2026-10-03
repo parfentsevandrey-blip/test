@@ -1,4 +1,4 @@
-// «Как это работает?»: four plain sentences about svoi and what the status
+// «Как это работает?»: four plain sentences about The Mesh and what the status
 // marks mean. Opened from the "?" in the top bar and from Home.
 import { html } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";

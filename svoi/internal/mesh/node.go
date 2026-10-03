@@ -41,8 +41,8 @@ var Version = "0.1.0"
 
 // ALPN protocol names.
 const (
-	ALPNMesh = "svoi/1"
-	ALPNJoin = "svoi-join/1"
+	ALPNMesh = "themesh/1"
+	ALPNJoin = "themesh-join/1"
 )
 
 // QUIC application error codes used when closing connections.
@@ -645,7 +645,7 @@ func (n *Node) serverTLS() *tls.Config {
 func (n *Node) clientTLS(expect identity.ID) *tls.Config {
 	return &tls.Config{
 		MinVersion: tls.VersionTLS13,
-		ServerName: "svoi",
+		ServerName: "themesh",
 		// The certificate is verified below against the mesh root and the expected
 		// device; the standard web PKI checks do not apply to this network.
 		InsecureSkipVerify: true,
@@ -819,7 +819,7 @@ func (n *Node) dial(p *Peer) {
 // The other end then drops the dead link at its next packet instead of after 40 s of silence.
 func (n *Node) statelessResetKey() *quic.StatelessResetKey {
 	m := hmac.New(sha256.New, n.device().Priv.Seed())
-	m.Write([]byte("svoi/quic-stateless-reset/v1"))
+	m.Write([]byte("themesh/quic-stateless-reset/v1"))
 	var k quic.StatelessResetKey
 	copy(k[:], m.Sum(nil))
 	return &k
@@ -992,7 +992,7 @@ func (n *Node) Peers() []*Peer {
 	return out
 }
 
-// FindPeer resolves a name ("nas", "nas.svoi", an ID or ID prefix, an overlay IP).
+// FindPeer resolves a name ("nas", "nas.mesh", an ID or ID prefix, an overlay IP).
 func (n *Node) FindPeer(q string) *Peer {
 	q = strings.TrimSpace(strings.ToLower(q))
 	q = strings.TrimSuffix(q, "."+identity.DNSSuffix)

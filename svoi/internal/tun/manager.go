@@ -1,7 +1,7 @@
 // Package tun gives the mesh a real network interface: every device has a
 // stable overlay address (100.64.0.0/10 and an fd00::/8 prefix) and any
 // program - ssh, a browser, a media player, SMB - can talk to other devices by
-// that address or by <name>.svoi, with no application support. IP packets are
+// that address or by <name>.mesh, with no application support. IP packets are
 // carried over the same encrypted QUIC links as everything else (as unreliable
 // datagrams, like WireGuard does).
 //
@@ -28,7 +28,7 @@ import (
 
 const (
 	// DefaultName is the interface name.
-	DefaultName = "svoi0"
+	DefaultName = "themesh0"
 	// MTU leaves room inside a QUIC datagram (one packet of 1280 bytes) for the
 	// QUIC and framing overhead.
 	MTU = 1150
@@ -80,7 +80,7 @@ func New(node *mesh.Node, name string, manageHosts bool) *Manager {
 	return m
 }
 
-// SetManageHosts switches maintenance of the <name>.svoi block in /etc/hosts.
+// SetManageHosts switches maintenance of the <name>.mesh block in /etc/hosts.
 func (m *Manager) SetManageHosts(on bool) {
 	m.manageHosts.Store(on)
 	if !on {
@@ -341,15 +341,15 @@ func (m *Manager) onDatagram(p *mesh.Peer, data []byte) {
 type hostEntry struct{ ip, name string }
 
 const (
-	hostsBegin = "# BEGIN svoi"
-	hostsEnd   = "# END svoi"
+	hostsBegin = "# BEGIN themesh"
+	hostsEnd   = "# END themesh"
 )
 
 // hostsPath is a variable only so tests can point it elsewhere.
 var hostsPath = "/etc/hosts"
 
 // ourHostsLine reports whether line has the shape of the entries we write: an overlay
-// address and a name under .svoi, and nothing else.
+// address and a name under .mesh, and nothing else.
 func ourHostsLine(line string) bool {
 	f := strings.Fields(line)
 	if len(f) != 2 || !strings.HasSuffix(strings.ToLower(f[1]), "."+identity.DNSSuffix) {
@@ -359,7 +359,7 @@ func ourHostsLine(line string) bool {
 	return err == nil && identity.IsOverlayAddr(a)
 }
 
-// writeHosts replaces the svoi block of /etc/hosts (nil removes it). Everything
+// writeHosts replaces the themesh block of /etc/hosts (nil removes it). Everything
 // outside the block stays byte for byte as it was, and when there is nothing to
 // change the file is not written at all (not even to tidy it up).
 //

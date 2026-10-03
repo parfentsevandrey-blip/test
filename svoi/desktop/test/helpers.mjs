@@ -10,28 +10,28 @@ import { fileURLToPath } from 'node:url';
 const require = createRequire(import.meta.url);
 export const appDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-export const exe = process.platform === 'win32' ? 'svoi.exe' : 'svoi';
+export const exe = process.platform === 'win32' ? 'themesh.exe' : 'themesh';
 const key = `${process.platform === 'win32' ? 'win' : process.platform === 'darwin' ? 'mac' : 'linux'}-${process.arch}`;
-export const coreBinary = () => process.env.SVOI_CORE || path.join(appDir, 'bin', key, exe);
+export const coreBinary = () => process.env.THEMESH_CORE || path.join(appDir, 'bin', key, exe);
 
 /** Where this test run keeps everything (nothing touches the real profile). */
-export function sandboxDirs(prefix = 'svoi-desktop-test-') {
+export function sandboxDirs(prefix = 'themesh-desktop-test-') {
   const base = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
   const d = { base, userData: path.join(base, 'profile'), data: path.join(base, 'data'), home: path.join(base, 'home'), downloads: path.join(base, 'home', 'Downloads') };
   fs.mkdirSync(d.home, { recursive: true });
   return d;
 }
 
-/** The app: SVOI_APP_EXE = a packaged build, else the source tree run with the installed Electron. */
+/** The app: THEMESH_APP_EXE = a packaged build, else the source tree run with the installed Electron. */
 export function launchOptions(dirs, extraEnv = {}) {
   const env = {
     ...process.env,
-    SVOI_DESKTOP_TEST: '1',
-    SVOI_DESKTOP_USERDATA: dirs.userData,
-    SVOI_DIR: dirs.data,
+    THEMESH_DESKTOP_TEST: '1',
+    THEMESH_DESKTOP_USERDATA: dirs.userData,
+    THEMESH_DIR: dirs.data,
     // a packaged build must find the program it carries; only the source tree needs to be told where it is
-    ...(process.env.SVOI_APP_EXE ? {} : { SVOI_CORE: coreBinary() }),
-    SVOI_CORE_ARGS: JSON.stringify(['--no-stun', '--no-portmap', '--loopback']),
+    ...(process.env.THEMESH_APP_EXE ? {} : { THEMESH_CORE: coreBinary() }),
+    THEMESH_CORE_ARGS: JSON.stringify(['--no-stun', '--no-portmap', '--loopback']),
     // (Windows keeps its real profile: pointing USERPROFILE somewhere else stalls Electron's start there.
     // Downloads then land in the real Downloads folder, and the test removes what it saved.)
     ...(process.platform === 'win32' ? {} : { HOME: dirs.home, XDG_CONFIG_HOME: path.join(dirs.home, '.config'), XDG_DOWNLOAD_DIR: dirs.downloads }),
@@ -40,24 +40,24 @@ export function launchOptions(dirs, extraEnv = {}) {
   delete env.ELECTRON_RUN_AS_NODE;
   const sandboxOff = process.platform === 'linux' ? ['--no-sandbox'] : [];
   // a language for the whole app (the system's own one is what a person gets): the page follows the browser's
-  const lang = process.env.SVOI_DESKTOP_LOCALE ? ['--lang=' + process.env.SVOI_DESKTOP_LOCALE] : [];
-  const packaged = process.env.SVOI_APP_EXE;
+  const lang = process.env.THEMESH_DESKTOP_LOCALE ? ['--lang=' + process.env.THEMESH_DESKTOP_LOCALE] : [];
+  const packaged = process.env.THEMESH_APP_EXE;
   return packaged ? { executablePath: packaged, args: [...sandboxOff, ...lang], env } : { executablePath: require('electron'), args: [appDir, ...sandboxOff, ...lang], env };
 }
 
-/** A second `svoi` node (another device) in its own directory. */
+/** A second `themesh` node (another device) in its own directory. */
 export async function startNode(name, base) {
   const data = path.join(base, 'node-' + name);
   fs.mkdirSync(data, { recursive: true });
   const log = fs.openSync(path.join(base, `node-${name}.log`), 'a');
-  const child = spawn(coreBinary(), ['up', '--no-browser', '--no-stun', '--no-portmap', '--loopback', '--ui', '127.0.0.1:0', '--exit-when-stdin-closes', '--dir', data], { stdio: ['pipe', log, log], windowsHide: true, env: { ...process.env, SVOI_DIR: data, ...(process.platform === 'win32' ? { GODEBUG: 'asyncpreemptoff=1' } : {}) } });
+  const child = spawn(coreBinary(), ['up', '--no-browser', '--no-stun', '--no-portmap', '--loopback', '--ui', '127.0.0.1:0', '--exit-when-stdin-closes', '--dir', data], { stdio: ['pipe', log, log], windowsHide: true, env: { ...process.env, THEMESH_DIR: data, ...(process.platform === 'win32' ? { GODEBUG: 'asyncpreemptoff=1' } : {}) } });
   child.stdin.on('error', () => {});
   const node = { name, data, child };
   await waitFor(() => fs.existsSync(path.join(data, 'ui.addr')) && fs.existsSync(path.join(data, 'ui.token')), 20000, `node ${name} to start`);
   node.origin = 'http://' + fs.readFileSync(path.join(data, 'ui.addr'), 'utf8').trim();
   node.token = fs.readFileSync(path.join(data, 'ui.token'), 'utf8').trim();
   node.api = async (method, p, body) => {
-    const res = await fetch(node.origin + p, { method, headers: { Authorization: 'Bearer ' + node.token, 'X-Svoi': '1', ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) }, body: body === undefined ? undefined : JSON.stringify(body) });
+    const res = await fetch(node.origin + p, { method, headers: { Authorization: 'Bearer ' + node.token, 'X-Themesh': '1', ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) }, body: body === undefined ? undefined : JSON.stringify(body) });
     const text = await res.text();
     if (!res.ok) throw new Error(`${method} ${p} → ${res.status} ${text.slice(0, 200)}`);
     return text ? JSON.parse(text) : null;

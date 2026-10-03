@@ -30,7 +30,7 @@ async function notificationFor(kind, d, ctx) {
     if (d.mine !== false || !d.id) return null;
     const peer = (await ctx.peerName(d.peer)) || '';
     const body = clip(d.text, 140) || t.chatAttachment;
-    return { key: `chat:${d.id}`, title: peer || 'Свои', body, route: `#/chat/${d.peer}` };
+    return { key: `chat:${d.id}`, title: peer || 'The Mesh', body, route: `#/chat/${d.peer}` };
   }
   if (kind === 'mail') {
     if (d.folder !== 'inbox' || !d.unread || !d.id) return null;

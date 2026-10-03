@@ -21,7 +21,7 @@ const OUT = path.resolve(args.includes("--out") ? args[args.indexOf("--out") + 1
 if (!fs.existsSync(path.join(CACHE, "node_modules", "esbuild"))) {
   console.log("installing build dependencies into web-dev/.demo-cache …");
   fs.mkdirSync(CACHE, { recursive: true });
-  fs.writeFileSync(path.join(CACHE, "package.json"), JSON.stringify({ name: "svoi-demo-build", private: true, version: "0.0.0" }));
+  fs.writeFileSync(path.join(CACHE, "package.json"), JSON.stringify({ name: "themesh-demo-build", private: true, version: "0.0.0" }));
   execFileSync("npm", ["i", "--no-audit", "--no-fund", "--silent", "esbuild", "@noble/hashes", "buffer", "path-browserify", "fflate"], { cwd: CACHE, stdio: "inherit" });
 }
 const esbuild = await import(pathToFileURL(path.join(CACHE, "node_modules", "esbuild", "lib", "main.js")).href);
@@ -78,7 +78,7 @@ const src = fs.readFileSync(path.join(UI, "index.html"), "utf8");
 const body = /<body>([\s\S]*)<\/body>/.exec(src);
 if (!body) throw new Error("index.html changed: no <body>");
 const sheets = [...src.matchAll(/<link rel="stylesheet"[^>]*>/g)].map((m) => "  " + m[0]);
-const html = `<title>Свои</title>
+const html = `<title>The Mesh</title>
 ${sheets.join("\n")}
 <script src="demo/mock.js"></script>
 <script src="js/boot.js"></script>

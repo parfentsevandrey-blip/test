@@ -1,7 +1,7 @@
 'use strict';
 // Script of the two local pages (splash and error). Texts come from the shell; nothing is injected as HTML.
 (async () => {
-  const shell = window.svoiShell;
+  const shell = window.themeshShell;
   if (!shell) return;
   let info;
   try {

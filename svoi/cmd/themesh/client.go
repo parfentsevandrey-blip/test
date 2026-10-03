@@ -39,7 +39,7 @@ type client struct {
 func newClient(dir string) (*client, error) {
 	addr, err := os.ReadFile(filepath.Join(dir, "ui.addr"))
 	if err != nil {
-		return nil, errors.New("svoi is not running (start it with `svoi up`)")
+		return nil, errors.New("themesh is not running (start it with `themesh up`)")
 	}
 	tok, err := os.ReadFile(filepath.Join(dir, "ui.token"))
 	if err != nil {
@@ -68,7 +68,7 @@ func (c *client) handshake() error {
 	nonce := hex.EncodeToString(raw[:])
 	resp, err := (&http.Client{Timeout: 5 * time.Second, CheckRedirect: noRedirect}).Get(c.base + "/api/handshake?n=" + nonce)
 	if err != nil {
-		return errors.New("cannot reach the running svoi: " + err.Error())
+		return errors.New("cannot reach the running themesh: " + err.Error())
 	}
 	defer resp.Body.Close()
 	var out struct {
@@ -76,7 +76,7 @@ func (c *client) handshake() error {
 	}
 	if resp.StatusCode != http.StatusOK || json.NewDecoder(io.LimitReader(resp.Body, 4096)).Decode(&out) != nil ||
 		subtle.ConstantTimeCompare([]byte(out.Proof), []byte(api.HandshakeProof(c.token, nonce))) != 1 {
-		return fmt.Errorf("what listens on %s is not this svoi node (is ui.addr stale?); the token was not sent", strings.TrimPrefix(c.base, "http://"))
+		return fmt.Errorf("what listens on %s is not this themesh node (is ui.addr stale?); the token was not sent", strings.TrimPrefix(c.base, "http://"))
 	}
 	return nil
 }
@@ -92,7 +92,7 @@ func (c *client) do(ctx context.Context, method, path string, body io.Reader, ou
 	}
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return errors.New("cannot reach the running svoi: " + err.Error())
+		return errors.New("cannot reach the running themesh: " + err.Error())
 	}
 	defer resp.Body.Close()
 	data, _ := io.ReadAll(resp.Body)
@@ -150,7 +150,7 @@ func cmdStatus(args []string) error {
 		return enc.Encode(st)
 	}
 	if !st.Configured {
-		fmt.Println("This device is not part of a mesh yet. Open the web interface (`svoi open`) to create or join one.")
+		fmt.Println("This device is not part of a mesh yet. Open the web interface (`themesh open`) to create or join one.")
 		return nil
 	}
 	role := ""
@@ -229,7 +229,7 @@ func cmdInvite(args []string) error {
 	fmt.Println()
 	fmt.Println(inv.Code)
 	fmt.Println()
-	fmt.Println("On the other device run:  svoi join " + inv.Code)
+	fmt.Println("On the other device run:  themesh join " + inv.Code)
 	fmt.Println("or choose «Join with an invitation» in its web interface.")
 	return nil
 }
@@ -240,7 +240,7 @@ func cmdPing(args []string) error {
 		return err
 	}
 	if len(pos) != 1 {
-		return errors.New("usage: svoi ping <device>")
+		return errors.New("usage: themesh ping <device>")
 	}
 	var out struct{ MS float64 }
 	for i := 0; i < 4; i++ {
@@ -259,7 +259,7 @@ func cmdSend(args []string) error {
 		return err
 	}
 	if len(pos) < 2 {
-		return errors.New("usage: svoi send <device> <file>...")
+		return errors.New("usage: themesh send <device> <file>...")
 	}
 	dev := pos[0]
 	for _, path := range pos[1:] {
@@ -320,8 +320,8 @@ func cmdURL(args []string) error {
 
 // uiURL asks the running node for a fresh single-use sign-in link. local says the
 // link is for a browser on this machine that is about to be started with it on its
-// command line (`svoi open`): it then only works for this user. A link that is
-// printed (`svoi url`) works for whoever has it, so it can be carried to another
+// command line (`themesh open`): it then only works for this user. A link that is
+// printed (`themesh url`) works for whoever has it, so it can be carried to another
 // computer.
 func uiURL(dir string, local bool) (string, error) {
 	c, err := newClient(dir)
@@ -346,7 +346,7 @@ func cmdSignout(args []string) error {
 	if err := c.post("/api/logout?all=1", struct{}{}, nil); err != nil {
 		return err
 	}
-	fmt.Println("All browsers are signed out; unused sign-in links are cancelled. `svoi open` signs this one back in.")
+	fmt.Println("All browsers are signed out; unused sign-in links are cancelled. `themesh open` signs this one back in.")
 	return nil
 }
 

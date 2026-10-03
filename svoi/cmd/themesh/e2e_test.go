@@ -33,15 +33,15 @@ import (
 var testBin string
 
 func TestMain(m *testing.M) {
-	dir, err := os.MkdirTemp("", "svoi-e2e")
+	dir, err := os.MkdirTemp("", "themesh-e2e")
 	if err != nil {
 		panic(err)
 	}
-	testBin = filepath.Join(dir, "svoi")
+	testBin = filepath.Join(dir, "themesh")
 	build := exec.Command("go", "build", "-o", testBin, ".")
 	build.Stdout, build.Stderr = os.Stderr, os.Stderr
 	if err := build.Run(); err != nil {
-		fmt.Fprintln(os.Stderr, "cannot build svoi:", err)
+		fmt.Fprintln(os.Stderr, "cannot build themesh:", err)
 		os.Exit(1)
 	}
 	code := m.Run()
@@ -71,7 +71,7 @@ func newProc(t *testing.T, name string) *proc {
 
 func (p *proc) command(args ...string) *exec.Cmd {
 	c := exec.Command(testBin, args...)
-	c.Env = append(os.Environ(), "SVOI_DIR="+p.dir, "HOME="+p.home, "XDG_CONFIG_HOME="+filepath.Join(p.home, ".config"))
+	c.Env = append(os.Environ(), "THEMESH_DIR="+p.dir, "HOME="+p.home, "XDG_CONFIG_HOME="+filepath.Join(p.home, ".config"))
 	c.Env = append(c.Env, "DISPLAY=", "WAYLAND_DISPLAY=") // never try to open a browser
 	return c
 }
@@ -99,12 +99,12 @@ func (p *proc) mustRun(args ...string) string {
 	p.t.Helper()
 	out, err := p.run(args...)
 	if err != nil {
-		p.t.Fatalf("[%s] svoi %s: %v\n%s", p.name, strings.Join(args, " "), err, out)
+		p.t.Fatalf("[%s] themesh %s: %v\n%s", p.name, strings.Join(args, " "), err, out)
 	}
 	return out
 }
 
-// start launches `svoi up` in the background and waits for its interface.
+// start launches `themesh up` in the background and waits for its interface.
 func (p *proc) start(extra ...string) {
 	p.t.Helper()
 	args := append([]string{"up", "--no-browser", "--no-stun", "--no-portmap", "--loopback", "--ui", "127.0.0.1:0"}, extra...)
@@ -206,7 +206,7 @@ func openLink(t *testing.T, link string) *http.Cookie {
 		return nil
 	}
 	for _, c := range resp.Cookies() {
-		if strings.HasPrefix(c.Name, "svoi_session") && c.Value != "" {
+		if strings.HasPrefix(c.Name, "themesh_session") && c.Value != "" {
 			return c
 		}
 	}
@@ -234,7 +234,7 @@ func (p *proc) checkSignIn(t *testing.T) {
 	if strings.Contains(log, tok) {
 		t.Fatal("the master token was written to the log")
 	}
-	// The link `svoi up` printed works once.
+	// The link `themesh up` printed works once.
 	m := loginLinkRe.FindStringSubmatch(log)
 	if m == nil {
 		t.Fatalf("no sign-in link in the banner:\n%s", log)
@@ -255,17 +255,17 @@ func (p *proc) checkSignIn(t *testing.T) {
 	if first.Value == tok || p.apiAs(first, "/api/state") != 200 {
 		t.Fatalf("the session is wrong: value=%q", first.Value)
 	}
-	// `svoi url` mints a new one each time.
+	// `themesh url` mints a new one each time.
 	l1 := strings.TrimSpace(p.mustRun("url"))
 	l2 := strings.TrimSpace(p.mustRun("url"))
 	if l1 == l2 || strings.Contains(l1, tok) || !loginLinkRe.MatchString(l1) {
-		t.Fatalf("svoi url: %q / %q", l1, l2)
+		t.Fatalf("themesh url: %q / %q", l1, l2)
 	}
 	second := openLink(t, l1)
 	if second == nil || second.Value == first.Value {
-		t.Fatal("svoi url did not sign in")
+		t.Fatal("themesh url did not sign in")
 	}
-	// The link `svoi open` hands to the browser it starts is tied to this user (Linux), and
+	// The link `themesh open` hands to the browser it starts is tied to this user (Linux), and
 	// works for this user, from this very process: a real loopback connection between two
 	// processes, identified by the kernel's socket table.
 	req, _ := http.NewRequest("POST", p.apiBase()+"/api/login/code", strings.NewReader(`{"local":true}`))
@@ -290,13 +290,13 @@ func (p *proc) checkSignIn(t *testing.T) {
 	if c := openLink(t, p.apiBase()+"/?t="+minted.Code); c == nil || p.apiAs(c, "/api/state") != 200 {
 		t.Fatalf("the user a local link was made for could not use it (bound=%v)", minted.Bound)
 	}
-	// `svoi signout` ends every browser session and cancels unused links.
+	// `themesh signout` ends every browser session and cancels unused links.
 	p.mustRun("signout")
 	if p.apiAs(first, "/api/state") != 401 || p.apiAs(second, "/api/state") != 401 {
-		t.Fatal("sessions survived `svoi signout`")
+		t.Fatal("sessions survived `themesh signout`")
 	}
 	if openLink(t, l2) != nil {
-		t.Fatal("an unused link survived `svoi signout`")
+		t.Fatal("an unused link survived `themesh signout`")
 	}
 	if c := openLink(t, strings.TrimSpace(p.mustRun("url"))); c == nil || p.apiAs(c, "/api/state") != 200 {
 		t.Fatal("cannot sign in again after signout")
@@ -305,7 +305,7 @@ func (p *proc) checkSignIn(t *testing.T) {
 
 // A node that runs without a terminal (a service, a container) must not write a live
 // sign-in link into its log: the journal keeps it long after the ten minutes, for
-// whoever can read it. `svoi url` is how a person gets one.
+// whoever can read it. `themesh url` is how a person gets one.
 func TestHeadlessUpKeepsTheSignInLinkOutOfTheLog(t *testing.T) {
 	if testing.Short() {
 		t.Skip("starts a real process")
@@ -317,21 +317,21 @@ func TestHeadlessUpKeepsTheSignInLinkOutOfTheLog(t *testing.T) {
 	if strings.Contains(log, "?t=") || regexp.MustCompile(`[0-9a-f]{48}`).MatchString(log) {
 		t.Fatalf("a sign-in link or code is in the log:\n%s", log)
 	}
-	if !strings.Contains(log, "svoi url") {
+	if !strings.Contains(log, "themesh url") {
 		t.Fatalf("the log does not say how to get a link:\n%s", log)
 	}
 	link := strings.TrimSpace(p.mustRun("url"))
 	if c := openLink(t, link); c == nil || p.apiAs(c, "/api/state") != 200 {
-		t.Fatalf("`svoi url` did not give a working link: %q", link)
+		t.Fatalf("`themesh url` did not give a working link: %q", link)
 	}
-	// `svoi open` prints a link that can be copied anywhere, and starts a browser (here there is none).
+	// `themesh open` prints a link that can be copied anywhere, and starts a browser (here there is none).
 	out := p.mustRun("open")
 	m := loginLinkRe.FindString(out)
 	if m == "" {
-		t.Fatalf("svoi open printed no link:\n%s", out)
+		t.Fatalf("themesh open printed no link:\n%s", out)
 	}
 	if c := openLink(t, m); c == nil {
-		t.Fatal("the link `svoi open` printed does not work")
+		t.Fatal("the link `themesh open` printed does not work")
 	}
 	// And the opposite, on request.
 	q := newProc(t, "printing")
@@ -363,8 +363,8 @@ func TestStartingTwiceDoesNotStartASecondNode(t *testing.T) {
 	if err := c.Run(); err != nil {
 		t.Fatalf("the second start failed: %v\n%s", err, out.String())
 	}
-	if !strings.Contains(out.String(), "уже запущены") || !loginLinkRe.MatchString(out.String()) {
-		t.Fatalf("the second start did not say that svoi is running, or gave no link:\n%s", out.String())
+	if !strings.Contains(out.String(), "уже запущен") || !loginLinkRe.MatchString(out.String()) {
+		t.Fatalf("the second start did not say that themesh is running, or gave no link:\n%s", out.String())
 	}
 	if strings.Contains(out.String(), "mesh network started") {
 		t.Fatalf("the second start brought up another node:\n%s", out.String())
@@ -405,8 +405,8 @@ func TestCommandLineDoesNotSendTheTokenToAnImpostor(t *testing.T) {
 	}
 	for _, args := range [][]string{{"status"}, {"url"}, {"signout"}, {"ping", "somebody"}} {
 		out, err := p.run(args...)
-		if err == nil || !strings.Contains(out, "not this svoi") {
-			t.Errorf("svoi %s against an impostor: err=%v out=%q", strings.Join(args, " "), err, out)
+		if err == nil || !strings.Contains(out, "not this themesh") {
+			t.Errorf("themesh %s against an impostor: err=%v out=%q", strings.Join(args, " "), err, out)
 		}
 	}
 	mu.Lock()
@@ -450,7 +450,7 @@ func TestCommandLineDoesNotFollowRedirects(t *testing.T) {
 	}
 	out, err := p.run("status")
 	if err == nil {
-		t.Fatalf("svoi status followed a redirect and succeeded: %q", out)
+		t.Fatalf("themesh status followed a redirect and succeeded: %q", out)
 	}
 	mu.Lock()
 	defer mu.Unlock()
@@ -471,7 +471,7 @@ func waitFor(t *testing.T, d time.Duration, what string, cond func() bool) {
 	t.Fatalf("timed out after %v waiting for: %s", d, what)
 }
 
-var inviteRe = regexp.MustCompile(`SVOI1-[A-Z0-9-]+`)
+var inviteRe = regexp.MustCompile(`MESH1-[A-Z0-9-]+`)
 
 func TestTwoProcessesEndToEnd(t *testing.T) {
 	if testing.Short() {
@@ -548,7 +548,7 @@ func TestTwoProcessesEndToEnd(t *testing.T) {
 		t.Fatal(err)
 	}
 	a.mustRun("send", "beta", src)
-	dest := filepath.Join(b.home, "Downloads", "Svoi", "payload.bin")
+	dest := filepath.Join(b.home, "Downloads", "The Mesh", "payload.bin")
 	waitFor(t, 40*time.Second, "the file to arrive at beta", func() bool {
 		st, err := os.Stat(dest)
 		return err == nil && st.Size() == int64(len(data))
@@ -611,8 +611,8 @@ func TestLeaveKeepsDeviceKey(t *testing.T) {
 	}
 }
 
-// A desktop or phone app runs svoi as a background process and holds its standard input open:
-// when the app quits - or dies - the pipe closes and svoi must go with it (no orphan keeps the
+// A desktop or phone app runs themesh as a background process and holds its standard input open:
+// when the app quits - or dies - the pipe closes and themesh must go with it (no orphan keeps the
 // ports and the data directory).
 func TestExitsWhenTheAppThatStartedItGoesAway(t *testing.T) {
 	p := newProc(t, "node")
@@ -635,17 +635,17 @@ func TestExitsWhenTheAppThatStartedItGoesAway(t *testing.T) {
 	})
 	select {
 	case err := <-done:
-		t.Fatalf("svoi quit while its parent was still there: %v\n%s", err, out.String())
+		t.Fatalf("themesh quit while its parent was still there: %v\n%s", err, out.String())
 	case <-time.After(1500 * time.Millisecond):
 	}
 	stdin.Close() // the app went away
 	select {
 	case err := <-done:
 		if err != nil {
-			t.Fatalf("svoi did not end cleanly: %v\n%s", err, out.String())
+			t.Fatalf("themesh did not end cleanly: %v\n%s", err, out.String())
 		}
 	case <-time.After(15 * time.Second):
-		t.Fatalf("svoi kept running after its parent closed standard input\n%s", out.String())
+		t.Fatalf("themesh kept running after its parent closed standard input\n%s", out.String())
 	}
 	if _, err := os.Stat(filepath.Join(p.dir, "ui.addr")); err == nil {
 		t.Fatal("ui.addr is still there after the clean exit")

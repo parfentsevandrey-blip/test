@@ -1,5 +1,5 @@
 'use strict';
-// The core is the `svoi` program itself, started in the background without a terminal window.
+// The core is the `themesh` program itself, started in the background without a terminal window.
 // This module starts it (or attaches to one that already runs on the same data directory), waits
 // until its interface answers, proves that what answers really is that node before sending it
 // the token, hands out one-time sign-in links and stops it again.
@@ -31,7 +31,7 @@ function freePort(preferred) {
 
 /** What a genuine node answers to a handshake nonce (see internal/api/session.go). */
 function handshakeProof(token, nonce) {
-  return crypto.createHmac('sha256', token).update('svoi-handshake/v1\0' + nonce).digest('hex');
+  return crypto.createHmac('sha256', token).update('themesh-handshake/v1\0' + nonce).digest('hex');
 }
 
 /** True only if the thing listening at `origin` knows `token`: the token is never sent to a stranger. */
@@ -63,7 +63,7 @@ function readTrim(file) {
  * that was built without.)
  */
 function coreEnv(dataDir, base = process.env, platform = process.platform) {
-  const env = { ...base, SVOI_DIR: dataDir };
+  const env = { ...base, THEMESH_DIR: dataDir };
   if (platform === 'win32' && !/(^|,)asyncpreemptoff=/.test(env.GODEBUG || '')) env.GODEBUG = (env.GODEBUG ? env.GODEBUG + ',' : '') + 'asyncpreemptoff=1';
   return env;
 }
@@ -71,7 +71,7 @@ function coreEnv(dataDir, base = process.env, platform = process.platform) {
 class Core extends EventEmitter {
   /**
    * @param {object} o
-   * @param {string} o.binary        the svoi executable
+   * @param {string} o.binary        the themesh executable
    * @param {string} o.dataDir       the node's data directory (keys, mail, settings)
    * @param {string} o.logFile       where the node's own output goes
    * @param {number} [o.preferredPort]
@@ -197,7 +197,7 @@ class Core extends EventEmitter {
     const res = await fetch(this.origin + p, {
       method,
       redirect: 'error',
-      headers: { Authorization: 'Bearer ' + this.token, 'X-Svoi': '1', ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
+      headers: { Authorization: 'Bearer ' + this.token, 'X-Themesh': '1', ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: AbortSignal.timeout(15000),
     });

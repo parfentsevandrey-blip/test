@@ -128,13 +128,13 @@ func (e *uidEnv) open(code, uid string) (status int, cookie bool, body string) {
 func TestLocalLinkOfTheCommandLineIsTiedToItsUser(t *testing.T) {
 	e := newUIDEnv(t)
 
-	// `svoi open` asks for a link for a browser on this machine: tied to the asking user.
+	// `themesh open` asks for a link for a browser on this machine: tied to the asking user.
 	code, bound := e.mint(`{"local":true}`, "1000")
 	if !bound {
 		t.Fatal("a local link was not tied to the user")
 	}
 	status, cookie, body := e.open(code, "1001") // somebody who read it off `ps`
-	if status != http.StatusForbidden || cookie || !strings.Contains(body, "svoi url") {
+	if status != http.StatusForbidden || cookie || !strings.Contains(body, "themesh url") {
 		t.Fatalf("another user: status %d, cookie %v, body %q", status, cookie, body)
 	}
 	if status, cookie, _ := e.open(code, "1000"); status != http.StatusFound || !cookie {
@@ -144,7 +144,7 @@ func TestLocalLinkOfTheCommandLineIsTiedToItsUser(t *testing.T) {
 		t.Fatal("a code worked twice")
 	}
 
-	// `svoi url` prints a link to be copied, perhaps to another computer: not tied.
+	// `themesh url` prints a link to be copied, perhaps to another computer: not tied.
 	code, bound = e.mint(`{}`, "1000")
 	if bound {
 		t.Fatal("a link for copying was tied to a user")
@@ -173,7 +173,7 @@ func TestLocalLinkOfTheCommandLineIsTiedToItsUser(t *testing.T) {
 	}
 }
 
-// What `svoi up` opens in the browser it starts itself is for the user running it;
+// What `themesh up` opens in the browser it starts itself is for the user running it;
 // what it prints is for anybody.
 func TestUpOpensALinkForItsOwnUserAndPrintsOneForAnybody(t *testing.T) {
 	e := newUIDEnv(t)
@@ -191,6 +191,6 @@ func TestUpOpensALinkForItsOwnUserAndPrintsOneForAnybody(t *testing.T) {
 		t.Errorf("the printed link is tied to user %d", pc.uid)
 	}
 	if want := os.Getuid(); lc.uid != want {
-		t.Errorf("the link for the browser is tied to user %d, want %d (the one running svoi)", lc.uid, want)
+		t.Errorf("the link for the browser is tied to user %d, want %d (the one running themesh)", lc.uid, want)
 	}
 }

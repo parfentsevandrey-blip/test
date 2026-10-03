@@ -355,7 +355,7 @@ func (g *igd) add(ctx context.Context, external, internal, lease int) error {
 		{"NewInternalPort", strconv.Itoa(internal)},
 		{"NewInternalClient", g.local.String()},
 		{"NewEnabled", "1"},
-		{"NewPortMappingDescription", "svoi"},
+		{"NewPortMappingDescription", "themesh"},
 		{"NewLeaseDuration", strconv.Itoa(lease)},
 	})
 	return err

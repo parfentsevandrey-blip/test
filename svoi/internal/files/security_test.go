@@ -23,7 +23,7 @@ func TestOfferIDsNeverReachTheFileSystem(t *testing.T) {
 	h.Mesh(victim, mallory)
 
 	root := t.TempDir()
-	dl := filepath.Join(root, "home", "user", "Downloads", "Svoi")
+	dl := filepath.Join(root, "home", "user", "Downloads", "The Mesh")
 	bait := filepath.Join(root, "home", "user", ".bashrc.d", "x.part")
 	writeFile(t, bait, []byte("# existing\n"))
 	set := &TransferSettings{DownloadDir: dl, AutoAccept: "all"}
@@ -165,7 +165,7 @@ func TestUniquePathTerminates(t *testing.T) {
 	}
 }
 
-// If an administrator shared a folder that contains the svoi data folder (the home
+// If an administrator shared a folder that contains the themesh data folder (the home
 // folder, say), any member could read mesh.json and with it the mesh authority key.
 func TestSharesCannotExposeTheDataFolder(t *testing.T) {
 	h := meshtest.New(t)

@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 
 export const here = path.dirname(fileURLToPath(import.meta.url));
 export const root = path.resolve(here, "..");
-export const config = { bin: path.join(root, "svoi"), shots: path.join(os.tmpdir(), "svoi-e2e-shots"), headed: false };
+export const config = { bin: path.join(root, "themesh"), shots: path.join(os.tmpdir(), "themesh-e2e-shots"), headed: false };
 
 // ------------------------------------------------------------------ playwright
 function loadPlaywright() {
@@ -56,7 +56,7 @@ function freePorts(n) {
 
 export async function startDemo({ quiet = true } = {}) {
   const base = await freePorts(4);
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "svoi-e2e-demo-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "themesh-e2e-demo-"));
   const proc = spawn(config.bin, ["demo", "--no-browser", "--dir", dir, "--port", String(base), ...(quiet ? ["--quiet"] : [])], { stdio: ["ignore", "pipe", "pipe"] });
   let out = "";
   const devices = {};
@@ -101,18 +101,18 @@ export async function startDemo({ quiet = true } = {}) {
   return demo;
 }
 
-// A real `svoi up` process with its own data directory (loopback only), optionally
-// already part of a mesh of its own (via `svoi init`). Used where the demo does not
+// A real `themesh up` process with its own data directory (loopback only), optionally
+// already part of a mesh of its own (via `themesh init`). Used where the demo does not
 // fit: onboarding screens and anything that needs an unconfigured device.
 export async function startNode({ name, init = false, mesh = "Тест", owner = "", port = 0 } = {}) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "svoi-e2e-node-"));
-  const env = { ...process.env, SVOI_DIR: path.join(dir, "data"), HOME: path.join(dir, "home"), XDG_CONFIG_HOME: path.join(dir, "home", ".config"), DISPLAY: "", WAYLAND_DISPLAY: "" };
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "themesh-e2e-node-"));
+  const env = { ...process.env, THEMESH_DIR: path.join(dir, "data"), HOME: path.join(dir, "home"), XDG_CONFIG_HOME: path.join(dir, "home", ".config"), DISPLAY: "", WAYLAND_DISPLAY: "" };
   fs.mkdirSync(env.HOME, { recursive: true });
   if (init) execFileSync(config.bin, ["init", "--mesh", mesh, "--name", name, "--owner", owner], { env, stdio: "pipe" });
   const log = fs.openSync(path.join(dir, "node.log"), "a");
   const spawnIt = () => spawn(config.bin, ["up", "--no-browser", "--no-stun", "--no-portmap", "--loopback", "--ui", `127.0.0.1:${port}`], { env, stdio: ["ignore", log, log], detached: true });
-  const addrFile = path.join(env.SVOI_DIR, "ui.addr");
-  const tokFile = path.join(env.SVOI_DIR, "ui.token");
+  const addrFile = path.join(env.THEMESH_DIR, "ui.addr");
+  const tokFile = path.join(env.THEMESH_DIR, "ui.token");
   const proc = spawnIt();
   await until(async () => fs.existsSync(addrFile) && fs.existsSync(tokFile), 20000, `${name || "node"} to start`);
   const origin = "http://" + fs.readFileSync(addrFile, "utf8").trim();
@@ -143,7 +143,7 @@ export async function stopNodes() { while (nodes.length) await nodes.pop().stop(
 export async function api(dev, method, p, body, { raw = false, headers = {} } = {}) {
   const res = await fetch(dev.origin + p, {
     method,
-    headers: { Authorization: "Bearer " + dev.token, "X-Svoi": "1", ...(body !== undefined && !(body instanceof Uint8Array) ? { "Content-Type": "application/json" } : {}), ...headers },
+    headers: { Authorization: "Bearer " + dev.token, "X-Themesh": "1", ...(body !== undefined && !(body instanceof Uint8Array) ? { "Content-Type": "application/json" } : {}), ...headers },
     body: body === undefined ? undefined : body instanceof Uint8Array ? body : JSON.stringify(body),
   });
   if (raw) return res;
@@ -203,8 +203,8 @@ export async function open(browser, dev, { w = 1280, h = 800, lang = "ru", theme
   });
   await ctx.addInitScript(([th, lg]) => {
     try {
-      if (!localStorage.getItem("svoi.lang")) localStorage.setItem("svoi.lang", lg);
-      if (!localStorage.getItem("svoi.theme")) localStorage.setItem("svoi.theme", th);
+      if (!localStorage.getItem("themesh.lang")) localStorage.setItem("themesh.lang", lg);
+      if (!localStorage.getItem("themesh.theme")) localStorage.setItem("themesh.theme", th);
     } catch {}
   }, [theme, lang]);
   const page = await ctx.newPage();
@@ -215,7 +215,7 @@ export async function open(browser, dev, { w = 1280, h = 800, lang = "ru", theme
   page.on("pageerror", (e) => bad("pageerror: " + e.message));
   page.on("requestfailed", (r) => !/\/api\/events/.test(r.url()) && bad(`requestfailed: ${r.method()} ${r.url()} ${r.failure() && r.failure().errorText}`));
   page.on("response", (r) => r.status() >= 400 && /\/api\//.test(r.url()) && bad(`HTTP ${r.status()} ${r.request().method()} ${r.url().replace(dev.origin, "")}`));
-  // Sign in the way a person does: a one-time link (what `svoi url` prints). The server turns
+  // Sign in the way a person does: a one-time link (what `themesh url` prints). The server turns
   // the code into a session cookie; the master token never goes near the browser.
   const { code } = await api(dev, "POST", "/api/login/code", {});
   await page.goto(`${dev.origin}/?t=${code}`, { waitUntil: "load" });

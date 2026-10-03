@@ -8,8 +8,8 @@ import { installDemoPanel } from "./panel.js";
 // interface's theme until the person picks one inside the interface itself.
 try {
   const t = document.documentElement.getAttribute("data-theme");
-  if ((t === "light" || t === "dark") && !localStorage.getItem("svoi.theme")) localStorage.setItem("svoi.theme", t);
+  if ((t === "light" || t === "dark") && !localStorage.getItem("themesh.theme")) localStorage.setItem("themesh.theme", t);
 } catch { /* storage may be blocked */ }
 
-installNet(globalThis.__svoiMockHandler);
+installNet(globalThis.__themeshMockHandler);
 installDemoPanel();

@@ -1,12 +1,12 @@
-name: svoi
+name: The Mesh
 
 on:
   push:
     branches: ["**"]
-    tags: ["svoi-v*"]          # releases; path filters are not applied to tag pushes
-    paths: ["svoi/**", ".github/workflows/svoi.yml"]
+    tags: ["themesh-v*"]          # releases; path filters are not applied to tag pushes
+    paths: ["svoi/**", ".github/workflows/themesh.yml"]
   pull_request:
-    paths: ["svoi/**", ".github/workflows/svoi.yml"]
+    paths: ["svoi/**", ".github/workflows/themesh.yml"]
   workflow_dispatch:
     inputs:
       lab:
@@ -38,7 +38,7 @@ jobs:
         run: make dist VERSION=ci
       - uses: actions/upload-artifact@v4
         with:
-          name: svoi-dist
+          name: themesh-dist
           path: svoi/dist/*
           retention-days: 7
 
@@ -59,7 +59,9 @@ jobs:
           go-version-file: svoi/go.mod
           cache-dependency-path: svoi/go.sum
       - run: go vet ./...
-      - run: go test ./... -count=1 -timeout 20m
+      - name: go test (on Windows a crash of the Go runtime itself is run again, a failed test never is)
+        shell: bash
+        run: bash deploy/ci/retry-on-go-crash.sh go test ./... -count=1 -timeout 20m
         env:
           # (the Go runtime of Windows Server 2025 crashes now and then, golang/go#76614, #77955)
           GODEBUG: ${{ runner.os == 'Windows' && 'asyncpreemptoff=1' || '' }}
@@ -79,7 +81,7 @@ jobs:
       - run: sudo -E env "PATH=$PATH" go test -tags lab ./lab -count=1 -v -timeout 20m
 
   release:
-    if: startsWith(github.ref, 'refs/tags/svoi-v')
+    if: startsWith(github.ref, 'refs/tags/themesh-v')
     needs: test
     runs-on: ubuntu-latest
     permissions:
@@ -91,7 +93,7 @@ jobs:
           go-version-file: svoi/go.mod
           cache-dependency-path: svoi/go.sum
       - name: build archives
-        run: make dist VERSION=${GITHUB_REF_NAME#svoi-v}
+        run: make dist VERSION=${GITHUB_REF_NAME#themesh-v}
       - uses: softprops/action-gh-release@v2
         with:
           files: svoi/dist/*

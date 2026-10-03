@@ -1,4 +1,4 @@
-// Package api is the local HTTP interface of a svoi device: the JSON API the web
+// Package api is the local HTTP interface of a themesh device: the JSON API the web
 // UI talks to (docs/UI-API.md), the live event stream and the embedded UI itself.
 package api
 
@@ -23,7 +23,7 @@ import (
 	"github.com/parfentsevandrey-blip/test/svoi/internal/app"
 )
 
-const cookiePrefix = "svoi_session"
+const cookiePrefix = "themesh_session"
 
 // cookieName: browsers share cookies between the ports of one host, so the session
 // cookie carries this node's port in its name. Otherwise signing in to a second node
@@ -244,8 +244,8 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	if t := r.URL.Query().Get("t"); t != "" && !strings.HasPrefix(r.URL.Path, "/api/") {
 		id, res := s.sess.redeemCode(t, func() (int, bool) { return s.callerUID(r) })
 		if res == redeemWrongUser {
-			http.Error(w, "This sign-in link was made for the user who started svoi on this computer, and you are another user.\n"+
-				"Ask that user to run `svoi url`: that prints a link you can open from any browser.", http.StatusForbidden)
+			http.Error(w, "This sign-in link was made for the user who started themesh on this computer, and you are another user.\n"+
+				"Ask that user to run `themesh url`: that prints a link you can open from any browser.", http.StatusForbidden)
 			return
 		}
 		if id != "" {
@@ -266,13 +266,13 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(r.URL.Path, "/api/") {
 		if !s.authorized(w, r) {
-			writeError(w, errCode("unauthorized", "open the link printed by `svoi up` (or run `svoi open`) to sign in"))
+			writeError(w, errCode("unauthorized", "open the link printed by `themesh up` (or run `themesh open`) to sign in"))
 			return
 		}
 		if r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions {
 			if !s.bearerOK(r) { // only a valid master token marks a client that is not a browser
-				if r.Header.Get("X-Svoi") != "1" {
-					writeError(w, errCode("denied", "missing X-Svoi header"))
+				if r.Header.Get("X-Themesh") != "1" {
+					writeError(w, errCode("denied", "missing X-Themesh header"))
 					return
 				}
 				if o := r.Header.Get("Origin"); o != "" {
@@ -322,7 +322,7 @@ func (s *Server) serveServiceWorker(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	data = swVersionRe.ReplaceAll(data, []byte(`const VERSION = "svoi-ui-`+s.uiVersion()+`";`))
+	data = swVersionRe.ReplaceAll(data, []byte(`const VERSION = "themesh-ui-`+s.uiVersion()+`";`))
 	w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 	http.ServeContent(w, r, "sw.js", time.Time{}, bytes.NewReader(data))
 }

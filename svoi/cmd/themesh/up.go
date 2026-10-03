@@ -23,16 +23,16 @@ func version() string { return mesh.Version }
 
 // defaultDir picks the data directory.
 func defaultDir() string {
-	if d := os.Getenv("SVOI_DIR"); d != "" {
+	if d := os.Getenv("THEMESH_DIR"); d != "" {
 		return d
 	}
 	if d, err := os.UserConfigDir(); err == nil && d != "" {
-		return filepath.Join(d, "svoi")
+		return filepath.Join(d, "themesh")
 	}
 	if os.Geteuid() == 0 {
-		return "/var/lib/svoi"
+		return "/var/lib/themesh"
 	}
-	return ".svoi"
+	return ".themesh"
 }
 
 type commonFlags struct {
@@ -61,11 +61,11 @@ func cmdUp(args []string) error {
 	owner := fs.String("owner", "", "owner name offered when creating/joining a mesh")
 	debug := fs.Bool("debug", false, "verbose logging")
 	loopback := fs.Bool("loopback", false, "also advertise 127.0.0.1 (several nodes on one machine)")
-	tunOn := fs.Bool("tun", false, "create the svoi0 network interface (Linux, needs root): reach devices by IP or <name>.svoi from any program")
+	tunOn := fs.Bool("tun", false, "create the themesh0 network interface (Linux, needs root): reach devices by IP or <name>.mesh from any program")
 	noSTUN := fs.Bool("no-stun", false, "do not use public STUN servers (peers still tell each other how they see us); saved in the settings")
 	printLink := fs.Bool("print-link", false, "print the one-time sign-in link even when the output is not a terminal (it then stays in the log)")
 	noPortMap := fs.Bool("no-portmap", false, "do not ask the home router (UPnP / NAT-PMP) to forward our UDP port; saved in the settings")
-	exitOnStdin := fs.Bool("exit-when-stdin-closes", false, "quit when standard input is closed (for the desktop and phone apps that run svoi as a background process: if the app goes away, so does svoi)")
+	exitOnStdin := fs.Bool("exit-when-stdin-closes", false, "quit when standard input is closed (for the desktop and phone apps that run themesh as a background process: if the app goes away, so does themesh)")
 	fs.Parse(args)
 
 	// Started a second time (a double click on the icon, say): the first copy owns the
@@ -74,10 +74,10 @@ func cmdUp(args []string) error {
 	if c, err := newClient(cf.dir); err == nil {
 		_ = c
 		if *noBrowser || !interactive() {
-			return errors.New("svoi is already running with this data directory (" + cf.dir + ")")
+			return errors.New("themesh is already running with this data directory (" + cf.dir + ")")
 		}
-		fmt.Fprintln(os.Stderr, "Свои уже запущены на этом устройстве — открываю интерфейс в браузере.")
-		fmt.Fprintln(os.Stderr, "svoi is already running on this device — opening the interface in your browser.")
+		fmt.Fprintln(os.Stderr, "The Mesh уже запущен на этом устройстве — открываю интерфейс в браузере.")
+		fmt.Fprintln(os.Stderr, "The Mesh is already running on this device — opening the interface in your browser.")
 		if printed, err := uiURL(cf.dir, false); err == nil {
 			fmt.Fprintln(os.Stderr, "  "+printed)
 		}
@@ -130,18 +130,18 @@ func cmdUp(args []string) error {
 	self := a.Node().Self()
 	if isTerminal(os.Stderr) {
 		// A person is looking: plain Russian, the link is theirs to copy (it scrolls away).
-		fmt.Fprintf(os.Stderr, "\nСвои %s запущены. Интерфейс откроется в браузере сам.\n\n", version())
+		fmt.Fprintf(os.Stderr, "\nThe Mesh %s запущен. Интерфейс откроется в браузере сам.\n\n", version())
 		if self.Configured {
 			fmt.Fprintf(os.Stderr, "  Это устройство:    %s, сеть «%s»\n", self.Name, self.MeshName)
 		} else {
 			fmt.Fprintf(os.Stderr, "  Это устройство пока не в сети: создайте свою сеть или подключитесь по приглашению — в браузере.\n")
 		}
 		fmt.Fprintf(os.Stderr, "  Адрес интерфейса:  %s\n", srv.URL())
-		fmt.Fprintf(os.Stderr, "                     (одноразовая ссылка на 10 минут; новую даёт команда `svoi open`)\n")
+		fmt.Fprintf(os.Stderr, "                     (одноразовая ссылка на 10 минут; новую даёт команда `themesh open`)\n")
 		fmt.Fprintf(os.Stderr, "  Ваши данные:       %s\n\n", cf.dir)
 		fmt.Fprintf(os.Stderr, "Не закрывайте это окно: пока оно открыто, программа работает.\nЗакрыть окно или нажать Ctrl+C — значит выйти (данные сохранятся).\n\n")
 	} else {
-		fmt.Fprintf(os.Stderr, "\nsvoi %s\n", version())
+		fmt.Fprintf(os.Stderr, "\nthemesh %s\n", version())
 		if self.Configured {
 			fmt.Fprintf(os.Stderr, "  device:  %s  (%s)\n  mesh:    %s\n", self.Name, self.IP4, self.MeshName)
 		} else {
@@ -149,10 +149,10 @@ func cmdUp(args []string) error {
 		}
 		// The link is a key for ten minutes. On a terminal a person reads it and it scrolls
 		// away; in a log (systemd's journal, docker logs) it would stay for others to find.
-		if *printLink || os.Getenv("SVOI_PRINT_LINK") != "" {
-			fmt.Fprintf(os.Stderr, "  open:    %s\n           (a one-time link, valid 10 minutes; `svoi open` makes a new one)\n  data:    %s\n\n", srv.URL(), cf.dir)
+		if *printLink || os.Getenv("THEMESH_PRINT_LINK") != "" {
+			fmt.Fprintf(os.Stderr, "  open:    %s\n           (a one-time link, valid 10 minutes; `themesh open` makes a new one)\n  data:    %s\n\n", srv.URL(), cf.dir)
 		} else {
-			fmt.Fprintf(os.Stderr, "  open:    run `svoi url` on this machine for a one-time sign-in link\n           (it is not printed here, a log would keep it; --print-link overrides)\n  data:    %s\n\n", cf.dir)
+			fmt.Fprintf(os.Stderr, "  open:    run `themesh url` on this machine for a one-time sign-in link\n           (it is not printed here, a log would keep it; --print-link overrides)\n  data:    %s\n\n", cf.dir)
 		}
 	}
 
@@ -173,7 +173,7 @@ func cmdUp(args []string) error {
 	}
 	select {
 	case <-stdinClosed:
-		fmt.Fprintln(os.Stderr, "shutting down (the app that started svoi has gone)…")
+		fmt.Fprintln(os.Stderr, "shutting down (the app that started themesh has gone)…")
 		srv.Close()
 		return nil
 	case <-signalChan():

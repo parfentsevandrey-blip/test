@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // End-to-end tests of the web interface against the REAL backend (no mock):
-// `svoi demo` brings up four simulated devices (laptop, phone, NAS, home server)
+// `themesh demo` brings up four simulated devices (laptop, phone, NAS, home server)
 // with the real protocol stack, and a headless Chromium drives the laptop's UI.
 // The other devices are poked through their own HTTP APIs to produce incoming
 // events (messages, offers) and to check what really arrived.
 //
-//   make build && node web-e2e/run.mjs [--bin ./svoi] [--only substring] [--shots dir] [--headed] [--list]
+//   make build && node web-e2e/run.mjs [--bin ./themesh] [--only substring] [--shots dir] [--headed] [--list]
 //
 // Needs Node 22+ and Playwright (`npm i -D playwright` or a global install) with a Chromium.
 import fs from "node:fs";
@@ -33,8 +33,8 @@ if (opt("list", false)) {
   process.exit(0);
 }
 if (!fs.existsSync(config.bin)) {
-  console.log("building svoi…");
-  execFileSync("go", ["build", "-o", config.bin, "./cmd/svoi"], { cwd: root, stdio: "inherit" });
+  console.log("building themesh…");
+  execFileSync("go", ["build", "-o", config.bin, "./cmd/themesh"], { cwd: root, stdio: "inherit" });
 }
 
 const browser = await chromium.launch({ headless: !config.headed, args: ["--no-sandbox", "--no-proxy-server", "--autoplay-policy=no-user-gesture-required"] });

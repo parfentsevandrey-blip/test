@@ -1,4 +1,4 @@
-// Package files implements the file features of svoi: shared folders that other
+// Package files implements the file features of themesh: shared folders that other
 // devices can browse, stream and upload to (the NAS use case), and AirDrop-style
 // file transfers between devices.
 package files
@@ -82,7 +82,7 @@ type Config struct {
 }
 
 // ErrProtected is returned for a share that would expose the device's own secrets.
-var ErrProtected = errors.New("this folder contains (or lies inside) the folder where svoi keeps its keys and settings")
+var ErrProtected = errors.New("this folder contains (or lies inside) the folder where themesh keeps its keys and settings")
 
 func within(child, parent string) bool {
 	rel, err := filepath.Rel(parent, child)
@@ -412,7 +412,7 @@ func (m *Manager) Create(actor Actor, shareID, rel string, overwrite bool) (*Pen
 		root.Close()
 		return nil, mesh.Errf(mesh.CodeNotFound, "the target folder does not exist")
 	}
-	tmp := path.Join(dir, fmt.Sprintf(".svoi-part-%d-%s", time.Now().UnixNano(), randHex(4)))
+	tmp := path.Join(dir, fmt.Sprintf(".themesh-part-%d-%s", time.Now().UnixNano(), randHex(4)))
 	f, err := root.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
 	if err != nil {
 		root.Close()

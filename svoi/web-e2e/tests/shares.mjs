@@ -7,7 +7,7 @@ const peerByName = async (dev, name) => (await dev.laptop.api("GET", "/api/state
 
 group("shares of this device", () => {
   test("a folder is shared read-only, then read-write, then only with one device — and others see exactly that", async ({ browser, dev }) => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "svoi-e2e-share-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "themesh-e2e-share-"));
     fs.writeFileSync(path.join(dir, "hello.txt"), "привет из ноутбука");
     fs.mkdirSync(path.join(dir, "sub"));
     const lap = (await dev.laptop.api("GET", "/api/state")).self;

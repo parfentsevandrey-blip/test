@@ -181,7 +181,7 @@ function FullScreen({ icon, tone = "neutral", title, text, children, testid, rea
 
 /**
  * No valid session (401) or signed out. Sign-in links are one-time codes, so a
- * reload never helps: the person runs `svoi open` / `svoi url` and opens the
+ * reload never helps: the person runs `themesh open` / `themesh url` and opens the
  * new link. "Check again" covers having done that in another tab (same cookie).
  */
 function Unauthorized() {
@@ -189,7 +189,7 @@ function Unauthorized() {
   const linkUsed = deadLoginCode;
   const [checking, setChecking] = useState(false);
   const reason = signedOut ? "signed-out" : linkUsed ? "link" : "expired";
-  const cmd = { open: html`<code class="mono">svoi open</code>`, url: html`<code class="mono">svoi url</code>` };
+  const cmd = { open: html`<code class="mono">themesh open</code>`, url: html`<code class="mono">themesh url</code>` };
   const title = signedOut ? t("auth.signedOut.title") : linkUsed ? t("auth.link.title") : t("auth.expired.title");
   const text = signedOut ? tx("auth.signedOut.text", cmd) : linkUsed ? tx("auth.link.text", cmd) : tx("auth.expired.text", cmd);
   const check = async () => {
@@ -202,7 +202,7 @@ function Unauthorized() {
       reason=${reason} title=${title}
       text=${html`<div class="auth-text">
         <p>${text}</p>
-        <div class="code-line mt-4"><span>svoi open</span><${CopyButton} text="svoi open" /></div>
+        <div class="code-line mt-4"><span>themesh open</span><${CopyButton} text="themesh open" /></div>
         <p class="faint small mt-3">${t("auth.checkHint")}</p>
       </div>`}>
     <${Button} variant="primary" icon="refresh" loading=${checking} onClick=${check} data-testid="auth-retry">${t("auth.retry")}</${Button}>
@@ -337,4 +337,4 @@ startLive();
 registerSW();
 
 // Expose for debugging in the console (read-only use).
-window.__svoi = { state };
+window.__themesh = { state };

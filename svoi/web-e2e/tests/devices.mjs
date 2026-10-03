@@ -33,7 +33,7 @@ group("devices", () => {
     await tid(page, "invite-create").click();
     await tid(page, "invite-qr").locator("img").waitFor();
     const code = (await tid(page, "invite-code").innerText()).trim();
-    assert(/^SVOI1-[A-Z0-9-]+$/.test(code), "invitation code format: " + code);
+    assert(/^MESH1-[A-Z0-9-]+$/.test(code), "invitation code format: " + code);
     const src = await tid(page, "invite-qr").locator("img").getAttribute("src");
     assert(/^(data:image\/svg|blob:|.*\/api\/)/.test(src), "QR image source: " + src.slice(0, 40));
     await tid(page, "invite-waiting").waitFor();

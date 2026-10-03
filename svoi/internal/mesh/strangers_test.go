@@ -86,11 +86,11 @@ func TestStrangersAreShownNothing(t *testing.T) {
 	wrong := append([]byte(nil), secret...)
 	wrong[0] ^= 0xFF
 	for _, tc := range []struct{ name, alpn, sni string }{
-		{"member protocol", ALPNMesh, "svoi"},
+		{"member protocol", ALPNMesh, "themesh"},
 		{"member protocol with a token", ALPNMesh, joinSNI(secret)},
-		{"join without a token", ALPNJoin, "svoi"},
+		{"join without a token", ALPNJoin, "themesh"},
 		{"join with a token for another secret", ALPNJoin, joinSNI(wrong)},
-		{"join with a mangled token", ALPNJoin, "zz.zz.join.svoi"},
+		{"join with a mangled token", ALPNJoin, "zz.zz.join.mesh"},
 	} {
 		cert, err := knock(t, evil, target, tc.alpn, tc.sni)
 		if cert != nil {
@@ -110,7 +110,7 @@ func TestStrangersAreShownNothing(t *testing.T) {
 	// Even then the certificate is a plain one: nothing about the device, its owner, the
 	// mesh or its addresses (those are for members).
 	if len(cert.Subject.Organization) != 0 || len(cert.Issuer.Organization) != 0 || len(cert.DNSNames) != 0 ||
-		len(cert.IPAddresses) != 0 || len(cert.URIs) != 0 || len(cert.EmailAddresses) != 0 || cert.Subject.CommonName != "svoi" ||
+		len(cert.IPAddresses) != 0 || len(cert.URIs) != 0 || len(cert.EmailAddresses) != 0 || cert.Subject.CommonName != "themesh" ||
 		len(cert.Extensions) > 2 {
 		t.Errorf("the join certificate says too much: subject %q issuer %q dns %v ips %v, %d extensions", cert.Subject, cert.Issuer, cert.DNSNames, cert.IPAddresses, len(cert.Extensions))
 	}
@@ -183,7 +183,7 @@ func TestAStrangerWithManyAddressesCannotLockOutTheInvitedDevice(t *testing.T) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				if c, _ := knock(t, h, target, ALPNJoin, "svoi"); c != nil {
+				if c, _ := knock(t, h, target, ALPNJoin, "themesh"); c != nil {
 					cert.Add(1)
 				}
 			}()
@@ -255,7 +255,7 @@ func TestForgedStandInSourceIsDropped(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
 			defer cancel()
 			_, _ = tr.Dial(ctx, &net.UDPAddr{IP: net.IPv4(10, 0, 0, 2), Port: 2}, &tls.Config{
-				InsecureSkipVerify: true, NextProtos: []string{ALPNMesh}, ServerName: "svoi", MinVersion: tls.VersionTLS13,
+				InsecureSkipVerify: true, NextProtos: []string{ALPNMesh}, ServerName: "themesh", MinVersion: tls.VersionTLS13,
 			}, &quic.Config{HandshakeIdleTimeout: 200 * time.Millisecond})
 		}()
 	}

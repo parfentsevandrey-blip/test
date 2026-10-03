@@ -1,6 +1,6 @@
 // HTTP helpers for the local node API. All URLs are relative ("api/…") so the
 // UI works under any mount point; every state-changing request carries the
-// X-Svoi header the node requires (CSRF guard).
+// X-Themesh header the node requires (CSRF guard).
 import { setState, state } from "./store.js";
 
 export class ApiError extends Error {
@@ -37,7 +37,7 @@ async function toError(res) {
 export async function api(path, { method = "GET", body, headers = {}, signal, raw = false } = {}) {
   const h = { ...headers };
   const init = { method, headers: h, signal, credentials: "same-origin", cache: "no-store" };
-  if (method !== "GET" && method !== "HEAD") h["X-Svoi"] = "1";
+  if (method !== "GET" && method !== "HEAD") h["X-Themesh"] = "1";
   if (body !== undefined) {
     if (body instanceof Blob || body instanceof ArrayBuffer || typeof body === "string") {
       init.body = body;
@@ -73,7 +73,7 @@ export function upload(path, body, { method = "POST", onProgress, contentType } 
   const xhr = new XMLHttpRequest();
   const promise = new Promise((resolve, reject) => {
     xhr.open(method, "api/" + path);
-    xhr.setRequestHeader("X-Svoi", "1");
+    xhr.setRequestHeader("X-Themesh", "1");
     if (contentType) xhr.setRequestHeader("Content-Type", contentType);
     xhr.responseType = "text";
     if (onProgress) {

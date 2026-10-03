@@ -26,7 +26,7 @@ group("services", () => {
     const sshAddr = (await ssh.getByTestId("forward-addr").innerText()).trim();
     assert(/^127\.0\.0\.1:\d+$/.test(sshAddr), "forward address: " + sshAddr);
     const sshPort = +sshAddr.split(":")[1];
-    assert((await talk(sshPort)).startsWith("SSH-2.0-svoi-demo"), "the SSH banner arrives through the mesh");
+    assert((await talk(sshPort)).startsWith("SSH-2.0-themesh-demo"), "the SSH banner arrives through the mesh");
 
     await web.getByTestId("service-connect").click();
     await web.getByTestId("forward-addr").waitFor();

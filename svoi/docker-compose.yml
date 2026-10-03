@@ -1,19 +1,19 @@
-# A headless svoi device (NAS, home server).
+# A headless themesh device (NAS, home server).
 #
 #   docker compose up -d
-#   docker compose exec svoi svoi url   # prints a fresh sign-in address for the web interface
-#   docker compose exec svoi svoi invite     # or: svoi join <code>
+#   docker compose exec themesh themesh url   # prints a fresh sign-in address for the web interface
+#   docker compose exec themesh themesh invite     # or: themesh join <code>
 #
 # network_mode: host is the simplest way to have real LAN discovery, direct
 # connections and the correct UDP port. On Docker Desktop (macOS/Windows) host
 # networking does not expose the real network — use the published ports below.
 services:
-  svoi:
+  themesh:
     build: .
     restart: unless-stopped
     network_mode: host
     volumes:
-      - svoi-data:/data
+      - themesh-data:/data
       # Folders to share (add the share in the interface as /srv/share):
       # - /mnt/storage:/srv/share
     command: ["up", "--no-browser", "--ui", "127.0.0.1:8777"]
@@ -22,4 +22,4 @@ services:
     #   ports: ["41710:41710/udp", "127.0.0.1:8777:8777"]
     #   command: ["up", "--no-browser", "--ui", "0.0.0.0:8777"]
 volumes:
-  svoi-data:
+  themesh-data:

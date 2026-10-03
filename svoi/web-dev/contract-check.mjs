@@ -4,7 +4,7 @@
 // node does not is a place where the interface can break.
 //
 //   node web-dev/mock-server.mjs --port 8777 --calm &
-//   ./svoi demo --no-browser --port 18777 --dir /tmp/demo &
+//   ./themesh demo --no-browser --port 18777 --dir /tmp/demo &
 //   node web-dev/contract-check.mjs --real http://127.0.0.1:18777 --token "$(cat /tmp/demo/laptop/data/ui.token)" --mock http://127.0.0.1:8777
 //
 // Exit code 1 when a field the mock has is missing in the real response or has an

@@ -92,7 +92,7 @@ group("settings", () => {
     const page = await open(browser, dev.laptop, { hash: "settings/interface" });
     await tid(page, "lang-en").click();
     await page.waitForFunction(() => /Devices/.test((document.querySelector('[data-testid="nav-devices"]')?.innerText ?? "")));
-    eq(await page.evaluate(() => localStorage.getItem("svoi.lang")), "en", "stored language");
+    eq(await page.evaluate(() => localStorage.getItem("themesh.lang")), "en", "stored language");
     await tid(page, "theme-light").click();
     await page.waitForFunction(() => document.documentElement.dataset.theme === "light" || document.documentElement.classList.contains("light") || getComputedStyle(document.body).backgroundColor === "rgb(255, 255, 255)" || window.matchMedia("(prefers-color-scheme: light)").matches === false);
     await page.reload();

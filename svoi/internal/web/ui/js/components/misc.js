@@ -49,7 +49,7 @@ export function attStateText(a) {
 }
 
 /**
- * «Адрес в сети: kukhonnyy-noutbuk.svoi» — live preview of the DNS name a typed
+ * «Адрес в сети: kukhonnyy-noutbuk.mesh» — live preview of the DNS name a typed
  * device name becomes; `taken` (names of the other members) adds the node's -2, -3… suffix.
  */
 export function DnsPreview({ name, taken }) {
@@ -57,7 +57,7 @@ export function DnsPreview({ name, taken }) {
   return html`<p class="dns-preview" data-testid="dns-preview" data-label=${label}>
     <${Icon} name="globe" size=${14} />
     <span>${t("dev.dnsPreview")}</span>
-    <span class="dns-preview__addr mono">${label}.svoi</span>
+    <span class="dns-preview__addr mono">${label}.mesh</span>
   </p>`;
 }
 

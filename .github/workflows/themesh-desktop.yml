@@ -1,14 +1,14 @@
-name: svoi desktop
+name: The Mesh desktop
 
-# Builds the desktop app «Свои» (Electron window + the svoi program inside) on real Windows, macOS and
+# Builds the desktop app The Mesh (Electron window + the themesh program inside) on real Windows, macOS and
 # Linux machines, runs the app's own end-to-end test against the PACKAGED build (a real window, the real
 # program, a second real node as another device), tests the installer where there is one, and keeps
-# the installers as build artifacts. A tag svoi-v* also attaches them to a release.
+# the installers as build artifacts. A tag themesh-v* also attaches them to a release.
 on:
   push:
     branches: ["**"]
-    tags: ["svoi-v*"] # path filters are not applied to tag pushes
-    paths: ["svoi/desktop/**", "svoi/cmd/**", "svoi/internal/**", "svoi/go.mod", "svoi/go.sum", ".github/workflows/svoi-desktop.yml"]
+    tags: ["themesh-v*"] # path filters are not applied to tag pushes
+    paths: ["svoi/desktop/**", "svoi/cmd/**", "svoi/internal/**", "svoi/go.mod", "svoi/go.sum", ".github/workflows/themesh-desktop.yml"]
   workflow_dispatch:
     inputs:
       repeat:
@@ -58,7 +58,7 @@ jobs:
           cache: npm
           cache-dependency-path: svoi/desktop/package-lock.json
 
-      - name: Build the svoi program for this platform
+      - name: Build the themesh program for this platform
         shell: bash
         run: |
           set -e
@@ -69,15 +69,15 @@ jobs:
             mkdir -p "desktop/bin/$key"
             if [ "${{ inputs.race }}" = "true" ] && [ $first = 1 ]; then
               # a diagnostic build for this machine's own kind of processor
-              CGO_ENABLED=1 go build -race -o "desktop/bin/$key/svoi$ext" ./cmd/svoi
-              echo "built desktop/bin/$key/svoi$ext WITH THE RACE DETECTOR"
+              CGO_ENABLED=1 go build -race -o "desktop/bin/$key/themesh$ext" ./cmd/themesh
+              echo "built desktop/bin/$key/themesh$ext WITH THE RACE DETECTOR"
             else
               flags="-s -w"
               # the Go runtime of Windows Server 2025 / Windows 11 24H2 crashes now and then while it scans a
               # stack (golang/go#76614, #77955): without asynchronous preemption it does not
               [ "$goos" = windows ] && flags="$flags -X runtime.godebugDefault=asyncpreemptoff=1"
-              CGO_ENABLED=0 GOOS=$goos GOARCH=$goarch go build -trimpath -ldflags "$flags" -o "desktop/bin/$key/svoi$ext" ./cmd/svoi
-              echo "built desktop/bin/$key/svoi$ext"
+              CGO_ENABLED=0 GOOS=$goos GOARCH=$goarch go build -trimpath -ldflags "$flags" -o "desktop/bin/$key/themesh$ext" ./cmd/themesh
+              echo "built desktop/bin/$key/themesh$ext"
             fi
             first=0
           done
@@ -101,8 +101,8 @@ jobs:
         shell: bash
         run: |
           case "$RUNNER_OS" in
-            Linux)   exe="$PWD/dist/linux-unpacked/Svoi" ;;
-            Windows) exe="$PWD/dist/win-unpacked/Svoi.exe" ;;
+            Linux)   exe="$PWD/dist/linux-unpacked/TheMesh" ;;
+            Windows) exe="$PWD/dist/win-unpacked/TheMesh.exe" ;;
             macOS)   exe=$(ls -d "$PWD"/dist/mac-arm64/*.app/Contents/MacOS/* | head -1) ;;
           esac
           test -f "$exe" || { echo "no executable at $exe"; ls -R dist | head -50; exit 1; }
@@ -113,8 +113,8 @@ jobs:
         working-directory: svoi/desktop
         shell: bash
         env:
-          SVOI_APP_EXE: ${{ steps.app.outputs.exe }} # the app must find and run the program it carries (no SVOI_CORE)
-          SVOI_DESKTOP_LOCALE: ru # the screenshots are those of a Russian-speaking person's window
+          THEMESH_APP_EXE: ${{ steps.app.outputs.exe }} # the app must find and run the program it carries (no THEMESH_CORE)
+          THEMESH_DESKTOP_LOCALE: ru # the screenshots are those of a Russian-speaking person's window
           GORACE: halt_on_error=1 exitcode=66 # (only matters for the diagnostic build with the race detector)
         run: |
           mkdir -p ../../shots
@@ -124,10 +124,11 @@ jobs:
           bad=0
           for n in $(seq 1 "${{ inputs.repeat || 1 }}"); do
             echo "=== run $n"
+            # (on Windows a run that died of a crash of the Go runtime itself is run again; a failed check never is)
             if [ "$RUNNER_OS" = Linux ]; then
-              xvfb-run -a -s "-screen 0 1280x900x24" node test/smoke.mjs --shots ../../shots || bad=1
+              bash ../deploy/ci/retry-on-go-crash.sh xvfb-run -a -s "-screen 0 1280x900x24" node test/smoke.mjs --shots ../../shots || bad=1
             else
-              node test/smoke.mjs --shots ../../shots || bad=1
+              bash ../deploy/ci/retry-on-go-crash.sh node test/smoke.mjs --shots ../../shots || bad=1
             fi
             if [ $bad = 1 ]; then break; fi
           done
@@ -140,10 +141,10 @@ jobs:
         run: |
           $d = Join-Path $env:RUNNER_TEMP 'probe'
           New-Item -ItemType Directory -Force $d | Out-Null
-          $env:SVOI_DESKTOP_TEST = '1'; $env:SVOI_DESKTOP_VERBOSE = '1'
-          $env:SVOI_DESKTOP_USERDATA = "$d\profile"; $env:SVOI_DIR = "$d\data"
-          $env:SVOI_CORE_ARGS = '["--no-stun","--no-portmap","--loopback"]'
-          $exe = (Resolve-Path 'dist\win-unpacked\Svoi.exe').Path
+          $env:THEMESH_DESKTOP_TEST = '1'; $env:THEMESH_DESKTOP_VERBOSE = '1'
+          $env:THEMESH_DESKTOP_USERDATA = "$d\profile"; $env:THEMESH_DIR = "$d\data"
+          $env:THEMESH_CORE_ARGS = '["--no-stun","--no-portmap","--loopback"]'
+          $exe = (Resolve-Path 'dist\win-unpacked\TheMesh.exe').Path
           foreach ($mode in @('plain', 'inspect')) {
             Write-Host "=== $mode"
             $extra = @(); if ($mode -eq 'inspect') { $extra = @('--inspect=0', '--remote-debugging-port=0') }
@@ -153,8 +154,8 @@ jobs:
             Write-Host '--- stdout'; Get-Content "$d\out-$mode.txt" -ErrorAction SilentlyContinue | Select-Object -First 30
             Write-Host '--- stderr'; Get-Content "$d\err-$mode.txt" -ErrorAction SilentlyContinue | Select-Object -First 30
             Write-Host '--- desktop.log'; Get-Content "$d\profile\logs\desktop.log" -ErrorAction SilentlyContinue | Select-Object -First 30
-            Get-Process | Where-Object { $_.ProcessName -like 'Svoi*' -or $_.ProcessName -like 'svoi*' } | Format-Table Id, ProcessName, MainWindowTitle -AutoSize | Out-String | Write-Host
-            Get-Process | Where-Object { $_.ProcessName -like 'Svoi*' -or $_.ProcessName -like 'svoi*' } | Stop-Process -Force -ErrorAction SilentlyContinue
+            Get-Process | Where-Object { $_.ProcessName -like 'TheMesh*' -or $_.ProcessName -like 'themesh*' } | Format-Table Id, ProcessName, MainWindowTitle -AutoSize | Out-String | Write-Host
+            Get-Process | Where-Object { $_.ProcessName -like 'TheMesh*' -or $_.ProcessName -like 'themesh*' } | Stop-Process -Force -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 2
             Remove-Item -Recurse -Force "$d\profile", "$d\data" -ErrorAction SilentlyContinue
           }
@@ -164,20 +165,20 @@ jobs:
         working-directory: svoi/desktop
         shell: pwsh
         run: |
-          $setup = Get-ChildItem dist -Filter 'Svoi-Setup-*.exe' | Select-Object -First 1
+          $setup = Get-ChildItem dist -Filter 'TheMesh-Setup-*.exe' | Select-Object -First 1
           if (-not $setup) { throw 'no installer was built' }
           Write-Host "installing $($setup.Name) ($([math]::Round($setup.Length/1MB)) MB) silently"
           Start-Process -FilePath $setup.FullName -ArgumentList '/S' -Wait
           $programs = Join-Path $env:LOCALAPPDATA 'Programs'
-          $exe = Get-ChildItem $programs -Recurse -Filter 'Svoi.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+          $exe = Get-ChildItem $programs -Recurse -Filter 'TheMesh.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $exe) { Get-ChildItem $programs -Recurse | Select-Object -First 40 | ForEach-Object { Write-Host $_.FullName }; throw 'the installer did not install the app for this user' }
           Write-Host "installed at $($exe.FullName)"
-          $lnk = Get-ChildItem (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs') -Filter '*.lnk' -ErrorAction SilentlyContinue | Where-Object { $_.Name -like 'Св*' -or $_.Name -like 'Svoi*' }
+          $lnk = Get-ChildItem (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs') -Filter '*.lnk' -ErrorAction SilentlyContinue | Where-Object { $_.Name -like 'The Mesh*' -or $_.Name -like 'TheMesh*' }
           if (-not $lnk) { throw 'no Start menu shortcut' }
           Write-Host "Start menu shortcut: $($lnk.Name)"
           # the installed copy carries its own program
-          $env:SVOI_APP_EXE = $exe.FullName
-          node test/smoke.mjs
+          $env:THEMESH_APP_EXE = $exe.FullName
+          bash ../deploy/ci/retry-on-go-crash.sh node test/smoke.mjs
           if ($LASTEXITCODE -ne 0) { throw 'the installed app failed its test' }
           $uninst = Get-ChildItem $exe.Directory.FullName -Filter 'Uninstall*.exe' | Select-Object -First 1
           if (-not $uninst) { throw 'no uninstaller' }
@@ -196,13 +197,13 @@ jobs:
         run: |
           deb=$(ls "$APP_DEB"/*.deb | head -1)
           sudo apt-get install -y -qq "$deb" >/dev/null
-          exe=$(dpkg -L svoi-desktop | grep -E '/Svoi$' | head -1)
-          test -x "$exe" || { dpkg -L svoi-desktop | head -30; echo "no installed executable"; exit 1; }
+          exe=$(dpkg -L themesh-desktop | grep -E '/TheMesh$' | head -1)
+          test -x "$exe" || { dpkg -L themesh-desktop | head -30; echo "no installed executable"; exit 1; }
           echo "installed at $exe"
-          entry=$(dpkg -L svoi-desktop | grep -E '\.desktop$' | head -1)
+          entry=$(dpkg -L themesh-desktop | grep -E '\.desktop$' | head -1)
           test -n "$entry" && echo "menu entry: $entry" || { echo "no menu entry"; exit 1; }
-          unset SVOI_CORE
-          SVOI_APP_EXE="$exe" xvfb-run -a -s "-screen 0 1280x900x24" node test/smoke.mjs
+          unset THEMESH_CORE
+          THEMESH_APP_EXE="$exe" xvfb-run -a -s "-screen 0 1280x900x24" node test/smoke.mjs
 
       - name: Linux - the AppImage runs by itself (no installation)
         if: runner.os == 'Linux'
@@ -213,8 +214,8 @@ jobs:
           sudo apt-get install -y -qq libfuse2t64 >/dev/null 2>&1 || sudo apt-get install -y -qq libfuse2 >/dev/null 2>&1 || true
           appimage=$(ls "$PWD"/dist/*.AppImage | head -1)
           echo "running $appimage (FUSE: $(test -e /dev/fuse && echo yes || echo no))"
-          unset SVOI_CORE
-          SVOI_APP_EXE="$appimage" xvfb-run -a -s "-screen 0 1280x900x24" node test/smoke.mjs
+          unset THEMESH_CORE
+          THEMESH_APP_EXE="$appimage" xvfb-run -a -s "-screen 0 1280x900x24" node test/smoke.mjs
 
       - name: macOS - the .dmg opens, the app inside is signed and runs
         if: runner.os == 'macOS'
@@ -224,17 +225,17 @@ jobs:
           set -e
           dmg=$(ls dist/*-mac-arm64.dmg | head -1)
           echo "opening $dmg"
-          hdiutil attach "$dmg" -nobrowse -readonly -mountpoint /Volumes/SvoiTest
-          ls /Volumes/SvoiTest
+          hdiutil attach "$dmg" -nobrowse -readonly -mountpoint /Volumes/TheMeshTest
+          ls /Volumes/TheMeshTest
           mkdir -p "$RUNNER_TEMP/apps"
-          cp -R /Volumes/SvoiTest/*.app "$RUNNER_TEMP/apps/"
-          hdiutil detach /Volumes/SvoiTest
+          cp -R /Volumes/TheMeshTest/*.app "$RUNNER_TEMP/apps/"
+          hdiutil detach /Volumes/TheMeshTest
           app=$(ls -d "$RUNNER_TEMP"/apps/*.app | head -1)
           codesign --verify --deep --strict --verbose=2 "$app"
           codesign -dv "$app" 2>&1 | head -12 || true
           exe=$(ls "$app"/Contents/MacOS/* | head -1)
-          unset SVOI_CORE
-          SVOI_APP_EXE="$exe" node test/smoke.mjs
+          unset THEMESH_CORE
+          THEMESH_APP_EXE="$exe" node test/smoke.mjs
 
       - name: macOS - the build for Intel Macs, run here through Rosetta (best effort)
         if: runner.os == 'macOS'
@@ -251,8 +252,8 @@ jobs:
           fi
           arch -x86_64 /usr/bin/true
           exe=$(ls "$PWD/$app"/Contents/MacOS/* | head -1)
-          unset SVOI_CORE
-          SVOI_APP_EXE="$exe" node test/smoke.mjs
+          unset THEMESH_CORE
+          THEMESH_APP_EXE="$exe" node test/smoke.mjs
 
       - name: What was built
         if: always()
@@ -263,7 +264,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: svoi-desktop-${{ runner.os }}
+          name: themesh-desktop-${{ runner.os }}
           path: |
             svoi/desktop/dist/*.exe
             svoi/desktop/dist/*.dmg
@@ -276,7 +277,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: svoi-desktop-screens-${{ runner.os }}
+          name: themesh-desktop-screens-${{ runner.os }}
           path: |
             shots/*.png
             shots/failure-*
@@ -284,7 +285,7 @@ jobs:
           retention-days: 7
 
   release:
-    if: startsWith(github.ref, 'refs/tags/svoi-v')
+    if: startsWith(github.ref, 'refs/tags/themesh-v')
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -292,7 +293,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: svoi-desktop-{Linux,Windows,macOS}
+          pattern: themesh-desktop-{Linux,Windows,macOS}
           path: installers
           merge-multiple: true
       - uses: softprops/action-gh-release@v2

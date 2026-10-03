@@ -66,7 +66,7 @@ func TestUIDInTable(t *testing.T) {
 			i, procAddr(l), procAddr(r), uid, 1000+i)
 	}
 	table := "  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode\n" +
-		line(0, server, client, 111) + // the server's end of the connection (owned by svoi)
+		line(0, server, client, 111) + // the server's end of the connection (owned by themesh)
 		line(1, other, server, 2222) + // somebody else's connection
 		line(2, client, server, 1234) // the client's end: the one we want
 	if uid, ok := uidInTable(strings.NewReader(table), client, server); !ok || uid != 1234 {

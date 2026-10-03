@@ -1,4 +1,4 @@
-# svoi web UI — notes
+# The Mesh web UI — notes
 
 The UI is a static single-page app in `internal/web/ui/` (embedded into the binary with
 `go:embed`). It talks only to its own node over the API in `docs/UI-API.md`. No build step,
@@ -20,13 +20,13 @@ internal/web/ui/
   css/layout.css          shell: sidebar (≥1100px), icon rail (760–1099px), tab bar (<760px)
   css/views.css           per-screen styles
   js/app.js               shell, global banners, full-screen states, view routing
-  js/api.js               fetch/XHR helpers (relative URLs, X-Svoi header, ApiError)
+  js/api.js               fetch/XHR helpers (relative URLs, X-Themesh header, ApiError)
   js/sse.js               one EventSource + backoff; GET api/state on every (re)connect
   js/store.js             tiny global store + useStore(selector) + event bus
   js/router.js            hash router (#/section/…, each segment URI-encoded)
   js/i18n.js, i18n/*.js   t()/tn()/tx(); ru (default) and en dictionaries, Russian plurals
-  js/prefs.js             language/theme (localStorage "svoi.lang"/"svoi.theme"), Home's
-                          first-steps flags ("svoi.home.browsed|sent|startDismissed")
+  js/prefs.js             language/theme (localStorage "themesh.lang"/"themesh.theme"), Home's
+                          first-steps flags ("themesh.home.browsed|sent|startDismissed")
   js/format.js            sizes, speeds, RTT, dates, durations (Intl)
   js/util.js              linkify, device/file-kind heuristics, osName, clipboard, dnsLabel/uniqueLabel
                           (device name → DNS label, ports of SanitizeName/UniqueName), misc
@@ -76,7 +76,7 @@ node web-dev/mock-server.mjs --latency 300        # slower API to look at loadin
 export NODE_PATH=/opt/node22/lib/node_modules      # Playwright is installed globally
 node web-dev/screenshots.mjs [--only devices,mail] [--lang en] [--out /tmp/shots] [--dpr 1]
 node web-dev/smoke.mjs [--only mail,chat]
-# against the real node: `svoi demo --no-browser --quiet --port 18777 --dir /tmp/demo`, token = the master token in
+# against the real node: `themesh demo --no-browser --quiet --port 18777 --dir /tmp/demo`, token = the master token in
 # /tmp/demo/laptop/data/ui.token (the printed ?t= links are one-time sign-in codes, not the token)
 # (steps that need mock hooks or the mock's sample files are skipped or fail on data, not on the UI)
 node web-dev/smoke.mjs --base http://127.0.0.1:18777 --token <TOKEN>
@@ -123,7 +123,7 @@ The interface is meant for people who don't care how a mesh works. The landing p
    button opens the help sheet.
 2. *Нужно ваше внимание* (`home-attention`, hidden when empty): incoming file offers with
    Принять/Отклонить right in the row (up to 3, then a link to Files), unread mail and chat, pending
-   invitations (with whom they are for and the countdown), «перезапустите svoi» when
+   invitations (with whom they are for and the countdown), «перезапустите The Mesh» when
    `restartRequired`. Because Home lists offers itself, the global offers banner is **not** shown on
    Home (it still is on every other page except Files → Send). Accepting toasts «Принимаем «…»» with a
    link to Files.
@@ -131,8 +131,8 @@ The interface is meant for people who don't care how a mesh works. The landing p
    send something. Shown while the network is young (≤ 1 other device, or no transfers in the store)
    and not dismissed. Step 1 is done when there is a peer; step 3 when the store has an outgoing
    transfer. Looking at another device's folders and sending chat/mail leave no trace in the API,
-   so those are remembered per browser (`svoi.home.browsed`, `svoi.home.sent`); «Скрыть» stores
-   `svoi.home.startDismissed`.
+   so those are remembered per browser (`themesh.home.browsed`, `themesh.home.sent`); «Скрыть» stores
+   `themesh.home.startDismissed`.
 4. *Four big actions*: «Отправить файл» and «Написать сообщение» ask «Кому?» in a sheet when there
    are two or more devices (`device-pick`, «Выбрать на следующем шаге» for files), go straight to the
    only device when there is one, and say «Сначала добавьте второе устройство» (and open the invite
@@ -183,7 +183,7 @@ device is off, a letter or file waits. Plus what the dots and the map's lines me
 
 * Serve `index.html` for `/`; hash routing means no other SPA fallback is needed.
   Serve `sw.js` with `Cache-Control: no-cache`. The node rewrites its line
-  `const VERSION = "svoi-ui-v1";` to `"svoi-ui-<hash of the embedded UI files>"` (keep that line
+  `const VERSION = "themesh-ui-v1";` to `"themesh-ui-<hash of the embedded UI files>"` (keep that line
   exactly as it is; never bump it by hand), so every new binary installs a fresh worker and cache
   (the mock does the same with a hash of `internal/web/ui/`).
 * Recommended headers for the UI: `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`,
@@ -215,7 +215,7 @@ Onboarding: `page-onboarding`, `onb-create`, `onb-join`, `onb-mesh-name`, `onb-d
 `onb-owner` (create form only — the join form has no owner), `onb-code`, `onb-submit`,
 `onb-progress`, `onb-error`, `removed-notice`.
 Device-name preview (onboarding and the rename prompt): `dns-preview` (`data-label` = the label
-without `.svoi`).
+without `.mesh`).
 Home: `home-status` (`data-state` = `ok|partial|offline|alone`), `home-help`, `home-attention` with
 `home-offer` (`data-id`; its buttons are `offer-accept` / `offer-decline` like the banner's),
 `home-att-mail`, `home-att-chat`, `home-att-invite`, `home-att-restart`, `home-att-offers` (links),
@@ -240,7 +240,7 @@ Files: `files-tab-<send|browse|shares>`, `device-chip` (`data-id`, `data-name`),
 (`data-id`, `data-mode`), `file-row` / `file-tile` (`data-name`, `data-dir`), `file-filter`,
 `view-list`, `view-grid`, `read-only`, `upload-button`, `upload-input`, `upload-panel`,
 `upload-item` (`data-status`), `new-folder`, `share-add`, `share-row` (`data-blocked="true"` when
-blocked), `share-blocked` (the «Не раздаётся: в папке ключи svoi» badge), `share-path`,
+blocked), `share-blocked` (the «Не раздаётся: в папке ключи The Mesh» badge), `share-path`,
 `share-pick`, `share-name`, `share-save`, `share-error` (the node's message in the dialog),
 `manage-device`.
 Mail: `mail-compose`, `mail-folder-<inbox|sent|trash>`, `mail-search`, `mail-item` (`data-id`,
@@ -283,7 +283,7 @@ switch is off), endpoint chips in the NAT card carry `data-kind` (`mapped|local|
    the same shape as `/api/state` (the UI reads `self` and `settings` from it).
 9. **`fs` rename `to`** is assumed to be a bare name in the same folder (not a path);
    `delete` of a folder is assumed recursive (the confirmation says so).
-10. **`<name>.svoi`** in the TUN hints uses `deviceName` (not the local alias).
+10. **`<name>.mesh`** in the TUN hints uses `deviceName` (not the local alias).
 11. **`Peer.services`** from `state`/`peers` is used for the Services screen (no per-device
     `GET /api/peers/:id/services` calls); it is assumed to be the list the device exposes *to us*.
 12. **Join errors**: the UI maps `invalid` → "the code didn't work", `busy`/network → "couldn't
@@ -299,7 +299,7 @@ switch is off), endpoint chips in the NAT card carry `data-kind` (`mapped|local|
     `GET /api/events` (the bearer header used by test tools is not available to the UI).
 16. **Device names** (onboarding, rename): suggested from `self.os`; the form keeps its rule —
     whitespace → `-`, then `^[\p{L}\p{N}][\p{L}\p{N}._-]{0,62}$` — and shows the DNS label the node
-    will derive («Адрес в сети: kukhonnyy-noutbuk.svoi») with `dnsLabel()` in `js/util.js`, a port
+    will derive («Адрес в сети: kukhonnyy-noutbuk.mesh») with `dnsLabel()` in `js/util.js`, a port
     of `SanitizeName` (checked by `web-dev/check-util.mjs` against the docs and Go test cases).
     The rename preview also predicts the `-2`, `-3`… suffix from the names of the members it
     knows (`uniqueLabel`, like `UniqueName`); joining can't know the mesh's names, so onboarding

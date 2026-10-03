@@ -2,7 +2,7 @@
 
 // Real-NAT integration tests. They need root and iproute2/iptables, and build a
 // miniature Internet out of network namespaces (see natlab.sh), then run real
-// `svoi` processes inside it.
+// `themesh` processes inside it.
 //
 //	sudo go test -tags lab ./lab -v -count=1 -timeout 20m
 package lab
@@ -24,9 +24,9 @@ import (
 )
 
 var (
-	svoiBin string
-	igdBin  string // the stand-in for a router's UPnP service (lab/fakeigd)
-	labSh   string
+	themeshBin string
+	igdBin     string // the stand-in for a router's UPnP service (lab/fakeigd)
+	labSh      string
 )
 
 func TestMain(m *testing.M) {
@@ -38,12 +38,12 @@ func TestMain(m *testing.M) {
 		fmt.Println("lab tests need iproute2; skipping")
 		os.Exit(0)
 	}
-	dir, err := os.MkdirTemp("", "svoi-lab-bin")
+	dir, err := os.MkdirTemp("", "themesh-lab-bin")
 	if err != nil {
 		panic(err)
 	}
-	svoiBin = filepath.Join(dir, "svoi")
-	build := exec.Command("go", "build", "-o", svoiBin, "../cmd/svoi")
+	themeshBin = filepath.Join(dir, "themesh")
+	build := exec.Command("go", "build", "-o", themeshBin, "../cmd/themesh")
 	build.Stdout, build.Stderr = os.Stdout, os.Stderr
 	if err := build.Run(); err != nil {
 		panic(err)
@@ -80,12 +80,12 @@ func newNode(t *testing.T, ns, name string) *node {
 
 func (n *node) command(args ...string) *exec.Cmd {
 	full := []string{"netns", "exec", n.ns, "env",
-		"SVOI_DIR=" + n.dir, "HOME=" + filepath.Join(n.dir, "home"),
-		"QUIC_GO_DISABLE_RECEIVE_BUFFER_WARNING=true", svoiBin}
+		"THEMESH_DIR=" + n.dir, "HOME=" + filepath.Join(n.dir, "home"),
+		"QUIC_GO_DISABLE_RECEIVE_BUFFER_WARNING=true", themeshBin}
 	return exec.Command("ip", append(full, args...)...)
 }
 
-// run executes a one-shot svoi command inside the namespace.
+// run executes a one-shot themesh command inside the namespace.
 func (n *node) run(args ...string) string {
 	n.t.Helper()
 	cmd := n.command(args...)
@@ -99,11 +99,11 @@ func (n *node) run(args ...string) string {
 	select {
 	case err := <-done:
 		if err != nil {
-			n.t.Fatalf("[%s] svoi %s failed: %v\n%s", n.name, strings.Join(args, " "), err, out.String())
+			n.t.Fatalf("[%s] themesh %s failed: %v\n%s", n.name, strings.Join(args, " "), err, out.String())
 		}
 	case <-time.After(90 * time.Second):
 		cmd.Process.Kill()
-		n.t.Fatalf("[%s] svoi %s timed out\n%s", n.name, strings.Join(args, " "), out.String())
+		n.t.Fatalf("[%s] themesh %s timed out\n%s", n.name, strings.Join(args, " "), out.String())
 	}
 	return out.String()
 }
@@ -216,7 +216,7 @@ func waitFor(t *testing.T, d time.Duration, what string, cond func() bool) {
 	t.Fatalf("timed out after %v waiting for: %s", d, what)
 }
 
-var codeRe = regexp.MustCompile(`SVOI1-[A-Z0-9-]+`)
+var codeRe = regexp.MustCompile(`MESH1-[A-Z0-9-]+`)
 
 func invite(t *testing.T, founder *node) string {
 	out := founder.run("invite", "--ttl", "5m", "--owner", "lab") // the inviter says whose device it is
@@ -242,7 +242,7 @@ func runScenario(t *testing.T, natA, natB, fw, wantPath string) {
 		}
 	}
 	t.Cleanup(func() {
-		if t.Failed() || os.Getenv("SVOI_LAB_DUMP") != "" {
+		if t.Failed() || os.Getenv("THEMESH_LAB_DUMP") != "" {
 			dump()
 		}
 	})
@@ -320,7 +320,7 @@ func runScenario(t *testing.T, natA, natB, fw, wantPath string) {
 		relayedBefore = st.Self.Relayed.Bytes
 	}
 	a.run("send", "b", src)
-	dest := filepath.Join(b.dir, "home", "Downloads", "Svoi", "payload.bin")
+	dest := filepath.Join(b.dir, "home", "Downloads", "The Mesh", "payload.bin")
 	waitFor(t, 90*time.Second, "file to arrive at b", func() bool {
 		st, err := os.Stat(dest)
 		return err == nil && st.Size() == int64(len(data))
@@ -357,7 +357,7 @@ func TestConeToConePermissiveFirewall(t *testing.T) {
 }
 
 // The overlay: ordinary programs (curl, here) reach another device by its overlay
-// address or by <name>.svoi, across two NATs, without knowing svoi exists.
+// address or by <name>.mesh, across two NATs, without knowing themesh exists.
 func TestOverlayTUN(t *testing.T) {
 	if out, err := exec.Command(labSh, "up", "cone", "cone", "home").CombinedOutput(); err != nil {
 		t.Fatalf("natlab up: %v\n%s", err, out)
@@ -460,11 +460,11 @@ func TestOverlayTUN(t *testing.T) {
 			}
 		}
 	}()
-	waitFor(t, 15*time.Second, "b.svoi resolves", func() bool {
-		out, err := exec.Command("ip", "netns", "exec", "svl-A", "getent", "ahostsv4", "b.svoi").Output()
+	waitFor(t, 15*time.Second, "b.mesh resolves", func() bool {
+		out, err := exec.Command("ip", "netns", "exec", "svl-A", "getent", "ahostsv4", "b.mesh").Output()
 		return err == nil && strings.Contains(string(out), pb.IP4)
 	})
-	if got := string(curl("http://b.svoi:8088/hello.txt")); got != "hello over the overlay\n" {
+	if got := string(curl("http://b.mesh:8088/hello.txt")); got != "hello over the overlay\n" {
 		t.Fatalf("by-name request returned %q", got)
 	}
 	// A multi-megabyte transfer through the tunnel arrives intact.
@@ -520,7 +520,7 @@ func TestLANOnlyAndReaddressing(t *testing.T) {
 			t.Fatal(err)
 		}
 		l1.run("send", "l2", src)
-		dest := filepath.Join(l2.dir, "home", "Downloads", "Svoi", name)
+		dest := filepath.Join(l2.dir, "home", "Downloads", "The Mesh", name)
 		waitFor(t, 60*time.Second, "file "+name+" to arrive", func() bool {
 			st, err := os.Stat(dest)
 			return err == nil && st.Size() == int64(len(data))
@@ -619,7 +619,7 @@ func TestPortMapMakesAHomeDeviceReachable(t *testing.T) {
 	b := newNode(t, "svl-B", "b")
 	a.portmap = true
 	t.Cleanup(func() {
-		if t.Failed() || os.Getenv("SVOI_LAB_DUMP") != "" {
+		if t.Failed() || os.Getenv("THEMESH_LAB_DUMP") != "" {
 			for _, n := range []*node{a, b} {
 				t.Logf("---- %s log ----\n%s", n.name, n.logTail(80))
 			}
@@ -694,7 +694,7 @@ func TestPortMapMakesAHomeDeviceReachable(t *testing.T) {
 		t.Fatal(err)
 	}
 	b.run("send", "a", src)
-	dest := filepath.Join(a.dir, "home", "Downloads", "Svoi", "payload.bin")
+	dest := filepath.Join(a.dir, "home", "Downloads", "The Mesh", "payload.bin")
 	waitFor(t, 90*time.Second, "the file to arrive at a", func() bool {
 		st, err := os.Stat(dest)
 		return err == nil && st.Size() == int64(len(data))

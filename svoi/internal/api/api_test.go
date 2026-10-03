@@ -119,11 +119,11 @@ func TestAuthenticationAndBrowserProtections(t *testing.T) {
 	}
 	// Cookie-authenticated writes need the custom header (CSRF), and a same-origin Origin.
 	if resp, _ := e.req("POST", "/api/mesh/leave", "{}", withCookie); resp.StatusCode != 403 {
-		t.Fatalf("POST without X-Svoi: %d", resp.StatusCode)
+		t.Fatalf("POST without X-Themesh: %d", resp.StatusCode)
 	}
 	if resp, _ := e.req("POST", "/api/mesh/leave", "{}", func(r *http.Request) {
 		withCookie(r)
-		r.Header.Set("X-Svoi", "1")
+		r.Header.Set("X-Themesh", "1")
 		r.Header.Set("Origin", "http://evil.example")
 	}); resp.StatusCode != 403 {
 		t.Fatalf("cross-origin POST: %d", resp.StatusCode)
@@ -178,7 +178,7 @@ func TestOnboardingAndValidation(t *testing.T) {
 	// An invite comes with a QR code that is an SVG.
 	var inv struct{ ID, Code, QRSvg string }
 	if code := e.call("POST", "/api/invites", `{"admin":false,"ttlMinutes":5}`, &inv); code != 200 ||
-		!strings.HasPrefix(inv.Code, "SVOI1-") || !strings.HasPrefix(inv.QRSvg, "<svg") {
+		!strings.HasPrefix(inv.Code, "MESH1-") || !strings.HasPrefix(inv.QRSvg, "<svg") {
 		t.Fatalf("invite: %d %+v", code, inv)
 	}
 	if code := e.call("DELETE", "/api/invites/"+inv.ID, "", nil); code != 200 {
@@ -409,7 +409,7 @@ func TestStaticInterface(t *testing.T) {
 	}
 	defer a.Close()
 	ui := fstest.MapFS{
-		"index.html":   {Data: []byte("<!doctype html><title>svoi</title>")},
+		"index.html":   {Data: []byte("<!doctype html><title>themesh</title>")},
 		"js/app.js":    {Data: []byte("console.log(1)")},
 		"css/main.css": {Data: []byte("body{}")},
 	}
@@ -427,7 +427,7 @@ func TestStaticInterface(t *testing.T) {
 	}
 	for _, p := range []string{"/", "/index.html"} {
 		resp, body := get(p)
-		if resp.StatusCode != 200 || !strings.Contains(body, "<title>svoi</title>") || !strings.HasPrefix(resp.Header.Get("Content-Type"), "text/html") {
+		if resp.StatusCode != 200 || !strings.Contains(body, "<title>themesh</title>") || !strings.HasPrefix(resp.Header.Get("Content-Type"), "text/html") {
 			t.Errorf("GET %s: %d %q %q", p, resp.StatusCode, resp.Header.Get("Content-Type"), body)
 		}
 	}
@@ -448,12 +448,12 @@ func TestStaticInterface(t *testing.T) {
 	}
 }
 
-// A share that would expose svoi's own keys and settings (the folder that holds
+// A share that would expose themesh's own keys and settings (the folder that holds
 // them, one of its parents such as the home folder, or something inside it) is
 // refused when saved.
 func TestSharingTheDataFolderIsRefused(t *testing.T) {
 	root := t.TempDir()
-	data := filepath.Join(root, "home", ".config", "svoi")
+	data := filepath.Join(root, "home", ".config", "themesh")
 	a, err := app.Open(app.Options{Dir: data, DeviceName: "keys-box", Owner: "tester"})
 	if err != nil {
 		t.Fatal(err)
@@ -526,7 +526,7 @@ func TestServiceWorkerCacheFollowsTheInterface(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer a.Close()
-	sw := `const VERSION = "svoi-ui-v1";
+	sw := `const VERSION = "themesh-ui-v1";
 self.addEventListener("install", () => {});`
 	version := func(files fstest.MapFS) string {
 		ts := httptest.NewServer(api.New(a, files).Handler())
@@ -541,11 +541,11 @@ self.addEventListener("install", () => {});`
 			t.Fatalf("sw.js: %d %q", resp.StatusCode, resp.Header.Get("Content-Type"))
 		}
 		body := string(b)
-		i := strings.Index(body, `const VERSION = "svoi-ui-`)
-		if i < 0 || strings.Contains(body, `"svoi-ui-v1"`) || !strings.Contains(body, `self.addEventListener("install"`) {
+		i := strings.Index(body, `const VERSION = "themesh-ui-`)
+		if i < 0 || strings.Contains(body, `"themesh-ui-v1"`) || !strings.Contains(body, `self.addEventListener("install"`) {
 			t.Fatalf("the cache name was not tied to the interface:\n%s", body)
 		}
-		return body[i : i+len(`const VERSION = "svoi-ui-`)+12]
+		return body[i : i+len(`const VERSION = "themesh-ui-`)+12]
 	}
 	v1 := version(fstest.MapFS{"index.html": {Data: []byte("a")}, "js/app.js": {Data: []byte("one")}, "sw.js": {Data: []byte(sw)}})
 	same := version(fstest.MapFS{"sw.js": {Data: []byte(sw)}, "js/app.js": {Data: []byte("one")}, "index.html": {Data: []byte("a")}})

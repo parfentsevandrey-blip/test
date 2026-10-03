@@ -113,11 +113,11 @@ function DeviceSection({ cfg }) {
     try { await post("mesh/leave", {}); toast({ level: "success", title: t("set.left") }); await refreshState(); }
     catch (e) { toastError(e); }
   };
-  // Ends only this browser's session; signing in again needs a new link (`svoi open`).
+  // Ends only this browser's session; signing in again needs a new link (`themesh open`).
   const logout = async () => {
     const ok = await confirmDialog({
       title: t("set.logoutTitle"), icon: "logout", confirmText: t("set.logout"),
-      text: html`<p>${tx("set.logoutText", { open: html`<code class="mono">svoi open</code>`, url: html`<code class="mono">svoi url</code>` })}</p>`,
+      text: html`<p>${tx("set.logoutText", { open: html`<code class="mono">themesh open</code>`, url: html`<code class="mono">themesh url</code>` })}</p>`,
     });
     if (!ok) return;
     try { await post("logout", {}); }
@@ -313,11 +313,11 @@ function TunSection({ cfg, dev }) {
     try { await cfg.save({ tun: patch }, { quiet: true, inline: true }); } catch (e) { setReqErr(e); }
     setBusy("");
   };
-  const name = tun.name || "svoi0";
+  const name = tun.name || "themesh0";
   const sample = peers.find((p) => p.online) || peers[0];
   return html`<${Section} id="tun" icon="network" title=${t("tun.title")} sub=${t("tun.sub")} expert>
     <${Card} class="tun" data-testid="tun-section">
-      <p class="tun__lead">${t("tun.lead", { example: sample ? `${sample.deviceName || sample.name}.svoi` : "nas.svoi", ip: sample ? sample.ip4 : "100.64.0.7" })}</p>
+      <p class="tun__lead">${t("tun.lead", { example: sample ? `${sample.deviceName || sample.name}.mesh` : "nas.mesh", ip: sample ? sample.ip4 : "100.64.0.7" })}</p>
       <div class=${cx("tun__state", `is-${tun.state}`)} data-testid="tun-state" data-state=${tun.state} role="status">
         ${tun.state === "running" ? html`
           <span class="dot dot--ok dot--pulse"></span>
@@ -340,7 +340,7 @@ function TunSection({ cfg, dev }) {
       ${tun.state === "running" && sample && html`<div class="tun__try">
         <span class="faint xsmall">${t("tun.try")}</span>
         <div class="code-line"><span>ping ${sample.ip4}</span><${CopyButton} text=${`ping ${sample.ip4}`} /></div>
-        ${tun.manageHosts && html`<div class="code-line"><span>ssh ${sample.deviceName || sample.name}.svoi</span><${CopyButton} text=${`ssh ${sample.deviceName || sample.name}.svoi`} /></div>`}
+        ${tun.manageHosts && html`<div class="code-line"><span>ssh ${sample.deviceName || sample.name}.mesh</span><${CopyButton} text=${`ssh ${sample.deviceName || sample.name}.mesh`} /></div>`}
       </div>`}
     </${Card}>
   </${Section}>`;

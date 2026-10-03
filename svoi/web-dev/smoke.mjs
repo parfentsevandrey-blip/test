@@ -6,7 +6,7 @@
 //        [--base http://127.0.0.1:18777 --token TOKEN]
 //
 // With --base the test runs against an already running server (e.g. the real
-// node: `svoi demo --no-browser --quiet --port 18777 --dir DIR`, TOKEN = the
+// node: `themesh demo --no-browser --quiet --port 18777 --dir DIR`, TOKEN = the
 // master token in DIR/laptop/data/ui.token) and skips the steps that need
 // mock-only hooks. The browser signs in like a person does, with a one-time link.
 import fs from "node:fs";
@@ -48,11 +48,11 @@ async function newPage(base, label, { mobile = false, lang = "ru" } = {}) {
     viewport: mobile ? { width: 390, height: 844 } : { width: 1360, height: 860 },
     locale: lang === "en" ? "en-GB" : "ru-RU", serviceWorkers: "block", acceptDownloads: true,
   });
-  await ctx.addInitScript((lg) => { try { localStorage.setItem("svoi.lang", lg); } catch { /* ignore */ } }, lang);
+  await ctx.addInitScript((lg) => { try { localStorage.setItem("themesh.lang", lg); } catch { /* ignore */ } }, lang);
   const page = await ctx.newPage();
   current = page;
   if (token) {
-    // what `svoi url` does: ask the node for a single-use sign-in code with the master token
+    // what `themesh url` does: ask the node for a single-use sign-in code with the master token
     const res = await fetch(base + "/api/login/code", { method: "POST", headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" }, body: "{}" });
     const { code } = await res.json();
     await page.goto(base + "/?t=" + encodeURIComponent(code)); // becomes the session cookie
@@ -108,11 +108,11 @@ if (!external) {
     await p.fill("[data-testid=onb-code]", "hello");
     await p.click("[data-testid=onb-submit]");
     await p.waitForSelector("text=Это не похоже на код приглашения");
-    await p.fill("[data-testid=onb-code]", "SVOI1-EXPIRED-AAAAAAAA-BBBBBBBB-CCCCCCCC-DDDDDDDD-EEEEEEEE");
+    await p.fill("[data-testid=onb-code]", "MESH1-EXPIRED-AAAAAAAA-BBBBBBBB-CCCCCCCC-DDDDDDDD-EEEEEEEE");
     await p.click("[data-testid=onb-submit]");
     await p.waitForSelector("[data-testid=onb-progress]");
     await p.waitForSelector("[data-testid=onb-error]", { timeout: 15000 });
-    await p.fill("[data-testid=onb-code]", "svoi1-aeawvqfq-ghijklmn-opqrstuv-wxyz2345-67abcdef-ghijklmn");
+    await p.fill("[data-testid=onb-code]", "mesh1-aeawvqfq-ghijklmn-opqrstuv-wxyz2345-67abcdef-ghijklmn");
     const sent = p.waitForRequest((r) => r.url().endsWith("/api/mesh/join"));
     await p.click("[data-testid=onb-submit]");
     const body = JSON.parse((await sent).postData() || "{}");
@@ -296,7 +296,7 @@ await step("devices: add device → QR → device joins", async () => {
   await page.waitForSelector("[data-testid=invite-qr] img");
   await page.waitForSelector("[data-testid=invite-for]:has-text('Анна')");
   const code = (await page.textContent("[data-testid=invite-code]")).trim();
-  if (!code.startsWith("SVOI1-")) throw new Error("bad invite code " + code);
+  if (!code.startsWith("MESH1-")) throw new Error("bad invite code " + code);
   if (srv) {
     await page.click(".modal__foot .btn--secondary"); // hide: the pending invite is listed with its owner
     await page.waitForSelector("[data-testid=invite-row][data-owner='Анна']");
@@ -493,7 +493,7 @@ await step("files: share a folder via the folder picker", async () => {
 });
 
 if (srv) {
-  await step("files: a share holding svoi's keys is blocked and refused", async () => {
+  await step("files: a share holding themesh's keys is blocked and refused", async () => {
     await page.open("#/files/shares");
     await page.waitForSelector("[data-testid=share-row][data-id=sh_home][data-blocked=true] [data-testid=share-blocked]");
     await page.click("[data-testid=share-add]");
@@ -736,13 +736,13 @@ if (srv) {
   await step("removed by an admin → onboarding with a notice, then join again", async () => {
     const p = await newPage(rm.url, "removed");
     await p.open("#/settings/network");
-    await p.waitForFunction(() => window.__svoi.state.conn === "online" && window.__svoi.state.peers.length > 0);
+    await p.waitForFunction(() => window.__themesh.state.conn === "online" && window.__themesh.state.peers.length > 0);
     await rm.hook("/__mock/removed");
     await p.waitForSelector("[data-testid=removed-notice]:has-text('Дом')", { timeout: 8000 });
     if ((await p.evaluate(() => location.hash)) !== "#/") throw new Error("route not reset to #/");
     if (await p.$("[data-testid=toast]:has-text('removed')")) throw new Error("raw 'removed' notify shown as a toast");
     await p.click("[data-testid=onb-join]");
-    await p.fill("[data-testid=onb-code]", "SVOI1-AEAWVQFQ-GHIJKLMN-OPQRSTUV-WXYZ2345-67ABCDEF-GHIJKLMN");
+    await p.fill("[data-testid=onb-code]", "MESH1-AEAWVQFQ-GHIJKLMN-OPQRSTUV-WXYZ2345-67ABCDEF-GHIJKLMN");
     await p.click("[data-testid=onb-submit]");
     await p.waitForSelector("[data-testid=page-home]", { timeout: 15000 });
     if (await p.$("[data-testid=removed-notice]")) throw new Error("notice still shown after joining");
@@ -754,7 +754,7 @@ if (srv) {
     const p = await newPage(auth.url, "auth");
     await p.open();
     await p.waitForSelector("[data-testid=unauthorized][data-reason=expired]");
-    const { url } = await auth.hook("/__mock/login"); // what `svoi url` prints
+    const { url } = await auth.hook("/__mock/login"); // what `themesh url` prints
     await p.goto(auth.url + url);
     await p.waitForSelector("[data-testid=page-home]");
     if ((await p.evaluate(() => location.search)).includes("t=")) throw new Error("login code left in the address bar");

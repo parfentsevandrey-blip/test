@@ -24,9 +24,9 @@ import (
 )
 
 // DNSSuffix is the pseudo top-level domain under which members are addressable.
-const DNSSuffix = "svoi"
+const DNSSuffix = "mesh"
 
-// oidMemberExt marks the svoi extension inside member certificates. The
+// oidMemberExt marks the themesh extension inside member certificates. The
 // 2.999 arc is reserved by ITU-T X.660 for examples and private experiments, so
 // it can never collide with a registered meaning.
 var oidMemberExt = asn1.ObjectIdentifier{2, 999, 7, 1}
@@ -112,7 +112,7 @@ func authorityFromKey(priv ed25519.PrivateKey, pub ed25519.PublicKey, meshName s
 	}
 	tpl := &x509.Certificate{
 		SerialNumber:          serial,
-		Subject:               pkix.Name{CommonName: "svoi mesh root", Organization: []string{meshName}},
+		Subject:               pkix.Name{CommonName: "themesh mesh root", Organization: []string{meshName}},
 		NotBefore:             time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
 		NotAfter:              time.Date(2120, 1, 1, 0, 0, 0, 0, time.UTC),
 		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
@@ -170,7 +170,7 @@ func (r *Root) Name() string {
 // mesh. What makes a beacon trustworthy is the device signature inside it.
 func (r *Root) LANKey() [32]byte {
 	h := sha256.New()
-	h.Write([]byte("svoi/lan-key/v2"))
+	h.Write([]byte("themesh/lan-key/v2"))
 	h.Write(r.Pub)
 	var out [32]byte
 	copy(out[:], h.Sum(nil))
@@ -405,7 +405,7 @@ func UniqueName(name string, taken map[string]bool) string {
 func AllocIPv4(id ID, taken map[netip.Addr]bool) netip.Addr {
 	for salt := uint32(0); ; salt++ {
 		h := sha256.New()
-		h.Write([]byte("svoi/ipv4/v1"))
+		h.Write([]byte("themesh/ipv4/v1"))
 		h.Write(id[:])
 		var s [4]byte
 		binary.BigEndian.PutUint32(s[:], salt)
@@ -424,8 +424,8 @@ func AllocIPv4(id ID, taken map[netip.Addr]bool) netip.Addr {
 // OverlayIPv6 derives a unique-local IPv6 address: a /48 per mesh (from the
 // root key) and a /64 interface identifier per device.
 func OverlayIPv6(rootPub ed25519.PublicKey, id ID) netip.Addr {
-	g := sha256.Sum256(append([]byte("svoi/ula/v1"), rootPub...))
-	i := sha256.Sum256(append([]byte("svoi/iid/v1"), id[:]...))
+	g := sha256.Sum256(append([]byte("themesh/ula/v1"), rootPub...))
+	i := sha256.Sum256(append([]byte("themesh/iid/v1"), id[:]...))
 	var b [16]byte
 	b[0] = 0xfd
 	copy(b[1:6], g[:5])
@@ -433,7 +433,7 @@ func OverlayIPv6(rootPub ed25519.PublicKey, id ID) netip.Addr {
 	return netip.AddrFrom16(b)
 }
 
-// IsOverlayAddr reports whether a is inside the svoi overlay ranges.
+// IsOverlayAddr reports whether a is inside the themesh overlay ranges.
 func IsOverlayAddr(a netip.Addr) bool {
 	a = a.Unmap()
 	if a.Is4() {
@@ -452,7 +452,7 @@ type Revocation struct {
 
 func revocationMessage(root ed25519.PublicKey, id ID, at int64) []byte {
 	var buf bytes.Buffer
-	buf.WriteString("svoi/revoke/v1")
+	buf.WriteString("themesh/revoke/v1")
 	buf.Write(root)
 	buf.Write(id[:])
 	var t [8]byte

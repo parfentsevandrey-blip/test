@@ -39,7 +39,7 @@ type Options struct {
 	Owner      string
 }
 
-// App is one running svoi device.
+// App is one running themesh device.
 type App struct {
 	opts Options
 	dir  string
@@ -122,7 +122,7 @@ func Open(opts Options) (*App, error) {
 		return nil, err
 	}
 
-	a.db, err = store.Open(filepath.Join(opts.Dir, "svoi.db"))
+	a.db, err = store.Open(filepath.Join(opts.Dir, "themesh.db"))
 	if err != nil {
 		a.node.Close()
 		return nil, err

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// A REAL run of a release binary, nothing mocked or simulated: two separate `svoi` processes,
+// A REAL run of a release binary, nothing mocked or simulated: two separate `themesh` processes,
 // each with its own HOME like two computers, set up and used only through the web interface in a
 // real browser — create a network, add the second device with an invitation code, send files,
 // chat, send mail, switch one device off and on again. The screenshots are of that real interface;
 // the checks compare real bytes (sha256) on the receiving side.
 //
-//   node web-e2e/tour.mjs --bin /path/to/svoi [--out docs/img/real] [--theme light|dark]
+//   node web-e2e/tour.mjs --bin /path/to/themesh [--out docs/img/real] [--theme light|dark]
 //
 // Needs Node 22+ and Playwright with a Chromium (see web-e2e/run.mjs). Exit code 0 only if every check holds.
 import crypto from "node:crypto";
@@ -74,14 +74,14 @@ function makePng(w = 960, h = 600) {
 }
 
 // ------------------------------------------------------------------ a real node process
-// Started the way a person starts it: `svoi up`, a fresh HOME, nothing else from this shell.
+// Started the way a person starts it: `themesh up`, a fresh HOME, nothing else from this shell.
 function launch(name, uiAddr) {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), `svoi-tour-${name}-`));
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), `themesh-tour-${name}-`));
   const env = { PATH: "/usr/bin:/bin", HOME: home, LANG: "C.UTF-8" };
-  const data = path.join(home, ".config", "svoi");
+  const data = path.join(home, ".config", "themesh");
   const node = { name, home, data, origin: "http://" + (uiAddr || "127.0.0.1:8777"), token: "", proc: null };
   const spawnIt = () => {
-    const log = fs.openSync(path.join(home, "svoi.log"), "a");
+    const log = fs.openSync(path.join(home, "themesh.log"), "a");
     node.proc = spawn(config.bin, ["up", "--no-browser", ...(uiAddr ? ["--ui", uiAddr] : []), ...(DEBUG ? ["--debug"] : [])], { env, stdio: ["ignore", log, log], detached: true });
     return until(async () => (await fetch(node.origin + "/api/handshake?n=" + "0".repeat(16)).then((r) => r.ok, () => false)), 30000, `${name} to start`).then(() => {
       node.token = fs.readFileSync(path.join(data, "ui.token"), "utf8").trim();
@@ -89,14 +89,14 @@ function launch(name, uiAddr) {
   };
   node.start = spawnIt;
   node.api = async (method, p, body, o = {}) => {
-    const res = await fetch(node.origin + p, { method, headers: { Authorization: "Bearer " + node.token, "X-Svoi": "1", ...(body !== undefined && !(body instanceof Uint8Array) ? { "Content-Type": "application/json" } : {}), ...(o.headers || {}) }, body: body === undefined ? undefined : body instanceof Uint8Array ? body : JSON.stringify(body) });
+    const res = await fetch(node.origin + p, { method, headers: { Authorization: "Bearer " + node.token, "X-Themesh": "1", ...(body !== undefined && !(body instanceof Uint8Array) ? { "Content-Type": "application/json" } : {}), ...(o.headers || {}) }, body: body === undefined ? undefined : body instanceof Uint8Array ? body : JSON.stringify(body) });
     if (o.raw) return res;
     const text = await res.text();
     if (!res.ok) throw new Error(`${method} ${p} → ${res.status} ${text.slice(0, 200)}`);
     return text ? JSON.parse(text) : null;
   };
   node.state = () => node.api("GET", "/api/state");
-  node.log = () => fs.readFileSync(path.join(home, "svoi.log"), "utf8");
+  node.log = () => fs.readFileSync(path.join(home, "themesh.log"), "utf8");
   node.stop = async () => {
     const p = node.proc;
     if (!p || p.exitCode !== null || p.signalCode !== null) return;
@@ -166,7 +166,7 @@ try {
   await tid(pa, "invite-create").click();
   await tid(pa, "invite-qr").locator("img").waitFor();
   const code = (await tid(pa, "invite-code").innerText()).trim();
-  check("the invitation is a one-time code", /^SVOI1-/.test(code), code.slice(0, 14) + "…");
+  check("the invitation is a one-time code", /^MESH1-/.test(code), code.slice(0, 14) + "…");
   await shot(pa, "04-invitation");
 
   step("4. Second device (another process, another home directory): join with the code");
@@ -309,8 +309,8 @@ try {
       if (logs) console.log(`${n.name}: diag logs (tail) = ` + JSON.stringify(logs).slice(-1800));
     } catch (e2) { console.log(`${n.name}: could not collect diagnostics: ${e2.message}`); }
   }
-  console.log("\n--- laptop log (tail) ---\n" + (fs.existsSync(path.join(A.home, "svoi.log")) ? A.log().split("\n").slice(-25).join("\n") : ""));
-  console.log("\n--- home-server log (tail) ---\n" + (fs.existsSync(path.join(B.home, "svoi.log")) ? B.log().split("\n").slice(-25).join("\n") : ""));
+  console.log("\n--- laptop log (tail) ---\n" + (fs.existsSync(path.join(A.home, "themesh.log")) ? A.log().split("\n").slice(-25).join("\n") : ""));
+  console.log("\n--- home-server log (tail) ---\n" + (fs.existsSync(path.join(B.home, "themesh.log")) ? B.log().split("\n").slice(-25).join("\n") : ""));
 } finally {
   for (const [who, p] of pages) {
     // (a page whose node was switched off on purpose loses its event stream and gets «connection refused»)

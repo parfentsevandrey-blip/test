@@ -2,7 +2,7 @@
 //
 // It exists so the hole-punching and relay logic can be tested
 // deterministically, for every combination of NAT behaviours, without root
-// privileges or real network namespaces. It is also what powers `svoi demo`,
+// privileges or real network namespaces. It is also what powers `themesh demo`,
 // which runs several virtual devices (some "behind" NATs) inside one process.
 //
 // The model: a Network has a root Realm (the public Internet). A NAT connects

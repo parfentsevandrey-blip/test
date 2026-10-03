@@ -4,8 +4,8 @@
 (function () {
   var theme = "auto", lang = "auto";
   try {
-    theme = localStorage.getItem("svoi.theme") || "auto";
-    lang = localStorage.getItem("svoi.lang") || "auto";
+    theme = localStorage.getItem("themesh.theme") || "auto";
+    lang = localStorage.getItem("themesh.lang") || "auto";
   } catch (e) { /* storage may be disabled */ }
   if (theme !== "light" && theme !== "dark") {
     theme = window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";

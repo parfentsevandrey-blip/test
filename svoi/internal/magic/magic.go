@@ -326,7 +326,7 @@ func (c *Conn) AddPeer(id identity.ID) error {
 	}
 	box.Precompute(&p.shared, &pub, &c.xpriv)
 	p.macKey = deriveMACKey(p.shared)
-	p.dataKey = deriveKey("svoi/data-mac/v1", p.shared)
+	p.dataKey = deriveKey("themesh/data-mac/v1", p.shared)
 	var v [16]byte
 	v[0], v[1], v[2], v[3] = virtualPrefix[0], virtualPrefix[1], virtualPrefix[2], virtualPrefix[3]
 	copy(v[8:], p.r8[:])
@@ -742,7 +742,7 @@ func isVirtualAddr(a netip.Addr) bool {
 	return b[0] == virtualPrefix[0] && b[1] == virtualPrefix[1] && b[2] == virtualPrefix[2] && b[3] == virtualPrefix[3]
 }
 
-func deriveMACKey(shared [32]byte) [32]byte { return deriveKey("svoi/relay-mac/v1", shared) }
+func deriveMACKey(shared [32]byte) [32]byte { return deriveKey("themesh/relay-mac/v1", shared) }
 
 func deriveKey(label string, shared [32]byte) [32]byte {
 	h, _ := blake2s.New256(nil)

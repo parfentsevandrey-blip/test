@@ -30,7 +30,7 @@ func cmdDemo(args []string) error {
 	}
 	defer d.Close()
 
-	fmt.Fprintf(os.Stderr, "\nsvoi demo is running. Everything here is simulated in this process;\nfiles, mail and chat are real and go through the real protocol stack.\n\n")
+	fmt.Fprintf(os.Stderr, "\nthemesh demo is running. Everything here is simulated in this process;\nfiles, mail and chat are real and go through the real protocol stack.\n\n")
 	laptop := d.Devices["laptop"].LoginURL()
 	for _, name := range []string{"laptop", "phone", "nas", "home-server"} {
 		marker, link := "  ", laptop
@@ -42,7 +42,7 @@ func cmdDemo(args []string) error {
 		fmt.Fprintf(os.Stderr, "%s%-12s %s\n", marker, name, link)
 	}
 	fmt.Fprintln(os.Stderr, "\nOpen the first address (the laptop). The others are the same interface seen from the other devices.")
-	fmt.Fprintf(os.Stderr, "Each link works once, for ten minutes. A new one: svoi open --dir %s\n", d.Devices["laptop"].App.Dir())
+	fmt.Fprintf(os.Stderr, "Each link works once, for ten minutes. A new one: themesh open --dir %s\n", d.Devices["laptop"].App.Dir())
 	fmt.Fprintln(os.Stderr, "Press Ctrl+C to stop.")
 	if !*noBrowser {
 		go func() {

@@ -1,4 +1,4 @@
-# svoi — local HTTP API contract (UI ⇄ node)
+# The Mesh — local HTTP API contract (UI ⇄ node)
 
 The web UI is a static single-page app that talks to **its own local node** over
 HTTP on `127.0.0.1`. Everything is JSON unless stated otherwise. Remote devices are
@@ -13,32 +13,32 @@ and the UI mock server (`web-dev/mock-server.mjs`) must implement exactly this t
 * **Base**: all endpoints live under `/api/`. The UI uses **relative URLs** (`fetch("api/state")`
   from a page served at `/`), uses **hash routing** (`#/devices`, `#/files`, …) and loads
   every asset from the same origin (no CDN, must work offline).
-* **Auth**: the node prints `http://127.0.0.1:PORT/?t=<login code>`; `svoi url` / `svoi open` print a
+* **Auth**: the node prints `http://127.0.0.1:PORT/?t=<login code>`; `themesh url` / `themesh open` print a
   fresh one. A **login code** is random (192 bit), works **once** and for **10 minutes**. Visiting the link
   exchanges it for a random *session id* (kept by the node as a hash in `ui.sessions`), sets that as an
   `HttpOnly; SameSite=Strict` cookie and redirects to `/` (the code is gone from the address bar). The
-  cookie is named `svoi_session_<port>`: browsers share cookies between the ports of one host, and
+  cookie is named `themesh_session_<port>`: browsers share cookies between the ports of one host, and
   without the port in the name signing in to a second node on the same machine (the demo's four
   devices) would sign the first one out. The UI never touches the cookie (it is HttpOnly). A session lasts 14 days and is renewed while it is used, so an active browser stays
   signed in; it survives a restart of the node. The master token (`ui.token`) is for the command line
   only (`Authorization: Bearer …`) and is never put in a URL or a cookie — the browser cannot learn it.
   API calls without a valid session get `401 {"error":{"code":"unauthorized",…}}` — the UI then shows a
-  full-screen "Session expired — run `svoi open` and open the new link" page (a refresh does not help;
+  full-screen "Session expired — run `themesh open` and open the new link" page (a refresh does not help;
   the old link is used up).
-  The link the node hands to a browser **started on the same machine** (`svoi open`, the browser
-  `svoi up` launches) passes through a command line, where other users of the machine can read it; such
+  The link the node hands to a browser **started on the same machine** (`themesh open`, the browser
+  `themesh up` launches) passes through a command line, where other users of the machine can read it; such
   a link is tied to the user who asked for it (Linux: the owner of the client socket, from
   `/proc/net/tcp`). Opening it as another user gives `403` (plain text, the code is *not* used up);
-  the UI will not normally see this page. A link printed for copying (`svoi url`) is not tied to anyone.
-  State-changing requests (anything but GET/HEAD) must send header `X-Svoi: 1`; only a request that
+  the UI will not normally see this page. A link printed for copying (`themesh url`) is not tied to anyone.
+  State-changing requests (anything but GET/HEAD) must send header `X-Themesh: 1`; only a request that
   carries the real master token is exempt (any other `Authorization` header does not turn the check off).
   The event stream (below) ends when the session does.
   Auth endpoints (all but `logout` are for the command line, the UI never calls them):
   `POST /api/login/code` (Bearer only; optional body `{"local": true}` = for a browser on this machine, tied to
   the asking user) → `{"code","url","expiresIn":600,"singleUse":true,"sessionTtl","bound":false}`;
   `POST /api/logout` ends this browser's session (the UI may offer "Sign out"; `?all=1` — Bearer only —
-  ends every session and cancels unused links, it is `svoi signout`);
-  `GET /api/handshake?n=<16–128 chars>` (no auth) → `{"proof": hex(HMAC-SHA256(token, "svoi-handshake/v1\0"+n))}` —
+  ends every session and cancels unused links, it is `themesh signout`);
+  `GET /api/handshake?n=<16–128 chars>` (no auth) → `{"proof": hex(HMAC-SHA256(token, "themesh-handshake/v1\0"+n))}` —
   the command line checks it before it ever sends the token to the address recorded in `ui.addr`.
 * **IDs**: a device ID is the 52-char lowercase base32 string (`"id"` fields). `self` is
   accepted wherever `:id` of a device is expected and means "this device".
@@ -49,7 +49,7 @@ and the UI mock server (`web-dev/mock-server.mjs`) must implement exactly this t
   (а a, б b, в v, г g, д d, е e, ё yo, ж zh, з z, и i, й y, к k, л l, м m, н n, о o, п p, р r, с s, т t,
   у u, ф f, х kh, ц ts, ч ch, ш sh, щ shch, ъ/ь dropped, ы y, э e, ю yu, я ya; і i, ї yi, є ye, ґ g, ў u),
   accents are stripped (é → e), everything else becomes `-`; an empty result becomes `device`.
-  So `Кухонный ноутбук` → `kukhonnyy-noutbuk`, reachable as `kukhonnyy-noutbuk.svoi`. Forms that ask for
+  So `Кухонный ноутбук` → `kukhonnyy-noutbuk`, reachable as `kukhonnyy-noutbuk.mesh`. Forms that ask for
   a device name (onboarding, rename) should preview the result live (a JS port of that table);
   what counts is `name` in the backend's response. Users who want a Russian display name use the
   per-device **alias** (local nickname, any text).
@@ -155,7 +155,7 @@ The list excludes this device. Sort in the UI (online first, then by name).
   "state": "active",   // offered | queued | active | done | failed | declined | canceled
   "speed": 1234567,    // bytes/s, only while active
   "error": "", "created": 1760000000, "updated": 1760000100, "finished": null,
-  "path": "/home/me/Downloads/Svoi/photo.jpg"       // incoming + done only
+  "path": "/home/me/Downloads/The Mesh/photo.jpg"       // incoming + done only
 }
 ```
 * `in` + `offered`: someone wants to send you a file → show **Accept / Decline** (unless
@@ -203,7 +203,7 @@ never inject as HTML.
 { "id": "sh_…", "name": "Photos", "path": "/mnt/photos", "mode": "ro",   // ro | rw
   "allow": ["*"],                  // "*" = every member, or a list of device ids
   "exists": true,                  // false if the folder is missing on disk
-  "blocked": true }                // only when true: the folder holds svoi's own keys (it is the data
+  "blocked": true }                // only when true: the folder holds themesh's own keys (it is the data
                                    // directory, a parent of it, or inside it) — it is NOT served; show a warning
                                    // and let the user pick a sub-folder
 // what a remote device exposes to you (GET /api/peers/:id/shares):
@@ -221,7 +221,7 @@ never inject as HTML.
 
 ### Invite
 ```jsonc
-{ "id": "…", "code": "SVOI1-AEAWVQFQ-…", "admin": false,
+{ "id": "…", "code": "MESH1-AEAWVQFQ-…", "admin": false,
   "owner": "Anna",                  // whose device this invitation is for; the *inviter* decides it
   "created": 1760000000, "expires": 1760001800,
   "qrSvg": "<svg …>…</svg>" }       // server-rendered QR code of `code`; safe to inject
@@ -229,7 +229,7 @@ never inject as HTML.
 
 ### Settings
 ```jsonc
-{ "downloadDir": "/home/me/Downloads/Svoi",
+{ "downloadDir": "/home/me/Downloads/The Mesh",
   "autoAccept": "own",             // own = from devices of the same owner | all | ask
   "autoAcceptMaxMB": 0,            // 0 = no limit
   "relay": true,                   // act as a relay for other members
@@ -238,9 +238,9 @@ never inject as HTML.
   "portMap": true,                 // ask the home router to forward our UDP port (UPnP / NAT-PMP); see Self.portmap
   "socks": {"enabled": false, "listen": "127.0.0.1:1080"},
   "tun": { "enabled": false,       // create a virtual network interface (Linux, needs root / CAP_NET_ADMIN)
-           "manageHosts": true,    // also add `<name>.svoi` lines to /etc/hosts
+           "manageHosts": true,    // also add `<name>.mesh` lines to /etc/hosts
            "state": "off",         // off | running | error   (live status, read-only)
-           "name": "svoi0",        // interface name while running
+           "name": "themesh0",        // interface name while running
            "error": "",            // why it could not start, e.g. "permission denied — run as root"
            "supported": true,      // false on platforms without TUN support → hide the section
            "txPackets": 0, "rxPackets": 0, "dropped": 0 },
@@ -248,7 +248,7 @@ never inject as HTML.
 ```
 `PUT /api/settings` accepts `{"tun": {"enabled": true}}` (either field, either order). With the
 interface up, every device is reachable at its overlay address (`ip4`/`ip6`) and as
-`<name>.svoi` by *any* program (ssh, a browser, `ping`), not only through the web UI.
+`<name>.mesh` by *any* program (ssh, a browser, `ping`), not only through the web UI.
 Language and theme are **client-side only** (`localStorage`), not part of Settings.
 
 ## Endpoints
@@ -299,7 +299,7 @@ Language and theme are **client-side only** (`localStorage`), not part of Settin
 | method & path | body → response |
 |---|---|
 | `GET /api/shares` | `[Share]` |
-| `POST /api/shares` | `{"name","path","mode":"ro","allow":["*"]}` → `Share` (`invalid` if the folder does not exist, or if it would expose svoi's own keys: the data directory, one of its parents such as the home folder, or something inside it — the message says so) |
+| `POST /api/shares` | `{"name","path","mode":"ro","allow":["*"]}` → `Share` (`invalid` if the folder does not exist, or if it would expose The Mesh's own keys: the data directory, one of its parents such as the home folder, or something inside it — the message says so) |
 | `PUT /api/shares/:id` | same fields → `Share` |
 | `DELETE /api/shares/:id` | → `{"ok":true}` |
 | `GET /api/local/fs?path=/home/me` | folder picker for *this* device: `{"path":"/home/me","parent":"/home","home":"/home/me","sep":"/","roots":["/"],"entries":[{"name":"Documents","isDir":true}]}` — directories only; `path` omitted → home |

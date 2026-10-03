@@ -1,4 +1,4 @@
-// Command svoi is a private network of your own devices, with no cloud and no
+// Command themesh is a private network of your own devices, with no cloud and no
 // account: encrypted direct connections between your phone, laptop, home
 // server and NAS, and one web interface for files, mail, chat and shared
 // services. Run it without arguments to start (and open the interface).
@@ -16,33 +16,33 @@ import (
 
 func init() {
 	// quic-go warns when it cannot tune the UDP buffers of a custom socket; the
-	// real socket is sized by svoi itself.
+	// real socket is sized by themesh itself.
 	if os.Getenv("QUIC_GO_DISABLE_RECEIVE_BUFFER_WARNING") == "" {
 		os.Setenv("QUIC_GO_DISABLE_RECEIVE_BUFFER_WARNING", "true")
 	}
 }
 
-const usage = `svoi — a private mesh network of your own devices (no cloud, no account)
+const usage = `The Mesh (themesh) — a private mesh network of your own devices (no cloud, no account)
 
 Usage:
-  svoi [up] [flags]        start this device and open the web interface (default)
-  svoi init [flags]        create a new mesh with this device as the first member
-  svoi join <invite>       join an existing mesh with an invitation code
-  svoi invite [--admin]    print an invitation code (and QR) for another device
-  svoi status              show this device and the other devices
-  svoi send <device> <file>...   send files to a device
-  svoi ping <device>       measure the round trip to a device
-  svoi open                open the web interface in the browser (signs it in)
-  svoi url                 print a one-time sign-in link to the web interface
-  svoi signout             sign every browser out of the web interface
-  svoi leave [--yes]        leave the mesh (keeps the device key)
-  svoi demo                run a simulated four-device mesh to try the interface
-  svoi version
+  themesh [up] [flags]            start this device and open the web interface (default)
+  themesh init [flags]            create a new mesh with this device as the first member
+  themesh join <invite>           join an existing mesh with an invitation code
+  themesh invite [--admin]        print an invitation code (and QR) for another device
+  themesh status                  show this device and the other devices
+  themesh send <device> <file>... send files to a device
+  themesh ping <device>           measure the round trip to a device
+  themesh open                    open the web interface in the browser (signs it in)
+  themesh url                     print a one-time sign-in link to the web interface
+  themesh signout                 sign every browser out of the web interface
+  themesh leave [--yes]           leave the mesh (keeps the device key)
+  themesh demo                    run a simulated four-device mesh to try the interface
+  themesh version
 
 Common flags:
-  --dir PATH   data directory (default: ~/.config/svoi, or $SVOI_DIR)
+  --dir PATH   data directory (default: ~/.config/themesh, or $THEMESH_DIR)
 
-Run "svoi <command> -h" for the flags of a command.
+Run "themesh <command> -h" for the flags of a command.
 `
 
 func main() {
@@ -78,15 +78,15 @@ func main() {
 	case "demo":
 		err = cmdDemo(args)
 	case "version", "-v", "--version":
-		fmt.Printf("svoi %s (%s/%s, %s)\n", version(), runtime.GOOS, runtime.GOARCH, runtime.Version())
+		fmt.Printf("themesh %s (%s/%s, %s)\n", version(), runtime.GOOS, runtime.GOARCH, runtime.Version())
 	case "help", "-h", "--help":
 		fmt.Print(usage)
 	default:
-		fmt.Fprintf(os.Stderr, "svoi: unknown command %q\n\n%s", cmd, usage)
+		fmt.Fprintf(os.Stderr, "themesh: unknown command %q\n\n%s", cmd, usage)
 		os.Exit(2)
 	}
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "svoi:", err)
+		fmt.Fprintln(os.Stderr, "themesh:", err)
 		os.Exit(1)
 	}
 }

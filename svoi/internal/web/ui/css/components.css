@@ -300,7 +300,7 @@
 .modal__foot { display: flex; justify-content: flex-end; gap: var(--sp-2); padding: var(--sp-4) var(--sp-5); border-top: 1px solid var(--line); flex-wrap: wrap; }
 .confirm-text { color: var(--text-2); }
 .confirm-text p + p { margin-top: var(--sp-2); }
-/* commands quoted in running text (`svoi open`) */
+/* commands quoted in running text (`themesh open`) */
 :where(p) > code { padding: 1px 6px; border-radius: 6px; background: var(--surface-2); color: var(--text); white-space: nowrap; }
 [data-theme="dark"] :where(p) > code { background: var(--surface-3); }
 .confirm-warn { display: flex; gap: var(--sp-2); align-items: flex-start; margin-top: var(--sp-3); padding: var(--sp-3); border-radius: var(--r-md); background: var(--amber-soft); border: 1px solid var(--amber-line); color: var(--amber-text); }

@@ -1,10 +1,10 @@
-# How «Свои» is packaged: an installer for Windows, a .dmg for macOS, an AppImage and a .deb for Linux.
-# The `svoi` program itself (built from ../cmd/svoi for the same platform) is put next to the app as a resource.
-appId: ru.svoi.app
-productName: Свои
-executableName: Svoi
-copyright: Свои
-artifactName: Svoi-${version}-${os}-${arch}.${ext}
+# How The Mesh is packaged: an installer for Windows, a .dmg for macOS, an AppImage and a .deb for Linux.
+# The `themesh` program itself (built from ../cmd/themesh for the same platform) is put next to the app as a resource.
+appId: app.themesh.desktop
+productName: The Mesh
+executableName: TheMesh
+copyright: The Mesh
+artifactName: TheMesh-${version}-${os}-${arch}.${ext}
 directories:
   output: dist
   buildResources: build
@@ -18,8 +18,8 @@ extraResources:
   - from: bin/${os}-${arch}
     to: bin
     filter:
-      - svoi
-      - svoi.exe
+      - themesh
+      - themesh.exe
 compression: normal
 
 win:
@@ -37,11 +37,11 @@ nsis:
   runAfterFinish: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: Свои
-  uninstallDisplayName: Свои
-  deleteAppDataOnUninstall: false # the keys of this device (%APPDATA%\svoi) are never removed by an uninstall
+  shortcutName: The Mesh
+  uninstallDisplayName: The Mesh
+  deleteAppDataOnUninstall: false # the keys of this device (%APPDATA%\themesh) are never removed by an uninstall
   language: '1049' # Russian
-  artifactName: Svoi-Setup-${version}-${arch}.${ext}
+  artifactName: TheMesh-Setup-${version}-${arch}.${ext}
 
 mac:
   icon: build/icon.png
@@ -61,15 +61,15 @@ mac:
         - arm64
         - x64
   extendInfo:
-    NSHumanReadableCopyright: Свои
+    NSHumanReadableCopyright: The Mesh
 dmg:
-  title: Свои ${version}
-  artifactName: Svoi-${version}-mac-${arch}.${ext}
+  title: The Mesh ${version}
+  artifactName: TheMesh-${version}-mac-${arch}.${ext}
 
 linux:
   icon: build/icon.png
   category: Network
-  maintainer: Свои <svoi@localhost>
+  maintainer: The Mesh <themesh@localhost>
   synopsis: Private network of your own devices
   description: Files, mail and chat directly between your own devices, with no cloud and no account.
   target:
@@ -77,10 +77,10 @@ linux:
     - deb
   desktop:
     entry:
-      Name: Свои
+      Name: The Mesh
       Comment: Частная сеть ваших устройств
       Keywords: files;mail;chat;network;vpn;
-      StartupWMClass: Svoi
+      StartupWMClass: TheMesh
 deb:
   depends:
     - libgtk-3-0

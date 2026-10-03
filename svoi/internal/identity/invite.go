@@ -16,7 +16,7 @@ import (
 )
 
 // InvitePrefix starts every invitation code.
-const InvitePrefix = "SVOI1-"
+const InvitePrefix = "MESH1-"
 
 // Invite is a one-time pass to join a mesh. It is handed over out of band (as
 // text or a QR code), so it carries everything the newcomer needs to find and
@@ -54,7 +54,7 @@ func NewInvite(root ed25519.PublicKey, inviter ID, ttl time.Duration, admin bool
 // Handle is a public identifier of the invite (a hash of the secret) that the
 // joiner sends so the inviter knows which pending invite it refers to.
 func (i *Invite) Handle() [8]byte {
-	h := sha256.Sum256(append([]byte("svoi/invite-handle/v1"), i.Secret[:]...))
+	h := sha256.Sum256(append([]byte("themesh/invite-handle/v1"), i.Secret[:]...))
 	var out [8]byte
 	copy(out[:], h[:8])
 	return out
@@ -64,7 +64,7 @@ func (i *Invite) Handle() [8]byte {
 // exported keying material so it cannot be replayed on another connection.
 func (i *Invite) Proof(exporter []byte) []byte {
 	m := hmac.New(sha256.New, i.Secret[:])
-	m.Write([]byte("svoi/join/v1"))
+	m.Write([]byte("themesh/join/v1"))
 	m.Write(exporter)
 	return m.Sum(nil)
 }
@@ -138,11 +138,11 @@ func (i *Invite) Encode() string {
 func ParseInvite(s string) (*Invite, error) {
 	s = strings.ToUpper(strings.NewReplacer("-", "", " ", "", "\n", "", "\r", "", "\t", "").Replace(s))
 	p := strings.ReplaceAll(InvitePrefix, "-", "")
-	// The prefix is "SVOI1"; tolerate a "svoi://join/" style wrapper too.
+	// The prefix is "MESH1"; tolerate a "themesh://join/" style wrapper too.
 	if i := strings.Index(s, p); i >= 0 {
 		s = s[i+len(p):]
 	} else {
-		return nil, errors.New("identity: this is not an svoi invite")
+		return nil, errors.New("identity: this is not an invitation to The Mesh")
 	}
 	raw, err := b32.DecodeString(s)
 	if err != nil {

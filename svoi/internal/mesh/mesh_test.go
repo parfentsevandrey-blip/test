@@ -67,7 +67,7 @@ func openTestNode(t *testing.T, host *netsim.Host, name, dir string, mod func(*C
 		PassiveWait: time.Second,
 		DialTimeout: 8 * time.Second,
 	}
-	if os.Getenv("SVOI_TEST_DEBUG") != "" {
+	if os.Getenv("THEMESH_TEST_DEBUG") != "" {
 		cfg.Logger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})).With("node", name)
 	}
 	if mod != nil {
@@ -274,7 +274,7 @@ func TestMembershipGossipAndThreeNodeMesh(t *testing.T) {
 	if got := len(b.Peers()); got != 2 {
 		t.Fatalf("b sees %d peers, want 2", got)
 	}
-	if p := b.FindPeer("gamma.svoi"); p == nil || p.ID != c.ID() {
+	if p := b.FindPeer("gamma.mesh"); p == nil || p.ID != c.ID() {
 		t.Fatal("FindPeer by DNS-style name failed")
 	}
 	if p := b.FindPeer(c.Self().IP4); p == nil || p.ID != c.ID() {

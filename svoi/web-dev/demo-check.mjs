@@ -50,13 +50,13 @@ async function step(name, fn) {
 
 const browser = await launch();
 const ctx = await browser.newContext({ viewport: { width: 1360, height: 860 }, locale: "ru-RU", serviceWorkers: "block", acceptDownloads: true });
-await ctx.addInitScript(() => { try { localStorage.setItem("svoi.lang", "ru"); } catch { /* ignore */ } });
+await ctx.addInitScript(() => { try { localStorage.setItem("themesh.lang", "ru"); } catch { /* ignore */ } });
 const page = await ctx.newPage();
 watch(page, "demo", problems);
 // Under a strict CSP the browser reports violations as console errors: they are failures here.
 page.on("console", (m) => { if (CSP && /Content Security Policy/i.test(m.text())) problems.push("[csp] " + m.text()); });
 const shot = async (name) => { if (SHOTS) await page.screenshot({ path: path.join(SHOTS, name + ".png") }); };
-const hook = (p) => page.evaluate((u) => fetch(u, { method: "POST", headers: { "X-Svoi": "1" } }).then((r) => r.json().catch(() => null)), p);
+const hook = (p) => page.evaluate((u) => fetch(u, { method: "POST", headers: { "X-Themesh": "1" } }).then((r) => r.json().catch(() => null)), p);
 const go = async (hash) => { await page.evaluate((h) => { location.hash = h; }, hash); await page.waitForTimeout(150); };
 
 await step("the page starts on the Home screen, in plain words", async () => {
@@ -80,10 +80,10 @@ await step("the devices page still shows the network, with the details folded aw
 });
 
 await step("the demo guide opens and says what this is", async () => {
-  await page.locator("#svoi-demo-guide").getByRole("button", { name: /Что здесь можно сделать/ }).click();
-  await page.locator("#svoi-demo-guide").getByText("Это макет, а не сама программа «Свои»").waitFor();
+  await page.locator("#themesh-demo-guide").getByRole("button", { name: /Что здесь можно сделать/ }).click();
+  await page.locator("#themesh-demo-guide").getByText("Это макет, а не сама программа The Mesh").waitFor();
   await shot("guide");
-  await page.locator("#svoi-demo-guide").getByRole("button", { name: /Скрыть подсказки/ }).click();
+  await page.locator("#themesh-demo-guide").getByRole("button", { name: /Скрыть подсказки/ }).click();
 });
 
 await step("photos of the NAS: thumbnails really load (data: URLs), the viewer pages through them", async () => {
@@ -132,7 +132,7 @@ await step("a download button explains that the demo does not save files (the ho
   let downloaded = false;
   page.once("download", () => { downloaded = true; });
   await page.click("[data-testid=file-row][data-name='test-page.html'] a.frow__dl");
-  await page.locator("#svoi-demo-guide").getByText("В демо файлы не скачиваются").waitFor({ timeout: 5000 });
+  await page.locator("#themesh-demo-guide").getByText("В демо файлы не скачиваются").waitFor({ timeout: 5000 });
   if (downloaded) throw new Error("a download started although the host blocks them");
 });
 
@@ -188,7 +188,7 @@ await step("settings and the theme", async () => {
 });
 
 await step("the first run can be shown and left again from the guide (no query string needed)", async () => {
-  const guide = () => page.locator("#svoi-demo-guide");
+  const guide = () => page.locator("#themesh-demo-guide");
   await guide().getByRole("button", { name: /Что здесь можно сделать/ }).click();
   await guide().getByRole("button", { name: /Показать первый запуск/ }).click();
   await page.waitForFunction(() => /Создать свою сеть/.test(document.body.innerText), null, { timeout: 15000 });

@@ -210,7 +210,7 @@ func TestSOCKS5ProxyReachesMeshServices(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, host := range []string{"nas.svoi", "nas", e.nas.Self().IP4} {
+	for _, host := range []string{"nas.mesh", "nas", e.nas.Self().IP4} {
 		c, code := socksConnect(t, srv.Addr(), host, e.port)
 		if code != 0 {
 			t.Fatalf("connect to %s: reply %d", host, code)
@@ -224,12 +224,12 @@ func TestSOCKS5ProxyReachesMeshServices(t *testing.T) {
 		}
 	}
 	// Unknown host -> host unreachable (4); known host but unpublished port -> refused (5).
-	if c, code := socksConnect(t, srv.Addr(), "ghost.svoi", e.port); code != 4 {
+	if c, code := socksConnect(t, srv.Addr(), "ghost.mesh", e.port); code != 4 {
 		t.Fatalf("unknown host reply %d", code)
 	} else {
 		c.Close()
 	}
-	if c, code := socksConnect(t, srv.Addr(), "nas.svoi", e.port+1); code != 5 {
+	if c, code := socksConnect(t, srv.Addr(), "nas.mesh", e.port+1); code != 5 {
 		t.Fatalf("unpublished port reply %d", code)
 	} else {
 		c.Close()

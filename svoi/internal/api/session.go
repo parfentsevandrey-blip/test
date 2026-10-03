@@ -17,7 +17,7 @@ import (
 
 // How the browser signs in. The master token (ui.token, 0600) is for the command
 // line only: it is never printed, never put in a URL or a cookie. A person gets a
-// short-lived, single-use *login code* in the link `svoi up` prints (or `svoi url`
+// short-lived, single-use *login code* in the link `themesh up` prints (or `themesh url`
 // mints); opening it exchanges the code for a random *session*, kept by the
 // server (as a hash, so the file on disk cannot be replayed) and by the browser
 // as an HttpOnly cookie. Whoever sees the link in a log or the process list
@@ -248,7 +248,7 @@ func (s *Server) sessionCookie(id string) *http.Cookie {
 // who grabbed the recorded port after the node died never gets to see it.
 func HandshakeProof(token, nonce string) string {
 	m := hmac.New(sha256.New, []byte(token))
-	m.Write([]byte("svoi-handshake/v1\x00" + nonce))
+	m.Write([]byte("themesh-handshake/v1\x00" + nonce))
 	return hex.EncodeToString(m.Sum(nil))
 }
 
@@ -264,14 +264,14 @@ func (s *Server) handleHandshake(w http.ResponseWriter, r *http.Request) {
 
 // POST /api/login/code — mint a single-use link that signs a browser in. Only the
 // command line (master token) may ask: a browser session cannot mint more of them.
-// {"local": true} asks for a link to be opened by a browser on this machine (`svoi
+// {"local": true} asks for a link to be opened by a browser on this machine (`themesh
 // open`): it is tied to the user who asks, because it is about to appear on a command
 // line (xdg-open) where every other user of the machine can read it. A link that is
-// printed to be copied (`svoi url`), perhaps to another computer through a tunnel,
+// printed to be copied (`themesh url`), perhaps to another computer through a tunnel,
 // is not.
 func (s *Server) handleLoginCode(w http.ResponseWriter, r *http.Request) {
 	if !s.bearerOK(r) {
-		writeError(w, errCode("denied", "login links are issued to the command line only (svoi url / svoi open)"))
+		writeError(w, errCode("denied", "login links are issued to the command line only (themesh url / themesh open)"))
 		return
 	}
 	var in struct {

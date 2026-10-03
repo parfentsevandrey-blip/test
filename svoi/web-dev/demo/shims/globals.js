@@ -7,7 +7,7 @@ const q = new URLSearchParams(typeof location !== "undefined" ? location.search 
 // The hosting page may not pass a query string through, so the guide panel also keeps the
 // wanted scenario in sessionStorage and reloads (see panel.js).
 let stored = "";
-try { stored = sessionStorage.getItem("svoi.demo.scenario") || ""; } catch { /* storage may be blocked */ }
+try { stored = sessionStorage.getItem("themesh.demo.scenario") || ""; } catch { /* storage may be blocked */ }
 const scenario = q.get("scenario") || stored;
 const argv = ["node", "mock-server.mjs"];
 if (["full", "empty", "onboarding"].includes(scenario)) argv.push("--scenario", scenario);

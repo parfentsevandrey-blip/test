@@ -19,7 +19,7 @@ import (
 // kernel's table of TCP sockets: a browser or curl on this machine is a socket with
 // the user's uid on it. ok is false when that cannot be found out (not a loopback
 // connection, no /proc, ...). It is how a sign-in link made for "the user who runs
-// svoi" can refuse everybody else on the machine (see sessions.redeemCode).
+// themesh" can refuse everybody else on the machine (see sessions.redeemCode).
 func peerUID(r *http.Request) (uid int, ok bool) {
 	remote, err := netip.ParseAddrPort(r.RemoteAddr)
 	if err != nil {

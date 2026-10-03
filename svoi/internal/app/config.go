@@ -55,7 +55,7 @@ type Config struct {
 func defaultConfig(dataDir string) Config {
 	dl := filepath.Join(dataDir, "downloads")
 	if home, err := os.UserHomeDir(); err == nil && home != "" {
-		dl = filepath.Join(home, "Downloads", "Svoi")
+		dl = filepath.Join(home, "Downloads", "The Mesh")
 	}
 	return Config{
 		DownloadDir: dl,

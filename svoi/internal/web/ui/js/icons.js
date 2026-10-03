@@ -155,7 +155,7 @@ export function Icon({ name, size = 18, class: cls, label, strokeWidth = 1.75, s
   }, children);
 }
 
-/** The «Свои» mark: three connected nodes in a rounded square. */
+/** The Mesh mark: three connected nodes in a rounded square. */
 export function Logo({ size = 32, class: cls }) {
   return h("svg", { class: "logo-mark" + (cls ? " " + cls : ""), width: size, height: size, viewBox: "0 0 48 48", "aria-hidden": "true", focusable: "false" }, [
     h("rect", { x: 1.5, y: 1.5, width: 45, height: 45, rx: 14, class: "logo-mark__bg" }),

@@ -27,7 +27,7 @@ import (
 
 // Joining a mesh without a server: an admin device creates an invite that
 // carries the mesh root key, its own device key, a one-time secret and a few
-// addresses. The newcomer dials the inviter directly (QUIC, ALPN svoi-join/1),
+// addresses. The newcomer dials the inviter directly (QUIC, ALPN themesh-join/1),
 // verifies the inviter's certificate against the root key from the invite,
 // proves knowledge of the secret bound to this very TLS session, and receives a
 // member certificate (plus, for admin invites, the authority key).
@@ -266,7 +266,7 @@ func (n *Node) handleJoin(conn *quic.Conn) {
 		reply(nil, Errf(CodeInvalid, "bad device key"))
 		return
 	}
-	exporter, err := cs.ExportKeyingMaterial("svoi-join", nil, 32)
+	exporter, err := cs.ExportKeyingMaterial("themesh-join", nil, 32)
 	if err != nil {
 		reply(nil, Errf(CodeInternal, "cannot bind to the TLS session"))
 		return
@@ -343,7 +343,7 @@ func selfSignedCert(dev *identity.Device) tls.Certificate {
 	serial, _ := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 62))
 	tpl := &x509.Certificate{
 		SerialNumber: serial,
-		Subject:      pkix.Name{CommonName: "svoi"},
+		Subject:      pkix.Name{CommonName: "themesh"},
 		NotBefore:    time.Now().Add(-24 * time.Hour),
 		NotAfter:     time.Now().AddDate(1, 0, 0),
 		KeyUsage:     x509.KeyUsageDigitalSignature,
@@ -359,7 +359,7 @@ func selfSignedCert(dev *identity.Device) tls.Certificate {
 func (n *Node) joinTLS(inv *identity.Invite) *tls.Config {
 	return &tls.Config{
 		MinVersion:         tls.VersionTLS13,
-		ServerName:         "svoi",
+		ServerName:         "themesh",
 		InsecureSkipVerify: true, // pinned below to the root key and inviter from the invite
 		Certificates:       []tls.Certificate{selfSignedCert(n.device())},
 		NextProtos:         []string{ALPNJoin},
@@ -471,7 +471,7 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName string) error {
 	defer conn.CloseWithError(closeNormal, "done")
 
 	cs := conn.ConnectionState().TLS
-	exporter, err := cs.ExportKeyingMaterial("svoi-join", nil, 32)
+	exporter, err := cs.ExportKeyingMaterial("themesh-join", nil, 32)
 	if err != nil {
 		return err
 	}

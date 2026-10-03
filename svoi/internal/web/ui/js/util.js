@@ -244,7 +244,7 @@ const TRANSLIT = new Map(Object.entries({
  * The DNS label the node makes of a typed device name: lowercase, NFC,
  * transliterate, strip accents, anything else → "-" (collapsed, trimmed),
  * at most 32 chars, "device" if nothing is left. «Кухонный ноутбук» →
- * "kukhonnyy-noutbuk" (reachable as kukhonnyy-noutbuk.svoi). A preview only:
+ * "kukhonnyy-noutbuk" (reachable as kukhonnyy-noutbuk.mesh). A preview only:
  * the node's answer wins (it also adds -2, -3… on collisions). Mirrors
  * SanitizeName in internal/identity/authority.go.
  */

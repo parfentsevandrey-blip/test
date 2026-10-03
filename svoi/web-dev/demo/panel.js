@@ -32,16 +32,16 @@ li { margin: 4px 0; }
 
 /** Start the made-up network over in another scenario: the page reloads itself. */
 function restart(scenario) {
-  try { sessionStorage.setItem("svoi.demo.scenario", scenario); } catch { /* blocked: fall back to the address */ }
+  try { sessionStorage.setItem("themesh.demo.scenario", scenario); } catch { /* blocked: fall back to the address */ }
   try { location.reload(); } catch { location.search = "?scenario=" + scenario; }
 }
 
-const call = (path) => fetch(path, { method: "POST", headers: { "X-Svoi": "1" } }).catch(() => {});
+const call = (path) => fetch(path, { method: "POST", headers: { "X-Themesh": "1" } }).catch(() => {});
 const enc = encodeURIComponent;
 
 export function installDemoPanel() {
   const host = document.createElement("div");
-  host.id = "svoi-demo-guide";
+  host.id = "themesh-demo-guide";
   const root = host.attachShadow({ mode: "open" });
   let nasOn = true;
   let open = false;
@@ -53,7 +53,7 @@ export function installDemoPanel() {
       ${notice && !open ? `<div class="notice" role="status">${notice}</div>` : ""}
       ${open ? `<div class="card" role="dialog" aria-label="Подсказки к демо">
         <button class="close" data-a="close" aria-label="Закрыть">×</button>
-        <h2>Это макет, а не сама программа «Свои»</h2>
+        <h2>Это макет, а не сама программа The Mesh</h2>
         <p>Интерфейс здесь тот же, что в настоящей программе, но сеть выдуманная: устройства, фото на NAS, письма и чаты нарисованы, ничего не уходит в интернет. Настоящая программа — один файл, который запускается на ваших устройствах (Windows, macOS, Linux, Android через Termux): архивы и инструкция «Скачать и запустить» — в README репозитория.</p>
         <h3>Сделать так, чтобы что-то произошло</h3>
         <div class="acts">
@@ -77,7 +77,7 @@ export function installDemoPanel() {
       <button class="pill" data-a="toggle" aria-expanded="${open}" aria-label="${open ? "Скрыть подсказки" : "Что здесь можно сделать?"}"><span class="badge">ДЕМО</span><span class="more">${open ? "Скрыть подсказки" : "Что здесь можно сделать?"}</span><span aria-hidden="true">${open ? "×" : "?"}</span></button>`;
   };
 
-  window.addEventListener("svoi-demo-notice", (e) => {
+  window.addEventListener("themesh-demo-notice", (e) => {
     notice = String(e.detail || "");
     render();
     clearTimeout(noticeTimer);

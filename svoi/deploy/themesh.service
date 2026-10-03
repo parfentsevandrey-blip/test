@@ -1,18 +1,18 @@
 # systemd unit for a headless device (home server, NAS).
 #
-#   sudo useradd --system --home-dir /var/lib/svoi --no-create-home --shell /usr/sbin/nologin svoi
-#       (the home directory is where received files go by default: ~/Downloads/Svoi)
-#   sudo install -m755 svoi /usr/local/bin/svoi
-#   sudo install -m644 deploy/svoi.service /etc/systemd/system/svoi.service
-#   sudo systemctl daemon-reload && sudo systemctl enable --now svoi
-#   sudo -u svoi svoi url --dir /var/lib/svoi    # a one-time address of the web interface (valid 10 minutes);
+#   sudo useradd --system --home-dir /var/lib/themesh --no-create-home --shell /usr/sbin/nologin themesh
+#       (the home directory is where received files go by default: ~/Downloads/The Mesh)
+#   sudo install -m755 themesh /usr/local/bin/themesh
+#   sudo install -m644 deploy/themesh.service /etc/systemd/system/themesh.service
+#   sudo systemctl daemon-reload && sudo systemctl enable --now themesh
+#   sudo -u themesh themesh url --dir /var/lib/themesh    # a one-time address of the web interface (valid 10 minutes);
 #       it needs the token, so run it as that user. The journal does not carry the address: a service
-#       has no terminal, and a log would keep a link nobody used up (`svoi up --print-link` overrides).
+#       has no terminal, and a log would keep a link nobody used up (`themesh up --print-link` overrides).
 #
 # The web interface listens on 127.0.0.1:8777 only; manage this device from
 # another member's interface ("Manage device"), or through an SSH tunnel.
 [Unit]
-Description=svoi — private mesh network of your own devices
+Description=themesh — private mesh network of your own devices
 Documentation=https://github.com/parfentsevandrey-blip/test
 After=network-online.target
 Wants=network-online.target
@@ -20,14 +20,14 @@ Wants=network-online.target
 [Service]
 Type=simple
 # Create the mesh or join one the first time (before the first start):
-#   sudo install -d -o svoi -g svoi -m 700 /var/lib/svoi
-#   sudo -u svoi svoi join SVOI1-… --dir /var/lib/svoi   (or: init --mesh "Home" --name nas --dir /var/lib/svoi)
-ExecStart=/usr/local/bin/svoi up --no-browser --ui 127.0.0.1:8777 --dir /var/lib/svoi
+#   sudo install -d -o themesh -g themesh -m 700 /var/lib/themesh
+#   sudo -u themesh themesh join MESH1-… --dir /var/lib/themesh   (or: init --mesh "Home" --name nas --dir /var/lib/themesh)
+ExecStart=/usr/local/bin/themesh up --no-browser --ui 127.0.0.1:8777 --dir /var/lib/themesh
 Restart=always
 RestartSec=3
-User=svoi
-Group=svoi
-StateDirectory=svoi
+User=themesh
+Group=themesh
+StateDirectory=themesh
 StateDirectoryMode=0700
 
 # Hardening. Folders you want to share must be readable (and, for read-write
@@ -41,11 +41,11 @@ ProtectKernelModules=true
 ProtectControlGroups=true
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
 LockPersonality=true
-# ReadWritePaths=/srv/share /var/lib/svoi
+# ReadWritePaths=/srv/share /var/lib/themesh
 # ReadOnlyPaths=/srv/media
 
 # For the optional virtual network interface (settings → "Network interface",
-# `svoi up --tun`) the unit needs these two lines instead of User=svoi:
+# `themesh up --tun`) the unit needs these two lines instead of User=themesh:
 #   AmbientCapabilities=CAP_NET_ADMIN
 #   DeviceAllow=/dev/net/tun rw
 

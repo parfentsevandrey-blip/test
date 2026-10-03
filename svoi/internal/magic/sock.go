@@ -89,18 +89,18 @@ func listenUDP(port int) (net.PacketConn, error) {
 
 // DefaultLocalAddrs enumerates interface addresses that are useful as
 // endpoints: not loopback, not link-local, not multicast and not part of the
-// svoi overlay itself (probing through our own tunnel would be circular).
+// themesh overlay itself (probing through our own tunnel would be circular).
 //
 // Since Android 11 an app may not list the network interfaces at all (net.Interfaces fails with
-// "permission denied"); the app that runs svoi then writes the addresses it can see into the file
-// named by SVOI_LOCAL_ADDRS_FILE (whitespace or comma separated), and they are used as well.
+// "permission denied"); the app that runs themesh then writes the addresses it can see into the file
+// named by THEMESH_LOCAL_ADDRS_FILE (whitespace or comma separated), and they are used as well.
 func DefaultLocalAddrs() []netip.Addr {
 	var out []netip.Addr
 	usable := func(na netip.Addr) bool {
 		na = na.Unmap()
 		return !(na.IsLoopback() || na.IsLinkLocalUnicast() || na.IsMulticast() || na.IsUnspecified() || identity.IsOverlayAddr(na))
 	}
-	if f := os.Getenv("SVOI_LOCAL_ADDRS_FILE"); f != "" {
+	if f := os.Getenv("THEMESH_LOCAL_ADDRS_FILE"); f != "" {
 		for _, na := range readAddrFile(f) {
 			if usable(na) {
 				out = append(out, na.Unmap())

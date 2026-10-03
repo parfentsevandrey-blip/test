@@ -17,11 +17,11 @@
 ЕСЛИ ЧТО-ТО НЕ ПОЛУЧАЕТСЯ
 -------------------------
 • Браузер не открылся: в окне программы напечатан адрес — откройте его.
-  Новую ссылку для входа можно получить командой:  svoi open
+  Новую ссылку для входа можно получить командой:  themesh open
 • Программа уже запущена: повторный запуск просто откроет её в браузере.
-• Ключи, письма и настройки лежат в папке «svoi» в настройках пользователя
-  (Windows: %AppData%\svoi, macOS: ~/Library/Application Support/svoi,
-  Linux: ~/.config/svoi). Чтобы начать с чистого листа, закройте программу
+• Ключи, письма и настройки лежат в папке «themesh» в настройках пользователя
+  (Windows: %AppData%\themesh, macOS: ~/Library/Application Support/themesh,
+  Linux: ~/.config/themesh). Чтобы начать с чистого листа, закройте программу
   и удалите эту папку.
 
 ЧЕСТНО О СОСТОЯНИИ
@@ -33,7 +33,7 @@ macOS и Android собираются, но на настоящих устрой
 
 ENGLISH, IN SHORT
 -----------------
-Svoi is a private network of your own devices: no cloud, no account, direct
+The Mesh is a private network of your own devices: no cloud, no account, direct
 encrypted links. Run the program (double-click on Windows/macOS), it opens a
 web interface in your browser. Create a network on the first device, then add
 others with an invitation code. Devices on one Wi-Fi find each other; across

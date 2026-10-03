@@ -52,15 +52,15 @@ func TestHostsFileIsLeftAloneWhenThereIsNothingOfOurs(t *testing.T) {
 		t.Fatal(err)
 	}
 	if readFile(t, p) != orig || !untouched(t, p) {
-		t.Fatal("/etc/hosts was rewritten although there was no svoi block to remove")
+		t.Fatal("/etc/hosts was rewritten although there was no themesh block to remove")
 	}
 }
 
 func TestHostsBlockIsAddedReplacedAndRemoved(t *testing.T) {
 	orig := "127.0.0.1 localhost\n::1 ip6-localhost\n\n"
 	p := useHostsFile(t, orig)
-	nas := hostEntry{"100.64.0.2", "nas.svoi"}
-	laptop := hostEntry{"100.64.0.3", "laptop.svoi"}
+	nas := hostEntry{"100.64.0.2", "nas.mesh"}
+	laptop := hostEntry{"100.64.0.3", "laptop.mesh"}
 
 	if err := writeHosts([]hostEntry{nas, laptop}); err != nil {
 		t.Fatal(err)
@@ -69,7 +69,7 @@ func TestHostsBlockIsAddedReplacedAndRemoved(t *testing.T) {
 	if !strings.HasPrefix(got, orig) {
 		t.Fatalf("the original lines were disturbed:\n%q", got)
 	}
-	want := orig + "# BEGIN svoi\n100.64.0.3 laptop.svoi\n100.64.0.2 nas.svoi\n# END svoi\n"
+	want := orig + "# BEGIN themesh\n100.64.0.3 laptop.mesh\n100.64.0.2 nas.mesh\n# END themesh\n"
 	if got != want {
 		t.Fatalf("block:\n%q\nwant\n%q", got, want)
 	}
@@ -88,7 +88,7 @@ func TestHostsBlockIsAddedReplacedAndRemoved(t *testing.T) {
 	if err := writeHosts([]hostEntry{nas}); err != nil {
 		t.Fatal(err)
 	}
-	if got := readFile(t, p); got != orig+"# BEGIN svoi\n100.64.0.2 nas.svoi\n# END svoi\n" {
+	if got := readFile(t, p); got != orig+"# BEGIN themesh\n100.64.0.2 nas.mesh\n# END themesh\n" {
 		t.Fatalf("replaced block:\n%q", got)
 	}
 
@@ -103,10 +103,10 @@ func TestHostsBlockIsAddedReplacedAndRemoved(t *testing.T) {
 
 func TestHostsBlockWorksWhenTheFileHasNoFinalNewline(t *testing.T) {
 	p := useHostsFile(t, "127.0.0.1 localhost")
-	if err := writeHosts([]hostEntry{{"100.64.0.2", "nas.svoi"}}); err != nil {
+	if err := writeHosts([]hostEntry{{"100.64.0.2", "nas.mesh"}}); err != nil {
 		t.Fatal(err)
 	}
-	if got := readFile(t, p); got != "127.0.0.1 localhost\n# BEGIN svoi\n100.64.0.2 nas.svoi\n# END svoi\n" {
+	if got := readFile(t, p); got != "127.0.0.1 localhost\n# BEGIN themesh\n100.64.0.2 nas.mesh\n# END themesh\n" {
 		t.Fatalf("%q", got)
 	}
 }
@@ -115,40 +115,40 @@ func TestHostsBlockWorksWhenTheFileHasNoFinalNewline(t *testing.T) {
 // removed the END line, a second BEGIN, a stray END) must never cost the user a line
 // of their own.
 func TestHostsMarkersWithoutPartnersNeverEatUserLines(t *testing.T) {
-	nas := hostEntry{"100.64.0.2", "nas.svoi"}
-	block := "# BEGIN svoi\n100.64.0.2 nas.svoi\n# END svoi\n"
+	nas := hostEntry{"100.64.0.2", "nas.mesh"}
+	block := "# BEGIN themesh\n100.64.0.2 nas.mesh\n# END themesh\n"
 	for name, c := range map[string]struct{ orig, want string }{
 		"BEGIN without END": {
-			"127.0.0.1 localhost\n# BEGIN svoi\n100.64.0.9 old.svoi\n10.1.1.1 printer.lan\n192.168.0.9 build-server\n",
+			"127.0.0.1 localhost\n# BEGIN themesh\n100.64.0.9 old.mesh\n10.1.1.1 printer.lan\n192.168.0.9 build-server\n",
 			"127.0.0.1 localhost\n10.1.1.1 printer.lan\n192.168.0.9 build-server\n" + block,
 		},
 		"BEGIN without END, nothing after it": {
-			"127.0.0.1 localhost\n# BEGIN svoi\n100.64.0.9 old.svoi\n",
+			"127.0.0.1 localhost\n# BEGIN themesh\n100.64.0.9 old.mesh\n",
 			"127.0.0.1 localhost\n" + block,
 		},
 		"BEGIN without END at the very end": {
-			"127.0.0.1 localhost\n# BEGIN svoi\n",
+			"127.0.0.1 localhost\n# BEGIN themesh\n",
 			"127.0.0.1 localhost\n" + block,
 		},
 		"END without BEGIN": {
-			"127.0.0.1 localhost\n10.1.1.1 printer.lan\n# END svoi\n192.168.0.9 build-server\n",
+			"127.0.0.1 localhost\n10.1.1.1 printer.lan\n# END themesh\n192.168.0.9 build-server\n",
 			"127.0.0.1 localhost\n10.1.1.1 printer.lan\n192.168.0.9 build-server\n" + block,
 		},
 		"two BEGINs": {
-			"127.0.0.1 localhost\n# BEGIN svoi\n100.64.0.9 old.svoi\n10.1.1.1 printer.lan\n# BEGIN svoi\n100.64.0.8 older.svoi\n# END svoi\n192.168.0.9 build-server\n",
+			"127.0.0.1 localhost\n# BEGIN themesh\n100.64.0.9 old.mesh\n10.1.1.1 printer.lan\n# BEGIN themesh\n100.64.0.8 older.mesh\n# END themesh\n192.168.0.9 build-server\n",
 			"127.0.0.1 localhost\n10.1.1.1 printer.lan\n192.168.0.9 build-server\n" + block,
 		},
 		"a user's line inside a whole block": {
-			"127.0.0.1 localhost\n# BEGIN svoi\n100.64.0.9 old.svoi\n10.1.1.1 printer.lan\n100.64.0.8 older.svoi\n# END svoi\n192.168.0.9 build-server\n",
+			"127.0.0.1 localhost\n# BEGIN themesh\n100.64.0.9 old.mesh\n10.1.1.1 printer.lan\n100.64.0.8 older.mesh\n# END themesh\n192.168.0.9 build-server\n",
 			"127.0.0.1 localhost\n10.1.1.1 printer.lan\n192.168.0.9 build-server\n" + block,
 		},
 		"windows line endings": {
-			"127.0.0.1 localhost\r\n# BEGIN svoi\r\n100.64.0.9 old.svoi\r\n# END svoi\r\n10.1.1.1 printer.lan\r\n",
+			"127.0.0.1 localhost\r\n# BEGIN themesh\r\n100.64.0.9 old.mesh\r\n# END themesh\r\n10.1.1.1 printer.lan\r\n",
 			"127.0.0.1 localhost\r\n10.1.1.1 printer.lan\r\n" + block,
 		},
-		"a svoi-looking line outside the block is the user's": {
-			"127.0.0.1 localhost\n100.64.0.9 mine.svoi\n",
-			"127.0.0.1 localhost\n100.64.0.9 mine.svoi\n" + block,
+		"a themesh-looking line outside the block is the user's": {
+			"127.0.0.1 localhost\n100.64.0.9 mine.mesh\n",
+			"127.0.0.1 localhost\n100.64.0.9 mine.mesh\n" + block,
 		},
 	} {
 		p := useHostsFile(t, c.orig)
@@ -162,7 +162,7 @@ func TestHostsMarkersWithoutPartnersNeverEatUserLines(t *testing.T) {
 		if err := writeHosts(nil); err != nil {
 			t.Fatalf("%s: %v", name, err)
 		}
-		if got := readFile(t, p); strings.Contains(got, "svoi\n# END") || strings.Contains(got, "BEGIN svoi") {
+		if got := readFile(t, p); strings.Contains(got, "themesh\n# END") || strings.Contains(got, "BEGIN themesh") {
 			t.Errorf("%s: markers left after removal: %q", name, got)
 		}
 		if got := readFile(t, p); !strings.Contains(got, "127.0.0.1 localhost") {
@@ -173,14 +173,14 @@ func TestHostsMarkersWithoutPartnersNeverEatUserLines(t *testing.T) {
 
 func TestOurHostsLine(t *testing.T) {
 	for line, want := range map[string]bool{
-		"100.64.0.2 nas.svoi\n":     true,
-		"100.64.0.2 NAS.SVOI":       true,
-		"fd7a:115c::2 nas.svoi\r\n": true,
-		"10.0.0.2 nas.svoi\n":       false, // not an overlay address
+		"100.64.0.2 nas.mesh\n":     true,
+		"100.64.0.2 NAS.MESH":       true,
+		"fd7a:115c::2 nas.mesh\r\n": true,
+		"10.0.0.2 nas.mesh\n":       false, // not an overlay address
 		"100.64.0.2 nas.example\n":  false,
-		"100.64.0.2 nas.svoi alias": false, // more than we write
+		"100.64.0.2 nas.mesh alias": false, // more than we write
 		"100.64.0.2\n":              false,
-		"# 100.64.0.2 nas.svoi\n":   false,
+		"# 100.64.0.2 nas.mesh\n":   false,
 		"\n":                        false,
 	} {
 		if got := ourHostsLine(line); got != want {

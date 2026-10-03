@@ -60,7 +60,7 @@ function frame(now) {
   });
   const k = (t * 0.6) % 1, a = nodes[Math.floor(t * 0.6) % 3], b = nodes[(Math.floor(t * 0.6) + 1) % 3];
   g.fillStyle = "#fff"; g.beginPath(); g.arc(a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, 7, 0, Math.PI * 2); g.fill();
-  g.fillStyle = "rgba(255,255,255,.85)"; g.font = "600 22px system-ui, sans-serif"; g.fillText("svoi · " + t.toFixed(1) + " s", 24, 336);
+  g.fillStyle = "rgba(255,255,255,.85)"; g.font = "600 22px system-ui, sans-serif"; g.fillText("themesh · " + t.toFixed(1) + " s", 24, 336);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

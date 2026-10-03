@@ -27,7 +27,7 @@ trap 'rm -f "$tmp"' EXIT
     cat "$here/$b"
   done
   cat "$here/common-tail.txt"
-} | sed "s/svoi-linux-arm64/svoi-$os-$arch/g" > "$tmp"
+} | sed "s/themesh-linux-arm64/themesh-$os-$arch/g" > "$tmp"
 if [ "$os" = windows ]; then
   { printf '\357\273\277'; sed 's/$/\r/' "$tmp"; } > "$dir/$name"
 else
@@ -35,6 +35,6 @@ else
 fi
 chmod 644 "$dir/$name"
 if [ "$os" = darwin ]; then
-  cp "$here/Start-Svoi.command" "$dir/Start-Svoi.command"
-  chmod 755 "$dir/Start-Svoi.command"
+  cp "$here/Start-TheMesh.command" "$dir/Start-TheMesh.command"
+  chmod 755 "$dir/Start-TheMesh.command"
 fi

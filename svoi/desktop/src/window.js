@@ -8,7 +8,7 @@ const { BrowserWindow, Menu, Notification, app, clipboard, nativeTheme, screen, 
 const log = require('./log');
 const { safeName, uniquePath } = require('./files');
 
-const PARTITION = 'persist:svoi';
+const PARTITION = 'persist:themesh';
 
 function visibleBounds(b) {
   if (!b || !Number.isFinite(b.x) || !Number.isFinite(b.y)) return false;
@@ -35,7 +35,7 @@ class MainWindow {
     this.reloginTimes = [];
     this.onFirstHide = null;
     this.onSaved = null;
-    this.devTools = !app.isPackaged || !!process.env.SVOI_DEVTOOLS;
+    this.devTools = !app.isPackaged || !!process.env.THEMESH_DEVTOOLS;
   }
 
   create({ show }) {
@@ -46,7 +46,7 @@ class MainWindow {
       minWidth: 420,
       minHeight: 600,
       show: false,
-      title: 'Свои',
+      title: 'The Mesh',
       icon: path.join(this.root, 'assets', 'icon.png'),
       backgroundColor: nativeTheme.shouldUseDarkColors ? '#0d1012' : '#f4f2ee',
       autoHideMenuBar: true,
@@ -76,7 +76,7 @@ class MainWindow {
     win.once('ready-to-show', () => {
       if (show) win.show();
     });
-    win.on('page-title-updated', (e) => e.preventDefault()); // always "Свои"
+    win.on('page-title-updated', (e) => e.preventDefault()); // always "The Mesh"
     win.on('close', (e) => {
       this.saveBounds();
       if (this.quitting) return;
@@ -120,7 +120,7 @@ class MainWindow {
     win.webContents.setWindowOpenHandler(({ url }) => {
       if (sameOrigin(url)) {
         // e.g. the licence texts: a small window of the same app, same sign-in
-        return { action: 'allow', overrideBrowserWindowOptions: { width: 760, height: 640, autoHideMenuBar: true, title: 'Свои', webPreferences: { partition: PARTITION, sandbox: true, contextIsolation: true } } };
+        return { action: 'allow', overrideBrowserWindowOptions: { width: 760, height: 640, autoHideMenuBar: true, title: 'The Mesh', webPreferences: { partition: PARTITION, sandbox: true, contextIsolation: true } } };
       }
       this.openExternal(url);
       return { action: 'deny' };
@@ -156,8 +156,8 @@ class MainWindow {
   /** Downloads, permissions and expired sessions for the window's own session. */
   handleSession(win) {
     const ses = win.webContents.session;
-    if (ses.__svoiHandled) return;
-    ses.__svoiHandled = true;
+    if (ses.__themeshHandled) return;
+    ses.__themeshHandled = true;
 
     ses.on('will-download', (_e, item) => {
       const dir = app.getPath('downloads');

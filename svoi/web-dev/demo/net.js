@@ -369,7 +369,7 @@ function installDomUrls() {
     if (!isApiUrl(a.getAttribute("href"))) return;
     e.preventDefault();
     e.stopPropagation();
-    window.dispatchEvent(new CustomEvent("svoi-demo-notice", { detail: "В демо файлы не скачиваются. В настоящей программе он сохранится на вашем устройстве." }));
+    window.dispatchEvent(new CustomEvent("themesh-demo-notice", { detail: "В демо файлы не скачиваются. В настоящей программе он сохранится на вашем устройстве." }));
   }, true);
 }
 

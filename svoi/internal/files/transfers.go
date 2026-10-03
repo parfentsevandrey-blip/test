@@ -53,10 +53,10 @@ const (
 // local random name of their own.
 var (
 	transferIDRe = regexp.MustCompile(`^t_[0-9a-f]{16}$`)
-	partNameRe   = regexp.MustCompile(`^\.svoi-[0-9a-f]{16}\.part$`)
+	partNameRe   = regexp.MustCompile(`^\.themesh-[0-9a-f]{16}\.part$`)
 )
 
-func newPartName() string { return ".svoi-" + strings.TrimPrefix(newID("t_"), "t_") + ".part" }
+func newPartName() string { return ".themesh-" + strings.TrimPrefix(newID("t_"), "t_") + ".part" }
 
 // cleanMime keeps a peer-supplied media type short and printable.
 func cleanMime(m string) string {

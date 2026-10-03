@@ -43,7 +43,7 @@ func (id ID) PublicKey() ed25519.PublicKey { return ed25519.PublicKey(id[:]) }
 // truncated hash so that the public key itself never appears in data packets.
 func (id ID) Route8() [8]byte {
 	h := sha256.New()
-	h.Write([]byte("svoi/route8/v1"))
+	h.Write([]byte("themesh/route8/v1"))
 	h.Write(id[:])
 	var out [8]byte
 	copy(out[:], h.Sum(nil))
@@ -121,7 +121,7 @@ func GenerateDevice() *Device {
 	return d
 }
 
-const deviceKeyPrefix = "svoi-device-key-v1:"
+const deviceKeyPrefix = "themesh-device-key-v1:"
 
 // LoadOrCreateDevice reads the device key at path or creates a new one with
 // 0600 permissions. created reports whether a new key was generated.

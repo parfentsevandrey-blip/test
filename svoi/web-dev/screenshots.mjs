@@ -25,7 +25,7 @@ const VIEWPORTS = { desktop: { width: 1440, height: 900 }, mobile: { width: 390,
 const THEMES = ["dark", "light"];
 const enc = (...parts) => "#/" + parts.map((p) => encodeURIComponent(p)).join("/");
 /** Wait until the page's live link (SSE) is up, so events triggered by hooks reach it. */
-const live = (p) => p.waitForFunction(() => window.__svoi && window.__svoi.state.conn === "online", null, { timeout: 8000 });
+const live = (p) => p.waitForFunction(() => window.__themesh && window.__themesh.state.conn === "online", null, { timeout: 8000 });
 
 const servers = {
   full: await startMock(["--calm"]),
@@ -45,13 +45,13 @@ const SHOTS = [
   { name: "onboarding-create", server: "onboarding", hash: "", run: async (p) => { await p.click(".onb-choice >> nth=0"); await p.waitForSelector(".onb-form"); } },
   { name: "onboarding-join-error", server: "onboarding", hash: "", run: async (p) => {
     await p.click(".onb-choice >> nth=1");
-    await p.fill(".onb-code", "SVOI1-EXPIRED-AAAAAAAA-BBBBBBBB-CCCCCCCC-DDDDDDDD-EEEEEEEE");
+    await p.fill(".onb-code", "MESH1-EXPIRED-AAAAAAAA-BBBBBBBB-CCCCCCCC-DDDDDDDD-EEEEEEEE");
     await p.click(".onb-form button[type=submit]");
     await p.waitForSelector(".callout--err", { timeout: 9000 });
   } },
   { name: "onboarding-joining", server: "onboarding", hash: "", run: async (p, srv) => {
     await p.click(".onb-choice >> nth=1");
-    await p.fill(".onb-code", "SVOI1-TIMEOUT-AAAAAAAA-BBBBBBBB-CCCCCCCC-DDDDDDDD-EEEEEEEE");
+    await p.fill(".onb-code", "MESH1-TIMEOUT-AAAAAAAA-BBBBBBBB-CCCCCCCC-DDDDDDDD-EEEEEEEE");
     await p.click(".onb-form button[type=submit]");
     await p.waitForSelector(".onb-progress");
     await sleep(1200);
@@ -166,7 +166,7 @@ const SHOTS = [
     await p.click(".ftool [role=radio] >> nth=1");
     await p.waitForSelector(".ftile img");
     await sleep(800);
-  }, after: async (p) => { await p.evaluate(() => localStorage.setItem("svoi.files.view", JSON.stringify("list"))); } },
+  }, after: async (p) => { await p.evaluate(() => localStorage.setItem("themesh.files.view", JSON.stringify("list"))); } },
   { name: "preview-image", server: "full", hash: enc("files", "browse", NAS, "sh_photo", "2025", "Байкал"), run: async (p) => {
     await p.waitForSelector(".frow__link >> nth=0");
     await p.click("button.frow__link >> nth=0");
@@ -355,7 +355,7 @@ for (const [vp, size] of Object.entries(VIEWPORTS)) {
       serviceWorkers: "block",
     });
     await ctx.addInitScript(([th, lg]) => {
-      try { localStorage.setItem("svoi.theme", th); localStorage.setItem("svoi.lang", lg); } catch { /* ignore */ }
+      try { localStorage.setItem("themesh.theme", th); localStorage.setItem("themesh.lang", lg); } catch { /* ignore */ }
     }, [theme, lang]);
     for (const shot of SHOTS) {
       if (shot.only && shot.only !== vp) continue;

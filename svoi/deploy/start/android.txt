@@ -5,7 +5,7 @@
 в браузере телефона. Подробности — в файле ANDROID.md.
 Коротко, в Termux (подставьте имя скачанного архива):
    termux-setup-storage
-   tar xzf ~/storage/downloads/svoi-linux-arm64.tar.gz
-   cd svoi-linux-arm64 && ./svoi
+   tar xzf ~/storage/downloads/themesh-linux-arm64.tar.gz
+   cd themesh-linux-arm64 && ./themesh
 Если Android убивает программу в фоне, отключите для Termux экономию заряда
 батареи. На реальном телефоне это ещё не проверялось.

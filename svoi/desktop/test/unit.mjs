@@ -1,5 +1,5 @@
 // Tests of the shell's logic that need no window: `node --test test/unit.mjs`.
-// The core tests run the real `svoi` program (set SVOI_CORE to its path; otherwise ../bin/<platform>-<arch>/).
+// The core tests run the real `themesh` program (set THEMESH_CORE to its path; otherwise ../bin/<platform>-<arch>/).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
@@ -20,8 +20,8 @@ const { Core, coreEnv, freePort, handshakeProof, verifyNode } = require('../src/
 const log = require('../src/log.js');
 
 const key = `${process.platform === 'win32' ? 'win' : process.platform === 'darwin' ? 'mac' : 'linux'}-${process.arch}`;
-const exe = process.platform === 'win32' ? 'svoi.exe' : 'svoi';
-const CORE = process.env.SVOI_CORE || path.join(here, '..', 'bin', key, exe);
+const exe = process.platform === 'win32' ? 'themesh.exe' : 'themesh';
+const CORE = process.env.THEMESH_CORE || path.join(here, '..', 'bin', key, exe);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function collect(chunks) {
@@ -106,7 +106,7 @@ test('downloaded file names are safe on every system and never overwrite', () =>
   assert.equal(safeName('report. '), 'report');
   assert.equal(safeName(''), 'file');
   assert.equal(safeName('я'.repeat(300)).length, 200);
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'svoi-files-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'themesh-files-'));
   try {
     assert.equal(uniquePath(dir, 'a.txt'), path.join(dir, 'a.txt'));
     fs.writeFileSync(path.join(dir, 'a.txt'), '1');
@@ -131,8 +131,8 @@ test('freePort keeps the preferred port when it is free and moves when it is not
 
 test('the handshake proof matches the one the Go node computes', () => {
   // The vector comes from api.HandshakeProof("tok", "nnnnnnnnnnnnnnnn") in internal/api/session.go
-  // (and, independently, from Python's hmac): key = token, message = "svoi-handshake/v1\0" + nonce.
-  assert.equal(handshakeProof('tok', 'n'.repeat(16)), 'ca5abf690f2db02f4de7c9b36c604079c15e7cb569e5f2b4d4bf44ef3184582e');
+  // (and, independently, from Python's hmac): key = token, message = "themesh-handshake/v1\0" + nonce.
+  assert.equal(handshakeProof('tok', 'n'.repeat(16)), '6dde69f3781328e11fcff588efda0a293ad1b943871f740f2ec19fa7e598d739');
   assert.notEqual(handshakeProof('tok', 'a'.repeat(16)), handshakeProof('tok', 'b'.repeat(16)));
   assert.notEqual(handshakeProof('tok', 'a'.repeat(16)), handshakeProof('other', 'a'.repeat(16)));
 });
@@ -143,9 +143,9 @@ const haveCore = fs.existsSync(CORE);
 const coreTest = haveCore ? test : test.skip;
 
 function sandbox() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'svoi-core-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'themesh-core-'));
   log.init(path.join(dir, 'logs'));
-  return { dir, data: path.join(dir, 'data'), logFile: path.join(dir, 'logs', 'svoi.log') };
+  return { dir, data: path.join(dir, 'data'), logFile: path.join(dir, 'logs', 'themesh.log') };
 }
 const mk = (s, extra = {}) => new Core({ binary: CORE, dataDir: s.data, logFile: s.logFile, extraArgs: ['--no-stun', '--no-portmap', '--loopback'], ...extra });
 
@@ -306,5 +306,5 @@ test('on Windows the program runs without asynchronous preemption (a Go runtime 
   assert.equal(coreEnv('D:\\data', { GODEBUG: 'http2client=0' }, 'win32').GODEBUG, 'http2client=0,asyncpreemptoff=1');
   assert.equal(coreEnv('D:\\data', { GODEBUG: 'asyncpreemptoff=0' }, 'win32').GODEBUG, 'asyncpreemptoff=0', 'a choice made by the person is kept');
   assert.equal(coreEnv('/data', {}, 'linux').GODEBUG, undefined);
-  assert.equal(coreEnv('/data', { A: '1' }, 'darwin').SVOI_DIR, '/data');
+  assert.equal(coreEnv('/data', { A: '1' }, 'darwin').THEMESH_DIR, '/data');
 });

@@ -4,7 +4,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 if (location.protocol === 'file:') {
-  contextBridge.exposeInMainWorld('svoiShell', {
+  contextBridge.exposeInMainWorld('themeshShell', {
     info: () => ipcRenderer.invoke('shell:info'),
     restart: () => ipcRenderer.invoke('shell:restart'),
     showLog: () => ipcRenderer.invoke('shell:show-log'),

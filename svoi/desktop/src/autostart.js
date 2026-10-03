@@ -10,7 +10,7 @@ const HIDDEN = '--hidden';
 
 function linuxFile() {
   const base = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
-  return path.join(base, 'autostart', 'svoi.desktop');
+  return path.join(base, 'autostart', 'themesh.desktop');
 }
 
 function linuxExec() {
@@ -33,7 +33,7 @@ function setEnabled(on) {
     fs.mkdirSync(path.dirname(f), { recursive: true });
     fs.writeFileSync(
       f,
-      ['[Desktop Entry]', 'Type=Application', 'Name=Свои', 'Name[en]=Svoi', 'Comment=Private network of your own devices', `Exec=${linuxExec()}`, 'Terminal=false', 'X-GNOME-Autostart-enabled=true', ''].join('\n'),
+      ['[Desktop Entry]', 'Type=Application', 'Name=The Mesh', 'Name[en]=The Mesh', 'Comment=Private network of your own devices', `Exec=${linuxExec()}`, 'Terminal=false', 'X-GNOME-Autostart-enabled=true', ''].join('\n'),
     );
     return;
   }

@@ -37,9 +37,9 @@ group("onboarding (real processes)", { noDemo: true }, () => {
     // a malformed code is rejected before anything is sent
     await tid(page, "onb-code").fill("hello world");
     await tid(page, "onb-submit").click();
-    await page.getByText(/SVOI1|код/i).first().waitFor();
+    await page.getByText(/MESH1|код/i).first().waitFor();
     // a well-formed but unknown code fails with an explanation
-    await tid(page, "onb-code").fill("SVOI1-AEAWVQFQ-AAAAAAAA");
+    await tid(page, "onb-code").fill("MESH1-AEAWVQFQ-AAAAAAAA");
     await tid(page, "onb-submit").click();
     await tid(page, "onb-error").waitFor({ timeout: 40000 });
     // the real one: whose device it is was decided by the inviter, so the form does not ask

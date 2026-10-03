@@ -174,6 +174,6 @@ func seedNAS(root string) (photos, music, docs string, err error) {
 	if err = writeFile(filepath.Join(docs, "Бюджет.csv"), []byte("месяц,доход,расход\nянварь,120000,84000\nфевраль,120000,79500\nмарт,125000,91200\n")); err != nil {
 		return
 	}
-	err = writeFile(filepath.Join(docs, "Договор.pdf"), tinyPDF("svoi demo document"))
+	err = writeFile(filepath.Join(docs, "Договор.pdf"), tinyPDF("themesh demo document"))
 	return
 }

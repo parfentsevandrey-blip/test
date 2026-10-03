@@ -22,7 +22,7 @@ func newManager(t *testing.T, n *mesh.Node, shares *[]Share, set *TransferSettin
 	t.Helper()
 	m := NewManager(Config{Node: n, Shares: func() []Share { return *shares }, Protected: []string{n.Dir()}})
 	m.RegisterRPC(n)
-	db, err := store.Open(filepath.Join(n.Dir(), "svoi.db"))
+	db, err := store.Open(filepath.Join(n.Dir(), "themesh.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,7 +137,7 @@ func TestSandboxPreventsEscapes(t *testing.T) {
 	// No temp files left behind.
 	ents, _ := os.ReadDir(filepath.Join(shareDir, "sub"))
 	for _, e := range ents {
-		if strings.HasPrefix(e.Name(), ".svoi-part") {
+		if strings.HasPrefix(e.Name(), ".themesh-part") {
 			t.Fatalf("temp file leaked: %s", e.Name())
 		}
 	}
@@ -483,7 +483,7 @@ func TestTransferResumesPartialDownload(t *testing.T) {
 		return false
 	})
 	// Simulate an interrupted earlier attempt: a partial file with the first 1.5 MB.
-	part := filepath.Join(bDL, ".svoi-"+offer.ID+".part")
+	part := filepath.Join(bDL, ".themesh-"+offer.ID+".part")
 	if err := os.WriteFile(part, data[:1_500_000], 0o600); err != nil {
 		t.Fatal(err)
 	}

@@ -14,8 +14,8 @@ import (
 
 // A tiny SOCKS5 server (CONNECT only, no authentication, loopback by default)
 // that routes connections to devices of the mesh: `ssh -o
-// ProxyCommand='nc -X 5 -x 127.0.0.1:1080 %h %p' nas.svoi` or any application
-// with a SOCKS setting can reach `nas.svoi:22` or `100.64.x.y:22`, provided the
+// ProxyCommand='nc -X 5 -x 127.0.0.1:1080 %h %p' nas.mesh` or any application
+// with a SOCKS setting can reach `nas.mesh:22` or `100.64.x.y:22`, provided the
 // target device publishes a service on that port.
 
 // SOCKSServer is a SOCKS5 listener bound to the mesh.

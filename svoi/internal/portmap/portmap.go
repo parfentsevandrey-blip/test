@@ -5,7 +5,7 @@
 //
 // It is best effort: no router, no UPnP, a router with a private WAN address
 // (carrier-grade NAT) - all of that just means "no mapping", and everything
-// else in svoi keeps working as before (hole punching, relays). The mapping is
+// else in themesh keeps working as before (hole punching, relays). The mapping is
 // removed again when the device stops.
 package portmap
 

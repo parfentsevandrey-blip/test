@@ -26,7 +26,7 @@ group("shares that would expose the device's keys", () => {
   test("a share that has become a way to the keys is marked and not served", async ({ browser, demo, dev }) => {
     const dataDir = path.join(demo.dir, "laptop", "data");
     const lap = (await dev.laptop.api("GET", "/api/state")).self;
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "svoi-e2e-swap-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "themesh-e2e-swap-"));
     fs.writeFileSync(path.join(dir, "innocent.txt"), "just a file");
     const sh = await dev.laptop.api("POST", "/api/shares", { name: "Невинная", path: dir, mode: "ro", allow: ["*"] });
     const listing = () => dev.nas.api("GET", `/api/peers/${lap.id}/fs?share=${sh.id}&path=/`, undefined, { raw: true });

@@ -31,7 +31,7 @@ type box struct {
 func newBox(t *testing.T, n *mesh.Node) *box {
 	t.Helper()
 	dir := n.Dir()
-	db, err := store.Open(filepath.Join(dir, "svoi.db"))
+	db, err := store.Open(filepath.Join(dir, "themesh.db"))
 	if err != nil {
 		t.Fatal(err)
 	}

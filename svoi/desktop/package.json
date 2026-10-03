@@ -1,11 +1,11 @@
 {
-  "name": "svoi-desktop",
-  "productName": "Свои",
+  "name": "themesh-desktop",
+  "productName": "The Mesh",
   "version": "0.1.0",
   "description": "Частная сеть ваших устройств: файлы, почта и чат напрямую, без облака",
   "private": true,
   "main": "src/main.js",
-  "author": "Свои",
+  "author": "The Mesh",
   "homepage": "https://github.com/parfentsevandrey-blip/test",
   "scripts": {
     "start": "electron .",

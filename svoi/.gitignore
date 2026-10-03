@@ -1,7 +1,7 @@
-/svoi
+/themesh
 /dist/
 *.test
-.svoi/
+.themesh/
 /web-dev/screens/
 /web-dev/.demo-cache/
 /web-dev/demo-dist/

@@ -26,7 +26,7 @@ func TestJoinOverRealSockets(t *testing.T) {
 			PassiveWait: time.Second,
 			DialTimeout: 8 * time.Second,
 		}
-		if os.Getenv("SVOI_TEST_DEBUG") != "" {
+		if os.Getenv("THEMESH_TEST_DEBUG") != "" {
 			cfg.Logger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})).With("node", name)
 		}
 		n, err := Open(cfg)

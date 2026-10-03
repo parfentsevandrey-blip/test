@@ -11,7 +11,7 @@ import (
 
 // A joiner puts a token in the server name of its TLS ClientHello:
 //
-//	<nonce 16 bytes hex>.<mac 16 bytes hex>.join.svoi
+//	<nonce 16 bytes hex>.<mac 16 bytes hex>.join.mesh
 //
 // where mac = HMAC-SHA256(invitation secret, label || nonce). The inviter checks it
 // against its pending invitations *before* it spends anything on the handshake, so
@@ -20,8 +20,8 @@ import (
 // (a copied one cannot be replayed); the join request itself still proves the
 // secret again, bound to the TLS session.
 const (
-	sniLabel         = "svoi-join-sni/v1\x00"
-	sniSuffix        = "join.svoi"
+	sniLabel         = "themesh-join-sni/v1\x00"
+	sniSuffix        = "join.mesh"
 	sniKeepFor       = 10 * time.Minute
 	sniMaxRemembered = 4096
 )

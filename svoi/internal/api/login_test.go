@@ -15,7 +15,7 @@ import (
 	"github.com/parfentsevandrey-blip/test/svoi/internal/app"
 )
 
-// mintCode does what `svoi url` does: ask the node for a single-use sign-in code.
+// mintCode does what `themesh url` does: ask the node for a single-use sign-in code.
 func (e *env) mintCode() string {
 	e.t.Helper()
 	var out struct {
@@ -41,7 +41,7 @@ func (e *env) redeem(code string) (status int, session *http.Cookie, location st
 	}
 	resp.Body.Close()
 	for _, c := range resp.Cookies() {
-		if c.Name == "svoi_session" && c.MaxAge >= 0 && c.Value != "" {
+		if c.Name == "themesh_session" && c.MaxAge >= 0 && c.Value != "" {
 			session = c
 		}
 	}
@@ -52,7 +52,7 @@ func (e *env) asBrowser(c *http.Cookie) func(*http.Request) {
 	return func(r *http.Request) {
 		r.AddCookie(c)
 		if r.Method != "GET" {
-			r.Header.Set("X-Svoi", "1")
+			r.Header.Set("X-Themesh", "1")
 		}
 	}
 }
@@ -215,7 +215,7 @@ func TestLogout(t *testing.T) {
 	}
 	cleared := false
 	for _, c := range resp.Cookies() {
-		if c.Name == "svoi_session" && c.MaxAge < 0 {
+		if c.Name == "themesh_session" && c.MaxAge < 0 {
 			cleared = true
 		}
 	}
@@ -361,7 +361,7 @@ func TestNodesOnOneHostDoNotSignEachOtherOut(t *testing.T) {
 	}
 	// Signing out of one leaves the other alone.
 	req, _ := http.NewRequest("POST", one.base+"/api/logout", strings.NewReader("{}"))
-	req.Header.Set("X-Svoi", "1")
+	req.Header.Set("X-Themesh", "1")
 	resp, err := browser.Do(req)
 	if err != nil {
 		t.Fatal(err)

@@ -49,7 +49,7 @@ export function LogViewer({ dev }) {
     const url = URL.createObjectURL(new Blob([asText() + "\n"], { type: "text/plain" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `svoi-log-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.txt`;
+    a.download = `themesh-log-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.txt`;
     document.body.appendChild(a);
     a.click();
     a.remove();

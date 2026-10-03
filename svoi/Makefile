@@ -29,14 +29,14 @@ all: build
 
 # The single self-contained binary (the web interface is embedded in it).
 build:
-	$(GO) build -trimpath -ldflags "$(if $(filter windows,$(shell $(GO) env GOOS)),$(WINLDFLAGS),$(LDFLAGS))" -o svoi ./cmd/svoi
+	$(GO) build -trimpath -ldflags "$(if $(filter windows,$(shell $(GO) env GOOS)),$(WINLDFLAGS),$(LDFLAGS))" -o themesh ./cmd/themesh
 
 run: build
-	./svoi up
+	./themesh up
 
 # Four simulated devices in one process: the quickest way to look around.
 demo: build
-	./svoi demo
+	./themesh demo
 
 test:
 	$(GO) test ./... -count=1
@@ -66,11 +66,11 @@ dist:
 	@set -e; for p in $(PLATFORMS); do \
 		os=$${p%/*}; arch=$${p#*/}; \
 		ext=""; [ $$os = windows ] && ext=".exe"; \
-		name=svoi-$$os-$$arch; \
+		name=themesh-$$os-$$arch; \
 		echo "  $$name"; \
 		mkdir -p $(DIST)/$$name; \
 		flags="$(LDFLAGS)"; [ $$os = windows ] && flags="$(WINLDFLAGS)"; \
-		GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags "$$flags" -o $(DIST)/$$name/svoi$$ext ./cmd/svoi; \
+		GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags "$$flags" -o $(DIST)/$$name/themesh$$ext ./cmd/themesh; \
 		cp README.md $(DIST)/$$name/; \
 		case $$os in android|linux) [ $$arch = arm64 ] && cp docs/ANDROID.md $(DIST)/$$name/ || true ;; esac; \
 		sh deploy/start/guide.sh $$os $$arch $(DIST)/$$name; \
@@ -81,7 +81,7 @@ dist:
 	cd $(DIST) && sha256sum * > SHA256SUMS
 
 install: build
-	install -Dm755 svoi $(DESTDIR)/usr/local/bin/svoi
+	install -Dm755 themesh $(DESTDIR)/usr/local/bin/themesh
 
 clean:
-	rm -rf svoi $(DIST)
+	rm -rf themesh $(DIST)
