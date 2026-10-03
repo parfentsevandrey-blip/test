@@ -208,6 +208,20 @@ func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
 	return os.Rename(name, path)
 }
 
+// EnsurePrivateDir creates dir (mode 0700) and, if it already existed with group or
+// other access, takes that away: it holds the device key and the token of the web
+// interface. (MkdirAll leaves an existing directory as it is.) It is best effort for a
+// directory that is not ours.
+func EnsurePrivateDir(dir string) error {
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return err
+	}
+	if fi, err := os.Stat(dir); err == nil && fi.IsDir() && fi.Mode().Perm()&0o077 != 0 {
+		_ = os.Chmod(dir, 0o700)
+	}
+	return nil
+}
+
 // WriteFileAtomic is exported for packages that persist small state files.
 func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
 	return writeFileAtomic(path, data, perm)

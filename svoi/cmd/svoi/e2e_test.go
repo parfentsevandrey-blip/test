@@ -22,6 +22,8 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/parfentsevandrey-blip/test/svoi/internal/api"
 )
 
 // These tests run the real binary: two separate processes on this machine
@@ -374,6 +376,44 @@ func TestCommandLineDoesNotSendTheTokenToAnImpostor(t *testing.T) {
 		if strings.Contains(r, secret) || strings.Contains(strings.ToLower(r), "authorization") {
 			t.Fatalf("the token (or an Authorization header) reached the impostor:\n%s", r)
 		}
+	}
+}
+
+// Even something that really is the node (it proves the token) must not be able to send
+// the command line, with its Authorization header, somewhere else with a redirect.
+func TestCommandLineDoesNotFollowRedirects(t *testing.T) {
+	const secret = "0a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6071"
+	p := newProc(t, "redirected")
+	var mu sync.Mutex
+	var stolen []string
+	other := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		stolen = append(stolen, r.Header.Get("Authorization"))
+		mu.Unlock()
+	}))
+	defer other.Close()
+	node := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/handshake" {
+			fmt.Fprintf(w, `{"proof":%q}`, api.HandshakeProof(secret, r.URL.Query().Get("n")))
+			return
+		}
+		http.Redirect(w, r, other.URL+"/collect", http.StatusTemporaryRedirect)
+	}))
+	defer node.Close()
+	if err := os.WriteFile(filepath.Join(p.dir, "ui.addr"), []byte(strings.TrimPrefix(node.URL, "http://")+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(p.dir, "ui.token"), []byte(secret+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out, err := p.run("status")
+	if err == nil {
+		t.Fatalf("svoi status followed a redirect and succeeded: %q", out)
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if len(stolen) != 0 {
+		t.Fatalf("the redirect target was contacted: %v", stolen)
 	}
 }
 

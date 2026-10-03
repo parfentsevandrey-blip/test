@@ -6,6 +6,7 @@ import (
 	"net/netip"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -379,5 +380,41 @@ func TestWeakKeysAreRejected(t *testing.T) {
 	d := GenerateDevice()
 	if _, err := IDFromPublicKey(ed25519.PublicKey(d.ID[:])); err != nil {
 		t.Fatalf("a normal key was rejected: %v", err)
+	}
+}
+
+func TestEnsurePrivateDirTightensAnExistingDirectory(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, "data")
+	if err := os.Mkdir(dir, 0o755); err != nil { // as a careless installer leaves it
+		t.Fatal(err)
+	}
+	if err := os.Chmod(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := EnsurePrivateDir(dir); err != nil {
+		t.Fatal(err)
+	}
+	if runtime.GOOS != "windows" {
+		if fi, _ := os.Stat(dir); fi.Mode().Perm() != 0o700 {
+			t.Fatalf("an existing directory was left with mode %v", fi.Mode().Perm())
+		}
+	}
+	fresh := filepath.Join(root, "a", "b")
+	if err := EnsurePrivateDir(fresh); err != nil {
+		t.Fatal(err)
+	}
+	if runtime.GOOS != "windows" {
+		if fi, _ := os.Stat(fresh); fi.Mode().Perm() != 0o700 {
+			t.Fatalf("a new directory got mode %v", fi.Mode().Perm())
+		}
+	}
+	// Not a directory: an error, and the file is untouched.
+	file := filepath.Join(root, "file")
+	if err := os.WriteFile(file, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := EnsurePrivateDir(file); err == nil {
+		t.Fatal("a file was accepted as a data directory")
 	}
 }

@@ -75,7 +75,7 @@ func Open(opts Options) (*App, error) {
 	if opts.Dir == "" {
 		return nil, errors.New("app: Options.Dir is required")
 	}
-	if err := os.MkdirAll(opts.Dir, 0o700); err != nil {
+	if err := identity.EnsurePrivateDir(opts.Dir); err != nil {
 		return nil, err
 	}
 	cfg, err := loadConfig(opts.Dir)

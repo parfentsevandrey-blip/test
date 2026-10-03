@@ -199,7 +199,7 @@ func Open(cfg Config) (*Node, error) {
 	if cfg.Dir == "" {
 		return nil, errors.New("mesh: Config.Dir is required")
 	}
-	if err := os.MkdirAll(cfg.Dir, 0o700); err != nil {
+	if err := identity.EnsurePrivateDir(cfg.Dir); err != nil {
 		return nil, err
 	}
 	dev, _, err := identity.LoadOrCreateDevice(filepath.Join(cfg.Dir, "device.key"))

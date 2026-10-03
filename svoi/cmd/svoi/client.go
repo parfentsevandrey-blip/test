@@ -48,7 +48,7 @@ func newClient(dir string) (*client, error) {
 	c := &client{
 		base:  "http://" + strings.TrimSpace(string(addr)),
 		token: strings.TrimSpace(string(tok)),
-		http:  &http.Client{Timeout: 0},
+		http:  &http.Client{Timeout: 0, CheckRedirect: noRedirect},
 	}
 	if err := c.handshake(); err != nil {
 		return nil, err
@@ -56,13 +56,17 @@ func newClient(dir string) (*client, error) {
 	return c, nil
 }
 
+// noRedirect: the node never redirects an API call, so whatever does is not the node
+// (and Go would carry the Authorization header along to the same host).
+func noRedirect(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+
 func (c *client) handshake() error {
 	var raw [16]byte
 	if _, err := rand.Read(raw[:]); err != nil {
 		return err
 	}
 	nonce := hex.EncodeToString(raw[:])
-	resp, err := (&http.Client{Timeout: 5 * time.Second}).Get(c.base + "/api/handshake?n=" + nonce)
+	resp, err := (&http.Client{Timeout: 5 * time.Second, CheckRedirect: noRedirect}).Get(c.base + "/api/handshake?n=" + nonce)
 	if err != nil {
 		return errors.New("cannot reach the running svoi: " + err.Error())
 	}
