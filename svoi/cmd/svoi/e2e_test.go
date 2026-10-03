@@ -124,6 +124,9 @@ func (p *proc) start(extra ...string) {
 		_, err := os.Stat(filepath.Join(p.dir, "ui.addr"))
 		return err == nil
 	})
+	// The start-up banner (with the sign-in link, when it is asked for) is printed just after the address
+	// is published: a test that reads the log at once would find it empty on a slow machine.
+	waitFor(p.t, 15*time.Second, p.name+" start-up banner", func() bool { return strings.Contains(p.logs(), "  data:") })
 }
 
 // stop asks the process to quit and returns how it ended.

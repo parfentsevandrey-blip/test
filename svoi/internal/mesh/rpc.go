@@ -353,6 +353,39 @@ func (c *ClientStream) ReadResponse(out any) error {
 	return nil
 }
 
+// replaced reports whether err says that the link was closed because another one took its place.
+// Two devices that dial each other at the same moment end up with two links and one of them is
+// closed (see keepNewConn) - perhaps with a call on it; a device that comes back from a restart does
+// the same to the link its peer still holds. Nothing is wrong with the peer or the path then, and
+// the call only has to go again on the link that stays.
+func replaced(err error) bool {
+	var ae *quic.ApplicationError
+	return errors.As(err, &ae) && ae.ErrorCode == closeDuplicate
+}
+
+// replacement waits (a moment) for the link that took the place of failed.
+func (p *Peer) replacement(ctx context.Context, failed *quic.Conn) *quic.Conn {
+	deadline := time.NewTimer(3 * time.Second)
+	defer deadline.Stop()
+	tick := time.NewTicker(20 * time.Millisecond)
+	defer tick.Stop()
+	for {
+		if c := p.currentConn(); c != nil && c != failed {
+			return c
+		}
+		select {
+		case <-tick.C:
+		case <-deadline.C:
+			return nil
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+// retriesOnReplacedLink is how many times a call is repeated on the link that replaced its own.
+const retriesOnReplacedLink = 2
+
 // OpenStream starts a streaming call to the peer. The request header is sent
 // immediately; the caller then writes any body, calls CloseWrite, and reads
 // the response with ReadResponse.
@@ -361,6 +394,19 @@ func (p *Peer) OpenStream(ctx context.Context, method string, args any) (*Client
 	if conn == nil {
 		return nil, Errf(CodeOffline, "%s is offline", p.Name())
 	}
+	for attempt := 0; ; attempt++ {
+		cs, err := p.openStreamOn(ctx, conn, method, args)
+		if err == nil || attempt >= retriesOnReplacedLink || !replaced(err) {
+			return cs, err
+		}
+		// (the request did not get through: the link was closed before its header was written)
+		if conn = p.replacement(ctx, conn); conn == nil {
+			return nil, err
+		}
+	}
+}
+
+func (p *Peer) openStreamOn(ctx context.Context, conn *quic.Conn, method string, args any) (*ClientStream, error) {
 	s, err := conn.OpenStreamSync(ctx)
 	if err != nil {
 		return nil, err
@@ -384,14 +430,32 @@ func (p *Peer) OpenStream(ctx context.Context, method string, args any) (*Client
 	return &ClientStream{s: s}, nil
 }
 
-// Call performs a request/response call and decodes the result into out.
+// Call performs a request/response call and decodes the result into out. A call that was on a link
+// that has just been replaced by another one (see replaced) is repeated on the new link: handlers are
+// written so that the same request can arrive twice, as it can after any dropped connection.
 func (p *Peer) Call(ctx context.Context, method string, args, out any) error {
 	if _, ok := ctx.Deadline(); !ok {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 	}
-	cs, err := p.OpenStream(ctx, method, args)
+	conn := p.currentConn()
+	if conn == nil {
+		return Errf(CodeOffline, "%s is offline", p.Name())
+	}
+	for attempt := 0; ; attempt++ {
+		err := p.callOn(ctx, conn, method, args, out)
+		if err == nil || attempt >= retriesOnReplacedLink || !replaced(err) {
+			return err
+		}
+		if conn = p.replacement(ctx, conn); conn == nil {
+			return err
+		}
+	}
+}
+
+func (p *Peer) callOn(ctx context.Context, conn *quic.Conn, method string, args, out any) error {
+	cs, err := p.openStreamOn(ctx, conn, method, args)
 	if err != nil {
 		return err
 	}
