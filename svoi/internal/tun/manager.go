@@ -348,23 +348,61 @@ const (
 // hostsPath is a variable only so tests can point it elsewhere.
 var hostsPath = "/etc/hosts"
 
+// ourHostsLine reports whether line has the shape of the entries we write: an overlay
+// address and a name under .svoi, and nothing else.
+func ourHostsLine(line string) bool {
+	f := strings.Fields(line)
+	if len(f) != 2 || !strings.HasSuffix(strings.ToLower(f[1]), "."+identity.DNSSuffix) {
+		return false
+	}
+	a, err := netip.ParseAddr(f[0])
+	return err == nil && identity.IsOverlayAddr(a)
+}
+
 // writeHosts replaces the svoi block of /etc/hosts (nil removes it). Everything
 // outside the block stays byte for byte as it was, and when there is nothing to
 // change the file is not written at all (not even to tidy it up).
+//
+// The block is only ever *our* lines. Inside a block that has both markers, a line
+// that does not look like one of ours is somebody else's and is kept. A marker
+// without its partner (a block cut short by a crash, an END line removed by an
+// editor, a second BEGIN, a stray END) never makes us take lines that follow it: a
+// BEGIN with no END covers only the entries of ours directly after it.
 func writeHosts(entries []hostEntry) error {
 	raw, err := os.ReadFile(hostsPath)
 	if err != nil {
 		return err
 	}
+	lines := strings.SplitAfter(string(raw), "\n")
+	if n := len(lines); n > 0 && lines[n-1] == "" {
+		lines = lines[:n-1]
+	}
+	is := func(line, marker string) bool { return strings.TrimSpace(line) == marker }
 	var kept []string // lines outside our block, each with its line ending
-	hadBlock, skipping := false, false
-	for _, line := range strings.SplitAfter(string(raw), "\n") {
-		switch trimmed := strings.TrimSpace(line); {
-		case trimmed == hostsBegin:
-			hadBlock, skipping = true, true
-		case trimmed == hostsEnd:
-			skipping = false
-		case !skipping && line != "":
+	hadBlock := false
+	for i := 0; i < len(lines); i++ {
+		switch line := lines[i]; {
+		case is(line, hostsEnd): // an END with no BEGIN
+			hadBlock = true
+		case is(line, hostsBegin):
+			hadBlock = true
+			j := i + 1
+			for j < len(lines) && !is(lines[j], hostsEnd) && !is(lines[j], hostsBegin) {
+				j++
+			}
+			if j < len(lines) && is(lines[j], hostsEnd) { // a whole block: i..j
+				for _, l := range lines[i+1 : j] {
+					if !ourHostsLine(l) {
+						kept = append(kept, l)
+					}
+				}
+				i = j
+			} else { // no END: only our entries right after the BEGIN
+				for i+1 < len(lines) && ourHostsLine(lines[i+1]) {
+					i++
+				}
+			}
+		default:
 			kept = append(kept, line)
 		}
 	}
