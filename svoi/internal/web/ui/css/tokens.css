@@ -116,6 +116,9 @@
   --shadow-3: 0 1px 0 rgba(255, 255, 255, .05) inset, 0 24px 64px rgba(0, 0, 0, .55), 0 6px 18px rgba(0, 0, 0, .35);
 
   --qr-bg: #f4f2ec;
+  --bubble-mine: #163a2f;
+  --bubble-mine-text: #e3f6ee;
+  --bubble-theirs: #1d2428;
 }
 
 /* ---------- Light: warm paper white with a deeper green ---------- */
@@ -185,6 +188,9 @@
   --shadow-3: 0 2px 6px rgba(60, 45, 15, .08), 0 24px 64px rgba(60, 45, 15, .18);
 
   --qr-bg: #ffffff;
+  --bubble-mine: #d9f0e6;
+  --bubble-mine-text: #10251d;
+  --bubble-theirs: #ffffff;
 }
 
 @media (max-width: 759px) {

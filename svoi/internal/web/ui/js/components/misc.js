@@ -22,7 +22,7 @@ export function PageHeader({ title, subtitle, actions, back, children }) {
 }
 
 /** Route-driven tabs: items [{ id, label, href, icon, badge }] */
-export function Tabs({ items, active, label, class: cls }) {
+export function Tabs({ items, active, label, class: cls, testid }) {
   const onKey = (e) => {
     if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
     const links = Array.from(e.currentTarget.querySelectorAll("a"));
@@ -32,11 +32,11 @@ export function Tabs({ items, active, label, class: cls }) {
     e.preventDefault();
   };
   return html`<nav class=${cx("tabs", cls)} aria-label=${label} onKeyDown=${onKey}>
-    ${items.map((it) => html`<a key=${it.id} href=${it.href} class=${cx("tabs__tab", active === it.id && "is-active")}
+    ${items.map((it) => html`<a key=${it.id} href=${it.href} class=${cx("tabs__tab", active === it.id && "is-active")} data-testid=${testid ? `${testid}-${it.id}` : undefined}
         aria-current=${active === it.id ? "page" : undefined}>
       ${it.icon && html`<${Icon} name=${it.icon} size=${16} />`}
       <span>${it.label}</span>
-      ${it.badge ? html`<span class="badge badge--accent">${it.badge}</span>` : null}
+      ${it.badge ? html`<span class=${`badge badge--${it.badgeTone || "accent"}`}>${it.badge}</span>` : null}
     </a>`)}
   </nav>`;
 }
@@ -80,7 +80,7 @@ export function DropZone({ onFiles, title, hint, icon = "upload", multiple = tru
         const files = Array.from(e.dataTransfer.files || []);
         if (files.length) onFiles(files);
       }}>
-    <input type="file" ref=${input} class="sr-only" tabindex="-1" aria-hidden="true" multiple=${multiple}
+    <input type="file" ref=${input} class="sr-only" tabindex="-1" aria-hidden="true" multiple=${multiple} data-testid="dropzone-input"
       onChange=${(e) => { const f = Array.from(e.target.files || []); e.target.value = ""; if (f.length) onFiles(f); }} />
     <button type="button" class="dropzone__btn" onClick=${pick} disabled=${disabled}>
       <span class="dropzone__icon"><${Icon} name=${icon} size=${compact ? 22 : 28} /></span>

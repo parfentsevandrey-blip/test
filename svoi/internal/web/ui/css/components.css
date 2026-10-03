@@ -211,8 +211,8 @@
 .radio-card:hover { border-color: var(--line-3); }
 .radio-card.is-on { border-color: var(--accent); background: var(--accent-softer); }
 .radio-card input { margin: 3px 0 0; accent-color: var(--accent); width: 16px; height: 16px; flex: none; }
-.radio-card__title { font-weight: 600; }
-.radio-card__text { color: var(--text-2); font-size: var(--fs-sm); margin-top: 2px; }
+.radio-card__title { display: block; font-weight: 600; }
+.radio-card__text { display: block; color: var(--text-2); font-size: var(--fs-sm); margin-top: 2px; }
 
 /* ---------- empty states & skeletons ---------- */
 .empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--sp-2); padding: var(--sp-8) var(--sp-5); color: var(--text-2); }
@@ -272,9 +272,9 @@
 .portal { position: relative; z-index: 100; }
 .portal--menu { z-index: 140; }
 .portal--toasts { z-index: 160; }
-.modal-layer, .drawer-layer { position: fixed; inset: 0; display: grid; place-items: center; padding: var(--sp-5); }
+.modal-layer, .drawer-layer { position: fixed; inset: 0; display: grid; place-items: center; padding: var(--sp-5); grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); }
 .modal-backdrop { position: absolute; inset: 0; background: var(--backdrop); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); animation: fade-in var(--dur) var(--ease); }
-.modal-backdrop--light { background: var(--backdrop); }
+.modal-backdrop--light { background: var(--backdrop); backdrop-filter: none; -webkit-backdrop-filter: none; }
 .modal {
   position: relative; display: flex; flex-direction: column; width: 100%; max-height: min(88vh, 900px);
   background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--r-xl);
@@ -312,9 +312,9 @@
 }
 
 /* ---------- drawer ---------- */
-.drawer-layer { place-items: stretch end; padding: 0; }
+.drawer-layer { place-items: stretch end; padding: 0; grid-template-rows: minmax(0, 1fr); }
 .drawer {
-  position: relative; display: flex; flex-direction: column; width: min(460px, 100vw); height: 100%;
+  position: relative; display: flex; flex-direction: column; width: min(460px, 100vw); height: 100%; min-height: 0;
   background: var(--surface); border-left: 1px solid var(--line-2); box-shadow: var(--shadow-3);
   animation: slide-in-right var(--dur-slow) var(--ease-out);
 }
@@ -357,6 +357,8 @@
 .toast__close:hover { background: var(--surface-hover); color: var(--text); }
 @media (max-width: 759px) {
   .toasts { left: 50%; right: auto; transform: translateX(-50%); bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 12px); }
+  /* bottom sheets cover the lower part of the screen: show toasts on top instead */
+  .has-modal .toasts { top: calc(12px + var(--safe-top)); bottom: auto; }
 }
 
 /* ---------- menu ---------- */

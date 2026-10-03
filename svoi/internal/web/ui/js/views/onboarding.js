@@ -75,21 +75,21 @@ function CreateForm({ self, onBack }) {
     </div>
     <div class="form-grid">
       <${Field} label=${t("onb.meshName")} hint=${t("onb.meshNameHint")} error=${errs.mesh}>
-        ${(id, d) => html`<input id=${id} class="input" value=${mesh} placeholder=${t("onb.meshNamePh")} maxlength="40" autofocus
+        ${(id, d) => html`<input id=${id} class="input" value=${mesh} placeholder=${t("onb.meshNamePh")} maxlength="40" autofocus data-testid="onb-mesh-name"
           aria-describedby=${d} aria-invalid=${errs.mesh ? "true" : undefined} onInput=${(e) => setMesh(e.target.value)} />`}
       </${Field}>
       <${Field} label=${t("onb.deviceName")} hint=${t("onb.deviceNameHint")} error=${errs.name}>
-        ${(id, d) => html`<input id=${id} class="input" value=${name} placeholder=${placeholder} maxlength="63" autocapitalize="off" spellcheck="false"
+        ${(id, d) => html`<input id=${id} class="input" value=${name} placeholder=${placeholder} maxlength="63" autocapitalize="off" spellcheck="false" data-testid="onb-device-name"
           aria-describedby=${d} aria-invalid=${errs.name ? "true" : undefined}
           onInput=${(e) => setName(e.target.value)} onBlur=${() => setName(normalizeName(name))} />`}
       </${Field}>
       <${Field} label=${t("onb.owner")} hint=${t("onb.ownerHint")} optional>
-        ${(id, d) => html`<input id=${id} class="input" value=${owner} placeholder=${t("onb.ownerPh")} maxlength="40" autocomplete="given-name"
+        ${(id, d) => html`<input id=${id} class="input" value=${owner} placeholder=${t("onb.ownerPh")} maxlength="40" autocomplete="given-name" data-testid="onb-owner"
           aria-describedby=${d} onInput=${(e) => setOwner(e.target.value)} />`}
       </${Field}>
     </div>
-    ${fail && html`<${Callout} tone="err" title=${t("err." + fail.code)}>${fail.message}</${Callout}>`}
-    <${Button} type="submit" variant="primary" size="lg" block loading=${busy} icon="sparkle">${t("onb.create.submit")}</${Button}>
+    ${fail && html`<${Callout} tone="err" title=${t("err." + fail.code)} data-testid="onb-error">${fail.message}</${Callout}>`}
+    <${Button} type="submit" variant="primary" size="lg" block loading=${busy} icon="sparkle" data-testid="onb-submit">${t("onb.create.submit")}</${Button}>
   </form>`;
 }
 
@@ -137,7 +137,7 @@ function JoinForm({ self, onBack }) {
 
   if (busy) {
     const pct = Math.min(96, (elapsed / JOIN_LIMIT) * 100);
-    return html`<div class="onb-form onb-progress" role="status" aria-live="polite">
+    return html`<div class="onb-form onb-progress" role="status" aria-live="polite" data-testid="onb-progress">
       <div class="onb-progress__rings" aria-hidden="true"><span></span><span></span><span></span><${Logo} size=${44} /></div>
       <h2 class="onb-form__title center">${t("onb.joining")}</h2>
       <p class="muted center">${elapsed < 8 ? t("onb.joiningStep1") : elapsed < 16 ? t("onb.joiningStep2") : t("onb.joiningStep3")}</p>
@@ -155,28 +155,28 @@ function JoinForm({ self, onBack }) {
       <span class="onb-choice__icon onb-choice__icon--join"><${Icon} name="ticket" size=${24} /></span>
       <div><h2 class="onb-form__title">${t("onb.join.title")}</h2><p class="muted">${t("onb.join.lead")}</p></div>
     </div>
-    ${fail && html`<${Callout} tone="err" title=${t("onb.failTitle")} role="alert">
+    ${fail && html`<${Callout} tone="err" title=${t("onb.failTitle")} role="alert" data-testid="onb-error">
       <p>${failText}</p>${fail.message && html`<p class="mono xsmall mt-1">${fail.message}</p>`}
     </${Callout}>`}
     <div class="form-grid">
       <${Field} label=${t("onb.code")} hint=${t("onb.codeHint")} error=${errs.code}>
-        ${(id, d) => html`<textarea id=${id} class="input textarea mono onb-code" value=${code} rows="3" autofocus
+        ${(id, d) => html`<textarea id=${id} class="input textarea mono onb-code" value=${code} rows="3" autofocus data-testid="onb-code"
           placeholder="SVOI1-AEAWVQFQ-…" spellcheck="false" autocapitalize="characters" autocomplete="off"
           aria-describedby=${d} aria-invalid=${errs.code ? "true" : undefined} onInput=${(e) => setCode(e.target.value)}></textarea>`}
       </${Field}>
       <div class="form-row">
         <${Field} label=${t("onb.deviceName")} error=${errs.name} hint=${t("onb.deviceNameHintShort")}>
-          ${(id, d) => html`<input id=${id} class="input" value=${name} placeholder=${placeholder} maxlength="63" autocapitalize="off" spellcheck="false"
+          ${(id, d) => html`<input id=${id} class="input" value=${name} placeholder=${placeholder} maxlength="63" autocapitalize="off" spellcheck="false" data-testid="onb-device-name"
             aria-describedby=${d} aria-invalid=${errs.name ? "true" : undefined}
             onInput=${(e) => setName(e.target.value)} onBlur=${() => setName(normalizeName(name))} />`}
         </${Field}>
         <${Field} label=${t("onb.owner")} optional hint=${t("onb.ownerHintShort")}>
-          ${(id, d) => html`<input id=${id} class="input" value=${owner} placeholder=${t("onb.ownerPh")} maxlength="40" autocomplete="given-name"
+          ${(id, d) => html`<input id=${id} class="input" value=${owner} placeholder=${t("onb.ownerPh")} maxlength="40" autocomplete="given-name" data-testid="onb-owner"
             aria-describedby=${d} onInput=${(e) => setOwner(e.target.value)} />`}
         </${Field}>
       </div>
     </div>
-    <${Button} type="submit" variant="primary" size="lg" block icon="link">${t("onb.join.submit")}</${Button}>
+    <${Button} type="submit" variant="primary" size="lg" block icon="link" data-testid="onb-submit">${t("onb.join.submit")}</${Button}>
   </form>`;
 }
 
@@ -184,7 +184,7 @@ export function OnboardingView() {
   const self = useStore((s) => s.self);
   const [mode, setMode] = useState(null); // null | create | join
   const back = () => setMode(null);
-  return html`<div class="onb">
+  return html`<div class="onb" data-testid="page-onboarding">
     <${Corner} />
     <main class="onb__main" id="main" tabindex="-1">
       <header class="onb__hero">
@@ -195,13 +195,13 @@ export function OnboardingView() {
       </header>
 
       ${!mode && html`<div class="onb__choices">
-        <button type="button" class="onb-choice" onClick=${() => setMode("create")}>
+        <button type="button" class="onb-choice" onClick=${() => setMode("create")} data-testid="onb-create">
           <span class="onb-choice__icon"><${Icon} name="sparkle" size=${26} /></span>
           <span class="onb-choice__title">${t("onb.create.title")}</span>
           <span class="onb-choice__text">${t("onb.create.card")}</span>
           <span class="onb-choice__go">${t("onb.create.go")} <${Icon} name="chevronRight" size=${16} /></span>
         </button>
-        <button type="button" class="onb-choice" onClick=${() => setMode("join")}>
+        <button type="button" class="onb-choice" onClick=${() => setMode("join")} data-testid="onb-join">
           <span class="onb-choice__icon onb-choice__icon--join"><${Icon} name="ticket" size=${26} /></span>
           <span class="onb-choice__title">${t("onb.join.title")}</span>
           <span class="onb-choice__text">${t("onb.join.card")}</span>

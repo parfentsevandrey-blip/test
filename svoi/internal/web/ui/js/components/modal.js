@@ -1,5 +1,5 @@
 // Modal dialog, side drawer / bottom sheet, and promise-based confirm/prompt.
-import { html, useEffect, useRef, useState } from "../../vendor/preact-htm.js";
+import { html, useLayoutEffect, useRef, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t } from "../i18n.js";
 import { setState, state, useStore } from "../store.js";
@@ -11,22 +11,28 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([t
 
 let titleSeq = 0;
 
-/** Shared behaviour: focus in on open, restore on close, Esc to close, Tab trap. */
+/**
+ * Shared behaviour: focus in on open, restore on close, Esc to close, Tab trap.
+ * Runs as a layout effect so the opener is captured before any autofocus moves
+ * focus, and the Escape listener is attached before the user can type.
+ */
 function useDialogBehaviour(ref, onClose, initialFocus) {
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
-  useEffect(() => {
+  useLayoutEffect(() => {
     const prev = document.activeElement;
     const node = ref.current;
-    // Focus after the portal content is in the DOM.
-    const tm = setTimeout(() => {
-      if (!node) return;
+    const focusIn = () => {
+      if (!node || node.contains(document.activeElement)) return;
+      const body = node.querySelector(".modal__body, .drawer__body");
       const target = (initialFocus && node.querySelector(initialFocus)) ||
         node.querySelector("[autofocus]") ||
-        node.querySelector(".modal__body " + FOCUSABLE) ||
+        (body && body.querySelector(FOCUSABLE)) ||
         node.querySelector(FOCUSABLE) || node;
       target.focus({ preventScroll: true });
-    }, 20);
+    };
+    focusIn();
+    const raf = requestAnimationFrame(focusIn); // in case content was not focusable yet
     const onKey = (e) => {
       const layer = node && node.closest(".portal");
       if (layer && !isTopLayer(layer)) return;
@@ -38,7 +44,7 @@ function useDialogBehaviour(ref, onClose, initialFocus) {
         closeRef.current();
       } else if (e.key === "Tab" && node) {
         const f = Array.from(node.querySelectorAll(FOCUSABLE)).filter((x) => x.offsetParent !== null || x === document.activeElement);
-        if (!f.length) return;
+        if (!f.length) { e.preventDefault(); return; }
         const first = f[0], last = f[f.length - 1];
         if (e.shiftKey && (document.activeElement === first || !node.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
         else if (!e.shiftKey && (document.activeElement === last || !node.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
@@ -46,20 +52,23 @@ function useDialogBehaviour(ref, onClose, initialFocus) {
     };
     document.addEventListener("keydown", onKey, true);
     return () => {
-      clearTimeout(tm);
+      cancelAnimationFrame(raf);
       document.removeEventListener("keydown", onKey, true);
-      if (prev && prev.focus && document.contains(prev)) setTimeout(() => prev.focus({ preventScroll: true }), 0);
+      // Restore focus once the layer is gone and the app is no longer inert.
+      if (prev && prev.focus && prev !== document.body) {
+        setTimeout(() => { if (document.contains(prev) && !prev.closest("[inert]")) prev.focus({ preventScroll: true }); }, 0);
+      }
     };
   }, []);
 }
 
-function ModalInner({ onClose, title, subtitle, icon, children, footer, size, class: cls, closeOnBackdrop, initialFocus, hideClose, tone, label }) {
+function ModalInner({ onClose, title, subtitle, icon, children, footer, size, class: cls, closeOnBackdrop, initialFocus, hideClose, tone, label, testid }) {
   const ref = useRef(null);
   const tid = useRef(`dlg-t${++titleSeq}`);
   useDialogBehaviour(ref, onClose, initialFocus);
   return html`<div class="modal-layer">
     <div class="modal-backdrop" onClick=${() => closeOnBackdrop && onClose && onClose()}></div>
-    <div class=${cx("modal", `modal--${size}`, tone && `modal--${tone}`, cls)} role="dialog" aria-modal="true"
+    <div class=${cx("modal", `modal--${size}`, tone && `modal--${tone}`, cls)} role="dialog" aria-modal="true" data-testid=${testid}
         aria-labelledby=${title ? tid.current : undefined} aria-label=${title ? undefined : label} tabindex="-1" ref=${ref}>
       ${(title || !hideClose) && html`<header class="modal__head">
         ${icon && html`<span class=${cx("modal__icon", tone && `modal__icon--${tone}`)}><${Icon} name=${icon} size=${20} /></span>`}
@@ -86,12 +95,12 @@ export function Modal(props) {
   </${Portal}>`;
 }
 
-function DrawerInner({ onClose, title, children, label, header, class: cls, footer }) {
+function DrawerInner({ onClose, title, children, label, header, class: cls, footer, testid }) {
   const ref = useRef(null);
   useDialogBehaviour(ref, onClose);
   return html`<div class="drawer-layer">
     <div class="modal-backdrop modal-backdrop--light" onClick=${onClose}></div>
-    <aside class=${cx("drawer", cls)} role="dialog" aria-modal="true" aria-label=${label || title} tabindex="-1" ref=${ref}>
+    <aside class=${cx("drawer", cls)} role="dialog" aria-modal="true" aria-label=${label || title} tabindex="-1" ref=${ref} data-testid=${testid}>
       <div class="drawer__grip" aria-hidden="true"></div>
       <header class="drawer__head">
         <div class="grow">${header || html`<h2 class="drawer__title">${title}</h2>`}</div>
@@ -145,14 +154,14 @@ function ConfirmDialog({ d }) {
   return html`<${Modal} size="sm" title=${o.title} icon=${o.icon || (o.danger ? "alert" : undefined)} tone=${o.danger ? "danger" : undefined}
       onClose=${() => done(false)}
       footer=${html`
-        <${Button} variant="ghost" onClick=${() => done(false)} autofocus=${!!o.danger && !o.requireText}>${o.cancelText || t("common.cancel")}</${Button}>
-        <${Button} variant=${o.danger ? "danger" : "primary"} disabled=${!ok} onClick=${() => done(true)} autofocus=${!o.danger && !o.requireText}>
+        <${Button} variant="ghost" onClick=${() => done(false)} autofocus=${!!o.danger && !o.requireText} data-testid="confirm-cancel">${o.cancelText || t("common.cancel")}</${Button}>
+        <${Button} variant=${o.danger ? "danger" : "primary"} disabled=${!ok} onClick=${() => done(true)} autofocus=${!o.danger && !o.requireText} data-testid="confirm-ok">
           ${o.confirmText || t("common.ok")}
         </${Button}>`}>
     ${o.text && html`<div class="confirm-text">${o.text}</div>`}
     ${o.requireText && html`<div class="field mt-3">
       <label class="field__label" for=${"req" + d.id}>${o.requireLabel || t("common.typeToConfirm", { text: o.requireText })}</label>
-      <input id=${"req" + d.id} class="input" value=${typed} autocomplete="off" spellcheck="false" autofocus
+      <input id=${"req" + d.id} class="input" value=${typed} autocomplete="off" spellcheck="false" autofocus data-testid="confirm-input"
         onInput=${(e) => setTyped(e.target.value)}
         onKeyDown=${(e) => { if (e.key === "Enter" && ok) done(true); }} />
     </div>`}
@@ -163,6 +172,7 @@ function PromptDialog({ d }) {
   const o = d.opts;
   const [val, setVal] = useState(o.value || "");
   const [err, setErr] = useState("");
+  const selected = useRef(false);
   const submit = (e) => {
     e && e.preventDefault();
     const v = val.trim();
@@ -173,15 +183,21 @@ function PromptDialog({ d }) {
   return html`<${Modal} size="sm" title=${o.title} icon=${o.icon} onClose=${() => closeDialog(d.id, null)}
       footer=${html`
         <${Button} variant="ghost" onClick=${() => closeDialog(d.id, null)}>${t("common.cancel")}</${Button}>
-        <${Button} variant="primary" onClick=${submit}>${o.confirmText || t("common.save")}</${Button}>`}>
+        <${Button} variant="primary" onClick=${submit} data-testid="prompt-ok">${o.confirmText || t("common.save")}</${Button}>`}>
     <form onSubmit=${submit} class="stack">
       ${o.text && html`<p class="muted">${o.text}</p>`}
       <div class=${cx("field", err && "has-error")}>
         ${o.label && html`<label class="field__label" for=${"pr" + d.id}>${o.label}</label>`}
-        <input id=${"pr" + d.id} class="input" value=${val} placeholder=${o.placeholder || ""} autofocus
+        <input id=${"pr" + d.id} class="input" value=${val} placeholder=${o.placeholder || ""} autofocus data-testid="prompt-input"
           autocomplete="off" spellcheck="false" maxlength=${o.maxLength || 200}
           onInput=${(e) => { setVal(e.target.value); setErr(""); }}
-          onFocus=${(e) => { if (o.selectBase) { const v = e.target.value; const i = v.lastIndexOf("."); e.target.setSelectionRange(0, i > 0 ? i : v.length); } }} />
+          onFocus=${(e) => {
+            // First focus selects the name without its extension (like file managers do).
+            if (!o.selectBase || selected.current) return;
+            selected.current = true;
+            const v = e.target.value; const i = v.lastIndexOf(".");
+            e.target.setSelectionRange(0, i > 0 ? i : v.length);
+          }} />
         ${err ? html`<p class="field__error" role="alert">${err}</p>` : o.hint && html`<p class="field__hint">${o.hint}</p>`}
       </div>
     </form>

@@ -72,7 +72,7 @@ export function TransferRow({ tr, compact = false }) {
   const showProgress = tr.state === "active" || ((tr.state === "queued" || tr.state === "failed") && tr.done > 0 && tr.size > 0);
   const canOpen = !out && tr.state === "done";
   const pk = previewKind(tr.name, tr.mime);
-  return html`<li class=${cx("tr", `tr--${tr.state}`, isIncomingOffer(tr) && "tr--offer", compact && "tr--compact")}>
+  return html`<li class=${cx("tr", `tr--${tr.state}`, isIncomingOffer(tr) && "tr--offer", compact && "tr--compact")} data-testid="transfer" data-id=${tr.id} data-state=${tr.state} data-dir=${tr.dir}>
     <div class="tr__icon">
       <${FileIcon} name=${tr.name} mime=${tr.mime} boxed size=${40} />
       <span class=${cx("tr__dir", out ? "is-out" : "is-in")} title=${out ? t("tr.out") : t("tr.in")}><${Icon} name=${out ? "arrowOut" : "arrowIn"} size=${11} strokeWidth=${2.4} /></span>
@@ -91,13 +91,13 @@ export function TransferRow({ tr, compact = false }) {
     </div>
     <div class="tr__actions">
       ${isIncomingOffer(tr) && html`
-        <${Button} size="sm" variant="primary" icon="check" loading=${busy === "accept"} onClick=${() => run("accept")}>${t("tr.accept")}</${Button}>
-        <${Button} size="sm" variant="ghost" loading=${busy === "decline"} onClick=${() => run("decline")}>${t("tr.decline")}</${Button}>`}
-      ${canOpen && pk && html`<${IconButton} icon="eye" size="sm" label=${t("tr.open")} onClick=${() => setPreview(true)} />`}
-      ${canOpen && html`<${IconButton} icon="download" size="sm" label=${t("common.download")} href=${transferFileUrl(tr.id, true)} download=${tr.name} />`}
-      ${out && (tr.state === "failed" || tr.state === "canceled") && html`<${IconButton} icon="retry" size="sm" label=${t("tr.retry")} onClick=${() => run("retry")} />`}
-      ${LIVE.has(tr.state) && !isIncomingOffer(tr) && html`<${IconButton} icon="x" size="sm" variant="danger" label=${t("tr.cancel")} onClick=${() => run("cancel")} />`}
-      ${!LIVE.has(tr.state) && html`<${IconButton} icon="trash" size="sm" label=${t("tr.remove")} onClick=${remove} />`}
+        <${Button} size="sm" variant="primary" icon="check" loading=${busy === "accept"} onClick=${() => run("accept")} data-testid="transfer-accept">${t("tr.accept")}</${Button}>
+        <${Button} size="sm" variant="ghost" loading=${busy === "decline"} onClick=${() => run("decline")} data-testid="transfer-decline">${t("tr.decline")}</${Button}>`}
+      ${canOpen && pk && html`<${IconButton} icon="eye" size="sm" label=${t("tr.open")} onClick=${() => setPreview(true)} data-testid="transfer-open" />`}
+      ${canOpen && html`<${IconButton} icon="download" size="sm" label=${t("common.download")} href=${transferFileUrl(tr.id, true)} download=${tr.name} data-testid="transfer-download" />`}
+      ${out && (tr.state === "failed" || tr.state === "canceled") && html`<${IconButton} icon="retry" size="sm" label=${t("tr.retry")} onClick=${() => run("retry")} data-testid="transfer-retry" />`}
+      ${LIVE.has(tr.state) && !isIncomingOffer(tr) && html`<${IconButton} icon="x" size="sm" variant="danger" label=${t("tr.cancel")} onClick=${() => run("cancel")} data-testid="transfer-cancel" />`}
+      ${!LIVE.has(tr.state) && html`<${IconButton} icon="trash" size="sm" label=${t("tr.remove")} onClick=${remove} data-testid="transfer-remove" />`}
     </div>
     ${preview && html`<${PreviewModal} index=${0} onIndex=${() => {}} onClose=${() => setPreview(false)}
       items=${[{ name: tr.name, mime: tr.mime, size: tr.size, mtime: tr.finished, url: transferFileUrl(tr.id), dlUrl: transferFileUrl(tr.id, true) }]} />`}
@@ -147,20 +147,20 @@ export function OffersBanner() {
   if (offers.length === 1) {
     const tr = offers[0];
     const run = async (a) => { setBusy(a); await act(tr, a); setBusy(""); };
-    return html`<div class="gbanner gbanner--offer" role="status">
+    return html`<div class="gbanner gbanner--offer" role="status" data-testid="offers-banner">
       <span class="gbanner__icon"><${Icon} name="inbox" size=${18} /></span>
       <div class="grow">
         <span>${tx("offer.one", { who: html`<strong>${tr.peerName}</strong>`, name: html`<strong class="break">«${tr.name}»</strong>` })}</span>
         <span class="gbanner__text tnum">${fmtBytes(tr.size)}</span>
       </div>
       <div class="gbanner__actions">
-        <${Button} size="sm" variant="ghost" loading=${busy === "decline"} onClick=${() => run("decline")}>${t("tr.decline")}</${Button}>
-        <${Button} size="sm" variant="primary" icon="check" loading=${busy === "accept"} onClick=${() => run("accept")}>${t("tr.accept")}</${Button}>
+        <${Button} size="sm" variant="ghost" icon="x" loading=${busy === "decline"} onClick=${() => run("decline")} aria-label=${t("tr.decline")} title=${t("tr.decline")} data-testid="offer-decline"><span class="lbl-wide">${t("tr.decline")}</span></${Button}>
+        <${Button} size="sm" variant="primary" icon="check" loading=${busy === "accept"} onClick=${() => run("accept")} aria-label=${t("tr.accept")} data-testid="offer-accept"><span class="lbl-wide">${t("tr.accept")}</span></${Button}>
       </div>
     </div>`;
   }
   const who = Array.from(new Set(offers.map((x) => x.peerName))).join(", ");
-  return html`<div class="gbanner gbanner--offer" role="status">
+  return html`<div class="gbanner gbanner--offer" role="status" data-testid="offers-banner">
     <span class="gbanner__icon"><${Icon} name="inbox" size=${18} /></span>
     <div class="grow"><span>${tn("offer.many", offers.length, { who })}</span></div>
     <div class="gbanner__actions"><${Button} size="sm" variant="primary" href="#/files/send" iconRight="chevronRight">${t("offer.review")}</${Button}></div>

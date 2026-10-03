@@ -37,7 +37,7 @@ export function DeviceChips({ value = [], onChange, peers, label, filter, showOw
     ${list.map((p) => {
       const on = value.includes(p.id);
       const disabled = !allowOffline && !p.online;
-      return html`<button type="button" key=${p.id} class=${cx("dchip", on && "is-on", !p.online && "is-offline")}
+      return html`<button type="button" key=${p.id} class=${cx("dchip", on && "is-on", !p.online && "is-offline")} data-testid="device-chip" data-id=${p.id} data-name=${p.deviceName || p.name}
           aria-pressed=${String(on)} disabled=${disabled}
           title=${p.online ? t("dev.status.online") : t("dev.offlineQueued", { ago: fmtAgo(p.lastSeen) })}
           onClick=${() => toggle(p.id)}>
@@ -75,7 +75,7 @@ export function ManageDeviceSelect({ value, onChange, filter }) {
   return html`<div class="manage">
     <span class="manage__label" id="manage-lbl">${t("manage.label")}</span>
     <${Menu} items=${items} align="start" width=${280} label=${t("manage.label")}
-      trigger=${(p) => html`<button type="button" class=${cx("manage__btn", !isSelf && "is-remote")} aria-describedby="manage-lbl" ...${p}>
+      trigger=${(p) => html`<button type="button" class=${cx("manage__btn", !isSelf && "is-remote")} aria-describedby="manage-lbl" data-testid="manage-device" ...${p}>
         <${Icon} name=${kindIcon[deviceKind(cur || self)]} size=${16} />
         <span class="ellipsis">${cur ? cur.name : value}${isSelf ? html` <span class="faint">· ${t("dev.thisDeviceShort")}</span>` : ""}</span>
         <${Icon} name="chevronDown" size=${16} />

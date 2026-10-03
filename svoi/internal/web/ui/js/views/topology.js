@@ -62,7 +62,7 @@ export function Topology({ self, peers, selected, onSelect, onAdd }) {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(id); }
   };
 
-  return html`<div class="topo" ref=${box}>
+  return html`<div class="topo" ref=${box} data-testid="topology">
     ${w > 0 && html`<svg class="topo__svg" width=${w} height=${h} viewBox=${`0 0 ${w} ${h}`} role="group" aria-label=${t("topo.label")}>
       <defs>
         <radialGradient id="topo-glow" cx="50%" cy="50%" r="50%">
@@ -113,6 +113,7 @@ export function Topology({ self, peers, selected, onSelect, onAdd }) {
         const label = `${p.name}: ${p.online ? t("path.long." + (p.path || "none"), { via: p.relayVia || "?" }) : t("dev.status.offline")}${p.rttMs && p.online ? ", " + fmtRtt(p.rttMs) : ""}`;
         return html`<g key=${"n" + p.id} class=${cx("topo__node", `topo__node--${nd.st}`, isSel && "is-selected")}
             transform=${`translate(${nd.x},${nd.y})`} tabindex="0" role="button" aria-label=${label} aria-pressed=${String(isSel)}
+            data-testid="topo-node" data-id=${p.id} data-path=${nd.st}
             onClick=${() => onSelect(p.id)} onKeyDown=${(e) => onKey(e, p.id)}>
           <title>${label}</title>
           <circle r=${r + 12} class="topo__hit" />

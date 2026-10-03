@@ -11,13 +11,13 @@ export function FilesView({ route }) {
   const tab = ["send", "browse", "shares"].includes(route.parts[1]) ? route.parts[1] : "send";
   const offers = useStore((s) => s.counters.offers || 0);
   const items = [
-    { id: "send", label: t("files.tab.send"), href: "#/files/send", icon: "send", badge: offers },
+    { id: "send", label: t("files.tab.send"), href: "#/files/send", icon: "send", badge: offers, badgeTone: "warn" },
     { id: "browse", label: t("files.tab.browse"), href: "#/files/browse", icon: "folderOpen" },
     { id: "shares", label: t("files.tab.shares"), href: "#/files/shares", icon: "folder" },
   ];
   return html`<div class="page files">
     <${PageHeader} title=${t("nav.files")} subtitle=${t("files.subtitle." + tab)} />
-    <${Tabs} items=${items} active=${tab} label=${t("nav.files")} class="files__tabs" />
+    <${Tabs} items=${items} active=${tab} label=${t("nav.files")} class="files__tabs" testid="files-tab" />
     <div class="files__body">
       ${tab === "send" && html`<${SendTab} route=${route} />`}
       ${tab === "browse" && html`<${BrowseTab} route=${route} />`}

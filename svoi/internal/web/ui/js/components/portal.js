@@ -1,8 +1,10 @@
-// Minimal portal (the vendored Preact build has no createPortal): renders
-// children into a node under #layers with a separate render root.
+// Minimal portal: renders children into a node under #layers with a separate
+// render root (kept instead of preact/compat's createPortal, which the
+// vendored bundle does not include). The nested render() runs in a layout
+// effect so portal content exists in the DOM in the same frame as its parent.
 // Also keeps a stack of open modal layers to make the app (and lower layers)
 // `inert`, which traps focus and hides background content from assistive tech.
-import { render, useEffect, useRef } from "../../vendor/preact-htm.js";
+import { render, useLayoutEffect, useRef } from "../../vendor/preact-htm.js";
 
 export function Portal({ children, class: cls = "portal", modal = false }) {
   const el = useRef(null);
@@ -10,7 +12,7 @@ export function Portal({ children, class: cls = "portal", modal = false }) {
     el.current = document.createElement("div");
     el.current.className = cls;
   }
-  useEffect(() => {
+  useLayoutEffect(() => {
     const node = el.current;
     (document.getElementById("layers") || document.body).appendChild(node);
     if (modal) pushLayer(node);
@@ -20,7 +22,7 @@ export function Portal({ children, class: cls = "portal", modal = false }) {
       node.remove();
     };
   }, []);
-  useEffect(() => {
+  useLayoutEffect(() => {
     render(children, el.current);
   });
   return null;

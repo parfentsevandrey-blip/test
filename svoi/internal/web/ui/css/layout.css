@@ -45,7 +45,7 @@
 
 /* ---------- top bar ---------- */
 .topbar {
-  position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: var(--sp-3);
+  position: sticky; top: 0; z-index: 20; display: flex; flex: none; align-items: center; gap: var(--sp-3);
   height: calc(var(--topbar-h) + var(--safe-top)); padding: var(--safe-top) var(--gutter) 0;
   background: var(--surface-glass); border-bottom: 1px solid var(--line);
   backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px);
@@ -77,7 +77,7 @@
 
 /* ---------- global banners ---------- */
 .banners:empty { display: none; }
-.banners { display: flex; flex-direction: column; }
+.banners { display: flex; flex-direction: column; flex: none; }
 .gbanner {
   display: flex; align-items: center; gap: var(--sp-3); padding: 10px var(--gutter); font-size: var(--fs-md);
   border-bottom: 1px solid var(--line);
@@ -90,8 +90,10 @@
 .gbanner--offer > .icon, .gbanner--offer .gbanner__icon { color: var(--amber-text); }
 .gbanner__actions { display: flex; gap: var(--sp-2); flex: none; }
 @media (max-width: 559px) {
-  .gbanner { flex-wrap: wrap; }
-  .gbanner__actions { width: 100%; justify-content: flex-end; }
+  .gbanner { padding: 8px var(--gutter); gap: 10px; font-size: var(--fs-sm); }
+  .gbanner .grow { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .gbanner .gbanner__text { display: none; }
+  .gbanner__actions .btn { --btn-h: 34px; padding: 0 10px; }
 }
 
 /* ---------- full screen states ---------- */

@@ -21,7 +21,7 @@ import { cx } from "../util.js";
  */
 function QrImage({ svg, label }) {
   const src = svg ? "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg) : "";
-  return html`<div class="qr">${src ? html`<img src=${src} alt=${label} width="220" height="220" />` : html`<${Spinner} />`}</div>`;
+  return html`<div class="qr" data-testid="invite-qr">${src ? html`<img src=${src} alt=${label} width="220" height="220" />` : html`<${Spinner} />`}</div>`;
 }
 
 const TTL = [
@@ -104,7 +104,7 @@ export function AddDeviceModal({ onClose }) {
     return html`<${Modal} title=${t("add.title")} subtitle=${t("add.subtitle")} icon="userPlus" onClose=${onClose}
         footer=${html`
           <${Button} variant="ghost" onClick=${onClose}>${t("common.cancel")}</${Button}>
-          <${Button} variant="primary" icon="qr" loading=${busy} onClick=${create}>${t("add.create")}</${Button}>`}>
+          <${Button} variant="primary" icon="qr" loading=${busy} onClick=${create} data-testid="invite-create">${t("add.create")}</${Button}>`}>
       <div class="stack stack--lg">
         <fieldset class="fieldset">
           <legend class="field__label">${t("add.role")}</legend>
@@ -135,7 +135,7 @@ export function AddDeviceModal({ onClose }) {
         footer=${html`
           <${Button} variant="ghost" onClick=${onClose}>${t("common.done")}</${Button}>
           ${joined && html`<${Button} variant="primary" icon="chevronRight" onClick=${() => { onClose(); go(href(["devices", joined.id])); }}>${t("add.openDevice")}</${Button}>`}`}>
-      <div class="add-done">
+      <div class="add-done" data-testid="invite-done">
         ${joined && html`<${DeviceAvatar} dev=${joined} size=${64} />`}
         <p class="add-done__title">${joined ? t("add.joined", { name: joined.name }) : t("add.joinedGeneric")}</p>
         <p class="muted">${t("add.joinedText")}</p>
@@ -154,7 +154,7 @@ export function AddDeviceModal({ onClose }) {
 
   // waiting
   const left = inv ? inv.expires - nowSec() : 0;
-  return html`<${Modal} title=${t("add.waitTitle")} icon="qr" onClose=${onClose} size="lg"
+  return html`<${Modal} title=${t("add.waitTitle")} icon="qr" onClose=${onClose} size="lg" testid="invite-modal"
       footer=${html`
         <${Button} variant="danger-ghost" icon="x" onClick=${cancelInvite}>${t("inv.cancel")}</${Button}>
         <span class="grow"></span>
@@ -172,11 +172,11 @@ export function AddDeviceModal({ onClose }) {
         </ol>
         <div class="field">
           <span class="field__label">${t("add.code")}</span>
-          <div class="invite__code mono">${inv && inv.code}</div>
+          <div class="invite__code mono" data-testid="invite-code">${inv && inv.code}</div>
           <div class="row"><${CopyButton} text=${inv ? inv.code : ""} variant="secondary" size="sm">${t("add.copyCode")}</${CopyButton}>
             ${inv && inv.admin && html`<span class="chip chip--warn"><${Icon} name="shield" size=${14} />${t("inv.roleAdmin")}</span>`}</div>
         </div>
-        <div class="invite__wait" role="status">
+        <div class="invite__wait" role="status" data-testid="invite-waiting">
           <span class="invite__pulse" aria-hidden="true"></span>
           <span>${t("add.waiting")}</span>
         </div>

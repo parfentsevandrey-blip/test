@@ -101,7 +101,7 @@ export function SendTab({ route }) {
           <h2 class="send__h"><span class="send__n">2</span>${t("send.what")}</h2>
           <${DropZone} onFiles=${add} title=${t("send.dropTitle")} hint=${t("send.dropHint")} />
           ${files.length > 0 && html`<ul class="staged" aria-label=${t("send.staged")}>
-            ${files.map((f) => html`<li key=${f.key} class=${cx("staged__item", f.status === "error" && "is-error")}>
+            ${files.map((f) => html`<li key=${f.key} class=${cx("staged__item", f.status === "error" && "is-error")} data-testid="staged-file" data-status=${f.status}>
               <${FileIcon} name=${f.file.name} mime=${f.file.type} boxed size=${36} />
               <div class="grow">
                 <div class="row row--between"><span class="ellipsis strong small" title=${f.file.name}>${f.file.name}</span>
@@ -118,7 +118,7 @@ export function SendTab({ route }) {
             ${files.length ? tn("send.summaryFiles", files.length, { size: fmtBytes(total) }) : t("send.summaryNone")}
             ${recipients.length > 0 && html` → <strong>${tn("send.summaryTo", recipients.length)}</strong>`}
           </p>
-          <${Button} variant="primary" icon="send" disabled=${!pending.length || !recipients.length} loading=${uploading} onClick=${sendAll}>
+          <${Button} variant="primary" icon="send" disabled=${!pending.length || !recipients.length} loading=${uploading} onClick=${sendAll} data-testid="send-submit">
             ${t("send.send")}
           </${Button}>
         </div>

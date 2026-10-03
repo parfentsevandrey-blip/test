@@ -150,7 +150,7 @@ func setSecurityHeaders(w http.ResponseWriter) {
 	h.Set("X-Frame-Options", "SAMEORIGIN")
 	h.Set("Content-Security-Policy",
 		"default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; "+
-			"script-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'self'; base-uri 'none'; form-action 'self'")
+			"script-src 'self'; connect-src 'self'; frame-src 'self' blob:; object-src 'self'; base-uri 'none'; form-action 'self'")
 }
 
 func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {

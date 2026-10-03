@@ -4,7 +4,7 @@
 //  - PDFs are fetched and re-wrapped as a Blob with a forced application/pdf
 //    type before going into an <iframe>, so a lying server cannot make it HTML,
 //  - nothing is ever navigated to directly on the UI origin.
-import { html, useEffect, useRef, useState } from "../../vendor/preact-htm.js";
+import { html, useEffect, useLayoutEffect, useRef, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t } from "../i18n.js";
 import { fmtBytes, fmtDateTime } from "../format.js";
@@ -71,28 +71,36 @@ function MediaError({ item }) {
   </div>`;
 }
 
+// Media previews are keyed by URL by the caller, so their state starts fresh for
+// every file — no "reset" effects that could race with load/error events.
 function ImagePreview({ item }) {
   const [loaded, setLoaded] = useState(false);
   const [err, setErr] = useState(false);
-  useEffect(() => { setLoaded(false); setErr(false); }, [item.url]);
+  const img = useRef(null);
+  // A cached/loopback image may finish loading before our listeners matter.
+  useLayoutEffect(() => {
+    const el = img.current;
+    if (el && el.complete) {
+      if (el.naturalWidth > 0) setLoaded(true);
+      else if (el.currentSrc) setErr(true);
+    }
+  }, []);
   if (err) return html`<${MediaError} item=${item} />`;
   return html`<div class="pv__img-wrap">
     ${!loaded && html`<div class="pv__center pv__abs"><${Spinner} size=${24} /></div>`}
-    <img class=${cx("pv__img", loaded && "is-loaded")} src=${item.url} alt=${item.name} decoding="async"
+    <img ref=${img} class=${cx("pv__img", loaded && "is-loaded")} src=${item.url} alt=${item.name} decoding="async"
       onLoad=${() => setLoaded(true)} onError=${() => setErr(true)} />
   </div>`;
 }
 
 function VideoPreview({ item }) {
   const [err, setErr] = useState(false);
-  useEffect(() => setErr(false), [item.url]);
   if (err) return html`<${MediaError} item=${item} />`;
   return html`<video class="pv__video" src=${item.url} controls preload="metadata" playsinline onError=${() => setErr(true)}></video>`;
 }
 
 function AudioPreview({ item }) {
   const [err, setErr] = useState(false);
-  useEffect(() => setErr(false), [item.url]);
   return html`<div class="pv__center pv__audio">
     <div class="pv__disc"><${Icon} name="music" size=${44} /></div>
     <p class="strong break center">${item.name}</p>
@@ -116,9 +124,16 @@ function NoPreview({ item }) {
 export function PreviewModal({ items, index, onIndex, onClose, extraActions }) {
   const item = items[index];
   const touch = useRef(null);
+  // The key handler is registered once and reads the latest values from a ref,
+  // so a quick ←/→ right after navigating never uses a stale index.
+  const cur = useRef({ index, items, onIndex });
+  cur.current = { index, items, onIndex };
   const go = (d) => {
-    if (items.length < 2) return;
-    onIndex((index + d + items.length) % items.length);
+    const c = cur.current;
+    if (c.items.length < 2) return;
+    const next = (c.index + d + c.items.length) % c.items.length;
+    c.index = next;
+    c.onIndex(next);
   };
   useEffect(() => {
     const onKey = (e) => {
@@ -129,21 +144,21 @@ export function PreviewModal({ items, index, onIndex, onClose, extraActions }) {
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  });
+  }, []);
   if (!item) return null;
   const kind = previewKind(item.name, item.mime);
   let body;
-  if (kind === "image") body = html`<${ImagePreview} item=${item} />`;
-  else if (kind === "video") body = html`<${VideoPreview} item=${item} />`;
-  else if (kind === "audio") body = html`<${AudioPreview} item=${item} />`;
-  else if (kind === "text") body = html`<${TextPreview} url=${item.url} name=${item.name} />`;
-  else if (kind === "pdf") body = html`<${PdfPreview} url=${item.url} />`;
-  else body = html`<${NoPreview} item=${item} />`;
+  if (kind === "image") body = html`<${ImagePreview} item=${item} key=${item.url} />`;
+  else if (kind === "video") body = html`<${VideoPreview} item=${item} key=${item.url} />`;
+  else if (kind === "audio") body = html`<${AudioPreview} item=${item} key=${item.url} />`;
+  else if (kind === "text") body = html`<${TextPreview} url=${item.url} name=${item.name} key=${item.url} />`;
+  else if (kind === "pdf") body = html`<${PdfPreview} url=${item.url} key=${item.url} />`;
+  else body = html`<${NoPreview} item=${item} key=${item.url} />`;
 
   const head = html`<div class="pv__bar">
     <${FileIcon} name=${item.name} mime=${item.mime} boxed size=${36} />
     <div class="grow">
-      <h2 class="pv__title ellipsis" title=${item.name}>${item.name}</h2>
+      <h2 class="pv__title ellipsis" title=${item.name} data-testid="preview-name">${item.name}</h2>
       <p class="pv__sub tnum">${[item.size !== undefined && fmtBytes(item.size), item.mtime && fmtDateTime(item.mtime), items.length > 1 && t("pv.counter", { i: index + 1, n: items.length })].filter(Boolean).join(" · ")}</p>
     </div>
     ${extraActions}
@@ -151,7 +166,7 @@ export function PreviewModal({ items, index, onIndex, onClose, extraActions }) {
     <${IconButton} icon="x" label=${t("common.close")} onClick=${onClose} />
   </div>`;
 
-  return html`<${Modal} size="full" class="pv" onClose=${onClose} hideClose=${true} initialFocus=".pv__stage" label=${item.name}>
+  return html`<${Modal} size="full" class="pv" onClose=${onClose} hideClose=${true} initialFocus=".pv__stage" label=${item.name} testid="preview">
     ${head}
     <div class=${cx("pv__stage", `pv__stage--${kind || "none"}`)} tabindex="-1"
         onTouchStart=${(e) => { touch.current = e.touches[0].clientX; }}
@@ -163,8 +178,8 @@ export function PreviewModal({ items, index, onIndex, onClose, extraActions }) {
         }}>
       ${body}
       ${items.length > 1 && html`
-        <button type="button" class="pv__nav pv__nav--prev" aria-label=${t("pv.prev")} onClick=${() => go(-1)}><${Icon} name="chevronLeft" size=${24} /></button>
-        <button type="button" class="pv__nav pv__nav--next" aria-label=${t("pv.next")} onClick=${() => go(1)}><${Icon} name="chevronRight" size=${24} /></button>`}
+        <button type="button" class="pv__nav pv__nav--prev" aria-label=${t("pv.prev")} onClick=${() => go(-1)} data-testid="preview-prev"><${Icon} name="chevronLeft" size=${24} /></button>
+        <button type="button" class="pv__nav pv__nav--next" aria-label=${t("pv.next")} onClick=${() => go(1)} data-testid="preview-next"><${Icon} name="chevronRight" size=${24} /></button>`}
     </div>
   </${Modal}>`;
 }

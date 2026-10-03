@@ -4,7 +4,7 @@ import { html, render, useEffect } from "../vendor/preact-htm.js";
 import { Icon, Logo } from "./icons.js";
 import { t, tn } from "./i18n.js";
 import { initPrefs } from "./prefs.js";
-import { href, useRoute } from "./router.js";
+import { useRoute } from "./router.js";
 import { refreshState, reconnectNow, startLive } from "./sse.js";
 import { state, useStore } from "./store.js";
 import { cx, natTone, sortPeers } from "./util.js";
@@ -69,7 +69,7 @@ function Sidebar({ section }) {
         const count = n.counter ? counters[n.counter] || 0 : 0;
         const active = section === n.id;
         const aria = count ? `${t(n.label)}, ${tn("nav.badgeCount", count)}` : undefined;
-        return html`<a key=${n.id} href=${"#/" + n.id} class=${cx("nav__item", active && "is-active")}
+        return html`<a key=${n.id} href=${"#/" + n.id} class=${cx("nav__item", active && "is-active")} data-testid=${"nav-" + n.id}
             aria-current=${active ? "page" : undefined} aria-label=${aria} title=${t(n.label)}>
           <span class="nav__icon"><${Icon} name=${n.icon} size=${20} /></span>
           <span class="nav__label">${t(n.label)}</span>
@@ -100,7 +100,7 @@ function TabBar({ section }) {
   ];
   const activeTab = TABS.includes(section) ? section : "more";
   return html`<nav class="tabbar" aria-label=${t("nav.label")}>
-    ${items.map((it) => html`<a key=${it.id} href=${"#/" + it.id} class=${cx("tabbar__item", activeTab === it.id && "is-active")}
+    ${items.map((it) => html`<a key=${it.id} href=${"#/" + it.id} class=${cx("tabbar__item", activeTab === it.id && "is-active")} data-testid=${"tab-" + it.id}
         aria-current=${activeTab === it.id ? "page" : undefined}
         aria-label=${it.n ? `${it.label}, ${tn("nav.badgeCount", it.n)}` : undefined}>
       <span class="tabbar__icon"><${Icon} name=${it.icon} size=${22} />
@@ -130,7 +130,7 @@ function TopBar() {
       ${self.meshName && html`<span class="topbar__mesh ellipsis">${t("app.meshName", { name: self.meshName })}</span>`}
     </div>
     <div class="topbar__status">
-      <a class="conn-pill" href="#/devices" title=${t("top.onlineTitle")}>
+      <a class="conn-pill" href="#/devices" title=${t("top.onlineTitle")} data-testid="conn-pill">
         <span class="conn-pill__dots" aria-hidden="true">
           ${onlinePeers.map((p) => html`<span key=${p.id} class=${cx("conn-pill__dot", p.online ? (p.path === "relay" ? "is-relay" : "is-on") : "is-off")}></span>`)}
         </span>
@@ -139,7 +139,7 @@ function TopBar() {
           <span class="conn-pill__short">${online}/${total}</span>
         </span>
       </a>
-      <a class=${cx("nat-chip", `nat-chip--${tone}`)} href="#/settings/network" title=${t("nat.title." + diff)}>
+      <a class=${cx("nat-chip", `nat-chip--${tone}`)} href="#/settings/network" title=${t("nat.title." + diff)} data-testid="nat-chip" data-difficulty=${diff}>
         <${Icon} name=${tone === "warn" ? "alert" : tone === "ok" ? "shieldCheck" : "radar"} size=${15} />
         <span class="nat-chip__text">${t("nat.chip." + diff)}</span>
       </a>
@@ -153,7 +153,7 @@ function OfflineBanner() {
   const now = useNow(1000);
   if (conn !== "offline") return null;
   const secs = Math.max(0, Math.ceil((next - now) / 1000));
-  return html`<div class="gbanner gbanner--offline" role="alert">
+  return html`<div class="gbanner gbanner--offline" role="alert" data-testid="offline-banner">
     <${Icon} name="wifiOff" size=${18} />
     <div class="grow">
       <strong>${t("offline.title")}</strong>
@@ -163,8 +163,8 @@ function OfflineBanner() {
   </div>`;
 }
 
-function FullScreen({ icon, tone = "neutral", title, text, children }) {
-  return html`<div class="fullscreen">
+function FullScreen({ icon, tone = "neutral", title, text, children, testid }) {
+  return html`<div class="fullscreen" data-testid=${testid}>
     <div class="fullscreen__card">
       <div class="fullscreen__brand"><${Logo} size=${40} /><span class="brand__name">${t("app.name")}</span></div>
       <div class=${cx("fullscreen__icon", `fullscreen__icon--${tone}`)}><${Icon} name=${icon} size=${28} /></div>
@@ -176,7 +176,7 @@ function FullScreen({ icon, tone = "neutral", title, text, children }) {
 }
 
 function Unauthorized() {
-  return html`<${FullScreen} icon="lock" tone="warn" title=${t("auth.title")}
+  return html`<${FullScreen} icon="lock" tone="warn" testid="unauthorized" title=${t("auth.title")}
       text=${html`<p>${t("auth.text1")}</p><p class="mt-2">${t("auth.text2")}</p>
         <div class="code-line mt-4"><span>svoi open</span></div>`}>
     <${Button} variant="primary" icon="refresh" onClick=${() => location.reload()}>${t("auth.retry")}</${Button}>
@@ -184,7 +184,7 @@ function Unauthorized() {
 }
 
 function LoadFailed() {
-  return html`<${FullScreen} icon="wifiOff" tone="err" title=${t("boot.failTitle")} text=${html`<p>${t("boot.failText")}</p>`}>
+  return html`<${FullScreen} icon="wifiOff" tone="err" testid="load-failed" title=${t("boot.failTitle")} text=${html`<p>${t("boot.failText")}</p>`}>
     <${Button} variant="primary" icon="refresh" onClick=${() => { refreshState(); reconnectNow(); }}>${t("offline.retryNow")}</${Button}>
   </${FullScreen}>`;
 }
@@ -240,10 +240,12 @@ function App() {
 
   const View = VIEWS[section];
   const fixed = FIXED.has(section);
+  // On phones a conversation / an open message takes the whole screen.
+  const immersive = (section === "chat" && !!route.parts[1]) || (section === "mail" && (!!route.parts[2] || route.parts[1] === "compose"));
   const showOffers = !(section === "files" && (route.parts[1] || "send") === "send");
   return html`
     <a class="skip-link" href="#main" onClick=${(e) => { e.preventDefault(); document.getElementById("main").focus(); }}>${t("app.skip")}</a>
-    <div class=${cx("shell", fixed && "shell--fixed")} key=${lang}>
+    <div class=${cx("shell", fixed && "shell--fixed", immersive && "shell--immersive")} key=${lang}>
       <${Sidebar} section=${section} />
       <div class="main">
         <${TopBar} />
@@ -251,7 +253,7 @@ function App() {
           <${OfflineBanner} />
           ${showOffers && html`<${OffersBanner} />`}
         </div>
-        <main id="main" class=${cx("content", `content--${section}`)} tabindex="-1">
+        <main id="main" class=${cx("content", `content--${section}`)} tabindex="-1" data-testid=${"page-" + section}>
           <${View} route=${route} />
         </main>
       </div>

@@ -4,7 +4,7 @@ import { html, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t, tn, tx } from "../i18n.js";
 import { get, post } from "../api.js";
-import { go, href } from "../router.js";
+import { href } from "../router.js";
 import { useStore } from "../store.js";
 import { fmtBytes, fmtDuration, fmtRtt } from "../format.js";
 import { DeviceAvatar } from "../components/avatar.js";
@@ -48,8 +48,8 @@ function PingButton({ p }) {
     }
   };
   return html`<div class="row">
-    <${Button} size="sm" icon="activity" loading=${st.busy} onClick=${ping} disabled=${!p.online}>${t("dev.ping")}</${Button}>
-    <span class="small tnum" aria-live="polite">
+    <${Button} size="sm" icon="activity" loading=${st.busy} onClick=${ping} disabled=${!p.online} data-testid="device-ping">${t("dev.ping")}</${Button}>
+    <span class="small tnum" aria-live="polite" data-testid="device-ping-result">
       ${st.ms !== null && html`<span class="accent strong">${fmtRtt(st.ms) || "<0,1"}</span>`}
       ${st.err && html`<span class="danger-text">${t("err." + st.err.code)}</span>`}
     </span>
@@ -128,7 +128,7 @@ export function DeviceDrawer({ id, onClose }) {
     </div>
   </div>`;
 
-  return html`<${Drawer} label=${p.name} header=${header} onClose=${onClose}>
+  return html`<${Drawer} label=${p.name} header=${header} onClose=${onClose} testid="device-drawer">
     <div class="ddr">
       <div class="ddr-actions">
         <a class="ddr-act" href=${href(["files", "send"], { to: p.id })}><${Icon} name="send" size=${20} /><span>${t("dev.act.sendFile")}</span></a>

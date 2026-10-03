@@ -253,4 +253,64 @@ func TestDemoMeshEndToEnd(t *testing.T) {
 	if !strings.Contains(string(page), "Домашняя страница") {
 		t.Fatalf("service through the forward returned %q", page)
 	}
+
+	// Remote administration (the laptop is an admin). Switching relay on the NAS
+	// takes effect at once and keeps the link; a setting that restarts the NAS's
+	// network (LAN discovery here) must still get its answer, and the NAS comes back.
+	nasAPI := newAPI(t, d.Devices["nas"])
+	type peerCaps struct {
+		Online bool
+		Caps   []string
+		Name   string
+	}
+	nasCaps := func() peerCaps {
+		var s struct{ Peers []peerCaps }
+		laptop.get("/api/state", &s)
+		for _, p := range s.Peers {
+			if p.Name == "nas" {
+				return p
+			}
+		}
+		return peerCaps{}
+	}
+	hasRelay := func(c peerCaps) bool {
+		for _, x := range c.Caps {
+			if x == "relay" {
+				return true
+			}
+		}
+		return false
+	}
+	if !hasRelay(nasCaps()) {
+		t.Fatalf("the NAS should relay by default: %+v", nasCaps())
+	}
+	var rs struct{ Relay, LAN bool }
+	if code := laptop.do("PUT", "/api/d/"+nasID+"/settings", strings.NewReader(`{"relay":false}`), &rs); code != 200 || rs.Relay {
+		t.Fatalf("remote relay off: %d %+v", code, rs)
+	}
+	relayOff := time.Now().Add(15 * time.Second)
+	for hasRelay(nasCaps()) && time.Now().Before(relayOff) {
+		if c := nasCaps(); !c.Online {
+			t.Fatal("the link to the NAS dropped when only its relay setting changed")
+		}
+		time.Sleep(300 * time.Millisecond)
+	}
+	if c := nasCaps(); hasRelay(c) || !c.Online {
+		t.Fatalf("after switching relay off: %+v", c)
+	}
+	if code := laptop.do("PUT", "/api/d/"+nasID+"/settings", strings.NewReader(`{"lan":false}`), &rs); code != 200 || rs.LAN {
+		t.Fatalf("remote LAN setting: the answer was lost (%d %+v)", code, rs)
+	}
+	var local struct{ Relay, LAN bool }
+	nasAPI.get("/api/settings", &local)
+	if local.LAN || local.Relay {
+		t.Fatalf("settings on the NAS itself: %+v", local)
+	}
+	back := time.Now().Add(30 * time.Second)
+	for !nasCaps().Online && time.Now().Before(back) {
+		time.Sleep(300 * time.Millisecond)
+	}
+	if !nasCaps().Online {
+		t.Fatal("the NAS did not come back after its network restarted")
+	}
 }

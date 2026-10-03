@@ -9,6 +9,7 @@
 //   --calm      no random background events and no jitter (deterministic screenshots)
 //   --auth      require the session cookie; open /?t=dev once to get it
 //   --latency   artificial delay for API responses, ms
+//   --tun-error enabling the TUN interface fails with "permission denied" (to see the error state)
 //
 // Test hooks (not part of the real API), GET or POST:
 //   /__mock/offer?from=phone        incoming file offer
@@ -18,6 +19,7 @@
 //   /__mock/drop?for=5              drop SSE clients and refuse reconnects for N s
 //   /__mock/peer?name=nas&online=0  toggle a device online/offline
 //   /__mock/auth?on=1               require auth from now on (on=0 to disable)
+//   /__mock/tun?error=1             make enabling TUN fail (error=0: succeed again)
 //   /__mock/reset                   rebuild the world from the scenario
 
 import http from "node:http";
@@ -34,7 +36,7 @@ const FIXTURES = path.resolve(__dirname, "fixtures");
 
 // ---------------------------------------------------------------- args
 function parseArgs(argv) {
-  const o = { port: 8777, host: "127.0.0.1", scenario: "full", calm: false, auth: false, latency: 40, quiet: false };
+  const o = { port: 8777, host: "127.0.0.1", scenario: "full", calm: false, auth: false, latency: 40, quiet: false, tunError: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     const next = () => argv[++i];
@@ -45,6 +47,7 @@ function parseArgs(argv) {
     else if (a === "--auth") o.auth = true;
     else if (a === "--latency") o.latency = Number(next());
     else if (a === "--quiet") o.quiet = true;
+    else if (a === "--tun-error") o.tunError = true;
     else if (a.startsWith("--port=")) o.port = Number(a.slice(7));
     else if (a.startsWith("--scenario=")) o.scenario = a.slice(11);
     else if (a === "-h" || a === "--help") { console.log(fs.readFileSync(fileURLToPath(import.meta.url), "utf8").split("\n").slice(1, 24).join("\n")); process.exit(0); }
@@ -55,6 +58,7 @@ function parseArgs(argv) {
 const opts = parseArgs(process.argv.slice(2));
 const TOKEN = "dev";
 let authRequired = opts.auth;
+let tunFails = opts.tunError;
 
 // ---------------------------------------------------------------- helpers
 const now = () => Math.floor(Date.now() / 1000);
@@ -81,7 +85,6 @@ function seeded(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-const log = (...a) => { if (!opts.quiet) console.log(...a); };
 const clone = (x) => JSON.parse(JSON.stringify(x));
 
 // ---------------------------------------------------------------- generated content
@@ -130,7 +133,6 @@ const PALETTES = [
   { sky: [[255, 214, 170], [250, 240, 220]], sun: [255, 245, 225], hills: [[180, 160, 150], [140, 120, 120], [100, 84, 90]], water: true }, // misty morning
   { sky: [[120, 180, 230], [200, 225, 245]], sun: [255, 255, 240], hills: [[235, 240, 248], [170, 190, 210], [90, 110, 140]], water: false, snow: true }, // winter
 ];
-const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 
 /** A procedural "photo": sky gradient, sun, layered ridges, optional lake. */
 function genScene(seed, w, h) {
@@ -139,45 +141,54 @@ function genScene(seed, w, h) {
   const rgb = Buffer.alloc(w * h * 3);
   const sunX = (0.2 + rnd() * 0.6) * w, sunY = (0.18 + rnd() * 0.25) * h, sunR = (0.05 + rnd() * 0.04) * w;
   const horizon = h * (0.55 + rnd() * 0.12);
+  // Ridge heights are precomputed per column (the per-pixel loop stays cheap).
   const layers = pal.hills.map((col, i) => {
     const base = horizon - h * (0.22 - i * 0.07);
     const f = [rnd() * 3 + 1, rnd() * 7 + 3, rnd() * 17 + 9];
     const ph = [rnd() * 6.28, rnd() * 6.28, rnd() * 6.28];
     const amp = [h * (0.08 - i * 0.015), h * 0.03, h * 0.012];
-    return { col, ridge: (x) => base + amp[0] * Math.sin((x / w) * f[0] + ph[0]) + amp[1] * Math.sin((x / w) * f[1] * 3.1 + ph[1]) + amp[2] * Math.sin((x / w) * f[2] * 6 + ph[2]) };
-  });
-  const stars = pal.stars ? Array.from({ length: Math.round(w * h / 2500) }, () => [rnd() * w, rnd() * horizon * 0.8, rnd()]) : [];
-  const starSet = new Set(stars.map(([x, y]) => (Math.round(y) * w + Math.round(x))));
-  const noise = seeded(seed + 7);
-  for (let y = 0; y < h; y++) {
+    const ridge = new Float32Array(w);
     for (let x = 0; x < w; x++) {
-      let c;
-      const water = pal.water && y > horizon;
+      ridge[x] = base + amp[0] * Math.sin((x / w) * f[0] + ph[0]) + amp[1] * Math.sin((x / w) * f[1] * 3.1 + ph[1]) + amp[2] * Math.sin((x / w) * f[2] * 6 + ph[2]);
+    }
+    return { col, ridge, k: 0.06 * (pal.hills.length - i) };
+  });
+  const stars = new Set();
+  if (pal.stars) for (let i = 0; i < Math.round((w * h) / 2500); i++) stars.add(Math.round(rnd() * horizon * 0.8) * w + Math.round(rnd() * w));
+  const noise = seeded(seed + 7);
+  const [s0, s1] = pal.sky, sun = pal.sun;
+  const glowR = w * 0.5;
+  for (let y = 0; y < h; y++) {
+    const water = pal.water && y > horizon;
+    for (let x = 0; x < w; x++) {
       const yy = water ? horizon - (y - horizon) * 1.1 - Math.sin(y * 0.9 + x * 0.02) * 1.6 : y;
-      const tt = Math.max(0, Math.min(1, yy / horizon));
-      c = mix(pal.sky[1], pal.sky[0], 1 - tt);
-      const d = Math.hypot(x - sunX, yy - sunY);
-      if (d < sunR) c = mix(c, pal.sun, 0.95);
-      else c = mix(c, pal.sun, Math.max(0, 0.45 - (d - sunR) / (w * 0.5)));
-      if (starSet.has(Math.round(yy) * w + x)) c = [240, 240, 255];
+      const tt = yy <= 0 ? 0 : yy >= horizon ? 1 : yy / horizon;
+      let r = s1[0] + (s0[0] - s1[0]) * (1 - tt), g = s1[1] + (s0[1] - s1[1]) * (1 - tt), b = s1[2] + (s0[2] - s1[2]) * (1 - tt);
+      const dx = x - sunX, dy = yy - sunY;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      const k = d < sunR ? 0.95 : Math.max(0, 0.45 - (d - sunR) / glowR);
+      if (k > 0) { r += (sun[0] - r) * k; g += (sun[1] - g) * k; b += (sun[2] - b) * k; }
+      if (stars.size && stars.has(Math.round(yy) * w + x)) { r = 240; g = 240; b = 255; }
       for (let i = 0; i < layers.length; i++) {
         const L = layers[i];
-        if (yy > L.ridge(x)) {
-          let col = L.col;
-          if (pal.snow && i === 0 && yy < L.ridge(x) + h * 0.03) col = [250, 252, 255];
-          c = mix(col, c, 0.06 * (layers.length - i));
+        if (yy > L.ridge[x]) {
+          let c = L.col;
+          if (pal.snow && i === 0 && yy < L.ridge[x] + h * 0.03) c = SNOW;
+          // mostly the hill colour, with a little haze from what is behind it
+          r = c[0] + (r - c[0]) * L.k; g = c[1] + (g - c[1]) * L.k; b = c[2] + (b - c[2]) * L.k;
         }
       }
-      if (water) c = mix(c, [20, 40, 70], 0.25);
+      if (water) { r += (20 - r) * 0.25; g += (40 - g) * 0.25; b += (70 - b) * 0.25; }
       const n = (noise() - 0.5) * 10;
       const o = (y * w + x) * 3;
-      rgb[o] = Math.max(0, Math.min(255, c[0] + n));
-      rgb[o + 1] = Math.max(0, Math.min(255, c[1] + n));
-      rgb[o + 2] = Math.max(0, Math.min(255, c[2] + n));
+      rgb[o] = r + n < 0 ? 0 : r + n > 255 ? 255 : r + n;
+      rgb[o + 1] = g + n < 0 ? 0 : g + n > 255 ? 255 : g + n;
+      rgb[o + 2] = b + n < 0 ? 0 : b + n > 255 ? 255 : b + n;
     }
   }
   return encodePNG(w, h, rgb);
 }
+const SNOW = [250, 252, 255];
 
 function genSvgArt(seed, title) {
   const rnd = seeded(seed);
@@ -480,19 +491,19 @@ function buildTrees() {
 }
 
 // ---------------------------------------------------------------- local folder trees (folder picker)
-function macTree() {
+function laptopTree() {
   return {
-    sep: "/", home: "/Users/andrey", roots: ["/"],
+    sep: "/", home: "/home/andrey", roots: ["/"],
     tree: {
-      "": ["Applications", "Users", "Volumes", "opt", "private"],
-      "/Users": ["andrey", "Shared"],
-      "/Users/andrey": ["Desktop", "Documents", "Downloads", "Movies", "Music", "Pictures", "Projects", "Public"],
-      "/Users/andrey/Documents": ["Архив", "Налоги", "Работа"],
-      "/Users/andrey/Downloads": ["Svoi"],
-      "/Users/andrey/Pictures": ["2024", "2025", "Скриншоты"],
-      "/Users/andrey/Projects": ["svoi", "dotfiles", "garden-sensors"],
-      "/Users/andrey/Movies": [], "/Users/andrey/Music": ["Плейлисты"], "/Users/andrey/Desktop": [], "/Users/andrey/Public": ["Drop Box"],
-      "/Volumes": ["Macintosh HD", "Backup"], "/Volumes/Backup": ["Time Machine"],
+      "": ["bin", "etc", "home", "media", "mnt", "opt", "srv", "usr", "var"],
+      "/home": ["andrey"],
+      "/home/andrey": ["Desktop", "Documents", "Downloads", "Music", "Pictures", "Projects", "Public", "Videos"],
+      "/home/andrey/Documents": ["Архив", "Налоги", "Работа"],
+      "/home/andrey/Downloads": ["Svoi"],
+      "/home/andrey/Pictures": ["2024", "2025", "Скриншоты"],
+      "/home/andrey/Projects": ["svoi", "dotfiles", "garden-sensors"],
+      "/home/andrey/Videos": [], "/home/andrey/Music": ["Плейлисты"], "/home/andrey/Desktop": [], "/home/andrey/Public": [],
+      "/media": ["andrey"], "/media/andrey": ["BACKUP"], "/media/andrey/BACKUP": ["Фото", "Старое"],
     },
   };
 }
@@ -522,7 +533,7 @@ function winTree() {
 
 // ---------------------------------------------------------------- world
 const DEVICE_DEFS = [
-  { key: "laptop", name: "laptop", owner: "Андрей", os: "darwin", arch: "arm64", ip4: "100.64.0.1", ip6: "fd7a:5f3c:9e21::1" },
+  { key: "laptop", name: "laptop", owner: "Андрей", os: "linux", arch: "amd64", ip4: "100.64.0.1", ip6: "fd7a:5f3c:9e21::1" },
   { key: "phone", name: "phone", owner: "Андрей", os: "android", arch: "arm64", ip4: "100.64.0.2", ip6: "fd7a:5f3c:9e21::2", online: true, path: "relay", relayVia: "home-server", rttMs: 48.2, uptime: 86400 * 5 + 3600 * 3, shares: 1,
     services: [], nat: "hard", endpoints: ["100.84.17.203:41022"] },
   { key: "home-server", name: "home-server", owner: "Андрей", os: "linux", arch: "amd64", ip4: "100.64.0.3", ip6: "fd7a:5f3c:9e21::3", online: true, path: "direct", rttMs: 18.4, admin: true, uptime: 86400 * 41 + 3600 * 7, shares: 2,
@@ -579,10 +590,11 @@ function remoteSelf(p, def) {
   };
 }
 
+const defaultTun = (o = {}) => ({ enabled: false, manageHosts: true, state: "off", name: "svoi0", error: "", supported: true, txPackets: 0, rxPackets: 0, dropped: 0, ...o });
 const defaultSettings = (o = {}) => ({
-  downloadDir: "/Users/andrey/Downloads/Svoi", autoAccept: "own", autoAcceptMaxMB: 500, relay: true,
+  downloadDir: "/home/andrey/Downloads/Svoi", autoAccept: "own", autoAcceptMaxMB: 500, relay: true,
   stunEnabled: true, stunServers: ["stun.l.google.com:19302", "stun.cloudflare.com:3478"], udpPort: 41710, lan: true,
-  socks: { enabled: false, listen: "127.0.0.1:1080" }, restartRequired: false, ...o,
+  socks: { enabled: false, listen: "127.0.0.1:1080" }, tun: defaultTun(), restartRequired: false, ...o,
 });
 
 function addLog(level, msg, dev = "laptop") {
@@ -611,29 +623,29 @@ function buildWorld(scenario) {
   W.portSeq = 2222;
   const selfDef = DEVICE_DEFS[0];
   if (scenario === "onboarding") {
-    W.self = { id: devId("laptop"), short: devId("laptop").slice(0, 8), version: "0.1.0", os: "darwin", arch: "arm64", configured: false };
+    W.self = { id: devId("laptop"), short: devId("laptop").slice(0, 8), version: "0.1.0", os: "linux", arch: "amd64", configured: false };
     W.peers = [];
     W.settings = defaultSettings();
     W.shares = []; W.services = [];
     W.remote = {};
-    seedLogs("laptop", [["info", "svoi 0.1.0 starting (darwin/arm64)"], ["info", "device key loaded: " + devId("laptop").slice(0, 8)], ["info", "not a member of any mesh yet — open the UI to create or join one"]]);
+    seedLogs("laptop", [["info", "svoi 0.1.0 starting (linux/amd64)"], ["info", "device key loaded: " + devId("laptop").slice(0, 8)], ["info", "not a member of any mesh yet — open the UI to create or join one"]]);
     return;
   }
   W.self = makeSelf(selfDef);
   W.settings = defaultSettings();
   W.shares = [
-    { id: "sh_docs", name: "Документы", path: "/Users/andrey/Documents", mode: "ro", allow: ["*"], exists: true },
-    { id: "sh_drop", name: "Входящие", path: "/Users/andrey/Downloads/Svoi", mode: "rw", allow: [ids.phone, ids.nas], exists: true },
-    { id: "sh_old", name: "Старый проект", path: "/Volumes/External/project", mode: "ro", allow: ["*"], exists: false },
+    { id: "sh_docs", name: "Документы", path: "/home/andrey/Documents", mode: "ro", allow: ["*"], exists: true },
+    { id: "sh_drop", name: "Входящие", path: "/home/andrey/Downloads/Svoi", mode: "rw", allow: [ids.phone, ids.nas], exists: true },
+    { id: "sh_old", name: "Старый проект", path: "/media/andrey/OLD-DISK/project", mode: "ro", allow: ["*"], exists: false },
   ];
   W.services = [
     { id: "sv_ssh", name: "ssh", addr: "127.0.0.1:22", description: "SSH на ноутбуке", allow: [ids["home-server"]] },
     { id: "sv_vite", name: "notes-dev", addr: "127.0.0.1:5173", description: "Черновик сайта заметок", allow: ["*"] },
   ];
-  W.localfs = { laptop: macTree(), nas: linuxTree("admin", { "/volume1/photo": ["2024", "2025", "Обои"], "/volume1/docs": ["Квитанции", "Рецепты"], "/volume1/video": ["Мультики", "Музыка"] }), "home-server": linuxTree("andrey"), phone: { sep: "/", home: "/storage/emulated/0", roots: ["/storage/emulated/0"], tree: { "/storage/emulated/0": ["DCIM", "Download", "Documents", "Pictures"], "/storage/emulated/0/DCIM": ["Camera", "Screenshots"] } }, "dad-pc": winTree() };
+  W.localfs = { laptop: laptopTree(), nas: linuxTree("admin", { "/volume1/photo": ["2024", "2025", "Обои"], "/volume1/docs": ["Квитанции", "Рецепты"], "/volume1/video": ["Мультики", "Музыка"] }), "home-server": linuxTree("andrey"), phone: { sep: "/", home: "/storage/emulated/0", roots: ["/storage/emulated/0"], tree: { "/storage/emulated/0": ["DCIM", "Download", "Documents", "Pictures"], "/storage/emulated/0/DCIM": ["Camera", "Screenshots"] } }, "dad-pc": winTree() };
 
   seedLogs("laptop", [
-    ["info", "svoi 0.1.0 starting (darwin/arm64)"], ["info", "mesh «Дом» (k3j4h5g6f7d8), 7 members, this device is admin"],
+    ["info", "svoi 0.1.0 starting (linux/amd64)"], ["info", "mesh «Дом» (k3j4h5g6f7d8), 7 members, this device is admin"],
     ["info", "udp listening on 0.0.0.0:41710"], ["info", "stun stun.l.google.com:19302 → 203.0.113.57:41710"],
     ["info", "nat: mapping stable across servers → difficulty easy"], ["info", "lan: discovered nas at 192.168.1.9:41710"],
     ["info", "peer nas: handshake ok via 192.168.1.9:41710 (lan, 0.9 ms)"], ["info", "peer home-server: handshake ok via 198.51.100.20:41710 (direct)"],
@@ -660,7 +672,12 @@ function buildWorld(scenario) {
   W.remote = {};
   for (const d of DEVICE_DEFS.slice(1)) {
     const p = W.peers.find((x) => x.id === ids[d.key]);
-    W.remote[d.key] = { self: remoteSelf(p, d), settings: defaultSettings({ downloadDir: d.key === "dad-pc" ? "C:\\Users\\Папа\\Downloads\\Svoi" : d.key === "phone" ? "/storage/emulated/0/Download/Svoi" : "/srv/svoi/incoming", relay: d.key !== "phone", autoAccept: d.key === "nas" ? "all" : "own" }) };
+    const linux = d.os === "linux";
+    W.remote[d.key] = { self: remoteSelf(p, d), settings: defaultSettings({
+      downloadDir: d.key === "dad-pc" ? "C:\\Users\\Папа\\Downloads\\Svoi" : d.key === "phone" ? "/storage/emulated/0/Download/Svoi" : "/srv/svoi/incoming",
+      relay: d.key !== "phone", autoAccept: d.key === "nas" ? "all" : "own",
+      tun: defaultTun(linux ? { enabled: true, state: "running", txPackets: 182_311, rxPackets: 240_877, dropped: 12 } : { supported: false }),
+    }) };
   }
   W.remote.nas.shares = [
     { id: "sh_photo", name: "Фото", path: "/volume1/photo", mode: "rw", allow: ["*"], exists: true },
@@ -728,7 +745,7 @@ function seedTransfers() {
     tr({ id: "t_offer", dir: "in", peer: ids["dad-pc"], peerName: "Компьютер папы", name: "Сканы документов.pdf", size: 2_411_920, mime: "application/pdf", state: "offered", created: T - 240, updated: T - 240, gen: { kind: "pdf", title: "Scanned documents" } }),
     tr({ id: "t_pres", dir: "out", peer: ids.nas, peerName: "nas", name: "Презентация.pdf", size: 8_808_038, done: 3_970_000, mime: "application/pdf", state: "active", speed: 2_350_000, created: T - 30 }),
     tr({ id: "t_mom", dir: "out", peer: ids["mom-laptop"], peerName: "mom-laptop", name: "Фото для мамы.zip", size: 125_829_120, mime: "application/zip", state: "queued", created: T - 3600 * 20, updated: T - 3600 * 20 }),
-    tr({ id: "t_img", dir: "in", peer: ids.phone, peerName: "phone", name: "IMG_20251003_141205.jpg", size: 0, mime: "image/jpeg", state: "done", created: T - 7300, updated: T - 7200, finished: T - 7200, path: "/Users/andrey/Downloads/Svoi/IMG_20251003_141205.jpg", gen: { kind: "photo", seed: 200 } }),
+    tr({ id: "t_img", dir: "in", peer: ids.phone, peerName: "phone", name: "IMG_20251003_141205.jpg", size: 0, mime: "image/jpeg", state: "done", created: T - 7300, updated: T - 7200, finished: T - 7200, path: "/home/andrey/Downloads/Svoi/IMG_20251003_141205.jpg", gen: { kind: "photo", seed: 200 } }),
     tr({ id: "t_bak", dir: "out", peer: ids["home-server"], peerName: "home-server", name: "notes-backup.tar", size: 52_428_800, done: 18_874_368, mime: "application/x-tar", state: "failed", error: "connection reset by peer", created: T - 5400, updated: T - 5300 }),
     tr({ id: "t_gpx", dir: "out", peer: ids.phone, peerName: "phone", name: "Маршрут.gpx", size: 48_211, done: 48_211, mime: "application/gpx+xml", state: "done", created: T - 86400, updated: T - 86300, finished: T - 86300 }),
     tr({ id: "t_dec", dir: "in", peer: ids.nas, peerName: "nas", name: "debug-dump.bin", size: 734_003, mime: "application/octet-stream", state: "declined", created: T - 86400 * 2, updated: T - 86400 * 2 }),
@@ -963,6 +980,14 @@ function tick() {
       else if (c.state === "sent" && Date.now() - (c.stAt || 0) > 1600) { c.state = "delivered"; broadcast("chat", { ...publicChat(c), peer }); }
     }
   }
+  // live TUN counters
+  for (const st of [W.settings, ...Object.values(W.remote || {}).map((r) => r.settings)]) {
+    const tun = st && st.tun;
+    if (!tun || tun.state !== "running") continue;
+    tun.txPackets += 3 + Math.floor(Math.random() * 40);
+    tun.rxPackets += 4 + Math.floor(Math.random() * 55);
+    if (Math.random() < 0.03) tun.dropped += 1;
+  }
   // invites expiry
   const before = W.invites.length;
   W.invites = W.invites.filter((i) => i.expires > T);
@@ -1173,6 +1198,25 @@ function route(method, pattern, handler) {
 
 function requireConfigured() { if (!W.configured) throw E.notconfigured(); }
 
+/** PUT {"tun": {enabled?, manageHosts?}}: start/stop the (fake) interface; failures are reported in-band. */
+function applyTun(tun, patch, devKey) {
+  if (patch.manageHosts !== undefined) tun.manageHosts = !!patch.manageHosts;
+  if (patch.enabled === undefined) return;
+  tun.enabled = !!patch.enabled;
+  if (!tun.enabled) {
+    Object.assign(tun, { state: "off", error: "", txPackets: 0, rxPackets: 0, dropped: 0 });
+    addLog("info", "tun: svoi0 removed", devKey);
+  } else if (!tun.supported) {
+    Object.assign(tun, { state: "error", error: "virtual interfaces are not supported on this platform" });
+  } else if (tunFails) {
+    Object.assign(tun, { state: "error", error: "permission denied — run as root (or grant CAP_NET_ADMIN)" });
+    addLog("error", "tun: open /dev/net/tun: permission denied", devKey);
+  } else {
+    Object.assign(tun, { state: "running", error: "", name: "svoi0" });
+    addLog("info", `tun: svoi0 up (100.64.0.0/10, fd7a:5f3c:9e21::/48)${tun.manageHosts ? ", /etc/hosts updated" : ""}`, devKey);
+  }
+}
+
 function statePayload() {
   return {
     version: "0.1.0", configured: W.configured, self: W.self, peers: W.peers,
@@ -1359,7 +1403,7 @@ route("GET", "/api/peers/:id/fs", (req, res, p, q) => {
   if (!node.dir) throw E.invalid("not a folder");
   const entries = Object.entries(node.children).map(([name, n]) => n.dir
     ? { name, isDir: true, size: 0, mtime: n.mtime, mime: "" }
-    : { name, isDir: false, size: nodeSize(`${key}/${s.id}${pp}/${name}`, n, name), mtime: n.mtime, mime: mimeOf(name) });
+    : { name, isDir: false, size: nodeSize(`${key}/${s.id}${pp === "/" ? "" : pp}/${name}`, n, name), mtime: n.mtime, mime: mimeOf(name) });
   // shuffle a bit: the contract says the order is not guaranteed
   entries.sort((a, b) => (a.name.length % 3) - (b.name.length % 3));
   sendJSON(res, 200, { path: pp, canWrite: s.mode === "rw", entries });
@@ -1594,6 +1638,7 @@ function sharesHandlers(prefix, getKey) {
     const restartKeys = ["udpPort", "lan", "socks"];
     for (const k of Object.keys(b)) {
       if (!(k in s) || k === "restartRequired") continue;
+      if (k === "tun") { applyTun(s.tun, b.tun || {}, key); continue; }
       if (k === "udpPort" && !(Number.isInteger(b[k]) && b[k] >= 0 && b[k] < 65536)) throw E.invalid("udpPort must be 0..65535");
       if (k === "autoAccept" && !["own", "all", "ask"].includes(b[k])) throw E.invalid("autoAccept must be own|all|ask");
       if (k === "stunServers" && (!Array.isArray(b[k]) || b[k].some((x) => !/^[^\s:]+:\d{1,5}$/.test(x)))) throw E.invalid("stunServers must be host:port");
@@ -1830,6 +1875,7 @@ route("ANY", "/__mock/peer", (req, res, p, q) => {
   ok(res);
 });
 route("ANY", "/__mock/auth", (req, res, p, q) => { authRequired = q.get("on") !== "0"; ok(res, { authRequired }); });
+route("ANY", "/__mock/tun", (req, res, p, q) => { tunFails = q.get("error") !== "0"; ok(res, { tunFails }); });
 route("ANY", "/__mock/reset", (req, res) => { buildWorld(opts.scenario); broadcast("self", W.self); emitPeers(); ok(res); });
 
 // ---------------------------------------------------------------- static files
@@ -1907,8 +1953,28 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+/** Generate the fake media in the background so first folder listings are instant. */
+function warmUp() {
+  const jobs = [];
+  const walkTree = (key, node, name) => {
+    if (node.dir) { for (const [n, c] of Object.entries(node.children)) walkTree(`${key}/${n}`, c, n); return; }
+    if (node.kind && node.kind !== "big" && !node.data) jobs.push([key, node, name]);
+  };
+  for (const [dev, shares] of Object.entries(W.trees || {})) {
+    for (const [sid, root] of Object.entries(shares)) walkTree(`${dev}/${sid}`, root, "");
+  }
+  const next = () => {
+    const j = jobs.shift();
+    if (!j) return;
+    try { fileBytes(j[0], j[1], j[2]); } catch { /* ignore */ }
+    setTimeout(next, 5);
+  };
+  setTimeout(next, 50);
+}
+
 buildWorld(opts.scenario);
 server.listen(opts.port, opts.host, () => {
+  warmUp();
   const addr = server.address();
   console.log(`svoi mock (${opts.scenario}${opts.calm ? ", calm" : ""}) → http://${opts.host}:${addr.port}/${authRequired ? "?t=" + TOKEN : ""}`);
 });

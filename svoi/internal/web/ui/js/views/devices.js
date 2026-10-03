@@ -44,7 +44,7 @@ function statusLine(p) {
 
 function DeviceCard({ p }) {
   const canFiles = (p.caps || []).includes("files");
-  return html`<article class=${cx("dcard", !p.online && "is-offline")}>
+  return html`<article class=${cx("dcard", !p.online && "is-offline")} data-testid="device-card" data-id=${p.id} data-name=${p.deviceName || p.name} data-online=${String(!!p.online)}>
     <div class="dcard__head">
       <${DeviceAvatar} dev=${p} size=${44} />
       <div class="grow">
@@ -71,7 +71,7 @@ function DeviceCard({ p }) {
 function SelfCard({ self, peersOnline, total }) {
   const diff = (self.nat && self.nat.difficulty) || "unknown";
   const tone = natTone(diff);
-  return html`<${Card} class="selfcard" aria-labelledby="selfcard-title">
+  return html`<${Card} class="selfcard" aria-labelledby="selfcard-title" data-testid="self-card">
     <div class="selfcard__head">
       <${DeviceAvatar} dev=${self} size=${52} status="self" />
       <div class="grow">
@@ -105,7 +105,7 @@ function InvitesCard({ invites, admin }) {
     try { await del(`invites/${encodeURIComponent(inv.id)}`); toast({ level: "success", title: t("inv.canceled") }); }
     catch (e) { toastError(e); }
   };
-  return html`<${Card} class="invites" pad=${false}>
+  return html`<${Card} class="invites" pad=${false} data-testid="invites">
     <header class="invites__head">
       <span class="card__icon"><${Icon} name="ticket" size=${18} /></span>
       <div class="grow"><h2 class="card__title">${t("inv.pending")}</h2><p class="card__sub">${t("inv.pendingSub")}</p></div>
@@ -113,7 +113,7 @@ function InvitesCard({ invites, admin }) {
     <ul class="list">
       ${invites.map((inv) => {
         const left = inv.expires - nowSec();
-        return html`<li class="list-row inv-row" key=${inv.id}>
+        return html`<li class="list-row inv-row" key=${inv.id} data-testid="invite-row" data-id=${inv.id}>
           <span class=${cx("inv-row__icon", inv.admin && "is-admin")}><${Icon} name=${inv.admin ? "shield" : "userPlus"} size=${16} /></span>
           <div class="grow">
             <span class="strong small ellipsis">${inv.admin ? t("inv.roleAdminLong") : t("inv.roleRegularLong")}</span>
@@ -143,7 +143,7 @@ export function DevicesView({ route }) {
   return html`<div class="page devices">
     <${PageHeader} title=${t("nav.devices")}
       subtitle=${peers.length ? t("dev.subtitle", { online: online + 1, total }) : t("dev.subtitleAlone")}
-      actions=${html`<${Button} variant="primary" icon="userPlus" onClick=${openAdd} aria-label=${t("dev.add")}>
+      actions=${html`<${Button} variant="primary" icon="userPlus" onClick=${openAdd} aria-label=${t("dev.add")} data-testid="add-device">
         <span class="lbl-wide">${t("dev.add")}</span><span class="lbl-narrow">${t("dev.addShort")}</span>
       </${Button}>`} />
 

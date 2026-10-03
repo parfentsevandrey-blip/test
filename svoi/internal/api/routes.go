@@ -274,7 +274,12 @@ func (s *Server) handleSettingsPut(w http.ResponseWriter, r *http.Request) {
 		writeError(w, err)
 		return
 	}
-	res, err := s.app.UpdateSettings(patch)
+	var opts []app.SettingsOption
+	if r.Context().Value(remoteCtxKey{}) != nil {
+		// Over the mesh: a network restart must not cut the link the answer travels on.
+		opts = append(opts, app.DeferNetworkRestart())
+	}
+	res, err := s.app.UpdateSettings(patch, opts...)
 	if err != nil {
 		writeError(w, err)
 		return

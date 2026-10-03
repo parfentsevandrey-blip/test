@@ -177,6 +177,10 @@ type Node struct {
 	kickDial   chan struct{}
 	joinGate   tokenGate
 	joinActive atomic.Int32
+
+	// relayOn is whether we forward traffic for other members; it can change
+	// while the network is running (see SetRelay).
+	relayOn atomic.Bool
 }
 
 // Open loads (or creates) the device identity and, if the device already
@@ -307,6 +311,22 @@ func (n *Node) Reconfigure(mod func(*Config)) error {
 	return nil
 }
 
+// SetRelay switches relaying for other members on or off without restarting the
+// network (links stay up). Other members learn about it with the next state
+// gossip, which is triggered right away.
+func (n *Node) SetRelay(on bool) {
+	n.mu.Lock()
+	n.cfg.NoRelay = !on
+	mg := n.magic
+	n.mu.Unlock()
+	n.relayOn.Store(on)
+	if mg != nil {
+		mg.StateChanged()
+		go n.pushSyncToAll() // refresh the capabilities (hello) other members show
+	}
+	n.emit(Event{Kind: EvSelf})
+}
+
 // Leave removes this device from the mesh (locally) and stops the network.
 // The device key is kept, so the device can join again with a new invite.
 func (n *Node) Leave() error {
@@ -424,7 +444,7 @@ func (n *Node) startMember() error {
 }
 
 func (n *Node) openMagic(port int, listen func(int) (net.PacketConn, error)) (*magic.Conn, error) {
-	allowRelay := !n.cfg.NoRelay
+	n.relayOn.Store(!n.cfg.NoRelay)
 	return magic.New(magic.Config{
 		Device:          n.dev,
 		Port:            port,
@@ -433,7 +453,7 @@ func (n *Node) openMagic(port int, listen func(int) (net.PacketConn, error)) (*m
 		STUN:            n.cfg.STUN,
 		SelfCert:        func() []byte { n.mu.RLock(); defer n.mu.RUnlock(); return n.self.CertDER },
 		AcceptUnknown:   n.acceptUnknown,
-		AllowRelay:      func() bool { return allowRelay },
+		AllowRelay:      n.relayOn.Load,
 		OnPath:          n.onPath,
 		OnEndpoints:     func([]magic.Endpoint) { n.emit(Event{Kind: EvSelf}) },
 		OnPeerEndpoints: func(identity.ID, []netip.AddrPort) {},

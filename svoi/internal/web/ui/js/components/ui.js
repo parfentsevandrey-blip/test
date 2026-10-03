@@ -19,7 +19,13 @@ export function Button({
   if (href && !disabled) {
     return html`<a class=${className} href=${href} ...${rest}>${inner}</a>`;
   }
-  return html`<button type=${type} class=${className} disabled=${disabled || loading} aria-busy=${loading ? "true" : undefined} ...${rest}>${inner}</button>`;
+  // While loading the button stays focusable (no `disabled`, which would drop
+  // keyboard focus to <body>); clicks are swallowed instead.
+  if (loading) {
+    const { onClick, ...other } = rest;
+    return html`<button type="button" class=${className} aria-busy="true" aria-disabled="true" onClick=${(e) => e.preventDefault()} ...${other}>${inner}</button>`;
+  }
+  return html`<button type=${type} class=${className} disabled=${disabled} ...${rest}>${inner}</button>`;
 }
 
 export function IconButton({ icon, label, size = "md", variant = "ghost", badge, active, class: cls, iconSize, href, ...rest }) {
@@ -30,8 +36,8 @@ export function IconButton({ icon, label, size = "md", variant = "ghost", badge,
   return html`<button type="button" class=${className} aria-label=${label} title=${label} aria-pressed=${active === undefined ? undefined : String(!!active)} ...${rest}>${inner}</button>`;
 }
 
-export function Chip({ tone = "neutral", icon, dot = false, children, class: cls, title, size }) {
-  return html`<span class=${cx("chip", `chip--${tone}`, size === "sm" && "chip--sm", cls)} title=${title}>
+export function Chip({ tone = "neutral", icon, dot = false, children, class: cls, title, size, ...rest }) {
+  return html`<span class=${cx("chip", `chip--${tone}`, size === "sm" && "chip--sm", cls)} title=${title} ...${rest}>
     ${dot && html`<span class="chip__dot" aria-hidden="true"></span>`}
     ${icon && html`<${Icon} name=${icon} size=${size === "sm" ? 12 : 14} />`}
     <span>${children}</span>
@@ -72,7 +78,7 @@ export function Progress({ value = 0, max = 100, tone = "accent", indeterminate 
 }
 
 let switchSeq = 0;
-export function Switch({ checked, onChange, label, description, disabled = false, id }) {
+export function Switch({ checked, onChange, label, description, disabled = false, id, testid }) {
   const ref = useRef(id || `sw${++switchSeq}`);
   const sid = ref.current;
   return html`<div class=${cx("switch-row", disabled && "is-disabled")}>
@@ -80,7 +86,7 @@ export function Switch({ checked, onChange, label, description, disabled = false
       <label class="switch-row__label" for=${sid}>${label}</label>
       ${description && html`<p class="switch-row__desc" id=${sid + "-d"}>${description}</p>`}
     </div>
-    <button type="button" role="switch" id=${sid} class=${cx("switch", checked && "is-on")} aria-checked=${String(!!checked)}
+    <button type="button" role="switch" id=${sid} class=${cx("switch", checked && "is-on")} aria-checked=${String(!!checked)} data-testid=${testid}
       aria-describedby=${description ? sid + "-d" : undefined} disabled=${disabled}
       onClick=${() => onChange && onChange(!checked)}>
       <span class="switch__thumb"></span>
@@ -103,7 +109,7 @@ export function Segmented({ value, options, onChange, label, size, class: cls, f
     }
   };
   return html`<div class=${cx("seg", size === "sm" && "seg--sm", full && "seg--full", cls)} role="radiogroup" aria-label=${label} onKeyDown=${onKey}>
-    ${options.map((o) => html`<button type="button" role="radio" key=${o.value} aria-checked=${String(o.value === value)}
+    ${options.map((o) => html`<button type="button" role="radio" key=${o.value} aria-checked=${String(o.value === value)} data-testid=${o.testid}
         tabindex=${o.value === value ? 0 : -1} class=${cx("seg__opt", o.value === value && "is-on")}
         disabled=${o.disabled} title=${o.title}
         onClick=${() => onChange(o.value)}>
@@ -139,9 +145,9 @@ export function Skeleton({ w = "100%", h = 14, r = 6, class: cls, style = "" }) 
   return html`<span class=${cx("skeleton", cls)} aria-hidden="true" style=${`width:${typeof w === "number" ? w + "px" : w};height:${h}px;border-radius:${r}px;${style}`}></span>`;
 }
 
-export function Callout({ tone = "info", icon, title, children, actions, class: cls, role }) {
+export function Callout({ tone = "info", icon, title, children, actions, class: cls, role, ...rest }) {
   const ic = icon || { info: "info", warn: "alert", err: "alertCircle", ok: "checkCircle", accent: "sparkle" }[tone] || "info";
-  return html`<div class=${cx("callout", `callout--${tone}`, cls)} role=${role}>
+  return html`<div class=${cx("callout", `callout--${tone}`, cls)} role=${role} ...${rest}>
     <span class="callout__icon"><${Icon} name=${ic} size=${18} /></span>
     <div class="grow">
       ${title && html`<p class="callout__title">${title}</p>`}

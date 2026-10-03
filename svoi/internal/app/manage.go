@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/files"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
@@ -77,8 +78,23 @@ func (a *App) Settings() Settings {
 	return s
 }
 
+// SettingsOption tunes UpdateSettings.
+type SettingsOption func(*settingsOpts)
+
+type settingsOpts struct{ deferNetwork bool }
+
+// DeferNetworkRestart makes UpdateSettings apply changes that restart the
+// network (UDP port, STUN, LAN discovery) a moment after it returns. A request
+// that arrives over the mesh itself (remote administration) needs this: the
+// restart would otherwise cut the very link its answer travels on.
+func DeferNetworkRestart() SettingsOption { return func(o *settingsOpts) { o.deferNetwork = true } }
+
 // UpdateSettings validates and applies a patch.
-func (a *App) UpdateSettings(p SettingsPatch) (Settings, error) {
+func (a *App) UpdateSettings(p SettingsPatch, opts ...SettingsOption) (Settings, error) {
+	var so settingsOpts
+	for _, o := range opts {
+		o(&so)
+	}
 	before := a.cfg.Get()
 	err := a.cfg.Update(func(c *Config) error {
 		if p.DownloadDir != nil {
@@ -154,22 +170,39 @@ func (a *App) UpdateSettings(p SettingsPatch) (Settings, error) {
 		return Settings{}, err
 	}
 	after := a.cfg.Get()
-	netChanged := before.Relay != after.Relay || before.STUNEnabled != after.STUNEnabled ||
+	if before.Relay != after.Relay {
+		a.node.SetRelay(after.Relay) // takes effect at once, links stay up
+	}
+	restartNet := before.STUNEnabled != after.STUNEnabled ||
 		strings.Join(before.STUNServers, ",") != strings.Join(after.STUNServers, ",") ||
 		before.UDPPort != after.UDPPort || before.LAN != after.LAN
-	if netChanged {
-		if err := a.node.Reconfigure(func(mc *mesh.Config) {
-			mc.NoRelay = !after.Relay
-			mc.UDPPort = after.UDPPort
-			mc.STUN = nil
-			if after.STUNEnabled {
-				mc.STUN = after.STUNServers
-			}
-			mc.LANPort = a.baseNet.LANPort
-			if !after.LAN {
-				mc.LANPort = -1
-			}
-		}); err != nil {
+	if restartNet {
+		reconf := func() error {
+			return a.node.Reconfigure(func(mc *mesh.Config) {
+				mc.NoRelay = !after.Relay
+				mc.UDPPort = after.UDPPort
+				mc.STUN = nil
+				if after.STUNEnabled {
+					mc.STUN = after.STUNServers
+				}
+				mc.LANPort = a.baseNet.LANPort
+				if !after.LAN {
+					mc.LANPort = -1
+				}
+			})
+		}
+		if so.deferNetwork {
+			go func() {
+				select {
+				case <-a.ctx.Done():
+					return
+				case <-time.After(500 * time.Millisecond): // let the answer leave first
+				}
+				if err := reconf(); err != nil {
+					a.log.Warn("applying the network settings failed", "err", err)
+				}
+			}()
+		} else if err := reconf(); err != nil {
 			return Settings{}, err
 		}
 	}

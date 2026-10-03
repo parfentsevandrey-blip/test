@@ -36,6 +36,10 @@ func remotePathAllowed(p string) bool {
 	return false
 }
 
+// remoteCtxKey marks a request that arrived over the mesh (api.call) rather than
+// from the local browser. Unlike a header, a context value cannot be forged by a client.
+type remoteCtxKey struct{}
+
 type remoteCall struct {
 	Method string `json:"method"`
 	Path   string `json:"path"` // path + query
@@ -70,7 +74,7 @@ func (s *Server) registerRemoteHandler() {
 		default:
 			return nil, mesh.Errf(mesh.CodeInvalid, "unsupported method")
 		}
-		req, err := http.NewRequestWithContext(ctx, rc.Method, rc.Path, bytes.NewReader(rc.Body))
+		req, err := http.NewRequestWithContext(context.WithValue(ctx, remoteCtxKey{}, true), rc.Method, rc.Path, bytes.NewReader(rc.Body))
 		if err != nil {
 			return nil, mesh.Errf(mesh.CodeInvalid, "bad path")
 		}

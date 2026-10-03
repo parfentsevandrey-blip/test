@@ -47,7 +47,7 @@ function ToastItem({ x }) {
   const pause = () => { clearTimeout(timers.get(x.id)); };
   const resume = () => { if (x.ms > 0) timers.set(x.id, setTimeout(() => dismiss(x.id), 2500)); };
   useEffect(() => { /* mount animation handled by CSS */ }, []);
-  return html`<div class=${cx("toast", `toast--${x.level}`)} role=${x.level === "error" ? "alert" : "status"} ref=${ref}
+  return html`<div class=${cx("toast", `toast--${x.level}`)} role=${x.level === "error" ? "alert" : "status"} ref=${ref} data-testid="toast" data-level=${x.level}
       onMouseEnter=${pause} onMouseLeave=${resume} onfocusin=${pause} onfocusout=${resume}>
     <span class="toast__icon"><${Icon} name=${ICON[x.level] || "info"} size=${18} /></span>
     <div class="toast__content">

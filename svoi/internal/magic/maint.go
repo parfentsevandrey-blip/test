@@ -121,6 +121,13 @@ func (c *Conn) probe(p *peer, now time.Time) {
 
 func (c *Conn) markStateDirty() { c.self.stateDirty.Store(true) }
 
+// StateChanged tells magic that something peers learn from our state gossip (such
+// as whether we relay) changed, so it is sent again right away.
+func (c *Conn) StateChanged() {
+	c.markStateDirty()
+	c.Kick()
+}
+
 // broadcastState sends our peer-state to every peer we have a direct path to.
 func (c *Conn) broadcastState() {
 	now := time.Now()

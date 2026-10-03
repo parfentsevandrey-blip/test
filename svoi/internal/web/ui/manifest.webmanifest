@@ -1,0 +1,26 @@
+{
+  "name": "Свои — сеть ваших устройств",
+  "short_name": "Свои",
+  "description": "Личная сеть для ваших устройств: файлы, почта, чат и сервисы без облака.",
+  "lang": "ru",
+  "dir": "ltr",
+  "id": "./",
+  "start_url": "./#/devices",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d1012",
+  "theme_color": "#0d1012",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Отправить файл", "url": "./#/files/send", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Почта", "url": "./#/mail", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Чат", "url": "./#/chat", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
