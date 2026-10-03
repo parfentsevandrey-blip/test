@@ -250,12 +250,27 @@ type SelfInfo struct {
 	Configured bool           `json:"configured"`
 	Relay      bool           `json:"relay"`
 	Relayed    RelayedInfo    `json:"relayed"`
+	// PortMap is the state of the automatic port forwarding on the home router;
+	// absent when it is switched off.
+	PortMap *PortMapInfo `json:"portmap,omitempty"`
+}
+
+// PortMapInfo describes the router port mapping (UPnP / NAT-PMP).
+type PortMapInfo struct {
+	// State: searching | mapped | private | unavailable.
+	State string `json:"state"`
+	// Protocol is "upnp" or "natpmp" once mapped.
+	Protocol string `json:"protocol,omitempty"`
+	// External is the public address the router forwards to us.
+	External string `json:"external,omitempty"`
+	Gateway  string `json:"gateway,omitempty"`
+	Error    string `json:"error,omitempty"`
 }
 
 // EndpointInfo is one of our reachable addresses.
 type EndpointInfo struct {
 	Addr string `json:"addr"`
-	Kind string `json:"kind"` // local | stun | observed
+	Kind string `json:"kind"` // local | stun | observed | mapped
 }
 
 // NATInfo is the NAT diagnosis shown in the UI.
@@ -311,11 +326,17 @@ func (n *Node) Self() SelfInfo {
 		info.NAT.Difficulty = natDifficulty(nat, n.magic.Endpoints())
 		pk, by := n.magic.RelayStats()
 		info.Relayed = RelayedInfo{Packets: pk, Bytes: by}
+		if st, ok := n.magic.PortMapStatus(); ok {
+			info.PortMap = &PortMapInfo{State: st.State, Protocol: string(st.Protocol), External: st.External, Gateway: st.Gateway, Error: st.Error}
+		}
 	}
 	return info
 }
 
 func natDifficulty(nat magic.NATReport, eps []magic.Endpoint) string {
+	if nat.Mapped.IsValid() {
+		return "open" // the router forwards a public address to us: anybody can connect
+	}
 	if nat.MappingVaries {
 		return "hard"
 	}

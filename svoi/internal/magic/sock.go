@@ -257,3 +257,21 @@ func resolveHostPort(hp string) ([]netip.AddrPort, error) {
 	}
 	return nil, lastErr
 }
+
+// SetReadBuffer and SetWriteBuffer let the QUIC stack ask for bigger kernel
+// buffers on the socket underneath (which is ours); without them it logs a
+// warning that it cannot, on every start.
+func (c *Conn) SetReadBuffer(n int) error {
+	if s, ok := c.sock.(interface{ SetReadBuffer(int) error }); ok {
+		return s.SetReadBuffer(n)
+	}
+	return nil
+}
+
+// SetWriteBuffer: see SetReadBuffer.
+func (c *Conn) SetWriteBuffer(n int) error {
+	if s, ok := c.sock.(interface{ SetWriteBuffer(int) error }); ok {
+		return s.SetWriteBuffer(n)
+	}
+	return nil
+}

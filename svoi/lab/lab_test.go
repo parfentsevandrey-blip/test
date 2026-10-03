@@ -25,6 +25,7 @@ import (
 
 var (
 	svoiBin string
+	igdBin  string // the stand-in for a router's UPnP service (lab/fakeigd)
 	labSh   string
 )
 
@@ -47,6 +48,12 @@ func TestMain(m *testing.M) {
 	if err := build.Run(); err != nil {
 		panic(err)
 	}
+	igdBin = filepath.Join(dir, "fakeigd")
+	buildIGD := exec.Command("go", "build", "-o", igdBin, "./fakeigd")
+	buildIGD.Stdout, buildIGD.Stderr = os.Stdout, os.Stderr
+	if err := buildIGD.Run(); err != nil {
+		panic(err)
+	}
 	labSh, _ = filepath.Abs("natlab.sh")
 	code := m.Run()
 	exec.Command(labSh, "down").Run()
@@ -55,11 +62,12 @@ func TestMain(m *testing.M) {
 }
 
 type node struct {
-	t    *testing.T
-	ns   string
-	name string
-	dir  string
-	cmd  *exec.Cmd
+	t       *testing.T
+	ns      string
+	name    string
+	dir     string
+	cmd     *exec.Cmd
+	portmap bool // let the node ask its router to forward its port (off unless a test is about that)
 }
 
 func newNode(t *testing.T, ns, name string) *node {
@@ -103,7 +111,11 @@ func (n *node) run(args ...string) string {
 // start runs the node in the background.
 func (n *node) start(extra ...string) {
 	n.t.Helper()
-	cmd := n.command(append([]string{"up", "--no-browser", "--no-stun", "--debug"}, extra...)...)
+	args := []string{"up", "--no-browser", "--no-stun", "--debug"}
+	if !n.portmap {
+		args = append(args, "--no-portmap")
+	}
+	cmd := n.command(append(args, extra...)...)
 	logf, err := os.Create(filepath.Join(n.dir, "node.log"))
 	if err != nil {
 		n.t.Fatal(err)
@@ -158,6 +170,10 @@ type state struct {
 	Self struct {
 		Relayed struct{ Packets, Bytes uint64 } `json:"relayed"`
 		NAT     struct{ Difficulty string }     `json:"nat"`
+		PortMap *struct {
+			State, Protocol, External string
+		} `json:"portmap"`
+		Endpoints []struct{ Addr, Kind string } `json:"endpoints"`
 	} `json:"self"`
 	Peers []peerState `json:"peers"`
 }
@@ -565,4 +581,147 @@ func TestLANOnlyAndReaddressing(t *testing.T) {
 	l1.start()
 	l2.start()
 	together("LAN discovery switched back on")
+}
+
+// tryRun is run for a command that is expected to fail: it reports instead of
+// failing the test.
+func (n *node) tryRun(timeout time.Duration, args ...string) (string, error) {
+	cmd := n.command(args...)
+	var out bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &out
+	if err := cmd.Start(); err != nil {
+		return "", err
+	}
+	done := make(chan error, 1)
+	go func() { done <- cmd.Wait() }()
+	select {
+	case err := <-done:
+		return out.String(), err
+	case <-time.After(timeout):
+		cmd.Process.Kill()
+		return out.String(), fmt.Errorf("timed out after %v", timeout)
+	}
+}
+
+// A device behind a home router that only forwards what it was asked to: with
+// two symmetric NATs and home firewalls nothing from outside can reach A, so B
+// cannot even join. Once A's router offers UPnP (here a fake one that programs
+// real iptables rules), A maps its port by itself, the invitation it makes
+// contains the router's public address, and B reaches A directly - with no
+// public "anchor" anywhere and nobody opening a port by hand.
+func TestPortMapMakesAHomeDeviceReachable(t *testing.T) {
+	if out, err := exec.Command(labSh, "up", "symmetric", "symmetric", "home").CombinedOutput(); err != nil {
+		t.Fatalf("natlab up: %v\n%s", err, out)
+	}
+	t.Cleanup(func() { exec.Command(labSh, "down").Run() })
+
+	a := newNode(t, "svl-A", "a")
+	b := newNode(t, "svl-B", "b")
+	a.portmap = true
+	t.Cleanup(func() {
+		if t.Failed() || os.Getenv("SVOI_LAB_DUMP") != "" {
+			for _, n := range []*node{a, b} {
+				t.Logf("---- %s log ----\n%s", n.name, n.logTail(80))
+			}
+		}
+	})
+	a.run("init", "--mesh", "Lab", "--name", "a", "--owner", "lab")
+	a.start()
+
+	// Control: no router service yet. A has only its private address to offer, so B,
+	// in another network behind its own NAT, cannot reach it.
+	waitFor(t, 30*time.Second, "A to give up looking for a router", func() bool {
+		st, ok := a.state()
+		return ok && st.Self.PortMap != nil && st.Self.PortMap.State == "unavailable"
+	})
+	out, err := b.tryRun(60*time.Second, "join", invite(t, a), "--name", "b")
+	if err == nil {
+		t.Fatalf("B joined although nothing could reach A - the test would prove nothing:\n%s", out)
+	}
+	t.Logf("without a port mapping B cannot reach A, as expected: %s", strings.TrimSpace(lastLine(out)))
+
+	// The router starts offering UPnP. A finds it on its next look and maps its port.
+	igdLog := filepath.Join(t.TempDir(), "igd.log")
+	igd := exec.Command("ip", "netns", "exec", "svl-rA", igdBin, "-lan", "192.168.1.1", "-lanif", "lanA",
+		"-wan", "203.0.113.1", "-wanif", "wanA", "-log", igdLog)
+	igd.Stderr = os.Stderr
+	if err := igd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	igdStopped := false
+	stopIGD := func() {
+		if !igdStopped {
+			igdStopped = true
+			igd.Process.Signal(syscall.SIGTERM)
+			igd.Wait()
+		}
+	}
+	t.Cleanup(stopIGD)
+	var mapped string
+	waitFor(t, 150*time.Second, "A to map its port on the router", func() bool {
+		st, ok := a.state()
+		if ok && st.Self.PortMap != nil && st.Self.PortMap.State == "mapped" {
+			mapped = st.Self.PortMap.External
+			return true
+		}
+		return false
+	})
+	t.Logf("A mapped %s through UPnP", mapped)
+	if !strings.HasPrefix(mapped, "203.0.113.1:") {
+		t.Fatalf("the mapping should be on the router's public address, got %q", mapped)
+	}
+	if st, _ := a.state(); st.Self.NAT.Difficulty != "open" {
+		t.Fatalf("a device with a mapped port is reachable: difficulty %q", st.Self.NAT.Difficulty)
+	}
+
+	// Now B can join through the mapped address, and the two talk directly.
+	b.run("join", invite(t, a), "--name", "b")
+	b.start()
+	waitFor(t, 60*time.Second, "a and b connected", func() bool {
+		pa, ok1 := a.peer("b")
+		pb, ok2 := b.peer("a")
+		return ok1 && ok2 && pa.Online && pb.Online
+	})
+	waitFor(t, 30*time.Second, "b's path to a to be direct", func() bool {
+		pb, ok := b.peer("a")
+		return ok && pb.Online && pb.Path == "direct"
+	})
+
+	data := make([]byte, 2<<20)
+	rand.Read(data)
+	src := filepath.Join(b.dir, "payload.bin")
+	if err := os.WriteFile(src, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	b.run("send", "a", src)
+	dest := filepath.Join(a.dir, "home", "Downloads", "Svoi", "payload.bin")
+	waitFor(t, 90*time.Second, "the file to arrive at a", func() bool {
+		st, err := os.Stat(dest)
+		return err == nil && st.Size() == int64(len(data))
+	})
+	got, _ := os.ReadFile(dest)
+	if sha256.Sum256(got) != sha256.Sum256(data) {
+		t.Fatal("received file differs from the original")
+	}
+
+	// When A stops, it takes its mapping off the router.
+	a.stop()
+	waitFor(t, 15*time.Second, "the router to be told to drop the mapping", func() bool {
+		b, _ := os.ReadFile(igdLog)
+		return strings.Contains(string(b), "DEL ext=")
+	})
+	ipt := "iptables"
+	if p, err := exec.LookPath("iptables-legacy"); err == nil {
+		ipt = p
+	}
+	rules, _ := exec.Command("ip", "netns", "exec", "svl-rA", ipt, "-t", "nat", "-S", "PREROUTING").CombinedOutput()
+	if strings.Contains(string(rules), "--dport") {
+		t.Fatalf("a forwarding rule was left on the router:\n%s", rules)
+	}
+	stopIGD()
+}
+
+func lastLine(s string) string {
+	lines := strings.Split(strings.TrimSpace(s), "\n")
+	return lines[len(lines)-1]
 }

@@ -20,6 +20,7 @@ type selfState struct {
 	stunTx    map[stunTxID]string
 	resolved  map[string]resolvedEntry
 	observed  map[netip.AddrPort]*obsInfo
+	mapped    netip.AddrPort // what the router forwards to us (zero: nothing)
 	lastEps   []Endpoint
 	lastCheck time.Time
 
@@ -132,6 +133,11 @@ func (c *Conn) endpointsLocked(now time.Time) []Endpoint {
 		seen[ap] = true
 		out = append(out, Endpoint{Addr: ap, Kind: k})
 	}
+	// An address the router forwards to us is the best one there is: it works for
+	// anybody, no hole punching needed.
+	if s.mapped.IsValid() {
+		add(s.mapped, EPMapped)
+	}
 	// Public endpoints first: they are the ones remote peers can use.
 	type scored struct {
 		ap    netip.AddrPort
@@ -190,6 +196,8 @@ type NATReport struct {
 	HasIPv6 bool
 	// STUNWorks is true if at least one STUN server answered recently.
 	STUNWorks bool
+	// Mapped is the public address the router forwards to us (UPnP / NAT-PMP), if any.
+	Mapped netip.AddrPort
 }
 
 // NAT returns the current NAT diagnosis.
@@ -199,6 +207,7 @@ func (c *Conn) NAT() NATReport {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	var rep NATReport
+	rep.Mapped = s.mapped
 	portsByIP := map[netip.Addr]map[uint16]bool{}
 	note := func(ap netip.AddrPort) {
 		ip := ap.Addr()
@@ -300,6 +309,9 @@ func (c *Conn) endpointLoop() {
 		s.local = addrs
 		s.mu.Unlock()
 		c.refreshEndpoints()
+		if changed && c.portmap != nil {
+			c.portmap.Poke() // a new network: look for its router now
+		}
 		if changed || force {
 			if changed {
 				// The network changed under us: existing mappings may be dead.
@@ -398,6 +410,9 @@ func (c *Conn) NetCheck() {
 	c.self.local = addrs
 	c.self.mu.Unlock()
 	c.refreshEndpoints()
+	if c.portmap != nil {
+		c.portmap.Poke()
+	}
 	go c.runSTUN()
 	for _, p := range c.allPeers() {
 		p.mu.Lock()

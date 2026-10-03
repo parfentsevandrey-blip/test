@@ -34,6 +34,7 @@ import (
 	"golang.org/x/crypto/nacl/box"
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
+	"github.com/parfentsevandrey-blip/test/svoi/internal/portmap"
 )
 
 // Source says where a candidate endpoint came from.
@@ -81,9 +82,10 @@ const (
 	EPLocal    EndpointKind = iota // an interface address
 	EPSTUN                         // learned from a STUN server
 	EPObserved                     // a member told us how it sees us
+	EPMapped                       // the router forwards this public address to us (UPnP / NAT-PMP)
 )
 
-func (k EndpointKind) String() string { return [...]string{"local", "stun", "observed"}[k] }
+func (k EndpointKind) String() string { return [...]string{"local", "stun", "observed", "mapped"}[k] }
 
 // Endpoint is one address other members may try to reach us at.
 type Endpoint struct {
@@ -150,6 +152,9 @@ type Config struct {
 	AllowRelay func() bool
 	// OnPath is called (from an internal goroutine) when a peer's path changes.
 	OnPath func(id identity.ID, info PathInfo)
+	// PortMap asks the router (UPnP IGD, NAT-PMP) to forward our UDP port, so that
+	// a device behind a home router is reachable from outside. Off by default.
+	PortMap bool
 	// OnEndpoints is called when our own endpoint list changes.
 	OnEndpoints func(eps []Endpoint)
 	// OnPeerEndpoints is called when a peer tells us where it can be reached.
@@ -179,6 +184,8 @@ type Conn struct {
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
 	closed atomic.Bool
+
+	portmap *portmap.Mapper // nil unless Config.PortMap
 
 	mu    sync.RWMutex
 	peers map[identity.ID]*peer
@@ -254,6 +261,9 @@ func New(cfg Config) (*Conn, error) {
 	c.self.local = local
 	c.self.lastEps = c.endpointsLocked(time.Now())
 
+	if cfg.PortMap { // before the loops start: they look at c.portmap
+		c.startPortMap()
+	}
 	c.wg.Add(2)
 	go c.readLoop()
 	go c.maintLoop()
@@ -271,6 +281,9 @@ func (c *Conn) Close() error {
 		return nil
 	}
 	c.cancel()
+	if c.portmap != nil {
+		c.portmap.Close() // takes the mapping off the router (bounded)
+	}
 	err := c.sock.Close()
 	c.wg.Wait()
 	return err

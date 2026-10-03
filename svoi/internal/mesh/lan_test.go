@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
+	"github.com/parfentsevandrey-blip/test/svoi/internal/magic"
 )
 
 func testKey(t *testing.T) [32]byte {
@@ -151,4 +152,16 @@ func hasNet(addrs []net.Addr, prefix string) bool {
 		}
 	}
 	return false
+}
+
+// A router that forwards a public address to us makes this device directly
+// reachable, whatever kind of NAT it is.
+func TestNATDifficultyWithAPortMapping(t *testing.T) {
+	mapped := netip.MustParseAddrPort("203.0.113.5:41710")
+	if got := natDifficulty(magic.NATReport{MappingVaries: true, Mapped: mapped}, nil); got != "open" {
+		t.Fatalf("a mapped device is reachable: %q", got)
+	}
+	if got := natDifficulty(magic.NATReport{MappingVaries: true}, nil); got != "hard" {
+		t.Fatalf("without a mapping a symmetric NAT stays hard: %q", got)
+	}
 }

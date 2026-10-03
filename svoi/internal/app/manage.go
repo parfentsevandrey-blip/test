@@ -28,6 +28,7 @@ type Settings struct {
 	STUNServers     []string      `json:"stunServers"`
 	UDPPort         int           `json:"udpPort"`
 	LAN             bool          `json:"lan"`
+	PortMap         bool          `json:"portMap"`
 	Socks           SocksSettings `json:"socks"`
 	TUN             TUNView       `json:"tun"`
 	RestartRequired bool          `json:"restartRequired"`
@@ -56,6 +57,7 @@ type SettingsPatch struct {
 	STUNServers     *[]string      `json:"stunServers"`
 	UDPPort         *int           `json:"udpPort"`
 	LAN             *bool          `json:"lan"`
+	PortMap         *bool          `json:"portMap"`
 	Socks           *SocksSettings `json:"socks"`
 	TUN             *TUNPatch      `json:"tun"`
 }
@@ -66,7 +68,7 @@ func (a *App) Settings() Settings {
 	s := Settings{
 		DownloadDir: c.DownloadDir, AutoAccept: c.AutoAccept, AutoAcceptMaxMB: c.AutoAcceptMaxMB,
 		Relay: c.Relay, STUNEnabled: c.STUNEnabled, STUNServers: c.STUNServers, UDPPort: c.UDPPort,
-		LAN: c.LAN, Socks: c.Socks,
+		LAN: c.LAN, PortMap: c.PortMap, Socks: c.Socks,
 		TUN: TUNView{Enabled: c.TUN.Enabled, ManageHosts: c.TUN.ManageHosts, Status: a.tun.Status()},
 	}
 	if s.STUNServers == nil {
@@ -120,6 +122,9 @@ func (a *App) UpdateSettings(p SettingsPatch, opts ...SettingsOption) (Settings,
 		}
 		if p.Relay != nil {
 			c.Relay = *p.Relay
+		}
+		if p.PortMap != nil {
+			c.PortMap = *p.PortMap
 		}
 		if p.STUNEnabled != nil {
 			c.STUNEnabled = *p.STUNEnabled
@@ -175,11 +180,12 @@ func (a *App) UpdateSettings(p SettingsPatch, opts ...SettingsOption) (Settings,
 	}
 	restartNet := before.STUNEnabled != after.STUNEnabled ||
 		strings.Join(before.STUNServers, ",") != strings.Join(after.STUNServers, ",") ||
-		before.UDPPort != after.UDPPort || before.LAN != after.LAN
+		before.UDPPort != after.UDPPort || before.LAN != after.LAN || before.PortMap != after.PortMap
 	if restartNet {
 		reconf := func() error {
 			return a.node.Reconfigure(func(mc *mesh.Config) {
 				mc.NoRelay = !after.Relay
+				mc.PortMap = after.PortMap
 				mc.UDPPort = after.UDPPort
 				mc.STUN = nil
 				if after.STUNEnabled {

@@ -37,7 +37,7 @@ func newEnv(t *testing.T) *env {
 	}
 	t.Cleanup(func() { a.Close() })
 	off := false
-	if _, err := a.UpdateSettings(app.SettingsPatch{STUNEnabled: &off}); err != nil {
+	if _, err := a.UpdateSettings(app.SettingsPatch{STUNEnabled: &off, PortMap: &off}); err != nil {
 		t.Fatal(err)
 	}
 	s := api.New(a, nil)
@@ -592,4 +592,53 @@ func TestCloseRightAfterServeIsSafe(t *testing.T) {
 			t.Fatal("the port is still listening after Close")
 		}
 	}
+}
+
+// Asking the router to forward our port is a setting (on by default, off here
+// for the tests) and shows up in the device's own description.
+func TestPortMapSettingAndStatus(t *testing.T) {
+	e := newEnv(t)
+	e.call("POST", "/api/mesh/create", `{"meshName":"M","deviceName":"pm-box"}`, nil)
+	var set struct{ PortMap bool }
+	if code := e.call("GET", "/api/settings", "", &set); code != 200 || set.PortMap {
+		t.Fatalf("settings: %d portMap=%v (the harness switched it off)", code, set.PortMap)
+	}
+	type self struct {
+		Self struct {
+			PortMap *struct{ State string } `json:"portmap"`
+		}
+	}
+	var st self
+	e.call("GET", "/api/state", "", &st)
+	if st.Self.PortMap != nil {
+		t.Fatalf("a switched-off port mapping must not be reported: %+v", st.Self.PortMap)
+	}
+	if code := e.call("PUT", "/api/settings", `{"portMap":true}`, &set); code != 200 || !set.PortMap {
+		t.Fatalf("enabling: %d %+v", code, set)
+	}
+	waitUntil(t, "the mapper to report a state", func() bool {
+		st = self{}
+		e.call("GET", "/api/state", "", &st)
+		return st.Self.PortMap != nil && st.Self.PortMap.State != ""
+	})
+	if code := e.call("PUT", "/api/settings", `{"portMap":false}`, &set); code != 200 || set.PortMap {
+		t.Fatalf("disabling: %d %+v", code, set)
+	}
+	waitUntil(t, "the report to go away", func() bool {
+		st = self{}
+		e.call("GET", "/api/state", "", &st)
+		return st.Self.PortMap == nil
+	})
+}
+
+func waitUntil(t *testing.T, what string, cond func() bool) {
+	t.Helper()
+	deadline := time.Now().Add(15 * time.Second)
+	for time.Now().Before(deadline) {
+		if cond() {
+			return
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	t.Fatalf("timed out waiting for %s", what)
 }

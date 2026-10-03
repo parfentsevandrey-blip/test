@@ -85,17 +85,31 @@ A browser tab that is hidden may drop the connection; that is fine.
   "ip4": "100.64.12.34", "ip6": "fd12:3456::1", "admin": true,
   "meshId": "k3j4h5g6f7d8", "meshName": "Home",
   "udpPort": 41710,
-  "endpoints": [ {"addr": "192.168.1.5:41710", "kind": "local"},
-                 {"addr": "203.0.113.5:41710", "kind": "observed"} ],   // local | stun | observed
+  "endpoints": [ {"addr": "203.0.113.5:41710", "kind": "mapped"},
+                 {"addr": "192.168.1.5:41710", "kind": "local"},
+                 {"addr": "203.0.113.5:41710", "kind": "observed"} ],   // mapped | local | stun | observed
   "nat": { "mappingVaries": false, "public": ["203.0.113.5:41710"], "hasIPv6": false,
            "stun": true,
            "difficulty": "easy" },        // open | easy | hard | unknown
   "version": "0.1.0", "os": "linux", "arch": "amd64", "started": 1760000000,
   "configured": true,
   "relay": true,                           // this device agrees to relay for others
-  "relayed": { "packets": 120, "bytes": 150000 }
+  "relayed": { "packets": 120, "bytes": 150000 },
+  "portmap": {                             // present only while the router port mapping is switched on
+    "state": "mapped",                     // searching | mapped | private | unavailable
+    "protocol": "upnp",                    // upnp | natpmp, once mapped
+    "external": "203.0.113.5:41710",       // the public address the router forwards to this device
+    "gateway": "192.168.1.1", "error": ""  // the router that answered; why not (diagnostics)
+  }
 }
 ```
+`portmap`: the device asks the home router (UPnP IGD, NAT-PMP) to forward its UDP port, so other
+devices can reach it directly without anybody opening a port by hand. `mapped` — done, `external` is
+offered to the others first (endpoint kind `mapped`, and `nat.difficulty` becomes `open`);
+`searching` — looking for a router; `unavailable` — no router answered (UPnP/NAT-PMP off or not
+supported: nothing breaks, hole punching and relaying still work; the node looks again later);
+`private` — the router's own address is not public (double NAT, carrier-grade NAT): a mapping would
+not help, so none is made. The mapping is removed when the node stops.
 `difficulty`: `open` = directly reachable, `easy` = hole punching works, `hard` = symmetric NAT
 (traffic will use a relay), `unknown` = not enough info yet.
 
@@ -212,6 +226,7 @@ never inject as HTML.
   "relay": true,                   // act as a relay for other members
   "stunEnabled": true, "stunServers": ["stun.l.google.com:19302"],
   "udpPort": 41710, "lan": true,
+  "portMap": true,                 // ask the home router to forward our UDP port (UPnP / NAT-PMP); see Self.portmap
   "socks": {"enabled": false, "listen": "127.0.0.1:1080"},
   "tun": { "enabled": false,       // create a virtual network interface (Linux, needs root / CAP_NET_ADMIN)
            "manageHosts": true,    // also add `<name>.svoi` lines to /etc/hosts

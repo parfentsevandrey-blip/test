@@ -104,7 +104,7 @@ func (p *proc) mustRun(args ...string) string {
 // start launches `svoi up` in the background and waits for its interface.
 func (p *proc) start(extra ...string) {
 	p.t.Helper()
-	args := append([]string{"up", "--no-browser", "--no-stun", "--loopback", "--ui", "127.0.0.1:0"}, extra...)
+	args := append([]string{"up", "--no-browser", "--no-stun", "--no-portmap", "--loopback", "--ui", "127.0.0.1:0"}, extra...)
 	c := p.command(args...)
 	var err error
 	if p.log, err = os.Create(filepath.Join(p.dir, "..", p.name+".log")); err != nil {

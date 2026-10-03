@@ -71,6 +71,8 @@ type Config struct {
 	STUN []string
 	// NoRelay stops this node from forwarding traffic for other members.
 	NoRelay bool
+	// PortMap asks the home router (UPnP / NAT-PMP) to forward our UDP port.
+	PortMap bool
 	Logger  *slog.Logger
 
 	// Platform overrides the reported "os/arch" (used by the demo to show a
@@ -467,6 +469,7 @@ func (n *Node) openMagic(port int, listen func(int) (net.PacketConn, error)) (*m
 		Listen:          listen,
 		LocalAddrs:      n.cfg.LocalAddrs,
 		STUN:            n.cfg.STUN,
+		PortMap:         n.cfg.PortMap,
 		SelfCert:        func() []byte { n.mu.RLock(); defer n.mu.RUnlock(); return n.self.CertDER },
 		AcceptUnknown:   n.acceptUnknown,
 		AllowRelay:      n.relayOn.Load,

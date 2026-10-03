@@ -106,6 +106,7 @@ func Open(opts Options) (*App, error) {
 		mc.STUN = c.STUNServers
 	}
 	mc.NoRelay = !c.Relay
+	mc.PortMap = c.PortMap
 	if !c.LAN {
 		mc.LANPort = -1
 	}

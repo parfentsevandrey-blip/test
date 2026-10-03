@@ -133,7 +133,7 @@ func Start(ctx context.Context, opts Options) (*Demo, error) {
 		}
 		off := false
 		dl := filepath.Join(opts.Dir, name, "Downloads")
-		if _, err := a.UpdateSettings(app.SettingsPatch{STUNEnabled: &off, DownloadDir: &dl}); err != nil {
+		if _, err := a.UpdateSettings(app.SettingsPatch{STUNEnabled: &off, PortMap: &off, DownloadDir: &dl}); err != nil {
 			d.Close()
 			return nil, err
 		}

@@ -44,6 +44,7 @@ type Config struct {
 	STUNServers     []string           `json:"stunServers"`
 	UDPPort         int                `json:"udpPort"`
 	LAN             bool               `json:"lan"`
+	PortMap         bool               `json:"portMap"` // ask the home router (UPnP / NAT-PMP) to forward our UDP port
 	Socks           SocksSettings      `json:"socks"`
 	TUN             TUNSettings        `json:"tun"`
 	Shares          []files.Share      `json:"shares"`
@@ -60,6 +61,7 @@ func defaultConfig(dataDir string) Config {
 		DownloadDir: dl,
 		AutoAccept:  "own",
 		Relay:       true,
+		PortMap:     true,
 		STUNEnabled: true,
 		STUNServers: append([]string(nil), DefaultSTUN...),
 		LAN:         true,
