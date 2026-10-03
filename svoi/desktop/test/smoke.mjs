@@ -41,6 +41,14 @@ async function step(name, fn) {
 
 const shot = async (name) => {
   if (!shotsDir || !page) return;
+  // the top of the page, with no key focus showing: what a person sees when the window opens
+  await page
+    .evaluate(() => {
+      for (const el of document.querySelectorAll('*')) if (el.scrollTop) el.scrollTop = 0;
+      window.scrollTo(0, 0);
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    })
+    .catch(() => {});
   await sleep(300);
   await page.screenshot({ path: path.join(shotsDir, name + '.png') }).catch(() => {});
 };
