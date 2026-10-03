@@ -236,6 +236,7 @@ try {
   for (const name of ['desktop.log', 'svoi.log']) {
     const f = path.join(dirs.userData, 'logs', name);
     if (fs.existsSync(f)) console.log(`--- ${name} (tail) ---\n` + fs.readFileSync(f, 'utf8').split('\n').slice(-25).join('\n'));
+    else console.log(`--- no ${name}: the app never got as far as writing it (profile: ${fs.existsSync(dirs.userData) ? fs.readdirSync(dirs.userData).join(', ') || 'empty' : 'not created'})`);
   }
 } finally {
   if (other) await other.stop().catch(() => {});

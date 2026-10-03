@@ -102,6 +102,32 @@ jobs:
             node test/smoke.mjs --shots ../../shots
           fi
 
+      - name: Windows - what the app does when started by hand (diagnostics for a failed test)
+        if: failure() && runner.os == 'Windows'
+        working-directory: svoi/desktop
+        shell: pwsh
+        run: |
+          $d = Join-Path $env:RUNNER_TEMP 'probe'
+          New-Item -ItemType Directory -Force $d | Out-Null
+          $env:SVOI_DESKTOP_TEST = '1'; $env:SVOI_DESKTOP_VERBOSE = '1'
+          $env:SVOI_DESKTOP_USERDATA = "$d\profile"; $env:SVOI_DIR = "$d\data"
+          $env:SVOI_CORE_ARGS = '["--no-stun","--no-portmap","--loopback"]'
+          $exe = (Resolve-Path 'dist\win-unpacked\Svoi.exe').Path
+          foreach ($mode in @('plain', 'inspect')) {
+            Write-Host "=== $mode"
+            $extra = @(); if ($mode -eq 'inspect') { $extra = @('--inspect=0', '--remote-debugging-port=0') }
+            $p = Start-Process -FilePath $exe -ArgumentList $extra -PassThru -RedirectStandardOutput "$d\out-$mode.txt" -RedirectStandardError "$d\err-$mode.txt"
+            Start-Sleep -Seconds 20
+            Write-Host "process alive: $(-not $p.HasExited)"
+            Write-Host '--- stdout'; Get-Content "$d\out-$mode.txt" -ErrorAction SilentlyContinue | Select-Object -First 30
+            Write-Host '--- stderr'; Get-Content "$d\err-$mode.txt" -ErrorAction SilentlyContinue | Select-Object -First 30
+            Write-Host '--- desktop.log'; Get-Content "$d\profile\logs\desktop.log" -ErrorAction SilentlyContinue | Select-Object -First 30
+            Get-Process | Where-Object { $_.ProcessName -like 'Svoi*' -or $_.ProcessName -like 'svoi*' } | Format-Table Id, ProcessName, MainWindowTitle -AutoSize | Out-String | Write-Host
+            Get-Process | Where-Object { $_.ProcessName -like 'Svoi*' -or $_.ProcessName -like 'svoi*' } | Stop-Process -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 2
+            Remove-Item -Recurse -Force "$d\profile", "$d\data" -ErrorAction SilentlyContinue
+          }
+
       - name: Windows - the installer installs, the installed app runs, the uninstaller removes it and keeps the keys
         if: runner.os == 'Windows'
         working-directory: svoi/desktop
