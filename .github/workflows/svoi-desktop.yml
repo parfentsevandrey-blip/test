@@ -72,7 +72,11 @@ jobs:
               CGO_ENABLED=1 go build -race -o "desktop/bin/$key/svoi$ext" ./cmd/svoi
               echo "built desktop/bin/$key/svoi$ext WITH THE RACE DETECTOR"
             else
-              CGO_ENABLED=0 GOOS=$goos GOARCH=$goarch go build -trimpath -ldflags "-s -w" -o "desktop/bin/$key/svoi$ext" ./cmd/svoi
+              flags="-s -w"
+              # the Go runtime of Windows Server 2025 / Windows 11 24H2 crashes now and then while it scans a
+              # stack (golang/go#76614, #77955): without asynchronous preemption it does not
+              [ "$goos" = windows ] && flags="$flags -X runtime.godebugDefault=asyncpreemptoff=1"
+              CGO_ENABLED=0 GOOS=$goos GOARCH=$goarch go build -trimpath -ldflags "$flags" -o "desktop/bin/$key/svoi$ext" ./cmd/svoi
               echo "built desktop/bin/$key/svoi$ext"
             fi
             first=0

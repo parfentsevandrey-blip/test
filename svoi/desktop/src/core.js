@@ -56,6 +56,18 @@ function readTrim(file) {
   }
 }
 
+/**
+ * The program's environment. On Windows 11 / Server 2025 the Go runtime crashes now and then while it scans a stack
+ * (golang/go#76614, #77955: a thread is preempted while it is inside the kernel); without asynchronous
+ * preemption it does not. (The program that ships with the app is built that way already; this covers one
+ * that was built without.)
+ */
+function coreEnv(dataDir, base = process.env, platform = process.platform) {
+  const env = { ...base, SVOI_DIR: dataDir };
+  if (platform === 'win32' && !/(^|,)asyncpreemptoff=/.test(env.GODEBUG || '')) env.GODEBUG = (env.GODEBUG ? env.GODEBUG + ',' : '') + 'asyncpreemptoff=1';
+  return env;
+}
+
 class Core extends EventEmitter {
   /**
    * @param {object} o
@@ -137,7 +149,7 @@ class Core extends EventEmitter {
     const out = fs.openSync(this.logFile, 'a');
     log.info('core: starting', this.binary, args.join(' '));
     // stdin is a pipe we keep open: when this app goes away, however it goes, the pipe closes and so does the node.
-    const child = spawn(this.binary, args, { stdio: ['pipe', out, out], windowsHide: true, env: { ...process.env, SVOI_DIR: this.dataDir } });
+    const child = spawn(this.binary, args, { stdio: ['pipe', out, out], windowsHide: true, env: coreEnv(this.dataDir) });
     fs.closeSync(out);
     this.child = child;
     this.exited = false;
@@ -224,4 +236,4 @@ class Core extends EventEmitter {
   }
 }
 
-module.exports = { Core, freePort, handshakeProof, verifyNode, DEFAULT_PORT };
+module.exports = { Core, coreEnv, freePort, handshakeProof, verifyNode, DEFAULT_PORT };

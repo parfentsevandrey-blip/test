@@ -9,6 +9,11 @@ LDFLAGS  := -s -w
 ifneq ($(VERSION),)
 LDFLAGS  += -X $(MODULE)/internal/mesh.Version=$(VERSION)
 endif
+# The Go runtime of Windows Server 2025 / Windows 11 24H2 (build 26100) crashes now and then while it scans a
+# goroutine's stack (golang/go#76614, #77955: the asynchronous preemption of a thread that is inside the kernel).
+# A Windows program is therefore built with it switched off; a program of this repository that is built some
+# other way gets the same by running with GODEBUG=asyncpreemptoff=1.
+WINLDFLAGS := $(LDFLAGS) -X runtime.godebugDefault=asyncpreemptoff=1
 
 # os/arch pairs built by `make dist`.
 PLATFORMS := linux/amd64 linux/arm64 linux/arm linux/riscv64 \
@@ -24,7 +29,7 @@ all: build
 
 # The single self-contained binary (the web interface is embedded in it).
 build:
-	$(GO) build -trimpath -ldflags "$(LDFLAGS)" -o svoi ./cmd/svoi
+	$(GO) build -trimpath -ldflags "$(if $(filter windows,$(shell $(GO) env GOOS)),$(WINLDFLAGS),$(LDFLAGS))" -o svoi ./cmd/svoi
 
 run: build
 	./svoi up
@@ -64,7 +69,8 @@ dist:
 		name=svoi-$$os-$$arch; \
 		echo "  $$name"; \
 		mkdir -p $(DIST)/$$name; \
-		GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags "$(LDFLAGS)" -o $(DIST)/$$name/svoi$$ext ./cmd/svoi; \
+		flags="$(LDFLAGS)"; [ $$os = windows ] && flags="$(WINLDFLAGS)"; \
+		GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags "$$flags" -o $(DIST)/$$name/svoi$$ext ./cmd/svoi; \
 		cp README.md $(DIST)/$$name/; \
 		case $$os in android|linux) [ $$arch = arm64 ] && cp docs/ANDROID.md $(DIST)/$$name/ || true ;; esac; \
 		sh deploy/start/guide.sh $$os $$arch $(DIST)/$$name; \

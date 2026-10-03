@@ -218,7 +218,7 @@ try {
     await quit(app);
     // a node of ours on the very data directory the app uses (what `svoi up` in a terminal would be)
     const log = fs.openSync(path.join(dirs.base, 'external-core.log'), 'a');
-    const ext = spawn(coreBinary(), ['up', '--no-browser', '--no-stun', '--no-portmap', '--loopback', '--ui', '127.0.0.1:0', '--exit-when-stdin-closes', '--dir', dirs.data], { stdio: ['pipe', log, log], windowsHide: true, env: { ...process.env, SVOI_DIR: dirs.data } });
+    const ext = spawn(coreBinary(), ['up', '--no-browser', '--no-stun', '--no-portmap', '--loopback', '--ui', '127.0.0.1:0', '--exit-when-stdin-closes', '--dir', dirs.data], { stdio: ['pipe', log, log], windowsHide: true, env: { ...process.env, SVOI_DIR: dirs.data, ...(process.platform === 'win32' ? { GODEBUG: 'asyncpreemptoff=1' } : {}) } });
     ext.stdin.on('error', () => {});
     let extEnd = 'still running';
     ext.on('exit', (code, signal) => {

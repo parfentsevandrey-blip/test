@@ -16,7 +16,7 @@ const { notificationFor, clip } = require('../src/notify.js');
 const { statusText } = require('../src/status.js');
 const { safeName, uniquePath } = require('../src/files.js');
 const { texts, ru, en } = require('../src/i18n.js');
-const { Core, freePort, handshakeProof, verifyNode } = require('../src/core.js');
+const { Core, coreEnv, freePort, handshakeProof, verifyNode } = require('../src/core.js');
 const log = require('../src/log.js');
 
 const key = `${process.platform === 'win32' ? 'win' : process.platform === 'darwin' ? 'mac' : 'linux'}-${process.arch}`;
@@ -299,4 +299,12 @@ test('an interrupted navigation is retried only a couple of times', async () => 
   }, links);
   await assert.rejects(mw.loadUI(), /ERR_ABORTED/);
   assert.equal(attempts, 3);
+});
+
+test('on Windows the program runs without asynchronous preemption (a Go runtime bug there); elsewhere nothing is added', () => {
+  assert.equal(coreEnv('D:\\data', {}, 'win32').GODEBUG, 'asyncpreemptoff=1');
+  assert.equal(coreEnv('D:\\data', { GODEBUG: 'http2client=0' }, 'win32').GODEBUG, 'http2client=0,asyncpreemptoff=1');
+  assert.equal(coreEnv('D:\\data', { GODEBUG: 'asyncpreemptoff=0' }, 'win32').GODEBUG, 'asyncpreemptoff=0', 'a choice made by the person is kept');
+  assert.equal(coreEnv('/data', {}, 'linux').GODEBUG, undefined);
+  assert.equal(coreEnv('/data', { A: '1' }, 'darwin').SVOI_DIR, '/data');
 });

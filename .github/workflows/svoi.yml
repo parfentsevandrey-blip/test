@@ -60,6 +60,9 @@ jobs:
           cache-dependency-path: svoi/go.sum
       - run: go vet ./...
       - run: go test ./... -count=1 -timeout 20m
+        env:
+          # (the Go runtime of Windows Server 2025 crashes now and then, golang/go#76614, #77955)
+          GODEBUG: ${{ runner.os == 'Windows' && 'asyncpreemptoff=1' || '' }}
 
   lab:
     # Real NAT behaviour: cone / symmetric NATs and firewalls built from network

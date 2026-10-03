@@ -50,7 +50,7 @@ export async function startNode(name, base) {
   const data = path.join(base, 'node-' + name);
   fs.mkdirSync(data, { recursive: true });
   const log = fs.openSync(path.join(base, `node-${name}.log`), 'a');
-  const child = spawn(coreBinary(), ['up', '--no-browser', '--no-stun', '--no-portmap', '--loopback', '--ui', '127.0.0.1:0', '--exit-when-stdin-closes', '--dir', data], { stdio: ['pipe', log, log], windowsHide: true, env: { ...process.env, SVOI_DIR: data } });
+  const child = spawn(coreBinary(), ['up', '--no-browser', '--no-stun', '--no-portmap', '--loopback', '--ui', '127.0.0.1:0', '--exit-when-stdin-closes', '--dir', data], { stdio: ['pipe', log, log], windowsHide: true, env: { ...process.env, SVOI_DIR: data, ...(process.platform === 'win32' ? { GODEBUG: 'asyncpreemptoff=1' } : {}) } });
   child.stdin.on('error', () => {});
   const node = { name, data, child };
   await waitFor(() => fs.existsSync(path.join(data, 'ui.addr')) && fs.existsSync(path.join(data, 'ui.token')), 20000, `node ${name} to start`);
