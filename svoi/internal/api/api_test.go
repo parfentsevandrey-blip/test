@@ -516,3 +516,49 @@ func TestThumbnailRefusesDecompressionBombs(t *testing.T) {
 		t.Fatalf("the bomb made the node allocate %d MB", grown>>20)
 	}
 }
+
+// The service worker names its cache after the interface it ships with, so a new
+// binary replaces what a browser kept instead of showing yesterday's files first.
+func TestServiceWorkerCacheFollowsTheInterface(t *testing.T) {
+	a, err := app.Open(app.Options{Dir: t.TempDir(), DeviceName: "sw-box"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer a.Close()
+	sw := `const VERSION = "svoi-ui-v1";
+self.addEventListener("install", () => {});`
+	version := func(files fstest.MapFS) string {
+		ts := httptest.NewServer(api.New(a, files).Handler())
+		defer ts.Close()
+		resp, err := http.Get(ts.URL + "/sw.js")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		b, _ := io.ReadAll(resp.Body)
+		if resp.StatusCode != 200 || !strings.Contains(resp.Header.Get("Content-Type"), "javascript") {
+			t.Fatalf("sw.js: %d %q", resp.StatusCode, resp.Header.Get("Content-Type"))
+		}
+		body := string(b)
+		i := strings.Index(body, `const VERSION = "svoi-ui-`)
+		if i < 0 || strings.Contains(body, `"svoi-ui-v1"`) || !strings.Contains(body, `self.addEventListener("install"`) {
+			t.Fatalf("the cache name was not tied to the interface:\n%s", body)
+		}
+		return body[i : i+len(`const VERSION = "svoi-ui-`)+12]
+	}
+	v1 := version(fstest.MapFS{"index.html": {Data: []byte("a")}, "js/app.js": {Data: []byte("one")}, "sw.js": {Data: []byte(sw)}})
+	same := version(fstest.MapFS{"sw.js": {Data: []byte(sw)}, "js/app.js": {Data: []byte("one")}, "index.html": {Data: []byte("a")}})
+	changed := version(fstest.MapFS{"index.html": {Data: []byte("a")}, "js/app.js": {Data: []byte("two")}, "sw.js": {Data: []byte(sw)}})
+	if v1 != same {
+		t.Fatalf("the same interface got two versions: %q %q", v1, same)
+	}
+	if v1 == changed {
+		t.Fatal("a changed interface kept its cache name")
+	}
+	// Without a service worker there is simply nothing to serve.
+	ts := httptest.NewServer(api.New(a, fstest.MapFS{"index.html": {Data: []byte("a")}}).Handler())
+	defer ts.Close()
+	if resp, _ := http.Get(ts.URL + "/sw.js"); resp.StatusCode != 404 {
+		t.Fatalf("sw.js when there is none: %d", resp.StatusCode)
+	}
+}

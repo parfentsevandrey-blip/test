@@ -30,6 +30,8 @@ jobs:
       - name: gofmt
         run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
       - run: go vet ./...
+      - name: vet the real-NAT lab harness (it only builds with its tag)
+        run: go vet -tags lab ./lab
       - name: tests (race detector)
         run: go test ./... -race -count=1 -timeout 15m
       - name: every release platform compiles

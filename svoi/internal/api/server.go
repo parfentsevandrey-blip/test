@@ -4,15 +4,19 @@ package api
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"crypto/subtle"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/fs"
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/app"
@@ -25,6 +29,8 @@ type Server struct {
 	app      *app.App
 	mux      *http.ServeMux
 	ui       fs.FS
+	uiOnce   sync.Once
+	uiVer    string
 	sess     *sessions
 	loopback bool // listening on a loopback address only
 	srv      *http.Server
@@ -213,6 +219,44 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	s.serveUI(w, r)
 }
 
+// uiVersion identifies the embedded interface: a hash over its files. The
+// service worker's cache is named after it, so a new binary that brings a new
+// interface replaces what the browser kept instead of being shown yesterday's
+// files first.
+func (s *Server) uiVersion() string {
+	s.uiOnce.Do(func() {
+		h := sha256.New()
+		_ = fs.WalkDir(s.ui, ".", func(p string, d fs.DirEntry, err error) error {
+			if err != nil || d.IsDir() || p == "sw.js" {
+				return nil
+			}
+			b, _ := fs.ReadFile(s.ui, p)
+			h.Write([]byte(p))
+			h.Write([]byte{0})
+			h.Write(b)
+			h.Write([]byte{0})
+			return nil
+		})
+		s.uiVer = hex.EncodeToString(h.Sum(nil))[:12]
+	})
+	return s.uiVer
+}
+
+var swVersionRe = regexp.MustCompile(`const VERSION = "[^"\n]*";`)
+
+// serveServiceWorker serves sw.js with its cache name tied to the interface
+// version (see uiVersion).
+func (s *Server) serveServiceWorker(w http.ResponseWriter, r *http.Request) {
+	data, err := fs.ReadFile(s.ui, "sw.js")
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	data = swVersionRe.ReplaceAll(data, []byte(`const VERSION = "svoi-ui-`+s.uiVersion()+`";`))
+	w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+	http.ServeContent(w, r, "sw.js", time.Time{}, bytes.NewReader(data))
+}
+
 // serveUI serves the embedded single-page app.
 func (s *Server) serveUI(w http.ResponseWriter, r *http.Request) {
 	if s.ui == nil {
@@ -225,6 +269,10 @@ func (s *Server) serveUI(w http.ResponseWriter, r *http.Request) {
 	}
 	p := strings.TrimPrefix(r.URL.Path, "/")
 	w.Header().Set("Cache-Control", "no-cache")
+	if p == "sw.js" {
+		s.serveServiceWorker(w, r)
+		return
+	}
 	if p == "" || p == "index.html" {
 		// http.FileServer redirects every request for index.html to "./", which
 		// would loop for "/", so the entry page is served directly.

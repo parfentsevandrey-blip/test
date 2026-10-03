@@ -1,9 +1,12 @@
 # systemd unit for a headless device (home server, NAS).
 #
+#   sudo useradd --system --home-dir /var/lib/svoi --no-create-home --shell /usr/sbin/nologin svoi
+#       (the home directory is where received files go by default: ~/Downloads/Svoi)
 #   sudo install -m755 svoi /usr/local/bin/svoi
 #   sudo install -m644 deploy/svoi.service /etc/systemd/system/svoi.service
 #   sudo systemctl daemon-reload && sudo systemctl enable --now svoi
-#   sudo journalctl -u svoi -f          # prints the one-time address of the web interface
+#   sudo journalctl -u svoi -f          # prints a one-time address of the web interface (valid 10 minutes)
+#   sudo -u svoi svoi url --dir /var/lib/svoi    # ... or mints a fresh one later (needs the token, so: as that user)
 #
 # The web interface listens on 127.0.0.1:8777 only; manage this device from
 # another member's interface ("Manage device"), or through an SSH tunnel.
