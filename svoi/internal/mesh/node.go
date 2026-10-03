@@ -1,0 +1,1086 @@
+// Package mesh turns the magic UDP layer into a private network of devices:
+// authenticated QUIC links between every pair of members, a stream RPC for
+// applications, membership gossip and the join handshake. It is the part that
+// replaces Tailscale's coordination server - every member holds the full
+// membership list and members introduce each other.
+package mesh
+
+import (
+	"bytes"
+	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
+	"fmt"
+	"io"
+	"log/slog"
+	"math/rand"
+	"net"
+	"net/netip"
+	"os"
+	"path/filepath"
+	"runtime"
+	"sort"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+
+	"github.com/quic-go/quic-go"
+
+	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
+	"github.com/parfentsevandrey-blip/test/svoi/internal/magic"
+)
+
+// Version of the application, reported to peers.
+const Version = "0.1.0"
+
+// ALPN protocol names.
+const (
+	ALPNMesh = "svoi/1"
+	ALPNJoin = "svoi-join/1"
+)
+
+// QUIC application error codes used when closing connections.
+const (
+	closeNormal    quic.ApplicationErrorCode = 0
+	closeDuplicate quic.ApplicationErrorCode = 0x10
+	closeRevoked   quic.ApplicationErrorCode = 0x11
+	closeShutdown  quic.ApplicationErrorCode = 0x12
+	closeBadALPN   quic.ApplicationErrorCode = 0x13
+)
+
+// ErrNotConfigured is returned by operations that need a mesh.
+var ErrNotConfigured = errors.New("mesh: this device is not part of a mesh yet")
+
+// ErrNotAdmin is returned when a non-admin attempts an admin operation.
+var ErrNotAdmin = errors.New("mesh: only an admin device can do this")
+
+// Config configures a Node.
+type Config struct {
+	// Dir holds device.key, mesh.json and application data. Required.
+	Dir string
+	// DeviceName / Owner are defaults for CreateMesh and JoinMesh.
+	DeviceName string
+	Owner      string
+	// UDPPort is the preferred UDP port (0 = pick and remember).
+	UDPPort int
+	// STUN servers; empty disables STUN.
+	STUN []string
+	// NoRelay stops this node from forwarding traffic for other members.
+	NoRelay bool
+	Logger  *slog.Logger
+
+	// Test and simulation hooks.
+	Listen     func(port int) (net.PacketConn, error)
+	LocalAddrs func() []netip.Addr
+	Timing     magic.Timing
+	// LANPort is the UDP port for LAN beacons (0 = default, <0 disables).
+	LANPort int
+	// Timers (zero = default).
+	SyncEvery   time.Duration
+	ConnectTick time.Duration
+	PassiveWait time.Duration
+	DialTimeout time.Duration
+}
+
+func (c *Config) fill() {
+	if c.Logger == nil {
+		c.Logger = slog.New(slog.NewTextHandler(io.Discard, nil))
+	}
+	if c.SyncEvery == 0 {
+		c.SyncEvery = 45 * time.Second
+	}
+	if c.ConnectTick == 0 {
+		c.ConnectTick = 500 * time.Millisecond
+	}
+	if c.PassiveWait == 0 {
+		c.PassiveWait = 6 * time.Second
+	}
+	if c.DialTimeout == 0 {
+		c.DialTimeout = 20 * time.Second
+	}
+	if c.DeviceName == "" {
+		h, _ := os.Hostname()
+		c.DeviceName = h
+	}
+}
+
+// EventKind classifies node events.
+type EventKind string
+
+// Event kinds.
+const (
+	EvPeer    EventKind = "peer"    // a peer's state or info changed
+	EvMembers EventKind = "members" // the member list changed
+	EvSelf    EventKind = "self"    // own endpoints / NAT info changed
+)
+
+// Event is published on the node's event bus.
+type Event struct {
+	Kind EventKind
+	Peer identity.ID
+}
+
+// Node is one device's membership in a mesh.
+type Node struct {
+	cfg Config
+	log *slog.Logger
+	dev *identity.Device
+
+	mu       sync.RWMutex
+	root     *identity.Root
+	auth     *identity.Authority
+	self     *identity.Member
+	meshName string
+	peers    map[identity.ID]*Peer
+	revoked  map[identity.ID]identity.Revocation
+	invites  map[[8]byte]*invite
+
+	// Networking; nil while not configured.
+	magic   *magic.Conn
+	tr      *quic.Transport
+	ln      *quic.Listener
+	tlsCert tls.Certificate
+	udpPort int
+	started time.Time
+	ctx     context.Context
+	cancel  context.CancelFunc
+	wg      sync.WaitGroup
+	lan     *lanDiscovery
+
+	hmu            sync.RWMutex
+	handlers       map[string]handlerEntry
+	dgram          map[byte]DatagramHandler
+	helloProviders map[string]func() any
+
+	saveMu    sync.Mutex
+	saveTimer *time.Timer
+
+	busMu sync.Mutex
+	subs  map[int]chan Event
+	subID int
+
+	kickDial   chan struct{}
+	joinGate   tokenGate
+	joinActive atomic.Int32
+}
+
+// Open loads (or creates) the device identity and, if the device already
+// belongs to a mesh, brings the network up.
+func Open(cfg Config) (*Node, error) {
+	cfg.fill()
+	if cfg.Dir == "" {
+		return nil, errors.New("mesh: Config.Dir is required")
+	}
+	if err := os.MkdirAll(cfg.Dir, 0o700); err != nil {
+		return nil, err
+	}
+	dev, _, err := identity.LoadOrCreateDevice(filepath.Join(cfg.Dir, "device.key"))
+	if err != nil {
+		return nil, err
+	}
+	n := &Node{
+		cfg:            cfg,
+		log:            cfg.Logger,
+		dev:            dev,
+		peers:          map[identity.ID]*Peer{},
+		revoked:        map[identity.ID]identity.Revocation{},
+		invites:        map[[8]byte]*invite{},
+		handlers:       map[string]handlerEntry{},
+		dgram:          map[byte]DatagramHandler{},
+		helloProviders: map[string]func() any{},
+		subs:           map[int]chan Event{},
+		kickDial:       make(chan struct{}, 1),
+		joinGate:       newTokenGate(3, 6),
+	}
+	n.registerCoreHandlers()
+	if err := n.loadState(); err != nil {
+		return nil, err
+	}
+	if n.root != nil {
+		if err := n.startMember(); err != nil {
+			return nil, err
+		}
+	}
+	return n, nil
+}
+
+// ID returns this device's identity.
+func (n *Node) ID() identity.ID { return n.dev.ID }
+
+// Device returns the device key (for application-level signing).
+func (n *Node) Device() *identity.Device { return n.dev }
+
+// Dir returns the state directory.
+func (n *Node) Dir() string { return n.cfg.Dir }
+
+// Logger returns the node's logger.
+func (n *Node) Logger() *slog.Logger { return n.log }
+
+// Configured reports whether the device belongs to a mesh.
+func (n *Node) Configured() bool {
+	n.mu.RLock()
+	defer n.mu.RUnlock()
+	return n.root != nil
+}
+
+// IsAdmin reports whether this device holds the mesh authority.
+func (n *Node) IsAdmin() bool {
+	n.mu.RLock()
+	defer n.mu.RUnlock()
+	return n.auth != nil
+}
+
+// Root returns the mesh root (nil if not configured).
+func (n *Node) Root() *identity.Root {
+	n.mu.RLock()
+	defer n.mu.RUnlock()
+	return n.root
+}
+
+// Magic exposes the UDP layer for diagnostics.
+func (n *Node) Magic() *magic.Conn {
+	n.mu.RLock()
+	defer n.mu.RUnlock()
+	return n.magic
+}
+
+// CreateMesh founds a new mesh with this device as its first admin.
+func (n *Node) CreateMesh(meshName, deviceName, owner string) error {
+	n.mu.Lock()
+	if n.root != nil {
+		n.mu.Unlock()
+		return errors.New("mesh: already part of a mesh; leave it first")
+	}
+	if deviceName == "" {
+		deviceName = n.cfg.DeviceName
+	}
+	if owner == "" {
+		owner = n.cfg.Owner
+	}
+	auth, err := identity.NewAuthority(meshName)
+	if err != nil {
+		n.mu.Unlock()
+		return err
+	}
+	self, err := auth.Issue(identity.IssueRequest{ID: n.dev.ID, Name: deviceName, Owner: owner, Admin: true}, nil)
+	if err != nil {
+		n.mu.Unlock()
+		return err
+	}
+	n.auth, n.root, n.self, n.meshName = auth, auth.Root, self, strings.TrimSpace(meshName)
+	if n.meshName == "" {
+		n.meshName = "mesh"
+	}
+	n.mu.Unlock()
+	if err := n.saveState(); err != nil {
+		return err
+	}
+	return n.startMember()
+}
+
+// Leave removes this device from the mesh (locally) and stops the network.
+// The device key is kept, so the device can join again with a new invite.
+func (n *Node) Leave() error {
+	n.stopNetwork()
+	n.mu.Lock()
+	n.root, n.auth, n.self, n.meshName = nil, nil, nil, ""
+	n.peers = map[identity.ID]*Peer{}
+	n.revoked = map[identity.ID]identity.Revocation{}
+	n.invites = map[[8]byte]*invite{}
+	n.mu.Unlock()
+	if err := os.Remove(n.statePath()); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	n.emit(Event{Kind: EvMembers})
+	return nil
+}
+
+// Close shuts the node down.
+func (n *Node) Close() error {
+	n.saveMu.Lock()
+	if n.saveTimer != nil {
+		n.saveTimer.Stop()
+		n.saveTimer = nil
+	}
+	n.saveMu.Unlock()
+	_ = n.saveState()
+	n.stopNetwork()
+	return nil
+}
+
+// ---- lifecycle of the network part ----
+
+func (n *Node) udpPortOrDefault() int {
+	if n.cfg.UDPPort != 0 {
+		return n.cfg.UDPPort
+	}
+	// Remember the port we got last time so port forwards keep working.
+	if b, err := os.ReadFile(filepath.Join(n.cfg.Dir, "udp.port")); err == nil {
+		var p int
+		if _, err := fmt.Sscanf(strings.TrimSpace(string(b)), "%d", &p); err == nil && p > 0 && p < 65536 {
+			return p
+		}
+	}
+	return 41710
+}
+
+func (n *Node) startMember() error {
+	n.mu.Lock()
+	if n.magic != nil {
+		n.mu.Unlock()
+		return nil
+	}
+	self := n.self
+	n.tlsCert = tls.Certificate{Certificate: [][]byte{self.CertDER}, PrivateKey: n.dev.Priv}
+	n.ctx, n.cancel = context.WithCancel(context.Background())
+	ctx := n.ctx
+	n.started = time.Now()
+	n.mu.Unlock()
+
+	listen := n.cfg.Listen
+	port := n.udpPortOrDefault()
+	mg, err := n.openMagic(port, listen)
+	if err != nil && n.cfg.UDPPort == 0 && port != 0 {
+		n.log.Warn("preferred UDP port is busy, picking another", "port", port, "err", err)
+		mg, err = n.openMagic(0, listen)
+	}
+	if err != nil {
+		n.cancel()
+		return err
+	}
+	n.udpPort = mg.Port()
+	_ = os.WriteFile(filepath.Join(n.cfg.Dir, "udp.port"), []byte(fmt.Sprintf("%d\n", n.udpPort)), 0o600)
+
+	tr := &quic.Transport{Conn: mg}
+	ln, err := tr.Listen(n.serverTLS(), n.quicConf())
+	if err != nil {
+		_ = tr.Close()
+		_ = mg.Close()
+		n.cancel()
+		return err
+	}
+	n.mu.Lock()
+	n.magic, n.tr, n.ln = mg, tr, ln
+	peers := make([]*Peer, 0, len(n.peers))
+	for _, p := range n.peers {
+		peers = append(peers, p)
+	}
+	n.mu.Unlock()
+
+	for _, p := range peers {
+		if err := mg.AddPeer(p.ID); err != nil {
+			n.log.Warn("cannot register peer", "peer", p.ID.Short(), "err", err)
+			continue
+		}
+		var eps []netip.AddrPort
+		for _, s := range p.storedEndpoints {
+			if ap, err := netip.ParseAddrPort(s); err == nil {
+				eps = append(eps, ap)
+			}
+		}
+		mg.AddCandidates(p.ID, eps, magic.SrcStored)
+	}
+	n.updateAnonymous()
+
+	n.wg.Add(3)
+	go n.acceptLoop(ctx, ln)
+	go n.dialLoop(ctx)
+	go n.housekeepingLoop(ctx)
+	if n.cfg.LANPort >= 0 {
+		n.startLAN(ctx)
+	}
+	n.log.Info("mesh network started", "name", self.Name, "udp", n.udpPort, "peers", len(peers))
+	n.emit(Event{Kind: EvMembers})
+	return nil
+}
+
+func (n *Node) openMagic(port int, listen func(int) (net.PacketConn, error)) (*magic.Conn, error) {
+	allowRelay := !n.cfg.NoRelay
+	return magic.New(magic.Config{
+		Device:          n.dev,
+		Port:            port,
+		Listen:          listen,
+		LocalAddrs:      n.cfg.LocalAddrs,
+		STUN:            n.cfg.STUN,
+		SelfCert:        func() []byte { n.mu.RLock(); defer n.mu.RUnlock(); return n.self.CertDER },
+		AcceptUnknown:   n.acceptUnknown,
+		AllowRelay:      func() bool { return allowRelay },
+		OnPath:          n.onPath,
+		OnEndpoints:     func([]magic.Endpoint) { n.emit(Event{Kind: EvSelf}) },
+		OnPeerEndpoints: func(identity.ID, []netip.AddrPort) {},
+		Logf:            func(f string, a ...any) { n.log.Debug(fmt.Sprintf(f, a...)) },
+		Timing:          n.cfg.Timing,
+	})
+}
+
+func (n *Node) stopNetwork() {
+	n.mu.Lock()
+	cancel, mg, tr, ln, lan := n.cancel, n.magic, n.tr, n.ln, n.lan
+	peers := make([]*Peer, 0, len(n.peers))
+	for _, p := range n.peers {
+		peers = append(peers, p)
+	}
+	n.magic, n.tr, n.ln, n.lan, n.cancel = nil, nil, nil, nil, nil
+	n.mu.Unlock()
+	if cancel == nil {
+		return
+	}
+	cancel()
+	if lan != nil {
+		lan.stop()
+	}
+	for _, p := range peers {
+		if c := p.currentConn(); c != nil {
+			_ = c.CloseWithError(closeShutdown, "shutting down")
+		}
+	}
+	if ln != nil {
+		_ = ln.Close()
+	}
+	if tr != nil {
+		_ = tr.Close()
+	}
+	if mg != nil {
+		_ = mg.Close()
+	}
+	n.wg.Wait()
+}
+
+// ---- TLS / QUIC configuration ----
+
+func (n *Node) quicConf() *quic.Config {
+	return &quic.Config{
+		HandshakeIdleTimeout:           12 * time.Second,
+		MaxIdleTimeout:                 40 * time.Second,
+		KeepAlivePeriod:                12 * time.Second,
+		MaxIncomingStreams:             512,
+		MaxIncomingUniStreams:          16,
+		EnableDatagrams:                true,
+		InitialStreamReceiveWindow:     1 << 20,
+		MaxStreamReceiveWindow:         16 << 20,
+		InitialConnectionReceiveWindow: 4 << 20,
+		MaxConnectionReceiveWindow:     64 << 20,
+	}
+}
+
+// verifyLeaf validates a presented member certificate against the mesh root and
+// the revocation list.
+func (n *Node) verifyLeaf(der []byte) (*identity.Member, error) {
+	n.mu.RLock()
+	root := n.root
+	n.mu.RUnlock()
+	if root == nil {
+		return nil, ErrNotConfigured
+	}
+	m, err := root.Verify(der)
+	if err != nil {
+		return nil, err
+	}
+	n.mu.RLock()
+	_, revoked := n.revoked[m.ID]
+	n.mu.RUnlock()
+	if revoked {
+		return nil, errors.New("mesh: device has been revoked")
+	}
+	return m, nil
+}
+
+func (n *Node) serverTLS() *tls.Config {
+	mesh := &tls.Config{
+		MinVersion:   tls.VersionTLS13,
+		Certificates: []tls.Certificate{n.tlsCert},
+		ClientAuth:   tls.RequireAnyClientCert,
+		NextProtos:   []string{ALPNMesh},
+		VerifyPeerCertificate: func(raw [][]byte, _ [][]*x509.Certificate) error {
+			if len(raw) == 0 {
+				return errors.New("no client certificate")
+			}
+			_, err := n.verifyLeaf(raw[0])
+			return err
+		},
+	}
+	join := &tls.Config{
+		MinVersion:   tls.VersionTLS13,
+		Certificates: []tls.Certificate{n.tlsCert},
+		ClientAuth:   tls.RequireAnyClientCert, // self-signed: the invite secret authenticates the joiner
+		NextProtos:   []string{ALPNJoin},
+	}
+	return &tls.Config{
+		MinVersion:   tls.VersionTLS13,
+		Certificates: []tls.Certificate{n.tlsCert},
+		NextProtos:   []string{ALPNMesh, ALPNJoin},
+		GetConfigForClient: func(chi *tls.ClientHelloInfo) (*tls.Config, error) {
+			for _, p := range chi.SupportedProtos {
+				if p == ALPNJoin {
+					if !n.joinOpen() || !n.joinGate.allow() {
+						return nil, errors.New("not accepting new devices")
+					}
+					return join, nil
+				}
+			}
+			return mesh, nil
+		},
+	}
+}
+
+func (n *Node) clientTLS(expect identity.ID) *tls.Config {
+	return &tls.Config{
+		MinVersion: tls.VersionTLS13,
+		ServerName: "svoi",
+		// The certificate is verified below against the mesh root and the expected
+		// device; the standard web PKI checks do not apply to this network.
+		InsecureSkipVerify: true,
+		Certificates:       []tls.Certificate{n.tlsCert},
+		NextProtos:         []string{ALPNMesh},
+		VerifyPeerCertificate: func(raw [][]byte, _ [][]*x509.Certificate) error {
+			if len(raw) == 0 {
+				return errors.New("no server certificate")
+			}
+			m, err := n.verifyLeaf(raw[0])
+			if err != nil {
+				return err
+			}
+			if m.ID != expect {
+				return fmt.Errorf("connected to %s but expected %s", m.ID.Short(), expect.Short())
+			}
+			return nil
+		},
+	}
+}
+
+// ---- accepting and dialing ----
+
+func (n *Node) acceptLoop(ctx context.Context, ln *quic.Listener) {
+	defer n.wg.Done()
+	for {
+		conn, err := ln.Accept(ctx)
+		if err != nil {
+			if ctx.Err() != nil {
+				return
+			}
+			n.log.Debug("accept failed", "err", err)
+			select {
+			case <-time.After(100 * time.Millisecond):
+			case <-ctx.Done():
+				return
+			}
+			continue
+		}
+		go n.handleIncoming(conn)
+	}
+}
+
+func (n *Node) handleIncoming(conn *quic.Conn) {
+	cs := conn.ConnectionState().TLS
+	switch cs.NegotiatedProtocol {
+	case ALPNJoin:
+		n.handleJoin(conn)
+	case ALPNMesh:
+		if len(cs.PeerCertificates) == 0 {
+			_ = conn.CloseWithError(closeBadALPN, "no certificate")
+			return
+		}
+		m, err := n.verifyLeaf(cs.PeerCertificates[0].Raw)
+		if err != nil {
+			_ = conn.CloseWithError(closeRevoked, err.Error())
+			return
+		}
+		p := n.learnMember(m)
+		if p == nil {
+			_ = conn.CloseWithError(closeRevoked, "unknown member")
+			return
+		}
+		n.attach(p, conn, false)
+	default:
+		_ = conn.CloseWithError(closeBadALPN, "unsupported protocol")
+	}
+}
+
+func (n *Node) dialLoop(ctx context.Context) {
+	defer n.wg.Done()
+	t := time.NewTicker(n.cfg.ConnectTick)
+	defer t.Stop()
+	for {
+		select {
+		case <-t.C:
+		case <-n.kickDial:
+		case <-ctx.Done():
+			return
+		}
+		for _, p := range n.peerList() {
+			n.maybeDial(p)
+		}
+	}
+}
+
+func (n *Node) kick() {
+	select {
+	case n.kickDial <- struct{}{}:
+	default:
+	}
+}
+
+func (n *Node) maybeDial(p *Peer) {
+	now := time.Now()
+	p.mu.Lock()
+	if p.conn != nil || p.dialing || now.Before(p.nextDial) {
+		p.mu.Unlock()
+		return
+	}
+	if p.wantSince.IsZero() {
+		p.wantSince = now
+	}
+	designated := bytes.Compare(n.dev.ID[:], p.ID[:]) < 0
+	if !designated && now.Sub(p.wantSince) < n.cfg.PassiveWait {
+		p.mu.Unlock()
+		if mg := n.Magic(); mg != nil {
+			mg.Poke(p.ID) // keep probing so the other side's dial can get through
+		}
+		return
+	}
+	p.dialing = true
+	p.mu.Unlock()
+	go n.dial(p)
+}
+
+func (n *Node) dial(p *Peer) {
+	n.mu.RLock()
+	mg, tr, ctx := n.magic, n.tr, n.ctx
+	n.mu.RUnlock()
+	if mg == nil || tr == nil {
+		return
+	}
+	dctx, cancel := context.WithTimeout(ctx, n.cfg.DialTimeout)
+	p.mu.Lock()
+	p.cancelDial = cancel
+	p.mu.Unlock()
+	defer cancel()
+
+	mg.Poke(p.ID)
+	vaddr, ok := mg.VirtualAddr(p.ID)
+	if !ok {
+		p.mu.Lock()
+		p.dialing = false
+		p.mu.Unlock()
+		return
+	}
+	conn, err := tr.Dial(dctx, vaddr, n.clientTLS(p.ID), n.quicConf())
+	p.mu.Lock()
+	p.dialing = false
+	p.cancelDial = nil
+	if err != nil {
+		p.failures++
+		backoff := time.Second << min(p.failures, 6)
+		if backoff > 60*time.Second {
+			backoff = 60 * time.Second
+		}
+		backoff += time.Duration(rand.Int63n(int64(backoff) / 4))
+		if p.restartDial {
+			p.restartDial = false
+			backoff = 0
+		}
+		p.nextDial = time.Now().Add(backoff)
+		p.lastErr = err.Error()
+		p.mu.Unlock()
+		n.log.Debug("dial failed", "peer", p.Name(), "err", err)
+		if backoff == 0 {
+			n.kick()
+		}
+		return
+	}
+	p.lastErr = ""
+	p.mu.Unlock()
+	n.attach(p, conn, true)
+}
+
+func minID(a, b identity.ID) identity.ID {
+	if bytes.Compare(a[:], b[:]) < 0 {
+		return a
+	}
+	return b
+}
+
+// attach installs conn as the peer's link, resolving simultaneous dials: the
+// connection initiated by the device with the lower ID wins on both ends.
+func (n *Node) attach(p *Peer, conn *quic.Conn, outbound bool) {
+	dialer := p.ID
+	if outbound {
+		dialer = n.dev.ID
+	}
+	p.mu.Lock()
+	old := p.conn
+	if old != nil {
+		keepNew := p.connDialer == dialer || dialer == minID(n.dev.ID, p.ID)
+		if !keepNew {
+			p.mu.Unlock()
+			_ = conn.CloseWithError(closeDuplicate, "duplicate connection")
+			return
+		}
+	}
+	p.conn = conn
+	p.connDialer = dialer
+	p.connectedAt = time.Now()
+	p.failures = 0
+	p.wantSince = time.Time{}
+	p.lastSeen.Store(time.Now().Unix())
+	p.mu.Unlock()
+	if old != nil {
+		_ = old.CloseWithError(closeDuplicate, "superseded")
+	}
+	n.log.Info("peer connected", "peer", p.Name(), "outbound", outbound)
+	go n.serveConn(p, conn)
+	go n.serveDatagrams(p, conn)
+	go func() {
+		<-conn.Context().Done()
+		n.detach(p, conn)
+	}()
+	n.emit(Event{Kind: EvPeer, Peer: p.ID})
+	go n.syncWith(p)
+}
+
+func (n *Node) detach(p *Peer, conn *quic.Conn) {
+	p.mu.Lock()
+	if p.conn != conn {
+		p.mu.Unlock()
+		return
+	}
+	p.conn = nil
+	p.lastSeen.Store(time.Now().Unix())
+	p.nextDial = time.Now().Add(time.Second)
+	p.wantSince = time.Now()
+	p.mu.Unlock()
+	n.log.Info("peer disconnected", "peer", p.Name())
+	n.emit(Event{Kind: EvPeer, Peer: p.ID})
+	n.saveSoon()
+}
+
+// onPath is called by magic when the path to a peer changes.
+func (n *Node) onPath(id identity.ID, info magic.PathInfo) {
+	p := n.Peer(id)
+	if p == nil {
+		return
+	}
+	p.mu.Lock()
+	p.path = info
+	reachable := info.Kind != magic.PathNone
+	if reachable && p.conn == nil {
+		// A path just appeared: dial now instead of waiting out a backoff or
+		// the remainder of a handshake that was running into the void.
+		p.nextDial = time.Now()
+		if p.dialing && p.cancelDial != nil {
+			p.restartDial = true
+			p.cancelDial()
+		}
+	}
+	p.mu.Unlock()
+	n.emit(Event{Kind: EvPeer, Peer: id})
+	if reachable {
+		n.kick()
+	}
+}
+
+// acceptUnknown is magic's callback for a sender it has not met: accept it if
+// it carries a valid certificate for this mesh.
+func (n *Node) acceptUnknown(id identity.ID, cert []byte) bool {
+	m, err := n.verifyLeaf(cert)
+	if err != nil || m.ID != id {
+		return false
+	}
+	return n.learnMember(m) != nil
+}
+
+// housekeepingLoop does periodic chores: syncing with peers, expiring invites.
+func (n *Node) housekeepingLoop(ctx context.Context) {
+	defer n.wg.Done()
+	t := time.NewTicker(n.cfg.SyncEvery)
+	defer t.Stop()
+	for {
+		select {
+		case <-t.C:
+			n.expireInvites()
+			for _, p := range n.peerList() {
+				if p.Online() {
+					go n.syncWith(p)
+				}
+			}
+			n.saveSoon()
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+// ---- membership ----
+
+func (n *Node) peerList() []*Peer {
+	n.mu.RLock()
+	defer n.mu.RUnlock()
+	out := make([]*Peer, 0, len(n.peers))
+	for _, p := range n.peers {
+		out = append(out, p)
+	}
+	return out
+}
+
+// Peer returns the peer with the given ID, or nil.
+func (n *Node) Peer(id identity.ID) *Peer {
+	n.mu.RLock()
+	defer n.mu.RUnlock()
+	return n.peers[id]
+}
+
+// Peers returns all known members except this device, sorted by name.
+func (n *Node) Peers() []*Peer {
+	out := n.peerList()
+	sort.Slice(out, func(i, j int) bool { return out[i].Name() < out[j].Name() })
+	return out
+}
+
+// FindPeer resolves a name ("nas", "nas.svoi", an ID or ID prefix, an overlay IP).
+func (n *Node) FindPeer(q string) *Peer {
+	q = strings.TrimSpace(strings.ToLower(q))
+	q = strings.TrimSuffix(q, "."+identity.DNSSuffix)
+	if q == "" {
+		return nil
+	}
+	var byPrefix *Peer
+	for _, p := range n.peerList() {
+		m := p.Member()
+		if strings.ToLower(p.Name()) == q || m.Name == q || strings.ToLower(p.alias) == q {
+			return p
+		}
+		if m.IPv4.String() == q || m.IPv6.String() == q {
+			return p
+		}
+		if id := p.ID.String(); id == q || (len(q) >= 6 && strings.HasPrefix(id, q)) {
+			byPrefix = p
+		}
+	}
+	return byPrefix
+}
+
+// PeerByIP maps an overlay address back to a peer.
+func (n *Node) PeerByIP(a netip.Addr) *Peer {
+	a = a.Unmap()
+	for _, p := range n.peerList() {
+		m := p.Member()
+		if m.IPv4 == a || m.IPv6 == a {
+			return p
+		}
+	}
+	return nil
+}
+
+// learnMember registers a verified member certificate. It returns the peer
+// (nil for ourselves or a revoked device).
+func (n *Node) learnMember(m *identity.Member) *Peer {
+	n.mu.Lock()
+	if _, rev := n.revoked[m.ID]; rev {
+		n.mu.Unlock()
+		return nil
+	}
+	if m.ID == n.dev.ID {
+		changed := false
+		if m.Newer(n.self) {
+			n.self = m
+			n.tlsCert = tls.Certificate{Certificate: [][]byte{m.CertDER}, PrivateKey: n.dev.Priv}
+			changed = true
+		}
+		n.mu.Unlock()
+		if changed {
+			n.saveSoon()
+			n.emit(Event{Kind: EvSelf})
+		}
+		return nil
+	}
+	p := n.peers[m.ID]
+	isNew := p == nil
+	if isNew {
+		p = newPeer(n, m)
+		n.peers[m.ID] = p
+	} else {
+		p.mu.Lock()
+		if m.Newer(p.member) {
+			p.member = m
+		}
+		p.mu.Unlock()
+	}
+	mg := n.magic
+	n.mu.Unlock()
+	if isNew {
+		if mg != nil {
+			if err := mg.AddPeer(m.ID); err != nil {
+				n.log.Warn("cannot register member", "peer", m.ID.Short(), "err", err)
+			}
+		}
+		n.log.Info("new member", "name", m.Name, "id", m.ID.Short())
+		n.saveSoon()
+		n.emit(Event{Kind: EvMembers})
+		n.kick()
+	}
+	return p
+}
+
+// applyRevocation records a verified revocation and drops the device.
+func (n *Node) applyRevocation(rv identity.Revocation) bool {
+	n.mu.Lock()
+	if n.root == nil || n.root.VerifyRevocation(rv) != nil {
+		n.mu.Unlock()
+		return false
+	}
+	if _, dup := n.revoked[rv.ID]; dup {
+		n.mu.Unlock()
+		return false
+	}
+	if rv.ID == n.dev.ID {
+		n.mu.Unlock()
+		n.log.Warn("this device was revoked from the mesh")
+		return false
+	}
+	n.revoked[rv.ID] = rv
+	p := n.peers[rv.ID]
+	delete(n.peers, rv.ID)
+	mg := n.magic
+	n.mu.Unlock()
+	if p != nil {
+		if c := p.currentConn(); c != nil {
+			_ = c.CloseWithError(closeRevoked, "revoked")
+		}
+	}
+	if mg != nil {
+		mg.RemovePeer(rv.ID)
+	}
+	n.saveSoon()
+	n.emit(Event{Kind: EvMembers})
+	return true
+}
+
+// Revoke withdraws a device from the mesh (admin only) and tells everyone.
+func (n *Node) Revoke(id identity.ID) error {
+	n.mu.RLock()
+	auth := n.auth
+	n.mu.RUnlock()
+	if auth == nil {
+		return ErrNotAdmin
+	}
+	if id == n.dev.ID {
+		return errors.New("mesh: cannot revoke this device itself; use Leave")
+	}
+	rv := auth.Revoke(id, time.Now())
+	if !n.applyRevocation(rv) {
+		return errors.New("mesh: unknown or already revoked device")
+	}
+	n.pushSyncToAll()
+	return nil
+}
+
+// SetAlias stores a local nickname for a peer (display only).
+func (n *Node) SetAlias(id identity.ID, alias string) error {
+	p := n.Peer(id)
+	if p == nil {
+		return errors.New("mesh: unknown device")
+	}
+	p.mu.Lock()
+	p.alias = strings.TrimSpace(alias)
+	p.mu.Unlock()
+	n.saveSoon()
+	n.emit(Event{Kind: EvPeer, Peer: id})
+	return nil
+}
+
+// Reissue gives a device a fresh certificate (rename and/or change admin
+// status). Admin only; the new certificate spreads by gossip.
+func (n *Node) Reissue(id identity.ID, name string, admin bool) error {
+	n.mu.RLock()
+	auth := n.auth
+	var existing []*identity.Member
+	for _, p := range n.peers {
+		existing = append(existing, p.Member())
+	}
+	if n.self != nil {
+		existing = append(existing, n.self)
+	}
+	var owner string
+	if id == n.dev.ID {
+		owner = n.self.Owner
+	} else if p := n.peers[id]; p != nil {
+		owner = p.Member().Owner
+	} else {
+		n.mu.RUnlock()
+		return errors.New("mesh: unknown device")
+	}
+	n.mu.RUnlock()
+	if auth == nil {
+		return ErrNotAdmin
+	}
+	m, err := auth.Issue(identity.IssueRequest{ID: id, Name: name, Owner: owner, Admin: admin}, existing)
+	if err != nil {
+		return err
+	}
+	n.learnMember(m)
+	n.pushSyncToAll()
+	return nil
+}
+
+// ---- event bus ----
+
+// Subscribe returns a channel of node events and a function to cancel it. A
+// slow subscriber loses events rather than blocking the node.
+func (n *Node) Subscribe() (<-chan Event, func()) {
+	ch := make(chan Event, 128)
+	n.busMu.Lock()
+	n.subID++
+	id := n.subID
+	n.subs[id] = ch
+	n.busMu.Unlock()
+	return ch, func() {
+		n.busMu.Lock()
+		delete(n.subs, id)
+		n.busMu.Unlock()
+	}
+}
+
+func (n *Node) emit(e Event) {
+	n.busMu.Lock()
+	defer n.busMu.Unlock()
+	for _, ch := range n.subs {
+		select {
+		case ch <- e:
+		default:
+		}
+	}
+}
+
+// Platform is "os/arch" of this build.
+func Platform() string { return runtime.GOOS + "/" + runtime.GOARCH }
+
+// tokenGate is a small rate limiter.
+type tokenGate struct {
+	mu     sync.Mutex
+	rate   float64
+	burst  float64
+	tokens float64
+	last   time.Time
+}
+
+func newTokenGate(perSecond, burst float64) tokenGate {
+	return tokenGate{rate: perSecond, burst: burst, tokens: burst, last: time.Now()}
+}
+
+func (g *tokenGate) allow() bool {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	now := time.Now()
+	g.tokens += now.Sub(g.last).Seconds() * g.rate
+	if g.tokens > g.burst {
+		g.tokens = g.burst
+	}
+	g.last = now
+	if g.tokens < 1 {
+		return false
+	}
+	g.tokens--
+	return true
+}

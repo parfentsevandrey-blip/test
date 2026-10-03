@@ -24,6 +24,7 @@ import (
 	"net"
 	"net/netip"
 	"os"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -419,6 +420,33 @@ func (c *Conn) PathInfo(id identity.ID) PathInfo {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	return p.pathLocked(time.Now())
+}
+
+// KnownEndpoints returns up to max addresses at which the peer has answered a
+// verified probe, most recently confirmed first. They are good hints to hand to
+// other members or to remember across restarts.
+func (c *Conn) KnownEndpoints(id identity.ID, max int) []netip.AddrPort {
+	p := c.peerByID(id)
+	if p == nil {
+		return nil
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	var list []*cand
+	for _, cd := range p.cands {
+		if !cd.lastPong.IsZero() {
+			list = append(list, cd)
+		}
+	}
+	sort.Slice(list, func(i, j int) bool { return list[i].lastPong.After(list[j].lastPong) })
+	var out []netip.AddrPort
+	for _, cd := range list {
+		if len(out) >= max {
+			break
+		}
+		out = append(out, cd.ap)
+	}
+	return out
 }
 
 // PeerStats are cumulative traffic counters for a peer.
