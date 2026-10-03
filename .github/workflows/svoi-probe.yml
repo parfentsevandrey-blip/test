@@ -74,17 +74,27 @@ jobs:
           	fmt.Printf("%s: A=%v B=%v\n", network, a.LocalAddr(), b.LocalAddr())
           	for _, h := range hosts {
           		dst := &net.UDPAddr{IP: net.ParseIP(h), Port: pa}
-          		_, werr := b.WriteTo([]byte("ping"), dst)
-          		_ = a.SetReadDeadline(time.Now().Add(1500 * time.Millisecond))
-          		buf := make([]byte, 100)
-          		n, from, rerr := a.ReadFrom(buf)
-          		fmt.Printf("  B -> %s: write err=%v; A read n=%d from=%v err=%v\n", dst, werr, n, from, rerr)
-          		if rerr == nil {
-          			_, werr = a.WriteTo([]byte("pong"), from)
-          			_ = b.SetReadDeadline(time.Now().Add(1500 * time.Millisecond))
-          			n, from2, rerr := b.ReadFrom(buf)
-          			fmt.Printf("     A -> %v: write err=%v; B read n=%d from=%v err=%v\n", from, werr, n, from2, rerr)
+          		line := fmt.Sprintf("  B -> %s:", dst)
+          		for _, size := range []int{4, 600, 1200, 1280, 1281, 1452, 1500, 4000} {
+          			out := make([]byte, size)
+          			_, werr := b.WriteTo(out, dst)
+          			_ = a.SetReadDeadline(time.Now().Add(1000 * time.Millisecond))
+          			buf := make([]byte, 8000)
+          			n, from, rerr := a.ReadFrom(buf)
+          			if werr != nil || rerr != nil || n != size {
+          				line += fmt.Sprintf(" [%d: write=%v read n=%d err=%v]", size, werr, n, rerr)
+          				continue
+          			}
+          			_, werr = a.WriteTo(out, from)
+          			_ = b.SetReadDeadline(time.Now().Add(1000 * time.Millisecond))
+          			n, _, rerr = b.ReadFrom(buf)
+          			if werr != nil || rerr != nil || n != size {
+          				line += fmt.Sprintf(" [%d back: write=%v read n=%d err=%v]", size, werr, n, rerr)
+          				continue
+          			}
+          			line += fmt.Sprintf(" %d ok", size)
           		}
+          		fmt.Println(line)
           	}
           }
 
@@ -108,12 +118,18 @@ jobs:
           GO
           go mod init udpcheck > /dev/null 2>&1
           go run .
-      - name: the real-socket tests of the program, with the program's own log
-        env:
-          SVOI_TEST_DEBUG: "1"
+      - name: the real-socket test of the exchange between two devices (datagram sizes)
+        run: go test ./internal/magic -run TestAnonymousTrafficOverRealSockets -count=1 -v 2>&1 | tail -30 || true
+      - name: a join over real sockets, with QUIC's own log
         run: |
-          go test ./internal/magic -run TestAnonymousTrafficOverRealSockets -count=1 -v 2>&1 | tail -40
-          go test ./internal/mesh -run TestJoinOverRealSockets -count=1 -v 2>&1 | tail -120
+          export QUIC_GO_LOG_LEVEL=DEBUG SVOI_TEST_DEBUG=1
+          go test ./internal/mesh -run TestJoinOverRealSockets -count=1 -v > "$RUNNER_TEMP/join.log" 2>&1 || true
+          wc -l "$RUNNER_TEMP/join.log"
+          head -90 "$RUNNER_TEMP/join.log" | cut -c1-240
+          echo "..... the interesting lines:"
+          grep -n -i "error\|drop\|invalid\|ignor\|fail\|timeout\|reset\|close" "$RUNNER_TEMP/join.log" | cut -c1-260 | head -40
+          echo "..... the end:"
+          tail -25 "$RUNNER_TEMP/join.log" | cut -c1-240
       - name: two nodes on one machine - join through the API of a running node (what the app test does)
         run: |
           set +e
