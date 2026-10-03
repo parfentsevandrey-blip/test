@@ -8,6 +8,8 @@ package mesh
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -420,7 +422,7 @@ func (n *Node) startMember() error {
 	// QUIC listener is a joiner and must prove it can receive at its source
 	// address (Retry) before any handshake state is kept or any large answer is
 	// sent, so forged Initials cost us nothing and cannot be used for reflection.
-	tr := &quic.Transport{Conn: mg, VerifySourceAddress: func(a net.Addr) bool { return !magic.IsVirtual(a) }}
+	tr := &quic.Transport{Conn: mg, VerifySourceAddress: func(a net.Addr) bool { return !magic.IsVirtual(a) }, StatelessResetKey: n.statelessResetKey()}
 	ln, err := tr.Listen(n.serverTLS(), n.quicConf())
 	if err != nil {
 		_ = tr.Close()
@@ -810,6 +812,19 @@ func (n *Node) dial(p *Peer) {
 	n.attach(p, conn, true)
 }
 
+// statelessResetKey lets a restarted node answer a packet of a link it no longer knows with a
+// "stateless reset" (RFC 9000, section 10.3) that the other end accepts as genuine: the key, and
+// so the reset tokens the old incarnation handed out, is derived from the device key, which
+// survives the restart (and which only this device has, so nobody else can reset its links).
+// The other end then drops the dead link at its next packet instead of after 40 s of silence.
+func (n *Node) statelessResetKey() *quic.StatelessResetKey {
+	m := hmac.New(sha256.New, n.device().Priv.Seed())
+	m.Write([]byte("svoi/quic-stateless-reset/v1"))
+	var k quic.StatelessResetKey
+	copy(k[:], m.Sum(nil))
+	return &k
+}
+
 func minID(a, b identity.ID) identity.ID {
 	if bytes.Compare(a[:], b[:]) < 0 {
 		return a
@@ -1033,7 +1048,7 @@ func (n *Node) learnMember(m *identity.Member) *Peer {
 		}
 		n.mu.Unlock()
 		if changed {
-			n.saveSoon()
+			n.saveNow()
 			n.emit(Event{Kind: EvSelf})
 		}
 		return nil
@@ -1059,7 +1074,7 @@ func (n *Node) learnMember(m *identity.Member) *Peer {
 			}
 		}
 		n.log.Info("new member", "name", m.Name, "id", m.ID.Short())
-		n.saveSoon()
+		n.saveNow()
 		n.emit(Event{Kind: EvMembers})
 		n.kick()
 	}
@@ -1095,7 +1110,7 @@ func (n *Node) applyRevocation(rv identity.Revocation) bool {
 	if mg != nil {
 		mg.RemovePeer(rv.ID)
 	}
-	n.saveSoon()
+	n.saveNow()
 	n.emit(Event{Kind: EvMembers})
 	return true
 }

@@ -131,7 +131,7 @@ func (n *Node) NewInviteFor(admin bool, ttl time.Duration, owner string) (Invite
 	n.invites[h] = rec
 	n.mu.Unlock()
 	n.updateAnonymous()
-	n.saveSoon()
+	n.saveNow()
 	return rec.info(h), nil
 }
 
@@ -164,7 +164,7 @@ func (n *Node) CancelInvite(id string) bool {
 	}
 	n.mu.Unlock()
 	n.updateAnonymous()
-	n.saveSoon()
+	n.saveNow()
 	return found
 }
 

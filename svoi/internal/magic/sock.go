@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"os"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"golang.org/x/net/dns/dnsmessage"
 
@@ -79,11 +81,26 @@ func listenUDP(port int) (net.PacketConn, error) {
 // DefaultLocalAddrs enumerates interface addresses that are useful as
 // endpoints: not loopback, not link-local, not multicast and not part of the
 // svoi overlay itself (probing through our own tunnel would be circular).
+//
+// Since Android 11 an app may not list the network interfaces at all (net.Interfaces fails with
+// "permission denied"); the app that runs svoi then writes the addresses it can see into the file
+// named by SVOI_LOCAL_ADDRS_FILE (whitespace or comma separated), and they are used as well.
 func DefaultLocalAddrs() []netip.Addr {
 	var out []netip.Addr
+	usable := func(na netip.Addr) bool {
+		na = na.Unmap()
+		return !(na.IsLoopback() || na.IsLinkLocalUnicast() || na.IsMulticast() || na.IsUnspecified() || identity.IsOverlayAddr(na))
+	}
+	if f := os.Getenv("SVOI_LOCAL_ADDRS_FILE"); f != "" {
+		for _, na := range readAddrFile(f) {
+			if usable(na) {
+				out = append(out, na.Unmap())
+			}
+		}
+	}
 	ifs, err := net.Interfaces()
 	if err != nil {
-		return nil
+		return out
 	}
 	for _, ifc := range ifs {
 		if ifc.Flags&net.FlagUp == 0 || ifc.Flags&net.FlagLoopback != 0 {
@@ -106,13 +123,35 @@ func DefaultLocalAddrs() []netip.Addr {
 				continue
 			}
 			na = na.Unmap()
-			if na.IsLoopback() || na.IsLinkLocalUnicast() || na.IsMulticast() || na.IsUnspecified() {
-				continue
-			}
-			if identity.IsOverlayAddr(na) {
+			if !usable(na) || containsAddr(out, na) {
 				continue
 			}
 			out = append(out, na)
+		}
+	}
+	return out
+}
+
+func containsAddr(list []netip.Addr, a netip.Addr) bool {
+	for _, x := range list {
+		if x == a {
+			return true
+		}
+	}
+	return false
+}
+
+// readAddrFile reads IP addresses (whitespace or comma separated) from a small file; anything that is
+// not an address is ignored, a missing file is an empty list.
+func readAddrFile(path string) []netip.Addr {
+	raw, err := os.ReadFile(path)
+	if err != nil || len(raw) > 64<<10 {
+		return nil
+	}
+	var out []netip.Addr
+	for _, f := range strings.FieldsFunc(string(raw), func(r rune) bool { return r == ',' || r == ';' || unicode.IsSpace(r) }) {
+		if a, err := netip.ParseAddr(f); err == nil && !containsAddr(out, a) {
+			out = append(out, a)
 		}
 	}
 	return out

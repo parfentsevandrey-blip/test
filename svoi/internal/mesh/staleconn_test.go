@@ -2,6 +2,9 @@ package mesh
 
 import (
 	"bytes"
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -85,4 +88,54 @@ func TestARestartedDeviceReplacesItsStaleLink(t *testing.T) {
 		return p.conn != nil && p.connectedAt.After(started)
 	})
 	waitFor(t, 10*time.Second, "the restarted alpha to see beta", online(a2, b))
+}
+
+// The reset key is the same for every start of a device (so a restarted node can reset the links of
+// its previous life), different between devices (so nobody can reset somebody else's), and the
+// transport really carries it.
+func TestStatelessResetKeyIsStableAndPrivate(t *testing.T) {
+	nw := netsim.New()
+	a := newTestNode(t, nw.Internet().NewHost(ip("198.51.100.1")), "alpha", nil)
+	b := newTestNode(t, nw.Internet().NewHost(ip("198.51.100.2")), "beta", nil)
+	ka, kb := a.statelessResetKey(), b.statelessResetKey()
+	if *ka == [32]byte{} || *ka == *kb {
+		t.Fatal("the key must be non-zero and differ between devices")
+	}
+	a2 := openTestNode(t, nw.Internet().NewHost(ip("198.51.100.3")), "alpha", a.dir, nil)
+	if a2.ID() != a.ID() || *a2.statelessResetKey() != *ka {
+		t.Fatal("a restarted device must derive the same key")
+	}
+	if err := a.CreateMesh("Home", "alpha", "x"); err != nil {
+		t.Fatal(err)
+	}
+	a.mu.RLock()
+	tr := a.tr
+	a.mu.RUnlock()
+	if tr == nil || tr.StatelessResetKey == nil || *tr.StatelessResetKey != *ka {
+		t.Fatal("the QUIC transport does not carry the device's reset key")
+	}
+}
+
+// A member that has just joined is on disk before the join is answered: a crash right after must not
+// make the inviter forget it (it would not dial it after the restart, and the member's old link would
+// sit unnoticed until it timed out).
+func TestANewMemberIsOnDiskAtOnce(t *testing.T) {
+	nw := netsim.New()
+	a := newTestNode(t, nw.Internet().NewHost(ip("198.51.100.1")), "alpha", nil)
+	b := newTestNode(t, nw.Internet().NewHost(ip("198.51.100.2")), "beta", nil)
+	if err := a.CreateMesh("Home", "alpha", "x"); err != nil {
+		t.Fatal(err)
+	}
+	join(t, a, b, "beta", false)
+	raw, err := os.ReadFile(filepath.Join(a.dir, "mesh.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var sf stateFile
+	if err := json.Unmarshal(raw, &sf); err != nil {
+		t.Fatal(err)
+	}
+	if len(sf.Members) != 1 {
+		t.Fatalf("mesh.json lists %d members right after the join, want 1", len(sf.Members))
+	}
 }

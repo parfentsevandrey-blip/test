@@ -163,6 +163,23 @@ func (n *Node) saveState() error {
 	return identity.WriteFileAtomic(n.statePath(), raw, 0o600)
 }
 
+// saveNow writes mesh.json before it returns, for the changes that must survive a crash a moment
+// later: a member that has just joined, a revocation, the key of a new administrator, an invitation
+// that has just been handed out. (A device that lost its newest member to a crash inside the
+// debounce below would not know it again after a restart, and that member's old link would sit
+// unnoticed until it timed out.)
+func (n *Node) saveNow() {
+	n.saveMu.Lock()
+	if n.saveTimer != nil {
+		n.saveTimer.Stop()
+		n.saveTimer = nil
+	}
+	n.saveMu.Unlock()
+	if err := n.saveState(); err != nil {
+		n.log.Error("saving state failed", "err", err)
+	}
+}
+
 // saveSoon schedules a debounced save.
 func (n *Node) saveSoon() {
 	n.saveMu.Lock()

@@ -280,7 +280,7 @@ func (n *Node) registerCoreHandlers() {
 		n.auth = auth
 		n.mu.Unlock()
 		n.learnMember(m)
-		n.saveSoon()
+		n.saveNow()
 		n.emit(Event{Kind: EvSelf})
 		go n.pushSyncToAll()
 		return map[string]bool{"ok": true}, nil
