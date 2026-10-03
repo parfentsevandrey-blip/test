@@ -93,7 +93,7 @@ jobs:
         shell: bash
         env:
           SVOI_APP_EXE: ${{ steps.app.outputs.exe }} # the app must find and run the program it carries (no SVOI_CORE)
-          DEBUG: ${{ runner.os == 'Windows' && 'pw:browser' || '' }}
+          SVOI_DESKTOP_LOCALE: ru # the screenshots are those of a Russian-speaking person's window
         run: |
           mkdir -p ../../shots
           if [ "$RUNNER_OS" = Linux ]; then

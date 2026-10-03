@@ -39,8 +39,10 @@ export function launchOptions(dirs, extraEnv = {}) {
   };
   delete env.ELECTRON_RUN_AS_NODE;
   const sandboxOff = process.platform === 'linux' ? ['--no-sandbox'] : [];
+  // a language for the whole app (the system's own one is what a person gets): the page follows the browser's
+  const lang = process.env.SVOI_DESKTOP_LOCALE ? ['--lang=' + process.env.SVOI_DESKTOP_LOCALE] : [];
   const packaged = process.env.SVOI_APP_EXE;
-  return packaged ? { executablePath: packaged, args: sandboxOff, env } : { executablePath: require('electron'), args: [appDir, ...sandboxOff], env };
+  return packaged ? { executablePath: packaged, args: [...sandboxOff, ...lang], env } : { executablePath: require('electron'), args: [appDir, ...sandboxOff, ...lang], env };
 }
 
 /** A second `svoi` node (another device) in its own directory. */
