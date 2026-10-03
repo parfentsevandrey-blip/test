@@ -16,6 +16,12 @@ function suggestName(os) {
   return { darwin: "macbook", windows: "pc", linux: "server", android: "phone", ios: "iphone", freebsd: "server" }[os] || "laptop";
 }
 
+/** What the name field offers: the name the node itself would take (its --name, the phone's own name, the host name),
+ *  so the preview is the real result; only a node that does not say falls back to a guess from the system. */
+function offeredName(self) {
+  return (self && self.defaultName) || suggestName(self && self.os);
+}
+
 function validateName(v) {
   if (!v) return t("common.required");
   if (!DEVICE_NAME_RE.test(v)) return t("dev.nameInvalid");
@@ -52,7 +58,7 @@ function CreateForm({ self, onBack }) {
   const [errs, setErrs] = useState({});
   const [busy, setBusy] = useState(false);
   const [fail, setFail] = useState(null);
-  const placeholder = suggestName(self && self.os);
+  const placeholder = offeredName(self);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -111,7 +117,7 @@ function JoinForm({ self, onBack }) {
   const [elapsed, setElapsed] = useState(0);
   const [fail, setFail] = useState(null);
   const timer = useRef(0);
-  const placeholder = suggestName(self && self.os);
+  const placeholder = offeredName(self);
   useEffect(() => () => clearInterval(timer.current), []);
 
   const cleanCode = code.replace(/\s+/g, "").toUpperCase();

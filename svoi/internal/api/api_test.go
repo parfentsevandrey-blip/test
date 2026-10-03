@@ -29,9 +29,12 @@ type env struct {
 	tok string
 }
 
-func newEnv(t *testing.T) *env {
+func newEnv(t *testing.T) *env { return newEnvNamed(t, "test-box") }
+
+// newEnvNamed starts a device that was started with `--name deviceName`.
+func newEnvNamed(t *testing.T, deviceName string) *env {
 	t.Helper()
-	a, err := app.Open(app.Options{Dir: t.TempDir(), DeviceName: "test-box", Owner: "tester"})
+	a, err := app.Open(app.Options{Dir: t.TempDir(), DeviceName: deviceName, Owner: "tester"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,6 +140,40 @@ func TestAuthenticationAndBrowserProtections(t *testing.T) {
 	for _, h := range []string{"X-Content-Type-Options", "Content-Security-Policy", "Referrer-Policy"} {
 		if resp.Header.Get(h) == "" {
 			t.Errorf("missing header %s", h)
+		}
+	}
+}
+
+// A device that has no mesh yet says what it will call itself when the person does not choose a
+// name (the first-run forms show it as the suggestion), and that is what it really becomes. The
+// name is already a valid device name, however odd the one the program was started with.
+func TestAFreshDeviceOffersTheNameItWillTake(t *testing.T) {
+	for _, tc := range []struct{ started, offered string }{
+		{"test-box", "test-box"},
+		{"Pixel 8 (Анна)", "pixel-8-anna"},
+		{"Анна's Phone", "anna-s-phone"},
+	} {
+		e := newEnvNamed(t, tc.started)
+		var st struct {
+			Configured bool
+			Self       struct{ Name, DefaultName string }
+		}
+		if code := e.call("GET", "/api/state", "", &st); code != 200 || st.Configured || st.Self.DefaultName != tc.offered || st.Self.Name != "" {
+			t.Fatalf("fresh device started as %q: %d %+v, want it to offer %q", tc.started, code, st, tc.offered)
+		}
+		// Sent with no name, the form's own suggestion is what the node keeps.
+		if code := e.call("POST", "/api/mesh/create", `{"meshName":"Home"}`, nil); code != 200 {
+			t.Fatalf("create without a device name: %d", code)
+		}
+		var raw map[string]any
+		e.call("GET", "/api/state", "", &raw)
+		self, _ := raw["self"].(map[string]any)
+		if self["name"] != tc.offered {
+			t.Fatalf("started as %q: the device became %v, but it had offered %q", tc.started, self["name"], tc.offered)
+		}
+		// Once it is in a mesh the offer is gone: the name is its own.
+		if _, still := self["defaultName"]; still {
+			t.Fatalf("a device in a mesh still offers a default name: %v", self)
 		}
 	}
 }

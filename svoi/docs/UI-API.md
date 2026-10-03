@@ -112,6 +112,14 @@ A browser tab that is hidden may drop the connection; that is fine.
   }
 }
 ```
+`defaultName` is present only while `configured` is `false` (the device has no mesh yet, `name` is
+empty): the name the device will give itself when `POST /api/mesh/create` or `/api/mesh/join` come
+without a `deviceName` — the `--name` the program was started with (the phone app passes the phone's own
+name), else the host name — already reduced to a valid device name (see **Device names**). The first-run
+forms put it in the name field as the suggestion and preview it, so what they show is what the device
+really becomes (on a join the inviting mesh may still add `-2`, `-3`… if the name is taken). When it is
+missing (an older node, a mock), fall back to a guess from `os`.
+
 `portmap`: the device asks the home router (UPnP IGD, NAT-PMP) to forward its UDP port, so other
 devices can reach it directly without anybody opening a port by hand. `mapped` — done, `external` is
 offered to the others first (endpoint kind `mapped`, and `nat.difficulty` becomes `open`);
@@ -256,7 +264,7 @@ Language and theme are **client-side only** (`localStorage`), not part of Settin
 ### State & lifecycle
 | method & path | body → response |
 |---|---|
-| `GET /api/state` | → `{ "version", "configured", "self": Self, "peers": [Peer], "transfers": [Transfer] (active + last 50), "counters": {"mail","chat","offers"}, "invites": [Invite], "settings": Settings, "removed"?: {"meshName": "Дом", "at": 1760000000} }`. Works when `configured:false` (then `self` has only id/short/version/os/arch/configured, `peers: []`). `removed` is present only while the device is outside any mesh **because an administrator removed it** from one: the onboarding screen should say so ("this device was removed from the network «Дом» by an administrator — ask for a new invitation"). The device already has a fresh identity then, so a new invitation just works. A `notify` event with `level: "warn"` and `link: "#/"` is sent at the moment it happens, followed by a `peers` event with an empty list; the UI should reload `GET /api/state`. |
+| `GET /api/state` | → `{ "version", "configured", "self": Self, "peers": [Peer], "transfers": [Transfer] (active + last 50), "counters": {"mail","chat","offers"}, "invites": [Invite], "settings": Settings, "removed"?: {"meshName": "Дом", "at": 1760000000} }`. Works when `configured:false` (then `self` has only id/short/version/os/arch/configured and `defaultName`, `peers: []`). `removed` is present only while the device is outside any mesh **because an administrator removed it** from one: the onboarding screen should say so ("this device was removed from the network «Дом» by an administrator — ask for a new invitation"). The device already has a fresh identity then, so a new invitation just works. A `notify` event with `level: "warn"` and `link: "#/"` is sent at the moment it happens, followed by a `peers` event with an empty list; the UI should reload `GET /api/state`. |
 | `GET /api/events` | SSE, see above |
 | `POST /api/mesh/create` | `{"meshName","deviceName","owner"}` → `{"ok":true}` (then reload state) |
 | `POST /api/mesh/join` | `{"invite","deviceName"}` → `{"ok":true}`; may take up to ~25 s; errors are human readable in `error.message`. There is no `owner` here: whose device this is was set by the inviting device in the invitation (an `owner` sent anyway is ignored), so a new device cannot claim someone else's name to get auto-accepted files. |

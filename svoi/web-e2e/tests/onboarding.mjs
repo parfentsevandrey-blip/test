@@ -1,3 +1,4 @@
+import os from "node:os";
 import { group, test, assert, eq, until, open, nav, tid, startNode } from "../lib.mjs";
 
 group("onboarding (real processes)", { noDemo: true }, () => {
@@ -26,6 +27,36 @@ group("onboarding (real processes)", { noDemo: true }, () => {
     const st = await node.api("GET", "/api/state");
     eq([st.configured, st.self.meshName, st.self.name, st.self.owner, st.self.admin], [true, "Моя семья", "kukhonnyy-noutbuk", "Мария", true], "what was created");
     eq(page.problems.filter((p) => !/400/.test(p)), [], "console / network problems");
+  });
+
+  test("the name field offers the name the device will really take (the --name it was started with); leaving it alone keeps that name", async ({ browser }) => {
+    // what the phone app does: it starts the program with the phone's own name
+    const node = await startNode({ name: "offered", offerName: "Кухонный Pixel 8" });
+    const page = await open(browser, node);
+    await tid(page, "page-onboarding").waitFor();
+    eq((await node.api("GET", "/api/state")).self.defaultName, "kukhonnyy-pixel-8", "backend: the name it offers, as a valid device name");
+    await tid(page, "onb-create").click();
+    eq(await tid(page, "onb-device-name").getAttribute("placeholder"), "kukhonnyy-pixel-8", "create: the field offers it");
+    eq(await tid(page, "dns-preview").getAttribute("data-label"), "kukhonnyy-pixel-8", "create: the preview shows the address it gives");
+    await tid(page, "onb-mesh-name").fill("Дом");
+    await tid(page, "onb-submit").click();
+    await tid(page, "page-home").waitFor();
+    const st = await node.api("GET", "/api/state");
+    eq([st.self.name, st.self.defaultName], ["kukhonnyy-pixel-8", undefined], "the device took the name it offered, and offers none any more");
+    // the join form offers the same
+    const other = await startNode({ name: "offered-join", offerName: "Nokia 3310" });
+    const p2 = await open(browser, other);
+    await tid(p2, "onb-join").click();
+    eq(await tid(p2, "onb-device-name").getAttribute("placeholder"), "nokia-3310", "join: the field offers it");
+    // a device that was started without a name offers its host name, not a made-up one
+    const plain = await startNode({ name: "plain" });
+    const p3 = await open(browser, plain);
+    await tid(p3, "onb-create").click();
+    const offered = (await plain.api("GET", "/api/state")).self.defaultName;
+    assert(/^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$/.test(offered || ""), `a plain start offers a valid device name (${offered})`);
+    const host = os.hostname().split(".")[0];
+    if (/^[A-Za-z0-9-]+$/.test(host)) eq(offered, host.toLowerCase().slice(0, 32).replace(/-+$/, ""), "a plain start offers the host name");
+    eq(await tid(p3, "onb-device-name").getAttribute("placeholder"), offered, "the field offers what the backend says");
   });
 
   test("joining with an invitation code works, bad codes are explained, the invitation is single-use", async ({ browser }) => {

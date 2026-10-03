@@ -683,7 +683,7 @@ function buildWorld(scenario) {
   W.portSeq = 2222;
   const selfDef = DEVICE_DEFS[0];
   if (scenario === "onboarding") {
-    W.self = { id: devId("laptop"), short: devId("laptop").slice(0, 8), version: "0.1.0", os: "linux", arch: "amd64", configured: false };
+    W.self = { id: devId("laptop"), short: devId("laptop").slice(0, 8), version: "0.1.0", os: "linux", arch: "amd64", configured: false, defaultName: "work-laptop" };
     W.peers = [];
     W.settings = defaultSettings();
     W.shares = []; W.services = [];

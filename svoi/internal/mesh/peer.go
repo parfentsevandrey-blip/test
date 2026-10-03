@@ -250,6 +250,12 @@ type SelfInfo struct {
 	Configured bool           `json:"configured"`
 	Relay      bool           `json:"relay"`
 	Relayed    RelayedInfo    `json:"relayed"`
+	// DefaultName is the name this device would take if it were asked to create or
+	// join a mesh without a name of its own (the --name the program was started with,
+	// else the host name), already reduced to a valid device name. Only a device that
+	// has no mesh yet carries it: the first-run forms offer it, so what they preview is
+	// what the device really becomes.
+	DefaultName string `json:"defaultName,omitempty"`
 	// PortMap is the state of the automatic port forwarding on the home router;
 	// absent when it is switched off.
 	PortMap *PortMapInfo `json:"portmap,omitempty"`
@@ -301,6 +307,7 @@ func (n *Node) Self() SelfInfo {
 		Configured: n.root != nil,
 	}
 	if n.root == nil {
+		info.DefaultName = identity.SanitizeName(n.cfg.DeviceName)
 		return info
 	}
 	info.Name, info.Owner = n.self.Name, n.self.Owner
