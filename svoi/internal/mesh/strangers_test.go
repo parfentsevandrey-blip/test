@@ -273,3 +273,72 @@ func TestForgedStandInSourceIsDropped(t *testing.T) {
 		t.Error("the members lost each other")
 	}
 }
+
+// A join is one small request and one answer. Whoever holds an invitation (or has
+// stolen one) must not be able to make the node keep megabytes of buffers or hundreds
+// of streams for a connection of a device that is not a member yet.
+func TestAJoinConnectionGetsSmallWindowsAndFewStreams(t *testing.T) {
+	nw := netsim.New()
+	a := newTestNode(t, nw.Internet().NewHost(ip("198.51.100.1")), "alpha", nil)
+	if err := a.CreateMesh("Home", "alpha", "x"); err != nil {
+		t.Fatal(err)
+	}
+	inv, err := a.NewInvite(false, 30*time.Minute)
+	if err != nil {
+		t.Fatal(err)
+	}
+	secret := inviteSecret(t, inv.Code)
+
+	host := nw.Internet().NewHost(ip("198.51.100.66"))
+	dev := identity.GenerateDevice()
+	mg, err := magic.New(magic.Config{
+		Device: dev, Port: 0,
+		Listen:     func(port int) (net.PacketConn, error) { return host.ListenPacket(uint16(port)) },
+		LocalAddrs: func() []netip.Addr { return host.Addrs() },
+		Timing:     testTiming,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	mg.SetAnonymous(true)
+	tr := &quic.Transport{Conn: mg}
+	defer func() { _ = tr.Close(); _ = mg.Close() }()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	conn, err := tr.Dial(ctx, net.UDPAddrFromAddrPort(netip.MustParseAddrPort("198.51.100.1:41710")), &tls.Config{
+		MinVersion: tls.VersionTLS13, ServerName: joinSNI(secret), InsecureSkipVerify: true,
+		Certificates: []tls.Certificate{selfSignedCert(dev)}, NextProtos: []string{ALPNJoin},
+	}, &quic.Config{HandshakeIdleTimeout: 3 * time.Second, MaxIdleTimeout: 20 * time.Second, EnableDatagrams: true})
+	if err != nil {
+		t.Fatalf("a valid token was refused: %v", err)
+	}
+	defer conn.CloseWithError(0, "")
+
+	streams := 0
+	var written int64
+	for i := 0; i < 50; i++ {
+		s, err := conn.OpenStream()
+		if err != nil {
+			break
+		}
+		streams++
+		_ = s.SetWriteDeadline(time.Now().Add(300 * time.Millisecond))
+		junk := make([]byte, 16<<10)
+		for {
+			n, err := s.Write(junk)
+			written += int64(n)
+			if err != nil {
+				break
+			}
+		}
+	}
+	if streams > 2 {
+		t.Errorf("the node accepted %d streams from a joining device, want at most 2", streams)
+	}
+	if written > 256<<10 {
+		t.Errorf("the node took %d KiB of unread data from a joining device", written>>10)
+	}
+	if err := conn.SendDatagram([]byte("x")); err == nil {
+		t.Error("datagrams were accepted on a join connection")
+	}
+}

@@ -519,7 +519,7 @@ func (n *Node) stopNetwork() {
 // ---- TLS / QUIC configuration ----
 
 func (n *Node) quicConf() *quic.Config {
-	return &quic.Config{
+	member := &quic.Config{
 		HandshakeIdleTimeout:           12 * time.Second,
 		MaxIdleTimeout:                 40 * time.Second,
 		KeepAlivePeriod:                12 * time.Second,
@@ -531,6 +531,31 @@ func (n *Node) quicConf() *quic.Config {
 		InitialConnectionReceiveWindow: 4 << 20,
 		MaxConnectionReceiveWindow:     64 << 20,
 	}
+	// A connection that comes from a real address is not a member (members arrive from
+	// stand-in addresses): it is somebody joining, who sends one request of a few
+	// hundred bytes (see maxJoinFrame) and reads one answer. Such a connection gets
+	// small windows and a few streams, so a holder of an invitation cannot make the node
+	// keep megabytes of buffers or hundreds of streams for it while it waits for the request.
+	joiner := *member
+	joiner.GetConfigForClient = nil
+	joiner.MaxIncomingStreams = 2
+	joiner.MaxIncomingUniStreams = -1 // none
+	joiner.EnableDatagrams = false
+	joiner.KeepAlivePeriod = 0
+	joiner.MaxIdleTimeout = 20 * time.Second
+	joiner.InitialStreamReceiveWindow = 16 << 10
+	joiner.MaxStreamReceiveWindow = 32 << 10
+	joiner.InitialConnectionReceiveWindow = 32 << 10
+	joiner.MaxConnectionReceiveWindow = 64 << 10
+	member.GetConfigForClient = func(ci *quic.ClientInfo) (*quic.Config, error) {
+		if ci != nil && !magic.IsVirtual(ci.RemoteAddr) {
+			return &joiner, nil
+		}
+		plain := *member // (nil would mean quic-go's defaults, not this configuration)
+		plain.GetConfigForClient = nil
+		return &plain, nil
+	}
+	return member
 }
 
 // verifyLeaf validates a presented member certificate against the mesh root and

@@ -178,8 +178,10 @@ func (c *Conn) handleDisco(pkt []byte, from netip.AddrPort, via *peer) {
 		shared = p.shared
 	} else {
 		// A stranger (or a member we have not met yet). Opening costs a curve
-		// operation, so rate-limit work on behalf of unknown senders.
-		if !c.unknownTokens.allow() {
+		// operation, so rate-limit work on behalf of unknown senders: per source
+		// network, so that one network cannot use up what a member's first contact
+		// needs, and overall. (Relayed packets have no source address: they share one.)
+		if !c.unknownGate.allow(from.Addr()) {
 			return
 		}
 		pub, err := identity.IDToX25519(sender)

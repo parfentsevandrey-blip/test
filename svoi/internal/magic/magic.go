@@ -199,8 +199,8 @@ type Conn struct {
 	rdDeadline time.Time
 	rdWake     chan struct{}
 
-	unknownTokens tokenBucket
-	anonLimit     *anonGate
+	unknownGate *netGate // disco packets of senders we do not know (see handleDisco)
+	anonLimit   *anonGate
 
 	self selfState
 
@@ -253,7 +253,7 @@ func New(cfg Config) (*Conn, error) {
 	c.port = uint16(pc.LocalAddr().(*net.UDPAddr).Port)
 	c.ctx, c.cancel = context.WithCancel(context.Background())
 	c.bufPool.New = func() any { b := make([]byte, maxPacket); return &b }
-	c.unknownTokens = newTokenBucket(100, 200)
+	c.unknownGate = newNetGate(unknownPerNetRate, unknownPerNetBurst, 100, 200)
 	c.anonLimit = newAnonGate()
 	c.self.init()
 	// Know our interface addresses before anyone asks (an invitation created right

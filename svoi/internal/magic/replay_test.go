@@ -319,3 +319,34 @@ func TestIsVirtualAddr(t *testing.T) {
 		}
 	}
 }
+
+// Packets from senders we do not know cost a curve operation each, so they are
+// rationed. One network flooding them must only use up its own share: the first
+// contact of a new member from somewhere else still gets through.
+func TestUnknownSendersOfOneNetworkDoNotStarveOthers(t *testing.T) {
+	g := newNetGate(unknownPerNetRate, unknownPerNetBurst, 100, 200)
+	flooder := netip.MustParseAddr("203.0.113.9")
+	passed := 0
+	for i := 0; i < 10_000; i++ {
+		if g.allow(flooder) {
+			passed++
+		}
+	}
+	if passed > unknownPerNetBurst+5 {
+		t.Fatalf("one network got %d unknown-sender packets through in an instant, its share is %d", passed, unknownPerNetBurst)
+	}
+	if !g.allow(netip.MustParseAddr("198.51.100.4")) {
+		t.Fatal("a member's first contact from another network was refused because of the flood")
+	}
+	// Packets that came through a relay have no source address: they share one budget.
+	var zero netip.Addr
+	ok := 0
+	for i := 0; i < 1000; i++ {
+		if g.allow(zero) {
+			ok++
+		}
+	}
+	if ok > unknownPerNetBurst+5 {
+		t.Fatalf("relayed unknown-sender packets are not rationed: %d passed", ok)
+	}
+}
