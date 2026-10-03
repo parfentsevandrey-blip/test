@@ -243,8 +243,18 @@ try {
   console.log('\nstopped at the first failure');
   for (const name of ['desktop.log', 'svoi.log']) {
     const f = path.join(dirs.userData, 'logs', name);
-    if (fs.existsSync(f)) console.log(`--- ${name} (tail) ---\n` + fs.readFileSync(f, 'utf8').split('\n').slice(-25).join('\n'));
-    else console.log(`--- no ${name}: the app never got as far as writing it (profile: ${fs.existsSync(dirs.userData) ? fs.readdirSync(dirs.userData).join(', ') || 'empty' : 'not created'})`);
+    if (fs.existsSync(f)) {
+      const text = fs.readFileSync(f, 'utf8');
+      const lines = text.split('\n');
+      console.log(`--- ${name} (tail) ---\n` + lines.slice(-25).join('\n'));
+      // a program that crashed: where it says so (the tail of its dump is no use without the top)
+      const at = lines.map((l, i) => (/^(panic:|fatal error:|runtime:|Exception 0x|SIG[A-Z]+:)/.test(l) ? i : -1)).filter((i) => i >= 0);
+      for (const i of at.slice(0, 3)) console.log(`--- ${name}: a crash at line ${i + 1} ---\n` + lines.slice(i, i + 30).join('\n'));
+      if (shotsDir) fs.writeFileSync(path.join(shotsDir, `failure-${name}`), text);
+    } else console.log(`--- no ${name}: the app never got as far as writing it (profile: ${fs.existsSync(dirs.userData) ? fs.readdirSync(dirs.userData).join(', ') || 'empty' : 'not created'})`);
+  }
+  if (shotsDir) {
+    for (const f of fs.readdirSync(dirs.base).filter((n) => /^node-.*\.log$/.test(n))) fs.copyFileSync(path.join(dirs.base, f), path.join(shotsDir, `failure-${f}`));
   }
 } finally {
   if (other) await other.stop().catch(() => {});

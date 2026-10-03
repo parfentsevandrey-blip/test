@@ -10,6 +10,11 @@ on:
     tags: ["svoi-v*"] # path filters are not applied to tag pushes
     paths: ["svoi/desktop/**", "svoi/cmd/**", "svoi/internal/**", "svoi/go.mod", "svoi/go.sum", ".github/workflows/svoi-desktop.yml"]
   workflow_dispatch:
+    inputs:
+      repeat:
+        description: "run the end-to-end test of the packaged app this many times (to catch a failure that comes now and then)"
+        type: string
+        default: "1"
 
 defaults:
   run:
@@ -98,10 +103,18 @@ jobs:
           mkdir -p ../../shots
           if [ "$RUNNER_OS" = Linux ]; then
             sudo apt-get update -qq && sudo apt-get install -y -qq xvfb >/dev/null
-            xvfb-run -a -s "-screen 0 1280x900x24" node test/smoke.mjs --shots ../../shots
-          else
-            node test/smoke.mjs --shots ../../shots
           fi
+          bad=0
+          for n in $(seq 1 "${{ inputs.repeat || 1 }}"); do
+            echo "=== run $n"
+            if [ "$RUNNER_OS" = Linux ]; then
+              xvfb-run -a -s "-screen 0 1280x900x24" node test/smoke.mjs --shots ../../shots || bad=1
+            else
+              node test/smoke.mjs --shots ../../shots || bad=1
+            fi
+            if [ $bad = 1 ]; then break; fi
+          done
+          exit $bad
 
       - name: Windows - what the app does when started by hand (diagnostics for a failed test)
         if: failure() && runner.os == 'Windows'
@@ -247,7 +260,9 @@ jobs:
         if: always()
         with:
           name: svoi-desktop-screens-${{ runner.os }}
-          path: shots/*.png
+          path: |
+            shots/*.png
+            shots/failure-*
           if-no-files-found: ignore
           retention-days: 7
 
