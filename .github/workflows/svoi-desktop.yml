@@ -93,6 +93,7 @@ jobs:
         shell: bash
         env:
           SVOI_APP_EXE: ${{ steps.app.outputs.exe }} # the app must find and run the program it carries (no SVOI_CORE)
+          DEBUG: ${{ runner.os == 'Windows' && 'pw:browser' || '' }}
         run: |
           mkdir -p ../../shots
           if [ "$RUNNER_OS" = Linux ]; then

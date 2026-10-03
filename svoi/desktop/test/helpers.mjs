@@ -32,10 +32,9 @@ export function launchOptions(dirs, extraEnv = {}) {
     // a packaged build must find the program it carries; only the source tree needs to be told where it is
     ...(process.env.SVOI_APP_EXE ? {} : { SVOI_CORE: coreBinary() }),
     SVOI_CORE_ARGS: JSON.stringify(['--no-stun', '--no-portmap', '--loopback']),
-    HOME: dirs.home,
-    USERPROFILE: dirs.home,
-    XDG_CONFIG_HOME: path.join(dirs.home, '.config'),
-    XDG_DOWNLOAD_DIR: dirs.downloads,
+    // (Windows keeps its real profile: pointing USERPROFILE somewhere else stalls Electron's start there.
+    // Downloads then land in the real Downloads folder, and the test removes what it saved.)
+    ...(process.platform === 'win32' ? {} : { HOME: dirs.home, XDG_CONFIG_HOME: path.join(dirs.home, '.config'), XDG_DOWNLOAD_DIR: dirs.downloads }),
     ...extraEnv,
   };
   delete env.ELECTRON_RUN_AS_NODE;
