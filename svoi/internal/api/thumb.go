@@ -76,8 +76,50 @@ func (c *thumbCache) put(key string, data []byte) {
 
 var (
 	thumbs   = newThumbCache()
-	thumbSem = make(chan struct{}, 2) // decoding is memory hungry: at most two at a time
+	thumbSem = make(chan struct{}, 3) // reading and decoding are memory hungry: only a few at a time...
+	// ...and by size: the pixels being decoded at once are bounded too (about 4 bytes each, so
+	// ≈ 256 MB at most), a 50 MP image decodes alone and small ones can go alongside it.
+	thumbPixels = &pixelBudget{free: maxThumbInFlight}
 )
+
+const maxThumbInFlight = 64 << 20 // pixels
+
+// pixelBudget is a counting semaphore for pixels.
+type pixelBudget struct {
+	mu      sync.Mutex
+	free    int64
+	waiters []chan struct{}
+}
+
+func (b *pixelBudget) acquire(ctx context.Context, n int64) error {
+	for {
+		b.mu.Lock()
+		if b.free >= n {
+			b.free -= n
+			b.mu.Unlock()
+			return nil
+		}
+		ch := make(chan struct{})
+		b.waiters = append(b.waiters, ch)
+		b.mu.Unlock()
+		select {
+		case <-ch:
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+}
+
+func (b *pixelBudget) release(n int64) {
+	b.mu.Lock()
+	b.free += n
+	waiters := b.waiters
+	b.waiters = nil
+	b.mu.Unlock()
+	for _, ch := range waiters {
+		close(ch)
+	}
+}
 
 // handleThumb returns a JPEG thumbnail of an image in a share (local or remote).
 func (s *Server) handleThumb(w http.ResponseWriter, r *http.Request) {
@@ -150,6 +192,11 @@ func (s *Server) handleThumb(w http.ResponseWriter, r *http.Request) {
 		writeError(w, errCode("notfound", "the image is too large or cannot be decoded"))
 		return
 	}
+	pixels := int64(cfg.Width) * int64(cfg.Height)
+	if err := thumbPixels.acquire(r.Context(), pixels); err != nil {
+		return // the client went away while waiting
+	}
+	defer thumbPixels.release(pixels)
 	img, _, err := image.Decode(bytes.NewReader(raw))
 	if err != nil {
 		writeError(w, errCode("notfound", "cannot decode this image"))
