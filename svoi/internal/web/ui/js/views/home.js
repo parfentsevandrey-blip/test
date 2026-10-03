@@ -50,7 +50,7 @@ export function networkStatus(peers) {
     return {
       state: "offline", icon: "wifiOff",
       title: off.length === 1 ? t("home.status.oneOff", { name: off[0].name }) : t("home.status.none"),
-      line: t("home.status.noneLine"),
+      line: t(off.length === 1 ? "home.status.oneOffLine" : "home.status.noneLine"),
     };
   }
   const now = nowSec();
@@ -60,7 +60,7 @@ export function networkStatus(peers) {
   }
   return {
     state: "ok", icon: "checkCircle", title: tn("home.status.ok", total, { n, total }),
-    line: off.length ? t("home.status.okAsleep", { names: names(off, true) }) : t("home.status.okLine"),
+    line: off.length ? t(off.length === 1 ? "home.status.okAsleepOne" : "home.status.okAsleep", { names: names(off, true) }) : t("home.status.okLine"),
   };
 }
 

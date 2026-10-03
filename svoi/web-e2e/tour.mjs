@@ -111,7 +111,10 @@ const B = launch("home-server", "127.0.0.1:8778");
 let browser;
 const pages = [];
 // A screenshot as a person would see it: the page at the top, no stray focus ring, notifications closed.
-const shot = async (page, name) => {
+// Long pages are taken on a taller screen (`h`), not stitched: the side navigation stays one screen high.
+const shot = async (page, name, { h } = {}) => {
+  const vp = page.viewportSize();
+  if (h && vp && vp.height !== h) await page.setViewportSize({ width: vp.width, height: h });
   await page.evaluate(() => {
     document.querySelectorAll('[data-testid="toast"] .toast__close').forEach((b) => b.click());
     if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
@@ -119,6 +122,7 @@ const shot = async (page, name) => {
   });
   await page.waitForTimeout(400);
   await page.screenshot({ path: path.join(OUT, name + ".png") });
+  if (h && vp && vp.height !== h) await page.setViewportSize(vp);
   console.log(`  📷 ${name}.png`);
 };
 const openPage = async (dev, o = {}) => {
@@ -144,16 +148,16 @@ try {
   step("2. First device: create the network in the browser");
   const pa = await openPage(A, { w: 1280, h: 800 });
   await tid(pa, "page-onboarding").waitFor();
-  await shot(pa, "01-first-start");
+  await shot(pa, "01-first-start", { h: 1040 });
   await tid(pa, "onb-create").click();
   await tid(pa, "onb-mesh-name").fill("Наша семья");
   await tid(pa, "onb-device-name").fill("laptop");
   await tid(pa, "onb-owner").fill("Мария");
-  await shot(pa, "02-create-network");
+  await shot(pa, "02-create-network", { h: 1040 });
   await tid(pa, "onb-submit").click();
   await tid(pa, "page-home").waitFor();
   await pa.locator('[data-testid="home-status"][data-state="alone"]').waitFor();
-  await shot(pa, "03-home-alone");
+  await shot(pa, "03-home-alone", { h: 1040 });
   const sa = await A.state();
   check("network created", sa.configured && sa.self.meshName === "Наша семья" && sa.self.admin, `${sa.self.name}, admin`);
 
@@ -171,7 +175,7 @@ try {
   await tid(pb, "onb-join").click();
   await tid(pb, "onb-code").fill(code);
   await tid(pb, "onb-device-name").fill("home-server");
-  await shot(pb, "05-join-with-code");
+  await shot(pb, "05-join-with-code", { h: 1040 });
   await tid(pb, "onb-submit").click();
   await tid(pb, "page-home").waitFor({ timeout: 60000 });
   await pb.waitForFunction(() => document.querySelectorAll('[data-testid="home-device"]').length === 1, null, { timeout: 30000 });
@@ -186,8 +190,8 @@ try {
   check("the one-time invitation was used up", (await A.api("GET", "/api/invites")).length === 0, "no open invitations left on the laptop");
   await pa.locator('[data-testid="home-status"][data-state="ok"]').waitFor({ timeout: 20000 });
   await pb.locator('[data-testid="home-status"][data-state="ok"]').waitFor({ timeout: 20000 });
-  await shot(pa, "07-home-laptop");
-  await shot(pb, "08-home-server");
+  await shot(pa, "07-home-laptop", { h: 1040 });
+  await shot(pb, "08-home-server", { h: 1040 });
 
   step("5. Send files from the laptop to the home server (the interface, a real picture and 8 MB of random bytes)");
   const picture = makePng();
@@ -258,7 +262,9 @@ try {
   check("the process shut down cleanly", /Выход|shutting down/.test(B.log()));
   await nav(pa, A, "home");
   await pa.locator('[data-testid="home-status"]:not([data-state="ok"])').waitFor({ timeout: 60000 });
-  await shot(pa, "14-device-switched-off");
+  const offText = await tid(pa, "home-status").innerText();
+  check("the home screen names the device that is off and says its mail will wait", /home-server/.test(offText) && /подождут/.test(offText) && !/для них/.test(offText), offText.replace(/\s+/g, " "));
+  await shot(pa, "14-device-switched-off", { h: 1040 });
   const later = "Это сообщение написано, пока сервер был выключен.";
   await nav(pa, A, `chat/${pab.id}`);
   await tid(pa, "chat-input").click();
@@ -307,8 +313,11 @@ try {
   console.log("\n--- home-server log (tail) ---\n" + (fs.existsSync(path.join(B.home, "svoi.log")) ? B.log().split("\n").slice(-25).join("\n") : ""));
 } finally {
   for (const [who, p] of pages) {
-    const problems = p.problems.filter((s) => !/\/api\/events/.test(s));
+    // (a page whose node was switched off on purpose loses its event stream and gets «connection refused»)
+    const problems = p.problems.filter((s) => !/\/api\/events|ERR_INCOMPLETE_CHUNKED_ENCODING|ERR_CONNECTION_REFUSED/.test(s));
+    const expected = p.problems.length - problems.length;
     if (problems.length) console.log(`\nbrowser problems (${who}):\n  ` + problems.join("\n  "));
+    check(`${who}: no unexpected errors in the browser console`, problems.length === 0, expected ? `${expected} from nodes switched off on purpose ignored` : "");
   }
   if (browser) await browser.close();
   await A.stop();

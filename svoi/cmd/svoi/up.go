@@ -128,22 +128,31 @@ func cmdUp(args []string) error {
 
 	self := a.Node().Self()
 	if isTerminal(os.Stderr) {
-		fmt.Fprintf(os.Stderr, "\nСвои %s запущены. Интерфейс откроется в браузере сам.\n"+
-			"Не закрывайте это окно: пока оно открыто, программа работает. Закрыть окно или нажать Ctrl+C — значит выйти.\n"+
-			"Нужен адрес интерфейса (браузер не открылся)? Он напечатан ниже; новый можно получить командой `svoi open`.\n", version())
-	}
-	fmt.Fprintf(os.Stderr, "\nsvoi %s\n", version())
-	if self.Configured {
-		fmt.Fprintf(os.Stderr, "  device:  %s  (%s)\n  mesh:    %s\n", self.Name, self.IP4, self.MeshName)
+		// A person is looking: plain Russian, the link is theirs to copy (it scrolls away).
+		fmt.Fprintf(os.Stderr, "\nСвои %s запущены. Интерфейс откроется в браузере сам.\n\n", version())
+		if self.Configured {
+			fmt.Fprintf(os.Stderr, "  Это устройство:    %s, сеть «%s»\n", self.Name, self.MeshName)
+		} else {
+			fmt.Fprintf(os.Stderr, "  Это устройство пока не в сети: создайте свою сеть или подключитесь по приглашению — в браузере.\n")
+		}
+		fmt.Fprintf(os.Stderr, "  Адрес интерфейса:  %s\n", srv.URL())
+		fmt.Fprintf(os.Stderr, "                     (одноразовая ссылка на 10 минут; новую даёт команда `svoi open`)\n")
+		fmt.Fprintf(os.Stderr, "  Ваши данные:       %s\n\n", cf.dir)
+		fmt.Fprintf(os.Stderr, "Не закрывайте это окно: пока оно открыто, программа работает.\nЗакрыть окно или нажать Ctrl+C — значит выйти (данные сохранятся).\n\n")
 	} else {
-		fmt.Fprintf(os.Stderr, "  this device is not part of a mesh yet — create one or join in the browser\n")
-	}
-	// The link is a key for ten minutes. On a terminal a person reads it and it scrolls
-	// away; in a log (systemd's journal, docker logs) it would stay for others to find.
-	if isTerminal(os.Stderr) || *printLink || os.Getenv("SVOI_PRINT_LINK") != "" {
-		fmt.Fprintf(os.Stderr, "  open:    %s\n           (a one-time link, valid 10 minutes; `svoi open` makes a new one)\n  data:    %s\n\n", srv.URL(), cf.dir)
-	} else {
-		fmt.Fprintf(os.Stderr, "  open:    run `svoi url` on this machine for a one-time sign-in link\n           (it is not printed here, a log would keep it; --print-link overrides)\n  data:    %s\n\n", cf.dir)
+		fmt.Fprintf(os.Stderr, "\nsvoi %s\n", version())
+		if self.Configured {
+			fmt.Fprintf(os.Stderr, "  device:  %s  (%s)\n  mesh:    %s\n", self.Name, self.IP4, self.MeshName)
+		} else {
+			fmt.Fprintf(os.Stderr, "  this device is not part of a mesh yet — create one or join in the browser\n")
+		}
+		// The link is a key for ten minutes. On a terminal a person reads it and it scrolls
+		// away; in a log (systemd's journal, docker logs) it would stay for others to find.
+		if *printLink || os.Getenv("SVOI_PRINT_LINK") != "" {
+			fmt.Fprintf(os.Stderr, "  open:    %s\n           (a one-time link, valid 10 minutes; `svoi open` makes a new one)\n  data:    %s\n\n", srv.URL(), cf.dir)
+		} else {
+			fmt.Fprintf(os.Stderr, "  open:    run `svoi url` on this machine for a one-time sign-in link\n           (it is not printed here, a log would keep it; --print-link overrides)\n  data:    %s\n\n", cf.dir)
+		}
 	}
 
 	errc := make(chan error, 1)
@@ -156,7 +165,11 @@ func cmdUp(args []string) error {
 	}
 	select {
 	case <-signalChan():
-		fmt.Fprintln(os.Stderr, "Выход… / shutting down…")
+		if isTerminal(os.Stderr) {
+			fmt.Fprintln(os.Stderr, "Выход…")
+		} else {
+			fmt.Fprintln(os.Stderr, "shutting down…")
+		}
 		srv.Close()
 		return nil
 	case err := <-errc:
