@@ -66,6 +66,43 @@ jobs:
           # (the Go runtime of Windows Server 2025 crashes now and then, golang/go#76614, #77955)
           GODEBUG: ${{ runner.os == 'Windows' && 'asyncpreemptoff=1' || '' }}
 
+  docker:
+    # The container image of the headless variant (NAS, home server): it builds, starts as an unprivileged user on a fresh
+    # volume, shows its state, hands out a sign-in link and an invitation, and quits cleanly when told to stop.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - name: The compose file is valid; the image builds
+        run: |
+          docker compose -f svoi/docker-compose.yml config -q
+          docker build -t themesh svoi
+          docker run --rm themesh version
+      - name: A network is made on a fresh volume, the container runs it, a link and an invitation come out, it quits with 0
+        run: |
+          docker volume create themesh-data
+          docker run --rm -v themesh-data:/data themesh init --mesh Home --name box --owner ci
+          docker run -d --name tm -v themesh-data:/data themesh up --no-browser --ui 127.0.0.1:8777 --no-stun --no-portmap
+          ok=0
+          for i in $(seq 1 40); do
+            if docker exec tm themesh status > status.txt 2>&1; then ok=1; break; fi
+            sleep 1
+          done
+          cat status.txt
+          if [ "$ok" != 1 ]; then docker logs tm; exit 1; fi
+          docker exec tm themesh url | tee url.txt
+          grep -Eq '^http://127\.0\.0\.1:8777/\?t=[0-9a-f]+$' url.txt
+          docker exec tm themesh invite | tee invite.txt
+          grep -q 'MESH1-' invite.txt
+          docker stop -t 20 tm
+          code=$(docker inspect -f '{{.State.ExitCode}}' tm)
+          echo "exit code: $code"
+          docker logs tm | tail -5
+          test "$code" = 0
+
   lab:
     # Real NAT behaviour: cone / symmetric NATs and firewalls built from network
     # namespaces + iptables/conntrack. Needs privileges, so run it on demand.
