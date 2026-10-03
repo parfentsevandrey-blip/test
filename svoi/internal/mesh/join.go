@@ -32,7 +32,10 @@ import (
 // proves knowledge of the secret bound to this very TLS session, and receives a
 // member certificate (plus, for admin invites, the authority key).
 
-const maxJoinFails = 5
+const (
+	maxJoinFails = 5
+	maxJoinFrame = 4 << 10 // a join request is a handle, a proof and two short names
+)
 
 type joinRequest struct {
 	Handle   []byte `json:"h"`
@@ -219,7 +222,7 @@ func (n *Node) handleJoin(conn *quic.Conn) {
 	}
 	_ = s.SetDeadline(time.Now().Add(15 * time.Second))
 	var req joinRequest
-	if err := readFrame(s, &req); err != nil {
+	if err := readFrameMax(s, &req, maxJoinFrame); err != nil {
 		return
 	}
 	reply := func(resp *joinResponse, rerr error) {

@@ -17,10 +17,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/blob"
@@ -59,6 +61,7 @@ const (
 	maxRawSize    = 4 << 20
 	maxBody       = 1 << 20
 	maxAttach     = 50
+	maxRecipients = 256
 )
 
 // Attachment describes a file attached to a message.
@@ -204,10 +207,42 @@ func (m *Manager) Run(ctx context.Context) {
 	}
 }
 
-func newID(prefix string) string {
+// newID makes a message id that carries its author: "m_<author>_<random>". The
+// receiver checks that the author part is the device that signed the message, so
+// two different devices can never produce the same id (and nobody can pre-empt
+// another device's message by announcing its id first).
+func newID(prefix string, author identity.ID) string {
 	b := make([]byte, 9)
 	_, _ = rand.Read(b)
-	return prefix + hex.EncodeToString(b)
+	return prefix + author.Short() + "_" + hex.EncodeToString(b)
+}
+
+var msgIDRe = regexp.MustCompile(`^[mc]_[a-z2-7]{8}_[0-9a-f]{18}$`)
+
+// validMsgID checks the shape of a message id and that it belongs to its author.
+func validMsgID(id string, author identity.ID) bool {
+	return msgIDRe.MatchString(id) && id[2:10] == author.Short()
+}
+
+// cleanText removes control characters (other than newlines and tabs) from a
+// peer-supplied string and cuts it to max bytes on a rune boundary.
+func cleanText(s string, max int) string {
+	s = strings.Map(func(r rune) rune {
+		if (r < 32 && r != '\n' && r != '\t') || r == 127 || unicode.Is(unicode.Cf, r) {
+			return -1
+		}
+		return r
+	}, s)
+	if len(s) > max {
+		s = s[:max]
+		for len(s) > 0 && !utf8.RuneStart(s[len(s)-1]) {
+			s = s[:len(s)-1]
+		}
+		if !utf8.ValidString(s) {
+			s = strings.ToValidUTF8(s, "")
+		}
+	}
+	return s
 }
 
 // ---- sending ----
@@ -263,12 +298,12 @@ func (m *Manager) Send(in SendInput) (string, error) {
 		Created: time.Now().Unix(), InReplyTo: in.InReplyTo,
 	}
 	if in.Kind == "chat" {
-		c.ID = newID("c_")
+		c.ID = newID("c_", self)
 		if len(to) != 1 {
 			return "", mesh.Errf(mesh.CodeInvalid, "a chat message has exactly one recipient")
 		}
 	} else {
-		c.ID = newID("m_")
+		c.ID = newID("m_", self)
 	}
 	for _, sha := range in.Attach {
 		var a Attachment
@@ -462,7 +497,9 @@ func (m *Manager) Register() {
 		if !ed25519.Verify(cr.From.PublicKey(), msg.Core, msg.Sig) {
 			return nil, mesh.Errf(mesh.CodeDenied, "bad signature")
 		}
-		if cr.ID == "" || (cr.Kind != "mail" && cr.Kind != "chat") || len(cr.Body) > maxBody || len(cr.Attach) > maxAttach {
+		if (cr.Kind != "mail" && cr.Kind != "chat") || !validMsgID(cr.ID, cr.From) || cr.ID[0] != cr.Kind[0] ||
+			len(cr.Body) > maxBody || len(cr.Attach) > maxAttach || len(cr.Subject) > 1000 || len(cr.To) > maxRecipients ||
+			len(cr.InReplyTo) > 64 || len(cr.Thread) > 64 {
 			return nil, mesh.Errf(mesh.CodeInvalid, "bad message")
 		}
 		self := m.node.ID()
@@ -475,10 +512,13 @@ func (m *Manager) Register() {
 		if !forMe || (cr.Kind == "chat" && len(cr.To) != 1) {
 			return nil, mesh.Errf(mesh.CodeInvalid, "not addressed to this device")
 		}
-		for _, a := range cr.Attach {
+		for i := range cr.Attach {
+			a := &cr.Attach[i]
 			if !blob.ValidSHA(a.SHA256) || a.Size < 0 {
 				return nil, mesh.Errf(mesh.CodeInvalid, "bad attachment")
 			}
+			// The signed bytes (Raw) stay as they arrived; what is shown is cleaned.
+			a.Name, a.Mime = cleanText(a.Name, 255), cleanText(a.Mime, 100)
 		}
 		m.mu.Lock()
 		if _, dup := m.msgs[cr.ID]; dup {

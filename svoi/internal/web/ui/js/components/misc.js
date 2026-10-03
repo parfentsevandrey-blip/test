@@ -5,9 +5,19 @@ import { Icon } from "../icons.js";
 import { t } from "../i18n.js";
 import { useNow } from "../hooks.js";
 import { fmtAgo, fmtDateTime } from "../format.js";
-import { cx, linkify } from "../util.js";
+import { cx, dnsLabel, linkify } from "../util.js";
 import { DeviceChips } from "./devicepicker.js";
 import { Segmented } from "./ui.js";
+
+/** «Адрес в сети: kukhonnyy-noutbuk.svoi» — live preview of the DNS name a typed device name becomes. */
+export function DnsPreview({ name }) {
+  const label = dnsLabel(name);
+  return html`<p class="dns-preview" data-testid="dns-preview" data-label=${label}>
+    <${Icon} name="globe" size=${14} />
+    <span>${t("dev.dnsPreview")}</span>
+    <span class="dns-preview__addr mono">${label}.svoi</span>
+  </p>`;
+}
 
 export function PageHeader({ title, subtitle, actions, back, children }) {
   return html`<header class="page-head">

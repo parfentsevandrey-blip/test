@@ -111,7 +111,7 @@ func Start(ctx context.Context, opts Options) (*Demo, error) {
 	for _, name := range order {
 		host := hosts[name]
 		a, err := app.Open(app.Options{
-			Dir:    filepath.Join(opts.Dir, name),
+			Dir:    filepath.Join(opts.Dir, name, "data"), // keys and settings; never inside a shared folder
 			Logger: opts.Logger.With("device", name),
 			Mesh: mesh.Config{
 				Listen:     func(port int) (net.PacketConn, error) { return host.ListenPacket(uint16(port)) },

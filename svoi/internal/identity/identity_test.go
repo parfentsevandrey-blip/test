@@ -317,3 +317,67 @@ func TestOverlayAddressesAreStableAndDistinct(t *testing.T) {
 	}
 	_ = ed25519.PublicKeySize
 }
+
+func TestSanitizeOwner(t *testing.T) {
+	cases := map[string]string{
+		"  Андрей  ":                         "Андрей",
+		"Анна\nПетровна\t(дача)":             "Анна Петровна (дача)",
+		"a\x00b\x1b[31mc‮d​e":                "ab[31mcde",
+		"":                                   "",
+		"   ":                                "",
+		strings.Repeat("я", 500):             strings.Repeat("я", MaxOwnerRunes),
+		"x" + strings.Repeat(" ", 100) + "y": "x y",
+	}
+	for in, want := range cases {
+		if got := SanitizeOwner(in); got != want {
+			t.Errorf("SanitizeOwner(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+// The owner label is typed by the joining device and then signed, gossiped to every
+// member and stored: it must stay small and clean.
+func TestIssueBoundsTheOwnerLabel(t *testing.T) {
+	a, err := NewAuthority("Home")
+	if err != nil {
+		t.Fatal(err)
+	}
+	dev := GenerateDevice()
+	m, err := a.Issue(IssueRequest{ID: dev.ID, Name: "x", Owner: "Мария\n<b>" + strings.Repeat("o", 3<<20)}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len([]rune(m.Owner)) > MaxOwnerRunes || strings.ContainsRune(m.Owner, '\n') || len(m.CertDER) > 4096 {
+		t.Fatalf("owner %q (%d runes), certificate %d bytes", m.Owner[:10], len([]rune(m.Owner)), len(m.CertDER))
+	}
+}
+
+// Small-order points are valid curve points but make poor identities: signatures
+// for them can be forged by anyone, and the key agreement result is a constant.
+func TestWeakKeysAreRejected(t *testing.T) {
+	weak := [][]byte{
+		append([]byte{1}, make([]byte, 31)...), // the identity point
+		make([]byte, 32),                       // order 4: y = 0
+		{0xec, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f}, // order 2: y = -1
+	}
+	a, err := NewAuthority("Home")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, w := range weak {
+		if _, err := IDFromPublicKey(ed25519.PublicKey(w)); err == nil {
+			t.Errorf("IDFromPublicKey accepted the weak key %x", w[:4])
+		}
+		var id ID
+		copy(id[:], w)
+		if _, err := a.Issue(IssueRequest{ID: id, Name: "weak"}, nil); err == nil {
+			t.Errorf("a certificate was issued for the weak key %x", w[:4])
+		}
+	}
+	// ordinary keys still work
+	d := GenerateDevice()
+	if _, err := IDFromPublicKey(ed25519.PublicKey(d.ID[:])); err != nil {
+		t.Fatalf("a normal key was rejected: %v", err)
+	}
+}

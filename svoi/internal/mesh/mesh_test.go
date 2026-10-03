@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"io"
 	"log/slog"
@@ -619,5 +620,29 @@ func TestWrongMeshCannotConnect(t *testing.T) {
 		if p.Online() {
 			t.Fatal("a device from another mesh got a link")
 		}
+	}
+}
+
+// Whatever a peer puts into its hello is bounded and cleaned before it reaches the
+// device list, the event stream and the saved state.
+func TestHelloIsSanitised(t *testing.T) {
+	h := Hello{
+		Name: strings.Repeat("n", 500), Owner: "Мария\n<script>" + strings.Repeat("x", 3<<20), OS: "linux\x00\x1b[31m", Arch: strings.Repeat("a", 100),
+		Version: "1.0‮", Caps: append([]string{"files\x07"}, make([]string, 100)...),
+		Endpoints: make([]string, 300),
+		Extra:     map[string]json.RawMessage{},
+	}
+	for i := 0; i < 40; i++ {
+		h.Extra[strings.Repeat("k", i+1)] = json.RawMessage(`"v"`)
+	}
+	h.sanitize()
+	if len(h.Name) > 64 || len([]rune(h.Owner)) > identity.MaxOwnerRunes || strings.ContainsAny(h.Owner, "\n") {
+		t.Errorf("name/owner not bounded: %d %q", len(h.Name), h.Owner[:20])
+	}
+	if strings.ContainsAny(h.OS, "\x00\x1b") || len(h.Arch) > 32 || strings.ContainsRune(h.Version, '‮') {
+		t.Errorf("os/arch/version not cleaned: %q %q %q", h.OS, h.Arch, h.Version)
+	}
+	if len(h.Caps) != 16 || h.Caps[0] != "files" || len(h.Endpoints) != 24 || h.Extra != nil {
+		t.Errorf("lists not bounded: caps=%d endpoints=%d extra=%v", len(h.Caps), len(h.Endpoints), h.Extra)
 	}
 }

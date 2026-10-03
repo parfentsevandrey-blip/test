@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"net/netip"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/magic"
@@ -124,8 +127,66 @@ func (n *Node) buildSync(to *Peer) syncMsg {
 	return msg
 }
 
+// cleanStr removes control and invisible characters from a peer-supplied string
+// and cuts it to max bytes (on a rune boundary).
+func cleanStr(s string, max int) string {
+	s = strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) || unicode.Is(unicode.Cf, r) || r == unicode.ReplacementChar {
+			return -1
+		}
+		return r
+	}, s)
+	if len(s) > max {
+		s = s[:max]
+		for len(s) > 0 && !utf8.ValidString(s) {
+			s = s[:len(s)-1]
+		}
+	}
+	return s
+}
+
+// sanitize bounds everything a peer can put into its hello: it flows into the
+// device list, the live event stream and the saved state of every member.
+func (h *Hello) sanitize() {
+	h.Name, h.Owner = cleanStr(h.Name, 64), identity.SanitizeOwner(h.Owner)
+	h.OS, h.Arch, h.Version = cleanStr(h.OS, 32), cleanStr(h.Arch, 32), cleanStr(h.Version, 32)
+	if len(h.Caps) > 16 {
+		h.Caps = h.Caps[:16]
+	}
+	for i, c := range h.Caps {
+		h.Caps[i] = cleanStr(c, 32)
+	}
+	if len(h.Endpoints) > 24 {
+		h.Endpoints = h.Endpoints[:24]
+	}
+	for i, e := range h.Endpoints {
+		h.Endpoints[i] = cleanStr(e, 64)
+	}
+	if len(h.Extra) > 16 {
+		h.Extra = nil
+	}
+	total := 0
+	for k, v := range h.Extra {
+		total += len(k) + len(v)
+		if len(k) > 32 || total > 256<<10 {
+			h.Extra = nil
+			break
+		}
+	}
+}
+
 // applySync merges a sync message received from p.
 func (n *Node) applySync(p *Peer, msg syncMsg) {
+	msg.Hello.sanitize()
+	if len(msg.Hints) > 128 {
+		msg.Hints = msg.Hints[:128]
+	}
+	if len(msg.Certs) > 512 {
+		msg.Certs = msg.Certs[:512]
+	}
+	if len(msg.Revoked) > 1024 {
+		msg.Revoked = msg.Revoked[:1024]
+	}
 	p.mu.Lock()
 	h := msg.Hello
 	p.hello = &h

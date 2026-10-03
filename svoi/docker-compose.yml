@@ -1,7 +1,7 @@
 # A headless svoi device (NAS, home server).
 #
 #   docker compose up -d
-#   docker compose logs svoi        # prints the web interface address with its one-time token
+#   docker compose exec svoi svoi url   # prints a fresh sign-in address for the web interface
 #   docker compose exec svoi svoi invite     # or: svoi join <code>
 #
 # network_mode: host is the simplest way to have real LAN discovery, direct

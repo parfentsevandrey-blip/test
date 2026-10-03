@@ -327,7 +327,7 @@ func TestDeliveryRejectsForgeriesAndStrangers(t *testing.T) {
 		return from.Peer(to.ID()).Call(ctx, "mail.deliver", msg, nil)
 	}
 	mk := func(sender *identity.Device, mut func(*core)) signedMsg {
-		cr := core{ID: "m_forged", Kind: "mail", From: sender.ID, To: []identity.ID{b.ID()}, Subject: "s", Body: "b", Created: time.Now().Unix()}
+		cr := core{ID: newID("m_", sender.ID), Kind: "mail", From: sender.ID, To: []identity.ID{b.ID()}, Subject: "s", Body: "b", Created: time.Now().Unix()}
 		if mut != nil {
 			mut(&cr)
 		}
@@ -340,16 +340,38 @@ func TestDeliveryRejectsForgeriesAndStrangers(t *testing.T) {
 		t.Fatalf("forged sender: %v", err)
 	}
 	// 2. gamma delivers a message claiming to be alpha's, relaying alpha's signature over different content.
-	good := mk(a.Device(), func(cr *core) { cr.ID = "m_real" })
+	good := mk(a.Device(), nil)
 	tampered := good
 	tampered.Core = bytes.Replace(good.Core, []byte(`"b"`), []byte(`"EVIL"`), 1)
 	if err := call(a, b, tampered); !mesh.IsCode(err, mesh.CodeDenied) {
 		t.Fatalf("tampered content: %v", err)
 	}
 	// 3. valid, but not addressed to beta.
-	other := mk(a.Device(), func(cr *core) { cr.To = []identity.ID{c.ID()}; cr.ID = "m_other" })
+	other := mk(a.Device(), func(cr *core) { cr.To = []identity.ID{c.ID()} })
 	if err := call(a, b, other); !mesh.IsCode(err, mesh.CodeInvalid) {
 		t.Fatalf("misaddressed: %v", err)
+	}
+	// 3b. ids belong to their author: gamma cannot announce an id carrying alpha's name
+	// (that is how one co-recipient used to suppress another device's message), and
+	// malformed or oversized fields are refused.
+	hijack := mk(c.Device(), func(cr *core) { cr.ID = good2ID(a) })
+	if err := call(c, b, hijack); !mesh.IsCode(err, mesh.CodeInvalid) {
+		t.Fatalf("an id carrying another device's name was accepted: %v", err)
+	}
+	for _, mut := range []func(*core){
+		func(cr *core) { cr.ID = "m_forged" },
+		func(cr *core) { cr.ID = strings.Repeat("m", 5000) },
+		func(cr *core) { cr.Subject = strings.Repeat("s", 5000) },
+		func(cr *core) { cr.InReplyTo = strings.Repeat("r", 100) },
+		func(cr *core) {
+			for i := 0; i < maxRecipients+1; i++ {
+				cr.To = append(cr.To, identity.GenerateDevice().ID)
+			}
+		},
+	} {
+		if err := call(a, b, mk(a.Device(), mut)); !mesh.IsCode(err, mesh.CodeInvalid) {
+			t.Fatalf("malformed message accepted: %v", err)
+		}
 	}
 	// 4. a genuine message is accepted, and re-delivery is idempotent.
 	if err := call(a, b, good); err != nil {
@@ -391,3 +413,6 @@ func TestSendValidation(t *testing.T) {
 		t.Fatalf("note to self: %+v", msg.Summary)
 	}
 }
+
+// an id that looks like one of alpha's
+func good2ID(a *mesh.Node) string { return newID("m_", a.ID()) }

@@ -141,7 +141,10 @@ export function confirmDialog(opts) {
   return openDialog("confirm", opts);
 }
 
-/** promptDialog({ title, label, value, placeholder, confirmText, validate, hint }) → Promise<string|null> */
+/**
+ * promptDialog({ title, label, value, placeholder, confirmText, validate, hint, preview, selectBase })
+ * → Promise<string|null>. `preview(value)` renders live under the field.
+ */
 export function promptDialog(opts) {
   return openDialog("prompt", opts);
 }
@@ -190,6 +193,8 @@ function PromptDialog({ d }) {
         ${o.label && html`<label class="field__label" for=${"pr" + d.id}>${o.label}</label>`}
         <input id=${"pr" + d.id} class="input" value=${val} placeholder=${o.placeholder || ""} autofocus data-testid="prompt-input"
           autocomplete="off" spellcheck="false" maxlength=${o.maxLength || 200}
+          aria-invalid=${err ? "true" : undefined}
+          aria-describedby=${[(err || o.hint) && `pr${d.id}-h`, o.preview && `pr${d.id}-x`].filter(Boolean).join(" ") || undefined}
           onInput=${(e) => { setVal(e.target.value); setErr(""); }}
           onFocus=${(e) => {
             // First focus selects the name without its extension (like file managers do).
@@ -198,7 +203,8 @@ function PromptDialog({ d }) {
             const v = e.target.value; const i = v.lastIndexOf(".");
             e.target.setSelectionRange(0, i > 0 ? i : v.length);
           }} />
-        ${err ? html`<p class="field__error" role="alert">${err}</p>` : o.hint && html`<p class="field__hint">${o.hint}</p>`}
+        ${err ? html`<p class="field__error" id=${`pr${d.id}-h`} role="alert">${err}</p>` : o.hint && html`<p class="field__hint" id=${`pr${d.id}-h`}>${o.hint}</p>`}
+        ${o.preview && html`<div class="field__extra" id=${`pr${d.id}-x`}>${o.preview(val)}</div>`}
       </div>
     </form>
   </${Modal}>`;

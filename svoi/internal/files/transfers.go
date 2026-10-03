@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -42,7 +43,33 @@ const (
 	bucketTransfers = "transfers"
 	maxPendingIn    = 200
 	maxConcurrentIn = 3
+	maxInPerPeer    = 1000 // incoming records (any state) kept per sending device
+	diskReserve     = 64 << 20
 )
+
+// Transfer IDs are chosen by the sender of an offer, so they must never reach a
+// file path: only this exact shape is accepted, and partial downloads get a
+// local random name of their own.
+var (
+	transferIDRe = regexp.MustCompile(`^t_[0-9a-f]{16}$`)
+	partNameRe   = regexp.MustCompile(`^\.svoi-[0-9a-f]{16}\.part$`)
+)
+
+func newPartName() string { return ".svoi-" + strings.TrimPrefix(newID("t_"), "t_") + ".part" }
+
+// cleanMime keeps a peer-supplied media type short and printable.
+func cleanMime(m string) string {
+	m = strings.Map(func(r rune) rune {
+		if r < 32 || r == 127 {
+			return -1
+		}
+		return r
+	}, m)
+	if len(m) > 100 {
+		m = m[:100]
+	}
+	return m
+}
 
 // Transfer is the API view of a transfer.
 type Transfer struct {
@@ -120,6 +147,12 @@ func (m *Manager) InitTransfers(db *store.DB, dataDir string, settings func() Tr
 		var r record
 		if err := json.Unmarshal(raw, &r); err != nil {
 			return nil
+		}
+		if r.Dir == "in" && !transferIDRe.MatchString(r.ID) {
+			return nil // written by a version that trusted peer-chosen ids: never use it as a path
+		}
+		if r.Part != "" && !partNameRe.MatchString(filepath.Base(r.Part)) {
+			r.Part = ""
 		}
 		// A crash may have interrupted a download: it simply resumes.
 		if r.State == StateActive {
@@ -670,7 +703,7 @@ func (t *transfers) download(ctx context.Context, r *record) {
 	if r.Part == "" {
 		dir := set.DownloadDir
 		_ = os.MkdirAll(dir, 0o755)
-		r.Part = filepath.Join(dir, ".svoi-"+r.ID+".part")
+		r.Part = filepath.Join(dir, newPartName())
 	}
 	part, id := r.Part, r.ID
 	var offset int64
@@ -704,6 +737,10 @@ func (t *transfers) download(ctx context.Context, r *record) {
 		go t.tell(peer, "xfer.done", map[string]string{"id": id})
 	case mesh.IsCode(err, mesh.CodeNotFound), mesh.IsCode(err, mesh.CodeDenied):
 		t.setStateLocked(r, StateFailed, "the sender no longer offers this file")
+	case errors.Is(err, errSizeChanged):
+		t.setStateLocked(r, StateFailed, err.Error())
+	case errors.Is(err, errNoSpace):
+		t.setStateLocked(r, StateFailed, "not enough free disk space in the download folder")
 	default:
 		// Transient: stay queued and resume from the partial file.
 		r.nextTry = time.Now().Add(3 * time.Second)
@@ -737,8 +774,17 @@ func (t *transfers) pull(ctx context.Context, id string, peerID identity.ID, par
 		t.mu.Unlock()
 		return errors.New("transfer vanished")
 	}
-	r.Size = meta.Size
+	// What was offered (and what auto-accept and the size limit judged) is what is
+	// received: a sender cannot announce 10 bytes and then stream gigabytes.
+	if meta.Size != r.Size {
+		announced := r.Size
+		t.mu.Unlock()
+		return fmt.Errorf("%w (%d announced, %d offered at download)", errSizeChanged, announced, meta.Size)
+	}
 	t.mu.Unlock()
+	if free, ok := diskFree(filepath.Dir(part)); ok && free < uint64(meta.Size-offset)+diskReserve {
+		return errNoSpace
+	}
 	if offset > meta.Size {
 		os.Remove(part)
 		return errors.New("partial file is larger than the source; restarting")
@@ -806,12 +852,15 @@ func uniquePath(dir, name string) string {
 	ext := filepath.Ext(name)
 	base := strings.TrimSuffix(name, ext)
 	p := filepath.Join(dir, name)
-	for i := 1; ; i++ {
+	for i := 1; i < 10000; i++ {
 		if _, err := os.Lstat(p); errors.Is(err, os.ErrNotExist) {
 			return p
 		}
 		p = filepath.Join(dir, fmt.Sprintf("%s (%d)%s", base, i, ext))
 	}
+	// Lstat keeps failing for another reason, or 10000 files share the name: do
+	// not spin; a random suffix is as unique as it gets.
+	return filepath.Join(dir, fmt.Sprintf("%s (%s)%s", base, strings.TrimPrefix(newID("t_"), "t_"), ext))
 }
 
 // SanitizeName reduces a remote-supplied file name to a safe local one.
@@ -838,8 +887,7 @@ func SanitizeName(name string) string {
 		}
 		name = name[:cut] + ext
 	}
-	switch strings.ToUpper(strings.TrimSuffix(name, filepath.Ext(name))) {
-	case "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "LPT1", "LPT2", "LPT3":
+	if reservedWindowsName(strings.TrimSuffix(name, filepath.Ext(name))) {
 		name = "_" + name
 	}
 	if name == "" {
@@ -849,6 +897,19 @@ func SanitizeName(name string) string {
 }
 
 func isRuneStart(b byte) bool { return b&0xC0 != 0x80 }
+
+// reservedWindowsName reports the device names Windows refuses as file names.
+func reservedWindowsName(base string) bool {
+	u := strings.ToUpper(base)
+	switch u {
+	case "CON", "PRN", "AUX", "NUL":
+		return true
+	}
+	if len(u) == 4 && (strings.HasPrefix(u, "COM") || strings.HasPrefix(u, "LPT")) && u[3] >= '1' && u[3] <= '9' {
+		return true
+	}
+	return false
+}
 
 func describeErr(err error) string {
 	var re *mesh.RPCError
@@ -868,7 +929,7 @@ func (m *Manager) registerTransferRPC() {
 		if err := c.Decode(&o); err != nil {
 			return nil, err
 		}
-		if o.ID == "" || o.Size < 0 {
+		if !transferIDRe.MatchString(o.ID) || o.Size < 0 {
 			return nil, mesh.Errf(mesh.CodeInvalid, "bad offer")
 		}
 		set := t.settings()
@@ -880,18 +941,27 @@ func (m *Manager) registerTransferRPC() {
 			}
 			return map[string]string{"state": offerReply(r)}, nil // idempotent retry
 		}
-		pending := 0
+		pending, fromPeer := 0, 0
 		for _, r := range t.items {
 			if r.Dir == "in" && r.State == StateOffered {
 				pending++
+			}
+			if r.Dir == "in" && r.Peer == c.Peer.ID {
+				fromPeer++
 			}
 		}
 		if pending >= maxPendingIn {
 			return nil, mesh.Errf(mesh.CodeBusy, "too many pending offers")
 		}
+		if fromPeer >= maxInPerPeer {
+			t.pruneFinishedLocked(c.Peer.ID, maxInPerPeer/2)
+			if fromPeer = t.countFromLocked(c.Peer.ID); fromPeer >= maxInPerPeer {
+				return nil, mesh.Errf(mesh.CodeBusy, "too many transfers from this device")
+			}
+		}
 		now := time.Now().Unix()
 		r := &record{
-			ID: o.ID, Dir: "in", Peer: c.Peer.ID, Name: SanitizeName(o.Name), Size: o.Size, Mime: o.Mime,
+			ID: o.ID, Dir: "in", Peer: c.Peer.ID, Name: SanitizeName(o.Name), Size: o.Size, Mime: cleanMime(o.Mime),
 			State: StateOffered, Created: now, Updated: now,
 		}
 		if t.autoAccept(c.Peer, o.Size, set) {
@@ -1074,5 +1144,38 @@ func (t *transfers) autoAccept(p *mesh.Peer, size int64, set TransferSettings) b
 	default: // "own": devices that belong to the same person
 		me := t.m.cfg.Node.Self()
 		return me.Owner != "" && strings.EqualFold(p.Member().Owner, me.Owner)
+	}
+}
+
+var (
+	errNoSpace     = errors.New("not enough free disk space")
+	errSizeChanged = errors.New("the sender changed the file size")
+)
+
+func (t *transfers) countFromLocked(peer identity.ID) int {
+	n := 0
+	for _, r := range t.items {
+		if r.Dir == "in" && r.Peer == peer {
+			n++
+		}
+	}
+	return n
+}
+
+// pruneFinishedLocked drops the oldest finished incoming records of one device
+// until at most keep remain (open offers and running downloads are never touched).
+func (t *transfers) pruneFinishedLocked(peer identity.ID, keep int) {
+	var old []*record
+	for _, r := range t.items {
+		if r.Dir == "in" && r.Peer == peer && (r.State == StateDone || r.State == StateFailed || r.State == StateDeclined || r.State == StateCanceled) {
+			old = append(old, r)
+		}
+	}
+	sort.Slice(old, func(i, j int) bool { return old[i].Updated < old[j].Updated })
+	for t.countFromLocked(peer) > keep && len(old) > 0 {
+		r := old[0]
+		old = old[1:]
+		delete(t.items, r.ID)
+		_ = t.db.Delete(bucketTransfers, r.ID)
 	}
 }

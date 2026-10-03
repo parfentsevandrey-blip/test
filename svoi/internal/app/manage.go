@@ -259,6 +259,8 @@ func (a *App) applySocks() {
 type ShareView struct {
 	files.Share
 	Exists bool `json:"exists"`
+	// Blocked: the folder would expose the device's own keys and is not served.
+	Blocked bool `json:"blocked,omitempty"`
 }
 
 // Shares lists the folders this device shares.
@@ -267,7 +269,7 @@ func (a *App) Shares() []ShareView {
 	out := make([]ShareView, 0, len(list))
 	for _, s := range list {
 		st, err := os.Stat(s.Path)
-		out = append(out, ShareView{Share: s, Exists: err == nil && st.IsDir()})
+		out = append(out, ShareView{Share: s, Exists: err == nil && st.IsDir(), Blocked: a.files.CheckShareRoot(s.Path) != nil})
 	}
 	return out
 }
@@ -312,6 +314,9 @@ func (a *App) SaveShare(id string, in files.Share) (ShareView, error) {
 	st, err := os.Stat(path)
 	if err != nil || !st.IsDir() {
 		return ShareView{}, mesh.Errf(mesh.CodeInvalid, "this folder does not exist on the device")
+	}
+	if err := a.files.CheckShareRoot(path); err != nil {
+		return ShareView{}, mesh.Errf(mesh.CodeInvalid, "%v. Choose a folder that does not contain it", err)
 	}
 	allow, err := normalizeAllow(in.Allow)
 	if err != nil {

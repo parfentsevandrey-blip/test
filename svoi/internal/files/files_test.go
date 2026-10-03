@@ -20,7 +20,7 @@ import (
 // newManager builds a Manager for a node with a mutable share list.
 func newManager(t *testing.T, n *mesh.Node, shares *[]Share, set *TransferSettings) *Manager {
 	t.Helper()
-	m := NewManager(Config{Node: n, Shares: func() []Share { return *shares }})
+	m := NewManager(Config{Node: n, Shares: func() []Share { return *shares }, Protected: []string{n.Dir()}})
 	m.RegisterRPC(n)
 	db, err := store.Open(filepath.Join(n.Dir(), "svoi.db"))
 	if err != nil {

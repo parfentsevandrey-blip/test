@@ -7,23 +7,28 @@ import { refreshState } from "../sse.js";
 import { useStore } from "../store.js";
 import { langPref, setLangPref, setThemePref, themePref } from "../prefs.js";
 import { Button, Callout, Field, Progress, Segmented } from "../components/ui.js";
+import { DnsPreview } from "../components/misc.js";
 import { toast } from "../components/toast.js";
-import { cx } from "../util.js";
-
-const NAME_RE = /^[\p{L}\p{N}][\p{L}\p{N}._-]{0,62}$/u;
+import { fmtDateTime } from "../format.js";
+import { cx, DEVICE_NAME_RE, normalizeDeviceName as normalizeName } from "../util.js";
 
 function suggestName(os) {
   return { darwin: "macbook", windows: "pc", linux: "server", android: "phone", ios: "iphone", freebsd: "server" }[os] || "laptop";
 }
 
-function normalizeName(v) {
-  return v.trim().replace(/\s+/g, "-");
-}
-
 function validateName(v) {
   if (!v) return t("common.required");
-  if (!NAME_RE.test(v)) return t("dev.nameInvalid");
+  if (!DEVICE_NAME_RE.test(v)) return t("dev.nameInvalid");
   return "";
+}
+
+/** Shown while GET /api/state carries `removed`: an admin removed this device from its mesh. */
+function RemovedNotice({ removed }) {
+  return html`<${Callout} tone="warn" icon="userX" class="onb-removed" role="status" data-testid="removed-notice"
+      title=${t("onb.removed.title", { mesh: removed.meshName || "—" })}>
+    <p>${t("onb.removed.text")}</p>
+    ${removed.at ? html`<p class="faint xsmall mt-1">${t("onb.removed.when", { when: fmtDateTime(removed.at) })}</p>` : null}
+  </${Callout}>`;
 }
 
 function Corner() {
@@ -78,7 +83,8 @@ function CreateForm({ self, onBack }) {
         ${(id, d) => html`<input id=${id} class="input" value=${mesh} placeholder=${t("onb.meshNamePh")} maxlength="40" autofocus data-testid="onb-mesh-name"
           aria-describedby=${d} aria-invalid=${errs.mesh ? "true" : undefined} onInput=${(e) => setMesh(e.target.value)} />`}
       </${Field}>
-      <${Field} label=${t("onb.deviceName")} hint=${t("onb.deviceNameHint")} error=${errs.name}>
+      <${Field} label=${t("onb.deviceName")} hint=${t("onb.deviceNameHint")} error=${errs.name}
+          extra=${html`<${DnsPreview} name=${name.trim() ? name : placeholder} />`}>
         ${(id, d) => html`<input id=${id} class="input" value=${name} placeholder=${placeholder} maxlength="63" autocapitalize="off" spellcheck="false" data-testid="onb-device-name"
           aria-describedby=${d} aria-invalid=${errs.name ? "true" : undefined}
           onInput=${(e) => setName(e.target.value)} onBlur=${() => setName(normalizeName(name))} />`}
@@ -165,7 +171,8 @@ function JoinForm({ self, onBack }) {
           aria-describedby=${d} aria-invalid=${errs.code ? "true" : undefined} onInput=${(e) => setCode(e.target.value)}></textarea>`}
       </${Field}>
       <div class="form-row">
-        <${Field} label=${t("onb.deviceName")} error=${errs.name} hint=${t("onb.deviceNameHintShort")}>
+        <${Field} label=${t("onb.deviceName")} error=${errs.name} hint=${t("onb.deviceNameHintShort")}
+            extra=${html`<${DnsPreview} name=${name.trim() ? name : placeholder} />`}>
           ${(id, d) => html`<input id=${id} class="input" value=${name} placeholder=${placeholder} maxlength="63" autocapitalize="off" spellcheck="false" data-testid="onb-device-name"
             aria-describedby=${d} aria-invalid=${errs.name ? "true" : undefined}
             onInput=${(e) => setName(e.target.value)} onBlur=${() => setName(normalizeName(name))} />`}
@@ -182,11 +189,13 @@ function JoinForm({ self, onBack }) {
 
 export function OnboardingView() {
   const self = useStore((s) => s.self);
+  const removed = useStore((s) => s.removed);
   const [mode, setMode] = useState(null); // null | create | join
   const back = () => setMode(null);
   return html`<div class="onb" data-testid="page-onboarding">
     <${Corner} />
     <main class="onb__main" id="main" tabindex="-1">
+      ${removed && html`<${RemovedNotice} removed=${removed} />`}
       <header class="onb__hero">
         <div class="onb__brand"><${Logo} size=${56} /><span class="onb__wordmark">${t("app.name")}</span></div>
         <h1 class="onb__title">${t("onb.title")}</h1>

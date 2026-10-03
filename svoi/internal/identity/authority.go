@@ -191,6 +191,10 @@ func (a *Authority) Issue(req IssueRequest, existing []*Member) (*Member, error)
 	if _, err := IDToX25519(req.ID); err != nil {
 		return nil, err
 	}
+	if err := checkStrongKey(req.ID); err != nil {
+		return nil, err
+	}
+	owner := SanitizeOwner(req.Owner)
 	names := map[string]bool{}
 	ips := map[netip.Addr]bool{}
 	for _, m := range existing {
@@ -214,7 +218,7 @@ func (a *Authority) Issue(req IssueRequest, existing []*Member) (*Member, error)
 		SerialNumber: serial,
 		Subject: pkix.Name{
 			CommonName:   name,
-			Organization: []string{strings.TrimSpace(req.Owner)},
+			Organization: []string{owner},
 		},
 		DNSNames:           []string{name + "." + DNSSuffix},
 		IPAddresses:        []net.IP{ip4.AsSlice(), ip6.AsSlice()},
@@ -225,7 +229,7 @@ func (a *Authority) Issue(req IssueRequest, existing []*Member) (*Member, error)
 		ExtraExtensions:    []pkix.Extension{{Id: oidMemberExt, Value: ext}},
 		SignatureAlgorithm: x509.PureEd25519,
 	}
-	if req.Owner == "" {
+	if owner == "" {
 		tpl.Subject.Organization = nil
 	}
 	der, err := x509.CreateCertificate(rand.Reader, tpl, a.Cert, ed25519.PublicKey(req.ID[:]), a.Priv)
@@ -286,6 +290,9 @@ func (r *Root) Verify(der []byte) (*Member, error) {
 	if SanitizeName(m.Name) != m.Name || m.Name == "" {
 		return nil, errors.New("identity: certificate carries an invalid device name")
 	}
+	if SanitizeOwner(m.Owner) != m.Owner {
+		return nil, errors.New("identity: certificate carries an invalid owner")
+	}
 	return m, nil
 }
 
@@ -335,6 +342,39 @@ func SanitizeName(s string) string {
 		out = "device"
 	}
 	return out
+}
+
+// MaxOwnerRunes is the longest owner label a certificate may carry.
+const MaxOwnerRunes = 64
+
+// SanitizeOwner turns the owner label a joining device typed into something safe
+// to sign, gossip to every member and show in their interfaces: surrounding and
+// repeated blanks collapse, control and invisible formatting characters go, and
+// it is cut to MaxOwnerRunes.
+func SanitizeOwner(s string) string {
+	var b strings.Builder
+	space := false
+	n := 0
+	for _, r := range strings.TrimSpace(s) {
+		switch {
+		case unicode.IsSpace(r):
+			space = true
+			continue
+		case unicode.IsControl(r) || unicode.Is(unicode.Cf, r) || r == unicode.ReplacementChar || !unicode.IsPrint(r):
+			continue
+		}
+		if space && b.Len() > 0 {
+			b.WriteByte(' ')
+			n++
+		}
+		space = false
+		if n >= MaxOwnerRunes {
+			break
+		}
+		b.WriteRune(r)
+		n++
+	}
+	return strings.TrimSpace(b.String())
 }
 
 // UniqueName appends -2, -3, ... until the name is not in taken.

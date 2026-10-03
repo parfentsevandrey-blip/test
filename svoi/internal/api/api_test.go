@@ -1,13 +1,17 @@
 package api_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/json"
+	"hash/crc32"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -446,5 +450,75 @@ func TestStaticInterface(t *testing.T) {
 	// The API stays behind the token even though the page itself is public.
 	if resp, _ := get("/api/state"); resp.StatusCode != 401 {
 		t.Errorf("/api/state without credentials: %d", resp.StatusCode)
+	}
+}
+
+// A share that would expose svoi's own keys and settings (the folder that holds
+// them, one of its parents such as the home folder, or something inside it) is
+// refused when saved.
+func TestSharingTheDataFolderIsRefused(t *testing.T) {
+	root := t.TempDir()
+	data := filepath.Join(root, "home", ".config", "svoi")
+	a, err := app.Open(app.Options{Dir: data, DeviceName: "keys-box", Owner: "tester"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer a.Close()
+	ts := httptest.NewServer(api.New(a, nil).Handler())
+	defer ts.Close()
+	e := &env{t: t, app: a, srv: ts, tok: a.Token()}
+	e.call("POST", "/api/mesh/create", `{"meshName":"M","deviceName":"keys-box"}`, nil)
+	os.MkdirAll(filepath.Join(data, "blobs"), 0o755)
+	for _, p := range []string{data, filepath.Join(data, "blobs"), filepath.Join(root, "home"), root} {
+		var out struct {
+			Error struct{ Code, Message string }
+		}
+		code := e.call("POST", "/api/shares", `{"name":"x","path":"`+p+`","mode":"ro"}`, &out)
+		if code != 400 || !strings.Contains(out.Error.Message, "keys") {
+			t.Errorf("sharing %s: %d %+v", p, code, out)
+		}
+	}
+	ok := t.TempDir()
+	if code := e.call("POST", "/api/shares", `{"name":"fine","path":"`+ok+`","mode":"ro"}`, nil); code != 200 {
+		t.Errorf("an unrelated folder was refused: %d", code)
+	}
+}
+
+// A tiny PNG that declares a huge canvas must not be decoded for a thumbnail
+// (it used to allocate gigabytes and take the node down).
+func TestThumbnailRefusesDecompressionBombs(t *testing.T) {
+	e := newEnv(t)
+	e.call("POST", "/api/mesh/create", `{"meshName":"M","deviceName":"box"}`, nil)
+	dir := t.TempDir()
+	// PNG signature + IHDR 40000x40000 (8-bit grayscale), a truncated IDAT and IEND: ~100 bytes.
+	var png bytes.Buffer
+	png.WriteString("\x89PNG\r\n\x1a\n")
+	chunk := func(typ string, data []byte) {
+		binary.Write(&png, binary.BigEndian, uint32(len(data)))
+		body := append([]byte(typ), data...)
+		png.Write(body)
+		binary.Write(&png, binary.BigEndian, crc32.ChecksumIEEE(body))
+	}
+	ihdr := make([]byte, 13)
+	binary.BigEndian.PutUint32(ihdr[0:], 40000)
+	binary.BigEndian.PutUint32(ihdr[4:], 40000)
+	ihdr[8], ihdr[9] = 8, 0
+	chunk("IHDR", ihdr)
+	chunk("IDAT", []byte{0x78, 0x9c, 0x63, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01})
+	chunk("IEND", nil)
+	os.WriteFile(filepath.Join(dir, "bomb.png"), png.Bytes(), 0o644)
+	var sh struct{ ID string }
+	e.call("POST", "/api/shares", `{"name":"W","path":"`+dir+`","mode":"ro"}`, &sh)
+
+	var before, after runtime.MemStats
+	runtime.GC()
+	runtime.ReadMemStats(&before)
+	resp, _ := e.req("GET", "/api/peers/self/thumb?share="+sh.ID+"&path=/bomb.png&w=256", "", e.auth)
+	runtime.ReadMemStats(&after)
+	if resp.StatusCode != 404 {
+		t.Fatalf("thumbnail of a bomb: %d", resp.StatusCode)
+	}
+	if grown := after.TotalAlloc - before.TotalAlloc; grown > 200<<20 {
+		t.Fatalf("the bomb made the node allocate %d MB", grown>>20)
 	}
 }

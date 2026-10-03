@@ -1,7 +1,7 @@
 // Tiny global store: one mutable state object, immutable updates of its
 // fields, batched notifications and a selector hook. Plus a small event bus
 // for SSE events that views react to (mail, chat, …).
-import { useEffect, useReducer, useRef } from "../vendor/preact-htm.js";
+import { useLayoutEffect, useReducer, useRef } from "../vendor/preact-htm.js";
 
 export const state = {
   booted: false,        // first /api/state finished (successfully or not)
@@ -69,10 +69,17 @@ export function useStore(selector) {
   const value = selector(state);
   const last = useRef(value);
   last.current = value;
-  useEffect(() => subscribe(() => {
-    const next = sel.current(state);
-    if (!shallowEqual(next, last.current)) force();
-  }), []);
+  // Subscribe in a layout effect (synchronously after the commit) and re-check
+  // right away: a passive effect runs a frame later, and an update landing in
+  // between (e.g. a fast first /api/state) would otherwise be lost for good.
+  useLayoutEffect(() => {
+    const check = () => {
+      if (!shallowEqual(sel.current(state), last.current)) force();
+    };
+    const off = subscribe(check);
+    check();
+    return off;
+  }, []);
   return value;
 }
 
@@ -97,7 +104,7 @@ export function emit(type, data) {
 export function useEvent(type, fn) {
   const ref = useRef(fn);
   ref.current = fn;
-  useEffect(() => on(type, (d) => ref.current(d)), [type]);
+  useLayoutEffect(() => on(type, (d) => ref.current(d)), [type]);
 }
 
 // ---------- helpers for common slices ----------

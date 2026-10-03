@@ -120,15 +120,21 @@ export function Segmented({ value, options, onChange, label, size, class: cls, f
 
 let fieldSeq = 0;
 /** Labelled form field. Children receive the generated id via render prop or `id` attribute. */
-export function Field({ label, hint, error, children, id, class: cls, optional }) {
+/**
+ * Label + control + hint/error. `children` may be a function (id, describedBy)
+ * to wire the control up; `extra` is shown under the hint (e.g. a live preview).
+ */
+export function Field({ label, hint, error, children, id, class: cls, optional, extra }) {
   const ref = useRef(id || `f${++fieldSeq}`);
   const fid = ref.current;
-  const content = typeof children === "function" ? children(fid, hint || error ? fid + "-h" : undefined) : children;
+  const described = [(hint || error) && fid + "-h", extra && fid + "-x"].filter(Boolean).join(" ") || undefined;
+  const content = typeof children === "function" ? children(fid, described) : children;
   return html`<div class=${cx("field", error && "has-error", cls)}>
     ${label && html`<label class="field__label" for=${fid}>${label}${optional && html` <span class="faint">· ${t("common.optional")}</span>`}</label>`}
     ${content}
     ${error ? html`<p class="field__error" id=${fid + "-h"} role="alert">${error}</p>`
       : hint && html`<p class="field__hint" id=${fid + "-h"}>${hint}</p>`}
+    ${extra && html`<div class="field__extra" id=${fid + "-x"}>${extra}</div>`}
   </div>`;
 }
 

@@ -1,6 +1,7 @@
 package mesh
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"encoding/json"
@@ -83,20 +84,28 @@ func writeFrame(w io.Writer, v any) error {
 	return err
 }
 
-func readFrame(r io.Reader, v any) error {
+func readFrame(r io.Reader, v any) error { return readFrameMax(r, v, maxFrame) }
+
+// readFrameMax reads one length-prefixed JSON frame of at most limit bytes. The
+// buffer grows with the bytes that actually arrive: a peer that announces
+// 8 MiB and then stays silent costs a few bytes, not 8 MiB per open stream.
+func readFrameMax(r io.Reader, v any, limit uint32) error {
 	var hdr [4]byte
 	if _, err := io.ReadFull(r, hdr[:]); err != nil {
 		return err
 	}
 	n := binary.BigEndian.Uint32(hdr[:])
-	if n > maxFrame {
+	if n > limit {
 		return errors.New("mesh: frame too large")
 	}
-	buf := make([]byte, n)
-	if _, err := io.ReadFull(r, buf); err != nil {
+	var buf bytes.Buffer
+	if n <= 16<<10 {
+		buf.Grow(int(n))
+	}
+	if _, err := io.CopyN(&buf, r, int64(n)); err != nil {
 		return err
 	}
-	return json.Unmarshal(buf, v)
+	return json.Unmarshal(buf.Bytes(), v)
 }
 
 // Call is an incoming request as seen by a handler.

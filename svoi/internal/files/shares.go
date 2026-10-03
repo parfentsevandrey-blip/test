@@ -75,6 +75,40 @@ type Config struct {
 	Node *mesh.Node
 	// Shares returns the current share definitions (owned by the app config).
 	Shares func() []Share
+	// Protected are folders that must never be reachable through a share, whether
+	// the share is one of them, contains one or lies inside one (the data folder of
+	// this device: its keys, the mesh authority key, the interface token).
+	Protected []string
+}
+
+// ErrProtected is returned for a share that would expose the device's own secrets.
+var ErrProtected = errors.New("this folder contains (or lies inside) the folder where svoi keeps its keys and settings")
+
+func within(child, parent string) bool {
+	rel, err := filepath.Rel(parent, child)
+	return err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+}
+
+func realPath(p string) string {
+	if r, err := filepath.EvalSymlinks(p); err == nil {
+		p = r
+	}
+	if a, err := filepath.Abs(p); err == nil {
+		p = a
+	}
+	return filepath.Clean(p)
+}
+
+// CheckShareRoot reports ErrProtected when sharing dir would expose protected data.
+func (m *Manager) CheckShareRoot(dir string) error {
+	d := realPath(dir)
+	for _, prot := range m.cfg.Protected {
+		pr := realPath(prot)
+		if within(d, pr) || within(pr, d) {
+			return ErrProtected
+		}
+	}
+	return nil
 }
 
 // NewManager creates a manager. Call RegisterRPC to serve other devices.
@@ -107,7 +141,7 @@ func shareAllows(s Share, actor Actor) bool {
 func (m *Manager) VisibleShares(actor Actor) []RemoteShare {
 	var out []RemoteShare
 	for _, s := range m.cfg.Shares() {
-		if shareAllows(s, actor) {
+		if shareAllows(s, actor) && m.CheckShareRoot(s.Path) == nil {
 			out = append(out, RemoteShare{ID: s.ID, Name: s.Name, Mode: s.Mode})
 		}
 	}
@@ -116,8 +150,10 @@ func (m *Manager) VisibleShares(actor Actor) []RemoteShare {
 
 func (m *Manager) authorize(actor Actor, id string, write bool) (Share, error) {
 	s, ok := m.share(id)
-	if !ok || !shareAllows(s, actor) {
-		// Do not reveal whether a share exists to someone who may not see it.
+	if !ok || !shareAllows(s, actor) || m.CheckShareRoot(s.Path) != nil {
+		// Do not reveal whether a share exists to someone who may not see it. (A share
+		// that reaches the device's own secrets is treated as not existing, even if an
+		// older version or a hand-edited config let it be saved.)
 		return Share{}, mesh.Errf(mesh.CodeNotFound, "no such shared folder")
 	}
 	if write && s.Mode != "rw" {

@@ -44,8 +44,10 @@ group("mail", () => {
     await page.locator('[data-testid="mail-item"]', { hasText: "Список покупок" }).click();
     await tid(page, "mail-reply").click();
     await tid(page, "compose-body").waitFor();
-    assert(/Re: Список покупок/i.test(await tid(page, "compose-subject").inputValue()), "reply subject");
+    // the original message is fetched asynchronously after the form appears
+    await page.waitForFunction(() => /Re: Список покупок/i.test(document.querySelector('[data-testid="compose-subject"]').value), null, { timeout: 8000 });
     const answer = "Куплю всё по списку, " + crypto.randomBytes(3).toString("hex");
+    await page.waitForFunction(() => /пишет/.test(document.querySelector('[data-testid="compose-body"]').value)); // the quoted original is in
     await tid(page, "compose-body").click();
     await page.keyboard.press("Control+Home");
     await page.keyboard.type(answer + "\n\n");

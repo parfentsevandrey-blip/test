@@ -83,7 +83,25 @@ func IDFromPublicKey(pub ed25519.PublicKey) (ID, error) {
 	}
 	var id ID
 	copy(id[:], pub)
+	if err := checkStrongKey(id); err != nil {
+		return ID{}, err
+	}
 	return id, nil
+}
+
+// checkStrongKey rejects public keys that are not a valid curve point or whose
+// order divides the cofactor (the identity point and its small-order relatives):
+// for those, signatures can be forged by anyone and the key-agreement result is a
+// constant, so such a "device" would be impersonable by every other member.
+func checkStrongKey(id ID) error {
+	p, err := new(edwards25519.Point).SetBytes(id[:])
+	if err != nil {
+		return errors.New("identity: not a valid public key")
+	}
+	if new(edwards25519.Point).MultByCofactor(p).Equal(edwards25519.NewIdentityPoint()) == 1 {
+		return errors.New("identity: weak (small-order) public key")
+	}
+	return nil
 }
 
 // Device is this machine's long-term identity.

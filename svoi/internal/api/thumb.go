@@ -23,7 +23,10 @@ import (
 	"github.com/parfentsevandrey-blip/test/svoi/internal/files"
 )
 
-const maxThumbSource = 30 << 20 // do not decode images larger than this
+const (
+	maxThumbSource = 30 << 20 // do not decode images larger than this (bytes)
+	maxThumbPixels = 50 << 20 // ...or declaring more pixels than this (≈ 50 MP; decoding costs 4 bytes each)
+)
 
 // thumbCache is a small LRU of encoded thumbnails.
 type thumbCache struct {
@@ -138,6 +141,13 @@ func (s *Server) handleThumb(w http.ResponseWriter, r *http.Request) {
 	raw, err := io.ReadAll(io.LimitReader(rc, maxThumbSource+1))
 	if err != nil {
 		writeError(w, err)
+		return
+	}
+	// A small file can declare a gigantic canvas (a 1.6 MB PNG of 40000x40000
+	// pixels needs gigabytes to decode): look at the header first.
+	cfg, _, err := image.DecodeConfig(bytes.NewReader(raw))
+	if err != nil || cfg.Width <= 0 || cfg.Height <= 0 || int64(cfg.Width)*int64(cfg.Height) > maxThumbPixels {
+		writeError(w, errCode("notfound", "the image is too large or cannot be decoded"))
 		return
 	}
 	img, _, err := image.Decode(bytes.NewReader(raw))

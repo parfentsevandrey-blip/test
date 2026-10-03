@@ -132,7 +132,7 @@ func Open(opts Options) (*App, error) {
 		return nil, err
 	}
 
-	a.files = files.NewManager(files.Config{Node: a.node, Shares: func() []files.Share { return a.cfg.Get().Shares }})
+	a.files = files.NewManager(files.Config{Node: a.node, Shares: func() []files.Share { return a.cfg.Get().Shares }, Protected: []string{opts.Dir}})
 	a.files.RegisterRPC(a.node)
 	if err := a.files.InitTransfers(a.db, opts.Dir, a.transferSettings, a.onTransfer); err != nil {
 		a.Close()
@@ -566,11 +566,7 @@ func (a *App) JoinMesh(ctx context.Context, code, deviceName, owner string) erro
 
 // LeaveMesh forgets the mesh; the device key is kept.
 func (a *App) LeaveMesh() error {
-	for _, f := range a.cfg.Get().Forwards {
-		a.fwd.Close(f.ID)
-	}
-	_ = a.cfg.Update(func(c *Config) error { c.Forwards = []services.Forward{}; return nil })
-	a.tun.Stop()
+	a.forgetMeshScoped()
 	if err := a.node.Leave(); err != nil {
 		return err
 	}
@@ -578,14 +574,27 @@ func (a *App) LeaveMesh() error {
 	return nil
 }
 
-// onRemoved cleans up after an administrator removed this device from the mesh
-// (the node itself forgets the mesh and takes a new identity).
-func (a *App) onRemoved() {
+// forgetMeshScoped drops everything that only made sense inside the mesh being
+// left: forwards, the virtual interface and — because they were granted to that
+// mesh's members — the shared folders and published services. Otherwise a device
+// that joins another mesh would silently offer its folders to strangers.
+func (a *App) forgetMeshScoped() {
 	for _, f := range a.cfg.Get().Forwards {
 		a.fwd.Close(f.ID)
 	}
-	_ = a.cfg.Update(func(c *Config) error { c.Forwards = []services.Forward{}; return nil })
+	_ = a.cfg.Update(func(c *Config) error {
+		c.Forwards = []services.Forward{}
+		c.Shares = []files.Share{}
+		c.Services = []services.Service{}
+		return nil
+	})
 	a.tun.Stop()
+}
+
+// onRemoved cleans up after an administrator removed this device from the mesh
+// (the node itself forgets the mesh and takes a new identity).
+func (a *App) onRemoved() {
+	a.forgetMeshScoped()
 	name := ""
 	if ri := a.node.Removed(); ri != nil {
 		name = ri.MeshName

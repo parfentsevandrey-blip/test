@@ -217,3 +217,40 @@ export function pick(obj, keys) {
 export function natTone(d) {
   return d === "open" || d === "easy" ? "ok" : d === "hard" ? "warn" : "muted";
 }
+
+// ---------- device names ----------
+/** What device-name forms accept, checked after whitespace → "-" (see normalizeDeviceName). */
+export const DEVICE_NAME_RE = /^[\p{L}\p{N}][\p{L}\p{N}._-]{0,62}$/u;
+
+export function normalizeDeviceName(v) {
+  return String(v || "").trim().replace(/\s+/g, "-");
+}
+
+// Cyrillic → Latin, the same table the node uses (docs/UI-API.md → "Device names").
+const TRANSLIT = new Map(Object.entries({
+  а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo", ж: "zh", з: "z", и: "i", й: "y",
+  к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f",
+  х: "kh", ц: "ts", ч: "ch", ш: "sh", щ: "shch", ъ: "", ы: "y", ь: "", э: "e", ю: "yu", я: "ya",
+  і: "i", ї: "yi", є: "ye", ґ: "g", ў: "u",
+}));
+
+/**
+ * The DNS label the node makes of a typed device name: lowercase, NFC,
+ * transliterate, strip accents, anything else → "-" (collapsed, trimmed),
+ * at most 32 chars, "device" if nothing is left. «Кухонный ноутбук» →
+ * "kukhonnyy-noutbuk" (reachable as kukhonnyy-noutbuk.svoi). A preview only:
+ * the node's answer wins (it also adds -2, -3… on collisions).
+ */
+export function dnsLabel(input) {
+  let out = "";
+  for (const ch of String(input || "").toLowerCase().normalize("NFC")) {
+    const tr = TRANSLIT.get(ch);
+    if (tr !== undefined) { out += tr; continue; }
+    const base = ch.normalize("NFD").replace(/\p{M}+/gu, "");
+    if (!base) continue; // a lone combining mark
+    out += /^[a-z0-9]+$/.test(base) ? base : "-";
+  }
+  out = out.replace(/-{2,}/g, "-").replace(/^-+|-+$/g, "");
+  if (out.length > 32) out = out.slice(0, 32).replace(/-+$/, "");
+  return out || "device";
+}
