@@ -39,6 +39,7 @@ type inviteRec struct {
 	Secret  []byte `json:"secret"`
 	Expires int64  `json:"expires"`
 	Admin   bool   `json:"admin"`
+	Owner   string `json:"owner,omitempty"`
 	Created int64  `json:"created"`
 	Fails   int    `json:"fails,omitempty"`
 	Code    string `json:"code,omitempty"`
@@ -108,7 +109,7 @@ func (n *Node) loadState() error {
 		if time.Now().Unix() >= ir.Expires {
 			continue
 		}
-		inv := &invite{secret: ir.Secret, expires: time.Unix(ir.Expires, 0), admin: ir.Admin, created: time.Unix(ir.Created, 0), fails: ir.Fails, code: ir.Code}
+		inv := &invite{secret: ir.Secret, expires: time.Unix(ir.Expires, 0), admin: ir.Admin, owner: ir.Owner, created: time.Unix(ir.Created, 0), fails: ir.Fails, code: ir.Code}
 		var h [8]byte
 		i := identity.Invite{}
 		copy(i.Secret[:], ir.Secret)
@@ -148,7 +149,7 @@ func (n *Node) saveState() error {
 	sort.Slice(sf.Revoked, func(i, j int) bool { return sf.Revoked[i].At < sf.Revoked[j].At })
 	for _, inv := range n.invites {
 		sf.Invites = append(sf.Invites, inviteRec{
-			Secret: inv.secret, Expires: inv.expires.Unix(), Admin: inv.admin, Created: inv.created.Unix(), Fails: inv.fails, Code: inv.code,
+			Secret: inv.secret, Expires: inv.expires.Unix(), Admin: inv.admin, Owner: inv.owner, Created: inv.created.Unix(), Fails: inv.fails, Code: inv.code,
 		})
 	}
 	n.mu.RUnlock()
@@ -183,6 +184,7 @@ type invite struct {
 	secret  []byte
 	expires time.Time
 	admin   bool
+	owner   string // label for the joining device, chosen by the inviter
 	created time.Time
 	fails   int
 	code    string

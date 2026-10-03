@@ -19,6 +19,7 @@ package magic
 
 import (
 	"context"
+	"crypto/subtle"
 	"errors"
 	"fmt"
 	"net"
@@ -310,8 +311,9 @@ func (c *Conn) AddPeer(id identity.ID) error {
 	}
 	box.Precompute(&p.shared, &pub, &c.xpriv)
 	p.macKey = deriveMACKey(p.shared)
+	p.dataKey = deriveKey("svoi/data-mac/v1", p.shared)
 	var v [16]byte
-	v[0], v[1], v[2], v[3] = 0xfd, 0xc7, 0x5e, 0x57
+	v[0], v[1], v[2], v[3] = virtualPrefix[0], virtualPrefix[1], virtualPrefix[2], virtualPrefix[3]
 	copy(v[8:], p.r8[:])
 	p.vap = netip.AddrPortFrom(netip.AddrFrom16(v), 1)
 	p.vaddr = net.UDPAddrFromAddrPort(p.vap)
@@ -605,8 +607,8 @@ func (c *Conn) handlePacket(pkt []byte, from netip.AddrPort) {
 			return
 		}
 		pr := c.peerByR8([8]byte(pkt[1:9]))
-		if pr == nil {
-			return
+		if pr == nil || !c.dataMACOK(pr, [8]byte(pkt[9:17]), pkt[dataHeader:]) {
+			return // unknown sender or forged: never reaches QUIC and never teaches us an address
 		}
 		pr.noteDirectSource(from)
 		c.deliver(pr, pkt[dataHeader:], false)
@@ -669,16 +671,20 @@ func (c *Conn) sendData(pr *peer, payload []byte) {
 	defer c.bufPool.Put(bp)
 	switch {
 	case ok:
+		mac := dataMAC(&pr.dataKey, c.r8, pr.r8, payload)
 		pkt := append((*bp)[:0], typeData)
 		pkt = append(pkt, c.r8[:]...)
+		pkt = append(pkt, mac[:]...)
 		pkt = append(pkt, payload...)
 		_, _ = c.sock.WriteToAddrPort(pkt, direct)
 		pr.txDirect.Add(uint64(len(payload)))
 	case relay != nil:
 		// inner packet is a normal data packet, wrapped for the relay
+		mac := dataMAC(&pr.dataKey, c.r8, pr.r8, payload)
 		inner := make([]byte, 0, dataHeader+len(payload))
 		inner = append(inner, typeData)
 		inner = append(inner, c.r8[:]...)
+		inner = append(inner, mac[:]...)
 		inner = append(inner, payload...)
 		if c.sendRelayed(relay, pr, inner, *bp) {
 			pr.txRelay.Add(uint64(len(payload)))
@@ -690,13 +696,40 @@ func (c *Conn) sendData(pr *peer, payload []byte) {
 
 // ---- crypto helpers ----
 
-func deriveMACKey(shared [32]byte) [32]byte {
+// virtualPrefix starts the stand-in IPv6 address QUIC sees for each member.
+var virtualPrefix = [4]byte{0xfd, 0xc7, 0x5e, 0x57}
+
+// IsVirtual reports whether addr is the stand-in address of a member (as opposed
+// to the real address of an anonymous joiner).
+func IsVirtual(addr net.Addr) bool {
+	ua, ok := addr.(*net.UDPAddr)
+	if !ok || len(ua.IP) != net.IPv6len {
+		return false
+	}
+	return ua.IP[0] == virtualPrefix[0] && ua.IP[1] == virtualPrefix[1] && ua.IP[2] == virtualPrefix[2] && ua.IP[3] == virtualPrefix[3]
+}
+
+func deriveMACKey(shared [32]byte) [32]byte { return deriveKey("svoi/relay-mac/v1", shared) }
+
+func deriveKey(label string, shared [32]byte) [32]byte {
 	h, _ := blake2s.New256(nil)
-	h.Write([]byte("svoi/relay-mac/v1"))
+	h.Write([]byte(label))
 	h.Write(shared[:])
 	var out [32]byte
 	h.Sum(out[:0])
 	return out
+}
+
+// dataMAC authenticates one data packet from src to dst. Both route ids are part
+// of the input although only the sender's travels in the header, so a packet
+// cannot be reflected back at its sender or replayed to a third device.
+func dataMAC(key *[32]byte, src, dst [8]byte, payload []byte) [8]byte {
+	return mac8(key, []byte{typeData}, src[:], dst[:], payload)
+}
+
+func (c *Conn) dataMACOK(from *peer, mac [8]byte, payload []byte) bool {
+	want := dataMAC(&from.dataKey, from.r8, c.r8, payload)
+	return subtle.ConstantTimeCompare(want[:], mac[:]) == 1
 }
 
 // mac8 computes the truncated keyed hash protecting relay envelopes.

@@ -412,7 +412,11 @@ func (n *Node) startMember() error {
 	n.udpPort = mg.Port()
 	_ = os.WriteFile(filepath.Join(n.cfg.Dir, "udp.port"), []byte(fmt.Sprintf("%d\n", n.udpPort)), 0o600)
 
-	tr := &quic.Transport{Conn: mg}
+	// Members are authenticated per packet (see magic); whoever else reaches the
+	// QUIC listener is a joiner and must prove it can receive at its source
+	// address (Retry) before any handshake state is kept or any large answer is
+	// sent, so forged Initials cost us nothing and cannot be used for reflection.
+	tr := &quic.Transport{Conn: mg, VerifySourceAddress: func(a net.Addr) bool { return !magic.IsVirtual(a) }}
 	ln, err := tr.Listen(n.serverTLS(), n.quicConf())
 	if err != nil {
 		_ = tr.Close()

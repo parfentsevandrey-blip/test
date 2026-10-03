@@ -42,8 +42,12 @@ type Device struct {
 	Name string
 	App  *app.App
 	UI   *api.Server
-	URL  string
 }
+
+// LoginURL returns a fresh single-use link (valid ten minutes) that signs a
+// browser in to this device's interface. The master token stays in
+// <data dir>/ui.token, as on a real device.
+func (d *Device) LoginURL() string { return d.UI.URL() }
 
 // Demo is a running simulation.
 type Demo struct {
@@ -59,6 +63,7 @@ func (d *Demo) Close() {
 	d.cancel()
 	for _, dev := range d.Devices {
 		dev.UI.Close()
+		_ = os.Remove(filepath.Join(dev.App.Dir(), "ui.addr"))
 		dev.App.Close()
 	}
 	for _, f := range d.cleanup {
@@ -139,7 +144,9 @@ func Start(ctx context.Context, opts Options) (*Demo, error) {
 			return nil, fmt.Errorf("cannot start the interface of %s: %w", name, err)
 		}
 		go srv.Serve(ln)
-		d.Devices[name] = &Device{Name: name, App: a, UI: srv, URL: srv.URL()}
+		// Like `svoi up`: `svoi open --dir <this data dir>` finds the device.
+		_ = os.WriteFile(filepath.Join(a.Dir(), "ui.addr"), []byte(ln.Addr().String()+"\n"), 0o600)
+		d.Devices[name] = &Device{Name: name, App: a, UI: srv}
 	}
 	// One mesh: the home server founds it; the laptop joins as an administrator
 	// (this is "the user's device"); the NAS and the phone join normally.
@@ -149,13 +156,13 @@ func Start(ctx context.Context, opts Options) (*Demo, error) {
 		return nil, err
 	}
 	join := func(name string, admin bool) error {
-		inv, err := hs.NewInvite(admin, 10*time.Minute)
+		inv, err := hs.NewInvite(admin, 10*time.Minute, owner[name])
 		if err != nil {
 			return err
 		}
 		jctx, cancelJoin := context.WithTimeout(ctx, 30*time.Second)
 		defer cancelJoin()
-		return d.Devices[name].App.JoinMesh(jctx, inv.Code, name, owner[name])
+		return d.Devices[name].App.JoinMesh(jctx, inv.Code, name)
 	}
 	for _, step := range []struct {
 		name  string

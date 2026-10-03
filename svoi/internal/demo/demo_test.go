@@ -17,12 +17,9 @@ type apiClient struct {
 	token string
 }
 
+// newAPI talks to a device like the command line does: master token from its data directory.
 func newAPI(t *testing.T, d *Device) *apiClient {
-	u, err := url.Parse(d.URL)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return &apiClient{t: t, base: "http://" + u.Host, token: u.Query().Get("t")}
+	return &apiClient{t: t, base: "http://" + d.UI.Addr(), token: d.App.Token()}
 }
 
 func (c *apiClient) do(method, path string, body io.Reader, out any) int {

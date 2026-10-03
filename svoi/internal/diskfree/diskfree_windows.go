@@ -1,10 +1,11 @@
 //go:build windows
 
-package files
+// Package diskfree reports the free space of a volume, where the platform allows.
+package diskfree
 
 import "golang.org/x/sys/windows"
 
-func diskFree(dir string) (uint64, bool) {
+func Free(dir string) (uint64, bool) {
 	p, err := windows.UTF16PtrFromString(dir)
 	if err != nil {
 		return 0, false

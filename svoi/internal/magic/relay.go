@@ -92,7 +92,7 @@ func (c *Conn) handleRelayIn(pkt []byte) {
 	}
 	switch inner[0] {
 	case typeData:
-		if len(inner) <= dataHeader || [8]byte(inner[1:9]) != src.r8 {
+		if len(inner) <= dataHeader || [8]byte(inner[1:9]) != src.r8 || !c.dataMACOK(src, [8]byte(inner[9:17]), inner[dataHeader:]) {
 			return
 		}
 		src.mu.Lock()

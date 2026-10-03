@@ -13,11 +13,23 @@ and the UI mock server (`web-dev/mock-server.mjs`) must implement exactly this t
 * **Base**: all endpoints live under `/api/`. The UI uses **relative URLs** (`fetch("api/state")`
   from a page served at `/`), uses **hash routing** (`#/devices`, `#/files`, …) and loads
   every asset from the same origin (no CDN, must work offline).
-* **Auth**: the node prints `http://127.0.0.1:PORT/?t=<token>` once. Visiting it sets an
-  `HttpOnly; SameSite=Strict` cookie and redirects to `/`. API calls without the cookie
-  get `401 {"error":{"code":"unauthorized",…}}` — the UI then shows a full-screen
-  "Session expired — open the link printed by `svoi up` or run `svoi open`" page.
+* **Auth**: the node prints `http://127.0.0.1:PORT/?t=<login code>`; `svoi url` / `svoi open` print a
+  fresh one. A **login code** is random (192 bit), works **once** and for **10 minutes**. Visiting the link
+  exchanges it for a random *session id* (kept by the node as a hash in `ui.sessions`), sets that as an
+  `HttpOnly; SameSite=Strict` cookie `svoi_session` and redirects to `/` (the code is gone from the
+  address bar). A session lasts 14 days and is renewed while it is used, so an active browser stays
+  signed in; it survives a restart of the node. The master token (`ui.token`) is for the command line
+  only (`Authorization: Bearer …`) and is never put in a URL or a cookie — the browser cannot learn it.
+  API calls without a valid session get `401 {"error":{"code":"unauthorized",…}}` — the UI then shows a
+  full-screen "Session expired — run `svoi open` and open the new link" page (a refresh does not help;
+  the old link is used up).
   State-changing requests (anything but GET/HEAD) must send header `X-Svoi: 1`.
+  Auth endpoints (all but `logout` are for the command line, the UI never calls them):
+  `POST /api/login/code` (Bearer only) → `{"code","url","expiresIn":600,"singleUse":true,"sessionTtl"}`;
+  `POST /api/logout` ends this browser's session (the UI may offer "Sign out"; `?all=1` — Bearer only —
+  ends every session and cancels unused links, it is `svoi signout`);
+  `GET /api/handshake?n=<16–128 chars>` (no auth) → `{"proof": hex(HMAC-SHA256(token, "svoi-handshake/v1\0"+n))}` —
+  the command line checks it before it ever sends the token to the address recorded in `ui.addr`.
 * **IDs**: a device ID is the 52-char lowercase base32 string (`"id"` fields). `self` is
   accepted wherever `:id` of a device is expected and means "this device".
   `short` is the first 8 chars, for display. Other IDs (`transfer.id`, `mail.id`, …)
@@ -140,8 +152,11 @@ Full message adds:
 { …summary…, "body": "plain text, may contain newlines and links",
   "inReplyTo": null,
   "attachments": [ {"name":"report.pdf","size":123456,"mime":"application/pdf",
-                    "sha256":"…hex…", "state":"ready", "got": 123456} ] }
+                    "sha256":"…hex…", "state":"ready", "got": 123456,
+                    "needsConsent": true} ] }
                     // state: ready | fetching | remote (not downloaded yet) | failed
+                    // needsConsent (only when true): a `remote` attachment over 25 MB is not
+                    // downloaded on its own — show "Download (31 MB)" which POSTs …/fetch
 ```
 Bodies are **plain text**: the UI must render them escaped (auto-link URLs, keep line breaks);
 never inject as HTML.
@@ -162,7 +177,10 @@ never inject as HTML.
 ```jsonc
 { "id": "sh_…", "name": "Photos", "path": "/mnt/photos", "mode": "ro",   // ro | rw
   "allow": ["*"],                  // "*" = every member, or a list of device ids
-  "exists": true }                 // false if the folder is missing on disk
+  "exists": true,                  // false if the folder is missing on disk
+  "blocked": true }                // only when true: the folder holds svoi's own keys (it is the data
+                                   // directory, a parent of it, or inside it) — it is NOT served; show a warning
+                                   // and let the user pick a sub-folder
 // what a remote device exposes to you (GET /api/peers/:id/shares):
 { "id": "sh_…", "name": "Photos", "mode": "ro" }
 ```
@@ -179,6 +197,7 @@ never inject as HTML.
 ### Invite
 ```jsonc
 { "id": "…", "code": "SVOI1-AEAWVQFQ-…", "admin": false,
+  "owner": "Anna",                  // whose device this invitation is for; the *inviter* decides it
   "created": 1760000000, "expires": 1760001800,
   "qrSvg": "<svg …>…</svg>" }       // server-rendered QR code of `code`; safe to inject
 ```
@@ -214,7 +233,7 @@ Language and theme are **client-side only** (`localStorage`), not part of Settin
 | `GET /api/state` | → `{ "version", "configured", "self": Self, "peers": [Peer], "transfers": [Transfer] (active + last 50), "counters": {"mail","chat","offers"}, "invites": [Invite], "settings": Settings, "removed"?: {"meshName": "Дом", "at": 1760000000} }`. Works when `configured:false` (then `self` has only id/short/version/os/arch/configured, `peers: []`). `removed` is present only while the device is outside any mesh **because an administrator removed it** from one: the onboarding screen should say so ("this device was removed from the network «Дом» by an administrator — ask for a new invitation"). The device already has a fresh identity then, so a new invitation just works. A `notify` event with `level: "warn"` and `link: "#/"` is sent at the moment it happens, followed by a `peers` event with an empty list; the UI should reload `GET /api/state`. |
 | `GET /api/events` | SSE, see above |
 | `POST /api/mesh/create` | `{"meshName","deviceName","owner"}` → `{"ok":true}` (then reload state) |
-| `POST /api/mesh/join` | `{"invite","deviceName","owner"}` → `{"ok":true}`; may take up to ~25 s; errors are human readable in `error.message` |
+| `POST /api/mesh/join` | `{"invite","deviceName"}` → `{"ok":true}`; may take up to ~25 s; errors are human readable in `error.message`. There is no `owner` here: whose device this is was set by the inviting device in the invitation (an `owner` sent anyway is ignored), so a new device cannot claim someone else's name to get auto-accepted files. |
 | `POST /api/mesh/leave` | `{}` → `{"ok":true}` (forgets the mesh, keeps the device key) |
 | `POST /api/netcheck` | `{}` → `{ "self": Self }` re-runs STUN + re-probes peers (takes ≤ 3 s) |
 | `GET /api/diag/logs?limit=200` | → `{"lines":[{"ts":1760000000,"level":"info","msg":"…"}]}` |
@@ -224,7 +243,7 @@ Language and theme are **client-side only** (`localStorage`), not part of Settin
 | method & path | body → response |
 |---|---|
 | `GET /api/invites` | → `[Invite]` |
-| `POST /api/invites` | `{"admin":false,"ttlMinutes":30}` → `Invite` (admin only; `denied` otherwise) |
+| `POST /api/invites` | `{"admin":false,"ttlMinutes":30,"owner":"Anna"}` → `Invite` (admin only; `denied` otherwise). `owner` is whose device the invitation is for (≤ 64 characters; empty = the inviter's own owner). The "Add a device" dialog asks for it ("Whose device is it?", prefilled with this device's owner). |
 | `DELETE /api/invites/:id` | → `{"ok":true}` |
 | `POST /api/peers/:id/alias` | `{"alias":"Dad's phone"}` → `{"ok":true}` (local nickname; empty clears) |
 | `POST /api/peers/:id/revoke` | `{}` → `{"ok":true}` admin only; permanently removes the device |
@@ -254,7 +273,7 @@ Language and theme are **client-side only** (`localStorage`), not part of Settin
 | method & path | body → response |
 |---|---|
 | `GET /api/shares` | `[Share]` |
-| `POST /api/shares` | `{"name","path","mode":"ro","allow":["*"]}` → `Share` (`invalid` if the folder does not exist) |
+| `POST /api/shares` | `{"name","path","mode":"ro","allow":["*"]}` → `Share` (`invalid` if the folder does not exist, or if it would expose svoi's own keys: the data directory, one of its parents such as the home folder, or something inside it — the message says so) |
 | `PUT /api/shares/:id` | same fields → `Share` |
 | `DELETE /api/shares/:id` | → `{"ok":true}` |
 | `GET /api/local/fs?path=/home/me` | folder picker for *this* device: `{"path":"/home/me","parent":"/home","home":"/home/me","sep":"/","roots":["/"],"entries":[{"name":"Documents","isDir":true}]}` — directories only; `path` omitted → home |
@@ -269,6 +288,7 @@ Language and theme are **client-side only** (`localStorage`), not part of Settin
 | `DELETE /api/mail/:id` | in trash: delete forever; elsewhere: move to trash → `{"ok":true}` |
 | `POST /api/blobs?name=report.pdf&mime=application/pdf` | raw body → `{"id":"<sha256>","name","size","mime"}` (attachment staging) |
 | `GET /api/mail/:id/attachments/:index` | download attachment (`?dl=1` for attachment disposition); `404`/`409` while still `remote`/`fetching` |
+| `POST /api/mail/:id/attachments/:index/fetch` | `{}` → `{"ok":true}` — the user agrees to download an attachment with `needsConsent` (or retries a `failed` one). Show it as `fetching` at once; there is no event when it starts, a `mail` event comes when it ends (`ready`, or back to `remote`/`failed`) — re-read the message then |
 
 ### Chat
 | method & path | body → response |
@@ -278,6 +298,7 @@ Language and theme are **client-side only** (`localStorage`), not part of Settin
 | `POST /api/chat/:peerId` | `{"text":"hi","attachments":["<blob sha256>"]}` → `ChatMessage` |
 | `POST /api/chat/:peerId/read` | `{}` → `{"ok":true}` |
 | `GET /api/chat/messages/:id/attachments/:index` | download |
+| `POST /api/chat/messages/:id/attachments/:index/fetch` | same as for mail |
 
 ### Services (TCP port sharing)
 | method & path | body → response |

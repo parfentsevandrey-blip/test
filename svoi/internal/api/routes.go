@@ -19,6 +19,8 @@ func (s *Server) routes() {
 	m.HandleFunc("POST /api/mesh/join", s.handleMeshJoin)
 	m.HandleFunc("POST /api/mesh/leave", s.handleMeshLeave)
 	m.HandleFunc("POST /api/netcheck", s.handleNetcheck)
+	m.HandleFunc("POST /api/login/code", s.handleLoginCode)
+	m.HandleFunc("POST /api/logout", s.handleLogout)
 	m.HandleFunc("GET /api/diag/logs", s.handleLogs)
 	m.HandleFunc("GET /api/diag/ping", s.handlePing)
 	// devices & invites
@@ -59,10 +61,12 @@ func (s *Server) routes() {
 	m.HandleFunc("POST /api/mail/{id}/flags", s.handleMailFlags)
 	m.HandleFunc("DELETE /api/mail/{id}", s.handleMailDelete)
 	m.HandleFunc("GET /api/mail/{id}/attachments/{index}", s.handleMailAttachment)
+	m.HandleFunc("POST /api/mail/{id}/attachments/{index}/fetch", s.handleAttachmentFetch)
 	m.HandleFunc("POST /api/blobs", s.handleBlobUpload)
 	// chat
 	m.HandleFunc("GET /api/chat/threads", s.handleChatThreads)
 	m.HandleFunc("GET /api/chat/messages/{id}/attachments/{index}", s.handleChatAttachment)
+	m.HandleFunc("POST /api/chat/messages/{id}/attachments/{index}/fetch", s.handleAttachmentFetch)
 	m.HandleFunc("GET /api/chat/{peer}", s.handleChatMessages)
 	m.HandleFunc("POST /api/chat/{peer}", s.handleChatSend)
 	m.HandleFunc("POST /api/chat/{peer}/read", s.handleChatRead)
@@ -105,14 +109,15 @@ func (s *Server) handleMeshCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleMeshJoin(w http.ResponseWriter, r *http.Request) {
-	var in struct{ Invite, DeviceName, Owner string }
+	// (An "owner" in the body is ignored: the inviting device decides whose device this is.)
+	var in struct{ Invite, DeviceName string }
 	if err := decode(r, &in); err != nil {
 		writeError(w, err)
 		return
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 40*time.Second)
 	defer cancel()
-	if err := s.app.JoinMesh(ctx, in.Invite, in.DeviceName, in.Owner); err != nil {
+	if err := s.app.JoinMesh(ctx, in.Invite, in.DeviceName); err != nil {
 		writeError(w, errCode("invalid", err.Error()))
 		return
 	}
@@ -165,15 +170,16 @@ func (s *Server) handleInvites(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleInviteCreate(w http.ResponseWriter, r *http.Request) {
 	var in struct {
-		Admin      bool `json:"admin"`
-		TTLMinutes int  `json:"ttlMinutes"`
+		Admin      bool   `json:"admin"`
+		TTLMinutes int    `json:"ttlMinutes"`
+		Owner      string `json:"owner"` // empty: the inviter's own owner
 	}
 	if err := decode(r, &in); err != nil {
 		writeError(w, err)
 		return
 	}
 	ttl := time.Duration(in.TTLMinutes) * time.Minute
-	v, err := s.app.NewInvite(in.Admin, ttl)
+	v, err := s.app.NewInvite(in.Admin, ttl, in.Owner)
 	if err != nil {
 		writeError(w, err)
 		return

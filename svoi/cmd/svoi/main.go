@@ -32,8 +32,9 @@ Usage:
   svoi status              show this device and the other devices
   svoi send <device> <file>...   send files to a device
   svoi ping <device>       measure the round trip to a device
-  svoi open                open the web interface in the browser
-  svoi url                 print the web interface address
+  svoi open                open the web interface in the browser (signs it in)
+  svoi url                 print a one-time sign-in link to the web interface
+  svoi signout             sign every browser out of the web interface
   svoi leave [--yes]        leave the mesh (keeps the device key)
   svoi demo                run a simulated four-device mesh to try the interface
   svoi version
@@ -70,6 +71,8 @@ func main() {
 		err = cmdOpen(args)
 	case "url":
 		err = cmdURL(args)
+	case "signout":
+		err = cmdSignout(args)
 	case "leave":
 		err = cmdLeave(args)
 	case "demo":

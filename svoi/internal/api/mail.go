@@ -127,6 +127,21 @@ func (s *Server) handleChatAttachment(w http.ResponseWriter, r *http.Request) {
 	s.serveAttachment(w, r, r.PathValue("id"), r.PathValue("index"))
 }
 
+// handleAttachmentFetch is the user's consent to download an attachment that is
+// too large to be fetched automatically (or a retry of one that failed).
+func (s *Server) handleAttachmentFetch(w http.ResponseWriter, r *http.Request) {
+	idx, err := strconv.Atoi(r.PathValue("index"))
+	if err != nil {
+		writeError(w, errCode("invalid", "bad attachment index"))
+		return
+	}
+	if err := s.app.Mail().FetchAttachment(r.PathValue("id"), idx); err != nil {
+		writeError(w, err)
+		return
+	}
+	ok(w)
+}
+
 // handleBlobUpload stages an attachment (raw body) and returns its hash.
 func (s *Server) handleBlobUpload(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()

@@ -43,8 +43,15 @@ type peer struct {
 	xpub   [32]byte
 	shared [32]byte // NaCl box precomputed key
 	macKey [32]byte // relay envelope MAC key
-	vaddr  *net.UDPAddr
-	vap    netip.AddrPort
+	// dataKey authenticates data packets between us and this peer. QUIC protects
+	// the content, but without this anyone who knows a member's public key could
+	// feed forged packets to the QUIC stack "from" that member, make us probe
+	// arbitrary addresses, or evict real candidate addresses.
+	dataKey [32]byte
+
+	lastCandAdd time.Time // when noteDirectSource last accepted a new address
+	vaddr       *net.UDPAddr
+	vap         netip.AddrPort
 
 	mu            sync.Mutex
 	cands         map[netip.AddrPort]*cand
@@ -187,6 +194,11 @@ func (p *peer) noteDirectSource(from netip.AddrPort) {
 	}
 	if usableCandidate(from) {
 		if _, ok := p.cands[from]; !ok {
+			if now.Sub(p.lastCandAdd) < time.Second {
+				p.mu.Unlock() // a member may roam, but not flood us with addresses
+				return
+			}
+			p.lastCandAdd = now
 			p.evictLocked()
 			p.cands[from] = &cand{ap: from, src: SrcObserved, added: now}
 		}

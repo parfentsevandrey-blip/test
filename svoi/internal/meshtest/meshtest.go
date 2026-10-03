@@ -111,13 +111,13 @@ func (h *Harness) Open(host *netsim.Host, name string) *mesh.Node {
 // Join enrols joiner into founder's mesh.
 func (h *Harness) Join(founder, joiner *mesh.Node, name, owner string, admin bool) {
 	h.T.Helper()
-	inv, err := founder.NewInvite(admin, 5*time.Minute)
+	inv, err := founder.NewInviteFor(admin, 5*time.Minute, owner)
 	if err != nil {
 		h.T.Fatal(err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 	defer cancel()
-	if err := joiner.JoinMesh(ctx, inv.Code, name, owner); err != nil {
+	if err := joiner.JoinMesh(ctx, inv.Code, name); err != nil {
 		h.T.Fatalf("join %s: %v", name, err)
 	}
 }

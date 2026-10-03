@@ -457,13 +457,14 @@ type InviteView struct {
 	ID      string `json:"id"`
 	Code    string `json:"code"`
 	Admin   bool   `json:"admin"`
+	Owner   string `json:"owner"` // whose device the invitation is for (set by the inviter)
 	Created int64  `json:"created"`
 	Expires int64  `json:"expires"`
 	QRSvg   string `json:"qrSvg"`
 }
 
 func (a *App) inviteView(i mesh.InviteInfo) InviteView {
-	return InviteView{ID: i.ID, Code: i.Code, Admin: i.Admin, Created: i.Created, Expires: i.Expires, QRSvg: qrSVG(i.Code)}
+	return InviteView{ID: i.ID, Code: i.Code, Admin: i.Admin, Owner: i.Owner, Created: i.Created, Expires: i.Expires, QRSvg: qrSVG(i.Code)}
 }
 
 // Invites lists pending invitations.
@@ -476,9 +477,10 @@ func (a *App) Invites() []InviteView {
 	return out
 }
 
-// NewInvite creates an invitation (admin only).
-func (a *App) NewInvite(admin bool, ttl time.Duration) (InviteView, error) {
-	i, err := a.node.NewInvite(admin, ttl)
+// NewInvite creates an invitation (admin only). owner is the label the joining
+// device will carry; empty means this device's own owner ("my other device").
+func (a *App) NewInvite(admin bool, ttl time.Duration, owner string) (InviteView, error) {
+	i, err := a.node.NewInviteFor(admin, ttl, owner)
 	if err != nil {
 		return InviteView{}, err
 	}
@@ -555,8 +557,8 @@ func (a *App) CreateMesh(meshName, deviceName, owner string) error {
 }
 
 // JoinMesh joins an existing mesh by invitation code.
-func (a *App) JoinMesh(ctx context.Context, code, deviceName, owner string) error {
-	if err := a.node.JoinMesh(ctx, code, deviceName, owner); err != nil {
+func (a *App) JoinMesh(ctx context.Context, code, deviceName string) error {
+	if err := a.node.JoinMesh(ctx, code, deviceName); err != nil {
 		return err
 	}
 	a.applyTUN()

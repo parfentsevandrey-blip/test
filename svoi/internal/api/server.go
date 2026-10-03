@@ -25,6 +25,7 @@ type Server struct {
 	app      *app.App
 	mux      *http.ServeMux
 	ui       fs.FS
+	sess     *sessions
 	loopback bool // listening on a loopback address only
 	srv      *http.Server
 	ln       net.Listener
@@ -32,7 +33,7 @@ type Server struct {
 
 // New creates the server. ui may be nil (API only).
 func New(a *app.App, ui fs.FS) *Server {
-	s := &Server{app: a, ui: ui, mux: http.NewServeMux(), loopback: true}
+	s := &Server{app: a, ui: ui, mux: http.NewServeMux(), loopback: true, sess: newSessions(a.Dir())}
 	s.routes()
 	s.registerRemoteHandler()
 	return s
@@ -88,7 +89,8 @@ func (s *Server) Close() error {
 	return nil
 }
 
-// URL returns the address to open in a browser, including the one-time login token.
+// URL returns the address to open in a browser. It carries a fresh single-use
+// login code (valid for ten minutes), not the master token.
 func (s *Server) URL() string {
 	if s.ln == nil {
 		return ""
@@ -100,7 +102,7 @@ func (s *Server) URL() string {
 			host = h
 		}
 	}
-	return fmt.Sprintf("http://%s:%s/?t=%s", host, port, url.QueryEscape(s.app.Token()))
+	return fmt.Sprintf("http://%s:%s/?t=%s", host, port, url.QueryEscape(s.sess.newCode()))
 }
 
 // Addr returns the listening address.
@@ -131,16 +133,25 @@ func (s *Server) hostAllowed(r *http.Request) bool {
 	return false
 }
 
-func (s *Server) authorized(r *http.Request) bool {
-	tok := s.app.Token()
-	if c, err := r.Cookie(cookieName); err == nil && subtle.ConstantTimeCompare([]byte(c.Value), []byte(tok)) == 1 {
-		return true
+// bearerOK: the command line, with the master token. Browsers never hold it.
+func (s *Server) bearerOK(r *http.Request) bool {
+	h := r.Header.Get("Authorization")
+	return strings.HasPrefix(h, "Bearer ") &&
+		subtle.ConstantTimeCompare([]byte(strings.TrimPrefix(h, "Bearer ")), []byte(s.app.Token())) == 1
+}
+
+// authorized reports whether the request is signed in, and refreshes a browser's
+// cookie when its session was extended.
+func (s *Server) authorized(w http.ResponseWriter, r *http.Request) bool {
+	if c, err := r.Cookie(cookieName); err == nil {
+		if ok, renewed := s.sess.check(c.Value); ok {
+			if renewed {
+				http.SetCookie(w, s.sessionCookie(c.Value))
+			}
+			return true
+		}
 	}
-	if h := r.Header.Get("Authorization"); strings.HasPrefix(h, "Bearer ") &&
-		subtle.ConstantTimeCompare([]byte(strings.TrimPrefix(h, "Bearer ")), []byte(tok)) == 1 {
-		return true
-	}
-	return false
+	return s.bearerOK(r)
 }
 
 func setSecurityHeaders(w http.ResponseWriter) {
@@ -159,16 +170,13 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "unexpected Host header", http.StatusMisdirectedRequest)
 		return
 	}
-	// Login handshake: /?t=<token> sets the session cookie and drops the token from the URL.
+	// Login: /?t=<one-time code> becomes a session cookie, and the code leaves the URL.
 	if t := r.URL.Query().Get("t"); t != "" && !strings.HasPrefix(r.URL.Path, "/api/") {
-		if subtle.ConstantTimeCompare([]byte(t), []byte(s.app.Token())) == 1 {
-			http.SetCookie(w, &http.Cookie{
-				Name: cookieName, Value: s.app.Token(), Path: "/", HttpOnly: true,
-				SameSite: http.SameSiteStrictMode, MaxAge: 365 * 24 * 3600,
-			})
+		if id := s.sess.redeem(t); id != "" {
+			http.SetCookie(w, s.sessionCookie(id))
 			q := r.URL.Query()
 			q.Del("t")
-			target := r.URL.Path
+			target := "/" + strings.TrimLeft(r.URL.Path, "/") // never "//host": that would leave the site
 			if enc := q.Encode(); enc != "" {
 				target += "?" + enc
 			}
@@ -176,8 +184,12 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	if r.URL.Path == "/api/handshake" && (r.Method == http.MethodGet || r.Method == http.MethodHead) {
+		s.handleHandshake(w, r)
+		return
+	}
 	if strings.HasPrefix(r.URL.Path, "/api/") {
-		if !s.authorized(r) {
+		if !s.authorized(w, r) {
 			writeError(w, errCode("unauthorized", "open the link printed by `svoi up` (or run `svoi open`) to sign in"))
 			return
 		}

@@ -41,7 +41,6 @@ type joinRequest struct {
 	Handle   []byte `json:"h"`
 	Proof    []byte `json:"p"`
 	Name     string `json:"name"`
-	Owner    string `json:"owner"`
 	Platform string `json:"platform,omitempty"`
 }
 
@@ -58,14 +57,25 @@ type InviteInfo struct {
 	ID      string `json:"id"`
 	Code    string `json:"code"`
 	Admin   bool   `json:"admin"`
+	Owner   string `json:"owner"` // whose device this is meant for; set by the inviter
 	Created int64  `json:"created"`
 	Expires int64  `json:"expires"`
 }
 
 func inviteID(h [8]byte) string { return hex.EncodeToString(h[:]) }
 
-// NewInvite creates a one-time invitation. Only admin devices can invite.
+// NewInvite creates a one-time invitation for another device of this device's own
+// owner. Only admin devices can invite.
 func (n *Node) NewInvite(admin bool, ttl time.Duration) (InviteInfo, error) {
+	return n.NewInviteFor(admin, ttl, "")
+}
+
+// NewInviteFor creates a one-time invitation whose device will carry the given
+// owner label in its certificate (empty: this device's own owner). The label is
+// chosen by the inviter, never by the joiner: "own devices" (auto-accepting
+// files, for example) must mean devices an administrator vouched for as one
+// person's, not whatever a newcomer typed.
+func (n *Node) NewInviteFor(admin bool, ttl time.Duration, owner string) (InviteInfo, error) {
 	n.mu.Lock()
 	if n.root == nil {
 		n.mu.Unlock()
@@ -83,6 +93,9 @@ func (n *Node) NewInvite(admin bool, ttl time.Duration) (InviteInfo, error) {
 	}
 	mg := n.magic
 	root, meshName := n.root, n.meshName
+	if owner = identity.SanitizeOwner(owner); owner == "" && n.self != nil {
+		owner = n.self.Owner
+	}
 	n.mu.Unlock()
 
 	var eps []netip.AddrPort
@@ -110,6 +123,7 @@ func (n *Node) NewInvite(admin bool, ttl time.Duration) (InviteInfo, error) {
 		secret:  append([]byte(nil), ident.Secret[:]...),
 		expires: ident.Expires,
 		admin:   admin,
+		owner:   owner,
 		created: time.Now(),
 		code:    ident.Encode(),
 	}
@@ -122,7 +136,7 @@ func (n *Node) NewInvite(admin bool, ttl time.Duration) (InviteInfo, error) {
 }
 
 func (i *invite) info(h [8]byte) InviteInfo {
-	return InviteInfo{ID: inviteID(h), Code: i.code, Admin: i.admin, Created: i.created.Unix(), Expires: i.expires.Unix()}
+	return InviteInfo{ID: inviteID(h), Code: i.code, Admin: i.admin, Owner: i.owner, Created: i.created.Unix(), Expires: i.expires.Unix()}
 }
 
 // Invites lists pending invitations.
@@ -295,7 +309,7 @@ func (n *Node) handleJoin(conn *quic.Conn) {
 	mg := n.magic
 	n.mu.Unlock()
 
-	m, err := auth.Issue(identity.IssueRequest{ID: joinerID, Name: req.Name, Owner: req.Owner, Admin: inv.admin}, existing)
+	m, err := auth.Issue(identity.IssueRequest{ID: joinerID, Name: req.Name, Owner: inv.owner, Admin: inv.admin}, existing)
 	if err != nil {
 		reply(nil, Errf(CodeInternal, "cannot issue certificate: %v", err))
 		return
@@ -367,7 +381,7 @@ func (n *Node) joinTLS(inv *identity.Invite) *tls.Config {
 }
 
 // JoinMesh joins the mesh described by an invitation code.
-func (n *Node) JoinMesh(ctx context.Context, code, deviceName, owner string) error {
+func (n *Node) JoinMesh(ctx context.Context, code, deviceName string) error {
 	n.mu.RLock()
 	configured := n.root != nil
 	n.mu.RUnlock()
@@ -386,9 +400,6 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName, owner string) err
 	}
 	if deviceName == "" {
 		deviceName = n.cfg.DeviceName
-	}
-	if owner == "" {
-		owner = n.cfg.Owner
 	}
 
 	// A temporary UDP endpoint that only speaks to the inviter.
@@ -461,7 +472,7 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName, owner string) err
 	_ = s.SetDeadline(time.Now().Add(20 * time.Second))
 	h := inv.Handle()
 	if err := writeFrame(s, joinRequest{
-		Handle: h[:], Proof: inv.Proof(exporter), Name: deviceName, Owner: owner, Platform: Platform(),
+		Handle: h[:], Proof: inv.Proof(exporter), Name: deviceName, Platform: Platform(),
 	}); err != nil {
 		return err
 	}

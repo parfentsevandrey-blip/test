@@ -97,6 +97,26 @@ type delivery struct {
 type fetchState struct {
 	State string `json:"state"`
 	Got   int64  `json:"got"`
+	Want  bool   `json:"want,omitempty"` // the user asked for it: consent for a large attachment
+	Fails int    `json:"fails,omitempty"`
+	Next  int64  `json:"next,omitempty"` // do not try again before this time (unix seconds)
+}
+
+// Attachments are pulled from the sender automatically only while small; a
+// larger one waits until the user asks for it (FetchAttachment). Failures back
+// off and eventually stop, so a sender cannot keep us busy and writing forever.
+const (
+	maxAutoFetch       = 25 << 20
+	maxFetchTries      = 8
+	maxConcurrentFetch = 2
+)
+
+func fetchBackoff(fails int) time.Duration {
+	d := 30 * time.Second << min(fails, 10)
+	if d > 6*time.Hour {
+		d = 6 * time.Hour
+	}
+	return d
 }
 
 type record struct {
@@ -137,6 +157,7 @@ type Manager struct {
 	mu       sync.Mutex
 	msgs     map[string]*record
 	inflight map[string]bool
+	fetching int // attachment downloads running
 	kick     chan struct{}
 }
 
@@ -408,7 +429,7 @@ func (m *Manager) pump(ctx context.Context) {
 			}
 		} else {
 			for _, a := range r.Core.Attach {
-				if f := r.Fetch[a.SHA256]; f != nil && f.State == AttRemote && !m.inflight["f|"+a.SHA256] {
+				if f := r.Fetch[a.SHA256]; m.wantsFetchLocked(f, a, now) && !m.inflight["f|"+a.SHA256] {
 					fetches = append(fetches, r)
 					break
 				}
@@ -420,8 +441,52 @@ func (m *Manager) pump(ctx context.Context) {
 		go m.deliver(ctx, j.r, j.peer)
 	}
 	for _, r := range fetches {
-		go m.fetchAttachments(ctx, r)
+		m.mu.Lock()
+		busy := m.fetching >= maxConcurrentFetch
+		if !busy {
+			m.fetching++
+		}
+		m.mu.Unlock()
+		if busy {
+			break // the next pump (a few seconds later) continues
+		}
+		go func(r *record) {
+			defer func() { m.mu.Lock(); m.fetching--; m.mu.Unlock() }()
+			m.fetchAttachments(ctx, r)
+		}(r)
 	}
+}
+
+// wantsFetchLocked reports whether an attachment should be fetched now.
+func (m *Manager) wantsFetchLocked(f *fetchState, a Attachment, now int64) bool {
+	if f == nil || f.State != AttRemote || now < f.Next {
+		return false
+	}
+	return a.Size <= maxAutoFetch || f.Want
+}
+
+// FetchAttachment records the user's consent to download attachment idx of a
+// message (needed for large ones) and retries one that failed.
+func (m *Manager) FetchAttachment(id string, idx int) error {
+	m.mu.Lock()
+	r := m.msgs[id]
+	if r == nil || idx < 0 || idx >= len(r.Core.Attach) {
+		m.mu.Unlock()
+		return mesh.Errf(mesh.CodeNotFound, "no such attachment")
+	}
+	a := r.Core.Attach[idx]
+	f := r.Fetch[a.SHA256]
+	if f == nil {
+		m.mu.Unlock()
+		return nil // our own attachment: nothing to fetch
+	}
+	if f.State == AttFailed || f.State == AttRemote {
+		f.State, f.Want, f.Fails, f.Next = AttRemote, true, 0, 0
+		m.save(r)
+	}
+	m.mu.Unlock()
+	m.Kick()
+	return nil
 }
 
 func (m *Manager) deliver(ctx context.Context, r *record, p *mesh.Peer) {
@@ -555,7 +620,7 @@ func (m *Manager) fetchAttachments(ctx context.Context, r *record) {
 	for _, a := range r.Core.Attach {
 		m.mu.Lock()
 		f := r.Fetch[a.SHA256]
-		if f == nil || f.State == AttReady || f.State == AttFetching || m.inflight["f|"+a.SHA256] {
+		if !m.wantsFetchLocked(f, a, time.Now().Unix()) || m.inflight["f|"+a.SHA256] {
 			m.mu.Unlock()
 			continue
 		}
@@ -570,7 +635,14 @@ func (m *Manager) fetchAttachments(ctx context.Context, r *record) {
 		if ok {
 			f.State, f.Got = AttReady, a.Size
 		} else if f.State == AttFetching {
-			f.State = AttRemote // try again later, when someone who has it is online
+			f.Fails++
+			f.Got = 0
+			if f.Fails >= maxFetchTries {
+				f.State = AttFailed
+			} else {
+				f.State = AttRemote // try again later, when someone who has it is online
+				f.Next = time.Now().Add(fetchBackoff(f.Fails)).Unix()
+			}
 		}
 		m.save(r)
 		ev := Event{Kind: r.Core.Kind, ID: r.Core.ID, Folder: r.Folder, Peer: chatPeer(r, m.node.ID())}
@@ -644,6 +716,8 @@ type AttachmentView struct {
 	Attachment
 	State string `json:"state"`
 	Got   int64  `json:"got"`
+	// NeedsConsent: too large to fetch on its own; POST .../fetch to download it.
+	NeedsConsent bool `json:"needsConsent,omitempty"`
 }
 
 // Message is the full view.
@@ -778,6 +852,7 @@ func (m *Manager) attachViewsLocked(r *record) []AttachmentView {
 			v.Got = 0
 			if f := r.Fetch[a.SHA256]; f != nil {
 				v.State, v.Got = f.State, f.Got
+				v.NeedsConsent = f.State == AttRemote && a.Size > maxAutoFetch && !f.Want
 			}
 		}
 		out = append(out, v)

@@ -163,13 +163,15 @@ func (r *Root) Name() string {
 	return "mesh"
 }
 
-// LANTag is a short value members broadcast on the LAN so they can recognise
-// each other without revealing the mesh to outsiders who do not know the root key.
-func (r *Root) LANTag() [8]byte {
+// LANKey is the symmetric key members seal their LAN beacons with. Only someone
+// who knows the root key can read or make a beacon, so a stranger on the same
+// Wi-Fi sees random bytes: no device key, no mesh identifier to follow from one
+// network to the next.
+func (r *Root) LANKey() [32]byte {
 	h := sha256.New()
-	h.Write([]byte("svoi/lan-tag/v1"))
+	h.Write([]byte("svoi/lan-key/v2"))
 	h.Write(r.Pub)
-	var out [8]byte
+	var out [32]byte
 	copy(out[:], h.Sum(nil))
 	return out
 }

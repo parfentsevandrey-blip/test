@@ -8,11 +8,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
+	"net/http/httputil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -179,6 +182,134 @@ func (p *proc) status() statusJSON {
 	return st
 }
 
+var loginLinkRe = regexp.MustCompile(`http://127\.0\.0\.1:\d+/\?t=([0-9a-f]+)`)
+
+// open follows a sign-in link the way a browser does, without following the
+// redirect, and returns the session cookie it was given (nil if refused).
+func openLink(t *testing.T, link string) *http.Cookie {
+	t.Helper()
+	cl := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	resp, err := cl.Get(link)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusFound {
+		return nil
+	}
+	for _, c := range resp.Cookies() {
+		if c.Name == "svoi_session" && c.Value != "" {
+			return c
+		}
+	}
+	return nil
+}
+
+func (p *proc) apiAs(cookie *http.Cookie, path string) int {
+	p.t.Helper()
+	req, _ := http.NewRequest("GET", p.apiBase()+path, nil)
+	req.AddCookie(cookie)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		p.t.Fatal(err)
+	}
+	resp.Body.Close()
+	return resp.StatusCode
+}
+
+// checkSignIn covers how a person gets into the web interface: with a link that
+// works once, while the master token stays on the command line.
+func (p *proc) checkSignIn(t *testing.T) {
+	t.Helper()
+	tok := p.token()
+	log := p.logs()
+	if strings.Contains(log, tok) {
+		t.Fatal("the master token was written to the log")
+	}
+	// The link `svoi up` printed works once.
+	m := loginLinkRe.FindStringSubmatch(log)
+	if m == nil {
+		t.Fatalf("no sign-in link in the banner:\n%s", log)
+	}
+	if m[1] == tok || len(m[1]) != 48 {
+		t.Fatalf("the banner link carries %q, not a one-time code", m[1])
+	}
+	first := openLink(t, m[0])
+	if first == nil {
+		t.Fatal("the banner link did not sign in")
+	}
+	if openLink(t, m[0]) != nil {
+		t.Fatal("the banner link worked twice")
+	}
+	if openLink(t, p.apiBase()+"/?t="+tok) != nil {
+		t.Fatal("the master token worked as a sign-in link")
+	}
+	if first.Value == tok || p.apiAs(first, "/api/state") != 200 {
+		t.Fatalf("the session is wrong: value=%q", first.Value)
+	}
+	// `svoi url` mints a new one each time.
+	l1 := strings.TrimSpace(p.mustRun("url"))
+	l2 := strings.TrimSpace(p.mustRun("url"))
+	if l1 == l2 || strings.Contains(l1, tok) || !loginLinkRe.MatchString(l1) {
+		t.Fatalf("svoi url: %q / %q", l1, l2)
+	}
+	second := openLink(t, l1)
+	if second == nil || second.Value == first.Value {
+		t.Fatal("svoi url did not sign in")
+	}
+	// `svoi signout` ends every browser session and cancels unused links.
+	p.mustRun("signout")
+	if p.apiAs(first, "/api/state") != 401 || p.apiAs(second, "/api/state") != 401 {
+		t.Fatal("sessions survived `svoi signout`")
+	}
+	if openLink(t, l2) != nil {
+		t.Fatal("an unused link survived `svoi signout`")
+	}
+	if c := openLink(t, strings.TrimSpace(p.mustRun("url"))); c == nil || p.apiAs(c, "/api/state") != 200 {
+		t.Fatal("cannot sign in again after signout")
+	}
+}
+
+// If whatever answers on the recorded port cannot prove it knows the token (a
+// stale ui.addr, a squatter), the command line must not hand the token over.
+func TestCommandLineDoesNotSendTheTokenToAnImpostor(t *testing.T) {
+	const secret = "5e6c7a1d9b0f4e2a8c3d5b7f9a1e3c5d7b9f1a3c5e7d9b1f"
+	p := newProc(t, "victim")
+	var mu sync.Mutex
+	var seen []string
+	imp := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		dump, _ := httputil.DumpRequest(r, true)
+		mu.Lock()
+		seen = append(seen, string(dump))
+		mu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{"proof":"00"}`) // answers, but cannot know the token
+	}))
+	defer imp.Close()
+	if err := os.WriteFile(filepath.Join(p.dir, "ui.addr"), []byte(strings.TrimPrefix(imp.URL, "http://")+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(p.dir, "ui.token"), []byte(secret+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, args := range [][]string{{"status"}, {"url"}, {"signout"}, {"ping", "somebody"}} {
+		out, err := p.run(args...)
+		if err == nil || !strings.Contains(out, "not this svoi") {
+			t.Errorf("svoi %s against an impostor: err=%v out=%q", strings.Join(args, " "), err, out)
+		}
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if len(seen) == 0 {
+		t.Fatal("the impostor was never contacted: the test checks nothing")
+	}
+	for _, r := range seen {
+		if strings.Contains(r, secret) || strings.Contains(strings.ToLower(r), "authorization") {
+			t.Fatalf("the token (or an Authorization header) reached the impostor:\n%s", r)
+		}
+	}
+}
+
 func waitFor(t *testing.T, d time.Duration, what string, cond func() bool) {
 	t.Helper()
 	deadline := time.Now().Add(d)
@@ -236,12 +367,14 @@ func TestTwoProcessesEndToEnd(t *testing.T) {
 		t.Fatalf("the web interface is not served: %d %q %.80q", resp.StatusCode, resp.Header.Get("Content-Type"), page)
 	}
 
+	a.checkSignIn(t)
+
 	// A second device joins with an invitation code.
-	code := inviteRe.FindString(a.mustRun("invite", "--ttl", "5m"))
+	code := inviteRe.FindString(a.mustRun("invite", "--ttl", "5m", "--owner", "tester"))
 	if code == "" {
 		t.Fatal("no invitation code printed")
 	}
-	b.mustRun("join", code, "--name", "beta", "--owner", "tester")
+	b.mustRun("join", code, "--name", "beta")
 	b.start()
 	waitFor(t, 40*time.Second, "alpha and beta see each other", func() bool {
 		sa, sb := a.status(), b.status()

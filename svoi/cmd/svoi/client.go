@@ -3,6 +3,9 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/subtle"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -19,6 +22,7 @@ import (
 
 	qrcode "github.com/skip2/go-qrcode"
 
+	"github.com/parfentsevandrey-blip/test/svoi/internal/api"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/app"
 )
 
@@ -29,6 +33,9 @@ type client struct {
 	http  *http.Client
 }
 
+// newClient finds the running node from its data directory and checks that what
+// answers on the recorded port really is that node before the master token is
+// ever sent to it (a stale ui.addr may point at somebody else's server by now).
 func newClient(dir string) (*client, error) {
 	addr, err := os.ReadFile(filepath.Join(dir, "ui.addr"))
 	if err != nil {
@@ -38,11 +45,36 @@ func newClient(dir string) (*client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &client{
+	c := &client{
 		base:  "http://" + strings.TrimSpace(string(addr)),
 		token: strings.TrimSpace(string(tok)),
 		http:  &http.Client{Timeout: 0},
-	}, nil
+	}
+	if err := c.handshake(); err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+func (c *client) handshake() error {
+	var raw [16]byte
+	if _, err := rand.Read(raw[:]); err != nil {
+		return err
+	}
+	nonce := hex.EncodeToString(raw[:])
+	resp, err := (&http.Client{Timeout: 5 * time.Second}).Get(c.base + "/api/handshake?n=" + nonce)
+	if err != nil {
+		return errors.New("cannot reach the running svoi: " + err.Error())
+	}
+	defer resp.Body.Close()
+	var out struct {
+		Proof string `json:"proof"`
+	}
+	if resp.StatusCode != http.StatusOK || json.NewDecoder(io.LimitReader(resp.Body, 4096)).Decode(&out) != nil ||
+		subtle.ConstantTimeCompare([]byte(out.Proof), []byte(api.HandshakeProof(c.token, nonce))) != 1 {
+		return fmt.Errorf("what listens on %s is not this svoi node (is ui.addr stale?); the token was not sent", strings.TrimPrefix(c.base, "http://"))
+	}
+	return nil
 }
 
 func (c *client) do(ctx context.Context, method, path string, body io.Reader, out any) error {
@@ -173,15 +205,17 @@ func ago(t time.Time) string {
 func cmdInvite(args []string) error {
 	var admin *bool
 	var ttl *time.Duration
+	var owner *string
 	c, _, err := clientFromFlags("invite", args, func(fs *flag.FlagSet) {
 		admin = fs.Bool("admin", false, "make the new device an administrator (gives it the mesh key)")
 		ttl = fs.Duration("ttl", 30*time.Minute, "how long the invitation stays valid")
+		owner = fs.String("owner", "", "whose device this is (default: your own: files from your own devices are accepted without asking)")
 	})
 	if err != nil {
 		return err
 	}
 	var inv app.InviteView
-	if err := c.post("/api/invites", map[string]any{"admin": *admin, "ttlMinutes": int(ttl.Minutes())}, &inv); err != nil {
+	if err := c.post("/api/invites", map[string]any{"admin": *admin, "ttlMinutes": int(ttl.Minutes()), "owner": *owner}, &inv); err != nil {
 		return err
 	}
 	if q, err := qrcode.New(inv.Code, qrcode.Medium); err == nil {
@@ -275,12 +309,32 @@ func cmdURL(args []string) error {
 	return nil
 }
 
+// uiURL asks the running node for a fresh single-use sign-in link.
 func uiURL(dir string) (string, error) {
 	c, err := newClient(dir)
 	if err != nil {
 		return "", err
 	}
-	return c.base + "/?t=" + c.token, nil
+	var out struct {
+		Code string `json:"code"`
+	}
+	if err := c.post("/api/login/code", struct{}{}, &out); err != nil {
+		return "", err
+	}
+	return c.base + "/?t=" + out.Code, nil
+}
+
+// cmdSignout ends every browser session of this node's web interface.
+func cmdSignout(args []string) error {
+	c, _, err := clientFromFlags("signout", args, nil)
+	if err != nil {
+		return err
+	}
+	if err := c.post("/api/logout?all=1", struct{}{}, nil); err != nil {
+		return err
+	}
+	fmt.Println("All browsers are signed out; unused sign-in links are cancelled. `svoi open` signs this one back in.")
+	return nil
 }
 
 func cmdLeave(args []string) error {

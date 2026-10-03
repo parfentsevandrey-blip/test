@@ -9,7 +9,7 @@ import (
 // Packet type bytes. They are all >= 0xA0 so they can never be confused with a
 // STUN message (first byte < 0x40) or a BitTorrent DHT datagram ('d' = 0x64).
 const (
-	typeData     byte = 0xA1 // [type][src8][quic packet]
+	typeData     byte = 0xA1 // [type][src8][mac8][quic packet]   (mac: see dataMAC)
 	typeRelayOut byte = 0xA2 // [type][src8][dst8][mac8][inner packet]   client -> relay
 	typeRelayIn  byte = 0xA3 // [type][relay8][src8][mac8][inner packet] relay -> client
 	typeAnon     byte = 0xA4 // [type][quic packet]                      joiner traffic, no membership yet
@@ -17,7 +17,7 @@ const (
 )
 
 const (
-	dataHeader     = 1 + 8
+	dataHeader     = 1 + 8 + 8
 	relayHeader    = 1 + 8 + 8 + 8
 	discoHeaderLen = 1 + 32 + 24
 	maxPacket      = 2048

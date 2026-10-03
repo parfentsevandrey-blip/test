@@ -15,10 +15,16 @@ import (
 	"regexp"
 	"sync"
 
+	"github.com/parfentsevandrey-blip/test/svoi/internal/diskfree"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/mesh"
 )
 
 var shaRe = regexp.MustCompile(`^[0-9a-f]{64}$`)
+
+// ErrNoSpace is returned when the volume cannot hold a blob that is being fetched.
+var ErrNoSpace = errors.New("blob: not enough free disk space")
+
+const freeReserve = 64 << 20
 
 // ValidSHA reports whether s looks like a hex SHA-256.
 func ValidSHA(s string) bool { return shaRe.MatchString(s) }
@@ -187,8 +193,17 @@ func (s *Store) Fetch(ctx context.Context, p *mesh.Peer, sha string, wantSize in
 	if err := cs.ReadResponse(&meta); err != nil {
 		return err
 	}
-	if wantSize > 0 && meta.Size != wantSize {
+	// The size comes from a signed message; what the peer streams must match it
+	// exactly (negative: not known in advance), or it could make us store
+	// whatever it likes before the hash check fails.
+	if wantSize >= 0 && meta.Size != wantSize {
 		return fmt.Errorf("blob: size mismatch (%d, expected %d)", meta.Size, wantSize)
+	}
+	if meta.Size < 0 {
+		return errors.New("blob: bad size")
+	}
+	if free, ok := diskfree.Free(s.dir); ok && free < uint64(meta.Size)+freeReserve {
+		return ErrNoSpace
 	}
 	tmp, err := os.CreateTemp(s.dir, ".fetch-*")
 	if err != nil {
@@ -208,6 +223,10 @@ func (s *Store) Fetch(ctx context.Context, p *mesh.Peer, sha string, wantSize in
 			}
 			h.Write(buf[:n])
 			got += int64(n)
+			if got > meta.Size {
+				tmp.Close()
+				return errors.New("blob: the peer sent more than it announced")
+			}
 			if progress != nil {
 				progress(got)
 			}

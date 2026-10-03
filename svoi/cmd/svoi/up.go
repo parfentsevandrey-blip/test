@@ -104,14 +104,15 @@ func cmdUp(args []string) error {
 	} else {
 		fmt.Fprintf(os.Stderr, "  this device is not part of a mesh yet — create one or join in the browser\n")
 	}
-	fmt.Fprintf(os.Stderr, "  open:    %s\n  data:    %s\n\n", srv.URL(), cf.dir)
+	loginURL := srv.URL()
+	fmt.Fprintf(os.Stderr, "  open:    %s\n           (a one-time link, valid 10 minutes; `svoi open` makes a new one)\n  data:    %s\n\n", loginURL, cf.dir)
 
 	errc := make(chan error, 1)
 	go func() { errc <- srv.Serve(ln) }()
 	if !*noBrowser && interactive() {
 		go func() {
 			time.Sleep(300 * time.Millisecond)
-			openBrowser(srv.URL())
+			openBrowser(loginURL)
 		}()
 	}
 	select {

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -416,3 +417,88 @@ func TestSendValidation(t *testing.T) {
 
 // an id that looks like one of alpha's
 func good2ID(a *mesh.Node) string { return newID("m_", a.ID()) }
+
+// A member can mail an attachment of any announced size. Small ones are fetched
+// automatically; a large one waits for the user's consent; one that cannot be
+// fetched is retried with growing pauses and finally given up; and a sender that
+// streams more than it announced is cut off.
+func TestAttachmentFetchPolicy(t *testing.T) {
+	h := meshtest.New(t)
+	victim := h.Public("victim", "198.51.100.1")
+	mallory := h.Public("mallory", "198.51.100.2")
+	h.Mesh(victim, mallory)
+	vb := newBox(t, victim)
+
+	var served atomic.Int64
+	mallory.HandleStream("blob.get", func(ctx context.Context, c *mesh.Call, s *mesh.ServerStream) error {
+		served.Add(1)
+		const announced = 1 << 20
+		if err := s.Reply(map[string]int64{"size": announced}); err != nil {
+			return err
+		}
+		buf := make([]byte, 64<<10)
+		for sent := 0; sent < 4*announced; sent += len(buf) { // ...but streams four times as much
+			if _, err := s.Write(buf); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	deliver := func(att Attachment) string {
+		cr := core{ID: newID("m_", mallory.ID()), Kind: "mail", From: mallory.ID(), To: []identity.ID{victim.ID()},
+			Subject: "hi", Body: "see attachment", Created: time.Now().Unix(), Attach: []Attachment{att}}
+		raw, _ := json.Marshal(cr)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := mallory.Peer(victim.ID()).Call(ctx, "mail.deliver", signedMsg{Core: raw, Sig: ed25519.Sign(mallory.Device().Priv, raw)}, nil); err != nil {
+			t.Fatal(err)
+		}
+		return cr.ID
+	}
+	state := func(id string) AttachmentView {
+		msg, ok := vb.m.Get(id)
+		if !ok || len(msg.Attachments) != 1 {
+			t.Fatalf("message %s: %v", id, ok)
+		}
+		return msg.Attachments[0]
+	}
+
+	// 1. Too large to fetch unasked: nothing is downloaded and the user is told.
+	big := deliver(Attachment{Name: "film.mkv", Size: 400 << 20, Mime: "video/x-matroska", SHA256: strings.Repeat("a", 64)})
+	time.Sleep(4 * time.Second) // more than one pump
+	if v := state(big); v.State != AttRemote || !v.NeedsConsent {
+		t.Fatalf("a 400 MB attachment: %+v", v)
+	}
+	if served.Load() != 0 {
+		t.Fatalf("the victim fetched a huge attachment without being asked (%d requests)", served.Load())
+	}
+
+	// 2. A small one is fetched, but the sender streams more than it announced: refused, backs off.
+	small := deliver(Attachment{Name: "a.bin", Size: 1 << 20, Mime: "application/octet-stream", SHA256: strings.Repeat("b", 64)})
+	meshtest.WaitFor(t, 15*time.Second, "the first attempt", func() bool { return served.Load() >= 1 })
+	time.Sleep(time.Second)
+	v := state(small)
+	if v.State == AttReady {
+		t.Fatal("a blob that does not match its hash was accepted")
+	}
+	ents, _ := os.ReadDir(filepath.Join(victim.Dir(), "blobs"))
+	for _, e := range ents {
+		if fi, err := e.Info(); err == nil && !fi.IsDir() && fi.Size() > (1<<20)+(256<<10) {
+			t.Fatalf("%d bytes were kept for a 1 MiB announcement", fi.Size())
+		}
+	}
+	before := served.Load()
+	time.Sleep(4 * time.Second) // pump runs every ~3 s; the pause after a failure is at least 30 s
+	if served.Load() != before {
+		t.Fatalf("the failed fetch was retried at once (%d -> %d requests)", before, served.Load())
+	}
+
+	// 3. Consent: asking for the big one starts the download (which fails here, but is attempted).
+	if err := vb.m.FetchAttachment(big, 0); err != nil {
+		t.Fatal(err)
+	}
+	meshtest.WaitFor(t, 15*time.Second, "the consented download", func() bool { return served.Load() > before })
+	if err := vb.m.FetchAttachment(big, 7); !mesh.IsCode(err, mesh.CodeNotFound) {
+		t.Fatalf("an unknown attachment index: %v", err)
+	}
+}

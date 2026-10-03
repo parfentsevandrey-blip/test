@@ -96,27 +96,21 @@ func TestAuthenticationAndBrowserProtections(t *testing.T) {
 	if resp, _ := e.req("GET", "/api/state", "", func(r *http.Request) { r.Header.Set("Authorization", "Bearer nope") }); resp.StatusCode != 401 {
 		t.Fatalf("wrong token: %d", resp.StatusCode)
 	}
-	// The login handshake sets an HttpOnly, SameSite=Strict cookie and strips the token from the URL.
-	noRedirect := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
-	resp, err := noRedirect.Get(e.srv.URL + "/?t=" + e.tok)
-	if err != nil {
-		t.Fatal(err)
-	}
-	resp.Body.Close()
-	if resp.StatusCode != 302 || resp.Header.Get("Location") != "/" {
-		t.Fatalf("handshake: %d -> %q", resp.StatusCode, resp.Header.Get("Location"))
-	}
-	var cookie *http.Cookie
-	for _, c := range resp.Cookies() {
-		if c.Name == "svoi_session" {
-			cookie = c
-		}
+	// Signing in: a one-time code from the command line becomes an HttpOnly,
+	// SameSite=Strict session cookie, and the code leaves the URL.
+	status, cookie, location := e.redeem(e.mintCode())
+	if status != 302 || location != "/" {
+		t.Fatalf("login: %d -> %q", status, location)
 	}
 	if cookie == nil || !cookie.HttpOnly || cookie.SameSite != http.SameSiteStrictMode {
 		t.Fatalf("session cookie: %+v", cookie)
 	}
-	if resp, _ := e.req("GET", "/?t=wrong", "", nil); resp.StatusCode == 302 {
-		t.Fatal("a wrong token produced a session")
+	// Neither a made-up code nor the master token opens a session.
+	if status, c, _ := e.redeem("wrong"); status == 302 || c != nil {
+		t.Fatal("a wrong code produced a session")
+	}
+	if status, c, _ := e.redeem(e.tok); status == 302 || c != nil {
+		t.Fatal("the master token produced a session")
 	}
 	withCookie := func(r *http.Request) { r.AddCookie(cookie) }
 	if resp, _ := e.req("GET", "/api/state", "", withCookie); resp.StatusCode != 200 {
@@ -138,7 +132,7 @@ func TestAuthenticationAndBrowserProtections(t *testing.T) {
 		t.Fatalf("foreign Host header: %d", resp.StatusCode)
 	}
 	// Security headers on every response.
-	resp, _ = e.req("GET", "/api/state", "", e.auth)
+	resp, _ := e.req("GET", "/api/state", "", e.auth)
 	for _, h := range []string{"X-Content-Type-Options", "Content-Security-Policy", "Referrer-Policy"} {
 		if resp.Header.Get(h) == "" {
 			t.Errorf("missing header %s", h)

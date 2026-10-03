@@ -17,6 +17,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/parfentsevandrey-blip/test/svoi/internal/diskfree"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/mesh"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/store"
@@ -782,7 +783,7 @@ func (t *transfers) pull(ctx context.Context, id string, peerID identity.ID, par
 		return fmt.Errorf("%w (%d announced, %d offered at download)", errSizeChanged, announced, meta.Size)
 	}
 	t.mu.Unlock()
-	if free, ok := diskFree(filepath.Dir(part)); ok && free < uint64(meta.Size-offset)+diskReserve {
+	if free, ok := diskfree.Free(filepath.Dir(part)); ok && free < uint64(meta.Size-offset)+diskReserve {
 		return errNoSpace
 	}
 	if offset > meta.Size {

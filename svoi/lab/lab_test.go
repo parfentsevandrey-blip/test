@@ -203,7 +203,7 @@ func waitFor(t *testing.T, d time.Duration, what string, cond func() bool) {
 var codeRe = regexp.MustCompile(`SVOI1-[A-Z0-9-]+`)
 
 func invite(t *testing.T, founder *node) string {
-	out := founder.run("invite", "--ttl", "5m")
+	out := founder.run("invite", "--ttl", "5m", "--owner", "lab") // the inviter says whose device it is
 	code := codeRe.FindString(out)
 	if code == "" {
 		t.Fatalf("no invitation code in output:\n%s", out)
@@ -233,9 +233,9 @@ func runScenario(t *testing.T, natA, natB, fw, wantPath string) {
 
 	anchor.run("init", "--mesh", "Lab", "--name", "anchor", "--owner", "lab")
 	anchor.start()
-	a.run("join", invite(t, anchor), "--name", "a", "--owner", "lab")
+	a.run("join", invite(t, anchor), "--name", "a")
 	a.start()
-	b.run("join", invite(t, anchor), "--name", "b", "--owner", "lab")
+	b.run("join", invite(t, anchor), "--name", "b")
 	b.start()
 
 	// Timeline of how a sees b, to understand slow or failed punching afterwards.
@@ -374,9 +374,9 @@ func TestOverlayTUN(t *testing.T) {
 	})
 	anchor.run("init", "--mesh", "Lab", "--name", "anchor", "--owner", "lab")
 	anchor.start()
-	a.run("join", invite(t, anchor), "--name", "a", "--owner", "lab")
+	a.run("join", invite(t, anchor), "--name", "a")
 	a.start("--tun")
-	b.run("join", invite(t, anchor), "--name", "b", "--owner", "lab")
+	b.run("join", invite(t, anchor), "--name", "b")
 	b.start("--tun")
 
 	var pb peerState
@@ -482,7 +482,7 @@ func TestLANOnlyAndReaddressing(t *testing.T) {
 	})
 	l1.run("init", "--mesh", "Lan", "--name", "l1", "--owner", "lab")
 	l1.start()
-	l2.run("join", invite(t, l1), "--name", "l2", "--owner", "lab")
+	l2.run("join", invite(t, l1), "--name", "l2")
 	l2.start()
 
 	together := func(what string) {

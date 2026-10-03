@@ -19,11 +19,19 @@ import (
 func (c *Conn) sealDisco(p *peer, payload []byte) []byte {
 	var nonce [24]byte
 	_, _ = rand.Read(nonce[:])
-	out := make([]byte, 0, discoHeaderLen+len(payload)+box.Overhead)
+	// Sender and recipient are sealed inside, not only named in the header: the box
+	// key is the same in both directions, so without this a stranger could bounce a
+	// packet back at its author with the header sender swapped, and have it accepted
+	// as "from the other device".
+	plain := make([]byte, 0, 16+len(payload))
+	plain = append(plain, c.r8[:]...)
+	plain = append(plain, p.r8[:]...)
+	plain = append(plain, payload...)
+	out := make([]byte, 0, discoHeaderLen+len(plain)+box.Overhead)
 	out = append(out, typeDisco)
 	out = append(out, c.dev.ID[:]...)
 	out = append(out, nonce[:]...)
-	return box.SealAfterPrecomputation(out, payload, &nonce, &p.shared)
+	return box.SealAfterPrecomputation(out, plain, &nonce, &p.shared)
 }
 
 // sendDisco sends a disco payload to p, either straight to a physical address
@@ -177,10 +185,16 @@ func (c *Conn) handleDisco(pkt []byte, from netip.AddrPort, via *peer) {
 		}
 		box.Precompute(&shared, &pub, &c.xpriv)
 	}
-	payload, ok := box.OpenAfterPrecomputation(nil, pkt[discoHeaderLen:], &nonce, &shared)
-	if !ok || len(payload) == 0 {
+	plain, ok := box.OpenAfterPrecomputation(nil, pkt[discoHeaderLen:], &nonce, &shared)
+	if !ok || len(plain) <= 16 {
 		return
 	}
+	// The sealed sender must be the one named in the header, and we must be the
+	// sealed recipient (see sealDisco).
+	if [8]byte(plain[0:8]) != sender.Route8() || [8]byte(plain[8:16]) != c.r8 {
+		return
+	}
+	payload := plain[16:]
 	r := rbuf{b: payload[1:]}
 	kind := payload[0]
 

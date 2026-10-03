@@ -50,10 +50,9 @@ func cmdJoin(args []string) error {
 	var cf commonFlags
 	cf.register(fs)
 	name := fs.String("name", "", "name of this device (default: hostname)")
-	owner := fs.String("owner", "", "owner name")
 	pos := parseInterspersed(fs, args)
 	if len(pos) != 1 {
-		return errors.New("usage: svoi join <invite code> [--name NAME] [--owner OWNER]")
+		return errors.New("usage: svoi join <invite code> [--name NAME]")
 	}
 	a, err := openOffline(cf.dir, false)
 	if err != nil {
@@ -66,7 +65,7 @@ func cmdJoin(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
 	fmt.Println("Connecting to the inviting device…")
-	if err := a.JoinMesh(ctx, pos[0], *name, *owner); err != nil {
+	if err := a.JoinMesh(ctx, pos[0], *name); err != nil {
 		return err
 	}
 	s := a.Node().Self()

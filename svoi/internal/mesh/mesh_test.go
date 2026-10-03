@@ -110,7 +110,7 @@ func join(t *testing.T, founder, joiner *tnode, name string, admin bool) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	if err := joiner.JoinMesh(ctx, inv.Code, name, "tester"); err != nil {
+	if err := joiner.JoinMesh(ctx, inv.Code, name); err != nil {
 		t.Fatalf("join %s: %v", name, err)
 	}
 }
@@ -189,7 +189,7 @@ func TestInviteIsSingleUseAndExpires(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	if err := b.JoinMesh(ctx, inv.Code, "beta", "x"); err != nil {
+	if err := b.JoinMesh(ctx, inv.Code, "beta"); err != nil {
 		t.Fatal(err)
 	}
 	if len(a.Invites()) != 0 {
@@ -198,7 +198,7 @@ func TestInviteIsSingleUseAndExpires(t *testing.T) {
 	// Re-using the same code must fail.
 	ctx2, cancel2 := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel2()
-	err = c.JoinMesh(ctx2, inv.Code, "gamma", "x")
+	err = c.JoinMesh(ctx2, inv.Code, "gamma")
 	if err == nil {
 		t.Fatal("a used invitation was accepted twice")
 	}
@@ -207,7 +207,7 @@ func TestInviteIsSingleUseAndExpires(t *testing.T) {
 	}
 	// A tampered code (bad checksum) is rejected before any network traffic.
 	bad := inv.Code[:len(inv.Code)-3] + "AAA"
-	if err := c.JoinMesh(ctx2, bad, "gamma", "x"); err == nil {
+	if err := c.JoinMesh(ctx2, bad, "gamma"); err == nil {
 		t.Fatal("tampered invitation accepted")
 	}
 	// Non-admins cannot invite; only the founder can.
@@ -220,7 +220,7 @@ func TestInviteIsSingleUseAndExpires(t *testing.T) {
 	if !a.CancelInvite(inv2.ID) || len(a.Invites()) != 0 {
 		t.Fatal("CancelInvite failed")
 	}
-	if err := c.JoinMesh(ctx2, inv2.Code, "gamma", "x"); err == nil {
+	if err := c.JoinMesh(ctx2, inv2.Code, "gamma"); err == nil {
 		t.Fatal("cancelled invitation accepted")
 	}
 }
@@ -248,7 +248,7 @@ func TestJoinPinsTheInviter(t *testing.T) {
 	evil.NewInvite(false, time.Minute) // makes the impostor accept anonymous traffic
 	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
 	defer cancel()
-	if err := victim.JoinMesh(ctx, parsed.Encode(), "victim", "x"); err == nil {
+	if err := victim.JoinMesh(ctx, parsed.Encode(), "victim"); err == nil {
 		t.Fatal("joined through an impostor")
 	}
 	if victim.Configured() {
@@ -644,5 +644,46 @@ func TestHelloIsSanitised(t *testing.T) {
 	}
 	if len(h.Caps) != 16 || h.Caps[0] != "files" || len(h.Endpoints) != 24 || h.Extra != nil {
 		t.Errorf("lists not bounded: caps=%d endpoints=%d extra=%v", len(h.Caps), len(h.Endpoints), h.Extra)
+	}
+}
+
+// "Owner" decides whose devices count as one's own (files from them are accepted
+// without asking). It is the inviting administrator who says whose device is
+// being added; a joiner can no longer claim to be someone else's second device.
+func TestOwnerIsChosenByTheInviter(t *testing.T) {
+	nw := netsim.New()
+	a := newTestNode(t, nw.Internet().NewHost(ip("198.51.100.1")), "alpha", nil) // owner "tester"
+	b := newTestNode(t, nw.Internet().NewHost(ip("198.51.100.2")), "beta", nil)
+	c := newTestNode(t, nw.Internet().NewHost(ip("198.51.100.3")), "gamma", nil)
+	if err := a.CreateMesh("Home", "alpha", "Андрей"); err != nil {
+		t.Fatal(err)
+	}
+	// The default: the new device is the inviter's own.
+	inv, err := a.NewInvite(false, time.Minute)
+	if err != nil || inv.Owner != "Андрей" {
+		t.Fatalf("default invitation: %+v %v", inv, err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	if err := b.JoinMesh(ctx, inv.Code, "beta"); err != nil {
+		t.Fatal(err)
+	}
+	if got := b.Self().Owner; got != "Андрей" {
+		t.Fatalf("beta's owner = %q, want the inviter's", got)
+	}
+	// Someone else's device: the inviter says so, with a label that is cleaned.
+	inv2, err := a.NewInviteFor(false, time.Minute, "  Анна\n<b>  ")
+	if err != nil || inv2.Owner != "Анна <b>" {
+		t.Fatalf("invitation for another person: %+v %v", inv2, err)
+	}
+	if err := c.JoinMesh(ctx, inv2.Code, "gamma"); err != nil {
+		t.Fatal(err)
+	}
+	if got := c.Self().Owner; got != "Анна <b>" {
+		t.Fatalf("gamma's owner = %q", got)
+	}
+	waitFor(t, 15*time.Second, "a learns both", func() bool { return a.Peer(b.ID()) != nil && a.Peer(c.ID()) != nil })
+	if p := a.Peer(c.ID()); p.Member().Owner != "Анна <b>" {
+		t.Fatalf("what the others see: %q", p.Member().Owner)
 	}
 }

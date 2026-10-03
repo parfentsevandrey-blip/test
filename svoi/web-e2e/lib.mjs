@@ -56,16 +56,20 @@ function freePorts(n) {
 
 export async function startDemo({ quiet = true } = {}) {
   const base = await freePorts(4);
-  const proc = spawn(config.bin, ["demo", "--no-browser", "--port", String(base), ...(quiet ? ["--quiet"] : [])], { stdio: ["ignore", "pipe", "pipe"] });
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "svoi-e2e-demo-"));
+  const proc = spawn(config.bin, ["demo", "--no-browser", "--dir", dir, "--port", String(base), ...(quiet ? ["--quiet"] : [])], { stdio: ["ignore", "pipe", "pipe"] });
   let out = "";
   const devices = {};
   const ready = new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error("demo did not start:\n" + out)), 60000);
     const onData = (d) => {
       out += d;
-      for (const m of String(out).matchAll(/(laptop|phone|nas|home-server)\s+(http:\/\/127\.0\.0\.1:(\d+))\/\?t=([0-9a-f]+)/g)) {
+      // The printed links carry one-time sign-in codes; what the harness needs from them is the
+      // address. Like the command line, it authenticates with the master token from the data directory.
+      for (const m of String(out).matchAll(/(laptop|phone|nas|home-server)\s+(http:\/\/127\.0\.0\.1:(\d+))\/\?t=([0-9a-f]{48})/g)) {
         if (devices[m[1]]) continue; // later output re-matches the same lines; keep the first object (it gets .api below)
-        devices[m[1]] = { name: m[1], origin: m[2], port: +m[3], token: m[4], url: `${m[2]}/?t=${m[4]}` };
+        const token = fs.readFileSync(path.join(dir, m[1], "data", "ui.token"), "utf8").trim();
+        devices[m[1]] = { name: m[1], origin: m[2], port: +m[3], token };
         devices[m[1]].api = (method, p, body, o = {}) => api(devices[m[1]], method, p, body, o);
       }
       if (Object.keys(devices).length === 4 && /Ctrl\+C/.test(out)) {
@@ -79,7 +83,7 @@ export async function startDemo({ quiet = true } = {}) {
   });
   await ready;
   proc.removeAllListeners("exit");
-  const demo = { devices, proc, log: () => out };
+  const demo = { devices, proc, dir, log: () => out };
   // wait until the laptop sees everybody and the seeded content has settled
   const lap = devices.laptop;
   await until(async () => {
@@ -92,6 +96,7 @@ export async function startDemo({ quiet = true } = {}) {
       const t = setTimeout(() => (proc.kill("SIGKILL"), r()), 8000);
       proc.once("exit", () => (clearTimeout(t), r()));
     });
+    fs.rmSync(dir, { recursive: true, force: true });
   };
   return demo;
 }
@@ -111,7 +116,7 @@ export async function startNode({ name, init = false, mesh = "Тест", owner =
   await until(async () => fs.existsSync(addrFile) && fs.existsSync(tokFile), 20000, `${name || "node"} to start`);
   const origin = "http://" + fs.readFileSync(addrFile, "utf8").trim();
   const token = fs.readFileSync(tokFile, "utf8").trim();
-  const node = { name, dir, origin, token, url: `${origin}/?t=${token}`, proc, log: () => fs.readFileSync(path.join(dir, "node.log"), "utf8") };
+  const node = { name, dir, origin, token, proc, log: () => fs.readFileSync(path.join(dir, "node.log"), "utf8") };
   node.api = (method, p, body, o = {}) => api(node, method, p, body, o);
   node.stop = async () => {
     try { process.kill(-proc.pid, "SIGINT"); } catch {}
@@ -198,7 +203,10 @@ export async function open(browser, dev, { w = 1280, h = 800, lang = "ru", theme
   page.on("pageerror", (e) => bad("pageerror: " + e.message));
   page.on("requestfailed", (r) => !/\/api\/events/.test(r.url()) && bad(`requestfailed: ${r.method()} ${r.url()} ${r.failure() && r.failure().errorText}`));
   page.on("response", (r) => r.status() >= 400 && /\/api\//.test(r.url()) && bad(`HTTP ${r.status()} ${r.request().method()} ${r.url().replace(dev.origin, "")}`));
-  await page.goto(dev.url, { waitUntil: "load" }); // token handshake sets the session cookie
+  // Sign in the way a person does: a one-time link (what `svoi url` prints). The server turns
+  // the code into a session cookie; the master token never goes near the browser.
+  const { code } = await api(dev, "POST", "/api/login/code", {});
+  await page.goto(`${dev.origin}/?t=${code}`, { waitUntil: "load" });
   // (the side navigation exists but is hidden on a narrow screen, the tab bar the other way round)
   await page.waitForFunction(() => [...document.querySelectorAll('[data-testid="nav-devices"], [data-testid="tab-devices"], [data-testid="page-onboarding"]')].some((e) => e.getClientRects().length > 0));
   if (hash) await nav(page, dev, hash);
