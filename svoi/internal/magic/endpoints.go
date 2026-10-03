@@ -168,15 +168,18 @@ func (c *Conn) NAT() NATReport {
 		portsByIP[ip][ap.Port()] = true
 	}
 	for ap, o := range s.observed {
-		if now.Sub(o.last) <= time.Minute {
+		if now.Sub(o.last) <= time.Minute && !isPrivateAddr(ap.Addr()) {
 			note(ap)
 			rep.Public = append(rep.Public, ap)
 		}
 	}
 	for _, r := range s.stun {
 		if now.Sub(r.at) <= time.Minute {
-			note(r.ap)
 			rep.STUNWorks = true
+			if isPrivateAddr(r.ap.Addr()) {
+				continue
+			}
+			note(r.ap)
 			if !contains(rep.Public, r.ap) {
 				rep.Public = append(rep.Public, r.ap)
 			}
@@ -344,4 +347,23 @@ func (c *Conn) handleSTUN(pkt []byte, from netip.AddrPort) {
 		c.refreshEndpoints()
 	}
 	_ = from
+}
+
+// NetCheck re-runs address discovery now: STUN, interface scan and a fresh
+// round of probes to every peer. Used by the "check network" button.
+func (c *Conn) NetCheck() {
+	addrs := c.cfg.LocalAddrs()
+	sort.Slice(addrs, func(i, j int) bool { return addrs[i].Less(addrs[j]) })
+	c.self.mu.Lock()
+	c.self.local = addrs
+	c.self.mu.Unlock()
+	c.refreshEndpoints()
+	go c.runSTUN()
+	for _, p := range c.allPeers() {
+		p.mu.Lock()
+		p.nextProbe = time.Now()
+		p.lastFullProbe = time.Time{}
+		p.mu.Unlock()
+	}
+	c.Kick()
 }

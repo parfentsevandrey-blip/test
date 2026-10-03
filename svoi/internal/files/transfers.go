@@ -744,7 +744,7 @@ func (t *transfers) pull(ctx context.Context, id string, peerID identity.ID, par
 		return errors.New("partial file is larger than the source; restarting")
 	}
 
-	f, err := os.OpenFile(part, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o600)
+	f, err := os.OpenFile(part, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o666)
 	if err != nil {
 		return err
 	}

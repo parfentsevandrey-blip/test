@@ -95,6 +95,9 @@ func (n *Node) NewInvite(admin bool, ttl time.Duration) (InviteInfo, error) {
 		}
 		eps = append(pub, lan...)
 	}
+	if len(eps) == 0 {
+		return InviteInfo{}, errors.New("mesh: this device has no network address yet; connect to a network and try again")
+	}
 	ident, err := identity.NewInvite(root.Pub, n.dev.ID, ttl, admin, eps, meshName)
 	if err != nil {
 		return InviteInfo{}, err

@@ -69,10 +69,10 @@ func listenUDP(port int) (net.PacketConn, error) {
 	return pc, nil
 }
 
-// defaultLocalAddrs enumerates interface addresses that are useful as
+// DefaultLocalAddrs enumerates interface addresses that are useful as
 // endpoints: not loopback, not link-local, not multicast and not part of the
 // svoi overlay itself (probing through our own tunnel would be circular).
-func defaultLocalAddrs() []netip.Addr {
+func DefaultLocalAddrs() []netip.Addr {
 	var out []netip.Addr
 	ifs, err := net.Interfaces()
 	if err != nil {

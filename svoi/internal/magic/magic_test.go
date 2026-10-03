@@ -254,15 +254,19 @@ func TestHolePunchingThroughAnchorForAllConePairs(t *testing.T) {
 					return tp.a.conn.PathInfo(tp.b.dev.ID).Kind == PathDirect &&
 						tp.b.conn.PathInfo(tp.a.dev.ID).Kind == PathDirect
 				})
-				before, _ := tp.anchor.conn.RelayStats()
+				// Data must flow directly. (Disco chatter may still pass the relay for a
+				// moment after the path switches, so count payload bytes, not packets.)
+				drain(tp.a)
+				drain(tp.b)
+				ab, ba := tp.a.conn.Stats(tp.b.dev.ID), tp.b.conn.Stats(tp.a.dev.ID)
 				send(t, tp.a, tp.b, "punched")
 				send(t, tp.b, tp.a, "through")
-				after, _ := tp.anchor.conn.RelayStats()
-				if after != before {
-					t.Fatalf("traffic still went through the relay (%d -> %d packets)", before, after)
+				aa, ba2 := tp.a.conn.Stats(tp.b.dev.ID), tp.b.conn.Stats(tp.a.dev.ID)
+				if aa.TxRelay != ab.TxRelay || ba2.TxRelay != ba.TxRelay {
+					t.Fatalf("payload still went through the relay: a %+v -> %+v, b %+v -> %+v", ab, aa, ba, ba2)
 				}
-				if s := tp.a.conn.Stats(tp.b.dev.ID); s.TxDirect == 0 {
-					t.Fatalf("no direct tx recorded: %+v", s)
+				if aa.TxDirect <= ab.TxDirect || ba2.TxDirect <= ba.TxDirect {
+					t.Fatalf("no direct tx recorded: a %+v -> %+v, b %+v -> %+v", ab, aa, ba, ba2)
 				}
 			})
 		}

@@ -71,6 +71,10 @@ type Config struct {
 	NoRelay bool
 	Logger  *slog.Logger
 
+	// Loopback adds 127.0.0.1 to the advertised addresses: for running several
+	// nodes on one machine (demos, tests).
+	Loopback bool
+
 	// Test and simulation hooks.
 	Listen     func(port int) (net.PacketConn, error)
 	LocalAddrs func() []netip.Addr
@@ -85,6 +89,11 @@ type Config struct {
 }
 
 func (c *Config) fill() {
+	if c.LocalAddrs == nil && c.Loopback {
+		c.LocalAddrs = func() []netip.Addr {
+			return append(magic.DefaultLocalAddrs(), netip.MustParseAddr("127.0.0.1"))
+		}
+	}
 	if c.Logger == nil {
 		c.Logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
@@ -278,6 +287,20 @@ func (n *Node) CreateMesh(meshName, deviceName, owner string) error {
 		return err
 	}
 	return n.startMember()
+}
+
+// Reconfigure changes network settings (STUN servers, relay, UDP port, LAN
+// discovery) and restarts the network part of the node so they take effect.
+func (n *Node) Reconfigure(mod func(*Config)) error {
+	n.stopNetwork()
+	n.mu.Lock()
+	mod(&n.cfg)
+	configured := n.root != nil
+	n.mu.Unlock()
+	if configured {
+		return n.startMember()
+	}
+	return nil
 }
 
 // Leave removes this device from the mesh (locally) and stops the network.

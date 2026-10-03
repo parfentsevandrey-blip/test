@@ -216,7 +216,7 @@ func New(cfg Config) (*Conn, error) {
 		cfg.Listen = listenUDP
 	}
 	if cfg.LocalAddrs == nil {
-		cfg.LocalAddrs = defaultLocalAddrs
+		cfg.LocalAddrs = DefaultLocalAddrs
 	}
 	if cfg.ResolveSTUN == nil {
 		cfg.ResolveSTUN = resolveHostPort
@@ -246,6 +246,12 @@ func New(cfg Config) (*Conn, error) {
 	c.bufPool.New = func() any { b := make([]byte, maxPacket); return &b }
 	c.unknownTokens = newTokenBucket(100, 200)
 	c.self.init()
+	// Know our interface addresses before anyone asks (an invitation created right
+	// after startup must already contain them).
+	local := cfg.LocalAddrs()
+	sort.Slice(local, func(i, j int) bool { return local[i].Less(local[j]) })
+	c.self.local = local
+	c.self.lastEps = c.endpointsLocked(time.Now())
 
 	c.wg.Add(2)
 	go c.readLoop()

@@ -164,6 +164,42 @@ func (n *Node) registerCoreHandlers() {
 		n.applySync(c.Peer, req)
 		return n.buildSync(c.Peer), nil
 	})
+	n.Handle("mesh.grant", func(ctx context.Context, c *Call) (any, error) {
+		// An admin hands us the mesh authority key together with our new admin
+		// certificate. Only a holder of the key can produce a certificate that
+		// verifies as admin, and the seed must match the mesh root, so a regular
+		// member cannot trick us into anything.
+		if !c.Peer.Member().Admin {
+			return nil, Errf(CodeDenied, "only an admin can grant admin rights")
+		}
+		var a struct {
+			Seed []byte `json:"seed"`
+			Cert []byte `json:"cert"`
+		}
+		if err := c.Decode(&a); err != nil {
+			return nil, err
+		}
+		root := n.Root()
+		if root == nil {
+			return nil, ErrNotConfigured
+		}
+		auth, err := identity.AuthorityFromSeed(a.Seed, root.DER)
+		if err != nil {
+			return nil, Errf(CodeInvalid, "bad authority key")
+		}
+		m, err := root.Verify(a.Cert)
+		if err != nil || m.ID != n.dev.ID || !m.Admin {
+			return nil, Errf(CodeInvalid, "bad certificate")
+		}
+		n.mu.Lock()
+		n.auth = auth
+		n.mu.Unlock()
+		n.learnMember(m)
+		n.saveSoon()
+		n.emit(Event{Kind: EvSelf})
+		go n.pushSyncToAll()
+		return map[string]bool{"ok": true}, nil
+	})
 	n.Handle("mesh.ping", func(ctx context.Context, c *Call) (any, error) {
 		return map[string]int64{"t": time.Now().UnixMilli()}, nil
 	})
@@ -213,4 +249,44 @@ func (p *Peer) Ping(ctx context.Context) (time.Duration, error) {
 		return 0, err
 	}
 	return time.Since(start), nil
+}
+
+// GrantAdmin makes another device a full administrator: it receives the mesh
+// authority key (over the encrypted link) and an admin certificate. This cannot
+// be undone short of removing the device from the mesh, because the key cannot
+// be taken back.
+func (n *Node) GrantAdmin(ctx context.Context, id identity.ID) error {
+	n.mu.RLock()
+	auth := n.auth
+	n.mu.RUnlock()
+	if auth == nil {
+		return ErrNotAdmin
+	}
+	p := n.Peer(id)
+	if p == nil {
+		return Errf(CodeNotFound, "unknown device")
+	}
+	if !p.Online() {
+		return Errf(CodeOffline, "%s is not online", p.Name())
+	}
+	if p.Member().Admin {
+		return nil
+	}
+	var existing []*identity.Member
+	n.mu.RLock()
+	for _, q := range n.peers {
+		existing = append(existing, q.Member())
+	}
+	existing = append(existing, n.self)
+	n.mu.RUnlock()
+	m, err := auth.Issue(identity.IssueRequest{ID: id, Name: p.Member().Name, Owner: p.Member().Owner, Admin: true}, existing)
+	if err != nil {
+		return err
+	}
+	if err := p.Call(ctx, "mesh.grant", map[string]any{"seed": auth.Priv.Seed(), "cert": m.CertDER}, nil); err != nil {
+		return err
+	}
+	n.learnMember(m)
+	n.pushSyncToAll()
+	return nil
 }
