@@ -19,7 +19,7 @@ group("signing in", () => {
     assert(!p1.url().includes("t="), "the code was removed from the address bar: " + p1.url());
 
     // The cookie is a session: HttpOnly, SameSite=Strict, not the token, invisible to scripts.
-    const cookie = (await ctx1.cookies()).find((c) => c.name === "svoi_session");
+    const cookie = (await ctx1.cookies()).find((c) => c.name.startsWith("svoi_session"));
     assert(cookie, "a session cookie was set");
     assert(cookie.httpOnly && cookie.sameSite === "Strict", `cookie flags: ${JSON.stringify(cookie)}`);
     assert(cookie.value.length === 64 && cookie.value !== lap.token && cookie.value !== code, "the cookie is its own random session id");
@@ -45,11 +45,11 @@ group("signing in", () => {
     await p2.goto(`${lap.origin}/?t=${code}`);
     await tid(p2, "unauthorized").waitFor();
     eq(await tid(p2, "unauthorized").getAttribute("data-reason"), "link", "the screen says the link was used");
-    assert((await ctx2.cookies()).every((c) => c.name !== "svoi_session"), "a used link produced a session");
+    assert((await ctx2.cookies()).every((c) => !c.name.startsWith("svoi_session")), "a used link produced a session");
     // The master token is no sign-in link either.
     await p2.goto(`${lap.origin}/?t=${lap.token}`);
     await tid(p2, "unauthorized").waitFor();
-    assert((await ctx2.cookies()).every((c) => c.name !== "svoi_session"), "the master token produced a session");
+    assert((await ctx2.cookies()).every((c) => !c.name.startsWith("svoi_session")), "the master token produced a session");
     await ctx2.close();
 
     // The first browser carries on, also after a reload.
@@ -67,7 +67,7 @@ group("signing in", () => {
     await tid(page, "unauthorized").waitFor();
     eq(await tid(page, "unauthorized").getAttribute("data-reason"), "signed-out", "the screen says we signed out");
     // The old cookie is dead on the server too, not just forgotten by the page.
-    const dead = (await ctx.cookies()).find((c) => c.name === "svoi_session");
+    const dead = (await ctx.cookies()).find((c) => c.name.startsWith("svoi_session"));
     if (dead) {
       const other = await browser.newContext();
       await other.addCookies([dead]);
@@ -95,5 +95,21 @@ group("signing in", () => {
     eq((await lap.api("GET", "/api/state")).self.name, "laptop");
     const c = await open(browser, lap, { allow: [] });
     eq(await c.evaluate(() => fetch("api/state").then((r) => r.status)), 200);
+  });
+
+  test("signing in to another device on the same machine does not sign the first one out", async ({ browser, dev }) => {
+    // One browser, three devices on localhost ports: browsers share cookies between ports.
+    const ctx = await browser.newContext();
+    const devices = [dev.laptop, dev.phone, dev.nas];
+    for (const d of devices) {
+      const { code } = await d.api("POST", "/api/login/code", {});
+      const page = await ctx.newPage();
+      await page.goto(`${d.origin}/?t=${code}`);
+      await navVisible(page);
+    }
+    const names = (await ctx.cookies()).map((c) => c.name).filter((n) => n.startsWith("svoi_session"));
+    eq(new Set(names).size, 3, "each device keeps its own session cookie");
+    for (const d of devices) eq((await ctx.request.get(`${d.origin}/api/state`)).status(), 200, `${d.name} is still signed in`);
+    await ctx.close();
   });
 });

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"hash/crc32"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -560,5 +561,35 @@ self.addEventListener("install", () => {});`
 	defer ts.Close()
 	if resp, _ := http.Get(ts.URL + "/sw.js"); resp.StatusCode != 404 {
 		t.Fatalf("sw.js when there is none: %d", resp.StatusCode)
+	}
+}
+
+// Close may arrive while Serve is still starting up in its goroutine (the demo
+// does exactly that when one of its devices fails to come up): no data race, no
+// leaked listener, and Serve returns.
+func TestCloseRightAfterServeIsSafe(t *testing.T) {
+	a, err := app.Open(app.Options{Dir: t.TempDir(), DeviceName: "close-box"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer a.Close()
+	for i := 0; i < 100; i++ {
+		s := api.New(a, nil)
+		ln, err := s.Listen("127.0.0.1:0", true)
+		if err != nil {
+			t.Fatal(err)
+		}
+		done := make(chan struct{})
+		go func() { s.Serve(ln); close(done) }()
+		s.Close()
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second):
+			t.Fatal("Serve did not return after Close")
+		}
+		if c, err := net.DialTimeout("tcp", ln.Addr().String(), 200*time.Millisecond); err == nil {
+			c.Close()
+			t.Fatal("the port is still listening after Close")
+		}
 	}
 }

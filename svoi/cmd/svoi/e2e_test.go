@@ -200,7 +200,7 @@ func openLink(t *testing.T, link string) *http.Cookie {
 		return nil
 	}
 	for _, c := range resp.Cookies() {
-		if c.Name == "svoi_session" && c.Value != "" {
+		if strings.HasPrefix(c.Name, "svoi_session") && c.Value != "" {
 			return c
 		}
 	}

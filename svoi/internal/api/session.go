@@ -187,7 +187,7 @@ func (s *sessions) dropAll() {
 
 func (s *Server) sessionCookie(id string) *http.Cookie {
 	return &http.Cookie{
-		Name: cookieName, Value: id, Path: "/", HttpOnly: true,
+		Name: s.cookieName(), Value: id, Path: "/", HttpOnly: true,
 		SameSite: http.SameSiteStrictMode, MaxAge: int(sessionTTL / time.Second),
 	}
 }
@@ -237,9 +237,9 @@ func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		s.sess.dropAll()
-	} else if c, err := r.Cookie(cookieName); err == nil {
+	} else if c, err := r.Cookie(s.cookieName()); err == nil {
 		s.sess.drop(c.Value)
 	}
-	http.SetCookie(w, &http.Cookie{Name: cookieName, Value: "", Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode, MaxAge: -1})
+	http.SetCookie(w, &http.Cookie{Name: s.cookieName(), Value: "", Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode, MaxAge: -1})
 	ok(w)
 }

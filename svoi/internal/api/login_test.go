@@ -3,7 +3,9 @@ package api_test
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -289,5 +291,83 @@ func TestLoginRedirectStaysOnThisSite(t *testing.T) {
 	loc := resp.Header.Get("Location")
 	if resp.StatusCode != 302 || strings.HasPrefix(loc, "//") || !strings.HasPrefix(loc, "/") {
 		t.Fatalf("redirect: %d %q", resp.StatusCode, loc)
+	}
+}
+
+// Browsers share cookies between the ports of one host. Two nodes on one machine
+// (the demo runs four!) must not sign each other's browser out.
+func TestNodesOnOneHostDoNotSignEachOtherOut(t *testing.T) {
+	type node struct{ base, token string }
+	start := func(name string) node {
+		a, err := app.Open(app.Options{Dir: t.TempDir(), DeviceName: name, Owner: "tester"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { a.Close() })
+		s := api.New(a, nil)
+		ln, err := s.Listen("127.0.0.1:0", true)
+		if err != nil {
+			t.Fatal(err)
+		}
+		go s.Serve(ln)
+		t.Cleanup(func() { s.Close() })
+		return node{base: "http://" + ln.Addr().String(), token: a.Token()}
+	}
+	one, two := start("one-box"), start("two-box")
+
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	browser := &http.Client{Jar: jar} // one browser: one cookie jar for the whole host
+	signIn := func(n node) {
+		req, _ := http.NewRequest("POST", n.base+"/api/login/code", strings.NewReader("{}"))
+		req.Header.Set("Authorization", "Bearer "+n.token)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		var out struct{ Code string }
+		if err := json.NewDecoder(resp.Body).Decode(&out); err != nil || out.Code == "" {
+			t.Fatalf("login code: %v %+v", err, out)
+		}
+		r, err := browser.Get(n.base + "/?t=" + out.Code)
+		if err != nil {
+			t.Fatal(err)
+		}
+		r.Body.Close()
+	}
+	status := func(n node) int {
+		r, err := browser.Get(n.base + "/api/state")
+		if err != nil {
+			t.Fatal(err)
+		}
+		r.Body.Close()
+		return r.StatusCode
+	}
+	signIn(one)
+	signIn(two)
+	if a, b := status(one), status(two); a != 200 || b != 200 {
+		t.Fatalf("signing in to the second node signed the first one out (first %d, second %d)", a, b)
+	}
+	u, _ := url.Parse(one.base)
+	names := map[string]bool{}
+	for _, c := range jar.Cookies(u) {
+		names[c.Name] = true
+	}
+	if len(names) != 2 {
+		t.Fatalf("the two nodes share one cookie name: %v", names)
+	}
+	// Signing out of one leaves the other alone.
+	req, _ := http.NewRequest("POST", one.base+"/api/logout", strings.NewReader("{}"))
+	req.Header.Set("X-Svoi", "1")
+	resp, err := browser.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if a, b := status(one), status(two); a != 401 || b != 200 {
+		t.Fatalf("after signing out of the first node: first %d (want 401), second %d (want 200)", a, b)
 	}
 }

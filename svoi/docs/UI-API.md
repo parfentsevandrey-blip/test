@@ -16,8 +16,10 @@ and the UI mock server (`web-dev/mock-server.mjs`) must implement exactly this t
 * **Auth**: the node prints `http://127.0.0.1:PORT/?t=<login code>`; `svoi url` / `svoi open` print a
   fresh one. A **login code** is random (192 bit), works **once** and for **10 minutes**. Visiting the link
   exchanges it for a random *session id* (kept by the node as a hash in `ui.sessions`), sets that as an
-  `HttpOnly; SameSite=Strict` cookie `svoi_session` and redirects to `/` (the code is gone from the
-  address bar). A session lasts 14 days and is renewed while it is used, so an active browser stays
+  `HttpOnly; SameSite=Strict` cookie and redirects to `/` (the code is gone from the address bar). The
+  cookie is named `svoi_session_<port>`: browsers share cookies between the ports of one host, and
+  without the port in the name signing in to a second node on the same machine (the demo's four
+  devices) would sign the first one out. The UI never touches the cookie (it is HttpOnly). A session lasts 14 days and is renewed while it is used, so an active browser stays
   signed in; it survives a restart of the node. The master token (`ui.token`) is for the command line
   only (`Authorization: Bearer …`) and is never put in a URL or a cookie — the browser cannot learn it.
   API calls without a valid session get `401 {"error":{"code":"unauthorized",…}}` — the UI then shows a

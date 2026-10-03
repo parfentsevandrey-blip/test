@@ -3,13 +3,43 @@ package demo
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"math/rand"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
 )
+
+// freePortBase finds four consecutive free loopback ports (the demo's devices
+// use consecutive ports), so the test does not depend on what else is running.
+func freePortBase(t *testing.T) int {
+	t.Helper()
+	for try := 0; try < 100; try++ {
+		base := 20000 + rand.Intn(30000)
+		var ls []net.Listener
+		ok := true
+		for i := 0; i < 4; i++ {
+			l, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", base+i))
+			if err != nil {
+				ok = false
+				break
+			}
+			ls = append(ls, l)
+		}
+		for _, l := range ls {
+			l.Close()
+		}
+		if ok {
+			return base
+		}
+	}
+	t.Fatal("no four consecutive free ports")
+	return 0
+}
 
 type apiClient struct {
 	t     *testing.T
@@ -51,7 +81,7 @@ func (c *apiClient) get(path string, out any) int { return c.do("GET", path, nil
 func TestDemoMeshEndToEnd(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Minute)
 	defer cancel()
-	d, err := Start(ctx, Options{Dir: t.TempDir(), UIPort: 18777, Quiet: true})
+	d, err := Start(ctx, Options{Dir: t.TempDir(), UIPort: freePortBase(t), Quiet: true})
 	if err != nil {
 		t.Fatal(err)
 	}

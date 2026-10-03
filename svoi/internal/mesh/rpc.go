@@ -172,7 +172,16 @@ func (s *ServerStream) Fail(err error) error {
 }
 
 // CloseWrite ends the response body (half-close); reads stay possible.
-func (s *ServerStream) CloseWrite() error { return s.s.Close() }
+func (s *ServerStream) CloseWrite() error { return closeSend(s.s) }
+
+// closeSend closes the send side of a stream, unless the stream is already
+// cancelled (by the other end, or by us), which is not worth an error.
+func closeSend(s *quic.Stream) error {
+	if err := s.Close(); err != nil && s.Context().Err() == nil {
+		return err
+	}
+	return nil
+}
 
 // SetDeadline bounds the whole stream.
 func (s *ServerStream) SetDeadline(t time.Time) error { return s.s.SetDeadline(t) }
@@ -299,7 +308,13 @@ type ClientStream struct {
 func (c *ClientStream) Write(p []byte) (int, error) { return c.s.Write(p) }
 
 // CloseWrite signals the end of the request body.
-func (c *ClientStream) CloseWrite() error { return c.s.Close() }
+//
+// A server that has already answered tells us to stop sending (STOP_SENDING), and
+// closing a send side that has been cancelled is an error in QUIC - but not a
+// failure of the call: the answer is waiting to be read, or the connection is
+// gone and reading says so. Reporting it here made calls fail now and then,
+// whenever the server was quicker than the client.
+func (c *ClientStream) CloseWrite() error { return closeSend(c.s) }
 
 // Read reads response body bytes (after ReadResponse).
 func (c *ClientStream) Read(p []byte) (int, error) { return c.s.Read(p) }
@@ -313,7 +328,7 @@ func (c *ClientStream) Cancel() {
 // Close ends the stream, discarding anything unread.
 func (c *ClientStream) Close() error {
 	c.s.CancelRead(0)
-	return c.s.Close()
+	return closeSend(c.s)
 }
 
 // SetDeadline bounds reads and writes.

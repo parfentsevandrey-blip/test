@@ -687,3 +687,33 @@ func TestOwnerIsChosenByTheInviter(t *testing.T) {
 		t.Fatalf("what the others see: %q", p.Member().Owner)
 	}
 }
+
+// A server that is quicker than the client has answered, and told us to stop
+// sending, before we close our side of the stream. Closing a cancelled send side
+// is an error in QUIC, but it must not turn a call that worked into a failure
+// (this made calls fail now and then, under load).
+func TestClosingTheRequestAfterTheAnswerIsNotAnError(t *testing.T) {
+	nw := netsim.New()
+	a := newTestNode(t, nw.Internet().NewHost(ip("198.51.100.1")), "alpha", nil)
+	b := newTestNode(t, nw.Internet().NewHost(ip("198.51.100.2")), "beta", nil)
+	a.CreateMesh("Home", "alpha", "x")
+	join(t, a, b, "beta", false)
+	waitFor(t, 10*time.Second, "link", online(b, a))
+	a.Handle("test.echo", func(ctx context.Context, c *Call) (any, error) { return "pong", nil })
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cs, err := b.Peer(a.ID()).OpenStream(ctx, "test.echo", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out string
+	if err := cs.ReadResponse(&out); err != nil || out != "pong" {
+		t.Fatalf("response: %q %v", out, err)
+	}
+	time.Sleep(300 * time.Millisecond) // the server's STOP_SENDING has reached us by now
+	if err := cs.CloseWrite(); err != nil {
+		t.Fatalf("closing the request after the answer failed: %v", err)
+	}
+	cs.Close()
+}

@@ -22,7 +22,20 @@ import (
 	"github.com/parfentsevandrey-blip/test/svoi/internal/app"
 )
 
-const cookieName = "svoi_session"
+const cookiePrefix = "svoi_session"
+
+// cookieName: browsers share cookies between the ports of one host, so the session
+// cookie carries this node's port in its name. Otherwise signing in to a second node
+// on the same machine (the demo's four devices, two real nodes) would replace the
+// first one's cookie and sign it out.
+func (s *Server) cookieName() string {
+	if s.ln != nil {
+		if _, port, err := net.SplitHostPort(s.ln.Addr().String()); err == nil && port != "" {
+			return cookiePrefix + "_" + port
+		}
+	}
+	return cookiePrefix
+}
 
 // Server serves the API and the UI.
 type Server struct {
@@ -33,8 +46,11 @@ type Server struct {
 	uiVer    string
 	sess     *sessions
 	loopback bool // listening on a loopback address only
-	srv      *http.Server
 	ln       net.Listener
+
+	mu     sync.Mutex // guards srv and closed: Close may race with Serve starting up
+	srv    *http.Server
+	closed bool
 }
 
 // New creates the server. ui may be nil (API only).
@@ -75,22 +91,38 @@ func (s *Server) Listen(addr string, strict bool) (net.Listener, error) {
 
 // Serve runs the server on ln until it is closed.
 func (s *Server) Serve(ln net.Listener) error {
-	s.srv = &http.Server{
+	srv := &http.Server{
 		Handler:           s.Handler(),
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       120 * time.Second,
 	}
-	err := s.srv.Serve(ln)
+	s.mu.Lock()
+	if s.closed { // Close won the race against this goroutine starting
+		s.mu.Unlock()
+		_ = ln.Close()
+		return nil
+	}
+	s.srv = srv
+	s.mu.Unlock()
+	err := srv.Serve(ln)
 	if errors.Is(err, http.ErrServerClosed) {
 		return nil
 	}
 	return err
 }
 
-// Close stops the server.
+// Close stops the server. It is safe to call at any moment, also right after Serve
+// was started in another goroutine and before that goroutine got going.
 func (s *Server) Close() error {
-	if s.srv != nil {
-		return s.srv.Close()
+	s.mu.Lock()
+	s.closed = true
+	srv, ln := s.srv, s.ln
+	s.mu.Unlock()
+	if srv != nil {
+		return srv.Close()
+	}
+	if ln != nil { // Serve has not started: free the port ourselves
+		return ln.Close()
 	}
 	return nil
 }
@@ -149,7 +181,7 @@ func (s *Server) bearerOK(r *http.Request) bool {
 // authorized reports whether the request is signed in, and refreshes a browser's
 // cookie when its session was extended.
 func (s *Server) authorized(w http.ResponseWriter, r *http.Request) bool {
-	if c, err := r.Cookie(cookieName); err == nil {
+	if c, err := r.Cookie(s.cookieName()); err == nil {
 		if ok, renewed := s.sess.check(c.Value); ok {
 			if renewed {
 				http.SetCookie(w, s.sessionCookie(c.Value))

@@ -392,8 +392,11 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName string) error {
 	if err != nil {
 		return err
 	}
+	// An inviter that has no valid invitation left does not answer strangers at all,
+	// so an expired code would end in a long wait and a misleading "cannot reach".
+	// Say it at once, and name the one reason it can be wrong: this device's clock.
 	if inv.Expired(time.Now()) {
-		return errors.New("mesh: this invitation has expired; ask for a new one")
+		return errors.New("mesh: this invitation has expired; ask for a new one (if it should still be valid, check the date and time on this device)")
 	}
 	if len(inv.Endpoints) == 0 {
 		return errors.New("mesh: the invitation contains no addresses to connect to")
@@ -454,7 +457,9 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName string) error {
 		if firstErr == nil {
 			firstErr = errors.New("no response")
 		}
-		return fmt.Errorf("mesh: cannot reach the inviting device (%v). Make sure it is online and reachable from this network", firstErr)
+		// A device with no valid invitation left stays silent to strangers on purpose, so
+		// "it was used, cancelled or has expired" looks exactly like "it is offline".
+		return fmt.Errorf("mesh: cannot reach the inviting device (%v). Make sure it is online and reachable from this network, and that the invitation is still valid (it may have been used, cancelled or have expired)", firstErr)
 	}
 	defer conn.CloseWithError(closeNormal, "done")
 
