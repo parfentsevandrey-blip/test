@@ -459,3 +459,110 @@ func TestOverlayTUN(t *testing.T) {
 	}
 	t.Logf("3 MB through the overlay in %v", time.Since(start).Round(time.Millisecond))
 }
+
+// A home network with no way out: the devices are on one switch, nothing routes
+// anywhere, there is no anchor and no STUN. They must still find and use each
+// other, and after the whole network is re-addressed (a new router, a new DHCP
+// range) nobody knows anybody's address anymore - only the LAN beacons can bring
+// them back together.
+func TestLANOnlyAndReaddressing(t *testing.T) {
+	if out, err := exec.Command(labSh, "lan", "7").CombinedOutput(); err != nil {
+		t.Fatalf("natlab lan: %v\n%s", err, out)
+	}
+	t.Cleanup(func() { exec.Command(labSh, "down").Run() })
+
+	l1 := newNode(t, "svl-L1", "l1")
+	l2 := newNode(t, "svl-L2", "l2")
+	t.Cleanup(func() {
+		if t.Failed() {
+			for _, n := range []*node{l1, l2} {
+				t.Logf("---- %s log ----\n%s", n.name, n.logTail(80))
+			}
+		}
+	})
+	l1.run("init", "--mesh", "Lan", "--name", "l1", "--owner", "lab")
+	l1.start()
+	l2.run("join", invite(t, l1), "--name", "l2", "--owner", "lab")
+	l2.start()
+
+	together := func(what string) {
+		waitFor(t, 60*time.Second, what, func() bool {
+			p1, ok1 := l1.peer("l2")
+			p2, ok2 := l2.peer("l1")
+			return ok1 && ok2 && p1.Online && p2.Online && (p1.Path == "lan" || p1.Path == "direct")
+		})
+		p, _ := l1.peer("l2")
+		t.Logf("%s: l1 sees l2 via %s, %.1f ms", what, p.Path, p.RTTms)
+	}
+	together("devices on a closed LAN find each other")
+
+	send := func(name string) {
+		data := make([]byte, 2<<20)
+		rand.Read(data)
+		src := filepath.Join(l1.dir, name)
+		if err := os.WriteFile(src, data, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		l1.run("send", "l2", src)
+		dest := filepath.Join(l2.dir, "home", "Downloads", "Svoi", name)
+		waitFor(t, 60*time.Second, "file "+name+" to arrive", func() bool {
+			st, err := os.Stat(dest)
+			return err == nil && st.Size() == int64(len(data))
+		})
+	}
+	send("before.bin")
+
+	// The whole network moves to 192.168.8.0/24 while both devices are off.
+	l1.stop()
+	l2.stop()
+	for _, c := range [][]string{
+		{"readdr", "svl-L1", "192.168.8.101/24"},
+		{"readdr", "svl-L2", "192.168.8.102/24"},
+	} {
+		if out, err := exec.Command(labSh, c...).CombinedOutput(); err != nil {
+			t.Fatalf("natlab %v: %v\n%s", c, err, out)
+		}
+	}
+	l1.start()
+	l2.start()
+	together("devices find each other after the network was re-addressed")
+	send("after.bin")
+
+	// Control: the same move with LAN discovery switched off must NOT reconnect
+	// (nothing else knows the new addresses), which shows the beacons did the work above.
+	setLAN := func(n *node, on bool) {
+		path := filepath.Join(n.dir, "config.json")
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var cfg map[string]any
+		if err := json.Unmarshal(raw, &cfg); err != nil {
+			t.Fatal(err)
+		}
+		cfg["lan"] = on
+		raw, _ = json.Marshal(cfg)
+		if err := os.WriteFile(path, raw, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	l1.stop()
+	l2.stop()
+	setLAN(l1, false)
+	setLAN(l2, false)
+	exec.Command(labSh, "readdr", "svl-L1", "192.168.9.101/24").Run()
+	exec.Command(labSh, "readdr", "svl-L2", "192.168.9.102/24").Run()
+	l1.start()
+	l2.start()
+	time.Sleep(20 * time.Second)
+	if p, ok := l1.peer("l2"); ok && p.Online {
+		t.Fatalf("devices reconnected on a re-addressed network without LAN discovery (path %s): the control is meaningless", p.Path)
+	}
+	l1.stop()
+	l2.stop()
+	setLAN(l1, true)
+	setLAN(l2, true)
+	l1.start()
+	l2.start()
+	together("LAN discovery switched back on")
+}

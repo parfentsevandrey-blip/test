@@ -7,6 +7,9 @@
 #   svl-rB     NAT router B  wan 203.0.113.2   lan 192.168.2.0/24  -> svl-B  192.168.2.10
 #   svl-core   an L2 bridge joining the three public-side links
 #
+#   `natlab.sh lan [N]` builds something else: a home network with no way out at all —
+#   svl-L1 (192.168.N.1) and svl-L2 (192.168.N.2) on one switch (svl-sw), no router, no Internet
+#
 # usage (root):  natlab.sh up [natA] [natB] [firewall]
 #                   natX     = cone (default) | symmetric
 #                   firewall = home (default: like a typical home router, drops unsolicited
@@ -16,7 +19,7 @@
 set -euo pipefail
 
 IPT=$(command -v iptables-legacy || command -v iptables)
-NAMES="svl-core svl-anchor svl-rA svl-rB svl-A svl-B"
+NAMES="svl-core svl-anchor svl-rA svl-rB svl-A svl-B svl-sw svl-L1 svl-L2"
 
 down() {
   for ns in $NAMES; do ip netns del "$ns" 2>/dev/null || true; done
@@ -86,8 +89,35 @@ up() {
   echo "lab up: A behind a $natA NAT, B behind a $natB NAT ($fw firewall), anchor 203.0.113.100"
 }
 
+lan() {
+  local n=${1:-7}
+  down
+  for ns in svl-sw svl-L1 svl-L2; do ip netns add "$ns"; ip -n "$ns" link set lo up; done
+  ip -n svl-sw link add br0 type bridge
+  ip -n svl-sw link set br0 up
+  # unique names while they are still in the root namespace, eth0 inside
+  link svl-L1 eL1 svl-sw p1
+  link svl-L2 eL2 svl-sw p2
+  ip -n svl-L1 link set eL1 name eth0
+  ip -n svl-L2 link set eL2 name eth0
+  for p in p1 p2; do ip -n svl-sw link set "$p" master br0; ip -n svl-sw link set "$p" up; done
+  ip -n svl-L1 addr add "192.168.$n.1/24" dev eth0
+  ip -n svl-L2 addr add "192.168.$n.2/24" dev eth0
+  ip -n svl-L1 link set eth0 up
+  ip -n svl-L2 link set eth0 up
+  echo "lan up: svl-L1 192.168.$n.1 and svl-L2 192.168.$n.2 on one switch, no route out"
+}
+
+# readdr <ns> <old-addr> <new-addr>/24 : move a device to another subnet (the router was replaced)
+readdr() {
+  ip -n "$1" addr flush dev eth0
+  ip -n "$1" addr add "$2" dev eth0
+}
+
 case "${1:-}" in
+  lan) shift; lan "$@" ;;
+  readdr) shift; readdr "$@" ;;
   up) shift; up "$@" ;;
   down) down ;;
-  *) echo "usage: $0 up [cone|symmetric] [cone|symmetric] [home|permissive] | down" >&2; exit 2 ;;
+  *) echo "usage: $0 up [cone|symmetric] [cone|symmetric] [home|permissive] | lan [N] | readdr NS ADDR/24 | down" >&2; exit 2 ;;
 esac
