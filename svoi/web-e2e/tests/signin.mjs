@@ -1,4 +1,4 @@
-import { group, test, assert, eq, until, open, tid } from "../lib.mjs";
+import { group, test, assert, eq, until, open, tid, startNode, freePort } from "../lib.mjs";
 
 // How a person gets into the interface: with a one-time link. The master token
 // (what the command line uses) must never reach the browser.
@@ -111,5 +111,26 @@ group("signing in", () => {
     eq(new Set(names).size, 3, "each device keeps its own session cookie");
     for (const d of devices) eq((await ctx.request.get(`${d.origin}/api/state`)).status(), 200, `${d.name} is still signed in`);
     await ctx.close();
+  });
+});
+
+group("restarting a node", { noDemo: true }, () => {
+  test("an open tab keeps working after the node restarts, without signing in again", async ({ browser }) => {
+    const port = await freePort();
+    const node = await startNode({ name: "phoenix", init: true, mesh: "Феникс", owner: "Анна", port });
+    const page = await open(browser, node, { allow: [/requestfailed/, /HTTP 5\d\d/, /console\.error/] });
+    await tid(page, "self-card").waitFor();
+    await node.restart();
+    eq(node.origin.endsWith(":" + port), true, "the node came back on the same port");
+    // The session is stored on disk, so the same cookie is still good...
+    eq(await page.evaluate(() => fetch("api/state").then((r) => r.status)), 200, "the old session works after the restart");
+    // ...and the open tab recovers on its own: its live stream reconnects, so a change made now shows up
+    // without any reload (a pending invitation appears in the list).
+    await node.api("POST", "/api/invites", { admin: false, owner: "Анна" });
+    await tid(page, "invite-row").waitFor({ timeout: 30000 });
+    await page.reload();
+    await tid(page, "self-card").waitFor();
+    eq(await tid(page, "unauthorized").count(), 0, "no sign-in screen appeared");
+    assert((await node.api("GET", "/api/state")).self.name === "phoenix", "the node kept its identity");
   });
 });

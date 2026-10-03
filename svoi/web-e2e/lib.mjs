@@ -104,27 +104,39 @@ export async function startDemo({ quiet = true } = {}) {
 // A real `svoi up` process with its own data directory (loopback only), optionally
 // already part of a mesh of its own (via `svoi init`). Used where the demo does not
 // fit: onboarding screens and anything that needs an unconfigured device.
-export async function startNode({ name, init = false, mesh = "Тест", owner = "" } = {}) {
+export async function startNode({ name, init = false, mesh = "Тест", owner = "", port = 0 } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "svoi-e2e-node-"));
   const env = { ...process.env, SVOI_DIR: path.join(dir, "data"), HOME: path.join(dir, "home"), XDG_CONFIG_HOME: path.join(dir, "home", ".config"), DISPLAY: "", WAYLAND_DISPLAY: "" };
   fs.mkdirSync(env.HOME, { recursive: true });
   if (init) execFileSync(config.bin, ["init", "--mesh", mesh, "--name", name, "--owner", owner], { env, stdio: "pipe" });
-  const log = fs.openSync(path.join(dir, "node.log"), "w");
-  const proc = spawn(config.bin, ["up", "--no-browser", "--no-stun", "--loopback", "--ui", "127.0.0.1:0"], { env, stdio: ["ignore", log, log], detached: true });
+  const log = fs.openSync(path.join(dir, "node.log"), "a");
+  const spawnIt = () => spawn(config.bin, ["up", "--no-browser", "--no-stun", "--loopback", "--ui", `127.0.0.1:${port}`], { env, stdio: ["ignore", log, log], detached: true });
   const addrFile = path.join(env.SVOI_DIR, "ui.addr");
   const tokFile = path.join(env.SVOI_DIR, "ui.token");
+  const proc = spawnIt();
   await until(async () => fs.existsSync(addrFile) && fs.existsSync(tokFile), 20000, `${name || "node"} to start`);
   const origin = "http://" + fs.readFileSync(addrFile, "utf8").trim();
   const token = fs.readFileSync(tokFile, "utf8").trim();
   const node = { name, dir, origin, token, proc, log: () => fs.readFileSync(path.join(dir, "node.log"), "utf8") };
   node.api = (method, p, body, o = {}) => api(node, method, p, body, o);
   node.stop = async () => {
-    try { process.kill(-proc.pid, "SIGINT"); } catch {}
-    await new Promise((r) => { const t = setTimeout(() => { try { process.kill(-proc.pid, "SIGKILL"); } catch {} r(); }, 8000); proc.once("exit", () => { clearTimeout(t); r(); }); });
+    const p = node.proc;
+    if (p.exitCode !== null || p.signalCode !== null) return;
+    try { process.kill(-p.pid, "SIGINT"); } catch {}
+    await new Promise((r) => { const t = setTimeout(() => { try { process.kill(-p.pid, "SIGKILL"); } catch {} r(); }, 8000); p.once("exit", () => { clearTimeout(t); r(); }); });
+  };
+  // Stop the process and start it again on the same data directory (and, if a port was given, the same port).
+  node.restart = async () => {
+    await node.stop();
+    node.proc = spawnIt();
+    await until(async () => fs.existsSync(addrFile) && (await fetch("http://" + fs.readFileSync(addrFile, "utf8").trim() + "/api/handshake?n=" + "0".repeat(16)).then((r) => r.ok, () => false)), 20000, `${name || "node"} to start again`);
   };
   nodes.push(node);
   return node;
 }
+
+/** Four consecutive free ports starting at the returned one (the first is used). */
+export const freePort = () => freePorts(4);
 const nodes = [];
 export async function stopNodes() { while (nodes.length) await nodes.pop().stop(); }
 
