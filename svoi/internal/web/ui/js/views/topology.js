@@ -38,21 +38,25 @@ export function Topology({ self, peers, selected, onSelect, onAdd }) {
   const { w } = useSize(box);
   const list = peers.slice().sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { numeric: true }));
   const narrow = w > 0 && w < 520;
-  const h = w ? Math.round(narrow ? Math.max(300, Math.min(w * 0.98, 400)) : Math.max(320, Math.min(w * 0.5, 430))) : 0;
+  const h = w ? Math.round(narrow ? Math.max(300, Math.min(w * 0.98, 400)) : Math.max(340, Math.min(w * 0.56, 460))) : 0;
   const many = list.length > 9;
   const r = many ? 18 : narrow ? 20 : 23;
   const rc = narrow ? 28 : 32;
   const cxp = w / 2, cyp = h / 2;
-  const R = Math.max(80, Math.min(w / 2 - (narrow ? 58 : 90), h / 2 - 48));
+  // Leave room for the two label lines above the top node / below the bottom one.
+  const R = Math.max(70, Math.min(w / 2 - (narrow ? 58 : 90), h / 2 - r - 40));
   const n = Math.max(list.length, 1);
-  // Start at the top and go clockwise; offset a little when there are 2 nodes so labels don't collide with the centre.
-  const start = -Math.PI / 2 + (n === 2 ? Math.PI / 2 : 0);
+  // Start at the top and go clockwise. With an even count, rotate by half a step so
+  // no node sits straight below the centre (its edge would cross our own label).
+  const start = -Math.PI / 2 + (n % 2 === 0 ? Math.PI / n : 0);
   const nodes = list.map((p, i) => {
     const a = start + (2 * Math.PI * i) / n;
     // Ellipse on wide screens uses horizontal space better.
-    const rx = narrow ? R : Math.min(R * 1.55, w / 2 - 80);
+    const rx = narrow ? R : Math.min(R * 1.85, w / 2 - 95);
     return { p, a, x: cxp + Math.cos(a) * rx, y: cyp + Math.sin(a) * R, st: statusOf(p) };
   });
+
+  const selfLabelW = Math.max(108, Math.min(self.name.length, 18) * 8.6 + 22);
 
   const onKey = (e, id) => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(id); }
@@ -67,7 +71,7 @@ export function Topology({ self, peers, selected, onSelect, onAdd }) {
         </radialGradient>
       </defs>
       <circle cx=${cxp} cy=${cyp} r=${Math.min(R * 0.95, 160)} fill="url(#topo-glow)" />
-      ${!narrow && html`<ellipse class="topo__orbit" cx=${cxp} cy=${cyp} rx=${Math.min(R * 1.55, w / 2 - 80)} ry=${R} />`}
+      ${!narrow && html`<ellipse class="topo__orbit" cx=${cxp} cy=${cyp} rx=${Math.min(R * 1.85, w / 2 - 95)} ry=${R} />`}
       ${narrow && html`<circle class="topo__orbit" cx=${cxp} cy=${cyp} r=${R} />`}
 
       ${nodes.map((nd, i) => {
@@ -95,8 +99,9 @@ export function Topology({ self, peers, selected, onSelect, onAdd }) {
         <circle r=${rc + 7} class="topo__halo" />
         <circle r=${rc} class="topo__circle" />
         <g transform=${`translate(${-(narrow ? 12 : 14)},${-(narrow ? 12 : 14)})`}><${Icon} name=${kindIcon[deviceKind(self)]} size=${narrow ? 24 : 28} /></g>
-        <text y=${rc + 20} class="topo__name" text-anchor="middle">${truncate(self.name, 18)}</text>
-        <text y=${rc + 35} class="topo__meta" text-anchor="middle">${t("dev.thisDeviceShort")}</text>
+        <rect class="topo__label-bg" x=${-selfLabelW / 2} y=${rc + 6} width=${selfLabelW} height="36" rx="8" />
+        <text y=${rc + 21} class="topo__name" text-anchor="middle">${truncate(self.name, 18)}</text>
+        <text y=${rc + 36} class="topo__meta" text-anchor="middle">${t("dev.thisDeviceShort")}</text>
       </g>
 
       ${nodes.map((nd) => {

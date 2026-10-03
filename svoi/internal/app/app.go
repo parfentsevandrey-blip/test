@@ -22,6 +22,7 @@ import (
 	"github.com/parfentsevandrey-blip/test/svoi/internal/mesh"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/services"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/store"
+	"github.com/parfentsevandrey-blip/test/svoi/internal/tun"
 )
 
 // Options configure Open.
@@ -52,6 +53,7 @@ type App struct {
 	mail  *mail.Manager
 	svc   *services.Manager
 	fwd   *services.Forwarder
+	tun   *tun.Manager
 	hub   *Hub
 	logs  func(limit int) []LogLine
 	extra *extrasCache
@@ -147,6 +149,7 @@ func Open(opts Options) (*App, error) {
 	a.svc.RegisterRPC()
 	a.fwd = services.NewForwarder(a.svc, a.forwardsChanged)
 	a.extra = newExtrasCache(a)
+	a.tun = tun.New(a.node, "", c.TUN.ManageHosts)
 
 	a.start()
 	return a, nil
@@ -162,6 +165,7 @@ func (a *App) start() {
 		}
 	}
 	a.applySocks()
+	a.applyTUN()
 	run := func(f func()) {
 		a.wg.Add(1)
 		go func() { defer a.wg.Done(); f() }()
@@ -180,6 +184,9 @@ func (a *App) Close() error {
 		a.socks.Close()
 	}
 	a.mu.Unlock()
+	if a.tun != nil {
+		a.tun.Stop()
+	}
 	if a.node != nil {
 		a.node.Close()
 	}
@@ -535,6 +542,7 @@ func (a *App) CreateMesh(meshName, deviceName, owner string) error {
 	if err := a.node.CreateMesh(meshName, deviceName, owner); err != nil {
 		return err
 	}
+	a.applyTUN()
 	a.peersChanged()
 	return nil
 }
@@ -544,6 +552,7 @@ func (a *App) JoinMesh(ctx context.Context, code, deviceName, owner string) erro
 	if err := a.node.JoinMesh(ctx, code, deviceName, owner); err != nil {
 		return err
 	}
+	a.applyTUN()
 	a.peersChanged()
 	return nil
 }
@@ -554,6 +563,7 @@ func (a *App) LeaveMesh() error {
 		a.fwd.Close(f.ID)
 	}
 	_ = a.cfg.Update(func(c *Config) error { c.Forwards = []services.Forward{}; return nil })
+	a.tun.Stop()
 	if err := a.node.Leave(); err != nil {
 		return err
 	}

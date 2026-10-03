@@ -28,6 +28,12 @@ type SocksSettings struct {
 	Listen  string `json:"listen"`
 }
 
+// TUNSettings configures the virtual network interface.
+type TUNSettings struct {
+	Enabled     bool `json:"enabled"`
+	ManageHosts bool `json:"manageHosts"`
+}
+
 // Config is the persisted configuration of this device (config.json).
 type Config struct {
 	DownloadDir     string             `json:"downloadDir"`
@@ -39,6 +45,7 @@ type Config struct {
 	UDPPort         int                `json:"udpPort"`
 	LAN             bool               `json:"lan"`
 	Socks           SocksSettings      `json:"socks"`
+	TUN             TUNSettings        `json:"tun"`
 	Shares          []files.Share      `json:"shares"`
 	Services        []services.Service `json:"services"`
 	Forwards        []services.Forward `json:"forwards"`

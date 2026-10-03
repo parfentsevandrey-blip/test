@@ -101,9 +101,9 @@ func (n *node) run(args ...string) string {
 }
 
 // start runs the node in the background.
-func (n *node) start() {
+func (n *node) start(extra ...string) {
 	n.t.Helper()
-	cmd := n.command("up", "--no-browser", "--no-stun", "--debug")
+	cmd := n.command(append([]string{"up", "--no-browser", "--no-stun", "--debug"}, extra...)...)
 	logf, err := os.Create(filepath.Join(n.dir, "node.log"))
 	if err != nil {
 		n.t.Fatal(err)
@@ -145,6 +145,8 @@ func (n *node) logTail(lines int) string {
 }
 
 type peerState struct {
+	IP4      string  `json:"ip4"`
+	IP6      string  `json:"ip6"`
 	Name     string  `json:"name"`
 	Online   bool    `json:"online"`
 	Path     string  `json:"path"`
@@ -324,4 +326,124 @@ func TestSymmetricToSymmetric(t *testing.T) {
 // the same peer. See docs/ARCHITECTURE.md ("NAT traversal in the real world").
 func TestConeToConePermissiveFirewall(t *testing.T) {
 	runScenario(t, "cone", "cone", "permissive", "direct")
+}
+
+// The overlay: ordinary programs (curl, here) reach another device by its overlay
+// address or by <name>.svoi, across two NATs, without knowing svoi exists.
+func TestOverlayTUN(t *testing.T) {
+	if out, err := exec.Command(labSh, "up", "cone", "cone", "home").CombinedOutput(); err != nil {
+		t.Fatalf("natlab up: %v\n%s", err, out)
+	}
+	t.Cleanup(func() { exec.Command(labSh, "down").Run() })
+
+	// Each namespace gets its own /etc/hosts so the three nodes do not fight over one file.
+	for _, ns := range []string{"svl-A", "svl-B"} {
+		dir := filepath.Join("/etc/netns", ns)
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		hosts, _ := os.ReadFile("/etc/hosts")
+		if err := os.WriteFile(filepath.Join(dir, "hosts"), hosts, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		ns := ns
+		t.Cleanup(func() { os.RemoveAll(filepath.Join("/etc/netns", ns)) })
+	}
+
+	anchor := newNode(t, "svl-anchor", "anchor")
+	a := newNode(t, "svl-A", "a")
+	b := newNode(t, "svl-B", "b")
+	t.Cleanup(func() {
+		if t.Failed() {
+			for _, n := range []*node{anchor, a, b} {
+				t.Logf("---- %s log ----\n%s", n.name, n.logTail(40))
+			}
+		}
+	})
+	anchor.run("init", "--mesh", "Lab", "--name", "anchor", "--owner", "lab")
+	anchor.start()
+	a.run("join", invite(t, anchor), "--name", "a", "--owner", "lab")
+	a.start("--tun")
+	b.run("join", invite(t, anchor), "--name", "b", "--owner", "lab")
+	b.start("--tun")
+
+	var pb peerState
+	waitFor(t, 60*time.Second, "a sees b online with a direct path", func() bool {
+		var ok bool
+		pb, ok = a.peer("b")
+		return ok && pb.Online && (pb.Path == "direct" || pb.Path == "lan")
+	})
+	if pb.IP4 == "" || pb.IP6 == "" {
+		t.Fatalf("no overlay addresses: %+v", pb)
+	}
+	t.Logf("b's overlay addresses: %s %s", pb.IP4, pb.IP6)
+
+	// A web server on b, listening on all addresses (including the overlay).
+	www := filepath.Join(b.dir, "www")
+	os.MkdirAll(www, 0o755)
+	os.WriteFile(filepath.Join(www, "hello.txt"), []byte("hello over the overlay\n"), 0o644)
+	big := make([]byte, 3<<20)
+	rand.Read(big)
+	os.WriteFile(filepath.Join(www, "big.bin"), big, 0o644)
+	_, err6 := os.Stat("/proc/net/if_inet6")
+	hasV6 := err6 == nil
+	bind := "::"
+	if !hasV6 {
+		bind = "0.0.0.0"
+	}
+	srv := exec.Command("ip", "netns", "exec", "svl-B", "python3", "-m", "http.server", "8088", "--bind", bind, "--directory", www)
+	srv.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	if err := srv.Start(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { syscall.Kill(-srv.Process.Pid, syscall.SIGKILL); srv.Wait() })
+	time.Sleep(time.Second)
+
+	curl := func(url string, args ...string) []byte {
+		t.Helper()
+		full := append([]string{"netns", "exec", "svl-A", "curl", "-sS", "--max-time", "30"}, args...)
+		full = append(full, url)
+		out, err := exec.Command("ip", full...).CombinedOutput()
+		if err != nil {
+			t.Fatalf("curl %s: %v\n%s", url, err, out)
+		}
+		return out
+	}
+	// By overlay IPv4.
+	waitFor(t, 20*time.Second, "overlay IPv4 reachable", func() bool {
+		out, err := exec.Command("ip", "netns", "exec", "svl-A", "curl", "-sS", "--max-time", "5",
+			fmt.Sprintf("http://%s:8088/hello.txt", pb.IP4)).Output()
+		return err == nil && string(out) == "hello over the overlay\n"
+	})
+	// By overlay IPv6 (when the kernel has IPv6 at all).
+	if hasV6 {
+		if got := string(curl(fmt.Sprintf("http://[%s]:8088/hello.txt", pb.IP6), "-g")); got != "hello over the overlay\n" {
+			t.Fatalf("IPv6 overlay returned %q", got)
+		}
+	} else {
+		t.Log("IPv6 is not available in this kernel: skipping the IPv6 overlay check")
+	}
+	// By name, resolved through the managed /etc/hosts block.
+	defer func() {
+		if t.Failed() {
+			for _, ns := range []string{"svl-A", "svl-B"} {
+				b, _ := os.ReadFile(filepath.Join("/etc/netns", ns, "hosts"))
+				t.Logf("---- /etc/netns/%s/hosts ----\n%s", ns, b)
+			}
+		}
+	}()
+	waitFor(t, 15*time.Second, "b.svoi resolves", func() bool {
+		out, err := exec.Command("ip", "netns", "exec", "svl-A", "getent", "ahostsv4", "b.svoi").Output()
+		return err == nil && strings.Contains(string(out), pb.IP4)
+	})
+	if got := string(curl("http://b.svoi:8088/hello.txt")); got != "hello over the overlay\n" {
+		t.Fatalf("by-name request returned %q", got)
+	}
+	// A multi-megabyte transfer through the tunnel arrives intact.
+	start := time.Now()
+	gotBig := curl(fmt.Sprintf("http://%s:8088/big.bin", pb.IP4))
+	if sha256.Sum256(gotBig) != sha256.Sum256(big) {
+		t.Fatalf("3 MB download through the overlay is corrupt (%d bytes)", len(gotBig))
+	}
+	t.Logf("3 MB through the overlay in %v", time.Since(start).Round(time.Millisecond))
 }

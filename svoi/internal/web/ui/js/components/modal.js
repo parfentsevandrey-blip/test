@@ -53,14 +53,14 @@ function useDialogBehaviour(ref, onClose, initialFocus) {
   }, []);
 }
 
-function ModalInner({ onClose, title, subtitle, icon, children, footer, size, class: cls, closeOnBackdrop, initialFocus, hideClose, tone }) {
+function ModalInner({ onClose, title, subtitle, icon, children, footer, size, class: cls, closeOnBackdrop, initialFocus, hideClose, tone, label }) {
   const ref = useRef(null);
   const tid = useRef(`dlg-t${++titleSeq}`);
   useDialogBehaviour(ref, onClose, initialFocus);
   return html`<div class="modal-layer">
     <div class="modal-backdrop" onClick=${() => closeOnBackdrop && onClose && onClose()}></div>
     <div class=${cx("modal", `modal--${size}`, tone && `modal--${tone}`, cls)} role="dialog" aria-modal="true"
-        aria-labelledby=${title ? tid.current : undefined} tabindex="-1" ref=${ref}>
+        aria-labelledby=${title ? tid.current : undefined} aria-label=${title ? undefined : label} tabindex="-1" ref=${ref}>
       ${(title || !hideClose) && html`<header class="modal__head">
         ${icon && html`<span class=${cx("modal__icon", tone && `modal__icon--${tone}`)}><${Icon} name=${icon} size=${20} /></span>`}
         <div class="grow">

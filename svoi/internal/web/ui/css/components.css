@@ -484,9 +484,10 @@
 .page-head__actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; align-items: center; }
 .page-head__back { margin-left: -8px; }
 @media (max-width: 759px) {
-  .page-head { margin-bottom: var(--sp-4); }
-  .page-head__title { font-size: var(--fs-xl); }
-  .page-head__text { min-width: 0; flex-basis: 0; }
+  .page-head { margin-bottom: var(--sp-4); flex-wrap: nowrap; align-items: flex-start; }
+  .page-head__title { font-size: var(--fs-xl); overflow-wrap: anywhere; }
+  .page-head__text { min-width: 0; flex: 1 1 auto; }
+  .page-head__actions { flex-wrap: nowrap; }
 }
 
 /* plain text bodies (mail/chat) */

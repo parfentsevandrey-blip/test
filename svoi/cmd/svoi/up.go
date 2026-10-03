@@ -60,6 +60,7 @@ func cmdUp(args []string) error {
 	owner := fs.String("owner", "", "owner name offered when creating/joining a mesh")
 	debug := fs.Bool("debug", false, "verbose logging")
 	loopback := fs.Bool("loopback", false, "also advertise 127.0.0.1 (several nodes on one machine)")
+	tunOn := fs.Bool("tun", false, "create the svoi0 network interface (Linux, needs root): reach devices by IP or <name>.svoi from any program")
 	noSTUN := fs.Bool("no-stun", false, "do not use public STUN servers (peers still tell each other how they see us)")
 	fs.Parse(args)
 
@@ -78,6 +79,13 @@ func cmdUp(args []string) error {
 		off := false
 		if _, err := a.UpdateSettings(app.SettingsPatch{STUNEnabled: &off}); err != nil {
 			return err
+		}
+	}
+
+	if *tunOn && !a.Settings().TUN.Enabled {
+		on, hosts := true, true
+		if _, err := a.UpdateSettings(app.SettingsPatch{TUN: &app.TUNPatch{Enabled: &on, ManageHosts: &hosts}}); err != nil {
+			fmt.Fprintln(os.Stderr, "warning: TUN mode:", err)
 		}
 	}
 

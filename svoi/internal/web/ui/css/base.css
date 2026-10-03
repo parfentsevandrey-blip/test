@@ -93,6 +93,9 @@ input:focus-visible, textarea:focus-visible, select:focus-visible { outline-offs
 .strong { font-weight: 600; }
 .center { text-align: center; }
 
+.lbl-narrow { display: none; }
+@media (max-width: 559px) { .lbl-wide { display: none; } .lbl-narrow { display: inline; } }
+
 .skip-link {
   position: fixed; left: 12px; top: 12px; z-index: 1000;
   padding: 10px 14px; border-radius: var(--r-sm);

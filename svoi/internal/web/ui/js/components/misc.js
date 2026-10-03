@@ -104,9 +104,10 @@ export function useFileDrop(onFiles, active = true) {
     const leave = () => { depth = Math.max(0, depth - 1); if (!depth) setOver(false); };
     const drop = (e) => {
       if (!hasFiles(e)) return;
-      e.preventDefault();
       depth = 0;
       setOver(false);
+      if (e.defaultPrevented) return; // a nested drop zone already took the files
+      e.preventDefault();
       const files = Array.from(e.dataTransfer.files || []);
       if (files.length) cb.current(files);
     };

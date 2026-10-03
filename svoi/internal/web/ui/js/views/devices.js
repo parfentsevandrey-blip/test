@@ -32,13 +32,14 @@ export function pathChip(p) {
 
 function statusLine(p) {
   if (!p.online) {
-    return html`<span class="dcard__status is-off"><${Icon} name="clock" size=${14} />${t("dev.lastSeen")} <${Ago} ts=${p.lastSeen} /></span>`;
+    return html`<div class="dcard__status is-off"><${Icon} name="clock" size=${14} /><span class="ellipsis">${t("dev.lastSeen")} <${Ago} ts=${p.lastSeen} /></span></div>`;
   }
-  const rtt = p.rttMs ? html` · <span class="tnum">${fmtRtt(p.rttMs)}</span>` : null;
+  const rtt = p.rttMs ? html`<span class="dcard__rtt mono tnum">${fmtRtt(p.rttMs)}</span>` : null;
   if (p.path === "relay") {
-    return html`<span class="dcard__status is-relay"><${Icon} name="relay" size=${14} /><span class="ellipsis">${t("path.via", { via: p.relayVia || "?" })}${rtt}</span></span>`;
+    return html`<div class="dcard__status is-relay"><${Icon} name="relay" size=${14} /><span class="ellipsis">${t("path.via", { via: p.relayVia || "?" })}</span>${rtt}</div>`;
   }
-  return html`<span class="dcard__status is-on"><${Icon} name=${p.path === "lan" ? "network" : "zap"} size=${14} /><span class="ellipsis">${t("path.long." + (p.path || "none"), { via: "" })}${rtt}</span></span>`;
+  const label = p.path === "lan" ? t("path.long.lan") : p.path === "direct" ? t("path.direct") : t("path.none");
+  return html`<div class="dcard__status is-on"><${Icon} name=${p.path === "lan" ? "network" : p.path === "direct" ? "zap" : "radar"} size=${14} /><span class="ellipsis">${label}</span>${rtt}</div>`;
 }
 
 function DeviceCard({ p }) {
@@ -76,9 +77,9 @@ function SelfCard({ self, peersOnline, total }) {
       <div class="grow">
         <p class="selfcard__eyebrow">${t("dev.thisDevice")}</p>
         <h2 class="selfcard__name" id="selfcard-title">${self.name}</h2>
-        <p class="selfcard__sub ellipsis">${[self.owner, osName(self.os), self.version && "v" + self.version].filter(Boolean).join(" · ")}</p>
+        <p class="selfcard__sub">${[self.owner, osName(self.os), self.version && "v" + self.version].filter(Boolean).join(" · ")}</p>
+        ${self.admin && html`<div class="mt-2"><${Chip} tone="accent" icon="shield" size="sm">${t("dev.admin")}</${Chip}></div>`}
       </div>
-      ${self.admin && html`<${Chip} tone="accent" icon="shield">${t("dev.admin")}</${Chip}>`}
     </div>
     <dl class="selfcard__grid">
       <div><dt>IPv4</dt><dd class="mono"><span class="ellipsis">${self.ip4 || "—"}</span>${self.ip4 && html`<${CopyButton} text=${self.ip4} label=${t("copy.copyWhat", { what: "IPv4" })} />`}</dd></div>
@@ -112,10 +113,13 @@ function InvitesCard({ invites, admin }) {
     <ul class="list">
       ${invites.map((inv) => {
         const left = inv.expires - nowSec();
-        return html`<li class="list-row" key=${inv.id}>
-          <${Chip} tone=${inv.admin ? "warn" : "neutral"} icon=${inv.admin ? "shield" : "userPlus"}>${inv.admin ? t("inv.roleAdmin") : t("inv.roleRegular")}</${Chip}>
-          <span class="grow mono small ellipsis faint" title=${inv.code}>${inv.code}</span>
-          <span class="tnum small nowrap" title=${t("inv.expiresIn")}>${left > 0 ? fmtCountdown(left) : t("inv.expired")}</span>
+        return html`<li class="list-row inv-row" key=${inv.id}>
+          <span class=${cx("inv-row__icon", inv.admin && "is-admin")}><${Icon} name=${inv.admin ? "shield" : "userPlus"} size=${16} /></span>
+          <div class="grow">
+            <span class="strong small ellipsis">${inv.admin ? t("inv.roleAdminLong") : t("inv.roleRegularLong")}</span>
+            <span class="xsmall faint row gap-1"><span class="tnum nowrap" title=${t("inv.expiresIn")}>${left > 0 ? t("inv.left", { time: fmtCountdown(left) }) : t("inv.expired")}</span>
+              <span aria-hidden="true">·</span><span class="mono ellipsis" title=${inv.code}>${inv.code}</span></span>
+          </div>
           <${CopyButton} text=${inv.code} label=${t("inv.copyCode")} />
           ${admin && html`<${IconButton} icon="x" size="sm" variant="danger" label=${t("inv.cancel")} onClick=${() => cancel(inv)} />`}
         </li>`;
@@ -139,7 +143,9 @@ export function DevicesView({ route }) {
   return html`<div class="page devices">
     <${PageHeader} title=${t("nav.devices")}
       subtitle=${peers.length ? t("dev.subtitle", { online: online + 1, total }) : t("dev.subtitleAlone")}
-      actions=${html`<${Button} variant="primary" icon="userPlus" onClick=${openAdd}>${t("dev.add")}</${Button}>`} />
+      actions=${html`<${Button} variant="primary" icon="userPlus" onClick=${openAdd} aria-label=${t("dev.add")}>
+        <span class="lbl-wide">${t("dev.add")}</span><span class="lbl-narrow">${t("dev.addShort")}</span>
+      </${Button}>`} />
 
     <div class="devices__top">
       <${Card} class="topo-card" pad=${false} aria-label=${t("topo.label")}>

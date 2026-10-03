@@ -12,6 +12,7 @@ import (
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/mesh"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/services"
+	"github.com/parfentsevandrey-blip/test/svoi/internal/tun"
 )
 
 // ---- settings ----
@@ -27,7 +28,21 @@ type Settings struct {
 	UDPPort         int           `json:"udpPort"`
 	LAN             bool          `json:"lan"`
 	Socks           SocksSettings `json:"socks"`
+	TUN             TUNView       `json:"tun"`
 	RestartRequired bool          `json:"restartRequired"`
+}
+
+// TUNView is the TUN configuration together with its live status.
+type TUNView struct {
+	Enabled     bool `json:"enabled"`
+	ManageHosts bool `json:"manageHosts"`
+	tun.Status
+}
+
+// TUNPatch updates the TUN configuration.
+type TUNPatch struct {
+	Enabled     *bool `json:"enabled"`
+	ManageHosts *bool `json:"manageHosts"`
 }
 
 // SettingsPatch updates any subset of Settings.
@@ -41,6 +56,7 @@ type SettingsPatch struct {
 	UDPPort         *int           `json:"udpPort"`
 	LAN             *bool          `json:"lan"`
 	Socks           *SocksSettings `json:"socks"`
+	TUN             *TUNPatch      `json:"tun"`
 }
 
 // Settings returns the current settings.
@@ -50,6 +66,7 @@ func (a *App) Settings() Settings {
 		DownloadDir: c.DownloadDir, AutoAccept: c.AutoAccept, AutoAcceptMaxMB: c.AutoAcceptMaxMB,
 		Relay: c.Relay, STUNEnabled: c.STUNEnabled, STUNServers: c.STUNServers, UDPPort: c.UDPPort,
 		LAN: c.LAN, Socks: c.Socks,
+		TUN: TUNView{Enabled: c.TUN.Enabled, ManageHosts: c.TUN.ManageHosts, Status: a.tun.Status()},
 	}
 	if s.STUNServers == nil {
 		s.STUNServers = []string{}
@@ -123,6 +140,14 @@ func (a *App) UpdateSettings(p SettingsPatch) (Settings, error) {
 				c.Socks.Listen = "127.0.0.1:1080"
 			}
 		}
+		if p.TUN != nil {
+			if p.TUN.Enabled != nil {
+				c.TUN.Enabled = *p.TUN.Enabled
+			}
+			if p.TUN.ManageHosts != nil {
+				c.TUN.ManageHosts = *p.TUN.ManageHosts
+			}
+		}
 		return nil
 	})
 	if err != nil {
@@ -151,7 +176,28 @@ func (a *App) UpdateSettings(p SettingsPatch) (Settings, error) {
 	if before.Socks != after.Socks {
 		a.applySocks()
 	}
+	if before.TUN != after.TUN {
+		a.applyTUN()
+		if p.TUN != nil && p.TUN.Enabled != nil && *p.TUN.Enabled {
+			if st := a.tun.Status(); st.State == "error" {
+				return a.Settings(), mesh.Errf(mesh.CodeUnsupported, "%s", st.Error)
+			}
+		}
+	}
 	return a.Settings(), nil
+}
+
+// applyTUN starts or stops the virtual interface according to the settings.
+func (a *App) applyTUN() {
+	c := a.cfg.Get()
+	a.tun.SetManageHosts(c.TUN.ManageHosts)
+	if c.TUN.Enabled && a.node.Configured() {
+		if err := a.tun.Start(); err != nil {
+			a.log.Warn("cannot start the TUN interface", "err", err)
+		}
+		return
+	}
+	a.tun.Stop()
 }
 
 func (a *App) applySocks() {
