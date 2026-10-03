@@ -3,6 +3,7 @@
 package api
 
 import (
+	"bytes"
 	"crypto/subtle"
 	"errors"
 	"fmt"
@@ -211,14 +212,22 @@ func (s *Server) serveUI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	p := strings.TrimPrefix(r.URL.Path, "/")
-	if p == "" {
-		p = "index.html"
+	w.Header().Set("Cache-Control", "no-cache")
+	if p == "" || p == "index.html" {
+		// http.FileServer redirects every request for index.html to "./", which
+		// would loop for "/", so the entry page is served directly.
+		data, err := fs.ReadFile(s.ui, "index.html")
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		http.ServeContent(w, r, "index.html", time.Time{}, bytes.NewReader(data))
+		return
 	}
-	if _, err := fs.Stat(s.ui, p); err != nil {
+	if fi, err := fs.Stat(s.ui, p); err != nil || fi.IsDir() {
 		http.NotFound(w, r)
 		return
 	}
-	w.Header().Set("Cache-Control", "no-cache")
 	r2 := new(http.Request)
 	*r2 = *r
 	r2.URL = new(url.URL)

@@ -34,7 +34,7 @@ Usage:
   svoi ping <device>       measure the round trip to a device
   svoi open                open the web interface in the browser
   svoi url                 print the web interface address
-  svoi leave               leave the mesh (keeps the device key)
+  svoi leave [--yes]        leave the mesh (keeps the device key)
   svoi demo                run a simulated four-device mesh to try the interface
   svoi version
 

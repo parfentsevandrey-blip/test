@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"testing/fstest"
 	"time"
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/api"
@@ -397,5 +398,53 @@ func TestEventStream(t *testing.T) {
 	}
 	if !strings.Contains(got, "event: notify") {
 		t.Fatalf("event not delivered: %q", got)
+	}
+}
+
+// The embedded interface must open at "/" without redirect loops (http.FileServer
+// redirects index.html to "./"), and must not expose directory listings.
+func TestStaticInterface(t *testing.T) {
+	a, err := app.Open(app.Options{Dir: t.TempDir(), DeviceName: "ui-box"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer a.Close()
+	ui := fstest.MapFS{
+		"index.html":   {Data: []byte("<!doctype html><title>svoi</title>")},
+		"js/app.js":    {Data: []byte("console.log(1)")},
+		"css/main.css": {Data: []byte("body{}")},
+	}
+	ts := httptest.NewServer(api.New(a, ui).Handler())
+	defer ts.Close()
+	noFollow := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	get := func(path string) (*http.Response, string) {
+		resp, err := noFollow.Get(ts.URL + path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		b, _ := io.ReadAll(resp.Body)
+		return resp, string(b)
+	}
+	for _, p := range []string{"/", "/index.html"} {
+		resp, body := get(p)
+		if resp.StatusCode != 200 || !strings.Contains(body, "<title>svoi</title>") || !strings.HasPrefix(resp.Header.Get("Content-Type"), "text/html") {
+			t.Errorf("GET %s: %d %q %q", p, resp.StatusCode, resp.Header.Get("Content-Type"), body)
+		}
+	}
+	if resp, body := get("/js/app.js"); resp.StatusCode != 200 || body != "console.log(1)" || !strings.Contains(resp.Header.Get("Content-Type"), "javascript") {
+		t.Errorf("js: %d %q %q", resp.StatusCode, resp.Header.Get("Content-Type"), body)
+	}
+	if resp, _ := get("/css/main.css"); resp.StatusCode != 200 || !strings.HasPrefix(resp.Header.Get("Content-Type"), "text/css") {
+		t.Errorf("css: %d %q", resp.StatusCode, resp.Header.Get("Content-Type"))
+	}
+	for _, p := range []string{"/js", "/js/", "/nope.js", "/../etc/passwd"} {
+		if resp, _ := get(p); resp.StatusCode == 200 {
+			t.Errorf("GET %s unexpectedly succeeded", p)
+		}
+	}
+	// The API stays behind the token even though the page itself is public.
+	if resp, _ := get("/api/state"); resp.StatusCode != 401 {
+		t.Errorf("/api/state without credentials: %d", resp.StatusCode)
 	}
 }

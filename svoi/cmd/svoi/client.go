@@ -284,16 +284,21 @@ func uiURL(dir string) (string, error) {
 }
 
 func cmdLeave(args []string) error {
-	c, _, err := clientFromFlags("leave", args, nil)
+	var yes bool
+	c, _, err := clientFromFlags("leave", args, func(fs *flag.FlagSet) {
+		fs.BoolVar(&yes, "yes", false, "do not ask for confirmation")
+		fs.BoolVar(&yes, "y", false, "same as --yes")
+	})
 	if err != nil {
 		return err
 	}
-	fmt.Print("Leave the mesh? This device will forget all other devices (type yes): ")
-	var ans string
-	fmt.Scanln(&ans)
-	if strings.ToLower(ans) != "yes" {
-		fmt.Println("cancelled")
-		return nil
+	if !yes {
+		fmt.Print("Leave the mesh? This device will forget all other devices (type yes): ")
+		var ans string
+		fmt.Scanln(&ans)
+		if strings.ToLower(ans) != "yes" {
+			return errors.New("cancelled")
+		}
 	}
 	return c.post("/api/mesh/leave", map[string]any{}, nil)
 }
