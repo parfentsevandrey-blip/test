@@ -35,7 +35,7 @@
 |---|---|---|
 | **Windows 10/11** | `Svoi-Setup-0.1.0-x64.exe` (~110 МБ) | двойной щелчок — установка в один шаг, **без прав администратора**; «Свои» появятся в меню «Пуск» и на рабочем столе |
 | **macOS** | `Svoi-0.1.0-mac-arm64.dmg` (Apple silicon) или `Svoi-0.1.0-mac-x64.dmg` (Intel) | открыть, перетащить «Свои» в «Программы»; в первый раз — правый щелчок → «Открыть» |
-| **Linux** | `Svoi-0.1.0-linux-x86_64.AppImage` или `Svoi-0.1.0-linux-amd64.deb` | AppImage: `chmod +x` и запустить; deb: `sudo apt install ./Svoi-0.1.0-linux-amd64.deb` — «Свои» появятся в меню приложений |
+| **Linux** | `Svoi-0.1.0-linux-amd64.deb` (Debian, Ubuntu, Mint) или `Svoi-0.1.0-linux-x86_64.AppImage` (любой дистрибутив) | deb: `sudo apt install ./Svoi-0.1.0-linux-amd64.deb` — «Свои» появятся в меню приложений; AppImage: `chmod +x` и запустить (на Ubuntu 22.04 и новее сначала `sudo apt install libfuse2`) |
 | **Android** | `svoi-0.1.0.apk` | см. [«Телефон»](#3-телефон) |
 | **Сервер / NAS без экрана** | `svoi-linux-amd64.tar.gz` (и другие процессоры) | одна программа без окна — см. [«Сервер / NAS»](#4-сервер--nas-без-экрана) |
 
