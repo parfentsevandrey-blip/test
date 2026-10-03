@@ -319,8 +319,8 @@ func TestBlobFetchRejectsCorruptedContent(t *testing.T) {
 	}
 }
 
-// Knowing a hash is not enough: attachments are served to the author and the
-// recipients of the message that carries them, and everybody else gets the same
+// Knowing a hash is not enough: attachments are served to the recipients of the
+// message that carries them, and everybody else gets the same
 // "no such blob" as for a file that does not exist (so it cannot even be probed).
 func TestBlobsAreOnlyServedToTheParticipantsOfAMessage(t *testing.T) {
 	h := meshtest.New(t)
@@ -362,8 +362,8 @@ func TestBlobsAreOnlyServedToTheParticipantsOfAMessage(t *testing.T) {
 	if err := mb.blobs.Fetch(ctx, mb.node.Peer(a.ID()), sha, int64(len(secret)), nil); err != nil {
 		t.Fatalf("the recipient was refused its own attachment: %v", err)
 	}
-	if !ma.m.MayFetchBlob(b.ID(), sha) || !ma.m.MayFetchBlob(a.ID(), sha) || ma.m.MayFetchBlob(c.ID(), sha) {
-		t.Fatal("MayFetchBlob disagrees with the message's participants")
+	if !ma.m.MayFetchBlob(b.ID(), sha) || ma.m.MayFetchBlob(c.ID(), sha) {
+		t.Fatal("MayFetchBlob disagrees with the message's recipients")
 	}
 }
 

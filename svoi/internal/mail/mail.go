@@ -97,9 +97,12 @@ type delivery struct {
 type fetchState struct {
 	State string `json:"state"`
 	Got   int64  `json:"got"`
-	Want  bool   `json:"want,omitempty"` // the user asked for it: consent for a large attachment
-	Fails int    `json:"fails,omitempty"`
-	Next  int64  `json:"next,omitempty"` // do not try again before this time (unix seconds)
+	// Via: we pulled this attachment from the message's author. Only then may it be
+	// passed on to the other recipients (see blobPeers).
+	Via   bool  `json:"via,omitempty"`
+	Want  bool  `json:"want,omitempty"` // the user asked for it: consent for a large attachment
+	Fails int   `json:"fails,omitempty"`
+	Next  int64 `json:"next,omitempty"` // do not try again before this time (unix seconds)
 }
 
 // Attachments are pulled from the sender automatically only while small; a
@@ -159,6 +162,13 @@ type Manager struct {
 	inflight map[string]bool
 	fetching int // attachment downloads running
 	kick     chan struct{}
+
+	// blobAuth says, per attachment hash, which devices the messages we hold let us
+	// hand that blob to (and how many messages say so); blobRefs counts the messages
+	// that carry a hash at all. Both make the checks of the blob server and of the
+	// clean-up independent of the size of the mailbox.
+	blobAuth map[string]map[identity.ID]int
+	blobRefs map[string]int
 }
 
 // New loads the mailbox from the database.
@@ -166,6 +176,7 @@ func New(node *mesh.Node, db *store.DB, blobs *blob.Store, emit func(Event)) (*M
 	m := &Manager{
 		node: node, db: db, blobs: blobs, emit: emit,
 		msgs: map[string]*record{}, inflight: map[string]bool{}, kick: make(chan struct{}, 1),
+		blobAuth: map[string]map[identity.ID]int{}, blobRefs: map[string]int{},
 	}
 	err := db.ForEach(bucketMsgs, func(key string, raw []byte) error {
 		var r record
@@ -178,6 +189,7 @@ func New(node *mesh.Node, db *store.DB, blobs *blob.Store, emit func(Event)) (*M
 			}
 		}
 		m.msgs[r.Core.ID] = &r
+		m.indexLocked(&r, +1)
 		return nil
 	})
 	if err != nil {
@@ -189,27 +201,81 @@ func New(node *mesh.Node, db *store.DB, blobs *blob.Store, emit func(Event)) (*M
 	return m, nil
 }
 
-// MayFetchBlob reports whether peer is the author or a recipient of a message
-// that carries the attachment with this hash.
+// MayFetchBlob reports whether we may hand the attachment with this hash to peer.
+//
+// Knowing a hash proves nothing, and neither does being the author of a message
+// that names it: anybody can send us a message that lists any hash. What counts is
+// who the owner of the blob decided to send it to:
+//
+//   - a message we wrote ourselves lets us give its attachments to its recipients;
+//   - a message that was written to us lets us pass its attachments on to the other
+//     recipients, but only those we pulled from its author - the author held the
+//     blob and named the recipients, which is the author's decision to make. A blob
+//     we already had, or got from somebody else, is not made available by a message
+//     that merely mentions it.
 func (m *Manager) MayFetchBlob(peer identity.ID, sha string) bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	for _, r := range m.msgs {
-		for _, a := range r.Core.Attach {
-			if a.SHA256 != sha {
-				continue
-			}
-			if r.Core.From == peer {
-				return true
-			}
-			for _, to := range r.Core.To {
-				if to == peer {
-					return true
-				}
-			}
+	return m.blobAuth[sha][peer] > 0
+}
+
+// blobPeers lists the devices the message r lets us hand its attachment sha to.
+func (m *Manager) blobPeers(r *record, sha string) []identity.ID {
+	self := m.node.ID()
+	switch {
+	case r.Core.From == self:
+	case r.Fetch[sha] != nil && r.Fetch[sha].Via:
+	default:
+		return nil
+	}
+	out := make([]identity.ID, 0, len(r.Core.To)+1)
+	for _, id := range r.Core.To {
+		if id != self {
+			out = append(out, id)
 		}
 	}
-	return false
+	if r.Core.From != self {
+		out = append(out, r.Core.From)
+	}
+	return out
+}
+
+// reindexLocked adds delta (+1 or -1) to what message r contributes for sha.
+func (m *Manager) reindexLocked(r *record, sha string, delta int) {
+	for _, id := range m.blobPeers(r, sha) {
+		set := m.blobAuth[sha]
+		if set == nil {
+			if delta < 0 {
+				continue
+			}
+			set = map[identity.ID]int{}
+			m.blobAuth[sha] = set
+		}
+		set[id] += delta
+		if set[id] <= 0 {
+			delete(set, id)
+		}
+		if len(set) == 0 {
+			delete(m.blobAuth, sha)
+		}
+	}
+}
+
+// indexLocked adds (+1) or removes (-1) everything message r contributes to the
+// indexes. Call it when a message is stored or removed.
+func (m *Manager) indexLocked(r *record, delta int) {
+	seen := make(map[string]bool, len(r.Core.Attach))
+	for _, a := range r.Core.Attach {
+		if seen[a.SHA256] {
+			continue
+		}
+		seen[a.SHA256] = true
+		m.reindexLocked(r, a.SHA256, delta)
+		m.blobRefs[a.SHA256] += delta
+		if m.blobRefs[a.SHA256] <= 0 {
+			delete(m.blobRefs, a.SHA256)
+		}
+	}
 }
 
 func (m *Manager) fire(e Event) {
@@ -402,6 +468,7 @@ func (m *Manager) Send(in SendInput) (string, error) {
 		}
 	}
 	m.msgs[c.ID] = r
+	m.indexLocked(r, +1)
 	m.save(r)
 	m.mu.Unlock()
 	m.fire(Event{Kind: in.Kind, ID: c.ID, Folder: r.Folder, Peer: chatPeer(r, self)})
@@ -631,6 +698,7 @@ func (m *Manager) Register() {
 			r.Fetch[a.SHA256] = &fetchState{State: st}
 		}
 		m.msgs[cr.ID] = r
+		m.indexLocked(r, +1)
 		m.save(r)
 		ev := Event{Kind: cr.Kind, ID: cr.ID, Folder: r.Folder, Unread: true, Peer: chatPeer(r, self)}
 		m.mu.Unlock()
@@ -654,12 +722,19 @@ func (m *Manager) fetchAttachments(ctx context.Context, r *record) {
 		f.State = AttFetching
 		m.mu.Unlock()
 
-		ok := m.fetchOne(ctx, r, a)
+		ok, fromAuthor := m.fetchOne(ctx, r, a)
 
 		m.mu.Lock()
 		delete(m.inflight, "f|"+a.SHA256)
 		if ok {
-			f.State, f.Got = AttReady, a.Size
+			live := m.msgs[r.Core.ID] == r // (the message may have been deleted meanwhile)
+			if live {
+				m.reindexLocked(r, a.SHA256, -1)
+			}
+			f.State, f.Got, f.Via = AttReady, a.Size, fromAuthor
+			if live {
+				m.reindexLocked(r, a.SHA256, +1)
+			}
 		} else if f.State == AttFetching {
 			f.Fails++
 			f.Got = 0
@@ -677,7 +752,8 @@ func (m *Manager) fetchAttachments(ctx context.Context, r *record) {
 	}
 }
 
-func (m *Manager) fetchOne(ctx context.Context, r *record, a Attachment) bool {
+// fetchOne pulls an attachment; fromAuthor tells whether the message's author was the one that served it.
+func (m *Manager) fetchOne(ctx context.Context, r *record, a Attachment) (ok, fromAuthor bool) {
 	// The sender is the most likely holder; fall back to any other online member.
 	var peers []*mesh.Peer
 	if p := m.node.Peer(r.Core.From); p != nil && p.Online() {
@@ -699,10 +775,10 @@ func (m *Manager) fetchOne(ctx context.Context, r *record, a Attachment) bool {
 		})
 		cancel()
 		if err == nil {
-			return true
+			return true, p.ID == r.Core.From
 		}
 	}
-	return false
+	return false, false
 }
 
 // ---- queries ----
@@ -953,6 +1029,7 @@ func (m *Manager) Delete(id string) error {
 	}
 	if r.Folder == FolderTrash || r.Core.Kind == "chat" {
 		delete(m.msgs, id)
+		m.indexLocked(r, -1)
 		_ = m.db.Delete(bucketMsgs, id)
 		m.gcBlobsLocked(r)
 		ev := Event{Kind: r.Core.Kind, ID: id, Folder: r.Folder, Peer: chatPeer(r, m.node.ID())}
@@ -969,15 +1046,7 @@ func (m *Manager) Delete(id string) error {
 // gcBlobsLocked removes attachment blobs no remaining message refers to.
 func (m *Manager) gcBlobsLocked(gone *record) {
 	for _, a := range gone.Core.Attach {
-		used := false
-		for _, o := range m.msgs {
-			for _, oa := range o.Core.Attach {
-				if oa.SHA256 == a.SHA256 {
-					used = true
-				}
-			}
-		}
-		if !used {
+		if m.blobRefs[a.SHA256] <= 0 {
 			m.blobs.Remove(a.SHA256)
 		}
 	}
