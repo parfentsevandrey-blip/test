@@ -1,0 +1,47 @@
+# systemd unit for a headless device (home server, NAS).
+#
+#   sudo install -m755 svoi /usr/local/bin/svoi
+#   sudo install -m644 deploy/svoi.service /etc/systemd/system/svoi.service
+#   sudo systemctl daemon-reload && sudo systemctl enable --now svoi
+#   sudo journalctl -u svoi -f          # prints the one-time address of the web interface
+#
+# The web interface listens on 127.0.0.1:8777 only; manage this device from
+# another member's interface ("Manage device"), or through an SSH tunnel.
+[Unit]
+Description=svoi — private mesh network of your own devices
+Documentation=https://github.com/parfentsevandrey-blip/test
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Create the mesh or join one the first time:  sudo -u svoi svoi --dir /var/lib/svoi join SVOI1-…
+ExecStart=/usr/local/bin/svoi up --no-browser --ui 127.0.0.1:8777 --dir /var/lib/svoi
+Restart=always
+RestartSec=3
+User=svoi
+Group=svoi
+StateDirectory=svoi
+StateDirectoryMode=0700
+
+# Hardening. Folders you want to share must be readable (and, for read-write
+# shares, writable) — add them to ReadWritePaths= / ReadOnlyPaths=.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+LockPersonality=true
+# ReadWritePaths=/srv/share /var/lib/svoi
+# ReadOnlyPaths=/srv/media
+
+# For the optional virtual network interface (settings → "Network interface",
+# `svoi up --tun`) the unit needs these two lines instead of User=svoi:
+#   AmbientCapabilities=CAP_NET_ADMIN
+#   DeviceAllow=/dev/net/tun rw
+
+[Install]
+WantedBy=multi-user.target

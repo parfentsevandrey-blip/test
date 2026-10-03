@@ -1,0 +1,25 @@
+# A headless svoi device (NAS, home server).
+#
+#   docker compose up -d
+#   docker compose logs svoi        # prints the web interface address with its one-time token
+#   docker compose exec svoi svoi invite     # or: svoi join <code>
+#
+# network_mode: host is the simplest way to have real LAN discovery, direct
+# connections and the correct UDP port. On Docker Desktop (macOS/Windows) host
+# networking does not expose the real network — use the published ports below.
+services:
+  svoi:
+    build: .
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - svoi-data:/data
+      # Folders to share (add the share in the interface as /srv/share):
+      # - /mnt/storage:/srv/share
+    command: ["up", "--no-browser", "--ui", "127.0.0.1:8777"]
+    # With published ports instead of host networking:
+    #   network_mode: bridge
+    #   ports: ["41710:41710/udp", "127.0.0.1:8777:8777"]
+    #   command: ["up", "--no-browser", "--ui", "0.0.0.0:8777"]
+volumes:
+  svoi-data:

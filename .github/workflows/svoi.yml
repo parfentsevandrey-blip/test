@@ -1,0 +1,74 @@
+name: svoi
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["svoi-v*"]          # releases; path filters are not applied to tag pushes
+    paths: ["svoi/**", ".github/workflows/svoi.yml"]
+  pull_request:
+    paths: ["svoi/**", ".github/workflows/svoi.yml"]
+  workflow_dispatch:
+    inputs:
+      lab:
+        description: "also run the real-NAT lab (network namespaces, needs sudo)"
+        type: boolean
+        default: false
+
+defaults:
+  run:
+    working-directory: svoi
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: svoi/go.mod
+          cache-dependency-path: svoi/go.sum
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - run: go vet ./...
+      - name: tests (race detector)
+        run: go test ./... -race -count=1 -timeout 15m
+      - name: every release platform compiles
+        run: make dist VERSION=ci
+      - uses: actions/upload-artifact@v4
+        with:
+          name: svoi-dist
+          path: svoi/dist/*
+          retention-days: 7
+
+  lab:
+    # Real NAT behaviour: cone / symmetric NATs and firewalls built from network
+    # namespaces + iptables/conntrack. Needs privileges, so run it on demand.
+    if: github.event_name == 'workflow_dispatch' && inputs.lab
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: svoi/go.mod
+          cache-dependency-path: svoi/go.sum
+      - run: sudo apt-get update && sudo apt-get install -y iproute2 iptables conntrack
+      - run: sudo -E env "PATH=$PATH" go test -tags lab ./lab -count=1 -v -timeout 20m
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/svoi-v')
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: svoi/go.mod
+          cache-dependency-path: svoi/go.sum
+      - name: build archives
+        run: make dist VERSION=${GITHUB_REF_NAME#svoi-v}
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: svoi/dist/*
+          generate_release_notes: true

@@ -32,8 +32,9 @@ import (
 	"github.com/parfentsevandrey-blip/test/svoi/internal/magic"
 )
 
-// Version of the application, reported to peers.
-const Version = "0.1.0"
+// Version of the application, reported to peers. Release builds override it
+// with -ldflags "-X .../internal/mesh.Version=1.2.3".
+var Version = "0.1.0"
 
 // ALPN protocol names.
 const (

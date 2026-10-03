@@ -183,8 +183,18 @@ never inject as HTML.
   "stunEnabled": true, "stunServers": ["stun.l.google.com:19302"],
   "udpPort": 41710, "lan": true,
   "socks": {"enabled": false, "listen": "127.0.0.1:1080"},
+  "tun": { "enabled": false,       // create a virtual network interface (Linux, needs root / CAP_NET_ADMIN)
+           "manageHosts": true,    // also add `<name>.svoi` lines to /etc/hosts
+           "state": "off",         // off | running | error   (live status, read-only)
+           "name": "svoi0",        // interface name while running
+           "error": "",            // why it could not start, e.g. "permission denied — run as root"
+           "supported": true,      // false on platforms without TUN support → hide the section
+           "txPackets": 0, "rxPackets": 0, "dropped": 0 },
   "restartRequired": false }       // true when a change needs a restart (udpPort, lan…)
 ```
+`PUT /api/settings` accepts `{"tun": {"enabled": true}}` (either field, either order). With the
+interface up, every device is reachable at its overlay address (`ip4`/`ip6`) and as
+`<name>.svoi` by *any* program (ssh, a browser, `ping`), not only through the web UI.
 Language and theme are **client-side only** (`localStorage`), not part of Settings.
 
 ## Endpoints
