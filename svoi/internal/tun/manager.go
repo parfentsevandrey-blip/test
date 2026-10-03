@@ -39,8 +39,8 @@ const (
 // Status describes the TUN state for the UI.
 type Status struct {
 	State     string `json:"state"` // off | running | error
-	Name      string `json:"name,omitempty"`
-	Error     string `json:"error,omitempty"`
+	Name      string `json:"name"`
+	Error     string `json:"error"`
 	Supported bool   `json:"supported"`
 	TxPackets uint64 `json:"txPackets"`
 	RxPackets uint64 `json:"rxPackets"`
