@@ -89,14 +89,28 @@ func within(child, parent string) bool {
 	return err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
+// realPath is where a path really is: symbolic links followed (and, on Windows, short names such as
+// RUNNER~1 spelled out). A folder that does not exist (yet) is reached through the links of the part of
+// the path that does, so that part is resolved and the rest put back; otherwise a share named
+// <data folder>/blobs before that folder exists would slip past the check on a system whose temporary and
+// home folders are themselves links (macOS: /var is /private/var).
 func realPath(p string) string {
-	if r, err := filepath.EvalSymlinks(p); err == nil {
-		p = r
-	}
 	if a, err := filepath.Abs(p); err == nil {
 		p = a
 	}
-	return filepath.Clean(p)
+	p = filepath.Clean(p)
+	rest := ""
+	for q := p; ; {
+		if r, err := filepath.EvalSymlinks(q); err == nil {
+			return filepath.Join(r, rest)
+		}
+		parent := filepath.Dir(q)
+		if parent == q {
+			return p
+		}
+		rest = filepath.Join(filepath.Base(q), rest)
+		q = parent
+	}
 }
 
 // CheckShareRoot reports ErrProtected when sharing dir would expose protected data.

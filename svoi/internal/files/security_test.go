@@ -211,3 +211,70 @@ func TestSharesCannotExposeTheDataFolder(t *testing.T) {
 		t.Fatal("a share that contains the data folder must not be served at all")
 	}
 }
+
+// A folder that is not there (yet) is still reached through the links of the part that is: the check
+// must see the same place however the path is spelled.
+func TestRealPathOfAFolderThatDoesNotExistYet(t *testing.T) {
+	dir := t.TempDir()
+	want := filepath.Join(realPath(dir), "a", "b")
+	if got := realPath(filepath.Join(dir, "a", "b")); got != want {
+		t.Fatalf("realPath(%s/a/b) = %s, want %s", dir, got, want)
+	}
+	link := filepath.Join(t.TempDir(), "link")
+	if err := os.Symlink(dir, link); err != nil {
+		t.Skip("cannot create a symbolic link here:", err)
+	}
+	if got := realPath(filepath.Join(link, "a", "b")); got != want {
+		t.Fatalf("through a link: realPath = %s, want %s", got, want)
+	}
+}
+
+// A staged copy that is still open when its transfer ends (Windows will not delete an open file) is removed as
+// soon as it is closed.
+func TestAStagedCopyThatIsStillOpenIsRemovedLater(t *testing.T) {
+	stage := filepath.Join(t.TempDir(), "outbox", "b_1")
+	file := filepath.Join(stage, "photo.jpg")
+	writeFile(t, file, []byte("data"))
+	f, err := os.Open(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	removeStage(stage)
+	time.Sleep(700 * time.Millisecond)
+	f.Close()
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		if _, err := os.Stat(stage); os.IsNotExist(err) {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("the staged copy is still there")
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+}
+
+// What nothing needs any more is cleared out of the outbox when the program starts; what an unfinished
+// transfer still needs stays.
+func TestSweepOutboxKeepsWhatIsStillNeeded(t *testing.T) {
+	dir := t.TempDir()
+	keep := filepath.Join(dir, "outbox", "b_keep")
+	drop := filepath.Join(dir, "outbox", "b_drop")
+	stray := filepath.Join(dir, "outbox", "b_stray")
+	for _, d := range []string{keep, drop, stray} {
+		writeFile(t, filepath.Join(d, "x.bin"), []byte("x"))
+	}
+	tr := &transfers{dataDir: dir, items: map[string]*record{
+		"t_1": {ID: "t_1", Dir: "out", State: StateQueued, Stage: keep},
+		"t_2": {ID: "t_2", Dir: "out", State: StateDone, Stage: drop},
+	}}
+	tr.sweepOutbox()
+	if _, err := os.Stat(keep); err != nil {
+		t.Fatalf("a staged copy of a queued transfer was removed: %v", err)
+	}
+	for _, d := range []string{drop, stray} {
+		if _, err := os.Stat(d); err == nil {
+			t.Fatalf("%s was not swept", d)
+		}
+	}
+}

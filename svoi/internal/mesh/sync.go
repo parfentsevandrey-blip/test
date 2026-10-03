@@ -346,7 +346,11 @@ func (p *Peer) Ping(ctx context.Context) (time.Duration, error) {
 	if err := p.Call(ctx, "mesh.ping", nil, &out); err != nil {
 		return 0, err
 	}
-	return time.Since(start), nil
+	rtt := time.Since(start)
+	if rtt < time.Microsecond {
+		rtt = time.Microsecond // (a coarse clock reads a fast answer as zero)
+	}
+	return rtt, nil
 }
 
 // GrantAdmin makes another device a full administrator: it receives the mesh

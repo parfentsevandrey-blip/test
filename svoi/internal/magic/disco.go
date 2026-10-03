@@ -311,6 +311,9 @@ func (c *Conn) onPong(p *peer, r *rbuf, from netip.AddrPort, via *peer) {
 	}
 	now := time.Now()
 	rtt := now.Sub(rec.sent)
+	if rtt < time.Microsecond {
+		rtt = time.Microsecond // a coarse clock (Windows ticks every 0.5-15 ms) reads a fast network as zero, which would mean "not measured"
+	}
 	if via != nil {
 		if rec.via != via.id {
 			return

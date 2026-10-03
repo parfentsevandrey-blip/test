@@ -61,12 +61,21 @@ func wrapSock(pc net.PacketConn) udpSock {
 	return pcSock{pc}
 }
 
-// listenUDP opens a dual-stack UDP socket (falling back to IPv4 only) with
-// generous buffers so bulk transfers do not drop packets in the kernel.
+// listenUDP opens a dual-stack UDP socket (an IPv4 one where there is no IPv6) with generous buffers so
+// bulk transfers do not drop packets in the kernel.
+//
+// A port that is taken is reported as taken. It is never answered with an IPv4-only socket on the same port:
+// Windows lets that one in beside the dual-stack socket of another node and hands it the IPv4 traffic, so
+// two nodes on one machine (a join over loopback, a second copy of the program) would talk to themselves.
 func listenUDP(port int) (net.PacketConn, error) {
-	pc, err := net.ListenPacket("udp", ":"+strconv.Itoa(port))
+	addr := ":" + strconv.Itoa(port)
+	lc := net.ListenConfig{Control: listenControl}
+	pc, err := lc.ListenPacket(context.Background(), "udp", addr)
 	if err != nil {
-		pc, err = net.ListenPacket("udp4", ":"+strconv.Itoa(port))
+		if addrInUse(err) {
+			return nil, err
+		}
+		pc, err = lc.ListenPacket(context.Background(), "udp4", addr)
 		if err != nil {
 			return nil, err
 		}

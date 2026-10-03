@@ -199,7 +199,7 @@ func TestOnboardingAndValidation(t *testing.T) {
 	}
 	dl := filepath.Join(t.TempDir(), "dl")
 	var s struct{ DownloadDir, AutoAccept string }
-	if code := e.call("PUT", "/api/settings", `{"downloadDir":"`+dl+`","autoAccept":"ask"}`, &s); code != 200 || s.DownloadDir != dl || s.AutoAccept != "ask" {
+	if code := e.call("PUT", "/api/settings", `{"downloadDir":`+js(dl)+`,"autoAccept":"ask"}`, &s); code != 200 || s.DownloadDir != dl || s.AutoAccept != "ask" {
 		t.Fatalf("valid settings: %d %+v", code, s)
 	}
 	// Shares: validation and CRUD.
@@ -212,10 +212,10 @@ func TestOnboardingAndValidation(t *testing.T) {
 		Exists bool
 		Allow  []string
 	}
-	if code := e.call("POST", "/api/shares", `{"name":"Docs","path":"`+dir+`","mode":"rw"}`, &sh); code != 200 || !sh.Exists || len(sh.Allow) != 1 || sh.Allow[0] != "*" {
+	if code := e.call("POST", "/api/shares", `{"name":"Docs","path":`+js(dir)+`,"mode":"rw"}`, &sh); code != 200 || !sh.Exists || len(sh.Allow) != 1 || sh.Allow[0] != "*" {
 		t.Fatalf("create share: %d %+v", code, sh)
 	}
-	if code := e.call("PUT", "/api/shares/"+sh.ID, `{"name":"Docs2","path":"`+dir+`","mode":"ro","allow":["not-an-id"]}`, nil); code != 400 {
+	if code := e.call("PUT", "/api/shares/"+sh.ID, `{"name":"Docs2","path":`+js(dir)+`,"mode":"ro","allow":["not-an-id"]}`, nil); code != 400 {
 		t.Fatalf("bad allow list: %d", code)
 	}
 	var list []struct{ ID, Name string }
@@ -252,7 +252,7 @@ func TestFilesAreServedInertly(t *testing.T) {
 	os.WriteFile(filepath.Join(dir, "x.svg"), []byte(`<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>`), 0o644)
 	os.WriteFile(filepath.Join(dir, "photo.png"), []byte("\x89PNG\r\n\x1a\nxxxx"), 0o644)
 	var sh struct{ ID string }
-	e.call("POST", "/api/shares", `{"name":"W","path":"`+dir+`","mode":"ro"}`, &sh)
+	e.call("POST", "/api/shares", `{"name":"W","path":`+js(dir)+`,"mode":"ro"}`, &sh)
 
 	get := func(name string) (*http.Response, string) {
 		resp, b := e.req("GET", "/api/peers/self/file?share="+sh.ID+"&path=/"+name, "", e.auth)
@@ -468,13 +468,13 @@ func TestSharingTheDataFolderIsRefused(t *testing.T) {
 		var out struct {
 			Error struct{ Code, Message string }
 		}
-		code := e.call("POST", "/api/shares", `{"name":"x","path":"`+p+`","mode":"ro"}`, &out)
+		code := e.call("POST", "/api/shares", `{"name":"x","path":`+js(p)+`,"mode":"ro"}`, &out)
 		if code != 400 || !strings.Contains(out.Error.Message, "keys") {
 			t.Errorf("sharing %s: %d %+v", p, code, out)
 		}
 	}
 	ok := t.TempDir()
-	if code := e.call("POST", "/api/shares", `{"name":"fine","path":"`+ok+`","mode":"ro"}`, nil); code != 200 {
+	if code := e.call("POST", "/api/shares", `{"name":"fine","path":`+js(ok)+`,"mode":"ro"}`, nil); code != 200 {
 		t.Errorf("an unrelated folder was refused: %d", code)
 	}
 }
@@ -503,7 +503,7 @@ func TestThumbnailRefusesDecompressionBombs(t *testing.T) {
 	chunk("IEND", nil)
 	os.WriteFile(filepath.Join(dir, "bomb.png"), png.Bytes(), 0o644)
 	var sh struct{ ID string }
-	e.call("POST", "/api/shares", `{"name":"W","path":"`+dir+`","mode":"ro"}`, &sh)
+	e.call("POST", "/api/shares", `{"name":"W","path":`+js(dir)+`,"mode":"ro"}`, &sh)
 
 	var before, after runtime.MemStats
 	runtime.GC()
@@ -641,4 +641,10 @@ func waitUntil(t *testing.T, what string, cond func() bool) {
 		time.Sleep(50 * time.Millisecond)
 	}
 	t.Fatalf("timed out waiting for %s", what)
+}
+
+// js is s as a JSON string: a path on Windows has backslashes in it.
+func js(s string) string {
+	b, _ := json.Marshal(s)
+	return string(b)
 }

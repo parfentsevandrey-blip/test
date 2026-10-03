@@ -59,3 +59,26 @@ func TestAnonymousTrafficOverRealSockets(t *testing.T) {
 		t.Logf("%d bytes: there and back (b saw the sender as %v)", size, from)
 	}
 }
+
+// Two nodes on one machine must not end up on one port. The first to ask gets it; the second is told it is
+// taken (and then takes another one) - on Windows it used to be let in beside the first as an IPv4-only socket
+// and given the IPv4 traffic of the first, so a join over loopback talked to itself.
+func TestAPortInUseIsReportedNotShared(t *testing.T) {
+	first, err := listenUDP(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	port := first.LocalAddr().(*net.UDPAddr).Port
+	if second, err := listenUDP(port); err == nil {
+		second.Close()
+		first.Close()
+		t.Fatalf("a second socket was given port %d, which is in use", port)
+	}
+	// Closing frees it (a node that restarts takes its port again).
+	first.Close()
+	again, err := listenUDP(port)
+	if err != nil {
+		t.Fatalf("the port is not free after the socket was closed: %v", err)
+	}
+	again.Close()
+}

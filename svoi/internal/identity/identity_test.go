@@ -48,7 +48,7 @@ func TestDeviceKeyPersistence(t *testing.T) {
 		t.Fatal("identity changed across reload")
 	}
 	st, _ := os.Stat(path)
-	if st.Mode().Perm() != 0o600 {
+	if runtime.GOOS != "windows" && st.Mode().Perm() != 0o600 { // (Windows has no such bits: the profile folder's own permissions protect the key)
 		t.Fatalf("key file mode is %v, want 0600", st.Mode().Perm())
 	}
 	if err := os.WriteFile(path, []byte("garbage"), 0o600); err != nil {

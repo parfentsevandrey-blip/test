@@ -141,7 +141,8 @@ func TestSandboxPreventsEscapes(t *testing.T) {
 			t.Fatalf("temp file leaked: %s", e.Name())
 		}
 	}
-	if _, err := m.Create(actor, "s1", "../evil.txt", true); err == nil {
+	if pf, err := m.Create(actor, "s1", "../evil.txt", true); err == nil {
+		pf.Abort() // (an open file would keep Windows from deleting the folder around it)
 		// cleaned to "evil.txt" inside the share, which is fine, but must not be outside
 		if _, err := os.Stat(filepath.Join(root, "evil.txt")); err == nil {
 			t.Fatal("wrote outside the share")

@@ -173,11 +173,37 @@ func (m *Manager) InitTransfers(db *store.DB, dataDir string, settings func() Tr
 	if err != nil {
 		return err
 	}
+	t.sweepOutbox()
 	m.mu.Lock()
 	m.transfer = t
 	m.mu.Unlock()
 	m.registerTransferRPC()
 	return nil
+}
+
+// sweepOutbox removes staged copies that no unfinished transfer needs any more: what a crash left, or what
+// could not be removed because a file was still open (Windows).
+func (t *transfers) sweepOutbox() {
+	outbox := filepath.Join(t.dataDir, "outbox")
+	ents, err := os.ReadDir(outbox)
+	if err != nil {
+		return
+	}
+	needed := map[string]bool{}
+	for _, r := range t.items {
+		if r.Stage == "" {
+			continue
+		}
+		switch r.State {
+		case StateOffered, StateQueued, StateActive, StateFailed:
+			needed[filepath.Clean(r.Stage)] = true
+		}
+	}
+	for _, e := range ents {
+		if p := filepath.Join(outbox, e.Name()); !needed[filepath.Clean(p)] {
+			_ = os.RemoveAll(p)
+		}
+	}
 }
 
 func (m *Manager) tr() *transfers {
@@ -558,7 +584,24 @@ func (t *transfers) cleanupStageLocked(r *record) {
 			}
 		}
 	}
-	os.RemoveAll(r.Stage)
+	removeStage(r.Stage)
+}
+
+// removeStage deletes a staged outgoing copy. A file that is still open cannot be removed on Windows (the
+// sender may be reading it for a moment longer, or the other side has just said it is done), so it is tried
+// again for a while; whatever is left after that is removed when the program next starts.
+func removeStage(dir string) {
+	if os.RemoveAll(dir) == nil {
+		return
+	}
+	go func() {
+		for i := 0; i < 40; i++ {
+			time.Sleep(500 * time.Millisecond)
+			if os.RemoveAll(dir) == nil {
+				return
+			}
+		}
+	}()
 }
 
 func (t *transfers) srcAvailable(r *record) bool {
@@ -1058,6 +1101,7 @@ func (m *Manager) registerTransferRPC() {
 				return rerr
 			}
 		}
+		f.Close() // (a file that is still open cannot be removed on Windows, and its staged copy is about to be)
 		t.mu.Lock()
 		if r.State == StateActive && sent >= st.Size() {
 			r.done = st.Size()
