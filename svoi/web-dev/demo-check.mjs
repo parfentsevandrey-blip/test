@@ -81,7 +81,7 @@ await step("the devices page still shows the network, with the details folded aw
 
 await step("the demo guide opens and says what this is", async () => {
   await page.locator("#svoi-demo-guide").getByRole("button", { name: /Что здесь можно сделать/ }).click();
-  await page.locator("#svoi-demo-guide").getByText("Это демо программы «Свои»").waitFor();
+  await page.locator("#svoi-demo-guide").getByText("Это макет, а не сама программа «Свои»").waitFor();
   await shot("guide");
   await page.locator("#svoi-demo-guide").getByRole("button", { name: /Скрыть подсказки/ }).click();
 });
