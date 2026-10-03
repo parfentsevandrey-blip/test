@@ -4,14 +4,13 @@
 
 const css = `
 :host { all: initial; position: fixed; z-index: 900; right: 14px; bottom: 14px; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #e9efe9; }
-@media (max-width: 720px) { :host { top: 8px; bottom: auto; right: 8px; } }
+@media (max-width: 720px) { :host { right: 10px; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); } .pill .more { display: none; } }
 * { box-sizing: border-box; }
 button { font: inherit; color: inherit; cursor: pointer; }
 .pill { display: flex; align-items: center; gap: 8px; padding: 8px 14px 8px 10px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; background: rgba(18,24,22,.92); backdrop-filter: blur(8px); box-shadow: 0 6px 24px rgba(0,0,0,.35); }
 .pill:hover { border-color: rgba(120,230,190,.6); }
 .badge { background: #4be3b5; color: #06241b; font-weight: 700; font-size: 11px; letter-spacing: .06em; padding: 2px 8px; border-radius: 999px; }
 .card { width: min(380px, calc(100vw - 16px)); max-height: min(78vh, 640px); overflow: auto; margin-bottom: 10px; padding: 16px 16px 14px; border: 1px solid rgba(255,255,255,.16); border-radius: 18px; background: rgba(18,24,22,.97); box-shadow: 0 16px 48px rgba(0,0,0,.5); }
-@media (max-width: 720px) { .card { margin: 10px 0 0; } }
 h2 { margin: 0 0 6px; font-size: 17px; }
 p { margin: 0 0 12px; color: #b9c6bf; }
 h3 { margin: 14px 0 8px; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: #8fa39a; }
@@ -29,7 +28,6 @@ li { margin: 4px 0; }
 .close { float: right; border: 0; background: transparent; font-size: 20px; line-height: 1; color: #9fb1a8; padding: 0 2px; }
 .sent { color: #4be3b5; font-size: 12.5px; min-height: 1.4em; margin-top: 8px; }
 .notice { width: min(380px, calc(100vw - 16px)); margin-bottom: 10px; padding: 10px 14px; border-radius: 12px; background: rgba(18,24,22,.97); border: 1px solid rgba(75,227,181,.5); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
-@media (max-width: 720px) { .notice { margin: 10px 0 0; } }
 `;
 
 /** Start the made-up network over in another scenario: the page reloads itself. */
@@ -76,7 +74,7 @@ export function installDemoPanel() {
         </div>
         <div class="sent" id="sent"></div>
       </div>` : ""}
-      <button class="pill" data-a="toggle" aria-expanded="${open}"><span class="badge">ДЕМО</span><span>${open ? "Скрыть подсказки" : "Что здесь можно сделать?"}</span></button>`;
+      <button class="pill" data-a="toggle" aria-expanded="${open}" aria-label="${open ? "Скрыть подсказки" : "Что здесь можно сделать?"}"><span class="badge">ДЕМО</span><span class="more">${open ? "Скрыть подсказки" : "Что здесь можно сделать?"}</span><span aria-hidden="true">${open ? "×" : "?"}</span></button>`;
   };
 
   window.addEventListener("svoi-demo-notice", (e) => {
