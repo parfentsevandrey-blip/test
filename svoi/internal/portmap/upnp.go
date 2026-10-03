@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -137,6 +138,11 @@ func searchSSDP(ctx context.Context, target *net.UDPAddr, local netip.Addr, out 
 	}
 }
 
+// allowLoopbackIGD lets the tests talk to a stand-in router on 127.0.0.1. A real
+// router is never on loopback: a process of this very machine that answers a search
+// from there could otherwise steer us to any port of the machine's loopback.
+var allowLoopbackIGD atomic.Bool
+
 // parseSSDPResponse extracts the description URL from an SSDP answer and checks
 // that it points at the device that sent it, on our own network: anything else
 // would let any host on the LAN make us fetch arbitrary addresses.
@@ -159,7 +165,7 @@ func parseSSDPResponse(pkt []byte, from netip.Addr) (*url.URL, bool) {
 	if err != nil || host.Unmap() != from {
 		return nil, false
 	}
-	if !(host.IsPrivate() || host.IsLinkLocalUnicast() || host.IsLoopback()) {
+	if !(host.IsPrivate() || host.IsLinkLocalUnicast() || (allowLoopbackIGD.Load() && host.IsLoopback())) {
 		return nil, false
 	}
 	if p := u.Port(); p != "" {

@@ -134,7 +134,10 @@ func (f *fakeRouter) snapshot() (map[int]string, []string) {
 
 // ---- helpers ----
 
-func init() { ssdpWait = 300 * time.Millisecond } // the fake answers at once
+func init() {
+	ssdpWait = 300 * time.Millisecond // the fake answers at once
+	allowLoopbackIGD.Store(true)      // and lives on loopback
+}
 
 var loopback = []netip.Addr{netip.MustParseAddr("127.0.0.1")}
 
@@ -454,6 +457,21 @@ func TestParseSSDPResponse(t *testing.T) {
 		if _, good := parseSSDPResponse([]byte(pkt), from); good {
 			t.Errorf("%s was accepted", name)
 		}
+	}
+}
+
+// A router is never on 127.0.0.1: a process of this machine that answers an SSDP search
+// from there must not be able to make us talk to ports of the loopback interface.
+func TestALoopbackRouterIsRefusedUnlessTheTestsAllowIt(t *testing.T) {
+	allowLoopbackIGD.Store(false)
+	defer allowLoopbackIGD.Store(true)
+	pkt := "HTTP/1.1 200 OK\r\nLOCATION: http://127.0.0.1:5000/rootDesc.xml\r\nST: urn:schemas-upnp-org:device:InternetGatewayDevice:1\r\n\r\n"
+	if _, good := parseSSDPResponse([]byte(pkt), netip.MustParseAddr("127.0.0.1")); good {
+		t.Fatal("a description on loopback was accepted")
+	}
+	lan := strings.ReplaceAll(pkt, "127.0.0.1", "192.168.1.1")
+	if _, good := parseSSDPResponse([]byte(lan), netip.MustParseAddr("192.168.1.1")); !good {
+		t.Fatal("a description on the LAN was refused")
 	}
 }
 
