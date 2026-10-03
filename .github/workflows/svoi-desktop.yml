@@ -36,7 +36,7 @@ jobs:
             os: macos-latest
             # the .dmg of both processor kinds is built here; the app of this machine's kind is the one that is run
             cores: "darwin/arm64:mac-arm64 darwin/amd64:mac-x64"
-            builder: "--mac dmg zip"
+            builder: "--mac dmg zip --arm64 --x64"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -172,6 +172,56 @@ jobs:
           test -f /usr/share/applications/*.desktop && echo "menu entry: $(ls /usr/share/applications/*.desktop | head -1)"
           unset SVOI_CORE
           SVOI_APP_EXE="$exe" xvfb-run -a -s "-screen 0 1280x900x24" node test/smoke.mjs
+
+      - name: Linux - the AppImage runs by itself (no installation)
+        if: runner.os == 'Linux'
+        working-directory: svoi/desktop
+        shell: bash
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: "1" # (the runner has no FUSE)
+        run: |
+          appimage=$(ls "$PWD"/dist/*.AppImage | head -1)
+          echo "running $appimage"
+          unset SVOI_CORE
+          SVOI_APP_EXE="$appimage" xvfb-run -a -s "-screen 0 1280x900x24" node test/smoke.mjs
+
+      - name: macOS - the .dmg opens, the app inside is signed and runs
+        if: runner.os == 'macOS'
+        working-directory: svoi/desktop
+        shell: bash
+        run: |
+          set -e
+          dmg=$(ls dist/*-mac-arm64.dmg | head -1)
+          echo "opening $dmg"
+          hdiutil attach "$dmg" -nobrowse -readonly -mountpoint /Volumes/SvoiTest
+          ls /Volumes/SvoiTest
+          mkdir -p "$RUNNER_TEMP/apps"
+          cp -R /Volumes/SvoiTest/*.app "$RUNNER_TEMP/apps/"
+          hdiutil detach /Volumes/SvoiTest
+          app=$(ls -d "$RUNNER_TEMP"/apps/*.app | head -1)
+          codesign --verify --deep --strict --verbose=2 "$app"
+          codesign -dv "$app" 2>&1 | head -12 || true
+          exe=$(ls "$app"/Contents/MacOS/* | head -1)
+          unset SVOI_CORE
+          SVOI_APP_EXE="$exe" node test/smoke.mjs
+
+      - name: macOS - the build for Intel Macs, run here through Rosetta (best effort)
+        if: runner.os == 'macOS'
+        continue-on-error: true
+        working-directory: svoi/desktop
+        shell: bash
+        run: |
+          set -e
+          ls dist
+          app=$(ls -d dist/mac/*.app | head -1)
+          file "$app"/Contents/MacOS/* | head -3
+          if ! arch -x86_64 /usr/bin/true 2>/dev/null; then
+            sudo softwareupdate --install-rosetta --agree-to-license || true
+          fi
+          arch -x86_64 /usr/bin/true
+          exe=$(ls "$PWD/$app"/Contents/MacOS/* | head -1)
+          unset SVOI_CORE
+          SVOI_APP_EXE="$exe" node test/smoke.mjs
 
       - name: What was built
         if: always()
