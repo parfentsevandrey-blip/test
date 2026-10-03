@@ -1,18 +1,18 @@
 // Entry point: app shell (sidebar / top bar / mobile tab bar), global
 // banners and states, routing to views.
-import { html, render, useEffect } from "../vendor/preact-htm.js";
+import { html, render, useEffect, useState } from "../vendor/preact-htm.js";
 import { Icon, Logo } from "./icons.js";
-import { t, tn } from "./i18n.js";
+import { t, tn, tx } from "./i18n.js";
 import { initPrefs } from "./prefs.js";
-import { useRoute } from "./router.js";
+import { go, useRoute } from "./router.js";
 import { refreshState, reconnectNow, startLive } from "./sse.js";
 import { state, useStore } from "./store.js";
 import { cx, natTone, sortPeers } from "./util.js";
 import { useNow } from "./hooks.js";
 import { DialogHost } from "./components/modal.js";
-import { ToastHost } from "./components/toast.js";
+import { toast, ToastHost } from "./components/toast.js";
 import { DeviceAvatar } from "./components/avatar.js";
-import { Button, Spinner } from "./components/ui.js";
+import { Button, CopyButton, Spinner } from "./components/ui.js";
 import { OnboardingView } from "./views/onboarding.js";
 import { DevicesView } from "./views/devices.js";
 import { FilesView } from "./views/files.js";
@@ -163,8 +163,8 @@ function OfflineBanner() {
   </div>`;
 }
 
-function FullScreen({ icon, tone = "neutral", title, text, children, testid }) {
-  return html`<div class="fullscreen" data-testid=${testid}>
+function FullScreen({ icon, tone = "neutral", title, text, children, testid, reason }) {
+  return html`<div class="fullscreen" data-testid=${testid} data-reason=${reason}>
     <div class="fullscreen__card">
       <div class="fullscreen__brand"><${Logo} size=${40} /><span class="brand__name">${t("app.name")}</span></div>
       <div class=${cx("fullscreen__icon", `fullscreen__icon--${tone}`)}><${Icon} name=${icon} size=${28} /></div>
@@ -175,11 +175,33 @@ function FullScreen({ icon, tone = "neutral", title, text, children, testid }) {
   </div>`;
 }
 
+/**
+ * No valid session (401) or signed out. Sign-in links are one-time codes, so a
+ * reload never helps: the person runs `svoi open` / `svoi url` and opens the
+ * new link. "Check again" covers having done that in another tab (same cookie).
+ */
 function Unauthorized() {
-  return html`<${FullScreen} icon="lock" tone="warn" testid="unauthorized" title=${t("auth.title")}
-      text=${html`<p>${t("auth.text1")}</p><p class="mt-2">${t("auth.text2")}</p>
-        <div class="code-line mt-4"><span>svoi open</span></div>`}>
-    <${Button} variant="primary" icon="refresh" onClick=${() => location.reload()}>${t("auth.retry")}</${Button}>
+  const signedOut = useStore((s) => s.signedOut);
+  const linkUsed = deadLoginCode;
+  const [checking, setChecking] = useState(false);
+  const reason = signedOut ? "signed-out" : linkUsed ? "link" : "expired";
+  const cmd = { open: html`<code class="mono">svoi open</code>`, url: html`<code class="mono">svoi url</code>` };
+  const title = signedOut ? t("auth.signedOut.title") : linkUsed ? t("auth.link.title") : t("auth.expired.title");
+  const text = signedOut ? tx("auth.signedOut.text", cmd) : linkUsed ? tx("auth.link.text", cmd) : tx("auth.expired.text", cmd);
+  const check = async () => {
+    setChecking(true);
+    await refreshState();
+    if (!state.authError) reconnectNow();
+    setChecking(false);
+  };
+  return html`<${FullScreen} icon=${signedOut ? "logout" : "lock"} tone=${signedOut ? "neutral" : "warn"} testid="unauthorized"
+      reason=${reason} title=${title}
+      text=${html`<div class="auth-text">
+        <p>${text}</p>
+        <div class="code-line mt-4"><span>svoi open</span><${CopyButton} text="svoi open" /></div>
+        <p class="faint small mt-3">${t("auth.checkHint")}</p>
+      </div>`}>
+    <${Button} variant="primary" icon="refresh" loading=${checking} onClick=${check} data-testid="auth-retry">${t("auth.retry")}</${Button}>
   </${FullScreen}>`;
 }
 
@@ -233,6 +255,11 @@ function App() {
     window.scrollTo(0, 0);
   }, [section]);
 
+  // Onboarding ignores the route; start the member UI from "#/" once it is done.
+  useEffect(() => {
+    if (booted && !configured && !["", "#", "#/"].includes(location.hash)) go("#/", { replace: true });
+  }, [booted, configured]);
+
   if (authError) return html`<${Unauthorized} />${html`<${ToastHost} />`}`;
   if (!booted) return html`<${Booting} />`;
   if (loadError && !hasSelf) return html`<${LoadFailed} />`;
@@ -263,12 +290,37 @@ function App() {
     <${ToastHost} />`;
 }
 
+const loadedAt = Date.now();
+
 function registerSW() {
   if (!("serviceWorker" in navigator)) return;
   if (location.protocol !== "https:" && location.hostname !== "127.0.0.1" && location.hostname !== "localhost") return;
+  // A new binary serves a new sw.js (the node stamps VERSION with a hash of the UI
+  // files). When a new worker takes over a page that already had one, this page
+  // runs the previous UI: reload once. Not on the very first install (no
+  // controller yet), at most once per page. Right after loading (the usual case:
+  // the update is found by this very navigation) reload at once; later in a
+  // session, offer it instead so a half-written message is not lost.
+  const had = !!navigator.serviceWorker.controller;
+  let done = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!had || done) return;
+    done = true;
+    if (Date.now() - loadedAt < 30000 || document.visibilityState === "hidden") location.reload();
+    else toast({ level: "info", title: t("app.updated"), text: t("app.updatedText"), actionLabel: t("app.reload"), onAction: () => location.reload(), timeout: 0 });
+  });
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(() => { /* not critical */ });
   });
+}
+
+// A sign-in code that reaches the page was not accepted: the node redirects a
+// good one away (`/?t=…` → `/`). Drop it from the address bar either way.
+const deadLoginCode = new URLSearchParams(location.search).has("t");
+if (deadLoginCode) {
+  const q = new URLSearchParams(location.search);
+  q.delete("t");
+  history.replaceState(history.state, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash);
 }
 
 initPrefs();

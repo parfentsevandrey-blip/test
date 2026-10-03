@@ -6,10 +6,10 @@ import { del, get, mailAttachmentUrl, post } from "../api.js";
 import { back, go, href } from "../router.js";
 import { state, useEvent, useStore } from "../store.js";
 import { fmtBytes, fmtDateTime, fmtShortDate } from "../format.js";
-import { useIsMobile, useMedia } from "../hooks.js";
+import { useInterval, useIsMobile, useMedia } from "../hooks.js";
 import { cx, debounce, previewKind } from "../util.js";
 import { DeviceAvatar, FileIcon } from "../components/avatar.js";
-import { Linkified } from "../components/misc.js";
+import { AttachmentFetch, attStateText, keepFetching, Linkified } from "../components/misc.js";
 import { Button, Chip, EmptyState, IconButton, Progress, Skeleton } from "../components/ui.js";
 import { confirmDialog } from "../components/modal.js";
 import { toast, toastError } from "../components/toast.js";
@@ -112,11 +112,12 @@ function useMailList(folder, query) {
 }
 
 // ---------------------------------------------------------------- reader
-function AttachmentRow({ m, a, i, onPreview }) {
+function AttachmentRow({ m, a, i, onPreview, onFetching }) {
   const ready = a.state === "ready";
   const pk = previewKind(a.name, a.mime);
-  const stateText = a.state === "fetching" ? t("mail.att.fetching") : a.state === "remote" ? t("mail.att.remote") : a.state === "failed" ? t("mail.att.failed") : "";
-  return html`<li class=${cx("att", `att--${a.state}`)}>
+  const stateText = attStateText(a);
+  const askable = (a.state === "remote" && a.needsConsent === true) || a.state === "failed";
+  return html`<li class=${cx("att", `att--${a.state}`, askable && "att--ask")} data-testid="mail-attachment" data-state=${a.state} data-index=${i}>
     <${FileIcon} name=${a.name} mime=${a.mime} boxed size=${40} />
     <div class="grow att__main">
       <span class="ellipsis strong small" title=${a.name}>${a.name}</span>
@@ -125,7 +126,9 @@ function AttachmentRow({ m, a, i, onPreview }) {
     </div>
     ${ready && pk && html`<${IconButton} icon="eye" size="sm" label=${t("mail.att.preview", { name: a.name })} onClick=${() => onPreview(i)} />`}
     ${ready && html`<${IconButton} icon="download" size="sm" label=${t("mail.att.download", { name: a.name })} href=${mailAttachmentUrl(m.id, i, true)} download=${a.name} />`}
-    ${!ready && html`<span class="att__state">${a.state === "fetching" ? html`<span class="spinner" style="width:16px;height:16px"></span>` : html`<${Icon} name=${a.state === "failed" ? "alertCircle" : "clock"} size=${16} />`}</span>`}
+    ${askable
+      ? html`<${AttachmentFetch} a=${a} fetchPath=${`mail/${encodeURIComponent(m.id)}/attachments/${i}/fetch`} onStarted=${() => onFetching(i)} />`
+      : !ready && html`<span class="att__state">${a.state === "fetching" ? html`<span class="spinner" style="width:16px;height:16px"></span>` : html`<${Icon} name="clock" size=${16} />`}</span>`}
   </li>`;
 }
 
@@ -137,7 +140,7 @@ function Reader({ id, folder, onChanged, onRemoved, isMobile }) {
     if (!silent) setSt({ m: null, loading: true, error: null });
     try {
       const m = await get(`mail/${encodeURIComponent(id)}`);
-      setSt({ m, loading: false, error: null });
+      setSt((s) => ({ m: s.m && s.m.id === m.id ? { ...m, attachments: keepFetching(s.m.attachments, m.attachments) } : m, loading: false, error: null }));
       if (m.unread && !silent) {
         // Opening a message marks it read (GET does not).
         post(`mail/${encodeURIComponent(id)}/flags`, { unread: false }).then(() => {
@@ -146,11 +149,17 @@ function Reader({ id, folder, onChanged, onRemoved, isMobile }) {
         }).catch(() => {});
       }
     } catch (e) {
-      setSt({ m: null, loading: false, error: e });
+      // A background re-read that fails keeps what is shown, unless the message is gone.
+      if (!silent || e.code === "notfound") setSt({ m: null, loading: false, error: e });
     }
   };
   useEffect(() => { load(false); setPreview(-1); }, [id]);
+  // A fetched attachment ends with a `mail` event for the message; a reconnect may have missed it.
   useEvent("mail", (d) => { if (d && d.id === id) load(true); });
+  useEvent("refreshed", () => load(true));
+  // Downloads report only their end; poll meanwhile so the progress bar moves.
+  const fetching = !!(st.m && Array.isArray(st.m.attachments) && st.m.attachments.some((a) => a.state === "fetching"));
+  useInterval(() => load(true), 3000, fetching);
 
   const m = st.m;
   const listHref = href(["mail", folder]);
@@ -188,6 +197,8 @@ function Reader({ id, folder, onChanged, onRemoved, isMobile }) {
     catch (e) { toastError(e); }
   };
   const restore = () => flag({ folder: mine ? "sent" : "inbox" }, t("mail.restored")).then(() => onRemoved(m.id));
+  // No event when a download starts: show it as fetching right away.
+  const markFetching = (i) => setSt((s) => (s.m ? { ...s, m: { ...s.m, attachments: s.m.attachments.map((x, j) => (j === i ? { ...x, state: "fetching", got: 0, needsConsent: false } : x)) } } : s));
   const atts = Array.isArray(m.attachments) ? m.attachments : [];
   const pvItems = atts.map((a, i) => ({ name: a.name, mime: a.mime, size: a.size, url: mailAttachmentUrl(m.id, i), dlUrl: mailAttachmentUrl(m.id, i, true), i, ok: a.state === "ready" && previewKind(a.name, a.mime) }))
     .filter((x) => x.ok);
@@ -229,7 +240,7 @@ function Reader({ id, folder, onChanged, onRemoved, isMobile }) {
       ${atts.length > 0 && html`<section class="reader__atts" aria-label=${tn("mail.attN", atts.length)}>
         <h3 class="section-title"><${Icon} name="paperclip" size=${14} /> ${tn("mail.attN", atts.length)}</h3>
         <ul class="atts">${atts.map((a, i) => html`<${AttachmentRow} key=${i} m=${m} a=${a} i=${i}
-          onPreview=${(idx) => setPreview(pvItems.findIndex((x) => x.i === idx))} />`)}</ul>
+          onPreview=${(idx) => setPreview(pvItems.findIndex((x) => x.i === idx))} onFetching=${markFetching} />`)}</ul>
       </section>`}
     </div>
     ${preview >= 0 && html`<${PreviewModal} items=${pvItems} index=${preview} onIndex=${setPreview} onClose=${() => setPreview(-1)} />`}

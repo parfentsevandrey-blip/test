@@ -150,7 +150,7 @@ export function OffersBanner() {
     return html`<div class="gbanner gbanner--offer" role="status" data-testid="offers-banner">
       <span class="gbanner__icon"><${Icon} name="inbox" size=${18} /></span>
       <div class="grow">
-        <span>${tx("offer.one", { who: html`<strong>${tr.peerName}</strong>`, name: html`<strong class="break">«${tr.name}»</strong>` })}</span>
+        <span>${tx("offer.one", { who: html`<strong>${tr.peerName}</strong>`, name: html`<strong class="break">${tr.name}</strong>` })}</span>
         <span class="gbanner__text tnum">${fmtBytes(tr.size)}</span>
       </div>
       <div class="gbanner__actions">

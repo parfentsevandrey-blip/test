@@ -4,14 +4,56 @@ import { html, useEffect, useRef, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t } from "../i18n.js";
 import { useNow } from "../hooks.js";
-import { fmtAgo, fmtDateTime } from "../format.js";
-import { cx, dnsLabel, linkify } from "../util.js";
+import { post } from "../api.js";
+import { fmtAgo, fmtBytes, fmtDateTime } from "../format.js";
+import { cx, dnsLabel, linkify, uniqueLabel } from "../util.js";
 import { DeviceChips } from "./devicepicker.js";
-import { Segmented } from "./ui.js";
+import { Button, Segmented } from "./ui.js";
+import { toastError } from "./toast.js";
 
-/** «Адрес в сети: kukhonnyy-noutbuk.svoi» — live preview of the DNS name a typed device name becomes. */
-export function DnsPreview({ name }) {
-  const label = dnsLabel(name);
+/**
+ * Consent / retry for a received mail or chat attachment: `remote` with
+ * `needsConsent` (over 25 MB, not fetched on its own) → «Загрузить (31 МБ)»,
+ * `failed` → «Повторить». Both POST {} to `fetchPath`; there is no event when
+ * the download starts, so `onStarted` flips the attachment to `fetching` at
+ * once and the owner re-reads the message on the mail/chat event at the end.
+ */
+export function AttachmentFetch({ a, fetchPath, onStarted }) {
+  const [busy, setBusy] = useState(false);
+  const consent = a.state === "remote" && a.needsConsent === true;
+  if (!consent && a.state !== "failed") return null;
+  const start = async () => {
+    setBusy(true);
+    try { await post(fetchPath, {}); onStarted(); } catch (e) { toastError(e); } finally { setBusy(false); }
+  };
+  return consent
+    ? html`<${Button} size="sm" variant="secondary" icon="download" loading=${busy} onClick=${start} class="att__fetch" data-testid="attachment-fetch">${t("att.fetch", { size: fmtBytes(a.size) })}</${Button}>`
+    : html`<${Button} size="sm" variant="secondary" icon="retry" loading=${busy} onClick=${start} class="att__fetch" data-testid="attachment-retry">${t("att.retry")}</${Button}>`;
+}
+
+/**
+ * Merge a fresh copy of a message's attachments over the shown ones: an
+ * attachment the user asked for stays "fetching" while the node still reports
+ * a plain `remote` (asked for, download not started yet).
+ */
+export function keepFetching(prev, next) {
+  if (!Array.isArray(prev) || !Array.isArray(next)) return next;
+  return next.map((a, i) => (prev[i] && prev[i].state === "fetching" && a.state === "remote" && !a.needsConsent ? { ...a, state: "fetching" } : a));
+}
+
+/** Status words for a received attachment that is not ready yet ("" when ready). */
+export function attStateText(a) {
+  if (!a.state || a.state === "ready") return "";
+  if (a.state === "remote" && a.needsConsent === true) return t("att.needsConsent");
+  return t("mail.att." + a.state);
+}
+
+/**
+ * «Адрес в сети: kukhonnyy-noutbuk.svoi» — live preview of the DNS name a typed
+ * device name becomes; `taken` (names of the other members) adds the node's -2, -3… suffix.
+ */
+export function DnsPreview({ name, taken }) {
+  const label = uniqueLabel(dnsLabel(name), taken);
   return html`<p class="dns-preview" data-testid="dns-preview" data-label=${label}>
     <${Icon} name="globe" size=${14} />
     <span>${t("dev.dnsPreview")}</span>

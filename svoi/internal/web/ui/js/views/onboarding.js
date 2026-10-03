@@ -90,7 +90,7 @@ function CreateForm({ self, onBack }) {
           onInput=${(e) => setName(e.target.value)} onBlur=${() => setName(normalizeName(name))} />`}
       </${Field}>
       <${Field} label=${t("onb.owner")} hint=${t("onb.ownerHint")} optional>
-        ${(id, d) => html`<input id=${id} class="input" value=${owner} placeholder=${t("onb.ownerPh")} maxlength="40" autocomplete="given-name" data-testid="onb-owner"
+        ${(id, d) => html`<input id=${id} class="input" value=${owner} placeholder=${t("onb.ownerPh")} maxlength="64" autocomplete="given-name" data-testid="onb-owner"
           aria-describedby=${d} onInput=${(e) => setOwner(e.target.value)} />`}
       </${Field}>
     </div>
@@ -101,10 +101,11 @@ function CreateForm({ self, onBack }) {
 
 const JOIN_LIMIT = 25;
 
+// No owner here: whose device this is was decided by the inviting device and
+// travels in the invitation (the node ignores an `owner` sent with the join).
 function JoinForm({ self, onBack }) {
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
-  const [owner, setOwner] = useState("");
   const [errs, setErrs] = useState({});
   const [busy, setBusy] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -130,7 +131,7 @@ function JoinForm({ self, onBack }) {
     const started = Date.now();
     timer.current = setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 250);
     try {
-      await post("mesh/join", { invite: cleanCode, deviceName: dn, owner: owner.trim() });
+      await post("mesh/join", { invite: cleanCode, deviceName: dn });
       clearInterval(timer.current);
       toast({ level: "success", title: t("onb.joined"), text: t("onb.joinedText") });
       await refreshState();
@@ -170,18 +171,12 @@ function JoinForm({ self, onBack }) {
           placeholder="SVOI1-AEAWVQFQ-…" spellcheck="false" autocapitalize="characters" autocomplete="off"
           aria-describedby=${d} aria-invalid=${errs.code ? "true" : undefined} onInput=${(e) => setCode(e.target.value)}></textarea>`}
       </${Field}>
-      <div class="form-row">
-        <${Field} label=${t("onb.deviceName")} error=${errs.name} hint=${t("onb.deviceNameHintShort")}
-            extra=${html`<${DnsPreview} name=${name.trim() ? name : placeholder} />`}>
-          ${(id, d) => html`<input id=${id} class="input" value=${name} placeholder=${placeholder} maxlength="63" autocapitalize="off" spellcheck="false" data-testid="onb-device-name"
-            aria-describedby=${d} aria-invalid=${errs.name ? "true" : undefined}
-            onInput=${(e) => setName(e.target.value)} onBlur=${() => setName(normalizeName(name))} />`}
-        </${Field}>
-        <${Field} label=${t("onb.owner")} optional hint=${t("onb.ownerHintShort")}>
-          ${(id, d) => html`<input id=${id} class="input" value=${owner} placeholder=${t("onb.ownerPh")} maxlength="40" autocomplete="given-name" data-testid="onb-owner"
-            aria-describedby=${d} onInput=${(e) => setOwner(e.target.value)} />`}
-        </${Field}>
-      </div>
+      <${Field} label=${t("onb.deviceName")} error=${errs.name} hint=${t("onb.deviceNameHintJoin")}
+          extra=${html`<${DnsPreview} name=${name.trim() ? name : placeholder} />`}>
+        ${(id, d) => html`<input id=${id} class="input" value=${name} placeholder=${placeholder} maxlength="63" autocapitalize="off" spellcheck="false" data-testid="onb-device-name"
+          aria-describedby=${d} aria-invalid=${errs.name ? "true" : undefined}
+          onInput=${(e) => setName(e.target.value)} onBlur=${() => setName(normalizeName(name))} />`}
+      </${Field}>
     </div>
     <${Button} type="submit" variant="primary" size="lg" block icon="link" data-testid="onb-submit">${t("onb.join.submit")}</${Button}>
   </form>`;

@@ -38,15 +38,17 @@ group("onboarding (real processes)", { noDemo: true }, () => {
     await tid(page, "onb-code").fill("SVOI1-AEAWVQFQ-AAAAAAAA");
     await tid(page, "onb-submit").click();
     await tid(page, "onb-error").waitFor({ timeout: 40000 });
-    // the real one
-    const inv = await alpha.api("POST", "/api/invites", { admin: false });
+    // the real one: whose device it is was decided by the inviter, so the form does not ask
+    const inv = await alpha.api("POST", "/api/invites", { admin: false, owner: "Мария" });
+    eq(inv.owner, "Мария", "the invitation carries the owner the inviter named");
+    eq(await tid(page, "onb-owner").count(), 0, "joining asks for no owner");
     await tid(page, "onb-code").fill(inv.code);
     await tid(page, "onb-device-name").fill("beta");
-    await tid(page, "onb-owner").fill("Андрей");
     await tid(page, "onb-submit").click();
     await tid(page, "self-card").waitFor({ timeout: 40000 });
     await page.waitForFunction(() => document.querySelectorAll('[data-testid="device-card"]').length === 1, null, { timeout: 20000 });
     eq(await page.locator('[data-testid="device-card"]').first().getAttribute("data-name"), "alpha", "alpha is listed");
+    eq((await beta.api("GET", "/api/state")).self.owner, "Мария", "the new device belongs to the person the inviter named, not to whoever typed");
     await until(async () => (await alpha.api("GET", "/api/state")).peers.some((p) => p.deviceName === "beta"), 20000, "alpha to see beta");
     // the same invitation cannot be used again
     const p2 = await open(browser, gamma);

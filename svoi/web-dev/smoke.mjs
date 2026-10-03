@@ -2,19 +2,23 @@
 // Interaction smoke test against the mock server: drives the main flows and
 // fails on any console error / uncaught exception.
 //
-//   NODE_PATH=/opt/node22/lib/node_modules node web-dev/smoke.mjs [--headed] [--base http://127.0.0.1:8777]
+//   NODE_PATH=/opt/node22/lib/node_modules node web-dev/smoke.mjs [--only mail,chat]
+//        [--base http://127.0.0.1:18777 --token TOKEN]
 //
 // With --base the test runs against an already running server (e.g. the real
-// node in demo mode) and skips the steps that need mock-only hooks.
+// node: `svoi demo --no-browser --quiet --port 18777 --dir DIR`, TOKEN = the
+// master token in DIR/laptop/data/ui.token) and skips the steps that need
+// mock-only hooks. The browser signs in like a person does, with a one-time link.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { launch, sleep, startMock, watch } from "./lib.mjs";
+import { launch, startMock, watch } from "./lib.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 const argv = process.argv.slice(2);
-const external = argv.includes("--base") ? argv[argv.indexOf("--base") + 1] : null;
+const external = argv.includes("--base") ? argv[argv.indexOf("--base") + 1].replace(/\/+$/, "") : null;
+const token = argv.includes("--token") ? argv[argv.indexOf("--token") + 1] : "";
 const problems = [];
 const results = [];
 
@@ -47,6 +51,12 @@ async function newPage(base, label, { mobile = false, lang = "ru" } = {}) {
   await ctx.addInitScript((lg) => { try { localStorage.setItem("svoi.lang", lg); } catch { /* ignore */ } }, lang);
   const page = await ctx.newPage();
   current = page;
+  if (token) {
+    // what `svoi url` does: ask the node for a single-use sign-in code with the master token
+    const res = await fetch(base + "/api/login/code", { method: "POST", headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" }, body: "{}" });
+    const { code } = await res.json();
+    await page.goto(base + "/?t=" + encodeURIComponent(code)); // becomes the session cookie
+  }
   watch(page, label, problems);
   page.setDefaultTimeout(10000);
   page.base = base;
@@ -74,7 +84,11 @@ if (!external) {
     await p.click("[data-testid=onb-submit]");
     await p.waitForSelector(".field__error"); // mesh name is required
     await p.fill("[data-testid=onb-mesh-name]", "Дача");
+    // live preview of the DNS name the node will derive (docs: "Device names")
+    await p.fill("[data-testid=onb-device-name]", "Кухонный ноутбук");
+    await p.waitForSelector("[data-testid=dns-preview][data-label=kukhonnyy-noutbuk]");
     await p.fill("[data-testid=onb-device-name]", "my laptop");
+    await p.waitForSelector("[data-testid=dns-preview][data-label=my-laptop]");
     await p.fill("[data-testid=onb-owner]", "Андрей");
     await p.click("[data-testid=onb-submit]");
     await p.waitForSelector("[data-testid=page-devices]");
@@ -88,6 +102,7 @@ if (!external) {
     const p = await newPage(onb.url, "onb-join");
     await p.open();
     await p.click("[data-testid=onb-join]");
+    if (await p.$("[data-testid=onb-owner]")) throw new Error("the join form must not ask for an owner (the inviter sets it)");
     await p.fill("[data-testid=onb-code]", "hello");
     await p.click("[data-testid=onb-submit]");
     await p.waitForSelector("text=Это не похоже на код приглашения");
@@ -96,7 +111,10 @@ if (!external) {
     await p.waitForSelector("[data-testid=onb-progress]");
     await p.waitForSelector("[data-testid=onb-error]", { timeout: 15000 });
     await p.fill("[data-testid=onb-code]", "svoi1-aeawvqfq-ghijklmn-opqrstuv-wxyz2345-67abcdef-ghijklmn");
+    const sent = p.waitForRequest((r) => r.url().endsWith("/api/mesh/join"));
     await p.click("[data-testid=onb-submit]");
+    const body = JSON.parse((await sent).postData() || "{}");
+    if ("owner" in body || !body.invite || !body.deviceName) throw new Error("join body should be {invite, deviceName}: " + JSON.stringify(body));
     await p.waitForSelector("[data-testid=page-devices]", { timeout: 15000 });
     await p.waitForSelector("[data-testid=device-card]");
     await p.context().close();
@@ -106,7 +124,7 @@ if (!external) {
 // ------------------------------------------------------------- main flows
 const srv = external ? null : await mock([]);
 const base = external || srv.url;
-const state = await (await fetch(base + "/api/state")).json();
+const state = await (await fetch(base + "/api/state", { headers: token ? { Authorization: "Bearer " + token } : {} })).json();
 const peer = (n) => state.peers.find((p) => p.deviceName === n || p.name === n);
 const NAS = peer("nas");
 const page = await newPage(base, "main");
@@ -126,19 +144,70 @@ await step("devices: topology, drawer, ping", async () => {
 
 await step("devices: add device → QR → device joins", async () => {
   await page.click("[data-testid=add-device]");
+  // the inviter decides whose device it is (prefilled with this device's owner)
+  const prefilled = await page.inputValue("[data-testid=invite-owner]");
+  if (state.self.owner && prefilled !== state.self.owner) throw new Error(`owner not prefilled: "${prefilled}"`);
+  await page.fill("[data-testid=invite-owner]", "Анна");
+  const sent = page.waitForRequest((r) => r.url().endsWith("/api/invites") && r.method() === "POST");
   await page.click("[data-testid=invite-create]");
+  const body = JSON.parse((await sent).postData() || "{}");
+  if (body.owner !== "Анна") throw new Error("owner not sent with the invite: " + JSON.stringify(body));
   await page.waitForSelector("[data-testid=invite-qr] img");
+  await page.waitForSelector("[data-testid=invite-for]:has-text('Анна')");
   const code = (await page.textContent("[data-testid=invite-code]")).trim();
   if (!code.startsWith("SVOI1-")) throw new Error("bad invite code " + code);
   if (srv) {
+    await page.click(".modal__foot .btn--secondary"); // hide: the pending invite is listed with its owner
+    await page.waitForSelector("[data-testid=invite-row][data-owner='Анна']");
+    await page.click("[data-testid=add-device]");
+    await page.click("[data-testid=invite-create]");
+    await page.waitForSelector("[data-testid=invite-qr] img");
     await srv.hook("/__mock/join?name=tablet");
     await page.waitForSelector("[data-testid=invite-done]", { timeout: 10000 });
+    await page.waitForSelector("[data-testid=invite-done] [data-testid=invite-for]:has-text('Андрей')");
     await page.click(".modal__foot .btn--primary"); // open the new device
     await page.waitForSelector("[data-testid=device-drawer]");
     await page.keyboard.press("Escape");
   } else {
     await page.keyboard.press("Escape");
   }
+});
+
+await step("devices: manage — admin note, promote warning, rename preview, revoke warning", async () => {
+  const admin = state.peers.find((p) => p.admin);
+  const regular = state.peers.find((p) => !p.admin && p.online);
+  if (!state.self.admin || !admin || !regular) return; // needs an admin self, an admin peer and an online member
+  await page.open("#/devices/" + encodeURIComponent(admin.id));
+  await page.waitForSelector("[data-testid=manage-admin-note]");
+  if (await page.$("[data-testid=manage-promote]")) throw new Error("an admin must not offer promote/demote");
+  await page.click("[data-testid=manage-revoke]");
+  await page.waitForSelector("[data-testid=revoke-admin-warning]");
+  if (!(await page.isDisabled("[data-testid=confirm-ok]"))) throw new Error("revoke must need the typed name");
+  await page.click("[data-testid=confirm-cancel]");
+  await page.open("#/devices/" + encodeURIComponent(regular.id));
+  await page.click("[data-testid=manage-promote]");
+  await page.waitForSelector("[data-testid=confirm-ok]");
+  await page.click("[data-testid=confirm-cancel]");
+  await page.click("[data-testid=manage-revoke]");
+  await page.waitForSelector("[data-testid=confirm-input]");
+  if (await page.$("[data-testid=revoke-admin-warning]")) throw new Error("admin warning shown for a regular member");
+  await page.click("[data-testid=confirm-cancel]");
+  await page.click("[data-testid=manage-rename]");
+  await page.fill("[data-testid=prompt-input]", "Мой NAS (дача)");
+  await page.waitForSelector("[data-testid=dns-preview][data-label=moy-nas-dacha]");
+  await page.click("[data-testid=prompt-ok]");
+  await page.waitForSelector(".modal .field__error"); // parentheses are still refused by the form
+  if (srv) {
+    await page.fill("[data-testid=prompt-input]", "Кухонный ноутбук");
+    await page.waitForSelector("[data-testid=dns-preview][data-label=kukhonnyy-noutbuk]");
+    await page.click("[data-testid=prompt-ok]");
+    await page.waitForSelector("[data-testid=device-drawer] .drawer__title:has-text('kukhonnyy-noutbuk')");
+    await srv.hook("/__mock/reset");
+  } else {
+    await page.keyboard.press("Escape");
+  }
+  await page.keyboard.press("Escape");
+  await page.waitForSelector("[data-testid=device-drawer]", { state: "detached" });
 });
 
 await step("files: send a file to nas and watch it get delivered", async () => {
@@ -282,6 +351,20 @@ await step("files: share a folder via the folder picker", async () => {
   await page.waitForSelector("[data-testid=share-row][data-name='Фото 2025']");
 });
 
+if (srv) {
+  await step("files: a share holding svoi's keys is blocked and refused", async () => {
+    await page.open("#/files/shares");
+    await page.waitForSelector("[data-testid=share-row][data-id=sh_home][data-blocked=true] [data-testid=share-blocked]");
+    await page.click("[data-testid=share-add]");
+    await page.fill("[data-testid=share-path]", "/home/andrey");
+    await page.fill("[data-testid=share-name]", "Дом");
+    await page.click("[data-testid=share-save]");
+    await page.waitForSelector("[data-testid=share-error]:has-text('keys')"); // the node's own message is shown
+    await page.keyboard.press("Escape");
+    await page.waitForSelector("[data-testid=share-error]", { state: "detached" });
+  });
+}
+
 await step("mail: compose with attachment, see it in Sent with delivery", async () => {
   await page.open("#/mail/inbox");
   await page.waitForSelector("[data-testid=mail-item]");
@@ -299,6 +382,30 @@ await step("mail: compose with attachment, see it in Sent with delivery", async 
   await page.waitForSelector("[data-testid=mail-reader] a[href='https://example.org/x'][rel~=noopener]");
   if (srv) await page.waitForSelector("[data-testid=mail-recipient][data-state=delivered]", { timeout: 15000 });
 });
+
+if (srv) {
+  await step("mail & chat: a large attachment needs consent, a failed one retries", async () => {
+    await page.open("#/mail/inbox");
+    await page.click("[data-testid=mail-item]:has-text('Фото с юбилея') a");
+    const video = "[data-testid=mail-attachment]:has-text('Видео с юбилея')";
+    await page.waitForSelector(`${video}[data-state=remote] [data-testid=attachment-fetch]`);
+    const label = await page.textContent(`${video} [data-testid=attachment-fetch]`);
+    if (!/31\s*МБ/.test(label)) throw new Error("size missing on the consent button: " + label);
+    await page.click(`${video} [data-testid=attachment-fetch]`);
+    await page.waitForSelector(`${video}[data-state=fetching]`, { timeout: 1500 }); // at once: no event at the start
+    await page.waitForSelector(`${video}[data-state=ready]`, { timeout: 15000 }); // the end event → re-read
+    await page.open("#/mail/inbox");
+    await page.click("[data-testid=mail-item]:has-text('Скриншот ошибки') a");
+    await page.click("[data-testid=mail-attachment][data-state=failed] [data-testid=attachment-retry]");
+    await page.waitForSelector("[data-testid=mail-attachment][data-state=ready]", { timeout: 15000 });
+    const dad = state.peers.find((x) => x.deviceName === "dad-pc");
+    await page.open("#/chat/" + encodeURIComponent(dad.id));
+    const clip = "[data-testid=chat-attachment]:has-text('Юбилей.mp4')";
+    await page.click(`${clip}[data-state=remote] [data-testid=attachment-fetch]`);
+    await page.waitForSelector(`${clip}[data-state=fetching]`, { timeout: 1500 });
+    await page.waitForSelector(`${clip}[data-state=ready]`, { timeout: 15000 }); // the chat event carries the message
+  });
+}
 
 await step("mail: open, reply prefill, trash", async () => {
   await page.open("#/mail/inbox");
@@ -356,6 +463,9 @@ await step("services: publish a service", async () => {
 
 await step("settings: relay toggle, TUN on/off, language and theme", async () => {
   await page.open("#/settings");
+  await page.click("[data-testid=leave-mesh]"); // the confirmation says what gets reset
+  await page.waitForSelector(".modal .confirm-text:has-text('Почта и история чатов останутся')");
+  await page.click("[data-testid=confirm-cancel]");
   await page.click("[data-testid=setting-relay]");
   await page.waitForSelector("[data-testid=toast]:has-text('Сохранено')");
   if (await page.$("[data-testid=tun-section]")) {
@@ -403,13 +513,47 @@ if (srv) {
     await m.context().close();
   });
 
+  const rm = await mock(["--calm"]);
+  await step("removed by an admin → onboarding with a notice, then join again", async () => {
+    const p = await newPage(rm.url, "removed");
+    await p.open("#/settings/network");
+    await p.waitForFunction(() => window.__svoi.state.conn === "online" && window.__svoi.state.peers.length > 0);
+    await rm.hook("/__mock/removed");
+    await p.waitForSelector("[data-testid=removed-notice]:has-text('Дом')", { timeout: 8000 });
+    if ((await p.evaluate(() => location.hash)) !== "#/") throw new Error("route not reset to #/");
+    if (await p.$("[data-testid=toast]:has-text('removed')")) throw new Error("raw 'removed' notify shown as a toast");
+    await p.click("[data-testid=onb-join]");
+    await p.fill("[data-testid=onb-code]", "SVOI1-AEAWVQFQ-GHIJKLMN-OPQRSTUV-WXYZ2345-67ABCDEF-GHIJKLMN");
+    await p.click("[data-testid=onb-submit]");
+    await p.waitForSelector("[data-testid=page-devices]", { timeout: 15000 });
+    if (await p.$("[data-testid=removed-notice]")) throw new Error("notice still shown after joining");
+    await p.context().close();
+  });
+
   const auth = await mock(["--calm", "--auth"]);
-  await step("auth: unauthorized screen, then login link", async () => {
+  await step("auth: expired screen, one-time link, used link, sign out", async () => {
     const p = await newPage(auth.url, "auth");
     await p.open();
-    await p.waitForSelector("[data-testid=unauthorized]");
-    await p.goto(auth.url + "/?t=dev");
+    await p.waitForSelector("[data-testid=unauthorized][data-reason=expired]");
+    const { url } = await auth.hook("/__mock/login"); // what `svoi url` prints
+    await p.goto(auth.url + url);
     await p.waitForSelector("[data-testid=page-devices]");
+    if ((await p.evaluate(() => location.search)).includes("t=")) throw new Error("login code left in the address bar");
+    // the same link again, in a fresh browser: used up
+    const q = await newPage(auth.url, "auth-reuse");
+    await q.goto(auth.url + url);
+    await q.waitForSelector("[data-testid=unauthorized][data-reason=link]");
+    if ((await q.evaluate(() => location.search)).includes("t=")) throw new Error("dead code not removed from the address bar");
+    await q.context().close();
+    // sign out from Settings
+    await p.open("#/settings");
+    await p.click("[data-testid=logout]");
+    await p.click("[data-testid=confirm-ok]");
+    await p.waitForSelector("[data-testid=unauthorized][data-reason=signed-out]");
+    await p.click("[data-testid=auth-retry]");
+    await p.waitForSelector("[data-testid=unauthorized][data-reason=signed-out]"); // still signed out
+    const st = await p.evaluate(() => fetch("api/state").then((r) => r.status));
+    if (st !== 401) throw new Error("session still valid after sign-out: " + st);
     await p.context().close();
   });
 }

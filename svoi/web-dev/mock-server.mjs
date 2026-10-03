@@ -7,7 +7,8 @@
 // Serves internal/web/ui/ as a SPA and implements every endpoint of
 // docs/UI-API.md against an in-memory fake mesh with live SSE updates.
 //   --calm      no random background events and no jitter (deterministic screenshots)
-//   --auth      require the session cookie; open /?t=dev once to get it
+//   --auth      require sign-in: open the one-time /?t=<code> link printed at start
+//               (or from POST /__mock/login); scripts may use "Authorization: Bearer dev"
 //   --latency   artificial delay for API responses, ms
 //   --tun-error enabling the TUN interface fails with "permission denied" (to see the error state)
 //
@@ -18,8 +19,11 @@
 //   /__mock/join[?name=tablet]      consume the newest invite → a new device joins
 //   /__mock/drop?for=5              drop SSE clients and refuse reconnects for N s
 //   /__mock/peer?name=nas&online=0  toggle a device online/offline
-//   /__mock/auth?on=1               require auth from now on (on=0 to disable)
+//   /__mock/auth?on=1               require sign-in from now on (on=0 to disable)
+//   /__mock/login                   a fresh one-time sign-in link {code, url: "/?t=…"}
 //   /__mock/tun?error=1             make enabling TUN fail (error=0: succeed again)
+//   /__mock/removed                 an admin removed this device: back to onboarding with `removed`
+//   /__mock/sw?bump=1               pretend a new binary: sw.js gets a new VERSION (as after an upgrade)
 //   /__mock/reset                   rebuild the world from the scenario
 
 import http from "node:http";
@@ -56,7 +60,13 @@ function parseArgs(argv) {
   return o;
 }
 const opts = parseArgs(process.argv.slice(2));
-const TOKEN = "dev";
+// Sign-in like the node: the master token is for scripts only (Authorization:
+// Bearer dev); a browser signs in with a one-time login code (/?t=<code>, 10 min)
+// that becomes a 14-day sliding session cookie.
+const MASTER = "dev";
+const CODE_TTL = 600, SESSION_TTL = 14 * 86400;
+const loginCodes = new Map(); // code → expiry (s)
+const sessions = new Map();   // session id → expiry (s)
 let authRequired = opts.auth;
 let tunFails = opts.tunError;
 
@@ -552,6 +562,34 @@ const DEVICE_DEFS = [
 const W = {}; // the world
 const ids = {}; // key → id
 
+// Device names are DNS labels: same rules as SanitizeName / UniqueName in
+// internal/identity/authority.go (Cyrillic transliterated, accents stripped…).
+const TRANSLIT = new Map(Object.entries({
+  а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo", ж: "zh", з: "z", и: "i", й: "y", к: "k", л: "l", м: "m",
+  н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "kh", ц: "ts", ч: "ch", ш: "sh", щ: "shch",
+  ъ: "", ы: "y", ь: "", э: "e", ю: "yu", я: "ya", і: "i", ї: "yi", є: "ye", ґ: "g", ў: "u",
+}));
+function sanitizeName(input) {
+  let out = "";
+  for (const ch of String(input || "").trim().normalize("NFC").toLowerCase()) {
+    const tr = TRANSLIT.get(ch);
+    if (tr !== undefined) { out += tr; continue; }
+    const base = ch.normalize("NFD").replace(/\p{Mn}+/gu, "");
+    if (base) out += /^[a-z0-9]+$/.test(base) ? base : "-";
+  }
+  out = out.replace(/-{2,}/g, "-").replace(/^-+|-+$/g, "");
+  if (out.length > 32) out = out.slice(0, 32).replace(/^-+|-+$/g, "");
+  return out || "device";
+}
+function uniqueName(name, taken) {
+  if (!taken.has(name)) return name;
+  for (let i = 2; ; i++) {
+    const suffix = `-${i}`;
+    const cand = (name.length + suffix.length > 32 ? name.slice(0, 32 - suffix.length) : name) + suffix;
+    if (!taken.has(cand)) return cand;
+  }
+}
+
 function makeSelf(def, extra = {}) {
   return {
     id: devId(def.key), short: devId(def.key).slice(0, 8), name: def.name, owner: def.owner,
@@ -637,6 +675,8 @@ function buildWorld(scenario) {
     { id: "sh_docs", name: "Документы", path: "/home/andrey/Documents", mode: "ro", allow: ["*"], exists: true },
     { id: "sh_drop", name: "Входящие", path: "/home/andrey/Downloads/Svoi", mode: "rw", allow: [ids.phone, ids.nas], exists: true },
     { id: "sh_old", name: "Старый проект", path: "/media/andrey/OLD-DISK/project", mode: "ro", allow: ["*"], exists: false },
+    // saved before the node refused such folders: it holds ~/.config/svoi, so it is not served
+    { id: "sh_home", name: "Домашняя папка", path: "/home/andrey", mode: "ro", allow: [ids.phone], exists: true },
   ];
   W.services = [
     { id: "sv_ssh", name: "ssh", addr: "127.0.0.1:22", description: "SSH на ноутбуке", allow: [ids["home-server"]] },
@@ -714,7 +754,7 @@ function buildWorld(scenario) {
   seedTransfers();
   seedMail();
   seedChat();
-  W.invites = [makeInvite(false, 47)];
+  W.invites = [makeInvite(false, 47, "Анна")];
   W.forwards = [{ id: "fw_ssh", peer: ids["home-server"], peerName: "home-server", service: "ssh", listen: "127.0.0.1:2222", state: "listening", error: "", conns: 1 }];
 }
 
@@ -732,9 +772,13 @@ function nameOf(id) {
   return p ? p.name : id.slice(0, 8);
 }
 
-function makeInvite(admin, ttlMinutes) {
+function makeInvite(admin, ttlMinutes, owner) {
   const code = inviteCode(admin);
-  return { id: rid("inv_"), code, admin, created: now() - 60 * 13, expires: now() + ttlMinutes * 60, qrSvg: fakeQrSvg(code) };
+  return { id: rid("inv_"), code, admin, owner: owner || W.self.owner || "", created: now() - 60 * 13, expires: now() + ttlMinutes * 60, qrSvg: fakeQrSvg(code) };
+}
+/** Like SanitizeOwner: blanks collapse, at most 64 characters; empty → the inviter's own owner. */
+function cleanOwner(v) {
+  return Array.from(String(v ?? "").replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim()).slice(0, 64).join("").trim();
 }
 
 // ---------------------------------------------------------------- transfers
@@ -783,8 +827,8 @@ function seedMail() {
       body: "Ночной бэкап прошёл успешно.\n\nСкопировано: 12,4 ГБ (3 812 файлов)\nДлительность: 6 мин 14 с\nСледующий запуск: сегодня в 03:00\n\nПодробный журнал — во вложении. Панель мониторинга: http://100.64.0.3:3000/d/backup",
       attachments: [att("backup-2025-10-03.log", "text", "ready", { text: BACKUP_LOG })] }),
     m({ folder: "inbox", from: from("dad-pc"), subject: "Фото с юбилея", ts: T - 3600 * 3, unread: true, starred: true,
-      body: "Андрей, привет!\n\nСкинул фотки с юбилея бабушки, посмотри. Остальные выложу на NAS в папку «2025».\nВидео загружу позже, оно большое.\n\nПапа",
-      attachments: [att("DSC_4410.jpg", "photo", "ready", { seed: 300 }), att("DSC_4413.jpg", "photo", "ready", { seed: 301 }), att("DSC_4416.jpg", "photo", "fetching", { seed: 302 }), att("Видео.mp4", "big", "remote", { size: 912_441_000 })] }),
+      body: "Андрей, привет!\n\nСкинул фотки с юбилея бабушки, посмотри. Остальные выложу на NAS в папку «2025».\nВидео тоже приложил, но оно большое — скачай, когда будет удобно.\n\nПапа",
+      attachments: [att("DSC_4410.jpg", "photo", "ready", { seed: 300 }), att("DSC_4413.jpg", "photo", "ready", { seed: 301 }), att("DSC_4416.jpg", "photo", "fetching", { seed: 302 }), att("Видео с юбилея.mp4", "big", "remote", { size: 32_400_000 })] }),
     m({ folder: "inbox", from: from("phone"), subject: "Ссылки на потом", ts: T - 3600 * 7,
       body: "Почитать в выходные:\nhttps://go.dev/doc/effective_go\nhttps://ru.wikipedia.org/wiki/NAT\nhttps://tailscale.com/blog/how-nat-traversal-works\n\nИ не забыть про (https://example.org/скобки) в конце." }),
     m({ folder: "inbox", from: from("nas"), subject: "Диск заполнен на 85 %", ts: T - 86400 - 3600 * 2,
@@ -832,7 +876,42 @@ function mailSummary(x) {
   };
 }
 function mailFull(x) {
-  return { ...mailSummary(x), body: x.body, inReplyTo: x.inReplyTo, attachments: x.attachments.map(({ node, data, ...a }) => a) };
+  return { ...mailSummary(x), body: x.body, inReplyTo: x.inReplyTo, attachments: x.attachments.map(attPublic) };
+}
+
+// Received attachments over 25 MB are not fetched on their own: `needsConsent`
+// (only when true) until the user asks (POST …/fetch), like the node.
+const MAX_AUTO_FETCH = 25 << 20;
+function attPublic({ node, data, want, timer, ...a }) {
+  return a.state === "remote" && a.size > MAX_AUTO_FETCH && !want ? { ...a, needsConsent: true } : a;
+}
+/** POST …/fetch: queued (back to remote), then fetching with progress, then ready; `done` sends the end event. */
+function fetchAttachment(a, done) {
+  if (a.state !== "remote" && a.state !== "failed") return; // ready / already fetching: nothing to do
+  a.want = true; a.state = "remote"; a.got = 0;
+  clearInterval(a.timer);
+  let k = 0;
+  setTimeout(() => {
+    a.state = "fetching";
+    a.timer = setInterval(() => {
+      k++;
+      a.got = Math.min(a.size, Math.round((a.size * k) / 8));
+      if (k < 8) return;
+      clearInterval(a.timer); a.timer = null;
+      a.state = "ready"; a.got = a.size;
+      done();
+    }, 450);
+  }, 500);
+}
+/** Bytes of a received attachment, refusing the ones that are not here yet. */
+function sendAttachment(req, res, a, prefix, q) {
+  if (a.state === "remote") throw E.notfound("attachment has not been downloaded yet");
+  if (a.state === "fetching") throw E.exists("attachment is still downloading");
+  if (a.state === "failed") throw E.notfound("attachment could not be fetched");
+  const mime = a.node && a.node.kind === "photo" ? "image/png" : a.mime;
+  if (a.node && a.node.kind === "big") return sendBytes(req, res, { size: a.size, seed: 11, mime, name: a.name, dl: q.get("dl") === "1" });
+  const buf = (a.node && a.node.data) || fileBytes(prefix + a.name, a.node, a.name);
+  sendBytes(req, res, { buf, mime, name: a.name, dl: q.get("dl") === "1" });
 }
 function mailCounters() { return W.mail.filter((m) => m.folder === "inbox" && m.unread).length; }
 
@@ -858,7 +937,7 @@ function seedChat() {
     msg("dad-pc", true, "Вот так выглядит", 86400 + 7200, "delivered", [att("Скриншот.png", "photo", { seed: 900, w: 640, h: 400 })]),
     msg("dad-pc", false, "Всё загрузил, проверь", 3600 * 3 + 120),
     msg("dad-pc", true, "Вижу, спасибо! Бабушка там отлично получилась", 3600 * 2),
-    msg("dad-pc", false, "Ещё видео есть, но оно большое, 900 МБ", 600),
+    msg("dad-pc", false, "Вот видео, оно большое", 600, "delivered", [{ name: "Юбилей.mp4", size: 48_234_496, mime: "video/mp4", sha256: sha(Buffer.from("Юбилей.mp4")), state: "remote", node: { kind: "big" } }]),
     msg("dad-pc", false, "Ок, вечером позвоню", 240),
   ]);
   W.chat.get(ids["dad-pc"]).slice(-2).forEach((x) => { x.read = false; });
@@ -888,8 +967,8 @@ function chatUnread() {
   return n;
 }
 const publicChat = (m) => {
-  const { read, ...rest } = m;
-  return { ...rest, attachments: (m.attachments || []).map(({ node, data, ...a }) => a) };
+  const { read, stAt, ...rest } = m;
+  return { ...rest, attachments: (m.attachments || []).map(attPublic) };
 };
 function threads() {
   const out = [];
@@ -1058,6 +1137,7 @@ const E = {
   notconfigured: () => new HttpError(412, "notconfigured", "this device is not a member of a mesh"),
   toolarge: () => new HttpError(413, "toolarge", "too large"),
   busy: (m) => new HttpError(503, "busy", m || "busy"),
+  unsupported: (m) => new HttpError(501, "unsupported", m || "not supported"),
 };
 
 function sendJSON(res, status, obj) {
@@ -1137,6 +1217,26 @@ function sharesOf(devKey) {
 }
 function shareVisibleToMe(share) { return share.allow.includes("*") || share.allow.includes(W.self.id); }
 
+// Where each device keeps its keys and settings: a share may not contain that
+// folder or lie inside it (files.CheckShareRoot on the node).
+const DATA_DIRS = {
+  laptop: "/home/andrey/.config/svoi", nas: "/var/lib/svoi", "home-server": "/var/lib/svoi",
+  phone: "/data/user/0/org.svoi/files", "dad-pc": "C:\\Users\\Папа\\AppData\\Roaming\\svoi",
+};
+const PROTECTED_MSG = "this folder contains (or lies inside) the folder where svoi keeps its keys and settings. Choose a folder that does not contain it";
+function protectedShare(devKey, p) {
+  const dir = DATA_DIRS[devKey] || (devKey && devKey.startsWith("new-") ? "/var/lib/svoi" : null);
+  if (!dir || !p) return false;
+  const norm = (x) => String(x).replace(/\\/g, "/").replace(/\/+$/, "");
+  const a = norm(p), b = norm(dir);
+  const within = (child, parent) => parent === "" || child === parent || child.startsWith(parent + "/");
+  return within(a, b) || within(b, a);
+}
+/** A share as GET /api/shares shows it: `blocked` only when true. */
+function shareView(devKey, sh) {
+  return protectedShare(devKey, sh.path) ? { ...sh, blocked: true } : sh;
+}
+
 /** Resolve :id of /api/peers/:id/... → { key, peer|null (null = self) } with offline checks. */
 function resolvePeer(id) {
   if (id === "self" || id === W.self.id) return { key: "laptop", peer: null };
@@ -1147,7 +1247,7 @@ function resolvePeer(id) {
 }
 function getShare(key, shareId, self) {
   const s = sharesOf(key).find((x) => x.id === shareId);
-  if (!s || (!self && !shareVisibleToMe(s))) throw E.notfound("no such share");
+  if (!s || (!self && !shareVisibleToMe(s)) || protectedShare(key, s.path)) throw E.notfound("no such shared folder");
   if (s.exists === false) throw E.notfound("shared folder is missing on disk");
   let root = treeFor(key, shareId);
   if (!root) { root = dir({}); W.trees[key] = W.trees[key] || {}; W.trees[key][shareId] = root; }
@@ -1222,6 +1322,7 @@ function statePayload() {
     version: "0.1.0", configured: W.configured, self: W.self, peers: W.peers,
     transfers: W.transfers.slice(0, 60).map(publicTransfer), counters: W.configured ? counters() : { mail: 0, chat: 0, offers: 0 },
     invites: W.invites, settings: W.settings,
+    ...(!W.configured && W.removed ? { removed: W.removed } : {}),
   };
 }
 
@@ -1241,7 +1342,7 @@ route("POST", "/api/mesh/create", async (req, res) => {
   if (W.configured) throw E.invalid("already a member of a mesh");
   if (!b.meshName || !b.deviceName) throw E.invalid("meshName and deviceName are required");
   buildWorld("empty");
-  W.self.name = b.deviceName; W.self.owner = b.owner || ""; W.self.meshName = b.meshName;
+  W.self.name = sanitizeName(b.deviceName); W.self.owner = b.owner || ""; W.self.meshName = b.meshName;
   W.self.meshId = base32(crypto.randomBytes(8)).slice(0, 12);
   W.peers = [];
   addLog("info", `created mesh «${b.meshName}»`);
@@ -1260,15 +1361,22 @@ route("POST", "/api/mesh/join", async (req, res) => {
   if (code.includes("EXPIRED")) throw E.invalid("invite expired");
   if (code.includes("TIMEOUT")) throw new HttpError(503, "busy", "could not reach the inviting device (timeout after 25 s)");
   buildWorld("full");
-  W.self.name = b.deviceName; W.self.owner = b.owner || W.self.owner; W.self.admin = false;
+  W.self.name = uniqueName(sanitizeName(b.deviceName), new Set(W.peers.map((x) => x.deviceName)));
+  W.self.admin = false; // the owner came with the invitation; an `owner` in the request is ignored
   addLog("info", "joined mesh «Дом»");
   ok(res);
 });
 
+/** Forget the mesh like the node: shares, services, forwards and TUN go; mail and chat history stay. */
+function forgetMesh() {
+  const { mail, chat } = W;
+  buildWorld("onboarding");
+  W.mail = mail; W.chat = chat;
+}
 route("POST", "/api/mesh/leave", async (req, res) => {
   await readJSON(req);
   requireConfigured();
-  buildWorld("onboarding");
+  forgetMesh();
   broadcast("self", W.self);
   broadcast("peers", []);
   ok(res);
@@ -1299,6 +1407,25 @@ route("GET", "/api/diag/ping", async (req, res, p, q) => {
   sendJSON(res, 200, { ms: +(peer.rttMs * (0.85 + Math.random() * 0.3)).toFixed(1) });
 });
 
+// ---- sign-in (the browser only ever calls logout)
+route("POST", "/api/login/code", async (req, res) => {
+  await readJSON(req);
+  if (!bearerOk(req)) throw E.denied("login links are issued to the command line only (svoi url / svoi open)");
+  const code = newLoginCode();
+  sendJSON(res, 200, { code, url: `http://${req.headers.host}/?t=${code}`, expiresIn: CODE_TTL, singleUse: true, sessionTtl: SESSION_TTL });
+});
+route("POST", "/api/logout", async (req, res, p, q) => {
+  await readJSON(req);
+  if (q.get("all") === "1") {
+    if (!bearerOk(req)) throw E.denied("signing out everywhere is for the command line only");
+    sessions.clear(); loginCodes.clear();
+  } else {
+    sessions.delete(parseCookies(req.headers.cookie).svoi_session || "");
+  }
+  res.setHeader("Set-Cookie", sessionCookie("", 0));
+  ok(res);
+});
+
 // ---- invites & devices
 route("GET", "/api/invites", (req, res) => sendJSON(res, 200, W.invites));
 route("POST", "/api/invites", async (req, res) => {
@@ -1306,7 +1433,7 @@ route("POST", "/api/invites", async (req, res) => {
   requireConfigured();
   if (!W.self.admin) throw E.denied("only admins can invite");
   const ttl = Math.max(1, Math.min(7 * 24 * 60, Number(b.ttlMinutes) || 30));
-  const inv = makeInvite(!!b.admin, ttl);
+  const inv = makeInvite(!!b.admin, ttl, cleanOwner(b.owner));
   inv.created = now();
   W.invites.push(inv);
   emitInvites();
@@ -1325,11 +1452,10 @@ route("DELETE", "/api/invites/:id", (req, res, p) => {
 function joinViaInvite(inv, name) {
   W.invites = W.invites.filter((x) => x.id !== inv.id);
   emitInvites();
-  let n = name, k = 2;
-  while (W.peers.some((p) => p.deviceName === n)) n = `${name}-${k++}`;
+  const n = uniqueName(sanitizeName(name), new Set([W.self.name, ...W.peers.map((p) => p.deviceName)]));
   const key = "new-" + n;
   ids[key] = devId(key + Date.now());
-  const def = { key, name: n, owner: W.self.owner, os: "android", arch: "arm64", ip4: `100.64.0.${20 + W.peers.length}`, ip6: `fd7a:5f3c:9e21::${(20 + W.peers.length).toString(16)}`, online: true, path: "lan", rttMs: 2.4, uptime: 30, shares: 0, services: [], admin: inv.admin, addr: "192.168.1.44:41710", endpoints: ["192.168.1.44:41710"] };
+  const def = { key, name: n, owner: inv.owner || W.self.owner, os: "android", arch: "arm64", ip4: `100.64.0.${20 + W.peers.length}`, ip6: `fd7a:5f3c:9e21::${(20 + W.peers.length).toString(16)}`, online: true, path: "lan", rttMs: 2.4, uptime: 30, shares: 0, services: [], admin: inv.admin, addr: "192.168.1.44:41710", endpoints: ["192.168.1.44:41710"] };
   const p = makePeer(def);
   p.id = ids[key]; p.short = p.id.slice(0, 8); p.txBytes = 2048; p.rxBytes = 4096;
   W.peers.push(p);
@@ -1367,9 +1493,8 @@ route("POST", "/api/peers/:id/rename", async (req, res, p) => {
   if (!W.self.admin) throw E.denied("admins only");
   const peer = W.peers.find((x) => x.id === p.id);
   if (!peer) throw E.notfound("unknown device");
-  const name = String(b.name || "").trim();
-  if (!/^[\p{L}\p{N}][\p{L}\p{N}._-]{0,62}$/u.test(name)) throw E.invalid("invalid device name");
-  if (W.peers.some((x) => x.deviceName === name && x.id !== peer.id)) throw E.exists("name is taken");
+  if (!String(b.name || "").trim()) throw E.invalid("name is required");
+  const name = uniqueName(sanitizeName(b.name), new Set([W.self.name, ...W.peers.filter((x) => x.id !== peer.id).map((x) => x.deviceName)]));
   peer.deviceName = name;
   peer.name = peer.alias || name;
   emitPeers();
@@ -1380,8 +1505,9 @@ route("POST", "/api/peers/:id/admin", async (req, res, p) => {
   if (!W.self.admin) throw E.denied("admins only");
   const peer = W.peers.find((x) => x.id === p.id);
   if (!peer) throw E.notfound("unknown device");
-  if (b.admin && !peer.online) throw E.offline("the device must be online to receive the mesh key");
-  peer.admin = !!b.admin;
+  if (!b.admin) throw E.unsupported("administrator rights cannot be taken back once granted (the device already holds the mesh key); remove the device and add it again as a regular one");
+  if (!peer.online) throw E.offline("the device must be online to receive the mesh key");
+  peer.admin = true;
   emitPeers();
   ok(res);
 });
@@ -1390,7 +1516,8 @@ route("POST", "/api/peers/:id/admin", async (req, res, p) => {
 route("GET", "/api/peers/:id/shares", (req, res, p) => {
   requireConfigured();
   const { key, peer } = resolvePeer(p.id);
-  const list = sharesOf(key).filter((s) => !peer || shareVisibleToMe(s));
+  // a share that would expose the device's keys is not served at all
+  const list = sharesOf(key).filter((s) => (!peer || shareVisibleToMe(s)) && !protectedShare(key, s.path));
   sendJSON(res, 200, list.map((s) => ({ id: s.id, name: s.name, mode: s.mode })));
 });
 route("GET", "/api/peers/:id/fs", (req, res, p, q) => {
@@ -1565,18 +1692,19 @@ function cfgTarget(devKey) {
   return W.remote[devKey];
 }
 function sharesHandlers(prefix, getKey) {
-  route("GET", prefix + "/shares", (req, res, p) => sendJSON(res, 200, cfgTarget(getKey(p)).shares));
+  route("GET", prefix + "/shares", (req, res, p) => { const key = getKey(p); sendJSON(res, 200, cfgTarget(key).shares.map((sh) => shareView(key, sh))); });
   route("POST", prefix + "/shares", async (req, res, p) => {
     const key = getKey(p);
     const b = await readJSON(req);
     const c = cfgTarget(key);
     if (!b.name || !b.path) throw E.invalid("name and path are required");
-    if (!localFolderExists(key, b.path)) throw E.invalid("folder does not exist: " + b.path);
+    if (!localFolderExists(key, b.path)) throw E.invalid("this folder does not exist on the device");
+    if (protectedShare(key, b.path)) throw E.invalid(PROTECTED_MSG);
     if (c.shares.some((s) => s.name === b.name)) throw E.exists("a share with this name already exists");
     const sh = { id: rid("sh_"), name: String(b.name), path: String(b.path), mode: b.mode === "rw" ? "rw" : "ro", allow: Array.isArray(b.allow) && b.allow.length ? b.allow : ["*"], exists: true };
     c.shares.push(sh);
-    if (key === "laptop") broadcast("shares", W.shares);
-    sendJSON(res, 200, sh);
+    if (key === "laptop") broadcast("shares", W.shares.map((x) => shareView(key, x)));
+    sendJSON(res, 200, shareView(key, sh));
   });
   route("PUT", prefix + "/shares/:sid", async (req, res, p) => {
     const key = getKey(p);
@@ -1584,13 +1712,14 @@ function sharesHandlers(prefix, getKey) {
     const c = cfgTarget(key);
     const sh = c.shares.find((s) => s.id === p.sid);
     if (!sh) throw E.notfound("no such share");
-    if (b.path !== undefined && b.path !== sh.path && !localFolderExists(key, b.path)) throw E.invalid("folder does not exist: " + b.path);
+    if (b.path !== undefined && b.path !== sh.path && !localFolderExists(key, b.path)) throw E.invalid("this folder does not exist on the device");
+    if (protectedShare(key, b.path !== undefined ? b.path : sh.path)) throw E.invalid(PROTECTED_MSG);
     if (b.name !== undefined) sh.name = String(b.name);
     if (b.path !== undefined) { sh.path = String(b.path); sh.exists = true; }
     if (b.mode !== undefined) sh.mode = b.mode === "rw" ? "rw" : "ro";
     if (b.allow !== undefined) sh.allow = Array.isArray(b.allow) && b.allow.length ? b.allow : ["*"];
-    if (key === "laptop") broadcast("shares", W.shares);
-    sendJSON(res, 200, sh);
+    if (key === "laptop") broadcast("shares", W.shares.map((x) => shareView(key, x)));
+    sendJSON(res, 200, shareView(key, sh));
   });
   route("DELETE", prefix + "/shares/:sid", (req, res, p) => {
     const key = getKey(p);
@@ -1598,7 +1727,7 @@ function sharesHandlers(prefix, getKey) {
     const i = c.shares.findIndex((s) => s.id === p.sid);
     if (i < 0) throw E.notfound("no such share");
     c.shares.splice(i, 1);
-    if (key === "laptop") broadcast("shares", W.shares);
+    if (key === "laptop") broadcast("shares", W.shares.map((x) => shareView(key, x)));
     ok(res);
   });
   route("GET", prefix + "/services", (req, res, p) => sendJSON(res, 200, cfgTarget(getKey(p)).services));
@@ -1748,28 +1877,41 @@ route("POST", "/api/blobs", async (req, res, p, q) => {
   sendJSON(res, 200, { id: h, name, size: body.length, mime: q.get("mime") || mimeOf(name) });
 });
 route("GET", "/api/mail/:id/attachments/:idx", (req, res, p, q) => {
+  const a = getMail(p.id).attachments[Number(p.idx)];
+  if (!a) throw E.notfound("no such attachment");
+  sendAttachment(req, res, a, "att/", q);
+});
+route("POST", "/api/mail/:id/attachments/:idx/fetch", async (req, res, p) => {
+  await readJSON(req);
   const m = getMail(p.id);
   const a = m.attachments[Number(p.idx)];
   if (!a) throw E.notfound("no such attachment");
-  if (a.state === "remote") throw E.notfound("attachment has not been downloaded yet");
-  if (a.state === "fetching") throw E.exists("attachment is still downloading");
-  if (a.state === "failed") throw E.notfound("attachment could not be fetched");
-  const buf = a.node.data || fileBytes("att/" + a.name, a.node, a.name);
-  sendBytes(req, res, { buf, mime: a.node.kind === "photo" ? "image/png" : a.mime, name: a.name, dl: q.get("dl") === "1" });
+  // no event now; a `mail` event when it ends
+  fetchAttachment(a, () => broadcast("mail", { id: m.id, folder: m.folder, unread: m.unread }));
+  ok(res);
 });
 
 // ---- chat
 route("GET", "/api/chat/threads", (req, res) => { requireConfigured(); sendJSON(res, 200, threads()); });
-route("GET", "/api/chat/messages/:id/attachments/:idx", (req, res, p, q) => {
-  for (const list of W.chat.values()) {
-    const m = list.find((x) => x.id === p.id);
-    if (!m) continue;
-    const a = m.attachments[Number(p.idx)];
-    if (!a) break;
-    const buf = a.node.data || fileBytes("chat/" + a.name, a.node, a.name);
-    return sendBytes(req, res, { buf, mime: a.node.kind === "photo" ? "image/png" : a.mime, name: a.name, dl: q.get("dl") === "1" });
+function findChat(id) {
+  for (const [peer, list] of W.chat.entries()) {
+    const m = list.find((x) => x.id === id);
+    if (m) return { m, peer };
   }
-  throw E.notfound("no such attachment");
+  throw E.notfound("no such message");
+}
+route("GET", "/api/chat/messages/:id/attachments/:idx", (req, res, p, q) => {
+  const a = findChat(p.id).m.attachments[Number(p.idx)];
+  if (!a) throw E.notfound("no such attachment");
+  sendAttachment(req, res, a, "chat/", q);
+});
+route("POST", "/api/chat/messages/:id/attachments/:idx/fetch", async (req, res, p) => {
+  await readJSON(req);
+  const { m, peer } = findChat(p.id);
+  const a = m.attachments[Number(p.idx)];
+  if (!a) throw E.notfound("no such attachment");
+  fetchAttachment(a, () => broadcast("chat", { ...publicChat(m), peer }));
+  ok(res);
 });
 route("GET", "/api/chat/:peer", (req, res, p, q) => {
   requireConfigured();
@@ -1875,7 +2017,23 @@ route("ANY", "/__mock/peer", (req, res, p, q) => {
   ok(res);
 });
 route("ANY", "/__mock/auth", (req, res, p, q) => { authRequired = q.get("on") !== "0"; ok(res, { authRequired }); });
+route("ANY", "/__mock/sw", (req, res, p, q) => { if (q.get("bump")) swSalt = String(Date.now()); ok(res, { version: "svoi-ui-" + uiHash() }); });
+route("ANY", "/__mock/login", (req, res) => { const code = newLoginCode(); sendJSON(res, 200, { code, url: "/?t=" + code }); });
 route("ANY", "/__mock/tun", (req, res, p, q) => { tunFails = q.get("error") !== "0"; ok(res, { tunFails }); });
+// An admin elsewhere removed this device: it forgets the mesh, takes a fresh
+// identity, and tells the UI (warn notify with link "#/", then empty peers).
+route("ANY", "/__mock/removed", (req, res) => {
+  if (!W.configured) throw E.notconfigured();
+  const meshName = W.self.meshName || "Дом";
+  forgetMesh();
+  const fresh = devId("laptop-" + Date.now());
+  W.self.id = fresh; W.self.short = fresh.slice(0, 8);
+  W.removed = { meshName, at: now() };
+  addLog("warn", `removed from mesh «${meshName}» by an administrator; new device key ${fresh.slice(0, 8)}`);
+  broadcast("notify", { level: "warn", title: meshName, text: "removed", link: "#/" });
+  broadcast("peers", []);
+  ok(res, { removed: W.removed });
+});
 route("ANY", "/__mock/reset", (req, res) => { buildWorld(opts.scenario); broadcast("self", W.self); emitPeers(); ok(res); });
 
 // ---------------------------------------------------------------- static files
@@ -1886,6 +2044,22 @@ const STATIC_MIME = {
 };
 // The CSP we recommend for the real node; the UI must work under it.
 const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; frame-src 'self' blob:; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
+
+// Like the node: sw.js gets `const VERSION = "svoi-ui-<hash of the UI files>"`, so
+// any change to the UI (or /__mock/sw?bump=1) makes browsers install a new worker.
+let swSalt = "";
+function uiHash() {
+  const h = crypto.createHash("sha256").update(swSalt);
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const f = path.join(dir, e.name);
+      if (e.isDirectory()) walk(f);
+      else h.update(path.relative(UI_DIR, f)).update(fs.readFileSync(f));
+    }
+  };
+  walk(UI_DIR);
+  return h.digest("hex").slice(0, 16);
+}
 
 function serveStatic(req, res, urlPath) {
   let rel = decodeURIComponent(urlPath).replace(/^\/+/, "");
@@ -1906,12 +2080,46 @@ function serveStatic(req, res, urlPath) {
     "Referrer-Policy": "no-referrer",
   };
   if (ext === ".html") { headers["Content-Security-Policy"] = CSP; headers["X-Frame-Options"] = "DENY"; }
+  if (path.relative(UI_DIR, file) === "sw.js") {
+    const body = fs.readFileSync(file, "utf8").replace('const VERSION = "svoi-ui-v1";', `const VERSION = "svoi-ui-${uiHash()}";`);
+    res.writeHead(200, headers);
+    res.end(req.method === "HEAD" ? undefined : body);
+    return;
+  }
   res.writeHead(200, headers);
   if (req.method === "HEAD") { res.end(); return; }
   fs.createReadStream(file).pipe(res);
 }
 
 // ---------------------------------------------------------------- server
+function newLoginCode() {
+  const code = crypto.randomBytes(24).toString("hex");
+  loginCodes.set(code, now() + CODE_TTL);
+  return code;
+}
+function redeemCode(code) {
+  const exp = loginCodes.get(code);
+  loginCodes.delete(code); // works once
+  if (!exp || now() >= exp) return null;
+  const id = crypto.randomBytes(32).toString("hex");
+  sessions.set(id, now() + SESSION_TTL);
+  return id;
+}
+function sessionOk(id) {
+  const exp = sessions.get(id);
+  if (!exp) return false;
+  if (now() >= exp) { sessions.delete(id); return false; }
+  if (exp - now() < SESSION_TTL / 2) sessions.set(id, now() + SESSION_TTL); // sliding
+  return true;
+}
+const bearerOk = (req) => req.headers.authorization === "Bearer " + MASTER;
+const authorized = (req) => bearerOk(req) || sessionOk(parseCookies(req.headers.cookie).svoi_session || "");
+const sessionCookie = (id, maxAge) => `svoi_session=${id}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}`;
+function handshake(res, n) {
+  if (n.length < 16 || n.length > 128) return sendJSON(res, 400, { error: { code: "invalid", message: "n must be 16 to 128 characters" } });
+  sendJSON(res, 200, { proof: crypto.createHmac("sha256", MASTER).update("svoi-handshake/v1\0" + n).digest("hex") });
+}
+
 function parseCookies(h) {
   const o = {};
   for (const part of (h || "").split(";")) { const i = part.indexOf("="); if (i > 0) o[part.slice(0, i).trim()] = part.slice(i + 1).trim(); }
@@ -1922,19 +2130,27 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
   const pth = url.pathname;
   try {
-    if (pth === "/" && url.searchParams.get("t")) {
-      if (url.searchParams.get("t") !== TOKEN) { res.writeHead(403, { "Content-Type": "text/plain; charset=utf-8" }); res.end("wrong token"); return; }
-      res.writeHead(302, { "Set-Cookie": `svoi_session=${TOKEN}; HttpOnly; SameSite=Strict; Path=/`, Location: "/" });
-      res.end();
-      return;
+    // /?t=<one-time code> becomes a session cookie and leaves the URL; a used or
+    // expired code is ignored (the page then meets 401s), as the node does.
+    if (url.searchParams.get("t") && !pth.startsWith("/api/")) {
+      const id = redeemCode(url.searchParams.get("t"));
+      if (id) {
+        const q = new URLSearchParams(url.searchParams);
+        q.delete("t");
+        const qs = q.toString();
+        res.writeHead(302, { "Set-Cookie": sessionCookie(id, SESSION_TTL), Location: "/" + pth.replace(/^\/+/, "") + (qs ? "?" + qs : "") });
+        res.end();
+        return;
+      }
     }
     const isApi = pth.startsWith("/api/");
     const isMock = pth.startsWith("/__mock/");
     if (!isApi && !isMock) { serveStatic(req, res, pth); return; }
-    if (isApi && authRequired && parseCookies(req.headers.cookie).svoi_session !== TOKEN) {
-      throw new HttpError(401, "unauthorized", "missing or expired session");
+    if (pth === "/api/handshake" && ["GET", "HEAD"].includes(req.method)) { handshake(res, url.searchParams.get("n") || ""); return; }
+    if (isApi && authRequired && !authorized(req)) {
+      throw new HttpError(401, "unauthorized", "open the link printed by `svoi up` (or run `svoi open`) to sign in");
     }
-    if (isApi && !["GET", "HEAD"].includes(req.method) && req.headers["x-svoi"] !== "1") {
+    if (isApi && !["GET", "HEAD"].includes(req.method) && !req.headers.authorization && req.headers["x-svoi"] !== "1") {
       throw E.denied("missing X-Svoi header");
     }
     const r = routes.find((x) => (x.method === req.method || x.method === "ANY" || (req.method === "HEAD" && x.method === "GET")) && x.re.test(pth));
@@ -1976,5 +2192,5 @@ buildWorld(opts.scenario);
 server.listen(opts.port, opts.host, () => {
   warmUp();
   const addr = server.address();
-  console.log(`svoi mock (${opts.scenario}${opts.calm ? ", calm" : ""}) → http://${opts.host}:${addr.port}/${authRequired ? "?t=" + TOKEN : ""}`);
+  console.log(`svoi mock (${opts.scenario}${opts.calm ? ", calm" : ""}) → http://${opts.host}:${addr.port}/${authRequired ? "?t=" + newLoginCode() + "  (one-time sign-in link; more from POST /__mock/login)" : ""}`);
 });

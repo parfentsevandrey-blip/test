@@ -133,6 +133,14 @@ function closeDialog(id, value) {
   if (d) d.resolve(value);
 }
 
+/** Dismiss every open confirm/prompt (as cancelled), e.g. when the device left its mesh under them. */
+export function closeAllDialogs() {
+  const list = state.dialogs;
+  if (!list.length) return;
+  setState({ dialogs: [] });
+  for (const d of list) d.resolve(d.kind === "confirm" ? false : null);
+}
+
 /**
  * confirmDialog({ title, text, confirmText, danger, requireText, icon }) → Promise<boolean>
  * `requireText`: the user must type this exact text to enable the confirm button.

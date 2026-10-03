@@ -7,10 +7,12 @@ export const state = {
   booted: false,        // first /api/state finished (successfully or not)
   conn: "connecting",   // SSE link to the local node: connecting | online | offline
   authError: false,     // 401 from the node → full-screen "session expired"
+  signedOut: false,     // the user signed out here (the same screen says "you signed out")
   loadError: null,      // first /api/state failed for another reason
   serverOffset: 0,      // node clock − browser clock, seconds
   version: "",
   configured: true,
+  removed: null,        // {meshName, at} while outside any mesh because an admin removed this device
   self: null,
   peers: [],
   transfers: [],

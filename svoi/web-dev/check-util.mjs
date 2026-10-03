@@ -22,6 +22,15 @@ eq(u.dnsLabel("Мой NAS (дача)"), "moy-nas-dacha", "docs example 2");
 eq(u.dnsLabel("Café Zürich"), "cafe-zurich", "docs example 3");
 eq(u.dnsLabel("ЖЁСТКИЙ ДИСК"), "zhyostkiy-disk", "docs example 4");
 
+// --- dnsLabel: the cases of TestSanitizeName in internal/identity/identity_test.go
+eq(u.dnsLabel("My Laptop!"), "my-laptop", "go case: punctuation");
+eq(u.dnsLabel("  NAS  "), "nas", "go case: surrounding blanks");
+eq(u.dnsLabel("Телефон"), "telefon", "go case: Cyrillic word");
+eq(u.dnsLabel("Щука, ёж & Юля"), "shchuka-yozh-yulya", "go case: mixed punctuation");
+eq(u.dnsLabel("日本語"), "device", "go case: nothing transliterable");
+eq(u.dnsLabel("a--b__c"), "a-b-c", "go case: runs collapse");
+eq(u.dnsLabel("x".repeat(80)), "x".repeat(32), "go case: cut to 32");
+
 // --- dnsLabel: the rest of the rules
 eq(u.dnsLabel(""), "device", "empty → device");
 eq(u.dnsLabel("   "), "device", "blank → device");
@@ -46,6 +55,11 @@ assert.ok(long.length <= 32, "max 32 chars"); n++;
 assert.ok(!long.endsWith("-") && !long.startsWith("-"), "no hyphen at the ends after the cut"); n++;
 eq(long, "ochen-dlinnoe-imya-dlya-domashne", "cut at 32");
 eq(u.dnsLabel("a".repeat(31) + " b"), "a".repeat(31), "trailing hyphen removed after the cut");
+
+// --- uniqueLabel mirrors UniqueName (TestSanitizeName's last case and the 32-char cut)
+eq(u.uniqueLabel("nas", new Set(["nas", "nas-2"])), "nas-3", "go case: UniqueName");
+eq(u.uniqueLabel("nas", ["phone"]), "nas", "free name kept");
+eq(u.uniqueLabel("x".repeat(32), ["x".repeat(32)]), "x".repeat(30) + "-2", "suffix fits in 32 chars");
 
 // --- the form rule (after whitespace → "-") stays as before
 eq(u.normalizeDeviceName("  Кухонный  ноутбук "), "Кухонный-ноутбук", "whitespace → single hyphen");

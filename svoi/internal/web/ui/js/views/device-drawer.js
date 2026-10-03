@@ -1,5 +1,6 @@
 // Device details drawer: addresses, connection path in plain words, traffic,
-// what it shares, and admin actions (rename, promote/demote, revoke).
+// what it shares, and admin actions (nickname, rename, promote, revoke).
+// There is no "demote": the node refuses it (the mesh key can't be taken back).
 import { html, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t, tn, tx } from "../i18n.js";
@@ -8,12 +9,12 @@ import { href } from "../router.js";
 import { useStore } from "../store.js";
 import { fmtBytes, fmtDuration, fmtRtt } from "../format.js";
 import { DeviceAvatar } from "../components/avatar.js";
-import { Ago } from "../components/misc.js";
+import { Ago, DnsPreview } from "../components/misc.js";
 import { Button, Callout, Chip, KV } from "../components/ui.js";
 import { confirmDialog, Drawer, promptDialog } from "../components/modal.js";
 import { toast, toastError } from "../components/toast.js";
 import { osName, pathChip } from "./devices.js";
-import { serviceIcon } from "../util.js";
+import { DEVICE_NAME_RE, dnsLabel, normalizeDeviceName, serviceIcon, uniqueLabel } from "../util.js";
 
 function PathExplainer({ p }) {
   if (!p.online) {
@@ -79,32 +80,42 @@ export function DeviceDrawer({ id, onClose }) {
   };
 
   const rename = async () => {
+    // The node keeps names unique (-2, -3…) among the other members, this device included.
+    const taken = new Set([self && self.name, ...peers.filter((x) => x.id !== p.id).map((x) => x.deviceName)].filter(Boolean));
     const v = await promptDialog({
-      title: t("dev.renameTitle"), label: t("dev.renameLabel"), value: p.deviceName, hint: t("dev.renameHint"), icon: "pencil",
-      validate: (s) => (!s ? t("common.required") : !/^[\p{L}\p{N}][\p{L}\p{N}._-]{0,62}$/u.test(s) ? t("dev.nameInvalid") : ""),
+      title: t("dev.renameTitle"), label: t("dev.renameLabel"), value: p.deviceName, hint: t("dev.renameHint"), icon: "pencil", maxLength: 63,
+      validate: (s) => {
+        const n = normalizeDeviceName(s);
+        return !n ? t("common.required") : !DEVICE_NAME_RE.test(n) ? t("dev.nameInvalid") : "";
+      },
+      preview: (s) => (s.trim() ? html`<${DnsPreview} name=${s} taken=${taken} />` : null),
     });
-    if (v === null || v === p.deviceName) return;
-    try { await post(`peers/${encodeURIComponent(p.id)}/rename`, { name: v }); toast({ level: "success", title: t("dev.renamed", { name: v }) }); }
+    if (v === null) return;
+    const name = normalizeDeviceName(v);
+    if (name === p.deviceName || dnsLabel(name) === p.deviceName) return;
+    try { await post(`peers/${encodeURIComponent(p.id)}/rename`, { name }); toast({ level: "success", title: t("dev.renamed", { name: uniqueLabel(dnsLabel(name), taken) }) }); }
     catch (e) { toastError(e); }
   };
 
-  const setAdmin = async (on) => {
-    const ok = await confirmDialog(on ? {
+  // Promotion only: the node refuses {admin:false} (`unsupported`), the key can't be taken back.
+  const promote = async () => {
+    const ok = await confirmDialog({
       title: t("dev.promoteTitle", { name: p.name }),
       text: html`<p>${t("dev.promoteText1")}</p><p>${t("dev.promoteText2")}</p>`,
       confirmText: t("dev.promote"), danger: true, icon: "key",
-    } : {
-      title: t("dev.demoteTitle", { name: p.name }), text: html`<p>${t("dev.demoteText")}</p>`, confirmText: t("dev.demote"),
     });
     if (!ok) return;
-    try { await post(`peers/${encodeURIComponent(p.id)}/admin`, { admin: on }); toast({ level: "success", title: on ? t("dev.promoted", { name: p.name }) : t("dev.demoted", { name: p.name }) }); }
+    try { await post(`peers/${encodeURIComponent(p.id)}/admin`, { admin: true }); toast({ level: "success", title: t("dev.promoted", { name: p.name }) }); }
     catch (e) { toastError(e); }
   };
 
   const revoke = async () => {
     const ok = await confirmDialog({
       title: t("dev.revokeTitle", { name: p.name }),
-      text: html`<p>${t("dev.revokeText1")}</p><p>${t("dev.revokeText2")}</p>`,
+      text: html`<p>${t("dev.revokeText1")}</p><p>${t("dev.revokeText2")}</p>
+        ${p.admin && html`<div class="confirm-warn" data-testid="revoke-admin-warning">
+          <${Icon} name="key" size=${18} /><p><strong>${t("dev.revokeAdminWarn")}</strong></p>
+        </div>`}`,
       confirmText: t("dev.revoke"), danger: true, requireText: p.deviceName,
       requireLabel: t("dev.revokeType", { name: p.deviceName }),
     });
@@ -202,20 +213,25 @@ export function DeviceDrawer({ id, onClose }) {
       <section class="ddr-sec">
         <h3 class="section-title">${t("dev.sec.manage")}</h3>
         <div class="ddr-manage">
-          <button type="button" class="ddr-link" onClick=${setAlias}>
+          <button type="button" class="ddr-link" onClick=${setAlias} data-testid="manage-alias">
             <${Icon} name="tag" size=${18} />
             <span class="grow"><span class="strong">${t("dev.alias")}</span><span class="ddr-link__hint">${t("dev.aliasHintShort")}</span></span>
           </button>
           ${admin && html`
-            <button type="button" class="ddr-link" onClick=${rename}>
+            <button type="button" class="ddr-link" onClick=${rename} data-testid="manage-rename">
               <${Icon} name="pencil" size=${18} />
               <span class="grow"><span class="strong">${t("dev.rename")}</span><span class="ddr-link__hint">${t("dev.renameHintShort")}</span></span>
             </button>
-            <button type="button" class="ddr-link" onClick=${() => setAdmin(!p.admin)}>
-              <${Icon} name=${p.admin ? "shield" : "key"} size=${18} />
-              <span class="grow"><span class="strong">${p.admin ? t("dev.demote") : t("dev.promote")}</span><span class="ddr-link__hint">${p.admin ? t("dev.demoteHint") : t("dev.promoteHint")}</span></span>
-            </button>
-            <button type="button" class="ddr-link is-danger" onClick=${revoke}>
+            ${p.admin
+              ? html`<div class="ddr-link ddr-link--static" data-testid="manage-admin-note">
+                  <${Icon} name="shield" size=${18} />
+                  <span class="grow"><span class="strong">${t("dev.adminKeptTitle")}</span><span class="ddr-link__hint">${t("dev.adminKept")}</span></span>
+                </div>`
+              : html`<button type="button" class="ddr-link" onClick=${promote} data-testid="manage-promote">
+                  <${Icon} name="key" size=${18} />
+                  <span class="grow"><span class="strong">${t("dev.promote")}</span><span class="ddr-link__hint">${t("dev.promoteHint")}</span></span>
+                </button>`}
+            <button type="button" class="ddr-link is-danger" onClick=${revoke} data-testid="manage-revoke">
               <${Icon} name="trash" size=${18} />
               <span class="grow"><span class="strong">${t("dev.revoke")}</span><span class="ddr-link__hint">${t("dev.revokeHint")}</span></span>
             </button>`}

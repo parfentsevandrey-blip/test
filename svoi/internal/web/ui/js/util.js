@@ -239,18 +239,30 @@ const TRANSLIT = new Map(Object.entries({
  * transliterate, strip accents, anything else → "-" (collapsed, trimmed),
  * at most 32 chars, "device" if nothing is left. «Кухонный ноутбук» →
  * "kukhonnyy-noutbuk" (reachable as kukhonnyy-noutbuk.svoi). A preview only:
- * the node's answer wins (it also adds -2, -3… on collisions).
+ * the node's answer wins (it also adds -2, -3… on collisions). Mirrors
+ * SanitizeName in internal/identity/authority.go.
  */
 export function dnsLabel(input) {
   let out = "";
   for (const ch of String(input || "").toLowerCase().normalize("NFC")) {
     const tr = TRANSLIT.get(ch);
     if (tr !== undefined) { out += tr; continue; }
-    const base = ch.normalize("NFD").replace(/\p{M}+/gu, "");
-    if (!base) continue; // a lone combining mark
+    const base = ch.normalize("NFD").replace(/\p{Mn}+/gu, "");
+    if (!base) continue; // a lone accent
     out += /^[a-z0-9]+$/.test(base) ? base : "-";
   }
   out = out.replace(/-{2,}/g, "-").replace(/^-+|-+$/g, "");
   if (out.length > 32) out = out.slice(0, 32).replace(/-+$/, "");
   return out || "device";
+}
+
+/** Like UniqueName on the node: append -2, -3… (within 32 chars) while `taken` has the label. */
+export function uniqueLabel(label, taken) {
+  const has = (x) => (taken instanceof Set ? taken.has(x) : (taken || []).includes(x));
+  if (!has(label)) return label;
+  for (let i = 2; ; i++) {
+    const suffix = `-${i}`;
+    const cand = (label.length + suffix.length > 32 ? label.slice(0, 32 - suffix.length) : label) + suffix;
+    if (!has(cand)) return cand;
+  }
 }

@@ -2,3 +2,4 @@
 /dist/
 *.test
 .svoi/
+/web-dev/screens/

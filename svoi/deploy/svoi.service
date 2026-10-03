@@ -18,7 +18,9 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-# Create the mesh or join one the first time:  sudo -u svoi svoi --dir /var/lib/svoi join SVOI1-…
+# Create the mesh or join one the first time (before the first start):
+#   sudo install -d -o svoi -g svoi -m 700 /var/lib/svoi
+#   sudo -u svoi svoi join SVOI1-… --dir /var/lib/svoi   (or: init --mesh "Home" --name nas --dir /var/lib/svoi)
 ExecStart=/usr/local/bin/svoi up --no-browser --ui 127.0.0.1:8777 --dir /var/lib/svoi
 Restart=always
 RestartSec=3

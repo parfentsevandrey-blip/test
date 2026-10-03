@@ -10,7 +10,7 @@ import { dayDiff, fmtAgo, fmtBytes, fmtDay, fmtRtt, fmtShortDate, fmtTime } from
 import { useIsMobile } from "../hooks.js";
 import { cx, fileKind, previewKind, sortPeers } from "../util.js";
 import { DeviceAvatar, FileIcon } from "../components/avatar.js";
-import { Linkified } from "../components/misc.js";
+import { AttachmentFetch, attStateText, keepFetching, Linkified } from "../components/misc.js";
 import { AutoTextarea, Button, EmptyState, IconButton, Skeleton, Spinner } from "../components/ui.js";
 import { Menu } from "../components/menu.js";
 import { toastError } from "../components/toast.js";
@@ -86,7 +86,7 @@ function ThreadList({ threads, loading, error, active, onRetry }) {
 }
 
 // ---------------------------------------------------------------- conversation
-function Bubble({ m, first, last, onPreview, onMedia }) {
+function Bubble({ m, first, last, onPreview, onMedia, onFetching }) {
   const atts = m.attachments || [];
   return html`<div class=${cx("bubble", m.mine ? "bubble--mine" : "bubble--theirs", first && "is-first", last && "is-last", m.state === "failed" && "is-failed")}
       data-testid="bubble" data-id=${m.id} data-state=${m.state} data-mine=${String(!!m.mine)}>
@@ -98,11 +98,14 @@ function Bubble({ m, first, last, onPreview, onMedia }) {
             <img src=${chatAttachmentUrl(m.id, i)} alt=${a.name} decoding="async" onLoad=${onMedia} />
           </button>`;
         }
-        return html`<div key=${i} class="bubble__file">
+        const st = attStateText(a);
+        return html`<div key=${i} class=${cx("bubble__file", a.state === "failed" && "is-failed")} data-testid="chat-attachment" data-state=${a.state || "ready"} data-index=${i}>
           <${FileIcon} name=${a.name} mime=${a.mime} boxed size=${36} />
-          <span class="grow"><span class="ellipsis strong small" title=${a.name}>${a.name}</span><span class="xsmall bubble__fmeta tnum">${fmtBytes(a.size)}${!ready ? " · " + t("mail.att." + a.state) : ""}</span></span>
+          <span class="grow"><span class="ellipsis strong small" title=${a.name}>${a.name}</span><span class="xsmall bubble__fmeta tnum">${fmtBytes(a.size)}${st ? " · " + st : ""}</span></span>
           ${ready && previewKind(a.name, a.mime) && html`<${IconButton} icon="eye" size="sm" label=${t("mail.att.preview", { name: a.name })} onClick=${() => onPreview(m, i)} />`}
           ${ready && html`<${IconButton} icon="download" size="sm" label=${t("mail.att.download", { name: a.name })} href=${chatAttachmentUrl(m.id, i, true)} download=${a.name} />`}
+          ${a.state === "fetching" && html`<${Spinner} size=${16} />`}
+          <${AttachmentFetch} a=${a} fetchPath=${`chat/messages/${encodeURIComponent(m.id)}/attachments/${i}/fetch`} onStarted=${() => onFetching(m, i)} />
         </div>`;
       })}
     </div>`}
@@ -153,7 +156,7 @@ function Conversation({ peerId, isMobile, onRead }) {
     const { peer: _p, ...m } = d;
     setMsgs((cur) => {
       const i = cur.findIndex((x) => x.id === m.id);
-      if (i >= 0) { const c = cur.slice(); c[i] = { ...c[i], ...m }; return c; }
+      if (i >= 0) { const c = cur.slice(); c[i] = { ...c[i], ...m, attachments: keepFetching(c[i].attachments, m.attachments) }; return c; }
       return [...cur, m].sort((a, b) => a.ts - b.ts);
     });
     if (!m.mine) {
@@ -192,6 +195,12 @@ function Conversation({ peerId, isMobile, onRead }) {
       toastError(e);
     }
   };
+
+  // No event when an attachment download starts: show it as fetching right away
+  // (the `chat` event at the end carries the updated message).
+  const markFetching = (m, i) => setMsgs((cur) => cur.map((x) => (x.id === m.id
+    ? { ...x, attachments: (x.attachments || []).map((a, j) => (j === i ? { ...a, state: "fetching", needsConsent: false } : a)) }
+    : x)));
 
   // Images change the height after load: keep the view pinned if it was at the bottom.
   const stickToBottom = () => {
@@ -267,7 +276,7 @@ function Conversation({ peerId, isMobile, onRead }) {
       ${!st.loading && !st.error && !msgs.length && html`<${EmptyState} compact icon="chat" tone="accent" title=${t("chat.emptyConv", { name })} text=${peer && !peer.online ? t("chat.emptyConvOffline") : t("chat.emptyConvText")} />`}
       ${rows.map((r) => r.sep
         ? html`<div class="daysep" key=${r.key}><span>${dayDiff(r.ts) === 1 ? t("chat.yesterday") : fmtDay(r.ts)}</span></div>`
-        : html`<div key=${r.key} class=${cx("bubble-row", r.m.mine && "is-mine", r.first && "is-first")}><${Bubble} m=${r.m} first=${r.first} last=${r.last} onPreview=${(m, i) => setPv({ m, i })} onMedia=${stickToBottom} /></div>`)}
+        : html`<div key=${r.key} class=${cx("bubble-row", r.m.mine && "is-mine", r.first && "is-first")}><${Bubble} m=${r.m} first=${r.first} last=${r.last} onPreview=${(m, i) => setPv({ m, i })} onMedia=${stickToBottom} onFetching=${markFetching} /></div>`)}
     </div>
     ${newBelow > 0 && html`<button type="button" class="conv__new" onClick=${() => { const el = scroller.current; if (el) el.scrollTop = el.scrollHeight; setNewBelow(0); }}>
       <${Icon} name="arrowDown" size=${16} />${tn("chat.newBelow", newBelow)}</button>`}

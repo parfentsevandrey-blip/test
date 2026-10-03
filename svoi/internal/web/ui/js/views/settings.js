@@ -2,10 +2,10 @@
 // advanced, about + logs. Admins can switch to another device's settings.
 import { html, useEffect, useRef, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
-import { getLang, t } from "../i18n.js";
+import { getLang, t, tx } from "../i18n.js";
 import { devPrefix, get, isSelf, post, put } from "../api.js";
 import { go, href } from "../router.js";
-import { refreshState } from "../sse.js";
+import { refreshState, stopLive } from "../sse.js";
 import { setState, useStore } from "../store.js";
 import { fmtBytes, fmtDateTime, fmtDuration, fmtNumber } from "../format.js";
 import { useAsync, useInterval } from "../hooks.js";
@@ -105,7 +105,7 @@ function DeviceSection({ cfg }) {
     const lastAdmin = self.admin && !peers.some((p) => p.admin);
     const ok = await confirmDialog({
       title: t("set.leaveTitle", { name: self.meshName }),
-      text: html`<p>${t("set.leaveText1", { name: self.meshName })}</p><p>${t("set.leaveText2")}</p>
+      text: html`<p>${t("set.leaveText1", { name: self.meshName })}</p><p>${t("set.leaveReset")}</p><p>${t("set.leaveText2")}</p>
         ${lastAdmin && html`<p class="warn-text strong">${t("set.leaveLastAdmin")}</p>`}`,
       confirmText: t("set.leave"), danger: true, icon: "logout", requireText: self.meshName,
       requireLabel: t("set.leaveType", { name: self.meshName }),
@@ -113,6 +113,18 @@ function DeviceSection({ cfg }) {
     if (!ok) return;
     try { await post("mesh/leave", {}); toast({ level: "success", title: t("set.left") }); await refreshState(); }
     catch (e) { toastError(e); }
+  };
+  // Ends only this browser's session; signing in again needs a new link (`svoi open`).
+  const logout = async () => {
+    const ok = await confirmDialog({
+      title: t("set.logoutTitle"), icon: "logout", confirmText: t("set.logout"),
+      text: html`<p>${tx("set.logoutText", { open: html`<code class="mono">svoi open</code>`, url: html`<code class="mono">svoi url</code>` })}</p>`,
+    });
+    if (!ok) return;
+    try { await post("logout", {}); }
+    catch (e) { if (e.code !== "unauthorized") { toastError(e); return; } } // already gone: fine
+    stopLive();
+    setState({ authError: true, signedOut: true });
   };
   return html`<${Section} id="device" icon=${kindIcon[deviceKind(self)]} title=${cfg.local ? t("set.sec.device") : t("set.sec.deviceRemote", { name: self.name })}>
     <${Card}>
@@ -130,6 +142,12 @@ function DeviceSection({ cfg }) {
         self.started && { k: t("dev.uptime"), v: fmtDuration(Math.floor(Date.now() / 1000) - self.started) },
       ]} />
     </${Card}>
+    ${cfg.local && html`<${Card}>
+      <div class="row row--top gap-4">
+        <div class="grow"><h3 class="strong">${t("set.session")}</h3><p class="muted small">${t("set.sessionHint")}</p></div>
+        <${Button} variant="secondary" icon="logout" onClick=${logout} data-testid="logout">${t("set.logout")}</${Button}>
+      </div>
+    </${Card}>`}
     ${cfg.local && html`<${Card} class="danger-zone">
       <div class="row row--top gap-4">
         <div class="grow"><h3 class="strong">${t("set.leave")}</h3><p class="muted small">${t("set.leaveHint")}</p></div>

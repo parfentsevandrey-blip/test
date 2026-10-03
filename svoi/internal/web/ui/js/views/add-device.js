@@ -1,6 +1,7 @@
-// "Add device" modal: create an invite (regular/admin, validity), show the QR
-// + code with a countdown, and flip to success when the invite is consumed
-// and a new peer shows up.
+// "Add device" modal: create an invite (whose device, regular/admin,
+// validity), show the QR + code with a countdown, and flip to success when the
+// invite is consumed and a new peer shows up. The inviter decides the owner:
+// the joining device cannot claim one.
 import { html, useEffect, useRef, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t } from "../i18n.js";
@@ -10,7 +11,7 @@ import { nowSec, state, useStore } from "../store.js";
 import { fmtCountdown } from "../format.js";
 import { useNow } from "../hooks.js";
 import { DeviceAvatar } from "../components/avatar.js";
-import { Button, Callout, CopyButton, Segmented, Spinner } from "../components/ui.js";
+import { Button, Callout, CopyButton, Field, Segmented, Spinner } from "../components/ui.js";
 import { Modal } from "../components/modal.js";
 import { toastError } from "../components/toast.js";
 import { cx } from "../util.js";
@@ -24,6 +25,11 @@ function QrImage({ svg, label }) {
   return html`<div class="qr" data-testid="invite-qr">${src ? html`<img src=${src} alt=${label} width="220" height="220" />` : html`<${Spinner} />`}</div>`;
 }
 
+/** Whose device the invitation was for: the invite says so; the joined peer carries the same owner. */
+function inviteOwner(inv, joined) {
+  return (inv && inv.owner) || (joined && joined.owner) || "";
+}
+
 const TTL = [
   { value: 15, label: "inv.ttl15" },
   { value: 60, label: "inv.ttl60" },
@@ -35,6 +41,7 @@ export function AddDeviceModal({ onClose }) {
   const invites = useStore((s) => s.invites);
   const peers = useStore((s) => s.peers);
   const [admin, setAdmin] = useState(false);
+  const [owner, setOwner] = useState(() => (state.self && state.self.owner) || "");
   const [ttl, setTtl] = useState(60);
   const [busy, setBusy] = useState(false);
   const [inv, setInv] = useState(null);
@@ -72,7 +79,7 @@ export function AddDeviceModal({ onClose }) {
     setBusy(true);
     try {
       known.current = new Set(state.peers.map((p) => p.id));
-      const r = await post("invites", { admin, ttlMinutes: ttl });
+      const r = await post("invites", { admin, ttlMinutes: ttl, owner: owner.trim().replace(/\s+/g, " ") });
       setInv(r);
       setPhase("waiting");
     } catch (e) {
@@ -106,6 +113,10 @@ export function AddDeviceModal({ onClose }) {
           <${Button} variant="ghost" onClick=${onClose}>${t("common.cancel")}</${Button}>
           <${Button} variant="primary" icon="qr" loading=${busy} onClick=${create} data-testid="invite-create">${t("add.create")}</${Button}>`}>
       <div class="stack stack--lg">
+        <${Field} label=${t("add.owner")} hint=${t("add.ownerHint")}>
+          ${(id, d) => html`<input id=${id} class="input" value=${owner} maxlength="64" autocomplete="off" data-testid="invite-owner"
+            placeholder=${t("add.ownerPh")} aria-describedby=${d} onInput=${(e) => setOwner(e.target.value)} />`}
+        </${Field}>
         <fieldset class="fieldset">
           <legend class="field__label">${t("add.role")}</legend>
           <div class="radio-cards">
@@ -138,6 +149,7 @@ export function AddDeviceModal({ onClose }) {
       <div class="add-done" data-testid="invite-done">
         ${joined && html`<${DeviceAvatar} dev=${joined} size=${64} />`}
         <p class="add-done__title">${joined ? t("add.joined", { name: joined.name }) : t("add.joinedGeneric")}</p>
+        ${inviteOwner(inv, joined) && html`<p class="add-done__for" data-testid="invite-for"><${Icon} name="user" size=${14} />${t("inv.for", { owner: inviteOwner(inv, joined) })}</p>`}
         <p class="muted">${t("add.joinedText")}</p>
       </div>
     </${Modal}>`;
@@ -173,7 +185,8 @@ export function AddDeviceModal({ onClose }) {
         <div class="field">
           <span class="field__label">${t("add.code")}</span>
           <div class="invite__code mono" data-testid="invite-code">${inv && inv.code}</div>
-          <div class="row"><${CopyButton} text=${inv ? inv.code : ""} variant="secondary" size="sm">${t("add.copyCode")}</${CopyButton}>
+          <div class="row row--wrap"><${CopyButton} text=${inv ? inv.code : ""} variant="secondary" size="sm">${t("add.copyCode")}</${CopyButton}>
+            ${inv && inv.owner && html`<span class="chip chip--outline" data-testid="invite-for"><${Icon} name="user" size=${14} />${t("inv.for", { owner: inv.owner })}</span>`}
             ${inv && inv.admin && html`<span class="chip chip--warn"><${Icon} name="shield" size=${14} />${t("inv.roleAdmin")}</span>`}</div>
         </div>
         <div class="invite__wait" role="status" data-testid="invite-waiting">

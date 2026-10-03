@@ -63,16 +63,16 @@ group("settings", () => {
   test("language and theme switch instantly and are remembered", async ({ browser, dev }) => {
     const page = await open(browser, dev.laptop, { hash: "settings/interface" });
     await tid(page, "lang-en").click();
-    await page.waitForFunction(() => /Devices/.test(document.querySelector('[data-testid="nav-devices"]').innerText));
+    await page.waitForFunction(() => /Devices/.test((document.querySelector('[data-testid="nav-devices"]')?.innerText ?? "")));
     eq(await page.evaluate(() => localStorage.getItem("svoi.lang")), "en", "stored language");
     await tid(page, "theme-light").click();
     await page.waitForFunction(() => document.documentElement.dataset.theme === "light" || document.documentElement.classList.contains("light") || getComputedStyle(document.body).backgroundColor === "rgb(255, 255, 255)" || window.matchMedia("(prefers-color-scheme: light)").matches === false);
     await page.reload();
-    await page.waitForFunction(() => /Devices/.test(document.querySelector('[data-testid="nav-devices"]').innerText));
+    await page.waitForFunction(() => /Devices/.test((document.querySelector('[data-testid="nav-devices"]')?.innerText ?? "")));
     const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
     assert(bg !== "rgb(11, 15, 18)", "the light theme survived the reload (body background " + bg + ")");
     await tid(page, "lang-ru").click();
-    await page.waitForFunction(() => /Устройства/.test(document.querySelector('[data-testid="nav-devices"]').innerText));
+    await page.waitForFunction(() => /Устройства/.test((document.querySelector('[data-testid="nav-devices"]')?.innerText ?? "")));
     eq(page.problems, [], "console / network problems");
   });
 

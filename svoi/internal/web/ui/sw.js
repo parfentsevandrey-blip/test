@@ -2,6 +2,8 @@
 //  - static shell: cache-first (stale-while-revalidate, so updates roll in),
 //  - navigations: network-first with the cached index.html as fallback,
 //  - anything under /api/ (and the ?t= login link): never touched, never cached.
+// The node rewrites the next line on the fly to "svoi-ui-<hash of the embedded UI
+// files>", so every new binary gets a new cache. Keep it exactly as it is.
 const VERSION = "svoi-ui-v1";
 const SHELL = [
   "./",

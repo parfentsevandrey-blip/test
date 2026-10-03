@@ -68,13 +68,24 @@ function ShareDialog({ dev, share, onClose, onSaved }) {
     }
   };
 
+  // The node's message is English; for the two common refusals add our own words above it.
+  const msg = (fail && fail.message) || "";
+  const hint = fail && fail.code === "invalid"
+    ? (/not exist|does not exist|no such/i.test(msg) ? t("shares.pathMissing") : /keys/i.test(msg) ? t("shares.keysInside") : "")
+    : "";
+  const blockedNow = !!(share && share.blocked && path.trim() === share.path);
+
   return html`<${Modal} title=${share ? t("shares.editTitle") : t("shares.addTitle")} icon="folder" onClose=${onClose}
       subtitle=${!isSelf(dev) ? t("manage.remoteNote", { name: deviceName(dev) }) : undefined}
       footer=${html`
         <${Button} variant="ghost" onClick=${onClose}>${t("common.cancel")}</${Button}>
         <${Button} variant="primary" loading=${busy} onClick=${submit} data-testid="share-save">${share ? t("common.save") : t("shares.addBtn")}</${Button}>`}>
     <form class="stack stack--lg" onSubmit=${submit} noValidate>
-      ${fail && html`<${Callout} tone="err" title=${t("err." + fail.code)}>${fail.code === "invalid" && /exist/i.test(fail.message || "") ? t("shares.pathMissing") : fail.message}</${Callout}>`}
+      ${blockedNow && !fail && html`<${Callout} tone="err" icon="key" title=${t("shares.blocked")}>${t("shares.blockedEdit")}</${Callout}>`}
+      ${fail && html`<${Callout} tone="err" title=${t("err." + fail.code)} role="alert" data-testid="share-error">
+        ${hint && html`<p>${hint}</p>`}
+        ${fail.message && html`<p class=${cx(hint && "mono xsmall mt-1")}>${fail.message}</p>`}
+      </${Callout}>`}
       <${Field} label=${t("shares.path")} error=${errs.path} hint=${t("shares.pathHint")}>
         ${(id, d) => html`<div class="input-group">
           <input id=${id} class="input mono" value=${path} placeholder=${isSelf(dev) ? "/home/me/Pictures" : "/srv/media"} spellcheck="false" autocapitalize="off" data-testid="share-path"
@@ -154,7 +165,7 @@ export function SharesTab({ route }) {
     </${EmptyState}></${Card}>`;
   } else {
     body = html`<ul class="share-list">
-      ${list.map((s) => html`<li key=${s.id} class=${cx("share-row", s.exists === false && "is-missing")} data-testid="share-row" data-id=${s.id} data-name=${s.name}>
+      ${list.map((s) => html`<li key=${s.id} class=${cx("share-row", s.exists === false && "is-missing", s.blocked && "is-blocked")} data-testid="share-row" data-id=${s.id} data-name=${s.name} data-blocked=${s.blocked ? "true" : undefined}>
         <${FileIcon} name=${s.name} isDir boxed size=${44} />
         <div class="grow share-row__main">
           <div class="row row--wrap">
@@ -164,9 +175,13 @@ export function SharesTab({ route }) {
           <span class="share-row__path mono" title=${s.path}>${s.path}</span>
           <${AccessSummary} allow=${s.allow} />
           ${s.exists === false && html`<span class="share-row__warn"><${Icon} name="alert" size=${14} />${t("shares.missing")}</span>`}
+          ${s.blocked && html`<span class="share-row__blocked">
+            <${Chip} size="sm" tone="err" icon="key" data-testid="share-blocked">${t("shares.blocked")}</${Chip}>
+            <span class="xsmall muted">${t("shares.blockedHint")}</span>
+          </span>`}
         </div>
         <div class="share-row__actions">
-          ${s.exists !== false && html`<${IconButton} icon="folderOpen" label=${t("shares.browse")} href=${href(["files", "browse", local ? "self" : dev, s.id])} />`}
+          ${s.exists !== false && !s.blocked && html`<${IconButton} icon="folderOpen" label=${t("shares.browse")} href=${href(["files", "browse", local ? "self" : dev, s.id])} />`}
           <${IconButton} icon="pencil" label=${t("common.edit")} onClick=${() => setEditing(s)} />
           <${IconButton} icon="trash" variant="danger" label=${t("common.delete")} onClick=${() => remove(s)} />
         </div>

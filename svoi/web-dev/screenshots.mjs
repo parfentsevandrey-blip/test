@@ -2,7 +2,7 @@
 // Walks every screen/state of the UI in dark and light themes at desktop
 // (1440×900) and phone (390×844) sizes, saving PNGs to web-dev/screens/.
 //
-//   NODE_PATH=/opt/node22/lib/node_modules node web-dev/screenshots.mjs [--only devices,mail] [--lang en]
+//   NODE_PATH=/opt/node22/lib/node_modules node web-dev/screenshots.mjs [--only devices,mail] [--lang en] [--out dir]
 //
 // Starts its own mock servers (calm mode, random ports). Exits non-zero if any
 // page logged a console error or threw.
@@ -12,8 +12,8 @@ import { fileURLToPath } from "node:url";
 import { launch, sleep, startMock, watch } from "./lib.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const OUT = path.join(here, "screens");
 const argv = process.argv.slice(2);
+const OUT = argv.includes("--out") ? path.resolve(argv[argv.indexOf("--out") + 1]) : path.join(here, "screens");
 const only = argv.includes("--only") ? argv[argv.indexOf("--only") + 1].split(",") : null;
 const lang = argv.includes("--lang") ? argv[argv.indexOf("--lang") + 1] : "ru";
 fs.mkdirSync(OUT, { recursive: true });
@@ -21,6 +21,8 @@ fs.mkdirSync(OUT, { recursive: true });
 const VIEWPORTS = { desktop: { width: 1440, height: 900 }, mobile: { width: 390, height: 844 } };
 const THEMES = ["dark", "light"];
 const enc = (...parts) => "#/" + parts.map((p) => encodeURIComponent(p)).join("/");
+/** Wait until the page's live link (SSE) is up, so events triggered by hooks reach it. */
+const live = (p) => p.waitForFunction(() => window.__svoi && window.__svoi.state.conn === "online", null, { timeout: 8000 });
 
 const servers = {
   full: await startMock(["--calm"]),
@@ -51,12 +53,49 @@ const SHOTS = [
     await p.waitForSelector(".onb-progress");
     await sleep(1200);
   } },
+  { name: "onboarding-removed", server: "scratch", hash: "#/devices", reset: true, run: async (p, srv) => {
+    await p.waitForSelector(".topo__svg");
+    await live(p);
+    await srv.hook("/__mock/removed");
+    await p.waitForSelector("[data-testid=removed-notice]", { timeout: 8000 });
+    await p.click("[data-testid=onb-join]");
+    await p.waitForSelector("[data-testid=dns-preview]");
+    await sleep(300);
+  } },
   { name: "unauthorized", server: "auth", hash: "", wait: ".fullscreen__title" },
+  { name: "unauthorized-link", server: "auth", hash: "", only: "mobile", run: async (p, srv) => {
+    const { url } = await srv.hook("/__mock/login");
+    await fetch(srv.url + url, { redirect: "manual" }); // used up elsewhere first (no shared cookies)
+    await p.goto(srv.url + url);
+    await p.waitForSelector("[data-testid=unauthorized][data-reason=link]");
+  } },
+  { name: "signed-out", server: "scratch", hash: "#/settings", reset: true, only: "desktop", run: async (p) => {
+    await p.click("[data-testid=logout]");
+    await p.waitForSelector("[data-testid=confirm-ok]");
+    await p.click("[data-testid=confirm-ok]");
+    await p.waitForSelector("[data-testid=unauthorized][data-reason=signed-out]");
+  } },
   { name: "devices", server: "full", hash: "#/devices", wait: ".topo__svg", full: true },
   { name: "devices-empty", server: "empty", hash: "#/devices", wait: ".topo__svg" },
   { name: "device-drawer-nas", server: "full", hash: enc("devices", NAS), wait: ".drawer" },
   { name: "device-drawer-phone", server: "full", hash: enc("devices", PHONE), wait: ".drawer", only: "desktop" },
   { name: "device-drawer-offline", server: "full", hash: enc("devices", TABLET), wait: ".drawer", only: "mobile" },
+  { name: "device-drawer-admin", server: "full", hash: enc("devices", HOME), only: "desktop", run: async (p) => {
+    await p.waitForSelector("[data-testid=manage-admin-note]");
+    await p.evaluate(() => document.querySelector("[data-testid=manage-admin-note]").scrollIntoView({ block: "center" }));
+    await sleep(200);
+  } },
+  { name: "rename-prompt", server: "scratch", hash: enc("devices", NAS), run: async (p) => {
+    await p.waitForSelector("[data-testid=manage-rename]");
+    await p.click("[data-testid=manage-rename]");
+    await p.fill("[data-testid=prompt-input]", "Кухонный ноутбук");
+    await p.waitForSelector("[data-testid=dns-preview][data-label=kukhonnyy-noutbuk]");
+  } },
+  { name: "confirm-revoke-admin", server: "scratch", hash: enc("devices", HOME), run: async (p) => {
+    await p.waitForSelector("[data-testid=manage-revoke]");
+    await p.click("[data-testid=manage-revoke]");
+    await p.waitForSelector("[data-testid=revoke-admin-warning]");
+  } },
   { name: "add-device", server: "scratch", hash: "#/devices", run: async (p) => { await p.click(".page-head__actions .btn--primary"); await p.waitForSelector(".radio-card"); } },
   { name: "add-device-qr", server: "scratch", hash: "#/devices", run: async (p) => {
     await p.click(".page-head__actions .btn--primary");
@@ -68,6 +107,7 @@ const SHOTS = [
     await p.click(".page-head__actions .btn--primary");
     await p.click(".modal__foot .btn--primary");
     await p.waitForSelector(".qr img");
+    await live(p);
     await srv.hook("/__mock/join?name=tablet");
     await p.waitForSelector(".add-done", { timeout: 8000 });
   } },
@@ -123,6 +163,14 @@ const SHOTS = [
   } },
   { name: "browse-offline", server: "full", hash: enc("files", "browse", TABLET), wait: ".empty" },
   { name: "my-folders", server: "full", hash: "#/files/shares", wait: ".share-row" },
+  { name: "share-error", server: "full", hash: "#/files/shares", run: async (p) => {
+    await p.waitForSelector(".share-row");
+    await p.click("[data-testid=share-add]");
+    await p.fill("[data-testid=share-path]", "/home/andrey");
+    await p.fill("[data-testid=share-name]", "Дом");
+    await p.click("[data-testid=share-save]");
+    await p.waitForSelector("[data-testid=share-error]");
+  } },
   { name: "share-dialog-picker", server: "full", hash: "#/files/shares", run: async (p) => {
     await p.waitForSelector(".share-row");
     await p.click(".shares__bar .btn--primary");
@@ -138,6 +186,18 @@ const SHOTS = [
   { name: "mail-open", server: "full", hash: "#/mail/inbox", only: "mobile", run: async (p) => {
     await p.click(".mitem__link >> nth=1");
     await p.waitForSelector(".reader__body");
+  } },
+  { name: "mail-attachments", server: "scratch", hash: "#/mail/inbox", reset: true, run: async (p) => {
+    await p.click("[data-testid=mail-item]:has-text('Фото с юбилея') a");
+    await p.waitForSelector("[data-testid=attachment-fetch]");
+    await p.click("[data-testid=attachment-fetch]"); // → fetching at once
+    await p.waitForSelector("[data-testid=mail-attachment][data-state=fetching]:has-text('Видео')");
+    await p.evaluate(() => document.querySelector(".reader__atts").scrollIntoView({ block: "center" }));
+    await sleep(300);
+  } },
+  { name: "mail-attachment-failed", server: "full", hash: "#/mail/inbox", only: "desktop", run: async (p) => {
+    await p.click("[data-testid=mail-item]:has-text('Скриншот ошибки') a");
+    await p.waitForSelector("[data-testid=attachment-retry]");
   } },
   { name: "mail-sent", server: "full", hash: "#/mail/sent", run: async (p) => {
     await p.click(".mitem__link >> nth=1");
@@ -165,6 +225,11 @@ const SHOTS = [
     await p.click(".thread >> nth=0");
     await p.waitForSelector(".bubble");
     await sleep(600);
+  } },
+  { name: "chat-consent", server: "full", hash: "#/chat", run: async (p) => {
+    await p.click(".thread:has-text('Компьютер папы')");
+    await p.waitForSelector("[data-testid=chat-attachment] [data-testid=attachment-fetch]");
+    await sleep(500);
   } },
   { name: "chat-offline-peer", server: "full", hash: "#/chat", run: async (p) => {
     await p.click(".thread:has-text('mom-laptop')");
@@ -202,14 +267,20 @@ const SHOTS = [
     await p.evaluate(() => document.querySelector("[data-testid=tun-section]").scrollIntoView({ block: "center" }));
     await sleep(300);
   }, after: async (p) => { await servers.scratch.hook("/__mock/tun?error=0"); } },
+  { name: "leave-confirm", server: "full", hash: "#/settings", only: "desktop", run: async (p) => {
+    await p.click("[data-testid=leave-mesh]");
+    await p.waitForSelector(".modal .confirm-text");
+  } },
   { name: "more", server: "full", hash: "#/more", wait: ".more-row", only: "mobile" },
   { name: "offline-banner", server: "scratch", hash: "#/devices", reset: true, run: async (p, srv) => {
     await p.waitForSelector(".topo__svg");
+    await live(p);
     await srv.hook("/__mock/drop?for=60");
     await p.waitForSelector(".gbanner--offline", { timeout: 8000 });
   } },
   { name: "incoming-offer-toast", server: "scratch", hash: "#/devices", reset: true, run: async (p, srv) => {
     await p.waitForSelector(".topo__svg");
+    await live(p);
     await srv.hook("/__mock/offer?from=phone");
     await p.waitForSelector(".toast");
     await sleep(400);
