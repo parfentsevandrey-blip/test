@@ -35,7 +35,9 @@ import app.themesh.mobile.core.FileNames;
 /**
  * «Скачать» в интерфейсе: файл забирается тем же HTTP-запросом с cookie окна (сессия в WebView) и
  * сохраняется в общую папку «Загрузки» — через MediaStore (Android 10+) или напрямую (Android 8–9),
- * под именем, которого там ещё нет. В конце — уведомление «Файл сохранён», открывающее файл.
+ * под именем, которого там ещё нет. В конце — уведомление «Файл сохранён», открывающее файл. Тот же сохранятель
+ * ({@link #saveInto}) использует {@link ReceivedStore} для копий полученных от других устройств файлов (в подпапку
+ * «The Mesh»).
  */
 final class Downloads {
     private static final String TAG = "themesh";
@@ -84,25 +86,41 @@ final class Downloads {
             String type = mimeOf(c.getContentType(), listenerMime, name);
             toast(app, app.getString(R.string.toast_download_started, name));
             try (InputStream in = c.getInputStream()) {
-                if (Build.VERSION.SDK_INT >= 29) {
-                    saveWithMediaStore(app, in, name, type);
-                } else {
-                    saveLegacy(app, in, name, type);
-                }
+                saveInto(app, in, name, type, "", (uri, shown) -> Notifier.downloadSaved(app, uri, type, shown));
             }
         } finally {
             c.disconnect();
         }
     }
 
+    /** Вызывается, когда файл лёг и известен его адрес (на Android 8–9 — после того, как его просканирует система). */
+    interface Saved {
+        void onSaved(Uri uri, String name);
+    }
+
+    /**
+     * Кладёт поток в «Загрузки» (или в подпапку «Загрузок», если {@code subfolder} не пуст) под именем, которого
+     * там ещё нет: через MediaStore (Android 10+) или напрямую (Android 8–9, нужно разрешение на запись).
+     *
+     * @param saved может быть {@code null}
+     * @return имя, под которым файл лёг
+     */
+    static String saveInto(Context app, InputStream in, String name, String type, String subfolder, Saved saved) throws IOException {
+        return Build.VERSION.SDK_INT >= 29
+                ? saveWithMediaStore(app, in, name, type, subfolder, saved)
+                : saveLegacy(app, in, name, type, subfolder, saved);
+    }
+
     @RequiresApi(Build.VERSION_CODES.Q)
-    private static void saveWithMediaStore(Context app, InputStream in, String name, String type) throws IOException {
+    private static String saveWithMediaStore(Context app, InputStream in, String name, String type, String subfolder, Saved saved)
+            throws IOException {
         ContentResolver cr = app.getContentResolver();
-        String unique = FileNames.uniqueName(name, candidate -> existsInDownloads(cr, candidate));
+        String relative = subfolder.isEmpty() ? Environment.DIRECTORY_DOWNLOADS : Environment.DIRECTORY_DOWNLOADS + "/" + subfolder;
+        String unique = FileNames.uniqueName(name, candidate -> existsIn(cr, relative, candidate));
         ContentValues v = new ContentValues();
         v.put(MediaStore.Downloads.DISPLAY_NAME, unique);
         v.put(MediaStore.Downloads.MIME_TYPE, type);
-        v.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+        v.put(MediaStore.Downloads.RELATIVE_PATH, relative);
         v.put(MediaStore.Downloads.IS_PENDING, 1);
         Uri uri = cr.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, v);
         if (uri == null) {
@@ -121,14 +139,18 @@ final class Downloads {
         done.put(MediaStore.Downloads.IS_PENDING, 0);
         cr.update(uri, done, null, null);
         String shown = displayName(cr, uri, unique);
-        Notifier.downloadSaved(app, uri, type, shown);
+        if (saved != null) {
+            saved.onSaved(uri, shown);
+        }
+        return shown;
     }
 
+    /** Есть ли в этой папке «Загрузок» (MediaStore, только файлы приложения) файл с таким именем. */
     @RequiresApi(Build.VERSION_CODES.Q)
-    private static boolean existsInDownloads(ContentResolver cr, String name) {
+    private static boolean existsIn(ContentResolver cr, String relativePath, String name) {
         try (Cursor cur = cr.query(MediaStore.Downloads.EXTERNAL_CONTENT_URI, new String[] {MediaStore.Downloads._ID},
                 MediaStore.Downloads.DISPLAY_NAME + "=? AND " + MediaStore.Downloads.RELATIVE_PATH + "=?",
-                new String[] {name, Environment.DIRECTORY_DOWNLOADS + "/"}, null)) {
+                new String[] {name, relativePath + "/"}, null)) {
             return cur != null && cur.moveToFirst();
         } catch (RuntimeException e) {
             return false;
@@ -148,9 +170,11 @@ final class Downloads {
     }
 
     @SuppressWarnings("deprecation")
-    private static void saveLegacy(Context app, InputStream in, String name, String type) throws IOException {
-        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        if (!dir.isDirectory() && !dir.mkdirs()) {
+    private static String saveLegacy(Context app, InputStream in, String name, String type, String subfolder, Saved saved)
+            throws IOException {
+        File root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        File dir = subfolder.isEmpty() ? root : new File(root, subfolder);
+        if (!dir.isDirectory() && !dir.mkdirs() && !dir.isDirectory()) {
             throw new IOException("no Downloads folder");
         }
         String unique = FileNames.uniqueName(name, candidate -> new File(dir, candidate).exists());
@@ -162,7 +186,12 @@ final class Downloads {
             throw e;
         }
         MediaScannerConnection.scanFile(app, new String[] {file.getPath()}, new String[] {type},
-                (path, uri) -> Notifier.downloadSaved(app, uri, type, unique));
+                (path, uri) -> {
+                    if (saved != null) {
+                        saved.onSaved(uri, unique);
+                    }
+                });
+        return unique;
     }
 
     private static void copy(InputStream in, OutputStream out) throws IOException {
@@ -173,7 +202,8 @@ final class Downloads {
         }
     }
 
-    private static String mimeOf(String contentType, String listenerMime, String name) {
+    /** Тип файла: из ответа узла или подсказки WebView, а если там «что угодно» — по расширению имени. */
+    static String mimeOf(String contentType, String listenerMime, String name) {
         String type = clean(contentType);
         if (type.isEmpty()) {
             type = clean(listenerMime);

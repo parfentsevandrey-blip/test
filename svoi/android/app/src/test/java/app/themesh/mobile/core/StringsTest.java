@@ -63,6 +63,15 @@ public class StringsTest {
     }
 
     @Test
+    public void theMenuSettingForCopiesIsNamedAsAgreed() throws Exception {
+        assertEquals("Сохранять полученные файлы в «Загрузки»", ResourceTexts.ru().get("menu_copy_received"));
+        assertFalse(ResourceTexts.en().get("menu_copy_received").isEmpty());
+        // где лежит копия, в обоих языках называется одинаково: «Загрузки/The Mesh» и «Downloads/The Mesh»
+        assertTrue(ResourceTexts.ru().copiedTo(ReceivedFiles.FOLDER).contains("«Загрузки/The Mesh»"));
+        assertTrue(ResourceTexts.en().copiedTo(ReceivedFiles.FOLDER).contains("Downloads/The Mesh"));
+    }
+
+    @Test
     public void theTextsTheDesktopAppUsesAreTheSame() throws Exception {
         // desktop/src/i18n.js: те же слова в уведомлениях и строке состояния
         ResourceTexts t = ResourceTexts.ru();

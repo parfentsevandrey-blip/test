@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 
 /**
  * Владеет процессом узла: запускает {@code libthemesh.so up --no-browser --exit-when-stdin-closes --ui
- * 127.0.0.1:<порт> --dir <каталог данных>}, ждёт, пока интерфейс ответит и пройдёт handshake, следит
+ * 127.0.0.1:<порт> --dir <каталог данных> [--name <имя устройства>]}, ждёт, пока интерфейс ответит и пройдёт handshake, следит
  * за процессом и перезапускает его, если он упал (паузы 1, 2, 4 … 30 секунд, после двух минут работы
  * отсчёт начинается заново). Это обычная Java без Android: так её можно проверить на компьютере
  * настоящей программой.
@@ -92,6 +92,11 @@ public final class NodeSupervisor {
         public File logFile;
         /** THEMESH_LOCAL_ADDRS_FILE. */
         public File addrsFile;
+        /**
+         * Имя устройства, которое узел предложит при создании или вступлении в сеть ({@code --name}, см.
+         * {@link DeviceName}); {@code null} или пусто — флаг не передаётся и узел берёт имя хоста («localhost»).
+         */
+        public String deviceName;
         public int preferredPort = Ports.DEFAULT;
         /** Порт прошлого запуска (0 — не помним). */
         public IntSupplier lastPort = () -> 0;
@@ -286,6 +291,10 @@ public final class NodeSupervisor {
         List<String> cmd = new ArrayList<>(Arrays.asList(
                 spec.binary.getPath(), "up", "--no-browser", "--exit-when-stdin-closes",
                 "--ui", "127.0.0.1:" + port, "--dir", spec.dataDir.getPath()));
+        if (spec.deviceName != null && !spec.deviceName.isEmpty()) {
+            cmd.add("--name");
+            cmd.add(spec.deviceName);
+        }
         cmd.addAll(spec.extraArgs);
         ProcessBuilder pb = new ProcessBuilder(cmd);
         pb.directory(spec.filesDir);

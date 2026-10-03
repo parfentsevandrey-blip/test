@@ -41,6 +41,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -160,6 +161,7 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
     private String pendingRoute;
     private int pageBg = ThemeColor.NONE;
     private boolean resumed;
+    private PopupWindow menuPopup; // меню «⋮», пока оно открыто
 
     // ---- жизненный цикл ---------------------------------------------------------------------
 
@@ -232,6 +234,7 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
     protected void onPause() {
         resumed = false;
         NodeRuntime.get().setUiForeground(false);
+        dismissMenu();
         main.removeCallbacks(themePoll);
         web.onPause();
         super.onPause();
@@ -254,6 +257,7 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
 
     @Override
     protected void onDestroy() {
+        dismissMenu();
         main.removeCallbacksAndMessages(null);
         io.shutdownNow();
         if (pulse != null) {
@@ -774,11 +778,11 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         storageLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
             String[] job = pendingDownload;
             pendingDownload = null;
-            if (!granted || job == null) {
+            if (!granted) {
                 Toast.makeText(this, R.string.toast_no_storage_permission, Toast.LENGTH_LONG).show();
-                return;
-            }
-            Downloads.start(this, job[0], job[1], job[2]);
+            } else if (job != null) {
+                Downloads.start(this, job[0], job[1], job[2]);
+            } // разрешение выдано без скачивания (включили «Сохранять полученные файлы в «Загрузки»»): больше ничего не нужно
         });
     }
 
@@ -796,8 +800,7 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
             Toast.makeText(this, R.string.toast_download_unsupported, Toast.LENGTH_LONG).show();
             return;
         }
-        if (Downloads.needsLegacyPermission()
-                && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+        if (Downloads.needsLegacyPermission() && !hasStoragePermission()) {
             pendingDownload = new String[] {url, contentDisposition, mimeType};
             storageLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             return;
@@ -857,13 +860,22 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
     // ---- меню -------------------------------------------------------------------------------
 
     private void showMenu() {
-        PopupMenu popup = new PopupMenu(this, barMenu);
-        popup.getMenuInflater().inflate(R.menu.main, popup.getMenu());
-        Menu menu = popup.getMenu();
+        // PopupMenu здесь нужен только как готовый Menu с пунктами из XML: сам он не показывается (он обрезал бы длинные пункты)
+        PopupMenu source = new PopupMenu(this, barMenu);
+        source.getMenuInflater().inflate(R.menu.main, source.getMenu());
+        Menu menu = source.getMenu();
         menu.findItem(R.id.menu_autostart).setChecked(prefs.autostart());
         menu.findItem(R.id.menu_battery).setChecked(isIgnoringBatteryOptimizations());
-        popup.setOnMenuItemClickListener(this::onMenuItem);
-        popup.show();
+        menu.findItem(R.id.menu_copy_received).setChecked(copiesWillBeMade());
+        dismissMenu();
+        menuPopup = MenuPopup.show(this, barMenu, menu, this::onMenuItem);
+    }
+
+    private void dismissMenu() {
+        if (menuPopup != null) {
+            menuPopup.dismiss();
+            menuPopup = null;
+        }
     }
 
     private boolean onMenuItem(MenuItem item) {
@@ -874,6 +886,8 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
             Toast.makeText(this, on ? R.string.toast_autostart_on : R.string.toast_autostart_off, Toast.LENGTH_SHORT).show();
         } else if (id == R.id.menu_battery) {
             openBatterySettings();
+        } else if (id == R.id.menu_copy_received) {
+            toggleCopyReceived();
         } else if (id == R.id.menu_log) {
             startActivity(new Intent(this, LogActivity.class));
         } else if (id == R.id.menu_about) {
@@ -882,6 +896,27 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
             return false;
         }
         return true;
+    }
+
+    /**
+     * Галочка «Сохранять полученные файлы в «Загрузки»»: копии делаются, если настройка включена и (на Android 8–9)
+     * приложению разрешено писать в память. Без разрешения галочка не стоит, хотя настройка по умолчанию включена, —
+     * нажатие на неё тогда просит разрешение (фоновая служба просить его не может).
+     */
+    private boolean copiesWillBeMade() {
+        return prefs.copyReceived() && (!Downloads.needsLegacyPermission() || hasStoragePermission());
+    }
+
+    private void toggleCopyReceived() {
+        boolean turnOn = !copiesWillBeMade();
+        prefs.setCopyReceived(turnOn);
+        if (turnOn && Downloads.needsLegacyPermission() && !hasStoragePermission()) {
+            storageLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+    }
+
+    private boolean hasStoragePermission() {
+        return checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
 
     private boolean isIgnoringBatteryOptimizations() {

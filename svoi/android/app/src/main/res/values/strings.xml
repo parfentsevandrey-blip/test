@@ -27,6 +27,10 @@
     <string name="notif_offer_body">хочет отправить вам файл «%1$s»</string>
     <string name="notif_received_title">Файл получен</string>
     <string name="notif_received_body">«%1$s» — от устройства %2$s</string>
+    <string name="notif_copied_to">Копия — в «Загрузки/%1$s»</string>
+    <string name="notif_copied_as">Копия — в «Загрузки/%1$s» под именем «%2$s»</string>
+    <string name="notif_copy_no_permission">Копия в «Загрузки» не сделана: нет разрешения на запись в память</string>
+    <string name="notif_copy_failed">Копию в «Загрузки» сделать не удалось</string>
     <string name="notif_chat_attachment">Прислал вложение</string>
     <string name="notif_mail_title">Новое письмо от %1$s</string>
     <string name="notif_mail_title_unknown">Новое письмо</string>
@@ -55,6 +59,7 @@
     <string name="menu_more">Ещё</string>
     <string name="menu_autostart">Запускать при включении телефона</string>
     <string name="menu_battery">В фоне без ограничений батареи</string>
+    <string name="menu_copy_received">Сохранять полученные файлы в «Загрузки»</string>
     <string name="menu_log">Журнал</string>
     <string name="menu_about">О программе</string>
     <string name="toast_autostart_on">The Mesh будет запускаться при включении телефона</string>

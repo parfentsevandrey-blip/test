@@ -33,6 +33,26 @@ final class AndroidTexts implements Texts {
     }
 
     @Override
+    public String copiedTo(String folder) {
+        return context.getString(R.string.notif_copied_to, folder);
+    }
+
+    @Override
+    public String copiedAs(String folder, String name) {
+        return context.getString(R.string.notif_copied_as, folder, name);
+    }
+
+    @Override
+    public String copyNeedsPermission() {
+        return context.getString(R.string.notif_copy_no_permission);
+    }
+
+    @Override
+    public String copyFailed() {
+        return context.getString(R.string.notif_copy_failed);
+    }
+
+    @Override
     public String chatAttachment() {
         return context.getString(R.string.notif_chat_attachment);
     }

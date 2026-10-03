@@ -17,6 +17,18 @@ public interface Texts {
     /** ««X» — от устройства Y». */
     String receivedBody(String file, String peer);
 
+    /** «Копия — в «Загрузки/The Mesh»». */
+    String copiedTo(String folder);
+
+    /** «Копия — в «Загрузки/The Mesh» под именем «X»» (имя в «Загрузках» уже было занято). */
+    String copiedAs(String folder, String name);
+
+    /** «Копия в «Загрузки» не сделана: нет разрешения на запись в память». */
+    String copyNeedsPermission();
+
+    /** «Копию в «Загрузки» сделать не удалось». */
+    String copyFailed();
+
     /** «Прислал вложение». */
     String chatAttachment();
 

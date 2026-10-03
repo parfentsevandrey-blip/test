@@ -27,6 +27,10 @@
     <string name="notif_offer_body">wants to send you the file “%1$s”</string>
     <string name="notif_received_title">File received</string>
     <string name="notif_received_body">“%1$s” — from %2$s</string>
+    <string name="notif_copied_to">A copy is in Downloads/%1$s</string>
+    <string name="notif_copied_as">A copy is in Downloads/%1$s as “%2$s”</string>
+    <string name="notif_copy_no_permission">No copy in Downloads: the app may not write to storage</string>
+    <string name="notif_copy_failed">Could not copy it to Downloads</string>
     <string name="notif_chat_attachment">Sent an attachment</string>
     <string name="notif_mail_title">New mail from %1$s</string>
     <string name="notif_mail_title_unknown">New mail</string>
@@ -55,6 +59,7 @@
     <string name="menu_more">More options</string>
     <string name="menu_autostart">Start when the phone turns on</string>
     <string name="menu_battery">Background without battery limits</string>
+    <string name="menu_copy_received">Copy received files to Downloads</string>
     <string name="menu_log">Log</string>
     <string name="menu_about">About</string>
     <string name="toast_autostart_on">The Mesh will start when the phone turns on</string>

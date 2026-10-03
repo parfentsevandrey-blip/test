@@ -9,6 +9,10 @@
         android:checkable="true"
         android:title="@string/menu_battery" />
     <item
+        android:id="@+id/menu_copy_received"
+        android:checkable="true"
+        android:title="@string/menu_copy_received" />
+    <item
         android:id="@+id/menu_log"
         android:title="@string/menu_log" />
     <item

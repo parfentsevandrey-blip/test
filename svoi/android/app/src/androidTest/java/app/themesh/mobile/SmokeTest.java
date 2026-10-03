@@ -105,6 +105,19 @@ public class SmokeTest {
             assertTrue("интерфейс не появился в окне за " + waitMs / 1000 + " с (проверка: " + script + ")",
                     waitForScript(scenario, script, deadline));
 
+            // 2б. Имя устройства: приложение передало узлу имя телефона (а не имя хоста: на Android это «localhost»),
+            // узел предлагает его в состоянии, и форма создания сети подставляет в поле именно его.
+            if (!configured) {
+                String offered = offeredName(port);
+                assertFalse("узел предлагает имя телефона, а не имя хоста: «" + offered + "»",
+                        offered.isEmpty() || offered.startsWith("localhost"));
+                String formShowsIt = "(function () {"
+                        + " var b = document.querySelector('[data-testid=\"onb-create\"]'); if (b) b.click();"
+                        + " var i = document.querySelector('[data-testid=\"onb-device-name\"]');"
+                        + " return i != null && i.getAttribute('placeholder') === " + JSONObject.quote(offered) + "; })()";
+                assertTrue("форма создания сети не предложила имя «" + offered + "»", waitForScript(scenario, formShowsIt, deadline));
+            }
+
             // 3. Процесс узла — дочерний процесс приложения, с нужной командной строкой.
             List<Integer> nodes = nodeProcesses();
             assertEquals("ровно один процесс узла среди детей приложения: " + nodes, 1, nodes.size());
@@ -153,13 +166,23 @@ public class SmokeTest {
     }
 
     private boolean nodeIsConfigured(int port) throws Exception {
+        return nodeState(port).optBoolean("configured");
+    }
+
+    /** Имя, которое узел без сети предлагает себе ({@code self.defaultName} в {@code GET /api/state}). */
+    private String offeredName(int port) throws Exception {
+        JSONObject self = nodeState(port).optJSONObject("self");
+        return self == null ? "" : self.optString("defaultName");
+    }
+
+    private JSONObject nodeState(int port) throws Exception {
         String token = new String(Files.readAllBytes(new File(context.getFilesDir(), "themesh/ui.token").toPath()), StandardCharsets.UTF_8).trim();
         HttpURLConnection c = (HttpURLConnection) new URL("http://127.0.0.1:" + port + "/api/state").openConnection(Proxy.NO_PROXY);
         try {
             c.setRequestProperty("Authorization", "Bearer " + token);
             c.setConnectTimeout(5000);
             c.setReadTimeout(10_000);
-            return new JSONObject(read(c.getInputStream())).optBoolean("configured");
+            return new JSONObject(read(c.getInputStream()));
         } finally {
             c.disconnect();
         }

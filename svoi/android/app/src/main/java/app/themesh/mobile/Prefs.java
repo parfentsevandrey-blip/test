@@ -10,6 +10,7 @@ final class Prefs {
     private static final String LAST_PORT = "lastPort";
     private static final String NOTIF_ASKED = "notifAsked";
     private static final String WEBVIEW_WARNED = "webViewWarned";
+    private static final String COPY_RECEIVED = "copyReceived";
 
     private final SharedPreferences prefs;
 
@@ -42,6 +43,15 @@ final class Prefs {
 
     void setNotifAsked() {
         prefs.edit().putBoolean(NOTIF_ASKED, true).apply();
+    }
+
+    /** «Сохранять полученные файлы в «Загрузки»»: копия каждого принятого файла в общей папке; по умолчанию включено. */
+    boolean copyReceived() {
+        return prefs.getBoolean(COPY_RECEIVED, true);
+    }
+
+    void setCopyReceived(boolean on) {
+        prefs.edit().putBoolean(COPY_RECEIVED, on).apply();
     }
 
     /** Версия WebView, о которой уже предупредили (пусто — ни о какой). */

@@ -17,6 +17,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 
 import org.json.JSONObject;
@@ -34,6 +35,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import app.themesh.mobile.core.AppLog;
+import app.themesh.mobile.core.DeviceName;
 import app.themesh.mobile.core.EventWatcher;
 import app.themesh.mobile.core.LocalAddrs;
 import app.themesh.mobile.core.NodeApi;
@@ -41,6 +43,7 @@ import app.themesh.mobile.core.NodeState;
 import app.themesh.mobile.core.NodeSupervisor;
 import app.themesh.mobile.core.Notice;
 import app.themesh.mobile.core.Notices;
+import app.themesh.mobile.core.ReceivedFiles;
 import app.themesh.mobile.core.SeenKeys;
 import app.themesh.mobile.core.StatusLine;
 
@@ -100,6 +103,8 @@ public class NodeService extends Service {
     private AndroidTexts texts;
     private ExecutorService addrWorker;
     private ExecutorService eventWorker;
+    private ExecutorService copyWorker; // копии больших файлов не должны задерживать остальные уведомления
+    private ReceivedFiles received;
 
     private int generation;
     private boolean started;
@@ -213,6 +218,9 @@ public class NodeService extends Service {
         if (eventWorker != null) {
             eventWorker.shutdown();
         }
+        if (copyWorker != null) {
+            copyWorker.shutdown(); // уже начатая копия дойдёт до конца
+        }
         NodeRuntime.get().stopped(byUser);
     }
 
@@ -227,6 +235,8 @@ public class NodeService extends Service {
         NodeRuntime.get().starting();
         addrWorker = Executors.newSingleThreadExecutor(r -> new Thread(r, "themesh-addrs"));
         eventWorker = Executors.newSingleThreadExecutor(r -> new Thread(r, "themesh-notify"));
+        copyWorker = Executors.newSingleThreadExecutor(r -> new Thread(r, "themesh-copy"));
+        received = new ReceivedFiles(new ReceivedStore(this), prefs::copyReceived, getFilesDir(), new File(getFilesDir(), "themesh"));
         log.i("service started, app " + BuildInfo.versionName(this) + ", sdk " + Build.VERSION.SDK_INT
                 + ", abi " + (Build.SUPPORTED_ABIS.length > 0 ? Build.SUPPORTED_ABIS[0] : "?"));
         acquireMulticastLock();
@@ -245,7 +255,17 @@ public class NodeService extends Service {
         spec.logFile = log.file();
         spec.addrsFile = new File(getFilesDir(), "local-addrs.txt");
         spec.lastPort = prefs::lastPort;
+        spec.deviceName = DeviceName.choose(settingsDeviceName(), Build.MODEL);
         return spec;
+    }
+
+    /** «Имя устройства» из настроек Android ({@code Settings.Global.DEVICE_NAME}); на части телефонов его нет. */
+    private String settingsDeviceName() {
+        try {
+            return Settings.Global.getString(getContentResolver(), Settings.Global.DEVICE_NAME);
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     /** События наблюдателя за процессом. Вызываются из его потока. */
@@ -314,7 +334,7 @@ public class NodeService extends Service {
 
         @Override
         public void onEvent(String kind, JSONObject data) {
-            ExecutorService worker = eventWorker;
+            ExecutorService worker = ReceivedFiles.isFinishedIncoming(kind, data) ? copyWorker : eventWorker;
             if (worker == null || worker.isShutdown()) {
                 return;
             }
@@ -391,10 +411,46 @@ public class NodeService extends Service {
         if (notice == null || !seen.add(notice.key)) {
             return;
         }
+        if (notice.kind == Notice.Kind.RECEIVED) {
+            notice = withCopyResult(notice, kind, data); // копия делается, даже если уведомление не покажем
+        }
         if (NodeRuntime.get().uiForeground()) {
             return; // человек смотрит на окно: интерфейс показывает это сам
         }
         Notifier.post(this, notice);
+    }
+
+    /**
+     * Копирует полученный файл в «Загрузки/The Mesh» (если человек этого не выключил) и дописывает к уведомлению
+     * «Файл получен», куда делась копия или почему её нет. Имена файлов в журнал не пишутся.
+     */
+    private Notice withCopyResult(Notice notice, String kind, JSONObject data) {
+        ReceivedFiles files = received;
+        if (files == null) {
+            return notice;
+        }
+        ReceivedFiles.Result result = files.onEvent(kind, data);
+        if (result == null) {
+            return notice;
+        }
+        switch (result.outcome) {
+            case COPIED:
+                log.i("a received file was copied to Downloads/" + ReceivedFiles.FOLDER);
+                break;
+            case NO_PERMISSION:
+                log.w("a received file was not copied to Downloads: no permission to write to storage");
+                break;
+            case FAILED:
+                log.w("a received file could not be copied to Downloads: " + result.error);
+                break;
+            case SKIPPED:
+                log.w("a received file was not copied to Downloads: " + result.error);
+                break;
+            default:
+                break;
+        }
+        String line = ReceivedFiles.describe(result, texts);
+        return line.isEmpty() ? notice : notice.withBody(notice.body + "\n" + line);
     }
 
     // ---- сеть телефона ----------------------------------------------------------------------

@@ -126,6 +126,65 @@ public class NodeSupervisorTest {
         assertEquals("failed:EXITED_AT_START:3:4000", next(8));
     }
 
+    /** Скрипт-заглушка: записывает свои аргументы по одному на строку и выходит. */
+    private File argsRecorder(File out) throws Exception {
+        return script("args.sh", "for a in \"$@\"; do printf '%s\\n' \"$a\"; done > '" + out.getPath() + "'\nexit 3");
+    }
+
+    @Test
+    public void theDeviceNameIsPassedAsTheNameFlag() throws Exception {
+        assumeTrue(unixLike());
+        File out = new File(tmp.getRoot(), "args.txt");
+        NodeSupervisor.Spec s = spec(argsRecorder(out));
+        s.deviceName = "Pixel 7 Pro";
+        start(s);
+        assertEquals("starting:1", next(5));
+        assertEquals("failed:EXITED_AT_START:3:1000", next(5));
+        java.util.List<String> args = Files.readAllLines(out.toPath());
+        int i = args.indexOf("--name");
+        assertTrue("есть --name: " + args, i >= 0 && i + 1 < args.size());
+        assertEquals("имя одним аргументом, вместе с пробелами", "Pixel 7 Pro", args.get(i + 1));
+        assertEquals("up", args.get(0));
+        assertTrue(args.contains("--exit-when-stdin-closes"));
+        assertTrue(args.contains("--no-browser"));
+    }
+
+    @Test
+    public void withoutADeviceNameNoNameFlagIsPassed() throws Exception {
+        assumeTrue(unixLike());
+        for (String none : new String[] {null, ""}) {
+            File out = new File(tmp.getRoot(), "args-" + (none == null ? "null" : "empty") + ".txt");
+            NodeSupervisor.Spec s = spec(argsRecorder(out));
+            s.deviceName = none;
+            NodeSupervisor one = new NodeSupervisor(s, new AppLog(s.logFile, null), new NodeSupervisor.Listener() {
+                @Override
+                public void onStarting(int attempt) {
+                    events.add("starting:" + attempt);
+                }
+
+                @Override
+                public void onReady(NodeApi api, int port) {
+                }
+
+                @Override
+                public void onFailed(NodeSupervisor.Failure failure, long retryInMs) {
+                    events.add("failed");
+                }
+
+                @Override
+                public void onStopped() {
+                }
+            });
+            one.start();
+            assertEquals("starting:1", next(5));
+            assertEquals("failed", next(5));
+            one.requestStop();
+            assertTrue(one.awaitTermination(10_000));
+            assertFalse(Files.readAllLines(out.toPath()).contains("--name"));
+            events.clear();
+        }
+    }
+
     @Test
     public void restartNowSkipsTheWaitAndResetsThePauses() throws Exception {
         assumeTrue(unixLike());
@@ -238,6 +297,32 @@ public class NodeSupervisorTest {
         assertEquals("stopped", lastOf());
         assertFalse("чистый выход убирает ui.addr", new File(s.dataDir, "ui.addr").exists());
         assertTrue(new File(s.dataDir, "device.key").isFile());
+    }
+
+    @Test
+    public void theRealNodeOffersTheDeviceNameItWasGiven() throws Exception {
+        NodeSupervisor.Spec s = realSpec();
+        s.deviceName = DeviceName.choose("Pixel 7 Pro", "ignored");
+        start(s);
+        assertEquals("starting:1", next(5));
+        assertTrue(next(30).startsWith("ready:"));
+        // пустое имя в запросе значит «возьми предложенное»; узел делает из него метку DNS
+        lastApi.postObject("/api/mesh/create", new JSONObject().put("meshName", "T").put("deviceName", "").put("owner", ""));
+        assertEquals("pixel-7-pro", lastApi.getObject("/api/state").getJSONObject("self").getString("name"));
+    }
+
+    @Test
+    public void theRealNodeTakesARussianNameWithAnEmojiToo() throws Exception {
+        // аргументы командной строки JVM на компьютере кодирует в системной кодировке: проверяем, только если это UTF-8
+        // (на телефоне ART всегда передаёт UTF-8)
+        assumeTrue("нужна системная кодировка UTF-8", "UTF-8".equalsIgnoreCase(System.getProperty("sun.jnu.encoding", "")));
+        NodeSupervisor.Spec s = realSpec();
+        s.deviceName = DeviceName.choose("  Телефон   Андрея 📱 ", "ignored");
+        start(s);
+        assertEquals("starting:1", next(5));
+        assertTrue(next(30).startsWith("ready:"));
+        lastApi.postObject("/api/mesh/create", new JSONObject().put("meshName", "T").put("deviceName", "").put("owner", ""));
+        assertEquals("telefon-andreya", lastApi.getObject("/api/state").getJSONObject("self").getString("name"));
     }
 
     @Test

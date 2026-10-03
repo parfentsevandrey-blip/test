@@ -17,7 +17,9 @@
     <uses-permission
         android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
         tools:ignore="BatteryLife" />
-    <!-- Сохранение скачанного в «Загрузки» на Android 8–9 (с Android 10 хватает MediaStore). -->
+    <!-- Сохранение скачанного и копий полученных файлов в «Загрузки» на Android 8–9 (с Android 10 хватает MediaStore).
+         Из службы в фоне это разрешение не спросить: копии делаются, только если оно уже выдано (меню, «Сохранять
+         полученные файлы в «Загрузки»»). -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />

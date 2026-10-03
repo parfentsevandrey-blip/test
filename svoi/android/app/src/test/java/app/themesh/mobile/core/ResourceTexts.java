@@ -106,6 +106,26 @@ final class ResourceTexts implements Texts {
     }
 
     @Override
+    public String copiedTo(String folder) {
+        return get("notif_copied_to", folder);
+    }
+
+    @Override
+    public String copiedAs(String folder, String name) {
+        return get("notif_copied_as", folder, name);
+    }
+
+    @Override
+    public String copyNeedsPermission() {
+        return get("notif_copy_no_permission");
+    }
+
+    @Override
+    public String copyFailed() {
+        return get("notif_copy_failed");
+    }
+
+    @Override
     public String chatAttachment() {
         return get("notif_chat_attachment");
     }

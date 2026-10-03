@@ -33,6 +33,11 @@ public final class Notice {
         this.route = route;
     }
 
+    /** То же уведомление с другим текстом (к «Файл получен» дописывается, куда делась копия). */
+    public Notice withBody(String newBody) {
+        return new Notice(kind, key, tag, title, newBody, route);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Notice)) {
