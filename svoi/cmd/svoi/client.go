@@ -84,26 +84,34 @@ func (c *client) get(path string, out any) error {
 	return c.do(context.Background(), http.MethodGet, path, nil, out)
 }
 
-func clientFromFlags(name string, args []string, extra func(*flag.FlagSet)) (*client, *flag.FlagSet, error) {
+func clientFromFlags(name string, args []string, extra func(*flag.FlagSet)) (*client, []string, error) {
 	fs := flag.NewFlagSet(name, flag.ExitOnError)
 	var cf commonFlags
 	cf.register(fs)
 	if extra != nil {
 		extra(fs)
 	}
-	fs.Parse(args)
+	pos := parseInterspersed(fs, args)
 	c, err := newClient(cf.dir)
-	return c, fs, err
+	return c, pos, err
 }
 
 func cmdStatus(args []string) error {
-	c, _, err := clientFromFlags("status", args, nil)
+	var asJSON *bool
+	c, _, err := clientFromFlags("status", args, func(fs *flag.FlagSet) {
+		asJSON = fs.Bool("json", false, "print the full state as JSON")
+	})
 	if err != nil {
 		return err
 	}
 	var st app.State
 	if err := c.get("/api/state", &st); err != nil {
 		return err
+	}
+	if *asJSON {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", " ")
+		return enc.Encode(st)
 	}
 	if !st.Configured {
 		fmt.Println("This device is not part of a mesh yet. Open the web interface (`svoi open`) to create or join one.")
@@ -189,34 +197,34 @@ func cmdInvite(args []string) error {
 }
 
 func cmdPing(args []string) error {
-	c, fs, err := clientFromFlags("ping", args, nil)
+	c, pos, err := clientFromFlags("ping", args, nil)
 	if err != nil {
 		return err
 	}
-	if fs.NArg() != 1 {
+	if len(pos) != 1 {
 		return errors.New("usage: svoi ping <device>")
 	}
 	var out struct{ MS float64 }
 	for i := 0; i < 4; i++ {
-		if err := c.get("/api/diag/ping?peer="+url.QueryEscape(fs.Arg(0)), &out); err != nil {
+		if err := c.get("/api/diag/ping?peer="+url.QueryEscape(pos[0]), &out); err != nil {
 			return err
 		}
-		fmt.Printf("reply from %s: %.1f ms\n", fs.Arg(0), out.MS)
+		fmt.Printf("reply from %s: %.1f ms\n", pos[0], out.MS)
 		time.Sleep(400 * time.Millisecond)
 	}
 	return nil
 }
 
 func cmdSend(args []string) error {
-	c, fs, err := clientFromFlags("send", args, nil)
+	c, pos, err := clientFromFlags("send", args, nil)
 	if err != nil {
 		return err
 	}
-	if fs.NArg() < 2 {
+	if len(pos) < 2 {
 		return errors.New("usage: svoi send <device> <file>...")
 	}
-	dev := fs.Arg(0)
-	for _, path := range fs.Args()[1:] {
+	dev := pos[0]
+	for _, path := range pos[1:] {
 		f, err := os.Open(path)
 		if err != nil {
 			return err

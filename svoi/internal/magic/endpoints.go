@@ -290,22 +290,22 @@ func (c *Conn) endpointLoop() {
 	}
 }
 
-// runSTUN sends a binding request to every configured server.
+// runSTUN sends a binding request to every configured server. Each server is
+// handled in its own goroutine so a slow or broken DNS never stalls the loop.
 func (c *Conn) runSTUN() {
-	if len(c.cfg.STUN) == 0 {
-		return
-	}
 	for _, server := range c.cfg.STUN {
-		for _, ap := range c.resolveSTUNServer(server) {
-			tx, req := newStunRequest()
-			c.self.mu.Lock()
-			if len(c.self.stunTx) > 64 {
-				c.self.stunTx = map[stunTxID]string{}
+		go func(server string) {
+			for _, ap := range c.resolveSTUNServer(server) {
+				tx, req := newStunRequest()
+				c.self.mu.Lock()
+				if len(c.self.stunTx) > 64 {
+					c.self.stunTx = map[stunTxID]string{}
+				}
+				c.self.stunTx[tx] = server + "|" + ap.String()
+				c.self.mu.Unlock()
+				_, _ = c.sock.WriteToAddrPort(req, ap)
 			}
-			c.self.stunTx[tx] = server + "|" + ap.String()
-			c.self.mu.Unlock()
-			_, _ = c.sock.WriteToAddrPort(req, ap)
-		}
+		}(server)
 	}
 }
 

@@ -54,6 +54,10 @@ func (c *Conn) sendPing(p *peer, to netip.AddrPort, via *peer) {
 
 	p.mu.Lock()
 	needCert := !p.heard
+	// A node that has just started has not heard the peer's state yet (which
+	// members it can reach directly, whether it relays): ask for it right away
+	// instead of waiting for the next periodic gossip.
+	wantState := p.theirStateAt.IsZero() || now.Sub(p.theirStateAt) > 2*c.cfg.Timing.StateEvery
 	p.mu.Unlock()
 
 	w := wbuf{}
@@ -63,12 +67,17 @@ func (c *Conn) sendPing(p *peer, to netip.AddrPort, via *peer) {
 	if needCert && c.cfg.SelfCert != nil {
 		cert = c.cfg.SelfCert()
 	}
+	var flags byte
 	if len(cert) > 0 && len(cert) < 1000 {
-		w.u8(1)
+		flags |= pingFlagCert
+	}
+	if wantState {
+		flags |= pingFlagWantState
+	}
+	w.u8(flags)
+	if flags&pingFlagCert != 0 {
 		w.u16(uint16(len(cert)))
 		w.bytes(cert)
-	} else {
-		w.u8(0)
 	}
 	c.sendDisco(p, w.b, to, via)
 }
@@ -130,6 +139,7 @@ func (c *Conn) sendPeerState(p *peer, to netip.AddrPort) {
 	if len(direct) > 200 {
 		direct = direct[:200]
 	}
+	c.cfg.Logf("magic: sending peer-state to %s: direct=%d", p.id.Short(), len(direct))
 	w.u8(byte(len(direct)))
 	for _, d := range direct {
 		w.bytes(d[:])
@@ -222,7 +232,8 @@ func (c *Conn) handleDisco(pkt []byte, from netip.AddrPort, via *peer) {
 func (c *Conn) onPing(p *peer, r *rbuf, from netip.AddrPort, via *peer) {
 	var tx [12]byte
 	copy(tx[:], r.take(12))
-	if r.u8()&1 != 0 { // skip a certificate we may already have processed
+	flags := r.u8()
+	if flags&pingFlagCert != 0 { // skip a certificate we may already have processed
 		r.take(int(r.u16()))
 	}
 	if r.err != nil {
@@ -252,6 +263,17 @@ func (c *Conn) onPing(p *peer, r *rbuf, from netip.AddrPort, via *peer) {
 		p.mu.Unlock()
 		if needs {
 			c.sendPing(p, from, nil)
+		}
+		if flags&pingFlagWantState != 0 {
+			p.mu.Lock()
+			give := time.Since(p.lastStateSent) > 500*time.Millisecond
+			if give {
+				p.lastStateSent = time.Now()
+			}
+			p.mu.Unlock()
+			if give {
+				c.sendPeerState(p, from)
+			}
 		}
 	} else {
 		w.ap(netip.AddrPort{})
@@ -343,6 +365,7 @@ func (c *Conn) onPeerState(p *peer, r *rbuf) {
 	p.theirDirect = direct
 	p.theirStateAt = time.Now()
 	p.mu.Unlock()
+	c.cfg.Logf("magic: peer-state from %s: canRelay=%v direct=%d endpoints=%d", p.id.Short(), flags&1 != 0, len(direct), len(eps))
 	if p.addCandidates(eps, SrcGossip) && c.cfg.OnPeerEndpoints != nil {
 		c.cfg.OnPeerEndpoints(p.id, eps)
 	}

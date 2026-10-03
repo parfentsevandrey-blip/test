@@ -787,6 +787,7 @@ func (n *Node) onPath(id identity.ID, info magic.PathInfo) {
 	}
 	p.mu.Lock()
 	p.path = info
+	n.log.Debug("path changed", "peer", p.member.Name, "kind", info.Kind.String(), "addr", info.Addr.String(), "relay", info.Relay.Short(), "rtt", info.RTT.String())
 	reachable := info.Kind != magic.PathNone
 	if reachable && p.conn == nil {
 		// A path just appeared: dial now instead of waiting out a backoff or

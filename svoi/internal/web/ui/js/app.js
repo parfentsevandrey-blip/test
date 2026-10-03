@@ -7,7 +7,7 @@ import { initPrefs } from "./prefs.js";
 import { href, useRoute } from "./router.js";
 import { refreshState, reconnectNow, startLive } from "./sse.js";
 import { state, useStore } from "./store.js";
-import { cx, sortPeers } from "./util.js";
+import { cx, natTone, sortPeers } from "./util.js";
 import { useNow } from "./hooks.js";
 import { DialogHost } from "./components/modal.js";
 import { ToastHost } from "./components/toast.js";
@@ -110,10 +110,6 @@ function TabBar({ section }) {
       <span class="tabbar__label">${it.label}</span>
     </a>`)}
   </nav>`;
-}
-
-export function natTone(d) {
-  return d === "open" || d === "easy" ? "ok" : d === "hard" ? "warn" : "muted";
 }
 
 function TopBar() {

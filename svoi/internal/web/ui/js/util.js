@@ -212,3 +212,8 @@ export function pick(obj, keys) {
   for (const k of keys) if (obj[k] !== undefined) o[k] = obj[k];
   return o;
 }
+
+/** Tone used for NAT difficulty chips. */
+export function natTone(d) {
+  return d === "open" || d === "easy" ? "ok" : d === "hard" ? "warn" : "muted";
+}

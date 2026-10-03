@@ -64,6 +64,7 @@ type peer struct {
 	lastRx        time.Time
 	lastTx        time.Time
 	lastRoamProbe time.Time
+	lastStateSent time.Time
 	heard         bool // we have authenticated something from this peer
 	theirDirect   map[[8]byte]bool
 	theirCanRelay bool
@@ -331,6 +332,11 @@ func (c *Conn) recomputeRelays() {
 		}
 		b.mu.Unlock()
 		if changed {
+			if best != nil {
+				c.cfg.Logf("magic: relay for %s is now %s (%d relay candidates)", b.id.Short(), best.id.Short(), len(relays))
+			} else {
+				c.cfg.Logf("magic: no relay for %s any more (%d relay candidates)", b.id.Short(), len(relays))
+			}
 			c.notifyPath(b)
 		}
 	}

@@ -649,3 +649,51 @@ func TestClosedConnReturnsErrors(t *testing.T) {
 }
 
 var netErrClosed = net.ErrClosed
+
+// A node that restarts must learn its peers' state (who can relay to whom)
+// right away, not at the next periodic gossip. The periodic gossip is switched
+// off here to prove the pull mechanism does the work.
+func TestRestartedNodeLearnsRelayStateImmediately(t *testing.T) {
+	noGossip := func(tm *Timing) { tm.StateEvery = time.Hour }
+	nw := netsim.New()
+	inet := nw.Internet()
+	natA := inet.NewNAT(ip("203.0.113.1"), netsim.Symmetric)
+	natB := inet.NewNAT(ip("203.0.113.2"), netsim.Symmetric)
+	anchor := newNode(t, inet.NewHost(ip("203.0.113.100")), nodeOpts{tuneTiming: noGossip})
+	a := newNode(t, natA.Inner().NewHost(ip("192.168.1.2")), nodeOpts{tuneTiming: noGossip})
+	hostB := natB.Inner().NewHost(ip("192.168.7.2"))
+	b := newNode(t, hostB, nodeOpts{tuneTiming: noGossip})
+	meet(t, a, b, anchor)
+	for _, n := range []*node{a, b} {
+		n.conn.AddCandidates(anchor.dev.ID, []netip.AddrPort{anchor.addr(ip("203.0.113.100"))}, SrcInvite)
+		n.conn.Poke(anchor.dev.ID)
+	}
+	a.conn.Poke(b.dev.ID)
+	waitFor(t, 8*time.Second, "a reaches b through the relay", func() bool { return a.conn.PathInfo(b.dev.ID).Kind == PathRelay })
+
+	// b restarts: same identity, same port, empty memory.
+	b.conn.Close()
+	b2dev := b.dev
+	conn, err := New(Config{
+		Device: b2dev, Port: int(b.port),
+		Listen:     func(port int) (net.PacketConn, error) { return hostB.ListenPacket(uint16(port)) },
+		LocalAddrs: func() []netip.Addr { return hostB.Addrs() },
+		AllowRelay: func() bool { return true },
+		Timing:     func() Timing { tm := fastTiming; tm.StateEvery = time.Hour; return tm }(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { conn.Close() })
+	for _, id := range []identity.ID{a.dev.ID, anchor.dev.ID} {
+		if err := conn.AddPeer(id); err != nil {
+			t.Fatal(err)
+		}
+	}
+	conn.AddCandidates(anchor.dev.ID, []netip.AddrPort{anchor.addr(ip("203.0.113.100"))}, SrcInvite)
+	conn.Poke(anchor.dev.ID)
+	conn.Poke(a.dev.ID)
+	start := time.Now()
+	waitFor(t, 8*time.Second, "restarted b learns it can relay to a", func() bool { return conn.PathInfo(a.dev.ID).Kind == PathRelay })
+	t.Logf("restarted node got its relay in %v", time.Since(start))
+}

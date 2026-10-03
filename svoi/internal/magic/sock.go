@@ -1,10 +1,12 @@
 package magic
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/netip"
 	"strconv"
+	"time"
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
 )
@@ -124,7 +126,9 @@ func resolveHostPort(hp string) ([]netip.AddrPort, error) {
 	if ip, err := netip.ParseAddr(host); err == nil {
 		return []netip.AddrPort{netip.AddrPortFrom(ip.Unmap(), uint16(port))}, nil
 	}
-	ips, err := net.LookupHost(host)
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+	ips, err := net.DefaultResolver.LookupHost(ctx, host)
 	if err != nil {
 		return nil, err
 	}

@@ -31,6 +31,12 @@ const (
 	msgPeerState   byte = 4
 )
 
+// Flags in a ping.
+const (
+	pingFlagCert      byte = 1 // a member certificate follows
+	pingFlagWantState byte = 2 // "send me your peer-state"
+)
+
 var errShort = errors.New("magic: truncated message")
 
 type wbuf struct{ b []byte }

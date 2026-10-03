@@ -60,6 +60,7 @@ func cmdUp(args []string) error {
 	owner := fs.String("owner", "", "owner name offered when creating/joining a mesh")
 	debug := fs.Bool("debug", false, "verbose logging")
 	loopback := fs.Bool("loopback", false, "also advertise 127.0.0.1 (several nodes on one machine)")
+	noSTUN := fs.Bool("no-stun", false, "do not use public STUN servers (peers still tell each other how they see us)")
 	fs.Parse(args)
 
 	a, err := app.Open(app.Options{
@@ -73,6 +74,12 @@ func cmdUp(args []string) error {
 		return err
 	}
 	defer a.Close()
+	if *noSTUN && a.Settings().STUNEnabled {
+		off := false
+		if _, err := a.UpdateSettings(app.SettingsPatch{STUNEnabled: &off}); err != nil {
+			return err
+		}
+	}
 
 	srv := api.New(a, web.UI())
 	ln, err := srv.Listen(*uiAddr, false)

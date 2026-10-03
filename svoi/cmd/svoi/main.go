@@ -5,6 +5,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -92,4 +93,20 @@ func signalChan() <-chan os.Signal {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 	return ch
+}
+
+// parseInterspersed parses flags that may appear before, between or after
+// positional arguments (Go's flag package stops at the first positional one),
+// and returns the positional arguments.
+func parseInterspersed(fs *flag.FlagSet, args []string) []string {
+	var pos []string
+	for {
+		fs.Parse(args)
+		args = fs.Args()
+		if len(args) == 0 {
+			return pos
+		}
+		pos = append(pos, args[0])
+		args = args[1:]
+	}
 }
