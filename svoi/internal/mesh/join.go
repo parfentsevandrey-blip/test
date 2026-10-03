@@ -336,11 +336,14 @@ func (n *Node) handleJoin(conn *quic.Conn) {
 
 // ---- joiner side ----
 
+// selfSignedCert is the certificate of the join handshake, for both sides: it is
+// signed by the device key itself and says nothing about the device or its owner
+// (the handshake proves possession of the key, which is what the other side pins).
 func selfSignedCert(dev *identity.Device) tls.Certificate {
 	serial, _ := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 62))
 	tpl := &x509.Certificate{
 		SerialNumber: serial,
-		Subject:      pkix.Name{CommonName: "svoi joiner"},
+		Subject:      pkix.Name{CommonName: "svoi"},
 		NotBefore:    time.Now().Add(-24 * time.Hour),
 		NotAfter:     time.Now().AddDate(1, 0, 0),
 		KeyUsage:     x509.KeyUsageDigitalSignature,
@@ -368,12 +371,14 @@ func (n *Node) joinTLS(inv *identity.Invite) *tls.Config {
 			if err != nil {
 				return err
 			}
-			if !ed25519.Verify(inv.Root, leaf.RawTBSCertificate, leaf.Signature) {
-				return errors.New("the device you are joining through is not part of the mesh in the invitation")
-			}
+			// The inviter shows a plain self-signed certificate (its member certificate
+			// would tell a not-yet-member its name, owner and overlay addresses). TLS has
+			// proved that it holds the key in it; the invitation names the key it must be.
+			// The mesh itself is vouched for by the root key in the invitation, which
+			// signs everything the inviter sends back.
 			pub, ok := leaf.PublicKey.(ed25519.PublicKey)
 			if !ok || !bytes.Equal(pub, inv.Inviter[:]) {
-				return errors.New("unexpected inviter identity")
+				return errors.New("the device that answered is not the one that made the invitation")
 			}
 			return nil
 		},

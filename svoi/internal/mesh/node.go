@@ -570,8 +570,10 @@ func (n *Node) serverTLS() *tls.Config {
 		},
 	}
 	join := &tls.Config{
-		MinVersion:   tls.VersionTLS13,
-		Certificates: []tls.Certificate{n.tlsCert},
+		MinVersion: tls.VersionTLS13,
+		// Not the member certificate: a device that is not a member yet gets to know
+		// only the key it was told to expect (see joinTLS).
+		Certificates: []tls.Certificate{selfSignedCert(n.device())},
 		ClientAuth:   tls.RequireAnyClientCert, // self-signed: the invite secret authenticates the joiner
 		NextProtos:   []string{ALPNJoin},
 	}

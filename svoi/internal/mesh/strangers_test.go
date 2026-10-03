@@ -1,6 +1,7 @@
 package mesh
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -105,6 +106,16 @@ func TestStrangersAreShownNothing(t *testing.T) {
 	cert, err := knock(t, evil, target, ALPNJoin, tok)
 	if err != nil || cert == nil {
 		t.Fatalf("a valid token was refused: cert=%v err=%v", cert != nil, err)
+	}
+	// Even then the certificate is a plain one: nothing about the device, its owner, the
+	// mesh or its addresses (those are for members).
+	if len(cert.Subject.Organization) != 0 || len(cert.Issuer.Organization) != 0 || len(cert.DNSNames) != 0 ||
+		len(cert.IPAddresses) != 0 || len(cert.URIs) != 0 || len(cert.EmailAddresses) != 0 || cert.Subject.CommonName != "svoi" ||
+		len(cert.Extensions) > 2 {
+		t.Errorf("the join certificate says too much: subject %q issuer %q dns %v ips %v, %d extensions", cert.Subject, cert.Issuer, cert.DNSNames, cert.IPAddresses, len(cert.Extensions))
+	}
+	if bytes.Contains(cert.Raw, []byte("Andrey")) || bytes.Contains(cert.Raw, []byte("alpha")) || bytes.Contains(cert.Raw, []byte("Home")) {
+		t.Error("the join certificate contains the owner, the device name or the mesh name")
 	}
 	// A token is good once: copying it off the wire gains nothing.
 	if cert, err := knock(t, evil, target, ALPNJoin, tok); err == nil || cert != nil {
