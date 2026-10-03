@@ -136,7 +136,11 @@ function Reader({ id, folder, onChanged, onRemoved, isMobile }) {
   const self = useStore((s) => s.self);
   const [st, setSt] = useState({ m: null, loading: true, error: null });
   const [preview, setPreview] = useState(-1);
+  // Set while the person deletes this message for good: the node's own `mail` event for the deletion would make
+  // the background re-read ask for a message that is already gone (a 404, and a flash of «Письмо не найдено»).
+  const gone = useRef(false);
   const load = async (silent) => {
+    if (silent && gone.current) return;
     if (!silent) setSt({ m: null, loading: true, error: null });
     try {
       const m = await get(`mail/${encodeURIComponent(id)}`);
@@ -153,7 +157,7 @@ function Reader({ id, folder, onChanged, onRemoved, isMobile }) {
       if (!silent || e.code === "notfound") setSt({ m: null, loading: false, error: e });
     }
   };
-  useEffect(() => { load(false); setPreview(-1); }, [id]);
+  useEffect(() => { gone.current = false; load(false); setPreview(-1); }, [id]);
   // A fetched attachment ends with a `mail` event for the message; a reconnect may have missed it.
   useEvent("mail", (d) => { if (d && d.id === id) load(true); });
   useEvent("refreshed", () => load(true));
@@ -193,8 +197,9 @@ function Reader({ id, folder, onChanged, onRemoved, isMobile }) {
   const forever = async () => {
     const ok = await confirmDialog({ title: t("mail.delForeverTitle"), text: t("mail.delForeverText"), confirmText: t("mail.delForever"), danger: true });
     if (!ok) return;
+    gone.current = true;
     try { await del(`mail/${encodeURIComponent(m.id)}`); toast({ level: "success", title: t("mail.deleted") }); onRemoved(m.id); }
-    catch (e) { toastError(e); }
+    catch (e) { gone.current = false; toastError(e); }
   };
   const restore = () => flag({ folder: mine ? "sent" : "inbox" }, t("mail.restored")).then(() => onRemoved(m.id));
   // No event when a download starts: show it as fetching right away.
