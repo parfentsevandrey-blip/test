@@ -4,7 +4,7 @@ import { html, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t, tn, tx } from "../i18n.js";
 import { del, post, transferFileUrl } from "../api.js";
-import { useStore, upsertTransfer } from "../store.js";
+import { useStore, mergeTransferAnswer } from "../store.js";
 import { fmtBytes, fmtEta, fmtPercent, fmtSpeed } from "../format.js";
 import { cx, previewKind } from "../util.js";
 import { FileIcon } from "../components/avatar.js";
@@ -27,7 +27,7 @@ export function isIncomingOffer(tr) {
 export async function transferAction(tr, action) {
   try {
     const r = await post(`transfers/${encodeURIComponent(tr.id)}/${action}`, {});
-    if (r && r.id) upsertTransfer(r);
+    if (r && r.id) mergeTransferAnswer(r);
     return true;
   } catch (e) {
     toastError(e);

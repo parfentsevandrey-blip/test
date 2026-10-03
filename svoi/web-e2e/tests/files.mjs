@@ -196,6 +196,34 @@ group("files: sending and receiving", () => {
     eq(page.problems, [], "console / network problems");
   });
 
+  // The same race as in the chat: a small file is done before the page reads the answer to its own request.
+  test("a file that is delivered before the page has read the answer to «send» is not shown as still sending", async ({ browser, dev }) => {
+    const hs = await peerByName(dev, "home-server");
+    const page = await open(browser, dev.laptop, { hash: `files/send?to=${hs.id}` });
+    let release;
+    const held = new Promise((r) => (release = r));
+    await page.route(/\/api\/transfers\?/, async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      const answer = await route.fetch();
+      await held;
+      await route.fulfill({ response: answer });
+    });
+    const name = "быстрый-" + crypto.randomBytes(3).toString("hex") + ".bin";
+    const data = crypto.randomBytes(20 * 1024);
+    await tid(page, "dropzone-input").setInputFiles(tmp(name, data));
+    await tid(page, "staged-file").waitFor();
+    await tid(page, "send-submit").click();
+    const done = await until(async () => (await dev["home-server"].api("GET", "/api/transfers")).find((t) => t.name === name && t.dir === "in" && t.state === "done"), 20000, "home-server to receive the file");
+    eq(sha(fs.readFileSync(done.path)), sha(data), "received bytes");
+    const row = page.locator('[data-testid="transfer"][data-dir="out"]', { hasText: name });
+    await page.locator('[data-testid="transfer"][data-dir="out"][data-state="done"]', { hasText: name }).waitFor({ timeout: 15000 }); // from the live events alone
+    release();
+    await page.waitForTimeout(700);
+    eq(await row.getAttribute("data-state"), "done", "the late answer did not take the transfer back to an earlier state");
+    eq(await row.count(), 1, "and it is listed once");
+    eq(page.problems, [], "console / network problems");
+  });
+
   test("a file for another person's device waits for their decision, then flows", async ({ browser, dev }) => {
     const phone = await peerByName(dev, "phone");
     const page = await open(browser, dev.laptop, { hash: `files/send?to=${phone.id}` });

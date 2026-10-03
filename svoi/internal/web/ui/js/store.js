@@ -121,6 +121,26 @@ export function upsertTransfer(tr) {
   });
 }
 
+// How far a transfer has got. Live events always win (they are the truth, in order); the answer to a
+// request is a snapshot taken when it was served and may be read after the events that followed it.
+const TRANSFER_RANK = { offered: 0, queued: 1, active: 2, done: 3, failed: 3, declined: 3, canceled: 3 };
+
+/**
+ * Merge the answer to a request (send, accept, cancel, retry) into the list without ever taking a transfer
+ * back to an earlier state: a small file can be done before the answer reaches the page, and the stale
+ * answer would otherwise leave it «sending» for good. (A retry shows up through its own live event.)
+ */
+export function mergeTransferAnswer(tr) {
+  setState((s) => {
+    const i = s.transfers.findIndex((x) => x.id === tr.id);
+    if (i < 0) return { transfers: [tr, ...s.transfers] };
+    if ((TRANSFER_RANK[tr.state] ?? 0) < (TRANSFER_RANK[s.transfers[i].state] ?? 0)) return null;
+    const list = s.transfers.slice();
+    list[i] = { ...list[i], ...tr };
+    return { transfers: list };
+  });
+}
+
 export function removeTransfer(id) {
   setState((s) => ({ transfers: s.transfers.filter((x) => x.id !== id) }));
 }

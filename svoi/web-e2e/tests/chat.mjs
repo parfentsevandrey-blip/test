@@ -49,6 +49,35 @@ group("chat", () => {
     eq(page.problems, [], "console / network problems");
   });
 
+  // Found by a real two-process run: on a fast local network the live «delivered» event can reach the page before
+  // the answer to «send» does, and the answer (the message as it was created) used to take the bubble back to «queued».
+  test("a message delivered before the page has read the answer to «send» stays delivered", async ({ browser, dev }) => {
+    const phone = await peerByName(dev, "phone");
+    const lap = (await dev.laptop.api("GET", "/api/state")).self;
+    const page = await open(browser, dev.laptop, { hash: `chat/${phone.id}` });
+    await tid(page, "conversation").waitFor();
+    let release;
+    const held = new Promise((r) => (release = r));
+    await page.route(new RegExp(`/api/chat/${phone.id}$`), async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      const answer = await route.fetch(); // the real answer, held back until the events have said «delivered»
+      await held;
+      await route.fulfill({ response: answer });
+    });
+    const mine = "Быстрая доставка " + crypto.randomBytes(3).toString("hex");
+    await tid(page, "chat-input").click();
+    await page.keyboard.type(mine);
+    await page.keyboard.press("Enter");
+    await until(async () => (await dev.phone.api("GET", `/api/chat/${lap.id}`)).messages.some((m) => m.text === mine), 15000, "the phone to receive the message");
+    const bubble = page.locator('[data-testid="bubble"][data-mine="true"]', { hasText: mine });
+    await page.locator('[data-testid="bubble"][data-mine="true"][data-state="delivered"]', { hasText: mine }).waitFor({ timeout: 15000 }); // from the live events alone
+    release();
+    await page.waitForTimeout(700); // the stale answer is read now
+    eq(await bubble.getAttribute("data-state"), "delivered", "the late answer did not take the message back to queued");
+    eq(await bubble.count(), 1, "and it did not appear twice");
+    eq(page.problems, [], "console / network problems");
+  });
+
   test("an image can be sent in the chat and shows up as a picture on both sides", async ({ browser, dev }) => {
     const phone = await peerByName(dev, "phone");
     const lap = (await dev.laptop.api("GET", "/api/state")).self;

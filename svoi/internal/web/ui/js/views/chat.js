@@ -230,7 +230,9 @@ function Conversation({ peerId, isMobile, onRead }) {
       const m = await post(`chat/${encodeURIComponent(peerId)}`, { text: body, attachments: A.ids });
       setStartFlag("sent");
       stick.current = true;
-      setMsgs((cur) => (cur.some((x) => x.id === m.id) ? cur.map((x) => (x.id === m.id ? { ...x, ...m } : x)) : [...cur, m]));
+      // The answer is the oldest snapshot of the message: if the live events of this chat already brought it
+      // («delivered» can come before the answer is read), keep what they said.
+      setMsgs((cur) => (cur.some((x) => x.id === m.id) ? cur : [...cur, m]));
       setText("");
       A.reset();
       onRead();

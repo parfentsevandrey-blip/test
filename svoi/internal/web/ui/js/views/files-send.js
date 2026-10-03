@@ -4,7 +4,7 @@ import { html, useEffect, useRef, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t, tn } from "../i18n.js";
 import { upload } from "../api.js";
-import { state, upsertTransfer, useStore } from "../store.js";
+import { mergeTransferAnswer, state, useStore } from "../store.js";
 import { fmtBytes, fmtPercent } from "../format.js";
 import { cx, guessMime, uid } from "../util.js";
 import { useWindowEvent } from "../hooks.js";
@@ -55,7 +55,7 @@ export function SendTab({ route }) {
     patch(f.key, { status: "uploading", progress: 0, error: null, abort: up.abort });
     try {
       const r = await up.promise;
-      (r && r.transfers || []).forEach(upsertTransfer);
+      (r && r.transfers || []).forEach(mergeTransferAnswer);
       setFiles((cur) => cur.filter((x) => x.key !== f.key));
       return true;
     } catch (e) {
