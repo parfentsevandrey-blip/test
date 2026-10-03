@@ -53,7 +53,7 @@ function detail(tr) {
       const eta = fmtEta(tr.size - tr.done, tr.speed);
       return [fmtPercent(tr.done, tr.size), tr.speed ? fmtSpeed(tr.speed) : "", eta && t("tr.d.eta", { eta })].filter(Boolean).join(" · ");
     }
-    case "done": return html`${out ? t("tr.d.delivered") : t("tr.d.received")} <${Ago} ts=${tr.finished || tr.updated} />`;
+    case "done": return html`<${Ago} ts=${tr.finished || tr.updated} />`;
     case "failed": return tr.error ? t("tr.d.failedWhy", { why: tr.error }) : t("tr.d.failed");
     case "declined": return out ? t("tr.d.declinedOut", { who }) : t("tr.d.declinedIn");
     case "canceled": return t("tr.d.canceled");

@@ -43,6 +43,23 @@ for (const k of Object.keys(ru)) {
   if (Array.isArray(en[k]) && en[k].length !== 2) { console.log(`en plural needs 2 forms: ${k}`); bad++; }
   if (Array.isArray(ru[k]) !== Array.isArray(en[k])) { console.log(`plural mismatch: ${k}`); bad++; }
 }
+// Dynamic keys whose suffixes come from fixed lists in the code.
+const DYNAMIC = {
+  "set.sec.": ["device", "network", "tun", "files", "interface", "advanced", "about"],
+  "nat.chip.": ["open", "easy", "hard", "unknown"], "nat.title.": ["open", "easy", "hard", "unknown"],
+  "nat.head.": ["open", "easy", "hard", "unknown"], "nat.text.": ["open", "easy", "hard", "unknown"],
+  "nat.means.": ["open", "easy", "hard", "unknown"], "nat.kind.": ["local", "stun", "observed"],
+  "nat.kindHint.": ["local", "stun", "observed"], "path.": ["lan", "direct", "relay", "none"],
+  "path.long.": ["lan", "direct", "relay", "none"], "mail.st.": ["queued", "sent", "delivered", "failed"],
+  "mail.folder.": ["inbox", "sent", "trash"], "mail.empty.": ["inbox", "sent", "trash"], "mail.emptyText.": ["inbox", "sent", "trash"],
+  "mail.att.": ["ready", "fetching", "remote", "failed"], "chat.st.": ["queued", "sent", "delivered", "failed"],
+  "files.subtitle.": ["send", "browse", "shares"], "logs.lv.": ["all", "info", "warn", "error"],
+  "err.": ["unauthorized", "notconfigured", "denied", "notfound", "invalid", "exists", "offline", "busy", "toolarge", "unsupported", "internal", "network", "aborted"],
+};
+for (const [p, list] of Object.entries(DYNAMIC)) for (const x of list) {
+  if (!(p + x in ru)) { console.log(`missing in ru: ${p + x} (dynamic)`); bad++; }
+  if (!(p + x in en)) { console.log(`missing in en: ${p + x} (dynamic)`); bad++; }
+}
 const prefixes = [...used.keys()].filter((k) => k.endsWith("."));
 const unused = Object.keys(ru).filter((k) => !used.has(k) && !prefixes.some((p) => k.startsWith(p)));
 console.log(`${used.size} keys used statically, ${Object.keys(ru).length} in ru, ${unused.length} not referenced statically (may be dynamic).`);

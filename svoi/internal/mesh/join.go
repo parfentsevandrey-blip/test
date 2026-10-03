@@ -98,7 +98,7 @@ func (n *Node) NewInvite(admin bool, ttl time.Duration) (InviteInfo, error) {
 	if len(eps) == 0 {
 		return InviteInfo{}, errors.New("mesh: this device has no network address yet; connect to a network and try again")
 	}
-	ident, err := identity.NewInvite(root.Pub, n.dev.ID, ttl, admin, eps, meshName)
+	ident, err := identity.NewInvite(root.Pub, n.device().ID, ttl, admin, eps, meshName)
 	if err != nil {
 		return InviteInfo{}, err
 	}
@@ -269,7 +269,7 @@ func (n *Node) handleJoin(conn *quic.Conn) {
 		reply(nil, Errf(CodeDenied, "this invitation is invalid or has expired"))
 		return
 	}
-	ident := inv.toIdentity(root.Pub, n.dev.ID)
+	ident := inv.toIdentity(root.Pub, n.device().ID)
 	if !ident.CheckProof(exporter, req.Proof) {
 		inv.fails++
 		n.mu.Unlock()
@@ -341,7 +341,7 @@ func (n *Node) joinTLS(inv *identity.Invite) *tls.Config {
 		MinVersion:         tls.VersionTLS13,
 		ServerName:         "svoi",
 		InsecureSkipVerify: true, // pinned below to the root key and inviter from the invite
-		Certificates:       []tls.Certificate{selfSignedCert(n.dev)},
+		Certificates:       []tls.Certificate{selfSignedCert(n.device())},
 		NextProtos:         []string{ALPNJoin},
 		VerifyPeerCertificate: func(raw [][]byte, _ [][]*x509.Certificate) error {
 			if len(raw) == 0 {
@@ -391,11 +391,11 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName, owner string) err
 	// A temporary UDP endpoint that only speaks to the inviter.
 	port := n.udpPortOrDefault()
 	mg, err := magic.New(magic.Config{
-		Device: n.dev, Port: port, Listen: n.cfg.Listen, LocalAddrs: n.cfg.LocalAddrs, Timing: n.cfg.Timing,
+		Device: n.device(), Port: port, Listen: n.cfg.Listen, LocalAddrs: n.cfg.LocalAddrs, Timing: n.cfg.Timing,
 	})
 	if err != nil && n.cfg.UDPPort == 0 {
 		mg, err = magic.New(magic.Config{
-			Device: n.dev, Port: 0, Listen: n.cfg.Listen, LocalAddrs: n.cfg.LocalAddrs, Timing: n.cfg.Timing,
+			Device: n.device(), Port: 0, Listen: n.cfg.Listen, LocalAddrs: n.cfg.LocalAddrs, Timing: n.cfg.Timing,
 		})
 	}
 	if err != nil {
@@ -483,7 +483,7 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName, owner string) err
 	if err != nil {
 		return err
 	}
-	if self.ID != n.dev.ID {
+	if self.ID != n.device().ID {
 		return errors.New("mesh: the issued certificate is for a different device")
 	}
 	var auth *identity.Authority
@@ -500,7 +500,7 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName, owner string) err
 	n.root, n.auth, n.self = root, auth, self
 	n.meshName = strings.TrimSpace(resp.MeshName)
 	for _, der := range resp.Members {
-		if m, err := root.Verify(der); err == nil && m.ID != n.dev.ID {
+		if m, err := root.Verify(der); err == nil && m.ID != n.device().ID {
 			if _, ok := n.peers[m.ID]; !ok {
 				p := newPeer(n, m)
 				n.peers[m.ID] = p

@@ -70,7 +70,7 @@ func (n *Node) loadState() error {
 	if err != nil {
 		return fmt.Errorf("mesh: own certificate invalid: %w", err)
 	}
-	if self.ID != n.dev.ID {
+	if self.ID != n.device().ID {
 		return errors.New("mesh: state belongs to a different device key")
 	}
 	n.root = root
@@ -90,7 +90,7 @@ func (n *Node) loadState() error {
 	}
 	for _, rec := range sf.Members {
 		m, err := root.Verify(rec.Cert)
-		if err != nil || m.ID == n.dev.ID {
+		if err != nil || m.ID == n.device().ID {
 			continue
 		}
 		if _, rev := n.revoked[m.ID]; rev {

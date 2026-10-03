@@ -10,6 +10,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -127,6 +128,7 @@ const (
 	EvPeer    EventKind = "peer"    // a peer's state or info changed
 	EvMembers EventKind = "members" // the member list changed
 	EvSelf    EventKind = "self"    // own endpoints / NAT info changed
+	EvRemoved EventKind = "removed" // an administrator removed this device from the mesh
 )
 
 // Event is published on the node's event bus.
@@ -137,9 +139,10 @@ type Event struct {
 
 // Node is one device's membership in a mesh.
 type Node struct {
-	cfg Config
-	log *slog.Logger
-	dev *identity.Device
+	cfg   Config
+	log   *slog.Logger
+	devMu sync.RWMutex
+	dev   *identity.Device // replaced when a removed device is given a fresh identity
 
 	mu       sync.RWMutex
 	root     *identity.Root
@@ -181,6 +184,8 @@ type Node struct {
 	// relayOn is whether we forward traffic for other members; it can change
 	// while the network is running (see SetRelay).
 	relayOn atomic.Bool
+
+	removing atomic.Bool // the removal-from-mesh sequence is running
 }
 
 // Open loads (or creates) the device identity and, if the device already
@@ -224,10 +229,16 @@ func Open(cfg Config) (*Node, error) {
 }
 
 // ID returns this device's identity.
-func (n *Node) ID() identity.ID { return n.dev.ID }
+func (n *Node) ID() identity.ID { return n.device().ID }
 
 // Device returns the device key (for application-level signing).
-func (n *Node) Device() *identity.Device { return n.dev }
+func (n *Node) Device() *identity.Device { return n.device() }
+
+func (n *Node) device() *identity.Device {
+	n.devMu.RLock()
+	defer n.devMu.RUnlock()
+	return n.dev
+}
 
 // Dir returns the state directory.
 func (n *Node) Dir() string { return n.cfg.Dir }
@@ -281,7 +292,7 @@ func (n *Node) CreateMesh(meshName, deviceName, owner string) error {
 		n.mu.Unlock()
 		return err
 	}
-	self, err := auth.Issue(identity.IssueRequest{ID: n.dev.ID, Name: deviceName, Owner: owner, Admin: true}, nil)
+	self, err := auth.Issue(identity.IssueRequest{ID: n.device().ID, Name: deviceName, Owner: owner, Admin: true}, nil)
 	if err != nil {
 		n.mu.Unlock()
 		return err
@@ -374,13 +385,14 @@ func (n *Node) udpPortOrDefault() int {
 }
 
 func (n *Node) startMember() error {
+	_ = os.Remove(n.removedPath())
 	n.mu.Lock()
 	if n.magic != nil {
 		n.mu.Unlock()
 		return nil
 	}
 	self := n.self
-	n.tlsCert = tls.Certificate{Certificate: [][]byte{self.CertDER}, PrivateKey: n.dev.Priv}
+	n.tlsCert = tls.Certificate{Certificate: [][]byte{self.CertDER}, PrivateKey: n.device().Priv}
 	n.ctx, n.cancel = context.WithCancel(context.Background())
 	ctx := n.ctx
 	n.started = time.Now()
@@ -446,7 +458,7 @@ func (n *Node) startMember() error {
 func (n *Node) openMagic(port int, listen func(int) (net.PacketConn, error)) (*magic.Conn, error) {
 	n.relayOn.Store(!n.cfg.NoRelay)
 	return magic.New(magic.Config{
-		Device:          n.dev,
+		Device:          n.device(),
 		Port:            port,
 		Listen:          listen,
 		LocalAddrs:      n.cfg.LocalAddrs,
@@ -679,7 +691,7 @@ func (n *Node) maybeDial(p *Peer) {
 	if p.wantSince.IsZero() {
 		p.wantSince = now
 	}
-	designated := bytes.Compare(n.dev.ID[:], p.ID[:]) < 0
+	designated := bytes.Compare(n.device().ID[:], p.ID[:]) < 0
 	if !designated && now.Sub(p.wantSince) < n.cfg.PassiveWait {
 		p.mu.Unlock()
 		if mg := n.Magic(); mg != nil {
@@ -754,12 +766,12 @@ func minID(a, b identity.ID) identity.ID {
 func (n *Node) attach(p *Peer, conn *quic.Conn, outbound bool) {
 	dialer := p.ID
 	if outbound {
-		dialer = n.dev.ID
+		dialer = n.device().ID
 	}
 	p.mu.Lock()
 	old := p.conn
 	if old != nil {
-		keepNew := p.connDialer == dialer || dialer == minID(n.dev.ID, p.ID)
+		keepNew := p.connDialer == dialer || dialer == minID(n.device().ID, p.ID)
 		if !keepNew {
 			p.mu.Unlock()
 			_ = conn.CloseWithError(closeDuplicate, "duplicate connection")
@@ -929,11 +941,11 @@ func (n *Node) learnMember(m *identity.Member) *Peer {
 		n.mu.Unlock()
 		return nil
 	}
-	if m.ID == n.dev.ID {
+	if m.ID == n.device().ID {
 		changed := false
 		if m.Newer(n.self) {
 			n.self = m
-			n.tlsCert = tls.Certificate{Certificate: [][]byte{m.CertDER}, PrivateKey: n.dev.Priv}
+			n.tlsCert = tls.Certificate{Certificate: [][]byte{m.CertDER}, PrivateKey: n.device().Priv}
 			changed = true
 		}
 		n.mu.Unlock()
@@ -982,9 +994,9 @@ func (n *Node) applyRevocation(rv identity.Revocation) bool {
 		n.mu.Unlock()
 		return false
 	}
-	if rv.ID == n.dev.ID {
+	if rv.ID == n.device().ID {
 		n.mu.Unlock()
-		n.log.Warn("this device was revoked from the mesh")
+		n.removedFromMesh()
 		return false
 	}
 	n.revoked[rv.ID] = rv
@@ -1005,6 +1017,75 @@ func (n *Node) applyRevocation(rv identity.Revocation) bool {
 	return true
 }
 
+// RemovedInfo records that an administrator removed this device from a mesh.
+type RemovedInfo struct {
+	MeshName string `json:"meshName"`
+	At       int64  `json:"at"`
+}
+
+func (n *Node) removedPath() string { return filepath.Join(n.cfg.Dir, "removed.json") }
+
+// Removed reports that an administrator removed this device from a mesh and it
+// has not joined another one since (nil otherwise).
+func (n *Node) Removed() *RemovedInfo {
+	if n.Configured() {
+		return nil
+	}
+	raw, err := os.ReadFile(n.removedPath())
+	if err != nil {
+		return nil
+	}
+	var ri RemovedInfo
+	if json.Unmarshal(raw, &ri) != nil {
+		return nil
+	}
+	return &ri
+}
+
+// removedFromMesh handles a valid revocation of this very device: remember it,
+// tell the application, forget the mesh and take a fresh identity (the old key
+// stays revoked everywhere, so it could never join again).
+func (n *Node) removedFromMesh() {
+	if !n.removing.CompareAndSwap(false, true) {
+		return
+	}
+	n.mu.RLock()
+	name := n.meshName
+	n.mu.RUnlock()
+	n.log.Warn("an administrator removed this device from the mesh", "mesh", name)
+	if raw, err := json.Marshal(RemovedInfo{MeshName: name, At: time.Now().Unix()}); err == nil {
+		_ = identity.WriteFileAtomic(n.removedPath(), raw, 0o600)
+	}
+	n.emit(Event{Kind: EvRemoved})
+	go func() {
+		defer n.removing.Store(false)
+		time.Sleep(300 * time.Millisecond) // let the call that brought the news be answered
+		if err := n.Leave(); err != nil {
+			n.log.Warn("leaving the mesh failed", "err", err)
+		}
+		if err := n.rotateDevice(); err != nil {
+			n.log.Warn("cannot create a new device identity", "err", err)
+		}
+		n.emit(Event{Kind: EvMembers})
+	}()
+}
+
+// rotateDevice replaces the device key with a new one.
+func (n *Node) rotateDevice() error {
+	path := filepath.Join(n.cfg.Dir, "device.key")
+	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	dev, _, err := identity.LoadOrCreateDevice(path)
+	if err != nil {
+		return err
+	}
+	n.devMu.Lock()
+	n.dev = dev
+	n.devMu.Unlock()
+	return nil
+}
+
 // Revoke withdraws a device from the mesh (admin only) and tells everyone.
 func (n *Node) Revoke(id identity.ID) error {
 	n.mu.RLock()
@@ -1013,10 +1094,17 @@ func (n *Node) Revoke(id identity.ID) error {
 	if auth == nil {
 		return ErrNotAdmin
 	}
-	if id == n.dev.ID {
+	if id == n.device().ID {
 		return errors.New("mesh: cannot revoke this device itself; use Leave")
 	}
 	rv := auth.Revoke(id, time.Now())
+	// Tell the device itself first, while the link still exists, so it can say
+	// it was removed instead of just seeing everybody go offline.
+	if p := n.Peer(id); p != nil && p.Online() {
+		ctx, cancel := context.WithTimeout(n.ctxOrBackground(), 3*time.Second)
+		_ = p.Call(ctx, "mesh.revoked", rv, nil)
+		cancel()
+	}
 	if !n.applyRevocation(rv) {
 		return errors.New("mesh: unknown or already revoked device")
 	}
@@ -1051,7 +1139,7 @@ func (n *Node) Reissue(id identity.ID, name string, admin bool) error {
 		existing = append(existing, n.self)
 	}
 	var owner string
-	if id == n.dev.ID {
+	if id == n.device().ID {
 		owner = n.self.Owner
 	} else if p := n.peers[id]; p != nil {
 		owner = p.Member().Owner

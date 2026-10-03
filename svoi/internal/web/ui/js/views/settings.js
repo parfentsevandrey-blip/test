@@ -10,7 +10,7 @@ import { setState, useStore } from "../store.js";
 import { fmtBytes, fmtDateTime, fmtDuration, fmtNumber } from "../format.js";
 import { useAsync, useInterval } from "../hooks.js";
 import { langPref, setLangPref, setThemePref, themePref } from "../prefs.js";
-import { cx, isValidHostPort, natTone } from "../util.js";
+import { cx, deviceKind, isValidHostPort, kindIcon, natTone } from "../util.js";
 import { deviceName, ManageDeviceSelect } from "../components/devicepicker.js";
 import { FolderPicker } from "../components/folderpicker.js";
 import { PageHeader } from "../components/misc.js";
@@ -114,7 +114,7 @@ function DeviceSection({ cfg }) {
     try { await post("mesh/leave", {}); toast({ level: "success", title: t("set.left") }); await refreshState(); }
     catch (e) { toastError(e); }
   };
-  return html`<${Section} id="device" icon="laptop" title=${cfg.local ? t("set.sec.device") : t("set.sec.deviceRemote", { name: self.name })}>
+  return html`<${Section} id="device" icon=${kindIcon[deviceKind(self)]} title=${cfg.local ? t("set.sec.device") : t("set.sec.deviceRemote", { name: self.name })}>
     <${Card}>
       <${KV} items=${[
         { k: t("set.devName"), v: self.name },
@@ -429,7 +429,7 @@ export function SettingsView({ route }) {
     <div class="settings__layout">
       <nav class="settings__nav" aria-label=${t("set.sections")}>
         ${SECTIONS.filter((s) => (cfg.local || s.id !== "interface") && (s.id !== "tun" || (cfg.settings && cfg.settings.tun && cfg.settings.tun.supported))).map((s) => html`<a key=${s.id} href=${href(["settings", s.id], { d: cfg.local ? undefined : dev })}
-            class=${cx("settings__link", section === s.id && "is-active")}><${Icon} name=${s.icon} size=${17} />${t("set.sec." + s.id)}</a>`)}
+            class=${cx("settings__link", section === s.id && "is-active")}><${Icon} name=${s.icon} size=${17} />${!cfg.local && s.id === "device" ? t("set.sec.deviceNav") : t("set.sec." + s.id)}</a>`)}
       </nav>
       <div class="settings__main" ref=${mainRef}>${body}</div>
     </div>

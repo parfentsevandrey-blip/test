@@ -301,6 +301,8 @@ func (a *App) bridgeNodeEvents() {
 			return
 		case ev := <-events:
 			switch ev.Kind {
+			case mesh.EvRemoved:
+				a.onRemoved()
 			case mesh.EvMembers:
 				a.peersChanged()
 				a.hub.Publish("invites", a.Invites())
@@ -502,6 +504,9 @@ type State struct {
 	Counters   Counters         `json:"counters"`
 	Invites    []InviteView     `json:"invites"`
 	Settings   Settings         `json:"settings"`
+	// Removed is set while this device is outside any mesh because an
+	// administrator removed it from one.
+	Removed *mesh.RemovedInfo `json:"removed,omitempty"`
 }
 
 // State assembles the snapshot.
@@ -516,6 +521,7 @@ func (a *App) State() State {
 		Settings:   a.Settings(),
 	}
 	if !st.Configured {
+		st.Removed = a.node.Removed()
 		return st
 	}
 	st.Peers = a.PeerViews()
@@ -570,6 +576,22 @@ func (a *App) LeaveMesh() error {
 	}
 	a.peersChanged()
 	return nil
+}
+
+// onRemoved cleans up after an administrator removed this device from the mesh
+// (the node itself forgets the mesh and takes a new identity).
+func (a *App) onRemoved() {
+	for _, f := range a.cfg.Get().Forwards {
+		a.fwd.Close(f.ID)
+	}
+	_ = a.cfg.Update(func(c *Config) error { c.Forwards = []services.Forward{}; return nil })
+	a.tun.Stop()
+	name := ""
+	if ri := a.node.Removed(); ri != nil {
+		name = ri.MeshName
+	}
+	a.hub.Publish("notify", map[string]any{"level": "warn", "title": name, "text": "removed", "link": "#/"})
+	a.peersChanged()
 }
 
 // NetCheck re-runs address discovery and returns the refreshed self info.

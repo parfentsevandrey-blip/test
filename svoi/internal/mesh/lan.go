@@ -109,7 +109,7 @@ func (l *lanDiscovery) run(ctx context.Context) {
 		if root == nil {
 			return
 		}
-		beacon := encodeBeacon(root.LANTag(), l.n.dev.ID, l.n.udpPort)
+		beacon := encodeBeacon(root.LANTag(), l.n.device().ID, l.n.udpPort)
 		for _, ifc := range l.interfaces() {
 			if !joined[ifc.Name] {
 				_ = l.pc4.JoinGroup(&ifc, &net.UDPAddr{IP: lanGroup})
@@ -192,7 +192,7 @@ func isClosedErr(err error) bool {
 // lanHeard handles one received beacon.
 func (n *Node) lanHeard(b []byte, from netip.AddrPort) {
 	tag, id, port, ok := decodeBeacon(b)
-	if !ok || id == n.dev.ID {
+	if !ok || id == n.device().ID {
 		return
 	}
 	root := n.Root()

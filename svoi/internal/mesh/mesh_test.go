@@ -317,6 +317,7 @@ func TestRevocationDisconnectsAndBans(t *testing.T) {
 	if err := b.Revoke(c.ID()); !errors.Is(err, ErrNotAdmin) {
 		t.Fatalf("non-admin revoke: %v", err)
 	}
+	oldC := c.ID()
 	if err := a.Revoke(c.ID()); err != nil {
 		t.Fatal(err)
 	}
@@ -336,6 +337,36 @@ func TestRevocationDisconnectsAndBans(t *testing.T) {
 	time.Sleep(1500 * time.Millisecond)
 	if online(b, c)() {
 		t.Fatal("revoked device reconnected")
+	}
+
+	// c was told while its link still existed: it knows it was removed, has
+	// forgotten the mesh and took a fresh identity (the old one stays revoked).
+	waitFor(t, 10*time.Second, "c learns it was removed", func() bool { return !c.Configured() && c.Removed() != nil })
+	if ri := c.Removed(); ri.MeshName != "Home" || ri.At == 0 {
+		t.Fatalf("removal note: %+v", ri)
+	}
+	if c.ID() == oldC {
+		t.Fatal("the removed device kept its burned identity")
+	}
+	// A new invitation lets the same device join again, under its new identity.
+	join(t, a, c, "gamma", false)
+	waitFor(t, 20*time.Second, "c is back in the mesh", online(a, c))
+	if c.Removed() != nil {
+		t.Fatal("the removal note should vanish once the device is in a mesh again")
+	}
+	// A forged "you were removed" cannot come from a member: it needs the root's signature.
+	forged := identity.Revocation{ID: c.ID(), At: time.Now().Unix()}
+	p := b.Peer(c.ID())
+	if p != nil && p.Online() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := p.Call(ctx, "mesh.revoked", forged, nil); err == nil && !c.Configured() {
+			t.Fatal("an unsigned revocation made the device leave its mesh")
+		}
+	}
+	time.Sleep(600 * time.Millisecond)
+	if !c.Configured() {
+		t.Fatal("an unsigned revocation made the device leave its mesh")
 	}
 }
 

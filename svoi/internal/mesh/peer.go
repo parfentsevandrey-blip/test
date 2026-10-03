@@ -281,7 +281,7 @@ func (n *Node) Self() SelfInfo {
 	defer n.mu.RUnlock()
 	hos, harch := n.platform()
 	info := SelfInfo{
-		ID: n.dev.ID.String(), Short: n.dev.ID.Short(),
+		ID: n.device().ID.String(), Short: n.device().ID.Short(),
 		Version: Version, OS: hos, Arch: harch,
 		Configured: n.root != nil,
 	}

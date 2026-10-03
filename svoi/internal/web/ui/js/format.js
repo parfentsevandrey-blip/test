@@ -102,8 +102,8 @@ export function fmtAgo(ts) {
   const s = Math.max(0, nowSec() - ts);
   if (s < 45) return t("time.justNow");
   if (s < 3600) return tn("time.minAgo", Math.max(1, Math.round(s / 60)));
-  if (s < 86400) return tn("time.hourAgo", Math.round(s / 3600));
-  const days = Math.round(s / 86400);
+  const days = dayDiff(ts); // calendar days, so "yesterday" means yesterday
+  if (days <= 0 || s < 6 * 3600) return tn("time.hourAgo", Math.max(1, Math.round(s / 3600)));
   if (days === 1) return t("time.yesterday");
   if (days < 30) return tn("time.dayAgo", days);
   return fmtDate(ts);

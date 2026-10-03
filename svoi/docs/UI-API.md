@@ -202,7 +202,7 @@ Language and theme are **client-side only** (`localStorage`), not part of Settin
 ### State & lifecycle
 | method & path | body → response |
 |---|---|
-| `GET /api/state` | → `{ "version", "configured", "self": Self, "peers": [Peer], "transfers": [Transfer] (active + last 50), "counters": {"mail","chat","offers"}, "invites": [Invite], "settings": Settings }`. Works when `configured:false` (then `self` has only id/short/version/os/arch/configured, `peers: []`). |
+| `GET /api/state` | → `{ "version", "configured", "self": Self, "peers": [Peer], "transfers": [Transfer] (active + last 50), "counters": {"mail","chat","offers"}, "invites": [Invite], "settings": Settings, "removed"?: {"meshName": "Дом", "at": 1760000000} }`. Works when `configured:false` (then `self` has only id/short/version/os/arch/configured, `peers: []`). `removed` is present only while the device is outside any mesh **because an administrator removed it** from one: the onboarding screen should say so ("this device was removed from the network «Дом» by an administrator — ask for a new invitation"). The device already has a fresh identity then, so a new invitation just works. A `notify` event with `level: "warn"` and `link: "#/"` is sent at the moment it happens, followed by a `peers` event with an empty list; the UI should reload `GET /api/state`. |
 | `GET /api/events` | SSE, see above |
 | `POST /api/mesh/create` | `{"meshName","deviceName","owner"}` → `{"ok":true}` (then reload state) |
 | `POST /api/mesh/join` | `{"invite","deviceName","owner"}` → `{"ok":true}`; may take up to ~25 s; errors are human readable in `error.message` |
@@ -220,7 +220,7 @@ Language and theme are **client-side only** (`localStorage`), not part of Settin
 | `POST /api/peers/:id/alias` | `{"alias":"Dad's phone"}` → `{"ok":true}` (local nickname; empty clears) |
 | `POST /api/peers/:id/revoke` | `{}` → `{"ok":true}` admin only; permanently removes the device |
 | `POST /api/peers/:id/rename` | `{"name":"new-name"}` → `{"ok":true}` admin only (re-issues its certificate) |
-| `POST /api/peers/:id/admin` | `{"admin":true}` → `{"ok":true}` admin only (promote/demote; promotion hands over the mesh key — the UI must warn) |
+| `POST /api/peers/:id/admin` | `{"admin":true}` → `{"ok":true}` admin only. **Promotion only**: it hands over the mesh key (the UI must warn). Demotion (`{"admin":false}`) is refused with `unsupported`: the key cannot be taken back, so an administrator stays one — and **removing an administrator does not take its power away** (it still holds the mesh key and can enrol devices); the revoke dialog must say so when `peer.admin` is true. |
 
 ### Files — browsing shares (works for `self` too)
 | method & path | → response |

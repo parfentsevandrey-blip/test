@@ -154,7 +154,7 @@ func (n *Node) applySync(p *Peer, msg syncMsg) {
 					eps = append(eps, ap)
 				}
 			}
-			if hint.ID != n.dev.ID {
+			if hint.ID != n.device().ID {
 				mg.AddCandidates(hint.ID, eps, magic.SrcGossip)
 			}
 		}
@@ -202,7 +202,7 @@ func (n *Node) registerCoreHandlers() {
 			return nil, Errf(CodeInvalid, "bad authority key")
 		}
 		m, err := root.Verify(a.Cert)
-		if err != nil || m.ID != n.dev.ID || !m.Admin {
+		if err != nil || m.ID != n.device().ID || !m.Admin {
 			return nil, Errf(CodeInvalid, "bad certificate")
 		}
 		n.mu.Lock()
@@ -212,6 +212,19 @@ func (n *Node) registerCoreHandlers() {
 		n.saveSoon()
 		n.emit(Event{Kind: EvSelf})
 		go n.pushSyncToAll()
+		return map[string]bool{"ok": true}, nil
+	})
+	n.Handle("mesh.revoked", func(ctx context.Context, c *Call) (any, error) {
+		// An administrator tells us, before cutting the link, that we were removed.
+		// The signature is checked against the mesh root, so nobody else can send this.
+		var rv identity.Revocation
+		if err := c.Decode(&rv); err != nil {
+			return nil, err
+		}
+		if rv.ID != n.device().ID {
+			return nil, Errf(CodeInvalid, "not about this device")
+		}
+		n.applyRevocation(rv)
 		return map[string]bool{"ok": true}, nil
 	})
 	n.Handle("mesh.ping", func(ctx context.Context, c *Call) (any, error) {
