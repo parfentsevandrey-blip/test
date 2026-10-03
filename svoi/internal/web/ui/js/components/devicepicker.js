@@ -21,7 +21,7 @@ export function DeviceChips({ value = [], onChange, peers, label, filter, showOw
   const own = self ? list.filter((p) => p.owner && p.owner === self.owner) : [];
   const allOwnSelected = own.length > 0 && own.every((p) => value.includes(p.id));
   if (!list.length) {
-    return html`<p class="muted small">${t("dev.noOthers")}</p>`;
+    return html`<p class="muted small">${t("dev.noOthers")} <a href="#/home?add=1">${t("dev.add")}</a></p>`;
   }
   return html`<div class="dchips" role="group" aria-label=${label}>
     ${showOwnShortcut && own.length > 1 && html`<button type="button" class=${cx("dchip", "dchip--shortcut", allOwnSelected && "is-on")}

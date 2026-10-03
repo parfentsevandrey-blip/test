@@ -32,6 +32,12 @@ export const kindIcon = {
   laptop: "laptop", desktop: "monitor", phone: "phone", tablet: "tablet", server: "server", nas: "nas",
 };
 
+/** Operating system as people call it: "android" → "Android", "darwin" → "macOS". */
+export function osName(os) {
+  const m = { darwin: "macOS", windows: "Windows", linux: "Linux", android: "Android", ios: "iOS", freebsd: "FreeBSD", openbsd: "OpenBSD" };
+  return m[(os || "").toLowerCase()] || os || "—";
+}
+
 const EXT = {
   image: ["jpg", "jpeg", "png", "gif", "webp", "avif", "bmp", "svg", "heic", "heif", "ico", "tif", "tiff"],
   video: ["mp4", "m4v", "webm", "mov", "mkv", "avi", "ogv", "3gp", "ts"],

@@ -214,7 +214,8 @@ group("files: sending and receiving", () => {
   });
 
   test("an incoming offer shows a banner and can be accepted", async ({ browser, dev }) => {
-    const page = await open(browser, dev.laptop);
+    // the banner is on every page but Home (which lists offers itself, see home.mjs) and Files → Send
+    const page = await open(browser, dev.laptop, { hash: "devices" });
     await tid(page, "offers-banner").waitFor();
     assert(/IMG_20241005_dacha\.png/.test(await tid(page, "offers-banner").innerText()), "the banner names the file");
     await tid(page, "offer-accept").click();
@@ -234,7 +235,7 @@ group("files: sending and receiving", () => {
     const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAHnOcgAAAAABJRU5ErkJggg==", "base64");
     const sent = await dev.phone.api("POST", `/api/transfers?to=${lap.self.id}&name=spam.png&mime=image/png`, new Uint8Array(png), { headers: { "Content-Type": "application/octet-stream" } });
     const id = sent.transfers[0].id;
-    const page = await open(browser, dev.laptop);
+    const page = await open(browser, dev.laptop, { hash: "devices" });
     await page.locator('[data-testid="offers-banner"]', { hasText: "spam.png" }).waitFor();
     await page.locator('[data-testid="offers-banner"]', { hasText: "spam.png" }).locator('[data-testid="offer-decline"]').click();
     await until(async () => (await dev.phone.api("GET", "/api/transfers")).find((t) => t.id === id && t.state === "declined"), 10000, "the sender to see the refusal");

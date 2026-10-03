@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Unit-ish checks for the pure helpers in internal/web/ui/js/util.js
-// (device-name → DNS label port, name rule, path and address helpers).
+// (device-name → DNS label port, name rule, path and address helpers, device words).
 //
 //   node web-dev/check-util.mjs
 import assert from "node:assert/strict";
@@ -79,5 +79,15 @@ eq(u.isValidHostPort("127.0.0.1:22"), true, "host:port");
 eq(u.isValidHostPort("[::1]:8080"), true, "IPv6 host:port");
 eq(u.isValidHostPort("localhost"), false, "port required");
 eq(u.isValidHostPort("127.0.0.1:70000"), false, "port range");
+
+// --- device kind and OS words (Home and the device cards say "телефон Android", not "android")
+eq(u.osName("android"), "Android", "osName android");
+eq(u.osName("darwin"), "macOS", "osName darwin");
+eq(u.osName("plan9"), "plan9", "osName unknown stays as is");
+eq(u.deviceKind({ deviceName: "phone", os: "linux" }), "phone", "kind from the name");
+eq(u.deviceKind({ deviceName: "nas", os: "linux" }), "nas", "nas");
+eq(u.deviceKind({ deviceName: "home-server", os: "linux" }), "server", "server");
+eq(u.deviceKind({ deviceName: "dad-pc", os: "windows" }), "desktop", "desktop");
+eq(u.deviceKind({ deviceName: "x", os: "ios" }), "phone", "kind from the OS");
 
 console.log(`util checks: ${n} assertions passed`);

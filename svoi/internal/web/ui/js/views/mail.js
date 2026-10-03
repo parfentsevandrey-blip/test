@@ -330,6 +330,7 @@ export function MailView({ route }) {
   return html`<div class=${cx("mail", openId && "has-open")}>
     ${wide && folderNav}
     ${showList && html`<section class="mail__list" aria-label=${t("mail.folder." + folder)}>
+      <p class="pane-intro">${t("mail.intro")}</p>
       ${!wide && folderSeg}
       <div class="mail__search">
         <div class="input-wrap"><${Icon} name="search" size=${16} />

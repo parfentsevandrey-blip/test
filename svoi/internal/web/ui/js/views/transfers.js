@@ -20,14 +20,21 @@ export function isIncomingOffer(tr) {
   return tr.dir === "in" && tr.state === "offered";
 }
 
-async function act(tr, action) {
+/**
+ * Accept / decline / cancel / retry a transfer; the answer updates the store,
+ * errors become a toast. Resolves to whether it worked.
+ */
+export async function transferAction(tr, action) {
   try {
     const r = await post(`transfers/${encodeURIComponent(tr.id)}/${action}`, {});
     if (r && r.id) upsertTransfer(r);
+    return true;
   } catch (e) {
     toastError(e);
+    return false;
   }
 }
+const act = transferAction;
 
 function stateChip(tr) {
   const out = tr.dir === "out";
@@ -139,7 +146,7 @@ export function TransferList({ filter }) {
   </div>`;
 }
 
-/** Banner shown on every screen (except Files → Send) while somebody wants to send us files. */
+/** Banner shown on every screen (except Home and Files → Send, which list offers themselves) while somebody wants to send us files. */
 export function OffersBanner() {
   const offers = useStore((s) => s.transfers.filter(isIncomingOffer));
   const [busy, setBusy] = useState("");

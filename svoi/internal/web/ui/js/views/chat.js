@@ -6,24 +6,26 @@ import { t, tn } from "../i18n.js";
 import { chatAttachmentUrl, get, post } from "../api.js";
 import { back, go, href } from "../router.js";
 import { useEvent, useStore } from "../store.js";
-import { dayDiff, fmtAgo, fmtBytes, fmtDay, fmtRtt, fmtShortDate, fmtTime } from "../format.js";
+import { dayDiff, fmtAgo, fmtBytes, fmtDay, fmtShortDate, fmtTime } from "../format.js";
 import { useIsMobile } from "../hooks.js";
+import { setStartFlag } from "../prefs.js";
 import { cx, fileKind, previewKind, sortPeers } from "../util.js";
 import { DeviceAvatar, FileIcon } from "../components/avatar.js";
 import { AttachmentFetch, attStateText, keepFetching, Linkified } from "../components/misc.js";
 import { AutoTextarea, Button, EmptyState, IconButton, Skeleton, Spinner } from "../components/ui.js";
 import { Menu } from "../components/menu.js";
 import { toastError } from "../components/toast.js";
+import { connText } from "../components/device-actions.js";
 import { AttachmentChips, useAttachments } from "./compose.js";
 import { PreviewModal } from "./preview.js";
 
 const PAGE = 50;
 
+// The same plain words as the device cards: «На связи · напрямую», no delays in ms.
 function statusText(p) {
   if (!p) return "";
   if (!p.online) return t("chat.seen", { ago: fmtAgo(p.lastSeen) });
-  const via = p.path === "relay" ? t("path.via", { via: p.relayVia || "?" }) : t("path.long." + (p.path || "none"), { via: "" });
-  return [t("dev.status.online"), via, p.rttMs ? fmtRtt(p.rttMs) : ""].filter(Boolean).join(" · ");
+  return connText(p);
 }
 
 function Tick({ st }) {
@@ -58,6 +60,10 @@ function ThreadList({ threads, loading, error, active, onRetry }) {
   }
   if (error && !threads.length) {
     return html`<${EmptyState} compact icon="alertCircle" tone="err" title=${t("chat.loadError")} text=${t("err." + error.code)}><${Button} size="sm" icon="refresh" onClick=${onRetry}>${t("common.retry")}</${Button}></${EmptyState}>`;
+  }
+  if (!threads.length && !peers.length) {
+    return html`<${EmptyState} compact icon="chat" title=${t("chat.noThreads")} text=${t("chat.noPeersText")}>
+      <${Button} size="sm" variant="primary" icon="userPlus" href="#/home?add=1">${t("dev.add")}</${Button}></${EmptyState}>`;
   }
   if (!threads.length) {
     return html`<${EmptyState} compact icon="chat" title=${t("chat.noThreads")} text=${t("chat.noThreadsText")}><${NewChatMenu} threads=${threads} variant="primary" /></${EmptyState}>`;
@@ -222,6 +228,7 @@ function Conversation({ peerId, isMobile, onRead }) {
     setSending(true);
     try {
       const m = await post(`chat/${encodeURIComponent(peerId)}`, { text: body, attachments: A.ids });
+      setStartFlag("sent");
       stick.current = true;
       setMsgs((cur) => (cur.some((x) => x.id === m.id) ? cur.map((x) => (x.id === m.id ? { ...x, ...m } : x)) : [...cur, m]));
       setText("");
@@ -328,6 +335,7 @@ export function ChatView({ route }) {
         <h1 class="chat__title">${t("nav.chat")}</h1>
         <${NewChatMenu} threads=${threads} />
       </div>
+      <p class="chat__intro">${t("chat.intro")}</p>
       <div class="chat__threads">
         <${ThreadList} threads=${threads} loading=${st.loading} error=${st.error} active=${peerId} onRetry=${load} />
       </div>

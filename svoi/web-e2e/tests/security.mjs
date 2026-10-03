@@ -54,7 +54,7 @@ group("shares that would expose the device's keys", () => {
 
 group("the inviter says whose device it is", () => {
   test("the owner typed in the dialog goes into the invitation and into the new device", async ({ browser, dev }) => {
-    const page = await open(browser, dev.laptop);
+    const page = await open(browser, dev.laptop, { hash: "devices" });
     await tid(page, "add-device").click();
     eq(await tid(page, "invite-owner").inputValue(), "Андрей", "prefilled with this device's owner");
     await tid(page, "invite-owner").fill("Мама");

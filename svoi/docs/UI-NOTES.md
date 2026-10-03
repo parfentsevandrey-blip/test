@@ -9,7 +9,7 @@ no npm at runtime, no CDN: every byte is served from the embedded directory.
 ```
 internal/web/ui/
   index.html              entry point; loads css/*, js/boot.js (theme before first paint), js/app.js
-  manifest.webmanifest    PWA manifest (start_url ./#/devices, scope ./)
+  manifest.webmanifest    PWA manifest (start_url ./#/home, scope ./)
   sw.js                   service worker: static shell cache-first (stale-while-revalidate),
                           navigations network-first, never touches /api/ or ?t=
   icons/                  icon.svg (any), maskable.svg, PNG renders (192/512/maskable/apple-touch)
@@ -25,9 +25,10 @@ internal/web/ui/
   js/store.js             tiny global store + useStore(selector) + event bus
   js/router.js            hash router (#/section/…, each segment URI-encoded)
   js/i18n.js, i18n/*.js   t()/tn()/tx(); ru (default) and en dictionaries, Russian plurals
-  js/prefs.js             language/theme (localStorage "svoi.lang"/"svoi.theme")
+  js/prefs.js             language/theme (localStorage "svoi.lang"/"svoi.theme"), Home's
+                          first-steps flags ("svoi.home.browsed|sent|startDismissed")
   js/format.js            sizes, speeds, RTT, dates, durations (Intl)
-  js/util.js              linkify, device/file-kind heuristics, clipboard, dnsLabel/uniqueLabel
+  js/util.js              linkify, device/file-kind heuristics, osName, clipboard, dnsLabel/uniqueLabel
                           (device name → DNS label, ports of SanitizeName/UniqueName), misc
   js/hooks.js             useAsync, useNow, useMedia, useInterval, usePersistent…
   js/icons.js             hand-drawn inline SVG icon set + logo mark
@@ -35,13 +36,17 @@ internal/web/ui/
                           EmptyState, Skeleton, Callout, KV, CopyButton, Progress…),
                           modal (Modal, Drawer, confirmDialog, promptDialog), toast, menu,
                           portal, avatar (DeviceAvatar, FileIcon), devicepicker
-                          (DeviceChips, ManageDeviceSelect), folderpicker, misc
-  js/views/               onboarding, devices (+topology, device-drawer, add-device),
+                          (DeviceChips, ManageDeviceSelect), folderpicker, misc (PageHeader,
+                          ExpertTag, TechDetails…), device-actions (platformLine, ConnLine,
+                          DeviceActions: the plain device words and buttons of Home and Devices)
+  js/views/               home (landing page), help («Как это работает?» sheet), onboarding,
+                          devices (+topology, device-drawer, add-device),
                           files (+files-send, transfers, files-browse, preview, files-shares),
                           mail (+compose), chat, services, settings (+logs), more
 web-dev/
   mock-server.mjs         zero-dependency mock of the whole API (see below)
-  screenshots.mjs         walks every screen in dark/light × 1440×900/390×844 → web-dev/screens/ (generated, not tracked; the few shown in the README live in docs/img/)
+  screenshots.mjs         walks every screen in dark/light × 1440×900/390×844 → web-dev/screens/ (generated, not tracked; the few shown in the README live in docs/img/;
+                          `--dpr 1` makes the phone shots 390 px wide, as docs/img/home-mobile.png)
   smoke.mjs               interaction smoke test of the main flows (fails on console errors)
   check-i18n.mjs          every t() key exists in ru and en; plural forms are complete
   check-util.mjs          unit-ish asserts for js/util.js (dnsLabel incl. the docs/Go test cases)
@@ -49,7 +54,8 @@ web-dev/
   lib.mjs                 helpers shared by the scripts
 ```
 
-Routes: `#/devices[/<id>]`, `#/files/send[?to=<id>]`, `#/files/browse[/<dev>[/<share>[/<path…>]]]`
+Routes: `#/home[/<id>]` (the default; `/<id>` opens the device drawer over Home; `#/home?add=1` opens
+«Добавить устройство» — the empty states of Chat, Files and the recipient chips link there), `#/devices[/<id>]`, `#/files/send[?to=<id>]`, `#/files/browse[/<dev>[/<share>[/<path…>]]]`
 (`self` = this device), `#/files/shares[?d=<id>]`, `#/mail/<inbox|sent|trash>[/<msgId>]`,
 `#/mail/compose[?to=<id,…>|?reply=<msgId>[&all=1]]`, `#/chat[/<peerId>]`,
 `#/services[?peer=<id>][&d=<id>]`, `#/settings[/<device|network|tun|files|interface|advanced|about>][?d=<id>]`,
@@ -68,7 +74,7 @@ node web-dev/mock-server.mjs --tun-error          # enabling the TUN interface f
 node web-dev/mock-server.mjs --latency 300        # slower API to look at loading states
 
 export NODE_PATH=/opt/node22/lib/node_modules      # Playwright is installed globally
-node web-dev/screenshots.mjs [--only devices,mail] [--lang en] [--out /tmp/shots]
+node web-dev/screenshots.mjs [--only devices,mail] [--lang en] [--out /tmp/shots] [--dpr 1]
 node web-dev/smoke.mjs [--only mail,chat]
 # against the real node: `svoi demo --no-browser --quiet --port 18777 --dir /tmp/demo`, token = the master token in
 # /tmp/demo/laptop/data/ui.token (the printed ?t= links are one-time sign-in codes, not the token)
@@ -100,6 +106,79 @@ duplicate uploads, 403 on read-only shares, device names turned into DNS labels 
 `SanitizeName`/`UniqueName`), demotion refused with 501 `unsupported`. It also sends the CSP we
 recommend (below) so the UI is verified to work under it.
 
+## Plain language: Home and the wording rules
+
+The interface is meant for people who don't care how a mesh works. The landing page is
+**«Главная»** (`#/home`, first in the sidebar and the phone tab bar); everything else is one tap away.
+
+**Home**, top to bottom (one column on phones, the same order for the keyboard):
+
+1. *Status sentence* (`home-status`, `data-state`):
+   `ok` «Всё в порядке — 5 из 7 устройств на связи»; `partial` «Часть устройств не в сети: nas»;
+   `offline` «Другие устройства сейчас не в сети»; `alone` «Вы пока одни в сети — добавьте второе
+   устройство». Counts include this device, like the top bar. Only devices that dropped off within
+   the last 24 h (`lastSeen`) make it `partial` and are named; devices away for longer (a tablet in a
+   drawer) are mentioned calmly under `ok` («mom-laptop и old-tablet сейчас не в сети — письма и файлы
+   для них подождут»). With other devices but none online it is `offline`. A «Как это работает?»
+   button opens the help sheet.
+2. *Нужно ваше внимание* (`home-attention`, hidden when empty): incoming file offers with
+   Принять/Отклонить right in the row (up to 3, then a link to Files), unread mail and chat, pending
+   invitations (with whom they are for and the countdown), «перезапустите svoi» when
+   `restartRequired`. Because Home lists offers itself, the global offers banner is **not** shown on
+   Home (it still is on every other page except Files → Send). Accepting toasts «Принимаем «…»» with a
+   link to Files.
+3. *Начало работы* (`home-start-checklist`): add a second device → open another device's files →
+   send something. Shown while the network is young (≤ 1 other device, or no transfers in the store)
+   and not dismissed. Step 1 is done when there is a peer; step 3 when the store has an outgoing
+   transfer. Looking at another device's folders and sending chat/mail leave no trace in the API,
+   so those are remembered per browser (`svoi.home.browsed`, `svoi.home.sent`); «Скрыть» stores
+   `svoi.home.startDismissed`.
+4. *Four big actions*: «Отправить файл» and «Написать сообщение» ask «Кому?» in a sheet when there
+   are two or more devices (`device-pick`, «Выбрать на следующем шаге» for files), go straight to the
+   only device when there is one, and say «Сначала добавьте второе устройство» (and open the invite
+   dialog) when there is none. «Файлы на других устройствах» → Files → Обзор, «Добавить устройство»
+   → the usual dialog.
+5. *Ваши устройства*: one card per device — avatar, name, «Андрей · телефон Android», a big dot and
+   «На связи · напрямую / в одной сети с вами / через home-server», «Не в сети · был 2 дня назад»,
+   and three buttons «Отправить файл · Написать · Файлы». Labels show when the card is wide enough
+   (a container query: ≥ 420 px inside the card; the device grids use ≥ 460 px columns, so labels
+   are there on a laptop screen); narrower cards and phones (< 480 px) show icons with `aria-label`
+   and a tooltip, 44 px tall. Sending and writing
+   stay enabled for an offline device (the tooltip says it will wait); «Файлы» is `aria-disabled`
+   with the reason in the tooltip and in a toast on click (offline / nothing shared / can't share).
+   The card opens the device drawer at `#/home/<id>`. «Подробнее об устройствах» → `#/devices`.
+
+**Navigation.** Sidebar: Главная, Устройства, Файлы, Почта, Чат, Программы, Настройки. Phones keep
+five tabs: Главная, Файлы, Почта, Чат, Ещё — `tab-devices` is gone; the device list is on Home, the
+full Devices page (map, invitations, technical details) is reached from Home, the «5 из 7» pill and
+«Ещё → Устройства», and counts as the Home tab.
+
+**Words.** On the primary screens (Home, device cards, top bar, sidebar, chat header, the map's
+node labels, the help sheet) these words are not used: NAT, STUN, UPnP, ретранслятор / relay,
+IPv4/IPv6, ID, RTT / «мс» / задержка, LAN, «сервис». Instead: «на связи» / «не в сети»,
+«напрямую», «в одной сети с вами», «через home-server» / «через другое устройство», «программы»,
+«приглашение — одноразовый код». The «Простой NAT» chip left the top bar.
+
+**Where the technical details went** (all with working copy buttons):
+
+* Settings → Сеть: the NAT card (type, public address, ports, IPv6, STUN, this device's addresses
+  with their kinds), relay/LAN/STUN/router switches. Its badge carries `data-testid="nat-chip"`
+  and `data-difficulty`.
+* «Технические данные» disclosures (`tech-details`, folded by default): on the Devices page in
+  «Это устройство» (IPv4, ID, NAT type → Settings, uptime, version, OS, and the overlay address of
+  every device); in the device drawer (delay, address, known addresses, IPv4/IPv6, ID, OS, version,
+  uptime, clock skew, last error, traffic incl. «через другое устройство»); in Settings → Это
+  устройство (ID, IPv4/IPv6, mesh ID, OS, version, uptime).
+* Screens for experts carry a small «для опытных» tag: Программы, Settings → Сеть, Сетевой
+  интерфейс, Дополнительно (also on their rows in «Ещё»).
+* Every main page has a one-line "what is this" subtitle; Mail and Chat show an intro line in their
+  list pane. Empty states say what to do next.
+
+**«Как это работает?»** (`help-button` in the top bar, `home-help` on Home → `help-sheet`): every
+device has its own key (like an ID card); an invitation is a one-time code; data goes straight
+between your devices (sometimes through another of yours), encrypted, no server in the middle; if a
+device is off, a letter or file waits. Plus what the dots and the map's lines mean.
+
 ## Notes for the Go side
 
 * Serve `index.html` for `/`; hash routing means no other SPA fallback is needed.
@@ -123,8 +202,9 @@ recommend (below) so the UI is verified to work under it.
 
 ## Stable selectors (`data-testid`)
 
-Shell: `nav-<section>` (sidebar), `tab-<devices|files|mail|chat|more>` (phone tab bar),
-`page-<section>` (the `<main>`), `conn-pill`, `nat-chip` (`data-difficulty`), `offline-banner`,
+Shell: `nav-<section>` (sidebar: `nav-home`, `nav-devices`, …), `tab-<home|files|mail|chat|more>`
+(phone tab bar; there is no `tab-devices` any more), `page-<section>` (the `<main>`, `page-home` by
+default), `conn-pill`, `help-button` → `help-sheet`, `offline-banner`,
 `offers-banner`, `offer-accept`, `offer-decline`, `toast` (`data-level`), `unauthorized`,
 `load-failed`; `unauthorized` carries `data-reason` = `expired` (no valid session), `link` (the
 page was opened with a used/expired `?t=` code) or `signed-out` (after "Выйти"), with
@@ -136,8 +216,18 @@ Onboarding: `page-onboarding`, `onb-create`, `onb-join`, `onb-mesh-name`, `onb-d
 `onb-progress`, `onb-error`, `removed-notice`.
 Device-name preview (onboarding and the rename prompt): `dns-preview` (`data-label` = the label
 without `.svoi`).
+Home: `home-status` (`data-state` = `ok|partial|offline|alone`), `home-help`, `home-attention` with
+`home-offer` (`data-id`; its buttons are `offer-accept` / `offer-decline` like the banner's),
+`home-att-mail`, `home-att-chat`, `home-att-invite`, `home-att-restart`, `home-att-offers` (links),
+`home-start-checklist` (steps `[data-step=add|browse|send][data-done]`, buttons
+`home-start-<add|browse|send>`, `home-start-dismiss`), `home-action-<send|chat|files|add>`,
+`device-pick` → `device-pick-item` (`data-peer`), `home-device` (`data-peer`, `data-name`,
+`data-online`, `data-state` = `on|relay|wait|off`), `home-devices-all`.
+Device cards on Home and Devices: `conn-line` (`data-state`), `device-act-send`, `device-act-chat`,
+`device-act-files` (`aria-disabled="true"` + `title` with the reason when unavailable).
+Disclosures: `tech-details` («Технические данные», a `<details>`). «Ещё»: `more-devices`.
 Devices: `add-device`, `topology`, `topo-node` (`data-id`, `data-path`), `device-card`
-(`data-id`, `data-name`, `data-online`), `self-card`, `invites`, `invite-row` (`data-owner`),
+(`data-id`, `data-name`, `data-online`, `data-state`), `self-card`, `invites`, `invite-row` (`data-owner`),
 `invite-owner` (the "Чьё это устройство?" field), `invite-create`, `invite-qr`, `invite-code`,
 `invite-for` («Для: Анна», on the QR step and the done step), `invite-waiting`, `invite-done`,
 `device-ping`, `device-ping-result`,
@@ -163,7 +253,8 @@ Mail: `mail-compose`, `mail-folder-<inbox|sent|trash>`, `mail-search`, `mail-ite
 `bubble` (`data-id`, `data-state`, `data-mine`), `chat-input`, `chat-send`, `chat-files`.
 Services: `service-card` (`data-peer`, `data-service`, `data-forwarded`), `service-connect`,
 `service-disconnect`, `forward-addr`, `service-publish`, `service-name`, `service-addr`,
-`service-save`, `published-service`. Settings: `settings-<section>`, `netcheck`, `logout`, `leave-mesh`,
+`service-save`, `published-service`. Settings: `settings-<section>`, `netcheck`, `nat-chip` (the NAT
+card's badge in Settings → Сеть, `data-difficulty`; it used to be in the top bar), `logout`, `leave-mesh`,
 `setting-portmap` (switch), `portmap-status` (`data-state` = `self.portmap.state`; absent while the
 switch is off), endpoint chips in the NAT card carry `data-kind` (`mapped|local|stun|observed`),
 `setting-relay`, `tun-section`, `tun-state` (`data-state`), `tun-enabled`, `tun-hosts`,
@@ -253,6 +344,12 @@ switch is off), endpoint chips in the NAT card carry `data-kind` (`mapped|local|
     `nat.difficulty:"open"` and a `mapped` portmap, the NAT card says the router forwards the port.
     The mock's laptop is mapped by default (so it is "open"); its public address is now
     203.0.113.5, the same router as the NAS.
+
+25. **Home without new endpoints.** Everything on Home comes from `/api/state`, `transfers`,
+    `counters` and `invites`. Two of the three first steps (opening another device's files, having
+    sent a chat message or a letter) leave no trace in the API, so they are remembered in the
+    browser only; on a new browser they show as not done until repeated (or the list is hidden).
+    "Recently dropped off" (named in the status) is `lastSeen` within 24 h, decided by the UI.
 
 ## Rough edges / not done
 

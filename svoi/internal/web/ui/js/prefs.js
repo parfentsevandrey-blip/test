@@ -17,6 +17,17 @@ export function save(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* ignore */ }
 }
 
+// «Начало работы» on Home: steps that leave no trace on the node (looking at
+// another device's folders, having sent something) are remembered per browser.
+// `name`: "browsed" | "sent" | "startDismissed".
+export function startFlag(name) {
+  return load("svoi.home." + name, false) === true;
+}
+
+export function setStartFlag(name) {
+  if (!startFlag(name)) save("svoi.home." + name, true);
+}
+
 function raw(key, fallback) {
   try { return localStorage.getItem(key) || fallback; } catch { return fallback; }
 }

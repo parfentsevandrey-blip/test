@@ -5,6 +5,7 @@ import { Icon } from "../icons.js";
 import { t } from "../i18n.js";
 import { get, post, upload } from "../api.js";
 import { href } from "../router.js";
+import { setStartFlag } from "../prefs.js";
 import { state, useStore } from "../store.js";
 import { fmtBytes, fmtDateTime, fmtPercent } from "../format.js";
 import { guessMime, uid } from "../util.js";
@@ -130,6 +131,7 @@ export function ComposeModal({ query, onClose }) {
     setSending(true);
     try {
       const r = await post("mail", { to, subject: subject.trim(), body, attachments: A.ids, ...(orig ? { inReplyTo: orig.id } : {}) });
+      setStartFlag("sent");
       const names = to.map((id) => (state.peers.find((p) => p.id === id) || {}).name).filter(Boolean).join(", ");
       const offline = to.filter((id) => { const p = state.peers.find((x) => x.id === id); return p && !p.online; }).length;
       toast({ level: "success", title: t("compose.sent"), text: offline ? t("compose.sentQueued", { names }) : t("compose.sentTo", { names }),

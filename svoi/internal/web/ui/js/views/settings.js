@@ -10,14 +10,13 @@ import { setState, useStore } from "../store.js";
 import { fmtBytes, fmtDateTime, fmtDuration, fmtNumber } from "../format.js";
 import { useAsync, useInterval } from "../hooks.js";
 import { langPref, setLangPref, setThemePref, themePref } from "../prefs.js";
-import { cx, deviceKind, isValidHostPort, kindIcon, natTone } from "../util.js";
+import { cx, deviceKind, isValidHostPort, kindIcon, natTone, osName } from "../util.js";
 import { deviceName, ManageDeviceSelect } from "../components/devicepicker.js";
 import { FolderPicker } from "../components/folderpicker.js";
-import { PageHeader } from "../components/misc.js";
+import { ExpertTag, PageHeader, TechDetails } from "../components/misc.js";
 import { Button, Callout, Card, Chip, CopyButton, EmptyState, Field, IconButton, KV, Segmented, Skeleton, Spinner, Switch } from "../components/ui.js";
 import { confirmDialog } from "../components/modal.js";
 import { toast, toastError } from "../components/toast.js";
-import { osName } from "./devices.js";
 import { LogViewer } from "./logs.js";
 
 const SECTIONS = [
@@ -59,11 +58,11 @@ function useDeviceConfig(dev) {
   return { local, self, settings, loading: !local && remote.loading, error: !local ? remote.error : null, reload: remote.reload, save, setSelf, setSettings };
 }
 
-function Section({ id, title, icon, children, sub }) {
+function Section({ id, title, icon, children, sub, expert = false }) {
   return html`<section class="set-sec" id=${"set-" + id} aria-labelledby=${"set-h-" + id} data-testid=${"settings-" + id}>
     <header class="set-sec__head">
       <span class="card__icon"><${Icon} name=${icon} size=${18} /></span>
-      <div><h2 class="set-sec__title" id=${"set-h-" + id}>${title}</h2>${sub && html`<p class="card__sub">${sub}</p>`}</div>
+      <div><h2 class="set-sec__title" id=${"set-h-" + id}>${title}${expert && html` <${ExpertTag} />`}</h2>${sub && html`<p class="card__sub">${sub}</p>`}</div>
     </header>
     ${children}
   </section>`;
@@ -131,16 +130,20 @@ function DeviceSection({ cfg }) {
       <${KV} items=${[
         { k: t("set.devName"), v: self.name },
         self.owner && { k: t("dev.owner"), v: self.owner },
-        { k: t("set.role"), v: html`${self.admin ? html`<${Chip} tone="accent" icon="shield" size="sm">${t("dev.admin")}</${Chip}>` : t("set.member")}` },
-        { k: t("dev.id"), v: self.id, mono: true, copy: self.id },
-        self.ip4 && { k: "IPv4", v: self.ip4, mono: true, copy: self.ip4 },
-        self.ip6 && { k: "IPv6", v: self.ip6, mono: true, copy: self.ip6 },
         { k: t("set.mesh"), v: self.meshName || "—" },
-        self.meshId && { k: t("set.meshId"), v: self.meshId, mono: true, copy: self.meshId },
-        { k: t("dev.os"), v: `${osName(self.os)}${self.arch ? " · " + self.arch : ""}` },
-        { k: t("dev.version"), v: self.version ? "v" + self.version : "—" },
-        self.started && { k: t("dev.uptime"), v: fmtDuration(Math.floor(Date.now() / 1000) - self.started) },
+        { k: t("set.role"), v: html`${self.admin ? html`<${Chip} tone="accent" icon="shield" size="sm">${t("dev.admin")}</${Chip}>` : t("set.member")}` },
       ]} />
+      <${TechDetails}>
+        <${KV} items=${[
+          { k: t("dev.id"), v: self.id, mono: true, copy: self.id },
+          self.ip4 && { k: "IPv4", v: self.ip4, mono: true, copy: self.ip4 },
+          self.ip6 && { k: "IPv6", v: self.ip6, mono: true, copy: self.ip6 },
+          self.meshId && { k: t("set.meshId"), v: self.meshId, mono: true, copy: self.meshId },
+          { k: t("dev.os"), v: `${osName(self.os)}${self.arch ? " · " + self.arch : ""}` },
+          { k: t("dev.version"), v: self.version ? "v" + self.version : "—" },
+          self.started && { k: t("dev.uptime"), v: fmtDuration(Math.floor(Date.now() / 1000) - self.started) },
+        ]} />
+      </${TechDetails}>
     </${Card}>
     ${cfg.local && html`<${Card}>
       <div class="row row--top gap-4">
@@ -177,7 +180,7 @@ function NatCard({ cfg }) {
   const mapped = self && self.portmap && self.portmap.state === "mapped" ? self.portmap : null;
   return html`<${Card} class=${cx("nat", `nat--${tone}`)}>
     <div class="nat__head">
-      <span class="nat__badge"><${Icon} name=${tone === "ok" ? "shieldCheck" : tone === "warn" ? "alert" : "radar"} size=${28} /></span>
+      <span class="nat__badge" data-testid="nat-chip" data-difficulty=${diff} title=${t("nat.chip." + diff)}><${Icon} name=${tone === "ok" ? "shieldCheck" : tone === "warn" ? "alert" : "radar"} size=${28} /></span>
       <div class="grow">
         <p class="nat__eyebrow">${t("nat.diag")}</p>
         <h3 class="nat__title">${t("nat.head." + diff)}</h3>
@@ -270,7 +273,7 @@ function NetworkSection({ cfg }) {
     const r = await cfg.save({ portMap: v });
     if (r && !cfg.local) setTimeout(() => cfg.reload(), 2000);
   };
-  return html`<${Section} id="network" icon="globe" title=${t("set.sec.network")} sub=${t("set.sec.networkSub")}>
+  return html`<${Section} id="network" icon="globe" title=${t("set.sec.network")} sub=${t("set.sec.networkSub")} expert>
     <${NatCard} cfg=${cfg} />
     ${s && html`<${Card}>
       <${Switch} label=${t("set.relay")} description=${html`${t("set.relayHint")}${self && self.relayed && self.relayed.bytes ? html` <span class="tnum">${t("set.relayed", { packets: fmtNumber(self.relayed.packets), bytes: fmtBytes(self.relayed.bytes) })}</span>` : ""}`}
@@ -312,7 +315,7 @@ function TunSection({ cfg, dev }) {
   };
   const name = tun.name || "svoi0";
   const sample = peers.find((p) => p.online) || peers[0];
-  return html`<${Section} id="tun" icon="network" title=${t("tun.title")} sub=${t("tun.sub")}>
+  return html`<${Section} id="tun" icon="network" title=${t("tun.title")} sub=${t("tun.sub")} expert>
     <${Card} class="tun" data-testid="tun-section">
       <p class="tun__lead">${t("tun.lead", { example: sample ? `${sample.deviceName || sample.name}.svoi` : "nas.svoi", ip: sample ? sample.ip4 : "100.64.0.7" })}</p>
       <div class=${cx("tun__state", `is-${tun.state}`)} data-testid="tun-state" data-state=${tun.state} role="status">
@@ -405,7 +408,7 @@ function AdvancedSection({ cfg }) {
   const s = cfg.settings;
   if (!s) return null;
   const socks = s.socks || { enabled: false, listen: "127.0.0.1:1080" };
-  return html`<${Section} id="advanced" icon="settings" title=${t("set.sec.advanced")}>
+  return html`<${Section} id="advanced" icon="settings" title=${t("set.sec.advanced")} sub=${t("set.sec.advancedSub")} expert>
     <${Card}>
       <${Switch} label=${t("set.socks")} description=${t("set.socksHint")} checked=${socks.enabled} onChange=${(v) => cfg.save({ socks: { ...socks, enabled: v } })} />
       ${socks.enabled && html`<div class="set-sub">

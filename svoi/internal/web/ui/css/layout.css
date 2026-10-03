@@ -67,13 +67,8 @@
 .conn-pill__dot.is-relay { background: var(--amber); }
 .conn-pill__dot.is-off { background: var(--surface-3); box-shadow: inset 0 0 0 1.5px var(--text-3); }
 .conn-pill__short { display: none; }
-.nat-chip {
-  display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: var(--r-pill);
-  font-size: var(--fs-sm); font-weight: 600; text-decoration: none !important; border: 1px solid transparent;
-}
-.nat-chip--ok { background: var(--accent-soft); color: var(--accent-text); }
-.nat-chip--warn { background: var(--amber-soft); color: var(--amber-text); }
-.nat-chip--muted { background: var(--surface-2); color: var(--text-2); border-color: var(--line); }
+.topbar__help { --ib: 36px; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface-2); color: var(--text-2); }
+.topbar__help:hover:not(:disabled) { background: var(--surface-3); }
 
 /* ---------- global banners ---------- */
 .banners:empty { display: none; }
@@ -115,11 +110,11 @@
 /* ---------- tablet: icon rail ---------- */
 @media (max-width: 1099px) and (min-width: 760px) {
   .shell { grid-template-columns: var(--rail-w) minmax(0, 1fr); }
-  .sidebar { padding: var(--sp-4) 8px; align-items: center; gap: var(--sp-4); }
+  .sidebar { padding: var(--sp-4) 6px; align-items: center; gap: var(--sp-4); }
   .brand { padding: 4px; }
   .brand__text, .sidebar__self-text { display: none; }
   .nav { width: 100%; }
-  .nav__item { flex-direction: column; height: auto; padding: 8px 4px 6px; gap: 3px; font-size: 10.5px; font-weight: 600; justify-content: center; }
+  .nav__item { flex-direction: column; height: auto; padding: 8px 2px 6px; gap: 3px; font-size: 10.5px; font-weight: 600; letter-spacing: -0.01em; justify-content: center; }
   .nav__label { text-align: center; width: 100%; }
   .nav__badge { position: absolute; top: 3px; right: 8px; min-width: 18px; height: 17px; padding: 0 5px; }
   .nav__dot { position: absolute; top: 8px; right: 14px; }
@@ -141,8 +136,10 @@
   .conn-pill { padding: 0 10px 0 8px; height: 30px; }
   .conn-pill__long { display: none; }
   .conn-pill__short { display: inline; }
-  .nat-chip { height: 30px; padding: 0 9px; }
-  .nat-chip__text { display: none; }
+  .topbar__help { --ib: 44px; }
+  /* the pill stays slim but gets a finger-sized hit area */
+  .conn-pill { position: relative; }
+  .conn-pill::before { content: ""; position: absolute; inset: -7px -4px; }
 
   .tabbar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: grid; grid-template-columns: repeat(5, 1fr);

@@ -1,7 +1,7 @@
 import { group, test, assert, eq, until, open, nav, tid, startNode } from "../lib.mjs";
 
 group("onboarding (real processes)", { noDemo: true }, () => {
-  test("a fresh device offers to create or join; creating a mesh validates and lands on the devices page", async ({ browser }) => {
+  test("a fresh device offers to create or join; creating a mesh validates and lands on Home", async ({ browser }) => {
     const node = await startNode({ name: "fresh" });
     const page = await open(browser, node);
     await tid(page, "page-onboarding").waitFor();
@@ -18,7 +18,11 @@ group("onboarding (real processes)", { noDemo: true }, () => {
     await tid(page, "onb-device-name").fill("Кухонный ноутбук");
     await tid(page, "onb-owner").fill("Мария");
     await tid(page, "onb-submit").click();
-    await tid(page, "self-card").waitFor();
+    // Home, in plain words: alone in the new network, with the first steps to take
+    await tid(page, "page-home").waitFor();
+    await page.locator('[data-testid="home-status"][data-state="alone"]').waitFor();
+    assert(/добавьте второе устройство/.test(await tid(page, "home-status").innerText()), "the status says what to do next");
+    await page.locator('[data-testid="home-start-checklist"] [data-step="add"][data-done="false"]').waitFor();
     const st = await node.api("GET", "/api/state");
     eq([st.configured, st.self.meshName, st.self.name, st.self.owner, st.self.admin], [true, "Моя семья", "kukhonnyy-noutbuk", "Мария", true], "what was created");
     eq(page.problems.filter((p) => !/400/.test(p)), [], "console / network problems");
@@ -45,9 +49,9 @@ group("onboarding (real processes)", { noDemo: true }, () => {
     await tid(page, "onb-code").fill(inv.code);
     await tid(page, "onb-device-name").fill("beta");
     await tid(page, "onb-submit").click();
-    await tid(page, "self-card").waitFor({ timeout: 40000 });
-    await page.waitForFunction(() => document.querySelectorAll('[data-testid="device-card"]').length === 1, null, { timeout: 20000 });
-    eq(await page.locator('[data-testid="device-card"]').first().getAttribute("data-name"), "alpha", "alpha is listed");
+    await tid(page, "page-home").waitFor({ timeout: 40000 });
+    await page.waitForFunction(() => document.querySelectorAll('[data-testid="home-device"]').length === 1, null, { timeout: 20000 });
+    eq(await page.locator('[data-testid="home-device"]').first().getAttribute("data-name"), "alpha", "alpha is listed");
     eq((await beta.api("GET", "/api/state")).self.owner, "Мария", "the new device belongs to the person the inviter named, not to whoever typed");
     await until(async () => (await alpha.api("GET", "/api/state")).peers.some((p) => p.deviceName === "beta"), 20000, "alpha to see beta");
     // the same invitation cannot be used again

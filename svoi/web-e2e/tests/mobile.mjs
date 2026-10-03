@@ -20,14 +20,16 @@ group("phone-sized screen", () => {
   test("every main screen fits a 390px wide screen and the bottom tab bar navigates", async ({ browser, dev }) => {
     const nas = await peerByName(dev, "nas");
     const page = await open(browser, dev.laptop, { ...M });
-    await tid(page, "tab-devices").waitFor();
-    for (const hash of ["devices", "files/send", "files/browse", `files/browse/${nas.id}`, "files/shares", "mail/inbox", "chat", "services", "settings", "settings/network"]) {
+    await tid(page, "tab-home").waitFor();
+    for (const hash of ["home", "devices", "files/send", "files/browse", `files/browse/${nas.id}`, "files/shares", "mail/inbox", "chat", "services", "settings", "settings/network", "more"]) {
       await nav(page, dev.laptop, hash);
       await page.waitForTimeout(500);
       const o = await overflow(page);
       assert(!o, `horizontal overflow on #/${hash}: ${JSON.stringify(o)}`);
-      assert(await tid(page, "tab-devices").isVisible(), `the tab bar is visible on #/${hash}`);
+      assert(await tid(page, "tab-home").isVisible(), `the tab bar is visible on #/${hash}`);
     }
+    // five tabs: Home took the place of Devices, which is on Home and in «Ещё»
+    eq(await page.$$eval('[data-testid^="tab-"]', (els) => els.map((e) => e.dataset.testid)), ["tab-home", "tab-files", "tab-mail", "tab-chat", "tab-more"], "the tab bar");
     // tab bar navigation works with taps
     await tid(page, "tab-chat").tap();
     await page.waitForFunction(() => location.hash.startsWith("#/chat"));

@@ -247,7 +247,7 @@ export function ServicesView({ route }) {
   const focus = route.query.get("peer");
   const setDev = (id) => go(href(["services"], { d: isSelf(id) ? undefined : id }));
   return html`<div class="page services">
-    <${PageHeader} title=${t("nav.services")} subtitle=${t("svc.subtitle")} />
+    <${PageHeader} title=${t("nav.services")} subtitle=${t("svc.subtitle")} expert />
     <section class="services__remote" aria-labelledby="svc-remote-h">
       <h2 class="section-title" id="svc-remote-h">${t("svc.remoteTitle")}</h2>
       <${RemoteServices} focus=${focus} />

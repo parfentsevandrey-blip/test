@@ -501,6 +501,10 @@
   .page-head__title { font-size: var(--fs-xl); overflow-wrap: anywhere; }
   .page-head__text { min-width: 0; flex: 1 1 auto; }
   .page-head__actions { flex-wrap: nowrap; }
+  /* the managed-device switch is too wide to share the row with the title: it goes underneath */
+  .page-head:has(.manage) { flex-wrap: wrap; }
+  .page-head:has(.manage) .page-head__actions, .page-head__actions .manage { width: 100%; }
+  .page-head__actions .manage__btn { flex: 1 1 auto; }
 }
 
 /* plain text bodies (mail/chat) */
@@ -514,10 +518,72 @@
   border-bottom: 1px solid var(--line);
 }
 .list-row:last-child { border-bottom: 0; }
-.section-title { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .07em; margin: 0 0 var(--sp-3); }
+.section-title { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: var(--sp-3); }
 .kbd, kbd { display: inline-block; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--line-2); background: var(--surface-2); font-size: var(--fs-xs); font-family: var(--font-mono); color: var(--text-2); }
 .code-line {
   display: flex; align-items: center; gap: var(--sp-2); padding: 8px 8px 8px 12px; border-radius: 10px;
   background: var(--surface-2); border: 1px solid var(--line); font-family: var(--font-mono); font-size: var(--fs-sm); min-width: 0;
 }
 .code-line > span { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+
+/* ---------- plain device status: «● На связи · напрямую» ---------- */
+.conn { display: flex; align-items: center; gap: 10px; min-width: 0; font-size: var(--fs-md); font-weight: 600; color: var(--text); }
+.conn__text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.conn--off { color: var(--text-2); font-weight: 500; }
+.conn__dot { width: 12px; height: 12px; border-radius: 50%; flex: none; background: var(--text-3); }
+.conn__dot--on { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.conn__dot--relay { background: var(--amber); box-shadow: 0 0 0 4px var(--amber-soft); }
+.conn__dot--wait { background: var(--info); box-shadow: 0 0 0 4px var(--info-soft); animation: conn-wait 1.6s ease-in-out infinite; }
+.conn__dot--off { background: transparent; box-shadow: inset 0 0 0 2px var(--text-3); }
+@keyframes conn-wait { 50% { opacity: .4; } }
+
+/* ---------- «Отправить файл · Написать · Файлы» on device cards ---------- */
+.dact { display: flex; gap: var(--sp-2); position: relative; z-index: 1; padding-top: var(--sp-3); border-top: 1px solid var(--line); min-width: 0; }
+.dact__btn {
+  flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; height: 38px; padding: 0 12px;
+  border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line-2); color: var(--text);
+  font: inherit; font-size: var(--fs-sm); font-weight: 600; white-space: nowrap; text-decoration: none !important; cursor: pointer;
+  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.dact__btn .icon { flex: none; color: var(--accent-text); }
+.dact__btn:hover { background: var(--surface-3); border-color: var(--line-3); }
+.dact__btn.is-disabled { opacity: .55; cursor: not-allowed; }
+.dact__btn.is-disabled .icon { color: var(--text-3); }
+.dact__btn.is-disabled:hover { background: var(--surface-2); border-color: var(--line-2); }
+/* The Russian labels need ~410px; narrower cards (and phones) show icons with a tooltip and an accessible name. */
+@container (max-width: 419px) { .dact__label { display: none; } .dact__btn { padding: 0; } }
+@media (max-width: 479px) { .dact__label { display: none; } .dact__btn { padding: 0; } }
+@media (max-width: 759px) { .dact__btn { height: 44px; } }
+
+/* ---------- «Технические данные» ---------- */
+.tech { margin-top: var(--sp-4); border-top: 1px solid var(--line); }
+.tech__summary {
+  display: flex; align-items: center; gap: 6px; min-height: 44px; cursor: pointer; list-style: none; user-select: none;
+  color: var(--text-2); font-size: var(--fs-sm); font-weight: 600;
+}
+.tech__summary::-webkit-details-marker { display: none; }
+.tech__summary:hover { color: var(--text); }
+.tech__chev { color: var(--text-3); transition: transform var(--dur) var(--ease); }
+.tech[open] > .tech__summary .tech__chev { transform: rotate(90deg); }
+.tech__body { padding-bottom: var(--sp-3); }
+.tech__label { margin: var(--sp-4) 0 var(--sp-2); font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .07em; }
+.tech__list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.tech__row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: var(--sp-2); padding: 4px 6px 4px 12px; border-top: 1px solid var(--line); font-size: var(--fs-sm); }
+.tech__row:first-child { border-top: 0; }
+
+/* ---------- «для опытных» ---------- */
+.expert-tag {
+  display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: var(--r-pill); vertical-align: middle; white-space: nowrap;
+  background: var(--surface-2); border: 1px solid var(--line-2); color: var(--text-2);
+  font-size: var(--fs-2xs); font-weight: 650; letter-spacing: .02em; text-transform: none; position: relative; top: -2px;
+}
+
+/* ---------- «Как это работает?» ---------- */
+.help__lead { color: var(--text-2); font-size: var(--fs-md); margin-bottom: var(--sp-4); }
+.help .section-title { margin: var(--sp-6) 0 var(--sp-3); }
+.help__points { display: flex; flex-direction: column; gap: var(--sp-2); }
+.help__point { display: flex; align-items: flex-start; gap: var(--sp-3); padding: var(--sp-3); border-radius: var(--r-md); background: var(--surface-2); }
+.help__point p { font-size: var(--fs-md); line-height: 1.45; }
+.help__icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; flex: none; background: var(--accent-soft); color: var(--accent-text); }
+.help__dots { display: flex; flex-direction: column; gap: 12px; }
+.help__dots li { display: flex; align-items: center; gap: 14px; font-size: var(--fs-md); color: var(--text-2); padding-left: 4px; }

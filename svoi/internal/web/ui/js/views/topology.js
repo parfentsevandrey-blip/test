@@ -4,7 +4,6 @@
 import { html, useEffect, useRef, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t } from "../i18n.js";
-import { fmtRtt } from "../format.js";
 import { cx, deviceKind, kindIcon } from "../util.js";
 
 function useSize(ref) {
@@ -109,8 +108,9 @@ export function Topology({ self, peers, selected, onSelect, onAdd }) {
         const isSel = selected === p.id;
         const above = nd.y < cyp - R * 0.35;
         const ly = above ? -r - 26 : r + 18;
-        const meta = p.online ? (p.rttMs ? fmtRtt(p.rttMs) : t("path." + (p.path || "none"))) : t("dev.status.offline");
-        const label = `${p.name}: ${p.online ? t("path.long." + (p.path || "none"), { via: p.relayVia || "?" }) : t("dev.status.offline")}${p.rttMs && p.online ? ", " + fmtRtt(p.rttMs) : ""}`;
+        // Plain words only; the delay in ms is in the device drawer (Технические данные).
+        const meta = p.online ? t("topo.metaOn") : t("topo.metaOff");
+        const label = `${p.name}: ${p.online ? t("path.long." + (p.path || "none"), { via: p.relayVia || "?" }) : t("dev.status.offline")}`;
         return html`<g key=${"n" + p.id} class=${cx("topo__node", `topo__node--${nd.st}`, isSel && "is-selected")}
             transform=${`translate(${nd.x},${nd.y})`} tabindex="0" role="button" aria-label=${label} aria-pressed=${String(isSel)}
             data-testid="topo-node" data-id=${p.id} data-path=${nd.st}
@@ -137,14 +137,15 @@ export function Topology({ self, peers, selected, onSelect, onAdd }) {
   </div>`;
 }
 
-export function TopologyLegend() {
+/** What the lines mean; `stacked` puts one per row (the help sheet). */
+export function TopologyLegend({ stacked = false }) {
   const items = [
     { k: "lan", label: t("legend.lan") },
     { k: "direct", label: t("legend.direct") },
     { k: "relay", label: t("legend.relay") },
     { k: "offline", label: t("legend.offline") },
   ];
-  return html`<ul class="topo-legend" aria-label=${t("legend.title")}>
+  return html`<ul class=${cx("topo-legend", stacked && "topo-legend--stack")} aria-label=${t("legend.title")}>
     ${items.map((it) => html`<li key=${it.k}><svg width="28" height="8" aria-hidden="true" class=${`topo-legend__sw topo__edge--${it.k}`}><line x1="1" y1="4" x2="27" y2="4" class="topo__line" /></svg>${it.label}</li>`)}
   </ul>`;
 }

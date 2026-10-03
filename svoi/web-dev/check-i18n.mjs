@@ -49,11 +49,12 @@ const DYNAMIC = {
   "nat.chip.": ["open", "easy", "hard", "unknown"], "nat.title.": ["open", "easy", "hard", "unknown"],
   "nat.head.": ["open", "easy", "hard", "unknown"], "nat.text.": ["open", "easy", "hard", "unknown"],
   "nat.means.": ["open", "easy", "hard", "unknown"], "nat.kind.": ["mapped", "local", "stun", "observed"],
-  "nat.kindHint.": ["mapped", "local", "stun", "observed"], "path.": ["lan", "direct", "relay", "none"],
+  "nat.kindHint.": ["mapped", "local", "stun", "observed"],
   "path.long.": ["lan", "direct", "relay", "none"], "mail.st.": ["queued", "sent", "delivered", "failed"],
   "mail.folder.": ["inbox", "sent", "trash"], "mail.empty.": ["inbox", "sent", "trash"], "mail.emptyText.": ["inbox", "sent", "trash"],
   "mail.att.": ["ready", "fetching", "remote", "failed"], "chat.st.": ["queued", "sent", "delivered", "failed"],
   "files.subtitle.": ["send", "browse", "shares"], "logs.lv.": ["all", "info", "warn", "error"],
+  "dev.kind.": ["laptop", "desktop", "phone", "tablet", "server", "nas"],
   "err.": ["unauthorized", "notconfigured", "denied", "notfound", "invalid", "exists", "offline", "busy", "toolarge", "unsupported", "internal", "network", "aborted"],
 };
 for (const [p, list] of Object.entries(DYNAMIC)) for (const x of list) {

@@ -1,15 +1,18 @@
-// Devices (home): this device, topology graph, device cards, pending invites.
+// Devices: how the devices are connected (map), this device, every device
+// with plain actions, pending invitations. Addresses, keys and the NAT type are
+// one click away under «Технические данные».
 import { html, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t, tn } from "../i18n.js";
 import { del } from "../api.js";
 import { go, href } from "../router.js";
 import { nowSec, useStore } from "../store.js";
-import { cx, natTone, sortPeers } from "../util.js";
-import { fmtCountdown, fmtDuration, fmtRtt } from "../format.js";
+import { cx, natTone, osName, sortPeers } from "../util.js";
+import { fmtCountdown, fmtDuration } from "../format.js";
 import { useNow } from "../hooks.js";
 import { DeviceAvatar } from "../components/avatar.js";
-import { Ago, PageHeader } from "../components/misc.js";
+import { ConnLine, DeviceActions, connState, platformLine } from "../components/device-actions.js";
+import { PageHeader, TechDetails } from "../components/misc.js";
 import { Button, Card, Chip, CopyButton, EmptyState, IconButton } from "../components/ui.js";
 import { confirmDialog } from "../components/modal.js";
 import { toast, toastError } from "../components/toast.js";
@@ -17,82 +20,61 @@ import { Topology, TopologyLegend } from "./topology.js";
 import { DeviceDrawer } from "./device-drawer.js";
 import { AddDeviceModal } from "./add-device.js";
 
-export function osName(os) {
-  const m = { darwin: "macOS", windows: "Windows", linux: "Linux", android: "Android", ios: "iOS", freebsd: "FreeBSD", openbsd: "OpenBSD" };
-  return m[(os || "").toLowerCase()] || os || "—";
-}
-
-export function pathChip(p) {
-  if (!p.online) return html`<${Chip} tone="muted" dot>${t("dev.status.offline")}</${Chip}>`;
-  if (p.path === "relay") return html`<${Chip} tone="warn" icon="relay">${t("path.relay")}</${Chip}>`;
-  if (p.path === "lan") return html`<${Chip} tone="ok" icon="network">${t("path.lan")}</${Chip}>`;
-  if (p.path === "direct") return html`<${Chip} tone="ok" icon="zap">${t("path.direct")}</${Chip}>`;
-  return html`<${Chip} tone="info" dot>${t("path.none")}</${Chip}>`;
-}
-
-function statusLine(p) {
-  if (!p.online) {
-    return html`<div class="dcard__status is-off"><${Icon} name="clock" size=${14} /><span class="ellipsis">${t("dev.lastSeen")} <${Ago} ts=${p.lastSeen} /></span></div>`;
-  }
-  const rtt = p.rttMs ? html`<span class="dcard__rtt mono tnum">${fmtRtt(p.rttMs)}</span>` : null;
-  if (p.path === "relay") {
-    return html`<div class="dcard__status is-relay"><${Icon} name="relay" size=${14} /><span class="ellipsis">${t("path.via", { via: p.relayVia || "?" })}</span>${rtt}</div>`;
-  }
-  const label = p.path === "lan" ? t("path.long.lan") : p.path === "direct" ? t("path.direct") : t("path.none");
-  return html`<div class="dcard__status is-on"><${Icon} name=${p.path === "lan" ? "network" : p.path === "direct" ? "zap" : "radar"} size=${14} /><span class="ellipsis">${label}</span>${rtt}</div>`;
-}
 
 function DeviceCard({ p }) {
-  const canFiles = (p.caps || []).includes("files");
-  return html`<article class=${cx("dcard", !p.online && "is-offline")} data-testid="device-card" data-id=${p.id} data-name=${p.deviceName || p.name} data-online=${String(!!p.online)}>
+  return html`<article class=${cx("dcard", !p.online && "is-offline")} data-testid="device-card" data-id=${p.id} data-name=${p.deviceName || p.name}
+      data-online=${String(!!p.online)} data-state=${connState(p)}>
     <div class="dcard__head">
-      <${DeviceAvatar} dev=${p} size=${44} />
+      <${DeviceAvatar} dev=${p} size=${44} showStatus=${false} />
       <div class="grow">
         <h3 class="dcard__name"><a href=${href(["devices", p.id])} class="stretched">${p.name}</a></h3>
-        <p class="dcard__sub ellipsis">${[p.owner, osName(p.os)].filter(Boolean).join(" · ")}</p>
+        <p class="dcard__sub ellipsis">${platformLine(p)}</p>
       </div>
       ${p.admin && html`<span class="dcard__admin" title=${t("dev.admin")}><${Icon} name="shield" size=${16} label=${t("dev.admin")} /></span>`}
     </div>
-    <div class="dcard__body">
-      ${statusLine(p)}
-      <span class="dcard__ip mono">${p.ip4}</span>
-    </div>
-    <div class="dcard__actions">
-      <${IconButton} icon="send" size="sm" label=${t("dev.act.sendFile")} href=${href(["files", "send"], { to: p.id })} />
-      <${IconButton} icon="chat" size="sm" label=${t("dev.act.message")} href=${href(["chat", p.id])} />
-      <${IconButton} icon="mail" size="sm" label=${t("dev.act.mail")} href=${href(["mail", "compose"], { to: p.id })} />
-      ${canFiles && p.shares > 0 && html`<${IconButton} icon="folderOpen" size="sm" label=${t("dev.act.browse")} href=${href(["files", "browse", p.id])} />`}
-      <span class="grow"></span>
-      <${CopyButton} text=${p.ip4} label=${t("copy.copyWhat", { what: "IPv4" })} />
-    </div>
+    <${ConnLine} p=${p} />
+    <${DeviceActions} p=${p} />
   </article>`;
 }
 
-function SelfCard({ self, peersOnline, total }) {
+function SelfCard({ self, peers, peersOnline, total }) {
   const diff = (self.nat && self.nat.difficulty) || "unknown";
   const tone = natTone(diff);
+  const withIp = sortPeers(peers).filter((p) => p.ip4);
   return html`<${Card} class="selfcard" aria-labelledby="selfcard-title" data-testid="self-card">
     <div class="selfcard__head">
       <${DeviceAvatar} dev=${self} size=${52} status="self" />
       <div class="grow">
         <p class="selfcard__eyebrow">${t("dev.thisDevice")}</p>
         <h2 class="selfcard__name" id="selfcard-title">${self.name}</h2>
-        <p class="selfcard__sub">${[self.owner, osName(self.os), self.version && "v" + self.version].filter(Boolean).join(" · ")}</p>
+        <p class="selfcard__sub">${platformLine(self)}</p>
         ${self.admin && html`<div class="mt-2"><${Chip} tone="accent" icon="shield" size="sm">${t("dev.admin")}</${Chip}></div>`}
       </div>
     </div>
-    <dl class="selfcard__grid">
-      <div><dt>IPv4</dt><dd class="mono"><span class="ellipsis">${self.ip4 || "—"}</span>${self.ip4 && html`<${CopyButton} text=${self.ip4} label=${t("copy.copyWhat", { what: "IPv4" })} />`}</dd></div>
-      <div><dt>${t("dev.idShort")}</dt><dd class="mono"><span class="ellipsis">${self.short}</span><${CopyButton} text=${self.id} label=${t("copy.copyWhat", { what: "ID" })} /></dd></div>
-      <div><dt>${t("nat.label")}</dt><dd><a href="#/settings/network" class=${cx("selfcard__nat", `is-${tone}`)}>${t("nat.chip." + diff)}</a></dd></div>
-      <div><dt>${t("dev.uptime")}</dt><dd class="tnum">${self.started ? fmtDuration(nowSec() - self.started) : "—"}</dd></div>
-    </dl>
     <div class="selfcard__meter" aria-label=${t("top.online", { n: peersOnline + 1, total })}>
       <div class="selfcard__meter-row"><span>${t("dev.meshOnline")}</span><span class="tnum strong">${peersOnline + 1} / ${total}</span></div>
       <div class="selfcard__bars" aria-hidden="true">
         ${Array.from({ length: Math.min(total, 24) }, (_, i) => html`<span key=${i} class=${cx("selfcard__bar", i < peersOnline + 1 && "is-on")}></span>`)}
       </div>
     </div>
+    <${TechDetails} class="selfcard__tech">
+      <dl class="selfcard__grid">
+        <div><dt>IPv4</dt><dd class="mono"><span class="ellipsis">${self.ip4 || "—"}</span>${self.ip4 && html`<${CopyButton} text=${self.ip4} label=${t("copy.copyWhat", { what: "IPv4" })} />`}</dd></div>
+        <div><dt>${t("dev.idShort")}</dt><dd class="mono"><span class="ellipsis">${self.short}</span><${CopyButton} text=${self.id} label=${t("copy.copyWhat", { what: "ID" })} /></dd></div>
+        <div><dt>${t("nat.label")}</dt><dd><a href="#/settings/network" class=${cx("selfcard__nat", `is-${tone}`)}>${t("nat.chip." + diff)}</a></dd></div>
+        <div><dt>${t("dev.uptime")}</dt><dd class="tnum">${self.started ? fmtDuration(nowSec() - self.started) : "—"}</dd></div>
+        ${self.version && html`<div><dt>${t("dev.version")}</dt><dd class="mono"><span class="ellipsis">v${self.version}</span></dd></div>`}
+        ${self.os && html`<div><dt>${t("dev.os")}</dt><dd><span class="ellipsis">${osName(self.os)}${self.arch ? " · " + self.arch : ""}</span></dd></div>`}
+      </dl>
+      ${withIp.length > 0 && html`<p class="tech__label">${t("tech.addresses")}</p>
+        <ul class="tech__list">
+          ${withIp.map((p) => html`<li key=${p.id} class="tech__row">
+            <span class="ellipsis">${p.name}</span>
+            <span class="mono tnum">${p.ip4}</span>
+            <${CopyButton} text=${p.ip4} label=${t("copy.copyWhat", { what: p.name + " IPv4" })} />
+          </li>`)}
+        </ul>`}
+    </${TechDetails}>
   </${Card}>`;
 }
 
@@ -154,7 +136,7 @@ export function DevicesView({ route }) {
         <div class="topo-card__foot"><${TopologyLegend} /></div>
       </${Card}>
       <div class="devices__side">
-        <${SelfCard} self=${self} peersOnline=${online} total=${total} />
+        <${SelfCard} self=${self} peers=${peers} peersOnline=${online} total=${total} />
         <${InvitesCard} invites=${invites} admin=${self.admin} />
       </div>
     </div>

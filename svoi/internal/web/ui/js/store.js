@@ -23,6 +23,7 @@ export const state = {
   forwards: null,       // local forwards (null = not loaded yet)
   toasts: [],
   dialogs: [],
+  help: false,          // the «Как это работает?» sheet is open
   lang: "ru",
   theme: "auto",
 };

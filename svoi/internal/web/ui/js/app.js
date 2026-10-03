@@ -7,13 +7,15 @@ import { initPrefs } from "./prefs.js";
 import { go, useRoute } from "./router.js";
 import { refreshState, reconnectNow, startLive } from "./sse.js";
 import { state, useStore } from "./store.js";
-import { cx, natTone, sortPeers } from "./util.js";
+import { cx, sortPeers } from "./util.js";
 import { useNow } from "./hooks.js";
 import { DialogHost } from "./components/modal.js";
 import { toast, ToastHost } from "./components/toast.js";
 import { DeviceAvatar } from "./components/avatar.js";
-import { Button, CopyButton, Spinner } from "./components/ui.js";
+import { Button, CopyButton, IconButton, Spinner } from "./components/ui.js";
 import { OnboardingView } from "./views/onboarding.js";
+import { HomeView } from "./views/home.js";
+import { HelpHost, openHelp } from "./views/help.js";
 import { DevicesView } from "./views/devices.js";
 import { FilesView } from "./views/files.js";
 import { MailView } from "./views/mail.js";
@@ -24,6 +26,7 @@ import { MoreView } from "./views/more.js";
 import { OffersBanner } from "./views/transfers.js";
 
 const NAV = [
+  { id: "home", icon: "home", label: "nav.home" },
   { id: "devices", icon: "devices", label: "nav.devices" },
   { id: "files", icon: "files", label: "nav.files", counter: "offers" },
   { id: "mail", icon: "mail", label: "nav.mail", counter: "mail" },
@@ -32,9 +35,13 @@ const NAV = [
   { id: "settings", icon: "settings", label: "nav.settings" },
 ];
 
-const TABS = ["devices", "files", "mail", "chat", "more"];
+// Phones have room for five tabs. The device list lives on Home (and the full
+// Devices page is one tap away from there and from «Ещё»).
+const TABS = ["home", "files", "mail", "chat", "more"];
+const TAB_OF = { devices: "home" };
 
 const VIEWS = {
+  home: HomeView,
   devices: DevicesView,
   files: FilesView,
   mail: MailView,
@@ -57,7 +64,7 @@ function Sidebar({ section }) {
   const counters = useStore((s) => s.counters);
   const restart = useStore((s) => !!(s.settings && s.settings.restartRequired));
   return html`<aside class="sidebar">
-    <a class="brand" href="#/devices" aria-label=${t("app.name")}>
+    <a class="brand" href="#/home" aria-label=${t("app.name")}>
       <${Logo} size=${34} />
       <span class="brand__text">
         <span class="brand__name">${t("app.name")}</span>
@@ -82,7 +89,7 @@ function Sidebar({ section }) {
       <${DeviceAvatar} dev=${self} size=${36} status="self" />
       <span class="sidebar__self-text">
         <span class="ellipsis strong">${self.name}</span>
-        <span class="ellipsis mono faint xsmall">${self.ip4 || self.short}</span>
+        <span class="ellipsis faint xsmall">${t("dev.thisDevice")}</span>
       </span>
     </a>`}
   </aside>`;
@@ -92,13 +99,13 @@ function TabBar({ section }) {
   const counters = useStore((s) => s.counters);
   const restart = useStore((s) => !!(s.settings && s.settings.restartRequired));
   const items = [
-    { id: "devices", icon: "devices", label: t("nav.devices") },
+    { id: "home", icon: "home", label: t("nav.home") },
     { id: "files", icon: "files", label: t("nav.files"), n: counters.offers, tone: "warn" },
     { id: "mail", icon: "mail", label: t("nav.mail"), n: counters.mail },
     { id: "chat", icon: "chat", label: t("nav.chat"), n: counters.chat },
     { id: "more", icon: "more", label: t("nav.more"), dot: restart },
   ];
-  const activeTab = TABS.includes(section) ? section : "more";
+  const activeTab = TABS.includes(section) ? section : TAB_OF[section] || "more";
   return html`<nav class="tabbar" aria-label=${t("nav.label")}>
     ${items.map((it) => html`<a key=${it.id} href=${"#/" + it.id} class=${cx("tabbar__item", activeTab === it.id && "is-active")} data-testid=${"tab-" + it.id}
         aria-current=${activeTab === it.id ? "page" : undefined}
@@ -112,17 +119,17 @@ function TabBar({ section }) {
   </nav>`;
 }
 
+// How the connection works (NAT type, relays) is in Settings → Сеть; the top
+// bar only says how many devices are online and offers «Как это работает?».
 function TopBar() {
   const self = useStore((s) => s.self);
   const peers = useStore((s) => s.peers);
   if (!self) return html`<header class="topbar"></header>`;
   const total = peers.length + 1;
   const online = peers.filter((p) => p.online).length + 1;
-  const diff = (self.nat && self.nat.difficulty) || "unknown";
-  const tone = natTone(diff);
   const onlinePeers = sortPeers(peers).slice(0, 4);
   return html`<header class="topbar">
-    <a class="topbar__brand" href="#/devices" aria-label=${t("app.name")}>
+    <a class="topbar__brand" href="#/home" aria-label=${t("app.name")}>
       <${Logo} size=${30} />
     </a>
     <div class="topbar__self">
@@ -139,10 +146,7 @@ function TopBar() {
           <span class="conn-pill__short">${online}/${total}</span>
         </span>
       </a>
-      <a class=${cx("nat-chip", `nat-chip--${tone}`)} href="#/settings/network" title=${t("nat.title." + diff)} data-testid="nat-chip" data-difficulty=${diff}>
-        <${Icon} name=${tone === "warn" ? "alert" : tone === "ok" ? "shieldCheck" : "radar"} size=${15} />
-        <span class="nat-chip__text">${t("nat.chip." + diff)}</span>
-      </a>
+      <${IconButton} icon="help" label=${t("top.help")} onClick=${openHelp} class="topbar__help" data-testid="help-button" />
     </div>
   </header>`;
 }
@@ -219,7 +223,7 @@ function Booting() {
 }
 
 const TITLES = {
-  devices: "nav.devices", files: "nav.files", mail: "nav.mail", chat: "nav.chat",
+  home: "nav.home", devices: "nav.devices", files: "nav.files", mail: "nav.mail", chat: "nav.chat",
   services: "nav.services", settings: "nav.settings", more: "nav.more",
 };
 
@@ -229,7 +233,7 @@ function useDocumentTitle(section) {
   const lang = useStore((s) => s.lang);
   useEffect(() => {
     const n = (counters.mail || 0) + (counters.chat || 0) + (counters.offers || 0);
-    const page = configured ? t(TITLES[section] || "nav.devices") : t("onb.title");
+    const page = configured ? t(TITLES[section] || "nav.home") : t("onb.title");
     document.title = `${n ? `(${n}) ` : ""}${page} — ${t("app.name")}`;
   }, [counters, section, configured, lang]);
 }
@@ -242,8 +246,8 @@ function App() {
   const configured = useStore((s) => s.configured);
   const hasSelf = useStore((s) => !!s.self);
   const lang = useStore((s) => s.lang);
-  let section = route.parts[0] || "devices";
-  if (!VIEWS[section]) section = "devices";
+  let section = route.parts[0] || "home";
+  if (!VIEWS[section]) section = "home";
   useDocumentTitle(section);
 
   // Move focus to the main region on navigation between sections (a11y).
@@ -269,7 +273,8 @@ function App() {
   const fixed = FIXED.has(section);
   // On phones a conversation / an open message takes the whole screen.
   const immersive = (section === "chat" && !!route.parts[1]) || (section === "mail" && (!!route.parts[2] || route.parts[1] === "compose"));
-  const showOffers = !(section === "files" && (route.parts[1] || "send") === "send");
+  // Home lists incoming offers itself (with Принять / Отклонить), Files → Send has them in its list.
+  const showOffers = section !== "home" && !(section === "files" && (route.parts[1] || "send") === "send");
   return html`
     <a class="skip-link" href="#main" onClick=${(e) => { e.preventDefault(); document.getElementById("main").focus(); }}>${t("app.skip")}</a>
     <div class=${cx("shell", fixed && "shell--fixed", immersive && "shell--immersive")} key=${lang}>
@@ -286,6 +291,7 @@ function App() {
       </div>
       <${TabBar} section=${section} />
     </div>
+    <${HelpHost} />
     <${DialogHost} />
     <${ToastHost} />`;
 }

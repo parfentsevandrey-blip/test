@@ -59,11 +59,23 @@ const shot = async (name) => { if (SHOTS) await page.screenshot({ path: path.joi
 const hook = (p) => page.evaluate((u) => fetch(u, { method: "POST", headers: { "X-Svoi": "1" } }).then((r) => r.json().catch(() => null)), p);
 const go = async (hash) => { await page.evaluate((h) => { location.hash = h; }, hash); await page.waitForTimeout(150); };
 
-await step("the page starts and shows the devices", async () => {
+await step("the page starts on the Home screen, in plain words", async () => {
   await page.goto(BASE + "/?calm=1&latency=0");
-  await page.waitForSelector("[data-testid=nav-devices]", { timeout: 15000 });
+  await page.waitForSelector("[data-testid=page-home]", { timeout: 15000 });
+  await page.waitForSelector("[data-testid=home-status]");
+  const text = await page.innerText("[data-testid=page-home]");
+  if (!/Всё в порядке/.test(text)) throw new Error("no status sentence: " + text.slice(0, 120));
+  for (const word of ["NAT", "ретранслятор", "IPv4"]) if (text.includes(word)) throw new Error(`the Home screen says "${word}"`);
+  const n = await page.locator("[data-testid=home-device]").count();
+  if (n < 5) throw new Error("only " + n + " devices on Home");
+  for (const a of ["send", "chat", "files", "add"]) await page.locator(`[data-testid=home-action-${a}]`).waitFor();
+  await shot("home");
+});
+
+await step("the devices page still shows the network, with the details folded away", async () => {
   await go("#/devices");
   await page.waitForFunction(() => /home-server/.test(document.body.innerText) && /nas/.test(document.body.innerText), null, { timeout: 10000 });
+  if (await page.locator("[data-testid=tech-details]").count() < 1) throw new Error("no folded technical details");
   await shot("devices");
 });
 
@@ -75,7 +87,8 @@ await step("the demo guide opens and says what this is", async () => {
 });
 
 await step("photos of the NAS: thumbnails really load (data: URLs), the viewer pages through them", async () => {
-  await go("#/devices");
+  await go("#/home");
+  await page.click("[data-testid=home-action-files]");
   const nas = await page.evaluate(() => fetch("api/state").then((r) => r.json()).then((s) => s.peers.find((p) => p.deviceName === "nas").id));
   await go(`#/files/browse/${nas}`);
   await page.click("[data-testid=share-card][data-id=sh_photo]");
@@ -135,12 +148,14 @@ await step("a file can be sent to another device (upload with progress)", async 
 });
 
 await step("live events: a file offer, a chat message and a letter arrive by themselves", async () => {
-  await go("#/devices");
-  const before = await page.evaluate(() => fetch("api/state").then((r) => r.json()).then((s) => s.counters.offers));
+  await go("#/home");
+  await page.waitForSelector("[data-testid=home-attention]");
+  const before = await page.locator("[data-testid=home-offer]").count();
   await hook("/__mock/offer?from=phone&name=" + encodeURIComponent("Фото с дачи.jpg"));
-  await page.waitForFunction((n) => fetch("api/state").then((r) => r.json()).then((s) => s.counters.offers > n), before, { timeout: 10000 });
-  await page.waitForSelector("[data-testid=offers-banner]", { timeout: 10000 });
+  await page.waitForFunction((n) => document.querySelectorAll("[data-testid=home-offer]").length > n, before, { timeout: 10000 });
+  await page.waitForSelector("[data-testid=home-offer]:has-text('Фото с дачи.jpg') [data-testid=offer-accept]");
   await shot("offer");
+  await page.click("[data-testid=home-offer]:has-text('Фото с дачи.jpg') [data-testid=offer-accept]");
   await hook("/__mock/chat?from=dad-pc&text=" + encodeURIComponent("Привет!"));
   await page.waitForSelector("[data-testid=toast]", { timeout: 10000 });
   await hook("/__mock/mail?from=nas");
@@ -180,7 +195,7 @@ await step("the first run can be shown and left again from the guide (no query s
   await shot("first-run");
   await guide().getByRole("button", { name: /Что здесь можно сделать/ }).click();
   await guide().getByRole("button", { name: /Вернуть готовую сеть/ }).click();
-  await page.waitForSelector("[data-testid=nav-devices]", { timeout: 15000 });
+  await page.waitForSelector("[data-testid=page-home]", { timeout: 15000 });
 });
 
 await browser.close();

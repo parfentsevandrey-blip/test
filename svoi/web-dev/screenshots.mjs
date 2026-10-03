@@ -2,7 +2,9 @@
 // Walks every screen/state of the UI in dark and light themes at desktop
 // (1440×900) and phone (390×844) sizes, saving PNGs to web-dev/screens/.
 //
-//   NODE_PATH=/opt/node22/lib/node_modules node web-dev/screenshots.mjs [--only devices,mail] [--lang en] [--out dir]
+//   NODE_PATH=/opt/node22/lib/node_modules node web-dev/screenshots.mjs [--only devices,mail] [--lang en] [--out dir] [--dpr 1]
+//
+// --dpr sets the pixel ratio of the phone shots (default 2; 1 gives 390-px-wide images, e.g. for docs/img).
 //
 // Starts its own mock servers (calm mode, random ports). Exits non-zero if any
 // page logged a console error or threw.
@@ -16,6 +18,7 @@ const argv = process.argv.slice(2);
 const OUT = argv.includes("--out") ? path.resolve(argv[argv.indexOf("--out") + 1]) : path.join(here, "screens");
 const only = argv.includes("--only") ? argv[argv.indexOf("--only") + 1].split(",") : null;
 const lang = argv.includes("--lang") ? argv[argv.indexOf("--lang") + 1] : "ru";
+const mobileDpr = argv.includes("--dpr") ? Number(argv[argv.indexOf("--dpr") + 1]) || 2 : 2;
 fs.mkdirSync(OUT, { recursive: true });
 
 const VIEWPORTS = { desktop: { width: 1440, height: 900 }, mobile: { width: 390, height: 844 } };
@@ -75,7 +78,37 @@ const SHOTS = [
     await p.click("[data-testid=confirm-ok]");
     await p.waitForSelector("[data-testid=unauthorized][data-reason=signed-out]");
   } },
+  { name: "home", server: "full", hash: "#/home", wait: ".hdev" },
+  { name: "home-full", server: "full", hash: "#/home", wait: ".hdev", full: true },
+  { name: "home-empty", server: "empty", hash: "#/home", wait: "[data-testid=home-start-checklist]", full: true },
+  { name: "home-pick", server: "full", hash: "#/home", run: async (p) => {
+    await p.click("[data-testid=home-action-send]");
+    await p.waitForSelector("[data-testid=device-pick] [data-testid=device-pick-item]");
+  } },
+  { name: "home-drawer", server: "full", hash: enc("home", NAS), run: async (p) => {
+    await p.waitForSelector("[data-testid=device-drawer] [data-testid=tech-details]");
+    await p.click("[data-testid=device-drawer] [data-testid=tech-details] summary");
+    await p.evaluate(() => document.querySelector("[data-testid=device-drawer] [data-testid=tech-details]").scrollIntoView({ block: "start" }));
+    await sleep(300);
+  } },
+  { name: "home-offline-files", server: "full", hash: "#/home", only: "mobile", run: async (p) => {
+    const btn = `[data-testid=home-device][data-peer="${TABLET}"] [data-testid=device-act-files]`;
+    await p.waitForSelector(btn);
+    await p.evaluate((b) => document.querySelector(b).closest("[data-testid=home-device]").scrollIntoView({ block: "center" }), btn);
+    await p.click(btn, { force: true });
+    await p.waitForSelector("[data-testid=toast]");
+  } },
+  { name: "help-sheet", server: "full", hash: "#/home", run: async (p) => {
+    await p.click("[data-testid=help-button]");
+    await p.waitForSelector("[data-testid=help-sheet] .help__point");
+    await sleep(300);
+  } },
   { name: "devices", server: "full", hash: "#/devices", wait: ".topo__svg", full: true },
+  { name: "devices-tech", server: "full", hash: "#/devices", only: "desktop", run: async (p) => {
+    await p.waitForSelector("[data-testid=self-card] [data-testid=tech-details]");
+    await p.click("[data-testid=self-card] [data-testid=tech-details] summary");
+    await sleep(300);
+  } },
   { name: "devices-empty", server: "empty", hash: "#/devices", wait: ".topo__svg" },
   { name: "device-drawer-nas", server: "full", hash: enc("devices", NAS), wait: ".drawer" },
   { name: "device-drawer-phone", server: "full", hash: enc("devices", PHONE), wait: ".drawer", only: "desktop" },
@@ -317,7 +350,7 @@ const t0 = Date.now();
 for (const [vp, size] of Object.entries(VIEWPORTS)) {
   for (const theme of THEMES) {
     const ctx = await browser.newContext({
-      viewport: size, deviceScaleFactor: vp === "mobile" ? 2 : 1, colorScheme: theme, reducedMotion: "reduce",
+      viewport: size, deviceScaleFactor: vp === "mobile" ? mobileDpr : 1, colorScheme: theme, reducedMotion: "reduce",
       locale: lang === "en" ? "en-GB" : "ru-RU", hasTouch: vp === "mobile", isMobile: vp === "mobile",
       serviceWorkers: "block",
     });

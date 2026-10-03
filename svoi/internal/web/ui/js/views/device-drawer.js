@@ -1,5 +1,6 @@
-// Device details drawer: addresses, connection path in plain words, traffic,
-// what it shares, and admin actions (nickname, rename, promote, revoke).
+// Device details drawer: how it is connected in plain words (and a ping),
+// what it shares, admin actions (nickname, rename, promote, revoke), and the
+// technical details (addresses, keys, delay, traffic) folded away.
 // There is no "demote": the node refuses it (the mesh key can't be taken back).
 import { html, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
@@ -9,18 +10,17 @@ import { href } from "../router.js";
 import { useStore } from "../store.js";
 import { fmtBytes, fmtDuration, fmtRtt } from "../format.js";
 import { DeviceAvatar } from "../components/avatar.js";
-import { Ago, DnsPreview } from "../components/misc.js";
+import { ConnLine, filesUnavailable, platformLine } from "../components/device-actions.js";
+import { Ago, DnsPreview, TechDetails } from "../components/misc.js";
 import { Button, Callout, Chip, KV } from "../components/ui.js";
 import { confirmDialog, Drawer, promptDialog } from "../components/modal.js";
 import { toast, toastError } from "../components/toast.js";
-import { osName, pathChip } from "./devices.js";
-import { DEVICE_NAME_RE, dnsLabel, normalizeDeviceName, serviceIcon, uniqueLabel } from "../util.js";
+import { DEVICE_NAME_RE, dnsLabel, normalizeDeviceName, osName, serviceIcon, uniqueLabel } from "../util.js";
 
 function PathExplainer({ p }) {
   if (!p.online) {
     return html`<${Callout} tone="neutral" icon="wifiOff" title=${t("path.explain.offlineTitle")}>
       <p>${tx("path.explain.offline", { ago: html`<${Ago} ts=${p.lastSeen} />` })}</p>
-      ${p.lastError && html`<p class="mt-1">${t("dev.lastError")}: <span class="mono">${p.lastError}</span></p>`}
     </${Callout}>`;
   }
   if (p.path === "relay") {
@@ -51,7 +51,7 @@ function PingButton({ p }) {
   return html`<div class="row">
     <${Button} size="sm" icon="activity" loading=${st.busy} onClick=${ping} disabled=${!p.online} data-testid="device-ping">${t("dev.ping")}</${Button}>
     <span class="small tnum" aria-live="polite" data-testid="device-ping-result">
-      ${st.ms !== null && html`<span class="accent strong">${fmtRtt(st.ms) || "<0,1"}</span>`}
+      ${st.ms !== null && html`<span class="accent strong">${t("dev.pingOk", { ms: fmtRtt(st.ms) || "<0,1" })}</span>`}
       ${st.err && html`<span class="danger-text">${t("err." + st.err.code)}</span>`}
     </span>
   </div>`;
@@ -124,71 +124,42 @@ export function DeviceDrawer({ id, onClose }) {
     catch (e) { toastError(e); }
   };
 
-  const caps = p.caps || [];
   const versionDiffers = self && p.version && self.version && p.version !== self.version;
   const skew = Math.abs(p.clockSkewMs || 0) > 2000;
 
   const header = html`<div class="ddr-head">
-    <${DeviceAvatar} dev=${p} size=${52} />
+    <${DeviceAvatar} dev=${p} size=${52} showStatus=${false} />
     <div class="grow">
       <h2 class="drawer__title ellipsis">${p.name}</h2>
       <p class="muted small ellipsis">
-        ${p.alias ? html`${t("dev.realName")}: <span class="mono">${p.deviceName}</span> · ` : ""}${p.owner || ""}
+        ${p.alias ? html`${t("dev.realName")}: <span class="mono">${p.deviceName}</span> · ` : ""}${platformLine(p)}
       </p>
-      <div class="row mt-1 row--wrap">${pathChip(p)}${p.admin && html`<${Chip} tone="accent" icon="shield">${t("dev.admin")}</${Chip}>`}</div>
+      <${ConnLine} p=${p} class="mt-1" />
+      ${p.admin && html`<div class="row mt-2"><${Chip} tone="accent" icon="shield" size="sm">${t("dev.admin")}</${Chip}></div>`}
     </div>
   </div>`;
+  const noFiles = filesUnavailable(p);
 
   return html`<${Drawer} label=${p.name} header=${header} onClose=${onClose} testid="device-drawer">
     <div class="ddr">
       <div class="ddr-actions">
-        <a class="ddr-act" href=${href(["files", "send"], { to: p.id })}><${Icon} name="send" size=${20} /><span>${t("dev.act.sendFile")}</span></a>
-        <a class="ddr-act" href=${href(["chat", p.id])}><${Icon} name="chat" size=${20} /><span>${t("dev.act.message")}</span></a>
+        <a class="ddr-act" href=${href(["files", "send"], { to: p.id })} title=${p.online ? undefined : t("act.sendOffline")}><${Icon} name="send" size=${20} /><span>${t("dev.act.sendFile")}</span></a>
+        <a class="ddr-act" href=${href(["chat", p.id])} title=${p.online ? undefined : t("act.chatOffline")}><${Icon} name="chat" size=${20} /><span>${t("dev.act.message")}</span></a>
         <a class="ddr-act" href=${href(["mail", "compose"], { to: p.id })}><${Icon} name="mail" size=${20} /><span>${t("dev.act.mail")}</span></a>
-        ${caps.includes("files") && html`<a class=${"ddr-act" + (!p.online || !p.shares ? " is-disabled" : "")} href=${href(["files", "browse", p.id])}
-            aria-disabled=${!p.online || !p.shares ? "true" : undefined}><${Icon} name="folderOpen" size=${20} /><span>${t("dev.act.browse")}</span></a>`}
+        ${noFiles
+          ? html`<button type="button" class="ddr-act is-disabled" aria-disabled="true" title=${noFiles} onClick=${() => toast({ level: "info", title: noFiles })}>
+              <${Icon} name="folderOpen" size=${20} /><span>${t("dev.act.browse")}</span></button>`
+          : html`<a class="ddr-act" href=${href(["files", "browse", p.id])}><${Icon} name="folderOpen" size=${20} /><span>${t("dev.act.browse")}</span></a>`}
       </div>
 
       <section class="ddr-sec">
         <h3 class="section-title">${t("dev.sec.connection")}</h3>
         <${PathExplainer} p=${p} />
         <${KV} class="mt-3" items=${[
-          p.online && { k: t("dev.rtt"), v: p.rttMs ? fmtRtt(p.rttMs) : "—" },
-          p.addr && { k: t("dev.addr"), v: p.addr, mono: true, copy: p.addr },
           p.online && p.connectedAt && { k: t("dev.connectedAt"), v: html`<${Ago} ts=${p.connectedAt} />` },
           !p.online && { k: t("dev.lastSeen"), v: html`<${Ago} ts=${p.lastSeen} />` },
-          p.endpoints && p.endpoints.length && { k: t("dev.endpoints"), v: p.endpoints.join(", "), mono: true, wrap: true },
         ]} />
         <div class="mt-3"><${PingButton} p=${p} /></div>
-      </section>
-
-      <section class="ddr-sec">
-        <h3 class="section-title">${t("dev.sec.addresses")}</h3>
-        <${KV} items=${[
-          { k: "IPv4", v: p.ip4 || "—", mono: true, copy: p.ip4 },
-          p.ip6 && { k: "IPv6", v: p.ip6, mono: true, copy: p.ip6 },
-          { k: t("dev.id"), v: p.id, mono: true, copy: p.id, title: p.id },
-        ]} />
-      </section>
-
-      <section class="ddr-sec">
-        <h3 class="section-title">${t("dev.sec.about")}</h3>
-        <${KV} items=${[
-          { k: t("dev.os"), v: `${osName(p.os)}${p.arch ? " · " + p.arch : ""}` },
-          { k: t("dev.version"), v: html`<span>${p.version ? "v" + p.version : "—"}${versionDiffers ? html` <${Chip} size="sm" tone="warn">${t("dev.versionDiffers")}</${Chip}>` : ""}</span>` },
-          p.owner && { k: t("dev.owner"), v: p.owner },
-          p.online && p.uptime && { k: t("dev.uptime"), v: fmtDuration(p.uptime) },
-          skew && { k: t("dev.clockSkew"), v: html`<span class="warn-text">${t("dev.clockSkewVal", { s: (p.clockSkewMs / 1000).toFixed(1) })}</span>` },
-        ]} />
-      </section>
-
-      <section class="ddr-sec">
-        <h3 class="section-title">${t("dev.sec.traffic")}</h3>
-        <div class="ddr-traffic">
-          <div><${Icon} name="arrowOut" size=${16} /><span class="faint small">${t("dev.sent")}</span><strong class="tnum">${fmtBytes(p.txBytes || 0)}</strong></div>
-          <div><${Icon} name="arrowIn" size=${16} /><span class="faint small">${t("dev.received")}</span><strong class="tnum">${fmtBytes(p.rxBytes || 0)}</strong></div>
-        </div>
-        ${(p.txRelay || p.rxRelay) ? html`<p class="small faint mt-2">${t("dev.viaRelayTraffic", { tx: fmtBytes(p.txRelay || 0), rx: fmtBytes(p.rxRelay || 0) })}</p>` : null}
       </section>
 
       <section class="ddr-sec">
@@ -209,6 +180,31 @@ export function DeviceDrawer({ id, onClose }) {
           </div>`}
         </div>
       </section>
+
+      <${TechDetails}>
+        <div class="ddr-tech">
+          <${KV} items=${[
+            p.online && { k: t("dev.rtt"), v: p.rttMs ? fmtRtt(p.rttMs) : "—" },
+            p.online && p.path === "relay" && p.relayVia && { k: t("dev.relayVia"), v: p.relayVia },
+            p.addr && { k: t("dev.addr"), v: p.addr, mono: true, copy: p.addr },
+            p.endpoints && p.endpoints.length && { k: t("dev.endpoints"), v: p.endpoints.join(", "), mono: true, wrap: true },
+            { k: "IPv4", v: p.ip4 || "—", mono: true, copy: p.ip4 },
+            p.ip6 && { k: "IPv6", v: p.ip6, mono: true, copy: p.ip6 },
+            { k: t("dev.id"), v: p.id, mono: true, copy: p.id, title: p.id },
+            { k: t("dev.os"), v: `${osName(p.os)}${p.arch ? " · " + p.arch : ""}` },
+            { k: t("dev.version"), v: html`<span>${p.version ? "v" + p.version : "—"}${versionDiffers ? html` <${Chip} size="sm" tone="warn">${t("dev.versionDiffers")}</${Chip}>` : ""}</span>` },
+            p.online && p.uptime && { k: t("dev.uptime"), v: fmtDuration(p.uptime) },
+            skew && { k: t("dev.clockSkew"), v: html`<span class="warn-text">${t("dev.clockSkewVal", { s: (p.clockSkewMs / 1000).toFixed(1) })}</span>` },
+            p.lastError && { k: t("dev.lastError"), v: p.lastError, mono: true, wrap: true },
+          ]} />
+          <p class="tech__label">${t("dev.sec.traffic")}</p>
+          <div class="ddr-traffic">
+            <div><${Icon} name="arrowOut" size=${16} /><span class="faint small">${t("dev.sent")}</span><strong class="tnum">${fmtBytes(p.txBytes || 0)}</strong></div>
+            <div><${Icon} name="arrowIn" size=${16} /><span class="faint small">${t("dev.received")}</span><strong class="tnum">${fmtBytes(p.rxBytes || 0)}</strong></div>
+          </div>
+          ${(p.txRelay || p.rxRelay) ? html`<p class="small faint mt-2">${t("dev.viaRelayTraffic", { tx: fmtBytes(p.txRelay || 0), rx: fmtBytes(p.rxRelay || 0) })}</p>` : null}
+        </div>
+      </${TechDetails}>
 
       <section class="ddr-sec">
         <h3 class="section-title">${t("dev.sec.manage")}</h3>

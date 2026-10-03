@@ -91,8 +91,10 @@ if (!external) {
     await p.waitForSelector("[data-testid=dns-preview][data-label=my-laptop]");
     await p.fill("[data-testid=onb-owner]", "Андрей");
     await p.click("[data-testid=onb-submit]");
-    await p.waitForSelector("[data-testid=page-devices]");
-    await p.waitForSelector("text=Пока здесь только это устройство");
+    // a new mesh lands on Home: "you're alone — add a second device" and the first steps
+    await p.waitForSelector("[data-testid=page-home]");
+    await p.waitForSelector("[data-testid=home-status][data-state=alone]:has-text('Вы пока одни в сети')");
+    await p.waitForSelector("[data-testid=home-start-checklist] [data-step=add][data-done=false]");
     const name = await p.textContent(".topbar__name");
     if (name.trim() !== "my-laptop") throw new Error(`device name not normalised: ${name}`);
     await p.context().close();
@@ -115,8 +117,8 @@ if (!external) {
     await p.click("[data-testid=onb-submit]");
     const body = JSON.parse((await sent).postData() || "{}");
     if ("owner" in body || !body.invite || !body.deviceName) throw new Error("join body should be {invite, deviceName}: " + JSON.stringify(body));
-    await p.waitForSelector("[data-testid=page-devices]", { timeout: 15000 });
-    await p.waitForSelector("[data-testid=device-card]");
+    await p.waitForSelector("[data-testid=page-home]", { timeout: 15000 });
+    await p.waitForSelector("[data-testid=home-device]");
     await p.context().close();
   });
 }
@@ -128,6 +130,145 @@ const state = await (await fetch(base + "/api/state", { headers: token ? { Autho
 const peer = (n) => state.peers.find((p) => p.deviceName === n || p.name === n);
 const NAS = peer("nas");
 const page = await newPage(base, "main");
+const PHONE = peer("phone");
+const hashIs = (re) => page.waitForFunction((src) => new RegExp(src).test(location.hash), re.source);
+
+await step("home: the landing page says how the network is in words", async () => {
+  await page.open();
+  await page.waitForSelector("[data-testid=page-home]");
+  await page.waitForSelector("[data-testid=nav-home][aria-current=page]");
+  // devices that have been away for days are mentioned calmly; the network itself is fine
+  const off = state.peers.filter((p) => !p.online).map((p) => p.name);
+  const status = page.locator("[data-testid=home-status]");
+  await status.waitFor();
+  const st = await status.getAttribute("data-state");
+  const text = await status.innerText();
+  const n = state.peers.length - off.length + 1, total = state.peers.length + 1;
+  if (st !== "ok" || !text.includes(`Всё в порядке — ${n} из ${total} устройств на связи`)) throw new Error(`status: [${st}] ${text}`);
+  if (!off.every((x) => text.includes(x))) throw new Error(`the long-absent devices ${off} should be mentioned: ${text}`);
+  const main = await page.textContent("main");
+  for (const re of [/\bNAT\b/, /ретранслят/i, /IPv[46]/, /\d\s?мс(?![а-яё])/i, /\bID\b/]) if (re.test(main)) throw new Error(`jargon on Home: ${re}`);
+  if (srv) {
+    // a device drops off just now → the sentence names it; it comes back → all good again
+    await srv.hook("/__mock/peer?name=nas&online=0");
+    await page.waitForSelector("[data-testid=home-status][data-state=partial]:has-text('Часть устройств не в сети: nas')");
+    await page.waitForSelector(`[data-testid=home-device][data-peer="${NAS.id}"][data-online=false]:has-text('Не в сети')`);
+    await srv.hook("/__mock/peer?name=nas&online=1");
+    await page.waitForSelector("[data-testid=home-status][data-state=ok]");
+  }
+  // every device has a card with a plain status line and three labelled buttons
+  const cards = await page.$$("[data-testid=home-device]");
+  if (cards.length !== state.peers.length) throw new Error(`expected ${state.peers.length} device cards, got ${cards.length}`);
+  const nas = `[data-testid=home-device][data-peer="${NAS.id}"]`;
+  await page.waitForSelector(`${nas} [data-testid=conn-line][data-state=on]`);
+  if (PHONE && PHONE.path === "relay") await page.waitForSelector(`[data-testid=home-device][data-peer="${PHONE.id}"] [data-testid=conn-line]:has-text('через')`);
+  if ((await page.textContent(`${nas} [data-testid=device-act-send]`)).trim() !== "Отправить файл") throw new Error("send button label");
+});
+
+await step("home: what needs attention — accept an offer right there, links to mail and chat", async () => {
+  await page.open("#/home");
+  await page.waitForSelector("[data-testid=home-attention]");
+  if (await page.$("[data-testid=offers-banner]")) throw new Error("Home lists offers itself; the banner must not repeat them");
+  if (state.counters.mail) await page.waitForSelector("[data-testid=home-att-mail] a[href='#/mail/inbox']");
+  if (state.counters.chat) await page.waitForSelector("[data-testid=home-att-chat] a[href='#/chat']");
+  if (srv) {
+    await page.waitForSelector("[data-testid=home-att-invite]"); // the mock has a pending invitation
+    const offer = await srv.hook("/__mock/offer?from=phone&name=" + encodeURIComponent("Фото с дачи.jpg"));
+    const row = `[data-testid=home-offer][data-id="${offer.id}"]`;
+    await page.waitForSelector(`${row}:has-text('Фото с дачи.jpg')`);
+    await page.click(`${row} [data-testid=offer-accept]`);
+    await page.waitForSelector(row, { state: "detached", timeout: 10000 });
+    await page.waitForSelector("[data-testid=toast]:has-text('Принимаем')");
+    const tr = (await srv.get("/api/transfers")).find((x) => x.id === offer.id);
+    if (!tr || tr.state === "offered") throw new Error("the offer was not accepted: " + JSON.stringify(tr && tr.state));
+  }
+});
+
+await step("home: the four actions lead to the real flows", async () => {
+  await page.open("#/home");
+  // more than one device: «Кому отправить файл?»
+  await page.click("[data-testid=home-action-send]");
+  await page.waitForSelector("[data-testid=device-pick] .modal__title:has-text('Кому отправить файл?')");
+  await page.click(`[data-testid=device-pick-item][data-peer="${NAS.id}"]`);
+  await hashIs(/^#\/files\/send\?to=/);
+  await page.waitForSelector(`[data-testid=device-chip][data-id="${NAS.id}"][aria-pressed=true]`);
+  await page.open("#/home");
+  await page.click("[data-testid=home-action-chat]");
+  await page.waitForSelector("[data-testid=device-pick] .modal__title:has-text('Кому написать?')");
+  await page.click(`[data-testid=device-pick-item][data-peer="${NAS.id}"]`);
+  await page.waitForSelector("[data-testid=conversation]");
+  await page.open("#/home");
+  await page.click("[data-testid=home-action-files]");
+  await hashIs(/^#\/files\/browse$/);
+  await page.waitForSelector("[data-testid=browse-device]");
+  await page.open("#/home");
+  await page.click("[data-testid=home-action-add]");
+  await page.waitForSelector("[data-testid=invite-create]");
+  await page.keyboard.press("Escape");
+  await page.waitForSelector("[data-testid=invite-create]", { state: "detached" });
+});
+
+await step("home: device buttons, an unavailable one says why, the card opens the drawer", async () => {
+  await page.open("#/home");
+  const nas = `[data-testid=home-device][data-peer="${NAS.id}"]`;
+  await page.click(`${nas} [data-testid=device-act-files]`);
+  await hashIs(new RegExp("^#/files/browse/" + NAS.id + "$"));
+  await page.waitForSelector("[data-testid=share-card]");
+  await page.open("#/home");
+  await page.click(`${nas} [data-testid=device-act-send]`);
+  await hashIs(new RegExp("^#/files/send\\?to=" + NAS.id));
+  await page.open("#/home");
+  await page.click(`${nas} [data-testid=device-act-chat]`);
+  await hashIs(new RegExp("^#/chat/" + NAS.id + "$"));
+  const offline = state.peers.find((p) => !p.online);
+  if (offline) {
+    const btn = `[data-testid=home-device][data-peer="${offline.id}"] [data-testid=device-act-files]`;
+    await page.open("#/home");
+    if ((await page.getAttribute(btn, "aria-disabled")) !== "true") throw new Error("files of an offline device should be unavailable");
+    if (!/не в сети/.test(await page.getAttribute(btn, "title"))) throw new Error("the tooltip should say why");
+    await page.click(btn, { force: true }); // aria-disabled: still clickable, it explains instead of navigating
+    await page.waitForSelector("[data-testid=toast]:has-text('не в сети')");
+    if (!/#\/home$/.test(await page.evaluate(() => location.hash))) throw new Error("an unavailable button must not navigate");
+    const send = `[data-testid=home-device][data-peer="${offline.id}"] [data-testid=device-act-send]`;
+    if (!/дождётся/.test(await page.getAttribute(send, "title"))) throw new Error("sending to an offline device should say it waits");
+  }
+  // the card itself opens the device drawer (on Home, at #/home/<id>); technical details are folded away
+  await page.click(`${nas} .hdev__name a`);
+  await page.waitForSelector("[data-testid=device-drawer]");
+  await hashIs(new RegExp("^#/home/" + NAS.id + "$"));
+  const tech = "[data-testid=device-drawer] [data-testid=tech-details]";
+  if (await page.$eval(tech, (d) => d.open)) throw new Error("technical details should start folded");
+  if (await page.isVisible(`${tech} :text('IPv4')`)) throw new Error("IPv4 visible before unfolding");
+  await page.click(`${tech} summary`);
+  await page.waitForSelector(`${tech} :text('IPv4')`);
+  await page.keyboard.press("Escape");
+  await page.waitForSelector("[data-testid=device-drawer]", { state: "detached" });
+  await hashIs(/^#\/home$/);
+});
+
+await step("home: «Как это работает?» from the top bar and from the status", async () => {
+  await page.open("#/home");
+  await page.click("[data-testid=help-button]");
+  await page.waitForSelector("[data-testid=help-sheet]");
+  const n = await page.$$eval("[data-testid=help-sheet] .help__point", (els) => els.length);
+  if (n !== 4) throw new Error("the sheet should explain 4 things, has " + n);
+  for (const words of ["ключ", "одноразовый код", "напрямую", "подождут"]) {
+    if (!(await page.textContent("[data-testid=help-sheet]")).includes(words)) throw new Error("help sheet misses: " + words);
+  }
+  await page.waitForSelector("[data-testid=help-sheet] .help__dots");
+  await page.keyboard.press("Escape");
+  await page.waitForSelector("[data-testid=help-sheet]", { state: "detached" });
+  await page.waitForFunction(() => document.activeElement && document.activeElement.dataset.testid === "help-button");
+  await page.click("[data-testid=home-help]");
+  await page.waitForSelector("[data-testid=help-sheet]");
+  await page.keyboard.press("Escape");
+  // no NAT chip in the top bar any more; the details live in Settings → Сеть
+  if (await page.$(".topbar [data-testid=nat-chip]")) throw new Error("NAT chip still in the top bar");
+  await page.open("#/settings/network");
+  await page.waitForSelector("[data-testid=settings-network] [data-testid=nat-chip][data-difficulty]");
+  await page.open("#/devices");
+  await page.waitForSelector("[data-testid=self-card] [data-testid=tech-details]");
+});
 
 await step("devices: topology, drawer, ping", async () => {
   await page.open("#/devices");
@@ -524,8 +665,62 @@ if (srv) {
     await page.waitForSelector("[data-testid=offline-banner]", { state: "detached", timeout: 20000 });
   });
 
+  const fresh = await mock(["--calm", "--scenario", "empty"]);
+  await step("home: getting started — first steps, nothing to send to yet, dismiss for good", async () => {
+    const p = await newPage(fresh.url, "start");
+    // empty states elsewhere send you to Home's «Добавить устройство» (#/home?add=1)
+    await p.open("#/chat");
+    await p.click(".chat__list .empty a:has-text('Добавить устройство')");
+    await p.waitForSelector("[data-testid=invite-create]");
+    if ((await p.evaluate(() => location.hash)) !== "#/home") throw new Error("?add=1 should be dropped from the address");
+    await p.keyboard.press("Escape");
+    await p.waitForSelector("[data-testid=invite-create]", { state: "detached" });
+    await p.waitForSelector("[data-testid=home-status][data-state=alone]");
+    const list = "[data-testid=home-start-checklist]";
+    await p.waitForSelector(`${list} [data-step=add][data-done=false]`);
+    // sending needs somebody to send to: say so and offer to add a device
+    await p.click("[data-testid=home-action-send]");
+    await p.waitForSelector("[data-testid=toast]:has-text('Сначала добавьте второе устройство')");
+    await p.waitForSelector("[data-testid=invite-create]");
+    await p.keyboard.press("Escape");
+    // a second device joins → step 1 is done, the status turns green, «Отправить» goes straight to it
+    await fetch(fresh.url + "/api/invites", { method: "POST", headers: { Authorization: "Bearer dev", "Content-Type": "application/json" }, body: JSON.stringify({ admin: false, owner: "Андрей" }) });
+    await fresh.hook("/__mock/join?name=phone");
+    await p.waitForSelector(`${list} [data-step=add][data-done=true]`, { timeout: 10000 });
+    await p.waitForSelector("[data-testid=home-status][data-state=ok]:has-text('2 из 2')");
+    const href = await p.getAttribute("[data-testid=home-action-send]", "href");
+    if (!/^#\/files\/send\?to=/.test(href || "")) throw new Error("with one other device «Отправить файл» should go straight to it: " + href);
+    // looking at the other device's folders ticks step 2 (remembered in this browser)
+    const other = (await fresh.get("/api/state")).peers[0];
+    await p.open(`#/files/browse/${other.id}`);
+    await p.waitForSelector("[data-testid=share-card], .empty");
+    await p.open("#/home");
+    await p.waitForSelector(`${list} [data-step=browse][data-done=true]`);
+    await p.click("[data-testid=home-start-dismiss]");
+    await p.waitForSelector(list, { state: "detached" });
+    await p.reload();
+    await p.waitForSelector("[data-testid=home-status]");
+    if (await p.$(list)) throw new Error("the dismissed checklist came back after a reload");
+    await p.context().close();
+  });
+
   await step("mobile: tab bar, drill-down chat and back", async () => {
     const m = await newPage(base, "mobile", { mobile: true });
+    // Home on a phone: one column, no sideways scroll, finger-sized buttons
+    await m.open();
+    await m.waitForSelector("[data-testid=tab-home][aria-current=page]");
+    if (await m.$("[data-testid=tab-devices]")) throw new Error("five tabs at most: Devices lives on Home and in «Ещё»");
+    if (await m.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)) throw new Error("Home scrolls sideways at 390px");
+    const small = await m.$$eval(".home-act, .dact__btn, .home-status__help, [data-testid=help-button], .home-att__row--link", (els) =>
+      els.filter((e) => e.getClientRects().length).map((e) => [e.className, Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)]).filter(([, w, h]) => w < 44 || h < 44));
+    if (small.length) throw new Error("tap targets under 44px: " + JSON.stringify(small.slice(0, 3)));
+    const labels = await m.$$eval(".dact__label", (els) => els.filter((e) => e.getClientRects().length).length);
+    if (labels) throw new Error("device buttons should be icons with an accessible name on a phone");
+    // the full device list is one tap away in «Ещё»
+    await m.click("[data-testid=tab-more]");
+    await m.click("[data-testid=more-devices]");
+    await m.waitForSelector("[data-testid=page-devices] [data-testid=device-card]");
+    if ((await m.getAttribute("[data-testid=tab-home]", "aria-current")) !== "page") throw new Error("the Devices page belongs to the Home tab");
     await m.open("#/chat");
     await m.click("[data-testid=thread] >> nth=0");
     await m.waitForSelector("[data-testid=conversation]");
@@ -549,7 +744,7 @@ if (srv) {
     await p.click("[data-testid=onb-join]");
     await p.fill("[data-testid=onb-code]", "SVOI1-AEAWVQFQ-GHIJKLMN-OPQRSTUV-WXYZ2345-67ABCDEF-GHIJKLMN");
     await p.click("[data-testid=onb-submit]");
-    await p.waitForSelector("[data-testid=page-devices]", { timeout: 15000 });
+    await p.waitForSelector("[data-testid=page-home]", { timeout: 15000 });
     if (await p.$("[data-testid=removed-notice]")) throw new Error("notice still shown after joining");
     await p.context().close();
   });
@@ -561,7 +756,7 @@ if (srv) {
     await p.waitForSelector("[data-testid=unauthorized][data-reason=expired]");
     const { url } = await auth.hook("/__mock/login"); // what `svoi url` prints
     await p.goto(auth.url + url);
-    await p.waitForSelector("[data-testid=page-devices]");
+    await p.waitForSelector("[data-testid=page-home]");
     if ((await p.evaluate(() => location.search)).includes("t=")) throw new Error("login code left in the address bar");
     // the same link again, in a fresh browser: used up
     const q = await newPage(auth.url, "auth-reuse");

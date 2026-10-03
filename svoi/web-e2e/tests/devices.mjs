@@ -2,7 +2,7 @@ import { group, test, assert, eq, until, open, nav, tid, api } from "../lib.mjs"
 
 group("devices", () => {
   test("overview shows this device, the topology and every other device", async ({ browser, dev }) => {
-    const page = await open(browser, dev.laptop);
+    const page = await open(browser, dev.laptop, { hash: "devices" });
     await tid(page, "self-card").waitFor();
     await tid(page, "topology").waitFor();
     await page.waitForFunction(() => document.querySelectorAll('[data-testid="device-card"]').length === 3);
@@ -19,7 +19,7 @@ group("devices", () => {
   });
 
   test("a device can be pinged from its drawer", async ({ browser, dev }) => {
-    const page = await open(browser, dev.laptop);
+    const page = await open(browser, dev.laptop, { hash: "devices" });
     await page.locator('[data-testid="device-card"][data-name="nas"] a.stretched').click();
     await tid(page, "device-drawer").waitFor();
     await tid(page, "device-ping").click();
@@ -28,7 +28,7 @@ group("devices", () => {
   });
 
   test("an invitation with a QR code can be created, is listed and can be cancelled", async ({ browser, dev }) => {
-    const page = await open(browser, dev.laptop);
+    const page = await open(browser, dev.laptop, { hash: "devices" });
     await tid(page, "add-device").click();
     await tid(page, "invite-create").click();
     await tid(page, "invite-qr").locator("img").waitFor();
@@ -53,7 +53,7 @@ group("devices", () => {
   test("a device that was renamed locally shows its alias everywhere", async ({ browser, dev }) => {
     const nas = (await dev.laptop.api("GET", "/api/state")).peers.find((p) => p.deviceName === "nas");
     await dev.laptop.api("POST", `/api/peers/${nas.id}/alias`, { alias: "Домашний NAS" });
-    const page = await open(browser, dev.laptop);
+    const page = await open(browser, dev.laptop, { hash: "devices" });
     await page.waitForFunction(() => [...document.querySelectorAll('[data-testid="device-card"]')].some((e) => /Домашний NAS/.test(e.innerText)));
     await dev.laptop.api("POST", `/api/peers/${nas.id}/alias`, { alias: "" });
     await page.waitForFunction(() => ![...document.querySelectorAll('[data-testid="device-card"]')].some((e) => /Домашний NAS/.test(e.innerText)));

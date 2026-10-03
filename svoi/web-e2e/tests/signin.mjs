@@ -3,7 +3,7 @@ import { group, test, assert, eq, until, open, tid, startNode, freePort } from "
 // How a person gets into the interface: with a one-time link. The master token
 // (what the command line uses) must never reach the browser.
 const navVisible = (page) =>
-  page.waitForFunction(() => [...document.querySelectorAll('[data-testid="nav-devices"], [data-testid="tab-devices"]')].some((e) => e.getClientRects().length > 0));
+  page.waitForFunction(() => [...document.querySelectorAll('[data-testid="nav-home"], [data-testid="tab-home"]')].some((e) => e.getClientRects().length > 0));
 
 group("signing in", () => {
   test("a sign-in link works exactly once and leaves no secret in the page", async ({ browser, dev }) => {
@@ -118,7 +118,7 @@ group("restarting a node", { noDemo: true }, () => {
   test("an open tab keeps working after the node restarts, without signing in again", async ({ browser }) => {
     const port = await freePort();
     const node = await startNode({ name: "phoenix", init: true, mesh: "Феникс", owner: "Анна", port });
-    const page = await open(browser, node, { allow: [/requestfailed/, /HTTP 5\d\d/, /console\.error/] });
+    const page = await open(browser, node, { hash: "devices", allow: [/requestfailed/, /HTTP 5\d\d/, /console\.error/] });
     await tid(page, "self-card").waitFor();
     await node.restart();
     eq(node.origin.endsWith(":" + port), true, "the node came back on the same port");

@@ -1,6 +1,6 @@
 // Files → Browse: device → share → folder browser with previews, uploads
 // (drag & drop, 409 → overwrite confirmation), new folder / rename / delete.
-import { html, useEffect, useMemo, useRef, useState } from "../../vendor/preact-htm.js";
+import { html, useEffect, useLayoutEffect, useMemo, useRef, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t, tn } from "../i18n.js";
 import { fileUrl, get, peerPath, post, thumbUrl, upload } from "../api.js";
@@ -8,6 +8,7 @@ import { go, href } from "../router.js";
 import { useStore } from "../store.js";
 import { fmtBytes, fmtShortDate, fmtDateTime, fmtPercent } from "../format.js";
 import { useAsync, usePersistent } from "../hooks.js";
+import { setStartFlag } from "../prefs.js";
 import { cx, fileKind, joinPath, sortPeers, uid } from "../util.js";
 import { DeviceAvatar, FileIcon } from "../components/avatar.js";
 import { Ago, useFileDrop } from "../components/misc.js";
@@ -53,6 +54,10 @@ function DeviceGrid() {
       <span class="bdev__text"><span class="bdev__name">${self.name}</span><span class="bdev__sub">${t("dev.thisDevice")}</span></span>
       <${Icon} name="chevronRight" size=${18} class="bdev__chev" />
     </a>
+    ${!peers.length && html`<div class="bdev bdev--hint">
+      <span class="bdev__text"><span class="bdev__sub">${t("browse.noPeersText")}</span></span>
+      <${Button} size="sm" variant="primary" icon="userPlus" href="#/home?add=1">${t("dev.add")}</${Button}>
+    </div>`}
     ${list.map((p) => {
       const inner = html`
         <${DeviceAvatar} dev=${p} size=${48} />
@@ -76,6 +81,8 @@ function ShareList({ dev }) {
     return list;
   }, [dev, d.online]);
   const crumbs = html`<${Crumbs} dev=${dev} devName=${d.name} />`;
+  // «Начало работы» on Home: having looked into another device's folders (noted as soon as they show).
+  useLayoutEffect(() => { if (!d.isSelf && res.data) setStartFlag("browsed"); }, [d.isSelf, res.data]);
   if (!d.known) return html`${crumbs}<${EmptyState} icon="alertCircle" title=${t("dev.notFound")} text=${t("dev.notFoundText")} />`;
   if (!d.online) return html`${crumbs}<${OfflineState} name=${d.name} peer=${d.peer} />`;
   if (res.loading && !res.data) {

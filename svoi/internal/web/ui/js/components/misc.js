@@ -61,11 +61,24 @@ export function DnsPreview({ name, taken }) {
   </p>`;
 }
 
-export function PageHeader({ title, subtitle, actions, back, children }) {
+/** Collapsed «Технические данные» (addresses, keys, NAT, delays…) for the people who need them. */
+export function TechDetails({ children, class: cls, summary }) {
+  return html`<details class=${cx("tech", cls)} data-testid="tech-details">
+    <summary class="tech__summary"><${Icon} name="chevronRight" size=${16} class="tech__chev" /><span>${summary || t("tech.title")}</span></summary>
+    <div class="tech__body">${children}</div>
+  </details>`;
+}
+
+/** «для опытных»: marks screens and sections nobody needs for everyday use. */
+export function ExpertTag() {
+  return html`<span class="expert-tag" title=${t("expert.hint")}>${t("expert.tag")}</span>`;
+}
+
+export function PageHeader({ title, subtitle, actions, back, children, expert = false }) {
   return html`<header class="page-head">
     ${back && html`<a class="page-head__back icon-btn icon-btn--ghost" href=${back} aria-label=${t("common.back")} title=${t("common.back")}><${Icon} name="arrowLeft" size=${20} /></a>`}
     <div class="grow page-head__text">
-      <h1 class="page-head__title">${title}</h1>
+      <h1 class="page-head__title">${title}${expert && html` <${ExpertTag} />`}</h1>
       ${subtitle && html`<p class="page-head__sub">${subtitle}</p>`}
     </div>
     ${actions && html`<div class="page-head__actions">${actions}</div>`}

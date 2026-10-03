@@ -8,6 +8,7 @@ import { state, upsertTransfer, useStore } from "../store.js";
 import { fmtBytes, fmtPercent } from "../format.js";
 import { cx, guessMime, uid } from "../util.js";
 import { useWindowEvent } from "../hooks.js";
+import { setStartFlag } from "../prefs.js";
 import { FileIcon } from "../components/avatar.js";
 import { DeviceChips } from "../components/devicepicker.js";
 import { DropZone, useFileDrop } from "../components/misc.js";
@@ -78,6 +79,7 @@ export function SendTab({ route }) {
     });
     await Promise.all(workers);
     if (okN) {
+      setStartFlag("sent");
       const names = recipients.map((id) => (state.peers.find((p) => p.id === id) || {}).name).filter(Boolean).join(", ");
       toast({ level: "success", title: tn("send.queued", okN), text: t("send.queuedTo", { names }) });
     }
