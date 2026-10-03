@@ -47,7 +47,7 @@ func cmdDemo(args []string) error {
 	if !*noBrowser {
 		go func() {
 			time.Sleep(300 * time.Millisecond)
-			openBrowser(laptop)
+			openBrowser(d.Devices["laptop"].LocalLoginURL()) // not the printed link: this one is for a command line
 		}()
 	}
 	<-signalChan()

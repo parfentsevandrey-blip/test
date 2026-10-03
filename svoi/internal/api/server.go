@@ -13,6 +13,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -48,6 +49,9 @@ type Server struct {
 	loopback bool // listening on a loopback address only
 	ln       net.Listener
 
+	// callerUID says which user a loopback request comes from (see peerUID); tests replace it.
+	callerUID func(*http.Request) (int, bool)
+
 	mu     sync.Mutex // guards srv and closed: Close may race with Serve starting up
 	srv    *http.Server
 	closed bool
@@ -55,7 +59,7 @@ type Server struct {
 
 // New creates the server. ui may be nil (API only).
 func New(a *app.App, ui fs.FS) *Server {
-	s := &Server{app: a, ui: ui, mux: http.NewServeMux(), loopback: true, sess: newSessions(a.Dir())}
+	s := &Server{app: a, ui: ui, mux: http.NewServeMux(), loopback: true, sess: newSessions(a.Dir()), callerUID: peerUID}
 	s.routes()
 	s.registerRemoteHandler()
 	return s
@@ -128,8 +132,16 @@ func (s *Server) Close() error {
 }
 
 // URL returns the address to open in a browser. It carries a fresh single-use
-// login code (valid for ten minutes), not the master token.
-func (s *Server) URL() string {
+// login code (valid for ten minutes), not the master token. Anybody who sees it can
+// use it: it is for printing, not for a command line.
+func (s *Server) URL() string { return s.loginURL(anyUser) }
+
+// LocalURL is URL for a browser that is started on this machine by this process
+// (xdg-open and the like): the link goes through a command line, so it only works
+// for the user running this process (where the system can tell).
+func (s *Server) LocalURL() string { return s.loginURL(os.Getuid()) }
+
+func (s *Server) loginURL(uid int) string {
 	if s.ln == nil {
 		return ""
 	}
@@ -140,7 +152,7 @@ func (s *Server) URL() string {
 			host = h
 		}
 	}
-	return fmt.Sprintf("http://%s:%s/?t=%s", host, port, url.QueryEscape(s.sess.newCode()))
+	return fmt.Sprintf("http://%s:%s/?t=%s", host, port, url.QueryEscape(s.sess.newCodeFor(uid)))
 }
 
 // Addr returns the listening address.
@@ -230,7 +242,13 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	// Login: /?t=<one-time code> becomes a session cookie, and the code leaves the URL.
 	if t := r.URL.Query().Get("t"); t != "" && !strings.HasPrefix(r.URL.Path, "/api/") {
-		if id := s.sess.redeem(t); id != "" {
+		id, res := s.sess.redeemCode(t, func() (int, bool) { return s.callerUID(r) })
+		if res == redeemWrongUser {
+			http.Error(w, "This sign-in link was made for the user who started svoi on this computer, and you are another user.\n"+
+				"Ask that user to run `svoi url`: that prints a link you can open from any browser.", http.StatusForbidden)
+			return
+		}
+		if id != "" {
 			http.SetCookie(w, s.sessionCookie(id))
 			q := r.URL.Query()
 			q.Del("t")

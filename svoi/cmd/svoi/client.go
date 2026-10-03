@@ -287,12 +287,17 @@ func cmdOpen(args []string) error {
 	fs := flag.NewFlagSet("open", flag.ExitOnError)
 	cf.register(fs)
 	fs.Parse(args)
-	u, err := uiURL(cf.dir)
+	// What is printed can be copied to any computer; what the browser is started with
+	// goes through a command line, where other users of this machine can read it, so
+	// that one only works for this user.
+	printed, err := uiURL(cf.dir, false)
 	if err != nil {
 		return err
 	}
-	fmt.Println(u)
-	openBrowser(u)
+	fmt.Println(printed)
+	if opened, err := uiURL(cf.dir, true); err == nil {
+		openBrowser(opened)
+	}
 	return nil
 }
 
@@ -301,7 +306,7 @@ func cmdURL(args []string) error {
 	fs := flag.NewFlagSet("url", flag.ExitOnError)
 	cf.register(fs)
 	fs.Parse(args)
-	u, err := uiURL(cf.dir)
+	u, err := uiURL(cf.dir, false)
 	if err != nil {
 		return err
 	}
@@ -309,8 +314,12 @@ func cmdURL(args []string) error {
 	return nil
 }
 
-// uiURL asks the running node for a fresh single-use sign-in link.
-func uiURL(dir string) (string, error) {
+// uiURL asks the running node for a fresh single-use sign-in link. local says the
+// link is for a browser on this machine that is about to be started with it on its
+// command line (`svoi open`): it then only works for this user. A link that is
+// printed (`svoi url`) works for whoever has it, so it can be carried to another
+// computer.
+func uiURL(dir string, local bool) (string, error) {
 	c, err := newClient(dir)
 	if err != nil {
 		return "", err
@@ -318,7 +327,7 @@ func uiURL(dir string) (string, error) {
 	var out struct {
 		Code string `json:"code"`
 	}
-	if err := c.post("/api/login/code", struct{}{}, &out); err != nil {
+	if err := c.post("/api/login/code", map[string]bool{"local": local}, &out); err != nil {
 		return "", err
 	}
 	return c.base + "/?t=" + out.Code, nil

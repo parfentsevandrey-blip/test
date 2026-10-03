@@ -35,12 +35,21 @@ type sessions struct {
 	mu    sync.Mutex
 	now   func() time.Time
 	path  string
-	codes map[string]time.Time // sha256(code) -> expiry
+	codes map[string]loginCode // sha256(code) -> what it is good for
 	sess  map[string]int64     // sha256(session id) -> expiry (unix seconds)
 }
 
+// loginCode is an unused sign-in code. uid is the user it was made for (a link that
+// is opened on the machine itself, see redeemCode), or anyUser.
+type loginCode struct {
+	exp time.Time
+	uid int
+}
+
+const anyUser = -1
+
 func newSessions(dir string) *sessions {
-	s := &sessions{now: time.Now, codes: map[string]time.Time{}, sess: map[string]int64{}}
+	s := &sessions{now: time.Now, codes: map[string]loginCode{}, sess: map[string]int64{}}
 	if dir != "" {
 		s.path = filepath.Join(dir, "ui.sessions")
 		if raw, err := os.ReadFile(s.path); err == nil {
@@ -65,8 +74,8 @@ func randomHex(n int) string {
 }
 
 func (s *sessions) pruneLocked(now time.Time) {
-	for k, exp := range s.codes {
-		if !now.Before(exp) {
+	for k, c := range s.codes {
+		if !now.Before(c.exp) {
 			delete(s.codes, k)
 		}
 	}
@@ -86,8 +95,14 @@ func (s *sessions) saveLocked() {
 	}
 }
 
-// newCode returns a fresh single-use login code.
-func (s *sessions) newCode() string {
+// newCode returns a fresh single-use login code that anybody who has it can use.
+func (s *sessions) newCode() string { return s.newCodeFor(anyUser) }
+
+// newCodeFor returns a fresh single-use login code. With uid >= 0 only a connection
+// that belongs to that user can use it (where the system can tell: Linux): the link
+// that is handed to a browser on this very machine sits on a command line for a
+// moment, where every other user of the machine can read it.
+func (s *sessions) newCodeFor(uid int) string {
 	code := randomHex(codeLen / 2)
 	now := s.now()
 	s.mu.Lock()
@@ -95,33 +110,58 @@ func (s *sessions) newCode() string {
 	for len(s.codes) >= maxCodes { // forget the one closest to expiry
 		var oldK string
 		var oldE time.Time
-		for k, e := range s.codes {
-			if oldK == "" || e.Before(oldE) {
-				oldK, oldE = k, e
+		for k, c := range s.codes {
+			if oldK == "" || c.exp.Before(oldE) {
+				oldK, oldE = k, c.exp
 			}
 		}
 		delete(s.codes, oldK)
 	}
-	s.codes[hashOf(code)] = now.Add(loginCodeTTL)
+	s.codes[hashOf(code)] = loginCode{exp: now.Add(loginCodeTTL), uid: uid}
 	s.mu.Unlock()
 	return code
 }
 
+type redeemResult int
+
+const (
+	redeemOK        redeemResult = iota
+	redeemBad                    // unknown, used or expired
+	redeemWrongUser              // made for another user of this machine; not used up
+)
+
 // redeem exchanges a login code for a new session id ("" if the code is unknown,
 // used or expired). A code works exactly once.
 func (s *sessions) redeem(code string) string {
+	id, _ := s.redeemCode(code, nil)
+	return id
+}
+
+// redeemCode is redeem for a request: caller says which user the connection
+// belongs to (ok=false if that cannot be told). A code made for a user is refused
+// - and kept - when the connection is known to belong to somebody else.
+func (s *sessions) redeemCode(code string, caller func() (uid int, ok bool)) (string, redeemResult) {
 	if len(code) != codeLen {
-		return ""
+		return "", redeemBad
 	}
 	key := hashOf(code)
 	now := s.now()
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	exp, ok := s.codes[key]
-	delete(s.codes, key)
-	if !ok || !now.Before(exp) {
-		return ""
+	c, ok := s.codes[key]
+	if !ok {
+		return "", redeemBad
 	}
+	if !now.Before(c.exp) {
+		delete(s.codes, key)
+		return "", redeemBad
+	}
+	if c.uid != anyUser && caller != nil {
+		if uid, known := caller(); known && uid != c.uid {
+			return "", redeemWrongUser
+		}
+	}
+	delete(s.codes, key)
 	s.pruneLocked(now)
 	for len(s.sess) >= maxSessions { // drop the one closest to expiry
 		var oldK string
@@ -136,7 +176,7 @@ func (s *sessions) redeem(code string) string {
 	id := randomHex(sessionIDLen / 2)
 	s.sess[hashOf(id)] = now.Add(sessionTTL).Unix()
 	s.saveLocked()
-	return id
+	return id, redeemOK
 }
 
 // check reports whether id is a live session. renewed is true when the session
@@ -191,7 +231,7 @@ func (s *sessions) drop(id string) {
 func (s *sessions) dropAll() {
 	s.mu.Lock()
 	s.sess = map[string]int64{}
-	s.codes = map[string]time.Time{}
+	s.codes = map[string]loginCode{}
 	s.saveLocked()
 	s.mu.Unlock()
 }
@@ -224,18 +264,34 @@ func (s *Server) handleHandshake(w http.ResponseWriter, r *http.Request) {
 
 // POST /api/login/code — mint a single-use link that signs a browser in. Only the
 // command line (master token) may ask: a browser session cannot mint more of them.
+// {"local": true} asks for a link to be opened by a browser on this machine (`svoi
+// open`): it is tied to the user who asks, because it is about to appear on a command
+// line (xdg-open) where every other user of the machine can read it. A link that is
+// printed to be copied (`svoi url`), perhaps to another computer through a tunnel,
+// is not.
 func (s *Server) handleLoginCode(w http.ResponseWriter, r *http.Request) {
 	if !s.bearerOK(r) {
 		writeError(w, errCode("denied", "login links are issued to the command line only (svoi url / svoi open)"))
 		return
 	}
-	code := s.sess.newCode()
+	var in struct {
+		Local bool `json:"local"`
+	}
+	_ = json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<10)).Decode(&in)
+	uid, bound := anyUser, false
+	if in.Local {
+		if u, ok := s.callerUID(r); ok {
+			uid, bound = u, true
+		}
+	}
+	code := s.sess.newCodeFor(uid)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"code":       code,
 		"url":        "http://" + r.Host + "/?t=" + code,
 		"expiresIn":  int(loginCodeTTL / time.Second),
 		"singleUse":  true,
 		"sessionTtl": int(sessionTTL / time.Second),
+		"bound":      bound,
 	})
 }
 

@@ -49,6 +49,10 @@ type Device struct {
 // <data dir>/ui.token, as on a real device.
 func (d *Device) LoginURL() string { return d.UI.URL() }
 
+// LocalLoginURL is LoginURL for a browser this process starts itself: the link goes
+// through a command line, so it only works for the user running the process.
+func (d *Device) LocalLoginURL() string { return d.UI.LocalURL() }
+
 // Demo is a running simulation.
 type Demo struct {
 	Devices map[string]*Device

@@ -61,8 +61,9 @@ func cmdUp(args []string) error {
 	debug := fs.Bool("debug", false, "verbose logging")
 	loopback := fs.Bool("loopback", false, "also advertise 127.0.0.1 (several nodes on one machine)")
 	tunOn := fs.Bool("tun", false, "create the svoi0 network interface (Linux, needs root): reach devices by IP or <name>.svoi from any program")
-	noSTUN := fs.Bool("no-stun", false, "do not use public STUN servers (peers still tell each other how they see us)")
-	noPortMap := fs.Bool("no-portmap", false, "do not ask the home router (UPnP / NAT-PMP) to forward our UDP port")
+	noSTUN := fs.Bool("no-stun", false, "do not use public STUN servers (peers still tell each other how they see us); saved in the settings")
+	printLink := fs.Bool("print-link", false, "print the one-time sign-in link even when the output is not a terminal (it then stays in the log)")
+	noPortMap := fs.Bool("no-portmap", false, "do not ask the home router (UPnP / NAT-PMP) to forward our UDP port; saved in the settings")
 	fs.Parse(args)
 
 	a, err := app.Open(app.Options{
@@ -112,15 +113,20 @@ func cmdUp(args []string) error {
 	} else {
 		fmt.Fprintf(os.Stderr, "  this device is not part of a mesh yet — create one or join in the browser\n")
 	}
-	loginURL := srv.URL()
-	fmt.Fprintf(os.Stderr, "  open:    %s\n           (a one-time link, valid 10 minutes; `svoi open` makes a new one)\n  data:    %s\n\n", loginURL, cf.dir)
+	// The link is a key for ten minutes. On a terminal a person reads it and it scrolls
+	// away; in a log (systemd's journal, docker logs) it would stay for others to find.
+	if isTerminal(os.Stderr) || *printLink || os.Getenv("SVOI_PRINT_LINK") != "" {
+		fmt.Fprintf(os.Stderr, "  open:    %s\n           (a one-time link, valid 10 minutes; `svoi open` makes a new one)\n  data:    %s\n\n", srv.URL(), cf.dir)
+	} else {
+		fmt.Fprintf(os.Stderr, "  open:    run `svoi url` on this machine for a one-time sign-in link\n           (it is not printed here, a log would keep it; --print-link overrides)\n  data:    %s\n\n", cf.dir)
+	}
 
 	errc := make(chan error, 1)
 	go func() { errc <- srv.Serve(ln) }()
 	if !*noBrowser && interactive() {
 		go func() {
 			time.Sleep(300 * time.Millisecond)
-			openBrowser(loginURL)
+			openBrowser(srv.LocalURL()) // for this user only: it passes through a command line
 		}()
 	}
 	select {
@@ -131,6 +137,19 @@ func cmdUp(args []string) error {
 	case err := <-errc:
 		return err
 	}
+}
+
+// isTerminal reports whether f is a terminal, that is, whether a person is looking at
+// it (rather than a file, a pipe or a service manager's journal).
+func isTerminal(f *os.File) bool {
+	fi, err := f.Stat()
+	if err != nil || fi.Mode()&os.ModeCharDevice == 0 {
+		return false
+	}
+	if null, err := os.Stat(os.DevNull); err == nil && os.SameFile(fi, null) {
+		return false
+	}
+	return true
 }
 
 // interactive reports whether we were started by a person (double-click or a

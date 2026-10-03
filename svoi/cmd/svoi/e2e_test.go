@@ -16,6 +16,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -259,6 +260,31 @@ func (p *proc) checkSignIn(t *testing.T) {
 	if second == nil || second.Value == first.Value {
 		t.Fatal("svoi url did not sign in")
 	}
+	// The link `svoi open` hands to the browser it starts is tied to this user (Linux), and
+	// works for this user, from this very process: a real loopback connection between two
+	// processes, identified by the kernel's socket table.
+	req, _ := http.NewRequest("POST", p.apiBase()+"/api/login/code", strings.NewReader(`{"local":true}`))
+	req.Header.Set("Authorization", "Bearer "+tok)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var minted struct {
+		Code  string
+		Bound bool
+	}
+	_ = json.NewDecoder(resp.Body).Decode(&minted)
+	resp.Body.Close()
+	if len(minted.Code) != 48 {
+		t.Fatalf("local link: %d %+v", resp.StatusCode, minted)
+	}
+	if runtime.GOOS == "linux" && !minted.Bound {
+		t.Log("the kernel's socket table could not be read here: the local link is not tied to a user")
+	}
+	if c := openLink(t, p.apiBase()+"/?t="+minted.Code); c == nil || p.apiAs(c, "/api/state") != 200 {
+		t.Fatalf("the user a local link was made for could not use it (bound=%v)", minted.Bound)
+	}
 	// `svoi signout` ends every browser session and cancels unused links.
 	p.mustRun("signout")
 	if p.apiAs(first, "/api/state") != 401 || p.apiAs(second, "/api/state") != 401 {
@@ -269,6 +295,45 @@ func (p *proc) checkSignIn(t *testing.T) {
 	}
 	if c := openLink(t, strings.TrimSpace(p.mustRun("url"))); c == nil || p.apiAs(c, "/api/state") != 200 {
 		t.Fatal("cannot sign in again after signout")
+	}
+}
+
+// A node that runs without a terminal (a service, a container) must not write a live
+// sign-in link into its log: the journal keeps it long after the ten minutes, for
+// whoever can read it. `svoi url` is how a person gets one.
+func TestHeadlessUpKeepsTheSignInLinkOutOfTheLog(t *testing.T) {
+	if testing.Short() {
+		t.Skip("starts a real process")
+	}
+	p := newProc(t, "headless")
+	p.mustRun("init", "--mesh", "Дом", "--name", "headless", "--owner", "tester")
+	p.start() // its output is a file: not a terminal
+	log := p.logs()
+	if strings.Contains(log, "?t=") || regexp.MustCompile(`[0-9a-f]{48}`).MatchString(log) {
+		t.Fatalf("a sign-in link or code is in the log:\n%s", log)
+	}
+	if !strings.Contains(log, "svoi url") {
+		t.Fatalf("the log does not say how to get a link:\n%s", log)
+	}
+	link := strings.TrimSpace(p.mustRun("url"))
+	if c := openLink(t, link); c == nil || p.apiAs(c, "/api/state") != 200 {
+		t.Fatalf("`svoi url` did not give a working link: %q", link)
+	}
+	// `svoi open` prints a link that can be copied anywhere, and starts a browser (here there is none).
+	out := p.mustRun("open")
+	m := loginLinkRe.FindString(out)
+	if m == "" {
+		t.Fatalf("svoi open printed no link:\n%s", out)
+	}
+	if c := openLink(t, m); c == nil {
+		t.Fatal("the link `svoi open` printed does not work")
+	}
+	// And the opposite, on request.
+	q := newProc(t, "printing")
+	q.mustRun("init", "--mesh", "Дом", "--name", "printing", "--owner", "tester")
+	q.start("--print-link")
+	if !loginLinkRe.MatchString(q.logs()) {
+		t.Fatalf("--print-link printed no link:\n%s", q.logs())
 	}
 }
 
@@ -342,7 +407,7 @@ func TestTwoProcessesEndToEnd(t *testing.T) {
 
 	// The first device creates the mesh and starts.
 	a.mustRun("init", "--mesh", "Дом", "--name", "alpha", "--owner", "tester")
-	a.start()
+	a.start("--print-link") // (output is a file here, not a terminal: the link is only printed on request)
 	st := a.status()
 	if !st.Configured || st.Self.Name != "alpha" || st.Self.IP4 == "" {
 		t.Fatalf("alpha after init: %+v", st)
