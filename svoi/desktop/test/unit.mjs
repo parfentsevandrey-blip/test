@@ -1,0 +1,238 @@
+// Tests of the shell's logic that need no window: `node --test test/unit.mjs`.
+// The core tests run the real `svoi` program (set SVOI_CORE to its path; otherwise ../bin/<platform>-<arch>/).
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import net from 'node:net';
+import { fileURLToPath } from 'node:url';
+
+const require = createRequire(import.meta.url);
+const here = path.dirname(fileURLToPath(import.meta.url));
+const { parseSSE } = require('../src/events.js');
+const { notificationFor, clip } = require('../src/notify.js');
+const { statusText } = require('../src/status.js');
+const { safeName, uniquePath } = require('../src/files.js');
+const { texts, ru, en } = require('../src/i18n.js');
+const { Core, freePort, handshakeProof, verifyNode } = require('../src/core.js');
+const log = require('../src/log.js');
+
+const key = `${process.platform === 'win32' ? 'win' : process.platform === 'darwin' ? 'mac' : 'linux'}-${process.arch}`;
+const exe = process.platform === 'win32' ? 'svoi.exe' : 'svoi';
+const CORE = process.env.SVOI_CORE || path.join(here, '..', 'bin', key, exe);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function collect(chunks) {
+  async function* body() {
+    for (const c of chunks) yield Buffer.from(c);
+  }
+  const out = [];
+  for await (const m of parseSSE(body())) out.push(m);
+  return out;
+}
+
+test('the event stream is parsed across chunk boundaries, CRLF and comments', async () => {
+  const msgs = await collect([': hi\n\nevent: peers\ndata: [{"id"', ':"a"}]\n\nevent: chat\r\ndata: {"x":1}\r\n', '\r\nevent: none\n\ndata: lonely\n\n']);
+  assert.deepEqual(msgs, [
+    { event: 'peers', data: '[{"id":"a"}]' },
+    { event: 'chat', data: '{"x":1}' },
+    { event: 'message', data: 'lonely' },
+  ]);
+});
+
+test('a multi-line data field is joined', async () => {
+  assert.deepEqual(await collect(['event: e\ndata: a\ndata: b\n\n']), [{ event: 'e', data: 'a\nb' }]);
+});
+
+const t = texts('ru-RU');
+const ctx = (extra = {}) => ({ t, peerName: (id) => ({ p1: 'телефон', p2: 'nas' })[id] || '', fetchMail: async () => ({ from: { name: 'nas' }, subject: 'Отчёт о резервном копировании' }), ...extra });
+
+test('an offered file becomes a notification, once per transfer', async () => {
+  const n = await notificationFor('transfer', { id: 't1', dir: 'in', state: 'offered', name: 'фото.jpg', peer: 'p1', peerName: 'телефон' }, ctx());
+  assert.deepEqual(n, { key: 'offer:t1', title: 'телефон', body: 'хочет отправить вам файл «фото.jpg»', route: '#/home' });
+});
+
+test('a received file is announced; sent files and progress are not', async () => {
+  const done = await notificationFor('transfer', { id: 't1', dir: 'in', state: 'done', name: 'a.bin', peer: 'p2' }, ctx());
+  assert.equal(done.key, 'done:t1');
+  assert.match(done.body, /«a\.bin» — от устройства nas/);
+  assert.equal(await notificationFor('transfer', { id: 't2', dir: 'out', state: 'done', name: 'a' }, ctx()), null);
+  assert.equal(await notificationFor('transfer', { id: 't3', dir: 'in', state: 'active', name: 'a' }, ctx()), null);
+});
+
+test('chat: only messages from others; long and empty texts are handled', async () => {
+  assert.equal(await notificationFor('chat', { id: 'c1', mine: true, text: 'hi', peer: 'p1' }, ctx()), null);
+  const n = await notificationFor('chat', { id: 'c2', mine: false, text: 'Ты дома?', peer: 'p1' }, ctx());
+  assert.deepEqual(n, { key: 'chat:c2', title: 'телефон', body: 'Ты дома?', route: '#/chat/p1' });
+  const long = await notificationFor('chat', { id: 'c3', mine: false, text: 'x'.repeat(500), peer: 'p1' }, ctx());
+  assert.ok(long.body.length <= 140 && long.body.endsWith('…'));
+  const file = await notificationFor('chat', { id: 'c4', mine: false, text: '', peer: 'p1', attachments: [{}] }, ctx());
+  assert.equal(file.body, ru.chatAttachment);
+});
+
+test('mail: unread inbox letters only, with the subject looked up', async () => {
+  const n = await notificationFor('mail', { id: 'm1', folder: 'inbox', unread: true }, ctx());
+  assert.deepEqual(n, { key: 'mail:m1', title: 'Новое письмо от nas', body: 'Отчёт о резервном копировании', route: '#/mail/inbox' });
+  assert.equal(await notificationFor('mail', { id: 'm2', folder: 'sent', unread: true }, ctx()), null);
+  assert.equal(await notificationFor('mail', { id: 'm3', folder: 'inbox', unread: false }, ctx()), null);
+  assert.equal(await notificationFor('mail', { id: 'm4', folder: 'inbox', unread: true }, ctx({ fetchMail: async () => { throw new Error('gone'); } })), null);
+});
+
+test('the English texts exist for everything the Russian ones have', () => {
+  assert.deepEqual(Object.keys(en).sort(), Object.keys(ru).sort());
+  assert.equal(texts('en-US'), en);
+  assert.equal(texts('ru'), ru);
+  assert.equal(texts('de-DE'), en);
+  assert.equal(texts(undefined), en);
+  assert.equal(clip('  a   b  ', 10), 'a b');
+});
+
+test('the tray sentence says what the network is doing', () => {
+  const peers = (...online) => online.map((o, i) => ({ id: String(i), online: o }));
+  assert.equal(statusText(ru, 'starting', null), ru.statusStarting);
+  assert.equal(statusText(ru, 'failed', null), ru.statusStopped);
+  assert.equal(statusText(ru, 'running', { self: { configured: false }, peers: [] }), ru.statusNoNetwork);
+  assert.equal(statusText(ru, 'running', { self: { configured: true }, peers: [] }), ru.statusAlone);
+  assert.equal(statusText(ru, 'running', { self: { configured: true }, peers: peers(true, false, true) }), 'На связи 3 из 4');
+  assert.equal(statusText(en, 'running', { self: { configured: true }, peers: peers(false) }), '1 of 2 online');
+});
+
+test('downloaded file names are safe on every system and never overwrite', () => {
+  assert.equal(safeName('../../etc/passwd'), 'passwd');
+  assert.equal(safeName('a<b>:c|d?.txt'), 'a_b__c_d_.txt');
+  assert.equal(safeName('con.txt'), '_con.txt');
+  assert.equal(safeName('report. '), 'report');
+  assert.equal(safeName(''), 'file');
+  assert.equal(safeName('я'.repeat(300)).length, 200);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'svoi-files-'));
+  try {
+    assert.equal(uniquePath(dir, 'a.txt'), path.join(dir, 'a.txt'));
+    fs.writeFileSync(path.join(dir, 'a.txt'), '1');
+    assert.equal(uniquePath(dir, 'a.txt'), path.join(dir, 'a (2).txt'));
+    fs.writeFileSync(path.join(dir, 'a (2).txt'), '2');
+    assert.equal(uniquePath(dir, 'a.txt'), path.join(dir, 'a (3).txt'));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('freePort keeps the preferred port when it is free and moves when it is not', async () => {
+  const first = await freePort(0);
+  assert.ok(first > 0);
+  assert.equal(await freePort(first), first);
+  const srv = net.createServer();
+  await new Promise((r) => srv.listen(first, '127.0.0.1', r));
+  const other = await freePort(first);
+  assert.ok(other > 0 && other !== first);
+  await new Promise((r) => srv.close(r));
+});
+
+test('the handshake proof matches the one the Go node computes', () => {
+  // The vector comes from api.HandshakeProof("tok", "nnnnnnnnnnnnnnnn") in internal/api/session.go
+  // (and, independently, from Python's hmac): key = token, message = "svoi-handshake/v1\0" + nonce.
+  assert.equal(handshakeProof('tok', 'n'.repeat(16)), 'ca5abf690f2db02f4de7c9b36c604079c15e7cb569e5f2b4d4bf44ef3184582e');
+  assert.notEqual(handshakeProof('tok', 'a'.repeat(16)), handshakeProof('tok', 'b'.repeat(16)));
+  assert.notEqual(handshakeProof('tok', 'a'.repeat(16)), handshakeProof('other', 'a'.repeat(16)));
+});
+
+// ---- the real program ------------------------------------------------------------------------
+
+const haveCore = fs.existsSync(CORE);
+const coreTest = haveCore ? test : test.skip;
+
+function sandbox() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'svoi-core-'));
+  log.init(path.join(dir, 'logs'));
+  return { dir, data: path.join(dir, 'data'), logFile: path.join(dir, 'logs', 'svoi.log') };
+}
+const mk = (s, extra = {}) => new Core({ binary: CORE, dataDir: s.data, logFile: s.logFile, extraArgs: ['--no-stun', '--no-portmap', '--loopback'], ...extra });
+
+coreTest('the core starts without a terminal, signs a window in, and stops cleanly with its parent', async () => {
+  const s = sandbox();
+  const core = mk(s);
+  try {
+    await core.start();
+    assert.equal(core.status, 'running');
+    assert.equal(core.attached, false);
+    assert.ok(await verifyNode(core.origin, core.token));
+    assert.equal(await verifyNode(core.origin, 'not-the-token'), false, 'a node that does not know our token is not trusted');
+    const url = await core.loginURL();
+    assert.match(url, /^http:\/\/127\.0\.0\.1:\d+\/\?t=[0-9a-f]+$/);
+    const st = await core.api('GET', '/api/state');
+    assert.equal(st.configured, false);
+    // the link signs a browser in exactly once
+    const first = await fetch(url, { redirect: 'manual' });
+    assert.ok(first.status >= 200 && first.status < 400, 'the link works: ' + first.status);
+    await core.stop();
+    assert.equal(core.status, 'stopped');
+    assert.equal(fs.existsSync(path.join(s.data, 'ui.addr')), false, 'a clean exit removes ui.addr');
+    assert.ok(fs.existsSync(path.join(s.data, 'device.key')), 'the device key stays');
+  } finally {
+    await core.stop().catch(() => {});
+    fs.rmSync(s.dir, { recursive: true, force: true });
+  }
+});
+
+coreTest('a node that already runs on the data directory is used, and left running', async () => {
+  const s = sandbox();
+  const owner = mk(s);
+  const guest = mk(s);
+  try {
+    await owner.start();
+    await guest.start();
+    assert.equal(guest.attached, true);
+    assert.equal(guest.origin, owner.origin);
+    assert.ok((await guest.loginURL()).startsWith(owner.origin));
+    await guest.stop();
+    assert.ok(await verifyNode(owner.origin, owner.token), 'attached means not ours to stop');
+  } finally {
+    await owner.stop().catch(() => {});
+    fs.rmSync(s.dir, { recursive: true, force: true });
+  }
+});
+
+coreTest('a stale ui.addr from a crashed run does not fool it', async () => {
+  const s = sandbox();
+  fs.mkdirSync(s.data, { recursive: true });
+  fs.writeFileSync(path.join(s.data, 'ui.addr'), '127.0.0.1:9\n');
+  fs.writeFileSync(path.join(s.data, 'ui.token'), 'deadbeef'.repeat(6) + '\n');
+  const core = mk(s);
+  try {
+    await core.start();
+    assert.equal(core.attached, false);
+    assert.notEqual(new URL(core.origin).port, '9');
+  } finally {
+    await core.stop().catch(() => {});
+    fs.rmSync(s.dir, { recursive: true, force: true });
+  }
+});
+
+coreTest('when the program is missing or cannot start the error says so', async () => {
+  const s = sandbox();
+  try {
+    const missing = new Core({ binary: path.join(s.dir, 'nope', exe), dataDir: s.data, logFile: s.logFile });
+    await assert.rejects(missing.start(), /Не найден файл программы/);
+    assert.equal(missing.status, 'failed');
+    const broken = mk(s, { extraArgs: ['--definitely-not-a-flag'] });
+    await assert.rejects(broken.start(), /не запустилась/);
+  } finally {
+    fs.rmSync(s.dir, { recursive: true, force: true });
+  }
+});
+
+coreTest('if the core dies by itself the shell is told', async () => {
+  const s = sandbox();
+  const core = mk(s);
+  try {
+    await core.start();
+    const crashed = new Promise((r) => core.once('crashed', r));
+    process.kill(core.child.pid, process.platform === 'win32' ? undefined : 'SIGKILL');
+    await Promise.race([crashed, sleep(10000).then(() => assert.fail('no crash event'))]);
+    assert.equal(core.status, 'failed');
+  } finally {
+    await core.stop().catch(() => {});
+    fs.rmSync(s.dir, { recursive: true, force: true });
+  }
+});

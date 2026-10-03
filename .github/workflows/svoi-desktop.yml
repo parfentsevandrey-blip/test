@@ -1,0 +1,190 @@
+name: svoi desktop
+
+# Builds the desktop app «Свои» (Electron window + the svoi program inside) on real Windows, macOS and
+# Linux machines, runs the app's own end-to-end test against the PACKAGED build (a real window, the real
+# program, a second real node as another device), tests the installer where there is one, and keeps
+# the installers as build artifacts. A tag svoi-v* also attaches them to a release.
+on:
+  push:
+    branches: ["**"]
+    tags: ["svoi-v*"] # path filters are not applied to tag pushes
+    paths: ["svoi/desktop/**", "svoi/cmd/**", "svoi/internal/**", "svoi/go.mod", "svoi/go.sum", ".github/workflows/svoi-desktop.yml"]
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: svoi
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-latest
+            cores: "linux/amd64:linux-x64"
+            builder: "--linux AppImage deb"
+          - name: Windows
+            os: windows-latest
+            cores: "windows/amd64:win-x64"
+            builder: "--win nsis"
+          - name: macOS
+            os: macos-latest
+            # the .dmg of both processor kinds is built here; the app of this machine's kind is the one that is run
+            cores: "darwin/arm64:mac-arm64 darwin/amd64:mac-x64"
+            builder: "--mac dmg zip"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: svoi/go.mod
+          cache-dependency-path: svoi/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: svoi/desktop/package-lock.json
+
+      - name: Build the svoi program for this platform
+        shell: bash
+        run: |
+          set -e
+          for t in ${{ matrix.cores }}; do
+            goos=${t%%/*}; rest=${t#*/}; goarch=${rest%%:*}; key=${rest##*:}
+            ext=""; [ "$goos" = windows ] && ext=".exe"
+            mkdir -p "desktop/bin/$key"
+            CGO_ENABLED=0 GOOS=$goos GOARCH=$goarch go build -trimpath -ldflags "-s -w" -o "desktop/bin/$key/svoi$ext" ./cmd/svoi
+            echo "built desktop/bin/$key/svoi$ext"
+          done
+
+      - name: Install the dependencies of the app
+        working-directory: svoi/desktop
+        run: npm ci
+
+      - name: Unit tests of the shell and of the program as a background process
+        working-directory: svoi/desktop
+        shell: bash
+        run: node --test test/unit.mjs
+
+      - name: Package
+        working-directory: svoi/desktop
+        run: npx electron-builder ${{ matrix.builder }} --publish never
+
+      - name: Find the packaged app
+        id: app
+        working-directory: svoi/desktop
+        shell: bash
+        run: |
+          case "$RUNNER_OS" in
+            Linux)   exe="$PWD/dist/linux-unpacked/Svoi" ;;
+            Windows) exe="$PWD/dist/win-unpacked/Svoi.exe" ;;
+            macOS)   exe=$(ls -d "$PWD"/dist/mac-arm64/*.app/Contents/MacOS/* | head -1) ;;
+          esac
+          test -f "$exe" || { echo "no executable at $exe"; ls -R dist | head -50; exit 1; }
+          echo "exe=$exe" >> "$GITHUB_OUTPUT"
+          echo "packaged app: $exe"
+
+      - name: End-to-end test of the packaged app (on Linux under a virtual screen)
+        working-directory: svoi/desktop
+        shell: bash
+        env:
+          SVOI_APP_EXE: ${{ steps.app.outputs.exe }} # the app must find and run the program it carries (no SVOI_CORE)
+        run: |
+          mkdir -p ../../shots
+          if [ "$RUNNER_OS" = Linux ]; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq xvfb >/dev/null
+            xvfb-run -a -s "-screen 0 1280x900x24" node test/smoke.mjs --shots ../../shots
+          else
+            node test/smoke.mjs --shots ../../shots
+          fi
+
+      - name: Windows - the installer installs, the installed app runs, the uninstaller removes it and keeps the keys
+        if: runner.os == 'Windows'
+        working-directory: svoi/desktop
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist -Filter 'Svoi-Setup-*.exe' | Select-Object -First 1
+          if (-not $setup) { throw 'no installer was built' }
+          Write-Host "installing $($setup.Name) ($([math]::Round($setup.Length/1MB)) MB) silently"
+          Start-Process -FilePath $setup.FullName -ArgumentList '/S' -Wait
+          $programs = Join-Path $env:LOCALAPPDATA 'Programs'
+          $exe = Get-ChildItem $programs -Recurse -Filter 'Svoi.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $exe) { Get-ChildItem $programs -Recurse | Select-Object -First 40 | ForEach-Object { Write-Host $_.FullName }; throw 'the installer did not install the app for this user' }
+          Write-Host "installed at $($exe.FullName)"
+          $lnk = Get-ChildItem (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs') -Filter '*.lnk' -ErrorAction SilentlyContinue | Where-Object { $_.Name -like 'Св*' -or $_.Name -like 'Svoi*' }
+          if (-not $lnk) { throw 'no Start menu shortcut' }
+          Write-Host "Start menu shortcut: $($lnk.Name)"
+          # the installed copy carries its own program
+          $env:SVOI_APP_EXE = $exe.FullName
+          node test/smoke.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'the installed app failed its test' }
+          $uninst = Get-ChildItem $exe.Directory.FullName -Filter 'Uninstall*.exe' | Select-Object -First 1
+          if (-not $uninst) { throw 'no uninstaller' }
+          Start-Process -FilePath $uninst.FullName -ArgumentList '/S' -Wait
+          # (an NSIS uninstaller hands over to a copy of itself and returns early)
+          for ($i = 0; $i -lt 40 -and (Test-Path $exe.FullName); $i++) { Start-Sleep -Milliseconds 500 }
+          if (Test-Path $exe.FullName) { throw 'the uninstaller left the app behind' }
+          Write-Host 'uninstalled'
+
+      - name: Linux - the .deb installs and the installed app runs
+        if: runner.os == 'Linux'
+        working-directory: svoi/desktop
+        shell: bash
+        env:
+          APP_DEB: ${{ github.workspace }}/svoi/desktop/dist
+        run: |
+          deb=$(ls "$APP_DEB"/*.deb | head -1)
+          sudo apt-get install -y -qq "$deb" >/dev/null
+          exe=$(dpkg -L svoi-desktop | grep -E '/Svoi$' | head -1)
+          test -x "$exe" || { dpkg -L svoi-desktop | head -30; echo "no installed executable"; exit 1; }
+          echo "installed at $exe"
+          test -f /usr/share/applications/*.desktop && echo "menu entry: $(ls /usr/share/applications/*.desktop | head -1)"
+          unset SVOI_CORE
+          SVOI_APP_EXE="$exe" xvfb-run -a -s "-screen 0 1280x900x24" node test/smoke.mjs
+
+      - name: What was built
+        if: always()
+        working-directory: svoi/desktop
+        shell: bash
+        run: ls -la dist 2>/dev/null | head -40 || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: svoi-desktop-${{ runner.os }}
+          path: |
+            svoi/desktop/dist/*.exe
+            svoi/desktop/dist/*.dmg
+            svoi/desktop/dist/*.zip
+            svoi/desktop/dist/*.AppImage
+            svoi/desktop/dist/*.deb
+            !svoi/desktop/dist/*-unpacked/**
+          if-no-files-found: warn
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: svoi-desktop-screens-${{ runner.os }}
+          path: shots/*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/svoi-v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: svoi-desktop-{Linux,Windows,macOS}
+          path: installers
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: installers/*

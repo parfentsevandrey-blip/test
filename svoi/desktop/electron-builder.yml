@@ -1,0 +1,94 @@
+# How «Свои» is packaged: an installer for Windows, a .dmg for macOS, an AppImage and a .deb for Linux.
+# The `svoi` program itself (built from ../cmd/svoi for the same platform) is put next to the app as a resource.
+appId: ru.svoi.app
+productName: Свои
+executableName: Svoi
+copyright: Свои
+artifactName: Svoi-${version}-${os}-${arch}.${ext}
+directories:
+  output: dist
+  buildResources: build
+files:
+  - src/**/*
+  - assets/**/*
+  - package.json
+  - '!**/*.map'
+asar: true
+extraResources:
+  - from: bin/${os}-${arch}
+    to: bin
+    filter:
+      - svoi
+      - svoi.exe
+compression: normal
+
+win:
+  icon: build/icon.png
+  target:
+    - target: nsis
+      arch:
+        - x64
+  # Without a code-signing certificate the installer is unsigned: Windows SmartScreen says so on the first run.
+  signAndEditExecutable: true
+nsis:
+  oneClick: true # no wizard: one click, no administrator rights, installed for this user only
+  perMachine: false
+  allowToChangeInstallationDirectory: false
+  runAfterFinish: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Свои
+  uninstallDisplayName: Свои
+  deleteAppDataOnUninstall: false # the keys of this device (%APPDATA%\svoi) are never removed by an uninstall
+  language: '1049' # Russian
+  artifactName: Svoi-Setup-${version}-${arch}.${ext}
+
+mac:
+  icon: build/icon.png
+  category: public.app-category.utilities
+  # Ad-hoc signature: the system needs *a* signature on Apple silicon; there is no Apple developer certificate,
+  # so the app is not notarized and Gatekeeper asks for a confirmation on the first start.
+  identity: '-'
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
+  extendInfo:
+    NSHumanReadableCopyright: Свои
+dmg:
+  title: Свои ${version}
+  artifactName: Svoi-${version}-mac-${arch}.${ext}
+
+linux:
+  icon: build/icon.png
+  category: Network
+  maintainer: Свои <svoi@localhost>
+  synopsis: Private network of your own devices
+  description: Files, mail and chat directly between your own devices, with no cloud and no account.
+  target:
+    - AppImage
+    - deb
+  desktop:
+    entry:
+      Name: Свои
+      Comment: Частная сеть ваших устройств
+      Keywords: files;mail;chat;network;vpn;
+      StartupWMClass: Svoi
+deb:
+  depends:
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+    - libatspi2.0-0
+    - libuuid1
+    - libsecret-1-0

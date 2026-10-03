@@ -1,0 +1,23 @@
+{
+  "name": "svoi-desktop",
+  "productName": "Свои",
+  "version": "0.1.0",
+  "description": "Частная сеть ваших устройств: файлы, почта и чат напрямую, без облака",
+  "private": true,
+  "main": "src/main.js",
+  "author": "Свои",
+  "homepage": "https://github.com/parfentsevandrey-blip/test",
+  "scripts": {
+    "start": "electron .",
+    "test:unit": "node --test test/unit.mjs",
+    "test:smoke": "node test/smoke.mjs",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "44.5.1",
+    "electron-builder": "26.15.3",
+    "playwright-core": "1.63.0"
+  },
+  "repository": "github:parfentsevandrey-blip/test"
+}
