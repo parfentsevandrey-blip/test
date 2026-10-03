@@ -3,3 +3,5 @@
 *.test
 .svoi/
 /web-dev/screens/
+/web-dev/.demo-cache/
+/web-dev/demo-dist/
