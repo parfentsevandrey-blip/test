@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -66,6 +67,25 @@ func cmdUp(args []string) error {
 	noPortMap := fs.Bool("no-portmap", false, "do not ask the home router (UPnP / NAT-PMP) to forward our UDP port; saved in the settings")
 	fs.Parse(args)
 
+	// Started a second time (a double click on the icon, say): the first copy owns the
+	// data directory, so do not start another node on the same keys - bring the running
+	// one to the screen. A service that finds its predecessor still alive must fail instead.
+	if c, err := newClient(cf.dir); err == nil {
+		_ = c
+		if *noBrowser || !interactive() {
+			return errors.New("svoi is already running with this data directory (" + cf.dir + ")")
+		}
+		fmt.Fprintln(os.Stderr, "Свои уже запущены на этом устройстве — открываю интерфейс в браузере.")
+		fmt.Fprintln(os.Stderr, "svoi is already running on this device — opening the interface in your browser.")
+		if printed, err := uiURL(cf.dir, false); err == nil {
+			fmt.Fprintln(os.Stderr, "  "+printed)
+		}
+		if opened, err := uiURL(cf.dir, true); err == nil {
+			openBrowser(opened)
+		}
+		return nil
+	}
+
 	a, err := app.Open(app.Options{
 		Dir:        cf.dir,
 		Logger:     newLogger(*debug, os.Stderr),
@@ -107,6 +127,11 @@ func cmdUp(args []string) error {
 	defer os.Remove(filepath.Join(cf.dir, "ui.addr"))
 
 	self := a.Node().Self()
+	if isTerminal(os.Stderr) {
+		fmt.Fprintf(os.Stderr, "\nСвои %s запущены. Интерфейс откроется в браузере сам.\n"+
+			"Не закрывайте это окно: пока оно открыто, программа работает. Закрыть окно или нажать Ctrl+C — значит выйти.\n"+
+			"Нужен адрес интерфейса (браузер не открылся)? Он напечатан ниже; новый можно получить командой `svoi open`.\n", version())
+	}
 	fmt.Fprintf(os.Stderr, "\nsvoi %s\n", version())
 	if self.Configured {
 		fmt.Fprintf(os.Stderr, "  device:  %s  (%s)\n  mesh:    %s\n", self.Name, self.IP4, self.MeshName)
@@ -131,7 +156,7 @@ func cmdUp(args []string) error {
 	}
 	select {
 	case <-signalChan():
-		fmt.Fprintln(os.Stderr, "shutting down…")
+		fmt.Fprintln(os.Stderr, "Выход… / shutting down…")
 		srv.Close()
 		return nil
 	case err := <-errc:

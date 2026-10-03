@@ -339,6 +339,45 @@ func TestHeadlessUpKeepsTheSignInLinkOutOfTheLog(t *testing.T) {
 	}
 }
 
+// A second copy on the same data directory (a double click on the icon) must not start
+// another node with the same keys: it brings the running one to the screen, and a
+// service that finds its predecessor alive fails instead of looping.
+func TestStartingTwiceDoesNotStartASecondNode(t *testing.T) {
+	if testing.Short() {
+		t.Skip("starts a real process")
+	}
+	p := newProc(t, "once")
+	p.mustRun("init", "--mesh", "Дом", "--name", "once", "--owner", "tester")
+	p.start()
+	started := strings.Count(p.logs(), "mesh network started")
+
+	// As a person starts it: an interactive session. No browser can be found (PATH is empty),
+	// so nothing opens; what matters is that it says so and ends well.
+	c := p.command("up", "--ui", "127.0.0.1:0")
+	c.Env = append(c.Env, "DISPLAY=:0", "PATH=/nonexistent")
+	var out bytes.Buffer
+	c.Stdout, c.Stderr = &out, &out
+	if err := c.Run(); err != nil {
+		t.Fatalf("the second start failed: %v\n%s", err, out.String())
+	}
+	if !strings.Contains(out.String(), "уже запущены") || !loginLinkRe.MatchString(out.String()) {
+		t.Fatalf("the second start did not say that svoi is running, or gave no link:\n%s", out.String())
+	}
+	if strings.Contains(out.String(), "mesh network started") {
+		t.Fatalf("the second start brought up another node:\n%s", out.String())
+	}
+
+	// As a service: a clear failure.
+	out2, err := p.run("up", "--no-browser", "--ui", "127.0.0.1:0")
+	if err == nil || !strings.Contains(out2, "already running") {
+		t.Fatalf("a second service start: err=%v\n%s", err, out2)
+	}
+	time.Sleep(300 * time.Millisecond)
+	if n := strings.Count(p.logs(), "mesh network started"); n != started {
+		t.Fatalf("the running node's log shows %d starts, want %d", n, started)
+	}
+}
+
 // If whatever answers on the recorded port cannot prove it knows the token (a
 // stale ui.addr, a squatter), the command line must not hand the token over.
 func TestCommandLineDoesNotSendTheTokenToAnImpostor(t *testing.T) {

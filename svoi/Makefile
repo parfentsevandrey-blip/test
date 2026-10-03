@@ -54,7 +54,8 @@ check: fmt vet race
 lab:
 	sudo -E $(GO) test -tags lab ./lab -count=1 -v -timeout 600s
 
-# Release archives for every platform in $(PLATFORMS), with checksums.
+# Release archives for every platform in $(PLATFORMS), with checksums. Each one carries README.md and the
+# plain-language start guide (deploy/start); needs python3 for the Windows zip (UTF-8 file names).
 dist:
 	rm -rf $(DIST) && mkdir -p $(DIST)
 	@set -e; for p in $(PLATFORMS); do \
@@ -65,7 +66,9 @@ dist:
 		mkdir -p $(DIST)/$$name; \
 		GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags "$(LDFLAGS)" -o $(DIST)/$$name/svoi$$ext ./cmd/svoi; \
 		cp README.md $(DIST)/$$name/; \
-		if [ $$os = windows ]; then (cd $(DIST) && zip -qr $$name.zip $$name); \
+		case $$os in android|linux) [ $$arch = arm64 ] && cp docs/ANDROID.md $(DIST)/$$name/ || true ;; esac; \
+		sh deploy/start/guide.sh $$os $$arch $(DIST)/$$name; \
+		if [ $$os = windows ]; then python3 deploy/start/mkzip.py $(DIST)/$$name.zip $(DIST)/$$name; \
 		else tar -C $(DIST) -czf $(DIST)/$$name.tar.gz $$name; fi; \
 		rm -rf $(DIST)/$$name; \
 	done
