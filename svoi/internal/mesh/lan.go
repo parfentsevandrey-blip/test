@@ -2,6 +2,7 @@ package mesh
 
 import (
 	"context"
+	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/binary"
 	"net"
@@ -25,16 +26,21 @@ import (
 // happens in the disco handshake, so a forged beacon can at worst cause a few
 // wasted probes.
 //
-// A beacon is sealed with a key derived from the mesh's root key (AEAD, fresh
-// random nonce each time): a bystander on the same network can neither read the
-// device key inside nor recognise two beacons as coming from the same device or
-// mesh, so the broadcast cannot be used to follow someone from café to café, and
-// cannot be forged by anyone outside the mesh.
+// A beacon is sealed with a key derived from the mesh's root public key (AEAD,
+// fresh random nonce each time): a bystander on the same network can neither read
+// the device key inside nor recognise two beacons as coming from the same device
+// or mesh, so the broadcast cannot be used to follow someone from café to café.
+// That key is not a secret of the mesh - everybody who has seen an invitation
+// knows the root public key - so what vouches for a beacon is the signature of the
+// device it names: nobody can announce a member's device in that member's name.
+// (A beacon that was recorded can be sent again; see the note above.)
 
 const (
 	defaultLANPort = 41711
-	lanVersion     = 2
-	beaconLen      = 1 + chacha20poly1305.NonceSizeX + 32 + 2 + chacha20poly1305.Overhead
+	lanVersion     = 3
+	beaconBody     = 32 + 2 + ed25519.SignatureSize // device id, udp port, signature
+	beaconLen      = 1 + chacha20poly1305.NonceSizeX + beaconBody + chacha20poly1305.Overhead
+	beaconSigLabel = "svoi-lan-beacon/v3\x00"
 )
 
 var lanGroup = net.IPv4(239, 255, 77, 77)
@@ -48,8 +54,17 @@ type lanDiscovery struct {
 	done   chan struct{}
 }
 
-// encodeBeacon: [version][nonce 24][seal(device id 32 | udp port 2)].
-func encodeBeacon(key [32]byte, id identity.ID, udpPort int) []byte {
+// beaconSigned is what a device signs: this very beacon's nonce, its id and its port.
+func beaconSigned(nonce []byte, id identity.ID, udpPort uint16) []byte {
+	m := make([]byte, 0, len(beaconSigLabel)+len(nonce)+34)
+	m = append(m, beaconSigLabel...)
+	m = append(m, nonce...)
+	m = append(m, id[:]...)
+	return binary.BigEndian.AppendUint16(m, udpPort)
+}
+
+// encodeBeacon: [version][nonce 24][seal(device id 32 | udp port 2 | signature 64)].
+func encodeBeacon(key [32]byte, dev *identity.Device, udpPort int) []byte {
 	aead, err := chacha20poly1305.NewX(key[:])
 	if err != nil {
 		return nil
@@ -58,14 +73,15 @@ func encodeBeacon(key [32]byte, id identity.ID, udpPort int) []byte {
 	b = append(b, lanVersion)
 	b = b[:1+aead.NonceSize()]
 	_, _ = rand.Read(b[1:])
-	plain := make([]byte, 0, 34)
-	plain = append(plain, id[:]...)
+	plain := make([]byte, 0, beaconBody)
+	plain = append(plain, dev.ID[:]...)
 	plain = binary.BigEndian.AppendUint16(plain, uint16(udpPort))
+	plain = append(plain, ed25519.Sign(dev.Priv, beaconSigned(b[1:], dev.ID, uint16(udpPort)))...)
 	return aead.Seal(b, b[1:], plain, []byte{lanVersion})
 }
 
-// decodeBeacon opens a beacon with the mesh's key; ok is false for anything
-// that was not sealed by a member of this mesh.
+// decodeBeacon opens a beacon with the mesh's key and checks the signature of the
+// device it names; ok is false for anything else.
 func decodeBeacon(key [32]byte, b []byte) (id identity.ID, udpPort int, ok bool) {
 	if len(b) != beaconLen || b[0] != lanVersion {
 		return id, 0, false
@@ -75,11 +91,15 @@ func decodeBeacon(key [32]byte, b []byte) (id identity.ID, udpPort int, ok bool)
 		return id, 0, false
 	}
 	plain, err := aead.Open(nil, b[1:1+aead.NonceSize()], b[1+aead.NonceSize():], []byte{lanVersion})
-	if err != nil || len(plain) != 34 {
+	if err != nil || len(plain) != beaconBody {
 		return id, 0, false
 	}
 	copy(id[:], plain[:32])
-	return id, int(binary.BigEndian.Uint16(plain[32:])), true
+	port := binary.BigEndian.Uint16(plain[32:34])
+	if !ed25519.Verify(id.PublicKey(), beaconSigned(b[1:1+aead.NonceSize()], id, port), plain[34:]) {
+		return identity.ID{}, 0, false
+	}
+	return id, int(port), true
 }
 
 func (n *Node) startLAN(parent context.Context) {
@@ -134,7 +154,7 @@ func (l *lanDiscovery) run(ctx context.Context) {
 			return
 		}
 		for _, ifc := range l.interfaces() {
-			beacon := encodeBeacon(root.LANKey(), l.n.device().ID, l.n.udpPort) // fresh nonce per send: unlinkable
+			beacon := encodeBeacon(root.LANKey(), l.n.device(), l.n.udpPort) // fresh nonce per send: unlinkable
 			if !joined[ifc.Name] {
 				_ = l.pc4.JoinGroup(&ifc, &net.UDPAddr{IP: lanGroup})
 				joined[ifc.Name] = true

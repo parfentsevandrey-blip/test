@@ -2,10 +2,14 @@ package mesh
 
 import (
 	"bytes"
+	"crypto/ed25519"
 	"crypto/rand"
+	"encoding/binary"
 	"net"
 	"net/netip"
 	"testing"
+
+	"golang.org/x/crypto/chacha20poly1305"
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/magic"
@@ -22,9 +26,9 @@ func testKey(t *testing.T) [32]byte {
 
 func TestBeaconRoundTrip(t *testing.T) {
 	key := testKey(t)
-	var id identity.ID
-	rand.Read(id[:])
-	b := encodeBeacon(key, id, 41710)
+	dev := identity.GenerateDevice()
+	id := dev.ID
+	b := encodeBeacon(key, dev, 41710)
 	if len(b) != beaconLen {
 		t.Fatalf("beacon is %d bytes, want %d", len(b), beaconLen)
 	}
@@ -38,9 +42,9 @@ func TestBeaconRoundTrip(t *testing.T) {
 // device key, not the mesh, and not even that two beacons come from one device.
 func TestBeaconRevealsNothingToOutsiders(t *testing.T) {
 	key := testKey(t)
-	var id identity.ID
-	rand.Read(id[:])
-	b1, b2 := encodeBeacon(key, id, 41710), encodeBeacon(key, id, 41710)
+	dev := identity.GenerateDevice()
+	id := dev.ID
+	b1, b2 := encodeBeacon(key, dev, 41710), encodeBeacon(key, dev, 41710)
 	if bytes.Equal(b1, b2) {
 		t.Fatal("two beacons of one device are identical: they can be linked")
 	}
@@ -64,16 +68,15 @@ func TestBeaconRevealsNothingToOutsiders(t *testing.T) {
 	if _, _, ok := decodeBeacon(other, b1); ok {
 		t.Fatal("a beacon of one mesh was accepted by another")
 	}
-	if _, _, ok := decodeBeacon(other, encodeBeacon(other, id, 41710)); !ok {
+	if _, _, ok := decodeBeacon(other, encodeBeacon(other, dev, 41710)); !ok {
 		t.Fatal("sanity: the other mesh cannot read its own beacons")
 	}
 }
 
 func TestBeaconRejectsDamage(t *testing.T) {
 	key := testKey(t)
-	var id identity.ID
-	rand.Read(id[:])
-	good := encodeBeacon(key, id, 41710)
+	dev := identity.GenerateDevice()
+	good := encodeBeacon(key, dev, 41710)
 	for i := range good { // every single flipped bit is caught
 		bad := append([]byte(nil), good...)
 		bad[i] ^= 0x01
@@ -92,6 +95,62 @@ func TestBeaconRejectsDamage(t *testing.T) {
 	old[0] = 1 // the previous, unsealed format
 	if _, _, ok := decodeBeacon(key, old); ok {
 		t.Fatal("an old-format beacon was accepted")
+	}
+}
+
+// The key that seals beacons comes from the root's public key, which is in every
+// invitation. Somebody who has seen one can therefore seal a beacon, but not sign it
+// as a member: a beacon that names a device without that device's signature is not
+// accepted, whatever it says.
+func TestBeaconNeedsTheSignatureOfTheDeviceItNames(t *testing.T) {
+	key := testKey(t) // known to the attacker
+	victim, attacker := identity.GenerateDevice(), identity.GenerateDevice()
+	seal := func(nonce []byte, plain []byte) []byte {
+		aead, err := chacha20poly1305.NewX(key[:])
+		if err != nil {
+			t.Fatal(err)
+		}
+		b := append([]byte{lanVersion}, nonce...)
+		return aead.Seal(b, nonce, plain, []byte{lanVersion})
+	}
+	nonce := make([]byte, chacha20poly1305.NonceSizeX)
+	rand.Read(nonce)
+	body := func(id identity.ID, port uint16, sig []byte) []byte {
+		p := append([]byte(nil), id[:]...)
+		p = binary.BigEndian.AppendUint16(p, port)
+		return append(p, sig...)
+	}
+	// Names the victim, signed by the attacker.
+	forged := seal(nonce, body(victim.ID, 4444, ed25519.Sign(attacker.Priv, beaconSigned(nonce, victim.ID, 4444))))
+	if _, _, ok := decodeBeacon(key, forged); ok {
+		t.Fatal("a beacon naming a member but signed by somebody else was accepted")
+	}
+	// No signature at all (the previous format's body).
+	if _, _, ok := decodeBeacon(key, seal(nonce, body(victim.ID, 4444, make([]byte, ed25519.SignatureSize)))); ok {
+		t.Fatal("an unsigned beacon was accepted")
+	}
+	// A genuine beacon of the victim, with the port changed by somebody who re-seals it.
+	real := encodeBeacon(key, victim, 41710)
+	aead, _ := chacha20poly1305.NewX(key[:])
+	n := real[1 : 1+aead.NonceSize()]
+	plain, err := aead.Open(nil, n, real[1+aead.NonceSize():], []byte{lanVersion})
+	if err != nil {
+		t.Fatal(err)
+	}
+	binary.BigEndian.PutUint16(plain[32:34], 4444)
+	if _, _, ok := decodeBeacon(key, seal(n, plain)); ok {
+		t.Fatal("a genuine beacon with its port rewritten was accepted")
+	}
+	// ...and with a fresh nonce the old signature does not carry over.
+	nonce2 := make([]byte, chacha20poly1305.NonceSizeX)
+	rand.Read(nonce2)
+	plain2, _ := aead.Open(nil, n, real[1+aead.NonceSize():], []byte{lanVersion})
+	if _, _, ok := decodeBeacon(key, seal(nonce2, plain2)); ok {
+		t.Fatal("a genuine beacon was accepted under a nonce it was not signed for")
+	}
+	// The genuine one is fine.
+	if id, port, ok := decodeBeacon(key, real); !ok || id != victim.ID || port != 41710 {
+		t.Fatalf("the genuine beacon was refused (ok=%v port=%d)", ok, port)
 	}
 }
 

@@ -163,10 +163,11 @@ func (r *Root) Name() string {
 	return "mesh"
 }
 
-// LANKey is the symmetric key members seal their LAN beacons with. Only someone
-// who knows the root key can read or make a beacon, so a stranger on the same
-// Wi-Fi sees random bytes: no device key, no mesh identifier to follow from one
-// network to the next.
+// LANKey is the symmetric key members seal their LAN beacons with. It comes from
+// the root's *public* key, which every member (and everybody who has seen an
+// invitation) knows: it keeps a bystander on the same Wi-Fi from reading a beacon
+// or following a device from one network to the next, but it is not a secret of the
+// mesh. What makes a beacon trustworthy is the device signature inside it.
 func (r *Root) LANKey() [32]byte {
 	h := sha256.New()
 	h.Write([]byte("svoi/lan-key/v2"))
