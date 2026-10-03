@@ -45,6 +45,7 @@ func TestJoinLimiterIsBoundedAndForgets(t *testing.T) {
 	for _, g := range l.per {
 		g.last = time.Now().Add(-time.Hour)
 	}
+	l.lastSweep = time.Time{}                   // (a full table is only scanned once a second)
 	l.allow(netip.MustParseAddr("203.0.113.9")) // (the answer does not matter: the global ceiling is spent)
 	if len(l.per) > joinMaxTracked/2 {
 		t.Fatalf("idle addresses were not forgotten (%d kept)", len(l.per))

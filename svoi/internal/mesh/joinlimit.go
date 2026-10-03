@@ -22,9 +22,10 @@ const (
 )
 
 type joinLimiter struct {
-	mu     sync.Mutex
-	global tokenGate
-	per    map[netip.Addr]*addrGate
+	mu        sync.Mutex
+	global    tokenGate
+	per       map[netip.Addr]*addrGate
+	lastSweep time.Time
 }
 
 type addrGate struct {
@@ -44,7 +45,8 @@ func (l *joinLimiter) allow(addr netip.Addr) bool {
 		l.mu.Lock()
 		g := l.per[addr]
 		if g == nil {
-			if len(l.per) >= joinMaxTracked {
+			if len(l.per) >= joinMaxTracked && now.Sub(l.lastSweep) >= time.Second {
+				l.lastSweep = now // (a full table is scanned at most once a second)
 				l.forgetIdleLocked(now)
 			}
 			if len(l.per) < joinMaxTracked {

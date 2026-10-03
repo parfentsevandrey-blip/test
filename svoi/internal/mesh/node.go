@@ -182,6 +182,8 @@ type Node struct {
 	kickDial   chan struct{}
 	joinLimit  *joinLimiter
 	joinActive atomic.Int32
+	sniMu      sync.Mutex
+	sniSeen    map[[16]byte]time.Time // join tokens already used (see joinsni.go)
 
 	// relayOn is whether we forward traffic for other members; it can change
 	// while the network is running (see SetRelay).
@@ -578,17 +580,26 @@ func (n *Node) serverTLS() *tls.Config {
 		Certificates: []tls.Certificate{n.tlsCert},
 		NextProtos:   []string{ALPNMesh, ALPNJoin},
 		GetConfigForClient: func(chi *tls.ClientHelloInfo) (*tls.Config, error) {
+			var remote net.Addr
+			if chi.Conn != nil {
+				remote = chi.Conn.RemoteAddr()
+			}
 			for _, p := range chi.SupportedProtos {
 				if p == ALPNJoin {
-					var from netip.Addr
-					if chi.Conn != nil {
-						from = remoteAddr(chi.Conn.RemoteAddr())
-					}
-					if !n.joinOpen() || !n.joinLimit.allow(from) {
+					// A joiner has to show, in the server name, that it knows the secret of a
+					// pending invitation; only then does it count against the (per address and
+					// overall) join budget. Strangers get nothing: no certificate, no state.
+					if !n.joinOpen() || !n.checkJoinSNI(chi.ServerName) || !n.joinLimit.allow(remoteAddr(remote)) {
 						return nil, errors.New("not accepting new devices")
 					}
 					return join, nil
 				}
+			}
+			// The member protocol. Members come in over the authenticated path, which hands QUIC
+			// their stand-in addresses; whatever arrives from a real address is a stranger and
+			// is not shown our certificate (name, owner, overlay addresses).
+			if remote == nil || !magic.IsVirtual(remote) {
+				return nil, errors.New("not a member")
 			}
 			return mesh, nil
 		},

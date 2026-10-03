@@ -11,7 +11,10 @@ import (
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
 )
 
-const maxCandidates = 16
+const (
+	maxCandidates = 16
+	maxPending    = 128 // pings sent to a peer and not answered yet
+)
 
 // cand is one address a peer might be reachable at.
 type cand struct {
@@ -49,7 +52,7 @@ type peer struct {
 	// arbitrary addresses, or evict real candidate addresses.
 	dataKey [32]byte
 
-	lastCandAdd time.Time // when noteDirectSource last accepted a new address
+	lastCandAdd time.Time // when an address seen as a packet's source was last taken as a candidate
 	vaddr       *net.UDPAddr
 	vap         netip.AddrPort
 
@@ -73,6 +76,7 @@ type peer struct {
 	lastRoamProbe time.Time
 	lastStateSent time.Time
 	heard         bool // we have authenticated something from this peer
+	nonces        nonceSet
 	theirDirect   map[[8]byte]bool
 	theirCanRelay bool
 	theirStateAt  time.Time
@@ -178,9 +182,54 @@ func worse(a, b *cand) bool {
 		return a.lastPong.IsZero()
 	}
 	if a.lastPong.IsZero() {
+		// An address learned only from the source of a packet is the cheapest to learn
+		// again and the one a replayed packet can plant: it goes first.
+		if ao, bo := a.src == SrcObserved, b.src == SrcObserved; ao != bo {
+			return ao
+		}
 		return a.added.Before(b.added)
 	}
 	return a.lastPong.Before(b.lastPong)
+}
+
+// maxObservedCands is how many unconfirmed addresses learned from packet sources a
+// peer keeps at a time.
+const maxObservedCands = 4
+
+// learnObservedLocked takes from, the source address of a packet that verified as
+// ours, as a candidate. Such a packet can be replayed from anywhere, so this is
+// limited: one new address a second, and at most maxObservedCands unconfirmed ones at
+// a time (the oldest makes room), which leaves the addresses from gossip and the
+// confirmed ones alone. It reports whether the address was added.
+func (p *peer) learnObservedLocked(from netip.AddrPort, now time.Time) bool {
+	from = normalize(from)
+	if !usableCandidate(from) {
+		return false
+	}
+	if _, ok := p.cands[from]; ok {
+		return false
+	}
+	if now.Sub(p.lastCandAdd) < time.Second {
+		return false
+	}
+	p.lastCandAdd = now
+	var oldest *cand
+	n := 0
+	for _, c := range p.cands {
+		if c.src == SrcObserved && c.lastPong.IsZero() && c.ap != p.direct {
+			n++
+			if oldest == nil || c.added.Before(oldest.added) {
+				oldest = c
+			}
+		}
+	}
+	if n >= maxObservedCands {
+		delete(p.cands, oldest.ap)
+	} else {
+		p.evictLocked()
+	}
+	p.cands[from] = &cand{ap: from, src: SrcObserved, added: now}
+	return true
 }
 
 // noteDirectSource is called for each data packet; if it came from an address we
@@ -193,16 +242,8 @@ func (p *peer) noteDirectSource(from netip.AddrPort) {
 		return
 	}
 	if usableCandidate(from) {
-		if _, ok := p.cands[from]; !ok {
-			if now.Sub(p.lastCandAdd) < time.Second {
-				p.mu.Unlock() // a member may roam, but not flood us with addresses
-				return
-			}
-			p.lastCandAdd = now
-			p.evictLocked()
-			p.cands[from] = &cand{ap: from, src: SrcObserved, added: now}
-		}
-		if now.Sub(p.lastRoamProbe) > 2*time.Second {
+		p.learnObservedLocked(from, now)
+		if _, ok := p.cands[from]; ok && now.Sub(p.lastRoamProbe) > 2*time.Second {
 			p.lastRoamProbe = now
 			p.nextProbe = now
 			p.mu.Unlock()
@@ -253,14 +294,22 @@ func (p *peer) confirmLocked(ap netip.AddrPort, rtt time.Duration, now time.Time
 func (p *peer) addPending(tx [12]byte, rec pingRec) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if len(p.pending) >= 128 {
+	if len(p.pending) >= maxPending {
 		for k, v := range p.pending {
 			if rec.sent.Sub(v.sent) > 15*time.Second {
 				delete(p.pending, k)
 			}
 		}
-		if len(p.pending) >= 128 {
-			p.pending = map[[12]byte]pingRec{}
+		if len(p.pending) >= maxPending { // still full: the oldest probe is the one given up on
+			var oldest [12]byte
+			var at time.Time
+			first := true
+			for k, v := range p.pending {
+				if first || v.sent.Before(at) {
+					oldest, at, first = k, v.sent, false
+				}
+			}
+			delete(p.pending, oldest)
 		}
 	}
 	p.pending[tx] = rec
@@ -369,4 +418,52 @@ func (c *Conn) notifyPath(p *peer) {
 	if c.cfg.OnPath != nil {
 		c.cfg.OnPath(p.id, info)
 	}
+}
+
+// discoMemory is how many disco nonces are remembered per peer.
+const discoMemory = 512
+
+// nonceSet remembers the nonces of the last discoMemory disco packets accepted from a
+// peer. A sealed packet that is captured and sent again (from anywhere, also from a
+// spoofed address) carries a nonce we have seen and is dropped. Only packets that
+// opened correctly are remembered, so the set cannot be filled with junk.
+type nonceSet struct {
+	seen map[[24]byte]struct{}
+	ring [][24]byte
+	next int
+}
+
+func (s *nonceSet) has(n [24]byte) bool {
+	_, ok := s.seen[n]
+	return ok
+}
+
+func (s *nonceSet) add(n [24]byte) {
+	if s.seen == nil {
+		s.seen = make(map[[24]byte]struct{}, 64)
+	}
+	if _, dup := s.seen[n]; dup {
+		return
+	}
+	if len(s.ring) < discoMemory {
+		s.ring = append(s.ring, n)
+	} else {
+		delete(s.seen, s.ring[s.next])
+		s.ring[s.next] = n
+		s.next = (s.next + 1) % discoMemory
+	}
+	s.seen[n] = struct{}{}
+}
+
+// discoSeen reports whether a disco packet with this nonce was already accepted.
+func (p *peer) discoSeen(n [24]byte) bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.nonces.has(n)
+}
+
+func (p *peer) discoRemember(n [24]byte) {
+	p.mu.Lock()
+	p.nonces.add(n)
+	p.mu.Unlock()
 }

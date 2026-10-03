@@ -200,6 +200,7 @@ type Conn struct {
 	rdWake     chan struct{}
 
 	unknownTokens tokenBucket
+	anonLimit     *anonGate
 
 	self selfState
 
@@ -253,6 +254,7 @@ func New(cfg Config) (*Conn, error) {
 	c.ctx, c.cancel = context.WithCancel(context.Background())
 	c.bufPool.New = func() any { b := make([]byte, maxPacket); return &b }
 	c.unknownTokens = newTokenBucket(100, 200)
+	c.anonLimit = newAnonGate()
 	c.self.init()
 	// Know our interface addresses before anyone asks (an invitation created right
 	// after startup must already contain them).
@@ -635,6 +637,15 @@ func (c *Conn) handlePacket(pkt []byte, from netip.AddrPort) {
 		if !c.anonOK.Load() || len(pkt) <= 1 {
 			return
 		}
+		// Stand-in addresses belong to members, whose packets arrive on the authenticated
+		// path. A stranger's packet that claims one as its source is a forgery: it would
+		// skip QUIC's address check and make us answer a member.
+		if isVirtualAddr(from.Addr()) {
+			return
+		}
+		if !c.anonLimit.allow(from.Addr()) {
+			return
+		}
 		c.enqueue(pkt[1:], net.UDPAddrFromAddrPort(from))
 	default:
 		if looksLikeSTUN(pkt) {
@@ -720,6 +731,15 @@ func IsVirtual(addr net.Addr) bool {
 		return false
 	}
 	return ua.IP[0] == virtualPrefix[0] && ua.IP[1] == virtualPrefix[1] && ua.IP[2] == virtualPrefix[2] && ua.IP[3] == virtualPrefix[3]
+}
+
+// isVirtualAddr is IsVirtual for a plain address.
+func isVirtualAddr(a netip.Addr) bool {
+	if !a.Is6() || a.Is4In6() {
+		return false
+	}
+	b := a.As16()
+	return b[0] == virtualPrefix[0] && b[1] == virtualPrefix[1] && b[2] == virtualPrefix[2] && b[3] == virtualPrefix[3]
 }
 
 func deriveMACKey(shared [32]byte) [32]byte { return deriveKey("svoi/relay-mac/v1", shared) }

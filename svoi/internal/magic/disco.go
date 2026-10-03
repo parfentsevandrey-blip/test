@@ -172,6 +172,9 @@ func (c *Conn) handleDisco(pkt []byte, from netip.AddrPort, via *peer) {
 	p := c.peerByID(sender)
 	var shared [32]byte
 	if p != nil {
+		if p.discoSeen(nonce) {
+			return // a copy of a packet we have already taken: a replay
+		}
 		shared = p.shared
 	} else {
 		// A stranger (or a member we have not met yet). Opening costs a curve
@@ -225,11 +228,14 @@ func (c *Conn) handleDisco(pkt []byte, from netip.AddrPort, via *peer) {
 
 	now := time.Now()
 	p.mu.Lock()
+	if p.nonces.has(nonce) { // (a first-contact packet can arrive twice at once)
+		p.mu.Unlock()
+		return
+	}
+	p.nonces.add(nonce)
 	p.lastHeard = now
-	firstContact := !p.heard
 	p.heard = true
 	p.mu.Unlock()
-	_ = firstContact
 
 	switch kind {
 	case msgPing:
@@ -261,14 +267,9 @@ func (c *Conn) onPing(p *peer, r *rbuf, from netip.AddrPort, via *peer) {
 		c.sendDisco(p, w.b, from, nil)
 		// Hole punching reflex: a verified packet from `from` means that path is
 		// worth probing in the other direction too.
-		p.mu.Lock()
-		_, known := p.cands[from]
-		p.mu.Unlock()
-		if !known && usableCandidate(from) {
-			p.addCandidates([]netip.AddrPort{from}, SrcObserved)
-		}
 		now := time.Now()
 		p.mu.Lock()
+		p.learnObservedLocked(from, now)
 		cd := p.cands[from]
 		needs := cd != nil && now.Sub(cd.lastPing) > 300*time.Millisecond && now.Sub(cd.lastPong) > c.cfg.Timing.KeepAlive
 		if needs {

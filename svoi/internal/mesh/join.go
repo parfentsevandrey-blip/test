@@ -436,7 +436,9 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName string) error {
 	qconf := n.quicConf()
 	for _, ep := range inv.Endpoints {
 		go func(ep netip.AddrPort) {
-			c, err := tr.Dial(dctx, net.UDPAddrFromAddrPort(ep), tlsConf, qconf)
+			tc := tlsConf.Clone()
+			tc.ServerName = joinSNI(inv.Secret[:]) // each attempt shows its own token
+			c, err := tr.Dial(dctx, net.UDPAddrFromAddrPort(ep), tc, qconf)
 			results <- result{c, err}
 		}(ep)
 	}
