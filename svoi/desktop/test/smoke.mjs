@@ -220,6 +220,10 @@ try {
     const log = fs.openSync(path.join(dirs.base, 'external-core.log'), 'a');
     const ext = spawn(coreBinary(), ['up', '--no-browser', '--no-stun', '--no-portmap', '--loopback', '--ui', '127.0.0.1:0', '--exit-when-stdin-closes', '--dir', dirs.data], { stdio: ['pipe', log, log], windowsHide: true, env: { ...process.env, SVOI_DIR: dirs.data } });
     ext.stdin.on('error', () => {});
+    let extEnd = 'still running';
+    ext.on('exit', (code, signal) => {
+      extEnd = `ended with code ${code} / signal ${signal} at ${new Date().toISOString()}`;
+    });
     try {
       await waitFor(() => fs.existsSync(path.join(dirs.data, 'ui.addr')), 20000, 'the external node');
       app = await launch();
@@ -228,7 +232,13 @@ try {
       await page.getByTestId('page-home').waitFor({ timeout: 60000 });
       assert.equal(await hook(() => global.__svoiTest.core.attached), true);
       await quit(app);
-      assert.ok(alive(ext.pid), 'the app does not stop a node it did not start');
+      let extLog = '';
+      try {
+        extLog = fs.readFileSync(path.join(dirs.base, 'external-core.log'), 'utf8').split('\n').slice(-40).join('\n');
+      } catch {
+        /* no log */
+      }
+      assert.ok(alive(ext.pid), `the app does not stop a node it did not start (the node ${extEnd}; its log:\n${extLog})`);
     } finally {
       try {
         ext.stdin.end();
@@ -248,13 +258,13 @@ try {
       const lines = text.split('\n');
       console.log(`--- ${name} (tail) ---\n` + lines.slice(-25).join('\n'));
       // a program that crashed: where it says so (the tail of its dump is no use without the top)
-      const at = lines.map((l, i) => (/^(panic:|fatal error:|runtime:|Exception 0x|SIG[A-Z]+:)/.test(l) ? i : -1)).filter((i) => i >= 0);
-      for (const i of at.slice(0, 3)) console.log(`--- ${name}: a crash at line ${i + 1} ---\n` + lines.slice(i, i + 30).join('\n'));
+      const at = lines.map((l, i) => (/^(panic:|fatal error:|runtime:|Exception 0x|SIG[A-Z]+:|WARNING: DATA RACE)/.test(l) ? i : -1)).filter((i) => i >= 0);
+      for (const i of at.slice(0, 3)) console.log(`--- ${name}: a crash at line ${i + 1} ---\n` + lines.slice(i, i + 60).join('\n'));
       if (shotsDir) fs.writeFileSync(path.join(shotsDir, `failure-${name}`), text);
     } else console.log(`--- no ${name}: the app never got as far as writing it (profile: ${fs.existsSync(dirs.userData) ? fs.readdirSync(dirs.userData).join(', ') || 'empty' : 'not created'})`);
   }
   if (shotsDir) {
-    for (const f of fs.readdirSync(dirs.base).filter((n) => /^node-.*\.log$/.test(n))) fs.copyFileSync(path.join(dirs.base, f), path.join(shotsDir, `failure-${f}`));
+    for (const f of fs.readdirSync(dirs.base).filter((n) => /^(node-.*|external-core)\.log$/.test(n))) fs.copyFileSync(path.join(dirs.base, f), path.join(shotsDir, `failure-${f}`));
   }
 } finally {
   if (other) await other.stop().catch(() => {});

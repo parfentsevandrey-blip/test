@@ -15,6 +15,10 @@ on:
         description: "run the end-to-end test of the packaged app this many times (to catch a failure that comes now and then)"
         type: string
         default: "1"
+      race:
+        description: "build the program with the race detector (slower; a data race stops it and is printed)"
+        type: boolean
+        default: false
 
 defaults:
   run:
@@ -58,12 +62,20 @@ jobs:
         shell: bash
         run: |
           set -e
+          first=1
           for t in ${{ matrix.cores }}; do
             goos=${t%%/*}; rest=${t#*/}; goarch=${rest%%:*}; key=${rest##*:}
             ext=""; [ "$goos" = windows ] && ext=".exe"
             mkdir -p "desktop/bin/$key"
-            CGO_ENABLED=0 GOOS=$goos GOARCH=$goarch go build -trimpath -ldflags "-s -w" -o "desktop/bin/$key/svoi$ext" ./cmd/svoi
-            echo "built desktop/bin/$key/svoi$ext"
+            if [ "${{ inputs.race }}" = "true" ] && [ $first = 1 ]; then
+              # a diagnostic build for this machine's own kind of processor
+              CGO_ENABLED=1 go build -race -o "desktop/bin/$key/svoi$ext" ./cmd/svoi
+              echo "built desktop/bin/$key/svoi$ext WITH THE RACE DETECTOR"
+            else
+              CGO_ENABLED=0 GOOS=$goos GOARCH=$goarch go build -trimpath -ldflags "-s -w" -o "desktop/bin/$key/svoi$ext" ./cmd/svoi
+              echo "built desktop/bin/$key/svoi$ext"
+            fi
+            first=0
           done
 
       - name: Install the dependencies of the app
@@ -99,6 +111,7 @@ jobs:
         env:
           SVOI_APP_EXE: ${{ steps.app.outputs.exe }} # the app must find and run the program it carries (no SVOI_CORE)
           SVOI_DESKTOP_LOCALE: ru # the screenshots are those of a Russian-speaking person's window
+          GORACE: halt_on_error=1 exitcode=66 # (only matters for the diagnostic build with the race detector)
         run: |
           mkdir -p ../../shots
           if [ "$RUNNER_OS" = Linux ]; then

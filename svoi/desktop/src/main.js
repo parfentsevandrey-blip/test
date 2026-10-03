@@ -105,8 +105,18 @@ function showLog() {
   shell.showItemInFolder(f);
 }
 
-/** Start the node and show the interface; on failure show the error page. */
-async function startCore() {
+/**
+ * Start the node and show the interface; on failure show the error page. One start at a time: a node that
+ * dies while an earlier start is still loading the window must not make two navigations fight for it.
+ */
+let startQueue = Promise.resolve();
+function startCore() {
+  const run = startQueue.then(doStartCore, doStartCore);
+  startQueue = run.catch(() => {});
+  return run;
+}
+
+async function doStartCore() {
   mainWin.showSplash();
   updateTray();
   try {
