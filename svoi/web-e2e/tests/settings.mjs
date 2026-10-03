@@ -21,6 +21,34 @@ group("settings", () => {
     eq(page.problems, [], "console / network problems");
   });
 
+  test("the router port switch is saved on the device and its status says what the router did", async ({ browser, dev }) => {
+    // In the demo the devices live in a simulated network, so there is no router to answer:
+    // the mapper starts, finds none, and the interface has to say so in plain words.
+    const page = await open(browser, dev.laptop, { hash: "settings/network" });
+    const sw = tid(page, "setting-portmap");
+    await sw.waitFor();
+    eq(await sw.getAttribute("aria-checked"), "false", "the demo devices have it off");
+    eq(await tid(page, "portmap-status").count(), 0, "no status while the switch is off");
+    await sw.click();
+    await until(async () => (await dev.laptop.api("GET", "/api/settings")).portMap === true, 5000, "portMap=true on the backend");
+    const status = tid(page, "portmap-status");
+    await status.waitFor();
+    // the node reports through `self`: searching first, then the answer
+    await page.waitForFunction(() => document.querySelector('[data-testid="portmap-status"]')?.dataset.state === "unavailable", null, { timeout: 30000 });
+    const text = await status.innerText();
+    assert(/Роутер не ответил/.test(text), "the explanation of an unanswered router: " + text);
+    const self = (await dev.laptop.api("GET", "/api/state")).self;
+    eq(self.portmap?.state, "unavailable", "the backend says the same");
+    // it survives a reload, and switching off removes the status again
+    await page.reload();
+    await tid(page, "setting-portmap").waitFor();
+    eq(await tid(page, "setting-portmap").getAttribute("aria-checked"), "true", "state after reload");
+    await tid(page, "setting-portmap").click();
+    await until(async () => (await dev.laptop.api("GET", "/api/settings")).portMap === false, 5000, "portMap=false on the backend");
+    await page.waitForFunction(() => !document.querySelector('[data-testid="portmap-status"]'), null, { timeout: 10000 });
+    eq(page.problems, [], "console / network problems");
+  });
+
   test("the auto-accept policy really changes how incoming files are treated", async ({ browser, dev }) => {
     const lap = (await dev.laptop.api("GET", "/api/state")).self;
     const page = await open(browser, dev.laptop, { hash: "settings/files" });

@@ -5,8 +5,9 @@
 #   sudo install -m755 svoi /usr/local/bin/svoi
 #   sudo install -m644 deploy/svoi.service /etc/systemd/system/svoi.service
 #   sudo systemctl daemon-reload && sudo systemctl enable --now svoi
-#   sudo journalctl -u svoi -f          # prints a one-time address of the web interface (valid 10 minutes)
-#   sudo -u svoi svoi url --dir /var/lib/svoi    # ... or mints a fresh one later (needs the token, so: as that user)
+#   sudo -u svoi svoi url --dir /var/lib/svoi    # a one-time address of the web interface (valid 10 minutes);
+#       it needs the token, so run it as that user. The journal does not carry the address: a service
+#       has no terminal, and a log would keep a link nobody used up (`svoi up --print-link` overrides).
 #
 # The web interface listens on 127.0.0.1:8777 only; manage this device from
 # another member's interface ("Manage device"), or through an SSH tunnel.

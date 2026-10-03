@@ -14,7 +14,7 @@ import { cx, deviceKind, isValidHostPort, kindIcon, natTone } from "../util.js";
 import { deviceName, ManageDeviceSelect } from "../components/devicepicker.js";
 import { FolderPicker } from "../components/folderpicker.js";
 import { PageHeader } from "../components/misc.js";
-import { Button, Callout, Card, Chip, CopyButton, EmptyState, Field, IconButton, KV, Segmented, Skeleton, Switch } from "../components/ui.js";
+import { Button, Callout, Card, Chip, CopyButton, EmptyState, Field, IconButton, KV, Segmented, Skeleton, Spinner, Switch } from "../components/ui.js";
 import { confirmDialog } from "../components/modal.js";
 import { toast, toastError } from "../components/toast.js";
 import { osName } from "./devices.js";
@@ -174,13 +174,16 @@ function NatCard({ cfg }) {
     setChecking(false);
   };
   const eps = (self && self.endpoints) || [];
+  const mapped = self && self.portmap && self.portmap.state === "mapped" ? self.portmap : null;
   return html`<${Card} class=${cx("nat", `nat--${tone}`)}>
     <div class="nat__head">
       <span class="nat__badge"><${Icon} name=${tone === "ok" ? "shieldCheck" : tone === "warn" ? "alert" : "radar"} size=${28} /></span>
       <div class="grow">
         <p class="nat__eyebrow">${t("nat.diag")}</p>
         <h3 class="nat__title">${t("nat.head." + diff)}</h3>
-        <p class="nat__text">${t("nat.text." + diff, { port: (self && self.udpPort) || 41710 })}</p>
+        <p class="nat__text">${diff === "open" && mapped
+          ? t("nat.text.openMapped", { proto: PM_PROTO[mapped.protocol] || "UPnP" })
+          : t("nat.text." + diff, { port: (self && self.udpPort) || 41710 })}</p>
       </div>
       ${cfg.local && html`<${Button} icon="radar" loading=${checking} onClick=${check} class="nat__btn" data-testid="netcheck">${t("nat.check")}</${Button}>`}
     </div>
@@ -198,12 +201,39 @@ function NatCard({ cfg }) {
       <h4 class="section-title">${t("nat.endpoints")}</h4>
       <ul class="eplist">${eps.map((e, i) => html`<li key=${i} class="eplist__row">
         <span class="mono small grow">${e.addr}</span>
-        <${Chip} size="sm" tone=${e.kind === "local" ? "outline" : e.kind === "stun" ? "info" : "accent"} title=${t("nat.kindHint." + e.kind)}>${t("nat.kind." + e.kind)}</${Chip}>
+        <${Chip} size="sm" tone=${e.kind === "local" ? "outline" : e.kind === "stun" ? "info" : e.kind === "mapped" ? "ok" : "accent"} icon=${e.kind === "mapped" ? "shieldCheck" : undefined}
+          title=${t("nat.kindHint." + e.kind)} data-kind=${e.kind}>${t("nat.kind." + e.kind)}</${Chip}>
         <${CopyButton} text=${e.addr} />
       </li>`)}</ul>
     </div>`}
     ${!cfg.local && html`<p class="faint xsmall mt-3">${t("nat.remoteNoCheck")}</p>`}
   </${Card}>`;
+}
+
+const PM_PROTO = { upnp: "UPnP", natpmp: "NAT-PMP" };
+
+/**
+ * Router port mapping status under its switch (self.portmap). While the switch
+ * is on but the node has not reported yet, it reads as "searching".
+ */
+function PortmapStatus({ pm }) {
+  const st = (pm && pm.state) || "searching";
+  const tone = st === "mapped" ? "ok" : st === "private" ? "warn" : "neutral";
+  const proto = PM_PROTO[pm && pm.protocol] || "UPnP";
+  const diag = (st === "unavailable" || st === "private") && pm
+    ? [pm.gateway && t("pmap.gateway", { gw: pm.gateway }), pm.error].filter(Boolean).join(" · ")
+    : "";
+  return html`<div class=${cx("pmap", `pmap--${tone}`)} data-testid="portmap-status" data-state=${st} role="status">
+    <span class="pmap__icon">${st === "searching" ? html`<${Spinner} size=${14} />`
+      : html`<${Icon} name=${st === "mapped" ? "checkCircle" : st === "private" ? "alert" : "info"} size=${16} />`}</span>
+    <div class="grow pmap__body">
+      ${st === "mapped"
+        ? html`<span>${tx("pmap.mapped", { proto, addr: html`<span class="mono strong">${pm.external || "—"}</span>` })}</span>`
+        : html`<span>${st === "searching" ? t("pmap.searching") : st === "private" ? t("pmap.private") : t("pmap.unavailable")}</span>`}
+      ${diag && html`<span class="pmap__diag mono xsmall">${diag}</span>`}
+    </div>
+    ${st === "mapped" && pm.external && html`<${CopyButton} text=${pm.external} />`}
+  </div>`;
 }
 
 function StunEditor({ list, onChange, disabled }) {
@@ -233,6 +263,13 @@ function StunEditor({ list, onChange, disabled }) {
 function NetworkSection({ cfg }) {
   const s = cfg.settings;
   const self = cfg.self;
+  // Like the STUN switch: a plain save (the node restarts its network layer for
+  // a second). This device reports the mapping through `self` events; a managed
+  // device has no events here, so read its state again a moment later.
+  const savePortMap = async (v) => {
+    const r = await cfg.save({ portMap: v });
+    if (r && !cfg.local) setTimeout(() => cfg.reload(), 2000);
+  };
   return html`<${Section} id="network" icon="globe" title=${t("set.sec.network")} sub=${t("set.sec.networkSub")}>
     <${NatCard} cfg=${cfg} />
     ${s && html`<${Card}>
@@ -242,6 +279,9 @@ function NetworkSection({ cfg }) {
       <${Switch} label=${t("set.stun")} description=${t("set.stunHint")} checked=${s.stunEnabled} onChange=${(v) => cfg.save({ stunEnabled: v })} />
       ${s.stunEnabled && html`<div class="set-sub"><span class="field__label">${t("set.stunServers")}</span>
         <${StunEditor} list=${s.stunServers || []} onChange=${(l) => cfg.save({ stunServers: l })} /></div>`}
+      ${typeof s.portMap === "boolean" && html`
+        <${Switch} label=${t("set.portMap")} description=${t("set.portMapHint")} checked=${s.portMap} onChange=${savePortMap} testid="setting-portmap" />
+        ${s.portMap && html`<${PortmapStatus} pm=${self && self.portmap} />`}`}
       <div class="set-sub">
         <${SaveField} label=${t("set.udpPort")} hint=${t("set.udpPortHint")} value=${s.udpPort} type="number" width="160px" mono
           validate=${(v) => (!/^\d+$/.test(String(v).trim()) || Number(v) > 65535 ? t("set.portInvalid") : "")}

@@ -13,7 +13,7 @@
 //   --tun-error enabling the TUN interface fails with "permission denied" (to see the error state)
 //
 // Test hooks (not part of the real API), GET or POST:
-//   /__mock/offer?from=phone        incoming file offer
+//   /__mock/offer?from=phone[&name=…] incoming file offer (.jpg/.pdf/.wav are small, others 18 MB)
 //   /__mock/chat?from=dad-pc&text=… incoming chat message
 //   /__mock/mail?from=nas           incoming mail
 //   /__mock/join[?name=tablet]      consume the newest invite → a new device joins
@@ -24,6 +24,7 @@
 //   /__mock/tun?error=1             make enabling TUN fail (error=0: succeed again)
 //   /__mock/removed                 an admin removed this device: back to onboarding with `removed`
 //   /__mock/sw?bump=1               pretend a new binary: sw.js gets a new VERSION (as after an upgrade)
+//   /__mock/portmap?state=mapped    router port mapping: mapped|searching|unavailable|private
 //   /__mock/reset                   rebuild the world from the scenario
 
 import http from "node:http";
@@ -594,8 +595,8 @@ function makeSelf(def, extra = {}) {
   return {
     id: devId(def.key), short: devId(def.key).slice(0, 8), name: def.name, owner: def.owner,
     ip4: def.ip4, ip6: def.ip6, admin: true, meshId: "k3j4h5g6f7d8", meshName: "Дом", udpPort: 41710,
-    endpoints: [{ addr: "192.168.1.23:41710", kind: "local" }, { addr: "10.211.55.2:41710", kind: "local" }, { addr: "203.0.113.57:41710", kind: "stun" }, { addr: "203.0.113.57:41710", kind: "observed" }],
-    nat: { mappingVaries: false, public: ["203.0.113.57:41710"], hasIPv6: false, stun: true, difficulty: "easy" },
+    endpoints: [{ addr: "192.168.1.23:41710", kind: "local" }, { addr: "10.211.55.2:41710", kind: "local" }, { addr: "203.0.113.5:41710", kind: "stun" }, { addr: "203.0.113.5:41710", kind: "observed" }],
+    nat: { mappingVaries: false, public: ["203.0.113.5:41710"], hasIPv6: false, stun: true, difficulty: "easy" },
     version: "0.1.0", os: def.os, arch: def.arch, started: now() - 3 * 3600 - 1260, configured: true,
     relay: true, relayed: { packets: 18342, bytes: 21_734_112 },
     ...extra,
@@ -631,9 +632,30 @@ function remoteSelf(p, def) {
 const defaultTun = (o = {}) => ({ enabled: false, manageHosts: true, state: "off", name: "svoi0", error: "", supported: true, txPackets: 0, rxPackets: 0, dropped: 0, ...o });
 const defaultSettings = (o = {}) => ({
   downloadDir: "/home/andrey/Downloads/Svoi", autoAccept: "own", autoAcceptMaxMB: 500, relay: true,
-  stunEnabled: true, stunServers: ["stun.l.google.com:19302", "stun.cloudflare.com:3478"], udpPort: 41710, lan: true,
+  stunEnabled: true, stunServers: ["stun.l.google.com:19302", "stun.cloudflare.com:3478"], udpPort: 41710, lan: true, portMap: true,
   socks: { enabled: false, listen: "127.0.0.1:1080" }, tun: defaultTun(), restartRequired: false, ...o,
 });
+
+// Router port mapping (UPnP / NAT-PMP): Self.portmap while Settings.portMap is on.
+// A mapped port is offered first (endpoint kind "mapped") and makes the device "open".
+const PM_STATES = ["mapped", "searching", "unavailable", "private"];
+const PM_DEFAULT = { laptop: "mapped", nas: "mapped", "home-server": "unavailable", phone: "private", "dad-pc": "unavailable", "mom-laptop": "searching", "old-tablet": "searching" };
+function portmapFor(key, state) {
+  const ext = { laptop: "203.0.113.5:41710", nas: "203.0.113.5:41711" }[key] || "203.0.113.5:41712";
+  if (state === "mapped") return { state, protocol: key === "nas" ? "natpmp" : "upnp", external: ext, gateway: "192.168.1.1", error: "" };
+  if (state === "searching") return { state, gateway: "", error: "" };
+  if (state === "private") return { state, gateway: "192.168.1.1", error: "the router's external address 100.72.14.9 is not public (carrier-grade NAT)" };
+  return { state: "unavailable", gateway: "", error: "no UPnP IGD or NAT-PMP gateway answered" };
+}
+/** Put device `key` into port-mapping `state` (null = switched off). */
+function applyPortmap(key, self, state) {
+  if (!self || !self.nat) return;
+  self.endpoints = (self.endpoints || []).filter((e) => e.kind !== "mapped");
+  self.nat.difficulty = (W.natBase && W.natBase[key]) || "easy";
+  if (!state) { delete self.portmap; return; }
+  self.portmap = portmapFor(key, state);
+  if (state === "mapped") { self.endpoints.unshift({ addr: self.portmap.external, kind: "mapped" }); self.nat.difficulty = "open"; }
+}
 
 function addLog(level, msg, dev = "laptop") {
   const d = W.devLogs[dev] || (W.devLogs[dev] = []);
@@ -671,6 +693,9 @@ function buildWorld(scenario) {
   }
   W.self = makeSelf(selfDef);
   W.settings = defaultSettings();
+  W.natBase = { laptop: "easy" };
+  W.pmTarget = {}; // the state a switched-on mapping settles in (default PM_DEFAULT)
+  applyPortmap("laptop", W.self, PM_DEFAULT.laptop);
   W.shares = [
     { id: "sh_docs", name: "Документы", path: "/home/andrey/Documents", mode: "ro", allow: ["*"], exists: true },
     { id: "sh_drop", name: "Входящие", path: "/home/andrey/Downloads/Svoi", mode: "rw", allow: [ids.phone, ids.nas], exists: true },
@@ -686,7 +711,8 @@ function buildWorld(scenario) {
 
   seedLogs("laptop", [
     ["info", "svoi 0.1.0 starting (linux/amd64)"], ["info", "mesh «Дом» (k3j4h5g6f7d8), 7 members, this device is admin"],
-    ["info", "udp listening on 0.0.0.0:41710"], ["info", "stun stun.l.google.com:19302 → 203.0.113.57:41710"],
+    ["info", "udp listening on 0.0.0.0:41710"], ["info", "stun stun.l.google.com:19302 → 203.0.113.5:41710"],
+    ["info", "portmap: upnp mapped 203.0.113.5:41710 → 192.168.1.23:41710 (gateway 192.168.1.1)"],
     ["info", "nat: mapping stable across servers → difficulty easy"], ["info", "lan: discovered nas at 192.168.1.9:41710"],
     ["info", "peer nas: handshake ok via 192.168.1.9:41710 (lan, 0.9 ms)"], ["info", "peer home-server: handshake ok via 198.51.100.20:41710 (direct)"],
     ["warn", "peer phone: direct probes failed (symmetric nat), using relay home-server"], ["info", "peer dad-pc: hole punched 91.122.40.18:51022 (direct)"],
@@ -718,6 +744,8 @@ function buildWorld(scenario) {
       relay: d.key !== "phone", autoAccept: d.key === "nas" ? "all" : "own",
       tun: defaultTun(linux ? { enabled: true, state: "running", txPackets: 182_311, rxPackets: 240_877, dropped: 12 } : { supported: false }),
     }) };
+    W.natBase[d.key] = d.nat || "easy";
+    applyPortmap(d.key, W.remote[d.key].self, PM_DEFAULT[d.key]);
   }
   W.remote.nas.shares = [
     { id: "sh_photo", name: "Фото", path: "/volume1/photo", mode: "rw", allow: ["*"], exists: true },
@@ -1089,7 +1117,7 @@ function background() {
   if (bgN % 13 === 0) incomingChat(ids["home-server"], SERVER_LINES[Math.floor(Math.random() * SERVER_LINES.length)]);
   if (bgN % 23 === 0) incomingMail("nas");
   if (bgN % 31 === 0) incomingOffer("phone");
-  if (bgN % 4 === 0) addLog(["info", "debug", "info", "warn"][bgN % 4], ["keepalive: 5 peers ok", "relay: forwarded 64 packets for phone", "stun: mapping unchanged 203.0.113.57:41710", "peer phone: direct probe failed, staying on relay"][bgN % 4]);
+  if (bgN % 4 === 0) addLog(["info", "debug", "info", "warn"][bgN % 4], ["keepalive: 5 peers ok", "relay: forwarded 64 packets for phone", "stun: mapping unchanged 203.0.113.5:41710", "peer phone: direct probe failed, staying on relay"][bgN % 4]);
 }
 setInterval(background, 5000);
 
@@ -1110,10 +1138,10 @@ function incomingMail(fromKey) {
   emitCounters();
   broadcast("notify", { level: "info", title: "Новое письмо", text: `${p.name}: ${m.subject}`, link: "#/mail/inbox/" + m.id });
 }
-function incomingOffer(fromKey) {
+function incomingOffer(fromKey, wanted) {
   const p = peerByAny(fromKey) || W.peers[0];
   const names = ["IMG_20251003_190144.jpg", "Документы.zip", "Голосовое.wav", "План ремонта.pdf"];
-  const name = names[Math.floor(Math.random() * names.length)];
+  const name = wanted || names[Math.floor(Math.random() * names.length)];
   const kind = name.endsWith(".jpg") ? "photo" : name.endsWith(".pdf") ? "pdf" : name.endsWith(".wav") ? "wav" : "big";
   const t = { id: rid("t_"), dir: "in", peer: p.id, peerName: p.name, name, size: kind === "big" ? 18_221_331 : 0, done: 0, mime: mimeOf(name), state: "offered", speed: 0, error: "", created: now(), updated: now(), finished: null, gen: { kind, seed: 777, size: 18_221_331 } };
   if (kind !== "big") t.size = fileBytes("tr/" + t.id, t.gen, name).length;
@@ -1771,12 +1799,26 @@ function sharesHandlers(prefix, getKey) {
       if (k === "udpPort" && !(Number.isInteger(b[k]) && b[k] >= 0 && b[k] < 65536)) throw E.invalid("udpPort must be 0..65535");
       if (k === "autoAccept" && !["own", "all", "ask"].includes(b[k])) throw E.invalid("autoAccept must be own|all|ask");
       if (k === "stunServers" && (!Array.isArray(b[k]) || b[k].some((x) => !/^[^\s:]+:\d{1,5}$/.test(x)))) throw E.invalid("stunServers must be host:port");
+      if (k === "portMap" && typeof b[k] !== "boolean") throw E.invalid("portMap must be true or false");
       if (restartKeys.includes(k) && JSON.stringify(s[k]) !== JSON.stringify(b[k])) s.restartRequired = true;
       s[k] = b[k];
     }
     if (key === "laptop") {
       W.self.relay = s.relay;
       if (b.stunEnabled !== undefined) { W.self.nat.stun = s.stunEnabled; broadcast("self", W.self); }
+    }
+    if (b.portMap !== undefined) {
+      // the node restarts its network layer: off removes the mapping, on looks for the router again
+      applyPortmap(key, c.self, s.portMap ? "searching" : null);
+      if (s.portMap) {
+        setTimeout(() => {
+          const cur = cfgTarget(key);
+          if (!cur || !cur.settings.portMap || !cur.self || !cur.self.nat) return;
+          applyPortmap(key, cur.self, (W.pmTarget || {})[key] || PM_DEFAULT[key] || "mapped");
+          if (key === "laptop") { addLog("info", "portmap: " + cur.self.portmap.state); broadcast("self", W.self); }
+        }, 1500);
+      }
+      if (key === "laptop") broadcast("self", W.self);
     }
     sendJSON(res, 200, s);
   });
@@ -1985,7 +2027,7 @@ route("DELETE", "/api/forwards/:id", (req, res, p) => {
 });
 
 // ---- mock hooks
-route("ANY", "/__mock/offer", (req, res, p, q) => { const t = incomingOffer(q.get("from") || "phone"); sendJSON(res, 200, publicTransfer(t)); });
+route("ANY", "/__mock/offer", (req, res, p, q) => { const t = incomingOffer(q.get("from") || "phone", q.get("name") || ""); sendJSON(res, 200, publicTransfer(t)); });
 route("ANY", "/__mock/chat", (req, res, p, q) => {
   const peer = peerByAny(q.get("from") || "dad-pc");
   incomingChat(peer.id, q.get("text") || "Привет! Это тестовое сообщение.");
@@ -2018,6 +2060,16 @@ route("ANY", "/__mock/peer", (req, res, p, q) => {
 });
 route("ANY", "/__mock/auth", (req, res, p, q) => { authRequired = q.get("on") !== "0"; ok(res, { authRequired }); });
 route("ANY", "/__mock/sw", (req, res, p, q) => { if (q.get("bump")) swSalt = String(Date.now()); ok(res, { version: "svoi-ui-" + uiHash() }); });
+route("ANY", "/__mock/portmap", (req, res, p, q) => {
+  requireConfigured();
+  const st = q.get("state") || "mapped";
+  if (!PM_STATES.includes(st)) throw E.invalid("state must be " + PM_STATES.join("|"));
+  W.settings.portMap = true; // the UI sees the switch itself on its next settings read
+  W.pmTarget.laptop = st;
+  applyPortmap("laptop", W.self, st);
+  broadcast("self", W.self);
+  ok(res, { portmap: W.self.portmap });
+});
 route("ANY", "/__mock/login", (req, res) => { const code = newLoginCode(); sendJSON(res, 200, { code, url: "/?t=" + code }); });
 route("ANY", "/__mock/tun", (req, res, p, q) => { tunFails = q.get("error") !== "0"; ok(res, { tunFails }); });
 // An admin elsewhere removed this device: it forgets the mesh, takes a fresh

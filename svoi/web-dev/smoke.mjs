@@ -228,7 +228,7 @@ if (srv) {
     await page.waitForSelector("[data-testid=offers-banner] [data-testid=offer-accept]");
     await page.click("[data-testid=offer-accept]");
     await page.waitForSelector("[data-testid=offers-banner]", { state: "detached", timeout: 10000 });
-    const offer = await srv.hook("/__mock/offer?from=phone");
+    const offer = await srv.hook("/__mock/offer?from=phone&name=" + encodeURIComponent("План ремонта.pdf")); // small: done in a few seconds over the relay
     await page.waitForSelector("[data-testid=offers-banner]");
     await page.waitForSelector("[data-testid=toast]");
     await page.open("#/files/send");
@@ -493,6 +493,30 @@ await step("settings: relay toggle, TUN on/off, language and theme", async () =>
 });
 
 if (srv) {
+  await step("settings: router port mapping — switch and its four states", async () => {
+    await srv.hook("/__mock/portmap?state=mapped");
+    await page.open("#/settings/network");
+    const sw = "[data-testid=setting-portmap]";
+    const pm = "[data-testid=portmap-status]";
+    await page.waitForSelector(`${sw}[aria-checked=true]`);
+    await page.waitForSelector(`${pm}[data-state=mapped]:has-text('203.0.113.5:41710')`);
+    if (!/UPnP/.test(await page.textContent(pm))) throw new Error("protocol missing in the mapped status");
+    await page.waitForSelector(".eplist [data-kind=mapped]:has-text('открыт на роутере')");
+    const words = { searching: "Ищу роутер", unavailable: "Роутер не ответил", private: "не публичный адрес", mapped: "Порт открыт на роутере" };
+    for (const [st, text] of Object.entries(words)) {
+      await srv.hook("/__mock/portmap?state=" + st); // arrives as a `self` event
+      await page.waitForSelector(`${pm}[data-state=${st}]:has-text('${text}')`);
+    }
+    const sent = page.waitForRequest((r) => r.url().endsWith("/api/settings") && r.method() === "PUT");
+    await page.click(sw);
+    const body = JSON.parse((await sent).postData() || "{}");
+    if (body.portMap !== false) throw new Error("expected PUT {portMap:false}, got " + JSON.stringify(body));
+    await page.waitForSelector(pm, { state: "detached" });
+    await page.click(sw);
+    await page.waitForSelector(`${pm}[data-state=searching]`);
+    await page.waitForSelector(`${pm}[data-state=mapped]`, { timeout: 8000 });
+  });
+
   await step("global: offline banner and recovery", async () => {
     await page.open("#/devices");
     await srv.hook("/__mock/drop?for=3");

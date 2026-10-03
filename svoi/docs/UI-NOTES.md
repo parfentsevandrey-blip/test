@@ -79,10 +79,12 @@ node web-dev/check-util.mjs
 node web-dev/make-assets.mjs                      # only when icons/video fixture change
 ```
 
-Mock hooks (test-only, GET or POST): `/__mock/offer?from=phone`, `/__mock/chat?from=dad-pc&text=…`,
+Mock hooks (test-only, GET or POST): `/__mock/offer?from=phone[&name=…]`, `/__mock/chat?from=dad-pc&text=…`,
 `/__mock/mail?from=nas`, `/__mock/join[?name=tablet]` (consumes the newest invite → device joins),
 `/__mock/drop?for=5` (drop SSE, refuse reconnects for N s), `/__mock/peer?name=nas&online=0`,
-`/__mock/auth?on=1`, `/__mock/login` (a fresh one-time sign-in link), `/__mock/sw?bump=1` (sw.js
+`/__mock/auth?on=1`, `/__mock/login` (a fresh one-time sign-in link),
+`/__mock/portmap?state=mapped|searching|unavailable|private` (router port mapping of this device;
+also switches `settings.portMap` on), `/__mock/sw?bump=1` (sw.js
 gets a new `VERSION`, as after installing a new binary), `/__mock/tun?error=1`, `/__mock/removed` (an admin removed this device:
 back to `configured:false` with `removed`, a fresh identity, the warn `notify` + empty `peers`
 events like the node sends), `/__mock/reset`.
@@ -162,6 +164,8 @@ Mail: `mail-compose`, `mail-folder-<inbox|sent|trash>`, `mail-search`, `mail-ite
 Services: `service-card` (`data-peer`, `data-service`, `data-forwarded`), `service-connect`,
 `service-disconnect`, `forward-addr`, `service-publish`, `service-name`, `service-addr`,
 `service-save`, `published-service`. Settings: `settings-<section>`, `netcheck`, `logout`, `leave-mesh`,
+`setting-portmap` (switch), `portmap-status` (`data-state` = `self.portmap.state`; absent while the
+switch is off), endpoint chips in the NAT card carry `data-kind` (`mapped|local|stun|observed`),
 `setting-relay`, `tun-section`, `tun-state` (`data-state`), `tun-enabled`, `tun-hosts`,
 `lang-<auto|ru|en>`, `theme-<auto|light|dark>`.
 
@@ -241,6 +245,14 @@ Services: `service-card` (`data-peer`, `data-service`, `data-forwarded`), `servi
     state, which helps after opening a new link in another tab (the cookie is shared).
 23. **Leaving the mesh** resets the device's shares, services and forwards (mail and chat stay);
     the confirmation says so. The mock keeps mail and chat across leave/removal too.
+24. **Router port mapping.** The switch is shown only when `settings.portMap` is a boolean (a node
+    without the feature hides it) and saves like the STUN switch. While it is on and `self.portmap`
+    has not arrived yet, the status reads `searching`. `unavailable`/`private` add a faint
+    diagnostics line (`gateway` · `error`, as the node sends them). For a managed device (`?d=`)
+    there are no `self` events, so its state is read again 2 s after toggling. With
+    `nat.difficulty:"open"` and a `mapped` portmap, the NAT card says the router forwards the port.
+    The mock's laptop is mapped by default (so it is "open"); its public address is now
+    203.0.113.5, the same router as the NAS.
 
 ## Rough edges / not done
 

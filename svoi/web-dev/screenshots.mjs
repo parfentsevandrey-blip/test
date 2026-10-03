@@ -271,6 +271,29 @@ const SHOTS = [
     await p.click("[data-testid=leave-mesh]");
     await p.waitForSelector(".modal .confirm-text");
   } },
+  { name: "settings-portmap", server: "scratch", hash: "#/settings/network", reset: true, run: async (p, srv) => {
+    await srv.hook("/__mock/portmap?state=mapped");
+    await p.waitForSelector("[data-testid=portmap-status][data-state=mapped]");
+    await sleep(700); // let the section deep-link scroll finish first
+    await p.evaluate(() => document.querySelector("[data-testid=portmap-status]").scrollIntoView({ block: "center" }));
+    await sleep(300);
+  } },
+  { name: "settings-portmap-private", server: "scratch", hash: "#/settings/network", reset: true, only: "desktop", run: async (p, srv) => {
+    await p.waitForSelector("[data-testid=portmap-status]");
+    await live(p);
+    await srv.hook("/__mock/portmap?state=private");
+    await p.waitForSelector("[data-testid=portmap-status][data-state=private]");
+    await p.evaluate(() => document.querySelector("[data-testid=portmap-status]").scrollIntoView({ block: "center" }));
+    await sleep(300);
+  } },
+  { name: "settings-portmap-unavailable", server: "scratch", hash: "#/settings/network", reset: true, only: "mobile", run: async (p, srv) => {
+    await p.waitForSelector("[data-testid=portmap-status]");
+    await live(p);
+    await srv.hook("/__mock/portmap?state=unavailable");
+    await p.waitForSelector("[data-testid=portmap-status][data-state=unavailable]");
+    await p.evaluate(() => document.querySelector("[data-testid=portmap-status]").scrollIntoView({ block: "center" }));
+    await sleep(300);
+  } },
   { name: "more", server: "full", hash: "#/more", wait: ".more-row", only: "mobile" },
   { name: "offline-banner", server: "scratch", hash: "#/devices", reset: true, run: async (p, srv) => {
     await p.waitForSelector(".topo__svg");

@@ -678,6 +678,17 @@ a.bdev:hover, a.scard:hover { border-color: var(--line-2); box-shadow: var(--sha
 .set-sec__head { display: flex; align-items: center; gap: var(--sp-3); }
 .set-sec__title { font-size: var(--fs-xl); font-weight: 680; }
 .set-sub { padding: var(--sp-3) 0 var(--sp-2); border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.set-sub + .switch-row { border-top: 1px solid var(--line); }
+/* router port mapping status under its switch */
+.pmap { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 var(--sp-3); padding: 9px 12px; border-radius: var(--r-md); background: var(--surface-2); color: var(--text-2); font-size: var(--fs-sm); }
+.pmap__icon { flex: none; display: grid; place-items: center; width: 18px; min-height: 20px; }
+.pmap__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-top: 1px; }
+.pmap__body .mono { overflow-wrap: anywhere; }
+.pmap__diag { color: var(--text-3); }
+.pmap--ok { background: var(--accent-soft); color: var(--accent-text); }
+.pmap--ok .pmap__body .mono { color: var(--text); }
+.pmap--warn { background: var(--amber-soft); color: var(--amber-text); }
+.pmap .copy-btn, .pmap .icon-btn { margin: -4px -6px -4px 0; }
 .savefield { display: flex; gap: var(--sp-2); align-items: center; flex-wrap: wrap; }
 .savefield .input { flex: 1 1 220px; min-width: 0; }
 .danger-zone { border-color: color-mix(in srgb, var(--danger) 25%, var(--line)); }
