@@ -19,6 +19,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"golang.org/x/text/unicode/norm"
 )
 
 // DNSSuffix is the pseudo top-level domain under which members are addressable.
@@ -287,13 +289,36 @@ func (r *Root) Verify(der []byte) (*Member, error) {
 	return m, nil
 }
 
-// SanitizeName reduces s to a valid DNS label (lowercase letters, digits and
-// hyphens, at most 32 characters).
+// translit maps Cyrillic letters to the Latin ones used in device names, so that
+// «Кухонный ноутбук» becomes kukhonnyy-noutbuk instead of nothing at all.
+var translit = map[rune]string{
+	'а': "a", 'б': "b", 'в': "v", 'г': "g", 'д': "d", 'е': "e", 'ё': "yo", 'ж': "zh", 'з': "z", 'и': "i",
+	'й': "y", 'к': "k", 'л': "l", 'м': "m", 'н': "n", 'о': "o", 'п': "p", 'р': "r", 'с': "s", 'т': "t",
+	'у': "u", 'ф': "f", 'х': "kh", 'ц': "ts", 'ч': "ch", 'ш': "sh", 'щ': "shch", 'ъ': "", 'ы': "y", 'ь': "",
+	'э': "e", 'ю': "yu", 'я': "ya",
+	// Ukrainian and Belarusian
+	'і': "i", 'ї': "yi", 'є': "ye", 'ґ': "g", 'ў': "u",
+}
+
+// SanitizeName reduces s to a valid DNS label (lowercase ASCII letters, digits
+// and hyphens, at most 32 characters). Cyrillic letters are transliterated and
+// Latin letters with accents lose them; anything else becomes a hyphen.
 func SanitizeName(s string) string {
+	s = strings.ToLower(norm.NFC.String(strings.TrimSpace(s)))
+	var pre strings.Builder
+	for _, r := range s {
+		if t, ok := translit[r]; ok {
+			pre.WriteString(t)
+		} else {
+			pre.WriteRune(r)
+		}
+	}
 	var b strings.Builder
 	lastDash := true
-	for _, r := range strings.ToLower(strings.TrimSpace(s)) {
+	for _, r := range norm.NFD.String(pre.String()) {
 		switch {
+		case unicode.Is(unicode.Mn, r):
+			// an accent that NFD split off a letter: drop it
 		case r < unicode.MaxASCII && (unicode.IsLetter(r) || unicode.IsDigit(r)):
 			b.WriteRune(r)
 			lastDash = false

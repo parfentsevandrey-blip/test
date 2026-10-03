@@ -22,6 +22,15 @@ and the UI mock server (`web-dev/mock-server.mjs`) must implement exactly this t
   accepted wherever `:id` of a device is expected and means "this device".
   `short` is the first 8 chars, for display. Other IDs (`transfer.id`, `mail.id`, …)
   are opaque strings.
+* **Device names** are DNS labels: the backend turns whatever the user typed into lowercase ASCII
+  letters, digits and hyphens (≤ 32 chars; collisions get `-2`, `-3`…). Cyrillic is transliterated
+  (а a, б b, в v, г g, д d, е e, ё yo, ж zh, з z, и i, й y, к k, л l, м m, н n, о o, п p, р r, с s, т t,
+  у u, ф f, х kh, ц ts, ч ch, ш sh, щ shch, ъ/ь dropped, ы y, э e, ю yu, я ya; і i, ї yi, є ye, ґ g, ў u),
+  accents are stripped (é → e), everything else becomes `-`; an empty result becomes `device`.
+  So `Кухонный ноутбук` → `kukhonnyy-noutbuk`, reachable as `kukhonnyy-noutbuk.svoi`. Forms that ask for
+  a device name (onboarding, rename) should preview the result live (a JS port of that table);
+  what counts is `name` in the backend's response. Users who want a Russian display name use the
+  per-device **alias** (local nickname, any text).
 * **Times** are Unix **seconds** (integers). `0`/`null` means "never/unknown".
 * **Sizes** are bytes.
 * **Errors**: non-2xx responses carry `{"error":{"code":"…","message":"human readable"}}`.

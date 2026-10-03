@@ -11,7 +11,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { chromium, config, root, startDemo, tests } from "./lib.mjs";
+import { chromium, config, root, startDemo, stopNodes, tests } from "./lib.mjs";
 
 const args = process.argv.slice(2);
 const opt = (name, def) => {
@@ -43,7 +43,7 @@ const failed = [];
 for (const g of [...new Set(selected.map((t) => t.group))]) {
   let demo;
   try {
-    demo = await startDemo({ quiet: g.opts.quiet !== false });
+    demo = g.opts.noDemo ? { devices: {}, stop: async () => {} } : await startDemo({ quiet: g.opts.quiet !== false });
   } catch (e) {
     for (const t of selected.filter((t) => t.group === g)) failed.push([t.name, "could not start the demo: " + e.message]);
     continue;
@@ -60,6 +60,7 @@ for (const g of [...new Set(selected.map((t) => t.group))]) {
       console.log(`  ✗ ${t.name.replace(g.name + ": ", "")}\n      ${String(e.message).split("\n").join("\n      ")}`);
     }
   }
+  await stopNodes();
   await demo.stop();
 }
 await browser.close();

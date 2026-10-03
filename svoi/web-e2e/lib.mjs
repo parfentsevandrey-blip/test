@@ -96,6 +96,33 @@ export async function startDemo({ quiet = true } = {}) {
   return demo;
 }
 
+// A real `svoi up` process with its own data directory (loopback only), optionally
+// already part of a mesh of its own (via `svoi init`). Used where the demo does not
+// fit: onboarding screens and anything that needs an unconfigured device.
+export async function startNode({ name, init = false, mesh = "Тест", owner = "" } = {}) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "svoi-e2e-node-"));
+  const env = { ...process.env, SVOI_DIR: path.join(dir, "data"), HOME: path.join(dir, "home"), XDG_CONFIG_HOME: path.join(dir, "home", ".config"), DISPLAY: "", WAYLAND_DISPLAY: "" };
+  fs.mkdirSync(env.HOME, { recursive: true });
+  if (init) execFileSync(config.bin, ["init", "--mesh", mesh, "--name", name, "--owner", owner], { env, stdio: "pipe" });
+  const log = fs.openSync(path.join(dir, "node.log"), "w");
+  const proc = spawn(config.bin, ["up", "--no-browser", "--no-stun", "--loopback", "--ui", "127.0.0.1:0"], { env, stdio: ["ignore", log, log], detached: true });
+  const addrFile = path.join(env.SVOI_DIR, "ui.addr");
+  const tokFile = path.join(env.SVOI_DIR, "ui.token");
+  await until(async () => fs.existsSync(addrFile) && fs.existsSync(tokFile), 20000, `${name || "node"} to start`);
+  const origin = "http://" + fs.readFileSync(addrFile, "utf8").trim();
+  const token = fs.readFileSync(tokFile, "utf8").trim();
+  const node = { name, dir, origin, token, url: `${origin}/?t=${token}`, proc, log: () => fs.readFileSync(path.join(dir, "node.log"), "utf8") };
+  node.api = (method, p, body, o = {}) => api(node, method, p, body, o);
+  node.stop = async () => {
+    try { process.kill(-proc.pid, "SIGINT"); } catch {}
+    await new Promise((r) => { const t = setTimeout(() => { try { process.kill(-proc.pid, "SIGKILL"); } catch {} r(); }, 8000); proc.once("exit", () => { clearTimeout(t); r(); }); });
+  };
+  nodes.push(node);
+  return node;
+}
+const nodes = [];
+export async function stopNodes() { while (nodes.length) await nodes.pop().stop(); }
+
 export async function api(dev, method, p, body, { raw = false, headers = {} } = {}) {
   const res = await fetch(dev.origin + p, {
     method,
@@ -172,7 +199,8 @@ export async function open(browser, dev, { w = 1280, h = 800, lang = "ru", theme
   page.on("requestfailed", (r) => !/\/api\/events/.test(r.url()) && bad(`requestfailed: ${r.method()} ${r.url()} ${r.failure() && r.failure().errorText}`));
   page.on("response", (r) => r.status() >= 400 && /\/api\//.test(r.url()) && bad(`HTTP ${r.status()} ${r.request().method()} ${r.url().replace(dev.origin, "")}`));
   await page.goto(dev.url, { waitUntil: "load" }); // token handshake sets the session cookie
-  await page.waitForSelector('[data-testid="nav-devices"], [data-testid="tab-devices"], [data-testid="page-onboarding"]');
+  // (the side navigation exists but is hidden on a narrow screen, the tab bar the other way round)
+  await page.waitForFunction(() => [...document.querySelectorAll('[data-testid="nav-devices"], [data-testid="tab-devices"], [data-testid="page-onboarding"]')].some((e) => e.getClientRects().length > 0));
   if (hash) await nav(page, dev, hash);
   return page;
 }
