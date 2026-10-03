@@ -607,3 +607,44 @@ func TestLeaveKeepsDeviceKey(t *testing.T) {
 		t.Fatal("leaving the mesh changed the device key")
 	}
 }
+
+// A desktop or phone app runs svoi as a background process and holds its standard input open:
+// when the app quits - or dies - the pipe closes and svoi must go with it (no orphan keeps the
+// ports and the data directory).
+func TestExitsWhenTheAppThatStartedItGoesAway(t *testing.T) {
+	p := newProc(t, "node")
+	c := p.command("up", "--no-browser", "--no-stun", "--no-portmap", "--loopback", "--ui", "127.0.0.1:0", "--exit-when-stdin-closes")
+	stdin, err := c.StdinPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	c.Stdout, c.Stderr = &out, &out
+	if err := c.Start(); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() { done <- c.Wait() }()
+	defer c.Process.Kill()
+	waitFor(t, 15*time.Second, "web interface", func() bool {
+		_, err := os.Stat(filepath.Join(p.dir, "ui.addr"))
+		return err == nil
+	})
+	select {
+	case err := <-done:
+		t.Fatalf("svoi quit while its parent was still there: %v\n%s", err, out.String())
+	case <-time.After(1500 * time.Millisecond):
+	}
+	stdin.Close() // the app went away
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("svoi did not end cleanly: %v\n%s", err, out.String())
+		}
+	case <-time.After(15 * time.Second):
+		t.Fatalf("svoi kept running after its parent closed standard input\n%s", out.String())
+	}
+	if _, err := os.Stat(filepath.Join(p.dir, "ui.addr")); err == nil {
+		t.Fatal("ui.addr is still there after the clean exit")
+	}
+}

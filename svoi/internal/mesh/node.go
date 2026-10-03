@@ -817,8 +817,31 @@ func minID(a, b identity.ID) identity.ID {
 	return b
 }
 
-// attach installs conn as the peer's link, resolving simultaneous dials: the
-// connection initiated by the device with the lower ID wins on both ends.
+// crossingDials is how long two dials that pass each other on the wire can take. A connection
+// that has been up longer than this is not one half of such a pair (both handshakes of a crossing pair
+// finish within about a round trip of each other).
+const crossingDials = 5 * time.Second
+
+// keepNewConn decides between the link we have and a second one that has just come up with the
+// same peer. Two cases look alike from here:
+//   - both devices dialled each other at the same moment: exactly one link must survive on both
+//     ends, so the connection started by the device with the lower ID wins;
+//   - the peer restarted (or its path died without a word) and dials again while we still hold
+//     the old link, which nobody will close for another 40 seconds of silence: the newcomer is
+//     the live one. Turning it away as a "duplicate" kept a restarted device offline for as long.
+//
+// Only a young link can be half of a crossing pair; an older one yields to the newcomer.
+func keepNewConn(self, peer, oldDialer, newDialer identity.ID, oldAge time.Duration) bool {
+	if oldDialer == newDialer { // the same side dialled again: it has lost the old link
+		return true
+	}
+	if oldAge > crossingDials {
+		return true
+	}
+	return newDialer == minID(self, peer)
+}
+
+// attach installs conn as the peer's link, resolving simultaneous dials (see keepNewConn).
 func (n *Node) attach(p *Peer, conn *quic.Conn, outbound bool) {
 	dialer := p.ID
 	if outbound {
@@ -827,7 +850,7 @@ func (n *Node) attach(p *Peer, conn *quic.Conn, outbound bool) {
 	p.mu.Lock()
 	old := p.conn
 	if old != nil {
-		keepNew := p.connDialer == dialer || dialer == minID(n.device().ID, p.ID)
+		keepNew := keepNewConn(n.device().ID, p.ID, p.connDialer, dialer, time.Since(p.connectedAt))
 		if !keepNew {
 			p.mu.Unlock()
 			_ = conn.CloseWithError(closeDuplicate, "duplicate connection")

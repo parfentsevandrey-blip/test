@@ -65,6 +65,7 @@ func cmdUp(args []string) error {
 	noSTUN := fs.Bool("no-stun", false, "do not use public STUN servers (peers still tell each other how they see us); saved in the settings")
 	printLink := fs.Bool("print-link", false, "print the one-time sign-in link even when the output is not a terminal (it then stays in the log)")
 	noPortMap := fs.Bool("no-portmap", false, "do not ask the home router (UPnP / NAT-PMP) to forward our UDP port; saved in the settings")
+	exitOnStdin := fs.Bool("exit-when-stdin-closes", false, "quit when standard input is closed (for the desktop and phone apps that run svoi as a background process: if the app goes away, so does svoi)")
 	fs.Parse(args)
 
 	// Started a second time (a double click on the icon, say): the first copy owns the
@@ -157,6 +158,13 @@ func cmdUp(args []string) error {
 
 	errc := make(chan error, 1)
 	go func() { errc <- srv.Serve(ln) }()
+	stdinClosed := make(chan struct{})
+	if *exitOnStdin {
+		go func() {
+			_, _ = io.Copy(io.Discard, os.Stdin) // returns when the parent closes its end (or dies)
+			close(stdinClosed)
+		}()
+	}
 	if !*noBrowser && interactive() {
 		go func() {
 			time.Sleep(300 * time.Millisecond)
@@ -164,6 +172,10 @@ func cmdUp(args []string) error {
 		}()
 	}
 	select {
+	case <-stdinClosed:
+		fmt.Fprintln(os.Stderr, "shutting down (the app that started svoi has gone)…")
+		srv.Close()
+		return nil
 	case <-signalChan():
 		if isTerminal(os.Stderr) {
 			fmt.Fprintln(os.Stderr, "Выход…")
