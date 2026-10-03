@@ -162,6 +162,9 @@ func (s *ServerStream) Fail(err error) error {
 	return writeFrame(s.s, responseFrame{Err: asRPCError(err)})
 }
 
+// CloseWrite ends the response body (half-close); reads stay possible.
+func (s *ServerStream) CloseWrite() error { return s.s.Close() }
+
 // SetDeadline bounds the whole stream.
 func (s *ServerStream) SetDeadline(t time.Time) error { return s.s.SetDeadline(t) }
 

@@ -9,6 +9,7 @@ require (
 
 require (
 	github.com/quic-go/quic-go v0.63.0 // indirect
+	go.etcd.io/bbolt v1.5.0 // indirect
 	golang.org/x/net v0.59.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 )
