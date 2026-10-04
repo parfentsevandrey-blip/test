@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Светлая тема: цвета те же, что у веб-интерфейса (внутренние страницы desktop/src/*.html) -->
-    <color name="bg">#F5F3EE</color>
+    <!-- Светлая тема. Фон — основа стеклянного вида (glass-base в css/glass.css): с него начинается окно, пока страница
+         не сообщила свой вид; остальные цвета — те же, что у веб-интерфейса -->
+    <color name="bg">#DCE8EE</color>
     <color name="fg">#1C2421</color>
-    <color name="muted">#66706B</color>
+    <color name="muted">#46525A</color>
     <color name="accent">#0E7A5A</color>
     <color name="on_accent">#FFFFFF</color>
     <color name="err">#B3261E</color>

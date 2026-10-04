@@ -50,6 +50,14 @@ function resolveTheme(pref) {
   return mqLight && mqLight.matches ? "light" : "dark";
 }
 
+// The phone app paints the system bars and the backdrop behind the page to match it: tell it the look (js/boot.js does at start).
+function tellShell() {
+  try {
+    const root = document.documentElement;
+    if (root.hasAttribute("data-native-backdrop")) window.themeshShell.look(root.getAttribute("data-theme"), root.getAttribute("data-skin"));
+  } catch { /* the app is not there */ }
+}
+
 function applyTheme() {
   const th = resolveTheme(themePref());
   document.documentElement.setAttribute("data-theme", th);
@@ -57,6 +65,7 @@ function applyTheme() {
   const color = th === "light" ? "#f5f3ee" : "#0d1012";
   meta.forEach((m) => { m.setAttribute("content", color); m.removeAttribute("media"); });
   setState({ theme: th });
+  tellShell();
 }
 
 function applySkin() {
@@ -66,6 +75,7 @@ function applySkin() {
   const skin = asked || (pref === "glass" || pref === "classic" ? pref : root.getAttribute("data-skin-default") || "classic");
   root.setAttribute("data-skin", skin);
   setState({ skin });
+  tellShell();
 }
 
 export function setSkinPref(v) {

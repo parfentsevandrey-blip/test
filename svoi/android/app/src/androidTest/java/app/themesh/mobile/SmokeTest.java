@@ -253,7 +253,7 @@ public class SmokeTest {
     public void theAddressesOfThePhoneAreWrittenForTheNode() throws Exception {
         // Go-часть с Android 11 не может перечислить сетевые интерфейсы сама: приглашение, которое создаёт телефон, содержит адрес в
         // домашней сети, только если приложение записало его в files/local-addrs.txt (на эмуляторе это 10.0.2.x)
-        List<String> usable = LocalAddrs.select(LocalAddrs.scan());
+        List<String> usable = LocalAddrs.lines(LocalAddrs.scan());
         assumeFalse("у устройства нет ни одного сетевого адреса, кроме петлевых: записывать в файл нечего", usable.isEmpty());
         File file = new File(context.getFilesDir(), "local-addrs.txt");
         file.delete(); // чтобы не принять за результат этого запуска файл прошлого
@@ -271,12 +271,26 @@ public class SmokeTest {
             }
             assertTrue("служба не записала " + file + " за " + waitMs / 1000 + " с", file.isFile());
             assertFalse("файл адресов пуст, хотя у устройства есть адреса " + usable, text.trim().isEmpty());
+            boolean sharedNetwork = false;
+            boolean expectShared = false; // есть интерфейс с групповой рассылкой и известной длиной префикса (Wi-Fi, Ethernet)
+            for (LocalAddrs.Addr a : LocalAddrs.scan()) {
+                expectShared |= a.shared && a.prefix >= 1 && LocalAddrs.usable(a.address) && a.address instanceof java.net.Inet4Address;
+            }
             for (String line : text.trim().split("\n")) {
-                String addr = line.trim();
+                // «192.168.1.50/24» — адрес в общей сети (по ней ядро ищет устройства рядом), «10.20.30.40» — просто адрес
+                String[] parts = line.trim().split("/");
+                String addr = parts[0];
                 assertTrue("в файле адресов не адрес: «" + addr + "»", addr.matches("\\d{1,3}(\\.\\d{1,3}){3}") || addr.contains(":"));
                 assertTrue("в файле адресов лишний адрес (петлевой, link-local, групповой): " + addr,
                         LocalAddrs.usable(java.net.InetAddress.getByName(addr)));
+                if (parts.length > 1) {
+                    int prefix = Integer.parseInt(parts[1]);
+                    assertTrue("в файле адресов невозможная длина префикса: " + line, prefix >= 1 && prefix <= (addr.contains(":") ? 128 : 32));
+                    sharedNetwork |= !addr.contains(":");
+                }
             }
+            // у телефона есть Wi-Fi или Ethernet с групповой рассылкой: хотя бы один адрес записан с префиксом (по ним ядро ищет устройства рядом)
+            assertTrue("ни у одного адреса нет длины префикса сети, хотя есть общая сеть: " + text.trim(), sharedNetwork || !expectShared);
             System.out.println("local-addrs.txt: " + text.trim().replace('\n', ' '));
         }
     }

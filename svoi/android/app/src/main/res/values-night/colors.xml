@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Тёмная тема -->
-    <color name="bg">#0D1012</color>
+    <color name="bg">#070B0E</color>
     <color name="fg">#E8EEEB</color>
-    <color name="muted">#8C9893</color>
+    <color name="muted">#ABB7B2</color>
     <color name="accent">#4FE0B0</color>
     <color name="on_accent">#05231A</color>
     <color name="err">#FF8A80</color>

@@ -169,6 +169,7 @@ export default {
   "top.online": "{n} из {total} в сети",
   "top.onlineTitle": "Сколько устройств сейчас на связи",
   "top.help": "Как это работает?",
+  "top.appMenu": "Меню приложения",
 
   // ---- NAT
   "nat.label": "NAT",

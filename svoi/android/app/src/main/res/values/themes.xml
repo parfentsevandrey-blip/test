@@ -11,6 +11,15 @@
         <item name="android:windowLightStatusBar">true</item>
     </style>
 
+    <!-- Меню приложения («⋮»): окно-плашка без заголовка, фона и затемнения; стеклянную панель рисует MenuPopup. -->
+    <style name="Theme.TheMesh.Menu" parent="android:Theme.Material.Dialog.NoActionBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
     <!-- Экран сканера: чёрный фон окна, пока не заработала камера (а не бежевый, как у остальных окон). Родитель — Theme.TheMesh
          из values или values-night, смотря какая тема на экране; цвета сканера в обеих одинаковые. -->
     <style name="Theme.TheMesh.Scan" parent="Theme.TheMesh">

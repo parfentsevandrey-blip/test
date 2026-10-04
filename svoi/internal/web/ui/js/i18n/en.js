@@ -164,6 +164,7 @@ export default {
   "top.online": "{n} of {total} online",
   "top.onlineTitle": "How many devices are connected right now",
   "top.help": "How does it work?",
+  "top.appMenu": "App menu",
 
   "nat.label": "NAT",
   "nat.chip.open": "Open",

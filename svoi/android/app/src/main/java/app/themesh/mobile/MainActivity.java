@@ -4,6 +4,7 @@ import android.Manifest;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -12,6 +13,9 @@ import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.RippleDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -41,7 +45,6 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
-import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -70,6 +73,7 @@ import app.themesh.mobile.core.NodeApi;
 import app.themesh.mobile.core.NodeStatus;
 import app.themesh.mobile.core.NodeSupervisor;
 import app.themesh.mobile.core.OriginPolicy;
+import app.themesh.mobile.core.PageLook;
 import app.themesh.mobile.core.Route;
 import app.themesh.mobile.core.ScanEvent;
 import app.themesh.mobile.core.StatusLine;
@@ -109,8 +113,8 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         }
     }
 
-    private static final Palette LIGHT = new Palette(ThemeColor.LIGHT_BG, 0xFF1C2421, 0xFF66706B, 0xFF0E7A5A, 0xFFFFFFFF, 0xFFB3261E);
-    private static final Palette DARK = new Palette(ThemeColor.DARK_BG, 0xFFE8EEEB, 0xFF8C9893, 0xFF4FE0B0, 0xFF05231A, 0xFFFF8A80);
+    private static final Palette LIGHT = new Palette(ThemeColor.LIGHT_BG, 0xFF1C2421, 0xFF46525A, 0xFF0E7A5A, 0xFFFFFFFF, 0xFFB3261E);
+    private static final Palette DARK = new Palette(ThemeColor.DARK_BG, 0xFFE8EEEB, 0xFFABB7B2, 0xFF4FE0B0, 0xFF05231A, 0xFFFF8A80);
 
     /** Когда (elapsedRealtime) падал процесс отрисовки WebView: на весь процесс, окно при этом пересоздаётся. */
     private static final ArrayDeque<Long> RENDERER_CRASHES = new ArrayDeque<>();
@@ -125,7 +129,10 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
     private AndroidTexts texts;
 
     private View root;
+    private View bar;
     private View splash;
+    private View splashOrb;
+    private View errorCard;
     private View errorPanel;
     private WebView web;
     private ImageView barLogo;
@@ -137,6 +144,7 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
     private TextView errorMessage;
     private TextView errorHint;
     private Button errorRestart;
+    private Button errorLog;
     private ImageButton barMenu;
     private ObjectAnimator pulse;
 
@@ -163,9 +171,14 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
     private final Runnable loadWatchdog = this::onLoadTimeout;
     private String currentUrl = "";
     private String pendingRoute;
-    private int pageBg = ThemeColor.NONE;
+    private boolean glassLook = true; // у приложения стеклянный вид по умолчанию; обычный — если человек выбрал его в настройках интерфейса
+    private Boolean lightPage; // светлая ли тема страницы; null — страница ещё не сказала, берём тему системы
+    private int pageBg = ThemeColor.NONE; // фон страницы при обычном виде (при стеклянном страница прозрачна)
+    private PageLook look; // вид, под который окно покрашено сейчас
+    private AuroraDrawable auroraLight;
+    private AuroraDrawable auroraDark;
     private boolean resumed;
-    private PopupWindow menuPopup; // меню «⋮», пока оно открыто
+    private Dialog menuPopup; // меню «⋮», пока оно открыто
 
     // ---- жизненный цикл ---------------------------------------------------------------------
 
@@ -203,7 +216,7 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
             }
         }
         handleIntent(getIntent());
-        applyPalette(ThemeColor.NONE);
+        applyPalette();
         render();
     }
 
@@ -288,7 +301,7 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        applyPalette(pageBg); // тема системы могла смениться, а страница ещё не спрошена
+        applyPalette(); // тема системы могла смениться, а страница ещё не спрошена
     }
 
     @Override
@@ -310,7 +323,10 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
 
     private void bindViews() {
         root = findViewById(R.id.root);
+        bar = findViewById(R.id.bar);
         splash = findViewById(R.id.splash);
+        splashOrb = findViewById(R.id.splash_orb);
+        errorCard = findViewById(R.id.error_card);
         errorPanel = findViewById(R.id.error_panel);
         web = findViewById(R.id.web);
         barLogo = findViewById(R.id.bar_logo);
@@ -322,6 +338,7 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         errorMessage = findViewById(R.id.error_message);
         errorHint = findViewById(R.id.error_hint);
         errorRestart = findViewById(R.id.error_restart);
+        errorLog = findViewById(R.id.error_log);
         barMenu = findViewById(R.id.bar_menu);
     }
 
@@ -363,6 +380,7 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         // WebView остаётся видимым всегда: скрытая страница считается фоновой (таймеры и отрисовка замирают, процесс
         // отрисовки получает низкий приоритет). Пока интерфейс не готов, его закрывают заставка или ошибка.
         showingWeb = showWeb;
+        bar.setVisibility(showWeb ? View.GONE : View.VISIBLE); // у страницы своя верхняя полоса, меню приложения открывает её кнопка «⋮»
         web.setImportantForAccessibility(showWeb ? View.IMPORTANT_FOR_ACCESSIBILITY_AUTO : View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
         errorPanel.setVisibility(problem != null ? View.VISIBLE : View.GONE);
         splash.setVisibility(!showWeb && problem == null ? View.VISIBLE : View.GONE);
@@ -415,16 +433,55 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         return (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
     }
 
-    /** Красит окно под тему страницы (или системы, пока страница неизвестна) и ставит значки панелей. */
-    private void applyPalette(int pageBackground) {
-        pageBg = pageBackground;
-        boolean light = pageBackground != ThemeColor.NONE ? ThemeColor.isLight(pageBackground) : !systemIsDark();
+    /** Красит окно под вид страницы, который она сообщила (или тему системы, пока страница молчит). */
+    private void applyLook(PageLook newLook) {
+        if (newLook == null || newLook.equals(look)) {
+            return;
+        }
+        look = newLook;
+        glassLook = newLook.glass;
+        lightPage = newLook.light;
+        pageBg = newLook.background;
+        applyPalette();
+    }
+
+    private AuroraDrawable aurora(boolean light) {
+        if (light) {
+            if (auroraLight == null) {
+                auroraLight = new AuroraDrawable(true);
+            }
+            return auroraLight;
+        }
+        if (auroraDark == null) {
+            auroraDark = new AuroraDrawable(false);
+        }
+        return auroraDark;
+    }
+
+    private static GradientDrawable pill(int color, float radius) {
+        GradientDrawable d = new GradientDrawable();
+        d.setShape(GradientDrawable.RECTANGLE);
+        d.setCornerRadius(radius);
+        d.setColor(color);
+        return d;
+    }
+
+    /**
+     * Красит окно: при стеклянном виде за прозрачной страницей лежит «северное сияние», которое рисует окно (и под
+     * системными панелями тоже, поэтому панели и страница — одна картинка), при обычном — сплошной цвет страницы.
+     * Заставка, ошибка и меню в обоих видах стеклянные.
+     */
+    private void applyPalette() {
+        boolean light = lightPage != null ? lightPage : !systemIsDark();
         Palette p = light ? LIGHT : DARK;
-        int bg = pageBackground != ThemeColor.NONE ? pageBackground : p.bg;
-        root.setBackgroundColor(bg);
-        splash.setBackgroundColor(bg);
-        errorPanel.setBackgroundColor(bg);
-        web.setBackgroundColor(bg);
+        int bg = glassLook ? (light ? ThemeColor.GLASS_LIGHT_BG : ThemeColor.GLASS_DARK_BG) : (pageBg != ThemeColor.NONE ? pageBg : p.bg);
+        root.setBackground(glassLook ? aurora(light) : new ColorDrawable(bg));
+        splash.setBackgroundColor(Color.TRANSPARENT);
+        errorPanel.setBackgroundColor(Color.TRANSPARENT);
+        web.setBackgroundColor(glassLook ? Color.TRANSPARENT : bg);
+        float density = getResources().getDisplayMetrics().density;
+        splashOrb.setBackground(Glass.panel(this, light, 52, false));
+        errorCard.setBackground(Glass.panel(this, light, 28, false));
         barTitle.setTextColor(p.fg);
         barStatus.setTextColor(p.muted);
         barMenu.setColorFilter(p.muted);
@@ -434,25 +491,22 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         errorTitle.setTextColor(p.fg);
         errorMessage.setTextColor(p.err);
         errorHint.setTextColor(p.muted);
-        errorRestart.setBackgroundTintList(ColorStateList.valueOf(p.accent));
+        errorRestart.setBackground(new RippleDrawable(ColorStateList.valueOf(0x33FFFFFF), pill(p.accent, 28 * density), null));
         errorRestart.setTextColor(p.onAccent);
+        errorLog.setBackground(new RippleDrawable(ColorStateList.valueOf((p.accent & 0x00FFFFFF) | 0x33000000), null, pill(Color.WHITE, 28 * density)));
+        errorLog.setTextColor(p.accent);
         WindowInsetsControllerCompat bars = WindowCompat.getInsetsController(getWindow(), root);
         bars.setAppearanceLightStatusBars(light);
         bars.setAppearanceLightNavigationBars(light);
     }
 
-    /** Спрашивает у страницы её фон: человек мог переключить тему в самом интерфейсе. */
+    /** Спрашивает у страницы её вид: человек мог переключить тему или вид в самом интерфейсе. */
     private void pollTheme() {
         if (!resumed) {
             return;
         }
         if (pageReady && showingWeb) {
-            web.evaluateJavascript(ThemeColor.SCRIPT, value -> {
-                int color = ThemeColor.parse(ThemeColor.unquote(value));
-                if (color != ThemeColor.NONE && color != pageBg) {
-                    applyPalette(color);
-                }
-            });
+            web.evaluateJavascript(PageLook.SCRIPT, value -> applyLook(PageLook.parse(ThemeColor.unquote(value))));
         }
         main.postDelayed(themePoll, 2000);
     }
@@ -468,7 +522,7 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
             if (notificationsDialog != null && notificationsDialog.isShowing()) {
                 return;
             }
-            notificationsDialog = new AlertDialog.Builder(this)
+            notificationsDialog = showGlassDialog(new AlertDialog.Builder(this)
                     .setTitle(R.string.perm_notif_title)
                     .setMessage(R.string.perm_notif_text)
                     .setCancelable(false)
@@ -479,8 +533,7 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
                     .setNegativeButton(R.string.perm_notif_later, (d, w) -> {
                         prefs.setNotifAsked();
                         NodeService.start(this);
-                    })
-                    .show();
+                    }));
             return;
         }
         NodeService.start(this);
@@ -617,6 +670,21 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         web.setWebChromeClient(new Chrome());
         web.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) ->
                 startDownload(url, contentDisposition, mimetype));
+        // Приложение называет себя в user agent: так страница узнаёт, что она в окне телефона, и начинает со стеклянного вида
+        // (js/boot.js; человек может выбрать обычный в настройках интерфейса).
+        s.setUserAgentString(s.getUserAgentString() + " TheMeshAndroid/" + BuildInfo.versionName(this) + " (android; skin=glass)");
+        // Объект window.themeshShell: меню приложения и вид страницы для окраски системных панелей.
+        web.addJavascriptInterface(new ShellBridge(main::post, () -> web.getUrl(), () -> loadedOrigin, new ShellBridge.Host() {
+            @Override
+            public void openMenu() {
+                showMenu();
+            }
+
+            @Override
+            public void look(PageLook pageLook) {
+                applyLook(pageLook);
+            }
+        }), ShellBridge.NAME);
         // Сканер QR-кода приглашения: объект window.themeshApp есть в странице, только если у телефона есть камера.
         if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
             web.addJavascriptInterface(new ScanBridge(true, main::post, () -> web.getUrl(), () -> loadedOrigin, this::openScanner),
@@ -927,7 +995,19 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         menu.findItem(R.id.menu_battery).setChecked(isIgnoringBatteryOptimizations());
         menu.findItem(R.id.menu_copy_received).setChecked(copiesWillBeMade());
         dismissMenu();
-        menuPopup = MenuPopup.show(this, barMenu, menu, this::onMenuItem);
+        boolean light = lightPage != null ? lightPage : !systemIsDark();
+        Palette p = light ? LIGHT : DARK;
+        // под строкой состояния и (если окно показывает страницу, а не заставку) под её верхней панелью, у кнопки «⋮»
+        float density = getResources().getDisplayMetrics().density;
+        int top = root.getPaddingTop() + (bar.getVisibility() == View.VISIBLE ? bar.getHeight() : (int) (52 * density));
+        menuPopup = MenuPopup.show(this, menu, top, light, p.fg, p.accent, this::onMenuItem);
+    }
+
+    /** Окно-вопрос в виде стеклянной панели, в цветах страницы. */
+    private AlertDialog showGlassDialog(AlertDialog.Builder builder) {
+        boolean light = lightPage != null ? lightPage : !systemIsDark();
+        Palette p = light ? LIGHT : DARK;
+        return GlassDialogs.show(this, builder, light, p.fg, p.muted, p.accent);
     }
 
     private void dismissMenu() {
@@ -1036,11 +1116,10 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         if (WebViewVersion.isTooOld(webView)) {
             text += "\n\n" + getString(R.string.webview_old_text, WebViewVersion.MIN_MAJOR);
         }
-        new AlertDialog.Builder(this)
+        showGlassDialog(new AlertDialog.Builder(this)
                 .setTitle(R.string.about_title)
                 .setMessage(text)
-                .setPositiveButton(R.string.about_close, null)
-                .show();
+                .setPositiveButton(R.string.about_close, null));
     }
 
     /** Версия системного WebView («113.0.5672.136») или пустая строка, если узнать нельзя. */
@@ -1064,10 +1143,9 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
             return;
         }
         prefs.setWebViewWarned(version);
-        new AlertDialog.Builder(this)
+        showGlassDialog(new AlertDialog.Builder(this)
                 .setTitle(R.string.webview_old_title)
                 .setMessage(getString(R.string.webview_old_text, WebViewVersion.MIN_MAJOR))
-                .setPositiveButton(R.string.about_close, null)
-                .show();
+                .setPositiveButton(R.string.about_close, null));
     }
 }

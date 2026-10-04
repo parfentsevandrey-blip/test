@@ -156,9 +156,9 @@
   .tabbar__item.is-active .tabbar__icon { background: var(--accent-soft); }
   .tabbar__label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }
   .tabbar__badge {
-    position: absolute; top: -3px; right: 4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
-    background: var(--accent); color: var(--accent-ink); font-size: 10px; font-weight: 750; line-height: 18px; text-align: center;
-    border: 2px solid var(--bg); box-sizing: content-box;
+    position: absolute; top: -5px; right: 0; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 10px;
+    background: var(--accent); color: var(--accent-ink); font-size: 10px; font-weight: 750; line-height: 16px; text-align: center;
+    border: 2px solid var(--bg); box-sizing: border-box;
   }
   .tabbar__badge--warn { background: var(--amber); color: #1b1305; }
   .tabbar__dot { position: absolute; top: 2px; right: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }

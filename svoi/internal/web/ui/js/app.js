@@ -121,10 +121,14 @@ function TabBar({ section }) {
 
 // How the connection works (NAT type, relays) is in Settings → Сеть; the top
 // bar only says how many devices are online and offers «Как это работает?».
+// The phone app has a menu of its own (start with the phone, battery, the log…); it asks for it here.
+const appMenu = () => (window.themeshShell && typeof window.themeshShell.menu === "function" ? () => window.themeshShell.menu() : null);
+
 function TopBar() {
   const self = useStore((s) => s.self);
   const peers = useStore((s) => s.peers);
   if (!self) return html`<header class="topbar"></header>`;
+  const openAppMenu = appMenu();
   const total = peers.length + 1;
   const online = peers.filter((p) => p.online).length + 1;
   const onlinePeers = sortPeers(peers).slice(0, 4);
@@ -147,6 +151,7 @@ function TopBar() {
         </span>
       </a>
       <${IconButton} icon="help" label=${t("top.help")} onClick=${openHelp} class="topbar__help" data-testid="help-button" />
+      ${openAppMenu && html`<${IconButton} icon="moreV" label=${t("top.appMenu")} onClick=${openAppMenu} class="topbar__help" data-testid="app-menu-button" />`}
     </div>
   </header>`;
 }

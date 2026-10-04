@@ -9,8 +9,9 @@ import android.util.AttributeSet;
 import android.view.View;
 
 /**
- * Рамка-видоискатель поверх превью камеры: четыре уголка квадрата посередине экрана. Только подсказка, куда навести
- * камеру: код ищется на всём кадре, а не внутри рамки. Касания пропускает к превью (там фокус по нажатию).
+ * Рамка-видоискатель поверх превью камеры: четыре уголка квадрата посередине экрана, а вокруг него кадр чуть притемнён,
+ * как у стеклянных плашек вокруг. Только подсказка, куда навести камеру: код ищется на всём кадре, а не внутри рамки.
+ * Касания пропускает к превью (там фокус по нажатию).
  */
 public final class ViewfinderView extends View {
     /** Сторона рамки — доля меньшей стороны экрана. */
@@ -19,7 +20,9 @@ public final class ViewfinderView extends View {
     private static final float ARM = 0.17f;
 
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint scrimPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path corners = new Path();
+    private final Path scrim = new Path();
     private final RectF arc = new RectF();
     private final float radius;
 
@@ -31,6 +34,10 @@ public final class ViewfinderView extends View {
         paint.setStrokeWidth(4 * density);
         paint.setStrokeCap(Paint.Cap.ROUND);
         paint.setColor(0xF2FFFFFF);
+        paint.setShadowLayer(6 * density, 0, 0, 0x66000000); // светлые уголки читаются и на светлом кадре
+        setLayerType(LAYER_TYPE_SOFTWARE, null); // тень у линии (setShadowLayer) аппаратно не рисуется
+        scrimPaint.setStyle(Paint.Style.FILL);
+        scrimPaint.setColor(0x4D000000);
     }
 
     @Override
@@ -44,6 +51,10 @@ public final class ViewfinderView extends View {
         float bottom = top + side;
         float arm = side * ARM;
         float d = radius * 2;
+        scrim.reset();
+        scrim.setFillType(Path.FillType.EVEN_ODD);
+        scrim.addRect(0, 0, w, h, Path.Direction.CW);
+        scrim.addRoundRect(left, top, right, bottom, radius, radius, Path.Direction.CW);
         // верхний левый: вниз по левой стороне, дуга, вправо по верхней
         corners.moveTo(left, top + arm);
         corners.lineTo(left, top + radius);
@@ -72,6 +83,7 @@ public final class ViewfinderView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        canvas.drawPath(scrim, scrimPaint);
         canvas.drawPath(corners, paint);
     }
 }

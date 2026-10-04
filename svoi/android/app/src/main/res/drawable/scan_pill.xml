@@ -1,11 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Кнопка поверх камеры: тёмная полупрозрачная «таблетка» с кругом нажатия. -->
+<!-- Кнопка поверх камеры: стеклянная «таблетка» — тёмная полупрозрачная, со светлым ободком и кругом нажатия. -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="#40FFFFFF">
     <item>
-        <shape android:shape="rectangle">
-            <solid android:color="@color/scan_card" />
-            <corners android:radius="24dp" />
-        </shape>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/scan_card" />
+                    <corners android:radius="28dp" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <gradient
+                        android:angle="315"
+                        android:endColor="#00FFFFFF"
+                        android:startColor="#26FFFFFF" />
+                    <corners android:radius="28dp" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <stroke
+                        android:width="1dp"
+                        android:color="#40FFFFFF" />
+                    <corners android:radius="28dp" />
+                </shape>
+            </item>
+        </layer-list>
     </item>
 </ripple>

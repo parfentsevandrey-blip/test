@@ -6,7 +6,7 @@ import { post } from "../api.js";
 import { refreshState } from "../sse.js";
 import { useStore } from "../store.js";
 import { langPref, setLangPref, setThemePref, themePref } from "../prefs.js";
-import { Button, Callout, Field, Progress, Segmented } from "../components/ui.js";
+import { Button, Callout, Field, IconButton, Progress, Segmented } from "../components/ui.js";
 import { DnsPreview } from "../components/misc.js";
 import { toast } from "../components/toast.js";
 import { fmtDateTime } from "../format.js";
@@ -48,6 +48,7 @@ function Corner() {
     <${Segmented} size="sm" label=${t("set.ui.theme")} value=${theme}
       options=${[{ value: "auto", label: "", icon: "auto", title: t("set.ui.themeAuto") }, { value: "light", label: "", icon: "sun", title: t("set.ui.themeLight") }, { value: "dark", label: "", icon: "moon", title: t("set.ui.themeDark") }]}
       onChange=${(v) => { setT(v); setThemePref(v); }} />
+    ${window.themeshShell && typeof window.themeshShell.menu === "function" && html`<${IconButton} icon="moreV" label=${t("top.appMenu")} onClick=${() => window.themeshShell.menu()} class="topbar__help" data-testid="app-menu-button" />`}
   </div>`;
 }
 

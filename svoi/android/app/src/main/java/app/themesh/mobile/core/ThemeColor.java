@@ -13,6 +13,10 @@ public final class ThemeColor {
     public static final int DARK_BG = 0xFF0D1012;
     /** Светлая тема интерфейса. */
     public static final int LIGHT_BG = 0xFFF5F3EE;
+    /** Основа стеклянного вида, тёмная тема: --glass-base в css/glass.css; поверх неё лежит «северное сияние». */
+    public static final int GLASS_DARK_BG = 0xFF070B0E;
+    /** Основа стеклянного вида, светлая тема. */
+    public static final int GLASS_LIGHT_BG = 0xFFDCE8EE;
     /** «Не удалось определить». */
     public static final int NONE = 0;
 

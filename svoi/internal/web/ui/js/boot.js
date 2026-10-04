@@ -19,13 +19,14 @@
   root.setAttribute("data-theme", theme);
   root.setAttribute("lang", lang);
 
-  // The desktop app says in its user agent what it is and what its window can do:
-  //   "TheMeshDesktop/0.1.0 (mac; skin=glass; vibrancy; inset)"
+  // The apps say in their user agent what they are and what their window can do:
+  //   "TheMeshDesktop/0.1.0 (mac; skin=glass; vibrancy; inset)"   the desktop app
+  //   "TheMeshAndroid/0.1.0 (android; skin=glass)"                the phone app
   //   = platform; the skin to start with; a window that is see-through to the system material (or "reduced-transparency":
   //     macOS says "Reduce transparency", the panels are solid from the first picture on); no title bar
-  // A browser or the phone app says nothing and gets the classic skin unless the person chose another.
+  // A browser says nothing and gets the classic skin unless the person chose another.
   var skinByDefault = "classic", shell = "", vibrancy = false, inset = false, solid = false;
-  var app = /TheMeshDesktop\/\S+ \(([^)]*)\)/.exec(navigator.userAgent || "");
+  var app = /TheMesh(?:Desktop|Android)\/\S+ \(([^)]*)\)/.exec(navigator.userAgent || "");
   if (app) {
     var facts = app[1].split(/;\s*/);
     shell = facts[0] || "desktop";
@@ -46,4 +47,13 @@
   if (vibrancy) root.setAttribute("data-vibrancy", "on");
   if (inset) root.setAttribute("data-titlebar", "inset");
   if (solid) root.setAttribute("data-reduce-transparency", "");
+
+  // The phone app paints the backdrop itself, behind a see-through page, so that the status bar, the navigation bar and
+  // the page are one picture; it is told the look of the page now (and by js/prefs.js whenever it changes) to match it.
+  if (shell === "android") {
+    try {
+      window.themeshShell.look(theme, skin);
+      root.setAttribute("data-native-backdrop", "");
+    } catch (e) { /* no bridge (a browser pretending to be the app): the page paints its own backdrop */ }
+  }
 })();

@@ -432,6 +432,20 @@ html[data-titlebar="inset"] .onb__corner { -webkit-app-region: no-drag; }
   html[data-titlebar="inset"] .topbar__brand { display: none; }
 }
 
+/* ---------- 8b. the phone app ----------
+   The Android app (js/boot.js: data-shell="android") shows this page in a WebView that is see-through: the app paints the
+   aurora itself, behind the page, so that the status bar, the navigation bar and the page are one picture
+   (data-native-backdrop; without the app's bridge the page paints its own). Phones are weaker than the Macs this skin was
+   made on, and a blur shows only where something passes under a pane: at the bars, the sheets and the menus, which keep
+   theirs. The cards lie over the smooth backdrop in the page flow and would only cost a blur each, so there they are
+   translucent without one. */
+html[data-native-backdrop][data-skin="glass"],
+html[data-native-backdrop][data-skin="glass"] body { background: transparent; }
+html[data-native-backdrop][data-skin="glass"] body::before { display: none; }
+html[data-shell="android"][data-skin="glass"] :is(.card, .home-card, .home-status, .home-act, .hdev, .dcard, .onb-choice, .onb-form, .flist, .svc-group, .more-self, .mail, .chat, .gbanner, .conn-pill, .topbar__help, .btn--secondary) {
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+
 /* ---------- 9. less glass when asked, or when the browser cannot blur ---------- */
 @media (prefers-reduced-transparency: reduce) {
   html[data-skin="glass"] { --glass-filter: none; --glass-filter-soft: none; --glass-filter-heavy: none; }
