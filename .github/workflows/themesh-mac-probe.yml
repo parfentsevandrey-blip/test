@@ -28,11 +28,15 @@ jobs:
         working-directory: svoi/desktop
         run: npm ci
 
-      - name: The machine
+      - name: The machine (and an attempt to switch "Reduce transparency" off, which the hosted machines have on)
         run: |
           sw_vers
           system_profiler SPDisplaysDataType 2>/dev/null | head -30 || true
-          defaults read com.apple.universalaccess reduceTransparency 2>/dev/null || echo "reduceTransparency: not set"
+          echo "reduceTransparency before: $(defaults read com.apple.universalaccess reduceTransparency 2>&1)"
+          defaults write com.apple.universalaccess reduceTransparency -bool false 2>&1 || echo "(could not write the setting)"
+          killall cfprefsd universalaccessd 2>/dev/null || true
+          sleep 2
+          echo "reduceTransparency after: $(defaults read com.apple.universalaccess reduceTransparency 2>&1)"
           defaults read -g AppleInterfaceStyle 2>/dev/null || echo "appearance: light"
 
       - name: Look at the window

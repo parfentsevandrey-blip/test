@@ -4,8 +4,8 @@
 //
 // A page screenshot cannot show what makes the Mac window what it is: the system material behind it, the traffic
 // lights, the shadow. So this opens the real interface (web-dev/mock-server.mjs serves it with made-up devices)
-// in windows made the way the app makes its window (src/window.js, windowLook), in a few variants of the
-// options, over a colourful "wallpaper" window, and photographs the screen with the system's own tools.
+// in windows made the way the app makes its window (src/window.js, windowLook), in a few variants, over a
+// colourful "wallpaper" window, and photographs the screen with the system's own tool.
 //
 //   PROBE_URL=http://127.0.0.1:8791 PROBE_OUT=./out npx electron tools/mac-probe/main.js
 const { app, BrowserWindow, nativeTheme, screen } = require('electron');
@@ -43,17 +43,26 @@ body{background:
   radial-gradient(62vw 56vh at 82% 92%, #b061ff, transparent 62%),
   radial-gradient(52vw 48vh at 8% 92%, #12d3a0, transparent 62%),
   #1c2a3a}
-.b{position:absolute;border-radius:50%;filter:blur(2px)}
-</style><div class="b" style="left:46%;top:30%;width:260px;height:260px;background:#ffd166"></div><div class="b" style="left:30%;top:62%;width:180px;height:180px;background:#ffffff"></div>`);
+.b{position:absolute;border-radius:50%}
+</style><div class="b" style="left:46%;top:30%;width:18vw;height:18vw;background:#ffd166"></div><div class="b" style="left:30%;top:62%;width:12vw;height:12vw;background:#ffffff"></div>`);
 
+// The variants. `reduced` is what the window is told about "Reduce transparency" (undefined: what the system says).
 const VARIANTS = [
-  { name: 'A-as-the-app-makes-it', extra: {}, themes: ['light', 'dark'] },
-  { name: 'B-plus-transparent', extra: { transparent: true }, themes: ['light'] },
-  { name: 'C-effect-always-active', extra: { visualEffectState: 'active' }, themes: ['light'] },
-  { name: 'D-default-background', extra: { backgroundColor: undefined }, themes: ['light'] },
-  { name: 'E-sidebar-material', extra: { vibrancy: 'sidebar' }, themes: ['light'] },
-  { name: 'F-no-vibrancy', extra: { vibrancy: undefined, visualEffectState: undefined, backgroundColor: '#f4f2ee' }, themes: ['light'] },
+  { name: 'A-the-app-on-this-machine', reduced: undefined, themes: ['light', 'dark'] },
+  { name: 'B-glass-without-vibrancy', reduced: true, noVibrancyToken: true, themes: ['light', 'dark'] },
+  { name: 'C-glass-with-vibrancy', reduced: false, themes: ['light', 'dark'] },
 ];
+
+function loaded(win, url) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, 12000);
+    win.webContents.once('did-finish-load', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    win.loadURL(url).catch((e) => log('loadURL', e.message)); // (a page that moves to its own #route during the load makes this reject)
+  });
+}
 
 async function main() {
   log('electron', process.versions.electron, 'chrome', process.versions.chrome, 'macOS', process.getSystemVersion());
@@ -74,38 +83,34 @@ async function main() {
   for (const v of VARIANTS) {
     for (const theme of v.themes) {
       nativeTheme.themeSource = theme;
-      const look = windowLook({ platform: 'darwin', env: {}, dark: theme === 'dark', reducedTransparency: false, version: app.getVersion() });
+      const reduced = v.reduced === undefined ? !!nativeTheme.prefersReducedTransparency : v.reduced;
+      const look = windowLook({ platform: 'darwin', env: {}, dark: theme === 'dark', reducedTransparency: reduced, version: app.getVersion() });
       const options = { ...look.options };
-      for (const [k, val] of Object.entries(v.extra)) {
-        if (val === undefined) delete options[k];
-        else options[k] = val;
-      }
+      if (v.reduced === true && v.noVibrancyToken) delete options.vibrancy; // (the system may say "reduced" while the window is told nothing of it)
       const win = new BrowserWindow({
-        width: 1180, height: 780, x: Math.max(40, display.bounds.x + 90), y: display.bounds.y + 70, show: false, title: 'The Mesh probe',
+        width: 940, height: 640, x: display.bounds.x + 40, y: display.bounds.y + 44, show: false, title: 'The Mesh probe',
         ...options,
         webPreferences: { partition: `probe-${v.name}-${theme}`, sandbox: true, contextIsolation: true, nodeIntegration: false },
       });
-      const ses = win.webContents.session;
-      ses.setUserAgent(`${ses.getUserAgent()} ${look.userAgentToken}`);
-      try {
-        await win.loadURL(`${URL_BASE}/#/home`);
-        await win.webContents.executeJavaScript(`localStorage.setItem('themesh.theme', ${JSON.stringify(theme)}); localStorage.setItem('themesh.lang', 'ru');`);
-        await win.loadURL(`${URL_BASE}/#/devices`);
-        await win.loadURL(`${URL_BASE}/#/home`);
-      } catch (e) {
-        log('cannot load the interface', e.message);
-      }
+      const wc = win.webContents;
+      // (what the app does in create(): the user agent of a web contents that exists is set on the web contents)
+      wc.setUserAgent(`${wc.getUserAgent()} ${look.userAgentToken}`);
+      await loaded(win, `${URL_BASE}/#/home`);
+      await wc.executeJavaScript(`try { localStorage.setItem('themesh.lang', 'ru'); localStorage.setItem('themesh.theme', ${JSON.stringify(theme)}); } catch (e) {}`);
+      await loaded(win, `${URL_BASE}/?probe=${Date.now()}#/home`);
       win.show();
       win.focus();
       app.focus({ steal: true });
-      await sleep(3000);
-      const info = await win.webContents.executeJavaScript(`(() => { const r = document.documentElement; const s = document.querySelector('.sidebar'); const cs = s && getComputedStyle(s); return { ua: (/TheMeshDesktop\\S* \\([^)]*\\)/.exec(navigator.userAgent) || [''])[0], skin: r.dataset.skin, vibrancy: r.dataset.vibrancy, titlebar: r.dataset.titlebar, theme: r.dataset.theme, sidebar: cs ? { backdrop: cs.backdropFilter, padTop: cs.paddingTop, bg: cs.backgroundColor } : null, bodyBg: getComputedStyle(document.body).backgroundColor, htmlBg: getComputedStyle(r).backgroundColor }; })()`).catch((e) => ({ error: e.message }));
-      log(v.name, theme, JSON.stringify(info));
+      await sleep(3500);
+      const info = await wc.executeJavaScript(`(() => { const r = document.documentElement; const s = document.querySelector('.sidebar'); const cs = s && getComputedStyle(s); return { ua: (/TheMeshDesktop\\S* \\([^)]*\\)/.exec(navigator.userAgent) || [''])[0], skin: r.dataset.skin, vibrancy: r.dataset.vibrancy, titlebar: r.dataset.titlebar, theme: r.dataset.theme, reduce: r.hasAttribute('data-reduce-transparency'), sidebar: cs ? { backdrop: cs.backdropFilter, padTop: cs.paddingTop, bg: cs.backgroundColor } : null, bodyBg: getComputedStyle(document.body).backgroundColor, htmlBg: getComputedStyle(r).backgroundColor }; })()`).catch((e) => ({ error: e.message }));
+      log(v.name, theme, JSON.stringify({ reducedForWindow: reduced, ...info }));
       const b = win.getBounds();
+      const c = win.getContentBounds();
+      log(v.name, theme, `window ${JSON.stringify(b)} content ${JSON.stringify(c)} vibrancy option ${options.vibrancy || 'none'}`);
       const base = `${String(++shot).padStart(2, '0')}-${v.name}-${theme}`;
-      await capture(path.join(OUT, `${base}-screen.png`), { x: b.x - 40, y: b.y - 30, width: b.width + 80, height: b.height + 90 });
+      await capture(path.join(OUT, `${base}-screen.png`), { x: Math.max(0, b.x - 30), y: Math.max(0, b.y - 20), width: Math.min(display.bounds.width, b.width + 60), height: Math.min(display.bounds.height - 20, b.height + 50) });
       try {
-        const img = await win.webContents.capturePage();
+        const img = await wc.capturePage();
         fs.writeFileSync(path.join(OUT, `${base}-page.png`), img.toPNG());
       } catch (e) {
         log('capturePage failed', e.message);

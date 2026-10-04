@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 // Contrast audit of the interface as it is really drawn.
 //
-//   NODE_PATH=/opt/node22/lib/node_modules node web-dev/check-contrast.mjs [--skin glass|classic] [--routes home,mail] [--sizes 1280x800,480x820] [--min 4.5] [--list]
+//   NODE_PATH=/opt/node22/lib/node_modules node web-dev/check-contrast.mjs [--skin glass|glass-vibrancy|classic] [--routes home,mail] [--sizes 1280x800,480x820] [--min 4.5] [--list]
+//
+//   glass-vibrancy is the Mac app's window, which is see-through to the system material: its page has no background of its own, so
+//   it is judged over a dark-ish and a light-ish stand-in for the material in each theme (the worst cases of what a wallpaper
+//   under the window can make of it).
 //
 // Token tables cannot tell the contrast of text on glass: what is behind a translucent panel is the backdrop, the panel's tint
 // and whatever scrolls under it. So this looks at pixels: for every piece of text that is really visible on a screen it takes
@@ -14,7 +18,10 @@ import { launch, sleep, startMock, watch } from "./lib.mjs";
 
 const argv = process.argv.slice(2);
 const arg = (name, def) => (argv.includes("--" + name) ? argv[argv.indexOf("--" + name) + 1] : def);
-const skin = arg("skin", "glass");
+const mode = arg("skin", "glass");
+const skin = mode === "classic" ? "classic" : "glass";
+const vibrancy = mode === "glass-vibrancy";
+const UNDERLAYS = { light: ["#9aa4aa", "#eef2f4"], dark: ["#5a656d", "#0d1114"] }; // stand-ins for the system material, from the dullest it gets to the brightest
 const MIN = Number(arg("min", "4.5"));
 const LARGE_MIN = Math.min(MIN, 3);
 const sizes = arg("sizes", "1280x800,900x700,480x820").split(",").map((s) => s.split("x").map(Number));
@@ -61,6 +68,8 @@ function collectRuns() {
     const cs = getComputedStyle(el);
     if (cs.visibility === "hidden" || cs.display === "none") continue;
     if (el.closest(":disabled, [aria-disabled='true'], .is-disabled, [disabled]")) continue; // inactive controls are exempt from WCAG
+    const closed = el.closest("details:not([open])");
+    if (closed && !el.closest("summary")) continue; // folded away: not on screen
     let op = 1;
     for (let e = el; e; e = e.parentElement) op *= Number(getComputedStyle(e).opacity);
     if (op < 0.05) continue;
@@ -68,7 +77,14 @@ function collectRuns() {
     range.selectNodeContents(node);
     const rects = [...range.getClientRects()].filter((r) => r.width > 2 && r.height > 4);
     for (const r of rects) {
-      const x0 = Math.max(0, r.left), y0 = Math.max(0, r.top), x1 = Math.min(innerWidth, r.right), y1 = Math.min(innerHeight, r.bottom);
+      let x0 = Math.max(0, r.left), y0 = Math.max(0, r.top), x1 = Math.min(innerWidth, r.right), y1 = Math.min(innerHeight, r.bottom);
+      // only what is not cut off by a scrolling or clipping parent is on screen
+      for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
+        const ps = getComputedStyle(p);
+        if (ps.overflowX === "visible" && ps.overflowY === "visible") continue;
+        const pr = p.getBoundingClientRect();
+        x0 = Math.max(x0, pr.left); y0 = Math.max(y0, pr.top); x1 = Math.min(x1, pr.right); y1 = Math.min(y1, pr.bottom);
+      }
       if (x1 - x0 < 3 || y1 - y0 < 4) continue;
       if (!el.closest(".topbar") && y0 < fade && top && getComputedStyle(top).position === "sticky" && window.scrollY > 0) continue;
       if (y1 > tabTop - 2 && !el.closest(".tabbar")) continue;
@@ -141,41 +157,54 @@ for (const theme of ["light", "dark"]) {
   for (const [w, h] of sizes) {
     const ctx = await browser.newContext({
       viewport: { width: w, height: h }, colorScheme: theme, reducedMotion: "reduce",
-      userAgent: skin === "glass" ? "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 TheMeshDesktop/0.1.0 (mac; skin=glass; vibrancy; inset)" : undefined,
+      userAgent: skin === "glass" ? `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 TheMeshDesktop/0.1.0 (mac; skin=glass${vibrancy ? "; vibrancy" : ""}; inset)` : undefined,
     });
     await ctx.addInitScript((th) => { try { localStorage.setItem("themesh.theme", th); localStorage.setItem("themesh.lang", "ru"); } catch {} }, theme);
-    for (const name of wanted) {
-      const hash = ROUTES[name];
-      if (!hash) { console.log("unknown route", name); continue; }
-      const page = await ctx.newPage();
-      watch(page, `${theme}-${w}x${h}-${name}`, problems);
-      await page.goto(`${srv.url}/?skin=${skin}${hash}`, { waitUntil: "domcontentloaded" });
-      await page.waitForSelector(".shell", { timeout: 10000 }).catch(() => {});
-      await sleep(900);
-      if (name === "mail") { await page.click(".mitem__link >> nth=0").catch(() => {}); await sleep(300); }
-      if (name === "chat") { await page.click(".thread >> nth=0").catch(() => {}); await sleep(300); }
-      const runs = await page.evaluate(collectRuns);
-      await page.addStyleTag({ content: "*, *::before, *::after { color: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; caret-color: transparent !important; } svg text, svg tspan { fill: transparent !important; } ::placeholder { color: transparent !important; }" });
-      await sleep(150);
-      const png = await page.screenshot();
-      const res = await judge(png.toString("base64"), runs, 1);
-      total += res.count;
-      failures += res.bad.length;
-      const label = `${theme} ${w}x${h} ${name}`;
-      if (res.bad.length) {
-        console.log(`✗ ${label}: ${res.bad.length} of ${res.count} pieces of text fall short`);
-        for (const b of res.bad.slice(0, 8)) console.log(`    ${b.ratio}:1 (needs ${b.need}) «${b.text}» ${b.tag} ${b.size}px ${b.color}`);
-        if (res.bad.length > 8) console.log(`    … and ${res.bad.length - 8} more`);
-      } else {
-        summary.push(label);
+    for (const under of vibrancy ? UNDERLAYS[theme] : [null]) {
+      for (const name of wanted) {
+        const hash = ROUTES[name];
+        if (!hash) { console.log("unknown route", name); continue; }
+        // (a page that navigates by itself while it is looked at — a reload after an update, say — is looked at again)
+        let res = null;
+        for (let attempt = 1; !res; attempt++) {
+          const page = await ctx.newPage();
+          watch(page, `${theme}-${w}x${h}-${name}`, problems);
+          try {
+            await page.goto(`${srv.url}/?skin=${skin}${hash}`, { waitUntil: "domcontentloaded" });
+            await page.waitForSelector(".shell", { timeout: 10000 }).catch(() => {});
+            await sleep(900);
+            if (name === "mail") { await page.click(".mitem__link >> nth=0").catch(() => {}); await sleep(300); }
+            if (name === "chat") { await page.click(".thread >> nth=0").catch(() => {}); await sleep(300); }
+            if (under) await page.addStyleTag({ content: `html { background: ${under} !important; }` });
+            const runs = await page.evaluate(collectRuns);
+            await page.addStyleTag({ content: "*, *::before, *::after { color: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; caret-color: transparent !important; } svg text, svg tspan { fill: transparent !important; } ::placeholder { color: transparent !important; }" });
+            await sleep(150);
+            const png = await page.screenshot();
+            res = await judge(png.toString("base64"), runs, 1);
+          } catch (e) {
+            if (attempt >= 3 || !/context was destroyed|navigation/i.test(String(e.message))) throw e;
+            console.log(`  (${theme} ${w}x${h} ${name}: the page moved on by itself, looking again)`);
+          } finally {
+            await page.close();
+          }
+        }
+        total += res.count;
+        failures += res.bad.length;
+        const label = `${theme} ${w}x${h} ${name}${under ? " over " + under : ""}`;
+        if (res.bad.length) {
+          console.log(`✗ ${label}: ${res.bad.length} of ${res.count} pieces of text fall short`);
+          for (const b of res.bad.slice(0, 8)) console.log(`    ${b.ratio}:1 (needs ${b.need}) «${b.text}» ${b.tag} ${b.size}px ${b.color}`);
+          if (res.bad.length > 8) console.log(`    … and ${res.bad.length - 8} more`);
+        } else {
+          summary.push(label);
+        }
       }
-      await page.close();
     }
     await ctx.close();
   }
 }
 await browser.close();
 await srv.stop();
-console.log(`\n${skin}: ${total} pieces of text looked at, ${failures} below the WCAG AA limit (${MIN}:1, large text ${LARGE_MIN}:1); ${summary.length} screens clean`);
+console.log(`\n${mode}: ${total} pieces of text looked at, ${failures} below the WCAG AA limit (${MIN}:1, large text ${LARGE_MIN}:1); ${summary.length} screens clean`);
 if (problems.length) console.log("page problems:\n" + problems.join("\n"));
 process.exit(failures || problems.length ? 1 : 0);

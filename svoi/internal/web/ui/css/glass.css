@@ -39,11 +39,12 @@ html[data-skin="glass"][data-theme="light"] {
     radial-gradient(62vmax 46vmax at 6% 2%, rgba(58, 214, 168, .34), transparent 62%),
     radial-gradient(56vmax 44vmax at 98% 4%, rgba(96, 158, 255, .30), transparent 60%),
     radial-gradient(62vmax 50vmax at 90% 100%, rgba(178, 138, 255, .26), transparent 62%),
-    radial-gradient(54vmax 40vmax at 2% 98%, rgba(255, 186, 126, .28), transparent 60%);
+    radial-gradient(54vmax 40vmax at 2% 98%, rgba(255, 186, 126, .28), transparent 60%),
+    linear-gradient(rgba(255, 255, 255, .28), rgba(255, 255, 255, .28)); /* evens the material out: text that sits straight on it keeps its contrast */
 
   --bg: #dce8ee;
   --bg-side: transparent;
-  --surface: rgba(255, 255, 255, .64);
+  --surface: rgba(255, 255, 255, .68);
   --surface-2: rgba(255, 255, 255, .56);
   --surface-3: rgba(34, 70, 90, .10);
   --surface-hover: rgba(34, 70, 90, .07);
@@ -54,6 +55,8 @@ html[data-skin="glass"][data-theme="light"] {
   --line-3: rgba(34, 70, 90, .28);
   --text-2: #38444a;
   --text-3: #46525a;
+  --accent-text: #05583f;
+  --amber-text: #834e08;
   --backdrop: rgba(20, 42, 58, .28);
   --node-fill: rgba(255, 255, 255, .95);
   --shadow-1: 0 1px 2px rgba(30, 70, 90, .08);
@@ -62,9 +65,9 @@ html[data-skin="glass"][data-theme="light"] {
   --bubble-mine: rgba(186, 236, 214, .82);
   --bubble-theirs: rgba(255, 255, 255, .74);
 
-  --glass-fill: rgba(255, 255, 255, .60);
+  --glass-fill: rgba(255, 255, 255, .66);
   --glass-fill-strong: rgba(255, 255, 255, .80);
-  --glass-fill-side: rgba(255, 255, 255, .54);
+  --glass-fill-side: rgba(255, 255, 255, .60);
   --glass-select: rgba(255, 255, 255, .78);
   --glass-well: rgba(34, 70, 90, .09);
   --glass-sheen: linear-gradient(158deg, rgba(255, 255, 255, .62) 0%, rgba(255, 255, 255, .10) 36%, rgba(255, 255, 255, 0) 62%);
@@ -87,7 +90,8 @@ html[data-skin="glass"][data-theme="dark"] {
     radial-gradient(62vmax 46vmax at 6% 2%, rgba(14, 178, 146, .26), transparent 62%),
     radial-gradient(56vmax 44vmax at 98% 4%, rgba(58, 104, 226, .26), transparent 60%),
     radial-gradient(62vmax 50vmax at 90% 100%, rgba(122, 76, 222, .24), transparent 62%),
-    radial-gradient(54vmax 40vmax at 2% 98%, rgba(210, 118, 70, .14), transparent 60%);
+    radial-gradient(54vmax 40vmax at 2% 98%, rgba(210, 118, 70, .14), transparent 60%),
+    linear-gradient(rgba(6, 10, 13, .40), rgba(6, 10, 13, .40));
 
   --bg: #070b0e;
   --bg-side: transparent;
@@ -137,6 +141,8 @@ html[data-skin="glass"][data-vibrancy="on"] body::before { background: var(--aur
 /* Over the system material the panels are a little denser: what is behind them is not ours to know. */
 html[data-skin="glass"][data-vibrancy="on"][data-theme="light"] { --glass-fill: rgba(255, 255, 255, .64); --glass-fill-strong: rgba(255, 255, 255, .84); --glass-fill-side: rgba(255, 255, 255, .58); }
 html[data-skin="glass"][data-vibrancy="on"][data-theme="dark"] { --glass-fill: rgba(22, 31, 36, .68); --glass-fill-strong: rgba(20, 28, 33, .88); --glass-fill-side: rgba(18, 26, 31, .64); }
+html[data-skin="glass"][data-vibrancy="on"][data-theme="light"] { --text-2: #2f3b41; --text-3: #3d4950; }
+html[data-skin="glass"][data-vibrancy="on"][data-theme="dark"] { --text-2: #c8d1cd; --text-3: #b7c2be; }
 html[data-skin="glass"] ::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); }
 
 /* ---------- 2. panels: the big glass surfaces ---------- */
@@ -215,7 +221,19 @@ html[data-skin="glass"] .topbar__help {
 html[data-skin="glass"] .conn-pill { height: 36px; padding: 0 14px 0 12px; }
 html[data-skin="glass"] .conn-pill__dot { border-color: transparent; }
 html[data-skin="glass"] .conn-pill:hover, html[data-skin="glass"] .topbar__help:hover:not(:disabled) { background-color: var(--glass-fill-strong); color: var(--text); }
-html[data-skin="glass"] .gbanner { border-bottom: 0; margin: 0 var(--gutter) var(--sp-3); border-radius: var(--r-lg); box-shadow: var(--glass-rim-sm); padding: 10px var(--sp-4); }
+html[data-skin="glass"] .gbanner {
+  --tint: transparent; border-bottom: 0; margin: 0 var(--gutter) var(--sp-3); border-radius: var(--r-lg); padding: 10px var(--sp-4);
+  background-color: var(--glass-fill); background-image: linear-gradient(var(--tint), var(--tint)), var(--glass-sheen);
+  box-shadow: var(--glass-rim-sm), var(--glass-drop-sm);
+  -webkit-backdrop-filter: var(--glass-filter-soft); backdrop-filter: var(--glass-filter-soft);
+}
+html[data-skin="glass"] .gbanner--offline { --tint: var(--danger-soft); }
+html[data-skin="glass"] .gbanner--offer { --tint: var(--amber-soft); }
+html[data-skin="glass"] .callout { background-color: var(--glass-fill); background-image: linear-gradient(var(--tint, transparent), var(--tint, transparent)); }
+html[data-skin="glass"] .callout--info { --tint: var(--info-soft); }
+html[data-skin="glass"] .callout--warn { --tint: var(--amber-soft); }
+html[data-skin="glass"] .callout--err { --tint: var(--danger-soft); }
+html[data-skin="glass"] :is(.callout--ok, .callout--accent) { --tint: var(--accent-soft); }
 
 @media (max-width: 1099px) and (min-width: 760px) {
   html[data-skin="glass"] .shell { grid-template-columns: calc(var(--rail-w) + var(--inset)) minmax(0, 1fr); }
@@ -309,6 +327,8 @@ html[data-skin="glass"] .code-line { border: 0; border-radius: 14px; background:
 html[data-skin="glass"] .radio-card { border-color: transparent; border-radius: var(--r-lg); background-color: var(--surface-2); box-shadow: var(--glass-rim-sm); }
 html[data-skin="glass"] .radio-card.is-on { background-color: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
 html[data-skin="glass"] .dchip, html[data-skin="glass"] .manage__btn { border-color: transparent; border-radius: var(--r-pill); background-color: var(--surface-2); box-shadow: var(--glass-rim-sm); }
+html[data-skin="glass"] .manage__btn { background-color: var(--glass-fill); background-image: var(--glass-sheen); }
+html[data-skin="glass"] .manage__btn.is-remote { background-image: linear-gradient(var(--amber-soft), var(--amber-soft)), var(--glass-sheen); }
 html[data-skin="glass"] .dchip.is-on { background-color: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
 html[data-skin="glass"] .dact__btn, html[data-skin="glass"] .ddr-act { border-color: transparent; border-radius: var(--r-pill); background-color: var(--surface-2); box-shadow: var(--glass-rim-sm); }
 html[data-skin="glass"] .dact__btn:hover, html[data-skin="glass"] .ddr-act:hover { background-color: var(--glass-fill-strong); border-color: transparent; }
@@ -380,7 +400,6 @@ html[data-skin="glass"] .pv__stage { background: var(--glass-well); }
 html[data-skin="glass"] .page-head__title { letter-spacing: -.025em; }
 html[data-skin="glass"] .callout { border-radius: var(--r-lg); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35); }
 html[data-skin="glass"] .callout--neutral { border-color: transparent; box-shadow: var(--glass-rim-sm); }
-html[data-skin="glass"] .callout--err { background-color: color-mix(in srgb, var(--danger-soft) 100%, var(--glass-fill)); }
 html[data-skin="glass"] .empty__icon { border-color: transparent; box-shadow: var(--glass-rim-sm); background-color: var(--glass-fill); }
 html[data-skin="glass"] .tech__list { border-color: transparent; box-shadow: var(--glass-rim-sm); background: var(--surface-2); }
 html[data-skin="glass"] .avatar { border-color: transparent; box-shadow: var(--glass-rim-sm); }
