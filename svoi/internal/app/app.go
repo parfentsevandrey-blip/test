@@ -462,10 +462,19 @@ type InviteView struct {
 	Created int64  `json:"created"`
 	Expires int64  `json:"expires"`
 	QRSvg   string `json:"qrSvg"`
+	// Endpoints are the addresses of this device that the code carries: where a newcomer will look for it. Shown to the
+	// person (in the technical details) because "it did not connect" is mostly a question of which address was there.
+	Endpoints []string `json:"endpoints"`
 }
 
 func (a *App) inviteView(i mesh.InviteInfo) InviteView {
-	return InviteView{ID: i.ID, Code: i.Code, Admin: i.Admin, Owner: i.Owner, Created: i.Created, Expires: i.Expires, QRSvg: qrSVG(qrPayload(i.Code))}
+	v := InviteView{ID: i.ID, Code: i.Code, Admin: i.Admin, Owner: i.Owner, Created: i.Created, Expires: i.Expires, QRSvg: qrSVG(qrPayload(i.Code)), Endpoints: []string{}}
+	if inv, err := identity.ParseInvite(i.Code); err == nil {
+		for _, ep := range inv.Endpoints {
+			v.Endpoints = append(v.Endpoints, ep.String())
+		}
+	}
+	return v
 }
 
 // Invites lists pending invitations.

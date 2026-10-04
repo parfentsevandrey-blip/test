@@ -232,7 +232,8 @@ never inject as HTML.
 { "id": "…", "code": "MESH1-AEAWVQFQ-…", "admin": false,
   "owner": "Anna",                  // whose device this invitation is for; the *inviter* decides it
   "created": 1760000000, "expires": 1760001800,
-  "qrSvg": "<svg …>…</svg>" }       // server-rendered QR code of `code`; safe to inject
+  "qrSvg": "<svg …>…</svg>",        // server-rendered QR code of `code`; safe to inject
+  "endpoints": ["192.168.1.23:41710", "203.0.113.5:41710"] }   // the addresses the code carries (technical details)
 ```
 The QR carries the code **without the dashes** that group `code` for reading (`MESH1-` and then the base32 body in one piece;
 parsing ignores dashes either way). That is a QR one size smaller, so a phone camera reads it off a screen more easily. An invitation

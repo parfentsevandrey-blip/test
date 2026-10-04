@@ -13,6 +13,7 @@ import { useNow } from "../hooks.js";
 import { DeviceAvatar } from "../components/avatar.js";
 import { Button, Callout, CopyButton, Field, Segmented, Spinner } from "../components/ui.js";
 import { Modal } from "../components/modal.js";
+import { TechDetails } from "../components/misc.js";
 import { toastError } from "../components/toast.js";
 import { cx } from "../util.js";
 
@@ -199,6 +200,10 @@ export function AddDeviceModal({ onClose }) {
             ${inv && inv.owner && html`<span class="chip chip--outline" data-testid="invite-for"><${Icon} name="user" size=${14} />${t("inv.for", { owner: inv.owner })}</span>`}
             ${inv && inv.admin && html`<span class="chip chip--warn"><${Icon} name="shield" size=${14} />${t("inv.roleAdmin")}</span>`}</div>
         </div>
+        ${inv && inv.endpoints && inv.endpoints.length > 0 && html`<${TechDetails} summary=${t("add.addrs")}>
+          <p class="muted small">${t("add.addrsText")}</p>
+          <ul class="mono xsmall invite__addrs" data-testid="invite-addrs">${inv.endpoints.map((e) => html`<li key=${e}>${e}</li>`)}</ul>
+        </${TechDetails}>`}
         <div class="invite__wait" role="status" data-testid="invite-waiting">
           <span class="invite__pulse" aria-hidden="true"></span>
           <span>${t("add.waiting")}</span>

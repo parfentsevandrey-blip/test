@@ -350,6 +350,8 @@ export default {
   "add.qrBig": "Show larger",
   "add.qrBigTitle": "Invitation QR code",
   "add.qrBigText": "Point the new device’s camera at this code. If it won’t scan, move the phone closer or turn the screen brightness up.",
+  "add.addrs": "Invitation addresses",
+  "add.addrsText": "The new device will look for this one at these addresses. If both devices are nearby, one of them should be a home-network address (192.168.…, 10.… or 172.16.…).",
   "add.qrTip": "Hold the phone 20–30 cm from the screen so the code fills most of the frame.",
   "add.code": "Invite code",
   "add.copyCode": "Copy code",

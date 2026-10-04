@@ -174,6 +174,9 @@ group("onboarding (real processes)", { noDemo: true }, () => {
     // the QR is the one of the code without dashes: ask the node, which draws it
     const [shown] = (await alpha.api("GET", "/api/invites")).filter((i) => i.code === code);
     assert(shown && shown.qrSvg.startsWith("<svg"), "the invitation list carries the QR");
+    assert(shown.endpoints.length > 0 && shown.endpoints.length <= 6, `the invitation lists the addresses it carries: ${shown.endpoints}`);
+    const listed = await tid(page, "invite-addrs").textContent();
+    assert(shown.endpoints.every((e) => listed.includes(e)), "the dialog shows them in its technical details");
     await tid(page, "invite-qr-enlarge").click();
     await tid(page, "invite-qr-big").locator("img").waitFor();
     const big = await tid(page, "invite-qr-big").boundingBox();

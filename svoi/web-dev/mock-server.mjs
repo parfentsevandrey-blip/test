@@ -802,7 +802,7 @@ function nameOf(id) {
 
 function makeInvite(admin, ttlMinutes, owner) {
   const code = inviteCode(admin);
-  return { id: rid("inv_"), code, admin, owner: owner || W.self.owner || "", created: now() - 60 * 13, expires: now() + ttlMinutes * 60, qrSvg: fakeQrSvg(code) };
+  return { id: rid("inv_"), code, admin, owner: owner || W.self.owner || "", created: now() - 60 * 13, expires: now() + ttlMinutes * 60, qrSvg: fakeQrSvg(code), endpoints: ["192.168.1.23:41710", "203.0.113.5:41710", "[2001:db8::1]:41710"] };
 }
 /** Like SanitizeOwner: blanks collapse, at most 64 characters; empty → the inviter's own owner. */
 function cleanOwner(v) {

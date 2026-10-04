@@ -87,4 +87,7 @@ func TestInviteViewShowsTheGroupedCodeAndTheCompactQR(t *testing.T) {
 	if want := qrSVG(qrPayload(inv.Encode())); v.QRSvg != want {
 		t.Fatal("the QR is not the one of the compact payload")
 	}
+	if len(v.Endpoints) != 2 || v.Endpoints[0] != "192.168.1.23:41710" || v.Endpoints[1] != "203.0.113.5:41710" {
+		t.Fatalf("the addresses the code carries: %v", v.Endpoints)
+	}
 }
