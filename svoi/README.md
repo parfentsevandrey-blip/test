@@ -44,9 +44,10 @@ The Mesh — **обычная программа с окном**, а не скр
 `themesh-v*` те же файлы прикладываются к релизу. Архивы для серверов — `make dist` (артефакт `themesh-dist`).
 
 Прямая ссылка на один файл (артефакт Actions — это zip со всем сразу, и скачать его можно только после входа в GitHub): сборка для Mac лежит
-в предварительном выпуске [themesh-mac-v0.1.0](https://github.com/parfentsevandrey-blip/test/releases/tag/themesh-mac-v0.1.0) —
-[`TheMesh-0.1.0-mac-arm64.dmg`](https://github.com/parfentsevandrey-blip/test/releases/download/themesh-mac-v0.1.0/TheMesh-0.1.0-mac-arm64.dmg)
-и `…-mac-x64.dmg`, с контрольными суммами. Положить на выпуск любой уже собранный и проверенный файл из прогона CI, не пересобирая его,
+в предварительном выпуске [themesh-mac-587c72a](https://github.com/parfentsevandrey-blip/test/releases/tag/themesh-mac-587c72a) —
+[`TheMesh-0.1.0-mac-arm64.dmg`](https://github.com/parfentsevandrey-blip/test/releases/download/themesh-mac-587c72a/TheMesh-0.1.0-mac-arm64.dmg)
+и `…-mac-x64.dmg`, с контрольными суммами (это сборка с видом Liquid Glass и со сканированием QR-приглашения; прежние сборки —
+выпуски `themesh-mac-62976e9` и `themesh-mac-v0.1.0` — остаются на месте). Положить на выпуск любой уже собранный и проверенный файл из прогона CI, не пересобирая его,
 можно вручную: Actions → «The Mesh publish» → Run workflow (номер прогона, имя артефакта, имена файлов, метка, коммит).
 
 **Что делает приложение:**
