@@ -30,4 +30,5 @@ THEMESH_APP_EXE=dist/linux-unpacked/TheMesh node test/smoke.mjs   # то же с
 ```
 
 Все три системы собираются и проверяются на настоящих машинах в GitHub Actions (`.github/workflows/themesh-desktop.yml`).
-Подписи нет: Windows покажет SmartScreen, macOS — предупреждение Gatekeeper (программа не заверена Apple).
+Подписи нет: Windows покажет SmartScreen, macOS — предупреждение Gatekeeper (программа не заверена Apple; в macOS 15 и новее
+выход один: «Системные настройки → Конфиденциальность и безопасность → Всё равно открыть»).
