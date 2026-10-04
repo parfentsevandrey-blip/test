@@ -293,6 +293,11 @@ on an administrator a **dialog opens by itself** for each new entry of `requests
 "Whose device is it?", «Добавить» / «Отклонить»), and an entry whose dialog was closed stays as a row on Home until it expires. The desktop shell and the
 phone app show a system notification for each new request when the window is not in front.
 
+Events win over answers. The node answers `POST /api/nearby/requests/{id}` at once (the request is still in the picture it returns) and forgets the request
+a moment later, which comes as a `nearby` event; the answer can reach the page after that event. The interface therefore counts the `nearby` events and takes
+the picture from an answer (and from `GET /api/state`) only if none came while it was on its way — otherwise the request that was just allowed would stay on
+Home under "Needs your attention" (`web-e2e/tests/nearby.mjs` checks this with two real programs).
+
 ### Scanning an invitation (phone app)
 The Android app lets a person scan the QR code that another device shows, instead of typing the code. The window is a WebView around
 this same interface, so the app and the interface meet in two small places:
