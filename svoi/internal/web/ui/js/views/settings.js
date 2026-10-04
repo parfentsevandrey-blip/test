@@ -146,13 +146,13 @@ function DeviceSection({ cfg }) {
       </${TechDetails}>
     </${Card}>
     ${cfg.local && html`<${Card}>
-      <div class="row row--top gap-4">
+      <div class="row row--top setting-action gap-4">
         <div class="grow"><h3 class="strong">${t("set.session")}</h3><p class="muted small">${t("set.sessionHint")}</p></div>
         <${Button} variant="secondary" icon="logout" onClick=${logout} data-testid="logout">${t("set.logout")}</${Button}>
       </div>
     </${Card}>`}
     ${cfg.local && html`<${Card} class="danger-zone">
-      <div class="row row--top gap-4">
+      <div class="row row--top setting-action gap-4">
         <div class="grow"><h3 class="strong">${t("set.leave")}</h3><p class="muted small">${t("set.leaveHint")}</p></div>
         <${Button} variant="danger-ghost" icon="logout" onClick=${leave} data-testid="leave-mesh">${t("set.leaveBtn")}</${Button}>
       </div>

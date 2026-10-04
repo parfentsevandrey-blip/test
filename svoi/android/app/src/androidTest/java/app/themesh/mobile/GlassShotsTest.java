@@ -30,8 +30,8 @@ import java.util.List;
 @RunWith(AndroidJUnit4.class)
 public class GlassShotsTest {
     private static final String PACKAGE = "app.themesh.mobile";
-    /** Пока страница после перехода, анимации и размытие не установились, снимок получается «на полпути». */
-    private static final long SETTLE_MS = 2000;
+    /** После того как страница договорила анимации (WebProbe.settle) шрифты и размытие ещё устанавливаются. */
+    private static final long SETTLE_MS = 1500;
     private final long waitMs = Long.parseLong(InstrumentationRegistry.getArguments().getString("waitSeconds", "90")) * 1000;
 
     private final Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
@@ -66,16 +66,16 @@ public class GlassShotsTest {
 
             for (String theme : new String[] {"light", "dark"}) {
                 setTheme(web, theme, "page-onboarding");
-                shot("01-start-" + theme);
+                shot(web, "01-start-" + theme);
                 // меню приложения «⋮»: его просит страница. Закрывается оно самим окном, а не клавишей «Назад»: если бы меню не
                 // открылось, «Назад» закрыла бы приложение, и следующие снимки были бы снимками рабочего стола
                 web.run("window.themeshShell && window.themeshShell.menu();");
-                shot("02-menu-" + theme);
+                shot(web, "02-menu-" + theme);
                 scenario.onActivity(MainActivity::dismissMenu);
                 Thread.sleep(800);
                 // форма «Создать свою сеть»
                 web.click("[data-testid=\"onb-create\"]");
-                shot("03-create-" + theme);
+                shot(web, "03-create-" + theme);
                 web.click(".onb-back");
             }
 
@@ -85,16 +85,16 @@ public class GlassShotsTest {
             web.waitFor("window.__created === 200", 30_000);
             for (String theme : new String[] {"light", "dark"}) {
                 setTheme(web, theme, "page-home");
-                shot("04-home-" + theme);
+                shot(web, "04-home-" + theme);
                 web.click("[data-testid=\"home-action-add\"]");
-                shot("05-add-device-" + theme);
+                shot(web, "05-add-device-" + theme);
                 web.click("[data-testid=\"invite-create\"]");
                 web.waitFor("document.querySelector('[data-testid=\"invite-qr\"] img') != null", 20_000);
-                shot("06-invite-" + theme);
+                shot(web, "06-invite-" + theme);
                 web.click(".modal__close");
                 Thread.sleep(500);
                 web.run("location.hash = '#/settings';");
-                shot("07-settings-" + theme);
+                shot(web, "07-settings-" + theme);
                 web.run("location.hash = '#/home';");
                 Thread.sleep(500);
             }
@@ -114,7 +114,8 @@ public class GlassShotsTest {
                 + " && document.documentElement.getAttribute('data-theme') === '" + theme + "'", 30_000);
     }
 
-    private void shot(String name) {
+    private void shot(WebProbe web, String name) throws InterruptedException {
+        web.settle(15_000);
         if (Shots.take(instrumentation, name, SETTLE_MS)) {
             written.add(name);
         }

@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -137,11 +138,17 @@ final class NodeProcess {
 
     /**
      * @param label    имя папки в кэше приложения
-     * @param udpPort  UDP-порт этого узла: не тот, что у узла приложения (41710), чтобы они не мешали друг другу
+     * @param udpPort  UDP-порт этого узла (0 — любой свободный): не тот, что у узла приложения (41710), чтобы они не мешали друг другу;
+     *                 занятый порт (узел от прошлого прогона, которого не успели остановить) не дал бы второму узлу запуститься
      * @param platform как узел называет свою систему («darwin/arm64»)
      */
     NodeProcess(Context context, String label, int udpPort, String platform) throws IOException {
         this.platform = platform;
+        if (udpPort == 0) {
+            try (DatagramSocket probe = new DatagramSocket(0)) {
+                udpPort = probe.getLocalPort();
+            }
+        }
         File base = new File(context.getCacheDir(), label);
         deleteRecursively(base);
         dir = new File(base, "data");

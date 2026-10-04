@@ -9,7 +9,7 @@ import { html, useEffect, useRef, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t, tn } from "../i18n.js";
 import { post } from "../api.js";
-import { nearbyOf, nowSec, setState, state, useStore } from "../store.js";
+import { nearbyEvents, nearbyOf, nowSec, setState, state, useStore } from "../store.js";
 import { useNow } from "../hooks.js";
 import { fmtCountdown } from "../format.js";
 import { DeviceAvatar } from "../components/avatar.js";
@@ -51,8 +51,11 @@ function takeAnswer(view) {
 }
 
 async function ask(path, body) {
+  const events = nearbyEvents();
   const v = await post(path, body);
-  takeAnswer(v);
+  // An event that came while the request was served is fresher than the answer: when the administrator allows a device,
+  // the node answers at once and forgets the request a moment later; the event about that must not be undone by the answer.
+  if (nearbyEvents() === events) takeAnswer(v);
   return v;
 }
 

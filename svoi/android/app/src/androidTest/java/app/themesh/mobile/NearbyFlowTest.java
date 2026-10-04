@@ -52,8 +52,6 @@ import app.themesh.mobile.core.AppLog;
 public class NearbyFlowTest {
     private static final String TAG = "NearbyFlowTest";
     private static final String PACKAGE = "app.themesh.mobile";
-    /** UDP-порт второго узла: не 41710 (порт по умолчанию у узла приложения). */
-    private static final int MAC_PORT = 41720;
     private static final String MAC_MESH = "Дом Мака";
     /** Объявления идут раз в 5 с, эмулятор CI небыстрый: на то, чтобы найти друг друга, дано много времени. */
     private static final long DISCOVERY_MS = 150_000;
@@ -91,9 +89,9 @@ public class NearbyFlowTest {
     public void aPhoneWithoutAMeshFindsAMacNearbyAndIsAddedByIt() throws Exception {
         inWindow("phone-joins", web -> {
             assertTrue("первый экран не показал блок «Рядом»", web.waitFor("document.querySelector('[data-testid=\"nearby\"]') != null", waitMs));
-            Shots.take(instrumentation, "10-nearby-searching", 2000);
+            shot(web, "10-nearby-searching");
 
-            mac = new NodeProcess(context, "mac", MAC_PORT, "darwin/arm64");
+            mac = new NodeProcess(context, "mac", 0, "darwin/arm64");
             mac.init(MAC_MESH, "mac", "Андрей");
             mac.up();
 
@@ -102,7 +100,7 @@ public class NearbyFlowTest {
             assertTrue("телефон не показал «Mac» в списке за " + DISCOVERY_MS / 1000 + " с", web.waitFor(found + " != null", DISCOVERY_MS));
             assertTrue("в строке «Mac» нет названия его сети: " + web.value(found + ".textContent"),
                     web.has(found + ".textContent.indexOf('" + MAC_MESH + "') >= 0"));
-            Shots.take(instrumentation, "11-nearby-list", 2000);
+            shot(web, "11-nearby-list");
 
             // одно нажатие — и на экране шесть цифр
             web.click("[data-testid=\"nearby-connect\"]");
@@ -110,7 +108,7 @@ public class NearbyFlowTest {
                     web.waitFor("document.querySelector('[data-testid=\"nearby-join\"][data-state=\"waiting\"]') != null", STEP_MS));
             String code = web.value("document.querySelector('[data-testid=\"nearby-code\"] .nearby-code__digits').getAttribute('data-code')");
             assertTrue("шесть цифр: «" + code + "»", code.matches("\\d{6}"));
-            Shots.take(instrumentation, "12-nearby-code", 2000);
+            shot(web, "12-nearby-code");
 
             // «Mac» видит запрос с теми же цифрами, и там ещё никто не подтвердил
             Ask ask = macAsk(false, STEP_MS);
@@ -124,7 +122,7 @@ public class NearbyFlowTest {
             web.click("[data-testid=\"nearby-match\"]");
             assertTrue("телефон не перешёл в «ждёт хозяина»",
                     web.waitFor("document.querySelector('[data-testid=\"nearby-join\"][data-state=\"confirmed\"]') != null", STEP_MS));
-            Shots.take(instrumentation, "13-nearby-waiting", 2000);
+            shot(web, "13-nearby-waiting");
             ask = macAsk(true, STEP_MS);
             if (ask == null) {
                 fail("«Mac» не узнал, что на телефоне цифры подтвердили: " + macSays("nearby"));
@@ -137,7 +135,7 @@ public class NearbyFlowTest {
             // телефон в сети: «Главная» с «Mac» среди устройств
             assertTrue("телефон не показал «Главную» после добавления",
                     web.waitFor("document.querySelector('[data-testid=\"page-home\"]') != null", STEP_MS));
-            Shots.take(instrumentation, "14-nearby-joined-home", 2500);
+            shot(web, "14-nearby-joined-home");
             JSONObject state = waitForState(web, s -> s.optBoolean("configured") && peer(s, "mac") != null, STEP_MS);
             if (state == null) {
                 fail("телефон не знает «Mac» среди устройств сети");
@@ -170,9 +168,9 @@ public class NearbyFlowTest {
     public void aNewMacFindsThePhoneNearbyAndThePhoneAddsIt() throws Exception {
         inWindow("mac-joins", web -> {
             createMesh(web, "Дом", "pixel", "Андрей");
-            Shots.take(instrumentation, "20-nearby-admin-home", 2000);
+            shot(web, "20-nearby-admin-home");
 
-            mac = new NodeProcess(context, "mac", MAC_PORT, "darwin/arm64");
+            mac = new NodeProcess(context, "mac", 0, "darwin/arm64");
             mac.up(); // у «Mac» нет сети: он слушает, кто рядом может его добавить
 
             // «Mac» находит телефон (администратор, которого видно)
@@ -194,13 +192,13 @@ public class NearbyFlowTest {
                 assertEquals("цифры на телефоне и на «Mac» разные", code,
                         web.value("document.querySelector('[data-testid=\"nearby-ask-code\"] .nearby-code__digits').getAttribute('data-code')"));
                 assertEquals("mac", web.value("document.querySelector('[data-testid=\"nearby-ask-name\"]').textContent"));
-                Shots.take(instrumentation, "21-nearby-ask", 2000);
+                shot(web, "21-nearby-ask");
 
                 // человек у «Mac» говорит «совпадает», телефон это видит
                 join.type("y\n");
                 assertTrue("окно телефона не узнало, что на «Mac» цифры подтвердили",
                         web.waitFor("document.querySelector('[data-testid=\"nearby-ask-state\"][data-confirmed=\"true\"]') != null", STEP_MS));
-                Shots.take(instrumentation, "22-nearby-ask-confirmed", 2000);
+                shot(web, "22-nearby-ask-confirmed");
 
                 // хозяин телефона разрешает
                 web.click("[data-testid=\"nearby-allow\"]");
@@ -219,7 +217,11 @@ public class NearbyFlowTest {
             assertFalse("добавленное так устройство должно быть обычным, не администратором", peer(state, "mac").optBoolean("admin"));
             assertEquals("darwin", peer(state, "mac").optString("os"));
             assertTrue(state.getJSONObject("self").getBoolean("admin"));
-            Shots.take(instrumentation, "23-nearby-admin-added", 2500);
+            // «Нужно ваше внимание» не спрашивает про устройство, которое уже добавлено (ответ на «Разрешить» приходит позже события
+            // о том, что узел забыл просьбу, и не должен его затирать)
+            assertTrue("на «Главной» осталась просьба «Mac», хотя его уже добавили",
+                    web.waitFor("document.querySelector('[data-testid=\"home-att-nearby\"]') == null", 20_000));
+            shot(web, "23-nearby-admin-added");
 
             JSONObject theirs = macState(s -> s.optBoolean("configured") && s.optJSONArray("peers") != null && s.optJSONArray("peers").length() == 1, STEP_MS);
             if (theirs == null) {
@@ -261,6 +263,12 @@ public class NearbyFlowTest {
                 leave(web);
             }
         }
+    }
+
+    /** Снимок экрана, когда страница договорила анимации (см. {@link WebProbe#settle}) и шрифты с размытием установились. */
+    private void shot(WebProbe web, String name) throws InterruptedException {
+        web.settle(15_000);
+        Shots.take(instrumentation, name, 1000);
     }
 
     private void createMesh(WebProbe web, String meshName, String deviceName, String owner) throws Exception {

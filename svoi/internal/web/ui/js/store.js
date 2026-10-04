@@ -41,6 +41,12 @@ function flush() {
   }
 }
 
+// How many `nearby` events the node has sent. A snapshot (the answer to a request, the state) that was on its way while
+// an event came is older than that event and must not undo it: the removal of a request that was just answered, for one.
+let nearbyClock = 0;
+export const nearbyEvents = () => nearbyClock;
+export const noteNearbyEvent = () => ++nearbyClock;
+
 /** What GET api/nearby / the `nearby` event / `state.nearby` carry, with the gaps filled in (an older node says nothing). */
 export function nearbyOf(d) {
   const v = d && typeof d === "object" ? d : {};

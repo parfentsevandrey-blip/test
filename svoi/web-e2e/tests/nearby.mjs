@@ -102,6 +102,9 @@ group("nearby (real processes)", { noDemo: true }, () => {
     await until(async () => (await phone.api("GET", "/api/state")).peers.some((p) => p.name === "mac" && p.online), 30000, "the phone to be connected to the Mac");
     eq((await mac.api("GET", "/api/state")).self.meshName, "Дом", "the Mac is in the phone's mesh");
     await tid(page, "nearby-ask").waitFor({ state: "detached" });
+    // nothing is left of the request: not in the node, not on Home ("Needs your attention" asks about a device that is already added)
+    eq((await phone.api("GET", "/api/nearby")).requests, [], "the node forgot the request");
+    await page.locator('[data-testid="home-att-nearby"]').waitFor({ state: "detached" });
     eq(page.problems, [], "console / network problems");
   });
 
@@ -118,6 +121,7 @@ group("nearby (real processes)", { noDemo: true }, () => {
     const j = await until(async () => { const v = (await mac.api("GET", "/api/nearby")).join; return v.state === "denied" && v; }, 30000, "the Mac to be told no");
     eq(j.state, "denied", "the new device learns that it was refused");
     await tid(page, "nearby-ask").waitFor({ state: "detached" });
+    await page.locator('[data-testid="home-att-nearby"]').waitFor({ state: "detached" });
     eq((await phone.api("GET", "/api/nearby")).requests, [], "the phone keeps no request");
     eq((await mac.api("GET", "/api/state")).configured, false, "the new device is still in no mesh");
     eq(page.problems, [], "console / network problems");
