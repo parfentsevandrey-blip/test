@@ -21,6 +21,12 @@ func (s *Server) routes() {
 	m.HandleFunc("POST /api/mesh/join", s.handleMeshJoin)
 	m.HandleFunc("POST /api/mesh/leave", s.handleMeshLeave)
 	m.HandleFunc("POST /api/netcheck", s.handleNetcheck)
+	// devices nearby: a device that is not in a mesh asks one that can add it; an admin answers
+	m.HandleFunc("GET /api/nearby", s.handleNearby)
+	m.HandleFunc("POST /api/nearby/connect", s.handleNearbyConnect)
+	m.HandleFunc("POST /api/nearby/confirm", s.handleNearbyConfirm)
+	m.HandleFunc("POST /api/nearby/cancel", s.handleNearbyCancel)
+	m.HandleFunc("POST /api/nearby/requests/{id}", s.handleNearbyAnswer)
 	m.HandleFunc("POST /api/login/code", s.handleLoginCode)
 	m.HandleFunc("POST /api/logout", s.handleLogout)
 	m.HandleFunc("GET /api/diag/logs", s.handleLogs)
@@ -309,4 +315,67 @@ func (s *Server) handleSettingsPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, res)
+}
+
+// ---- devices nearby ----
+
+func (s *Server) handleNearby(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, s.app.Nearby())
+}
+
+func (s *Server) handleNearbyConnect(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		ID         string `json:"id"`
+		DeviceName string `json:"deviceName"`
+	}
+	if err := decode(r, &in); err != nil {
+		writeError(w, err)
+		return
+	}
+	if err := s.app.NearbyConnect(in.ID, in.DeviceName); err != nil {
+		writeError(w, nearbyFailure(err))
+		return
+	}
+	writeJSON(w, http.StatusOK, s.app.Nearby())
+}
+
+func (s *Server) handleNearbyConfirm(w http.ResponseWriter, r *http.Request) {
+	if err := s.app.NearbyConfirm(); err != nil {
+		writeError(w, errCode("invalid", err.Error()))
+		return
+	}
+	writeJSON(w, http.StatusOK, s.app.Nearby())
+}
+
+func (s *Server) handleNearbyCancel(w http.ResponseWriter, r *http.Request) {
+	s.app.NearbyCancel()
+	writeJSON(w, http.StatusOK, s.app.Nearby())
+}
+
+func (s *Server) handleNearbyAnswer(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Approve bool   `json:"approve"`
+		Owner   string `json:"owner"` // whose device it is; empty: the person of this device
+	}
+	if err := decode(r, &in); err != nil {
+		writeError(w, err)
+		return
+	}
+	if err := s.app.NearbyAnswer(r.PathValue("id"), in.Approve, in.Owner); err != nil {
+		writeError(w, nearbyFailure(err))
+		return
+	}
+	writeJSON(w, http.StatusOK, s.app.Nearby())
+}
+
+// nearbyFailure tells apart why a request about a device nearby failed: "notfound" (the device or the request is gone: it
+// may have left or expired), "denied" (not an admin), "invalid" (already in a mesh, a request is running already).
+func nearbyFailure(err error) error {
+	switch {
+	case errors.Is(err, mesh.ErrNearbyGone), errors.Is(err, mesh.ErrNoSuchRequest):
+		return errCode("notfound", err.Error())
+	case errors.Is(err, mesh.ErrNotAdmin):
+		return errCode("denied", err.Error())
+	}
+	return errCode("invalid", err.Error())
 }

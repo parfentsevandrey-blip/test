@@ -43,6 +43,7 @@ var Version = "0.1.0"
 const (
 	ALPNMesh = "themesh/1"
 	ALPNJoin = "themesh-join/1"
+	// (ALPNNearby, the request of a device nearby to be added, is in nearby.go.)
 )
 
 // QUIC application error codes used when closing connections.
@@ -90,6 +91,9 @@ type Config struct {
 	Timing     magic.Timing
 	// LANPort is the UDP port for LAN beacons (0 = default, <0 disables).
 	LANPort int
+	// NoNearby stops an admin device from announcing on the local network that it can add devices (see nearby.go);
+	// it still adds them by invitation.
+	NoNearby bool
 	// Timers (zero = default).
 	SyncEvery   time.Duration
 	ConnectTick time.Duration
@@ -133,6 +137,7 @@ const (
 	EvMembers EventKind = "members" // the member list changed
 	EvSelf    EventKind = "self"    // own endpoints / NAT info changed
 	EvRemoved EventKind = "removed" // an administrator removed this device from the mesh
+	EvNearby  EventKind = "nearby"  // the devices nearby, a request to add one, or this device's own request changed
 )
 
 // Event is published on the node's event bus.
@@ -168,6 +173,8 @@ type Node struct {
 	cancel  context.CancelFunc
 	wg      sync.WaitGroup
 	lan     *lanDiscovery
+	lanMu   sync.Mutex  // one start of the LAN discovery at a time
+	nearby  nearbyState // devices nearby and requests (nearby.go)
 
 	hmu            sync.RWMutex
 	handlers       map[string]handlerEntry
@@ -230,6 +237,8 @@ func Open(cfg Config) (*Node, error) {
 		if err := n.startMember(); err != nil {
 			return nil, err
 		}
+	} else {
+		n.startIdleLAN()
 	}
 	return n, nil
 }
@@ -325,6 +334,7 @@ func (n *Node) Reconfigure(mod func(*Config)) error {
 	if configured {
 		return n.startMember()
 	}
+	n.startIdleLAN()
 	return nil
 }
 
@@ -357,6 +367,7 @@ func (n *Node) Leave() error {
 	if err := os.Remove(n.statePath()); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
+	n.startIdleLAN() // not in a mesh any more: listen for the devices nearby that could add this one
 	n.emit(Event{Kind: EvMembers})
 	return nil
 }
@@ -501,13 +512,13 @@ func (n *Node) stopNetwork() {
 	}
 	n.magic, n.tr, n.ln, n.lan, n.cancel = nil, nil, nil, nil, nil
 	n.mu.Unlock()
+	if lan != nil {
+		lan.stop() // (a device that is not in a mesh listens too, with no network running)
+	}
 	if cancel == nil {
 		return
 	}
 	cancel()
-	if lan != nil {
-		lan.stop()
-	}
 	for _, p := range peers {
 		if c := p.currentConn(); c != nil {
 			_ = c.CloseWithError(closeShutdown, "shutting down")
@@ -611,16 +622,26 @@ func (n *Node) serverTLS() *tls.Config {
 		ClientAuth:   tls.RequireAnyClientCert, // self-signed: the invite secret authenticates the joiner
 		NextProtos:   []string{ALPNJoin},
 	}
+	nearby := n.nearbyTLS()
 	return &tls.Config{
 		MinVersion:   tls.VersionTLS13,
 		Certificates: []tls.Certificate{n.tlsCert},
-		NextProtos:   []string{ALPNMesh, ALPNJoin},
+		NextProtos:   []string{ALPNMesh, ALPNJoin, ALPNNearby},
 		GetConfigForClient: func(chi *tls.ClientHelloInfo) (*tls.Config, error) {
 			var remote net.Addr
 			if chi.Conn != nil {
 				remote = chi.Conn.RemoteAddr()
 			}
 			for _, p := range chi.SupportedProtos {
+				if p == ALPNNearby {
+					// A device nearby asks to be added. It must show a ticket from an announcement of ours
+					// (so it is a neighbour that heard one a moment ago), and we must be willing: a person
+					// at this device decides about the request, not the network.
+					if !n.nearbyOpen() || !n.checkNearbySNI(chi.ServerName) || !n.joinLimit.allow(remoteAddr(remote)) {
+						return nil, errors.New("not accepting new devices")
+					}
+					return nearby, nil
+				}
 				if p == ALPNJoin {
 					// A joiner has to show, in the server name, that it knows the secret of a
 					// pending invitation; only then does it count against the (per address and
@@ -694,6 +715,8 @@ func (n *Node) handleIncoming(conn *quic.Conn) {
 	switch cs.NegotiatedProtocol {
 	case ALPNJoin:
 		n.handleJoin(conn)
+	case ALPNNearby:
+		n.handleNearby(conn)
 	case ALPNMesh:
 		if len(cs.PeerCertificates) == 0 {
 			_ = conn.CloseWithError(closeBadALPN, "no certificate")

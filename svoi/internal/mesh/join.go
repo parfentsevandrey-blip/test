@@ -236,14 +236,15 @@ func (n *Node) CancelInvite(id string) bool {
 }
 
 // updateAnonymous keeps magic's anonymous (joiner) mode in step with reality:
-// on while an invitation is outstanding or a join handshake is still running.
+// on while an invitation is outstanding, a join handshake is still running, or this
+// device announces that it can add devices nearby (nearby.go).
 func (n *Node) updateAnonymous() {
 	n.mu.RLock()
 	mg := n.magic
 	open := n.joinOpenLocked()
 	n.mu.RUnlock()
 	if mg != nil {
-		mg.SetAnonymous(open || n.joinActive.Load() > 0)
+		mg.SetAnonymous(open || n.joinActive.Load() > 0 || n.nearbyOpen())
 	}
 }
 
@@ -367,25 +368,44 @@ func (n *Node) handleJoin(conn *quic.Conn) {
 	}
 	// The invitation is single use: consume it before issuing anything.
 	delete(n.invites, handle)
-	existing := make([]*identity.Member, 0, len(n.peers)+1)
-	existing = append(existing, n.self)
-	for _, p := range n.peers {
-		existing = append(existing, p.Member())
-	}
-	meshName := n.meshName
-	mg := n.magic
 	n.mu.Unlock()
 
-	m, err := auth.Issue(identity.IssueRequest{ID: joinerID, Name: req.Name, Owner: inv.owner, Admin: inv.admin}, existing)
+	resp, err := n.issueMembership(conn, joinerID, req.Name, inv.owner, inv.admin)
 	if err != nil {
 		reply(nil, Errf(CodeInternal, "cannot issue certificate: %v", err))
 		return
+	}
+	reply(resp, nil)
+	n.saveSoon()
+	go n.pushSyncToAll()
+}
+
+// issueMembership makes a newcomer a member: it signs its certificate (the newcomer's key and name, the owner and role
+// given here), tells it who the members are, and starts to look for it at the address it came from. Whoever calls it has
+// made sure that the newcomer may join (an invitation, or the answer of a person at this device).
+func (n *Node) issueMembership(conn *quic.Conn, joinerID identity.ID, name, owner string, admin bool) (*joinResponse, error) {
+	n.mu.RLock()
+	auth, root, self, meshName, mg := n.auth, n.root, n.self, n.meshName, n.magic
+	existing := make([]*identity.Member, 0, len(n.peers)+1)
+	if self != nil {
+		existing = append(existing, self)
+	}
+	for _, p := range n.peers {
+		existing = append(existing, p.Member())
+	}
+	n.mu.RUnlock()
+	if auth == nil || root == nil {
+		return nil, ErrNotAdmin
+	}
+	m, err := auth.Issue(identity.IssueRequest{ID: joinerID, Name: name, Owner: owner, Admin: admin}, existing)
+	if err != nil {
+		return nil, err
 	}
 	resp := &joinResponse{RootCert: root.DER, Cert: m.CertDER, MeshName: meshName}
 	for _, e := range existing {
 		resp.Members = append(resp.Members, e.CertDER)
 	}
-	if inv.admin {
+	if admin {
 		resp.AuthSeed = auth.Priv.Seed()
 	}
 	n.learnMember(m)
@@ -395,10 +415,70 @@ func (n *Node) handleJoin(conn *quic.Conn) {
 		}
 		mg.Poke(joinerID)
 	}
-	n.log.Info("device joined the mesh", "name", m.Name, "admin", inv.admin)
-	reply(resp, nil)
-	n.saveSoon()
-	go n.pushSyncToAll()
+	n.log.Info("device joined the mesh", "name", m.Name, "admin", admin)
+	return resp, nil
+}
+
+// adoptMembership takes what an inviter answered a newcomer: the mesh root, the newcomer's own certificate and the members.
+// With an invitation the root must be the one the invitation names (wantRoot); without one (a device nearby that was
+// asked) it is whatever the inviter shows, which is why the people compared the digits first, and the inviter must be an
+// administrator among the members it lists. The inviter is reachable at the addresses we used: they are remembered.
+func (n *Node) adoptMembership(resp *joinResponse, wantRoot []byte, inviter identity.ID, endpoints []string) error {
+	root, err := identity.ParseRoot(resp.RootCert)
+	if err != nil {
+		return err
+	}
+	if wantRoot != nil && !bytes.Equal(root.Pub, wantRoot) {
+		return errors.New("mesh: the mesh root in the answer does not match the invitation")
+	}
+	self, err := root.Verify(resp.Cert)
+	if err != nil {
+		return err
+	}
+	if self.ID != n.device().ID {
+		return errors.New("mesh: the issued certificate is for a different device")
+	}
+	var auth *identity.Authority
+	if len(resp.AuthSeed) > 0 {
+		if wantRoot == nil {
+			return errors.New("mesh: an authority key that nobody asked for")
+		}
+		if auth, err = identity.AuthorityFromSeed(resp.AuthSeed, resp.RootCert); err != nil {
+			return err
+		}
+		if !self.Admin {
+			return errors.New("mesh: received an authority key without an admin certificate")
+		}
+	}
+	var members []*identity.Member
+	for _, der := range resp.Members {
+		if m, err := root.Verify(der); err == nil && m.ID != n.device().ID {
+			members = append(members, m)
+		}
+	}
+	if wantRoot == nil {
+		listed := false
+		for _, m := range members {
+			listed = listed || (m.ID == inviter && m.Admin)
+		}
+		if !listed {
+			return errors.New("mesh: the device that added us is not an administrator of the mesh it describes")
+		}
+	}
+
+	n.mu.Lock()
+	n.root, n.auth, n.self = root, auth, self
+	n.meshName = strings.TrimSpace(resp.MeshName)
+	for _, m := range members {
+		if _, ok := n.peers[m.ID]; !ok {
+			n.peers[m.ID] = newPeer(n, m)
+		}
+	}
+	if p := n.peers[inviter]; p != nil {
+		p.storedEndpoints = append(p.storedEndpoints, endpoints...)
+	}
+	n.mu.Unlock()
+	return n.saveState()
 }
 
 // ---- joiner side ----
@@ -569,49 +649,11 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName string) error {
 		return err
 	}
 
-	root, err := identity.ParseRoot(resp.RootCert)
-	if err != nil {
-		return err
+	endpoints := make([]string, 0, len(inv.Endpoints))
+	for _, ep := range inv.Endpoints {
+		endpoints = append(endpoints, ep.String())
 	}
-	if !bytes.Equal(root.Pub, inv.Root) {
-		return errors.New("mesh: the mesh root in the answer does not match the invitation")
-	}
-	self, err := root.Verify(resp.Cert)
-	if err != nil {
-		return err
-	}
-	if self.ID != n.device().ID {
-		return errors.New("mesh: the issued certificate is for a different device")
-	}
-	var auth *identity.Authority
-	if len(resp.AuthSeed) > 0 {
-		if auth, err = identity.AuthorityFromSeed(resp.AuthSeed, resp.RootCert); err != nil {
-			return err
-		}
-		if !self.Admin {
-			return errors.New("mesh: received an authority key without an admin certificate")
-		}
-	}
-
-	n.mu.Lock()
-	n.root, n.auth, n.self = root, auth, self
-	n.meshName = strings.TrimSpace(resp.MeshName)
-	for _, der := range resp.Members {
-		if m, err := root.Verify(der); err == nil && m.ID != n.device().ID {
-			if _, ok := n.peers[m.ID]; !ok {
-				p := newPeer(n, m)
-				n.peers[m.ID] = p
-			}
-		}
-	}
-	// The inviter is reachable at the address we just used: remember it.
-	if p := n.peers[inv.Inviter]; p != nil {
-		for _, ep := range inv.Endpoints {
-			p.storedEndpoints = append(p.storedEndpoints, ep.String())
-		}
-	}
-	n.mu.Unlock()
-	if err := n.saveState(); err != nil {
+	if err := n.adoptMembership(&resp, inv.Root, inv.Inviter, endpoints); err != nil {
 		return err
 	}
 	// Release the temporary socket before the permanent one binds the same port.

@@ -24,6 +24,8 @@ import (
 	"github.com/parfentsevandrey-blip/test/svoi/internal/api"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/app"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
+	"github.com/parfentsevandrey-blip/test/svoi/internal/magic"
+	"github.com/parfentsevandrey-blip/test/svoi/internal/mesh"
 )
 
 type env struct {
@@ -719,4 +721,125 @@ func waitUntil(t *testing.T, what string, cond func() bool) {
 func js(s string) string {
 	b, _ := json.Marshal(s)
 	return string(b)
+}
+
+// A device that is not in a mesh lists the admin devices nearby, asks one, and the two people say yes (see mesh/nearby.go).
+func TestNearbyDevicesThroughTheAPI(t *testing.T) {
+	hasLAN := false
+	for _, n := range magic.LocalNets() {
+		if _, ok := n.Broadcast(); ok && n.Iface != nil {
+			hasLAN = true
+		}
+	}
+	if !hasLAN {
+		t.Skip("no network card with a multicast-capable IPv4 address and a broadcast address here")
+	}
+	pc, err := net.ListenPacket("udp4", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	lanPort := pc.LocalAddr().(*net.UDPAddr).Port
+	pc.Close()
+	open := func(name string) *env {
+		a, err := app.Open(app.Options{Dir: t.TempDir(), DeviceName: name, Owner: "tester", Mesh: mesh.Config{LANPort: lanPort}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { a.Close() })
+		off := false
+		if _, err := a.UpdateSettings(app.SettingsPatch{STUNEnabled: &off, PortMap: &off}); err != nil {
+			t.Fatal(err)
+		}
+		ts := httptest.NewServer(api.New(a, nil).Handler())
+		t.Cleanup(ts.Close)
+		return &env{t: t, app: a, srv: ts, tok: a.Token()}
+	}
+	mac, phone := open("mac"), open("phone")
+	if code := mac.call("POST", "/api/mesh/create", `{"meshName":"Home","deviceName":"mac","owner":"andrey"}`, nil); code != 200 {
+		t.Fatalf("create: %d", code)
+	}
+
+	// Nothing to confirm, nobody to ask, no such request: the answers say what is wrong.
+	if code := phone.call("POST", "/api/nearby/confirm", "", nil); code != 400 {
+		t.Fatalf("confirm with no request: %d", code)
+	}
+	if code := phone.call("POST", "/api/nearby/connect", `{"id":"nobody"}`, nil); code != 404 {
+		t.Fatalf("connect to an unknown device: %d", code)
+	}
+	if code := mac.call("POST", "/api/nearby/requests/none", `{"approve":true}`, nil); code != 404 {
+		t.Fatalf("answer to an unknown request: %d", code)
+	}
+	if code := phone.call("POST", "/api/nearby/requests/none", `{"approve":true}`, nil); code != 403 {
+		t.Fatalf("a device that is not an admin answers: %d", code)
+	}
+
+	var view app.NearbyView
+	waitUntil(t, "the phone to list the Mac", func() bool {
+		phone.call("GET", "/api/nearby", "", &view)
+		return len(view.Devices) == 1
+	})
+	if view.Devices[0].Name != "mac" || view.Devices[0].MeshName != "Home" || !view.Visible || view.Join.State != "idle" {
+		t.Fatalf("the phone sees %+v", view)
+	}
+	var st struct {
+		Nearby app.NearbyView `json:"nearby"`
+	}
+	phone.call("GET", "/api/state", "", &st)
+	if len(st.Nearby.Devices) != 1 {
+		t.Fatalf("the state carries %+v", st.Nearby)
+	}
+
+	if code := phone.call("POST", "/api/nearby/connect", `{"id":"`+view.Devices[0].ID+`","deviceName":"phone"}`, nil); code != 200 {
+		t.Fatalf("connect: %d", code)
+	}
+	var code string
+	waitUntil(t, "the digits on the phone", func() bool {
+		phone.call("GET", "/api/nearby", "", &view)
+		code = view.Join.Code
+		return view.Join.State == "waiting" && len(code) == 6
+	})
+	var asked app.NearbyView
+	waitUntil(t, "the request on the Mac", func() bool {
+		mac.call("GET", "/api/nearby", "", &asked)
+		return len(asked.Requests) == 1
+	})
+	if r := asked.Requests[0]; r.Code != code || r.Name != "phone" {
+		t.Fatalf("the Mac shows %+v for the digits %s", r, code)
+	}
+	if c := mac.call("POST", "/api/nearby/requests/"+asked.Requests[0].ID, `{"approve":true,"owner":""}`, nil); c != 200 {
+		t.Fatalf("answer: %d", c)
+	}
+	if c := phone.call("POST", "/api/nearby/confirm", "", nil); c != 200 {
+		t.Fatalf("confirm: %d", c)
+	}
+	waitUntil(t, "the phone to be added", func() bool {
+		var s struct {
+			Configured bool `json:"configured"`
+		}
+		phone.call("GET", "/api/state", "", &s)
+		return s.Configured
+	})
+	var after struct {
+		Peers  []map[string]any `json:"peers"`
+		Nearby app.NearbyView   `json:"nearby"`
+	}
+	waitUntil(t, "the phone to know the Mac", func() bool {
+		phone.call("GET", "/api/state", "", &after)
+		return len(after.Peers) == 1
+	})
+	if len(after.Nearby.Devices) != 0 {
+		t.Fatalf("a device in a mesh lists %v", after.Nearby.Devices)
+	}
+
+	// The switch in Settings: an admin that is switched off announces nothing and takes no request.
+	if c := mac.call("PUT", "/api/settings", `{"nearby":false}`, nil); c != 200 {
+		t.Fatalf("settings: %d", c)
+	}
+	var set struct {
+		Nearby bool `json:"nearby"`
+	}
+	mac.call("GET", "/api/settings", "", &set)
+	if set.Nearby {
+		t.Fatal("the switch did not stick")
+	}
 }

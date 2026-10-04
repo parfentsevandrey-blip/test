@@ -8,11 +8,13 @@
 package lab
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -680,6 +682,136 @@ func TestLANDiscoveryOfAPhoneThatCannotListItsInterfaces(t *testing.T) {
 		together(c.what)
 		dropBeacons(c.silent, false)
 	}
+}
+
+// Two real devices on one home network, one in a mesh (an admin) and one that has just been installed: the new one lists
+// the admin without anybody typing or scanning anything, both show the same six digits, and the device is added when both
+// people have said yes - as the terminal of a server without a screen would do it (themesh nearby).
+func TestNearbyDevicesFindEachOtherAndAreAdded(t *testing.T) {
+	if out, err := exec.Command(labSh, "lan", "7").CombinedOutput(); err != nil {
+		t.Fatalf("natlab lan: %v\n%s", err, out)
+	}
+	t.Cleanup(func() { exec.Command(labSh, "down").Run() })
+
+	mac := newNode(t, "svl-L1", "mac")
+	phone := newNode(t, "svl-L2", "phone")
+	t.Cleanup(func() {
+		if t.Failed() {
+			for _, n := range []*node{mac, phone} {
+				t.Logf("---- %s log ----\n%s", n.name, n.logTail(80))
+			}
+		}
+	})
+	mac.run("init", "--mesh", "Lan", "--name", "mac", "--owner", "lab")
+	mac.start()
+	phone.start() // installed, not in any mesh
+
+	waitFor(t, 40*time.Second, "the new device to list the admin", func() bool {
+		out, err := phone.tryRun(20*time.Second, "nearby")
+		return err == nil && strings.Contains(out, "mac") && strings.Contains(out, "Lan")
+	})
+
+	ask := func(answer string) (digits string, result string, err error) {
+		cmd := phone.command("nearby", "join", "mac", "--name", "phone")
+		stdin, _ := cmd.StdinPipe()
+		stdout, _ := cmd.StdoutPipe()
+		cmd.Stderr = cmd.Stdout
+		if err := cmd.Start(); err != nil {
+			t.Fatal(err)
+		}
+		lines := make(chan string, 64)
+		go func() {
+			sc := bufio.NewScanner(stdout)
+			sc.Buffer(make([]byte, 64<<10), 1<<20)
+			for sc.Scan() {
+				lines <- sc.Text()
+			}
+			close(lines)
+		}()
+		var all []string
+		wait := func(re *regexp.Regexp, d time.Duration) []string {
+			deadline := time.After(d)
+			for {
+				select {
+				case l, ok := <-lines:
+					if !ok {
+						return nil
+					}
+					all = append(all, l)
+					if m := re.FindStringSubmatch(l); m != nil {
+						return m
+					}
+				case <-deadline:
+					return nil
+				}
+			}
+		}
+		m := wait(regexp.MustCompile(`The six digits: (\d{6})`), 40*time.Second)
+		if m == nil {
+			cmd.Process.Kill()
+			t.Fatalf("the new device showed no digits:\n%s", strings.Join(all, "\n"))
+		}
+		digits = m[1]
+		// the admin lists the request with the same digits
+		var reqID string
+		waitFor(t, 20*time.Second, "the request to appear at the admin", func() bool {
+			out, err := mac.tryRun(20*time.Second, "nearby")
+			if err != nil {
+				return false
+			}
+			for _, l := range strings.Split(out, "\n") {
+				f := strings.Fields(l)
+				if len(f) >= 4 && f[1] == digits {
+					reqID = f[len(f)-1]
+					return true
+				}
+			}
+			return false
+		})
+		if answer == "no" {
+			mac.run("nearby", "deny", reqID) // the new device's command, waiting for its person to answer, is told at once
+		} else {
+			mac.run("nearby", "allow", reqID)
+			io.WriteString(stdin, "y\n")
+		}
+		defer stdin.Close()
+		done := make(chan error, 1)
+		go func() { done <- cmd.Wait() }()
+		select {
+		case err = <-done:
+		case <-time.After(60 * time.Second):
+			cmd.Process.Kill()
+			err = fmt.Errorf("the join command did not end")
+		}
+		for l := range lines {
+			all = append(all, l)
+		}
+		return digits, strings.Join(all, "\n"), err
+	}
+
+	// The person at the admin says no: the new device is not added, and says so.
+	digits, out, err := ask("no")
+	if err == nil || !strings.Contains(out, "not added") {
+		t.Fatalf("a refused request ended with %v:\n%s", err, out)
+	}
+	t.Logf("refused (digits %s): %s", digits, strings.TrimSpace(out))
+	if st, ok := phone.state(); ok && st.Self.NAT.Difficulty == "" && len(st.Peers) != 0 {
+		t.Fatal("a refused device has peers")
+	}
+
+	// Asked again, both say yes.
+	digits, out, err = ask("yes")
+	if err != nil || !strings.Contains(out, "Added") {
+		t.Fatalf("an approved request ended with %v:\n%s", err, out)
+	}
+	t.Logf("added (digits %s)", digits)
+	waitFor(t, 60*time.Second, "the two devices to connect", func() bool {
+		p1, ok1 := mac.peer("phone")
+		p2, ok2 := phone.peer("mac")
+		return ok1 && ok2 && p1.Online && p2.Online
+	})
+	p, _ := mac.peer("phone")
+	t.Logf("the admin sees the new device via %s, %.1f ms", p.Path, p.RTTms)
 }
 
 // tryRun is run for a command that is expected to fail: it reports instead of

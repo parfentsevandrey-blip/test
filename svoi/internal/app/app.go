@@ -65,6 +65,9 @@ type App struct {
 	mu    sync.Mutex
 	socks *services.SOCKSServer
 
+	nearbyNotified map[string]bool // requests of devices nearby that the person has been told about
+	nearbyJoined   bool            // the request of this device was granted, and what follows has been done
+
 	token        string
 	peersDebounc *debouncer
 	baseNet      mesh.Config // what the node was started with, to detect restart-requiring changes
@@ -110,6 +113,7 @@ func Open(opts Options) (*App, error) {
 	if !c.LAN {
 		mc.LANPort = -1
 	}
+	mc.NoNearby = !c.Nearby
 	if mc.DeviceName == "" {
 		mc.DeviceName = firstNonEmpty(opts.DeviceName, hostName())
 	}
@@ -307,6 +311,8 @@ func (a *App) bridgeNodeEvents() {
 			case mesh.EvMembers:
 				a.peersChanged()
 				a.hub.Publish("invites", a.Invites())
+			case mesh.EvNearby:
+				a.publishNearby()
 			default:
 				a.peersChanged()
 			}
@@ -519,6 +525,9 @@ type State struct {
 	// Removed is set while this device is outside any mesh because an
 	// administrator removed it from one.
 	Removed *mesh.RemovedInfo `json:"removed,omitempty"`
+	// Nearby: the devices around that can add this one, the requests of devices that want to be added by this one,
+	// and this device's own request.
+	Nearby NearbyView `json:"nearby"`
 }
 
 // State assembles the snapshot.
@@ -531,6 +540,7 @@ func (a *App) State() State {
 		Transfers:  []files.Transfer{},
 		Invites:    []InviteView{},
 		Settings:   a.Settings(),
+		Nearby:     a.Nearby(),
 	}
 	if !st.Configured {
 		st.Removed = a.node.Removed()

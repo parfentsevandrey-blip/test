@@ -131,6 +131,14 @@ func decodeBeacon(key [32]byte, b []byte) (id identity.ID, udpPort int, ok bool)
 }
 
 func (n *Node) startLAN(parent context.Context) {
+	n.lanMu.Lock()
+	defer n.lanMu.Unlock()
+	n.mu.RLock()
+	running := n.lan != nil
+	n.mu.RUnlock()
+	if running {
+		return // already listening (a device that is not in a mesh listens too, for the devices nearby)
+	}
 	port := n.cfg.LANPort
 	if port == 0 {
 		port = defaultLANPort
@@ -150,6 +158,14 @@ func (n *Node) startLAN(parent context.Context) {
 	n.lan = l
 	n.mu.Unlock()
 	go l.run(ctx)
+}
+
+// startIdleLAN starts listening on the local network for a device that is not in a mesh (it hears the devices nearby
+// that can add it, nearby.go); a device in a mesh starts it with its network.
+func (n *Node) startIdleLAN() {
+	if n.cfg.LANPort >= 0 {
+		n.startLAN(context.Background())
+	}
 }
 
 func (l *lanDiscovery) stop() {
@@ -175,11 +191,15 @@ func (l *lanDiscovery) sendVia(ln magic.LocalNet) error {
 	return setMulticastIfByAddr(l.conn, ln.Addr)
 }
 
-// round announces this device on every network it is on, once.
+// round announces this device on every network it is on, once: its beacon to the mesh it is in, the announcement that it
+// can add devices (an admin that is visible), or, when it is not in a mesh, the question who nearby can add it.
 func (l *lanDiscovery) round(joined map[netip.Addr]bool) {
+	l.n.nearbyExpire()
 	root := l.n.Root()
+	advert := l.n.nearbyAdvert()
+	var query []byte
 	if root == nil {
-		return
+		query = nearbyQueryPacket()
 	}
 	nets := magic.LocalNets()
 	var sent, failed int
@@ -195,8 +215,19 @@ func (l *lanDiscovery) round(joined map[netip.Addr]bool) {
 				l.n.log.Debug("LAN discovery: cannot join the group", "network", ln.String(), "err", err)
 			}
 		}
-		beacon := encodeBeacon(root.LANKey(), l.n.device(), l.n.udpPort) // fresh nonce per send: unlinkable
-		if beacon == nil {
+		var packets [][]byte
+		if root != nil {
+			if beacon := encodeBeacon(root.LANKey(), l.n.device(), l.n.udpPort); beacon != nil { // fresh nonce per send: unlinkable
+				packets = append(packets, beacon)
+			}
+		}
+		if advert != nil {
+			packets = append(packets, advert)
+		}
+		if query != nil {
+			packets = append(packets, query)
+		}
+		if len(packets) == 0 {
 			continue
 		}
 		if err := l.sendVia(ln); err != nil {
@@ -207,14 +238,16 @@ func (l *lanDiscovery) round(joined map[netip.Addr]bool) {
 		if bc, ok := ln.Broadcast(); ok {
 			targets = append(targets, bc)
 		}
-		for _, to := range targets {
-			if _, err := l.conn.WriteToUDPAddrPort(beacon, netip.AddrPortFrom(to, uint16(l.port))); err != nil {
-				failed++
-				if firstErr == nil {
-					firstErr = err
+		for _, pkt := range packets {
+			for _, to := range targets {
+				if _, err := l.conn.WriteToUDPAddrPort(pkt, netip.AddrPortFrom(to, uint16(l.port))); err != nil {
+					failed++
+					if firstErr == nil {
+						firstErr = err
+					}
+				} else {
+					sent++
 				}
-			} else {
-				sent++
 			}
 		}
 	}
@@ -311,7 +344,7 @@ func (l *lanDiscovery) readLoop(ctx context.Context) {
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
-		l.n.lanHeard(buf[:nr], from)
+		l.heard(buf[:nr], from)
 	}
 }
 
@@ -376,6 +409,26 @@ func (n *Node) LANStatus() LANStatus {
 		return LANStatus{}
 	}
 	return l.snapshot()
+}
+
+// heard handles one packet from the local network: a member's beacon, an announcement of a device that can add devices
+// (nearby.go), or a question who can.
+func (l *lanDiscovery) heard(b []byte, from netip.AddrPort) {
+	if len(b) == 0 || !fromLocalNetwork(from.Addr()) {
+		return
+	}
+	switch b[0] {
+	case nearbyAnnounceMarker:
+		l.n.nearbyAnnounced(b, from)
+	case nearbyQueryMarker:
+		if len(b) == nearbyQueryLen && b[1] == nearbyFormat {
+			if advert := l.n.nearbyAdvert(); advert != nil && l.n.nearbyShouldReply(from.Addr()) {
+				_, _ = l.conn.WriteToUDPAddrPort(advert, from) // to the asker only: it also works where multicast does not
+			}
+		}
+	default:
+		l.n.lanHeard(b, from)
+	}
 }
 
 // lanHeard handles one received beacon.

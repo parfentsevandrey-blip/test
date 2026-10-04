@@ -44,6 +44,7 @@ type Config struct {
 	STUNServers     []string           `json:"stunServers"`
 	UDPPort         int                `json:"udpPort"`
 	LAN             bool               `json:"lan"`
+	Nearby          bool               `json:"nearby"`  // an admin device tells the devices around that it can add them (see mesh/nearby.go)
 	PortMap         bool               `json:"portMap"` // ask the home router (UPnP / NAT-PMP) to forward our UDP port
 	Socks           SocksSettings      `json:"socks"`
 	TUN             TUNSettings        `json:"tun"`
@@ -65,6 +66,7 @@ func defaultConfig(dataDir string) Config {
 		STUNEnabled: true,
 		STUNServers: append([]string(nil), DefaultSTUN...),
 		LAN:         true,
+		Nearby:      true,
 		Socks:       SocksSettings{Listen: "127.0.0.1:1080"},
 		Shares:      []files.Share{},
 		Services:    []services.Service{},

@@ -28,6 +28,7 @@ type Settings struct {
 	STUNServers     []string      `json:"stunServers"`
 	UDPPort         int           `json:"udpPort"`
 	LAN             bool          `json:"lan"`
+	Nearby          bool          `json:"nearby"`
 	PortMap         bool          `json:"portMap"`
 	Socks           SocksSettings `json:"socks"`
 	TUN             TUNView       `json:"tun"`
@@ -57,6 +58,7 @@ type SettingsPatch struct {
 	STUNServers     *[]string      `json:"stunServers"`
 	UDPPort         *int           `json:"udpPort"`
 	LAN             *bool          `json:"lan"`
+	Nearby          *bool          `json:"nearby"`
 	PortMap         *bool          `json:"portMap"`
 	Socks           *SocksSettings `json:"socks"`
 	TUN             *TUNPatch      `json:"tun"`
@@ -68,7 +70,7 @@ func (a *App) Settings() Settings {
 	s := Settings{
 		DownloadDir: c.DownloadDir, AutoAccept: c.AutoAccept, AutoAcceptMaxMB: c.AutoAcceptMaxMB,
 		Relay: c.Relay, STUNEnabled: c.STUNEnabled, STUNServers: c.STUNServers, UDPPort: c.UDPPort,
-		LAN: c.LAN, PortMap: c.PortMap, Socks: c.Socks,
+		LAN: c.LAN, Nearby: c.Nearby, PortMap: c.PortMap, Socks: c.Socks,
 		TUN: TUNView{Enabled: c.TUN.Enabled, ManageHosts: c.TUN.ManageHosts, Status: a.tun.Status()},
 	}
 	if s.STUNServers == nil {
@@ -152,6 +154,9 @@ func (a *App) UpdateSettings(p SettingsPatch, opts ...SettingsOption) (Settings,
 		if p.LAN != nil {
 			c.LAN = *p.LAN
 		}
+		if p.Nearby != nil {
+			c.Nearby = *p.Nearby
+		}
 		if p.Socks != nil {
 			if p.Socks.Listen != "" && !validHostPort(p.Socks.Listen) {
 				return mesh.Errf(mesh.CodeInvalid, "the proxy address must look like host:port")
@@ -177,6 +182,9 @@ func (a *App) UpdateSettings(p SettingsPatch, opts ...SettingsOption) (Settings,
 	after := a.cfg.Get()
 	if before.Relay != after.Relay {
 		a.node.SetRelay(after.Relay) // takes effect at once, links stay up
+	}
+	if before.Nearby != after.Nearby {
+		a.node.SetNearbyVisible(after.Nearby) // takes effect at once
 	}
 	restartNet := before.STUNEnabled != after.STUNEnabled ||
 		strings.Join(before.STUNServers, ",") != strings.Join(after.STUNServers, ",") ||
