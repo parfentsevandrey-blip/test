@@ -11,7 +11,7 @@ const clip = (s, n) => {
 
 /**
  * What an event deserves, or null.
- * @param {string} kind  'transfer' | 'chat' | 'mail'
+ * @param {string} kind  'transfer' | 'chat' | 'mail' | 'nearby' (one request of a device nearby to be added)
  * @param {object} d     the event's data (see docs/UI-API.md)
  * @param {{t: object, peerName: (id:string)=>string|Promise<string>, fetchMail: (id:string)=>Promise<object>}} ctx
  * @returns {Promise<null | {key: string, title: string, body: string, route: string}>}
@@ -31,6 +31,11 @@ async function notificationFor(kind, d, ctx) {
     const peer = (await ctx.peerName(d.peer)) || '';
     const body = clip(d.text, 140) || t.chatAttachment;
     return { key: `chat:${d.id}`, title: peer || 'The Mesh', body, route: `#/chat/${d.peer}` };
+  }
+  if (kind === 'nearby') {
+    if (!d.id || !d.code) return null;
+    const code = String(d.code).replace(/^(\d{3})(\d{3})$/, '$1 $2');
+    return { key: `nearby:${d.id}`, title: t.nearbyTitle(clip(d.name, 40) || '?'), body: t.nearbyBody(code), route: '#/home' };
   }
   if (kind === 'mail') {
     if (d.folder !== 'inbox' || !d.unread || !d.id) return null;
@@ -66,6 +71,10 @@ class Notifier {
 
   attach() {
     for (const kind of ['transfer', 'chat', 'mail']) this.watcher.on(kind, (d) => this.handle(kind, d).catch((e) => log.warn('notify:', e.message)));
+    // The picture of the devices nearby carries the requests that wait for an answer: each is announced once.
+    this.watcher.on('nearby', (v) => {
+      for (const r of (v && Array.isArray(v.requests) ? v.requests : [])) this.handle('nearby', r).catch((e) => log.warn('notify:', e.message));
+    });
   }
 
   async handle(kind, d) {

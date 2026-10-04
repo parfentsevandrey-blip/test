@@ -125,7 +125,8 @@ jobs:
           disable-animations: true
           emulator-boot-timeout: 600
           working-directory: svoi/android
-          script: ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.waitSeconds=240
+          # (the script also takes the screenshots of the real window that GlassShotsTest wrote, whatever the tests' result)
+          script: sh tools/emulator-run.sh -Pandroid.testInstrumentationRunnerArguments.waitSeconds=240
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -135,6 +136,14 @@ jobs:
             svoi/android/app/build/outputs/androidTest-results/**
           if-no-files-found: ignore
           retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          # the window of the app on a real WebView (Android 14 emulator): the glass look, the system bars, the menu, both themes
+          name: themesh-android-emulator-screens
+          path: svoi/android/emulator-shots/**
+          if-no-files-found: ignore
+          retention-days: 14
 
   release:
     if: startsWith(github.ref, 'refs/tags/themesh-v')

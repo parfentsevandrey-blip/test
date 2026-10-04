@@ -41,6 +41,12 @@ public interface Texts {
     /** «(без темы)». */
     String noSubject();
 
+    /** «X просит добавить его в сеть». */
+    String nearbyTitle(String name);
+
+    /** «Код 482 913: сверьте его с экраном нового устройства». */
+    String nearbyBody(String code);
+
     /** «Запускаем…». */
     String statusStarting();
 

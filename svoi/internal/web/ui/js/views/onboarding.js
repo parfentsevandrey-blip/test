@@ -10,23 +10,9 @@ import { Button, Callout, Field, IconButton, Progress, Segmented } from "../comp
 import { DnsPreview } from "../components/misc.js";
 import { toast } from "../components/toast.js";
 import { fmtDateTime } from "../format.js";
-import { cx, DEVICE_NAME_RE, invitationIn, normalizeDeviceName as normalizeName } from "../util.js";
-
-function suggestName(os) {
-  return { darwin: "macbook", windows: "pc", linux: "server", android: "phone", ios: "iphone", freebsd: "server" }[os] || "laptop";
-}
-
-/** What the name field offers: the name the node itself would take (its --name, the phone's own name, the host name),
- *  so the preview is the real result; only a node that does not say falls back to a guess from the system. */
-function offeredName(self) {
-  return (self && self.defaultName) || suggestName(self && self.os);
-}
-
-function validateName(v) {
-  if (!v) return t("common.required");
-  if (!DEVICE_NAME_RE.test(v)) return t("dev.nameInvalid");
-  return "";
-}
+import { cx, invitationIn, normalizeDeviceName as normalizeName } from "../util.js";
+import { offeredName, validateName } from "../naming.js";
+import { NearbyJoin, NearbySection, nearbyJoinShown } from "./nearby.js";
 
 /** Shown while GET /api/state carries `removed`: an admin removed this device from its mesh. */
 function RemovedNotice({ removed }) {
@@ -254,8 +240,10 @@ function JoinForm({ self, onBack }) {
 export function OnboardingView() {
   const self = useStore((s) => s.self);
   const removed = useStore((s) => s.removed);
+  const nearbyJoin = useStore((s) => s.nearby.join);
   const [mode, setMode] = useState(null); // null | create | join
   const back = () => setMode(null);
+  const asking = nearbyJoinShown(nearbyJoin); // a request to a device nearby is running (or has ended in something to read)
   return html`<div class="onb" data-testid="page-onboarding">
     <${Corner} />
     <main class="onb__main" id="main" tabindex="-1">
@@ -267,7 +255,10 @@ export function OnboardingView() {
         <p class="onb__lead onb__lead--2">${t("onb.lead2")}</p>
       </header>
 
-      ${!mode && html`<div class="onb__choices">
+      ${asking && html`<div class="onb__panel onb__panel--nearby"><${NearbyJoin} join=${nearbyJoin} self=${self} /></div>`}
+      ${!asking && !mode && html`<${NearbySection} self=${self} />`}
+
+      ${!asking && !mode && html`<div class="onb__choices">
         <button type="button" class="onb-choice" onClick=${() => setMode("create")} data-testid="onb-create">
           <span class="onb-choice__icon"><${Icon} name="sparkle" size=${26} /></span>
           <span class="onb-choice__title">${t("onb.create.title")}</span>
@@ -282,7 +273,7 @@ export function OnboardingView() {
         </button>
       </div>`}
 
-      ${mode && html`<div class=${cx("onb__panel", `onb__panel--${mode}`)}>
+      ${!asking && mode && html`<div class=${cx("onb__panel", `onb__panel--${mode}`)}>
         ${mode === "create" ? html`<${CreateForm} self=${self} onBack=${back} />` : html`<${JoinForm} self=${self} onBack=${back} />`}
       </div>`}
 

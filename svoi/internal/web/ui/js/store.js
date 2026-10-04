@@ -18,6 +18,8 @@ export const state = {
   transfers: [],
   counters: { mail: 0, chat: 0, offers: 0 },
   invites: [],
+  nearby: { visible: true, devices: [], join: { state: "idle" }, requests: [] }, // devices around that can add this one; its own request; requests of others (admin)
+  nearbyAsk: null,      // the id of the request whose dialog is open on this (admin) device
   settings: null,
   shares: null,         // local shares (null = not loaded yet)
   forwards: null,       // local forwards (null = not loaded yet)
@@ -37,6 +39,17 @@ function flush() {
   for (const fn of Array.from(listeners)) {
     try { fn(); } catch (e) { console.error(e); }
   }
+}
+
+/** What GET api/nearby / the `nearby` event / `state.nearby` carry, with the gaps filled in (an older node says nothing). */
+export function nearbyOf(d) {
+  const v = d && typeof d === "object" ? d : {};
+  return {
+    visible: v.visible !== false,
+    devices: Array.isArray(v.devices) ? v.devices : [],
+    join: v.join && typeof v.join === "object" && v.join.state ? v.join : { state: "idle" },
+    requests: Array.isArray(v.requests) ? v.requests : [],
+  };
 }
 
 /** Shallow-merge a patch (or the result of fn(state)) into the state. */

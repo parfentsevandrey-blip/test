@@ -106,6 +106,23 @@ public class EventWatcherTest {
     }
 
     @Test
+    public void everyRequestOfADeviceNearbyIsOneEvent() throws Exception {
+        startWatcher(5000);
+        awaitConnected();
+        FakeNode.Stream stream = node.awaitStream(1, 2000);
+        stream.event("nearby", "{\"visible\":true,\"devices\":[],\"join\":{\"state\":\"idle\"},\"requests\":[{\"id\":\"r1\",\"name\":\"a\",\"code\":\"111111\"},{\"id\":\"r2\",\"name\":\"b\",\"code\":\"222222\"}]}");
+        stream.event("nearby", "{\"visible\":true,\"devices\":[],\"join\":{\"state\":\"idle\"},\"requests\":[]}");
+        stream.event("nearby", "{\"devices\":null}");
+        stream.event("chat", "{\"id\":\"c1\",\"peer\":\"p1\",\"mine\":false,\"text\":\"after\"}");
+        String a = next();
+        String b = next();
+        assertTrue(a, a.startsWith("event:nearby:") && a.contains("\"r1\""));
+        assertTrue(b, b.startsWith("event:nearby:") && b.contains("\"r2\""));
+        String c = next();
+        assertTrue("a picture without requests says nothing, and a broken one does not stop the stream: " + c, c.startsWith("event:chat:"));
+    }
+
+    @Test
     public void aBrokenEventDoesNotStopTheStream() throws Exception {
         startWatcher(5000);
         awaitConnected();

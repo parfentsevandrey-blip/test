@@ -301,6 +301,8 @@ function NetworkSection({ cfg }) {
         checked=${s.relay} onChange=${(v) => cfg.save({ relay: v })} testid="setting-relay" />
       <${Switch} label=${t("set.lan")} description=${t("set.lanHint")} checked=${s.lan} onChange=${(v) => cfg.save({ lan: v })} testid="setting-lan" />
       ${s.lan && html`<${LanStatus} lan=${self && self.lan} os=${self && self.os} />`}
+      ${s.lan && typeof s.nearby === "boolean" && self && self.admin && html`
+        <${Switch} label=${t("set.nearby")} description=${t("set.nearbyHint")} checked=${s.nearby} onChange=${(v) => cfg.save({ nearby: v })} testid="setting-nearby" />`}
       <${Switch} label=${t("set.stun")} description=${t("set.stunHint")} checked=${s.stunEnabled} onChange=${(v) => cfg.save({ stunEnabled: v })} />
       ${s.stunEnabled && html`<div class="set-sub"><span class="field__label">${t("set.stunServers")}</span>
         <${StunEditor} list=${s.stunServers || []} onChange=${(l) => cfg.save({ stunServers: l })} /></div>`}

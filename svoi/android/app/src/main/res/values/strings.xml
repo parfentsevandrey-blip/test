@@ -35,6 +35,8 @@
     <string name="notif_mail_title">Новое письмо от %1$s</string>
     <string name="notif_mail_title_unknown">Новое письмо</string>
     <string name="notif_no_subject">(без темы)</string>
+    <string name="notif_nearby_title">%1$s просит добавить его в сеть</string>
+    <string name="notif_nearby_body">Код %1$s: сверьте его с экраном нового устройства</string>
     <string name="notif_saved_title">Файл сохранён</string>
 
     <!-- Главное окно -->

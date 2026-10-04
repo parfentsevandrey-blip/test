@@ -263,6 +263,15 @@ func TestNearbyAddingADevice(t *testing.T) {
 	if got := mac.NearbyRequests(); len(got) != 0 {
 		t.Fatalf("the answered request is still listed: %v", got)
 	}
+
+	// A device that leaves its mesh starts from a clean slate: the way its last request ended is forgotten, so that the
+	// start screen does not show "you joined" for a device that is not in a mesh.
+	if err := phone.Leave(); err != nil {
+		t.Fatal(err)
+	}
+	if st := phone.NearbyJoinStatus(); st.State != "idle" {
+		t.Fatalf("after leaving the status of the last request is still %+v", st)
+	}
 }
 
 func TestNearbyRefusalAndOwner(t *testing.T) {

@@ -7,7 +7,7 @@ import java.io.IOException;
 /**
  * Какие события узла заслуживают уведомления и как они выглядят. Логика та же, что в
  * desktop/src/notify.js (notificationFor): предложенный и полученный файл, сообщение чата от
- * другого устройства, новое непрочитанное письмо во «Входящих».
+ * другого устройства, новое непрочитанное письмо во «Входящих», просьба устройства рядом добавить его в сеть.
  */
 public final class Notices {
     /** Откуда берутся имена устройств и тексты писем. */
@@ -26,7 +26,8 @@ public final class Notices {
     }
 
     /**
-     * @param kind событие: «transfer», «chat» или «mail» (остальные уведомлений не порождают)
+     * @param kind событие: «transfer», «chat», «mail» или «nearby» (одна просьба из списка просьб; остальные
+     *             уведомлений не порождают)
      * @param d    данные события (docs/UI-API.md)
      * @return уведомление или {@code null}
      */
@@ -41,6 +42,8 @@ public final class Notices {
                 return chat(d, t, lookup);
             case "mail":
                 return mail(d, t, lookup);
+            case "nearby":
+                return nearby(d, t);
             default:
                 return null;
         }
@@ -103,6 +106,21 @@ public final class Notices {
         String key = "mail:" + id;
         return new Notice(Notice.Kind.MAIL, key, key, from.isEmpty() ? t.mailTitleUnknown() : t.mailTitle(from),
                 subject.isEmpty() ? t.noSubject() : subject, Route.MAIL_INBOX);
+    }
+
+    /** Устройство рядом просит добавить его: имя и шесть цифр, которые нужно сверить с его экраном. */
+    private static Notice nearby(JSONObject d, Texts t) {
+        String id = Json.str(d, "id");
+        String code = Json.str(d, "code");
+        if (id.isEmpty() || code.isEmpty()) {
+            return null;
+        }
+        if (code.matches("\\d{6}")) {
+            code = code.substring(0, 3) + " " + code.substring(3);
+        }
+        String name = clip(Json.str(d, "name"), 40);
+        String key = "nearby:" + id;
+        return new Notice(Notice.Kind.NEARBY, key, key, t.nearbyTitle(name.isEmpty() ? "?" : name), t.nearbyBody(code), Route.HOME);
     }
 
     private static String peerName(Lookup lookup, String id) {

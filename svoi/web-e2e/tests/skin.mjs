@@ -2,6 +2,8 @@ import { group, test, assert, eq, open, nav, tid } from "../lib.mjs";
 
 // What the Mac app says about itself in its user agent (desktop/src/window.js, windowLook).
 const MAC = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 TheMeshDesktop/0.1.0 (mac; skin=glass; vibrancy; inset)";
+// ... and the phone app (android/…/MainActivity): the glass look from the first picture, and a window that paints the backdrop itself.
+const ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36 TheMeshAndroid/0.1.0 (android; skin=glass)";
 const WIN = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 TheMeshDesktop/0.1.0 (win)";
 
 // (with reduced motion every style change is a transition of 0.01 ms: the computed style is the new one only a moment later)
@@ -36,6 +38,37 @@ group("skin", () => {
     eq(await page.evaluate(() => getComputedStyle(document.querySelector(".topbar a, .topbar button")).webkitAppRegion), "no-drag", "its buttons are buttons");
     eq(await page.evaluate(() => getComputedStyle(document.querySelector(".nav__item")).webkitAppRegion), "no-drag", "navigation is clickable");
     eq(page.problems, [], "console / network problems");
+  });
+
+  test("the phone app starts with glass, tells its window the look of the page, and the window paints the backdrop", async ({ browser, dev }) => {
+    // the window of the phone app gives the page `window.themeshShell` (look, menu); here it is a stub that remembers the calls
+    const shell = () => {
+      window.themeshShell = { calls: [], look(theme, skin) { this.calls.push(["look", theme, skin]); }, menu() { this.calls.push(["menu"]); } };
+    };
+    const page = await open(browser, dev.laptop, { userAgent: ANDROID, init: shell, mobile: true, w: 390, h: 844, theme: "dark" });
+    const state = () => page.evaluate(() => ({ skin: document.documentElement.dataset.skin, shell: document.documentElement.dataset.shell, native: document.documentElement.hasAttribute("data-native-backdrop"),
+      bg: getComputedStyle(document.documentElement).backgroundColor, bodyBg: getComputedStyle(document.body).backgroundColor, calls: window.themeshShell.calls }));
+    let st = await state();
+    eq([st.skin, st.shell, st.native], ["glass", "android", true], "the phone app: glass, with the backdrop painted by the window");
+    eq([st.bg, st.bodyBg], ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)"], "the page paints nothing behind its panes");
+    assert(st.calls.some((c) => c[0] === "look" && c[1] === "dark" && c[2] === "glass"), "the page says what it looks like: " + JSON.stringify(st.calls));
+    // a change of the theme or the skin is told to the window at once
+    await nav(page, dev.laptop, "settings/interface");
+    await tid(page, "skin-classic").click();
+    await page.waitForFunction(() => window.themeshShell.calls.some((c) => c[0] === "look" && c[2] === "classic"));
+    await tid(page, "skin-auto").click();
+    await page.waitForFunction(() => window.themeshShell.calls.filter((c) => c[0] === "look" && c[2] === "glass").length >= 2);
+    // the «⋮» button of the top bar asks the window for its menu
+    await tid(page, "app-menu-button").click();
+    st = await state();
+    assert(st.calls.some((c) => c[0] === "menu"), "the menu button reaches the window: " + JSON.stringify(st.calls));
+    eq(page.problems, [], "console / network problems");
+
+    // the same page in a browser that pretends to be the phone app but has no window to ask: it paints its own backdrop
+    const bare = await open(browser, dev.laptop, { userAgent: ANDROID, mobile: true, w: 390, h: 844 });
+    st = await bare.evaluate(() => ({ native: document.documentElement.hasAttribute("data-native-backdrop"), skin: document.documentElement.dataset.skin }));
+    eq([st.skin, st.native], ["glass", false], "without a window to paint for it the page keeps its own backdrop");
+    eq(bare.problems, [], "console / network problems");
   });
 
   test("the style picked in Settings wins over what the window starts with, and is remembered", async ({ browser, dev }) => {

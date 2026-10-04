@@ -3,9 +3,10 @@
 // (re)connect so nothing missed while disconnected is lost.
 import { get } from "./api.js";
 import { go } from "./router.js";
-import { emit, removeTransfer, setState, state, upsertTransfer } from "./store.js";
+import { emit, nearbyOf, removeTransfer, setState, state, upsertTransfer } from "./store.js";
 import { closeAllDialogs } from "./components/modal.js";
 import { toast } from "./components/toast.js";
+import { t } from "./i18n.js";
 
 let es = null;
 let retryTimer = null;
@@ -13,6 +14,7 @@ let offlineTimer = null;
 let attempt = 0;
 let refreshSeq = 0;
 let stopped = false; // signed out: no live link until connect() is called again
+let nearbySeq = 0;   // how many `nearby` events have come: a snapshot older than the latest one must not undo it
 
 /**
  * The device stopped being a mesh member while the UI was open (an admin
@@ -28,6 +30,7 @@ function leftMesh() {
 /** Reload the whole state snapshot. Safe to call any time. */
 export async function refreshState() {
   const seq = ++refreshSeq;
+  const nearbyBefore = nearbySeq;
   try {
     const s = await get("state");
     if (seq !== refreshSeq) return;
@@ -46,6 +49,7 @@ export async function refreshState() {
       transfers: Array.isArray(s.transfers) ? s.transfers : [],
       counters: { mail: 0, chat: 0, offers: 0, ...(s.counters || {}) },
       invites: Array.isArray(s.invites) ? s.invites : [],
+      ...(nearbySeq === nearbyBefore ? { nearby: nearbyOf(s.nearby) } : {}),
       settings: s.settings || null,
     });
     if (wasMember && !configured) leftMesh();
@@ -98,6 +102,19 @@ const handlers = {
     toast({ level: d.level || "info", title: d.title || "", text: d.text || "", link: d.link || null });
   },
   invites(d) { if (Array.isArray(d)) setState({ invites: d }); },
+  nearby(d) {
+    if (!d || typeof d !== "object") return;
+    nearbySeq++;
+    const was = state.nearby.join.state;
+    const next = nearbyOf(d);
+    setState({ nearby: next });
+    // This device was added by a device nearby. The start screen may be gone already (the `self` event can come first),
+    // so the welcome is given here, not by the screen.
+    if (next.join.state === "joined" && was !== "joined") {
+      toast({ level: "success", title: t("onb.joined"), text: t("onb.joinedText") });
+      refreshState();
+    }
+  },
   shares(d) { if (Array.isArray(d)) { setState({ shares: d }); emit("shares", d); } },
   forwards(d) { if (Array.isArray(d)) { setState({ forwards: d }); emit("forwards", d); } },
 };

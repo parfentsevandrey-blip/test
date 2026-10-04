@@ -65,8 +65,7 @@ type App struct {
 	mu    sync.Mutex
 	socks *services.SOCKSServer
 
-	nearbyNotified map[string]bool // requests of devices nearby that the person has been told about
-	nearbyJoined   bool            // the request of this device was granted, and what follows has been done
+	nearbyJoined bool // the request of this device was granted, and what follows has been done
 
 	token        string
 	peersDebounc *debouncer

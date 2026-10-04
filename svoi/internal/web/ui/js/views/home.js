@@ -20,6 +20,7 @@ import { toast } from "../components/toast.js";
 import { AddDeviceModal } from "./add-device.js";
 import { DeviceDrawer } from "./device-drawer.js";
 import { openHelp } from "./help.js";
+import { lanNotice, showRequest, spaced } from "./nearby.js";
 import { isIncomingOffer, transferAction } from "./transfers.js";
 
 const MAX_NAMES = 3;
@@ -122,24 +123,28 @@ function InviteRows({ invites }) {
   });
 }
 
-/**
- * What to say when the discovery of devices on the home network does not work (self.lan, from the node): the system
- * refuses to send there (on a Mac: the "Local Network" permission is off) or it fails some other way. Nothing for the
- * ordinary "not on Wi-Fi right now".
- */
-export function lanNotice(self) {
-  const lan = self && self.lan;
-  if (!lan || (lan.problem !== "blocked" && lan.problem !== "failed")) return null;
-  if (lan.problem === "failed") return { text: t("home.att.lanFailed"), sub: lan.detail || "" };
-  const mac = self.os === "darwin";
-  return { text: t(mac ? "home.att.lanBlockedMac" : "home.att.lanBlocked"), sub: t(mac ? "home.att.lanBlockedMacHow" : "home.att.lanBlockedHow") };
+/** A device nearby that asks to be added (its dialog opens by itself; this row brings it back if it was closed). */
+function NearbyRow({ r }) {
+  return html`<li data-testid="home-att-nearby" data-id=${r.id}>
+    <div class="home-att__row home-att__row--offer">
+      <span class="home-att__icon is-warn"><${Icon} name="userPlus" size=${18} /></span>
+      <div class="grow">
+        <p class="home-att__text">${t("home.att.nearby", { name: r.name })}</p>
+        <p class="home-att__sub tnum">${t("home.att.nearbyCode", { code: spaced(r.code) })}</p>
+      </div>
+      <div class="home-att__actions">
+        <${Button} size="sm" variant="primary" onClick=${() => showRequest(r.id)} data-testid="home-att-nearby-open">${t("home.att.nearbyGo")}</${Button}>
+      </div>
+    </div>
+  </li>`;
 }
 
-function Attention({ offers, counters, invites, restart, lan }) {
-  if (!offers.length && !counters.mail && !counters.chat && !invites.length && !restart && !lan) return null;
+function Attention({ offers, counters, invites, restart, lan, asks }) {
+  if (!offers.length && !counters.mail && !counters.chat && !invites.length && !restart && !lan && !asks.length) return null;
   return html`<section class="home-card home-att" data-testid="home-attention" aria-labelledby="home-att-title">
     <h2 class="home-sec__title" id="home-att-title">${t("home.attention")}</h2>
     <ul class="home-att__list">
+      ${asks.map((r) => html`<${NearbyRow} key=${r.id} r=${r} />`)}
       ${offers.slice(0, MAX_NAMES).map((tr) => html`<${OfferRow} key=${tr.id} tr=${tr} />`)}
       ${offers.length > MAX_NAMES && html`<${LinkRow} icon="inbox" tone="warn" text=${tn("home.att.moreOffers", offers.length - MAX_NAMES)} to="#/files/send" label=${t("offer.review")} testid="home-att-offers" />`}
       ${counters.mail > 0 && html`<${LinkRow} icon="mail" tone="accent" text=${tn("home.att.mail", counters.mail)} to="#/mail/inbox" label=${t("home.att.mailGo")} testid="home-att-mail" />`}
@@ -247,6 +252,7 @@ export function HomeView({ route }) {
   const transfers = useStore((s) => s.transfers);
   const counters = useStore((s) => s.counters);
   const invites = useStore((s) => s.invites);
+  const asks = useStore((s) => s.nearby.requests);
   const restart = useStore((s) => !!(s.settings && s.settings.restartRequired));
   const [adding, setAdding] = useState(false);
   const [picking, setPicking] = useState(null); // "send" | "chat"
@@ -282,8 +288,8 @@ export function HomeView({ route }) {
     setStartHidden(true);
   };
   const lan = lanNotice(self);
-  const attention = html`<${Attention} offers=${offers} counters=${counters} invites=${invites} restart=${restart} lan=${lan} />`;
-  const hasAttention = offers.length || counters.mail || counters.chat || invites.length || restart || lan;
+  const attention = html`<${Attention} offers=${offers} counters=${counters} invites=${invites} restart=${restart} lan=${lan} asks=${asks} />`;
+  const hasAttention = offers.length || counters.mail || counters.chat || invites.length || restart || lan || asks.length;
 
   return html`<div class="page home">
     <h1 class="sr-only">${t("home.h1")}</h1>

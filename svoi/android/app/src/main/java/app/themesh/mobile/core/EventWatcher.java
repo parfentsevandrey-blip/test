@@ -180,6 +180,16 @@ public final class EventWatcher {
                 case "mail":
                     listener.onEvent(ev.event, new JSONObject(ev.data));
                     break;
+                case "nearby":
+                    // картина «рядом»: просьбы устройств, которые ждут ответа, — по одному событию на просьбу
+                    JSONArray requests = new JSONObject(ev.data).optJSONArray("requests");
+                    for (int i = 0; requests != null && i < requests.length(); i++) {
+                        JSONObject r = requests.optJSONObject(i);
+                        if (r != null) {
+                            listener.onEvent("nearby", r);
+                        }
+                    }
+                    break;
                 default:
                     break; // hello, counters, notify, invites… приложению не нужны
             }

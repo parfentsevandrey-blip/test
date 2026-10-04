@@ -146,6 +146,16 @@ final class ResourceTexts implements Texts {
     }
 
     @Override
+    public String nearbyTitle(String name) {
+        return get("notif_nearby_title", name);
+    }
+
+    @Override
+    public String nearbyBody(String code) {
+        return get("notif_nearby_body", code);
+    }
+
+    @Override
     public String statusStarting() {
         return get("status_starting");
     }

@@ -84,6 +84,7 @@ A browser tab that is hidden may drop the connection; that is fine.
 | `invites`   | full array of **Invite** (a pending invite was used/expired)                           |
 | `shares`    | full array of local **Share**                                                          |
 | `forwards`  | full array of **Forward**                                                              |
+| `nearby`    | the whole **Nearby** picture (devices around, this device's own request, requests to answer) |
 
 ## Data types
 
@@ -104,6 +105,14 @@ A browser tab that is hidden may drop the connection; that is fine.
   "configured": true,
   "relay": true,                           // this device agrees to relay for others
   "relayed": { "packets": 120, "bytes": 150000 },
+  "lan": {                                 // how looking for devices on the home network goes (absent while Settings.lan is off or the node has not started it yet)
+    "enabled": true,                       // the node is listening for and sending beacons
+    "networks": ["192.168.1.23/24 (wlan0)"],   // where this device announces itself
+    "problem": "",                         // "" = fine | "no-network" (no Wi-Fi or cable: nothing to look at, not an error) |
+                                           // "blocked" (the system refuses to send there: on a Mac the "Local Network" permission is off) |
+                                           // "failed" (sending fails for another reason, see `detail`)
+    "detail": ""                           // the system's own error text, for `blocked` and `failed`
+  },
   "portmap": {                             // present only while the router port mapping is switched on
     "state": "mapped",                     // searching | mapped | private | unavailable
     "protocol": "upnp",                    // upnp | natpmp, once mapped
@@ -119,6 +128,12 @@ name), else the host name — already reduced to a valid device name (see **Devi
 forms put it in the name field as the suggestion and preview it, so what they show is what the device
 really becomes (on a join the inviting mesh may still add `-2`, `-3`… if the name is taken). When it is
 missing (an older node, a mock), fall back to a guess from `os`.
+
+`lan`: what the UI says about it: `ok` — nothing (or the list of networks in Settings → Network); `no-network` — "no Wi-Fi: there is nobody
+to look for", **not** a problem to nag about; `blocked` / `failed` — a notice on Home («Требует внимания») and in Settings, with the way out (on a
+Mac: System Settings → Privacy & Security → Local Network → The Mesh), because without it devices on one Wi-Fi do not find each other by themselves.
+On a Mac the desktop shell checks the permission itself and shows its own dialog once; this field is how the interface, which runs in the same window,
+learns about it. `lan` is missing from a node that has not tried yet (a mock, an older node): show nothing.
 
 `portmap`: the device asks the home router (UPnP IGD, NAT-PMP) to forward its UDP port, so other
 devices can reach it directly without anybody opening a port by hand. `mapped` — done, `external` is
@@ -241,6 +256,43 @@ holds at most six addresses of the inviting device, chosen so that every way to 
 the home-network one, the public IPv4, a global IPv6): a newcomer on the same Wi-Fi can only use the home-network address, and with
 many IPv6 addresses it used to be cut off.
 
+### Devices nearby
+
+A device that has The Mesh but is **not in any mesh** lists the devices around that can add it — administrators of a mesh that are on the
+same network and have not switched "Show this device nearby" off — and a tap asks one of them. No code is typed and no QR is scanned: **both
+screens show the same six digits** (derived from the keys of the very connection between them, so somebody in the middle shows two different
+numbers), the person at the new device says "they match", and the person at the device that adds says "add". Only then does the new device get a
+**regular** (never administrator) membership, the same one an invitation gives.
+
+```jsonc
+// Nearby — GET /api/nearby, state.nearby, the `nearby` event (always the whole picture)
+{ "visible": true,                     // this device, if it is an administrator, tells others that it can add them (Settings.nearby)
+  "devices": [                         // only while this device is not in a mesh: who can add it (a device is listed while it is heard, ~16 s)
+    { "id": "…", "name": "macbook-andrey", "meshName": "Дом", "os": "darwin", "seen": 1760000000 } ],
+  "join": {                            // this device's own request to be added
+    "state": "idle",                   // idle | connecting | waiting | confirmed | joined | denied | failed | canceled
+    "peer": { /* the device asked, as in devices[] */ },
+    "code": "482913",                  // waiting and confirmed: the six digits to compare with the other screen
+    "reason": "",                      // denied / failed: offline | denied | expired | invalid | failed
+    "error": "" },                     // the technical text for `reason`, if any
+  "requests": [                        // only on an administrator: devices that ask to be added and wait for an answer (≤ 3, each valid 2 minutes)
+    { "id": "…", "name": "pixel-8", "os": "android", "code": "482913",
+      "confirmed": false,              // the person at the new device has already said "they match"
+      "created": 1760000000, "expires": 1760000120 } ] }
+```
+States of `join`: `connecting` (setting up the secure connection) → `waiting` (**show `code`, ask "do they match?"**; the person can say yes, or cancel) → `confirmed`
+(waiting for the person at the other device) → `joined` (the device is a member now: reload `GET /api/state`; `configured` is `true`), or `denied`
+(`reason`: `denied` — the other person said no; `expired` — nobody answered in 2 minutes) / `failed` (`offline` — the device did not answer: show the advice that
+the invitation flow shows, plus "same Wi-Fi, no client isolation on the router"; `invalid` / `failed` — something else, `error` has the text).
+`canceled` is what a request the person gave up looks like: show the list again. After an end (`joined`, `denied`, `failed`, `canceled`) `POST /api/nearby/cancel`
+forgets it (state `idle`); leaving the mesh forgets it too.
+
+The interface (`js/views/nearby.js`): on the start screen a card **«Рядом с вами»** lists `devices` with a «Подключиться» button each, or says that it
+is looking (and, when `self.lan.problem` is `blocked`/`failed`, why it cannot); a request takes the place of the start choices while it lasts;
+on an administrator a **dialog opens by itself** for each new entry of `requests` (device name, OS, the digits, whether the other person has confirmed,
+"Whose device is it?", «Добавить» / «Отклонить»), and an entry whose dialog was closed stays as a row on Home until it expires. The desktop shell and the
+phone app show a system notification for each new request when the window is not in front.
+
 ### Scanning an invitation (phone app)
 The Android app lets a person scan the QR code that another device shows, instead of typing the code. The window is a WebView around
 this same interface, so the app and the interface meet in two small places:
@@ -265,6 +317,7 @@ The camera is used only to read the code: frames are not stored or sent anywhere
   "relay": true,                   // act as a relay for other members
   "stunEnabled": true, "stunServers": ["stun.l.google.com:19302"],
   "udpPort": 41710, "lan": true,
+  "nearby": true,                  // an administrator device tells the devices around that it can add them (see Devices nearby); applies at once
   "portMap": true,                 // ask the home router to forward our UDP port (UPnP / NAT-PMP); see Self.portmap
   "socks": {"enabled": false, "listen": "127.0.0.1:1080"},
   "tun": { "enabled": false,       // create a virtual network interface (Linux, needs root / CAP_NET_ADMIN)
@@ -286,7 +339,7 @@ Language and theme are **client-side only** (`localStorage`), not part of Settin
 ### State & lifecycle
 | method & path | body → response |
 |---|---|
-| `GET /api/state` | → `{ "version", "configured", "self": Self, "peers": [Peer], "transfers": [Transfer] (active + last 50), "counters": {"mail","chat","offers"}, "invites": [Invite], "settings": Settings, "removed"?: {"meshName": "Дом", "at": 1760000000} }`. Works when `configured:false` (then `self` has only id/short/version/os/arch/configured and `defaultName`, `peers: []`). `removed` is present only while the device is outside any mesh **because an administrator removed it** from one: the onboarding screen should say so ("this device was removed from the network «Дом» by an administrator — ask for a new invitation"). The device already has a fresh identity then, so a new invitation just works. A `notify` event with `level: "warn"` and `link: "#/"` is sent at the moment it happens, followed by a `peers` event with an empty list; the UI should reload `GET /api/state`. |
+| `GET /api/state` | → `{ "version", "configured", "self": Self, "peers": [Peer], "transfers": [Transfer] (active + last 50), "counters": {"mail","chat","offers"}, "invites": [Invite], "settings": Settings, "nearby": Nearby, "removed"?: {"meshName": "Дом", "at": 1760000000} }`. Works when `configured:false` (then `self` has only id/short/version/os/arch/configured and `defaultName`, `peers: []`). `removed` is present only while the device is outside any mesh **because an administrator removed it** from one: the onboarding screen should say so ("this device was removed from the network «Дом» by an administrator — ask for a new invitation"). The device already has a fresh identity then, so a new invitation just works. A `notify` event with `level: "warn"` and `link: "#/"` is sent at the moment it happens, followed by a `peers` event with an empty list; the UI should reload `GET /api/state`. |
 | `GET /api/events` | SSE, see above |
 | `POST /api/mesh/create` | `{"meshName","deviceName","owner"}` → `{"ok":true}` (then reload state) |
 | `POST /api/mesh/join` | `{"invite","deviceName"}` → `{"ok":true}`; may take up to ~25 s; errors are human readable in `error.message`, and the **code says why**, because the advice differs: `invalid` — the text is no invitation (malformed, copied only partly); `expired` — past its lifetime by this device's clock (also say: check the date and time here); `offline` — the device that made the invitation did not answer (it is off, on another network, or the invitation is used up or cancelled: from outside those look the same; the message lists the addresses that were tried); `denied` — the inviter answered and refused. There is no `owner` here: whose device this is was set by the inviting device in the invitation (an `owner` sent anyway is ignored), so a new device cannot claim someone else's name to get auto-accepted files. |
@@ -305,6 +358,19 @@ Language and theme are **client-side only** (`localStorage`), not part of Settin
 | `POST /api/peers/:id/revoke` | `{}` → `{"ok":true}` admin only; permanently removes the device |
 | `POST /api/peers/:id/rename` | `{"name":"new-name"}` → `{"ok":true}` admin only (re-issues its certificate) |
 | `POST /api/peers/:id/admin` | `{"admin":true}` → `{"ok":true}` admin only. **Promotion only**: it hands over the mesh key (the UI must warn). Demotion (`{"admin":false}`) is refused with `unsupported`: the key cannot be taken back, so an administrator stays one — and **removing an administrator does not take its power away** (it still holds the mesh key and can enrol devices); the revoke dialog must say so when `peer.admin` is true. |
+
+### Devices nearby
+| method & path | body → response |
+|---|---|
+| `GET /api/nearby` | → **Nearby** |
+| `POST /api/nearby/connect` | `{"id":"<devices[].id>","deviceName":"phone"}` → **Nearby** (`join.state` is `connecting`; the rest comes as `nearby` events). `notfound` — the device is no longer listed (it left, or switched off); `invalid` — this device is already in a mesh, or a request is already running. `deviceName` is what this device is called in that mesh (empty: its usual name; see **Device names**). |
+| `POST /api/nearby/confirm` | `{}` → **Nearby**. The person says the six digits match. `invalid` unless `join.state` is `waiting`. |
+| `POST /api/nearby/cancel` | `{}` → **Nearby**. Gives up a running request; after an end, forgets it. |
+| `POST /api/nearby/requests/:id` | `{"approve":true,"owner":"Anna"}` → **Nearby** (administrator only, `denied` otherwise). `owner` is whose device the new one is (≤ 64 characters; empty: this device's own owner). Approving does not add the device yet: it is added when its person has confirmed the digits too (either order). `notfound` — the request is gone (the device left or 2 minutes passed). |
+| `PUT /api/settings` | `{"nearby":false}` — stop telling the devices around that this one can add them. |
+
+Command line: `themesh nearby` lists the devices around and the requests waiting; `themesh nearby join NAME` asks a device (and shows the digits); `themesh nearby allow ID [--owner NAME]`
+and `themesh nearby deny ID` answer a request — a server with no screen can be added, and can add, the same way.
 
 ### Files — browsing shares (works for `self` too)
 | method & path | → response |

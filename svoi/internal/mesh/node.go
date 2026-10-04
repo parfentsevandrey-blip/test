@@ -364,6 +364,9 @@ func (n *Node) Leave() error {
 	n.revoked = map[identity.ID]identity.Revocation{}
 	n.invites = map[[8]byte]*invite{}
 	n.mu.Unlock()
+	n.nearby.mu.Lock()
+	n.nearby.join = nil // how an earlier request of this device ended is of no interest to the next one
+	n.nearby.mu.Unlock()
 	if err := os.Remove(n.statePath()); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}

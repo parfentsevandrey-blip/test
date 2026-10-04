@@ -55,6 +55,21 @@ public class NoticesTest {
     }
 
     @Test
+    public void aDeviceNearbyThatAsksToBeAddedIsAnnouncedWithTheDigitsToCompare() throws Exception {
+        Notice n = event("nearby", "{\"id\":\"r1\",\"name\":\"pixel-8\",\"os\":\"android\",\"code\":\"482913\",\"confirmed\":false}");
+        assertEquals(new Notice(Notice.Kind.NEARBY, "nearby:r1", "nearby:r1", "pixel-8 просит добавить его в сеть",
+                "Код 482 913: сверьте его с экраном нового устройства", "#/home"), n);
+        assertEquals("The English text carries the same",
+                "pixel-8 asks to be added to the mesh", ResourceTexts.en().nearbyTitle("pixel-8"));
+        assertNull("без номера просьбы её нечем отличить от другой", event("nearby", "{\"name\":\"x\",\"code\":\"123456\"}"));
+        assertNull("без цифр нечего сверять", event("nearby", "{\"id\":\"r2\",\"name\":\"x\"}"));
+        Notice unnamed = event("nearby", "{\"id\":\"r3\",\"code\":\"000111\"}");
+        assertEquals("? просит добавить его в сеть", unnamed.title);
+        Notice longName = event("nearby", "{\"id\":\"r4\",\"name\":\"" + "я".repeat(100) + "\",\"code\":\"000111\"}");
+        assertTrue(longName.title.length() < 80);
+    }
+
+    @Test
     public void anOfferedFileBecomesANotificationTitledWithTheDevice() throws Exception {
         Notice n = event("transfer", "{\"id\":\"t1\",\"dir\":\"in\",\"state\":\"offered\",\"name\":\"фото.jpg\",\"peer\":\"p1\",\"peerName\":\"телефон\"}");
         assertEquals(new Notice(Notice.Kind.OFFER, "offer:t1", "offer:t1", "телефон", "хочет отправить вам файл «фото.jpg»", "#/home"), n);

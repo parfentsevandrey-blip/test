@@ -81,6 +81,15 @@ test('mail: unread inbox letters only, with the subject looked up', async () => 
   assert.equal(await notificationFor('mail', { id: 'm4', folder: 'inbox', unread: true }, ctx({ fetchMail: async () => { throw new Error('gone'); } })), null);
 });
 
+test('a device nearby that asks to be added is announced once per request, with the digits to compare', async () => {
+  const n = await notificationFor('nearby', { id: 'r1', name: 'pixel-8', os: 'android', code: '482913', confirmed: false }, ctx());
+  assert.deepEqual(n, { key: 'nearby:r1', title: 'pixel-8 просит добавить его в сеть', body: 'Код 482 913: сверьте его с экраном нового устройства', route: '#/home' });
+  assert.equal(await notificationFor('nearby', { name: 'x', code: '123456' }, ctx()), null); // no id: nothing to key it by
+  assert.equal(await notificationFor('nearby', { id: 'r2', name: 'x' }, ctx()), null); // no digits: nothing to compare
+  const long = await notificationFor('nearby', { id: 'r3', name: 'я'.repeat(100), code: '000111' }, ctx());
+  assert.ok(long.title.length < 80);
+});
+
 test('the English texts exist for everything the Russian ones have', () => {
   assert.deepEqual(Object.keys(en).sort(), Object.keys(ru).sort());
   assert.equal(texts('en-US'), en);

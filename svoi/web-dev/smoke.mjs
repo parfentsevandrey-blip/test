@@ -67,6 +67,13 @@ async function newPage(base, label, { mobile = false, lang = "ru" } = {}) {
   return page;
 }
 
+/** page.waitForRequest whose rejection cannot get lost when the step fails before it is awaited. */
+function expectRequest(page, pred) {
+  const pending = page.waitForRequest(pred);
+  pending.catch(() => {});
+  return pending;
+}
+
 const mocks = [];
 async function mock(args) {
   const m = await startMock(args);
@@ -121,6 +128,95 @@ if (!external) {
     await p.waitForSelector("[data-testid=home-device]");
     await p.context().close();
   });
+  await onb.hook("/__mock/reset");
+  await step("nearby: the devices around show up by themselves; one tap, the same digits on both screens, joined", async () => {
+    const p = await newPage(onb.url, "nearby-join");
+    await p.open();
+    // nobody around: the app says that it is looking, and the two other ways in are still there
+    const sec = "[data-testid=nearby]";
+    await p.waitForSelector(`${sec}[data-found="0"]:has-text('Ищем устройства с The Mesh рядом')`);
+    await p.waitForSelector("[data-testid=onb-create]");
+    await p.waitForSelector("[data-testid=onb-join]");
+    // a Mac with the app shows up in the list without anybody doing anything
+    await onb.hook("/__mock/nearby?add=macbook-andrey&os=darwin&mesh=Дом");
+    const row = "[data-testid=nearby-device][data-name=macbook-andrey]";
+    await p.waitForSelector(`${sec}[data-found="1"] ${row}:has-text('сеть «Дом»'):has-text('macOS')`);
+    await p.waitForSelector(`${sec}:has-text('Найдено рядом: 1 устройство')`);
+    // it can be named differently before asking; the real DNS name is previewed
+    if ((await p.textContent("[data-testid=nearby-name]")).trim() !== "work-laptop") throw new Error("the offered name is not the node's own");
+    await p.click("[data-testid=nearby-rename]");
+    await p.fill("[data-testid=nearby-name-input]", "Мой ноутбук");
+    await p.waitForSelector("[data-testid=dns-preview][data-label=moy-noutbuk]");
+    await p.keyboard.press("Enter");
+    await p.waitForSelector("[data-testid=nearby-name]:has-text('Мой-ноутбук')"); // the name keeps its letters; only the address in the network is Latin
+    const sent = expectRequest(p, (r) => r.url().endsWith("/api/nearby/connect"));
+    await p.click(`${row} [data-testid=nearby-connect]`);
+    const body = JSON.parse((await sent).postData() || "{}");
+    if (!body.id || !/^[\p{L}\p{N}][\p{L}\p{N}._-]*$/u.test(body.deviceName || "")) throw new Error("connect body should be {id, deviceName}: " + JSON.stringify(body));
+    // the start screen gives way to the request: connecting → the digits to compare
+    const join = "[data-testid=nearby-join]";
+    await p.waitForSelector(`${join}[data-state=connecting]:has-text('Соединяемся с «macbook-andrey»')`);
+    await p.waitForSelector(`${join}[data-state=waiting]`);
+    const code = await p.getAttribute("[data-testid=nearby-code] .nearby-code__digits", "data-code");
+    if (!/^\d{6}$/.test(code)) throw new Error("the digits to compare: " + code);
+    if (!(await p.textContent("[data-testid=nearby-code]")).replace(/\s/g, "").includes(code)) throw new Error("the digits are not on the screen");
+    if (await p.$("[data-testid=onb-create]")) throw new Error("the start choices must give way while a request runs");
+    await p.click("[data-testid=nearby-match]");
+    await p.waitForSelector(`${join}[data-state=confirmed]:has-text('Ждём разрешения')`);
+    // the other person says yes → this device is in the mesh, with the usual welcome
+    await p.waitForSelector("[data-testid=page-home]", { timeout: 15000 });
+    await p.waitForSelector("[data-testid=toast]:has-text('Вы в сети')");
+    await p.waitForSelector("[data-testid=home-device]");
+    if ((await p.textContent(".topbar__name")).trim() !== "moy-noutbuk") throw new Error("the device took another name: " + (await p.textContent(".topbar__name")));
+    await p.context().close();
+  });
+
+  await onb.hook("/__mock/reset");
+  await step("nearby: cancel, a refusal, a device that does not answer, a device that leaves the list", async () => {
+    const p = await newPage(onb.url, "nearby-fail");
+    await p.open();
+    const sec = "[data-testid=nearby]";
+    await onb.hook("/__mock/nearby?add=macbook-andrey&os=darwin");
+    await onb.hook("/__mock/nearby?add=denied-pc&os=windows&mesh=Работа");
+    await onb.hook("/__mock/nearby?add=offline-nas&os=linux");
+    await p.waitForSelector(`${sec} [data-testid=nearby-device]:nth-child(3)`);
+    await p.waitForSelector(`${sec}:has-text('Найдено рядом: 3 устройства')`);
+    const join = "[data-testid=nearby-join]";
+    // cancel while the digits are on the screen: back to the list, and asking again works
+    await p.click("[data-testid=nearby-device][data-name=macbook-andrey] [data-testid=nearby-connect]");
+    await p.waitForSelector(`${join}[data-state=waiting]`);
+    await p.click("[data-testid=nearby-cancel]");
+    await p.waitForSelector(`${sec}[data-found="3"]`);
+    await p.click("[data-testid=nearby-device][data-name=macbook-andrey] [data-testid=nearby-connect]");
+    await p.waitForSelector(`${join}[data-state=waiting]`);
+    await p.click("[data-testid=nearby-cancel]");
+    await p.waitForSelector(sec);
+    // the person at the other device says no
+    await p.click("[data-testid=nearby-device][data-name=denied-pc] [data-testid=nearby-connect]");
+    await p.waitForSelector(`${join}[data-state=waiting]`);
+    await p.click("[data-testid=nearby-match]");
+    await p.waitForSelector(`${join}[data-state=denied][data-reason=denied] [data-testid=nearby-error]:has-text('«denied-pc» не добавил это устройство')`);
+    await p.click("[data-testid=nearby-back]");
+    await p.waitForSelector(`${sec}[data-found="3"]`);
+    // a device that does not answer: the things to check, in words
+    await p.click("[data-testid=nearby-device][data-name=offline-nas] [data-testid=nearby-connect]");
+    await p.waitForSelector(`${join}[data-state=failed][data-reason=offline] [data-testid=nearby-reach-help]:has-text('изоляция клиентов')`, { timeout: 10000 });
+    const text = await p.textContent(join);
+    for (const re of [/\bQUIC\b/, /\bNAT\b/, /timeout/i]) if (re.test(text.replace(/mesh: cannot reach[^]*$/, ""))) throw new Error("jargon in the advice: " + re);
+    // it leaves the list while the person looks at the advice: "again" is not offered, the way back is
+    await onb.hook("/__mock/nearby?remove=offline-nas");
+    await p.waitForSelector("[data-testid=nearby-again]", { state: "detached" });
+    await p.click("[data-testid=nearby-back]");
+    await p.waitForSelector(`${sec}[data-found="2"]`);
+    await onb.hook("/__mock/nearby?clear=1");
+    await p.waitForSelector(`${sec}[data-found="0"]`);
+    // the system forbids looking around: the section says so and says what to do (instead of "looking…" for ever)
+    await onb.hook("/__mock/lan?state=blocked&os=darwin");
+    await p.waitForSelector(`${sec}:has-text('macOS не пускает The Mesh в домашнюю сеть')`);
+    if (!/Локальная сеть/.test(await p.textContent(sec))) throw new Error("the section does not say where to switch the permission on");
+    await p.context().close();
+  });
+  await onb.hook("/__mock/reset");
 }
 
 // ------------------------------------------------------------- main flows
@@ -681,6 +777,77 @@ if (srv) {
     await srv.hook("/__mock/lan?state=no-network");
     await page.waitForSelector("[data-testid=home-att-lan]", { state: "detached" });
     await srv.hook("/__mock/lan?state=ok");
+  });
+
+  await step("nearby: a device asks to be added — the dialog opens by itself, the digits, whose device, allow or decline", async () => {
+    await srv.hook("/__mock/nearby?clear=1");
+    await page.open("#/home");
+    const waiting = async () => Number(((await page.title()).match(/^\((\d+)\)/) || [0, 0])[1]);
+    await page.waitForSelector("[data-testid=home-status]");
+    await page.waitForFunction(() => /^\(\d+\)/.test(document.title)); // unread mail, chat and offers are counted in the tab already
+    const before = await waiting();
+    await srv.hook("/__mock/nearby?request=pixel&os=android");
+    const ask = "[data-testid=nearby-ask]";
+    await page.waitForSelector(`${ask}:has-text('pixel')`);
+    const code = await page.getAttribute("[data-testid=nearby-ask-code] .nearby-code__digits", "data-code");
+    if (!/^\d{6}$/.test(code)) throw new Error("the digits: " + code);
+    // the person at the new device confirms a moment later: the dialog says so
+    await page.waitForSelector("[data-testid=nearby-ask-state][data-confirmed=true]", { timeout: 6000 });
+    if ((await waiting()) !== before + 1) throw new Error(`the tab does not count the waiting request: ${before} before, title "${await page.title()}"`);
+    // closed without an answer: nothing is lost, the request waits on Home
+    await page.keyboard.press("Escape");
+    await page.waitForSelector(ask, { state: "detached" });
+    await page.waitForSelector("[data-testid=home-att-nearby]:has-text('«pixel» просит добавить его в сеть')");
+    await page.waitForSelector(`[data-testid=home-att-nearby]:has-text('${code.slice(0, 3)} ${code.slice(3)}')`);
+    await page.click("[data-testid=home-att-nearby-open]");
+    await page.waitForSelector(ask);
+    // whose device it is: the person of this one by default, and can be changed
+    const owner = await page.inputValue("[data-testid=nearby-ask-owner]");
+    if (owner !== state.self.owner) throw new Error(`owner offered: ${owner}, this device's: ${state.self.owner}`);
+    await page.fill("[data-testid=nearby-ask-owner]", "Мария");
+    const sent = expectRequest(page, (r) => /\/api\/nearby\/requests\//.test(r.url()));
+    await page.click("[data-testid=nearby-allow]");
+    const body = JSON.parse((await sent).postData() || "{}");
+    if (body.approve !== true || body.owner !== "Мария") throw new Error("answer body: " + JSON.stringify(body));
+    await page.waitForSelector("[data-testid=toast]:has-text('Разрешено: «pixel» появится в списке')");
+    await page.waitForSelector("[data-testid=home-att-nearby]", { state: "detached" });
+    await page.waitForSelector("[data-testid=home-device][data-name=pixel]", { timeout: 8000 });
+    // a second one is declined; a request that is old is gone for good
+    await srv.hook("/__mock/nearby?request=intruder&os=windows&confirmed=0");
+    await page.waitForSelector(`${ask}:has-text('intruder')`);
+    await page.waitForSelector("[data-testid=nearby-ask-state][data-confirmed=false]");
+    const no = expectRequest(page, (r) => /\/api\/nearby\/requests\//.test(r.url()));
+    await page.click("[data-testid=nearby-deny]");
+    if (JSON.parse((await no).postData() || "{}").approve !== false) throw new Error("decline must send approve:false");
+    await page.waitForSelector(ask, { state: "detached" });
+    await page.waitForSelector("[data-testid=home-att-nearby]", { state: "detached" });
+    // two at once: one dialog at a time, the next one right after
+    await srv.hook("/__mock/nearby?request=first&os=linux");
+    await srv.hook("/__mock/nearby?request=second&os=android");
+    await page.waitForSelector(`${ask}:has-text('first')`);
+    await page.keyboard.press("Escape");
+    await page.waitForSelector(`${ask}:has-text('second')`);
+    await page.keyboard.press("Escape");
+    await page.waitForSelector(ask, { state: "detached" });
+    if ((await page.$$("[data-testid=home-att-nearby]")).length !== 2) throw new Error("both requests should wait on Home");
+    await srv.hook("/__mock/nearby?clear=1");
+    await page.waitForSelector("[data-testid=home-att-nearby]", { state: "detached" });
+  });
+
+  await step("nearby: the switch in Settings, and the hint when adding a device by an invitation", async () => {
+    await page.open("#/settings/network");
+    const sw = "[data-testid=setting-nearby]";
+    await page.waitForSelector(`${sw}[aria-checked=true]`);
+    const sent = expectRequest(page, (r) => r.url().endsWith("/api/settings") && r.method() === "PUT");
+    await page.click(sw);
+    const body = JSON.parse((await sent).postData() || "{}");
+    if (body.nearby !== false) throw new Error("expected PUT {nearby:false}, got " + JSON.stringify(body));
+    await page.waitForSelector(`${sw}[aria-checked=false]`);
+    await page.click(sw);
+    await page.waitForSelector(`${sw}[aria-checked=true]`);
+    await page.open("#/home?add=1");
+    await page.waitForSelector("[data-testid=add-nearby-note]:has-text('Если новое устройство рядом, код не нужен')");
+    await page.keyboard.press("Escape");
   });
 
   await step("global: offline banner and recovery", async () => {

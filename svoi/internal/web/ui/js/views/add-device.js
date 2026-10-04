@@ -41,6 +41,7 @@ export function AddDeviceModal({ onClose }) {
   const self = useStore((s) => s.self);
   const invites = useStore((s) => s.invites);
   const peers = useStore((s) => s.peers);
+  const nearbyOn = useStore((s) => !!(s.nearby.visible && s.settings && s.settings.nearby !== false && s.self && s.self.lan && s.self.lan.enabled !== false));
   const [admin, setAdmin] = useState(false);
   const [owner, setOwner] = useState(() => (state.self && state.self.owner) || "");
   const [ttl, setTtl] = useState(60);
@@ -115,6 +116,7 @@ export function AddDeviceModal({ onClose }) {
           <${Button} variant="ghost" onClick=${onClose}>${t("common.cancel")}</${Button}>
           <${Button} variant="primary" icon="qr" loading=${busy} onClick=${create} data-testid="invite-create">${t("add.create")}</${Button}>`}>
       <div class="stack stack--lg">
+        ${nearbyOn && html`<${Callout} tone="info" icon="radar" class="add-nearby" data-testid="add-nearby-note">${t("inv.nearbyNote")}</${Callout}>`}
         <${Field} label=${t("add.owner")} hint=${t("add.ownerHint")}>
           ${(id, d) => html`<input id=${id} class="input" value=${owner} maxlength="64" autocomplete="off" data-testid="invite-owner"
             placeholder=${t("add.ownerPh")} aria-describedby=${d} onInput=${(e) => setOwner(e.target.value)} />`}

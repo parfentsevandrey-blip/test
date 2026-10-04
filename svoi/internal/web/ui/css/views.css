@@ -378,6 +378,44 @@ button.ddr-act { font-family: inherit; }
   .onb__lead { font-size: var(--fs-base); }
 }
 
+/* =========================================================== Nearby (devices with The Mesh around) */
+.nearby { width: min(680px, 100%); margin-top: var(--sp-7); display: flex; flex-direction: column; gap: var(--sp-4); padding: var(--sp-5) var(--sp-6); border-radius: var(--r-xl); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1); animation: pop-in var(--dur-slow) var(--ease-out); }
+.nearby--found { border-color: var(--accent-line); box-shadow: var(--shadow-2); }
+.nearby__head { display: flex; gap: var(--sp-4); align-items: center; min-width: 0; }
+.nearby__radar { position: relative; flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; background: var(--accent-soft); color: var(--accent-text); }
+.nearby__radar::before, .nearby__radar::after { content: ""; position: absolute; inset: 0; border-radius: 16px; border: 1.5px solid var(--accent-line); animation: ripple 2.4s var(--ease-out) infinite; }
+.nearby__radar::after { animation-delay: 1.2s; }
+.nearby--found .nearby__radar::before, .nearby--found .nearby__radar::after { animation: none; opacity: 0; }
+.nearby__title { font-size: var(--fs-lg); font-weight: 680; letter-spacing: -0.01em; }
+.nearby__sub { color: var(--text-2); font-size: var(--fs-md); margin-top: 2px; }
+.nearby__hint { margin: 0; color: var(--text-3); font-size: var(--fs-sm); }
+.nearby__hint:empty { display: none; }
+.nearby__list { display: flex; flex-direction: column; gap: var(--sp-2); }
+.nearby__item { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3); border-radius: var(--r-lg); background: var(--surface-2); min-width: 0; }
+.nearby__who { min-width: 0; }
+.nearby__name { font-weight: 650; }
+.nearby__meta { color: var(--text-3); font-size: var(--fs-sm); }
+.nearby__me { display: flex; align-items: baseline; gap: 6px 8px; flex-wrap: wrap; color: var(--text-2); font-size: var(--fs-sm); }
+.nearby__me strong { color: var(--text); }
+.nearby__rename { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
+.nearby__rename .field { width: 100%; }
+.linklike { color: var(--accent-text); font-weight: 600; font-size: inherit; padding: 2px 4px; margin: -2px -4px; border-radius: 6px; }
+.linklike:hover { text-decoration: underline; background: var(--surface-hover); }
+.nearby-code { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: var(--sp-5) var(--sp-4); border-radius: var(--r-lg); background: var(--surface-2); border: 1px solid var(--line); }
+.nearby-code__label { color: var(--text-3); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .08em; font-weight: 650; }
+.nearby-code__digits { font-size: clamp(36px, 10vw, 52px); font-weight: 720; letter-spacing: .1em; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--text); }
+.nearby-join__actions { display: flex; flex-direction: column; gap: var(--sp-2); }
+.nearby-join__done { color: var(--accent-text); }
+.nearby-who { display: flex; align-items: center; gap: var(--sp-3); min-width: 0; }
+.nearby-state { display: flex; align-items: center; gap: 8px; margin: 0; padding: 8px 12px; border-radius: var(--r-md); background: var(--surface-2); color: var(--text-2); font-size: var(--fs-sm); }
+.nearby-state.is-ok { background: var(--accent-softer); color: var(--accent-text); font-weight: 600; }
+.add-nearby { margin-bottom: 0; }
+@media (max-width: 759px) {
+  .nearby { margin-top: var(--sp-6); padding: var(--sp-4); }
+  .nearby__item { flex-wrap: wrap; }
+  .nearby__item .btn { flex: 1 1 100%; }
+}
+
 /* =========================================================== Files */
 .files__tabs { margin-bottom: var(--sp-5); }
 .drop-overlay { position: fixed; inset: 0; z-index: 90; pointer-events: none; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 55%, transparent); animation: fade-in var(--dur) var(--ease); }

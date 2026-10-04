@@ -24,6 +24,7 @@ import { ServicesView } from "./views/services.js";
 import { SettingsView } from "./views/settings.js";
 import { MoreView } from "./views/more.js";
 import { OffersBanner } from "./views/transfers.js";
+import { NearbyAskHost } from "./views/nearby.js";
 
 const NAV = [
   { id: "home", icon: "home", label: "nav.home" },
@@ -236,11 +237,12 @@ function useDocumentTitle(section) {
   const counters = useStore((s) => s.counters);
   const configured = useStore((s) => s.configured);
   const lang = useStore((s) => s.lang);
+  const asks = useStore((s) => s.nearby.requests.length); // devices nearby that wait to be added
   useEffect(() => {
-    const n = (counters.mail || 0) + (counters.chat || 0) + (counters.offers || 0);
+    const n = (counters.mail || 0) + (counters.chat || 0) + (counters.offers || 0) + asks;
     const page = configured ? t(TITLES[section] || "nav.home") : t("onb.title");
     document.title = `${n ? `(${n}) ` : ""}${page} — ${t("app.name")}`;
-  }, [counters, section, configured, lang]);
+  }, [counters, section, configured, lang, asks]);
 }
 
 function App() {
@@ -297,6 +299,7 @@ function App() {
       <${TabBar} section=${section} />
     </div>
     <${HelpHost} />
+    <${NearbyAskHost} />
     <${DialogHost} />
     <${ToastHost} />`;
 }

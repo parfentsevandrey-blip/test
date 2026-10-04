@@ -92,7 +92,11 @@ Mock hooks (test-only, GET or POST): `/__mock/offer?from=phone[&name=…]`, `/__
 `/__mock/drop?for=5` (drop SSE, refuse reconnects for N s), `/__mock/peer?name=nas&online=0`,
 `/__mock/auth?on=1`, `/__mock/login` (a fresh one-time sign-in link),
 `/__mock/portmap?state=mapped|searching|unavailable|private` (router port mapping of this device;
-also switches `settings.portMap` on), `/__mock/sw?bump=1` (sw.js
+also switches `settings.portMap` on), `/__mock/lan?state=ok|blocked|failed|no-network[&os=darwin]` (how looking for devices on the home
+network goes; works before a mesh exists too), `/__mock/nearby?add=macbook&os=darwin[&mesh=Дом]` (a device with The Mesh shows up nearby while this one is
+not in a mesh; `remove=<name>`, `clear=1`; a device whose name contains `offline` does not answer, one containing `denied` is refused),
+`/__mock/nearby?request=pixel&os=android[&confirmed=0]` (a device nearby asks this administrator to add it), `/__mock/nearby?hold=1` (the other person keeps
+this device's request waiting until `?answer=allow|deny|expire`), `/__mock/nearby?visible=0`, `/__mock/sw?bump=1` (sw.js
 gets a new `VERSION`, as after installing a new binary), `/__mock/tun?error=1`, `/__mock/removed` (an admin removed this device:
 back to `configured:false` with `removed`, a fresh identity, the warn `notify` + empty `peers`
 events like the node sends), `/__mock/reset`.
@@ -119,8 +123,8 @@ toasts, a scroll-edge fade under the top bar, springy presses. It is **not** a r
 
 *Which skin.* `js/boot.js` decides before the first paint, in this order: `?skin=glass|classic` in the address (for tests and
 screenshots; not remembered; `data-skin-url`), the person's choice in Settings → Interface → Style (`themesh.skin`:
-`auto|glass|classic`), what the window starts with (`data-skin-default`). A browser and the phone start with classic; the Mac
-desktop app with glass. The desktop app says what it is in its user agent (`desktop/src/window.js`, `windowLook`):
+`auto|glass|classic`), what the window starts with (`data-skin-default`). A browser starts with classic; the Mac desktop app and the
+Android app with glass. The desktop app says what it is in its user agent (`desktop/src/window.js`, `windowLook`):
 
 ```
 TheMeshDesktop/<version> (<mac|win|linux>[; skin=glass][; vibrancy][; inset])
@@ -132,6 +136,15 @@ the page then has no background of its own and draws a lighter backdrop plus a s
 They become `data-shell`, `data-vibrancy="on"`, `data-titlebar="inset"` on `<html>`. The Mac app also sets
 `data-reduce-transparency` while macOS "Reduce transparency" is on, and the same is done by `@media
 (prefers-reduced-transparency: reduce)`: the panels turn solid and nothing is blurred.
+
+*The phone app (Android).* Its user agent says `TheMeshAndroid/<version> (android; skin=glass)`, which gives `data-shell="android"`. The
+window is painted by the app itself: an aurora backdrop in the app window (behind the status bar and the navigation bar, edge to edge) and a
+transparent WebView over it, so the page paints no backdrop (`data-native-backdrop`: `html`/`body` are transparent and `body::before` is
+hidden), and its panes are translucent **without** `backdrop-filter` (a blur on every pane is too expensive on a phone). The page tells the window its look
+(`window.themeshShell.look(theme, skin)`, from `js/boot.js` at the start and from `js/prefs.js` whenever the theme or the skin changes), and the window
+paints the matching backdrop, status-bar icons and menu colours; `window.themeshShell.menu()` opens the app's own menu (the «⋮» button in the top bar, `app-menu-button`, and
+a corner button on the start screen). `themeshShell` has just these two methods and works only for the node's own page. In a browser (no `themeshShell`) the page
+paints its own backdrop as usual. `web-dev/glass-shots`-style pictures of the phone profile come from the same pages with that user agent and a stub `themeshShell`.
 
 *Rules of the glass.* A `backdrop-filter` goes only on the big panes and never inside another one that has one (inside, a pane
 sees only its parent's content; Chromium also mirrors the edges of a backdrop blur, which is why the radii are moderate: 8–14 px).
@@ -247,7 +260,12 @@ page was opened with a used/expired `?t=` code) or `signed-out` (after "Выйт
 (+`picker-item` `data-name`, `picker-choose`), `device-drawer`, `compose`, `invite-modal`.
 Onboarding: `page-onboarding`, `onb-create`, `onb-join`, `onb-mesh-name`, `onb-device-name`,
 `onb-owner` (create form only — the join form has no owner), `onb-code`, `onb-submit`,
-`onb-progress`, `onb-error`, `removed-notice`.
+`onb-progress`, `onb-error`, `removed-notice`, `app-menu-button` (phone app: the «⋮» that opens the app's menu; also in the top bar).
+Devices nearby: `nearby` (the card on the start screen; `data-found` = how many devices are listed), `nearby-device` (`data-id`, `data-name`), `nearby-connect`,
+`nearby-name` / `nearby-rename` / `nearby-name-input`, `nearby-join` (`data-state` = `connecting|waiting|confirmed|joined|denied|failed`, `data-reason`), `nearby-code`
+(the digits are in `.nearby-code__digits[data-code]`), `nearby-match`, `nearby-cancel`, `nearby-again`, `nearby-back`, `nearby-error`, `nearby-reach-help`; on an administrator:
+`nearby-ask` (the dialog), `nearby-ask-name`, `nearby-ask-code`, `nearby-ask-state` (`data-confirmed`), `nearby-ask-owner`, `nearby-allow`, `nearby-deny`, `home-att-nearby` (a row on Home; `home-att-nearby-open`),
+`setting-nearby` (Settings → Network), `add-nearby-note` (in the invite dialog). Looking around on the home network: `lan-status` (Settings → Network, `data-state`), `setting-lan`, `home-att-lan`.
 Device-name preview (onboarding and the rename prompt): `dns-preview` (`data-label` = the label
 without `.mesh`).
 Home: `home-status` (`data-state` = `ok|partial|offline|alone`), `home-help`, `home-attention` with

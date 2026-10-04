@@ -146,7 +146,7 @@ html[data-skin="glass"][data-vibrancy="on"][data-theme="dark"] { --text-2: #c8d1
 html[data-skin="glass"] ::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); }
 
 /* ---------- 2. panels: the big glass surfaces ---------- */
-html[data-skin="glass"] :is(.card, .home-card, .home-status, .home-act, .hdev, .dcard, .onb-choice, .onb-form, .flist, .svc-group, .more-self) {
+html[data-skin="glass"] :is(.card, .home-card, .home-status, .home-act, .hdev, .dcard, .onb-choice, .onb-form, .nearby, .flist, .svc-group, .more-self) {
   background-color: var(--glass-fill);
   background-image: var(--glass-sheen);
   border-color: transparent;
@@ -442,7 +442,7 @@ html[data-titlebar="inset"] .onb__corner { -webkit-app-region: no-drag; }
 html[data-native-backdrop][data-skin="glass"],
 html[data-native-backdrop][data-skin="glass"] body { background: transparent; }
 html[data-native-backdrop][data-skin="glass"] body::before { display: none; }
-html[data-shell="android"][data-skin="glass"] :is(.card, .home-card, .home-status, .home-act, .hdev, .dcard, .onb-choice, .onb-form, .flist, .svc-group, .more-self, .mail, .chat, .gbanner, .conn-pill, .topbar__help, .btn--secondary) {
+html[data-shell="android"][data-skin="glass"] :is(.card, .home-card, .home-status, .home-act, .hdev, .dcard, .onb-choice, .onb-form, .nearby, .flist, .svc-group, .more-self, .mail, .chat, .gbanner, .conn-pill, .topbar__help, .btn--secondary) {
   -webkit-backdrop-filter: none; backdrop-filter: none;
 }
 

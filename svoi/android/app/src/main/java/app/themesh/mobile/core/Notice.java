@@ -11,7 +11,9 @@ public final class Notice {
         /** Сообщение в чате. */
         CHAT,
         /** Новое письмо. */
-        MAIL
+        MAIL,
+        /** Устройство рядом просит добавить его в сеть. */
+        NEARBY
     }
 
     public final Kind kind;

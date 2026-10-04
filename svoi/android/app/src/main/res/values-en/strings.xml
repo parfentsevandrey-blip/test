@@ -35,6 +35,8 @@
     <string name="notif_mail_title">New mail from %1$s</string>
     <string name="notif_mail_title_unknown">New mail</string>
     <string name="notif_no_subject">(no subject)</string>
+    <string name="notif_nearby_title">%1$s asks to be added to the mesh</string>
+    <string name="notif_nearby_body">Code %1$s: compare it with the screen of the new device</string>
     <string name="notif_saved_title">File saved</string>
 
     <!-- Main window -->
