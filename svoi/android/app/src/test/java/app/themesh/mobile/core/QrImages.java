@@ -89,6 +89,45 @@ public final class QrImages {
         return new Scene(modules);
     }
 
+    /**
+     * Что видит сканер на самом деле: не один кадр, а кадры живой камеры подряд. От кадра к кадру код другого размера (телефон
+     * не держат неподвижно: от 3,6 до 6 пикселей на модуль), чуть сдвинут, повёрнут и наклонён, на нём шум и лёгкое размытие, а
+     * с экрана камера видит не чёрное и белое, а, например, 40 и 210. Кадры разбираются так, как их разбирает приложение:
+     * обычным проходом, а каждый третий — углублённым ({@code QrAnalyzer.DEEP_EVERY}). Возвращает, сколько из {@code frames}
+     * кадров дало {@code expected} (после {@link InviteCode#extract}). Кадры определяются текстом приглашения: тот же код — те же
+     * кадры.
+     *
+     * <p>Почему не один «идеальный» кадр: на идеально чётком кадре с целым числом пикселей на модуль ZXing не читает 1–2% кодов,
+     * которые рисует узел, и какие именно — решают сами данные (приглашения случайны); на кадрах «как с камеры» тот же код читается
+     * почти всегда, а то, что не прочиталось, прочитывается на следующем кадре. Проверка по идеальным кадрам роняла бы тест
+     * (по подсчёту на 3000 случайных приглашений, как их рисует узел) не реже, чем в одном прогоне из двадцати пяти.
+     */
+    public static int videoReads(boolean[][] modules, String expected, int frames) {
+        Random random = new Random(expected.hashCode());
+        int side = (int) Math.ceil(modules.length * 6.0 * 1.25); // с запасом на поворот и сдвиг
+        int reads = 0;
+        for (int i = 1; i <= frames; i++) {
+            Frame frame = scene(modules)
+                    .moduleSize(3.6 + random.nextDouble() * 2.4)
+                    .angle((random.nextDouble() - 0.5) * 12)
+                    .keystone((random.nextDouble() - 0.5) * 0.1)
+                    .shift((random.nextDouble() - 0.5) * 6, (random.nextDouble() - 0.5) * 6)
+                    .levels(25 + random.nextInt(40), 185 + random.nextInt(50))
+                    .noise(2 + random.nextDouble() * 3)
+                    .blur(1)
+                    .canvas(side, side)
+                    .background()
+                    .pad(32)
+                    .seed(random.nextLong())
+                    .render();
+            String text = frame.decode(i % 3 == 0);
+            if (text != null && expected.equals(InviteCode.extract(text))) {
+                reads++;
+            }
+        }
+        return reads;
+    }
+
     /** Что снимает «камера». Настройки меняются цепочкой вызовов; {@link #render()} рисует кадр. */
     public static final class Scene {
         private static final int SAMPLES = 3; // подвыборок на пиксель по каждой оси: границы модулей усредняются
