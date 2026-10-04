@@ -2,12 +2,14 @@ package api
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/app"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
+	"github.com/parfentsevandrey-blip/test/svoi/internal/mesh"
 )
 
 func (s *Server) routes() {
@@ -118,10 +120,26 @@ func (s *Server) handleMeshJoin(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 40*time.Second)
 	defer cancel()
 	if err := s.app.JoinMesh(ctx, in.Invite, in.DeviceName); err != nil {
-		writeError(w, errCode("invalid", err.Error()))
+		writeError(w, joinFailure(err))
 		return
 	}
 	ok(w)
+}
+
+// joinFailure tells apart why a join failed, so that the interface can say what to do about it: "offline" is an inviting
+// device that did not answer (it may be switched off, on another network, or the invitation may be used up: from outside
+// those look the same), "expired" an invitation past its lifetime, "denied" an inviter that said no, and "invalid" a code
+// that is no invitation at all.
+func joinFailure(err error) error {
+	switch {
+	case errors.Is(err, mesh.ErrInviterUnreachable):
+		return errCode("offline", err.Error())
+	case errors.Is(err, mesh.ErrInviteExpired):
+		return errCode("expired", err.Error())
+	case errors.Is(err, mesh.ErrJoinRefused):
+		return errCode("denied", err.Error())
+	}
+	return errCode("invalid", err.Error())
 }
 
 func (s *Server) handleMeshLeave(w http.ResponseWriter, r *http.Request) {

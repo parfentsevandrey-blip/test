@@ -5,7 +5,19 @@ import (
 	"strings"
 
 	qrcode "github.com/skip2/go-qrcode"
+
+	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
 )
+
+// qrPayload is what the QR code of an invitation carries: the code without the dashes that group it for reading by eye (parsing
+// ignores them). That makes the QR a size smaller, so its squares are bigger on the same screen and a camera reads it more
+// easily; the prefix keeps its dash, because that is how the interface and the phone app recognise an invitation.
+func qrPayload(code string) string {
+	if rest, ok := strings.CutPrefix(code, identity.InvitePrefix); ok {
+		return identity.InvitePrefix + strings.ReplaceAll(rest, "-", "")
+	}
+	return strings.ReplaceAll(code, "-", "")
+}
 
 // qrSVG renders text as a scalable QR code (black modules on a white card with
 // a quiet zone), ready to be injected into the page.

@@ -32,6 +32,7 @@ var statusFor = map[string]int{
 	"notconfigured": http.StatusPreconditionFailed,
 	"toolarge":      http.StatusRequestEntityTooLarge,
 	"offline":       http.StatusBadGateway,
+	"expired":       http.StatusGone,
 	"busy":          http.StatusServiceUnavailable,
 	"unsupported":   http.StatusNotImplemented,
 	"internal":      http.StatusInternalServerError,

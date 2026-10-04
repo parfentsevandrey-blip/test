@@ -37,6 +37,28 @@ const (
 	maxJoinFrame = 4 << 10 // a join request is a handle, a proof and two short names
 )
 
+// Why a join failed, told apart so that an interface can say what to do about it instead of
+// calling everything a bad code.
+var (
+	// ErrInviterUnreachable: no address of the invitation answered. From outside this is also what a
+	// used, cancelled or expired invitation looks like: the inviter stays silent to strangers it has
+	// no invitation for.
+	ErrInviterUnreachable = errors.New("mesh: cannot reach the inviting device")
+	// ErrInviteExpired: the invitation is past its lifetime by this device's clock.
+	ErrInviteExpired = errors.New("mesh: this invitation has expired")
+	// ErrJoinRefused: the inviter answered, and said no.
+	ErrJoinRefused = errors.New("mesh: join refused")
+)
+
+// joinError is a message written for people that is also one of the reasons above.
+type joinError struct {
+	reason error
+	msg    string
+}
+
+func (e *joinError) Error() string { return e.msg }
+func (e *joinError) Unwrap() error { return e.reason }
+
 type joinRequest struct {
 	Handle   []byte `json:"h"`
 	Proof    []byte `json:"p"`
@@ -63,6 +85,60 @@ type InviteInfo struct {
 }
 
 func inviteID(h [8]byte) string { return hex.EncodeToString(h[:]) }
+
+// maxInviteEndpoints is how many of the inviter's addresses go into an invitation. The code is read off a screen by a
+// phone camera and pasted by people, and every address makes it longer: an IPv4 one by 7 bytes, an IPv6 one by 19.
+const maxInviteEndpoints = 6
+
+// inviteEndpoints picks the addresses for an invitation out of everything the device is reachable at. The newcomer tries
+// them all at once, so what matters is that each way it may come is there: an address the router forwards, an address on
+// the inviter's own network (a newcomer on the same Wi-Fi can only use that one), the public IPv4 address as the world
+// sees it, a global IPv6 address. "Public ones first, the rest after, cut at the limit" used to push the home-network
+// address out of the code on hosts that have many IPv6 addresses.
+func inviteEndpoints(eps []magic.Endpoint) []netip.AddrPort {
+	type class struct {
+		limit int
+		list  []netip.AddrPort
+	}
+	var loop, mapped, lan4, pub4, pub6, lan6 = class{limit: 1}, class{limit: 1}, class{limit: 3}, class{limit: 2}, class{limit: 2}, class{limit: 1}
+	for _, e := range eps {
+		a := e.Addr.Addr().Unmap()
+		var c *class
+		switch {
+		case a.IsLoopback():
+			c = &loop // only when asked for (tests, demos, several devices on one machine)
+		case e.Kind == magic.EPMapped:
+			c = &mapped
+		case isPrivate(a) && a.Is4():
+			c = &lan4
+		case isPrivate(a):
+			c = &lan6
+		case a.Is4():
+			c = &pub4
+		default:
+			c = &pub6
+		}
+		if len(c.list) < c.limit {
+			c.list = append(c.list, e.Addr)
+		}
+	}
+	// One from each kind in turn, the kinds in order of how much a missing one hurts.
+	kinds := []class{loop, mapped, lan4, pub4, pub6, lan6}
+	out := make([]netip.AddrPort, 0, maxInviteEndpoints)
+	for round := 0; len(out) < maxInviteEndpoints; round++ {
+		took := false
+		for _, k := range kinds {
+			if round < len(k.list) && len(out) < maxInviteEndpoints {
+				out = append(out, k.list[round])
+				took = true
+			}
+		}
+		if !took {
+			break
+		}
+	}
+	return out
+}
 
 // NewInvite creates a one-time invitation for another device of this device's own
 // owner. Only admin devices can invite.
@@ -100,16 +176,7 @@ func (n *Node) NewInviteFor(admin bool, ttl time.Duration, owner string) (Invite
 
 	var eps []netip.AddrPort
 	if mg != nil {
-		// Public endpoints first, then LAN addresses; at most 8 fit in the code.
-		pub, lan := []netip.AddrPort{}, []netip.AddrPort{}
-		for _, e := range mg.Endpoints() {
-			if isPrivate(e.Addr.Addr()) {
-				lan = append(lan, e.Addr)
-			} else {
-				pub = append(pub, e.Addr)
-			}
-		}
-		eps = append(pub, lan...)
+		eps = inviteEndpoints(mg.Endpoints())
 	}
 	if len(eps) == 0 {
 		return InviteInfo{}, errors.New("mesh: this device has no network address yet; connect to a network and try again")
@@ -401,7 +468,7 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName string) error {
 	// so an expired code would end in a long wait and a misleading "cannot reach".
 	// Say it at once, and name the one reason it can be wrong: this device's clock.
 	if inv.Expired(time.Now()) {
-		return errors.New("mesh: this invitation has expired; ask for a new one (if it should still be valid, check the date and time on this device)")
+		return &joinError{ErrInviteExpired, "mesh: this invitation has expired; ask for a new one (if it should still be valid, check the date and time on this device)"}
 	}
 	if len(inv.Endpoints) == 0 {
 		return errors.New("mesh: the invitation contains no addresses to connect to")
@@ -466,7 +533,11 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName string) error {
 		}
 		// A device with no valid invitation left stays silent to strangers on purpose, so
 		// "it was used, cancelled or has expired" looks exactly like "it is offline".
-		return fmt.Errorf("mesh: cannot reach the inviting device (%v). Make sure it is online and reachable from this network, and that the invitation is still valid (it may have been used, cancelled or have expired)", firstErr)
+		tried := make([]string, 0, len(inv.Endpoints))
+		for _, ep := range inv.Endpoints {
+			tried = append(tried, ep.String())
+		}
+		return &joinError{ErrInviterUnreachable, fmt.Sprintf("mesh: cannot reach the inviting device (%v; tried %s). Make sure it is online and reachable from this network, and that the invitation is still valid (it may have been used, cancelled or have expired)", firstErr, strings.Join(tried, ", "))}
 	}
 	defer conn.CloseWithError(closeNormal, "done")
 
@@ -493,7 +564,7 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName string) error {
 	if err := cs2.ReadResponse(&resp); err != nil {
 		var re *RPCError
 		if errors.As(err, &re) {
-			return fmt.Errorf("mesh: join refused: %s", re.Msg)
+			return &joinError{ErrJoinRefused, fmt.Sprintf("mesh: join refused: %s", re.Msg)}
 		}
 		return err
 	}

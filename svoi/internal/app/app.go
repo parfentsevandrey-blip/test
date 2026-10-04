@@ -465,7 +465,7 @@ type InviteView struct {
 }
 
 func (a *App) inviteView(i mesh.InviteInfo) InviteView {
-	return InviteView{ID: i.ID, Code: i.Code, Admin: i.Admin, Owner: i.Owner, Created: i.Created, Expires: i.Expires, QRSvg: qrSVG(i.Code)}
+	return InviteView{ID: i.ID, Code: i.Code, Admin: i.Admin, Owner: i.Owner, Created: i.Created, Expires: i.Expires, QRSvg: qrSVG(qrPayload(i.Code))}
 }
 
 // Invites lists pending invitations.

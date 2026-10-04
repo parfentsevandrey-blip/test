@@ -3,6 +3,8 @@ package api_test
 import (
 	"bytes"
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
 	"encoding/binary"
 	"encoding/json"
 	"hash/crc32"
@@ -10,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -20,6 +23,7 @@ import (
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/api"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/app"
+	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
 )
 
 type env struct {
@@ -175,6 +179,37 @@ func TestAFreshDeviceOffersTheNameItWillTake(t *testing.T) {
 		if _, still := self["defaultName"]; still {
 			t.Fatalf("a device in a mesh still offers a default name: %v", self)
 		}
+	}
+}
+
+// Joining with a code that cannot work says why, and the invitation's own expiry is told apart from a bad code at once.
+func TestJoinWithAnInvitationThatIsPastItsLifetime(t *testing.T) {
+	e := newEnv(t)
+	root, _, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var inviter identity.ID
+	if _, err := rand.Read(inviter[:]); err != nil {
+		t.Fatal(err)
+	}
+	endpoints := []netip.AddrPort{netip.MustParseAddrPort("127.0.0.1:9")}
+	expired, err := identity.NewInvite(root, inviter, -time.Minute, false, endpoints, "Home")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out struct {
+		Error struct{ Code, Message string }
+	}
+	if code := e.call("POST", "/api/mesh/join", `{"invite":"`+expired.Encode()+`","deviceName":"phone"}`, &out); code != 410 || out.Error.Code != "expired" {
+		t.Fatalf("an expired invitation: %d %+v", code, out)
+	}
+	if !strings.Contains(out.Error.Message, "check the date and time") {
+		t.Fatalf("the advice about the clock is gone: %q", out.Error.Message)
+	}
+	out.Error.Code = ""
+	if code := e.call("POST", "/api/mesh/join", `{"invite":"MESH1-NOTACODE"}`, &out); code != 400 || out.Error.Code != "invalid" {
+		t.Fatalf("a code that is no invitation: %d %+v", code, out)
 	}
 }
 
