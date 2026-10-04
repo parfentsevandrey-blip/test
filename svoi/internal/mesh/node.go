@@ -812,6 +812,35 @@ func (n *Node) dial(p *Peer) {
 	n.attach(p, conn, true)
 }
 
+// ReplaceLink dials the peer again and puts the new link in place of the one in use, which is closed as
+// superseded: what happens by itself when two devices dial each other at the same moment (or when a
+// device that was restarted dials a link it did not know it had). It is here for the tests of the layers
+// above (see meshtest), which need to see what a transfer does when its link is replaced under it.
+// Whether the new link is the one that stays is decided by keepNewConn, so call it on the device whose
+// dial wins (the one that dialled the old link, or the one with the lower ID).
+func (n *Node) ReplaceLink(ctx context.Context, id identity.ID) error {
+	p := n.Peer(id)
+	if p == nil {
+		return Errf(CodeNotFound, "no such device")
+	}
+	n.mu.RLock()
+	mg, tr := n.magic, n.tr
+	n.mu.RUnlock()
+	if mg == nil || tr == nil {
+		return Errf(CodeOffline, "the node is not running")
+	}
+	vaddr, ok := mg.VirtualAddr(p.ID)
+	if !ok {
+		return Errf(CodeOffline, "%s has no path yet", p.Name())
+	}
+	conn, err := tr.Dial(ctx, vaddr, n.clientTLS(p.ID), n.quicConf())
+	if err != nil {
+		return err
+	}
+	n.attach(p, conn, true)
+	return nil
+}
+
 // statelessResetKey lets a restarted node answer a packet of a link it no longer knows with a
 // "stateless reset" (RFC 9000, section 10.3) that the other end accepts as genuine: the key, and
 // so the reset tokens the old incarnation handed out, is derived from the device key, which

@@ -2,7 +2,9 @@ package files
 
 import (
 	"context"
+	"errors"
 	"io"
+	"time"
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/mesh"
@@ -126,37 +128,132 @@ func (m *Manager) RemoteList(ctx context.Context, id identity.ID, share, rel str
 }
 
 // RemoteReader streams (part of) a remote file. Close must be called.
+//
+// If the link it reads from is closed because another link to the same device took its place (it
+// happens when two devices dial each other at the same moment, see mesh.IsReplaced), the reader asks
+// for the rest of the file on the link that stays and goes on, so whoever reads does not see the break.
 type RemoteReader struct {
 	cs   *mesh.ClientStream
 	Meta FileMeta
+
+	// what is needed to ask for the rest on another link
+	m       *Manager
+	ctx     context.Context
+	id      identity.ID
+	share   string
+	rel     string
+	offset  int64 // where the stream that is being read begins in the file
+	length  int64 // how much of the file it was asked for (<= 0: to the end)
+	got     int64 // how much of it has been handed out
+	resumes int   // how many times the reader went on another link
 }
 
+// maxResumes is how many times one reader goes on after its link was replaced: a link is replaced once
+// when two devices meet, so more than a few means something else is wrong.
+const maxResumes = 3
+
+// replacementWait is how long a reader waits for the link that replaces its own to be installed.
+const replacementWait = 3 * time.Second
+
 // Read implements io.Reader.
-func (r *RemoteReader) Read(p []byte) (int, error) { return r.cs.Read(p) }
+func (r *RemoteReader) Read(p []byte) (int, error) {
+	for {
+		if r.length > 0 && r.got >= r.length {
+			return 0, io.EOF // everything that was asked for has come, whatever the stream says now
+		}
+		n, err := r.cs.Read(p)
+		r.got += int64(n)
+		if err == nil || err == io.EOF || !mesh.IsReplaced(err) || r.resumes >= maxResumes {
+			return n, err
+		}
+		if n > 0 {
+			return n, nil // hand out what came; the next call goes on over the new link
+		}
+		if r.resume() != nil {
+			return 0, err
+		}
+	}
+}
+
+// resume asks for the rest of the file on the link that replaced the one that broke.
+func (r *RemoteReader) resume() error {
+	r.resumes++
+	offset := r.offset + r.got
+	length := r.length
+	if length > 0 {
+		length -= r.got
+	}
+	cs, meta, err := r.m.openGet(r.ctx, r.id, r.share, r.rel, offset, length, true)
+	if err != nil {
+		return err
+	}
+	if meta.Size != r.Meta.Size || meta.MTime != r.Meta.MTime {
+		cs.Cancel() // the file is not the one that was being read: its rest would be the rest of another file
+		return errChanged
+	}
+	r.cs.Cancel()
+	r.cs, r.offset, r.length, r.got = cs, offset, length, 0
+	return nil
+}
+
+var errChanged = errors.New("files: the file changed while it was being read")
 
 // Close aborts/ends the transfer.
 func (r *RemoteReader) Close() error { return r.cs.Close() }
 
 // RemoteOpen opens a remote file starting at offset (length <= 0: to the end).
 func (m *Manager) RemoteOpen(ctx context.Context, id identity.ID, share, rel string, offset, length int64) (*RemoteReader, error) {
-	p, err := m.peer(id)
+	cs, meta, err := m.openGet(ctx, id, share, rel, offset, length, false)
 	if err != nil {
 		return nil, err
+	}
+	return &RemoteReader{cs: cs, Meta: meta, m: m, ctx: ctx, id: id, share: share, rel: rel, offset: offset, length: length}, nil
+}
+
+// openGet sends the request for (part of) a file and reads the header of the answer. A link that is
+// replaced before the answer comes is no reason to fail: the request goes again on the link that stays.
+// afterReplace says that the caller's own link has just been replaced: the old one is gone and the new
+// one may not be installed yet, for that moment the device looks offline, so the request waits a little.
+func (m *Manager) openGet(ctx context.Context, id identity.ID, share, rel string, offset, length int64, afterReplace bool) (*mesh.ClientStream, FileMeta, error) {
+	deadline := time.Now().Add(replacementWait)
+	for replaced := 0; ; {
+		cs, meta, err := m.openGetOnce(ctx, id, share, rel, offset, length)
+		switch {
+		case err == nil:
+			return cs, meta, nil
+		case mesh.IsReplaced(err) && replaced < maxResumes:
+			replaced++
+		case afterReplace && mesh.IsCode(err, mesh.CodeOffline) && time.Now().Before(deadline):
+			select {
+			case <-time.After(20 * time.Millisecond):
+			case <-ctx.Done():
+				return nil, FileMeta{}, err
+			}
+		default:
+			return nil, FileMeta{}, err
+		}
+	}
+}
+
+func (m *Manager) openGetOnce(ctx context.Context, id identity.ID, share, rel string, offset, length int64) (*mesh.ClientStream, FileMeta, error) {
+	p, err := m.peer(id)
+	if err != nil {
+		return nil, FileMeta{}, err
 	}
 	cs, err := p.OpenStream(ctx, "files.get", map[string]any{"share": share, "path": rel, "offset": offset, "length": length})
 	if err != nil {
-		return nil, err
-	}
-	if err := cs.CloseWrite(); err != nil {
-		cs.Cancel()
-		return nil, err
+		return nil, FileMeta{}, err
 	}
 	var meta FileMeta
+	if err := cs.CloseWrite(); err != nil {
+		cs.Cancel()
+		return nil, FileMeta{}, err
+	}
 	if err := cs.ReadResponse(&meta); err != nil {
 		cs.Cancel()
-		return nil, err
+		return nil, FileMeta{}, err
 	}
-	return &RemoteReader{cs: cs, Meta: meta}, nil
+	return cs, meta, nil
 }
 
 // RemotePut uploads size bytes from r into a remote read-write share.

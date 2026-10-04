@@ -363,6 +363,11 @@ func replaced(err error) bool {
 	return errors.As(err, &ae) && ae.ErrorCode == closeDuplicate
 }
 
+// IsReplaced reports whether err says that the link was closed because another link to the same device took
+// its place (see keepNewConn): nothing is wrong with the device or the path, and a request that can be made
+// twice (reading a file from an offset, say) can simply go again on the link that stays.
+func IsReplaced(err error) bool { return replaced(err) }
+
 // replacement waits (a moment) for the link that took the place of failed.
 func (p *Peer) replacement(ctx context.Context, failed *quic.Conn) *quic.Conn {
 	deadline := time.NewTimer(3 * time.Second)

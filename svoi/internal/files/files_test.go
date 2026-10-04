@@ -562,3 +562,139 @@ func TestCancelAndRetry(t *testing.T) {
 		t.Fatal("canceling a finished transfer should fail")
 	}
 }
+
+// replaceLinkUnder makes the node with the lower ID dial the other again: that dial wins at both ends (see
+// mesh.keepNewConn), the link in use is closed as superseded - what happens by itself when two devices dial
+// each other at the same moment, and what cut a download of the test above short on a slow machine.
+func replaceLinkUnder(t *testing.T, ctx context.Context, a, b *mesh.Node) {
+	t.Helper()
+	ida, idb := a.ID(), b.ID()
+	lower, upper := a, b
+	if bytes.Compare(idb[:], ida[:]) < 0 {
+		lower, upper = b, a
+	}
+	if err := lower.ReplaceLink(ctx, upper.ID()); err != nil {
+		t.Fatalf("replace the link: %v", err)
+	}
+}
+
+func TestADownloadGoesOnWhenItsLinkIsReplaced(t *testing.T) {
+	h := meshtest.New(t)
+	nas := h.Public("nas", "198.51.100.1")
+	laptop := h.Public("laptop", "198.51.100.2")
+	h.Mesh(nas, laptop)
+
+	dir := t.TempDir()
+	payload := make([]byte, 32<<20+5) // more than any window the link has, so most of it is still on the way
+	rand.Read(payload)
+	writeFile(t, filepath.Join(dir, "film.bin"), payload)
+	shares := []Share{{ID: "media", Name: "Media", Path: dir, Mode: "ro", Allow: []string{"*"}}}
+	newManager(t, nas, &shares, &TransferSettings{DownloadDir: t.TempDir(), AutoAccept: "all"})
+	lapShares := []Share{}
+	lapM := newManager(t, laptop, &lapShares, &TransferSettings{DownloadDir: t.TempDir(), AutoAccept: "all"})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	rr, err := lapM.RemoteOpen(ctx, nas.ID(), "media", "/film.bin", 0, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rr.Close()
+	got := make([]byte, 256<<10)
+	if _, err := io.ReadFull(rr, got); err != nil {
+		t.Fatal(err)
+	}
+
+	replaceLinkUnder(t, ctx, nas, laptop) // under the download, which is far from done
+
+	rest, err := io.ReadAll(rr)
+	got = append(got, rest...)
+	if err != nil || !bytes.Equal(got, payload) {
+		t.Fatalf("download mismatch: %d of %d bytes, err=%v", len(got), len(payload), err)
+	}
+	if rr.resumes == 0 {
+		t.Fatal("the link was not replaced under the download, so this test proved nothing")
+	}
+	t.Logf("the download went on over the new link %d time(s)", rr.resumes)
+}
+
+func TestARangeReadGoesOnWhenItsLinkIsReplaced(t *testing.T) {
+	h := meshtest.New(t)
+	nas := h.Public("nas", "198.51.100.1")
+	laptop := h.Public("laptop", "198.51.100.2")
+	h.Mesh(nas, laptop)
+
+	dir := t.TempDir()
+	payload := make([]byte, 24<<20)
+	rand.Read(payload)
+	writeFile(t, filepath.Join(dir, "film.bin"), payload)
+	shares := []Share{{ID: "media", Name: "Media", Path: dir, Mode: "ro", Allow: []string{"*"}}}
+	newManager(t, nas, &shares, &TransferSettings{DownloadDir: t.TempDir(), AutoAccept: "all"})
+	lapShares := []Share{}
+	lapM := newManager(t, laptop, &lapShares, &TransferSettings{DownloadDir: t.TempDir(), AutoAccept: "all"})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	// what a video player asks for after a seek: bytes from the middle, a bounded range
+	const from, count = 5 << 20, 16 << 20
+	rr, err := lapM.RemoteOpen(ctx, nas.ID(), "media", "/film.bin", from, count)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rr.Close()
+	got := make([]byte, 128<<10)
+	if _, err := io.ReadFull(rr, got); err != nil {
+		t.Fatal(err)
+	}
+	replaceLinkUnder(t, ctx, nas, laptop)
+	rest, err := io.ReadAll(rr)
+	got = append(got, rest...)
+	if err != nil || !bytes.Equal(got, payload[from:from+count]) {
+		t.Fatalf("range mismatch: %d of %d bytes, err=%v", len(got), count, err)
+	}
+	if rr.resumes == 0 {
+		t.Fatal("the link was not replaced under the read, so this test proved nothing")
+	}
+}
+
+func TestADownloadDoesNotGoOnWithAnotherFile(t *testing.T) {
+	h := meshtest.New(t)
+	nas := h.Public("nas", "198.51.100.1")
+	laptop := h.Public("laptop", "198.51.100.2")
+	h.Mesh(nas, laptop)
+
+	dir := t.TempDir()
+	payload := make([]byte, 32<<20)
+	rand.Read(payload)
+	path := filepath.Join(dir, "film.bin")
+	writeFile(t, path, payload)
+	shares := []Share{{ID: "media", Name: "Media", Path: dir, Mode: "ro", Allow: []string{"*"}}}
+	newManager(t, nas, &shares, &TransferSettings{DownloadDir: t.TempDir(), AutoAccept: "all"})
+	lapShares := []Share{}
+	lapM := newManager(t, laptop, &lapShares, &TransferSettings{DownloadDir: t.TempDir(), AutoAccept: "all"})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	rr, err := lapM.RemoteOpen(ctx, nas.ID(), "media", "/film.bin", 0, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rr.Close()
+	got := make([]byte, 256<<10)
+	if _, err := io.ReadFull(rr, got); err != nil {
+		t.Fatal(err)
+	}
+	// the file is replaced by another one of another size, then the link is replaced
+	other := make([]byte, 20<<20)
+	rand.Read(other)
+	writeFile(t, path, other)
+	replaceLinkUnder(t, ctx, nas, laptop)
+
+	rest, err := io.ReadAll(rr)
+	if err == nil {
+		t.Fatalf("the rest of another file was read as the rest of the first: %d bytes", len(rest))
+	}
+	if !mesh.IsReplaced(err) {
+		t.Fatalf("the reader should report what really happened to its link, got %v", err)
+	}
+}
