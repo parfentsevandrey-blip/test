@@ -1,0 +1,79 @@
+name: The Mesh publish
+
+# Puts files that an earlier CI run has already built and tested (an installer, an APK) on a GitHub release: a direct link to
+# one file, which an Actions artifact cannot give (it is a zip of everything, behind a sign-in). Nothing is rebuilt; only the
+# files named below are published, as a pre-release by default. Started by hand: Actions -> «The Mesh publish» -> Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "id of the CI run that built the files (the number in the run's address)"
+        required: true
+      artifact:
+        description: "name of that run's artifact, for example themesh-desktop-macOS"
+        required: true
+      files:
+        description: "files of the artifact to publish, separated by spaces, for example TheMesh-0.1.0-mac-arm64.dmg"
+        required: true
+      tag:
+        description: "tag of the release (created at `commit` if it does not exist yet), for example themesh-mac-v0.1.0"
+        required: true
+      commit:
+        description: "full hash of the commit the files were built from"
+        required: true
+      title:
+        description: "title of the release"
+        required: true
+      notes:
+        description: "text of the release"
+        required: false
+        default: ""
+      prerelease:
+        description: "mark it as a pre-release"
+        type: boolean
+        default: true
+  push:
+    # Only so that GitHub registers this workflow when it is pushed to a branch (a workflow that exists only on a branch cannot
+    # be started by hand before it has run once). The job below does nothing for a push.
+    paths: [".github/workflows/themesh-publish.yml"]
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the release and attach the files
+      actions: read     # read the artifact of the other run
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact }}
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+          path: artifact
+
+      - name: Take only the named files and write their checksums
+        env:
+          FILES: ${{ inputs.files }}
+        run: |
+          set -eu
+          mkdir publish
+          for f in $FILES; do
+            case "$f" in */* | .*) echo "not a plain file name: $f"; exit 1 ;; esac
+            test -f "artifact/$f" || { echo "the artifact has no file $f; it has:"; ls -la artifact; exit 1; }
+            cp "artifact/$f" publish/
+          done
+          (cd publish && sha256sum -- * > ../SHA256SUMS.txt)
+          cp SHA256SUMS.txt publish/
+          ls -la publish
+          cat SHA256SUMS.txt
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          target_commitish: ${{ inputs.commit }}
+          name: ${{ inputs.title }}
+          body: ${{ inputs.notes }}
+          prerelease: ${{ inputs.prerelease }}
+          fail_on_unmatched_files: true
+          files: publish/*
