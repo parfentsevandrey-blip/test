@@ -108,6 +108,8 @@ public class ScanActivity extends ComponentActivity {
     private boolean asked; // разрешение уже спрашивали (запоминается, чтобы после пересоздания окна не спрашивать снова)
     private boolean requesting; // системный запрос разрешения на экране
     private boolean denied; // разрешения нет: вместо превью — объяснение
+    private volatile int deliveredCode = RESULT_CANCELED; // что отдано окну: см. deliveredData()
+    private volatile Intent deliveredData;
 
     private PreviewView preview;
     private View frame;
@@ -218,8 +220,23 @@ public class ScanActivity extends ComponentActivity {
         if (error != null) {
             data.putExtra(EXTRA_ERROR, error);
         }
+        deliveredCode = resultCode;
+        deliveredData = data;
         setResult(resultCode, data);
         finish();
+    }
+
+    /**
+     * Ответ, отданный окну ({@code null}, пока ничего не отдано), и его код. Доступно пакету — для тестов на устройстве: через
+     * {@code ActivityScenario.launchActivityForResult().getResult()} на эмуляторе в CI каждый ответ ждался около 45 секунд
+     * (таймаут самого {@code ActivityScenario}), а здесь он виден сразу. Что окно получает этот ответ, проверяет {@code SmokeTest}.
+     */
+    Intent deliveredData() {
+        return deliveredData;
+    }
+
+    int deliveredCode() {
+        return deliveredCode;
     }
 
     /** Человек вышел. Если он вышел из объяснения про разрешение — это «denied»: странице есть что сказать. */

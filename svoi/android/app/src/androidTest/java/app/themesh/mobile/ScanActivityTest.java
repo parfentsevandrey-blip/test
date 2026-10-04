@@ -2,6 +2,7 @@ package app.themesh.mobile;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -14,11 +15,13 @@ import android.app.Activity;
 import android.app.Instrumentation;
 import android.app.UiAutomation;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
@@ -47,6 +50,11 @@ import java.util.function.Function;
  * настроек. Кадр с настоящим QR-кодом эмулятору не показать, поэтому «прочитанное камерой» подставляется вызовом
  * {@code ScanActivity.onDecoded}; распознавание кадров проверено отдельно (модульные тесты {@code QrDecoder}, {@code QrAnalyzer}).
  *
+ * <p>Ответ экрана читается у самого экрана ({@code deliveredCode}, {@code deliveredData}), а не через
+ * {@code launchActivityForResult().getResult()}: на эмуляторе в CI тот ждал ответ около 45 секунд после каждого закрытия (таймаут
+ * {@code ActivityScenario}), и прогон из секунд превращался в четверть часа. То, что окно получает ответ экрана, проверяет
+ * {@code SmokeTest} (настоящее окно открывает настоящий сканер).
+ *
  * <p>Порядок тестов важен: разрешение на камеру, выданное один раз, из процесса приложения не отозвать (система убивает
  * процесс, а в нём идёт тест: проверено, «Process crashed»), поэтому первым идёт тест без разрешения, а остальные выдают его
  * себе сами. Если разрешение уже выдано (повторный прогон на том же устройстве, другой тест), первый тест честно пропускается.
@@ -55,6 +63,7 @@ import java.util.function.Function;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ScanActivityTest {
     private static final String PACKAGE = "app.themesh.mobile";
+    private static final String TAG = "themesh-test";
     /** Приглашение настоящей длины (250 знаков), без дефисов. */
     private static final String INVITE = TestInvite.CODE;
 
@@ -71,7 +80,8 @@ public class ScanActivityTest {
         assumeTrue("у устройства нет камеры (так и должно закрываться: см. последний тест)", hasCamera());
         assumeFalse("разрешение на камеру уже выдано (другим тестом или человеком), а отозвать его из процесса приложения нельзя: "
                 + "система убивает процесс, в котором идёт тест", hasPermission());
-        try (ActivityScenario<ScanActivity> scenario = ActivityScenario.launchActivityForResult(ScanActivity.class)) {
+        try (ActivityScenario<ScanActivity> scenario = open()) {
+            ScanActivity scanner = activityOf(scenario);
             // система спрашивает, человек (тест) отвечает «Не разрешать» — и вместо превью появляется объяснение
             long end = SystemClock.elapsedRealtime() + waitMs;
             String screen = "";
@@ -98,10 +108,10 @@ public class ScanActivityTest {
             });
             assertFalse("разрешения по-прежнему нет", hasPermission());
             scenario.onActivity(a -> a.findViewById(R.id.scan_denied_cancel).performClick());
-            Instrumentation.ActivityResult result = scenario.getResult();
-            assertEquals(Activity.RESULT_CANCELED, result.getResultCode());
-            assertEquals("странице сказано, что камера запрещена", "denied", result.getResultData().getStringExtra(ScanActivity.EXTRA_ERROR));
-            assertNull(result.getResultData().getStringExtra(ScanActivity.EXTRA_INVITE));
+            Answer answer = awaitAnswer(scanner);
+            assertEquals(Activity.RESULT_CANCELED, answer.code);
+            assertEquals("странице сказано, что камера запрещена", "denied", answer.data.getStringExtra(ScanActivity.EXTRA_ERROR));
+            assertNull(answer.data.getStringExtra(ScanActivity.EXTRA_INVITE));
         }
     }
 
@@ -110,8 +120,9 @@ public class ScanActivityTest {
     @Test
     public void test2_thePreviewStreamsAndCancelClosesTheScreen() throws Exception {
         assumeCameraWorks();
-        try (ActivityScenario<ScanActivity> scenario = ActivityScenario.launchActivityForResult(ScanActivity.class)) {
-            waitForStreaming(scenario);
+        try (ActivityScenario<ScanActivity> scenario = open()) {
+            ScanActivity screen = activityOf(scenario);
+            waitForStreaming(scenario, screen);
             // кадры доходят и до распознавания (а не только до превью): плоскость яркости годится, строки и размеры верны
             waitFor("кадры камеры не дошли до распознавания", waitMs, () -> on(scenario, a -> a.framesAnalysed()) > 0);
             scenario.onActivity(a -> {
@@ -136,35 +147,37 @@ public class ScanActivityTest {
             assertEquals(PreviewView.StreamState.STREAMING, streamState(scenario));
 
             scenario.onActivity(a -> a.findViewById(R.id.scan_cancel).performClick());
-            Instrumentation.ActivityResult result = scenario.getResult();
-            assertEquals(Activity.RESULT_CANCELED, result.getResultCode());
-            assertNull("человек просто вышел: без приглашения", result.getResultData().getStringExtra(ScanActivity.EXTRA_INVITE));
-            assertNull("и без ошибки", result.getResultData().getStringExtra(ScanActivity.EXTRA_ERROR));
+            Answer answer = awaitAnswer(screen);
+            assertEquals(Activity.RESULT_CANCELED, answer.code);
+            assertNull("человек просто вышел: без приглашения", answer.data.getStringExtra(ScanActivity.EXTRA_INVITE));
+            assertNull("и без ошибки", answer.data.getStringExtra(ScanActivity.EXTRA_ERROR));
         }
     }
 
     @Test
     public void test3_backClosesTheScreenToo() throws Exception {
         assumeCameraWorks();
-        try (ActivityScenario<ScanActivity> scenario = ActivityScenario.launchActivityForResult(ScanActivity.class)) {
-            waitForStreaming(scenario);
+        try (ActivityScenario<ScanActivity> scenario = open()) {
+            ScanActivity screen = activityOf(scenario);
+            waitForStreaming(scenario, screen);
             scenario.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
-            Instrumentation.ActivityResult result = scenario.getResult();
-            assertEquals(Activity.RESULT_CANCELED, result.getResultCode());
-            assertNull(result.getResultData().getStringExtra(ScanActivity.EXTRA_ERROR));
+            Answer answer = awaitAnswer(screen);
+            assertEquals(Activity.RESULT_CANCELED, answer.code);
+            assertNull(answer.data.getStringExtra(ScanActivity.EXTRA_ERROR));
         }
     }
 
     @Test
     public void test4_theCameraIsReleasedWhenTheScreenCloses() throws Exception {
         assumeCameraWorks();
-        try (ActivityScenario<ScanActivity> scenario = ActivityScenario.launchActivityForResult(ScanActivity.class)) {
-            waitForStreaming(scenario);
+        try (ActivityScenario<ScanActivity> scenario = open()) {
+            ScanActivity screen = activityOf(scenario);
+            waitForStreaming(scenario, screen);
             String during = cameraClients();
             assumeTrue("в выводе dumpsys media.camera нет нашего приложения среди тех, кто держит камеру, пока она работает; "
                     + "проверять отпускание не с чем:\n" + during, during.contains(PACKAGE));
             scenario.onActivity(a -> a.findViewById(R.id.scan_cancel).performClick());
-            scenario.getResult();
+            awaitAnswer(screen);
         }
         long end = SystemClock.elapsedRealtime() + 15_000;
         String after = cameraClients();
@@ -178,8 +191,9 @@ public class ScanActivityTest {
     @Test
     public void test5_turningThePhoneKeepsTheSameScreenAndTheCamera() throws Exception {
         assumeCameraWorks();
-        try (ActivityScenario<ScanActivity> scenario = ActivityScenario.launchActivityForResult(ScanActivity.class)) {
-            waitForStreaming(scenario);
+        try (ActivityScenario<ScanActivity> scenario = open()) {
+            ScanActivity screen = activityOf(scenario);
+            waitForStreaming(scenario, screen);
             AtomicReference<Activity> before = new AtomicReference<>();
             scenario.onActivity(before::set);
             int was = on(scenario, a -> a.getResources().getConfiguration().orientation);
@@ -201,7 +215,7 @@ public class ScanActivityTest {
                 scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED));
             }
             scenario.onActivity(a -> a.findViewById(R.id.scan_cancel).performClick());
-            scenario.getResult();
+            awaitAnswer(screen);
         }
     }
 
@@ -212,12 +226,13 @@ public class ScanActivityTest {
         assumeTrue("у устройства нет камеры", hasCamera());
         grant();
         for (String shown : new String[] {INVITE, "themesh://join?code=" + INVITE.toLowerCase(), TestInvite.grouped(INVITE)}) {
-            try (ActivityScenario<ScanActivity> scenario = ActivityScenario.launchActivityForResult(ScanActivity.class)) {
+            try (ActivityScenario<ScanActivity> scenario = open()) {
+                ScanActivity screen = activityOf(scenario);
                 scenario.onActivity(a -> a.onDecoded(shown));
-                Instrumentation.ActivityResult result = scenario.getResult();
-                assertEquals(shown, Activity.RESULT_OK, result.getResultCode());
-                assertEquals("приглашение отдано в обычном виде", INVITE, result.getResultData().getStringExtra(ScanActivity.EXTRA_INVITE));
-                assertNull(result.getResultData().getStringExtra(ScanActivity.EXTRA_ERROR));
+                Answer answer = awaitAnswer(screen);
+                assertEquals(shown, Activity.RESULT_OK, answer.code);
+                assertEquals("приглашение отдано в обычном виде", INVITE, answer.data.getStringExtra(ScanActivity.EXTRA_INVITE));
+                assertNull(answer.data.getStringExtra(ScanActivity.EXTRA_ERROR));
             }
         }
     }
@@ -226,7 +241,8 @@ public class ScanActivityTest {
     public void test7_aForeignCodeIsAnnouncedAndScanningGoesOn() throws Exception {
         assumeTrue("у устройства нет камеры", hasCamera());
         grant();
-        try (ActivityScenario<ScanActivity> scenario = ActivityScenario.launchActivityForResult(ScanActivity.class)) {
+        try (ActivityScenario<ScanActivity> scenario = open()) {
+            ScanActivity screen = activityOf(scenario);
             scenario.onActivity(a -> a.onDecoded("https://example.com/not-the-mesh"));
             waitFor("«Это QR-код не от The Mesh» не появилось", 10_000,
                     () -> on(scenario, a -> a.findViewById(R.id.scan_notice).getVisibility() == View.VISIBLE));
@@ -235,9 +251,9 @@ public class ScanActivityTest {
             // сообщение пропадает само, и экран по-прежнему принимает приглашение
             waitFor("сообщение не пропало само", 10_000, () -> on(scenario, a -> a.findViewById(R.id.scan_notice).getVisibility() != View.VISIBLE));
             scenario.onActivity(a -> a.onDecoded(INVITE));
-            Instrumentation.ActivityResult result = scenario.getResult();
-            assertEquals(Activity.RESULT_OK, result.getResultCode());
-            assertEquals(INVITE, result.getResultData().getStringExtra(ScanActivity.EXTRA_INVITE));
+            Answer answer = awaitAnswer(screen);
+            assertEquals(Activity.RESULT_OK, answer.code);
+            assertEquals(INVITE, answer.data.getStringExtra(ScanActivity.EXTRA_INVITE));
         }
     }
 
@@ -245,25 +261,27 @@ public class ScanActivityTest {
     public void test8_theResultIsDeliveredOnceAndTheFirstOneWins() throws Exception {
         assumeTrue("у устройства нет камеры", hasCamera());
         grant();
-        try (ActivityScenario<ScanActivity> scenario = ActivityScenario.launchActivityForResult(ScanActivity.class)) {
+        try (ActivityScenario<ScanActivity> scenario = open()) {
+            ScanActivity screen = activityOf(scenario);
             scenario.onActivity(a -> {
                 a.findViewById(R.id.scan_cancel).performClick(); // человек успел нажать «Отмена»
                 a.onDecoded(INVITE); // а камера прочитала код в тот же миг
                 a.onDecoded(INVITE);
                 a.findViewById(R.id.scan_cancel).performClick();
             });
-            Instrumentation.ActivityResult result = scenario.getResult();
-            assertEquals("первым был «Отмена»", Activity.RESULT_CANCELED, result.getResultCode());
-            assertNull(result.getResultData().getStringExtra(ScanActivity.EXTRA_INVITE));
+            Answer answer = awaitAnswer(screen);
+            assertEquals("первым был «Отмена»", Activity.RESULT_CANCELED, answer.code);
+            assertNull(answer.data.getStringExtra(ScanActivity.EXTRA_INVITE));
         }
-        try (ActivityScenario<ScanActivity> scenario = ActivityScenario.launchActivityForResult(ScanActivity.class)) {
+        try (ActivityScenario<ScanActivity> scenario = open()) {
+            ScanActivity screen = activityOf(scenario);
             scenario.onActivity(a -> {
                 a.onDecoded(INVITE); // приглашение первым, потом ещё раз то же, потом «Отмена»
                 a.onDecoded(INVITE);
             });
-            Instrumentation.ActivityResult result = scenario.getResult();
-            assertEquals(Activity.RESULT_OK, result.getResultCode());
-            assertEquals(INVITE, result.getResultData().getStringExtra(ScanActivity.EXTRA_INVITE));
+            Answer answer = awaitAnswer(screen);
+            assertEquals(Activity.RESULT_OK, answer.code);
+            assertEquals(INVITE, answer.data.getStringExtra(ScanActivity.EXTRA_INVITE));
         }
     }
 
@@ -272,6 +290,7 @@ public class ScanActivityTest {
     @Test
     public void test9_aPhoneWithoutACameraClosesAtOnceAsUnavailable() throws Exception {
         assumeFalse("у устройства есть камера: экран работает по-настоящему (тесты выше)", hasCamera());
+        // Здесь экран закрывается ещё в onCreate, ActivityScenario.launch его уже не застаёт, поэтому ответ берётся у системы.
         try (ActivityScenario<ScanActivity> scenario = ActivityScenario.launchActivityForResult(ScanActivity.class)) {
             Instrumentation.ActivityResult result = scenario.getResult();
             assertEquals(Activity.RESULT_CANCELED, result.getResultCode());
@@ -300,6 +319,42 @@ public class ScanActivityTest {
         assumeTrue("камера не открывается и без нашего экрана (в эмуляторе нет камеры?)", CameraProbe.opens(context));
     }
 
+    /**
+     * Экран сканера, запущенный как есть (не через {@code launchActivityForResult}: см. описание класса). Ответ экрана читается
+     * у самого экрана, {@link #awaitAnswer}.
+     */
+    private ActivityScenario<ScanActivity> open() {
+        return ActivityScenario.launch(ScanActivity.class);
+    }
+
+    /** Сам экран: после закрытия у {@code ActivityScenario} его уже не спросить, а ответ экрана лежит в нём. */
+    private ScanActivity activityOf(ActivityScenario<ScanActivity> scenario) {
+        return on(scenario, a -> a);
+    }
+
+    /** Ответ экрана окну: код и данные. */
+    private static final class Answer {
+        final int code;
+        final Intent data;
+
+        Answer(int code, Intent data) {
+            this.code = code;
+            this.data = data;
+        }
+    }
+
+    /** Ждёт, пока экран отдаст ответ и закроется (камера при этом отпускается), и возвращает ответ. */
+    private Answer awaitAnswer(ScanActivity screen) throws Exception {
+        long begin = SystemClock.elapsedRealtime();
+        waitFor("экран не отдал ответ", Math.min(waitMs, 60_000), () -> screen.deliveredData() != null);
+        long answered = SystemClock.elapsedRealtime();
+        waitFor("экран не закрылся после ответа", Math.min(waitMs, 60_000), screen::isDestroyed);
+        Log.i(TAG, "the answer after " + (answered - begin) + " ms, the screen closed after " + (SystemClock.elapsedRealtime() - begin) + " ms");
+        Intent data = screen.deliveredData();
+        assertNotNull("ответ отдан", data);
+        return new Answer(screen.deliveredCode(), data);
+    }
+
     private <T> T on(ActivityScenario<ScanActivity> scenario, Function<ScanActivity, T> read) {
         AtomicReference<T> out = new AtomicReference<>();
         scenario.onActivity(a -> out.set(read.apply(a)));
@@ -326,14 +381,14 @@ public class ScanActivityTest {
     }
 
     /** Ждёт, пока превью камеры не пойдёт ({@code STREAMING}); если экран закрылся сам, объясняет почему. */
-    private void waitForStreaming(ActivityScenario<ScanActivity> scenario) throws Exception {
+    private void waitForStreaming(ActivityScenario<ScanActivity> scenario, ScanActivity screen) throws Exception {
         long end = SystemClock.elapsedRealtime() + waitMs;
         String last = "ещё не спрашивали";
         while (SystemClock.elapsedRealtime() < end) {
-            if (scenario.getState() == Lifecycle.State.DESTROYED) {
-                Instrumentation.ActivityResult result = scenario.getResult();
-                fail("экран закрылся сам, не дождавшись превью: код " + result.getResultCode() + ", ошибка «"
-                        + result.getResultData().getStringExtra(ScanActivity.EXTRA_ERROR) + "», хотя камера сама по себе открывается");
+            if (screen.isDestroyed()) {
+                Intent data = screen.deliveredData();
+                fail("экран закрылся сам, не дождавшись превью: код " + screen.deliveredCode() + ", ошибка «"
+                        + (data == null ? "ответа не было" : data.getStringExtra(ScanActivity.EXTRA_ERROR)) + "», хотя камера сама по себе открывается");
             }
             try {
                 PreviewView.StreamState state = streamState(scenario);

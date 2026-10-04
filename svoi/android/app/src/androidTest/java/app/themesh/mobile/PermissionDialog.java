@@ -3,7 +3,10 @@ package app.themesh.mobile;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.UiAutomation;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityWindowInfo;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -12,6 +15,10 @@ import java.util.Locale;
  * (проверено: «Process crashed»), — поэтому отказ даёт настоящий отказ человека в настоящем диалоге. Кнопку ищем по
  * идентификатору ({@code …:id/permission_deny_button}: пакет PermissionController на образах AOSP и Google API называется
  * по-разному, поэтому смотрим только на хвост) и, если не нашлось, по тексту.
+ *
+ * <p>Ищем во всех окнах, а не только в активном: на только что загруженном эмуляторе поверх запроса бывает окно системы «Pixel
+ * Launcher isn't responding» (так и упал первый прогон в CI), и «активным» оказывается оно. Если кнопки отказа нет ни в одном
+ * окне, а такое окно есть, нажимаем в нём «Подождать» и ищем снова на следующем круге.
  */
 final class PermissionDialog {
     private PermissionDialog() {
@@ -35,16 +42,50 @@ final class PermissionDialog {
             info.flags |= AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS | AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
             automation.setServiceInfo(info);
         }
-        AccessibilityNodeInfo root = automation.getRootInActiveWindow();
-        if (root == null) {
-            return new Result(false, "активного окна нет");
+        List<AccessibilityNodeInfo> roots = roots(automation);
+        if (roots.isEmpty()) {
+            return new Result(false, "окон нет");
         }
-        StringBuilder screen = new StringBuilder(String.valueOf(root.getPackageName())).append(':');
-        AccessibilityNodeInfo button = find(root, screen, 0);
-        return new Result(button != null && button.performAction(AccessibilityNodeInfo.ACTION_CLICK), screen.toString());
+        StringBuilder screen = new StringBuilder();
+        AccessibilityNodeInfo wait = null;
+        for (AccessibilityNodeInfo root : roots) {
+            screen.append(screen.length() == 0 ? "" : " | ").append(root.getPackageName()).append(':');
+            AccessibilityNodeInfo button = find(root, screen, 0, false);
+            if (button != null && button.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+                return new Result(true, screen.toString());
+            }
+            if (wait == null) {
+                wait = find(root, new StringBuilder(), 0, true);
+            }
+        }
+        if (wait != null && wait.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+            screen.append(" [нажато «Подождать» в окне «не отвечает»]");
+        }
+        return new Result(false, screen.toString());
     }
 
-    private static AccessibilityNodeInfo find(AccessibilityNodeInfo node, StringBuilder screen, int depth) {
+    private static List<AccessibilityNodeInfo> roots(UiAutomation automation) {
+        List<AccessibilityNodeInfo> roots = new ArrayList<>();
+        List<AccessibilityWindowInfo> windows = automation.getWindows();
+        if (windows != null) {
+            for (AccessibilityWindowInfo window : windows) {
+                AccessibilityNodeInfo root = window.getRoot();
+                if (root != null) {
+                    roots.add(root);
+                }
+            }
+        }
+        if (roots.isEmpty()) {
+            AccessibilityNodeInfo active = automation.getRootInActiveWindow();
+            if (active != null) {
+                roots.add(active);
+            }
+        }
+        return roots;
+    }
+
+    /** Кнопка отказа ({@code waitButton == false}) или кнопка «Подождать» окна «не отвечает» ({@code true}); {@code null} — нет. */
+    private static AccessibilityNodeInfo find(AccessibilityNodeInfo node, StringBuilder screen, int depth, boolean waitButton) {
         if (node == null || depth > 30) {
             return null;
         }
@@ -53,11 +94,11 @@ final class PermissionDialog {
         if (text != null && text.length() > 0 && screen.length() < 600) {
             screen.append(" «").append(text).append('»');
         }
-        if (node.isClickable() && (isDenyId(id) || isDenyText(text))) {
+        if (node.isClickable() && (waitButton ? isWait(id, text) : (isDenyId(id) || isDenyText(text)))) {
             return node;
         }
         for (int i = 0; i < node.getChildCount(); i++) {
-            AccessibilityNodeInfo found = find(node.getChild(i), screen, depth + 1);
+            AccessibilityNodeInfo found = find(node.getChild(i), screen, depth + 1, waitButton);
             if (found != null) {
                 return found;
             }
@@ -75,5 +116,14 @@ final class PermissionDialog {
         }
         String t = text.toString().trim().toLowerCase(Locale.ROOT).replace('’', '\'');
         return t.equals("don't allow") || t.equals("deny") || t.equals("не разрешать") || t.equals("запретить");
+    }
+
+    /** «Подождать» в окне «Приложение не отвечает» ({@code android:id/aerr_wait}). */
+    private static boolean isWait(String id, CharSequence text) {
+        if (id != null && id.endsWith(":id/aerr_wait")) {
+            return true;
+        }
+        String t = text == null ? "" : text.toString().trim().toLowerCase(Locale.ROOT);
+        return t.equals("wait") || t.equals("подождать");
     }
 }
