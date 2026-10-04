@@ -119,8 +119,57 @@ async function main() {
       await sleep(400);
     }
   }
+  await gallery(display, wallpaper);
   await capture(path.join(OUT, '99-whole-screen.png'));
   wallpaper.destroy();
+}
+
+// The screens of the interface in the window as the app makes it (the first variant), light and dark. The screen of
+// a CI machine is 1024 px wide, so the page is shown at 80 %: the sidebar then has its full width, as on a laptop.
+const SCREENS = [
+  { name: 'home', hash: '#/home' },
+  { name: 'devices', hash: '#/devices' },
+  { name: 'files', hash: '#/files/send' },
+  { name: 'mail', hash: '#/mail/inbox', js: "document.querySelector('.mitem__link') && document.querySelector('.mitem__link').click()" },
+  { name: 'chat', hash: '#/chat', js: "document.querySelector('.thread') && document.querySelector('.thread').click()" },
+  { name: 'invite', hash: '#/home?add=1', js: "(async () => { await new Promise((r) => setTimeout(r, 400)); const b = document.querySelector('[data-testid=invite-create]'); if (b) b.click(); })()" },
+  { name: 'settings', hash: '#/settings/interface' },
+];
+
+async function gallery(display) {
+  let n = 0;
+  for (const theme of ['light', 'dark']) {
+    nativeTheme.themeSource = theme;
+    const reduced = !!nativeTheme.prefersReducedTransparency;
+    const look = windowLook({ platform: 'darwin', env: {}, dark: theme === 'dark', reducedTransparency: reduced, version: app.getVersion() });
+    const win = new BrowserWindow({
+      width: 1000, height: 672, x: display.bounds.x + 12, y: display.bounds.y + 42, show: false, title: 'The Mesh probe',
+      ...look.options,
+      webPreferences: { partition: `probe-gallery-${theme}`, sandbox: true, contextIsolation: true, nodeIntegration: false, zoomFactor: 0.8 },
+    });
+    const wc = win.webContents;
+    wc.setUserAgent(`${wc.getUserAgent()} ${look.userAgentToken}`);
+    await loaded(win, `${URL_BASE}/#/home`);
+    await wc.executeJavaScript(`try { localStorage.setItem('themesh.lang', 'ru'); localStorage.setItem('themesh.theme', ${JSON.stringify(theme)}); } catch (e) {}`);
+    await loaded(win, `${URL_BASE}/?gallery=${Date.now()}#/home`);
+    wc.setZoomFactor(0.8);
+    win.show();
+    win.focus();
+    app.focus({ steal: true });
+    await sleep(2500);
+    for (const sc of SCREENS) {
+      await wc.executeJavaScript(`location.hash = ${JSON.stringify(sc.hash)}`);
+      await sleep(1200);
+      if (sc.js) {
+        await wc.executeJavaScript(sc.js).catch((e) => log('script', sc.name, e.message));
+        await sleep(1200);
+      }
+      const b = win.getBounds();
+      await capture(path.join(OUT, `g${String(++n).padStart(2, '0')}-${theme}-${sc.name}.png`), { x: Math.max(0, b.x - 12), y: Math.max(0, b.y - 12), width: Math.min(display.bounds.width, b.width + 24), height: Math.min(display.bounds.height - 12, b.height + 36) });
+    }
+    win.destroy();
+    await sleep(400);
+  }
 }
 
 app.whenReady().then(main).then(() => app.quit(), (e) => {

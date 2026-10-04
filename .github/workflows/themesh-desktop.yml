@@ -109,6 +109,17 @@ jobs:
           echo "exe=$exe" >> "$GITHUB_OUTPUT"
           echo "packaged app: $exe"
 
+      - name: macOS - the hosted machines have "Reduce transparency" on; switch it off, so that the window is drawn as on a person's Mac (best effort)
+        if: runner.os == 'macOS'
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "reduceTransparency before: $(defaults read com.apple.universalaccess reduceTransparency 2>&1)"
+          defaults write com.apple.universalaccess reduceTransparency -bool false || echo "(could not write the setting)"
+          killall cfprefsd universalaccessd 2>/dev/null || true
+          sleep 2
+          echo "reduceTransparency after: $(defaults read com.apple.universalaccess reduceTransparency 2>&1)"
+
       - name: End-to-end test of the packaged app (on Linux under a virtual screen)
         working-directory: svoi/desktop
         shell: bash

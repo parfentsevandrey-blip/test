@@ -323,7 +323,7 @@ test('with macOS "Reduce transparency" the title bar stays hidden but nothing is
   assert.equal(light.options.vibrancy, undefined);
   assert.equal(light.options.backgroundColor, '#f4f2ee');
   assert.equal(windowLook({ platform: 'darwin', env: {}, dark: true, reducedTransparency: true }).options.backgroundColor, '#0d1012');
-  assert.equal(light.userAgentToken, 'TheMeshDesktop/1.0.0 (mac; skin=glass; inset)');
+  assert.equal(light.userAgentToken, 'TheMeshDesktop/1.0.0 (mac; skin=glass; reduced-transparency; inset)');
 });
 
 test('THEMESH_DESKTOP_GLASS=0 gives a Mac the ordinary window; Windows and Linux always have it', () => {

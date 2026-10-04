@@ -157,6 +157,14 @@ group("skin", () => {
     }
   });
 
+  test("a Mac that says \"Reduce transparency\" gets solid panels from the very first picture", async ({ browser, dev }) => {
+    const page = await open(browser, dev.laptop, { userAgent: MAC.replace("vibrancy", "reduced-transparency") });
+    const l = await page.evaluate(() => ({ skin: document.documentElement.dataset.skin, solid: document.documentElement.hasAttribute("data-reduce-transparency"), vibrancy: document.documentElement.dataset.vibrancy || "" }));
+    eq(l, { skin: "glass", solid: true, vibrancy: "" }, "what the page took from the user agent");
+    await sidebarBlur(page, true);
+    eq((await look(page)).blur, "none", "no blur");
+  });
+
   test("with reduced transparency the glass turns solid", async ({ browser, dev }) => {
     const page = await open(browser, dev.laptop, { userAgent: MAC });
     const before = await page.evaluate(() => { const cs = getComputedStyle(document.querySelector(".sidebar")); return { bf: cs.backdropFilter, bg: cs.backgroundColor }; });

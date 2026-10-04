@@ -56,8 +56,16 @@ const shot = async (name) => {
 
 // macOS only: the whole window as the system draws it (traffic lights, the material behind the window, the shadow),
 // which a page screenshot cannot show. Best effort: a CI machine may not let a program photograph the screen.
+let promptTried = false;
 const nativeShot = async (name) => {
   try {
+    if (!promptTried) {
+      // macOS asks, on a machine that has not been asked yet, whether this program may look for devices on the local network
+      // (here it names the CI agent that started the app): with nobody to answer, the question stays over the window
+      promptTried = true;
+      spawnSync('osascript', ['-e', 'tell application "System Events" to tell (first process whose name is "UserNotificationCenter") to click button "Allow" of window 1'], { timeout: 10000 });
+      await sleep(500);
+    }
     const b = await hook(() => global.__themeshTest.window().getBounds());
     const r = spawnSync('screencapture', ['-x', '-R', `${b.x - 40},${b.y - 30},${b.width + 80},${b.height + 90}`, path.join(shotsDir, name + '-native.png')], { timeout: 15000 });
     if (r.status !== 0) console.log(`      (no native screenshot: screencapture exited with ${r.status})`);
@@ -134,17 +142,19 @@ try {
         shell: r.dataset.shell || '',
         titlebar: r.dataset.titlebar || '',
         vibrancy: r.dataset.vibrancy || '',
+        solid: r.hasAttribute('data-reduce-transparency'),
         blur: cs ? cs.backdropFilter : '',
         padTop: cs ? parseFloat(cs.paddingTop) : 0,
       };
     });
     console.log('      the interface sees:', JSON.stringify(seen));
     if (process.platform === 'darwin') {
-      assert.equal(seen.ua, reduced ? 'mac; skin=glass; inset' : 'mac; skin=glass; vibrancy; inset');
+      assert.equal(seen.ua, reduced ? 'mac; skin=glass; reduced-transparency; inset' : 'mac; skin=glass; vibrancy; inset');
       assert.equal(seen.skin, 'glass');
       assert.equal(seen.shell, 'mac');
       assert.equal(seen.titlebar, 'inset');
       assert.equal(seen.vibrancy, reduced ? '' : 'on');
+      assert.equal(seen.solid, reduced, 'the page knows about "Reduce transparency"');
       assert.ok(seen.padTop >= 48, 'the sidebar leaves room for the traffic lights');
       if (!reduced) assert.match(seen.blur, /blur/, 'the sidebar is a pane of glass');
       const [bounds, content] = await hook(() => [global.__themeshTest.window().getBounds(), global.__themeshTest.window().getContentBounds()]);

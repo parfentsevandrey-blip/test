@@ -8,7 +8,7 @@ no npm at runtime, no CDN: every byte is served from the embedded directory.
 
 ```
 internal/web/ui/
-  index.html              entry point; loads css/*, js/boot.js (theme before first paint), js/app.js
+  index.html              entry point; loads css/*, js/boot.js (theme and skin before first paint), js/app.js
   manifest.webmanifest    PWA manifest (start_url ./#/home, scope ./)
   sw.js                   service worker: static shell cache-first (stale-while-revalidate),
                           navigations network-first, never touches /api/ or ?t=
@@ -19,14 +19,15 @@ internal/web/ui/
   css/components.css      buttons, chips, inputs, modal/drawer, toasts, menu, tabs, …
   css/layout.css          shell: sidebar (≥1100px), icon rail (760–1099px), tab bar (<760px)
   css/views.css           per-screen styles
+  css/glass.css           the "glass" skin (macOS 26 «Liquid Glass» look), all scoped to html[data-skin="glass"]
   js/app.js               shell, global banners, full-screen states, view routing
   js/api.js               fetch/XHR helpers (relative URLs, X-Themesh header, ApiError)
   js/sse.js               one EventSource + backoff; GET api/state on every (re)connect
   js/store.js             tiny global store + useStore(selector) + event bus
   js/router.js            hash router (#/section/…, each segment URI-encoded)
   js/i18n.js, i18n/*.js   t()/tn()/tx(); ru (default) and en dictionaries, Russian plurals
-  js/prefs.js             language/theme (localStorage "themesh.lang"/"themesh.theme"), Home's
-                          first-steps flags ("themesh.home.browsed|sent|startDismissed")
+  js/prefs.js             language/theme/skin (localStorage "themesh.lang"/"themesh.theme"/"themesh.skin"),
+                          Home's first-steps flags ("themesh.home.browsed|sent|startDismissed")
   js/format.js            sizes, speeds, RTT, dates, durations (Intl)
   js/util.js              linkify, device/file-kind heuristics, osName, clipboard, dnsLabel/uniqueLabel
                           (device name → DNS label, ports of SanitizeName/UniqueName), misc
@@ -82,6 +83,7 @@ node web-dev/smoke.mjs [--only mail,chat]
 node web-dev/smoke.mjs --base http://127.0.0.1:18777 --token <TOKEN>
 node web-dev/check-i18n.mjs
 node web-dev/check-util.mjs
+node web-dev/check-contrast.mjs [--skin glass|glass-vibrancy|classic] # WCAG contrast of every visible piece of text, from pixels
 node web-dev/make-assets.mjs                      # only when icons/video fixture change
 ```
 
@@ -105,6 +107,38 @@ forward CRUD, the `/api/d/:id/…` proxy (403 for non-admins, 502 for offline de
 duplicate uploads, 403 on read-only shares, device names turned into DNS labels (same rules as
 `SanitizeName`/`UniqueName`), demotion refused with 501 `unsupported`. It also sends the CSP we
 recommend (below) so the UI is verified to work under it.
+
+## Skins: classic and glass
+
+The look of the surfaces is a *skin*, separate from the colour *theme* (light/dark): `html[data-skin="classic"|"glass"]`.
+`css/glass.css` is a layer over the usual stylesheets and everything in it is scoped to `html[data-skin="glass"]`, so with the
+classic skin it does nothing. The skin follows the design language of macOS 26 («Liquid Glass») as far as plain CSS can: a
+colourful static backdrop (`body::before`, "aurora") with translucent panels over it, a light inner rim and a soft sheen on
+every pane, a floating sidebar, capsule buttons, tabs and segmented controls, tinted prominent buttons, glass sheets/menus/
+toasts, a scroll-edge fade under the top bar, springy presses. It is **not** a real lens: there is no refraction at the edges.
+
+*Which skin.* `js/boot.js` decides before the first paint, in this order: `?skin=glass|classic` in the address (for tests and
+screenshots; not remembered; `data-skin-url`), the person's choice in Settings → Interface → Style (`themesh.skin`:
+`auto|glass|classic`), what the window starts with (`data-skin-default`). A browser and the phone start with classic; the Mac
+desktop app with glass. The desktop app says what it is in its user agent (`desktop/src/window.js`, `windowLook`):
+
+```
+TheMeshDesktop/<version> (<mac|win|linux>[; skin=glass][; vibrancy][; inset])
+```
+
+`skin=glass` is the skin to start with, `vibrancy` means the window is see-through to the system material (Electron `vibrancy`;
+the page then has no background of its own and draws a lighter backdrop plus a scrim), `inset` means the window has no title bar
+(the sidebar leaves room for the traffic lights and the sidebar's top strip and the top bar drag the window, whatever the skin).
+They become `data-shell`, `data-vibrancy="on"`, `data-titlebar="inset"` on `<html>`. The Mac app also sets
+`data-reduce-transparency` while macOS "Reduce transparency" is on, and the same is done by `@media
+(prefers-reduced-transparency: reduce)`: the panels turn solid and nothing is blurred.
+
+*Rules of the glass.* A `backdrop-filter` goes only on the big panes and never inside another one that has one (inside, a pane
+sees only its parent's content; Chromium also mirrors the edges of a backdrop blur, which is why the radii are moderate: 8–14 px).
+Small repeated things (rows, tiles, chips) are translucent and lit at the edge but not blurred. A QR code stays opaque and sharp
+(`.qr`: no blur, no tint; a test looks at the pixels). Text on glass is judged from pixels by `web-dev/check-contrast.mjs`:
+a screenshot with the text made transparent gives what is really behind each piece of text; the result is a WCAG ratio
+(4.5:1, large text 3:1). When a token changes, run it.
 
 ## Plain language: Home and the wording rules
 
@@ -258,7 +292,7 @@ card's badge in Settings → Сеть, `data-difficulty`; it used to be in the t
 `setting-portmap` (switch), `portmap-status` (`data-state` = `self.portmap.state`; absent while the
 switch is off), endpoint chips in the NAT card carry `data-kind` (`mapped|local|stun|observed`),
 `setting-relay`, `tun-section`, `tun-state` (`data-state`), `tun-enabled`, `tun-hosts`,
-`lang-<auto|ru|en>`, `theme-<auto|light|dark>`.
+`lang-<auto|ru|en>`, `theme-<auto|light|dark>`, `skin-<auto|glass|classic>`.
 
 ## API gaps, ambiguities and assumptions
 
@@ -364,6 +398,9 @@ switch is off), endpoint chips in the NAT card carry `data-kind` (`mapped|local|
   UI shows a sticky «Вышла новая версия интерфейса — Обновить» toast instead, so a draft is not
   lost. A UI build from before this change cannot do that for itself: the first upgrade away
   from it still needs one manual reload.
-* Verified in headless Chromium only (desktop and phone viewports, dark/light, RU/EN);
-  Safari/Firefox not run here. Uses `inert`, `color-mix()`, `dvh` — current browsers only.
+* Verified in headless Chromium (desktop and phone viewports, dark/light, RU/EN) and, for the Mac app, in the real window on a
+  macOS 26 machine of CI (see desktop/README.md); Safari/Firefox not run here. Uses `inert`, `color-mix()`, `dvh`,
+  `backdrop-filter` — current browsers only (without `backdrop-filter` the glass skin falls back to denser panels).
+* The glass skin has no real glass: no refraction at the edges, no light that follows the pointer; the Mac app's see-through
+  window is the system's own blurred material, not our blur.
 * The fake QR from the mock is not scannable (the real node renders a real one).

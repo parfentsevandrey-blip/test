@@ -31,7 +31,8 @@ const TRANSPARENT = '#00000000';
  * "Reduce transparency" keeps the title bar hidden but drops the see-through material.
  *
  * The interface learns all this from the user agent (see js/boot.js): "TheMeshDesktop/<v> (mac; skin=glass;
- * vibrancy; inset)".
+ * vibrancy; inset)" - or "reduced-transparency" in place of "vibrancy" when macOS says so, so that the first
+ * picture is already the solid one.
  */
 function windowLook({ platform = process.platform, env = process.env, dark = false, reducedTransparency = false, version = '0.0.0' } = {}) {
   const mac = platform === 'darwin';
@@ -51,6 +52,7 @@ function windowLook({ platform = process.platform, env = process.env, dark = fal
   const facts = [mac ? 'mac' : platform === 'win32' ? 'win' : 'linux'];
   if (glass) facts.push('skin=glass');
   if (vibrant) facts.push('vibrancy');
+  else if (glass) facts.push('reduced-transparency');
   if (glass) facts.push('inset');
   return { glass, vibrant, solid, options, userAgentToken: `TheMeshDesktop/${version} (${facts.join('; ')})` };
 }

@@ -21,9 +21,10 @@
 
   // The desktop app says in its user agent what it is and what its window can do:
   //   "TheMeshDesktop/0.1.0 (mac; skin=glass; vibrancy; inset)"
-  //   = platform; the skin to start with; a window that is see-through to the system material; no title bar
+  //   = platform; the skin to start with; a window that is see-through to the system material (or "reduced-transparency":
+  //     macOS says "Reduce transparency", the panels are solid from the first picture on); no title bar
   // A browser or the phone app says nothing and gets the classic skin unless the person chose another.
-  var skinByDefault = "classic", shell = "", vibrancy = false, inset = false;
+  var skinByDefault = "classic", shell = "", vibrancy = false, inset = false, solid = false;
   var app = /TheMeshDesktop\/\S+ \(([^)]*)\)/.exec(navigator.userAgent || "");
   if (app) {
     var facts = app[1].split(/;\s*/);
@@ -31,6 +32,7 @@
     for (var i = 1; i < facts.length; i++) {
       if (facts[i] === "vibrancy") vibrancy = true;
       if (facts[i] === "inset") inset = true;
+      if (facts[i] === "reduced-transparency") solid = true;
       var m = /^skin=(glass|classic)$/.exec(facts[i]);
       if (m) skinByDefault = m[1];
     }
@@ -43,4 +45,5 @@
   if (shell) root.setAttribute("data-shell", shell);
   if (vibrancy) root.setAttribute("data-vibrancy", "on");
   if (inset) root.setAttribute("data-titlebar", "inset");
+  if (solid) root.setAttribute("data-reduce-transparency", "");
 })();
