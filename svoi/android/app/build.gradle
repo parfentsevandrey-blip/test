@@ -64,9 +64,20 @@ android {
     }
 }
 
+// CameraX: последняя стабильная версия, которой достаточно compileSdk 35 (у 1.6.x в метаданных minCompileSdk=36).
+def cameraxVersion = '1.5.3'
+
 dependencies {
     // ComponentActivity: ActivityResultLauncher, OnBackPressedDispatcher, EdgeToEdge.
     implementation 'androidx.activity:activity:1.10.1'
+
+    // Сканер QR-кода приглашения (ScanActivity): камера — CameraX (превью и кадры для анализа), распознавание — ZXing.
+    // ZXing core — чистая Java (Apache-2.0), без Google Play Services и без сети: кадры никуда не уходят.
+    implementation "androidx.camera:camera-core:${cameraxVersion}"
+    implementation "androidx.camera:camera-camera2:${cameraxVersion}"
+    implementation "androidx.camera:camera-lifecycle:${cameraxVersion}"
+    implementation "androidx.camera:camera-view:${cameraxVersion}"
+    implementation 'com.google.zxing:core:3.5.4'
 
     testImplementation 'junit:junit:4.13.2'
     // org.json из android.jar в модульных тестах на JVM — заглушка; здесь настоящая.

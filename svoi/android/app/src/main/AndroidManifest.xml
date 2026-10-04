@@ -24,6 +24,18 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
 
+    <!-- Камера — только чтобы прочитать QR-код приглашения («Сканировать QR-код» в форме «Подключиться по приглашению»).
+         Спрашивается при первом открытии сканера; кадры не сохраняются и никуда не передаются. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Камеры может не быть: тогда приложение всё равно ставится и работает, только без кнопки «Сканировать QR-код»
+         (код приглашения можно вставить текстом). Поэтому камера и автофокус не обязательны. -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+
     <!-- android:extractNativeLibs="true" здесь нет намеренно: AGP сам кладёт его в итоговый манифест из
          packaging { jniLibs { useLegacyPackaging = true } } (app/build.gradle) и не любит, когда оно записано
          ещё и в исходном. libthemesh.so — исполняемый файл, а не библиотека: он обязан быть распакован при установке
@@ -61,6 +73,14 @@
             android:configChanges="orientation|screenSize|keyboardHidden|uiMode|smallestScreenSize|screenLayout|keyboard|navigation|density"
             android:exported="false"
             android:label="@string/log_title" />
+
+        <!-- Сканер QR-кода приглашения: открывается из окна по просьбе страницы (ScanBridge), возвращает приглашение окну. -->
+        <activity
+            android:name=".ScanActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden|uiMode|smallestScreenSize|screenLayout|keyboard|navigation|density"
+            android:exported="false"
+            android:label="@string/scan_title"
+            android:theme="@style/Theme.TheMesh.Scan" />
 
         <service
             android:name=".NodeService"

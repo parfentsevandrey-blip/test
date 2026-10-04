@@ -10,4 +10,12 @@
         <item name="android:textColorSecondary">@color/muted</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
+
+    <!-- Экран сканера: чёрный фон окна, пока не заработала камера (а не бежевый, как у остальных окон). Родитель — Theme.TheMesh
+         из values или values-night, смотря какая тема на экране; цвета сканера в обеих одинаковые. -->
+    <style name="Theme.TheMesh.Scan" parent="Theme.TheMesh">
+        <item name="android:windowBackground">@color/scan_bg</item>
+        <item name="android:colorBackground">@color/scan_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
 </resources>

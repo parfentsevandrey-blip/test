@@ -71,6 +71,7 @@ import app.themesh.mobile.core.NodeStatus;
 import app.themesh.mobile.core.NodeSupervisor;
 import app.themesh.mobile.core.OriginPolicy;
 import app.themesh.mobile.core.Route;
+import app.themesh.mobile.core.ScanEvent;
 import app.themesh.mobile.core.StatusLine;
 import app.themesh.mobile.core.ThemeColor;
 import app.themesh.mobile.core.WebViewVersion;
@@ -142,9 +143,12 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
     private ActivityResultLauncher<Intent> chooserLauncher;
     private ActivityResultLauncher<String> notificationsLauncher;
     private ActivityResultLauncher<String> storageLauncher;
+    private ActivityResultLauncher<Intent> scanLauncher;
     private AlertDialog notificationsDialog;
     private ValueCallback<Uri[]> chooserCallback;
     private String[] pendingDownload;
+    private boolean scanOpen; // экран сканера QR-кода на экране: второй раз не открываем
+    private String pendingScan; // скрипт с событием «themesh-scan», пока окно не вернулось на экран
 
     private String loadedOrigin = "";
     private boolean loginInFlight;
@@ -228,6 +232,7 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         web.onResume();
         main.removeCallbacks(themePoll);
         main.post(themePoll);
+        main.post(this::flushScan); // сканер закрылся: страница узнаёт результат, когда окно снова на экране
     }
 
     @Override
@@ -258,6 +263,7 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
     @Override
     protected void onDestroy() {
         dismissMenu();
+        pendingScan = null;
         main.removeCallbacksAndMessages(null);
         io.shutdownNow();
         if (pulse != null) {
@@ -611,6 +617,11 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         web.setWebChromeClient(new Chrome());
         web.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) ->
                 startDownload(url, contentDisposition, mimetype));
+        // Сканер QR-кода приглашения: объект window.themeshApp есть в странице, только если у телефона есть камера.
+        if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
+            web.addJavascriptInterface(new ScanBridge(true, main::post, () -> web.getUrl(), () -> loadedOrigin, this::openScanner),
+                    ScanBridge.NAME);
+        }
     }
 
     private final class Client extends WebViewClient {
@@ -784,6 +795,8 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
                 Downloads.start(this, job[0], job[1], job[2]);
             } // разрешение выдано без скачивания (включили «Сохранять полученные файлы в «Загрузки»»): больше ничего не нужно
         });
+        scanLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                result -> onScanResult(result.getResultCode(), result.getData()));
     }
 
     private void openInBrowser(Uri uri) {
@@ -806,6 +819,52 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
             return;
         }
         Downloads.start(this, url, contentDisposition, mimeType);
+    }
+
+    // ---- сканер QR-кода ---------------------------------------------------------------------
+
+    /** Страница попросила сканер (в главном потоке; что страница — интерфейс узла, уже проверил {@link ScanBridge}). */
+    private void openScanner() {
+        if (scanOpen || isFinishing() || isDestroyed()) {
+            return;
+        }
+        scanOpen = true;
+        try {
+            scanLauncher.launch(new Intent(this, ScanActivity.class));
+        } catch (RuntimeException e) {
+            Log.w(TAG, "cannot open the scanner: " + e);
+            scanOpen = false;
+            pendingScan = ScanEvent.failed(ScanEvent.UNAVAILABLE);
+            flushScan();
+        }
+    }
+
+    /**
+     * Сканер закрылся: приглашение, отмена, нет разрешения или нет камеры. Страница узнаёт это событием «themesh-scan».
+     * Доступно пакету: тесты на устройстве вызывают это так, как будто сканер закрылся.
+     */
+    void onScanResult(int resultCode, Intent data) {
+        scanOpen = false;
+        String invite = resultCode == RESULT_OK && data != null ? data.getStringExtra(ScanActivity.EXTRA_INVITE) : null;
+        pendingScan = invite != null
+                ? ScanEvent.found(invite)
+                : ScanEvent.failed(data == null ? null : data.getStringExtra(ScanActivity.EXTRA_ERROR));
+        main.post(this::flushScan);
+    }
+
+    /**
+     * Отдаёт странице ждущее событие — когда окно на экране, а в нём интерфейс узла. Если окно за это время пересоздано (страница
+     * загружена заново, форма, которая ждала ответа, уже не открыта), событие никому не нужно и пропадает.
+     */
+    private void flushScan() {
+        String script = pendingScan;
+        if (script == null || !resumed) {
+            return; // окно ещё не вернулось на экран: onResume вызовет это снова
+        }
+        pendingScan = null;
+        if (pageReady && showingWeb && OriginPolicy.isInternal(loadedOrigin, web.getUrl())) {
+            web.evaluateJavascript(script, null);
+        }
     }
 
     // ---- переходы ---------------------------------------------------------------------------

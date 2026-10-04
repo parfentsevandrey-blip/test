@@ -94,4 +94,15 @@
     <string name="log_refresh">Обновить</string>
     <string name="log_copied">Журнал скопирован</string>
     <string name="log_share_title">Журнал The Mesh</string>
+
+    <!-- Сканер QR-кода приглашения -->
+    <string name="scan_title">Сканирование QR-кода</string>
+    <string name="scan_cancel">Отмена</string>
+    <string name="scan_hint">Наведите камеру на QR-код приглашения на экране другого устройства. Откройте там «Добавить устройство».</string>
+    <string name="scan_privacy">Камера нужна только чтобы прочитать код. Кадры не сохраняются и никуда не передаются.</string>
+    <string name="scan_not_ours">Это QR-код не от The Mesh</string>
+    <string name="scan_camera_busy">Камера занята другим приложением или не отвечает. Закройте приложения, которые её используют.</string>
+    <string name="scan_denied_title">Нет доступа к камере</string>
+    <string name="scan_denied_text">Чтобы прочитать QR-код, The Mesh нужно разрешение на камеру: включите его в настройках приложения. Камера нужна только для этого: кадры не сохраняются и никуда не передаются. Код приглашения можно и вставить в форму вручную.</string>
+    <string name="scan_open_settings">Открыть настройки</string>
 </resources>

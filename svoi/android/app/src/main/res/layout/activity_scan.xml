@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Сканер QR-кода приглашения: превью камеры на весь экран (и под системными панелями), поверх — рамка-видоискатель,
+     кнопка «Отмена», подсказка и строка о приватности. Нет разрешения на камеру — вместо превью объяснение (scan_denied).
+     Отступы под системные панели и вырез экрана (edge-to-edge) ставит ScanActivity на scan_overlay. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scan_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/scan_bg"
+    android:keepScreenOn="true"
+    tools:ignore="Overdraw">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/scan_preview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no" />
+
+    <app.themesh.mobile.ViewfinderView
+        android:id="@+id/scan_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no" />
+
+    <FrameLayout
+        android:id="@+id/scan_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <Button
+            android:id="@+id/scan_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_margin="8dp"
+            android:background="@drawable/scan_pill"
+            android:minWidth="96dp"
+            android:minHeight="48dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:stateListAnimator="@null"
+            android:text="@string/scan_cancel"
+            android:textAllCaps="false"
+            android:textColor="@color/scan_text"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/scan_notice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="68dp"
+            android:layout_marginEnd="16dp"
+            android:accessibilityLiveRegion="polite"
+            android:background="@drawable/scan_notice"
+            android:gravity="center"
+            android:paddingStart="16dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="8dp"
+            android:textColor="@color/scan_text"
+            android:textSize="15sp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/scan_bottom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_margin="16dp"
+            android:background="@drawable/scan_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/scan_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/scan_hint"
+                android:textColor="@color/scan_text"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/scan_privacy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="@string/scan_privacy"
+                android:textColor="@color/scan_text_muted"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ScrollView
+            android:id="@+id/scan_denied"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <TextView
+                    android:id="@+id/scan_denied_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/scan_denied_title"
+                    android:textColor="@color/scan_text"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/scan_denied_text"
+                    android:textColor="@color/scan_text_muted"
+                    android:textSize="15sp" />
+
+                <Button
+                    android:id="@+id/scan_settings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:backgroundTint="@color/accent"
+                    android:text="@string/scan_open_settings"
+                    android:textColor="@color/on_accent" />
+
+                <Button
+                    android:id="@+id/scan_denied_cancel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/scan_pill"
+                    android:minHeight="48dp"
+                    android:stateListAnimator="@null"
+                    android:text="@string/scan_cancel"
+                    android:textAllCaps="false"
+                    android:textColor="@color/scan_text" />
+            </LinearLayout>
+        </ScrollView>
+    </FrameLayout>
+</FrameLayout>

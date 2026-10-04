@@ -7,6 +7,12 @@
     <color name="accent">#0E7A5A</color>
     <color name="on_accent">#FFFFFF</color>
     <color name="err">#B3261E</color>
+    <!-- Экран сканера QR-кода: всегда тёмный (камера, а не страница), в обеих темах одни и те же цвета -->
+    <color name="scan_bg">#000000</color>
+    <color name="scan_text">#FFFFFF</color>
+    <color name="scan_text_muted">#CCFFFFFF</color>
+    <color name="scan_card">#B3000000</color>
+    <color name="scan_notice">#E6B3261E</color>
     <!-- Фон значка приложения (плитка из icons/icon.svg) -->
     <color name="ic_launcher_background">#0F1714</color>
 </resources>

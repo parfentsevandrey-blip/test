@@ -94,4 +94,15 @@
     <string name="log_refresh">Refresh</string>
     <string name="log_copied">Log copied</string>
     <string name="log_share_title">The Mesh log</string>
+
+    <!-- Invitation QR scanner -->
+    <string name="scan_title">Scan QR code</string>
+    <string name="scan_cancel">Cancel</string>
+    <string name="scan_hint">Point the camera at the invitation QR code on another device’s screen. Open “Add a device” there.</string>
+    <string name="scan_privacy">The camera is only used to read the code. Frames are not saved and not sent anywhere.</string>
+    <string name="scan_not_ours">That QR code isn’t from The Mesh</string>
+    <string name="scan_camera_busy">The camera is in use by another app or does not respond. Close the apps that use it.</string>
+    <string name="scan_denied_title">No access to the camera</string>
+    <string name="scan_denied_text">To read the QR code, The Mesh needs permission to use the camera: turn it on in the app’s settings. The camera is only used for that: frames are not saved and not sent anywhere. You can also paste the invitation code into the form by hand.</string>
+    <string name="scan_open_settings">Open settings</string>
 </resources>
