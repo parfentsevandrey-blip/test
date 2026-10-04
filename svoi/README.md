@@ -34,7 +34,7 @@ The Mesh — **обычная программа с окном**, а не скр
 | Система | Что скачать | Как поставить |
 |---|---|---|
 | **Windows 10/11** | `TheMesh-Setup-0.1.0-x64.exe` (~110 МБ) | двойной щелчок — установка в один шаг, **без прав администратора**; The Mesh появится в меню «Пуск» и на рабочем столе |
-| **macOS** | `TheMesh-0.1.0-mac-arm64.dmg` (Apple silicon) или `TheMesh-0.1.0-mac-x64.dmg` (Intel) | открыть, перетащить The Mesh в «Программы»; в первый раз — правый щелчок → «Открыть» |
+| **macOS** | `TheMesh-0.1.0-mac-arm64.dmg` (Apple silicon) или `TheMesh-0.1.0-mac-x64.dmg` (Intel) | открыть, перетащить The Mesh в «Программы»; в первый раз — правый щелчок → «Открыть» (в macOS 15 и новее — «Системные настройки → Конфиденциальность и безопасность → Всё равно открыть») |
 | **Linux** | `TheMesh-0.1.0-linux-amd64.deb` (Debian, Ubuntu, Mint) или `TheMesh-0.1.0-linux-x86_64.AppImage` (любой дистрибутив) | deb: `sudo apt install ./TheMesh-0.1.0-linux-amd64.deb` — The Mesh появится в меню приложений; AppImage: `chmod +x` и запустить (на Ubuntu 22.04 и новее сначала `sudo apt install libfuse2`) |
 | **Android 8+** | `TheMesh-0.1.0-android-debug.apk` (~18 МБ) | открыть файл на телефоне и разрешить установку из этого источника (Google Play не нужен) — см. [«Телефон»](#3-телефон) |
 | **Сервер / NAS без экрана** | `themesh-linux-amd64.tar.gz` (и другие процессоры) | одна программа без окна — см. [«Сервер / NAS»](#4-сервер--nas-без-экрана) |
@@ -42,6 +42,12 @@ The Mesh — **обычная программа с окном**, а не скр
 Установщики собирает CI на каждый push (вкладка Actions → «The Mesh desktop» → артефакты `themesh-desktop-Windows`,
 `themesh-desktop-macOS`, `themesh-desktop-Linux`; приложение для телефона — «The Mesh Android» → `themesh-android-apk`); для метки
 `themesh-v*` те же файлы прикладываются к релизу. Архивы для серверов — `make dist` (артефакт `themesh-dist`).
+
+Прямая ссылка на один файл (артефакт Actions — это zip со всем сразу, и скачать его можно только после входа в GitHub): сборка для Mac лежит
+в предварительном выпуске [themesh-mac-v0.1.0](https://github.com/parfentsevandrey-blip/test/releases/tag/themesh-mac-v0.1.0) —
+[`TheMesh-0.1.0-mac-arm64.dmg`](https://github.com/parfentsevandrey-blip/test/releases/download/themesh-mac-v0.1.0/TheMesh-0.1.0-mac-arm64.dmg)
+и `…-mac-x64.dmg`, с контрольными суммами. Положить на выпуск любой уже собранный и проверенный файл из прогона CI, не пересобирая его,
+можно вручную: Actions → «The Mesh publish» → Run workflow (номер прогона, имя артефакта, имена файлов, метка, коммит).
 
 **Что делает приложение:**
 
