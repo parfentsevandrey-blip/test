@@ -137,10 +137,49 @@ func TestBeaconsLeaveWithoutAnInterfaceList(t *testing.T) {
 		}
 	}
 	if !gotMulticast || (!gotBroadcast && runtime.GOOS == "linux") {
-		t.Fatalf("beacons that reached a listener on %s: multicast=%v broadcast(%v)=%v", ln, gotMulticast, bcast, gotBroadcast)
+		// Say what this machine can do at all, so that a failure can be told apart: a network that does not deliver
+		// multicast to the machine's own listeners (a virtual machine) from a fault in the way the group is reached by address.
+		t.Fatalf("beacons that reached a listener on %s: multicast=%v broadcast(%v)=%v; LAN status of the node: %+v; "+
+			"a plain multicast sender through the interface reaches the listener: %v; one that picks the network by address: %v",
+			ln, gotMulticast, bcast, gotBroadcast, n.LANStatus(),
+			probeMulticast(t, pc, ln, false), probeMulticast(t, pc, ln, true))
 	}
 	st := n.LANStatus()
 	if !st.Enabled || st.Problem != "" || len(st.Networks) != 1 {
 		t.Errorf("LAN status of a working node: %+v", st)
 	}
+}
+
+// probeMulticast sends one multicast datagram to the beacon group from a fresh socket, choosing the network by the interface
+// or by the address, and reports whether the listener pc hears it (or what stopped it).
+func probeMulticast(t *testing.T, pc net.PacketConn, ln magic.LocalNet, byAddr bool) string {
+	t.Helper()
+	c, err := net.ListenUDP("udp4", &net.UDPAddr{IP: net.IP(ln.Addr.AsSlice())})
+	if err != nil {
+		return "no socket: " + err.Error()
+	}
+	defer c.Close()
+	if byAddr {
+		if err := setMulticastIfByAddr(c, ln.Addr); err != nil {
+			return "cannot choose the network by address: " + err.Error()
+		}
+	} else if err := ipv4.NewPacketConn(c).SetMulticastInterface(ln.Iface); err != nil {
+		return "cannot choose the interface: " + err.Error()
+	}
+	_ = ipv4.NewPacketConn(c).SetMulticastLoopback(true)
+	port := pc.LocalAddr().(*net.UDPAddr).Port
+	probe := []byte("themesh-probe")
+	if _, err := c.WriteToUDP(probe, &net.UDPAddr{IP: lanGroup, Port: port}); err != nil {
+		return "send failed: " + err.Error()
+	}
+	buf := make([]byte, 64)
+	end := time.Now().Add(3 * time.Second)
+	for time.Now().Before(end) {
+		_ = pc.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+		n, _, err := pc.ReadFrom(buf)
+		if err == nil && string(buf[:n]) == string(probe) {
+			return "yes"
+		}
+	}
+	return "no (sent, nothing came)"
 }
