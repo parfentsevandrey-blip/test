@@ -80,17 +80,11 @@ export function Topology({ self, peers, selected, onSelect, onAdd }) {
         const x1 = cxp + ux * (rc + 4), y1 = cyp + uy * (rc + 4);
         const x2 = nd.x - ux * (r + 4), y2 = nd.y - uy * (r + 4);
         const L = Math.max(1, len - rc - r - 8);
-        const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
         const isSel = selected === nd.p.id;
         return html`<g key=${"e" + nd.p.id} class=${cx("topo__edge", `topo__edge--${nd.st}`, isSel && "is-selected")}>
           <line x1=${x1} y1=${y1} x2=${x2} y2=${y2} class="topo__line" />
           ${nd.st !== "offline" && html`<line x1=${x1} y1=${y1} x2=${x2} y2=${y2} class="topo__pulse"
               style=${`stroke-dasharray: 10 ${Math.round(L + 40)}; --len:${Math.round(L + 50)}; animation-delay:${(i * 0.37) % 2.4}s`} />`}
-          ${nd.st === "relay" && nd.p.relayVia && html`<g class="topo__relay" transform=${`translate(${mx},${my})`}>
-            <rect x=${-(Math.min(nd.p.relayVia.length, 14) * 3.4 + 17)} y="-11" width=${Math.min(nd.p.relayVia.length, 14) * 6.8 + 34} height="22" rx="11" />
-            <g transform=${`translate(${-(Math.min(nd.p.relayVia.length, 14) * 3.4 + 11)},-6)`}><${Icon} name="relay" size=${12} strokeWidth=${2.2} /></g>
-            <text x="7" y="4" text-anchor="middle">${truncate(nd.p.relayVia, 14)}</text>
-          </g>`}
         </g>`;
       })}
 
@@ -122,6 +116,22 @@ export function Topology({ self, peers, selected, onSelect, onAdd }) {
           <g transform=${`translate(${-(r * 0.45)},${-(r * 0.45)})`}><${Icon} name=${kindIcon[deviceKind(p)]} size=${Math.round(r * 0.9)} /></g>
           <text y=${ly} class="topo__name" text-anchor="middle">${truncate(p.name, narrow ? 12 : 18)}</text>
           <text y=${ly + 15} class="topo__meta" text-anchor="middle">${meta}</text>
+        </g>`;
+      })}
+
+
+      ${nodes.map((nd) => {
+        if (nd.st !== "relay" || !nd.p.relayVia) return null;
+        // the middle of the line between the two circles; the label is drawn after the nodes, so that neither circle can cover a word of it
+        const dx = nd.x - cxp, dy = nd.y - cyp;
+        const len = Math.hypot(dx, dy) || 1;
+        const ux = dx / len, uy = dy / len;
+        const mx = (cxp + ux * (rc + 4) + nd.x - ux * (r + 4)) / 2, my = (cyp + uy * (rc + 4) + nd.y - uy * (r + 4)) / 2;
+        const half = Math.min(nd.p.relayVia.length, 14) * 3.4;
+        return html`<g key=${"rl" + nd.p.id} class="topo__relay" transform=${`translate(${mx},${my})`}>
+          <rect x=${-(half + 17)} y="-11" width=${half * 2 + 34} height="22" rx="11" />
+          <g transform=${`translate(${-(half + 11)},-6)`}><${Icon} name="relay" size=${12} strokeWidth=${2.2} /></g>
+          <text x="7" y="4" text-anchor="middle">${truncate(nd.p.relayVia, 14)}</text>
         </g>`;
       })}
 

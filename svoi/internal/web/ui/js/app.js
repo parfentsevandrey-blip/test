@@ -4,6 +4,7 @@ import { html, render, useEffect, useState } from "../vendor/preact-htm.js";
 import { Icon, Logo } from "./icons.js";
 import { t, tn, tx } from "./i18n.js";
 import { initPrefs } from "./prefs.js";
+import { startRosa } from "./rosa.js";
 import { go, useRoute } from "./router.js";
 import { refreshState, reconnectNow, startLive } from "./sse.js";
 import { state, useStore } from "./store.js";
@@ -108,6 +109,7 @@ function TabBar({ section }) {
   ];
   const activeTab = TABS.includes(section) ? section : TAB_OF[section] || "more";
   return html`<nav class="tabbar" aria-label=${t("nav.label")}>
+    <span class="tabbar__lens" aria-hidden="true"></span>
     ${items.map((it) => html`<a key=${it.id} href=${"#/" + it.id} class=${cx("tabbar__item", activeTab === it.id && "is-active")} data-testid=${"tab-" + it.id}
         aria-current=${activeTab === it.id ? "page" : undefined}
         aria-label=${it.n ? `${it.label}, ${tn("nav.badgeCount", it.n)}` : undefined}>
@@ -341,6 +343,7 @@ initPrefs();
 const root = document.getElementById("app");
 root.textContent = "";
 render(html`<${App} />`, root);
+startRosa();
 startLive();
 registerSW();
 

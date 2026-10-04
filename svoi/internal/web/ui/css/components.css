@@ -155,6 +155,11 @@
 /* ---------- segmented ---------- */
 .seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); max-width: 100%; }
 .seg--full { display: flex; width: 100%; }
+/* many options: two columns on a phone (a pill of four would not fit), one row where there is room */
+html .seg.seg--wrap { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; border-radius: 20px; }
+html .seg.seg--wrap .seg__opt { justify-content: center; min-width: 0; }
+@media (min-width: 640px) { html .seg.seg--wrap { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); border-radius: var(--r-pill, 999px); } }
+
 .seg--full .seg__opt { flex: 1 1 0; }
 .seg__opt {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 32px; padding: 0 12px;

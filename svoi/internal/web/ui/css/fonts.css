@@ -1,0 +1,17 @@
+/* The two faces of the "Роса" look (css/rosa.css): Manrope for the interface and Cormorant Garamond for the big numerals.
+   Both are variable fonts (one file, any weight) cut down to Latin, Cyrillic and the punctuation the interface uses
+   (SIL Open Font License: see fonts/*-OFL.txt). They are only fetched when the look is used. */
+@font-face {
+  font-family: "Manrope";
+  src: url("../fonts/manrope.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("../fonts/cormorant.woff2") format("woff2");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}

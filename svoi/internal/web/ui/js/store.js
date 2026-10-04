@@ -28,7 +28,8 @@ export const state = {
   help: false,          // the «Как это работает?» sheet is open
   lang: "ru",
   theme: "auto",
-  skin: "classic",     // look of the surfaces: "glass" | "classic" (css/glass.css)
+  skin: "classic",     // the look: "rosa" | "glass" | "classic" (css/rosa.css over css/glass.css, or css/glass.css alone)
+  appearance: "",      // "rosa" look: the mood of the sky, "auto" | "light" | "evening" | "dark" (js/sky-palette.js)
 };
 
 const listeners = new Set();

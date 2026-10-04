@@ -9,7 +9,7 @@ import { refreshState, stopLive } from "../sse.js";
 import { setState, useStore } from "../store.js";
 import { fmtBytes, fmtDateTime, fmtDuration, fmtNumber } from "../format.js";
 import { useAsync, useInterval } from "../hooks.js";
-import { langPref, setLangPref, setSkinPref, setThemePref, skinPref, themePref } from "../prefs.js";
+import { fxPref, hapticsOn, langPref, setFxPref, setHapticsPref, setLangPref, setSkinPref, setThemePref, skinPref, themePref } from "../prefs.js";
 import { cx, deviceKind, isValidHostPort, kindIcon, natTone, osName } from "../util.js";
 import { deviceName, ManageDeviceSelect } from "../components/devicepicker.js";
 import { FolderPicker } from "../components/folderpicker.js";
@@ -406,12 +406,40 @@ function FilesSection({ cfg, dev }) {
 }
 
 // ---------------------------------------------------------------- interface
+/** The moods of the sky ("Роса" look): little pictures to choose from, in a radio group. */
+function SkyPick({ value, options, onChange, label }) {
+  const onKey = (e) => {
+    const i = options.findIndex((o) => o.value === value);
+    let n = -1;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") n = (i + 1) % options.length;
+    if (e.key === "ArrowLeft" || e.key === "ArrowUp") n = (i - 1 + options.length) % options.length;
+    if (n >= 0) {
+      e.preventDefault();
+      onChange(options[n].value);
+      const btns = e.currentTarget.querySelectorAll("button");
+      btns[n] && btns[n].focus();
+    }
+  };
+  return html`<div class="skypick" role="radiogroup" aria-label=${label} onKeyDown=${onKey}>
+    ${options.map((o) => html`<button type="button" role="radio" key=${o.value} class="skypick__opt" aria-checked=${String(o.value === value)}
+        tabindex=${o.value === value ? 0 : -1} data-testid=${o.testid} onClick=${() => onChange(o.value)}>
+      <span class=${"skypick__thumb skypick__thumb--" + o.value}><span class="skypick__check"><${Icon} name="check" size=${12} strokeWidth=${3} /></span></span>
+      <span>${o.label}</span>
+    </button>`)}
+  </div>`;
+}
+
 function InterfaceSection() {
   const [lang, setL] = useState(langPref());
   const [theme, setT] = useState(themePref());
   const [skin, setS] = useState(skinPref());
+  const [fx, setF] = useState(fxPref());
+  const [haptics, setH] = useState(hapticsOn());
   const nowSkin = useStore((s) => s.skin);
   useStore((s) => s.theme);
+  const rosa = nowSkin === "rosa";
+  const skinName = (k) => (k === "rosa" ? t("set.ui.skinRosa") : k === "glass" ? t("set.ui.skinGlass") : t("set.ui.skinClassic"));
+  const hasHaptics = !!(window.themeshShell && typeof window.themeshShell.haptic === "function");
   return html`<${Section} id="interface" icon="sun" title=${t("set.sec.interface")} sub=${t("set.sec.interfaceSub")}>
     <${Card} class="stack stack--lg">
       <div class="field">
@@ -421,16 +449,30 @@ function InterfaceSection() {
         <p class="field__hint">${lang === "auto" ? t("set.ui.langAutoHint", { lang: getLang() === "ru" ? "Русский" : "English" }) : t("set.ui.langHint")}</p>
       </div>
       <div class="field">
-        <span class="field__label">${t("set.ui.theme")}</span>
-        <${Segmented} label=${t("set.ui.theme")} value=${theme} onChange=${(v) => { setT(v); setThemePref(v); }}
-          options=${[{ value: "auto", label: t("set.ui.themeAuto"), icon: "auto", testid: "theme-auto" }, { value: "light", label: t("set.ui.themeLight"), icon: "sun", testid: "theme-light" }, { value: "dark", label: t("set.ui.themeDark"), icon: "moon", testid: "theme-dark" }]} />
+        <span class="field__label">${rosa ? t("set.ui.sky") : t("set.ui.theme")}</span>
+        ${rosa
+          ? html`<${SkyPick} label=${t("set.ui.sky")} value=${theme} onChange=${(v) => { setT(v); setThemePref(v); }}
+              options=${[{ value: "auto", label: t("set.ui.skyAuto"), testid: "theme-auto" }, { value: "light", label: t("set.ui.skyLight"), testid: "theme-light" },
+                { value: "evening", label: t("set.ui.skyEvening"), testid: "theme-evening" }, { value: "dark", label: t("set.ui.skyDark"), testid: "theme-dark" }]} />
+            <p class="field__hint">${t("set.ui.skyHint")}</p>`
+          : html`<${Segmented} label=${t("set.ui.theme")} value=${theme === "evening" ? "dark" : theme} onChange=${(v) => { setT(v); setThemePref(v); }}
+              options=${[{ value: "auto", label: t("set.ui.themeAuto"), icon: "auto", testid: "theme-auto" }, { value: "light", label: t("set.ui.themeLight"), icon: "sun", testid: "theme-light" }, { value: "dark", label: t("set.ui.themeDark"), icon: "moon", testid: "theme-dark" }]} />`}
       </div>
       <div class="field">
         <span class="field__label">${t("set.ui.skin")}</span>
-        <${Segmented} label=${t("set.ui.skin")} value=${skin} onChange=${(v) => { setS(v); setSkinPref(v); }}
-          options=${[{ value: "auto", label: t("set.ui.auto"), icon: "auto", testid: "skin-auto" }, { value: "glass", label: t("set.ui.skinGlass"), icon: "sparkle", testid: "skin-glass" }, { value: "classic", label: t("set.ui.skinClassic"), icon: "grid", testid: "skin-classic" }]} />
-        <p class="field__hint">${skin === "auto" ? t("set.ui.skinAutoHint", { skin: nowSkin === "glass" ? t("set.ui.skinGlass") : t("set.ui.skinClassic") }) : skin === "glass" ? t("set.ui.skinGlassHint") : t("set.ui.skinClassicHint")}</p>
+        <${Segmented} label=${t("set.ui.skin")} class="seg--wrap" value=${skin} onChange=${(v) => { setS(v); setSkinPref(v); }}
+          options=${[{ value: "auto", label: t("set.ui.auto"), icon: "auto", testid: "skin-auto" }, { value: "rosa", label: t("set.ui.skinRosa"), icon: "sun", testid: "skin-rosa" },
+            { value: "glass", label: t("set.ui.skinGlass"), icon: "sparkle", testid: "skin-glass" }, { value: "classic", label: t("set.ui.skinClassic"), icon: "grid", testid: "skin-classic" }]} />
+        <p class="field__hint">${skin === "auto" ? t("set.ui.skinAutoHint", { skin: skinName(nowSkin) }) : skin === "rosa" ? t("set.ui.skinRosaHint") : skin === "glass" ? t("set.ui.skinGlassHint") : t("set.ui.skinClassicHint")}</p>
       </div>
+      ${rosa && html`<div class="field">
+        <span class="field__label">${t("set.ui.fx")}</span>
+        <${Segmented} label=${t("set.ui.fx")} class="seg--wrap" value=${fx} onChange=${(v) => { setF(v); setFxPref(v); }}
+          options=${[{ value: "auto", label: t("set.ui.fxAuto"), testid: "fx-auto" }, { value: "full", label: t("set.ui.fxFull"), testid: "fx-full" },
+            { value: "calm", label: t("set.ui.fxCalm"), testid: "fx-calm" }, { value: "still", label: t("set.ui.fxStill"), testid: "fx-still" }]} />
+        <p class="field__hint">${t("set.ui.fxHint")}</p>
+      </div>`}
+      ${rosa && hasHaptics && html`<${Switch} label=${t("set.ui.haptics")} description=${t("set.ui.hapticsHint")} checked=${haptics} onChange=${(v) => { setH(v); setHapticsPref(v); }} testid="haptics" />`}
     </${Card}>
   </${Section}>`;
 }

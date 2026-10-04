@@ -5,6 +5,29 @@ const MAC = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 
 // ... and the phone app (android/…/MainActivity): the glass look from the first picture, and a window that paints the backdrop itself.
 const ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36 TheMeshAndroid/0.1.0 (android; skin=glass)";
 const WIN = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 TheMeshDesktop/0.1.0 (win)";
+// ... and the phone app as it is now: the look of the weather app «Роса» (a living sky, glass over it)
+const ROSA = ANDROID.replace("skin=glass", "skin=rosa");
+// the window of the phone app as a stub that remembers what the page tells it
+const rosaShell = () => {
+  // (open() starts in the dark theme; in Роса that is a fixed mood, and these tests want the real sky: "auto")
+  try { localStorage.setItem("themesh.theme", "auto"); } catch {}
+  window.themeshShell = {
+    calls: [],
+    look(theme, skin) { this.calls.push(["look", theme, skin]); },
+    sky(top, bottom, light) { this.calls.push(["sky", top, bottom, light]); },
+    haptic(kind) { this.calls.push(["haptic", kind]); },
+    menu() { this.calls.push(["menu"]); },
+  };
+};
+const sky = (page) => page.evaluate(() => {
+  const r = document.documentElement, cs = getComputedStyle(r);
+  return {
+    skin: r.dataset.skin, look: r.dataset.look || "", theme: r.dataset.theme, appearance: r.dataset.appearance || "", body: r.dataset.body || "", fx: r.dataset.fx,
+    native: r.hasAttribute("data-native-backdrop"), zen: cs.getPropertyValue("--sky-zen").trim(), hor: cs.getPropertyValue("--sky-hor").trim(), ink: cs.getPropertyValue("--sky-ink").trim(),
+    accent: cs.getPropertyValue("--sky-accent").trim(), stars: cs.getPropertyValue("--sky-stars").trim(), top: cs.getPropertyValue("--sky-top").trim(), bottom: cs.getPropertyValue("--sky-bottom").trim(),
+    htmlBg: cs.backgroundColor, calls: window.themeshShell ? window.themeshShell.calls : null,
+  };
+});
 
 // (with reduced motion every style change is a transition of 0.01 ms: the computed style is the new one only a moment later)
 const sidebarBlur = (page, gone) => page.waitForFunction((g) => (getComputedStyle(document.querySelector(".sidebar")).backdropFilter === "none") === g, gone, { timeout: 5000 });
@@ -69,6 +92,137 @@ group("skin", () => {
     st = await bare.evaluate(() => ({ native: document.documentElement.hasAttribute("data-native-backdrop"), skin: document.documentElement.dataset.skin }));
     eq([st.skin, st.native], ["glass", false], "without a window to paint for it the page keeps its own backdrop");
     eq(bare.problems, [], "console / network problems");
+  });
+
+  test("the phone app starts with Роса: a sky of its own, and its window is told the colours of the sky for the bars", async ({ browser, dev }) => {
+    const page = await open(browser, dev.laptop, { userAgent: ROSA, init: rosaShell, mobile: true, w: 390, h: 844, theme: "dark" });
+    // ?sky= shows the sky at a height of the sun (here 25 degrees: a day), the way ?skin= shows a look: for screenshots and tests
+    await page.goto(`${dev.laptop.origin}/?sky=25#/home`);
+    await tid(page, "tab-home").waitFor();
+    let st = await sky(page);
+    eq([st.skin, st.look, st.native], ["glass", "rosa", false], "Роса is a layer over glass, and the page paints its own sky (the window does not)");
+    eq([st.theme, st.zen, st.hor, st.body], ["dark", "#2c76d8", "#9bcbf6", "sun"], "a day: vivid blue, light type, the sun up");
+    assert(/^#[0-9a-f]{6}$/.test(st.top) && st.bottom === "#9bcbf6", "the colours of the first and the last row of the sky: " + st.top + " " + st.bottom);
+    assert(st.htmlBg !== "rgba(0, 0, 0, 0)", "the page is opaque: " + st.htmlBg);
+    assert(st.calls.some((c) => c[0] === "look" && c[1] === "dark" && c[2] === "rosa"), "the window is told the look: " + JSON.stringify(st.calls));
+    assert(st.calls.some((c) => c[0] === "sky" && c[1] === st.top && c[2] === st.bottom && c[3] === false), "and the colours of the sky for the bars: " + JSON.stringify(st.calls));
+    // the fonts of the look are really there (the display face is fetched when the numeral of Home first needs it; waiting for it here
+    // also means that nothing is still on its way when the next address is opened)
+    const fonts = await page.evaluate(async () => {
+      const display = await document.fonts.load('600 64px "Cormorant Garamond"');
+      await document.fonts.ready;
+      return { manrope: document.fonts.check('16px "Manrope"'), display: display.length, body: getComputedStyle(document.body).fontFamily.slice(0, 20) };
+    });
+    assert(fonts.manrope && /Manrope/.test(fonts.body), "the interface is set in Manrope: " + JSON.stringify(fonts));
+    eq(fonts.display, 1, "the display face of the big numeral is there");
+    // the manner of the sky: noon is the sun in the upper right, night is stars and a moon
+    await page.goto(`${dev.laptop.origin}/?sky=-16#/home`);
+    await tid(page, "tab-home").waitFor();
+    st = await sky(page);
+    eq([st.theme, st.body, st.stars], ["dark", "moon", "1"], "a night: the moon and all the stars");
+    eq(page.problems, [], "console / network problems");
+
+    // the same page in a browser that pretends to be the app but has no window: no calls to make, nothing breaks
+    const bare = await open(browser, dev.laptop, { userAgent: ROSA, mobile: true, w: 390, h: 844 });
+    st = await sky(bare);
+    eq([st.skin, st.look, st.native], ["glass", "rosa", false], "no window to talk to");
+    eq(bare.problems, [], "console / network problems");
+  });
+
+  test("the moods of the sky: «По небу», «Светлое», «Вечернее», «Тёмное» are chosen in Settings, and the type follows the sky", async ({ browser, dev }) => {
+    const page = await open(browser, dev.laptop, { userAgent: ROSA, init: rosaShell, mobile: true, w: 390, h: 844 });
+    await page.goto(`${dev.laptop.origin}/?sky=25#/settings/interface`);
+    await tid(page, "theme-auto").waitFor();
+    eq(await page.getByRole("radiogroup", { name: /Небо/ }).count(), 1, "the sky picker is a radio group");
+    for (const mood of ["auto", "light", "evening", "dark"]) assert(await tid(page, "theme-" + mood).isVisible(), `the picture of the mood "${mood}" is there`);
+    eq(await tid(page, "theme-auto").getAttribute("aria-checked"), "true", "«По небу» is what it starts with");
+
+    await tid(page, "theme-light").click();
+    await page.waitForFunction(() => document.documentElement.dataset.appearance === "light");
+    await page.waitForFunction(() => document.documentElement.dataset.theme === "light", null, { timeout: 5000 });
+    let st = await sky(page);
+    eq([st.theme, st.ink, st.accent, st.body, st.stars], ["light", "#1b2030", "#c46f1e", "none", "0"], "Светлое: a pale sky, dark type, a deeper amber, no sun and no stars of its own");
+    eq(await page.evaluate(() => localStorage.getItem("themesh.theme")), "light", "the mood is remembered");
+    assert(st.calls.some((c) => c[0] === "look" && c[1] === "light" && c[2] === "rosa"), "the window is told: " + JSON.stringify(st.calls.slice(-3)));
+
+    await tid(page, "theme-evening").click();
+    await page.waitForFunction(() => document.documentElement.dataset.appearance === "evening");
+    st = await sky(page);
+    eq([st.theme, st.zen, st.stars, st.body], ["dark", "#2b478d", "0.3", "none"], "Вечернее: the blue hour, the first stars");
+
+    await tid(page, "theme-dark").click();
+    await page.waitForFunction(() => document.documentElement.dataset.appearance === "dark");
+    st = await sky(page);
+    eq([st.theme, st.stars, st.ink], ["dark", "1", "#fffbf5"], "Тёмное: night, all the stars");
+
+    await tid(page, "theme-auto").click();
+    await page.waitForFunction(() => document.documentElement.dataset.appearance === "auto");
+    st = await sky(page);
+    eq([st.zen, st.body], ["#2c76d8", "sun"], "«По небу» is the real sky again (here: the day that ?sky=25 shows)");
+
+    // leave Роса: the sky goes, the glass stays, and the moods are light and dark again
+    await tid(page, "skin-glass").click();
+    await page.waitForFunction(() => !document.documentElement.hasAttribute("data-look"));
+    st = await sky(page);
+    eq([st.skin, st.look, st.zen, st.body, st.appearance, st.native], ["glass", "", "", "", "", true], "no sky, and the window paints the backdrop again");
+    assert(await tid(page, "theme-dark").isVisible() && !(await tid(page, "theme-evening").count()), "the moods of the sky are Роса's own");
+    await tid(page, "skin-rosa").click();
+    await page.waitForFunction(() => document.documentElement.dataset.look === "rosa");
+    eq(page.problems, [], "console / network problems");
+  });
+
+  test("effects: full, calm and still; «Remove animations» of the system means still; the choice is remembered", async ({ browser, dev }) => {
+    const page = await open(browser, dev.laptop, { userAgent: ROSA, init: rosaShell, mobile: true, w: 390, h: 844 }); // (reduced motion, as in all these tests)
+    await page.goto(`${dev.laptop.origin}/?sky=25#/settings/interface`);
+    await tid(page, "fx-auto").waitFor();
+    eq((await sky(page)).fx, "still", "the system asks for less motion: «Авто» is still");
+    await tid(page, "fx-full").click();
+    await page.waitForFunction(() => document.documentElement.dataset.fx === "full");
+    await tid(page, "fx-calm").click();
+    await page.waitForFunction(() => document.documentElement.dataset.fx === "calm");
+    eq(await page.evaluate(() => localStorage.getItem("themesh.fx")), "calm", "remembered");
+    await page.reload();
+    await tid(page, "fx-calm").waitFor();
+    eq((await sky(page)).fx, "calm", "it survives a reload");
+    eq(await tid(page, "fx-calm").getAttribute("aria-checked"), "true");
+    // the phone app has a vibrator: the switch for haptics is there (the stub window has `haptic`)
+    await tid(page, "haptics").waitFor();
+    await tid(page, "haptics").click();
+    eq(await page.evaluate(() => localStorage.getItem("themesh.haptics")), "off", "haptics off");
+    eq(page.problems, [], "console / network problems");
+  });
+
+  test("the tab bar of the phone carries a lens of glass that sits under the open tab and follows a finger across the tabs", async ({ browser, dev }) => {
+    const page = await open(browser, dev.laptop, { userAgent: ROSA, init: rosaShell, mobile: true, w: 390, h: 844 });
+    await page.goto(`${dev.laptop.origin}/?sky=25#/home`);
+    await tid(page, "tab-home").waitFor();
+    const lens = () => page.evaluate(() => {
+      const nav = document.querySelector(".tabbar"), on = nav.querySelector(".tabbar__item.is-active");
+      return { x: parseFloat(nav.style.getPropertyValue("--lens-x")), w: parseFloat(nav.style.getPropertyValue("--lens-w")), left: on.offsetLeft, width: on.offsetWidth, tab: on.dataset.testid, shown: getComputedStyle(nav.querySelector(".tabbar__lens")).display };
+    });
+    await page.waitForFunction(() => document.querySelector(".tabbar").style.getPropertyValue("--lens-w") !== "");
+    let l = await lens();
+    eq([l.shown, l.x, l.w, l.tab], ["block", l.left, l.width, "tab-home"], "the lens is under the open tab");
+    // a tap on another tab opens it, and the lens goes there
+    await tid(page, "tab-files").click();
+    await page.waitForFunction(() => document.querySelector(".tabbar__item.is-active").dataset.testid === "tab-files");
+    await page.waitForFunction(() => { const n = document.querySelector(".tabbar"); return parseFloat(n.style.getPropertyValue("--lens-x")) === n.querySelector(".tabbar__item.is-active").offsetLeft; });
+    l = await lens();
+    eq([l.x, l.tab], [l.left, "tab-files"], "the lens followed the tap");
+    // a finger put on the bar lifts the lens, drags it across the tabs (a tick at each), and the tab under it opens when the finger lets go
+    const box = async (id) => (await tid(page, id).boundingBox());
+    const a = await box("tab-files"), c = await box("tab-chat");
+    await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+    await page.mouse.down();
+    await page.waitForFunction(() => document.querySelector(".tabbar").hasAttribute("data-lifted"));
+    for (let i = 1; i <= 6; i++) await page.mouse.move(a.x + a.width / 2 + ((c.x - a.x) * i) / 6, a.y + a.height / 2);
+    await page.waitForFunction(() => document.querySelector('.tabbar__item[data-under]') && document.querySelector('.tabbar__item[data-under]').dataset.testid === "tab-chat");
+    await page.mouse.up();
+    await page.waitForFunction(() => location.hash.startsWith("#/chat"));
+    const calls = (await sky(page)).calls.filter((x) => x[0] === "haptic").map((x) => x[1]);
+    assert(calls[0] === "press" && calls.includes("tick") && calls[calls.length - 1] === "select", "haptics: a press, ticks across the tabs, a selection: " + JSON.stringify(calls));
+    await page.waitForFunction(() => !document.querySelector(".tabbar").hasAttribute("data-lifted"));
+    eq(page.problems, [], "console / network problems");
   });
 
   test("the style picked in Settings wins over what the window starts with, and is remembered", async ({ browser, dev }) => {

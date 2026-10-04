@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { group, test, assert, eq, until, open, tid, startNode } from "../lib.mjs";
+import { group, test, assert, eq, until, open, tid, startNode, stopNodes } from "../lib.mjs";
 
 // "Nearby" with two real programs and the real interface (no mock): a device with the app finds another one that can add it,
 // shows it in a list, connects in one tap, and both people confirm the same six digits. The two programs run on this
@@ -29,8 +29,11 @@ const macEnv = (file) => ({ THEMESH_HIDE_INTERFACES: "1", THEMESH_LOCAL_ADDRS_FI
 const digits = (el) => el.getAttribute("data-code");
 const SLOW = { timeout: 45000 };
 
+// (the programs of one test must be gone when the next starts: a phone and a Mac left over from another test are devices nearby too,
+// with the same names, and "the first device named pixel" would be one of them — a request to a program no page is looking at)
 group("nearby (real processes)", { noDemo: true }, () => {
   test("a phone that is in no mesh finds a Mac nearby by itself, connects in one tap, and both sides confirm the same six digits", async ({ browser }) => {
+    await stopNodes();
     const file = networkFile();
     const mac = await startNode({ name: "mac", init: true, mesh: "Дом Мака", owner: "Андрей", env: macEnv(file) });
     const phone = await startNode({ name: "pixel", offerName: "Pixel 8", env: phoneEnv(file) });
@@ -70,6 +73,7 @@ group("nearby (real processes)", { noDemo: true }, () => {
   });
 
   test("a new Mac finds a phone that has a mesh; the phone opens a window with the same six digits, and its owner allows", async ({ browser }) => {
+    await stopNodes();
     const file = networkFile();
     const phone = await startNode({ name: "pixel", init: true, mesh: "Дом", owner: "Андрей", env: phoneEnv(file) });
     const mac = await startNode({ name: "mac", offerName: "mac", env: macEnv(file) });
@@ -109,6 +113,7 @@ group("nearby (real processes)", { noDemo: true }, () => {
   });
 
   test("a refusal reaches the new device, and the request is gone from the phone", async ({ browser }) => {
+    await stopNodes();
     const file = networkFile();
     const phone = await startNode({ name: "pixel", init: true, mesh: "Дом", owner: "Андрей", env: phoneEnv(file) });
     const mac = await startNode({ name: "mac", offerName: "mac", env: macEnv(file) });

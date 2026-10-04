@@ -40,8 +40,9 @@ final class MenuPopup {
      * @param light светлая ли тема страницы
      * @param text  цвет текста пунктов
      * @param accent цвет галочек
+     * @param rosaSmoke цвет дымчатого стекла «Росы» (см. {@code ThemeColor.rosaSmoke}) или 0, если страница не «Роса»
      */
-    static Dialog show(Activity activity, Menu menu, int top, boolean light, int text, int accent, Listener listener) {
+    static Dialog show(Activity activity, Menu menu, int top, boolean light, int text, int accent, int rosaSmoke, Listener listener) {
         float density = activity.getResources().getDisplayMetrics().density;
         int screen = activity.getResources().getDisplayMetrics().widthPixels;
         int width = Math.min(screen - (int) (24 * density), (int) (360 * density));
@@ -78,7 +79,7 @@ final class MenuPopup {
         Window window = dialog.getWindow();
         if (window != null) {
             boolean frosted = Glass.frosted(activity);
-            window.setBackgroundDrawable(Glass.panel(activity, light, 22, frosted));
+            window.setBackgroundDrawable(rosaSmoke != 0 ? Glass.rosaPanel(activity, light, rosaSmoke, 24, frosted) : Glass.panel(activity, light, 22, frosted));
             if (frosted && android.os.Build.VERSION.SDK_INT >= 31) {
                 window.setBackgroundBlurRadius((int) (28 * density));
             }

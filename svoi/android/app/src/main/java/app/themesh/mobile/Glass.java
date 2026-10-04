@@ -30,6 +30,17 @@ final class Glass {
     }
 
     /**
+     * Стеклянная панель «Росы»: дымчатая в цвете неба, с толстым светящимся ободком (см. {@link RosaGlass}).
+     *
+     * @param light   светлая ли тема страницы
+     * @param smoke   цвет дымчатого стекла ({@code ThemeColor.rosaSmoke}); у светлой темы не используется
+     * @param frosted размоет ли система фон за панелью
+     */
+    static Drawable rosaPanel(Context context, boolean light, int smoke, float radiusDp, boolean frosted) {
+        return new RosaGlass(context, light, smoke, radiusDp, frosted);
+    }
+
+    /**
      * Стеклянная панель со скруглёнными углами.
      *
      * @param light   светлая ли тема страницы

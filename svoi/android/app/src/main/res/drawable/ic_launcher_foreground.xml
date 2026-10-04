@@ -1,31 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Передний план адаптивного значка: три зелёных круга, соединённые треугольником (internal/web/ui/icons/icon.svg).
-     Холст 108dp; метка уменьшена и сдвинута так, чтобы её центр тяжести лёг в центр, а сама она — в безопасную зону (круг 66dp). -->
+<!-- Передний план адаптивного значка: стеклянная бусина с меткой The Mesh (три круга, соединённые треугольником, как в
+     internal/web/ui/icons/icon.svg), блики на стекле и искра — так выглядят стеклянные карточки «Росы». Холст 108dp, всё
+     важное — в безопасной зоне (круг 66dp в центре). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="512"
-    android:viewportHeight="512">
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- тень под бусиной -->
+    <group
+        android:pivotX="54"
+        android:pivotY="81"
+        android:scaleY="0.2">
+        <path android:pathData="M32,81a22,22 0 1,0 44,0a22,22 0 1,0 -44,0z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="radial"
+                    android:centerX="54"
+                    android:centerY="81"
+                    android:gradientRadius="22">
+                    <item android:color="#8C150C40" android:offset="0" />
+                    <item android:color="#00150C40" android:offset="1" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
+    <!-- тело стекла -->
+    <path android:pathData="M27,52a27,27 0 1,0 54,0a27,27 0 1,0 -54,0z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54"
+                android:startY="25"
+                android:endX="54"
+                android:endY="79">
+                <item android:color="#9EFFE9F2" android:offset="0" />
+                <item android:color="#5CB9A4FF" android:offset="0.5" />
+                <item android:color="#757C69E0" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- свет, собравшийся внизу бусины -->
+    <group
+        android:pivotX="54"
+        android:pivotY="71"
+        android:scaleY="0.47">
+        <path android:pathData="M35,71a19,19 0 1,0 38,0a19,19 0 1,0 -38,0z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="radial"
+                    android:centerX="54"
+                    android:centerY="71"
+                    android:gradientRadius="19">
+                    <item android:color="#D9FFF1E2" android:offset="0" />
+                    <item android:color="#00FFD9C8" android:offset="1" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
+    <!-- ободок: белый вверху слева, голубоватый внизу справа -->
+    <path
+        android:pathData="M27.6,52a26.4,26.4 0 1,0 52.8,0a26.4,26.4 0 1,0 -52.8,0z"
+        android:strokeWidth="1.7">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="30"
+                android:startY="26"
+                android:endX="78"
+                android:endY="78">
+                <item android:color="#FFFFFFFF" android:offset="0" />
+                <item android:color="#59FFFFFF" android:offset="0.35" />
+                <item android:color="#4DFFFFFF" android:offset="0.68" />
+                <item android:color="#D98FE3FF" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- метка The Mesh -->
     <group
         android:pivotX="256"
-        android:pivotY="256"
-        android:scaleX="0.9"
-        android:scaleY="0.9"
-        android:translateY="-18">
+        android:pivotY="244"
+        android:scaleX="0.097"
+        android:scaleY="0.097"
+        android:translateX="-202"
+        android:translateY="-192">
         <path
             android:pathData="M256,150 L150,338 L362,338 Z"
-            android:strokeColor="#4FE0B0"
-            android:strokeAlpha="0.55"
+            android:strokeColor="#9EFFFFFF"
             android:strokeWidth="22"
             android:strokeLineJoin="round" />
         <path
-            android:fillColor="#4FE0B0"
+            android:fillColor="#F7FFFFFF"
             android:pathData="M208,150 a48,48 0 1,0 96,0 a48,48 0 1,0 -96,0 Z" />
         <path
-            android:fillColor="#4FE0B0"
+            android:fillColor="#F7FFFFFF"
             android:pathData="M102,338 a48,48 0 1,0 96,0 a48,48 0 1,0 -96,0 Z" />
         <path
-            android:fillColor="#4FE0B0"
+            android:fillColor="#F7FFFFFF"
             android:pathData="M314,338 a48,48 0 1,0 96,0 a48,48 0 1,0 -96,0 Z" />
     </group>
+    <!-- блики -->
+    <path
+        android:pathData="M33.5,43.5A21.5,21.5 0 0 1 46,31.8"
+        android:strokeColor="#E6FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="2.2" />
+    <path
+        android:fillColor="#E6FFFFFF"
+        android:pathData="M30.15,50.5a1.25,1.25 0 1,0 2.5,0a1.25,1.25 0 1,0 -2.5,0z" />
+    <path
+        android:fillColor="#FFFFF4DA"
+        android:pathData="M80,20Q80,27.5 87.5,27.5Q80,27.5 80,35Q80,27.5 72.5,27.5Q80,27.5 80,20Z" />
+    <path
+        android:fillColor="#CCFFFFFF"
+        android:pathData="M87.4,39a1.1,1.1 0 1,0 2.2,0a1.1,1.1 0 1,0 -2.2,0z" />
 </vector>

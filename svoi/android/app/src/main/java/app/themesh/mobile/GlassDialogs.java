@@ -15,15 +15,19 @@ final class GlassDialogs {
     private GlassDialogs() {
     }
 
-    /** Показывает окно и перекрашивает его. У заголовка AlertDialog нет публичного идентификатора: ищем его по имени. */
+    /**
+     * Показывает окно и перекрашивает его. У заголовка AlertDialog нет публичного идентификатора: ищем его по имени.
+     *
+     * @param rosaSmoke цвет дымчатого стекла «Росы» или 0, если страница не «Роса»
+     */
     @SuppressLint("DiscouragedApi")
-    static AlertDialog show(Activity activity, AlertDialog.Builder builder, boolean light, int text, int muted, int accent) {
+    static AlertDialog show(Activity activity, AlertDialog.Builder builder, boolean light, int text, int muted, int accent, int rosaSmoke) {
         AlertDialog dialog = builder.create();
         dialog.show();
         Window window = dialog.getWindow();
         if (window != null) {
             boolean frosted = Glass.frosted(activity);
-            window.setBackgroundDrawable(Glass.panel(activity, light, 28, frosted));
+            window.setBackgroundDrawable(rosaSmoke != 0 ? Glass.rosaPanel(activity, light, rosaSmoke, 30, frosted) : Glass.panel(activity, light, 28, frosted));
             if (frosted && android.os.Build.VERSION.SDK_INT >= 31) {
                 window.setBackgroundBlurRadius((int) (28 * activity.getResources().getDisplayMetrics().density));
             }

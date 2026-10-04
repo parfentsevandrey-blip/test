@@ -1,20 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Одноцветный значок для «тематических» значков Android 13+: учитывается только прозрачность. -->
+<!-- Одноцветный значок для «тематических» значков Android 13+: учитывается только прозрачность. Та же бусина, что у цветного:
+     ободок, метка The Mesh и искра. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="512"
-    android:viewportHeight="512">
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M27.6,52a26.4,26.4 0 1,0 52.8,0a26.4,26.4 0 1,0 -52.8,0z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.2" />
     <group
         android:pivotX="256"
-        android:pivotY="256"
-        android:scaleX="0.9"
-        android:scaleY="0.9"
-        android:translateY="-18">
+        android:pivotY="244"
+        android:scaleX="0.097"
+        android:scaleY="0.097"
+        android:translateX="-202"
+        android:translateY="-192">
         <path
             android:pathData="M256,150 L150,338 L362,338 Z"
-            android:strokeColor="#FFFFFF"
             android:strokeAlpha="0.7"
+            android:strokeColor="#FFFFFF"
             android:strokeWidth="22"
             android:strokeLineJoin="round" />
         <path
@@ -27,4 +33,7 @@
             android:fillColor="#FFFFFF"
             android:pathData="M314,338 a48,48 0 1,0 96,0 a48,48 0 1,0 -96,0 Z" />
     </group>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M80,20Q80,27.5 87.5,27.5Q80,27.5 80,35Q80,27.5 72.5,27.5Q80,27.5 80,20Z" />
 </vector>

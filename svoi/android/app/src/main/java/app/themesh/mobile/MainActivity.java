@@ -25,6 +25,7 @@ import android.os.PowerManager;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -115,6 +116,9 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
 
     private static final Palette LIGHT = new Palette(ThemeColor.LIGHT_BG, 0xFF1C2421, 0xFF46525A, 0xFF0E7A5A, 0xFFFFFFFF, 0xFFB3261E);
     private static final Palette DARK = new Palette(ThemeColor.DARK_BG, 0xFFE8EEEB, 0xFFABB7B2, 0xFF4FE0B0, 0xFF05231A, 0xFFFF8A80);
+    // «Роса» (css/rosa.css): светлый текст на живом небе — золото акцента, тёмный на бледном небе светлого настроения — янтарь
+    private static final Palette ROSA_DARK = new Palette(ThemeColor.ROSA_TOP, 0xFFFFFBF5, 0xFFE3E0F2, 0xFFFFD37A, 0xFF14172A, 0xFFFFBDB9);
+    private static final Palette ROSA_LIGHT = new Palette(0xFFD9EBFC, 0xFF1B2030, 0xFF3F4559, 0xFFB05C0E, 0xFFFFFFFF, 0xFFB3261E);
 
     /** Когда (elapsedRealtime) падал процесс отрисовки WebView: на весь процесс, окно при этом пересоздаётся. */
     private static final ArrayDeque<Long> RENDERER_CRASHES = new ArrayDeque<>();
@@ -172,6 +176,9 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
     private String currentUrl = "";
     private String pendingRoute;
     private boolean glassLook = true; // у приложения стеклянный вид по умолчанию; обычный — если человек выбрал его в настройках интерфейса
+    private boolean rosaLook = true; // «Роса» — вид приложения по умолчанию: страница рисует небо сама, окно докрашивает полосы под системными панелями
+    private int skyTop; // цвета неба «Росы» у верхнего и нижнего края страницы: последние, о которых она сообщила (или запомнили с прошлого раза)
+    private int skyBottom;
     private Boolean lightPage; // светлая ли тема страницы; null — страница ещё не сказала, берём тему системы
     private int pageBg = ThemeColor.NONE; // фон страницы при обычном виде (при стеклянном страница прозрачна)
     private PageLook look; // вид, под который окно покрашено сейчас
@@ -189,6 +196,8 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
                 SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT));
         super.onCreate(savedInstanceState);
         prefs = new Prefs(this);
+        skyTop = prefs.skyTop() != 0 ? prefs.skyTop() : ThemeColor.ROSA_TOP;
+        skyBottom = prefs.skyBottom() != 0 ? prefs.skyBottom() : ThemeColor.ROSA_BOTTOM;
         texts = new AndroidTexts(this);
         setUpLaunchers();
         setContentView(R.layout.activity_main); // здесь создаётся WebView: на очень медленных устройствах это десятки секунд
@@ -440,9 +449,53 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         }
         look = newLook;
         glassLook = newLook.glass;
+        rosaLook = newLook.rosa;
         lightPage = newLook.light;
         pageBg = newLook.background;
+        if (newLook.rosa && newLook.skyTop != ThemeColor.NONE && newLook.skyBottom != ThemeColor.NONE) {
+            setSky(newLook.skyTop, newLook.skyBottom);
+        }
         applyPalette();
+    }
+
+    /** Небо «Росы» у краёв страницы: запоминает (заставка при следующем запуске будет того же цвета) и перекрашивает окно. */
+    private void setSky(int top, int bottom) {
+        if (top == skyTop && bottom == skyBottom) {
+            return;
+        }
+        skyTop = top;
+        skyBottom = bottom;
+        prefs.setSky(top, bottom);
+    }
+
+    /** Окно перекрашивается небом, о котором сообщила страница (мост {@code themeshShell.sky}). */
+    private void applySky(int top, int bottom) {
+        int before = skyTop;
+        setSky(top, bottom);
+        if (rosaLook && before != skyTop) {
+            applyPalette();
+        }
+    }
+
+    /** Тактильный отклик по просьбе страницы: тик на проходе линзы вкладок, лёгкий — на нажатии, подтверждение — на выборе. */
+    private void haptic(String kind) {
+        if (web == null) {
+            return;
+        }
+        int type;
+        if ("tick".equals(kind)) {
+            type = HapticFeedbackConstants.CLOCK_TICK;
+        } else if ("select".equals(kind)) {
+            type = Build.VERSION.SDK_INT >= 30 ? HapticFeedbackConstants.CONFIRM : HapticFeedbackConstants.CLOCK_TICK;
+        } else {
+            type = Build.VERSION.SDK_INT >= 27 ? HapticFeedbackConstants.KEYBOARD_TAP : HapticFeedbackConstants.VIRTUAL_KEY;
+        }
+        web.performHapticFeedback(type); // без флагов: система сама молчит, если человек выключил отклик касаний
+    }
+
+    /** Цвет дымчатого стекла окон «Росы» (меню, диалоги) или 0, если страница не «Роса». */
+    private int glassSmoke() {
+        return rosaLook ? ThemeColor.rosaSmoke(skyTop) : 0;
     }
 
     private AuroraDrawable aurora(boolean light) {
@@ -472,16 +525,22 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
      * Заставка, ошибка и меню в обоих видах стеклянные.
      */
     private void applyPalette() {
-        boolean light = lightPage != null ? lightPage : !systemIsDark();
-        Palette p = light ? LIGHT : DARK;
+        // пока страница не сказала своё, у телефона вид по умолчанию — «Роса», у неё свой свет (тёмный текст — только в светлом настроении)
+        boolean light = lightPage != null ? lightPage : (rosaLook ? false : !systemIsDark());
+        Palette p = rosaLook ? (light ? ROSA_LIGHT : ROSA_DARK) : (light ? LIGHT : DARK);
         int bg = glassLook ? (light ? ThemeColor.GLASS_LIGHT_BG : ThemeColor.GLASS_DARK_BG) : (pageBg != ThemeColor.NONE ? pageBg : p.bg);
-        root.setBackground(glassLook ? aurora(light) : new ColorDrawable(bg));
+        root.setBackground(rosaLook ? new SkyDrawable(skyTop, skyBottom) : glassLook ? aurora(light) : new ColorDrawable(bg));
         splash.setBackgroundColor(Color.TRANSPARENT);
         errorPanel.setBackgroundColor(Color.TRANSPARENT);
         web.setBackgroundColor(glassLook ? Color.TRANSPARENT : bg);
         float density = getResources().getDisplayMetrics().density;
-        splashOrb.setBackground(Glass.panel(this, light, 52, false));
-        errorCard.setBackground(Glass.panel(this, light, 28, false));
+        if (rosaLook) {
+            splashOrb.setBackground(Glass.rosaPanel(this, light, glassSmoke(), 52, false));
+            errorCard.setBackground(Glass.rosaPanel(this, light, glassSmoke(), 30, false));
+        } else {
+            splashOrb.setBackground(Glass.panel(this, light, 52, false));
+            errorCard.setBackground(Glass.panel(this, light, 28, false));
+        }
         barTitle.setTextColor(p.fg);
         barStatus.setTextColor(p.muted);
         barMenu.setColorFilter(p.muted);
@@ -670,9 +729,9 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         web.setWebChromeClient(new Chrome());
         web.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) ->
                 startDownload(url, contentDisposition, mimetype));
-        // Приложение называет себя в user agent: так страница узнаёт, что она в окне телефона, и начинает со стеклянного вида
-        // (js/boot.js; человек может выбрать обычный в настройках интерфейса).
-        s.setUserAgentString(s.getUserAgentString() + " TheMeshAndroid/" + BuildInfo.versionName(this) + " (android; skin=glass)");
+        // Приложение называет себя в user agent: так страница узнаёт, что она в окне телефона, и начинает с вида «Роса»
+        // (js/boot.js; человек может выбрать другой в настройках интерфейса).
+        s.setUserAgentString(s.getUserAgentString() + " TheMeshAndroid/" + BuildInfo.versionName(this) + " (android; skin=rosa)");
         // Объект window.themeshShell: меню приложения и вид страницы для окраски системных панелей.
         web.addJavascriptInterface(new ShellBridge(main::post, () -> web.getUrl(), () -> loadedOrigin, new ShellBridge.Host() {
             @Override
@@ -683,6 +742,16 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
             @Override
             public void look(PageLook pageLook) {
                 applyLook(pageLook);
+            }
+
+            @Override
+            public void sky(int top, int bottom) {
+                applySky(top, bottom);
+            }
+
+            @Override
+            public void haptic(String kind) {
+                MainActivity.this.haptic(kind);
             }
         }), ShellBridge.NAME);
         // Сканер QR-кода приглашения: объект window.themeshApp есть в странице, только если у телефона есть камера.
@@ -995,19 +1064,19 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         menu.findItem(R.id.menu_battery).setChecked(isIgnoringBatteryOptimizations());
         menu.findItem(R.id.menu_copy_received).setChecked(copiesWillBeMade());
         dismissMenu();
-        boolean light = lightPage != null ? lightPage : !systemIsDark();
-        Palette p = light ? LIGHT : DARK;
+        boolean light = lightPage != null ? lightPage : (rosaLook ? false : !systemIsDark());
+        Palette p = rosaLook ? (light ? ROSA_LIGHT : ROSA_DARK) : (light ? LIGHT : DARK);
         // под строкой состояния и (если окно показывает страницу, а не заставку) под её верхней панелью, у кнопки «⋮»
         float density = getResources().getDisplayMetrics().density;
         int top = root.getPaddingTop() + (bar.getVisibility() == View.VISIBLE ? bar.getHeight() : (int) (52 * density));
-        menuPopup = MenuPopup.show(this, menu, top, light, p.fg, p.accent, this::onMenuItem);
+        menuPopup = MenuPopup.show(this, menu, top, light, p.fg, p.accent, glassSmoke(), this::onMenuItem);
     }
 
     /** Окно-вопрос в виде стеклянной панели, в цветах страницы. */
     private AlertDialog showGlassDialog(AlertDialog.Builder builder) {
-        boolean light = lightPage != null ? lightPage : !systemIsDark();
-        Palette p = light ? LIGHT : DARK;
-        return GlassDialogs.show(this, builder, light, p.fg, p.muted, p.accent);
+        boolean light = lightPage != null ? lightPage : (rosaLook ? false : !systemIsDark());
+        Palette p = rosaLook ? (light ? ROSA_LIGHT : ROSA_DARK) : (light ? LIGHT : DARK);
+        return GlassDialogs.show(this, builder, light, p.fg, p.muted, p.accent, glassSmoke());
     }
 
     /** Закрывает меню «⋮», если оно открыто (окну, когда оно уходит с экрана, и тесту снимков, которому нечем нажать «Назад», не закрыв приложение). */

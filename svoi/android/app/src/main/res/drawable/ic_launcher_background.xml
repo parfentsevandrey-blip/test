@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Фон значка: небо «Росы» в сумерках — от глубокого фиолетового вверху к розовому у горизонта, тёплое свечение внизу и
+     лиловая дымка в правом верхнем углу (то же небо, что страница рисует по цветам из js/sky-palette.js). Холст 108dp. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54"
+                android:startY="0"
+                android:endX="54"
+                android:endY="108">
+                <item android:color="#FF2A2470" android:offset="0" />
+                <item android:color="#FF5E4496" android:offset="0.5" />
+                <item android:color="#FFE18FA8" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="54"
+                android:centerY="106"
+                android:gradientRadius="58">
+                <item android:color="#CCFFD0A8" android:offset="0" />
+                <item android:color="#00FFD0A8" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="86"
+                android:centerY="14"
+                android:gradientRadius="46">
+                <item android:color="#739F8CFF" android:offset="0" />
+                <item android:color="#009F8CFF" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

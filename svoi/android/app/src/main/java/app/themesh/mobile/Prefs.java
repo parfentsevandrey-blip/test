@@ -11,6 +11,8 @@ final class Prefs {
     private static final String NOTIF_ASKED = "notifAsked";
     private static final String WEBVIEW_WARNED = "webViewWarned";
     private static final String COPY_RECEIVED = "copyReceived";
+    private static final String SKY_TOP = "skyTop";
+    private static final String SKY_BOTTOM = "skyBottom";
 
     private final SharedPreferences prefs;
 
@@ -61,5 +63,20 @@ final class Prefs {
 
     void setWebViewWarned(String version) {
         prefs.edit().putString(WEBVIEW_WARNED, version).apply();
+    }
+
+    /** Цвет неба «Росы» у верхнего края страницы, каким его видели в последний раз (0 — не помним). */
+    int skyTop() {
+        return prefs.getInt(SKY_TOP, 0);
+    }
+
+    /** То же у нижнего края. */
+    int skyBottom() {
+        return prefs.getInt(SKY_BOTTOM, 0);
+    }
+
+    /** Запоминает небо: заставка при следующем запуске будет того же цвета, что страница, а не чужого. */
+    void setSky(int top, int bottom) {
+        prefs.edit().putInt(SKY_TOP, top).putInt(SKY_BOTTOM, bottom).apply();
     }
 }

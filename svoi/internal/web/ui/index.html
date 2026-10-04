@@ -23,12 +23,22 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/views.css">
   <link rel="stylesheet" href="css/glass.css">
-  <!-- Applies the saved theme/language before first paint (no inline scripts, CSP friendly). -->
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/rosa-stars.css">
+  <link rel="stylesheet" href="css/rosa.css">
+  <!-- The sky of the "Роса" look, then the script that applies the saved theme/look/language before first paint (no inline scripts, CSP friendly). -->
+  <script src="js/sky-palette.js"></script>
   <script src="js/boot.js"></script>
   <link rel="modulepreload" href="vendor/preact-htm.js">
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
+  <!-- The sky of the "Роса" look (css/rosa.css; empty and invisible in the other looks): stars, the sun, the moon. -->
+  <div id="sky" aria-hidden="true">
+    <i class="sky__stars sky__stars--a"></i><i class="sky__stars sky__stars--b"></i>
+    <i class="sky__sun"></i>
+    <svg class="sky__moon" viewBox="-60 -60 120 120"><circle class="moon__dark" r="46"/><path class="moon__lit" d=""/></svg>
+  </div>
   <div id="app">
     <div class="boot-splash" aria-busy="true">
       <svg class="boot-splash__mark" viewBox="0 0 48 48" aria-hidden="true"><rect x="2" y="2" width="44" height="44" rx="13" fill="none" stroke="currentColor" stroke-width="2" opacity=".35"/><path d="M24 14 14 31h20z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" opacity=".7"/><circle cx="24" cy="14" r="4.2" fill="currentColor"/><circle cx="14" cy="31" r="4.2" fill="currentColor"/><circle cx="34" cy="31" r="4.2" fill="currentColor"/></svg>

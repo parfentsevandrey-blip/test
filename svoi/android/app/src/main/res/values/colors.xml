@@ -14,6 +14,7 @@
     <color name="scan_text_muted">#CCFFFFFF</color>
     <color name="scan_card">#B3000000</color>
     <color name="scan_notice">#E6B3261E</color>
-    <!-- Фон значка приложения (плитка из icons/icon.svg) -->
-    <color name="ic_launcher_background">#0F1714</color>
+    <!-- Небо «Росы» до того, как страница сказала своё (ThemeColor.ROSA_TOP и ROSA_BOTTOM): фон окна при запуске и заставки -->
+    <color name="rosa_top">#2E2A66</color>
+    <color name="rosa_bottom">#D58AA6</color>
 </resources>

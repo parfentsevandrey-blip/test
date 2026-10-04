@@ -32,6 +32,8 @@ public class ShellBridgeTest {
     private final ExecutorService mainThread = Executors.newSingleThreadExecutor(r -> new Thread(r, "fake-main"));
     private final AtomicInteger menus = new AtomicInteger();
     private final List<String> looks = Collections.synchronizedList(new ArrayList<>());
+    private final List<String> skies = Collections.synchronizedList(new ArrayList<>());
+    private final List<String> haptics = Collections.synchronizedList(new ArrayList<>());
     private final List<String> threads = Collections.synchronizedList(new ArrayList<>());
     private final AtomicReference<String> page = new AtomicReference<>(ORIGIN + "/#/home");
 
@@ -51,6 +53,18 @@ public class ShellBridgeTest {
         public void look(PageLook look) {
             threads.add(Thread.currentThread().getName());
             looks.add(look.toString());
+        }
+
+        @Override
+        public void sky(int top, int bottom) {
+            threads.add(Thread.currentThread().getName());
+            skies.add(String.format("%08X/%08X", top, bottom));
+        }
+
+        @Override
+        public void haptic(String kind) {
+            threads.add(Thread.currentThread().getName());
+            haptics.add(kind);
         }
     };
 
@@ -101,6 +115,42 @@ public class ShellBridgeTest {
     }
 
     @Test
+    public void theRosaLookAndItsSkyArePassedOn() throws Exception {
+        ShellBridge bridge = bridge(ORIGIN);
+        bridge.look("dark", "rosa");
+        bridge.look("light", "rosa");
+        bridge.sky("#2c76d8", "#9bcbf6", false);
+        bridge.sky("#05081A", "#121637", true);
+        bridge.sky("rgb(1, 2, 3)", "#9bcbf6", false);  // CSS-цвета, которые страница не посылает, тоже понятны
+        // не цвета и пустое — игнорируется
+        bridge.sky("blue", "#9bcbf6", false);
+        bridge.sky("#2c76d8", "", false);
+        bridge.sky(null, null, false);
+        bridge.sky("#2c76d8", "javascript:alert(1)", false);
+        waitForTheMainThread();
+        assertEquals(Arrays.asList("rosa/dark", "rosa/light"), looks);
+        assertEquals(Arrays.asList("FF2C76D8/FF9BCBF6", "FF05081A/FF121637", "FF010203/FF9BCBF6"), skies);
+    }
+
+    @Test
+    public void hapticsAreAskedForByName() throws Exception {
+        ShellBridge bridge = bridge(ORIGIN);
+        for (String kind : new String[] {"tick", "press", "select", "vibrate", "TICK", "", null, "tick; rm -rf /"}) {
+            bridge.haptic(kind);
+        }
+        waitForTheMainThread();
+        assertEquals(Arrays.asList("tick", "press", "select"), haptics);
+        haptics.clear();
+        for (String bad : new String[] {"https://evil.example/", "about:blank", "", null}) {
+            page.set(bad);
+            bridge.haptic("tick");
+            bridge.sky("#2c76d8", "#9bcbf6", false);
+        }
+        waitForTheMainThread();
+        assertTrue("с чужой страницы — ни отклика, ни цвета", haptics.isEmpty() && skies.isEmpty());
+    }
+
+    @Test
     public void onlyTheNodesOwnInterfaceIsListenedTo() throws Exception {
         ShellBridge bridge = bridge(ORIGIN);
         for (String ok : new String[] {ORIGIN, ORIGIN + "/", ORIGIN + "/#/chat/p", ORIGIN + "/?x=1"}) {
@@ -139,8 +189,8 @@ public class ShellBridgeTest {
     }
 
     @Test
-    public void thePageSeesExactlyTwoMethods() {
-        // WebView отдаёт странице только методы с @JavascriptInterface: их должно быть ровно два, и других публичных нет
+    public void thePageSeesExactlyFourMethods() {
+        // WebView отдаёт странице только методы с @JavascriptInterface: их должно быть ровно четыре, и других публичных нет
         TreeSet<String> exposed = new TreeSet<>();
         TreeSet<String> publicOnes = new TreeSet<>();
         for (Method m : ShellBridge.class.getMethods()) {
@@ -154,7 +204,7 @@ public class ShellBridgeTest {
                 publicOnes.add(m.getName());
             }
         }
-        assertEquals(new TreeSet<>(Arrays.asList("look", "menu")), exposed);
+        assertEquals(new TreeSet<>(Arrays.asList("haptic", "look", "menu", "sky")), exposed);
         assertEquals(exposed, publicOnes);
         assertEquals("themeshShell", ShellBridge.NAME);
     }

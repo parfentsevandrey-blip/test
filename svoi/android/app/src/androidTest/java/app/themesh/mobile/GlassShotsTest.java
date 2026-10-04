@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Снимки экрана настоящего окна на настоящем WebView (в эмуляторе CI): стеклянный вид, строка состояния, меню «⋮», светлая и
+ * Снимки экрана настоящего окна на настоящем WebView (в эмуляторе CI): вид «Роса» (небо и стекло), строка состояния, меню «⋮», светлая и
  * тёмная темы, первый экран и «Главная». Ничего, кроме того, что снимки получились, тест не проверяет — смотрит на них человек
  * (CI кладёт их в артефакт «themesh-android-emulator-screens»), поэтому шаг, который не удался (меню не открылось, страница не
  * успела), записывается в журнал и не ломает остальные снимки. Как снимки попадают на диск, см. {@link Shots}; что происходит в
@@ -98,6 +98,21 @@ public class GlassShotsTest {
                 web.run("location.hash = '#/home';");
                 Thread.sleep(500);
             }
+
+            // «Роса»: небо днём, ночью и в вечернем настроении (страница показывает небо на заданной высоте солнца, ?sky=: так снимки не
+            // зависят от того, когда их снимают), и картинки для выбора настроения в «Настройки → Внешний вид»
+            String[][] moods = {{"auto", "25", "auto", "10-sky-day"}, {"auto", "-16", "auto", "11-sky-night"}, {"evening", "", "evening", "12-sky-evening"}};
+            for (String[] mood : moods) {
+                web.run("try { localStorage.setItem('themesh.theme', '" + mood[0] + "'); } catch (e) {}"
+                        + " location.href = location.pathname + '" + (mood[1].isEmpty() ? "" : "?sky=" + mood[1]) + "#/home';");
+                Thread.sleep(1500);
+                web.waitFor("document.querySelector('[data-testid=\"page-home\"]') != null"
+                        + " && document.documentElement.getAttribute('data-appearance') === '" + mood[2] + "'", 30_000);
+                shot(web, mood[3]);
+            }
+            web.run("location.hash = '#/settings/interface'; setTimeout(function () { var e = document.querySelector('[data-testid=\"theme-auto\"]'); if (e) e.scrollIntoView({ block: 'center' }); }, 400);");
+            Thread.sleep(900);
+            shot(web, "13-sky-picker");
 
             // вернуть узел в прежнее состояние: другие тесты ждут первый экран
             web.run("fetch('api/mesh/leave',{method:'POST',headers:{'Content-Type':'application/json','X-Themesh':'1'},body:'{}'});");

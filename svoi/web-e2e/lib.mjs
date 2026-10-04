@@ -219,7 +219,18 @@ export async function open(browser, dev, { w = 1280, h = 800, lang = "ru", theme
   const bad = (s) => !allow.some((re) => re.test(s)) && page.problems.push(s);
   page.on("console", (m) => (m.type() === "error" || m.type() === "warning") && bad(`console.${m.type()}: ${m.text()}`));
   page.on("pageerror", (e) => bad("pageerror: " + e.message));
-  page.on("requestfailed", (r) => !/\/api\/events/.test(r.url()) && bad(`requestfailed: ${r.method()} ${r.url()} ${r.failure() && r.failure().errorText}`));
+  // A page that is left (the test opens the next address or reloads) has what it was still fetching cancelled by the browser: that is the test
+  // moving on, not a failure of the page. Only what is cancelled while the test navigates is let through.
+  let leaving = 0;
+  for (const m of ["goto", "reload", "goBack", "goForward"]) {
+    const go = page[m].bind(page);
+    page[m] = async (...args) => {
+      leaving++;
+      try { return await go(...args); } finally { setTimeout(() => { leaving--; }, 300); }
+    };
+  }
+  const leftBehind = (r) => leaving > 0 && /ERR_ABORTED/.test((r.failure() && r.failure().errorText) || "");
+  page.on("requestfailed", (r) => !/\/api\/events/.test(r.url()) && !leftBehind(r) && bad(`requestfailed: ${r.method()} ${r.url()} ${r.failure() && r.failure().errorText}`));
   page.on("response", (r) => r.status() >= 400 && /\/api\//.test(r.url()) && bad(`HTTP ${r.status()} ${r.request().method()} ${r.url().replace(dev.origin, "")}`));
   // Sign in the way a person does: a one-time link (what `themesh url` prints). The server turns
   // the code into a session cookie; the master token never goes near the browser.

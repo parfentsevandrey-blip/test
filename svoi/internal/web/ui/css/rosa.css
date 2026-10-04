@@ -1,0 +1,393 @@
+/* Look "Роса": the design of the weather app «Роса» (this repository, branch claude/zen-gates-ms602p) for The Mesh.
+
+   The look is a layer over the glass skin (css/glass.css, which makes the panes, capsules, sheets and menus out of
+   translucent fills, rims and shadows that all come from the tokens of that file): js/boot.js sets html[data-skin="glass"]
+   and html[data-look="rosa"] together, and this file replaces what makes Роса itself:
+
+     the sky    — the page paints a living sky (js/sky-palette.js: its colours follow the height of the sun, the sun or the
+                  moon stands where it really is, stars come out at night) and everything else floats on it;
+     the glass  — smoky over a dark sky, milky over a pale one, with a thick rim lit from the upper left, rainbow fringes
+                  along the lower edges and deep shadows in the sky's own colour (navy under a blue day, violet at dusk);
+     the type   — Manrope for the interface, Cormorant Garamond for the big numerals;
+     the motion — panes arrive one after another and catch a wave of light, light the glass under a finger, tip back as they
+                  slide up under the top of the screen, and the tab bar carries a drop of glass that follows the finger
+                  (js/rosa.js; css/rosa.css only describes how each of them looks).
+
+   Everything that depends on the sky comes from custom properties that js/sky-palette.js writes on <html> (--sky-*); the
+   defaults below are the blue hour, so that nothing breaks if the script is missing. */
+
+@property --tg { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --sw { syntax: "<percentage>"; inherits: false; initial-value: -40%; }
+
+/* ---------- 0. tokens of the look ---------- */
+html[data-look="rosa"] {
+  --sky-zen: #2b478d; --sky-zen-rgb: 43 71 141; --sky-hor: #b8798e; --sky-hor-rgb: 184 121 142;
+  --sky-m1: #3f5b9a; --sky-m2: #7e6a96; --sky-m3: #a67890;
+  --sky-glow: #f0928a; --sky-glow-rgb: 240 146 138; --sky-sun: #ffb387; --sky-sun-rgb: 255 179 135;
+  --sky-ink: #fffbf5; --sky-ink-rgb: 255 251 245; --sky-accent: #c6ccff; --sky-accent-rgb: 198 204 255;
+  --sky-smoke: #141e3c; --sky-smoke-rgb: 20 30 60; --sky-deep: #07112b; --sky-deep-rgb: 7 17 43;
+  --sky-stars: 0; --sky-daylight: .5; --sky-body: 0; --sky-body-x: 80%; --sky-body-y: 20%;
+
+  --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-display: "Cormorant Garamond", Cormorant, "Iowan Old Style", Georgia, serif;
+  --r-xs: 10px; --r-sm: 14px; --r-md: 20px; --r-lg: 26px; --r-xl: 32px;
+  --tabbar-h: 68px; --topbar-h: 64px; --inset: 14px;
+  --glass-filter: blur(10px) saturate(1.5);
+  --glass-filter-soft: blur(6px) saturate(1.4);
+  --glass-filter-heavy: blur(16px) saturate(1.6);
+
+  /* the springs of the weather app (stiffness 158 and damping .7 for the gel; .5 and 300 for a press), as CSS easings */
+  --ease-gel: cubic-bezier(.3, 1.35, .5, 1); --dur-gel: 700ms;
+  --ease-press: cubic-bezier(.3, 1.6, .5, 1); --dur-press: 520ms;
+  --ease-lens: cubic-bezier(.3, 1.3, .5, 1); --dur-lens: 380ms;
+  --spring: var(--ease-press);
+}
+@supports (transition-timing-function: linear(0, 1)) {
+  html[data-look="rosa"] {
+    --ease-gel: linear(0, .004, .025, .069, .136, .223, .325, .435, .547, .654, .751, .836, .905, .959, .999, 1.024, 1.039, 1.045, 1.045, 1.041, 1.034, 1.027, 1.019, 1.013, 1.007, 1.003, 1.001, .999, .998, .998, 1);
+    --ease-press: linear(0, .009, .053, .144, .279, .446, .625, .798, .947, 1.059, 1.13, 1.161, 1.158, 1.131, 1.093, 1.052, 1.017, .992, .978, .973, .976, .983, .991, .997, 1.002, 1.004, 1.004, 1.003, 1);
+    --ease-lens: linear(0, .004, .025, .067, .133, .218, .318, .425, .534, .639, .735, .818, .887, .942, .983, 1.011, 1.028, 1.036, 1.038, 1.036, 1.031, 1.025, 1.019, 1.014, 1.009, 1.005, 1);
+    --spring: var(--ease-press);
+  }
+}
+
+/* ---------- 1. the sky ---------- */
+html[data-look="rosa"][data-skin="glass"][data-theme] {
+  --glass-base: var(--sky-hor);
+  --aurora:
+    var(--sky-veil),
+    radial-gradient(135% 56% at 50% 114%, rgb(var(--sky-glow-rgb) / .9), rgb(var(--sky-glow-rgb) / 0) 70%),
+    linear-gradient(180deg, var(--sky-zen) 0%, var(--sky-m1) 25%, var(--sky-m2) 50%, var(--sky-m3) 75%, var(--sky-hor) 100%);
+  --aurora-vib: var(--aurora);
+}
+/* A veil of the sky's own deep colour over the upper two thirds of a vivid sky (the lower third, the horizon, stays luminous):
+   the type that sits straight on the sky keeps its contrast, and a real sky is darker overhead anyway. Light type only. */
+html[data-look="rosa"][data-theme="dark"] {
+  --sky-veil: linear-gradient(180deg, rgb(var(--sky-deep-rgb) / calc(.22 + .30 * var(--sky-daylight))) 0%, rgb(var(--sky-deep-rgb) / calc(.18 + .38 * var(--sky-daylight))) 42%, rgb(var(--sky-deep-rgb) / 0) 88%);
+}
+html[data-look="rosa"][data-theme="light"] { --sky-veil: linear-gradient(rgb(0 0 0 / 0), rgb(0 0 0 / 0)); }
+
+#sky { display: none; }
+html[data-look="rosa"] #sky { display: block; position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+#sky > * { position: absolute; }
+
+/* the sun and the moon, where they really are (js/sky-palette.js: the patch of sky near the top right corner) */
+.sky__sun, .sky__moon { display: none; left: var(--sky-body-x); top: var(--sky-body-y); opacity: var(--sky-body); transition: opacity 1.2s ease; }
+html[data-body="sun"] .sky__sun { display: block; }
+html[data-body="moon"] .sky__moon { display: block; }
+.sky__sun { width: 0; height: 0; }
+.sky__sun::before {
+  content: ""; position: absolute; width: max(130vw, 130vh); height: max(130vw, 130vh); left: calc(max(130vw, 130vh) / -2); top: calc(max(130vw, 130vh) / -2); border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(var(--sky-sun-rgb) / .50), rgb(var(--sky-sun-rgb) / .18) 8%, rgb(var(--sky-sun-rgb) / .05) 26%, rgb(var(--sky-sun-rgb) / 0) 100%);
+}
+.sky__sun::after {
+  content: ""; position: absolute; width: 52px; height: 52px; left: -26px; top: -26px; border-radius: 50%;
+  background: radial-gradient(closest-side, #fff 0 44%, rgb(var(--sky-sun-rgb) / .92) 62%, rgb(var(--sky-sun-rgb) / 0) 100%);
+}
+.sky__moon { width: 52px; height: 52px; margin: -26px 0 0 -26px; filter: drop-shadow(0 0 16px rgb(200 214 255 / .5)); overflow: visible; }
+.sky__moon .moon__dark { fill: rgb(200 212 255 / .10); }
+.sky__moon .moon__lit { fill: #eef1ff; }
+/* the stars: two sheets that twinkle against each other, thinning towards the horizon */
+.sky__stars {
+  inset: 0; opacity: calc(var(--sky-stars) * .9); background-repeat: repeat;
+  -webkit-mask-image: linear-gradient(#000, #000 50%, transparent 92%); mask-image: linear-gradient(#000, #000 50%, transparent 92%);
+}
+.sky__stars--a { background-image: var(--sky-stars-a); background-size: 331px 577px; }
+.sky__stars--b { background-image: var(--sky-stars-b); background-size: 389px 701px; }
+html[data-fx="full"] .sky__stars--a { animation: rz-twinkle-a 5.5s ease-in-out infinite alternate; }
+html[data-fx="full"] .sky__stars--b { animation: rz-twinkle-b 7.5s ease-in-out -3s infinite alternate; }
+@keyframes rz-twinkle-a { from { opacity: calc(var(--sky-stars) * .45); } to { opacity: calc(var(--sky-stars) * .95); } }
+@keyframes rz-twinkle-b { from { opacity: calc(var(--sky-stars) * .9); } to { opacity: calc(var(--sky-stars) * .35); } }
+
+/* ---------- 2. the tokens: light type on a dark or vivid sky ---------- */
+html[data-look="rosa"][data-theme="dark"] {
+  --bg: var(--sky-hor); --bg-side: transparent;
+  --surface: rgb(var(--sky-smoke-rgb) / calc(.62 + .2 * var(--sky-daylight)));
+  --surface-2: rgb(255 255 255 / .08);
+  --surface-3: rgb(255 255 255 / .15);
+  --surface-hover: rgb(255 255 255 / .09);
+  --surface-press: rgb(255 255 255 / .15);
+  --surface-glass: rgb(var(--sky-smoke-rgb) / .62);
+  --line: rgb(255 255 255 / .17);
+  --line-2: rgb(255 255 255 / .28);
+  --line-3: rgb(255 255 255 / .42);
+
+  --text: var(--sky-ink);
+  --text-2: rgb(var(--sky-ink-rgb) / .95);
+  --text-3: rgb(var(--sky-ink-rgb) / .92);
+  --text-inv: #14172a;
+
+  --accent: var(--sky-accent);
+  --accent-2: color-mix(in srgb, var(--sky-accent) 82%, #fff);
+  --accent-ink: #14172a;
+  --accent-text: color-mix(in srgb, var(--sky-accent) 80%, #fff);
+  /* (the soft fills are dark, tinted with the accent: text of the accent colour on a pale tint of it would not be readable) */
+  --accent-soft: color-mix(in srgb, var(--sky-accent) 20%, rgb(var(--sky-smoke-rgb) / .92));
+  --accent-softer: color-mix(in srgb, var(--sky-accent) 11%, rgb(var(--sky-smoke-rgb) / .72));
+  --accent-line: rgb(var(--sky-accent-rgb) / .62);
+  --focus: color-mix(in srgb, var(--sky-accent) 78%, #fff);
+  --amber-text: #ffd896; --danger-text: #ffbdb9; --info-text: #c1d6ff;
+  --ok: #78e6c1; --ok-text: #9af1d6; --ok-soft: rgb(120 230 193 / .22);
+  --backdrop: rgb(var(--sky-deep-rgb) / .55);
+  --node-fill: rgb(var(--sky-smoke-rgb) / .92);
+  --edge-off: rgb(255 255 255 / .34);
+  --shadow-1: 0 2px 8px -2px rgb(var(--sky-deep-rgb) / .4);
+  --shadow-2: 0 14px 34px -10px rgb(var(--sky-deep-rgb) / .5), 0 3px 8px rgb(var(--sky-deep-rgb) / .25);
+  --shadow-3: 0 34px 80px -14px rgb(var(--sky-deep-rgb) / .65), 0 8px 24px rgb(var(--sky-deep-rgb) / .3);
+  --bubble-mine: color-mix(in srgb, var(--sky-accent) 24%, rgb(var(--sky-smoke-rgb) / .92));
+  --bubble-mine-text: var(--sky-ink);
+  --bubble-theirs: rgb(var(--sky-smoke-rgb) / calc(.66 + .22 * var(--sky-daylight)));
+
+  /* the glass: smoke that keeps the hue of the sky (deep blue by day, violet at dusk), the denser the brighter the sky */
+  --glass-fill: rgb(var(--sky-smoke-rgb) / calc(.40 + .34 * var(--sky-daylight)));
+  --glass-fill-strong: rgb(var(--sky-smoke-rgb) / calc(.72 + .18 * var(--sky-daylight)));
+  --glass-fill-side: var(--glass-fill);
+  --glass-select: rgb(255 255 255 / .20);
+  --glass-well: rgb(var(--sky-deep-rgb) / .38);
+  --glass-sheen:
+    radial-gradient(44px 2.5px at 78% 0, rgb(255 255 255 / .95), rgb(255 255 255 / 0) 100%),
+    radial-gradient(26px 2px at 14% 0, rgb(255 255 255 / .7), rgb(255 255 255 / 0) 100%),
+    linear-gradient(162deg, rgb(255 255 255 / .24) 0%, rgb(255 255 255 / .08) 26%, rgb(255 255 255 / 0) 54%),
+    linear-gradient(0deg, rgb(255 255 255 / .07), rgb(255 255 255 / 0) 22%);
+  --glass-rim:
+    inset 0 2px 0 rgb(255 255 255 / .70), inset 1.5px 0 0 rgb(255 255 255 / .30),
+    inset -1px 0 0 rgb(255 196 236 / .22), inset 0 -2px 0 rgb(140 222 255 / .38),
+    inset 0 0 0 1px rgb(255 255 255 / .17), inset 0 0 22px rgb(255 255 255 / .09);
+  --glass-rim-sm:
+    inset 0 1px 0 rgb(255 255 255 / .52), inset 1px 0 0 rgb(255 255 255 / .2),
+    inset 0 -1px 0 rgb(150 224 255 / .26), inset 0 0 0 1px rgb(255 255 255 / .12);
+  --glass-drop: 0 22px 46px -14px rgb(var(--sky-deep-rgb) / .62), 0 5px 12px -2px rgb(var(--sky-deep-rgb) / .3);
+  --glass-drop-sm: 0 8px 20px -6px rgb(var(--sky-deep-rgb) / .55);
+  --glass-edge-fade: rgb(var(--sky-zen-rgb) / .86);
+  --btn-grad: linear-gradient(180deg, color-mix(in srgb, var(--accent) 74%, #fff) 0%, var(--accent) 100%);
+  --btn-grad-hover: linear-gradient(180deg, color-mix(in srgb, var(--accent) 60%, #fff) 0%, color-mix(in srgb, var(--accent) 90%, #fff) 100%);
+  --rz-lens: rgb(255 255 255 / .2);
+}
+
+/* ---------- 2b. the tokens: dark type on the pale sky of the Light appearance ---------- */
+html[data-look="rosa"][data-theme="light"] {
+  --bg: var(--sky-hor); --bg-side: transparent;
+  --surface: rgb(255 255 255 / .66);
+  --surface-2: rgb(255 255 255 / .50);
+  --surface-3: rgb(var(--sky-ink-rgb) / .08);
+  --surface-hover: rgb(var(--sky-ink-rgb) / .06);
+  --surface-press: rgb(var(--sky-ink-rgb) / .11);
+  --surface-glass: rgb(255 255 255 / .64);
+  --line: rgb(var(--sky-ink-rgb) / .13);
+  --line-2: rgb(var(--sky-ink-rgb) / .22);
+  --line-3: rgb(var(--sky-ink-rgb) / .34);
+
+  --text: var(--sky-ink);
+  --text-2: rgb(var(--sky-ink-rgb) / .84);
+  --text-3: rgb(var(--sky-ink-rgb) / .70);
+  --text-inv: #fff;
+
+  --accent: #b05c0e; --accent-2: #9a4f0a; --accent-ink: #fff; --accent-text: #8f4c0c;
+  --accent-soft: rgb(176 92 14 / .15); --accent-softer: rgb(176 92 14 / .08); --accent-line: rgb(176 92 14 / .5);
+  --focus: #8f4c0c;
+  --ok: #0b7a5a; --ok-text: #08704f; --ok-soft: rgb(11 122 90 / .14);
+  --backdrop: rgb(40 56 90 / .34);
+  --node-fill: rgb(255 255 255 / .95);
+  --edge-off: rgb(var(--sky-ink-rgb) / .3);
+  --shadow-1: 0 2px 8px -2px rgb(60 80 120 / .2);
+  --shadow-2: 0 14px 34px -10px rgb(60 80 130 / .32), 0 3px 8px rgb(60 80 130 / .12);
+  --shadow-3: 0 34px 80px -14px rgb(50 70 120 / .45), 0 8px 24px rgb(50 70 120 / .16);
+  --bubble-mine: rgb(255 226 190 / .9);
+  --bubble-mine-text: #2b1a08;
+  --bubble-theirs: rgb(255 255 255 / .8);
+
+  --glass-fill: rgb(255 255 255 / .52);
+  --glass-fill-strong: rgb(255 255 255 / .84);
+  --glass-fill-side: var(--glass-fill);
+  --glass-select: rgb(255 255 255 / .86);
+  --glass-well: rgb(var(--sky-ink-rgb) / .08);
+  --glass-sheen:
+    radial-gradient(44px 2.5px at 78% 0, rgb(255 255 255 / 1), rgb(255 255 255 / 0) 100%),
+    linear-gradient(162deg, rgb(255 255 255 / .75) 0%, rgb(255 255 255 / .18) 30%, rgb(255 255 255 / 0) 58%);
+  --glass-rim:
+    inset 0 2px 0 rgb(255 255 255 / .98), inset 1.5px 0 0 rgb(255 255 255 / .75),
+    inset -1px 0 0 rgb(232 196 250 / .34), inset 0 -2px 0 rgb(120 176 236 / .32),
+    inset 0 0 0 1px rgb(255 255 255 / .62), 0 0 0 .75px rgb(var(--sky-ink-rgb) / .12);
+  --glass-rim-sm:
+    inset 0 1px 0 rgb(255 255 255 / .95), inset 1px 0 0 rgb(255 255 255 / .6),
+    inset 0 -1px 0 rgb(120 176 236 / .24), inset 0 0 0 1px rgb(255 255 255 / .5), 0 0 0 .5px rgb(var(--sky-ink-rgb) / .12);
+  --glass-drop: 0 20px 44px -14px rgb(var(--sky-deep-rgb) / .38), 0 4px 10px -2px rgb(var(--sky-deep-rgb) / .14);
+  --glass-drop-sm: 0 8px 18px -6px rgb(var(--sky-deep-rgb) / .3);
+  --glass-edge-fade: rgb(var(--sky-zen-rgb) / .8);
+  --btn-grad: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
+  --btn-grad-hover: linear-gradient(180deg, var(--accent-2) 0%, #864108 100%);
+  --rz-lens: rgb(255 255 255 / .62);
+}
+
+html[data-look="rosa"] { font-feature-settings: normal; }
+html[data-look="rosa"] body { font-feature-settings: normal; font-weight: 500; letter-spacing: -.003em; }
+html[data-look="rosa"] ::selection { background: rgb(var(--sky-accent-rgb) / .34); color: inherit; }
+html[data-look="rosa"][data-theme="light"] ::selection { background: rgb(176 92 14 / .22); }
+
+/* "ok" is green, whatever the accent of the sky is: a device that is online must not turn gold at noon */
+html[data-look="rosa"] :is(.dot--ok, .conn__dot--on, .conn-pill__dot.is-on, .dchip__dot.is-on, .selfcard__bar.is-on, .avatar--online .avatar__status) { background: var(--ok); }
+html[data-look="rosa"] .dot--ok { box-shadow: 0 0 0 3px var(--ok-soft); }
+html[data-look="rosa"] .conn__dot--on { box-shadow: 0 0 0 4px var(--ok-soft); }
+html[data-look="rosa"] :is(.avatar--online, .avatar--self) { color: var(--ok-text); background: var(--ok-soft); border-color: transparent; }
+html[data-look="rosa"] .home-status--ok .home-status__icon { background: var(--ok-soft); color: var(--ok-text); }
+
+/* ---------- 3. panes: the thick rim and the layers that move (the sweep of light, the glow under a finger) ---------- */
+html[data-look="rosa"][data-skin="glass"] :is(.card, .home-card, .home-act, .hdev, .dcard, .onb-choice, .onb-form, .nearby, .flist, .svc-group, .more-self) {
+  --rz-touch: radial-gradient(circle at var(--tx, 50%) var(--ty, 50%), rgb(255 255 255 / calc(.26 * var(--tg, 0))), rgb(255 255 255 / 0) 72%);
+  --rz-sweep: linear-gradient(104deg, rgb(255 255 255 / 0) calc(var(--sw, -40%) - 14%), rgb(255 255 255 / .30) var(--sw, -40%), rgb(255 255 255 / 0) calc(var(--sw, -40%) + 14%));
+  background-image: var(--rz-touch), var(--rz-sweep), var(--glass-sheen);
+  transition: --tg .38s ease-out, transform var(--dur-press) var(--ease-press), box-shadow var(--dur) var(--ease);
+}
+html[data-look="rosa"][data-skin="glass"] [data-touched] { --tg: 1; transition-duration: .16s, var(--dur-press), var(--dur); }
+html[data-look="rosa"] .hdev--off, html[data-look="rosa"] .dcard.is-offline { opacity: .82; }
+/* The phone app takes the blur off the cards of the glass look (css/glass.css 8b: over a smooth backdrop it only costs). Here the
+   backdrop is a sky with stars and a sun, which a frosted card hides, so with full effects the blur is back; the calm and still
+   levels (and a screen that cannot keep up, js/rosa.js) go without. */
+html[data-look="rosa"][data-fx="full"][data-shell="android"][data-skin="glass"] :is(.card, .home-card, .home-act, .hdev, .dcard, .onb-choice, .onb-form, .nearby, .flist, .svc-group, .more-self) {
+  -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter);
+}
+/* a pane that arrives: it rises into place on a gel spring and catches a band of light on the way */
+html[data-fx="full"] [data-rz-in] { animation: rz-arrive var(--dur-gel) var(--ease-gel) var(--rz-delay, 0ms) backwards, rz-sweep 1.5s cubic-bezier(.4, 0, .2, 1) calc(var(--rz-delay, 0ms) + 120ms) backwards; }
+html[data-fx="calm"] [data-rz-in] { animation: rz-fade .4s ease var(--rz-delay, 0ms) backwards; }
+@keyframes rz-arrive { from { opacity: 0; transform: translateY(36px) scale(.96); } }
+@keyframes rz-sweep { from { --sw: -40%; } to { --sw: 140%; } }
+@keyframes rz-fade { from { opacity: 0; } }
+/* a pane that slides up under the top of the screen tips back and shrinks a little (js/rosa.js sets --rz-gone, 0..1) */
+html[data-look="rosa"] [data-receding] { transform-origin: 50% 100%; transform: perspective(900px) rotateX(calc(14deg * var(--rz-gone, 0))) scale(calc(1 - .06 * var(--rz-gone, 0))); transition: none; will-change: transform; }
+
+/* ---------- 4. type ---------- */
+html[data-look="rosa"] .page-head__title { font-size: 32px; font-weight: 700; letter-spacing: -.025em; line-height: 1.1; }
+html[data-look="rosa"] :is(h1, h2, h3, h4) { letter-spacing: -.015em; }
+html[data-look="rosa"] .brand__name { font-weight: 760; }
+@media (max-width: 559px) { html[data-look="rosa"] .page-head__title { font-size: 30px; } }
+
+/* the big number of Home: how many devices are on the line — a numeral of glass, like the temperature of the weather app */
+.home-status__num { display: none; }
+html[data-look="rosa"] .home-status {
+  flex-direction: column; align-items: flex-start; gap: 4px; padding: 6px 4px 8px;
+  background: none; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; border-radius: 0;
+}
+html[data-look="rosa"][data-skin="glass"] .home-status { background-image: none; }
+html[data-look="rosa"] .home-status__icon { display: none; }
+html[data-look="rosa"] .home-status__num { display: flex; align-items: baseline; gap: 12px; line-height: 1; margin-bottom: 2px; }
+html[data-look="rosa"] .home-status__n {
+  font-family: var(--font-display); font-weight: 300; font-size: clamp(92px, 30vw, 132px); line-height: .86; letter-spacing: -.03em;
+  font-feature-settings: "lnum"; font-variant-numeric: lining-nums;
+  color: transparent; -webkit-text-fill-color: transparent;
+  background: linear-gradient(176deg, rgb(255 255 255 / .98) 0%, rgb(255 255 255 / .70) 48%, rgb(var(--sky-accent-rgb) / .55) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-stroke: .7px rgb(255 255 255 / .6);
+  filter: drop-shadow(0 8px 16px rgb(var(--sky-deep-rgb) / .38));
+}
+html[data-look="rosa"][data-theme="light"] .home-status__n {
+  background: linear-gradient(176deg, rgb(var(--sky-ink-rgb) / .9) 0%, rgb(var(--sky-ink-rgb) / .55) 60%, rgb(176 92 14 / .6) 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-stroke: .7px rgb(255 255 255 / .8);
+  filter: drop-shadow(0 6px 12px rgb(255 255 255 / .6));
+}
+html[data-look="rosa"] .home-status__of { font-size: 18px; font-weight: 600; color: var(--text-2); letter-spacing: -.01em; }
+html[data-look="rosa"] .home-status__title { font-size: 24px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+html[data-look="rosa"] .home-status__line { font-size: 15px; font-weight: 500; color: var(--text-2); margin-top: 4px; }
+html[data-look="rosa"] .home-status__help { margin-left: 0; margin-top: 10px; }
+html[data-look="rosa"] .home-status .grow { flex: none; width: 100%; }
+
+/* little labels that would stand straight on the sky are little panes of glass (the sky behind them can be anything: noon, the sun) */
+html[data-look="rosa"] :is(.expert-tag, .page > h2.section-title) { background-color: var(--glass-fill); box-shadow: var(--glass-rim-sm); border-color: transparent; }
+html[data-look="rosa"] .page > h2.section-title { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: var(--r-pill); color: var(--text); }
+html[data-look="rosa"][data-theme="dark"] .page-head__sub { color: var(--text); }
+
+/* type that sits straight on the sky (not on a pane) gets a soft shadow of the sky's deep colour: it reads better in sunlight */
+html[data-look="rosa"][data-theme="dark"] :is(.home-status__title, .home-status__line, .home-status__of, .page-head__title, .page-head__sub, .onb__lead, .onb__wordmark, .topbar__name, .topbar__mesh, .section-title) {
+  text-shadow: 0 1px 12px rgb(var(--sky-deep-rgb) / .5), 0 0 2px rgb(var(--sky-deep-rgb) / .25);
+}
+
+/* ---------- 5. the top bar and the tab bar ---------- */
+html[data-look="rosa"] .topbar__name { font-weight: 700; letter-spacing: -.01em; }
+html[data-look="rosa"] .topbar__mesh { color: var(--text-2); }
+html[data-look="rosa"] .conn-pill, html[data-look="rosa"] .topbar__help { color: var(--text); }
+@media (max-width: 759px) {
+  /* what scrolls up under the top bar dissolves into the sky; at the bottom the same, above the tab bar */
+  html[data-look="rosa"] .main::after {
+    content: ""; position: fixed; z-index: 25; left: 0; right: 0; bottom: 0; pointer-events: none;
+    height: calc(var(--tabbar-h) + 48px + var(--safe-bottom));
+    background: linear-gradient(to top, rgb(var(--sky-hor-rgb) / .94) 0%, rgb(var(--sky-hor-rgb) / .78) 38%, rgb(var(--sky-hor-rgb) / 0) 100%);
+  }
+  html[data-look="rosa"] .tabbar {
+    left: var(--inset); right: var(--inset); bottom: calc(10px + var(--safe-bottom)); height: var(--tabbar-h);
+    padding: 6px; border-radius: 34px; overflow: visible;
+    background-color: rgb(var(--sky-smoke-rgb) / calc(.68 + .22 * var(--sky-daylight)));
+  }
+  html[data-look="rosa"][data-theme="light"] .tabbar { background-color: rgb(255 255 255 / .74); }
+  html[data-look="rosa"] .main { padding-bottom: calc(var(--tabbar-h) + 10px + var(--inset) + var(--safe-bottom)); }
+  html[data-look="rosa"] .toasts { bottom: calc(var(--tabbar-h) + 10px + var(--inset) + var(--safe-bottom) + 8px); }
+  html[data-look="rosa"] .tabbar__item { position: relative; z-index: 1; font-size: 11px; font-weight: 650; letter-spacing: -.005em; color: var(--text-2); transition: color .25s ease; }
+  html[data-look="rosa"] .tabbar__item.is-active { color: var(--text); }
+  html[data-look="rosa"] .tabbar__item.is-active .tabbar__icon { color: var(--accent-text); }
+  html[data-look="rosa"] .tabbar__icon { background: none !important; box-shadow: none !important; transition: transform var(--dur-lens) var(--ease-lens); }
+  html[data-look="rosa"] .tabbar__item.is-active .tabbar__icon { transform: translateY(-1px); }
+  html[data-look="rosa"] .tabbar__badge { border-color: transparent; box-shadow: 0 0 0 2px rgb(var(--sky-smoke-rgb) / .9); }
+  /* a finger (or a mouse) dragged across the bar is the lens's, not a scroll and not a dragged link */
+  html[data-look="rosa"] .tabbar { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  html[data-look="rosa"] .tabbar a { -webkit-user-drag: none; user-drag: none; }
+  /* the drop of glass under the tab that is open: it slides between the tabs on a spring, and lifts into a lens under a finger */
+  html[data-look="rosa"] .tabbar__lens {
+    display: block; position: absolute; z-index: 0; top: 6px; bottom: 6px; left: 0; width: var(--lens-w, 20%); border-radius: 28px;
+    transform: translateX(var(--lens-x, 0px)) scale(var(--lens-s, 1)); transform-origin: 50% 50%;
+    background: var(--rz-lens); pointer-events: none;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .55), inset 0 0 0 1px rgb(255 255 255 / .14), inset 0 -1px 0 rgb(150 224 255 / .3), 0 4px 12px -4px rgb(var(--sky-deep-rgb) / .45);
+  }
+  html[data-look="rosa"] .tabbar[data-ready] .tabbar__lens { transition: transform var(--dur-gel) var(--ease-gel), width var(--dur-gel) var(--ease-gel), background-color .3s ease, box-shadow .3s ease; }
+  html[data-look="rosa"] .tabbar[data-lifted] .tabbar__lens {
+    --lens-s: 1.1;
+    background: rgb(255 255 255 / .3); transition-duration: .12s, .12s, .3s, .3s;
+    box-shadow: inset 0 1.5px 0 rgb(255 255 255 / .8), inset 1.5px 0 0 rgb(255 255 255 / .4), inset -1.5px 0 0 rgb(255 170 230 / .5), inset 0 -1.5px 0 rgb(120 230 255 / .6), 0 10px 22px -6px rgb(var(--sky-deep-rgb) / .6);
+  }
+  html[data-look="rosa"][data-theme="light"] .tabbar[data-lifted] .tabbar__lens { background: rgb(255 255 255 / .9); }
+  html[data-look="rosa"] .tabbar[data-lifted] .tabbar__item[data-under] { color: var(--text); }
+  html[data-look="rosa"] .tabbar[data-lifted] .tabbar__item[data-under] .tabbar__icon { transform: scale(1.14); }
+}
+.tabbar__lens { display: none; }
+
+/* ---------- 6. controls ---------- */
+html[data-look="rosa"] .btn--primary { color: var(--accent-ink); }
+html[data-look="rosa"] .btn { font-weight: 650; letter-spacing: -.005em; }
+html[data-look="rosa"] .seg__opt, html[data-look="rosa"] .tabs__tab { font-weight: 650; }
+html[data-look="rosa"] .switch.is-on { box-shadow: inset 0 1px 3px rgb(0 0 0 / .22), 0 0 0 3px var(--accent-soft); }
+html[data-look="rosa"] .modal, html[data-look="rosa"] .drawer { border-radius: 30px; }
+html[data-look="rosa"] .input, html[data-look="rosa"] .select { border-radius: 16px; }
+
+/* the sky picker of Settings → Interface (the four moods of the sky, as little pictures) */
+.skypick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.skypick__opt { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0; padding: 0; background: none; border: 0; color: var(--text-2); font-size: var(--fs-xs); font-weight: 650; text-align: center; }
+.skypick__opt[aria-checked="true"] { color: var(--text); }
+.skypick__thumb { position: relative; display: block; width: 100%; aspect-ratio: 3 / 4; border-radius: 18px; overflow: hidden; box-shadow: var(--glass-rim-sm), 0 6px 14px -6px rgb(var(--sky-deep-rgb) / .5); transition: transform var(--dur-press) var(--ease-press), box-shadow .25s ease; }
+.skypick__opt:active .skypick__thumb { transform: scale(.95); }
+.skypick__opt[aria-checked="true"] .skypick__thumb { box-shadow: 0 0 0 2px var(--accent), 0 0 0 5px var(--accent-soft), 0 6px 14px -6px rgb(var(--sky-deep-rgb) / .5); }
+.skypick__thumb::before, .skypick__thumb::after { content: ""; position: absolute; border-radius: 50%; }
+.skypick__thumb--auto { background: linear-gradient(135deg, #3a82e0 0 49.5%, #0a0f2e 50.5% 100%); }
+.skypick__thumb--auto::before { width: 26%; height: 20%; left: 14%; top: 14%; background: radial-gradient(closest-side, #fff 0 45%, rgb(255 244 214 / .85) 70%, transparent); }
+.skypick__thumb--auto::after { width: 24%; height: 18%; right: 16%; bottom: 16%; background: radial-gradient(circle at 70% 40%, transparent 0 42%, #e6eaff 44%); }
+.skypick__thumb--light { background: linear-gradient(#91b7ed, #d9ebfc); }
+.skypick__thumb--light::before { width: 26%; height: 18%; right: 14%; top: 14%; background: radial-gradient(closest-side, #fff 0 44%, rgb(255 244 214 / .8) 70%, transparent); }
+.skypick__thumb--light::after { width: 62%; height: 16%; left: 8%; bottom: 20%; border-radius: 40px; background: rgb(255 255 255 / .75); filter: blur(1px); }
+.skypick__thumb--evening { background: linear-gradient(#2b478d 0%, #9b6b9e 46%, #f0928a 78%, #ffb077 100%); }
+.skypick__thumb--evening::before { width: 5%; height: 4%; left: 24%; top: 18%; background: #fff; box-shadow: 18px 10px 0 -.5px rgb(255 255 255 / .8), 38px -4px 0 -.5px rgb(255 255 255 / .7); }
+.skypick__thumb--dark { background: linear-gradient(#05081a, #1c1b45); }
+.skypick__thumb--dark::before { width: 4%; height: 3%; left: 22%; top: 16%; background: #fff; box-shadow: 16px 20px 0 rgb(255 255 255 / .8), 38px 6px 0 rgb(255 255 255 / .7), 8px 52px 0 rgb(255 255 255 / .6), 34px 44px 0 rgb(255 255 255 / .8); }
+.skypick__thumb--dark::after { width: 26%; height: 20%; right: 16%; top: 36%; background: radial-gradient(circle at 70% 40%, transparent 0 42%, #e6eaff 44%); }
+.skypick__check { position: absolute; z-index: 1; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 50%; display: none; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: 0 2px 6px rgb(0 0 0 / .3); }
+.skypick__opt[aria-checked="true"] .skypick__check { display: grid; }
+@media (max-width: 359px) { .skypick { gap: 6px; } }
+
+/* ---------- 7. less glass, less motion ---------- */
+html[data-look="rosa"][data-fx="still"] *, html[data-look="rosa"][data-fx="still"] *::before, html[data-look="rosa"][data-fx="still"] *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
+html[data-look="rosa"][data-fx="still"] [data-receding] { transform: none; will-change: auto; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-look="rosa"] [data-receding] { transform: none; will-change: auto; }
+  html[data-look="rosa"] .tabbar .tabbar__lens, html[data-look="rosa"] .tabbar__icon { transition: none !important; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  html[data-look="rosa"][data-theme="dark"] { --glass-fill: rgb(var(--sky-smoke-rgb) / .94); --glass-fill-strong: rgb(var(--sky-smoke-rgb) / .98); --surface: rgb(var(--sky-smoke-rgb) / .94); --surface-glass: rgb(var(--sky-smoke-rgb) / .96); }
+  html[data-look="rosa"][data-theme="light"] { --glass-fill: rgb(255 255 255 / .92); --glass-fill-strong: #fff; --surface: rgb(255 255 255 / .92); --surface-glass: rgb(255 255 255 / .94); }
+}
+html[data-look="rosa"][data-reduce-transparency][data-theme="dark"] { --glass-fill: rgb(var(--sky-smoke-rgb) / .94); --glass-fill-strong: rgb(var(--sky-smoke-rgb) / .98); --surface: rgb(var(--sky-smoke-rgb) / .94); --surface-glass: rgb(var(--sky-smoke-rgb) / .96); }
+html[data-look="rosa"][data-reduce-transparency][data-theme="light"] { --glass-fill: rgb(255 255 255 / .92); --glass-fill-strong: #fff; --surface: rgb(255 255 255 / .92); --surface-glass: rgb(255 255 255 / .94); }

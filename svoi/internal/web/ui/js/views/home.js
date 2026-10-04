@@ -67,7 +67,11 @@ export function networkStatus(peers) {
 
 function Status({ peers }) {
   const s = networkStatus(peers);
+  const total = peers.length + 1;
+  const n = peers.filter((p) => p.online).length + 1;
+  // (the big numeral is the "Роса" look's: how many are on the line; the sentence below says the same in words)
   return html`<div class=${cx("home-status", `home-status--${s.state}`)} data-testid="home-status" data-state=${s.state}>
+    <span class="home-status__num" aria-hidden="true"><span class="home-status__n">${n}</span><span class="home-status__of">${t("home.status.of", { total })}</span></span>
     <span class="home-status__icon"><${Icon} name=${s.icon} size=${26} /></span>
     <div class="grow">
       <p class="home-status__title" aria-live="polite">${s.title}</p>

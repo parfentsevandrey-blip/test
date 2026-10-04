@@ -17,6 +17,14 @@ public final class ThemeColor {
     public static final int GLASS_DARK_BG = 0xFF070B0E;
     /** Основа стеклянного вида, светлая тема. */
     public static final int GLASS_LIGHT_BG = 0xFFDCE8EE;
+    /**
+     * Небо «Росы», пока страница ещё не сказала своё (первый запуск, заставка): сумерки, цвета значка — от глубокого
+     * фиолетового вверху к розовому у горизонта. Дальше окно помнит последнее небо, о котором ему сообщила страница.
+     */
+    public static final int ROSA_TOP = 0xFF2E2A66;
+    public static final int ROSA_BOTTOM = 0xFFD58AA6;
+    /** Цвет, из которого «Роса» делает дымчатое стекло (css/rosa.css: --sky-smoke смешивает небо над головой с ним). */
+    public static final int ROSA_INK = 0xFF0B1020;
     /** «Не удалось определить». */
     public static final int NONE = 0;
 
@@ -78,6 +86,19 @@ public final class ThemeColor {
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    /** Смесь двух цветов: {@code t} от {@code b} поверх {@code a} (то, что делает браузер с полупрозрачным слоем), непрозрачная. */
+    public static int mix(int a, int b, float t) {
+        int r = Math.round(((a >> 16) & 0xFF) * (1 - t) + ((b >> 16) & 0xFF) * t);
+        int g = Math.round(((a >> 8) & 0xFF) * (1 - t) + ((b >> 8) & 0xFF) * t);
+        int bl = Math.round((a & 0xFF) * (1 - t) + (b & 0xFF) * t);
+        return 0xFF000000 | (r << 16) | (g << 8) | bl;
+    }
+
+    /** Цвет дымчатого стекла под небом «Росы»: небо над головой, сильно сдвинутое к ночной синеве (оно остаётся своего оттенка). */
+    public static int rosaSmoke(int skyTop) {
+        return mix(skyTop, ROSA_INK, 0.72f);
     }
 
     /** Светлый ли цвет (тёмные значки на нём читаются лучше светлых). */

@@ -11,6 +11,12 @@
         <item name="android:windowLightStatusBar">true</item>
     </style>
 
+    <!-- Главное окно: на старте фон — небо «Росы» (светлые значки системных панелей на нём), а не цвет темы. -->
+    <style name="Theme.TheMesh.Main" parent="Theme.TheMesh">
+        <item name="android:windowBackground">@drawable/window_sky</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
     <!-- Меню приложения («⋮»): окно-плашка без заголовка, фона и затемнения; стеклянную панель рисует MenuPopup. -->
     <style name="Theme.TheMesh.Menu" parent="android:Theme.Material.Dialog.NoActionBar">
         <item name="android:windowBackground">@android:color/transparent</item>
