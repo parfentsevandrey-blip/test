@@ -84,7 +84,7 @@ public class GlassShotsTest {
                 // меню приложения «⋮»: его просит страница
                 run(scenario, "window.themeshShell && window.themeshShell.menu(); true");
                 shot("02-menu-" + theme);
-                instrumentation.getUiAutomation().executeShellCommand("input keyevent KEYCODE_BACK").close();
+                drain(instrumentation.getUiAutomation().executeShellCommand("input keyevent KEYCODE_BACK"));
                 Thread.sleep(800);
                 // форма «Создать свою сеть»
                 run(scenario, "var b = document.querySelector('[data-testid=\"onb-create\"]'); if (b) b.click(); true");
@@ -107,7 +107,7 @@ public class GlassShotsTest {
                 run(scenario, "var c = document.querySelector('[data-testid=\"invite-create\"]'); if (c) c.click(); true");
                 waitFor(scenario, "document.querySelector('[data-testid=\"invite-qr\"] img') != null", 20_000);
                 shot("06-invite-" + theme);
-                instrumentation.getUiAutomation().executeShellCommand("input keyevent KEYCODE_BACK").close();
+                drain(instrumentation.getUiAutomation().executeShellCommand("input keyevent KEYCODE_BACK"));
                 run(scenario, "var x = document.querySelector('.modal__close'); if (x) x.click(); true");
                 Thread.sleep(500);
                 run(scenario, "location.hash = '#/settings'; true");
@@ -148,15 +148,26 @@ public class GlassShotsTest {
         }
     }
 
+    /**
+     * Записывает файл в {@link #DIR} от имени оболочки. Команда запускается без {@code sh -c}: UiAutomation делит строку по пробелам и
+     * не понимает ни кавычек, ни «&&», ни «&gt;», — поэтому папка делается отдельной командой, а запись — программой {@code dd}, которая
+     * читает стандартный ввод и пишет в файл, названный в её аргументе.
+     */
     private void writeToShell(String file, byte[] bytes) throws Exception {
         UiAutomation ua = instrumentation.getUiAutomation();
-        ParcelFileDescriptor[] fds = ua.executeShellCommandRw("sh -c 'mkdir -p " + DIR + " && cat > " + DIR + "/" + file + "'");
+        drain(ua.executeShellCommand("mkdir -p " + DIR));
+        ParcelFileDescriptor[] fds = ua.executeShellCommandRw("dd bs=65536 of=" + DIR + "/" + file);
         try (OutputStream stdin = new ParcelFileDescriptor.AutoCloseOutputStream(fds[1])) {
             stdin.write(bytes);
         }
-        try (InputStream stdout = new ParcelFileDescriptor.AutoCloseInputStream(fds[0])) {
-            while (stdout.read() >= 0) {
-                // ждём конца команды: когда она закончила, чтение возвращает -1
+        drain(fds[0]);
+    }
+
+    /** Читает вывод команды до конца: когда она закончила, чтение возвращает -1. */
+    private static void drain(ParcelFileDescriptor out) throws Exception {
+        try (InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(out)) {
+            while (in.read() >= 0) {
+                // вывод не нужен
             }
         }
     }
