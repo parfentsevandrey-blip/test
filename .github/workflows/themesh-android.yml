@@ -124,9 +124,18 @@ jobs:
           profile: pixel_6
           disable-animations: true
           emulator-boot-timeout: 600
+          # (the page of the look «Роса» is bigger than the pages of the glass look were: a phone with 2.5 GB is too small for it)
+          ram-size: 4096M
           working-directory: svoi/android
           # (the script also takes the screenshots of the real window that GlassShotsTest wrote, whatever the tests' result)
           script: sh tools/emulator-run.sh -Pandroid.testInstrumentationRunnerArguments.waitSeconds=240
+      - name: What the machine says (the emulator vanished once in the middle of the pictures)
+        if: always()
+        run: |
+          df -h / /tmp 2>/dev/null || true
+          free -m || true
+          sudo dmesg 2>/dev/null | tail -60 || true
+          ps aux --sort=-rss | head -10 | cut -c1-200 || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:

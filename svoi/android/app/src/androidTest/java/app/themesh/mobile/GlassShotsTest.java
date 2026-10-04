@@ -7,6 +7,7 @@ import android.Manifest;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -99,10 +100,19 @@ public class GlassShotsTest {
                 Thread.sleep(500);
             }
 
-            // «Роса»: небо днём, ночью и в вечернем настроении (страница показывает небо на заданной высоте солнца, ?sky=: так снимки не
-            // зависят от того, когда их снимают), и картинки для выбора настроения в «Настройки → Внешний вид»
+            // «Роса»: картинки для выбора настроения в «Настройки → Внешний вид» и небо днём, ночью и в вечернем настроении (страница
+            // показывает небо на заданной высоте солнца, ?sky=: так снимки не зависят от того, когда их снимают)
+            Log.i("Shots", "step: the sky picker");
+            web.run("try { localStorage.setItem('themesh.theme', 'auto'); } catch (e) {} location.href = location.pathname + '?sky=25#/settings/interface';");
+            Thread.sleep(1500);
+            web.waitFor("document.querySelector('[data-testid=\"theme-auto\"]') != null", 30_000);
+            web.run("var e = document.querySelector('[data-testid=\"theme-auto\"]'); if (e) e.scrollIntoView({ block: 'center' });");
+            Thread.sleep(900);
+            shot(web, "13-sky-picker");
+
             String[][] moods = {{"auto", "25", "auto", "10-sky-day"}, {"auto", "-16", "auto", "11-sky-night"}, {"evening", "", "evening", "12-sky-evening"}};
             for (String[] mood : moods) {
+                Log.i("Shots", "step: " + mood[3]);
                 web.run("try { localStorage.setItem('themesh.theme', '" + mood[0] + "'); } catch (e) {}"
                         + " location.href = location.pathname + '" + (mood[1].isEmpty() ? "" : "?sky=" + mood[1]) + "#/home';");
                 Thread.sleep(1500);
@@ -110,9 +120,6 @@ public class GlassShotsTest {
                         + " && document.documentElement.getAttribute('data-appearance') === '" + mood[2] + "'", 30_000);
                 shot(web, mood[3]);
             }
-            web.run("location.hash = '#/settings/interface'; setTimeout(function () { var e = document.querySelector('[data-testid=\"theme-auto\"]'); if (e) e.scrollIntoView({ block: 'center' }); }, 400);");
-            Thread.sleep(900);
-            shot(web, "13-sky-picker");
 
             // вернуть узел в прежнее состояние: другие тесты ждут первый экран
             web.run("fetch('api/mesh/leave',{method:'POST',headers:{'Content-Type':'application/json','X-Themesh':'1'},body:'{}'});");
