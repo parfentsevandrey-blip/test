@@ -10,6 +10,7 @@ import android.net.ConnectivityManager;
 import android.net.LinkAddress;
 import android.net.LinkProperties;
 import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
@@ -24,7 +25,6 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
@@ -95,7 +95,7 @@ public class NodeService extends Service {
 
     private final Handler main = new Handler(Looper.getMainLooper());
     private final SeenKeys seen = new SeenKeys();
-    private final Map<Network, List<InetAddress>> linkAddrs = new ConcurrentHashMap<>();
+    private final Map<Network, List<LocalAddrs.Addr>> linkAddrs = new ConcurrentHashMap<>();
     private final Runnable scheduledRefresh = this::runScheduledRefresh;
 
     private Prefs prefs;
@@ -482,6 +482,12 @@ public class NodeService extends Service {
             }
 
             @Override
+            public void onCapabilitiesChanged(Network network, NetworkCapabilities capabilities) {
+                // Wi-Fi это или мобильный интернет, становится известно не сразу: перечитываем адреса сети
+                trackNetwork(network, connectivity.getLinkProperties(network));
+            }
+
+            @Override
             public void onLost(Network network) {
                 linkAddrs.remove(network);
                 scheduleAddrRefresh();
@@ -497,9 +503,14 @@ public class NodeService extends Service {
 
     private void trackNetwork(Network network, LinkProperties properties) {
         if (properties != null) {
-            List<InetAddress> list = new ArrayList<>();
+            // Другие устройства бывают в Wi-Fi и в проводной сети (и в точке доступа, но она — не «сеть» Android,
+            // её адреса видны только через NetworkInterface); в мобильном интернете и в VPN их нет.
+            NetworkCapabilities caps = connectivity.getNetworkCapabilities(network);
+            boolean shared = caps != null && !caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+                    && (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET));
+            List<LocalAddrs.Addr> list = new ArrayList<>();
             for (LinkAddress a : properties.getLinkAddresses()) {
-                list.add(a.getAddress());
+                list.add(new LocalAddrs.Addr(a.getAddress(), a.getPrefixLength(), shared));
             }
             linkAddrs.put(network, list);
         }
@@ -520,31 +531,32 @@ public class NodeService extends Service {
     }
 
     /**
-     * Пишет local-addrs.txt: по адресу на строку, кроме петлевых и link-local. Адреса берутся и из
-     * NetworkInterface (как просили), и из LinkProperties сетей (надёжнее на новых Android).
+     * Пишет local-addrs.txt: по строке на адрес, кроме петлевых и link-local; для адресов в общей сети (Wi-Fi,
+     * Ethernet, точка доступа) с длиной префикса — по ним программа ищет другие устройства (см. LocalAddrs).
+     * Адреса берутся и из NetworkInterface (как просили), и из LinkProperties сетей (надёжнее на новых Android).
      */
     private synchronized void refreshAddresses() {
         if (shutDown) {
             return;
         }
-        List<InetAddress> all = new ArrayList<>();
+        List<LocalAddrs.Addr> all = new ArrayList<>();
         try {
             all.addAll(LocalAddrs.scan());
         } catch (SocketException | RuntimeException e) {
             log.w("cannot list the network interfaces: " + e);
         }
-        for (List<InetAddress> list : linkAddrs.values()) {
+        for (List<LocalAddrs.Addr> list : linkAddrs.values()) {
             all.addAll(list);
         }
-        List<String> addrs = LocalAddrs.select(all);
-        String content = LocalAddrs.format(addrs);
+        List<String> lines = LocalAddrs.lines(all);
+        String content = LocalAddrs.format(lines);
         if (content.equals(lastAddrs)) {
             return;
         }
         try {
             LocalAddrs.write(new File(getFilesDir(), "local-addrs.txt"), content);
             lastAddrs = content;
-            log.i("local addresses updated (" + addrs.size() + ")");
+            log.i("local addresses updated (" + lines.size() + "): " + String.join(" ", lines));
         } catch (IOException e) {
             log.w("cannot write local-addrs.txt: " + e);
         }

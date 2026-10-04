@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/netip"
 	"testing"
+	"time"
 
 	"golang.org/x/crypto/chacha20poly1305"
 
@@ -155,11 +156,11 @@ func TestBeaconNeedsTheSignatureOfTheDeviceItNames(t *testing.T) {
 }
 
 func TestOnLink(t *testing.T) {
-	_, home, _ := net.ParseCIDR("192.168.1.5/24")
-	home.IP = net.ParseIP("192.168.1.5") // an interface address keeps its host bits
-	_, lo, _ := net.ParseCIDR("127.0.0.1/8")
-	_, v6, _ := net.ParseCIDR("2001:db8::5/64")
-	addrs := []net.Addr{home, lo, v6, &net.UnixAddr{Name: "x"}}
+	nets := []netip.Prefix{
+		netip.MustParsePrefix("192.168.1.5/24"), // an interface address keeps its host bits
+		netip.MustParsePrefix("127.0.0.1/8"),
+		netip.MustParsePrefix("2001:db8::5/64"),
+	}
 	for ip, want := range map[string]bool{
 		"192.168.1.77":       true,
 		"192.168.2.77":       false,
@@ -168,7 +169,7 @@ func TestOnLink(t *testing.T) {
 		"::ffff:192.168.1.9": true,  // the same address in its IPv6 spelling
 		"10.0.0.1":           false,
 	} {
-		if got := onLink(netip.MustParseAddr(ip), addrs); got != want {
+		if got := onLink(netip.MustParseAddr(ip), nets); got != want {
 			t.Errorf("onLink(%s) = %v, want %v", ip, got, want)
 		}
 	}
@@ -184,6 +185,7 @@ func TestOnLinkWithRealInterfaces(t *testing.T) {
 	if err != nil {
 		t.Skip(err)
 	}
+	localNetworks.at = time.Time{} // do not trust what an earlier test cached
 	checked := 0
 	for _, a := range addrs {
 		ipn, ok := a.(*net.IPNet)

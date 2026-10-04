@@ -259,6 +259,9 @@ type SelfInfo struct {
 	// PortMap is the state of the automatic port forwarding on the home router;
 	// absent when it is switched off.
 	PortMap *PortMapInfo `json:"portmap,omitempty"`
+	// LAN is what discovery on the local network is doing (the beacons that let devices on one
+	// Wi-Fi find each other); absent when it is switched off.
+	LAN *LANStatus `json:"lan,omitempty"`
 }
 
 // PortMapInfo describes the router port mapping (UPnP / NAT-PMP).
@@ -336,6 +339,10 @@ func (n *Node) Self() SelfInfo {
 		if st, ok := n.magic.PortMapStatus(); ok {
 			info.PortMap = &PortMapInfo{State: st.State, Protocol: string(st.Protocol), External: st.External, Gateway: st.Gateway, Error: st.Error}
 		}
+	}
+	if n.lan != nil {
+		st := n.lan.snapshot() // not LANStatus(): n.mu is already held
+		info.LAN = &st
 	}
 	return info
 }

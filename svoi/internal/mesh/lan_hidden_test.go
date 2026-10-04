@@ -1,0 +1,146 @@
+package mesh
+
+import (
+	"context"
+	"net"
+	"net/netip"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"testing"
+	"time"
+
+	"golang.org/x/net/ipv4"
+
+	"github.com/parfentsevandrey-blip/test/svoi/internal/magic"
+)
+
+// A device whose system will not list its network interfaces (a phone, since Android 11) knows its addresses
+// only from the file its app writes. These tests are about what such a device does: the same things as any other.
+
+// hideInterfaces makes the system refuse to list the interfaces, as Android does, and gives the program the
+// file the app would write.
+func hideInterfaces(t *testing.T, fileContent string) {
+	t.Helper()
+	t.Setenv(magic.HideInterfacesEnv, "1")
+	f := filepath.Join(t.TempDir(), "local-addrs.txt")
+	if err := os.WriteFile(f, []byte(fileContent), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("THEMESH_LOCAL_ADDRS_FILE", f)
+	localNetworks.at = time.Time{} // do not trust what an earlier test cached
+	t.Cleanup(func() { localNetworks.at = time.Time{} })
+}
+
+func TestBeaconFromTheLocalNetworkIsBelievedWithoutAnInterfaceList(t *testing.T) {
+	hideInterfaces(t, "192.168.1.50/24\n10.20.30.40\n")
+	for ip, want := range map[string]bool{
+		"192.168.1.77": true,  // a neighbour on the phone's Wi-Fi
+		"192.168.2.77": false, // another network
+		"8.8.8.8":      false, // a routed or spoofed source
+		"10.20.30.41":  false, // the mobile data link has no neighbours: its line names no prefix
+		"127.0.0.1":    true,  // several nodes on one machine
+	} {
+		if got := fromLocalNetwork(netip.MustParseAddr(ip)); got != want {
+			t.Errorf("fromLocalNetwork(%s) = %v, want %v", ip, got, want)
+		}
+	}
+}
+
+func freeUDPPort(t *testing.T) int {
+	t.Helper()
+	pc, err := net.ListenPacket("udp4", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pc.Close()
+	return pc.LocalAddr().(*net.UDPAddr).Port
+}
+
+// The node's beacons leave on the one network it has an address on, to the multicast group and to the
+// broadcast address, although it could not have found that network by itself.
+func TestBeaconsLeaveWithoutAnInterfaceList(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Windows always lists its interfaces; the fallback is not used there")
+	}
+	var ln magic.LocalNet
+	for _, n := range magic.LocalNets() {
+		if _, ok := n.Broadcast(); ok && n.Iface != nil {
+			ln = n
+			break
+		}
+	}
+	if ln.Iface == nil {
+		t.Skip("no network card with a multicast-capable IPv4 address and a broadcast address here")
+	}
+	bcast, _ := ln.Broadcast()
+	port := freeUDPPort(t)
+
+	// Somebody else on the network, listening for beacons.
+	lc := net.ListenConfig{Control: reuseAddrControl}
+	pc, err := lc.ListenPacket(context.Background(), "udp4", ":"+strconv.Itoa(port))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pc.Close()
+	p4 := ipv4.NewPacketConn(pc)
+	if err := p4.JoinGroup(ln.Iface, &net.UDPAddr{IP: lanGroup}); err != nil {
+		t.Skipf("cannot listen to the multicast group on %s here: %v", ln.Iface.Name, err)
+	}
+	if err := p4.SetControlMessage(ipv4.FlagDst, true); err != nil {
+		t.Skipf("cannot see the destination of a packet here: %v", err)
+	}
+
+	// The phone: it cannot list its interfaces, and its app says it is at ln.Addr.
+	hideInterfaces(t, netip.PrefixFrom(ln.Addr, ln.Prefix).String()+"\n")
+	n, err := Open(Config{
+		Dir:        t.TempDir(),
+		DeviceName: "phone",
+		Owner:      "tester",
+		Timing:     testTiming,
+		LANPort:    port,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { n.Close() })
+	if err := n.CreateMesh("Home", "phone", "tester"); err != nil {
+		t.Fatal(err)
+	}
+	key := n.Root().LANKey()
+
+	var gotMulticast, gotBroadcast bool
+	buf := make([]byte, 512)
+	deadline := time.Now().Add(15 * time.Second)
+	for time.Now().Before(deadline) && !(gotMulticast && gotBroadcast) {
+		_ = pc.SetReadDeadline(time.Now().Add(time.Second))
+		nr, cm, from, err := p4.ReadFrom(buf)
+		if err != nil {
+			continue
+		}
+		id, udpPort, ok := decodeBeacon(key, buf[:nr])
+		if !ok || id != n.ID() {
+			continue
+		}
+		if udpPort != n.udpPort {
+			t.Errorf("the beacon names port %d, the node listens on %d", udpPort, n.udpPort)
+		}
+		if got := from.(*net.UDPAddr).IP.String(); got != ln.Addr.String() {
+			t.Errorf("the beacon came from %s, want the app's address %s", got, ln.Addr)
+		}
+		switch {
+		case cm != nil && cm.Dst.Equal(lanGroup):
+			gotMulticast = true
+		case cm != nil && cm.Dst.Equal(net.IP(bcast.AsSlice())):
+			gotBroadcast = true
+		}
+	}
+	if !gotMulticast || (!gotBroadcast && runtime.GOOS == "linux") {
+		t.Fatalf("beacons that reached a listener on %s: multicast=%v broadcast(%v)=%v", ln, gotMulticast, bcast, gotBroadcast)
+	}
+	st := n.LANStatus()
+	if !st.Enabled || st.Problem != "" || len(st.Networks) != 1 {
+		t.Errorf("LAN status of a working node: %+v", st)
+	}
+}

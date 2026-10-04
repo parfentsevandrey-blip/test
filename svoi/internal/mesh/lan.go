@@ -5,9 +5,11 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/binary"
+	"errors"
 	"net"
 	"net/netip"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -43,7 +45,28 @@ const (
 	beaconSigLabel = "themesh-lan-beacon/v3\x00"
 )
 
-var lanGroup = net.IPv4(239, 255, 77, 77)
+var (
+	lanGroup     = net.IPv4(239, 255, 77, 77)
+	lanGroupAddr = netip.AddrFrom4([4]byte{239, 255, 77, 77})
+)
+
+// What a device announces on is the list of networks magic.LocalNets gives: the system's own list of network
+// cards, or, where the system refuses to give it (Android 11+), the addresses the phone's app writes down for
+// the program (see magic/netview.go). Either way a beacon goes to the multicast group and to the network's
+// broadcast address, one per network, every few seconds; the list is looked at again each time, so a phone
+// that joins Wi-Fi after the program started is found, and finds, a few seconds later.
+
+// LANStatus says what local discovery is doing, so that the interface can explain why two devices on one
+// network do not find each other.
+type LANStatus struct {
+	Enabled  bool     `json:"enabled"`            // the beacon socket is open
+	Networks []string `json:"networks,omitempty"` // where it announces: "192.168.1.50/24 (en0)"
+	// Problem is "" when all is well, or why announcing does not work: "no-network" (no Wi-Fi or Ethernet
+	// address to announce on), "blocked" (the system refuses to send on the local network: on a Mac, the
+	// "Local Network" permission of the app is off) or "failed" (some other error, see Detail).
+	Problem string `json:"problem,omitempty"`
+	Detail  string `json:"detail,omitempty"` // the system's own words
+}
 
 type lanDiscovery struct {
 	n      *Node
@@ -52,6 +75,11 @@ type lanDiscovery struct {
 	port   int
 	cancel context.CancelFunc
 	done   chan struct{}
+
+	mu           sync.Mutex
+	status       LANStatus
+	failedRounds int    // rounds in a row in which nothing could be sent
+	logged       string // the networks as last written to the log
 }
 
 // beaconSigned is what a device signs: this very beacon's nonce, its id and its port.
@@ -116,6 +144,8 @@ func (n *Node) startLAN(parent context.Context) {
 	conn := pc.(*net.UDPConn)
 	ctx, cancel := context.WithCancel(parent)
 	l := &lanDiscovery{n: n, conn: conn, pc4: ipv4.NewPacketConn(conn), port: port, cancel: cancel, done: make(chan struct{})}
+	_ = l.pc4.SetMulticastLoopback(true) // several nodes on one machine (tests, demos) hear each other
+	l.status.Enabled = true
 	n.mu.Lock()
 	n.lan = l
 	n.mu.Unlock()
@@ -128,71 +158,136 @@ func (l *lanDiscovery) stop() {
 	<-l.done
 }
 
-func (l *lanDiscovery) interfaces() []net.Interface {
-	ifs, err := net.Interfaces()
-	if err != nil {
-		return nil
+// join makes this socket a member of the beacon group on the network ln, so that the group's packets
+// arrive from there.
+func (l *lanDiscovery) join(ln magic.LocalNet) error {
+	if ln.Iface != nil {
+		return l.pc4.JoinGroup(ln.Iface, &net.UDPAddr{IP: lanGroup})
 	}
-	var out []net.Interface
-	for _, ifc := range ifs {
-		if ifc.Flags&net.FlagUp == 0 || ifc.Flags&net.FlagLoopback != 0 || ifc.Flags&net.FlagMulticast == 0 {
+	return joinGroupByAddr(l.conn, lanGroupAddr, ln.Addr)
+}
+
+// sendVia makes multicast packets of this socket leave through the network ln.
+func (l *lanDiscovery) sendVia(ln magic.LocalNet) error {
+	if ln.Iface != nil {
+		return l.pc4.SetMulticastInterface(ln.Iface)
+	}
+	return setMulticastIfByAddr(l.conn, ln.Addr)
+}
+
+// round announces this device on every network it is on, once.
+func (l *lanDiscovery) round(joined map[netip.Addr]bool) {
+	root := l.n.Root()
+	if root == nil {
+		return
+	}
+	nets := magic.LocalNets()
+	var sent, failed int
+	var firstErr error
+	live := map[netip.Addr]bool{}
+	for _, ln := range nets {
+		live[ln.Addr] = true
+		if !joined[ln.Addr] {
+			// Not marked as joined until it worked: a network card that was not quite ready is tried again.
+			if err := l.join(ln); err == nil || errors.Is(err, syscall.EADDRINUSE) {
+				joined[ln.Addr] = true
+			} else {
+				l.n.log.Debug("LAN discovery: cannot join the group", "network", ln.String(), "err", err)
+			}
+		}
+		beacon := encodeBeacon(root.LANKey(), l.n.device(), l.n.udpPort) // fresh nonce per send: unlinkable
+		if beacon == nil {
 			continue
 		}
-		out = append(out, ifc)
+		if err := l.sendVia(ln); err != nil {
+			l.n.log.Debug("LAN discovery: cannot pick the network to send on", "network", ln.String(), "err", err)
+		}
+		// The group, and also the network's broadcast address: some Wi-Fi access points drop multicast.
+		targets := []netip.Addr{lanGroupAddr}
+		if bc, ok := ln.Broadcast(); ok {
+			targets = append(targets, bc)
+		}
+		for _, to := range targets {
+			if _, err := l.conn.WriteToUDPAddrPort(beacon, netip.AddrPortFrom(to, uint16(l.port))); err != nil {
+				failed++
+				if firstErr == nil {
+					firstErr = err
+				}
+			} else {
+				sent++
+			}
+		}
 	}
-	return out
+	for a := range joined {
+		if !live[a] {
+			delete(joined, a) // the network went away: join again when it is back
+		}
+	}
+	l.record(nets, sent, failed, firstErr)
+}
+
+// record keeps what the last round did, for LANStatus, and writes a line to the log when it changes.
+func (l *lanDiscovery) record(nets []magic.LocalNet, sent, failed int, firstErr error) {
+	st := LANStatus{Enabled: true}
+	names := make([]string, 0, len(nets))
+	for _, ln := range nets {
+		names = append(names, ln.String())
+	}
+	st.Networks = names
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	switch {
+	case len(nets) == 0:
+		st.Problem = "no-network"
+		l.failedRounds = 0
+	case sent == 0 && failed > 0:
+		// One round that sends nothing can be a network that is just changing; two are a problem.
+		if l.failedRounds++; l.failedRounds >= 2 {
+			st.Problem, st.Detail = "failed", firstErr.Error()
+			if errors.Is(firstErr, syscall.EHOSTUNREACH) || errors.Is(firstErr, syscall.EPERM) || errors.Is(firstErr, syscall.EACCES) {
+				st.Problem = "blocked"
+			}
+		} else {
+			st.Problem, st.Detail = l.status.Problem, l.status.Detail
+		}
+	default:
+		l.failedRounds = 0
+	}
+	if desc := strings.Join(names, ", "); desc != l.logged {
+		l.logged = desc
+		if desc == "" {
+			l.n.log.Info("LAN discovery: no local network to announce on")
+		} else {
+			l.n.log.Info("LAN discovery announcing", "networks", desc)
+		}
+	}
+	if st.Problem != l.status.Problem {
+		if st.Problem == "" {
+			l.n.log.Info("LAN discovery works again")
+		} else {
+			l.n.log.Warn("LAN discovery cannot send", "problem", st.Problem, "err", st.Detail)
+		}
+	}
+	l.status = st
 }
 
 func (l *lanDiscovery) run(ctx context.Context) {
 	defer close(l.done)
 	go l.readLoop(ctx)
 
-	joined := map[string]bool{}
-	send := func() {
-		root := l.n.Root()
-		if root == nil {
-			return
-		}
-		for _, ifc := range l.interfaces() {
-			beacon := encodeBeacon(root.LANKey(), l.n.device(), l.n.udpPort) // fresh nonce per send: unlinkable
-			if !joined[ifc.Name] {
-				_ = l.pc4.JoinGroup(&ifc, &net.UDPAddr{IP: lanGroup})
-				joined[ifc.Name] = true
-			}
-			_ = l.pc4.SetMulticastInterface(&ifc)
-			_ = l.pc4.SetMulticastLoopback(true)
-			_, _ = l.conn.WriteToUDP(beacon, &net.UDPAddr{IP: lanGroup, Port: l.port})
-			// Also the subnet broadcast: some Wi-Fi access points drop multicast.
-			addrs, _ := ifc.Addrs()
-			for _, a := range addrs {
-				ipn, ok := a.(*net.IPNet)
-				if !ok {
-					continue
-				}
-				ip4 := ipn.IP.To4()
-				mask := ipn.Mask
-				if len(mask) == 16 {
-					mask = mask[12:]
-				}
-				if ip4 == nil || len(mask) != 4 {
-					continue
-				}
-				bc := make(net.IP, 4)
-				for i := range bc {
-					bc[i] = ip4[i] | ^mask[i]
-				}
-				_, _ = l.conn.WriteToUDP(beacon, &net.UDPAddr{IP: bc, Port: l.port})
-			}
-		}
-	}
+	joined := map[netip.Addr]bool{} // networks, by our address on them, whose group this socket has joined
 	t := time.NewTicker(5 * time.Second)
 	defer t.Stop()
-	time.Sleep(500 * time.Millisecond)
-	send()
+	select {
+	case <-time.After(500 * time.Millisecond):
+	case <-ctx.Done():
+		return
+	}
+	l.round(joined)
 	for {
 		select {
 		case <-t.C:
-			send()
+			l.round(joined)
 		case <-ctx.Done():
 			return
 		}
@@ -233,49 +328,54 @@ func isClosedErr(err error) bool {
 	return false
 }
 
-// onLink reports whether ip lies inside a network one of addrs is attached to.
+// onLink reports whether ip lies inside a network this device is attached to (nets).
 // A beacon is a local-network affair: one that claims to come from anywhere else
 // (a spoofed source, a routed packet) is not allowed to make us probe that address.
-func onLink(ip netip.Addr, addrs []net.Addr) bool {
+func onLink(ip netip.Addr, nets []netip.Prefix) bool {
 	ip = ip.Unmap()
-	for _, a := range addrs {
-		ipn, ok := a.(*net.IPNet)
-		if !ok {
-			continue
-		}
-		base, ok := netip.AddrFromSlice(ipn.IP)
-		if !ok {
-			continue
-		}
-		ones, bits := ipn.Mask.Size()
-		if bits == 0 {
-			continue
-		}
-		if bits == 32 && base.Is4In6() {
-			base = base.Unmap()
-		}
-		if netip.PrefixFrom(base.Unmap(), ones).Contains(ip) {
+	for _, p := range nets {
+		if p.Contains(ip) {
 			return true
 		}
 	}
 	return false
 }
 
-// localNetworks is the cached list of addresses of this machine's interfaces.
+// localNetworks is the cached list of the networks this machine is attached to.
 var localNetworks struct {
-	mu    sync.Mutex
-	at    time.Time
-	addrs []net.Addr
+	mu   sync.Mutex
+	at   time.Time
+	nets []netip.Prefix
 }
 
 func fromLocalNetwork(ip netip.Addr) bool {
 	localNetworks.mu.Lock()
 	defer localNetworks.mu.Unlock()
 	if time.Since(localNetworks.at) > 2*time.Second {
-		localNetworks.addrs, _ = net.InterfaceAddrs()
+		localNetworks.nets = magic.LocalPrefixes()
 		localNetworks.at = time.Now()
 	}
-	return onLink(ip, localNetworks.addrs)
+	return onLink(ip, localNetworks.nets)
+}
+
+// snapshot is the status as of the last round.
+func (l *lanDiscovery) snapshot() LANStatus {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	st := l.status
+	st.Networks = append([]string(nil), st.Networks...)
+	return st
+}
+
+// LANStatus reports what local discovery is doing now; the zero value when it is switched off.
+func (n *Node) LANStatus() LANStatus {
+	n.mu.RLock()
+	l := n.lan
+	n.mu.RUnlock()
+	if l == nil {
+		return LANStatus{}
+	}
+	return l.snapshot()
 }
 
 // lanHeard handles one received beacon.

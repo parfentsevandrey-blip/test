@@ -7,11 +7,9 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
-	"os"
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 
 	"golang.org/x/net/dns/dnsmessage"
 
@@ -93,21 +91,19 @@ func listenUDP(port int) (net.PacketConn, error) {
 //
 // Since Android 11 an app may not list the network interfaces at all (net.Interfaces fails with
 // "permission denied"); the app that runs themesh then writes the addresses it can see into the file
-// named by THEMESH_LOCAL_ADDRS_FILE (whitespace or comma separated), and they are used as well.
+// named by THEMESH_LOCAL_ADDRS_FILE (see netview.go), and they are used as well.
 func DefaultLocalAddrs() []netip.Addr {
 	var out []netip.Addr
 	usable := func(na netip.Addr) bool {
 		na = na.Unmap()
 		return !(na.IsLoopback() || na.IsLinkLocalUnicast() || na.IsMulticast() || na.IsUnspecified() || identity.IsOverlayAddr(na))
 	}
-	if f := os.Getenv("THEMESH_LOCAL_ADDRS_FILE"); f != "" {
-		for _, na := range readAddrFile(f) {
-			if usable(na) {
-				out = append(out, na.Unmap())
-			}
+	for _, e := range readLocalAddrsFile() {
+		if usable(e.Addr) && !containsAddr(out, e.Addr.Unmap()) {
+			out = append(out, e.Addr.Unmap())
 		}
 	}
-	ifs, err := net.Interfaces()
+	ifs, err := Interfaces()
 	if err != nil {
 		return out
 	}
@@ -148,22 +144,6 @@ func containsAddr(list []netip.Addr, a netip.Addr) bool {
 		}
 	}
 	return false
-}
-
-// readAddrFile reads IP addresses (whitespace or comma separated) from a small file; anything that is
-// not an address is ignored, a missing file is an empty list.
-func readAddrFile(path string) []netip.Addr {
-	raw, err := os.ReadFile(path)
-	if err != nil || len(raw) > 64<<10 {
-		return nil
-	}
-	var out []netip.Addr
-	for _, f := range strings.FieldsFunc(string(raw), func(r rune) bool { return r == ',' || r == ';' || unicode.IsSpace(r) }) {
-		if a, err := netip.ParseAddr(f); err == nil && !containsAddr(out, a) {
-			out = append(out, a)
-		}
-	}
-	return out
 }
 
 // Name resolution for STUN servers. The system resolver comes first; when it

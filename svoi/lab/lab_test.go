@@ -68,6 +68,9 @@ type node struct {
 	dir     string
 	cmd     *exec.Cmd
 	portmap bool // let the node ask its router to forward its port (off unless a test is about that)
+
+	env       []string // more environment (NAME=value) for every command of this node
+	addrsFile string   // the phone's address file (see asAndroidPhone)
 }
 
 func newNode(t *testing.T, ns, name string) *node {
@@ -81,8 +84,26 @@ func newNode(t *testing.T, ns, name string) *node {
 func (n *node) command(args ...string) *exec.Cmd {
 	full := []string{"netns", "exec", n.ns, "env",
 		"THEMESH_DIR=" + n.dir, "HOME=" + filepath.Join(n.dir, "home"),
-		"QUIC_GO_DISABLE_RECEIVE_BUFFER_WARNING=true", themeshBin}
+		"QUIC_GO_DISABLE_RECEIVE_BUFFER_WARNING=true"}
+	full = append(full, n.env...)
+	full = append(full, themeshBin)
 	return exec.Command("ip", append(full, args...)...)
+}
+
+// asAndroidPhone makes the node behave like the program on a phone since Android 11: the system will not list
+// its network interfaces, so what it knows about its networks is only the file the app writes (writeAddrs).
+func (n *node) asAndroidPhone() {
+	n.addrsFile = filepath.Join(n.dir, "local-addrs.txt")
+	n.env = append(n.env, "THEMESH_HIDE_INTERFACES=1", "THEMESH_LOCAL_ADDRS_FILE="+n.addrsFile)
+}
+
+// writeAddrs is what the phone's app does whenever the network changes: it writes down the address the phone
+// has now, with the length of its network prefix.
+func (n *node) writeAddrs(cidr string) {
+	n.t.Helper()
+	if err := os.WriteFile(n.addrsFile, []byte(cidr+"\n"), 0o600); err != nil {
+		n.t.Fatal(err)
+	}
 }
 
 // run executes a one-shot themesh command inside the namespace.
@@ -581,6 +602,84 @@ func TestLANOnlyAndReaddressing(t *testing.T) {
 	l1.start()
 	l2.start()
 	together("LAN discovery switched back on")
+}
+
+// The same home network, but one of the devices is a phone with Android 11 or later, whose program cannot ask the
+// system for its network interfaces and is told its address by the app instead. This is the case in which the
+// phone and the Mac did not find each other on their own: the phone neither announced itself nor believed the
+// Mac's announcements. After the whole network is re-addressed (nobody knows anybody's address) each direction
+// is tried alone: the other side's beacons are dropped by the firewall of the namespace.
+func TestLANDiscoveryOfAPhoneThatCannotListItsInterfaces(t *testing.T) {
+	if out, err := exec.Command(labSh, "lan", "7").CombinedOutput(); err != nil {
+		t.Fatalf("natlab lan: %v\n%s", err, out)
+	}
+	t.Cleanup(func() { exec.Command(labSh, "down").Run() })
+
+	mac := newNode(t, "svl-L1", "mac")
+	phone := newNode(t, "svl-L2", "phone")
+	phone.asAndroidPhone()
+	phone.writeAddrs("192.168.7.2/24")
+	t.Cleanup(func() {
+		if t.Failed() {
+			for _, n := range []*node{mac, phone} {
+				t.Logf("---- %s log ----\n%s", n.name, n.logTail(80))
+			}
+		}
+	})
+	mac.run("init", "--mesh", "Lan", "--name", "mac", "--owner", "lab")
+	mac.start()
+	phone.run("join", invite(t, mac), "--name", "phone")
+	phone.start()
+
+	together := func(what string) {
+		waitFor(t, 60*time.Second, what, func() bool {
+			p1, ok1 := mac.peer("phone")
+			p2, ok2 := phone.peer("mac")
+			return ok1 && ok2 && p1.Online && p2.Online
+		})
+		p, _ := mac.peer("phone")
+		t.Logf("%s: the Mac sees the phone via %s, %.1f ms", what, p.Path, p.RTTms)
+	}
+	together("a phone that cannot list its interfaces joins and connects")
+
+	// The program says what it announces on: the address the app wrote, not anything it found out itself.
+	waitFor(t, 20*time.Second, "the phone to announce itself on the app's network", func() bool {
+		return strings.Contains(phone.logTail(200), "192.168.7.2/24")
+	})
+
+	dropBeacons := func(ns string, on bool) {
+		flag := "-D"
+		if on {
+			flag = "-I"
+		}
+		if out, err := exec.Command("ip", "netns", "exec", ns, "iptables", flag, "OUTPUT", "-p", "udp", "--dport", "41711", "-j", "DROP").CombinedOutput(); err != nil {
+			t.Fatalf("iptables %s in %s: %v\n%s", flag, ns, err, out)
+		}
+	}
+	round := 0
+	for _, c := range []struct{ what, silent string }{
+		{"the phone hears the Mac's beacons (the phone's own are dropped)", "svl-L2"},
+		{"the Mac hears the phone's beacons (the Mac's own are dropped)", "svl-L1"},
+	} {
+		round++
+		mac.stop()
+		phone.stop()
+		// The whole network moves to 192.168.(7+round)/24 while both devices are off.
+		for _, r := range [][]string{
+			{"readdr", "svl-L1", fmt.Sprintf("192.168.%d.101/24", 7+round)},
+			{"readdr", "svl-L2", fmt.Sprintf("192.168.%d.102/24", 7+round)},
+		} {
+			if out, err := exec.Command(labSh, r...).CombinedOutput(); err != nil {
+				t.Fatalf("natlab %v: %v\n%s", r, err, out)
+			}
+		}
+		phone.writeAddrs(fmt.Sprintf("192.168.%d.102/24", 7+round)) // the app does this before it starts the program
+		dropBeacons(c.silent, true)
+		mac.start()
+		phone.start()
+		together(c.what)
+		dropBeacons(c.silent, false)
+	}
 }
 
 // tryRun is run for a command that is expected to fail: it reports instead of
