@@ -122,8 +122,21 @@ function InviteRows({ invites }) {
   });
 }
 
-function Attention({ offers, counters, invites, restart }) {
-  if (!offers.length && !counters.mail && !counters.chat && !invites.length && !restart) return null;
+/**
+ * What to say when the discovery of devices on the home network does not work (self.lan, from the node): the system
+ * refuses to send there (on a Mac: the "Local Network" permission is off) or it fails some other way. Nothing for the
+ * ordinary "not on Wi-Fi right now".
+ */
+export function lanNotice(self) {
+  const lan = self && self.lan;
+  if (!lan || (lan.problem !== "blocked" && lan.problem !== "failed")) return null;
+  if (lan.problem === "failed") return { text: t("home.att.lanFailed"), sub: lan.detail || "" };
+  const mac = self.os === "darwin";
+  return { text: t(mac ? "home.att.lanBlockedMac" : "home.att.lanBlocked"), sub: t(mac ? "home.att.lanBlockedMacHow" : "home.att.lanBlockedHow") };
+}
+
+function Attention({ offers, counters, invites, restart, lan }) {
+  if (!offers.length && !counters.mail && !counters.chat && !invites.length && !restart && !lan) return null;
   return html`<section class="home-card home-att" data-testid="home-attention" aria-labelledby="home-att-title">
     <h2 class="home-sec__title" id="home-att-title">${t("home.attention")}</h2>
     <ul class="home-att__list">
@@ -133,6 +146,7 @@ function Attention({ offers, counters, invites, restart }) {
       ${counters.chat > 0 && html`<${LinkRow} icon="chat" tone="accent" text=${tn("home.att.chat", counters.chat)} to="#/chat" label=${t("home.att.chatGo")} testid="home-att-chat" />`}
       ${invites.length > 0 && html`<${InviteRows} invites=${invites} />`}
       ${restart && html`<${LinkRow} icon="refresh" tone="warn" text=${t("home.att.restart")} to="#/settings" label=${t("home.att.restartGo")} testid="home-att-restart" />`}
+      ${lan && html`<${LinkRow} icon="wifiOff" tone="warn" text=${lan.text} sub=${lan.sub} to="#/settings" label=${t("home.att.lanGo")} testid="home-att-lan" />`}
     </ul>
   </section>`;
 }
@@ -267,8 +281,9 @@ export function HomeView({ route }) {
     setStartFlag("startDismissed");
     setStartHidden(true);
   };
-  const attention = html`<${Attention} offers=${offers} counters=${counters} invites=${invites} restart=${restart} />`;
-  const hasAttention = offers.length || counters.mail || counters.chat || invites.length || restart;
+  const lan = lanNotice(self);
+  const attention = html`<${Attention} offers=${offers} counters=${counters} invites=${invites} restart=${restart} lan=${lan} />`;
+  const hasAttention = offers.length || counters.mail || counters.chat || invites.length || restart || lan;
 
   return html`<div class="page home">
     <h1 class="sr-only">${t("home.h1")}</h1>

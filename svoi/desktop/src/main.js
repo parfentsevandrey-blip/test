@@ -11,6 +11,7 @@ const { Core, DEFAULT_PORT } = require('./core');
 const { Watcher } = require('./events');
 const { texts } = require('./i18n');
 const { buildMenu } = require('./menu');
+const { LocalNetworkWatch, SETTINGS_URL } = require('./localnet');
 const { Notifier } = require('./notify');
 const { Settings } = require('./settings');
 const { statusText } = require('./status');
@@ -45,6 +46,8 @@ let quitting = false;
 let shuttingDown = false;
 let lastError = '';
 const restarts = [];
+const localNet = new LocalNetworkWatch();
+let localNetTimer = null;
 
 function coreBinary() {
   if (process.env.THEMESH_CORE) return process.env.THEMESH_CORE;
@@ -146,6 +149,7 @@ async function doStartCore() {
     watcher.on('state', () => {
       updateTray();
       maybeAskAutostart();
+      maybeExplainLocalNetwork();
     });
     watcher.start();
   }
@@ -174,6 +178,26 @@ async function maybeAskAutostart() {
     autostart.setEnabled(true);
     updateTray();
   }
+}
+
+/**
+ * On a Mac the person has to allow the app to use the local network; without it the node cannot be found by the
+ * other devices at home. The node reports it (self.lan.problem === 'blocked'): explain it, once in a while.
+ */
+async function maybeExplainLocalNetwork() {
+  if (testMode || !mainWin.isVisible()) return;
+  const r = localNet.check(watcher && watcher.state, settings.get('localNetworkAskedAt', 0), Date.now());
+  if (r.action === 'wait') {
+    clearTimeout(localNetTimer);
+    localNetTimer = setTimeout(maybeExplainLocalNetwork, r.ms + 500);
+    localNetTimer.unref();
+    return;
+  }
+  if (r.action !== 'ask') return;
+  localNet.asked();
+  settings.set('localNetworkAskedAt', Date.now());
+  const answer = await dialog.showMessageBox(mainWin.win, { type: 'warning', buttons: [t.localNetOpen, t.localNetLater], defaultId: 0, cancelId: 1, title: t.localNetTitle, message: t.localNetTitle, detail: t.localNetText });
+  if (answer.response === 0) shell.openExternal(SETTINGS_URL).catch((e) => log.warn('cannot open the settings:', e.message));
 }
 
 /** The node died by itself: start it again (a few times), then give up with a readable page. */

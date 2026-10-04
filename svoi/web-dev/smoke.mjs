@@ -658,6 +658,31 @@ if (srv) {
     await page.waitForSelector(`${pm}[data-state=mapped]`, { timeout: 8000 });
   });
 
+  await step("lan: discovery on the home network — what Settings says, and the notice on Home when the system refuses", async () => {
+    await srv.hook("/__mock/lan?state=ok");
+    await page.open("#/settings/network");
+    const st = "[data-testid=lan-status]";
+    await page.waitForSelector(`${st}[data-state=ok]:has-text('192.168.1.23/24')`);
+    await page.waitForSelector("[data-testid=setting-lan][aria-checked=true]");
+    await srv.hook("/__mock/lan?state=no-network");
+    await page.waitForSelector(`${st}[data-state=no-network]:has-text('Нет подключения к Wi')`);
+    // a refusal by the system: a notice on Home that names the way out (on a Mac, the permission to switch on)
+    await srv.hook("/__mock/lan?state=blocked&os=darwin");
+    await page.waitForSelector(`${st}[data-state=blocked]:has-text('Локальная сеть')`);
+    await page.open("#/home");
+    await page.waitForSelector("[data-testid=home-att-lan]:has-text('macOS не пускает The Mesh в домашнюю сеть')");
+    if (!/Конфиденциальность и безопасность → Локальная сеть/.test(await page.textContent("[data-testid=home-att-lan]"))) throw new Error("the notice does not say where to switch it on");
+    await srv.hook("/__mock/lan?state=blocked&os=linux");
+    await page.waitForSelector("[data-testid=home-att-lan]:has-text('Системе нельзя искать устройства в домашней сети')");
+    await srv.hook("/__mock/lan?state=failed");
+    await page.waitForSelector("[data-testid=home-att-lan]:has-text('Поиск устройств в домашней сети не работает')");
+    await page.waitForSelector("[data-testid=home-att-lan]:has-text('network is unreachable')");
+    // ... and it goes away when the discovery works again; an absent Wi-Fi is not a problem to nag about
+    await srv.hook("/__mock/lan?state=no-network");
+    await page.waitForSelector("[data-testid=home-att-lan]", { state: "detached" });
+    await srv.hook("/__mock/lan?state=ok");
+  });
+
   await step("global: offline banner and recovery", async () => {
     await page.open("#/devices");
     await srv.hook("/__mock/drop?for=3");

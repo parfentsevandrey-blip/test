@@ -239,6 +239,27 @@ function PortmapStatus({ pm }) {
   </div>`;
 }
 
+/**
+ * What discovery on the local network is doing under its switch (self.lan): where it announces itself, or why it
+ * cannot. While the node has not reported yet there is nothing to say.
+ */
+function LanStatus({ lan, os }) {
+  if (!lan || !lan.enabled) return null;
+  const p = lan.problem || "";
+  const tone = p === "blocked" || p === "failed" ? "warn" : p === "no-network" ? "neutral" : "ok";
+  const text = p === "no-network" ? t("lan.noNetwork")
+    : p === "blocked" ? t(os === "darwin" ? "lan.blockedMac" : "lan.blocked")
+    : p === "failed" ? t("lan.failed")
+    : t("lan.ok", { nets: (lan.networks || []).join(", ") });
+  return html`<div class=${cx("pmap", `pmap--${tone}`)} data-testid="lan-status" data-state=${p || "ok"} role="status">
+    <span class="pmap__icon"><${Icon} name=${tone === "ok" ? "checkCircle" : tone === "warn" ? "alert" : "info"} size=${16} /></span>
+    <div class="grow pmap__body">
+      <span>${text}</span>
+      ${p === "failed" && lan.detail && html`<span class="pmap__diag mono xsmall">${lan.detail}</span>`}
+    </div>
+  </div>`;
+}
+
 function StunEditor({ list, onChange, disabled }) {
   const [v, setV] = useState("");
   const [err, setErr] = useState("");
@@ -278,7 +299,8 @@ function NetworkSection({ cfg }) {
     ${s && html`<${Card}>
       <${Switch} label=${t("set.relay")} description=${html`${t("set.relayHint")}${self && self.relayed && self.relayed.bytes ? html` <span class="tnum">${t("set.relayed", { packets: fmtNumber(self.relayed.packets), bytes: fmtBytes(self.relayed.bytes) })}</span>` : ""}`}
         checked=${s.relay} onChange=${(v) => cfg.save({ relay: v })} testid="setting-relay" />
-      <${Switch} label=${t("set.lan")} description=${t("set.lanHint")} checked=${s.lan} onChange=${(v) => cfg.save({ lan: v })} />
+      <${Switch} label=${t("set.lan")} description=${t("set.lanHint")} checked=${s.lan} onChange=${(v) => cfg.save({ lan: v })} testid="setting-lan" />
+      ${s.lan && html`<${LanStatus} lan=${self && self.lan} os=${self && self.os} />`}
       <${Switch} label=${t("set.stun")} description=${t("set.stunHint")} checked=${s.stunEnabled} onChange=${(v) => cfg.save({ stunEnabled: v })} />
       ${s.stunEnabled && html`<div class="set-sub"><span class="field__label">${t("set.stunServers")}</span>
         <${StunEditor} list=${s.stunServers || []} onChange=${(l) => cfg.save({ stunServers: l })} /></div>`}

@@ -25,6 +25,7 @@
 //   /__mock/removed                 an admin removed this device: back to onboarding with `removed`
 //   /__mock/sw?bump=1               pretend a new binary: sw.js gets a new VERSION (as after an upgrade)
 //   /__mock/portmap?state=mapped    router port mapping: mapped|searching|unavailable|private
+//   /__mock/lan?state=blocked[&os=darwin]  discovery on the local network: ok|blocked|failed|no-network (os: what this device says it runs)
 //   /__mock/reset                   rebuild the world from the scenario
 
 import http from "node:http";
@@ -591,6 +592,16 @@ function uniqueName(name, taken) {
   }
 }
 
+const LAN_STATES = ["ok", "blocked", "failed", "no-network"];
+/** What a node reports as self.lan: where it announces itself on the local network, or why it cannot. */
+function lanFor(state) {
+  const base = { enabled: true, networks: ["192.168.1.23/24 (wlan0)", "10.211.55.2/24 (vmnet8)"] };
+  if (state === "no-network") return { enabled: true, networks: [], problem: "no-network" };
+  if (state === "blocked") return { ...base, problem: "blocked", detail: "write udp4 0.0.0.0:41711->239.255.77.77:41711: sendto: no route to host" };
+  if (state === "failed") return { ...base, problem: "failed", detail: "write udp4 0.0.0.0:41711->192.168.1.255:41711: sendto: network is unreachable" };
+  return base;
+}
+
 function makeSelf(def, extra = {}) {
   return {
     id: devId(def.key), short: devId(def.key).slice(0, 8), name: def.name, owner: def.owner,
@@ -598,7 +609,7 @@ function makeSelf(def, extra = {}) {
     endpoints: [{ addr: "192.168.1.23:41710", kind: "local" }, { addr: "10.211.55.2:41710", kind: "local" }, { addr: "203.0.113.5:41710", kind: "stun" }, { addr: "203.0.113.5:41710", kind: "observed" }],
     nat: { mappingVaries: false, public: ["203.0.113.5:41710"], hasIPv6: false, stun: true, difficulty: "easy" },
     version: "0.1.0", os: def.os, arch: def.arch, started: now() - 3 * 3600 - 1260, configured: true,
-    relay: true, relayed: { packets: 18342, bytes: 21_734_112 },
+    relay: true, relayed: { packets: 18342, bytes: 21_734_112 }, lan: lanFor("ok"),
     ...extra,
   };
 }
@@ -2069,6 +2080,16 @@ route("ANY", "/__mock/portmap", (req, res, p, q) => {
   applyPortmap("laptop", W.self, st);
   broadcast("self", W.self);
   ok(res, { portmap: W.self.portmap });
+});
+route("ANY", "/__mock/lan", (req, res, p, q) => {
+  requireConfigured();
+  const st = q.get("state") || "ok";
+  if (!LAN_STATES.includes(st)) throw E.invalid("state must be " + LAN_STATES.join("|"));
+  if (q.get("os")) W.self.os = q.get("os");
+  W.settings.lan = true;
+  W.self.lan = lanFor(st);
+  broadcast("self", W.self);
+  ok(res, { lan: W.self.lan });
 });
 route("ANY", "/__mock/login", (req, res) => { const code = newLoginCode(); sendJSON(res, 200, { code, url: "/?t=" + code }); });
 route("ANY", "/__mock/tun", (req, res, p, q) => { tunFails = q.get("error") !== "0"; ok(res, { tunFails }); });

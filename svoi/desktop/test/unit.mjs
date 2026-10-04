@@ -14,6 +14,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const { parseSSE } = require('../src/events.js');
 const { notificationFor, clip } = require('../src/notify.js');
 const { statusText } = require('../src/status.js');
+const { LocalNetworkWatch, SETTINGS_URL, SETTLE_MS, REASK_MS } = require('../src/localnet.js');
 const { safeName, uniquePath } = require('../src/files.js');
 const { texts, ru, en } = require('../src/i18n.js');
 const { Core, coreEnv, freePort, handshakeProof, verifyNode } = require('../src/core.js');
@@ -338,6 +339,45 @@ test('THEMESH_DESKTOP_GLASS=0 gives a Mac the ordinary window; Windows and Linux
   assert.equal(windowLook({ platform: 'darwin', env: { THEMESH_DESKTOP_GLASS: '0' }, version: '1.0.0' }).userAgentToken, 'TheMeshDesktop/1.0.0 (mac)');
   assert.equal(windowLook({ platform: 'win32', env: {}, version: '1.0.0' }).userAgentToken, 'TheMeshDesktop/1.0.0 (win)');
   assert.equal(windowLook({ platform: 'linux', env: {}, version: '1.0.0' }).userAgentToken, 'TheMeshDesktop/1.0.0 (linux)');
+});
+
+test('a Mac whose system refuses the local network is told so, after the system had time to ask its own question, and not again for days', () => {
+  const blocked = { self: { lan: { enabled: true, problem: 'blocked' } } };
+  const fine = { self: { lan: { enabled: true, networks: ['192.168.1.5/24'] } } };
+  const t0 = 1_000_000;
+
+  const w = new LocalNetworkWatch('darwin');
+  assert.deepEqual(w.check(fine, 0, t0), { action: 'none' });
+  assert.deepEqual(w.check(blocked, 0, t0), { action: 'wait', ms: SETTLE_MS }, 'the system\'s own question may still be on the screen');
+  assert.deepEqual(w.check(blocked, 0, t0 + 10_000), { action: 'wait', ms: SETTLE_MS - 10_000 });
+  assert.deepEqual(w.check(blocked, 0, t0 + SETTLE_MS), { action: 'ask' });
+
+  // answered "later": quiet for three days, then it starts waiting again
+  w.asked();
+  const asked = t0 + SETTLE_MS;
+  assert.deepEqual(w.check(blocked, asked, asked + 1000), { action: 'none' });
+  assert.deepEqual(w.check(blocked, asked, asked + REASK_MS + 1), { action: 'wait', ms: SETTLE_MS });
+
+  // allowed in the meantime: the waiting starts from the beginning the next time it is refused
+  const v = new LocalNetworkWatch('darwin');
+  assert.equal(v.check(blocked, 0, t0).action, 'wait');
+  assert.deepEqual(v.check(fine, 0, t0 + 20_000), { action: 'none' });
+  assert.deepEqual(v.check(blocked, 0, t0 + 50_000), { action: 'wait', ms: SETTLE_MS }, 'not "45 s since the first time"');
+
+  // no report at all (an older node, or the discovery is off): nothing to say
+  assert.deepEqual(w.check({ self: {} }, 0, t0), { action: 'none' });
+  assert.deepEqual(w.check(null, 0, t0), { action: 'none' });
+});
+
+test('only a Mac is told to switch on "Local Network"; the explanation exists in both languages and points at the right page', () => {
+  const blocked = { self: { lan: { problem: 'blocked' } } };
+  for (const platform of ['win32', 'linux']) assert.deepEqual(new LocalNetworkWatch(platform).check(blocked, 0, 5), { action: 'none' }, platform);
+  assert.match(SETTINGS_URL, /^x-apple\.systempreferences:com\.apple\.preference\.security\?Privacy_LocalNetwork$/);
+  for (const tx of [ru, en]) {
+    for (const k of ['localNetTitle', 'localNetText', 'localNetOpen', 'localNetLater']) assert.ok(tx[k] && tx[k].length > 3, k);
+  }
+  assert.match(ru.localNetText, /Локальная сеть/);
+  assert.match(en.localNetText, /Local Network/);
 });
 
 test('on Windows the program runs without asynchronous preemption (a Go runtime bug there); elsewhere nothing is added', () => {

@@ -62,6 +62,9 @@ mac:
         - x64
   extendInfo:
     NSHumanReadableCopyright: The Mesh
+    # Shown by macOS in its question "Allow The Mesh to find devices on local networks?". Without it the
+    # question has no explanation and a "Don't allow" is likelier: the devices at home then do not find this Mac.
+    NSLocalNetworkUsageDescription: "The Mesh ищет ваши другие устройства (телефон, ноутбук, сервер) в домашней сети и соединяется с ними напрямую. / The Mesh looks for your other devices (phone, laptop, server) on the home network and connects to them directly."
 dmg:
   title: The Mesh ${version}
   artifactName: TheMesh-${version}-mac-${arch}.${ext}
