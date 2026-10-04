@@ -26,6 +26,7 @@ export const state = {
   help: false,          // the «Как это работает?» sheet is open
   lang: "ru",
   theme: "auto",
+  skin: "classic",     // look of the surfaces: "glass" | "classic" (css/glass.css)
 };
 
 const listeners = new Set();

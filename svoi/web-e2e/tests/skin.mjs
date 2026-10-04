@@ -1,0 +1,173 @@
+import { group, test, assert, eq, open, nav, tid } from "../lib.mjs";
+
+// What the Mac app says about itself in its user agent (desktop/src/window.js, windowLook).
+const MAC = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 TheMeshDesktop/0.1.0 (mac; skin=glass; vibrancy; inset)";
+const WIN = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 TheMeshDesktop/0.1.0 (win)";
+
+// (with reduced motion every style change is a transition of 0.01 ms: the computed style is the new one only a moment later)
+const sidebarBlur = (page, gone) => page.waitForFunction((g) => (getComputedStyle(document.querySelector(".sidebar")).backdropFilter === "none") === g, gone, { timeout: 5000 });
+
+const look = (page) =>
+  page.evaluate(() => {
+    const r = document.documentElement;
+    const side = document.querySelector(".sidebar");
+    const cs = side && getComputedStyle(side);
+    return { skin: r.dataset.skin, titlebar: r.dataset.titlebar || "", vibrancy: r.dataset.vibrancy || "", shell: r.dataset.shell || "", blur: cs ? cs.backdropFilter : "", padTop: cs ? parseFloat(cs.paddingTop) : 0 };
+  });
+
+group("skin", () => {
+  test("a browser and the Windows app keep the classic look; the Mac app starts with glass", async ({ browser, dev }) => {
+    let page = await open(browser, dev.laptop);
+    let l = await look(page);
+    eq([l.skin, l.titlebar, l.vibrancy, l.shell, l.blur], ["classic", "", "", "", "none"], "a plain browser");
+    eq(page.problems, [], "console / network problems");
+
+    page = await open(browser, dev.laptop, { userAgent: WIN });
+    l = await look(page);
+    eq([l.skin, l.titlebar, l.shell, l.blur], ["classic", "", "win", "none"], "the Windows app");
+
+    page = await open(browser, dev.laptop, { userAgent: MAC });
+    l = await look(page);
+    eq([l.skin, l.titlebar, l.vibrancy, l.shell], ["glass", "inset", "on", "mac"], "the Mac app");
+    assert(/blur/.test(l.blur), "the sidebar is a pane of glass: " + l.blur);
+    assert(l.padTop >= 48, "the sidebar leaves room for the traffic lights: " + l.padTop);
+    // the top bar and the strip above the navigation drag the window; what can be clicked does not
+    eq(await page.evaluate(() => getComputedStyle(document.querySelector(".topbar")).webkitAppRegion), "drag", "the top bar drags the window");
+    eq(await page.evaluate(() => getComputedStyle(document.querySelector(".topbar a, .topbar button")).webkitAppRegion), "no-drag", "its buttons are buttons");
+    eq(await page.evaluate(() => getComputedStyle(document.querySelector(".nav__item")).webkitAppRegion), "no-drag", "navigation is clickable");
+    eq(page.problems, [], "console / network problems");
+  });
+
+  test("the style picked in Settings wins over what the window starts with, and is remembered", async ({ browser, dev }) => {
+    const page = await open(browser, dev.laptop, { userAgent: MAC, hash: "settings/interface" });
+    eq((await look(page)).skin, "glass", "the Mac app starts with glass");
+    await tid(page, "skin-classic").click();
+    await page.waitForFunction(() => document.documentElement.dataset.skin === "classic");
+    await sidebarBlur(page, true);
+    eq((await look(page)).blur, "none", "classic means no glass");
+    eq(await page.evaluate(() => localStorage.getItem("themesh.skin")), "classic", "the choice is stored");
+    await page.reload();
+    await tid(page, "skin-classic").waitFor();
+    eq((await look(page)).skin, "classic", "it survives a reload");
+    eq((await look(page)).titlebar, "inset", "the window is still a window without a title bar: its room for the traffic lights stays");
+    assert((await look(page)).padTop >= 48, "also in the classic look");
+    await tid(page, "skin-glass").click();
+    await page.waitForFunction(() => document.documentElement.dataset.skin === "glass");
+    await tid(page, "skin-auto").click();
+    await page.waitForFunction(() => document.documentElement.dataset.skin === "glass"); // "auto" in the Mac app is glass
+    eq(await page.evaluate(() => localStorage.getItem("themesh.skin")), "auto");
+
+    // and in a browser the same switch works the other way round
+    const b = await open(browser, dev.laptop, { hash: "settings/interface" });
+    eq((await look(b)).skin, "classic", "a browser starts with classic");
+    await tid(b, "skin-glass").click();
+    await b.waitForFunction(() => document.documentElement.dataset.skin === "glass");
+    await sidebarBlur(b, false);
+    assert(/blur/.test((await look(b)).blur), "glass in a browser too");
+    await b.reload();
+    await tid(b, "skin-glass").waitFor();
+    eq((await look(b)).skin, "glass", "remembered");
+    eq(page.problems, [], "console / network problems");
+    eq(b.problems, [], "console / network problems");
+  });
+
+  test("?skin= in the address shows a look for the moment and is not remembered (screenshots, tests)", async ({ browser, dev }) => {
+    const page = await open(browser, dev.laptop);
+    await page.goto(`${dev.laptop.origin}/?skin=glass#/home`);
+    await page.waitForFunction(() => document.documentElement.dataset.skin === "glass");
+    await tid(page, "nav-home").waitFor();
+    eq(await page.evaluate(() => document.documentElement.dataset.skin), "glass", "still glass after the application started");
+    eq(await page.evaluate(() => localStorage.getItem("themesh.skin")), null, "nothing was stored");
+    await page.goto(`${dev.laptop.origin}/#/home`);
+    await page.reload();
+    await tid(page, "nav-home").waitFor();
+    eq(await page.evaluate(() => document.documentElement.dataset.skin), "classic", "the next visit is classic again");
+  });
+
+  test("glass leaves no sideways scrolling on the main screens at desktop, tablet and phone widths, in both themes", async ({ browser, dev }) => {
+    const page = await open(browser, dev.laptop, { userAgent: MAC });
+    const routes = ["home", "devices", "files/send", "files/browse", "mail/inbox", "chat", "services", "settings", "more"];
+    const bad = [];
+    for (const theme of ["light", "dark"]) {
+      await page.evaluate((th) => localStorage.setItem("themesh.theme", th), theme);
+      for (const [w, h] of [[1280, 800], [900, 700], [480, 820]]) {
+        await page.setViewportSize({ width: w, height: h });
+        for (const r of routes) {
+          await nav(page, dev.laptop, r);
+          await page.reload();
+          await page.waitForFunction(() => [...document.querySelectorAll('[data-testid^="page-"]')].length > 0, null, { timeout: 8000 }).catch(() => {});
+          await page.waitForTimeout(150);
+          const m = await page.evaluate(() => ({ th: document.documentElement.dataset.theme, over: document.documentElement.scrollWidth - window.innerWidth, w: window.innerWidth }));
+          if (m.th !== theme) bad.push(`${r} ${w}px: theme ${m.th}, wanted ${theme}`);
+          if (m.over > 1) bad.push(`${r} ${theme} ${w}px: ${m.over}px of sideways scroll`);
+        }
+      }
+    }
+    eq(bad, [], "pages that overflow");
+  });
+
+  test("a QR code stays a sharp, opaque picture under glass: no tint, no blur, no transparency", async ({ browser, dev }) => {
+    for (const theme of ["light", "dark"]) {
+      const page = await open(browser, dev.laptop, { userAgent: MAC, theme, hash: "home" });
+      await tid(page, "home-action-add").click();
+      await tid(page, "invite-create").click();
+      const qr = tid(page, "invite-qr");
+      await qr.locator("img").waitFor();
+      await page.waitForTimeout(400);
+      // nothing from the glass reaches the picture: it and its frame are opaque and unfiltered
+      const chain = await page.evaluate(() => {
+        const out = [];
+        for (let el = document.querySelector('[data-testid="invite-qr"] img'); el && el !== document.body; el = el.parentElement) {
+          const cs = getComputedStyle(el);
+          out.push({ tag: el.tagName + "." + el.className, op: cs.opacity, bf: cs.backdropFilter, filter: cs.filter, bg: cs.backgroundColor, mix: cs.mixBlendMode });
+          if (el.getAttribute("data-testid") === "invite-qr") break;
+        }
+        return out;
+      });
+      for (const c of chain) {
+        assert(c.op === "1" && c.filter === "none" && c.mix === "normal", `${theme}: ${c.tag} would change the picture: ${JSON.stringify(c)}`);
+      }
+      const frame = chain.find((c) => /^rgb\(/.test(c.bg));
+      assert(frame, `${theme}: the picture has a solid frame behind it: ${JSON.stringify(chain)}`);
+      // and what is on screen: the quiet zone around the modules is light everywhere, the modules are dark
+      const png = await qr.screenshot();
+      const probe = await browser.newPage();
+      const stats = await probe.evaluate(async (b64) => {
+        const img = new Image();
+        img.src = "data:image/png;base64," + b64;
+        await img.decode();
+        const c = document.createElement("canvas");
+        c.width = img.width;
+        c.height = img.height;
+        const g = c.getContext("2d");
+        g.drawImage(img, 0, 0);
+        const lum = (x, y) => { const d = g.getImageData(x, y, 1, 1).data; return 0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2]; };
+        const m = Math.round(img.width * 0.04);
+        const lo = Math.round(img.width * 0.15), hi = Math.round(img.width * 0.85); // (the frame has rounded corners)
+        let darkest = 255, lightestEdge = 255;
+        for (let i = 0; i < img.width; i += 3) for (let j = 0; j < img.height; j += 3) darkest = Math.min(darkest, lum(i, j));
+        for (let i = lo; i < hi; i += 3) lightestEdge = Math.min(lightestEdge, lum(i, m), lum(i, img.height - 1 - m));
+        for (let j = lo; j < hi; j += 3) lightestEdge = Math.min(lightestEdge, lum(m, j), lum(img.width - 1 - m, j));
+        return { darkest, edgeMin: lightestEdge, w: img.width, h: img.height };
+      }, png.toString("base64"));
+      await probe.close();
+      assert(stats.darkest < 40, `${theme}: the modules are black (darkest ${stats.darkest})`);
+      assert(stats.edgeMin > 225, `${theme}: the quiet zone is light all around (darkest edge pixel ${stats.edgeMin})`);
+      eq(page.problems, [], "console / network problems");
+    }
+  });
+
+  test("with reduced transparency the glass turns solid", async ({ browser, dev }) => {
+    const page = await open(browser, dev.laptop, { userAgent: MAC });
+    const before = await page.evaluate(() => { const cs = getComputedStyle(document.querySelector(".sidebar")); return { bf: cs.backdropFilter, bg: cs.backgroundColor }; });
+    assert(/blur/.test(before.bf), "glass to begin with: " + before.bf);
+    // what the Mac app does when macOS "Reduce transparency" is on
+    await page.evaluate(() => { document.documentElement.setAttribute("data-reduce-transparency", ""); document.documentElement.removeAttribute("data-vibrancy"); });
+    await sidebarBlur(page, true);
+    await page.waitForFunction(() => { const m = /rgba?\(([^)]+)\)/.exec(getComputedStyle(document.querySelector(".sidebar")).backgroundColor); const p = m[1].split(",").map(Number); return (p.length === 4 ? p[3] : 1) >= 0.85; }, null, { timeout: 5000 });
+    const after = await page.evaluate(() => { const r = document.documentElement; const cs = getComputedStyle(document.querySelector(".sidebar")); return { bf: cs.backdropFilter, bg: cs.backgroundColor, token: getComputedStyle(r).getPropertyValue("--glass-filter"), attrs: r.getAttributeNames().join(" ") }; });
+    eq(after.bf, "none", "no blur (" + JSON.stringify(after) + ")");
+    const alpha = (c) => { const m = /rgba?\(([^)]+)\)/.exec(c); const p = m[1].split(",").map(Number); return p.length === 4 ? p[3] : 1; };
+    assert(alpha(after.bg) >= 0.85, "the panel is nearly opaque now: " + after.bg);
+  });
+});

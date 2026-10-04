@@ -1,0 +1,429 @@
+/* Skin "glass": the look of macOS 26 «Liquid Glass» — translucent, softly lit surfaces floating over a colourful
+   backdrop, capsule controls, a floating sidebar, glass sheets and menus.
+
+   It is a layer over the usual interface: everything is scoped to <html data-skin="glass">, so with the classic
+   skin this file does nothing. js/boot.js picks the skin before the first paint: the Mac app starts with glass,
+   a browser or the phone with the classic look; Settings → Interface → Style changes it.
+
+   How the glass is made (there is no real lens refraction in CSS, so this is an approximation):
+     fill     — a translucent tint over the page's own backdrop (the "aurora" below),
+     blur     — backdrop-filter: blur + saturate on the big panels only (never nested inside each other),
+     rim      — a light inner edge on top and a hairline outside, like the edge of a thick glass pane,
+     sheen    — a soft diagonal highlight,
+     depth    — a long, soft drop shadow.
+   The Mac app additionally sets html[data-vibrancy="on"]: its window is see-through to the system's own blurred
+   material (Electron `vibrancy`), and the aurora is drawn lighter so that material shows. html[data-shell="mac"]
+   makes room for the window's traffic lights and turns the bars into window drag areas. */
+
+/* ---------- 0. tokens of the skin ---------- */
+html[data-skin="glass"] {
+  --r-xs: 8px; --r-sm: 11px; --r-md: 16px; --r-lg: 22px; --r-xl: 30px;
+  --sidebar-w: 272px; --rail-w: 100px; --topbar-h: 64px; --tabbar-h: 66px;
+  --inset: 12px;                                  /* how far the floating panels sit from the window edge */
+  --spring: cubic-bezier(.3, 1.5, .5, 1);         /* a little overshoot: the "gel" feel of pressed glass */
+  /* Moderate radii on purpose: Liquid Glass is only lightly frosted, and big radii cost a lot on weak GPUs. */
+  --glass-filter: blur(12px) saturate(1.8);
+  --glass-filter-soft: blur(8px) saturate(1.6);
+  --glass-filter-heavy: blur(14px) saturate(1.9);
+}
+
+html[data-skin="glass"][data-theme="light"] {
+  --glass-base: #dce8ee;
+  --aurora:
+    radial-gradient(62vmax 46vmax at 6% 2%, rgba(58, 214, 168, .50), transparent 62%),
+    radial-gradient(56vmax 44vmax at 98% 4%, rgba(96, 158, 255, .46), transparent 60%),
+    radial-gradient(62vmax 50vmax at 90% 100%, rgba(178, 138, 255, .38), transparent 62%),
+    radial-gradient(54vmax 40vmax at 2% 98%, rgba(255, 186, 126, .42), transparent 60%),
+    radial-gradient(38vmax 30vmax at 52% 48%, rgba(110, 226, 236, .26), transparent 70%);
+  --aurora-vib:
+    radial-gradient(62vmax 46vmax at 6% 2%, rgba(58, 214, 168, .34), transparent 62%),
+    radial-gradient(56vmax 44vmax at 98% 4%, rgba(96, 158, 255, .30), transparent 60%),
+    radial-gradient(62vmax 50vmax at 90% 100%, rgba(178, 138, 255, .26), transparent 62%),
+    radial-gradient(54vmax 40vmax at 2% 98%, rgba(255, 186, 126, .28), transparent 60%);
+
+  --bg: #dce8ee;
+  --bg-side: transparent;
+  --surface: rgba(255, 255, 255, .64);
+  --surface-2: rgba(255, 255, 255, .56);
+  --surface-3: rgba(34, 70, 90, .10);
+  --surface-hover: rgba(34, 70, 90, .07);
+  --surface-press: rgba(34, 70, 90, .12);
+  --surface-glass: rgba(255, 255, 255, .55);
+  --line: rgba(34, 70, 90, .10);
+  --line-2: rgba(34, 70, 90, .17);
+  --line-3: rgba(34, 70, 90, .28);
+  --text-2: #38444a;
+  --text-3: #46525a;
+  --backdrop: rgba(20, 42, 58, .28);
+  --node-fill: rgba(255, 255, 255, .95);
+  --shadow-1: 0 1px 2px rgba(30, 70, 90, .08);
+  --shadow-2: 0 10px 28px -8px rgba(30, 70, 90, .24), 0 2px 6px rgba(30, 70, 90, .08);
+  --shadow-3: 0 34px 90px -14px rgba(20, 50, 70, .42), 0 8px 26px rgba(20, 50, 70, .14);
+  --bubble-mine: rgba(186, 236, 214, .82);
+  --bubble-theirs: rgba(255, 255, 255, .74);
+
+  --glass-fill: rgba(255, 255, 255, .60);
+  --glass-fill-strong: rgba(255, 255, 255, .80);
+  --glass-fill-side: rgba(255, 255, 255, .54);
+  --glass-select: rgba(255, 255, 255, .78);
+  --glass-well: rgba(34, 70, 90, .09);
+  --glass-sheen: linear-gradient(158deg, rgba(255, 255, 255, .62) 0%, rgba(255, 255, 255, .10) 36%, rgba(255, 255, 255, 0) 62%);
+  --glass-rim: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1px rgba(255, 255, 255, .40), inset 0 -1px 1px rgba(30, 70, 90, .08), 0 0 0 .5px rgba(30, 70, 90, .16);
+  --glass-rim-sm: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 0 0 1px rgba(255, 255, 255, .34), 0 0 0 .5px rgba(30, 70, 90, .16);
+  --glass-drop: 0 16px 44px -14px rgba(30, 70, 90, .30), 0 3px 10px rgba(30, 70, 90, .08);
+  --glass-drop-sm: 0 4px 14px -4px rgba(30, 70, 90, .22);
+  --glass-edge-fade: rgba(220, 232, 238, .72);
+}
+
+html[data-skin="glass"][data-theme="dark"] {
+  --glass-base: #070b0e;
+  --aurora:
+    radial-gradient(62vmax 46vmax at 6% 2%, rgba(14, 178, 146, .36), transparent 62%),
+    radial-gradient(56vmax 44vmax at 98% 4%, rgba(58, 104, 226, .36), transparent 60%),
+    radial-gradient(62vmax 50vmax at 90% 100%, rgba(122, 76, 222, .32), transparent 62%),
+    radial-gradient(54vmax 40vmax at 2% 98%, rgba(210, 118, 70, .20), transparent 60%),
+    radial-gradient(38vmax 30vmax at 52% 48%, rgba(30, 150, 170, .20), transparent 70%);
+  --aurora-vib:
+    radial-gradient(62vmax 46vmax at 6% 2%, rgba(14, 178, 146, .26), transparent 62%),
+    radial-gradient(56vmax 44vmax at 98% 4%, rgba(58, 104, 226, .26), transparent 60%),
+    radial-gradient(62vmax 50vmax at 90% 100%, rgba(122, 76, 222, .24), transparent 62%),
+    radial-gradient(54vmax 40vmax at 2% 98%, rgba(210, 118, 70, .14), transparent 60%);
+
+  --bg: #070b0e;
+  --bg-side: transparent;
+  --surface: rgba(30, 42, 48, .62);
+  --surface-2: rgba(255, 255, 255, .07);
+  --surface-3: rgba(255, 255, 255, .13);
+  --surface-hover: rgba(255, 255, 255, .07);
+  --surface-press: rgba(255, 255, 255, .12);
+  --surface-glass: rgba(20, 28, 32, .52);
+  --line: rgba(255, 255, 255, .10);
+  --line-2: rgba(255, 255, 255, .17);
+  --line-3: rgba(255, 255, 255, .27);
+  --text-2: #bdc7c3;
+  --text-3: #abb7b2;
+  --backdrop: rgba(0, 0, 0, .42);
+  --node-fill: rgba(24, 34, 39, .95);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .35);
+  --shadow-2: 0 12px 32px -8px rgba(0, 0, 0, .6), 0 2px 6px rgba(0, 0, 0, .3);
+  --shadow-3: 0 34px 90px -14px rgba(0, 0, 0, .75), 0 8px 26px rgba(0, 0, 0, .4);
+  --bubble-mine: rgba(24, 82, 62, .78);
+  --bubble-theirs: rgba(44, 58, 66, .70);
+
+  --glass-fill: rgba(22, 31, 36, .62);
+  --glass-fill-strong: rgba(20, 28, 33, .84);
+  --glass-fill-side: rgba(18, 26, 31, .58);
+  --glass-select: rgba(255, 255, 255, .15);
+  --glass-well: rgba(0, 0, 0, .26);
+  --glass-sheen: linear-gradient(158deg, rgba(255, 255, 255, .17) 0%, rgba(255, 255, 255, .03) 36%, rgba(255, 255, 255, 0) 62%);
+  --glass-rim: inset 0 1px 0 rgba(255, 255, 255, .30), inset 0 0 0 1px rgba(255, 255, 255, .09), inset 0 -1px 1px rgba(0, 0, 0, .40), 0 0 0 .5px rgba(0, 0, 0, .6);
+  --glass-rim-sm: inset 0 1px 0 rgba(255, 255, 255, .26), inset 0 0 0 1px rgba(255, 255, 255, .08), 0 0 0 .5px rgba(0, 0, 0, .6);
+  --glass-drop: 0 18px 50px -14px rgba(0, 0, 0, .7), 0 3px 12px rgba(0, 0, 0, .35);
+  --glass-drop-sm: 0 4px 14px -4px rgba(0, 0, 0, .55);
+  --glass-edge-fade: rgba(7, 11, 14, .72);
+}
+
+/* ---------- 1. the backdrop the glass floats over ---------- */
+html[data-skin="glass"] { background: var(--glass-base); }
+html[data-skin="glass"] body { background: transparent; }
+html[data-skin="glass"] body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: var(--aurora);
+}
+/* In the Mac app the window is see-through to the system material: show it, tinted by a lighter aurora. */
+html[data-skin="glass"][data-vibrancy="on"],
+html[data-skin="glass"][data-vibrancy="on"] body { background: transparent; }
+html[data-skin="glass"][data-vibrancy="on"] body::before { background: var(--aurora-vib); }
+/* Over the system material the panels are a little denser: what is behind them is not ours to know. */
+html[data-skin="glass"][data-vibrancy="on"][data-theme="light"] { --glass-fill: rgba(255, 255, 255, .64); --glass-fill-strong: rgba(255, 255, 255, .84); --glass-fill-side: rgba(255, 255, 255, .58); }
+html[data-skin="glass"][data-vibrancy="on"][data-theme="dark"] { --glass-fill: rgba(22, 31, 36, .68); --glass-fill-strong: rgba(20, 28, 33, .88); --glass-fill-side: rgba(18, 26, 31, .64); }
+html[data-skin="glass"] ::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+
+/* ---------- 2. panels: the big glass surfaces ---------- */
+html[data-skin="glass"] :is(.card, .home-card, .home-status, .home-act, .hdev, .dcard, .onb-choice, .onb-form, .flist, .svc-group, .more-self) {
+  background-color: var(--glass-fill);
+  background-image: var(--glass-sheen);
+  border-color: transparent;
+  box-shadow: var(--glass-rim), var(--glass-drop);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+}
+html[data-skin="glass"] .home-status--ok { background-image: linear-gradient(100deg, var(--accent-soft), transparent 70%), var(--glass-sheen); }
+html[data-skin="glass"] .home-status--partial { background-image: linear-gradient(100deg, var(--amber-soft), transparent 70%), var(--glass-sheen); }
+html[data-skin="glass"] .home-status--alone { background-image: linear-gradient(100deg, var(--info-soft), transparent 70%), var(--glass-sheen); }
+html[data-skin="glass"] :is(.hdev--off, .dcard.is-offline) { background-color: color-mix(in srgb, var(--glass-fill) 62%, transparent); }
+html[data-skin="glass"] :is(.home-act, .hdev, .dcard, .onb-choice, a.bdev, a.scard):hover {
+  border-color: transparent;
+  box-shadow: var(--glass-rim), var(--shadow-2);
+}
+html[data-skin="glass"] :is(.home-act, .onb-choice) { transition: transform .45s var(--spring), box-shadow var(--dur) var(--ease); }
+html[data-skin="glass"] :is(.home-act, .onb-choice):hover { transform: translateY(-3px) scale(1.012); }
+html[data-skin="glass"] :is(.home-act, .onb-choice):active { transform: scale(.985); }
+
+/* smaller surfaces: translucent, lit at the edge, but without their own blur (there can be hundreds) */
+html[data-skin="glass"] :is(.tr, .share-row, .bdev, .scard, .ftile, .att, .achip, .svc, .reader__delivery, .tr__dir) {
+  border-color: transparent;
+  box-shadow: var(--glass-rim-sm);
+}
+html[data-skin="glass"] :is(.bdev, .scard, .ftile) { background-color: var(--glass-fill); background-image: var(--glass-sheen); }
+html[data-skin="glass"] .tr--offer { background-color: color-mix(in srgb, var(--amber-soft) 70%, var(--glass-fill)); box-shadow: var(--glass-rim-sm), 0 0 0 3px var(--amber-soft); }
+html[data-skin="glass"] .tr__dir { box-shadow: none; }
+html[data-skin="glass"] .svc { background-color: var(--surface-2); }
+html[data-skin="glass"] :is(.card__icon, .modal__icon, .help__icon, .home-act__icon, .home-status__icon) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45); }
+
+/* ---------- 3. the window: floating sidebar, scroll-edge top bar, glass tab bar ---------- */
+html[data-skin="glass"] .sidebar {
+  top: var(--inset); height: calc(100vh - 2 * var(--inset)); height: calc(100dvh - 2 * var(--inset));
+  margin: var(--inset) 0 var(--inset) var(--inset);
+  padding: var(--sp-5) var(--sp-3) var(--sp-3);
+  border: 0; border-radius: 26px;
+  background-color: var(--glass-fill-side); background-image: var(--glass-sheen);
+  box-shadow: var(--glass-rim), var(--glass-drop);
+  -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter);
+}
+html[data-skin="glass"] .shell { grid-template-columns: calc(var(--sidebar-w) + var(--inset)) minmax(0, 1fr); }
+html[data-skin="glass"] .brand { padding: 4px 8px; }
+html[data-skin="glass"] .nav { gap: 3px; }
+html[data-skin="glass"] .nav__item { border-radius: var(--r-pill); height: 44px; transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), transform .45s var(--spring); }
+html[data-skin="glass"] .nav__item:hover { background: var(--surface-hover); }
+html[data-skin="glass"] .nav__item:active { transform: scale(.97); }
+html[data-skin="glass"] :is(.nav__item.is-active, .mfolder.is-active, .thread.is-active, .settings__link.is-active, .mfseg.is-active, .mitem.is-active .mitem__link) {
+  background: var(--glass-select);
+  box-shadow: var(--glass-rim-sm), var(--glass-drop-sm);
+}
+html[data-skin="glass"][data-theme="dark"] :is(.nav__item.is-active, .mfolder.is-active, .thread.is-active, .settings__link.is-active, .mfseg.is-active, .mitem.is-active .mitem__link) { background: var(--glass-select); }
+html[data-skin="glass"] .sidebar__self { border: 0; border-radius: 20px; background: var(--surface-2); box-shadow: var(--glass-rim-sm); }
+html[data-skin="glass"] .sidebar__self:hover { background: var(--surface); }
+
+html[data-skin="glass"] .topbar {
+  background: transparent; border-bottom: 0; -webkit-backdrop-filter: none; backdrop-filter: none;
+  height: calc(var(--topbar-h) + var(--safe-top)); padding-top: var(--safe-top);
+}
+/* scroll-edge effect: what scrolls under the bar fades into a soft blur instead of ending at a hard line */
+html[data-skin="glass"] .topbar::before {
+  content: ""; position: absolute; z-index: -1; left: 0; right: 0; top: 0; bottom: -30px; pointer-events: none;
+  background: linear-gradient(to bottom, var(--glass-edge-fade), transparent);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent); mask-image: linear-gradient(to bottom, #000 55%, transparent);
+}
+html[data-skin="glass"] .conn-pill,
+html[data-skin="glass"] .topbar__help {
+  border: 0; background-color: var(--glass-fill); background-image: var(--glass-sheen);
+  box-shadow: var(--glass-rim-sm), var(--glass-drop-sm);
+  -webkit-backdrop-filter: var(--glass-filter-soft); backdrop-filter: var(--glass-filter-soft);
+}
+html[data-skin="glass"] .conn-pill { height: 36px; padding: 0 14px 0 12px; }
+html[data-skin="glass"] .conn-pill__dot { border-color: transparent; }
+html[data-skin="glass"] .conn-pill:hover, html[data-skin="glass"] .topbar__help:hover:not(:disabled) { background-color: var(--glass-fill-strong); color: var(--text); }
+html[data-skin="glass"] .gbanner { border-bottom: 0; margin: 0 var(--gutter) var(--sp-3); border-radius: var(--r-lg); box-shadow: var(--glass-rim-sm); padding: 10px var(--sp-4); }
+
+@media (max-width: 1099px) and (min-width: 760px) {
+  html[data-skin="glass"] .shell { grid-template-columns: calc(var(--rail-w) + var(--inset)) minmax(0, 1fr); }
+  html[data-skin="glass"] .sidebar { padding: var(--sp-4) 6px; border-radius: 28px; }
+  html[data-skin="glass"] .nav__item { border-radius: 20px; height: auto; }
+}
+
+@media (max-width: 759px) {
+  html[data-skin="glass"] .tabbar {
+    left: var(--inset); right: var(--inset); bottom: calc(var(--inset) + var(--safe-bottom));
+    height: var(--tabbar-h); padding-bottom: 0; border-top: 0; border-radius: 34px;
+    background-color: var(--glass-fill-strong); background-image: var(--glass-sheen);
+    box-shadow: var(--glass-rim), var(--glass-drop);
+    -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter);
+  }
+  html[data-skin="glass"] .main { padding-bottom: calc(var(--tabbar-h) + var(--inset) * 2 + var(--safe-bottom)); }
+  html[data-skin="glass"] .tabbar__icon { border-radius: var(--r-pill); }
+  html[data-skin="glass"] .tabbar__item.is-active .tabbar__icon { background: var(--glass-select); box-shadow: var(--glass-rim-sm); }
+  html[data-skin="glass"] .tabbar__badge { border-color: transparent; }
+  html[data-skin="glass"] .toasts { bottom: calc(var(--tabbar-h) + var(--inset) * 2 + var(--safe-bottom) + 8px); }
+}
+
+/* ---------- 4. controls: capsules, tinted prominent buttons, glass thumbs ---------- */
+html[data-skin="glass"] .btn { border-radius: var(--r-pill); padding: 0 18px; transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform .45s var(--spring); }
+html[data-skin="glass"] .btn--sm { padding: 0 14px; border-radius: var(--r-pill); }
+html[data-skin="glass"] .btn--lg { padding: 0 26px; border-radius: var(--r-pill); }
+html[data-skin="glass"] .btn:active:not(:disabled) { transform: scale(.96); }
+html[data-skin="glass"][data-theme="light"] { --btn-grad: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%); --btn-grad-hover: linear-gradient(180deg, var(--accent-2) 0%, color-mix(in srgb, var(--accent-2) 88%, #000) 100%); }
+html[data-skin="glass"][data-theme="dark"] { --btn-grad: linear-gradient(180deg, color-mix(in srgb, var(--accent) 84%, #fff) 0%, var(--accent) 100%); --btn-grad-hover: linear-gradient(180deg, color-mix(in srgb, var(--accent-2) 84%, #fff) 0%, var(--accent-2) 100%); }
+html[data-skin="glass"] .btn--primary {
+  background: var(--btn-grad);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(255, 255, 255, .14), 0 8px 20px -6px color-mix(in srgb, var(--accent) 65%, transparent);
+}
+html[data-skin="glass"] .btn--primary:hover:not(:disabled) { background: var(--btn-grad-hover); }
+html[data-skin="glass"] .btn--secondary {
+  background-color: var(--glass-fill); background-image: var(--glass-sheen); border-color: transparent;
+  box-shadow: var(--glass-rim-sm), var(--glass-drop-sm);
+  -webkit-backdrop-filter: var(--glass-filter-soft); backdrop-filter: var(--glass-filter-soft);
+}
+html[data-skin="glass"] .btn--secondary:hover:not(:disabled) { background-color: var(--glass-fill-strong); border-color: transparent; }
+html[data-skin="glass"] .btn--subtle { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35); }
+html[data-skin="glass"] .btn--danger { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 8px 20px -6px color-mix(in srgb, var(--danger) 60%, transparent); }
+html[data-skin="glass"] .btn--danger-ghost { border-color: transparent; background-color: var(--surface-2); box-shadow: var(--glass-rim-sm); }
+html[data-skin="glass"] .icon-btn { border-radius: 50%; transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), transform .45s var(--spring); }
+html[data-skin="glass"] .icon-btn:active:not(:disabled) { transform: scale(.9); }
+html[data-skin="glass"] .icon-btn--secondary { border: 0; background-color: var(--glass-fill); box-shadow: var(--glass-rim-sm); }
+html[data-skin="glass"] .icon-btn--primary { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55); }
+html[data-skin="glass"] .home-status__help { border: 0; background-color: var(--glass-fill); box-shadow: var(--glass-rim-sm); }
+html[data-skin="glass"] .chip { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28); }
+html[data-skin="glass"] .chip--outline { box-shadow: none; }
+
+/* segmented control */
+html[data-skin="glass"] .seg { padding: 4px; gap: 3px; border: 0; border-radius: var(--r-pill); background: var(--glass-well); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .10), inset 0 0 0 1px rgba(255, 255, 255, .10); }
+html[data-skin="glass"] .seg__opt { border-radius: var(--r-pill); min-height: 34px; padding: 0 16px; transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform .45s var(--spring); }
+html[data-skin="glass"] .seg--sm .seg__opt { min-height: 28px; padding: 0 12px; }
+html[data-skin="glass"] .seg__opt.is-on,
+html[data-skin="glass"][data-theme="dark"] .seg__opt.is-on { background: var(--glass-select); box-shadow: var(--glass-rim-sm), 0 3px 10px -2px rgba(0, 0, 0, .22); }
+html[data-skin="glass"] .seg__opt:active:not(:disabled) { transform: scale(.96); }
+
+/* switch */
+html[data-skin="glass"] .switch { width: 52px; height: 30px; border-radius: 15px; border: 0; background: var(--glass-well); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .18), inset 0 0 0 1px rgba(255, 255, 255, .10); }
+html[data-skin="glass"] .switch__thumb,
+html[data-skin="glass"][data-theme="light"] .switch__thumb,
+html[data-skin="glass"][data-theme="light"] .switch.is-on .switch__thumb,
+html[data-skin="glass"] .switch.is-on .switch__thumb {
+  top: 2px; left: 2px; width: 26px; height: 26px; background: #fff;
+  box-shadow: inset 0 1px 0 #fff, 0 2px 6px rgba(0, 0, 0, .28), 0 0 0 .5px rgba(0, 0, 0, .12);
+  transition: transform .45s var(--spring), width .3s var(--spring);
+}
+html[data-skin="glass"] .switch.is-on { background: var(--accent); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .22), 0 0 0 3px var(--accent-soft); }
+html[data-skin="glass"] .switch.is-on .switch__thumb { transform: translateX(22px); }
+html[data-skin="glass"] .switch:active .switch__thumb { width: 32px; }
+html[data-skin="glass"] .switch.is-on:active .switch__thumb { transform: translateX(16px); }
+
+/* fields: soft wells with a lit edge */
+html[data-skin="glass"] .input, html[data-skin="glass"] .select,
+html[data-skin="glass"][data-theme="light"] .input, html[data-skin="glass"][data-theme="light"] .select {
+  min-height: 42px; border-radius: 14px; border: 0; background-color: var(--glass-well);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .12), inset 0 0 0 1px rgba(255, 255, 255, .14);
+}
+html[data-skin="glass"] .input:hover, html[data-skin="glass"] .select:hover { box-shadow: inset 0 1px 2px rgba(0, 0, 0, .12), inset 0 0 0 1px rgba(255, 255, 255, .26); }
+html[data-skin="glass"] .input:focus, html[data-skin="glass"] .select:focus,
+html[data-skin="glass"] .input:focus-visible, html[data-skin="glass"] .select:focus-visible {
+  border-color: transparent; background-color: var(--surface);
+  box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 0 4px var(--accent-soft);
+}
+html[data-skin="glass"] .has-error .input { box-shadow: inset 0 0 0 1.5px var(--danger); }
+html[data-skin="glass"] .input-wrap > .input { padding-left: 38px; border-radius: var(--r-pill); }
+html[data-skin="glass"] .input-wrap > .icon { left: 14px; }
+html[data-skin="glass"] .code-line { border: 0; border-radius: 14px; background: var(--glass-well); }
+html[data-skin="glass"] .radio-card { border-color: transparent; border-radius: var(--r-lg); background-color: var(--surface-2); box-shadow: var(--glass-rim-sm); }
+html[data-skin="glass"] .radio-card.is-on { background-color: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
+html[data-skin="glass"] .dchip, html[data-skin="glass"] .manage__btn { border-color: transparent; border-radius: var(--r-pill); background-color: var(--surface-2); box-shadow: var(--glass-rim-sm); }
+html[data-skin="glass"] .dchip.is-on { background-color: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
+html[data-skin="glass"] .dact__btn, html[data-skin="glass"] .ddr-act { border-color: transparent; border-radius: var(--r-pill); background-color: var(--surface-2); box-shadow: var(--glass-rim-sm); }
+html[data-skin="glass"] .dact__btn:hover, html[data-skin="glass"] .ddr-act:hover { background-color: var(--glass-fill-strong); border-color: transparent; }
+html[data-skin="glass"] .progress { background: var(--glass-well); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .12); }
+/* tabs: a capsule of glass with the chosen tab lifted out of it, like a segmented control */
+html[data-skin="glass"] .tabs { display: inline-flex; max-width: 100%; padding: 4px; gap: 3px; border: 0; border-radius: var(--r-pill); background: var(--glass-well); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .10), inset 0 0 0 1px rgba(255, 255, 255, .10); }
+html[data-skin="glass"] .tabs__tab { padding: 8px 16px; border-radius: var(--r-pill); transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+html[data-skin="glass"] .tabs__tab.is-active { background: var(--glass-select); box-shadow: var(--glass-rim-sm), 0 3px 10px -2px rgba(0, 0, 0, .22); }
+html[data-skin="glass"] .tabs__tab.is-active::after { display: none; }
+html[data-skin="glass"] .dropzone { border-radius: var(--r-xl); border-color: color-mix(in srgb, var(--line-3) 80%, transparent); background-color: var(--glass-fill); }
+
+/* ---------- 5. layers above the page: sheets, menus, toasts ---------- */
+html[data-skin="glass"] .modal-backdrop { -webkit-backdrop-filter: blur(10px) saturate(1.2); backdrop-filter: blur(10px) saturate(1.2); }
+html[data-skin="glass"] .modal-backdrop--light { -webkit-backdrop-filter: none; backdrop-filter: none; }
+html[data-skin="glass"] :is(.modal, .drawer) {
+  background-color: var(--glass-fill-strong); background-image: var(--glass-sheen);
+  border-color: transparent; box-shadow: var(--glass-rim), var(--shadow-3);
+  -webkit-backdrop-filter: var(--glass-filter-heavy); backdrop-filter: var(--glass-filter-heavy);
+}
+html[data-skin="glass"] .modal--full.pv { background-color: var(--glass-fill-strong); }
+html[data-skin="glass"] :is(.modal__foot, .drawer__foot) { border-top-color: var(--line); }
+html[data-skin="glass"] :is(.menu, .toast, .upanel) {
+  background-color: var(--glass-fill-strong); background-image: var(--glass-sheen);
+  border-color: transparent; box-shadow: var(--glass-rim), var(--shadow-2);
+  -webkit-backdrop-filter: var(--glass-filter-heavy); backdrop-filter: var(--glass-filter-heavy);
+}
+html[data-skin="glass"] .menu { border-radius: 20px; padding: 8px; }
+html[data-skin="glass"] .menu__item { border-radius: 12px; }
+html[data-skin="glass"] .toast { border-radius: 22px; }
+html[data-skin="glass"] .toast--error { box-shadow: var(--glass-rim), 0 0 0 1.5px color-mix(in srgb, var(--danger) 45%, transparent), var(--shadow-2); }
+html[data-skin="glass"] .drawer__grip { background: var(--line-3); }
+html[data-skin="glass"] .picker__list { border-color: transparent; border-radius: var(--r-lg); background: var(--glass-well); }
+html[data-skin="glass"] .kv__row, html[data-skin="glass"] .list-row, html[data-skin="glass"] .switch-row + .switch-row { border-color: var(--line); }
+
+/* ---------- 6. Mail and Chat: one big glass sheet with panes inside ---------- */
+html[data-skin="glass"] .shell--fixed .content { padding: 0 var(--gutter) var(--inset); }
+html[data-skin="glass"] :is(.mail, .chat) {
+  border-radius: 28px; overflow: hidden;
+  background-color: var(--glass-fill); background-image: var(--glass-sheen);
+  box-shadow: var(--glass-rim), var(--glass-drop);
+  -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter);
+}
+html[data-skin="glass"] :is(.mail__list, .mail__reader, .mfolders, .chat__list, .conv__compose),
+html[data-skin="glass"][data-theme="dark"] .mail__reader { background: transparent; }
+html[data-skin="glass"] :is(.mfolders, .mail__list, .chat__list) { border-right-color: var(--line); }
+html[data-skin="glass"] :is(.conv__head, .reader__tools) { background: transparent; }
+html[data-skin="glass"] .conv__head { border-bottom-color: var(--line); }
+html[data-skin="glass"] .conv__compose { border-top-color: var(--line); }
+html[data-skin="glass"] .composer { border: 0; border-radius: 26px; background: var(--glass-well); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .10), inset 0 0 0 1px rgba(255, 255, 255, .14); }
+html[data-skin="glass"] .composer .composer__input,
+html[data-skin="glass"] .composer .composer__input:focus,
+html[data-skin="glass"] .composer .composer__input:focus-visible { background: transparent; border-radius: 0; box-shadow: none !important; min-height: 36px; }
+html[data-skin="glass"] .composer:focus-within { box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 0 4px var(--accent-soft); }
+html[data-skin="glass"] .topo__relay rect { fill: var(--node-fill); }
+html[data-skin="glass"][data-theme="dark"] :is(.nav__item.is-active, .mfolder.is-active, .thread.is-active, .settings__link.is-active, .mfseg.is-active, .mitem.is-active .mitem__link) { --text-3: var(--text-2); }
+html[data-skin="glass"] .bubble--mine .bubble__meta { color: color-mix(in srgb, var(--bubble-mine-text) 80%, transparent); }
+html[data-skin="glass"] .selfcard__grid { border-color: transparent; background: var(--line); box-shadow: var(--glass-rim-sm); }
+html[data-skin="glass"] .selfcard__grid > div { background: var(--glass-fill-strong); }
+html[data-skin="glass"] .bubble { border-color: transparent; border-radius: 20px; box-shadow: var(--glass-rim-sm); }
+html[data-skin="glass"] .daysep span { border: 0; box-shadow: var(--glass-rim-sm); background: var(--glass-fill); }
+html[data-skin="glass"] .mfolder, html[data-skin="glass"] .thread, html[data-skin="glass"] .settings__link { border-radius: var(--r-pill); }
+html[data-skin="glass"] .thread { border-radius: 18px; }
+html[data-skin="glass"] .mitem__link { border-radius: 16px; }
+
+/* ---------- 7. odds and ends ---------- */
+html[data-skin="glass"] .onb { background: transparent; }
+html[data-skin="glass"] .mitem__dot { box-shadow: none; }
+html[data-skin="glass"] .pv__stage { background: var(--glass-well); }
+html[data-skin="glass"] .page-head__title { letter-spacing: -.025em; }
+html[data-skin="glass"] .callout { border-radius: var(--r-lg); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35); }
+html[data-skin="glass"] .callout--neutral { border-color: transparent; box-shadow: var(--glass-rim-sm); }
+html[data-skin="glass"] .callout--err { background-color: color-mix(in srgb, var(--danger-soft) 100%, var(--glass-fill)); }
+html[data-skin="glass"] .empty__icon { border-color: transparent; box-shadow: var(--glass-rim-sm); background-color: var(--glass-fill); }
+html[data-skin="glass"] .tech__list { border-color: transparent; box-shadow: var(--glass-rim-sm); background: var(--surface-2); }
+html[data-skin="glass"] .avatar { border-color: transparent; box-shadow: var(--glass-rim-sm); }
+html[data-skin="glass"] .avatar__status { border-color: transparent; }
+html[data-skin="glass"] .frow--head { background: transparent; }
+html[data-skin="glass"] .flist { overflow: hidden; }
+html[data-skin="glass"] .expert-tag, html[data-skin="glass"] .kbd, html[data-skin="glass"] kbd { border-color: transparent; box-shadow: var(--glass-rim-sm); }
+html[data-skin="glass"] .fullscreen__icon, html[data-skin="glass"] .nat__badge { box-shadow: var(--glass-rim-sm); }
+/* a QR code must stay a sharp, opaque, high-contrast picture: no tint, no blur, no rim over it */
+html[data-skin="glass"] .qr, html[data-skin="glass"] .qr * { -webkit-backdrop-filter: none; backdrop-filter: none; }
+html[data-skin="glass"] .qr { background: var(--qr-bg); }
+html[data-skin="glass"] * { scrollbar-color: var(--line-3) transparent; }
+
+/* ---------- 8. the Mac app: no title bar ----------
+   The window has no title bar of its own (Electron titleBarStyle "hiddenInset"; js/boot.js turns the app's
+   user agent into html[data-titlebar="inset"]): the traffic lights sit on top of the page's top-left corner,
+   so the sidebar leaves room for them, and the sidebar's top strip and the top bar drag the window. This does
+   not depend on the skin: the classic look needs the same room. */
+html[data-titlebar="inset"] { --titlebar-room: 52px; }
+html[data-titlebar="inset"] .sidebar { padding-top: var(--titlebar-room); }
+html[data-titlebar="inset"] .sidebar::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: var(--titlebar-room); -webkit-app-region: drag; }
+html[data-titlebar="inset"] .topbar { -webkit-app-region: drag; }
+html[data-titlebar="inset"] :is(.topbar a, .topbar button, .topbar input, .sidebar a, .sidebar button) { -webkit-app-region: no-drag; }
+html[data-titlebar="inset"] .fullscreen::before,
+html[data-titlebar="inset"] .onb::before { content: ""; position: fixed; z-index: 1; top: 0; left: 0; right: 0; height: 44px; -webkit-app-region: drag; }
+html[data-titlebar="inset"] .onb__corner { -webkit-app-region: no-drag; }
+@media (max-width: 759px) {
+  /* no sidebar at this width: the top bar carries the corner with the traffic lights */
+  html[data-titlebar="inset"] .topbar { padding-left: 92px; }
+  html[data-titlebar="inset"] .topbar__brand { display: none; }
+}
+
+/* ---------- 9. less glass when asked, or when the browser cannot blur ---------- */
+@media (prefers-reduced-transparency: reduce) {
+  html[data-skin="glass"] { --glass-filter: none; --glass-filter-soft: none; --glass-filter-heavy: none; }
+  html[data-skin="glass"][data-theme="light"] { --glass-fill: rgba(255, 255, 255, .92); --glass-fill-strong: #fff; --glass-fill-side: rgba(255, 255, 255, .88); --surface: rgba(255, 255, 255, .92); --surface-glass: rgba(255, 255, 255, .94); }
+  html[data-skin="glass"][data-theme="dark"] { --glass-fill: rgba(30, 40, 46, .94); --glass-fill-strong: #1b2328; --glass-fill-side: rgba(24, 32, 37, .94); --surface: rgba(30, 40, 46, .94); --surface-glass: rgba(20, 28, 32, .94); }
+}
+html[data-skin="glass"][data-reduce-transparency] { --glass-filter: none; --glass-filter-soft: none; --glass-filter-heavy: none; }
+html[data-skin="glass"][data-reduce-transparency][data-theme="light"] { --glass-fill: rgba(255, 255, 255, .92); --glass-fill-strong: #fff; --glass-fill-side: rgba(255, 255, 255, .88); --surface: rgba(255, 255, 255, .92); --surface-glass: rgba(255, 255, 255, .94); }
+html[data-skin="glass"][data-reduce-transparency][data-theme="dark"] { --glass-fill: rgba(30, 40, 46, .94); --glass-fill-strong: #1b2328; --glass-fill-side: rgba(24, 32, 37, .94); --surface: rgba(30, 40, 46, .94); --surface-glass: rgba(20, 28, 32, .94); }
+html[data-skin="glass"][data-reduce-transparency] body::before { background: none; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-skin="glass"][data-theme="light"] { --glass-fill: rgba(255, 255, 255, .86); --glass-fill-strong: rgba(255, 255, 255, .96); --glass-fill-side: rgba(255, 255, 255, .82); }
+  html[data-skin="glass"][data-theme="dark"] { --glass-fill: rgba(30, 40, 46, .90); --glass-fill-strong: rgba(24, 33, 38, .96); --glass-fill-side: rgba(22, 31, 36, .88); }
+}

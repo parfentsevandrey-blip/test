@@ -301,6 +301,45 @@ test('an interrupted navigation is retried only a couple of times', async () => 
   assert.equal(attempts, 3);
 });
 
+test('on a Mac the window has no title bar and is see-through; the interface is told in the user agent', () => {
+  const { windowLook } = loadWindowModule();
+  const look = windowLook({ platform: 'darwin', env: {}, dark: false, reducedTransparency: false, version: '1.2.3' });
+  assert.equal(look.glass, true);
+  assert.equal(look.vibrant, true);
+  assert.equal(look.options.titleBarStyle, 'hiddenInset');
+  assert.deepEqual(look.options.trafficLightPosition, { x: 26, y: 22 });
+  assert.equal(look.options.vibrancy, 'under-window');
+  assert.equal(look.options.visualEffectState, 'followWindow');
+  assert.equal(look.options.backgroundColor, '#00000000', 'the web view must not paint over the material');
+  assert.equal(look.userAgentToken, 'TheMeshDesktop/1.2.3 (mac; skin=glass; vibrancy; inset)');
+});
+
+test('with macOS "Reduce transparency" the title bar stays hidden but nothing is see-through', () => {
+  const { windowLook } = loadWindowModule();
+  const light = windowLook({ platform: 'darwin', env: {}, dark: false, reducedTransparency: true, version: '1.0.0' });
+  assert.equal(light.glass, true);
+  assert.equal(light.vibrant, false);
+  assert.equal(light.options.titleBarStyle, 'hiddenInset');
+  assert.equal(light.options.vibrancy, undefined);
+  assert.equal(light.options.backgroundColor, '#f4f2ee');
+  assert.equal(windowLook({ platform: 'darwin', env: {}, dark: true, reducedTransparency: true }).options.backgroundColor, '#0d1012');
+  assert.equal(light.userAgentToken, 'TheMeshDesktop/1.0.0 (mac; skin=glass; inset)');
+});
+
+test('THEMESH_DESKTOP_GLASS=0 gives a Mac the ordinary window; Windows and Linux always have it', () => {
+  const { windowLook } = loadWindowModule();
+  for (const look of [windowLook({ platform: 'darwin', env: { THEMESH_DESKTOP_GLASS: '0' }, version: '1.0.0' }), windowLook({ platform: 'win32', env: {}, version: '1.0.0' }), windowLook({ platform: 'linux', env: {}, version: '1.0.0' })]) {
+    assert.equal(look.glass, false);
+    assert.equal(look.vibrant, false);
+    assert.equal(look.options.titleBarStyle, undefined);
+    assert.equal(look.options.vibrancy, undefined);
+    assert.notEqual(look.options.backgroundColor, '#00000000');
+  }
+  assert.equal(windowLook({ platform: 'darwin', env: { THEMESH_DESKTOP_GLASS: '0' }, version: '1.0.0' }).userAgentToken, 'TheMeshDesktop/1.0.0 (mac)');
+  assert.equal(windowLook({ platform: 'win32', env: {}, version: '1.0.0' }).userAgentToken, 'TheMeshDesktop/1.0.0 (win)');
+  assert.equal(windowLook({ platform: 'linux', env: {}, version: '1.0.0' }).userAgentToken, 'TheMeshDesktop/1.0.0 (linux)');
+});
+
 test('on Windows the program runs without asynchronous preemption (a Go runtime bug there); elsewhere nothing is added', () => {
   assert.equal(coreEnv('D:\\data', {}, 'win32').GODEBUG, 'asyncpreemptoff=1');
   assert.equal(coreEnv('D:\\data', { GODEBUG: 'http2client=0' }, 'win32').GODEBUG, 'http2client=0,asyncpreemptoff=1');

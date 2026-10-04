@@ -18,6 +18,43 @@ function visibleBounds(b) {
   });
 }
 
+const VIBRANCY = 'under-window';
+const TRANSPARENT = '#00000000';
+
+/**
+ * How the window looks on this system.
+ *
+ * On a Mac the interface is drawn in its "Liquid Glass" skin (internal/web/ui/css/glass.css): the window has no
+ * title bar (the traffic lights sit inside the interface's sidebar) and is see-through to the system's own
+ * blurred material (Electron `vibrancy`), which the interface lets shine through. Elsewhere it is an ordinary
+ * window with the classic skin. THEMESH_DESKTOP_GLASS=0 gives a Mac the ordinary window too, and macOS
+ * "Reduce transparency" keeps the title bar hidden but drops the see-through material.
+ *
+ * The interface learns all this from the user agent (see js/boot.js): "TheMeshDesktop/<v> (mac; skin=glass;
+ * vibrancy; inset)".
+ */
+function windowLook({ platform = process.platform, env = process.env, dark = false, reducedTransparency = false, version = '0.0.0' } = {}) {
+  const mac = platform === 'darwin';
+  const glass = mac && env.THEMESH_DESKTOP_GLASS !== '0';
+  const vibrant = glass && !reducedTransparency;
+  const solid = dark ? '#0d1012' : '#f4f2ee';
+  const options = { backgroundColor: solid };
+  if (glass) {
+    options.titleBarStyle = 'hiddenInset';
+    options.trafficLightPosition = { x: 26, y: 22 };
+  }
+  if (vibrant) {
+    options.vibrancy = VIBRANCY;
+    options.visualEffectState = 'followWindow';
+    options.backgroundColor = TRANSPARENT;
+  }
+  const facts = [mac ? 'mac' : platform === 'win32' ? 'win' : 'linux'];
+  if (glass) facts.push('skin=glass');
+  if (vibrant) facts.push('vibrancy');
+  if (glass) facts.push('inset');
+  return { glass, vibrant, solid, options, userAgentToken: `TheMeshDesktop/${version} (${facts.join('; ')})` };
+}
+
 class MainWindow {
   /**
    * @param {object} o
@@ -40,6 +77,8 @@ class MainWindow {
 
   create({ show }) {
     const saved = this.settings.get('window', null);
+    this.look = windowLook({ dark: nativeTheme.shouldUseDarkColors, reducedTransparency: !!nativeTheme.prefersReducedTransparency, version: app.getVersion() });
+    this.reduced = !!nativeTheme.prefersReducedTransparency;
     const opts = {
       width: 1120,
       height: 760,
@@ -48,8 +87,8 @@ class MainWindow {
       show: false,
       title: 'The Mesh',
       icon: path.join(this.root, 'assets', 'icon.png'),
-      backgroundColor: nativeTheme.shouldUseDarkColors ? '#0d1012' : '#f4f2ee',
       autoHideMenuBar: true,
+      ...this.look.options,
       webPreferences: {
         preload: path.join(this.root, 'src', 'preload.js'),
         contextIsolation: true,
@@ -70,6 +109,9 @@ class MainWindow {
     }
     const win = new BrowserWindow(opts);
     this.win = win;
+    // Tells the interface what this window is and can do (see windowLook): it picks its look from that.
+    const ua = win.webContents.getUserAgent();
+    if (!ua.includes('TheMeshDesktop/')) win.webContents.setUserAgent(`${ua} ${this.look.userAgentToken}`);
     if (saved && saved.maximized) win.maximize();
     win.setMenuBarVisibility(false);
 
@@ -92,7 +134,47 @@ class MainWindow {
     this.guardNavigation(win);
     this.contextMenu(win);
     this.handleSession(win);
+    this.watchAppearance(win);
     return win;
+  }
+
+  /**
+   * Mac, glass look: keeps the window in step with the interface. The system material takes its light or dark
+   * tone from the app's appearance, so the app follows the interface's own Auto / Light / Dark choice (only the
+   * page knows it: it is read from the page), and the see-through material goes away when macOS
+   * "Reduce transparency" is on (the interface then draws solid panels, see css/glass.css).
+   */
+  watchAppearance(win) {
+    if (!this.look.glass) return;
+    const wc = win.webContents;
+    const sync = async () => {
+      if (win.isDestroyed() || wc.isDestroyed()) return;
+      let pref = 'auto';
+      try {
+        pref = await wc.executeJavaScript("(() => { try { return localStorage.getItem('themesh.theme') || 'auto'; } catch (e) { return 'auto'; } })()");
+      } catch {
+        /* the page is still loading */
+      }
+      if (win.isDestroyed()) return;
+      const source = pref === 'light' || pref === 'dark' ? pref : 'system';
+      if (nativeTheme.themeSource !== source) nativeTheme.themeSource = source;
+      const reduced = !!nativeTheme.prefersReducedTransparency;
+      if (reduced !== this.reduced) {
+        this.reduced = reduced;
+        win.setVibrancy(reduced ? null : VIBRANCY);
+        win.setBackgroundColor(reduced ? this.look.solid : TRANSPARENT);
+      }
+      const see = !reduced;
+      wc.executeJavaScript(`(() => { const r = document.documentElement; r.toggleAttribute('data-reduce-transparency', ${!see}); if (${see}) r.setAttribute('data-vibrancy', 'on'); else r.removeAttribute('data-vibrancy'); })()`).catch(() => {});
+    };
+    wc.on('did-finish-load', sync);
+    win.on('focus', sync);
+    nativeTheme.on('updated', sync);
+    const timer = setInterval(() => { if (win.isVisible() && !win.isMinimized()) sync(); }, 2500);
+    win.on('closed', () => {
+      clearInterval(timer);
+      nativeTheme.removeListener('updated', sync);
+    });
   }
 
   saveBounds() {
@@ -158,6 +240,10 @@ class MainWindow {
     const ses = win.webContents.session;
     if (ses.__themeshHandled) return;
     ses.__themeshHandled = true;
+
+    // Windows opened later from this one (the licence texts) are told what they are in too. (A session's user
+    // agent does not reach web contents that already exist: the main window is told in create().)
+    if (!ses.getUserAgent().includes('TheMeshDesktop/')) ses.setUserAgent(`${ses.getUserAgent()} ${this.look.userAgentToken}`);
 
     ses.on('will-download', (_e, item) => {
       const dir = app.getPath('downloads');
@@ -268,4 +354,4 @@ class MainWindow {
   }
 }
 
-module.exports = { MainWindow, PARTITION };
+module.exports = { MainWindow, PARTITION, windowLook };

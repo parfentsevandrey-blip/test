@@ -9,7 +9,7 @@ import { refreshState, stopLive } from "../sse.js";
 import { setState, useStore } from "../store.js";
 import { fmtBytes, fmtDateTime, fmtDuration, fmtNumber } from "../format.js";
 import { useAsync, useInterval } from "../hooks.js";
-import { langPref, setLangPref, setThemePref, themePref } from "../prefs.js";
+import { langPref, setLangPref, setSkinPref, setThemePref, skinPref, themePref } from "../prefs.js";
 import { cx, deviceKind, isValidHostPort, kindIcon, natTone, osName } from "../util.js";
 import { deviceName, ManageDeviceSelect } from "../components/devicepicker.js";
 import { FolderPicker } from "../components/folderpicker.js";
@@ -385,6 +385,8 @@ function FilesSection({ cfg, dev }) {
 function InterfaceSection() {
   const [lang, setL] = useState(langPref());
   const [theme, setT] = useState(themePref());
+  const [skin, setS] = useState(skinPref());
+  const nowSkin = useStore((s) => s.skin);
   useStore((s) => s.theme);
   return html`<${Section} id="interface" icon="sun" title=${t("set.sec.interface")} sub=${t("set.sec.interfaceSub")}>
     <${Card} class="stack stack--lg">
@@ -398,6 +400,12 @@ function InterfaceSection() {
         <span class="field__label">${t("set.ui.theme")}</span>
         <${Segmented} label=${t("set.ui.theme")} value=${theme} onChange=${(v) => { setT(v); setThemePref(v); }}
           options=${[{ value: "auto", label: t("set.ui.themeAuto"), icon: "auto", testid: "theme-auto" }, { value: "light", label: t("set.ui.themeLight"), icon: "sun", testid: "theme-light" }, { value: "dark", label: t("set.ui.themeDark"), icon: "moon", testid: "theme-dark" }]} />
+      </div>
+      <div class="field">
+        <span class="field__label">${t("set.ui.skin")}</span>
+        <${Segmented} label=${t("set.ui.skin")} value=${skin} onChange=${(v) => { setS(v); setSkinPref(v); }}
+          options=${[{ value: "auto", label: t("set.ui.auto"), icon: "auto", testid: "skin-auto" }, { value: "glass", label: t("set.ui.skinGlass"), icon: "sparkle", testid: "skin-glass" }, { value: "classic", label: t("set.ui.skinClassic"), icon: "grid", testid: "skin-classic" }]} />
+        <p class="field__hint">${skin === "auto" ? t("set.ui.skinAutoHint", { skin: nowSkin === "glass" ? t("set.ui.skinGlass") : t("set.ui.skinClassic") }) : skin === "glass" ? t("set.ui.skinGlassHint") : t("set.ui.skinClassicHint")}</p>
       </div>
     </${Card}>
   </${Section}>`;

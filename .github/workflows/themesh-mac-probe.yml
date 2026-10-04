@@ -1,0 +1,53 @@
+name: The Mesh Mac probe
+
+# Not part of the product build. Looks at the macOS window of the desktop app on a real Mac: opens the interface
+# (the mock server of web-dev serves it with made-up devices) in windows made the way the app makes its own, in a
+# few variants of the window options, over a colourful "wallpaper", and photographs the screen with the system's own
+# tool. A page screenshot cannot show the material behind the window, the traffic lights or the shadow.
+# The pictures are kept as a build artifact. Runs when the probe changes, or by hand.
+on:
+  push:
+    branches: ["**"]
+    paths: ["svoi/desktop/tools/mac-probe/**", "svoi/desktop/src/window.js", ".github/workflows/themesh-mac-probe.yml"]
+  workflow_dispatch:
+
+jobs:
+  probe:
+    name: macOS window
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: svoi/desktop/package-lock.json
+
+      - name: Install the dependencies of the app
+        working-directory: svoi/desktop
+        run: npm ci
+
+      - name: The machine
+        run: |
+          sw_vers
+          system_profiler SPDisplaysDataType 2>/dev/null | head -30 || true
+          defaults read com.apple.universalaccess reduceTransparency 2>/dev/null || echo "reduceTransparency: not set"
+          defaults read -g AppleInterfaceStyle 2>/dev/null || echo "appearance: light"
+
+      - name: Look at the window
+        working-directory: svoi/desktop
+        shell: bash
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/probe-out"
+          node ../web-dev/mock-server.mjs --port 8791 --calm --latency 0 --quiet > "$RUNNER_TEMP/mock.log" 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8791/api/state >/dev/null && break; sleep 1; done
+          PROBE_URL=http://127.0.0.1:8791 PROBE_OUT="$GITHUB_WORKSPACE/probe-out" npx electron tools/mac-probe/main.js 2>&1 | tee "$GITHUB_WORKSPACE/probe-out/probe.log"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: themesh-mac-probe
+          path: probe-out/
+          if-no-files-found: warn
+          retention-days: 7

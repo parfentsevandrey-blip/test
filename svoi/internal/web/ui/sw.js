@@ -14,6 +14,7 @@ const SHELL = [
   "css/components.css",
   "css/layout.css",
   "css/views.css",
+  "css/glass.css",
   "js/boot.js",
   "js/app.js",
   "js/api.js",

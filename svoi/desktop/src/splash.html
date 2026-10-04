@@ -15,9 +15,11 @@
   @keyframes pulse { 0%,100% { opacity:.35 } 50% { opacity:1 } }
   @media (prefers-reduced-motion: reduce) { .dot { animation:none } }
   p { margin:0; color:var(--muted); }
+  .drag { position:fixed; top:0; left:0; right:0; height:44px; -webkit-app-region:drag; } /* a Mac window has no title bar to take hold of */
 </style>
 </head>
 <body>
+<div class="drag"></div>
 <main>
   <svg viewBox="0 0 512 512" aria-hidden="true">
     <path d="M256 150 150 338h212Z" fill="none" stroke="var(--accent)" stroke-opacity=".55" stroke-width="22" stroke-linejoin="round"/>

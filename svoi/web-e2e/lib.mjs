@@ -193,8 +193,10 @@ export function eq(a, b, msg) {
 }
 
 // init: a function that runs in every page before its own scripts (to play the part of the phone app, for example).
-export async function open(browser, dev, { w = 1280, h = 800, lang = "ru", theme = "dark", hash = "", allow = [], mobile = false, init = null } = {}) {
+// userAgent: to play the part of the desktop app ("... TheMeshDesktop/0.1.0 (mac; skin=glass; vibrancy; inset)").
+export async function open(browser, dev, { w = 1280, h = 800, lang = "ru", theme = "dark", hash = "", allow = [], mobile = false, init = null, userAgent = undefined } = {}) {
   const ctx = await browser.newContext({
+    userAgent,
     viewport: { width: w, height: h },
     colorScheme: theme,
     locale: lang === "en" ? "en-US" : "ru-RU",

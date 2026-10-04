@@ -5,7 +5,7 @@
 //   node test/smoke.mjs [--shots DIR]          the source tree, run with the installed Electron
 //   THEMESH_APP_EXE=/path/to/The Mesh.exe node test/smoke.mjs     a packaged build
 import { _electron as electron } from 'playwright-core';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -51,6 +51,19 @@ const shot = async (name) => {
     .catch(() => {});
   await sleep(300);
   await page.screenshot({ path: path.join(shotsDir, name + '.png') }).catch(() => {});
+  if (process.platform === 'darwin' && /^desktop-(3-home|3b-invitation-qr|4-two-devices)$/.test(name)) await nativeShot(name);
+};
+
+// macOS only: the whole window as the system draws it (traffic lights, the material behind the window, the shadow),
+// which a page screenshot cannot show. Best effort: a CI machine may not let a program photograph the screen.
+const nativeShot = async (name) => {
+  try {
+    const b = await hook(() => global.__themeshTest.window().getBounds());
+    const r = spawnSync('screencapture', ['-x', '-R', `${b.x - 40},${b.y - 30},${b.width + 80},${b.height + 90}`, path.join(shotsDir, name + '-native.png')], { timeout: 15000 });
+    if (r.status !== 0) console.log(`      (no native screenshot: screencapture exited with ${r.status})`);
+  } catch (e) {
+    console.log(`      (no native screenshot: ${e.message})`);
+  }
 };
 
 const hook = (fn, arg) => app.evaluate(fn, arg);
@@ -107,6 +120,41 @@ try {
     await page.getByTestId('onb-submit').click();
     await page.getByTestId('page-home').waitFor({ timeout: 30000 });
     await shot('desktop-3-home');
+  });
+
+  await step('the interface takes its look from the window: the Mac app is glass, the others keep the classic look', async () => {
+    const reduced = await hook(({ nativeTheme }) => nativeTheme.prefersReducedTransparency);
+    const seen = await page.evaluate(() => {
+      const r = document.documentElement;
+      const side = document.querySelector('.sidebar');
+      const cs = side && getComputedStyle(side);
+      return {
+        ua: (/TheMeshDesktop\/\S+ \(([^)]*)\)/.exec(navigator.userAgent) || [])[1] || '',
+        skin: r.dataset.skin || '',
+        shell: r.dataset.shell || '',
+        titlebar: r.dataset.titlebar || '',
+        vibrancy: r.dataset.vibrancy || '',
+        blur: cs ? cs.backdropFilter : '',
+        padTop: cs ? parseFloat(cs.paddingTop) : 0,
+      };
+    });
+    console.log('      the interface sees:', JSON.stringify(seen));
+    if (process.platform === 'darwin') {
+      assert.equal(seen.ua, reduced ? 'mac; skin=glass; inset' : 'mac; skin=glass; vibrancy; inset');
+      assert.equal(seen.skin, 'glass');
+      assert.equal(seen.shell, 'mac');
+      assert.equal(seen.titlebar, 'inset');
+      assert.equal(seen.vibrancy, reduced ? '' : 'on');
+      assert.ok(seen.padTop >= 48, 'the sidebar leaves room for the traffic lights');
+      if (!reduced) assert.match(seen.blur, /blur/, 'the sidebar is a pane of glass');
+      const [bounds, content] = await hook(() => [global.__themeshTest.window().getBounds(), global.__themeshTest.window().getContentBounds()]);
+      console.log(`      window ${bounds.width}x${bounds.height}, its content ${content.width}x${content.height} (equal heights: no title bar)`);
+    } else {
+      assert.equal(seen.ua, process.platform === 'win32' ? 'win' : 'linux');
+      assert.equal(seen.skin, 'classic');
+      assert.equal(seen.titlebar, '');
+      assert.equal(seen.blur, 'none', 'the classic look has no glass');
+    }
   });
 
   await step('«Add a device» in the menu opens the dialog with the invitation (the QR code is made there)', async () => {
