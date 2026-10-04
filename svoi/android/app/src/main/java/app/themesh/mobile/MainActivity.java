@@ -1010,7 +1010,8 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
         return GlassDialogs.show(this, builder, light, p.fg, p.muted, p.accent);
     }
 
-    private void dismissMenu() {
+    /** Закрывает меню «⋮», если оно открыто (окну, когда оно уходит с экрана, и тесту снимков, которому нечем нажать «Назад», не закрыв приложение). */
+    void dismissMenu() {
         if (menuPopup != null) {
             menuPopup.dismiss();
             menuPopup = null;

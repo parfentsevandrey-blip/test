@@ -236,7 +236,7 @@ export function NearbyJoin({ join, self }) {
   const body = reason === "offline" ? html`<${ReachTips} name=${peer.name} />`
     : reason === "denied" ? html`<p>${t("nearby.join.denied")}</p>`
     : reason === "expired" ? html`<p>${t("nearby.join.expired")}</p>`
-    : html`<p>${t("nearby.join.invalid")}</p>${join.error && html`<p class="mono xsmall mt-1">${join.error}</p>`}`;
+    : html`<p>${reason === "invalid" ? t("nearby.join.invalid") : t("nearby.join.broken", { name: peer.name })}</p>${join.error && html`<p class="mono xsmall mt-1">${join.error}</p>`}`;
   return html`<div class="onb-form nearby-join" data-testid="nearby-join" data-state=${st} data-reason=${reason}>
     <${Callout} tone="err" title=${title} role="alert" data-testid="nearby-error">${body}</${Callout}>
     <div class="nearby-join__actions">

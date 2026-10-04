@@ -105,9 +105,10 @@ export async function startDemo({ quiet = true } = {}) {
 // already part of a mesh of its own (via `themesh init`). Used where the demo does not
 // fit: onboarding screens and anything that needs an unconfigured device.
 // offerName is the `--name` the program is started with (what a phone passes: its own name).
-export async function startNode({ name, init = false, mesh = "Тест", owner = "", port = 0, offerName = "" } = {}) {
+// env: more environment for the program (what the phone app passes: THEMESH_PLATFORM, THEMESH_LOCAL_ADDRS_FILE, ...).
+export async function startNode({ name, init = false, mesh = "Тест", owner = "", port = 0, offerName = "", env: more = {} } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "themesh-e2e-node-"));
-  const env = { ...process.env, THEMESH_DIR: path.join(dir, "data"), HOME: path.join(dir, "home"), XDG_CONFIG_HOME: path.join(dir, "home", ".config"), DISPLAY: "", WAYLAND_DISPLAY: "" };
+  const env = { ...process.env, THEMESH_DIR: path.join(dir, "data"), HOME: path.join(dir, "home"), XDG_CONFIG_HOME: path.join(dir, "home", ".config"), DISPLAY: "", WAYLAND_DISPLAY: "", ...more };
   fs.mkdirSync(env.HOME, { recursive: true });
   if (init) execFileSync(config.bin, ["init", "--mesh", mesh, "--name", name, "--owner", owner], { env, stdio: "pipe" });
   const log = fs.openSync(path.join(dir, "node.log"), "a");

@@ -38,7 +38,10 @@
   AGP сам записывает в итоговый манифест `android:extractNativeLibs="true"` (в исходный манифест оно не вписано
   намеренно — AGP предупреждает об этом; в готовом APK оно есть: `aapt2 dump xmltree app-debug.apk --file AndroidManifest.xml`).
 * **Процесс.** `NodeSupervisor` запускает `libthemesh.so up --no-browser --exit-when-stdin-closes --ui 127.0.0.1:8777
-  --dir <filesDir>/themesh --name <имя устройства>`, окружение `HOME=<filesDir>`, `TMPDIR=<cacheDir>`, `THEMESH_DIR`, `THEMESH_LOCAL_ADDRS_FILE`.
+  --dir <filesDir>/themesh --name <имя устройства>`, окружение `HOME=<filesDir>`, `TMPDIR=<cacheDir>`, `THEMESH_DIR`, `THEMESH_LOCAL_ADDRS_FILE`, `THEMESH_PLATFORM`
+  (`android/arm64`, `android/arm`, `android/amd64`: ядро — сборка для Linux и без этого назвало бы себя «linux», а другие устройства
+  показывали бы телефон как сервер на Linux; с ним телефон — Android-телефон в списках устройств и в просьбе «добавьте меня»;
+  `core/Platform`, `PlatformTest`, `NodeSupervisorTest.theRealNodeCallsItselfAnAndroidPhoneWhenTheAppSaysSo`).
   Стандартный ввод — канал, который приложение держит открытым: умерло приложение, как бы это ни случилось, — канал
   закрылся — узел вышел сам. Вывод идёт в `<filesDir>/themesh.log` (при запуске журнал больше 5 МБ уходит в
   `themesh.log.1`). Упал — перезапуск с паузами 1, 2, 4 … 30 с (после двух минут работы отсчёт заново). Остановка:
@@ -225,7 +228,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 Проверки:
 
 ```sh
-./gradlew testDebugUnitTest          # модульные тесты на JVM (211 тестов; часть запускает настоящее ядро x86_64, если оно собрано)
+./gradlew testDebugUnitTest          # модульные тесты на JVM (231 тест, два из них пропускаются, если системная кодировка не UTF-8; часть запускает настоящее ядро x86_64, если оно собрано)
 ./gradlew lintDebug                  # Android lint (на момент написания: «No issues found»)
 ./gradlew assembleDebugAndroidTest   # собрать тесты для устройства
 ./gradlew connectedDebugAndroidTest  # тесты на эмуляторе или телефоне (нужно подключённое adb-устройство)
@@ -269,9 +272,37 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
   (`files/local-addrs.txt` после запуска узла есть и не пуст — приглашение с телефона содержит адрес в домашней сети; на
   эмуляторе это `10.0.2.x`; у устройства без сетевого адреса тест пропускается).
 
+Ещё два набора для устройства снимают настоящее окно и проверяют «Рядом» с настоящим вторым узлом (общие помощники:
+`WebProbe` — выполнить скрипт в странице, дождаться условия; `Shots` — снимок экрана для людей; `NodeProcess` — второй узел):
+
+* `GlassShotsTest` (1 тест) снимает окно на настоящем WebView в обеих темах: первый экран, меню «⋮», форму «Создать свою сеть»,
+  «Главную», окно «Добавить устройство» с приглашением и «Настройки» (`01-start` … `07-settings`, `-light` и `-dark`). Меню
+  закрывает само окно (`MainActivity.dismissMenu()`), а не клавиша «Назад»: не открой оно меню, «Назад» закрыла бы приложение, и
+  следующие снимки были бы снимками рабочего стола. Снимки пишутся от имени оболочки в `/data/local/tmp/themesh-shots` (эту папку
+  не удаляет удаление приложения после прогона), `tools/emulator-run.sh` забирает их командой `adb pull` в `emulator-shots/`, а CI
+  кладёт в артефакт `themesh-android-emulator-screens`. Проверяет тест только то, что хотя бы один снимок получился: смотрит на
+  них человек.
+* `NearbyFlowTest` (2 теста) — «Рядом» без подставок. Вторым устройством («Mac») служит вторая копия `libthemesh.so` со своим
+  каталогом данных, своим UDP-портом (41720) и `THEMESH_PLATFORM=darwin/arm64`: настоящий процесс, который объявляет себя в сети,
+  ищет, кто рядом, и отвечает по сети. Сети он узнаёт из того же `files/local-addrs.txt`, что и узел приложения, поэтому
+  проверяется путь «по адресу» (Android 11+ не отдаёт список интерфейсов), а не по списку интерфейсов. Первый тест: у телефона нет
+  сети, «Mac» её хозяин — телефон сам показывает «Mac» в списке с названием его сети, одно нажатие, шесть цифр на телефоне те же,
+  что в `themesh nearby` у «Mac», «Совпадает» на телефоне, `themesh nearby allow` на «Mac» — телефон на «Главной» как обычное
+  устройство (не администратор), устройства соединились, и «Mac» знает, что это Android. Второй: у телефона своя сеть, «Mac»
+  новичок — «Mac» находит телефон, `themesh nearby join` печатает шесть цифр, у телефона открывается окно с теми же цифрами, на
+  «Mac» отвечают `y`, окно показывает «там подтвердили», «Разрешить» — «Mac» добавлен обычным устройством, и они соединены. Снимки
+  каждого шага: `10-nearby-searching` … `14-nearby-joined-home` и `20-nearby-admin-home` … `23-nearby-admin-added`; если тест не
+  удался — `99-failed-…` и в журнале (logcat, тег `NearbyFlowTest`) хвосты журналов обоих узлов. Оба узла живут на одном адресе
+  телефона и делят порт объявлений, поэтому одноадресные ответы на вопрос «кто рядом?» могут прийти не тому сокету; это не мешает:
+  объявления идут по группе и по широковещанию и доходят до обоих. После теста телефон покидает сеть, второй узел останавливается.
+  То же самое, на двух настоящих процессах и настоящем интерфейсе в Chromium (с тем же User-Agent, что у окна приложения, и
+  теми же «скрытыми интерфейсами»), проверяет `web-e2e/tests/nearby.mjs` — без эмулятора.
+
 В CI всё это делает `.github/workflows/themesh-android.yml` (в корне репозитория): собирает ядро, гоняет модульные тесты и
-lint, собирает APK, а на эмуляторе Android 14 с аппаратным ускорением выполняет `connectedDebugAndroidTest` — то есть все три
-класса тестов для устройства: `SmokeTest` (5 тестов), `ReceivedStoreTest` (4) и `ScanActivityTest` (9), всего 18.
+lint, собирает APK, а на эмуляторе Android 14 с аппаратным ускорением выполняет `connectedDebugAndroidTest` — то есть все пять
+классов тестов для устройства: `SmokeTest` (5 тестов), `ReceivedStoreTest` (4), `ScanActivityTest` (9), `GlassShotsTest` (1) и
+`NearbyFlowTest` (2), всего 21. Отчёты тестов лежат в артефакте `themesh-android-emulator-reports`, снимки — в
+`themesh-android-emulator-screens`.
 
 ### Подпись своим ключом
 
@@ -325,7 +356,8 @@ android/
         ├── test/java/app/themesh/mobile/       ScanBridgeTest, QrAnalyzerTest (мост и разбор кадров камеры, поддельный ImageProxy)
         ├── test/java/app/themesh/mobile/core/   модульные тесты (JUnit 4) + FakeNode (поддельный узел) и тесты с настоящим ядром;
         │                                        QrImages (кадры «как с камеры»), QrSvg (разбор qrSvg узла), RealNode (настоящий узел)
-        └── androidTest/java/app/themesh/mobile/   SmokeTest (узел, окно, мост), ReceivedStoreTest (запись в «Загрузки»), ScanActivityTest (сканер)
+        └── androidTest/java/app/themesh/mobile/   SmokeTest (узел, окно, мост), ReceivedStoreTest (запись в «Загрузки»), ScanActivityTest (сканер),
+                                                   GlassShotsTest (снимки окна), NearbyFlowTest (+ NodeProcess, WebProbe, Shots: «Рядом» с настоящим вторым узлом)
 ```
 
 ## Что проверено и что нет

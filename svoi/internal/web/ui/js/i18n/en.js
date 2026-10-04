@@ -480,6 +480,7 @@ export default {
   "nearby.join.tip2": "Both devices are on the same Wi‑Fi network. “Client isolation” (AP isolation) must be off on the router; a guest network will not work either.",
   "nearby.join.tip3": "If it still fails, create an invitation on that device and scan its QR code.",
   "nearby.join.invalid": "The device sent an answer that could not be accepted. Try again.",
+  "nearby.join.broken": "The connection to “{name}” was lost. Try again.",
   "nearby.join.again": "Try again",
   "nearby.join.back": "Back to the list",
   "nearby.ask.title": "A new device asks to be added",

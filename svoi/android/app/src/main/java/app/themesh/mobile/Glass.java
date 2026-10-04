@@ -13,7 +13,8 @@ import android.view.WindowManager;
  * по диагонали и светлый ободок, как у карточек страницы (css/glass.css: {@code --glass-fill}, {@code --glass-sheen},
  * {@code --glass-rim}). Размывать то, что лежит за панелью, умеет только система и только с Android 12 (и не на каждом
  * телефоне): там окно просит у неё размытие ({@link #frosted}), и заливка прозрачнее; без размытия заливка плотнее,
- * чтобы текст читался на любом фоне.
+ * чтобы текст читался на любом фоне. Даже «с размытием» заливка остаётся плотной (около 85 %): система может сказать, что
+ * размывает, и не размыть (так бывает на эмуляторе), и тогда сквозь слишком прозрачную панель просвечивал бы текст страницы.
  */
 final class Glass {
     private Glass() {
@@ -41,11 +42,11 @@ final class Glass {
         int sheenFrom;
         int rim;
         if (light) {
-            fillColor = Color.argb(frosted ? 158 : 232, 255, 255, 255);
+            fillColor = Color.argb(frosted ? 214 : 232, 255, 255, 255);
             sheenFrom = Color.argb(frosted ? 140 : 110, 255, 255, 255);
             rim = Color.argb(217, 255, 255, 255);
         } else {
-            fillColor = Color.argb(frosted ? 158 : 238, 22, 31, 36);
+            fillColor = Color.argb(frosted ? 220 : 238, 22, 31, 36);
             sheenFrom = Color.argb(frosted ? 44 : 36, 255, 255, 255);
             rim = Color.argb(56, 255, 255, 255);
         }
