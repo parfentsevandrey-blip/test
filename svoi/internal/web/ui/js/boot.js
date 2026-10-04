@@ -18,12 +18,13 @@
 
   // The apps say in their user agent what they are and what their window can do:
   //   "TheMeshDesktop/0.1.0 (mac; skin=glass; vibrancy; inset)"   the desktop app
-  //   "TheMeshAndroid/0.1.0 (android; skin=rosa)"                 the phone app
+  //   "TheMeshAndroid/0.1.0 (android; skin=rosa; fx=calm)"        the phone app (fx: a level of motion to start with, for a
+  //                                                               phone that cannot do it all: little memory, a software renderer)
   //   = platform; the look to start with; a window that is see-through to the system material (or "reduced-transparency":
   //     macOS says "Reduce transparency", the panels are solid from the first picture on); no title bar
   // A browser says nothing and gets the classic look unless the person chose another.
   // The looks: "rosa" (a living sky and glass, the design of the weather app «Роса»), "glass" (Liquid Glass) and "classic".
-  var skinByDefault = "classic", shell = "", vibrancy = false, inset = false, solid = false;
+  var skinByDefault = "classic", fxByDefault = "", shell = "", vibrancy = false, inset = false, solid = false;
   var app = /TheMesh(?:Desktop|Android)\/\S+ \(([^)]*)\)/.exec(navigator.userAgent || "");
   if (app) {
     var facts = app[1].split(/;\s*/);
@@ -34,6 +35,8 @@
       if (facts[i] === "reduced-transparency") solid = true;
       var m = /^skin=(rosa|glass|classic)$/.exec(facts[i]);
       if (m) skinByDefault = m[1];
+      var f = /^fx=(full|calm|still)$/.exec(facts[i]);
+      if (f) fxByDefault = f[1];
     }
   }
   var asked = /[?&]skin=(rosa|glass|classic)(&|$)/.exec(location.search); // for tests and screenshots; not remembered
@@ -71,11 +74,13 @@
   }
 
   // How much the page moves: "full" (everything), "calm" (panes fade in, no tilting, no twinkling), "still" (nothing).
-  // "auto" is full unless the system asks for less motion (js/rosa.js also steps down when the screen cannot keep up).
+  // "auto" is what the window says it can do (fx= in its user agent), else full, unless the system asks for less motion
+  // (js/rosa.js also steps down when the screen cannot keep up).
   if (fx !== "full" && fx !== "calm" && fx !== "still") {
-    fx = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches ? "still" : "full";
+    fx = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches ? "still" : fxByDefault || "full";
   }
   root.setAttribute("data-fx", fx);
+  if (fxByDefault) root.setAttribute("data-fx-default", fxByDefault);
 
   // The phone app paints the system bars (and, in the glass look, the backdrop behind a see-through page) itself, so that
   // the status bar, the navigation bar and the page are one picture; it is told the look of the page now (and by js/prefs.js

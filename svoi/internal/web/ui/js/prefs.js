@@ -162,16 +162,21 @@ export function setThemePref(v) {
   applyLook(true);
 }
 
-/** "auto" is full motion unless the system asks for less; "calm" and "still" are the person's choice. */
+/** "auto" is what the window can do (fx= in the user agent, see js/boot.js), else full motion, unless the system asks for less;
+ *  "full", "calm" and "still" are the person's choice. */
 function resolveFx(pref) {
   if (pref === "full" || pref === "calm" || pref === "still") return pref;
-  return mqCalm && mqCalm.matches ? "still" : "full";
+  return mqCalm && mqCalm.matches ? "still" : root().getAttribute("data-fx-default") || "full";
+}
+
+function applyFx() {
+  root().setAttribute("data-fx", resolveFx(fxPref()));
+  window.dispatchEvent(new window.Event("themesh-fx"));
 }
 
 export function setFxPref(v) {
   setRaw(K_FX, v);
-  root().setAttribute("data-fx", resolveFx(v));
-  window.dispatchEvent(new window.Event("themesh-fx"));
+  applyFx();
 }
 
 export function setHapticsPref(on) {
@@ -204,7 +209,7 @@ export function initPrefs() {
     mqLight.addEventListener("change", () => { if (!isRosa() && themePref() === "auto") applyLook(false); });
   }
   if (mqCalm && mqCalm.addEventListener) {
-    mqCalm.addEventListener("change", () => { if (fxPref() === "auto") setFxPref("auto"); });
+    mqCalm.addEventListener("change", () => { if (fxPref() === "auto") applyFx(); });
   }
   // the real sky moves: a new minute, a new colour (the sun rises about a quarter of a degree a minute)
   const tick = () => { if (isRosa() && themePref() === "auto" && root().getAttribute("data-sky-fixed") === null) applyLook(false); };

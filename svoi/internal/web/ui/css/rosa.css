@@ -240,12 +240,9 @@ html[data-look="rosa"][data-skin="glass"] :is(.card, .home-card, .home-act, .hde
 }
 html[data-look="rosa"][data-skin="glass"] [data-touched] { --tg: 1; transition-duration: .16s, var(--dur-press), var(--dur); }
 html[data-look="rosa"] .hdev--off, html[data-look="rosa"] .dcard.is-offline { opacity: .82; }
-/* The phone app takes the blur off the cards of the glass look (css/glass.css 8b: over a smooth backdrop it only costs). Here the
-   backdrop is a sky with stars and a sun, which a frosted card hides, so with full effects the blur is back; the calm and still
-   levels (and a screen that cannot keep up, js/rosa.js) go without. */
-html[data-look="rosa"][data-fx="full"][data-shell="android"][data-skin="glass"] :is(.card, .home-card, .home-act, .hdev, .dcard, .onb-choice, .onb-form, .nearby, .flist, .svc-group, .more-self) {
-  -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter);
-}
+/* In the phone app the cards have no blur, as in the glass look (css/glass.css 8b): a blur costs a pass per card and per frame, and
+   a software renderer (an emulator) cannot do it at all. What shows through a card there is the sky, unblurred, so --glass-fill has to
+   hold the type up by itself. The bars, the sheets and the menus keep theirs. */
 /* a pane that arrives: it rises into place on a gel spring and catches a band of light on the way */
 html[data-fx="full"] [data-rz-in] { animation: rz-arrive var(--dur-gel) var(--ease-gel) var(--rz-delay, 0ms) backwards, rz-sweep 1.5s cubic-bezier(.4, 0, .2, 1) calc(var(--rz-delay, 0ms) + 120ms) backwards; }
 html[data-fx="calm"] [data-rz-in] { animation: rz-fade .4s ease var(--rz-delay, 0ms) backwards; }

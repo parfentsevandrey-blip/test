@@ -960,7 +960,7 @@ export default {
   "set.ui.fxFull": "Full",
   "set.ui.fxCalm": "Calm",
   "set.ui.fxStill": "Off",
-  "set.ui.fxHint": "The wave of light on cards, the light under a finger, the tilt while scrolling, twinkling stars. “Auto” is full unless the system says “Remove animations” (and while the screen keeps up); “Calm” only fades cards in; “Off” does not move at all and saves battery.",
+  "set.ui.fxHint": "The wave of light on cards, the light under a finger, the tilt while scrolling, twinkling stars. “Auto” is full unless the system says “Remove animations” and while the screen keeps up (a weak phone steps down to calm by itself); “Calm” only fades cards in; “Off” does not move at all and saves battery.",
   "set.ui.haptics": "Haptic feedback",
   "set.ui.hapticsHint": "A light tick when buttons and the tabs below are pressed.",
   "home.status.of": "of {total}",

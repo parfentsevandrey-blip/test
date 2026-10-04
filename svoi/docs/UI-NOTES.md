@@ -142,7 +142,9 @@ They become `data-shell`, `data-vibrancy="on"`, `data-titlebar="inset"` on `<htm
 (prefers-reduced-transparency: reduce)`: the panels turn solid and nothing is blurred.
 
 *The phone app (Android).* Its user agent says `TheMeshAndroid/<version> (android; skin=rosa)` (the look of the next section; with `skin=glass`
-or in the glass look chosen in Settings it is the Liquid Glass of this one), which gives `data-shell="android"`. In the glass look the
+or in the glass look chosen in Settings it is the Liquid Glass of this one), which gives `data-shell="android"`; a phone that cannot do it all adds
+`; fx=calm` (little memory: `ActivityManager.isLowRamDevice`) or `; fx=still` (an emulator: its renderer is software), the level of motion that «Авто» means
+there (`data-fx-default`; `core/AppAgent`). A choice made in Settings is stronger than this hint, and the system's "Remove animations" is stronger than both. In the glass look the
 window is painted by the app itself: an aurora backdrop in the app window (behind the status bar and the navigation bar, edge to edge) and a
 transparent WebView over it, so the page paints no backdrop (`data-native-backdrop`: `html`/`body` are transparent and `body::before` is
 hidden), and its panes are translucent **without** `backdrop-filter` (a blur on every pane is too expensive on a phone). The page tells the window its look
@@ -190,16 +192,19 @@ night, and the three moods).
 *Glass.* Smoke over a dark or vivid sky, milk over the pale one; a thick rim lit from the upper left (inset shadows: a bright top edge, a fainter left one, a
 cyan fringe along the bottom and a pink one along the right, a glow inside), a spark on the top edge, a diagonal sheen, and deep shadows in the sky's own colour
 (navy under a blue day, violet at dusk). It is not a lens (no refraction), and glass never lies on glass (little things inside a pane are tinted wells, not panes).
-`backdrop-filter` is on the cards only with full effects (the sky has a sun and stars that a frosted card hides; the phone app takes it off the cards of the
-glass look, see 8b of `css/glass.css`).
+`backdrop-filter` is on the panes of the desktop and the browser; the phone app takes it off the cards, as in the glass look (8b of `css/glass.css`): a blur costs a
+pass per card and per frame, and the software renderer of an emulator did not survive it. So what shows through a card on the phone is the sky itself, unblurred, and the
+glass fill (40 % at night, up to 74 % at noon) has to hold the type up by itself; the contrast audit judges exactly that (`check-contrast.mjs --skin rosa` uses the
+phone's user agent). The bars, the sheets and the menus keep their blur.
 
 *Type.* Manrope for the interface, Cormorant Garamond for the big numeral of Home (the number of devices that are on the line, lining figures, a glassy
 gradient with a thin rim; `aria-hidden`, the sentence under it says the same). Both are variable fonts (`fonts/*.woff2`, Latin + Cyrillic subsets, SIL
 OFL; the licence texts are next to them), fetched only in this look (`boot.js` preloads the interface face).
 
 *Motion* (`js/rosa.js`; `data-fx` on `<html>`: **full** does all of it, **calm** only fades the panes in, **still** nothing; Settings → Interface → Effects,
-`auto` = full unless the system says "Remove animations" (`prefers-reduced-motion`), and a screen that misses more than a third of its frames in the first two
-seconds steps down to calm). The panes that are on the screen when a screen opens rise into place one after another (36 px, scale .96 → 1, 70 ms apart, on the
+`auto` = what the window says it can do (`fx=` above), else full unless the system says "Remove animations" (`prefers-reduced-motion`); and a screen that cannot keep
+up steps down by itself: the 2.5 seconds after a screen has been drawn are timed, under 24 frames a second (or a third of the frames missed) is a step from full to calm, and
+under 14 a second step to still; a choice made in Settings is never overruled). The panes that are on the screen when a screen opens rise into place one after another (36 px, scale .96 → 1, 70 ms apart, on the
 weather app's gel spring: stiffness 158, damping .7, as CSS `linear()`, with a `cubic-bezier` fallback) and catch a band of light that sweeps across each (an
 animated `@property`); a pane that is touched lights up from the point of the finger and the light follows it; a pane that slides up under the top bar tips
 back (`rotateX` 14°, scale −6 %, from the bottom edge); the tab bar is a floating capsule with a lens of glass that flows to the open tab and, under a finger

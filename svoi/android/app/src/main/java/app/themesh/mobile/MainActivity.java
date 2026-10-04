@@ -3,6 +3,7 @@ package app.themesh.mobile;
 import android.Manifest;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
@@ -69,6 +70,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import app.themesh.mobile.core.AcceptTypes;
+import app.themesh.mobile.core.AppAgent;
 import app.themesh.mobile.core.Json;
 import app.themesh.mobile.core.NodeApi;
 import app.themesh.mobile.core.NodeStatus;
@@ -731,7 +733,11 @@ public class MainActivity extends ComponentActivity implements NodeRuntime.Liste
                 startDownload(url, contentDisposition, mimetype));
         // Приложение называет себя в user agent: так страница узнаёт, что она в окне телефона, и начинает с вида «Роса»
         // (js/boot.js; человек может выбрать другой в настройках интерфейса).
-        s.setUserAgentString(s.getUserAgentString() + " TheMeshAndroid/" + BuildInfo.versionName(this) + " (android; skin=rosa)");
+        // Телефону, который не потянет полные эффекты (мало памяти, программная отрисовка эмулятора), заодно сообщается более
+        // спокойный уровень движения, с которого начинать (core/AppAgent).
+        ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        s.setUserAgentString(s.getUserAgentString() + AppAgent.suffix(BuildInfo.versionName(this), am != null && am.isLowRamDevice(),
+                AppAgent.looksLikeEmulator(Build.FINGERPRINT, Build.MODEL, Build.HARDWARE, Build.PRODUCT)));
         // Объект window.themeshShell: меню приложения и вид страницы для окраски системных панелей.
         web.addJavascriptInterface(new ShellBridge(main::post, () -> web.getUrl(), () -> loadedOrigin, new ShellBridge.Host() {
             @Override

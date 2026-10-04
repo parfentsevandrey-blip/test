@@ -236,19 +236,33 @@ function lensSetup() {
 }
 
 // ------------------------------------------------------------------ a screen that cannot keep up gets calmer
-let judged = false;
+// The seconds after a screen has been drawn are watched. A screen that shows fewer than 24 frames a second (or misses more than a third of
+// them) is stepped down from "full" to "calm" (no sweeping, tilting, twinkling), and if even that is not smooth (under 14 frames a second:
+// a phone with a software renderer, an emulator) to "still". What the person chose in Settings → Effects is never overruled.
+let stage = 0;       // 0: waiting to judge "full"; 1: stepped down to "calm" by us, waiting to judge that; 2: done
+let judging = false;
 function judge() {
-  if (judged || root.getAttribute("data-fx") !== "full") return;
-  try { if (localStorage.getItem("themesh.fx") && localStorage.getItem("themesh.fx") !== "auto") { judged = true; return; } } catch { /* storage may be disabled */ }
-  judged = true;
-  let last = performance.now(), slow = 0, frames = 0;
-  const t0 = last;
+  if (stage >= 2 || judging) return;
+  if (root.getAttribute("data-fx") !== (stage === 0 ? "full" : "calm")) { stage = 2; return; } // somebody else decided
+  try { const p = localStorage.getItem("themesh.fx"); if (p && p !== "auto") { stage = 2; return; } } catch { /* storage may be disabled */ }
+  judging = true;
+  const t0 = performance.now();
+  let last = t0, slow = 0, frames = 0;
   const tick = (now) => {
     frames++;
     if (now - last > 34) slow++;
     last = now;
-    if (now - t0 < 2200) requestAnimationFrame(tick);
-    else if (frames > 20 && slow / frames > 0.35) root.setAttribute("data-fx", "calm"); // more than a third of the frames missed: no more tilting and sweeping
+    const spent = now - t0;
+    if (spent < 2500) { requestAnimationFrame(tick); return; }
+    judging = false;
+    if (document.hidden) return; // nothing was drawn while the page was out of sight: nothing is known, the next screen is judged
+    const fps = frames * 1000 / spent;
+    if (stage === 0) {
+      if (fps < 24 || (frames > 20 && slow / frames > 0.35)) { root.setAttribute("data-fx", "calm"); stage = 1; setTimeout(judge, 600); } else stage = 2;
+    } else {
+      if (fps < 14) root.setAttribute("data-fx", "still");
+      stage = 2;
+    }
   };
   requestAnimationFrame(tick);
 }

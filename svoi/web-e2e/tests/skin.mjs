@@ -192,6 +192,51 @@ group("skin", () => {
     eq(page.problems, [], "console / network problems");
   });
 
+  test("a window that knows its screen is weak can start with less motion (fx= in the user agent); the system and the person decide over it", async ({ browser, dev }) => {
+    const calm = ROSA.replace("skin=rosa)", "skin=rosa; fx=calm)");
+    const page = await open(browser, dev.laptop, { userAgent: calm, init: rosaShell, mobile: true, w: 390, h: 844 });
+    await page.emulateMedia({ reducedMotion: "no-preference" }); // (these tests run with reduced motion; here it is the window that speaks)
+    await page.goto(`${dev.laptop.origin}/?sky=25#/settings/interface`);
+    await tid(page, "fx-auto").waitFor();
+    eq((await sky(page)).fx, "calm", "the window said calm: «Авто» is calm");
+    eq(await tid(page, "fx-auto").getAttribute("aria-checked"), "true");
+    await tid(page, "fx-full").click(); // a choice of the person
+    await page.waitForFunction(() => document.documentElement.dataset.fx === "full");
+    await page.reload();
+    await tid(page, "fx-full").waitFor();
+    eq((await sky(page)).fx, "full", "what the person chose wins over what the window said, also after a reload");
+    await tid(page, "fx-auto").click();
+    await page.waitForFunction(() => document.documentElement.dataset.fx === "calm");
+    await page.emulateMedia({ reducedMotion: "reduce" }); // «Remove animations» of the system is stricter than any hint of the window
+    await page.reload();
+    await tid(page, "fx-auto").waitFor();
+    eq((await sky(page)).fx, "still", "the system asks for no motion at all");
+    eq(page.problems, [], "console / network problems");
+  });
+
+  test("a screen that cannot keep up gets calmer by itself (full, calm, still) and never against what the person chose", async ({ browser, dev }) => {
+    // a page that is given about eight frames a second
+    const slow = () => { const raf = window.requestAnimationFrame.bind(window); window.requestAnimationFrame = (cb) => setTimeout(() => raf(cb), 130); };
+    const init = `(${rosaShell.toString()})();(${slow.toString()})();`;
+    const page = await open(browser, dev.laptop, { userAgent: ROSA, init, mobile: true, w: 390, h: 844 });
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto(`${dev.laptop.origin}/?sky=25#/home`);
+    await tid(page, "tab-home").waitFor();
+    eq((await sky(page)).fx, "full", "a screen starts with everything");
+    await page.waitForFunction(() => document.documentElement.dataset.fx === "calm", undefined, { timeout: 15000 });
+    await page.waitForFunction(() => document.documentElement.dataset.fx === "still", undefined, { timeout: 15000 });
+    const kept = await page.evaluate(() => localStorage.getItem("themesh.fx"));
+    assert(kept === null || kept === "auto", "the step down is not remembered as a choice of the person: " + kept);
+
+    // the person chose full: nobody takes it away
+    await page.evaluate(() => localStorage.setItem("themesh.fx", "full"));
+    await page.reload();
+    await tid(page, "tab-home").waitFor();
+    await page.waitForTimeout(6500);
+    eq((await sky(page)).fx, "full", "a choice is kept even on a screen that is slow");
+    eq(page.problems, [], "console / network problems");
+  });
+
   test("the tab bar of the phone carries a lens of glass that sits under the open tab and follows a finger across the tabs", async ({ browser, dev }) => {
     const page = await open(browser, dev.laptop, { userAgent: ROSA, init: rosaShell, mobile: true, w: 390, h: 844 });
     await page.goto(`${dev.laptop.origin}/?sky=25#/home`);
