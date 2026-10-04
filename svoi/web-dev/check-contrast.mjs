@@ -36,6 +36,12 @@ const ROUTES = {
   services: "#/services",
   settings: "#/settings",
   more: "#/more",
+  // the first screen of a device that is not in a mesh yet, with devices nearby; the request to a device nearby; and the same request
+  // as it looks to the administrator that is asked (they need a mock of their own: a world without a mesh)
+  "nearby-list": { hash: "", world: "onboarding", ready: ".nearby__item", setup: async (m) => { await m.hook("/__mock/reset"); await m.hook("/__mock/nearby?add=macbook-andrey&os=darwin&mesh=Дом"); await m.hook("/__mock/nearby?add=pixel-8&os=android&mesh=Дом"); } },
+  "nearby-code": { hash: "", world: "onboarding", ready: "[data-testid=nearby-code]", setup: async (m) => { await m.hook("/__mock/reset"); await m.hook("/__mock/nearby?add=macbook-andrey&os=darwin&mesh=Дом"); await m.hook("/__mock/nearby?hold=1"); },
+    after: async (page) => { await page.click("[data-testid=nearby-connect]"); await page.waitForSelector("[data-testid=nearby-join][data-state=waiting]"); await sleep(300); } },
+  "nearby-ask": { hash: "#/home", world: "full", ready: "[data-testid=nearby-ask-state][data-confirmed=true]", setup: async (m) => { await m.hook("/__mock/nearby?clear=1"); await m.hook("/__mock/nearby?request=pixel-8&os=android"); } },
 };
 const wanted = arg("routes", Object.keys(ROUTES).join(",")).split(",");
 if (argv.includes("--list")) {
@@ -44,6 +50,8 @@ if (argv.includes("--list")) {
 }
 
 const srv = await startMock(["--calm"]);
+const worlds = { full: srv, onboarding: null };
+if (wanted.some((n) => ROUTES[n] && ROUTES[n].world === "onboarding")) worlds.onboarding = await startMock(["--calm", "--scenario", "onboarding"]);
 await sleep(1500);
 const browser = await launch();
 const checker = await browser.newPage(); // a blank page whose canvas reads the pixels
@@ -162,17 +170,21 @@ for (const theme of ["light", "dark"]) {
     await ctx.addInitScript((th) => { try { localStorage.setItem("themesh.theme", th); localStorage.setItem("themesh.lang", "ru"); } catch {} }, theme);
     for (const under of vibrancy ? UNDERLAYS[theme] : [null]) {
       for (const name of wanted) {
-        const hash = ROUTES[name];
-        if (!hash) { console.log("unknown route", name); continue; }
+        const route = typeof ROUTES[name] === "string" ? { hash: ROUTES[name], world: "full" } : ROUTES[name];
+        if (!route) { console.log("unknown route", name); continue; }
+        const hash = route.hash;
+        const mock = worlds[route.world || "full"];
+        if (route.setup) await route.setup(mock);
         // (a page that navigates by itself while it is looked at — a reload after an update, say — is looked at again)
         let res = null;
         for (let attempt = 1; !res; attempt++) {
           const page = await ctx.newPage();
           watch(page, `${theme}-${w}x${h}-${name}`, problems);
           try {
-            await page.goto(`${srv.url}/?skin=${skin}${hash}`, { waitUntil: "domcontentloaded" });
-            await page.waitForSelector(".shell", { timeout: 10000 }).catch(() => {});
+            await page.goto(`${mock.url}/?skin=${skin}${hash}`, { waitUntil: "domcontentloaded" });
+            await page.waitForSelector(route.ready || ".shell", { timeout: 10000 }).catch(() => {});
             await sleep(900);
+            if (route.after) await route.after(page);
             if (name === "mail") { await page.click(".mitem__link >> nth=0").catch(() => {}); await sleep(300); }
             if (name === "chat") { await page.click(".thread >> nth=0").catch(() => {}); await sleep(300); }
             if (under) await page.addStyleTag({ content: `html { background: ${under} !important; }` });
@@ -205,6 +217,7 @@ for (const theme of ["light", "dark"]) {
 }
 await browser.close();
 await srv.stop();
+if (worlds.onboarding) await worlds.onboarding.stop();
 console.log(`\n${mode}: ${total} pieces of text looked at, ${failures} below the WCAG AA limit (${MIN}:1, large text ${LARGE_MIN}:1); ${summary.length} screens clean`);
 if (problems.length) console.log("page problems:\n" + problems.join("\n"));
 process.exit(failures || problems.length ? 1 : 0);

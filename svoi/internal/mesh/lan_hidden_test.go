@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -136,13 +137,24 @@ func TestBeaconsLeaveWithoutAnInterfaceList(t *testing.T) {
 			gotBroadcast = true
 		}
 	}
-	if !gotMulticast || (!gotBroadcast && runtime.GOOS == "linux") {
-		// Say what this machine can do at all, so that a failure can be told apart: a network that does not deliver
-		// multicast to the machine's own listeners (a virtual machine) from a fault in the way the group is reached by address.
+	// A machine that cannot send to the group at all cannot show that this node can: the macOS machines of CI answer "no route to
+	// host" to every multicast send (the system's permission for the local network is not given to a program there), a plain
+	// socket included. The multicast of such a machine is not judged; its broadcast still is.
+	viaInterface, byAddress := "not tried", "not tried"
+	multicastPossible := true
+	if !gotMulticast {
+		viaInterface, byAddress = probeMulticast(t, pc, ln, false), probeMulticast(t, pc, ln, true)
+		if strings.HasPrefix(viaInterface, "send failed") && strings.HasPrefix(byAddress, "send failed") {
+			t.Logf("this machine cannot send to the multicast group at all (%s): only the broadcast is checked", viaInterface)
+			multicastPossible = false
+		}
+	}
+	if (multicastPossible && !gotMulticast) || (!gotBroadcast && (runtime.GOOS == "linux" || !multicastPossible)) {
+		// Say what this machine can do, so that a failure can be told apart: a network that does not deliver multicast to
+		// the machine's own listeners (a virtual machine) from a fault in the way the group is reached by address.
 		t.Fatalf("beacons that reached a listener on %s: multicast=%v broadcast(%v)=%v; LAN status of the node: %+v; "+
 			"a plain multicast sender through the interface reaches the listener: %v; one that picks the network by address: %v",
-			ln, gotMulticast, bcast, gotBroadcast, n.LANStatus(),
-			probeMulticast(t, pc, ln, false), probeMulticast(t, pc, ln, true))
+			ln, gotMulticast, bcast, gotBroadcast, n.LANStatus(), viaInterface, byAddress)
 	}
 	st := n.LANStatus()
 	if !st.Enabled || st.Problem != "" || len(st.Networks) != 1 {
