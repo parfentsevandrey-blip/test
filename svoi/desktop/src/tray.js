@@ -11,6 +11,7 @@ class AppTray {
    * @param {object} o.t
    * @param {string} o.root
    * @param {() => void} o.onOpen
+   * @param {() => void} o.onAddDevice
    * @param {() => void} o.onQuit
    * @param {() => void} o.onAbout
    * @param {() => void} o.onShowLog
@@ -55,6 +56,7 @@ class AppTray {
     this.tray.setContextMenu(
       Menu.buildFromTemplate([
         { label: t.open, click: () => this.onOpen() },
+        { label: t.addDevice, click: () => this.onAddDevice() },
         { label: status, enabled: false },
         { type: 'separator' },
         { label: t.autostart, type: 'checkbox', checked: this.getAutostart(), click: (item) => this.setAutostart(item.checked) },

@@ -109,6 +109,19 @@ try {
     await shot('desktop-3-home');
   });
 
+  await step('«Add a device» in the menu opens the dialog with the invitation (the QR code is made there)', async () => {
+    await hook(() => global.__themeshTest.addDevice());
+    await page.getByTestId('invite-create').waitFor({ timeout: 15000 });
+    await page.getByTestId('invite-create').click();
+    await page.getByTestId('invite-qr').locator('img').waitFor({ timeout: 15000 });
+    await shot('desktop-3b-invitation-qr');
+    await page.keyboard.press('Escape');
+    await page.getByTestId('invite-modal').waitFor({ state: 'detached', timeout: 10000 });
+    // back where the later steps expect the window to be
+    await page.evaluate(() => { location.hash = '#/home'; });
+    await page.getByTestId('page-home').waitFor({ timeout: 15000 });
+  });
+
   let corePid = 0;
   await step('closing the window hides it; the device stays on the network', async () => {
     corePid = await hook(() => global.__themeshTest.core.child.pid);

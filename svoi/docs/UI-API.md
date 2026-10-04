@@ -57,9 +57,9 @@ and the UI mock server (`web-dev/mock-server.mjs`) must implement exactly this t
 * **Sizes** are bytes.
 * **Errors**: non-2xx responses carry `{"error":{"code":"…","message":"human readable"}}`.
   Codes: `unauthorized`, `notconfigured`, `denied`, `notfound`, `invalid`, `exists`,
-  `offline` (target device not connected), `busy`, `toolarge`, `unsupported`,
-  `internal`. HTTP: 400 invalid, 401 unauthorized, 403 denied, 404 notfound, 409 exists,
-  412 notconfigured, 413 toolarge, 502 offline, 503 busy, 500 internal.
+  `offline` (target device not connected), `expired` (only `POST /api/mesh/join`), `busy`, `toolarge`,
+  `unsupported`, `internal`. HTTP: 400 invalid, 401 unauthorized, 403 denied, 404 notfound, 409 exists,
+  410 expired, 412 notconfigured, 413 toolarge, 502 offline, 503 busy, 500 internal.
   `message` is already localised-neutral English; the UI maps `code` to Russian/English text.
 * **Streaming bodies** (upload/download) are raw bytes, not multipart.
 
@@ -234,6 +234,27 @@ never inject as HTML.
   "created": 1760000000, "expires": 1760001800,
   "qrSvg": "<svg …>…</svg>" }       // server-rendered QR code of `code`; safe to inject
 ```
+The QR carries the code **without the dashes** that group `code` for reading (`MESH1-` and then the base32 body in one piece;
+parsing ignores dashes either way). That is a QR one size smaller, so a phone camera reads it off a screen more easily. An invitation
+holds at most six addresses of the inviting device, chosen so that every way to reach it is represented (the router-forwarded one,
+the home-network one, the public IPv4, a global IPv6): a newcomer on the same Wi-Fi can only use the home-network address, and with
+many IPv6 addresses it used to be cut off.
+
+### Scanning an invitation (phone app)
+The Android app lets a person scan the QR code that another device shows, instead of typing the code. The window is a WebView around
+this same interface, so the app and the interface meet in two small places:
+
+* **`window.themeshApp`** — an object the app adds to the page (only the app does; in a browser it is `undefined`).
+  `canScan()` → `true` when the phone has a camera; `scanInvite()` opens the camera screen. The join form shows a **«Scan QR code»**
+  button (`data-testid="onb-scan"`) only when `window.themeshApp && window.themeshApp.canScan()`.
+* **`themesh-scan`** — a DOM event the app dispatches on `window` when the camera screen closes:
+  `new CustomEvent("themesh-scan", { detail })` with `detail` one of `{"text": "MESH1-…"}` (what the camera read: an invitation in
+  capitals, no dashes or blanks), `{"error": "cancelled"}` (the person backed out: say nothing), `{"error": "denied"}` (no permission to
+  use the camera) or `{"error": "unavailable"}` (no camera, or it would not open). The form takes the invitation out of `detail.text`
+  (it also finds one inside a longer text, such as a link), fills the code field and joins at once, with the device name it offers;
+  a text that holds no invitation gets a short notice and nothing else.
+
+The camera is used only to read the code: frames are not stored or sent anywhere.
 
 ### Settings
 ```jsonc
@@ -267,7 +288,7 @@ Language and theme are **client-side only** (`localStorage`), not part of Settin
 | `GET /api/state` | → `{ "version", "configured", "self": Self, "peers": [Peer], "transfers": [Transfer] (active + last 50), "counters": {"mail","chat","offers"}, "invites": [Invite], "settings": Settings, "removed"?: {"meshName": "Дом", "at": 1760000000} }`. Works when `configured:false` (then `self` has only id/short/version/os/arch/configured and `defaultName`, `peers: []`). `removed` is present only while the device is outside any mesh **because an administrator removed it** from one: the onboarding screen should say so ("this device was removed from the network «Дом» by an administrator — ask for a new invitation"). The device already has a fresh identity then, so a new invitation just works. A `notify` event with `level: "warn"` and `link: "#/"` is sent at the moment it happens, followed by a `peers` event with an empty list; the UI should reload `GET /api/state`. |
 | `GET /api/events` | SSE, see above |
 | `POST /api/mesh/create` | `{"meshName","deviceName","owner"}` → `{"ok":true}` (then reload state) |
-| `POST /api/mesh/join` | `{"invite","deviceName"}` → `{"ok":true}`; may take up to ~25 s; errors are human readable in `error.message`. There is no `owner` here: whose device this is was set by the inviting device in the invitation (an `owner` sent anyway is ignored), so a new device cannot claim someone else's name to get auto-accepted files. |
+| `POST /api/mesh/join` | `{"invite","deviceName"}` → `{"ok":true}`; may take up to ~25 s; errors are human readable in `error.message`, and the **code says why**, because the advice differs: `invalid` — the text is no invitation (malformed, copied only partly); `expired` — past its lifetime by this device's clock (also say: check the date and time here); `offline` — the device that made the invitation did not answer (it is off, on another network, or the invitation is used up or cancelled: from outside those look the same; the message lists the addresses that were tried); `denied` — the inviter answered and refused. There is no `owner` here: whose device this is was set by the inviting device in the invitation (an `owner` sent anyway is ignored), so a new device cannot claim someone else's name to get auto-accepted files. |
 | `POST /api/mesh/leave` | `{}` → `{"ok":true}` (forgets the mesh, keeps the device key) |
 | `POST /api/netcheck` | `{}` → `{ "self": Self }` re-runs STUN + re-probes peers (takes ≤ 3 s) |
 | `GET /api/diag/logs?limit=200` | → `{"lines":[{"ts":1760000000,"level":"info","msg":"…"}]}` |

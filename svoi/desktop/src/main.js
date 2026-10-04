@@ -72,6 +72,11 @@ function updateTray() {
   if (tray) tray.update(statusText(t, core ? core.status : 'idle', watcher ? watcher.state : null));
 }
 
+/** «Добавить устройство»: the window opens the dialog that shows the QR code of a new invitation. */
+function showAddDevice() {
+  showWindow('#/devices?add=1');
+}
+
 function showWindow(route) {
   if (!mainWin || !mainWin.win) return;
   mainWin.show(route);
@@ -209,11 +214,12 @@ async function main() {
     app.quit();
   });
 
-  Menu.setApplicationMenu(buildMenu({ t, onAbout: showAbout, onShowLog: showLog, onQuit: quitFromUser }));
+  Menu.setApplicationMenu(buildMenu({ t, onAbout: showAbout, onShowLog: showLog, onQuit: quitFromUser, onAddDevice: showAddDevice }));
   tray = new AppTray({
     t,
     root,
     onOpen: () => showWindow(),
+    onAddDevice: showAddDevice,
     onQuit: quitFromUser,
     onAbout: showAbout,
     onShowLog: showLog,
@@ -265,6 +271,7 @@ async function main() {
       },
       window: () => mainWin.win,
       visible: () => mainWin.isVisible(),
+      addDevice: showAddDevice,
       watcher: () => watcher,
       autostart,
       notes: [],

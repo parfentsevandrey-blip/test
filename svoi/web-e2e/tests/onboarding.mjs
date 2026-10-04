@@ -93,4 +93,107 @@ group("onboarding (real processes)", { noDemo: true }, () => {
     await tid(p2, "onb-error").waitFor({ timeout: 40000 });
     eq((await gamma.api("GET", "/api/state")).configured, false, "the second device did not get in");
   });
+
+  // The phone app puts `window.themeshApp` into its window and answers with a `themesh-scan` event (docs/UI-API.md → "Scanning an invitation").
+  const phoneApp = () => {
+    window.__scanCalls = 0;
+    window.themeshApp = { canScan: () => true, scanInvite: () => { window.__scanCalls += 1; } };
+  };
+  const camera = (page, detail) => page.evaluate((d) => window.dispatchEvent(new CustomEvent("themesh-scan", { detail: d })), detail);
+
+  test("the join form offers «Сканировать QR-код» only in the phone app, and an invitation its camera read joins at once", async ({ browser }) => {
+    const alpha = await startNode({ name: "alpha-scan", init: true, mesh: "Дом", owner: "Андрей" });
+    const beta = await startNode({ name: "beta-scan", offerName: "Pixel 8" });
+    // in a browser (and in the desktop app) there is no camera button
+    const plain = await open(browser, beta);
+    await tid(plain, "onb-join").click();
+    await tid(plain, "onb-code").waitFor();
+    eq(await tid(plain, "onb-scan").count(), 0, "no scan button without the phone app");
+    // in the phone app there is, and it asks the app for the camera
+    const page = await open(browser, beta, { init: phoneApp });
+    await tid(page, "onb-join").click();
+    await tid(page, "onb-scan").click();
+    eq(await page.evaluate(() => window.__scanCalls), 1, "the button opens the app's camera screen");
+    // what the camera brings back that is no invitation, or no camera at all, is said in a word and changes nothing
+    await camera(page, { text: "https://example.com/" });
+    await page.getByText("Это QR-код не от The Mesh").waitFor();
+    await camera(page, { error: "denied" });
+    await page.getByText(/Нет доступа к камере/).waitFor();
+    await camera(page, { error: "cancelled" });
+    eq(await tid(page, "onb-progress").count(), 0, "nothing started");
+    eq((await beta.api("GET", "/api/state")).configured, false, "still outside any mesh");
+    // an invitation as the Mac's QR carries it (no dashes) is used at once, with the name the device offers
+    const inv = await alpha.api("POST", "/api/invites", { admin: false, owner: "Мария" });
+    const qrText = "MESH1-" + inv.code.replace(/^MESH1-/, "").replace(/-/g, "");
+    assert(!/-/.test(qrText.slice(6)), "the QR text is the code without dashes");
+    await camera(page, { text: qrText });
+    await tid(page, "page-home").waitFor({ timeout: 40000 });
+    const st = await beta.api("GET", "/api/state");
+    eq([st.configured, st.self.meshName, st.self.name, st.self.owner], [true, "Дом", "pixel-8", "Мария"], "joined through the code the camera read");
+    await until(async () => (await alpha.api("GET", "/api/state")).peers.some((p) => p.deviceName === "pixel-8"), 20000, "alpha to see the phone");
+    eq(page.problems, [], "console / network problems");
+  });
+
+  test("a device that does not answer is not called a bad code: the form says what to check, and says it before the code is blamed", async ({ browser }) => {
+    const alpha = await startNode({ name: "alpha-gone", init: true, mesh: "Дом", owner: "Андрей" });
+    const beta = await startNode({ name: "beta-gone" });
+    const inv = await alpha.api("POST", "/api/invites", { admin: false, owner: "Мария" });
+    await alpha.stop(); // its address is in the invitation, and nobody listens there any more
+    const page = await open(browser, beta, { allow: [/HTTP 50\d/, /Failed to load resource/] });
+    await tid(page, "onb-join").click();
+    await tid(page, "onb-code").fill(inv.code);
+    await tid(page, "onb-submit").click();
+    await tid(page, "onb-error").waitFor({ timeout: 60000 });
+    eq(await tid(page, "onb-error").getAttribute("data-code"), "offline", "the API says the inviting device is unreachable");
+    await tid(page, "onb-reach-help").waitFor();
+    const text = await tid(page, "onb-error").innerText();
+    assert(/в одной сети Wi-Fi/.test(text) && /QR-код/.test(text), "the checklist names the usual causes and the QR");
+    assert(!/Код не подошёл|не код приглашения/.test(text), "the code is not blamed");
+    assert(/tried 127\.0\.0\.1:\d+/.test(text), "the technical line says which addresses were tried");
+    // an expired invitation, as the node says it, is told apart as well
+    await page.route("**/api/mesh/join", (route) => route.fulfill({
+      status: 410, contentType: "application/json",
+      body: JSON.stringify({ error: { code: "expired", message: "mesh: this invitation has expired; ask for a new one (if it should still be valid, check the date and time on this device)" } }),
+    }));
+    await tid(page, "onb-submit").click();
+    await page.getByText(/Приглашение истекло/).waitFor({ timeout: 20000 });
+    eq(await tid(page, "onb-error").getAttribute("data-code"), "expired", "expired is its own code");
+    eq((await beta.api("GET", "/api/state")).configured, false, "still outside any mesh");
+  });
+
+  test("the invitation's QR is large and can be shown larger; Escape closes only the large one", async ({ browser }) => {
+    const alpha = await startNode({ name: "alpha-qr", init: true, mesh: "Дом", owner: "Андрей" });
+    const page = await open(browser, alpha, { w: 1280, h: 900 });
+    await tid(page, "home-action-add").click();
+    await tid(page, "invite-create").click();
+    await tid(page, "invite-qr").locator("img").waitFor();
+    const box = await tid(page, "invite-qr").boundingBox();
+    assert(box.width >= 300 && Math.abs(box.width - box.height) < 1, `the QR is ${Math.round(box.width)}×${Math.round(box.height)} px: large enough and square`);
+    const code = (await tid(page, "invite-code").innerText()).trim();
+    assert(/^MESH1-[A-Z2-7]+(-[A-Z2-7]+)+$/.test(code), "the code shown for copying stays grouped");
+    // the QR is the one of the code without dashes: ask the node, which draws it
+    const [shown] = (await alpha.api("GET", "/api/invites")).filter((i) => i.code === code);
+    assert(shown && shown.qrSvg.startsWith("<svg"), "the invitation list carries the QR");
+    await tid(page, "invite-qr-enlarge").click();
+    await tid(page, "invite-qr-big").locator("img").waitFor();
+    const big = await tid(page, "invite-qr-big").boundingBox();
+    assert(big.width >= 440 && big.width > box.width, `the large QR is ${Math.round(big.width)} px`);
+    await page.keyboard.press("Escape");
+    await tid(page, "invite-qr-big").waitFor({ state: "detached" });
+    await tid(page, "invite-modal").waitFor();
+    eq(await tid(page, "invite-code").count(), 1, "the invitation dialog is still there");
+  });
+
+  test("«Добавить устройство» in the desktop app's menu opens the invitation dialog through #/devices?add=1, once", async ({ browser }) => {
+    const alpha = await startNode({ name: "alpha-menu", init: true, mesh: "Дом", owner: "Андрей" });
+    const page = await open(browser, alpha);
+    await nav(page, alpha, "devices?add=1");
+    await tid(page, "invite-create").waitFor();
+    await until(async () => /#\/devices$/.test(page.url()), 3000, "the address to be cleaned");
+    await page.keyboard.press("Escape");
+    await tid(page, "invite-create").waitFor({ state: "detached" });
+    await page.reload();
+    await tid(page, "add-device").waitFor();
+    eq(await tid(page, "invite-create").count(), 0, "a reload does not open it again");
+  });
 });

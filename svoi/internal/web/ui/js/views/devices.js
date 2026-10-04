@@ -1,7 +1,7 @@
 // Devices: how the devices are connected (map), this device, every device
 // with plain actions, pending invitations. Addresses, keys and the NAT type are
 // one click away under «Технические данные».
-import { html, useState } from "../../vendor/preact-htm.js";
+import { html, useEffect, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t, tn } from "../i18n.js";
 import { del } from "../api.js";
@@ -116,6 +116,14 @@ export function DevicesView({ route }) {
   const invites = useStore((s) => s.invites);
   const [adding, setAdding] = useState(false);
   const selId = route.parts[1] || null;
+  // `#/devices?add=1` (the «Добавить устройство» item of the desktop app's menu) opens the dialog with the invitation's QR code; the
+  // address is cleaned at once, so that a reload does not open it again.
+  const wantsAdd = route.query.get("add") === "1";
+  useEffect(() => {
+    if (!wantsAdd) return;
+    setAdding(true);
+    go(href(selId ? ["devices", selId] : ["devices"]), { replace: true });
+  }, [wantsAdd]);
   if (!self) return null;
   const sorted = sortPeers(peers);
   const online = peers.filter((p) => p.online).length;

@@ -10,7 +10,7 @@ import { Button, Callout, Field, Progress, Segmented } from "../components/ui.js
 import { DnsPreview } from "../components/misc.js";
 import { toast } from "../components/toast.js";
 import { fmtDateTime } from "../format.js";
-import { cx, DEVICE_NAME_RE, normalizeDeviceName as normalizeName } from "../util.js";
+import { cx, DEVICE_NAME_RE, invitationIn, normalizeDeviceName as normalizeName } from "../util.js";
 
 function suggestName(os) {
   return { darwin: "macbook", windows: "pc", linux: "server", android: "phone", ios: "iphone", freebsd: "server" }[os] || "laptop";
@@ -107,6 +107,28 @@ function CreateForm({ self, onBack }) {
 
 const JOIN_LIMIT = 25;
 
+/** The phone app's camera scanner when this window is the phone app (docs/UI-API.md → "Scanning an invitation"), else null. */
+function phoneScanner() {
+  try {
+    const app = window.themeshApp;
+    return app && typeof app.scanInvite === "function" && typeof app.canScan === "function" && app.canScan() ? app : null;
+  } catch {
+    return null;
+  }
+}
+
+/** What to try when the device that made the invitation did not answer, in the order people run into them. */
+function ReachHelp() {
+  return html`<div data-testid="onb-reach-help">
+    <p>${t("onb.reach.lead")}</p>
+    <ul class="onb-tips">
+      <li>${t("onb.reach.tip1")}</li>
+      <li>${t("onb.reach.tip2")}</li>
+      <li>${t("onb.reach.tip3")}</li>
+    </ul>
+  </div>`;
+}
+
 // No owner here: whose device this is was decided by the inviting device and
 // travels in the invitation (the node ignores an `owner` sent with the join).
 function JoinForm({ self, onBack }) {
@@ -118,12 +140,12 @@ function JoinForm({ self, onBack }) {
   const [fail, setFail] = useState(null);
   const timer = useRef(0);
   const placeholder = offeredName(self);
+  const scanner = phoneScanner();
   useEffect(() => () => clearInterval(timer.current), []);
 
-  const cleanCode = code.replace(/\s+/g, "").toUpperCase();
-
-  const submit = async (e) => {
-    e.preventDefault();
+  /** Joins with an invitation: the one typed or pasted into the form, or the one the camera read. */
+  const join = async (raw) => {
+    const cleanCode = raw.replace(/\s+/g, "").toUpperCase();
     const dn = normalizeName(name || placeholder);
     const er = {
       code: !cleanCode ? t("common.required") : !cleanCode.startsWith("MESH1-") ? t("onb.codeBad") : "",
@@ -147,6 +169,40 @@ function JoinForm({ self, onBack }) {
       setBusy(false);
     }
   };
+  const submit = (e) => {
+    e.preventDefault();
+    join(code);
+  };
+
+  // The phone app hands over what its camera read as a DOM event; a read invitation is used at once.
+  const latest = useRef(null);
+  latest.current = { join, busy };
+  useEffect(() => {
+    const onScan = (e) => {
+      const d = (e && e.detail) || {};
+      if (d.error) {
+        if (d.error !== "cancelled") toast({ level: "warn", title: t(d.error === "denied" ? "onb.scan.denied" : "onb.scan.unavailable") });
+        return;
+      }
+      const found = invitationIn(d.text);
+      if (!found) {
+        toast({ level: "warn", title: t("onb.scan.notInvite") });
+        return;
+      }
+      if (latest.current.busy) return;
+      setCode(found);
+      latest.current.join(found);
+    };
+    window.addEventListener("themesh-scan", onScan);
+    return () => window.removeEventListener("themesh-scan", onScan);
+  }, []);
+  const scan = () => {
+    try {
+      scanner.scanInvite();
+    } catch {
+      toast({ level: "warn", title: t("onb.scan.unavailable") });
+    }
+  };
 
   if (busy) {
     const pct = Math.min(96, (elapsed / JOIN_LIMIT) * 100);
@@ -159,8 +215,9 @@ function JoinForm({ self, onBack }) {
     </div>`;
   }
 
-  const failText = fail && (fail.code === "busy" || fail.code === "network" ? t("onb.failReach")
-    : fail.code === "invalid" ? t("onb.failInvalid") : fail.code === "denied" ? t("onb.failDenied") : t("err." + fail.code));
+  const reach = fail && (fail.code === "offline" || fail.code === "busy");
+  const failText = fail && (fail.code === "expired" ? t("onb.failExpired") : fail.code === "invalid" ? t("onb.failInvalid")
+    : fail.code === "denied" ? t("onb.failDenied") : t("err." + fail.code));
 
   return html`<form class="onb-form" onSubmit=${submit} noValidate>
     <button type="button" class="onb-back" onClick=${onBack}><${Icon} name="arrowLeft" size=${16} />${t("common.back")}</button>
@@ -168,12 +225,17 @@ function JoinForm({ self, onBack }) {
       <span class="onb-choice__icon onb-choice__icon--join"><${Icon} name="ticket" size=${24} /></span>
       <div><h2 class="onb-form__title">${t("onb.join.title")}</h2><p class="muted">${t("onb.join.lead")}</p></div>
     </div>
-    ${fail && html`<${Callout} tone="err" title=${t("onb.failTitle")} role="alert" data-testid="onb-error">
-      <p>${failText}</p>${fail.message && html`<p class="mono xsmall mt-1">${fail.message}</p>`}
+    ${fail && html`<${Callout} tone="err" title=${t("onb.failTitle")} role="alert" data-testid="onb-error" data-code=${fail.code}>
+      ${reach ? html`<${ReachHelp} />` : html`<p>${failText}</p>`}${fail.message && html`<p class="mono xsmall mt-1">${fail.message}</p>`}
     </${Callout}>`}
+    ${scanner && html`<div class="onb-scan">
+      <${Button} type="button" variant="primary" size="lg" block icon="qr" onClick=${scan} data-testid="onb-scan">${t("onb.scan")}</${Button}>
+      <p class="faint small center">${t("onb.scanHint")}</p>
+      <p class="onb-or" aria-hidden="true"><span>${t("onb.scanOr")}</span></p>
+    </div>`}
     <div class="form-grid">
       <${Field} label=${t("onb.code")} hint=${t("onb.codeHint")} error=${errs.code}>
-        ${(id, d) => html`<textarea id=${id} class="input textarea mono onb-code" value=${code} rows="3" autofocus data-testid="onb-code"
+        ${(id, d) => html`<textarea id=${id} class="input textarea mono onb-code" value=${code} rows="3" autofocus=${!scanner} data-testid="onb-code"
           placeholder="MESH1-AEAWVQFQ-…" spellcheck="false" autocapitalize="characters" autocomplete="off"
           aria-describedby=${d} aria-invalid=${errs.code ? "true" : undefined} onInput=${(e) => setCode(e.target.value)}></textarea>`}
       </${Field}>
@@ -184,7 +246,7 @@ function JoinForm({ self, onBack }) {
           onInput=${(e) => setName(e.target.value)} onBlur=${() => setName(normalizeName(name))} />`}
       </${Field}>
     </div>
-    <${Button} type="submit" variant="primary" size="lg" block icon="link" data-testid="onb-submit">${t("onb.join.submit")}</${Button}>
+    <${Button} type="submit" variant=${scanner ? "secondary" : "primary"} size="lg" block icon="link" data-testid="onb-submit">${t("onb.join.submit")}</${Button}>
   </form>`;
 }
 

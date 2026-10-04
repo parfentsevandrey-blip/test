@@ -90,4 +90,18 @@ eq(u.deviceKind({ deviceName: "home-server", os: "linux" }), "server", "server")
 eq(u.deviceKind({ deviceName: "dad-pc", os: "windows" }), "desktop", "desktop");
 eq(u.deviceKind({ deviceName: "x", os: "ios" }), "phone", "kind from the OS");
 
+// --- invitationIn: what a QR scanner read or what was pasted → the invitation, or ""
+const body = "AEAWVQFQ".repeat(30); // 240 characters of base32, the size of a real invitation
+const code = "MESH1-" + body;
+eq(u.invitationIn(code), code, "compact code");
+eq(u.invitationIn(code.toLowerCase()), code, "lower case");
+eq(u.invitationIn("MESH1-" + body.match(/.{1,8}/g).join("-")), code, "grouped by dashes");
+eq(u.invitationIn("  MESH1-" + body.match(/.{1,8}/g).join("-\n") + "\n "), code, "line breaks and blanks");
+eq(u.invitationIn("themesh://join?code=" + code + "&x=1"), code, "inside a link");
+eq(u.invitationIn("https://example.com/MESH"), "", "a link that is not an invitation");
+eq(u.invitationIn("MESH1-AEAWVQFQ"), "", "too short to be one");
+eq(u.invitationIn("MESH2-" + body), "", "another prefix");
+eq(u.invitationIn(""), "", "empty");
+eq(u.invitationIn(null), "", "null");
+
 console.log(`util checks: ${n} assertions passed`);

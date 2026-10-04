@@ -280,8 +280,12 @@ button.ddr-act { font-family: inherit; }
 .fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
 .invite { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-6); align-items: start; }
 .invite__qr { display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); }
-.qr { width: 236px; height: 236px; padding: 8px; border-radius: var(--r-lg); background: var(--qr-bg); display: grid; place-items: center; box-shadow: 0 0 0 1px var(--line-2); }
-.qr img { width: 220px; height: 220px; image-rendering: pixelated; }
+/* The QR is read off this screen by a phone camera: as large as the dialog allows, and a button for larger still. */
+.qr { width: 328px; max-width: 100%; aspect-ratio: 1; padding: 8px; border-radius: var(--r-lg); background: var(--qr-bg); display: grid; place-items: center; box-shadow: 0 0 0 1px var(--line-2); }
+.qr img { width: 100%; height: 100%; image-rendering: pixelated; }
+.qr--big { width: 480px; padding: 12px; }
+.qr-big { display: flex; flex-direction: column; align-items: center; gap: var(--sp-4); }
+.invite__tip { max-width: 30ch; margin: 0; }
 .invite__timer { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); font-size: var(--fs-sm); }
 .invite__code {
   padding: 10px 12px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line);
@@ -342,6 +346,12 @@ button.ddr-act { font-family: inherit; }
 .onb-back { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; color: var(--text-2); font-size: var(--fs-sm); font-weight: 600; padding: 4px 8px 4px 4px; margin: -8px 0 -6px -4px; border-radius: 8px; }
 .onb-back:hover { color: var(--text); background: var(--surface-hover); }
 .onb-code { min-height: 88px; letter-spacing: .02em; text-transform: uppercase; }
+.onb-scan { display: flex; flex-direction: column; gap: var(--sp-2); }
+.onb-scan p { margin: 0; }
+.onb-or { display: flex; align-items: center; gap: var(--sp-3); color: var(--text-3); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .06em; padding-top: var(--sp-2); }
+.onb-or::before, .onb-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.onb-tips { margin: var(--sp-2) 0 0; padding-left: 1.25em; list-style: disc; display: flex; flex-direction: column; gap: 4px; }
+.onb-tips li { display: list-item; }
 .onb-progress { align-items: center; text-align: center; padding: var(--sp-8) var(--sp-6); }
 .onb-progress__rings { position: relative; width: 120px; height: 120px; display: grid; place-items: center; margin-bottom: var(--sp-2); }
 .onb-progress__rings span { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid var(--accent-line); animation: ripple 2.4s var(--ease-out) infinite; }

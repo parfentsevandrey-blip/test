@@ -232,6 +232,19 @@ export function normalizeDeviceName(v) {
   return String(v || "").trim().replace(/\s+/g, "-");
 }
 
+/**
+ * The invitation inside a text (what a QR scanner read, or what was pasted): `MESH1-` and the base32 body, with the dashes and
+ * blanks that group it for reading, or a line break, taken out; "" when the text holds no invitation. Case does not matter.
+ * It also finds the code inside a longer text, for example behind `themesh://join?code=`. An invitation is at least 92 bytes,
+ * 148 characters, so a shorter run is a typo or something else.
+ */
+export function invitationIn(text) {
+  const m = /MESH1-([A-Z2-7\s-]+)/i.exec(String(text || ""));
+  if (!m) return "";
+  const body = m[1].replace(/[\s-]+/g, "").toUpperCase();
+  return body.length >= 140 ? "MESH1-" + body : "";
+}
+
 // Cyrillic → Latin, the same table the node uses (docs/UI-API.md → "Device names").
 const TRANSLIT = new Map(Object.entries({
   а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo", ж: "zh", з: "z", и: "i", й: "y",

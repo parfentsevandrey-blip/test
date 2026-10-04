@@ -11,12 +11,19 @@ group("settings", () => {
     const sw = tid(page, "setting-relay");
     await sw.waitFor();
     eq(await sw.getAttribute("aria-checked"), "true", "relay is on by default");
+    // the answer to the save is waited for as well: the node applies the change before it answers, and a reload that comes
+    // in between would abort the request and be counted as a network problem
+    const saved = () => page.waitForResponse((r) => /\/api\/settings$/.test(r.url()) && r.request().method() === "PUT");
+    let answer = saved();
     await sw.click();
+    await answer;
     await until(async () => (await dev.laptop.api("GET", "/api/settings")).relay === false, 5000, "relay=false on the backend");
     await page.reload();
     await tid(page, "setting-relay").waitFor();
     eq(await tid(page, "setting-relay").getAttribute("aria-checked"), "false", "state after reload");
+    answer = saved();
     await tid(page, "setting-relay").click();
+    await answer;
     await until(async () => (await dev.laptop.api("GET", "/api/settings")).relay === true, 5000, "relay back on");
     eq(page.problems, [], "console / network problems");
   });

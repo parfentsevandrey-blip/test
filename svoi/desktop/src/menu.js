@@ -3,7 +3,7 @@
 // short one that appears when Alt is pressed (the window itself has no menu bar).
 const { Menu, app } = require('electron');
 
-function buildMenu({ t, onAbout, onShowLog, onQuit }) {
+function buildMenu({ t, onAbout, onShowLog, onQuit, onAddDevice }) {
   const isMac = process.platform === 'darwin';
   const view = {
     label: t.menuView,
@@ -37,7 +37,7 @@ function buildMenu({ t, onAbout, onShowLog, onQuit }) {
       submenu: [{ label: t.about, click: onAbout }, { type: 'separator' }, { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' }, { type: 'separator' }, { label: t.quit, accelerator: 'Cmd+Q', click: onQuit }],
     });
   }
-  template.push(edit, view);
+  template.push(edit, { label: t.menuNetwork, submenu: [{ label: t.addDevice, click: onAddDevice }] }, view);
   template.push({ label: t.menuWindow, submenu: isMac ? [{ role: 'minimize' }, { role: 'close' }] : [{ role: 'minimize' }, { role: 'close' }, { type: 'separator' }, { label: t.quit, accelerator: 'Ctrl+Q', click: onQuit }] });
   template.push(help);
   return Menu.buildFromTemplate(template);

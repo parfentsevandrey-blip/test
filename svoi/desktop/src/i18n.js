@@ -4,6 +4,8 @@
 
 const ru = {
   open: 'Открыть The Mesh',
+  addDevice: 'Добавить устройство (QR-код)…',
+  menuNetwork: 'Сеть',
   quit: 'Выйти из The Mesh',
   autostart: 'Запускать при входе в систему',
   about: 'О программе',
@@ -60,6 +62,8 @@ const ru = {
 
 const en = {
   open: 'Open The Mesh',
+  addDevice: 'Add a device (QR code)…',
+  menuNetwork: 'Network',
   quit: 'Quit The Mesh',
   autostart: 'Start when I sign in',
   about: 'About',

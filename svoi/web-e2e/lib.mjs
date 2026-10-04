@@ -192,7 +192,8 @@ export function eq(a, b, msg) {
   if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(`${msg || "values differ"}: got ${JSON.stringify(a)}, want ${JSON.stringify(b)}`);
 }
 
-export async function open(browser, dev, { w = 1280, h = 800, lang = "ru", theme = "dark", hash = "", allow = [], mobile = false } = {}) {
+// init: a function that runs in every page before its own scripts (to play the part of the phone app, for example).
+export async function open(browser, dev, { w = 1280, h = 800, lang = "ru", theme = "dark", hash = "", allow = [], mobile = false, init = null } = {}) {
   const ctx = await browser.newContext({
     viewport: { width: w, height: h },
     colorScheme: theme,
@@ -208,6 +209,7 @@ export async function open(browser, dev, { w = 1280, h = 800, lang = "ru", theme
       if (!localStorage.getItem("themesh.theme")) localStorage.setItem("themesh.theme", th);
     } catch {}
   }, [theme, lang]);
+  if (init) await ctx.addInitScript(init);
   const page = await ctx.newPage();
   page.setDefaultTimeout(8000);
   page.problems = [];
