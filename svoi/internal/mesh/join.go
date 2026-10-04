@@ -634,8 +634,9 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName string) error {
 	}
 	_ = s.SetDeadline(time.Now().Add(20 * time.Second))
 	h := inv.Handle()
+	hos, harch := n.platform()
 	if err := writeFrame(s, joinRequest{
-		Handle: h[:], Proof: inv.Proof(exporter), Name: deviceName, Platform: Platform(),
+		Handle: h[:], Proof: inv.Proof(exporter), Name: deviceName, Platform: hos + "/" + harch,
 	}); err != nil {
 		return err
 	}

@@ -92,6 +92,8 @@ public final class NodeSupervisor {
         public File logFile;
         /** THEMESH_LOCAL_ADDRS_FILE. */
         public File addrsFile;
+        /** THEMESH_PLATFORM: как узел называет систему («android/arm64», см. {@link Platform}); {@code null} или пусто — как собран. */
+        public String platform;
         /**
          * Имя устройства, которое узел предложит при создании или вступлении в сеть ({@code --name}, см.
          * {@link DeviceName}); {@code null} или пусто — флаг не передаётся и узел берёт имя хоста («localhost»).
@@ -303,6 +305,9 @@ public final class NodeSupervisor {
         env.put("TMPDIR", spec.cacheDir.getPath());
         env.put("THEMESH_DIR", spec.dataDir.getPath());
         env.put("THEMESH_LOCAL_ADDRS_FILE", spec.addrsFile.getPath());
+        if (spec.platform != null && !spec.platform.isEmpty()) {
+            env.put("THEMESH_PLATFORM", spec.platform);
+        }
         pb.redirectErrorStream(true);
         pb.redirectOutput(ProcessBuilder.Redirect.appendTo(spec.logFile));
         // stdin остаётся каналом: мы держим его открытым

@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -92,7 +93,7 @@ func cmdUp(args []string) error {
 		Logger:     newLogger(*debug, os.Stderr),
 		DeviceName: *name,
 		Owner:      *owner,
-		Mesh:       mesh.Config{Loopback: *loopback},
+		Mesh:       mesh.Config{Loopback: *loopback, Platform: platformFromEnv()},
 	})
 	if err != nil {
 		return err
@@ -238,4 +239,18 @@ func joinNonEmpty(sep string, ss ...string) string {
 		}
 	}
 	return strings.Join(out, sep)
+}
+
+// platformRE is what THEMESH_PLATFORM may hold: an operating system and, after a slash, a processor ("android/arm64").
+var platformRE = regexp.MustCompile(`^[a-z][a-z0-9]{1,15}(/[a-z0-9_]{1,15})?$`)
+
+// platformFromEnv is the "os/arch" this program reports about itself when the program that starts it knows better than the
+// build does: the phone app runs a Linux build on Android and says so (THEMESH_PLATFORM=android/arm64), so that the other
+// devices show a phone as an Android phone and not as a Linux machine. Anything that does not look like a platform is ignored.
+func platformFromEnv() string {
+	p := strings.ToLower(strings.TrimSpace(os.Getenv("THEMESH_PLATFORM")))
+	if platformRE.MatchString(p) {
+		return p
+	}
+	return ""
 }

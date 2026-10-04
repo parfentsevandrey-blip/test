@@ -43,6 +43,7 @@ import app.themesh.mobile.core.NodeState;
 import app.themesh.mobile.core.NodeSupervisor;
 import app.themesh.mobile.core.Notice;
 import app.themesh.mobile.core.Notices;
+import app.themesh.mobile.core.Platform;
 import app.themesh.mobile.core.ReceivedFiles;
 import app.themesh.mobile.core.SeenKeys;
 import app.themesh.mobile.core.StatusLine;
@@ -254,6 +255,7 @@ public class NodeService extends Service {
         spec.dataDir = new File(getFilesDir(), "themesh");
         spec.logFile = log.file();
         spec.addrsFile = new File(getFilesDir(), "local-addrs.txt");
+        spec.platform = Platform.android(Build.SUPPORTED_ABIS);
         spec.lastPort = prefs::lastPort;
         spec.deviceName = DeviceName.choose(settingsDeviceName(), Build.MODEL);
         return spec;

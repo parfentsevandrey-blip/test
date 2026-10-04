@@ -300,6 +300,19 @@ public class NodeSupervisorTest {
     }
 
     @Test
+    public void theRealNodeCallsItselfAnAndroidPhoneWhenTheAppSaysSo() throws Exception {
+        // программа в приложении — сборка для Linux; без этого другие устройства видели бы телефон как «Linux» и сервер
+        NodeSupervisor.Spec s = realSpec();
+        s.platform = "android/arm64";
+        start(s);
+        assertEquals("starting:1", next(5));
+        assertTrue(next(30).startsWith("ready:"));
+        JSONObject self = lastApi.getObject("/api/state").getJSONObject("self");
+        assertEquals("android", self.getString("os"));
+        assertEquals("arm64", self.getString("arch"));
+    }
+
+    @Test
     public void theRealNodeOffersTheDeviceNameItWasGiven() throws Exception {
         NodeSupervisor.Spec s = realSpec();
         s.deviceName = DeviceName.choose("Pixel 7 Pro", "ignored");
