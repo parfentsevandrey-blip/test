@@ -120,6 +120,7 @@ async function main() {
     }
   }
   await gallery(display, wallpaper);
+  await scrolling(display);
   await capture(path.join(OUT, '99-whole-screen.png'));
   wallpaper.destroy();
 }
@@ -135,6 +136,51 @@ const SCREENS = [
   { name: 'invite', hash: '#/home?add=1', js: "(async () => { await new Promise((r) => setTimeout(r, 400)); const b = document.querySelector('[data-testid=invite-create]'); if (b) b.click(); })()" },
   { name: 'settings', hash: '#/settings/interface' },
 ];
+
+// Scrolling a long page: pictures at several positions (a raster that has not caught up shows as a pale block), and the
+// number of frames a scripted scroll gets in 3 s with each skin. A CI machine has no graphics card to speak of, so the
+// absolute numbers are low; what counts is glass against classic on the same machine.
+async function scrolling(display) {
+  for (const theme of ['light', 'dark']) {
+    nativeTheme.themeSource = theme;
+    const reduced = !!nativeTheme.prefersReducedTransparency;
+    const look = windowLook({ platform: 'darwin', env: {}, dark: theme === 'dark', reducedTransparency: reduced, version: app.getVersion() });
+    const win = new BrowserWindow({
+      width: 1000, height: 672, x: display.bounds.x + 12, y: display.bounds.y + 42, show: false, title: 'The Mesh probe',
+      ...look.options,
+      webPreferences: { partition: `probe-scroll-${theme}`, sandbox: true, contextIsolation: true, nodeIntegration: false, zoomFactor: 0.8 },
+    });
+    const wc = win.webContents;
+    wc.setUserAgent(`${wc.getUserAgent()} ${look.userAgentToken}`);
+    await loaded(win, `${URL_BASE}/#/home`);
+    await wc.executeJavaScript(`try { localStorage.setItem('themesh.lang', 'ru'); localStorage.setItem('themesh.theme', ${JSON.stringify(theme)}); } catch (e) {}`);
+    await loaded(win, `${URL_BASE}/?scroll=${Date.now()}#/settings`);
+    wc.setZoomFactor(0.8);
+    win.show();
+    win.focus();
+    app.focus({ steal: true });
+    await sleep(2500);
+    const b = win.getBounds();
+    const rect = { x: Math.max(0, b.x - 12), y: Math.max(0, b.y - 12), width: Math.min(display.bounds.width, b.width + 24), height: Math.min(display.bounds.height - 12, b.height + 36) };
+    for (let i = 0; i < 5; i++) {
+      await wc.executeJavaScript(`window.scrollTo(0, ${i * 520}); 0`);
+      await sleep(900);
+      await capture(path.join(OUT, `s-${theme}-${i}.png`), rect);
+    }
+    // the same page, scrolled by a script for 3 s, with each skin
+    for (const skin of ['glass', 'classic']) {
+      await wc.executeJavaScript(`localStorage.setItem('themesh.skin', ${JSON.stringify(skin)}); 0`);
+      await loaded(win, `${URL_BASE}/?perf=${skin}${Date.now()}#/devices`);
+      wc.setZoomFactor(0.8);
+      await sleep(1500);
+      const r = await wc.executeJavaScript(`new Promise((resolve) => { const el = document.scrollingElement; let frames = 0, dir = 1; const t0 = performance.now(); (function step(t) { frames++; el.scrollTop += 14 * dir; if (el.scrollTop + innerHeight >= el.scrollHeight - 2) dir = -1; if (el.scrollTop <= 0) dir = 1; if (t - t0 < 3000) requestAnimationFrame(step); else resolve({ skin: document.documentElement.dataset.skin, frames, ms: Math.round(performance.now() - t0), height: el.scrollHeight }); })(t0); })`).catch((e) => ({ error: e.message }));
+      log('scroll speed', theme, JSON.stringify(r), r.frames ? `${(r.frames / r.ms * 1000).toFixed(1)} frames/s` : '');
+    }
+    await wc.executeJavaScript(`localStorage.removeItem('themesh.skin'); 0`);
+    win.destroy();
+    await sleep(400);
+  }
+}
 
 async function gallery(display) {
   let n = 0;
