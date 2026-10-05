@@ -14,6 +14,7 @@ Source Serif 4 для заголовков и лидов, Source Sans 3 для �
 from __future__ import annotations
 
 import math
+import re
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
@@ -77,7 +78,8 @@ def tracked_width(draw, text, fnt, tracking_em: float = 0.0) -> float:
 
 
 def wrap(draw, text: str, fnt, max_width: float) -> list[str]:
-    words, lines, current = text.split(), [], ""
+    # str.split() рвёт и по неразрывному пробелу; переносим только по обычным
+    words, lines, current = re.split(r"[ \t\n]+", text.strip()), [], ""
     for word in words:
         probe = f"{current} {word}".strip()
         if draw.textlength(probe, font=fnt) <= max_width or not current:
@@ -445,10 +447,15 @@ def contents_cover(dest: Path, *, kicker: str, title: str, subtitle: str,
 
     y = height_px - 20 * MM
     hairline(draw, left, y, right, y, GREY_SOFT, 0.25)
-    draw.text((left, y + 3.4 * MM), meta, font=font(SANS, 7), fill=GREY)
     count = f"{len(items)} {_objects_word(len(items))}"
     w = tracked_width(draw, count.upper(), font(SANS_MED, 7))
     tracked(draw, (right - w, y + 3.4 * MM), count.upper(), font(SANS_MED, 7), GOLD)
+    # длинная строка источников переносится до счётчика, а не уходит под него
+    meta_font = font(SANS, 7)
+    line_y = y + 3.4 * MM
+    for line in wrap(draw, meta, meta_font, right - left - w - 8 * MM):
+        draw.text((left, line_y), line, font=meta_font, fill=GREY)
+        line_y += meta_font.size * 1.35
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     canvas.save(dest, quality=94, subsampling=1)
