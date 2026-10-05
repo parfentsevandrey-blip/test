@@ -618,6 +618,98 @@ func TestADownloadGoesOnWhenItsLinkIsReplaced(t *testing.T) {
 	t.Logf("the download went on over the new link %d time(s)", rr.resumes)
 }
 
+// replacingReader is a source of an upload (it can be rewound, like a file or a buffer) that, once part of it has been read, makes the
+// link of the upload be replaced - at that moment the upload is far from done. seeks counts the times it was rewound.
+type replacingReader struct {
+	*bytes.Reader
+	at    int64
+	fn    func()
+	fired bool
+	seeks int
+}
+
+func (r *replacingReader) Read(p []byte) (int, error) {
+	n, err := r.Reader.Read(p)
+	if !r.fired && int64(r.Reader.Size())-int64(r.Reader.Len()) >= r.at {
+		r.fired = true
+		r.fn()
+	}
+	return n, err
+}
+
+func (r *replacingReader) Seek(off int64, whence int) (int64, error) {
+	if whence == io.SeekStart { // (asking where it is now, io.SeekCurrent, is not a rewind)
+		r.seeks++
+	}
+	return r.Reader.Seek(off, whence)
+}
+
+// An upload is cut off when its link is closed as superseded; when its source can be rewound it goes again on the link that stays
+// (what failed the test of the remote share on a slow Windows machine: "expected exists, got Application error 0x10 (local): superseded").
+func TestAnUploadGoesOnWhenItsLinkIsReplaced(t *testing.T) {
+	h := meshtest.New(t)
+	nas := h.Public("nas", "198.51.100.1")
+	laptop := h.Public("laptop", "198.51.100.2")
+	h.Mesh(nas, laptop)
+
+	dir := t.TempDir()
+	shares := []Share{{ID: "media", Name: "Media", Path: dir, Mode: "rw", Allow: []string{"*"}}}
+	newManager(t, nas, &shares, &TransferSettings{DownloadDir: t.TempDir(), AutoAccept: "all"})
+	lapShares := []Share{}
+	lapM := newManager(t, laptop, &lapShares, &TransferSettings{DownloadDir: t.TempDir(), AutoAccept: "all"})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	payload := make([]byte, 24<<20+3) // more than any window the link has, so most of it is still to be sent
+	rand.Read(payload)
+	src := &replacingReader{Reader: bytes.NewReader(payload), at: 1 << 20}
+	src.fn = func() { replaceLinkUnder(t, ctx, nas, laptop) }
+
+	n, err := lapM.RemotePut(ctx, nas.ID(), "media", "/big.bin", src, int64(len(payload)), false)
+	if err != nil || n != int64(len(payload)) {
+		t.Fatalf("upload: %d of %d bytes, err=%v", n, len(payload), err)
+	}
+	if !src.fired || src.seeks == 0 {
+		t.Fatalf("the link was not replaced under the upload (fired=%v, rewound %d times), so this test proved nothing", src.fired, src.seeks)
+	}
+	if disk, _ := os.ReadFile(filepath.Join(dir, "big.bin")); !bytes.Equal(disk, payload) {
+		t.Fatal("uploaded bytes differ on disk")
+	}
+	t.Logf("the upload went on over the new link after %d rewind(s)", src.seeks)
+}
+
+// A source that cannot be rewound (the body of an HTTP request) cannot be sent twice: the upload fails and says what happened to its link.
+func TestAnUploadFromASourceThatCannotBeRewoundReportsTheReplacedLink(t *testing.T) {
+	h := meshtest.New(t)
+	nas := h.Public("nas", "198.51.100.1")
+	laptop := h.Public("laptop", "198.51.100.2")
+	h.Mesh(nas, laptop)
+
+	dir := t.TempDir()
+	shares := []Share{{ID: "media", Name: "Media", Path: dir, Mode: "rw", Allow: []string{"*"}}}
+	newManager(t, nas, &shares, &TransferSettings{DownloadDir: t.TempDir(), AutoAccept: "all"})
+	lapShares := []Share{}
+	lapM := newManager(t, laptop, &lapShares, &TransferSettings{DownloadDir: t.TempDir(), AutoAccept: "all"})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	payload := make([]byte, 24<<20)
+	rand.Read(payload)
+	src := &replacingReader{Reader: bytes.NewReader(payload), at: 1 << 20}
+	src.fn = func() { replaceLinkUnder(t, ctx, nas, laptop) }
+
+	_, err := lapM.RemotePut(ctx, nas.ID(), "media", "/big.bin", struct{ io.Reader }{src}, int64(len(payload)), false)
+	if err == nil {
+		t.Fatal("an upload from a source that cannot be rewound went on after its link was replaced: some of it would have been sent twice or not at all")
+	}
+	if !mesh.IsReplaced(err) {
+		t.Fatalf("the upload should report what really happened to its link, got %v", err)
+	}
+	if _, serr := os.Stat(filepath.Join(dir, "big.bin")); serr == nil {
+		t.Fatal("a partial file was left under the final name")
+	}
+}
+
 func TestARangeReadGoesOnWhenItsLinkIsReplaced(t *testing.T) {
 	h := meshtest.New(t)
 	nas := h.Public("nas", "198.51.100.1")

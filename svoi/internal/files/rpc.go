@@ -257,7 +257,47 @@ func (m *Manager) openGetOnce(ctx context.Context, id identity.ID, share, rel st
 }
 
 // RemotePut uploads size bytes from r into a remote read-write share.
+//
+// If the link of the upload is closed because another link to the same device took its place (it happens when two devices dial each
+// other at the same moment, see mesh.IsReplaced), the upload goes again on the link that stays, from the start, when r can be rewound
+// (a file, a buffer). A source that cannot be rewound (the body of an HTTP request) has been read in part and cannot be sent twice, so
+// there the upload fails and says what happened to its link. The remote end writes under a temporary name and renames when all of the
+// bytes are there, so a broken try leaves nothing behind. (If the break came after everything was written, only the answer was lost,
+// and the second try without overwrite is told that the file exists: it is the same file, and nothing is lost.)
 func (m *Manager) RemotePut(ctx context.Context, id identity.ID, share, rel string, r io.Reader, size int64, overwrite bool) (int64, error) {
+	seeker, canRewind := r.(io.Seeker)
+	var start int64
+	if canRewind {
+		var err error
+		if start, err = seeker.Seek(0, io.SeekCurrent); err != nil {
+			canRewind = false
+		}
+	}
+	deadline := time.Now().Add(replacementWait)
+	for replaced := 0; ; {
+		n, err := m.remotePutOnce(ctx, id, share, rel, r, size, overwrite)
+		switch {
+		case err == nil:
+			return n, nil
+		case canRewind && mesh.IsReplaced(err) && replaced < maxResumes:
+			replaced++
+			if _, serr := seeker.Seek(start, io.SeekStart); serr != nil {
+				return 0, err
+			}
+		case canRewind && replaced > 0 && mesh.IsCode(err, mesh.CodeOffline) && time.Now().Before(deadline):
+			// the old link is gone and the one that replaces it is not installed yet: for that moment the device looks offline
+			select {
+			case <-time.After(20 * time.Millisecond):
+			case <-ctx.Done():
+				return 0, err
+			}
+		default:
+			return 0, err
+		}
+	}
+}
+
+func (m *Manager) remotePutOnce(ctx context.Context, id identity.ID, share, rel string, r io.Reader, size int64, overwrite bool) (int64, error) {
 	p, err := m.peer(id)
 	if err != nil {
 		return 0, err
