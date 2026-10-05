@@ -90,10 +90,17 @@ jobs:
   emulator:
     # The smoke test: the app starts, its program answers and proves it knows the app's token, the window shows the
     # interface, the service runs in the foreground, "Выйти" stops the program.
+    # (Several runs side by side: on the page «Настройки → Внешний вид» the emulator itself vanished, and each variant takes a
+    # different part of that page away to show which part it is - see GlassShotsTest.pickerShot. "full" is the page as it is.)
+    name: emulator (${{ matrix.picker }})
     needs: build
     if: github.event_name != 'workflow_dispatch' || inputs.emulator
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        picker: [full, skip, noscroll, hash, nopicker, noeffects]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -115,6 +122,9 @@ jobs:
       - name: The program for the phone processors (the app checks that all three are there)
         working-directory: svoi/android
         run: sh tools/build-core.sh
+      - name: Watch what the emulator takes from the machine
+        run: |
+          nohup sh -c 'while true; do date +%T; ps -eo pid,rss,pcpu,etimes,comm --sort=-rss | head -5; vmstat 1 1 | tail -1; sleep 2; done' > /tmp/sampler.log 2>&1 &
       - name: The smoke test on an Android 14 emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -126,9 +136,11 @@ jobs:
           emulator-boot-timeout: 600
           # (the page of the look «Роса» is bigger than the pages of the glass look were: a phone with 2.5 GB is too small for it)
           ram-size: 4096M
+          # (what the emulator says about itself goes to a file: when it vanishes, nothing else tells why)
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -verbose > /tmp/emulator.log 2>&1
           working-directory: svoi/android
           # (the script also takes the screenshots of the real window that GlassShotsTest wrote, whatever the tests' result)
-          script: sh tools/emulator-run.sh -Pandroid.testInstrumentationRunnerArguments.waitSeconds=240
+          script: sh tools/emulator-run.sh -Pandroid.testInstrumentationRunnerArguments.waitSeconds=240 -Pandroid.testInstrumentationRunnerArguments.pickerVariant=${{ matrix.picker }}
       - name: What the machine says (the emulator vanished once in the middle of the pictures)
         if: always()
         run: |
@@ -136,10 +148,13 @@ jobs:
           free -m || true
           sudo dmesg 2>/dev/null | tail -60 || true
           ps aux --sort=-rss | head -10 | cut -c1-200 || true
+          echo "--- the emulator's own words (the end)"; tail -n 60 /tmp/emulator.log 2>/dev/null | cut -c1-300 || true
+          echo "--- what the emulator left when it fell"; ls -laR /tmp/android-runner 2>/dev/null | head -40 || true
+          echo "--- the machine while the emulator ran (the end)"; tail -n 40 /tmp/sampler.log 2>/dev/null || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: themesh-android-emulator-reports
+          name: themesh-android-emulator-reports-${{ matrix.picker }}
           path: |
             svoi/android/app/build/reports/androidTests/**
             svoi/android/app/build/outputs/androidTest-results/**
@@ -148,8 +163,18 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
+          name: themesh-android-emulator-diag-${{ matrix.picker }}
+          path: |
+            /tmp/emulator.log
+            /tmp/sampler.log
+            /tmp/android-runner/**
+          if-no-files-found: ignore
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
           # the window of the app on a real WebView (Android 14 emulator): the glass look, the system bars, the menu, both themes
-          name: themesh-android-emulator-screens
+          name: themesh-android-emulator-screens-${{ matrix.picker }}
           path: svoi/android/emulator-shots/**
           if-no-files-found: ignore
           retention-days: 14

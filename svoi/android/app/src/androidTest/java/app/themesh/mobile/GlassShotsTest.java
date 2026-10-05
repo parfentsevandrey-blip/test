@@ -34,6 +34,11 @@ public class GlassShotsTest {
     /** После того как страница договорила анимации (WebProbe.settle) шрифты и размытие ещё устанавливаются. */
     private static final long SETTLE_MS = 1500;
     private final long waitMs = Long.parseLong(InstrumentationRegistry.getArguments().getString("waitSeconds", "90")) * 1000;
+    /**
+     * Как снимается страница «Настройки → Внешний вид»: в эмуляторе CI на ней один раз пропало само устройство (процесс эмулятора
+     * завершился). Чтобы найти, что именно её вызывает, CI запускает несколько вариантов рядом (см. pickerShot); обычный запуск — «full».
+     */
+    private final String pickerVariant = InstrumentationRegistry.getArguments().getString("pickerVariant", "full");
 
     private final Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
     private final Context context = instrumentation.getTargetContext();
@@ -113,19 +118,51 @@ public class GlassShotsTest {
                 shot(web, mood[3]);
             }
 
-            Log.i("Shots", "step: the sky picker");
-            web.run("try { localStorage.setItem('themesh.theme', 'auto'); } catch (e) {} location.href = location.pathname + '?sky=25#/settings/interface';");
-            Thread.sleep(1500);
-            web.waitFor("document.querySelector('[data-testid=\"theme-auto\"]') != null", 30_000);
-            web.run("var e = document.querySelector('[data-testid=\"theme-auto\"]'); if (e) e.scrollIntoView({ block: 'center' });");
-            Thread.sleep(900);
-            shot(web, "13-sky-picker");
+            pickerShot(web);
 
             // вернуть узел в прежнее состояние: другие тесты ждут первый экран
             web.run("fetch('api/mesh/leave',{method:'POST',headers:{'Content-Type':'application/json','X-Themesh':'1'},body:'{}'});");
             Thread.sleep(1500);
         }
         assertTrue("ни одного снимка не получилось", !written.isEmpty());
+    }
+
+    /** Все эффекты стекла разом выключены: «а без них страница снимается?» */
+    private static final String NO_EFFECTS = "*,*::before,*::after{box-shadow:none!important;filter:none!important;backdrop-filter:none!important;"
+            + "-webkit-backdrop-filter:none!important;text-shadow:none!important;animation:none!important;transition:none!important;will-change:auto!important;}";
+
+    private void pickerShot(WebProbe web) throws Exception {
+        Log.i("Shots", "step: the sky picker, variant " + pickerVariant);
+        if (pickerVariant.equals("skip")) {
+            return;
+        }
+        web.run("try { localStorage.setItem('themesh.theme', 'auto'); } catch (e) {}");
+        boolean byHash = pickerVariant.equals("hash") || pickerVariant.equals("nopicker") || pickerVariant.equals("noeffects");
+        if (byHash) {
+            // сначала «Главная» с тем же небом, потом только смена адреса внутри страницы (без перезагрузки)
+            web.run("location.href = location.pathname + '?sky=25#/home';");
+            Thread.sleep(1500);
+            web.waitFor("document.querySelector('[data-testid=\"page-home\"]') != null", 30_000);
+            Log.i("Shots", "step: the home page is up");
+            if (pickerVariant.equals("nopicker")) {
+                web.run("var s = document.createElement('style'); s.textContent = '.skypick{display:none!important}'; document.head.appendChild(s);");
+            } else if (pickerVariant.equals("noeffects")) {
+                web.run("var s = document.createElement('style'); s.textContent = '" + NO_EFFECTS + "'; document.head.appendChild(s);");
+            }
+            web.run("location.hash = '#/settings/interface';");
+        } else {
+            web.run("location.href = location.pathname + '?sky=25#/settings/interface';");
+        }
+        Thread.sleep(1500);
+        Log.i("Shots", "step: waiting for the page of the settings");
+        web.waitFor("document.querySelector('[data-testid=\"theme-auto\"]') != null || document.querySelector('[data-testid=\"lang-auto\"]') != null", 30_000);
+        if (!pickerVariant.equals("noscroll")) {
+            Log.i("Shots", "step: scrolling to the picker");
+            web.run("var e = document.querySelector('[data-testid=\"theme-auto\"]') || document.querySelector('[data-testid=\"lang-auto\"]'); if (e) e.scrollIntoView({ block: 'center' });");
+        }
+        Thread.sleep(900);
+        Log.i("Shots", "step: the picture of the picker");
+        shot(web, "13-sky-picker");
     }
 
     /** Включает тему страницы (она запоминает её в localStorage), перезагружает страницу и ждёт, пока на ней нужный экран в этой теме. */
