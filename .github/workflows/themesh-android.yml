@@ -90,10 +90,30 @@ jobs:
   emulator:
     # The smoke test: the app starts, its program answers and proves it knows the app's token, the window shows the
     # interface, the service runs in the foreground, "Выйти" stops the program.
+    # Two runs side by side, because the two jobs want different things of the emulator's graphics (see matrix).
+    name: emulator (${{ matrix.name }})
     needs: build
     if: github.event_name != 'workflow_dispatch' || inputs.emulator
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The tests of the program and of the window (everything but the pictures): the usual software graphics of the emulator
+          # (swiftshader_indirect) is what they were written against and runs them in a few minutes; the second Nearby test, which waits for
+          # a conversation of two programs under a time limit, did not survive the slow graphics of the other job (the whole job took 27 minutes).
+          - name: tests
+            gpu: swiftshader_indirect
+            only: -Pandroid.testInstrumentationRunnerArguments.notClass=app.themesh.mobile.GlassShotsTest
+          # The pictures of the window (GlassShotsTest, a few minutes to a quarter of an hour: the page of the look «Роса» is heavy for a
+          # software renderer). One of them is the page «Настройки → Внешний вид» with the sky picker, which in the usual mode kills the
+          # emulator itself (its render thread segfaults ~1 s after the page opens, seen in dmesg; not memory, not the app; it depended on the
+          # size of the labels of the picker, not on gradients, shadows, blur, animation, the aspect ratio or the clip: four rounds of variants are in
+          # the history of this file). ANGLE over SwiftShader (swangle_indirect) draws the same page and the emulator survives.
+          - name: pictures
+            gpu: swangle_indirect
+            only: -Pandroid.testInstrumentationRunnerArguments.class=app.themesh.mobile.GlassShotsTest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -126,13 +146,11 @@ jobs:
           emulator-boot-timeout: 600
           # (the page of the look «Роса» is bigger than the pages of the glass look were: a phone with 2.5 GB is too small for it)
           ram-size: 4096M
-          # ANGLE over SwiftShader (swangle_indirect), not the default swiftshader_indirect: with that one the emulator's own render thread died
-          # (a segfault in the process of the emulator, seen in dmesg) a second after the page «Настройки → Внешний вид» opened, whatever the page
-          # was made of; with this one it draws the same page. What the emulator says about itself goes to a file, for the day it dies again.
-          emulator-options: -no-window -gpu swangle_indirect -no-snapshot -noaudio -no-boot-anim -verbose > /tmp/emulator.log 2>&1
+          # (what the emulator says about itself goes to a file, for the day it dies again)
+          emulator-options: -no-window -gpu ${{ matrix.gpu }} -no-snapshot -noaudio -no-boot-anim -verbose > /tmp/emulator.log 2>&1
           working-directory: svoi/android
           # (the script also takes the screenshots of the real window that GlassShotsTest wrote, whatever the tests' result)
-          script: sh tools/emulator-run.sh -Pandroid.testInstrumentationRunnerArguments.waitSeconds=240
+          script: sh tools/emulator-run.sh -Pandroid.testInstrumentationRunnerArguments.waitSeconds=240 ${{ matrix.only }}
       - name: What the machine says (for the day the emulator vanishes in the middle of the pictures again)
         if: failure()
         run: |
@@ -143,7 +161,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: themesh-android-emulator-reports
+          name: themesh-android-emulator-reports-${{ matrix.name }}
           path: |
             svoi/android/app/build/reports/androidTests/**
             svoi/android/app/build/outputs/androidTest-results/**
@@ -152,7 +170,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: themesh-android-emulator-diag
+          name: themesh-android-emulator-diag-${{ matrix.name }}
           path: |
             /tmp/emulator.log
             /tmp/android-runner/**
@@ -162,7 +180,7 @@ jobs:
         if: always()
         with:
           # the window of the app on a real WebView (Android 14 emulator): the glass look, the system bars, the menu, both themes
-          name: themesh-android-emulator-screens
+          name: themesh-android-emulator-screens-${{ matrix.name }}
           path: svoi/android/emulator-shots/**
           if-no-files-found: ignore
           retention-days: 14
