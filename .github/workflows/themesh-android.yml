@@ -92,7 +92,9 @@ jobs:
     # interface, the service runs in the foreground, "Выйти" stops the program.
     # (Several runs side by side: on the page «Настройки → Внешний вид» the emulator itself vanished, and each variant takes a
     # different part of the little pictures of the sky picker away to show which part it is - see GlassShotsTest.pickerCss.
-    # Found so far: the page is fine without the picker (skip, nopicker), and it still vanishes with every shadow, blur and animation off.)
+    # Found so far: the page is fine without the picker (skip, nopicker); it vanishes ~1 s after the page opens with the picker in view, also
+    # with every shadow, blur and animation off, with flat colours, without the aspect ratio, the clip or the tick: the emulator's own render
+    # thread dies (dmesg: segfault in RenderThread). Only GlassShotsTest runs in these variants.)
     name: emulator (${{ matrix.picker }})
     needs: build
     if: github.event_name != 'workflow_dispatch' || inputs.emulator
@@ -101,7 +103,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        picker: [nogradient, lineargrad, radialonly, noaspect, noclip, nocheck]
+        picker: [invisible, transparent, nothumb, nolabel, onefirst, onelast, emptybox, block]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -141,7 +143,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -verbose > /tmp/emulator.log 2>&1
           working-directory: svoi/android
           # (the script also takes the screenshots of the real window that GlassShotsTest wrote, whatever the tests' result)
-          script: sh tools/emulator-run.sh -Pandroid.testInstrumentationRunnerArguments.waitSeconds=240 -Pandroid.testInstrumentationRunnerArguments.pickerVariant=${{ matrix.picker }}
+          script: sh tools/emulator-run.sh -Pandroid.testInstrumentationRunnerArguments.waitSeconds=240 -Pandroid.testInstrumentationRunnerArguments.pickerVariant=${{ matrix.picker }} -Pandroid.testInstrumentationRunnerArguments.class=app.themesh.mobile.GlassShotsTest
       - name: What the machine says (the emulator vanished once in the middle of the pictures)
         if: always()
         run: |

@@ -138,24 +138,23 @@ public class GlassShotsTest {
             case "noeffects":
                 return "*,*::before,*::after{box-shadow:none!important;filter:none!important;backdrop-filter:none!important;"
                         + "-webkit-backdrop-filter:none!important;text-shadow:none!important;animation:none!important;transition:none!important;will-change:auto!important;}";
-            case "nogradient": // картинки — однотонные
-                return ".skypick__thumb{background:#7a8fb8!important}";
-            case "lineargrad": // только линейные градиенты
-                return ".skypick__thumb--auto{background:linear-gradient(135deg,#3a82e0 0 49.5%,#0a0f2e 50.5% 100%)!important}"
-                        + ".skypick__thumb--light{background:linear-gradient(#91b7ed,#d9ebfc)!important}"
-                        + ".skypick__thumb--evening{background:linear-gradient(#2b478d 0%,#9b6b9e 46%,#f0928a 78%,#ffb077 100%)!important}"
-                        + ".skypick__thumb--dark{background:linear-gradient(#05081a,#1c1b45)!important}";
-            case "radialonly": // только радиальные
-                return ".skypick__thumb--auto{background:radial-gradient(circle 9px at 26% 26%,#fff 0 45%,rgb(255 244 214 / .85) 70%,transparent 100%)!important}"
-                        + ".skypick__thumb--light{background:radial-gradient(circle 9px at 74% 24%,#fff 0 44%,rgb(255 244 214 / .8) 70%,transparent 100%)!important}"
-                        + ".skypick__thumb--evening{background:radial-gradient(circle 2px at 24% 18%,#fff 0 55%,transparent 100%)!important}"
-                        + ".skypick__thumb--dark{background:radial-gradient(circle 6px at 70% 44%,#e6eaff 0 85%,transparent 100%)!important}";
-            case "noaspect": // без aspect-ratio
-                return ".skypick__thumb{aspect-ratio:auto!important;height:64px!important}";
-            case "noclip": // без скруглённой обрезки
-                return ".skypick__thumb{overflow:visible!important;border-radius:0!important}";
-            case "nocheck": // без галочки
-                return ".skypick__check{display:none!important}";
+            case "invisible": // место занято, но ничего не рисуется
+                return ".skypick{visibility:hidden!important}";
+            case "transparent": // рисуется, но невидимо
+                return ".skypick{opacity:0!important}";
+            case "nothumb": // только подписи
+                return ".skypick__thumb{display:none!important}";
+            case "nolabel": // только картинки
+                return ".skypick__opt>span:not(.skypick__thumb){display:none!important}";
+            case "onefirst": // только первая из четырёх
+                return ".skypick__opt:not(:first-child){display:none!important}";
+            case "onelast": // только последняя из четырёх
+                return ".skypick__opt:not(:last-child){display:none!important}";
+            case "emptybox": // картинки — пустые прозрачные коробки
+                return ".skypick__thumb{background:transparent!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important;aspect-ratio:auto!important;height:40px!important}"
+                        + ".skypick__check{display:none!important}";
+            case "block": // без сетки и без гибкой раскладки
+                return ".skypick,.skypick__opt{display:block!important}.skypick__thumb{display:inline-block!important;width:60px!important}";
             default:
                 return null;
         }
