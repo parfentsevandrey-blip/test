@@ -102,14 +102,6 @@ public class GlassShotsTest {
 
             // «Роса»: картинки для выбора настроения в «Настройки → Внешний вид» и небо днём, ночью и в вечернем настроении (страница
             // показывает небо на заданной высоте солнца, ?sky=: так снимки не зависят от того, когда их снимают)
-            Log.i("Shots", "step: the sky picker");
-            web.run("try { localStorage.setItem('themesh.theme', 'auto'); } catch (e) {} location.href = location.pathname + '?sky=25#/settings/interface';");
-            Thread.sleep(1500);
-            web.waitFor("document.querySelector('[data-testid=\"theme-auto\"]') != null", 30_000);
-            web.run("var e = document.querySelector('[data-testid=\"theme-auto\"]'); if (e) e.scrollIntoView({ block: 'center' });");
-            Thread.sleep(900);
-            shot(web, "13-sky-picker");
-
             String[][] moods = {{"auto", "25", "auto", "10-sky-day"}, {"auto", "-16", "auto", "11-sky-night"}, {"evening", "", "evening", "12-sky-evening"}};
             for (String[] mood : moods) {
                 Log.i("Shots", "step: " + mood[3]);
@@ -120,6 +112,14 @@ public class GlassShotsTest {
                         + " && document.documentElement.getAttribute('data-appearance') === '" + mood[2] + "'", 30_000);
                 shot(web, mood[3]);
             }
+
+            Log.i("Shots", "step: the sky picker");
+            web.run("try { localStorage.setItem('themesh.theme', 'auto'); } catch (e) {} location.href = location.pathname + '?sky=25#/settings/interface';");
+            Thread.sleep(1500);
+            web.waitFor("document.querySelector('[data-testid=\"theme-auto\"]') != null", 30_000);
+            web.run("var e = document.querySelector('[data-testid=\"theme-auto\"]'); if (e) e.scrollIntoView({ block: 'center' });");
+            Thread.sleep(900);
+            shot(web, "13-sky-picker");
 
             // вернуть узел в прежнее состояние: другие тесты ждут первый экран
             web.run("fetch('api/mesh/leave',{method:'POST',headers:{'Content-Type':'application/json','X-Themesh':'1'},body:'{}'});");
@@ -138,6 +138,8 @@ public class GlassShotsTest {
 
     private void shot(WebProbe web, String name) throws InterruptedException {
         web.settle(15_000);
+        // (what the page runs with: the level of motion it settled on and what the window said in its user agent)
+        Log.i("Shots", name + ": " + web.evaluate("document.documentElement.getAttribute('data-fx') + ' default=' + document.documentElement.getAttribute('data-fx-default') + ' ' + (navigator.userAgent.match(/TheMeshAndroid[^)]*\\)/) || [''])[0]"));
         if (Shots.take(instrumentation, name, SETTLE_MS)) {
             written.add(name);
         }

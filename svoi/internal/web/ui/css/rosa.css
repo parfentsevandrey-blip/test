@@ -359,18 +359,28 @@ html[data-look="rosa"] .input, html[data-look="rosa"] .select { border-radius: 1
 .skypick__thumb { position: relative; display: block; width: 100%; aspect-ratio: 3 / 4; border-radius: 18px; overflow: hidden; box-shadow: var(--glass-rim-sm), 0 6px 14px -6px rgb(var(--sky-deep-rgb) / .5); transition: transform var(--dur-press) var(--ease-press), box-shadow .25s ease; }
 .skypick__opt:active .skypick__thumb { transform: scale(.95); }
 .skypick__opt[aria-checked="true"] .skypick__thumb { box-shadow: 0 0 0 2px var(--accent), 0 0 0 5px var(--accent-soft), 0 6px 14px -6px rgb(var(--sky-deep-rgb) / .5); }
-.skypick__thumb::before, .skypick__thumb::after { content: ""; position: absolute; border-radius: 50%; }
-.skypick__thumb--auto { background: linear-gradient(135deg, #3a82e0 0 49.5%, #0a0f2e 50.5% 100%); }
-.skypick__thumb--auto::before { width: 26%; height: 20%; left: 14%; top: 14%; background: radial-gradient(closest-side, #fff 0 45%, rgb(255 244 214 / .85) 70%, transparent); }
-.skypick__thumb--auto::after { width: 24%; height: 18%; right: 16%; bottom: 16%; background: radial-gradient(circle at 70% 40%, transparent 0 42%, #e6eaff 44%); }
-.skypick__thumb--light { background: linear-gradient(#91b7ed, #d9ebfc); }
-.skypick__thumb--light::before { width: 26%; height: 18%; right: 14%; top: 14%; background: radial-gradient(closest-side, #fff 0 44%, rgb(255 244 214 / .8) 70%, transparent); }
-.skypick__thumb--light::after { width: 62%; height: 16%; left: 8%; bottom: 20%; border-radius: 40px; background: rgb(255 255 255 / .75); filter: blur(1px); }
-.skypick__thumb--evening { background: linear-gradient(#2b478d 0%, #9b6b9e 46%, #f0928a 78%, #ffb077 100%); }
-.skypick__thumb--evening::before { width: 5%; height: 4%; left: 24%; top: 18%; background: #fff; box-shadow: 18px 10px 0 -.5px rgb(255 255 255 / .8), 38px -4px 0 -.5px rgb(255 255 255 / .7); }
-.skypick__thumb--dark { background: linear-gradient(#05081a, #1c1b45); }
-.skypick__thumb--dark::before { width: 4%; height: 3%; left: 22%; top: 16%; background: #fff; box-shadow: 16px 20px 0 rgb(255 255 255 / .8), 38px 6px 0 rgb(255 255 255 / .7), 8px 52px 0 rgb(255 255 255 / .6), 34px 44px 0 rgb(255 255 255 / .8); }
-.skypick__thumb--dark::after { width: 26%; height: 20%; right: 16%; top: 36%; background: radial-gradient(circle at 70% 40%, transparent 0 42%, #e6eaff 44%); }
+/* (the pictures are made of gradients alone: no pseudo-elements, no filters, no shadows for the stars; a blur on a little pseudo-element
+   inside a clipped, rounded box is what the software renderer of the CI emulator did not survive) */
+.skypick__thumb--auto { background:
+  radial-gradient(circle 9px at 26% 26%, #fff 0 45%, rgb(255 244 214 / .85) 70%, transparent 100%),
+  radial-gradient(circle 5px at 72% 76%, #e6eaff 0 85%, transparent 100%),
+  linear-gradient(135deg, #3a82e0 0 49.5%, #0a0f2e 50.5% 100%); }
+.skypick__thumb--light { background:
+  radial-gradient(circle 9px at 74% 24%, #fff 0 44%, rgb(255 244 214 / .8) 70%, transparent 100%),
+  radial-gradient(ellipse 26px 6px at 38% 76%, rgb(255 255 255 / .85), transparent 100%),
+  linear-gradient(#91b7ed, #d9ebfc); }
+.skypick__thumb--evening { background:
+  radial-gradient(circle 2px at 24% 18%, #fff 0 55%, transparent 100%),
+  radial-gradient(circle 2px at 46% 25%, rgb(255 255 255 / .8) 0 55%, transparent 100%),
+  radial-gradient(circle 2px at 68% 14%, rgb(255 255 255 / .7) 0 55%, transparent 100%),
+  linear-gradient(#2b478d 0%, #9b6b9e 46%, #f0928a 78%, #ffb077 100%); }
+.skypick__thumb--dark { background:
+  radial-gradient(circle 6px at 70% 44%, #e6eaff 0 85%, transparent 100%),
+  radial-gradient(circle 2px at 22% 16%, #fff 0 55%, transparent 100%),
+  radial-gradient(circle 2px at 45% 30%, rgb(255 255 255 / .8) 0 55%, transparent 100%),
+  radial-gradient(circle 2px at 30% 55%, rgb(255 255 255 / .6) 0 55%, transparent 100%),
+  radial-gradient(circle 2px at 58% 72%, rgb(255 255 255 / .8) 0 55%, transparent 100%),
+  linear-gradient(#05081a, #1c1b45); }
 .skypick__check { position: absolute; z-index: 1; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 50%; display: none; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: 0 2px 6px rgb(0 0 0 / .3); }
 .skypick__opt[aria-checked="true"] .skypick__check { display: grid; }
 @media (max-width: 359px) { .skypick { gap: 6px; } }
