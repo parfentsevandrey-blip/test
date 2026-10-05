@@ -711,6 +711,49 @@ def object_location(doc, obj: dict, cache: Path, assets: Path, *,
         access_block(doc, "Доступность и окружение", obj["access"])
 
 
+WHY_MAP_PX_PER_MM = 11.81   # карта полосы «Почему выбран» — 300 dpi, как листы файла
+WHY_MAP_MAX_MM = 175.0      # карта добирает полосу до нижнего поля: другого кадра на ней нет
+
+
+def object_why(doc, obj: dict, cache: Path, assets: Path) -> None:
+    """Полоса «Почему выбран»: привязка объекта к выбранным территориям.
+
+    Текст пишется по фактам из ``reportgen.selection``: на какой выбранной
+    территории стоит объект, в какой промзоне листа файла с картами или как
+    далеко от неё, что рядом из того, ради чего территорию выбирали. Карта —
+    те же контуры и знаки, что на листе файла, плюс метка объекта; перечень
+    внизу собирает привязку в строки.
+    """
+    from . import selection
+
+    why = obj["why"]
+    micro(doc, "Почему выбран", after=6)
+    display_title(doc, why["title"], size=26, after=8)
+    rule(doc, color=S.INK, size=S.SZ_RULE, after=11)
+    texts = why.get("paragraphs", [])
+    if texts:
+        text_columns(doc, texts)
+
+    rows = why.get("rows") or []
+    used = (_heading_height(why["title"], 26) + _columns_height(texts)
+            + _mm(13) + _mm(3 + S.LH_SMALL))
+    if rows:
+        used += _mm(13 + 5 + S.FS_MICRO + 2 + 5) + _rows_height(rows)
+    free = S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM - used - MAP_SLACK_MM
+    free = min(max(free, MAP_MIN_MM), WHY_MAP_MAX_MM)
+    ratio = (S.CONTENT_W_MM - FRAME_PAD_MM) / (free - FRAME_PAD_MM)
+    width = int((S.CONTENT_W_MM - FRAME_PAD_MM) * WHY_MAP_PX_PER_MM)
+    image = selection.why_map(obj, why, (width, int(round(width / ratio))),
+                              assets / f"why-{obj.get('slug', 'object')}.png")
+    par(doc, after=0, lead=13)
+    framed_photo(doc, image, cache, width_mm=S.CONTENT_W_MM, ratio=ratio)
+    caption = par(doc, before=3, after=0, lead=S.LH_SMALL, align=WD_ALIGN_PARAGRAPH.CENTER)
+    txt(caption, why.get("caption", "Контуры промзон — по файлу с картами выбранных территорий")
+        + " · картографические данные © Google", size=S.FS_CAPTION, color=S.MUTED)
+    if rows:
+        access_block(doc, "Привязка к выбранным территориям", rows)
+
+
 CHAPTER_SLACK_MM = 6.0
 CHAPTER_MIN_MM = 40.0
 
@@ -1020,6 +1063,11 @@ def build(report: dict, objects: list[tuple[dict, list[Path]]], dest: Path) -> P
             flow.new_page()
         started = True
         object_facts(doc, index, obj, cache, plan.closer, labels)
+        if obj.get("why"):
+            flow.new_page()
+            object_why(doc, obj, cache, assets)
+        elif report.get("selection"):
+            log.warning("у объекта %s нет полосы «Почему выбран»", obj.get("title"))
         flow.new_page()
         object_description(doc, obj, cache, plan.portrait, labels)
         flow.new_page()
