@@ -91,7 +91,8 @@ jobs:
     # The smoke test: the app starts, its program answers and proves it knows the app's token, the window shows the
     # interface, the service runs in the foreground, "Выйти" stops the program.
     # (Several runs side by side: on the page «Настройки → Внешний вид» the emulator itself vanished, and each variant takes a
-    # different part of that page away to show which part it is - see GlassShotsTest.pickerShot. "full" is the page as it is.)
+    # different part of the little pictures of the sky picker away to show which part it is - see GlassShotsTest.pickerCss.
+    # Found so far: the page is fine without the picker (skip, nopicker), and it still vanishes with every shadow, blur and animation off.)
     name: emulator (${{ matrix.picker }})
     needs: build
     if: github.event_name != 'workflow_dispatch' || inputs.emulator
@@ -100,7 +101,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        picker: [full, skip, noscroll, hash, nopicker, noeffects]
+        picker: [nogradient, lineargrad, radialonly, noaspect, noclip, nocheck]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
