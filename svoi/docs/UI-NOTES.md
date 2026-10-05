@@ -219,6 +219,25 @@ and the first frame of the next start are the sky of the last time), and the men
 (`RosaGlass`: smoke in the sky's hue, a thick rim lit from the upper left, a spark). The launcher icon is a glass bead with the mark of The Mesh on a violet → pink
 dusk sky (an adaptive vector icon; the themed one is the same bead in one colour).
 
+*What was checked, and what was not.* In headless Chromium at phone sizes (360×780, 412×860) under the nine skies of the audit: `check-contrast.mjs --skin rosa` reads the
+contrast of every visible piece of text from pixels, and its last full run looked at 6942 pieces of text on 342 screens; two were short of WCAG AA (the link «Изменить имя» at the
+foot of the first screen of a tall phone at dusk, 3.6:1 — it is white now, with the accent as its underline — and the three first-screen routes were audited again: 54 screens, none
+short). The end-to-end tests (90), the mock smoke test (40 steps) and the sky checks (`check-sky.mjs`, 16) pass. On a real WebView (113) in the Android 14 emulator of CI the window
+starts, shows the look and is photographed by `GlassShotsTest` (the first screen, the menu, Home, the sheets, Settings, the sky by day, at night and in the evening mood, the page
+Interface with the sky picker; both themes), and the tests on the device pass with it.
+
+Not checked: **a real phone**. That means a real GPU (what the blur on the bars, the sheets and the menus, the live sky and the lens cost it; the steps down to `calm` and `still` were
+tuned on software renderers); haptics (an emulator cannot feel them); the blur behind the native menus and dialogs (an emulator does not do it, so their fill there is dense, about
+85 %); the launcher icon on real launchers; any WebView but 113; and **the place of the sun**, which is a guess from the time zone, not the person's location. At the size of a tablet
+(900×700) 8 of 2263 pieces of text (labels at the bright horizon at the foot of a screen, at noon and in the evening mood) are between 4.0:1 and 4.5:1; a phone has none.
+
+*The emulator and the page Interface.* On the usual software graphics of the emulator (`swiftshader_indirect`) the emulator's own process died (a segfault in its render thread,
+seen in `dmesg`; not memory, not the app) about a second after the page with the sky picker opened. It depended on the size of the picker's labels, not on gradients, shadows,
+blur, animation, the aspect ratio or the clip (four rounds of variants are in the history of `.github/workflows/themesh-android.yml`). CI therefore draws that one page alone on
+`-gpu swangle_indirect` (ANGLE over SwiftShader), which is several times slower: the whole suite on it took 27 minutes, and a second run did not finish in 40. The cause inside
+the emulator was not found, and what a real GPU does with the page was not checked (it is the emulator's process that died, not the WebView or the app, so there is no reason to
+expect the same on a phone — but that is a reason, not a check).
+
 ## Plain language: Home and the wording rules
 
 The interface is meant for people who don't care how a mesh works. The landing page is

@@ -35,6 +35,12 @@ final class Shots {
                 Thread.sleep(900);
             }
             Bitmap bmp = ua.takeScreenshot();
+            // (на перегруженном эмуляторе система иногда отвечает «нет снимка»: два раза пробуем ещё)
+            for (int i = 0; i < 2 && bmp == null; i++) {
+                Log.w(TAG, name + ": система не дала снимок, пробуем ещё");
+                Thread.sleep(1500);
+                bmp = ua.takeScreenshot();
+            }
             if (bmp == null) {
                 Log.w(TAG, name + ": система не дала снимок");
                 return false;
