@@ -90,7 +90,7 @@ jobs:
   emulator:
     # The smoke test: the app starts, its program answers and proves it knows the app's token, the window shows the
     # interface, the service runs in the foreground, "Выйти" stops the program.
-    # Two runs side by side, because the two jobs want different things of the emulator's graphics (see matrix).
+    # Three runs side by side, because they want different things of the emulator's graphics (see matrix).
     name: emulator (${{ matrix.name }})
     needs: build
     if: github.event_name != 'workflow_dispatch' || inputs.emulator
@@ -100,20 +100,24 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # The tests of the program and of the window (everything but the pictures): the usual software graphics of the emulator
-          # (swiftshader_indirect) is what they were written against and runs them in a few minutes; the second Nearby test, which waits for
-          # a conversation of two programs under a time limit, did not survive the slow graphics of the other job (the whole job took 27 minutes).
+          # The tests of the program and of the window: the usual software graphics of the emulator (swiftshader_indirect) is what they were
+          # written against and runs them in a few minutes. The second Nearby test, in which two programs talk under a time limit, did not
+          # survive the slow graphics of the picker job below (the whole run took 27 minutes and the program on the other end gave up waiting).
           - name: tests
             gpu: swiftshader_indirect
             only: -Pandroid.testInstrumentationRunnerArguments.notClass=app.themesh.mobile.GlassShotsTest
-          # The pictures of the window (GlassShotsTest, a few minutes to a quarter of an hour: the page of the look «Роса» is heavy for a
-          # software renderer). One of them is the page «Настройки → Внешний вид» with the sky picker, which in the usual mode kills the
-          # emulator itself (its render thread segfaults ~1 s after the page opens, seen in dmesg; not memory, not the app; it depended on the
-          # size of the labels of the picker, not on gradients, shadows, blur, animation, the aspect ratio or the clip: four rounds of variants are in
-          # the history of this file). ANGLE over SwiftShader (swangle_indirect) draws the same page and the emulator survives.
+          # The pictures of the window (GlassShotsTest): every screen but one.
           - name: pictures
+            gpu: swiftshader_indirect
+            only: -Pandroid.testInstrumentationRunnerArguments.class=app.themesh.mobile.GlassShotsTest -Pandroid.testInstrumentationRunnerArguments.shots=main
+          # The one picture left: the page «Настройки → Внешний вид» with the sky picker. In the usual mode it kills the emulator itself (its render
+          # thread segfaults a second after the page opens, seen in dmesg; not memory, not the app; it depended on the size of the labels of the
+          # picker, not on gradients, shadows, blur, animation, the aspect ratio or the clip: four rounds of variants are in the history of this
+          # file). ANGLE over SwiftShader (swangle_indirect) draws the same page and the emulator survives, but it is several times slower (the page of
+          # the look «Роса» took a quarter of an hour to take pictures of, with the launcher's «isn't responding» over them), so it draws this page alone.
+          - name: picker
             gpu: swangle_indirect
-            only: -Pandroid.testInstrumentationRunnerArguments.class=app.themesh.mobile.GlassShotsTest
+            only: -Pandroid.testInstrumentationRunnerArguments.class=app.themesh.mobile.GlassShotsTest -Pandroid.testInstrumentationRunnerArguments.shots=picker
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

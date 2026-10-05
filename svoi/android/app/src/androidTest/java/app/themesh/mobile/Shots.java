@@ -29,6 +29,11 @@ final class Shots {
         try {
             Thread.sleep(settleMs);
             UiAutomation ua = instrumentation.getUiAutomation();
+            // окно «Pixel Launcher isn't responding» поверх приложения (медленный эмулятор) закрыло бы снимок: нажать в нём «Подождать»
+            for (int i = 0; i < 3 && PermissionDialog.waitOut(ua); i++) {
+                Log.i(TAG, name + ": нажато «Подождать» в окне «не отвечает»");
+                Thread.sleep(900);
+            }
             Bitmap bmp = ua.takeScreenshot();
             if (bmp == null) {
                 Log.w(TAG, name + ": система не дала снимок");

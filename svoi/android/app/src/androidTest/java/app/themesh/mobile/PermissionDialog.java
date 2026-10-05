@@ -35,13 +35,37 @@ final class PermissionDialog {
         }
     }
 
-    /** Нажимает «Не разрешать», если запрос разрешения на экране. */
-    static Result deny(UiAutomation automation) {
+    /** Чтобы видеть окна системы и идентификаторы кнопок в них. */
+    private static void seeAllWindows(UiAutomation automation) {
         AccessibilityServiceInfo info = automation.getServiceInfo();
         if (info != null) {
             info.flags |= AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS | AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
             automation.setServiceInfo(info);
         }
+    }
+
+    /**
+     * Нажимает «Подождать» в окне системы «Приложение не отвечает», если оно на экране (на медленном эмуляторе так бывает у лаунчера, пока
+     * окно приложения рисуется программно), чтобы оно не закрывало снимок. {@code true}, если нажато; окно может появиться снова.
+     */
+    static boolean waitOut(UiAutomation automation) {
+        seeAllWindows(automation);
+        for (AccessibilityNodeInfo root : roots(automation)) {
+            // это окно держит система («android»), а не приложение: в окне приложения кнопку «Wait» нажимать не за что
+            if (!"android".contentEquals(root.getPackageName() == null ? "" : root.getPackageName())) {
+                continue;
+            }
+            AccessibilityNodeInfo wait = find(root, new StringBuilder(), 0, true);
+            if (wait != null && wait.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Нажимает «Не разрешать», если запрос разрешения на экране. */
+    static Result deny(UiAutomation automation) {
+        seeAllWindows(automation);
         List<AccessibilityNodeInfo> roots = roots(automation);
         if (roots.isEmpty()) {
             return new Result(false, "окон нет");

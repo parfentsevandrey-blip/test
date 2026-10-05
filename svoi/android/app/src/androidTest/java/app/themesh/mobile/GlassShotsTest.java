@@ -27,6 +27,10 @@ import java.util.List;
  * (CI кладёт их в артефакт «themesh-android-emulator-screens»), поэтому шаг, который не удался (меню не открылось, страница не
  * успела), записывается в журнал и не ломает остальные снимки. Как снимки попадают на диск, см. {@link Shots}; что происходит в
  * странице — {@link WebProbe}. «Рядом» с настоящим вторым узлом снимает {@link NearbyFlowTest}.
+ *
+ * <p>Аргумент {@code shots}: {@code all} (по умолчанию) — всё; {@code main} — всё, кроме страницы «Настройки → Внешний вид»; {@code picker} — только
+ * она. CI снимает их в разных заданиях: эта страница с выбором неба убивает сам эмулятор на его обычной программной графике (см.
+ * комментарий к матрице в themesh-android.yml), и из-за неё остальным снимкам пришлось бы идти на медленной.
  */
 @RunWith(AndroidJUnit4.class)
 public class GlassShotsTest {
@@ -34,6 +38,9 @@ public class GlassShotsTest {
     /** После того как страница договорила анимации (WebProbe.settle) шрифты и размытие ещё устанавливаются. */
     private static final long SETTLE_MS = 1500;
     private final long waitMs = Long.parseLong(InstrumentationRegistry.getArguments().getString("waitSeconds", "90")) * 1000;
+    private final String shots = InstrumentationRegistry.getArguments().getString("shots", "all");
+    private final boolean takeMain = !shots.equals("picker");
+    private final boolean takePicker = !shots.equals("main");
     private final Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
     private final Context context = instrumentation.getTargetContext();
     private final List<String> written = new ArrayList<>();
@@ -64,61 +71,84 @@ public class GlassShotsTest {
             assertTrue("первый экран не появился за " + waitMs / 1000 + " с",
                     web.waitFor("document.querySelector('[data-testid=\"page-onboarding\"]') != null", waitMs));
 
-            for (String theme : new String[] {"light", "dark"}) {
-                setTheme(web, theme, "page-onboarding");
-                shot(web, "01-start-" + theme);
-                // меню приложения «⋮»: его просит страница. Закрывается оно самим окном, а не клавишей «Назад»: если бы меню не
-                // открылось, «Назад» закрыла бы приложение, и следующие снимки были бы снимками рабочего стола
-                web.run("window.themeshShell && window.themeshShell.menu();");
-                shot(web, "02-menu-" + theme);
-                scenario.onActivity(MainActivity::dismissMenu);
-                Thread.sleep(800);
-                // форма «Создать свою сеть»
-                web.click("[data-testid=\"onb-create\"]");
-                shot(web, "03-create-" + theme);
-                web.click(".onb-back");
+            if (takeMain) {
+                firstScreens(web, scenario);
             }
-
-            // сеть создана: «Главная», окно «Добавить устройство»
-            web.run("window.__created = 0; fetch('api/mesh/create',{method:'POST',headers:{'Content-Type':'application/json','X-Themesh':'1'},"
-                    + "body:JSON.stringify({meshName:'Дом',deviceName:'pixel',owner:'Андрей'})}).then(function (r) { window.__created = r.status; });");
-            web.waitFor("window.__created === 200", 30_000);
-            for (String theme : new String[] {"light", "dark"}) {
-                setTheme(web, theme, "page-home");
-                shot(web, "04-home-" + theme);
-                web.click("[data-testid=\"home-action-add\"]");
-                shot(web, "05-add-device-" + theme);
-                web.click("[data-testid=\"invite-create\"]");
-                web.waitFor("document.querySelector('[data-testid=\"invite-qr\"] img') != null", 20_000);
-                shot(web, "06-invite-" + theme);
-                web.click(".modal__close");
-                Thread.sleep(500);
-                web.run("location.hash = '#/settings';");
-                shot(web, "07-settings-" + theme);
-                web.run("location.hash = '#/home';");
-                Thread.sleep(500);
+            createTheNetwork(web);
+            if (takeMain) {
+                homeScreens(web);
+                skies(web);
             }
-
-            // «Роса»: картинки для выбора настроения в «Настройки → Внешний вид» и небо днём, ночью и в вечернем настроении (страница
-            // показывает небо на заданной высоте солнца, ?sky=: так снимки не зависят от того, когда их снимают)
-            String[][] moods = {{"auto", "25", "auto", "10-sky-day"}, {"auto", "-16", "auto", "11-sky-night"}, {"evening", "", "evening", "12-sky-evening"}};
-            for (String[] mood : moods) {
-                Log.i("Shots", "step: " + mood[3]);
-                web.run("try { localStorage.setItem('themesh.theme', '" + mood[0] + "'); } catch (e) {}"
-                        + " location.href = location.pathname + '" + (mood[1].isEmpty() ? "" : "?sky=" + mood[1]) + "#/home';");
-                Thread.sleep(1500);
-                web.waitFor("document.querySelector('[data-testid=\"page-home\"]') != null"
-                        + " && document.documentElement.getAttribute('data-appearance') === '" + mood[2] + "'", 30_000);
-                shot(web, mood[3]);
+            if (takePicker) {
+                pickerShot(web);
             }
-
-            pickerShot(web);
 
             // вернуть узел в прежнее состояние: другие тесты ждут первый экран
             web.run("fetch('api/mesh/leave',{method:'POST',headers:{'Content-Type':'application/json','X-Themesh':'1'},body:'{}'});");
             Thread.sleep(1500);
         }
         assertTrue("ни одного снимка не получилось", !written.isEmpty());
+    }
+
+    /** Первый экран, меню «⋮» и форма «Создать свою сеть» в обеих темах. */
+    private void firstScreens(WebProbe web, ActivityScenario<MainActivity> scenario) throws Exception {
+        for (String theme : new String[] {"light", "dark"}) {
+            setTheme(web, theme, "page-onboarding");
+            shot(web, "01-start-" + theme);
+            // меню приложения «⋮»: его просит страница. Закрывается оно самим окном, а не клавишей «Назад»: если бы меню не
+            // открылось, «Назад» закрыла бы приложение, и следующие снимки были бы снимками рабочего стола
+            web.run("window.themeshShell && window.themeshShell.menu();");
+            shot(web, "02-menu-" + theme);
+            scenario.onActivity(MainActivity::dismissMenu);
+            Thread.sleep(800);
+            // форма «Создать свою сеть»
+            web.click("[data-testid=\"onb-create\"]");
+            shot(web, "03-create-" + theme);
+            web.click(".onb-back");
+        }
+    }
+
+    /** Сеть создана: дальше «Главная» и всё, что за ней. */
+    private void createTheNetwork(WebProbe web) throws Exception {
+        web.run("window.__created = 0; fetch('api/mesh/create',{method:'POST',headers:{'Content-Type':'application/json','X-Themesh':'1'},"
+                + "body:JSON.stringify({meshName:'Дом',deviceName:'pixel',owner:'Андрей'})}).then(function (r) { window.__created = r.status; });");
+        web.waitFor("window.__created === 200", 30_000);
+    }
+
+    /** «Главная», окно «Добавить устройство», приглашение и «Настройки» в обеих темах. */
+    private void homeScreens(WebProbe web) throws Exception {
+        for (String theme : new String[] {"light", "dark"}) {
+            setTheme(web, theme, "page-home");
+            shot(web, "04-home-" + theme);
+            web.click("[data-testid=\"home-action-add\"]");
+            shot(web, "05-add-device-" + theme);
+            web.click("[data-testid=\"invite-create\"]");
+            web.waitFor("document.querySelector('[data-testid=\"invite-qr\"] img') != null", 20_000);
+            shot(web, "06-invite-" + theme);
+            web.click(".modal__close");
+            Thread.sleep(500);
+            web.run("location.hash = '#/settings';");
+            shot(web, "07-settings-" + theme);
+            web.run("location.hash = '#/home';");
+            Thread.sleep(500);
+        }
+    }
+
+    /**
+     * «Роса»: небо днём, ночью и в вечернем настроении (страница показывает небо на заданной высоте солнца, ?sky=: так снимки не
+     * зависят от того, когда их снимают).
+     */
+    private void skies(WebProbe web) throws Exception {
+        String[][] moods = {{"auto", "25", "auto", "10-sky-day"}, {"auto", "-16", "auto", "11-sky-night"}, {"evening", "", "evening", "12-sky-evening"}};
+        for (String[] mood : moods) {
+            Log.i("Shots", "step: " + mood[3]);
+            web.run("try { localStorage.setItem('themesh.theme', '" + mood[0] + "'); } catch (e) {}"
+                    + " location.href = location.pathname + '" + (mood[1].isEmpty() ? "" : "?sky=" + mood[1]) + "#/home';");
+            Thread.sleep(1500);
+            web.waitFor("document.querySelector('[data-testid=\"page-home\"]') != null"
+                    + " && document.documentElement.getAttribute('data-appearance') === '" + mood[2] + "'", 30_000);
+            shot(web, mood[3]);
+        }
     }
 
     /**
