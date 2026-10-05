@@ -303,6 +303,8 @@ html[data-look="rosa"] .home-status .grow { flex: none; width: 100%; }
 
 /* little labels that would stand straight on the sky are little panes of glass (the sky behind them can be anything: noon, the sun) */
 html[data-look="rosa"] :is(.expert-tag, .page > h2.section-title) { background-color: var(--glass-fill); box-shadow: var(--glass-rim-sm); border-color: transparent; }
+/* a link that stands on the glass is white (the accent of dusk is too dim for the bright horizon at the foot of a tall screen: 3.6:1), the accent is its underline */
+html[data-look="rosa"] .linklike { color: var(--text); text-decoration: underline; text-decoration-color: rgb(var(--sky-accent-rgb) / .85); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
 html[data-look="rosa"] .page > h2.section-title { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: var(--r-pill); color: var(--text); }
 html[data-look="rosa"][data-theme="dark"] .page-head__sub { color: var(--text); }
 
