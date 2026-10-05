@@ -47,7 +47,7 @@ internal/web/ui/
   js/views/               home (landing page), help («Как это работает?» sheet), onboarding,
                           devices (+topology, device-drawer, add-device),
                           files (+files-send, transfers, files-browse, preview, files-shares),
-                          mail (+compose), chat, services, settings (+logs), more
+                          mail (+compose), mailgw (Settings → Own address: the setup of the mail gateway), chat, services, settings (+logs), more
 web-dev/
   mock-server.mjs         zero-dependency mock of the whole API (see below)
   screenshots.mjs         walks every screen in dark/light × 1440×900/390×844 → web-dev/screens/ (generated, not tracked; the few shown in the README live in docs/img/;
@@ -62,8 +62,8 @@ web-dev/
 Routes: `#/home[/<id>]` (the default; `/<id>` opens the device drawer over Home; `#/home?add=1` opens
 «Добавить устройство» — the empty states of Chat, Files and the recipient chips link there), `#/devices[/<id>]`, `#/files/send[?to=<id>]`, `#/files/browse[/<dev>[/<share>[/<path…>]]]`
 (`self` = this device), `#/files/shares[?d=<id>]`, `#/mail/<inbox|sent|trash>[/<msgId>]`,
-`#/mail/compose[?to=<id,…>|?reply=<msgId>[&all=1]]`, `#/chat[/<peerId>]`,
-`#/services[?peer=<id>][&d=<id>]`, `#/settings[/<device|network|tun|files|interface|advanced|about>][?d=<id>]`,
+`#/mail/compose[?to=<id,…>|?reply=<msgId>[&all=1]|?emailTo=<addr,…>]`, `#/chat[/<peerId>]`,
+`#/services[?peer=<id>][&d=<id>]`, `#/settings[/<device|network|tun|files|mailgw|interface|advanced|about>][?d=<id>]`,
 `#/more` (phones). `?d=<peerId>` = "Manage device ▾" (admin, through `/api/d/:id/…`).
 
 ## Running
@@ -292,6 +292,36 @@ device has its own key (like an ID card); an invitation is a one-time code; data
 between your devices (sometimes through another of yours), encrypted, no server in the middle; if a
 device is off, a letter or file waits. Plus what the dots and the map's lines mean.
 
+## Internet mail: the letters and the setup
+
+**A letter from the Internet is somebody else's code.** The reader shows, in this order: who it is from (the name and, beside it, the address —
+a name can say anything, the address is what counts), the **verdict** of the gateway as a banner (`verified` green, `unverified` amber,
+`suspicious` red with the warning about links and attachments; the three checks are under «Подробности проверки»), a switch «С оформлением /
+Простой текст» when the letter has formatted text, and the text itself. The formatted text is **not** put into the page: it is a page of the
+node (`GET /api/mail/:id/html`) shown in an `<iframe sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox">` — no
+`allow-scripts`, so nothing in it runs, and `allow-same-origin` only so that the interface can read the height of the page and fit the frame (it
+has a policy of its own that forbids everything but its inline styles and `data:` pictures; see `internal/api/mailhtml.go`). White paper, whatever
+the theme: the colours inside a letter were chosen by its sender for white. **Pictures of the Internet are never loaded** (also not on request): the
+note says how many there were; the pictures that belong to the letter (`cid:`) are inside the page as `data:`. The android window blocks every request
+to anything but the node anyway (`OriginPolicy`), the desktop one does not, so this is the node's rule, not the window's.
+
+**The list** marks a letter from the Internet with the `@` avatar instead of a device, a letter that is not what it says with a red mark beside the time,
+and a letter to the Internet shows what became of its addresses in one icon (failed beats waiting beats delivered).
+
+**Writing.** The recipients are the devices (chips, as before) and, when the mesh has a gateway with a mailbox for this device, a row «Адреса в
+интернете»: addresses become chips on Enter, a comma, a semicolon, a paste or when the field is left; `Name <a@b.c>` is understood; a wrong address stays in
+the field with the reason and blocks sending. «С какого адреса» is a choice when the mesh has several mailboxes and a sentence when it has one. Without a
+gateway the row is hidden behind a link «Адреса в интернете»; opening it and typing an address shows how to get one (a link to Settings → Own address) and
+the send button stays disabled. An answer to a letter from the Internet goes to its `Reply-To` (else its sender), from the mailbox the letter came to, with
+the other addressees in Cc for «Ответить всем»; no device is written to (the gateway is only the way).
+
+**The setup** (`js/views/mailgw.js`, Settings → «Свой адрес», on the device that has the address; `?d=` points it at another device through `/api/d/:id/mailgw`).
+One form keeps its own draft and saves everything at once (a password field that is left empty keeps the saved password). Mistakes are explained next to the
+field before anything is sent; what the node refuses on its own comes back as its (English) message in a red box. The state card polls every 6 s: the port
+that cannot be taken is said in words (`listenErrorKind`: `permission` — port 25 needs rights, with what to do; `inuse`). The **records of the DNS** are
+cards with the type, name and value (each with a copy button), a mark (`ok` / `missing` / `wrong` / `unknown`), what the DNS says now and why a record is wrong;
+they are looked up again after every save and on «Проверить». Below: the queue of letters on their way (retry, give up) and a test letter to any address.
+
 ## Notes for the Go side
 
 * Serve `index.html` for `/`; hash routing means no other SPA fallback is needed.
@@ -365,7 +395,18 @@ Mail: `mail-compose`, `mail-folder-<inbox|sent|trash>`, `mail-search`, `mail-ite
 `data-unread`), `mail-reader`, `mail-reply`, `mail-trash`, `mail-delivery`, `mail-recipient`
 (`data-state`), `mail-attachment` (`data-state`, `data-index`) in the reader, `compose-subject`,
 `compose-body`, `compose-files`, `attachment` (`data-status`, staged in compose/chat),
-`compose-send`; received attachments in mail and chat: `attachment-fetch` («Загрузить (31 МБ)»,
+`compose-send`; Internet mail — in the list `mail-item` carries `data-ext` = `in|out`; in the reader `mail-from`, `mail-from-addr`,
+`mail-via`, `mail-verdict` (`data-verdict` = `verified|unverified|suspicious`), `mail-view-formatted|plain`, `mail-html` (the `<iframe>` of the
+formatted text, `sandbox` without `allow-scripts`), `mail-images-note`, `mail-reply-all`; `mail-recipient` carries `data-kind` = `device|email`
+(state: `queued|sent|deferred|delivered|failed`) and for an address `mail-recipient-why` (the words of the other server); in the composer
+`compose-email-show` (reveals the field when there is no gateway), `compose-email-row`, `compose-email`, `compose-email-cc`, `compose-cc-add`,
+`email-chip`, `compose-from` (a `<select>` when the mesh has several mailboxes) or `compose-from-hint`, `compose-no-gateway`. Settings →
+Own address: `mailgw` (the section), `mailgw-status` (`data-state` = `off|on|partial`), `mailgw-listen-error`, `mailgw-setup`, `mailgw-enable`,
+`mailgw-domain`, `mailgw-box` / `mailgw-box-name` / `mailgw-box-remove` / `mailgw-add-box` / `mailgw-no-boxes`, `mailgw-advanced` (`mailgw-relay-switch`,
+`mailgw-relay-host|port|user|pass|spf`, `mailgw-mode-<starttls|tls|plain>`, `mailgw-host`, `mailgw-listen`, `mailgw-public-ip`), `mailgw-save`,
+`mailgw-save-error`, `mailgw-dns` (`mailgw-dns-check`, `mailgw-dns-verdict` `data-ready`, `mailgw-rec` `data-id` `data-state`), `mailgw-queue`
+(`mailgw-queue-item` `data-id`, `mailgw-queue-retry`, `mailgw-queue-cancel`, `mailgw-queue-empty`), `mailgw-test` (`mailgw-test-to`,
+`mailgw-test-send`); received attachments in mail and chat: `attachment-fetch` («Загрузить (31 МБ)»,
 `needsConsent`) and `attachment-retry` («Повторить», `failed`). Chat: `chat-attachment`
 (`data-state`, `data-index`), `thread` (`data-peer`, `data-unread`), `chat-new`, `conversation`,
 `bubble` (`data-id`, `data-state`, `data-mine`), `chat-input`, `chat-send`, `chat-files`.

@@ -164,6 +164,20 @@ html[data-look="rosa"][data-theme="dark"] {
   --rz-lens: rgb(255 255 255 / .2);
 }
 
+/* Chips are little glass too. Their fills in the tokens are see-through tints, and what is behind a card decides whether the words on them can be read
+   (on the bright part of an evening sky they could not): under the light type they get the smoke of the sky, tinted by what they say. */
+html[data-look="rosa"][data-theme="dark"] .chip {
+  --surface-2: rgb(var(--sky-smoke-rgb) / .74);
+  --surface-3: rgb(var(--sky-smoke-rgb) / .74);
+  --amber-soft: color-mix(in srgb, #f5b64a 16%, rgb(var(--sky-smoke-rgb) / .92));
+  --danger-soft: color-mix(in srgb, #ff6b66 16%, rgb(var(--sky-smoke-rgb) / .92));
+  --info-soft: color-mix(in srgb, #6c9bff 15%, rgb(var(--sky-smoke-rgb) / .92));
+}
+
+/* The chosen row of a list (a letter, a conversation) is the same smoke, a little more solid than the card it is on: a lighter fill under light type
+   would be the one place on a screen where the words get harder to read. */
+html[data-look="rosa"][data-theme="dark"] :is(.mitem.is-active .mitem__link, .thread.is-active) { background: rgb(var(--sky-smoke-rgb) / .9); box-shadow: 0 0 0 1px var(--line-2); }
+
 /* ---------- 2b. the tokens: dark type on the pale sky of the Light appearance ---------- */
 html[data-look="rosa"][data-theme="light"] {
   --bg: var(--sky-hor); --bg-side: transparent;

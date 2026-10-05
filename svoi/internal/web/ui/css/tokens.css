@@ -140,7 +140,7 @@
 
   --text: #1b211f;
   --text-2: #4f5754;
-  --text-3: #686f6b;
+  --text-3: #5f6662;
   --text-inv: #ffffff;
 
   --accent: #0b7a5a;
@@ -152,7 +152,7 @@
   --accent-line: rgba(11, 122, 90, .42);
 
   --amber: #c27a10;
-  --amber-text: #94590a;
+  --amber-text: #8a520a;
   --amber-soft: rgba(214, 140, 30, .14);
   --amber-line: rgba(194, 122, 16, .55);
 

@@ -18,12 +18,14 @@ import { Button, Callout, Card, Chip, CopyButton, EmptyState, Field, IconButton,
 import { confirmDialog } from "../components/modal.js";
 import { toast, toastError } from "../components/toast.js";
 import { LogViewer } from "./logs.js";
+import { MailGateway } from "./mailgw.js";
 
 const SECTIONS = [
   { id: "device", icon: "laptop" },
   { id: "network", icon: "globe" },
   { id: "tun", icon: "network" },
   { id: "files", icon: "files" },
+  { id: "mailgw", icon: "at" },
   { id: "interface", icon: "sun" },
   { id: "advanced", icon: "settings" },
   { id: "about", icon: "info" },
@@ -405,6 +407,13 @@ function FilesSection({ cfg, dev }) {
   </${Section}>`;
 }
 
+// ---------------------------------------------------------------- own address (the mail gateway)
+function MailGatewaySection({ dev, deviceName }) {
+  return html`<${Section} id="mailgw" icon="at" title=${t("set.sec.mailgw")} sub=${t("set.sec.mailgwSub")}>
+    <${MailGateway} dev=${dev} deviceName=${deviceName} />
+  </${Section}>`;
+}
+
 // ---------------------------------------------------------------- interface
 /** The moods of the sky ("Роса" look): little pictures to choose from, in a radio group. */
 function SkyPick({ value, options, onChange, label }) {
@@ -553,6 +562,7 @@ export function SettingsView({ route }) {
       <${NetworkSection} cfg=${cfg} />
       <${TunSection} cfg=${cfg} dev=${dev} />
       <${FilesSection} cfg=${cfg} dev=${dev} />
+      <${MailGatewaySection} dev=${dev} deviceName=${remotePeer ? remotePeer.name : ""} />
       ${cfg.local && html`<${InterfaceSection} />`}
       <${AdvancedSection} cfg=${cfg} />
       <${AboutSection} cfg=${cfg} dev=${dev} />`;

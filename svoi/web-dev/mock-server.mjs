@@ -30,6 +30,11 @@
 //   /__mock/nearby?request=pixel&os=android  (in a mesh) a device nearby asks to be added; &confirmed=0 keeps it unconfirmed
 //   /__mock/nearby?hold=1           the person at the other device keeps the request of this one waiting; answer=allow|deny|expire ends it
 //   /__mock/nearby?visible=0        this (admin) device stops announcing itself
+//   /__mock/gateway?on=1[&letters=1]  Internet mail: this device becomes a gateway for andrey@example.org (letters=1: three letters from the Internet in the inbox)
+//   /__mock/gateway?off=1           the gateway is set back to nothing
+//   /__mock/dns?publish=1           the domain's records are in the DNS (wrong=spf: that one is wrong; reset=1: nothing published)
+//   /__mock/gwlisten?error=permission  the gateway cannot take its port (permission|inuse|other; error=0 clears it)
+//   /__mock/mailext?kind=verified   a letter from the Internet arrives (verified|plain|forged); kind=sent: a letter that went out to three addresses (delivered, failed, waiting)
 //   /__mock/reset                   rebuild the world from the scenario
 
 import http from "node:http";
@@ -695,6 +700,7 @@ function buildWorld(scenario) {
   W.invites = [];
   W.transfers = [];
   W.mail = [];
+  W.gw = {};
   W.chat = new Map();
   W.forwards = [];
   W.portSeq = 2222;
@@ -917,7 +923,7 @@ function mailSummary(x) {
   return {
     id: x.id, kind: "mail", folder: x.folder, from: x.from, to: x.to.map(({ qAt, ...r }) => r), subject: x.subject,
     snippet: (x.body || "").replace(/\s+/g, " ").slice(0, 140), ts: x.ts, unread: x.unread,
-    attachments: x.attachments.length, thread: x.thread, starred: x.starred,
+    attachments: x.attachments.length, thread: x.thread, starred: x.starred, ...(x.ext ? { ext: extView(x) } : {}),
   };
 }
 function mailFull(x) {
@@ -1984,6 +1990,227 @@ route("GET", "/api/d/:pid/state", (req, res, p) => {
   sendJSON(res, 200, { version: peer.version, configured: true, self: r.self, peers: [], transfers: [], counters: { mail: 0, chat: 0, offers: 0 }, invites: [], settings: r.settings });
 });
 
+// ---------------------------------------------------------------- Internet mail (the mail gateway)
+const GW_IP = "203.0.113.7";
+function gwOf(key) {
+  return (W.gw[key] ||= { enabled: false, domain: "", host: "", listen: "", dkimSelector: "mesh", publicIPv4: "", mailboxes: [], relay: null, relayPass: "", queue: [], dns: {}, listenError: null });
+}
+const gwHost = (g) => g.host || (g.domain ? "mail." + g.domain : "");
+function gwIp(key, g) { return g.publicIPv4 || (key === "laptop" ? GW_IP : ""); }
+function gwRunning(g) { return !!(g.enabled && g.domain && g.mailboxes.length); }
+function gwStatus(key, g) {
+  const on = gwRunning(g);
+  const err = on && g.listenError;
+  return {
+    enabled: g.enabled, running: on, listening: on && !err, listenAddr: on && !err ? (g.listen || ":25").replace(/^:/, "0.0.0.0:") : "",
+    ...(err ? { listenError: err.text, listenErrorKind: err.kind } : {}),
+    relay: !!g.relay, queue: g.queue.filter((q) => q.rcpts.some((r) => r.state === "queued" || r.state === "deferred")).length, selector: g.dkimSelector,
+    ...(key === "laptop" ? { detectedIPv4: GW_IP } : {}), ...(gwIp(key, g) ? { publicIPv4: gwIp(key, g) } : {}),
+  };
+}
+function gwView(key) {
+  const g = gwOf(key);
+  return {
+    enabled: g.enabled, domain: g.domain, host: g.host, listen: g.listen, dkimSelector: g.dkimSelector, publicIPv4: g.publicIPv4,
+    mailboxes: g.mailboxes.map((b) => ({ name: b.name, ...(g.domain ? { address: b.name + "@" + g.domain } : {}), devices: [...b.devices] })),
+    relay: g.relay ? { host: g.relay.host, port: g.relay.port, ...(g.relay.username ? { username: g.relay.username } : {}), passwordSet: !!g.relayPass, mode: g.relay.mode, ...(g.relay.spfInclude ? { spfInclude: g.relay.spfInclude } : {}) } : null,
+    status: gwStatus(key, g), defaults: { host: g.domain ? "mail." + g.domain : "mail.<domain>", listen: ":25" },
+  };
+}
+function gwConfigure(key, b) {
+  const g = gwOf(key);
+  const domain = String(b.domain || "").trim().toLowerCase().replace(/\.$/, "");
+  if (domain && !/^([a-z0-9-]+\.)+[a-z]{2,}$/.test(domain)) throw E.invalid(`not a domain: "${domain}"`);
+  const boxes = [], seen = new Set();
+  for (const x of b.mailboxes || []) {
+    const name = String(x.name || "").trim().toLowerCase();
+    if (!/^[a-z0-9][a-z0-9._+-]{0,63}$/.test(name)) throw E.invalid(`the mailbox name ${JSON.stringify(name)} is letters, digits, dots, dashes and underscores`);
+    if (seen.has(name)) throw E.invalid(`the mailbox "${name}" is listed twice`);
+    seen.add(name);
+    if (!Array.isArray(x.devices) || !x.devices.length) throw E.invalid(`the mailbox "${name}" has no devices: choose who receives its mail`);
+    for (const d of x.devices) if (d !== W.self.id && !W.peers.find((p) => p.id === d)) throw E.invalid(`the mailbox "${name}" names a device that is not in the mesh`);
+    boxes.push({ name, devices: [...new Set(x.devices)].sort() });
+  }
+  if (b.enabled && !domain) throw E.invalid("name the domain the mailboxes are on");
+  if (b.enabled && !boxes.length) throw E.invalid("make at least one mailbox");
+  if (b.publicIPv4 && !/^\d{1,3}(\.\d{1,3}){3}$/.test(String(b.publicIPv4).trim())) throw E.invalid("the public address is an IPv4 address like 203.0.113.7");
+  let relay = null;
+  if (b.relay && String(b.relay.host || "").trim()) {
+    const mode = b.relay.mode || "starttls";
+    if (!["starttls", "tls", "plain"].includes(mode)) throw E.invalid("the connection to the mail service is starttls, tls or plain");
+    relay = { host: String(b.relay.host).trim(), port: Number(b.relay.port) || { starttls: 587, tls: 465, plain: 25 }[mode], username: String(b.relay.username || ""), mode, spfInclude: String(b.relay.spfInclude || "").trim().toLowerCase() };
+    if (b.relay.password) g.relayPass = String(b.relay.password);
+    else if (!(g.relay && g.relay.host === relay.host && g.relay.username === relay.username)) g.relayPass = "";
+  } else g.relayPass = "";
+  Object.assign(g, { enabled: !!b.enabled, domain, host: String(b.host || "").trim().toLowerCase(), listen: String(b.listen || "").trim(), publicIPv4: String(b.publicIPv4 || "").trim(), mailboxes: boxes, relay });
+  g.dns = {};
+}
+/** The records of the plan, each with what "the DNS" says (g.dns: id → state; "ok" once published). */
+function gwRecords(key, g) {
+  const ip = gwIp(key, g), host = gwHost(g);
+  const spf = "v=spf1 mx" + (g.relay && g.relay.spfInclude ? " include:" + g.relay.spfInclude : "") + " ~all";
+  const specs = [
+    { id: "mx", type: "MX", name: g.domain, value: `10 ${host}.`, required: true },
+    { id: "a", type: "A", name: host, value: ip, required: true },
+    { id: "spf", type: "TXT", name: g.domain, value: spf, required: true },
+    { id: "dkim", type: "TXT", name: `${g.dkimSelector}._domainkey.${g.domain}`, value: "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu3x0mock0mock0mock0mock0mock0mock0mockIDAQAB", required: true },
+    { id: "dmarc", type: "TXT", name: "_dmarc." + g.domain, value: "v=DMARC1; p=none; adkim=r; aspf=r", required: false },
+  ];
+  if (ip) specs.push({ id: "ptr", type: "PTR", name: ip.split(".").reverse().join(".") + ".in-addr.arpa", value: host + ".", required: false });
+  return specs.map((sp) => {
+    const st = g.dns[sp.id] || "missing";
+    const rc = { ...sp, state: !ip && sp.id === "a" ? "unknown" : st };
+    if (st === "wrong") { rc.found = sp.id === "spf" ? ["v=spf1 ip4:198.51.100.9 ~all"] : ["198.51.100.9"]; rc.detail = sp.id === "spf" ? "ip-not-allowed:softfail" : "other-address"; }
+    if (rc.state === "unknown" && sp.id === "a") rc.detail = "address-unknown";
+    return rc;
+  });
+}
+function gwDnsView(key) {
+  const g = gwOf(key);
+  if (!g.domain) throw E.invalid("name the domain first");
+  const records = gwRecords(key, g);
+  return { domain: g.domain, host: gwHost(g), ...(gwIp(key, g) ? { publicIPv4: gwIp(key, g) } : {}), relay: !!g.relay, report: { records, ready: records.filter((r) => r.required).every((r) => r.state === "ok") } };
+}
+function gwQueueView(key) {
+  return { items: gwOf(key).queue.filter((q) => q.rcpts.some((r) => r.state === "queued" || r.state === "deferred")).map((q) => ({ id: q.id, from: q.from, origin: q.origin, size: q.size, created: q.created, rcpts: q.rcpts.map((r) => ({ addr: r.addr, state: r.state, ...(r.code ? { code: r.code } : {}), ...(r.text ? { text: r.text } : {}) })) })) };
+}
+function mailgwHandlers(prefix, getKey) {
+  route("GET", prefix + "/mailgw", (req, res, p) => { requireConfigured(); sendJSON(res, 200, gwView(getKey(p))); });
+  route("PUT", prefix + "/mailgw", async (req, res, p) => {
+    const key = getKey(p);
+    gwConfigure(key, await readJSON(req));
+    broadcast("mail", { id: "", folder: "", unread: false });
+    sendJSON(res, 200, gwView(key));
+  });
+  route("GET", prefix + "/mailgw/dns", (req, res, p) => sendJSON(res, 200, gwDnsView(getKey(p))));
+  route("GET", prefix + "/mailgw/queue", (req, res, p) => sendJSON(res, 200, gwQueueView(getKey(p))));
+  route("POST", prefix + "/mailgw/queue/retry", async (req, res, p) => { await readJSON(req); getKey(p); ok(res); });
+  route("POST", prefix + "/mailgw/queue/:qid/cancel", async (req, res, p) => {
+    await readJSON(req);
+    const key = getKey(p);
+    const q = gwOf(key).queue.find((x) => x.id === p.qid && x.rcpts.some((r) => r.state === "queued" || r.state === "deferred"));
+    if (!q) throw E.notfound("no such letter in the queue");
+    for (const r of q.rcpts) if (r.state === "queued" || r.state === "deferred") { r.state = "failed"; r.text = "cancelled"; setExtState(q.origin, r.addr, "failed", 0, "cancelled"); }
+    ok(res);
+  });
+}
+mailgwHandlers("/api", () => "laptop");
+mailgwHandlers("/api/d/:pid", (p) => {
+  requireConfigured();
+  if (!W.self.admin) throw E.denied("only admins can manage other devices");
+  if (p.pid === "self" || p.pid === W.self.id) return "laptop";
+  const peer = W.peers.find((x) => x.id === p.pid);
+  if (!peer) throw E.notfound("unknown device");
+  if (!peer.online) throw E.offline(`${peer.name} is not connected`);
+  return keyOf(peer.id);
+});
+
+/** The mailboxes this device may write from, at each gateway of the mesh. */
+function gatewaysView() {
+  const out = [];
+  for (const [key, g] of Object.entries(W.gw)) {
+    if (!gwRunning(g)) continue;
+    const id = key === "laptop" ? W.self.id : (W.peers.find((x) => keyOf(x.id) === key) || {}).id;
+    if (!id) continue;
+    const mine = g.mailboxes.filter((b) => b.devices.includes(W.self.id)).map((b) => b.name + "@" + g.domain);
+    if (!mine.length) continue;
+    const peer = key === "laptop" ? null : W.peers.find((x) => x.id === id);
+    out.push({ id, name: key === "laptop" ? W.self.name : peer.name, ...(key === "laptop" ? { self: true } : {}), online: key === "laptop" || !!peer.online, domain: g.domain, host: gwHost(g), mailboxes: mine, ready: true });
+  }
+  return out;
+}
+route("GET", "/api/mail/gateways", (req, res) => { requireConfigured(); sendJSON(res, 200, { gateways: gatewaysView() }); });
+
+function parseExt(list) {
+  const out = [];
+  for (const raw of list || []) {
+    for (const part of String(raw).split(/[,;]+/)) {
+      const s = part.trim();
+      if (!s) continue;
+      const m = /^(.*?)\s*<([^<>]+)>$/.exec(s);
+      const addr = (m ? m[2] : s).trim();
+      if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/.test(addr)) throw E.invalid(`${s} is not an email address`);
+      out.push({ ...(m && m[1].trim() ? { name: m[1].trim().replace(/^"|"$/g, "") } : {}), addr: addr.toLowerCase() });
+    }
+  }
+  return out;
+}
+function extView(x) {
+  const e = x.ext;
+  if (!e) return undefined;
+  if (e.dir === "in") {
+    return { dir: "in", from: e.from, ...(e.to && e.to.length ? { to: e.to } : {}), ...(e.cc && e.cc.length ? { cc: e.cc } : {}), ...(e.replyTo ? { replyTo: e.replyTo } : {}), mailbox: e.mailbox, verdict: e.verdict,
+      ...(e.spf ? { spf: e.spf } : {}), ...(e.dkim ? { dkim: e.dkim } : {}), ...(e.dmarc ? { dmarc: e.dmarc } : {}), via: e.via, ...(e.html ? { hasHtml: true } : {}), ...(e.remoteImages ? { remoteImages: e.remoteImages } : {}), messageId: e.messageId };
+  }
+  return { dir: "out", from: e.from, to: e.to, ...(e.cc && e.cc.length ? { cc: e.cc } : {}), mailbox: e.mailbox, via: e.via, messageId: e.messageId,
+    recipients: e.recipients.map((r) => ({ addr: r.addr, ...(r.name ? { name: r.name } : {}), kind: r.kind, state: r.state, ...(r.code ? { code: r.code } : {}), ...(r.text ? { text: r.text } : {}), at: r.at || null })) };
+}
+/** What became of a recipient of a letter to the Internet. */
+function setExtState(id, addr, state, code, text) {
+  const m = W.mail.find((x) => x.id === id);
+  const r = m && m.ext && m.ext.recipients && m.ext.recipients.find((x) => x.addr === addr);
+  if (!r) return;
+  r.state = state; r.code = code || 0; r.text = text || ""; r.at = ["delivered", "failed"].includes(state) ? now() : null;
+  broadcast("mail", { id: m.id, folder: m.folder, unread: m.unread });
+}
+/** A letter goes out to the Internet: the addresses at the end of the domain decide what the "servers" say. */
+function planExtDelivery(m) {
+  const g = gwOf("laptop");
+  const q = { id: rid("q_"), from: m.ext.from.addr, origin: m.id, size: (m.body || "").length + 600, created: now(), rcpts: m.ext.recipients.map((r) => ({ addr: r.addr, state: "queued" })) };
+  g.queue.unshift(q);
+  for (const r of q.rcpts) {
+    const dom = r.addr.split("@")[1];
+    setTimeout(() => {
+      if (r.state === "failed") return;
+      if (dom === "fail.example") { r.state = "failed"; r.code = 550; r.text = "5.1.1 The email account that you tried to reach does not exist"; setExtState(m.id, r.addr, "failed", 550, r.text); }
+      else if (dom === "gone.example") { r.state = "failed"; r.text = `the domain ${dom} does not exist or takes no mail`; setExtState(m.id, r.addr, "failed", 0, r.text); }
+      else if (dom === "slow.example") { r.state = "deferred"; r.code = 452; r.text = "4.2.2 The email account that you tried to reach is over quota"; setExtState(m.id, r.addr, "deferred", 452, r.text); }
+      else { r.state = "delivered"; setExtState(m.id, r.addr, "delivered", 250, "2.0.0 OK"); }
+    }, opts.calm ? 200 : 1800);
+  }
+}
+const EXT_HTML = {
+  verified: '<table width="100%" cellpadding="0" cellspacing="0"><tr><td><h2 style="color:#24292f">Pull request merged</h2><p>Your pull request <b>#42 «Mail gateway»</b> was merged into <code>main</code>.</p><p><a href="https://example.com/pull/42">View it on the site</a></p><img src="https://tracker.example/pixel.gif" width="1" height="1" alt=""><img src="https://cdn.example/logo.png" alt="logo"></td></tr></table>',
+  forged: '<div><p><b>Your account is limited.</b></p><p>Confirm your identity within 24 hours: <a href="https://paypal-secure.example/login">https://paypal.com/verify</a></p></div>',
+};
+const EXT_SAMPLES = {
+  verified: { from: { name: "GitHub", addr: "noreply@github.com" }, subject: "[themesh] Your pull request was merged", verdict: "verified", spf: "pass", dkim: "github.com", dmarc: "pass", html: EXT_HTML.verified, remoteImages: 2,
+    body: "Pull request merged\n\nYour pull request #42 «Mail gateway» was merged into main.\nView it on the site: https://example.com/pull/42\n" },
+  plain: { from: { name: "Анна", addr: "anna@mail.example" }, subject: "Привет! Как дела?", verdict: "unverified", spf: "none", dkim: "", dmarc: "none", html: "", remoteImages: 0,
+    body: "Привет, Андрей!\n\nЯ нашла твой новый адрес. Теперь можно писать тебе прямо сюда?\n\nАнна" },
+  forged: { from: { name: "PayPal Support", addr: "support@paypal-secure.example" }, subject: "Подтвердите ваш аккаунт", verdict: "suspicious", spf: "fail", dkim: "", dmarc: "fail", html: EXT_HTML.forged, remoteImages: 0,
+    body: "Ваш аккаунт ограничен.\n\nПодтвердите личность в течение 24 часов: https://paypal.com/verify\n" },
+};
+function incomingExt(kind, ts = now()) {
+  const sm = EXT_SAMPLES[kind] || EXT_SAMPLES.plain;
+  const g = gwOf("laptop");
+  const mailbox = (g.mailboxes[0] ? g.mailboxes[0].name : "andrey") + "@" + (g.domain || "example.org");
+  const m = {
+    id: rid("m_"), kind: "mail", folder: "inbox", from: { id: W.self.id, name: sm.from.name || sm.from.addr }, to: [{ id: W.self.id, name: W.self.name, state: "delivered", at: ts }],
+    subject: sm.subject, body: sm.body, ts, unread: true, attachments: [], thread: rid("th_"), starred: false, inReplyTo: null,
+    ext: { dir: "in", from: sm.from, to: [{ name: "Андрей", addr: mailbox }], mailbox, verdict: sm.verdict, spf: sm.spf, dkim: sm.dkim, dmarc: sm.dmarc, via: { id: W.self.id, name: W.self.name },
+      html: sm.html, remoteImages: sm.remoteImages, messageId: "<" + rid("x") + "@mail.example>" },
+  };
+  W.mail.unshift(m);
+  broadcast("mail", { id: m.id, folder: "inbox", unread: true });
+  broadcast("notify", { level: "info", title: "Новое письмо", text: `${m.from.name}: ${m.subject}`, link: "#/mail/inbox/" + m.id });
+  emitCounters();
+  return m;
+}
+const LETTER_HEAD = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><meta name="referrer" content="no-referrer"><style>html{background:#fff;color:#1b1c1f}body{margin:0;padding:14px 16px;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-wrap:anywhere}img{max-width:100%;height:auto}table{max-width:100%}pre{white-space:pre-wrap}a{color:#0a58ca}</style></head><body>';
+route("GET", "/api/mail/:id/html", (req, res, p) => {
+  requireConfigured();
+  const m = getMail(p.id);
+  if (!m.ext || m.ext.dir !== "in" || !m.ext.html) throw E.notfound("this letter has no formatted text");
+  // (as the node does it: the pictures of the Internet are taken out of the page, and the policy forbids them too)
+  const html = m.ext.html.replace(/\s(?:src|srcset)="(?!data:)[^"]*"/g, "");
+  res.writeHead(200, {
+    "Content-Type": "text/html; charset=utf-8", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "no-referrer", "Cache-Control": "private, no-store",
+    "Content-Security-Policy": "default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'",
+  });
+  res.end(LETTER_HEAD + html + "</body></html>");
+});
+
 // ---- mail
 route("GET", "/api/mail", (req, res, p, q) => {
   requireConfigured();
@@ -1992,7 +2219,7 @@ route("GET", "/api/mail", (req, res, p, q) => {
   const limit = Math.max(1, Math.min(200, Number(q.get("limit")) || 50));
   const before = Number(q.get("before")) || 0;
   let list = W.mail.filter((m) => m.folder === folder);
-  if (query) list = list.filter((m) => `${m.subject}\n${m.body}\n${m.from.name}\n${m.to.map((x) => x.name).join(" ")}`.toLowerCase().includes(query));
+  if (query) list = list.filter((m) => `${m.subject}\n${m.body}\n${m.from.name}\n${m.to.map((x) => x.name).join(" ")}\n${m.ext && m.ext.dir === "in" ? m.ext.from.addr : ""}`.toLowerCase().includes(query));
   list.sort((a, b) => b.ts - a.ts);
   const total = list.length;
   if (before) list = list.filter((m) => m.ts < before);
@@ -2007,8 +2234,16 @@ route("GET", "/api/mail/:id", (req, res, p) => sendJSON(res, 200, mailFull(getMa
 route("POST", "/api/mail", async (req, res) => {
   const b = await readJSON(req);
   requireConfigured();
-  if (!Array.isArray(b.to) || !b.to.length) throw E.invalid("at least one recipient is required");
-  for (const id of b.to) if (!W.peers.find((x) => x.id === id)) throw E.notfound("unknown recipient");
+  const emailTo = parseExt(b.emailTo), emailCc = parseExt(b.emailCc);
+  if (!Array.isArray(b.to) || (!b.to.length && !emailTo.length)) throw E.invalid("at least one recipient is required");
+  for (const id of b.to) if (id !== W.self.id && !W.peers.find((x) => x.id === id)) throw E.notfound("unknown recipient");
+  let box = null;
+  if (emailTo.length + emailCc.length) {
+    const gws = gatewaysView();
+    const all = gws.flatMap((g) => g.mailboxes.map((addr) => ({ addr, gw: g })));
+    box = b.from ? all.find((x) => x.addr.toLowerCase() === String(b.from).toLowerCase()) : all[0];
+    if (!box) throw E.invalid(b.from ? `you have no mailbox ${b.from}` : "this mesh has no mail gateway with a mailbox for this device: set up your own address first");
+  }
   const atts = (b.attachments || []).map((h) => {
     const bl = W.blobs.get(h);
     if (!bl) throw E.invalid("unknown attachment " + String(h).slice(0, 8));
@@ -2020,10 +2255,15 @@ route("POST", "/api/mail", async (req, res) => {
     subject: String(b.subject || ""), body: String(b.body || ""), ts: now(), unread: false, attachments: atts,
     thread: b.inReplyTo ? (W.mail.find((x) => x.id === b.inReplyTo) || {}).thread || rid("th_") : rid("th_"), starred: false, inReplyTo: b.inReplyTo || null,
   };
+  if (box) {
+    m.ext = { dir: "out", from: { name: W.self.owner || "", addr: box.addr }, to: emailTo, cc: emailCc, mailbox: box.addr, via: { id: box.gw.id, name: box.gw.name }, messageId: "<" + rid("x") + "@" + box.gw.domain + ">",
+      recipients: [...emailTo.map((a) => ({ ...a, kind: "to", state: "queued", at: 0 })), ...emailCc.map((a) => ({ ...a, kind: "cc", state: "queued", at: 0 }))] };
+  }
   W.mail.unshift(m);
   broadcast("mail", { id: m.id, folder: "sent", unread: false });
   addLog("info", `mail ${m.id} queued for ${m.to.map((x) => x.name).join(", ")}`);
   sendJSON(res, 200, { id: m.id });
+  if (m.ext) planExtDelivery(m);
   // Auto-reply from dad-pc to make the inbox feel alive.
   if (!opts.calm && b.to.includes(ids["dad-pc"])) setTimeout(() => incomingChat(ids["dad-pc"], "Получил письмо 👍"), 6000);
 });
@@ -2171,6 +2411,53 @@ route("ANY", "/__mock/chat", (req, res, p, q) => {
   ok(res);
 });
 route("ANY", "/__mock/mail", (req, res, p, q) => { incomingMail(q.get("from") || "nas"); ok(res); });
+route("ANY", "/__mock/gateway", (req, res, p, q) => {
+  const g = gwOf("laptop");
+  if (q.get("off")) { W.gw.laptop = undefined; delete W.gw.laptop; W.mail = W.mail.filter((m) => !m.ext); broadcast("mail", { id: "", folder: "", unread: false }); emitCounters(); return ok(res); }
+  Object.assign(g, { enabled: true, domain: "example.org", mailboxes: [{ name: "andrey", devices: [W.self.id] }], dns: {} });
+  if (q.get("letters")) {
+    const T = now();
+    incomingExt("plain", T - 3600 * 5);
+    incomingExt("verified", T - 3600 * 2);
+    incomingExt("forged", T - 600);
+    for (const m of W.mail.filter((x) => x.ext && x.ext.dir === "in")) { m.unread = true; }
+  }
+  broadcast("mail", { id: "", folder: "", unread: false });
+  ok(res, gwView("laptop"));
+});
+route("ANY", "/__mock/dns", (req, res, p, q) => {
+  const g = gwOf("laptop");
+  if (q.get("reset")) g.dns = {};
+  if (q.get("publish")) for (const r of gwRecords("laptop", g)) g.dns[r.id] = "ok";
+  if (q.get("wrong")) g.dns[q.get("wrong")] = "wrong";
+  ok(res);
+});
+route("ANY", "/__mock/gwlisten", (req, res, p, q) => {
+  const g = gwOf("laptop");
+  const kind = q.get("error");
+  g.listenError = !kind || kind === "0" ? null : { kind, text: { permission: ":25: a program may take the port 25 only with the rights of an administrator", inuse: ":25: the port is taken by another program (a mail server of this computer?)" }[kind] || "listen tcp :25: bind: something went wrong" };
+  ok(res);
+});
+route("ANY", "/__mock/mailext", (req, res, p, q) => {
+  if (q.get("kind") === "sent") {
+    // a letter that went out to three addresses, each with another fate (no timers: the states are final or waiting as they are)
+    const g = gwOf("laptop");
+    const box = (g.mailboxes[0] ? g.mailboxes[0].name : "andrey") + "@" + (g.domain || "example.org");
+    const rc = (addr, kind, state, code, text) => ({ addr, kind, state, code, text, at: state === "delivered" || state === "failed" ? now() - 120 : null });
+    const m = {
+      id: rid("m_"), kind: "mail", folder: "sent", from: { id: W.self.id, name: W.self.name }, to: [], subject: "Проверка доставки", body: "Это письмо ушло на три адреса.", ts: now() - 180, unread: false,
+      attachments: [], thread: rid("th_"), starred: false, inReplyTo: null,
+      ext: { dir: "out", from: { name: W.self.owner || "", addr: box }, to: [{ addr: "friend@gmail.com" }, { addr: "x@fail.example" }], cc: [{ addr: "y@slow.example" }], mailbox: box, via: { id: W.self.id, name: W.self.name }, messageId: "<" + rid("x") + "@example.org>",
+        recipients: [rc("friend@gmail.com", "to", "delivered", 250, "2.0.0 OK"), rc("x@fail.example", "to", "failed", 550, "5.1.1 The email account that you tried to reach does not exist"),
+          rc("y@slow.example", "cc", "deferred", 452, "4.2.2 The email account that you tried to reach is over quota")] },
+    };
+    W.mail.unshift(m);
+    broadcast("mail", { id: m.id, folder: "sent", unread: false });
+    return ok(res, { id: m.id });
+  }
+  const m = incomingExt(q.get("kind") || "verified");
+  ok(res, { id: m.id });
+});
 route("ANY", "/__mock/join", (req, res, p, q) => {
   const inv = W.invites[W.invites.length - 1];
   if (!inv) throw E.notfound("no pending invite");

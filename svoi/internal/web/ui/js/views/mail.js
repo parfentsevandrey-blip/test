@@ -9,8 +9,8 @@ import { fmtBytes, fmtDateTime, fmtShortDate } from "../format.js";
 import { useInterval, useIsMobile, useMedia } from "../hooks.js";
 import { cx, debounce, previewKind } from "../util.js";
 import { DeviceAvatar, FileIcon } from "../components/avatar.js";
-import { AttachmentFetch, attStateText, keepFetching, Linkified } from "../components/misc.js";
-import { Button, Chip, EmptyState, IconButton, Progress, Skeleton } from "../components/ui.js";
+import { AttachmentFetch, attStateText, keepFetching, Linkified, TechDetails } from "../components/misc.js";
+import { Button, Callout, Chip, EmptyState, IconButton, Progress, Segmented, Skeleton } from "../components/ui.js";
 import { confirmDialog } from "../components/modal.js";
 import { toast, toastError } from "../components/toast.js";
 import { ComposeModal } from "./compose.js";
@@ -29,30 +29,48 @@ function peerOf(id) {
 }
 
 export function deliveryTone(st) {
-  return st === "delivered" ? "ok" : st === "failed" ? "err" : st === "sent" ? "info" : "neutral";
+  return st === "delivered" ? "ok" : st === "failed" ? "err" : st === "deferred" ? "warn" : st === "sent" ? "info" : "neutral";
 }
 
 function deliverySummary(to) {
   if (!to || !to.length) return null;
   if (to.some((r) => r.state === "failed")) return { icon: "alertCircle", cls: "danger-text", label: t("mail.st.failed") };
   if (to.every((r) => r.state === "delivered")) return { icon: "checks", cls: "accent", label: t("mail.st.delivered") };
+  if (to.some((r) => r.state === "deferred")) return { icon: "clock", cls: "warn-text", label: t("mail.st.deferred") };
   if (to.some((r) => r.state === "queued")) return { icon: "clock", cls: "faint", label: t("mail.st.queued") };
   return { icon: "check", cls: "faint", label: t("mail.st.sent") };
 }
 
+/** Everyone a letter goes to: the devices and, for a letter to the Internet, the addresses with what became of each. */
+function allRecipients(m) {
+  const out = (m.to || []).map((r) => ({ key: r.id, name: r.name, state: r.state, at: r.at }));
+  const e = m.ext;
+  if (e && e.dir === "out") {
+    for (const r of e.recipients || []) out.push({ key: r.addr, name: r.name || r.addr, addr: r.addr, state: r.state, at: r.at, code: r.code, text: r.text, email: true, kind: r.kind });
+  }
+  return out;
+}
+
+const addrName = (a) => (a && (a.name || a.addr)) || "";
+
 // ---------------------------------------------------------------- list
 function MailItem({ m, folder, active, onStar }) {
-  const sent = folder === "sent" || (state.self && m.from && m.from.id === state.self.id);
-  const who = sent ? t("mail.toNames", { names: (m.to || []).map((r) => r.name).join(", ") }) : (m.from && m.from.name) || "";
-  const dev = sent ? peerOf(m.to && m.to[0] && m.to[0].id) : peerOf(m.from && m.from.id);
-  const ds = sent ? deliverySummary(m.to) : null;
-  return html`<li class=${cx("mitem", m.unread && "is-unread", active && "is-active")} data-testid="mail-item" data-id=${m.id} data-unread=${String(!!m.unread)}>
+  const ext = m.ext || null;
+  // (a letter from the Internet comes from the gateway as far as the mesh is concerned, which may well be this very device)
+  const sent = ext ? ext.dir === "out" : folder === "sent" || (state.self && m.from && m.from.id === state.self.id);
+  const rcpts = allRecipients(m);
+  const who = sent ? t("mail.toNames", { names: rcpts.map((r) => r.name).join(", ") }) : (m.from && m.from.name) || "";
+  const dev = ext && ext.dir === "in" ? null : sent ? peerOf(m.to && m.to[0] && m.to[0].id) : peerOf(m.from && m.from.id);
+  const ds = sent ? deliverySummary(rcpts) : null;
+  const forged = !!ext && ext.dir === "in" && ext.verdict === "suspicious";
+  return html`<li class=${cx("mitem", m.unread && "is-unread", active && "is-active")} data-testid="mail-item" data-id=${m.id} data-unread=${String(!!m.unread)} data-ext=${ext ? ext.dir : undefined}>
     <a class="mitem__link" href=${href(["mail", folder, m.id])} aria-current=${active ? "true" : undefined}>
-      <span class="mitem__av">${dev ? html`<${DeviceAvatar} dev=${dev} size=${36} showStatus=${false} />` : html`<span class="avatar" style="--av:36px"><${Icon} name="user" size=${18} /></span>`}
+      <span class="mitem__av">${dev ? html`<${DeviceAvatar} dev=${dev} size=${36} showStatus=${false} />` : html`<span class=${cx("avatar", ext && "avatar--ext")} style="--av:36px"><${Icon} name=${ext ? "at" : "user"} size=${18} /></span>`}
         ${m.unread && html`<span class="mitem__dot" aria-label=${t("mail.unread")}></span>`}</span>
       <span class="mitem__body">
         <span class="mitem__top">
           <span class="mitem__who ellipsis">${who}</span>
+          ${forged && html`<span class="mitem__forged danger-text" title=${t("mail.verdict.suspicious")}><${Icon} name="alertCircle" size=${14} label=${t("mail.verdict.suspicious")} /></span>`}
           <span class="mitem__date tnum">${fmtShortDate(m.ts)}</span>
         </span>
         <span class="mitem__subj ellipsis">${m.subject || t("mail.noSubject")}</span>
@@ -132,10 +150,60 @@ function AttachmentRow({ m, a, i, onPreview, onFetching }) {
   </li>`;
 }
 
+/** The formatted text of a letter from the Internet: a page of the node's own, in a frame that runs no script and may load nothing (see api/mailhtml.go). */
+function LetterFrame({ id }) {
+  const ref = useRef(null);
+  const [h, setH] = useState(160);
+  const fit = () => {
+    try {
+      const d = ref.current && ref.current.contentDocument;
+      if (d && d.documentElement) setH(Math.min(30000, Math.max(80, d.documentElement.scrollHeight + 2)));
+    } catch { /* the frame cannot be read: it keeps its height and scrolls inside */ }
+  };
+  useEffect(() => {
+    const on = debounce(fit, 150);
+    window.addEventListener("resize", on);
+    return () => window.removeEventListener("resize", on);
+  }, []);
+  return html`<iframe ref=${ref} class="letter-frame" title=${t("mail.frameTitle")} data-testid="mail-html" referrerpolicy="no-referrer"
+    sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" src=${`api/mail/${encodeURIComponent(id)}/html`} style=${`height:${h}px`} onLoad=${fit}></iframe>`;
+}
+
+const CHECK_WORDS = ["pass", "fail", "softfail", "neutral", "none", "temperror", "permerror"];
+const checkWord = (r) => (CHECK_WORDS.includes(r) ? t("mail.check." + r) : r);
+
+/** What the gateway found out about the sender of a letter from the Internet. */
+function VerdictBanner({ ext }) {
+  const v = ["verified", "suspicious"].includes(ext.verdict) ? ext.verdict : "unverified";
+  // (what the node reports: the result of SPF and of DMARC as words, and for DKIM the domains whose signature held, none when there was no good one)
+  const checks = [["spf", ext.spf ? checkWord(ext.spf) : ""], ["dkim", ext.dkim ? `${t("mail.check.pass")} · ${ext.dkim}` : t("mail.check.none")], ["dmarc", ext.dmarc ? checkWord(ext.dmarc) : ""]].filter(([, r]) => r);
+  return html`<${Callout} tone=${v === "verified" ? "ok" : v === "suspicious" ? "err" : "warn"} icon=${v === "verified" ? "shieldCheck" : v === "suspicious" ? "alertCircle" : "shield"}
+      title=${t("mail.verdict." + v)} class="verdict" data-testid="mail-verdict" data-verdict=${v}>
+    ${t("mail.verdict." + v + "Text")}
+    ${checks.length > 0 && html`<${TechDetails} summary=${t("mail.verdict.details")}>
+      <ul class="verdict__checks">${checks.map(([k, r]) => html`<li key=${k}><span>${t("mail.check." + k)}</span> <strong>${r}</strong></li>`)}</ul>
+    </${TechDetails}>`}
+  </${Callout}>`;
+}
+
+/** One recipient of a letter with what became of it: a device of the mesh or an address on the Internet. */
+function RecipientState({ r }) {
+  const icon = r.state === "delivered" ? "checks" : r.state === "failed" ? "alertCircle" : r.state === "sent" ? "check" : "clock";
+  const said = [r.code || "", r.text || ""].join(" ").trim();
+  return html`<span class="dlv" data-testid="mail-recipient" data-state=${r.state} data-kind=${r.email ? "email" : "device"}>
+    <span class="strong small">${r.name}</span>${r.email && r.name !== r.addr && html`<span class="xsmall faint">${r.addr}</span>`}
+    <${Chip} size="sm" tone=${deliveryTone(r.state)} icon=${icon}>${t("mail.st." + r.state)}</${Chip}>
+    ${r.at ? html`<span class="xsmall faint tnum">${fmtShortDate(r.at)}</span>` : null}
+    ${r.email && r.state === "failed" && html`<span class="dlv__why danger-text xsmall" data-testid="mail-recipient-why">${t("mail.dlvFailed", { text: said || "—" })}</span>`}
+    ${r.email && r.state === "deferred" && html`<span class="dlv__why faint xsmall" data-testid="mail-recipient-why">${t("mail.dlvDeferred", { text: said || t("mail.dlvWait") })}</span>`}
+  </span>`;
+}
+
 function Reader({ id, folder, onChanged, onRemoved, isMobile }) {
   const self = useStore((s) => s.self);
   const [st, setSt] = useState({ m: null, loading: true, error: null });
   const [preview, setPreview] = useState(-1);
+  const [view, setView] = useState("formatted"); // a letter from the Internet that has formatted text: "formatted" or "plain"
   // Set while the person deletes this message for good: the node's own `mail` event for the deletion would make
   // the background re-read ask for a message that is already gone (a 404, and a flash of «Письмо не найдено»).
   const gone = useRef(false);
@@ -157,7 +225,7 @@ function Reader({ id, folder, onChanged, onRemoved, isMobile }) {
       if (!silent || e.code === "notfound") setSt({ m: null, loading: false, error: e });
     }
   };
-  useEffect(() => { gone.current = false; load(false); setPreview(-1); }, [id]);
+  useEffect(() => { gone.current = false; load(false); setPreview(-1); setView("formatted"); }, [id]);
   // A fetched attachment ends with a `mail` event for the message; a reconnect may have missed it.
   useEvent("mail", (d) => { if (d && d.id === id) load(true); });
   useEvent("refreshed", () => load(true));
@@ -175,8 +243,13 @@ function Reader({ id, folder, onChanged, onRemoved, isMobile }) {
   if (st.error || !m) {
     return html`<div class="reader">${head}<${EmptyState} icon="alertCircle" tone="err" title=${st.error && st.error.code === "notfound" ? t("mail.gone") : t("mail.loadError")} text=${st.error ? t("err." + st.error.code) : ""} /></div>`;
   }
-  const mine = self && m.from && m.from.id === self.id;
-  const fromDev = peerOf(m.from && m.from.id);
+  const ext = m.ext || null;
+  const extIn = !!ext && ext.dir === "in";
+  const extOut = !!ext && ext.dir === "out";
+  // (a letter from the Internet comes from the gateway as far as the mesh is concerned, which may be this very device)
+  const mine = extIn ? false : self && m.from && m.from.id === self.id;
+  const fromDev = extIn ? null : peerOf(m.from && m.from.id);
+  const rcpts = allRecipients(m);
   const flag = async (p, okText) => {
     try {
       await post(`mail/${encodeURIComponent(m.id)}/flags`, p);
@@ -208,13 +281,19 @@ function Reader({ id, folder, onChanged, onRemoved, isMobile }) {
   const pvItems = atts.map((a, i) => ({ name: a.name, mime: a.mime, size: a.size, url: mailAttachmentUrl(m.id, i), dlUrl: mailAttachmentUrl(m.id, i, true), i, ok: a.state === "ready" && previewKind(a.name, a.mime) }))
     .filter((x) => x.ok);
   const others = (m.to || []).filter((r) => !self || r.id !== self.id);
+  const canReplyAll = extIn
+    ? (ext.to || []).filter((a) => a.addr !== ext.mailbox).length + (ext.cc || []).length > 0 || others.length > 0
+    : !mine && others.length > 0;
+  const toLine = extIn
+    ? (ext.to || []).map((a) => (a.addr === ext.mailbox ? t("mail.meShort") : addrName(a))).join(", ")
+    : rcpts.map((r) => (self && r.key === self.id ? t("mail.meShort") : r.name)).join(", ");
 
   return html`<article class="reader" aria-labelledby="reader-subj" data-testid="mail-reader" data-id=${m.id}>
     ${head}
     <div class="reader__tools" role="toolbar" aria-label=${t("mail.actions")}>
       ${m.folder !== "trash" && html`
         <${Button} size="sm" icon="reply" href=${href(["mail", "compose"], { reply: m.id })} data-testid="mail-reply">${t("mail.reply")}</${Button}>
-        ${!mine && others.length > 0 && html`<${Button} size="sm" variant="ghost" icon="replyAll" href=${href(["mail", "compose"], { reply: m.id, all: 1 })}>${t("mail.replyAll")}</${Button}>`}`}
+        ${canReplyAll && html`<${Button} size="sm" variant="ghost" icon="replyAll" href=${href(["mail", "compose"], { reply: m.id, all: 1 })} data-testid="mail-reply-all">${t("mail.replyAll")}</${Button}>`}`}
       <span class="grow"></span>
       <${IconButton} icon="star" label=${m.starred ? t("mail.unstar") : t("mail.star")} active=${!!m.starred} onClick=${() => flag({ starred: !m.starred })} class="reader__star" />
       ${m.folder !== "sent" && html`<${IconButton} icon="mailDot" label=${t("mail.markUnread")} onClick=${() => { flag({ unread: true }, t("mail.markedUnread")); if (isMobile) back(listHref); }} />`}
@@ -226,22 +305,27 @@ function Reader({ id, folder, onChanged, onRemoved, isMobile }) {
     <div class="reader__inner">
       <h2 class="reader__subj" id="reader-subj">${m.subject || t("mail.noSubject")}</h2>
       <div class="reader__from">
-        ${fromDev ? html`<${DeviceAvatar} dev=${fromDev} size=${40} />` : html`<span class="avatar" style="--av:40px"><${Icon} name=${mine ? "laptop" : "user"} size=${20} /></span>`}
+        ${fromDev ? html`<${DeviceAvatar} dev=${fromDev} size=${40} />` : html`<span class=${cx("avatar", extIn && "avatar--ext")} style="--av:40px"><${Icon} name=${extIn ? "at" : mine ? "laptop" : "user"} size=${20} /></span>`}
         <div class="grow">
-          <div class="row row--wrap gap-1"><span class="strong">${mine ? t("mail.me", { name: m.from.name }) : m.from.name}</span>
-            <span class="faint small">→ ${(m.to || []).map((r) => (self && r.id === self.id ? t("mail.meShort") : r.name)).join(", ")}</span></div>
+          <div class="row row--wrap gap-1"><span class="strong" data-testid="mail-from">${mine ? t("mail.me", { name: m.from.name }) : m.from.name}</span>
+            ${extIn && ext.from.name && html`<span class="faint small" data-testid="mail-from-addr">${"<" + ext.from.addr + ">"}</span>`}
+            <span class="faint small">→ ${toLine}</span></div>
           <time class="faint small tnum" datetime=${new Date(m.ts * 1000).toISOString()}>${fmtDateTime(m.ts)}</time>
+          ${ext && ext.via && html`<p class="xsmall faint" data-testid="mail-via">${extIn ? t("mail.viaGateway", { name: ext.via.name }) : t("mail.sentVia", { name: ext.via.name })}</p>`}
         </div>
       </div>
-      ${mine && m.to && m.to.length > 0 && html`<div class="reader__delivery" aria-label=${t("mail.delivery")} data-testid="mail-delivery">
-        ${m.to.map((r) => html`<span class="dlv" key=${r.id} data-testid="mail-recipient" data-state=${r.state}>
-          <span class="strong small">${r.name}</span>
-          <${Chip} size="sm" tone=${deliveryTone(r.state)} icon=${r.state === "delivered" ? "checks" : r.state === "failed" ? "alertCircle" : r.state === "sent" ? "check" : "clock"}>${t("mail.st." + r.state)}</${Chip}>
-          ${r.at ? html`<span class="xsmall faint tnum">${fmtShortDate(r.at)}</span>` : null}
-        </span>`)}
-        ${m.to.some((r) => r.state === "queued") && html`<p class="xsmall faint reader__dlvhint">${t("mail.queuedHint")}</p>`}
+      ${extIn && html`<${VerdictBanner} ext=${ext} />`}
+      ${(mine || extOut) && rcpts.length > 0 && html`<div class="reader__delivery" aria-label=${t("mail.delivery")} data-testid="mail-delivery">
+        ${rcpts.map((r) => html`<${RecipientState} key=${r.key} r=${r} />`)}
+        ${rcpts.some((r) => r.state === "queued") && html`<p class="xsmall faint reader__dlvhint">${extOut ? t("mail.dlvQueued") : t("mail.queuedHint")}</p>`}
       </div>`}
-      <${Linkified} text=${m.body} class="reader__body" />
+      ${extIn && ext.hasHtml && html`<div class="reader__view"><${Segmented} size="sm" label=${t("mail.view.formatted")} value=${view} onChange=${setView}
+        options=${[{ value: "formatted", label: t("mail.view.formatted"), testid: "mail-view-formatted" }, { value: "plain", label: t("mail.view.plain"), testid: "mail-view-plain" }]} /></div>`}
+      ${extIn && ext.hasHtml && view === "formatted"
+        ? html`${ext.remoteImages > 0 && html`<p class="xsmall faint reader__images" data-testid="mail-images-note"><${Icon} name="shield" size=${14} /> ${tn("mail.imagesBlocked", ext.remoteImages)}</p>`}
+          <${LetterFrame} id=${m.id} key=${m.id} />`
+        : html`<${Linkified} text=${m.body} class="reader__body" />`}
+      ${extIn && ext.truncated && html`<p class="xsmall faint reader__images">${t("mail.truncated")}</p>`}
       ${atts.length > 0 && html`<section class="reader__atts" aria-label=${tn("mail.attN", atts.length)}>
         <h3 class="section-title"><${Icon} name="paperclip" size=${14} /> ${tn("mail.attN", atts.length)}</h3>
         <ul class="atts">${atts.map((a, i) => html`<${AttachmentRow} key=${i} m=${m} a=${a} i=${i}

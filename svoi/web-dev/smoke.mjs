@@ -666,6 +666,96 @@ await step("mail: open, reply prefill, trash", async () => {
   await page.waitForSelector("[data-testid=toast]:has-text('корзин')");
 });
 
+await step("internet mail: a letter from the Internet — who vouches for it, the formatted text in a frame, plain text, an answer to the sender", async () => {
+  if (!srv) return; // (needs the hooks of the mock)
+  await srv.hook("/__mock/gateway?on=1&letters=1");
+  await page.open("#/mail/inbox");
+  await page.click("[data-testid=mail-item][data-ext=in]:has-text('pull request') a");
+  await page.waitForSelector("[data-testid=mail-verdict][data-verdict=verified]");
+  const frame = page.frameLocator("[data-testid=mail-html]");
+  await frame.locator("h2").waitFor();
+  if (/allow-scripts/.test((await page.getAttribute("[data-testid=mail-html]", "sandbox")) || "")) throw new Error("the frame of a letter may run scripts");
+  if (await frame.locator("script").count()) throw new Error("a script is in the page of the letter");
+  await page.waitForSelector("[data-testid=mail-images-note]");
+  await page.click("[data-testid=mail-view-plain]");
+  await page.waitForSelector("[data-testid=mail-html]", { state: "detached" });
+  // a letter that is not what it says is named so in the list and in the reader
+  await page.click("[data-testid=mail-item]:has-text('аккаунт') a");
+  await page.waitForSelector("[data-testid=mail-verdict][data-verdict=suspicious]");
+  // an answer goes to the sender, from the mailbox the letter came to
+  await page.click("[data-testid=mail-item]:has-text('Как дела') a");
+  await page.waitForSelector("[data-testid=mail-reader]");
+  await page.click("[data-testid=mail-reply]");
+  await page.waitForSelector("[data-testid=email-chip]:has-text('anna@mail.example')");
+  await page.waitForSelector("[data-testid=compose-from-hint]:has-text('andrey@example.org')");
+  await page.waitForFunction(() => /^Re: /.test(document.querySelector("[data-testid=compose-subject]").value));
+  await page.keyboard.press("Escape"); // (the quoted answer is no draft)
+  await page.waitForSelector("[data-testid=compose]", { state: "detached" });
+});
+
+await step("internet mail: write to addresses on the Internet and see what became of each", async () => {
+  if (!srv) return;
+  await srv.hook("/__mock/gateway?on=1");
+  await page.open("#/mail/inbox");
+  await page.click("[data-testid=mail-compose]");
+  await page.waitForSelector("[data-testid=compose]");
+  for (const a of ["friend@gmail.com", "x@fail.example", "y@slow.example"]) {
+    await page.fill("[data-testid=compose-email]", a);
+    await page.press("[data-testid=compose-email]", "Enter");
+  }
+  await page.fill("[data-testid=compose-email]", "not an address");
+  await page.press("[data-testid=compose-email]", "Enter");
+  await page.waitForSelector("text=не похоже на адрес почты");
+  await page.fill("[data-testid=compose-email]", "");
+  await page.fill("[data-testid=compose-subject]", "Проверка доставки");
+  await page.fill("[data-testid=compose-body]", "Три адреса в интернете");
+  await page.click("[data-testid=compose-send]");
+  await page.waitForSelector("[data-testid=compose]", { state: "detached" });
+  await page.open("#/mail/sent");
+  await page.click("[data-testid=mail-item][data-ext=out] >> nth=0 >> a");
+  for (const st of ["delivered", "failed", "deferred"]) await page.waitForSelector(`[data-testid=mail-recipient][data-kind=email][data-state=${st}]`, { timeout: 8000 });
+  await page.waitForSelector("[data-testid=mail-recipient-why]:has-text('550')");
+});
+
+await step("internet mail: Settings → Own address — set up, the records of the domain, a port that cannot be taken, a queue, switch off", async () => {
+  if (!srv) return;
+  await srv.hook("/__mock/gateway?off=1");
+  await page.open("#/settings/mailgw");
+  await page.waitForSelector("[data-testid=mailgw-status][data-state=off]");
+  await page.fill("[data-testid=mailgw-domain]", "example.org");
+  await page.click("[data-testid=mailgw-add-box]");
+  await page.fill("[data-testid=mailgw-box-name]", "andrey");
+  await page.click("[data-testid=mailgw-enable]");
+  await page.click("[data-testid=mailgw-save]");
+  await page.waitForSelector("[data-testid=mailgw-status][data-state=on]");
+  await page.waitForSelector("[data-testid=mailgw-rec][data-id=mx]");
+  await page.waitForSelector("[data-testid=mailgw-dns-verdict][data-ready=false]");
+  await srv.hook("/__mock/dns?publish=1");
+  await page.click("[data-testid=mailgw-dns-check]");
+  await page.waitForSelector("[data-testid=mailgw-dns-verdict][data-ready=true]");
+  // the port cannot be taken: the reason is said in words, the sender goes on
+  await srv.hook("/__mock/gwlisten?error=permission");
+  await page.open("#/home");
+  await page.open("#/settings/mailgw");
+  await page.waitForSelector("[data-testid=mailgw-listen-error]:has-text('администратора')");
+  await srv.hook("/__mock/gwlisten?error=0");
+  // a letter that waits shows in the queue and can be given up on
+  await page.open("#/home");
+  await page.open("#/settings/mailgw");
+  await page.waitForSelector("[data-testid=mailgw-test]");
+  await page.fill("[data-testid=mailgw-test-to]", "y@slow.example");
+  await page.click("[data-testid=mailgw-test-send]");
+  await page.waitForSelector("[data-testid=mailgw-queue-item]", { timeout: 9000 });
+  await page.click("[data-testid=mailgw-queue-cancel]");
+  await page.waitForSelector("[data-testid=mailgw-queue-empty]", { timeout: 9000 });
+  // off again: the setup stays
+  await page.click("[data-testid=mailgw-enable]");
+  await page.click("[data-testid=mailgw-save]");
+  await page.waitForSelector("[data-testid=mailgw-status][data-state=off]");
+  const val = await page.inputValue("[data-testid=mailgw-domain]");
+  if (val !== "example.org") throw new Error("the domain is not kept: " + val);
+});
+
 await step("chat: send a message with Enter and see it delivered", async () => {
   const dad = peer("dad-pc");
   await page.open(`#/chat/${dad.id}`);

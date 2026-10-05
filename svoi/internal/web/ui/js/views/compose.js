@@ -1,5 +1,6 @@
 // Compose / reply dialog: recipients (device chips with an "all my devices"
-// shortcut), subject, plain-text body, attachments staged via POST api/blobs.
+// shortcut, and addresses on the Internet when the mesh has a mail gateway), subject, plain-text body,
+// attachments staged via POST api/blobs.
 import { html, useEffect, useLayoutEffect, useRef, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t } from "../i18n.js";
@@ -12,6 +13,7 @@ import { guessMime, uid } from "../util.js";
 import { FileIcon } from "../components/avatar.js";
 import { DeviceChips } from "../components/devicepicker.js";
 import { AutoTextarea, Button, Callout, Progress, Spinner } from "../components/ui.js";
+import { cx } from "../util.js";
 import { confirmDialog, Modal } from "../components/modal.js";
 import { toast, toastError } from "../components/toast.js";
 
@@ -70,11 +72,75 @@ export function AttachmentChips({ atts, onRemove }) {
   </ul>`;
 }
 
+// ---- addresses on the Internet
+const EMAIL_RE = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[^\s@<>()[\]\\,;:"]{2,}$/;
+/** The address inside "Name <name@host>" or the text itself. */
+const bareAddr = (v) => { const m = /<([^<>]+)>\s*$/.exec(v); return (m ? m[1] : v).trim(); };
+const fmtAddr = (a) => (a.name && a.name !== a.addr ? `${a.name} <${a.addr}>` : a.addr);
+/** Pieces of what was typed or pasted: separated by commas, semicolons or lines; several bare addresses split at spaces too. */
+function splitAddrs(text) {
+  const out = [];
+  for (const part of text.split(/[,;\n]+/)) {
+    const v = part.trim();
+    if (!v) continue;
+    if (!v.includes("<") && /\s/.test(v) && v.split(/\s+/).every((x) => x.includes("@"))) out.push(...v.split(/\s+/));
+    else out.push(v);
+  }
+  return out;
+}
+
+/** Addresses as chips with a field to add more (Enter, a comma or leaving the field adds what was typed). */
+function EmailChips({ value, onChange, label, placeholder, testid, onProblem }) {
+  const [text, setText] = useState("");
+  const [bad, setBad] = useState("");
+  const commit = (raw) => {
+    const parts = splitAddrs(raw);
+    if (!parts.length) { setText(""); return true; }
+    const keep = [], fine = [];
+    for (const p of parts) (EMAIL_RE.test(bareAddr(p)) ? fine : keep).push(p);
+    if (fine.length) {
+      const have = new Set(value.map((x) => bareAddr(x).toLowerCase()));
+      onChange([...value, ...fine.filter((x) => { const k = bareAddr(x).toLowerCase(); if (have.has(k)) return false; have.add(k); return true; })]);
+    }
+    setText(keep.join(", "));
+    const problem = keep.length ? t("compose.emailInvalid", { v: keep[0] }) : "";
+    setBad(problem);
+    onProblem && onProblem(!!problem);
+    return !keep.length;
+  };
+  const key = (e) => {
+    if (e.key === "Enter" || e.key === "," || e.key === ";") {
+      if (text.trim()) { e.preventDefault(); e.stopPropagation(); commit(text); }
+    } else if (e.key === "Backspace" && !text && value.length) {
+      onChange(value.slice(0, -1));
+    }
+  };
+  return html`<div class="echips-wrap">
+    <div class=${cx("echips", bad && "has-error")} onClick=${(e) => { const i = e.currentTarget.querySelector("input"); i && i.focus(); }}>
+      ${value.map((a) => html`<span class="echip" key=${a} data-testid="email-chip"><span class="echip__addr ellipsis">${a}</span>
+        <button type="button" class="echip__x" aria-label=${t("compose.removeEmail", { addr: a })} onClick=${(e) => { e.stopPropagation(); onChange(value.filter((x) => x !== a)); }}><${Icon} name="x" size=${12} /></button></span>`)}
+      <input class="echips__input" type="email" inputmode="email" autocapitalize="off" autocomplete="off" spellcheck="false" value=${text} placeholder=${value.length ? "" : placeholder}
+        aria-label=${label} data-testid=${testid} onInput=${(e) => { setText(e.target.value); if (bad) { setBad(""); onProblem && onProblem(false); } }}
+        onKeyDown=${key} onBlur=${() => text.trim() && commit(text)}
+        onPaste=${(e) => { const x = e.clipboardData && e.clipboardData.getData("text"); if (x && /[,;\n]|\s.*@/.test(x)) { e.preventDefault(); commit(text + x); } }} />
+    </div>
+    ${bad && html`<p class="field__error" role="alert">${bad}</p>`}
+  </div>`;
+}
+
 export function ComposeModal({ query, onClose }) {
   const self = useStore((s) => s.self);
   const replyId = query.get("reply");
   const replyAll = query.get("all") === "1";
   const [to, setTo] = useState(() => (query.get("to") || "").split(",").filter((id) => state.peers.some((p) => p.id === id)));
+  // addresses on the Internet, and the mailbox of ours the letter goes out from
+  const [emailTo, setEmailTo] = useState(() => splitAddrs(query.get("emailTo") || ""));
+  const [emailCc, setEmailCc] = useState([]);
+  const [showCc, setShowCc] = useState(false);
+  const [showEmail, setShowEmail] = useState(() => !!query.get("emailTo"));
+  const [from, setFrom] = useState("");
+  const [gateways, setGateways] = useState(null); // null: not known yet
+  const [emailProblem, setEmailProblem] = useState(false);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [orig, setOrig] = useState(null);
@@ -99,14 +165,39 @@ export function ComposeModal({ query, onClose }) {
   }, [body]);
 
   useEffect(() => {
+    get("mail/gateways").then((r) => setGateways((r && r.gateways) || [])).catch(() => setGateways([]));
+  }, []);
+
+  useEffect(() => {
     if (!replyId) return;
     get(`mail/${encodeURIComponent(replyId)}`).then((m) => {
       setOrig(m);
       const me = self && self.id;
       const fromMe = m.from && m.from.id === me;
-      let rcpt = fromMe ? (m.to || []).map((r) => r.id) : [m.from.id];
-      if (replyAll && !fromMe) rcpt = [m.from.id, ...(m.to || []).map((r) => r.id).filter((id) => id !== me && id !== m.from.id)];
-      setTo(rcpt.filter((id) => state.peers.some((p) => p.id === id)));
+      const e = m.ext;
+      if (e && e.dir === "in") {
+        // an answer to a letter from the Internet goes to its sender (to the address it asks answers to), from the mailbox it came to;
+        // the others it was written to get a copy when everybody is answered. The gateway is only the way: it is not written to.
+        const first = (e.replyTo && e.replyTo[0]) || e.from;
+        const skip = new Set([bareAddr(e.mailbox || "").toLowerCase(), first.addr.toLowerCase(), e.from.addr.toLowerCase()]);
+        setEmailTo([fmtAddr(first)]);
+        if (replyAll) setEmailCc([...(e.to || []), ...(e.cc || [])].filter((a) => !skip.has(a.addr.toLowerCase())).map(fmtAddr));
+        setShowEmail(true);
+        setShowCc(replyAll && (e.to || []).concat(e.cc || []).some((a) => !skip.has(a.addr.toLowerCase())));
+        if (e.mailbox) setFrom(e.mailbox);
+        setTo([]);
+      } else {
+        let rcpt = fromMe ? (m.to || []).map((r) => r.id) : [m.from.id];
+        if (replyAll && !fromMe) rcpt = [m.from.id, ...(m.to || []).map((r) => r.id).filter((id) => id !== me && id !== m.from.id)];
+        setTo(rcpt.filter((id) => state.peers.some((p) => p.id === id)));
+        if (e && e.dir === "out") {
+          setEmailTo((e.to || []).map(fmtAddr));
+          if (replyAll) setEmailCc((e.cc || []).map(fmtAddr));
+          setShowEmail(true);
+          setShowCc(replyAll && (e.cc || []).length > 0);
+          if (e.from && e.from.addr) setFrom(e.from.addr);
+        }
+      }
       setSubject(reSubject(m.subject));
       setBody(quote(m));
       initial.current = { subject: reSubject(m.subject), body: quote(m) };
@@ -116,7 +207,12 @@ export function ComposeModal({ query, onClose }) {
   }, [replyId]);
 
   const dirty = subject.trim() !== initial.current.subject.trim() || body.trim() !== initial.current.body.trim() || A.atts.length > 0;
-  const canSend = to.length > 0 && (subject.trim() || body.trim() || A.ids.length) && !A.busy && !sending;
+  // the mailboxes of the mesh a letter to the Internet can go out from (each at the gateway that has it)
+  const boxes = (gateways || []).flatMap((g) => (g.mailboxes || []).map((addr) => ({ addr, gw: g })));
+  const hasExt = emailTo.length + emailCc.length > 0;
+  const box = boxes.find((b) => b.addr.toLowerCase() === from.toLowerCase()) || boxes[0] || null;
+  const somebody = to.length > 0 || emailTo.length > 0;
+  const canSend = somebody && (!hasExt || !!box) && !emailProblem && (subject.trim() || body.trim() || A.ids.length) && !A.busy && !sending;
 
   const close = async () => {
     if (dirty && !sending) {
@@ -130,11 +226,16 @@ export function ComposeModal({ query, onClose }) {
     if (!canSend) return;
     setSending(true);
     try {
-      const r = await post("mail", { to, subject: subject.trim(), body, attachments: A.ids, ...(orig ? { inReplyTo: orig.id } : {}) });
+      const r = await post("mail", {
+        to, subject: subject.trim(), body, attachments: A.ids, ...(orig ? { inReplyTo: orig.id } : {}),
+        ...(hasExt ? { emailTo, ...(emailCc.length ? { emailCc } : {}), from: box.addr } : {}),
+      });
       setStartFlag("sent");
       const names = to.map((id) => (state.peers.find((p) => p.id === id) || {}).name).filter(Boolean).join(", ");
       const offline = to.filter((id) => { const p = state.peers.find((x) => x.id === id); return p && !p.online; }).length;
-      toast({ level: "success", title: t("compose.sent"), text: offline ? t("compose.sentQueued", { names }) : t("compose.sentTo", { names }),
+      const extNames = [...emailTo, ...emailCc].map((a) => bareAddr(a)).join(", ");
+      toast({ level: "success", title: t("compose.sent"),
+        text: [names && (offline ? t("compose.sentQueued", { names }) : t("compose.sentTo", { names })), extNames && t("compose.sentExt", { names: extNames })].filter(Boolean).join(" "),
         link: r && r.id ? href(["mail", "sent", r.id]) : null, actionLabel: t("compose.view") });
       A.reset();
       onClose();
@@ -163,6 +264,29 @@ export function ComposeModal({ query, onClose }) {
         <span class="compose__label" id="c-to">${t("compose.to")}</span>
         <div class="grow"><${DeviceChips} value=${to} onChange=${setTo} label=${t("compose.to")} showOwnShortcut /></div>
       </div>
+      ${(showEmail || boxes.length > 0 || hasExt) ? html`<div class="compose__row" data-testid="compose-email-row">
+          <span class="compose__label" id="c-email">${t("compose.toEmail")}</span>
+          <div class="grow stack stack--sm">
+            <${EmailChips} value=${emailTo} onChange=${setEmailTo} label=${t("compose.toEmail")} placeholder=${t("compose.toEmailPh")} testid="compose-email" onProblem=${setEmailProblem} />
+            ${!showCc && html`<button type="button" class="link-btn xsmall" onClick=${() => setShowCc(true)} data-testid="compose-cc-add">${t("compose.ccAdd")}</button>`}
+          </div>
+        </div>
+        ${showCc && html`<div class="compose__row">
+          <span class="compose__label">${t("compose.ccEmail")}</span>
+          <div class="grow"><${EmailChips} value=${emailCc} onChange=${setEmailCc} label=${t("compose.ccEmail")} placeholder=${t("compose.toEmailPh")} testid="compose-email-cc" onProblem=${setEmailProblem} /></div>
+        </div>`}
+        ${hasExt && boxes.length > 1 && html`<div class="compose__row">
+          <label class="compose__label" for="c-from">${t("compose.from")}</label>
+          <select id="c-from" class="input" value=${box ? box.addr : ""} onChange=${(e) => setFrom(e.target.value)} data-testid="compose-from">
+            ${boxes.map((b) => html`<option key=${b.addr} value=${b.addr} selected=${box && b.addr === box.addr}>${b.addr}${b.gw.self ? "" : ` — ${b.gw.name}`}</option>`)}
+          </select>
+        </div>`}
+        ${hasExt && box && boxes.length === 1 && html`<p class="xsmall faint compose__from" data-testid="compose-from-hint">${t("compose.fromWillBe", { addr: box.addr, name: box.gw.name })}</p>`}
+        ${hasExt && box && !box.gw.self && !box.gw.online && html`<${Callout} tone="neutral" icon="clock">${t("compose.gwOffline", { name: box.gw.name })}</${Callout}>`}
+        ${hasExt && gateways !== null && !box && html`<${Callout} tone="warn" icon="at" title=${t("compose.noGateway")} data-testid="compose-no-gateway">
+          <a href=${href(["settings", "mailgw"])}>${t("compose.setupAddress")}</a></${Callout}>`}`
+        : (gateways !== null && html`<div class="compose__row"><span class="compose__label"></span>
+            <button type="button" class="link-btn xsmall" onClick=${() => setShowEmail(true)} data-testid="compose-email-show"><${Icon} name="at" size=${14} /> ${t("compose.toEmail")}</button></div>`)}
       <div class="compose__row">
         <label class="compose__label" for="c-subj">${t("compose.subject")}</label>
         <input id="c-subj" class="input" value=${subject} maxlength="200" placeholder=${t("compose.subjectPh")} autofocus=${!replyId} data-testid="compose-subject"

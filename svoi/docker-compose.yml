@@ -17,6 +17,10 @@ services:
       # Folders to share (add the share in the interface as /srv/share):
       # - /mnt/storage:/srv/share
     command: ["up", "--no-browser", "--ui", "127.0.0.1:8777"]
+    # Internet mail (settings → "Own address") takes the port 25, which the unprivileged user of the image may not:
+    #   cap_add: [NET_BIND_SERVICE]
+    #   sysctls: { net.ipv4.ip_unprivileged_port_start: "0" }   # (not allowed with network_mode: host; there use "Where to listen" :2525
+    #                                                            and forward the port 25 to it on the router or with iptables)
     # With published ports instead of host networking:
     #   network_mode: bridge
     #   ports: ["41710:41710/udp", "127.0.0.1:8777:8777"]

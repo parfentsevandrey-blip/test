@@ -60,6 +60,7 @@ const SHELL = [
   "js/views/transfers.js",
   "js/views/preview.js",
   "js/views/mail.js",
+  "js/views/mailgw.js",
   "js/views/compose.js",
   "js/views/chat.js",
   "js/views/services.js",

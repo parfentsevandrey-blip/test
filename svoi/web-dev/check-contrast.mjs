@@ -49,6 +49,21 @@ const ROUTES = {
   "nearby-list": { hash: "", world: "onboarding", ready: ".nearby__item", setup: async (m) => { await m.hook("/__mock/reset"); await m.hook("/__mock/nearby?add=macbook-andrey&os=darwin&mesh=Дом"); await m.hook("/__mock/nearby?add=pixel-8&os=android&mesh=Дом"); } },
   "nearby-code": { hash: "", world: "onboarding", ready: "[data-testid=nearby-code]", setup: async (m) => { await m.hook("/__mock/reset"); await m.hook("/__mock/nearby?add=macbook-andrey&os=darwin&mesh=Дом"); await m.hook("/__mock/nearby?hold=1"); },
     after: async (page) => { await page.click("[data-testid=nearby-connect]"); await page.waitForSelector("[data-testid=nearby-join][data-state=waiting]"); await sleep(300); } },
+  // Internet mail: a letter from the Internet (verified, with formatted text in its frame; not what it says), a letter that went out to three addresses,
+  // the composer with addresses, and the setup (off; and on with a record that is wrong)
+  "mail-ext": { hash: "#/mail/inbox", world: "full", ready: "[data-testid=mail-item]", setup: async (m) => { await m.hook("/__mock/reset"); await m.hook("/__mock/gateway?on=1&letters=1"); },
+    after: async (page) => { await page.click("[data-testid=mail-item]:has-text('pull request') a"); await page.waitForSelector("[data-testid=mail-verdict]"); await sleep(900); } },
+  "mail-ext-forged": { hash: "#/mail/inbox", world: "full", ready: "[data-testid=mail-item]", setup: async (m) => { await m.hook("/__mock/reset"); await m.hook("/__mock/gateway?on=1&letters=1"); },
+    after: async (page) => { await page.click("[data-testid=mail-item]:has-text('аккаунт') a"); await page.waitForSelector("[data-testid=mail-verdict][data-verdict=suspicious]"); await sleep(900); } },
+  "mail-ext-sent": { hash: "#/mail/sent", world: "full", ready: "[data-testid=mail-item]", setup: async (m) => { await m.hook("/__mock/reset"); await m.hook("/__mock/gateway?on=1"); await m.hook("/__mock/mailext?kind=sent"); },
+    after: async (page) => { await page.click("[data-testid=mail-item][data-ext=out] >> nth=0 >> a"); await page.waitForSelector("[data-testid=mail-recipient][data-state=failed]"); await sleep(500); } },
+  "compose-ext": { hash: "#/mail/inbox", world: "full", ready: "[data-testid=mail-compose]", setup: async (m) => { await m.hook("/__mock/reset"); await m.hook("/__mock/gateway?on=1"); },
+    after: async (page) => { await page.click("[data-testid=mail-compose]"); await page.waitForSelector("[data-testid=compose-email]");
+      for (const a of ["friend@gmail.com", "Анна <anna@mail.example>"]) { await page.fill("[data-testid=compose-email]", a); await page.press("[data-testid=compose-email]", "Enter"); }
+      await page.fill("[data-testid=compose-email]", "not an address"); await page.press("[data-testid=compose-email]", "Enter"); await sleep(500); } },
+  "mailgw-off": { hash: "#/settings/mailgw", world: "full", ready: "[data-testid=mailgw-status]", setup: async (m) => { await m.hook("/__mock/reset"); } },
+  mailgw: { hash: "#/settings/mailgw", world: "full", ready: "[data-testid=mailgw-rec]", setup: async (m) => { await m.hook("/__mock/reset"); await m.hook("/__mock/gateway?on=1"); await m.hook("/__mock/dns?publish=1&wrong=spf"); await m.hook("/__mock/gwlisten?error=permission"); },
+    after: async (page) => { await sleep(600); } },
   "nearby-ask": { hash: "#/home", world: "full", ready: "[data-testid=nearby-ask-state][data-confirmed=true]", setup: async (m) => { await m.hook("/__mock/nearby?clear=1"); await m.hook("/__mock/nearby?request=pixel-8&os=android"); } },
 };
 const wanted = arg("routes", Object.keys(ROUTES).join(",")).split(",");
@@ -103,6 +118,7 @@ function collectRuns(dissolve) {
         x0 = Math.max(x0, pr.left); y0 = Math.max(y0, pr.top); x1 = Math.min(x1, pr.right); y1 = Math.min(y1, pr.bottom);
       }
       if (x1 - x0 < 3 || y1 - y0 < 4) continue;
+      if (y1 - y0 < 0.55 * r.height) continue; // (a line cut off at the edge of the screen or of its scroller is not read: a sliver of it is not judged)
       if (!el.closest(".topbar") && y0 < fade && top && getComputedStyle(top).position === "sticky" && window.scrollY > 0) continue;
       if (y1 > tabTop - 2 - (dissolve || 0) && !el.closest(".tabbar")) continue; // (covered by the tab bar, or in the band where the page fades into the sky above it)
       // text that is covered by something else (a modal, a toast, the part of a list under the bar) is judged where it shows

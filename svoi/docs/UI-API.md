@@ -193,7 +193,8 @@ The list excludes this device. Sort in the UI (online first, then by name).
   "to": [ {"id": "…", "name": "nas", "state": "delivered", "at": 1760000000} ],
                                                        // state: queued | sent | delivered | failed
   "subject": "Backup report", "snippet": "first ~140 chars of the body",
-  "ts": 1760000000, "unread": true, "attachments": 2, "thread": "…", "starred": false }
+  "ts": 1760000000, "unread": true, "attachments": 2, "thread": "…", "starred": false,
+  "ext": ExtMail? }                                    // only for a letter from / to the Internet, see below
 ```
 Full message adds:
 ```jsonc
@@ -208,6 +209,32 @@ Full message adds:
 ```
 Bodies are **plain text**: the UI must render them escaped (auto-link URLs, keep line breaks);
 never inject as HTML.
+
+#### Letters from and to the Internet (`ext`)
+A device that is set up as a *mail gateway* (see "Own address" below) turns the letters of its domain into letters of the mesh
+and the letters of the mesh into mail on the Internet. Such a letter carries `ext`:
+```jsonc
+// from the Internet (the gateway is "from" as far as the mesh goes: from.id is the gateway, from.name the sender as a person)
+{ "dir": "in", "from": {"name": "GitHub", "addr": "noreply@github.com"},   // name only when the letter has one
+  "to": [{"name":"Andrey","addr":"andrey@example.org"}], "cc": [], "replyTo": [],   // (empty lists are left out)
+  "mailbox": "andrey@example.org",                     // the mailbox of ours it came to
+  "verdict": "verified",                               // verified | unverified | suspicious — what the checks of the gateway say of the sender
+  "spf": "pass", "dkim": "github.com", "dmarc": "pass", // SPF/DMARC: pass|fail|softfail|neutral|none|temperror|permerror;
+                                                       // dkim: the domains whose signature held ("" when there was none)
+  "via": {"id": "…", "name": "home-server"},           // the gateway
+  "hasHtml": true,                                     // there is formatted text: GET /api/mail/:id/html
+  "remoteImages": 2,                                   // pictures on the Internet the letter asks for (never loaded)
+  "truncated": false, "messageId": "<…@mail.example>" }
+// to the Internet
+{ "dir": "out", "from": {"name":"Andrey","addr":"andrey@example.org"}, "to": [{"addr":"friend@gmail.com"}], "cc": [],
+  "mailbox": "andrey@example.org", "via": {"id":"…","name":"home-server"}, "messageId": "<…@example.org>",
+  "recipients": [ {"addr":"friend@gmail.com","kind":"to","state":"delivered","code":250,"text":"2.0.0 OK","at":1760000000} ] }
+                    // state: queued | deferred (tried, will be tried again — text says why) | delivered | failed (code/text: the words
+                    // of the other server, or of the gateway: "cancelled", "the domain … does not exist or takes no mail"); at is null until final
+```
+`to` of the summary lists only the **devices** a letter goes to: the gateway that only passes a letter on is not in it, so a letter to the
+Internet alone has an empty `to`. The body of such a letter is always the plain-text version; the UI shows the formatted one in a frame
+(below) when `ext.hasHtml`. A letter from the Internet is **somebody else's text**: the verdict is a hint, not a guarantee.
 
 ### Chat
 ```jsonc
@@ -410,7 +437,9 @@ and `themesh nearby deny ID` answer a request — a server with no screen can be
 |---|---|
 | `GET /api/mail?folder=inbox&q=text&limit=50&before=1760000000` | `{"items":[MailSummary],"total":120,"unread":3}` newest first; `before` = `ts` of the last item you have (paging) |
 | `GET /api/mail/:id` | full Mail (does **not** mark as read) |
-| `POST /api/mail` | `{"to":["<id>",…],"subject":"…","body":"…","attachments":["<blob sha256>",…],"inReplyTo":"m_…"?}` → `{"id":"m_…"}`; delivery is asynchronous (store-and-forward) |
+| `POST /api/mail` | `{"to":["<id>",…],"subject":"…","body":"…","attachments":["<blob sha256>",…],"inReplyTo":"m_…"?,"emailTo":["friend@gmail.com","Name <a@b.c>"]?,"emailCc":[…]?,"from":"andrey@example.org"?}` → `{"id":"m_…"}`; delivery is asynchronous (store-and-forward). `to` may be empty when `emailTo` is not. `from` is the mailbox the letter goes out from (omitted: the only one this device has; `400` when it has none or names one it does not have; `404` when no gateway of the mesh is known) — the gateway must be one this device trusts (an administrator, or a device of the same owner). Attachments of a letter to the Internet: up to 20 MiB in all. A reply carries `inReplyTo` and keeps the thread (`In-Reply-To`/`References`) |
+| `GET /api/mail/gateways` | `{"gateways":[{"id","name","self":bool,"online":bool,"domain":"example.org","host":"mail.example.org","mailboxes":["andrey@example.org"],"ready":bool}]}` — the gateways this device may write through, with the mailboxes it has at each (what the composer offers as "from"); `[]` when there is none |
+| `GET /api/mail/:id/html` | for a letter from the Internet that `hasHtml`: **a page**, not JSON — the cleaned formatted text, for an `<iframe sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" src=…>` (no `allow-scripts`). It is served under a policy of its own (`default-src 'none'; img-src data:; style-src 'unsafe-inline'; form-action 'none'; …`, `Referrer-Policy: no-referrer`, `no-store`): no script, nothing from the network; the pictures of the Internet are taken out, the pictures that belong to the letter (`cid:`) are put in as `data:` (when this device has them). `404` for a letter without formatted text |
 | `POST /api/mail/:id/flags` | `{"unread":false,"starred":true,"folder":"trash"}` (any subset) → `{"ok":true}` |
 | `DELETE /api/mail/:id` | in trash: delete forever; elsewhere: move to trash → `{"ok":true}` |
 | `POST /api/blobs?name=report.pdf&mime=application/pdf` | raw body → `{"id":"<sha256>","name","size","mime"}` (attachment staging) |
@@ -438,6 +467,19 @@ and `themesh nearby deny ID` answer a request — a server with no screen can be
 | `POST /api/forwards` | `{"peer":"<id>","service":"ssh","listen":"127.0.0.1:0"}` → `Forward` (port 0 = pick a free one; `listen` in the response has the real port) |
 | `DELETE /api/forwards/:id` | |
 
+### Own address — the mail gateway (Internet mail)
+The device that has the public address (port 25) and the domain is the *gateway*; it is off until its owner sets it up. An administrator can do it
+for another device with the `/api/d/:peerId` prefix (below).
+
+| method & path | body → response |
+|---|---|
+| `GET /api/mailgw` | MailGateway: `{"enabled","domain","host","listen","dkimSelector","publicIPv4","mailboxes":[{"name":"andrey","address":"andrey@example.org","devices":["<id>",…]}],"relay":null \| {"host","port","username"?,"passwordSet":bool,"mode":"starttls\|tls\|plain","spfInclude"?},"status":{"enabled","running":bool (the sender works),"listening":bool,"listenAddr"?,"listenError"?,"listenErrorKind"?:"permission\|inuse\|other","relay":bool,"queue":3,"selector","detectedIPv4"?,"publicIPv4"?},"defaults":{"host":"mail.<domain>","listen":":25"}}` |
+| `PUT /api/mailgw` | the same fields without `status`/`defaults`/`address`/`passwordSet` (`relay.password` only goes in, never comes out; a relay with the same host and login and **no** password keeps the one it has) → MailGateway. `400 invalid` with the reason in `message` (English): no domain / no mailbox while `enabled`, a name that is not a domain, a mailbox with no devices or with a device that is not in the mesh, a port that is not a number … A running gateway is restarted with the new setup; a server that cannot take its port does not stop the sender (`status.listenError`, `listenErrorKind` says why: `permission` — port 25 needs rights) |
+| `GET /api/mailgw/dns` | `{"domain","host","publicIPv4"?,"relay":bool,"report":{"ready":bool,"records":[{"id":"mx\|a\|aaaa\|spf\|dkim\|dmarc\|ptr","type":"MX\|A\|AAAA\|TXT\|PTR","name":"…","value":"…","required":bool,"state":"ok\|missing\|wrong\|unknown","found"?:["…"],"detail"?:"other-host\|address-unknown\|other-address\|two-records\|ip-not-allowed:softfail\|other-key\|other-name\|dns-error: …"}]}}` — the records the domain needs, each with what the real DNS says of it now (`ready`: every required record is right). `400` while no domain is saved |
+| `GET /api/mailgw/queue` | `{"items":[{"id","from","origin":"m_…","size","created","rcpts":[{"addr","state":"queued\|deferred","code"?,"text"?,"attempts"?,"next"?}]}]}` — the letters that are still on their way |
+| `POST /api/mailgw/queue/retry` | `{}` → `{"ok":true}` — try the letters that wait now |
+| `POST /api/mailgw/queue/:id/cancel` | `{}` → `{"ok":true}` — give up: the recipients that still wait fail with "cancelled" (`404` if it is not in the queue) |
+
 ### Settings
 `GET /api/settings` → Settings · `PUT /api/settings` (any subset of the fields) → Settings.
 
@@ -446,7 +488,7 @@ Any of the *configuration* endpoints can be addressed to another device by prefi
 path with `/api/d/:peerId`:
 
 `/api/d/:peerId/shares[/:id]`, `/api/d/:peerId/services[/:id]`, `/api/d/:peerId/settings`,
-`/api/d/:peerId/local/fs`, `/api/d/:peerId/diag/logs`, `/api/d/:peerId/state`.
+`/api/d/:peerId/local/fs`, `/api/d/:peerId/diag/logs`, `/api/d/:peerId/state`, `/api/d/:peerId/mailgw[/…]`.
 
 The node forwards the request to that device, which executes it as if it were local.
 `403 denied` unless **this** device is an admin; `502 offline` if the device is not
