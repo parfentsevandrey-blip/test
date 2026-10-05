@@ -364,7 +364,7 @@ def _map_image(map_spec: dict, size: tuple[int, int], sheet: dict, geo: dict, ki
         g = geo[site["label"]]
         lat, lon = site.get("at") or (g.representative_point().y, g.representative_point().x)
         px, py = frame.to_page(lat, lon)
-        if inside(px, py):
+        if inside(px, py) and not site.get("hide_label"):
             _label(draw, (px, py), site["label"], f.site_label, INK, site.get("side", "right"), 1.5)
     # точки компаний: офисы, склады, отдельные здания
     dot = kinds.get("point", {})
@@ -374,7 +374,8 @@ def _map_image(map_spec: dict, size: tuple[int, int], sheet: dict, geo: dict, ki
             continue
         r = _px(1.7)
         _marker(draw, px, py, r, _rgb(dot.get("fill", "16233A")), None, None)
-        _label(draw, (px, py), point["label"], f.site_label, INK, point.get("side", "right"), 2.6)
+        if not point.get("hide_label"):
+            _label(draw, (px, py), point["label"], f.site_label, INK, point.get("side", "right"), 2.6)
     for entry in sheet["entries"]:
         if entry.get("at") or entry.get("point"):
             lat, lon = entry.get("at") or entry["point"]
@@ -386,6 +387,8 @@ def _map_image(map_spec: dict, size: tuple[int, int], sheet: dict, geo: dict, ki
             continue
         r = _px(3.4)
         _marker(draw, px, py, r, _rgb(kinds[entry["kind"]]["badge"]), str(entry["n"]), f.map_badge)
+        if entry.get("hide_label"):
+            continue
         side = entry.get("side", "right")
         dx, dy = {"right": (1, 0), "left": (-1, 0), "above": (0, -1), "below": (0, 1)}[side]
         reach = r + _px(0.6)

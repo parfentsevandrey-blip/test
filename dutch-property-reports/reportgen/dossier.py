@@ -713,6 +713,10 @@ def object_location(doc, obj: dict, cache: Path, assets: Path, *,
 
 WHY_MAP_PX_PER_MM = 11.81   # карта полосы «Почему выбран» — 300 dpi, как листы файла
 WHY_MAP_MAX_MM = 175.0      # карта добирает полосу до нижнего поля: другого кадра на ней нет
+# LibreOffice балансирует колонки текста на строку-две выше расчёта, а под
+# картой ещё перечень привязки: без запаса его последняя строка уходит на
+# отдельную страницу
+WHY_SLACK_MM = 8.0
 
 
 def object_why(doc, obj: dict, cache: Path, assets: Path) -> None:
@@ -739,7 +743,8 @@ def object_why(doc, obj: dict, cache: Path, assets: Path) -> None:
             + _mm(13) + _mm(3 + S.LH_SMALL))
     if rows:
         used += _mm(13 + 5 + S.FS_MICRO + 2 + 5) + _rows_height(rows)
-    free = S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM - used - MAP_SLACK_MM
+    free = (S.PAGE_H_MM - S.MARGIN_TOP_MM - S.MARGIN_BOTTOM_MM - used
+            - MAP_SLACK_MM - WHY_SLACK_MM)
     free = min(max(free, MAP_MIN_MM), WHY_MAP_MAX_MM)
     ratio = (S.CONTENT_W_MM - FRAME_PAD_MM) / (free - FRAME_PAD_MM)
     width = int((S.CONTENT_W_MM - FRAME_PAD_MM) * WHY_MAP_PX_PER_MM)

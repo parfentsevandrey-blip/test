@@ -192,6 +192,33 @@ def describe(result: dict) -> str:
 # --------------------------------------------------------------------------
 # карта полосы
 # --------------------------------------------------------------------------
+def _relabel(sheet: dict, labels: dict) -> dict:
+    """Лист с другими сторонами подписей для карты полосы.
+
+    Стороны подписей на листе подобраны под его масштаб. На карте полосы
+    кадр бывает мельче, и подписи площадок одной зоны сходятся под её
+    номером. ``labels`` — {подпись: "left" | "right" | "above" | "below"
+    | null | {"side": …, "at": [lat, lon]}}; null оставляет знак без подписи,
+    сама площадка остаётся на карте, "at" переносит знак — например номер
+    зоны, который иначе лёг бы под булавку объекта.
+    """
+    if not labels:
+        return sheet
+    sheet = json.loads(json.dumps(sheet))
+    for group, name in (("sites", "label"), ("points", "label"), ("entries", "short")):
+        for item in sheet.get(group, []):
+            if item[name] not in labels:
+                continue
+            value = labels[item[name]]
+            if value is None:
+                item["hide_label"] = True
+            elif isinstance(value, dict):
+                item.update(value)
+            else:
+                item["side"] = value
+    return sheet
+
+
 def why_map(obj: dict, why: dict, size_px: tuple[int, int], dest: Path) -> Path:
     """Карта полосы «Почему выбран»: контуры выбранной территории, её знаки и
     метка объекта. Кадр охватывает объект, его зону и ближайшую площадку."""
@@ -206,7 +233,7 @@ def why_map(obj: dict, why: dict, size_px: tuple[int, int], dest: Path) -> Path:
         focus = [(lat, lon)]
         span_m = why.get("span_m", 6000)
     else:
-        sheet = data["sheets"][key]
+        sheet = _relabel(data["sheets"][key], why.get("labels") or {})
         focus = [(lat, lon)]
         for name in why.get("focus", []):
             for label, p in _anchors(sheet, geo):

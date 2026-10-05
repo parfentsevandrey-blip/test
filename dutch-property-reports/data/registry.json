@@ -185,6 +185,16 @@
       ]
     },
     {
+      "slug": "de-pinckart-24-nuenen",
+      "title": "De Pinckart 24, Nuenen",
+      "city": "Nuenen",
+      "price": "€ 4.975.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/nuenen/object-44508183-de-pinckart-24/",
+      "reports": [
+        "report-2026-10-05-hoorn-nuenen-eindhoven.json"
+      ]
+    },
+    {
       "slug": "decimalaan-3-utrecht",
       "title": "Decimalaan 3-5-7-9 и Nieuw-Amsterdamlaan 4-6, Utrecht",
       "city": "Utrecht",
@@ -212,6 +222,16 @@
       "url": "https://www.fundainbusiness.nl/bedrijfshal/son-en-breugel/object-89557984-ekkersrijt-1012-1014/",
       "reports": [
         "report-2026-09-02-locations.json"
+      ]
+    },
+    {
+      "slug": "electronweg-19-23-hoorn",
+      "title": "Electronweg 19-23, Hoorn",
+      "city": "Hoorn",
+      "price": "€ 2.795.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/hoorn-nh/object-43274830-electronweg-19-23/",
+      "reports": [
+        "report-2026-10-05-hoorn-nuenen-eindhoven.json"
       ]
     },
     {
@@ -523,6 +543,16 @@
       ]
     },
     {
+      "slug": "rijstenweg-4-6-eindhoven",
+      "title": "Rijstenweg 4-6, Eindhoven",
+      "city": "Eindhoven",
+      "price": "€ 1.795.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/eindhoven/object-44519242-rijstenweg-4-6/",
+      "reports": [
+        "report-2026-10-05-hoorn-nuenen-eindhoven.json"
+      ]
+    },
+    {
       "slug": "rondweg-6-ijmuiden",
       "title": "Rondweg 6, IJmuiden",
       "city": "IJmuiden",
@@ -664,5 +694,5 @@
       ]
     }
   ],
-  "updated": "2026-09-28"
+  "updated": "2026-10-05"
 }
