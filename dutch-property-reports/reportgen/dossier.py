@@ -753,10 +753,10 @@ def object_why(doc, obj: dict, cache: Path, assets: Path) -> None:
     par(doc, after=0, lead=13)
     framed_photo(doc, image, cache, width_mm=S.CONTENT_W_MM, ratio=ratio)
     caption = par(doc, before=3, after=0, lead=S.LH_SMALL, align=WD_ALIGN_PARAGRAPH.CENTER)
-    txt(caption, why.get("caption", "Контуры промзон — по файлу с картами выбранных территорий")
+    txt(caption, why.get("caption", "Промзоны и компании рядом с объектом")
         + " · картографические данные © Google", size=S.FS_CAPTION, color=S.MUTED)
     if rows:
-        access_block(doc, "Привязка к выбранным территориям", rows)
+        access_block(doc, "Что рядом и сколько ехать", rows)
 
 
 CHAPTER_SLACK_MM = 6.0
