@@ -53,6 +53,10 @@ func (s *Server) handleMailSend(w http.ResponseWriter, r *http.Request) {
 		Body        string   `json:"body"`
 		Attachments []string `json:"attachments"`
 		InReplyTo   string   `json:"inReplyTo"`
+		// letters to the Internet: the mailbox of ours it goes out from (empty: the only one this device has) and the addresses
+		From    string   `json:"from"`
+		EmailTo []string `json:"emailTo"`
+		EmailCc []string `json:"emailCc"`
 	}
 	if err := decode(r, &in); err != nil {
 		writeError(w, err)
@@ -65,6 +69,7 @@ func (s *Server) handleMailSend(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := s.app.Mail().Send(mail.SendInput{
 		Kind: "mail", To: to, Subject: in.Subject, Body: in.Body, Attach: in.Attachments, InReplyTo: in.InReplyTo,
+		ExtFrom: in.From, ExtTo: in.EmailTo, ExtCc: in.EmailCc,
 	})
 	if err != nil {
 		writeError(w, err)
@@ -295,3 +300,12 @@ func (s *Server) handleForwardDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 var _ = time.Second
+
+// handleMailGateways lists the mail gateways this device can write through, with the mailboxes it has at each.
+func (s *Server) handleMailGateways(w http.ResponseWriter, r *http.Request) {
+	g := s.app.Mail().Gateways()
+	if g == nil {
+		g = []mail.GatewayView{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"gateways": g})
+}

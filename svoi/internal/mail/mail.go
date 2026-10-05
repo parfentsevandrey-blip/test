@@ -21,12 +21,14 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode"
 	"unicode/utf8"
 
 	"github.com/parfentsevandrey-blip/test/svoi/internal/blob"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
+	"github.com/parfentsevandrey-blip/test/svoi/internal/inetmail"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/mesh"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/store"
 )
@@ -70,6 +72,8 @@ type Attachment struct {
 	Size   int64  `json:"size"`
 	Mime   string `json:"mime"`
 	SHA256 string `json:"sha256"`
+	// ContentID: the HTML of a letter from the Internet shows this file as cid:<ContentID> (a picture inside the text).
+	ContentID string `json:"cid,omitempty"`
 }
 
 // core is the immutable, signed content of a message.
@@ -84,6 +88,8 @@ type core struct {
 	Created   int64         `json:"created"`
 	InReplyTo string        `json:"inReplyTo,omitempty"`
 	Thread    string        `json:"thread,omitempty"`
+	// Ext: the letter has to do with the Internet (ext.go).
+	Ext *Ext `json:"ext,omitempty"`
 }
 
 type delivery struct {
@@ -133,6 +139,9 @@ type record struct {
 	Received int64                  `json:"received,omitempty"`
 	Delivery map[string]*delivery   `json:"delivery,omitempty"`
 	Fetch    map[string]*fetchState `json:"fetch,omitempty"`
+	// ExtDel: how the letter fared on its way to each address on the Internet; OutTaken: the gateway of this device has it.
+	ExtDel   map[string]*extDelivery `json:"extDel,omitempty"`
+	OutTaken bool                    `json:"outTaken,omitempty"`
 }
 
 // signedMsg is the wire form.
@@ -169,6 +178,11 @@ type Manager struct {
 	// clean-up independent of the size of the mailbox.
 	blobAuth map[string]map[identity.ID]int
 	blobRefs map[string]int
+
+	// the Internet (ext.go): the gateway of this device, the gateways of the others, the conversations by Message-ID
+	gw       Gateway
+	gateways map[identity.ID]gwEntry
+	extIDs   map[string]string
 }
 
 // New loads the mailbox from the database.
@@ -177,6 +191,7 @@ func New(node *mesh.Node, db *store.DB, blobs *blob.Store, emit func(Event)) (*M
 		node: node, db: db, blobs: blobs, emit: emit,
 		msgs: map[string]*record{}, inflight: map[string]bool{}, kick: make(chan struct{}, 1),
 		blobAuth: map[string]map[identity.ID]int{}, blobRefs: map[string]int{},
+		gateways: map[identity.ID]gwEntry{}, extIDs: map[string]string{},
 	}
 	err := db.ForEach(bucketMsgs, func(key string, raw []byte) error {
 		var r record
@@ -190,6 +205,7 @@ func New(node *mesh.Node, db *store.DB, blobs *blob.Store, emit func(Event)) (*M
 		}
 		m.msgs[r.Core.ID] = &r
 		m.indexLocked(&r, +1)
+		m.indexExtLocked(&r)
 		return nil
 	})
 	if err != nil {
@@ -304,7 +320,18 @@ func (m *Manager) Run(ctx context.Context) {
 	defer cancel()
 	tick := time.NewTicker(3 * time.Second)
 	defer tick.Stop()
+	var lastGW time.Time
+	var gwBusy atomic.Bool
+	refresh := func() {
+		// (which devices are mail gateways, and what they offer this device: asked every minute and when a device appears)
+		if gwBusy.CompareAndSwap(false, true) {
+			lastGW = time.Now()
+			go func() { defer gwBusy.Store(false); m.refreshGateways(ctx) }()
+		}
+	}
 	m.pump(ctx)
+	m.pumpExt(ctx)
+	refresh()
 	for {
 		select {
 		case <-ctx.Done():
@@ -315,8 +342,13 @@ func (m *Manager) Run(ctx context.Context) {
 			if ev.Kind != mesh.EvPeer {
 				continue
 			}
+			refresh()
 		}
 		m.pump(ctx)
+		m.pumpExt(ctx)
+		if time.Since(lastGW) > time.Minute {
+			refresh()
+		}
 	}
 }
 
@@ -368,6 +400,11 @@ type SendInput struct {
 	Body      string
 	Attach    []string // blob hashes uploaded earlier
 	InReplyTo string
+	// The Internet (ext.go): the mailbox of ours that the letter goes out from ("" - the only one this device has) and the
+	// addresses it is written to. A letter to the Internet is sent through the gateway that has that mailbox.
+	ExtFrom string
+	ExtTo   []string
+	ExtCc   []string
 }
 
 // RegisterUpload remembers the name and type of an uploaded blob so it can be
@@ -381,8 +418,11 @@ func (m *Manager) Send(in SendInput) (string, error) {
 	if in.Kind != "mail" && in.Kind != "chat" {
 		return "", mesh.Errf(mesh.CodeInvalid, "unknown message kind")
 	}
-	if len(in.To) == 0 {
+	if len(in.To) == 0 && len(in.ExtTo)+len(in.ExtCc) == 0 {
 		return "", mesh.Errf(mesh.CodeInvalid, "choose at least one recipient")
+	}
+	if in.Kind == "chat" && len(in.ExtTo)+len(in.ExtCc) > 0 {
+		return "", mesh.Errf(mesh.CodeInvalid, "a chat message goes to a device")
 	}
 	if len(in.Body) > maxBody || len(in.Subject) > 1000 {
 		return "", mesh.Errf(mesh.CodeTooLarge, "message is too long")
@@ -410,6 +450,19 @@ func (m *Manager) Send(in SendInput) (string, error) {
 		Kind: in.Kind, From: self, To: to, Subject: strings.TrimSpace(in.Subject), Body: in.Body,
 		Created: time.Now().Unix(), InReplyTo: in.InReplyTo,
 	}
+	var extOut *ExtOut
+	if len(in.ExtTo)+len(in.ExtCc) > 0 {
+		var err error
+		if extOut, err = m.planExtOut(in, to); err != nil {
+			return "", err
+		}
+		c.Ext = &Ext{Out: extOut}
+		if extOut.Via != self && !containsID(to, extOut.Via) {
+			to = append(to, extOut.Via) // the gateway is written to as well: it has to send the letter
+			c.To = to
+			extOut.ViaOnly = true
+		}
+	}
 	if in.Kind == "chat" {
 		c.ID = newID("c_", self)
 		if len(to) != 1 {
@@ -434,6 +487,15 @@ func (m *Manager) Send(in SendInput) (string, error) {
 		a.Size = size
 		c.Attach = append(c.Attach, a)
 	}
+	if extOut != nil {
+		var files int64
+		for _, a := range c.Attach {
+			files += a.Size
+		}
+		if files > maxExtOutBytes {
+			return "", mesh.Errf(mesh.CodeTooLarge, "a letter to the Internet carries at most %d MB of files", maxExtOutBytes>>20)
+		}
+	}
 	m.mu.Lock()
 	c.Thread = c.ID
 	if in.InReplyTo != "" {
@@ -454,12 +516,18 @@ func (m *Manager) Send(in SendInput) (string, error) {
 	default:
 		r.Folder = FolderSent
 	}
-	onlySelf := len(to) == 1 && to[0] == self
+	onlySelf := len(to) == 1 && to[0] == self && extOut == nil
 	for _, id := range to {
 		if id == self {
 			continue
 		}
 		r.Delivery[id.String()] = &delivery{State: DelQueued}
+	}
+	if extOut != nil {
+		r.ExtDel = map[string]*extDelivery{}
+		for _, a := range append(append([]ExtAddr(nil), extOut.To...), extOut.Cc...) {
+			r.ExtDel[strings.ToLower(a.Addr)] = &extDelivery{State: inetmail.RcptQueued}
+		}
 	}
 	if onlySelf { // a note to self lands in the inbox, already read
 		r.Folder = FolderInbox
@@ -469,6 +537,7 @@ func (m *Manager) Send(in SendInput) (string, error) {
 	}
 	m.msgs[c.ID] = r
 	m.indexLocked(r, +1)
+	m.indexExtLocked(r)
 	m.save(r)
 	m.mu.Unlock()
 	m.fire(Event{Kind: in.Kind, ID: c.ID, Folder: r.Folder, Peer: chatPeer(r, self)})
@@ -608,6 +677,12 @@ func (m *Manager) deliver(ctx context.Context, r *record, p *mesh.Peer) {
 		d.State, d.At, d.Err = DelDelivered, time.Now().Unix(), ""
 	case mesh.IsCode(err, mesh.CodeDenied), mesh.IsCode(err, mesh.CodeInvalid), mesh.IsCode(err, mesh.CodeTooLarge):
 		d.State, d.Err = DelFailed, describe(err)
+		if e := r.Core.Ext; e != nil && e.Out != nil && e.Out.Via == p.ID {
+			// the gateway refused the letter: none of the addresses on the Internet will get it
+			for _, a := range append(append([]ExtAddr(nil), e.Out.To...), e.Out.Cc...) {
+				m.setExtDelLocked(r, a.Addr, inetmail.RcptFailed, 0, describe(err), time.Now().Unix())
+			}
+		}
 	default:
 		backoff := time.Duration(1<<min(d.Attempts, 6)) * 5 * time.Second
 		if backoff > 5*time.Minute {
@@ -635,6 +710,7 @@ func describe(err error) string {
 
 // Register installs the RPC handlers.
 func (m *Manager) Register() {
+	m.registerExt()
 	m.node.Handle("mail.deliver", func(ctx context.Context, c *mesh.Call) (any, error) {
 		var msg signedMsg
 		if err := c.Decode(&msg); err != nil {
@@ -670,13 +746,21 @@ func (m *Manager) Register() {
 		if !forMe || (cr.Kind == "chat" && len(cr.To) != 1) {
 			return nil, mesh.Errf(mesh.CodeInvalid, "not addressed to this device")
 		}
+		if err := m.checkExt(c.Peer, &cr); err != nil {
+			return nil, err
+		}
+		var filesSize int64
 		for i := range cr.Attach {
 			a := &cr.Attach[i]
 			if !blob.ValidSHA(a.SHA256) || a.Size < 0 {
 				return nil, mesh.Errf(mesh.CodeInvalid, "bad attachment")
 			}
+			filesSize += a.Size
 			// The signed bytes (Raw) stay as they arrived; what is shown is cleaned.
-			a.Name, a.Mime = cleanText(a.Name, 255), cleanText(a.Mime, 100)
+			a.Name, a.Mime, a.ContentID = cleanText(a.Name, 255), cleanText(a.Mime, 100), cleanText(a.ContentID, 200)
+		}
+		if o := cr.Ext; o != nil && o.Out != nil && o.Out.Via == self && filesSize > maxExtOutBytes {
+			return nil, mesh.Errf(mesh.CodeTooLarge, "a letter to the Internet carries at most %d MB of files", maxExtOutBytes>>20)
 		}
 		m.mu.Lock()
 		if _, dup := m.msgs[cr.ID]; dup {
@@ -690,6 +774,12 @@ func (m *Manager) Register() {
 		if cr.Kind == "chat" {
 			r.Folder = FolderChat
 		}
+		if o := cr.Ext; o != nil && o.Out != nil && o.Out.Via == self {
+			if o.Out.ViaOnly {
+				r.Folder, r.Unread = FolderRelay, false // this device only passes the letter on: it is not for its owner to read
+			}
+			r.ExtDel = map[string]*extDelivery{}
+		}
 		for _, a := range cr.Attach {
 			st := AttRemote
 			if _, ok := m.blobs.Has(a.SHA256); ok {
@@ -699,8 +789,9 @@ func (m *Manager) Register() {
 		}
 		m.msgs[cr.ID] = r
 		m.indexLocked(r, +1)
+		m.indexExtLocked(r)
 		m.save(r)
-		ev := Event{Kind: cr.Kind, ID: cr.ID, Folder: r.Folder, Unread: true, Peer: chatPeer(r, self)}
+		ev := Event{Kind: cr.Kind, ID: cr.ID, Folder: r.Folder, Unread: r.Unread, Peer: chatPeer(r, self)}
 		m.mu.Unlock()
 		m.fire(ev)
 		m.fireCounters()
@@ -811,6 +902,8 @@ type Summary struct {
 	Attachments int         `json:"attachments"`
 	Thread      string      `json:"thread"`
 	Starred     bool        `json:"starred"`
+	// Ext: the letter came from the Internet or goes there (ext.go).
+	Ext *ExtView `json:"ext,omitempty"`
 }
 
 // AttachmentView is an attachment with its local availability.
@@ -825,7 +918,10 @@ type AttachmentView struct {
 // Message is the full view.
 type Message struct {
 	Summary
-	Body      string  `json:"body"`
+	Body string `json:"body"`
+	// HTML is the cleaned HTML of a letter from the Internet. The interface does not get it here but as a page of its own
+	// (GET /api/mail/{id}/html), which a frame that may load nothing shows.
+	HTML      string  `json:"-"`
 	InReplyTo *string `json:"inReplyTo"`
 	// Attachments shadows Summary.Attachments (the count) with the full list.
 	Attachments []AttachmentView `json:"attachments"`
@@ -852,12 +948,16 @@ func snippet(s string) string {
 
 func (m *Manager) summaryLocked(r *record) Summary {
 	c := r.Core
+	fromID, fromName := m.displaySender(r)
 	s := Summary{
-		ID: c.ID, Kind: c.Kind, Folder: r.Folder, From: Person{ID: c.From, Name: m.name(c.From)},
+		ID: c.ID, Kind: c.Kind, Folder: r.Folder, From: Person{ID: fromID, Name: fromName},
 		Subject: c.Subject, Snippet: snippet(c.Body), TS: c.Created, Unread: r.Unread,
-		Attachments: len(c.Attach), Thread: c.Thread, Starred: r.Starred,
+		Attachments: len(c.Attach), Thread: c.Thread, Starred: r.Starred, Ext: m.extViewLocked(r),
 	}
 	for _, id := range c.To {
+		if o := c.Ext; o != nil && o.Out != nil && o.Out.ViaOnly && id == o.Out.Via {
+			continue // the gateway only passes the letter on: it is not one of the people it is written to
+		}
 		rc := Recipient{ID: id, Name: m.name(id), State: DelDelivered}
 		if d := r.Delivery[id.String()]; d != nil {
 			rc.State = d.State
@@ -902,7 +1002,11 @@ func (m *Manager) List(folder, query string, limit int, before int64) ListResult
 			unread++
 		}
 		if query != "" {
-			hay := strings.ToLower(r.Core.Subject + "\n" + r.Core.Body + "\n" + m.name(r.Core.From))
+			_, who := m.displaySender(r)
+			if e := r.Core.Ext; e != nil && e.In != nil {
+				who += " " + e.In.From.Addr
+			}
+			hay := strings.ToLower(r.Core.Subject + "\n" + r.Core.Body + "\n" + who)
 			if !strings.Contains(hay, query) {
 				continue
 			}
@@ -937,6 +1041,9 @@ func (m *Manager) Get(id string) (*Message, bool) {
 		return nil, false
 	}
 	msg := &Message{Summary: m.summaryLocked(r), Body: r.Core.Body}
+	if e := r.Core.Ext; e != nil && e.In != nil {
+		msg.HTML = e.In.HTML
+	}
 	if r.Core.InReplyTo != "" {
 		s := r.Core.InReplyTo
 		msg.InReplyTo = &s

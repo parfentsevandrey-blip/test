@@ -18,7 +18,9 @@ import (
 	"github.com/parfentsevandrey-blip/test/svoi/internal/blob"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/files"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/identity"
+	"github.com/parfentsevandrey-blip/test/svoi/internal/inetmail"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/mail"
+	"github.com/parfentsevandrey-blip/test/svoi/internal/mailgw"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/mesh"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/services"
 	"github.com/parfentsevandrey-blip/test/svoi/internal/store"
@@ -37,6 +39,8 @@ type Options struct {
 	// DeviceName and Owner are the defaults offered when creating or joining a mesh.
 	DeviceName string
 	Owner      string
+	// MailResolver is the DNS the mail gateway asks (default: the one of the system); the tests put their own.
+	MailResolver inetmail.Resolver
 }
 
 // App is one running themesh device.
@@ -51,6 +55,7 @@ type App struct {
 	blobs *blob.Store
 	files *files.Manager
 	mail  *mail.Manager
+	mgw   *mailgw.Gateway
 	svc   *services.Manager
 	fwd   *services.Forwarder
 	tun   *tun.Manager
@@ -148,6 +153,13 @@ func Open(opts Options) (*App, error) {
 		return nil, err
 	}
 	a.mail.Register()
+	// the mail gateway (Internet mail): off until its owner sets it up; whatever its state, this device answers mailgw.info for it
+	a.mgw, err = mailgw.New(mailgw.Options{Dir: opts.Dir, Node: a.node, Mail: a.mail, Blobs: a.blobs, DB: a.db, Log: log, Resolver: opts.MailResolver})
+	if err != nil {
+		a.Close()
+		return nil, err
+	}
+	a.mail.SetGateway(a.mgw)
 	a.blobs.RegisterRPC(a.node)
 	a.svc = services.NewManager(a.node, func() []services.Service { return a.cfg.Get().Services })
 	a.svc.RegisterRPC()
@@ -177,6 +189,7 @@ func (a *App) start() {
 	}
 	run(func() { a.files.RunTransfers(a.ctx) })
 	run(func() { a.mail.Run(a.ctx) })
+	run(func() { a.mgw.Run(a.ctx) })
 	run(func() { a.extra.run(a.ctx) })
 	run(a.bridgeNodeEvents)
 }
@@ -210,6 +223,9 @@ func (a *App) Files() *files.Manager { return a.files }
 
 // Mail returns the mail manager.
 func (a *App) Mail() *mail.Manager { return a.mail }
+
+// MailGW returns the mail gateway of this device.
+func (a *App) MailGW() *mailgw.Gateway { return a.mgw }
 
 // Blobs returns the attachment store.
 func (a *App) Blobs() *blob.Store { return a.blobs }

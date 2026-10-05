@@ -3,7 +3,12 @@ module github.com/parfentsevandrey-blip/test/svoi
 go 1.26.8
 
 require (
+	blitiri.com.ar/go/spf v1.6.0
 	filippo.io/edwards25519 v1.2.0
+	github.com/emersion/go-message v0.18.2
+	github.com/emersion/go-msgauth v0.7.0
+	github.com/emersion/go-sasl v0.0.0-20241020182733-b788ff22d5a6
+	github.com/emersion/go-smtp v0.25.0
 	github.com/quic-go/quic-go v0.63.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/vishvananda/netlink v1.3.1

@@ -70,6 +70,15 @@ func (s *Server) routes() {
 	m.HandleFunc("DELETE /api/mail/{id}", s.handleMailDelete)
 	m.HandleFunc("GET /api/mail/{id}/attachments/{index}", s.handleMailAttachment)
 	m.HandleFunc("POST /api/mail/{id}/attachments/{index}/fetch", s.handleAttachmentFetch)
+	m.HandleFunc("GET /api/mail/gateways", s.handleMailGateways)
+	m.HandleFunc("GET /api/mail/{id}/html", s.handleMailHTML)
+	// the mail gateway (Internet mail): set up on the device that has the public address; an administrator does it from any device
+	m.HandleFunc("GET /api/mailgw", s.handleMailGWGet)
+	m.HandleFunc("PUT /api/mailgw", s.handleMailGWPut)
+	m.HandleFunc("GET /api/mailgw/dns", s.handleMailGWDNS)
+	m.HandleFunc("GET /api/mailgw/queue", s.handleMailGWQueue)
+	m.HandleFunc("POST /api/mailgw/queue/retry", s.handleMailGWRetry)
+	m.HandleFunc("POST /api/mailgw/queue/{id}/cancel", s.handleMailGWCancel)
 	m.HandleFunc("POST /api/blobs", s.handleBlobUpload)
 	// chat
 	m.HandleFunc("GET /api/chat/threads", s.handleChatThreads)

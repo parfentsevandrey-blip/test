@@ -24,7 +24,7 @@ func servicesFrom(name, addr, desc string, allow []string) services.Service {
 // caller holds the mesh authority.
 
 var remoteAllowed = []string{
-	"/api/shares", "/api/services", "/api/settings", "/api/local/fs", "/api/diag/logs", "/api/state",
+	"/api/shares", "/api/services", "/api/settings", "/api/local/fs", "/api/diag/logs", "/api/state", "/api/mailgw",
 }
 
 func remotePathAllowed(p string) bool {
