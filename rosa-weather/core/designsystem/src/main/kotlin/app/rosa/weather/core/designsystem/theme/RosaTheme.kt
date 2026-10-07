@@ -43,6 +43,8 @@ data class RosaColors(
     val isLightSky: Boolean,
     val zenith: Color,
     val horizon: Color,
+    /** 0..1: how much the glass glows with light of its own (the cozy mood's lamp-lit honey glass). */
+    val glassGlow: Float = 0f,
 )
 
 @Composable
@@ -58,7 +60,8 @@ fun animatedRosaColors(palette: SkyPalette): RosaColors {
     // Milky glass over bright skies; over dark ones smoky glass that keeps the sky's own hue —
     // deep blue by day, violet at dusk, ink at night — instead of turning grey.
     val smoke = lerp(palette.zenith.toColor(), Color(0xFF0B1020), 0.72f)
-    val glass by animateColorAsState(if (light) Color(0xFFFFFFFF) else smoke, spec, label = "glass")
+    // A mood may set the glass's own colour (the cozy mood's amber).
+    val glass by animateColorAsState(palette.glass?.toColor() ?: if (light) Color(0xFFFFFFFF) else smoke, spec, label = "glass")
     return RosaColors(
         ink = ink,
         inkSoft = ink.copy(alpha = 0.72f),
@@ -72,6 +75,7 @@ fun animatedRosaColors(palette: SkyPalette): RosaColors {
         isLightSky = light,
         zenith = zenith,
         horizon = horizon,
+        glassGlow = if (palette.glass != null) 1f else 0f,
     )
 }
 

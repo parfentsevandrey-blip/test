@@ -11,10 +11,11 @@ enum class EffectsQuality { Auto, Battery, Balanced, Cinematic }
 
 /**
  * How the app is lit. [Auto] follows the real sky — dawn, day, dusk, night; the others hold one
- * mood all day. Weather (clouds, rain, snow, fog) stays real in every mode.
+ * mood all day. Weather (clouds, rain, snow, fog) stays real in every mode. [Cozy] is the blue
+ * hour outside a lamp-lit window: warm glass, the town's lights below, a pane misted from inside.
  */
 @Serializable
-enum class Appearance { Auto, Light, Evening, Dark }
+enum class Appearance { Auto, Light, Evening, Dark, Cozy }
 
 @Serializable
 data class AppSettings(
