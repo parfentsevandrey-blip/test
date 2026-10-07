@@ -25,12 +25,13 @@ class SettingsStoreTest {
     }
 
     /**
-     * 2.7.0 had two more appearances, AMOLED and tinted glass, and the hue of the glass. After them
-     * the app is lit by the real sky again, and the rest of the settings stay as they were.
+     * 2.7.0 had two more appearances, AMOLED and tinted glass, and the hue of the glass; 2.11.0 had
+     * a cozy one. After them the app is lit by the real sky again, and the rest of the settings
+     * stay as they were.
      */
     @Test
-    fun `the appearances of 2_7_0 read as auto`() = runTest {
-        for (removed in listOf("Amoled", "Tinted")) {
+    fun `removed appearances read as auto`() = runTest {
+        for (removed in listOf("Amoled", "Tinted", "Cozy")) {
             val back = read("""{"appearance":"$removed","glassHue":205,"haptics":"Subtle","tiltLighting":false}""")
             assertThat(back.appearance).isEqualTo(Appearance.Auto)
             assertThat(back.haptics).isEqualTo(HapticsLevel.Subtle)

@@ -22,8 +22,6 @@ data class SkyPalette(
     val cool: Argb,
     /** Approximate luminance behind the main type (upper sky, clouds included), 0..1. */
     val brightness: Double = 0.2,
-    /** The glass's own tint where the mood sets one (the cozy mood's amber); else it follows the sky. */
-    val glass: Argb? = null,
 ) {
     /** True when the sky is bright enough that text must switch to dark ink. */
     val isLight: Boolean get() = ink.luminance < 0.2
@@ -45,38 +43,11 @@ data class SkyPalette(
         )
     }
 
-    /**
-     * The cozy mood: the blue hour seen from a lamp-lit room. The sky outside is a deep, cool blue
-     * — only its very foot warms where the town's lights glow — so the warm glass stands out
-     * against it; the glass turns to honey, the ink to warm ivory, the accents to amber.
-     */
-    private fun cozy(): SkyPalette {
-        val ink = Argb.hex(0xFFF1DE)
-        return copy(
-            zenith = zenith.lerp(Argb.hex(0x0B1533), 0.75f),
-            horizon = horizon.lerp(Argb.hex(0x1F2D5A), 0.8f),
-            // The sky's own glow stays cool: the warmth outside is only the town's, low down.
-            glow = Argb.hex(0x41528E),
-            sun = Argb.hex(0xFFC98A),
-            cloudLight = cloudLight.lerp(Argb.hex(0x7E6672), 0.35f),
-            cloudShade = cloudShade.lerp(Argb.hex(0x151A2C), 0.3f),
-            ink = ink,
-            inkSoft = ink.withAlpha(0.72f),
-            accent = Argb.hex(0xFFB869),
-            warm = Argb.hex(0xFFAA5E),
-            brightness = minOf(brightness, 0.14),
-            glass = Argb.hex(0x9A6230),
-        )
-    }
-
     companion object {
         /** Sun elevation each fixed mood is lit by: a bright late morning, the blue hour, deep night. */
         private const val LIGHT_ELEVATION = 30.0
         private const val EVENING_ELEVATION = -1.5
         private const val DARK_ELEVATION = -16.0
-
-        /** The cozy mood's sky: deep in the blue hour, the first stars out. */
-        private const val COZY_ELEVATION = -4.5
 
         /** The palette for an [Appearance]; [Appearance.Auto] is the real sky at [sunElevation]. */
         fun of(appearance: Appearance, sunElevation: Double, visual: WeatherVisual, moonIllumination: Double = 0.5): SkyPalette =
@@ -85,7 +56,6 @@ data class SkyPalette(
                 Appearance.Light -> of(LIGHT_ELEVATION, visual, moonIllumination).bleached()
                 Appearance.Evening -> of(EVENING_ELEVATION, visual, moonIllumination)
                 Appearance.Dark -> of(DARK_ELEVATION, visual, maxOf(moonIllumination, 0.4))
-                Appearance.Cozy -> of(COZY_ELEVATION, visual, moonIllumination).cozy()
             }
 
         private class Key(val elevation: Double, val zenith: Long, val horizon: Long, val glow: Long, val sun: Long)

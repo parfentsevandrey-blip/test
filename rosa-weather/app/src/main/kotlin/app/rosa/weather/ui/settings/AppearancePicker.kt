@@ -10,8 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,7 +39,6 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import app.rosa.weather.R
 import app.rosa.weather.core.designsystem.component.rememberPressScale
 import app.rosa.weather.core.designsystem.haptics.LocalHaptics
@@ -54,7 +52,7 @@ import app.rosa.weather.core.model.WeatherVisual
 import kotlin.math.PI
 import kotlin.math.sin
 
-/** Five little living skies to choose the app's light from. */
+/** Four little living skies to choose the app's light from. */
 @Composable
 internal fun AppearancePicker(selected: Appearance, onSelect: (Appearance) -> Unit) {
     val labels = mapOf(
@@ -62,9 +60,8 @@ internal fun AppearancePicker(selected: Appearance, onSelect: (Appearance) -> Un
         Appearance.Light to stringResource(R.string.appearance_light),
         Appearance.Evening to stringResource(R.string.appearance_evening),
         Appearance.Dark to stringResource(R.string.appearance_dark),
-        Appearance.Cozy to stringResource(R.string.appearance_cozy),
     )
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Appearance.entries.forEach { mode ->
             MoodTile(mode, labels.getValue(mode), mode == selected, Modifier.weight(1f)) { onSelect(mode) }
         }
@@ -130,7 +127,6 @@ private fun MoodTile(mode: Appearance, label: String, selected: Boolean, modifie
                     Appearance.Light -> lightSky(sky, t)
                     Appearance.Evening -> eveningSky(sky, t)
                     Appearance.Dark -> darkSky(sky, t)
-                    Appearance.Cozy -> cozySky(sky, t)
                 }
                 // Glass sheen across the top, as on every pane in the app.
                 drawRect(Brush.verticalGradient(0f to Color.White.copy(alpha = 0.22f), 0.45f to Color.Transparent))
@@ -158,14 +154,7 @@ private fun MoodTile(mode: Appearance, label: String, selected: Boolean, modifie
             }
         }
         Spacer(Modifier.height(6.dp))
-        // Five tiles share the row: a long name steps down a size rather than being cut off.
-        val style = if (selected) Rosa.type.label else Rosa.type.caption
-        BasicText(
-            label,
-            style = style.copy(color = if (selected) colors.ink else colors.inkSoft),
-            maxLines = 1,
-            autoSize = TextAutoSize.StepBased(minFontSize = 9.sp, maxFontSize = style.fontSize, stepSize = 0.5.sp),
-        )
+        Text(label, style = if (selected) Rosa.type.label else Rosa.type.caption, color = if (selected) colors.ink else colors.inkSoft, maxLines = 1)
     }
 }
 
@@ -210,35 +199,6 @@ private fun DrawScope.eveningSky(sky: MoodColors, t: Float) {
 private fun DrawScope.darkSky(night: MoodColors, t: Float) {
     stars(t, count = 12, fromY = 0f)
     crescent(Offset(size.width * 0.68f, size.height * 0.3f), size.minDimension * 0.14f, lerp(night.top, night.bottom, 0.3f))
-}
-
-/**
- * The blue hour from a lamp-lit room: the town's lights out of focus below, snow drifting past,
- * the pane misted along its foot and the lamp's warmth spilling in from the corner.
- */
-private fun DrawScope.cozySky(sky: MoodColors, t: Float) {
-    stars(t, count = 3, fromY = 0.04f, toY = 0.3f)
-    drawRect(Brush.verticalGradient(0.45f to Color.Transparent, 1f to Color(0xFFB0683E).copy(alpha = 0.5f)))
-    fun hash(v: Float): Float {
-        val x = sin(v) * 43758.547f
-        return x - kotlin.math.floor(x)
-    }
-    repeat(9) { i ->
-        val c = Offset(size.width * (0.06f + 0.88f * hash(i * 3.71f + 0.4f)), size.height * (0.62f + 0.3f * hash(i * 7.13f + 2.2f)))
-        val r = size.minDimension * (0.045f + 0.05f * hash(i * 1.93f + 5.1f))
-        val glow = 0.55f + 0.45f * (0.5f + 0.5f * sin(t * (0.7f + 0.13f * i) + i * 1.7f))
-        val warm = lerp(Color(0xFFFFB25C), Color(0xFFFFE2B0), hash(i * 5.3f + 1.1f))
-        drawCircle(Brush.radialGradient(listOf(warm.copy(alpha = 0.85f * glow), warm.copy(alpha = 0f)), c, r), r, c)
-    }
-    repeat(6) { i ->
-        val fall = (hash(i * 9.1f + 3.3f) + t * (0.04f + 0.012f * i)) % 1f
-        val x = size.width * (hash(i * 4.7f + 0.9f) + 0.03f * sin(t * 0.9f + i))
-        drawCircle(Color.White.copy(alpha = 0.85f), (1.1f + (i % 2) * 0.5f).dp.toPx(), Offset(x, size.height * fall))
-    }
-    // Mist rising on the pane from its foot, and the lamp's light from the lower left.
-    drawRect(Brush.verticalGradient(0.72f to Color.Transparent, 1f to Color(0xFFFFE9D2).copy(alpha = 0.42f)))
-    val lamp = Offset(0f, size.height)
-    drawCircle(Brush.radialGradient(listOf(Color(0xFFFFB46A).copy(alpha = 0.5f), Color(0x00FFB46A)), lamp, size.width * 0.9f), size.width * 0.9f, lamp)
 }
 
 private fun DrawScope.sun(center: Offset, radius: Float, core: Color, glow: Color, t: Float) {

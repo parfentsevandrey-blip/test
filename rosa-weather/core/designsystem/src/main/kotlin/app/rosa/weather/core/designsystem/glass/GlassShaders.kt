@@ -95,8 +95,6 @@ uniform float sweep;
 // Rich glass (the weather app): brighter reflections of the world sliding across it, and more
 // colour in its rim, flowing along the edge as it scrolls.
 uniform float rich;
-// The cozy mood, 0..1: lamplight instead of sunlight, fairy lights reflected in the glass.
-uniform float cozy;
 
 // How much of its light the rim keeps along the sides, away from both lit corners.
 const float RIM_FLOOR = 0.4;
@@ -177,23 +175,6 @@ float rimCoord(float2 p, float2 hs, float r) {
 // A drop of water on the glass at c (radii rad, px): a little lens showing what is behind it upside
 // down, darker toward its rim, with a glint toward the light and a caustic at its foot. Returns
 // its colour and, in alpha, how much of this pixel it covers.
-// Fairy lights reflected in the glass; [w] in dp across the screen. Soft warm discs hang below a
-// wire that sags between hooks 360 dp apart, [y0] down the screen and [sag] deep in the middle.
-half3 garland(float2 w, float y0, float sag, float seed) {
-    float spacing = 30.0;
-    float k = floor(w.x / spacing);
-    float bx = (k + 0.5) * spacing;
-    float u = fract(bx / 360.0) - 0.5;
-    float by = y0 + sag * (1.0 - 4.0 * u * u) + 7.0;
-    // Out of focus, each bulb is a round disc of light, a little brighter at its rim.
-    float r = length(w - float2(bx, by)) / 6.5;
-    float h = hash21(float2(k, seed));
-    float breathe = 0.7 + 0.3 * sin(time * (0.5 + 0.9 * h) + h * 40.0);
-    half3 tint = mix(half3(1.0, 0.72, 0.4), half3(1.0, 0.92, 0.76), half(h));
-    float disc = smoothstep(1.0, 0.8, r) * (0.75 + 0.25 * smoothstep(0.5, 0.92, r));
-    return tint * half((disc + 0.35 * exp(-r * r * 0.9)) * breathe);
-}
-
 half4 drop(float2 coord, float2 p, float2 c, float2 rad, float2 L, half3 sun, float2 lo, float2 hi) {
     float2 v = (p - c) / rad;
     float rho = length(v);
@@ -294,18 +275,10 @@ half4 main(float2 coord) {
     // The body: restrained vibrancy, the glass's own tone, a little brighter toward the light.
     col.rgb = vibrance(col.rgb, mix(1.0, saturation, materialize));
     col.rgb = mix(col.rgb, tint.rgb, tint.a * half(materialize));
-    // Cozy: the frosted glass is honey-coloured — the cool sky seen through it turns to amber.
-    if (cozy > 0.0) {
-        half lum = dot(col.rgb, half3(0.2126, 0.7152, 0.0722));
-        col.rgb = mix(col.rgb, half3(lum) * half3(1.3, 1.0, 0.68), half(cozy * 0.5 * materialize));
-    }
     float up = clamp(0.5 - dot(p / max(hs, float2(1.0)), L) * 0.5, 0.0, 1.0);
     col.rgb += half(brightness * materialize * (0.55 + 0.9 * (1.0 - up)));
     // A broad sheen across the glass from the side the light falls on.
     float sheenLit = (1.0 - up) * (1.0 - up);
-    // Cozy: the lamp's light scattered in the frosted glass, a warm glow through the pane,
-    // strongest on the side the lamp is on.
-    col.rgb += lightColor.rgb * half(cozy * materialize * (0.035 + 0.09 * sheenLit));
     col.rgb += mix(half3(1.0), lightColor.rgb, 0.5) * half(sheenLit * highlight * materialize * (0.035 + 0.05 * lightPower) * (1.0 - 0.5 * darkness));
 
     // Light on the bevel, in the light's own colour.
@@ -368,14 +341,6 @@ half4 main(float2 coord) {
         col.rgb += shine * half(passing * (0.13 + 0.75 * fresnel + 0.4 * held) * (1.0 - 0.3 * darkness));
     }
 
-    // Cozy: a string of fairy lights hanging in the room behind you, reflected in the glass — soft,
-    // out-of-focus warm discs along its sagging wire, each breathing in its own time. They hang in
-    // the room, so the panes slide past them as they scroll; the phone's tilt shifts them a little.
-    if (cozy > 0.01) {
-        half3 fairy = garland(world, 250.0, 46.0, 3.0) + garland(world + float2(170.0, 0.0), 590.0, 58.0, 7.0);
-        col.rgb += fairy * half(cozy * materialize * (0.16 + 0.3 * fresnel));
-    }
-
     // Living glass: light at play in it.
     if (alive > 0.0) {
         // The sky's clouds drifting across the glass, reflected: soft light, slowly passing.
@@ -384,8 +349,7 @@ half4 main(float2 coord) {
         col.rgb += reflection * half(smoothstep(0.42, 0.8, cr) * alive * (0.012 + 0.03 * clouds) * (0.35 + 0.65 * max(fresnel, sheenLit)) * (1.0 - 0.45 * darkness) * materialize);
         // Sunlight rippling through the glass as through water: soft patches of light, slowly
         // moving, brightest in the bevel facing the sun and fading across the pane away from it.
-        // (A lamp's light holds still.)
-        if (lightPower > 0.05 && cozy < 0.5) {
+        if (lightPower > 0.05) {
             float2 wq = world / 44.0;
             float tt = time * 0.33;
             float w1 = sin(wq.x * 1.25 + tt + 1.6 * sin(wq.y * 0.85 - tt * 0.7));

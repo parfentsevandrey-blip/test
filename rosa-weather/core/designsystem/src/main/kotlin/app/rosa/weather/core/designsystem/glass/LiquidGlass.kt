@@ -202,12 +202,6 @@ class GlassEnvironment {
      */
     var rich by mutableStateOf(false)
 
-    /**
-     * 0..1: the cozy mood. A lamp in the room lights the glass instead of the sun (no sunlight
-     * rippling through it), and a string of fairy lights behind you is reflected in it.
-     */
-    var cozy by mutableFloatStateOf(0f)
-
     /** Seconds on [clock] while the glass is alive (observed: the glass redraws on every tick), else 0. */
     internal fun livingTime(): Float = if (alive > 0f) clock?.seconds ?: 0f else 0f
 
@@ -227,10 +221,8 @@ class GlassEnvironment {
         stars: Float = 0f,
         clouds: Float = 0f,
         wind: Float = 0f,
-        cozy: Float = 0f,
     ) {
         if (!lightPosition.isSpecified || (position - lightPosition).getDistance() > 1.5f) lightPosition = position
-        if (abs(cozy - this.cozy) > 0.01f || (cozy == 0f && this.cozy != 0f)) this.cozy = cozy
         if (color.distanceTo(lightColor) > 0.01f) lightColor = color
         if (abs(power - lightPower) > 0.01f) lightPower = power
         if (sky.distanceTo(skyColor) > 0.01f) skyColor = sky
@@ -478,7 +470,6 @@ private class LiquidGlassNode(
             spread = if (touchOn) spread else 0f,
             sweep = sweep,
             rich = env?.rich == true,
-            cozy = env?.cozy ?: 0f,
             time = time,
             alive = alive,
             flow = lag,
@@ -533,7 +524,6 @@ private class LiquidGlassNode(
             shader.setFloatUniform("gel", key.lens, key.spread)
             shader.setFloatUniform("sweep", key.sweep)
             shader.setFloatUniform("rich", if (key.rich) 1f else 0f)
-            shader.setFloatUniform("cozy", key.cozy)
             shader.setFloatUniform("time", key.time)
             shader.setFloatUniform("alive", key.alive)
             shader.setFloatUniform("flow", key.flow.x, key.flow.y, (key.flow.getDistance() / flowLimit).coerceIn(0f, 1f))
@@ -582,7 +572,6 @@ private data class LensKey(
     val spread: Float,
     val sweep: Float,
     val rich: Boolean,
-    val cozy: Float,
     val time: Float,
     val alive: Float,
     val flow: Offset,

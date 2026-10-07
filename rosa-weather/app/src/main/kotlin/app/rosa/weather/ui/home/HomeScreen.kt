@@ -438,11 +438,9 @@ private fun Hero(
             GlassText(
                 text = format.temperature(if (feels) moment.apparentTemperature else moment.temperature),
                 fontSize = Rosa.type.hero.fontSize,
-                // In the cozy mood the numerals are honey glass, like the panes.
-                color = if (colors.glassGlow > 0f) lerp(colors.ink, colors.accent, 0.5f * colors.glassGlow) else colors.ink,
-                // Clear glass: just enough of the ink in it to read, more over pale skies (and
-                // warmer glass in the cozy mood).
-                tintStrength = if (colors.isLightSky) 0.3f else 0.16f + 0.14f * colors.glassGlow,
+                color = colors.ink,
+                // Clear glass: just enough of the ink in it to read, more over pale skies.
+                tintStrength = if (colors.isLightSky) 0.3f else 0.16f,
                 prefetch = upcoming,
                 modifier = Modifier
                     .semantics { liveRegion = LiveRegionMode.Polite }

@@ -300,12 +300,12 @@ class ScreenGalleryTest {
     @Test
     fun settingsNight() = settings(SampleForecast.Scenario.ClearNight, 1_758_664_800L, "settings-night")
 
-    private fun settings(scenario: SampleForecast.Scenario, now: Long, name: String, appearance: Appearance = Appearance.Auto) {
+    private fun settings(scenario: SampleForecast.Scenario, now: Long, name: String) {
         val forecast = SampleForecast.create(scenario, nowEpochSeconds = now, placeId = "geo:1")
-        val settings = AppSettings(effects = EffectsQuality.Balanced, appearance = appearance)
+        val settings = AppSettings(effects = EffectsQuality.Balanced)
         compose.mainClock.autoAdvance = false
         compose.setContent {
-            val sky = remember { SkyController(forecast.momentAt(now)).apply { applyAppearance(appearance) } }
+            val sky = remember { SkyController(forecast.momentAt(now)) }
             CompositionLocalProvider(LocalSky provides sky) {
                 RosaEnvironment(settings, sky.palette, richGlass = true) {
                     SkyBackdrop(sky.params, settings.effects, stage = sky.stage, transitionMillis = 0) {
@@ -412,28 +412,6 @@ class ScreenGalleryTest {
         home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-mode-evening", doc = false, appearance = Appearance.Evening)
     }
 
-    /** The cozy mood: the blue hour outside a lamp-lit window — here on a clear morning. */
-    @Test
-    fun homeCozyMode() = assertBarStandsApart(
-        home(SampleForecast.Scenario.SunnyMild, 1_758_607_980L, "home-mode-cozy", appearance = Appearance.Cozy),
-        "home-mode-cozy",
-    )
-
-    /** Cozy in the rain: drops on the misted pane, the town's lights blurred behind them. */
-    @Test
-    fun homeCozyRain() = assertBarStandsApart(
-        home(SampleForecast.Scenario.RainyAfternoon, 1_758_637_800L, "home-cozy-rain", forecastAgeSeconds = 2_400, appearance = Appearance.Cozy),
-        "home-cozy-rain",
-    )
-
-    @Test
-    fun homeCozySnow() {
-        home(SampleForecast.Scenario.SnowyCold, 1_758_610_800L, "home-cozy-snow", appearance = Appearance.Cozy)
-    }
-
-    @Test
-    fun settingsCozy() = settings(SampleForecast.Scenario.SnowyCold, 1_758_610_800L, "settings-cozy", Appearance.Cozy)
-
     @Test
     fun homeDarkMode() {
         home(SampleForecast.Scenario.RainyAfternoon, 1_758_628_800L, "home-mode-dark", doc = false, appearance = Appearance.Dark)
@@ -448,7 +426,7 @@ class ScreenGalleryTest {
                 SkyBackdrop(sky.params, EffectsQuality.Balanced, transitionMillis = 0) {
                     Column(Modifier.fillMaxWidth().padding(16.dp)) {
                         GlassSurface(Modifier.fillMaxWidth(), style = GlassStyle.Frosted, contentPadding = PaddingValues(18.dp)) {
-                            AppearancePicker(Appearance.Cozy) {}
+                            AppearancePicker(Appearance.Evening) {}
                         }
                     }
                 }

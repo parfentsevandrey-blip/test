@@ -98,11 +98,6 @@ data class SkyParams(
     val sunlitAir: Float = 0f,
     /** 0..1: a frosty clear day's diamond dust, ice crystals flashing in the air. */
     val diamondDust: Float = 0f,
-    /**
-     * 0..1: the cozy mood — the town's lights below the sky, a lamp in the room lighting the glass,
-     * the window misted from inside along its foot.
-     */
-    val cozy: Float = 0f,
 ) {
     fun lerp(to: SkyParams, t: Float): SkyParams {
         fun f(a: Float, b: Float) = a + (b - a) * t
@@ -112,7 +107,7 @@ data class SkyParams(
             f(bodyPath, to.bodyPath), f(bodyLift, to.bodyLift), if (t < 0.5f) isSun else to.isSun, f(bodyVisible, to.bodyVisible), f(moonPhase, to.moonPhase),
             f(cloudCover, to.cloudCover), f(cloudDark, to.cloudDark), f(fog, to.fog), f(wind, to.wind), f(stars, to.stars),
             f(rain, to.rain), f(snow, to.snow), f(lightning, to.lightning), f(frost, to.frost), f(condensation, to.condensation),
-            f(rainbow, to.rainbow), f(sunlitAir, to.sunlitAir), f(diamondDust, to.diamondDust), f(cozy, to.cozy),
+            f(rainbow, to.rainbow), f(sunlitAir, to.sunlitAir), f(diamondDust, to.diamondDust),
         )
     }
 
@@ -137,7 +132,6 @@ data class SkyParams(
                 Appearance.Auto -> ((-moment.sun.elevation - 6) / 8.0).toFloat().coerceIn(0f, 1f)
                 Appearance.Dark -> 1f
                 Appearance.Evening -> 0.3f // the first stars of the blue hour
-                Appearance.Cozy -> 0.4f
                 Appearance.Light -> 0f
             }
             return SkyParams(
@@ -155,7 +149,6 @@ data class SkyParams(
                 sunlitAir = if (realSky && useSun) clearAir(visual) * ((moment.sun.elevation - 1.0) / 6.0).toFloat().coerceIn(0f, 1f) else 0f,
                 // Diamond dust needs a hard frost: it begins about −6°, and is thick by −14°.
                 diamondDust = clearAir(visual) * ((-6.0 - moment.temperature) / 8.0).toFloat().coerceIn(0f, 1f),
-                cozy = if (appearance == Appearance.Cozy) 1f else 0f,
             )
         }
 
@@ -331,13 +324,10 @@ fun SkyScene(
             } else {
                 p.bodyVisible * 0.55f * clear * (0.35f + 0.65f * moonlight)
             }
-            // The cozy mood lights the glass from inside the room instead: a warm lamp, low on the left.
-            val lamp = p.cozy
-            val bodyAt = origin.value + Offset(body.x * size.width, body.y * size.height)
             env.publishScene(
-                position = if (lamp > 0.5f) origin.value + Offset(-0.3f * size.width, 0.78f * size.height) else bodyAt,
-                color = (if (p.isSun) p.sun else MOONLIGHT).let { if (lamp > 0f) lerp(it, LAMPLIGHT, lamp) else it },
-                power = max(power, LAMP_POWER * lamp).coerceIn(0f, 1f),
+                position = origin.value + Offset(body.x * size.width, body.y * size.height),
+                color = if (p.isSun) p.sun else MOONLIGHT,
+                power = power.coerceIn(0f, 1f),
                 sky = p.zenith,
                 flash = flash.value,
                 frost = p.frost,
@@ -346,7 +336,6 @@ fun SkyScene(
                 stars = p.stars,
                 clouds = p.cloudCover,
                 wind = p.wind,
-                cozy = lamp,
             )
         }
 
@@ -354,7 +343,7 @@ fun SkyScene(
         val age = rippleAge.value
         val rippleActive = age < RIPPLE_SECONDS
         val windowOn = quality.windowEffects &&
-            (p.rain > 0.05f || p.frost > 0.02f || p.condensation > 0.05f || p.cozy > 0.02f || rippleActive)
+            (p.rain > 0.05f || p.frost > 0.02f || p.condensation > 0.05f || rippleActive)
         // The pane (and the rain, whose streaks it refracts) is drawn finer than the soft sky.
         val ws = if (windowOn) max(quality.windowScale, s) else s
         val pw = max(1, (size.width * ws).roundToInt())
@@ -374,7 +363,6 @@ fun SkyScene(
             window.setFloatUniform("drops", (p.rain * 1.1f).coerceAtMost(1f))
             window.setFloatUniform("frost", p.frost)
             window.setFloatUniform("fogged", p.condensation)
-            window.setFloatUniform("mist", p.cozy)
             window.setFloatUniform(
                 "ripple",
                 ripple.position.x * ws, ripple.position.y * ws, t - age, if (rippleActive) ripple.strength else 0f,
@@ -428,7 +416,6 @@ internal fun RuntimeShader.setSkyUniforms(p: SkyParams, body: Offset, w: Int, h:
     setFloatUniform("rainbow", p.rainbow * p.bodyVisible)
     setFloatUniform("sunlitAir", p.sunlitAir * p.bodyVisible)
     setFloatUniform("diamondDust", p.diamondDust)
-    setFloatUniform("cozy", p.cozy)
     setFloatUniform("tilt", tilt.x, tilt.y)
 }
 
@@ -447,10 +434,6 @@ internal fun RuntimeShader.setPrecipitationUniforms(p: SkyParams, w: Int, h: Int
 private const val SUN_RADIUS = 0.022f
 
 private val MOONLIGHT = Color(0xFFD3DCF0)
-
-/** The cozy mood's lamp: a warm, low light in the room, and how strongly it lights the glass. */
-private val LAMPLIGHT = Color(0xFFFFB46A)
-private const val LAMP_POWER = 0.62f
 
 /** Where the scene sits on screen: the sun's position is handed to the glass in root pixels. */
 private class RootOrigin {

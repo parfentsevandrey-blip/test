@@ -102,8 +102,6 @@ uniform float2 tilt;
 // Clear sunshine (motes in the air, the lens's flare) and diamond dust (a frosty clear day), 0..1.
 uniform float sunlitAir;
 uniform float diamondDust;
-// The cozy mood, 0..1: the town's lights below the blue-hour sky.
-uniform float cozy;
 $NOISE
 
 // A rainbow's colours across its band, t from 0 (inside: violet) to 1 (outside: red).
@@ -330,26 +328,6 @@ half4 main(float2 fragCoord) {
         col *= half(1.0 - 0.06 * dark * clearOf);
     }
 
-    // Cozy: the town's lights far below, seen out of focus from a lamp-lit room — warm discs,
-    // thicker toward the foot of the sky, each breathing on its own, and the warm haze they light
-    // over the roofs. Rain and fog soften them; clouds low over the town catch their glow.
-    if (cozy > 0.01) {
-        float lowSky = smoothstep(0.55, 1.0, uv.y);
-        col += half3(0.62, 0.36, 0.2) * half(lowSky * lowSky * lowSky * (0.16 + 0.08 * mask) * cozy);
-        if (lowSky > 0.0) {
-            float2 q = float2(uv.x * aspect, uv.y) + tilt * float2(0.008, 0.005);
-            float2 g1 = q * 11.0;
-            float h1 = hash(floor(g1) + 71.0);
-            float near1 = moteAt(g1, 71.0, 0.5, 0.2, 0.0) * (0.72 + 0.28 * sin(time * (0.5 + h1) + h1 * 40.0));
-            float2 g2 = q * 5.0 + float2(3.1, 0.0);
-            float h2 = hash(floor(g2) + 83.0);
-            float near2 = moteAt(g2, 83.0, 0.4, 0.25, 0.0) * (0.78 + 0.22 * sin(time * (0.4 + h2) + h2 * 30.0));
-            half3 c1 = mix(half3(1.0, 0.7, 0.38), half3(1.0, 0.9, 0.7), half(h1));
-            half3 c2 = mix(half3(1.0, 0.6, 0.34), half3(1.0, 0.84, 0.6), half(h2));
-            col += (c1 * half(near1 * 0.3) + c2 * half(near2 * 0.18)) * half(lowSky * cozy * (1.0 - fog * 0.6));
-        }
-    }
-
     // Light in the air. Clear sunshine lights motes of dust drifting in it — thickest about the
     // sun, a few large and out of focus near the glass; on a frosty clear day, diamond dust: ice
     // crystals hanging in the air, flashing as they turn, now and then in a colour.
@@ -569,8 +547,6 @@ uniform float time;
 uniform float drops;
 uniform float frost;
 uniform float fogged;
-// The cozy mood: the pane misted from inside the warm room, rising from its foot.
-uniform float mist;
 uniform float4 ripple;
 $NOISE
 
@@ -710,18 +686,7 @@ half4 main(float2 fragCoord) {
 
     float2 p = fragCoord + offset;
     float wipeAmount = wipe.eval(fragCoord).a;
-    // The warm room mists the cold pane along its sill, raggedly; a finger wipes it.
-    float rise = 0.0;
-    if (mist > 0.01) {
-        float2 mq = fragCoord / resolution.y;
-        float aspect = resolution.x / resolution.y;
-        // Condensation gathers along the sill, a little higher at the corners.
-        float corner = smoothstep(0.35, 0.0, min(mq.x, aspect - mq.x));
-        float fromSill = 1.0 - mq.y - 0.06 * corner;
-        float ragged = (fbm3(mq * 5.0) - 0.5) * 0.07;
-        rise = mist * smoothstep(0.17, 0.02, fromSill + ragged);
-    }
-    float fogMask = max(fogged, rise) * (1.0 - max(smoothstep(0.1, 0.2, bead), trail)) * (1.0 - wipeAmount);
+    float fogMask = fogged * (1.0 - max(smoothstep(0.1, 0.2, bead), trail)) * (1.0 - wipeAmount);
     half4 col;
     if (drops > 0.01) {
         // The bead's surface, steep at its rim like water on glass.
@@ -754,8 +719,6 @@ half4 main(float2 fragCoord) {
     // Condensation: a milky, out-of-focus pane beaded with a mist of micro-droplets.
     if (fogMask > 0.01) {
         half4 misted = defocused(p, resolution.y * 0.014) + half4(0.075, 0.08, 0.085, 0.0);
-        // Misted from a lamp-lit room, the pane catches its warmth rather than turning white.
-        misted.rgb += half3(0.015, -0.025, -0.065) * half(mist);
         float2 mp = fragCoord / (resolution.y * 0.006);
         float2 mid = floor(mp);
         float mr = hash(mid);

@@ -110,14 +110,7 @@ fun GlassTabBar(
     // How bright the sky behind light type is: over a bright blue day the pill darkens instead of
     // lightening, and the selected name keeps to white, so both still read.
     val bright = if (colors.isLightSky) 0f else LocalGlassEnvironment.current.tintBoost
-    // On the cozy mood's honey glass an amber name would vanish: the selected tab is lit instead,
-    // an amber pill with the name in ivory on it.
-    val glow = if (colors.isLightSky) 0f else colors.glassGlow
-    val rest = if (colors.isLightSky) {
-        Color.White.copy(alpha = 0.55f)
-    } else {
-        lerp(Color.White.copy(alpha = 0.15f), Color.Black.copy(alpha = 0.16f), bright).let { if (glow > 0f) lerp(it, colors.accent.copy(alpha = 0.55f), glow) else it }
-    }
+    val rest = if (colors.isLightSky) Color.White.copy(alpha = 0.55f) else lerp(Color.White.copy(alpha = 0.15f), Color.Black.copy(alpha = 0.16f), bright)
     val lip = Color.White.copy(alpha = if (colors.isLightSky) 0.85f else 0.28f)
     val shape = RoundedCornerShape(GlassTabBarHeight / 2)
 
@@ -219,16 +212,8 @@ fun GlassTabBar(
                 val lit = if (pressed) i == underLens else i == selected
                 // The selected tab in the accent over dark skies; over bright ones, where the
                 // accent's gold would fade into the milky glass, in a deep blue.
-                val selectedTint = when {
-                    colors.isLightSky -> SelectedOnLight
-                    glow > 0f -> lerp(colors.accent, colors.ink, glow)
-                    else -> colors.accent
-                }
-                val selectedLabel = when {
-                    colors.isLightSky -> SelectedOnLight
-                    glow > 0f -> lerp(lerp(colors.accent, colors.ink, bright), colors.ink, glow)
-                    else -> lerp(colors.accent, colors.ink, bright)
-                }
+                val selectedTint = if (colors.isLightSky) SelectedOnLight else colors.accent
+                val selectedLabel = if (colors.isLightSky) SelectedOnLight else lerp(colors.accent, colors.ink, bright)
                 Column(
                     Modifier
                         .width(segment)
