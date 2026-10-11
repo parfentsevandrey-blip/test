@@ -67,6 +67,11 @@ import app.rosa.weather.core.designsystem.glass.GlassState
 import app.rosa.weather.core.designsystem.glass.GlassStyle
 import app.rosa.weather.core.designsystem.glass.LocalGlassEnvironment
 import app.rosa.weather.core.designsystem.glass.liquidGlass
+import app.rosa.weather.core.designsystem.glass.pressTilt
+import androidx.compose.animation.core.VectorConverter
+import kotlin.math.abs
+import kotlin.math.asin
+import kotlin.math.tanh
 import app.rosa.weather.core.designsystem.glass.rememberGlassState
 import app.rosa.weather.core.designsystem.haptics.LocalHaptics
 import app.rosa.weather.core.designsystem.motion.LocalMotionEnabled
@@ -156,18 +161,20 @@ fun GlassSurface(
     // Rich glass casts its shadows in the sky's own deep colour rather than grey — navy under a
     // blue day, violet at dusk — as light through tinted air does: it floats in the scene.
     val deep = lerp(colors.zenith, Color.Black, 0.55f)
+    // Pushed by a finger, the pane tilts away from the eye where it is pressed (see glassDepth).
+    val pressable = modifier.then(if (motion && rich) Modifier.glassDepth(state, PANE_PUSH, if (card) CARD_SINK else 0f) else Modifier)
     val base = when {
-        !shadow -> modifier
+        !shadow -> pressable
         // Cards lie on a broad, soft shadow (rich: a broad ambient one well below, and a tighter
         // one that grounds the edge); floating controls also on a tight contact one.
-        card && rich -> modifier
+        card && rich -> pressable
             .dropShadow(shape, Shadow(radius = 44.dp, color = deep, offset = DpOffset(0.dp, 18.dp), alpha = if (colors.isLightSky) 0.2f else 0.3f))
             .dropShadow(shape, Shadow(radius = 10.dp, color = deep, offset = DpOffset(0.dp, 4.dp), alpha = if (colors.isLightSky) 0.12f else 0.18f))
-        card -> modifier.dropShadow(shape, Shadow(radius = 30.dp, color = Color.Black, offset = DpOffset(0.dp, 10.dp), alpha = 0.13f))
-        rich -> modifier
+        card -> pressable.dropShadow(shape, Shadow(radius = 30.dp, color = Color.Black, offset = DpOffset(0.dp, 10.dp), alpha = 0.13f))
+        rich -> pressable
             .dropShadow(shape, Shadow(radius = 24.dp, color = deep, offset = DpOffset(0.dp, 10.dp), alpha = if (colors.isLightSky) 0.18f else 0.26f))
             .dropShadow(shape, Shadow(radius = 4.dp, color = deep, offset = DpOffset(0.dp, 1.5.dp), alpha = 0.12f))
-        else -> modifier
+        else -> pressable
             .dropShadow(shape, Shadow(radius = 22.dp, color = Color.Black, offset = DpOffset(0.dp, 8.dp), alpha = 0.14f))
             .dropShadow(shape, Shadow(radius = 3.dp, color = Color.Black, offset = DpOffset(0.dp, 1.dp), alpha = 0.08f))
     }
@@ -178,7 +185,7 @@ fun GlassSurface(
     }
     val glass = if (backdrop != null) {
         base.then(placed).liquidGlass(backdrop, style, cornerRadius, state, environment)
-            .then(if (touchResponsive && motion) Modifier.glassTouch(state, scope) else Modifier)
+            .then(if (touchResponsive && motion) Modifier.glassTouch(state, scope, push = rich) else Modifier)
             // What lies on the glass keeps to its shape (a card's own tint or picture has its
             // rounded corners); the glass itself, drawn before, still blooms past its edge.
             .clip(shape)
@@ -198,6 +205,49 @@ private const val SWEEP_DELAY = 120L
 private const val SWEEP_CASCADE = 0.45f
 private const val SWEEP_MILLIS = 1500
 
+/**
+ * How deep a finger pushes a pane in at its very edge, whatever the pane's size, as a real pane
+ * pivoting on its centre would: a small button rocks clearly, a broad card or the tab bar tilts
+ * only a few degrees, a platter set into other glass gives less. Cards also sink a little away
+ * from the eye as a whole.
+ */
+private val PANE_PUSH = 11.dp
+private val PLATTER_PUSH = 5.dp
+private const val CARD_SINK = 0.015f
+
+/** The steepest a pushed pane tilts, in degrees. */
+private const val MAX_PUSH_DEGREES = 10f
+
+/**
+ * How near the eye is (Compose camera distance; 8 is the platform's default): a little nearer
+ * than usual, so a tilted pane visibly narrows toward the edge pushed away.
+ */
+private const val PUSH_CAMERA = 7f
+
+/**
+ * The pane pushed in by the finger, in 3D: it tilts away from the eye where it is pressed, by
+ * [depth] at its edge, and follows the finger as it slides; let go, it rocks back through level a
+ * little the other way and settles. Its light and reflections move with it (see pressTilt).
+ */
+private fun Modifier.glassDepth(state: GlassState, depth: Dp, sink: Float): Modifier = graphicsLayer {
+    val pushed = state.pressTilt(size.width, size.height)
+    if (pushed == Offset.Zero) return@graphicsLayer
+    val d = depth.toPx()
+    // The pressed side goes away from the eye (checked by GlassPressGalleryTest).
+    rotationY = pushAngle(d, size.width / 2f) * pushed.x
+    rotationX = -pushAngle(d, size.height / 2f) * pushed.y
+    cameraDistance = PUSH_CAMERA
+    val inward = 1f - sink * state.press
+    scaleX = inward
+    scaleY = inward
+}
+
+private fun pushAngle(depth: Float, half: Float): Float {
+    if (half <= 0f) return 0f
+    val degrees = Math.toDegrees(asin((depth / half).coerceAtMost(1f).toDouble())).toFloat()
+    return degrees.coerceAtMost(MAX_PUSH_DEGREES)
+}
+
 /** A surface set into the glass it sits on: tinted inset, lit upper lip, a glow under the finger. */
 @Composable
 private fun Platter(
@@ -213,6 +263,7 @@ private fun Platter(
 ) {
     val colors = Rosa.colors
     val scope = rememberCoroutineScope()
+    val rich = LocalRichGlass.current
     val shape = RoundedCornerShape(cornerRadius)
     val fill = if (prominent) {
         (if (colors.isLightSky) Color.White.copy(alpha = 0.72f) else Color.White.copy(alpha = 0.26f))
@@ -221,6 +272,7 @@ private fun Platter(
     }
     val lip = Color.White.copy(alpha = if (colors.isLightSky) 0.55f else if (prominent) 0.42f else 0.2f)
     val surface = modifier
+        .then(if (touchResponsive && rich) Modifier.glassDepth(state, PLATTER_PUSH, 0f) else Modifier)
         .clip(shape)
         .drawBehind {
             drawRect(fill)
@@ -232,7 +284,7 @@ private fun Platter(
             }
         }
         .border(0.8.dp, Brush.verticalGradient(0f to lip, 0.55f to lip.copy(alpha = 0f), 1f to Color.Black.copy(alpha = 0.04f)), shape)
-        .then(if (touchResponsive) Modifier.glassTouch(state, scope) else Modifier)
+        .then(if (touchResponsive) Modifier.glassTouch(state, scope, push = rich) else Modifier)
     CompositionLocalProvider(LocalContentColor provides colors.ink, LocalGlassLevel provides level + 1) {
         Box(surface.padding(contentPadding), contentAlignment = contentAlignment, content = content)
     }
@@ -259,7 +311,13 @@ fun GlassButton(
     val state = rememberGlassState()
     val scope = rememberCoroutineScope()
     val press = remember { Animatable(0f) }
-    val light = remember(state, scope) { GlassTouchLight(state, scope) }
+    // How far the finger has drawn the glass after it, rubber-banded: it leans and stretches that way.
+    val pull = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
+    // Rich glass (the weather app) is pushed in 3D and drawn after the finger; the calendar's stays plainer.
+    val rich = LocalRichGlass.current
+    val liquid = LocalMotionEnabled.current && rich
+    val reach = with(LocalDensity.current) { PULL_REACH.toPx() }
+    val light = remember(state, scope, rich) { GlassTouchLight(state, scope, rich) }
     var size by remember { mutableStateOf(IntSize.Zero) }
     val currentOnClick by rememberUpdatedState(onClick)
     val grow = if (size.height > 0) 1f + 8f / size.height else 1.04f
@@ -270,8 +328,17 @@ fun GlassButton(
             .onSizeChanged { size = it }
             .graphicsLayer {
                 val p = press.value
-                scaleX = 1f + (grow - 1f) * p
-                scaleY = 1f + (grow - 1f) * p * 0.85f
+                // Drawn after the finger, liquid stretches toward it and thins across, keeping
+                // its volume, and leans its way.
+                val q = pull.value
+                val w = this.size.width.coerceAtLeast(1f)
+                val h = this.size.height.coerceAtLeast(1f)
+                val ax = abs(q.x) / w
+                val ay = abs(q.y) / h
+                scaleX = (1f + (grow - 1f) * p) * (1f + PULL_STRETCH * ax - PULL_THIN * ay)
+                scaleY = (1f + (grow - 1f) * p * 0.85f) * (1f + PULL_STRETCH * ay - PULL_THIN * ax)
+                translationX = q.x * PULL_LEAN
+                translationY = q.y * PULL_LEAN
                 alpha = if (enabled) 1f else 0.5f
             }
             .semantics(mergeDescendants = true) {
@@ -288,9 +355,14 @@ fun GlassButton(
                     scope.launch { press.animateTo(1f, RosaMotion.press()) }
                     light.press(1f)
                     // The light follows the finger across the glass until it lets go.
-                    val up = trackUntilUp { state.touch = it }
-                    // Let go, the button settles like a gel: a small swing past its size and back.
+                    val up = trackUntilUp {
+                        state.touch = it
+                        if (liquid) scope.launch { pull.snapTo(rubber(it - down.position, reach)) }
+                    }
+                    // Let go, the button settles like a gel: a small swing past its size and back,
+                    // and what the finger drew out snaps back, wobbling.
                     scope.launch { press.animateTo(0f, spring(dampingRatio = 0.5f, stiffness = RosaMotion.GelStiffness * 1.4f)) }
+                    scope.launch { pull.animateTo(Offset.Zero, spring(dampingRatio = 0.3f, stiffness = 340f)) }
                     light.release(420)
                     if (up != null) {
                         up.consume()
@@ -307,6 +379,19 @@ fun GlassButton(
         prominent = prominent,
         content = content,
     )
+}
+
+/** How far a button can be drawn after the finger, at most; how much of that it leans, stretches, thins. */
+private val PULL_REACH = 14.dp
+private const val PULL_LEAN = 0.6f
+private const val PULL_STRETCH = 1.1f
+private const val PULL_THIN = 0.4f
+
+/** A drag rubber-banded into [reach]: easy at first, ever stiffer. */
+private fun rubber(drag: Offset, reach: Float): Offset {
+    val length = drag.getDistance()
+    if (length < 0.5f || reach <= 0f) return Offset.Zero
+    return drag * (reach * tanh(length / (reach * 3f)) / length)
 }
 
 /** Small circular glass icon button (44dp touch target, per HIG). */
@@ -388,8 +473,8 @@ fun rememberPressScale(pressed: Boolean): Float {
  * Glow under the finger for any glass surface. Observes the gesture without consuming it, so
  * content inside keeps working, and backs off as soon as the finger starts scrolling.
  */
-private fun Modifier.glassTouch(state: GlassState, scope: kotlinx.coroutines.CoroutineScope): Modifier {
-    val light = GlassTouchLight(state, scope)
+private fun Modifier.glassTouch(state: GlassState, scope: kotlinx.coroutines.CoroutineScope, push: Boolean): Modifier {
+    val light = GlassTouchLight(state, scope, push)
     return pointerInput(state) {
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
@@ -418,15 +503,23 @@ private fun Modifier.glassTouch(state: GlassState, scope: kotlinx.coroutines.Cor
  * from there, both ways, while the glass swells into a lens. Let go: the light fades, and the lens
  * springs back like a gel — past flat into a slight dimple and back, twice, calmly.
  */
-private class GlassTouchLight(private val state: GlassState, private val scope: kotlinx.coroutines.CoroutineScope) {
+private class GlassTouchLight(
+    private val state: GlassState,
+    private val scope: kotlinx.coroutines.CoroutineScope,
+    /** Whether the finger also pushes the pane in, tilting it (rich glass). */
+    private val pushes: Boolean,
+) {
     private var glow: kotlinx.coroutines.Job? = null
     private var lens: kotlinx.coroutines.Job? = null
     private var spread: kotlinx.coroutines.Job? = null
+    private var push: kotlinx.coroutines.Job? = null
 
     fun press(strength: Float) {
         glow?.cancel()
         lens?.cancel()
         spread?.cancel()
+        push?.cancel()
+        if (pushes) push = scope.launch { Animatable(state.press).animateTo(strength, spring(dampingRatio = 0.62f, stiffness = 420f)) { state.press = value } }
         glow = scope.launch { Animatable(state.touchStrength).animateTo(strength, tween(160)) { state.touchStrength = value } }
         lens = scope.launch { Animatable(state.lens).animateTo(strength, RosaMotion.press()) { state.lens = value } }
         spread = scope.launch {
@@ -438,6 +531,12 @@ private class GlassTouchLight(private val state: GlassState, private val scope: 
     fun release(fadeMillis: Int) {
         glow?.cancel()
         lens?.cancel()
+        push?.cancel()
+        // Let go, the pane rocks back through level, a little the other way, and settles.
+        if (pushes) push = scope.launch {
+            Animatable(state.press).animateTo(0f, spring(dampingRatio = 0.34f, stiffness = 260f)) { state.press = value }
+            state.press = 0f
+        }
         glow = scope.launch { Animatable(state.touchStrength).animateTo(0f, tween(fadeMillis)) { state.touchStrength = value } }
         lens = scope.launch {
             Animatable(state.lens).animateTo(0f, spring(dampingRatio = 0.3f, stiffness = 230f)) { state.lens = value }

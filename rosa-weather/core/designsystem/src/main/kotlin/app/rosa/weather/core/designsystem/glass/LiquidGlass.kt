@@ -302,6 +302,23 @@ class GlassState {
 
     /** Where a band of light sweeping across the pane is, 0..1 (0: none). */
     var sweep by mutableFloatStateOf(0f)
+
+    /**
+     * How far the finger has pushed the pane in, tilting it toward the touch: 1 held down; let go,
+     * it rocks back through level a little the other way before it settles.
+     */
+    var press by mutableFloatStateOf(0f)
+}
+
+/**
+ * Where on the pane the finger presses it, -1..1 from its centre, times how hard: the pane tilts
+ * away from the eye there, and its light and reflections move as tilted glass's would.
+ */
+fun GlassState.pressTilt(width: Float, height: Float): Offset {
+    val p = press
+    val t = touch
+    if (p == 0f || !t.isSpecified || width <= 0f || height <= 0f) return Offset.Zero
+    return Offset(((t.x / width) * 2f - 1f).coerceIn(-1f, 1f) * p, ((t.y / height) * 2f - 1f).coerceIn(-1f, 1f) * p)
 }
 
 @Composable
@@ -441,7 +458,10 @@ private class LiquidGlassNode(
         val env = environment
         val light = env?.lightFor(position + Offset(size.width / 2f, size.height / 2f), LIGHT_FALLOFF.toPx())
             ?: ElementLight(DEFAULT_LIGHT_ANGLE, 0f)
-        val tilt = env?.tilt ?: Offset.Zero
+        // The phone's tilt, and the pane's own where a finger pushes it in: either way the scene
+        // behind shifts and the world's reflections slide across, and the rim's light swings round.
+        val pushed = s?.pressTilt(size.width, size.height) ?: Offset.Zero
+        val tilt = (env?.tilt ?: Offset.Zero) + pushed * PRESS_TILT
         val touch = s?.touch ?: Offset.Unspecified
         val pressLens = s?.lens ?: 0f
         val spread = s?.spread ?: 0f
@@ -461,7 +481,7 @@ private class LiquidGlassNode(
             radius = radius,
             style = style,
             density = density,
-            lightAngle = quantize(light.angle, 0.004f),
+            lightAngle = quantize(light.angle + (pushed.x - pushed.y) * PRESS_LIGHT_SWING, 0.004f),
             tint = tint.copy(alpha = (tint.alpha * style.tintAlpha * boost).coerceAtMost(0.62f + 0.2f * contrast)).toArgb(),
             materialize = materialize,
             touch = if (touchOn) touch else Offset.Zero,
@@ -495,7 +515,8 @@ private class LiquidGlassNode(
             shader.setFloatUniform("radius", radius)
             shader.setFloatUniform("bezel", style.bezel.toPx().coerceAtMost(size.minDimension / 2f))
             shader.setFloatUniform("amount", refraction)
-            shader.setFloatUniform("dispersion", style.dispersion)
+            // Pressed, the bevel bends harder and splits the light into brighter colours.
+            shader.setFloatUniform("dispersion", style.dispersion * (1f + (if (key.rich) PRESS_DISPERSION * key.lens.coerceAtLeast(0f) else 0f)))
             shader.setFloatUniform("depth", style.depth)
             shader.setFloatUniform("lightAngle", key.lightAngle)
             shader.setFloatUniform("highlight", style.highlight)
@@ -616,6 +637,15 @@ private const val DISPERSION_REACH = 0.12f
 
 /** How far from the sun its light fades to half strength on a pane. */
 private val LIGHT_FALLOFF = 640.dp
+
+/** How much a finger's push at the pane's edge tilts its light, as a share of a full tilt of the phone. */
+private const val PRESS_TILT = 0.45f
+
+/** How far the rim's light swings round, in radians, under a push at the pane's edge. */
+private const val PRESS_LIGHT_SWING = 0.35f
+
+/** How much brighter the bevel's colours split while the glass is pressed. */
+private const val PRESS_DISPERSION = 0.9f
 
 /** How much the scene behind the glass shifts with a full tilt. */
 private val PARALLAX = 5.dp
