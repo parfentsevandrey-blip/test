@@ -358,6 +358,9 @@ type nearbyState struct {
 	lookUntil time.Time                       // the person looks at the list until then (SetNearbyLooking)
 	lookName  string                          // the name this device gives while it is not in a mesh
 	added     []time.Time                     // devices an administrator added for members lately (nearbyinvite.go)
+	// when an invitation of that device ended: declined here, or taken back there (nearbyinvite.go). What still comes from
+	// it for a moment was on its way before (each invitation goes three ways, and the copies do not arrive together).
+	ended map[identity.ID]time.Time
 }
 
 // tickets returns the current and the previous ticket, replacing them when it is time.
@@ -656,6 +659,11 @@ func (n *Node) nearbyExpire() {
 		if now.Sub(v.heard) > nearbyListedFor {
 			delete(n.nearby.incoming, id)
 			changed = true
+		}
+	}
+	for id, t := range n.nearby.ended {
+		if now.Sub(t) >= nearbyEndQuiet {
+			delete(n.nearby.ended, id)
 		}
 	}
 	for id, o := range n.nearby.outgoing {

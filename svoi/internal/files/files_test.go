@@ -776,13 +776,23 @@ func TestADownloadDoesNotGoOnWithAnotherFile(t *testing.T) {
 	if _, err := io.ReadFull(rr, got); err != nil {
 		t.Fatal(err)
 	}
-	// the file is replaced by another one of another size, then the link is replaced. (Replaced as programs save: a new file
-	// takes the old one's name. The old one, still open on the NAS, goes on as it was until the link breaks; a file that is
-	// cut short where it lies is the next test.)
-	other := make([]byte, 20<<20)
+	// the file is written anew, then the link is replaced. (Written over where it lies, without cutting it short first, and
+	// with a time of its own: the NAS goes on sending until the link breaks, and never meets an early end — a file that is cut
+	// short is the next test. Renaming another file onto it is not possible on Windows while the NAS has it open.)
+	other := make([]byte, 1<<20)
 	rand.Read(other)
-	writeFile(t, path+".new", other)
-	if err := os.Rename(path+".new", path); err != nil {
+	f, err := os.OpenFile(path, os.O_WRONLY, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.Write(other); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+	later := time.Now().Add(time.Hour)
+	if err := os.Chtimes(path, later, later); err != nil {
 		t.Fatal(err)
 	}
 	replaceLinkUnder(t, ctx, nas, laptop)

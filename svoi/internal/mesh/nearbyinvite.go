@@ -98,6 +98,18 @@ type nearbyOutgoing struct {
 	ended   time.Time
 }
 
+// nearbyEndQuiet is how long the invitations of a device are not listed after one of them ended (declined here, or taken
+// back there): the copies that were on their way would bring it back for a while. A person who invites again takes longer.
+const nearbyEndQuiet = 3 * time.Second
+
+// nearbyEndedLocked notes that an invitation of the device from ended (n.nearby.mu held).
+func (n *Node) nearbyEndedLocked(from identity.ID, at time.Time) {
+	if n.nearby.ended == nil {
+		n.nearby.ended = map[identity.ID]time.Time{}
+	}
+	n.nearby.ended[from] = at
+}
+
 // ErrNoSuchInvite: there is no such invitation (it may have expired, or been taken back).
 var ErrNoSuchInvite = errors.New("mesh: no such invitation (it may have expired)")
 
@@ -286,6 +298,9 @@ func (n *Node) DeclineNearby(id string) error {
 	n.nearby.mu.Lock()
 	in := n.nearby.incoming[devID]
 	delete(n.nearby.incoming, devID)
+	if in != nil {
+		n.nearbyEndedLocked(devID, time.Now())
+	}
 	n.nearby.mu.Unlock()
 	if in == nil {
 		return ErrNoSuchInvite
@@ -547,6 +562,10 @@ func (n *Node) nearbyInvited(raw []byte, from netip.AddrPort) {
 	lan := netip.AddrPortFrom(from.Addr().Unmap(), from.Port())
 	now := time.Now()
 	n.nearby.mu.Lock()
+	if t, ok := n.nearby.ended[v.From]; ok && now.Sub(t) < nearbyEndQuiet {
+		n.nearby.mu.Unlock()
+		return // a copy of an invitation that has just ended (declined here, or taken back there)
+	}
 	if n.nearby.incoming == nil {
 		n.nearby.incoming = map[identity.ID]*nearbyIncoming{}
 	}
@@ -609,6 +628,7 @@ func (n *Node) nearbyDeclined(raw []byte, from netip.AddrPort) {
 	}
 	if _, ok := n.nearby.incoming[d.From]; ok {
 		delete(n.nearby.incoming, d.From)
+		n.nearbyEndedLocked(d.From, time.Now())
 		changed = true
 	}
 	n.nearby.mu.Unlock()

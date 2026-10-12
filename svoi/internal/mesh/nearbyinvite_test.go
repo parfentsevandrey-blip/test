@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
+	"net/netip"
 	"strings"
 	"sync"
 	"testing"
@@ -585,8 +586,18 @@ func TestNearbyDeclineAndTakeBack(t *testing.T) {
 		t.Fatal(err)
 	}
 	waitNearby(t, 20*time.Second, "the invitation to reach the phone", func() bool { _, ok := invitedBy(phone, mac.ID()); return ok })
+	onTheWay := mac.nearbyPending(phone.ID()) // (copies of the invitation that are still on their way when the person says no)
+	if len(onTheWay) == 0 {
+		t.Fatal("the Mac sends no invitation")
+	}
 	if err := phone.DeclineNearby(mac.ID().String()); err != nil {
 		t.Fatal(err)
+	}
+	for _, u := range onTheWay {
+		phone.nearbyInvited(u.pkt, netip.MustParseAddrPort("192.0.2.1:41711"))
+	}
+	if _, ok := invitedBy(phone, mac.ID()); ok {
+		t.Fatal("a copy of the invitation that came after the answer brought it back")
 	}
 	waitNearby(t, 5*time.Second, "the Mac to learn the answer", func() bool {
 		o, ok := sentTo(mac, phone.ID())
