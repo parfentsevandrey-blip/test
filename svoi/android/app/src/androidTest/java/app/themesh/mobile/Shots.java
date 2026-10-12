@@ -45,6 +45,7 @@ final class Shots {
                 Log.w(TAG, name + ": система не дала снимок");
                 return false;
             }
+            bmp = steady(ua, bmp, name);
             ByteArrayOutputStream png = new ByteArrayOutputStream();
             bmp.compress(Bitmap.CompressFormat.PNG, 100, png);
             drain(ua.executeShellCommand("mkdir -p " + DIR));
@@ -59,6 +60,55 @@ final class Shots {
             Log.w(TAG, name + ": не получилось", e);
             return false;
         }
+    }
+
+    /**
+     * Снимок, который больше не меняется. Программная графика эмулятора рисует кадр страницы до семи секунд и показывает кадр, в
+     * котором часть плиток ещё не нарисована (так на одном снимке целой карточки не было, а на её месте было небо): снимаем ещё раз,
+     * пока два снимка подряд не совпадут почти во всём, но не больше пяти раз. «Почти» — потому что часы в строке состояния и
+     * обратный отсчёт приглашения меняют сотни точек, а недорисованная карточка — сотни тысяч.
+     */
+    private static Bitmap steady(UiAutomation ua, Bitmap first, String name) throws InterruptedException {
+        Bitmap last = first;
+        for (int i = 0; i < 5; i++) {
+            Thread.sleep(800);
+            Bitmap next = ua.takeScreenshot();
+            if (next == null) {
+                return last;
+            }
+            if (alike(last, next)) {
+                return next;
+            }
+            Log.i(TAG, name + ": страница ещё дорисовывается, снимаем снова");
+            last = next;
+        }
+        Log.w(TAG, name + ": снимки так и не перестали меняться, берём последний");
+        return last;
+    }
+
+    /** Совпадают ли два снимка, кроме мелочей: сравнивается каждая четвёртая точка каждой четвёртой строки, различий не больше 0,5 %. */
+    static boolean alike(Bitmap a, Bitmap b) {
+        int w = a.getWidth(), h = a.getHeight();
+        if (w != b.getWidth() || h != b.getHeight()) {
+            return false;
+        }
+        // (снимок UiAutomation — «аппаратный» Bitmap, из которого точки не читаются: читаем из копий)
+        Bitmap ca = a.copy(Bitmap.Config.ARGB_8888, false), cb = b.copy(Bitmap.Config.ARGB_8888, false);
+        int[] ra = new int[w], rb = new int[w];
+        long all = 0, differ = 0;
+        for (int y = 0; y < h; y += 4) {
+            ca.getPixels(ra, 0, w, 0, y, w, 1);
+            cb.getPixels(rb, 0, w, 0, y, w, 1);
+            for (int x = 0; x < w; x += 4) {
+                all++;
+                if (ra[x] != rb[x]) {
+                    differ++;
+                }
+            }
+        }
+        ca.recycle();
+        cb.recycle();
+        return differ * 200 <= all;
     }
 
     /** Читает вывод команды до конца: когда она закончила, чтение возвращает -1. */
