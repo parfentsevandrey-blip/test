@@ -3,6 +3,11 @@ name: The Mesh publish
 # Puts files that an earlier CI run has already built and tested (an installer, an APK) on a GitHub release: a direct link to
 # one file, which an Actions artifact cannot give (it is a zip of everything, behind a sign-in). Nothing is rebuilt; only the
 # files named below are published, as a pre-release by default. Started by hand: Actions -> «The Mesh publish» -> Run workflow.
+#
+# Start it on the branch whose last commit is `commit` (or one with the same workflow files). A release makes its tag at `commit`,
+# and when that commit's workflow files differ from those of the commit this run started on, GitHub wants the "workflows"
+# permission, which the token of a job cannot have: the release fails with 403 "Resource not accessible by integration" (it did
+# for e1a62dd, started on 1bf6784, which had changed themesh-android.yml).
 on:
   workflow_dispatch:
     inputs:

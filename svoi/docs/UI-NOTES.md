@@ -166,7 +166,10 @@ sees only its parent's content; Chromium also mirrors the edges of a backdrop bl
 Small repeated things (rows, tiles, chips) are translucent and lit at the edge but not blurred. A QR code stays opaque and sharp
 (`.qr`: no blur, no tint; a test looks at the pixels). Text on glass is judged from pixels by `web-dev/check-contrast.mjs`:
 a screenshot with the text made transparent gives what is really behind each piece of text; the result is a WCAG ratio
-(4.5:1, large text 3:1). When a token changes, run it.
+(4.5:1, large text 3:1). When a token changes, run it. The Mac app's see-through window (`--skin glass-vibrancy`, judged over
+the dullest and the brightest stand-in for the system material in each theme) needs coloured text of its own: over the dullest
+material a section's link straight on the window fell to 4.0:1 and the word on an offer's chip to 3.7:1, so there the accent, amber and
+danger text are darker in the light theme and lighter in the dark one than over the aurora.
 
 ## The look «Роса»
 
@@ -192,7 +195,7 @@ as `#rrggbb` and, for `rgb(var(--x-rgb) / alpha)`, as `r g b`; `--sky-stars`, `-
 
 *Legibility.* A vivid sky and white type do not go together, so the sky has a veil of its own deep colour over its upper two thirds (the horizon stays
 luminous; stronger by day, weaker at night), the glass is smoky (the sky's hue pulled hard towards night blue, the denser the brighter the sky:
-`--glass-fill` 40 % at night, 74 % at noon), little labels that would stand on the sky are little panes of glass, the "soft" accent fills are dark and
+`--glass-fill` 45 % at night, 79 % at noon), little labels that would stand on the sky are little panes of glass, the "soft" accent fills are dark and
 tinted, and "online" stays green whatever the accent is (`--ok`). The accent follows the sky: gold by day, peach at dusk, periwinkle at night, amber on the
 pale sky. `web-dev/check-contrast.mjs --skin rosa` judges every visible piece of text from pixels under nine skies (noon, the golden hour, sunset, the blue hour,
 night, and the three moods).
@@ -202,14 +205,15 @@ cyan fringe along the bottom and a pink one along the right, a glow inside), a s
 (navy under a blue day, violet at dusk). It is not a lens (no refraction), and glass never lies on glass (little things inside a pane are tinted wells, not panes).
 `backdrop-filter` is on the panes of the desktop and the browser; the phone app takes it off the cards, as in the glass look (8b of `css/glass.css`): a blur costs a
 pass per card and per frame, and the software renderer of an emulator did not survive it. So what shows through a card on the phone is the sky itself, unblurred, and the
-glass fill (40 % at night, up to 74 % at noon) has to hold the type up by itself; the contrast audit judges exactly that (`check-contrast.mjs --skin rosa` uses the
+glass fill (45 % at night, up to 79 % at noon: the page of a phone reaches the bright horizon at the foot of the screen now that the tab bar is gone) has to hold the type up by itself; the contrast audit judges exactly that (`check-contrast.mjs --skin rosa` uses the
 phone's user agent). The bars, the sheets and the menus keep their blur.
 
 *Type.* Manrope for the interface, Cormorant Garamond for the big numeral of Home (the number of devices that are on the line, lining figures, a glassy
 gradient with a thin rim; `aria-hidden`, the sentence under it says the same). Both are variable fonts (`fonts/*.woff2`, Latin + Cyrillic subsets, SIL
 OFL; the licence texts are next to them), fetched only in this look (`boot.js` preloads the interface face).
 
-*Motion* (`js/rosa.js`; `data-fx` on `<html>`: **full** does all of it, **calm** only fades the panes in, **still** nothing; Settings → Interface → Effects,
+*Motion* (`js/rosa.js`; `data-fx` on `<html>`: **full** does all of it, **calm** only fades the panes in, **still** nothing — no animation runs or waits
+to run (no delays: a delayed one sits in a composited layer of its own until it starts), and the rings of the radar are not drawn; Settings → Interface → Effects,
 `auto` = what the window says it can do (`fx=` above), else full unless the system says "Remove animations" (`prefers-reduced-motion`); and a screen that cannot keep
 up steps down by itself: the 2.5 seconds after a screen has been drawn are timed, under 24 frames a second (or a third of the frames missed) is a step from full to calm, and
 under 14 a second step to still; a choice made in Settings is never overruled). The panes that are on the screen when a screen opens rise into place one after another (36 px, scale .96 → 1, 70 ms apart, on the
@@ -227,17 +231,20 @@ and the first frame of the next start are the sky of the last time), and the men
 (`RosaGlass`: smoke in the sky's hue, a thick rim lit from the upper left, a spark). The launcher icon is a glass bead with the mark of The Mesh on a violet → pink
 dusk sky (an adaptive vector icon; the themed one is the same bead in one colour).
 
-*What was checked, and what was not.* In headless Chromium at phone sizes (360×780, 412×860) under the nine skies of the audit: `check-contrast.mjs --skin rosa` reads the
-contrast of every visible piece of text from pixels, and its last full run looked at 6942 pieces of text on 342 screens; two were short of WCAG AA (the link «Изменить имя» at the
-foot of the first screen of a tall phone at dusk, 3.6:1 — it is white now, with the accent as its underline — and the three first-screen routes were audited again: 54 screens, none
-short). The end-to-end tests (90), the mock smoke test (40 steps) and the sky checks (`check-sky.mjs`, 16) pass. On a real WebView (113) in the Android 14 emulator of CI the window
-starts, shows the look and is photographed by `GlassShotsTest` (the first screen, the menu, Home, the sheets, Settings, the sky by day, at night and in the evening mood, the page
-Interface with the sky picker; both themes), and the tests on the device pass with it.
+*What was checked, and what was not.* In headless Chromium at phone sizes (360×780, 412×860) and the size of a tablet (900×700) under the nine skies of the audit:
+`check-contrast.mjs --skin rosa` reads the contrast of every visible piece of text from pixels, and its last full run, with the file-manager panel, looked at 12278 pieces of text on
+513 screens: none short of WCAG AA. (The run before it found the name of the place above on a phone's top bar in the light mood, 4.1:1, now in full ink, and eight pieces of text on
+the tablet at the bright horizon at sunrise and sunset; see below.) The end-to-end tests (93), the mock smoke test (42 steps) and the sky checks (`check-sky.mjs`, 16) pass. On a real WebView (113) in the Android 14 emulator of CI the window
+starts, shows the look and is photographed by `GlassShotsTest` (the first screen, the menu, the form «Создать свою сеть», the overview, the place «Рядом», the invitation, Settings,
+the sky by day, at night and in the evening mood, the page Interface with the sky picker; both themes), and the tests on the device pass with it.
 
 Not checked: **a real phone**. That means a real GPU (what the blur on the bars, the sheets and the menus, the live sky and the lens cost it; the steps down to `calm` and `still` were
 tuned on software renderers); haptics (an emulator cannot feel them); the blur behind the native menus and dialogs (an emulator does not do it, so their fill there is dense, about
 85 %); the launcher icon on real launchers; any WebView but 113; and **the place of the sun**, which is a guess from the time zone, not the person's location. At the size of a tablet
-(900×700) 8 of 2263 pieces of text (labels at the bright horizon at the foot of a screen, at noon and in the evening mood) are between 4.0:1 and 4.5:1; a phone has none.
+(900×700) the audit found text at 4.2–4.5:1 at the bright horizon at sunrise and sunset (the words under the title of the start screen, the folder «Почта» at the foot of the
+places panel, the reason a letter was not delivered, the selected folder of Mail); on a wide screen the start screen's words now have a soft veil of the sky's deep colour behind
+them (a phone gets no new layer), the places panel and the sheets of Mail and Chat grow denser towards their foot (`--rz-foot`), the pink of an error is lighter and the
+selected pane less white — none is short now. A real tablet was not checked.
 
 *The emulator and the page Interface.* On the usual software graphics of the emulator (`swiftshader_indirect`) the emulator's own process died (a segfault in its render thread,
 seen in `dmesg`; not memory, not the app) about a second after the page with the sky picker opened. It depended on the size of the picker's labels, not on gradients, shadows,
@@ -245,6 +252,16 @@ blur, animation, the aspect ratio or the clip (four rounds of variants are in th
 `-gpu swangle_indirect` (ANGLE over SwiftShader), which is several times slower: the whole suite on it took 27 minutes, and a second run did not finish in 40. The cause inside
 the emulator was not found, and what a real GPU does with the page was not checked (it is the emulator's process that died, not the WebView or the app, so there is no reason to
 expect the same on a phone — but that is a reason, not a check).
+
+*The emulator and the pages of the panel.* After the change to the file-manager panel the same emulator died again one to four seconds after a page had loaded (the start
+screen; the overview right after a mesh was made; the start screen in the light mood): both jobs on the usual graphics were red in every run (dc1c5d8, 49cdabc, aec11b7). Two
+things in the page made it worse, and are fixed: while nobody was around, the start screen showed two radars (one in the head of the section «Рядом», one in its empty list, with
+nearly the same words — it has one again, as the version that passed had), and in `still` an animation was cut short but its delay was not, so the second ring of the radar
+waited 1.2 s in a composited layer of its own and pulled what lay over it into layers too (in `still` nothing waits now, and the radar has no rings). After that the tests job
+passed twice (e1a62dd, f0759a1) and the pictures job once in two (f0759a1 lost the emulator a moment after the first screen loaded). On ANGLE the emulator never died, so the
+pictures job draws there too (on 1bf6784 all three jobs were green: 17 pictures, the pictures job took 6 minutes there); the tests stay on the usual graphics, where the two nearby tests keep their time limits. What dies inside the emulator is still not
+known, and any change of the look can touch it again. (The layers of a page can be compared with Chromium's DevTools protocol, `LayerTree`, with the window's user agent:
+that is how the second radar and the waiting ring were found.)
 
 ## The file manager: one panel instead of menus
 
