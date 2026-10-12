@@ -83,6 +83,16 @@
       ]
     },
     {
+      "slug": "aston-martinlaan-41-oud-beijerland",
+      "title": "Aston Martinlaan 41, Oud-Beijerland",
+      "city": "Oud-Beijerland",
+      "price": "€ 1.500.000",
+      "url": "https://www.fundainbusiness.nl/kantoor/oud-beijerland/object-44462990-aston-martinlaan-41/",
+      "reports": [
+        "report-2026-10-12-diemen-oud-beijerland-ridderkerk.json"
+      ]
+    },
+    {
       "slug": "avignonlaan-47-eindhoven",
       "title": "Avignonlaan 47, Eindhoven",
       "city": "Eindhoven",
@@ -315,6 +325,16 @@
       ]
     },
     {
+      "slug": "jan-van-der-heijdenstraat-38-oud-beijerland",
+      "title": "Jan van der Heijdenstraat 38, Oud-Beijerland",
+      "city": "Oud-Beijerland",
+      "price": "€ 2.850.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/oud-beijerland/object-43264440-jan-van-der-heijdenstraat-38/",
+      "reports": [
+        "report-2026-10-12-diemen-oud-beijerland-ridderkerk.json"
+      ]
+    },
+    {
       "slug": "keurenplein-51-53-amsterdam",
       "title": "Keurenplein 51-53, Amsterdam",
       "city": "Amsterdam",
@@ -491,6 +511,16 @@
       ]
     },
     {
+      "slug": "nikkelstraat-11-13-ridderkerk",
+      "title": "Nikkelstraat 11-13, Ridderkerk",
+      "city": "Ridderkerk",
+      "price": "€ 1.650.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/ridderkerk/object-44530920-nikkelstraat-11-13/",
+      "reports": [
+        "report-2026-10-12-diemen-oud-beijerland-ridderkerk.json"
+      ]
+    },
+    {
       "slug": "ondernemingsweg-49-57-uithoorn",
       "title": "Ondernemingsweg 49-57, Uithoorn",
       "city": "Uithoorn",
@@ -580,6 +610,16 @@
       "url": "https://www.fundainbusiness.nl/en/belegging/utrecht/object-44421368-st-ludgerusstraat-365-367/",
       "reports": [
         "report-2026-08-03.json"
+      ]
+    },
+    {
+      "slug": "stammerkamp-19-diemen",
+      "title": "Stammerkamp 19, Diemen",
+      "city": "Diemen",
+      "price": "€ 2.650.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/diemen/object-80928637-stammerkamp-19/",
+      "reports": [
+        "report-2026-10-12-diemen-oud-beijerland-ridderkerk.json"
       ]
     },
     {
@@ -694,5 +734,5 @@
       ]
     }
   ],
-  "updated": "2026-10-05"
+  "updated": "2026-10-12"
 }

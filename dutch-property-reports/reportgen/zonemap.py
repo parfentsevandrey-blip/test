@@ -344,9 +344,13 @@ def _legend(page, kinds: dict, spec: dict, f: PanelFonts, corner: str, box) -> N
 # лист
 # --------------------------------------------------------------------------
 def _map_image(map_spec: dict, size: tuple[int, int], sheet: dict, geo: dict, kinds: dict,
-               f: "PanelFonts") -> tuple[Image.Image, MapFrame]:
+               f: "PanelFonts", under=None) -> tuple[Image.Image, MapFrame]:
     """Карта с контурами, номерами и подписями — отдельной картинкой, чтобы
-    всё нарисованное обрезалось по её рамке (это нужно и для врезки)."""
+    всё нарисованное обрезалось по её рамке (это нужно и для врезки).
+
+    ``under(img, frame)`` рисует ещё один слой поверх контуров, но под знаками
+    и подписями — так граница города на карте полосы «Почему выбран» не режет
+    подписи центров обработки данных."""
     frame = MapFrame(map_spec, (0, 0, *size))
     print(f"{sheet['key']}: масштаб подписей ×{frame.scale * frame.k:.2f}", file=sys.stderr)
     img = frame.render()
@@ -357,6 +361,8 @@ def _map_image(map_spec: dict, size: tuple[int, int], sheet: dict, geo: dict, ki
         _paint(img, frame, geo[entry["n"]], kinds[entry["kind"]])
     for site in sheet.get("sites", []):
         _paint(img, frame, geo[site["label"]], kinds["site"])
+    if under:
+        under(img, frame)
 
     inside = lambda x, y: _px(4) < x < size[0] - _px(4) and _px(4) < y < size[1] - _px(4)
     draw = ImageDraw.Draw(img)

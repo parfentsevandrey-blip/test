@@ -229,8 +229,11 @@ def why_map(obj: dict, why: dict, size_px: tuple[int, int], dest: Path) -> Path:
     territory = next(t for t in selection["territories"] if t["key"] == key)
 
     if territory.get("whole"):
-        sheet = {"key": key, "entries": [], "sites": [], "points": []}
-        focus = [(lat, lon)]
+        # у территории целиком листа нет: знаки задаёт сама полоса —
+        # {"label", "at": [lat, lon], "side"}, и все они входят в кадр
+        points = why.get("points", [])
+        sheet = {"key": key, "entries": [], "sites": [], "points": points}
+        focus = [(lat, lon)] + [tuple(p["at"]) for p in points]
         span_m = why.get("span_m", 6000)
     else:
         sheet = _relabel(data["sheets"][key], why.get("labels") or {})
@@ -278,13 +281,17 @@ def why_map(obj: dict, why: dict, size_px: tuple[int, int], dest: Path) -> Path:
                 "center_lon": cx / tile_n * 360.0 - 180.0}
 
     fonts = zonemap.PanelFonts()
-    img, frame = zonemap._map_image(map_spec, (w, h), sheet, geo, spec["kinds"], fonts)
-    draw = ImageDraw.Draw(img)
+    under = None
     if territory.get("whole"):
+        # граница города — пунктиром, под знаками и подписями
         style = {"fill": "16233A", "alpha": 0, "outline": "16233A", "dashed": True}
-        for g in geo.values():
-            zonemap._paint(img, frame, g, style)
-        draw = ImageDraw.Draw(img)
+
+        def under(img, frame):
+            for g in geo.values():
+                zonemap._paint(img, frame, g, style)
+    img, frame = zonemap._map_image(map_spec, (w, h), sheet, geo, spec["kinds"], fonts,
+                                    under=under)
+    draw = ImageDraw.Draw(img)
     px, py = frame.to_page(lat, lon)
     maps._pin(draw, px, py, 3)
     zonemap._label(draw, (px, py - _px(9.5)), "Объект", fonts.map_label, INK, "right", 3.0)
