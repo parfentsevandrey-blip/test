@@ -104,4 +104,37 @@ public class LocalAddrsTest {
             assertFalse(line.startsWith("fe80"));
         }
     }
+
+    private static LocalAddrs.Route route(String net, int prefix, boolean around) throws Exception {
+        return new LocalAddrs.Route(ip(net), prefix, around);
+    }
+
+    /** VPN, который ставит 0.0.0.0/0, забирает и домашнюю сеть; тот, что пускает её мимо себя, на её адреса маршрутов не ставит. */
+    @Test
+    public void aVpnTakesTheHomeNetworkWhenItsRoutesCoverIt() throws Exception {
+        List<LocalAddrs.Addr> wifi = Arrays.asList(addr("192.168.1.50", 24, true), addr("10.8.0.2", 32, false));
+        assertTrue(LocalAddrs.vpnTakesLan(Arrays.asList(route("0.0.0.0", 0, false)), wifi));
+        assertTrue(LocalAddrs.vpnTakesLan(Arrays.asList(route("0.0.0.0", 1, false), route("128.0.0.0", 1, false)), wifi));
+        // «обход локальной сети»: маршруты только на внешние адреса (в списке нет 192.168.0.0/16)
+        assertFalse(LocalAddrs.vpnTakesLan(Arrays.asList(route("1.0.0.0", 8, false), route("128.0.0.0", 2, false), route("193.0.0.0", 8, false),
+                route("194.0.0.0", 7, false)), wifi));
+        // Android 13+: 0.0.0.0/0 и исключение для домашней сети — точнее, значит мимо VPN
+        assertFalse(LocalAddrs.vpnTakesLan(Arrays.asList(route("0.0.0.0", 0, false), route("192.168.0.0", 16, true)), wifi));
+        // исключение шире, а маршрут в VPN точнее — VPN
+        assertTrue(LocalAddrs.vpnTakesLan(Arrays.asList(route("192.168.0.0", 16, true), route("192.168.1.0", 24, false)), wifi));
+        // маршруты IPv6 к адресу IPv4 отношения не имеют
+        assertFalse(LocalAddrs.vpnTakesLan(Arrays.asList(route("::", 0, false)), wifi));
+        // без Wi‑Fi (только мобильный интернет) домашней сети нет
+        assertFalse(LocalAddrs.vpnTakesLan(Arrays.asList(route("0.0.0.0", 0, false)), Arrays.asList(addr("10.20.30.40", -1, false))));
+    }
+
+    /** Пометки о VPN — не адреса: Go-часть читает их отдельно, старая — просто пропускает. */
+    @Test
+    public void theVpnMarksAreNoAddresses() throws Exception {
+        assertEquals("vpn", LocalAddrs.VPN);
+        assertEquals("vpn-lan", LocalAddrs.VPN_TAKES_LAN);
+        for (String mark : Arrays.asList(LocalAddrs.VPN, LocalAddrs.VPN_TAKES_LAN)) {
+            assertFalse(mark.matches(".*[0-9.:/].*"));
+        }
+    }
 }

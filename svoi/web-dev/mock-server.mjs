@@ -25,7 +25,8 @@
 //   /__mock/removed                 an admin removed this device: back to onboarding with `removed`
 //   /__mock/sw?bump=1               pretend a new binary: sw.js gets a new VERSION (as after an upgrade)
 //   /__mock/portmap?state=mapped    router port mapping: mapped|searching|unavailable|private
-//   /__mock/lan?state=blocked[&os=darwin]  discovery on the local network: ok|blocked|failed|no-network (os: what this device says it runs)
+//   /__mock/lan?state=blocked[&os=darwin][&vpn=lan]  discovery on the local network: ok|blocked|failed|no-network (os: what this device
+//                                          says it runs; vpn: off|on|lan — a VPN that goes around the home network, or takes it)
 //   /__mock/nearby?add=macbook&os=darwin   a device with The Mesh shows up nearby: &mesh=Дом — in a mesh, can add this one
 //                                   (listed only while this one is not in a mesh); &kind=new — not in a mesh (listed always);
 //                                   remove=<name|id>, clear=1
@@ -2616,9 +2617,12 @@ route("ANY", "/__mock/portmap", (req, res, p, q) => {
 route("ANY", "/__mock/lan", (req, res, p, q) => {
   const st = q.get("state") || "ok";
   if (!LAN_STATES.includes(st)) throw E.invalid("state must be " + LAN_STATES.join("|"));
+  const vpn = q.get("vpn") || "off";
+  if (!["off", "on", "lan"].includes(vpn)) throw E.invalid("vpn must be off|on|lan");
   if (q.get("os")) W.self.os = q.get("os");
   W.settings.lan = true;
   W.self.lan = lanFor(st);
+  if (vpn !== "off") W.self.lan.vpn = vpn;
   broadcast("self", W.self);
   ok(res, { lan: W.self.lan });
 });

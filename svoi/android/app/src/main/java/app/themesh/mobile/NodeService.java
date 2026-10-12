@@ -7,11 +7,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.net.ConnectivityManager;
+import android.net.IpPrefix;
 import android.net.LinkAddress;
 import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.net.RouteInfo;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -114,6 +116,9 @@ public class NodeService extends Service {
     private WifiManager.MulticastLock multicast;
     private ConnectivityManager connectivity;
     private ConnectivityManager.NetworkCallback networkCallback;
+    // Сеть, через которую ходит само приложение: VPN, когда он включён. Его включение и выключение видно только здесь
+    // (обычный запрос сетей VPN не показывает), а от него зависит пометка о VPN в local-addrs.txt.
+    private ConnectivityManager.NetworkCallback defaultCallback;
     private String lastAddrs; // null: файл ещё не писали (первый раз пишем всегда, даже пустой)
     private String lastStatus = "";
 
@@ -206,6 +211,14 @@ public class NodeService extends Service {
                 // уже снят
             }
             networkCallback = null;
+        }
+        if (defaultCallback != null) {
+            try {
+                connectivity.unregisterNetworkCallback(defaultCallback);
+            } catch (RuntimeException ignored) {
+                // уже снят
+            }
+            defaultCallback = null;
         }
         if (multicast != null && multicast.isHeld()) {
             multicast.release();
@@ -501,6 +514,28 @@ public class NodeService extends Service {
             log.w("network callback: " + e);
             networkCallback = null;
         }
+        defaultCallback = new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(Network network) {
+                scheduleAddrRefresh();
+            }
+
+            @Override
+            public void onLinkPropertiesChanged(Network network, LinkProperties properties) {
+                scheduleAddrRefresh(); // маршруты VPN: пускает ли он домашнюю сеть мимо себя
+            }
+
+            @Override
+            public void onLost(Network network) {
+                scheduleAddrRefresh();
+            }
+        };
+        try {
+            connectivity.registerDefaultNetworkCallback(defaultCallback);
+        } catch (RuntimeException e) {
+            log.w("default network callback: " + e);
+            defaultCallback = null;
+        }
     }
 
     private void trackNetwork(Network network, LinkProperties properties) {
@@ -551,6 +586,10 @@ public class NodeService extends Service {
             all.addAll(list);
         }
         List<String> lines = LocalAddrs.lines(all);
+        String vpn = vpnMark(all);
+        if (vpn != null) {
+            lines.add(vpn);
+        }
         String content = LocalAddrs.format(lines);
         if (content.equals(lastAddrs)) {
             return;
@@ -561,6 +600,34 @@ public class NodeService extends Service {
             log.i("local addresses updated (" + lines.size() + "): " + String.join(" ", lines));
         } catch (IOException e) {
             log.w("cannot write local-addrs.txt: " + e);
+        }
+    }
+
+    /**
+     * Пометка о VPN для local-addrs.txt: null, если сеть приложения — не VPN; иначе «vpn» или «vpn-lan» — по маршрутам
+     * VPN (см. LocalAddrs.vpnTakesLan).
+     */
+    private String vpnMark(List<LocalAddrs.Addr> addrs) {
+        try {
+            Network active = connectivity == null ? null : connectivity.getActiveNetwork();
+            NetworkCapabilities caps = active == null ? null : connectivity.getNetworkCapabilities(active);
+            if (caps == null || !caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+                return null;
+            }
+            LinkProperties lp = connectivity.getLinkProperties(active);
+            List<LocalAddrs.Route> routes = new ArrayList<>();
+            if (lp != null) {
+                for (RouteInfo r : lp.getRoutes()) {
+                    IpPrefix d = r.getDestination();
+                    // с Android 13 исключения («мимо VPN») — тоже маршруты, только другого типа
+                    boolean around = Build.VERSION.SDK_INT >= 33 && r.getType() != RouteInfo.RTN_UNICAST;
+                    routes.add(new LocalAddrs.Route(d.getAddress(), d.getPrefixLength(), around));
+                }
+            }
+            return LocalAddrs.vpnTakesLan(routes, addrs) ? LocalAddrs.VPN_TAKES_LAN : LocalAddrs.VPN;
+        } catch (RuntimeException e) {
+            log.w("cannot look at the VPN: " + e);
+            return null;
         }
     }
 }

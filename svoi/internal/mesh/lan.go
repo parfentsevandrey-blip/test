@@ -66,6 +66,10 @@ type LANStatus struct {
 	// "Local Network" permission of the app is off) or "failed" (some other error, see Detail).
 	Problem string `json:"problem,omitempty"`
 	Detail  string `json:"detail,omitempty"` // the system's own words
+	// VPN is "" without a VPN, "on" when traffic to the internet goes through a VPN (the local network most likely goes
+	// around it), or "lan" when the VPN takes the local network's traffic too (a phone's app can tell): then what this
+	// device sends to the devices nearby reaches them only if the VPN lets local addresses go around it (see magic.VPN).
+	VPN string `json:"vpn,omitempty"`
 }
 
 type lanDiscovery struct {
@@ -83,6 +87,8 @@ type lanDiscovery struct {
 	logged       string // the networks as last written to the log
 
 	sendMu sync.Mutex // one sender at a time: the network multicast leaves through is a setting of the socket
+
+	dropGroup bool // tests: what goes to the group and to broadcast addresses is lost, as in a VPN that swallows it
 }
 
 // beaconSigned is what a device signs: this very beacon's nonce, its id and its port.
@@ -214,11 +220,10 @@ func (l *lanDiscovery) sendVia(ln magic.LocalNet) error {
 func (l *lanDiscovery) round(joined map[netip.Addr]bool) {
 	l.n.nearbyExpire()
 	l.n.updateAnonymous() // whether a member can add a device depends on whether an administrator is online
-	root := l.n.Root()
 	advert := l.n.nearbyAdvert()
 	newcomer := l.n.nearbyNewcomerAdvert()
 	var query []byte
-	if root == nil || l.n.NearbyLooking() {
+	if l.n.Root() == nil || l.n.NearbyLooking() {
 		query = nearbyQueryPacket()
 	}
 	nets := magic.LocalNets()
@@ -236,13 +241,8 @@ func (l *lanDiscovery) round(joined map[netip.Addr]bool) {
 			}
 		}
 		var packets [][]byte
-		if root != nil {
-			l.n.mu.RLock()
-			udpPort := l.n.udpPort
-			l.n.mu.RUnlock()
-			if beacon := encodeBeacon(root.LANKey(), l.n.device(), udpPort); beacon != nil { // fresh nonce per send: unlinkable
-				packets = append(packets, beacon)
-			}
+		if beacon := l.beacon(); beacon != nil { // fresh nonce per send: unlinkable
+			packets = append(packets, beacon)
 		}
 		if advert != nil {
 			packets = append(packets, advert)
@@ -270,10 +270,22 @@ func (l *lanDiscovery) round(joined map[netip.Addr]bool) {
 	}
 }
 
+// beacon is this device's beacon to the mesh it is in (a fresh nonce each time), or nil outside a mesh.
+func (l *lanDiscovery) beacon() []byte {
+	root := l.n.Root()
+	if root == nil {
+		return nil
+	}
+	l.n.mu.RLock()
+	udpPort := l.n.udpPort
+	l.n.mu.RUnlock()
+	return encodeBeacon(root.LANKey(), l.n.device(), udpPort)
+}
+
 // sendOn sends the packets on the network ln: to the group, and to the network's broadcast address (some Wi-Fi access
 // points drop multicast).
 func (l *lanDiscovery) sendOn(ln magic.LocalNet, packets [][]byte) (sent, failed int, firstErr error) {
-	if len(packets) == 0 {
+	if len(packets) == 0 || l.dropGroup {
 		return 0, 0, nil
 	}
 	l.sendMu.Lock()
@@ -317,7 +329,7 @@ func (l *lanDiscovery) sendTo(pkt []byte, to netip.AddrPort, nets []magic.LocalN
 
 // record keeps what the last round did, for LANStatus, and writes a line to the log when it changes.
 func (l *lanDiscovery) record(nets []magic.LocalNet, sent, failed int, firstErr error) {
-	st := LANStatus{Enabled: true}
+	st := LANStatus{Enabled: true, VPN: magic.VPN()}
 	names := make([]string, 0, len(nets))
 	for _, ln := range nets {
 		names = append(names, ln.String())
@@ -348,6 +360,16 @@ func (l *lanDiscovery) record(nets []magic.LocalNet, sent, failed int, firstErr 
 			l.n.log.Info("LAN discovery: no local network to announce on")
 		} else {
 			l.n.log.Info("LAN discovery announcing", "networks", desc)
+		}
+	}
+	if st.VPN != l.status.VPN {
+		switch st.VPN {
+		case "lan":
+			l.n.log.Warn("LAN discovery: a VPN takes the local network's traffic; devices nearby get what this device sends only if the VPN lets local addresses go around it")
+		case "on":
+			l.n.log.Info("LAN discovery: a VPN is on (the local network goes around it unless the VPN blocks it)")
+		default:
+			l.n.log.Info("LAN discovery: no VPN")
 		}
 	}
 	if st.Problem != l.status.Problem {
@@ -472,15 +494,25 @@ func (n *Node) LANStatus() LANStatus {
 // heard handles one packet from the local network: a member's beacon, or a packet of the devices nearby (nearby.go): an
 // announcement of a device that can add devices, one of a device that is not in a mesh, a question who is around, an
 // invitation, or a "no" to one.
+//
+// A device heard is answered straight at its address with what this device would announce to it: its beacon, its
+// announcement. What goes to the group and to broadcast addresses does not always arrive — a VPN on a phone often
+// takes it (while it lets plain local addresses through), and some Wi-Fi access points drop it — and one way that
+// works is then enough for both devices to find each other. Once per short while per address (nearbyShouldReply), so
+// two devices that both hear each other do not answer each other's answers for ever.
 func (l *lanDiscovery) heard(b []byte, from netip.AddrPort) {
 	if len(b) == 0 || !fromLocalNetwork(from.Addr()) {
 		return
 	}
 	switch b[0] {
 	case nearbyAnnounceMarker:
-		l.n.nearbyAnnounced(b, from)
+		if l.n.nearbyAnnounced(b, from) {
+			l.answer(from, l.n.nearbyNewcomerAdvert()) // a device that is not in a mesh: so that it can be invited
+		}
 	case nearbyNewcomerMarker:
-		l.n.nearbyNewcomerHeard(b, from)
+		if l.n.nearbyNewcomerHeard(b, from) {
+			l.answer(from, l.n.nearbyAdvert(), l.n.nearbyNewcomerAdvert())
+		}
 	case nearbyInviteMarker:
 		l.n.nearbyInvited(b, from)
 	case nearbyDeclineMarker:
@@ -498,32 +530,54 @@ func (l *lanDiscovery) heard(b []byte, from netip.AddrPort) {
 			}
 		}
 	default:
-		l.n.lanHeard(b, from)
+		if l.n.lanHeard(b, from) {
+			l.answer(from, l.beacon()) // a member that is not connected yet: so that it knows where this device is too
+		}
 	}
 }
 
-// lanHeard handles one received beacon.
-func (n *Node) lanHeard(b []byte, from netip.AddrPort) {
+// answer sends the packets (nil ones are skipped) straight to a device that was heard, unless it was answered a moment ago.
+func (l *lanDiscovery) answer(to netip.AddrPort, packets ...[]byte) {
+	var out [][]byte
+	for _, p := range packets {
+		if p != nil {
+			out = append(out, p)
+		}
+	}
+	if len(out) == 0 || !to.IsValid() || !l.n.nearbyShouldReply(to.Addr()) {
+		return
+	}
+	l.sendMu.Lock()
+	defer l.sendMu.Unlock()
+	for _, p := range out {
+		_, _ = l.conn.WriteToUDPAddrPort(p, to)
+	}
+}
+
+// lanHeard handles one received beacon; true when it came from a member of this mesh that is not connected.
+func (n *Node) lanHeard(b []byte, from netip.AddrPort) bool {
 	root := n.Root()
 	if root == nil || !fromLocalNetwork(from.Addr()) {
-		return
+		return false
 	}
 	id, port, ok := decodeBeacon(root.LANKey(), b)
 	if !ok || id == n.device().ID {
-		return
+		return false
 	}
 	p := n.Peer(id)
 	mg := n.Magic()
 	if p == nil || mg == nil || port == 0 {
-		return // an unknown device: wait until the member list tells us about it
+		return false // an unknown device: wait until the member list tells us about it
 	}
 	addr := netip.AddrPortFrom(from.Addr().Unmap(), uint16(port))
 	mg.AddCandidates(id, []netip.AddrPort{addr}, magic.SrcLAN)
-	if !p.Online() {
-		p.mu.Lock()
-		p.nextDial = time.Now()
-		p.mu.Unlock()
-		mg.Poke(id)
-		n.kick()
+	if p.Online() {
+		return false
 	}
+	p.mu.Lock()
+	p.nextDial = time.Now()
+	p.mu.Unlock()
+	mg.Poke(id)
+	n.kick()
+	return true
 }

@@ -248,7 +248,8 @@ function PortmapStatus({ pm }) {
 function LanStatus({ lan, os }) {
   if (!lan || !lan.enabled) return null;
   const p = lan.problem || "";
-  const tone = p === "blocked" || p === "failed" ? "warn" : p === "no-network" ? "neutral" : "ok";
+  const tone = p === "blocked" || p === "failed" || lan.vpn === "lan" ? "warn" : p === "no-network" ? "neutral" : "ok";
+  const vpn = lan.vpn === "lan" ? t("lan.vpnLan") : lan.vpn === "on" ? t("lan.vpnOn") : "";
   const text = p === "no-network" ? t("lan.noNetwork")
     : p === "blocked" ? t(os === "darwin" ? "lan.blockedMac" : "lan.blocked")
     : p === "failed" ? t("lan.failed")
@@ -257,6 +258,7 @@ function LanStatus({ lan, os }) {
     <span class="pmap__icon"><${Icon} name=${tone === "ok" ? "checkCircle" : tone === "warn" ? "alert" : "info"} size=${16} /></span>
     <div class="grow pmap__body">
       <span>${text}</span>
+      ${vpn && html`<span data-testid="lan-vpn">${vpn}</span>`}
       ${p === "failed" && lan.detail && html`<span class="pmap__diag mono xsmall">${lan.detail}</span>`}
     </div>
   </div>`;

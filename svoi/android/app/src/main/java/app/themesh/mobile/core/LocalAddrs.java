@@ -27,6 +27,10 @@ import java.util.TreeMap;
  * (мобильный интернет, VPN): его программа только сообщает другим как «здесь меня можно найти».
  * В файл попадает каждый адрес каждого работающего интерфейса, кроме петлевых, «link-local» и групповых
  * (так же отбирает и сама программа).
+ *
+ * <p>Последней строкой — включён ли VPN: {@code vpn}, если он пускает домашнюю сеть мимо себя, {@code vpn-lan}, если
+ * забирает и её (см. {@link #vpnTakesLan}). Тогда то, что телефон шлёт устройствам рядом, доходит до них, только если
+ * VPN-приложение само пропускает локальные адреса, и программа говорит об этом человеку.
  */
 public final class LocalAddrs {
     private LocalAddrs() {
@@ -50,6 +54,63 @@ public final class LocalAddrs {
         public String toString() {
             return line(this);
         }
+    }
+
+    /** Пометка: VPN включён и пускает домашнюю сеть мимо себя. */
+    public static final String VPN = "vpn";
+    /** Пометка: VPN включён и забирает и трафик домашней сети. */
+    public static final String VPN_TAKES_LAN = "vpn-lan";
+
+    /** Один маршрут VPN: куда он (сеть и длина префикса) и не исключение ли это — «мимо VPN» (Android 13+). */
+    public static final class Route {
+        public final InetAddress network;
+        public final int prefix;
+        public final boolean around;
+
+        public Route(InetAddress network, int prefix, boolean around) {
+            this.network = network;
+            this.prefix = prefix;
+            this.around = around;
+        }
+    }
+
+    /**
+     * Забирает ли VPN трафик домашней сети: для какого-нибудь адреса телефона в общей сети (Wi‑Fi, Ethernet) самый
+     * точный из маршрутов VPN, который его покрывает, ведёт в VPN, а не мимо. VPN-приложение, которое пускает локальную
+     * сеть мимо себя, не ставит маршрутов на её адреса (или ставит исключения); остальные ставят 0.0.0.0/0.
+     */
+    public static boolean vpnTakesLan(List<Route> routes, Collection<Addr> addrs) {
+        for (Addr a : addrs) {
+            if (a == null || !a.shared || a.prefix < 1 || a.address == null || a.address.getAddress().length != 4) {
+                continue;
+            }
+            Route best = null;
+            for (Route r : routes) {
+                if (r != null && r.network != null && covers(r, a.address) && (best == null || r.prefix > best.prefix)) {
+                    best = r;
+                }
+            }
+            if (best != null && !best.around) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Покрывает ли маршрут адрес (одного семейства; первые prefix бит совпадают). */
+    static boolean covers(Route r, InetAddress a) {
+        byte[] n = r.network.getAddress();
+        byte[] x = a.getAddress();
+        if (n.length != x.length || r.prefix < 0 || r.prefix > n.length * 8) {
+            return false;
+        }
+        for (int bit = 0; bit < r.prefix; bit++) {
+            int mask = 0x80 >> (bit % 8);
+            if ((n[bit / 8] & mask) != (x[bit / 8] & mask)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** Годится ли адрес как «наш адрес в сети». */

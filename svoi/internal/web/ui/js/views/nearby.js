@@ -35,15 +35,30 @@ export function spaced(code) {
 
 /**
  * What to say when discovery of devices on the home network does not work (self.lan, from the node): the system refuses
- * to send there (on a Mac: the "Local Network" permission is off) or it fails some other way. Nothing for the ordinary
- * "not on Wi-Fi right now".
+ * to send there (on a Mac: the "Local Network" permission is off), it fails some other way, or a VPN takes the home
+ * network's traffic (a phone can tell: self.lan.vpn is "lan"). Nothing for the ordinary "not on Wi-Fi right now", nor for
+ * a VPN that most likely lets the home network go around it ("on": said only while nobody is found, see searching).
  */
 export function lanNotice(self) {
   const lan = self && self.lan;
-  if (!lan || (lan.problem !== "blocked" && lan.problem !== "failed")) return null;
+  if (!lan) return null;
   if (lan.problem === "failed") return { text: t("home.att.lanFailed"), sub: lan.detail || "" };
-  const mac = self.os === "darwin";
-  return { text: t(mac ? "home.att.lanBlockedMac" : "home.att.lanBlocked"), sub: t(mac ? "home.att.lanBlockedMacHow" : "home.att.lanBlockedHow") };
+  if (lan.problem === "blocked") {
+    const mac = self.os === "darwin";
+    return { text: t(mac ? "home.att.lanBlockedMac" : "home.att.lanBlocked"), sub: t(mac ? "home.att.lanBlockedMacHow" : "home.att.lanBlockedHow") };
+  }
+  if (lan.vpn === "lan") return { text: t("home.att.lanVpn"), sub: t("home.att.lanVpnHow") };
+  return null;
+}
+
+/**
+ * While a VPN takes the home network's traffic, what to do about it — under a list of devices too: they are heard, but
+ * they get what this device sends only if the VPN lets local addresses through.
+ */
+function VpnNote({ self }) {
+  if (!self || !self.lan || self.lan.vpn !== "lan") return null;
+  return html`<p class="nb-vpn" role="note" data-testid="nearby-vpn"><${Icon} name="alert" size=${16} />
+    <span><strong>${t("home.att.lanVpn")}.</strong> ${t("home.att.lanVpnHow")}</span></p>`;
 }
 
 /**
@@ -244,10 +259,12 @@ export function NearbyList({ limit = 0, empty = null }) {
 /** While nobody is around, what to say: that the app is looking (and the hint), or what is wrong when it cannot. */
 function searching(self, hint) {
   const trouble = lanNotice(self);
-  const noNetwork = !!(self && self.lan && self.lan.problem === "no-network");
+  const lan = (self && self.lan) || {};
+  const noNetwork = lan.problem === "no-network";
   return {
     title: trouble ? trouble.text : noNetwork ? t("lan.noNetwork") : t("nearby.searching"),
-    text: trouble ? trouble.sub : noNetwork ? "" : hint,
+    // a VPN is on, and nobody is found: the likeliest reason, and what to do
+    text: trouble ? trouble.sub : noNetwork ? "" : lan.vpn === "on" ? t("nearby.vpnHint") : hint,
   };
 }
 
@@ -314,7 +331,7 @@ export function NearbySection({ self }) {
           : html`<p class="nearby__sub" role="status" aria-live="polite" data-testid="nearby-searching">${say.title}</p>`}
       </div>
     </header>
-    ${found ? html`<${NearbyList} />` : html`<p class="nearby__hint">${say.text}</p>`}
+    ${found ? html`<${NearbyList} /><${VpnNote} self=${self} />` : html`<p class="nearby__hint">${say.text}</p>`}
     <${NearbyName} self=${self} name=${name} setName=${setName} />
   </section>`;
 }
@@ -342,6 +359,7 @@ export function NearbyView() {
     <${PageHeader} title=${t("nav.nearby")} subtitle=${t("nearby.placeSub")} />
     <section class="nearby nearby--place" data-testid="nearby" data-found=${String(nb.devices.length)}>
       <${NearbyList} empty=${html`<${Searching} self=${self} hint=${t("nearby.searchingHintMember")} />`} />
+      ${nb.devices.length > 0 && html`<${VpnNote} self=${self} />`}
       <p class="faint small nb-visible">${nb.visible ? t("nearby.visibleOn") : t("nearby.visibleOff")} <a href="#/settings/network">${t("nearby.visibleWhere")}</a></p>
     </section>
     ${!nb.canAdd && html`<${Callout} tone="info" icon="info" class="mt-4" data-testid="nearby-no-admin">${t("nearby.noAdminText")}</${Callout}>`}

@@ -246,6 +246,11 @@ if (!external) {
     await p.waitForSelector(`${sec}[data-found="2"]`);
     await onb.hook("/__mock/nearby?clear=1");
     await p.waitForSelector(`${sec}[data-found="0"]`);
+    // a VPN on, nobody found: the likeliest reason, and what to do; one that takes the home network: said plainly
+    await onb.hook("/__mock/lan?state=ok&vpn=on");
+    await p.waitForSelector(`${sec}:has-text('Включён VPN. Если устройства рядом не находятся')`);
+    await onb.hook("/__mock/lan?state=ok&vpn=lan");
+    await p.waitForSelector(`${sec}:has-text('VPN забирает трафик домашней сети')`);
     // the system forbids looking around: the section says so and says what to do (instead of "looking…" for ever)
     await onb.hook("/__mock/lan?state=blocked&os=darwin");
     await p.waitForSelector(`${sec}:has-text('macOS не пускает The Mesh в домашнюю сеть')`);
@@ -905,6 +910,17 @@ if (srv) {
     await page.waitForSelector("[data-testid=home-att-lan]:has-text('network is unreachable')");
     // ... and it goes away when the discovery works again; an absent Wi-Fi is not a problem to nag about
     await srv.hook("/__mock/lan?state=no-network");
+    await page.waitForSelector("[data-testid=home-att-lan]", { state: "detached" });
+    // a VPN that takes the home network's traffic (a phone can tell): Home says so and names the settings of VPN apps
+    await srv.hook("/__mock/lan?state=ok&vpn=lan");
+    await page.waitForSelector("[data-testid=home-att-lan]:has-text('VPN забирает трафик домашней сети')");
+    if (!/Bypass LAN/.test(await page.textContent("[data-testid=home-att-lan]"))) throw new Error("the VPN notice does not say what to switch on");
+    await page.open("#/settings/network");
+    await page.waitForSelector("[data-testid=lan-status][data-state=ok] [data-testid=lan-vpn]:has-text('VPN забирает трафик')");
+    // a VPN that most likely goes around the home network is no trouble for Home; Settings mentions it
+    await srv.hook("/__mock/lan?state=ok&vpn=on");
+    await page.waitForSelector("[data-testid=lan-vpn]:has-text('Включён VPN')");
+    await page.open("#/home");
     await page.waitForSelector("[data-testid=home-att-lan]", { state: "detached" });
     await srv.hook("/__mock/lan?state=ok");
   });

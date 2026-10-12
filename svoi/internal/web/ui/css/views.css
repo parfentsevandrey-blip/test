@@ -1087,6 +1087,9 @@ a.bdev:hover, a.scard:hover { border-color: var(--line-2); box-shadow: var(--sha
 .nearby--place { padding: var(--sp-3); }
 .nb-list { display: flex; flex-direction: column; gap: var(--sp-2); }
 .nb-visible { margin-top: var(--sp-3); padding: 0 var(--sp-1); }
+.nb-vpn { display: flex; align-items: flex-start; gap: var(--sp-2); margin: var(--sp-3) 0 0; padding: var(--sp-3); border-radius: var(--r-sm);
+  background: var(--amber-soft); color: var(--amber-text); font-size: var(--fs-sm); }
+.nb-vpn > svg { flex: none; margin-top: 2px; }
 .nb-row { display: flex; align-items: center; gap: var(--sp-3); padding: 10px var(--sp-3); border-radius: var(--r-lg); background: var(--surface-2); min-width: 0; }
 .nb-row--invite { background: var(--accent-softer); box-shadow: inset 0 0 0 1px var(--accent-soft); }
 .nb-row__who { min-width: 0; }

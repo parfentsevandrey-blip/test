@@ -595,27 +595,30 @@ func (n *Node) nearbyHeard(id identity.ID, kind, name, mesh, os string, lan, add
 	}
 }
 
-// nearbyAnnounced notes the announcement of a device that can add devices (kept only by a device that is not in a mesh).
-func (n *Node) nearbyAnnounced(raw []byte, from netip.AddrPort) {
+// nearbyAnnounced notes the announcement of a device that can add devices (kept only by a device that is not in a mesh);
+// true when it was kept.
+func (n *Node) nearbyAnnounced(raw []byte, from netip.AddrPort) bool {
 	if n.Configured() {
-		return
+		return false
 	}
 	a, ok := decodeNearbyAnnouncement(raw)
 	if !ok || a.ID == n.device().ID {
-		return
+		return false
 	}
 	lan := netip.AddrPortFrom(from.Addr().Unmap(), from.Port())
 	n.nearbyHeard(a.ID, NearbyKindMesh, a.Name, a.MeshName, a.OS, lan, netip.AddrPortFrom(lan.Addr(), a.Port), a.Ticket)
+	return true
 }
 
-// nearbyNewcomerHeard notes a device that is not in a mesh.
-func (n *Node) nearbyNewcomerHeard(raw []byte, from netip.AddrPort) {
+// nearbyNewcomerHeard notes a device that is not in a mesh; true when it was noted.
+func (n *Node) nearbyNewcomerHeard(raw []byte, from netip.AddrPort) bool {
 	a, ok := decodeNearbyNewcomer(raw)
 	if !ok || a.ID == n.device().ID || n.Peer(a.ID) != nil { // (a member of this mesh is no newcomer to it: an old packet)
-		return
+		return false
 	}
 	lan := netip.AddrPortFrom(from.Addr().Unmap(), from.Port())
 	n.nearbyHeard(a.ID, NearbyKindNew, a.Name, "", a.OS, lan, netip.AddrPort{}, a.Ticket)
+	return true
 }
 
 // nearbyShouldReply: should this device answer a query from addr now (once per short while per address).

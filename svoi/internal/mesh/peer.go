@@ -311,6 +311,10 @@ func (n *Node) Self() SelfInfo {
 	}
 	if n.root == nil {
 		info.DefaultName = identity.SanitizeName(n.cfg.DeviceName)
+		if n.lan != nil { // a device that is not in a mesh looks around too (nearby.go): its start screen says what is wrong
+			st := n.lan.snapshot()
+			info.LAN = &st
+		}
 		return info
 	}
 	info.Name, info.Owner = n.self.Name, n.self.Owner

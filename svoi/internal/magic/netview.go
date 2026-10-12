@@ -24,6 +24,8 @@ import (
 //	                   Local discovery announces itself there, and answers from that network are believed.
 //	10.20.30.40        an address on a link nobody else is on (mobile data): offered to peers as a place to
 //	                   reach us, nothing more. The same goes for any line without a prefix length.
+//	vpn                a VPN is on, and the local network goes around it (see VPN).
+//	vpn-lan            a VPN is on and takes the local network's traffic too (its routes cover the Wi-Fi's addresses).
 //
 // Everything here keeps working when the system does answer, so a desktop program never needs the file.
 const (
@@ -144,8 +146,8 @@ func usableOnLAN(a netip.Addr) bool {
 
 // LocalNets lists the IPv4 networks this device shares with others, which is where local discovery
 // announces itself. They come from the system's own list of network interfaces (up, multicast capable,
-// not loopback); when the system will not give it, from the address file the app writes. Look again from
-// time to time: Wi-Fi comes and goes.
+// not loopback, not a tunnel); when the system will not give it, from the address file the app writes. Look
+// again from time to time: Wi-Fi comes and goes.
 func LocalNets() []LocalNet {
 	var out []LocalNet
 	have := map[netip.Addr]bool{}
@@ -158,7 +160,7 @@ func LocalNets() []LocalNet {
 	}
 	if ifs, err := Interfaces(); err == nil {
 		for _, ifc := range ifs {
-			if ifc.Flags&net.FlagUp == 0 || ifc.Flags&net.FlagLoopback != 0 || ifc.Flags&net.FlagMulticast == 0 {
+			if !sharedLink(ifc.Flags) {
 				continue
 			}
 			addrs, err := ifc.Addrs()
@@ -192,30 +194,42 @@ func LocalNets() []LocalNet {
 }
 
 // LocalPrefixes lists every network this device is directly attached to, loopback included: where a packet
-// that claims to come from the local network may legitimately come from. The system's list, and the
-// address file's entries that carry a prefix length.
+// that claims to come from the local network may legitimately come from. The system's list (without the
+// networks of VPN tunnels: whoever else is on a VPN provider's network is no neighbour), and the address
+// file's entries that carry a prefix length.
 func LocalPrefixes() []netip.Prefix {
 	out := []netip.Prefix{netip.MustParsePrefix("127.0.0.0/8"), netip.MustParsePrefix("::1/128")}
-	if addrs, err := InterfaceAddrs(); err == nil {
-		for _, a := range addrs {
-			ipn, ok := a.(*net.IPNet)
-			if !ok {
+	var addrs []net.Addr
+	if ifs, err := Interfaces(); err == nil {
+		for _, ifc := range ifs {
+			if tunnel(ifc.Flags) {
 				continue
 			}
-			ip, ok := netip.AddrFromSlice(ipn.IP)
-			ones, bits := ipn.Mask.Size()
-			if !ok || bits == 0 {
-				continue
+			if as, err := ifc.Addrs(); err == nil {
+				addrs = append(addrs, as...)
 			}
-			if bits == 128 && ip.Is4In6() {
-				ones, bits = ones-96, 32
-			}
-			if ones < 1 {
-				continue
-			}
-			if p := netip.PrefixFrom(ip.Unmap(), ones); p.IsValid() {
-				out = append(out, p)
-			}
+		}
+	} else if as, err := InterfaceAddrs(); err == nil {
+		addrs = as
+	}
+	for _, a := range addrs {
+		ipn, ok := a.(*net.IPNet)
+		if !ok {
+			continue
+		}
+		ip, ok := netip.AddrFromSlice(ipn.IP)
+		ones, bits := ipn.Mask.Size()
+		if !ok || bits == 0 {
+			continue
+		}
+		if bits == 128 && ip.Is4In6() {
+			ones, bits = ones-96, 32
+		}
+		if ones < 1 {
+			continue
+		}
+		if p := netip.PrefixFrom(ip.Unmap(), ones); p.IsValid() {
+			out = append(out, p)
 		}
 	}
 	for _, e := range readLocalAddrsFile() {
@@ -227,4 +241,89 @@ func LocalPrefixes() []netip.Prefix {
 		}
 	}
 	return out
+}
+
+// sharedLink: an interface whose network other devices share — up, multicast capable, not loopback, and not a
+// tunnel. A VPN's tunnel (utun on a Mac, tun, wg or ppp elsewhere) is a link to the VPN's server: announcing
+// ourselves there would tell the VPN's operator our name, and nobody nearby is there to hear it.
+func sharedLink(f net.Flags) bool {
+	return f&net.FlagUp != 0 && f&net.FlagLoopback == 0 && f&net.FlagMulticast != 0 && !tunnel(f)
+}
+
+// tunnel: a point-to-point link, which is what the tunnels of VPNs are.
+func tunnel(f net.Flags) bool { return f&net.FlagPointToPoint != 0 }
+
+// VPN says whether a VPN is on, as far as local discovery is concerned:
+//
+//	"lan"  a VPN takes even the local network's traffic. Only the phone's app can tell (from the VPN's routes,
+//	       see the address file above): devices nearby can still be heard, but what this device sends them goes
+//	       into the VPN, which delivers it only if it lets local addresses go around it.
+//	"on"   traffic to the internet leaves through a VPN tunnel; the local network most likely still goes around
+//	       it (a network a device sits on wins over the VPN's routes), unless the VPN blocks it.
+//	""     no VPN, or none that can be seen.
+func VPN() string {
+	if path := os.Getenv(localAddrsFileEnv); path != "" {
+		raw, err := os.ReadFile(path)
+		if err != nil || len(raw) > 64<<10 {
+			return ""
+		}
+		return vpnInFile(raw)
+	}
+	if name, ok := internetVia(); ok && name != "" {
+		return "on"
+	}
+	return ""
+}
+
+// vpnInFile reads the VPN's mark from the app's address file: "lan", "on" or "".
+func vpnInFile(raw []byte) string {
+	vpn := ""
+	for _, f := range strings.FieldsFunc(string(raw), func(r rune) bool { return r == ',' || r == ';' || unicode.IsSpace(r) }) {
+		switch f {
+		case "vpn-lan":
+			return "lan"
+		case "vpn":
+			vpn = "on"
+		}
+	}
+	return vpn
+}
+
+// internetVia names the tunnel that traffic to the internet leaves through, if it is a tunnel; ok is false when that
+// cannot be found out. Nothing is sent: connecting a UDP socket only asks the system for its route.
+func internetVia() (tunnelName string, ok bool) {
+	c, err := net.Dial("udp4", "198.51.100.1:9") // an address of the documentation range: routed like any other
+	if err != nil {
+		return "", false
+	}
+	local, _ := netip.AddrFromSlice(c.LocalAddr().(*net.UDPAddr).IP)
+	_ = c.Close()
+	local = local.Unmap()
+	ifs, err := Interfaces()
+	if err != nil {
+		return "", false
+	}
+	for _, ifc := range ifs {
+		addrs, err := ifc.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, a := range addrs {
+			if ipn, isNet := a.(*net.IPNet); isNet {
+				if ip, good := netip.AddrFromSlice(ipn.IP); good && ip.Unmap() == local {
+					if viaTunnel(ifc.Flags) {
+						return ifc.Name, true
+					}
+					return "", true
+				}
+			}
+		}
+	}
+	return "", false
+}
+
+// viaTunnel: is an interface that traffic to the internet leaves through a VPN's tunnel — a point-to-point link, or one
+// that can neither broadcast nor be a loopback (Windows reports a WireGuard or Wintun adapter so).
+func viaTunnel(f net.Flags) bool {
+	return f&net.FlagLoopback == 0 && (tunnel(f) || f&net.FlagBroadcast == 0)
 }

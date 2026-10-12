@@ -198,6 +198,11 @@ type state struct {
 		} `json:"portmap"`
 		Endpoints []struct{ Addr, Kind string } `json:"endpoints"`
 		MeshName  string                        `json:"meshName"`
+		LAN       *struct {
+			Networks []string `json:"networks"`
+			Problem  string   `json:"problem"`
+			VPN      string   `json:"vpn"`
+		} `json:"lan"`
 	} `json:"self"`
 	Peers []peerState `json:"peers"`
 }
@@ -877,6 +882,124 @@ func TestNearbyTwoNewDevicesMakeAMesh(t *testing.T) {
 	}
 	p, _ := b.peer("a")
 	t.Logf("b made mesh «Lab»; a joined by itself and is seen via %s, %.1f ms", p.Path, p.RTTms)
+}
+
+// Both devices on one home network have a VPN on. The Mac's is the kind a computer has: a tunnel the internet goes through
+// (routes 0/1 and 128/1), while the home network goes around it. The phone's takes even what the phone sends to the home
+// network, and lets plain local addresses through but swallows what goes to the group and to broadcast addresses — as the
+// VPN apps of phones that pass local addresses do. The Mac announces nothing into its tunnel and says a VPN is on, the
+// phone says its VPN takes the local network; and still the new phone lists the Mac, asks to join, is added, the two
+// connect, and connect again after both restart.
+func TestNearbyWithVPNsOnBothDevices(t *testing.T) {
+	if out, err := exec.Command(labSh, "lan", "7").CombinedOutput(); err != nil {
+		t.Fatalf("natlab lan: %v\n%s", err, out)
+	}
+	t.Cleanup(func() { exec.Command(labSh, "down").Run() })
+	sh := func(ns string, args ...string) {
+		t.Helper()
+		if out, err := exec.Command("ip", append([]string{"netns", "exec", ns}, args...)...).CombinedOutput(); err != nil {
+			t.Fatalf("%s: %v: %v\n%s", ns, args, err, out)
+		}
+	}
+	// The Mac's VPN: a tunnel with the routes a VPN app adds.
+	sh("svl-L1", "ip", "tuntap", "add", "dev", "tun0", "mode", "tun")
+	sh("svl-L1", "ip", "addr", "add", "10.8.0.2/24", "dev", "tun0")
+	sh("svl-L1", "ip", "link", "set", "tun0", "up")
+	sh("svl-L1", "ip", "route", "add", "0.0.0.0/1", "dev", "tun0")
+	sh("svl-L1", "ip", "route", "add", "128.0.0.0/1", "dev", "tun0")
+	// The phone's VPN: what the phone sends to the group and to broadcast addresses reaches nobody — and the phone is not
+	// told (the frames are dropped at the switch after the phone sent them, as a VPN takes such packets into its tunnel).
+	// IP only: the phone's ARP is not the VPN's business.
+	sh("svl-sw", "ebtables", "-A", "FORWARD", "-i", "p2", "-p", "IPv4", "-d", "Broadcast", "-j", "DROP")
+	sh("svl-sw", "ebtables", "-A", "FORWARD", "-i", "p2", "-p", "IPv4", "-d", "Multicast", "-j", "DROP")
+
+	mac := newNode(t, "svl-L1", "mac")
+	phone := newNode(t, "svl-L2", "phone")
+	phone.asAndroidPhone()
+	if err := os.WriteFile(phone.addrsFile, []byte("192.168.7.2/24\n10.9.0.5\nvpn-lan\n"), 0o600); err != nil {
+		t.Fatal(err) // the phone's app: its Wi-Fi, its VPN's address, and that the VPN takes the local network
+	}
+	t.Cleanup(func() {
+		if t.Failed() {
+			for _, n := range []*node{mac, phone} {
+				t.Logf("---- %s log ----\n%s", n.name, n.logTail(80))
+			}
+		}
+	})
+	mac.run("init", "--mesh", "Lan", "--name", "mac", "--owner", "lab")
+	mac.start()
+	phone.start() // installed, not in any mesh
+
+	waitFor(t, 30*time.Second, "both devices to say what they know about their VPNs", func() bool {
+		m, ok1 := mac.state()
+		p, ok2 := phone.state()
+		return ok1 && ok2 && m.Self.LAN != nil && p.Self.LAN != nil && m.Self.LAN.VPN == "on" && p.Self.LAN.VPN == "lan" &&
+			m.Self.LAN.Problem == "" && p.Self.LAN.Problem == ""
+	})
+	m, _ := mac.state()
+	if len(m.Self.LAN.Networks) != 1 || !strings.Contains(m.Self.LAN.Networks[0], "192.168.7.1/24") {
+		t.Fatalf("the Mac announces on %v: only its home network, never into its VPN's tunnel", m.Self.LAN.Networks)
+	}
+
+	waitFor(t, 40*time.Second, "the new phone to list the Mac", func() bool {
+		out, err := phone.tryRun(20*time.Second, "nearby")
+		return err == nil && strings.Contains(out, "mac") && strings.Contains(out, "Lan")
+	})
+	join := phone.command("nearby", "join", "mac", "--name", "phone")
+	stdin, _ := join.StdinPipe()
+	var out bytes.Buffer
+	join.Stdout, join.Stderr = &out, &out
+	if err := join.Start(); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() { done <- join.Wait() }()
+	t.Cleanup(func() {
+		if t.Failed() {
+			t.Logf("---- the phone's `nearby join` ----\n%s", out.String())
+		}
+	})
+	var reqID string
+	waitFor(t, 40*time.Second, "the phone's request to appear at the Mac", func() bool {
+		o, err := mac.tryRun(20*time.Second, "nearby")
+		if err != nil {
+			return false
+		}
+		for _, l := range strings.Split(o, "\n") {
+			if f := strings.Fields(l); len(f) >= 3 && regexp.MustCompile(`^\d{6}$`).MatchString(f[1]) {
+				reqID = f[len(f)-1]
+				return true
+			}
+		}
+		return false
+	})
+	mac.run("nearby", "allow", reqID)
+	io.WriteString(stdin, "y\n")
+	stdin.Close()
+	select {
+	case err := <-done:
+		if err != nil || !strings.Contains(out.String(), "Added") {
+			t.Fatalf("the join ended with %v:\n%s", err, out.String())
+		}
+	case <-time.After(60 * time.Second):
+		join.Process.Kill()
+		t.Fatalf("the join did not end:\n%s", out.String())
+	}
+	together := func(what string) {
+		waitFor(t, 60*time.Second, what, func() bool {
+			p1, ok1 := mac.peer("phone")
+			p2, ok2 := phone.peer("mac")
+			return ok1 && ok2 && p1.Online && p2.Online
+		})
+		p, _ := mac.peer("phone")
+		t.Logf("%s: the Mac sees the phone via %s, %.1f ms", what, p.Path, p.RTTms)
+	}
+	together("the phone, added through «Рядом», connects")
+	mac.stop()
+	phone.stop()
+	mac.start()
+	phone.start()
+	together("both restarted: they find each other again")
 }
 
 // tryRun is run for a command that is expected to fail: it reports instead of
