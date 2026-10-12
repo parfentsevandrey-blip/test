@@ -339,7 +339,18 @@ try {
   }
 } finally {
   if (other) await other.stop().catch(() => {});
-  for (const a of apps) await a.close().catch(() => {});
+  // close() waits for the app to exit: an app that hangs on its way out kept this test, and the CI job, waiting until the
+  // job's time ran out (the Intel build under Rosetta, c56c57e). A failure is reported anyway; the app is killed.
+  for (const a of apps) {
+    const closed = await Promise.race([a.close().then(() => true, () => true), sleep(15000).then(() => false)]);
+    if (!closed) {
+      try {
+        a.process().kill('SIGKILL');
+      } catch {
+        /* gone */
+      }
+    }
+  }
   if (!process.env.THEMESH_KEEP) fs.rmSync(dirs.base, { recursive: true, force: true });
 }
 
