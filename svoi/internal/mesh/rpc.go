@@ -174,6 +174,10 @@ func (s *ServerStream) Fail(err error) error {
 // CloseWrite ends the response body (half-close); reads stay possible.
 func (s *ServerStream) CloseWrite() error { return closeSend(s.s) }
 
+// Abort breaks off the response body so that the other side reads an error, not an end (RESET_STREAM): for a handler that
+// fails after it has begun to answer, where the clean end that follows would read as the whole of the answer.
+func (s *ServerStream) Abort() { s.s.CancelWrite(4) }
+
 // closeSend closes the send side of a stream, unless the stream is already
 // cancelled (by the other end, or by us), which is not worth an error.
 func closeSend(s *quic.Stream) error {

@@ -50,8 +50,12 @@ func (m *Manager) RegisterRPC(n *mesh.Node) {
 		if err := s.Reply(meta); err != nil {
 			return err
 		}
-		_, err = io.CopyN(s, f, n)
-		return err
+		if _, err := io.CopyN(s, f, n); err != nil {
+			// (a file that shrank while it was sent, a disk that failed: what came must not read as all of it)
+			s.Abort()
+			return err
+		}
+		return nil
 	})
 	n.HandleStream("files.put", func(ctx context.Context, c *mesh.Call, s *mesh.ServerStream) error {
 		var a struct {
@@ -163,6 +167,11 @@ func (r *RemoteReader) Read(p []byte) (int, error) {
 		}
 		n, err := r.cs.Read(p)
 		r.got += int64(n)
+		if err == io.EOF && r.got < r.want() {
+			// the other side stopped short of what it said it would send (a device that does not say so with an error):
+			// the file shrank while it was read, and a clean end here would hand out part of it as all of it
+			return n, errChanged
+		}
 		if err == nil || err == io.EOF || !mesh.IsReplaced(err) || r.resumes >= maxResumes {
 			return n, err
 		}
@@ -173,6 +182,15 @@ func (r *RemoteReader) Read(p []byte) (int, error) {
 			return 0, err
 		}
 	}
+}
+
+// want is how many bytes the stream being read is to bring (as the other side said when it began).
+func (r *RemoteReader) want() int64 {
+	n := r.Meta.Size - r.offset
+	if r.length > 0 && r.length < n {
+		n = r.length
+	}
+	return n
 }
 
 // resume asks for the rest of the file on the link that replaced the one that broke.

@@ -776,10 +776,15 @@ func TestADownloadDoesNotGoOnWithAnotherFile(t *testing.T) {
 	if _, err := io.ReadFull(rr, got); err != nil {
 		t.Fatal(err)
 	}
-	// the file is replaced by another one of another size, then the link is replaced
+	// the file is replaced by another one of another size, then the link is replaced. (Replaced as programs save: a new file
+	// takes the old one's name. The old one, still open on the NAS, goes on as it was until the link breaks; a file that is
+	// cut short where it lies is the next test.)
 	other := make([]byte, 20<<20)
 	rand.Read(other)
-	writeFile(t, path, other)
+	writeFile(t, path+".new", other)
+	if err := os.Rename(path+".new", path); err != nil {
+		t.Fatal(err)
+	}
 	replaceLinkUnder(t, ctx, nas, laptop)
 
 	rest, err := io.ReadAll(rr)
@@ -788,5 +793,46 @@ func TestADownloadDoesNotGoOnWithAnotherFile(t *testing.T) {
 	}
 	if !mesh.IsReplaced(err) {
 		t.Fatalf("the reader should report what really happened to its link, got %v", err)
+	}
+}
+
+// A file that is cut short where it lies while it is being read (a program that writes it anew in place): the download ends
+// with an error, not with the part that came as if it were the whole file.
+func TestADownloadOfAFileCutShortIsNotHandedOutAsWhole(t *testing.T) {
+	h := meshtest.New(t)
+	nas := h.Public("nas", "198.51.100.1")
+	laptop := h.Public("laptop", "198.51.100.2")
+	h.Mesh(nas, laptop)
+
+	dir := t.TempDir()
+	payload := make([]byte, 32<<20) // more than any window the link has: most of it is still on the NAS when it is cut
+	rand.Read(payload)
+	path := filepath.Join(dir, "film.bin")
+	writeFile(t, path, payload)
+	shares := []Share{{ID: "media", Name: "Media", Path: dir, Mode: "ro", Allow: []string{"*"}}}
+	newManager(t, nas, &shares, &TransferSettings{DownloadDir: t.TempDir(), AutoAccept: "all"})
+	lapShares := []Share{}
+	lapM := newManager(t, laptop, &lapShares, &TransferSettings{DownloadDir: t.TempDir(), AutoAccept: "all"})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	rr, err := lapM.RemoteOpen(ctx, nas.ID(), "media", "/film.bin", 0, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rr.Close()
+	got := make([]byte, 256<<10)
+	if _, err := io.ReadFull(rr, got); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Truncate(path, 0); err != nil {
+		t.Fatal(err)
+	}
+	rest, err := io.ReadAll(rr)
+	if err == nil {
+		t.Fatalf("a file cut short was handed out as whole: %d of %d bytes", len(got)+len(rest), len(payload))
+	}
+	if !bytes.Equal(rest, payload[len(got):len(got)+len(rest)]) {
+		t.Fatal("what came before the end is not the file")
 	}
 }
