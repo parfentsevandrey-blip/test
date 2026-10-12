@@ -241,15 +241,24 @@ export function NearbyList({ limit = 0, empty = null }) {
     ${limit > 0 && rows.length > limit && html`<a class="nb-more" href="#/nearby" data-testid="nearby-more">${tn("nearby.more", rows.length - limit)}<${Icon} name="chevronRight" size=${16} /></a>`}`;
 }
 
+/** While nobody is around, what to say: that the app is looking (and the hint), or what is wrong when it cannot. */
+function searching(self, hint) {
+  const trouble = lanNotice(self);
+  const noNetwork = !!(self && self.lan && self.lan.problem === "no-network");
+  return {
+    title: trouble ? trouble.text : noNetwork ? t("lan.noNetwork") : t("nearby.searching"),
+    text: trouble ? trouble.sub : noNetwork ? "" : hint,
+  };
+}
+
 /** While nobody is around: that the app is looking, or what is wrong when it cannot. */
 function Searching({ self, hint }) {
-  const trouble = lanNotice(self);
-  const lan = self && self.lan;
+  const say = searching(self, hint);
   return html`<div class="nb-empty" data-testid="nearby-searching">
     <span class="nearby__radar nb-empty__radar" aria-hidden="true"><${Icon} name="radar" size=${26} /></span>
     <div class="grow">
-      <p class="nb-empty__title" role="status" aria-live="polite">${trouble ? trouble.text : lan && lan.problem === "no-network" ? t("lan.noNetwork") : t("nearby.searching")}</p>
-      <p class="nb-empty__text">${trouble ? trouble.sub : lan && lan.problem === "no-network" ? "" : hint}</p>
+      <p class="nb-empty__title" role="status" aria-live="polite">${say.title}</p>
+      <p class="nb-empty__text">${say.text}</p>
     </div>
   </div>`;
 }
@@ -293,15 +302,19 @@ export function NearbySection({ self }) {
   useLooking();
   if (off) return null; // the person turned looking around on the network off
   const found = nb.devices.length + nb.invites.length + nb.sent.length;
+  // While nobody is around, the head says so itself, with the one radar of the section (no second one in an empty list)
+  const say = !found && searching(self, t("nearby.searchingHint"));
   return html`<section class=${cx("nearby", found && "nearby--found")} data-testid="nearby" data-found=${String(nb.devices.length)} aria-labelledby="nearby-title">
     <header class="nearby__head">
       <span class="nearby__radar" aria-hidden="true"><${Icon} name="radar" size=${24} /></span>
       <div class="grow">
         <h2 class="nearby__title" id="nearby-title">${found ? tn("nearby.found", nb.devices.length + nb.invites.length) : t("nearby.title")}</h2>
-        <p class="nearby__sub">${found ? t("nearby.lead") : t("nearby.leadEmpty")}</p>
+        ${found
+          ? html`<p class="nearby__sub">${t("nearby.lead")}</p>`
+          : html`<p class="nearby__sub" role="status" aria-live="polite" data-testid="nearby-searching">${say.title}</p>`}
       </div>
     </header>
-    <${NearbyList} empty=${html`<${Searching} self=${self} hint=${t("nearby.searchingHint")} />`} />
+    ${found ? html`<${NearbyList} />` : html`<p class="nearby__hint">${say.text}</p>`}
     <${NearbyName} self=${self} name=${name} setName=${setName} />
   </section>`;
 }

@@ -475,7 +475,6 @@ export default {
   "nearby.title": "Nearby",
   "nearby.found": ["{n} device nearby", "{n} devices nearby"],
   "nearby.lead": "Tap a device to connect: it asks the person there, and one tap there is enough.",
-  "nearby.leadEmpty": "Open The Mesh on another device on the same Wi‑Fi network — it shows up here by itself.",
   "nearby.searching": "Looking for devices with The Mesh nearby…",
   "nearby.searchingHint": "A device shows up here while The Mesh is open on it — one in a mesh already, or a new one. Both must be on the same Wi‑Fi network.",
   "nearby.searchingHintMember": "Devices on this Wi‑Fi network with The Mesh open show up here: a tap adds a new one.",
