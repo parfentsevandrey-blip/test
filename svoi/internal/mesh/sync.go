@@ -301,6 +301,7 @@ func (n *Node) registerCoreHandlers() {
 	n.Handle("mesh.ping", func(ctx context.Context, c *Call) (any, error) {
 		return map[string]int64{"t": time.Now().UnixMilli()}, nil
 	})
+	n.registerNearbyHandlers()
 }
 
 // syncWith exchanges membership and hello with one connected peer.

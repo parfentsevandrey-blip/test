@@ -26,10 +26,15 @@
 //   /__mock/sw?bump=1               pretend a new binary: sw.js gets a new VERSION (as after an upgrade)
 //   /__mock/portmap?state=mapped    router port mapping: mapped|searching|unavailable|private
 //   /__mock/lan?state=blocked[&os=darwin]  discovery on the local network: ok|blocked|failed|no-network (os: what this device says it runs)
-//   /__mock/nearby?add=macbook&os=darwin   (not in a mesh) a device with The Mesh shows up nearby; &mesh=Дом; remove=<name|id>, clear=1
+//   /__mock/nearby?add=macbook&os=darwin   a device with The Mesh shows up nearby: &mesh=Дом — in a mesh, can add this one
+//                                   (listed only while this one is not in a mesh); &kind=new — not in a mesh (listed always);
+//                                   remove=<name|id>, clear=1
+//   /__mock/nearby?invite=macbook&mesh=Дом  a device nearby invites this one to its mesh; without &mesh: asks to make one together
 //   /__mock/nearby?request=pixel&os=android  (in a mesh) a device nearby asks to be added; &confirmed=0 keeps it unconfirmed
-//   /__mock/nearby?hold=1           the person at the other device keeps the request of this one waiting; answer=allow|deny|expire ends it
-//   /__mock/nearby?visible=0        this (admin) device stops announcing itself
+//   /__mock/nearby?hold=1           the person at the other device takes their time: answer=allow|deny|expire ends what waits
+//                                   (this device's request, or the invitation it sent)
+//   /__mock/nearby?visible=0        this device stops making itself known; admin=0 — no administrator online (a member cannot add)
+// A device nearby whose name has "offline" in it cannot be reached; "denied" says no; "declin" declines an invitation.
 //   /__mock/gateway?on=1[&letters=1]  Internet mail: this device becomes a gateway for andrey@example.org (letters=1: three letters from the Internet in the inbox)
 //   /__mock/gateway?off=1           the gateway is set back to nothing
 //   /__mock/dns?publish=1           the domain's records are in the DNS (wrong=spf: that one is wrong; reset=1: nothing published)
@@ -693,7 +698,7 @@ function buildWorld(scenario) {
   for (const k of Object.keys(W)) delete W[k];
   for (const d of DEVICE_DEFS) ids[d.key] = devId(d.key);
   W.configured = scenario !== "onboarding";
-  W.nearby = { visible: true, devices: [], join: { state: "idle" }, requests: [], hold: false, timers: [] };
+  W.nearby = { visible: true, lookUntil: 0, lookName: "", devices: [], invites: [], sent: [], join: { state: "idle" }, requests: [], hold: false, noAdmin: false, timers: [] };
   W.devLogs = {};
   W.trees = buildTrees();
   W.blobs = new Map();
@@ -1120,6 +1125,10 @@ function tick() {
   }
   // requests of devices nearby expire
   if (W.nearby && W.nearby.requests.some((r) => r.expires <= T)) { W.nearby.requests = W.nearby.requests.filter((r) => r.expires > T); emitNearby(); }
+  if (W.nearby && W.nearby.sent.some((x) => x.state === "sent" && x.expires <= T)) {
+    for (const x of W.nearby.sent) if (x.state === "sent" && x.expires <= T) x.state = "expired";
+    emitNearby();
+  }
   // invites expiry
   const before = W.invites.length;
   W.invites = W.invites.filter((i) => i.expires > T);
@@ -1503,16 +1512,25 @@ route("DELETE", "/api/invites/:id", (req, res, p) => {
 });
 
 // ---------------------------------------------------------------- devices nearby
-// The node's picture (internal/app/nearby.go): the devices around that can add this one (only while it is not in a mesh),
-// this device's own request, and the requests of devices that want to be added by it (only on an admin).
+// The node's picture (internal/app/nearby.go): the devices around that this one can connect with in a tap (while it is
+// not in a mesh: the ones that can add it and the ones not in a mesh either; in a mesh: the ones not in one), the
+// invitations to it and the ones it sent, its own request to be added, and the requests of devices that want to be added.
 const NEARBY_LIFE = 120;
+function nearbyCanAdd() {
+  return !!W.configured && (!!W.self.admin || (!W.nearby.noAdmin && W.peers.some((p) => p.admin && p.online)));
+}
 function nearbyView() {
   const N = W.nearby;
+  const T = now();
   return {
     visible: N.visible,
-    devices: W.configured ? [] : N.devices.map((d) => ({ ...d, seen: now() })),
+    looking: N.lookUntil > T,
+    canAdd: nearbyCanAdd(),
+    devices: N.devices.filter((d) => !W.configured || d.kind === "new").map((d) => ({ ...d, seen: T })),
+    invites: N.invites.filter((i) => !W.configured || i.kind === "pair"),
+    sent: N.sent,
     join: N.join,
-    requests: W.configured && W.self.admin ? N.requests : [],
+    requests: W.configured ? N.requests : [],
   };
 }
 function emitNearby() { broadcast("nearby", nearbyView()); }
@@ -1526,56 +1544,157 @@ function nearbyEnd(state, reason, error) {
   const N = W.nearby;
   N.join = { state, peer: N.join.peer, ...(reason ? { reason } : {}), ...(error ? { error } : {}) };
   if (state === "canceled") delete N.join.peer;
+  const s = N.join.peer && N.sent.find((x) => x.id === N.join.peer.id && x.state === "joining");
+  if (s && state !== "joined") Object.assign(s, { state: "failed", error: error || state });
   emitNearby();
 }
 /** This device joined: like with an invitation, it is a member now. */
 function nearbyJoined(peerDev) {
-  const name = W.nearby.joinName || W.self.defaultName || "phone";
-  const joinedAs = peerDev;
+  const N = W.nearby;
+  const name = N.joinName || W.self.defaultName || "phone";
+  const keep = { visible: N.visible, lookUntil: N.lookUntil, lookName: N.lookName, devices: N.devices.filter((d) => d.kind === "new" && d.id !== peerDev.id) };
   buildWorld("full");
+  Object.assign(W.nearby, keep);
   W.self.name = uniqueName(sanitizeName(name), new Set(W.peers.map((x) => x.deviceName)));
   W.self.admin = false;
-  W.nearby.join = { state: "joined", peer: joinedAs };
-  addLog("info", `joined mesh «${(joinedAs && joinedAs.meshName) || "Дом"}» through a device nearby`);
+  if (peerDev.meshName) W.self.meshName = peerDev.meshName;
+  W.nearby.join = { state: "joined", peer: peerDev };
+  addLog("info", `joined mesh «${peerDev.meshName || "Дом"}» through a device nearby`);
   broadcast("self", W.self);
   emitPeers();
   emitNearby();
 }
-
-route("GET", "/api/nearby", (req, res) => sendJSON(res, 200, nearbyView()));
-route("POST", "/api/nearby/connect", async (req, res) => {
-  const b = await readJSON(req);
-  if (W.configured) throw E.invalid("mesh: already part of a mesh; leave it first");
+/** This device's request to be added runs: it goes on by itself once both screens show the digits (no confirmation). */
+function nearbyAsk(dev, deviceName, invited) {
   const N = W.nearby;
-  if (nearbyRunning()) throw E.invalid("mesh: a request is already being made");
-  const dev = N.devices.find((d) => d.id === b.id);
-  if (!dev) throw E.notfound("mesh: that device is no longer nearby");
-  N.joinName = sanitizeName(b.deviceName || W.self.defaultName || "phone");
-  N.join = { state: "connecting", peer: { ...dev, seen: now() } };
+  N.joinName = sanitizeName(deviceName || N.lookName || W.self.defaultName || "phone");
+  N.join = { state: "connecting", peer: { ...dev, kind: "mesh", seen: now() } };
   emitNearby();
-  sendJSON(res, 200, nearbyView());
-  // A device whose name says so does not answer / says no, to show how the screen takes it.
   if (/offline/i.test(dev.name)) return nearbyLater(1500, () => nearbyRunning() && nearbyEnd("failed", "offline", "mesh: cannot reach the device nearby (timeout: no recent network activity)"));
-  nearbyLater(900, () => {
+  nearbyLater(700, () => {
     if (!nearbyRunning()) return;
     N.join = { ...N.join, state: "waiting", code: nearbyCode6() };
     emitNearby();
+    nearbyLater(250, () => {
+      if (N.join.state !== "waiting") return;
+      N.join = { ...N.join, state: "confirmed" };
+      emitNearby();
+      if (N.hold && !invited) return; // /__mock/nearby?answer=allow|deny|expire
+      nearbyLater(invited ? 600 : 1600, () => {
+        if (N.join.state !== "confirmed") return;
+        if (/denied/i.test(dev.name) && !invited) nearbyEnd("denied", "denied", "the person at the other device said no");
+        else nearbyJoined(N.join.peer);
+      });
+    });
   });
+}
+/** An invitation this device sent waits for the person there (or, for a request to make a mesh, for the other device). */
+function nearbySend(dev, kind) {
+  const N = W.nearby;
+  const T = now();
+  N.sent = N.sent.filter((x) => x.id !== dev.id);
+  const s = { id: dev.id, kind, name: dev.name, os: dev.os || "", state: "sent", created: T, expires: T + NEARBY_LIFE };
+  N.sent.push(s);
+  emitNearby();
+  if (N.hold) return;
+  nearbyLater(2200, () => nearbyAnswered(s, /declin|denied/i.test(dev.name) ? "declined" : "accepted"));
+  return s;
+}
+function nearbyAnswered(s, how) {
+  const N = W.nearby;
+  if (!N.sent.includes(s) || s.state !== "sent") return;
+  if (how === "declined" || how === "expired") { s.state = how; emitNearby(); return; }
+  s.state = "joining";
+  emitNearby();
+  const dev = N.devices.find((d) => d.id === s.id) || { id: s.id, name: s.name, os: s.os };
+  if (s.kind === "pair") {
+    // the other device made a mesh, and this one joins it by itself
+    nearbyAsk({ ...dev, meshName: "Дача" }, N.lookName, true);
+    return;
+  }
+  nearbyLater(800, () => {
+    if (s.state !== "joining") return;
+    s.state = "joined";
+    N.devices = N.devices.filter((d) => d.id !== s.id);
+    const p = joinViaInvite({ id: "nearby-" + s.id, owner: W.self.owner, admin: false }, dev.name);
+    if (dev.os) { p.os = dev.os; p.arch = dev.os === "android" ? "arm64" : p.arch; }
+    emitPeers();
+    emitNearby();
+  });
+}
+/** This device makes a mesh for the two (it accepted a request to make one), like Create. */
+function nearbyMakeMesh(meshName, deviceName) {
+  const N = W.nearby;
+  const keep = { visible: N.visible, lookUntil: N.lookUntil, lookName: N.lookName, devices: N.devices.filter((d) => d.kind === "new"), invites: [], sent: [] };
+  buildWorld("empty");
+  Object.assign(W.nearby, keep);
+  W.self.name = sanitizeName(deviceName || N.lookName || "laptop"); W.self.meshName = meshName || "Дом";
+  W.self.meshId = base32(crypto.randomBytes(8)).slice(0, 12);
+  W.peers = [];
+  addLog("info", `made mesh «${W.self.meshName}» with a device nearby`);
+  broadcast("self", W.self);
+  emitPeers();
+}
+
+route("GET", "/api/nearby", (req, res) => sendJSON(res, 200, nearbyView()));
+route("POST", "/api/nearby/look", async (req, res) => {
+  const b = await readJSON(req);
+  const N = W.nearby;
+  N.lookUntil = b.on === false ? 0 : now() + 90;
+  if (b.name) N.lookName = String(b.name).slice(0, 40);
+  sendJSON(res, 200, nearbyView());
+});
+route("POST", "/api/nearby/connect", async (req, res) => {
+  const b = await readJSON(req);
+  const N = W.nearby;
+  if (nearbyRunning()) throw E.invalid("mesh: a request is already being made");
+  const inv = N.invites.find((i) => i.id === b.id && (!W.configured || i.kind === "pair"));
+  if (inv) return nearbyAccept(inv, b, res);
+  const dev = N.devices.find((d) => d.id === b.id && (!W.configured || d.kind === "new"));
+  if (!dev) throw E.notfound("mesh: that device is no longer nearby");
+  if (!W.configured && dev.kind === "mesh") nearbyAsk(dev, b.deviceName, false);
+  else if (W.configured && !nearbyCanAdd()) throw new HttpError(502, "offline", "mesh: an administrator of the mesh must be online to add a device");
+  else nearbySend(dev, W.configured ? "invite" : "pair");
+  sendJSON(res, 200, nearbyView());
+});
+function nearbyAccept(inv, b, res) {
+  const N = W.nearby;
+  N.invites = N.invites.filter((i) => i !== inv);
+  if (inv.kind === "invite") {
+    nearbyAsk({ id: inv.id, name: inv.name, meshName: inv.meshName, os: inv.os }, b.deviceName, true);
+  } else {
+    if (!W.configured) nearbyMakeMesh(b.meshName, b.deviceName);
+    else if (!nearbyCanAdd()) throw new HttpError(502, "offline", "mesh: an administrator of the mesh must be online to add a device");
+    const s = nearbySend({ id: inv.id, name: inv.name, os: inv.os }, "invite");
+    if (s) nearbyLater(300, () => nearbyAnswered(s, "accepted")); // it asked: it accepts by itself
+  }
+  emitNearby();
+  sendJSON(res, 200, nearbyView());
+}
+route("POST", "/api/nearby/invites/:id", async (req, res, p) => {
+  const b = await readJSON(req);
+  const N = W.nearby;
+  const inv = N.invites.find((i) => i.id === p.id && (!W.configured || i.kind === "pair"));
+  if (!inv) throw E.notfound("mesh: no such invitation (it may have expired)");
+  if (!b.accept) {
+    N.invites = N.invites.filter((i) => i !== inv);
+    emitNearby();
+    return sendJSON(res, 200, nearbyView());
+  }
+  if (nearbyRunning()) throw E.invalid("mesh: a request is already being made");
+  nearbyAccept(inv, b, res);
+});
+route("POST", "/api/nearby/sent/:id/cancel", async (req, res, p) => {
+  await readJSON(req);
+  const N = W.nearby;
+  if (!N.sent.some((x) => x.id === p.id)) throw E.notfound("mesh: no such invitation (it may have expired)");
+  N.sent = N.sent.filter((x) => x.id !== p.id);
+  emitNearby();
+  sendJSON(res, 200, nearbyView());
 });
 route("POST", "/api/nearby/confirm", async (req, res) => {
   await readJSON(req);
-  const N = W.nearby;
-  if (N.join.state !== "waiting") throw E.invalid("mesh: nothing to confirm");
-  N.join = { ...N.join, state: "confirmed" };
-  emitNearby();
-  sendJSON(res, 200, nearbyView());
-  if (N.hold) return; // /__mock/nearby?answer=allow|deny|expire
-  const dev = N.join.peer;
-  nearbyLater(1600, () => {
-    if (N.join.state !== "confirmed") return;
-    if (/denied/i.test(dev.name)) nearbyEnd("denied", "denied", "the person at the other device said no");
-    else nearbyJoined(dev);
-  });
+  throw E.invalid("mesh: nothing to confirm");
 });
 route("POST", "/api/nearby/cancel", async (req, res) => {
   await readJSON(req);
@@ -1586,8 +1705,7 @@ route("POST", "/api/nearby/cancel", async (req, res) => {
 });
 route("POST", "/api/nearby/requests/:id", async (req, res, p) => {
   const b = await readJSON(req);
-  requireConfigured();
-  if (!W.self.admin) throw E.denied("mesh: only an administrator can do that");
+  if (!W.configured) throw E.denied("mesh: this device is not part of a mesh yet");
   const N = W.nearby;
   const r = N.requests.find((x) => x.id === p.id);
   if (!r) throw E.notfound("mesh: no such request (it may have expired)");
@@ -1595,13 +1713,14 @@ route("POST", "/api/nearby/requests/:id", async (req, res, p) => {
   if (!b.approve) {
     dropped();
   } else {
+    if (!nearbyCanAdd()) throw new HttpError(502, "offline", "mesh: an administrator of the mesh must be online to add a device");
     r.approved = true;
     r.owner = String(b.owner || "").trim().slice(0, 64);
     nearbyLater(500, () => nearbyAdd(r, dropped));
   }
   sendJSON(res, 200, nearbyView());
 });
-/** The request was allowed: it joins as soon as its person has confirmed the digits too. */
+/** The request was allowed: it joins as soon as it goes on (a device of the first version: its person confirmed the digits). */
 function nearbyAdd(r, dropped) {
   if (!W.nearby.requests.includes(r)) return;
   if (!r.confirmed) return nearbyLater(400, () => nearbyAdd(r, dropped));
@@ -1616,7 +1735,7 @@ function nearbyNewRequest(name, os, confirmed) {
   const r = { id: crypto.randomBytes(6).toString("hex"), name: sanitizeName(name), os: os || "", code: nearbyCode6(), confirmed: false, created: T, expires: T + NEARBY_LIFE };
   N.requests.push(r);
   emitNearby();
-  if (confirmed) nearbyLater(1500, () => { if (N.requests.includes(r)) { r.confirmed = true; emitNearby(); } });
+  if (confirmed) nearbyLater(300, () => { if (N.requests.includes(r)) { r.confirmed = true; emitNearby(); } });
   return r;
 }
 
@@ -2505,15 +2624,28 @@ route("ANY", "/__mock/lan", (req, res, p, q) => {
 });
 route("ANY", "/__mock/nearby", (req, res, p, q) => {
   const N = W.nearby;
-  if (q.get("clear")) { N.devices = []; N.requests = []; }
+  if (q.get("clear")) { N.devices = []; N.requests = []; N.invites = []; N.sent = []; }
   if (q.get("add")) {
     const name = q.get("add");
-    const dev = { id: devId("nearby-" + name).slice(0, 26), name, meshName: q.get("mesh") ?? "Дом", os: q.get("os") || "darwin", seen: now() };
+    const kind = q.get("kind") === "new" ? "new" : "mesh";
+    const dev = { id: devId("nearby-" + name).slice(0, 26), kind, name, meshName: kind === "new" ? "" : (q.get("mesh") ?? "Дом"), os: q.get("os") || "darwin", seen: now() };
     N.devices = N.devices.filter((d) => d.id !== dev.id).concat(dev);
   }
-  if (q.get("remove")) N.devices = N.devices.filter((d) => d.name !== q.get("remove") && d.id !== q.get("remove"));
+  if (q.get("invite")) {
+    const name = q.get("invite");
+    const mesh = q.get("mesh");
+    const id = devId("nearby-" + name).slice(0, 26);
+    const inv = { id, kind: mesh ? "invite" : "pair", name, os: q.get("os") || "darwin", received: now(), ...(mesh ? { meshName: mesh } : {}) };
+    N.invites = N.invites.filter((i) => i.id !== id).concat(inv);
+  }
+  if (q.get("remove")) {
+    const r = q.get("remove");
+    N.devices = N.devices.filter((d) => d.name !== r && d.id !== r);
+    N.invites = N.invites.filter((d) => d.name !== r && d.id !== r);
+  }
   if (q.get("request")) nearbyNewRequest(q.get("request"), q.get("os") || "android", q.get("confirmed") !== "0");
   if (q.get("visible") !== null) N.visible = q.get("visible") !== "0";
+  if (q.get("admin") !== null) N.noAdmin = q.get("admin") === "0";
   if (q.get("hold") !== null) N.hold = q.get("hold") !== "0";
   const answer = q.get("answer");
   if (answer) {
@@ -2521,6 +2653,7 @@ route("ANY", "/__mock/nearby", (req, res, p, q) => {
       if (answer === "allow") nearbyJoined(N.join.peer);
       else nearbyEnd("denied", answer === "expire" ? "expired" : "denied", answer === "expire" ? "the request expired" : "the person at the other device said no");
     }
+    for (const s of N.sent.filter((x) => x.state === "sent")) nearbyAnswered(s, answer === "allow" ? "accepted" : answer === "expire" ? "expired" : "declined");
   }
   emitNearby();
   ok(res, nearbyView());

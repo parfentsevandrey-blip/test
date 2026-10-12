@@ -137,13 +137,15 @@ const (
 	EvMembers EventKind = "members" // the member list changed
 	EvSelf    EventKind = "self"    // own endpoints / NAT info changed
 	EvRemoved EventKind = "removed" // an administrator removed this device from the mesh
-	EvNearby  EventKind = "nearby"  // the devices nearby, a request to add one, or this device's own request changed
+	EvNearby  EventKind = "nearby"  // the devices nearby, an invitation or a request, or this device's own request changed
+	EvAdded   EventKind = "added"   // a member had this administrator add a device nearby (Peer: the device, By: the member)
 )
 
 // Event is published on the node's event bus.
 type Event struct {
 	Kind EventKind
 	Peer identity.ID
+	By   identity.ID
 }
 
 // Node is one device's membership in a mesh.
@@ -320,7 +322,11 @@ func (n *Node) CreateMesh(meshName, deviceName, owner string) error {
 	if err := n.saveState(); err != nil {
 		return err
 	}
-	return n.startMember()
+	if err := n.startMember(); err != nil {
+		return err
+	}
+	n.nearbyInMesh(identity.ID{})
+	return nil
 }
 
 // Reconfigure changes network settings (STUN servers, relay, UDP port, LAN
@@ -364,9 +370,7 @@ func (n *Node) Leave() error {
 	n.revoked = map[identity.ID]identity.Revocation{}
 	n.invites = map[[8]byte]*invite{}
 	n.mu.Unlock()
-	n.nearby.mu.Lock()
-	n.nearby.join = nil // how an earlier request of this device ended is of no interest to the next one
-	n.nearby.mu.Unlock()
+	n.nearbyLeft()
 	if err := os.Remove(n.statePath()); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}

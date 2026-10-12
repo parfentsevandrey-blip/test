@@ -21,9 +21,12 @@ func (s *Server) routes() {
 	m.HandleFunc("POST /api/mesh/join", s.handleMeshJoin)
 	m.HandleFunc("POST /api/mesh/leave", s.handleMeshLeave)
 	m.HandleFunc("POST /api/netcheck", s.handleNetcheck)
-	// devices nearby: a device that is not in a mesh asks one that can add it; an admin answers
+	// devices nearby: they find each other on the local network and connect in a tap (docs/UI-API.md)
 	m.HandleFunc("GET /api/nearby", s.handleNearby)
+	m.HandleFunc("POST /api/nearby/look", s.handleNearbyLook)
 	m.HandleFunc("POST /api/nearby/connect", s.handleNearbyConnect)
+	m.HandleFunc("POST /api/nearby/invites/{id}", s.handleNearbyInvite)
+	m.HandleFunc("POST /api/nearby/sent/{id}/cancel", s.handleNearbyTakeBack)
 	m.HandleFunc("POST /api/nearby/confirm", s.handleNearbyConfirm)
 	m.HandleFunc("POST /api/nearby/cancel", s.handleNearbyCancel)
 	m.HandleFunc("POST /api/nearby/requests/{id}", s.handleNearbyAnswer)
@@ -332,16 +335,65 @@ func (s *Server) handleNearby(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, s.app.Nearby())
 }
 
-func (s *Server) handleNearbyConnect(w http.ResponseWriter, r *http.Request) {
+// nearbyOptions is what the person chose for connecting with a device nearby (all optional).
+type nearbyOptions struct {
+	DeviceName string `json:"deviceName"` // the name this device takes in the mesh it joins or makes
+	MeshName   string `json:"meshName"`   // the name of a mesh this device makes for the two
+	Owner      string `json:"owner"`      // whose device this one is, when it makes the mesh
+	PeerOwner  string `json:"peerOwner"`  // whose device the other one is, when this one adds it
+}
+
+func (o nearbyOptions) mesh() mesh.NearbyOptions {
+	return mesh.NearbyOptions{DeviceName: o.DeviceName, MeshName: o.MeshName, Owner: o.Owner, PeerOwner: o.PeerOwner}
+}
+
+func (s *Server) handleNearbyLook(w http.ResponseWriter, r *http.Request) {
 	var in struct {
-		ID         string `json:"id"`
-		DeviceName string `json:"deviceName"`
+		On   *bool  `json:"on"`   // default true
+		Name string `json:"name"` // how this device calls itself while it is not in a mesh
 	}
 	if err := decode(r, &in); err != nil {
 		writeError(w, err)
 		return
 	}
-	if err := s.app.NearbyConnect(in.ID, in.DeviceName); err != nil {
+	s.app.NearbyLook(in.On == nil || *in.On, in.Name)
+	writeJSON(w, http.StatusOK, s.app.Nearby())
+}
+
+func (s *Server) handleNearbyConnect(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		ID string `json:"id"`
+		nearbyOptions
+	}
+	if err := decode(r, &in); err != nil {
+		writeError(w, err)
+		return
+	}
+	if err := s.app.NearbyConnect(in.ID, in.mesh()); err != nil {
+		writeError(w, nearbyFailure(err))
+		return
+	}
+	writeJSON(w, http.StatusOK, s.app.Nearby())
+}
+
+func (s *Server) handleNearbyInvite(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Accept bool `json:"accept"`
+		nearbyOptions
+	}
+	if err := decode(r, &in); err != nil {
+		writeError(w, err)
+		return
+	}
+	if err := s.app.NearbyInvite(r.PathValue("id"), in.Accept, in.mesh()); err != nil {
+		writeError(w, nearbyFailure(err))
+		return
+	}
+	writeJSON(w, http.StatusOK, s.app.Nearby())
+}
+
+func (s *Server) handleNearbyTakeBack(w http.ResponseWriter, r *http.Request) {
+	if err := s.app.NearbyTakeBack(r.PathValue("id")); err != nil {
 		writeError(w, nearbyFailure(err))
 		return
 	}
@@ -377,13 +429,16 @@ func (s *Server) handleNearbyAnswer(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, s.app.Nearby())
 }
 
-// nearbyFailure tells apart why a request about a device nearby failed: "notfound" (the device or the request is gone: it
-// may have left or expired), "denied" (not an admin), "invalid" (already in a mesh, a request is running already).
+// nearbyFailure tells apart why a request about a device nearby failed: "notfound" (the device, the invitation or the
+// request is gone: it may have left or expired), "offline" (a member, and no administrator of its mesh is online to add a
+// device), "denied" (not allowed), "invalid" (already in a mesh, a request is running already).
 func nearbyFailure(err error) error {
 	switch {
-	case errors.Is(err, mesh.ErrNearbyGone), errors.Is(err, mesh.ErrNoSuchRequest):
+	case errors.Is(err, mesh.ErrNearbyGone), errors.Is(err, mesh.ErrNoSuchRequest), errors.Is(err, mesh.ErrNoSuchInvite):
 		return errCode("notfound", err.Error())
-	case errors.Is(err, mesh.ErrNotAdmin):
+	case errors.Is(err, mesh.ErrNoAdminOnline):
+		return errCode("offline", err.Error())
+	case errors.Is(err, mesh.ErrNotAdmin), errors.Is(err, mesh.ErrNotConfigured):
 		return errCode("denied", err.Error())
 	}
 	return errCode("invalid", err.Error())

@@ -29,7 +29,7 @@ Usage:
   themesh init [flags]            create a new mesh with this device as the first member
   themesh join <invite>           join an existing mesh with an invitation code
   themesh invite [--admin]        print an invitation code (and QR) for another device
-  themesh nearby                  devices around that can add this one, or ask to be added (join, allow, deny)
+  themesh nearby                  the devices around: connect with one in a tap (look, connect, accept, decline, allow, deny)
   themesh status                  show this device and the other devices
   themesh send <device> <file>... send files to a device
   themesh ping <device>           measure the round trip to a device

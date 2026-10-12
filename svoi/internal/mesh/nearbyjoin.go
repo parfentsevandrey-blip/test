@@ -23,22 +23,26 @@ import (
 	"github.com/parfentsevandrey-blip/test/svoi/internal/magic"
 )
 
-// Asking a nearby device to add this one (see nearby.go for how the device is found).
+// Asking a device nearby to add this one (nearby.go is how the device is found, nearbyinvite.go the invitations).
 //
-//	newcomer                                            inviter (an admin that announced itself)
+//	newcomer                                            the device that adds (it announced itself, or invited this one)
 //	QUIC, ALPN themesh-nearby/1, server name
-//	<ticket from its announcement>.nearby.mesh    ->    only a neighbour that heard the announcement is answered
-//	hello{name, os}                               ->    the request is listed for the person at this device
+//	<ticket from its packet>.nearby.mesh          ->    only a neighbour that heard it lately is answered
+//	hello{name, os, v}                            ->    a request: listed for the person at this device — or, when
+//	                                                    this device invited the newcomer, approved already
 //	                                              <-    ack{waiting}
 //	both screens show the same six digits: they come from the keys of this very TLS session (RFC 5705 exporter), so
 //	two sessions stitched together by somebody in the middle show two different numbers
-//	the person compares them and taps "they match" on the newcomer: confirm{true}   ->
-//	the person taps "Add" on the inviter (the same request lists the name and the digits)
+//	confirm{true}                                 ->    the newcomer goes on (a newcomer of the first version waited
+//	                                                    for its person to say that the digits match)
+//	the person taps "Add" (unless they invited the newcomer)
 //	                                              <-    the membership: the same answer as to an invitation
 //
-// The answer is given only when both people have said yes, within two minutes; whoever says no, goes away or is silent
-// ends it. A newcomer never learns anything of the mesh before that, and the inviter never gives anything to a device
-// that nobody at it approved: an announcement alone, which anybody on the network can send, does not add a device.
+// The answer is given only when both sides said yes — the newcomer's person by tapping the device or accepting its
+// invitation, the other one by saying yes to the request or by inviting — within two minutes; whoever says no, goes away
+// or is silent ends it. A newcomer learns nothing of the mesh before that, and nothing is given to a device that no
+// person at the adding device picked: an announcement alone, which anybody on the network can send, adds nobody. A
+// member that is not an administrator has the certificate signed by an administrator that is online (nearbyinvite.go).
 const (
 	nearbySASLabel = "themesh-nearby-sas"
 )
@@ -51,7 +55,12 @@ func nearbyCode(exporter []byte) string {
 type nearbyHello struct {
 	Name string `json:"name"`
 	OS   string `json:"os,omitempty"`
+	// V is the version of the newcomer's side: 2 goes on by itself after the digits are shown, and takes a member that is
+	// not an administrator as the device that adds it (the first version, which sent no V, does neither).
+	V int `json:"v,omitempty"`
 }
+
+const nearbyHelloV = 2
 
 type nearbyConfirm struct {
 	Match bool `json:"match"`
@@ -65,9 +74,10 @@ type NearbyRequest struct {
 	Name      string `json:"name"` // what the newcomer calls itself (it says it without proof)
 	OS        string `json:"os"`
 	Code      string `json:"code"`      // the six digits, as the newcomer shows them
-	Confirmed bool   `json:"confirmed"` // the person at the newcomer has said that the digits match
+	Confirmed bool   `json:"confirmed"` // the newcomer goes on (its person tapped; the first version: said the digits match)
 	Created   int64  `json:"created"`
 	Expires   int64  `json:"expires"`
+	Invited   bool   `json:"invited,omitempty"` // this device invited it: nobody is asked
 }
 
 type nearbyDecision struct {
@@ -80,14 +90,28 @@ type nearbyRequest struct {
 	joiner   identity.ID
 	addr     netip.Addr
 	decision chan nearbyDecision
+	invite   *nearbyOutgoing // the invitation that let it in (nil: the person at this device answers)
 }
 
-// NearbyRequests lists the devices that asked to be added and wait for an answer.
+// waitingLocked counts the requests that wait for a person's answer (an invited device does not wait for one).
+func (s *nearbyState) waitingLocked() int {
+	k := 0
+	for _, r := range s.requests {
+		if r.invite == nil {
+			k++
+		}
+	}
+	return k
+}
+
+// NearbyRequests lists the devices that asked to be added and wait for the person's answer.
 func (n *Node) NearbyRequests() []NearbyRequest {
 	out := []NearbyRequest{}
 	n.nearby.mu.Lock()
 	for _, r := range n.nearby.requests {
-		out = append(out, r.NearbyRequest)
+		if r.invite == nil {
+			out = append(out, r.NearbyRequest)
+		}
 	}
 	n.nearby.mu.Unlock()
 	sort.Slice(out, func(i, j int) bool { return out[i].Created < out[j].Created })
@@ -95,13 +119,10 @@ func (n *Node) NearbyRequests() []NearbyRequest {
 }
 
 // AnswerNearbyRequest approves or refuses a request. owner is whose device the newcomer is (empty: the same person's as
-// this one); the newcomer is added only when it has confirmed the digits as well.
+// this one); the newcomer is added once it goes on as well.
 func (n *Node) AnswerNearbyRequest(id string, approve bool, owner string) error {
-	n.mu.RLock()
-	admin := n.auth != nil
-	n.mu.RUnlock()
-	if !admin {
-		return ErrNotAdmin
+	if !n.Configured() {
+		return ErrNotConfigured
 	}
 	n.nearby.mu.Lock()
 	r := n.nearby.requests[id]
@@ -116,7 +137,10 @@ func (n *Node) AnswerNearbyRequest(id string, approve bool, owner string) error 
 	return nil
 }
 
+// nearbyAddRequest lists the request of the newcomer joiner. A newcomer this device invited is approved already; any other
+// one waits for the person here, and only while this device takes requests (it announces itself), a few at a time.
 func (n *Node) nearbyAddRequest(joiner identity.ID, hello nearbyHello, addr netip.Addr, code string) (*nearbyRequest, error) {
+	takes := n.NearbyVisible() && n.nearbyCanAdd()
 	id := make([]byte, 6)
 	_, _ = rand.Read(id)
 	now := time.Now()
@@ -134,12 +158,24 @@ func (n *Node) nearbyAddRequest(joiner identity.ID, hello nearbyHello, addr neti
 	if n.nearby.requests == nil {
 		n.nearby.requests = map[string]*nearbyRequest{}
 	}
-	if len(n.nearby.requests) >= nearbyMaxRequests {
+	if o := n.nearby.outgoing[joiner]; o != nil && o.Kind == nearbyInviteKind && o.State == "sent" && now.Before(o.expires) {
+		o.State = "joining"
+		r.invite, r.Invited = o, true
+		r.decision <- nearbyDecision{approve: true, owner: o.owner}
+	}
+	switch {
+	case r.invite == nil && !takes:
+		n.nearby.mu.Unlock()
+		return nil, errors.New("this device does not take requests now")
+	case r.invite == nil && n.nearby.waitingLocked() >= nearbyMaxRequests:
 		n.nearby.mu.Unlock()
 		return nil, errors.New("too many requests")
 	}
 	for _, o := range n.nearby.requests {
-		if o.addr == r.addr || o.joiner == joiner { // one at a time from an address, and from a device
+		if o.joiner == joiner || (r.invite == nil && o.addr == r.addr) { // one at a time from a device, and from an address
+			if r.invite != nil {
+				r.invite.State = "sent"
+			}
 			n.nearby.mu.Unlock()
 			return nil, errors.New("a request from there is already waiting")
 		}
@@ -170,7 +206,7 @@ func (n *Node) nearbyTLS() *tls.Config {
 	}
 }
 
-// handleNearby runs on the inviter for a connection that uses ALPNNearby.
+// handleNearby runs on the device that adds, for a connection that uses ALPNNearby.
 func (n *Node) handleNearby(conn *quic.Conn) {
 	n.joinActive.Add(1)
 	defer func() {
@@ -224,9 +260,15 @@ func (n *Node) handleNearby(conn *quic.Conn) {
 	}
 	n.mu.RLock()
 	_, revoked := n.revoked[joinerID]
+	admin := n.auth != nil
 	n.mu.RUnlock()
 	if revoked {
 		fail(Errf(CodeDenied, "this device was revoked from the mesh"))
+		return
+	}
+	if !admin && hello.V < nearbyHelloV {
+		// The first version of the app takes only an administrator as the device that adds it.
+		fail(Errf(CodeDenied, "this device is not an administrator of its mesh; update The Mesh on the device that asks"))
 		return
 	}
 	var addr netip.Addr
@@ -239,14 +281,34 @@ func (n *Node) handleNearby(conn *quic.Conn) {
 		return
 	}
 	defer n.nearbyRemoveRequest(req.ID)
-	n.log.Info("a device nearby asks to be added", "name", req.Name, "from", addr)
+	// However it ends, an invitation that let the newcomer in says how (the person can invite it again).
+	outcome, outcomeErr := "failed", error(nil)
+	defer func() {
+		n.nearby.mu.Lock()
+		inv := req.invite
+		n.nearby.mu.Unlock()
+		if inv != nil {
+			if outcome == "failed" && outcomeErr == nil {
+				outcomeErr = errors.New("the device did not finish joining")
+			}
+			n.nearbyOutgoingEnd(inv, outcome, outcomeErr)
+		}
+	}()
+	n.nearby.mu.Lock()
+	invited := req.invite != nil
+	n.nearby.mu.Unlock()
+	if invited {
+		n.log.Info("a device nearby that was invited connects", "name", req.Name, "from", addr)
+	} else {
+		n.log.Info("a device nearby asks to be added", "name", req.Name, "from", addr)
+	}
 
 	_ = s.SetWriteDeadline(time.Now().Add(10 * time.Second))
 	if err := writeFrame(s, responseFrame{OK: true, Result: mustJSON(map[string]string{"state": "waiting"})}); err != nil {
 		return
 	}
 
-	// The newcomer's person says "the digits match" (or the newcomer goes away).
+	// The newcomer goes on (a newcomer of the first version: once its person said that the digits match), or goes away.
 	confirmed := make(chan bool, 1)
 	go func() {
 		var c nearbyConfirm
@@ -266,6 +328,7 @@ func (n *Node) handleNearby(conn *quic.Conn) {
 		select {
 		case d := <-req.decision:
 			if !d.approve {
+				outcome = "declined"
 				fail(Errf(CodeDenied, "the person at the other device said no"))
 				return
 			}
@@ -282,6 +345,7 @@ func (n *Node) handleNearby(conn *quic.Conn) {
 		case <-conn.Context().Done():
 			return
 		case <-timer.C:
+			outcomeErr = errors.New("the request expired")
 			fail(Errf(CodeDenied, "the request expired"))
 			return
 		}
@@ -293,14 +357,26 @@ func (n *Node) handleNearby(conn *quic.Conn) {
 		owner = n.self.Owner
 	}
 	n.mu.RUnlock()
-	resp, err := n.issueMembership(conn, joinerID, hello.Name, owner, false)
+	ictx, icancel := context.WithTimeout(conn.Context(), 45*time.Second)
+	resp, err := n.nearbyIssue(ictx, conn, joinerID, hello.Name, owner)
+	icancel()
 	if err != nil {
-		fail(Errf(CodeInternal, "cannot issue certificate: %v", err))
+		outcomeErr = err
+		var re *RPCError
+		switch {
+		case errors.Is(err, ErrNoAdminOnline):
+			fail(Errf(CodeOffline, "%v", err))
+		case errors.As(err, &re):
+			fail(re)
+		default:
+			fail(Errf(CodeInternal, "cannot issue certificate: %v", err))
+		}
 		return
 	}
 	_ = s.SetWriteDeadline(time.Now().Add(15 * time.Second))
 	_ = writeFrame(s, responseFrame{OK: true, Result: mustJSON(resp)})
 	_ = s.Close()
+	outcome = "joined"
 	n.saveSoon()
 	go n.pushSyncToAll()
 }
@@ -309,12 +385,12 @@ func (n *Node) handleNearby(conn *quic.Conn) {
 
 // NearbyJoinStatus is what this device is doing to get added by a device nearby.
 type NearbyJoinStatus struct {
-	// State: idle | connecting | waiting (both screens show the digits) | confirmed (the person said they match; the
-	// other person is to add this device) | joined | denied | failed | canceled.
+	// State: idle | connecting | waiting (both screens show the digits) | confirmed (this device goes on; the person
+	// at the other device is to add it, unless they invited it) | joined | denied | failed | canceled.
 	State  string        `json:"state"`
 	Peer   *NearbyDevice `json:"peer,omitempty"`
 	Code   string        `json:"code,omitempty"`
-	Reason string        `json:"reason,omitempty"` // with denied and failed: offline | denied | expired | invalid
+	Reason string        `json:"reason,omitempty"` // with denied and failed: offline | denied | expired | invalid | noadmin | failed
 	Error  string        `json:"error,omitempty"`
 }
 
@@ -350,9 +426,21 @@ func (j *nearbyJoin) running() bool {
 	return false
 }
 
-// StartNearbyJoin asks the device nearby with this id to add this one, calling this device deviceName (empty: its usual name).
-// Progress is in NearbyJoinStatus; it ends in "joined" (the device is a member now) or a reason.
+// StartNearbyJoin asks the device nearby with this id to add this one, calling this device deviceName (empty: the name it
+// gives nearby), and waits for its person to say that the digits match (ConfirmNearbyJoin), as the first version did; the
+// interface uses ConnectNearby, which goes on by itself. Progress is in NearbyJoinStatus; it ends in "joined" (the device
+// is a member now) or a reason.
 func (n *Node) StartNearbyJoin(id, deviceName string) error {
+	e, ok := n.nearbyEntryOf(id)
+	if !ok || e.Kind != NearbyKindMesh {
+		return ErrNearbyGone
+	}
+	return n.startNearbyJoin(&e, deviceName, false)
+}
+
+// startNearbyJoin asks the device e to add this one. auto: go on as soon as both screens show the digits (the person
+// tapped the device, or accepted its invitation: nothing more to ask them).
+func (n *Node) startNearbyJoin(e *nearbyEntry, deviceName string, auto bool) error {
 	if n.Configured() {
 		return errors.New("mesh: already part of a mesh; leave it first")
 	}
@@ -361,29 +449,21 @@ func (n *Node) StartNearbyJoin(id, deviceName string) error {
 		n.nearby.mu.Unlock()
 		return errors.New("mesh: a request is already being made")
 	}
-	var found *nearbyEntry
-	for _, e := range n.nearby.seen {
-		if e.ID == id && time.Since(e.heard) <= nearbyListedFor {
-			cp := *e
-			found = &cp
-		}
-	}
-	if found == nil {
-		n.nearby.mu.Unlock()
-		return ErrNearbyGone
-	}
 	ctx, cancel := context.WithCancel(context.Background())
-	peer := found.NearbyDevice
+	peer := e.NearbyDevice
 	j := &nearbyJoin{status: NearbyJoinStatus{State: "connecting", Peer: &peer}, confirm: make(chan struct{}), cancel: cancel}
+	if auto {
+		j.once.Do(func() { close(j.confirm) })
+	}
 	n.nearby.join = j
+	chosen := n.nearby.lookName
 	n.nearby.mu.Unlock()
 	n.emit(Event{Kind: EvNearby})
-	if deviceName == "" {
-		deviceName = n.cfg.DeviceName
-	}
+	deviceName = n.nearbyName(firstText(deviceName, chosen))
+	entry := *e
 	go func() {
 		defer cancel()
-		n.runNearbyJoin(ctx, j, found, deviceName)
+		n.runNearbyJoin(ctx, j, &entry, deviceName)
 	}()
 	return nil
 }
@@ -434,6 +514,13 @@ func (n *Node) runNearbyJoin(ctx context.Context, j *nearbyJoin, e *nearbyEntry,
 				s.Error = err.Error()
 			}
 		})
+		// This device asked that one to make a mesh, and it did, but joining it did not work out.
+		n.nearby.mu.Lock()
+		o := n.nearby.outgoing[e.devID]
+		n.nearby.mu.Unlock()
+		if o != nil && o.State == "joining" {
+			n.nearbyOutgoingEnd(o, "failed", err)
+		}
 	}
 
 	port := n.udpPortOrDefault()
@@ -514,7 +601,7 @@ func (n *Node) runNearbyJoin(ctx context.Context, j *nearbyJoin, e *nearbyEntry,
 	}
 	os, _ := n.platform()
 	_ = s.SetDeadline(time.Now().Add(15 * time.Second))
-	if err := writeFrame(s, nearbyHello{Name: deviceName, OS: os}); err != nil {
+	if err := writeFrame(s, nearbyHello{Name: deviceName, OS: os, V: nearbyHelloV}); err != nil {
 		fail("failed", err)
 		return
 	}
@@ -547,8 +634,13 @@ func (n *Node) runNearbyJoin(ctx context.Context, j *nearbyJoin, e *nearbyEntry,
 		switch {
 		case errors.As(err, &re):
 			reason := "denied"
-			if re.Msg == "the request expired" {
+			switch {
+			case re.Msg == "the request expired":
 				reason = "expired"
+			case re.Code == CodeOffline:
+				reason = "noadmin" // a member was to add this device, and no administrator of its mesh is online
+			case re.Code != CodeDenied:
+				reason = "failed"
 			}
 			fail(reason, errors.New(re.Msg))
 		case ctx.Err() != nil:
@@ -608,6 +700,6 @@ func (n *Node) runNearbyJoin(ctx context.Context, j *nearbyJoin, e *nearbyEntry,
 		fail("failed", err)
 		return
 	}
-	n.forgetNearby()
+	n.nearbyInMesh(e.devID)
 	n.setNearbyJoin(j, func(s *NearbyJoinStatus) { s.State, s.Code = "joined", "" })
 }

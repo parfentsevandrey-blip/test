@@ -70,7 +70,8 @@ type App struct {
 	mu    sync.Mutex
 	socks *services.SOCKSServer
 
-	nearbyJoined bool // the request of this device was granted, and what follows has been done
+	nearbyJoined  bool // the request of this device was granted, and what follows has been done
+	wasConfigured bool // in a mesh, as of the last membership event (syncConfigured)
 
 	token        string
 	peersDebounc *debouncer
@@ -183,6 +184,7 @@ func (a *App) start() {
 	}
 	a.applySocks()
 	a.applyTUN()
+	a.wasConfigured = a.node.Configured()
 	run := func(f func()) {
 		a.wg.Add(1)
 		go func() { defer a.wg.Done(); f() }()
@@ -324,10 +326,14 @@ func (a *App) bridgeNodeEvents() {
 			case mesh.EvRemoved:
 				a.onRemoved()
 			case mesh.EvMembers:
+				a.syncConfigured()
 				a.peersChanged()
 				a.hub.Publish("invites", a.Invites())
 			case mesh.EvNearby:
 				a.publishNearby()
+			case mesh.EvAdded:
+				a.onNearbyAdded(ev)
+				a.peersChanged()
 			default:
 				a.peersChanged()
 			}

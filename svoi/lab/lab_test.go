@@ -197,6 +197,7 @@ type state struct {
 			State, Protocol, External string
 		} `json:"portmap"`
 		Endpoints []struct{ Addr, Kind string } `json:"endpoints"`
+		MeshName  string                        `json:"meshName"`
 	} `json:"self"`
 	Peers []peerState `json:"peers"`
 }
@@ -685,8 +686,9 @@ func TestLANDiscoveryOfAPhoneThatCannotListItsInterfaces(t *testing.T) {
 }
 
 // Two real devices on one home network, one in a mesh (an admin) and one that has just been installed: the new one lists
-// the admin without anybody typing or scanning anything, both show the same six digits, and the device is added when both
-// people have said yes - as the terminal of a server without a screen would do it (themesh nearby).
+// the admin without anybody typing or scanning anything, asks it in a tap, both show the same six digits, and the device
+// is added when the person at the admin says yes - as the terminal of a server without a screen would do it (themesh
+// nearby). (The "y" typed to the new device is what the first version asked for; the second goes on by itself.)
 func TestNearbyDevicesFindEachOtherAndAreAdded(t *testing.T) {
 	if out, err := exec.Command(labSh, "lan", "7").CombinedOutput(); err != nil {
 		t.Fatalf("natlab lan: %v\n%s", err, out)
@@ -761,7 +763,7 @@ func TestNearbyDevicesFindEachOtherAndAreAdded(t *testing.T) {
 			}
 			for _, l := range strings.Split(out, "\n") {
 				f := strings.Fields(l)
-				if len(f) >= 4 && f[1] == digits {
+				if len(f) >= 3 && f[1] == digits {
 					reqID = f[len(f)-1]
 					return true
 				}
@@ -812,6 +814,69 @@ func TestNearbyDevicesFindEachOtherAndAreAdded(t *testing.T) {
 	})
 	p, _ := mac.peer("phone")
 	t.Logf("the admin sees the new device via %s, %.1f ms", p.Path, p.RTTms)
+}
+
+// Two devices that have just been installed, on one home network: the person at one runs `themesh nearby connect` with
+// the other's name, the person at the other accepts — a mesh is made by the one that accepted, and the first one joins it
+// by itself.
+func TestNearbyTwoNewDevicesMakeAMesh(t *testing.T) {
+	if out, err := exec.Command(labSh, "lan", "7").CombinedOutput(); err != nil {
+		t.Fatalf("natlab lan: %v\n%s", err, out)
+	}
+	t.Cleanup(func() { exec.Command(labSh, "down").Run() })
+
+	a := newNode(t, "svl-L1", "a")
+	b := newNode(t, "svl-L2", "b")
+	t.Cleanup(func() {
+		if t.Failed() {
+			for _, n := range []*node{a, b} {
+				t.Logf("---- %s log ----\n%s", n.name, n.logTail(80))
+			}
+		}
+	})
+	a.start()
+	b.start()
+
+	// The person at b looks at the list: b makes itself known.
+	look := b.command("nearby", "look", "--name", "b")
+	if err := look.Start(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { look.Process.Kill(); look.Wait() })
+
+	connect := a.command("nearby", "connect", "b", "--name", "a")
+	var out bytes.Buffer
+	connect.Stdout, connect.Stderr = &out, &out
+	if err := connect.Start(); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() { done <- connect.Wait() }()
+	waitFor(t, 40*time.Second, "b to be asked", func() bool {
+		o, err := b.tryRun(20*time.Second, "nearby")
+		return err == nil && strings.Contains(o, "make a mesh together")
+	})
+	b.run("nearby", "accept", "a", "--mesh", "Lab", "--name", "b")
+	select {
+	case err := <-done:
+		if err != nil || !strings.Contains(out.String(), "Added") {
+			t.Fatalf("connect ended with %v:\n%s", err, out.String())
+		}
+	case <-time.After(60 * time.Second):
+		connect.Process.Kill()
+		t.Fatalf("connect did not end:\n%s", out.String())
+	}
+	waitFor(t, 60*time.Second, "the two devices to connect", func() bool {
+		p1, ok1 := a.peer("b")
+		p2, ok2 := b.peer("a")
+		return ok1 && ok2 && p1.Online && p2.Online
+	})
+	st, _ := a.state()
+	if st.Self.MeshName != "Lab" {
+		t.Fatalf("a is in mesh %q", st.Self.MeshName)
+	}
+	p, _ := b.peer("a")
+	t.Logf("b made mesh «Lab»; a joined by itself and is seen via %s, %.1f ms", p.Path, p.RTTms)
 }
 
 // tryRun is run for a command that is expected to fail: it reports instead of

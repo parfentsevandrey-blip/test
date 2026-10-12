@@ -723,8 +723,26 @@ func js(s string) string {
 	return string(b)
 }
 
-// A device that is not in a mesh lists the admin devices nearby, asks one, and the two people say yes (see mesh/nearby.go).
-func TestNearbyDevicesThroughTheAPI(t *testing.T) {
+// nearbyApp opens an app with an HTTP API on the real network of this machine, for the tests of devices nearby (all of
+// them share lanPort, as devices on one network share the port of the local discovery).
+func nearbyApp(t *testing.T, lanPort int, name string) *env {
+	t.Helper()
+	a, err := app.Open(app.Options{Dir: t.TempDir(), DeviceName: name, Owner: "tester", Mesh: mesh.Config{LANPort: lanPort}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { a.Close() })
+	off := false
+	if _, err := a.UpdateSettings(app.SettingsPatch{STUNEnabled: &off, PortMap: &off}); err != nil {
+		t.Fatal(err)
+	}
+	ts := httptest.NewServer(api.New(a, nil).Handler())
+	t.Cleanup(ts.Close)
+	return &env{t: t, app: a, srv: ts, tok: a.Token()}
+}
+
+func needLANPort(t *testing.T) int {
+	t.Helper()
 	hasLAN := false
 	for _, n := range magic.LocalNets() {
 		if _, ok := n.Broadcast(); ok && n.Iface != nil {
@@ -738,39 +756,43 @@ func TestNearbyDevicesThroughTheAPI(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	lanPort := pc.LocalAddr().(*net.UDPAddr).Port
-	pc.Close()
-	open := func(name string) *env {
-		a, err := app.Open(app.Options{Dir: t.TempDir(), DeviceName: name, Owner: "tester", Mesh: mesh.Config{LANPort: lanPort}})
-		if err != nil {
-			t.Fatal(err)
-		}
-		t.Cleanup(func() { a.Close() })
-		off := false
-		if _, err := a.UpdateSettings(app.SettingsPatch{STUNEnabled: &off, PortMap: &off}); err != nil {
-			t.Fatal(err)
-		}
-		ts := httptest.NewServer(api.New(a, nil).Handler())
-		t.Cleanup(ts.Close)
-		return &env{t: t, app: a, srv: ts, tok: a.Token()}
+	defer pc.Close()
+	return pc.LocalAddr().(*net.UDPAddr).Port
+}
+
+func (e *env) configured() bool {
+	var s struct {
+		Configured bool `json:"configured"`
 	}
-	mac, phone := open("mac"), open("phone")
+	e.call("GET", "/api/state", "", &s)
+	return s.Configured
+}
+
+// A device that is not in a mesh lists the devices nearby that can add it, asks one in a tap, and the person there says
+// yes; that device then invites another one that is not in a mesh, whose person accepts (see mesh/nearby.go).
+func TestNearbyDevicesThroughTheAPI(t *testing.T) {
+	lanPort := needLANPort(t)
+	mac, phone := nearbyApp(t, lanPort, "mac"), nearbyApp(t, lanPort, "phone")
 	if code := mac.call("POST", "/api/mesh/create", `{"meshName":"Home","deviceName":"mac","owner":"andrey"}`, nil); code != 200 {
 		t.Fatalf("create: %d", code)
 	}
 
-	// Nothing to confirm, nobody to ask, no such request: the answers say what is wrong.
-	if code := phone.call("POST", "/api/nearby/confirm", "", nil); code != 400 {
-		t.Fatalf("confirm with no request: %d", code)
-	}
-	if code := phone.call("POST", "/api/nearby/connect", `{"id":"nobody"}`, nil); code != 404 {
-		t.Fatalf("connect to an unknown device: %d", code)
-	}
-	if code := mac.call("POST", "/api/nearby/requests/none", `{"approve":true}`, nil); code != 404 {
-		t.Fatalf("answer to an unknown request: %d", code)
-	}
-	if code := phone.call("POST", "/api/nearby/requests/none", `{"approve":true}`, nil); code != 403 {
-		t.Fatalf("a device that is not an admin answers: %d", code)
+	// Nothing to confirm, nobody to ask, no such request or invitation: the answers say what is wrong.
+	for _, c := range []struct {
+		who        *env
+		path, body string
+		want       int
+	}{
+		{phone, "/api/nearby/confirm", "", 400},
+		{phone, "/api/nearby/connect", `{"id":"nobody"}`, 404},
+		{mac, "/api/nearby/requests/none", `{"approve":true}`, 404},
+		{phone, "/api/nearby/requests/none", `{"approve":true}`, 403},
+		{phone, "/api/nearby/invites/nobody", `{"accept":true}`, 404},
+		{mac, "/api/nearby/sent/nobody/cancel", "", 404},
+	} {
+		if code := c.who.call("POST", c.path, c.body, nil); code != c.want {
+			t.Fatalf("%s: %d, want %d", c.path, code, c.want)
+		}
 	}
 
 	var view app.NearbyView
@@ -778,7 +800,7 @@ func TestNearbyDevicesThroughTheAPI(t *testing.T) {
 		phone.call("GET", "/api/nearby", "", &view)
 		return len(view.Devices) == 1
 	})
-	if view.Devices[0].Name != "mac" || view.Devices[0].MeshName != "Home" || !view.Visible || view.Join.State != "idle" {
+	if d := view.Devices[0]; d.Name != "mac" || d.MeshName != "Home" || d.Kind != "mesh" || !view.Visible || view.Join.State != "idle" || view.CanAdd {
 		t.Fatalf("the phone sees %+v", view)
 	}
 	var st struct {
@@ -789,36 +811,23 @@ func TestNearbyDevicesThroughTheAPI(t *testing.T) {
 		t.Fatalf("the state carries %+v", st.Nearby)
 	}
 
+	// One tap on the phone; nothing more to confirm there.
 	if code := phone.call("POST", "/api/nearby/connect", `{"id":"`+view.Devices[0].ID+`","deviceName":"phone"}`, nil); code != 200 {
 		t.Fatalf("connect: %d", code)
 	}
-	var code string
-	waitUntil(t, "the digits on the phone", func() bool {
-		phone.call("GET", "/api/nearby", "", &view)
-		code = view.Join.Code
-		return view.Join.State == "waiting" && len(code) == 6
-	})
 	var asked app.NearbyView
 	waitUntil(t, "the request on the Mac", func() bool {
 		mac.call("GET", "/api/nearby", "", &asked)
-		return len(asked.Requests) == 1
+		return len(asked.Requests) == 1 && asked.Requests[0].Confirmed
 	})
-	if r := asked.Requests[0]; r.Code != code || r.Name != "phone" {
-		t.Fatalf("the Mac shows %+v for the digits %s", r, code)
+	phone.call("GET", "/api/nearby", "", &view)
+	if r := asked.Requests[0]; r.Code != view.Join.Code || r.Name != "phone" || view.Join.State != "confirmed" {
+		t.Fatalf("the Mac shows %+v, the phone %+v", r, view.Join)
 	}
 	if c := mac.call("POST", "/api/nearby/requests/"+asked.Requests[0].ID, `{"approve":true,"owner":""}`, nil); c != 200 {
 		t.Fatalf("answer: %d", c)
 	}
-	if c := phone.call("POST", "/api/nearby/confirm", "", nil); c != 200 {
-		t.Fatalf("confirm: %d", c)
-	}
-	waitUntil(t, "the phone to be added", func() bool {
-		var s struct {
-			Configured bool `json:"configured"`
-		}
-		phone.call("GET", "/api/state", "", &s)
-		return s.Configured
-	})
+	waitUntil(t, "the phone to be added", phone.configured)
 	var after struct {
 		Peers  []map[string]any `json:"peers"`
 		Nearby app.NearbyView   `json:"nearby"`
@@ -831,6 +840,41 @@ func TestNearbyDevicesThroughTheAPI(t *testing.T) {
 		t.Fatalf("a device in a mesh lists %v", after.Nearby.Devices)
 	}
 
+	// A tablet that is not in a mesh: while its person looks, the Mac lists it and invites it; the tablet's person accepts.
+	tablet := nearbyApp(t, lanPort, "tablet")
+	if c := tablet.call("POST", "/api/nearby/look", `{"name":"Планшет"}`, &view); c != 200 || !view.Looking {
+		t.Fatalf("look: %d %+v", c, view)
+	}
+	var macView app.NearbyView
+	waitUntil(t, "the Mac to list the tablet", func() bool {
+		mac.call("GET", "/api/nearby", "", &macView)
+		return len(macView.Devices) == 1
+	})
+	if d := macView.Devices[0]; d.Kind != "new" || d.Name != "Планшет" || !macView.CanAdd {
+		t.Fatalf("the Mac sees %+v", macView)
+	}
+	if c := mac.call("POST", "/api/nearby/connect", `{"id":"`+macView.Devices[0].ID+`"}`, &macView); c != 200 || len(macView.Sent) != 1 || macView.Sent[0].State != "sent" {
+		t.Fatalf("invite: %d %+v", c, macView.Sent)
+	}
+	waitUntil(t, "the invitation on the tablet", func() bool {
+		tablet.call("GET", "/api/nearby", "", &view)
+		return len(view.Invites) == 1
+	})
+	if inv := view.Invites[0]; inv.Kind != "invite" || inv.MeshName != "Home" || inv.Name != "mac" {
+		t.Fatalf("the tablet sees %+v", inv)
+	}
+	if c := tablet.call("POST", "/api/nearby/invites/"+view.Invites[0].ID, `{"accept":true,"deviceName":"tablet"}`, nil); c != 200 {
+		t.Fatalf("accept: %d", c)
+	}
+	waitUntil(t, "the tablet to be added", tablet.configured)
+	waitUntil(t, "the Mac to see the invitation answered", func() bool {
+		mac.call("GET", "/api/nearby", "", &macView)
+		return len(macView.Sent) == 1 && macView.Sent[0].State == "joined" && len(macView.Requests) == 0
+	})
+	if c := mac.call("POST", "/api/nearby/sent/"+macView.Sent[0].ID+"/cancel", "", &macView); c != 200 || len(macView.Sent) != 0 {
+		t.Fatalf("forget the answered invitation: %d %+v", c, macView.Sent)
+	}
+
 	// The switch in Settings: an admin that is switched off announces nothing and takes no request.
 	if c := mac.call("PUT", "/api/settings", `{"nearby":false}`, nil); c != 200 {
 		t.Fatalf("settings: %d", c)
@@ -841,5 +885,51 @@ func TestNearbyDevicesThroughTheAPI(t *testing.T) {
 	mac.call("GET", "/api/settings", "", &set)
 	if set.Nearby {
 		t.Fatal("the switch did not stick")
+	}
+}
+
+// Two devices that are not in a mesh: one asks in a tap, the other accepts and makes a mesh, and the first joins it.
+func TestNearbyTwoNewDevicesThroughTheAPI(t *testing.T) {
+	lanPort := needLANPort(t)
+	a, b := nearbyApp(t, lanPort, "a"), nearbyApp(t, lanPort, "b")
+	for _, e := range []*env{a, b} {
+		if c := e.call("POST", "/api/nearby/look", `{}`, nil); c != 200 {
+			t.Fatalf("look: %d", c)
+		}
+	}
+	var va, vb app.NearbyView
+	waitUntil(t, "the two to list each other", func() bool {
+		a.call("GET", "/api/nearby", "", &va)
+		b.call("GET", "/api/nearby", "", &vb)
+		return len(va.Devices) == 1 && len(vb.Devices) == 1
+	})
+	if va.Devices[0].Kind != "new" || va.Devices[0].Name != "b" {
+		t.Fatalf("a sees %+v", va.Devices)
+	}
+	if c := a.call("POST", "/api/nearby/connect", `{"id":"`+va.Devices[0].ID+`","deviceName":"laptop"}`, &va); c != 200 || len(va.Sent) != 1 || va.Sent[0].Kind != "pair" {
+		t.Fatalf("connect: %d %+v", c, va.Sent)
+	}
+	waitUntil(t, "b to be asked", func() bool {
+		b.call("GET", "/api/nearby", "", &vb)
+		return len(vb.Invites) == 1
+	})
+	if inv := vb.Invites[0]; inv.Kind != "pair" || inv.Name != "laptop" || inv.MeshName != "" {
+		t.Fatalf("b sees %+v", inv)
+	}
+	if c := b.call("POST", "/api/nearby/invites/"+vb.Invites[0].ID, `{"accept":true,"meshName":"Дача","deviceName":"phone"}`, nil); c != 200 {
+		t.Fatalf("accept: %d", c)
+	}
+	waitUntil(t, "a to join b's mesh", a.configured)
+	var sa, sb struct {
+		Self  map[string]any   `json:"self"`
+		Peers []map[string]any `json:"peers"`
+	}
+	waitUntil(t, "the two to know each other", func() bool {
+		a.call("GET", "/api/state", "", &sa)
+		b.call("GET", "/api/state", "", &sb)
+		return len(sa.Peers) == 1 && len(sb.Peers) == 1
+	})
+	if sa.Self["meshName"] != "Дача" || sb.Self["meshName"] != "Дача" || sb.Self["admin"] != true || sa.Self["admin"] == true {
+		t.Fatalf("a: %v, b: %v", sa.Self, sb.Self)
 	}
 }

@@ -381,8 +381,9 @@ func (n *Node) handleJoin(conn *quic.Conn) {
 }
 
 // issueMembership makes a newcomer a member: it signs its certificate (the newcomer's key and name, the owner and role
-// given here), tells it who the members are, and starts to look for it at the address it came from. Whoever calls it has
-// made sure that the newcomer may join (an invitation, or the answer of a person at this device).
+// given here), tells it who the members are, and starts to look for it at the address it came from (conn; nil when a
+// member asked for the certificate, nearbyinvite.go). Whoever calls it has made sure that the newcomer may join (an
+// invitation, or the answer of a person at this device or at the member).
 func (n *Node) issueMembership(conn *quic.Conn, joinerID identity.ID, name, owner string, admin bool) (*joinResponse, error) {
 	n.mu.RLock()
 	auth, root, self, meshName, mg := n.auth, n.root, n.self, n.meshName, n.magic
@@ -409,7 +410,7 @@ func (n *Node) issueMembership(conn *quic.Conn, joinerID identity.ID, name, owne
 		resp.AuthSeed = auth.Priv.Seed()
 	}
 	n.learnMember(m)
-	if mg != nil {
+	if mg != nil && conn != nil {
 		if ua, ok := conn.RemoteAddr().(*net.UDPAddr); ok {
 			mg.AddCandidates(joinerID, []netip.AddrPort{ua.AddrPort()}, magic.SrcObserved)
 		}
@@ -420,9 +421,10 @@ func (n *Node) issueMembership(conn *quic.Conn, joinerID identity.ID, name, owne
 }
 
 // adoptMembership takes what an inviter answered a newcomer: the mesh root, the newcomer's own certificate and the members.
-// With an invitation the root must be the one the invitation names (wantRoot); without one (a device nearby that was
-// asked) it is whatever the inviter shows, which is why the people compared the digits first, and the inviter must be an
-// administrator among the members it lists. The inviter is reachable at the addresses we used: they are remembered.
+// With an invitation the root must be the one the invitation names (wantRoot); without one (a device nearby) it is the mesh
+// of the device the person picked — the one whose key answered — so that device must be among the members it lists (an
+// administrator, or a member that had an administrator sign the certificate). The inviter is reachable at the addresses we
+// used: they are remembered.
 func (n *Node) adoptMembership(resp *joinResponse, wantRoot []byte, inviter identity.ID, endpoints []string) error {
 	root, err := identity.ParseRoot(resp.RootCert)
 	if err != nil {
@@ -459,10 +461,10 @@ func (n *Node) adoptMembership(resp *joinResponse, wantRoot []byte, inviter iden
 	if wantRoot == nil {
 		listed := false
 		for _, m := range members {
-			listed = listed || (m.ID == inviter && m.Admin)
+			listed = listed || m.ID == inviter
 		}
 		if !listed {
-			return errors.New("mesh: the device that added us is not an administrator of the mesh it describes")
+			return errors.New("mesh: the device that added us is not a member of the mesh it describes")
 		}
 	}
 
@@ -661,7 +663,11 @@ func (n *Node) JoinMesh(ctx context.Context, code, deviceName string) error {
 	_ = conn.CloseWithError(closeNormal, "done")
 	_ = tr.Close()
 	_ = mg.Close()
-	return n.startMember()
+	if err := n.startMember(); err != nil {
+		return err
+	}
+	n.nearbyInMesh(inv.Inviter)
+	return nil
 }
 
 func mustJSON(v any) []byte {

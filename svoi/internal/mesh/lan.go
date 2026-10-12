@@ -75,11 +75,14 @@ type lanDiscovery struct {
 	port   int
 	cancel context.CancelFunc
 	done   chan struct{}
+	soon   chan struct{} // a round now, not at the next tick (lanSoon)
 
 	mu           sync.Mutex
 	status       LANStatus
 	failedRounds int    // rounds in a row in which nothing could be sent
 	logged       string // the networks as last written to the log
+
+	sendMu sync.Mutex // one sender at a time: the network multicast leaves through is a setting of the socket
 }
 
 // beaconSigned is what a device signs: this very beacon's nonce, its id and its port.
@@ -151,7 +154,7 @@ func (n *Node) startLAN(parent context.Context) {
 	}
 	conn := pc.(*net.UDPConn)
 	ctx, cancel := context.WithCancel(parent)
-	l := &lanDiscovery{n: n, conn: conn, pc4: ipv4.NewPacketConn(conn), port: port, cancel: cancel, done: make(chan struct{})}
+	l := &lanDiscovery{n: n, conn: conn, pc4: ipv4.NewPacketConn(conn), port: port, cancel: cancel, done: make(chan struct{}), soon: make(chan struct{}, 1)}
 	_ = l.pc4.SetMulticastLoopback(true) // several nodes on one machine (tests, demos) hear each other
 	l.status.Enabled = true
 	n.mu.Lock()
@@ -174,6 +177,19 @@ func (l *lanDiscovery) stop() {
 	<-l.done
 }
 
+// lanSoon asks the local discovery for a round now (it runs one every few seconds anyway).
+func (n *Node) lanSoon() {
+	n.mu.RLock()
+	l := n.lan
+	n.mu.RUnlock()
+	if l != nil {
+		select {
+		case l.soon <- struct{}{}:
+		default:
+		}
+	}
+}
+
 // join makes this socket a member of the beacon group on the network ln, so that the group's packets
 // arrive from there.
 func (l *lanDiscovery) join(ln magic.LocalNet) error {
@@ -191,14 +207,18 @@ func (l *lanDiscovery) sendVia(ln magic.LocalNet) error {
 	return setMulticastIfByAddr(l.conn, ln.Addr)
 }
 
-// round announces this device on every network it is on, once: its beacon to the mesh it is in, the announcement that it
-// can add devices (an admin that is visible), or, when it is not in a mesh, the question who nearby can add it.
+// round announces this device on every network it is on, once: its beacon to the mesh it is in; that it can add devices
+// (nearby.go), or that it is not in a mesh, while its person looks around; and the question who is around (a device that
+// is not in a mesh asks always, one in a mesh while its person looks). Then the invitations that wait for an answer are
+// said again, each to its device.
 func (l *lanDiscovery) round(joined map[netip.Addr]bool) {
 	l.n.nearbyExpire()
+	l.n.updateAnonymous() // whether a member can add a device depends on whether an administrator is online
 	root := l.n.Root()
 	advert := l.n.nearbyAdvert()
+	newcomer := l.n.nearbyNewcomerAdvert()
 	var query []byte
-	if root == nil {
+	if root == nil || l.n.NearbyLooking() {
 		query = nearbyQueryPacket()
 	}
 	nets := magic.LocalNets()
@@ -224,31 +244,16 @@ func (l *lanDiscovery) round(joined map[netip.Addr]bool) {
 		if advert != nil {
 			packets = append(packets, advert)
 		}
+		if newcomer != nil {
+			packets = append(packets, newcomer)
+		}
 		if query != nil {
 			packets = append(packets, query)
 		}
-		if len(packets) == 0 {
-			continue
-		}
-		if err := l.sendVia(ln); err != nil {
-			l.n.log.Debug("LAN discovery: cannot pick the network to send on", "network", ln.String(), "err", err)
-		}
-		// The group, and also the network's broadcast address: some Wi-Fi access points drop multicast.
-		targets := []netip.Addr{lanGroupAddr}
-		if bc, ok := ln.Broadcast(); ok {
-			targets = append(targets, bc)
-		}
-		for _, pkt := range packets {
-			for _, to := range targets {
-				if _, err := l.conn.WriteToUDPAddrPort(pkt, netip.AddrPortFrom(to, uint16(l.port))); err != nil {
-					failed++
-					if firstErr == nil {
-						firstErr = err
-					}
-				} else {
-					sent++
-				}
-			}
+		s, f, err := l.sendOn(ln, packets)
+		sent, failed = sent+s, failed+f
+		if firstErr == nil {
+			firstErr = err
 		}
 	}
 	for a := range joined {
@@ -257,6 +262,54 @@ func (l *lanDiscovery) round(joined map[netip.Addr]bool) {
 		}
 	}
 	l.record(nets, sent, failed, firstErr)
+	for _, u := range l.n.nearbyPending(identity.ID{}) {
+		l.sendTo(u.pkt, u.to, nets)
+	}
+}
+
+// sendOn sends the packets on the network ln: to the group, and to the network's broadcast address (some Wi-Fi access
+// points drop multicast).
+func (l *lanDiscovery) sendOn(ln magic.LocalNet, packets [][]byte) (sent, failed int, firstErr error) {
+	if len(packets) == 0 {
+		return 0, 0, nil
+	}
+	l.sendMu.Lock()
+	defer l.sendMu.Unlock()
+	if err := l.sendVia(ln); err != nil {
+		l.n.log.Debug("LAN discovery: cannot pick the network to send on", "network", ln.String(), "err", err)
+	}
+	targets := []netip.Addr{lanGroupAddr}
+	if bc, ok := ln.Broadcast(); ok {
+		targets = append(targets, bc)
+	}
+	for _, pkt := range packets {
+		for _, to := range targets {
+			if _, err := l.conn.WriteToUDPAddrPort(pkt, netip.AddrPortFrom(to, uint16(l.port))); err != nil {
+				failed++
+				if firstErr == nil {
+					firstErr = err
+				}
+			} else {
+				sent++
+			}
+		}
+	}
+	return sent, failed, firstErr
+}
+
+// sendTo sends a packet meant for one device (an invitation, a "no"): to its address, and to the group and the broadcast
+// address of every network as well — the packet names the device it is for, the others drop it. (Where several devices
+// share one machine, as in tests, a packet to the address reaches only one of their sockets; and a network that loses
+// one way may carry another.)
+func (l *lanDiscovery) sendTo(pkt []byte, to netip.AddrPort, nets []magic.LocalNet) {
+	if to.IsValid() {
+		l.sendMu.Lock()
+		_, _ = l.conn.WriteToUDPAddrPort(pkt, to)
+		l.sendMu.Unlock()
+	}
+	for _, ln := range nets {
+		_, _, _ = l.sendOn(ln, [][]byte{pkt})
+	}
 }
 
 // record keeps what the last round did, for LANStatus, and writes a line to the log when it changes.
@@ -321,6 +374,8 @@ func (l *lanDiscovery) run(ctx context.Context) {
 		select {
 		case <-t.C:
 			l.round(joined)
+		case <-l.soon:
+			l.round(joined)
 		case <-ctx.Done():
 			return
 		}
@@ -328,7 +383,7 @@ func (l *lanDiscovery) run(ctx context.Context) {
 }
 
 func (l *lanDiscovery) readLoop(ctx context.Context) {
-	buf := make([]byte, 256)
+	buf := make([]byte, nearbyPacketMax)
 	for {
 		nr, from, err := l.conn.ReadFromUDPAddrPort(buf)
 		if err != nil {
@@ -411,8 +466,9 @@ func (n *Node) LANStatus() LANStatus {
 	return l.snapshot()
 }
 
-// heard handles one packet from the local network: a member's beacon, an announcement of a device that can add devices
-// (nearby.go), or a question who can.
+// heard handles one packet from the local network: a member's beacon, or a packet of the devices nearby (nearby.go): an
+// announcement of a device that can add devices, one of a device that is not in a mesh, a question who is around, an
+// invitation, or a "no" to one.
 func (l *lanDiscovery) heard(b []byte, from netip.AddrPort) {
 	if len(b) == 0 || !fromLocalNetwork(from.Addr()) {
 		return
@@ -420,10 +476,22 @@ func (l *lanDiscovery) heard(b []byte, from netip.AddrPort) {
 	switch b[0] {
 	case nearbyAnnounceMarker:
 		l.n.nearbyAnnounced(b, from)
+	case nearbyNewcomerMarker:
+		l.n.nearbyNewcomerHeard(b, from)
+	case nearbyInviteMarker:
+		l.n.nearbyInvited(b, from)
+	case nearbyDeclineMarker:
+		l.n.nearbyDeclined(b, from)
 	case nearbyQueryMarker:
 		if len(b) == nearbyQueryLen && b[1] == nearbyFormat {
-			if advert := l.n.nearbyAdvert(); advert != nil && l.n.nearbyShouldReply(from.Addr()) {
-				_, _ = l.conn.WriteToUDPAddrPort(advert, from) // to the asker only: it also works where multicast does not
+			// to the asker only: it also works where multicast does not
+			advert, newcomer := l.n.nearbyAdvert(), l.n.nearbyNewcomerAdvert()
+			if (advert != nil || newcomer != nil) && l.n.nearbyShouldReply(from.Addr()) {
+				for _, pkt := range [][]byte{advert, newcomer} {
+					if pkt != nil {
+						_, _ = l.conn.WriteToUDPAddrPort(pkt, from)
+					}
+				}
 			}
 		}
 	default:
