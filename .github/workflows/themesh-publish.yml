@@ -32,13 +32,6 @@ on:
         description: "mark it as a pre-release"
         type: boolean
         default: true
-      # A new tag on a commit whose workflow files differ from the default branch's needs the "workflows" permission, which the
-      # token of this job cannot have (the release fails with 403 "Resource not accessible by integration"). A draft creates no
-      # tag: the files are attached, and the tag is created at `commit` when a person presses "Publish release".
-      draft:
-        description: "make a draft that a person publishes (needed when the tag cannot be created by this job)"
-        type: boolean
-        default: false
   push:
     # Only so that GitHub registers this workflow when it is pushed to a branch (a workflow that exists only on a branch cannot
     # be started by hand before it has run once). The job below does nothing for a push.
@@ -82,6 +75,5 @@ jobs:
           name: ${{ inputs.title }}
           body: ${{ inputs.notes }}
           prerelease: ${{ inputs.prerelease }}
-          draft: ${{ inputs.draft }}
           fail_on_unmatched_files: true
           files: publish/*
