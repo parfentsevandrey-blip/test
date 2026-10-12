@@ -95,11 +95,14 @@ function InvitesCard({ invites, admin }) {
     <ul class="list">
       ${invites.map((inv) => {
         const left = inv.expires - nowSec();
+        // the role has a line of its own: in the narrow side column of a wide window the role, the time left and the code did not fit
+        // on one (the time left ran under the buttons and the code was cut to nothing); now only the code is cut short
         return html`<li class="list-row inv-row" key=${inv.id} data-testid="invite-row" data-id=${inv.id} data-owner=${inv.owner || ""}>
           <span class=${cx("inv-row__icon", inv.admin && "is-admin")}><${Icon} name=${inv.admin ? "shield" : "userPlus"} size=${16} /></span>
           <div class="grow">
             <span class="strong small ellipsis">${inv.owner ? t("inv.for", { owner: inv.owner }) : inv.admin ? t("inv.roleAdminLong") : t("inv.roleRegularLong")}</span>
-            <span class="xsmall faint row gap-1">${inv.owner && html`<span class="nowrap">${inv.admin ? t("inv.roleAdmin") : t("inv.roleRegular")}</span><span aria-hidden="true">·</span>`}<span class="tnum nowrap" title=${t("inv.expiresIn")}>${left > 0 ? t("inv.left", { time: fmtCountdown(left) }) : t("inv.expired")}</span>
+            ${inv.owner && html`<span class="xsmall faint ellipsis">${inv.admin ? t("inv.roleAdmin") : t("inv.roleRegular")}</span>`}
+            <span class="xsmall faint row gap-1"><span class="tnum nowrap" title=${t("inv.expiresIn")}>${left > 0 ? t("inv.left", { time: fmtCountdown(left) }) : t("inv.expired")}</span>
               <span aria-hidden="true">·</span><span class="mono ellipsis" title=${inv.code}>${inv.code}</span></span>
           </div>
           <${CopyButton} text=${inv.code} label=${t("inv.copyCode")} />

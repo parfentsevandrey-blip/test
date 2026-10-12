@@ -143,6 +143,10 @@ html[data-skin="glass"][data-vibrancy="on"][data-theme="light"] { --glass-fill: 
 html[data-skin="glass"][data-vibrancy="on"][data-theme="dark"] { --glass-fill: rgba(22, 31, 36, .68); --glass-fill-strong: rgba(20, 28, 33, .88); --glass-fill-side: rgba(18, 26, 31, .64); }
 html[data-skin="glass"][data-vibrancy="on"][data-theme="light"] { --text-2: #2f3b41; --text-3: #3d4950; }
 html[data-skin="glass"][data-vibrancy="on"][data-theme="dark"] { --text-2: #c8d1cd; --text-3: #b7c2be; }
+/* So is coloured text: a section's link straight on the window, a folder's count on its pane, the word on a chip. Over the dullest
+   material (the stand-ins of check-contrast.mjs) the usual colours fell to 3.7–4.4:1; these keep 4.7:1 and more. */
+html[data-skin="glass"][data-vibrancy="on"][data-theme="light"] { --accent-text: #044a35; --amber-text: #6a3d05; }
+html[data-skin="glass"][data-vibrancy="on"][data-theme="dark"] { --accent-text: #7ff0cb; --amber-text: #f8d08f; --danger-text: #ffa5a2; }
 html[data-skin="glass"] ::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); }
 
 /* ---------- 2. panels: the big glass surfaces ---------- */

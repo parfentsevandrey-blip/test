@@ -116,8 +116,9 @@ function collectRuns(dissolve) {
     const rects = [...range.getClientRects()].filter((r) => r.width > 2 && r.height > 4);
     for (const r of rects) {
       let x0 = Math.max(0, r.left), y0 = Math.max(0, r.top), x1 = Math.min(innerWidth, r.right), y1 = Math.min(innerHeight, r.bottom);
-      // only what is not cut off by a scrolling or clipping parent is on screen
-      for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
+      // only what is not cut off by a scrolling or clipping box is on screen — the text's own element included: a line cut short
+      // with "…" (`.ellipsis`) has a range as long as the whole text, and the part past the "…" is not drawn
+      for (let p = el; p && p !== document.documentElement; p = p.parentElement) {
         const ps = getComputedStyle(p);
         if (ps.overflowX === "visible" && ps.overflowY === "visible") continue;
         const pr = p.getBoundingClientRect();
