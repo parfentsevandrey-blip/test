@@ -126,7 +126,7 @@ html[data-look="rosa"][data-theme="dark"] {
   --accent-softer: color-mix(in srgb, var(--sky-accent) 11%, rgb(var(--sky-smoke-rgb) / .72));
   --accent-line: rgb(var(--sky-accent-rgb) / .62);
   --focus: color-mix(in srgb, var(--sky-accent) 78%, #fff);
-  --amber-text: #ffd896; --danger-text: #ffbdb9; --info-text: #c1d6ff;
+  --amber-text: #ffd896; --danger-text: #ffcbc7; --info-text: #c1d6ff; /* (a lighter pink: a failed delivery's small reason kept only 4.2:1 low in a tablet's mail at sunset) */
   --ok: #78e6c1; --ok-text: #9af1d6; --ok-soft: rgb(120 230 193 / .22);
   --backdrop: rgb(var(--sky-deep-rgb) / .55);
   --node-fill: rgb(var(--sky-smoke-rgb) / .92);
@@ -142,7 +142,7 @@ html[data-look="rosa"][data-theme="dark"] {
   --glass-fill: rgb(var(--sky-smoke-rgb) / calc(.45 + .34 * var(--sky-daylight))); /* (.45: the page reaches the bright horizon at the foot of a phone's screen now that the tab bar is gone) */
   --glass-fill-strong: rgb(var(--sky-smoke-rgb) / calc(.72 + .18 * var(--sky-daylight)));
   --glass-fill-side: var(--glass-fill);
-  --glass-select: rgb(255 255 255 / .20);
+  --glass-select: rgb(255 255 255 / .16); /* (.20 left the open folder of Mail at 4.5:1 on a tablet at sunrise) */
   --glass-well: rgb(var(--sky-deep-rgb) / .38);
   --glass-sheen:
     radial-gradient(44px 2.5px at 78% 0, rgb(255 255 255 / .95), rgb(255 255 255 / 0) 100%),
@@ -325,7 +325,18 @@ html[data-look="rosa"] .conn-pill, html[data-look="rosa"] .topbar__help { color:
    sheets of Mail and Chat grow denser towards their foot, and the status bar is of the strong glass (light type only: a pale sky
    under dark type needs none of it). */
 html[data-look="rosa"][data-theme="dark"] {
-  --rz-foot: linear-gradient(to bottom, rgb(var(--sky-smoke-rgb) / 0) 40%, rgb(var(--sky-smoke-rgb) / calc(.16 + .30 * var(--sky-daylight))) 100%);
+  --rz-foot: linear-gradient(to bottom, rgb(var(--sky-smoke-rgb) / 0) 35%, rgb(var(--sky-smoke-rgb) / calc(.26 + .26 * var(--sky-daylight))) 100%);
+}
+/* On a wide screen the start screen's words stand at the height of the bright band above the horizon (at the golden hour the
+   second line had 4.2:1 on a tablet): a veil of the sky's deep colour lies behind them. (A phone's taller screen keeps them high
+   in the deep blue, and gets no new layer.) */
+@media (min-width: 760px) {
+  html[data-look="rosa"][data-theme="dark"] .onb__hero { position: relative; isolation: isolate; }
+  html[data-look="rosa"][data-theme="dark"] .onb__hero::before {
+    content: ""; position: absolute; z-index: -1; inset: -32px -64px -48px; pointer-events: none;
+    background: radial-gradient(farthest-side at 50% 62%, rgb(var(--sky-deep-rgb) / .42), rgb(var(--sky-deep-rgb) / .26) 55%, rgb(var(--sky-deep-rgb) / 0));
+  }
+  html[data-look="rosa"][data-theme="dark"] .onb__lead { color: var(--text); }
 }
 html[data-look="rosa"][data-theme="dark"][data-skin="glass"] :is(.sidebar, .mail, .chat) { background-image: var(--rz-foot), var(--glass-sheen); }
 html[data-look="rosa"] .fm-status { background: var(--glass-fill-strong); }
@@ -383,7 +394,11 @@ html[data-look="rosa"] .input, html[data-look="rosa"] .select { border-radius: 1
 @media (max-width: 359px) { .skypick { gap: 6px; } }
 
 /* ---------- 7. less glass, less motion ---------- */
-html[data-look="rosa"][data-fx="still"] *, html[data-look="rosa"][data-fx="still"] *::before, html[data-look="rosa"][data-fx="still"] *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
+/* "still": nothing moves and nothing waits to move (an animation with a delay, the second ring of the radar say, would sit in a layer
+   of its own until it starts: the software graphics of the CI emulator, which gets "still", died on such a page); the rings of the
+   radar are motion and nothing else, so there are none */
+html[data-look="rosa"][data-fx="still"] *, html[data-look="rosa"][data-fx="still"] *::before, html[data-look="rosa"][data-fx="still"] *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; }
+html[data-look="rosa"][data-fx="still"] .nearby__radar::before, html[data-look="rosa"][data-fx="still"] .nearby__radar::after { display: none; }
 html[data-look="rosa"][data-fx="still"] [data-receding] { transform: none; will-change: auto; }
 @media (prefers-reduced-motion: reduce) {
   html[data-look="rosa"] [data-receding] { transform: none; will-change: auto; }
