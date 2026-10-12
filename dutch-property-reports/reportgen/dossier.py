@@ -135,11 +135,15 @@ ACCENT = re.compile(r"\*\*(.+?)\*\*", re.DOTALL)
 UNITS = ("%", "м²", "м", "км", "мм", "кг/м²", "A", "Wp", "т", "мин")
 NUMBER_UNIT = re.compile(r"(\d)\s+(" + "|".join(re.escape(u) for u in UNITS) + r")(?![\w²])")
 CURRENCY = re.compile(r"€\s+(?=[\d])")
+# Энергетический класс «A+++» LibreOffice рвёт после плюса: «A+» в конце
+# строки, «++» в начале следующей. Знаки склеиваются невидимым WORD JOINER.
+ENERGY_CLASS = re.compile(r"(?<![\w+])([A-G])(\+{1,4})(?![\w+])")
 
 
 def _nbsp(text: str) -> str:
     """Неразрывные пробелы после знака валюты и перед единицами измерения."""
     text = CURRENCY.sub("€\u00a0", text)
+    text = ENERGY_CLASS.sub(lambda m: "\u2060".join(m.group(1) + m.group(2)), text)
     return NUMBER_UNIT.sub(lambda m: f"{m.group(1)}\u00a0{m.group(2)}", text)
 
 
