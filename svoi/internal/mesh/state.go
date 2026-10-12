@@ -174,7 +174,11 @@ func (n *Node) saveNow() {
 		n.saveTimer.Stop()
 		n.saveTimer = nil
 	}
+	closed := n.closed
 	n.saveMu.Unlock()
+	if closed {
+		return
+	}
 	if err := n.saveState(); err != nil {
 		n.log.Error("saving state failed", "err", err)
 	}
@@ -184,13 +188,17 @@ func (n *Node) saveNow() {
 func (n *Node) saveSoon() {
 	n.saveMu.Lock()
 	defer n.saveMu.Unlock()
-	if n.saveTimer != nil {
+	if n.saveTimer != nil || n.closed {
 		return
 	}
 	n.saveTimer = time.AfterFunc(500*time.Millisecond, func() {
 		n.saveMu.Lock()
 		n.saveTimer = nil
+		closed := n.closed
 		n.saveMu.Unlock()
+		if closed {
+			return
+		}
 		if err := n.saveState(); err != nil {
 			n.log.Error("saving state failed", "err", err)
 		}

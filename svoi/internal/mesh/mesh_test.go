@@ -170,9 +170,11 @@ func TestCreateJoinAndRPC(t *testing.T) {
 	if info.Name != "beta" || !strings.HasPrefix(info.IP4, "100.") || !info.Online {
 		t.Fatalf("peer info %+v", info)
 	}
-	if info.Hello == nil || info.Hello.Version != Version {
-		t.Fatalf("hello not exchanged: %+v", info.Hello)
-	}
+	// (the hellos go once the link is up, next to the calls above: under load they can come a moment later)
+	waitFor(t, 10*time.Second, "the hellos to be exchanged", func() bool {
+		h := a.Peer(b.ID()).Info().Hello
+		return h != nil && h.Version == Version
+	})
 }
 
 func TestInviteIsSingleUseAndExpires(t *testing.T) {

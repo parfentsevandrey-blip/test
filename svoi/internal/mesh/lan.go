@@ -237,7 +237,10 @@ func (l *lanDiscovery) round(joined map[netip.Addr]bool) {
 		}
 		var packets [][]byte
 		if root != nil {
-			if beacon := encodeBeacon(root.LANKey(), l.n.device(), l.n.udpPort); beacon != nil { // fresh nonce per send: unlinkable
+			l.n.mu.RLock()
+			udpPort := l.n.udpPort
+			l.n.mu.RUnlock()
+			if beacon := encodeBeacon(root.LANKey(), l.n.device(), udpPort); beacon != nil { // fresh nonce per send: unlinkable
 				packets = append(packets, beacon)
 			}
 		}

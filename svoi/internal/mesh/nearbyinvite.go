@@ -31,7 +31,8 @@ import (
 //
 // A member that is not an administrator holds no key to sign certificates with: it adds a device by asking an
 // administrator of its mesh that is online to sign one (mesh.nearbyAdd). The administrator does that for any member — the
-// person at the member said yes to the device in front of them — at most a few times a minute, and tells its own person.
+// person at the member said yes to the device in front of them — at most a few times a minute, and tells its own person;
+// an administrator whose person switched "nearby" off does not.
 
 // NearbyInvite is an invitation to this device from a device nearby.
 type NearbyInvite struct {
@@ -119,14 +120,21 @@ func firstText(texts ...string) string {
 func (n *Node) NearbyInvites() []NearbyInvite {
 	n.nearbyExpire()
 	configured := n.Configured()
-	out := []NearbyInvite{}
+	var all []*nearbyIncoming
 	n.nearby.mu.Lock()
 	for _, v := range n.nearby.incoming {
 		if !configured || v.Kind == nearbyPairKind {
-			out = append(out, v.NearbyInvite)
+			c := *v
+			all = append(all, &c)
 		}
 	}
 	n.nearby.mu.Unlock()
+	out := []NearbyInvite{}
+	for _, v := range all {
+		if n.Peer(v.from) == nil { // (a request of a device that has joined this mesh meanwhile is answered)
+			out = append(out, v.NearbyInvite)
+		}
+	}
 	sort.Slice(out, func(i, j int) bool {
 		if out[i].Received != out[j].Received {
 			return out[i].Received < out[j].Received
@@ -646,6 +654,10 @@ func (n *Node) nearbyIssue(ctx context.Context, conn *quic.Conn, joiner identity
 		cctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 		cerr := p.Call(cctx, "mesh.nearbyAdd", nearbyAddRequest{Device: joiner, Name: name, Owner: owner}, &resp)
 		cancel()
+		var re *RPCError
+		if errors.As(cerr, &re) && re.Code == CodeUnsupported {
+			continue // this administrator does not add devices nearby (its person switched it off)
+		}
 		if cerr != nil {
 			err = cerr
 			continue
@@ -659,8 +671,10 @@ func (n *Node) nearbyIssue(ctx context.Context, conn *quic.Conn, joiner identity
 		}
 		n.learnMember(m)
 		if mg := n.Magic(); mg != nil {
-			if ua, ok := conn.RemoteAddr().(*net.UDPAddr); ok {
-				mg.AddCandidates(joiner, []netip.AddrPort{ua.AddrPort()}, magic.SrcObserved)
+			if conn != nil {
+				if ua, ok := conn.RemoteAddr().(*net.UDPAddr); ok {
+					mg.AddCandidates(joiner, []netip.AddrPort{ua.AddrPort()}, magic.SrcObserved)
+				}
 			}
 			mg.Poke(joiner)
 		}
@@ -693,13 +707,16 @@ func (n *Node) registerNearbyHandlers() {
 	n.Handle("mesh.nearbyAdd", func(ctx context.Context, c *Call) (any, error) {
 		// A member of the mesh adds a device nearby that its person said yes to, and asks this administrator to sign the
 		// device's certificate (the member has no key to do it with). Any member may; a few a minute; this device's person
-		// is told.
+		// is told. Not while this device's person has switched "nearby" off.
 		var req nearbyAddRequest
 		if err := c.Decode(&req); err != nil {
 			return nil, err
 		}
 		if !n.IsAdmin() {
 			return nil, ErrNotAdmin
+		}
+		if !n.NearbyVisible() {
+			return nil, Errf(CodeUnsupported, "this administrator does not add devices nearby (switched off in its settings)")
 		}
 		if req.Device.IsZero() || req.Device == n.device().ID {
 			return nil, Errf(CodeInvalid, "no device")
@@ -711,7 +728,7 @@ func (n *Node) registerNearbyHandlers() {
 			return nil, Errf(CodeDenied, "this device was removed from the mesh")
 		}
 		if !n.nearbyAddAllowed() {
-			return nil, Errf(CodeDenied, "too many devices were added in the last minute; try again a little later")
+			return nil, Errf(CodeBusy, "too many devices were added in the last minute; try again a little later")
 		}
 		owner := identity.SanitizeOwner(req.Owner)
 		if owner == "" {

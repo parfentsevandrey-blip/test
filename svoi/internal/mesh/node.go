@@ -185,6 +185,7 @@ type Node struct {
 
 	saveMu    sync.Mutex
 	saveTimer *time.Timer
+	closed    bool // Close has saved for the last time: what a goroutine still running asks to save after it is not written
 
 	busMu sync.Mutex
 	subs  map[int]chan Event
@@ -382,6 +383,7 @@ func (n *Node) Leave() error {
 // Close shuts the node down.
 func (n *Node) Close() error {
 	n.saveMu.Lock()
+	n.closed = true
 	if n.saveTimer != nil {
 		n.saveTimer.Stop()
 		n.saveTimer = nil
@@ -433,8 +435,11 @@ func (n *Node) startMember() error {
 		n.cancel()
 		return err
 	}
-	n.udpPort = mg.Port()
-	_ = os.WriteFile(filepath.Join(n.cfg.Dir, "udp.port"), []byte(fmt.Sprintf("%d\n", n.udpPort)), 0o600)
+	udpPort := mg.Port()
+	n.mu.Lock()
+	n.udpPort = udpPort // (read by Self and by what goes out on the local network, from other goroutines)
+	n.mu.Unlock()
+	_ = os.WriteFile(filepath.Join(n.cfg.Dir, "udp.port"), []byte(fmt.Sprintf("%d\n", udpPort)), 0o600)
 
 	// Members are authenticated per packet (see magic); whoever else reaches the
 	// QUIC listener is a joiner and must prove it can receive at its source
@@ -478,7 +483,7 @@ func (n *Node) startMember() error {
 	if n.cfg.LANPort >= 0 {
 		n.startLAN(ctx)
 	}
-	n.log.Info("mesh network started", "name", self.Name, "udp", n.udpPort, "peers", len(peers))
+	n.log.Info("mesh network started", "name", self.Name, "udp", udpPort, "peers", len(peers))
 	n.emit(Event{Kind: EvMembers})
 	return nil
 }

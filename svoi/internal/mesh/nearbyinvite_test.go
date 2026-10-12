@@ -2,7 +2,9 @@ package mesh
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
+	"errors"
 	"strings"
 	"sync"
 	"testing"
@@ -381,8 +383,57 @@ func TestNearbyTwoNewcomersMakeAMesh(t *testing.T) {
 	}
 }
 
-// Both people tap each other's device at once: one mesh is made (by the device with the smaller key), not two.
+// Two devices that are not in a mesh: both people tap each other at once. When the two requests cross (each went out
+// before the other one was heard), the device with the smaller key makes the mesh and the other joins it; the person at
+// the bigger one tapping "accept" as well changes nothing.
 func TestNearbyBothTapAtOnce(t *testing.T) {
+	needLAN(t)
+	port := freeUDPPort(t)
+	a := lanNode(t, "a", port)
+	b := lanNode(t, "b", port)
+	keepLooking(t, "", a, b)
+	waitNearby(t, 20*time.Second, "the two to list each other", func() bool {
+		_, ok1 := listed(a, b.ID())
+		_, ok2 := listed(b, a.ID())
+		return ok1 && ok2
+	})
+	// What two taps that cross do (ConnectNearby on a device that is not in a mesh, of one that is not either): both
+	// requests go out. (A tap that comes after the other request was heard is an "accept" — the next test.)
+	for _, p := range [][2]*Node{{a, b}, {b, a}} {
+		e, ok := p[0].nearbyEntryOf(p[1].ID().String())
+		if !ok {
+			t.Fatal("the other device is not listed any more")
+		}
+		if err := p[0].inviteNearby(e.devID, e.Name, e.OS, e.lan, e.ticket, nearbyPairKind, "", NearbyOptions{MeshName: "Дом"}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	big, ida, idb := a, a.ID(), b.ID()
+	if bytes.Compare(ida[:], idb[:]) < 0 {
+		big = b
+	}
+	small := a
+	if big == a {
+		small = b
+	}
+	waitNearby(t, 20*time.Second, "the bigger key to see the other's request", func() bool { _, ok := invitedBy(big, small.ID()); return ok || big.Configured() })
+	_ = big.AcceptNearby(small.ID().String(), NearbyOptions{MeshName: "Дом"})
+	waitNearby(t, 40*time.Second, "both to be in one mesh", func() bool {
+		return a.Configured() && b.Configured() && (a.NearbyJoinStatus().State == "joined" || b.NearbyJoinStatus().State == "joined")
+	})
+	if !bytes.Equal(a.Root().Pub, b.Root().Pub) {
+		t.Fatal("two meshes were made")
+	}
+	if !small.IsAdmin() || big.IsAdmin() {
+		t.Fatalf("the device with the smaller key is to make the mesh: small admin=%v, big admin=%v", small.IsAdmin(), big.IsAdmin())
+	}
+	bothOnline(t, a, b)
+}
+
+// The same two taps as the people make them, at the same moment: whatever the order the packets take, the two end up in
+// one mesh, with one administrator — the device with the smaller key if the requests crossed, else the one whose tap
+// came second and so accepted the other's request.
+func TestNearbyBothTapAtTheSameMoment(t *testing.T) {
 	needLAN(t)
 	port := freeUDPPort(t)
 	a := lanNode(t, "a", port)
@@ -404,25 +455,25 @@ func TestNearbyBothTapAtOnce(t *testing.T) {
 		}(p[0], p[1])
 	}
 	wg.Wait()
-	// The person at the device with the bigger key also taps "accept": that changes nothing.
-	big, ida, idb := a, a.ID(), b.ID()
-	if bytes.Compare(ida[:], idb[:]) < 0 {
-		big = b
-	}
-	small := a
-	if big == a {
-		small = b
-	}
-	waitNearby(t, 20*time.Second, "the bigger key to see the other's request", func() bool { _, ok := invitedBy(big, small.ID()); return ok || big.Configured() })
-	_ = big.AcceptNearby(small.ID().String(), NearbyOptions{MeshName: "Дом"})
 	waitNearby(t, 40*time.Second, "both to be in one mesh", func() bool {
 		return a.Configured() && b.Configured() && (a.NearbyJoinStatus().State == "joined" || b.NearbyJoinStatus().State == "joined")
 	})
 	if !bytes.Equal(a.Root().Pub, b.Root().Pub) {
 		t.Fatal("two meshes were made")
 	}
-	if !small.IsAdmin() || big.IsAdmin() {
-		t.Fatalf("the device with the smaller key is to make the mesh: small admin=%v, big admin=%v", small.IsAdmin(), big.IsAdmin())
+	if a.IsAdmin() == b.IsAdmin() {
+		t.Fatalf("one administrator, not %v and %v", a.IsAdmin(), b.IsAdmin())
+	}
+	// The one that made the mesh invited the other into it; the other had asked to make one together.
+	maker, other := a, b
+	if b.IsAdmin() {
+		maker, other = b, a
+	}
+	if o, ok := sentTo(maker, other.ID()); !ok || o.Kind != nearbyInviteKind {
+		t.Fatalf("the device that made the mesh did not invite the other into it: %+v", o)
+	}
+	if o, ok := sentTo(other, maker.ID()); ok && o.Kind != nearbyPairKind {
+		t.Fatalf("the other device sent %+v", o)
 	}
 	bothOnline(t, a, b)
 }
@@ -498,6 +549,17 @@ func TestNearbyAMemberAddsADevice(t *testing.T) {
 		p := tablet.Peer(mac.ID())
 		return p != nil && p.Online()
 	})
+
+	// The person at the administrator switches "nearby" off: it adds nobody for the members either.
+	mac.SetNearbyVisible(false)
+	stranger := identity.GenerateDevice().ID
+	if _, err := phone.nearbyIssue(context.Background(), nil, stranger, "stranger", ""); !errors.Is(err, ErrNoAdminOnline) {
+		t.Fatalf("an administrator that switched nearby off still adds a device for a member: %v", err)
+	}
+	if mac.Peer(stranger) != nil {
+		t.Fatal("the administrator signed a certificate anyway")
+	}
+	mac.SetNearbyVisible(true)
 
 	// The administrator goes away: the member cannot add anybody, and does not offer to.
 	mac.Close()
