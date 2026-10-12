@@ -106,9 +106,13 @@ jobs:
           - name: tests
             gpu: swiftshader_indirect
             only: -Pandroid.testInstrumentationRunnerArguments.notClass=app.themesh.mobile.GlassShotsTest
-          # The pictures of the window (GlassShotsTest): every screen but one.
+          # The pictures of the window (GlassShotsTest): every screen but one. On the usual graphics the emulator died now and then a moment after
+          # a page of the file-manager panel had loaded: in every run before two fixes of the page (the start screen showed two radars while nobody
+          # was around; in "still" an animation with a delay waited in a layer of its own), and in one of the first two runs after them (the
+          # first screen, f0759a1), while the tests job above passed both times. On ANGLE over SwiftShader, which the picker job below uses, it has
+          # never died, so the pictures are taken there too: slower, but every picture is there.
           - name: pictures
-            gpu: swiftshader_indirect
+            gpu: swangle_indirect
             only: -Pandroid.testInstrumentationRunnerArguments.class=app.themesh.mobile.GlassShotsTest -Pandroid.testInstrumentationRunnerArguments.shots=main
           # The one picture left: the page «Настройки → Внешний вид» with the sky picker. In the usual mode it kills the emulator itself (its render
           # thread segfaults a second after the page opens, seen in dmesg; not memory, not the app; it depended on the size of the labels of the
