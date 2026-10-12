@@ -47,6 +47,15 @@ public interface Texts {
     /** «Код 482 913: сверьте его с экраном нового устройства». */
     String nearbyBody(String code);
 
+    /** «Mac приглашает в сеть «Дом»». */
+    String nearbyInviteTitle(String name, String mesh);
+
+    /** «Mac предлагает создать сеть вместе». */
+    String nearbyPairTitle(String name);
+
+    /** «Откройте The Mesh, чтобы ответить». */
+    String nearbyInviteBody();
+
     /** «Запускаем…». */
     String statusStarting();
 

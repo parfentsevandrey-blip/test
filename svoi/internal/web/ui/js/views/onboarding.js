@@ -1,4 +1,6 @@
-// Onboarding (configured:false): create a new mesh or join with an invite.
+// The start screen of a device that is not in a mesh: the devices around with The Mesh open, to connect with in a tap
+// (views/nearby.js) — that is the way. Making a mesh alone, or joining one with an invitation code (a device that is not
+// nearby), are there too, below.
 import { html, useEffect, useRef, useState } from "../../vendor/preact-htm.js";
 import { Icon, Logo } from "../icons.js";
 import { t, getLang } from "../i18n.js";
@@ -255,10 +257,11 @@ export function OnboardingView() {
         <p class="onb__lead onb__lead--2">${t("onb.lead2")}</p>
       </header>
 
-      ${asking && html`<div class="onb__panel onb__panel--nearby"><${NearbyJoin} join=${nearbyJoin} self=${self} /></div>`}
+      ${asking && html`<div class="onb__panel onb__panel--nearby"><${NearbyJoin} join=${nearbyJoin} /></div>`}
       ${!asking && !mode && html`<${NearbySection} self=${self} />`}
 
-      ${!asking && !mode && html`<div class="onb__choices">
+      ${!asking && !mode && html`<p class="onb__other">${t("onb.other")}</p>`}
+      ${!asking && !mode && html`<div class="onb__choices onb__choices--other">
         <button type="button" class="onb-choice" onClick=${() => setMode("create")} data-testid="onb-create">
           <span class="onb-choice__icon"><${Icon} name="sparkle" size=${26} /></span>
           <span class="onb-choice__title">${t("onb.create.title")}</span>

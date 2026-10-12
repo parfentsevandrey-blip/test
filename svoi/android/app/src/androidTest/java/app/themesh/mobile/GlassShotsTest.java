@@ -115,13 +115,19 @@ public class GlassShotsTest {
         web.waitFor("window.__created === 200", 30_000);
     }
 
-    /** «Главная», окно «Добавить устройство», приглашение и «Настройки» в обеих темах. */
+    /**
+     * «Обзор» (корень панели), место «Рядом» (туда ведёт «Добавить устройство»), приглашение для тех, кто не рядом, и «Настройки» в
+     * обеих темах.
+     */
     private void homeScreens(WebProbe web) throws Exception {
         for (String theme : new String[] {"light", "dark"}) {
             setTheme(web, theme, "page-home");
             shot(web, "04-home-" + theme);
             web.click("[data-testid=\"home-action-add\"]");
-            shot(web, "05-add-device-" + theme);
+            web.waitFor("document.querySelector('[data-testid=\"page-nearby\"]') != null", 20_000);
+            shot(web, "05-nearby-" + theme);
+            web.click("[data-testid=\"nearby-far-invite\"]");
+            web.waitFor("document.querySelector('[data-testid=\"invite-create\"]') != null", 20_000);
             web.click("[data-testid=\"invite-create\"]");
             web.waitFor("document.querySelector('[data-testid=\"invite-qr\"] img') != null", 20_000);
             shot(web, "06-invite-" + theme);

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // A REAL run of a release binary, nothing mocked or simulated: two separate `themesh` processes,
 // each with its own HOME like two computers, set up and used only through the web interface in a
-// real browser — create a network, add the second device with an invitation code, send files,
-// chat, send mail, switch one device off and on again. The screenshots are of that real interface;
+// real browser — create a network, add the second device that is nearby (it finds the first one by
+// itself: one tap there, "Добавить" here), send files, chat, send mail, switch one device off and on again. The screenshots are of that real interface;
 // the checks compare real bytes (sha256) on the receiving side.
 //
 //   node web-e2e/tour.mjs --bin /path/to/themesh [--out docs/img/real] [--theme light|dark]
@@ -161,37 +161,51 @@ try {
   const sa = await A.state();
   check("network created", sa.configured && sa.self.meshName === "Наша семья" && sa.self.admin, `${sa.self.name}, admin`);
 
-  step("3. Add the second device: one-time invitation code");
+  step("3. Add the second device: it is nearby — no code, no QR");
   await tid(pa, "home-action-add").click();
-  await tid(pa, "invite-create").click();
-  await tid(pa, "invite-qr").locator("img").waitFor();
-  const code = (await tid(pa, "invite-code").innerText()).trim();
-  check("the invitation is a one-time code", /^MESH1-/.test(code), code.slice(0, 14) + "…");
-  await shot(pa, "04-invitation");
-
-  step("4. Second device (another process, another home directory): join with the code");
+  await tid(pa, "page-nearby").waitFor();
   const pb = await openPage(B, { w: 1280, h: 800 });
   await tid(pb, "page-onboarding").waitFor();
-  await tid(pb, "onb-join").click();
-  await tid(pb, "onb-code").fill(code);
-  await tid(pb, "onb-device-name").fill("home-server");
-  await shot(pb, "05-join-with-code", { h: 1040 });
-  await tid(pb, "onb-submit").click();
+  await tid(pb, "nearby-rename").click();
+  await tid(pb, "nearby-name-input").fill("home-server");
+  await tid(pb, "nearby-name-input").press("Enter");
+  // the laptop is in the new device's list by itself, with the name of its network; and the laptop lists the new device
+  const row = pb.locator('[data-testid="nearby-device"][data-name="laptop"]');
+  await row.waitFor({ timeout: 60000 });
+  const rowText = (await row.innerText()).replace(/\s+/g, " ");
+  check("the new device finds the laptop nearby by itself, with the name of its network", /Наша семья/.test(rowText), rowText);
+  await pa.locator('[data-testid="nearby-device"][data-name="home-server"]').waitFor({ timeout: 60000 });
+  check("the laptop lists the new device nearby", true);
+  await shot(pb, "04-nearby-new-device", { h: 1040 });
+  await shot(pa, "05-nearby-laptop");
+
+  step("4. One tap on the new device; the person at the laptop says «Добавить»");
+  await row.getByTestId("nearby-connect").click();
+  await pb.locator('[data-testid="nearby-join"][data-state="confirmed"] [data-testid="nearby-code"]').waitFor({ timeout: 60000 });
+  const code = await pb.locator('[data-testid="nearby-code"] .nearby-code__digits').getAttribute("data-code");
+  await tid(pa, "nearby-ask").waitFor({ timeout: 30000 });
+  const asked = await pa.locator('[data-testid="nearby-ask-code"] .nearby-code__digits').getAttribute("data-code");
+  check("both screens show the same six digits (nobody has to type them)", /^\d{6}$/.test(code) && code === asked, code);
+  await shot(pb, "06-nearby-waiting", { h: 1040 });
+  await shot(pa, "07-nearby-ask");
+  await tid(pa, "nearby-allow").click();
   await tid(pb, "page-home").waitFor({ timeout: 60000 });
   await pb.waitForFunction(() => document.querySelectorAll('[data-testid="home-device"]').length === 1, null, { timeout: 30000 });
-  await tid(pa, "invite-done").waitFor({ timeout: 30000 });
-  await shot(pa, "06-invitation-used");
-  await pa.keyboard.press("Escape");
+  await tid(pa, "nearby-ask").waitFor({ state: "detached", timeout: 30000 });
   await until(async () => (await peerOf(A, "home-server"))?.online && (await peerOf(B, "laptop"))?.online, 30000, "both devices to see each other online");
   const pab = await peerOf(A, "home-server");
   const pba = await peerOf(B, "laptop");
   check("each device sees the other online", pab.online && pba.online);
   check("the link is a direct encrypted one (no relay)", pab.path !== "relay" && pba.path !== "relay", `path=${pab.path}, round trip ${pab.rttMs.toFixed(1)} ms`);
-  check("the one-time invitation was used up", (await A.api("GET", "/api/invites")).length === 0, "no open invitations left on the laptop");
+  const sb = await B.state();
+  check("the new device is an ordinary member of the network, under the name chosen on it", sb.self.meshName === "Наша семья" && !sb.self.admin && sb.self.name === "home-server", `${sb.self.name}, admin=${sb.self.admin}`);
+  check("no invitation code was made", (await A.api("GET", "/api/invites")).length === 0, "no invitations on the laptop");
+  await tid(pa, "fm-up").click(); // from «Рядом» up to the overview
+  await tid(pa, "page-home").waitFor();
   await pa.locator('[data-testid="home-status"][data-state="ok"]').waitFor({ timeout: 20000 });
   await pb.locator('[data-testid="home-status"][data-state="ok"]').waitFor({ timeout: 20000 });
-  await shot(pa, "07-home-laptop", { h: 1040 });
-  await shot(pb, "08-home-server", { h: 1040 });
+  await shot(pa, "08-home-laptop", { h: 1040 });
+  await shot(pb, "09-home-server", { h: 1040 });
 
   step("5. Send files from the laptop to the home server (the interface, a real picture and 8 MB of random bytes)");
   const picture = makePng();
@@ -202,7 +216,7 @@ try {
     { name: "архив.bin", mimeType: "application/octet-stream", buffer: blob },
   ]);
   await tid(pa, "staged-file").first().waitFor();
-  await shot(pa, "09-send-files");
+  await shot(pa, "10-send-files");
   await tid(pa, "send-submit").click();
   const got = {};
   for (const [name, data] of [["закат.png", picture], ["архив.bin", blob]]) {
@@ -211,10 +225,10 @@ try {
     check(`${name}: the bytes on the receiving device are identical`, sha(fs.readFileSync(t.path)) === sha(data), `${(data.length / 1048576).toFixed(1)} MB, sha256 ${sha(data).slice(0, 12)}…`);
   }
   await pa.locator('[data-testid="transfer"][data-dir="out"][data-state="done"]').nth(1).waitFor({ timeout: 30000 });
-  await shot(pa, "10-files-sent");
+  await shot(pa, "11-files-sent");
   await nav(pb, B, "files/send");
   await pb.locator('[data-testid="transfer"][data-dir="in"][data-state="done"]').nth(1).waitFor({ timeout: 30000 });
-  await shot(pb, "11-files-received");
+  await shot(pb, "12-files-received");
 
   step("6. Chat in both directions");
   await nav(pb, B, `chat/${pba.id}`);
@@ -232,7 +246,7 @@ try {
   await pa.keyboard.press("Enter");
   await pb.locator('[data-testid="bubble"][data-mine="false"]', { hasText: "Закат получился" }).waitFor({ timeout: 20000 });
   check("the message and the reply were delivered through the interface", true);
-  await shot(pa, "12-chat");
+  await shot(pa, "13-chat");
 
   step("7. Mail with an attachment");
   const report = crypto.randomBytes(300 * 1024);
@@ -255,7 +269,7 @@ try {
   await nav(pb, B, "mail/inbox");
   await pb.locator('[data-testid="mail-item"]', { hasText: "Квартальный" }).click();
   await tid(pb, "mail-reader").waitFor();
-  await shot(pb, "13-mail");
+  await shot(pb, "14-mail");
 
   step("8. The home server is switched off; a message written meanwhile waits and arrives when it is back");
   await B.stop();
@@ -264,7 +278,7 @@ try {
   await pa.locator('[data-testid="home-status"]:not([data-state="ok"])').waitFor({ timeout: 60000 });
   const offText = await tid(pa, "home-status").innerText();
   check("the home screen names the device that is off and says its mail will wait", /home-server/.test(offText) && /подождут/.test(offText) && !/для них/.test(offText), offText.replace(/\s+/g, " "));
-  await shot(pa, "14-device-switched-off", { h: 1040 });
+  await shot(pa, "15-device-switched-off", { h: 1040 });
   const later = "Это сообщение написано, пока сервер был выключен.";
   await nav(pa, A, `chat/${pab.id}`);
   await tid(pa, "chat-input").click();
@@ -273,19 +287,19 @@ try {
   await pa.locator('[data-testid="bubble"][data-mine="true"]', { hasText: "пока сервер был выключен" }).waitFor();
   const waiting = await pa.locator('[data-testid="bubble"][data-mine="true"]', { hasText: "пока сервер был выключен" }).getAttribute("data-state");
   check("while the device is off the message is kept and not marked delivered", waiting !== "delivered", `state=${waiting}`);
-  await shot(pa, "15-message-waits");
+  await shot(pa, "16-message-waits");
   await B.start();
   const bState = await B.state();
   check("after a restart the second device is still a member (identity and network survived)", bState.configured && bState.self.meshName === "Наша семья", bState.self.name);
   await until(async () => (await B.api("GET", `/api/chat/${(await peerOf(B, "laptop")).id}`)).messages.some((m) => m.text === later), 90000, "the waiting message to arrive after the restart");
   check("the waiting message arrived by itself after the device came back", true);
   await pa.locator('[data-testid="bubble"][data-mine="true"][data-state="delivered"]', { hasText: "пока сервер был выключен" }).waitFor({ timeout: 60000 });
-  await shot(pa, "16-message-delivered");
+  await shot(pa, "17-message-delivered");
 
   step("9. The same on a phone-sized screen (the home server's view)");
   const ph = await openPage(B, { w: 390, h: 844, mobile: true, hash: "home" });
   await ph.locator('[data-testid="home-status"]').waitFor();
-  await shot(ph, "17-phone-home");
+  await shot(ph, "18-phone-home");
 
   step("10. Shut both down");
   await A.stop();

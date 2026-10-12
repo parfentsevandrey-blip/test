@@ -84,7 +84,7 @@ A browser tab that is hidden may drop the connection; that is fine.
 | `invites`   | full array of **Invite** (a pending invite was used/expired)                           |
 | `shares`    | full array of local **Share**                                                          |
 | `forwards`  | full array of **Forward**                                                              |
-| `nearby`    | the whole **Nearby** picture (devices around, this device's own request, requests to answer) |
+| `nearby`    | the whole **Nearby** picture (devices around, invitations to this device and from it, this device's own request, requests to answer) |
 
 ## Data types
 
@@ -285,45 +285,79 @@ many IPv6 addresses it used to be cut off.
 
 ### Devices nearby
 
-A device that has The Mesh but is **not in any mesh** lists the devices around that can add it — administrators of a mesh that are on the
-same network and have not switched "Show this device nearby" off — and a tap asks one of them. No code is typed and no QR is scanned: **both
-screens show the same six digits** (derived from the keys of the very connection between them, so somebody in the middle shows two different
-numbers), the person at the new device says "they match", and the person at the device that adds says "add". Only then does the new device get a
-**regular** (never administrator) membership, the same one an invitation gives.
+Devices that have The Mesh find each other on the local network by themselves, and the person connects with **any** of them in a tap: no code
+is typed and no QR is scanned. Who is listed:
+
+* on a device that is **not in a mesh**: the devices that can add it (`kind: "mesh"`) — an administrator of a mesh all along (unless
+  "Show this device nearby" is off there), a member while its person looks at the list and an administrator of its mesh is online — and
+  the other devices that are not in a mesh either (`kind: "new"`) while their person looks at the list;
+* on a device **in a mesh**: the devices that are not in a mesh (`kind: "new"`), while their person looks at the list.
+
+A device that is not in a mesh is quiet until its person looks: the interface says `POST /api/nearby/look` while a list is on the screen
+(and the page is visible), every 30 s; it counts for 90 s. A tap («Подключиться», `POST /api/nearby/connect`) does what fits the two:
+
+| this device | the device tapped | what happens |
+|---|---|---|
+| not in a mesh | `kind: "mesh"` | asks it to add this one: `join` runs (below); the person there says yes in a dialog that shows the six digits this screen shows too |
+| in a mesh | `kind: "new"` | invites it (`sent[]`, `kind: "invite"`); when its person accepts, it is added without another question — the person here already said whom |
+| not in a mesh | `kind: "new"` | asks it to make a mesh together (`sent[]`, `kind: "pair"`); when its person accepts, that device makes the mesh and invites this one, which accepts by itself (it asked) |
+| any | a device in `invites[]` | accepts its invitation (same as `POST /api/nearby/invites/:id` with `accept: true`) |
+
+When both people tap each other at once, the device with the smaller key makes the mesh and the other joins it. A device that gets into a mesh
+while its own requests to make one wait turns them into invitations to its mesh, so three devices tapped at once end up in one mesh. Whoever is
+added gets a **regular** (never administrator) membership, the same one an invitation gives. A member adds a device through an administrator of
+its mesh that is online (it signs the certificate, and its interface gets a `notify` event `{"title": <device>, "text": "added", "by": <member>}`,
+shown as a note «В сети новое устройство: «Y»» — «Его добавили с «X».»); with no administrator online, `canAdd` is `false`.
 
 ```jsonc
 // Nearby — GET /api/nearby, state.nearby, the `nearby` event (always the whole picture)
-{ "visible": true,                     // this device, if it is an administrator, tells others that it can add them (Settings.nearby)
-  "devices": [                         // only while this device is not in a mesh: who can add it (a device is listed while it is heard, ~16 s)
-    { "id": "…", "name": "macbook-andrey", "meshName": "Дом", "os": "darwin", "seen": 1760000000 } ],
-  "join": {                            // this device's own request to be added
-    "state": "idle",                   // idle | connecting | waiting | confirmed | joined | denied | failed | canceled
+{ "visible": true,     // this device makes itself known nearby (Settings.nearby): that it can add devices, or its name while its person looks
+  "looking": true,     // the person looks at the list now (POST /api/nearby/look)
+  "canAdd": true,      // in a mesh, and a device can be added now: an administrator; a member while an administrator is online
+  "devices": [         // a device is listed while it is heard (~16 s)
+    { "id": "…", "kind": "mesh", "name": "macbook-andrey", "meshName": "Дом", "os": "darwin", "seen": 1760000000 },
+    { "id": "…", "kind": "new", "name": "pixel-8", "os": "android", "seen": 1760000000 } ],
+  "invites": [         // invitations to this device (in a mesh: only the requests to make one together), each valid 2 minutes
+    { "id": "…",       // the device that invites
+      "kind": "invite",// invite: to join its mesh (meshName) | pair: neither is in a mesh — to make one together
+      "name": "macbook-andrey", "meshName": "Дом", "os": "darwin", "received": 1760000000 } ],
+  "sent": [            // invitations this device sent, and for 30 s how they ended
+    { "id": "…", "kind": "invite", "name": "pixel-8", "os": "android",
+      "state": "sent", // sent (waits for the person there) | joining (accepted: being added) | joined | declined | expired | failed
+      "error": "",     // failed: why
+      "created": 1760000000, "expires": 1760000120 } ],
+  "join": {            // this device's own request to be added by a device of kind "mesh"
+    "state": "idle",   // idle | connecting | waiting | confirmed | joined | denied | failed | canceled
     "peer": { /* the device asked, as in devices[] */ },
-    "code": "482913",                  // waiting and confirmed: the six digits to compare with the other screen
-    "reason": "",                      // denied / failed: offline | denied | expired | invalid | failed
-    "error": "" },                     // the technical text for `reason`, if any
-  "requests": [                        // only on an administrator: devices that ask to be added and wait for an answer (≤ 3, each valid 2 minutes)
+    "code": "482913",  // waiting and confirmed: the six digits, the same on the other screen
+    "reason": "",      // denied / failed: offline | denied | expired | noadmin | invalid | failed
+    "error": "" },     // the technical text for `reason`, if any
+  "requests": [        // on a device in a mesh: devices that ask to be added and wait for an answer (≤ 3, each valid 2 minutes)
     { "id": "…", "name": "pixel-8", "os": "android", "code": "482913",
-      "confirmed": false,              // the person at the new device has already said "they match"
+      "confirmed": true, // the new device goes on (it does by itself; a device of the first version: its person said "they match")
       "created": 1760000000, "expires": 1760000120 } ] }
 ```
-States of `join`: `connecting` (setting up the secure connection) → `waiting` (**show `code`, ask "do they match?"**; the person can say yes, or cancel) → `confirmed`
-(waiting for the person at the other device) → `joined` (the device is a member now: reload `GET /api/state`; `configured` is `true`), or `denied`
-(`reason`: `denied` — the other person said no; `expired` — nobody answered in 2 minutes) / `failed` (`offline` — the device did not answer: show the advice that
-the invitation flow shows, plus "same Wi-Fi, no client isolation on the router"; `invalid` / `failed` — something else, `error` has the text).
-`canceled` is what a request the person gave up looks like: show the list again. After an end (`joined`, `denied`, `failed`, `canceled`) `POST /api/nearby/cancel`
-forgets it (state `idle`); leaving the mesh forgets it too.
+States of `join`: `connecting` (setting up the secure connection) → `waiting` → `confirmed` (**show `code`**, waiting for the person at the other
+device; the device goes on by itself, `waiting` lasts a moment) → `joined` (the device is a member now: reload `GET /api/state`; `configured` is
+`true`), or `denied` (`reason`: `denied` — the other person said no; `expired` — nobody answered in 2 minutes) / `failed` (`offline` — the device
+did not answer: show the advice that the invitation flow shows, plus "same Wi-Fi, no client isolation on the router"; `noadmin` — a member was to
+add this device and no administrator of its mesh is online; `invalid` / `failed` — something else, `error` has the text). `canceled` is what a
+request the person gave up looks like: show the list again. After an end (`joined`, `denied`, `failed`, `canceled`) `POST /api/nearby/cancel`
+forgets it (state `idle`); leaving the mesh forgets it too. An invitation that is accepted runs the same `join` (the device that invited answers
+it by itself).
 
-The interface (`js/views/nearby.js`): on the start screen a card **«Рядом с вами»** lists `devices` with a «Подключиться» button each, or says that it
-is looking (and, when `self.lan.problem` is `blocked`/`failed`, why it cannot); a request takes the place of the start choices while it lasts;
-on an administrator a **dialog opens by itself** for each new entry of `requests` (device name, OS, the digits, whether the other person has confirmed,
-"Whose device is it?", «Добавить» / «Отклонить»), and an entry whose dialog was closed stays as a row on Home until it expires. The desktop shell and the
-phone app show a system notification for each new request when the window is not in front.
+The interface (`js/views/nearby.js`): on the start screen of a device without a mesh a card **«Рядом с вами»** lists `devices` and `invites`
+with one button each (Подключиться / Принять), or says that it is looking (and, when `self.lan.problem` is `blocked`/`failed`, why it cannot);
+a request takes the place of the start choices while it lasts. On a device in a mesh the overview shows the same card, and the place **«Рядом»**
+(`#/nearby`) the whole list with what was sent and, for a device that is not nearby, the invitation with a QR code. On a device in a mesh a
+**dialog opens by itself** for each new entry of `requests` (device name, OS, the digits, "Whose device is it?", «Добавить» / «Отклонить»), and an
+entry whose dialog was closed stays on the overview under "Needs your attention" until it expires. The desktop shell and the phone app show a
+system notification for each new request and each new invitation when the window is not in front.
 
 Events win over answers. The node answers `POST /api/nearby/requests/{id}` at once (the request is still in the picture it returns) and forgets the request
 a moment later, which comes as a `nearby` event; the answer can reach the page after that event. The interface therefore counts the `nearby` events and takes
 the picture from an answer (and from `GET /api/state`) only if none came while it was on its way — otherwise the request that was just allowed would stay on
-Home under "Needs your attention" (`web-e2e/tests/nearby.mjs` checks this with two real programs).
+the overview under "Needs your attention" (`web-e2e/tests/nearby.mjs` checks this with two real programs).
 
 ### Scanning an invitation (phone app)
 The Android app lets a person scan the QR code that another device shows, instead of typing the code. The window is a WebView around
@@ -349,7 +383,7 @@ The camera is used only to read the code: frames are not stored or sent anywhere
   "relay": true,                   // act as a relay for other members
   "stunEnabled": true, "stunServers": ["stun.l.google.com:19302"],
   "udpPort": 41710, "lan": true,
-  "nearby": true,                  // an administrator device tells the devices around that it can add them (see Devices nearby); applies at once
+  "nearby": true,                  // this device makes itself known nearby: that it can add devices, or its name while its person looks (see Devices nearby); applies at once
   "portMap": true,                 // ask the home router to forward our UDP port (UPnP / NAT-PMP); see Self.portmap
   "socks": {"enabled": false, "listen": "127.0.0.1:1080"},
   "tun": { "enabled": false,       // create a virtual network interface (Linux, needs root / CAP_NET_ADMIN)
@@ -395,14 +429,19 @@ Language and theme are **client-side only** (`localStorage`), not part of Settin
 | method & path | body → response |
 |---|---|
 | `GET /api/nearby` | → **Nearby** |
-| `POST /api/nearby/connect` | `{"id":"<devices[].id>","deviceName":"phone"}` → **Nearby** (`join.state` is `connecting`; the rest comes as `nearby` events). `notfound` — the device is no longer listed (it left, or switched off); `invalid` — this device is already in a mesh, or a request is already running. `deviceName` is what this device is called in that mesh (empty: its usual name; see **Device names**). |
-| `POST /api/nearby/confirm` | `{}` → **Nearby**. The person says the six digits match. `invalid` unless `join.state` is `waiting`. |
-| `POST /api/nearby/cancel` | `{}` → **Nearby**. Gives up a running request; after an end, forgets it. |
-| `POST /api/nearby/requests/:id` | `{"approve":true,"owner":"Anna"}` → **Nearby** (administrator only, `denied` otherwise). `owner` is whose device the new one is (≤ 64 characters; empty: this device's own owner). Approving does not add the device yet: it is added when its person has confirmed the digits too (either order). `notfound` — the request is gone (the device left or 2 minutes passed). |
-| `PUT /api/settings` | `{"nearby":false}` — stop telling the devices around that this one can add them. |
+| `POST /api/nearby/look` | `{"name":"pixel-8"}` → **Nearby**. The person looks at the list now (for 90 s; repeat every 30 s while it is on the screen). `name` is what a device that is not in a mesh calls itself meanwhile (empty: its usual name). `{"on":false}` — they stopped looking. |
+| `POST /api/nearby/connect` | `{"id":"<devices[].id>","deviceName":"phone","meshName":"Дом","owner":"Anna","peerOwner":""}` → **Nearby**; what happens is in the table above, the rest comes as `nearby` events. All but `id` are optional: `deviceName` — what this device is called in the mesh it joins or makes (empty: its usual name; see **Device names**); `meshName`, `owner` — the mesh this device makes for the two, and whose device it is; `peerOwner` — whose device the other one is, if this one adds it (empty: this device's own owner). `notfound` — the device is no longer listed (it left, or switched off); `offline` — a member, and no administrator of its mesh is online; `invalid` — a request is already running, or this device cannot do that now. |
+| `POST /api/nearby/invites/:id` | `{"accept":true, …the options of connect}` → **Nearby**: accepts the invitation of the device `id` (joins its mesh; or, asked to make one together, makes it and invites that device). `{"accept":false}` declines, and tells that device. `notfound` — the invitation is gone (taken back, or 2 minutes passed). |
+| `POST /api/nearby/sent/:id/cancel` | `{}` → **Nearby**. Takes back the invitation sent to the device `id` (and tells it), or forgets how it ended. |
+| `POST /api/nearby/cancel` | `{}` → **Nearby**. Gives up this device's running request; after an end, forgets it. |
+| `POST /api/nearby/requests/:id` | `{"approve":true,"owner":"Anna"}` → **Nearby** (a device in a mesh; `denied` otherwise). `owner` is whose device the new one is (≤ 64 characters; empty: this device's own owner). `notfound` — the request is gone (the device left or 2 minutes passed). On a member the device is added once an administrator signs; if none is online, the new device's `join` ends with `reason: "noadmin"`. |
+| `POST /api/nearby/confirm` | `{}` → **Nearby**. Kept for the first version's clients (the person said the six digits match); the interface does not use it, a request goes on by itself. |
+| `PUT /api/settings` | `{"nearby":false}` — this device does not make itself known nearby: it does not announce that it can add devices, nor its name while its person looks (it still lists the others). |
 
-Command line: `themesh nearby` lists the devices around and the requests waiting; `themesh nearby join NAME` asks a device (and shows the digits); `themesh nearby allow ID [--owner NAME]`
-and `themesh nearby deny ID` answer a request — a server with no screen can be added, and can add, the same way.
+Command line: `themesh nearby` lists the devices around, the invitations, what was sent and the requests waiting; `themesh nearby look [--name NAME]`
+follows the list (and meanwhile a device without a mesh makes itself known); `themesh nearby connect NAME` connects with a device in the way the
+table above says and follows it to the end (it prints the six digits); `themesh nearby accept NAME` / `decline NAME` answer an invitation;
+`themesh nearby allow ID [--owner NAME]` and `themesh nearby deny ID` answer a request — a server with no screen can be added, and can add, the same way.
 
 ### Files — browsing shares (works for `self` too)
 | method & path | → response |

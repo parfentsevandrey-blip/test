@@ -19,6 +19,9 @@ const rosaShell = () => {
     menu() { this.calls.push(["menu"]); },
   };
 };
+// Two colours "#rrggbb" that differ by at most tol in every channel.
+const near = (a, b, tol) => /^#[0-9a-f]{6}$/i.test(a) && [1, 3, 5].every((i) => Math.abs(parseInt(a.slice(i, i + 2), 16) - parseInt(b.slice(i, i + 2), 16)) <= tol);
+
 const sky = (page) => page.evaluate(() => {
   const r = document.documentElement, cs = getComputedStyle(r);
   return {
@@ -98,7 +101,7 @@ group("skin", () => {
     const page = await open(browser, dev.laptop, { userAgent: ROSA, init: rosaShell, mobile: true, w: 390, h: 844, theme: "dark" });
     // ?sky= shows the sky at a height of the sun (here 25 degrees: a day), the way ?skin= shows a look: for screenshots and tests
     await page.goto(`${dev.laptop.origin}/?sky=25#/home`);
-    await tid(page, "tab-home").waitFor();
+    await tid(page, "page-home").waitFor();
     let st = await sky(page);
     eq([st.skin, st.look, st.native], ["glass", "rosa", false], "Роса is a layer over glass, and the page paints its own sky (the window does not)");
     eq([st.theme, st.zen, st.hor, st.body], ["dark", "#2c76d8", "#9bcbf6", "sun"], "a day: vivid blue, light type, the sun up");
@@ -117,7 +120,7 @@ group("skin", () => {
     eq(fonts.display, 1, "the display face of the big numeral is there");
     // the manner of the sky: noon is the sun in the upper right, night is stars and a moon
     await page.goto(`${dev.laptop.origin}/?sky=-16#/home`);
-    await tid(page, "tab-home").waitFor();
+    await tid(page, "page-home").waitFor();
     st = await sky(page);
     eq([st.theme, st.body, st.stars], ["dark", "moon", "1"], "a night: the moon and all the stars");
     eq(page.problems, [], "console / network problems");
@@ -148,7 +151,9 @@ group("skin", () => {
     await tid(page, "theme-evening").click();
     await page.waitForFunction(() => document.documentElement.dataset.appearance === "evening");
     st = await sky(page);
-    eq([st.theme, st.zen, st.stars, st.body], ["dark", "#2b478d", "0.3", "none"], "Вечернее: the blue hour, the first stars");
+    // (the blue hour takes in the light of the moon of the day, so its colour moves a little from one day to another)
+    eq([st.theme, st.stars, st.body], ["dark", "0.3", "none"], "Вечернее: the blue hour, the first stars");
+    assert(near(st.zen, "#2b478d", 10), `Вечернее: a sky of the blue hour, got ${st.zen}`);
 
     await tid(page, "theme-dark").click();
     await page.waitForFunction(() => document.documentElement.dataset.appearance === "dark");
@@ -221,7 +226,7 @@ group("skin", () => {
     const page = await open(browser, dev.laptop, { userAgent: ROSA, init, mobile: true, w: 390, h: 844 });
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto(`${dev.laptop.origin}/?sky=25#/home`);
-    await tid(page, "tab-home").waitFor();
+    await tid(page, "page-home").waitFor();
     eq((await sky(page)).fx, "full", "a screen starts with everything");
     await page.waitForFunction(() => document.documentElement.dataset.fx === "calm", undefined, { timeout: 15000 });
     await page.waitForFunction(() => document.documentElement.dataset.fx === "still", undefined, { timeout: 15000 });
@@ -231,42 +236,26 @@ group("skin", () => {
     // the person chose full: nobody takes it away
     await page.evaluate(() => localStorage.setItem("themesh.fx", "full"));
     await page.reload();
-    await tid(page, "tab-home").waitFor();
+    await tid(page, "page-home").waitFor();
     await page.waitForTimeout(6500);
     eq((await sky(page)).fx, "full", "a choice is kept even on a screen that is slow");
     eq(page.problems, [], "console / network problems");
   });
 
-  test("the tab bar of the phone carries a lens of glass that sits under the open tab and follows a finger across the tabs", async ({ browser, dev }) => {
+  test("Роса on a phone: no tab bar — the overview's folders and drives are panes of glass, and a press on one ticks", async ({ browser, dev }) => {
     const page = await open(browser, dev.laptop, { userAgent: ROSA, init: rosaShell, mobile: true, w: 390, h: 844 });
     await page.goto(`${dev.laptop.origin}/?sky=25#/home`);
-    await tid(page, "tab-home").waitFor();
-    const lens = () => page.evaluate(() => {
-      const nav = document.querySelector(".tabbar"), on = nav.querySelector(".tabbar__item.is-active");
-      return { x: parseFloat(nav.style.getPropertyValue("--lens-x")), w: parseFloat(nav.style.getPropertyValue("--lens-w")), left: on.offsetLeft, width: on.offsetWidth, tab: on.dataset.testid, shown: getComputedStyle(nav.querySelector(".tabbar__lens")).display };
-    });
-    await page.waitForFunction(() => document.querySelector(".tabbar").style.getPropertyValue("--lens-w") !== "");
-    let l = await lens();
-    eq([l.shown, l.x, l.w, l.tab], ["block", l.left, l.width, "tab-home"], "the lens is under the open tab");
-    // a tap on another tab opens it, and the lens goes there
-    await tid(page, "tab-files").click();
-    await page.waitForFunction(() => document.querySelector(".tabbar__item.is-active").dataset.testid === "tab-files");
-    await page.waitForFunction(() => { const n = document.querySelector(".tabbar"); return parseFloat(n.style.getPropertyValue("--lens-x")) === n.querySelector(".tabbar__item.is-active").offsetLeft; });
-    l = await lens();
-    eq([l.x, l.tab], [l.left, "tab-files"], "the lens followed the tap");
-    // a finger put on the bar lifts the lens, drags it across the tabs (a tick at each), and the tab under it opens when the finger lets go
-    const box = async (id) => (await tid(page, id).boundingBox());
-    const a = await box("tab-files"), c = await box("tab-chat");
-    await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
-    await page.mouse.down();
-    await page.waitForFunction(() => document.querySelector(".tabbar").hasAttribute("data-lifted"));
-    for (let i = 1; i <= 6; i++) await page.mouse.move(a.x + a.width / 2 + ((c.x - a.x) * i) / 6, a.y + a.height / 2);
-    await page.waitForFunction(() => document.querySelector('.tabbar__item[data-under]') && document.querySelector('.tabbar__item[data-under]').dataset.testid === "tab-chat");
-    await page.mouse.up();
+    await tid(page, "page-home").waitFor();
+    eq(await page.locator(".tabbar, [data-testid^='tab-']").count(), 0, "the file manager has no tab bar");
+    // the folders arrive like the other panes of the look (data-rz is how css/rosa.css animates a pane in)
+    await page.waitForFunction(() => document.querySelector('[data-testid="folder-chat"]').hasAttribute("data-rz"));
+    await tid(page, "folder-chat").click();
     await page.waitForFunction(() => location.hash.startsWith("#/chat"));
     const calls = (await sky(page)).calls.filter((x) => x[0] === "haptic").map((x) => x[1]);
-    assert(calls[0] === "press" && calls.includes("tick") && calls[calls.length - 1] === "select", "haptics: a press, ticks across the tabs, a selection: " + JSON.stringify(calls));
-    await page.waitForFunction(() => !document.querySelector(".tabbar").hasAttribute("data-lifted"));
+    assert(calls.includes("press"), "a press on a folder ticks: " + JSON.stringify(calls));
+    // and the bar on top leads back up
+    await tid(page, "fm-up").click();
+    await page.waitForFunction(() => location.hash === "#/home");
     eq(page.problems, [], "console / network problems");
   });
 
@@ -318,7 +307,7 @@ group("skin", () => {
 
   test("glass leaves no sideways scrolling on the main screens at desktop, tablet and phone widths, in both themes", async ({ browser, dev }) => {
     const page = await open(browser, dev.laptop, { userAgent: MAC });
-    const routes = ["home", "devices", "files/send", "files/browse", "mail/inbox", "chat", "services", "settings", "more"];
+    const routes = ["home", "devices", "nearby", "files/send", "files/browse", "mail/inbox", "chat", "services", "settings"];
     const bad = [];
     for (const theme of ["light", "dark"]) {
       await page.evaluate((th) => localStorage.setItem("themesh.theme", th), theme);
@@ -340,11 +329,15 @@ group("skin", () => {
 
   test("a QR code stays a sharp, opaque picture under glass: no tint, no blur, no transparency", async ({ browser, dev }) => {
     for (const theme of ["light", "dark"]) {
-      const page = await open(browser, dev.laptop, { userAgent: MAC, theme, hash: "home" });
-      await tid(page, "home-action-add").click();
+      const page = await open(browser, dev.laptop, { userAgent: MAC, theme, hash: "nearby" });
+      await tid(page, "nearby-far-invite").click();
       await tid(page, "invite-create").click();
       const qr = tid(page, "invite-qr");
       await qr.locator("img").waitFor();
+      // (the demo's devices write and send now and then: a toast that comes up over the code at that moment is not the code's;
+      // and the dialog has to have finished sliding in)
+      await page.addStyleTag({ content: ".portal--toasts { display: none !important; }" });
+      await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"), null, { timeout: 5000 }).catch(() => {});
       await page.waitForTimeout(400);
       // nothing from the glass reaches the picture: it and its frame are opaque and unfiltered
       const chain = await page.evaluate(() => {

@@ -1,23 +1,18 @@
-// Files section: tabs Send / Browse / My folders.
+// Files: in the file manager these are places of their own — the drives (devices, Browse), the transfers (Send) and the
+// folders this device shares (Shares); the places panel and the path bar are the way between them (js/shell.js).
 import { html } from "../../vendor/preact-htm.js";
 import { t } from "../i18n.js";
-import { useStore } from "../store.js";
-import { PageHeader, Tabs } from "../components/misc.js";
+import { PageHeader } from "../components/misc.js";
 import { SendTab } from "./files-send.js";
 import { BrowseTab } from "./files-browse.js";
 import { SharesTab } from "./files-shares.js";
 
 export function FilesView({ route }) {
-  const tab = ["send", "browse", "shares"].includes(route.parts[1]) ? route.parts[1] : "send";
-  const offers = useStore((s) => s.counters.offers || 0);
-  const items = [
-    { id: "send", label: t("files.tab.send"), href: "#/files/send", icon: "send", badge: offers, badgeTone: "warn" },
-    { id: "browse", label: t("files.tab.browse"), href: "#/files/browse", icon: "folderOpen" },
-    { id: "shares", label: t("files.tab.shares"), href: "#/files/shares", icon: "folder" },
-  ];
-  return html`<div class="page files">
-    <${PageHeader} title=${t("nav.files")} subtitle=${t("files.subtitle." + tab)} />
-    <${Tabs} items=${items} active=${tab} label=${t("nav.files")} class="files__tabs" testid="files-tab" />
+  const tab = ["send", "browse", "shares"].includes(route.parts[1]) ? route.parts[1] : "browse";
+  // A folder of a device is the file manager's own view: the path bar says where it is.
+  const head = tab === "send" ? t("nav.transfers") : tab === "shares" ? t("files.tab.shares") : route.parts[2] ? null : t("nav.files");
+  return html`<div class=${"page files files--" + tab}>
+    ${head && html`<${PageHeader} title=${head} subtitle=${t("files.subtitle." + tab)} />`}
     <div class="files__body">
       ${tab === "send" && html`<${SendTab} route=${route} />`}
       ${tab === "browse" && html`<${BrowseTab} route=${route} />`}

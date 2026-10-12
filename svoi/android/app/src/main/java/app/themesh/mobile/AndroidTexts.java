@@ -83,6 +83,21 @@ final class AndroidTexts implements Texts {
     }
 
     @Override
+    public String nearbyInviteTitle(String name, String mesh) {
+        return context.getString(R.string.notif_nearby_invite_title, name, mesh);
+    }
+
+    @Override
+    public String nearbyPairTitle(String name) {
+        return context.getString(R.string.notif_nearby_pair_title, name);
+    }
+
+    @Override
+    public String nearbyInviteBody() {
+        return context.getString(R.string.notif_nearby_invite_body);
+    }
+
+    @Override
     public String statusStarting() {
         return context.getString(R.string.status_starting);
     }

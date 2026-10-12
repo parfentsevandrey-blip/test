@@ -236,8 +236,8 @@ export async function open(browser, dev, { w = 1280, h = 800, lang = "ru", theme
   // the code into a session cookie; the master token never goes near the browser.
   const { code } = await api(dev, "POST", "/api/login/code", {});
   await page.goto(`${dev.origin}/?t=${code}`, { waitUntil: "load" });
-  // (the side navigation exists but is hidden on a narrow screen, the tab bar the other way round)
-  await page.waitForFunction(() => [...document.querySelectorAll('[data-testid="nav-home"], [data-testid="tab-home"], [data-testid="page-onboarding"]')].some((e) => e.getClientRects().length > 0));
+  // (the places panel of the file manager is hidden on a narrow screen; the path bar is always there)
+  await page.waitForFunction(() => [...document.querySelectorAll('[data-testid="fm-path"], .fm-bar, [data-testid="page-onboarding"]')].some((e) => e.getClientRects().length > 0));
   if (hash) await nav(page, dev, hash);
   return page;
 }

@@ -2,9 +2,8 @@
 //   arrival   panes rise into place one after another when a screen opens, and catch a wave of light on the way;
 //   touch     the glass lights up from the point of a finger and follows it;
 //   depth     a pane that slides up under the top bar tips back and shrinks a little;
-//   lens      the tab bar carries a drop of glass: it flows to the tab that opens, and lifts under a finger and follows it
-//             across the tabs (a tick at each);
-//   haptics   a soft tick on presses and on the lens (the phone app's bridge, `themeshShell.haptic`, or the vibrator).
+//   haptics   a soft tick on presses (the phone app's bridge, `themeshShell.haptic`, or the vibrator).
+// (The drop of glass that rode the phone's tab bar went with the tab bar: the file manager has none.)
 // Everything here sits on html[data-look="rosa"] and html[data-fx]: "full" does all of it, "calm" only fades panes in,
 // "still" nothing. It touches the DOM that Preact draws only through data-* attributes and custom properties, never classes
 // (a re-render rewrites class names), and does nothing at all in the other looks.
@@ -12,9 +11,9 @@ import { hapticsOn } from "./prefs.js";
 
 const root = document.documentElement;
 // The panes that arrive, light up and tip back (the same list as the panes of css/glass.css, without the big sheets of Mail and Chat)
-const PANES = ".card, .home-card, .home-act, .hdev, .dcard, .onb-choice, .onb-form, .nearby, .flist, .svc-group, .more-self";
+const PANES = ".card, .home-card, .home-act, .hdev, .dcard, .onb-choice, .onb-form, .nearby, .flist, .svc-group, .fm-folder";
 // What arrives without being a pane of glass
-const PLAIN = ".page-head, .home-status, .home-sec__head, .home-actions__grid > *";
+const PLAIN = ".page-head, .home-status, .home-sec__head, .fm-sec__head, .drive-head, .home-actions__grid > *";
 const STEP = 70;       // ms between two panes of a cascade
 const WINDOW = 700;    // ms after the first pane of a screen in which its panes still count as arriving
 const SLOP = 10;       // px: a finger that has moved so far is scrolling, not pressing
@@ -71,7 +70,6 @@ function scanNow() {
   // a screen that replaced the old one without a change of the address (the first screen after the network was made, say)
   if (fresh.length && fresh.length === all.length) newScreen();
   arrive(fresh);
-  lensSetup();
 }
 
 let queued = false;
@@ -82,7 +80,6 @@ function scan() {
   requestAnimationFrame(() => {
     queued = false;
     if (!rosa()) return;
-    lensPlace();
     reach();
   });
 }
@@ -151,90 +148,6 @@ function reach() {
   });
 }
 
-// ------------------------------------------------------------------ the lens of the tab bar
-function bar() { return document.querySelector(".tabbar"); }
-
-function lensPlace() {
-  const nav = bar();
-  if (!nav || nav.hasAttribute("data-dragging")) return;
-  const on = nav.querySelector(".tabbar__item.is-active");
-  if (!on || !nav.offsetWidth) return;
-  nav.style.setProperty("--lens-x", on.offsetLeft + "px");
-  nav.style.setProperty("--lens-w", on.offsetWidth + "px");
-  if (!nav.hasAttribute("data-ready")) requestAnimationFrame(() => nav.setAttribute("data-ready", "")); // the first placement is not animated
-}
-
-let drag = null;
-
-function lensItems(nav) { return [...nav.querySelectorAll(".tabbar__item")]; }
-
-function lensDown(e) {
-  if (!rosa() || (e.pointerType === "mouse" && e.button !== 0)) return;
-  const nav = e.currentTarget;
-  if (!nav.offsetWidth) return;
-  drag = { nav, x0: e.clientX, id: e.pointerId, moved: false, under: null, items: lensItems(nav) };
-  try { nav.setPointerCapture(e.pointerId); } catch { /* the pointer is gone */ }
-  nav.setAttribute("data-lifted", "");
-  haptic("press");
-  lensFollow(e.clientX);
-}
-
-function lensFollow(clientX) {
-  const { nav, items } = drag;
-  const nr = nav.getBoundingClientRect();
-  const cur = nav.querySelector(".tabbar__item.is-active");
-  const w = cur ? cur.offsetWidth : nr.width / items.length;
-  const lo = items[0].offsetLeft, hi = items[items.length - 1].offsetLeft;
-  const x = clamp(clientX - nr.left - w / 2, lo, hi);
-  nav.setAttribute("data-dragging", "");
-  nav.style.setProperty("--lens-x", x + "px");
-  nav.style.setProperty("--lens-w", w + "px");
-  const mid = x + w / 2;
-  let under = items.find((it) => mid >= it.offsetLeft && mid < it.offsetLeft + it.offsetWidth) || items[items.length - 1];
-  if (under !== drag.under) {
-    if (drag.under) drag.under.removeAttribute("data-under");
-    under.setAttribute("data-under", "");
-    if (drag.under) haptic("tick");
-    drag.under = under;
-  }
-}
-
-function lensMove(e) {
-  if (!drag || e.pointerId !== drag.id) return;
-  if (!drag.moved && Math.abs(e.clientX - drag.x0) > SLOP) drag.moved = true;
-  lensFollow(e.clientX);
-}
-
-function lensUp(e) {
-  if (!drag || e.pointerId !== drag.id) return;
-  const { nav, under, items } = drag;
-  const cancelled = e.type === "pointercancel";
-  nav.removeAttribute("data-lifted");
-  nav.removeAttribute("data-dragging");
-  items.forEach((it) => it.removeAttribute("data-under"));
-  drag = null;
-  if (cancelled || !under) { lensPlace(); return; }
-  // the lens settles on the tab under the finger at once (the tab itself opens a moment later, when the router has run)
-  nav.style.setProperty("--lens-x", under.offsetLeft + "px");
-  nav.style.setProperty("--lens-w", under.offsetWidth + "px");
-  const href = under.getAttribute("href");
-  haptic("select");
-  if (href && href !== location.hash) location.hash = href;
-}
-
-function lensSetup() {
-  const nav = bar();
-  if (!nav || nav.hasAttribute("data-lens")) return;
-  nav.setAttribute("data-lens", "");
-  nav.addEventListener("pointerdown", lensDown);
-  nav.addEventListener("pointermove", lensMove);
-  nav.addEventListener("pointerup", lensUp);
-  nav.addEventListener("pointercancel", lensUp);
-  nav.addEventListener("dragstart", (e) => e.preventDefault());
-  // a click that follows a drag is not another tap: the lens already went there (and a keyboard "click" still works)
-  nav.addEventListener("click", (e) => { if (rosa() && e.detail > 0) e.preventDefault(); }, true);
-}
-
 // ------------------------------------------------------------------ a screen that cannot keep up gets calmer
 // The seconds after a screen has been drawn are watched. A screen that shows fewer than 24 frames a second (or misses more than a third of
 // them) is stepped down from "full" to "calm" (no sweeping, tilting, twinkling), and if even that is not smooth (under 14 frames a second:
@@ -279,7 +192,7 @@ export function startRosa() {
   new window.MutationObserver(() => { if (rosa()) { newScreen(); scan(); } else tipped.forEach((el) => { el.removeAttribute("data-receding"); el.style.removeProperty("--rz-gone"); }); })
     .observe(root, { attributes: true, attributeFilter: ["data-look", "data-fx"] });
   window.addEventListener("scroll", reach, { passive: true });
-  window.addEventListener("resize", () => { lensPlace(); reach(); });
+  window.addEventListener("resize", reach);
   window.addEventListener("themesh-fx", reach);
   document.addEventListener("pointerdown", touchStart, { passive: true, capture: true });
   document.addEventListener("pointermove", touchMove, { passive: true, capture: true });
@@ -288,7 +201,7 @@ export function startRosa() {
   document.addEventListener("scroll", touchEnd, { passive: true, capture: true });
   // haptic ticks on presses of buttons
   document.addEventListener("pointerdown", (e) => {
-    if (rosa() && e.target.closest && e.target.closest(".btn, .icon-btn, .seg__opt, .switch, .skypick__opt") && !e.target.closest(".tabbar")) haptic("press");
+    if (rosa() && e.target.closest && e.target.closest(".btn, .icon-btn, .seg__opt, .switch, .skypick__opt, .nav__item, .fm-folder")) haptic("press");
   }, { passive: true, capture: true });
   scan();
 }

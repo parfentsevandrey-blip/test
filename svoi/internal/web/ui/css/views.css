@@ -547,7 +547,7 @@ a.bdev:hover, a.scard:hover { border-color: var(--line-2); box-shadow: var(--sha
 .upanel__list { max-height: 220px; overflow: auto; padding: 6px 0; }
 .upanel__item { display: flex; align-items: center; gap: 10px; padding: 6px 14px; }
 .upanel__item .grow { display: flex; flex-direction: column; gap: 4px; }
-@media (max-width: 759px) { .upanel { right: 16px; bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 12px); } }
+@media (max-width: 759px) { .upanel { right: 16px; bottom: calc(var(--safe-bottom) + 12px); } }
 
 /* preview */
 .modal--full.pv { max-width: min(1280px, 100%); height: min(92vh, 1000px); max-height: none; background: var(--surface); overflow: hidden; }
@@ -807,8 +807,9 @@ a.bdev:hover, a.scard:hover { border-color: var(--line-2); box-shadow: var(--sha
 .bubble.is-failed { box-shadow: 0 0 0 1px var(--danger); }
 .bubble__text { font-size: var(--fs-base); line-height: 1.45; }
 .bubble--mine .bubble__text a { color: inherit; }
-.bubble__meta { display: inline-flex; align-items: center; gap: 4px; float: right; margin: 6px 0 -2px 10px; font-size: 11px; color: var(--text-3); line-height: 1; }
-.bubble--mine .bubble__meta { color: color-mix(in srgb, var(--bubble-mine-text) 60%, transparent); }
+/* (the time is small: it keeps 4.5:1 on both kinds of bubble, in both themes) */
+.bubble__meta { display: inline-flex; align-items: center; gap: 4px; float: right; margin: 6px 0 -2px 10px; font-size: 11px; color: var(--text-2); line-height: 1; }
+.bubble--mine .bubble__meta { color: color-mix(in srgb, var(--bubble-mine-text) 76%, transparent); }
 .bubble__atts { display: flex; flex-direction: column; gap: 6px; margin: -2px -6px 6px; }
 .bubble__img { display: block; border-radius: 13px; overflow: hidden; max-width: 320px; background: var(--surface-3); }
 .bubble__img img { display: block; width: 100%; max-height: 320px; object-fit: cover; }
@@ -845,7 +846,7 @@ a.bdev:hover, a.scard:hover { border-color: var(--line-2); box-shadow: var(--sha
 
 /* immersive phone screens (conversation / open message / compose): no app bars */
 @media (max-width: 759px) {
-  .shell--immersive .tabbar, .shell--immersive .topbar { display: none; }
+  .shell--immersive .topbar { display: none; }
   .shell--immersive .main { padding-bottom: 0; }
 }
 
@@ -1028,4 +1029,128 @@ a.bdev:hover, a.scard:hover { border-color: var(--line-2); box-shadow: var(--sha
 @media (max-width: 759px) {
   .mgw-grid { grid-template-columns: minmax(0, 1fr); }
   .mgw-box__name { flex: 1 1 140px; }
+}
+
+/* ---------- the file manager: the overview (root), drives, folders, devices nearby ---------- */
+.fm-root { gap: var(--sp-6); }
+.fm-sec { display: flex; flex-direction: column; gap: var(--sp-3); min-width: 0; }
+.fm-sec__head { display: flex; align-items: center; gap: var(--sp-3); min-height: 32px; }
+.fm-sec__title { display: inline-flex; align-items: center; gap: 8px; flex: 1 1 auto; font-size: var(--fs-lg); font-weight: 680; letter-spacing: -0.01em; }
+.fm-sec__title .icon { color: var(--accent-text); }
+.fm-sec__link { display: inline-flex; align-items: center; gap: 2px; min-height: 44px; font-size: var(--fs-sm); font-weight: 600; color: var(--accent-text); }
+.fm-root .home-actions__grid { gap: var(--sp-3); }
+.fm-root .home-act { flex-direction: row; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); }
+.fm-root .home-act__icon { width: 40px; height: 40px; border-radius: 12px; }
+.fm-root .home-act__title { font-size: var(--fs-md); }
+.fm-root .home-act__sub { font-size: var(--fs-xs); }
+.fm-drive { text-decoration: none !important; color: var(--text); }
+.fm-drive .hdev__name { color: var(--text); }
+.fm-drive__chev { color: var(--text-3); flex: none; }
+.hdev--self { border-style: dashed; justify-content: center; }
+.hdev--self:hover { border-color: var(--accent-line); }
+
+.fm-folders__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: var(--sp-3); }
+.fm-folder {
+  display: flex; align-items: center; gap: var(--sp-3); min-width: 0; padding: var(--sp-3) var(--sp-4); min-height: 64px;
+  border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1);
+  color: var(--text); text-decoration: none !important; transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.fm-folder:hover { border-color: var(--accent-line); box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.fm-folder:active { transform: none; }
+.fm-folder__icon { position: relative; display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 13px; background: var(--amber-soft); color: var(--amber-text); }
+.fm-folder__icon--mail, .fm-folder__icon--chat { background: var(--info-soft); color: var(--info-text); }
+.fm-folder__icon--swap, .fm-folder__icon--folderOpen { background: var(--accent-soft); color: var(--accent-text); }
+.fm-folder__icon--services, .fm-folder__icon--settings { background: var(--surface-2); color: var(--text-2); }
+.fm-folder__badge {
+  position: absolute; top: -6px; right: -8px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; display: grid; place-items: center;
+  background: var(--accent); color: var(--accent-ink); font-size: 10.5px; font-weight: 760; border: 2px solid var(--surface); box-sizing: border-box; font-variant-numeric: tabular-nums;
+}
+.fm-folder__badge--warn { background: var(--amber); color: #1b1305; }
+.fm-folder__dot { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background: var(--amber); border: 2px solid var(--surface); }
+.fm-folder__text { display: flex; flex-direction: column; min-width: 0; }
+.fm-folder__title { font-weight: 650; font-size: var(--fs-md); }
+.fm-folder__sub { font-size: var(--fs-xs); color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* the head of a drive (a device's folders) */
+.drive-head { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-5); min-width: 0; }
+.drive-head > .grow { flex: 1 1 200px; }
+.drive-head__name { font-size: var(--fs-xl); font-weight: 700; letter-spacing: -0.01em; }
+.drive-head__sub { color: var(--text-2); font-size: var(--fs-sm); }
+.drive-head__acts { flex: 0 1 auto; min-width: 0; }
+.drive-head .dact { padding-top: 0; border-top: 0; }
+.drive-head [data-testid="device-act-files"] { display: none; } /* (it is this very place) */
+
+/* devices nearby: the list (the start screen, the overview, the place) */
+.nearby--panel, .nearby--place { width: auto; margin-top: 0; animation: none; }
+.nearby--panel { padding: var(--sp-4) var(--sp-5); }
+.nearby--panel .fm-sec__head { margin-bottom: 0; }
+.nearby--place { padding: var(--sp-3); }
+.nb-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+.nb-visible { margin-top: var(--sp-3); padding: 0 var(--sp-1); }
+.nb-row { display: flex; align-items: center; gap: var(--sp-3); padding: 10px var(--sp-3); border-radius: var(--r-lg); background: var(--surface-2); min-width: 0; }
+.nb-row--invite { background: var(--accent-softer); box-shadow: inset 0 0 0 1px var(--accent-soft); }
+.nb-row__who { min-width: 0; }
+.nb-row__name { font-weight: 650; }
+.nb-row__sub { color: var(--text-2); font-size: var(--fs-sm); }
+.nb-row__actions { display: flex; gap: var(--sp-2); flex: none; }
+.nb-sent { display: flex; align-items: center; gap: var(--sp-2); flex: none; font-size: var(--fs-sm); color: var(--text-2); }
+.nb-sent__text { display: inline-flex; align-items: center; gap: 6px; }
+.nb-sent--joined { color: var(--accent-text); font-weight: 600; }
+.nb-sent--declined, .nb-sent--expired, .nb-sent--failed { color: var(--amber-text); }
+.nb-more { display: inline-flex; align-items: center; gap: 2px; align-self: flex-start; min-height: 40px; font-size: var(--fs-sm); font-weight: 600; color: var(--accent-text); }
+.nb-empty { display: flex; align-items: center; gap: var(--sp-4); min-width: 0; padding: var(--sp-2) 0; }
+.nb-empty__radar { width: 44px; height: 44px; border-radius: 14px; }
+.nb-empty__radar::before, .nb-empty__radar::after { border-radius: 14px; }
+.nb-empty__title { font-weight: 650; }
+.nb-empty__text { color: var(--text-2); font-size: var(--fs-sm); margin-top: 2px; }
+.nb-empty__text:empty { display: none; }
+.nb-far { display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap; margin-top: var(--sp-5); padding: var(--sp-4) var(--sp-5); border-radius: var(--r-lg); border: 1px dashed var(--line-2); }
+.nb-far > .grow { flex: 1 1 240px; }
+.nb-far__icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 13px; flex: none; background: var(--surface-2); color: var(--text-2); }
+.onb__other { margin-top: var(--sp-7); color: var(--text-2); font-size: var(--fs-md); font-weight: 600; text-align: center; }
+.onb__other + .onb__choices { margin-top: var(--sp-3); }
+
+@media (max-width: 759px) {
+  .fm-root { gap: var(--sp-5); }
+  /* a phone's root is the way to everything: what needs an answer, the folders, the drives, the devices nearby */
+  .fm-root > .home-status { order: 1; }
+  .fm-root > .home__row { order: 2; }
+  .fm-root > .home-actions { order: 3; }
+  .fm-root > .fm-folders { order: 4; }
+  .fm-root > .home-devs { order: 5; }
+  .fm-root > .nearby--panel { order: 6; }
+  .fm-root .home-status__help { display: none; }
+  .fm-root .home-status__title { font-size: var(--fs-base); }
+  .fm-root .home-status__line { font-size: var(--fs-sm); }
+  .fm-root .home-actions__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
+  .fm-root .home-act { padding: 10px 12px; gap: 10px; min-height: 56px; }
+  .fm-root .home-act__icon { width: 34px; height: 34px; border-radius: 10px; }
+  .fm-root .home-act__sub { display: none; }
+  .fm-root .home-act__title { font-size: var(--fs-sm); }
+  /* the drives in one line each: name, how it is connected, and the three actions as icons */
+  .fm-root .home-devs__grid { gap: var(--sp-2); }
+  .fm-root .hdev { flex-direction: row; align-items: center; gap: var(--sp-2); padding: 10px 10px 10px 12px; }
+  .fm-root .hdev__head { flex: 1 1 auto; min-width: 0; gap: 10px; }
+  .fm-root .hdev .avatar { --av: 40px !important; }
+  .fm-root .hdev__name { font-size: var(--fs-md); }
+  .fm-root .hdev__sub { display: none; }
+  .fm-root .hdev .conn { font-size: var(--fs-xs); margin-top: 1px; }
+  .fm-root .hdev .dact { flex: none; padding-top: 0; border-top: 0; gap: 4px; }
+  .fm-root .hdev .dact__btn { width: 44px; min-width: 44px; height: 44px; padding: 0; justify-content: center; }
+  .fm-root .hdev .dact__label { display: none; }
+  .fm-root .hdev--self { padding: 12px; }
+  .fm-folders__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
+  .fm-folder { gap: 10px; padding: 10px 12px; min-height: 56px; }
+  .fm-folder__icon { width: 36px; height: 36px; border-radius: 11px; }
+  .fm-folder__sub { display: none; }
+  .fm-folder__title { font-size: var(--fs-sm); }
+  .nearby--panel { padding: var(--sp-3) var(--sp-4); }
+  /* a row is two lines on a phone: the name in full (that is what tells two devices apart), and what a tap does under it */
+  .nb-row { flex-wrap: wrap; }
+  .nb-row > .grow { flex: 1 1 calc(100% - 60px); }
+  .nb-row > .btn { --btn-h: 44px; flex: 1 1 auto; margin-left: 56px; }
+  .nb-row__actions, .nb-sent { width: 100%; padding-left: 56px; }
+  .nb-row__actions .btn { flex: 1 1 0; --btn-h: 44px; }
+  .nb-sent { justify-content: space-between; }
+  .drive-head__acts { width: 100%; }
 }

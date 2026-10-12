@@ -1,9 +1,12 @@
 // Devices nearby (docs/UI-API.md → "Devices nearby").
 //
-// A device that is not in a mesh yet lists the devices around that have The Mesh and can add it, and asks one of them in
-// one tap. Both screens then show the same six digits, the person at the new device says that they match, and the person
-// at the device that adds says yes. A device that can add others gets such requests in a dialog that opens by itself
-// (and as a row in Home → "Требует внимания" while it is not answered).
+// Every device around with The Mesh open is listed — the ones in a mesh that can add this one, and the ones that are not
+// in a mesh yet — and one tap connects: this device asks to be added, invites the other one, or the two make a mesh
+// together (the node works out which). The other side answers in a tap too: an invitation shows here with Принять /
+// Отклонить; a request to be added opens a dialog by itself (and stays as a row until it is answered). No code to type,
+// no QR to scan: both screens only show the same six digits, for whoever wants to be sure.
+// While the list is on the screen the interface tells the node that the person looks (POST nearby/look every half a
+// minute): only then does a device that is not in a mesh make itself known by name.
 // The node does the work and keeps the state; this file is its face.
 import { html, useEffect, useRef, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
@@ -15,12 +18,14 @@ import { fmtCountdown } from "../format.js";
 import { DeviceAvatar } from "../components/avatar.js";
 import { Button, Callout, Field, Spinner } from "../components/ui.js";
 import { Modal } from "../components/modal.js";
-import { DnsPreview } from "../components/misc.js";
+import { DnsPreview, PageHeader } from "../components/misc.js";
 import { toast, toastError } from "../components/toast.js";
 import { cx, normalizeDeviceName, osName } from "../util.js";
 import { offeredName, validateName } from "../naming.js";
+import { AddDeviceModal } from "./add-device.js";
 
 const RUNNING = new Set(["connecting", "waiting", "confirmed"]);
+const enc = encodeURIComponent;
 
 /** "482913" → "482 913": easier to compare across two screens. */
 export function spaced(code) {
@@ -59,7 +64,7 @@ async function ask(path, body) {
   return v;
 }
 
-/** The six digits, big, to be compared with another screen. */
+/** The six digits, big, for whoever wants to compare them with the other screen. */
 function Code({ code, label, testid }) {
   return html`<div class="nearby-code" data-testid=${testid}>
     <span class="nearby-code__label">${label}</span>
@@ -67,20 +72,186 @@ function Code({ code, label, testid }) {
   </div>`;
 }
 
-// ------------------------------------------------------------------------ the new device: the list
+// ------------------------------------------------------------------------ looking
 
-// The name chosen for this device while it asks, kept for "try again".
+// The name this device gives while it is not in a mesh (chosen on the start screen), kept for "try again".
 let chosenName = "";
+const myName = () => normalizeDeviceName(chosenName || offeredName(state.self));
 
-async function connect(device, name, self) {
-  const dn = normalizeDeviceName(name || offeredName(self));
-  chosenName = dn;
+let lookers = 0;
+let lookTimer = 0;
+function lookNow() {
+  if (document.visibilityState === "hidden") return;
+  ask("nearby/look", { name: state.configured ? "" : myName() }).catch(() => { /* the next one */ });
+}
+if (typeof document !== "undefined") document.addEventListener("visibilitychange", () => { if (lookers && document.visibilityState === "visible") lookNow(); });
+
+/** While the component is on the screen, the person looks at the list of devices nearby: the node is told so. */
+export function useLooking() {
+  useEffect(() => {
+    if (++lookers === 1) {
+      lookNow();
+      lookTimer = setInterval(lookNow, 30000);
+    }
+    return () => {
+      if (--lookers === 0) {
+        clearInterval(lookTimer);
+        post("nearby/look", { on: false }).catch(() => {});
+      }
+    };
+  }, []);
+}
+
+// ------------------------------------------------------------------------ what a tap does
+
+function failed(e) {
+  if (e.code === "notfound") toast({ level: "warn", title: t("nearby.gone") });
+  else if (e.code === "offline") toast({ level: "warn", title: t("nearby.noAdmin"), text: t("nearby.noAdminText") });
+  else toastError(e);
+}
+
+async function connectTo(d) {
   try {
-    await ask("nearby/connect", { id: device.id, deviceName: dn });
+    await ask("nearby/connect", { id: d.id, deviceName: myName(), meshName: t("nearby.defaultMesh") });
   } catch (e) {
-    if (e.code === "notfound") toast({ level: "warn", title: t("nearby.gone") });
-    else toastError(e);
+    failed(e);
   }
+}
+
+async function answerInvite(inv, accept) {
+  try {
+    await ask(`nearby/invites/${enc(inv.id)}`, { accept, deviceName: myName(), meshName: t("nearby.defaultMesh") });
+    if (!accept) toast({ level: "info", title: t("nearby.declined", { name: inv.name }) });
+  } catch (e) {
+    failed(e);
+  }
+}
+
+async function takeBack(id) {
+  try {
+    await ask(`nearby/sent/${enc(id)}/cancel`);
+  } catch (e) {
+    if (e.code !== "notfound") toastError(e);
+  }
+}
+
+// ------------------------------------------------------------------------ the list
+
+/** How an invitation this device sent goes (on the row of the device it went to). */
+function SentState({ s, onAgain }) {
+  const [busy, setBusy] = useState(false);
+  const wait = s.state === "sent" || s.state === "joining";
+  const text = {
+    sent: s.kind === "pair" ? t("nearby.sent.pair") : t("nearby.sent.invite"),
+    joining: t("nearby.sent.joining"), joined: t("nearby.sent.joined"), declined: t("nearby.sent.declined"),
+    expired: t("nearby.sent.expired"), failed: t("nearby.sent.failed"),
+  }[s.state] || s.state;
+  const run = async (f) => { setBusy(true); await f(); setBusy(false); };
+  return html`<div class=${cx("nb-sent", `nb-sent--${s.state}`)} data-testid="nearby-sent" data-state=${s.state} role="status" aria-live="polite">
+    <span class="nb-sent__text">
+      ${wait ? html`<${Spinner} size=${14} />` : html`<${Icon} name=${s.state === "joined" ? "checkCircle" : "info"} size=${15} />`}
+      <span>${text}</span>
+    </span>
+    ${s.state === "sent" && html`<${Button} size="sm" variant="ghost" loading=${busy} onClick=${() => run(() => takeBack(s.id))} data-testid="nearby-sent-cancel">${t("common.cancel")}</${Button}>`}
+    ${["declined", "expired", "failed"].includes(s.state) && onAgain && html`<${Button} size="sm" variant="secondary" icon="refresh" loading=${busy}
+      onClick=${() => run(async () => { await takeBack(s.id); await onAgain(); })} data-testid="nearby-sent-again">${t("nearby.again")}</${Button}>`}
+  </div>`;
+}
+
+function InviteRow({ inv }) {
+  const [busy, setBusy] = useState("");
+  const run = (accept) => async () => {
+    setBusy(accept ? "accept" : "decline");
+    await answerInvite(inv, accept);
+    setBusy("");
+  };
+  return html`<li class="nb-row nb-row--invite" data-testid="nearby-invite" data-id=${inv.id} data-kind=${inv.kind} data-name=${inv.name}>
+    <${DeviceAvatar} dev=${{ name: inv.name, os: inv.os }} size=${44} showStatus=${false} />
+    <div class="grow nb-row__who">
+      <p class="nb-row__name ellipsis">${inv.name}</p>
+      <p class="nb-row__sub">${inv.kind === "invite" ? t("nearby.inviteTo", { mesh: inv.meshName || "—" }) : t("nearby.wantsPair")}</p>
+    </div>
+    <div class="nb-row__actions">
+      <${Button} size="sm" variant="ghost" loading=${busy === "decline"} onClick=${run(false)} data-testid="nearby-decline">${t("nearby.decline")}</${Button}>
+      <${Button} size="sm" variant="primary" icon="check" loading=${busy === "accept"} onClick=${run(true)} data-testid="nearby-accept">${t("nearby.accept")}</${Button}>
+    </div>
+  </li>`;
+}
+
+function RequestRow({ r }) {
+  return html`<li class="nb-row nb-row--invite" data-testid="nearby-request" data-id=${r.id}>
+    <${DeviceAvatar} dev=${{ name: r.name, os: r.os }} size=${44} showStatus=${false} />
+    <div class="grow nb-row__who">
+      <p class="nb-row__name ellipsis">${r.name}</p>
+      <p class="nb-row__sub tnum">${t("nearby.asks")} · ${t("home.att.nearbyCode", { code: spaced(r.code) })}</p>
+    </div>
+    <div class="nb-row__actions">
+      <${Button} size="sm" variant="primary" onClick=${() => showRequest(r.id)} data-testid="nearby-request-open">${t("home.att.nearbyGo")}</${Button}>
+    </div>
+  </li>`;
+}
+
+function DeviceRow({ d, sent, configured, canAdd }) {
+  const [busy, setBusy] = useState(false);
+  const go = async () => {
+    if (!configured && validateName(myName())) return;
+    setBusy(true);
+    await connectTo(d);
+    setBusy(false);
+  };
+  const label = d.kind === "mesh" ? t("nearby.connect") : configured ? t("nearby.add") : t("nearby.pair");
+  const sub = [d.kind === "mesh" ? t("nearby.mesh", { mesh: d.meshName }) : t("nearby.notInMesh"), d.os && osName(d.os)].filter(Boolean).join(" · ");
+  const blocked = configured && !canAdd;
+  return html`<li class="nb-row" data-testid="nearby-device" data-id=${d.id} data-name=${d.name} data-kind=${d.kind}>
+    <${DeviceAvatar} dev=${{ name: d.name, os: d.os }} size=${44} showStatus=${false} />
+    <div class="grow nb-row__who">
+      <p class="nb-row__name ellipsis">${d.name}</p>
+      <p class="nb-row__sub ellipsis">${blocked ? t("nearby.noAdminShort") : sub}</p>
+    </div>
+    ${sent ? html`<${SentState} s=${sent} onAgain=${go} />`
+      : html`<${Button} variant="primary" size="sm" icon=${d.kind === "mesh" ? "link" : "plus"} loading=${busy} disabled=${blocked} onClick=${go}
+          aria-label=${t("nearby.connectTo", { name: d.name })} data-testid="nearby-connect">${label}</${Button}>`}
+  </li>`;
+}
+
+/**
+ * The list: invitations to answer first, then the devices around (each with what its tap does, or how the invitation sent
+ * to it goes), then invitations that went to devices no longer heard. `limit`: at most that many rows, and a link to the
+ * whole list.
+ */
+export function NearbyList({ limit = 0, empty = null }) {
+  const nb = useStore((s) => s.nearby);
+  const configured = useStore((s) => s.configured);
+  const sentTo = new Map(nb.sent.map((s) => [s.id, s]));
+  const listed = new Set(nb.devices.map((d) => d.id));
+  const invitedBy = new Set(nb.invites.map((i) => i.id));
+  const rows = [
+    ...(configured ? nb.requests.map((r) => html`<${RequestRow} key=${"r" + r.id} r=${r} />`) : []),
+    ...nb.invites.map((inv) => html`<${InviteRow} key=${"i" + inv.id} inv=${inv} />`),
+    ...nb.devices.filter((d) => !invitedBy.has(d.id)).map((d) => html`<${DeviceRow} key=${"d" + d.id} d=${d} sent=${sentTo.get(d.id)} configured=${configured} canAdd=${nb.canAdd} />`),
+    ...nb.sent.filter((s) => !listed.has(s.id) && !invitedBy.has(s.id)).map((s) => html`<li key=${"s" + s.id} class="nb-row" data-testid="nearby-device" data-id=${s.id} data-name=${s.name} data-gone="true">
+      <${DeviceAvatar} dev=${{ name: s.name, os: s.os }} size=${44} showStatus=${false} />
+      <div class="grow nb-row__who"><p class="nb-row__name ellipsis">${s.name}</p><p class="nb-row__sub">${s.os ? osName(s.os) : ""}</p></div>
+      <${SentState} s=${s} />
+    </li>`),
+  ];
+  if (!rows.length) return empty;
+  const shown = limit ? rows.slice(0, limit) : rows;
+  return html`<ul class="nb-list" data-testid="nearby-list">${shown}</ul>
+    ${limit > 0 && rows.length > limit && html`<a class="nb-more" href="#/nearby" data-testid="nearby-more">${tn("nearby.more", rows.length - limit)}<${Icon} name="chevronRight" size=${16} /></a>`}`;
+}
+
+/** While nobody is around: that the app is looking, or what is wrong when it cannot. */
+function Searching({ self, hint }) {
+  const trouble = lanNotice(self);
+  const lan = self && self.lan;
+  return html`<div class="nb-empty" data-testid="nearby-searching">
+    <span class="nearby__radar nb-empty__radar" aria-hidden="true"><${Icon} name="radar" size=${26} /></span>
+    <div class="grow">
+      <p class="nb-empty__title" role="status" aria-live="polite">${trouble ? trouble.text : lan && lan.problem === "no-network" ? t("lan.noNetwork") : t("nearby.searching")}</p>
+      <p class="nb-empty__text">${trouble ? trouble.sub : lan && lan.problem === "no-network" ? "" : hint}</p>
+    </div>
+  </div>`;
 }
 
 function NearbyName({ self, name, setName }) {
@@ -88,6 +259,11 @@ function NearbyName({ self, name, setName }) {
   const [editing, setEditing] = useState(false);
   const shown = normalizeDeviceName(name || placeholder);
   const problem = name ? validateName(shown) : "";
+  const done = () => {
+    setEditing(false);
+    chosenName = normalizeDeviceName(name);
+    lookNow(); // the devices around see the new name at once
+  };
   if (!editing) {
     return html`<div class="nearby__me">
       <span>${t("nearby.name")}</span>
@@ -100,57 +276,75 @@ function NearbyName({ self, name, setName }) {
       ${(id, d) => html`<input id=${id} class="input" value=${name} placeholder=${placeholder} maxlength="63" autocapitalize="off" spellcheck="false" autofocus
         data-testid="nearby-name-input" aria-describedby=${d} aria-invalid=${problem ? "true" : undefined}
         onInput=${(e) => setName(e.target.value)} onBlur=${() => setName(normalizeDeviceName(name))}
-        onKeyDown=${(e) => { if (e.key === "Enter" && !problem) setEditing(false); }} />`}
+        onKeyDown=${(e) => { if (e.key === "Enter" && !problem) done(); }} />`}
     </${Field}>
-    <${Button} size="sm" variant="secondary" disabled=${!!problem} onClick=${() => setEditing(false)}>${t("nearby.nameDone")}</${Button}>
+    <${Button} size="sm" variant="secondary" disabled=${!!problem} onClick=${done}>${t("nearby.nameDone")}</${Button}>
   </div>`;
 }
 
 /**
- * The list on the start screen: the devices around that can add this one, or — while there are none — a quiet line that
- * says that the app is looking (and what to do, or what is wrong, when it cannot).
+ * The start screen's list (a device that is not in a mesh): everybody around with The Mesh open, invitations to this
+ * device, and the name it is seen under.
  */
 export function NearbySection({ self }) {
-  const nearby = useStore((s) => s.nearby);
+  const nb = useStore((s) => s.nearby);
   const off = useStore((s) => !!s.settings && s.settings.lan === false);
-  const [name, setName] = useState("");
-  const [busy, setBusy] = useState("");
-  const lan = self && self.lan;
+  const [name, setName] = useState(chosenName);
+  useLooking();
   if (off) return null; // the person turned looking around on the network off
-  const devices = nearby.devices;
-  const trouble = lanNotice(self);
-  const found = devices.length > 0;
-  const go = async (d) => {
-    const dn = normalizeDeviceName(name || offeredName(self));
-    if (validateName(dn)) return;
-    setBusy(d.id);
-    await connect(d, name, self);
-    setBusy("");
-  };
-  return html`<section class=${cx("nearby", found && "nearby--found")} data-testid="nearby" data-found=${String(devices.length)} aria-labelledby="nearby-title">
+  const found = nb.devices.length + nb.invites.length + nb.sent.length;
+  return html`<section class=${cx("nearby", found && "nearby--found")} data-testid="nearby" data-found=${String(nb.devices.length)} aria-labelledby="nearby-title">
     <header class="nearby__head">
       <span class="nearby__radar" aria-hidden="true"><${Icon} name="radar" size=${24} /></span>
       <div class="grow">
-        <h2 class="nearby__title" id="nearby-title">${found ? tn("nearby.found", devices.length) : t("nearby.title")}</h2>
-        <p class="nearby__sub" role="status" aria-live="polite">${found ? t("nearby.lead") : trouble ? trouble.text : lan && lan.problem === "no-network" ? t("lan.noNetwork") : t("nearby.searching")}</p>
+        <h2 class="nearby__title" id="nearby-title">${found ? tn("nearby.found", nb.devices.length + nb.invites.length) : t("nearby.title")}</h2>
+        <p class="nearby__sub">${found ? t("nearby.lead") : t("nearby.leadEmpty")}</p>
       </div>
     </header>
-    ${!found && html`<p class="nearby__hint" data-testid="nearby-searching">${trouble ? trouble.sub : lan && lan.problem === "no-network" ? "" : t("nearby.searchingHint")}</p>`}
-    ${found && html`<ul class="nearby__list">
-      ${devices.map((d) => html`<li key=${d.id} class="nearby__item" data-testid="nearby-device" data-id=${d.id} data-name=${d.name}>
-        <${DeviceAvatar} dev=${{ name: d.name, os: d.os }} size=${44} showStatus=${false} />
-        <div class="grow nearby__who">
-          <p class="nearby__name ellipsis">${d.name}</p>
-          <p class="nearby__meta ellipsis">${[d.meshName && t("nearby.mesh", { mesh: d.meshName }), d.os && osName(d.os)].filter(Boolean).join(" · ")}</p>
-        </div>
-        <${Button} variant="primary" icon="link" loading=${busy === d.id} onClick=${() => go(d)} aria-label=${t("nearby.connectTo", { name: d.name })} data-testid="nearby-connect">${t("nearby.connect")}</${Button}>
-      </li>`)}
-    </ul>`}
-    ${found && html`<${NearbyName} self=${self} name=${name} setName=${setName} />`}
+    <${NearbyList} empty=${html`<${Searching} self=${self} hint=${t("nearby.searchingHint")} />`} />
+    <${NearbyName} self=${self} name=${name} setName=${setName} />
   </section>`;
 }
 
-// ------------------------------------------------------------------------ the new device: the request
+/** The overview's panel (a device in a mesh): the first few devices around, and the way to the whole list. */
+export function NearbyPanel() {
+  const self = useStore((s) => s.self);
+  useLooking();
+  return html`<section class="fm-sec nearby nearby--panel" data-testid="nearby" aria-labelledby="fm-nearby-title">
+    <div class="fm-sec__head">
+      <h2 class="fm-sec__title" id="fm-nearby-title"><${Icon} name="radar" size=${18} />${t("nav.nearby")}</h2>
+      <a class="fm-sec__link" href="#/nearby" data-testid="nearby-all">${t("nearby.all")}<${Icon} name="chevronRight" size=${16} /></a>
+    </div>
+    <${NearbyList} limit=${4} empty=${html`<${Searching} self=${self} hint=${t("nearby.searchingHintMember")} />`} />
+  </section>`;
+}
+
+/** The place «Рядом» (a device in a mesh): the whole list, and what to do when the device is not nearby. */
+export function NearbyView() {
+  const self = useStore((s) => s.self);
+  const nb = useStore((s) => s.nearby);
+  const [adding, setAdding] = useState(false);
+  useLooking();
+  return html`<div class="page page--narrow nearby-place">
+    <${PageHeader} title=${t("nav.nearby")} subtitle=${t("nearby.placeSub")} />
+    <section class="nearby nearby--place" data-testid="nearby" data-found=${String(nb.devices.length)}>
+      <${NearbyList} empty=${html`<${Searching} self=${self} hint=${t("nearby.searchingHintMember")} />`} />
+      <p class="faint small nb-visible">${nb.visible ? t("nearby.visibleOn") : t("nearby.visibleOff")} <a href="#/settings/network">${t("nearby.visibleWhere")}</a></p>
+    </section>
+    ${!nb.canAdd && html`<${Callout} tone="info" icon="info" class="mt-4" data-testid="nearby-no-admin">${t("nearby.noAdminText")}</${Callout}>`}
+    <div class="nb-far" data-testid="nearby-far">
+      <span class="nb-far__icon" aria-hidden="true"><${Icon} name="qr" size=${22} /></span>
+      <div class="grow">
+        <p class="strong">${t("nearby.far")}</p>
+        <p class="muted small">${t("nearby.farText")}</p>
+      </div>
+      <${Button} variant="secondary" icon="ticket" onClick=${() => setAdding(true)} data-testid="nearby-far-invite">${t("nearby.farGo")}</${Button}>
+    </div>
+    ${adding && html`<${AddDeviceModal} onClose=${() => setAdding(false)} />`}
+  </div>`;
+}
+
+// ------------------------------------------------------------------------ the new device: its request
 
 /** What to check when the device nearby did not answer. */
 function ReachTips({ name }) {
@@ -168,26 +362,24 @@ function ReachTips({ name }) {
  * The attempt of this device to be added, from "connecting" to the end (`join` is state.nearby.join). It takes the place
  * of the start screen's choices for as long as it lasts.
  */
-export function NearbyJoin({ join, self }) {
+export function NearbyJoin({ join }) {
   const peer = join.peer || { name: "?" };
   const [busy, setBusy] = useState("");
   const st = join.state;
   const gone = useStore((s) => !s.nearby.devices.some((d) => peer.id && d.id === peer.id));
 
-  const run = (what, path) => async () => {
-    setBusy(what);
+  const cancel = async () => {
+    setBusy("cancel");
     try {
-      await ask(path);
+      await ask("nearby/cancel");
     } catch (e) {
       if (e.code !== "notfound") toastError(e);
     }
     setBusy("");
   };
-  const cancel = run("cancel", "nearby/cancel");
-  const match = run("match", "nearby/confirm");
   const again = async () => {
     setBusy("again");
-    await connect(peer, chosenName, self);
+    await connectTo(peer);
     setBusy("");
   };
 
@@ -201,25 +393,20 @@ export function NearbyJoin({ join, self }) {
   }
 
   if (st === "waiting" || st === "confirmed") {
-    const waiting = st === "waiting";
     return html`<div class="onb-form nearby-join" data-testid="nearby-join" data-state=${st}>
       <div class="onb-form__head">
         <${DeviceAvatar} dev=${peer} size=${48} showStatus=${false} />
         <div>
-          <h2 class="onb-form__title">${waiting ? t("nearby.join.waiting") : t("nearby.join.confirmed")}</h2>
-          <p class="muted" role="status" aria-live="polite">${waiting ? t("nearby.join.waitingText", { name: peer.name }) : t("nearby.join.confirmedText", { name: peer.name })}</p>
+          <h2 class="onb-form__title">${t("nearby.join.waitTitle", { name: peer.name })}</h2>
+          <p class="muted" role="status" aria-live="polite">${t("nearby.join.waitText", { name: peer.name })}</p>
         </div>
       </div>
-      <${Code} code=${join.code} label=${t("nearby.join.codeLabel")} testid="nearby-code" />
-      ${waiting
-        ? html`<div class="nearby-join__actions">
-            <${Button} variant="primary" size="lg" block icon="check" loading=${busy === "match"} onClick=${match} data-testid="nearby-match">${t("nearby.join.match")}</${Button}>
-            <${Button} variant="ghost" size="lg" block loading=${busy === "cancel"} onClick=${cancel} data-testid="nearby-cancel">${t("nearby.join.cancel")}</${Button}>
-          </div>`
-        : html`<div class="invite__wait" role="status" data-testid="nearby-waiting-approval">
-            <span class="invite__pulse" aria-hidden="true"></span><span>${t("nearby.join.confirmed")}…</span>
-          </div>
-          <${Button} variant="ghost" block loading=${busy === "cancel"} onClick=${cancel} data-testid="nearby-cancel">${t("nearby.join.cancel")}</${Button}>`}
+      <div class="invite__wait" role="status" data-testid="nearby-waiting-approval">
+        <span class="invite__pulse" aria-hidden="true"></span><span>${t("nearby.join.waitShort")}</span>
+      </div>
+      ${join.code && html`<${Code} code=${join.code} label=${t("nearby.join.codeLabel")} testid="nearby-code" />`}
+      <p class="faint small">${t("nearby.join.codeHint")}</p>
+      <${Button} variant="ghost" block loading=${busy === "cancel"} onClick=${cancel} data-testid="nearby-cancel">${t("nearby.join.cancel")}</${Button}>
     </div>`;
   }
 
@@ -239,6 +426,7 @@ export function NearbyJoin({ join, self }) {
   const body = reason === "offline" ? html`<${ReachTips} name=${peer.name} />`
     : reason === "denied" ? html`<p>${t("nearby.join.denied")}</p>`
     : reason === "expired" ? html`<p>${t("nearby.join.expired")}</p>`
+    : reason === "noadmin" ? html`<p>${t("nearby.join.noadmin", { name: peer.name })}</p>`
     : html`<p>${reason === "invalid" ? t("nearby.join.invalid") : t("nearby.join.broken", { name: peer.name })}</p>${join.error && html`<p class="mono xsmall mt-1">${join.error}</p>`}`;
   return html`<div class="onb-form nearby-join" data-testid="nearby-join" data-state=${st} data-reason=${reason}>
     <${Callout} tone="err" title=${title} role="alert" data-testid="nearby-error">${body}</${Callout}>
@@ -265,12 +453,12 @@ function RequestDialog({ req, onClose }) {
   const answer = async (approve) => {
     setBusy(approve ? "allow" : "deny");
     try {
-      await ask(`nearby/requests/${encodeURIComponent(req.id)}`, { approve, owner: owner.trim().replace(/\s+/g, " ") });
+      await ask(`nearby/requests/${enc(req.id)}`, { approve, owner: owner.trim().replace(/\s+/g, " ") });
       if (approve) toast({ level: "success", title: t("nearby.ask.allowed", { name: req.name }), text: t(req.confirmed ? "nearby.ask.allowedNow" : "nearby.ask.allowedWait") });
       else toast({ level: "info", title: t("nearby.ask.denied") });
     } catch (e) {
       if (e.code === "notfound") toast({ level: "warn", title: t("nearby.ask.gone") });
-      else toastError(e);
+      else failed(e);
     }
     onClose();
   };
@@ -287,8 +475,9 @@ function RequestDialog({ req, onClose }) {
           <p class="faint small">${req.os ? osName(req.os) : ""}</p>
         </div>
       </div>
+      <p class="muted">${t("nearby.ask.lead", { name: req.name })}</p>
       <${Code} code=${req.code} label=${t("nearby.ask.codeLabel")} testid="nearby-ask-code" />
-      <p class="muted small">${t("nearby.ask.codeText", { name: req.name })}</p>
+      <p class="faint small">${t("nearby.ask.codeText", { name: req.name })}</p>
       <p class=${cx("nearby-state", req.confirmed && "is-ok")} role="status" data-testid="nearby-ask-state" data-confirmed=${String(!!req.confirmed)}>
         <${Icon} name=${req.confirmed ? "checkCircle" : "clock"} size=${16} />${req.confirmed ? t("nearby.ask.confirmedThere") : t("nearby.ask.notYet")}
       </p>
@@ -303,7 +492,7 @@ function RequestDialog({ req, onClose }) {
 
 /**
  * Opens the dialog for each request that is new, one at a time. A request whose dialog the person closed without an
- * answer stays as a row in Home (→ `showRequest`) until it expires.
+ * answer stays as a row (the overview, «Рядом») until it expires.
  */
 export function NearbyAskHost() {
   const requests = useStore((s) => s.nearby.requests);
@@ -324,7 +513,7 @@ export function NearbyAskHost() {
   return html`<${RequestDialog} key=${req.id} req=${req} onClose=${() => setState({ nearbyAsk: null })} />`;
 }
 
-/** Opens the dialog of a request again (from Home). */
+/** Opens the dialog of a request again (from a row). */
 export function showRequest(id) {
   setState({ nearbyAsk: id });
 }

@@ -29,7 +29,9 @@ let current = parseHash();
 const subs = new Set();
 // A trail of visited hashes lets "back" buttons use history.back() when the
 // previous entry is ours, and fall back to a parent route otherwise (deep links).
+// What "back" left behind is kept too, for "forward" (the file manager's arrows).
 const trail = [location.hash || "#/"];
+const ahead = [];
 let replacing = false;
 
 window.addEventListener("hashchange", () => {
@@ -38,14 +40,25 @@ window.addEventListener("hashchange", () => {
     trail[trail.length - 1] = h;
     replacing = false;
   } else if (trail.length > 1 && trail[trail.length - 2] === h) {
-    trail.pop(); // looks like a back navigation
+    ahead.push(trail.pop()); // looks like a back navigation
+    if (ahead.length > 100) ahead.shift();
+  } else if (ahead.length && ahead[ahead.length - 1] === h) {
+    trail.push(ahead.pop()); // and this like a forward one
   } else {
     trail.push(h);
+    ahead.length = 0;
     if (trail.length > 100) trail.shift();
   }
   current = parseHash();
   for (const fn of Array.from(subs)) fn(current);
 });
+
+/** Is there an in-app screen to go back to / forward to (the arrows of the file manager)? */
+export const canBack = () => trail.length > 1;
+export const canForward = () => ahead.length > 0;
+export function forward() {
+  if (ahead.length) history.forward();
+}
 
 export function go(to, { replace = false } = {}) {
   if (location.hash === to) return;

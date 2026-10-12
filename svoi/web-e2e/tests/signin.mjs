@@ -3,7 +3,7 @@ import { group, test, assert, eq, until, open, tid, startNode, freePort } from "
 // How a person gets into the interface: with a one-time link. The master token
 // (what the command line uses) must never reach the browser.
 const navVisible = (page) =>
-  page.waitForFunction(() => [...document.querySelectorAll('[data-testid="nav-home"], [data-testid="tab-home"]')].some((e) => e.getClientRects().length > 0));
+  page.waitForFunction(() => [...document.querySelectorAll('[data-testid="nav-home"], .fm-bar')].some((e) => e.getClientRects().length > 0));
 
 group("signing in", () => {
   test("a sign-in link works exactly once and leaves no secret in the page", async ({ browser, dev }) => {

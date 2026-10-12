@@ -1,163 +1,44 @@
-// Entry point: app shell (sidebar / top bar / mobile tab bar), global
-// banners and states, routing to views.
+// Entry point: the app shell — a file manager (js/shell.js): the places on the left, the path on top, the place itself in
+// the middle — global banners and states, routing to views.
 import { html, render, useEffect, useState } from "../vendor/preact-htm.js";
 import { Icon, Logo } from "./icons.js";
-import { t, tn, tx } from "./i18n.js";
+import { t, tx } from "./i18n.js";
 import { initPrefs } from "./prefs.js";
 import { startRosa } from "./rosa.js";
 import { go, useRoute } from "./router.js";
 import { refreshState, reconnectNow, startLive } from "./sse.js";
 import { state, useStore } from "./store.js";
-import { cx, sortPeers } from "./util.js";
+import { cx } from "./util.js";
 import { useNow } from "./hooks.js";
 import { DialogHost } from "./components/modal.js";
 import { toast, ToastHost } from "./components/toast.js";
-import { DeviceAvatar } from "./components/avatar.js";
-import { Button, CopyButton, IconButton, Spinner } from "./components/ui.js";
+import { Button, CopyButton, Spinner } from "./components/ui.js";
+import { PathBar, Places, StatusBar, placeOf, trailOf } from "./shell.js";
 import { OnboardingView } from "./views/onboarding.js";
 import { HomeView } from "./views/home.js";
-import { HelpHost, openHelp } from "./views/help.js";
+import { HelpHost } from "./views/help.js";
 import { DevicesView } from "./views/devices.js";
 import { FilesView } from "./views/files.js";
 import { MailView } from "./views/mail.js";
 import { ChatView } from "./views/chat.js";
 import { ServicesView } from "./views/services.js";
 import { SettingsView } from "./views/settings.js";
-import { MoreView } from "./views/more.js";
 import { OffersBanner } from "./views/transfers.js";
-import { NearbyAskHost } from "./views/nearby.js";
-
-const NAV = [
-  { id: "home", icon: "home", label: "nav.home" },
-  { id: "devices", icon: "devices", label: "nav.devices" },
-  { id: "files", icon: "files", label: "nav.files", counter: "offers" },
-  { id: "mail", icon: "mail", label: "nav.mail", counter: "mail" },
-  { id: "chat", icon: "chat", label: "nav.chat", counter: "chat" },
-  { id: "services", icon: "services", label: "nav.services" },
-  { id: "settings", icon: "settings", label: "nav.settings" },
-];
-
-// Phones have room for five tabs. The device list lives on Home (and the full
-// Devices page is one tap away from there and from «Ещё»).
-const TABS = ["home", "files", "mail", "chat", "more"];
-const TAB_OF = { devices: "home" };
+import { NearbyAskHost, NearbyView } from "./views/nearby.js";
 
 const VIEWS = {
   home: HomeView,
   devices: DevicesView,
   files: FilesView,
+  nearby: NearbyView,
   mail: MailView,
   chat: ChatView,
   services: ServicesView,
   settings: SettingsView,
-  more: MoreView,
 };
 
 // Screens that manage their own scrolling panes (fixed-height layout).
 const FIXED = new Set(["mail", "chat"]);
-
-function NavBadge({ n, tone }) {
-  if (!n) return null;
-  return html`<span class=${cx("nav__badge", tone && `nav__badge--${tone}`)}>${n > 99 ? "99+" : n}</span>`;
-}
-
-function Sidebar({ section }) {
-  const self = useStore((s) => s.self);
-  const counters = useStore((s) => s.counters);
-  const restart = useStore((s) => !!(s.settings && s.settings.restartRequired));
-  return html`<aside class="sidebar">
-    <a class="brand" href="#/home" aria-label=${t("app.name")}>
-      <${Logo} size=${34} />
-      <span class="brand__text">
-        <span class="brand__name">${t("app.name")}</span>
-        ${self && self.meshName && html`<span class="brand__mesh">${t("app.meshName", { name: self.meshName })}</span>`}
-      </span>
-    </a>
-    <nav class="nav" aria-label=${t("nav.label")}>
-      ${NAV.map((n) => {
-        const count = n.counter ? counters[n.counter] || 0 : 0;
-        const active = section === n.id;
-        const aria = count ? `${t(n.label)}, ${tn("nav.badgeCount", count)}` : undefined;
-        return html`<a key=${n.id} href=${"#/" + n.id} class=${cx("nav__item", active && "is-active")} data-testid=${"nav-" + n.id}
-            aria-current=${active ? "page" : undefined} aria-label=${aria} title=${t(n.label)}>
-          <span class="nav__icon"><${Icon} name=${n.icon} size=${20} /></span>
-          <span class="nav__label">${t(n.label)}</span>
-          <${NavBadge} n=${count} tone=${n.counter === "offers" ? "warn" : null} />
-          ${n.id === "settings" && restart && html`<span class="nav__dot" title=${t("settings.restartRequired")}></span>`}
-        </a>`;
-      })}
-    </nav>
-    ${self && html`<a class="sidebar__self" href="#/settings" title=${t("dev.thisDevice")}>
-      <${DeviceAvatar} dev=${self} size=${36} status="self" />
-      <span class="sidebar__self-text">
-        <span class="ellipsis strong">${self.name}</span>
-        <span class="ellipsis faint xsmall">${t("dev.thisDevice")}</span>
-      </span>
-    </a>`}
-  </aside>`;
-}
-
-function TabBar({ section }) {
-  const counters = useStore((s) => s.counters);
-  const restart = useStore((s) => !!(s.settings && s.settings.restartRequired));
-  const items = [
-    { id: "home", icon: "home", label: t("nav.home") },
-    { id: "files", icon: "files", label: t("nav.files"), n: counters.offers, tone: "warn" },
-    { id: "mail", icon: "mail", label: t("nav.mail"), n: counters.mail },
-    { id: "chat", icon: "chat", label: t("nav.chat"), n: counters.chat },
-    { id: "more", icon: "more", label: t("nav.more"), dot: restart },
-  ];
-  const activeTab = TABS.includes(section) ? section : TAB_OF[section] || "more";
-  return html`<nav class="tabbar" aria-label=${t("nav.label")}>
-    <span class="tabbar__lens" aria-hidden="true"></span>
-    ${items.map((it) => html`<a key=${it.id} href=${"#/" + it.id} class=${cx("tabbar__item", activeTab === it.id && "is-active")} data-testid=${"tab-" + it.id}
-        aria-current=${activeTab === it.id ? "page" : undefined}
-        aria-label=${it.n ? `${it.label}, ${tn("nav.badgeCount", it.n)}` : undefined}>
-      <span class="tabbar__icon"><${Icon} name=${it.icon} size=${22} />
-        ${it.n ? html`<span class=${cx("tabbar__badge", it.tone && `tabbar__badge--${it.tone}`)}>${it.n > 99 ? "99+" : it.n}</span>` : null}
-        ${it.dot && html`<span class="tabbar__dot"></span>`}
-      </span>
-      <span class="tabbar__label">${it.label}</span>
-    </a>`)}
-  </nav>`;
-}
-
-// How the connection works (NAT type, relays) is in Settings → Сеть; the top
-// bar only says how many devices are online and offers «Как это работает?».
-// The phone app has a menu of its own (start with the phone, battery, the log…); it asks for it here.
-const appMenu = () => (window.themeshShell && typeof window.themeshShell.menu === "function" ? () => window.themeshShell.menu() : null);
-
-function TopBar() {
-  const self = useStore((s) => s.self);
-  const peers = useStore((s) => s.peers);
-  if (!self) return html`<header class="topbar"></header>`;
-  const openAppMenu = appMenu();
-  const total = peers.length + 1;
-  const online = peers.filter((p) => p.online).length + 1;
-  const onlinePeers = sortPeers(peers).slice(0, 4);
-  return html`<header class="topbar">
-    <a class="topbar__brand" href="#/home" aria-label=${t("app.name")}>
-      <${Logo} size=${30} />
-    </a>
-    <div class="topbar__self">
-      <span class="topbar__name ellipsis">${self.name}</span>
-      ${self.meshName && html`<span class="topbar__mesh ellipsis">${t("app.meshName", { name: self.meshName })}</span>`}
-    </div>
-    <div class="topbar__status">
-      <a class="conn-pill" href="#/devices" title=${t("top.onlineTitle")} data-testid="conn-pill">
-        <span class="conn-pill__dots" aria-hidden="true">
-          ${onlinePeers.map((p) => html`<span key=${p.id} class=${cx("conn-pill__dot", p.online ? (p.path === "relay" ? "is-relay" : "is-on") : "is-off")}></span>`)}
-        </span>
-        <span class="conn-pill__text tnum">
-          <span class="conn-pill__long">${t("top.online", { n: online, total })}</span>
-          <span class="conn-pill__short">${online}/${total}</span>
-        </span>
-      </a>
-      <${IconButton} icon="help" label=${t("top.help")} onClick=${openHelp} class="topbar__help" data-testid="help-button" />
-      ${openAppMenu && html`<${IconButton} icon="moreV" label=${t("top.appMenu")} onClick=${openAppMenu} class="topbar__help" data-testid="app-menu-button" />`}
-    </div>
-  </header>`;
-}
 
 function OfflineBanner() {
   const conn = useStore((s) => s.conn);
@@ -230,21 +111,16 @@ function Booting() {
   </div></div>`;
 }
 
-const TITLES = {
-  home: "nav.home", devices: "nav.devices", files: "nav.files", mail: "nav.mail", chat: "nav.chat",
-  services: "nav.services", settings: "nav.settings", more: "nav.more",
-};
-
-function useDocumentTitle(section) {
+function useDocumentTitle(trail, configured) {
   const counters = useStore((s) => s.counters);
-  const configured = useStore((s) => s.configured);
   const lang = useStore((s) => s.lang);
-  const asks = useStore((s) => s.nearby.requests.length); // devices nearby that wait to be added
+  const asks = useStore((s) => s.nearby.requests.length + s.nearby.invites.length); // devices nearby that wait for an answer
+  const here = configured && trail.length ? trail[trail.length - 1].label : "";
   useEffect(() => {
     const n = (counters.mail || 0) + (counters.chat || 0) + (counters.offers || 0) + asks;
-    const page = configured ? t(TITLES[section] || "nav.home") : t("onb.title");
+    const page = configured ? here : t("onb.title");
     document.title = `${n ? `(${n}) ` : ""}${page} — ${t("app.name")}`;
-  }, [counters, section, configured, lang, asks]);
+  }, [counters, here, configured, lang, asks]);
 }
 
 function App() {
@@ -253,43 +129,50 @@ function App() {
   const authError = useStore((s) => s.authError);
   const loadError = useStore((s) => s.loadError);
   const configured = useStore((s) => s.configured);
-  const hasSelf = useStore((s) => !!s.self);
   const lang = useStore((s) => s.lang);
   let section = route.parts[0] || "home";
   if (!VIEWS[section]) section = "home";
-  useDocumentTitle(section);
+  // (the path and the place are worked out from these: subscribing to them is what keeps the path bar current)
+  const self = useStore((s) => s.self);
+  useStore((s) => s.peers);
+  useStore((s) => s.labels);
+  const trail = self ? trailOf(route, state) : [];
+  const place = placeOf(route, state);
+  useDocumentTitle(trail, configured);
 
-  // Move focus to the main region on navigation between sections (a11y).
+  // Move focus to the main region on navigation between places (a11y).
   useEffect(() => {
     const m = document.getElementById("main");
-    if (m && document.activeElement && document.activeElement.closest && document.activeElement.closest(".nav, .tabbar")) {
+    if (m && document.activeElement && document.activeElement.closest && document.activeElement.closest(".places, .fm-bar")) {
       m.focus({ preventScroll: true });
     }
     window.scrollTo(0, 0);
-  }, [section]);
+  }, [place]);
 
-  // Onboarding ignores the route; start the member UI from "#/" once it is done.
+  // Onboarding ignores the route; start the member UI from "#/" once it is done. The phone's «Ещё» (more) is gone: the
+  // overview is where everything is.
   useEffect(() => {
     if (booted && !configured && !["", "#", "#/"].includes(location.hash)) go("#/", { replace: true });
-  }, [booted, configured]);
+    else if (route.parts[0] === "more") go("#/home", { replace: true });
+  }, [booted, configured, route.parts[0]]);
 
   if (authError) return html`<${Unauthorized} />${html`<${ToastHost} />`}`;
   if (!booted) return html`<${Booting} />`;
-  if (loadError && !hasSelf) return html`<${LoadFailed} />`;
-  if (!configured) return html`<${OnboardingView} key=${lang} /><${DialogHost} /><${ToastHost} />`;
+  if (loadError && !self) return html`<${LoadFailed} />`;
+  if (!configured) return html`<${OnboardingView} key=${lang} /><${NearbyAskHost} /><${DialogHost} /><${ToastHost} />`;
 
   const View = VIEWS[section];
   const fixed = FIXED.has(section);
   // On phones a conversation / an open message takes the whole screen.
   const immersive = (section === "chat" && !!route.parts[1]) || (section === "mail" && (!!route.parts[2] || route.parts[1] === "compose"));
-  // Home lists incoming offers itself (with Принять / Отклонить), Files → Send has them in its list.
+  // The overview lists incoming offers itself (with Принять / Отклонить), Transfers has them in its list.
   const showOffers = section !== "home" && !(section === "files" && (route.parts[1] || "send") === "send");
   return html`
     <a class="skip-link" href="#main" onClick=${(e) => { e.preventDefault(); document.getElementById("main").focus(); }}>${t("app.skip")}</a>
-    <div class=${cx("shell", fixed && "shell--fixed", immersive && "shell--immersive")} key=${lang}>
-      <${Sidebar} section=${section} />
+    <div class=${cx("shell fm", fixed && "shell--fixed", immersive && "shell--immersive", place === "home" && "fm--root")} key=${lang} data-place=${place}>
+      <${Places} place=${place} />
       <div class="main">
-        <${TopBar} />
+        <${PathBar} trail=${trail} />
         <div class="banners">
           <${OfflineBanner} />
           ${showOffers && html`<${OffersBanner} />`}
@@ -297,8 +180,8 @@ function App() {
         <main id="main" class=${cx("content", `content--${section}`)} tabindex="-1" data-testid=${"page-" + section}>
           <${View} route=${route} />
         </main>
+        <${StatusBar} />
       </div>
-      <${TabBar} section=${section} />
     </div>
     <${HelpHost} />
     <${NearbyAskHost} />

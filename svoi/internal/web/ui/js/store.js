@@ -18,7 +18,10 @@ export const state = {
   transfers: [],
   counters: { mail: 0, chat: 0, offers: 0 },
   invites: [],
-  nearby: { visible: true, devices: [], join: { state: "idle" }, requests: [] }, // devices around that can add this one; its own request; requests of others (admin)
+  // devices nearby (views/nearby.js): the ones this device can connect with, invitations to it and from it, its own request,
+  // the requests of others
+  nearby: { visible: true, looking: false, canAdd: false, devices: [], invites: [], sent: [], join: { state: "idle" }, requests: [] },
+  labels: {},           // names of places the path bar shows that only a view knows (a shared folder's name: "share:<dev>/<id>")
   nearbyAsk: null,      // the id of the request whose dialog is open on this (admin) device
   settings: null,
   shares: null,         // local shares (null = not loaded yet)
@@ -53,10 +56,20 @@ export function nearbyOf(d) {
   const v = d && typeof d === "object" ? d : {};
   return {
     visible: v.visible !== false,
-    devices: Array.isArray(v.devices) ? v.devices : [],
+    looking: !!v.looking,
+    canAdd: !!v.canAdd,
+    devices: Array.isArray(v.devices) ? v.devices.map((d) => ({ ...d, kind: d.kind || "mesh" })) : [],
+    invites: Array.isArray(v.invites) ? v.invites : [],
+    sent: Array.isArray(v.sent) ? v.sent : [],
     join: v.join && typeof v.join === "object" && v.join.state ? v.join : { state: "idle" },
     requests: Array.isArray(v.requests) ? v.requests : [],
   };
+}
+
+/** Remembers the name of a place for the path bar (see state.labels). */
+export function setLabel(key, label) {
+  if (!label || state.labels[key] === label) return;
+  setState({ labels: { ...state.labels, [key]: label } });
 }
 
 /** Shallow-merge a patch (or the result of fn(state)) into the state. */

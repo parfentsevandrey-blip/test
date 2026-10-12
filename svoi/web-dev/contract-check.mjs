@@ -96,6 +96,7 @@ await both("GET /api/services", "/api/services");
 await both("GET /api/forwards", "/api/forwards");
 await both("GET /api/settings", "/api/settings");
 await both("GET /api/invites", "/api/invites");
+await both("GET /api/nearby", "/api/nearby");
 await both("GET /api/diag/logs", "/api/diag/logs?limit=50");
 await both("GET /api/chat/threads", "/api/chat/threads");
 await both("GET /api/mail (inbox)", "/api/mail?folder=inbox&limit=20");

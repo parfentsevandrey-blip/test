@@ -1,4 +1,6 @@
-/* App shell: sidebar (desktop) / icon rail (tablet) / bottom tab bar (phone). */
+/* App shell: a file manager (js/shell.js). The places panel on the left (computers and tablets), the path bar on top,
+   the place in the middle, a status bar at the bottom. On a phone: the path bar (the way up and the name of the place)
+   and the place; the overview is where everything is. */
 
 .shell { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; }
 .main { display: flex; flex-direction: column; min-width: 0; min-height: 100vh; min-height: 100dvh; }
@@ -8,27 +10,36 @@
 .page { width: 100%; max-width: var(--content-max); margin: 0 auto; }
 .page--narrow { max-width: 880px; }
 
-/* ---------- sidebar ---------- */
+/* ---------- the places ---------- */
 .sidebar {
-  position: sticky; top: 0; height: 100vh; height: 100dvh; display: flex; flex-direction: column; gap: var(--sp-5);
-  padding: var(--sp-5) var(--sp-3) var(--sp-4); background: var(--bg-side); border-right: 1px solid var(--line);
-  overflow-y: auto; z-index: 10;
+  position: sticky; top: 0; height: 100vh; height: 100dvh; display: flex; flex-direction: column; gap: var(--sp-4);
+  padding: var(--sp-5) var(--sp-3) var(--sp-3); background: var(--bg-side); border-right: 1px solid var(--line);
+  overflow-y: auto; z-index: 10; overscroll-behavior: contain;
 }
 .brand { display: flex; align-items: center; gap: 12px; padding: 4px 10px; border-radius: var(--r-md); text-decoration: none !important; color: var(--text); }
 .brand__text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
 .brand__name { font-size: 21px; font-weight: 720; letter-spacing: -0.03em; }
 .brand__mesh { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 .nav { display: flex; flex-direction: column; gap: 2px; }
+.places__group { display: flex; flex-direction: column; gap: 1px; margin-top: var(--sp-3); }
+.places__head {
+  display: flex; align-items: center; gap: 6px; min-height: 30px; padding: 4px 12px 2px; border-radius: 8px;
+  font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); text-decoration: none !important;
+}
+a.places__head:hover { color: var(--text); background: var(--surface-hover); }
+a.places__head[aria-current="page"] { color: var(--accent-text); }
+.places__head > span:first-child { flex: 1 1 auto; }
+.places__count { font-weight: 650; letter-spacing: 0; text-transform: none; font-size: var(--fs-xs); }
 .nav__item {
-  position: relative; display: flex; align-items: center; gap: 12px; height: 42px; padding: 0 12px;
-  border-radius: 12px; color: var(--text-2); font-weight: 600; font-size: var(--fs-md); text-decoration: none !important;
+  position: relative; display: flex; align-items: center; gap: 11px; height: 40px; padding: 0 10px 0 12px;
+  border-radius: 11px; color: var(--text-2); font-weight: 600; font-size: var(--fs-md); text-decoration: none !important;
   transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 .nav__item:hover { background: var(--surface-hover); color: var(--text); }
 .nav__item.is-active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-1), 0 0 0 1px var(--line); }
 [data-theme="dark"] .nav__item.is-active { background: var(--surface-2); }
 .nav__item.is-active .nav__icon { color: var(--accent-text); }
-.nav__icon { display: grid; place-items: center; flex: none; }
+.nav__icon { display: grid; place-items: center; flex: none; width: 22px; }
 .nav__label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nav__badge {
   min-width: 22px; height: 20px; padding: 0 7px; border-radius: 10px; display: grid; place-items: center;
@@ -36,24 +47,39 @@
 }
 .nav__badge--warn { background: var(--amber); color: #1b1305; }
 .nav__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
-.sidebar__self {
-  margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 14px;
-  border: 1px solid var(--line); color: var(--text); text-decoration: none !important; min-width: 0;
-}
-.sidebar__self:hover { background: var(--surface-hover); }
-.sidebar__self-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.place--device { height: 38px; font-weight: 560; }
+.place--device .avatar { --av: 22px; border-radius: 7px; }
+.place--device .avatar__status { width: 8px; height: 8px; border-width: 1.5px; }
+.place--device.is-offline .nav__label { color: var(--text-3); }
+.places__foot { margin-top: auto; padding-top: var(--sp-3); border-top: 1px solid var(--line); }
 
-/* ---------- top bar ---------- */
+/* ---------- the path bar ---------- */
 .topbar {
   position: sticky; top: 0; z-index: 20; display: flex; flex: none; align-items: center; gap: var(--sp-3);
   height: calc(var(--topbar-h) + var(--safe-top)); padding: var(--safe-top) var(--gutter) 0;
   background: var(--surface-glass); border-bottom: 1px solid var(--line);
   backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px);
 }
-.topbar__brand { display: none; }
-.topbar__self { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex: 1 1 auto; }
-.topbar__name { font-weight: 650; font-size: var(--fs-base); }
-.topbar__mesh { color: var(--text-3); font-size: var(--fs-sm); }
+.topbar__brand { display: none; flex: none; }
+.fm-bar { padding-left: var(--sp-4); }
+.fm-bar__nav { display: flex; align-items: center; gap: 2px; flex: none; padding: 3px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+.fm-bar__btn { --ib: 32px; border-radius: 9px; color: var(--text-2); }
+.fm-bar__btn:hover:not(:disabled) { color: var(--text); background: var(--surface-hover); }
+.fm-bar__btn:disabled { opacity: .38; }
+.fm-path { flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); }
+.fm-path::-webkit-scrollbar { display: none; }
+.fm-path ol { display: flex; align-items: center; gap: 2px; white-space: nowrap; }
+.fm-path__step { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.fm-path__sep { color: var(--text-3); flex: none; }
+.fm-path a, .fm-path__here {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 240px; min-height: 34px; padding: 0 8px; border-radius: 9px;
+  font-size: var(--fs-md); font-weight: 600; color: var(--text-2); text-decoration: none !important;
+}
+.fm-path a:hover { background: var(--surface-hover); color: var(--text); }
+.fm-path__here { color: var(--text); font-weight: 680; }
+.fm-path .icon { flex: none; color: var(--text-3); }
+.fm-path__here .icon { color: var(--accent-text); }
+.fm-title { display: none; }
 .topbar__status { display: flex; align-items: center; gap: var(--sp-2); flex: none; }
 .conn-pill {
   display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px 0 10px; border-radius: var(--r-pill);
@@ -69,6 +95,22 @@
 .conn-pill__short { display: none; }
 .topbar__help { --ib: 36px; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface-2); color: var(--text-2); }
 .topbar__help:hover:not(:disabled) { background: var(--surface-3); }
+/* settings are in the places panel on a computer; the gear is for the narrower screens */
+.fm-bar__settings { display: none; }
+
+/* ---------- the status bar ---------- */
+.fm-status {
+  position: sticky; bottom: 0; z-index: 15; display: flex; align-items: center; gap: var(--sp-5); flex: none;
+  min-height: 30px; padding: 4px var(--gutter) calc(4px + var(--safe-bottom)); font-size: var(--fs-xs); color: var(--text-3);
+  background: var(--surface-glass); border-top: 1px solid var(--line);
+  backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px);
+}
+.fm-status__item { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); text-decoration: none !important; white-space: nowrap; }
+a.fm-status__item:hover { color: var(--text); }
+.fm-status__item.is-warn { color: var(--amber-text); }
+.fm-status__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); }
+.fm-status__dot.is-on { background: var(--accent); }
+.shell--fixed .fm-status { display: none; }
 
 /* ---------- global banners ---------- */
 .banners:empty { display: none; }
@@ -104,35 +146,40 @@
 .fullscreen__actions { margin-top: var(--sp-4); display: flex; gap: var(--sp-2); }
 .boot-logo { animation: boot-breathe 1.6s var(--ease) infinite alternate; }
 
-/* ---------- tab bar (phones) ---------- */
+/* the tab bar of phones is gone: the overview is the way to everything (a look may still style an old one) */
 .tabbar { display: none; }
 
-/* ---------- tablet: icon rail ---------- */
+/* ---------- tablets: a narrower places panel, the path without the arrows ---------- */
 @media (max-width: 1099px) and (min-width: 760px) {
-  .shell { grid-template-columns: var(--rail-w) minmax(0, 1fr); }
-  .sidebar { padding: var(--sp-4) 6px; align-items: center; gap: var(--sp-4); }
-  .brand { padding: 4px; }
-  .brand__text, .sidebar__self-text { display: none; }
-  .nav { width: 100%; }
-  .nav__item { flex-direction: column; height: auto; padding: 8px 2px 6px; gap: 3px; font-size: 10.5px; font-weight: 600; letter-spacing: -0.01em; justify-content: center; }
-  .nav__label { text-align: center; width: 100%; }
-  .nav__badge { position: absolute; top: 3px; right: 8px; min-width: 18px; height: 17px; padding: 0 5px; }
-  .nav__dot { position: absolute; top: 8px; right: 14px; }
-  .sidebar__self { padding: 6px; border: 0; }
+  .shell { grid-template-columns: 216px minmax(0, 1fr); }
+  .sidebar { padding: var(--sp-4) var(--sp-2) var(--sp-2); }
+  .brand__name { font-size: 19px; }
+  .fm-bar__back, .fm-bar__fwd { display: none; }
+  .conn-pill__long { display: none; }
+  .conn-pill__short { display: inline; }
+  .fm-path a, .fm-path__here { max-width: 180px; }
 }
 
 /* ---------- phones ---------- */
 @media (max-width: 759px) {
   .shell { display: block; }
   .sidebar { display: none; }
-  .main { min-height: 100dvh; padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom)); }
+  .main { min-height: 100dvh; }
   .shell--fixed .main { height: 100dvh; }
   .content { padding: var(--sp-4) var(--gutter) var(--sp-7); }
   .topbar { gap: 10px; }
-  .topbar__brand { display: inline-flex; }
-  .topbar__self { flex-direction: column; align-items: flex-start; gap: 0; line-height: 1.2; }
-  .topbar__name { font-size: var(--fs-md); }
-  .topbar__mesh { font-size: var(--fs-xs); }
+  .fm-bar { padding-left: 10px; }
+  .fm-bar__nav { background: none; border: 0; padding: 0; }
+  .fm-bar__back, .fm-bar__fwd { display: none; }
+  .fm-bar__up { --ib: 44px; border-radius: 14px; color: var(--text); }
+  .fm-bar__up .icon { transform: rotate(-90deg); }
+  .fm--root .fm-bar__nav { display: none; }
+  .fm--root .topbar__brand { display: inline-flex; }
+  .fm-path { display: none; }
+  .fm-title { display: flex; flex-direction: column; justify-content: center; min-width: 0; flex: 1 1 auto; line-height: 1.2; }
+  .fm-title__up { font-size: var(--fs-xs); color: var(--text-3); }
+  .fm-title__here { font-size: var(--fs-md); font-weight: 680; color: var(--text); }
+  .fm-bar__settings { display: grid; }
   .conn-pill { padding: 0 10px 0 8px; height: 30px; }
   .conn-pill__long { display: none; }
   .conn-pill__short { display: inline; }
@@ -140,26 +187,8 @@
   /* the pill stays slim but gets a finger-sized hit area */
   .conn-pill { position: relative; }
   .conn-pill::before { content: ""; position: absolute; inset: -7px -4px; }
-
-  .tabbar {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: grid; grid-template-columns: repeat(5, 1fr);
-    height: calc(var(--tabbar-h) + var(--safe-bottom)); padding-bottom: var(--safe-bottom);
-    background: var(--surface-glass); border-top: 1px solid var(--line);
-    backdrop-filter: saturate(1.4) blur(14px); -webkit-backdrop-filter: saturate(1.4) blur(14px);
-  }
-  .tabbar__item {
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-    color: var(--text-3); font-size: 11px; font-weight: 600; text-decoration: none !important; min-width: 0;
-  }
-  .tabbar__item.is-active { color: var(--accent-text); }
-  .tabbar__icon { position: relative; display: grid; place-items: center; width: 52px; height: 30px; border-radius: 15px; transition: background-color var(--dur) var(--ease); }
-  .tabbar__item.is-active .tabbar__icon { background: var(--accent-soft); }
-  .tabbar__label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }
-  .tabbar__badge {
-    position: absolute; top: -5px; right: 0; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 10px;
-    background: var(--accent); color: var(--accent-ink); font-size: 10px; font-weight: 750; line-height: 16px; text-align: center;
-    border: 2px solid var(--bg); box-sizing: border-box;
-  }
-  .tabbar__badge--warn { background: var(--amber); color: #1b1305; }
-  .tabbar__dot { position: absolute; top: 2px; right: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
+  .fm-status { display: none; }
+}
+@media (max-width: 400px) {
+  .topbar .conn-pill { display: none; }
 }

@@ -55,11 +55,15 @@ group("home", () => {
     await tid(page, "home-action-files").click();
     await hashIs(page, /^#\/files\/browse$/);
     await tid(page, "browse-device").first().waitFor();
+    // «Подключить устройство»: the devices nearby; one that is not nearby gets an invitation from there
     await nav(page, dev.laptop, "home");
     await tid(page, "home-action-add").click();
+    await hashIs(page, /^#\/nearby$/);
+    await tid(page, "nearby-far-invite").click();
     await tid(page, "invite-create").waitFor();
     await page.keyboard.press("Escape");
     await tid(page, "invite-create").waitFor({ state: "detached" });
+    await nav(page, dev.laptop, "home");
     // the buttons on a device card
     const card = page.locator(`[data-testid="home-device"][data-peer="${nas.id}"]`);
     await card.getByTestId("device-act-files").click();
@@ -117,7 +121,8 @@ group("home", () => {
     await sheet.waitFor();
     eq(await sheet.locator(".help__point").count(), 4, "four plain points");
     const text = await sheet.innerText();
-    for (const w of ["свой ключ", "одноразовый код", "напрямую", "подождут"]) assert(text.includes(w), "the sheet explains: " + w);
+    // a new device is connected nearby, in a tap; one far away gets a one-time code
+    for (const w of ["свой ключ", "подключают рядом", "одноразовым кодом", "напрямую", "подождут"]) assert(text.includes(w), "the sheet explains: " + w);
     await page.keyboard.press("Escape");
     await sheet.waitFor({ state: "detached" });
     await page.waitForFunction(() => document.activeElement?.dataset.testid === "help-button");
@@ -165,16 +170,15 @@ group("home of a device alone in its network", { noDemo: true }, () => {
     assert(/Вы пока одни в сети — добавьте второе устройство/.test(await status.innerText()), "the alone status");
     const list = tid(page, "home-start-checklist");
     await list.locator('[data-step="add"][data-done="false"]').waitFor();
-    // nobody to send to yet: the card says so and offers to add a device
+    // nobody to send to yet: the card says so and shows the devices nearby
     await tid(page, "home-action-send").click();
-    await page.locator('[data-testid="toast"]', { hasText: "Сначала добавьте второе устройство" }).waitFor();
-    await tid(page, "invite-create").waitFor();
-    await page.keyboard.press("Escape");
-    await tid(page, "invite-create").waitFor({ state: "detached" });
-    // step 1's button opens the same dialog
+    await page.locator('[data-testid="toast"]', { hasText: "Сначала подключите второе устройство" }).waitFor();
+    await tid(page, "page-nearby").waitFor();
+    await nav(page, node, "home");
+    // step 1's button leads there too
     await tid(page, "home-start-add").click();
-    await tid(page, "invite-create").waitFor();
-    await page.keyboard.press("Escape");
+    await tid(page, "page-nearby").waitFor();
+    await nav(page, node, "home");
     // hide the list: it stays hidden after a reload
     await tid(page, "home-start-dismiss").click();
     await list.waitFor({ state: "detached" });

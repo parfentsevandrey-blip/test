@@ -26,8 +26,8 @@ public final class Notices {
     }
 
     /**
-     * @param kind событие: «transfer», «chat», «mail» или «nearby» (одна просьба из списка просьб; остальные
-     *             уведомлений не порождают)
+     * @param kind событие: «transfer», «chat», «mail», «nearby» (одна просьба из списка просьб) или «nearbyInvite» (одно
+     *             приглашение этому устройству); остальные уведомлений не порождают
      * @param d    данные события (docs/UI-API.md)
      * @return уведомление или {@code null}
      */
@@ -44,6 +44,8 @@ public final class Notices {
                 return mail(d, t, lookup);
             case "nearby":
                 return nearby(d, t);
+            case "nearbyInvite":
+                return nearbyInvite(d, t);
             default:
                 return null;
         }
@@ -121,6 +123,25 @@ public final class Notices {
         String name = clip(Json.str(d, "name"), 40);
         String key = "nearby:" + id;
         return new Notice(Notice.Kind.NEARBY, key, key, t.nearbyTitle(name.isEmpty() ? "?" : name), t.nearbyBody(code), Route.HOME);
+    }
+
+    /**
+     * Устройство рядом приглашает это в свою сеть (или, когда сети нет ни у того, ни у другого, предлагает создать её вместе).
+     * Новое приглашение от того же устройства (после отказа) — новое уведомление; оно заменяет прежнее.
+     */
+    private static Notice nearbyInvite(JSONObject d, Texts t) {
+        String id = Json.str(d, "id");
+        String kind = Json.str(d, "kind");
+        if (id.isEmpty() || !(kind.equals("invite") || kind.equals("pair"))) {
+            return null;
+        }
+        String name = clip(Json.str(d, "name"), 40);
+        if (name.isEmpty()) {
+            name = "?";
+        }
+        String title = kind.equals("pair") ? t.nearbyPairTitle(name) : t.nearbyInviteTitle(name, clip(Json.str(d, "meshName"), 40));
+        String tag = "nearbyInvite:" + id;
+        return new Notice(Notice.Kind.NEARBY, tag + ":" + d.optLong("received"), tag, title, t.nearbyInviteBody(), Route.HOME);
     }
 
     private static String peerName(Lookup lookup, String id) {

@@ -70,6 +70,22 @@ public class NoticesTest {
     }
 
     @Test
+    public void anInvitationOfADeviceNearbyIsAnnouncedOncePerInvitation() throws Exception {
+        Notice n = event("nearbyInvite", "{\"id\":\"d1\",\"kind\":\"invite\",\"name\":\"mac\",\"meshName\":\"Дом\",\"os\":\"darwin\",\"received\":1700000000}");
+        assertEquals(new Notice(Notice.Kind.NEARBY, "nearbyInvite:d1:1700000000", "nearbyInvite:d1", "mac приглашает в сеть «Дом»",
+                "Откройте The Mesh, чтобы ответить", "#/home"), n);
+        Notice pair = event("nearbyInvite", "{\"id\":\"d2\",\"kind\":\"pair\",\"name\":\"pixel\",\"received\":5}");
+        assertEquals("pixel предлагает создать сеть вместе", pair.title);
+        assertEquals("The English text carries the same",
+                "mac invites this device to the mesh “Дом”", ResourceTexts.en().nearbyInviteTitle("mac", "Дом"));
+        Notice again = event("nearbyInvite", "{\"id\":\"d1\",\"kind\":\"invite\",\"name\":\"mac\",\"meshName\":\"Дом\",\"received\":1700000100}");
+        assertTrue("новое приглашение после отказа — новое уведомление на месте прежнего", !again.key.equals(n.key) && again.tag.equals(n.tag));
+        assertNull("без устройства его нечем отличить", event("nearbyInvite", "{\"kind\":\"invite\",\"name\":\"x\"}"));
+        assertNull("непонятное приглашение не показывается", event("nearbyInvite", "{\"id\":\"d3\",\"kind\":\"other\",\"name\":\"x\"}"));
+        assertEquals("? предлагает создать сеть вместе", event("nearbyInvite", "{\"id\":\"d4\",\"kind\":\"pair\"}").title);
+    }
+
+    @Test
     public void anOfferedFileBecomesANotificationTitledWithTheDevice() throws Exception {
         Notice n = event("transfer", "{\"id\":\"t1\",\"dir\":\"in\",\"state\":\"offered\",\"name\":\"фото.jpg\",\"peer\":\"p1\",\"peerName\":\"телефон\"}");
         assertEquals(new Notice(Notice.Kind.OFFER, "offer:t1", "offer:t1", "телефон", "хочет отправить вам файл «фото.jpg»", "#/home"), n);

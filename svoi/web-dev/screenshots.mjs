@@ -327,7 +327,28 @@ const SHOTS = [
     await p.evaluate(() => document.querySelector("[data-testid=portmap-status]").scrollIntoView({ block: "center" }));
     await sleep(300);
   } },
-  { name: "more", server: "full", hash: "#/more", wait: ".more-row", only: "mobile" },
+  // «Рядом»: the place of a device in a mesh (two new devices around, one invited and not answering yet), the first screen
+  // of a device that is in no mesh (a mesh and a new device around, an invitation to it), the request as the device asked sees it
+  { name: "nearby", server: "scratch", hash: "#/nearby", reset: true, run: async (p, srv) => {
+    await srv.hook("/__mock/nearby?clear=1");
+    await srv.hook("/__mock/nearby?hold=1");
+    await srv.hook("/__mock/nearby?add=pixel-8&os=android&kind=new");
+    await srv.hook("/__mock/nearby?add=ipad-masha&os=ios&kind=new");
+    await p.waitForSelector("[data-testid=nearby-device][data-name=pixel-8] [data-testid=nearby-connect]");
+    await p.click("[data-testid=nearby-device][data-name=pixel-8] [data-testid=nearby-connect]");
+    await p.waitForSelector("[data-testid=nearby-sent][data-state=sent]");
+  } },
+  { name: "nearby-start", server: "onboarding", hash: "", run: async (p, srv) => {
+    await srv.hook("/__mock/nearby?add=macbook-andrey&os=darwin&mesh=Дом");
+    await srv.hook("/__mock/nearby?add=pixel-8&os=android&kind=new");
+    await srv.hook("/__mock/nearby?invite=nas&os=linux&mesh=Дача");
+    await p.waitForSelector("[data-testid=nearby-invite]");
+  } },
+  { name: "nearby-ask", server: "scratch", hash: "#/home", reset: true, run: async (p, srv) => {
+    await live(p);
+    await srv.hook("/__mock/nearby?request=pixel-8&os=android");
+    await p.waitForSelector("[data-testid=nearby-ask-state][data-confirmed=true]");
+  } },
   { name: "offline-banner", server: "scratch", hash: "#/devices", reset: true, run: async (p, srv) => {
     await p.waitForSelector(".topo__svg");
     await live(p);

@@ -63,7 +63,7 @@ function ThreadList({ threads, loading, error, active, onRetry }) {
   }
   if (!threads.length && !peers.length) {
     return html`<${EmptyState} compact icon="chat" title=${t("chat.noThreads")} text=${t("chat.noPeersText")}>
-      <${Button} size="sm" variant="primary" icon="userPlus" href="#/home?add=1">${t("dev.add")}</${Button}></${EmptyState}>`;
+      <${Button} size="sm" variant="primary" icon="radar" href="#/nearby">${t("dev.add")}</${Button}></${EmptyState}>`;
   }
   if (!threads.length) {
     return html`<${EmptyState} compact icon="chat" title=${t("chat.noThreads")} text=${t("chat.noThreadsText")}><${NewChatMenu} threads=${threads} variant="primary" /></${EmptyState}>`;

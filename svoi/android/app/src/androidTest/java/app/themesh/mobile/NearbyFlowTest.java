@@ -31,13 +31,14 @@ import java.util.regex.Pattern;
 import app.themesh.mobile.core.AppLog;
 
 /**
- * «Рядом» на настоящем окне настоящего телефона (эмулятор CI): устройство с приложением само находит другое, которое может его
- * добавить, показывает его в списке, подключается одним нажатием и подтверждает шесть цифр. Вторым устройством («Mac», как в
+ * «Рядом» на настоящем окне настоящего телефона (эмулятор CI): устройство с приложением само находит другое, у кого оно тоже
+ * стоит, показывает его в списке и подключается одним нажатием — без QR-кода и без фразы. Вторым устройством («Mac», как в
  * жизни) служит вторая копия той же программы {@code libthemesh.so} со своим каталогом данных — настоящий второй процесс, который
  * находит телефон и отвечает ему по сети, а не подставка. Оба направления:
  *
  * <ul>
- *   <li>у телефона нет сети, «Mac» её хозяин: телефон видит «Mac» в списке, подключается, сверяет цифры и входит;
+ *   <li>у телефона нет сети, «Mac» её хозяин: телефон видит «Mac» в списке, одно нажатие — и он просит «Mac» добавить его (на
+ *       обоих экранах одни и те же шесть цифр), человек у «Mac» разрешает, телефон входит;
  *   <li>у телефона своя сеть, «Mac» новичок: «Mac» находит телефон, просит добавить, телефон показывает окно с теми же цифрами, и
  *       хозяин телефона разрешает.
  * </ul>
@@ -45,8 +46,9 @@ import app.themesh.mobile.core.AppLog;
  * <p>Оба узла живут на одном телефоне и делят адрес в сети, поэтому проверяется путь «по адресу» (Android 11+ не даёт программе
  * перечислить интерфейсы), а не по списку интерфейсов; а вот ответы на вопрос «кто рядом?» по одноадресной отправке между двумя
  * сокетами одного адреса и порта могут попасть не к тому — их заменяют объявления, которые идут по группе и по широковещанию и
- * доходят до обоих. Снимки экрана на каждом шаге кладёт {@link Shots} (смотрит человек: артефакт «themesh-android-emulator-screens-tests»).
- * Что осталось на телефоне после теста, убирается: сеть покидается, второй узел останавливается.
+ * доходят до обоих (так же уходят приглашения и отказы). Снимки экрана на каждом шаге кладёт {@link Shots} (смотрит человек:
+ * артефакт «themesh-android-emulator-screens-tests»). Что осталось на телефоне после теста, убирается: сеть покидается, второй
+ * узел останавливается.
  */
 @RunWith(AndroidJUnit4.class)
 public class NearbyFlowTest {
@@ -57,8 +59,8 @@ public class NearbyFlowTest {
     private static final long DISCOVERY_MS = 150_000;
     private static final long STEP_MS = 90_000;
     private static final String POST = "method:'POST',headers:{'Content-Type':'application/json','X-Themesh':'1'}";
-    /** Строка запроса в `themesh nearby` у того, кого просят добавить: цифры, «подтвердили ли там», номер запроса. */
-    private static final Pattern ASK = Pattern.compile("(\\d{6})\\s+(true|false)\\s+([0-9a-f]{8,})\\s*$", Pattern.MULTILINE);
+    /** Строка запроса в `themesh nearby` у того, кого просят добавить («ASKS TO BE ADDED»): имя, цифры, номер запроса. */
+    private static final Pattern ASK = Pattern.compile("(\\d{6})\\s+([0-9a-f]{8,})\\s*$", Pattern.MULTILINE);
     private static final Pattern DIGITS = Pattern.compile("The six digits: (\\d{6})");
 
     private final long waitMs = Long.parseLong(InstrumentationRegistry.getArguments().getString("waitSeconds", "90")) * 1000;
@@ -102,31 +104,20 @@ public class NearbyFlowTest {
                     web.has(found + ".textContent.indexOf('" + MAC_MESH + "') >= 0"));
             shot(web, "11-nearby-list");
 
-            // одно нажатие — и на экране шесть цифр
-            web.click("[data-testid=\"nearby-connect\"]");
-            assertTrue("шесть цифр не появились за " + STEP_MS / 1000 + " с",
-                    web.waitFor("document.querySelector('[data-testid=\"nearby-join\"][data-state=\"waiting\"]') != null", STEP_MS));
+            // одно нажатие — и телефон просит «Mac» добавить его: ни QR-кода, ни фразы; на экране шесть цифр, и он ждёт
+            web.click("[data-testid=\"nearby-device\"][data-name=\"mac\"] [data-testid=\"nearby-connect\"]");
+            assertTrue("телефон не начал ждать «Mac» за " + STEP_MS / 1000 + " с",
+                    web.waitFor("document.querySelector('[data-testid=\"nearby-join\"][data-state=\"confirmed\"] [data-testid=\"nearby-code\"]') != null", STEP_MS));
             String code = web.value("document.querySelector('[data-testid=\"nearby-code\"] .nearby-code__digits').getAttribute('data-code')");
             assertTrue("шесть цифр: «" + code + "»", code.matches("\\d{6}"));
-            shot(web, "12-nearby-code");
+            shot(web, "12-nearby-waiting");
 
-            // «Mac» видит запрос с теми же цифрами, и там ещё никто не подтвердил
-            Ask ask = macAsk(false, STEP_MS);
+            // «Mac» видит запрос с теми же цифрами
+            Ask ask = macAsk(STEP_MS);
             if (ask == null) {
                 fail("«Mac» не увидел запрос телефона. `themesh nearby` ответил: " + macSays("nearby"));
             }
             assertEquals("цифры на телефоне и на «Mac» разные", code, ask.code);
-            assertFalse("запрос кажется подтверждённым, а телефон ещё не нажал «Совпадает»", ask.confirmed);
-
-            // человек у телефона говорит «совпадает» и ждёт «Mac»
-            web.click("[data-testid=\"nearby-match\"]");
-            assertTrue("телефон не перешёл в «ждёт хозяина»",
-                    web.waitFor("document.querySelector('[data-testid=\"nearby-join\"][data-state=\"confirmed\"]') != null", STEP_MS));
-            shot(web, "13-nearby-waiting");
-            ask = macAsk(true, STEP_MS);
-            if (ask == null) {
-                fail("«Mac» не узнал, что на телефоне цифры подтвердили: " + macSays("nearby"));
-            }
 
             // человек у «Mac» разрешает
             NodeProcess.Result allowed = mac.run(30_000, "nearby", "allow", ask.id, "--owner", "Андрей");
@@ -178,33 +169,29 @@ public class NearbyFlowTest {
                 fail("«Mac» не нашёл телефон за " + DISCOVERY_MS / 1000 + " с: " + macSays("nearby"));
             }
 
-            NodeProcess.Running join = mac.start("nearby", "join", "pixel", "--name", "mac");
+            NodeProcess.Running join = mac.start("nearby", "connect", "pixel", "--name", "mac");
             try {
                 String line = join.waitForLine("The six digits: \\d{6}", STEP_MS);
-                assertNotNull("`themesh nearby join` не показал шесть цифр за " + STEP_MS / 1000 + " с:\n" + join.output(), line);
+                assertNotNull("`themesh nearby connect` не показал шесть цифр за " + STEP_MS / 1000 + " с:\n" + join.output(), line);
                 Matcher m = DIGITS.matcher(line);
                 assertTrue(line, m.find());
                 String code = m.group(1);
 
-                // у телефона открылось окно с просьбой, и цифры в нём те же
+                // у телефона открылось окно с просьбой, и цифры в нём те же; «Mac» уже ждёт ответа (его человек нажал, и всё)
                 assertTrue("у телефона не открылось окно с просьбой за " + STEP_MS / 1000 + " с",
                         web.waitFor("document.querySelector('[data-testid=\"nearby-ask\"]') != null", STEP_MS));
                 assertEquals("цифры на телефоне и на «Mac» разные", code,
                         web.value("document.querySelector('[data-testid=\"nearby-ask-code\"] .nearby-code__digits').getAttribute('data-code')"));
                 assertEquals("mac", web.value("document.querySelector('[data-testid=\"nearby-ask-name\"]').textContent"));
-                shot(web, "21-nearby-ask");
-
-                // человек у «Mac» говорит «совпадает», телефон это видит
-                join.type("y\n");
-                assertTrue("окно телефона не узнало, что на «Mac» цифры подтвердили",
+                assertTrue("окно телефона не знает, что «Mac» ждёт ответа",
                         web.waitFor("document.querySelector('[data-testid=\"nearby-ask-state\"][data-confirmed=\"true\"]') != null", STEP_MS));
-                shot(web, "22-nearby-ask-confirmed");
+                shot(web, "21-nearby-ask");
 
                 // хозяин телефона разрешает
                 web.click("[data-testid=\"nearby-allow\"]");
-                assertNotNull("`themesh nearby join` не сообщил, что «Mac» добавлен:\n" + join.output(), join.waitForLine("Added:", STEP_MS));
+                assertNotNull("`themesh nearby connect` не сообщил, что «Mac» добавлен:\n" + join.output(), join.waitForLine("Added:", STEP_MS));
                 Integer exit = join.waitForExit(30_000);
-                assertEquals("`themesh nearby join` закончил с ошибкой:\n" + join.output(), Integer.valueOf(0), exit);
+                assertEquals("`themesh nearby connect` закончил с ошибкой:\n" + join.output(), Integer.valueOf(0), exit);
             } finally {
                 join.kill();
             }
@@ -341,27 +328,23 @@ public class NearbyFlowTest {
     /** Запрос на добавление, как его видит «Mac» в `themesh nearby`. */
     private static final class Ask {
         final String code;
-        final boolean confirmed;
         final String id;
 
-        Ask(String code, boolean confirmed, String id) {
+        Ask(String code, String id) {
             this.code = code;
-            this.confirmed = confirmed;
             this.id = id;
         }
     }
 
-    /** Ждёт, пока у «Mac» (он хозяин сети) появится запрос (и, если {@code confirmed}, пока на другом устройстве подтвердят цифры). */
-    private Ask macAsk(boolean confirmed, long timeoutMs) throws Exception {
+    /** Ждёт, пока у «Mac» (он хозяин сети) появится запрос на добавление. */
+    private Ask macAsk(long timeoutMs) throws Exception {
         long end = System.currentTimeMillis() + timeoutMs;
         while (System.currentTimeMillis() < end) {
             NodeProcess.Result r = mac.run(20_000, "nearby");
-            Matcher m = ASK.matcher(r.out);
+            int from = r.out.indexOf("ASKS TO BE ADDED");
+            Matcher m = ASK.matcher(from < 0 ? "" : r.out.substring(from));
             if (r.exit == 0 && m.find()) {
-                Ask ask = new Ask(m.group(1), m.group(2).equals("true"), m.group(3));
-                if (!confirmed || ask.confirmed) {
-                    return ask;
-                }
+                return new Ask(m.group(1), m.group(2));
             }
             Thread.sleep(1500);
         }

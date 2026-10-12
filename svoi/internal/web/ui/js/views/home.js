@@ -1,8 +1,8 @@
-// Home («Главная»): the landing screen for people who don't care how the mesh
-// works. One sentence about the network, four big actions, the devices with
-// plain buttons, what needs attention and — while the network is new — three
-// first steps. Everything comes from the store (/api/state, transfers,
-// counters, invites): no requests of its own.
+// The overview («Обзор»): the root of the file manager (js/shell.js). One sentence about the network, what needs
+// attention and — while the network is new — three first steps; then the drives (this device and the others, with plain
+// buttons), the devices nearby to connect with in a tap, and the folders of the app. On a phone it is also the way to
+// everything: there is no other menu. Everything comes from the store (/api/state, transfers, counters, invites,
+// nearby): no requests of its own, besides telling the node that the person looks at the devices nearby.
 import { html, useEffect, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { locale, t, tn, tx } from "../i18n.js";
@@ -20,7 +20,7 @@ import { toast } from "../components/toast.js";
 import { AddDeviceModal } from "./add-device.js";
 import { DeviceDrawer } from "./device-drawer.js";
 import { openHelp } from "./help.js";
-import { lanNotice, showRequest, spaced } from "./nearby.js";
+import { lanNotice, NearbyPanel, showRequest, spaced } from "./nearby.js";
 import { isIncomingOffer, transferAction } from "./transfers.js";
 
 const MAX_NAMES = 3;
@@ -196,20 +196,31 @@ function StartChecklist({ peers, transfers, onAdd, onDismiss }) {
   </section>`;
 }
 
-// ---------------------------------------------------------------- big actions
+// ---------------------------------------------------------------- the actions of the root
 const ACTIONS = [
   { id: "send", icon: "send", title: "home.act.send", text: "home.act.sendText" },
   { id: "chat", icon: "chat", title: "home.act.chat", text: "home.act.chatText" },
   { id: "files", icon: "folderOpen", title: "home.act.files", text: "home.act.filesText" },
-  { id: "add", icon: "userPlus", title: "home.act.add", text: "home.act.addText" },
+  { id: "add", icon: "radar", title: "home.act.add", text: "home.act.addText" },
 ];
 
 function ActionCard({ a, to, onClick }) {
-  const inner = html`<span class=${cx("home-act__icon", `home-act__icon--${a.id}`)}><${Icon} name=${a.icon} size=${24} /></span>
+  const inner = html`<span class=${cx("home-act__icon", `home-act__icon--${a.id}`)}><${Icon} name=${a.icon} size=${20} /></span>
     <span class="home-act__text"><span class="home-act__title">${t(a.title)}</span><span class="home-act__sub">${t(a.text)}</span></span>`;
   return to
     ? html`<a class="home-act" href=${to} data-testid=${"home-action-" + a.id}>${inner}</a>`
     : html`<button type="button" class="home-act" onClick=${onClick} data-testid=${"home-action-" + a.id}>${inner}</button>`;
+}
+
+/** A folder of the app on the root: transfers, mail, chat, the folders this device shares, programs, settings. */
+function Folder({ to, icon, title, sub, n, tone, dot, testid }) {
+  return html`<a class="fm-folder" href=${to} data-testid=${testid}>
+    <span class=${cx("fm-folder__icon", `fm-folder__icon--${icon}`)}><${Icon} name=${icon} size=${22} />
+      ${n > 0 && html`<span class=${cx("fm-folder__badge", tone && `fm-folder__badge--${tone}`)}>${n > 99 ? "99+" : n}</span>`}
+      ${dot && html`<span class="fm-folder__dot"></span>`}
+    </span>
+    <span class="fm-folder__text"><span class="fm-folder__title">${title}</span>${sub && html`<span class="fm-folder__sub">${sub}</span>`}</span>
+  </a>`;
 }
 
 const pickTarget = (kind, p) => (kind === "send" ? href(["files", "send"], { to: p.id }) : href(["chat", p.id]));
@@ -233,6 +244,7 @@ function DevicePick({ kind, peers, onClose }) {
 }
 
 // ---------------------------------------------------------------- devices
+/** A device of the mesh as a drive: its name (it opens its properties), how it is connected, and what one can do with it. */
 function HomeDevice({ p }) {
   const st = connState(p);
   return html`<article class=${cx("hdev", `hdev--${st}`)} data-testid="home-device" data-peer=${p.id} data-name=${p.deviceName || p.name}
@@ -242,11 +254,25 @@ function HomeDevice({ p }) {
       <div class="grow">
         <h3 class="hdev__name ellipsis"><a class="stretched" href=${href(["home", p.id])}>${p.name}</a></h3>
         <p class="hdev__sub ellipsis">${platformLine(p)}</p>
+        <${ConnLine} p=${p} />
       </div>
     </div>
-    <${ConnLine} p=${p} />
     <${DeviceActions} p=${p} />
   </article>`;
+}
+
+/** This device as a drive: its shared folders. */
+function SelfDrive({ self, shares }) {
+  return html`<a class="hdev hdev--self fm-drive" href=${href(["files", "browse", "self"])} data-testid="home-self">
+    <div class="hdev__head">
+      <${DeviceAvatar} dev=${self} size=${48} status="self" />
+      <div class="grow">
+        <h3 class="hdev__name ellipsis">${self.name}</h3>
+        <p class="hdev__sub ellipsis">${t("dev.thisDevice")}${shares !== null ? " · " + tn("fm.shares", shares) : ""}</p>
+      </div>
+      <${Icon} name="chevronRight" size=${18} class="fm-drive__chev" />
+    </div>
+  </a>`;
 }
 
 // ---------------------------------------------------------------- the page
@@ -257,11 +283,12 @@ export function HomeView({ route }) {
   const counters = useStore((s) => s.counters);
   const invites = useStore((s) => s.invites);
   const asks = useStore((s) => s.nearby.requests);
+  const shares = useStore((s) => (s.shares ? s.shares.length : null));
   const restart = useStore((s) => !!(s.settings && s.settings.restartRequired));
   const [adding, setAdding] = useState(false);
   const [picking, setPicking] = useState(null); // "send" | "chat"
   const [startHidden, setStartHidden] = useState(() => startFlag("startDismissed"));
-  // `#/home?add=1` (empty states elsewhere link here): open «Добавить устройство» right away.
+  // `#/home?add=1` (empty states elsewhere link here): open the invitation (for a device that is not nearby) right away.
   const wantsAdd = route.query.get("add") === "1";
   useEffect(() => {
     if (!wantsAdd) return;
@@ -273,15 +300,16 @@ export function HomeView({ route }) {
   const offers = transfers.filter(isIncomingOffer);
   const sorted = sortPeers(peers);
   const showStart = !startHidden && (peers.length <= 1 || !transfers.length);
+  const toNearby = () => go("#/nearby");
 
   const needDevice = () => {
     toast({ level: "info", title: t("home.act.needDevice") });
-    setAdding(true);
+    toNearby();
   };
-  // One device: straight there. More: ask which one. None: add one first.
+  // One device: straight there. More: ask which one. None: connect one first (nearby).
   const direct = peers.length === 1 ? peers[0] : null;
   const actionProps = (a) => {
-    if (a.id === "add") return { onClick: () => setAdding(true) };
+    if (a.id === "add") return { to: "#/nearby" };
     if (!peers.length) return { onClick: needDevice };
     if (a.id === "files") return { to: "#/files/browse" };
     if (direct) return { to: pickTarget(a.id, direct) };
@@ -295,13 +323,13 @@ export function HomeView({ route }) {
   const attention = html`<${Attention} offers=${offers} counters=${counters} invites=${invites} restart=${restart} lan=${lan} asks=${asks} />`;
   const hasAttention = offers.length || counters.mail || counters.chat || invites.length || restart || lan || asks.length;
 
-  return html`<div class="page home">
+  return html`<div class="page home fm-root">
     <h1 class="sr-only">${t("home.h1")}</h1>
     <${Status} peers=${peers} />
 
     ${(hasAttention || showStart) && html`<div class=${cx("home__row", hasAttention && showStart && "home__row--two")}>
       ${attention}
-      ${showStart && html`<${StartChecklist} peers=${peers} transfers=${transfers} onAdd=${() => setAdding(true)} onDismiss=${dismissStart} />`}
+      ${showStart && html`<${StartChecklist} peers=${peers} transfers=${transfers} onAdd=${toNearby} onDismiss=${dismissStart} />`}
     </div>`}
 
     <section class="home-actions" aria-labelledby="home-actions-title">
@@ -311,21 +339,36 @@ export function HomeView({ route }) {
       </div>
     </section>
 
-    <section class="home-devs" aria-labelledby="home-devs-title">
-      <div class="home-sec__head">
-        <div class="grow">
-          <h2 class="home-sec__title" id="home-devs-title">${t("home.devices")}</h2>
-          <p class="home-sec__sub">${t("home.here", { name: self.name })}</p>
-        </div>
-        <a class="home-sec__link" href="#/devices" data-testid="home-devices-all">${t("home.devicesAll")}<${Icon} name="chevronRight" size=${16} /></a>
+    <section class="fm-sec home-devs" aria-labelledby="home-devs-title">
+      <div class="fm-sec__head">
+        <h2 class="fm-sec__title" id="home-devs-title"><${Icon} name="drive" size=${18} />${t("home.devices")}</h2>
+        <a class="fm-sec__link" href="#/devices" data-testid="home-devices-all">${t("home.devicesAll")}<${Icon} name="chevronRight" size=${16} /></a>
       </div>
-      ${sorted.length
-        ? html`<div class="home-devs__grid">${sorted.map((p) => html`<${HomeDevice} key=${p.id} p=${p} />`)}</div>`
-        : html`<div class="home-card home-devs__empty">
-            <span class="home-devs__empty-icon"><${Icon} name="devices" size=${26} /></span>
-            <div class="grow"><p class="strong">${t("home.noDevices")}</p><p class="muted small">${t("home.noDevicesText")}</p></div>
-            <${Button} variant="primary" icon="userPlus" onClick=${() => setAdding(true)}>${t("dev.add")}</${Button}>
-          </div>`}
+      <div class="home-devs__grid">
+        <${SelfDrive} self=${self} shares=${shares} />
+        ${sorted.map((p) => html`<${HomeDevice} key=${p.id} p=${p} />`)}
+      </div>
+      ${!sorted.length && html`<div class="home-card home-devs__empty">
+        <span class="home-devs__empty-icon"><${Icon} name="radar" size=${26} /></span>
+        <div class="grow"><p class="strong">${t("home.noDevices")}</p><p class="muted small">${t("home.noDevicesText")}</p></div>
+        <${Button} variant="primary" icon="radar" href="#/nearby" data-testid="home-devs-nearby">${t("nav.nearby")}</${Button}>
+      </div>`}
+    </section>
+
+    <${NearbyPanel} />
+
+    <section class="fm-sec fm-folders" aria-labelledby="fm-folders-title">
+      <div class="fm-sec__head">
+        <h2 class="fm-sec__title" id="fm-folders-title"><${Icon} name="folder" size=${18} />${t("fm.folders")}</h2>
+      </div>
+      <div class="fm-folders__grid">
+        <${Folder} to="#/files/send" icon="swap" title=${t("nav.transfers")} sub=${t("fm.transfersSub")} n=${counters.offers} tone="warn" testid="folder-transfers" />
+        <${Folder} to="#/mail" icon="mail" title=${t("nav.mail")} sub=${counters.mail ? tn("home.att.mail", counters.mail) : t("fm.mailSub")} n=${counters.mail} testid="folder-mail" />
+        <${Folder} to="#/chat" icon="chat" title=${t("nav.chat")} sub=${counters.chat ? tn("home.att.chat", counters.chat) : t("fm.chatSub")} n=${counters.chat} testid="folder-chat" />
+        <${Folder} to="#/files/shares" icon="folderOpen" title=${t("files.tab.shares")} sub=${t("fm.sharesSub")} testid="folder-shares" />
+        <${Folder} to="#/services" icon="services" title=${t("nav.services")} sub=${t("fm.servicesSub")} testid="folder-services" />
+        <${Folder} to="#/settings" icon="settings" title=${t("nav.settings")} sub=${restart ? t("home.att.restart") : t("fm.settingsSub")} dot=${restart} testid="folder-settings" />
+      </div>
     </section>
 
     ${selId && html`<${DeviceDrawer} id=${selId} onClose=${() => go("#/home")} />`}

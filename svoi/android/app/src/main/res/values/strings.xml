@@ -37,6 +37,9 @@
     <string name="notif_no_subject">(без темы)</string>
     <string name="notif_nearby_title">%1$s просит добавить его в сеть</string>
     <string name="notif_nearby_body">Код %1$s: сверьте его с экраном нового устройства</string>
+    <string name="notif_nearby_invite_title">%1$s приглашает в сеть «%2$s»</string>
+    <string name="notif_nearby_pair_title">%1$s предлагает создать сеть вместе</string>
+    <string name="notif_nearby_invite_body">Откройте The Mesh, чтобы ответить</string>
     <string name="notif_saved_title">Файл сохранён</string>
 
     <!-- Главное окно -->

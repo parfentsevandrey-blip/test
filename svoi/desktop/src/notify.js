@@ -11,7 +11,8 @@ const clip = (s, n) => {
 
 /**
  * What an event deserves, or null.
- * @param {string} kind  'transfer' | 'chat' | 'mail' | 'nearby' (one request of a device nearby to be added)
+ * @param {string} kind  'transfer' | 'chat' | 'mail' | 'nearby' (one request of a device nearby to be added) |
+ *                       'nearbyInvite' (one invitation of a device nearby to this one)
  * @param {object} d     the event's data (see docs/UI-API.md)
  * @param {{t: object, peerName: (id:string)=>string|Promise<string>, fetchMail: (id:string)=>Promise<object>}} ctx
  * @returns {Promise<null | {key: string, title: string, body: string, route: string}>}
@@ -36,6 +37,13 @@ async function notificationFor(kind, d, ctx) {
     if (!d.id || !d.code) return null;
     const code = String(d.code).replace(/^(\d{3})(\d{3})$/, '$1 $2');
     return { key: `nearby:${d.id}`, title: t.nearbyTitle(clip(d.name, 40) || '?'), body: t.nearbyBody(code), route: '#/home' };
+  }
+  if (kind === 'nearbyInvite') {
+    // (an invitation again after a "no" is a new one: the time it came is part of the key)
+    if (!d.id || (d.kind !== 'invite' && d.kind !== 'pair')) return null;
+    const name = clip(d.name, 40) || '?';
+    const title = d.kind === 'pair' ? t.nearbyPairTitle(name) : t.nearbyInviteTitle(name, clip(d.meshName, 40));
+    return { key: `nearbyInvite:${d.id}:${d.received || 0}`, title, body: t.nearbyInviteBody, route: '#/home' };
   }
   if (kind === 'mail') {
     if (d.folder !== 'inbox' || !d.unread || !d.id) return null;
@@ -71,9 +79,11 @@ class Notifier {
 
   attach() {
     for (const kind of ['transfer', 'chat', 'mail']) this.watcher.on(kind, (d) => this.handle(kind, d).catch((e) => log.warn('notify:', e.message)));
-    // The picture of the devices nearby carries the requests that wait for an answer: each is announced once.
+    // The picture of the devices nearby carries the requests that wait for an answer and the invitations to this device:
+    // each is announced once.
     this.watcher.on('nearby', (v) => {
       for (const r of (v && Array.isArray(v.requests) ? v.requests : [])) this.handle('nearby', r).catch((e) => log.warn('notify:', e.message));
+      for (const i of (v && Array.isArray(v.invites) ? v.invites : [])) this.handle('nearbyInvite', i).catch((e) => log.warn('notify:', e.message));
     });
   }
 

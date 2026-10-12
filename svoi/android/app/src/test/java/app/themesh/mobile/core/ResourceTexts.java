@@ -156,6 +156,21 @@ final class ResourceTexts implements Texts {
     }
 
     @Override
+    public String nearbyInviteTitle(String name, String mesh) {
+        return get("notif_nearby_invite_title", name, mesh);
+    }
+
+    @Override
+    public String nearbyPairTitle(String name) {
+        return get("notif_nearby_pair_title", name);
+    }
+
+    @Override
+    public String nearbyInviteBody() {
+        return get("notif_nearby_invite_body");
+    }
+
+    @Override
     public String statusStarting() {
         return get("status_starting");
     }

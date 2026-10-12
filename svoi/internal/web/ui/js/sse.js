@@ -98,6 +98,11 @@ const handlers = {
       refreshState();
       if (d.text === "removed") return;
     }
+    // A member added a device nearby, and this administrator signed its certificate: {title: <device>, text: "added", by}.
+    if (d.text === "added") {
+      toast({ level: "info", title: t("nearby.addedTitle", { name: d.title || "" }), text: t("nearby.addedBy", { by: d.by || "" }), link: d.link || null });
+      return;
+    }
     toast({ level: d.level || "info", title: d.title || "", text: d.text || "", link: d.link || null });
   },
   invites(d) { if (Array.isArray(d)) setState({ invites: d }); },

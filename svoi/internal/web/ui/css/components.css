@@ -372,7 +372,7 @@ html .seg.seg--wrap .seg__opt { justify-content: center; min-width: 0; }
 .toast__close { flex: none; color: var(--text-3); width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px; margin: -2px -2px 0 0; }
 .toast__close:hover { background: var(--surface-hover); color: var(--text); }
 @media (max-width: 759px) {
-  .toasts { left: 50%; right: auto; transform: translateX(-50%); bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 12px); }
+  .toasts { left: 50%; right: auto; transform: translateX(-50%); bottom: calc(var(--safe-bottom) + 12px); }
   /* bottom sheets cover the lower part of the screen: show toasts on top instead */
   .has-modal .toasts { top: calc(12px + var(--safe-top)); bottom: auto; }
 }

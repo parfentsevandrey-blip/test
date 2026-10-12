@@ -181,14 +181,11 @@ public final class EventWatcher {
                     listener.onEvent(ev.event, new JSONObject(ev.data));
                     break;
                 case "nearby":
-                    // картина «рядом»: просьбы устройств, которые ждут ответа, — по одному событию на просьбу
-                    JSONArray requests = new JSONObject(ev.data).optJSONArray("requests");
-                    for (int i = 0; requests != null && i < requests.length(); i++) {
-                        JSONObject r = requests.optJSONObject(i);
-                        if (r != null) {
-                            listener.onEvent("nearby", r);
-                        }
-                    }
+                    // картина «рядом»: просьбы устройств, которые ждут ответа, и приглашения этому устройству — по одному
+                    // событию на каждое
+                    JSONObject nearby = new JSONObject(ev.data);
+                    each(nearby.optJSONArray("requests"), "nearby");
+                    each(nearby.optJSONArray("invites"), "nearbyInvite");
                     break;
                 default:
                     break; // hello, counters, notify, invites… приложению не нужны
@@ -197,6 +194,16 @@ public final class EventWatcher {
             log.w("events: cannot parse '" + ev.event + "'");
         } catch (RuntimeException e) {
             log.e("events: handler for '" + ev.event + "' failed", e);
+        }
+    }
+
+    /** Каждый элемент списка — отдельное событие {@code kind}. */
+    private void each(JSONArray list, String kind) {
+        for (int i = 0; list != null && i < list.length(); i++) {
+            JSONObject item = list.optJSONObject(i);
+            if (item != null) {
+                listener.onEvent(kind, item);
+            }
         }
     }
 

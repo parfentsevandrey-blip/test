@@ -1,17 +1,19 @@
-// Files → Browse: device → share → folder browser with previews, uploads
-// (drag & drop, 409 → overwrite confirmation), new folder / rename / delete.
+// The drives of the file manager: device → share → folder browser with previews, uploads (drag & drop, 409 → overwrite
+// confirmation), new folder / rename / delete. Where one is, the path bar on top says (js/shell.js): the folders tell it
+// the names of the shares (setLabel).
 import { html, useEffect, useLayoutEffect, useMemo, useRef, useState } from "../../vendor/preact-htm.js";
 import { Icon } from "../icons.js";
 import { t, tn } from "../i18n.js";
 import { fileUrl, get, peerPath, post, thumbUrl, upload } from "../api.js";
 import { go, href } from "../router.js";
-import { useStore } from "../store.js";
+import { setLabel, useStore } from "../store.js";
 import { fmtBytes, fmtShortDate, fmtDateTime, fmtPercent } from "../format.js";
 import { useAsync, usePersistent } from "../hooks.js";
 import { setStartFlag } from "../prefs.js";
 import { cx, fileKind, joinPath, sortPeers, uid } from "../util.js";
 import { DeviceAvatar, FileIcon } from "../components/avatar.js";
 import { Ago, useFileDrop } from "../components/misc.js";
+import { DeviceActions, platformLine } from "../components/device-actions.js";
 import { Button, Chip, EmptyState, IconButton, Progress, Segmented, Skeleton } from "../components/ui.js";
 import { Menu } from "../components/menu.js";
 import { confirmDialog, promptDialog } from "../components/modal.js";
@@ -56,7 +58,7 @@ function DeviceGrid() {
     </a>
     ${!peers.length && html`<div class="bdev bdev--hint">
       <span class="bdev__text"><span class="bdev__sub">${t("browse.noPeersText")}</span></span>
-      <${Button} size="sm" variant="primary" icon="userPlus" href="#/home?add=1">${t("dev.add")}</${Button}>
+      <${Button} size="sm" variant="primary" icon="radar" href="#/nearby">${t("dev.add")}</${Button}>
     </div>`}
     ${list.map((p) => {
       const inner = html`
@@ -72,30 +74,49 @@ function DeviceGrid() {
 }
 
 // ---------------------------------------------------------------- level 1: shares
+
+/** The head of a drive: which device, how it is, and what one can do with it. */
+function DriveHead({ dev, d }) {
+  const self = useStore((s) => s.self);
+  const p = d.isSelf ? self : d.peer;
+  if (!p) return null;
+  return html`<header class="drive-head" data-testid="drive-head" data-id=${d.isSelf ? "self" : dev}>
+    <${DeviceAvatar} dev=${p} size=${44} status=${d.isSelf ? "self" : undefined} />
+    <div class="grow">
+      <h1 class="drive-head__name ellipsis">${p.name}</h1>
+      <p class="drive-head__sub ellipsis">${d.isSelf ? t("dev.thisDevice") : platformLine(p)}</p>
+    </div>
+    ${d.isSelf
+      ? html`<${Button} size="sm" variant="secondary" icon="settings" href="#/files/shares" data-testid="drive-manage">${t("fm.manageShares")}</${Button}>`
+      : html`<div class="drive-head__acts"><${DeviceActions} p=${p} /></div>`}
+  </header>`;
+}
+
 function ShareList({ dev }) {
   const d = useDevice(dev);
   const res = useAsync(async (signal) => {
     if (!d.online) return null;
     const list = await get(`${peerPath(dev)}/shares`, { signal });
     sharesCache.set(dev, list);
+    for (const s of list) setLabel(`share:${dev}/${s.id}`, s.name);
     return list;
   }, [dev, d.online]);
-  const crumbs = html`<${Crumbs} dev=${dev} devName=${d.name} />`;
+  const head = html`<${DriveHead} dev=${dev} d=${d} />`;
   // «Начало работы» on Home: having looked into another device's folders (noted as soon as they show).
   useLayoutEffect(() => { if (!d.isSelf && res.data) setStartFlag("browsed"); }, [d.isSelf, res.data]);
-  if (!d.known) return html`${crumbs}<${EmptyState} icon="alertCircle" title=${t("dev.notFound")} text=${t("dev.notFoundText")} />`;
-  if (!d.online) return html`${crumbs}<${OfflineState} name=${d.name} peer=${d.peer} />`;
+  if (!d.known) return html`<${EmptyState} icon="alertCircle" title=${t("dev.notFound")} text=${t("dev.notFoundText")} />`;
+  if (!d.online) return html`${head}<${OfflineState} name=${d.name} peer=${d.peer} />`;
   if (res.loading && !res.data) {
-    return html`${crumbs}<div class="sgrid">${[0, 1, 2].map((i) => html`<div class="scard" key=${i}><${Skeleton} w=${44} h=${44} r=${12} /><div class="grow stack stack--sm"><${Skeleton} w="60%" h=${16} /><${Skeleton} w="30%" h=${12} /></div></div>`)}</div>`;
+    return html`${head}<div class="sgrid">${[0, 1, 2].map((i) => html`<div class="scard" key=${i}><${Skeleton} w=${44} h=${44} r=${12} /><div class="grow stack stack--sm"><${Skeleton} w="60%" h=${16} /><${Skeleton} w="30%" h=${12} /></div></div>`)}</div>`;
   }
-  if (res.error) return html`${crumbs}<${ErrorState} error=${res.error} onRetry=${res.reload} name=${d.name} peer=${d.peer} />`;
+  if (res.error) return html`${head}<${ErrorState} error=${res.error} onRetry=${res.reload} name=${d.name} peer=${d.peer} />`;
   const list = res.data || [];
   if (!list.length) {
-    return html`${crumbs}<${EmptyState} icon="folder" title=${t("browse.noShares", { name: d.name })} text=${d.isSelf ? t("browse.noSharesSelf") : t("browse.noSharesPeer")}>
+    return html`${head}<${EmptyState} icon="folder" title=${t("browse.noShares", { name: d.name })} text=${d.isSelf ? t("browse.noSharesSelf") : t("browse.noSharesPeer")}>
       ${d.isSelf && html`<${Button} variant="primary" icon="plus" href="#/files/shares">${t("shares.add")}</${Button}>`}
     </${EmptyState}>`;
   }
-  return html`${crumbs}<div class="sgrid">
+  return html`${head}<div class="sgrid">
     ${list.map((s) => html`<a key=${s.id} class="scard" href=${href(["files", "browse", dev, s.id])} data-testid="share-card" data-id=${s.id} data-mode=${s.mode}>
       <${FileIcon} name=${s.name} isDir boxed size=${48} />
       <span class="grow"><span class="scard__name">${s.name}</span>
@@ -103,26 +124,6 @@ function ShareList({ dev }) {
       <${Icon} name="chevronRight" size=${18} class="bdev__chev" />
     </a>`)}
   </div>`;
-}
-
-// ---------------------------------------------------------------- breadcrumbs
-function Crumbs({ dev, devName, share, shareName, segs = [] }) {
-  const items = [{ label: t("browse.devices"), href: "#/files/browse", icon: "devices" }];
-  if (dev) items.push({ label: devName, href: href(["files", "browse", dev]) });
-  if (share) items.push({ label: shareName || share, href: href(["files", "browse", dev, share]), icon: "folder" });
-  segs.forEach((s, i) => items.push({ label: s, href: href(["files", "browse", dev, share, ...segs.slice(0, i + 1)]) }));
-  const ref = useRef(null);
-  useEffect(() => { if (ref.current) ref.current.scrollLeft = ref.current.scrollWidth; });
-  return html`<nav class="crumbs" aria-label=${t("browse.path")} ref=${ref}>
-    <ol>
-      ${items.map((it, i) => html`<li key=${i}>
-        ${i > 0 && html`<${Icon} name="chevronRight" size=${14} class="crumbs__sep" />`}
-        ${i === items.length - 1
-          ? html`<span class="crumbs__cur" aria-current="page">${it.icon && html`<${Icon} name=${it.icon} size=${15} />`}${it.label}</span>`
-          : html`<a href=${it.href}>${it.icon && html`<${Icon} name=${it.icon} size=${15} />`}${it.label}</a>`}
-      </li>`)}
-    </ol>
-  </nav>`;
 }
 
 // ---------------------------------------------------------------- thumbnails
@@ -196,6 +197,7 @@ function FolderView({ dev, share, segs }) {
       setShareMeta(list.find((s) => s.id === share) || { id: share, name: share });
     }).catch(() => setShareMeta({ id: share, name: share }));
   }, [dev, share, d.online]);
+  useEffect(() => { if (shareMeta && shareMeta.name) setLabel(`share:${dev}/${share}`, shareMeta.name); }, [shareMeta, dev, share]);
 
   const res = useAsync((signal) => (d.online
     ? get(`${peerPath(dev)}/fs?share=${enc(share)}&path=${enc(path)}`, { signal })
@@ -274,9 +276,8 @@ function FolderView({ dev, share, segs }) {
     canWrite && { label: t("common.delete"), icon: "trash", danger: true, onClick: () => remove(e) },
   ].filter(Boolean);
 
-  const crumbs = html`<${Crumbs} dev=${dev} devName=${d.name} share=${share} shareName=${shareMeta && shareMeta.name} segs=${segs} />`;
-  if (!d.known) return html`${crumbs}<${EmptyState} icon="alertCircle" title=${t("dev.notFound")} text=${t("dev.notFoundText")} />`;
-  if (!d.online) return html`${crumbs}<${OfflineState} name=${d.name} peer=${d.peer} />`;
+  if (!d.known) return html`<${EmptyState} icon="alertCircle" title=${t("dev.notFound")} text=${t("dev.notFoundText")} />`;
+  if (!d.online) return html`<${OfflineState} name=${d.name} peer=${d.peer} />`;
 
   const sortLabel = { name: t("browse.sortName"), size: t("browse.sortSize"), mtime: t("browse.sortDate") }[sort.key];
   const toolbar = html`<div class="ftool">
@@ -368,7 +369,6 @@ function FolderView({ dev, share, segs }) {
   });
 
   return html`<div class=${cx("folder", over && "is-over")}>
-    ${crumbs}
     ${toolbar}
     ${res.data && html`<p class="folder__count faint xsmall">${tn("browse.countFolders", entries.filter((e) => e.isDir).length)} · ${tn("browse.countFiles", files.length)}${query ? ` · ${t("browse.filtered")}` : ""}</p>`}
     ${content}

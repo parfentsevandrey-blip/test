@@ -43,12 +43,16 @@ const ROUTES = {
   chat: "#/chat",
   services: "#/services",
   settings: "#/settings",
-  more: "#/more",
-  // the first screen of a device that is not in a mesh yet, with devices nearby; the request to a device nearby; and the same request
-  // as it looks to the administrator that is asked (they need a mock of their own: a world without a mesh)
-  "nearby-list": { hash: "", world: "onboarding", ready: ".nearby__item", setup: async (m) => { await m.hook("/__mock/reset"); await m.hook("/__mock/nearby?add=macbook-andrey&os=darwin&mesh=Дом"); await m.hook("/__mock/nearby?add=pixel-8&os=android&mesh=Дом"); } },
-  "nearby-code": { hash: "", world: "onboarding", ready: "[data-testid=nearby-code]", setup: async (m) => { await m.hook("/__mock/reset"); await m.hook("/__mock/nearby?add=macbook-andrey&os=darwin&mesh=Дом"); await m.hook("/__mock/nearby?hold=1"); },
-    after: async (page) => { await page.click("[data-testid=nearby-connect]"); await page.waitForSelector("[data-testid=nearby-join][data-state=waiting]"); await sleep(300); } },
+  // the place «Рядом» of a device in a mesh: a device that is not in one yet (invited, and one more), and the invitation for a device far away
+  nearby: { hash: "#/nearby", world: "full", ready: "[data-testid=nearby-device]", setup: async (m) => { await m.hook("/__mock/nearby?clear=1"); await m.hook("/__mock/nearby?hold=1");
+      await m.hook("/__mock/nearby?add=pixel-8&os=android&kind=new"); await m.hook("/__mock/nearby?add=ipad-masha&os=ios&kind=new"); },
+    after: async (page) => { await page.click("[data-testid=nearby-device][data-name=pixel-8] [data-testid=nearby-connect]"); await page.waitForSelector("[data-testid=nearby-sent][data-state=sent]"); await sleep(400); } },
+  // the first screen of a device that is not in a mesh yet, with devices nearby (a mesh, a device without one) and an invitation; the request to a
+  // device nearby; and the same request as it looks to the administrator that is asked (they need a mock of their own: a world without a mesh)
+  "nearby-list": { hash: "", world: "onboarding", ready: "[data-testid=nearby-device]", setup: async (m) => { await m.hook("/__mock/reset"); await m.hook("/__mock/nearby?add=macbook-andrey&os=darwin&mesh=Дом");
+      await m.hook("/__mock/nearby?add=pixel-8&os=android&kind=new"); await m.hook("/__mock/nearby?invite=nas&os=linux&mesh=Дача"); } },
+  "nearby-code": { hash: "", world: "onboarding", ready: "[data-testid=nearby-device]", setup: async (m) => { await m.hook("/__mock/reset"); await m.hook("/__mock/nearby?add=macbook-andrey&os=darwin&mesh=Дом"); await m.hook("/__mock/nearby?hold=1"); },
+    after: async (page) => { await page.click("[data-testid=nearby-connect]"); await page.waitForSelector("[data-testid=nearby-join][data-state=confirmed] [data-testid=nearby-code]"); await sleep(300); } },
   // Internet mail: a letter from the Internet (verified, with formatted text in its frame; not what it says), a letter that went out to three addresses,
   // the composer with addresses, and the setup (off; and on with a record that is wrong)
   "mail-ext": { hash: "#/mail/inbox", world: "full", ready: "[data-testid=mail-item]", setup: async (m) => { await m.hook("/__mock/reset"); await m.hook("/__mock/gateway?on=1&letters=1"); },
@@ -80,14 +84,16 @@ const browser = await launch();
 const checker = await browser.newPage(); // a blank page whose canvas reads the pixels
 const problems = [];
 
-/** Pieces of visible text with their boxes and colours. `dissolve`: how far above the tab bar the page dissolves into the sky (the "rosa" look) */
+/** Pieces of visible text with their boxes and colours. `dissolve`: how far above the tab bar (or the foot of a phone's screen) the page dissolves into the sky (the "rosa" look) */
 function collectRuns(dissolve) {
   const out = [];
   // what scrolls under the top bar fades out on purpose (and under the tab bar of a phone it is covered): not judged there
   const top = document.querySelector(".topbar");
   const fade = top ? top.getBoundingClientRect().bottom + 30 : 0;
   const tab = document.querySelector(".tabbar");
-  const tabTop = tab && getComputedStyle(tab).display !== "none" ? tab.getBoundingClientRect().top : Infinity;
+  // (a phone in the look «Роса» has no tab bar: the page dissolves into the sky at the foot of the screen instead — css/rosa.css)
+  const foot = document.documentElement.dataset.look === "rosa" && innerWidth < 760 && document.querySelector(".shell:not(.shell--fixed)") ? innerHeight : Infinity;
+  const tabTop = tab && getComputedStyle(tab).display !== "none" ? tab.getBoundingClientRect().top : foot;
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   while (walker.nextNode()) {
     const node = walker.currentNode;

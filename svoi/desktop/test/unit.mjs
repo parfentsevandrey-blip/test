@@ -90,6 +90,18 @@ test('a device nearby that asks to be added is announced once per request, with 
   assert.ok(long.title.length < 80);
 });
 
+test('an invitation of a device nearby is announced once per invitation; a new one after a "no" again', async () => {
+  const n = await notificationFor('nearbyInvite', { id: 'd1', kind: 'invite', name: 'mac', meshName: 'Дом', os: 'darwin', received: 1700000000 }, ctx());
+  assert.deepEqual(n, { key: 'nearbyInvite:d1:1700000000', title: 'mac приглашает в сеть «Дом»', body: 'Откройте The Mesh, чтобы ответить', route: '#/home' });
+  const pair = await notificationFor('nearbyInvite', { id: 'd2', kind: 'pair', name: 'pixel', received: 5 }, ctx());
+  assert.equal(pair.title, 'pixel предлагает создать сеть вместе');
+  const again = await notificationFor('nearbyInvite', { id: 'd1', kind: 'invite', name: 'mac', meshName: 'Дом', received: 1700000100 }, ctx());
+  assert.notEqual(again.key, n.key);
+  assert.equal(await notificationFor('nearbyInvite', { kind: 'invite', name: 'x' }, ctx()), null); // no device: nothing to key it by
+  assert.equal(await notificationFor('nearbyInvite', { id: 'd3', kind: 'other', name: 'x' }, ctx()), null);
+  assert.equal((await notificationFor('nearbyInvite', { id: 'd4', kind: 'pair' }, ctx())).title, '? предлагает создать сеть вместе');
+});
+
 test('the English texts exist for everything the Russian ones have', () => {
   assert.deepEqual(Object.keys(en).sort(), Object.keys(ru).sort());
   assert.equal(texts('en-US'), en);

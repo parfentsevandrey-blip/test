@@ -164,7 +164,8 @@ group("onboarding (real processes)", { noDemo: true }, () => {
   test("the invitation's QR is large and can be shown larger; Escape closes only the large one", async ({ browser }) => {
     const alpha = await startNode({ name: "alpha-qr", init: true, mesh: "Дом", owner: "Андрей" });
     const page = await open(browser, alpha, { w: 1280, h: 900 });
-    await tid(page, "home-action-add").click();
+    await tid(page, "home-action-add").click(); // the devices nearby; a device that is not nearby is invited from there
+    await tid(page, "nearby-far-invite").click();
     await tid(page, "invite-create").click();
     await tid(page, "invite-qr").locator("img").waitFor();
     const box = await tid(page, "invite-qr").boundingBox();

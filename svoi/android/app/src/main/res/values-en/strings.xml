@@ -37,6 +37,9 @@
     <string name="notif_no_subject">(no subject)</string>
     <string name="notif_nearby_title">%1$s asks to be added to the mesh</string>
     <string name="notif_nearby_body">Code %1$s: compare it with the screen of the new device</string>
+    <string name="notif_nearby_invite_title">%1$s invites this device to the mesh “%2$s”</string>
+    <string name="notif_nearby_pair_title">%1$s offers to make a mesh together</string>
+    <string name="notif_nearby_invite_body">Open The Mesh to answer</string>
     <string name="notif_saved_title">File saved</string>
 
     <!-- Main window -->
