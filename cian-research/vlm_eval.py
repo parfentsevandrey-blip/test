@@ -26,6 +26,32 @@ MODELS = {
     'gemma4-e4b': ('ggml-org/gemma-4-E4B-it-GGUF', r'Q4_K_M\.gguf$|it-q4_0\.gguf$', r'mmproj.*Q8_0\.gguf$|mmproj.*\.gguf$'),
     'gemma4-e2b': ('ggml-org/gemma-4-E2B-it-GGUF', r'Q4_K_M\.gguf$|it-q4_0\.gguf$', r'mmproj.*Q8_0\.gguf$|mmproj.*\.gguf$'),
     'minicpmv46': ('openbmb/MiniCPM-V-4.6-gguf', r'Q4_K_M\.gguf$', r'mmproj.*\.gguf$'),
+    # модели 2026 года (апрель–октябрь)
+    'qwen36-35b-a3b': ('unsloth/Qwen3.6-35B-A3B-GGUF', r'UD-IQ2_M\.gguf$', r'mmproj-F16\.gguf$|mmproj.*\.gguf$'),
+    'gemma4-12b': ('unsloth/gemma-4-12b-it-GGUF', r'it-Q4_K_M\.gguf$', r'mmproj-F16\.gguf$|mmproj.*\.gguf$'),
+    'minicpmv47-1b': ('openbmb/MiniCPM-V-4.7-1B-gguf', r'Q4_K_M\.gguf$', r'mmproj-model-f16-4x\.gguf$|mmproj.*\.gguf$'),
+    # «решающая» модель: классы за один проход без генерации текста (llama-server /v1/systemone)
+    'd1-3b': ('LiquidAI/d1-3B-GGUF', r'd1-3B-Q8_0\.gguf$|Q4_K_M\.gguf$', r'mmproj-d1-3B-Q8_0\.gguf$|mmproj.*\.gguf$'),
+}
+DECISION = {'d1-3b'}
+DECISION_Q = {
+    'condition': {'type': 'choice', 'instructions': 'Which class fits the WHOLE apartment interior shown?', 'criteria': {
+        'not_shown': 'no photo shows this apartment inside: only building, courtyard, plans or CGI renders',
+        'bare_shell': 'no finishing: bare concrete or brick walls, concrete floor, exposed wiring',
+        'white_box': 'developer pre-finish: smooth white walls, screed floor, no kitchen, no floor covering',
+        'needs_renovation': 'worn Soviet-era finishes: peeling wallpaper, old linoleum or worn parquet, small 1970s tiles, old wooden windows',
+        'old_livable': 'renovated long ago (1995-2015), intact but dated: wallpaper, laminate, beige tiles with borders, arches, multi-level ceilings',
+        'cosmetic': 'recent budget refresh: new wallpaper or paint, cheap laminate, simple tiles, basic mass-market kitchen',
+        'modern': 'quality renovation of the last 7 years: even painted walls, large-format porcelain, wall-hung toilet, built-in kitchen',
+        'designer': 'architect project: custom built-ins, premium stone and wood, designer lighting'}},
+    'works': {'type': 'choice', 'instructions': 'Which works must a buyer do before reselling this apartment?', 'criteria': {
+        'none': 'sell as is', 'refresh': 'paint and small fixes only',
+        'cosmetic': 'new floors, walls and doors; bathroom and kitchen stay',
+        'major': 'cosmetic plus new bathroom, kitchen, wiring and plumbing',
+        'full': 'all finishing from shell or white box'}},
+    'renovation_age': {'type': 'choice', 'instructions': 'How old is the renovation?', 'criteria': {
+        'new_0_3': '0-3 years', 'recent_3_7': '3-7 years', 'dated_7_15': '7-15 years', 'old_15_plus': 'over 15 years',
+        'soviet': 'Soviet-era finishes', 'none': 'no renovation: shell, white box or not shown'}},
 }
 ORDER = ['bare_shell', 'white_box', 'needs_renovation', 'old_livable', 'cosmetic', 'modern', 'designer']
 READY = {'modern', 'designer'}
@@ -109,6 +135,28 @@ class Server:
         r = json.loads(urllib.request.urlopen(req, timeout=3600).read())
         return r['choices'][0]['message'].get('content') or '', r.get('timings', {})
 
+    def decide(self, paths, side=384):
+        """Решающая модель: классы с вероятностями за проход на вопрос, без генерации текста."""
+        import base64, io, urllib.request
+        from PIL import Image
+        ims = []
+        for p in paths:
+            im = Image.open(p).convert('RGB')
+            im.thumbnail((side, side))
+            b = io.BytesIO()
+            im.save(b, 'JPEG', quality=85)
+            ims.append('data:image/jpeg;base64,' + base64.b64encode(b.getvalue()).decode())
+        body = {'state': 'Listing photos of one apartment for sale in Moscow. Judge the apartment interior only.',
+                'images': ims, 'questions': DECISION_Q}
+        req = urllib.request.Request(self.url + '/v1/systemone', data=json.dumps(body).encode(),
+                                     headers={'Content-Type': 'application/json'})
+        r = json.loads(urllib.request.urlopen(req, timeout=3600).read())
+        a = r['answers']
+        ans = {'condition': a['condition']['choice'], 'condition_confidence': round(a['condition'].get('confidence', 0), 2),
+               'works': a['works']['choice'], 'renovation_age': a['renovation_age']['choice'],
+               'probabilities': {k: v.get('probabilities') for k, v in a.items()}}
+        return json.dumps(ans), {'prompt_n': r.get('usage', {}).get('input_tokens'), 'predicted_n': 0}
+
     def close(self):
         self.proc.terminate()
         self.proc.wait(30)
@@ -117,7 +165,7 @@ class Server:
 def run_listing(server, paths, prompt, schema):
     t0 = time.time()
     try:
-        text, timings = server.ask(prompt, paths, schema)
+        text, timings = server.decide(paths) if getattr(server, 'decision', False) else server.ask(prompt, paths, schema)
     except Exception as e:
         return None, time.time() - t0, str(e)[:500], {}, 1
     m = re.search(r'\{.*\}', text, re.S)
@@ -135,6 +183,7 @@ def cmd_run(key, limit, max_tokens):
     prompt = open('inspector_prompt.md').read()
     schema = json.load(open('vlm_schema.json'))
     server = Server(model, mmproj, max_tokens)
+    server.decision = key in DECISION
     meta = json.load(open(f'{GOLD}/meta.json'))
     gold = {k: v for k, v in json.load(open(f'{GOLD}/gold.json')).items() if not k.startswith('_')}
     out_f = f'{GOLD}/eval_{key}.json'
