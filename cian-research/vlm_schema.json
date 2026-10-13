@@ -1,0 +1,100 @@
+{
+ "type": "object",
+ "properties": {
+  "condition": {
+   "enum": [
+    "not_shown",
+    "bare_shell",
+    "white_box",
+    "needs_renovation",
+    "old_livable",
+    "cosmetic",
+    "modern",
+    "designer"
+   ]
+  },
+  "condition_confidence": {
+   "type": "number"
+  },
+  "renovation_age": {
+   "enum": [
+    "new_0_3",
+    "recent_3_7",
+    "dated_7_15",
+    "old_15_plus",
+    "soviet",
+    "none"
+   ]
+  },
+  "works": {
+   "enum": [
+    "none",
+    "refresh",
+    "cosmetic",
+    "major",
+    "full"
+   ]
+  },
+  "kitchen": {
+   "type": "string",
+   "maxLength": 140
+  },
+  "bathroom": {
+   "type": "string",
+   "maxLength": 140
+  },
+  "rooms": {
+   "type": "string",
+   "maxLength": 140
+  },
+  "windows_doors": {
+   "type": "string",
+   "maxLength": 140
+  },
+  "furniture": {
+   "enum": [
+    "none",
+    "partial",
+    "full"
+   ]
+  },
+  "issues": {
+   "type": "array",
+   "items": {
+    "type": "string",
+    "maxLength": 70
+   },
+   "maxItems": 5
+  },
+  "extras": {
+   "type": "array",
+   "items": {
+    "type": "string",
+    "maxLength": 50
+   },
+   "maxItems": 4
+  },
+  "photos_used": {
+   "type": "integer"
+  },
+  "summary": {
+   "type": "string",
+   "maxLength": 320
+  }
+ },
+ "required": [
+  "condition",
+  "condition_confidence",
+  "renovation_age",
+  "works",
+  "kitchen",
+  "bathroom",
+  "rooms",
+  "windows_doors",
+  "furniture",
+  "issues",
+  "extras",
+  "photos_used",
+  "summary"
+ ]
+}
