@@ -37,19 +37,19 @@
   },
   "kitchen": {
    "type": "string",
-   "maxLength": 140
+   "maxLength": 90
   },
   "bathroom": {
    "type": "string",
-   "maxLength": 140
+   "maxLength": 90
   },
   "rooms": {
    "type": "string",
-   "maxLength": 140
+   "maxLength": 90
   },
   "windows_doors": {
    "type": "string",
-   "maxLength": 140
+   "maxLength": 90
   },
   "furniture": {
    "enum": [
@@ -62,24 +62,24 @@
    "type": "array",
    "items": {
     "type": "string",
-    "maxLength": 70
+    "maxLength": 50
    },
-   "maxItems": 5
+   "maxItems": 4
   },
   "extras": {
    "type": "array",
    "items": {
     "type": "string",
-    "maxLength": 50
+    "maxLength": 40
    },
-   "maxItems": 4
+   "maxItems": 3
   },
   "photos_used": {
    "type": "integer"
   },
   "summary": {
    "type": "string",
-   "maxLength": 320
+   "maxLength": 220
   }
  },
  "required": [

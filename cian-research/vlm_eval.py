@@ -79,29 +79,62 @@ def interior_photos(paths):
     return keep
 
 
-def run_listing(model, mmproj, paths, prompt, max_tokens):
-    cmd = [f'{LLAMA}/llama-mtmd-cli', '-m', model, '--mmproj', mmproj, '-c', '12288', '-n', '700', '--repeat-penalty', '1.1', '--temp', '0',
-           '-t', str(os.cpu_count() or 4), '--image-max-tokens', str(max_tokens), '-jf', 'vlm_schema.json',
-           '-p', prompt, '--no-warmup']
-    for p in paths:
-        cmd += ['--image', p]
+class Server:
+    """llama-server: модель грузится один раз, методичка (system) кэшируется между квартирами."""
+    def __init__(self, model, mmproj, max_tokens, port=8091):
+        import urllib.request
+        self.url = f'http://127.0.0.1:{port}'
+        self.proc = subprocess.Popen(
+            [f'{LLAMA}/llama-server', '-m', model, '--mmproj', mmproj, '-c', '12288', '-t', str(os.cpu_count() or 4),
+             '--image-max-tokens', str(max_tokens), '--port', str(port), '--no-webui', '-np', '1', '--cache-reuse', '256'],
+            stdout=subprocess.DEVNULL, stderr=open('market-data/gold/server.log', 'w'))
+        for _ in range(1200):
+            try:
+                urllib.request.urlopen(self.url + '/health', timeout=2)
+                return
+            except Exception:
+                time.sleep(1)
+        raise RuntimeError('llama-server не поднялся, см. market-data/gold/server.log')
+
+    def ask(self, prompt, paths, schema):
+        import base64, urllib.request
+        content = [{'type': 'image_url', 'image_url': {'url': 'data:image/jpeg;base64,' + base64.b64encode(open(p, 'rb').read()).decode()}}
+                   for p in paths] + [{'type': 'text', 'text': 'Inspect this apartment and fill in the form.'}]
+        body = {'messages': [{'role': 'system', 'content': prompt}, {'role': 'user', 'content': content}],
+                'temperature': 0, 'max_tokens': 700, 'repeat_penalty': 1.1, 'cache_prompt': True,
+                'response_format': {'type': 'json_schema', 'json_schema': {'schema': schema}},
+                'chat_template_kwargs': {'enable_thinking': False}}
+        req = urllib.request.Request(self.url + '/v1/chat/completions', data=json.dumps(body).encode(),
+                                     headers={'Content-Type': 'application/json'})
+        r = json.loads(urllib.request.urlopen(req, timeout=3600).read())
+        return r['choices'][0]['message'].get('content') or '', r.get('timings', {})
+
+    def close(self):
+        self.proc.terminate()
+        self.proc.wait(30)
+
+
+def run_listing(server, paths, prompt, schema):
     t0 = time.time()
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
-    out = r.stdout
-    m = re.search(r'\{.*\}', out, re.S)
+    try:
+        text, timings = server.ask(prompt, paths, schema)
+    except Exception as e:
+        return None, time.time() - t0, str(e)[:500], {}, 1
+    m = re.search(r'\{.*\}', text, re.S)
     ans = None
     if m:
         try:
             ans = json.loads(m.group(0))
         except Exception:
             ans = None
-    speed = re.findall(r'(prompt eval time|eval time)\s*=\s*([\d.]+) ms /\s*(\d+) tokens', r.stderr)
-    return ans, time.time() - t0, out[-1500:], speed, r.returncode
+    return ans, time.time() - t0, text[-1500:], timings, 0
 
 
 def cmd_run(key, limit, max_tokens):
     model, mmproj, name = fetch(key)
     prompt = open('inspector_prompt.md').read()
+    schema = json.load(open('vlm_schema.json'))
+    server = Server(model, mmproj, max_tokens)
     meta = json.load(open(f'{GOLD}/meta.json'))
     gold = {k: v for k, v in json.load(open(f'{GOLD}/gold.json')).items() if not k.startswith('_')}
     out_f = f'{GOLD}/eval_{key}.json'
@@ -115,16 +148,25 @@ def cmd_run(key, limit, max_tokens):
         paths, _out, _dup = photo_sort.sort_photos(allp, 0.93)
         t_clip = time.time() - t0
         if paths:
-            ans, sec, tail, speed, rc = run_listing(model, mmproj, paths, prompt, max_tokens)
+            ans, sec, tail, speed, rc = run_listing(server, paths, prompt, schema)
         else:   # ни одного фото квартиры — VLM не запускаем
             ans, sec, tail, speed, rc = ({'condition': 'not_shown', 'works': None, 'renovation_age': 'none',
                                           'summary': 'Фото квартиры в объявлении нет.'}, 0.0, '', [], 0)
         res[cid] = dict(answer=ans, seconds=round(sec + t_clip, 1), vlm_seconds=round(sec, 1), photos=len(allp),
-                        interior=len(paths), rc=rc, raw=None if ans else tail)
+                        interior=len(paths), rc=rc, raw=None if ans else tail,
+                        timings={k: speed.get(k) for k in ('prompt_n', 'prompt_ms', 'predicted_n', 'predicted_ms', 'cache_n')})
         json.dump(dict(res, _model=name), open(out_f, 'w'), ensure_ascii=False, indent=1)
         g = gold[cid]
-        print(f'{cid}: {len(allp)} фото, в VLM {len(paths)}, {sec + t_clip:.0f} с | эталон {g["condition"]}/{g["works"]} | '
+        tm = res[cid]['timings']
+        print(f'{cid}: {len(allp)} фото, в VLM {len(paths)}, {sec + t_clip:.0f} с '
+              f'(вход {tm.get("prompt_n")} ток. за {(tm.get("prompt_ms") or 0) / 1000:.0f} с, кэш {tm.get("cache_n")}, '
+              f'ответ {tm.get("predicted_n")} ток. за {(tm.get("predicted_ms") or 0) / 1000:.0f} с) | эталон {g["condition"]}/{g["works"]} | '
               f'модель {(ans or {}).get("condition")}/{(ans or {}).get("works")}', flush=True)
+    server.close()
+
+
+def _unused():
+    pass
 
 
 def score(res, gold):
