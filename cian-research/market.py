@@ -436,7 +436,7 @@ def cmd_photos(a):
             step = a.tabs * 10
             for k in range(0, len(todo), step):
                 await asyncio.gather(*(one(*t) for t in todo[k:k + step]))
-                con.executemany('insert or replace into photo values(?,?,?,?,?)', res)
+                con.executemany('insert or replace into photo(cian_id, idx, url, path, hash) values(?,?,?,?,?)', res)
                 con.commit()
                 res.clear()
                 if (k // step) % 10 == 9:
