@@ -134,7 +134,7 @@ tr.detail td { white-space: normal; background: var(--paper); }
       <label for="minact">Мин. активных в сегменте <input type="number" id="minact" min="1" max="50" value="3" style="width:70px"></label>
     </div>
     <div class="tablebox"><table id="seg-table"></table></div>
-    <p class="note">«Под ремонт» — без отделки, white box, требует ремонта, косметический; «с ремонтом» — современный и дизайнерский (по фото).
+    <p class="note">«Под ремонт» — без отделки, white box, требует ремонта, старый ремонт, косметический; «с ремонтом» — современный и дизайнерский (по фото).
       Маржа = (₽/м² с ремонтом − ₽/м² под ремонт − ремонт) ÷ (₽/м² под ремонт + ремонт). Продаж в месяц и срок продажи — по истории домов за 12 месяцев.
       Месяцев предложения = активных ÷ продаж в месяц. Индекс = маржа × ликвидность (6 ÷ месяцев предложения, не больше 1) — чем выше, тем быстрее и выгоднее оборот.</p>
   </section>
@@ -175,15 +175,15 @@ const mln = (v) => v == null ? '—' : (v / 1e6).toLocaleString('ru-RU', { maxim
 const tk = (v) => v == null ? '—' : fmt(v / 1000) + ' тыс';
 const median = (a) => { a = a.filter((x) => x != null && !isNaN(x)).sort((x, y) => x - y); if (!a.length) return null; const m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const NEEDS = new Set(['без отделки', 'white box', 'требует ремонта', 'косметический']);
+const NEEDS = new Set(['без отделки', 'white box', 'требует ремонта', 'старый ремонт', 'косметический']);
 const READY = new Set(['современный', 'дизайнерский']);
-const COND_COLOR = { 'без отделки': 'var(--muted)', 'white box': 'var(--line)', 'требует ремонта': 'var(--bad)', 'косметический': 'var(--warn)', 'современный': 'var(--accent)', 'дизайнерский': 'var(--good)' };
+const COND_COLOR = { 'без отделки': 'var(--muted)', 'white box': 'var(--line)', 'требует ремонта': 'var(--bad)', 'старый ремонт': 'var(--bad)', 'косметический': 'var(--warn)', 'современный': 'var(--accent)', 'дизайнерский': 'var(--good)' };
 let D, L, H;
 
 function condOf(r) { return r.cond || r.seller_cond || null; }
 function condPill(r) {
   const c = condOf(r); if (!c) return '<span class="pill p-mute">нет фото</span>';
-  const cls = READY.has(c) ? 'p-good' : c === 'требует ремонта' ? 'p-bad' : c === 'косметический' ? 'p-warn' : 'p-mute';
+  const cls = READY.has(c) ? 'p-good' : (c === 'требует ремонта' || c === 'старый ремонт') ? 'p-bad' : c === 'косметический' ? 'p-warn' : 'p-mute';
   const src = r.cond ? 'по фото' : 'со слов продавца';
   return `<span class="pill ${cls}" title="${src}${r.cond_conf ? ', уверенность ' + Math.round(r.cond_conf * 100) + '%' : ''}">${esc(c)}</span>` +
     (r.mismatch ? ` <span class="pill p-warn" title="Продавец указал «${esc(r.seller_cond)}»">≠ продавец</span>` : '');
@@ -198,11 +198,15 @@ function inspCard(r) {
   const i = r.inspect;
   const head = `<p><b>Оценка состояния:</b> ${condPill(r)}${r.seller_cond ? ` · продавец: ${esc(r.seller_cond)}` : ''}</p>`;
   if (!i) return `<div class="insp">${r.thumb ? `<img src="${r.thumb}" alt="">` : '<div class="nothumb"></div>'}<div>${head}<p class="meta">Визуальный осмотр этого объявления ещё не выполнен — локальная модель осматривает новые объявления при ежедневном обновлении.</p></div></div>`;
-  const rows = [['Состояние по осмотру', i.cond], ['Возраст ремонта', i.age], ['Нужны работы', i.works], ['Пол', i.floor], ['Стены', i.walls], ['Потолок', i.ceiling],
-    ['Кухня', i.kitchen], ['Санузел', i.bathroom], ['Окна', i.windows], ['Мебель', i.furniture], ['Дефекты', (i.defects || []).join('; ') || 'не видно']];
+  const list = (v) => Array.isArray(v) ? v.join('; ') : v;
+  const rows = [['Состояние по осмотру', i.cond === 'не показана' ? 'квартира на фото не показана (рендеры, фасад)' : i.cond], ['Возраст ремонта', i.age],
+    ['Нужны работы', i.works], ['Комнаты', i.rooms || [i.floor, i.walls, i.ceiling].filter(Boolean).join('; ')], ['Кухня', i.kitchen],
+    ['Санузел', i.bathroom], ['Окна и двери', i.windows_doors || i.windows], ['Мебель', i.furniture], ['Дефекты', list(i.issues) || 'не видно'],
+    ['Ещё видно', list(i.extras)]];
+  const gemma = (i.model || '').includes('gemma');
   return `<div class="insp">${r.thumb ? `<img src="${r.thumb}" alt="">` : '<div class="nothumb"></div>'}<div>${head}${i.summary ? `<p>${esc(i.summary)}</p>` : ''}
     <dl>${rows.filter(([, v]) => v).map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
-    <p class="meta" style="margin-top:8px">Осмотр выполнен локальной моделью Qwen2.5-VL по 3–4 интерьерным фото; описания пола, стен и т. п. — как их сформулировала модель.</p></div></div>`;
+    <p class="meta" style="margin-top:8px">${gemma ? `Осмотр — локальная модель Gemma 4 12B по ${i.n_photos} фото квартиры (все снимки объявления без фасадов, планировок и дублей); описание зон — заметки модели на английском, вывод — на русском.` : 'Осмотр — прежняя модель Qwen2.5-VL по 3–4 фото; будет заменён осмотром Gemma 4 12B.'}</p></div></div>`;
 }
 function title(r) { return `${esc(r.rooms)}, ${fmt(r.area, 1)} м², ${r.floor ?? '?'}/${r.floors ?? '?'} эт.`; }
 function spark(series) {

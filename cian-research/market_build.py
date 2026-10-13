@@ -14,7 +14,7 @@ ROOMS_RU = {'studio': 'студия', 'free': 'своб. план', '1': '1-ко
             '4': '4+ комн', '5': '4+ комн', '6': '4+ комн', 'room': 'комната'}
 MATERIAL_RU = {'brick': 'кирпич', 'panel': 'панель', 'monolith': 'монолит', 'monolithBrick': 'монолит-кирпич',
                'block': 'блок', 'wood': 'дерево', 'stalin': 'сталинский', 'old': 'старый фонд'}
-COND_ORDER = ['без отделки', 'white box', 'требует ремонта', 'косметический', 'современный', 'дизайнерский']
+COND_ORDER = ['без отделки', 'white box', 'требует ремонта', 'старый ремонт', 'косметический', 'современный', 'дизайнерский']
 NEEDS_WORK = {'без отделки', 'white box', 'требует ремонта', 'косметический'}
 READY = {'современный', 'дизайнерский'}
 
@@ -83,9 +83,11 @@ def cmd_build(a):
                 d0 = json.loads(r['data'] or '{}')
             except Exception:
                 d0 = {}
-            insp[r['cian_id']] = dict(cond=r['condition'], age=r['age'], works=r['works'],
-                                      **{k: d0.get(k) for k in ('floor', 'walls', 'ceiling', 'kitchen', 'bathroom', 'windows',
-                                                                 'furniture', 'defects', 'summary')})
+            insp[r['cian_id']] = dict(cond=r['condition'], age=r['age'], works=r['works'], model=r['model'],
+                                      n_photos=len(json.loads(r['photos'] or '[]')),
+                                      issues=d0.get('issues') or d0.get('defects'), extras=d0.get('extras'),
+                                      **{k: d0.get(k) for k in ('rooms', 'kitchen', 'bathroom', 'windows_doors', 'furniture',
+                                                                 'summary', 'floor', 'walls', 'ceiling', 'windows')})
     photo_path = {}
     for p in con.execute('select cian_id, path from photo where path is not null order by idx desc'):
         if os.path.exists(p['path']):

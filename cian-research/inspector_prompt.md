@@ -54,8 +54,8 @@ apartment's condition, the age of its renovation and the works a buyer must do b
 An `old_livable` flat never gets `none` or `refresh`.
 
 ## Answer
-Reply with one JSON object and nothing else (no markdown fences). All text in English, terse note style
-(no full sentences, no articles), e.g. "laminate, wallpaper, stretch ceiling":
+Reply with one JSON object and nothing else (no markdown fences). All notes in English, terse note style
+(no full sentences, no articles), e.g. "laminate, wallpaper, stretch ceiling"; only "summary" is in Russian:
 {"condition": "<not_shown|bare_shell|white_box|needs_renovation|old_livable|cosmetic|modern|designer>",
  "condition_confidence": <0.0-1.0>,
  "renovation_age": "<new_0_3|recent_3_7|dated_7_15|old_15_plus|soviet|none>",
@@ -68,4 +68,4 @@ Reply with one JSON object and nothing else (no markdown fences). All text in En
  "issues": ["<visible defect>"],
  "extras": ["<balcony, view, layout, facade if visible>"],
  "photos_used": <how many photos showed interiors>,
- "summary": "<one sentence: condition and what to do>"}
+ "summary": "<одно предложение по-русски: состояние и что сделать>"}

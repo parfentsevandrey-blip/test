@@ -120,20 +120,20 @@ def interior_photos(paths):
 
 class Server:
     """llama-server: модель грузится один раз, методичка (system) кэшируется между квартирами."""
-    def __init__(self, model, mmproj, max_tokens, port=8091):
+    def __init__(self, model, mmproj, max_tokens, port=8091, log='market-data/gold/server.log', ctx=12288):
         import urllib.request
         self.url = f'http://127.0.0.1:{port}'
         self.proc = subprocess.Popen(
-            [f'{LLAMA}/llama-server', '-m', model, '--mmproj', mmproj, '-c', '12288', '-t', str(os.cpu_count() or 4),
+            [f'{LLAMA}/llama-server', '-m', model, '--mmproj', mmproj, '-c', str(ctx), '-t', str(os.cpu_count() or 4),
              '--image-max-tokens', str(max_tokens), '--port', str(port), '--no-webui', '-np', '1', '--cache-reuse', '256', '--cache-ram', '0'],
-            stdout=subprocess.DEVNULL, stderr=open('market-data/gold/server.log', 'w'))
+            stdout=subprocess.DEVNULL, stderr=open(log, 'w'))
         for _ in range(1200):
             try:
                 urllib.request.urlopen(self.url + '/health', timeout=2)
                 return
             except Exception:
                 time.sleep(1)
-        raise RuntimeError('llama-server не поднялся, см. market-data/gold/server.log')
+        raise RuntimeError(f'llama-server не поднялся, см. {log}')
 
     def ask(self, prompt, paths, schema):
         import base64, urllib.request

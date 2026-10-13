@@ -3,8 +3,8 @@
 Признаки по объявлению:
 - CLIP: усреднённый эмбеддинг интерьерных фото и zero-shot вероятности классов (кэш в таблице clip_feat);
 - VLM-осмотр (market_vlm.py): состояние, возраст ремонта, объём работ из анкеты (one-hot).
-Классификатор (логистическая регрессия) учится на ремонте, указанном продавцами; точность — кросс-валидация.
-Если анкеты VLM нет, используется модель только на CLIP.
+Итог: класс по осмотру VLM (Gemma 4 12B, все фото), если он есть — на эталоне он точнее ремонта со слов продавца
+(VLM_BENCH.md). Для неосмотренных — логистическая регрессия на CLIP, обученная на ремонте, указанном продавцами.
 """
 import json
 import os
@@ -32,9 +32,10 @@ SELLER_MAP = {'no': 'требует ремонта', 'cosmetic': 'космети
               'without': 'без отделки', 'preFine': 'white box', 'fine': 'современный', 'fineWithFurniture': 'современный'}
 MODEL = os.environ.get('CLIP_MODEL', 'openai/clip-vit-base-patch16')
 READY = {'современный', 'дизайнерский'}
-VLM_COND = CLASSES
-VLM_AGE = ['новый', '3–10 лет', 'старше 10 лет', 'советский', 'нет ремонта']
-VLM_WORKS = ['не нужны', 'косметика', 'капитальный ремонт', 'ремонт с нуля']
+from market_vlm import AGE_RU, COND_RU, WORKS_RU
+VLM_COND = list(COND_RU.values())
+VLM_AGE = list(AGE_RU.values())
+VLM_WORKS = list(WORKS_RU.values())
 
 
 def seller_label(row):
@@ -99,10 +100,10 @@ def cmd_condition(a):
             for r in con.execute('select cian_id, emb, zs, n_interior from clip_feat where emb is not null')}
     insp = {}
     if con.execute("select name from sqlite_master where name='inspect'").fetchone():
-        insp = {r[0]: r[1:] for r in con.execute('select cian_id, condition, age, works from inspect where data is not null')}
+        insp = {r[0]: r[1:] for r in con.execute('select cian_id, condition, age, works, data from inspect where data is not null')}
 
     def vlm_vec(cid):
-        c, ag, w = insp.get(cid, (None, None, None))
+        c, ag, w, _ = insp.get(cid, (None, None, None, None))
         return np.array([c == x for x in VLM_COND] + [ag == x for x in VLM_AGE] + [w == x for x in VLM_WORKS] + [cid in insp], float)
 
     ids = list(feat)
@@ -147,10 +148,14 @@ def cmd_condition(a):
             pr, cls, mdl = clf_clip.predict_proba(X_clip[k:k + 1])[0], clf_clip.classes_, \
                 f'clip acc={report.get("CLIP, все объявления", {}).get("acc", 0):.2f}'
         probs = {c: float(p) for c, p in zip(cls, pr)}
-        # классы, которых нет в разметке продавцов вторички (без отделки, white box), берём из осмотра VLM
-        vc = insp.get(cid, (None,))[0]
-        if vc in ('без отделки', 'white box'):
-            best, conf = vc, 0.6
+        # класс по осмотру VLM всех фото — основной; «не показана» (только рендеры, фасад) — классификатор по CLIP
+        vc, _, _, vd = insp.get(cid, (None, None, None, None))
+        if vc and vc != 'не показана':
+            best, mdl = vc, 'vlm'
+            try:
+                conf = float(json.loads(vd or '{}').get('condition_confidence') or 0.8)
+            except (ValueError, TypeError):
+                conf = 0.8
         else:
             best = max(probs, key=probs.get)
             conf = probs[best]

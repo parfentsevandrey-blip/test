@@ -165,7 +165,7 @@ def parse_offer(o):
         sale_type=bt.get('saleType'), seller=str(o.get('publishedUserId') or ''), agency=agency,
         created=o.get('creationDate'), price=bt.get('priceRur'), multi_id=int(multi.group(1)) if multi else None,
         minhash=json.dumps(o.get('descriptionMinhash') or []),
-        photos=json.dumps([p.get('thumbnailUrl') for p in (o.get('photos') or []) if not p.get('isLayout')][:8]),
+        photos=json.dumps([p.get('fullUrl') or p.get('thumbnailUrl') for p in (o.get('photos') or []) if not p.get('isLayout')]),
         description=o.get('description'), url=f'https://www.cian.ru/sale/flat/{o["cianId"]}/')
 
 
@@ -266,8 +266,8 @@ def _collect(a):
             if k['gone_seen']:
                 con.execute('insert into event values(?,?,?,?,?)', (today, cid, k['flat_id'], 'returned',
                             f'то же объявление снова в выдаче после {k["gone_seen"]}'))
-            con.execute('update listing set last_seen=?, gone_seen=null, price_last=?, multi_id=coalesce(?, multi_id) '
-                        'where cian_id=?', (today, price, p['multi_id'], cid))
+            con.execute('update listing set last_seen=?, gone_seen=null, price_last=?, multi_id=coalesce(?, multi_id), '
+                        'photos=? where cian_id=?', (today, price, p['multi_id'], p['photos'], cid))
             if k['price_last'] and price and price != k['price_last']:
                 con.execute('insert into event values(?,?,?,?,?)', (today, cid, k['flat_id'], 'price',
                             f'{k["price_last"]} → {price}'))
@@ -388,30 +388,31 @@ def cmd_history(a):
 
 
 def cmd_photos(a):
-    """Скачивает до N фото объявлений без снимков (картинки — в кэш, хеши — в базу)."""
+    """Скачивает ВСЕ фото объявлений, ещё не осмотренных текущей моделью (и первое фото — для дашборда).
+    Картинки ужимаются до 768 px и лежат в кэше; хеши — в базе."""
     import asyncio
+    import io
+    from PIL import Image
     from scrapling.fetchers import AsyncStealthySession
+    import market_vlm
     con = db_open(a.db)
     client()                      # замок: фото не качаем параллельно со сбором
     os.makedirs(a.cache, exist_ok=True)
-    todo = []
     con.execute('create table if not exists inspect(cian_id integer primary key, model text, photos text, raw text, '
                 'data text, condition text, age text, works text, seconds real, date text)')
-    have = {}
-    for p in con.execute('select cian_id, path from photo'):
-        have.setdefault(p[0], []).append(bool(p[1] and os.path.exists(p[1])))
-    inspected = {r[0] for r in con.execute('select cian_id from inspect where data is not null')}
-    clipped = {r[0] for r in con.execute("select cian_id from clip_feat")} \
-        if con.execute("select name from sqlite_master where name='clip_feat'").fetchone() else set()
+    have = {(r[0], r[1]): (r[2], r[3]) for r in con.execute('select cian_id, idx, url, path from photo')}
+    done = {r[0] for r in con.execute('select cian_id from inspect where model=?', (market_vlm.MODEL_NAME,))}
+    todo = []
     for r in con.execute('select cian_id, photos from listing where gone_seen is null'):
         cid = r['cian_id']
-        # новые объявления, а также не осмотренные / без CLIP-признаков, чьих файлов нет (свежий контейнер)
-        if cid in have and (any(have[cid]) or (cid in inspected and cid in clipped)):
-            continue
-        for i, u in enumerate(json.loads(r['photos'] or '[]')[:a.per_listing]):
-            if u:
+        urls = json.loads(r['photos'] or '[]')[:a.per_listing]
+        for i, u in enumerate(urls[:1] if cid in done else urls):
+            url, path = have.get((cid, i), (None, None))
+            # скачиваем, если фото нет или под этим номером раньше было другое фото (старые превью)
+            if u and (url != u or (path and not os.path.exists(path))):
                 todo.append((cid, i, u))
-    print(f'фото к загрузке: {len(todo)}', flush=True)
+        con.execute('delete from photo where cian_id=? and idx>=?', (cid, len(urls)))
+    print(f'фото к загрузке: {len(todo)} ({len({t[0] for t in todo})} объявлений)', flush=True)
     res = []
 
     async def run():
@@ -422,7 +423,9 @@ def cmd_photos(a):
                     try:
                         r = await s.fetch(u)
                         if r.status == 200 and len(r.body) > 1000:
-                            open(path, 'wb').write(r.body)
+                            im = Image.open(io.BytesIO(r.body)).convert('RGB')
+                            im.thumbnail((768, 768))
+                            im.save(path, 'JPEG', quality=85)
                             res.append((cid, i, u, path, ct.dhash(path)))
                             return
                         if r.status == 404:
@@ -430,14 +433,17 @@ def cmd_photos(a):
                             return
                     except Exception:
                         await asyncio.sleep(2)
-            for k in range(0, len(todo), a.tabs * 10):
-                await asyncio.gather(*(one(*t) for t in todo[k:k + a.tabs * 10]))
-                if (k // (a.tabs * 10)) % 5 == 4:
-                    print(f'  {min(k + a.tabs * 10, len(todo))}/{len(todo)}', flush=True)
+            step = a.tabs * 10
+            for k in range(0, len(todo), step):
+                await asyncio.gather(*(one(*t) for t in todo[k:k + step]))
+                con.executemany('insert or replace into photo values(?,?,?,?,?)', res)
+                con.commit()
+                res.clear()
+                if (k // step) % 10 == 9:
+                    print(f'  {min(k + step, len(todo))}/{len(todo)}', flush=True)
     asyncio.run(run())
-    con.executemany('insert or replace into photo values(?,?,?,?,?)', res)
-    con.commit()
-    print(f'сохранено фото: {sum(1 for r in res if r[3])}', flush=True)
+    print('фото на диске:', sum(1 for r in con.execute('select path from photo where path is not null') if os.path.exists(r[0])),
+          flush=True)
 
 
 def main():
@@ -452,7 +458,7 @@ def main():
     cards.set_defaults(fn=cmd_cards)
     ph = sub.add_parser('photos')
     ph.add_argument('--cache', default='market-data/photos')
-    ph.add_argument('--per-listing', type=int, default=6)
+    ph.add_argument('--per-listing', type=int, default=60)
     ph.add_argument('--tabs', type=int, default=4)
     ph.set_defaults(fn=cmd_photos)
     import market_condition
