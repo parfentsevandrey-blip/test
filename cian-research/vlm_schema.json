@@ -79,7 +79,7 @@
   },
   "summary": {
    "type": "string",
-   "maxLength": 140
+   "maxLength": 240
   }
  },
  "required": [
