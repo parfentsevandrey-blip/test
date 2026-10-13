@@ -1,0 +1,495 @@
+{
+ "333401106": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.8,
+   "renovation_age": "dated_7_15",
+   "works": "refresh",
+   "kitchen": "not visible",
+   "bathroom": "needs_renovation",
+   "rooms": "[floor: red tile, walls: white with wear, ceiling: tiled, ceiling: peb",
+   "windows_doors": "multiple windows, some with frosted glass",
+   "furniture": "none",
+   "issues": [
+    "peeling wallpaper",
+    "worn flooring"
+   ],
+   "extras": [
+    "balcony visible",
+    "floor plan available"
+   ],
+   "photos_used": 12,
+   "summary": "the apartment is in old living condition with dated finishes and needs renovation for a fresh look."
+  },
+  "seconds": 167.6,
+  "vlm_seconds": 147.8,
+  "photos": 35,
+  "interior": 11,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 5085,
+   "prompt_ms": 137494.099,
+   "predicted_n": 159,
+   "predicted_ms": 8417.467,
+   "cache_n": 0
+  }
+ },
+ "331515022": {
+  "answer": {
+   "condition": "not_shown",
+   "condition_confidence": 0.0,
+   "renovation_age": "old_15_plus",
+   "works": "full",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "[floor: bare concrete; walls: unfinished; ceiling: unfinished]",
+   "windows_doors": "large windows, modern frames",
+   "furniture": "none",
+   "issues": [
+    "unfinished walls and ceilings",
+    "exposed plumbing and wiring",
+    "missing finishing materials"
+   ],
+   "extras": [
+    "view of cityscape",
+    "balcony area visible through l"
+   ],
+   "photos_used": 1,
+   "summary": "The apartment is in a state of disrepair with unfinished interiors and exposed structures, requiring full renovation before resale."
+  },
+  "seconds": 46.2,
+  "vlm_seconds": 44.2,
+  "photos": 17,
+  "interior": 3,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1008,
+   "prompt_ms": 34990.718,
+   "predicted_n": 192,
+   "predicted_ms": 7264.043,
+   "cache_n": 1444
+  }
+ },
+ "333610323": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.8,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances, not visible",
+   "bathroom": "tiles, bath/shower, toilet, sink, mirror",
+   "rooms": "[floor: hardwood, walls: plastered, ceiling: plastered, windows: large",
+   "windows_doors": "multiple, modern",
+   "furniture": "partial",
+   "issues": [
+    "old wallpaper",
+    "worn wooden furniture"
+   ],
+   "extras": [
+    "outdoor view, balcony access",
+    "functional layout"
+   ],
+   "photos_used": 6,
+   "summary": "the apartment is dated with some cosmetic needs like old finishes and wear in rooms."
+  },
+  "seconds": 85.2,
+  "vlm_seconds": 84.2,
+  "photos": 8,
+  "interior": 7,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2199,
+   "prompt_ms": 76456.438,
+   "predicted_n": 168,
+   "predicted_ms": 6775.947,
+   "cache_n": 1444
+  }
+ },
+ "333958360": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.8,
+   "renovation_age": "dated_7_15",
+   "works": "none",
+   "kitchen": "not visible",
+   "bathroom": "needs_renovation",
+   "rooms": "[floor: tiled, walls: mostly finished, ceiling: modern, windows: large",
+   "windows_doors": "[large windows, doors for hallway and entry]",
+   "furniture": "partial",
+   "issues": [
+    "small bathroom shows signs of wear"
+   ],
+   "extras": [
+    "kitchen details not visible, b",
+    "bathroom needs rework"
+   ],
+   "photos_used": 8,
+   "summary": "the apartment is dated with some minor repairs needed in the bathroom."
+  },
+  "seconds": 280.3,
+  "vlm_seconds": 276.2,
+  "photos": 34,
+  "interior": 21,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 6941,
+   "prompt_ms": 263187.131,
+   "predicted_n": 168,
+   "predicted_ms": 8760.338,
+   "cache_n": 1444
+  }
+ },
+ "324748952": {
+  "answer": {
+   "condition": "needs_renovation",
+   "condition_confidence": 0.6,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "not visible",
+   "bathroom": "needs_renovation",
+   "rooms": "[floor: terrazzo, walls: white, ceiling: painted, windows: large with纱",
+   "windows_doors": "doors: modern, windows: traditional",
+   "furniture": "none",
+   "issues": [
+    "plumbing in hallway shows signs of wear"
+   ],
+   "extras": [
+    "courtyard view visible",
+    "layout appears functional"
+   ],
+   "photos_used": 4,
+   "summary": "The apartment has dated finishes and needs cosmetic and plumbing work for the bathroom."
+  },
+  "seconds": 146.7,
+  "vlm_seconds": 143.4,
+  "photos": 27,
+  "interior": 19,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 3903,
+   "prompt_ms": 133281.143,
+   "predicted_n": 154,
+   "predicted_ms": 6638.637,
+   "cache_n": 1444
+  }
+ },
+ "326409050": {
+  "answer": {
+   "condition": "needs_renovation",
+   "condition_confidence": 0.6,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances, not visible",
+   "bathroom": "tiles, bath/shower, toilet, sink, no major issues",
+   "rooms": "[floor: hardwood, walls: plastered, ceiling: textured, windows: large,",
+   "windows_doors": "[main: bay window with curtains, other: doors]",
+   "furniture": "partial",
+   "issues": [
+    "old_livable finishes in living room and "
+   ],
+   "extras": [
+    "balcony visible",
+    "layout shows space for modern",
+    "facade includes view"
+   ],
+   "photos_used": 6,
+   "summary": "The apartment has dated interiors with some renovations needed, especially the living room and kitchen which should be refreshed for sale."
+  },
+  "seconds": 117.8,
+  "vlm_seconds": 116.0,
+  "photos": 16,
+  "interior": 9,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2982,
+   "prompt_ms": 106500.311,
+   "predicted_n": 192,
+   "predicted_ms": 8274.49,
+   "cache_n": 1444
+  }
+ },
+ "331071562": {
+  "answer": {
+   "condition": "needs_renovation",
+   "condition_confidence": 0.8,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "not visible",
+   "bathroom": "modern tiles and modern fixtures",
+   "rooms": "[floor: hardwood; walls: textured plaster; ceiling: contemporary;]",
+   "windows_doors": "large windows, doors",
+   "furniture": "none",
+   "issues": [
+    "plumbing and electrical in some rooms"
+   ],
+   "extras": [
+    "view of cityscape",
+    "balcony with large windows"
+   ],
+   "photos_used": 12,
+   "summary": "the apartment is in need of cosmetic renovations for the bathroom and kitchen, with modern finishes overall."
+  },
+  "seconds": 200.8,
+  "vlm_seconds": 197.8,
+  "photos": 25,
+  "interior": 18,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 5149,
+   "prompt_ms": 187682.252,
+   "predicted_n": 155,
+   "predicted_ms": 6916.615,
+   "cache_n": 1444
+  }
+ },
+ "334097670": {
+  "answer": {
+   "condition": "bare_shell",
+   "condition_confidence": 5.0,
+   "renovation_age": "soviet",
+   "works": "none",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "[floor: concrete, walls: white, ceiling: unfinished, ceiling: exposed,",
+   "windows_doors": "[door: door with tile pattern and blue trim, other doors: not visible]",
+   "furniture": "none",
+   "issues": [
+    "exposed wiring on ceiling",
+    "unfinished plastered walls"
+   ],
+   "extras": [
+    "courtyard view is not shown",
+    "floor plan available"
+   ],
+   "photos_used": 1,
+   "summary": "The apartment is in a bare shell condition with Soviet-era finishes; major renovation work is needed."
+  },
+  "seconds": 13.8,
+  "vlm_seconds": 13.3,
+  "photos": 4,
+  "interior": 1,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 226,
+   "prompt_ms": 6835.487,
+   "predicted_n": 177,
+   "predicted_ms": 5873.665,
+   "cache_n": 1444
+  }
+ },
+ "328939351": {
+  "answer": {
+   "condition": "needs_renovation",
+   "condition_confidence": 0.8,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances, not visible",
+   "bathroom": "shower, sink, toilet, modern",
+   "rooms": "[floor: checkered tiles; walls: white; ceiling: plain; ceilings: multi",
+   "windows_doors": "[doors: glass; windows: large with blinds and curtains]",
+   "furniture": "partial",
+   "issues": [
+    "old clock wall decoration"
+   ],
+   "extras": [
+    "balcony, view, layout",
+    "outdoor space visible"
+   ],
+   "photos_used": 12,
+   "summary": "the apartment has dated finishes and some wear, requiring cosmetic updates for resale."
+  },
+  "seconds": 193.8,
+  "vlm_seconds": 190.0,
+  "photos": 33,
+  "interior": 15,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 4961,
+   "prompt_ms": 182435.136,
+   "predicted_n": 172,
+   "predicted_ms": 7192.432,
+   "cache_n": 1444
+  }
+ },
+ "334880675": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.8,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "not visible",
+   "bathroom": "needs_renovation",
+   "rooms": "[floor: tiled; walls: dated; ceiling: plastered; windows: old; doors: ",
+   "windows_doors": "[old, dated]",
+   "furniture": "partial",
+   "issues": [
+    "peeling wallpaper in bedroom"
+   ],
+   "extras": [
+    "balcony view",
+    "modern lighting"
+   ],
+   "photos_used": 13,
+   "summary": "the apartment is aged with some cosmetic needs, especially the bathroom and kitchen; a buyer should focus on renovations for functionality."
+  },
+  "seconds": 191.9,
+  "vlm_seconds": 189.9,
+  "photos": 17,
+  "interior": 15,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 4966,
+   "prompt_ms": 179433.227,
+   "predicted_n": 158,
+   "predicted_ms": 6560.667,
+   "cache_n": 1444
+  }
+ },
+ "332464051": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.8,
+   "renovation_age": "dated_7_15",
+   "works": "none",
+   "kitchen": "not visible",
+   "bathroom": "needs_renovation",
+   "rooms": "[living_room, kitchen, bedroom, hallway]",
+   "windows_doors": "[all windows, doors in rooms]",
+   "furniture": "partial",
+   "issues": [
+    "plumbing in bathroom may be old"
+   ],
+   "extras": [
+    "large balcony with view",
+    "modern lighting and flooring"
+   ],
+   "photos_used": 5,
+   "summary": "the apartment is dated but livable; the bathroom needs renovation for safety and comfort."
+  },
+  "seconds": 173.5,
+  "vlm_seconds": 169.8,
+  "photos": 33,
+  "interior": 22,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 4543,
+   "prompt_ms": 161087.324,
+   "predicted_n": 144,
+   "predicted_ms": 6463.985,
+   "cache_n": 1444
+  }
+ },
+ "323138979": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.8,
+   "renovation_age": "dated_7_15",
+   "works": "none",
+   "kitchen": "not visible",
+   "bathroom": "modern, clean",
+   "rooms": "[floor: wood, walls: painted, ceiling: modern, windows: large, doors: ",
+   "windows_doors": "[all: glass or modern, some with frames]",
+   "furniture": "none",
+   "issues": [
+    "no visible defects"
+   ],
+   "extras": [
+    "balcony, layout, facade if not"
+   ],
+   "photos_used": 12,
+   "summary": "The apartment is in old_livable condition with dated finishes; no major works needed, but buyers should consider renovation for modernizing."
+  },
+  "seconds": 200.8,
+  "vlm_seconds": 196.3,
+  "photos": 38,
+  "interior": 26,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 5253,
+   "prompt_ms": 187023.152,
+   "predicted_n": 163,
+   "predicted_ms": 7800.507,
+   "cache_n": 1444
+  }
+ },
+ "330600150": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.95,
+   "renovation_age": "none",
+   "works": "none",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "[floor: engineered wood; walls: plastered with marble; ceiling: high;)",
+   "windows_doors": "[large glass doors and windows with modern frames]",
+   "furniture": "partial",
+   "issues": [],
+   "extras": [
+    "large balcony view",
+    "modern layout"
+   ],
+   "photos_used": 1,
+   "summary": "The apartment is in good condition with contemporary design; no major renovations needed."
+  },
+  "seconds": 26.3,
+  "vlm_seconds": 22.9,
+  "photos": 27,
+  "interior": 2,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 431,
+   "prompt_ms": 13913.306,
+   "predicted_n": 164,
+   "predicted_ms": 5863.175,
+   "cache_n": 1444
+  }
+ },
+ "330600164": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.8,
+   "renovation_age": "dated_7_15",
+   "works": "none",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "[floor: hardwood; walls: plastered with marble; ceiling: high; windows",
+   "windows_doors": "large glass, modern frames",
+   "furniture": "partial",
+   "issues": [
+    "old linoleum coffee tables"
+   ],
+   "extras": [
+    "outdoor views, contemporary设计"
+   ],
+   "photos_used": 1,
+   "summary": "The apartment has dated finishes and needs minimal renovation to meet current standards."
+  },
+  "seconds": 51.9,
+  "vlm_seconds": 48.1,
+  "photos": 33,
+  "interior": 6,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1251,
+   "prompt_ms": 42370.095,
+   "predicted_n": 143,
+   "predicted_ms": 5587.1,
+   "cache_n": 1444
+  }
+ },
+ "_model": "openbmb/MiniCPM-V-4.6-gguf/MiniCPM-V-4_6-Q4_K_M.gguf"
+}

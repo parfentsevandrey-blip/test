@@ -1,0 +1,479 @@
+{
+ "333401106": {
+  "answer": {
+   "condition": "needs_renovation",
+   "condition_confidence": 0.95,
+   "renovation_age": "old_15_plus",
+   "works": "major",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "peeling wallpaper",
+    "worn parquet",
+    "old radiator",
+    "chipped tiles"
+   ],
+   "extras": [
+    "balcony",
+    "view from window"
+   ],
+   "photos_used": 7,
+   "summary": "Worn Soviet-era finishes require major renovation before resale."
+  },
+  "seconds": 111.9,
+  "vlm_seconds": 83.1,
+  "photos": 35,
+  "interior": 11,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2408,
+   "prompt_ms": 49282.54,
+   "predicted_n": 150,
+   "predicted_ms": 33702.994,
+   "cache_n": 0
+  }
+ },
+ "331515022": {
+  "answer": {
+   "condition": "bare_shell",
+   "condition_confidence": 0.95,
+   "renovation_age": "new_0_3",
+   "works": "full",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "none",
+   "issues": [],
+   "extras": [
+    "balcony"
+   ],
+   "photos_used": 3,
+   "summary": "Unfinished concrete apartment with no finishing works done yet."
+  },
+  "seconds": 31.2,
+  "vlm_seconds": 28.7,
+  "photos": 17,
+  "interior": 3,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 283,
+   "prompt_ms": 8873.382,
+   "predicted_n": 115,
+   "predicted_ms": 19724.014,
+   "cache_n": 1405
+  }
+ },
+ "333610323": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.85,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [],
+   "extras": [
+    "balcony",
+    "view"
+   ],
+   "photos_used": 7,
+   "summary": "Renovated mid-2010s with dated finishes; minor cosmetic refresh needed for resale."
+  },
+  "seconds": 50.2,
+  "vlm_seconds": 49.1,
+  "photos": 8,
+  "interior": 7,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 646,
+   "prompt_ms": 20678.337,
+   "predicted_n": 141,
+   "predicted_ms": 28332.036,
+   "cache_n": 1405
+  }
+ },
+ "333958360": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.85,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [],
+   "extras": [
+    "balcony",
+    "view",
+    "layout"
+   ],
+   "photos_used": 18,
+   "summary": "Renovated mid-2000s with dated finishes; minor cosmetic refresh needed for resale."
+  },
+  "seconds": 110.8,
+  "vlm_seconds": 106.5,
+  "photos": 34,
+  "interior": 21,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1903,
+   "prompt_ms": 67308.851,
+   "predicted_n": 145,
+   "predicted_ms": 38624.246,
+   "cache_n": 1405
+  }
+ },
+ "324748952": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.85,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "peeling wallpaper",
+    "worn parquet",
+    "plastic windows"
+   ],
+   "extras": [
+    "balcony not visible",
+    "hallway with arches",
+    "view from window"
+   ],
+   "photos_used": 10,
+   "summary": "Renovated mid-2000s, needs cosmetic refresh for resale"
+  },
+  "seconds": 115.7,
+  "vlm_seconds": 111.8,
+  "photos": 27,
+  "interior": 19,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1780,
+   "prompt_ms": 62377.125,
+   "predicted_n": 163,
+   "predicted_ms": 42602.349,
+   "cache_n": 1405
+  }
+ },
+ "326409050": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.85,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [],
+   "extras": [
+    "balcony",
+    "view"
+   ],
+   "photos_used": 8,
+   "summary": "Renovated mid-2010s with dated finishes; minor cosmetic refresh needed before resale"
+  },
+  "seconds": 68.5,
+  "vlm_seconds": 66.4,
+  "photos": 16,
+  "interior": 9,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 823,
+   "prompt_ms": 27331.742,
+   "predicted_n": 140,
+   "predicted_ms": 29999.609,
+   "cache_n": 1405
+  }
+ },
+ "331071562": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [],
+   "extras": [
+    "balcony",
+    "view",
+    "layout"
+   ],
+   "photos_used": 16,
+   "summary": "Modern renovation with high-end finishes ready for resale without work."
+  },
+  "seconds": 102.7,
+  "vlm_seconds": 97.6,
+  "photos": 25,
+  "interior": 18,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1677,
+   "prompt_ms": 61686.662,
+   "predicted_n": 132,
+   "predicted_ms": 34944.35,
+   "cache_n": 1405
+  }
+ },
+ "334097670": {
+  "answer": {
+   "condition": "bare_shell",
+   "condition_confidence": 0.95,
+   "renovation_age": "none",
+   "works": "full",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "not visible",
+   "furniture": "none",
+   "issues": [
+    "exposed wiring",
+    "unfinished walls"
+   ],
+   "extras": [
+    "entrance door"
+   ],
+   "photos_used": 1,
+   "summary": "Unfinished shell with exposed wiring and unfinished walls; full renovation required."
+  },
+  "seconds": 27.2,
+  "vlm_seconds": 26.7,
+  "photos": 4,
+  "interior": 1,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 103,
+   "prompt_ms": 3345.135,
+   "predicted_n": 122,
+   "predicted_ms": 20461.064,
+   "cache_n": 1405
+  }
+ },
+ "328939351": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [],
+   "extras": [
+    "balcony",
+    "view"
+   ],
+   "photos_used": 14,
+   "summary": "Modern renovation with minimal visible defects ready for resale"
+  },
+  "seconds": 78.3,
+  "vlm_seconds": 74.2,
+  "photos": 33,
+  "interior": 15,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1355,
+   "prompt_ms": 45538.202,
+   "predicted_n": 126,
+   "predicted_ms": 28488.353,
+   "cache_n": 1405
+  }
+ },
+ "334880675": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [],
+   "extras": [
+    "balcony",
+    "view"
+   ],
+   "photos_used": 15,
+   "summary": "Modern renovation with minimal visible defects ready for resale"
+  },
+  "seconds": 83.6,
+  "vlm_seconds": 81.3,
+  "photos": 17,
+  "interior": 15,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1365,
+   "prompt_ms": 48005.53,
+   "predicted_n": 126,
+   "predicted_ms": 30053.065,
+   "cache_n": 1405
+  }
+ },
+ "332464051": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [],
+   "extras": [
+    "balcony",
+    "view",
+    "layout"
+   ],
+   "photos_used": 20,
+   "summary": "Modern renovation with quality finishes ready for resale without work."
+  },
+  "seconds": 120.7,
+  "vlm_seconds": 116.2,
+  "photos": 33,
+  "interior": 22,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2169,
+   "prompt_ms": 76888.607,
+   "predicted_n": 131,
+   "predicted_ms": 35523.158,
+   "cache_n": 1405
+  }
+ },
+ "323138979": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [],
+   "extras": [
+    "balcony",
+    "view"
+   ],
+   "photos_used": 25,
+   "summary": "Modern renovation with high-end finishes ready for resale without work."
+  },
+  "seconds": 133.4,
+  "vlm_seconds": 128.3,
+  "photos": 38,
+  "interior": 26,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2277,
+   "prompt_ms": 85721.051,
+   "predicted_n": 129,
+   "predicted_ms": 36799.884,
+   "cache_n": 1405
+  }
+ },
+ "330600150": {
+  "answer": {
+   "condition": "designer",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "full",
+   "issues": [],
+   "extras": [
+    "balcony",
+    "view"
+   ],
+   "photos_used": 2,
+   "summary": "High-end designer renovation ready to sell without work"
+  },
+  "seconds": 37.1,
+  "vlm_seconds": 33.7,
+  "photos": 27,
+  "interior": 2,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 209,
+   "prompt_ms": 6213.22,
+   "predicted_n": 131,
+   "predicted_ms": 22767.577,
+   "cache_n": 1405
+  }
+ },
+ "330600164": {
+  "answer": {
+   "condition": "designer",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "full",
+   "issues": [],
+   "extras": [
+    "balcony",
+    "view"
+   ],
+   "photos_used": 5,
+   "summary": "High-end designer renovation ready to sell as is"
+  },
+  "seconds": 45.6,
+  "vlm_seconds": 41.3,
+  "photos": 33,
+  "interior": 6,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 569,
+   "prompt_ms": 17792.044,
+   "predicted_n": 121,
+   "predicted_ms": 23487.936,
+   "cache_n": 1405
+  }
+ },
+ "_model": "Qwen/Qwen3-VL-4B-Instruct-GGUF/Qwen3VL-4B-Instruct-Q4_K_M.gguf"
+}

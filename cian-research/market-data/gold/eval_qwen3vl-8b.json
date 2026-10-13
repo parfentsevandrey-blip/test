@@ -1,0 +1,480 @@
+{
+ "333401106": {
+  "answer": {
+   "condition": "needs_renovation",
+   "condition_confidence": 0.95,
+   "renovation_age": "old_15_plus",
+   "works": "major",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "peeling wallpaper",
+    "worn parquet floor",
+    "old radiators",
+    "exposed pipes"
+   ],
+   "extras": [
+    "balcony view",
+    "layout with hallway and rooms"
+   ],
+   "photos_used": 10,
+   "summary": "Needs major renovation: old Soviet-era finishes, worn floors, peeling walls, outdated kitchen and bathroom."
+  },
+  "seconds": 136.7,
+  "vlm_seconds": 123.4,
+  "photos": 35,
+  "interior": 11,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2408,
+   "prompt_ms": 73135.6,
+   "predicted_n": 166,
+   "predicted_ms": 50069.691,
+   "cache_n": 0
+  }
+ },
+ "331515022": {
+  "answer": {
+   "condition": "white_box",
+   "condition_confidence": 0.95,
+   "renovation_age": "new_0_3",
+   "works": "none",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "concrete floor, bare concrete walls, exposed ceiling with recessed照明",
+   "windows_doors": "large windows, no doors installed",
+   "furniture": "none",
+   "issues": [],
+   "extras": [
+    "view from windows"
+   ],
+   "photos_used": 3,
+   "summary": "white box condition, ready to finish without major works"
+  },
+  "seconds": 48.3,
+  "vlm_seconds": 46.3,
+  "photos": 17,
+  "interior": 3,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 283,
+   "prompt_ms": 12278.619,
+   "predicted_n": 126,
+   "predicted_ms": 33982.391,
+   "cache_n": 1405
+  }
+ },
+ "333610323": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "wooden floor, wallpapered walls, plasterboard ceiling with moldings",
+   "windows_doors": "plastic windows, wooden doors",
+   "furniture": "partial",
+   "issues": [
+    "wallpaper pattern visible",
+    "ceiling light fixture"
+   ],
+   "extras": [
+    "balcony view",
+    "layout shows living room and卧室"
+   ],
+   "photos_used": 7,
+   "summary": "Renovated in late 1990s–2000s with dated finishes; needs cosmetic update before resale."
+  },
+  "seconds": 81.5,
+  "vlm_seconds": 80.5,
+  "photos": 8,
+  "interior": 7,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 646,
+   "prompt_ms": 29398.812,
+   "predicted_n": 176,
+   "predicted_ms": 50992.638,
+   "cache_n": 1405
+  }
+ },
+ "_model": "Qwen/Qwen3-VL-8B-Instruct-GGUF/Qwen3VL-8B-Instruct-Q4_K_M.gguf",
+ "333958360": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "wooden floor, wallpaper, plasterboard ceiling",
+   "windows_doors": "plastic windows, wooden doors",
+   "furniture": "partial",
+   "issues": [
+    "worn wallpaper",
+    "old herringbone parquet in some rooms"
+   ],
+   "extras": [
+    "balcony with view",
+    "layout shows separate rooms"
+   ],
+   "photos_used": 19,
+   "summary": "Renovated in late 1990s–2000s, needs cosmetic updates like new flooring and wall finishes to sell at top price."
+  },
+  "seconds": 200.4,
+  "vlm_seconds": 180.9,
+  "photos": 34,
+  "interior": 21,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 3308,
+   "prompt_ms": 118794.609,
+   "predicted_n": 181,
+   "predicted_ms": 61631.972,
+   "cache_n": 0
+  }
+ },
+ "324748952": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "parquet floor, wallpapered walls, plasterboard ceiling with moldings",
+   "windows_doors": "plastic windows with shutters, wooden doors",
+   "furniture": "partial",
+   "issues": [
+    "visible wear on parquet",
+    "outdated fixtures"
+   ],
+   "extras": [
+    "arched hallway",
+    "balcony view from living room"
+   ],
+   "photos_used": 17,
+   "summary": "Renovated in late 90s-2000s with dated finishes; needs cosmetic update to sell at top price"
+  },
+  "seconds": 149.5,
+  "vlm_seconds": 146.4,
+  "photos": 27,
+  "interior": 19,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1780,
+   "prompt_ms": 84460.079,
+   "predicted_n": 180,
+   "predicted_ms": 60870.906,
+   "cache_n": 1405
+  }
+ },
+ "326409050": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "wooden floor, wallpapered walls, plasterboard ceiling with moldings",
+   "windows_doors": "plastic windows, wooden doors",
+   "furniture": "partial",
+   "issues": [
+    "peeling wallpaper",
+    "worn laminate"
+   ],
+   "extras": [
+    "balcony view",
+    "layout shows living room and厨房"
+   ],
+   "photos_used": 9,
+   "summary": "Renovated in late 1990s–2000s with dated finishes; needs cosmetic update to sell at top price"
+  },
+  "seconds": 93.6,
+  "vlm_seconds": 91.7,
+  "photos": 16,
+  "interior": 9,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 823,
+   "prompt_ms": 37824.526,
+   "predicted_n": 176,
+   "predicted_ms": 51644.513,
+   "cache_n": 1405
+  }
+ },
+ "331071562": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [],
+   "extras": [
+    "balcony, view"
+   ],
+   "photos_used": 15,
+   "summary": "Modern renovation with high-end finishes; ready to live in and sell without works"
+  },
+  "seconds": 127.8,
+  "vlm_seconds": 124.6,
+  "photos": 25,
+  "interior": 18,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1677,
+   "prompt_ms": 80587.134,
+   "predicted_n": 131,
+   "predicted_ms": 43833.408,
+   "cache_n": 1405
+  }
+ },
+ "334097670": {
+  "answer": {
+   "condition": "white_box",
+   "condition_confidence": 0.95,
+   "renovation_age": "none",
+   "works": "none",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "screed floor, plastered walls, exposed ceiling wiring and pipes",
+   "windows_doors": "door with black frame, no windows shown",
+   "furniture": "none",
+   "issues": [
+    "exposed ceiling wiring",
+    "bare concrete-like floor"
+   ],
+   "extras": [],
+   "photos_used": 1,
+   "summary": "White box condition: ready to finish without major works"
+  },
+  "seconds": 40.2,
+  "vlm_seconds": 39.7,
+  "photos": 4,
+  "interior": 1,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 103,
+   "prompt_ms": 4866.469,
+   "predicted_n": 131,
+   "predicted_ms": 34432.384,
+   "cache_n": 1405
+  }
+ },
+ "328939351": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, shower, toilet",
+   "rooms": "wooden floor, painted walls, plasterboard ceiling with moldings",
+   "windows_doors": "plastic windows, wooden doors",
+   "furniture": "partial",
+   "issues": [
+    "black-and-white checkered floor tiles",
+    "outdated wallpaper pattern"
+   ],
+   "extras": [
+    "balcony with wood paneling and"
+   ],
+   "photos_used": 13,
+   "summary": "Renovated in late 1990s–2000s; needs cosmetic update to modernize bathroom and kitchen"
+  },
+  "seconds": 126.0,
+  "vlm_seconds": 121.8,
+  "photos": 33,
+  "interior": 15,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1355,
+   "prompt_ms": 64716.931,
+   "predicted_n": 175,
+   "predicted_ms": 56957.317,
+   "cache_n": 1405
+  }
+ },
+ "334880675": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "wooden floor, wallpapered walls, plasterboard ceiling with crown mould",
+   "windows_doors": "white plastic windows, white doors",
+   "furniture": "partial",
+   "issues": [
+    "wallpaper pattern mismatch between rooms"
+   ],
+   "extras": [
+    "balcony view to greenery and a"
+   ],
+   "photos_used": 14,
+   "summary": "Renovated in late 2000s with dated wallpaper and laminate flooring; cosmetic refresh needed for resale."
+  },
+  "seconds": 119.1,
+  "vlm_seconds": 117.1,
+  "photos": 17,
+  "interior": 15,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1365,
+   "prompt_ms": 63453.021,
+   "predicted_n": 169,
+   "predicted_ms": 53177.58,
+   "cache_n": 1405
+  }
+ },
+ "332464051": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "wooden floor, white walls, ceiling with track lighting",
+   "windows_doors": "modern windows, wooden doors",
+   "furniture": "partial",
+   "issues": [],
+   "extras": [
+    "balcony view",
+    "staircase"
+   ],
+   "photos_used": 18,
+   "summary": "Modern renovation with quality finishes; ready to sell without works"
+  },
+  "seconds": 157.6,
+  "vlm_seconds": 153.7,
+  "photos": 33,
+  "interior": 22,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2169,
+   "prompt_ms": 101935.091,
+   "predicted_n": 139,
+   "predicted_ms": 50981.103,
+   "cache_n": 1405
+  }
+ },
+ "323138979": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [],
+   "extras": [
+    "balcony"
+   ],
+   "photos_used": 21,
+   "summary": "Modern renovation with no visible defects; ready to sell as is."
+  },
+  "seconds": 169.5,
+  "vlm_seconds": 164.9,
+  "photos": 38,
+  "interior": 26,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2277,
+   "prompt_ms": 116951.953,
+   "predicted_n": 127,
+   "predicted_ms": 47293.596,
+   "cache_n": 1405
+  }
+ },
+ "330600150": {
+  "answer": {
+   "condition": "designer",
+   "condition_confidence": 0.95,
+   "renovation_age": "new_0_3",
+   "works": "none",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "dark wood floor, white walls, modern ceiling",
+   "windows_doors": "large glass windows, hidden doors",
+   "furniture": "full",
+   "issues": [],
+   "extras": [
+    "view from window"
+   ],
+   "photos_used": 2,
+   "summary": "Designer apartment with full renovation ready to live in and sell without works"
+  },
+  "seconds": 59.2,
+  "vlm_seconds": 55.7,
+  "photos": 27,
+  "interior": 2,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 209,
+   "prompt_ms": 9388.895,
+   "predicted_n": 124,
+   "predicted_ms": 33698.1,
+   "cache_n": 1405
+  }
+ },
+ "330600164": {
+  "answer": {
+   "condition": "not_shown",
+   "condition_confidence": 1.0,
+   "renovation_age": "none",
+   "works": "none",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "not visible",
+   "windows_doors": "not visible",
+   "furniture": "none",
+   "issues": [],
+   "extras": [
+    "view from windows"
+   ],
+   "photos_used": 0,
+   "summary": "No interior photos shown; listing uses CGI renders only."
+  },
+  "seconds": 63.5,
+  "vlm_seconds": 56.1,
+  "photos": 33,
+  "interior": 6,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 569,
+   "prompt_ms": 25922.504,
+   "predicted_n": 107,
+   "predicted_ms": 30065.256,
+   "cache_n": 1405
+  }
+ }
+}

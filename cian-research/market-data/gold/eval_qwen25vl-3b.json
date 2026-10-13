@@ -1,0 +1,476 @@
+{
+ "333401106": {
+  "answer": {
+   "condition": "bare_shell",
+   "condition_confidence": 0.3,
+   "renovation_age": "soviet",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances or not visible",
+   "bathroom": "tiles, bath/shower, toilet or not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "peeling wallpaper",
+    "cracked plaster"
+   ],
+   "extras": [
+    "balcony, view, layout, facade"
+   ],
+   "photos_used": 10,
+   "summary": "The apartment is a bare shell with Soviet-era finishes and requires cosmetic renovation."
+  },
+  "seconds": 77.1,
+  "vlm_seconds": 59.8,
+  "photos": 35,
+  "interior": 11,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2408,
+   "prompt_ms": 42590.713,
+   "predicted_n": 162,
+   "predicted_ms": 17042.351,
+   "cache_n": 0
+  }
+ },
+ "331515022": {
+  "answer": {
+   "condition": "bare_shell",
+   "condition_confidence": 0.9,
+   "renovation_age": "new_0_3",
+   "works": "none",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "exposed wiring"
+   ],
+   "extras": [
+    "view from the window"
+   ],
+   "photos_used": 1,
+   "summary": "bare shell with exposed wiring; view from the window"
+  },
+  "seconds": 24.6,
+  "vlm_seconds": 22.4,
+  "photos": 17,
+  "interior": 3,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 283,
+   "prompt_ms": 8575.391,
+   "predicted_n": 133,
+   "predicted_ms": 13789.445,
+   "cache_n": 1405
+  }
+ },
+ "333610323": {
+  "answer": {
+   "condition": "bare_shell",
+   "condition_confidence": 0.8,
+   "renovation_age": "soviet",
+   "works": "none",
+   "kitchen": "not visible",
+   "bathroom": "tiles, bath/shower, toilet or not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "peeling wallpaper"
+   ],
+   "extras": [
+    "balcony, view, layout, facade"
+   ],
+   "photos_used": 3,
+   "summary": "bare shell apartment with Soviet-era features and no visible defects."
+  },
+  "seconds": 36.8,
+  "vlm_seconds": 35.8,
+  "photos": 8,
+  "interior": 7,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 646,
+   "prompt_ms": 20151.636,
+   "predicted_n": 144,
+   "predicted_ms": 15401.451,
+   "cache_n": 1405
+  }
+ },
+ "333958360": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.8,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "peeling wallpaper"
+   ],
+   "extras": [
+    "balcony, view, layout, facade"
+   ],
+   "photos_used": 10,
+   "summary": "The apartment is in an old living condition with dated finishes and requires cosmetic work to sell."
+  },
+  "seconds": 84.6,
+  "vlm_seconds": 80.4,
+  "photos": 34,
+  "interior": 21,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1903,
+   "prompt_ms": 61757.323,
+   "predicted_n": 159,
+   "predicted_ms": 17888.32,
+   "cache_n": 1405
+  }
+ },
+ "324748952": {
+  "answer": {
+   "condition": "bare_shell",
+   "condition_confidence": 0.8,
+   "renovation_age": "soviet",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances or not visible",
+   "bathroom": "tiles, bath/shower, toilet or not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "none",
+   "issues": [
+    "chipped bathtub",
+    "old gas water heater"
+   ],
+   "extras": [
+    "balcony, view, layout, facade"
+   ],
+   "photos_used": 10,
+   "summary": "The apartment is a bare shell with Soviet-era finishes and requires cosmetic renovation."
+  },
+  "seconds": 80.2,
+  "vlm_seconds": 77.1,
+  "photos": 27,
+  "interior": 19,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1780,
+   "prompt_ms": 57730.197,
+   "predicted_n": 163,
+   "predicted_ms": 18188.664,
+   "cache_n": 1405
+  }
+ },
+ "326409050": {
+  "answer": {
+   "condition": "bare_shell",
+   "condition_confidence": 0.3,
+   "renovation_age": "soviet",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances or not visible",
+   "bathroom": "tiles, bath/shower, toilet or not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "peeling wallpaper"
+   ],
+   "extras": [
+    "balcony, view, layout, facade"
+   ],
+   "photos_used": 5,
+   "summary": "Bare shell apartment with Soviet-era features and peeling wallpaper."
+  },
+  "seconds": 44.4,
+  "vlm_seconds": 42.6,
+  "photos": 16,
+  "interior": 9,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 823,
+   "prompt_ms": 25471.917,
+   "predicted_n": 153,
+   "predicted_ms": 15933.848,
+   "cache_n": 1405
+  }
+ },
+ "331071562": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.9,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "chipped bathtub"
+   ],
+   "extras": [
+    "balcony",
+    "view"
+   ],
+   "photos_used": 10,
+   "summary": "The apartment is in a modern design with dated finishes and requires cosmetic work to sell."
+  },
+  "seconds": 73.8,
+  "vlm_seconds": 70.9,
+  "photos": 25,
+  "interior": 18,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1677,
+   "prompt_ms": 53326.922,
+   "predicted_n": 153,
+   "predicted_ms": 16805.146,
+   "cache_n": 1405
+  }
+ },
+ "334097670": {
+  "answer": {
+   "condition": "bare_shell",
+   "condition_confidence": 0.9,
+   "renovation_age": "soviet",
+   "works": "none",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "doors",
+   "furniture": "none",
+   "issues": [
+    "chipped paint on door"
+   ],
+   "extras": [
+    "balcony, view from window"
+   ],
+   "photos_used": 1,
+   "summary": "bare concrete floor and white walls with chipped paint; no visible finishes or appliances."
+  },
+  "seconds": 18.5,
+  "vlm_seconds": 17.9,
+  "photos": 4,
+  "interior": 1,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 103,
+   "prompt_ms": 2887.954,
+   "predicted_n": 139,
+   "predicted_ms": 14273.218,
+   "cache_n": 1405
+  }
+ },
+ "328939351": {
+  "answer": {
+   "condition": "bare_shell",
+   "condition_confidence": 0.3,
+   "renovation_age": "soviet",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances or not visible",
+   "bathroom": "tiles, bath/shower, toilet or not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "peeling wallpaper"
+   ],
+   "extras": [
+    "balcony, view, layout, facade"
+   ],
+   "photos_used": 10,
+   "summary": "Bare shell apartment with Soviet-era features and no visible defects."
+  },
+  "seconds": 64.5,
+  "vlm_seconds": 60.6,
+  "photos": 33,
+  "interior": 15,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1355,
+   "prompt_ms": 43134.817,
+   "predicted_n": 154,
+   "predicted_ms": 17229.779,
+   "cache_n": 1405
+  }
+ },
+ "334880675": {
+  "answer": {
+   "condition": "bare_shell",
+   "condition_confidence": 0.3,
+   "renovation_age": "soviet",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances or not visible",
+   "bathroom": "tiles, bath/shower, toilet or not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "peeling wallpaper"
+   ],
+   "extras": [
+    "balcony view"
+   ],
+   "photos_used": 5,
+   "summary": "Bare shell apartment with Soviet-era features and no visible defects."
+  },
+  "seconds": 64.4,
+  "vlm_seconds": 62.5,
+  "photos": 17,
+  "interior": 15,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1365,
+   "prompt_ms": 44265.019,
+   "predicted_n": 148,
+   "predicted_ms": 16655.657,
+   "cache_n": 1405
+  }
+ },
+ "332464051": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.9,
+   "renovation_age": "dated_7_15",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "peeling wallpaper"
+   ],
+   "extras": [
+    "balcony, view, layout, facade"
+   ],
+   "photos_used": 10,
+   "summary": "Modern apartment with dated finishes and some works needed for renovation."
+  },
+  "seconds": 93.6,
+  "vlm_seconds": 89.4,
+  "photos": 33,
+  "interior": 22,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2169,
+   "prompt_ms": 69458.986,
+   "predicted_n": 150,
+   "predicted_ms": 18229.987,
+   "cache_n": 1405
+  }
+ },
+ "323138979": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.9,
+   "renovation_age": "dated_7_15",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [],
+   "extras": [
+    "balcony"
+   ],
+   "photos_used": 10,
+   "summary": "Modern apartment with dated finishes and minor works needed."
+  },
+  "seconds": 97.8,
+  "vlm_seconds": 93.5,
+  "photos": 38,
+  "interior": 26,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2277,
+   "prompt_ms": 76268.136,
+   "predicted_n": 138,
+   "predicted_ms": 15403.42,
+   "cache_n": 1405
+  }
+ },
+ "330600150": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.9,
+   "renovation_age": "dated_7_15",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances or not visible",
+   "bathroom": "tiles, bath/shower, toilet or not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "full",
+   "issues": [],
+   "extras": [
+    "balcony"
+   ],
+   "photos_used": 1,
+   "summary": "Modern apartment in good condition with a balcony."
+  },
+  "seconds": 24.6,
+  "vlm_seconds": 21.4,
+  "photos": 27,
+  "interior": 2,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 209,
+   "prompt_ms": 6000.989,
+   "predicted_n": 142,
+   "predicted_ms": 14759.537,
+   "cache_n": 1405
+  }
+ },
+ "330600164": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.9,
+   "renovation_age": "dated_7_15",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances or not visible",
+   "bathroom": "tiles, bath/shower, toilet or not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "full",
+   "issues": [],
+   "extras": [
+    "balcony"
+   ],
+   "photos_used": 4,
+   "summary": "Modern apartment with dated finishes and no visible defects."
+  },
+  "seconds": 35.6,
+  "vlm_seconds": 31.7,
+  "photos": 33,
+  "interior": 6,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 569,
+   "prompt_ms": 17029.66,
+   "predicted_n": 143,
+   "predicted_ms": 14557.148,
+   "cache_n": 1405
+  }
+ },
+ "_model": "ggml-org/Qwen2.5-VL-3B-Instruct-GGUF/Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf"
+}

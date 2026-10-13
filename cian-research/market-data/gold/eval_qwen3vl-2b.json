@@ -1,0 +1,504 @@
+{
+ "333401106": {
+  "answer": {
+   "condition": "needs_renovation",
+   "condition_confidence": 0.95,
+   "renovation_age": "old_15_plus",
+   "works": "major",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "peeling wallpaper",
+    "cracked plaster",
+    "chipped bathtub"
+   ],
+   "extras": [
+    "balcony",
+    "view from window"
+   ],
+   "photos_used": 9,
+   "summary": "The apartment is in need of major renovation with significant wear and damage, including peeling wallpaper, cracked plaster, and a chipped浴缸"
+  },
+  "seconds": 61.9,
+  "vlm_seconds": 43.7,
+  "photos": 35,
+  "interior": 11,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2408,
+   "prompt_ms": 26851.166,
+   "predicted_n": 162,
+   "predicted_ms": 16727.277,
+   "cache_n": 0
+  }
+ },
+ "331515022": {
+  "answer": {
+   "condition": "bare_shell",
+   "condition_confidence": 0.95,
+   "renovation_age": "old_15_plus",
+   "works": "major",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "none",
+   "issues": [
+    "cracks in the floor",
+    "exposed wiring"
+   ],
+   "extras": [
+    "balcony",
+    "view"
+   ],
+   "photos_used": 3,
+   "summary": "The apartment is a bare shell with exposed concrete and wiring. It has an old renovation style, likely from the late 1990s to early 2000s, a"
+  },
+  "seconds": 21.4,
+  "vlm_seconds": 19.1,
+  "photos": 17,
+  "interior": 3,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 283,
+   "prompt_ms": 5181.696,
+   "predicted_n": 166,
+   "predicted_ms": 13845.39,
+   "cache_n": 1405
+  }
+ },
+ "333610323": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "chipped bathtub",
+    "old gas water heater"
+   ],
+   "extras": [
+    "balcony",
+    "view"
+   ],
+   "photos_used": 7,
+   "summary": "The apartment is in an old-livable condition with a dated renovation. It has cosmetic improvements but requires some work to sell it at the "
+  },
+  "seconds": 28.8,
+  "vlm_seconds": 27.8,
+  "photos": 8,
+  "interior": 7,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 646,
+   "prompt_ms": 11737.153,
+   "predicted_n": 159,
+   "predicted_ms": 16010.799,
+   "cache_n": 1405
+  }
+ },
+ "333958360": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "chipped bathtub",
+    "peeling wallpaper"
+   ],
+   "extras": [
+    "balcony",
+    "view from window",
+    "layout"
+   ],
+   "photos_used": 9,
+   "summary": "The apartment is old and lived-in with dated finishes. It has a cosmetic renovation that includes new flooring and wall coverings but stills"
+  },
+  "seconds": 65.3,
+  "vlm_seconds": 60.2,
+  "photos": 34,
+  "interior": 21,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1903,
+   "prompt_ms": 37733.135,
+   "predicted_n": 162,
+   "predicted_ms": 21737.022,
+   "cache_n": 1405
+  }
+ },
+ "324748952": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "water pipe exposed"
+   ],
+   "extras": [
+    "balcony",
+    "view from window",
+    "layout"
+   ],
+   "photos_used": 10,
+   "summary": "The apartment is old and lived-in with dated finishes. It has a modern kitchen and bathroom but the walls are painted in an older style with"
+  },
+  "seconds": 74.2,
+  "vlm_seconds": 70.7,
+  "photos": 27,
+  "interior": 19,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1780,
+   "prompt_ms": 36849.852,
+   "predicted_n": 159,
+   "predicted_ms": 20056.836,
+   "cache_n": 1405
+  }
+ },
+ "326409050": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "chipped bathtub",
+    "peeling wallpaper"
+   ],
+   "extras": [
+    "balcony",
+    "view"
+   ],
+   "photos_used": 8,
+   "summary": "The apartment is in an old-livable condition with a dated renovation. It has cosmetic improvements but requires some work to make it ready."
+  },
+  "seconds": 43.4,
+  "vlm_seconds": 40.0,
+  "photos": 16,
+  "interior": 9,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 823,
+   "prompt_ms": 16472.1,
+   "predicted_n": 156,
+   "predicted_ms": 15871.458,
+   "cache_n": 1405
+  }
+ },
+ "331071562": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "electrical outlets"
+   ],
+   "extras": [
+    "balcony",
+    "view",
+    "layout"
+   ],
+   "photos_used": 9,
+   "summary": "A modern apartment with a recent renovation, featuring a contemporary kitchen and bathroom, and an open layout. The living room has a large,"
+  },
+  "seconds": 55.1,
+  "vlm_seconds": 52.0,
+  "photos": 25,
+  "interior": 18,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1677,
+   "prompt_ms": 32665.023,
+   "predicted_n": 151,
+   "predicted_ms": 19172.553,
+   "cache_n": 1405
+  }
+ },
+ "334097670": {
+  "answer": {
+   "condition": "bare_shell",
+   "condition_confidence": 0.95,
+   "renovation_age": "soviet",
+   "works": "major",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "none",
+   "issues": [
+    "exposed wiring",
+    "ceiling joists"
+   ],
+   "extras": [
+    "view from window"
+   ],
+   "photos_used": 3,
+   "summary": "bare shell apartment with exposed wiring and ceiling joists; major renovation works needed"
+  },
+  "seconds": 16.2,
+  "vlm_seconds": 15.7,
+  "photos": 4,
+  "interior": 1,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 103,
+   "prompt_ms": 1963.789,
+   "predicted_n": 126,
+   "predicted_ms": 11143.548,
+   "cache_n": 1405
+  }
+ },
+ "328939351": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "chipped bathtub",
+    "peeling wallpaper"
+   ],
+   "extras": [
+    "balcony",
+    "view",
+    "layout"
+   ],
+   "photos_used": 9,
+   "summary": "The apartment is in an old-livable condition with a dated renovation from the late 1990s to early 2000s. It features a modern kitchen and a "
+  },
+  "seconds": 54.0,
+  "vlm_seconds": 48.8,
+  "photos": 33,
+  "interior": 15,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1355,
+   "prompt_ms": 27097.641,
+   "predicted_n": 172,
+   "predicted_ms": 21622.877,
+   "cache_n": 1405
+  }
+ },
+ "334880675": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "partial",
+   "issues": [
+    "chipped bathtub",
+    "worn wallpaper"
+   ],
+   "extras": [
+    "balcony",
+    "view"
+   ],
+   "photos_used": 9,
+   "summary": "The apartment is old and livable with a dated renovation. The kitchen has fronts and appliances, the bathroom has tiles and a bath/shower, a"
+  },
+  "seconds": 53.9,
+  "vlm_seconds": 51.8,
+  "photos": 17,
+  "interior": 15,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1365,
+   "prompt_ms": 26896.475,
+   "predicted_n": 158,
+   "predicted_ms": 18519.508,
+   "cache_n": 1405
+  }
+ },
+ "332464051": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "full",
+   "issues": [
+    "chipped bathtub"
+   ],
+   "extras": [
+    "balcony",
+    "view",
+    "layout"
+   ],
+   "photos_used": 9,
+   "summary": "A modern, recently renovated apartment with a contemporary design and quality finishes. It is in excellent condition and can be sold as-is."
+  },
+  "seconds": 73.0,
+  "vlm_seconds": 68.0,
+  "photos": 33,
+  "interior": 22,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2169,
+   "prompt_ms": 44627.542,
+   "predicted_n": 149,
+   "predicted_ms": 20424.435,
+   "cache_n": 1405
+  }
+ },
+ "323138979": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "cosmetic",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower, toilet",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "full",
+   "issues": [
+    "chipped bathtub",
+    "peeling wallpaper"
+   ],
+   "extras": [
+    "balcony",
+    "view",
+    "layout"
+   ],
+   "photos_used": 10,
+   "summary": "The apartment is old and lived-in with dated finishes. It has a cosmetic renovation that includes new flooring, wall finishing, and doors, a"
+  },
+  "seconds": 84.5,
+  "vlm_seconds": 79.3,
+  "photos": 38,
+  "interior": 26,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2277,
+   "prompt_ms": 48445.979,
+   "predicted_n": 162,
+   "predicted_ms": 22977.866,
+   "cache_n": 1405
+  }
+ },
+ "330600150": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "full",
+   "issues": [],
+   "extras": [
+    "balcony",
+    "view"
+   ],
+   "photos_used": 2,
+   "summary": "Modern, recently renovated apartment with a full interior and no issues. It is ready to sell."
+  },
+  "seconds": 24.5,
+  "vlm_seconds": 21.1,
+  "photos": 27,
+  "interior": 2,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 209,
+   "prompt_ms": 3932.411,
+   "predicted_n": 133,
+   "predicted_ms": 11650.802,
+   "cache_n": 1405
+  }
+ },
+ "330600164": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "fronts, worktop, appliances",
+   "bathroom": "tiles, bath/shower",
+   "rooms": "floor, walls, ceiling",
+   "windows_doors": "windows, doors",
+   "furniture": "full",
+   "issues": [],
+   "extras": [
+    "balcony",
+    "view"
+   ],
+   "photos_used": 5,
+   "summary": "A modern, recently renovated apartment with a high-end design and quality finishes. It is ready to sell as is."
+  },
+  "seconds": 28.6,
+  "vlm_seconds": 24.3,
+  "photos": 33,
+  "interior": 6,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 569,
+   "prompt_ms": 10976.441,
+   "predicted_n": 137,
+   "predicted_ms": 13245.092,
+   "cache_n": 1405
+  }
+ },
+ "_model": "Qwen/Qwen3-VL-2B-Instruct-GGUF/Qwen3VL-2B-Instruct-Q4_K_M.gguf"
+}
