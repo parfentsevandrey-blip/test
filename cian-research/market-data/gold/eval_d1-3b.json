@@ -1,0 +1,387 @@
+{
+ "333401106": {
+  "answer": null,
+  "seconds": 25.5,
+  "vlm_seconds": 0.1,
+  "photos": 35,
+  "interior": 11,
+  "rc": 1,
+  "raw": "HTTP Error 400: Bad Request",
+  "timings": {
+   "prompt_n": null,
+   "prompt_ms": null,
+   "predicted_n": null,
+   "predicted_ms": null,
+   "cache_n": null
+  }
+ },
+ "331515022": {
+  "answer": {
+   "condition": "bare_shell",
+   "condition_confidence": 0.64,
+   "works": "full",
+   "renovation_age": "none",
+   "probabilities": {
+    "condition": {
+     "not_shown": 0.04932489280246346,
+     "bare_shell": 0.6826425531571371,
+     "white_box": 0.1849816751825483,
+     "needs_renovation": 0.0049471803449692275,
+     "old_livable": 0.004993019172147687,
+     "cosmetic": 0.008700500776739702,
+     "modern": 0.0363488475170415,
+     "designer": 0.02806133104695317
+    },
+    "works": {
+     "none": 0.14072884658765883,
+     "refresh": 0.05428090442784192,
+     "cosmetic": 0.11661169217402687,
+     "major": 0.30173333451020035,
+     "full": 0.38664522230027204
+    },
+    "renovation_age": {
+     "new_0_3": 0.1691875469078159,
+     "recent_3_7": 0.1659773591902372,
+     "dated_7_15": 0.12078714761787496,
+     "old_15_plus": 0.047956999122330125,
+     "soviet": 0.04167693008149508,
+     "none": 0.4544140170802468
+    }
+   }
+  },
+  "seconds": 20.5,
+  "vlm_seconds": 18.4,
+  "photos": 17,
+  "interior": 3,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1231,
+   "prompt_ms": null,
+   "predicted_n": 0,
+   "predicted_ms": null,
+   "cache_n": null
+  }
+ },
+ "333610323": {
+  "answer": {
+   "condition": "cosmetic",
+   "condition_confidence": 0.33,
+   "works": "none",
+   "renovation_age": "dated_7_15",
+   "probabilities": {
+    "condition": {
+     "not_shown": 0.07138973586216658,
+     "bare_shell": 0.006278137031300185,
+     "white_box": 0.11459591089202201,
+     "needs_renovation": 0.03437936300601579,
+     "old_livable": 0.22229196123080172,
+     "cosmetic": 0.4098701858510844,
+     "modern": 0.11862164178501086,
+     "designer": 0.022573064341598593
+    },
+    "works": {
+     "none": 0.30543337509369894,
+     "refresh": 0.19618647622839197,
+     "cosmetic": 0.14189673715824935,
+     "major": 0.24370206023991484,
+     "full": 0.11278135127974498
+    },
+    "renovation_age": {
+     "new_0_3": 0.19572600923025388,
+     "recent_3_7": 0.2171105932924022,
+     "dated_7_15": 0.24675799605928123,
+     "old_15_plus": 0.10814316571443075,
+     "soviet": 0.09457752736914775,
+     "none": 0.1376847083344842
+    }
+   }
+  },
+  "seconds": 41.3,
+  "vlm_seconds": 40.2,
+  "photos": 8,
+  "interior": 7,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2299,
+   "prompt_ms": null,
+   "predicted_n": 0,
+   "predicted_ms": null,
+   "cache_n": null
+  }
+ },
+ "333958360": {
+  "answer": null,
+  "seconds": 5.6,
+  "vlm_seconds": 0.1,
+  "photos": 34,
+  "interior": 21,
+  "rc": 1,
+  "raw": "HTTP Error 400: Bad Request",
+  "timings": {
+   "prompt_n": null,
+   "prompt_ms": null,
+   "predicted_n": null,
+   "predicted_ms": null,
+   "cache_n": null
+  }
+ },
+ "324748952": {
+  "answer": null,
+  "seconds": 3.9,
+  "vlm_seconds": 0.1,
+  "photos": 27,
+  "interior": 19,
+  "rc": 1,
+  "raw": "HTTP Error 400: Bad Request",
+  "timings": {
+   "prompt_n": null,
+   "prompt_ms": null,
+   "predicted_n": null,
+   "predicted_ms": null,
+   "cache_n": null
+  }
+ },
+ "326409050": {
+  "answer": null,
+  "seconds": 2.1,
+  "vlm_seconds": 0.1,
+  "photos": 16,
+  "interior": 9,
+  "rc": 1,
+  "raw": "HTTP Error 400: Bad Request",
+  "timings": {
+   "prompt_n": null,
+   "prompt_ms": null,
+   "predicted_n": null,
+   "predicted_ms": null,
+   "cache_n": null
+  }
+ },
+ "331071562": {
+  "answer": null,
+  "seconds": 3.3,
+  "vlm_seconds": 0.1,
+  "photos": 25,
+  "interior": 18,
+  "rc": 1,
+  "raw": "HTTP Error 400: Bad Request",
+  "timings": {
+   "prompt_n": null,
+   "prompt_ms": null,
+   "predicted_n": null,
+   "predicted_ms": null,
+   "cache_n": null
+  }
+ },
+ "334097670": {
+  "answer": {
+   "condition": "white_box",
+   "condition_confidence": 0.86,
+   "works": "none",
+   "renovation_age": "none",
+   "probabilities": {
+    "condition": {
+     "not_shown": 0.016879559702646724,
+     "bare_shell": 0.07928764814103541,
+     "white_box": 0.8767998018491816,
+     "needs_renovation": 0.0077256675174760675,
+     "old_livable": 0.006789522888533029,
+     "cosmetic": 0.005383077078772875,
+     "modern": 0.00495925068428576,
+     "designer": 0.002175472138068666
+    },
+    "works": {
+     "none": 0.23483091416217033,
+     "refresh": 0.22151543914297117,
+     "cosmetic": 0.11391507643495485,
+     "major": 0.20491987718772503,
+     "full": 0.2248186930721785
+    },
+    "renovation_age": {
+     "new_0_3": 0.09818395946242639,
+     "recent_3_7": 0.07661574907707311,
+     "dated_7_15": 0.08107832198591462,
+     "old_15_plus": 0.10108371112311895,
+     "soviet": 0.1003739084044705,
+     "none": 0.5426643499469964
+    }
+   }
+  },
+  "seconds": 8.8,
+  "vlm_seconds": 8.2,
+  "photos": 4,
+  "interior": 1,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 715,
+   "prompt_ms": null,
+   "predicted_n": 0,
+   "predicted_ms": null,
+   "cache_n": null
+  }
+ },
+ "328939351": {
+  "answer": null,
+  "seconds": 4.3,
+  "vlm_seconds": 0.1,
+  "photos": 33,
+  "interior": 15,
+  "rc": 1,
+  "raw": "HTTP Error 400: Bad Request",
+  "timings": {
+   "prompt_n": null,
+   "prompt_ms": null,
+   "predicted_n": null,
+   "predicted_ms": null,
+   "cache_n": null
+  }
+ },
+ "334880675": {
+  "answer": null,
+  "seconds": 2.1,
+  "vlm_seconds": 0.1,
+  "photos": 17,
+  "interior": 15,
+  "rc": 1,
+  "raw": "HTTP Error 400: Bad Request",
+  "timings": {
+   "prompt_n": null,
+   "prompt_ms": null,
+   "predicted_n": null,
+   "predicted_ms": null,
+   "cache_n": null
+  }
+ },
+ "332464051": {
+  "answer": null,
+  "seconds": 4.1,
+  "vlm_seconds": 0.1,
+  "photos": 33,
+  "interior": 22,
+  "rc": 1,
+  "raw": "HTTP Error 400: Bad Request",
+  "timings": {
+   "prompt_n": null,
+   "prompt_ms": null,
+   "predicted_n": null,
+   "predicted_ms": null,
+   "cache_n": null
+  }
+ },
+ "323138979": {
+  "answer": null,
+  "seconds": 4.7,
+  "vlm_seconds": 0.1,
+  "photos": 38,
+  "interior": 26,
+  "rc": 1,
+  "raw": "HTTP Error 400: Bad Request",
+  "timings": {
+   "prompt_n": null,
+   "prompt_ms": null,
+   "predicted_n": null,
+   "predicted_ms": null,
+   "cache_n": null
+  }
+ },
+ "330600150": {
+  "answer": {
+   "condition": "designer",
+   "condition_confidence": 0.79,
+   "works": "none",
+   "renovation_age": "new_0_3",
+   "probabilities": {
+    "condition": {
+     "not_shown": 0.045873616334789674,
+     "bare_shell": 0.003326444114866718,
+     "white_box": 0.05762764295791899,
+     "needs_renovation": 0.0029251862064148056,
+     "old_livable": 0.006225975808147258,
+     "cosmetic": 0.006531895282289232,
+     "modern": 0.05957215839520321,
+     "designer": 0.8179170809003701
+    },
+    "works": {
+     "none": 0.36217100346061604,
+     "refresh": 0.12995378091777737,
+     "cosmetic": 0.11509380656677935,
+     "major": 0.31520895113833214,
+     "full": 0.07757245791649515
+    },
+    "renovation_age": {
+     "new_0_3": 0.31038566025713943,
+     "recent_3_7": 0.230295707051121,
+     "dated_7_15": 0.24080019271601585,
+     "old_15_plus": 0.05453282813426564,
+     "soviet": 0.011961520922302953,
+     "none": 0.15202409091915514
+    }
+   }
+  },
+  "seconds": 17.2,
+  "vlm_seconds": 13.8,
+  "photos": 27,
+  "interior": 2,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1009,
+   "prompt_ms": null,
+   "predicted_n": 0,
+   "predicted_ms": null,
+   "cache_n": null
+  }
+ },
+ "330600164": {
+  "answer": {
+   "condition": "designer",
+   "condition_confidence": 0.66,
+   "works": "none",
+   "renovation_age": "none",
+   "probabilities": {
+    "condition": {
+     "not_shown": 0.0775461072406959,
+     "bare_shell": 0.0034204048266496976,
+     "white_box": 0.01555665333395541,
+     "needs_renovation": 0.00300442412379023,
+     "old_livable": 0.007680975304939819,
+     "cosmetic": 0.007490834122849604,
+     "modern": 0.18195941852535769,
+     "designer": 0.7033411825217617
+    },
+    "works": {
+     "none": 0.36346263595008965,
+     "refresh": 0.11065992896915104,
+     "cosmetic": 0.1068452835064202,
+     "major": 0.3089678282227966,
+     "full": 0.11006432335154259
+    },
+    "renovation_age": {
+     "new_0_3": 0.19035401506421884,
+     "recent_3_7": 0.17374047743310841,
+     "dated_7_15": 0.23073906000281266,
+     "old_15_plus": 0.1004304116557535,
+     "soviet": 0.019769207655823753,
+     "none": 0.28496682818828284
+    }
+   }
+  },
+  "seconds": 40.8,
+  "vlm_seconds": 36.7,
+  "photos": 33,
+  "interior": 6,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2185,
+   "prompt_ms": null,
+   "predicted_n": 0,
+   "predicted_ms": null,
+   "cache_n": null
+  }
+ },
+ "_model": "LiquidAI/d1-3B-GGUF/d1-3B-Q8_0.gguf"
+}

@@ -36,6 +36,10 @@ MODELS = {
     'd1-3b': ('LiquidAI/d1-3B-GGUF', r'd1-3B-Q8_0\.gguf$|Q4_K_M\.gguf$', r'mmproj-d1-3B-Q8_0\.gguf$|mmproj.*\.gguf$'),
 }
 DECISION = {'d1-3b'}
+KNOWN_FILES = {
+    'qwen36-35b-a3b': ['Qwen3.6-35B-A3B-UD-IQ2_M.gguf', 'mmproj-F16.gguf'],
+    'bonsai2-27b': ['Ternary-Bonsai-2-27B-PQ2_0.gguf', 'Ternary-Bonsai-2-27B-mmproj-Q8_0.gguf'],
+}
 DECISION_Q = {
     'condition': {'type': 'choice', 'instructions': 'Which class fits the WHOLE apartment interior shown?', 'criteria': {
         'not_shown': 'no photo shows this apartment inside: only building, courtyard, plans or CGI renders',
@@ -62,7 +66,10 @@ READY = {'modern', 'designer'}
 def fetch(key):
     from huggingface_hub import HfApi, hf_hub_download
     repo, mpat, ppat = MODELS[key]
-    files = HfApi().list_repo_files(repo)
+    try:
+        files = HfApi().list_repo_files(repo)
+    except Exception:   # лимит запросов HF к списку файлов — берём известные имена
+        files = KNOWN_FILES.get(key) or []
     def pick(pat, exclude=None):
         for alt in pat.split('|'):
             c = sorted(f for f in files if re.search(alt, f, re.I) and 'mmproj' not in f.lower()) if exclude else \
