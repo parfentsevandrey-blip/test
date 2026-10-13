@@ -30,6 +30,8 @@ MODELS = {
     'qwen36-35b-a3b': ('unsloth/Qwen3.6-35B-A3B-GGUF', r'UD-IQ2_M\.gguf$', r'mmproj-F16\.gguf$|mmproj.*\.gguf$'),
     'gemma4-12b': ('unsloth/gemma-4-12b-it-GGUF', r'it-Q4_K_M\.gguf$', r'mmproj-F16\.gguf$|mmproj.*\.gguf$'),
     'minicpmv47-1b': ('openbmb/MiniCPM-V-4.7-1B-gguf', r'Q4_K_M\.gguf$', r'mmproj-model-f16-4x\.gguf$|mmproj.*\.gguf$'),
+    # Bonsai 2 27B: тернарные веса, нужна сборка PrismML llama.cpp (LLAMA_BIN)
+    'bonsai2-27b': ('prism-ml/Ternary-Bonsai-2-27B-gguf', r'27B-PQ2_0\.gguf$', r'mmproj-Q8_0\.gguf$'),
     # «решающая» модель: классы за один проход без генерации текста (llama-server /v1/systemone)
     'd1-3b': ('LiquidAI/d1-3B-GGUF', r'd1-3B-Q8_0\.gguf$|Q4_K_M\.gguf$', r'mmproj-d1-3B-Q8_0\.gguf$|mmproj.*\.gguf$'),
 }
@@ -112,7 +114,7 @@ class Server:
         self.url = f'http://127.0.0.1:{port}'
         self.proc = subprocess.Popen(
             [f'{LLAMA}/llama-server', '-m', model, '--mmproj', mmproj, '-c', '12288', '-t', str(os.cpu_count() or 4),
-             '--image-max-tokens', str(max_tokens), '--port', str(port), '--no-webui', '-np', '1', '--cache-reuse', '256'],
+             '--image-max-tokens', str(max_tokens), '--port', str(port), '--no-webui', '-np', '1', '--cache-reuse', '256', '--cache-ram', '0'],
             stdout=subprocess.DEVNULL, stderr=open('market-data/gold/server.log', 'w'))
         for _ in range(1200):
             try:
