@@ -1,0 +1,77 @@
+{
+ "333401106": {
+  "answer": {
+   "condition": "needs_renovation",
+   "condition_confidence": 0.9,
+   "renovation_age": "soviet",
+   "works": "major",
+   "kitchen": "wooden cabinets, gas stove, oven, fridge, sink, no worktop",
+   "bathroom": "small tiles, bathtub, washing machine, toilet, exposed pipes",
+   "rooms": "parquet floor, wallpapered walls, plasterboard ceiling",
+   "windows_doors": "plastic windows, wooden doors with floral panels",
+   "furniture": "partial",
+   "issues": [
+    "peeling wallpaper",
+    "stained bathroom tiles",
+    "exposed plumbing pipes",
+    "worn parquet floor"
+   ],
+   "extras": [
+    "balcony visible in hallway",
+    "multiple windows with natural"
+   ],
+   "photos_used": 10,
+   "summary": "Soviet-era apartment requiring major renovation including new bathroom, kitchen, flooring and wall finishing."
+  },
+  "seconds": 493.3,
+  "vlm_seconds": 477.2,
+  "photos": 35,
+  "interior": 11,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2455,
+   "prompt_ms": 294339.147,
+   "predicted_n": 236,
+   "predicted_ms": 182318.278,
+   "cache_n": 0
+  }
+ },
+ "331515022": {
+  "answer": {
+   "condition": "not_shown",
+   "condition_confidence": 0.95,
+   "renovation_age": "none",
+   "works": "full",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "concrete floor, bare concrete/brick walls, no ceiling finish",
+   "windows_doors": "large windows installed, no interior doors",
+   "furniture": "none",
+   "issues": [
+    "bare shell condition",
+    "exposed wiring on floor"
+   ],
+   "extras": [
+    "balcony with large windows",
+    "view of city and river from 20"
+   ],
+   "photos_used": 3,
+   "summary": "Bare shell apartment with no finishing; full renovation required before resale."
+  },
+  "seconds": 195.4,
+  "vlm_seconds": 193.2,
+  "photos": 17,
+  "interior": 3,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 291,
+   "prompt_ms": 42999.901,
+   "predicted_n": 196,
+   "predicted_ms": 150086.394,
+   "cache_n": 1444
+  }
+ },
+ "_model": "prism-ml/Ternary-Bonsai-2-27B-gguf/Ternary-Bonsai-2-27B-PQ2_0.gguf"
+}
