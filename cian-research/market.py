@@ -445,6 +445,8 @@ def main():
     ph.set_defaults(fn=cmd_photos)
     import market_condition
     import market_build
+    import market_vlm
+    market_vlm.add_parser(sub)
     market_condition.add_parser(sub)
     market_build.add_parser(sub)
     a = p.parse_args()

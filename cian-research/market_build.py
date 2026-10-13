@@ -19,12 +19,27 @@ NEEDS_WORK = {'без отделки', 'white box', 'требует ремонт
 READY = {'современный', 'дизайнерский'}
 
 
-def era(year, is_new):
+def era(year, is_new, year_lo=None):
     if is_new:
         return 'новостройка'
+    year = year or year_lo
     if not year:
         return 'год неизвестен'
     return next(n for a, b, n in ERA_BINS if a <= year <= b)
+
+
+def thumb(path, size=160):
+    """Маленькое превью как data: URI — страница не может грузить картинки с сайта ЦИАН."""
+    import base64, io
+    from PIL import Image
+    try:
+        im = Image.open(path).convert('RGB')
+        im.thumbnail((size, size))
+        buf = io.BytesIO()
+        im.save(buf, 'JPEG', quality=62)
+        return 'data:image/jpeg;base64,' + base64.b64encode(buf.getvalue()).decode()
+    except Exception:
+        return None
 
 
 def area_bin(a):
@@ -55,9 +70,26 @@ def cmd_build(a):
         if x['build_year']:
             house_year[x['house_key']].append(x['build_year'])
     house_era = {h: era(max(set(ys), key=ys.count), False) for h, ys in house_year.items()}
+    for x in L:
+        if x['year_lo'] and x['house_key'] not in house_era:
+            house_era[x['house_key']] = era(None, False, x['year_lo'])
     house_new = {x['house_key'] for x in L if x['is_new']}
 
     from market_condition import seller_label
+    insp = {}
+    if con.execute("select name from sqlite_master where name='inspect'").fetchone():
+        for r in con.execute('select * from inspect where data is not null'):
+            try:
+                d0 = json.loads(r['data'] or '{}')
+            except Exception:
+                d0 = {}
+            insp[r['cian_id']] = dict(cond=r['condition'], age=r['age'], works=r['works'],
+                                      **{k: d0.get(k) for k in ('floor', 'walls', 'ceiling', 'kitchen', 'bathroom', 'windows',
+                                                                 'furniture', 'defects', 'summary')})
+    photo_path = {}
+    for p in con.execute('select cian_id, path from photo where path is not null order by idx desc'):
+        if os.path.exists(p['path']):
+            photo_path[p['cian_id']] = p['path']        # первое фото (idx 0) перезапишет остальные
     rows = []
     last7 = [str(today - dt.timedelta(days=i)) for i in range(1, 8)]
     for x in L:
@@ -77,7 +109,7 @@ def cmd_build(a):
             price=price, ppsqm=round(price / x['area']) if price and x['area'] else None,
             price_first=x['price_first'], price_chg=round(100 * (price - x['price_first']) / x['price_first'], 1)
             if price and x['price_first'] else None,
-            era=era(x['build_year'], x['is_new']), year=x['build_year'], material=MATERIAL_RU.get(x['material'], x['material']),
+            era=era(x['build_year'], x['is_new'], x['year_lo']), year=x['build_year'], material=MATERIAL_RU.get(x['material'], x['material']),
             area_bin=area_bin(x['area']), is_new=bool(x['is_new']), owner=bool(x['is_owner']), apart=bool(x['is_apart']),
             cond=c['label'] if c else None, cond_conf=round(c['conf'], 2) if c else None, seller_cond=sl,
             mismatch=bool(c and sl and c['label'] != sl and (c['label'] in READY) != (sl in READY)),
@@ -85,7 +117,9 @@ def cmd_build(a):
             days=days, created=str(created) if created else None, views7=v7 if seen7 else None,
             views_day=round(v7 / seen7, 1) if seen7 else None, views_total=vtot.get(x['cian_id']),
             views_series=[v.get(str(today - dt.timedelta(days=i)), None) for i in range(10, 0, -1)],
-            returned=x['flat_id'] in returned_flats, photo=(json.loads(x['photos'] or '[]') or [None])[0]))
+            returned=x['flat_id'] in returned_flats, price_cuts=x['price_cuts'], repair=x['repair'],
+            inspect=insp.get(x['cian_id']),
+            thumb=thumb(photo_path[x['cian_id']]) if x['cian_id'] in photo_path else None))
     # относительный спрос: просмотры в день к медиане своего сегмента (комнаты × новостройка/вторичка)
     seg_med = {}
     for r in rows:
@@ -106,13 +140,14 @@ def cmd_build(a):
             id=str(h['cian_id']), deal='sale', rooms=h['rooms'], floor=(h['floor'], h['floors']) if h['floor'] else None,
             area=h['area'] or 0, start=d(h['start']), end=d(h['end']), status=h['status'], exp=h['exposition'] or 0))
     m = ct.Matcher({}, {}, ct.PHOTO_MAX, set(), {})
+    hist_by_id = {str(h['cian_id']): h for h in H}
     hist_rows = []
     for hk, pool in pools.items():
         for x in pool:
             if x['status'] != 'deactivated' or not x['floor'] or not x['end']:
                 continue
             res = ct.classify(x, pool, m, today)
-            src = next(h for h in H if str(h['cian_id']) == x['id'])
+            src = hist_by_id[x['id']]
             hist_rows.append(dict(id=int(x['id']), house=hk, era='новостройка' if hk in house_new else house_era.get(hk, 'год неизвестен'),
                                   rooms=ROOMS_RU.get(x['rooms'], x['rooms']), area_bin=area_bin(x['area']), start=str(x['start']),
                                   end=str(x['end']), exp=x['exp'], ppsqm=src['price_sqm'], price=src['price'],
@@ -130,7 +165,7 @@ def cmd_build(a):
         if d(r['end']) >= today - dt.timedelta(days=400):
             weeks[wk(r['end'])]['gone'] += 1
             weeks[wk(r['end'])]['sold'] += r['sold']
-    timeline = [dict(week=w, new=v['new'], gone=v['gone'], sold=v['sold'], ppsqm=med(v['ppsqm']))
+    timeline = [dict(week=w, new=v['new'], gone=v['gone'], sold=v['sold'], ppsqm=med(v['ppsqm']) if len(v['ppsqm']) >= 5 else None)
                 for w, v in sorted(weeks.items()) if w < str(today - dt.timedelta(days=today.weekday()))]
 
     runs = [dict(r) for r in con.execute('select * from run order by date')]
@@ -144,7 +179,8 @@ def cmd_build(a):
         months_of_supply=round(len(act) / (len(sold12) / 12), 1) if sold12 else None,
         relist_share=round(100 * sum(1 for r in hist_rows if not r['sold']) / len(hist_rows), 1) if hist_rows else None,
         median_exposure_sold=med([r['exp'] for r in sold12]), houses=len(pools), hist_lots=len(H),
-        cond_rated=sum(1 for r in act if r['cond']), mismatches=sum(1 for r in act if r['mismatch']))
+        cond_rated=sum(1 for r in act if r['cond']), mismatches=sum(1 for r in act if r['mismatch']),
+        inspected=sum(1 for r in act if r['inspect']))
     out = dict(generated=str(today), district=a.district_name, summary=summary, runs=runs, listings=rows,
                history=hist_rows, timeline=timeline, events=events, cond_order=COND_ORDER,
                era_order=[n for _, _, n in ERA_BINS] + ['новостройка', 'год неизвестен'],

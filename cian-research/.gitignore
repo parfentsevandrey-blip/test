@@ -1,4 +1,7 @@
 cian-data/
 monitor-data/photos/
 market-data/photos/
+market-data/*.log
+market-data/*-journal
 __pycache__/
+vlm_bench_*.json

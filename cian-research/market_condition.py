@@ -28,7 +28,7 @@ PHOTO_TYPES = {
 SELLER_MAP = {'no': 'требует ремонта', 'cosmetic': 'косметический', 'euro': 'современный', 'design': 'дизайнерский',
               'without': 'без отделки', 'preFine': 'white box', 'fine': 'современный',
               'fineWithFurniture': 'современный'}
-MODEL = 'openai/clip-vit-base-patch16'
+MODEL = os.environ.get('CLIP_MODEL', 'openai/clip-vit-base-patch16')
 
 
 def seller_label(row):
@@ -101,7 +101,15 @@ def cmd_condition(a):
         clf = LogisticRegression(max_iter=2000, C=2.0, class_weight='balanced')
         pred = cross_val_predict(clf, Xl, yl, cv=StratifiedKFold(5, shuffle=True, random_state=0))
         cv_acc = float(np.mean([p == t for p, t in zip(pred, yl)]))
-        print(f'классификатор на разметке продавцов, кросс-валидация: {100 * cv_acc:.0f}% (n={len(keep)}, классы {dict(Counter(yl))})', flush=True)
+        READY = {'современный', 'дизайнерский'}
+        bin_acc = float(np.mean([(p in READY) == (t in READY) for p, t in zip(pred, yl)]))
+        print(f'классификатор на разметке продавцов, кросс-валидация: {100 * cv_acc:.0f}% по 4 классам, '
+              f'{100 * bin_acc:.0f}% «под ремонт / с ремонтом» (n={len(keep)}, классы {dict(Counter(yl))})', flush=True)
+        conf = Counter((t, p) for p, t in zip(pred, yl))
+        labs = sorted(set(yl))
+        print('  матрица (строки — продавец, столбцы — модель):', ' | '.join(l[:6] for l in labs))
+        for t in labs:
+            print(f'  {t[:14]:14s}', ' '.join(f'{conf[(t, p)]:5d}' for p in labs))
         if cv_acc > zs_acc:
             use_sup = True
             clf.fit(Xl, yl)

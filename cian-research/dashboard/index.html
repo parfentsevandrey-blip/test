@@ -1,0 +1,381 @@
+<title>Барометр Академического</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: blueprint sheet — sticky tab bar over one working column; summary first, detail tables below */
+:root {
+  --paper: #f2f4f6; --sheet: #ffffff; --ink: #16202b; --muted: #5d6b79; --line: #d6dde4;
+  --accent: #1f4f8a; --accent-soft: #e3ebf5;
+  --good: #1f7a4d; --good-soft: #e1f2e8; --warn: #a2640c; --warn-soft: #f8eedb; --bad: #b2332b; --bad-soft: #f7e3e1;
+  --f-ui: "Onest", "Segoe UI", system-ui, sans-serif; --f-num: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #0f151c; --sheet: #161f29; --ink: #e4eaf0; --muted: #93a1af; --line: #2a3644;
+  --accent: #79a7e0; --accent-soft: #1d2d42;
+  --good: #5cc28f; --good-soft: #15302a; --warn: #e0a656; --warn-soft: #33281a; --bad: #ef7d74; --bad-soft: #3a1f1e; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #0f151c; --sheet: #161f29; --ink: #e4eaf0; --muted: #93a1af; --line: #2a3644;
+  --accent: #79a7e0; --accent-soft: #1d2d42;
+  --good: #5cc28f; --good-soft: #15302a; --warn: #e0a656; --warn-soft: #33281a; --bad: #ef7d74; --bad-soft: #3a1f1e; color-scheme: dark }
+body { background: var(--paper); color: var(--ink); font: 14px/1.5 var(--f-ui); }
+.wrap { max-width: 1280px; margin: 0 auto; padding-inline: 16px; padding-block: 12px 48px; }
+header.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; padding-block: 18px 6px; }
+h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; margin: 0; text-wrap: balance; overflow-wrap: anywhere; min-width: 0; }
+.meta { overflow-wrap: anywhere; }
+h1 small { font-weight: 500; color: var(--muted); font-size: 1rem; margin-left: 6px; }
+.meta { color: var(--muted); font-size: .85rem; }
+nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); display: flex; gap: 4px;
+  overflow-x: auto; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+nav.tabs button { font: 500 .92rem var(--f-ui); color: var(--muted); background: none; border: 0; padding: 10px 12px;
+  border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+nav.tabs button:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.kpi { background: var(--sheet); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; display: grid; gap: 2px; }
+.kpi b { font: 600 1.45rem var(--f-num); font-variant-numeric: tabular-nums; }
+.kpi span { color: var(--muted); font-size: .8rem; }
+.kpi em { font-style: normal; color: var(--muted); font-size: .75rem; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin-bottom: 14px; }
+.panel { background: var(--sheet); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; min-width: 0; }
+.panel h2 { font-size: 1rem; margin: 0 0 2px; }
+.panel p.sub { color: var(--muted); font-size: .82rem; margin: 0 0 10px; max-width: 70ch; }
+svg text { fill: var(--muted); font: 11px var(--f-num); }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: end; margin-bottom: 12px; }
+.controls label { display: grid; gap: 3px; font-size: .78rem; color: var(--muted); }
+select, input[type="search"], input[type="number"] { font: .9rem var(--f-ui); color: var(--ink); background: var(--sheet);
+  border: 1px solid var(--line); border-radius: 5px; padding: 6px 8px; }
+input[type="range"] { accent-color: var(--accent); width: 200px; max-width: 100%; }
+.tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--sheet); }
+table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; white-space: nowrap; }
+th { font-weight: 600; color: var(--muted); font-size: .75rem; letter-spacing: .02em; position: sticky; top: 0; background: var(--sheet); cursor: pointer; user-select: none; }
+th[data-sort]::after { content: " ↕"; opacity: .35; }
+th.asc::after { content: " ↑"; opacity: 1; } th.desc::after { content: " ↓"; opacity: 1; }
+td.n, th.n { text-align: right; font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: var(--accent-soft); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .75rem; font-weight: 500; white-space: nowrap; }
+.p-good { background: var(--good-soft); color: var(--good); } .p-warn { background: var(--warn-soft); color: var(--warn); }
+.p-bad { background: var(--bad-soft); color: var(--bad); } .p-acc { background: var(--accent-soft); color: var(--accent); }
+.p-mute { background: var(--paper); color: var(--muted); border: 1px solid var(--line); }
+.thumb { width: 64px; height: 48px; object-fit: cover; border-radius: 4px; display: block; background: var(--paper); }
+.nothumb { width: 64px; height: 48px; border-radius: 4px; background: var(--paper); border: 1px dashed var(--line); }
+.cardlist { display: grid; gap: 8px; }
+.lot { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; padding: 8px; border: 1px solid var(--line);
+  border-radius: 6px; background: var(--sheet); color: inherit; text-decoration: none; min-width: 0; }
+.lot:hover { border-color: var(--accent); }
+.lot .t { font-weight: 600; } .lot .s { color: var(--muted); font-size: .8rem; overflow-wrap: anywhere; }
+.lot .r { text-align: right; font-family: var(--f-num); font-variant-numeric: tabular-nums; display: grid; gap: 2px; justify-items: end; }
+.note { color: var(--muted); font-size: .8rem; max-width: 80ch; margin-top: 10px; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .78rem; color: var(--muted); margin-top: 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+a.ext { color: var(--accent); }
+.empty { color: var(--muted); padding: 24px; text-align: center; }
+tr.row { cursor: pointer; }
+tr.detail td { white-space: normal; background: var(--paper); }
+.insp { display: grid; grid-template-columns: minmax(0, 200px) 1fr; gap: 14px; padding-block: 6px; }
+.insp img { width: 100%; border-radius: 4px; }
+.insp dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 12px; margin: 0; font-size: .82rem; }
+.insp dt { color: var(--muted); } .insp dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.insp p { margin: 0 0 8px; max-width: 70ch; }
+@media (max-width: 560px) { .insp { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .lot { grid-template-columns: 56px 1fr; } .lot .r { grid-column: 1 / -1; justify-items: start; text-align: left; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Барометр Академического <small>вторичка и новостройки · ЦИАН</small></h1>
+    <span class="meta" id="meta">загрузка данных…</span>
+  </header>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="overview" aria-selected="true">Обзор</button>
+    <button role="tab" data-tab="segments">Сегменты для перепродажи</button>
+    <button role="tab" data-tab="fav">Фавориты</button>
+    <button role="tab" data-tab="losers">Лузеры</button>
+    <button role="tab" data-tab="returned">Вернувшиеся</button>
+    <button role="tab" data-tab="all">Все объявления</button>
+  </nav>
+
+  <section id="tab-overview">
+    <div class="kpis" id="kpis"></div>
+    <div class="grid2">
+      <div class="panel"><h2>Выставлено и ушло с рынка</h2>
+        <p class="sub">По неделям за год, все дома района по «Истории продаж в доме». Ушло — снятые объявления, похожие на продажу: квартира не вернулась на рынок (методика METHODOLOGY.md).</p>
+        <div id="chart-flow"></div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>выставлено</span><span><i style="background:var(--good)"></i>ушло, вероятно продано</span><span><i style="background:var(--warn)"></i>снято и вернулось</span></div>
+      </div>
+      <div class="panel"><h2>Цена м² новых объявлений</h2>
+        <p class="sub">Медиана по неделе выставления, тыс ₽ за м².</p>
+        <div id="chart-price"></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h2>Лучшие сегменты для перепродажи</h2>
+        <p class="sub" id="best-sub"></p>
+        <div id="best"></div>
+      </div>
+      <div class="panel"><h2>Состояние квартир по фото</h2>
+        <p class="sub">Активные объявления по эпохе дома. Состояние определено моделью по интерьерным фото; где фото нет — по словам продавца.</p>
+        <div id="chart-cond"></div><div class="legend" id="cond-legend"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-segments" hidden>
+    <div class="controls">
+      <label for="seg-dim">Группировка
+        <select id="seg-dim">
+          <option value="rooms|era">комнаты × эпоха дома</option><option value="rooms|area_bin">комнаты × площадь</option>
+          <option value="rooms">комнаты</option><option value="era">эпоха дома</option><option value="area_bin">площадь</option>
+        </select></label>
+      <label for="cost">Ремонт под продажу: <b id="cost-v"></b>
+        <input type="range" id="cost" min="15000" max="120000" step="5000" value="45000"></label>
+      <label for="minact">Мин. активных в сегменте <input type="number" id="minact" min="1" max="50" value="3" style="width:70px"></label>
+    </div>
+    <div class="tablebox"><table id="seg-table"></table></div>
+    <p class="note">«Под ремонт» — без отделки, white box, требует ремонта, косметический; «с ремонтом» — современный и дизайнерский (по фото).
+      Маржа = (₽/м² с ремонтом − ₽/м² под ремонт − ремонт) ÷ (₽/м² под ремонт + ремонт). Продаж в месяц и срок продажи — по истории домов за 12 месяцев.
+      Месяцев предложения = активных ÷ продаж в месяц. Индекс = маржа × ликвидность (6 ÷ месяцев предложения, не больше 1) — чем выше, тем быстрее и выгоднее оборот.</p>
+  </section>
+
+  <section id="tab-fav" hidden>
+    <div class="grid2">
+      <div class="panel"><h2>Спрос сейчас</h2><p class="sub">Активные объявления с наибольшими просмотрами за неделю относительно медианы своего сегмента (комнаты, вторичка/новостройка).</p><div class="cardlist" id="fav-now"></div></div>
+      <div class="panel"><h2>Ушли быстро</h2><p class="sub">Сняты за 30 дней и меньше и не вернулись на рынок — вероятно проданы. Последние 120 дней, история домов и наш мониторинг.</p><div id="fav-fast"></div></div>
+    </div>
+  </section>
+
+  <section id="tab-losers" hidden>
+    <div class="panel"><h2>Висят дольше всех</h2><p class="sub">Активные объявления с самым долгим сроком на ЦИАН. Спрос — просмотры за неделю относительно медианы сегмента; снижения — сколько раз падала цена.</p><div class="cardlist" id="losers"></div></div>
+  </section>
+
+  <section id="tab-returned" hidden>
+    <div class="controls"><label for="ret-q">Поиск по дому <input type="search" id="ret-q" placeholder="улица или дом"></label></div>
+    <div class="tablebox"><table id="ret-table"></table></div>
+    <p class="note">Квартира снималась с продажи и снова появилась: та же комнатность, этаж и площадь в истории дома. Возврат в течение 14 дней — перевыставление «для поднятия»; позже — снятие и возврат.</p>
+  </section>
+
+  <section id="tab-all" hidden>
+    <div class="controls">
+      <label for="f-rooms">Комнаты <select id="f-rooms"><option value="">все</option></select></label>
+      <label for="f-era">Эпоха дома <select id="f-era"><option value="">все</option></select></label>
+      <label for="f-cond">Состояние <select id="f-cond"><option value="">все</option></select></label>
+      <label for="f-status">Статус <select id="f-status"><option value="active">в продаже</option><option value="gone">ушли</option><option value="">все</option></select></label>
+      <label for="f-q">Адрес <input type="search" id="f-q" placeholder="улица, дом, ЖК"></label>
+    </div>
+    <div class="tablebox"><table id="all-table"></table></div>
+  </section>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const fmt = (v, d = 0) => v == null || isNaN(v) ? '—' : Number(v).toLocaleString('ru-RU', { maximumFractionDigits: d, minimumFractionDigits: d });
+const mln = (v) => v == null ? '—' : (v / 1e6).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + ' млн';
+const tk = (v) => v == null ? '—' : fmt(v / 1000) + ' тыс';
+const median = (a) => { a = a.filter((x) => x != null && !isNaN(x)).sort((x, y) => x - y); if (!a.length) return null; const m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const NEEDS = new Set(['без отделки', 'white box', 'требует ремонта', 'косметический']);
+const READY = new Set(['современный', 'дизайнерский']);
+const COND_COLOR = { 'без отделки': 'var(--muted)', 'white box': 'var(--line)', 'требует ремонта': 'var(--bad)', 'косметический': 'var(--warn)', 'современный': 'var(--accent)', 'дизайнерский': 'var(--good)' };
+let D, L, H;
+
+function condOf(r) { return r.cond || r.seller_cond || null; }
+function condPill(r) {
+  const c = condOf(r); if (!c) return '<span class="pill p-mute">нет фото</span>';
+  const cls = READY.has(c) ? 'p-good' : c === 'требует ремонта' ? 'p-bad' : c === 'косметический' ? 'p-warn' : 'p-mute';
+  const src = r.cond ? 'по фото' : 'со слов продавца';
+  return `<span class="pill ${cls}" title="${src}${r.cond_conf ? ', уверенность ' + Math.round(r.cond_conf * 100) + '%' : ''}">${esc(c)}</span>` +
+    (r.mismatch ? ` <span class="pill p-warn" title="Продавец указал «${esc(r.seller_cond)}»">≠ продавец</span>` : '');
+}
+function demandPill(d) {
+  if (d == null) return '<span class="pill p-mute">нет данных</span>';
+  const cls = d >= 1.5 ? 'p-good' : d >= 0.8 ? 'p-acc' : 'p-bad';
+  return `<span class="pill ${cls}">спрос ×${fmt(d, 1)}</span>`;
+}
+function thumb(r) { return r.thumb ? `<img class="thumb" src="${r.thumb}" alt="">` : '<div class="nothumb"></div>'; }
+function inspCard(r) {
+  const i = r.inspect;
+  const head = `<p><b>Оценка состояния:</b> ${condPill(r)}${r.seller_cond ? ` · продавец: ${esc(r.seller_cond)}` : ''}</p>`;
+  if (!i) return `<div class="insp">${r.thumb ? `<img src="${r.thumb}" alt="">` : '<div class="nothumb"></div>'}<div>${head}<p class="meta">Визуальный осмотр этого объявления ещё не выполнен — локальная модель осматривает новые объявления при ежедневном обновлении.</p></div></div>`;
+  const rows = [['Состояние по осмотру', i.cond], ['Возраст ремонта', i.age], ['Нужны работы', i.works], ['Пол', i.floor], ['Стены', i.walls], ['Потолок', i.ceiling],
+    ['Кухня', i.kitchen], ['Санузел', i.bathroom], ['Окна', i.windows], ['Мебель', i.furniture], ['Дефекты', (i.defects || []).join('; ') || 'не видно']];
+  return `<div class="insp">${r.thumb ? `<img src="${r.thumb}" alt="">` : '<div class="nothumb"></div>'}<div>${head}${i.summary ? `<p>${esc(i.summary)}</p>` : ''}
+    <dl>${rows.filter(([, v]) => v).map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+    <p class="meta" style="margin-top:8px">Осмотр выполнен локальной моделью Qwen2.5-VL по 3–4 интерьерным фото; описания пола, стен и т. п. — как их сформулировала модель.</p></div></div>`;
+}
+function title(r) { return `${esc(r.rooms)}, ${fmt(r.area, 1)} м², ${r.floor ?? '?'}/${r.floors ?? '?'} эт.`; }
+function spark(series) {
+  const v = (series || []).map((x) => x ?? 0); if (!v.some((x) => x)) return '';
+  const w = 80, h = 20, mx = Math.max(...v, 1);
+  const pts = v.map((x, i) => `${(i * w / (v.length - 1)).toFixed(1)},${(h - 2 - x / mx * (h - 4)).toFixed(1)}`).join(' ');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-label="просмотры за 10 дней"><polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="1.5"/></svg>`;
+}
+
+/* ---------- обзор ---------- */
+function kpis() {
+  const s = D.summary;
+  const k = [
+    [fmt(s.active), 'в продаже сейчас', `${fmt(s.new_listings)} новых за 7 дней`],
+    [fmt(s.sold_per_month, 1), 'продаж в месяц (оценка)', `${fmt(s.sold_12m)} за 12 мес., срок ${fmt(s.median_exposure_sold)} дн`],
+    [fmt(s.months_of_supply, 1), 'месяцев предложения', s.months_of_supply < 4 ? 'рынок продавца' : s.months_of_supply > 8 ? 'рынок покупателя' : 'баланс'],
+    [tk(s.median_ppsqm), '₽ за м², медиана', 'активные объявления'],
+    [fmt(s.median_days), 'дней на рынке, медиана', 'активные объявления'],
+    [fmt(s.median_views_day, 1), 'просмотров в день', `возвраты после снятия: ${fmt(s.relist_share, 0)}%`],
+  ];
+  $('#kpis').innerHTML = k.map(([b, sp, em]) => `<div class="kpi"><b>${b}</b><span>${sp}</span><em>${esc(em)}</em></div>`).join('');
+}
+function barsFlow() {
+  const t = D.timeline.slice(-52); if (!t.length) { $('#chart-flow').innerHTML = '<div class="empty">История домов ещё не загружена</div>'; return; }
+  const W = 640, Hh = 220, pl = 34, pb = 22, pt = 8, bw = (W - pl - 6) / t.length;
+  const mx = Math.max(...t.map((x) => Math.max(x.new, x.gone)), 1);
+  const nice = Math.ceil(mx / 5) * 5, mid = (Hh - pb + pt) / 2, sc = (mid - pt) / nice;
+  let g = '';
+  [-nice, -nice / 2, 0, nice / 2, nice].forEach((v) => { const y = mid - v * sc;
+    g += `<line x1="${pl}" x2="${W - 4}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="${v ? .6 : 1}"/><text x="${pl - 5}" y="${y + 4}" text-anchor="end">${Math.abs(v)}</text>`; });
+  t.forEach((x, i) => { const X = pl + i * bw + 1, w = Math.max(bw - 2, 1);
+    g += `<rect x="${X}" y="${mid - x.new * sc}" width="${w}" height="${x.new * sc}" fill="var(--accent)"><title>${x.week}: выставлено ${x.new}</title></rect>`;
+    g += `<rect x="${X}" y="${mid}" width="${w}" height="${x.sold * sc}" fill="var(--good)"><title>${x.week}: вероятно продано ${x.sold}</title></rect>`;
+    g += `<rect x="${X}" y="${mid + x.sold * sc}" width="${w}" height="${(x.gone - x.sold) * sc}" fill="var(--warn)"><title>${x.week}: снято и вернулось ${x.gone - x.sold}</title></rect>`;
+    if (i % 8 === 0) g += `<text x="${X}" y="${Hh - 6}">${x.week.slice(5).split('-').reverse().join('.')}</text>`; });
+  g += `<text x="${pl + 4}" y="${pt + 10}">↑ выставлено</text><text x="${pl + 4}" y="${Hh - pb - 4}">↓ ушло</text>`;
+  $('#chart-flow').innerHTML = `<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="Выставлено и ушло по неделям">${g}</svg>`;
+}
+function linePrice() {
+  const t = D.timeline.slice(-52).filter((x) => x.ppsqm); if (t.length < 3) { $('#chart-price').innerHTML = '<div class="empty">Мало данных</div>'; return; }
+  const W = 640, Hh = 220, pl = 40, pb = 22, pt = 10;
+  const vs = t.map((x) => x.ppsqm / 1000), lo = Math.floor(Math.min(...vs) / 50) * 50, hi = Math.ceil(Math.max(...vs) / 50) * 50;
+  const X = (i) => pl + i * (W - pl - 10) / (t.length - 1), Y = (v) => pt + (hi - v) / (hi - lo || 1) * (Hh - pb - pt);
+  let g = '';
+  for (let v = lo; v <= hi; v += (hi - lo) / 4) g += `<line x1="${pl}" x2="${W - 6}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width=".6"/><text x="${pl - 5}" y="${Y(v) + 4}" text-anchor="end">${fmt(v)}</text>`;
+  const pts = vs.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+  g += `<polygon points="${X(0)},${Hh - pb} ${pts} ${X(t.length - 1)},${Hh - pb}" fill="var(--accent-soft)"/>`;
+  g += `<polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
+  const last = vs.length - 1; g += `<circle cx="${X(last)}" cy="${Y(vs[last])}" r="4" fill="var(--accent)"/><text x="${X(last) - 6}" y="${Y(vs[last]) - 8}" text-anchor="end">${fmt(vs[last])}</text>`;
+  t.forEach((x, i) => { if (i % 8 === 0) g += `<text x="${X(i)}" y="${Hh - 6}" text-anchor="middle">${x.week.slice(5).split('-').reverse().join('.')}</text>`; });
+  $('#chart-price').innerHTML = `<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="Цена м² по неделям">${g}</svg>`;
+}
+function condChart() {
+  const act = L.filter((r) => r.active), eras = D.era_order.filter((e) => act.some((r) => r.era === e));
+  const order = D.cond_order, W = 640, rowH = 26, pl = 170, Hh = eras.length * rowH + 10;
+  let g = '';
+  eras.forEach((e, i) => { const rs = act.filter((r) => r.era === e && condOf(r)); const n = rs.length || 1; let x = pl; const y = 4 + i * rowH;
+    g += `<text x="${pl - 8}" y="${y + 15}" text-anchor="end">${esc(e)} · ${rs.length}</text>`;
+    order.forEach((c) => { const k = rs.filter((r) => condOf(r) === c).length; if (!k) return; const w = k / n * (W - pl - 6);
+      g += `<rect x="${x}" y="${y}" width="${w}" height="${rowH - 8}" fill="${COND_COLOR[c]}"><title>${esc(e)}: ${c} — ${k}</title></rect>`; x += w; }); });
+  $('#chart-cond').innerHTML = `<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="Состояние по эпохам">${g}</svg>`;
+  $('#cond-legend').innerHTML = order.map((c) => `<span><i style="background:${COND_COLOR[c]}"></i>${c}</span>`).join('');
+}
+
+/* ---------- сегменты ---------- */
+function segRows() {
+  const dims = $('#seg-dim').value.split('|'), cost = +$('#cost').value, minAct = +$('#minact').value;
+  const key = (r) => dims.map((d) => r[d] ?? '—').join(' · ');
+  const yearAgo = new Date(Date.now() - 365 * 864e5).toISOString().slice(0, 10);
+  const groups = new Map();
+  const get = (k) => groups.get(k) || groups.set(k, { k, act: [], hist: [] }).get(k);
+  L.filter((r) => r.active && r.ppsqm && !r.apart).forEach((r) => get(key(r)).act.push(r));
+  H.forEach((h) => { if (groups.has(key(h))) groups.get(key(h)).hist.push(h); });
+  return [...groups.values()].filter((g) => g.act.length >= minAct).map((g) => {
+    const needs = g.act.filter((r) => NEEDS.has(condOf(r))), ready = g.act.filter((r) => READY.has(condOf(r)));
+    const pn = needs.length >= 2 ? median(needs.map((r) => r.ppsqm)) : null, pr = ready.length >= 2 ? median(ready.map((r) => r.ppsqm)) : null;
+    const sold = g.hist.filter((h) => h.sold && h.end >= yearAgo), spm = sold.length / 12;
+    const mos = spm ? g.act.length / spm : null;
+    const margin = pn && pr ? (pr - pn - cost) / (pn + cost) : null;
+    const liq = mos ? Math.min(1, 6 / mos) : 0;
+    return { seg: g.k, act: g.act.length, ppsqm: median(g.act.map((r) => r.ppsqm)), pn, pr, nn: needs.length, nr: ready.length,
+      prem: pn && pr ? pr - pn : null, margin, spm, mos, exp: median(sold.map((h) => h.exp)),
+      relist: g.hist.length ? g.hist.filter((h) => !h.sold).length / g.hist.length : null,
+      views: median(g.act.map((r) => r.views_day)), index: margin != null ? margin * liq * 100 : null };
+  });
+}
+let segSort = { k: 'index', dir: -1 };
+function renderSeg() {
+  $('#cost-v').textContent = fmt(+$('#cost').value) + ' ₽/м²';
+  const rows = segRows().sort((a, b) => ((a[segSort.k] ?? -1e18) - (b[segSort.k] ?? -1e18)) * segSort.dir || 0);
+  const cols = [['seg', 'Сегмент', 0], ['act', 'Активных', 1], ['ppsqm', '₽/м²', 1], ['pn', 'под ремонт', 1], ['pr', 'с ремонтом', 1], ['prem', 'премия ремонта', 1],
+    ['margin', 'маржа', 1], ['spm', 'продаж/мес', 1], ['mos', 'мес. предложения', 1], ['exp', 'срок продажи, дн', 1], ['relist', 'возвраты', 1], ['views', 'просм./день', 1], ['index', 'индекс', 1]];
+  const th = cols.map(([k, t, n]) => `<th data-sort="${k}" class="${n ? 'n' : ''} ${segSort.k === k ? (segSort.dir > 0 ? 'asc' : 'desc') : ''}">${t}</th>`).join('');
+  const marginPill = (m) => m == null ? '<span class="pill p-mute">мало данных</span>' : `<span class="pill ${m > .15 ? 'p-good' : m > 0 ? 'p-warn' : 'p-bad'}">${fmt(m * 100, 0)}%</span>`;
+  const body = rows.map((r) => `<tr><td>${esc(r.seg)}</td><td class="n">${r.act}</td><td class="n">${tk(r.ppsqm)}</td>
+    <td class="n" title="${r.nn} объявл.">${tk(r.pn)}</td><td class="n" title="${r.nr} объявл.">${tk(r.pr)}</td><td class="n">${tk(r.prem)}</td>
+    <td class="n">${marginPill(r.margin)}</td><td class="n">${fmt(r.spm, 1)}</td><td class="n">${fmt(r.mos, 1)}</td><td class="n">${fmt(r.exp)}</td>
+    <td class="n">${r.relist == null ? '—' : fmt(r.relist * 100) + '%'}</td><td class="n">${fmt(r.views, 1)}</td><td class="n"><b>${fmt(r.index, 1)}</b></td></tr>`).join('');
+  $('#seg-table').innerHTML = `<thead><tr>${th}</tr></thead><tbody>${body || '<tr><td colspan="13" class="empty">Нет сегментов с таким числом объявлений</td></tr>'}</tbody>`;
+  $('#seg-table').querySelectorAll('th').forEach((h) => h.onclick = () => { const k = h.dataset.sort; segSort = { k, dir: segSort.k === k ? -segSort.dir : (k === 'seg' ? 1 : -1) }; renderSeg(); });
+  const best = segRows().filter((r) => r.index != null && r.index > 0).sort((a, b) => b.index - a.index).slice(0, 6);
+  $('#best-sub').textContent = `Комнаты × эпоха дома при ремонте ${fmt(+$('#cost').value)} ₽/м²: где разница цены «под ремонт» и «с ремонтом» перекрывает ремонт, а квартиры быстро продаются. Настройки — во вкладке «Сегменты».`;
+  $('#best').innerHTML = best.length ? `<div class="tablebox"><table><thead><tr><th>Сегмент</th><th class="n">маржа</th><th class="n">мес. предложения</th><th class="n">индекс</th></tr></thead><tbody>${best.map((r) => `<tr><td>${esc(r.seg)}</td><td class="n">${fmt(r.margin * 100)}%</td><td class="n">${fmt(r.mos, 1)}</td><td class="n"><b>${fmt(r.index, 1)}</b></td></tr>`).join('')}</tbody></table></div>`
+    : '<div class="empty">Пока ни в одном сегменте маржа не положительна при текущей стоимости ремонта</div>';
+}
+
+/* ---------- рейтинги ---------- */
+function lotRow(r, right) {
+  return `<a class="lot" href="${esc(r.url)}" target="_blank" rel="noopener">${thumb(r)}<div style="min-width:0"><div class="t">${title(r)} · ${mln(r.price)}</div>
+    <div class="s">${esc(r.address || '')}${r.jk ? ' · ЖК ' + esc(r.jk) : ''} · ${esc(r.era)}</div><div class="s">${condPill(r)}</div></div><div class="r">${right}</div></a>`;
+}
+function renderRatings() {
+  const act = L.filter((r) => r.active);
+  const fav = act.filter((r) => r.demand != null).sort((a, b) => b.demand - a.demand).slice(0, 20);
+  $('#fav-now').innerHTML = fav.map((r) => lotRow(r, `${demandPill(r.demand)}<span>${fmt(r.views_day, 1)} просм./день</span>${spark(r.views_series)}<span class="s">${fmt(r.days)} дн на рынке</span>`)).join('') || '<div class="empty">Нет данных о просмотрах</div>';
+  const since = new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10);
+  const fast = H.filter((h) => h.sold && h.exp <= 30 && h.end >= since).sort((a, b) => a.exp - b.exp).slice(0, 30);
+  $('#fav-fast').innerHTML = fast.length ? `<div class="tablebox"><table><thead><tr><th>Дом</th><th>Квартира</th><th class="n">₽/м²</th><th class="n">дней</th><th>снято</th></tr></thead><tbody>${fast.map((h) => `<tr><td>${esc(h.house)}</td><td>${esc(h.rooms)} · ${esc(h.area_bin)}</td><td class="n">${tk(h.ppsqm)}</td><td class="n">${h.exp}</td><td>${h.end.split('-').reverse().join('.')}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">История домов ещё не загружена</div>';
+  const los = act.filter((r) => r.days != null).sort((a, b) => b.days - a.days).slice(0, 25);
+  $('#losers').innerHTML = los.map((r) => lotRow(r, `<b>${fmt(r.days)} дн</b>${demandPill(r.demand)}<span class="s">${r.price_cuts ? 'снижений цены: ' + r.price_cuts : 'цену не снижали'}${r.price_chg ? ' · ' + (r.price_chg > 0 ? '+' : '') + fmt(r.price_chg, 1) + '%' : ''}</span>`)).join('');
+}
+function renderReturned() {
+  const q = $('#ret-q').value.toLowerCase();
+  const rows = H.filter((h) => !h.sold && h.relist_days != null && (!q || h.house.toLowerCase().includes(q))).sort((a, b) => b.end.localeCompare(a.end));
+  $('#ret-table').innerHTML = `<thead><tr><th>Дом</th><th>Квартира</th><th class="n">была на рынке, дн</th><th>снята</th><th class="n">вернулась через, дн</th><th>тип</th></tr></thead><tbody>${
+    rows.slice(0, 400).map((h) => `<tr><td>${esc(h.house)}</td><td>${esc(h.rooms)} · ${esc(h.area_bin)}</td><td class="n">${h.exp}</td><td>${h.end.split('-').reverse().join('.')}</td><td class="n">${h.relist_days}</td><td>${h.relist_days <= 14 ? '<span class="pill p-warn">перевыставление</span>' : '<span class="pill p-acc">снятие и возврат</span>'}</td></tr>`).join('') ||
+    '<tr><td colspan="6" class="empty">Нет данных</td></tr>'}</tbody>`;
+}
+
+/* ---------- все объявления ---------- */
+let allSort = { k: 'days', dir: -1 };
+function renderAll() {
+  const fr = $('#f-rooms').value, fe = $('#f-era').value, fc = $('#f-cond').value, fs = $('#f-status').value, q = $('#f-q').value.toLowerCase();
+  const rows = L.filter((r) => (!fr || r.rooms === fr) && (!fe || r.era === fe) && (!fc || condOf(r) === fc) &&
+    (!fs || (fs === 'active') === r.active) && (!q || `${r.address} ${r.jk || ''}`.toLowerCase().includes(q)))
+    .sort((a, b) => { const x = a[allSort.k], y = b[allSort.k]; return (typeof x === 'string' ? String(x).localeCompare(y) : (x ?? -1e18) - (y ?? -1e18)) * allSort.dir; });
+  const cols = [['thumb', '', 0, false], ['address', 'Адрес', 0, true], ['rooms', 'Квартира', 0, true], ['price', 'Цена', 1, true], ['ppsqm', '₽/м²', 1, true], ['era', 'Дом', 0, true],
+    ['cond', 'Состояние', 0, true], ['days', 'Дней', 1, true], ['views_day', 'Просм./день', 1, true], ['demand', 'Спрос', 1, true], ['price_chg', 'Цена с начала', 1, true]];
+  const th = cols.map(([k, t, n, s]) => `<th ${s ? `data-sort="${k}"` : ''} class="${n ? 'n' : ''} ${allSort.k === k ? (allSort.dir > 0 ? 'asc' : 'desc') : ''}">${t}</th>`).join('');
+  $('#all-table').innerHTML = `<thead><tr>${th}</tr></thead><tbody>${rows.map((r) => `<tr class="row" data-id="${r.id}" tabindex="0" title="Нажмите, чтобы открыть осмотр"><td>${thumb(r)}</td>
+    <td><a class="ext" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.address || '—')}</a>${r.jk ? '<div class="meta">ЖК ' + esc(r.jk) + '</div>' : ''}</td>
+    <td>${title(r)}${r.returned ? ' <span class="pill p-warn">возврат</span>' : ''}${r.owner ? ' <span class="pill p-acc">собственник</span>' : ''}</td><td class="n">${mln(r.price)}</td><td class="n">${tk(r.ppsqm)}</td>
+    <td>${esc(r.era)}${r.material ? '<div class="meta">' + esc(r.material) + '</div>' : ''}</td><td>${condPill(r)}</td>
+    <td class="n">${fmt(r.days)}${r.active ? '' : '<div class="meta">ушло ' + esc(r.gone) + '</div>'}</td><td class="n">${fmt(r.views_day, 1)}</td><td class="n">${r.demand == null ? '—' : '×' + fmt(r.demand, 1)}</td>
+    <td class="n">${r.price_chg == null ? '—' : (r.price_chg > 0 ? '+' : '') + fmt(r.price_chg, 1) + '%'}</td></tr>`).join('') || '<tr><td colspan="11" class="empty">Ничего не найдено — ослабьте фильтры</td></tr>'}</tbody>`;
+  $('#all-table').querySelectorAll('th[data-sort]').forEach((h) => h.onclick = () => { const k = h.dataset.sort; allSort = { k, dir: allSort.k === k ? -allSort.dir : -1 }; renderAll(); });
+  $('#all-table').querySelectorAll('tr.row').forEach((tr) => { const open = (e) => { if (e.target.closest('a')) return;
+    const nx = tr.nextElementSibling; if (nx && nx.classList.contains('detail')) { nx.remove(); return; }
+    const r = L.find((x) => String(x.id) === tr.dataset.id); tr.insertAdjacentHTML('afterend', `<tr class="detail"><td colspan="11">${inspCard(r)}</td></tr>`); };
+    tr.onclick = open; tr.onkeydown = (e) => { if (e.key === 'Enter') open(e); }; });
+}
+
+/* ---------- каркас ---------- */
+function showTab(name) {
+  document.querySelectorAll('nav.tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+  document.querySelectorAll('section[id^="tab-"]').forEach((s) => s.hidden = s.id !== 'tab-' + name);
+  try { localStorage.setItem('baro-tab', name); } catch (e) {}
+}
+document.querySelectorAll('nav.tabs button').forEach((b) => b.onclick = () => showTab(b.dataset.tab));
+
+fetch('data.json').then((r) => r.json()).then((data) => {
+  D = data; L = data.listings; H = data.history;
+  const s = data.summary;
+  $('#meta').textContent = `обновлено ${data.generated.split('-').reverse().join('.')} · ${fmt(L.length)} объявлений в базе · история ${fmt(s.houses)} домов (${fmt(s.hist_lots)} лотов) · модель состояния: ${data.model || 'нет'}`;
+  const opts = (sel, vals) => { $(sel).insertAdjacentHTML('beforeend', vals.map((v) => `<option>${esc(v)}</option>`).join('')); };
+  opts('#f-rooms', [...new Set(L.map((r) => r.rooms))].sort());
+  opts('#f-era', D.era_order.filter((e) => L.some((r) => r.era === e)));
+  opts('#f-cond', D.cond_order);
+  kpis(); barsFlow(); linePrice(); condChart(); renderSeg(); renderRatings(); renderReturned(); renderAll();
+  ['#seg-dim', '#cost', '#minact'].forEach((s) => $(s).addEventListener('input', renderSeg));
+  $('#ret-q').addEventListener('input', renderReturned);
+  ['#f-rooms', '#f-era', '#f-cond', '#f-status', '#f-q'].forEach((s) => $(s).addEventListener('input', renderAll));
+  let t = null; try { t = localStorage.getItem('baro-tab'); } catch (e) {}
+  const h = location.hash.slice(1); if (h && $('#tab-' + h)) showTab(h); else if (t && $('#tab-' + t)) showTab(t);
+}).catch((e) => { $('#meta').textContent = 'Не удалось загрузить data.json: ' + e.message; });
+</script>
