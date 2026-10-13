@@ -1,0 +1,504 @@
+{
+ "333401106": {
+  "answer": {
+   "condition": "needs_renovation",
+   "condition_confidence": 1.0,
+   "renovation_age": "soviet",
+   "works": "full",
+   "kitchen": "old cabinets, old stove, refrigerator, sink with tile backsplash",
+   "bathroom": "small white tiles, bathtub, washing machine, no shower cabin",
+   "rooms": "herringbone parquet (worn), peeling wallpaper/paint, plasterboard and-",
+   "windows_doors": "plastic windows, old wooden doors",
+   "furniture": "partial",
+   "issues": [
+    "peeling paint on walls",
+    "damaged floor covering in hallway",
+    "old plumbing fixtures"
+   ],
+   "extras": [
+    "balcony visible from window",
+    "view of trees"
+   ],
+   "photos_used": 10,
+   "summary": "Apartment is in poor condition with Soviet-era features like herringbone parquet and old doors; requires a full renovation including all-new"
+  },
+  "seconds": 182.5,
+  "vlm_seconds": 167.9,
+  "photos": 35,
+  "interior": 11,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2465,
+   "prompt_ms": 108550.924,
+   "predicted_n": 221,
+   "predicted_ms": 58879.245,
+   "cache_n": 0
+  }
+ },
+ "331515022": {
+  "answer": {
+   "condition": "white_box",
+   "condition_confidence": 1.0,
+   "renovation_age": "none",
+   "works": "full",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "concrete floor, brick walls, concrete ceiling",
+   "windows_doors": "double-pane windows installed, no interior doors",
+   "furniture": "none",
+   "issues": [
+    "exposed wiring",
+    "no finishing"
+   ],
+   "extras": [
+    "balcony/terrace with view",
+    "layout plan style photo"
+   ],
+   "photos_used": 3,
+   "summary": "Apartment is in white-box state with brick walls and concrete floors; requires full interior finishing before resale."
+  },
+  "seconds": 65.2,
+  "vlm_seconds": 63.2,
+  "photos": 17,
+  "interior": 3,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 292,
+   "prompt_ms": 17214.177,
+   "predicted_n": 180,
+   "predicted_ms": 45832.61,
+   "cache_n": 1453
+  }
+ },
+ "333610323": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "major",
+   "kitchen": "white fridge, washing machine, stove, small table, old cabinets",
+   "bathroom": "small mosaic tiles, bathtub, wall-hung toilet, sink with mirror",
+   "rooms": "laminate flooring, patterned wallpaper, stretch ceiling, old furniture",
+   "windows_doors": "plastic windows, wooden interior doors, metal entrance door",
+   "furniture": "full",
+   "issues": [
+    "dated wallpaper",
+    "old style kitchen units",
+    "worn sofa fabric"
+   ],
+   "extras": [
+    "balcony with view of courtyard",
+    "entrance hall visible"
+   ],
+   "photos_used": 6,
+   "summary": "Apartment is in lived-in condition with dated finishes from the 2000s; requires major renovation of kitchen and bathroom to reach modernRes售"
+  },
+  "seconds": 100.1,
+  "vlm_seconds": 99.2,
+  "photos": 8,
+  "interior": 7,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 650,
+   "prompt_ms": 34293.821,
+   "predicted_n": 249,
+   "predicted_ms": 64753.48,
+   "cache_n": 1458
+  }
+ },
+ "333958360": {
+  "answer": {
+   "condition": "needs_renovation",
+   "condition_confidence": 0.95,
+   "renovation_age": "soviet",
+   "works": "major",
+   "kitchen": "white cabinets, granite worktop, built-in oven, microwave, fridge, gas",
+   "bathroom": "small tiles, bathtub, washing machine, double sink",
+   "rooms": "herringbone parquet, floral wallpaper, stretch ceiling",
+   "windows_doors": "plastic windows, wooden doors",
+   "furniture": "full",
+   "issues": [
+    "worn sofa",
+    "dated wallpaper",
+    "old style furniture",
+    "visible wear on floor in hallway"
+   ],
+   "extras": [
+    "balcony",
+    "view from window"
+   ],
+   "photos_used": 20,
+   "summary": "Apartment has a mix of old Soviet-era features (parquet, wallpaper) and older renovations; requires major renovation including new flooring,"
+  },
+  "seconds": 166.6,
+  "vlm_seconds": 162.4,
+  "photos": 34,
+  "interior": 21,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1912,
+   "prompt_ms": 100097.626,
+   "predicted_n": 223,
+   "predicted_ms": 60358.518,
+   "cache_n": 1453
+  }
+ },
+ "324748952": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "major",
+   "kitchen": "wooden cabinets, white tile backsplash, gas stove, microwave, old sink",
+   "bathroom": "beige tiles with decorative borders, bathtub, wall-hung toilet, vanity",
+   "rooms": "herringbone parquet floor, wallpapered walls, plasterboard ceilings, c",
+   "windows_doors": "plastic windows, wooden interior doors, metal entrance doors",
+   "furniture": "full",
+   "issues": [
+    "worn furniture covers",
+    "dated bathroom tiles",
+    "old kitchen cabinetry"
+   ],
+   "extras": [
+    "hallway with arch",
+    "balcony visible from room"
+   ],
+   "photos_used": 18,
+   "summary": "Apartment is in lived-in condition with dated finishes including parquet and old tiles; requires major renovation of kitchen and bathroom to"
+  },
+  "seconds": 159.2,
+  "vlm_seconds": 156.1,
+  "photos": 27,
+  "interior": 19,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1789,
+   "prompt_ms": 90016.167,
+   "predicted_n": 247,
+   "predicted_ms": 65771.447,
+   "cache_n": 1453
+  }
+ },
+ "326409050": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "major",
+   "kitchen": "wooden cabinets, basic appliances, old tile floor",
+   "bathroom": "white and brown tiles, bathtub, pedestal sink, toilet",
+   "rooms": "laminate flooring, textured wallpaper, stretch ceiling",
+   "windows_doors": "plastic windows, wooden interior doors",
+   "furniture": "full",
+   "issues": [
+    "dated bathroom tiling",
+    "worn kitchen cabinets",
+    "old style furniture"
+   ],
+   "extras": [
+    "balcony with view",
+    "layout visible"
+   ],
+   "photos_used": 8,
+   "summary": "Apartment is in lived-in condition with dated finishes from the 2000s; requires major renovation of kitchen and bathroom to reach modernRes售"
+  },
+  "seconds": 105.9,
+  "vlm_seconds": 104.1,
+  "photos": 16,
+  "interior": 9,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 832,
+   "prompt_ms": 43790.148,
+   "predicted_n": 232,
+   "predicted_ms": 60149.923,
+   "cache_n": 1453
+  }
+ },
+ "331071562": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.95,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "white cabinets, stone worktop, built-in oven, dishwasher, double sink,",
+   "bathroom": "large format marble-look tiles, wall-hung toilet, walk-in shower with-",
+   "rooms": "dark wood laminate floor, textured wallpaper, stretch ceiling",
+   "windows_doors": "white plastic windows, white interior doors, glass balcony door",
+   "furniture": "full",
+   "issues": [],
+   "extras": [
+    "balcony",
+    "city view"
+   ],
+   "photos_used": 18,
+   "summary": "High-quality modern renovation with premium finishes and integrated appliances; ready for immediate resale."
+  },
+  "seconds": 135.1,
+  "vlm_seconds": 132.2,
+  "photos": 25,
+  "interior": 18,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1692,
+   "prompt_ms": 84239.527,
+   "predicted_n": 185,
+   "predicted_ms": 47460.205,
+   "cache_n": 1453
+  }
+ },
+ "334097670": {
+  "answer": {
+   "condition": "white_box",
+   "condition_confidence": 0.9,
+   "renovation_age": "none",
+   "works": "full",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "smooth plastered walls, screed floor, stretch ceiling",
+   "windows_doors": "basic interior doors, no windows visible",
+   "furniture": "none",
+   "issues": [
+    "no flooring",
+    "no kitchen units",
+    "no bathroom fixtures",
+    "exposed wiring/conduits on ceiling"
+   ],
+   "extras": [],
+   "photos_used": 1,
+   "summary": "Apartment is in white-box state with plastered walls and screed floor; requires full finishing including flooring, kitchen, bathroom, and a "
+  },
+  "seconds": 60.0,
+  "vlm_seconds": 59.6,
+  "photos": 4,
+  "interior": 1,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 112,
+   "prompt_ms": 9114.343,
+   "predicted_n": 202,
+   "predicted_ms": 50424.928,
+   "cache_n": 1453
+  }
+ },
+ "328939351": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.9,
+   "renovation_age": "dated_7_15",
+   "works": "major",
+   "kitchen": "white cabinets, wood-look worktop, built-in oven, washing machine, gas",
+   "bathroom": "small tiles with decorative borders, walk-in shower, wall-hung toilet",
+   "rooms": "laminate flooring, painted walls, stretch ceilings",
+   "windows_doors": "plastic windows, white interior doors",
+   "furniture": "full",
+   "issues": [
+    "dated bathroom tiles",
+    "worn sofa upholstery",
+    "old-style curtains"
+   ],
+   "extras": [
+    "balcony with view of trees",
+    "layout shown in photos"
+   ],
+   "photos_used": 18,
+   "summary": "The apartment is in lived-in condition with dated finishes; a major renovation including bathroom and kitchen updates is required for high-端"
+  },
+  "seconds": 136.8,
+  "vlm_seconds": 132.9,
+  "photos": 33,
+  "interior": 15,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1359,
+   "prompt_ms": 68869.14,
+   "predicted_n": 244,
+   "predicted_ms": 63741.449,
+   "cache_n": 1458
+  }
+ },
+ "334880675": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.95,
+   "renovation_age": "dated_7_15",
+   "works": "major",
+   "kitchen": "white cabinets, dark countertop, microwave, gas stove, tiled floor",
+   "bathroom": "beige marble-effect tiles with decorative borders, bathtub, wall-hungb",
+   "rooms": "laminate flooring, textured wallpaper, stretch ceilings, white paneled",
+   "windows_doors": "white plastic windows, white paneled interior doors, black metal entry",
+   "furniture": "full",
+   "issues": [
+    "dated bathroom tiles with borders",
+    "worn kitchen cabinets",
+    "old-style wallpaper in some rooms"
+   ],
+   "extras": [
+    "balcony with view of courtyard",
+    "layout shown via photos"
+   ],
+   "photos_used": 10,
+   "summary": "The apartment is in lived-in condition with dated finishes from the 2000s; a major renovation including bathroom and kitchen updates is and'"
+  },
+  "seconds": 141.0,
+  "vlm_seconds": 139.1,
+  "photos": 17,
+  "interior": 15,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 1374,
+   "prompt_ms": 69954.72,
+   "predicted_n": 261,
+   "predicted_ms": 68681.266,
+   "cache_n": 1453
+  }
+ },
+ "332464051": {
+  "answer": {
+   "condition": "old_livable",
+   "condition_confidence": 0.9,
+   "renovation_age": "dated_7_15",
+   "works": "major",
+   "kitchen": "white and wood fronts, built-in oven/microwave, tile backsplash, basic",
+   "bathroom": "blue and white tiles, corner bath, vanity with sink, wall-hung toilet",
+   "rooms": "wood parquet floor, painted walls, stretch ceilings",
+   "windows_doors": "plastic windows, wooden interior doors",
+   "furniture": "full",
+   "issues": [
+    "dated bathroom tiling",
+    "worn furniture"
+   ],
+   "extras": [
+    "balcony",
+    "view of city buildings",
+    "multi-level layout with stairs"
+   ],
+   "photos_used": 24,
+   "summary": "The apartment is in lived-in condition with dated finishes; a major renovation including the kitchen and bathroom is required for resale."
+  },
+  "seconds": 163.3,
+  "vlm_seconds": 159.2,
+  "photos": 33,
+  "interior": 22,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2178,
+   "prompt_ms": 103623.824,
+   "predicted_n": 207,
+   "predicted_ms": 54471.417,
+   "cache_n": 1453
+  }
+ },
+ "323138979": {
+  "answer": {
+   "condition": "modern",
+   "condition_confidence": 0.9,
+   "renovation_age": "recent_3_7",
+   "works": "none",
+   "kitchen": "white glossy fronts, black worktop, built-in oven and hob, sink with b",
+   "bathroom": "white tiles, bathtub, wall-hung toilet, washing machine, vanity unit",
+   "rooms": "dark wood laminate floor, textured wallpaper, stretch ceilings withLED",
+   "windows_doors": "plastic windows, white interior doors with glass inserts, balcony door",
+   "furniture": "full",
+   "issues": [],
+   "extras": [
+    "balcony",
+    "view from window"
+   ],
+   "photos_used": 30,
+   "summary": "High-quality modern renovation with consistent materials and finishes; ready for resale without additional works."
+  },
+  "seconds": 183.3,
+  "vlm_seconds": 178.9,
+  "photos": 38,
+  "interior": 26,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 2286,
+   "prompt_ms": 122907.013,
+   "predicted_n": 202,
+   "predicted_ms": 55237.805,
+   "cache_n": 1453
+  }
+ },
+ "330600150": {
+  "answer": {
+   "condition": "not_shown",
+   "condition_confidence": 1.0,
+   "renovation_age": "none",
+   "works": "full",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "not visible",
+   "windows_doors": "not visible",
+   "furniture": "none",
+   "issues": [],
+   "extras": [
+    "lobby area",
+    "reception desk",
+    "building interior"
+   ],
+   "photos_used": 0,
+   "summary": "Photos show a commercial lobby or reception area, not the apartment interior."
+  },
+  "seconds": 55.3,
+  "vlm_seconds": 52.1,
+  "photos": 27,
+  "interior": 2,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 218,
+   "prompt_ms": 13565.95,
+   "predicted_n": 150,
+   "predicted_ms": 38469.221,
+   "cache_n": 1453
+  }
+ },
+ "330600164": {
+  "answer": {
+   "condition": "not_shown",
+   "condition_confidence": 1.0,
+   "renovation_age": "none",
+   "works": "full",
+   "kitchen": "not visible",
+   "bathroom": "not visible",
+   "rooms": "not visible",
+   "windows_doors": "not visible",
+   "furniture": "none",
+   "issues": [],
+   "extras": [
+    "marketing renders",
+    "lobby/reception area"
+   ],
+   "photos_used": 0,
+   "summary": "The photos provided are marketing renders and a lobby view; no actual apartment interior is shown."
+  },
+  "seconds": 72.9,
+  "vlm_seconds": 69.1,
+  "photos": 33,
+  "interior": 6,
+  "rc": 0,
+  "raw": null,
+  "timings": {
+   "prompt_n": 573,
+   "prompt_ms": 29615.773,
+   "predicted_n": 152,
+   "predicted_ms": 39397.744,
+   "cache_n": 1458
+  }
+ },
+ "_model": "google/gemma-4-12B-it-qat-q4_0-gguf/gemma-4-12b-it-qat-q4_0.gguf"
+}
