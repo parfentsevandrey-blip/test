@@ -84,6 +84,65 @@ def offer_meta(html):
                 editDate=grab(r'"editDate":"([^"]+)"', html))
 
 
+def dhash(path, size=16):
+    """Перцептивный хеш: 256 бит, устойчив к пережатию и изменению размера."""
+    from PIL import Image
+    im = Image.open(path).convert('L').resize((size + 1, size))
+    px = list(im.tobytes())
+    bits = 0
+    for r in range(size):
+        for c in range(size):
+            bits = (bits << 1) | (px[r * (size + 1) + c] > px[r * (size + 1) + c + 1])
+    return f'{bits:064x}'
+
+
+def hamming(a, b):
+    return bin(int(a, 16) ^ int(b, 16)).count('1')
+
+
+def collect_photos(data, houses, tabs):
+    """Превью всех объявлений домов через браузер (картинки ЦИАН отдаёт только браузеру)."""
+    import asyncio
+    from scrapling.fetchers import AsyncStealthySession
+    os.makedirs(f'{data}/photos', exist_ok=True)
+    hashes = load(f'{data}/hashes.json', {})
+    todo = {str(o['id']): o['previewPhoto'].split('?')[0] for h in houses.values() for deal in ('sale', 'rent')
+            for o in h[deal] if o.get('previewPhoto') and str(o['id']) not in hashes}
+    print(f'превью без хеша: {len(todo)} (~{len(todo) * 0.4 / 60:.0f} мин)', flush=True)
+    if not todo:
+        return
+
+    async def run():
+        done = 0
+        async with AsyncStealthySession(headless=True, max_pages=tabs) as s:
+            async def one(oid, url):
+                nonlocal done
+                for _ in range(2):
+                    try:
+                        r = await s.fetch(url)
+                        if r.status == 404:      # ЦИАН удаляет фото у снятых объявлений — больше не пробуем
+                            hashes[oid] = None
+                            break
+                        if r.status == 200 and len(r.body) > 1000:
+                            path = f'{data}/photos/{oid}.img'
+                            open(path, 'wb').write(r.body)
+                            hashes[oid] = dhash(path)
+                            break
+                    except Exception:
+                        await asyncio.sleep(3)
+                done += 1
+                if done % 200 == 0:
+                    save(f'{data}/hashes.json', hashes)
+                    print(f'  {done}/{len(todo)}', flush=True)
+            items = list(todo.items())
+            for i in range(0, len(items), tabs * 10):
+                await asyncio.gather(*(one(o, u) for o, u in items[i:i + tabs * 10]))
+    asyncio.run(run())
+    save(f'{data}/hashes.json', hashes)
+    print(f'превью с хешем: {sum(1 for v in hashes.values() if v)}, удалены ЦИАН (404): '
+          f'{sum(1 for v in hashes.values() if v is None)}', flush=True)
+
+
 def cmd_collect(a):
     os.makedirs(a.data, exist_ok=True)
     houses = load(f'{a.data}/houses.json', {})
@@ -104,6 +163,8 @@ def cmd_collect(a):
             save(f'{a.data}/meta.json', meta)
             print(f'  {n}/{len(todo)}, {(time.time() - t0) / n:.1f} с/карточка', flush=True)
         time.sleep(0.8)
+    if not a.no_photos:
+        collect_photos(a.data, houses, a.tabs)
 
 
 def cmd_stats(a):
@@ -158,20 +219,64 @@ def wilson(k, n, z=1.96):
     return 100 * max(0, c - w), 100 * min(1, c + w)
 
 
-def classify(x, pool, meta, today):
-    """Возвращает (вывод, причина, подтверждено_продавцом) для снятого лота x."""
+COMMON_DIST = 10   # фото ближе этого считаются одним и тем же снимком при поиске общих фото
+PHOTO_MAX = 40     # верхняя граница порога совпадения фото (из 256 бит)
+
+
+def flat_key(o):
+    return o['rooms'], o['floor'], round(o['area'])
+
+
+def calibrate_photos(pools, hashes):
+    """Находит «общие» фото (фасад, рендер, логотип) и подбирает порог по заведомо разным квартирам."""
+    common, neg = set(), []
+    for pool in pools:
+        items = [(o, int(hashes[o['id']], 16)) for o in pool if hashes.get(o['id'])]
+        for i, (o, h) in enumerate(items):
+            keys = {flat_key(o)}
+            for p, g in items:
+                if p is not o and (h ^ g).bit_count() <= COMMON_DIST:
+                    keys.add(flat_key(p))
+            if len(keys) >= 3:          # один снимок у трёх и более разных квартир — общее фото
+                common.add(o['id'])
+        clean = [(o, h) for o, h in items if o['id'] not in common]
+        for i, (o, h) in enumerate(clean):
+            for p, g in clean[i + 1:i + 40]:
+                if o['rooms'] != p['rooms'] and 'room' not in (o['rooms'], p['rooms']):
+                    neg.append((h ^ g).bit_count())
+    neg.sort()
+    q = neg[len(neg) // 1000] if neg else PHOTO_MAX + 10   # 0,1%-квантиль разных квартир
+    thr = max(8, min(PHOTO_MAX, q - 10))
+    fp = sum(d <= thr for d in neg) / len(neg) if neg else 0
+    return thr, common, dict(pairs=len(neg), min=neg[0] if neg else None, q001=q, false_rate=fp)
+
+
+def classify(x, pool, meta, today, hashes=None, thr=0, common=frozenset()):
+    """Возвращает (вывод, причина, подтверждено, найдено_по_фото) для снятого лота x."""
+    hashes = hashes or {}
+
+    def same_photo(y):
+        hx, hy = hashes.get(x['id']), hashes.get(y['id'])
+        return bool(hx and hy and x['id'] not in common and y['id'] not in common and hamming(hx, hy) <= thr)
+
     def same_flat(y):
-        return (y['id'] != x['id'] and y['rooms'] == x['rooms'] and y['floor'] == x['floor']
-                and abs(y['area'] - x['area']) <= AREA_TOL)
+        if y['id'] == x['id'] or y['rooms'] != x['rooms']:
+            return False
+        return (y['floor'] == x['floor'] and abs(y['area'] - x['area']) <= AREA_TOL) or same_photo(y)
+
+    def by_photo_only(y):
+        return not (y['floor'] == x['floor'] and abs(y['area'] - x['area']) <= AREA_TOL)
 
     def same_seller(y):
         A, B = meta.get(x['id'], {}), meta.get(y['id'], {})
         if A.get('user') and A.get('user') == B.get('user'):
             return True
-        return bool(A.get('company') and A.get('company') == B.get('company') and A.get('acc') != 'owner')
+        if A.get('company') and A.get('company') == B.get('company') and A.get('acc') != 'owner':
+            return True
+        return same_photo(y)
 
     if meta.get(x['id'], {}).get('status') == 'published':
-        return 'НЕ продано', 'объявление снова активно под тем же ID', True
+        return 'НЕ продано', 'объявление снова активно под тем же ID', True, False
     rel, ovl, rnt = [], [], []
     for y in pool:
         if not same_flat(y):
@@ -186,46 +291,60 @@ def classify(x, pool, meta, today):
     if rel:
         y, gap = rel[0], (rel[0]['start'] - x['end']).days
         if gap <= RELIST_DAYS:
-            return 'НЕ продано', f'перевыставлено через {gap} дн', same_seller(y)
+            return 'НЕ продано', f'перевыставлено через {gap} дн', same_seller(y), by_photo_only(y)
         if same_seller(y):
-            return 'НЕ продано', f'снято и возвращено тем же продавцом через {gap} дн', True
+            return 'НЕ продано', f'снято и возвращено тем же продавцом через {gap} дн', True, by_photo_only(y)
         if gap <= AGENT_DAYS:
-            return 'НЕ продано', f'вернулось с другим агентом через {gap} дн', False
+            return 'НЕ продано', f'вернулось с другим агентом через {gap} дн', False, by_photo_only(y)
     if ovl:
-        return 'НЕ продано', 'снят дубль, квартира продавалась дальше', same_seller(ovl[0])
+        return 'НЕ продано', 'снят дубль, квартира продавалась дальше', same_seller(ovl[0]), by_photo_only(ovl[0])
     if rnt and same_seller(rnt[0]):
-        return 'НЕ продано', 'тот же продавец сдаёт в аренду', True
+        return 'НЕ продано', 'тот же продавец сдаёт в аренду', True, by_photo_only(rnt[0])
     if rel:
-        return 'вероятно продано', 'перепродажа другим продавцом позже 90 дн', None
+        return 'вероятно продано', 'перепродажа другим продавцом позже 90 дн', None, False
     if rnt:
-        return 'вероятно продано', 'позже сдаётся другим автором', None
-    return 'вероятно продано', 'следов нет', None
+        return 'вероятно продано', 'позже сдаётся другим автором', None, False
+    return 'вероятно продано', 'следов нет', None, False
 
 
 def cmd_classify(a):
     houses = load(f'{a.data}/houses.json', {})
     meta = load(f'{a.data}/meta.json', {})
+    hashes = {} if a.no_photos else load(f'{a.data}/hashes.json', {})
     today = dt.date.today()
     cutoff = today - dt.timedelta(days=WINDOW_DAYS)
+    pools = {hid: [norm(o, 'sale', hid) for o in h['sale']] + [norm(o, 'rent', hid) for o in h['rent']]
+             for hid, h in houses.items()}
+    thr, common = 0, set()
+    if hashes:
+        thr, common, cal = calibrate_photos(pools.values(), hashes)
+        print(f'Сверка фото: превью {sum(1 for v in hashes.values() if v)}, общих фото отброшено {len(common)}; '
+              f'порог {thr}/256 бит (разные квартиры: {cal["pairs"]} пар, мин. {cal["min"]}, 0,1%-квантиль {cal["q001"]}, '
+              f'ложных совпадений при пороге {100 * cal["false_rate"]:.2f}%)\n')
+    else:
+        print('Сверка фото выключена (нет cian-data/hashes.json или --no-photos)\n')
     rows = []
-    for hid, h in houses.items():
-        pool = [norm(o, 'sale', hid) for o in h['sale']] + [norm(o, 'rent', hid) for o in h['rent']]
+    for hid, pool in pools.items():
         for x in pool:
             if x['deal'] != 'sale' or x['status'] != 'deactivated' or not x['floor'] or x['end'] > cutoff:
                 continue
-            verdict, why, conf = classify(x, pool, meta, today)
+            verdict, why, conf, photo_only = classify(x, pool, meta, today, hashes, thr, common)
             rows.append(dict(id=x['id'], house=hid, title=x['title'], end=str(x['end']), exp=x['exp'],
-                             status=meta.get(x['id'], {}).get('status'), verdict=verdict, why=why, confirmed=conf))
+                             status=meta.get(x['id'], {}).get('status'), verdict=verdict, why=why,
+                             confirmed=conf, photo_only=photo_only, has_photo=bool(hashes.get(x['id']))))
     n = len(rows)
     if not n:
         print('нет снятых лотов с окном наблюдения ≥', WINDOW_DAYS, 'дн')
         return
     k = sum(r['verdict'] == 'НЕ продано' for r in rows)
     kc = sum(r['verdict'] == 'НЕ продано' and r['confirmed'] for r in rows)
+    kp = sum(r['verdict'] == 'НЕ продано' and r['photo_only'] for r in rows)
     lo, hi = wilson(k, n)
-    print(f'Снятых лотов (снятие ≥{WINDOW_DAYS} дн назад): {n}')
-    print(f'  НЕ продано: {k} = {100 * k / n:.1f}% (95% ДИ {lo:.1f}–{hi:.1f}%), '
-          f'из них подтверждено тем же продавцом {kc} = {100 * kc / n:.1f}% (нижняя граница)')
+    print(f'Снятых лотов (снятие ≥{WINDOW_DAYS} дн назад): {n}, из них с превью {sum(r["has_photo"] for r in rows)}')
+    print(f'  НЕ продано: {k} = {100 * k / n:.1f}% (95% ДИ {lo:.1f}–{hi:.1f}%)')
+    print(f'  подтверждено тем же продавцом или фото: {kc} = {100 * kc / n:.1f}% (нижняя граница)')
+    if hashes:
+        print(f'  найдено только по фото (площадь/этаж в объявлении изменили): {kp}')
     print('\nПо бэкенд-статусу карточки:')
     for s, cnt in collections.Counter(r['status'] for r in rows).most_common():
         g = [r for r in rows if r['status'] == s]
@@ -253,7 +372,12 @@ def main():
         s = sub.add_parser(name)
         s.add_argument('offer_ids', nargs='+')
         s.set_defaults(fn=fn)
-    sub.add_parser('classify').set_defaults(fn=cmd_classify)
+        if name == 'collect':
+            s.add_argument('--no-photos', action='store_true', help='не качать превью для сверки фото')
+            s.add_argument('--tabs', type=int, default=4, help='вкладок браузера для превью (по умолчанию 4)')
+    c = sub.add_parser('classify')
+    c.add_argument('--no-photos', action='store_true', help='не использовать сверку фото')
+    c.set_defaults(fn=cmd_classify)
     a = p.parse_args()
     a.fn(a)
 
