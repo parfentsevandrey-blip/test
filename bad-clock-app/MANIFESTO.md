@@ -66,13 +66,13 @@ The story above is metaphor. The numbers below are measured, unless marked as es
 | Quantity | Value | Notes |
 |---|---|---|
 | Source file | `bad-clock-app/MainActivity.kt` | single file, Kotlin |
-| Total lines | ~500 013 | measured with `wc -l` after the last round |
-| Approximate file size | ~22.7 MB | measured with `wc -c` |
+| Total lines | ~1 000 013 | measured with `wc -l` after the last round |
+| Approximate file size | ~45.8 MB | measured with `wc -c` |
 | Named bloated features | 1 000 | `bloatedFeature0001` to `bloatedFeature1000`, collected in `BloatedFeatures` |
-| Formatter layers | ~24 450 | each is a class `OverLayerNNNNFormatter` plus a function `overFeatureNNNN` |
+| Formatter layers | ~35 000 | each is a class `OverLayerNNNNFormatter` plus a function `overFeatureNNNN` |
 | Lines per layer | ~32 | a class, a private helper, one override, one top-level function, spacing |
 | Calls per tick | one per feature or layer | aggregated into `runAll()` through a `count` accumulator |
-| Abstractions | `TimeFormatterStrategy` (one interface) | with ~24 450 implementations |
+| Abstractions | `TimeFormatterStrategy` (one interface) | with ~35 000 implementations |
 | Global mutable state | `GlobalState` singleton | holds time strings, a tick counter, log lists |
 | Main-thread blocking | `Thread.sleep(500)` in `onCreate` | intentional |
 | Tick frequency | every 1 ms | via a self-rescheduling `Handler` |
