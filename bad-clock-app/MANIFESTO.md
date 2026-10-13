@@ -9,7 +9,6 @@
 We, the authors of BadClock, hold these truths to be self-evident. The following 266 articles of faith are listed in order of conviction. Each one was written by hand, at least once, by someone who believed it.
 
 ## Articles of Faith
-
 1. We believe a clock should tell the time, and that it may do so in many ways at once.
 2. We believe a second formatter is a backup and a third is a philosophy.
 3. We believe a lonely function is a function that has not yet been multiplied.
@@ -276,11 +275,21 @@ We, the authors of BadClock, hold these truths to be self-evident. The following
 264. We believe the overlay of interfaces welcomes one more interface.
 265. We believe the factory of factories rewards a patient reviewer.
 266. We believe the indirection garden celebrates a fresh layer of indirection.
+267. We believe one hundred thousand lines is the natural size of a clock.
+268. We believe a clock of this size can finally tell the time with conviction.
+269. We believe the quota was a horizon, and the horizon was a suggestion.
+270. We believe every layer added is a small monument to the one before it.
+271. We believe the editor is a humble tool, and we have asked it for a great deal.
+272. We believe a 4 MB source file is a sign of commitment to the source file.
+273. We believe the PDF should be printed by someone with a large shelf.
+274. We believe the log is the most honest document this project has produced.
+275. We believe the number 100 000 is a round number that deserves a round celebration.
+276. We believe the first line remains in place, as it always has.
 
 ## Closing Declaration
 
-BadClock is now roughly 29 000 lines long, contains 1 900 bloated features and overcomplicated layers, and rests on 266 articles of faith. Let it be read by juniors who learn what to avoid, by seniors who smile in recognition, and by future maintainers who will, with great courage, one day delete the first line.
+BadClock is now roughly 100 000 lines long, with thousands of overcomplicated layers and 276 articles of faith. Let it be read by juniors who learn what to avoid, by seniors who smile in recognition, and by future maintainers who will, with great courage, one day delete the first line.
 
 **We will not delete the first line.**
 
-*Signed, the authors of BadClock, who are proud of every line and of all 266 articles above.*
+*Signed, the authors of BadClock, who are proud of every line and of all 276 articles above.*
