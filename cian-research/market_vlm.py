@@ -116,9 +116,7 @@ def cmd_inspect(a):
     t_all = time.time()
     for n, cid in enumerate(ids, 1):
         paths = pick_photos(con, cid)
-        if not paths:
-            con.execute('insert or replace into inspect(cian_id, model, photos, date) values(?,?,?,date("now"))',
-                        (cid, VLM, '[]'))
+        if not paths:           # фото нет на диске (свежий контейнер) — осмотрим после `photos`
             continue
         ims = [Image.open(p).convert('RGB') for p in paths]
         msgs = [{'role': 'user', 'content': [{'type': 'image'} for _ in ims] + [{'type': 'text', 'text': PROMPT}]}]

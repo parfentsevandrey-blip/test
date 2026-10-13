@@ -395,10 +395,22 @@ def cmd_photos(a):
     client()                      # замок: фото не качаем параллельно со сбором
     os.makedirs(a.cache, exist_ok=True)
     todo = []
-    for r in con.execute('select cian_id, photos from listing where cian_id not in (select cian_id from photo)'):
+    con.execute('create table if not exists inspect(cian_id integer primary key, model text, photos text, raw text, '
+                'data text, condition text, age text, works text, seconds real, date text)')
+    have = {}
+    for p in con.execute('select cian_id, path from photo'):
+        have.setdefault(p[0], []).append(bool(p[1] and os.path.exists(p[1])))
+    inspected = {r[0] for r in con.execute('select cian_id from inspect where data is not null')}
+    clipped = {r[0] for r in con.execute("select cian_id from clip_feat")} \
+        if con.execute("select name from sqlite_master where name='clip_feat'").fetchone() else set()
+    for r in con.execute('select cian_id, photos from listing where gone_seen is null'):
+        cid = r['cian_id']
+        # новые объявления, а также не осмотренные / без CLIP-признаков, чьих файлов нет (свежий контейнер)
+        if cid in have and (any(have[cid]) or (cid in inspected and cid in clipped)):
+            continue
         for i, u in enumerate(json.loads(r['photos'] or '[]')[:a.per_listing]):
             if u:
-                todo.append((r['cian_id'], i, u))
+                todo.append((cid, i, u))
     print(f'фото к загрузке: {len(todo)}', flush=True)
     res = []
 
