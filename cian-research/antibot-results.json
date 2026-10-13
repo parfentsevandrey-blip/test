@@ -1,0 +1,52 @@
+[
+ {
+  "strategy": "S1 новый клиент, 1 с",
+  "requests": 40,
+  "ok": 40,
+  "share": 1.0,
+  "first_block": null,
+  "seconds": 104,
+  "rate_per_min": 23.1,
+  "cooldown_before": 2.004700183868408
+ },
+ {
+  "strategy": "S2 сессия с cookies, 1 с",
+  "requests": 40,
+  "ok": 40,
+  "share": 1.0,
+  "first_block": null,
+  "seconds": 86,
+  "rate_per_min": 27.9,
+  "cooldown_before": 4.215462684631348
+ },
+ {
+  "strategy": "S3 сессия + пауза 2,5–5 с",
+  "requests": 40,
+  "ok": 40,
+  "share": 1.0,
+  "first_block": null,
+  "seconds": 204,
+  "rate_per_min": 11.8,
+  "cooldown_before": 1.3953707218170166
+ },
+ {
+  "strategy": "S4 прогрев + Referer, 1 с",
+  "requests": 40,
+  "ok": 40,
+  "share": 1.0,
+  "first_block": null,
+  "seconds": 97,
+  "rate_per_min": 24.6,
+  "cooldown_before": 0.9889280796051025
+ },
+ {
+  "strategy": "S5 смена отпечатка, 1 с",
+  "requests": 10,
+  "ok": 5,
+  "share": 0.5,
+  "first_block": 3,
+  "seconds": 20,
+  "rate_per_min": 29.4,
+  "cooldown_before": 0.8380336761474609
+ }
+]
