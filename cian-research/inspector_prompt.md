@@ -43,25 +43,29 @@ apartment's condition, the age of its renovation and the works a buyer must do b
   cisterns, black or brass fittings, track lights, shadow-gap or skirting-free details, full-height hidden doors.
 
 ## Works needed before resale (pick one)
-- `none` — sell as is.
-- `refresh` — paint walls, fix details, staging; under ~10% of a full renovation.
-- `cosmetic` — new floor covering, wall finishing, doors; keep wiring, plumbing and layout.
-- `major` — everything in cosmetic plus new bathroom, kitchen, wiring and plumbing.
-- `full` — from a shell or white box: all finishing works.
+- `none` — sell as is: `modern` or `designer` without visible defects.
+- `refresh` — only paint, small fixes, staging. Use it ONLY for a recent `cosmetic` renovation in good shape.
+- `cosmetic` — new floor covering, wall finishing and doors; bathroom and kitchen can stay. Typical for an
+  `old_livable` flat whose bathroom and kitchen are still acceptable (renovated within ~10–15 years).
+- `major` — cosmetic plus new bathroom, kitchen, wiring and plumbing. Always for `needs_renovation`; also for
+  `old_livable` when the bathroom or kitchen is from the 1990s–2000s (beige tiles with borders, corner bath,
+  wooden kitchen set).
+- `full` — all finishing works: `bare_shell`, `white_box`, `not_shown` new-build without finishing.
+An `old_livable` flat never gets `none` or `refresh`.
 
 ## Answer
-Reply with one JSON object and nothing else (no markdown fences). Values in English for the enum fields,
-Russian for "summary", "issues" and the per-area notes:
+Reply with one JSON object and nothing else (no markdown fences). All text in English, terse note style
+(no full sentences, no articles), e.g. "laminate, wallpaper, stretch ceiling":
 {"condition": "<not_shown|bare_shell|white_box|needs_renovation|old_livable|cosmetic|modern|designer>",
  "condition_confidence": <0.0-1.0>,
  "renovation_age": "<new_0_3|recent_3_7|dated_7_15|old_15_plus|soviet|none>",
  "works": "<none|refresh|cosmetic|major|full>",
- "kitchen": "<короткое описание по-русски или not visible>",
- "bathroom": "<короткое описание по-русски или not visible>",
- "rooms": "<пол, стены, потолок в комнатах по-русски>",
- "windows_doors": "<окна и двери по-русски>",
+ "kitchen": "<fronts, worktop, appliances, or not visible>",
+ "bathroom": "<tiles, bath/shower, toilet, or not visible>",
+ "rooms": "<floor, walls, ceiling>",
+ "windows_doors": "<windows, doors>",
  "furniture": "<none|partial|full>",
- "issues": ["<каждый видимый дефект по-русски>"],
- "extras": ["<балкон, вид, планировка, фасад и т. п., если видно>"],
+ "issues": ["<visible defect>"],
+ "extras": ["<balcony, view, layout, facade if visible>"],
  "photos_used": <how many photos showed interiors>,
- "summary": "<2–3 предложения по-русски: в каком состоянии квартира и что с ней нужно сделать>"}
+ "summary": "<one sentence: condition and what to do>"}
