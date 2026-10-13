@@ -52,7 +52,7 @@ create table if not exists run(date text primary key, active integer, new intege
 
 def db_open(path):
     os.makedirs(os.path.dirname(path) or '.', exist_ok=True)
-    con = sqlite3.connect(path)
+    con = sqlite3.connect(path, timeout=120)   # фото и осмотр могут писать в базу одновременно
     con.row_factory = sqlite3.Row
     con.executescript(SCHEMA)
     cols = {r[1] for r in con.execute('pragma table_info(listing)')}

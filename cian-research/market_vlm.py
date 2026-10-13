@@ -24,6 +24,14 @@ WORKS_RU = {'none': 'не нужны', 'refresh': 'освежить', 'cosmetic'
             'full': 'ремонт с нуля'}
 
 
+def photos_complete(con, cid):
+    """Скачаны ли все фото объявления (404 не в счёт) — иначе осмотр подождёт."""
+    urls = json.loads(con.execute('select photos from listing where cian_id=?', (cid,)).fetchone()[0] or '[]')
+    rows = {r[0]: (r[1], r[2]) for r in con.execute('select idx, url, path from photo where cian_id=?', (cid,))}
+    return all(i in rows and rows[i][0] == u and (rows[i][1] is None or os.path.exists(rows[i][1]))
+               for i, u in enumerate(urls) if u)
+
+
 def listing_photos(con, cid):
     return [r[0] for r in con.execute('select path from photo where cian_id=? and path is not null order by idx', (cid,))
             if os.path.exists(r[0])]
@@ -38,21 +46,34 @@ def cmd_inspect(a):
     con.execute('create table if not exists inspect(cian_id integer primary key, model text, photos text, raw text, '
                 'data text, condition text, age text, works text, seconds real, date text)')
     where = 'gone_seen is null' if not a.all else '1'
-    ids = [r[0] for r in con.execute(
-        f'select cian_id from listing where {where} and cian_id not in (select cian_id from inspect where model=?) '
-        f'order by first_seen desc', (MODEL_NAME,))]
-    ids = [i for i in ids if listing_photos(con, i)][:a.limit]     # без фото на диске — после `photos`
-    print(f'к осмотру: {len(ids)} объявлений (~{len(ids) * 2:.0f} мин)', flush=True)
-    if not ids:
+
+    def pending():
+        ids = [r[0] for r in con.execute(
+            f'select cian_id from listing where {where} and cian_id not in (select cian_id from inspect where model=?) '
+            f'order by first_seen desc', (MODEL_NAME,)) if listing_photos(con, r[0])]
+        return [i for i in ids if photos_complete(con, i)], len(ids)
+
+    ready, total = pending()
+    print(f'к осмотру: {len(ready)} объявлений с полным набором фото (ещё докачиваются: {total - len(ready)}), '
+          f'~{len(ready) * 2:.0f} мин', flush=True)
+    if not ready and not a.wait:
         return
     prompt = open('inspector_prompt.md').read()
     schema = json.load(open('vlm_schema.json'))
     import vlm_eval
     vlm_eval.LLAMA = os.environ['LLAMA_BIN']
     server = Server(MODEL, MMPROJ, 96, log='market-data/vlm-server.log', ctx=16384)
-    t_all, deadline = time.time(), time.time() + a.max_minutes * 60
+    t_all, deadline, n, failed = time.time(), time.time() + a.max_minutes * 60, 0, set()
     try:
-        for n, cid in enumerate(ids, 1):
+        while time.time() < deadline and n < a.limit:
+            ready, total = pending()
+            ready = [i for i in ready if i not in failed]
+            if not ready:
+                if a.wait and total > len(failed):    # фото ещё докачиваются (`photos` в параллель)
+                    time.sleep(60)
+                    continue
+                break
+            cid = ready[0]
             allp = listing_photos(con, cid)
             keep, _out, _dup = photo_sort.sort_photos(allp, 0.93)
             keep = keep[:MAX_PHOTOS]
@@ -61,8 +82,9 @@ def cmd_inspect(a):
                 ans, _sec, raw, _t, _rc = run_listing(server, keep, prompt, schema)
             else:
                 ans, raw = {'condition': 'not_shown', 'renovation_age': 'none', 'works': None,
-                            'summary': 'No photo shows the apartment itself.'}, ''
+                            'summary': 'На фото нет самой квартиры.'}, ''
             if ans is None:
+                failed.add(cid)
                 print(f'  {cid}: нет ответа модели — повторим в следующий раз', flush=True)
                 continue
             con.execute('insert or replace into inspect values(?,?,?,?,?,?,?,?,?,date("now"))',
@@ -70,12 +92,12 @@ def cmd_inspect(a):
                          COND_RU.get(ans.get('condition')), AGE_RU.get(ans.get('renovation_age')),
                          WORKS_RU.get(ans.get('works')), time.time() - t0))
             con.commit()
-            el = time.time() - t_all
-            if n % 5 == 0 or n == len(ids):
-                print(f'  {n}/{len(ids)}, {el / n:.0f} с/объявление, осталось ~{el / n * (len(ids) - n) / 60:.0f} мин', flush=True)
-            if time.time() > deadline:
-                print(f'  стоп по времени ({a.max_minutes} мин): осмотрено {n}, остальные — при следующем запуске', flush=True)
-                break
+            n += 1
+            if n % 5 == 0:
+                left = pending()[1]
+                print(f'  осмотрено {n}, {(time.time() - t_all) / n:.0f} с/объявление, осталось {left} '
+                      f'(~{left * (time.time() - t_all) / n / 60:.0f} мин)', flush=True)
+        print(f'осмотрено за запуск: {n}; осталось: {pending()[1]}', flush=True)
     finally:
         server.close()
 
@@ -85,4 +107,5 @@ def add_parser(sub):
     p.add_argument('--limit', type=int, default=10000)
     p.add_argument('--max-minutes', type=float, default=1e9, help='остановиться после N минут (продолжение — следующим запуском)')
     p.add_argument('--all', action='store_true', help='включая ушедшие объявления')
+    p.add_argument('--wait', action='store_true', help='ждать объявления, чьи фото ещё докачиваются')
     p.set_defaults(fn=cmd_inspect)
