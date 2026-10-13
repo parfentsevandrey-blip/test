@@ -30,6 +30,8 @@ MODELS = {
     'qwen36-35b-a3b': ('unsloth/Qwen3.6-35B-A3B-GGUF', r'UD-IQ2_M\.gguf$', r'mmproj-F16\.gguf$|mmproj.*\.gguf$'),
     'gemma4-12b': ('unsloth/gemma-4-12b-it-GGUF', r'it-Q4_K_M\.gguf$', r'mmproj-F16\.gguf$|mmproj.*\.gguf$'),
     'minicpmv47-1b': ('openbmb/MiniCPM-V-4.7-1B-gguf', r'Q4_K_M\.gguf$', r'mmproj-model-f16-4x\.gguf$|mmproj.*\.gguf$'),
+    'gemma4-26b-a4b': ('unsloth/gemma-4-26B-A4B-it-GGUF', r'UD-IQ3_S\.gguf$', r'mmproj-F16\.gguf$'),
+    'gemma4-12b-qat': ('google/gemma-4-12B-it-qat-q4_0-gguf', r'it-qat-q4_0\.gguf$', r'mmproj.*\.gguf$'),
     # Bonsai 2 27B: тернарные веса, нужна сборка PrismML llama.cpp (LLAMA_BIN)
     'bonsai2-27b': ('prism-ml/Ternary-Bonsai-2-27B-gguf', r'27B-PQ2_0\.gguf$', r'mmproj-Q8_0\.gguf$'),
     # «решающая» модель: классы за один проход без генерации текста (llama-server /v1/systemone)
@@ -37,6 +39,8 @@ MODELS = {
 }
 DECISION = {'d1-3b'}
 KNOWN_FILES = {
+    'gemma4-26b-a4b': ['gemma-4-26B-A4B-it-UD-IQ3_S.gguf', 'mmproj-F16.gguf'],
+    'gemma4-12b-qat': ['gemma-4-12b-it-qat-q4_0.gguf', 'mmproj-gemma-4-12b-it-qat-q4_0.gguf'],
     'qwen36-35b-a3b': ['Qwen3.6-35B-A3B-UD-IQ2_M.gguf', 'mmproj-F16.gguf'],
     'bonsai2-27b': ['Ternary-Bonsai-2-27B-PQ2_0.gguf', 'Ternary-Bonsai-2-27B-mmproj-Q8_0.gguf'],
 }
