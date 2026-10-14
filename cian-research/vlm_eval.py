@@ -135,10 +135,10 @@ class Server:
                 time.sleep(1)
         raise RuntimeError(f'llama-server не поднялся, см. {log}')
 
-    def ask(self, prompt, paths, schema):
+    def ask(self, prompt, paths, schema, note=''):
         import base64, urllib.request
         content = [{'type': 'image_url', 'image_url': {'url': 'data:image/jpeg;base64,' + base64.b64encode(open(p, 'rb').read()).decode()}}
-                   for p in paths] + [{'type': 'text', 'text': 'Inspect this apartment and fill in the form.'}]
+                   for p in paths] + [{'type': 'text', 'text': (note + '\n' if note else '') + 'Inspect this apartment and fill in the form.'}]
         body = {'messages': [{'role': 'system', 'content': prompt}, {'role': 'user', 'content': content}],
                 'temperature': 0, 'max_tokens': 700, 'repeat_penalty': 1.1, 'cache_prompt': True,
                 'response_format': {'type': 'json_schema', 'json_schema': {'schema': schema}},
@@ -175,10 +175,10 @@ class Server:
         self.proc.wait(30)
 
 
-def run_listing(server, paths, prompt, schema):
+def run_listing(server, paths, prompt, schema, note=''):
     t0 = time.time()
     try:
-        text, timings = server.decide(paths) if getattr(server, 'decision', False) else server.ask(prompt, paths, schema)
+        text, timings = server.decide(paths) if getattr(server, 'decision', False) else server.ask(prompt, paths, schema, note)
     except Exception as e:
         return None, time.time() - t0, str(e)[:500], {}, 1
     m = re.search(r'\{.*\}', text, re.S)

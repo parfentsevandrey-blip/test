@@ -32,6 +32,23 @@ def photos_complete(con, cid):
                for i, u in enumerate(urls) if u)
 
 
+def listing_note(con, cid):
+    """Факты объявления для модели: год дома и новостройка — ремонт не может быть старше дома."""
+    r = con.execute('select build_year, year_lo, year_hi, is_new from listing where cian_id=?', (cid,)).fetchone()
+    if not r:
+        return ''
+    year, lo, hi, new = r
+    if year:
+        s = f'Building year: {year}.'
+    elif lo and (not hi or hi >= 2090):
+        s = f'Building year: {lo} or later.'
+    elif lo or hi:
+        s = f'Building year: between {lo or "?"} and {hi or "?"}.'
+    else:
+        s = 'Building year: unknown.'
+    return s + (' New building (sold by the developer or recently completed).' if new else '')
+
+
 def listing_photos(con, cid):
     return [r[0] for r in con.execute('select path from photo where cian_id=? and path is not null order by idx', (cid,))
             if os.path.exists(r[0])]
@@ -48,11 +65,15 @@ def cmd_inspect(a):
     where = 'gone_seen is null' if not a.all else '1'
 
     def pending():
+        if a.ids:
+            ids = [int(i) for i in a.ids.split(',') if int(i) not in done_ids]
+            return ids, len(ids)
         ids = [r[0] for r in con.execute(
             f'select cian_id from listing where {where} and cian_id not in (select cian_id from inspect where model=?) '
             f'order by first_seen desc', (MODEL_NAME,)) if listing_photos(con, r[0])]
         return [i for i in ids if photos_complete(con, i)], len(ids)
 
+    done_ids = set()
     ready, total = pending()
     print(f'к осмотру: {len(ready)} объявлений с полным набором фото (ещё докачиваются: {total - len(ready)}), '
           f'~{len(ready) * 2:.0f} мин', flush=True)
@@ -79,13 +100,20 @@ def cmd_inspect(a):
             keep = keep[:MAX_PHOTOS]
             t0 = time.time()
             if keep:
-                ans, _sec, raw, _t, _rc = run_listing(server, keep, prompt, schema)
+                ans, _sec, raw, _t, _rc = run_listing(server, keep, prompt, schema, listing_note(con, cid))
             else:
                 ans, raw = {'condition': 'not_shown', 'renovation_age': 'none', 'works': None,
                             'summary': 'На фото нет самой квартиры.'}, ''
             if ans is None:
                 failed.add(cid)
                 print(f'  {cid}: нет ответа модели — повторим в следующий раз', flush=True)
+                continue
+            done_ids.add(cid)
+            if a.dry:
+                old = con.execute('select data from inspect where cian_id=?', (cid,)).fetchone()
+                o = json.loads(old[0]) if old and old[0] else {}
+                print(f'  {cid} [{listing_note(con, cid)}] было {o.get("condition")}/{o.get("renovation_age")}/{o.get("works")} '
+                      f'→ стало {ans.get("condition")}/{ans.get("renovation_age")}/{ans.get("works")} | {ans.get("summary")}', flush=True)
                 continue
             con.execute('insert or replace into inspect values(?,?,?,?,?,?,?,?,?,date("now"))',
                         (cid, MODEL_NAME, json.dumps(keep), raw or None, json.dumps(ans, ensure_ascii=False),
@@ -107,5 +135,7 @@ def add_parser(sub):
     p.add_argument('--limit', type=int, default=10000)
     p.add_argument('--max-minutes', type=float, default=1e9, help='остановиться после N минут (продолжение — следующим запуском)')
     p.add_argument('--all', action='store_true', help='включая ушедшие объявления')
+    p.add_argument('--ids', help='осмотреть только эти объявления (через запятую), даже если уже осмотрены')
+    p.add_argument('--dry', action='store_true', help='не записывать, а показать «было → стало»')
     p.add_argument('--wait', action='store_true', help='ждать объявления, чьи фото ещё докачиваются')
     p.set_defaults(fn=cmd_inspect)

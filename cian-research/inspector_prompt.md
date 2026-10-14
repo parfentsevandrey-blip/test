@@ -34,6 +34,11 @@ apartment's condition, the age of its renovation and the works a buyer must do b
   wall panels, high-end plumbing. Clearly above an ordinary good renovation.
 
 ## Renovation age cues
+The message may state the building year. A renovation cannot be older than the building: in a building finished
+in the last ~10 years there is no 1990s–2000s renovation. A plain finish there (laminate, plain beige or white tiles,
+white walls, simple kitchen, standard doors) is a developer or budget finish: `cosmetic` (or `modern` if it is a
+quality one), age `new_0_3` or `recent_3_7`, works `refresh` — never `old_livable` with `major`. Use the style cues
+below only to date renovations in older buildings.
 - Soviet era (before 1991): parquet in a herringbone pattern that is worn and dark, wooden double windows, enamel
   paint on walls/pipes, small square tiles, cast-iron radiators with many sections.
 - 1995–2010: arches, stucco moldings, multi-level plasterboard ceilings, glossy stretch ceilings, beige/brown tiles
@@ -47,7 +52,8 @@ apartment's condition, the age of its renovation and the works a buyer must do b
 - `refresh` — only paint, small fixes, staging. Use it ONLY for a recent `cosmetic` renovation in good shape.
 - `cosmetic` — new floor covering, wall finishing and doors; bathroom and kitchen can stay. Typical for an
   `old_livable` flat whose bathroom and kitchen are still acceptable (renovated within ~10–15 years).
-- `major` — cosmetic plus new bathroom, kitchen, wiring and plumbing. Always for `needs_renovation`; also for
+- `major` — cosmetic plus new bathroom, kitchen, wiring and plumbing. Choose it only when the bathroom or the
+  kitchen itself is worn out or clearly 1990s–2000s; if both look acceptable, it is `cosmetic`. Always for `needs_renovation`; also for
   `old_livable` when the bathroom or kitchen is from the 1990s–2000s (beige tiles with borders, corner bath,
   wooden kitchen set).
 - `full` — all finishing works: `bare_shell`, `white_box`, `not_shown` new-build without finishing.
