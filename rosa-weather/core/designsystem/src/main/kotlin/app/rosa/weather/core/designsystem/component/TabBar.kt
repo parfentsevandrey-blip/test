@@ -59,6 +59,10 @@ import app.rosa.weather.core.designsystem.haptics.LocalHaptics
 import app.rosa.weather.core.designsystem.motion.LocalMotionEnabled
 import app.rosa.weather.core.designsystem.motion.RosaMotion
 import app.rosa.weather.core.designsystem.theme.Rosa
+import app.rosa.weather.core.designsystem.seaglass.LocalSeaGlass
+import app.rosa.weather.core.designsystem.seaglass.SeaGlass
+import app.rosa.weather.core.designsystem.seaglass.seaGlass
+import app.rosa.weather.core.designsystem.seaglass.seaPill
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
@@ -113,9 +117,12 @@ fun GlassTabBar(
     val rest = if (colors.isLightSky) Color.White.copy(alpha = 0.55f) else lerp(Color.White.copy(alpha = 0.15f), Color.Black.copy(alpha = 0.16f), bright)
     val lip = Color.White.copy(alpha = if (colors.isLightSky) 0.85f else 0.28f)
     val shape = RoundedCornerShape(GlassTabBarHeight / 2)
+    // Sea glass: a floating capsule of lilac glass, the selected tab a frosted pill set into it.
+    val sea = LocalSeaGlass.current
 
     BoxWithConstraints(modifier.fillMaxWidth().height(GlassTabBarHeight)) {
         val segment = (maxWidth - Inset * 2) / count
+        if (sea) Box(Modifier.fillMaxSize().seaGlass(SeaGlass.Lilac, GlassTabBarHeight / 2, SeaGlass.Dimens.Floating)) else {
         // A layer of its own above the content: a deep shadow that still shows over a night sky
         // or a dark card, so the bar never reads as part of what lies under it.
         Box(Modifier.fillMaxSize().dropShadow(shape, DropShadow(radius = 26.dp, color = Color.Black, offset = DpOffset(0.dp, 8.dp), alpha = if (colors.isLightSky) 0.2f else 0.45f)))
@@ -131,6 +138,7 @@ fun GlassTabBar(
             Brush.verticalGradient(0f to Color.White.copy(alpha = 0.4f), 1f to Color.White.copy(alpha = 0.12f))
         }
         Box(Modifier.fillMaxSize().clip(shape).background(tone).border(1.dp, edge, shape))
+        }
         // The drop spans both of its edges and stays inside the bar: at the last tab it squashes
         // against the wall. Stretched, it thins a little, as liquid keeps its volume.
         val drop = Modifier
@@ -150,14 +158,16 @@ fun GlassTabBar(
                 scaleY = (1f - 0.14f * stretch.coerceIn(0f, 1f)) * (1f + 0.3f * lift)
             }
         val pillShape = RoundedCornerShape((GlassTabBarHeight - Inset * 2) / 2)
-        Box(
+        if (sea) {
+            Box(drop.seaPill(SeaGlass.Lilac, (GlassTabBarHeight - Inset * 2) / 2, strength = 1f + 0.5f * lift))
+        } else Box(
             drop
                 .graphicsLayer { alpha = 1f - lift }
                 .clip(pillShape)
                 .background(rest)
                 .border(0.8.dp, Brush.verticalGradient(0f to lip, 0.55f to lip.copy(alpha = 0f)), pillShape),
         )
-        if (lift > 0.02f) GlassSurface(drop, style = GlassStyle.Lens, cornerRadius = (GlassTabBarHeight - Inset * 2) / 2) {}
+        if (lift > 0.02f && !sea) GlassSurface(drop, style = GlassStyle.Lens, cornerRadius = (GlassTabBarHeight - Inset * 2) / 2) {}
         Row(
             Modifier
                 .fillMaxSize()
@@ -212,8 +222,9 @@ fun GlassTabBar(
                 val lit = if (pressed) i == underLens else i == selected
                 // The selected tab in the accent over dark skies; over bright ones, where the
                 // accent's gold would fade into the milky glass, in a deep blue.
-                val selectedTint = if (colors.isLightSky) SelectedOnLight else colors.accent
-                val selectedLabel = if (colors.isLightSky) SelectedOnLight else lerp(colors.accent, colors.ink, bright)
+                val selectedTint = if (sea) SeaGlass.Lilac.content else if (colors.isLightSky) SelectedOnLight else colors.accent
+                val selectedLabel = if (sea) SeaGlass.Lilac.content else if (colors.isLightSky) SelectedOnLight else lerp(colors.accent, colors.ink, bright)
+                val idle = if (sea) SeaGlass.Lilac.content.copy(alpha = 0.72f) else colors.ink
                 Column(
                     Modifier
                         .width(segment)
@@ -236,12 +247,12 @@ fun GlassTabBar(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    RosaIconView(tab.icon, if (lit) selectedTint else colors.ink, size = 24.dp)
+                    RosaIconView(tab.icon, if (lit) selectedTint else idle, size = 24.dp)
                     Text(
                         tab.label,
                         // Light type keeps a soft shadow, as over the sky itself.
                         style = if (colors.isLightSky) Rosa.type.caption else Rosa.type.caption.copy(shadow = LabelShadow),
-                        color = if (lit) selectedLabel else colors.ink,
+                        color = if (lit) selectedLabel else idle,
                         maxLines = 1,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 3.dp),

@@ -53,7 +53,8 @@ data class SkyPalette(
         fun of(appearance: Appearance, sunElevation: Double, visual: WeatherVisual, moonIllumination: Double = 0.5): SkyPalette =
             when (appearance) {
                 Appearance.Auto -> of(sunElevation, visual, moonIllumination)
-                Appearance.Light -> of(LIGHT_ELEVATION, visual, moonIllumination).bleached()
+                // Sea glass draws no sky: a porcelain palette stands in wherever one is read.
+                Appearance.Light, Appearance.SeaGlass -> of(LIGHT_ELEVATION, visual, moonIllumination).bleached()
                 Appearance.Evening -> of(EVENING_ELEVATION, visual, moonIllumination)
                 Appearance.Dark -> of(DARK_ELEVATION, visual, maxOf(moonIllumination, 0.4))
             }

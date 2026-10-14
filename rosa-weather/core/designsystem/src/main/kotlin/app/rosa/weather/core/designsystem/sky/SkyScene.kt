@@ -129,7 +129,8 @@ data class SkyParams(
             val path = ((1.0 - sin(Math.toRadians(body.azimuth))) / 2.0).toFloat()
             val lift = (body.elevation / 50.0).toFloat().coerceIn(-0.25f, 1f)
             val night = when (appearance) {
-                Appearance.Auto -> ((-moment.sun.elevation - 6) / 8.0).toFloat().coerceIn(0f, 1f)
+                // Sea glass draws no sky, but its canvas still turns lilac at night.
+                Appearance.Auto, Appearance.SeaGlass -> ((-moment.sun.elevation - 6) / 8.0).toFloat().coerceIn(0f, 1f)
                 Appearance.Dark -> 1f
                 Appearance.Evening -> 0.3f // the first stars of the blue hour
                 Appearance.Light -> 0f

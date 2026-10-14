@@ -57,6 +57,12 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import app.rosa.weather.core.designsystem.glass.GlassStyle
+import app.rosa.weather.core.designsystem.seaglass.LocalSeaGlass
+import app.rosa.weather.core.designsystem.seaglass.LocalSeaPalette
+import app.rosa.weather.core.designsystem.seaglass.SeaGlass
+import app.rosa.weather.core.designsystem.seaglass.SeaTone
+import app.rosa.weather.core.designsystem.seaglass.seaGlass
+import app.rosa.weather.core.designsystem.seaglass.seaPill
 import app.rosa.weather.core.designsystem.haptics.LocalHaptics
 import app.rosa.weather.core.designsystem.motion.RosaMotion
 import app.rosa.weather.core.designsystem.theme.Rosa
@@ -79,7 +85,7 @@ fun GlassToggle(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: 
     val onChange by rememberUpdatedState(onCheckedChange)
     Box(
         modifier
-            .size(width = 58.dp, height = 32.dp)
+            .size(width = if (LocalSeaGlass.current) 60.dp else 58.dp, height = if (LocalSeaGlass.current) 34.dp else 32.dp)
             .semantics {
                 role = Role.Switch
                 toggleableState = ToggleableState(checked)
@@ -97,6 +103,10 @@ fun GlassToggle(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: 
                 }
             },
     ) {
+        if (LocalSeaGlass.current) {
+            SeaToggle(checked, position, lift, Modifier)
+            return@Box
+        }
         Canvas(Modifier.fillMaxWidth().fillMaxHeight()) {
             val track = androidx.compose.ui.graphics.lerp(colors.fill.copy(alpha = 0.22f), colors.accent, position)
             drawRoundRect(track, cornerRadius = CornerRadius(size.height / 2))
@@ -189,6 +199,30 @@ fun GlassSlider(
         contentAlignment = Alignment.CenterStart,
     ) {
         val widthPx = constraints.maxWidth.toFloat()
+        if (LocalSeaGlass.current) {
+            // Sea glass: a periwinkle groove filled with deeper periwinkle, a pebble of pale cyan
+            // glass that swells and deepens while held.
+            Canvas(Modifier.fillMaxWidth().height(8.dp)) {
+                val r = CornerRadius(size.height / 2)
+                drawRoundRect(SeaGlass.Periwinkle.bottom.copy(alpha = 0.9f), cornerRadius = r)
+                drawRoundRect(Brush.verticalGradient(listOf(SeaGlass.Periwinkle.top, Color(0xFFA4BFF2))), size = Size(size.width * fraction, size.height), cornerRadius = r)
+            }
+            val pebble = 30.dp
+            val pebbleX = with(density) { (fraction * (widthPx - pebble.toPx())).roundToInt() }
+            Box(
+                Modifier
+                    .offset { IntOffset(pebbleX, 0) }
+                    .size(pebble)
+                    .graphicsLayer {
+                        val s = 1f + 0.14f * lift
+                        val q = squash.value
+                        scaleX = s * (1f + abs(q) * 0.18f)
+                        scaleY = s * (1f - abs(q) * 0.08f)
+                    }
+                    .seaGlass(lerpPalette(SeaGlass.Cyan, SeaGlass.Milk, 0.35f), 15.dp, elevation = 6.dp, press = { lift }),
+            )
+            return@BoxWithConstraints
+        }
         Canvas(Modifier.fillMaxWidth().height(6.dp)) {
             drawRoundRect(colors.fill.copy(alpha = 0.25f), cornerRadius = CornerRadius(size.height / 2))
             drawRoundRect(colors.accent, size = Size(size.width * fraction, size.height), cornerRadius = CornerRadius(size.height / 2))
@@ -248,7 +282,8 @@ fun <T> GlassSegmented(
     val lift by animateFloatAsState(if (pressed || moving) 1f else 0f, spring(0.8f, 700f), label = "lift")
     val rest = if (colors.isLightSky) Color.White.copy(alpha = 0.86f) else Color.White.copy(alpha = 0.24f)
     val lip = Color.White.copy(alpha = if (colors.isLightSky) 0.9f else 0.32f)
-    GlassSurface(modifier.height(44.dp), cornerRadius = 22.dp) {
+    val sea = LocalSeaGlass.current
+    GlassSurface(modifier.height(44.dp), cornerRadius = 22.dp, tone = SeaTone.Lilac) {
         BoxWithConstraints(Modifier.fillMaxWidth().fillMaxHeight().padding(4.dp)) {
             val segment = maxWidth / options.size
             // The drop spans both edges and stays inside the control: overshooting at the last
@@ -270,7 +305,10 @@ fun <T> GlassSegmented(
                     scaleX = (1f + stretch) * (1f + 0.08f * lift)
                     scaleY = (1f - 0.14f * stretch.coerceIn(0f, 1f)) * (1f + 0.16f * lift)
                 }
-            Box(
+            if (sea) {
+                // The design's nested pill: frosted white set into the lilac glass, sliding over.
+                Box(pill.seaPill(LocalSeaPalette.current ?: SeaGlass.Lilac, 18.dp, strength = 1f + 0.3f * lift))
+            } else Box(
                 pill
                     .graphicsLayer { alpha = 1f - lift }
                     .dropShadow(RoundedCornerShape(18.dp), Shadow(radius = 5.dp, color = Color.Black, offset = DpOffset(0.dp, 1.5.dp), alpha = if (colors.isLightSky) 0.1f else 0.12f))
@@ -278,7 +316,7 @@ fun <T> GlassSegmented(
                     .background(rest)
                     .border(0.8.dp, Brush.verticalGradient(0f to lip, 0.5f to lip.copy(alpha = 0f)), RoundedCornerShape(18.dp)),
             )
-            if (lift > 0.02f) GlassSurface(pill, style = GlassStyle.Lens, cornerRadius = 18.dp, shadow = false) {}
+            if (lift > 0.02f && !sea) GlassSurface(pill, style = GlassStyle.Lens, cornerRadius = 18.dp, shadow = false) {}
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -342,7 +380,8 @@ fun <T> GlassSegmented(
                         Text(
                             label(option),
                             style = Rosa.type.label,
-                            color = if (i == index) colors.ink else colors.inkSoft,
+                            // Read here: set into sea glass, its own deep hue.
+                            color = if (i == index) Rosa.colors.ink else Rosa.colors.inkSoft,
                             textAlign = TextAlign.Center,
                             maxLines = 1,
                         )

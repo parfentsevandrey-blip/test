@@ -68,6 +68,8 @@ import app.rosa.weather.core.designsystem.glass.GlassStyle
 import app.rosa.weather.core.designsystem.glass.LocalGlassEnvironment
 import app.rosa.weather.core.designsystem.glass.liquidGlass
 import app.rosa.weather.core.designsystem.glass.pressTilt
+import app.rosa.weather.core.designsystem.seaglass.LocalSeaGlass
+import app.rosa.weather.core.designsystem.seaglass.SeaTone
 import androidx.compose.animation.core.VectorConverter
 import kotlin.math.abs
 import kotlin.math.asin
@@ -119,6 +121,8 @@ fun GlassSurface(
     touchResponsive: Boolean = true,
     /** The primary action: set into other glass, it stands out as a denser, brighter platter. */
     prominent: Boolean = false,
+    /** In sea glass, which glass this is (default: milky, cyan when prominent). */
+    tone: SeaTone? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val backdrop = LocalBackdrop.current
@@ -126,6 +130,10 @@ fun GlassSurface(
     val motion = LocalMotionEnabled.current
     val scope = rememberCoroutineScope()
     val level = LocalGlassLevel.current
+    if (LocalSeaGlass.current) {
+        SeaSurface(modifier, style, cornerRadius, state, shadow, contentPadding, contentAlignment, touchResponsive && motion, prominent, tone, level, content)
+        return
+    }
     if (level > 0 && style != GlassStyle.Lens) {
         Platter(modifier, cornerRadius, state, contentPadding, contentAlignment, touchResponsive && motion, level, prominent, content)
         return
@@ -305,9 +313,13 @@ fun GlassButton(
     enabled: Boolean = true,
     /** The primary action among its neighbours. */
     prominent: Boolean = false,
+    /** In sea glass, which glass this is. */
+    tone: SeaTone? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val haptics = LocalHaptics.current
+    // Sea glass sinks under the finger instead of swelling, and neither tilts nor stretches.
+    val sea = LocalSeaGlass.current
     val state = rememberGlassState()
     val scope = rememberCoroutineScope()
     val press = remember { Animatable(0f) }
@@ -315,12 +327,12 @@ fun GlassButton(
     val pull = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
     // Rich glass (the weather app) is pushed in 3D and drawn after the finger; the calendar's stays plainer.
     val rich = LocalRichGlass.current
-    val liquid = LocalMotionEnabled.current && rich
+    val liquid = LocalMotionEnabled.current && rich && !sea
     val reach = with(LocalDensity.current) { PULL_REACH.toPx() }
-    val light = remember(state, scope, rich) { GlassTouchLight(state, scope, rich) }
+    val light = remember(state, scope, rich, sea) { GlassTouchLight(state, scope, rich && !sea) }
     var size by remember { mutableStateOf(IntSize.Zero) }
     val currentOnClick by rememberUpdatedState(onClick)
-    val grow = if (size.height > 0) 1f + 8f / size.height else 1.04f
+    val grow = if (sea) 0.965f else if (size.height > 0) 1f + 8f / size.height else 1.04f
 
     GlassSurface(
         modifier = modifier
@@ -377,6 +389,7 @@ fun GlassButton(
         contentAlignment = Alignment.Center,
         touchResponsive = false,
         prominent = prominent,
+        tone = tone,
         content = content,
     )
 }
@@ -403,6 +416,10 @@ fun GlassIconButton(
     modifier: Modifier = Modifier,
     style: GlassStyle = GlassStyle.Regular,
 ) {
+    if (LocalSeaGlass.current && LocalGlassLevel.current == 0) {
+        SeaIconButton(icon, contentDescription, onClick, modifier)
+        return
+    }
     val hop = rememberHop()
     GlassButton(
         onClick = {

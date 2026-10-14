@@ -10,11 +10,13 @@ enum class HapticsLevel { Off, Subtle, Rich }
 enum class EffectsQuality { Auto, Battery, Balanced, Cinematic }
 
 /**
- * How the app is lit. [Auto] follows the real sky — dawn, day, dusk, night; the others hold one
- * mood all day. Weather (clouds, rain, snow, fog) stays real in every mode.
+ * How the app is lit. [Auto] follows the real sky — dawn, day, dusk, night; [Light], [Evening]
+ * and [Dark] hold one mood all day. Weather (clouds, rain, snow, fog) stays real in every mode.
+ * [SeaGlass] is a different design altogether: no sky, a pale pastel canvas, and the interface
+ * in coloured, frosted sea glass, tinted by the weather.
  */
 @Serializable
-enum class Appearance { Auto, Light, Evening, Dark }
+enum class Appearance { Auto, Light, Evening, Dark, SeaGlass }
 
 @Serializable
 data class AppSettings(

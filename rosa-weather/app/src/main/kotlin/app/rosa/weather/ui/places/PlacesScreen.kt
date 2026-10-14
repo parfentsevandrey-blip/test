@@ -1,5 +1,7 @@
 package app.rosa.weather.ui.places
 
+import app.rosa.weather.core.designsystem.seaglass.LocalSeaGlass
+import app.rosa.weather.ui.common.seaToneFor
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -207,8 +209,10 @@ private fun PlaceCard(
                 .clickable(remember { MutableInteractionSource() }, null, role = Role.Button, onClick = onClick),
             style = GlassStyle.Frosted,
             cornerRadius = 28.dp,
+            // In sea glass the card is the city's weather in coloured glass instead of its sky.
+            tone = moment?.let { seaToneFor(it.condition, it.isDay, it.temperature) },
         ) {
-            if (palette != null) {
+            if (palette != null && !LocalSeaGlass.current) {
                 val top = palette.zenith.toColor().copy(alpha = 0.55f)
                 val bottom = palette.horizon.toColor().copy(alpha = 0.4f)
                 Canvas(Modifier.matchParentSize()) { drawRect(Brush.linearGradient(listOf(top, bottom))) }

@@ -1,5 +1,7 @@
 package app.rosa.weather.core.designsystem.glass
 
+import app.rosa.weather.core.designsystem.seaglass.LocalSeaGlass
+import app.rosa.weather.core.designsystem.theme.Rosa
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
 import android.graphics.Matrix
@@ -83,6 +85,17 @@ fun GlassText(
     tintStrength: Float = 0.2f,
     prefetch: List<String> = emptyList(),
 ) {
+    if (LocalSeaGlass.current) {
+        // Sea glass has no sky to refract: the numerals are type, in Inter, in the glass's hue.
+        androidx.compose.material3.Text(
+            text,
+            modifier.semantics { contentDescription = text },
+            style = Rosa.type.hero.copy(fontSize = fontSize),
+            color = color,
+            maxLines = 1,
+        )
+        return
+    }
     val context = LocalContext.current
     val density = LocalDensity.current
     val backdrop = LocalBackdrop.current

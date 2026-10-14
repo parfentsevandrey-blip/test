@@ -101,6 +101,9 @@ import app.rosa.weather.core.designsystem.component.RosaIconView
 import app.rosa.weather.core.designsystem.component.WeatherGlyph
 import app.rosa.weather.core.designsystem.format.WeatherFormat
 import app.rosa.weather.core.designsystem.glass.GlassStyle
+import app.rosa.weather.core.designsystem.seaglass.LocalSeaGlass
+import app.rosa.weather.core.designsystem.seaglass.SeaGlass
+import app.rosa.weather.ui.common.seaToneFor
 import app.rosa.weather.core.designsystem.glass.GlassText
 import app.rosa.weather.core.designsystem.haptics.LocalHaptics
 import app.rosa.weather.core.designsystem.motion.LocalAmbientClock
@@ -414,103 +417,122 @@ private fun Hero(
         AnimatedVisibility(feels, enter = fadeIn() + slideInVertically(), exit = fadeOut() + slideOutVertically()) {
             Text(stringResource(R.string.feels_like_label), style = Rosa.type.label, color = colors.accent, modifier = Modifier.padding(start = 6.dp))
         }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.onGloballyPositioned {
-                probe.row = it
-                probe.report()
-            },
-        ) {
-            val feelsLabel = stringResource(R.string.feels_like_label)
-            // The number itself is liquid glass: the sky refracts through it and values melt.
-            // Every temperature the timeline can scrub to (it interpolates between hours, so the
-            // whole range), prepared before it is needed.
-            val upcoming = remember(forecast, format) {
-                val hours = forecast.hourly.filter { it.time >= forecast.current.time - 3600 }.take(49)
-                val values = hours.flatMap { listOf(it.temperature, it.apparentTemperature) } +
-                    listOf(forecast.current.temperature, forecast.current.apparentTemperature)
-                if (values.isEmpty()) {
-                    emptyList()
-                } else {
-                    (floor(values.min()).toInt()..ceil(values.max()).toInt()).map { format.temperature(it.toDouble()) }.distinct()
+        // Sea glass: the weather sits in a card of coloured glass, its colour the weather's own.
+        val sea = LocalSeaGlass.current
+        val body: @Composable () -> Unit = {
+            // Read here: inside sea glass, the card's own deep hue.
+            val colors = Rosa.colors
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.onGloballyPositioned {
+                    probe.row = it
+                    probe.report()
+                },
+            ) {
+                val feelsLabel = stringResource(R.string.feels_like_label)
+                // The number itself is liquid glass: the sky refracts through it and values melt.
+                // Every temperature the timeline can scrub to (it interpolates between hours, so the
+                // whole range), prepared before it is needed.
+                val upcoming = remember(forecast, format) {
+                    val hours = forecast.hourly.filter { it.time >= forecast.current.time - 3600 }.take(49)
+                    val values = hours.flatMap { listOf(it.temperature, it.apparentTemperature) } +
+                        listOf(forecast.current.temperature, forecast.current.apparentTemperature)
+                    if (values.isEmpty()) {
+                        emptyList()
+                    } else {
+                        (floor(values.min()).toInt()..ceil(values.max()).toInt()).map { format.temperature(it.toDouble()) }.distinct()
+                    }
+                }
+                GlassText(
+                    text = format.temperature(if (feels) moment.apparentTemperature else moment.temperature),
+                    fontSize = Rosa.type.hero.fontSize,
+                    color = colors.ink,
+                    // Clear glass: just enough of the ink in it to read, more over pale skies.
+                    tintStrength = if (colors.isLightSky) 0.3f else 0.16f,
+                    prefetch = upcoming,
+                    modifier = Modifier
+                        .semantics { liveRegion = LiveRegionMode.Polite }
+                        .onGloballyPositioned {
+                            probe.numeral = it
+                            probe.report()
+                        }
+                        .graphicsLayer {
+                            val v = squash.value
+                            scaleX = 1f + 0.05f * v
+                            scaleY = 1f - 0.04f * v
+                            // Depth: the numerals float above the sky and drift against it as the
+                            // phone tilts.
+                            val t = tilt?.value ?: Offset.Zero
+                            translationX = t.x * HERO_PARALLAX.toPx()
+                            translationY = t.y * HERO_PARALLAX.toPx() * 0.7f
+                        }
+                        .clickable(remember { MutableInteractionSource() }, indication = null, onClickLabel = feelsLabel) {
+                            haptics?.tick()
+                            feels = !feels
+                            scope.launch {
+                                squash.snapTo(1f)
+                                squash.animateTo(0f, spring(dampingRatio = 0.35f, stiffness = 420f))
+                            }
+                        },
+                )
+                Spacer(Modifier.weight(1f))
+                // Under a clear real sky the sun or moon takes this very spot (see HeroProbe), so the
+                // icon steps aside for it. Fixed moods draw no bodies: the icon always stays.
+                val bodyUp = (if (moment.sun.elevation > -5) moment.sun.elevation else moment.moon.elevation) > 3
+                val clearish = moment.condition == WeatherCondition.Clear || moment.condition == WeatherCondition.MostlyClear
+                if (!(realSky && clearish && bodyUp)) {
+                    // Nearer still: the glyph drifts further than the numerals.
+                    WeatherGlyph(
+                        moment.condition,
+                        moment.isDay,
+                        Modifier.size(HERO_GLYPH).graphicsLayer {
+                            val t = tilt?.value ?: Offset.Zero
+                            translationX = t.x * GLYPH_PARALLAX.toPx()
+                            translationY = t.y * GLYPH_PARALLAX.toPx() * 0.7f
+                        },
+                        moonPhase = moment.moonPhase.phase,
+                        animated = true,
+                    )
                 }
             }
-            GlassText(
-                text = format.temperature(if (feels) moment.apparentTemperature else moment.temperature),
-                fontSize = Rosa.type.hero.fontSize,
+            Text(
+                format.condition(moment.condition, moment.isDay),
+                style = Rosa.type.title.copy(shadow = shadow),
                 color = colors.ink,
-                // Clear glass: just enough of the ink in it to read, more over pale skies.
-                tintStrength = if (colors.isLightSky) 0.3f else 0.16f,
-                prefetch = upcoming,
-                modifier = Modifier
-                    .semantics { liveRegion = LiveRegionMode.Polite }
-                    .onGloballyPositioned {
-                        probe.numeral = it
-                        probe.report()
-                    }
-                    .graphicsLayer {
-                        val v = squash.value
-                        scaleX = 1f + 0.05f * v
-                        scaleY = 1f - 0.04f * v
-                        // Depth: the numerals float above the sky and drift against it as the
-                        // phone tilts.
-                        val t = tilt?.value ?: Offset.Zero
-                        translationX = t.x * HERO_PARALLAX.toPx()
-                        translationY = t.y * HERO_PARALLAX.toPx() * 0.7f
-                    }
-                    .clickable(remember { MutableInteractionSource() }, indication = null, onClickLabel = feelsLabel) {
-                        haptics?.tick()
-                        feels = !feels
-                        scope.launch {
-                            squash.snapTo(1f)
-                            squash.animateTo(0f, spring(dampingRatio = 0.35f, stiffness = 420f))
-                        }
-                    },
+                modifier = Modifier.padding(start = 6.dp),
             )
-            Spacer(Modifier.weight(1f))
-            // Under a clear real sky the sun or moon takes this very spot (see HeroProbe), so the
-            // icon steps aside for it. Fixed moods draw no bodies: the icon always stays.
-            val bodyUp = (if (moment.sun.elevation > -5) moment.sun.elevation else moment.moon.elevation) > 3
-            val clearish = moment.condition == WeatherCondition.Clear || moment.condition == WeatherCondition.MostlyClear
-            if (!(realSky && clearish && bodyUp)) {
-                // Nearer still: the glyph drifts further than the numerals.
-                WeatherGlyph(
-                    moment.condition,
-                    moment.isDay,
-                    Modifier.size(HERO_GLYPH).graphicsLayer {
-                        val t = tilt?.value ?: Offset.Zero
-                        translationX = t.x * GLYPH_PARALLAX.toPx()
-                        translationY = t.y * GLYPH_PARALLAX.toPx() * 0.7f
-                    },
-                    moonPhase = moment.moonPhase.phase,
-                    animated = true,
+            if (today != null) {
+                Text(
+                    format.highLow(today.temperatureMax, today.temperatureMin) + " · " +
+                        format.headline(Headline.FeelsLike(moment.apparentTemperature), moment.epochSeconds),
+                    style = Rosa.type.body.copy(shadow = shadow),
+                    color = colors.inkSoft,
+                    modifier = Modifier.padding(start = 6.dp, top = 2.dp),
                 )
             }
-        }
-        Text(
-            format.condition(moment.condition, moment.isDay),
-            style = Rosa.type.title.copy(shadow = shadow),
-            color = colors.ink,
-            modifier = Modifier.padding(start = 6.dp),
-        )
-        if (today != null) {
-            Text(
-                format.highLow(today.temperatureMax, today.temperatureMin) + " · " +
-                    format.headline(Headline.FeelsLike(moment.apparentTemperature), moment.epochSeconds),
-                style = Rosa.type.body.copy(shadow = shadow),
-                color = colors.inkSoft,
-                modifier = Modifier.padding(start = 6.dp, top = 2.dp),
-            )
-        }
-        if (headline !is Headline.Steady) {
-            Spacer(Modifier.height(12.dp))
-            GlassSurface(style = GlassStyle.Clear, cornerRadius = 20.dp, contentPadding = PaddingValues(horizontal = 14.dp, vertical = 9.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    PulsingDot(colors.accent)
-                    Spacer(Modifier.width(8.dp))
-                    Text(format.headline(headline, moment.epochSeconds), style = Rosa.type.label, color = colors.ink)
+            if (headline !is Headline.Steady) {
+                Spacer(Modifier.height(12.dp))
+                GlassSurface(style = GlassStyle.Clear, cornerRadius = 20.dp, contentPadding = PaddingValues(horizontal = 14.dp, vertical = 9.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        PulsingDot(colors.accent)
+                        Spacer(Modifier.width(8.dp))
+                        Text(format.headline(headline, moment.epochSeconds), style = Rosa.type.label, color = colors.ink)
+                    }
                 }
             }
+        }
+        if (sea) {
+            GlassSurface(
+                Modifier.fillMaxWidth(),
+                style = GlassStyle.Frosted,
+                cornerRadius = SeaGlass.Dimens.Card,
+                tone = seaToneFor(moment.condition, moment.isDay, moment.temperature),
+                contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 20.dp),
+            ) {
+                Column { body() }
+            }
+        } else {
+            body()
         }
         Spacer(Modifier.height(8.dp))
     }

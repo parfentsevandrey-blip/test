@@ -36,7 +36,12 @@ import app.rosa.weather.core.designsystem.sky.SkyScene
 import app.rosa.weather.core.designsystem.sky.SkyStage
 import app.rosa.weather.core.designsystem.theme.RosaTheme
 import app.rosa.weather.core.designsystem.theme.animatedRosaColors
+import app.rosa.weather.core.designsystem.seaglass.LocalSeaGlass
+import app.rosa.weather.core.designsystem.seaglass.SeaCanvas
+import app.rosa.weather.core.designsystem.seaglass.SeaGlass
+import app.rosa.weather.core.designsystem.theme.RosaType
 import app.rosa.weather.core.model.AppSettings
+import app.rosa.weather.core.model.Appearance
 import app.rosa.weather.core.model.EffectsQuality
 import app.rosa.weather.core.model.SkyPalette
 import kotlin.math.abs
@@ -53,11 +58,14 @@ fun RosaEnvironment(
     richGlass: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val colors = animatedRosaColors(palette)
+    // Sea glass is a design of its own: a pale canvas, coloured glass, Inter.
+    val sea = settings.appearance == Appearance.SeaGlass
+    val skyColors = animatedRosaColors(palette)
+    val colors = if (sea) SeaGlass.CanvasColors else skyColors
     val haptics = rememberRosaHaptics(settings.haptics)
     val motion = rememberSystemMotionEnabled()
     val clock = rememberAmbientClock(running = motion)
-    val tilt = rememberTilt(enabled = settings.tiltLighting && motion)
+    val tilt = rememberTilt(enabled = settings.tiltLighting && motion && !sea)
     val environment = remember { GlassEnvironment() }
     environment.tint = colors.glassTint
     environment.clock = clock
@@ -73,7 +81,7 @@ fun RosaEnvironment(
             if ((t - environment.tilt).getDistance() > 0.012f) environment.tilt = t
         }
     }
-    RosaTheme(colors) {
+    RosaTheme(colors, if (sea) SeaGlass.Type else RosaType.Default) {
         CompositionLocalProvider(
             LocalHaptics provides haptics,
             LocalMotionEnabled provides motion,
@@ -81,6 +89,7 @@ fun RosaEnvironment(
             LocalGlassEnvironment provides environment,
             LocalTilt provides tilt,
             LocalRichGlass provides richGlass,
+            LocalSeaGlass provides sea,
         ) {
             content()
         }
@@ -118,8 +127,19 @@ fun SkyBackdrop(
     content: @Composable BoxScope.() -> Unit,
 ) {
     val backdrop = rememberBackdrop()
-    val quality = rememberSceneQuality(effects)
     val motion = LocalMotionEnabled.current
+    if (LocalSeaGlass.current) {
+        // No sky: the pale canvas. Its glass is opaque and still; nothing in it lives on the sky.
+        LocalGlassEnvironment.current.alive = 0f
+        Box(modifier.fillMaxSize()) {
+            SeaCanvas(params, Modifier.fillMaxSize().backdropSource(backdrop))
+            CompositionLocalProvider(LocalBackdrop provides backdrop) {
+                content()
+            }
+        }
+        return
+    }
+    val quality = rememberSceneQuality(effects)
     // The glass lives with the sky: light at play in it, the weather on it moving — unless motion
     // is off or the sky is kept light for the battery.
     LocalGlassEnvironment.current.alive = if (motion && quality != SceneQuality.Battery) 1f else 0f

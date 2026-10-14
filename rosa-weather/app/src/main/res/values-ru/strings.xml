@@ -39,8 +39,9 @@
     <string name="appearance_auto">Авто</string>
     <string name="appearance_light">Светлый</string>
     <string name="appearance_evening">Вечерний</string>
+    <string name="appearance_sea_glass">Цветное стекло</string>
     <string name="appearance_dark">Тёмный</string>
-    <string name="appearance_hint">«Авто» следует за настоящим небом — от рассвета до ночи. В остальных режимах погода остаётся настоящей, меняется только свет.</string>
+    <string name="appearance_hint">«Авто» следует за настоящим небом — от рассвета до ночи. В остальных режимах погода остаётся настоящей, меняется только свет. «Цветное стекло» — другой дизайн: светлый фон и цветное матовое стекло.</string>
     <string name="settings_effects">Эффекты неба</string>
     <string name="settings_tilt">Свет от наклона</string>
     <string name="settings_tilt_hint">Блики на стекле двигаются, когда вы наклоняете телефон.</string>

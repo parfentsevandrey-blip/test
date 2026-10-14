@@ -45,6 +45,7 @@ import app.rosa.weather.core.designsystem.component.GlassSurface
 import app.rosa.weather.core.designsystem.component.WeatherGlyph
 import app.rosa.weather.core.designsystem.format.WeatherFormat
 import app.rosa.weather.core.designsystem.glass.GlassStyle
+import app.rosa.weather.core.designsystem.seaglass.SeaTone
 import app.rosa.weather.core.designsystem.motion.LocalAmbientClock
 import app.rosa.weather.core.designsystem.motion.LocalMotionEnabled
 import app.rosa.weather.core.designsystem.motion.RosaMotion
@@ -119,13 +120,16 @@ private fun countingUp(value: String): String {
 private val LeadingNumber = Regex("^([\u2212-]?)(\\d+)(?![.,]\\d)")
 
 @Composable
-private fun Tile(title: String, value: String, modifier: Modifier, subtitle: String? = null, visual: @Composable BoxScope.() -> Unit) {
-    val colors = Rosa.colors
+/** @param tone in sea glass, each tile is its own coloured glass, like the design's quick tiles. */
+private fun Tile(tone: SeaTone, title: String, value: String, modifier: Modifier, subtitle: String? = null, visual: @Composable BoxScope.() -> Unit) {
     GlassSurface(
         modifier.clearAndSetSemantics { contentDescription = listOfNotNull(title, value, subtitle).joinToString(", ") },
         style = GlassStyle.Frosted,
         cornerRadius = 26.dp,
+        tone = tone,
     ) {
+        // Read inside: in sea glass the tile's own deep hue.
+        val colors = Rosa.colors
         Column(Modifier.fillMaxSize().padding(16.dp)) {
             Text(title, style = Rosa.type.label, color = colors.inkSoft, maxLines = 1)
             Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center, content = visual)
@@ -145,7 +149,7 @@ private fun FeelsLikeTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifie
             else -> R.string.feels_same
         },
     )
-    Tile(stringResource(DsR.string.detail_feels_like), f.temperature(m.apparentTemperature), modifier, hint) {
+    Tile(SeaTone.Peach, stringResource(DsR.string.detail_feels_like), f.temperature(m.apparentTemperature), modifier, hint) {
         val colors = Rosa.colors
         Canvas(Modifier.fillMaxWidth().height(28.dp)) {
             // Actual vs felt on a small thermometer line.
@@ -168,6 +172,7 @@ private fun WindTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier) {
     // Stronger wind, quicker flutter (one swing every 0.3–1.6 s), on the shared ambient clock.
     val swing = ((1600 - m.windSpeed * 60) / 1000.0).toFloat().coerceAtLeast(0.3f)
     Tile(
+        SeaTone.Mint,
         stringResource(DsR.string.detail_wind),
         "${f.wind(m.windSpeed)} ${f.compass(m.windDirection)}",
         modifier,
@@ -214,6 +219,7 @@ private fun HumidityTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier
     val level = remember { Animatable(0f) }
     LaunchedEffect(m.humidity) { level.animateTo(m.humidity / 100f, RosaMotion.gel()) }
     Tile(
+        SeaTone.Cyan,
         stringResource(DsR.string.detail_humidity),
         f.percent(m.humidity),
         modifier,
@@ -258,7 +264,7 @@ private fun HumidityTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier
 private fun UvTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier) {
     val sweep = remember { Animatable(0f) }
     LaunchedEffect(m.uvIndex) { sweep.animateTo((m.uvIndex / 11.0).toFloat().coerceIn(0f, 1f), RosaMotion.gel()) }
-    Tile(stringResource(DsR.string.detail_uv), "${m.uvIndex.roundToInt()}", modifier, f.uvLevel(m.uvIndex)) {
+    Tile(SeaTone.Rose, stringResource(DsR.string.detail_uv), "${m.uvIndex.roundToInt()}", modifier, f.uvLevel(m.uvIndex)) {
         val colors = Rosa.colors
         Canvas(Modifier.size(84.dp, 48.dp)) {
             val stroke = 8.dp.toPx()
@@ -277,6 +283,7 @@ private fun UvTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier) {
 private fun SunTile(sunrise: Long, sunset: Long, now: Long, f: WeatherFormat, modifier: Modifier) {
     val daylightMinutes = ((sunset - sunrise) / 60).toInt()
     Tile(
+        SeaTone.Peach,
         stringResource(if (now < sunset && now >= sunrise) DsR.string.detail_sunset else DsR.string.detail_sunrise),
         f.time(if (now < sunset && now >= sunrise) sunset else sunrise),
         modifier,
@@ -304,7 +311,7 @@ private fun SunTile(sunrise: Long, sunset: Long, now: Long, f: WeatherFormat, mo
 private fun PressureTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier) {
     val needle = remember { Animatable(0f) }
     LaunchedEffect(m.pressure) { needle.animateTo(((m.pressure - 980) / 60).toFloat().coerceIn(0f, 1f), RosaMotion.gel()) }
-    Tile(stringResource(DsR.string.detail_pressure), f.pressureValue(m.pressure), modifier, f.pressureUnit()) {
+    Tile(SeaTone.Periwinkle, stringResource(DsR.string.detail_pressure), f.pressureValue(m.pressure), modifier, f.pressureUnit()) {
         val colors = Rosa.colors
         Canvas(Modifier.size(80.dp)) {
             val r = size.minDimension / 2
@@ -329,7 +336,7 @@ private fun PressureTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier
 
 @Composable
 private fun MoonTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier) {
-    Tile(stringResource(DsR.string.detail_moon), "${(m.moonPhase.illumination * 100).roundToInt()}%", modifier, f.moonPhase(m.moonPhase.phase)) {
+    Tile(SeaTone.Lilac, stringResource(DsR.string.detail_moon), "${(m.moonPhase.illumination * 100).roundToInt()}%", modifier, f.moonPhase(m.moonPhase.phase)) {
         WeatherGlyph(WeatherCondition.Clear, isDay = false, moonPhase = m.moonPhase.phase, modifier = Modifier.size(72.dp))
     }
 }
@@ -338,7 +345,7 @@ private fun MoonTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier) {
 private fun AirTile(forecast: Forecast, f: WeatherFormat, modifier: Modifier) {
     val air = forecast.air ?: return
     val aqi = air.europeanAqi ?: return
-    Tile(stringResource(DsR.string.detail_air), "$aqi", modifier, f.airLevel(air.level)) {
+    Tile(SeaTone.Mint, stringResource(DsR.string.detail_air), "$aqi", modifier, f.airLevel(air.level)) {
         val colors = Rosa.colors
         val position = remember { Animatable(0f) }
         LaunchedEffect(aqi) { position.animateTo((aqi / 100f).coerceIn(0f, 1f), RosaMotion.gel()) }
@@ -358,7 +365,7 @@ private fun AirTile(forecast: Forecast, f: WeatherFormat, modifier: Modifier) {
 @Composable
 private fun VisibilityTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifier) {
     val meters = m.visibility ?: return
-    Tile(stringResource(DsR.string.detail_visibility), f.visibility(meters), modifier, stringResource(R.string.visibility_hint).takeIf { meters > 10_000 }) {
+    Tile(SeaTone.Milk, stringResource(DsR.string.detail_visibility), f.visibility(meters), modifier, stringResource(R.string.visibility_hint).takeIf { meters > 10_000 }) {
         val colors = Rosa.colors
         Canvas(Modifier.fillMaxWidth().height(40.dp)) {
             val clear = (meters / 20_000.0).toFloat().coerceIn(0.05f, 1f)
@@ -372,7 +379,7 @@ private fun VisibilityTile(m: ForecastMoment, f: WeatherFormat, modifier: Modifi
 
 @Composable
 private fun PrecipitationTile(mm: Double, chance: Int, f: WeatherFormat, modifier: Modifier) {
-    Tile(stringResource(DsR.string.detail_precipitation), f.precipitation(mm), modifier, "${stringResource(DsR.string.detail_chance)} $chance%") {
+    Tile(SeaTone.Cyan, stringResource(DsR.string.detail_precipitation), f.precipitation(mm), modifier, "${stringResource(DsR.string.detail_chance)} $chance%") {
         WeatherGlyph(if (mm > 0.2) WeatherCondition.Rain else WeatherCondition.PartlyCloudy, isDay = true, animated = mm > 0.2, modifier = Modifier.size(64.dp))
     }
 }

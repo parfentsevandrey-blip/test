@@ -3,6 +3,18 @@ package app.rosa.weather.ui.settings
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import app.rosa.weather.core.designsystem.seaglass.SeaGlass
+import app.rosa.weather.core.designsystem.seaglass.seaGlass
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,6 +51,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.rosa.weather.R
 import app.rosa.weather.core.designsystem.component.rememberPressScale
 import app.rosa.weather.core.designsystem.haptics.LocalHaptics
@@ -52,7 +65,10 @@ import app.rosa.weather.core.model.WeatherVisual
 import kotlin.math.PI
 import kotlin.math.sin
 
-/** Four little living skies to choose the app's light from. */
+/**
+ * Four little living skies to choose the app's light from, and below them the other design: a
+ * tile of sea glass.
+ */
 @Composable
 internal fun AppearancePicker(selected: Appearance, onSelect: (Appearance) -> Unit) {
     val labels = mapOf(
@@ -61,9 +77,101 @@ internal fun AppearancePicker(selected: Appearance, onSelect: (Appearance) -> Un
         Appearance.Evening to stringResource(R.string.appearance_evening),
         Appearance.Dark to stringResource(R.string.appearance_dark),
     )
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Appearance.entries.forEach { mode ->
-            MoodTile(mode, labels.getValue(mode), mode == selected, Modifier.weight(1f)) { onSelect(mode) }
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Appearance.entries.filter { it != Appearance.SeaGlass }.forEach { mode ->
+                MoodTile(mode, labels.getValue(mode), mode == selected, Modifier.weight(1f)) { onSelect(mode) }
+            }
+        }
+        SeaGlassTile(stringResource(R.string.appearance_sea_glass), selected == Appearance.SeaGlass) { onSelect(Appearance.SeaGlass) }
+    }
+}
+
+/**
+ * The sea glass design, shown in its own material: three pebbles of coloured glass — a lilac
+ * capsule, a cyan squircle, a peach drop — on its pale canvas, whatever the app looks like now.
+ */
+@Composable
+private fun SeaGlassTile(label: String, selected: Boolean, onClick: () -> Unit) {
+    val haptics = LocalHaptics.current
+    val colors = Rosa.colors
+    val lift by animateFloatAsState(if (selected) 1f else 0f, RosaMotion.gel(), label = "sea")
+    var pressed by remember { mutableStateOf(false) }
+    val press = rememberPressScale(pressed)
+    val shape = RoundedCornerShape(18.dp)
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(76.dp)
+            .graphicsLayer {
+                val s = press * (0.97f + 0.03f * lift)
+                scaleX = s
+                scaleY = s
+                translationY = -3.dp.toPx() * lift
+            }
+            .drawWithContent {
+                drawContent()
+                if (lift > 0.01f) {
+                    val inset = 3.dp.toPx()
+                    drawRoundRect(
+                        colors.accent.copy(alpha = lift),
+                        topLeft = Offset(-inset, -inset),
+                        size = Size(size.width + inset * 2, size.height + inset * 2),
+                        cornerRadius = CornerRadius(18.dp.toPx() + inset),
+                        style = Stroke(2.dp.toPx()),
+                    )
+                }
+            }
+            .clip(shape)
+            .background(Brush.verticalGradient(listOf(SeaGlass.Canvas, SeaGlass.CanvasCool)))
+            .border(1.2.dp, Color.White.copy(alpha = 0.7f), shape)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        pressed = true
+                        tryAwaitRelease()
+                        pressed = false
+                    },
+                    onTap = {
+                        haptics?.tick()
+                        onClick()
+                    },
+                )
+            }
+            .semantics {
+                role = Role.RadioButton
+                this.selected = selected
+                contentDescription = label
+            }
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(width = 44.dp, height = 26.dp).seaGlass(SeaGlass.Lilac, 13.dp, 4.dp))
+            Spacer(Modifier.width(8.dp))
+            Box(Modifier.size(28.dp).seaGlass(SeaGlass.Cyan, 9.dp, 4.dp))
+            Spacer(Modifier.width(8.dp))
+            Box(Modifier.size(22.dp).seaGlass(SeaGlass.Peach, 11.dp, 4.dp))
+            Spacer(Modifier.width(16.dp))
+            Text(
+                label,
+                style = SeaGlass.Type.headline.copy(fontSize = 16.sp),
+                color = SeaGlass.Ink,
+                maxLines = 1,
+                modifier = Modifier.weight(1f),
+            )
+            if (selected) {
+                Box(Modifier.size(22.dp).clip(CircleShape).background(SeaGlass.Lilac.content), contentAlignment = Alignment.Center) {
+                    androidx.compose.foundation.Canvas(Modifier.size(12.dp)) {
+                        val tick = Path().apply {
+                            moveTo(size.width * 0.08f, size.height * 0.52f)
+                            lineTo(size.width * 0.4f, size.height * 0.82f)
+                            lineTo(size.width * 0.94f, size.height * 0.2f)
+                        }
+                        drawPath(tick, Color.White, style = Stroke(1.8.dp.toPx(), cap = StrokeCap.Round))
+                    }
+                }
+            }
         }
     }
 }
@@ -127,6 +235,7 @@ private fun MoodTile(mode: Appearance, label: String, selected: Boolean, modifie
                     Appearance.Light -> lightSky(sky, t)
                     Appearance.Evening -> eveningSky(sky, t)
                     Appearance.Dark -> darkSky(sky, t)
+                    Appearance.SeaGlass -> Unit
                 }
                 // Glass sheen across the top, as on every pane in the app.
                 drawRect(Brush.verticalGradient(0f to Color.White.copy(alpha = 0.22f), 0.45f to Color.Transparent))

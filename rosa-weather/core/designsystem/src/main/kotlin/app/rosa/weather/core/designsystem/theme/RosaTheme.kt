@@ -150,13 +150,13 @@ object Rosa {
 }
 
 @Composable
-fun RosaTheme(colors: RosaColors, content: @Composable () -> Unit) {
+fun RosaTheme(colors: RosaColors, type: RosaType = RosaType.Default, content: @Composable () -> Unit) {
     val scheme = if (colors.isLightSky) {
         lightColorScheme(primary = colors.ink, onPrimary = Color.White, secondary = colors.accent, surface = Color.White, onSurface = colors.ink)
     } else {
         darkColorScheme(primary = colors.accent, onPrimary = Color(0xFF14172A), secondary = colors.accent, surface = Color(0xFF14172A), onSurface = colors.ink)
     }
-    CompositionLocalProvider(LocalRosaColors provides colors, LocalRosaType provides RosaType.Default) {
+    CompositionLocalProvider(LocalRosaColors provides colors, LocalRosaType provides type) {
         MaterialTheme(colorScheme = scheme, content = content)
     }
 }
