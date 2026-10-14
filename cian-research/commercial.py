@@ -34,7 +34,7 @@ def query(deal, districts, page, sort=None):
          'region': {'type': 'terms', 'value': [1]},
          'geo': {'type': 'geo', 'value': [{'type': 'district', 'id': d} for d in districts]},
          'office_type': {'type': 'terms', 'value': [1, 5]},
-         'total_area': {'type': 'range', 'value': {'gte': 100, 'lte': 2500}},
+         'total_area': {'type': 'range', 'value': {'gte': 80, 'lte': 3000}},
          'page': {'type': 'term', 'value': page}}
     if sort:
         q['sort'] = {'type': 'term', 'value': sort}
@@ -80,7 +80,15 @@ def norm(o, deal):
         is_by_owner=(o.get('user') or {}).get('isAgent') is False, added=o.get('added'),
         photos=[p.get('fullUrl') for p in (o.get('photos') or []) if p.get('fullUrl') and not p.get('isLayout')][:12],
         url=o.get('fullUrl') or f'https://www.cian.ru/{deal}/commercial/{o["cianId"]}/',
-        title=o.get('title'), description=(o.get('description') or '')[:1500])
+        title=o.get('title'), description=(o.get('description') or '')[:2500],
+        # расширенные поля для кластеризации
+        b_type=bld.get('type'), b_class=bld.get('classType'), bc_dir_class=bc.get('buildingClassType'),
+        bc_type=bc.get('buildingType') or bc.get('type'), b_floors=bld.get('floorsCount'), b_material=bld.get('materialType'),
+        b_access=bld.get('accessType'), b_parking=(bld.get('parking') or {}).get('type'),
+        ceiling=o.get('ceilingHeight') or bld.get('ceilingHeight'), occupied=o.get('isOccupied'),
+        specialty=((o.get('specialty') or {}).get('types') or [])[:8],
+        included=b.get('includedOptions'), utilities=b.get('utilitiesTerms'), payment=b.get('paymentPeriod'),
+        undergrounds=[dict(name=u.get('name'), min=u.get('time'), walk=u.get('transportType') == 'walk') for u in und[:4]])
 
 
 def cmd_collect():

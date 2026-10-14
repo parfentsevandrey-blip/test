@@ -14,3 +14,6 @@ commercial-data/subj/
 commercial-data/stats.json
 reports/*.html
 commercial-data/cards_full.json
+commercial-data/bcphotos/
+commercial-data/offers_v1.json
+commercial-data/bc_profiles.json
