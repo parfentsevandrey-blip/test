@@ -1,6 +1,6 @@
 ===============================================================================
  Ретро-базы: исходный код Android-приложения одним текстовым файлом
- Файлов в архиве: 48
+ Файлов в архиве: 55
  Не включены: gradle/wrapper/gradle-wrapper.jar (бинарный, создаётся командой
    gradle wrapper --gradle-version 8.10.2) и local.properties (путь к вашему SDK).
 ===============================================================================
@@ -8,6 +8,7 @@
 СОДЕРЖАНИЕ:
   .gitignore
   DEVLOG.md
+  DEVLOG.txt
   README.md
   app/build.gradle.kts
   app/proguard-rules.pro
@@ -18,10 +19,16 @@
   app/src/main/java/com/example/retrodatabases/data/Entities.kt
   app/src/main/java/com/example/retrodatabases/data/Kind.kt
   app/src/main/java/com/example/retrodatabases/data/LibraryDao.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db1Additions.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db1Catalog.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db1Cross.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db1Devices.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db1Examples.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraDevices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraLanguages.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraPractices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraSystems.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraTools.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db1Flex.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db1Guides.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db1Languages.kt
@@ -99,6 +106,7 @@ Solo development log for the Android app in this folder. Entries are added at ch
 | CP-02 | 2026-10-14 | 4,277 | 169 | 82 | 115 | 4,643 | +177 (tests +169, examples +8) |
 | CP-03 | 2026-10-14 | 4,277 | 169 | 82 | 115 | 4,643 | 0 (no source changes; first build attempt failed) |
 | CP-04 | 2026-10-14 | 4,277 | 169 | 82 | 118 | 4,646 | +3 (.gitignore rule for generated Kotlin session data) |
+| CP-05 | 2026-10-14 | 6,236 | 169 | 82 | 118 | 6,605 | +1,959 (155 new records in five seed files) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -202,6 +210,243 @@ Non-blank lines at CP-04: 4,229 (Kotlin 3,911, tests 143, XML 74, Gradle and pro
 ### Next
 
 - Commit the packed source file `RetroDatabases_source.txt` together with this log.
+
+## CP-05: coverage audit and 155 added records
+
+Status: built, all 14 unit tests pass, debug APK assembles.
+
+Date: 2026-10-14. Totals: Kotlin main 6,236 (CP-04: 4,277), Kotlin test 169, XML 82, Gradle and project files 118, total 6,605. The +1,959 delta equals the size of the six new Kotlin files, and no other source changed.
+
+### What changed
+
+- Five seed files with new records: `Db1ExtraDevices.kt` (72), `Db1ExtraSystems.kt` (25), `Db1ExtraLanguages.kt` (22), `Db1ExtraTools.kt` (15) and `Db1ExtraPractices.kt` (21).
+- `Db1Additions.kt` joins the five lists into `db1Additions`. `Db1Catalog.kt` adds that list to `db1Records`; the change is one line.
+- Database 1 now has 320 records (165 before). Rare-flagged records rise from 55 to 181; 126 of the new records are rare.
+- New sections include regional home computers, Eastern-bloc and Soviet machines, Lisp machines, processor families, Unix variants, microkernels, networks, formal methods, and BBS and demoscene culture.
+
+### Audit
+
+- Compared the existing 165 records with reference lists of 1980s home computers, operating systems, processors, languages and tools, and with the standards and practices of the decade.
+- Searched for facts on the machines least likely to be known: Yugoslav, Bulgarian, Czechoslovak, East German, Chinese and Soviet computers, and the Iskra-1030.
+- Titles are unique across all 320 records. A grep over the seed files confirmed this before the build, and `SeedDataTest` enforces it.
+
+### Facts checked by web search
+
+- Galeb: 6502, made by PEL Varaždin. Sources disagree on the year: 1981 in one infobox, 1984 in a catalogue of Yugoslav systems. The entry uses 1981.
+- Orao: 6502 at 1 MHz, 1984. Standard school computer in Croatia and Vojvodina from 1985 to 1991.
+- Pecom 64: CDP1802B processor, 32 KB RAM, CDP1869 and CDP1870 video chips, 1985.
+- Tesla PMD 85: MHB8080A, a Czechoslovak copy of the Intel 8080, 2.048 MHz, produced from 1985 to 1989. One listing gives 1983 as the first year.
+- Matra Alice: Motorola 6803, 6847 video, a copy of the TRS-80 MC-10, sold in France from 1983.
+- Philips P2000T: Z80, Mullard SAA5050 teletext chip, built-in tape drive. Wikipedia gives March 1980 as the launch; a museum dates the T model to 1981.
+- Robotron Z1013: 1985, U880 (an East German Z80 clone). Variants Z1013.16 (1987) and Z1013.64 (1988).
+- Iskra-1030: IBM PC/XT-compatible, 8086 clone at 4.77 MHz, designed in Leningrad and built in Smolensk and Kursk. English Wikipedia gives 1989 as the release year.
+- CEC-I: Apple II-compatible, 6502A, 64 KB. Sources disagree on the maker and date (1986 or November 1987).
+
+### Corrections made during review
+
+- Pravetz 8D is an Oric Atmos clone, not an Apple II clone. Its year (1985) is an estimate; no source gave one.
+- The Iskra-1030 is no longer described as a school computer, which the sources did not support. It is now described as used in institute computing labs.
+- The CEC-I university attribution was removed; the sources do not support it.
+- Parlog was not used by the ICOT project. The entry now says it is related work.
+- The TI-99/4A is dated 1981, the year of the 4A. The 1979 date belongs to the TI-99/4.
+- Common Lisp is described as the 1984 book that unified the dialects. The ANSI standard came later.
+- RAD is dated to James Martin's 1982 book.
+- Removed claims I could not support: "hundreds of sprites" on the X68000, "basis of the Korean market" for the SPC-1000, "main place" for Usenet, "thousands of accounting systems" for Clipper, the wording that autoconf and sendmail grew out of m4, and the ITS "first text editor" wording.
+- Author names corrected from memory, not searched: Franz Lisp, Hope, Modula-3, mutation testing, gawk and uucp.
+
+### Examples and tests
+
+- New executable example: the C++ entry (a counter class). It was extracted from the Kotlin source, compiled with `g++ -std=c++17 -Wall -Wextra` and run: it prints `2`. It is the only new entry with executable code; the other 154 new entries are reading-only.
+- `./gradlew assembleDebug testDebugUnitTest` finished with BUILD SUCCESSFUL. Results: AppDatabaseSeedTest 2 of 2, RecordFilterTest 5 of 5, SeedDataTest 7 of 7. Debug APK: 10.2 MB.
+
+### Notes
+
+- About 145 of the new entries were written from memory and not checked against a source in this checkpoint. Dates and names are the first thing to check when an error is reported.
+- The rare flag now covers 59 of 72 new devices. Most of these machines were sold in one region or in small numbers. The flag is a judgement call and may need a review pass.
+- Not verified yet: running on a device or emulator, the new sections in the UI, lint, and the release build.
+- `DEVLOG.txt` is a plain-text copy of this log, and the packed bundle includes it.
+
+################################################################################
+# ФАЙЛ: RetroDatabases/DEVLOG.txt
+################################################################################
+# Development log: Retro Databases
+
+Solo development log for the Android app in this folder. Entries are added at checkpoints (CP-NN), in order.
+
+## Conventions
+
+- Each checkpoint records line counts for the tracked sources: Kotlin (`app/src/main/java`, `app/src/test`), XML (`app/src/main/res`, `AndroidManifest.xml`), and hand-written Gradle and project files.
+- Counts come from `wc -l` on the working tree. Build output, the generated Gradle wrapper (`gradlew`, `gradlew.bat`, `gradle-wrapper.jar`, `gradle-wrapper.properties`) and this log are excluded from the totals.
+- Deltas are measured against the previous checkpoint.
+- Work before CP-01 was not measured, so the table starts there.
+
+## Growth in lines of code
+
+| Checkpoint | Date | Kotlin main | Kotlin test | XML | Gradle and project files | Total | Delta |
+|---|---|---:|---:|---:|---:|---:|---|
+| CP-01 | 2026-10-14 | 4,269 | 0 | 82 | 115 | 4,466 | first measurement |
+| CP-02 | 2026-10-14 | 4,277 | 169 | 82 | 115 | 4,643 | +177 (tests +169, examples +8) |
+| CP-03 | 2026-10-14 | 4,277 | 169 | 82 | 115 | 4,643 | 0 (no source changes; first build attempt failed) |
+| CP-04 | 2026-10-14 | 4,277 | 169 | 82 | 118 | 4,646 | +3 (.gitignore rule for generated Kotlin session data) |
+| CP-05 | 2026-10-14 | 6,236 | 169 | 82 | 118 | 6,605 | +1,959 (155 new records in five seed files) |
+
+Non-blank lines: CP-01 4,078; CP-02 4,227.
+
+## CP-01: catalogue model and content (not yet compiled)
+
+Status: sources written, not built, examples not yet executed.
+
+### What changed
+
+- The record kind is an enum with ten values: LANGUAGE, SYSTEM, DEVICE, TOOL, PRACTICE, GUIDE, EXAMPLE, PROJECT, FLEX, CROSS. Each record also has a section (a subgroup inside its kind) and a rare flag.
+- Records gained an `instructions` field for step-by-step text. `details` now explains how a record works.
+- Seed data for database 1: 165 records. Languages 34, systems 23, devices 27, tools 18, practices 39, guides 5, examples 5, projects 4, flex 5, cross-technology 5. 55 records are flagged rare.
+- Seed insert runs as SQL in `onCreate` and binds 12 columns, plus a literal for `favorite`.
+- UI: kind filter chips with counts, a rare filter, section headers in the list, an instructions block on the detail screen, and a monospace code block with horizontal scroll.
+
+### Size by area (Kotlin main, 4,269 lines)
+
+- Seed data: 3,141 lines (73.6%). The ten catalogue files hold 3,077 of them.
+- UI: 919 lines (21.5%).
+- Data layer: 209 lines (4.9%).
+
+### Notes
+
+- Seed data is most of the code. I keep examples as raw strings so the same text can be extracted and executed during verification.
+- Examples in languages that are not installed in the build sandbox can only be checked by reading. They stay open until they are run somewhere.
+- Rare flags: 55 of 165 records. The flag shows as a badge and has its own filter.
+- The database schema is still version 1. No installs exist yet, so no migration is needed.
+
+## CP-02: example verification and unit tests
+
+Status: examples executed, bugs fixed, unit tests written, Gradle wrapper generated.
+
+### Example verification
+
+- Extracted every example from the seed files and executed the 32 that this sandbox can run: gcc 13, mawk 1.3.4, dash, make 4.3, perl 5.38, bc, bison, and SQLite 3.45 through Python.
+- 32 passed. 133 entries cannot run here (Forth, Prolog, Lisp, Scheme, Smalltalk, BASIC, APL, Logo, Icon, Miranda, PostScript, Pascal, Modula-2, Ada, COBOL and others, plus text-only entries such as the emulator guide and the Forth stack trace). They stay on the open list.
+- Five bugs were found by running the examples and fixed:
+  1. The sine-table Makefile listed `sine.h` first, so plain `make` built only the header and never produced `prog`. `prog` is now the first target.
+  2. The fixed-point example declared variables at file scope with non-constant initialisers, which C rejects. The code is now inside `main` and prints 576.
+  3. bc at `scale=50` printed `...937508` where the correct digits are `...937510`. The example now uses `scale=60`, which is exact to 60 decimals. The entry was renamed to sixty digits.
+  4. The normal-forms example created the table `orders` twice. The denormalised version is now `orders_flat`.
+  5. The harness expected a filename prefix from grep. grep omits it when only one file matches, so the harness check was corrected. The example itself was fine.
+- Four of the five bugs were in the example text. The first and fourth are easy to miss when reading, so every executable example is now run before it is accepted.
+
+### Unit tests
+
+- `RecordFilterTest`: search, case-insensitive Cyrillic matching, kind filter, favourite and rare filters, and their combinations.
+- `SeedDataTest`: database one exists, titles are unique, years are in range, every kind has records, projects carry instructions and code, rare records exist.
+- `AppDatabaseSeedTest` (Robolectric): the first open seeds database one with every record, and the favourite toggle persists. This exercises the real seed SQL and Room's schema validation.
+
+### Notes
+
+- The first Gradle wrapper attempt was rate-limited by Maven Central (HTTP 429). A second attempt worked. I did not change the project configuration to avoid the limit.
+
+### Next checkpoint
+
+- CP-03: build and unit test results.
+
+## CP-03: first build attempt (failed before compilation)
+
+Date: 2026-10-14. Totals unchanged from CP-02: no source files changed since then.
+
+### What happened
+
+- `./gradlew assembleDebug testDebugUnitTest` failed while Gradle configured the root project. It could not download plugin dependencies from `repo.maven.apache.org` and received HTTP 429 (Too Many Requests). Compilation did not start, so the code has not been compiled yet.
+- The wrapper step hit the same limit once and succeeded on a second try. This time the limit held for the whole resolution.
+
+### Decision
+
+- Retrying unchanged would hit the same limit. The next attempt points Gradle's Maven Central repository at `repo1.maven.org` through a per-user init script outside the repository. The project declares only `mavenCentral()`, so this change does not reach version control.
+
+### Open items
+
+- Build through the mirror, record the compile result, fix any compile errors, run the unit tests.
+- Pack the text bundle after the build is green.
+
+## CP-04: first successful build and unit tests
+
+Status: debug APK assembles and all 14 unit tests pass.
+
+Non-blank lines at CP-04: 4,229 (Kotlin 3,911, tests 143, XML 74, Gradle and project files 101).
+
+### What happened
+
+- Dependency downloads were rate-limited (HTTP 429) by Maven Central and by repo1.maven.org in four build attempts. Gradle caches each artifact it downloads, so every retry moved forward, and the fifth attempt finished the dependency phase.
+- Attempt 4 failed at compilation with two unresolved references in `RecordsScreen.kt`: a wrong import of `item` (a member of `LazyListScope`, so it needs no import) and a missing import of `RoundedCornerShape`. Both are fixed in `7e76f19`.
+- Attempt 5 compiled the main sources and assembled the debug APK. The unit-test task then reported one failure: `AppDatabaseSeedTest.firstOpenSeedsDatabaseOneWithEveryRecord` could not download Robolectric's Android runtime (`android-all-instrumented`, 199.5 MB) because of the same rate limit. The second database test passed in that run.
+- A rerun after the runtime finished caching passed all tests. The test task executed in that run, and the result files were written at that time.
+
+### Results
+
+- `assembleDebug`: `app/build/outputs/apk/debug/app-debug.apk`, 10.1 MB.
+- `testDebugUnitTest`: 14 of 14 passed. `SeedDataTest` 7, `RecordFilterTest` 5, `AppDatabaseSeedTest` 2. The database test runs the real seed SQL and Room's schema validation on Robolectric.
+
+### Notes
+
+- Not verified yet: the app running on a device or emulator (no emulator in this sandbox), the UI behaviour, lint, and the release build.
+- The sandbox builds use a per-user Gradle init script that points Maven Central requests at repo1.maven.org. It lives outside the repository and is not committed, so the project files are unchanged.
+- The Kotlin Gradle plugin writes `.kotlin/` session data during builds. `.gitignore` now excludes it (`802d0f1`).
+
+### Next
+
+- Commit the packed source file `RetroDatabases_source.txt` together with this log.
+
+## CP-05: coverage audit and 155 added records
+
+Status: built, all 14 unit tests pass, debug APK assembles.
+
+Date: 2026-10-14. Totals: Kotlin main 6,236 (CP-04: 4,277), Kotlin test 169, XML 82, Gradle and project files 118, total 6,605. The +1,959 delta equals the size of the six new Kotlin files, and no other source changed.
+
+### What changed
+
+- Five seed files with new records: `Db1ExtraDevices.kt` (72), `Db1ExtraSystems.kt` (25), `Db1ExtraLanguages.kt` (22), `Db1ExtraTools.kt` (15) and `Db1ExtraPractices.kt` (21).
+- `Db1Additions.kt` joins the five lists into `db1Additions`. `Db1Catalog.kt` adds that list to `db1Records`; the change is one line.
+- Database 1 now has 320 records (165 before). Rare-flagged records rise from 55 to 181; 126 of the new records are rare.
+- New sections include regional home computers, Eastern-bloc and Soviet machines, Lisp machines, processor families, Unix variants, microkernels, networks, formal methods, and BBS and demoscene culture.
+
+### Audit
+
+- Compared the existing 165 records with reference lists of 1980s home computers, operating systems, processors, languages and tools, and with the standards and practices of the decade.
+- Searched for facts on the machines least likely to be known: Yugoslav, Bulgarian, Czechoslovak, East German, Chinese and Soviet computers, and the Iskra-1030.
+- Titles are unique across all 320 records. A grep over the seed files confirmed this before the build, and `SeedDataTest` enforces it.
+
+### Facts checked by web search
+
+- Galeb: 6502, made by PEL Varaždin. Sources disagree on the year: 1981 in one infobox, 1984 in a catalogue of Yugoslav systems. The entry uses 1981.
+- Orao: 6502 at 1 MHz, 1984. Standard school computer in Croatia and Vojvodina from 1985 to 1991.
+- Pecom 64: CDP1802B processor, 32 KB RAM, CDP1869 and CDP1870 video chips, 1985.
+- Tesla PMD 85: MHB8080A, a Czechoslovak copy of the Intel 8080, 2.048 MHz, produced from 1985 to 1989. One listing gives 1983 as the first year.
+- Matra Alice: Motorola 6803, 6847 video, a copy of the TRS-80 MC-10, sold in France from 1983.
+- Philips P2000T: Z80, Mullard SAA5050 teletext chip, built-in tape drive. Wikipedia gives March 1980 as the launch; a museum dates the T model to 1981.
+- Robotron Z1013: 1985, U880 (an East German Z80 clone). Variants Z1013.16 (1987) and Z1013.64 (1988).
+- Iskra-1030: IBM PC/XT-compatible, 8086 clone at 4.77 MHz, designed in Leningrad and built in Smolensk and Kursk. English Wikipedia gives 1989 as the release year.
+- CEC-I: Apple II-compatible, 6502A, 64 KB. Sources disagree on the maker and date (1986 or November 1987).
+
+### Corrections made during review
+
+- Pravetz 8D is an Oric Atmos clone, not an Apple II clone. Its year (1985) is an estimate; no source gave one.
+- The Iskra-1030 is no longer described as a school computer, which the sources did not support. It is now described as used in institute computing labs.
+- The CEC-I university attribution was removed; the sources do not support it.
+- Parlog was not used by the ICOT project. The entry now says it is related work.
+- The TI-99/4A is dated 1981, the year of the 4A. The 1979 date belongs to the TI-99/4.
+- Common Lisp is described as the 1984 book that unified the dialects. The ANSI standard came later.
+- RAD is dated to James Martin's 1982 book.
+- Removed claims I could not support: "hundreds of sprites" on the X68000, "basis of the Korean market" for the SPC-1000, "main place" for Usenet, "thousands of accounting systems" for Clipper, the wording that autoconf and sendmail grew out of m4, and the ITS "first text editor" wording.
+- Author names corrected from memory, not searched: Franz Lisp, Hope, Modula-3, mutation testing, gawk and uucp.
+
+### Examples and tests
+
+- New executable example: the C++ entry (a counter class). It was extracted from the Kotlin source, compiled with `g++ -std=c++17 -Wall -Wextra` and run: it prints `2`. It is the only new entry with executable code; the other 154 new entries are reading-only.
+- `./gradlew assembleDebug testDebugUnitTest` finished with BUILD SUCCESSFUL. Results: AppDatabaseSeedTest 2 of 2, RecordFilterTest 5 of 5, SeedDataTest 7 of 7. Debug APK: 10.2 MB.
+
+### Notes
+
+- About 145 of the new entries were written from memory and not checked against a source in this checkpoint. Dates and names are the first thing to check when an error is reported.
+- The rare flag now covers 59 of 72 new devices. Most of these machines were sold in one region or in small numbers. The flag is a judgement call and may need a review pass.
+- Not verified yet: running on a device or emulator, the new sections in the UI, lint, and the release build.
+- `DEVLOG.txt` is a plain-text copy of this log, and the packed bundle includes it.
 
 ################################################################################
 # ФАЙЛ: RetroDatabases/README.md
@@ -631,6 +876,21 @@ interface LibraryDao {
 }
 
 ################################################################################
+# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Additions.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.RecordEntity
+
+/**
+ * Дополнения к базе 1: устройства, системы, языки, инструменты и практики 1980-х,
+ * которых не было в первой редакции каталога. Здесь же редкие и региональные записи.
+ * Собираются из пяти файлов по видам; каждый файл описывает один вид записей.
+ */
+val db1Additions: List<RecordEntity> =
+    db1ExtraLanguages + db1ExtraSystems + db1ExtraDevices + db1ExtraTools + db1ExtraPractices
+
+################################################################################
 # ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Catalog.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
@@ -644,7 +904,7 @@ import com.example.retrodatabases.data.RecordEntity
  */
 val db1Records: List<RecordEntity> =
     db1Languages + db1Systems + db1Devices + db1Tools + db1Practices +
-        db1Guides + db1Examples + db1Projects + db1Flex + db1Cross
+        db1Guides + db1Examples + db1Projects + db1Flex + db1Cross + db1Additions
 
 ################################################################################
 # ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Cross.kt
@@ -1363,6 +1623,1974 @@ val db1Examples: List<RecordEntity> = listOf(
             GROUP BY kind
             ORDER BY total DESC;
         """,
+    ),
+)
+
+################################################################################
+# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraDevices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Устройства 1980-х, которых не было в первой редакции каталога: в том числе редкие и региональные. */
+val db1ExtraDevices: List<RecordEntity> = listOf(
+
+    // ---------- Домашние компьютеры ----------
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Acorn Atom",
+        originalTitle = "Acorn Atom",
+        author = "Acorn Computers",
+        year = 1980,
+        summary = "Британский компьютер Acorn (1980) на 6502 с открытой шиной расширения; предшественник BBC Micro.",
+        details = "Atom продавался собранным и в виде набора. Расширения подключались через разъём на шине Eurocard. " +
+            "Программы писали на BASIC и на ассемблере 6502.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Acorn Electron",
+        originalTitle = "Acorn Electron",
+        author = "Acorn Computers",
+        year = 1983,
+        summary = "Упрощённая домашняя версия BBC Micro (1983) на том же 6502: дешевле и с упрощённой периферией.",
+        details = "Electron использовал систему команд BBC Micro, но с урезанным набором внешних разъёмов. " +
+            "Машина продавалась в основном в Великобритании.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Amstrad CPC 464",
+        originalTitle = "Amstrad CPC 464",
+        author = "Amstrad",
+        year = 1984,
+        summary = "Европейский домашний компьютер (1984) на Z80 с кассетником и монитором в одном корпусе.",
+        details = "В 1985 году вышли CPC 664 и 6128 со встроенным дисководом 3 дюйма. Машина была популярна в Великобритании, Франции и Испании.",
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Commodore VIC-20",
+        originalTitle = "Commodore VIC-20",
+        author = "Commodore",
+        year = 1980,
+        summary = "Первый цветной компьютер Commodore (1980) на 6502; продан миллионами экземпляров.",
+        details = "VIC-20 стал одним из первых массовых компьютеров с цветной графикой. Низкая цена запустила ценовую войну " +
+            "на рынке домашних компьютеров.",
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Commodore 128",
+        originalTitle = "Commodore 128",
+        author = "Commodore",
+        year = 1985,
+        summary = "Преемник C64 (1985) с тремя режимами: Commodore BASIC, CP/M на Z80 и совместимость с C64.",
+        details = "Процессор Z80 позволял запускать CP/M. Машина появилась поздно и не стала массовой, хотя программы C64 на ней работали.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Commodore PET 2001",
+        originalTitle = "Commodore PET 2001",
+        author = "Commodore",
+        year = 1977,
+        summary = "Один из первых готовых персональных компьютеров (1977) с монохромным экраном и встроенным BASIC.",
+        details = "PET 2001 построен на 6502 с BASIC от Microsoft и встроенным кассетником. Позже Commodore перешла к VIC-20 и C64.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Atari 800",
+        originalTitle = "Atari 400 и 800",
+        author = "Atari",
+        year = 1979,
+        summary = "Домашний компьютер Atari (1979) со спецчипами ANTIC и GTIA для цветной графики и звука.",
+        details = "Модели 400 и 800 стали основой популярной серии 8-битных машин. Аппаратные спрайты и графика позволяли делать плавные игры.",
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Sinclair ZX81",
+        originalTitle = "Sinclair ZX81",
+        author = "Sinclair Research",
+        year = 1981,
+        summary = "Сверхдешёвый компьютер Sinclair (1981) с 1 КБ памяти: BASIC и экран без звука.",
+        details = "ZX81 продавался как набор и в готовом виде. Изображение рисовала программа, поэтому процессор был почти постоянно занят выводом.",
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Sinclair QL",
+        originalTitle = "Sinclair QL",
+        author = "Sinclair Research",
+        year = 1984,
+        summary = "Компьютер Sinclair (1984) на 68008 с многозадачной QDOS и SuperBASIC; накопители Microdrive.",
+        details = "QL предвосхитил многозадачность в домашних компьютерах. Ненадёжные накопители Microdrive подорвали репутацию машины.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Oric-1",
+        originalTitle = "Oric-1",
+        author = "Tangerine Computer Systems",
+        year = 1983,
+        summary = "Британский домашний компьютер (1983) на 6502 с собственной логикой ULA; соперник ZX Spectrum.",
+        details = "Oric-1 продавался по цене ZX Spectrum и предлагал цветную графику. Модель Atmos (1984) улучшила клавиатуру.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "TI-99/4A",
+        originalTitle = "Texas Instruments TI-99/4A",
+        author = "Texas Instruments",
+        year = 1981,
+        summary = "Домашний компьютер Texas Instruments (1981) на 16-битном TMS9900: одна из первых 16-битных домашних машин.",
+        details = "Вокруг машины выросло множество модулей расширения. В ценовой войне 1983 года TI продавала машину с убытком.",
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Coleco Adam",
+        originalTitle = "Coleco Adam",
+        author = "Coleco",
+        year = 1983,
+        summary = "Домашний компьютер Coleco (1983) как дополнение к приставке ColecoVision, со встроенным принтером.",
+        details = "Adam продавался с принтером и кассетной системой, но надёжность хранения данных вызывала нарекания. Машину быстро сняли с рынка.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Enterprise 64",
+        originalTitle = "Enterprise 64 и 128",
+        author = "Intelligent Software (Великобритания)",
+        year = 1985,
+        summary = "Британский компьютер (1985) на Z80 с большой памятью и собственной графической микросхемой Nick.",
+        details = "Enterprise задумывался как конкурент ZX Spectrum и C64, но появился поздно и не стал массовым.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Dragon 32",
+        originalTitle = "Dragon 32",
+        author = "Dragon Data",
+        year = 1982,
+        summary = "Британский компьютер (1982) на 6809 с BASIC, близким к TRS-80 Color Computer.",
+        details = "Dragon 32 использовал тот же видеочип, что и TRS-80 CoCo, поэтому программы переносились с трудом, но возможно.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "TRS-80 Color Computer",
+        originalTitle = "Tandy TRS-80 Color Computer (CoCo)",
+        author = "Tandy / Radio Shack",
+        year = 1980,
+        summary = "Домашний компьютер Tandy (1980) на 6809, для которого выпускалась многозадачная OS-9.",
+        details = "CoCo работал с OS-9 и поддерживал множество клонов и расширений. Машина популярна в Америке и Канаде.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "TRS-80 Model 100",
+        originalTitle = "Tandy TRS-80 Model 100",
+        author = "Tandy",
+        year = 1983,
+        summary = "Портативный компьютер Tandy (1983) с ЖК-экраном, встроенным BASIC и питанием от батарей.",
+        details = "Model 100 стал предшественником современных ноутбуков: программы хранились в памяти, без дисков. Журналисты брали его в командировки.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Apple IIe",
+        originalTitle = "Apple IIe",
+        author = "Apple",
+        year = 1983,
+        summary = "Улучшенный Apple II (1983): строчные буквы, 80-колоночный текст и встроенная клавиатура.",
+        details = "Apple IIe выпускался до конца 1980-х и был основной машиной школ США. Программы для Apple II работали на нём.",
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Apple IIGS",
+        originalTitle = "Apple IIGS",
+        author = "Apple",
+        year = 1986,
+        summary = "Apple II на 16-битном 65C816 (1986) с цветной графикой Super Hi-Res и звуком Ensoniq.",
+        details = "IIGS совместим с программами Apple II и работал под GS/OS — собственной операционной системой с иерархией каталогов.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Amiga 500",
+        originalTitle = "Commodore Amiga 500",
+        author = "Commodore",
+        year = 1987,
+        summary = "Бюджетная Amiga (1987) с мультимедийным чипсетом и многозадачной ОС.",
+        details = "Amiga 500 стал одним из самых продаваемых вариантов Amiga. На нём писали демо и игры, которые помнят до сих пор.",
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Sharp X1",
+        originalTitle = "Sharp X1",
+        author = "Sharp",
+        year = 1982,
+        summary = "Японский домашний компьютер (1982) на Z80: популярная платформа для игр и обучения.",
+        details = "X1 использовал кассеты и дискеты и получил большую библиотеку игр в Японии.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Sharp X68000",
+        originalTitle = "Sharp X68000",
+        author = "Sharp",
+        year = 1987,
+        summary = "Японский компьютер (1987) на 68000 с аппаратными спрайтами: создан как игровая машина.",
+        details = "X68000 использовался для портов аркад и демо. Аппаратные спрайты позволяли двигать много объектов без нагрузки на процессор.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "NEC PC-8800",
+        originalTitle = "NEC PC-8800",
+        author = "NEC",
+        year = 1981,
+        summary = "Японский компьютер NEC (1981) на Z80 с цветной графикой: платформа бизнеса и игр.",
+        details = "Серия PC-8800 стала одной из самых популярных в Японии наряду с PC-9800.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Fujitsu FM-7",
+        originalTitle = "Fujitsu FM-7",
+        author = "Fujitsu",
+        year = 1982,
+        summary = "Японский компьютер Fujitsu (1982) на 6809 с цветной графикой и дисководом.",
+        details = "FM-7 стал популярен среди японских разработчиков игр и образовательного софта.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Sega SC-3000",
+        originalTitle = "Sega SC-3000",
+        author = "Sega",
+        year = 1983,
+        summary = "Японская приставка-компьютер Sega (1983) на Z80 с BASIC и клавиатурой.",
+        details = "SC-3000 работал с BASIC и картриджами. Линейка SG-1000 пошла дальше как игровая приставка.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Samsung SPC-1000",
+        originalTitle = "Samsung SPC-1000",
+        author = "Samsung",
+        year = 1983,
+        summary = "Корейский домашний компьютер (1983) на Z80 с BASIC и кассетным интерфейсом.",
+        details = "SPC-1000 стал одним из первых компьютеров Samsung.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Tatung Einstein",
+        originalTitle = "Tatung Einstein",
+        author = "Tatung",
+        year = 1984,
+        summary = "Тайваньский компьютер (1984) на Z80 с CP/M и встроенным видеовыводом.",
+        details = "Einstein продавался в Европе как альтернатива Spectrum с дисководом и CP/M.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Matra Alice",
+        originalTitle = "Matra Alice",
+        author = "Matra",
+        year = 1983,
+        summary = "Французский компьютер Matra Alice (1983) на Motorola 6803: копия TRS-80 MC-10 с видеочипом 6847.",
+        details = "Alice продавался во Франции. По одним данным, дома он не прижился, по другим — его брали в школы.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Thomson TO7",
+        originalTitle = "Thomson TO7",
+        author = "Thomson",
+        year = 1982,
+        summary = "Французский компьютер Thomson (1982) на 6809, популярный во Франции и в школах.",
+        details = "Thomson выпустил линейку TO и MO. Эти машины стояли во многих французских семьях и школах.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "Philips P2000",
+        originalTitle = "Philips P2000",
+        author = "Philips",
+        year = 1980,
+        summary = "Компьютер Philips (1980) на Z80. Модель P2000T получила телетекст Mullard SAA5050 и встроенный мини-магнитофон.",
+        details = "P2000T популярен у голландских любителей и в школах, но высокая цена и ограниченный телетекст сдерживали продажи. Позже Philips перешла на MSX.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Домашние компьютеры",
+        title = "MicroBee",
+        originalTitle = "MicroBee",
+        author = "Microbee Systems",
+        year = 1983,
+        summary = "Австралийский компьютер MicroBee (1983) на Z80 с CP/M и поддержкой дискет.",
+        details = "MicroBee использовался в австралийских школах и бизнесе. Несколько моделей выпускалось до конца 1980-х.",
+        rare = true,
+    ),
+
+    // ---------- Персональные компьютеры ----------
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Персональные компьютеры",
+        title = "Apple Lisa",
+        originalTitle = "Apple Lisa",
+        author = "Apple",
+        year = 1983,
+        summary = "Первый Apple с графическим интерфейсом, окнами и мышью (1983); дорогой и медленный.",
+        details = "Lisa предшествовала Macintosh, и её интерфейс повлиял на Mac OS. Продавалась плохо из-за высокой цены.",
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Персональные компьютеры",
+        title = "IBM PC AT",
+        originalTitle = "IBM Personal Computer AT",
+        author = "IBM",
+        year = 1984,
+        summary = "IBM PC на 80286 (1984) с шиной ISA: основа бизнес-стандарта на годы.",
+        details = "PC AT давал защищённый режим и 16-битную шину. Шина ISA оставалась стандартом до конца 1990-х.",
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Персональные компьютеры",
+        title = "IBM PS/2",
+        originalTitle = "IBM PS/2",
+        author = "IBM",
+        year = 1987,
+        summary = "Семейство IBM PS/2 (1987) с шиной MCA и 3,5-дюймовыми дискетами.",
+        details = "PS/2 ввёл клавиатурный и мышиный разъёмы, которые используются до сих пор. Шина MCA стандартом не стала.",
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Персональные компьютеры",
+        title = "Compaq Portable",
+        originalTitle = "Compaq Portable",
+        author = "Compaq",
+        year = 1983,
+        summary = "Первый полностью совместимый с IBM PC компьютер (1983), собранный через переписанный BIOS.",
+        details = "Compaq создал собственный BIOS, работающий как BIOS IBM PC, без лицензии IBM. Это открыло дорогу клонам.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Персональные компьютеры",
+        title = "Kaypro II",
+        originalTitle = "Kaypro II",
+        author = "Kaypro",
+        year = 1982,
+        summary = "Портативный CP/M-компьютер (1982) с 9-дюймовым экраном и двумя дисководами.",
+        details = "Kaypro II стал одним из самых популярных CP/M-компьютеров. Машина продавалась с WordStar и SuperCalc.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Персональные компьютеры",
+        title = "Amstrad PCW",
+        originalTitle = "Amstrad PCW",
+        author = "Amstrad",
+        year = 1985,
+        summary = "Текстовый процессор на Z80 с CP/M (1985) для домашних пользователей.",
+        details = "PCW продавался как недорогая замена пишущей машинке: принтер входил в комплект.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Персональные компьютеры",
+        title = "Amstrad PC1512",
+        originalTitle = "Amstrad PC1512",
+        author = "Amstrad",
+        year = 1986,
+        summary = "Дешёвый IBM-совместимый компьютер (1986) с MS-DOS и цветной графикой для дома.",
+        details = "PC1512 был совместим с IBM PC и продавался в Великобритании как домашний компьютер для работы.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Персональные компьютеры",
+        title = "NEC PC-9800",
+        originalTitle = "NEC PC-9800 (PC-98)",
+        author = "NEC",
+        year = 1982,
+        summary = "Японский стандарт PC-98 (1982) на 8086, доминировавший в Японии до конца 1990-х.",
+        details = "PC-9800 имел собственную архитектуру, несовместимую с IBM PC, поэтому японский рынок развивался отдельно.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Персональные компьютеры",
+        title = "Fujitsu FM Towns",
+        originalTitle = "Fujitsu FM Towns",
+        author = "Fujitsu",
+        year = 1989,
+        summary = "Японский мультимедийный ПК (1989) на 80386SX с CD-ROM — почти игровая приставка.",
+        details = "FM Towns запускал DOS и японские версии программ. CD-ROM давал звук и видео на уровне ранних мультимедийных систем.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Персональные компьютеры",
+        title = "DEC Rainbow 100",
+        originalTitle = "DEC Rainbow 100",
+        author = "Digital Equipment Corporation",
+        year = 1982,
+        summary = "Двухпроцессорный ПК DEC (1982): Z80 для CP/M и 8088 для MS-DOS.",
+        details = "Rainbow 100 мог работать с обеими операционными системами, что было редкостью для 1982 года.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Персональные компьютеры",
+        title = "Psion Organiser",
+        originalTitle = "Psion Organiser",
+        author = "Psion",
+        year = 1984,
+        summary = "Карманный компьютер Psion (1984) с калькулятором, записной книжкой и программами — предок современных карманных устройств.",
+        details = "Organiser умещался в ладони и объединял калькулятор, записную книжку и простые программы.",
+        rare = true,
+    ),
+
+    // ---------- Рабочие станции ----------
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Рабочие станции",
+        title = "Apollo DN100",
+        originalTitle = "Apollo DN100",
+        author = "Apollo Computer",
+        year = 1981,
+        summary = "Рабочая станция Apollo (1981) с сетевой ОС Domain и мышью.",
+        details = "Apollo был одним из первых производителей распределённых рабочих станций: Domain позволяла работать в сети без выделенного сервера.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Рабочие станции",
+        title = "Sun-1",
+        originalTitle = "Sun-1",
+        author = "Sun Microsystems",
+        year = 1982,
+        summary = "Первая рабочая станция Sun (1982) с Unix BSD и подключением к сети Ethernet.",
+        details = "Название Sun происходит от Stanford University Network. Станции Sun часто стояли в университетских лабораториях.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Рабочие станции",
+        title = "Symbolics 3600",
+        originalTitle = "Symbolics 3600",
+        author = "Symbolics",
+        year = 1983,
+        summary = "Lisp-машина Symbolics (1983) с аппаратной поддержкой Lisp и средой Genera.",
+        details = "3600 выполнял Lisp быстрее универсальных ЭВМ того времени. Стоил дорого и продавался учёным и военным.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Рабочие станции",
+        title = "Three Rivers PERQ",
+        originalTitle = "Three Rivers PERQ",
+        author = "Three Rivers Computer Corporation",
+        year = 1980,
+        summary = "Одна из первых коммерческих рабочих станций с окнами и мышью (1980).",
+        details = "PERQ продавался как конкурент станций Xerox и использовал растровую графику со своим интерфейсом.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Рабочие станции",
+        title = "Lilith",
+        originalTitle = "Lilith (ETH Zurich)",
+        author = "Никлаус Вирт, ETH Zurich",
+        year = 1980,
+        summary = "Рабочая станция ETH Zurich (1980), спроектированная вместе с языком Modula-2.",
+        details = "Lilith использовала растровую графику и мышь. На ней работала операционная система Medos-2, написанная на Modula-2.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Рабочие станции",
+        title = "Ceres",
+        originalTitle = "Ceres (ETH Zurich)",
+        author = "ETH Zurich, Никлаус Вирт, Юрг Гутнехт",
+        year = 1986,
+        summary = "Рабочая станция ETH Zurich (1986) для системы Oberon: мышь и экран высокой плотности.",
+        details = "Ceres создавалась под операционную систему Oberon. Вместе с ней появился редактор, в котором текст сам был командой.",
+        rare = true,
+    ),
+
+    // ---------- Суперкомпьютеры и параллельные машины ----------
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Суперкомпьютеры и параллельные машины",
+        title = "Cray X-MP",
+        originalTitle = "Cray X-MP",
+        author = "Cray Research",
+        year = 1982,
+        summary = "Двухпроцессорный Cray (1982) — преемник Cray-1 с общей памятью.",
+        details = "X-MP использовал параллельные процессоры с общей памятью. Такие машины работали в национальных научных центрах.",
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Суперкомпьютеры и параллельные машины",
+        title = "Connection Machine CM-1",
+        originalTitle = "Connection Machine CM-1",
+        author = "Thinking Machines Corporation",
+        year = 1985,
+        summary = "Параллельная машина (1985) с 65 536 простыми процессорами; каждый обрабатывал свой элемент данных.",
+        details = "Модель данных CM-1 напоминала массивы: одна команда выполнялась над всеми элементами сразу. Для машины создали языки вроде *Lisp.",
+        rare = true,
+    ),
+
+    // ---------- Восточный блок и Китай ----------
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Восточный блок и Китай",
+        title = "Правец-8D",
+        originalTitle = "Pravetz 8D",
+        author = "Pravetz (Болгария)",
+        year = 1985,
+        summary = "Болгарский компьютер Правец-8D: клон Oric Atmos на 6502, выпускался в Болгарии в 1980-х.",
+        details = "Серия Pravetz выпускалась в Болгарии в 1980-х. Модель 8D — клон Oric Atmos, а Pravetz 82 — клон Apple II.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Восточный блок и Китай",
+        title = "Galeb",
+        originalTitle = "PEL Varaždin Galeb",
+        author = "PEL Varaždin (Югославия)",
+        year = 1981,
+        summary = "Югославский компьютер Galeb (1981) на 6502, сделанный в PEL Varaždin.",
+        details = "Galeb выпускала фирма PEL Varaždin (Вараждин, Хорватия). Монитор монохромный, 96×48 пикселей; ПЗУ на 16 КБ содержит BASIC и монитор машинного кода. Выпуск остановился примерно на 250 машинах в 1984 году, когда его сменил Orao.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Восточный блок и Китай",
+        title = "Orao",
+        originalTitle = "PEL Varaždin Orao",
+        author = "PEL Varaždin (Югославия)",
+        year = 1984,
+        summary = "Югославский компьютер Orao (1984) на 6502, преемник Galeb.",
+        details = "Orao был стандартным школьным компьютером в Хорватии и Воеводине с 1985 по 1991 год. Имел 16 КБ ПЗУ и 16 КБ ОЗУ с расширением до 32 КБ.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Восточный блок и Китай",
+        title = "Pecom 64",
+        originalTitle = "Pecom 64",
+        author = "Elektronska Industrija Niš (Югославия)",
+        year = 1985,
+        summary = "Югославский компьютер Pecom 64 (1985) на CDP1802B (RCA 1802) с 32 КБ ОЗУ и цветной графикой.",
+        details = "Pecom 64 выпускала фирма Elektronska Industrija в Нише для школ и домов. Видеовывод строился на чипах CDP1869 и CDP1870: текст 40×24 и до восьми цветов.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Восточный блок и Китай",
+        title = "Tesla PMD 85",
+        originalTitle = "Tesla PMD 85",
+        author = "Tesla (Чехословакия)",
+        year = 1985,
+        summary = "Чехословацкий компьютер Tesla PMD 85 (1985) на MHB8080A, чешской копии Intel 8080, с частотой 2,048 МГц.",
+        details = "PMD 85 выпускали Tesla Piešťany и Tesla Bratislava до 1989 года. Модели 85-1, 2A и 3 различались объёмом ОЗУ, до 64 КБ.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Восточный блок и Китай",
+        title = "Robotron KC 85",
+        originalTitle = "VEB Robotron KC 85",
+        author = "VEB Robotron (ГДР)",
+        year = 1984,
+        summary = "Восточногерманский компьютер (1984) на Z80-совместимом процессоре с кассетами и BASIC.",
+        details = "KC 85 выпускали для школ и предприятий ГДР. Программы загружались с магнитофона.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Восточный блок и Китай",
+        title = "Robotron Z1013",
+        originalTitle = "VEB Robotron Z1013",
+        author = "VEB Robotron (ГДР)",
+        year = 1985,
+        summary = "Любительский компьютер-конструктор ГДР (1985) на U880, восточногерманском клоне Z80.",
+        details = "Покупатель получал готовую плату с проверенной схемой, плоскую клавиатуру и руководство, но без блока питания и корпуса. Варианты Z1013.16 и Z1013.64 вышли в 1987 и 1988 годах.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Восточный блок и Китай",
+        title = "Videoton TVC",
+        originalTitle = "Videoton TVC",
+        author = "Videoton (Венгрия)",
+        year = 1986,
+        summary = "Венгерский домашний компьютер (1986) на Z80, самая массовая домашняя платформа Венгрии.",
+        details = "TVC продавался через школы и магазины, поддерживал BASIC и запись на кассеты.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Восточный блок и Китай",
+        title = "CEC-I",
+        originalTitle = "CEC-I (China Education Computer)",
+        author = "Huaming Computer (Китай, по источникам)",
+        year = 1986,
+        summary = "Китайский клон Apple II (1986 и позже) на 6502A с 64 КБ памяти: учебная машина.",
+        details = "Источники расходятся в названии производителя и дате: 1986 или ноябрь 1987. Китайские иероглифы добавлялись отдельным модулем.",
+        rare = true,
+    ),
+
+    // ---------- Отечественные машины ----------
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Отечественные машины",
+        title = "Вектор-06Ц",
+        originalTitle = "Вектор-06Ц",
+        author = "Советская промышленность",
+        year = 1987,
+        summary = "Советский домашний компьютер Вектор-06Ц (1987) на отечественном клоне Intel 8080.",
+        details = "Машина совместима по процессору с 8080 и работала с кассетами и дискетами. На ней писали учебные и игровые программы.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Отечественные машины",
+        title = "Радио-86РК",
+        originalTitle = "Радио-86РК",
+        author = "Журнал «Радио» (любительский конструктор)",
+        year = 1986,
+        summary = "Любительский компьютер-конструктор (1986) на КР580ВМ80, описанный в журнале «Радио».",
+        details = "Схема и программы публиковались в журнале, поэтому многие собирали машину сами. Конструкция стала классикой советского радиолюбительства.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Отечественные машины",
+        title = "Искра-1030",
+        originalTitle = "Искра-1030",
+        author = "Советская промышленность",
+        year = 1989,
+        summary = "Советский IBM PC/XT-совместимый компьютер «Искра-1030» (1989) на клоне Intel 8086 с частотой 4,77 МГц.",
+        details = "Разработан в Ленинграде (Электронмаш), выпускался на заводах в Смоленске и Курске. Его ставили в вычислительные лаборатории отдельных институтов.",
+        rare = true,
+    ),
+
+    // ---------- Процессоры ----------
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Процессоры",
+        title = "Intel 80286",
+        originalTitle = "Intel 80286",
+        author = "Intel",
+        year = 1982,
+        summary = "16-битный процессор Intel (1982) с защищённым режимом; основа IBM PC AT.",
+        details = "Защищённый режим позволял многозадачность и изоляцию программ, но вернуться в реальный режим было сложно.",
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Процессоры",
+        title = "Intel 80386",
+        originalTitle = "Intel 80386",
+        author = "Intel",
+        year = 1985,
+        summary = "Первый 32-битный процессор семейства x86 (1985).",
+        details = "386 ввёл страничную память и виртуальные машины. Программы DOS на нём работали в режиме V86.",
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Процессоры",
+        title = "Motorola 68020",
+        originalTitle = "Motorola 68020",
+        author = "Motorola",
+        year = 1984,
+        summary = "32-битный процессор Motorola (1984), основа Mac II и Sun-3.",
+        details = "68020 имел полностью 32-битные регистры и шину, а также кэш команд. На нём строили первые мощные рабочие станции.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Процессоры",
+        title = "Zilog Z8000",
+        originalTitle = "Zilog Z8000",
+        author = "Zilog",
+        year = 1979,
+        summary = "16-битный процессор Zilog (1979), не получивший широкого распространения.",
+        details = "Z8000 создавался как ответ на 8086 и 68000. Несмотря на удачную архитектуру, опоздал и остался нишевым.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Процессоры",
+        title = "Intel 8051",
+        originalTitle = "Intel MCS-51 (8051)",
+        author = "Intel",
+        year = 1980,
+        summary = "Однокристальный микроконтроллер Intel (1980), основа огромного числа встраиваемых систем.",
+        details = "8051 остаётся популярным до сих пор. Программы для него писали на ассемблере, а позже на C.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Процессоры",
+        title = "RCA 1802",
+        originalTitle = "RCA CDP1802 COSMAC",
+        author = "RCA",
+        year = 1976,
+        summary = "Процессор RCA (1976) на CMOS: использовался в космосе, в игровых и учебных компьютерах.",
+        details = "CDP1802 был устойчив к радиации и питался от малого напряжения. Его ставили в COMX-35 и Pecom.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Процессоры",
+        title = "ARM1",
+        originalTitle = "Acorn ARM1",
+        author = "Acorn Computers, Стив Ферубер и Софи Уилсон",
+        year = 1985,
+        summary = "Первый процессор ARM (1985), созданный в Acorn для будущих компьютеров Archimedes.",
+        details = "ARM1 имел простую RISC-архитектуру и мало транзисторов. Его потомки работают сегодня в телефонах и встраиваемых устройствах.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Процессоры",
+        title = "К580ВМ80",
+        originalTitle = "КР580ВМ80 (советский аналог Intel 8080)",
+        author = "Советская промышленность",
+        year = 1980,
+        summary = "Советский аналог Intel 8080 (1980): основа Радио-86РК и многих любительских машин.",
+        details = "Процессор совместим с 8080 по системе команд и широко использовался в советских микрокомпьютерах.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Процессоры",
+        title = "КР1810ВМ86",
+        originalTitle = "КР1810ВМ86 (советский аналог Intel 8086)",
+        author = "Советская промышленность",
+        year = 1985,
+        summary = "Советский аналог Intel 8086 (1985), на котором строились отечественные ПК.",
+        details = "КР1810ВМ86 совместим с 8086 по командам. Его использовали в отечественных IBM-совместимых машинах.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Процессоры",
+        title = "К1801ВМ1",
+        originalTitle = "К1801ВМ1 (аналог LSI-11)",
+        author = "Советская промышленность",
+        year = 1984,
+        summary = "Советский процессор (1984), совместимый с PDP-11: основа БК-0010 и учебных комплексов ДВК.",
+        details = "К1801ВМ1 позволял запускать программы под PDP-11, поэтому в СССР возник целый класс учебных машин.",
+        rare = true,
+    ),
+
+    // ---------- Периферия и связь ----------
+
+    entry(
+        kind = Kind.DEVICE,
+        section = "Периферия и связь",
+        title = "Hayes Smartmodem",
+        originalTitle = "Hayes Smartmodem",
+        author = "Hayes Microcomputer Products",
+        year = 1981,
+        summary = "Модем, который управлялся командами AT (1981): набор команд AT используется до сих пор.",
+        details = "Команды начинаются с AT и управляют набором номера и режимами связи. Модемы этой серии задали стандарт для BBS и связи 80-х.",
+        rare = true,
+    ),
+)
+
+################################################################################
+# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraLanguages.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Языки 1980-х, которых не было в первой редакции: объектные, параллельные, Lisp-диалекты, экзотика. */
+val db1ExtraLanguages: List<RecordEntity> = listOf(
+
+    // ---------- Объектные и параллельные ----------
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Объектные и параллельные",
+        title = "Язык C++",
+        originalTitle = "C++",
+        author = "Бьёрн Страуструп, Bell Labs",
+        year = 1983,
+        summary = "C с классами (1979), названный C++ в 1983 году; объектное программирование на базе C.",
+        details = "Страуструп расширил C классами, виртуальными функциями и перегрузкой операторов. Первое издание книги «The C++ Programming Language» вышло в 1985 году. " +
+            "Язык стал главным для коммерческой разработки с конца 80-х.",
+        example = """
+            #include <iostream>
+
+            class Counter {
+            public:
+                void increment() { ++value; }
+                int get() const { return value; }
+            private:
+                int value = 0;
+            };
+
+            int main() {
+                Counter c;
+                c.increment();
+                c.increment();
+                std::cout << c.get() << "\n";
+                return 0;
+            }
+        """,
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Объектные и параллельные",
+        title = "Язык Objective-C",
+        originalTitle = "Objective-C",
+        author = "Брэд Кокс, Том Лав",
+        year = 1984,
+        summary = "C с объектами в стиле Smalltalk (1984): сообщения вместо прямых вызовов функций.",
+        details = "Кокс и Лав добавили к C синтаксис сообщений Smalltalk. Язык выбрала компания NeXT, а позже он стал основным для Apple.",
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Объектные и параллельные",
+        title = "Язык Eiffel",
+        originalTitle = "Eiffel",
+        author = "Бертран Мейер",
+        year = 1986,
+        summary = "Объектный язык с проектированием по контракту: предусловия и постусловия входят в язык.",
+        details = "Eiffel стал практическим воплощением «проектирования по контракту», которое Мейер ввёл для этого языка. Язык использовался в финансовой сфере.",
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Объектные и параллельные",
+        title = "Язык Self",
+        originalTitle = "Self",
+        author = "Дэвид Унгар, Рэнди Смит",
+        year = 1987,
+        summary = "Прототипное объектное программирование (1987): объекты создаются копированием, без классов.",
+        details = "Self повлиял на JIT-компиляцию и на прототипы JavaScript. Язык был экспериментальным, но многое из него стало стандартом.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Объектные и параллельные",
+        title = "Язык Beta",
+        originalTitle = "BETA",
+        author = "Мадсен, Меллер-Педерсен, Нигаард (Орхусский университет)",
+        year = 1983,
+        summary = "Объектный язык (1983), где классы, процедуры и сопрограммы объединены одной конструкцией.",
+        details = "Beta — наследник Simula. В нём есть «паттерны», которые объединяют понятия классов и процедур.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Объектные и параллельные",
+        title = "Язык CLU",
+        originalTitle = "CLU",
+        author = "Барбара Лисков и коллеги, MIT",
+        year = 1974,
+        summary = "Язык абстракций данных (1974): первые итераторы и абстрактные типы в языке.",
+        details = "CLU ввёл абстрактные типы данных и итераторы. Его идеи повлияли на Ada и на последующие языки с абстракциями.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Объектные и параллельные",
+        title = "Язык Linda",
+        originalTitle = "Linda",
+        author = "Дэвид Гелернтер, Yale",
+        year = 1985,
+        summary = "Модель координации (1985): процессы обмениваются данными через общее «пространство кортежей».",
+        details = "Linda не язык в обычном смысле, а набор операций поверх языка. Её идея легла в основу многих параллельных систем.",
+        rare = true,
+    ),
+
+    // ---------- Функциональные и логические ----------
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Функциональные и логические",
+        title = "Язык Common Lisp",
+        originalTitle = "Common Lisp",
+        author = "Гай Стил и коллеги",
+        year = 1984,
+        summary = "Common Lisp (1984): единый Lisp, собранный из диалектов Maclisp, Zetalisp и других.",
+        details = "Книга «Common Lisp: The Language» (1984) задала общий язык для всей семьи Lisp. Его использовали в ИИ, экспертных системах и CAD.",
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Функциональные и логические",
+        title = "Язык Franz Lisp",
+        originalTitle = "Franz Lisp",
+        author = "Джон Фодераро, Кит Склауэр, Беркли",
+        year = 1980,
+        summary = "Lisp для Unix (1980) из Беркли: один из первых Lisp, работавших на мини-ЭВМ под Unix.",
+        details = "Franz Lisp использовали в университетах для исследований и обучения ИИ.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Функциональные и логические",
+        title = "Язык Zetalisp",
+        originalTitle = "Zetalisp",
+        author = "MIT и Symbolics",
+        year = 1981,
+        summary = "Диалект Lisp для Lisp-машин MIT и Symbolics (1981): объектная система Flavors и окна.",
+        details = "Zetalisp стал основой среды программирования на Lisp-машинах. Его ценили за интерактивность и отладку.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Функциональные и логические",
+        title = "Язык T",
+        originalTitle = "T",
+        author = "Джонатан Рис, Норман Адамс, Yale",
+        year = 1984,
+        summary = "Минималистичный диалект Scheme (1984) из Yale: лексическая область видимости и простота.",
+        details = "T показал, что Scheme можно сделать очень маленьким и при этом практичным. Язык стал учебным для исследований компиляторов.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Функциональные и логические",
+        title = "Язык Hope",
+        originalTitle = "Hope",
+        author = "Родни Бёрсталл, Дэвид Макквин, Дональд Сэннелла",
+        year = 1980,
+        summary = "Чисто функциональный язык Эдинбурга (1980) с сопоставлением с образцом и ленивыми списками.",
+        details = "Hope стал одним из предшественников Miranda и Haskell. Язык изучали в университетах Великобритании.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Функциональные и логические",
+        title = "Язык FP",
+        originalTitle = "FP",
+        author = "Джон Бэкус",
+        year = 1977,
+        summary = "Функциональный язык Бэкуса (1977): программы строятся из функций высшего порядка без переменных.",
+        details = "Бэкус предложил FP в лекции «Можно ли освободить программирование от стиля фон Неймана?». Идея повлияла на функциональное программирование 80-х.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Функциональные и логические",
+        title = "Язык Parlog",
+        originalTitle = "Parlog",
+        author = "Кит Кларк, Стив Грегори, Imperial College",
+        year = 1986,
+        summary = "Параллельный Prolog (1986): несколько целей доказываются одновременно.",
+        details = "Parlog относится к тем же работам по параллельной логике, что и японский проект ICOT, и опирается на идеи Concurrent Prolog.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Функциональные и логические",
+        title = "Язык KL1",
+        originalTitle = "KL1",
+        author = "Японский проект ICOT «Компьютеры пятого поколения»",
+        year = 1985,
+        summary = "Параллельный логический язык японского проекта (1985) для многопроцессорных машин PIM.",
+        details = "KL1 строился на параллельных логических программах. Проект ICOT стал одним из крупнейших экспериментов с логическим программированием.",
+        rare = true,
+    ),
+
+    // ---------- Императивные и системные ----------
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Императивные и системные",
+        title = "Язык Modula-3",
+        originalTitle = "Modula-3",
+        author = "Люк Кардели, Джеймс Донахью и коллеги, DEC SRC",
+        year = 1988,
+        summary = "Наследник Modula-2 (1988) с объектами, исключениями и потоками в самом языке.",
+        details = "Modula-3 создавали в исследовательском центре DEC SRC. Язык выбрали для системного программирования, но широкого распространения он не получил.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Императивные и системные",
+        title = "Язык Euclid",
+        originalTitle = "Euclid",
+        author = "Батлер Лэмпсон и коллеги, Xerox PARC",
+        year = 1977,
+        summary = "Язык для верифицируемых программ (1977): проверки и спецификации встроены в код.",
+        details = "Euclid задумывался для системного программирования с возможностью доказать корректность. Его идеи повлияли на последующие языки семейства Pascal.",
+        rare = true,
+    ),
+
+    // ---------- Учебные и экзотические ----------
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Учебные и экзотические",
+        title = "Язык QuickBASIC",
+        originalTitle = "Microsoft QuickBASIC",
+        author = "Microsoft",
+        year = 1985,
+        summary = "Компилируемый BASIC от Microsoft (1985): интегрированная среда и быстрый код вместо интерпретатора.",
+        details = "QuickBASIC сочетал редактор с компилятором и отладчиком. Он заменил медленный интерпретатор BASIC на MS-DOS.",
+    ),
+
+    // ---------- Скрипты и языки описания ----------
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Скрипты и языки описания",
+        title = "Язык Scribe",
+        originalTitle = "Scribe",
+        author = "Брайан Рейд, Carnegie Mellon",
+        year = 1980,
+        summary = "Язык разметки документов (1980): структура текста задаётся командами, а не оформлением.",
+        details = "Scribe повлиял на LaTeX. Его идея разделения содержания и оформления живёт в современных языках разметки.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Скрипты и языки описания",
+        title = "Язык HyperTalk",
+        originalTitle = "HyperTalk",
+        author = "Билл Аткинсон, Apple",
+        year = 1987,
+        summary = "Скриптовый язык HyperCard (1987): программы пишут прямо на карточках, на английском языке.",
+        details = "HyperTalk позволил непрограммистам создавать приложения из карточек и кнопок. Язык повлиял на идеи скриптов в интерфейсах.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Скрипты и языки описания",
+        title = "Язык Clipper",
+        originalTitle = "Clipper",
+        author = "Nantucket Corporation",
+        year = 1985,
+        summary = "Компилятор языка dBase (1985): программы на dBase превращались в исполняемые файлы.",
+        details = "Clipper компилировал программы dBase в самостоятельные исполняемые файлы, которые работали быстрее интерпретатора.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.LANGUAGE,
+        section = "Скрипты и языки описания",
+        title = "Язык Tcl",
+        originalTitle = "Tcl (Tool Command Language)",
+        author = "Джон Устерхаут, Беркли",
+        year = 1988,
+        summary = "Встраиваемый скриптовый язык (1988): всё — строки, а команды можно добавлять из программы на C.",
+        details = "Tcl создан для управления инструментами проектирования. Позже вместе с Tk он дал быстрый способ строить интерфейсы из скриптов.",
+        rare = true,
+    ),
+)
+
+################################################################################
+# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraPractices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Практики 1980-х, которых не было в первой редакции: проектирование, формальные методы, стандарты, культура. */
+val db1ExtraPractices: List<RecordEntity> = listOf(
+
+    // ---------- Проектирование ----------
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Проектирование",
+        title = "Абстрактные типы данных",
+        originalTitle = "Abstract data types",
+        author = "Барбара Лисков, Стивен Цилльс",
+        year = 1974,
+        summary = "Тип описывается набором операций, а не устройством данных; внутреннее представление скрыто.",
+        details = "Лисков и Цилльс (1974) предложили описывать типы через поведение. Эта идея стала основой ООП и современных библиотек.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Проектирование",
+        title = "Принцип подстановки Лисков",
+        originalTitle = "Liskov substitution principle",
+        author = "Барбара Лисков",
+        year = 1987,
+        summary = "Подкласс должен работать везде, где работает базовый класс, не нарушая ожиданий программы.",
+        details = "Принцип сформулирован в 1987 году. Он объясняет, когда наследование безопасно, и лежит в основе проектирования интерфейсов.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Проектирование",
+        title = "Шаблоны проектирования",
+        originalTitle = "Design patterns",
+        author = "Кент Бек, Уорд Каннингем",
+        year = 1987,
+        summary = "Повторяемые решения типовых задач в объектных программах: зародыш будущей книги Gang of Four.",
+        details = "Бек и Каннингем показали шаблоны на OOPSLA-1987 в контексте Smalltalk. Позже эти идеи собраны в книге 1994 года.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Проектирование",
+        title = "CRC-карточки",
+        originalTitle = "CRC cards (Class-Responsibility-Collaboration)",
+        author = "Кент Бек, Уорд Каннингем",
+        year = 1989,
+        summary = "Проектирование классов на карточках: класс, его обязанности и соавторы по коллаборации.",
+        details = "Карточки позволяли проектировать объекты в группе, без компьютера. Метод удобен для обучения объектному мышлению.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Проектирование",
+        title = "Метод Джексона (JSP)",
+        originalTitle = "Jackson structured programming",
+        author = "Майкл Джексон",
+        year = 1975,
+        summary = "Структура программы выводится из структуры входных и выходных данных.",
+        details = "Джексон (1975) предложил строить программу по иерархии данных. Метод широко применялся в Великобритании для деловых систем.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Проектирование",
+        title = "Диаграммы Уорниера — Орра",
+        originalTitle = "Warnier–Orr diagrams",
+        author = "Жан-Доминик Уорниер, Кеннет Орр",
+        year = 1974,
+        summary = "Вложенные скобки описывают структуру данных и программы по иерархии: от общего к частному.",
+        details = "Уорниер предложил диаграммы в 1974 году, Орр развил их в 1977-м. Диаграммы применяли для проектирования отчётов и файлов.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Проектирование",
+        title = "Диаграммы HIPO",
+        originalTitle = "HIPO (Hierarchy plus Input-Process-Output)",
+        author = "IBM",
+        year = 1974,
+        summary = "Иерархия модулей с описанием входов, обработки и выходов каждой части программы.",
+        details = "HIPO создавали в IBM для документирования больших систем. Каждый блок описывал вход, процесс и выход отдельно.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Проектирование",
+        title = "Jackson System Development",
+        originalTitle = "JSD (Jackson System Development)",
+        author = "Майкл Джексон",
+        year = 1983,
+        summary = "Метод моделирования системы по событиям, с жизненным циклом каждого объекта.",
+        details = "JSD (1983) продолжал идеи JSP: сначала моделируется мир и его события, затем программа. Метод использовали в банковских системах.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Проектирование",
+        title = "Information Engineering",
+        originalTitle = "Information Engineering",
+        author = "Клайв Финкельштейн, Джеймс Мартин",
+        year = 1981,
+        summary = "Методология (1981) для проектирования всей информационной системы предприятия по данным и процессам.",
+        details = "Методология объединяла модели данных и процессов в единую картину. Её использовали для крупных корпоративных систем.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Проектирование",
+        title = "Быстрая разработка приложений",
+        originalTitle = "Rapid Application Development (RAD)",
+        author = "Джеймс Мартин",
+        year = 1982,
+        summary = "Разработка короткими итерациями с прототипами и инструментами, которые ускоряли создание экранов.",
+        details = "Джеймс Мартин описал подход в книге «Application Development Without Programmers» (1982). Идея: быстрый макет, обратная связь пользователей и повторное использование компонентов.",
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Проектирование",
+        title = "Метод Буча",
+        originalTitle = "Booch method (object-oriented design)",
+        author = "Грейди Буч",
+        year = 1986,
+        summary = "Объектно-ориентированное проектирование (1986): диаграммы классов и объектов для больших систем.",
+        details = "Буч описал метод в книге 1986 года. Его диаграммы стали основой нотаций UML, появившихся позже.",
+        rare = true,
+    ),
+
+    // ---------- Качество и тесты ----------
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Качество и тесты",
+        title = "Нотация Z",
+        originalTitle = "Z notation",
+        author = "Жан-Раймон Абриаль, Оксфорд",
+        year = 1980,
+        summary = "Формальная спецификация (1980) на математической нотации: требования записываются как предикаты.",
+        details = "Нотация Z применялась в промышленных спецификациях, в том числе для систем безопасности. Она сочетает теорию множеств и логику первого порядка.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Качество и тесты",
+        title = "Метод VDM",
+        originalTitle = "Vienna Development Method (VDM)",
+        author = "Дайнес Бьёрнер, Клифф Джонс",
+        year = 1978,
+        summary = "Формальный метод спецификации (1978) из Вены: модели данных и операции с предусловиями.",
+        details = "VDM сочетал спецификацию и доказательство корректности через шаги уточнения. Метод применялся в промышленных проектах.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Качество и тесты",
+        title = "Мутационное тестирование",
+        originalTitle = "Mutation testing",
+        author = "Ричард ДеМилло, Ричард Липтон, Фредерик Сейворд",
+        year = 1978,
+        summary = "Тесты проверяют сами себя: программа получает искусственные ошибки, и тесты должны их заметить.",
+        details = "Идея 1978 года: если тесты пропускают внесённые мутации, они слабы. Метод дорогой, но показывает пробелы в покрытии.",
+        rare = true,
+    ),
+
+    // ---------- Процессы и стандарты ----------
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Процессы и команды",
+        title = "Стандарты IEEE 829 и 830",
+        originalTitle = "IEEE 829 (1983), IEEE 830 (1984)",
+        author = "IEEE",
+        year = 1983,
+        summary = "Стандарты документации тестов (829, 1983) и требований к ПО (830, 1984).",
+        details = "Стандарты определили состав документов: план тестирования, сценарии, отчёты и спецификацию требований. Их до сих пор используют в контрактах.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Процессы и команды",
+        title = "Стандарт DOD-STD-2167A",
+        originalTitle = "DOD-STD-2167A",
+        author = "Министерство обороны США",
+        year = 1988,
+        summary = "Стандарт разработки ПО (1988) для военных проектов: строгие документы и вехи.",
+        details = "2167A заменил 2167 (1985). Он описывал жизненный цикл, документы и проверки для военного ПО.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Процессы и команды",
+        title = "Модель зрелости CMM",
+        originalTitle = "Capability Maturity Model (CMM)",
+        author = "Институт программной инженерии (SEI)",
+        year = 1987,
+        summary = "Пять уровней зрелости процессов разработки (SEI, 1987): от хаоса к измеряемым процессам.",
+        details = "Первые анкеты SEI появились в 1987 году. Полная модель CMM была издана в 1991-м. Она стала мерилом для подрядчиков.",
+        rare = true,
+    ),
+
+    // ---------- Культура и открытость ----------
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Культура и открытость",
+        title = "Хакерская этика",
+        originalTitle = "Hacker ethic",
+        author = "Стивен Леви (книга «Hackers», 1984)",
+        year = 1984,
+        summary = "Принципы хакеров: доступ к компьютерам должен быть свободным, а информация открытой.",
+        details = "Леви описал культуру MIT и первых компьютерных энтузиастов. Принципы лежали в основе свободного ПО.",
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Культура и открытость",
+        title = "Демосцена",
+        originalTitle = "Demoscene",
+        author = "Группы программистов Amiga, C64 и PC",
+        year = 1985,
+        summary = "Соревнование программистов (1985 и позже): демо на 64 КБ или меньше, с графикой и музыкой.",
+        details = "Демо-группы создавали эффекты на пределе железа. Сцена выросла из групп, взламывавших защиту игр.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Культура и открытость",
+        title = "Электронные доски объявлений",
+        originalTitle = "Bulletin Board System (BBS)",
+        author = "Ward Christensen, Randy Suess (CBBS, 1978)",
+        year = 1978,
+        summary = "Первые BBS (1978): компьютер с модемом, куда звонили пользователи, чтобы читать сообщения и файлы.",
+        details = "CBBS в Чикаго считается первой BBS. Вокруг BBS выросли файлообмен, форумы и сетевые культуры 80-х.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.PRACTICE,
+        section = "Культура и открытость",
+        title = "Защита от копирования",
+        originalTitle = "Copy protection",
+        author = "Разработчики игр и программ 1980-х",
+        year = 1980,
+        summary = "Методы защиты дискет от копирования (1980-е) и ответ взломщиков: крэки и вставки в программы.",
+        details = "Защита строилась на особенностях дорожек дискеты и на проверках ключей. Взломщики выпускали программы без защиты с заставками своих групп.",
+        rare = true,
+    ),
+)
+
+################################################################################
+# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraSystems.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Системы 1980-х, которых не было в первой редакции: ОС, микроядра, окна, сети и СУБД. */
+val db1ExtraSystems: List<RecordEntity> = listOf(
+
+    // ---------- Операционные системы ----------
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Операционные системы",
+        title = "UCSD p-System",
+        originalTitle = "UCSD p-System",
+        author = "Университет Калифорнии в Сан-Диего",
+        year = 1978,
+        summary = "ОС и среда на P-коде (1978): одна программа работала на Apple II, IBM PC и многих других машинах.",
+        details = "Система была написана на Pascal и выполнялась виртуальной P-машиной. Так переносимость достигалась переносом одного интерпретатора.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Операционные системы",
+        title = "CP/M-86",
+        originalTitle = "CP/M-86",
+        author = "Digital Research",
+        year = 1981,
+        summary = "16-битная версия CP/M (1981) от Digital Research для процессоров Intel 8086.",
+        details = "CP/M-86 задумывался как преемник CP/M для 16-битных машин, но уступил MS-DOS на рынке IBM-совместимых ПК.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Операционные системы",
+        title = "TRS-DOS",
+        originalTitle = "TRSDOS",
+        author = "Tandy / Radio Shack",
+        year = 1977,
+        summary = "Дисковая ОС для TRS-80 (1977): файловая система и команды для программ на BASIC и ассемблере.",
+        details = "TRSDOS работала на TRS-80 и на более поздних моделях Tandy. Для миллионов пользователей это была первая дисковая ОС.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Операционные системы",
+        title = "Apple DOS 3.3",
+        originalTitle = "Apple DOS 3.3",
+        author = "Apple",
+        year = 1980,
+        summary = "Дисковая ОС Apple II (1980): стандарт для программ 80-х на этой машине.",
+        details = "DOS 3.3 пришла на смену DOS 3.2. Она поддерживала тысячи программ, а ProDOS появилась позже (1983).",
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Операционные системы",
+        title = "DR DOS",
+        originalTitle = "DR DOS",
+        author = "Digital Research",
+        year = 1988,
+        summary = "Клон MS-DOS от Digital Research (1988) с собственным управлением памятью и утилитами.",
+        details = "DR DOS предлагала управление памятью, которого не было в ранних версиях MS-DOS. Продавалась как альтернатива Microsoft.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Операционные системы",
+        title = "MSX-DOS",
+        originalTitle = "MSX-DOS",
+        author = "Microsoft, ASCII",
+        year = 1984,
+        summary = "ОС для компьютеров MSX (1984), совместимая с CP/M по программному интерфейсу.",
+        details = "MSX-DOS позволяла запускать программы CP/M на машинах MSX. Это был мост между миром CP/M и домашними компьютерами.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Операционные системы",
+        title = "ITS",
+        originalTitle = "Incompatible Timesharing System",
+        author = "MIT, Лаборатория искусственного интеллекта",
+        year = 1967,
+        summary = "Система разделения времени MIT (1967–1980-е): хакерская культура и место, где появился Emacs.",
+        details = "ITS писали и использовали программисты MIT. Ричард Столлман работал с этой системой до создания GNU.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Операционные системы",
+        title = "TOPS-20",
+        originalTitle = "TOPS-20",
+        author = "Digital Equipment Corporation",
+        year = 1976,
+        summary = "ОС DEC для мейнфреймов PDP-10 (1976): основа многих университетских вычислительных центров.",
+        details = "TOPS-20 развивала идеи разделения времени. Её использовали в университетах для обучения и исследований вплоть до конца 1980-х.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Операционные системы",
+        title = "GS/OS",
+        originalTitle = "GS/OS",
+        author = "Apple",
+        year = 1986,
+        summary = "Операционная система Apple IIGS (1986) с иерархией каталогов и многозадачностью.",
+        details = "GS/OS заменила ProDOS на 16-битной машине и поддерживала длинные имена файлов.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Операционные системы",
+        title = "Desqview",
+        originalTitle = "DESQview",
+        author = "Quarterdeck",
+        year = 1985,
+        summary = "Многозадачная оболочка поверх MS-DOS (1985): несколько программ в окнах на обычном PC.",
+        details = "Desqview дала многозадачность DOS-программам, которые её не умели. Вместе с Windows она показала спрос на окна.",
+        rare = true,
+    ),
+
+    // ---------- Варианты Unix ----------
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Варианты Unix",
+        title = "Unix System V",
+        originalTitle = "UNIX System V",
+        author = "AT&T",
+        year = 1983,
+        summary = "Коммерческий Unix AT&T (1983): основа большого семейства вариантов Unix.",
+        details = "System V стала эталоном для коммерческих Unix-систем. От неё происходят Solaris, HP-UX и многие другие.",
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Варианты Unix",
+        title = "AIX",
+        originalTitle = "IBM AIX",
+        author = "IBM",
+        year = 1986,
+        summary = "Unix от IBM (1986): первая версия для рабочих станций RT PC.",
+        details = "AIX впервые вышла на рабочих станциях IBM RT PC, а позже работала на больших системах IBM.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Варианты Unix",
+        title = "A/UX",
+        originalTitle = "Apple A/UX",
+        author = "Apple",
+        year = 1988,
+        summary = "Unix для Macintosh II (1988): можно было запускать Unix и Mac-программы на одной машине.",
+        details = "A/UX стала первой попыткой Apple предложить полноценный Unix. Продажи были скромными, но идея жила в Mac OS X.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Варианты Unix",
+        title = "Ultrix",
+        originalTitle = "DEC Ultrix",
+        author = "Digital Equipment Corporation",
+        year = 1984,
+        summary = "Unix для машин DEC (1984): варианты для VAX и MIPS на рабочих станциях.",
+        details = "Ultrix ставили в университетах и научных центрах, где работали машины DEC.",
+        rare = true,
+    ),
+
+    // ---------- Микроядра и распределённые системы ----------
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Микроядра и распределённые системы",
+        title = "Mach",
+        originalTitle = "Mach",
+        author = "Университет Карнеги — Меллона",
+        year = 1985,
+        summary = "Микроядро Mach (1985): основа NeXTSTEP и позже macOS.",
+        details = "Mach выносил файловые системы и сеть из ядра в пользовательские серверы. Эта идея живёт в современном ядре XNU.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Микроядра и распределённые системы",
+        title = "NeXTSTEP",
+        originalTitle = "NeXTSTEP",
+        author = "NeXT",
+        year = 1989,
+        summary = "Система NeXT (1989) на Mach и BSD с Objective-C и графическим интерфейсом.",
+        details = "NeXTSTEP стала основой для будущей macOS. Её объектно-ориентированный интерфейс опирался на Objective-C.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Микроядра и распределённые системы",
+        title = "QNX",
+        originalTitle = "QNX",
+        author = "Quantum Software Systems",
+        year = 1982,
+        summary = "Микроядерная ОС реального времени (1982) для промышленности и медицины.",
+        details = "QNX передавала сообщения между процессами, что давало предсказуемые задержки. Система используется в автомобилях и медицинском оборудовании.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Микроядра и распределённые системы",
+        title = "Amoeba",
+        originalTitle = "Amoeba",
+        author = "Эндрю Таненбаум и коллеги, Vrije Universiteit",
+        year = 1981,
+        summary = "Распределённая ОС (1981): много машин выглядят как одна система с общими файлами.",
+        details = "Amoeba создавалась как учебный и исследовательский проект по распределённым системам. Её идеи повлияли на последующие работы.",
+        rare = true,
+    ),
+
+    // ---------- Графика и сети ----------
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Графика и сети",
+        title = "X Window System",
+        originalTitle = "X Window System (X10, X11)",
+        author = "MIT, проект Athena",
+        year = 1984,
+        summary = "Оконная система для Unix (1984; X11 в 1987): окна не привязаны к железу и работают по сети.",
+        details = "X разделяла сервер, который рисует, и клиента, который решает, что рисовать. Эта схема используется в Linux до сих пор.",
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Графика и сети",
+        title = "NeWS",
+        originalTitle = "NeWS",
+        author = "Sun Microsystems",
+        year = 1986,
+        summary = "Оконная система Sun (1986) на языке PostScript: окна и графику описывала программа.",
+        details = "NeWS была мощной, но тяжёлой для железа 1980-х. Её идеи повлияли на последующие графические системы.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Графика и сети",
+        title = "Usenet",
+        originalTitle = "Usenet",
+        author = "Том Траскотт и Джим Эллис, Duke University",
+        year = 1980,
+        summary = "Система обмена новостями по сети Unix (1980): предок современных форумов и групп рассылки.",
+        details = "Сообщения передавались между машинами через uucp. В 80-х Usenet стал одним из главных мест обсуждения программирования.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Графика и сети",
+        title = "FidoNet",
+        originalTitle = "FidoNet",
+        author = "Том Дженнингс",
+        year = 1984,
+        summary = "Сеть BBS (1984), которая соединила тысячи домашних ПК ночными звонками по модему.",
+        details = "Сообщения передавались от узла к узлу по расписанию. FidoNet работала на обычных телефонных линиях и связывала пользователей по всему миру.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Графика и сети",
+        title = "TCP/IP",
+        originalTitle = "TCP/IP",
+        author = "Винт Серф, Боб Кан и коллеги",
+        year = 1983,
+        summary = "Стек протоколов TCP/IP (1983): ARPANET перешла на него 1 января 1983 года.",
+        details = "Протоколы разделили надёжную передачу (TCP) и адресацию пакетов (IP). Эта схема стала основой Интернета.",
+    ),
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Графика и сети",
+        title = "Ethernet",
+        originalTitle = "Ethernet (DIX)",
+        author = "Xerox PARC, DEC, Intel",
+        year = 1980,
+        summary = "Спецификация Ethernet (1980): локальная сеть, которая связала рабочие станции и ПК.",
+        details = "Первая спецификация DIX появилась в 1980 году. Коаксиальный кабель, а позже витая пара, сделали сеть дешёвой.",
+    ),
+
+    // ---------- Системы управления базами данных ----------
+
+    entry(
+        kind = Kind.SYSTEM,
+        section = "Системы управления базами данных",
+        title = "IBM DB2",
+        originalTitle = "IBM DB2",
+        author = "IBM",
+        year = 1983,
+        summary = "Реляционная СУБД IBM (1983) для мейнфреймов с языком SQL: эталон для коммерческих баз.",
+        details = "DB2 вышла для MVS и позже получила версии для других платформ. Многие банки и страховые держали на ней данные десятилетиями.",
+    ),
+)
+
+################################################################################
+# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraTools.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Инструменты 1980-х, которых не было в первой редакции: ассемблеры, компиляторы, оболочки, связь, вёрстка. */
+val db1ExtraTools: List<RecordEntity> = listOf(
+
+    // ---------- Компиляторы и ассемблеры ----------
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Компиляторы и генераторы",
+        title = "Ассемблер MASM",
+        originalTitle = "Microsoft Macro Assembler (MASM)",
+        author = "Microsoft",
+        year = 1981,
+        summary = "Макроассемблер Microsoft (1981) для x86: стандарт для ассемблерных программ на PC.",
+        details = "MASM поддерживал макросы и условную компиляцию. Игры и системные программы 80-х часто писали на нём.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Компиляторы и генераторы",
+        title = "Компилятор Turbo C",
+        originalTitle = "Borland Turbo C",
+        author = "Borland",
+        year = 1987,
+        summary = "Быстрый компилятор C от Borland (1987) с интегрированной средой для MS-DOS.",
+        details = "Turbo C объединил редактор, компилятор и отладчик. Компилятор работал очень быстро на 8088 и 80286.",
+    ),
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Компиляторы и генераторы",
+        title = "Microsoft C",
+        originalTitle = "Microsoft C 1.0",
+        author = "Microsoft",
+        year = 1983,
+        summary = "Первый компилятор C от Microsoft (1983) для MS-DOS: переносимый код для PC.",
+        details = "Microsoft C конкурировал с Lattice C. Компиляторы этой эпохи различались в библиотеках и расширениях языка.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Компиляторы и генераторы",
+        title = "Компилятор Lattice C",
+        originalTitle = "Lattice C",
+        author = "Lattice Inc.",
+        year = 1982,
+        summary = "Один из первых компиляторов C для PC (1982): популярен у программистов CP/M и MS-DOS.",
+        details = "Lattice C продавался за умеренную цену и был одним из первых коммерческих компиляторов C на PC.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Компиляторы и генераторы",
+        title = "Ассемблер Turbo Assembler",
+        originalTitle = "Turbo Assembler (TASM)",
+        author = "Borland",
+        year = 1988,
+        summary = "Ассемблер Borland (1988), совместимый с синтаксисом MASM.",
+        details = "TASM поддерживал синтаксис MASM. Его использовали разработчики игр и драйверов.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Компиляторы и генераторы",
+        title = "Препроцессор M4",
+        originalTitle = "m4",
+        author = "Брайан Керниган, Дэннис Ритчи",
+        year = 1977,
+        summary = "Универсальный макропроцессор Unix (1977): подставляет текст по шаблонам. На нём построены autoconf и конфигурация sendmail.",
+        details = "M4 работал с текстом любого языка. Его применяли для генерации сценариев и заготовок программ.",
+        rare = true,
+    ),
+
+    // ---------- Калькуляторы и математика ----------
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Компиляторы и генераторы",
+        title = "Калькулятор bc",
+        originalTitle = "bc",
+        author = "Лоринда Черри, Роберт Моррис, Bell Labs",
+        year = 1975,
+        summary = "Калькулятор произвольной точности Unix (1975): язык с переменными, функциями и любой точностью.",
+        details = "bc использовал язык, похожий на C, и часто стоял в конвейерах оболочки. Его применяли для точных вычислений, например для π.",
+        rare = true,
+    ),
+
+    // ---------- Командная строка ----------
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Командная строка",
+        title = "Оболочка csh",
+        originalTitle = "C shell (csh)",
+        author = "Билл Джой, Беркли",
+        year = 1978,
+        summary = "Оболочка Unix с синтаксисом, похожим на C (1978): история команд, псевдонимы и задания.",
+        details = "csh появилась в Беркли и стала альтернативой Bourne shell. Её синтаксис часто ругали, но её возможности были новыми.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Командная строка",
+        title = "Оболочка ksh",
+        originalTitle = "Korn shell (ksh)",
+        author = "Дэвид Корн, Bell Labs",
+        year = 1983,
+        summary = "Оболочка Корна (1983): совмещает синтаксис Bourne shell с удобствами csh.",
+        details = "ksh стала стандартом для системных скриптов Unix System V. Многие её возможности позже появились в bash.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Командная строка",
+        title = "Оболочка bash",
+        originalTitle = "Bourne Again Shell (bash)",
+        author = "Брайан Фокс, проект GNU",
+        year = 1989,
+        summary = "Оболочка проекта GNU (1989): совместима с Bourne shell и содержит идеи csh и ksh.",
+        details = "bash стала стандартной оболочкой Linux и macOS. Её синтаксис до сих пор лежит в основе многих скриптов.",
+    ),
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Командная строка",
+        title = "Утилита gawk",
+        originalTitle = "GNU awk (gawk)",
+        author = "Пол Рубин и Джей Фенлсон, проект GNU",
+        year = 1988,
+        summary = "Свободная реализация AWK от проекта GNU (1988) с расширениями для текста и массивов.",
+        details = "gawk развивал AWK дальше исходной версии и добавил к нему расширения. Часто используется в скриптах обработки данных.",
+        rare = true,
+    ),
+
+    // ---------- Связь и передача файлов ----------
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Связь и передача файлов",
+        title = "Протокол Kermit",
+        originalTitle = "Kermit",
+        author = "Университет Колумбия",
+        year = 1981,
+        summary = "Протокол и программа передачи файлов (1981) между разными компьютерами через последовательный порт.",
+        details = "Kermit работала почти на любой машине. Её использовали для переноса файлов между мейнфреймами, PC и Unix.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Связь и передача файлов",
+        title = "Протокол XMODEM",
+        originalTitle = "XMODEM",
+        author = "Уорд Кристенсен",
+        year = 1977,
+        summary = "Протокол передачи файлов по модему (1977) с контрольной суммой блоков: основа многих BBS.",
+        details = "XMODEM передавал файл блоками по 128 байт с проверкой. Позже появились YMODEM и ZMODEM.",
+        rare = true,
+    ),
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Связь и передача файлов",
+        title = "Утилита uucp",
+        originalTitle = "uucp (Unix to Unix copy)",
+        author = "Дэвид Новитц, Майкл Лэск",
+        year = 1978,
+        summary = "Передача файлов и почты между машинами Unix по телефонным линиям (1978).",
+        details = "uucp работала по расписанию через модем. Сети uucp связывали университеты и компании до появления Интернета.",
+        rare = true,
+    ),
+
+    // ---------- Документы и вёрстка ----------
+
+    entry(
+        kind = Kind.TOOL,
+        section = "Документы и вёрстка",
+        title = "Система вёрстки LaTeX",
+        originalTitle = "LaTeX",
+        author = "Лесли Лэмпорт",
+        year = 1984,
+        summary = "Надстройка над TeX (1984): структура документа задаётся командами разделов, формул и ссылок.",
+        details = "LaTeX позволил писать научные статьи и книги без знания низкоуровневого TeX. Стал стандартом для научных публикаций.",
     ),
 )
 

@@ -17,6 +17,7 @@ Solo development log for the Android app in this folder. Entries are added at ch
 | CP-02 | 2026-10-14 | 4,277 | 169 | 82 | 115 | 4,643 | +177 (tests +169, examples +8) |
 | CP-03 | 2026-10-14 | 4,277 | 169 | 82 | 115 | 4,643 | 0 (no source changes; first build attempt failed) |
 | CP-04 | 2026-10-14 | 4,277 | 169 | 82 | 118 | 4,646 | +3 (.gitignore rule for generated Kotlin session data) |
+| CP-05 | 2026-10-14 | 6,236 | 169 | 82 | 118 | 6,605 | +1,959 (155 new records in five seed files) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -120,3 +121,58 @@ Non-blank lines at CP-04: 4,229 (Kotlin 3,911, tests 143, XML 74, Gradle and pro
 ### Next
 
 - Commit the packed source file `RetroDatabases_source.txt` together with this log.
+
+## CP-05: coverage audit and 155 added records
+
+Status: built, all 14 unit tests pass, debug APK assembles.
+
+Date: 2026-10-14. Totals: Kotlin main 6,236 (CP-04: 4,277), Kotlin test 169, XML 82, Gradle and project files 118, total 6,605. The +1,959 delta equals the size of the six new Kotlin files, and no other source changed.
+
+### What changed
+
+- Five seed files with new records: `Db1ExtraDevices.kt` (72), `Db1ExtraSystems.kt` (25), `Db1ExtraLanguages.kt` (22), `Db1ExtraTools.kt` (15) and `Db1ExtraPractices.kt` (21).
+- `Db1Additions.kt` joins the five lists into `db1Additions`. `Db1Catalog.kt` adds that list to `db1Records`; the change is one line.
+- Database 1 now has 320 records (165 before). Rare-flagged records rise from 55 to 181; 126 of the new records are rare.
+- New sections include regional home computers, Eastern-bloc and Soviet machines, Lisp machines, processor families, Unix variants, microkernels, networks, formal methods, and BBS and demoscene culture.
+
+### Audit
+
+- Compared the existing 165 records with reference lists of 1980s home computers, operating systems, processors, languages and tools, and with the standards and practices of the decade.
+- Searched for facts on the machines least likely to be known: Yugoslav, Bulgarian, Czechoslovak, East German, Chinese and Soviet computers, and the Iskra-1030.
+- Titles are unique across all 320 records. A grep over the seed files confirmed this before the build, and `SeedDataTest` enforces it.
+
+### Facts checked by web search
+
+- Galeb: 6502, made by PEL Varaždin. Sources disagree on the year: 1981 in one infobox, 1984 in a catalogue of Yugoslav systems. The entry uses 1981.
+- Orao: 6502 at 1 MHz, 1984. Standard school computer in Croatia and Vojvodina from 1985 to 1991.
+- Pecom 64: CDP1802B processor, 32 KB RAM, CDP1869 and CDP1870 video chips, 1985.
+- Tesla PMD 85: MHB8080A, a Czechoslovak copy of the Intel 8080, 2.048 MHz, produced from 1985 to 1989. One listing gives 1983 as the first year.
+- Matra Alice: Motorola 6803, 6847 video, a copy of the TRS-80 MC-10, sold in France from 1983.
+- Philips P2000T: Z80, Mullard SAA5050 teletext chip, built-in tape drive. Wikipedia gives March 1980 as the launch; a museum dates the T model to 1981.
+- Robotron Z1013: 1985, U880 (an East German Z80 clone). Variants Z1013.16 (1987) and Z1013.64 (1988).
+- Iskra-1030: IBM PC/XT-compatible, 8086 clone at 4.77 MHz, designed in Leningrad and built in Smolensk and Kursk. English Wikipedia gives 1989 as the release year.
+- CEC-I: Apple II-compatible, 6502A, 64 KB. Sources disagree on the maker and date (1986 or November 1987).
+
+### Corrections made during review
+
+- Pravetz 8D is an Oric Atmos clone, not an Apple II clone. Its year (1985) is an estimate; no source gave one.
+- The Iskra-1030 is no longer described as a school computer, which the sources did not support. It is now described as used in institute computing labs.
+- The CEC-I university attribution was removed; the sources do not support it.
+- Parlog was not used by the ICOT project. The entry now says it is related work.
+- The TI-99/4A is dated 1981, the year of the 4A. The 1979 date belongs to the TI-99/4.
+- Common Lisp is described as the 1984 book that unified the dialects. The ANSI standard came later.
+- RAD is dated to James Martin's 1982 book.
+- Removed claims I could not support: "hundreds of sprites" on the X68000, "basis of the Korean market" for the SPC-1000, "main place" for Usenet, "thousands of accounting systems" for Clipper, the wording that autoconf and sendmail grew out of m4, and the ITS "first text editor" wording.
+- Author names corrected from memory, not searched: Franz Lisp, Hope, Modula-3, mutation testing, gawk and uucp.
+
+### Examples and tests
+
+- New executable example: the C++ entry (a counter class). It was extracted from the Kotlin source, compiled with `g++ -std=c++17 -Wall -Wextra` and run: it prints `2`. It is the only new entry with executable code; the other 154 new entries are reading-only.
+- `./gradlew assembleDebug testDebugUnitTest` finished with BUILD SUCCESSFUL. Results: AppDatabaseSeedTest 2 of 2, RecordFilterTest 5 of 5, SeedDataTest 7 of 7. Debug APK: 10.2 MB.
+
+### Notes
+
+- About 145 of the new entries were written from memory and not checked against a source in this checkpoint. Dates and names are the first thing to check when an error is reported.
+- The rare flag now covers 59 of 72 new devices. Most of these machines were sold in one region or in small numbers. The flag is a judgement call and may need a review pass.
+- Not verified yet: running on a device or emulator, the new sections in the UI, lint, and the release build.
+- `DEVLOG.txt` is a plain-text copy of this log, and the packed bundle includes it.
