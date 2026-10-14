@@ -4,8 +4,8 @@
    "title": "БЦ «ЯРД»",
    "address": "Москва, 1-й Магистральный тупик, 11, стр. 1",
    "district": "Хорошёвский (САО)",
-   "cls": "B+ (по ЦИАН), реконструкция 2009 г., 5 этажей, кирпич",
-   "metro": "Беговая — 20 мин пешком; Хорошёвская (БКЛ) и МЦК Шелепиха — 4–5 мин транспортом; Полежаевская — 20 мин пешком",
+   "cls": "класс B по карточкам ЦИАН (B+ — в справочнике БЦ и рекламе), здание 1958 г., реконструкция 2009 г., 5 этажей, кирпич",
+   "metro": "Шелепиха (МЦК/БКЛ) — ~1 км, ~15 мин пешком; Хорошёвская (БКЛ) — 1,2 км; Беговая и Полежаевская — ~20 мин пешком",
    "units": [
     {
      "key": "y1",
@@ -33,6 +33,7 @@
         "fit": -3
        },
        "note": "тот же комплекс The Yard (11с7), 1 этаж, с арендатором",
+       "type": "офис в БЦ",
        "ask": 273058,
        "vat": "notIncluded",
        "ex_vat": 273058,
@@ -62,6 +63,7 @@
         "bld": -6
        },
        "note": "Магистраль Плаза в 300 м: тот же доступ к метро, но крупнее БЦ, инфраструктура, виды",
+       "type": "офис в БЦ",
        "ask": 280000,
        "vat": "notIncluded",
        "ex_vat": 280000,
@@ -91,6 +93,7 @@
         "bld": -6
        },
        "note": "Магистраль Плаза, 7 этаж, виды на Сити",
+       "type": "офис в БЦ",
        "ask": 295545,
        "vat": "included",
        "ex_vat": 242250,
@@ -121,6 +124,7 @@
         "size": 3
        },
        "note": "Магистраль Плаза, 5 этаж, ремонт",
+       "type": "офис в БЦ",
        "ask": 272436,
        "vat": "notIncluded",
        "ex_vat": 272436,
@@ -152,6 +156,7 @@
         "size": 5
        },
        "note": "БЦ «Магистраль», B, 1973 г.",
+       "type": "офис в БЦ",
        "ask": 154350,
        "vat": "notIncluded",
        "ex_vat": 154350,
@@ -182,7 +187,8 @@
         "bld": 8,
         "size": 4
        },
-       "note": "Хорошёвское ш., B, 1971 г., 12 мин до ЦСКА",
+       "note": "Хорошёвское ш., административное здание B, 1971 г., коридорная планировка",
+       "type": "офис в админ. здании",
        "ask": 201600,
        "vat": "included",
        "ex_vat": 165246,
@@ -204,9 +210,73 @@
         "https://images.cdn-cian.ru/images/2974926438-1.jpg",
         "https://images.cdn-cian.ru/images/2974926445-1.jpg"
        ]
+      },
+      {
+       "id": 333555511,
+       "weight": 1,
+       "adj": {
+        "loc": -5,
+        "bld": 15,
+        "size": 4
+       },
+       "note": "4-я Магистральная, 5к1: бывший промышленный корпус B (1959), грузовой лифт",
+       "type": "офис в админ. здании",
+       "ask": 114132,
+       "vat": "included",
+       "ex_vat": 93551,
+       "base": 86067,
+       "adjusted": 97789,
+       "area": 481.9,
+       "floor": 4,
+       "address": "Москва, Хорошёвский район, Магистральная 4-я ул., д.5, к.1",
+       "bc": "Строение 1",
+       "cls": "b",
+       "year": 1959,
+       "metro": "Хорошёвская",
+       "metro_min": 5,
+       "metro_walk": true,
+       "price": 55000000,
+       "url": "https://www.cian.ru/sale/commercial/333555511/?mlSearchSessionGuid=27015bd366ff847d16378c790281b691",
+       "category": "officeSale",
+       "photos": [
+        "https://images.cdn-cian.ru/images/2957053427-1.jpg",
+        "https://images.cdn-cian.ru/images/2957053434-1.jpg"
+       ]
+      },
+      {
+       "id": 327068779,
+       "weight": 1,
+       "adj": {
+        "loc": -15,
+        "bld": 5,
+        "size": -6
+       },
+       "note": "БЦ «Бега» (B−, 1951 г.), 3 мин до метро Беговая и МЦД",
+       "type": "офис в БЦ",
+       "ask": 261261,
+       "vat": "included",
+       "ex_vat": 214148,
+       "base": 197016,
+       "adjusted": 165287,
+       "area": 144.3,
+       "floor": 4,
+       "address": "Россия, Москва, 3-й Хорошёвский проезд, 1с1",
+       "bc": "Бега",
+       "cls": "b",
+       "year": 1951,
+       "metro": "Беговая",
+       "metro_min": 4,
+       "metro_walk": true,
+       "price": 37700000,
+       "url": "https://www.cian.ru/sale/commercial/327068779/?mlSearchSessionGuid=27015bd366ff847d16378c790281b691",
+       "category": "officeSale",
+       "photos": [
+        "https://images.cdn-cian.ru/images/ofis-moskva-3y-horoshevskiy-proezd-2946710665-1.jpg",
+        "https://images.cdn-cian.ru/images/ofis-moskva-3y-horoshevskiy-proezd-2946718058-1.jpg"
+       ]
       }
      ],
-     "value": 218894
+     "value": 205454
     },
     "y5": {
      "comps": [
@@ -219,6 +289,7 @@
         "fl": -3
        },
        "note": "тот же комплекс, 1 этаж, малый лот",
+       "type": "офис в БЦ",
        "ask": 273058,
        "vat": "notIncluded",
        "ex_vat": 273058,
@@ -249,6 +320,7 @@
         "size": -4
        },
        "note": "Магистраль Плаза",
+       "type": "офис в БЦ",
        "ask": 280000,
        "vat": "notIncluded",
        "ex_vat": 280000,
@@ -279,6 +351,7 @@
         "size": -3
        },
        "note": "Магистраль Плаза",
+       "type": "офис в БЦ",
        "ask": 295545,
        "vat": "included",
        "ex_vat": 242250,
@@ -308,6 +381,7 @@
         "bld": -6
        },
        "note": "Магистраль Плаза, близкий по площади блок",
+       "type": "офис в БЦ",
        "ask": 272436,
        "vat": "notIncluded",
        "ex_vat": 272436,
@@ -338,6 +412,7 @@
         "bld": 10
        },
        "note": "БЦ «Магистраль», B, 1973 г.",
+       "type": "офис в БЦ",
        "ask": 154350,
        "vat": "notIncluded",
        "ex_vat": 154350,
@@ -367,7 +442,8 @@
         "loc": -3,
         "bld": 8
        },
-       "note": "Хорошёвское ш., B, 1971 г.",
+       "note": "Хорошёвское ш., административное здание B, 1971 г.",
+       "type": "офис в админ. здании",
        "ask": 201600,
        "vat": "included",
        "ex_vat": 165246,
@@ -389,9 +465,72 @@
         "https://images.cdn-cian.ru/images/2974926438-1.jpg",
         "https://images.cdn-cian.ru/images/2974926445-1.jpg"
        ]
+      },
+      {
+       "id": 333555511,
+       "weight": 1,
+       "adj": {
+        "loc": -5,
+        "bld": 15
+       },
+       "note": "4-я Магистральная, 5к1: бывший промышленный корпус B (1959)",
+       "type": "офис в админ. здании",
+       "ask": 114132,
+       "vat": "included",
+       "ex_vat": 93551,
+       "base": 86067,
+       "adjusted": 94028,
+       "area": 481.9,
+       "floor": 4,
+       "address": "Москва, Хорошёвский район, Магистральная 4-я ул., д.5, к.1",
+       "bc": "Строение 1",
+       "cls": "b",
+       "year": 1959,
+       "metro": "Хорошёвская",
+       "metro_min": 5,
+       "metro_walk": true,
+       "price": 55000000,
+       "url": "https://www.cian.ru/sale/commercial/333555511/?mlSearchSessionGuid=27015bd366ff847d16378c790281b691",
+       "category": "officeSale",
+       "photos": [
+        "https://images.cdn-cian.ru/images/2957053427-1.jpg",
+        "https://images.cdn-cian.ru/images/2957053434-1.jpg"
+       ]
+      },
+      {
+       "id": 327068779,
+       "weight": 1,
+       "adj": {
+        "loc": -15,
+        "bld": 5,
+        "size": -12
+       },
+       "note": "БЦ «Бега», 3 мин до метро, малый лот",
+       "type": "офис в БЦ",
+       "ask": 261261,
+       "vat": "included",
+       "ex_vat": 214148,
+       "base": 197016,
+       "adjusted": 154737,
+       "area": 144.3,
+       "floor": 4,
+       "address": "Россия, Москва, 3-й Хорошёвский проезд, 1с1",
+       "bc": "Бега",
+       "cls": "b",
+       "year": 1951,
+       "metro": "Беговая",
+       "metro_min": 4,
+       "metro_walk": true,
+       "price": 37700000,
+       "url": "https://www.cian.ru/sale/commercial/327068779/?mlSearchSessionGuid=27015bd366ff847d16378c790281b691",
+       "category": "officeSale",
+       "photos": [
+        "https://images.cdn-cian.ru/images/ofis-moskva-3y-horoshevskiy-proezd-2946710665-1.jpg",
+        "https://images.cdn-cian.ru/images/ofis-moskva-3y-horoshevskiy-proezd-2946718058-1.jpg"
+       ]
       }
      ],
-     "value": 209540
+     "value": 196439
     }
    },
    "rent": [
@@ -624,7 +763,7 @@
      "floor": 1,
      "note": "кабинетная планировка, оборудован под банк/депозитарий, рядом с холлом БЦ",
      "group": "y1",
-     "comp": 218894,
+     "comp": 205454,
      "income": 197913,
      "noi": 22760,
      "inc": {
@@ -633,11 +772,11 @@
       "cap": 0.115
      },
      "extra": 0,
-     "per_m2": 208000,
-     "total": 63190400,
-     "lo": 58135168,
-     "hi": 68245632,
-     "gross_yield": 13.5
+     "per_m2": 202000,
+     "total": 61367600,
+     "lo": 56458192,
+     "hi": 66277008,
+     "gross_yield": 13.9
     },
     {
      "key": "y5",
@@ -646,7 +785,7 @@
      "floor": 5,
      "note": "верхний этаж, open space + кабинеты, два лестничных узла",
      "group": "y5",
-     "comp": 209540,
+     "comp": 196439,
      "income": 162500,
      "noi": 19500,
      "inc": {
@@ -655,11 +794,11 @@
       "cap": 0.12
      },
      "extra": 0,
-     "per_m2": 186000,
-     "total": 126480000,
-     "lo": 116361600,
-     "hi": 136598400,
-     "gross_yield": 13.4
+     "per_m2": 179000,
+     "total": 121720000,
+     "lo": 111982400,
+     "hi": 131457600,
+     "gross_yield": 14.0
     }
    ]
   },
@@ -667,8 +806,8 @@
    "title": "БЦ «Калейдоскоп»",
    "address": "Москва, Хлебозаводский проезд, 7, стр. 5",
    "district": "Нагатино-Садовники (ЮАО)",
-   "cls": "B, 1995 г., 3 лифта OTIS, центральное кондиционирование",
-   "metro": "Нагатинская (серая, МЦД-2) и Каширская (зелёная, БКЛ) — 10–15 мин пешком",
+   "cls": "класс B, 1995 г., 3 лифта OTIS, центральное кондиционирование, потолки 2,37–2,57 м",
+   "metro": "Нагорная — 1,45 км, Каширская (зелёная + БКЛ) — 1,8 км, Нагатинская — 15–25 мин пешком (в презентации — «10–15 мин»)",
    "units": [
     {
      "key": "k1",
@@ -692,15 +831,16 @@
        "id": 333676669,
        "weight": 2,
        "adj": {
-        "bld": -15,
+        "bld": -10,
         "fit": -3
        },
-       "note": "Сириус Парк стр. 4, B+, потолки 3,6 м, с арендатором",
+       "note": "Сириус Парк стр. 4: ПСН с отдельным входом, потолки 3,05 м, арендатор-столовая",
+       "type": "ПСН в БЦ",
        "ask": 370077,
        "vat": "included",
        "ex_vat": 303342,
        "base": 279074,
-       "adjusted": 230097,
+       "adjusted": 243632,
        "area": 480.0,
        "floor": 1,
        "address": "г Москва, Каширское шоссе, д 3 к 2 стр 4",
@@ -720,16 +860,17 @@
       },
       {
        "id": 334041595,
-       "weight": 2,
+       "weight": 1,
        "adj": {
-        "bld": -15
+        "bld": -12
        },
-       "note": "Сириус Парк стр. 4, 1 этаж",
+       "note": "Сириус Парк стр. 4, офис 1 этаж (в тексте объявления — шаблон аренды, надёжность ниже)",
+       "type": "офис в БЦ",
        "ask": 382294,
        "vat": "included",
        "ex_vat": 313356,
        "base": 288287,
-       "adjusted": 245044,
+       "adjusted": 253693,
        "area": 401.0,
        "floor": 1,
        "address": "Москва, ш Каширское, 3 корп.2 стр.4",
@@ -748,13 +889,106 @@
        ]
       },
       {
-       "id": 333124503,
+       "id": 334276621,
        "weight": 2,
+       "adj": {
+        "size": -5,
+        "fit": -5
+       },
+       "note": "Каширское ш., 8к1 — ближайший (270 м): ПСН с отдельным входом в жилом доме, дизайнерский ремонт",
+       "type": "ПСН в жилом доме",
+       "ask": 200000,
+       "vat": "notIncluded",
+       "ex_vat": 200000,
+       "base": 184000,
+       "adjusted": 166060,
+       "area": 145.0,
+       "floor": 1,
+       "address": "Россия, Москва, Каширское шоссе, 8к1",
+       "bc": null,
+       "cls": null,
+       "year": null,
+       "metro": "Нагорная",
+       "metro_min": 4,
+       "metro_walk": false,
+       "price": 29000000,
+       "url": "https://www.cian.ru/sale/commercial/334276621/?mlSearchSessionGuid=0e302c27402c14a59562ad8ce3c8a5ee",
+       "category": "freeAppointmentObjectSale",
+       "photos": [
+        "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-kashirskoe-shosse-2972690831-1.jpg",
+        "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-kashirskoe-shosse-2972690843-1.jpg"
+       ]
+      },
+      {
+       "id": 324992057,
+       "weight": 1,
+       "adj": {
+        "loc": -5
+       },
+       "note": "Варшавское ш., 69к1: ПСН 524 м², первая линия шоссе, витрины",
+       "type": "ПСН в жилом доме",
+       "ask": 169783,
+       "vat": "included",
+       "ex_vat": 139166,
+       "base": 128033,
+       "adjusted": 121631,
+       "area": 524.2,
+       "floor": 1,
+       "address": "Россия, Москва, Варшавское шоссе, 69к1",
+       "bc": null,
+       "cls": null,
+       "year": null,
+       "metro": "Варшавская",
+       "metro_min": 12,
+       "metro_walk": true,
+       "price": 89000000,
+       "url": "https://www.cian.ru/sale/commercial/324992057/?mlSearchSessionGuid=0e302c27402c14a59562ad8ce3c8a5ee",
+       "category": "freeAppointmentObjectSale",
+       "photos": [
+        "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-varshavskoe-shosse-2735210956-1.jpg",
+        "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-varshavskoe-shosse-2739097058-1.jpg"
+       ]
+      },
+      {
+       "id": 326664641,
+       "weight": 1,
+       "adj": {
+        "loc": -5,
+        "size": -3
+       },
+       "note": "Варшавское ш., 71к1: ПСН с двумя входами, первая линия",
+       "type": "ПСН в жилом доме",
+       "ask": 300000,
+       "vat": "included",
+       "ex_vat": 245902,
+       "base": 226230,
+       "adjusted": 208470,
+       "area": 284.4,
+       "floor": 1,
+       "address": "Россия, Москва, Варшавское шоссе, 71к1",
+       "bc": null,
+       "cls": null,
+       "year": null,
+       "metro": "Варшавская",
+       "metro_min": 11,
+       "metro_walk": true,
+       "price": 85320000,
+       "url": "https://www.cian.ru/sale/commercial/326664641/?mlSearchSessionGuid=0e302c27402c14a59562ad8ce3c8a5ee",
+       "category": "freeAppointmentObjectSale",
+       "photos": [
+        "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-varshavskoe-shosse-2799503245-1.jpg",
+        "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-varshavskoe-shosse-2799382318-1.jpg"
+       ]
+      },
+      {
+       "id": 333124503,
+       "weight": 1,
        "adj": {
         "loc": -12,
         "bld": -8
        },
-       "note": "Нагатинская, 10: первая линия, витрины, потолки 4,5 м",
+       "note": "Нагатинская, 10: офис на 1 этаже жилого дома, первая линия, витрины",
+       "type": "ПСН в жилом доме",
        "ask": 300000,
        "vat": "notIncluded",
        "ex_vat": 300000,
@@ -776,56 +1010,89 @@
         "https://images.cdn-cian.ru/images/ofis-moskva-nagatinskaya-ulica-2947569469-1.jpg",
         "https://images.cdn-cian.ru/images/ofis-moskva-nagatinskaya-ulica-2947569470-1.jpg"
        ]
-      },
-      {
-       "id": 333978351,
-       "weight": 1,
-       "adj": {
-        "bld": -8,
-        "fl": 5
-       },
-       "note": "офис в ЖК, 2 этаж, отдельный вход, потолки 3,4 м",
-       "ask": 233129,
-       "vat": "included",
-       "ex_vat": 191089,
-       "base": 175802,
-       "adjusted": 169825,
-       "area": 326.0,
-       "floor": 2,
-       "address": "Россия, Москва, 1-й Нагатинский проезд, 11к2",
-       "bc": null,
-       "cls": null,
-       "year": null,
-       "metro": "Нагатинская",
-       "metro_min": 15,
-       "metro_walk": true,
-       "price": 76000000,
-       "url": "https://www.cian.ru/sale/commercial/333978351/?mlSearchSessionGuid=0e302c27402c14a59562ad8ce3c8a5ee",
-       "category": "freeAppointmentObjectSale",
-       "photos": [
-        "https://images.cdn-cian.ru/images/2966075760-1.jpg",
-        "https://images.cdn-cian.ru/images/2966075748-1.jpg"
-       ]
       }
      ],
-     "value": 223858
+     "value": 203328
     },
     "k2": {
      "comps": [
       {
-       "id": 333424059,
+       "id": 334119775,
+       "weight": 3,
+       "adj": {
+        "bld": -10,
+        "fit": -3
+       },
+       "note": "Imagine Plaza, 2 этаж, потолки ~4 м, с арендатором",
+       "type": "офис в БЦ",
+       "ask": 200000,
+       "vat": "included",
+       "ex_vat": 163934,
+       "base": 150820,
+       "adjusted": 131666,
+       "area": 187.0,
+       "floor": 2,
+       "address": "Россия, Москва, Нагатинская улица, 16с9",
+       "bc": "Imagine Plaza (Имеджин Плаза)",
+       "cls": "bPlus",
+       "year": 1974,
+       "metro": "Нагатинская",
+       "metro_min": 15,
+       "metro_walk": true,
+       "price": 37400000,
+       "url": "https://www.cian.ru/sale/commercial/334119775/?mlSearchSessionGuid=0e302c27402c14a59562ad8ce3c8a5ee",
+       "category": "officeSale",
+       "photos": [
+        "https://images.cdn-cian.ru/images/ofis-moskva-nagatinskaya-ulica-2969316725-1.jpg",
+        "https://images.cdn-cian.ru/images/ofis-moskva-nagatinskaya-ulica-2969291218-1.jpg"
+       ]
+      },
+      {
+       "id": 334131429,
        "weight": 2,
        "adj": {
-        "bld": -12,
+        "fit": -3,
+        "size": -3
+       },
+       "note": "Электролитный пр., 3с32: этаж административного здания 1914 г., полностью сдан",
+       "type": "офис в админ. здании",
+       "ask": 147251,
+       "vat": "notIncluded",
+       "ex_vat": 147251,
+       "base": 135471,
+       "adjusted": 127465,
+       "area": 152.8,
+       "floor": 3,
+       "address": "Россия, Москва, Электролитный проезд, 3с32",
+       "bc": "в Электролитном проезде, 3с32",
+       "cls": null,
+       "year": 1914,
+       "metro": "Нагорная",
+       "metro_min": 6,
+       "metro_walk": true,
+       "price": 22500000,
+       "url": "https://www.cian.ru/sale/commercial/334131429/?mlSearchSessionGuid=0e302c27402c14a59562ad8ce3c8a5ee",
+       "category": "freeAppointmentObjectSale",
+       "photos": [
+        "https://images.cdn-cian.ru/images/2969586554-1.jpg",
+        "https://images.cdn-cian.ru/images/2969586578-1.jpg"
+       ]
+      },
+      {
+       "id": 333424059,
+       "weight": 1,
+       "adj": {
+        "bld": -15,
         "fit": 8,
         "size": -5
        },
-       "note": "Сириус Парк стр. 9, 5 этаж, без отделки",
+       "note": "Сириус Парк стр. 9, 5 этаж, без отделки, рассрочка",
+       "type": "офис в БЦ",
        "ask": 305000,
        "vat": "included",
        "ex_vat": 250000,
        "base": 230000,
-       "adjusted": 207662,
+       "adjusted": 200583,
        "area": 188.6,
        "floor": 5,
        "address": "Россия, Москва, Каширское шоссе, 3к2с9",
@@ -847,16 +1114,17 @@
        "id": 332803851,
        "weight": 1,
        "adj": {
-        "bld": -12,
-        "fit": 8,
+        "bld": -15,
+        "fit": 12,
         "size": -5
        },
-       "note": "Сириус Парк стр. 9, 2 этаж, без отделки",
+       "note": "Сириус Парк стр. 9, 2 этаж, под ремонт",
+       "type": "офис в БЦ",
        "ask": 150000,
        "vat": "included",
        "ex_vat": 122951,
        "base": 113115,
-       "adjusted": 102129,
+       "adjusted": 102301,
        "area": 192.0,
        "floor": 2,
        "address": "Россия, Москва, Каширское шоссе, 3к2с9",
@@ -876,16 +1144,17 @@
       },
       {
        "id": 333978351,
-       "weight": 2,
+       "weight": 1,
        "adj": {
-        "bld": -12
+        "bld": -15
        },
-       "note": "офис в ЖК, 2 этаж, потолки 3,4 м",
+       "note": "ПСН на 2 этаже в ЖК, отдельный вход, потолки 3,4 м",
+       "type": "ПСН в жилом доме",
        "ask": 233129,
        "vat": "included",
        "ex_vat": 191089,
        "base": 175802,
-       "adjusted": 154706,
+       "adjusted": 149432,
        "area": 326.0,
        "floor": 2,
        "address": "Россия, Москва, 1-й Нагатинский проезд, 11к2",
@@ -902,39 +1171,9 @@
         "https://images.cdn-cian.ru/images/2966075760-1.jpg",
         "https://images.cdn-cian.ru/images/2966075748-1.jpg"
        ]
-      },
-      {
-       "id": 334119775,
-       "weight": 3,
-       "adj": {
-        "size": -3,
-        "fit": -3
-       },
-       "note": "Imagine Plaza, 2 этаж, с арендатором",
-       "ask": 200000,
-       "vat": "included",
-       "ex_vat": 163934,
-       "base": 150820,
-       "adjusted": 141906,
-       "area": 187.0,
-       "floor": 2,
-       "address": "Россия, Москва, Нагатинская улица, 16с9",
-       "bc": "Imagine Plaza (Имеджин Плаза)",
-       "cls": "bPlus",
-       "year": 1974,
-       "metro": "Нагатинская",
-       "metro_min": 15,
-       "metro_walk": true,
-       "price": 37400000,
-       "url": "https://www.cian.ru/sale/commercial/334119775/?mlSearchSessionGuid=0e302c27402c14a59562ad8ce3c8a5ee",
-       "category": "officeSale",
-       "photos": [
-        "https://images.cdn-cian.ru/images/ofis-moskva-nagatinskaya-ulica-2969316725-1.jpg",
-        "https://images.cdn-cian.ru/images/ofis-moskva-nagatinskaya-ulica-2969291218-1.jpg"
-       ]
       }
      ],
-     "value": 156573
+     "value": 137780
     }
    },
    "rent": [
@@ -1049,6 +1288,28 @@
      ]
     },
     {
+     "id": 333103704,
+     "address": "Москва, ш Каширское, 3 к 2 стр 9",
+     "bc": "Строение 9",
+     "cls": "bPlus",
+     "floor": 2,
+     "area": 190.0,
+     "ask": 36300,
+     "vat": "included",
+     "ex_vat": 29754,
+     "month": 574750,
+     "url": "https://www.cian.ru/rent/commercial/333103704/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": true,
+     "util": true,
+     "net": 23254,
+     "metro": "Нагорная",
+     "metro_min": 5,
+     "metro_walk": false,
+     "photos": [
+      "https://images.cdn-cian.ru/images/2947151219-1.jpg"
+     ]
+    },
+    {
      "id": 332870165,
      "address": "г Москва, Варшавское шоссе, д 26",
      "bc": "Варшавская Плаза",
@@ -1071,25 +1332,69 @@
      ]
     },
     {
-     "id": 333103704,
-     "address": "Москва, ш Каширское, 3 к 2 стр 9",
-     "bc": "Строение 9",
-     "cls": "bPlus",
-     "floor": 2,
-     "area": 190.0,
-     "ask": 36300,
-     "vat": "included",
-     "ex_vat": 29754,
-     "month": 574750,
-     "url": "https://www.cian.ru/rent/commercial/333103704/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
-     "opex": true,
-     "util": true,
-     "net": 23254,
+     "id": 334943043,
+     "address": "Москва, Каширское шоссе, 2к1",
+     "bc": null,
+     "cls": null,
+     "floor": 1,
+     "area": 220.6,
+     "ask": 16319,
+     "vat": "notIncluded",
+     "ex_vat": 16319,
+     "month": 299999,
+     "url": "https://www.cian.ru/rent/commercial/334943043/?mlSearchSessionGuid=f20dbc67c2b6b246ca52d431e2c90fb5",
+     "opex": false,
+     "util": false,
+     "net": 16319,
      "metro": "Нагорная",
-     "metro_min": 5,
+     "metro_min": 18,
+     "metro_walk": true,
+     "photos": [
+      "https://images.cdn-cian.ru/images/2985665104-1.jpg"
+     ]
+    },
+    {
+     "id": 333126680,
+     "address": "Россия, Москва, Каширское шоссе, 8к1",
+     "bc": null,
+     "cls": null,
+     "floor": 1,
+     "area": 145.0,
+     "ask": 18207,
+     "vat": "notIncluded",
+     "ex_vat": 18207,
+     "month": 220000,
+     "url": "https://www.cian.ru/rent/commercial/333126680/?mlSearchSessionGuid=21e50277a2aec6f4185ea0efacb2f561",
+     "opex": false,
+     "util": false,
+     "net": 18207,
+     "metro": "Нагорная",
+     "metro_min": 4,
      "metro_walk": false,
      "photos": [
-      "https://images.cdn-cian.ru/images/2947151219-1.jpg"
+      "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-kashirskoe-shosse-2947633518-1.jpg"
+     ]
+    },
+    {
+     "id": 332619941,
+     "address": "Москва, Каширское шоссе, 17к5с3",
+     "bc": "на Каширском шоссе, 17к5с3",
+     "cls": null,
+     "floor": 1,
+     "area": 249.7,
+     "ask": 16080,
+     "vat": "included",
+     "ex_vat": 13180,
+     "month": 334598,
+     "url": "https://www.cian.ru/rent/commercial/332619941/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": false,
+     "util": false,
+     "net": 13180,
+     "metro": "Коломенская",
+     "metro_min": 4,
+     "metro_walk": false,
+     "photos": [
+      "https://images.cdn-cian.ru/images/2937159208-1.jpg"
      ]
     }
    ],
@@ -1101,19 +1406,19 @@
      "floor": 1,
      "note": "отдельный вход с улицы, высота потолка 2,57 м",
      "group": "k1",
-     "comp": 223858,
-     "income": 149913,
-     "noi": 17240,
+     "comp": 203328,
+     "income": 133913,
+     "noi": 15400,
      "inc": {
-      "rent": 22000,
+      "rent": 20000,
       "vac": 0.08,
       "cap": 0.115
      },
      "extra": 0,
-     "per_m2": 187000,
-     "total": 73846300,
-     "lo": 67938596,
-     "hi": 79754004,
+     "per_m2": 169000,
+     "total": 66738100,
+     "lo": 61399052,
+     "hi": 72077148,
      "gross_yield": 11.8
     },
     {
@@ -1123,20 +1428,20 @@
      "floor": 2,
      "note": "коридорно-кабинетная планировка, высота потолка 2,37 м",
      "group": "k2",
-     "comp": 156573,
-     "income": 95000,
-     "noi": 11400,
+     "comp": 137780,
+     "income": 80000,
+     "noi": 9600,
      "inc": {
-      "rent": 16000,
+      "rent": 14000,
       "vac": 0.1,
       "cap": 0.12
      },
      "extra": 0,
-     "per_m2": 126000,
-     "total": 50563800,
-     "lo": 46518696,
-     "hi": 54608904,
-     "gross_yield": 12.7
+     "per_m2": 109000,
+     "total": 43741700,
+     "lo": 40242364,
+     "hi": 47241036,
+     "gross_yield": 12.8
     }
    ]
   },
@@ -1144,8 +1449,8 @@
    "title": "БЦ Imagine Plaza",
    "address": "Москва, Нагатинская ул., 16 (стр. 9)",
    "district": "Нагатино-Садовники (ЮАО)",
-   "cls": "B / B+ (по ЦИАН), реконструкция здания 1974 г., 3 этажа",
-   "metro": "Нагатинская — 12–15 мин пешком; Коломенская — ~1,1 км; трамвай у входа",
+   "cls": "класс B по карточке здания (B+ — в справочнике БЦ ЦИАН), реконструированный промышленный корпус 1974 г., 3 этажа, потолки ~4 м",
+   "metro": "Нагатинская — ~15 мин пешком; Коломенская — 1,5 км; трамвай у входа",
    "units": [
     {
      "key": "i1",
@@ -1206,6 +1511,7 @@
         "fit": -3
        },
        "note": "тот же БЦ, 2 этаж, с арендатором и ремонтом «для себя»",
+       "type": "офис в БЦ",
        "ask": 200000,
        "vat": "included",
        "ex_vat": 163934,
@@ -1229,18 +1535,81 @@
        ]
       },
       {
+       "id": 334131429,
+       "weight": 2,
+       "adj": {
+        "bld": 5,
+        "fit": -3
+       },
+       "note": "Электролитный пр., 3с32: бывший промышленный/административный корпус 1914 г., сдан",
+       "type": "офис в админ. здании",
+       "ask": 147251,
+       "vat": "notIncluded",
+       "ex_vat": 147251,
+       "base": 135471,
+       "adjusted": 137977,
+       "area": 152.8,
+       "floor": 3,
+       "address": "Россия, Москва, Электролитный проезд, 3с32",
+       "bc": "в Электролитном проезде, 3с32",
+       "cls": null,
+       "year": 1914,
+       "metro": "Нагорная",
+       "metro_min": 6,
+       "metro_walk": true,
+       "price": 22500000,
+       "url": "https://www.cian.ru/sale/commercial/334131429/?mlSearchSessionGuid=0e302c27402c14a59562ad8ce3c8a5ee",
+       "category": "freeAppointmentObjectSale",
+       "photos": [
+        "https://images.cdn-cian.ru/images/2969586554-1.jpg",
+        "https://images.cdn-cian.ru/images/2969586578-1.jpg"
+       ]
+      },
+      {
+       "id": 329791543,
+       "weight": 1,
+       "adj": {
+        "loc": -10,
+        "fit": -8
+       },
+       "note": "Нагатинская, 31: 2 этаж административного здания, отдельный вход, арендатор-гостиница, 4 мин до Коломенской",
+       "type": "офис в админ. здании",
+       "ask": 305448,
+       "vat": "notIncluded",
+       "ex_vat": 305448,
+       "base": 281012,
+       "adjusted": 232678,
+       "area": 196.4,
+       "floor": 2,
+       "address": "г Москва, ул Нагатинская, д 31",
+       "bc": "на ул. Нагатинская, 31",
+       "cls": null,
+       "year": 1962,
+       "metro": "Коломенская",
+       "metro_min": 4,
+       "metro_walk": true,
+       "price": 59990000,
+       "url": "https://www.cian.ru/sale/commercial/329791543/?mlSearchSessionGuid=0e302c27402c14a59562ad8ce3c8a5ee",
+       "category": "freeAppointmentObjectSale",
+       "photos": [
+        "https://images.cdn-cian.ru/images/2900843948-1.jpg",
+        "https://images.cdn-cian.ru/images/2900843944-1.jpg"
+       ]
+      },
+      {
        "id": 333424059,
        "weight": 1,
        "adj": {
-        "bld": -12,
+        "bld": -8,
         "fit": 8
        },
        "note": "Сириус Парк стр. 9, B+, без отделки",
+       "type": "офис в БЦ",
        "ask": 305000,
        "vat": "included",
        "ex_vat": 250000,
        "base": 230000,
-       "adjusted": 218592,
+       "adjusted": 228528,
        "area": 188.6,
        "floor": 5,
        "address": "Россия, Москва, Каширское шоссе, 3к2с9",
@@ -1262,15 +1631,16 @@
        "id": 332803851,
        "weight": 1,
        "adj": {
-        "bld": -12,
-        "fit": 8
+        "bld": -8,
+        "fit": 12
        },
-       "note": "Сириус Парк стр. 9, 2 этаж, без отделки",
+       "note": "Сириус Парк стр. 9, 2 этаж, под ремонт",
+       "type": "офис в БЦ",
        "ask": 150000,
        "vat": "included",
        "ex_vat": 122951,
        "base": 113115,
-       "adjusted": 107504,
+       "adjusted": 116553,
        "area": 192.0,
        "floor": 2,
        "address": "Россия, Москва, Каширское шоссе, 3к2с9",
@@ -1290,11 +1660,12 @@
       },
       {
        "id": 333978351,
-       "weight": 2,
+       "weight": 1,
        "adj": {
         "bld": -8
        },
-       "note": "офис в ЖК, отдельный вход",
+       "note": "ПСН на 2 этаже в ЖК, отдельный вход",
+       "type": "ПСН в жилом доме",
        "ask": 233129,
        "vat": "included",
        "ex_vat": 191089,
@@ -1318,7 +1689,7 @@
        ]
       }
      ],
-     "value": 154344
+     "value": 160063
     },
     "ground": {
      "comps": [
@@ -1329,6 +1700,7 @@
         "loc": -15
        },
        "note": "Нагатинская, 10: первая линия улицы, витрины",
+       "type": "ПСН в жилом доме",
        "ask": 300000,
        "vat": "notIncluded",
        "ex_vat": 300000,
@@ -1352,48 +1724,81 @@
        ]
       },
       {
-       "id": 334614820,
-       "weight": 1,
+       "id": 331782161,
+       "weight": 2,
        "adj": {
-        "bld": -5
+        "bld": -5,
+        "fit": -5
        },
-       "note": "Нагатинская наб., 10к1: ПСН в жилом доме, торги по банкротству",
-       "ask": 226001,
+       "note": "Нагатинская наб., 10к3: ПСН в ЖК 2015 г., арендаторы (Ozon, салон)",
+       "type": "ПСН в жилом доме",
+       "ask": 199545,
        "vat": "notIncluded",
-       "ex_vat": 226001,
-       "base": 207921,
-       "adjusted": 197525,
-       "area": 287.3,
+       "ex_vat": 199545,
+       "base": 183581,
+       "adjusted": 165682,
+       "area": 220.0,
        "floor": 1,
-       "address": "Россия, Москва, Нагатинская набережная, 10к1",
+       "address": "Россия, Москва, Нагатинская набережная, 10к3",
        "bc": null,
        "cls": null,
        "year": null,
        "metro": "Коломенская",
-       "metro_min": 20,
+       "metro_min": 18,
        "metro_walk": true,
-       "price": 64930000,
-       "url": "https://www.cian.ru/sale/commercial/334614820/?mlSearchSessionGuid=0e302c27402c14a59562ad8ce3c8a5ee",
+       "price": 43900000,
+       "url": "https://www.cian.ru/sale/commercial/331782161/?mlSearchSessionGuid=0e302c27402c14a59562ad8ce3c8a5ee",
        "category": "freeAppointmentObjectSale",
        "photos": [
-        "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-nagatinskaya-naberezhnaya-2983608552-1.jpg",
-        "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-nagatinskaya-naberezhnaya-2983603481-1.jpg"
+        "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-nagatinskaya-naberezhnaya-2917759063-1.jpg",
+        "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-nagatinskaya-naberezhnaya-2917759104-1.jpg"
+       ]
+      },
+      {
+       "id": 334276621,
+       "weight": 1,
+       "adj": {
+        "fit": -5
+       },
+       "note": "Каширское ш., 8к1: ПСН с отдельным входом, дизайнерский ремонт",
+       "type": "ПСН в жилом доме",
+       "ask": 200000,
+       "vat": "notIncluded",
+       "ex_vat": 200000,
+       "base": 184000,
+       "adjusted": 174800,
+       "area": 145.0,
+       "floor": 1,
+       "address": "Россия, Москва, Каширское шоссе, 8к1",
+       "bc": null,
+       "cls": null,
+       "year": null,
+       "metro": "Нагорная",
+       "metro_min": 4,
+       "metro_walk": false,
+       "price": 29000000,
+       "url": "https://www.cian.ru/sale/commercial/334276621/?mlSearchSessionGuid=0e302c27402c14a59562ad8ce3c8a5ee",
+       "category": "freeAppointmentObjectSale",
+       "photos": [
+        "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-kashirskoe-shosse-2972690831-1.jpg",
+        "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-kashirskoe-shosse-2972690843-1.jpg"
        ]
       },
       {
        "id": 333676669,
-       "weight": 2,
+       "weight": 1,
        "adj": {
-        "bld": -12,
+        "bld": -8,
         "loc": 3,
         "fit": -3
        },
-       "note": "Сириус Парк стр. 4, 1 этаж, с арендатором",
+       "note": "Сириус Парк стр. 4: ПСН с арендатором-столовой",
+       "type": "ПСН в БЦ",
        "ask": 370077,
        "vat": "included",
        "ex_vat": 303342,
        "base": 279074,
-       "adjusted": 245364,
+       "adjusted": 256517,
        "area": 480.0,
        "floor": 1,
        "address": "г Москва, Каширское шоссе, д 3 к 2 стр 4",
@@ -1418,7 +1823,8 @@
         "fl": 12,
         "fit": -3
        },
-       "note": "тот же БЦ, 2 этаж (+ за 1 этаж)",
+       "note": "тот же БЦ, 2 этаж (+12% за 1 этаж с отдельным входом)",
+       "type": "офис в БЦ",
        "ask": 200000,
        "vat": "included",
        "ex_vat": 163934,
@@ -1442,32 +1848,10 @@
        ]
       }
      ],
-     "value": 212165
+     "value": 194948
     }
    },
    "rent": [
-    {
-     "id": 334090223,
-     "address": "Россия, Москва, Нагатинская улица, 16",
-     "bc": "Конфетти",
-     "cls": null,
-     "floor": 1,
-     "area": 146.2,
-     "ask": 35951,
-     "vat": "notIncluded",
-     "ex_vat": 35951,
-     "month": 438000,
-     "url": "https://www.cian.ru/rent/commercial/334090223/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
-     "opex": false,
-     "util": false,
-     "net": 35951,
-     "metro": "Коломенская",
-     "metro_min": 16,
-     "metro_walk": true,
-     "photos": [
-      "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-nagatinskaya-ulica-2968556327-1.jpg"
-     ]
-    },
     {
      "id": 332408335,
      "address": "Москва, ул Нагатинская, 3А",
@@ -1535,6 +1919,28 @@
      ]
     },
     {
+     "id": 334159845,
+     "address": "Россия, Москва, Каширское шоссе, 3к2с9",
+     "bc": "Строение 9",
+     "cls": "bPlus",
+     "floor": 1,
+     "area": 157.0,
+     "ask": 23006,
+     "vat": "included",
+     "ex_vat": 18857,
+     "month": 301000,
+     "url": "https://www.cian.ru/rent/commercial/334159845/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": false,
+     "util": false,
+     "net": 18857,
+     "metro": "Нагорная",
+     "metro_min": 5,
+     "metro_walk": false,
+     "photos": [
+      "https://images.cdn-cian.ru/images/ofis-moskva-kashirskoe-shosse-2970289195-1.jpg"
+     ]
+    },
+    {
      "id": 332870165,
      "address": "г Москва, Варшавское шоссе, д 26",
      "bc": "Варшавская Плаза",
@@ -1579,6 +1985,72 @@
      ]
     },
     {
+     "id": 331944357,
+     "address": "Россия, Москва, Нагатинская набережная, 10к3",
+     "bc": null,
+     "cls": null,
+     "floor": 1,
+     "area": 120.0,
+     "ask": 23900,
+     "vat": "notIncluded",
+     "ex_vat": 23900,
+     "month": 239000,
+     "url": "https://www.cian.ru/rent/commercial/331944357/?mlSearchSessionGuid=21e50277a2aec6f4185ea0efacb2f561",
+     "opex": false,
+     "util": false,
+     "net": 23900,
+     "metro": "Коломенская",
+     "metro_min": 18,
+     "metro_walk": true,
+     "photos": [
+      "https://images.cdn-cian.ru/images/nezhiloe-pomeshcenie-moskva-nagatinskaya-naberezhnaya-2921511409-1.jpg"
+     ]
+    },
+    {
+     "id": 333723762,
+     "address": "Москва, проезд 2-й Нагатинский, д.6, к.1",
+     "bc": null,
+     "cls": null,
+     "floor": 1,
+     "area": 175.0,
+     "ask": 27429,
+     "vat": "included",
+     "ex_vat": 22483,
+     "month": 400000,
+     "url": "https://www.cian.ru/rent/commercial/333723762/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": false,
+     "util": false,
+     "net": 22483,
+     "metro": "Нагатинская",
+     "metro_min": 6,
+     "metro_walk": false,
+     "photos": [
+      "https://images.cdn-cian.ru/images/2960686863-1.jpg"
+     ]
+    },
+    {
+     "id": 327237930,
+     "address": "Россия, Москва, 2-й Нагатинский проезд, 2/3",
+     "bc": null,
+     "cls": null,
+     "floor": 1,
+     "area": 133.6,
+     "ask": 31437,
+     "vat": "notIncluded",
+     "ex_vat": 31437,
+     "month": 350000,
+     "url": "https://www.cian.ru/rent/commercial/327237930/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": false,
+     "util": false,
+     "net": 31437,
+     "metro": "Коломенская",
+     "metro_min": 20,
+     "metro_walk": true,
+     "photos": [
+      "https://images.cdn-cian.ru/images/2815403304-1.jpg"
+     ]
+    },
+    {
      "id": 332872404,
      "address": "г Москва, Каширское шоссе, д 3 к 2 стр 1",
      "bc": "Строение 1",
@@ -1608,19 +2080,19 @@
      "area": 168.2,
      "floor": 1,
      "group": "ground",
-     "comp": 212165,
-     "income": 149913,
-     "noi": 17240,
+     "comp": 194948,
+     "income": 133913,
+     "noi": 15400,
      "inc": {
-      "rent": 22000,
+      "rent": 20000,
       "vac": 0.08,
       "cap": 0.115
      },
      "extra": 0,
-     "per_m2": 181000,
-     "total": 30444200,
-     "lo": 28008664,
-     "hi": 32879736,
+     "per_m2": 164000,
+     "total": 27584800,
+     "lo": 25378016,
+     "hi": 29791584,
      "gross_yield": 12.2
     },
     {
@@ -1629,19 +2101,19 @@
      "area": 230.0,
      "floor": 1,
      "group": "ground",
-     "comp": 212165,
-     "income": 149913,
-     "noi": 17240,
+     "comp": 194948,
+     "income": 133913,
+     "noi": 15400,
      "inc": {
-      "rent": 22000,
+      "rent": 20000,
       "vac": 0.08,
       "cap": 0.115
      },
      "extra": 0,
-     "per_m2": 181000,
-     "total": 41630000,
-     "lo": 38299600,
-     "hi": 44960400,
+     "per_m2": 164000,
+     "total": 37720000,
+     "lo": 34702400,
+     "hi": 40737600,
      "gross_yield": 12.2
     },
     {
@@ -1650,19 +2122,19 @@
      "area": 524.0,
      "floor": 1,
      "group": "ground",
-     "comp": 212165,
-     "income": 149913,
-     "noi": 17240,
+     "comp": 194948,
+     "income": 133913,
+     "noi": 15400,
      "inc": {
-      "rent": 22000,
+      "rent": 20000,
       "vac": 0.08,
       "cap": 0.115
      },
      "extra": -5,
-     "per_m2": 172000,
-     "total": 90128000,
-     "lo": 82917760,
-     "hi": 97338240,
+     "per_m2": 156000,
+     "total": 81744000,
+     "lo": 75204480,
+     "hi": 88283520,
      "gross_yield": 12.8
     },
     {
@@ -1671,11 +2143,11 @@
      "area": 182.3,
      "floor": 2,
      "group": "up",
-     "comp": 154344,
-     "income": 102500,
-     "noi": 12300,
+     "comp": 160063,
+     "income": 95000,
+     "noi": 11400,
      "inc": {
-      "rent": 17000,
+      "rent": 16000,
       "vac": 0.1,
       "cap": 0.12
      },
@@ -1684,7 +2156,7 @@
      "total": 23334400,
      "lo": 21467648,
      "hi": 25201152,
-     "gross_yield": 13.3
+     "gross_yield": 12.5
     },
     {
      "key": "i5",
@@ -1692,20 +2164,20 @@
      "area": 460.2,
      "floor": 2,
      "group": "up",
-     "comp": 154344,
-     "income": 102500,
-     "noi": 12300,
+     "comp": 160063,
+     "income": 95000,
+     "noi": 11400,
      "inc": {
-      "rent": 17000,
+      "rent": 16000,
       "vac": 0.1,
       "cap": 0.12
      },
      "extra": -5,
-     "per_m2": 122000,
-     "total": 56144400,
-     "lo": 51652848,
-     "hi": 60635952,
-     "gross_yield": 13.9
+     "per_m2": 121000,
+     "total": 55684200,
+     "lo": 51229464,
+     "hi": 60138936,
+     "gross_yield": 13.2
     },
     {
      "key": "i6",
@@ -1713,20 +2185,20 @@
      "area": 199.9,
      "floor": 3,
      "group": "up",
-     "comp": 154344,
-     "income": 102500,
-     "noi": 12300,
+     "comp": 160063,
+     "income": 95000,
+     "noi": 11400,
      "inc": {
-      "rent": 17000,
+      "rent": 16000,
       "vac": 0.1,
       "cap": 0.12
      },
      "extra": 3,
-     "per_m2": 132000,
-     "total": 26386800,
-     "lo": 24275856,
-     "hi": 28497744,
-     "gross_yield": 12.9
+     "per_m2": 131000,
+     "total": 26186900,
+     "lo": 24091948,
+     "hi": 28281852,
+     "gross_yield": 12.2
     },
     {
      "key": "i7",
@@ -1734,20 +2206,20 @@
      "area": 195.0,
      "floor": 3,
      "group": "up",
-     "comp": 154344,
-     "income": 102500,
-     "noi": 12300,
+     "comp": 160063,
+     "income": 95000,
+     "noi": 11400,
      "inc": {
-      "rent": 17000,
+      "rent": 16000,
       "vac": 0.1,
       "cap": 0.12
      },
      "extra": 3,
-     "per_m2": 132000,
-     "total": 25740000,
-     "lo": 23680800,
-     "hi": 27799200,
-     "gross_yield": 12.9
+     "per_m2": 131000,
+     "total": 25545000,
+     "lo": 23501400,
+     "hi": 27588600,
+     "gross_yield": 12.2
     },
     {
      "key": "i8",
@@ -1755,20 +2227,20 @@
      "area": 173.4,
      "floor": 3,
      "group": "up",
-     "comp": 154344,
-     "income": 102500,
-     "noi": 12300,
+     "comp": 160063,
+     "income": 95000,
+     "noi": 11400,
      "inc": {
-      "rent": 17000,
+      "rent": 16000,
       "vac": 0.1,
       "cap": 0.12
      },
      "extra": 3,
-     "per_m2": 132000,
-     "total": 22888800,
-     "lo": 21057696,
-     "hi": 24719904,
-     "gross_yield": 12.9
+     "per_m2": 131000,
+     "total": 22715400,
+     "lo": 20898168,
+     "hi": 24532632,
+     "gross_yield": 12.2
     }
    ]
   }
