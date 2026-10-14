@@ -267,8 +267,41 @@ def _stats(v):
     return dict(n=len(v), med=round(st.median(v)), q1=round(v[len(v) // 4]), q3=round(v[(3 * len(v)) // 4]), lo=v[0], hi=v[-1])
 
 
+# Сценарии рынка (октябрь 2026). Аналоги — цены и ставки ПРЕДЛОЖЕНИЯ; сценарий задаёт, насколько сделка ниже предложения и
+# сколько инвестор требует сверху. Основание: продажи офисов в Москве за 9 мес. 2026 г. −21…−50% г/г (IPG.Estate, CMWP, Bright Rich),
+# цены сделок −13,5% г/г при росте цен предложения +3,6% (Bright Rich, IPG.Estate), скидки к ставкам аренды до 18% (IBC Real Estate),
+# ключевая ставка 14% и ускорение цен (ЦБ, 11.09.2026), рост вакансии в неделовых локациях.
+SCENARIOS = {
+    'before': dict(name='Без учёта спада', bargain=0.08, rent_disc=0.0, vac_add=0.0, cap_add=0.0, exposure='3–6 мес.'),
+    'base': dict(name='Базовый: рынок покупателя', bargain=0.13, rent_disc=0.10, vac_add=0.04, cap_add=0.005, exposure='6–12 мес.'),
+    'stress': dict(name='Стресс: спад углубляется', bargain=0.18, rent_disc=0.18, vac_add=0.08, cap_add=0.01, exposure='12+ мес.'),
+}
+MAIN = 'base'
+
+
+def unit_value(S, u, comp_v, rent, wc, own_adj, p):
+    """Цена помещения в сценарии: сравнительный (аналоги пересчитаны под торг сценария) + доходный (ставка со скидкой,
+    больший простой, выше требуемая доходность); потолок по соседнему блоку в здании; поправка блока (потолки, балкон)."""
+    k = (1 - p['bargain']) / BARGAIN
+    comp = comp_v * k
+    r = rent * (1 - p['rent_disc'])
+    vac = (0.08 if u['area'] < 400 else 0.10) + p['vac_add']
+    cap_rate = S['cap'] + p['cap_add']
+    noi = r * (1 - vac) - OWNER
+    inc = noi / cap_rate
+    per = wc * comp + (1 - wc) * inc
+    cap_own = round(own_adj * k * 1.03) if own_adj else None
+    capped = bool(cap_own and per > cap_own)
+    if capped:
+        per = cap_own
+    per = round(per * (1 + u.get('extra', 0) / 100) / 1000) * 1000
+    return dict(comp=round(comp), rent=round(r), vac=round(vac, 2), cap_rate=round(cap_rate, 4), noi=round(noi), income=round(inc),
+                cap_own=cap_own, capped=capped, per_m2=per, total=round(per * u['area']))
+
+
 def main():
-    out = {'params': dict(vat=VAT, bargain=BARGAIN, owner=OWNER, mcd_penalty=MCD_PENALTY), 'exclude': EXCLUDE, 'subjects': {}}
+    out = {'params': dict(vat=VAT, bargain=BARGAIN, owner=OWNER, mcd_penalty=MCD_PENALTY), 'exclude': EXCLUDE, 'subjects': {},
+           'scenarios': SCENARIOS, 'main': MAIN}
     for sk, s in SUBJECTS.items():
         S = dict(s, **subject_attrs(sk, s))
         S['clusters'] = cluster_raw(sk)
@@ -286,24 +319,17 @@ def main():
             S['comps'][u['key']] = res
             comp_v = res['sale_K1']['value']
             rent = res['rent_K1']['value']
-            vac = 0.08 if u['area'] < 400 else 0.10
-            noi = rent * (1 - vac) - OWNER
-            inc_v = noi / S['cap']
             wc = 0.5 if res['sale_K1']['n_bc'] >= 5 else 0.4
-            per = wc * comp_v + (1 - wc) * inc_v
-            # покупатель не заплатит за наш блок заметно больше, чем за такой же блок в этом же здании (после торга и поправок)
             own_bld = [c for c in res['sale_K1']['comps'] if c['same'] and S.get('url') and c['bc_url'] == S['url']]
-            cap_own = round(sum(c['adjusted'] for c in own_bld) / len(own_bld) * 1.03) if own_bld else None
-            capped = bool(cap_own and per > cap_own)
-            if capped:
-                per = cap_own
-            per *= 1 + u.get('extra', 0) / 100
-            per = round(per / 1000) * 1000
-            total = per * u['area']
-            S['units_val'].append(dict(u, comp=comp_v, rent=rent, vac=vac, noi=round(noi), income=round(inc_v), wc=wc, per_m2=per,
-                                       cap_own=cap_own, capped=capped,
-                                       total=round(total), lo=round(total * 0.92), hi=round(total * 1.08), list_price=round(total / BARGAIN, -5),
-                                       gross_yield=round(rent / per * 100, 1),
+            own_adj = sum(c['adjusted'] for c in own_bld) / len(own_bld) if own_bld else None
+            scen = {key: unit_value(S, u, comp_v, rent, wc, own_adj, p) for key, p in SCENARIOS.items()}
+            b = scen[MAIN]
+            total = b['total']
+            S['units_val'].append(dict(u, comp=b['comp'], rent=b['rent'], vac=b['vac'], noi=b['noi'], income=b['income'], wc=wc,
+                                       per_m2=b['per_m2'], cap_own=b['cap_own'], capped=b['capped'], cap_rate=b['cap_rate'],
+                                       total=total, lo=scen['stress']['total'], hi=scen['before']['total'],
+                                       list_price=round(total / (1 - SCENARIOS[MAIN]['bargain']), -5),
+                                       gross_yield=round(b['rent'] / b['per_m2'] * 100, 1), scen=scen,
                                        ref={k: res[k]['value'] for k in res if k != 'sale_K1' and k != 'rent_K1'}))
         out['subjects'][sk] = S
     json.dump(out, open('commercial-data/valuation.json', 'w'), ensure_ascii=False, indent=1)
@@ -312,11 +338,13 @@ def main():
         for u in S['units_val']:
             c = S['comps'][u['key']]
             ref = ' | '.join(f"{k} {v:,}" if v else f'{k} —' for k, v in u['ref'].items())
+            print('   сценарии: ' + ' | '.join(f"{kk} {v['per_m2']:,} = {v['total'] / 1e6:,.1f}" for kk, v in u['scen'].items()))
             print(f"  {u['name']:20} {u['area']:>6}: K1 прод {u['comp']:,} (лотов {c['sale_K1']['n']}, БЦ {c['sale_K1']['n_bc']}) | "
                   f"K1 аренда {u['rent']:,} (лотов {c['rent_K1']['n']}, БЦ {c['rent_K1']['n_bc']}) → доход {u['income']:,} → "
                   f"{u['per_m2']:,} ₽/м² = {u['total'] / 1e6:,.1f} млн")
             print(f"      ориентиры: {ref}")
-        print(f"  ИТОГО {sum(u['total'] for u in S['units_val']) / 1e6:,.1f} млн ₽")
+        print(f"  ИТОГО {sum(u['total'] for u in S['units_val']) / 1e6:,.1f} млн ₽ | " +
+              ' | '.join(f"{kk} {sum(u['scen'][kk]['total'] for u in S['units_val']) / 1e6:,.1f}" for kk in SCENARIOS))
 
 
 if __name__ == '__main__':

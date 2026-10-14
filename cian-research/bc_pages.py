@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
-"""Профили бизнес-центров со страниц ЦИАН (браузер Scrapling: StealthySession — страницы БЦ закрыты антиботом для HTTP-клиента).
+"""Профили бизнес-центров со страниц ЦИАН (паук Scrapling + HTTP-клиент с отпечатком Chrome, см. ANTIBOT.md).
 
 python3 bc_pages.py  → commercial-data/bc_pages.json (класс, площадь, год, этажность, парковка, ставки, доступ, лифты,
                         инфраструктура, инженерия, метро с временем пешком, фото здания)
 """
-import asyncio
 import json
 import os
-import random
 import re
+
+from scrapling.fetchers import FetcherSession
+from scrapling.spiders import Request, Spider
 
 OUT = 'commercial-data/bc_pages.json'
 LABELS = ['Класс', 'Общая площадь', 'Год постройки', 'Этажность', 'Парковка', 'Арендная ставка', 'Стоимость продажи', 'Цена продажи',
           'Доступ в здание', 'Вход', 'Лифт', 'Инфраструктура', 'Технические характеристики', 'Стены и несущие конструкции',
           'Вентиляция', 'Кондиционирование', 'Отопление', 'Пожаротушение', 'Электроснабжение', 'Система бесперебойного питания',
-          'Категория электронадежности', 'Сообщить об ошибке']
+          'Категория электронадежности', 'Сообщить об ошибке', 'Предложения']
 
 
 def text_lines(h):
@@ -52,7 +53,7 @@ def parse(h):
         access=' '.join(section(L, 'Доступ в здание', LABELS)[:3]), entrance=' '.join(section(L, 'Вход', LABELS)[:3]),
         lifts=' '.join(section(L, 'Лифт', LABELS)[:4]),
         infra=section(L, 'Инфраструктура', LABELS)[:20],
-        tech={lab: ' '.join(section(L, lab, LABELS)[:3]) for lab in ('Стены и несущие конструкции', 'Вентиляция', 'Кондиционирование',
+        tech={lab: ' '.join(section(L, lab, LABELS)[:3]).split(' ЦИАН')[0] for lab in ('Стены и несущие конструкции', 'Вентиляция', 'Кондиционирование',
                                                                      'Отопление', 'Пожаротушение', 'Категория электронадежности')})
     m = re.search(r'<h1[^>]*>(.*?)</h1>', h, re.S)
     d['title'] = re.sub(r'<[^>]+>', '', m.group(1)).strip() if m else None
@@ -80,35 +81,48 @@ def parse(h):
     return d
 
 
-async def one(s, sem, k, key, url, urls, out):
-    async with sem:
-        for attempt in range(3):
-            try:
-                # данные БЦ приходят в серверном HTML — ждать полной загрузки сети не нужно
-                r = await s.fetch(url, network_idle=False, timeout=90000)
-                h = r.html_content if hasattr(r, 'html_content') else r.body.decode('utf-8', 'ignore')
-                if r.status == 429 or 'подозрительный трафик' in h[:200000]:
-                    out[key] = dict(url=url, error='429')
-                    await asyncio.sleep(90)       # антибот притормозил — пауза и повтор
-                    continue
-                d = parse(h)
-                d.update(url=url, status=r.status)
-                out[key] = d
-                break
-            except Exception as e:
-                out[key] = dict(url=url, error=str(e)[:200])
-                await asyncio.sleep(5)
-        json.dump(out, open(OUT, 'w'), ensure_ascii=False, indent=1)
-        print(f'{k}/{len(urls)} {out[key].get("title") or url} | {out[key].get("cls")} | {out[key].get("year")}', flush=True)
-        await asyncio.sleep(4 + random.random() * 4)
+BLOCK_MARKS = ('подозрительный трафик', 'captcha', 'Капча')
 
 
-async def run(urls, out):
-    from scrapling.fetchers import AsyncStealthySession
-    sem = asyncio.Semaphore(1)
-    async with AsyncStealthySession(headless=True, max_pages=1) as s:
-        await asyncio.gather(*[one(s, sem, k, key, url, urls, out) for k, (key, url) in enumerate(urls, 1)
-                               if not (key in out and out[key].get('cls'))])
+class BCPages(Spider):
+    """Страницы БЦ по методике ANTIBOT.md: лёгкий HTTP-клиент Scrapling с отпечатком desktop Chrome (данные БЦ есть
+    в серверном HTML — браузер с десятками фоновых запросов не нужен), одна сессия, один поток, пауза ~2 с,
+    AutoThrottle (удваивает паузу или ждёт Retry-After при блокировке) и повтор заблокированных запросов."""
+    name = 'cian_bc_pages'
+    concurrent_requests = 1
+    download_delay = 2.0
+    autothrottle_enabled = True
+    autothrottle_start_delay = 2.0
+    autothrottle_max_delay = 180.0
+    max_blocked_retries = 6
+    logging_level = 20
+
+    def __init__(self, urls, out):
+        self.urls, self.out = urls, out
+        super().__init__()
+
+    def configure_sessions(self, manager):
+        manager.add('cian', FetcherSession(impersonate='chrome', retries=2, timeout=40))
+
+    async def start_requests(self):
+        for u in self.urls:
+            yield Request(u, sid='cian')
+
+    async def is_blocked(self, response):
+        if response.status in (401, 403, 407, 429, 444, 500, 502, 503, 504):
+            return True
+        return any(m in response.html_content[:300000] for m in BLOCK_MARKS) and 'cf-bsc-detail' not in response.html_content
+
+    async def parse(self, response):
+        d = parse(response.html_content)
+        d.update(url=response.url, status=response.status)
+        yield d
+
+    async def on_scraped_item(self, item):
+        self.out[item['url']] = item
+        json.dump(self.out, open(OUT, 'w'), ensure_ascii=False, indent=1)
+        self.logger.info(f"{sum(1 for v in self.out.values() if v.get('title'))} профилей | {item.get('title')} | {item.get('cls')}")
+        return item
 
 
 if __name__ == '__main__':
@@ -119,5 +133,7 @@ if __name__ == '__main__':
             if b.get('url'):
                 urls[b['url']] = b['url']
     out = json.load(open(OUT)) if os.path.exists(OUT) else {}
-    asyncio.run(run(sorted(urls.items()), out))
-    print('профилей:', sum(1 for v in out.values() if v.get('cls')), 'из', len(urls))
+    todo = [u for u in sorted(urls) if not out.get(u, {}).get('title')]
+    print('к загрузке:', len(todo), 'из', len(urls))
+    res = BCPages(todo, out).start()
+    print('профилей:', sum(1 for v in out.values() if v.get('title')), 'из', len(urls), '| блокировок:', res.stats.blocked_requests_count)

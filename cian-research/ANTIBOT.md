@@ -86,3 +86,18 @@
 python3 antibot_test.py market-data/akademicheskiy.sqlite 40    # стратегии → antibot-results.json
 python3 antibot_stress.py market-data/akademicheskiy.sqlite     # профили и предельный темп → antibot-stress.json
 ```
+
+## Страницы бизнес-центров (14.10.2026)
+
+Страницы БЦ (`/biznes-centr-…/`) сначала собирались браузером (`AsyncStealthySession`): каждая загрузка тянет десятки
+фоновых запросов к ЦИАН, и после ~60–70 страниц за 7–8 минут сайт отвечал 429 «Обнаружен подозрительный трафик» —
+в том числе при одной вкладке. Решение — в инструментах самого Scrapling:
+
+1. **Браузер не нужен**: все данные БЦ (класс, год, площадь, инженерия, координаты, фото, `buildingClassType`,
+   `conditioningType` …) есть в серверном HTML. Достаточно одного запроса `FetcherSession(impersonate='chrome')`.
+2. **Паук Scrapling** (`scrapling.spiders.Spider`, `bc_pages.py`): один поток, `download_delay` 2 с,
+   `autothrottle_enabled` — пауза растёт при медленных ответах и удваивается (или берётся из `Retry-After`) при блокировке,
+   `is_blocked` распознаёт 429/403 и страницу капчи, `max_blocked_retries` — повтор заблокированного запроса позже.
+
+Результат: 46 недостающих страниц за 2,5 минуты; три ответа 429 обработаны автоматически (пауза и успешный повтор),
+все 146 БЦ выборки загружены.
