@@ -150,6 +150,9 @@ def cmd_condition(a):
         probs = {c: float(p) for c, p in zip(cls, pr)}
         # класс по осмотру VLM всех фото — основной; «не показана» (только рендеры, фасад) — классификатор по CLIP
         vc, _, _, vd = insp.get(cid, (None, None, None, None))
+        # новостройка, которую застройщик продаёт без отделки: «ремонт» на фото — рендеры или лобби ЖК
+        if vc in READY and rows[cid]['is_new'] and rows[cid]['decoration'] in ('without', 'preFine'):
+            vc = 'не показана'
         if vc and vc != 'не показана':
             best, mdl = vc, 'vlm'
             try:
