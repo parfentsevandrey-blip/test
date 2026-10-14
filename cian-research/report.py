@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Аналитическая записка (PDF): справедливая цена продажи трёх офисных объектов с учётом спада рынка.
+"""Аналитическая записка (PDF): цена продажи трёх офисных объектов с учётом спада рынка.
 Данные: valuation.json, bc_profiles.json, checks.json, backtest.json → reports/Оценка_офисов_ЯРД_Калейдоскоп_ImaginePlaza.pdf"""
 import hashlib
 import html
@@ -221,7 +221,7 @@ def summary_table():
         rows += (f"<tr><td>{e(S['title'])}</td><td class=r>{n(AREA(sk), 1)}</td><td class=r>{k(TOT(sk) / AREA(sk))}</td>"
                  f"<td class=r><b>{mln(TOT(sk))}</b></td><td class=r>{mln(TOT(sk, 'stress'))}</td><td class=r>{mln(TOT(sk, 'before'))}</td>"
                  f"<td class=r>{mln(TOT(sk) / (1 - MAINP['bargain']))}</td></tr>")
-    return (Num.tab('Справедливая цена продажи, без НДС') +
+    return (Num.tab('Цена продажи, без НДС') +
             f"<table class=t><thead><tr><th>Объект</th><th class=r>Площадь, м²</th><th class=r>Тыс. руб./м²</th><th class=r>Ожидаемая цена сделки, млн руб.</th>"
             f"<th class=r>При углублении спада, млн руб.</th><th class=r>Без учёта спада, млн руб.</th><th class=r>Цена предложения, млн руб.</th></tr></thead>"
             f"<tbody>{rows}</tbody></table><p class=src>Ожидаемая цена сделки — базовый сценарий, срок продажи 6–12 месяцев. Цена предложения — с запасом {BG}% на торг. "
@@ -515,7 +515,7 @@ def build():
     up = [u['per_m2'] for u in im if u['floor'] > 1]
     drop = {sk: n((1 - TOT(sk) / TOT(sk, 'before')) * 100, 0) for sk in V['subjects']}
     body = f'''
-<div class=title><div class=t1>Справедливая цена продажи офисных помещений в трёх бизнес-центрах Москвы</div>
+<div class=title><div class=t1>Цена продажи офисных помещений в трёх бизнес-центрах Москвы</div>
 <div class=t2>БЦ «ЯРД», 1-й Магистральный тупик, 11, стр. 1</div><div class=t2>БЦ «Калейдоскоп», Хлебозаводский проезд, 7, стр. 5</div>
 <div class=t2>БЦ Imagine Plaza, Нагатинская улица, 16, стр. 9</div>
 <div class=meta>Аналитическая записка<br>Дата оценки: {DATE}<br>Цены указаны без НДС</div>
@@ -555,7 +555,7 @@ if __name__ == '__main__':
         pg.pdf(path='reports/Оценка_офисов_ЯРД_Калейдоскоп_ImaginePlaza.pdf', format='A4', print_background=True,
                margin=dict(top='20mm', bottom='18mm', left='20mm', right='18mm'), display_header_footer=True,
                header_template='<div style="font-family:Carlito,sans-serif;font-size:7.5pt;color:#555;width:100%;padding:0 18mm 0 20mm;'
-                               'display:flex;justify-content:space-between"><span>Справедливая цена продажи офисных помещений</span>'
+                               'display:flex;justify-content:space-between"><span>Цена продажи офисных помещений</span>'
                                '<span>14 октября 2026 г.</span></div>',
                footer_template='<div style="font-family:Carlito,sans-serif;font-size:8pt;color:#555;width:100%;text-align:center">'
                                '<span class="pageNumber"></span></div>')
