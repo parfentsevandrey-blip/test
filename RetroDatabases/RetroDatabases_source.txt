@@ -1,6 +1,6 @@
 ===============================================================================
  Retro Databases: source code of the Android app in one text file
- Files in the archive: 66
+ Files in the archive: 77
  Not included: gradle/wrapper/gradle-wrapper.jar (binary, created by the command
    gradle wrapper --gradle-version 8.10.2) and local.properties (path to your SDK).
 ===============================================================================
@@ -47,6 +47,17 @@ CONTENTS:
   app/src/main/java/com/example/retrodatabases/data/seed/Db2Projects.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db2Systems.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db2Tools.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db3Catalog.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db3Cross.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db3Devices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db3Examples.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db3Flex.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db3Guides.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db3Languages.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db3Practices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db3Projects.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db3Systems.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db3Tools.kt
   app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
   app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
   app/src/main/java/com/example/retrodatabases/ui/AppNavHost.kt
@@ -120,6 +131,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-05 | 2026-10-14 | 6,236 | 169 | 82 | 118 | 6,605 | +1,959 (155 new records in five seed files) |
 | CP-06 | 2026-10-14 | 6,257 | 169 | 82 | 118 | 6,626 | +21 (translation; long strings re-wrapped) |
 | CP-07 | 2026-10-14 | 9,174 | 199 | 82 | 118 | 9,573 | +2,947 (database 2: 142 records in ten files, migration 1→2, tests +30) |
+| CP-08 | 2026-10-14 | 11,798 | 226 | 82 | 118 | 12,224 | +2,651 (database 3: 141 records in eleven files, migration 2→3, tests +27) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -361,6 +373,45 @@ Date: 2026-10-14. Totals: Kotlin main 9,174 (CP-06: 6,257), Kotlin test 199 (169
 - 115 of 142 records are reading-only, so most of database 2 has not been executed. The 27 that run cover the languages and tools that exist in this sandbox.
 - The rare flag covers 68 of 142 records. It's a judgement call again, and I'll review it against the database 1 flags.
 - Not verified yet: the migration on a real device from a version 1 install (the unit test runs the migration on a test file, which is not the same), the UI with two databases in the list and in the filters, lint, and the release build.
+
+## CP-08: database 3, the 2000s
+
+Status: database 3 is in the app: 141 records, a migration for installs made at version 2, and tests for all three databases. The build passes and 16 of 16 unit tests pass. 19 of the 141 new examples run and pass; the other 122 are checked by reading or have no code at all.
+
+Mood: pleased with how much of the decade fits into one list, from Windows XP to Cassandra. Annoyed with one example that printed nothing, because I forgot that `git shortlog` reads its input from standard input when no revision is given.
+
+Date: 2026-10-14. Totals: Kotlin main 11,798 (CP-07: 9,174), Kotlin test 226 (199), XML 82, Gradle and project files 118, total 12,224. The +2,651 is mostly the eleven new Kotlin files for database 3 (2,606 lines together), plus the catalogue, the database class and the tests (+27).
+
+### What changed
+
+- A third database, "Database 3: 2000s coding catalogue", with the same ten kinds. 141 records: languages 20, systems 20, devices 31, tools 24, practices 20, guides 5, examples 7, projects 4, flex 5, cross-code 5. 56 of them are rare.
+- Eleven files `Db3*.kt`: ten record files and `Db3Catalog.kt`, which joins them into `db3Records`. `SeedCatalog.kt` lists the third database and adds its records to `seedRecords`.
+- Database version 3 with `MIGRATION_2_3`. An install at version 2 gets database 3 from it. An install at version 1 runs `MIGRATION_1_2` and then `MIGRATION_2_3`, because Room runs the migrations in order. The unit tests cover the second migration on a test file; the chain from version 1 has not been run on a device.
+- The years of database 3 are 2000 to 2010, both included. Windows 2000 (February 2000) and the Eee PC (2007) are in; anything from 1999 is out.
+- Tests cover three databases. `SeedDataTest` checks the years of database 3, and every kind and the rare flags in each database. `AppDatabaseSeedTest` checks the record counts of all three databases and has a new test that removes database 3 and runs the migration again. 16 unit tests in total.
+
+### Facts checked by web search
+
+- Nine entries were checked against sources: Knoppix (first release in September 2000); Gentoo Linux (version 1.0 on 31 March 2002); OpenBeOS, later Haiku (launched in August 2001, renamed in 2004); Pharo (forked from Squeak in March 2008, Pharo 1.0 in April 2010, so the record uses the fork year); Scala (first public release in January 2004; one source says 2003, and I followed the 2004 date from the language's own ten-year post); Clojure (public release in October 2007; one source gives 1.0 in May 2009); Xen (first public release in October 2003; the date of version 1.0 is disputed between 2003 and 2004, so the record uses 2003); Notepad++ (first public build on SourceForge in November 2003; the infoboxes say 24 November, and one page dates the start of work to September); CUDA (first public SDK in February 2007, version 1.0 in mid-2007, with the sources disagreeing on the day).
+- A few machine-written encyclopaedia pages came up in the searches. They say they may contain errors, so I did not use them.
+- The other 132 records were written from memory, and I have not checked their dates one by one. The ones I would check first are the Pentium 4, the Itanium, the Cell, the Earth Simulator, the OLPC XO-1 and the early Ubuntu and Linux 2.6 dates.
+
+### How I checked it
+
+- Unit tests: 16 of 16 pass (AppDatabaseSeedTest 4, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL.
+- Examples: a script takes every database 3 example from the Kotlin source and runs what this sandbox can run. 19 pass: Java 5 (javac and java), Python 2.0, the Python 2.4 generator expression, Go (go run), an RSS parser, a SQL window function in SQLite, a PHP 5 exception class, a first Git commit, the Git object demo, a MapReduce word count, a podcast reader and a CamelCase wiki (both run on local files that the script writes), a Sudoku solver (its output is compared with the known solution), Ruby metaprogramming, one-line Git statistics, a 1 KB JavaScript demo, ctypes calling a C library, a C program that embeds Python, and a Git pre-commit hook written in Python, which the script installs and then tries to commit through.
+- The other 122 are not executed. 95 of them are systems, devices, tools and practices, which have no example at all. The other 27 are languages, guides, examples, projects and cross-code entries that need a compiler or service this sandbox does not have, or that have no code.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- `git shortlog -sn` with no revision reads from standard input when that is not a terminal. My own run and the checker both printed nothing. The fix is `git shortlog -sn HEAD`, which prints the counts. The checker caught it on the first run, and the rest of database 3 passed the first time.
+
+### Notes
+
+- 122 of 141 records are not executed, which is most of the decade. Systems, devices, tools and practices can't run in a sandbox anyway, so the examples there would only be documentation.
+- The rare flag covers 56 of 141 records. That is a judgement call again, and I will compare it with the flags of databases 1 and 2 before the next release.
+- Not verified yet: the migration on a real device from version 1 and version 2 installs, the UI with three databases in the list and in the filters, lint, and the release build.
 
 ################################################################################
 # FILE: RetroDatabases/DEVLOG.txt
@@ -387,6 +438,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-05 | 2026-10-14 | 6,236 | 169 | 82 | 118 | 6,605 | +1,959 (155 new records in five seed files) |
 | CP-06 | 2026-10-14 | 6,257 | 169 | 82 | 118 | 6,626 | +21 (translation; long strings re-wrapped) |
 | CP-07 | 2026-10-14 | 9,174 | 199 | 82 | 118 | 9,573 | +2,947 (database 2: 142 records in ten files, migration 1→2, tests +30) |
+| CP-08 | 2026-10-14 | 11,798 | 226 | 82 | 118 | 12,224 | +2,651 (database 3: 141 records in eleven files, migration 2→3, tests +27) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -629,15 +681,55 @@ Date: 2026-10-14. Totals: Kotlin main 9,174 (CP-06: 6,257), Kotlin test 199 (169
 - The rare flag covers 68 of 142 records. It's a judgement call again, and I'll review it against the database 1 flags.
 - Not verified yet: the migration on a real device from a version 1 install (the unit test runs the migration on a test file, which is not the same), the UI with two databases in the list and in the filters, lint, and the release build.
 
+## CP-08: database 3, the 2000s
+
+Status: database 3 is in the app: 141 records, a migration for installs made at version 2, and tests for all three databases. The build passes and 16 of 16 unit tests pass. 19 of the 141 new examples run and pass; the other 122 are checked by reading or have no code at all.
+
+Mood: pleased with how much of the decade fits into one list, from Windows XP to Cassandra. Annoyed with one example that printed nothing, because I forgot that `git shortlog` reads its input from standard input when no revision is given.
+
+Date: 2026-10-14. Totals: Kotlin main 11,798 (CP-07: 9,174), Kotlin test 226 (199), XML 82, Gradle and project files 118, total 12,224. The +2,651 is mostly the eleven new Kotlin files for database 3 (2,606 lines together), plus the catalogue, the database class and the tests (+27).
+
+### What changed
+
+- A third database, "Database 3: 2000s coding catalogue", with the same ten kinds. 141 records: languages 20, systems 20, devices 31, tools 24, practices 20, guides 5, examples 7, projects 4, flex 5, cross-code 5. 56 of them are rare.
+- Eleven files `Db3*.kt`: ten record files and `Db3Catalog.kt`, which joins them into `db3Records`. `SeedCatalog.kt` lists the third database and adds its records to `seedRecords`.
+- Database version 3 with `MIGRATION_2_3`. An install at version 2 gets database 3 from it. An install at version 1 runs `MIGRATION_1_2` and then `MIGRATION_2_3`, because Room runs the migrations in order. The unit tests cover the second migration on a test file; the chain from version 1 has not been run on a device.
+- The years of database 3 are 2000 to 2010, both included. Windows 2000 (February 2000) and the Eee PC (2007) are in; anything from 1999 is out.
+- Tests cover three databases. `SeedDataTest` checks the years of database 3, and every kind and the rare flags in each database. `AppDatabaseSeedTest` checks the record counts of all three databases and has a new test that removes database 3 and runs the migration again. 16 unit tests in total.
+
+### Facts checked by web search
+
+- Nine entries were checked against sources: Knoppix (first release in September 2000); Gentoo Linux (version 1.0 on 31 March 2002); OpenBeOS, later Haiku (launched in August 2001, renamed in 2004); Pharo (forked from Squeak in March 2008, Pharo 1.0 in April 2010, so the record uses the fork year); Scala (first public release in January 2004; one source says 2003, and I followed the 2004 date from the language's own ten-year post); Clojure (public release in October 2007; one source gives 1.0 in May 2009); Xen (first public release in October 2003; the date of version 1.0 is disputed between 2003 and 2004, so the record uses 2003); Notepad++ (first public build on SourceForge in November 2003; the infoboxes say 24 November, and one page dates the start of work to September); CUDA (first public SDK in February 2007, version 1.0 in mid-2007, with the sources disagreeing on the day).
+- A few machine-written encyclopaedia pages came up in the searches. They say they may contain errors, so I did not use them.
+- The other 132 records were written from memory, and I have not checked their dates one by one. The ones I would check first are the Pentium 4, the Itanium, the Cell, the Earth Simulator, the OLPC XO-1 and the early Ubuntu and Linux 2.6 dates.
+
+### How I checked it
+
+- Unit tests: 16 of 16 pass (AppDatabaseSeedTest 4, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL.
+- Examples: a script takes every database 3 example from the Kotlin source and runs what this sandbox can run. 19 pass: Java 5 (javac and java), Python 2.0, the Python 2.4 generator expression, Go (go run), an RSS parser, a SQL window function in SQLite, a PHP 5 exception class, a first Git commit, the Git object demo, a MapReduce word count, a podcast reader and a CamelCase wiki (both run on local files that the script writes), a Sudoku solver (its output is compared with the known solution), Ruby metaprogramming, one-line Git statistics, a 1 KB JavaScript demo, ctypes calling a C library, a C program that embeds Python, and a Git pre-commit hook written in Python, which the script installs and then tries to commit through.
+- The other 122 are not executed. 95 of them are systems, devices, tools and practices, which have no example at all. The other 27 are languages, guides, examples, projects and cross-code entries that need a compiler or service this sandbox does not have, or that have no code.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- `git shortlog -sn` with no revision reads from standard input when that is not a terminal. My own run and the checker both printed nothing. The fix is `git shortlog -sn HEAD`, which prints the counts. The checker caught it on the first run, and the rest of database 3 passed the first time.
+
+### Notes
+
+- 122 of 141 records are not executed, which is most of the decade. Systems, devices, tools and practices can't run in a sandbox anyway, so the examples there would only be documentation.
+- The rare flag covers 56 of 141 records. That is a judgement call again, and I will compare it with the flags of databases 1 and 2 before the next release.
+- Not verified yet: the migration on a real device from version 1 and version 2 installs, the UI with three databases in the list and in the filters, lint, and the release build.
+
 ################################################################################
 # FILE: RetroDatabases/README.md
 ################################################################################
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside are two databases of coding history:
+An Android application in Kotlin, Jetpack Compose and Room. Inside are three databases of coding history:
 
 - "Database 1" is a catalogue of 80s coding;
-- "Database 2" is a catalogue of 90s coding.
+- "Database 2" is a catalogue of 90s coding;
+- "Database 3" is a catalogue of coding from 2000 to 2010.
 
 ## What is inside
 
@@ -671,7 +763,22 @@ The catalogue of database 2 (90s) has the same ten kinds:
 | Flex | 5 | Mandelbrot in JavaScript, a Perl quine, compile-time primes, plasma and fire |
 | Cross-code | 5 | Java calling C through JNI, PHP calling C, Perl writing a C header, Lua in C, Visual Basic calling a DLL |
 
-In total there are 462 records: 320 in database 1 (181 of them flagged as rare) and 142 in database 2 (68 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
+The catalogue of database 3 (2000–2010) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 20 | C#, Visual Basic .NET, Java 5, Scala, Groovy, Python 2.0, PHP 5, Go, Clojure, Processing, and some esoteric languages |
+| Systems | 20 | Windows 2000, XP and Vista, Mac OS X, iPhone OS, Android, Linux 2.6, Ubuntu, Gentoo, Knoppix, Solaris, Haiku, PostgreSQL, SQLite, the Google File System, Cassandra, MongoDB, Xen |
+| Devices | 31 | Pentium 4, Athlon 64, Core 2 Duo, Cell, consoles from PlayStation 2 to PlayStation 3, iPod, iPhone, Kindle, Eee PC, OLPC XO-1, Blue Gene/L, Arduino |
+| Tools | 24 | Subversion, Git, Mercurial, Ant, Maven, Selenium, Eclipse, IntelliJ IDEA, Visual Studio 2005, Xcode, Rails, WordPress, Django, Audacity, CUDA |
+| Practices | 20 | Agile Manifesto, test-driven development, continuous integration, Kanban, domain-driven design, MapReduce, Ajax, Web 2.0, CMMI, OWASP Top 10, Stack Overflow |
+| Guides | 5 | How Git stores history, how MapReduce counts words, how the Google File System splits a file, how Ajax works, how an ORM maps classes to tables |
+| Examples | 7 | RSS parsing, a SQL window function, a PHP 5 exception, a first Git commit, Ajax, a Maven pom.xml, a generator expression |
+| Projects | 4 | A podcast reader, a CamelCase wiki, a Google Maps mash-up, a Firefox extension |
+| Flex | 5 | A Sudoku solver, Ruby metaprogramming, one-line Git statistics, a 1 KB demo, mod_rewrite |
+| Cross-code | 5 | Python calling C through ctypes, C embedding Python, a Git hook in Python, JavaScript calling Java, C# calling C |
+
+In total there are 603 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare) and 141 in database 3 (56 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
 
 In the app:
 - the list of databases with the number of records;
@@ -698,8 +805,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Structure
 
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migration from version 1 to version 2.
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of both databases: `Db1*.kt` and `Db2*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1 and 2 to version 3.
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all three databases: `Db1*.kt`, `Db2*.kt` and `Db3*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
 - `app/src/test` — tests of the filters, the data and the database itself (Robolectric).
 - `DEVLOG.md` — the development log with the growth of lines of code by checkpoint.
@@ -707,15 +814,15 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python and curl. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass; the other records there describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles).
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git and curl. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all).
 
-For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml and others), the examples were checked only by reading, and this is noted in the development log.
+For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala and others), the examples were checked only by reading, and this is noted in the development log.
 
 ## How to add a database
 
-1. Create files in `data/seed` with the records. Pass the database id to `entry()`, for example `databaseId = 2`; a record without it goes to database 1.
+1. Create files in `data/seed` with the records. Pass the database id to `entry()`, for example `databaseId = 3`; a record without it goes to database 1.
 2. Add the database to `seedDatabases` and its records to `seedRecords` (file `SeedCatalog.kt`).
-3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` is the example: it adds database 2 and keeps the favourites of database 1.
+3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` and `MIGRATION_2_3` are the examples: each adds one database, and an install made at version 1 runs them in order.
 
 ################################################################################
 # FILE: RetroDatabases/app/build.gradle.kts
@@ -864,7 +971,7 @@ import com.example.retrodatabases.data.seed.seedRecords
 
 @Database(
     entities = [DatabaseEntity::class, RecordEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -886,7 +993,7 @@ abstract class AppDatabase : RoomDatabase() {
         private fun buildDatabase(appContext: Context): AppDatabase =
             Room.databaseBuilder(appContext, AppDatabase::class.java, FILE_NAME)
                 .addCallback(SeedCallback())
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
     }
 }
@@ -898,6 +1005,18 @@ abstract class AppDatabase : RoomDatabase() {
 internal val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val added = setOf(2L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 3 added database 3. Copies at version 2 get it from this migration;
+ * copies at version 1 run it right after MIGRATION_1_2.
+ */
+internal val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(3L)
         seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
         seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
     }
@@ -9165,6 +9284,2656 @@ val db2Tools: List<RecordEntity> = listOf(
 )
 
 ################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db3Catalog.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.RecordEntity
+
+/**
+ * All records of database 3: languages, systems, devices, tools and practices of 2000 to 2010,
+ * as well as guides, examples, projects, flex projects and cross-code experiments.
+ */
+val db3Records: List<RecordEntity> =
+    db3Languages + db3Systems + db3Devices + db3Tools + db3Practices +
+        db3Guides + db3Examples + db3Projects + db3Flex + db3Cross
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db3Cross.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Cross-code experiments of 2000 to 2010: technologies mixed on purpose, from ctypes and embedded Python to Git hooks and LiveConnect. */
+val db3Cross: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 3,
+        kind = Kind.CROSS,
+        section = "Python and native code",
+        title = "Python calls C through ctypes",
+        originalTitle = "ctypes",
+        author = "The Python community (ctypes module)",
+        year = 2006,
+        summary = "A Python program loads a C shared library and calls one of its functions with plain Python values.",
+        details = "The ctypes module entered the standard library in Python 2.5 (2006). It loads a shared library and converts the arguments to C types, " +
+            "so a script can use C code without writing an extension module. The pattern was popular for wrapping existing libraries quickly.",
+        instructions = """
+            1. Save the two files below in one folder and build the library: cc -shared -fPIC -o libmathlib.so mathlib.c
+            2. Run the script: python3 call.py
+        """,
+        example = """
+            ### mathlib.c
+            int add_ints(int a, int b)
+            {
+                return a + b;
+            }
+            ### call.py
+            import ctypes
+
+            lib = ctypes.CDLL("./libmathlib.so")
+            print(lib.add_ints(20, 22))
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.CROSS,
+        section = "Embedding",
+        title = "C embeds Python",
+        originalTitle = "Embedding the Python interpreter",
+        author = "Python C API practice",
+        year = 2000,
+        summary = "A C program starts the Python interpreter, runs a script inside itself and shuts the interpreter down.",
+        details = "The Python C API let host programs start an interpreter inside themselves. Py_Initialize starts it, PyRun_SimpleString runs a script, " +
+            "and Py_Finalize stops it. The same calls existed in the Python 2.0 era that this record describes, so programs could use Python as a scripting layer.",
+        instructions = """
+            1. Save the code as embed.c.
+            2. Build it against the Python headers and library: cc -o embed embed.c <DOLLAR>(python3-config --includes) <DOLLAR>(python3-config --embed --ldflags)
+            3. Run it: ./embed
+        """,
+        example = """
+            #include <Python.h>
+
+            int main(void)
+            {
+                Py_Initialize();
+                PyRun_SimpleString("print('Hello from Python, run inside a C program')");
+                Py_Finalize();
+                return 0;
+            }
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.CROSS,
+        section = "Version control",
+        title = "A Git pre-commit hook written in Python",
+        originalTitle = "pre-commit hook",
+        author = "Git hook practice",
+        year = 2005,
+        summary = "A hook written in Python that stops a commit when a staged line ends with a space or a tab.",
+        details = "Git runs the program named pre-commit before each commit, and a non-zero exit status stops the commit. " +
+            "The hook asks Git for the staged changes, checks each added line for trailing whitespace, and reports how many lines are at fault. " +
+            "Teams used such hooks to keep the code tidy without waiting for a review.",
+        instructions = """
+            1. Make a repository and save the hook as .git/hooks/pre-commit.
+            2. Make it executable: chmod +x .git/hooks/pre-commit
+            3. Try to commit a line that ends with a space: the commit is refused.
+        """,
+        example = """
+            ### pre-commit
+            #!/usr/bin/env python3
+            # Git pre-commit hook: refuses the commit if a staged line ends with a space or a tab.
+            import subprocess
+            import sys
+
+            diff = subprocess.run(["git", "diff", "--cached", "-U0"], capture_output=True, text=True).stdout
+            bad = [line for line in diff.split("\n")
+                   if line.startswith("+") and not line.startswith("+++") and line[1:] != line[1:].rstrip()]
+            if bad:
+                sys.stderr.write("trailing whitespace in %d staged line(s)\n" % len(bad))
+                sys.exit(1)
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.CROSS,
+        section = "Browsers and applets",
+        title = "JavaScript calls Java through LiveConnect",
+        originalTitle = "LiveConnect",
+        author = "Netscape Communications",
+        year = 2000,
+        summary = "A web page's script uses Java classes directly through LiveConnect, the bridge built into Netscape browsers.",
+        details = "LiveConnect (1996) let page scripts call Java classes and applets in Netscape browsers. " +
+            "A script could create Java objects and call their methods, which made it possible to mix the two languages on one page. " +
+            "Browser security rules limited what the Java side could reach.",
+        instructions = """
+            1. Put the script in an HTML page and serve it to a browser with LiveConnect enabled.
+            2. Open the page and look at the Java console for the message.
+        """,
+        example = """
+            <script>
+              var system = java.lang.System;
+              system.out.println("Hello from Java, called by JavaScript");
+            </script>
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.CROSS,
+        section = "Windows interop",
+        title = "C# calls a C library with P/Invoke",
+        originalTitle = "P/Invoke (DllImport)",
+        author = "Microsoft .NET practice",
+        year = 2002,
+        summary = "A C# program declares a native function with DllImport, and the runtime calls it in the native library.",
+        details = "Platform invocation (P/Invoke) let .NET programs call functions in ordinary DLLs. " +
+            "The DllImport attribute named the library and the function, and the runtime converted the arguments to native types. " +
+            "The declaration was the only glue the program needed.",
+        instructions = """
+            1. Build the native library as mathlib.dll with a function add_ints.
+            2. Put the class in a C# project next to the library.
+            3. Run the program: it prints the sum that the native function returns.
+        """,
+        example = """
+            using System.Runtime.InteropServices;
+
+            class Native {
+                [DllImport("mathlib")]
+                public static extern int add_ints(int a, int b);
+
+                static void Main() {
+                    System.Console.WriteLine(add_ints(20, 22));
+                }
+            }
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db3Devices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Devices of 2000 to 2010: processors, game consoles, graphics cards, phones and handhelds, laptops, clusters and hobby boards. */
+val db3Devices: List<RecordEntity> = listOf(
+
+    // ---------- Processors ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "Intel Pentium 4",
+        originalTitle = "Pentium 4 (NetBurst)",
+        author = "Intel",
+        year = 2000,
+        summary = "Intel's NetBurst processor, built for very high clock speeds with a very long pipeline.",
+        details = "The Pentium 4 (2000) introduced the NetBurst architecture, with a long pipeline designed for high clock speeds. " +
+            "Intel pushed the clock past 3 GHz in 2002, and the design ran hot, which kept cooling and fan design in the news.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "AMD Athlon XP",
+        originalTitle = "Athlon XP",
+        author = "AMD",
+        year = 2001,
+        summary = "AMD's Athlon XP, which competed with the Pentium 4 on performance per clock and was sold under model numbers.",
+        details = "The Athlon XP (2001) was AMD's answer to the Pentium 4. It did more work per clock cycle, so AMD sold it under model numbers " +
+            "that matched the Pentium 4's clock speeds. Enthusiasts favoured it for years.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "Intel Itanium",
+        originalTitle = "Itanium (IA-64)",
+        author = "Intel and Hewlett-Packard",
+        year = 2001,
+        summary = "A 64-bit EPIC processor that relied on the compiler to find parallel instructions, first shipped in 2001.",
+        details = "Itanium, developed by Intel and HP, shipped in 2001 as the first EPIC processor. Its design moved the work of finding parallel instructions " +
+            "to the compiler. Its x86 emulation was slow, and the market preferred AMD's 64-bit x86 design.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "AMD Athlon 64",
+        originalTitle = "Athlon 64",
+        author = "AMD",
+        year = 2003,
+        summary = "AMD's first 64-bit x86 processor, with the AMD64 instruction set and a memory controller on the chip.",
+        details = "The Athlon 64 (2003) extended x86 to 64 bits while keeping old software running. Its memory controller sat on the processor, " +
+            "which cut latency. Intel later adopted the same 64-bit instruction set.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "Intel Core 2 Duo",
+        originalTitle = "Core 2 Duo (Core microarchitecture)",
+        author = "Intel",
+        year = 2006,
+        summary = "Intel's Core microarchitecture in dual-core chips for desktops and laptops, with a shared cache.",
+        details = "The Core 2 Duo (2006) brought Intel's new Core microarchitecture to desktops and laptops. " +
+            "Its wide execution core and shared second-level cache gave it a large lead over the Pentium 4 in most programs.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "Cell Broadband Engine",
+        originalTitle = "Cell Broadband Engine",
+        author = "IBM, Sony and Toshiba",
+        year = 2005,
+        summary = "A processor with one PowerPC core and eight synergistic cores, built for the PlayStation 3 and for computing.",
+        details = "The Cell was designed by IBM, Sony and Toshiba and used in the PlayStation 3 (2006). " +
+            "Its eight synergistic processing elements ran small programs with local memory, which made it powerful and difficult to program.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "PowerPC G5",
+        originalTitle = "PowerPC 970 (G5)",
+        author = "Apple and IBM",
+        year = 2003,
+        summary = "Apple's 64-bit PowerPC 970 processor, sold in the Power Mac G5 from June 2003.",
+        details = "The PowerPC 970, known as the G5 at Apple, was a 64-bit chip derived from IBM's POWER4 design. " +
+            "It appeared in the Power Mac G5 in June 2003, and Apple used the PowerPC line until its move to Intel processors in 2006.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "UltraSPARC T1",
+        originalTitle = "UltraSPARC T1 (Niagara)",
+        author = "Sun Microsystems",
+        year = 2005,
+        summary = "Sun's Niagara chip with eight cores and four threads per core, designed for servers that spend time waiting for memory.",
+        details = "The UltraSPARC T1 (2005) placed eight simple cores on one die, each with four hardware threads. " +
+            "It was aimed at web and database servers, where threads spend much of their time waiting for memory.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "Transmeta Crusoe",
+        originalTitle = "Crusoe",
+        author = "Transmeta",
+        year = 2000,
+        summary = "A low-power x86 processor that ran its instructions through software translation, launched in 2000.",
+        details = "The Crusoe (2000) ran x86 code through a translation layer written in software, which let it use a simpler and cooler hardware core. " +
+            "Some laptops used it for long battery life, and its translation approach became a footnote in processor history.",
+        rare = true,
+    ),
+
+    // ---------- Game consoles ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "PlayStation 2",
+        originalTitle = "PlayStation 2 (PS2)",
+        author = "Sony Computer Entertainment",
+        year = 2000,
+        summary = "Sony's DVD console with the Emotion Engine processor, released in Japan in March 2000.",
+        details = "The PlayStation 2 launched in Japan in March 2000 and became the best-selling console of its generation. " +
+            "Its Emotion Engine was a custom MIPS-based processor with vector units, and the console played DVDs as well as games.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Xbox",
+        originalTitle = "Xbox (original)",
+        author = "Microsoft",
+        year = 2001,
+        summary = "Microsoft's first console, built around a custom Intel Pentium III-class processor and an NVIDIA graphics chip.",
+        details = "The original Xbox launched in November 2001. Its custom processor was based on an Intel Pentium III design, and its graphics came from NVIDIA. " +
+            "Its hard drive and the online service Xbox Live (2002) set the pattern for later consoles.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "GameCube",
+        originalTitle = "Nintendo GameCube",
+        author = "Nintendo",
+        year = 2001,
+        summary = "Nintendo's cube-shaped console with the Gekko PowerPC processor and mini-DVD discs.",
+        details = "The GameCube launched in 2001 with a PowerPC processor called Gekko and proprietary mini-DVD discs. " +
+            "Nintendo kept its focus on games for families, and the console had a strong library of first-party titles.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Game Boy Advance",
+        originalTitle = "Game Boy Advance (GBA)",
+        author = "Nintendo",
+        year = 2001,
+        summary = "A 32-bit handheld with an ARM7 processor, a bright screen and a library of cartridge games.",
+        details = "The Game Boy Advance (2001) used an ARM7TDMI processor, the same core found in many phones. " +
+            "Its screen was bright and its cartridges fast, and it kept the older Game Boy games playable.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Nintendo DS",
+        originalTitle = "Nintendo DS",
+        author = "Nintendo",
+        year = 2004,
+        summary = "A dual-screen handheld with a touch-sensitive lower screen and a microphone, released in 2004.",
+        details = "The Nintendo DS (2004) had two screens, one of them touch-sensitive, and a microphone. " +
+            "Its library included puzzle, language and simulation titles, which reached audiences beyond traditional gamers.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "PlayStation Portable",
+        originalTitle = "PlayStation Portable (PSP)",
+        author = "Sony Computer Entertainment",
+        year = 2004,
+        summary = "Sony's widescreen handheld with a MIPS processor, a Memory Stick format and media playback.",
+        details = "The PSP launched in 2004 with a widescreen display, a MIPS processor and the Memory Stick format. " +
+            "It played games, video and music, and it became Sony's answer to the Game Boy Advance in the handheld market.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Xbox 360",
+        originalTitle = "Xbox 360",
+        author = "Microsoft",
+        year = 2005,
+        summary = "Microsoft's console with three PowerPC cores and an ATI graphics processor, released in November 2005.",
+        details = "The Xbox 360 launched in November 2005 with three PowerPC cores and an ATI graphics chip. " +
+            "Its online service and downloadable games set a standard for the next generation of consoles.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Wii",
+        originalTitle = "Nintendo Wii",
+        author = "Nintendo",
+        year = 2006,
+        summary = "Nintendo's console whose motion-sensing remote made it a family favourite; launched in November 2006.",
+        details = "The Wii launched in November 2006 with a remote that sensed motion, which changed how families and older players used games. " +
+            "Its low price and simple hardware kept it popular for years.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "PlayStation 3",
+        originalTitle = "PlayStation 3 (PS3)",
+        author = "Sony Computer Entertainment",
+        year = 2006,
+        summary = "Sony's console with the Cell processor and a Blu-ray drive, released in November 2006.",
+        details = "The PlayStation 3 launched in November 2006 with the Cell processor and a Blu-ray drive. " +
+            "Its complex architecture made development hard in the first years, and its games improved as developers learned the machine.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "N-Gage",
+        originalTitle = "Nokia N-Gage",
+        author = "Nokia",
+        year = 2003,
+        summary = "Nokia's phone shaped like a game deck, with games on cartridges and a library that failed to take off.",
+        details = "Nokia released the N-Gage in 2003 as a phone that doubled as a handheld game deck. " +
+            "Its games came on cartridges that were awkward to change, and players disliked holding the device to the ear. It is remembered as an unusual experiment.",
+        rare = true,
+    ),
+
+    // ---------- Graphics ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Graphics",
+        title = "ATI Radeon 9700",
+        originalTitle = "Radeon 9700 Pro",
+        author = "ATI Technologies",
+        year = 2002,
+        summary = "The first DirectX 9 graphics card, with programmable pixel and vertex shaders.",
+        details = "The Radeon 9700 (2002) was the first graphics card to support DirectX 9, with programmable pixel and vertex shaders. " +
+            "It gave ATI a lead over NVIDIA for a while, and games began to use shaders for effects that had been impossible before.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Graphics",
+        title = "NVIDIA GeForce 8800 GTX",
+        originalTitle = "GeForce 8800 GTX (G80)",
+        author = "NVIDIA",
+        year = 2006,
+        summary = "NVIDIA's G80 card with unified shaders, which made general computing on graphics processors practical.",
+        details = "The GeForce 8800 GTX (November 2006) used the G80 chip with unified shaders and 128 stream processors. " +
+            "Its general-purpose programming interface, CUDA, arrived a few months later and turned graphics cards into compute devices.",
+    ),
+
+    // ---------- Phones and handhelds ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Phones and handhelds",
+        title = "Palm Treo 600",
+        originalTitle = "Palm Treo 600",
+        author = "Palm and Handspring",
+        year = 2004,
+        summary = "A smartphone that combined a Palm organiser, a phone and a thumb keyboard.",
+        details = "The Treo 600 (2004) joined a Palm organiser with a phone and a thumb keyboard. " +
+            "Business users valued its email and calendar, and it helped open the market for smartphones before the iPhone.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Phones and handhelds",
+        title = "iPod",
+        originalTitle = "iPod (first generation)",
+        author = "Apple Computer",
+        year = 2001,
+        summary = "Apple's first iPod: a music player with a click wheel and a 5 GB hard drive, released in October 2001.",
+        details = "The first iPod (October 2001) stored about a thousand songs on a 5 GB hard drive and used a click wheel for navigation. " +
+            "It started Apple's move into consumer electronics beyond computers.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Phones and handhelds",
+        title = "iPhone",
+        originalTitle = "iPhone (first generation)",
+        author = "Apple Inc.",
+        year = 2007,
+        summary = "Apple's phone with a multi-touch screen and a full web browser, launched in June 2007.",
+        details = "The iPhone launched in June 2007. Its multi-touch screen replaced the keyboard and stylus of earlier smartphones, " +
+            "and its browser showed full websites. Its arrival changed the design of phones and of mobile software.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Phones and handhelds",
+        title = "Amazon Kindle",
+        originalTitle = "Kindle (first generation)",
+        author = "Amazon",
+        year = 2007,
+        summary = "An e-book reader with an e-ink screen and wireless delivery of books, launched in November 2007.",
+        details = "The Kindle (November 2007) used an electronic-ink display that looked like paper and read well in sunlight. " +
+            "Books arrived over a wireless connection, and the reader made e-books a mass-market product.",
+    ),
+
+    // ---------- Laptops and personal computers ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Laptops and personal computers",
+        title = "PowerBook G4 Titanium",
+        originalTitle = "PowerBook G4 (Titanium)",
+        author = "Apple Computer",
+        year = 2001,
+        summary = "Apple's titanium laptop with a PowerPC G4 processor and a thin, light body.",
+        details = "The PowerBook G4 Titanium (2001) had a titanium case and a PowerPC G4 processor. Its design set the look of Apple's laptops for years, " +
+            "and its metal shell made it one of the most admired portables of its time.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Laptops and personal computers",
+        title = "Asus Eee PC",
+        originalTitle = "Eee PC 701",
+        author = "ASUS",
+        year = 2007,
+        summary = "A small, cheap Linux laptop that started the netbook class in 2007.",
+        details = "The Eee PC (October 2007) was a small, inexpensive laptop with a Linux system and flash storage. " +
+            "Its success created the netbook class, which sold in large numbers for several years.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Laptops and personal computers",
+        title = "OLPC XO-1",
+        originalTitle = "XO-1 (One Laptop per Child)",
+        author = "One Laptop per Child project",
+        year = 2007,
+        summary = "A rugged green-and-white laptop for children, with a mesh network and a screen that works in sunlight.",
+        details = "The XO-1 was designed for the One Laptop per Child project. Its dual-mode screen worked in sunlight and in colour, " +
+            "and its mesh network let laptops share connections. The first units reached children in 2007, and the design influenced the cheap laptops that followed.",
+        rare = true,
+    ),
+
+    // ---------- Clusters and supercomputers ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Clusters and supercomputers",
+        title = "IBM Blue Gene/L",
+        originalTitle = "Blue Gene/L",
+        author = "IBM",
+        year = 2004,
+        summary = "A supercomputer built from many low-power PowerPC chips, which topped the TOP500 list in 2004.",
+        details = "Blue Gene/L (2004) was built from many low-power PowerPC chips, connected in a three-dimensional network. " +
+            "It topped the TOP500 list of supercomputers in November 2004, and its design favoured efficiency over raw clock speed.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Clusters and supercomputers",
+        title = "Earth Simulator",
+        originalTitle = "Earth Simulator (ES)",
+        author = "NEC",
+        year = 2002,
+        summary = "NEC's vector supercomputer in Japan, which topped the TOP500 list from 2002 until 2004.",
+        details = "The Earth Simulator (2002) was built by NEC for climate modelling in Japan. It used vector processors in large nodes, " +
+            "and it was the fastest computer in the world until Blue Gene/L overtook it in 2004.",
+        rare = true,
+    ),
+
+    // ---------- Hobby boards ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.DEVICE,
+        section = "Hobby boards",
+        title = "Arduino",
+        originalTitle = "Arduino",
+        author = "Massimo Banzi, David Cuartielles and the Arduino team",
+        year = 2005,
+        summary = "An open-source microcontroller board with a simple IDE, started in Italy for art and design students.",
+        details = "Arduino began in 2005 at the Interaction Design Institute in Ivrea, Italy, as a cheap board for students who were not electronics engineers. " +
+            "Its open hardware and simple programming environment made it popular with artists, makers and schools.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db3Examples.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Usage examples of 2000 to 2010: short recipes for feeds, databases, PHP 5 classes, Git, Ajax, Maven and Python 2.4. */
+val db3Examples: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 3,
+        kind = Kind.EXAMPLE,
+        section = "Web feeds",
+        title = "Parse an RSS feed in Python",
+        originalTitle = "ElementTree RSS reader",
+        author = "Python practice",
+        year = 2002,
+        summary = "Read the titles and links of an RSS 2.0 feed with the standard library, without a third-party package.",
+        details = "RSS 2.0 (2002) is XML with a fixed set of elements. The ElementTree module, part of the Python standard library from version 2.5, " +
+            "reads the document into a tree that the program walks with simple paths. Each item becomes one line of output.",
+        instructions = """
+            1. Save the example as rss.py.
+            2. Run it: python3 rss.py
+        """,
+        example = """
+            import sys
+            import xml.etree.ElementTree as ET
+
+            feed = '<rss version="2.0"><channel><title>Example news</title><item><title>First post</title><link>http://example.com/1</link></item><item><title>Second post</title><link>http://example.com/2</link></item></channel></rss>'
+            root = ET.fromstring(feed)
+            for item in root.findall("./channel/item"):
+                sys.stdout.write("%s -> %s\n" % (item.find("title").text, item.find("link").text))
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.EXAMPLE,
+        section = "Databases",
+        title = "A running total with a SQL window function",
+        originalTitle = "SUM() OVER (PARTITION BY ... ORDER BY ...)",
+        author = "SQL:2003 practice",
+        year = 2003,
+        summary = "A window function adds a running total per region without grouping the detail rows away.",
+        details = "SQL:2003 added window functions. An OVER clause computes an aggregate for each row over a window of related rows, so the detail rows stay visible. " +
+            "PARTITION BY restarts the total for each region, and ORDER BY sets the order of the running sum.",
+        instructions = """
+            1. Save the statements as sales.sql.
+            2. Run them with the SQLite command line: sqlite3 sales.db < sales.sql
+            3. Other databases that support window functions accept the same SELECT.
+        """,
+        example = """
+            CREATE TABLE sales (region TEXT, month INTEGER, amount INTEGER);
+            INSERT INTO sales VALUES ('north', 1, 120), ('north', 2, 90), ('north', 3, 150);
+            INSERT INTO sales VALUES ('south', 1, 80), ('south', 2, 200), ('south', 3, 40);
+            SELECT region, month, amount,
+                   SUM(amount) OVER (PARTITION BY region ORDER BY month) AS running_total
+            FROM sales
+            ORDER BY region, month;
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.EXAMPLE,
+        section = "Web pages",
+        title = "A PHP 5 class that throws an exception",
+        originalTitle = "PHP 5 object and exception",
+        author = "PHP 5 practice",
+        year = 2004,
+        summary = "A small class validates its input and reports a bad amount with an exception that the caller catches.",
+        details = "PHP 5 added private members and exceptions, so an error can travel up to the code that can handle it. " +
+            "The deposit method refuses a non-positive amount by throwing InvalidArgumentException, and the caller catches it and prints the message.",
+        instructions = """
+            1. Save the example as account.php.
+            2. Run it: php account.php
+        """,
+        example = """
+            <?php
+            class Account {
+                private <DOLLAR>balance = 0;
+
+                public function deposit(<DOLLAR>amount) {
+                    if (<DOLLAR>amount <= 0) {
+                        throw new InvalidArgumentException("amount must be positive");
+                    }
+                    <DOLLAR>this->balance += <DOLLAR>amount;
+                }
+
+                public function balance() {
+                    return <DOLLAR>this->balance;
+                }
+            }
+
+            <DOLLAR>account = new Account();
+            <DOLLAR>account->deposit(50);
+            try {
+                <DOLLAR>account->deposit(-5);
+            } catch (InvalidArgumentException <DOLLAR>e) {
+                echo "error: " . <DOLLAR>e->getMessage() . "\n";
+            }
+            echo "balance: " . <DOLLAR>account->balance() . "\n";
+            ?>
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.EXAMPLE,
+        section = "Version control",
+        title = "Your first Git commit",
+        originalTitle = "git init, add, commit",
+        author = "Git practice",
+        year = 2005,
+        summary = "Create a repository, stage a file and record the first snapshot, with the commands typed in a terminal.",
+        details = "Git records snapshots of the project. The init command creates the repository, add stages a file for the next snapshot, " +
+            "and commit records it with a message. The log command lists the snapshots, each identified by a short hash.",
+        instructions = """
+            1. Save the lines below as first-commit.sh.
+            2. Run it: sh first-commit.sh
+            3. The last line shows the commit with its message.
+        """,
+        example = """
+            git init first-commit
+            cd first-commit
+            git config user.name "Ann"
+            git config user.email "ann@example.com"
+            echo "hello" > notes.txt
+            git add notes.txt
+            git commit -m "First commit"
+            git log --oneline
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.EXAMPLE,
+        section = "Web",
+        title = "An Ajax request in plain JavaScript",
+        originalTitle = "XMLHttpRequest counter",
+        author = "Ajax practice",
+        year = 2005,
+        summary = "A script asks the server for a number and writes it into the page without reloading.",
+        details = "The XMLHttpRequest object sends the request in the background. The handler waits for the ready state to reach 4, " +
+            "which means the response has arrived, and then checks the HTTP status before using the text.",
+        instructions = """
+            1. Put the script in a page served by your web server.
+            2. Point the URL at a script that returns a number.
+            3. Open the page: the number appears without a reload.
+        """,
+        example = """
+            var request = new XMLHttpRequest();
+            request.open("GET", "/inbox/count", true);
+            request.onreadystatechange = function () {
+                if (request.readyState == 4 && request.status == 200) {
+                    document.getElementById("count").innerHTML = request.responseText;
+                }
+            };
+            request.send(null);
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.EXAMPLE,
+        section = "Build",
+        title = "A Maven pom.xml for a small project",
+        originalTitle = "Project object model",
+        author = "Maven practice",
+        year = 2004,
+        summary = "One XML file describes the project, its dependencies and the plugins that build it.",
+        details = "Maven reads this file to decide what to compile, which libraries to download and how to run the tests. " +
+            "The groupId and artifactId name the project, and each dependency names a library that Maven fetches from a repository.",
+        instructions = """
+            1. Save the file as pom.xml in the project folder.
+            2. Run mvn test to build the project and run its tests.
+        """,
+        example = """
+            <project>
+              <modelVersion>4.0.0</modelVersion>
+              <groupId>com.example</groupId>
+              <artifactId>guestbook</artifactId>
+              <version>1.0</version>
+              <dependencies>
+                <dependency>
+                  <groupId>junit</groupId>
+                  <artifactId>junit</artifactId>
+                  <version>3.8.1</version>
+                  <scope>test</scope>
+                </dependency>
+              </dependencies>
+            </project>
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.EXAMPLE,
+        section = "Python idioms",
+        title = "A generator expression in Python 2.4",
+        originalTitle = "Generator expression",
+        author = "Python 2.4 practice",
+        year = 2004,
+        summary = "A sum over squares without building a list in memory, written as a generator expression.",
+        details = "Python 2.4 (2004) added generator expressions, which have the syntax of list comprehensions but are written in parentheses. " +
+            "The values are produced one at a time, so a large range needs no list in memory. The sum function consumes the generator directly.",
+        instructions = """
+            1. Save the example as squares.py.
+            2. Run it: python3 squares.py
+        """,
+        example = """
+            # Python 2.4 generator expression: sums the squares without building a list
+            total = sum(n * n for n in range(1, 11))
+            print(total)
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db3Flex.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Flex projects of 2000 to 2010: showpieces that squeeze the most out of a few lines of code. */
+val db3Flex: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 3,
+        kind = Kind.FLEX,
+        section = "Puzzles and search",
+        title = "Sudoku solver in thirty lines of Python",
+        originalTitle = "Backtracking Sudoku solver",
+        author = "Inspired by Peter Norvig's 2006 essay on solving Sudoku",
+        year = 2006,
+        summary = "A backtracking solver that fills the grid cell by cell and tries only the digits that are still allowed.",
+        details = "The solver walks the grid in reading order. For each empty cell it collects the digits not yet used in the row, the column and the 3 by 3 box, " +
+            "and tries them one by one. When a cell has no allowed digit, the function gives up and the previous cell tries its next digit. " +
+            "A classic puzzle is solved in a fraction of a second.",
+        instructions = """
+            1. Save the code as sudoku.py.
+            2. Run it: python3 sudoku.py
+            3. The output is the solved grid, nine lines of nine digits.
+        """,
+        example = """
+            # A compact Sudoku solver: backtracking, trying only the digits that are still allowed.
+            puzzle = (
+                "53..7...."
+                "6..195..."
+                ".98....6."
+                "8...6...3"
+                "4..8.3..1"
+                "7...2...6"
+                ".6....28."
+                "...419..5"
+                "....8..79"
+            )
+
+            def allowed(grid, row, col):
+                used = set(grid[row]) | set(grid[r][col] for r in range(9))
+                top, left = 3 * (row // 3), 3 * (col // 3)
+                used |= set(grid[r][c] for r in range(top, top + 3) for c in range(left, left + 3))
+                return [d for d in "123456789" if d not in used]
+
+            def solve(grid):
+                for row in range(9):
+                    for col in range(9):
+                        if grid[row][col] == ".":
+                            for digit in allowed(grid, row, col):
+                                grid[row][col] = digit
+                                if solve(grid):
+                                    return True
+                            grid[row][col] = "."
+                            return False
+                return True
+
+            grid = [list(puzzle[i * 9:(i + 1) * 9]) for i in range(9)]
+            solve(grid)
+            for row in grid:
+                print("".join(row))
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.FLEX,
+        section = "Tricks",
+        title = "Ruby metaprogramming: methods made at run time",
+        originalTitle = "define_method",
+        author = "Ruby community practice",
+        year = 2006,
+        summary = "A class that defines its own getters and setters with a loop, so each field needs only one line of code.",
+        details = "Ruby lets a program define methods while it runs. A loop over the field names calls define_method twice for each name, " +
+            "once for the reader and once for the writer. The class has no hand-written accessors, yet its methods behave like any others.",
+        instructions = """
+            1. Save the code as person.rb.
+            2. Run it: ruby person.rb
+        """,
+        example = """
+            class Person
+              %w[name age city].each do |field|
+                define_method(field) { instance_variable_get("@#{field}") }
+                define_method("#{field}=") { |value| instance_variable_set("@#{field}", value) }
+              end
+            end
+
+            person = Person.new
+            person.name = "Ann"
+            person.age = 31
+            puts "#{person.name} is #{person.age}"
+            p Person.instance_methods(false).sort
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.FLEX,
+        section = "Tricks",
+        title = "One-line Git statistics",
+        originalTitle = "git shortlog",
+        author = "Git practice",
+        year = 2005,
+        summary = "The number of commits per author, from one command that reads the repository history.",
+        details = "Git stores the author of each commit, so the history can be summarised. The shortlog command groups commits by author and counts them, " +
+            "and the -s and -n switches print the counts sorted from the most active author. Teams used it to see who had written most of a project.",
+        instructions = """
+            1. Save the lines below as stats.sh.
+            2. Run it: sh stats.sh
+        """,
+        example = """
+            git init stats
+            cd stats
+            git config user.name "Ann"
+            git config user.email "ann@example.com"
+            echo one > a.txt && git add a.txt && git commit -qm "one"
+            echo two >> a.txt && git commit -qam "two"
+            git config user.name "Bob"
+            echo three >> a.txt && git commit -qam "three"
+            git shortlog -sn HEAD
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.FLEX,
+        section = "Demoscene in JavaScript",
+        title = "A 1 KB JavaScript demo",
+        originalTitle = "1 KB demo (js1k style)",
+        author = "Demo-contest practice",
+        year = 2010,
+        summary = "A dot that swings like a sine wave, drawn one line per frame and short enough for a 1 KB contest entry.",
+        details = "Contests that asked for demos in 1024 bytes of JavaScript appeared in 2010. Entries had to be tiny, so authors used short names, " +
+            "compact loops and one expression per frame. This demo draws a dot that swings left and right, one line for each frame.",
+        instructions = """
+            1. Save the code as wave.js.
+            2. Run it: node wave.js
+        """,
+        example = """
+            // A dot that swings like a sine wave: one line per frame, 40 columns wide
+            for (var t = 0; t < 20; t++) {
+              var pos = Math.round(20 + 18 * Math.sin(t / 3));
+              var row = "";
+              for (var x = 0; x < 40; x++) row += x == pos ? "*" : ".";
+              console.log(row);
+            }
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.FLEX,
+        section = "Web servers",
+        title = "Apache mod_rewrite: moving a whole site with one rule",
+        originalTitle = "RewriteRule with a back-reference",
+        author = "Apache mod_rewrite practice",
+        year = 2003,
+        summary = "One regular-expression rule redirects every old address to the matching new address and keeps the rest of the path.",
+        details = "mod_rewrite let a web server rewrite addresses with regular expressions. A rule with a captured group copied the rest of the path " +
+            "into the new address. With the redirect flag, browsers and search engines learned the new addresses.",
+        instructions = """
+            1. Put the rule in the .htaccess file of the old site.
+            2. Make sure the server has the rewrite engine enabled.
+            3. Request an old address and check that the browser is redirected.
+        """,
+        example = """
+            # .htaccess in the folder of the old site
+            RewriteEngine On
+            RewriteRule ^old/(.*)$ http://www.example.com/new/<DOLLAR>1 [R=301,L]
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db3Guides.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Guides of 2000 to 2010: how the mechanisms of the decade worked, from Git objects to MapReduce, GFS and ORM mapping. */
+val db3Guides: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 3,
+        kind = Kind.GUIDE,
+        section = "Version control",
+        title = "How Git stores your history",
+        originalTitle = "The Git object model",
+        author = "Linus Torvalds and the Git contributors",
+        year = 2005,
+        summary = "Git keeps every version as a content-addressed object: a blob for file contents, a tree for directories and a commit for history.",
+        details = "Each file's contents are stored as a blob named by the SHA-1 hash of the data, so identical content is stored once. " +
+            "A tree lists the blobs and sub-trees of a directory, and a commit points to a tree, its parent commits and its author. " +
+            "Branches and tags are only names that point to commits, which makes creating them almost free.",
+        instructions = """
+            1. Save the lines below as store.sh.
+            2. Run it: sh store.sh
+            3. The first line is the hash that Git computed for the text hello; the second line prints the stored object back.
+        """,
+        example = """
+            git init store
+            cd store
+            echo hello | git hash-object -w --stdin
+            git cat-file -p ce013625030ba8dba906f756967f9e9ca394464a
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.GUIDE,
+        section = "Data at scale",
+        title = "How MapReduce counts words",
+        originalTitle = "MapReduce word count",
+        author = "Jeffrey Dean and Sanjay Ghemawat (Google)",
+        year = 2004,
+        summary = "The map step emits a pair for every word, the shuffle groups the pairs by word, and the reduce step adds them up.",
+        details = "A MapReduce job has three phases. The map function turns each input record into key-value pairs, here one pair per word. " +
+            "The framework then groups the pairs by key, which in a cluster means moving data between machines. " +
+            "The reduce function receives each key with all its values and returns one result. Because each map call and each reduce call is independent, the work spreads over many machines.",
+        instructions = """
+            1. Save the example as wordcount.py.
+            2. Run it: python3 wordcount.py
+            3. Each output line is a word with its count.
+        """,
+        example = """
+            from collections import defaultdict
+
+            def map_phase(document):
+                for word in document.split():
+                    yield (word.lower(), 1)
+
+            def reduce_phase(word, counts):
+                return (word, sum(counts))
+
+            documents = ["the cat sat", "the dog sat down"]
+            groups = defaultdict(list)
+            for doc in documents:
+                for word, one in map_phase(doc):
+                    groups[word].append(one)
+            for word in sorted(groups):
+                print(reduce_phase(word, groups[word]))
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.GUIDE,
+        section = "Data at scale",
+        title = "How the Google File System splits a file",
+        originalTitle = "GFS chunks and replicas",
+        author = "Sanjay Ghemawat, Howard Gobioff and Shun-Tak Leung (Google)",
+        year = 2003,
+        summary = "Files become 64 MB chunks, each stored on three chunk servers, while one master keeps the map of where everything is.",
+        details = "A client asks the master where a chunk lives, then reads the data straight from a chunk server, so the master handles only small metadata requests. " +
+            "Each chunk has three replicas on different machines, and the master creates a new replica when a server fails. " +
+            "Record appends may leave duplicate records, and the applications were written to tolerate them.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.GUIDE,
+        section = "Web",
+        title = "How Ajax updates a page without a reload",
+        originalTitle = "XMLHttpRequest and the asynchronous page",
+        author = "Jesse James Garrett and the browser makers",
+        year = 2005,
+        summary = "A script sends a request in the background, waits for the answer and changes one part of the page.",
+        details = "A browser starts a request with XMLHttpRequest, which runs in the background while the page stays usable. " +
+            "The script registers a handler that the browser calls when the request changes state. When the server answers, the handler reads the response " +
+            "and updates the matching element of the page. Only the changed fragment travels over the network, so pages feel responsive.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.GUIDE,
+        section = "Frameworks and data",
+        title = "How a mapper turns classes into tables",
+        originalTitle = "Object-relational mapping with Hibernate",
+        author = "Gavin King and the Hibernate team",
+        year = 2001,
+        summary = "A mapping file says which class fields become which columns, and the framework writes the SQL for loads and saves.",
+        details = "Hibernate (2001) let Java programmers store objects without writing SQL by hand. A mapping file tied each class to a table and each field to a column. " +
+            "The framework built the SQL for saving, loading and updating objects, and it cached objects so that repeated reads did not reach the database.",
+        example = """
+            public class Cat {
+                private Long id;
+                private String name;
+                // getters and setters omitted
+            }
+
+            <!-- Cat.hbm.xml -->
+            <hibernate-mapping>
+              <class name="Cat" table="CATS">
+                <id name="id" column="CAT_ID"><generator class="native"/></id>
+                <property name="name" column="NAME"/>
+              </class>
+            </hibernate-mapping>
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db3Languages.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Programming languages of 2000 to 2010: the new managed platforms, the dynamic and functional newcomers, and some playful ones. */
+val db3Languages: List<RecordEntity> = listOf(
+
+    // ---------- Object-oriented and managed ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Object-oriented and managed",
+        title = "C# 1.0",
+        originalTitle = "C# (C-sharp)",
+        author = "Anders Hejlsberg and the Microsoft team",
+        year = 2002,
+        summary = "A C-family language for the .NET Framework, with garbage collection, properties and delegates built in.",
+        details = "Microsoft released C# 1.0 with the .NET Framework in 2002. Hejlsberg, who had designed Turbo Pascal and Delphi, led the design. " +
+            "The syntax looked familiar to Java and C++ programmers, but properties, events and delegates were part of the language itself. " +
+            "Visual Studio .NET gave the language a full IDE from the first day.",
+        example = """
+            using System;
+
+            class Hello {
+                static void Main() {
+                    Console.WriteLine("Hello, C#");
+                }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Object-oriented and managed",
+        title = "Visual Basic .NET",
+        originalTitle = "Visual Basic .NET 2002",
+        author = "Microsoft",
+        year = 2002,
+        summary = "Visual Basic on the .NET Framework: classes, inheritance and garbage collection for BASIC programmers.",
+        details = "Visual Basic .NET (2002) broke compatibility with VB6 on purpose. Programs became classes compiled for the Common Language Runtime, " +
+            "with inheritance and garbage collection. Many VB6 programmers found the move hard, and the community argued about it for years.",
+        example = """
+            Public Class Greeter
+                Public Function Greet(name As String) As String
+                    Return "Hello, " & name
+                End Function
+            End Class
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Object-oriented and managed",
+        title = "Java 5",
+        originalTitle = "J2SE 5.0 (Tiger)",
+        author = "Sun Microsystems (JSR 14 and JSR 175 expert groups)",
+        year = 2004,
+        summary = "Generics, annotations, varargs, autoboxing and the enhanced for loop, added to Java in one release.",
+        details = "Java 5.0 (2004) was code-named Tiger. Generics (JSR 14) let collections state the type of their elements, " +
+            "and annotations (JSR 175) gave tools a standard way to read metadata. Autoboxing, varargs and the enhanced for loop made everyday code shorter.",
+        instructions = """
+            1. Save the example as Java5Demo.java.
+            2. Compile it: javac Java5Demo.java
+            3. Run it: java Java5Demo
+        """,
+        example = """
+            import java.util.*;
+
+            public class Java5Demo {
+                static int sum(int... values) {          // varargs
+                    int total = 0;
+                    for (int v : values) total += v;     // enhanced for loop
+                    return total;
+                }
+
+                public static void main(String[] args) {
+                    List<String> names = new ArrayList<String>();   // generics
+                    names.add("Ann");
+                    names.add("Bob");
+                    for (String n : names) System.out.println(n);
+                    Integer boxed = 40;                             // autoboxing
+                    System.out.println(sum(1, 2, boxed));
+                }
+            }
+        """,
+        rare = false,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Object-oriented and managed",
+        title = "Scala",
+        originalTitle = "Scala 1.0",
+        author = "Martin Odersky and the EPFL team",
+        year = 2004,
+        summary = "A language for the JVM that mixes object-oriented and functional programming in one type system.",
+        details = "Design began in 2001 at EPFL in Lausanne, and the first public release came in January 2004. " +
+            "Scala compiles to Java bytecode and reuses the Java libraries. Its type system unites classes with functions used as values, " +
+            "so the same code can be written in either style.",
+        example = """
+            object Hello extends App {
+              val names = List("Ann", "Bob")
+              names.map(_.toUpperCase).foreach(println)
+            }
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Object-oriented and managed",
+        title = "Groovy",
+        originalTitle = "Groovy 1.0",
+        author = "James Strachan, Bob McWhirter and the Groovy community",
+        year = 2007,
+        summary = "A dynamic language for the JVM with Java-like syntax, closures and builders for markup.",
+        details = "Groovy was started by James Strachan and reached version 1.0 in January 2007 under JSR 241. " +
+            "It accepts almost any Java code and adds closures, optional typing and builders for XML and other markup. " +
+            "Groovy scripts that run from the command line made it popular for build and test tasks.",
+        example = """
+            def names = ['Ann', 'Bob']
+            names.each { println "Hello, <DOLLAR>{it}" }
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Object-oriented and managed",
+        title = "F#",
+        originalTitle = "F# 1.0",
+        author = "Don Syme and Microsoft Research",
+        year = 2005,
+        summary = "A functional language for .NET in the ML family, with type inference, pattern matching and immutable values.",
+        details = "Don Syme at Microsoft Research built F# on the ML tradition. The first version appeared in 2005 as a research release for Visual Studio, " +
+            "and the language shipped as a standard part of Visual Studio 2010.",
+        example = """
+            let rec fact n = if n = 0 then 1 else n * fact (n - 1)
+            printfn "%d" (fact 10)
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Object-oriented and managed",
+        title = "Objective-C 2.0",
+        originalTitle = "Objective-C 2.0",
+        author = "Apple Computer",
+        year = 2006,
+        summary = "Smalltalk-style messages on top of C, with properties, fast enumeration and garbage collection for Mac OS X.",
+        details = "Objective-C 2.0 (2006) added properties, fast enumeration and garbage collection for Mac OS X 10.5. " +
+            "Messages between objects were the heart of the language, inherited from Smalltalk and used throughout Cocoa.",
+        example = """
+            @interface Counter : NSObject
+            @property (nonatomic) int count;
+            - (void)increment;
+            @end
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Object-oriented and managed",
+        title = "Pharo",
+        originalTitle = "Pharo (a fork of Squeak)",
+        author = "Stephane Ducasse, Marcus Denker and the Pharo team",
+        year = 2008,
+        summary = "A Smalltalk fork that began as a cleaner base for research and business, with a live development environment.",
+        details = "A group of developers forked Squeak in March 2008 to clean up its code and make a stable base for research and commercial work. " +
+            "The first numbered release, Pharo 1.0, appeared in April 2010. The live image and the browser tools stayed at the heart of the system.",
+        example = """
+            Transcript show: 'Hello, Pharo'; cr.
+        """,
+        rare = true,
+    ),
+
+    // ---------- Web and scripting ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Web and scripting",
+        title = "Python 2.0",
+        originalTitle = "Python 2.0",
+        author = "Guido van Rossum and the Python community",
+        year = 2000,
+        summary = "List comprehensions, augmented assignment and a garbage collector for reference cycles, in a release many people kept for years.",
+        details = "Python 2.0 (October 2000) added list comprehensions, augmented assignment operators and a garbage collector that could reclaim reference cycles. " +
+            "Development moved to an open process with a public list of proposals (PEPs). Python 2 remained the everyday version until the 2010s.",
+        instructions = """
+            1. Save the example as squares.py.
+            2. Run it: python squares.py
+        """,
+        example = """
+            # Python 2.0 added list comprehensions and augmented assignment
+            squares = [n * n for n in range(10) if n % 2 == 0]
+            total = 0
+            for value in squares:
+                total += value
+            print(squares)
+            print(total)
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Web and scripting",
+        title = "PHP 5",
+        originalTitle = "PHP 5.0 (Zend Engine II)",
+        author = "Zend Technologies (Zeev Suraski and Andi Gutmans)",
+        year = 2004,
+        summary = "A rewritten object model with exceptions and visibility, which made PHP a serious choice for large sites.",
+        details = "PHP 5.0 (July 2004) ran on the Zend Engine II, which gave PHP a real object model with constructors, private members and exceptions. " +
+            "Sites that had outgrown PHP 4 moved to the new version, and frameworks built on it became common in the second half of the decade.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Web and scripting",
+        title = "ActionScript 3.0",
+        originalTitle = "ActionScript 3.0",
+        author = "Adobe (formerly Macromedia)",
+        year = 2006,
+        summary = "A class-based language for Flash 9 and the Flex framework, run by a much faster virtual machine.",
+        details = "ActionScript 3.0 arrived with Flash 9 in 2006. It was based on the ECMAScript standard, with classes, typed variables " +
+            "and the AVM2 virtual machine, which was much faster than the older one. Flex used it to build rich web applications.",
+        example = """
+            package {
+              import flash.display.Sprite;
+
+              public class Hello extends Sprite {
+                public function Hello() {
+                  trace("Hello, ActionScript 3");
+                }
+              }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Web and scripting",
+        title = "Perl 6 (announced)",
+        originalTitle = "Perl 6, later Raku",
+        author = "Larry Wall and the Perl community",
+        year = 2000,
+        summary = "The rewrite of Perl announced in 2000 that took fifteen years to arrive; it was renamed Raku in 2019.",
+        details = "Larry Wall announced Perl 6 in July 2000 as a clean redesign of Perl 5. The work took years, and the first production release came in 2015. " +
+            "In 2019 the language was renamed Raku, to separate it from Perl 5.",
+        example = """
+            say "Hello from Perl 6";
+            my @squares = (1..5).map({ <DOLLAR>_ * <DOLLAR>_ });
+            say @squares;
+        """,
+        rare = true,
+    ),
+
+    // ---------- Functional and concurrent ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Functional and concurrent",
+        title = "Clojure",
+        originalTitle = "Clojure 1.0",
+        author = "Rich Hickey",
+        year = 2007,
+        summary = "A Lisp on the Java Virtual Machine with immutable data structures and easy access to Java libraries.",
+        details = "Hickey released Clojure publicly in October 2007 after about two years of work. It runs on the JVM and reuses Java libraries. " +
+            "Its persistent data structures are immutable, and its concurrency model is built on software transactional memory. Version 1.0 followed in 2009.",
+        example = """
+            (defn greet [name]
+              (str "Hello, " name))
+
+            (println (map greet ["Ann" "Bob"]))
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Functional and concurrent",
+        title = "Go",
+        originalTitle = "Go (Golang)",
+        author = "Robert Griesemer, Rob Pike and Ken Thompson at Google",
+        year = 2009,
+        summary = "A compiled language with garbage collection, goroutines and channels, designed for servers with many cores.",
+        details = "Google announced Go in November 2009. The design came from Griesemer, Pike and Thompson, who wanted fast builds and simple concurrency. " +
+            "Goroutines are cheap threads, and channels pass values between them. The language reached version 1.0 in 2012.",
+        instructions = """
+            1. Save the example as hello.go.
+            2. Run it: go run hello.go
+        """,
+        example = """
+            package main
+
+            import "fmt"
+
+            func main() {
+                done := make(chan string)
+                go func() { done <- "hello from a goroutine" }()
+                fmt.Println(<-done)
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Functional and concurrent",
+        title = "Haskell 2010",
+        originalTitle = "The Haskell 2010 Report",
+        author = "Simon Marlow (editor) and the Haskell community",
+        year = 2010,
+        summary = "The revised standard of the lazy functional language, built on the Haskell 98 base with a few additions.",
+        details = "The Haskell 2010 Report fixed the standard after the Haskell 98 base had grown. Compilers such as GHC implemented it, " +
+            "and the report became the reference for teaching and for libraries. Lazy evaluation stayed at the heart of the language.",
+        example = """
+            import Data.List (sort)
+
+            main :: IO ()
+            main = print (sort [3, 1, 2 :: Int])
+        """,
+        rare = true,
+    ),
+
+    // ---------- Creative coding ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Creative coding",
+        title = "Processing",
+        originalTitle = "Processing",
+        author = "Casey Reas and Ben Fry at the MIT Media Lab",
+        year = 2001,
+        summary = "A language and editor for artists and designers, built on Java, that draws a picture in a few lines.",
+        details = "Reas and Fry began Processing in 2001 at the MIT Media Lab as a sketchbook for visual programming. " +
+            "The language compiles to Java, and its editor runs a sketch with a single button. " +
+            "Many interactive artworks and data visualizations started as Processing sketches.",
+        example = """
+            void setup() {
+              size(200, 200);
+            }
+
+            void draw() {
+              background(255);
+              ellipse(mouseX, mouseY, 40, 40);
+            }
+        """,
+    ),
+
+    // ---------- Esoteric and playful ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Esoteric and playful",
+        title = "Whitespace",
+        originalTitle = "Whitespace",
+        author = "Edwin Brady and Chris Morris",
+        year = 2003,
+        summary = "An esoteric language whose programs consist only of spaces, tabs and line feeds; everything else is ignored.",
+        details = "Brady and Morris published Whitespace in 2003 as a joke that is also a real language. " +
+            "Instructions are made of spaces, tabs and line feeds, so a program looks blank to a reader who cannot see the characters. " +
+            "An interpreter reads those three symbols as commands for a stack machine.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Esoteric and playful",
+        title = "Shakespeare Programming Language",
+        originalTitle = "SPL",
+        author = "Karl Hasselbring",
+        year = 2001,
+        summary = "An esoteric language whose programs are plays: variables are characters and numbers come from the nouns they speak.",
+        details = "Hasselbring released the Shakespeare Programming Language in 2001 as a parody of programming. " +
+            "Each variable is a character in a play, and values come from the nouns in their lines. " +
+            "A program is a sequence of lines spoken by the cast, and it ends when the play ends.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Esoteric and playful",
+        title = "LOLCODE",
+        originalTitle = "LOLCODE",
+        author = "Adam Lindsay",
+        year = 2007,
+        summary = "An esoteric language with cat-speak keywords: HAI starts a program and KTHXBYE ends it.",
+        details = "Adam Lindsay created LOLCODE in 2007 as a playful language for internet memes. " +
+            "Programs start with HAI and end with KTHXBYE, and the other keywords are written in the style of lolcat captions. " +
+            "Interpreters run on ordinary machines, so the jokes are real programs.",
+        example = """
+            HAI
+              VISIBLE "HAI WORLD!"
+            KTHXBYE
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.LANGUAGE,
+        section = "Esoteric and playful",
+        title = "Piet",
+        originalTitle = "Piet",
+        author = "David Morgan-Mar",
+        year = 2001,
+        summary = "An esoteric language whose programs are images: each coloured block is an instruction, and the picture is the code.",
+        details = "Morgan-Mar designed Piet in 2001 and named it after the Dutch painter Piet Mondrian. A program is a picture of coloured blocks, " +
+            "and the interpreter moves a pointer through the picture, executing an instruction at every change of colour. " +
+            "Hello World programs are painted as small abstract pictures.",
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db3Practices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Methods, design practices, standards, security and community of 2000 to 2010. */
+val db3Practices: List<RecordEntity> = listOf(
+
+    // ---------- Process and agility ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Process and agility",
+        title = "Agile Manifesto",
+        originalTitle = "Manifesto for Agile Software Development",
+        author = "Seventeen developers who met at Snowbird, Utah",
+        year = 2001,
+        summary = "Four values and twelve principles for lighter, customer-focused development, written at a ski resort in 2001.",
+        details = "Seventeen developers met at Snowbird, Utah, in February 2001 and wrote four values and twelve principles for lighter, customer-focused development. " +
+            "The manifesto gave teams a shared vocabulary and became the reference point for later methods.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Process and agility",
+        title = "Test-driven development",
+        originalTitle = "Test-Driven Development: By Example",
+        author = "Kent Beck",
+        year = 2002,
+        summary = "Write a failing test first, make it pass with the simplest code, then clean up the design.",
+        details = "Kent Beck described the practice in his 2002 book Test-Driven Development: By Example. " +
+            "The cycle of red, green and refactor kept the code covered by tests as it grew, and many teams adopted it as a daily habit.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Process and agility",
+        title = "Continuous integration",
+        originalTitle = "Continuous Integration",
+        author = "Martin Fowler and Matthew Foemmel",
+        year = 2006,
+        summary = "Merge and build the whole project several times a day, with an automated test run after each build.",
+        details = "Fowler and Foemmel described continuous integration in a 2006 article. Changes were merged into the mainline often, " +
+            "and each merge triggered a build and a test run, so breakage was found within minutes.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Process and agility",
+        title = "Lean software development",
+        originalTitle = "Lean Software Development: An Agile Toolkit",
+        author = "Mary and Tom Poppendieck",
+        year = 2003,
+        summary = "Lean ideas from manufacturing applied to software: remove waste, amplify learning, decide late and deliver fast.",
+        details = "The Poppendiecks' book Lean Software Development (2003) adapted the ideas of lean manufacturing to software. " +
+            "Its seven principles included eliminating waste, building quality in and optimising the whole.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Process and agility",
+        title = "Kanban for software",
+        originalTitle = "Kanban",
+        author = "David Anderson",
+        year = 2010,
+        summary = "A method for software teams that limits work in progress and makes the flow of tasks visible on a board.",
+        details = "Anderson's 2010 book brought the Kanban method, borrowed from lean production, into software. " +
+            "Teams drew their workflow on a board, set limits on work in progress and measured how long each task took to flow through.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Process and agility",
+        title = "Behaviour-driven development",
+        originalTitle = "Behaviour-Driven Development",
+        author = "Dan North",
+        year = 2006,
+        summary = "Tests written as examples of behaviour, in a language the business can read.",
+        details = "North presented behaviour-driven development in a 2006 article. Its tests were phrased as scenarios with a given, a when and a then, " +
+            "so that business people could read them and agree on what the software should do.",
+        rare = true,
+    ),
+
+    // ---------- Design and architecture ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Design and architecture",
+        title = "Domain-driven design",
+        originalTitle = "Domain-Driven Design: Tackling Complexity in the Heart of Software",
+        author = "Eric Evans",
+        year = 2003,
+        summary = "Put the business model at the centre of the software, with one shared language for developers and domain experts.",
+        details = "Evans's book Domain-Driven Design (2003) argued that software should follow the model of the business. " +
+            "Its ubiquitous language, bounded contexts and aggregates gave teams a vocabulary for complex domains.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Design and architecture",
+        title = "Aspect-oriented programming",
+        originalTitle = "AspectJ",
+        author = "Gregor Kiczales and the PARC team",
+        year = 2001,
+        summary = "Concerns such as logging and security are written in separate modules and woven into the code.",
+        details = "The AspectJ project, released in 2001, let programmers keep crosscutting concerns such as logging, transactions and security in aspects. " +
+            "A weaver inserted them into the compiled code at the places where they were declared.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Design and architecture",
+        title = "Model-driven architecture",
+        originalTitle = "Model Driven Architecture (MDA)",
+        author = "Object Management Group",
+        year = 2001,
+        summary = "Build software from platform-independent models, with tools that transform the models into code for a chosen platform.",
+        details = "The OMG's Model Driven Architecture (2001) separated the business model from the platform. " +
+            "Models written in UML were transformed by tools into code, so the same model could target different technologies.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Design and architecture",
+        title = "MapReduce",
+        originalTitle = "MapReduce",
+        author = "Jeffrey Dean and Sanjay Ghemawat at Google",
+        year = 2004,
+        summary = "A programming model for large data sets: map emits key-value pairs, and reduce combines the values for each key.",
+        details = "Dean and Ghemawat described MapReduce in a 2004 paper. Users wrote two functions, and the runtime handled distribution, " +
+            "failures and the shuffle between machines. Open-source systems such as Hadoop reproduced the model.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Design and architecture",
+        title = "Web 2.0",
+        originalTitle = "Web 2.0",
+        author = "Tim O'Reilly and MediaLive International",
+        year = 2004,
+        summary = "A style built on user contributions, open interfaces and rich pages, named at a conference in 2004.",
+        details = "The first Web 2.0 conference, held in October 2004, gave the name to a style of sites built on user contributions, " +
+            "open data and rich interfaces. The term was debated for years, but it described a real shift in how websites were built.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Design and architecture",
+        title = "Ajax",
+        originalTitle = "Ajax (asynchronous JavaScript and XML)",
+        author = "Jesse James Garrett",
+        year = 2005,
+        summary = "The technique of asynchronous requests with XMLHttpRequest, which update parts of a page without a reload.",
+        details = "Garrett's 2005 essay gave the name Ajax to a technique that browsers had supported for years. " +
+            "Scripts sent requests in the background and changed parts of the page, which made web applications feel like desktop programs.",
+    ),
+
+    // ---------- Standards and governance ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Standards and governance",
+        title = "CMMI",
+        originalTitle = "Capability Maturity Model Integration, version 1.1",
+        author = "Software Engineering Institute",
+        year = 2002,
+        summary = "The Capability Maturity Model Integration, version 1.1 (2002), merged several SEI models into one framework.",
+        details = "CMMI version 1.1 (2002) merged the separate SEI models for software, systems and development into one framework. " +
+            "It offered staged and continuous representations, and organisations were appraised against its process areas.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Standards and governance",
+        title = "ITIL version 2",
+        originalTitle = "IT Infrastructure Library",
+        author = "Office of Government Commerce (UK)",
+        year = 2001,
+        summary = "The IT Infrastructure Library: processes for service support and service delivery, for managing IT as a service.",
+        details = "The second version of the core ITIL books appeared between 2000 and 2001. It described processes for incidents, changes and service levels, " +
+            "and it became the standard vocabulary for managing IT operations.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Standards and governance",
+        title = "SWEBOK",
+        originalTitle = "Guide to the Software Engineering Body of Knowledge",
+        author = "IEEE Computer Society and ACM",
+        year = 2004,
+        summary = "The Guide to the Software Engineering Body of Knowledge, which listed ten knowledge areas for the profession.",
+        details = "The 2004 edition of SWEBOK, published by the IEEE Computer Society and the ACM, described ten knowledge areas, from requirements to professional practice. " +
+            "It gave courses and certifications a common reference.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Standards and governance",
+        title = "GNU General Public License version 3",
+        originalTitle = "GNU GPL version 3",
+        author = "Free Software Foundation (Richard Stallman and Eben Moglen)",
+        year = 2007,
+        summary = "A licence revision that added patent terms and rules against installation locks, drafted in public.",
+        details = "GPLv3 was published in June 2007 after a long public drafting process. It added patent terms, " +
+            "rules against installation locks that block modified software, and compatibility with other licences.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Standards and governance",
+        title = "Creative Commons licences",
+        originalTitle = "Creative Commons",
+        author = "Lawrence Lessig and the Creative Commons team",
+        year = 2002,
+        summary = "A set of licences that let authors share work with clear permissions, first published in December 2002.",
+        details = "Creative Commons launched its licences in December 2002. Authors chose from a few combinations of attribution, sharing and commercial rights, " +
+            "and the marks let readers see the terms at a glance.",
+    ),
+
+    // ---------- Security and quality ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Security and quality",
+        title = "OWASP Top 10",
+        originalTitle = "OWASP Top Ten",
+        author = "The Open Web Application Security Project",
+        year = 2003,
+        summary = "A list of the most critical web application risks, first published in 2003 with injection and cross-site scripting high on it.",
+        details = "OWASP published its first top-ten list in 2003. It named injection, broken authentication and cross-site scripting as the risks to fix first, " +
+            "and it became the common reference for web security reviews.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Security and quality",
+        title = "Microsoft Security Development Lifecycle",
+        originalTitle = "The Security Development Lifecycle",
+        author = "Michael Howard and Steve Lipner",
+        year = 2006,
+        summary = "Security practices built into each stage of development at Microsoft, from requirements to release.",
+        details = "Howard and Lipner's book The Security Development Lifecycle (2006) described how Microsoft built security into requirements, design, testing and release. " +
+            "Its practices, such as threat modelling and fuzz testing, spread to many other companies.",
+        rare = true,
+    ),
+
+    // ---------- Web and community ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PRACTICE,
+        section = "Web and community",
+        title = "Stack Overflow",
+        originalTitle = "Stack Overflow",
+        author = "Jeff Atwood and Joel Spolsky",
+        year = 2008,
+        summary = "Questions and answers for programmers, with voting that moved the best answers to the top.",
+        details = "Stack Overflow launched in beta in September 2008. Its voting and reputation system pushed the best answers to the top, " +
+            "and it became the main place where programmers searched for help.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db3Projects.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Built products of 2000 to 2010: finished programs with an explanation of how they work and instructions for running them. */
+val db3Projects: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PROJECT,
+        section = "Audio and feeds",
+        title = "Podcast feed reader in Python",
+        originalTitle = "Episode lister for RSS enclosures",
+        author = "Written in the style of the 2005 podcast clients",
+        year = 2005,
+        summary = "A small tool that reads a podcast feed and prints each episode with the address of its audio file.",
+        details = "Podcasts became popular in 2004 and 2005. Each episode was an RSS item with an enclosure element that pointed to an audio file. " +
+            "The tool parses the feed, skips items without an enclosure, and prints the title and the audio address. A download script could use the same addresses.",
+        instructions = """
+            1. Save the code as podcasts.py.
+            2. Save a feed as feed.xml, with one item that has an enclosure element.
+            3. Run it: python3 podcasts.py feed.xml
+        """,
+        example = """
+            #!/usr/bin/env python3
+            # Lists the episodes of a podcast feed (RSS 2.0 with enclosures) and their audio addresses.
+            import sys
+            import xml.etree.ElementTree as ET
+
+            root = ET.parse(sys.argv[1]).getroot()
+            for item in root.findall("./channel/item"):
+                enclosure = item.find("enclosure")
+                if enclosure is not None:
+                    sys.stdout.write("%s: %s\n" % (item.findtext("title"), enclosure.get("url")))
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PROJECT,
+        section = "Writing tools",
+        title = "A personal wiki with CamelCase links",
+        originalTitle = "Personal WikiWords renderer",
+        author = "Written in the style of the 2002 personal wikis",
+        year = 2002,
+        summary = "A one-file renderer that turns CamelCase words in a text page into links to other pages.",
+        details = "Wiki software of the early 2000s let anyone link pages by writing CamelCase words. " +
+            "This renderer finds every WikiWord with a regular expression and turns it into a link to a page of the same name. " +
+            "Paragraphs are separated by blank lines, and the output is plain HTML that any browser shows.",
+        instructions = """
+            1. Save the code as wiki.py.
+            2. Write a page in HomePage.txt, with some WikiWords in it.
+            3. Run it: python3 wiki.py HomePage.txt > HomePage.html, then open HomePage.html in a browser.
+        """,
+        example = """
+            #!/usr/bin/env python3
+            # A personal wiki in one file: CamelCase words become links to other pages.
+            import re
+            import sys
+
+            LINK = re.compile(r"\b([A-Z][a-z]+(?:[A-Z][a-z]+)+)\b")
+
+            def render(text):
+                html = LINK.sub(r'<a href="\1.html">\1</a>', text)
+                paragraphs = html.split("\n\n")
+                return "\n".join("<p>%s</p>" % p.strip() for p in paragraphs if p.strip())
+
+            if __name__ == "__main__":
+                print(render(open(sys.argv[1]).read()))
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PROJECT,
+        section = "Web services",
+        title = "Google Maps mash-up in JavaScript",
+        originalTitle = "Map mash-up (2005)",
+        author = "Written in the style of the 2005 mash-up craze",
+        year = 2005,
+        summary = "A web page that places markers on a Google map from a list of places, the classic mash-up of the decade.",
+        details = "The Google Maps API (2005) let any web page embed a map and draw on it with a few script calls. " +
+            "A mash-up combined a public data source with a map. This page shows the pattern: a map, a centre point and one marker for each place.",
+        instructions = """
+            1. Get an API key for the map service.
+            2. Put the script in an HTML page that loads the map script.
+            3. Open the page in a browser that is allowed to load the map.
+        """,
+        example = """
+            var map = new GMap2(document.getElementById("map"));
+            map.setCenter(new GLatLng(51.5, -0.12), 12);
+
+            var places = [
+              { name: "Museum", lat: 51.5194, lng: -0.1270 },
+              { name: "Park", lat: 51.5025, lng: -0.1419 }
+            ];
+            for (var i = 0; i < places.length; i++) {
+              var marker = new GMarker(new GLatLng(places[i].lat, places[i].lng));
+              map.addOverlay(marker);
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.PROJECT,
+        section = "Browsers",
+        title = "A Firefox extension in XUL",
+        originalTitle = "Firefox overlay extension",
+        author = "Written in the style of the first Firefox extensions",
+        year = 2004,
+        summary = "A small browser extension that adds a menu item through a XUL overlay and a script file.",
+        details = "Firefox 1.0 (2004) let developers add features with extensions. An extension defined XUL overlays that merged new elements " +
+            "into the browser window, and a script file that ran the feature. The package was installed from a file with an install manifest.",
+        instructions = """
+            1. Put the overlay and the script in one folder, with an install.rdf manifest.
+            2. Pack the folder into an .xpi file.
+            3. Open the file in Firefox to install the extension.
+        """,
+        example = """
+            <?xml version="1.0"?>
+            <overlay id="clock-overlay"
+                     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+              <script src="clock.js"/>
+              <menupopup id="viewMenuPopup">
+                <menuitem label="Show the clock" oncommand="showClock();"/>
+              </menupopup>
+            </overlay>
+        """,
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db3Systems.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Systems of 2000 to 2010: Windows, Mac OS X, phone systems, Linux and open systems, databases and storage, virtualization. */
+val db3Systems: List<RecordEntity> = listOf(
+
+    // ---------- Desktop and consumer ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Desktop and consumer",
+        title = "Windows 2000",
+        originalTitle = "Windows 2000 (NT 5.0)",
+        author = "Microsoft",
+        year = 2000,
+        summary = "Windows built on the NT kernel, with Active Directory and Plug and Play for business desktops and servers.",
+        details = "Windows 2000 shipped in February 2000 on the NT kernel. It was the first Windows with Active Directory, a directory service for users and computers, " +
+            "and it brought Plug and Play to business machines. Companies that had waited for stability moved their desktops to it.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Desktop and consumer",
+        title = "Windows XP",
+        originalTitle = "Windows XP (NT 5.1)",
+        author = "Microsoft",
+        year = 2001,
+        summary = "The NT-based Windows that joined the consumer and business lines, with a new Start menu and a built-in firewall after SP2.",
+        details = "Windows XP (October 2001) united the consumer Windows 9x line with the NT kernel. Its new Start menu and default visual style defined " +
+            "a generation of desktops. The built-in firewall arrived with Service Pack 2 in 2004, and it changed how home users thought about security.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Desktop and consumer",
+        title = "Windows Vista",
+        originalTitle = "Windows Vista (NT 6.0)",
+        author = "Microsoft",
+        year = 2007,
+        summary = "A redesigned Windows with the Aero interface, User Account Control and a new driver model.",
+        details = "Windows Vista (January 2007) introduced the Aero interface, User Account Control and a new driver model. " +
+            "Its hardware demands and the frequent UAC prompts were hard to live with, and many users kept Windows XP for years.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Desktop and consumer",
+        title = "Mac OS X 10.0 Cheetah",
+        originalTitle = "Mac OS X 10.0",
+        author = "Apple Computer",
+        year = 2001,
+        summary = "Apple's Unix-based system with the Aqua interface, built on the Mach kernel and BSD tools.",
+        details = "Mac OS X 10.0 (March 2001) replaced the classic Mac OS with a system built on the Mach kernel and BSD tools, " +
+            "with the Aqua interface on top. The first release was slow, but its Unix terminal and developer tools won over programmers.",
+    ),
+
+    // ---------- Phones and handhelds ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Phones and handhelds",
+        title = "iPhone OS 1.0",
+        originalTitle = "iPhone OS 1.0",
+        author = "Apple Inc.",
+        year = 2007,
+        summary = "The first system of the iPhone, with multi-touch and a full Safari browser, and no third-party apps until 2008.",
+        details = "The iPhone launched in June 2007 with a multi-touch screen and a complete Safari browser. Third-party applications were not allowed " +
+            "until the App Store opened in 2008, so web pages were the only programs most owners ran.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Phones and handhelds",
+        title = "Android 1.0",
+        originalTitle = "Android 1.0",
+        author = "Google and the Open Handset Alliance",
+        year = 2008,
+        summary = "Google's Linux-based system for phones, first shipped on the T-Mobile G1 with the Dalvik virtual machine.",
+        details = "Android 1.0 came out in 2008 on the T-Mobile G1, the first phone to run it. Applications ran on the Dalvik virtual machine, " +
+            "and the Open Handset Alliance of manufacturers and operators backed the platform.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Phones and handhelds",
+        title = "Windows Mobile 5.0",
+        originalTitle = "Windows Mobile 5.0 (Pocket PC)",
+        author = "Microsoft",
+        year = 2005,
+        summary = "Microsoft's pocket Windows for smartphones and PDAs, with the .NET Compact Framework and a new shell.",
+        details = "Windows Mobile 5.0 (2005) gave pocket and smartphone devices the .NET Compact Framework, which let managed programs run on handhelds. " +
+            "Its shell and mail program were rebuilt, and the platform stayed the business choice for handhelds until the iPhone.",
+        rare = true,
+    ),
+
+    // ---------- Linux and BSD ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Linux and BSD",
+        title = "Linux 2.6",
+        originalTitle = "Linux kernel 2.6.0",
+        author = "Linus Torvalds and the kernel developers",
+        year = 2003,
+        summary = "The 2.6 kernel, released in December 2003, with the O(1) scheduler and a preemptible kernel for desktops.",
+        details = "Linux 2.6.0 (December 2003) brought the O(1) scheduler, a new block layer and preemption that made desktops responsive. " +
+            "Its short development cycles and many maintainers became the pattern for the rest of the decade.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Linux and BSD",
+        title = "Ubuntu 4.10",
+        originalTitle = "Ubuntu 4.10 (Warty Warthog)",
+        author = "Canonical and the Ubuntu community",
+        year = 2004,
+        summary = "Canonical's first Ubuntu release, with GNOME, a simple installer and a new release every six months.",
+        details = "Canonical, founded by Mark Shuttleworth, released Ubuntu 4.10 in October 2004 on a Debian base. " +
+            "It shipped GNOME and a simple installer, and it set the pattern of a predictable release every six months.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Linux and BSD",
+        title = "Gentoo Linux",
+        originalTitle = "Gentoo Linux 1.0",
+        author = "Daniel Robbins and the Gentoo community",
+        year = 2002,
+        summary = "A source-based distribution with Portage, where each package is compiled for the machine it runs on.",
+        details = "Version 1.0 of Gentoo Linux came out on 31 March 2002. Its package manager, Portage, built every program from source " +
+            "with the options chosen by the user. People who wanted fine control over their systems liked it, and it grew a large community of documentation writers.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Linux and BSD",
+        title = "Knoppix",
+        originalTitle = "KNOPPIX",
+        author = "Klaus Knopper",
+        year = 2000,
+        summary = "A Debian-based Linux that boots from a CD and runs without installing anything on the disk.",
+        details = "Knoppix debuted in September 2000. It booted from a CD, detected the hardware and ran a full desktop from the disc, " +
+            "which made it useful for demonstrations, rescue work and classrooms. Its automatic hardware detection set a standard for later live systems.",
+        rare = true,
+    ),
+
+    // ---------- Open systems and research ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Open systems and research",
+        title = "Solaris 10",
+        originalTitle = "Solaris 10 (SunOS 5.10)",
+        author = "Sun Microsystems",
+        year = 2005,
+        summary = "Sun's Unix with DTrace for live tracing and Solaris Containers for isolating applications on one machine.",
+        details = "Solaris 10 (January 2005) introduced DTrace, a tool for tracing a running system without restarting it, " +
+            "and Solaris Containers, which isolate applications on one machine. It was a strong commercial Unix of its time.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Open systems and research",
+        title = "OpenSolaris",
+        originalTitle = "OpenSolaris",
+        author = "Sun Microsystems and the OpenSolaris community",
+        year = 2005,
+        summary = "Sun's open-source release of the Solaris code, which brought DTrace and ZFS to a community project.",
+        details = "Sun launched OpenSolaris in June 2005 as an open-source project built from the Solaris code. " +
+            "Its community brought DTrace and the ZFS file system to developers outside the company, and it tested features that later reached commercial releases.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Open systems and research",
+        title = "Haiku",
+        originalTitle = "OpenBeOS, later Haiku",
+        author = "The Haiku project",
+        year = 2001,
+        summary = "An open-source system that began in 2001 as OpenBeOS to recreate BeOS, and was renamed Haiku in 2004.",
+        details = "The effort began in August 2001 as OpenBeOS, to recreate the BeOS desktop as open-source software. " +
+            "Palm's ownership of the BeOS name brought a trademark warning, and the project was renamed Haiku in 2004. Its first alpha release came in 2009.",
+        rare = true,
+    ),
+
+    // ---------- Databases and storage ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Databases and storage",
+        title = "PostgreSQL 8.0",
+        originalTitle = "PostgreSQL 8.0",
+        author = "The PostgreSQL Global Development Group",
+        year = 2005,
+        summary = "The first PostgreSQL release with a native Windows port, tablespaces and savepoints.",
+        details = "PostgreSQL 8.0 (January 2005) ran natively on Windows instead of through a Unix layer. " +
+            "It added tablespaces, which put tables on chosen disks, and savepoints, which allow partial rollbacks inside a transaction.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Databases and storage",
+        title = "SQLite 3.0",
+        originalTitle = "SQLite 3",
+        author = "D. Richard Hipp",
+        year = 2004,
+        summary = "A file format change in version 3 made SQLite a stable embedded database for phones, browsers and applications.",
+        details = "SQLite 3.0 (2004) gave the database a stable file format that later versions would keep reading, which made it safe to ship inside applications. " +
+            "Browsers, phones and desktop programs embedded it for local storage, and it became one of the most widely deployed database engines.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Databases and storage",
+        title = "Google File System",
+        originalTitle = "GFS (Google File System)",
+        author = "Sanjay Ghemawat, Howard Gobioff and Shun-Tak Leung at Google",
+        year = 2003,
+        summary = "A distributed file system for large files on ordinary machines: 64 MB chunks, three replicas and one master for metadata.",
+        details = "The Google File System was described at SOSP in 2003. Files were split into 64 MB chunks, each kept on three machines, " +
+            "and a single master held the metadata. The design accepted that machines fail often, and it relied on replication to keep data safe.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Databases and storage",
+        title = "Cassandra",
+        originalTitle = "Apache Cassandra",
+        author = "Avinash Lakshman and Prashant Malik at Facebook",
+        year = 2008,
+        summary = "A distributed database created at Facebook for inbox search and released as open source in 2008, with no single master.",
+        details = "Facebook built Cassandra for its inbox search and released it as open source in 2008. Data is spread around a ring of nodes, " +
+            "and each node can answer a request, so no single master can fail. Its tunable consistency let applications choose how strict each read should be.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Databases and storage",
+        title = "MongoDB 1.0",
+        originalTitle = "MongoDB",
+        author = "10gen",
+        year = 2009,
+        summary = "A document database that stores JSON-like records and queries them without a fixed schema, first released in February 2009.",
+        details = "10gen released MongoDB in February 2009. Documents are stored as binary JSON, so records in one collection can differ in shape. " +
+            "Developers liked it for fast prototypes, and it became one of the best-known NoSQL databases.",
+    ),
+
+    // ---------- Virtualization ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.SYSTEM,
+        section = "Virtualization",
+        title = "Xen 1.0",
+        originalTitle = "Xen hypervisor",
+        author = "Ian Pratt, Keir Fraser and the Cambridge team",
+        year = 2003,
+        summary = "A hypervisor that runs several operating systems on one machine through paravirtualization, first released in October 2003.",
+        details = "Xen grew out of research at Cambridge's Computer Laboratory, led by Ian Pratt with his PhD student Keir Fraser. " +
+            "The first public release came in October 2003. Guest systems were modified to call the hypervisor directly, which made virtualization fast on ordinary x86 hardware.",
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db3Tools.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Tools of 2000 to 2010: version control, build and continuous integration, analysis, IDEs and editors, frameworks, creative software, computing platforms. */
+val db3Tools: List<RecordEntity> = listOf(
+
+    // ---------- Version control ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Version control",
+        title = "Subversion",
+        originalTitle = "Apache Subversion 1.0",
+        author = "CollabNet (Karl Fogel, Ben Collins-Sussman, Brian Fitzpatrick)",
+        year = 2004,
+        summary = "A centralized version control system designed as a better CVS: atomic commits, renames and versioned directories.",
+        details = "The project began in 2000 to replace CVS. Subversion 1.0 came out in February 2004. " +
+            "Commits were atomic, renames kept each file's history, and directories were versioned too.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Version control",
+        title = "Git",
+        originalTitle = "Git",
+        author = "Linus Torvalds",
+        year = 2005,
+        summary = "A distributed version control system with content-addressed objects, cheap branches and fast local history.",
+        details = "Torvalds wrote Git in April 2005, after the Linux kernel community lost free access to BitKeeper. " +
+            "Every clone holds the full history, objects are named by the hash of their content, and branches are only pointers.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Version control",
+        title = "Mercurial",
+        originalTitle = "Mercurial (hg)",
+        author = "Matt Mackall",
+        year = 2005,
+        summary = "A distributed version control system written mostly in Python, with a small and regular command set.",
+        details = "Mackall started Mercurial in April 2005, the same month as Git, after the Linux kernel community's BitKeeper dispute. " +
+            "Most of it was written in Python with a small core in C, and its commands were designed to be easy to learn.",
+        rare = true,
+    ),
+
+    // ---------- Build and continuous integration ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Build and continuous integration",
+        title = "Apache Ant",
+        originalTitle = "Ant 1.0",
+        author = "James Duncan Davidson and the Apache Ant team",
+        year = 2000,
+        summary = "A build tool with XML files, written in Java, that replaced make for Java projects.",
+        details = "Ant grew out of the build of the Tomcat server in 1998 and became an Apache project. " +
+            "Its build.xml files described targets and dependencies, and its built-in tasks made Java builds portable across platforms.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Build and continuous integration",
+        title = "Maven",
+        originalTitle = "Apache Maven 1.0",
+        author = "Jason van Zyl and the Apache Maven team",
+        year = 2004,
+        summary = "A build and dependency tool that downloads libraries from shared repositories and expects a standard project layout.",
+        details = "Maven 1.0 appeared in 2004. Its project object model in pom.xml described the dependencies, plugins and the standard directory layout, " +
+            "so projects were built the same way. Central repositories made libraries available with one line of configuration.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Build and continuous integration",
+        title = "CruiseControl",
+        originalTitle = "CruiseControl",
+        author = "ThoughtWorks developers",
+        year = 2001,
+        summary = "A continuous build server that rebuilds and tests the project after every commit and publishes the result.",
+        details = "ThoughtWorks released CruiseControl in 2001 as one of the first open-source continuous integration servers. " +
+            "It watched the version control system, ran the build on each change, and published the results on a web page.",
+        rare = true,
+    ),
+
+    // ---------- Testing and analysis ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Testing and analysis",
+        title = "TestNG",
+        originalTitle = "TestNG",
+        author = "Cédric Beust",
+        year = 2004,
+        summary = "A Java testing framework with annotations, test groups and dependencies between tests.",
+        details = "Beust released TestNG in 2004. Its annotations, parallel execution and test groups went beyond what JUnit 3 offered, " +
+            "and many teams used it alongside JUnit.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Testing and analysis",
+        title = "Selenium",
+        originalTitle = "Selenium",
+        author = "Jason Huggins and the ThoughtWorks team",
+        year = 2004,
+        summary = "A tool that drives a web browser from test code, so web applications can be tested the way users see them.",
+        details = "Huggins began Selenium in 2004 at ThoughtWorks to test internal web applications. Its first version ran JavaScript inside the browser, " +
+            "and later the WebDriver interface gave tests direct control of the browser.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Testing and analysis",
+        title = "Checkstyle",
+        originalTitle = "Checkstyle",
+        author = "Oliver Burn",
+        year = 2001,
+        summary = "A Java tool that checks source code against a coding standard and reports the violations.",
+        details = "Burn released Checkstyle in 2001 to enforce one coding standard across a team. Its rules were configured in XML, " +
+            "and its reports could run as part of the build.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Testing and analysis",
+        title = "FindBugs",
+        originalTitle = "FindBugs",
+        author = "William Pugh and David Hovemeyer",
+        year = 2004,
+        summary = "A static analyzer that looks for bug patterns in compiled Java classes, such as null pointer dereferences.",
+        details = "Pugh and Hovemeyer started FindBugs at the University of Maryland in 2004. It analyzed compiled classes rather than source, " +
+            "and it reported patterns that code reviews often missed.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Testing and analysis",
+        title = "PMD",
+        originalTitle = "PMD",
+        author = "Tom Copeland and the PMD team",
+        year = 2002,
+        summary = "A source code analyzer with rules for unused variables, empty blocks and duplicated code.",
+        details = "PMD began in 2002 as an open-source checker for Java sources. Its rule sets for common mistakes and its copy-paste detector " +
+            "were widely adopted by teams that wanted cheap static analysis.",
+        rare = true,
+    ),
+
+    // ---------- IDEs and editors ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "IDEs and editors",
+        title = "Eclipse 3.0",
+        originalTitle = "Eclipse 3.0 (Rich Client Platform)",
+        author = "IBM and the Eclipse Foundation",
+        year = 2004,
+        summary = "A Java IDE built on a plug-in platform that IBM gave to the community, with the Rich Client Platform.",
+        details = "IBM donated the Eclipse platform in 2001, and version 3.0 (2004) introduced the Rich Client Platform, " +
+            "which let other applications reuse the same plug-in system. Eclipse became the dominant Java IDE for much of the decade.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "IDEs and editors",
+        title = "IntelliJ IDEA",
+        originalTitle = "IntelliJ IDEA 1.0",
+        author = "JetBrains",
+        year = 2001,
+        summary = "A Java IDE with intelligent code completion and safe refactorings, for developers who paid for good tools.",
+        details = "JetBrains released IntelliJ IDEA 1.0 in 2001. Its code completion understood types and reference chains, " +
+            "and its refactorings changed code safely across a whole project. Developers paid for it while free editors were the norm.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "IDEs and editors",
+        title = "Visual Studio 2005",
+        originalTitle = "Visual Studio 2005 (Whidbey)",
+        author = "Microsoft",
+        year = 2005,
+        summary = "The IDE for .NET 2.0, with generics in C#, a new Windows Forms designer and database tools.",
+        details = "Visual Studio 2005, codenamed Whidbey, came with .NET 2.0 and generics in C#. " +
+            "Its designers and debugger for SQL Server and Windows Forms made Microsoft's tools the main choice for enterprise Windows developers.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "IDEs and editors",
+        title = "Xcode",
+        originalTitle = "Xcode 1.0",
+        author = "Apple Computer",
+        year = 2003,
+        summary = "Apple's IDE for Mac OS X, with the GNU compiler tools, Interface Builder and project templates.",
+        details = "Xcode 1.0 (2003) combined the GNU compiler tools with Interface Builder for Cocoa windows. " +
+            "Its project templates and build system replaced the older Project Builder.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "IDEs and editors",
+        title = "TextMate",
+        originalTitle = "TextMate 1.0",
+        author = "Allan Odgaard",
+        year = 2004,
+        summary = "A Mac text editor with bundles of language support, snippets and commands that let users script the editor.",
+        details = "Odgaard released TextMate in 2004. Its bundles of language grammars and snippets made it quick to edit in many languages, " +
+            "and users wrote small commands that changed how the editor behaved.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "IDEs and editors",
+        title = "Notepad++",
+        originalTitle = "Notepad++",
+        author = "Don Ho",
+        year = 2003,
+        summary = "A Windows source editor built on the Scintilla component, with syntax highlighting and tabs.",
+        details = "Ho began the editor in September 2003, and the first public build appeared on SourceForge in November 2003, for Windows only. " +
+            "It stayed free, and its tabs and syntax highlighting made it a favourite of Windows programmers.",
+        rare = true,
+    ),
+
+    // ---------- Frameworks and content ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Frameworks and content",
+        title = "Ruby on Rails",
+        originalTitle = "Rails 1.0",
+        author = "David Heinemeier Hansson",
+        year = 2004,
+        summary = "A web framework in Ruby built on convention over configuration, with scaffolding and database migrations.",
+        details = "Hansson extracted Rails from the Basecamp project and released it as open source in July 2004. " +
+            "Its conventions and the active record pattern made database-backed web applications quick to start, and the framework spread through the second half of the decade.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Frameworks and content",
+        title = "WordPress",
+        originalTitle = "WordPress 0.7",
+        author = "Matt Mullenweg and Mike Little",
+        year = 2003,
+        summary = "A blogging platform in PHP, forked from the b2 engine, that grew into one of the most used content systems on the Web.",
+        details = "WordPress began in May 2003 as a fork of the b2 blogging engine. Its plugin system, themes and easy installation " +
+            "made it the default blog software for a large part of the decade.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Frameworks and content",
+        title = "Django",
+        originalTitle = "Django 0.90",
+        author = "Adrian Holovaty and Simon Willison at the Lawrence Journal-World",
+        year = 2005,
+        summary = "A Python web framework with an admin site, a model layer and fast development for content-heavy sites.",
+        details = "Django grew at a newspaper in Lawrence, Kansas, and was released as open source in July 2005. " +
+            "Its automatic admin interface and model layer made content sites quick to build.",
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Frameworks and content",
+        title = "OpenOffice.org",
+        originalTitle = "OpenOffice.org 1.0",
+        author = "Sun Microsystems",
+        year = 2002,
+        summary = "A free office suite derived from StarOffice, with a word processor, spreadsheet and presentation program.",
+        details = "Sun released OpenOffice.org 1.0 in May 2002 as the open-source base of StarOffice. " +
+            "It read and wrote Microsoft Office formats, which made it useful to offices that could not buy a licence for every machine.",
+    ),
+
+    // ---------- Creative software ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Creative software",
+        title = "Audacity",
+        originalTitle = "Audacity 1.0",
+        author = "Dominic Mazzoni and Roger Dannenberg at Carnegie Mellon University",
+        year = 2000,
+        summary = "A free audio editor for recording, cutting and filtering sound on Windows, Mac and Linux.",
+        details = "Mazzoni and Dannenberg released Audacity in 2000 from Carnegie Mellon University. " +
+            "Its waveform editing and effects were free, and it became the usual tool for podcasters later in the decade.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Creative software",
+        title = "GIMP 2.0",
+        originalTitle = "GNU Image Manipulation Program 2.0",
+        author = "The GIMP team",
+        year = 2004,
+        summary = "The free image editor with a reworked user interface and better colour and text handling, released as version 2.0 in 2004.",
+        details = "GIMP 2.0 (2004) introduced a reworked user interface and better colour and text handling. " +
+            "Photographers and designers used it as a free alternative to commercial image editors.",
+    ),
+
+    // ---------- Computing platforms ----------
+
+    entry(
+        databaseId = 3,
+        kind = Kind.TOOL,
+        section = "Computing platforms",
+        title = "CUDA",
+        originalTitle = "CUDA 1.0",
+        author = "NVIDIA",
+        year = 2007,
+        summary = "NVIDIA's C-like language and toolkit for running general programs on GeForce graphics processors.",
+        details = "The first public CUDA SDK came out in February 2007, and version 1.0 followed in mid-2007. " +
+            "Programmers wrote kernels in C with extensions, and the GPU ran them across hundreds of threads. It turned gaming graphics cards into compute devices.",
+        rare = true,
+    ),
+)
+
+################################################################################
 # FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
@@ -9190,10 +11959,16 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "Languages, systems, devices, tools and practices of the 1990s, including rare and little-known items.",
         colorHex = "#BA68C8",
     ),
+    DatabaseEntity(
+        id = 3,
+        name = "Database 3: 2000s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 2000 to 2010, including rare and little-known items.",
+        colorHex = "#FF8A65",
+    ),
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
-val seedRecords: List<RecordEntity> = db1Records + db2Records
+val seedRecords: List<RecordEntity> = db1Records + db2Records + db3Records
 
 ################################################################################
 # FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
@@ -10265,8 +13040,10 @@ import androidx.test.core.app.ApplicationProvider
 import com.example.retrodatabases.data.AppDatabase
 import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.MIGRATION_1_2
+import com.example.retrodatabases.data.MIGRATION_2_3
 import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.db2Records
+import com.example.retrodatabases.data.seed.db3Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -10277,7 +13054,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/** Runs the real database: schema validation, the seed SQL in onCreate, the migration and the favourite toggle. */
+/** Runs the real database: schema validation, the seed SQL in onCreate, the migrations and the favourite toggle. */
 @RunWith(RobolectricTestRunner::class)
 class AppDatabaseSeedTest {
 
@@ -10290,6 +13067,7 @@ class AppDatabaseSeedTest {
         assertEquals(seedDatabases.size, databases.size)
         assertEquals(db1Records.size, databases.single { it.id == 1L }.recordCount)
         assertEquals(db2Records.size, databases.single { it.id == 2L }.recordCount)
+        assertEquals(db3Records.size, databases.single { it.id == 3L }.recordCount)
 
         val records = dao.observeRecords(1L).first()
         assertEquals(db1Records.size, records.size)
@@ -10312,6 +13090,23 @@ class AppDatabaseSeedTest {
         assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
         assertEquals(db2Records.size, dao.observeRecords(2L).first().size)
         assertEquals(db1Records.size, dao.observeRecords(1L).first().size)
+    }
+
+    @Test
+    fun migrationRestoresDatabaseThree() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 2 has no database 3: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 3")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 3")
+        MIGRATION_2_3.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db3Records.size, dao.observeRecords(3L).first().size)
+        assertEquals(db2Records.size, dao.observeRecords(2L).first().size)
     }
 
     @Test
@@ -10410,6 +13205,7 @@ package com.example.retrodatabases
 import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.db2Records
+import com.example.retrodatabases.data.seed.db3Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import com.example.retrodatabases.data.seed.seedRecords
 import org.junit.Assert.assertEquals
@@ -10418,6 +13214,8 @@ import org.junit.Test
 
 class SeedDataTest {
 
+    private val catalogues = listOf(db1Records, db2Records, db3Records)
+
     @Test
     fun seededDatabasesHaveUniqueIdsAndTheirOwnRecords() {
         val ids = seedDatabases.map { it.id }
@@ -10425,11 +13223,12 @@ class SeedDataTest {
         assertTrue(seedRecords.all { it.databaseId in ids })
         assertTrue(db1Records.all { it.databaseId == 1L })
         assertTrue(db2Records.all { it.databaseId == 2L })
+        assertTrue(db3Records.all { it.databaseId == 3L })
     }
 
     @Test
     fun titlesAreUniqueWithinEachDatabase() {
-        for (records in listOf(db1Records, db2Records)) {
+        for (records in catalogues) {
             val titles = records.map { it.title }
             assertEquals(titles.size, titles.toSet().size)
         }
@@ -10439,12 +13238,14 @@ class SeedDataTest {
     fun yearsAreInTheRangeOfEachCatalogue() {
         assertTrue(db1Records.all { it.year in 1950..1990 })
         assertTrue(db2Records.all { it.year in 1990..1999 })
+        assertTrue(db3Records.all { it.year in 2000..2010 })
     }
 
     @Test
     fun everyKindHasRecordsInEachDatabase() {
-        assertEquals(Kind.entries.toSet(), db1Records.map { it.kind }.toSet())
-        assertEquals(Kind.entries.toSet(), db2Records.map { it.kind }.toSet())
+        for (records in catalogues) {
+            assertEquals(Kind.entries.toSet(), records.map { it.kind }.toSet())
+        }
     }
 
     @Test
@@ -10461,8 +13262,9 @@ class SeedDataTest {
 
     @Test
     fun rareRecordsArePresentInEachDatabase() {
-        assertTrue(db1Records.count { it.rare } > 0)
-        assertTrue(db2Records.count { it.rare } > 0)
+        for (records in catalogues) {
+            assertTrue(records.count { it.rare } > 0)
+        }
     }
 }
 

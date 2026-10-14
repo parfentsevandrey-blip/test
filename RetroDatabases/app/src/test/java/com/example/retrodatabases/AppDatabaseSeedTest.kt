@@ -5,8 +5,10 @@ import androidx.test.core.app.ApplicationProvider
 import com.example.retrodatabases.data.AppDatabase
 import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.MIGRATION_1_2
+import com.example.retrodatabases.data.MIGRATION_2_3
 import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.db2Records
+import com.example.retrodatabases.data.seed.db3Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -17,7 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/** Runs the real database: schema validation, the seed SQL in onCreate, the migration and the favourite toggle. */
+/** Runs the real database: schema validation, the seed SQL in onCreate, the migrations and the favourite toggle. */
 @RunWith(RobolectricTestRunner::class)
 class AppDatabaseSeedTest {
 
@@ -30,6 +32,7 @@ class AppDatabaseSeedTest {
         assertEquals(seedDatabases.size, databases.size)
         assertEquals(db1Records.size, databases.single { it.id == 1L }.recordCount)
         assertEquals(db2Records.size, databases.single { it.id == 2L }.recordCount)
+        assertEquals(db3Records.size, databases.single { it.id == 3L }.recordCount)
 
         val records = dao.observeRecords(1L).first()
         assertEquals(db1Records.size, records.size)
@@ -52,6 +55,23 @@ class AppDatabaseSeedTest {
         assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
         assertEquals(db2Records.size, dao.observeRecords(2L).first().size)
         assertEquals(db1Records.size, dao.observeRecords(1L).first().size)
+    }
+
+    @Test
+    fun migrationRestoresDatabaseThree() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 2 has no database 3: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 3")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 3")
+        MIGRATION_2_3.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db3Records.size, dao.observeRecords(3L).first().size)
+        assertEquals(db2Records.size, dao.observeRecords(2L).first().size)
     }
 
     @Test
