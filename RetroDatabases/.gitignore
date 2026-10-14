@@ -1,0 +1,15 @@
+# Сборка и кэши Gradle
+build/
+.gradle/
+.cxx/
+captures/
+.externalNativeBuild/
+
+# Настройки IDE и локальные пути SDK
+.idea/
+*.iml
+local.properties
+
+# Артефакты сборки
+*.apk
+*.aab
