@@ -21,6 +21,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-06 | 2026-10-14 | 6,257 | 169 | 82 | 118 | 6,626 | +21 (translation; long strings re-wrapped) |
 | CP-07 | 2026-10-14 | 9,174 | 199 | 82 | 118 | 9,573 | +2,947 (database 2: 142 records in ten files, migration 1→2, tests +30) |
 | CP-08 | 2026-10-14 | 11,798 | 226 | 82 | 118 | 12,224 | +2,651 (database 3: 141 records in eleven files, migration 2→3, tests +27) |
+| CP-09 | 2026-10-14 | 14,224 | 249 | 82 | 118 | 14,673 | +2,449 (database 4: 109 records in eleven files, migration 3→4, tests +23) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -301,3 +302,70 @@ Date: 2026-10-14. Totals: Kotlin main 11,798 (CP-07: 9,174), Kotlin test 226 (19
 - 122 of 141 records are not executed, which is most of the decade. Systems, devices, tools and practices can't run in a sandbox anyway, so the examples there would only be documentation.
 - The rare flag covers 56 of 141 records. That is a judgement call again, and I will compare it with the flags of databases 1 and 2 before the next release.
 - Not verified yet: the migration on a real device from version 1 and version 2 installs, the UI with three databases in the list and in the filters, lint, and the release build.
+
+## CP-09: database 4, the 2010s
+
+Status: database 4 is in the app: 109 records, a migration for installs made at version 3, and tests for all four databases. The build passes, 17 of 17 unit tests pass, and the Kotlin compiler gives no warnings. 23 of the 109 new examples run and pass; the other 86 are checked by reading or have no code at all.
+
+Mood: pleased with how far the decade reaches, from Rust and Kubernetes to Figma and the M1 Mac. Annoyed with myself. My first draft had several dates wrong, and the searches caught them. One of my own examples printed the wrong output, because `rstrip(" \t")` does not remove the newline at the end of a line.
+
+Date: 2026-10-14. Totals: Kotlin main 14,224 (CP-08: 11,798), Kotlin test 249 (226), XML 82, Gradle and project files 118, total 14,673. The +2,449 is mostly the eleven new Kotlin files for database 4, plus the catalogue, the database class and the tests (+23).
+
+### What changed
+
+- A fourth database, "Database 4: 2010s coding catalogue", with the same ten kinds. 109 records: languages 20, systems 16, devices 19, tools 14, practices 14, guides 5, examples 7, projects 4, flex 5, cross-code 5. 38 of them are rare.
+- Eleven files `Db4*.kt`: ten record files and `Db4Catalog.kt`, which joins them into `db4Records`. `SeedCatalog.kt` lists the fourth database and adds its records to `seedRecords`.
+- Database version 4 with `MIGRATION_3_4`. An install at version 3 gets database 4 from it. Installs at version 1 or 2 run the earlier migrations first, as before.
+- The years run from 2010 to 2020, both included. The oldest records date from 2010, and the newest two from November 2020: the Apple M1 Mac and macOS Big Sur. Nothing else in the database is dated 2020, so I added those two after the first draft.
+- Tests cover four databases. `SeedDataTest` checks the years of database 4, and `AppDatabaseSeedTest` checks its record count. It also has a new test that removes database 4 and runs `MIGRATION_3_4` on the file. 17 unit tests in total.
+
+### Facts checked by web search
+
+- TypeScript: the first public version, 0.8, came out in October 2012. Wikipedia's infobox gives 1 October 2012, and Microsoft's DevBlog has the 0.8.1 post from 15 November 2012. Version 1.0 shipped at Build in 2014. One slideshare gives 2016, which I treated as an outlier. The record uses 0.8 and 2012.
+- Pony: Wikipedia's infobox gives 28 April 2015 for the first appearance. The results held no earlier date, so the record uses 2015. I had 2014 from memory.
+- Idris: Wikipedia gives 2007 for the first appearance, with a University of St Andrews index dated 12 December 2007. One low-quality site says 2009. Version 1.0 came out around April 2017 (InfoQ Japan). 2007 is outside the decade, so the record is Idris 1.0 from 2017.
+- Elixir: public debut on 25 May 2012 (the v0.5.0 post and a message to the Erlang mailing list). Work started in early 2011, and v0.3.0 existed by April 2011. I could not confirm a v0.1, so the record does not use one.
+- Solidity: version 0.1.0 on 7 August 2015 (iq.wiki). A Wikipedia mirror gives August 2014, which looks like the date of the proposal. The record uses 2015.
+- Scratch 2.0: relaunch on 9 May 2013. The Scratch forum, EdSurge and i-programmer agree.
+- Phoenix: version 1.0 in 2015 (InfoQ). The first commits are from May 2014 (Packt), and one podcast says the project started in 2011. The record mentions only the 1.0 year.
+- systemd: the release dates conflict: 30 March 2010 (infobox), 18 May 2010 (an industry article, for version 1) and 7 July 2010 (a CentOS changelog, "First upstream release"). The record uses 2010 and says the sources differ.
+- Fuchsia: the code appeared in a public repository in August 2016 with no announcement. The first product to run it was the Nest Hub, in 2021. Wikipedia gives 25 May 2021 as the initial release.
+- Wayland 1.0 with Weston: 22 October 2012 (Phoronix and LWN).
+- WebAssembly: a demo in 2015 ran a game in several browsers. Browsers agreed the design in late February 2017 (a mailing-list message from Mozilla dated 28 February), and the first versions shipped in March 2017. BleepingComputer reports full support by October 2017.
+- Vagrant: version 0.1.0 on 7 or 8 March 2010 (LWN, Open Hub, Wikipedia). Version 1.0 in March 2012. HashiCorp was founded in November 2012.
+- Ansible: most sources give 20 February 2012 for the first release. One documentation pull request gives 9 March 2012 for version 0.0.1. Red Hat bought AnsibleWorks in October 2015.
+- Let's Encrypt: the public beta opened on 3 December 2015 (letsencrypt.org, Fedora Magazine). One repost says 2 December, which I ignored.
+- Arduino Uno: unveiled at Maker Faire in September 2010. One book says 2011, which I believe is a typo.
+- Oculus Rift DK1: shipping began in late March 2013. The sources give 28 or 29 March.
+- Leap Motion: public launch on 22 July 2013. Two sources say the first units went out on 19 July.
+- ESP8266: the ESP-01 module from Ai-Thinker drew hobbyists in August 2014, and the Espressif SDK followed in October 2014. I did not find a release date for the chip itself.
+- AR.Drone: shown at CES in January 2010 and on sale later that year at 299 dollars (PCWorld's E3 report).
+- Firecracker: unveiled at re:Invent in late November 2018 (eWeek dates it to 26 November) and released under Apache 2.0. A third-party page gives a star count that looked unreliable, so I did not use it.
+- Terraform: first release on 28 July 2014 (infobox), with providers for AWS and DigitalOcean (HashiCorp's own keynote).
+- Redux: first public release on 2 June 2015 (infobox and a GitHub topic page). A tutorial site dates the announcement to May 2015.
+- Figma: invite-only preview from 3 December 2015, first public release on 27 September 2016 (infobox). Product Hunt listed it on 28 September, so the record says "late September 2016".
+- Git LFS: public in April 2015 (GitHub's blog, 8 April 2015), with version 1.0 for all GitHub.com repositories in October 2015. A GitLab post dates the earlier private work to September 2013.
+- Contributor Covenant: started in 2014 by Coraline Ada Ehmke, according to several sources. I did not find a date for version 1.0, so the record gives only 2014. OpenAFS adopted it in September 2015.
+- Progressive web apps: the name is credited to Frances Berriman and Alex Russell in 2015. Wikipedia dates the wider rollout to 2016.
+- Hacktoberfest: first-year participants were 676 in one source and 768 in DigitalOcean's recap. The record says the figures disagree.
+- Checked earlier in this work and kept as recorded: Hexagony (2015), Redox OS (April 2015), Tizen (2012, with the sources a month apart), Firefox OS (2013), Zig (2016, with one article saying 2015), Semantic Versioning 2.0 (2013, with one arXiv snippet saying 2011) and Crystal (June 2014).
+- Not searched: the Apple M1 Mac and macOS Big Sur (both November 2020), and most of the other records, which are from memory. The ones I would check first: Chrome OS, Windows 8, Kubernetes 1.0, AWS Lambda, Ouya, the Jenkins rename, the Git 2.5 release of `git worktree`, and the SQLite 3.9 release of FTS5.
+
+### How I checked it
+
+- Unit tests: 17 of 17 pass (AppDatabaseSeedTest 5, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL.
+- Examples: a script takes every database 4 example from the Kotlin source, applies the same markers and runs what this sandbox can run. 23 pass: C++11 with g++, Java 8 and the `var` keyword with javac and java, Python 3.6, async and await, dataclasses, the walrus loop, a sorted dictionary, a JWT signed with HMAC-SHA256 (the script checks that the signature verifies), Node.js (the ES2015 counter, the promise order demo and one Game of Life generation), PHP 7 types, std::optional with g++ and C++17, a worker pool and a cgo program with `go run`, SQLite full-text search, git worktree, git flow and a Git clean filter run in a real repository, a static site generator and a task list (both run on files the script writes), and a Go file hasher, whose output is compared with the SHA-256 of "hello".
+- The other 86 are not run here: languages with no compiler in this sandbox (Rust, Swift, Zig, Pony, Crystal, TypeScript, Kotlin, Dart, Hack, Elm, Elixir, Julia, Idris, Solidity, Scratch and Hexagony), devices and systems that have no code, tools that need an account, and the guides and examples that need Docker, OpenSSL or a browser.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- My first draft had dates wrong, all from memory. Pony was 2014 (the searches give 2015). Idris was 2011, but its first appearance is 2007, so the record is now Idris 1.0 from 2017. TypeScript's original title said 1.0, and the first public version was 0.8. The Phoenix line put its first release in 2014, and version 1.0 came in 2015. The Python 3.6 entry said Python 3 had replaced Python 2 in new projects, which the sources do not support, so I reworded it.
+- My Git clean filter example had a bug. `line.rstrip(" \t")` does not remove the newline at the end of a line, so the stored file kept its trailing spaces and got an extra newline. The verifier compares the exact output and caught it on the first run. The fix is `rstrip(" \t\n")`. The filter itself did run, so the relative path to the script in the repository config was right.
+- The two 2020 records came after the first draft, so their dates are from memory. I have not searched for them.
+
+### Notes
+
+- 38 of 109 records are rare. That is a judgement call again, and I'll compare it with the other databases before the next release.
+- Not verified yet: running on a device or emulator, the migration chain from version 1, 2 and 3 installs on a real device, the UI with four databases in the list and in the filters, lint, and the release build.
+- Line counts use the same method as before: tracked and untracked files from `git ls-files`, with the README, this log and the bundle left out.

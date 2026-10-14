@@ -1,6 +1,6 @@
 ===============================================================================
  Retro Databases: source code of the Android app in one text file
- Files in the archive: 77
+ Files in the archive: 88
  Not included: gradle/wrapper/gradle-wrapper.jar (binary, created by the command
    gradle wrapper --gradle-version 8.10.2) and local.properties (path to your SDK).
 ===============================================================================
@@ -58,6 +58,17 @@ CONTENTS:
   app/src/main/java/com/example/retrodatabases/data/seed/Db3Projects.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db3Systems.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db3Tools.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db4Catalog.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db4Cross.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db4Devices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db4Examples.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db4Flex.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db4Guides.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db4Languages.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db4Practices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db4Projects.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db4Systems.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db4Tools.kt
   app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
   app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
   app/src/main/java/com/example/retrodatabases/ui/AppNavHost.kt
@@ -132,6 +143,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-06 | 2026-10-14 | 6,257 | 169 | 82 | 118 | 6,626 | +21 (translation; long strings re-wrapped) |
 | CP-07 | 2026-10-14 | 9,174 | 199 | 82 | 118 | 9,573 | +2,947 (database 2: 142 records in ten files, migration 1→2, tests +30) |
 | CP-08 | 2026-10-14 | 11,798 | 226 | 82 | 118 | 12,224 | +2,651 (database 3: 141 records in eleven files, migration 2→3, tests +27) |
+| CP-09 | 2026-10-14 | 14,224 | 249 | 82 | 118 | 14,673 | +2,449 (database 4: 109 records in eleven files, migration 3→4, tests +23) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -412,6 +424,73 @@ Date: 2026-10-14. Totals: Kotlin main 11,798 (CP-07: 9,174), Kotlin test 226 (19
 - 122 of 141 records are not executed, which is most of the decade. Systems, devices, tools and practices can't run in a sandbox anyway, so the examples there would only be documentation.
 - The rare flag covers 56 of 141 records. That is a judgement call again, and I will compare it with the flags of databases 1 and 2 before the next release.
 - Not verified yet: the migration on a real device from version 1 and version 2 installs, the UI with three databases in the list and in the filters, lint, and the release build.
+
+## CP-09: database 4, the 2010s
+
+Status: database 4 is in the app: 109 records, a migration for installs made at version 3, and tests for all four databases. The build passes, 17 of 17 unit tests pass, and the Kotlin compiler gives no warnings. 23 of the 109 new examples run and pass; the other 86 are checked by reading or have no code at all.
+
+Mood: pleased with how far the decade reaches, from Rust and Kubernetes to Figma and the M1 Mac. Annoyed with myself. My first draft had several dates wrong, and the searches caught them. One of my own examples printed the wrong output, because `rstrip(" \t")` does not remove the newline at the end of a line.
+
+Date: 2026-10-14. Totals: Kotlin main 14,224 (CP-08: 11,798), Kotlin test 249 (226), XML 82, Gradle and project files 118, total 14,673. The +2,449 is mostly the eleven new Kotlin files for database 4, plus the catalogue, the database class and the tests (+23).
+
+### What changed
+
+- A fourth database, "Database 4: 2010s coding catalogue", with the same ten kinds. 109 records: languages 20, systems 16, devices 19, tools 14, practices 14, guides 5, examples 7, projects 4, flex 5, cross-code 5. 38 of them are rare.
+- Eleven files `Db4*.kt`: ten record files and `Db4Catalog.kt`, which joins them into `db4Records`. `SeedCatalog.kt` lists the fourth database and adds its records to `seedRecords`.
+- Database version 4 with `MIGRATION_3_4`. An install at version 3 gets database 4 from it. Installs at version 1 or 2 run the earlier migrations first, as before.
+- The years run from 2010 to 2020, both included. The oldest records date from 2010, and the newest two from November 2020: the Apple M1 Mac and macOS Big Sur. Nothing else in the database is dated 2020, so I added those two after the first draft.
+- Tests cover four databases. `SeedDataTest` checks the years of database 4, and `AppDatabaseSeedTest` checks its record count. It also has a new test that removes database 4 and runs `MIGRATION_3_4` on the file. 17 unit tests in total.
+
+### Facts checked by web search
+
+- TypeScript: the first public version, 0.8, came out in October 2012. Wikipedia's infobox gives 1 October 2012, and Microsoft's DevBlog has the 0.8.1 post from 15 November 2012. Version 1.0 shipped at Build in 2014. One slideshare gives 2016, which I treated as an outlier. The record uses 0.8 and 2012.
+- Pony: Wikipedia's infobox gives 28 April 2015 for the first appearance. The results held no earlier date, so the record uses 2015. I had 2014 from memory.
+- Idris: Wikipedia gives 2007 for the first appearance, with a University of St Andrews index dated 12 December 2007. One low-quality site says 2009. Version 1.0 came out around April 2017 (InfoQ Japan). 2007 is outside the decade, so the record is Idris 1.0 from 2017.
+- Elixir: public debut on 25 May 2012 (the v0.5.0 post and a message to the Erlang mailing list). Work started in early 2011, and v0.3.0 existed by April 2011. I could not confirm a v0.1, so the record does not use one.
+- Solidity: version 0.1.0 on 7 August 2015 (iq.wiki). A Wikipedia mirror gives August 2014, which looks like the date of the proposal. The record uses 2015.
+- Scratch 2.0: relaunch on 9 May 2013. The Scratch forum, EdSurge and i-programmer agree.
+- Phoenix: version 1.0 in 2015 (InfoQ). The first commits are from May 2014 (Packt), and one podcast says the project started in 2011. The record mentions only the 1.0 year.
+- systemd: the release dates conflict: 30 March 2010 (infobox), 18 May 2010 (an industry article, for version 1) and 7 July 2010 (a CentOS changelog, "First upstream release"). The record uses 2010 and says the sources differ.
+- Fuchsia: the code appeared in a public repository in August 2016 with no announcement. The first product to run it was the Nest Hub, in 2021. Wikipedia gives 25 May 2021 as the initial release.
+- Wayland 1.0 with Weston: 22 October 2012 (Phoronix and LWN).
+- WebAssembly: a demo in 2015 ran a game in several browsers. Browsers agreed the design in late February 2017 (a mailing-list message from Mozilla dated 28 February), and the first versions shipped in March 2017. BleepingComputer reports full support by October 2017.
+- Vagrant: version 0.1.0 on 7 or 8 March 2010 (LWN, Open Hub, Wikipedia). Version 1.0 in March 2012. HashiCorp was founded in November 2012.
+- Ansible: most sources give 20 February 2012 for the first release. One documentation pull request gives 9 March 2012 for version 0.0.1. Red Hat bought AnsibleWorks in October 2015.
+- Let's Encrypt: the public beta opened on 3 December 2015 (letsencrypt.org, Fedora Magazine). One repost says 2 December, which I ignored.
+- Arduino Uno: unveiled at Maker Faire in September 2010. One book says 2011, which I believe is a typo.
+- Oculus Rift DK1: shipping began in late March 2013. The sources give 28 or 29 March.
+- Leap Motion: public launch on 22 July 2013. Two sources say the first units went out on 19 July.
+- ESP8266: the ESP-01 module from Ai-Thinker drew hobbyists in August 2014, and the Espressif SDK followed in October 2014. I did not find a release date for the chip itself.
+- AR.Drone: shown at CES in January 2010 and on sale later that year at 299 dollars (PCWorld's E3 report).
+- Firecracker: unveiled at re:Invent in late November 2018 (eWeek dates it to 26 November) and released under Apache 2.0. A third-party page gives a star count that looked unreliable, so I did not use it.
+- Terraform: first release on 28 July 2014 (infobox), with providers for AWS and DigitalOcean (HashiCorp's own keynote).
+- Redux: first public release on 2 June 2015 (infobox and a GitHub topic page). A tutorial site dates the announcement to May 2015.
+- Figma: invite-only preview from 3 December 2015, first public release on 27 September 2016 (infobox). Product Hunt listed it on 28 September, so the record says "late September 2016".
+- Git LFS: public in April 2015 (GitHub's blog, 8 April 2015), with version 1.0 for all GitHub.com repositories in October 2015. A GitLab post dates the earlier private work to September 2013.
+- Contributor Covenant: started in 2014 by Coraline Ada Ehmke, according to several sources. I did not find a date for version 1.0, so the record gives only 2014. OpenAFS adopted it in September 2015.
+- Progressive web apps: the name is credited to Frances Berriman and Alex Russell in 2015. Wikipedia dates the wider rollout to 2016.
+- Hacktoberfest: first-year participants were 676 in one source and 768 in DigitalOcean's recap. The record says the figures disagree.
+- Checked earlier in this work and kept as recorded: Hexagony (2015), Redox OS (April 2015), Tizen (2012, with the sources a month apart), Firefox OS (2013), Zig (2016, with one article saying 2015), Semantic Versioning 2.0 (2013, with one arXiv snippet saying 2011) and Crystal (June 2014).
+- Not searched: the Apple M1 Mac and macOS Big Sur (both November 2020), and most of the other records, which are from memory. The ones I would check first: Chrome OS, Windows 8, Kubernetes 1.0, AWS Lambda, Ouya, the Jenkins rename, the Git 2.5 release of `git worktree`, and the SQLite 3.9 release of FTS5.
+
+### How I checked it
+
+- Unit tests: 17 of 17 pass (AppDatabaseSeedTest 5, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL.
+- Examples: a script takes every database 4 example from the Kotlin source, applies the same markers and runs what this sandbox can run. 23 pass: C++11 with g++, Java 8 and the `var` keyword with javac and java, Python 3.6, async and await, dataclasses, the walrus loop, a sorted dictionary, a JWT signed with HMAC-SHA256 (the script checks that the signature verifies), Node.js (the ES2015 counter, the promise order demo and one Game of Life generation), PHP 7 types, std::optional with g++ and C++17, a worker pool and a cgo program with `go run`, SQLite full-text search, git worktree, git flow and a Git clean filter run in a real repository, a static site generator and a task list (both run on files the script writes), and a Go file hasher, whose output is compared with the SHA-256 of "hello".
+- The other 86 are not run here: languages with no compiler in this sandbox (Rust, Swift, Zig, Pony, Crystal, TypeScript, Kotlin, Dart, Hack, Elm, Elixir, Julia, Idris, Solidity, Scratch and Hexagony), devices and systems that have no code, tools that need an account, and the guides and examples that need Docker, OpenSSL or a browser.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- My first draft had dates wrong, all from memory. Pony was 2014 (the searches give 2015). Idris was 2011, but its first appearance is 2007, so the record is now Idris 1.0 from 2017. TypeScript's original title said 1.0, and the first public version was 0.8. The Phoenix line put its first release in 2014, and version 1.0 came in 2015. The Python 3.6 entry said Python 3 had replaced Python 2 in new projects, which the sources do not support, so I reworded it.
+- My Git clean filter example had a bug. `line.rstrip(" \t")` does not remove the newline at the end of a line, so the stored file kept its trailing spaces and got an extra newline. The verifier compares the exact output and caught it on the first run. The fix is `rstrip(" \t\n")`. The filter itself did run, so the relative path to the script in the repository config was right.
+- The two 2020 records came after the first draft, so their dates are from memory. I have not searched for them.
+
+### Notes
+
+- 38 of 109 records are rare. That is a judgement call again, and I'll compare it with the other databases before the next release.
+- Not verified yet: running on a device or emulator, the migration chain from version 1, 2 and 3 installs on a real device, the UI with four databases in the list and in the filters, lint, and the release build.
+- Line counts use the same method as before: tracked and untracked files from `git ls-files`, with the README, this log and the bundle left out.
 
 ################################################################################
 # FILE: RetroDatabases/DEVLOG.txt
@@ -439,6 +518,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-06 | 2026-10-14 | 6,257 | 169 | 82 | 118 | 6,626 | +21 (translation; long strings re-wrapped) |
 | CP-07 | 2026-10-14 | 9,174 | 199 | 82 | 118 | 9,573 | +2,947 (database 2: 142 records in ten files, migration 1→2, tests +30) |
 | CP-08 | 2026-10-14 | 11,798 | 226 | 82 | 118 | 12,224 | +2,651 (database 3: 141 records in eleven files, migration 2→3, tests +27) |
+| CP-09 | 2026-10-14 | 14,224 | 249 | 82 | 118 | 14,673 | +2,449 (database 4: 109 records in eleven files, migration 3→4, tests +23) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -720,16 +800,84 @@ Date: 2026-10-14. Totals: Kotlin main 11,798 (CP-07: 9,174), Kotlin test 226 (19
 - The rare flag covers 56 of 141 records. That is a judgement call again, and I will compare it with the flags of databases 1 and 2 before the next release.
 - Not verified yet: the migration on a real device from version 1 and version 2 installs, the UI with three databases in the list and in the filters, lint, and the release build.
 
+## CP-09: database 4, the 2010s
+
+Status: database 4 is in the app: 109 records, a migration for installs made at version 3, and tests for all four databases. The build passes, 17 of 17 unit tests pass, and the Kotlin compiler gives no warnings. 23 of the 109 new examples run and pass; the other 86 are checked by reading or have no code at all.
+
+Mood: pleased with how far the decade reaches, from Rust and Kubernetes to Figma and the M1 Mac. Annoyed with myself. My first draft had several dates wrong, and the searches caught them. One of my own examples printed the wrong output, because `rstrip(" \t")` does not remove the newline at the end of a line.
+
+Date: 2026-10-14. Totals: Kotlin main 14,224 (CP-08: 11,798), Kotlin test 249 (226), XML 82, Gradle and project files 118, total 14,673. The +2,449 is mostly the eleven new Kotlin files for database 4, plus the catalogue, the database class and the tests (+23).
+
+### What changed
+
+- A fourth database, "Database 4: 2010s coding catalogue", with the same ten kinds. 109 records: languages 20, systems 16, devices 19, tools 14, practices 14, guides 5, examples 7, projects 4, flex 5, cross-code 5. 38 of them are rare.
+- Eleven files `Db4*.kt`: ten record files and `Db4Catalog.kt`, which joins them into `db4Records`. `SeedCatalog.kt` lists the fourth database and adds its records to `seedRecords`.
+- Database version 4 with `MIGRATION_3_4`. An install at version 3 gets database 4 from it. Installs at version 1 or 2 run the earlier migrations first, as before.
+- The years run from 2010 to 2020, both included. The oldest records date from 2010, and the newest two from November 2020: the Apple M1 Mac and macOS Big Sur. Nothing else in the database is dated 2020, so I added those two after the first draft.
+- Tests cover four databases. `SeedDataTest` checks the years of database 4, and `AppDatabaseSeedTest` checks its record count. It also has a new test that removes database 4 and runs `MIGRATION_3_4` on the file. 17 unit tests in total.
+
+### Facts checked by web search
+
+- TypeScript: the first public version, 0.8, came out in October 2012. Wikipedia's infobox gives 1 October 2012, and Microsoft's DevBlog has the 0.8.1 post from 15 November 2012. Version 1.0 shipped at Build in 2014. One slideshare gives 2016, which I treated as an outlier. The record uses 0.8 and 2012.
+- Pony: Wikipedia's infobox gives 28 April 2015 for the first appearance. The results held no earlier date, so the record uses 2015. I had 2014 from memory.
+- Idris: Wikipedia gives 2007 for the first appearance, with a University of St Andrews index dated 12 December 2007. One low-quality site says 2009. Version 1.0 came out around April 2017 (InfoQ Japan). 2007 is outside the decade, so the record is Idris 1.0 from 2017.
+- Elixir: public debut on 25 May 2012 (the v0.5.0 post and a message to the Erlang mailing list). Work started in early 2011, and v0.3.0 existed by April 2011. I could not confirm a v0.1, so the record does not use one.
+- Solidity: version 0.1.0 on 7 August 2015 (iq.wiki). A Wikipedia mirror gives August 2014, which looks like the date of the proposal. The record uses 2015.
+- Scratch 2.0: relaunch on 9 May 2013. The Scratch forum, EdSurge and i-programmer agree.
+- Phoenix: version 1.0 in 2015 (InfoQ). The first commits are from May 2014 (Packt), and one podcast says the project started in 2011. The record mentions only the 1.0 year.
+- systemd: the release dates conflict: 30 March 2010 (infobox), 18 May 2010 (an industry article, for version 1) and 7 July 2010 (a CentOS changelog, "First upstream release"). The record uses 2010 and says the sources differ.
+- Fuchsia: the code appeared in a public repository in August 2016 with no announcement. The first product to run it was the Nest Hub, in 2021. Wikipedia gives 25 May 2021 as the initial release.
+- Wayland 1.0 with Weston: 22 October 2012 (Phoronix and LWN).
+- WebAssembly: a demo in 2015 ran a game in several browsers. Browsers agreed the design in late February 2017 (a mailing-list message from Mozilla dated 28 February), and the first versions shipped in March 2017. BleepingComputer reports full support by October 2017.
+- Vagrant: version 0.1.0 on 7 or 8 March 2010 (LWN, Open Hub, Wikipedia). Version 1.0 in March 2012. HashiCorp was founded in November 2012.
+- Ansible: most sources give 20 February 2012 for the first release. One documentation pull request gives 9 March 2012 for version 0.0.1. Red Hat bought AnsibleWorks in October 2015.
+- Let's Encrypt: the public beta opened on 3 December 2015 (letsencrypt.org, Fedora Magazine). One repost says 2 December, which I ignored.
+- Arduino Uno: unveiled at Maker Faire in September 2010. One book says 2011, which I believe is a typo.
+- Oculus Rift DK1: shipping began in late March 2013. The sources give 28 or 29 March.
+- Leap Motion: public launch on 22 July 2013. Two sources say the first units went out on 19 July.
+- ESP8266: the ESP-01 module from Ai-Thinker drew hobbyists in August 2014, and the Espressif SDK followed in October 2014. I did not find a release date for the chip itself.
+- AR.Drone: shown at CES in January 2010 and on sale later that year at 299 dollars (PCWorld's E3 report).
+- Firecracker: unveiled at re:Invent in late November 2018 (eWeek dates it to 26 November) and released under Apache 2.0. A third-party page gives a star count that looked unreliable, so I did not use it.
+- Terraform: first release on 28 July 2014 (infobox), with providers for AWS and DigitalOcean (HashiCorp's own keynote).
+- Redux: first public release on 2 June 2015 (infobox and a GitHub topic page). A tutorial site dates the announcement to May 2015.
+- Figma: invite-only preview from 3 December 2015, first public release on 27 September 2016 (infobox). Product Hunt listed it on 28 September, so the record says "late September 2016".
+- Git LFS: public in April 2015 (GitHub's blog, 8 April 2015), with version 1.0 for all GitHub.com repositories in October 2015. A GitLab post dates the earlier private work to September 2013.
+- Contributor Covenant: started in 2014 by Coraline Ada Ehmke, according to several sources. I did not find a date for version 1.0, so the record gives only 2014. OpenAFS adopted it in September 2015.
+- Progressive web apps: the name is credited to Frances Berriman and Alex Russell in 2015. Wikipedia dates the wider rollout to 2016.
+- Hacktoberfest: first-year participants were 676 in one source and 768 in DigitalOcean's recap. The record says the figures disagree.
+- Checked earlier in this work and kept as recorded: Hexagony (2015), Redox OS (April 2015), Tizen (2012, with the sources a month apart), Firefox OS (2013), Zig (2016, with one article saying 2015), Semantic Versioning 2.0 (2013, with one arXiv snippet saying 2011) and Crystal (June 2014).
+- Not searched: the Apple M1 Mac and macOS Big Sur (both November 2020), and most of the other records, which are from memory. The ones I would check first: Chrome OS, Windows 8, Kubernetes 1.0, AWS Lambda, Ouya, the Jenkins rename, the Git 2.5 release of `git worktree`, and the SQLite 3.9 release of FTS5.
+
+### How I checked it
+
+- Unit tests: 17 of 17 pass (AppDatabaseSeedTest 5, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL.
+- Examples: a script takes every database 4 example from the Kotlin source, applies the same markers and runs what this sandbox can run. 23 pass: C++11 with g++, Java 8 and the `var` keyword with javac and java, Python 3.6, async and await, dataclasses, the walrus loop, a sorted dictionary, a JWT signed with HMAC-SHA256 (the script checks that the signature verifies), Node.js (the ES2015 counter, the promise order demo and one Game of Life generation), PHP 7 types, std::optional with g++ and C++17, a worker pool and a cgo program with `go run`, SQLite full-text search, git worktree, git flow and a Git clean filter run in a real repository, a static site generator and a task list (both run on files the script writes), and a Go file hasher, whose output is compared with the SHA-256 of "hello".
+- The other 86 are not run here: languages with no compiler in this sandbox (Rust, Swift, Zig, Pony, Crystal, TypeScript, Kotlin, Dart, Hack, Elm, Elixir, Julia, Idris, Solidity, Scratch and Hexagony), devices and systems that have no code, tools that need an account, and the guides and examples that need Docker, OpenSSL or a browser.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- My first draft had dates wrong, all from memory. Pony was 2014 (the searches give 2015). Idris was 2011, but its first appearance is 2007, so the record is now Idris 1.0 from 2017. TypeScript's original title said 1.0, and the first public version was 0.8. The Phoenix line put its first release in 2014, and version 1.0 came in 2015. The Python 3.6 entry said Python 3 had replaced Python 2 in new projects, which the sources do not support, so I reworded it.
+- My Git clean filter example had a bug. `line.rstrip(" \t")` does not remove the newline at the end of a line, so the stored file kept its trailing spaces and got an extra newline. The verifier compares the exact output and caught it on the first run. The fix is `rstrip(" \t\n")`. The filter itself did run, so the relative path to the script in the repository config was right.
+- The two 2020 records came after the first draft, so their dates are from memory. I have not searched for them.
+
+### Notes
+
+- 38 of 109 records are rare. That is a judgement call again, and I'll compare it with the other databases before the next release.
+- Not verified yet: running on a device or emulator, the migration chain from version 1, 2 and 3 installs on a real device, the UI with four databases in the list and in the filters, lint, and the release build.
+- Line counts use the same method as before: tracked and untracked files from `git ls-files`, with the README, this log and the bundle left out.
+
 ################################################################################
 # FILE: RetroDatabases/README.md
 ################################################################################
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside are three databases of coding history:
+An Android application in Kotlin, Jetpack Compose and Room. Inside are four databases of coding history:
 
 - "Database 1" is a catalogue of 80s coding;
 - "Database 2" is a catalogue of 90s coding;
-- "Database 3" is a catalogue of coding from 2000 to 2010.
+- "Database 3" is a catalogue of coding from 2000 to 2010;
+- "Database 4" is a catalogue of coding from 2010 to 2020.
 
 ## What is inside
 
@@ -778,7 +926,22 @@ The catalogue of database 3 (2000–2010) has the same ten kinds:
 | Flex | 5 | A Sudoku solver, Ruby metaprogramming, one-line Git statistics, a 1 KB demo, mod_rewrite |
 | Cross-code | 5 | Python calling C through ctypes, C embedding Python, a Git hook in Python, JavaScript calling Java, C# calling C |
 
-In total there are 603 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare) and 141 in database 3 (56 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
+The catalogue of database 4 (2010 to 2020) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 20 | Rust, Swift, Zig, Pony, Crystal, TypeScript, Kotlin, Dart, Elixir, Julia, Solidity, Java 8, Python 3.6, ES2015, and some esoteric ones |
+| Systems | 16 | Windows 8, Chrome OS, macOS Big Sur, Android 5.0 with ART, systemd, Wayland, Fuchsia, WebAssembly, Kubernetes, AWS Lambda, Firecracker, Java 9 modules |
+| Devices | 19 | iPad, Raspberry Pi, Arduino Uno, Pebble, Google Glass, Oculus Rift DK1, Leap Motion, Ouya, Apple Watch, ESP8266, AR.Drone, Apple M1 Mac |
+| Tools | 14 | Vagrant, Ansible, Docker, Visual Studio Code, Android Studio, Let's Encrypt, Jenkins, Yarn, React Native, GitHub Actions, Terraform, Git LFS, Redux, Figma |
+| Practices | 14 | Responsive web design, Git flow, GitHub flow, README-driven development, the Twelve-Factor App, microservices, Semantic Versioning 2.0, Hacktoberfest, left-pad, multi-stage Docker builds |
+| Guides | 5 | How JWT tokens are signed, how a promise chain runs, how Docker layers an image, how a CSS grid places items, how TLS 1.3 takes one round trip |
+| Examples | 7 | async and await in Python, dataclasses, the var keyword in Java, std::optional, PHP 7 types, git worktree, a Go worker pool |
+| Projects | 4 | A static site generator, a command-line task list, a Chrome extension that counts tabs, a Go file hasher |
+| Flex | 5 | The walrus operator, Game of Life in JavaScript, full-text search in SQLite, sorting a dictionary, CSS custom properties |
+| Cross-code | 5 | Go calling C with cgo, a Node.js addon through N-API, a Python module written in Rust, C compiled to WebAssembly, a Git clean filter in Python |
+
+In total there are 712 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare) and 109 in database 4 (38 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
 
 In the app:
 - the list of databases with the number of records;
@@ -805,8 +968,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Structure
 
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1 and 2 to version 3.
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all three databases: `Db1*.kt`, `Db2*.kt` and `Db3*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2 and 3 to version 4.
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all four databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt` and `Db4*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
 - `app/src/test` — tests of the filters, the data and the database itself (Robolectric).
 - `DEVLOG.md` — the development log with the growth of lines of code by checkpoint.
@@ -814,15 +977,15 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git and curl. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all).
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git and curl. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 23 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all).
 
-For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala and others), the examples were checked only by reading, and this is noted in the development log.
+For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Rust, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
 
 ## How to add a database
 
 1. Create files in `data/seed` with the records. Pass the database id to `entry()`, for example `databaseId = 3`; a record without it goes to database 1.
 2. Add the database to `seedDatabases` and its records to `seedRecords` (file `SeedCatalog.kt`).
-3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` and `MIGRATION_2_3` are the examples: each adds one database, and an install made at version 1 runs them in order.
+3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2`, `MIGRATION_2_3` and `MIGRATION_3_4` are the examples: each adds one database, and an install made at version 1 runs them in order.
 
 ################################################################################
 # FILE: RetroDatabases/app/build.gradle.kts
@@ -971,7 +1134,7 @@ import com.example.retrodatabases.data.seed.seedRecords
 
 @Database(
     entities = [DatabaseEntity::class, RecordEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -993,7 +1156,7 @@ abstract class AppDatabase : RoomDatabase() {
         private fun buildDatabase(appContext: Context): AppDatabase =
             Room.databaseBuilder(appContext, AppDatabase::class.java, FILE_NAME)
                 .addCallback(SeedCallback())
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
     }
 }
@@ -1017,6 +1180,18 @@ internal val MIGRATION_1_2 = object : Migration(1, 2) {
 internal val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val added = setOf(3L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 4 added database 4. Copies at version 3 get it from this migration;
+ * older copies run it after the earlier migrations.
+ */
+internal val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(4L)
         seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
         seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
     }
@@ -11934,6 +12109,2458 @@ val db3Tools: List<RecordEntity> = listOf(
 )
 
 ################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db4Catalog.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.RecordEntity
+
+/**
+ * All records of database 4: languages, systems, devices, tools and practices of 2010 to 2020,
+ * as well as guides, examples, projects, flex projects and cross-code experiments.
+ */
+val db4Records: List<RecordEntity> =
+    db4Languages + db4Systems + db4Devices + db4Tools + db4Practices +
+        db4Guides + db4Examples + db4Projects + db4Flex + db4Cross
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db4Cross.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Cross-code experiments of 2010 to 2020: technologies mixed on purpose, from cgo and Node addons to WebAssembly and Git filters. */
+val db4Cross: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 4,
+        kind = Kind.CROSS,
+        section = "Go and native code",
+        title = "Go calls C with cgo",
+        originalTitle = "cgo",
+        author = "The Go team",
+        year = 2012,
+        summary = "A Go program keeps C code in a comment above an import of the pseudo-package C and calls the C function directly.",
+        details = "cgo has been part of the Go toolchain since the early releases, and Go 1.0 shipped in March 2012 with it. " +
+            "The C code sits in a comment directly above import \"C\", and Go converts the arguments and results between the two languages. The build needs a C compiler installed.",
+        instructions = """
+            1. Save the code as cgo_demo.go.
+            2. Run it: go run cgo_demo.go
+            3. The output is the sum computed by the C function.
+        """,
+        example = """
+            package main
+
+            /*
+            int add_ints(int a, int b) {
+                return a + b;
+            }
+            */
+            import "C"
+
+            import "fmt"
+
+            func main() {
+                sum := C.add_ints(20, 22)
+                fmt.Println(int(sum))
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.CROSS,
+        section = "Node.js and native code",
+        title = "A Node.js addon through N-API",
+        originalTitle = "Node-API addon",
+        author = "The Node.js project",
+        year = 2017,
+        summary = "A native addon written in C++ against N-API, so the compiled module keeps working when Node.js is upgraded.",
+        details = "Node-API, or N-API, was introduced in 2017 as a stable interface between Node.js and native code. " +
+            "An addon built against it does not need to be recompiled for every Node.js release, and node-gyp builds it from a small binding file.",
+        instructions = """
+            1. Put the three files below in one folder.
+            2. Build the addon: npx node-gyp configure build
+            3. Run the script: node index.js
+        """,
+        example = """
+            ### binding.gyp
+            {
+              "targets": [
+                { "target_name": "addon", "sources": ["addon.cc"] }
+              ]
+            }
+            ### addon.cc
+            #include <node_api.h>
+
+            static napi_value Add(napi_env env, napi_callback_info info) {
+              size_t argc = 2;
+              napi_value args[2];
+              napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+              double a, b;
+              napi_get_value_double(env, args[0], &a);
+              napi_get_value_double(env, args[1], &b);
+              napi_value result;
+              napi_create_double(env, a + b, &result);
+              return result;
+            }
+
+            static napi_value Init(napi_env env, napi_value exports) {
+              napi_value fn;
+              napi_create_function(env, NULL, 0, Add, NULL, &fn);
+              napi_set_named_property(env, exports, "add", fn);
+              return exports;
+            }
+
+            NAPI_MODULE(NODE_GYP_MODULE_NAME, Init)
+            ### index.js
+            const addon = require("./build/Release/addon");
+            console.log(addon.add(20, 22));
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.CROSS,
+        section = "Python and Rust",
+        title = "A Python module written in Rust",
+        originalTitle = "PyO3 extension module",
+        author = "The PyO3 project and its contributors",
+        year = 2017,
+        summary = "A Rust library compiled into a Python extension module, with a function that Python code calls like any other.",
+        details = "PyO3 makes it routine to write Python modules in Rust, and many libraries used it for speed-critical code in the late 2010s. " +
+            "The example uses a recent version of the PyO3 API, so the code shows the current form of the bindings rather than the first one.",
+        instructions = """
+            1. Create a Rust project with the files below, and build it with maturin develop.
+            2. Run call.py from the same environment, which imports the new module.
+        """,
+        example = """
+            ### Cargo.toml
+            [lib]
+            name = "mathlib"
+            crate-type = ["cdylib"]
+
+            [dependencies]
+            pyo3 = { version = "0.20", features = ["extension-module"] }
+            ### src/lib.rs
+            use pyo3::prelude::*;
+
+            #[pyfunction]
+            fn add_ints(a: i64, b: i64) -> PyResult<i64> {
+                Ok(a + b)
+            }
+
+            #[pymodule]
+            fn mathlib(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+                m.add_function(wrap_pyfunction!(add_ints, m)?)?;
+                Ok(())
+            }
+            ### call.py
+            import mathlib
+            print(mathlib.add_ints(20, 22))
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.CROSS,
+        section = "C and WebAssembly",
+        title = "C compiled to WebAssembly with Emscripten",
+        originalTitle = "Emscripten and WebAssembly",
+        author = "The Emscripten project and the WebAssembly community",
+        year = 2017,
+        summary = "A C function compiled to WebAssembly and called from a web page, with the Emscripten toolchain writing the glue code.",
+        details = "Emscripten compiled C to JavaScript, first as asm.js, and added WebAssembly output when browsers began running the format in 2017. " +
+            "The build script exports one C function, and the page calls it through the generated module object.",
+        instructions = """
+            1. Install the Emscripten SDK and put the files below in one folder.
+            2. Build: sh build.sh
+            3. Open index.html through a local web server and read the console.
+        """,
+        example = """
+            ### add.c
+            int add_ints(int a, int b) {
+              return a + b;
+            }
+            ### build.sh
+            emcc add.c -O2 -s EXPORTED_FUNCTIONS="['_add_ints']" -s EXPORTED_RUNTIME_METHODS="['ccall']" -o add.js
+            ### index.html
+            <script src="add.js"></script>
+            <script>
+              Module.onRuntimeInitialized = function () {
+                console.log(Module.ccall("add_ints", "number", ["number", "number"], [20, 22]));
+              };
+            </script>
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.CROSS,
+        section = "Version control",
+        title = "A Git clean filter written in Python",
+        originalTitle = "clean filter",
+        author = "Git filter attribute practice",
+        year = 2015,
+        summary = "A filter that Git runs on each staged file, here removing trailing spaces before the content is stored.",
+        details = "Git's clean and smudge filters let a repository change file content on the way in and on the way out. Git LFS made the pattern widely known in 2015. " +
+            "The filter is set in the repository configuration and matched to files through .gitattributes, so the working copy stays as the author typed it.",
+        instructions = """
+            1. Save the two files below in one folder.
+            2. Run the setup script in that folder: sh setup.sh
+            3. The stored file has no trailing spaces, even though the working copy had them.
+        """,
+        example = """
+            ### clean.py
+            import sys
+
+            for line in sys.stdin:
+                sys.stdout.write(line.rstrip(" \t\n") + "\n")
+            ### setup.sh
+            git init -q repo
+            cd repo
+            git config user.name "Ann"
+            git config user.email "ann@example.com"
+            git config filter.trim.clean "python3 ../clean.py"
+            echo "*.txt filter=trim" > .gitattributes
+            printf "hello   \n" > notes.txt
+            git add .gitattributes notes.txt
+            git commit -qm "notes"
+            git show HEAD:notes.txt
+        """,
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db4Devices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Devices of 2010 to 2020: phones, tablets, boards, wearables and gadgets that programmers wrote code for. */
+val db4Devices: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Laptops",
+        title = "Apple M1 Mac",
+        originalTitle = "Mac with Apple M1",
+        author = "Apple",
+        year = 2020,
+        summary = "The first Macs built around Apple's own ARM chip, which made the Mac an Apple silicon platform for developers.",
+        details = "Apple announced the M1 in November 2020 in a MacBook Air, a 13-inch MacBook Pro and a Mac mini. Developers had to rebuild their tools for ARM, " +
+            "and Rosetta 2 ran the Intel versions of their apps while the native builds were prepared.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Tablets",
+        title = "iPad (first generation)",
+        originalTitle = "iPad (1st generation)",
+        author = "Apple",
+        year = 2010,
+        summary = "Apple's first tablet, which ran iPhone apps and the iOS touch frameworks on a 9.7-inch screen.",
+        details = "The first iPad went on sale in April 2010. Developers wrote its apps with the same iOS SDK as the iPhone, so existing iPhone apps ran on it, " +
+            "and many were rebuilt for the larger screen over the following months.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Phones",
+        title = "Nexus One",
+        originalTitle = "Nexus One",
+        author = "Google and HTC",
+        year = 2010,
+        summary = "A phone that Google sold unlocked on its own web store, running stock Android without carrier changes.",
+        details = "The Nexus One was announced in January 2010 and sold without a carrier contract. Because it ran stock Android, " +
+            "developers received system updates straight from Google instead of waiting for a carrier to pass them on.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Microcontroller boards",
+        title = "Arduino Uno",
+        originalTitle = "Arduino Uno",
+        author = "Massimo Banzi, David Cuartielles and the Arduino team",
+        year = 2010,
+        summary = "A board with a microcontroller, USB and fourteen digital pins, programmed in short C++ sketches from a simple IDE.",
+        details = "The Arduino Uno was shown in September 2010, and its name means one in Italian. It became the reference board of the platform. " +
+            "A sketch has a setup function that runs once and a loop function that runs forever, and the IDE uploads it over USB.",
+        instructions = """
+            1. Install the Arduino IDE and connect the board with a USB cable.
+            2. Open File, Examples, Basics, Blink.
+            3. Choose the Uno in the Tools menu and press Upload. The onboard LED blinks.
+        """,
+        example = """
+            void setup() {
+              pinMode(13, OUTPUT);
+            }
+
+            void loop() {
+              digitalWrite(13, HIGH);
+              delay(500);
+              digitalWrite(13, LOW);
+              delay(500);
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Single-board computers",
+        title = "Raspberry Pi Model B",
+        originalTitle = "Raspberry Pi Model B",
+        author = "Raspberry Pi Foundation",
+        year = 2012,
+        summary = "A computer the size of a credit card, with an ARM processor, HDMI and USB, that schools used to learn Linux and Python.",
+        details = "The Raspberry Pi Model B went on sale in February 2012. Its ARM processor, HDMI output and USB ports made it a cheap way to run Linux, " +
+            "and the Foundation aimed it at teaching programming. Millions of boards sold over the following years.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Single-board computers",
+        title = "Raspberry Pi Zero",
+        originalTitle = "Raspberry Pi Zero",
+        author = "Raspberry Pi Foundation",
+        year = 2015,
+        summary = "A very small Raspberry Pi that cost five dollars and was first given away on a magazine cover.",
+        details = "The Pi Zero was announced in November 2015 for five dollars, and the first boards came free with a magazine. " +
+            "It had a single-core processor and a mini HDMI port, and it became a common base for small embedded projects.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Wearables",
+        title = "Pebble",
+        originalTitle = "Pebble smartwatch",
+        author = "Pebble Technology",
+        year = 2013,
+        summary = "A smartwatch with an e-paper screen, whose apps were written in C with a JavaScript layer and a free SDK.",
+        details = "Pebble began shipping its watches in January 2013, after a crowdfunding campaign. Its e-paper screen lasted days on one charge, " +
+            "and the free SDK let developers write watch faces and apps.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Wearables",
+        title = "Google Glass Explorer Edition",
+        originalTitle = "Google Glass Explorer Edition",
+        author = "Google",
+        year = 2013,
+        summary = "A head-mounted display that showed cards on a small screen and ran apps built with the Glass Development Kit.",
+        details = "Google began shipping the Explorer Edition to developers in 2013. Its apps used the Glass Development Kit with Android tools. " +
+            "The consumer version was withdrawn in 2015, and an enterprise edition followed in 2017.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Virtual reality",
+        title = "Oculus Rift Development Kit 1",
+        originalTitle = "Oculus Rift DK1",
+        author = "Oculus VR",
+        year = 2013,
+        summary = "The first Rift developer kit, a headset with head tracking that developers used for the first wave of VR demos.",
+        details = "Backers began receiving the DK1 in late March 2013, after the delivery date slipped from the original plan. " +
+            "Its SDK exposed the head-tracking data to C and C++ code, and developers built the first VR demos on top of it.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Input devices",
+        title = "Leap Motion Controller",
+        originalTitle = "Leap Motion Controller",
+        author = "Leap Motion (David Holz and Michael Buckwald)",
+        year = 2013,
+        summary = "A small USB sensor that tracks the hands above it, which programs read through a native SDK.",
+        details = "The Leap Motion controller reached customers in July 2013, after a delay from its first target date. Developers read hand and finger positions " +
+            "through the SDK in several languages, and a common demo mapped a fingertip to the mouse cursor.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Input devices",
+        title = "Kinect for Windows",
+        originalTitle = "Kinect for Windows sensor",
+        author = "Microsoft",
+        year = 2012,
+        summary = "The Kinect sensor sold for PCs, with an SDK for C# and C++ and a licence for commercial use.",
+        details = "Microsoft released Kinect for Windows in February 2012. Its skeleton tracking let a program follow the body of a person in front of the sensor, " +
+            "and the licence allowed businesses to build products on it.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Tablets",
+        title = "Microsoft Surface RT",
+        originalTitle = "Surface RT",
+        author = "Microsoft",
+        year = 2012,
+        summary = "A Windows RT tablet that could run only apps from the Windows Store, which made it a rare curiosity.",
+        details = "Surface RT went on sale in October 2012 with Windows RT, a version of Windows for ARM chips that ran store apps and no classic desktop programs. " +
+            "Its apps were written with the WinRT API, and the tablet sold poorly.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Laptops",
+        title = "Samsung Series 5 Chromebook",
+        originalTitle = "Samsung Series 5 Chromebook",
+        author = "Samsung",
+        year = 2011,
+        summary = "One of the first Chromebooks, a laptop that started into a browser and ran web apps as its only programs.",
+        details = "The Series 5 Chromebook went on sale in June 2011 with Chrome OS. Its apps were web pages and packaged web apps, " +
+            "and the machine kept most of its files in the cloud.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Ouya",
+        originalTitle = "Ouya console",
+        author = "Ouya Inc.",
+        year = 2013,
+        summary = "A small Android console for games, whose developers could publish without signing a publisher's contract.",
+        details = "Ouya shipped in June 2013 after a crowdfunding campaign. Its games ran on Android, " +
+            "and the open policy attracted small studios that had no route onto the big consoles.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Streaming",
+        title = "Chromecast",
+        originalTitle = "Chromecast",
+        author = "Google",
+        year = 2013,
+        summary = "A small HDMI dongle that plays a stream started by an app on a phone or laptop.",
+        details = "Google released the first Chromecast in July 2013 for 35 dollars. It did not run apps itself: a sending app started a stream, " +
+            "and the later Google Cast SDK let developers add the cast button to their own apps.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Smart speakers",
+        title = "Amazon Echo",
+        originalTitle = "Amazon Echo",
+        author = "Amazon",
+        year = 2014,
+        summary = "A voice-controlled speaker whose features are skills that developers write and run in Amazon's cloud.",
+        details = "Amazon released the Echo in November 2014 with the Alexa voice service. Developers added skills through the Alexa Skills Kit, " +
+            "which Amazon launched in 2015, and the skill code ran on Amazon's servers while speech handling stayed with Alexa.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Wearables",
+        title = "Apple Watch",
+        originalTitle = "Apple Watch (first generation)",
+        author = "Apple",
+        year = 2015,
+        summary = "A watch whose first apps ran as extensions of iPhone apps, through the WatchKit framework.",
+        details = "Apple Watch shipped in April 2015. WatchKit had been introduced with iOS 8 in 2014, and at first the phone did most of the work. " +
+            "Later watchOS versions let apps run on the watch itself.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Wi-Fi chips",
+        title = "ESP8266 and the ESP-01 module",
+        originalTitle = "ESP8266 (ESP-01 module)",
+        author = "Espressif Systems and Ai-Thinker",
+        year = 2014,
+        summary = "A cheap Wi-Fi chip whose small ESP-01 module let hobbyists add Wi-Fi to their own microcontroller projects.",
+        details = "The ESP8266 is a Wi-Fi chip from Espressif Systems. The ESP-01 module, made by Ai-Thinker, drew hobbyists in August 2014, " +
+            "and an SDK in October 2014 let the chip run programs on its own. Firmware could be written in C or Lua, and a module cost only a few dollars.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.DEVICE,
+        section = "Drones",
+        title = "Parrot AR.Drone",
+        originalTitle = "Parrot AR.Drone",
+        author = "Parrot",
+        year = 2010,
+        summary = "A Wi-Fi quadcopter that an iPhone app flew, with an SDK that let outside programmers send it flight commands.",
+        details = "Parrot showed the AR.Drone at CES in January 2010, and it went on sale later that year for about 300 dollars. " +
+            "Its SDK let outside programmers send commands over Wi-Fi, and a small community made games and tracking demos with it.",
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db4Examples.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Small examples of 2010 to 2020: one feature per program, short enough to read in a minute. */
+val db4Examples: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 4,
+        kind = Kind.EXAMPLE,
+        section = "Python",
+        title = "async and await in Python",
+        originalTitle = "PEP 492 (Python 3.5)",
+        author = "Yury Selivanov and the Python core developers",
+        year = 2015,
+        summary = "Two coroutines that wait on timers at the same time, so the whole program takes as long as the slower one.",
+        details = "Python 3.5 added the async and await keywords for coroutines, following PEP 492. asyncio.run, which starts the event loop in one call, came in Python 3.7. " +
+            "The example starts two coroutines and gathers their results in the order they were given.",
+        instructions = """
+            1. Save the example as async_demo.py.
+            2. Run it: python3 async_demo.py
+        """,
+        example = """
+            import asyncio
+
+            async def fetch(name, delay):
+                await asyncio.sleep(delay)
+                return name + " done"
+
+            async def main():
+                results = await asyncio.gather(fetch("a", 0.2), fetch("b", 0.1))
+                for line in results:
+                    print(line)
+
+            asyncio.run(main())
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.EXAMPLE,
+        section = "Python",
+        title = "Dataclasses in Python",
+        originalTitle = "PEP 557 (Python 3.7)",
+        author = "Eric V. Smith and the Python core developers",
+        year = 2018,
+        summary = "A class decorator that writes the constructor, the printed form and the equality check from the field list.",
+        details = "Python 3.7 added the dataclasses module in 2018, following PEP 557. The decorator reads the annotated fields of a class " +
+            "and generates the methods that a plain class would need written by hand.",
+        instructions = """
+            1. Save the example as point.py.
+            2. Run it: python3 point.py
+        """,
+        example = """
+            from dataclasses import dataclass
+
+            @dataclass
+            class Point:
+                x: int
+                y: int = 0
+
+            p = Point(3)
+            print(p)
+            print(p == Point(3, 0))
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.EXAMPLE,
+        section = "Java",
+        title = "The var keyword in Java",
+        originalTitle = "Local variable type inference (Java 10)",
+        author = "Oracle and the OpenJDK community",
+        year = 2018,
+        summary = "Local variables whose type the compiler infers from the value, so the declaration does not repeat the type.",
+        details = "Java 10 shipped in March 2018 with var for local variables. The compiler works out the type from the initialiser, so loops and generic collections need less typing. " +
+            "The type is still fixed at compile time, and var can be used only for locals.",
+        instructions = """
+            1. Save the example as VarDemo.java.
+            2. Compile it: javac VarDemo.java
+            3. Run it: java VarDemo
+        """,
+        example = """
+            import java.util.ArrayList;
+
+            public class VarDemo {
+                public static void main(String[] args) {
+                    var names = new ArrayList<String>();
+                    names.add("Ann");
+                    names.add("Bob");
+                    for (var name : names) {
+                        System.out.println("Hello, " + name);
+                    }
+                }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.EXAMPLE,
+        section = "C++",
+        title = "std::optional in C++17",
+        originalTitle = "std::optional (C++17)",
+        author = "The ISO C++ committee",
+        year = 2017,
+        summary = "A value that may be missing, so a function can return a name or nothing without a null pointer or a sentinel value.",
+        details = "C++17 added std::optional to the standard library. A function that may find nothing returns an optional, and the caller tests it before using the value. " +
+            "The example prints a name for one id and a fallback for the other.",
+        instructions = """
+            1. Save the example as optional.cpp.
+            2. Compile it: g++ -std=c++17 -o optional optional.cpp
+            3. Run it: ./optional
+        """,
+        example = """
+            #include <iostream>
+            #include <optional>
+            #include <string>
+
+            std::optional<std::string> find_name(int id) {
+                if (id == 1) return std::string("Ann");
+                return std::nullopt;
+            }
+
+            int main() {
+                int ids[] = {1, 2};
+                for (int id : ids) {
+                    auto name = find_name(id);
+                    std::cout << (name ? *name : std::string("nobody")) << "\n";
+                }
+                return 0;
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.EXAMPLE,
+        section = "PHP",
+        title = "PHP 7 scalar types and the null coalescing operator",
+        originalTitle = "PHP 7.0 features",
+        author = "The PHP development team",
+        year = 2015,
+        summary = "Typed function parameters that refuse wrong types, and a ?? operator that reads a value or falls back to a default.",
+        details = "PHP 7.0 was released in December 2015. With declare(strict_types=1), scalar parameters must have the declared type. " +
+            "The null coalescing operator ?? returns the left side when it is set and the right side otherwise, which replaces a longer isset check.",
+        instructions = """
+            1. Save the example as scalars.php.
+            2. Run it: php scalars.php
+        """,
+        example = """
+            <?php
+            declare(strict_types=1);
+
+            function greet(string <DOLLAR>name, int <DOLLAR>age): string
+            {
+                return "Hello, " . <DOLLAR>name . " (" . <DOLLAR>age . ")\n";
+            }
+
+            echo greet("Ann", 31);
+            <DOLLAR>settings = [];
+            echo <DOLLAR>settings['mode'] ?? "default", "\n";
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.EXAMPLE,
+        section = "Git",
+        title = "Two working trees from one Git repository",
+        originalTitle = "git worktree",
+        author = "The Git project (Git 2.5)",
+        year = 2015,
+        summary = "One repository with two checked-out folders, so an experiment can run next to the main work without a second clone.",
+        details = "git worktree arrived in Git 2.5 in July 2015. A linked worktree is a second folder that shares the same history and object store. " +
+            "Each folder has its own branch checked out, so two branches can be built or tested at the same time.",
+        instructions = """
+            1. Save the commands below as worktree.sh.
+            2. Run it: sh worktree.sh
+            3. The last lines list both folders and the branch each one has checked out.
+        """,
+        example = """
+            git init -q main-repo
+            cd main-repo
+            git config user.name "Ann"
+            git config user.email "ann@example.com"
+            echo one > notes.txt
+            git add notes.txt
+            git commit -qm "first"
+            git worktree add ../second-tree -b experiment
+            cd ../second-tree
+            echo two >> notes.txt
+            git commit -qam "experiment"
+            cd ../main-repo
+            git worktree list
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.EXAMPLE,
+        section = "Go",
+        title = "A worker pool with goroutines and channels",
+        originalTitle = "Go 1.0 goroutines and channels",
+        author = "The Go team",
+        year = 2012,
+        summary = "Three goroutines take jobs from one channel and send results back on another, while a WaitGroup closes the results at the end.",
+        details = "Go 1.0 shipped in March 2012 with goroutines, channels and the sync package. The example is a common pattern for spreading work over a few workers. " +
+            "The results arrive in any order, so the example sorts them before printing.",
+        instructions = """
+            1. Save the example as pool.go.
+            2. Run it: go run pool.go
+        """,
+        example = """
+            package main
+
+            import (
+                "fmt"
+                "sort"
+                "sync"
+            )
+
+            func main() {
+                jobs := make(chan int)
+                results := make(chan int)
+                var wg sync.WaitGroup
+                for w := 1; w <= 3; w++ {
+                    wg.Add(1)
+                    go func() {
+                        defer wg.Done()
+                        for job := range jobs {
+                            results <- job * job
+                        }
+                    }()
+                }
+                go func() {
+                    for n := 1; n <= 5; n++ {
+                        jobs <- n
+                    }
+                    close(jobs)
+                }()
+                go func() {
+                    wg.Wait()
+                    close(results)
+                }()
+                var squares []int
+                for r := range results {
+                    squares = append(squares, r)
+                }
+                sort.Ints(squares)
+                fmt.Println(squares)
+            }
+        """,
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db4Flex.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Flex projects of 2010 to 2020: showpieces that squeeze the most out of a few lines of code. */
+val db4Flex: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 4,
+        kind = Kind.FLEX,
+        section = "Python",
+        title = "The walrus operator in a loop",
+        originalTitle = "Assignment expressions (:=)",
+        author = "Python community (PEP 572)",
+        year = 2019,
+        summary = "A loop that reads until an empty value, binding each value to a name inside the loop condition.",
+        details = "Python 3.8, released in October 2019, added the := operator, which assigns a value and returns it in the same expression. " +
+            "Putting the assignment in the while condition removes the usual read-before-the-loop line.",
+        instructions = """
+            1. Save the example as walrus.py.
+            2. Run it: python3 walrus.py
+        """,
+        example = """
+            # Read values until an empty one, using the walrus operator (Python 3.8).
+            data = ["alpha", "beta", "", "gamma"]
+            it = iter(data)
+            while (line := next(it, "")) != "":
+                print(line.upper())
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.FLEX,
+        section = "Games in JavaScript",
+        title = "Game of Life in a few lines of JavaScript",
+        originalTitle = "Conway's Game of Life (js13k style)",
+        author = "Contest practice of the js13k games competition",
+        year = 2012,
+        summary = "A glider moves across a grid after one generation, computed by counting neighbours in a few short loops.",
+        details = "The js13k contest, which asks for a game in 13 kilobytes of JavaScript, began in 2012. Entries squeezed everything into a few lines, " +
+            "and Conway's Game of Life was a favourite: each cell lives or dies by counting its eight neighbours. This example prints one generation of a glider.",
+        instructions = """
+            1. Save the code as life.js.
+            2. Run it: node life.js
+        """,
+        example = """
+            // One generation of Conway's Game of Life on a small wrapping grid.
+            const size = 6;
+            const grid = Array.from({ length: size }, () => Array(size).fill(0));
+            [[1, 0], [2, 1], [0, 2], [1, 2], [2, 2]].forEach(([x, y]) => { grid[y][x] = 1; });
+
+            const next = grid.map((row, y) => row.map((cell, x) => {
+              let n = 0;
+              for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                  if (dx !== 0 || dy !== 0) {
+                    n += grid[(y + dy + size) % size][(x + dx + size) % size];
+                  }
+                }
+              }
+              return n === 3 || (cell === 1 && n === 2) ? 1 : 0;
+            }));
+
+            next.forEach(row => console.log(row.map(c => (c ? "#" : ".")).join("")));
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.FLEX,
+        section = "Databases",
+        title = "Full-text search in one SQLite table",
+        originalTitle = "FTS5 virtual table",
+        author = "SQLite project",
+        year = 2015,
+        summary = "A virtual table that indexes every word of its text columns, so a query can match any word of a note.",
+        details = "SQLite 3.9, released in October 2015, added the FTS5 full-text module. A table declared with USING fts5 keeps an index of the words in its columns, " +
+            "and MATCH searches that index with OR, AND and phrase queries. The example searches three notes for two alternative words.",
+        instructions = """
+            1. Save the example as search.py.
+            2. Run it: python3 search.py
+            3. The output lists the notes that mention a compiler or a map.
+        """,
+        example = """
+            import sqlite3
+
+            db = sqlite3.connect(":memory:")
+            db.execute("CREATE VIRTUAL TABLE notes USING fts5(title, body)")
+            db.executemany("INSERT INTO notes (title, body) VALUES (?, ?)", [
+                ("Shopping", "milk, eggs and bread"),
+                ("Ideas", "a compiler for the toy language"),
+                ("Travel", "train tickets and a map of the coast"),
+            ])
+            for (title,) in db.execute("SELECT title FROM notes WHERE notes MATCH ? ORDER BY title", ("compiler OR map",)):
+                print(title)
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.FLEX,
+        section = "Python",
+        title = "Sorting a dictionary by its values",
+        originalTitle = "Ordered dictionaries (Python 3.7)",
+        author = "Python community",
+        year = 2018,
+        summary = "One line that turns a dictionary into a new one ordered by value, from the highest score down.",
+        details = "Python 3.7 guaranteed that dictionaries keep their insertion order, so a sorted copy of a dictionary stays in the order it was built. " +
+            "The sorted call takes the items and a key function, and dict rebuilds the mapping from the sorted pairs.",
+        instructions = """
+            1. Save the example as sort_scores.py.
+            2. Run it: python3 sort_scores.py
+        """,
+        example = """
+            scores = {"ann": 31, "bob": 12, "cy": 45}
+            top = dict(sorted(scores.items(), key=lambda item: item[1], reverse=True))
+            print(top)
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.FLEX,
+        section = "Web styling",
+        title = "CSS custom properties in a few rules",
+        originalTitle = "CSS variables (custom properties)",
+        author = "W3C CSS Working Group",
+        year = 2016,
+        summary = "A value declared once on the root and changed by a single class, so the whole stylesheet follows one setting.",
+        details = "CSS custom properties, also called variables, were adopted by browsers between 2014 and 2017, and Chrome and Safari had them in 2016. " +
+            "A property name that starts with two dashes holds a value, and var() reads it. A class can redefine the value for itself and everything inside it.",
+        example = """
+            :root {
+              --accent: #d33;
+              --gap: 12px;
+            }
+            .card {
+              border-left: 4px solid var(--accent);
+              padding: var(--gap);
+            }
+            .card.quiet {
+              --accent: #888;
+            }
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db4Guides.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Guides of 2010 to 2020: step-by-step explanations of how a mechanism works, with a small program to try it where the sandbox allows. */
+val db4Guides: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 4,
+        kind = Kind.GUIDE,
+        section = "Web security",
+        title = "How JWT tokens are signed",
+        originalTitle = "JSON Web Token (RFC 7519)",
+        author = "Michael Jones, John Bradley and Nat Sakimura",
+        year = 2015,
+        summary = "A JSON Web Token is three base64url parts, and its signature is an HMAC over the first two.",
+        details = "JSON Web Tokens were standardised in May 2015 as RFC 7519. The header and the payload are JSON, encoded with base64url. " +
+            "The signature is computed over the two encoded parts with a secret key, so a server can detect any change to the payload.",
+        instructions = """
+            1. Save the code as jwt_demo.py.
+            2. Run it: python3 jwt_demo.py
+            3. The first line is the token, and the second line says whether the signature checks out.
+        """,
+        example = """
+            import base64
+            import hashlib
+            import hmac
+            import json
+
+            def b64url(data):
+                return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
+
+            secret = b"demo-secret"
+            header = b64url(json.dumps({"alg": "HS256", "typ": "JWT"}, separators=(",", ":")).encode())
+            payload = b64url(json.dumps({"sub": "ann", "admin": False}, separators=(",", ":")).encode())
+            signing_input = (header + "." + payload).encode("ascii")
+            signature = b64url(hmac.new(secret, signing_input, hashlib.sha256).digest())
+            print(header + "." + payload + "." + signature)
+
+            expected = b64url(hmac.new(secret, signing_input, hashlib.sha256).digest())
+            print("valid" if hmac.compare_digest(expected, signature) else "invalid")
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.GUIDE,
+        section = "JavaScript",
+        title = "How a promise chain runs",
+        originalTitle = "Promises and the job queue",
+        author = "ECMAScript committee (ES2015)",
+        year = 2015,
+        summary = "A promise runs its callbacks after the current code finishes, and a timer waits behind them in the queue.",
+        details = "ES2015 standardised promises. Their callbacks run as microtasks as soon as the current script ends, before any timer callback. " +
+            "Knowing this order explains why a log line from a then callback can appear after code that was written later.",
+        instructions = """
+            1. Save the code as order.js.
+            2. Run it: node order.js
+            3. Compare the order of the output lines with the order of the calls in the code.
+        """,
+        example = """
+            console.log("start");
+            Promise.resolve(1)
+              .then(function (value) { console.log("then", value); return value + 1; })
+              .then(function (value) { console.log("then again", value); });
+            setTimeout(function () { console.log("timeout"); }, 0);
+            console.log("end");
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.GUIDE,
+        section = "Containers",
+        title = "How Docker layers an image",
+        originalTitle = "Image layers and the writable layer",
+        author = "Docker documentation",
+        year = 2013,
+        summary = "Each instruction in a Dockerfile adds a read-only layer, and a running container adds one writable layer on top.",
+        details = "Docker builds an image as a stack of layers, one for each instruction that changes the file system. Layers are cached and shared between images, " +
+            "so a rebuild reuses everything below the first change. A running container adds a thin writable layer, which is discarded when the container is removed.",
+        instructions = """
+            1. Save the Dockerfile below in an empty folder, next to a file called hello.txt.
+            2. Build it: docker build -t layers-demo .
+            3. Look at the layers: docker history layers-demo
+        """,
+        example = """
+            FROM alpine:3.8
+            COPY hello.txt /hello.txt
+            RUN echo "built once" > /built.txt
+            CMD ["cat", "/hello.txt"]
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.GUIDE,
+        section = "Web layout",
+        title = "How a CSS grid places its items",
+        originalTitle = "CSS Grid Layout",
+        author = "W3C CSS Working Group",
+        year = 2017,
+        summary = "A grid container divides space into rows and columns, and each item fills a cell by line number or by auto-placement.",
+        details = "CSS Grid Layout reached all major browsers in 2017. A container declares its tracks with fr units or fixed sizes, and its items are placed in cells by line numbers. " +
+            "Items that name no cell fill the next free one, so the layout can change with a media query while the markup stays the same.",
+        instructions = """
+            1. Put the CSS below in a page with a container and four child elements: header, menu, main and footer.
+            2. Open the page in a browser and resize the window.
+        """,
+        example = """
+            .page {
+              display: grid;
+              grid-template-columns: 200px 1fr;
+              grid-template-rows: auto 1fr auto;
+            }
+            .header { grid-column: 1 / -1; }
+            .menu   { grid-row: 2; }
+            .main   { grid-column: 2; grid-row: 2; }
+            .footer { grid-column: 1 / -1; }
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.GUIDE,
+        section = "Web security",
+        title = "How a TLS 1.3 handshake takes one round trip",
+        originalTitle = "TLS 1.3 (RFC 8446)",
+        author = "Eric Rescorla and the IETF TLS working group",
+        year = 2018,
+        summary = "TLS 1.3 sends the client's key share in its first message, so the server can answer with its own key share.",
+        details = "RFC 8446 was published in August 2018. The client sends its key share together with the cipher suites it supports. " +
+            "The server replies with its key share and certificate, and both sides derive the keys from that exchange, so the rest of the handshake is encrypted.",
+        instructions = """
+            1. Open a terminal with OpenSSL installed.
+            2. Run: openssl s_client -connect example.com:443 -tls1_3
+            3. Read the handshake messages in the output.
+        """,
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db4Languages.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Programming languages of 2010 to 2020: the systems and safety languages, typed web languages, functional and data languages, and some playful ones. */
+val db4Languages: List<RecordEntity> = listOf(
+
+    // ---------- Systems and safety ----------
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Systems and safety",
+        title = "Rust",
+        originalTitle = "Rust 1.0",
+        author = "Graydon Hoare, then the Rust team at Mozilla",
+        year = 2015,
+        summary = "A systems language with ownership and borrowing, which checks memory safety at compile time without a garbage collector.",
+        details = "Hoare began Rust as a personal project in 2006, and Mozilla sponsored it from 2009. Rust 1.0 came out in May 2015. " +
+            "The borrow checker tracks who owns each value and who may read or write it, so many memory bugs are rejected before the program runs.",
+        example = """
+            fn main() {
+                let names = vec![String::from("Ann"), String::from("Bob")];
+                let first = &names[0];
+                println!("first: {}", first);
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Systems and safety",
+        title = "Swift",
+        originalTitle = "Swift 1.0",
+        author = "Chris Lattner and the Apple team",
+        year = 2014,
+        summary = "Apple's modern language for iOS and macOS, unveiled in 2014 as a safer and shorter replacement for Objective-C.",
+        details = "Apple unveiled Swift at its developer conference in June 2014. It made missing values explicit with optionals, and it added closures, generics and value types. " +
+            "Swift was open-sourced in 2015, and developers moved their apps to it over the following years.",
+        example = """
+            let names = ["Ann", "Bob"]
+            for name in names where name.hasPrefix("A") {
+                print("Hello, \(name)")
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Systems and safety",
+        title = "Zig",
+        originalTitle = "Zig",
+        author = "Andrew Kelley",
+        year = 2016,
+        summary = "A small systems language that avoids hidden control flow and hidden allocations, aiming to be a simpler replacement for C.",
+        details = "Kelley's language made its public debut in February 2016. Compile-time execution, explicit memory allocators and the lack of hidden function calls " +
+            "make the cost of each line visible. For years after its debut Zig stayed below version 1.0, and the design kept changing in public.",
+        example = """
+            const std = @import("std");
+
+            pub fn main() void {
+                std.debug.print("hello from Zig\n", .{});
+            }
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Systems and safety",
+        title = "Pony",
+        originalTitle = "Pony",
+        author = "Sylvan Clebsch and the Pony team",
+        year = 2015,
+        summary = "An actor-based language whose reference capabilities rule out data races at compile time.",
+        details = "Clebsch developed Pony in research at Imperial College London. Its type system tracks which references may be read, written or shared between actors, " +
+            "so the compiler can prove that concurrent code has no data races. The language first appeared in 2015.",
+        example = """
+            actor Counter
+              var count: U32 = 0
+              be increment() => count = count + 1
+              be report(out: OutStream) => out.print(count.string())
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Systems and safety",
+        title = "Crystal",
+        originalTitle = "Crystal",
+        author = "Ary Borenszweig, Juan Wajnerman and the Crystal team",
+        year = 2014,
+        summary = "A language with Ruby-like syntax that infers static types and compiles to fast native code through LLVM.",
+        details = "Crystal debuted publicly in June 2014. It keeps Ruby's readable syntax, but it infers types at compile time and generates native code, " +
+            "so programs run close to C speed while still reading like Ruby. Version 1.0 arrived in 2021.",
+        example = """
+            def greet(name : String) : String
+              "Hello, #{name}"
+            end
+
+            puts greet("Ann")
+        """,
+        rare = true,
+    ),
+
+    // ---------- Web and typed ----------
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Web and typed",
+        title = "TypeScript",
+        originalTitle = "TypeScript 0.8",
+        author = "Anders Hejlsberg and the Microsoft team",
+        year = 2012,
+        summary = "JavaScript with optional static types that compile to plain JavaScript and catch many mistakes early.",
+        details = "Microsoft released TypeScript as a public preview, version 0.8, in October 2012. Types are optional and erased at compile time, so the output is ordinary JavaScript that runs anywhere. " +
+            "Version 1.0 followed at Microsoft's Build conference in 2014, and large codebases adopted the language for its editor support and safer refactoring.",
+        example = """
+            function total(prices: number[]): number {
+              return prices.reduce((sum, p) => sum + p, 0);
+            }
+            console.log(total([2, 3, 5]));
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Web and typed",
+        title = "Kotlin",
+        originalTitle = "Kotlin 1.0",
+        author = "JetBrains",
+        year = 2016,
+        summary = "A concise language for the JVM and Android, with null-safe types and full interoperability with Java.",
+        details = "JetBrains began Kotlin in 2011, and version 1.0 came out in February 2016. Its null-safe types and short syntax made it popular with Android developers, " +
+            "and Google announced it as an official Android language in 2017.",
+        example = """
+            data class Person(val name: String, val age: Int?)
+
+            fun main() {
+                val people = listOf(Person("Ann", 31), Person("Bob", null))
+                people.forEach { println("<DOLLAR>{it.name} <DOLLAR>{it.age ?: "unknown"}") }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Web and typed",
+        title = "Dart",
+        originalTitle = "Dart 1.0",
+        author = "Lars Bak, Kasper Lund and the Google team",
+        year = 2013,
+        summary = "Google's language for web and mobile apps, compiled to JavaScript or to native code, and later the language of Flutter.",
+        details = "Google announced Dart in 2011, and version 1.0 came out in November 2013. Its tools compile it to JavaScript for browsers and to native code for mobile. " +
+            "The Flutter framework, first shown in 2017, made Dart the language of its user interfaces.",
+        example = """
+            void main() {
+              final names = ['Ann', 'Bob'];
+              for (final name in names) {
+                print('Hello, <DOLLAR>name');
+              }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Web and typed",
+        title = "Hack",
+        originalTitle = "Hack (HHVM)",
+        author = "Facebook engineers",
+        year = 2014,
+        summary = "A dialect of PHP with static types, built for the HipHop Virtual Machine at Facebook.",
+        details = "Facebook introduced Hack in 2014 for its HipHop Virtual Machine (HHVM). Hack adds static types to PHP code gradually, " +
+            "so large codebases can migrate without a rewrite. Facebook, later Meta, ran much of its web code in Hack.",
+        example = """
+            function greet(string <DOLLAR>name): string {
+              return "Hello, " . <DOLLAR>name;
+            }
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Web and typed",
+        title = "Elm",
+        originalTitle = "Elm",
+        author = "Evan Czaplicki",
+        year = 2012,
+        summary = "A functional language for web front ends whose compiler gives helpful messages and avoids runtime exceptions in typical code.",
+        details = "Czaplicki released Elm in 2012 as a functional language that compiles to JavaScript. Its architecture keeps the application state in one model " +
+            "that changes only through messages. The compiler's error messages became known for being unusually helpful.",
+        example = """
+            import Html exposing (text)
+
+            main =
+              text "Hello, Elm"
+        """,
+        rare = true,
+    ),
+
+    // ---------- Functional and data ----------
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Functional and data",
+        title = "Elixir",
+        originalTitle = "Elixir",
+        author = "José Valim",
+        year = 2012,
+        summary = "A functional language on the Erlang virtual machine, with Ruby-like syntax and built-in concurrency.",
+        details = "Valim released Elixir publicly in May 2012, after working on it since 2011. It runs on the Erlang virtual machine, so it inherits lightweight processes and fault tolerance, " +
+            "and it adds macros and a friendlier syntax. The Phoenix web framework, which reached version 1.0 in 2015, made it popular for web services.",
+        example = """
+            defmodule Greeter do
+              def greet(name), do: "Hello, #{name}"
+            end
+
+            IO.puts Greeter.greet("Ann")
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Functional and data",
+        title = "Julia",
+        originalTitle = "Julia",
+        author = "Jeff Bezanson, Stefan Karpinski, Viral Shah and Alan Edelman",
+        year = 2012,
+        summary = "A language for numerical computing with a fast compiler and multiple dispatch.",
+        details = "The four creators announced Julia in February 2012, aiming for the speed of C with the ease of Python for technical work. " +
+            "Multiple dispatch chooses the method from the types of all its arguments, which lets numerical libraries stay both generic and fast.",
+        example = """
+            struct Circle
+                r::Float64
+            end
+
+            area(c::Circle) = π * c.r^2
+            println(area(Circle(2.0)))
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Functional and data",
+        title = "Idris",
+        originalTitle = "Idris 1.0",
+        author = "Edwin Brady",
+        year = 2017,
+        summary = "A dependently typed functional language in which types can describe and prove properties of programs.",
+        details = "Brady had been developing Idris as a research language since 2007, and version 1.0 came out in April 2017. A type may mention values, so a function can carry a proof " +
+            "that its result has the right length, and the compiler checks that proof before the program runs.",
+        example = """
+            vappend : Vect n a -> Vect m a -> Vect (n + m) a
+            vappend [] ys = ys
+            vappend (x :: xs) ys = x :: vappend xs ys
+        """,
+        rare = true,
+    ),
+
+    // ---------- Blockchain and contracts ----------
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Blockchain and contracts",
+        title = "Solidity",
+        originalTitle = "Solidity",
+        author = "Gavin Wood, Christian Reitwiessner and the Ethereum team",
+        year = 2015,
+        summary = "The language for Ethereum smart contracts: programs stored on a shared blockchain that pay gas for each step.",
+        details = "Solidity came with the Ethereum platform in 2015. Contracts are compiled to bytecode for the Ethereum Virtual Machine and run on every node, " +
+            "so each operation costs gas. Code on a public ledger cannot be patched casually, so its designers stressed caution, and expensive bugs were found in contracts later.",
+        example = """
+            pragma solidity ^0.8.0;
+
+            contract Counter {
+                uint256 public count;
+
+                function increment() public {
+                    count += 1;
+                }
+            }
+        """,
+    ),
+
+    // ---------- Standards and revisions ----------
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "C++11",
+        originalTitle = "C++11 (ISO/IEC 14882:2011)",
+        author = "Bjarne Stroustrup and the ISO C++ committee",
+        year = 2011,
+        summary = "The large C++ revision with lambdas, move semantics, auto and a standard threads library.",
+        details = "ISO standardised C++11 in 2011, the largest revision since the first standard. Lambdas, move semantics, auto, range-based loops " +
+            "and the standard thread library changed how C++ code was written, and later standards built on them.",
+        instructions = """
+            1. Save the example as lambdas.cpp.
+            2. Compile it: g++ -std=c++11 -o lambdas lambdas.cpp
+            3. Run it: ./lambdas
+        """,
+        example = """
+            #include <algorithm>
+            #include <iostream>
+            #include <string>
+            #include <vector>
+
+            int main() {
+                std::vector<std::string> words = {"compiler", "c", "linker"};
+                std::sort(words.begin(), words.end(),
+                          [](const std::string& a, const std::string& b) { return a.size() < b.size(); });
+                for (const auto& word : words)
+                    std::cout << word << "\n";
+                return 0;
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "Java 8",
+        originalTitle = "Java SE 8",
+        author = "Oracle and the Java Community Process",
+        year = 2014,
+        summary = "Lambda expressions, the Streams API and default methods, which brought functional-style code to Java.",
+        details = "Java 8 (March 2014) added lambda expressions, the Streams API and default methods in interfaces. " +
+            "Collections could be processed in a pipeline of map, filter and reduce steps, which made many loops shorter and easier to run in parallel.",
+        instructions = """
+            1. Save the example as Lambdas.java.
+            2. Compile it: javac Lambdas.java
+            3. Run it: java Lambdas
+        """,
+        example = """
+            public class Lambdas {
+                interface Greeter {
+                    String greet(String name);
+
+                    default String greetTwice(String name) {
+                        return greet(name) + " " + greet(name);
+                    }
+                }
+
+                public static void main(String[] args) {
+                    Runnable hello = () -> System.out.println("a lambda");
+                    hello.run();
+                    Greeter polite = name -> "Hello, " + name;
+                    System.out.println(polite.greetTwice("Ann"));
+                }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "Python 3.6",
+        originalTitle = "Python 3.6",
+        author = "Python Software Foundation and the core developers",
+        year = 2016,
+        summary = "Variable annotations for type checkers and formatted string literals, which made Python code clearer and checkable.",
+        details = "Python 3.6 (December 2016) added variable annotations for type checkers and f-strings for quick formatting. " +
+            "Python 2 was still common in 2016, and these additions became part of everyday Python style.",
+        instructions = """
+            1. Save the example as annotated.py.
+            2. Run it: python3 annotated.py
+        """,
+        example = """
+            from typing import List
+
+            def total(prices: List[float]) -> float:
+                return sum(prices)
+
+            prices: List[float] = [2.0, 3.5]
+            print(total(prices))
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "JavaScript ES2015",
+        originalTitle = "ECMAScript 2015 (ES6)",
+        author = "Ecma International (TC39)",
+        year = 2015,
+        summary = "The sixth edition of ECMAScript: classes, arrow functions, modules, promises, and let and const.",
+        details = "ECMAScript 2015, known as ES6, was published in June 2015. It added classes, arrow functions, template literals, modules, promises, " +
+            "and block-scoped let and const. Browsers and build tools spent several years catching up, and transpilers let teams use the new syntax early.",
+        instructions = """
+            1. Save the example as counter.js.
+            2. Run it: node counter.js
+        """,
+        example = """
+            class Counter {
+              constructor() { this.count = 0; }
+              increment() { this.count += 1; return this; }
+            }
+            console.log(new Counter().increment().increment().count);
+        """,
+    ),
+
+    // ---------- Education and esoteric ----------
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Education and esoteric",
+        title = "Scratch 2.0",
+        originalTitle = "Scratch 2.0",
+        author = "Mitchel Resnick and the MIT Media Lab",
+        year = 2013,
+        summary = "A block-based language for children, with a web version in which projects and sprites can be shared.",
+        details = "The MIT Media Lab released Scratch 2.0 in 2013 as a browser-based environment. Children snap blocks together to make animations and games, " +
+            "and the community shares projects online. The design builds on earlier educational languages such as Logo.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.LANGUAGE,
+        section = "Education and esoteric",
+        title = "Hexagony",
+        originalTitle = "Hexagony",
+        author = "Martin Büttner (known online as Martin Ender)",
+        year = 2015,
+        summary = "An esoteric language whose program sits on a hexagonal grid, and whose instruction pointer moves diagonally through it.",
+        details = "Büttner created Hexagony in 2015. The source code is laid out as a hexagon, and the instruction pointer moves across its edges, " +
+            "so the shape of the code matters as much as its text. Its memory is a separate hexagonal grid as well, which makes each program a puzzle in its own right.",
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db4Practices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Practices of 2010 to 2020: working habits, release rules, versioning and community rules that programmers adopted in the decade. */
+val db4Practices: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PRACTICE,
+        section = "Web design",
+        title = "Responsive web design",
+        originalTitle = "Responsive Web Design",
+        author = "Ethan Marcotte",
+        year = 2010,
+        summary = "One page layout with fluid grids and media queries, so the same site fits phones, tablets and desktop screens.",
+        details = "Marcotte named the approach in an article for A List Apart in May 2010. Fluid grids scale with the window, images resize inside their boxes, " +
+            "and media queries change the layout at set widths. Many teams stopped building a separate mobile site after that.",
+        instructions = """
+            1. Add a viewport meta tag to the page head.
+            2. Give the layout a width in percent, not in fixed pixels.
+            3. Add a media query where the layout needs to change, then test with a narrow window.
+        """,
+        example = """
+            .gallery {
+              display: grid;
+              grid-template-columns: 1fr;
+              gap: 1rem;
+            }
+
+            @media (min-width: 40em) {
+              .gallery {
+                grid-template-columns: 1fr 1fr;
+              }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PRACTICE,
+        section = "Web design",
+        title = "Mobile first",
+        originalTitle = "Mobile First",
+        author = "Luke Wroblewski",
+        year = 2011,
+        summary = "A way to write CSS: start with the smallest screen, then add rules for wider screens with min-width queries.",
+        details = "Wroblewski's book Mobile First, published in 2011, argued that designers should start from the smallest screen and add features as space grows. " +
+            "Teams that did this often ended with simpler stylesheets, because the base styles were already small.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PRACTICE,
+        section = "Version control",
+        title = "Git flow",
+        originalTitle = "A successful Git branching model",
+        author = "Vincent Driessen",
+        year = 2010,
+        summary = "A branching model with long-lived develop and master branches, and short branches for features, releases and fixes.",
+        details = "Driessen described the model in a blog post in January 2010, and it spread quickly among teams that wanted release branches. " +
+            "Its many branch types became a burden for teams that deploy every day, which led some of them to trunk-based workflows.",
+        instructions = """
+            1. Save the commands below as flow.sh.
+            2. Run it: sh flow.sh
+            3. Look at the graph at the end: the feature branch is merged into develop with a merge commit.
+        """,
+        example = """
+            git init -q flow
+            cd flow
+            git config user.name "Ann"
+            git config user.email "ann@example.com"
+            echo start > app.txt
+            git add app.txt
+            git commit -qm "start"
+            git checkout -q -b develop
+            git checkout -q -b feature/login
+            echo login >> app.txt
+            git commit -qam "add login"
+            git checkout -q develop
+            git merge -q --no-ff feature/login -m "Merge feature/login"
+            git log --oneline --graph
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PRACTICE,
+        section = "Version control",
+        title = "GitHub flow",
+        originalTitle = "GitHub Flow",
+        author = "Scott Chacon",
+        year = 2011,
+        summary = "One main branch, short-lived feature branches, and a pull request to review each change before it is merged.",
+        details = "Chacon described GitHub flow in a 2011 blog post, as a lighter alternative to heavier branching models. " +
+            "The main branch was deployed after each merge, and the pull request was where review and discussion happened. Many small teams and open-source projects adopted it.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PRACTICE,
+        section = "Documentation",
+        title = "README-driven development",
+        originalTitle = "Readme Driven Development",
+        author = "Tom Preston-Werner",
+        year = 2010,
+        summary = "Write the README of a project before its code, so the design is checked against the words that describe it.",
+        details = "Preston-Werner, a co-founder of GitHub, described the approach on his blog in 2010. " +
+            "The developer writes the README as a user would read it, then builds the code to match. The method suits libraries and command-line tools, where the usage text is the interface.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PRACTICE,
+        section = "Cloud apps",
+        title = "The Twelve-Factor App",
+        originalTitle = "The Twelve-Factor App",
+        author = "Adam Wiggins and the Heroku team",
+        year = 2011,
+        summary = "Twelve rules for web apps on a cloud platform, such as config in the environment and logs written as streams.",
+        details = "Wiggins published the twelve factors at Heroku in 2011, based on what worked for apps on its platform. " +
+            "The rules cover a single codebase, explicit dependencies, config in the environment, backing services as attached resources and logs written to standard output.",
+        instructions = """
+            1. Save the code below as server.py.
+            2. Run it with a port in the environment: PORT=9000 python3 server.py
+            3. The port is read from the environment, not from a value written into the code.
+        """,
+        example = """
+            import os
+
+            port = int(os.environ.get("PORT", "8000"))
+            print("listening on", port)
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PRACTICE,
+        section = "Release",
+        title = "Continuous Delivery",
+        originalTitle = "Continuous Delivery (book)",
+        author = "Jez Humble and David Farley",
+        year = 2010,
+        summary = "A practice in which every change goes through an automated pipeline that ends in a build ready to release.",
+        details = "Humble and Farley published Continuous Delivery in 2010. The book argued for automated build, test and deployment pipelines, " +
+            "and for trunk builds that always stay releasable. Many teams adopted the pipeline idea in the years that followed.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PRACTICE,
+        section = "Architecture",
+        title = "Microservices",
+        originalTitle = "Microservices (article)",
+        author = "James Lewis and Martin Fowler",
+        year = 2014,
+        summary = "An architecture in which an application is split into small services that run and deploy on their own.",
+        details = "Lewis and Fowler published a widely read article on microservices in March 2014. Each service owns its data and talks to the others over the network, " +
+            "so teams can deploy separately. The style brought new problems of tracing and failure handling, which later tools tried to solve.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PRACTICE,
+        section = "Versioning",
+        title = "Semantic Versioning 2.0",
+        originalTitle = "Semantic Versioning 2.0.0",
+        author = "Tom Preston-Werner",
+        year = 2013,
+        summary = "Version numbers in the form MAJOR.MINOR.PATCH, where a major change is one that breaks compatibility.",
+        details = "Preston-Werner published Semantic Versioning 2.0 in 2013 as a short spec. A patch fixes bugs, a minor version adds compatible features, " +
+            "and a major version breaks compatibility. Sources differ on the origin of the idea, and one places early versions in 2011, but the 2.0 spec dates from 2013.",
+        example = """
+            "dependencies": {
+              "left-pad": "^1.3.0"
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PRACTICE,
+        section = "Community",
+        title = "Hacktoberfest",
+        originalTitle = "Hacktoberfest",
+        author = "DigitalOcean",
+        year = 2014,
+        summary = "A yearly October event that invites people to make open-source contributions, with prizes for those who take part.",
+        details = "DigitalOcean started Hacktoberfest in 2014. The first-year counts disagree: one report gives 676 participants and another 768, so the number should be checked before it is quoted. " +
+            "The event made October a month for first pull requests and beginner-friendly issues.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PRACTICE,
+        section = "Community",
+        title = "Contributor Covenant",
+        originalTitle = "Contributor Covenant",
+        author = "Coraline Ada Ehmke",
+        year = 2014,
+        summary = "A code of conduct for open-source projects, written so that a community can adopt it with little editing.",
+        details = "Ehmke began the Contributor Covenant in 2014. Projects adopt it by copying its text into a CODE_OF_CONDUCT file. " +
+            "Stewardship later moved to the Organization for Ethical Source, which Ehmke co-founded and leads.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PRACTICE,
+        section = "Dependencies",
+        title = "Lessons from left-pad",
+        originalTitle = "left-pad incident",
+        author = "The npm community",
+        year = 2016,
+        summary = "The 2016 episode in which one unpublished npm package broke many builds, and which taught teams to pin their dependencies.",
+        details = "On 22 March 2016 the author removed the tiny left-pad package from npm, and builds that depended on it, many of them through other packages, failed across the ecosystem. " +
+            "npm restored the package within a few hours. Teams afterwards pinned versions, committed lock files and reviewed their dependency trees more closely.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PRACTICE,
+        section = "Containers",
+        title = "Multi-stage Docker builds",
+        originalTitle = "Multi-stage builds",
+        author = "Docker, Inc.",
+        year = 2017,
+        summary = "A Dockerfile with several FROM stages, so the build tools stay in an early stage and only the result is copied forward.",
+        details = "Docker 17.05 added multi-stage builds in May 2017. A build stage compiles the program with all its tools, and a later stage copies only the finished binary into a small image. " +
+            "The final image stays small, and the compilers never reach production.",
+        example = """
+            FROM golang:1.12 AS build
+            WORKDIR /src
+            COPY . .
+            RUN go build -o /out/app .
+
+            FROM debian:stable-slim
+            COPY --from=build /out/app /usr/local/bin/app
+            CMD ["app"]
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PRACTICE,
+        section = "Web design",
+        title = "Progressive web apps",
+        originalTitle = "Progressive Web Apps",
+        author = "Frances Berriman and Alex Russell",
+        year = 2015,
+        summary = "Websites that use service workers and a web app manifest, so they can work offline and be installed like apps.",
+        details = "Berriman and Russell gave the approach its name in 2015. Their web apps used newer browser features to work offline and to be installed on the home screen. " +
+            "Wikipedia dates the wider rollout to 2016, once browsers supported service workers well.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db4Projects.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Built products of 2010 to 2020: finished programs with an explanation of how they work and instructions for running them. */
+val db4Projects: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PROJECT,
+        section = "Web publishing",
+        title = "A static site generator in one file",
+        originalTitle = "One-file static site builder",
+        author = "Written in the style of the 2013 static site generators",
+        year = 2013,
+        summary = "A small tool that turns a text file with headings and list items into a complete HTML page.",
+        details = "Static site generators such as Jekyll and Pelican spread in the early 2010s, and many writers built their own in a few hundred lines. " +
+            "This one reads a text file, takes the first heading as the page title, and writes the body as HTML headings, paragraphs and list items.",
+        instructions = """
+            1. Save the code as build.py.
+            2. Write a page in site/index.txt, with a first line that starts with "# ".
+            3. Run it: python3 build.py site/index.txt public/index.html
+            4. Open public/index.html in a browser.
+        """,
+        example = """
+            #!/usr/bin/env python3
+            # A static site generator in one file: a text page in, an HTML page out.
+            import os
+            import sys
+
+            HEAD = "<!doctype html><html><head><meta charset='utf-8'><title>%s</title></head><body>\n"
+            FOOT = "\n</body></html>\n"
+
+            def convert(line):
+                if line.startswith("# "):
+                    return "<h1>%s</h1>" % line[2:]
+                if line.startswith("- "):
+                    return "<li>%s</li>" % line[2:]
+                return "<p>%s</p>" % line if line else ""
+
+            def build(source, target):
+                with open(source, encoding="utf-8") as handle:
+                    lines = [line.rstrip("\n") for line in handle]
+                title = next((line[2:] for line in lines if line.startswith("# ")), "Untitled")
+                body = "\n".join(convert(line) for line in lines)
+                os.makedirs(os.path.dirname(target) or ".", exist_ok=True)
+                with open(target, "w", encoding="utf-8") as out:
+                    out.write(HEAD % title + body + FOOT)
+
+            if __name__ == "__main__":
+                build(sys.argv[1], sys.argv[2])
+                print("built", sys.argv[2])
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PROJECT,
+        section = "Command-line tools",
+        title = "A command-line task list",
+        originalTitle = "Task list with a JSON file",
+        author = "Written in the style of the 2014 command-line todo tools",
+        year = 2014,
+        summary = "A tool that adds, completes and lists tasks, and keeps them in a JSON file next to the script.",
+        details = "Small command-line todo tools were popular with programmers in the 2010s, because a plain file was easy to back up and sync. " +
+            "This one keeps its list in tasks.json, adds tasks from the arguments, marks a task done by its number, and prints the list with check marks.",
+        instructions = """
+            1. Save the code as tasks.py.
+            2. Add a task: python3 tasks.py add Buy milk
+            3. Mark the first task done: python3 tasks.py done 1
+            4. List the tasks: python3 tasks.py
+        """,
+        example = """
+            #!/usr/bin/env python3
+            # A command-line task list that keeps its tasks in a JSON file.
+            import json
+            import os
+            import sys
+
+            FILE = "tasks.json"
+
+            def load():
+                if not os.path.exists(FILE):
+                    return []
+                with open(FILE, encoding="utf-8") as handle:
+                    return json.load(handle)
+
+            def save(tasks):
+                with open(FILE, "w", encoding="utf-8") as handle:
+                    json.dump(tasks, handle, indent=2)
+
+            def main(argv):
+                tasks = load()
+                if argv[:1] == ["add"]:
+                    tasks.append({"text": " ".join(argv[1:]), "done": False})
+                    save(tasks)
+                elif argv[:1] == ["done"]:
+                    tasks[int(argv[1]) - 1]["done"] = True
+                    save(tasks)
+                for number, task in enumerate(tasks, 1):
+                    mark = "x" if task["done"] else " "
+                    print("%d. [%s] %s" % (number, mark, task["text"]))
+
+            if __name__ == "__main__":
+                main(sys.argv[1:])
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PROJECT,
+        section = "Browser extensions",
+        title = "A Chrome extension that counts tabs",
+        originalTitle = "Tab counter (manifest version 2)",
+        author = "Written in the style of the 2012 Chrome extensions",
+        year = 2012,
+        summary = "A browser extension whose toolbar button logs the number of open tabs to the extension console.",
+        details = "Chrome extensions of the early 2010s were packages of a manifest file and scripts, and manifest version 2 was the common format. " +
+            "A background script listens for clicks on the toolbar button and asks the tabs API for the open tabs. The count goes to the console of the extension.",
+        instructions = """
+            1. Put the two files below in one folder called tab-counter.
+            2. Open chrome://extensions, switch on developer mode and choose Load unpacked.
+            3. Pick the folder, then click the toolbar button and open the extension console to read the count.
+        """,
+        example = """
+            ### manifest.json
+            {
+              "manifest_version": 2,
+              "name": "Tab counter",
+              "version": "1.0",
+              "browser_action": { "default_title": "Count tabs" },
+              "background": { "scripts": ["background.js"] },
+              "permissions": ["tabs"]
+            }
+            ### background.js
+            chrome.browserAction.onClicked.addListener(function () {
+              chrome.tabs.query({}, function (tabs) {
+                console.log("open tabs: " + tabs.length);
+              });
+            });
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.PROJECT,
+        section = "Command-line tools",
+        title = "A Go command that prints file hashes",
+        originalTitle = "SHA-256 file hasher",
+        author = "Written in the style of the 2017 Go command-line tools",
+        year = 2017,
+        summary = "A single-file command that reads each file named on the command line and prints its SHA-256 hash.",
+        details = "Go's standard library has the hash and io packages, so a useful tool fits in one file with no outside dependencies. " +
+            "The command streams each file through SHA-256 without loading it into memory, and prints the hash next to the name in the same layout as sha256sum.",
+        instructions = """
+            1. Save the code as hashes.go.
+            2. Run it on a file: go run hashes.go notes.txt
+            3. Compare the output with sha256sum notes.txt, which prints the same hash.
+        """,
+        example = """
+            package main
+
+            import (
+                "crypto/sha256"
+                "fmt"
+                "io"
+                "os"
+            )
+
+            func main() {
+                for _, name := range os.Args[1:] {
+                    file, err := os.Open(name)
+                    if err != nil {
+                        fmt.Fprintln(os.Stderr, err)
+                        os.Exit(1)
+                    }
+                    hash := sha256.New()
+                    if _, err := io.Copy(hash, file); err != nil {
+                        fmt.Fprintln(os.Stderr, err)
+                        os.Exit(1)
+                    }
+                    file.Close()
+                    fmt.Printf("%x  %s\n", hash.Sum(nil), name)
+                }
+            }
+        """,
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db4Systems.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Systems of 2010 to 2020: operating systems, mobile platforms, system services, runtimes and cloud services that changed how code was written and run. */
+val db4Systems: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Desktop systems",
+        title = "macOS Big Sur",
+        originalTitle = "macOS 11 Big Sur",
+        author = "Apple",
+        year = 2020,
+        summary = "The macOS release that ran natively on Apple silicon and ran Intel apps through the Rosetta 2 translation layer.",
+        details = "macOS 11 Big Sur shipped in November 2020, in the same month as the first Macs with Apple's own M1 chip. " +
+            "Rosetta 2 translates existing Intel apps as they run, so developers could also ship universal binaries that contain both kinds of machine code.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Desktop systems",
+        title = "Windows 8",
+        originalTitle = "Windows 8",
+        author = "Microsoft",
+        year = 2012,
+        summary = "The version of Windows built around touch, with a tiled Start screen and full-screen apps on the WinRT API.",
+        details = "Microsoft released Windows 8 in October 2012. The Start screen was made of live tiles designed for touch, and store apps ran full screen. " +
+            "Many desktop users disliked the change, and Windows 8.1 in 2013 brought back a Start button.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Mobile systems",
+        title = "Windows Phone 8",
+        originalTitle = "Windows Phone 8",
+        author = "Microsoft and Nokia",
+        year = 2012,
+        summary = "A phone system that shared its kernel with Windows 8 and ran apps written in C# and XAML.",
+        details = "Windows Phone 8 arrived in October 2012 on the Windows NT kernel, so phones and PCs could share code. " +
+            "Developers used the same C#, XAML and tools as desktop Windows apps. The platform never won a large share of the market.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Mobile systems",
+        title = "Tizen",
+        originalTitle = "Tizen 1.0 (Larkspur)",
+        author = "Samsung and the Linux Foundation",
+        year = 2012,
+        summary = "A Linux-based system from Samsung and the Linux Foundation, whose apps could be written in HTML5 and JavaScript.",
+        details = "Tizen 1.0, codenamed Larkspur, came out in 2012. Sources give April or May 2012 for it. " +
+            "Samsung later used Tizen for smart TVs and watches, and the system stayed a niche platform for phones.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Mobile systems",
+        title = "Firefox OS",
+        originalTitle = "Firefox OS",
+        author = "Mozilla",
+        year = 2013,
+        summary = "Mozilla's phone system in which every app is a web app written in HTML, CSS and JavaScript.",
+        details = "The first commercial phones, the Geeksphone Keon and Peak, were announced in January 2013 and went on sale in April 2013, with Telefónica helping to sell them. " +
+            "Apps were web apps installed from a store, so any web developer could write one. Mozilla stopped developing the system in 2016.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Desktop systems",
+        title = "Chrome OS",
+        originalTitle = "Chrome OS (Chromebooks)",
+        author = "Google",
+        year = 2011,
+        summary = "A Linux-based system in which the browser is the main program and most files live in the cloud.",
+        details = "Google published the Chromium OS source in 2009. The first Chromebooks, from Samsung and Acer, went on sale in June 2011 and started straight into a browser. " +
+            "Web apps were the only programs, and schools and businesses adopted the machines for managed accounts.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Mobile systems",
+        title = "Android 5.0 Lollipop and ART",
+        originalTitle = "Android 5.0 Lollipop (ART runtime)",
+        author = "Google and the Android team",
+        year = 2014,
+        summary = "The Android release that made ART, the runtime that compiles app code to machine code, the default.",
+        details = "Android 5.0 Lollipop came out in November 2014. ART had been offered as an option in KitKat in 2013, and Lollipop replaced the older Dalvik runtime with it. " +
+            "ART compiled app code to machine code when an app was installed, so the phone spent less time interpreting code while the app ran.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Linux",
+        title = "systemd",
+        originalTitle = "systemd",
+        author = "Lennart Poettering, Kay Sievers and Red Hat",
+        year = 2010,
+        summary = "A Linux init system that starts services in parallel, watches them and keeps their logs in a journal.",
+        details = "Development began at Red Hat in 2010. Release dates differ by source: an infobox gives 30 March 2010, an industry article gives 18 May 2010 for version 1, " +
+            "and a packaging changelog gives 7 July 2010 for the first upstream release. Many distributions made systemd their default init system in the years that followed.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Linux",
+        title = "Wayland",
+        originalTitle = "Wayland 1.0 with Weston",
+        author = "Kristian Høgsberg and the Wayland community",
+        year = 2012,
+        summary = "A display protocol in which the compositor draws every window, which replaces the older X11 model.",
+        details = "Wayland 1.0 and the Weston reference compositor came out on 22 October 2012. From then on the protocol and client API were fixed, so later versions only added to them. " +
+            "Adoption was slow, and desktops moved to Wayland over the following years.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Experimental systems",
+        title = "Redox OS",
+        originalTitle = "Redox OS",
+        author = "Jeremy Soller and the Redox community",
+        year = 2015,
+        summary = "A Unix-like operating system written in Rust, with a microkernel and most drivers running as separate programs.",
+        details = "Redox first appeared publicly on GitHub in April 2015 under the MIT license. Its kernel is a microkernel, so drivers and file systems run as ordinary programs in user space. " +
+            "The project is an attempt to build a whole operating system in a memory-safe language.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Experimental systems",
+        title = "Fuchsia",
+        originalTitle = "Fuchsia",
+        author = "Google",
+        year = 2016,
+        summary = "Google's experimental operating system, built on its own microkernel and not on the Linux kernel.",
+        details = "Fuchsia's code appeared in a public repository in August 2016, with no announcement. The kernel was first called Magenta and was later named Zircon. " +
+            "The first product to run Fuchsia was a smart display, the Nest Hub, in 2021.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Web platforms",
+        title = "WebAssembly",
+        originalTitle = "WebAssembly (MVP)",
+        author = "Google, Mozilla, Microsoft, Apple and the W3C community",
+        year = 2017,
+        summary = "A compact binary format that browsers run next to JavaScript, so compiled C, C++ and Rust code can run in a page.",
+        details = "The project started in 2015, when a demo ran a game in several browsers. Browsers began shipping the first version in March 2017, and every major engine supported it by the end of that year. " +
+            "Compilers such as Emscripten and LLVM can produce WebAssembly from other languages.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Cloud and containers",
+        title = "Kubernetes",
+        originalTitle = "Kubernetes 1.0",
+        author = "Google engineers, then the Cloud Native Computing Foundation",
+        year = 2014,
+        summary = "A system that schedules containers across a cluster of machines and restarts the ones that fail.",
+        details = "Google open-sourced Kubernetes in June 2014. It drew on Borg, the cluster manager Google had run internally for years. " +
+            "Version 1.0 came out in July 2015, when the project was handed to the new Cloud Native Computing Foundation.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Serverless",
+        title = "AWS Lambda",
+        originalTitle = "AWS Lambda",
+        author = "Amazon Web Services",
+        year = 2014,
+        summary = "A service that runs a function on demand, so the developer manages no servers.",
+        details = "Amazon announced Lambda in November 2014 at its re:Invent conference. A developer uploads a function, and the service runs it for each event, " +
+            "such as a file upload or an HTTP request. The customer pays only for the time the function runs.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Serverless",
+        title = "Firecracker",
+        originalTitle = "Firecracker microVM",
+        author = "Amazon Web Services",
+        year = 2018,
+        summary = "A minimal virtual machine monitor, built on KVM, that starts small virtual machines for functions and containers.",
+        details = "Amazon unveiled Firecracker at re:Invent in late November 2018 and released it as open source under the Apache 2.0 license. " +
+            "It is written in Rust, and Lambda and Fargate use it to isolate their workloads.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.SYSTEM,
+        section = "Runtimes",
+        title = "Java 9 modules",
+        originalTitle = "Java Platform Module System (Project Jigsaw)",
+        author = "Oracle and the OpenJDK community",
+        year = 2017,
+        summary = "A module system built into Java, in which a program declares which modules it needs and which it exports.",
+        details = "Java 9 shipped in September 2017 with the module system that the Jigsaw project had worked on for years. " +
+            "A program can be packaged with only the parts of the Java platform it uses, which made small runtime images possible.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db4Tools.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Tools of 2010 to 2020: editors, package managers, containers, automation services and other programs that developers used every day. */
+val db4Tools: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 4,
+        kind = Kind.TOOL,
+        section = "Virtual machines",
+        title = "Vagrant",
+        originalTitle = "Vagrant 0.1",
+        author = "Mitchell Hashimoto, John Bender and HashiCorp",
+        year = 2010,
+        summary = "A tool that creates and starts virtual machines from a text file, so a whole team shares one development setup.",
+        details = "Hashimoto began Vagrant as a side project in January 2010, and version 0.1 came out in early March 2010 (sources give 7 or 8 March). " +
+            "Version 1.0 landed in March 2012, and HashiCorp was founded in November 2012 to work on the tool full time.",
+        instructions = """
+            1. Install Vagrant and VirtualBox.
+            2. Save the file below as Vagrantfile in an empty folder.
+            3. Run vagrant up to build and start the machine, then vagrant ssh to log in.
+        """,
+        example = """
+            Vagrant.configure("2") do |config|
+              config.vm.box = "ubuntu/xenial64"
+              config.vm.network "forwarded_port", guest: 80, host: 8080
+            end
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.TOOL,
+        section = "Configuration",
+        title = "Ansible",
+        originalTitle = "Ansible",
+        author = "Michael DeHaan and Red Hat",
+        year = 2012,
+        summary = "A tool that configures machines over SSH from YAML playbooks, with no agent to install on the managed hosts.",
+        details = "Michael DeHaan started Ansible, and most references give 20 February 2012 for its first release (one documentation source gives March 2012 for version 0.0.1). " +
+            "Red Hat bought the company behind it in October 2015 for about 150 million dollars.",
+        example = """
+            - hosts: webservers
+              tasks:
+                - name: Install nginx
+                  apt:
+                    name: nginx
+                    state: present
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.TOOL,
+        section = "Containers",
+        title = "Docker",
+        originalTitle = "Docker",
+        author = "Solomon Hykes and dotCloud",
+        year = 2013,
+        summary = "A tool that packs an app and its libraries into an image, and runs the image as an isolated container.",
+        details = "Solomon Hykes showed Docker at PyCon in March 2013, and the project was released as open source that spring. " +
+            "Images are built in layers from a text file, and containers share the host's Linux kernel, so they start in a fraction of a second.",
+        example = """
+            FROM python:3.6-slim
+            WORKDIR /app
+            COPY hello.py .
+            CMD ["python", "hello.py"]
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.TOOL,
+        section = "Editors",
+        title = "Visual Studio Code",
+        originalTitle = "Visual Studio Code",
+        author = "Microsoft",
+        year = 2015,
+        summary = "A free code editor built on Electron, whose extensions are written in JavaScript and TypeScript.",
+        details = "Microsoft announced Visual Studio Code in April 2015 and released its source under the MIT license later that year. " +
+            "Extensions run in a separate process and use the same TypeScript-based API, and within a few years it was one of the most widely used code editors.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.TOOL,
+        section = "Editors",
+        title = "Android Studio",
+        originalTitle = "Android Studio (preview)",
+        author = "Google and JetBrains",
+        year = 2013,
+        summary = "The official IDE for Android, built on IntelliJ IDEA, with a Gradle build and an emulator for testing.",
+        details = "Google introduced Android Studio in May 2013 as a replacement for the Eclipse plugin. It is built on IntelliJ IDEA, " +
+            "and it uses Gradle as its build system, so each project declares its dependencies in build scripts.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.TOOL,
+        section = "Security",
+        title = "Let's Encrypt",
+        originalTitle = "Let's Encrypt (public beta)",
+        author = "Internet Security Research Group, EFF and Mozilla",
+        year = 2015,
+        summary = "A free certificate authority whose clients request, install and renew HTTPS certificates on their own.",
+        details = "The public beta opened on 3 December 2015, and any site owner with a domain and a web server could get a free certificate. " +
+            "Certificates lasted 90 days, and the client renewed them automatically, which made HTTPS cheap enough to turn on by default.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.TOOL,
+        section = "Automation",
+        title = "Jenkins",
+        originalTitle = "Jenkins (renamed from Hudson)",
+        author = "Kohsuke Kawaguchi and the Jenkins community",
+        year = 2011,
+        summary = "An automation server that runs build and test jobs, defined in a web interface or in a Jenkinsfile.",
+        details = "The project took the name Jenkins in 2011, after a dispute with Oracle over the Hudson name, and the community carried on the code. " +
+            "Pipelines written in a Jenkinsfile became the usual way to describe jobs, and the file lives in the project's repository.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.TOOL,
+        section = "Package managers",
+        title = "Yarn",
+        originalTitle = "Yarn",
+        author = "Facebook, Google, Exponent and Tilde engineers",
+        year = 2016,
+        summary = "A JavaScript package manager that installs dependencies in parallel and locks their exact versions in a lock file.",
+        details = "Engineers from Facebook, Google, Exponent and Tilde released Yarn in October 2016 to fix slow and inconsistent installs from npm. " +
+            "Its lock file recorded the exact version of every dependency, so every machine installed the same packages.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.TOOL,
+        section = "Mobile frameworks",
+        title = "React Native",
+        originalTitle = "React Native",
+        author = "Facebook",
+        year = 2015,
+        summary = "A framework that builds iOS and Android apps from JavaScript and React components, which map onto native views.",
+        details = "Facebook announced React Native at its F8 conference in March 2015 and released it as open source that year. " +
+            "Components draw native views instead of web views, so the app looks and behaves like a native one while most of the code is shared.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.TOOL,
+        section = "Automation",
+        title = "GitHub Actions",
+        originalTitle = "GitHub Actions",
+        author = "GitHub",
+        year = 2019,
+        summary = "Workflow automation built into GitHub, in which YAML files run jobs on hosted machines for each push or pull request.",
+        details = "GitHub made Actions generally available in November 2019, after a beta that began in 2018. " +
+            "A workflow file in the repository names the events that start it and the steps that run on the hosted runner.",
+        example = """
+            name: tests
+            on: [push]
+            jobs:
+              test:
+                runs-on: ubuntu-latest
+                steps:
+                  - uses: actions/checkout@v2
+                  - run: python3 -m unittest
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.TOOL,
+        section = "Infrastructure",
+        title = "Terraform",
+        originalTitle = "Terraform",
+        author = "HashiCorp and Mitchell Hashimoto",
+        year = 2014,
+        summary = "A tool that describes cloud resources in declarative files, and creates, changes or removes them to match.",
+        details = "Terraform's first release is dated 28 July 2014 in most references, and it started with providers for AWS and DigitalOcean. " +
+            "Its plan step shows what would change before anything is applied, and infrastructure as code became a common practice through the decade.",
+        example = """
+            resource "aws_instance" "web" {
+              ami           = "ami-0123456789abcdef0"
+              instance_type = "t2.micro"
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.TOOL,
+        section = "Version control",
+        title = "Git LFS",
+        originalTitle = "Git Large File Storage",
+        author = "GitHub",
+        year = 2015,
+        summary = "An extension to Git that keeps large files on a server and leaves small text pointers in the repository.",
+        details = "GitHub made Git LFS public in April 2015, after early access for a small group. Each large file in the repository is replaced by a text pointer, " +
+            "and its contents sit on a server. Version 1.0 opened the feature to all GitHub.com repositories in October 2015.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.TOOL,
+        section = "State management",
+        title = "Redux",
+        originalTitle = "Redux",
+        author = "Dan Abramov and Andrew Clark",
+        year = 2015,
+        summary = "A JavaScript state container in which one store holds the app state and pure reducers compute each change.",
+        details = "Redux had its first public release on 2 June 2015. It took its ideas from Flux, and its reducers are pure functions, " +
+            "so every state change can be recorded and replayed, which made time-travel debugging practical.",
+    ),
+
+    entry(
+        databaseId = 4,
+        kind = Kind.TOOL,
+        section = "Design",
+        title = "Figma",
+        originalTitle = "Figma",
+        author = "Figma, Inc.",
+        year = 2016,
+        summary = "A browser-based design tool in which several people edit the same file at the same time.",
+        details = "Figma's first public release came in late September 2016, after a closed beta that had started in late 2015. " +
+            "Real-time collaborative editing set it apart from design tools that ran as desktop applications.",
+    ),
+)
+
+################################################################################
 # FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
@@ -11965,10 +14592,16 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "Languages, systems, devices, tools and practices of 2000 to 2010, including rare and little-known items.",
         colorHex = "#FF8A65",
     ),
+    DatabaseEntity(
+        id = 4,
+        name = "Database 4: 2010s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 2010 to 2020, including rare and little-known items.",
+        colorHex = "#AED581",
+    ),
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
-val seedRecords: List<RecordEntity> = db1Records + db2Records + db3Records
+val seedRecords: List<RecordEntity> = db1Records + db2Records + db3Records + db4Records
 
 ################################################################################
 # FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
@@ -13041,9 +15674,11 @@ import com.example.retrodatabases.data.AppDatabase
 import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.MIGRATION_1_2
 import com.example.retrodatabases.data.MIGRATION_2_3
+import com.example.retrodatabases.data.MIGRATION_3_4
 import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.db2Records
 import com.example.retrodatabases.data.seed.db3Records
+import com.example.retrodatabases.data.seed.db4Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -13068,6 +15703,7 @@ class AppDatabaseSeedTest {
         assertEquals(db1Records.size, databases.single { it.id == 1L }.recordCount)
         assertEquals(db2Records.size, databases.single { it.id == 2L }.recordCount)
         assertEquals(db3Records.size, databases.single { it.id == 3L }.recordCount)
+        assertEquals(db4Records.size, databases.single { it.id == 4L }.recordCount)
 
         val records = dao.observeRecords(1L).first()
         assertEquals(db1Records.size, records.size)
@@ -13107,6 +15743,23 @@ class AppDatabaseSeedTest {
         assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
         assertEquals(db3Records.size, dao.observeRecords(3L).first().size)
         assertEquals(db2Records.size, dao.observeRecords(2L).first().size)
+    }
+
+    @Test
+    fun migrationRestoresDatabaseFour() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 3 has no database 4: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 4")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 4")
+        MIGRATION_3_4.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db4Records.size, dao.observeRecords(4L).first().size)
+        assertEquals(db3Records.size, dao.observeRecords(3L).first().size)
     }
 
     @Test
@@ -13206,6 +15859,7 @@ import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.db2Records
 import com.example.retrodatabases.data.seed.db3Records
+import com.example.retrodatabases.data.seed.db4Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import com.example.retrodatabases.data.seed.seedRecords
 import org.junit.Assert.assertEquals
@@ -13214,7 +15868,7 @@ import org.junit.Test
 
 class SeedDataTest {
 
-    private val catalogues = listOf(db1Records, db2Records, db3Records)
+    private val catalogues = listOf(db1Records, db2Records, db3Records, db4Records)
 
     @Test
     fun seededDatabasesHaveUniqueIdsAndTheirOwnRecords() {
@@ -13224,6 +15878,7 @@ class SeedDataTest {
         assertTrue(db1Records.all { it.databaseId == 1L })
         assertTrue(db2Records.all { it.databaseId == 2L })
         assertTrue(db3Records.all { it.databaseId == 3L })
+        assertTrue(db4Records.all { it.databaseId == 4L })
     }
 
     @Test
@@ -13239,6 +15894,7 @@ class SeedDataTest {
         assertTrue(db1Records.all { it.year in 1950..1990 })
         assertTrue(db2Records.all { it.year in 1990..1999 })
         assertTrue(db3Records.all { it.year in 2000..2010 })
+        assertTrue(db4Records.all { it.year in 2010..2020 })
     }
 
     @Test

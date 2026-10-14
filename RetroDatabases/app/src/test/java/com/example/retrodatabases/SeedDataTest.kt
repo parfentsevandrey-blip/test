@@ -4,6 +4,7 @@ import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.db2Records
 import com.example.retrodatabases.data.seed.db3Records
+import com.example.retrodatabases.data.seed.db4Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import com.example.retrodatabases.data.seed.seedRecords
 import org.junit.Assert.assertEquals
@@ -12,7 +13,7 @@ import org.junit.Test
 
 class SeedDataTest {
 
-    private val catalogues = listOf(db1Records, db2Records, db3Records)
+    private val catalogues = listOf(db1Records, db2Records, db3Records, db4Records)
 
     @Test
     fun seededDatabasesHaveUniqueIdsAndTheirOwnRecords() {
@@ -22,6 +23,7 @@ class SeedDataTest {
         assertTrue(db1Records.all { it.databaseId == 1L })
         assertTrue(db2Records.all { it.databaseId == 2L })
         assertTrue(db3Records.all { it.databaseId == 3L })
+        assertTrue(db4Records.all { it.databaseId == 4L })
     }
 
     @Test
@@ -37,6 +39,7 @@ class SeedDataTest {
         assertTrue(db1Records.all { it.year in 1950..1990 })
         assertTrue(db2Records.all { it.year in 1990..1999 })
         assertTrue(db3Records.all { it.year in 2000..2010 })
+        assertTrue(db4Records.all { it.year in 2010..2020 })
     }
 
     @Test
