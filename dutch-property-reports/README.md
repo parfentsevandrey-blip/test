@@ -426,9 +426,10 @@ python3 -m reportgen.selection --latlon 51.4277 5.4380
 ## Данные с funda in business
 
 Страницы funda закрыты Akamai Bot Manager (посетителя встречает страница
-проверки с reCAPTCHA), поэтому скачать HTML скриптом нельзя — страницу нужно
-сохранить из браузера («Сохранить как» → *.html или скопировать outerHTML).
-Из сохранённого файла черновик карточки собирается автоматически:
+проверки с reCAPTCHA). С 14.10.2026 их снимает Scrapling — см. следующий
+раздел; запасные пути — reader-прокси и сохранение страницы из браузера
+(«Сохранить как» → *.html или скопировать outerHTML). Из сохранённого файла
+черновик карточки собирается автоматически:
 
 ```bash
 python generate_report.py parse raw/steenovenweg.html \
@@ -442,6 +443,39 @@ python generate_report.py parse raw/steenovenweg.html \
 
 Сами изображения (`cloud.funda.nl`) отдаются без защиты, их загружает
 `reportgen/media.py` — правится только список ссылок.
+
+### Scrapling — основной путь
+
+[Scrapling](https://github.com/D4Vinci/Scrapling) ставится вместе с
+загрузчиками и снимает объявление целиком — с полным описанием, таблицей
+характеристик и всей галереей:
+
+```bash
+pip install "scrapling[fetchers]"
+python -m reportgen.funda_fetch --scrapling --html-dir raw <url> [<url> …]
+```
+
+- Сначала `Fetcher`: HTTP-запрос с TLS-отпечатком Chrome (curl_cffi). На
+  funda in business он проходит стену примерно за секунду, а полный текст
+  описания уже лежит в разметке — обрезает его только вёрстка.
+- Если стена всё же встала, страницу снимает `StealthyFetcher` — скрытый
+  Chromium через patchright, без Xvfb. Он нажимает согласие на cookie и кнопку
+  «Lees de volledige omschrijving»; около 25 секунд на объявление.
+
+В облачном окружении `scrapling install` не запускается: он тянет свою сборку
+Chromium через `playwright install`, а patchright 1.63 ищет сборку 1243,
+которой здесь нет. Браузер берётся предустановленный — из
+`SCRAPLING_EXECUTABLE_PATH` или `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`.
+Сертификат агентского прокси подкладывается тем же пином, что и у `--browser`;
+проверка TLS остаётся включённой.
+
+Проверено 14.10.2026 на трёх объявлениях: Stammerkamp 19 (оба пути),
+Nikkelstraat 11-13 (`Fetcher`) и Aston Martinlaan 41 (`StealthyFetcher`).
+Двумя днями раньше headful-Chromium (`--browser`) на тех же объявлениях не
+прошёл стену ни с одной из 12 попыток.
+
+Тот же `Fetcher` годится для сайтов компаний и брокеров:
+`Fetcher.get(url).css("h1::text").get()`.
 
 ### Обход стены: reader-прокси
 

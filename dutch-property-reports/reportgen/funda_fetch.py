@@ -1,9 +1,18 @@
-"""Снятие страницы funda и funda in business через reader-прокси.
+"""Снятие страницы funda и funda in business: Scrapling, браузер, reader-прокси.
 
 Обе площадки закрыты анти-бот стеной: прямой ``GET``, WebFetch, headless- и
 даже headful-Chromium под Xvfb получают страницу проверки («Je bent bijna op de
-pagina die je zoekt»). Проходит только reader-прокси ``r.jina.ai``: он рендерит
-страницу через браузерную ферму и отдаёт результат Markdown'ом или HTML.
+pagina die je zoekt»).
+
+С 14.10.2026 основной путь — Scrapling (``--scrapling``, ``scrapling_html``):
+его ``Fetcher`` подделывает TLS-отпечаток Chrome и получает страницу funda in
+business за секунду, вместе с полным текстом описания; если стена всё же
+встанет, страницу снимает его ``StealthyFetcher`` — скрытый Chromium через
+patchright. Headful-Chromium (``--browser``) 12.10.2026 стену не прошёл ни с
+одной из 12 попыток.
+
+Запасной путь — reader-прокси ``r.jina.ai``: он рендерит страницу через
+браузерную ферму и отдаёт результат Markdown'ом или HTML.
 
 Чего прокси **не** отдаёт: на funda in business описание обрывается на
 «Het object …» с кнопкой «Lees de volledige omschrijving» — остаток подгружает
@@ -33,7 +42,8 @@ je zoekt»; с ожиданием тишины в сети проверка ус
 
 Использование:
 
-    python -m reportgen.funda_fetch <url> [<url> ...] [--html-dir raw]
+    python -m reportgen.funda_fetch --scrapling <url> [<url> ...] [--html-dir raw]
+    python -m reportgen.funda_fetch <url> [<url> ...] [--html-dir raw]   # reader-прокси
 """
 
 from __future__ import annotations
@@ -225,6 +235,63 @@ def _spki_pin(path: str = PROXY_CA) -> str | None:
     return base64.b64encode(sha).decode()
 
 
+def _expand(page) -> None:
+    """Согласие на cookie и раскрытие описания — общий шаг браузерных путей."""
+    for group, once in ((CONSENT, True), (EXPAND, False)):
+        for selector in group:
+            try:
+                page.click(selector, timeout=5000)
+                page.wait_for_timeout(1500)
+                if once:
+                    break
+            except Exception:          # кнопки может не быть — это не сбой
+                continue
+    page.wait_for_timeout(2000)
+
+
+def scrapling_html(url: str, *, browser: bool = False) -> str:
+    """Страница через Scrapling: HTTP с отпечатком браузера, при стене — скрытый браузер.
+
+    Проверено 14.10.2026 на funda in business. ``Fetcher`` (curl_cffi с
+    TLS-отпечатком Chrome) получает страницу за секунду, и полный текст
+    описания уже лежит в разметке — обрезает его только вёрстка. Если стена
+    всё же встала (или ``browser=True``), страницу снимает ``StealthyFetcher`` —
+    Chromium через patchright, который проходит сенсор Akamai без Xvfb, — и
+    раскрывает описание кнопкой.
+
+    Браузер берётся предустановленный: ``SCRAPLING_EXECUTABLE_PATH`` или
+    CHROMIUM. ``scrapling install`` в этом окружении не нужен — он тянет свою
+    сборку Chromium через ``playwright install``.
+    """
+    import os
+
+    from scrapling.fetchers import Fetcher, StealthyFetcher
+
+    if not browser:
+        page = Fetcher.get(url, timeout=60)
+        html = page.html_content
+        if page.status == 200 and WALL not in html and "Omschrijving" in html:
+            return html
+        log.info("HTTP-путь получил стену или неполную страницу (%s), открываю браузер",
+                 page.status)
+
+    options = {"headless": True, "network_idle": True, "timeout": 120_000,
+               "locale": "nl-NL", "timezone_id": "Europe/Amsterdam", "page_action": _expand}
+    pin = _spki_pin()
+    if pin:
+        options["extra_flags"] = [f"--ignore-certificate-errors-spki-list={pin}"]
+    if os.environ.get("HTTPS_PROXY"):
+        options["proxy"] = os.environ["HTTPS_PROXY"]
+    executable = os.environ.get("SCRAPLING_EXECUTABLE_PATH") or (
+        CHROMIUM if Path(CHROMIUM).exists() else None)
+    if executable:
+        options["executable_path"] = executable
+    html = StealthyFetcher.fetch(url, **options).html_content
+    if WALL in html:
+        raise RuntimeError("Scrapling тоже получил страницу проверки")
+    return html
+
+
 def browser_html(url: str, *, timeout: int = 180_000) -> str:
     """Страница настоящим браузером, с раскрытым описанием.
 
@@ -252,16 +319,7 @@ def browser_html(url: str, *, timeout: int = 180_000) -> str:
         # именно networkidle: сенсор Akamai должен успеть отработать
         page.goto(url, wait_until="networkidle", timeout=timeout)
         page.wait_for_timeout(4000)
-        for group, once in ((CONSENT, True), (EXPAND, False)):
-            for selector in group:
-                try:
-                    page.click(selector, timeout=5000)
-                    page.wait_for_timeout(1500)
-                    if once:
-                        break
-                except Exception:          # кнопки может не быть — это не сбой
-                    continue
-        page.wait_for_timeout(2000)
+        _expand(page)
         if WALL in page.title():
             raise RuntimeError("браузер тоже получил страницу проверки")
         html = page.content()
@@ -309,17 +367,25 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--browser", action="store_true",
                         help="снять настоящим браузером и показать полное описание "
                              "(запускать под xvfb-run)")
+    parser.add_argument("--scrapling", action="store_true",
+                        help="снять через Scrapling: HTTP с отпечатком браузера, при стене — "
+                             "скрытый Chromium; показать полное описание, Xvfb не нужен")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     for url in args.urls:
-        page = browser_html(url) if args.browser else fetch(url, as_html=True)
+        if args.scrapling:
+            page = scrapling_html(url)
+        elif args.browser:
+            page = browser_html(url)
+        else:
+            page = fetch(url, as_html=True)
         name = re.sub(r"\W+", "-", url).strip("-")[-80:]
         if args.html_dir:
             args.html_dir.mkdir(parents=True, exist_ok=True)
             (args.html_dir / f"{name}.html").write_text(page, encoding="utf-8")
         print(f"\n=== {url}")
-        if args.browser:
+        if args.browser or args.scrapling:
             print(full_description(url, page) or "описание не нашлось")
             print()
         print(features(page) or "характеристики не нашлись")
