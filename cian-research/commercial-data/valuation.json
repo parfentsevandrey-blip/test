@@ -59,15 +59,14 @@
        "id": 323817290,
        "weight": 2,
        "adj": {
-        "loc": -5,
-        "bld": -3
+        "bld": -6
        },
-       "note": "Магистраль Плаза, B+, 15 мин до Беговой, крупный БЦ с инфраструктурой",
+       "note": "Магистраль Плаза в 300 м: тот же доступ к метро, но крупнее БЦ, инфраструктура, виды",
        "ask": 280000,
        "vat": "notIncluded",
        "ex_vat": 280000,
        "base": 257600,
-       "adjusted": 237378,
+       "adjusted": 242144,
        "area": 362.7,
        "floor": 7,
        "address": "Россия, Москва, 1-й Магистральный тупик, 5А",
@@ -89,15 +88,14 @@
        "id": 334609760,
        "weight": 2,
        "adj": {
-        "loc": -5,
-        "bld": -3
+        "bld": -6
        },
        "note": "Магистраль Плаза, 7 этаж, виды на Сити",
        "ask": 295545,
        "vat": "included",
        "ex_vat": 242250,
        "base": 222870,
-       "adjusted": 205375,
+       "adjusted": 209498,
        "area": 453.4,
        "floor": 7,
        "address": "Россия, Москва, 1-й Магистральный тупик, 5А",
@@ -119,8 +117,7 @@
        "id": 327871277,
        "weight": 2,
        "adj": {
-        "loc": -5,
-        "bld": -3,
+        "bld": -6,
         "size": 3
        },
        "note": "Магистраль Плаза, 5 этаж, ремонт",
@@ -128,7 +125,7 @@
        "vat": "notIncluded",
        "ex_vat": 272436,
        "base": 250641,
-       "adjusted": 237895,
+       "adjusted": 242671,
        "area": 624.0,
        "floor": 5,
        "address": "Магистральный 1-й туп, д 5А, Москва",
@@ -209,7 +206,7 @@
        ]
       }
      ],
-     "value": 216409
+     "value": 218894
     },
     "y5": {
      "comps": [
@@ -248,8 +245,7 @@
        "id": 323817290,
        "weight": 2,
        "adj": {
-        "loc": -5,
-        "bld": -3,
+        "bld": -6,
         "size": -4
        },
        "note": "Магистраль Плаза",
@@ -257,7 +253,7 @@
        "vat": "notIncluded",
        "ex_vat": 280000,
        "base": 257600,
-       "adjusted": 227883,
+       "adjusted": 232458,
        "area": 362.7,
        "floor": 7,
        "address": "Россия, Москва, 1-й Магистральный тупик, 5А",
@@ -279,8 +275,7 @@
        "id": 334609760,
        "weight": 2,
        "adj": {
-        "loc": -5,
-        "bld": -3,
+        "bld": -6,
         "size": -3
        },
        "note": "Магистраль Плаза",
@@ -288,7 +283,7 @@
        "vat": "included",
        "ex_vat": 242250,
        "base": 222870,
-       "adjusted": 199213,
+       "adjusted": 203213,
        "area": 453.4,
        "floor": 7,
        "address": "Россия, Москва, 1-й Магистральный тупик, 5А",
@@ -310,15 +305,14 @@
        "id": 327871277,
        "weight": 3,
        "adj": {
-        "loc": -5,
-        "bld": -3
+        "bld": -6
        },
        "note": "Магистраль Плаза, близкий по площади блок",
        "ask": 272436,
        "vat": "notIncluded",
        "ex_vat": 272436,
        "base": 250641,
-       "adjusted": 230966,
+       "adjusted": 235603,
        "area": 624.0,
        "floor": 5,
        "address": "Магистральный 1-й туп, д 5А, Москва",
@@ -397,7 +391,7 @@
        ]
       }
      ],
-     "value": 206716
+     "value": 209540
     }
    },
    "rent": [
@@ -413,6 +407,9 @@
      "ex_vat": 28819,
      "month": 729600,
      "url": "https://www.cian.ru/rent/commercial/324943568/?mlSearchSessionGuid=6943339238394b9839c65d26ef752329",
+     "opex": false,
+     "util": false,
+     "net": 28819,
      "metro": "Беговая",
      "metro_min": 20,
      "metro_walk": true,
@@ -432,6 +429,9 @@
      "ex_vat": 30000,
      "month": 927200,
      "url": "https://www.cian.ru/rent/commercial/332870182/?mlSearchSessionGuid=6943339238394b9839c65d26ef752329",
+     "opex": false,
+     "util": false,
+     "net": 30000,
      "metro": "Беговая",
      "metro_min": 20,
      "metro_walk": true,
@@ -451,6 +451,9 @@
      "ex_vat": 25800,
      "month": 494500,
      "url": "https://www.cian.ru/rent/commercial/334228161/?mlSearchSessionGuid=b5547a29f6111bb0814cee2f30712495",
+     "opex": true,
+     "util": false,
+     "net": 20800,
      "metro": "Беговая",
      "metro_min": 20,
      "metro_walk": true,
@@ -470,6 +473,9 @@
      "ex_vat": 30811,
      "month": 380000,
      "url": "https://www.cian.ru/rent/commercial/333270536/?mlSearchSessionGuid=b5547a29f6111bb0814cee2f30712495",
+     "opex": true,
+     "util": true,
+     "net": 24311,
      "metro": "Беговая",
      "metro_min": 20,
      "metro_walk": true,
@@ -489,6 +495,9 @@
      "ex_vat": 24000,
      "month": 492000,
      "url": "https://www.cian.ru/rent/commercial/322993142/?mlSearchSessionGuid=b5547a29f6111bb0814cee2f30712495",
+     "opex": false,
+     "util": false,
+     "net": 24000,
      "metro": "Беговая",
      "metro_min": 20,
      "metro_walk": true,
@@ -508,6 +517,9 @@
      "ex_vat": 26400,
      "month": 671000,
      "url": "https://www.cian.ru/rent/commercial/332870183/?mlSearchSessionGuid=b5547a29f6111bb0814cee2f30712495",
+     "opex": false,
+     "util": false,
+     "net": 26400,
      "metro": "Беговая",
      "metro_min": 20,
      "metro_walk": true,
@@ -527,6 +539,9 @@
      "ex_vat": 46200,
      "month": 1155000,
      "url": "https://www.cian.ru/rent/commercial/332872358/?mlSearchSessionGuid=6943339238394b9839c65d26ef752329",
+     "opex": true,
+     "util": false,
+     "net": 41200,
      "metro": "Беговая",
      "metro_min": 15,
      "metro_walk": true,
@@ -546,6 +561,9 @@
      "ex_vat": 45266,
      "month": 3221400,
      "url": "https://www.cian.ru/rent/commercial/334604035/?mlSearchSessionGuid=83b8c721643c4d7f646dd5ded1920500",
+     "opex": false,
+     "util": false,
+     "net": 45266,
      "metro": "Беговая",
      "metro_min": 15,
      "metro_walk": true,
@@ -565,6 +583,9 @@
      "ex_vat": 19672,
      "month": 972000,
      "url": "https://www.cian.ru/rent/commercial/333275891/?mlSearchSessionGuid=6943339238394b9839c65d26ef752329",
+     "opex": true,
+     "util": true,
+     "net": 13172,
      "metro": "Шелепиха",
      "metro_min": 3,
      "metro_walk": false,
@@ -584,6 +605,9 @@
      "ex_vat": 16393,
      "month": 916667,
      "url": "https://www.cian.ru/rent/commercial/330435006/?mlSearchSessionGuid=6943339238394b9839c65d26ef752329",
+     "opex": true,
+     "util": true,
+     "net": 9893,
      "metro": "Шелепиха",
      "metro_min": 3,
      "metro_walk": false,
@@ -600,20 +624,19 @@
      "floor": 1,
      "note": "кабинетная планировка, оборудован под банк/депозитарий, рядом с холлом БЦ",
      "group": "y1",
-     "comp": 216409,
-     "income": 197120,
-     "noi": 22669,
+     "comp": 218894,
+     "income": 197913,
+     "noi": 22760,
      "inc": {
       "rent": 28000,
       "vac": 0.08,
-      "opex": 0.12,
       "cap": 0.115
      },
      "extra": 0,
-     "per_m2": 207000,
-     "total": 62886600,
-     "lo": 57855672,
-     "hi": 67917528,
+     "per_m2": 208000,
+     "total": 63190400,
+     "lo": 58135168,
+     "hi": 68245632,
      "gross_yield": 13.5
     },
     {
@@ -623,13 +646,12 @@
      "floor": 5,
      "note": "верхний этаж, open space + кабинеты, два лестничных узла",
      "group": "y5",
-     "comp": 206716,
-     "income": 165000,
-     "noi": 19800,
+     "comp": 209540,
+     "income": 162500,
+     "noi": 19500,
      "inc": {
       "rent": 25000,
       "vac": 0.1,
-      "opex": 0.12,
       "cap": 0.12
      },
      "extra": 0,
@@ -670,7 +692,7 @@
        "id": 333676669,
        "weight": 2,
        "adj": {
-        "bld": -12,
+        "bld": -15,
         "fit": -3
        },
        "note": "Сириус Парк стр. 4, B+, потолки 3,6 м, с арендатором",
@@ -678,7 +700,7 @@
        "vat": "included",
        "ex_vat": 303342,
        "base": 279074,
-       "adjusted": 238218,
+       "adjusted": 230097,
        "area": 480.0,
        "floor": 1,
        "address": "г Москва, Каширское шоссе, д 3 к 2 стр 4",
@@ -700,14 +722,14 @@
        "id": 334041595,
        "weight": 2,
        "adj": {
-        "bld": -12
+        "bld": -15
        },
        "note": "Сириус Парк стр. 4, 1 этаж",
        "ask": 382294,
        "vat": "included",
        "ex_vat": 313356,
        "base": 288287,
-       "adjusted": 253693,
+       "adjusted": 245044,
        "area": 401.0,
        "floor": 1,
        "address": "Москва, ш Каширское, 3 корп.2 стр.4",
@@ -730,14 +752,14 @@
        "weight": 2,
        "adj": {
         "loc": -12,
-        "bld": -5
+        "bld": -8
        },
        "note": "Нагатинская, 10: первая линия, витрины, потолки 4,5 м",
        "ask": 300000,
        "vat": "notIncluded",
        "ex_vat": 300000,
        "base": 276000,
-       "adjusted": 230736,
+       "adjusted": 223450,
        "area": 300.0,
        "floor": 1,
        "address": "Россия, Москва, Нагатинская улица, 10",
@@ -786,7 +808,7 @@
        ]
       }
      ],
-     "value": 230731
+     "value": 223858
     },
     "k2": {
      "comps": [
@@ -928,6 +950,9 @@
      "ex_vat": 32213,
      "month": 1179459,
      "url": "https://www.cian.ru/rent/commercial/332872404/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": true,
+     "util": false,
+     "net": 27213,
      "metro": "Нахимовский проспект",
      "metro_min": 4,
      "metro_walk": false,
@@ -947,6 +972,9 @@
      "ex_vat": 43689,
      "month": 1781108,
      "url": "https://www.cian.ru/rent/commercial/334041594/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": true,
+     "util": true,
+     "net": 37189,
      "metro": "Нагорная",
      "metro_min": 5,
      "metro_walk": false,
@@ -966,6 +994,9 @@
      "ex_vat": 29754,
      "month": 1194875,
      "url": "https://www.cian.ru/rent/commercial/334041597/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": true,
+     "util": true,
+     "net": 23254,
      "metro": "Нагорная",
      "metro_min": 5,
      "metro_walk": false,
@@ -985,6 +1016,9 @@
      "ex_vat": 32213,
      "month": 1505125,
      "url": "https://www.cian.ru/rent/commercial/332797266/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": true,
+     "util": false,
+     "net": 27213,
      "metro": "Нахимовский проспект",
      "metro_min": 4,
      "metro_walk": false,
@@ -1004,6 +1038,9 @@
      "ex_vat": 33851,
      "month": 1721797,
      "url": "https://www.cian.ru/rent/commercial/334666497/?mlSearchSessionGuid=f20dbc67c2b6b246ca52d431e2c90fb5",
+     "opex": true,
+     "util": true,
+     "net": 27351,
      "metro": "Нагатинская",
      "metro_min": 19,
      "metro_walk": true,
@@ -1023,6 +1060,9 @@
      "ex_vat": 20902,
      "month": 423088,
      "url": "https://www.cian.ru/rent/commercial/332870165/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": true,
+     "util": false,
+     "net": 15902,
      "metro": "Нагатинская",
      "metro_min": 2,
      "metro_walk": true,
@@ -1042,6 +1082,9 @@
      "ex_vat": 29754,
      "month": 574750,
      "url": "https://www.cian.ru/rent/commercial/333103704/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": true,
+     "util": true,
+     "net": 23254,
      "metro": "Нагорная",
      "metro_min": 5,
      "metro_walk": false,
@@ -1058,21 +1101,20 @@
      "floor": 1,
      "note": "отдельный вход с улицы, высота потолка 2,57 м",
      "group": "k1",
-     "comp": 230731,
-     "income": 190080,
-     "noi": 21859,
+     "comp": 223858,
+     "income": 149913,
+     "noi": 17240,
      "inc": {
-      "rent": 27000,
+      "rent": 22000,
       "vac": 0.08,
-      "opex": 0.12,
       "cap": 0.115
      },
      "extra": 0,
-     "per_m2": 210000,
-     "total": 82929000,
-     "lo": 76294680,
-     "hi": 89563320,
-     "gross_yield": 12.9
+     "per_m2": 187000,
+     "total": 73846300,
+     "lo": 67938596,
+     "hi": 79754004,
+     "gross_yield": 11.8
     },
     {
      "key": "k2",
@@ -1082,20 +1124,19 @@
      "note": "коридорно-кабинетная планировка, высота потолка 2,37 м",
      "group": "k2",
      "comp": 156573,
-     "income": 138600,
-     "noi": 16632,
+     "income": 95000,
+     "noi": 11400,
      "inc": {
-      "rent": 21000,
+      "rent": 16000,
       "vac": 0.1,
-      "opex": 0.12,
       "cap": 0.12
      },
      "extra": 0,
-     "per_m2": 148000,
-     "total": 59392400,
-     "lo": 54641008,
-     "hi": 64143792,
-     "gross_yield": 14.2
+     "per_m2": 126000,
+     "total": 50563800,
+     "lo": 46518696,
+     "hi": 54608904,
+     "gross_yield": 12.7
     }
    ]
   },
@@ -1417,6 +1458,9 @@
      "ex_vat": 35951,
      "month": 438000,
      "url": "https://www.cian.ru/rent/commercial/334090223/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": false,
+     "util": false,
+     "net": 35951,
      "metro": "Коломенская",
      "metro_min": 16,
      "metro_walk": true,
@@ -1436,6 +1480,9 @@
      "ex_vat": 14754,
      "month": 208500,
      "url": "https://www.cian.ru/rent/commercial/332408335/?mlSearchSessionGuid=21e50277a2aec6f4185ea0efacb2f561",
+     "opex": true,
+     "util": false,
+     "net": 9754,
      "metro": "Нагатинская",
      "metro_min": 12,
      "metro_walk": true,
@@ -1455,6 +1502,9 @@
      "ex_vat": 29754,
      "month": 1004300,
      "url": "https://www.cian.ru/rent/commercial/332443483/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": true,
+     "util": true,
+     "net": 23254,
      "metro": "Нагорная",
      "metro_min": 5,
      "metro_walk": false,
@@ -1474,6 +1524,9 @@
      "ex_vat": 29754,
      "month": 626175,
      "url": "https://www.cian.ru/rent/commercial/332472602/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": true,
+     "util": true,
+     "net": 23254,
      "metro": "Нагорная",
      "metro_min": 5,
      "metro_walk": false,
@@ -1493,6 +1546,9 @@
      "ex_vat": 20902,
      "month": 423088,
      "url": "https://www.cian.ru/rent/commercial/332870165/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": true,
+     "util": false,
+     "net": 15902,
      "metro": "Нагатинская",
      "metro_min": 2,
      "metro_walk": true,
@@ -1512,6 +1568,9 @@
      "ex_vat": 21639,
      "month": 550000,
      "url": "https://www.cian.ru/rent/commercial/332939066/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": false,
+     "util": false,
+     "net": 21639,
      "metro": "Коломенская",
      "metro_min": 18,
      "metro_walk": true,
@@ -1531,6 +1590,9 @@
      "ex_vat": 32213,
      "month": 1179459,
      "url": "https://www.cian.ru/rent/commercial/332872404/?mlSearchSessionGuid=9ba8bab22df128c7cda75382f25fdd93",
+     "opex": true,
+     "util": false,
+     "net": 27213,
      "metro": "Нахимовский проспект",
      "metro_min": 4,
      "metro_walk": false,
@@ -1547,20 +1609,19 @@
      "floor": 1,
      "group": "ground",
      "comp": 212165,
-     "income": 190080,
-     "noi": 21859,
+     "income": 149913,
+     "noi": 17240,
      "inc": {
-      "rent": 27000,
+      "rent": 22000,
       "vac": 0.08,
-      "opex": 0.12,
       "cap": 0.115
      },
      "extra": 0,
-     "per_m2": 201000,
-     "total": 33808200,
-     "lo": 31103544,
-     "hi": 36512856,
-     "gross_yield": 13.4
+     "per_m2": 181000,
+     "total": 30444200,
+     "lo": 28008664,
+     "hi": 32879736,
+     "gross_yield": 12.2
     },
     {
      "key": "i2",
@@ -1569,20 +1630,19 @@
      "floor": 1,
      "group": "ground",
      "comp": 212165,
-     "income": 190080,
-     "noi": 21859,
+     "income": 149913,
+     "noi": 17240,
      "inc": {
-      "rent": 27000,
+      "rent": 22000,
       "vac": 0.08,
-      "opex": 0.12,
       "cap": 0.115
      },
      "extra": 0,
-     "per_m2": 201000,
-     "total": 46230000,
-     "lo": 42531600,
-     "hi": 49928400,
-     "gross_yield": 13.4
+     "per_m2": 181000,
+     "total": 41630000,
+     "lo": 38299600,
+     "hi": 44960400,
+     "gross_yield": 12.2
     },
     {
      "key": "i3",
@@ -1591,20 +1651,19 @@
      "floor": 1,
      "group": "ground",
      "comp": 212165,
-     "income": 190080,
-     "noi": 21859,
+     "income": 149913,
+     "noi": 17240,
      "inc": {
-      "rent": 27000,
+      "rent": 22000,
       "vac": 0.08,
-      "opex": 0.12,
       "cap": 0.115
      },
      "extra": -5,
-     "per_m2": 191000,
-     "total": 100084000,
-     "lo": 92077280,
-     "hi": 108090720,
-     "gross_yield": 14.1
+     "per_m2": 172000,
+     "total": 90128000,
+     "lo": 82917760,
+     "hi": 97338240,
+     "gross_yield": 12.8
     },
     {
      "key": "i4",
@@ -1613,20 +1672,19 @@
      "floor": 2,
      "group": "up",
      "comp": 154344,
-     "income": 145200,
-     "noi": 17424,
+     "income": 102500,
+     "noi": 12300,
      "inc": {
-      "rent": 22000,
+      "rent": 17000,
       "vac": 0.1,
-      "opex": 0.12,
       "cap": 0.12
      },
      "extra": 0,
-     "per_m2": 150000,
-     "total": 27345000,
-     "lo": 25157400,
-     "hi": 29532600,
-     "gross_yield": 14.7
+     "per_m2": 128000,
+     "total": 23334400,
+     "lo": 21467648,
+     "hi": 25201152,
+     "gross_yield": 13.3
     },
     {
      "key": "i5",
@@ -1635,20 +1693,19 @@
      "floor": 2,
      "group": "up",
      "comp": 154344,
-     "income": 145200,
-     "noi": 17424,
+     "income": 102500,
+     "noi": 12300,
      "inc": {
-      "rent": 22000,
+      "rent": 17000,
       "vac": 0.1,
-      "opex": 0.12,
       "cap": 0.12
      },
      "extra": -5,
-     "per_m2": 142000,
-     "total": 65348400,
-     "lo": 60120528,
-     "hi": 70576272,
-     "gross_yield": 15.5
+     "per_m2": 122000,
+     "total": 56144400,
+     "lo": 51652848,
+     "hi": 60635952,
+     "gross_yield": 13.9
     },
     {
      "key": "i6",
@@ -1657,20 +1714,19 @@
      "floor": 3,
      "group": "up",
      "comp": 154344,
-     "income": 145200,
-     "noi": 17424,
+     "income": 102500,
+     "noi": 12300,
      "inc": {
-      "rent": 22000,
+      "rent": 17000,
       "vac": 0.1,
-      "opex": 0.12,
       "cap": 0.12
      },
      "extra": 3,
-     "per_m2": 154000,
-     "total": 30784600,
-     "lo": 28321832,
-     "hi": 33247368,
-     "gross_yield": 14.3
+     "per_m2": 132000,
+     "total": 26386800,
+     "lo": 24275856,
+     "hi": 28497744,
+     "gross_yield": 12.9
     },
     {
      "key": "i7",
@@ -1679,20 +1735,19 @@
      "floor": 3,
      "group": "up",
      "comp": 154344,
-     "income": 145200,
-     "noi": 17424,
+     "income": 102500,
+     "noi": 12300,
      "inc": {
-      "rent": 22000,
+      "rent": 17000,
       "vac": 0.1,
-      "opex": 0.12,
       "cap": 0.12
      },
      "extra": 3,
-     "per_m2": 154000,
-     "total": 30030000,
-     "lo": 27627600,
-     "hi": 32432400,
-     "gross_yield": 14.3
+     "per_m2": 132000,
+     "total": 25740000,
+     "lo": 23680800,
+     "hi": 27799200,
+     "gross_yield": 12.9
     },
     {
      "key": "i8",
@@ -1701,26 +1756,28 @@
      "floor": 3,
      "group": "up",
      "comp": 154344,
-     "income": 145200,
-     "noi": 17424,
+     "income": 102500,
+     "noi": 12300,
      "inc": {
-      "rent": 22000,
+      "rent": 17000,
       "vac": 0.1,
-      "opex": 0.12,
       "cap": 0.12
      },
      "extra": 3,
-     "per_m2": 154000,
-     "total": 26703600,
-     "lo": 24567312,
-     "hi": 28839888,
-     "gross_yield": 14.3
+     "per_m2": 132000,
+     "total": 22888800,
+     "lo": 21057696,
+     "hi": 24719904,
+     "gross_yield": 12.9
     }
    ]
   }
  },
  "params": {
   "vat": 1.22,
-  "bargain": 0.92
+  "bargain": 0.92,
+  "opex": 5000,
+  "util": 1500,
+  "owner": 3000
  }
 }

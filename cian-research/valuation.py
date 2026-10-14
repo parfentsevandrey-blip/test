@@ -42,21 +42,21 @@ SUBJECTS = {
 SALE = {
     'yard': {
         'y1': [(322142440, 3, dict(size=-5, fit=-3), 'тот же комплекс The Yard (11с7), 1 этаж, с арендатором'),
-               (323817290, 2, dict(loc=-5, bld=-3), 'Магистраль Плаза, B+, 15 мин до Беговой, крупный БЦ с инфраструктурой'),
-               (334609760, 2, dict(loc=-5, bld=-3), 'Магистраль Плаза, 7 этаж, виды на Сити'),
-               (327871277, 2, dict(loc=-5, bld=-3, size=3), 'Магистраль Плаза, 5 этаж, ремонт'),
+               (323817290, 2, dict(bld=-6), 'Магистраль Плаза в 300 м: тот же доступ к метро, но крупнее БЦ, инфраструктура, виды'),
+               (334609760, 2, dict(bld=-6), 'Магистраль Плаза, 7 этаж, виды на Сити'),
+               (327871277, 2, dict(bld=-6, size=3), 'Магистраль Плаза, 5 этаж, ремонт'),
                (332376485, 1, dict(loc=-3, bld=10, size=5), 'БЦ «Магистраль», B, 1973 г.'),
                (332676289, 1, dict(loc=-3, bld=8, size=4), 'Хорошёвское ш., B, 1971 г., 12 мин до ЦСКА')],
         'y5': [(322142440, 2, dict(size=-12, fit=-3, fl=-3), 'тот же комплекс, 1 этаж, малый лот'),
-               (323817290, 2, dict(loc=-5, bld=-3, size=-4), 'Магистраль Плаза'),
-               (334609760, 2, dict(loc=-5, bld=-3, size=-3), 'Магистраль Плаза'),
-               (327871277, 3, dict(loc=-5, bld=-3), 'Магистраль Плаза, близкий по площади блок'),
+               (323817290, 2, dict(bld=-6, size=-4), 'Магистраль Плаза'),
+               (334609760, 2, dict(bld=-6, size=-3), 'Магистраль Плаза'),
+               (327871277, 3, dict(bld=-6), 'Магистраль Плаза, близкий по площади блок'),
                (332376485, 1, dict(loc=-3, bld=10), 'БЦ «Магистраль», B, 1973 г.'),
                (332676289, 1, dict(loc=-3, bld=8), 'Хорошёвское ш., B, 1971 г.')]},
     'kaleidoscope': {
-        'k1': [(333676669, 2, dict(bld=-12, fit=-3), 'Сириус Парк стр. 4, B+, потолки 3,6 м, с арендатором'),
-               (334041595, 2, dict(bld=-12), 'Сириус Парк стр. 4, 1 этаж'),
-               (333124503, 2, dict(loc=-12, bld=-5), 'Нагатинская, 10: первая линия, витрины, потолки 4,5 м'),
+        'k1': [(333676669, 2, dict(bld=-15, fit=-3), 'Сириус Парк стр. 4, B+, потолки 3,6 м, с арендатором'),
+               (334041595, 2, dict(bld=-15), 'Сириус Парк стр. 4, 1 этаж'),
+               (333124503, 2, dict(loc=-12, bld=-8), 'Нагатинская, 10: первая линия, витрины, потолки 4,5 м'),
                (333978351, 1, dict(bld=-8, fl=5), 'офис в ЖК, 2 этаж, отдельный вход, потолки 3,4 м')],
         'k2': [(333424059, 2, dict(bld=-12, fit=8, size=-5), 'Сириус Парк стр. 9, 5 этаж, без отделки'),
                (332803851, 1, dict(bld=-12, fit=8, size=-5), 'Сириус Парк стр. 9, 2 этаж, без отделки'),
@@ -73,14 +73,20 @@ SALE = {
                    (334119775, 2, dict(fl=12, fit=-3), 'тот же БЦ, 2 этаж (+ за 1 этаж)')]},
 }
 
-# Доходный подход: рыночная ставка аренды без НДС (₽/м²/год), недозагрузка, операционные расходы, ставка капитализации
+# Доходный подход. Ставки аналогов приводятся к единой базе «чистая ставка»: без НДС, без эксплуатационных и коммунальных
+# платежей (их арендатор возмещает отдельно). Если в ставку аналога они включены — вычитаем типичные для класса B значения.
+OPEX = 5000          # эксплуатационные расходы класса B, ₽/м²/год без НДС
+UTIL = 1500          # коммунальные (кроме электроэнергии), ₽/м²/год
+OWNER = 3000         # невозмещаемые расходы собственника: налог на имущество (2% кадастра), страховка, управление, резерв
+# условия по карточкам ЦИАН (поле и текст объявления; при противоречии верим тексту)
+TERMS_OVERRIDE = {324943568: dict(opex=False, util=False), 322993142: dict(opex=False, util=False)}
 INCOME = {
-    'y1': dict(rent=28000, vac=0.08, opex=0.12, cap=0.115),
-    'y5': dict(rent=25000, vac=0.10, opex=0.12, cap=0.12),
-    'k1': dict(rent=27000, vac=0.08, opex=0.12, cap=0.115),
-    'k2': dict(rent=21000, vac=0.10, opex=0.12, cap=0.12),
-    'ground': dict(rent=27000, vac=0.08, opex=0.12, cap=0.115),
-    'up': dict(rent=22000, vac=0.10, opex=0.12, cap=0.12),
+    'y1': dict(rent=28000, vac=0.08, cap=0.115),
+    'y5': dict(rent=25000, vac=0.10, cap=0.12),
+    'k1': dict(rent=22000, vac=0.08, cap=0.115),
+    'k2': dict(rent=16000, vac=0.10, cap=0.12),
+    'ground': dict(rent=22000, vac=0.08, cap=0.115),
+    'up': dict(rent=17000, vac=0.10, cap=0.12),
 }
 RENT_COMPS = {
     'yard': [324943568, 332870182, 334228161, 333270536, 322993142, 332870183, 332872358, 334604035, 333275891, 330435006],
@@ -102,12 +108,23 @@ def comp_row(cid, w, adj, note):
 
 
 def income_value(p):
-    noi = p['rent'] * (1 - p['vac']) * (1 - p['opex'])
+    noi = p['rent'] * (1 - p['vac']) - OWNER
     return noi / p['cap'], noi
 
 
+CARDS = json.load(open('commercial-data/cards.json'))
+
+
+def rent_terms(cid):
+    c = CARDS.get(str(cid)) or {}
+    inc = c.get('included') or []
+    t = dict(opex='operationalCosts' in inc, util='utilityCharges' in inc, known=bool(c))
+    t.update(TERMS_OVERRIDE.get(cid, {}))
+    return t
+
+
 def main():
-    out = {'subjects': {}, 'params': dict(vat=VAT, bargain=BARGAIN)}
+    out = {'subjects': {}, 'params': dict(vat=VAT, bargain=BARGAIN, opex=OPEX, util=UTIL, owner=OWNER)}
     for sk, s in SUBJECTS.items():
         S = dict(s, sale={}, rent=[], units_val=[])
         for grp, comps in SALE[sk].items():
@@ -117,8 +134,11 @@ def main():
         for cid in RENT_COMPS[sk]:
             r = rows.get(cid)
             if r:
+                t = rent_terms(cid)
+                net = ex_vat(r) - (OPEX if t['opex'] else 0) - (UTIL if t['util'] else 0)
                 S['rent'].append(dict(id=cid, address=r['address'], bc=r['bc'], cls=r['bc_class'], floor=r['floor'], area=r['area'],
                                       ask=r['per_m2'], vat=r['vat'], ex_vat=round(ex_vat(r)), month=r['price'], url=r['url'],
+                                      opex=t['opex'], util=t['util'], net=round(net),
                                       metro=r['metro'], metro_min=r['metro_min'], metro_walk=r['metro_walk'], photos=r['photos'][:1]))
         for u in s['units']:
             if sk == 'imagine':
