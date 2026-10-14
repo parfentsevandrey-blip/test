@@ -1,64 +1,64 @@
-# Ретро-базы
+# Retro Databases
 
-Android-приложение на Kotlin, Jetpack Compose и Room. Внутри — «База 1»: каталог кодинга 80-х.
+An Android application in Kotlin, Jetpack Compose and Room. Inside is "Database 1": a catalogue of 80s coding.
 
-## Что внутри
+## What is inside
 
-Каталог разбит по видам записей:
+The catalogue is split by kind of record:
 
-| Вид | Записей | Что это |
+| Kind | Records | What it is |
 |---|---:|---|
-| Языки | 34 | Языки 1950–80-х от массовых до почти забытых |
-| Системы | 23 | ОС, варианты Unix, исследовательские среды, СУБД |
-| Устройства | 27 | Мейнфреймы, отечественные машины, ПК, домашние компьютеры, процессоры |
-| Инструменты | 18 | make, lint, yacc, GCC, редакторы, отладчик, TeX, sed и другие |
-| Практики | 39 | Методы, проектирование, тестирование, метрики, процессы, оптимизация |
-| Пояснения | 5 | Как устроены конвейеры, рекурсивный спуск, стек Forth, Makefile, эмуляторы |
-| Примеры | 5 | Короткие рецепты: частоты слов, sed, grep по журналу, qsort, GROUP BY |
-| Проекты | 4 | Игра «Жизнь» на awk, лабиринт на C, записная книжка на sh, калькулятор на yacc |
-| Флекс | 5 | Максимум из минимума: фрактал одним оператором, квайн, Мандельброт на awk |
-| Кросс-код | 5 | Эксперименты, где языки смешаны: C с awk, make с awk, Forth внутри C, bc с awk |
+| Languages | 56 | Languages of the 1950s–80s, from mass-market to almost forgotten |
+| Systems | 48 | Operating systems, Unix variants, research environments, DBMSs, networks |
+| Devices | 99 | Mainframes, Soviet machines, PCs, home computers, processors, peripherals |
+| Tools | 33 | make, lint, yacc, GCC, editors, debugger, TeX, sed and others |
+| Practices | 60 | Methods, design, testing, standards, processes, BBS and demoscene culture |
+| Guides | 5 | How pipelines, recursive descent, the Forth stack, Makefiles and emulators work |
+| Examples | 5 | Short recipes: word frequencies, sed, grep on logs, qsort, GROUP BY |
+| Projects | 4 | Game of Life in awk, a maze in C, an address book in sh, a yacc calculator |
+| Flex | 5 | The maximum from the minimum: a fractal with one operator, a quine, Mandelbrot in awk |
+| Cross-code | 5 | Experiments with mixed languages: C with awk, make with awk, Forth inside C, bc with awk |
 
-Всего 165 записей, 55 из них помечены как редкие. У каждой записи есть год, автор, раздел, краткое описание, подробности, инструкция (для проектов и пояснений) и пример кода.
+In total there are 320 records, 181 of them flagged as rare. Each record has a year, an author, a section, a short summary, details, instructions (for projects and guides) and a code example.
 
-В приложении:
-- список баз с числом записей;
-- поиск по названию, оригинальному названию, автору, году и разделу (без учёта регистра, в том числе кириллицы);
-- фильтры по виду, избранному и редким записям;
-- записи сгруппированы по разделам внутри вида;
-- избранное сохраняется в базе.
+In the app:
+- the list of databases with the number of records;
+- search by title, original title, author, year and section (case-insensitive);
+- filters by kind, favorites and rare records;
+- records grouped by section within each kind;
+- favorites are saved in the database.
 
-## Сборка и запуск
+## Build and run
 
-Нужно: Android Studio (актуальная версия), JDK 17, Android SDK 35 (platform 35 и build-tools 35.0.0). Минимальная версия Android — 8.0 (API 26).
+Requirements: Android Studio (the latest version), JDK 17, Android SDK 35 (platform 35 and build-tools 35.0.0). The minimum Android version is 8.0 (API 26).
 
-1. Откройте папку `RetroDatabases` в Android Studio и дождитесь синхронизации Gradle.
-2. Нажмите Run на эмуляторе или устройстве.
+1. Open the `RetroDatabases` folder in Android Studio and wait for the Gradle sync to finish.
+2. Press Run on an emulator or a device.
 
-Из командной строки:
+From the command line:
 
 ```
-./gradlew assembleDebug        # сборка APK
-./gradlew testDebugUnitTest    # тесты
+./gradlew assembleDebug        # build the APK
+./gradlew testDebugUnitTest    # tests
 ```
 
-Файл `local.properties` с путём к SDK создаётся Android Studio автоматически.
+The `local.properties` file with the SDK path is created by Android Studio automatically.
 
-## Структура
+## Structure
 
-- `app/src/main/java/com/example/retrodatabases/data` — Room: сущности, DAO, конвертеры, сама база и заполнение при первом запуске.
-- `app/src/main/java/com/example/retrodatabases/data/seed` — записи базы 1, по одному файлу на вид, и каталог баз.
-- `app/src/main/java/com/example/retrodatabases/ui` — навигация, ViewModel, фильтрация, экраны и компоненты.
-- `app/src/test` — тесты фильтров, данных и самой базы (Robolectric).
-- `DEVLOG.md` — журнал разработки с ростом строк кода по контрольным точкам.
-- `RetroDatabases_source.txt` — весь исходный код одним текстовым файлом.
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself and seeding on first launch.
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of database 1, one file per kind, and the list of databases.
+- `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
+- `app/src/test` — tests of the filters, the data and the database itself (Robolectric).
+- `DEVLOG.md` — the development log with the growth of lines of code by checkpoint.
+- `RetroDatabases_source.txt` — all the source code in one text file.
 
-## Примеры в каталоге
+## Examples in the catalogue
 
-Код из примеров и инструкций проверен запуском: gcc, mawk, sh, make, perl, bc, bison и SQLite. Для языков, которых нет в среде сборки (Forth, Prolog, Lisp, Smalltalk, BASIC и другие), примеры проверены только чтением, и это отмечено в журнале разработки.
+The code in the examples and instructions was checked by running it: gcc, g++, mawk, sh, make, perl, bc, bison and SQLite. For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, BASIC and others), the examples were checked only by reading, and this is noted in the development log.
 
-## Как добавить базу
+## How to add a database
 
-1. Создайте файл в `data/seed` с записями и `databaseId` новой базы. Функция `entry()` в `SeedEntry.kt` сейчас фиксирует `databaseId = 1`: для второй базы добавьте параметр.
-2. Добавьте базу в `seedDatabases` (файл `SeedCatalog.kt`).
-3. Базы из seed-списков попадают в базу только при её создании. В уже установленных копиях новая база появится после увеличения версии БД в `AppDatabase` и написания `Migration`.
+1. Create a file in `data/seed` with the records and the `databaseId` of the new database. The `entry()` function in `SeedEntry.kt` currently fixes `databaseId = 1`: for a second database, add a parameter.
+2. Add the database to `seedDatabases` (file `SeedCatalog.kt`).
+3. Databases from the seed lists are written to the database only when it is created. In copies that are already installed, a new database appears after the database version is raised in `AppDatabase` and a `Migration` is written.

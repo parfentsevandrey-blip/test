@@ -3,193 +3,194 @@ package com.example.retrodatabases.data.seed
 import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.RecordEntity
 
-/** Инструменты 1980-х, которых не было в первой редакции: ассемблеры, компиляторы, оболочки, связь, вёрстка. */
+/** Tools of the 1980s that were missing from the first edition: assemblers, compilers, shells, communications and typesetting. */
 val db1ExtraTools: List<RecordEntity> = listOf(
 
-    // ---------- Компиляторы и ассемблеры ----------
+    // ---------- Compilers and assemblers ----------
 
     entry(
         kind = Kind.TOOL,
-        section = "Компиляторы и генераторы",
-        title = "Ассемблер MASM",
+        section = "Compilers and generators",
+        title = "MASM assembler",
         originalTitle = "Microsoft Macro Assembler (MASM)",
         author = "Microsoft",
         year = 1981,
-        summary = "Макроассемблер Microsoft (1981) для x86: стандарт для ассемблерных программ на PC.",
-        details = "MASM поддерживал макросы и условную компиляцию. Игры и системные программы 80-х часто писали на нём.",
+        summary = "The Microsoft macro assembler (1981) for x86: the standard assembler for PC programs.",
+        details = "MASM supported macros and conditional compilation. Games and system programs of the 80s were often written in it.",
         rare = true,
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Компиляторы и генераторы",
-        title = "Компилятор Turbo C",
+        section = "Compilers and generators",
+        title = "Turbo C compiler",
         originalTitle = "Borland Turbo C",
         author = "Borland",
         year = 1987,
-        summary = "Быстрый компилятор C от Borland (1987) с интегрированной средой для MS-DOS.",
-        details = "Turbo C объединил редактор, компилятор и отладчик. Компилятор работал очень быстро на 8088 и 80286.",
+        summary = "A fast C compiler from Borland (1987) with an integrated environment for MS-DOS.",
+        details = "Turbo C combined the editor, compiler and debugger. The compiler ran very fast on the 8088 and 80286.",
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Компиляторы и генераторы",
+        section = "Compilers and generators",
         title = "Microsoft C",
         originalTitle = "Microsoft C 1.0",
         author = "Microsoft",
         year = 1983,
-        summary = "Первый компилятор C от Microsoft (1983) для MS-DOS: переносимый код для PC.",
-        details = "Microsoft C конкурировал с Lattice C. Компиляторы этой эпохи различались в библиотеках и расширениях языка.",
+        summary = "Microsoft's first C compiler (1983) for MS-DOS: portable code for the PC.",
+        details = "Microsoft C competed with Lattice C. Compilers of that era differed in their libraries and language extensions.",
         rare = true,
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Компиляторы и генераторы",
-        title = "Компилятор Lattice C",
+        section = "Compilers and generators",
+        title = "Lattice C compiler",
         originalTitle = "Lattice C",
         author = "Lattice Inc.",
         year = 1982,
-        summary = "Один из первых компиляторов C для PC (1982): популярен у программистов CP/M и MS-DOS.",
-        details = "Lattice C продавался за умеренную цену и был одним из первых коммерческих компиляторов C на PC.",
+        summary = "One of the first C compilers for the PC (1982): popular with CP/M and MS-DOS programmers.",
+        details = "Lattice C sold at a moderate price and was one of the first commercial C compilers for the PC.",
         rare = true,
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Компиляторы и генераторы",
-        title = "Ассемблер Turbo Assembler",
+        section = "Compilers and generators",
+        title = "Turbo Assembler",
         originalTitle = "Turbo Assembler (TASM)",
         author = "Borland",
         year = 1988,
-        summary = "Ассемблер Borland (1988), совместимый с синтаксисом MASM.",
-        details = "TASM поддерживал синтаксис MASM. Его использовали разработчики игр и драйверов.",
+        summary = "The Borland assembler (1988), compatible with the MASM syntax.",
+        details = "TASM supported the MASM syntax. It was used by game and driver developers.",
         rare = true,
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Компиляторы и генераторы",
-        title = "Препроцессор M4",
+        section = "Compilers and generators",
+        title = "The m4 macro processor",
         originalTitle = "m4",
-        author = "Брайан Керниган, Дэннис Ритчи",
+        author = "Brian Kernighan, Dennis Ritchie",
         year = 1977,
-        summary = "Универсальный макропроцессор Unix (1977): подставляет текст по шаблонам. На нём построены autoconf и конфигурация sendmail.",
-        details = "M4 работал с текстом любого языка. Его применяли для генерации сценариев и заготовок программ.",
+        summary = "A general-purpose Unix macro processor (1977): it substitutes text by templates. autoconf and the sendmail configuration are built on it.",
+        details = "M4 worked with the text of any language. It was used to generate scripts and program skeletons.",
         rare = true,
     ),
 
-    // ---------- Калькуляторы и математика ----------
+    // ---------- Calculators and mathematics ----------
 
     entry(
         kind = Kind.TOOL,
-        section = "Компиляторы и генераторы",
-        title = "Калькулятор bc",
+        section = "Compilers and generators",
+        title = "The bc calculator",
         originalTitle = "bc",
-        author = "Лоринда Черри, Роберт Моррис, Bell Labs",
+        author = "Lorinda Cherry, Robert Morris, Bell Labs",
         year = 1975,
-        summary = "Калькулятор произвольной точности Unix (1975): язык с переменными, функциями и любой точностью.",
-        details = "bc использовал язык, похожий на C, и часто стоял в конвейерах оболочки. Его применяли для точных вычислений, например для π.",
+        summary = "A Unix arbitrary-precision calculator (1975): a language with variables, functions and any precision.",
+        details = "bc used a language similar to C and often sat in shell pipelines. It was used for precise calculations, for example for π.",
         rare = true,
     ),
 
-    // ---------- Командная строка ----------
+    // ---------- Command line ----------
 
     entry(
         kind = Kind.TOOL,
-        section = "Командная строка",
-        title = "Оболочка csh",
+        section = "Command line",
+        title = "The C shell",
         originalTitle = "C shell (csh)",
-        author = "Билл Джой, Беркли",
+        author = "Bill Joy, Berkeley",
         year = 1978,
-        summary = "Оболочка Unix с синтаксисом, похожим на C (1978): история команд, псевдонимы и задания.",
-        details = "csh появилась в Беркли и стала альтернативой Bourne shell. Её синтаксис часто ругали, но её возможности были новыми.",
+        summary = "A Unix shell with a C-like syntax (1978): command history, aliases and job control.",
+        details = "csh appeared at Berkeley and became an alternative to the Bourne shell. Its syntax was often criticised, but its features were new.",
         rare = true,
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Командная строка",
-        title = "Оболочка ksh",
+        section = "Command line",
+        title = "The Korn shell",
         originalTitle = "Korn shell (ksh)",
-        author = "Дэвид Корн, Bell Labs",
+        author = "David Korn, Bell Labs",
         year = 1983,
-        summary = "Оболочка Корна (1983): совмещает синтаксис Bourne shell с удобствами csh.",
-        details = "ksh стала стандартом для системных скриптов Unix System V. Многие её возможности позже появились в bash.",
+        summary = "The Korn shell (1983): combines the Bourne shell syntax with the conveniences of csh.",
+        details = "ksh became the standard for system scripts on Unix System V. Many of its features later appeared in bash.",
         rare = true,
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Командная строка",
-        title = "Оболочка bash",
+        section = "Command line",
+        title = "The bash shell",
         originalTitle = "Bourne Again Shell (bash)",
-        author = "Брайан Фокс, проект GNU",
+        author = "Brian Fox, GNU project",
         year = 1989,
-        summary = "Оболочка проекта GNU (1989): совместима с Bourne shell и содержит идеи csh и ksh.",
-        details = "bash стала стандартной оболочкой Linux и macOS. Её синтаксис до сих пор лежит в основе многих скриптов.",
+        summary = "The GNU project's shell (1989): compatible with the Bourne shell and incorporating ideas from csh and ksh.",
+        details = "bash became the standard shell of Linux and macOS. Its syntax still underlies many scripts.",
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Командная строка",
-        title = "Утилита gawk",
+        section = "Command line",
+        title = "The gawk utility",
         originalTitle = "GNU awk (gawk)",
-        author = "Пол Рубин и Джей Фенлсон, проект GNU",
+        author = "Paul Rubin and Jay Fenlason, GNU project",
         year = 1988,
-        summary = "Свободная реализация AWK от проекта GNU (1988) с расширениями для текста и массивов.",
-        details = "gawk развивал AWK дальше исходной версии и добавил к нему расширения. Часто используется в скриптах обработки данных.",
+        summary = "A free implementation of AWK from the GNU project (1988) with extensions for text and arrays.",
+        details = "gawk developed AWK beyond the original version and added extensions to it. It is often used in data-processing scripts.",
         rare = true,
     ),
 
-    // ---------- Связь и передача файлов ----------
+    // ---------- Communications and file transfer ----------
 
     entry(
         kind = Kind.TOOL,
-        section = "Связь и передача файлов",
-        title = "Протокол Kermit",
+        section = "Communications and file transfer",
+        title = "The Kermit protocol",
         originalTitle = "Kermit",
-        author = "Университет Колумбия",
+        author = "Columbia University",
         year = 1981,
-        summary = "Протокол и программа передачи файлов (1981) между разными компьютерами через последовательный порт.",
-        details = "Kermit работала почти на любой машине. Её использовали для переноса файлов между мейнфреймами, PC и Unix.",
+        summary = "A file-transfer protocol and program (1981) for moving files between different computers over a serial port.",
+        details = "Kermit ran on almost any machine. It was used to move files between mainframes, PCs and Unix.",
         rare = true,
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Связь и передача файлов",
-        title = "Протокол XMODEM",
+        section = "Communications and file transfer",
+        title = "The XMODEM protocol",
         originalTitle = "XMODEM",
-        author = "Уорд Кристенсен",
+        author = "Ward Christensen",
         year = 1977,
-        summary = "Протокол передачи файлов по модему (1977) с контрольной суммой блоков: основа многих BBS.",
-        details = "XMODEM передавал файл блоками по 128 байт с проверкой. Позже появились YMODEM и ZMODEM.",
+        summary = "A modem file-transfer protocol (1977) with a checksum for each block: the basis of many BBSs.",
+        details = "XMODEM transferred a file in 128-byte blocks with verification. YMODEM and ZMODEM came later.",
         rare = true,
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Связь и передача файлов",
-        title = "Утилита uucp",
+        section = "Communications and file transfer",
+        title = "The uucp utility",
         originalTitle = "uucp (Unix to Unix copy)",
-        author = "Дэвид Новитц, Майкл Лэск",
+        author = "David Nowitz, Michael Lesk",
         year = 1978,
-        summary = "Передача файлов и почты между машинами Unix по телефонным линиям (1978).",
-        details = "uucp работала по расписанию через модем. Сети uucp связывали университеты и компании до появления Интернета.",
+        summary = "Transfer of files and mail between Unix machines over telephone lines (1978).",
+        details = "uucp ran on a schedule over a modem. uucp networks linked universities and companies before the Internet appeared.",
         rare = true,
     ),
 
-    // ---------- Документы и вёрстка ----------
+    // ---------- Documents and typesetting ----------
 
     entry(
         kind = Kind.TOOL,
-        section = "Документы и вёрстка",
-        title = "Система вёрстки LaTeX",
+        section = "Documents and typesetting",
+        title = "The LaTeX typesetting system",
         originalTitle = "LaTeX",
-        author = "Лесли Лэмпорт",
+        author = "Leslie Lamport",
         year = 1984,
-        summary = "Надстройка над TeX (1984): структура документа задаётся командами разделов, формул и ссылок.",
-        details = "LaTeX позволил писать научные статьи и книги без знания низкоуровневого TeX. Стал стандартом для научных публикаций.",
+        summary = "A layer over TeX (1984): the structure of a document is set by commands for sections, formulas and references.",
+        details = "LaTeX made it possible to write scientific articles and books without knowing low-level TeX. " +
+            "It became the standard for scientific publications.",
     ),
 )

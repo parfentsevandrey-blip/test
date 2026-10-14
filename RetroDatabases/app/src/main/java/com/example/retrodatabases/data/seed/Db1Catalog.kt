@@ -3,9 +3,9 @@ package com.example.retrodatabases.data.seed
 import com.example.retrodatabases.data.RecordEntity
 
 /**
- * Все записи базы 1: языки, системы, устройства, инструменты и практики 1980-х,
- * а также пояснения, примеры, проекты, флекс-проекты и кросс-код эксперименты.
- * Порядок показа задаёт экран (вид → раздел → год), а не порядок в этих списках.
+ * All records of database 1: languages, systems, devices, tools and practices of the 1980s,
+ * as well as guides, examples, projects, flex projects and cross-code experiments.
+ * The display order is set by the screen (kind → section → year), not by the order in these lists.
  */
 val db1Records: List<RecordEntity> =
     db1Languages + db1Systems + db1Devices + db1Tools + db1Practices +

@@ -3,22 +3,22 @@ package com.example.retrodatabases.data.seed
 import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.RecordEntity
 
-/** Языки программирования 1980-х и их предки: от массовых до почти забытых. */
+/** Programming languages of the 1980s and their ancestors: from mass-market to almost forgotten. */
 val db1Languages: List<RecordEntity> = listOf(
 
-    // ---------- Императивные и системные ----------
+    // ---------- Imperative and system ----------
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Императивные и системные",
-        title = "Язык Pascal",
+        section = "Imperative and system",
+        title = "Pascal",
         originalTitle = "Pascal",
-        author = "Никлаус Вирт",
+        author = "Niklaus Wirth",
         year = 1970,
-        summary = "Строгий учебный язык с типами, блоками и процедурами; приучал писать аккуратно.",
-        details = "Вирт создал Pascal в 1970 году как язык для обучения программированию. " +
-            "В 80-х он стал основным языком вузовских курсов, а Turbo Pascal (1983) сделал его массовым на PC. " +
-            "Компилятор проверял типы до запуска, и для тех лет это было большим шагом.",
+        summary = "A strict teaching language with types, blocks and procedures; it taught people to write neatly.",
+        details = "Wirth created Pascal in 1970 as a language for teaching programming. " +
+            "In the 80s it became the main language of university courses, and Turbo Pascal (1983) made it mass-market on the PC. " +
+            "The compiler checked types before the program ran, which was a big step for those years.",
         example = """
             program Average;
             var
@@ -34,15 +34,15 @@ val db1Languages: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Императивные и системные",
-        title = "Язык C",
+        section = "Imperative and system",
+        title = "C",
         originalTitle = "C",
-        author = "Деннис Ритчи",
+        author = "Dennis Ritchie",
         year = 1972,
-        summary = "Язык системного программирования, на котором переписали Unix.",
-        details = "Ритчи создал C в 1972 году, а в 1973-м ядро Unix переписали на нём. " +
-            "Книга Кернигана и Ритчи «The C Programming Language» (1978) стала учебником десятилетия. " +
-            "Стандарт ANSI C (C89) принят в 1989 году. Язык дал переносимость: один исходник собирался на разных машинах.",
+        summary = "A systems programming language, in which Unix was rewritten.",
+        details = "Ritchie created C in 1972, and in 1973 the Unix kernel was rewritten in it. " +
+            "Kernighan and Ritchie's book “The C Programming Language” (1978) became the textbook of the decade. " +
+            "The ANSI C standard (C89) was adopted in 1989. The language gave portability: one source could be built on different machines.",
         example = """
             #include <stdio.h>
 
@@ -58,28 +58,28 @@ val db1Languages: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Императивные и системные",
-        title = "Язык Ada",
+        section = "Imperative and system",
+        title = "Ada",
         originalTitle = "Ada",
-        author = "Жан Ишбиа и команда по заказу Минобороны США",
+        author = "Jean Ichbiah and a team commissioned by the US Department of Defense",
         year = 1983,
-        summary = "Язык для больших оборонных систем: пакеты, строгие типы, исключения и параллельные задачи.",
-        details = "Ada создали по заказу Министерства обороны США. Стандарт 1983 года получил номер MIL-STD-1815 " +
-            "в честь года рождения Ады Лавлейс. Язык был тяжёлым, но предлагал пакеты с отдельным интерфейсом, " +
-            "обработку исключений и параллельные задачи прямо в языке.",
+        summary = "A language for large defence systems: packages, strong types, exceptions and parallel tasks.",
+        details = "Ada was created to order for the US Department of Defense. The 1983 standard received the number MIL-STD-1815, " +
+            "in honour of the year of Ada Lovelace's birth. The language was heavy, but it offered packages with a separate interface, " +
+            "exception handling and parallel tasks built into the language.",
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Императивные и системные",
-        title = "Язык Modula-2",
+        section = "Imperative and system",
+        title = "Modula-2",
         originalTitle = "Modula-2",
-        author = "Никлаус Вирт",
+        author = "Niklaus Wirth",
         year = 1978,
-        summary = "Наследник Pascal с модулями: интерфейс и реализация разделены, компиляция раздельная.",
-        details = "Вирт разработал Modula-2 в конце 1970-х в ETH Zurich. Модуль состоит из описания интерфейса " +
-            "и реализации, поэтому большие программы собирались по частям. Язык преподавали в Европе, " +
-            "а операционную систему Medos-2 написали на нём.",
+        summary = "A successor to Pascal with modules: the interface and the implementation are separated and compiled separately.",
+        details = "Wirth developed Modula-2 in the late 1970s at ETH Zurich. A module consists of an interface description " +
+            "and an implementation, so large programs were built in parts. The language was taught in Europe, " +
+            "and the Medos-2 operating system was written in it.",
         example = """
             DEFINITION MODULE Stack;
               PROCEDURE Push(x: INTEGER);
@@ -91,106 +91,105 @@ val db1Languages: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Императивные и системные",
-        title = "Язык Oberon",
+        section = "Imperative and system",
+        title = "Oberon",
         originalTitle = "Oberon",
-        author = "Никлаус Вирт, Юрг Гутнехт",
+        author = "Niklaus Wirth, Jürg Gutknecht",
         year = 1987,
-        summary = "Упрощённый наследник Modula-2 с расширением типов; операционную систему написали на нём целиком.",
-        details = "Вирт и Гутнехт создали язык вместе с операционной системой Oberon System. Языка меньше, чем у Modula-2: " +
-            "объекты появляются через расширение записей, а не через отдельные конструкции.",
+        summary = "A simplified successor to Modula-2 with extended types; the operating system was written entirely in it.",
+        details = "Wirth and Gutknecht created the language together with the Oberon System operating system. The language is smaller than Modula-2: " +
+            "objects appear through record extension, not through separate constructs.",
         rare = true,
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Императивные и системные",
-        title = "Язык Mesa",
+        section = "Imperative and system",
+        title = "Mesa",
         originalTitle = "Mesa",
-        author = "Команда Xerox PARC",
+        author = "Xerox PARC team",
         year = 1977,
-        summary = "Язык Xerox PARC для системного программирования: на нём писали ПО рабочих станций Alto и Star.",
-        details = "Mesa создавали для больших систем с модулями и строгой проверкой интерфейсов. " +
-            "Большая часть программного обеспечения рабочих станций Xerox написана на нём.",
+        summary = "Xerox PARC's language for systems programming: the software of the Alto and Star workstations was written in it.",
+        details = "Mesa was created for large systems with modules and strict checking of interfaces. " +
+            "Much of the software of Xerox workstations is written in it.",
         rare = true,
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Императивные и системные",
+        section = "Imperative and system",
         title = "Concurrent Pascal",
         originalTitle = "Concurrent Pascal",
-        author = "Пер Бринч Хансен",
+        author = "Per Brinch Hansen",
         year = 1975,
-        summary = "Pascal с параллельными процессами и мониторами: общие данные защищены структурой языка.",
-        details = "Бринч Хансен ввёл мониторы в 1975 году. На Concurrent Pascal написана экспериментальная " +
-            "операционная система Solo (1976), в которой параллельность проверялась прямо компилятором.",
+        summary = "Pascal with parallel processes and monitors: shared data is protected by the structure of the language.",
+        details = "Brinch Hansen introduced monitors in 1975. The experimental operating system Solo (1976) was written in Concurrent Pascal, " +
+            "and parallelism was checked directly by the compiler.",
         rare = true,
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Императивные и системные",
-        title = "Язык PL/M",
+        section = "Imperative and system",
+        title = "PL/M",
         originalTitle = "PL/M",
         author = "Intel",
         year = 1973,
-        summary = "Язык Intel для процессоров 8080 и 8086: Pascal-подобный синтаксис и низкоуровневые возможности.",
-        details = "Создан для программирования микропроцессоров Intel. На PL/M написана CP/M — первая массовая " +
-            "операционная система для 8-битных машин.",
+        summary = "Intel's language for the 8080 and 8086 processors: Pascal-like syntax and low-level capabilities.",
+        details = "Created for programming Intel microprocessors. CP/M, the first mass-market OS for 8-bit machines, was written in PL/M.",
         rare = true,
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Императивные и системные",
-        title = "Язык BCPL",
+        section = "Imperative and system",
+        title = "BCPL",
         originalTitle = "BCPL",
-        author = "Мартин Ричардс",
+        author = "Martin Richards",
         year = 1967,
-        summary = "Простой язык для системного программирования, предок языков B и C.",
-        details = "Ричардс создал BCPL в Кембридже. Язык компилировался на разные машины через промежуточный код, " +
-            "поэтому переносился легко. Из BCPL выросли B (Томпсон), а затем C.",
+        summary = "A simple language for systems programming, the ancestor of the B and C languages.",
+        details = "Richards created BCPL in Cambridge. The language was compiled for different machines through intermediate code, " +
+            "so it was easy to port. B (Thompson) and then C grew out of BCPL.",
         rare = true,
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Императивные и системные",
-        title = "Язык B",
+        section = "Imperative and system",
+        title = "B",
         originalTitle = "B",
-        author = "Кен Томпсон",
+        author = "Ken Thompson",
         year = 1969,
-        summary = "Язык без типов для миникомпьютера PDP-7 — промежуточный шаг от BCPL к C.",
-        details = "Томпсон упростил BCPL и создал B для PDP-7, где работала ранняя версия Unix. " +
-            "Затем Ритчи добавил типы и получил C.",
+        summary = "A typeless language for the PDP-7 minicomputer, an intermediate step from BCPL to C.",
+        details = "Thompson simplified BCPL and created B for the PDP-7, where an early version of Unix ran. " +
+            "Then Ritchie added types and got C.",
         rare = true,
     ),
 
-    // ---------- Научные и деловые ----------
+    // ---------- Scientific and business ----------
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Научные и деловые",
-        title = "Язык FORTRAN",
+        section = "Scientific and business",
+        title = "FORTRAN",
         originalTitle = "FORTRAN",
-        author = "Команда Джона Бэкуса, IBM",
+        author = "John Backus's team, IBM",
         year = 1957,
-        summary = "Старейший язык для научных расчётов; в 80-х на нём считали физику, механику и метеорологию.",
-        details = "FORTRAN (FORmula TRANslator) появился в IBM в 1957 году. Язык оптимизировали под числа и массивы, " +
-            "поэтому численные библиотеки 80-х часто писали на нём.",
+        summary = "The oldest language for scientific calculations; in the 80s it was used for physics, mechanics and meteorology.",
+        details = "FORTRAN (FORmula TRANslator) appeared at IBM in 1957. The language was optimised for numbers and arrays, " +
+            "so numerical libraries of the 80s were often written in it.",
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Научные и деловые",
-        title = "Язык COBOL",
+        section = "Scientific and business",
+        title = "COBOL",
         originalTitle = "COBOL",
-        author = "Комитет CODASYL, при участии Грейс Хоппер",
+        author = "CODASYL committee, with Grace Hopper's participation",
         year = 1959,
-        summary = "Деловой язык банков и страховых: описания данных и фразы, похожие на английский.",
-        details = "COBOL создал комитет CODASYL в 1959 году. В 80-х миллионы строк COBOL работали в банках " +
-            "и госучреждениях; стандарты COBOL-74 и COBOL-85 закрепили язык.",
+        summary = "A business language of banks and insurers: data descriptions and phrases resembling English.",
+        details = "COBOL was created by the CODASYL committee in 1959. In the 80s millions of lines of COBOL ran in banks " +
+            "and government institutions; the COBOL-74 and COBOL-85 standards consolidated the language.",
         example = """
                    IDENTIFICATION DIVISION.
                    PROGRAM-ID. HELLO.
@@ -202,14 +201,14 @@ val db1Languages: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Научные и деловые",
-        title = "Язык ALGOL 60",
+        section = "Scientific and business",
+        title = "ALGOL 60",
         originalTitle = "ALGOL 60",
-        author = "Международный комитет",
+        author = "International committee",
         year = 1960,
-        summary = "Образец для будущих языков: блоки, рекурсия и форма записи синтаксиса BNF.",
-        details = "Отчёт 1960 года задал структуру блочных языков. Форма Бэкуса — Наура (BNF) для описания синтаксиса " +
-            "появилась именно здесь. Алгол-60 использовали и в СССР: для БЭСМ-6 были трансляторы.",
+        summary = "A model for future languages: blocks, recursion and the BNF notation for syntax.",
+        details = "The 1960 report defined the structure of block-structured languages. The Backus–Naur form (BNF) for describing syntax " +
+            "appeared right here. ALGOL-60 was also used in the USSR: there were translators for the BESM-6.",
         example = """
             begin
               integer i, s;
@@ -222,57 +221,57 @@ val db1Languages: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Научные и деловые",
-        title = "Язык ALGOL 68",
+        section = "Scientific and business",
+        title = "ALGOL 68",
         originalTitle = "ALGOL 68",
-        author = "Комитет IFIP",
+        author = "IFIP committee",
         year = 1968,
-        summary = "Сложный язык с гибкой системой типов и выражениями; мощный, но трудный в реализации.",
-        details = "Алгол-68 задумывали как преемника Алгола-60. Богатая система типов и выражения-операторы были мощными, " +
-            "но компиляторы получались громоздкими, и язык так и не стал массовым.",
+        summary = "A complex language with a flexible type system and expressions; powerful, but hard to implement.",
+        details = "ALGOL 68 was designed as the successor of ALGOL 60. The rich type system and expressions that double as statements " +
+            "were powerful, but the compilers turned out bulky, and the language never became mass-market.",
         rare = true,
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Научные и деловые",
-        title = "Язык PL/I",
+        section = "Scientific and business",
+        title = "PL/I",
         originalTitle = "PL/I",
         author = "IBM",
         year = 1964,
-        summary = "Универсальный язык IBM: задумывался как замена сразу FORTRAN, COBOL и ALGOL.",
-        details = "Получился сложным: много конструкций и исключений. Язык жил в мейнфреймах IBM и в 80-х оставался " +
-            "в больших корпоративных системах.",
+        summary = "IBM's general-purpose language: it was meant to replace FORTRAN, COBOL and ALGOL all at once.",
+        details = "It turned out complicated: many constructs and exceptions. The language lived on IBM mainframes and in the 80s remained " +
+            "in large corporate systems.",
         rare = true,
     ),
 
-    // ---------- Объектные и параллельные ----------
+    // ---------- Object-oriented and parallel ----------
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Объектные и параллельные",
-        title = "Язык Simula 67",
+        section = "Object-oriented and parallel",
+        title = "Simula 67",
         originalTitle = "Simula 67",
-        author = "Оле-Йохан Даль, Кристен Нигаард",
+        author = "Ole-Johan Dahl, Kristen Nygaard",
         year = 1967,
-        summary = "Первый язык с классами, объектами и наследованием; предок Smalltalk и C++.",
-        details = "Язык создали в Норвегии для моделирования систем. Классы, объекты и виртуальные процедуры, " +
-            "которые Simula ввела первой, позже стали основой объектно-ориентированного программирования.",
+        summary = "The first language with classes, objects and inheritance; the ancestor of Smalltalk and C++.",
+        details = "The language was created in Norway for modelling systems. Classes, objects and virtual procedures, " +
+            "which Simula introduced first, later became the basis of object-oriented programming.",
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Объектные и параллельные",
-        title = "Язык Smalltalk-80",
+        section = "Object-oriented and parallel",
+        title = "Smalltalk-80",
         originalTitle = "Smalltalk-80",
-        author = "Алан Кей и команда Xerox PARC",
+        author = "Alan Kay and the Xerox PARC team",
         year = 1980,
-        summary = "Программа — набор объектов, которые хранят состояние и общаются сообщениями.",
-        details = "Smalltalk-80 выпустили в Xerox PARC в 1980 году. Он сделал ООП практичным: классы, наследование, " +
-            "окна и мышь. В начале 80-х появились C++ (Страуструп, 1983) и Objective-C; Smalltalk задал образец " +
-            "интерактивной среды разработки.",
+        summary = "A program is a set of objects that keep state and communicate by messages.",
+        details = "Smalltalk-80 was released at Xerox PARC in 1980. It made OOP practical: classes, inheritance, " +
+            "windows and a mouse. In the early 80s C++ (Stroustrup, 1983) and Objective-C appeared; Smalltalk set the model for " +
+            "an interactive development environment.",
         example = """
-            "Создаём счёт и кладём 100"
+            "Create an account and put 100 in it"
             | account |
             account := BankAccount new.
             account deposit: 100.
@@ -282,42 +281,42 @@ val db1Languages: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Объектные и параллельные",
-        title = "Язык Occam",
+        section = "Object-oriented and parallel",
+        title = "Occam",
         originalTitle = "Occam",
-        author = "INMOS, Дэвид Мэй",
+        author = "INMOS, David May",
         year = 1983,
-        summary = "Язык параллельных процессов для транспьютеров: процессы и каналы описаны прямо в языке.",
-        details = "Occam основан на модели CSP Хоара. Программа — набор процессов, которые обмениваются данными по каналам; " +
-            "параллельность здесь часть языка, а не библиотека.",
+        summary = "A language of parallel processes for transputers: processes and channels are described right in the language.",
+        details = "Occam is based on Hoare's CSP model. A program is a set of processes that exchange data over channels; " +
+            "parallelism here is part of the language, not a library.",
         rare = true,
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Объектные и параллельные",
-        title = "Язык Erlang",
+        section = "Object-oriented and parallel",
+        title = "Erlang",
         originalTitle = "Erlang",
-        author = "Джо Армстронг, Ericsson",
+        author = "Joe Armstrong, Ericsson",
         year = 1986,
-        summary = "Язык для телефонных систем: лёгкие процессы, сообщения и перезапуск сбойных частей.",
-        details = "Erlang создали внутри Ericsson для надёжных телекоммуникационных систем. Публично язык вышел только " +
-            "в 1998 году, но идея «пусть падает и перезапускается» уже работала в 80-х.",
+        summary = "A language for telephone systems: lightweight processes, messages and restarting of failing parts.",
+        details = "Erlang was created inside Ericsson for reliable telecommunications systems. It was released publicly only in 1998, " +
+            "but the idea of “let it crash and restart” already worked in the 80s.",
         rare = true,
     ),
 
-    // ---------- Функциональные и логические ----------
+    // ---------- Functional and logic ----------
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Функциональные и логические",
-        title = "Язык Lisp",
+        section = "Functional and logic",
+        title = "Lisp",
         originalTitle = "Lisp",
-        author = "Джон Маккарти",
+        author = "John McCarthy",
         year = 1958,
-        summary = "Программы — списки и функции. В 80-х Lisp-машины и Common Lisp были на пике.",
-        details = "Маккарти создал Lisp в 1958 году для обработки символов и задач ИИ. Common Lisp (спецификация 1984) " +
-            "объединил диалекты; Lisp-машины стоили дорого, но задавали стиль разработки.",
+        summary = "Programs are lists and functions. In the 80s Lisp machines and Common Lisp were at their peak.",
+        details = "McCarthy created Lisp in 1958 for symbol processing and AI tasks. Common Lisp (specification 1984) " +
+            "unified the dialects; Lisp machines were expensive, but they set the style of development.",
         example = """
             (defun factorial (n)
               (if (<= n 1)
@@ -329,14 +328,14 @@ val db1Languages: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Функциональные и логические",
-        title = "Язык Scheme",
+        section = "Functional and logic",
+        title = "Scheme",
         originalTitle = "Scheme",
-        author = "Джеральд Сассман, Гай Стил",
+        author = "Gerald Sussman, Guy Steele",
         year = 1975,
-        summary = "Минималистичный диалект Lisp с лексической областью видимости; учебный язык MIT.",
-        details = "Scheme создали в MIT в 1975 году. Язык положили в основу книги SICP (1985) — одного из самых " +
-            "известных учебников 80-х.",
+        summary = "A minimalist dialect of Lisp with lexical scoping; a teaching language of MIT.",
+        details = "Scheme was created at MIT in 1975. The language became the basis of the book SICP (1985), " +
+            "one of the best-known textbooks of the 80s.",
         example = """
             (define (fact n)
               (if (= n 0) 1 (* n (fact (- n 1)))))
@@ -346,27 +345,27 @@ val db1Languages: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Функциональные и логические",
-        title = "Язык ML",
+        section = "Functional and logic",
+        title = "ML",
         originalTitle = "ML, Standard ML",
-        author = "Роберт Милнер, Эдинбургский университет",
+        author = "Robin Milner, University of Edinburgh",
         year = 1973,
-        summary = "Функциональный язык с выводом типов и модулями; предок OCaml и F#.",
-        details = "ML появился в Эдинбургском университете как язык для доказательств. Вывод типов без лишних аннотаций " +
-            "и модульная система сделали его образцом для языков следующего поколения.",
+        summary = "A functional language with type inference and modules; the ancestor of OCaml and F#.",
+        details = "ML appeared at the University of Edinburgh as a language for proofs. Type inference without extra annotations " +
+            "and the module system made it a model for next-generation languages.",
         rare = true,
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Функциональные и логические",
-        title = "Язык Miranda",
+        section = "Functional and logic",
+        title = "Miranda",
         originalTitle = "Miranda",
-        author = "Дэвид Тёрнер",
+        author = "David Turner",
         year = 1985,
-        summary = "Ленивый чисто функциональный язык, непосредственный предшественник Haskell.",
-        details = "Miranda появилась в 1985 году как коммерческий язык с удобным сопоставлением с образцом. " +
-            "Её идеи вошли в Haskell, созданный в 1990 году.",
+        summary = "A lazy purely functional language, the direct predecessor of Haskell.",
+        details = "Miranda appeared in 1985 as a commercial language with convenient pattern matching. " +
+            "Its ideas went into Haskell, created in 1990.",
         example = """
             fac 0 = 1
             fac n = n * fac (n - 1)
@@ -376,15 +375,14 @@ val db1Languages: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Функциональные и логические",
-        title = "Язык Prolog",
+        section = "Functional and logic",
+        title = "Prolog",
         originalTitle = "Prolog",
-        author = "Ален Колмерауэр, Филипп Руссель",
+        author = "Alain Colmerauer, Philippe Roussel",
         year = 1972,
-        summary = "Программа — факты и правила; вычисление — поиск доказательства.",
-        details = "Prolog придумали в Марсельском университете в 1972 году. В 1982-м японский проект «Компьютеры пятого " +
-            "поколения» сделал логическое программирование модным. В 80-х Prolog использовали в экспертных системах " +
-            "и разборе естественного языка.",
+        summary = "A program is facts and rules; computation is the search for a proof.",
+        details = "Prolog was devised at the University of Marseille in 1972. In 1982 the Japanese “Fifth Generation Computers” project " +
+            "made logic programming fashionable. In the 80s Prolog was used in expert systems and natural-language parsing.",
         example = """
             parent(anna, boris).
             parent(boris, vera).
@@ -395,18 +393,18 @@ val db1Languages: List<RecordEntity> = listOf(
         """,
     ),
 
-    // ---------- Учебные и экзотические ----------
+    // ---------- Educational and exotic ----------
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Учебные и экзотические",
-        title = "Язык BASIC",
+        section = "Educational and exotic",
+        title = "BASIC",
         originalTitle = "BASIC",
-        author = "Джон Кемени, Томас Курц",
+        author = "John Kemeny, Thomas Kurtz",
         year = 1964,
-        summary = "Простой язык для новичков: в 80-х на нём писали почти все домашние компьютеры.",
-        details = "Кемени и Курц создали BASIC в Дартмутском колледже. Диалекты были в ПЗУ ZX Spectrum, Commodore 64 " +
-            "и Apple II, в комплекте шёл BASICA для IBM PC, а в СССР — в БК-0010.",
+        summary = "A simple language for beginners: in the 80s almost all home computers were programmed in it.",
+        details = "Kemeny and Kurtz created BASIC at Dartmouth College. Dialects were in the ROM of the ZX Spectrum, the Commodore 64 " +
+            "and the Apple II; BASICA came with the IBM PC, and in the USSR it was in the BK-0010.",
         example = """
             10 PRINT "HELLO"
             20 GOTO 10
@@ -415,14 +413,14 @@ val db1Languages: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Учебные и экзотические",
-        title = "Язык Logo",
+        section = "Educational and exotic",
+        title = "Logo",
         originalTitle = "Logo",
-        author = "Уолли Файгенбаум, Сеймур Пейперт, Синтия Соломон",
+        author = "Wally Feurzeig, Seymour Papert, Cynthia Solomon",
         year = 1967,
-        summary = "Язык-черепашка: команды двигают экранного исполнителя и рисуют узоры.",
-        details = "Logo создали для обучения детей программированию. Пейперт описал идеи в книге «Mindstorms» (1980): " +
-            "ребёнок учится думать о процессах, управляя черепашкой. В 80-х Logo появился на школьных компьютерах.",
+        summary = "A turtle language: commands move an on-screen turtle and draw patterns.",
+        details = "Logo was created to teach children programming. Papert described the ideas in the book “Mindstorms” (1980): " +
+            "a child learns to think about processes by controlling a turtle. In the 80s Logo appeared on school computers.",
         example = """
             REPEAT 4 [FORWARD 100 RIGHT 90]
         """,
@@ -430,66 +428,66 @@ val db1Languages: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Учебные и экзотические",
-        title = "Язык Forth",
+        section = "Educational and exotic",
+        title = "Forth",
         originalTitle = "Forth",
-        author = "Чарльз Мур",
+        author = "Charles Moore",
         year = 1970,
-        summary = "Стековый язык: мало ключевых слов, компактный код, быстрая работа на слабых машинах.",
-        details = "Мур создал Forth в конце 1960-х для управления телескопами. Программа — словарь слов, " +
-            "и каждое слово работает со стеком. В 80-х Forth ценили в робототехнике и управлении, где память и скорость " +
-            "были на вес золота.",
+        summary = "A stack language: few keywords, compact code, fast work on weak machines.",
+        details = "Moore created Forth in the late 1960s for controlling telescopes. A program is a dictionary of words, " +
+            "and each word works with the stack. In the 80s Forth was valued in robotics and control, where memory and speed " +
+            "were worth their weight in gold.",
         example = """
             : SQUARE  DUP * ;
-            5 SQUARE .      \ печатает 25
+            5 SQUARE .      \ prints 25
         """,
         rare = true,
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Учебные и экзотические",
-        title = "Язык APL",
+        section = "Educational and exotic",
+        title = "APL",
         originalTitle = "APL",
-        author = "Кеннет Айверсон",
+        author = "Kenneth Iverson",
         year = 1962,
-        summary = "Язык для массивов: одна строка заменяет целый цикл, а код записывают спецсимволами.",
-        details = "Айверсон описал нотацию в книге «A Programming Language» (1962). Программисты APL работали " +
-            "с клавиатурой, где были математические знаки, и писали очень короткий код.",
+        summary = "A language for arrays: one line replaces a whole loop, and code is written with special symbols.",
+        details = "Iverson described the notation in the book “A Programming Language” (1962). APL programmers worked on a keyboard " +
+            "with mathematical symbols and wrote very short code.",
         example = """
-            +/⍳10   ⍝ сумма чисел от 1 до 10: 55
+            +/⍳10   ⍝ sum of the numbers from 1 to 10: 55
         """,
         rare = true,
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Учебные и экзотические",
-        title = "Язык Icon",
+        section = "Educational and exotic",
+        title = "Icon",
         originalTitle = "Icon",
-        author = "Ральф Гризволд",
+        author = "Ralph Griswold",
         year = 1977,
-        summary = "Язык обработки строк: поиск и перебор результатов — встроенные генераторы.",
-        details = "Гризволд создал Icon в Аризонском университете. Выражение может возвращать несколько значений " +
-            "по очереди, поэтому поиск в тексте записывается коротко.",
+        summary = "A string-processing language: searching and iterating over results are built-in generators.",
+        details = "Griswold created Icon at the University of Arizona. An expression can return several values in turn, " +
+            "so a search in text is written briefly.",
         example = """
-            every write(find("a", "banana"))   # печатает 2, 4 и 6
+            every write(find("a", "banana"))   # prints 2, 4 and 6
         """,
         rare = true,
     ),
 
-    // ---------- Скрипты и языки описания ----------
+    // ---------- Scripting and description languages ----------
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Скрипты и языки описания",
-        title = "Язык AWK",
+        section = "Scripting and description languages",
+        title = "AWK",
         originalTitle = "AWK",
-        author = "Ахо, Вайнбергер, Керниган",
+        author = "Aho, Weinberger, Kernighan",
         year = 1977,
-        summary = "Язык обработки таблиц: для каждой строки задаётся шаблон и действие.",
-        details = "Имя языка составлено из фамилий авторов. В 80-х AWK был стандартным инструментом Unix " +
-            "для отчётов по текстовым данным.",
+        summary = "A language for processing tables: a pattern and an action are given for each line.",
+        details = "The name of the language is made from the authors' surnames. In the 80s AWK was the standard Unix tool " +
+            "for reports on text data.",
         example = """
             awk '{ sum += $2 } END { print sum }' data.txt
         """,
@@ -497,47 +495,47 @@ val db1Languages: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Скрипты и языки описания",
-        title = "Язык Perl",
+        section = "Scripting and description languages",
+        title = "Perl",
         originalTitle = "Perl",
-        author = "Ларри Волл",
+        author = "Larry Wall",
         year = 1987,
-        summary = "Скриптовый язык для отчётов и обработки текста с регулярными выражениями.",
-        details = "Perl 1.0 вышел в 1987 году. Удобство работы с текстом сделало его любимцем системных администраторов, " +
-            "а позже — основой ранних веб-программ.",
+        summary = "A scripting language for reports and text processing with regular expressions.",
+        details = "Perl 1.0 came out in 1987. Its convenience for working with text made it a favorite of system administrators, " +
+            "and later the basis of the early web programs.",
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Скрипты и языки описания",
-        title = "Язык REXX",
+        section = "Scripting and description languages",
+        title = "REXX",
         originalTitle = "REXX",
-        author = "Майк Коушлоу, IBM",
+        author = "Mike Cowlishaw, IBM",
         year = 1979,
-        summary = "Читаемый скриптовый язык IBM для VM/CMS, позже — для OS/2.",
-        details = "Коушлоу создал REXX в IBM в 1979 году. Язык заменял сложные командные файлы и был понятен " +
-            "людям без опыта программирования.",
+        summary = "IBM's readable scripting language for VM/CMS, later for OS/2.",
+        details = "Cowlishaw created REXX at IBM in 1979. The language replaced complicated command files and was understandable " +
+            "to people without programming experience.",
         example = """
-            /* REXX: сумма от 1 до 10 */
+            /* REXX: sum from 1 to 10 */
             total = 0
             do i = 1 to 10
               total = total + i
             end
-            say 'Сумма =' total
+            say 'Sum =' total
         """,
         rare = true,
     ),
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Скрипты и языки описания",
-        title = "Язык SQL",
+        section = "Scripting and description languages",
+        title = "SQL",
         originalTitle = "SQL (SEQUEL)",
-        author = "Дональд Чемберлин, Рэй Бойс, IBM",
+        author = "Donald Chamberlin, Raymond Boyce, IBM",
         year = 1974,
-        summary = "Язык запросов: описываешь, какие данные нужны, а не как их достать.",
-        details = "SEQUEL появился в IBM в 1974 году. Коммерческие СУБД 80-х реализовали язык по-своему; в 1986 году " +
-            "появился стандарт ANSI SQL-86, в 1987-м его приняла ISO.",
+        summary = "A query language: you describe which data you need, not how to get it.",
+        details = "SEQUEL appeared at IBM in 1974. Commercial DBMSs of the 80s implemented the language in their own ways; " +
+            "in 1986 the ANSI SQL-86 standard appeared, and in 1987 ISO adopted it.",
         example = """
             SELECT title, year
             FROM records
@@ -548,14 +546,14 @@ val db1Languages: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.LANGUAGE,
-        section = "Скрипты и языки описания",
-        title = "Язык PostScript",
+        section = "Scripting and description languages",
+        title = "PostScript",
         originalTitle = "PostScript",
-        author = "Джон Уорноук, Чарльз Гешке (Adobe)",
+        author = "John Warnock, Charles Geschke (Adobe)",
         year = 1982,
-        summary = "Стековый язык описания страниц: принтер исполняет программу, которая рисует страницу.",
-        details = "Adobe создала PostScript в 1982 году. Линии, текст и шрифты задавались командами, поэтому одна страница " +
-            "печаталась одинаково на любом совместимом принтере.",
+        summary = "A stack-based page description language: the printer runs a program that draws the page.",
+        details = "Adobe created PostScript in 1982. Lines, text and fonts were set by commands, so one page printed identically " +
+            "on any compatible printer.",
         example = """
             72 72 moveto
             200 200 lineto

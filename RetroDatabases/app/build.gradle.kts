@@ -38,7 +38,7 @@ android {
     }
 
     testOptions {
-        // Robolectric-тестам нужны ресурсы и манифест приложения.
+        // Robolectric tests need the app's resources and manifest.
         unitTests.isIncludeAndroidResources = true
     }
 }

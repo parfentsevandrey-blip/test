@@ -38,10 +38,10 @@ abstract class AppDatabase : RoomDatabase() {
 }
 
 /**
- * Заполняет базы при первом создании файла БД.
- * Вставка идёт SQL-запросами прямо в onCreate, поэтому не нужно ждать готовности экземпляра Room.
- * Базы из seed-списков добавляются только при создании файла: в уже установленных копиях
- * новая база появится после увеличения версии БД и миграции.
+ * Fills the databases when the database file is first created.
+ * Inserts run as SQL queries directly in onCreate, so there is no need to wait until the Room instance is ready.
+ * Databases from the seed lists are added only when the file is created: in copies that are already installed,
+ * a new database appears after the database version is raised and a migration is written.
  */
 private class SeedCallback : RoomDatabase.Callback() {
 

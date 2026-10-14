@@ -3,34 +3,33 @@ package com.example.retrodatabases.data.seed
 import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.RecordEntity
 
-/** Инструменты 1980-х: сборка, компиляторы, редакторы, отладка, вёрстка и командная строка. */
+/** Tools of the 1980s: build, compilers, editors, debugging, typesetting and the command line. */
 val db1Tools: List<RecordEntity> = listOf(
 
-    // ---------- Сборка и анализ ----------
+    // ---------- Build and analysis ----------
 
     entry(
         kind = Kind.TOOL,
-        section = "Сборка и анализ",
-        title = "Утилита make",
+        section = "Build and analysis",
+        title = "The make utility",
         originalTitle = "make",
-        author = "Стюарт Фелдман, Bell Labs",
+        author = "Stuart Feldman, Bell Labs",
         year = 1976,
-        summary = "Файл-рецепт описывает, какие файлы от чего зависят и как их собрать. Пересобирается только изменённое.",
-        details = "Утилита make появилась в Bell Labs в 1976 году. Она сравнивает времена изменения файлов и запускает " +
-            "только нужные команды. В 80-х Makefile был стандартом для C-проектов Unix, и многие проекты до сих пор собираются так.",
+        summary = "A recipe file describes which files depend on which and how to build them. Only what has changed is rebuilt.",
+        details = "The make utility appeared at Bell Labs in 1976. It compares the modification times of files and runs only the commands that are needed. " +
+            "In the 80s the Makefile was the standard for C projects on Unix, and many projects still build this way.",
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Сборка и анализ",
-        title = "Статический анализатор lint",
+        section = "Build and analysis",
+        title = "The lint static analyzer",
         originalTitle = "lint",
-        author = "Стивен Джонсон, Bell Labs",
+        author = "Stephen Johnson, Bell Labs",
         year = 1978,
-        summary = "Проверяет C-код до запуска и находит подозрительные места, которые компилятор пропускает.",
-        details = "Lint ловил несоответствие типов аргументов, переменные, использованные до присваивания, и код, " +
-            "который никогда не выполнится. В 80-х его запускали перед выпуском версии. Это прямой предок современных " +
-            "статических анализаторов.",
+        summary = "Checks C code before it runs and finds suspicious spots that the compiler lets through.",
+        details = "Lint caught mismatched argument types, variables used before assignment, and code that could never run. " +
+            "In the 80s it was run before a release. It is a direct ancestor of modern static analyzers.",
         example = """
             int average(a, n)
             int *a;
@@ -38,7 +37,7 @@ val db1Tools: List<RecordEntity> = listOf(
             {
                 int sum, i;
                 for (i = 0; i < n; i++)
-                    sum += a[i];       /* lint: sum используется до присваивания */
+                    sum += a[i];       /* lint: sum is used before it is assigned */
                 return sum / n;
             }
         """,
@@ -46,171 +45,170 @@ val db1Tools: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.TOOL,
-        section = "Сборка и анализ",
-        title = "Профилировщик gprof",
+        section = "Build and analysis",
+        title = "The gprof profiler",
         originalTitle = "gprof",
-        author = "Грэм, Кесслер, Маккьюсик (Беркли)",
+        author = "Graham, Kessler, McKusick (Berkeley)",
         year = 1982,
-        summary = "Показывает, сколько времени тратят функции и кто кого вызывает.",
-        details = "gprof строил граф вызовов и распределял время выполнения по функциям. Фраза Кнута «преждевременная " +
-            "оптимизация — корень всех зол» (1974) как раз о таких измерениях.",
+        summary = "Shows how much time functions take and who calls whom.",
+        details = "gprof built a call graph and distributed the running time among the functions. " +
+            "Knuth's phrase “premature optimization is the root of all evil” (1974) is about exactly this kind of measurement.",
     ),
 
-    // ---------- Компиляторы и генераторы ----------
+    // ---------- Compilers and generators ----------
 
     entry(
         kind = Kind.TOOL,
-        section = "Компиляторы и генераторы",
-        title = "Генератор парсеров yacc",
+        section = "Compilers and generators",
+        title = "The yacc parser generator",
         originalTitle = "yacc",
-        author = "Стивен Джонсон, Bell Labs",
+        author = "Stephen Johnson, Bell Labs",
         year = 1975,
-        summary = "Вместо ручного разбора языка описывают грамматику, а генератор создаёт парсер.",
-        details = "yacc строил парсер по описанию грамматики. Вместе с lex он стал стандартной связкой Unix для компиляторов, " +
-            "калькуляторов и конфигурационных языков.",
+        summary = "Instead of parsing a language by hand, you describe its grammar and the generator builds the parser.",
+        details = "yacc built a parser from a grammar description. Together with lex it became the standard Unix pair for compilers, " +
+            "calculators and configuration languages.",
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Компиляторы и генераторы",
-        title = "Лексический анализатор lex",
+        section = "Compilers and generators",
+        title = "The lex lexical analyzer",
         originalTitle = "lex",
-        author = "Майк Леск и Эрик Шмидт, Bell Labs",
+        author = "Mike Lesk and Eric Schmidt, Bell Labs",
         year = 1975,
-        summary = "Разбивает текст на лексемы по регулярным выражениям; работает в паре с yacc.",
-        details = "lex превращает набор шаблонов в код, который находит числа, идентификаторы и знаки в тексте программы. " +
-            "Его выход передавали парсеру yacc.",
+        summary = "Splits text into tokens using regular expressions; works in tandem with yacc.",
+        details = "lex turns a set of patterns into code that finds numbers, identifiers and symbols in the text of a program. " +
+            "Its output was passed to the yacc parser.",
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Компиляторы и генераторы",
+        section = "Compilers and generators",
         title = "Bison",
         originalTitle = "GNU Bison",
-        author = "Роберт Корбетт, проект GNU",
+        author = "Robert Corbett, GNU project",
         year = 1985,
-        summary = "Свободный аналог yacc из проекта GNU: тот же подход, открытый код.",
-        details = "Bison появился в 1985 году и заменил yacc во многих свободных проектах. Его генерировали парсеры компиляторов, " +
-            "в том числе GCC.",
+        summary = "The free equivalent of yacc from the GNU project: the same approach, open source.",
+        details = "Bison appeared in 1985 and replaced yacc in many free projects. Compiler parsers were generated with it, GCC's among them.",
         rare = true,
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Компиляторы и генераторы",
-        title = "Компилятор GCC",
+        section = "Compilers and generators",
+        title = "GCC compiler",
         originalTitle = "GNU C Compiler",
-        author = "Ричард Столлман, проект GNU",
+        author = "Richard Stallman, GNU project",
         year = 1987,
-        summary = "Свободный компилятор C, переносимый на десятки архитектур; вытеснил многие проприетарные компиляторы.",
-        details = "GCC появился в 1987 году как часть проекта GNU. Его архитектура переносилась на новые процессоры, " +
-            "и к концу 80-х компилятор стал стандартом для Unix-систем.",
+        summary = "A free C compiler that runs on dozens of architectures; it displaced many proprietary compilers.",
+        details = "GCC appeared in 1987 as part of the GNU project. Its architecture was ported to new processors, " +
+            "and by the end of the 80s the compiler had become the standard for Unix systems.",
     ),
 
-    // ---------- Редакторы и среды ----------
+    // ---------- Editors and environments ----------
 
     entry(
         kind = Kind.TOOL,
-        section = "Редакторы и среды",
-        title = "Интегрированная среда Turbo Pascal",
+        section = "Editors and environments",
+        title = "Turbo Pascal integrated environment",
         originalTitle = "Turbo Pascal IDE",
-        author = "Borland, Андерс Хейлсберг",
+        author = "Borland, Anders Hejlsberg",
         year = 1983,
-        summary = "Редактор, компилятор и запуск в одной программе; ошибки показываются прямо в тексте.",
-        details = "Turbo Pascal 1.0 (1983) компилировал программу в памяти за секунды и показывал ошибку прямо в редакторе. " +
-            "Цикл «правка — запуск» стал быстрым и удобным, и такая среда задала стандарт для PC. " +
-            "Позже Хейлсберг создал Delphi и C#.",
+        summary = "An editor, compiler and run command in one program; errors are shown right in the text.",
+        details = "Turbo Pascal 1.0 (1983) compiled a program in memory in seconds and showed errors right in the editor. " +
+            "The edit-run cycle became fast and comfortable, and this environment set the standard for the PC. " +
+            "Later Hejlsberg created Delphi and C#.",
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Редакторы и среды",
-        title = "Редактор vi",
+        section = "Editors and environments",
+        title = "The vi editor",
         originalTitle = "vi (ex/vi)",
-        author = "Билл Джой, Беркли",
+        author = "Bill Joy, Berkeley",
         year = 1976,
-        summary = "Визуальный редактор Unix с режимами команд и вставки; до сих пор стоит на серверах.",
-        details = "Редактор написан Биллом Джоем. В одном режиме клавиши означают команды, в другом — ввод текста. " +
-            "Такая модель вызывала споры, но vi остаётся обязательным инструментом администратора.",
+        summary = "The visual Unix editor with command and insert modes; it is still on servers today.",
+        details = "The editor was written by Bill Joy. In one mode the keys mean commands, in the other they mean text input. " +
+            "The model was controversial, but vi remains an indispensable tool for administrators.",
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Редакторы и среды",
-        title = "Редактор Emacs",
+        section = "Editors and environments",
+        title = "The Emacs editor",
         originalTitle = "Emacs",
-        author = "Ричард Столлман",
+        author = "Richard Stallman",
         year = 1976,
-        summary = "Расширяемый редактор: первая версия была набором макросов, GNU Emacs (1985) расширяется на Lisp.",
-        details = "Первый Emacs (1976) работал как набор макросов для TECO. GNU Emacs (1985) переписан так, что редактор " +
-            "стал средой: почту, отладку и справку читают внутри него.",
+        summary = "An extensible editor: the first version was a set of macros, and GNU Emacs (1985) is extended in Lisp.",
+        details = "The first Emacs (1976) worked as a set of macros for TECO. GNU Emacs (1985) was rewritten so that the editor became an environment: " +
+            "mail, debugging and help are read inside it.",
     ),
 
-    // ---------- Отладка и версии ----------
+    // ---------- Debugging and versions ----------
 
     entry(
         kind = Kind.TOOL,
-        section = "Отладка и версии",
-        title = "Отладчик GDB",
+        section = "Debugging and versions",
+        title = "The GDB debugger",
         originalTitle = "GDB",
-        author = "Ричард Столлман, проект GNU",
+        author = "Richard Stallman, GNU project",
         year = 1986,
-        summary = "Отладчик GNU: точки останова, просмотр памяти и разбор стека вызовов.",
-        details = "GDB появился в 1986 году и работал с C-программами, собранными GCC. Команды вроде «break» и «step» " +
-            "стали образцом для последующих отладчиков.",
+        summary = "The GNU debugger: breakpoints, memory inspection and stack traces.",
+        details = "GDB appeared in 1986 and worked with C programs compiled by GCC. " +
+            "Commands such as “break” and “step” became a model for later debuggers.",
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Отладка и версии",
-        title = "Контроль версий SCCS и RCS",
+        section = "Debugging and versions",
+        title = "SCCS and RCS version control",
         originalTitle = "SCCS, RCS",
-        author = "Марк Рочкинд (SCCS); Вальтер Тичи (RCS)",
+        author = "Marc Rochkind (SCCS); Walter Tichy (RCS)",
         year = 1972,
-        summary = "Каждое изменение файла сохраняется: историю можно посмотреть, сравнить и откатить.",
-        details = "SCCS (1972, Bell Labs) и RCS (1982, Вальтер Тичи) были первыми широко используемыми системами " +
-            "контроля версий. В 80-х команды хранили историю прямо в файлах и помечали релизы. Эти идеи дожили до Git.",
+        summary = "Every change to a file is saved: the history can be viewed, compared and rolled back.",
+        details = "SCCS (1972, Bell Labs) and RCS (1982, Walter Tichy) were the first widely used version control systems. " +
+            "In the 80s the tools kept the history inside the files and marked releases. These ideas lived on in Git.",
     ),
 
-    // ---------- Документы и вёрстка ----------
+    // ---------- Documents and typesetting ----------
 
     entry(
         kind = Kind.TOOL,
-        section = "Документы и вёрстка",
-        title = "Система вёрстки TeX",
+        section = "Documents and typesetting",
+        title = "The TeX typesetting system",
         originalTitle = "TeX",
-        author = "Дональд Кнут",
+        author = "Donald Knuth",
         year = 1978,
-        summary = "Система вёрстки с формулами и идеальной типографикой; создана Кнутом из-за плохого набора его книги.",
-        details = "Кнут начал TeX, недовольный качеством печати своего труда «The Art of Computer Programming». " +
-            "Формулы и переносы в TeX считаются по правилам, а не на глаз, — поэтому научные статьи в мире набирают именно так.",
+        summary = "A typesetting system with formulas and high-quality typography; Knuth created it because of the poor typesetting of his book.",
+        details = "Knuth started TeX, unhappy with the print quality of his work “The Art of Computer Programming”. " +
+            "Formulas and hyphenation in TeX are computed by rules, not by eye, which is why scientific papers around the world are typeset this way.",
     ),
 
     entry(
         kind = Kind.TOOL,
-        section = "Документы и вёрстка",
-        title = "Система вёрстки troff",
+        section = "Documents and typesetting",
+        title = "The troff typesetting system",
         originalTitle = "troff, nroff",
-        author = "Джо Оссанна, Bell Labs",
+        author = "Joe Ossanna, Bell Labs",
         year = 1973,
-        summary = "Система вёрстки Unix: текст с командами-макросами печатался на фотонаборных машинах и принтерах.",
-        details = "troff вывел на печать документацию Unix, а man-страницы с 1970-х форматировались именно им. " +
-            "Его синтаксис кажется странным, но работа с ним была стандартом для технических текстов.",
+        summary = "The Unix typesetting system: text with macro commands was printed on phototypesetters and printers.",
+        details = "troff printed the Unix documentation, and the man pages were formatted with it from the 1970s. " +
+            "Its syntax looks strange, but working with it was the standard for technical texts.",
         rare = true,
     ),
 
-    // ---------- Командная строка ----------
+    // ---------- Command line ----------
 
     entry(
         kind = Kind.TOOL,
-        section = "Командная строка",
-        title = "Потоковый редактор sed",
+        section = "Command line",
+        title = "The sed stream editor",
         originalTitle = "sed",
-        author = "Ли Макмахон, Bell Labs",
+        author = "Lee McMahon, Bell Labs",
         year = 1974,
-        summary = "Правит текст по шаблонам построчно, не открывая файл в интерактивном редакторе.",
-        details = "sed читал поток данных, применял команды к каждой строке и выводил результат. Его ценили за возможность " +
-            "автоматизировать правку больших файлов.",
+        summary = "Edits text line by line using patterns, without opening the file in an interactive editor.",
+        details = "sed read a data stream, applied commands to each line and printed the result. " +
+            "It was valued for automating the editing of large files.",
         example = """
             sed 's/Unix/UNIX/g' notes.txt
         """,
@@ -218,13 +216,13 @@ val db1Tools: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.TOOL,
-        section = "Командная строка",
-        title = "Поиск grep",
+        section = "Command line",
+        title = "The grep search tool",
         originalTitle = "grep",
-        author = "Кен Томпсон, Bell Labs",
+        author = "Ken Thompson, Bell Labs",
         year = 1973,
-        summary = "Находит строки по регулярным выражениям; имя — от команды редактора ed.",
-        details = "grep появился в Unix в 1973 году. Название идёт от команды g/re/p редактора ed: глобальный поиск с печатью строк.",
+        summary = "Finds lines by regular expressions; the name comes from an editor command in ed.",
+        details = "grep appeared in Unix in 1973. The name comes from the g/re/p command of the ed editor: a global search with printing of the lines.",
         example = """
             grep -n "goto" *.c
         """,
@@ -232,31 +230,31 @@ val db1Tools: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.TOOL,
-        section = "Командная строка",
-        title = "Оболочка Bourne shell",
+        section = "Command line",
+        title = "The Bourne shell",
         originalTitle = "sh (Bourne shell)",
-        author = "Стивен Борн, Bell Labs",
+        author = "Stephen Bourne, Bell Labs",
         year = 1979,
-        summary = "Командная оболочка Unix V7: переменные, конвейеры и скрипты; предок bash.",
-        details = "Оболочка из седьмой версии Unix стала стандартом для скриптов. Её синтаксис до сих пор лежит в основе bash " +
-            "и других современных оболочек.",
+        summary = "The Unix V7 command shell: variables, pipelines and scripts; the ancestor of bash.",
+        details = "The shell from the seventh edition of Unix became the standard for scripts. " +
+            "Its syntax still underlies bash and other modern shells.",
         example = """
             cat notes.txt | sort | uniq | wc -l
         """,
         rare = true,
     ),
 
-    // ---------- Моделирование ----------
+    // ---------- Modelling ----------
 
     entry(
         kind = Kind.TOOL,
-        section = "Моделирование",
-        title = "CASE-средства",
+        section = "Modelling",
+        title = "CASE tools",
         originalTitle = "CASE (Computer-Aided Software Engineering)",
-        author = "Индустрия начала 80-х",
+        author = "The industry of the early 80s",
         year = 1982,
-        summary = "Программы, которые рисуют диаграммы, проверяют модель и генерируют код и документацию.",
-        details = "CASE-инструменты обещали автоматизировать разработку от диаграмм DFD и ER до кода. Часть идей прижилась: " +
-            "диаграммы сущностей и генерация кода по схеме. Многие обещания — нет: тяжёлые репозитории и жёсткие процессы отпугивали команды.",
+        summary = "Programs that draw diagrams, check the model and generate code and documentation.",
+        details = "CASE tools promised to automate development, from DFD and ER diagrams to code. Some ideas took root: " +
+            "entity diagrams and code generation from a schema. Many promises did not: heavy repositories and rigid processes put teams off.",
     ),
 )

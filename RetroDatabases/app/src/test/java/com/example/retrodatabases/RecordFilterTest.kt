@@ -9,9 +9,9 @@ import org.junit.Test
 class RecordFilterTest {
 
     private val records = listOf(
-        record(1, Kind.PRACTICE, "Структурное программирование", "Structured programming", 1972, favorite = true),
-        record(2, Kind.LANGUAGE, "Язык C", "C", 1972),
-        record(3, Kind.PRACTICE, "Граничные значения", "Boundary value analysis", 1979, rare = true),
+        record(1, Kind.PRACTICE, "Structured programming", "Structured programming", 1972, favorite = true),
+        record(2, Kind.LANGUAGE, "C language", "C", 1972),
+        record(3, Kind.PRACTICE, "Boundary value analysis", "Boundary value analysis", 1979, rare = true),
     )
 
     @Test
@@ -20,8 +20,8 @@ class RecordFilterTest {
     }
 
     @Test
-    fun searchIsCaseInsensitiveForCyrillic() {
-        assertEquals(listOf(1L), filterRecords(records, "СТРУКТУРНОЕ", null, false, false).map { it.id })
+    fun searchIsCaseInsensitive() {
+        assertEquals(listOf(1L), filterRecords(records, "STRUCTURED", null, false, false).map { it.id })
     }
 
     @Test
@@ -54,13 +54,13 @@ class RecordFilterTest {
         id = id,
         databaseId = 1,
         kind = kind,
-        section = "Раздел",
+        section = "Section",
         title = title,
         originalTitle = originalTitle,
-        author = "Автор",
+        author = "Author",
         year = year,
-        summary = "Кратко",
-        details = "Подробно",
+        summary = "Short summary",
+        details = "Details",
         instructions = null,
         example = null,
         rare = rare,

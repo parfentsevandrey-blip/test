@@ -18,6 +18,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-03 | 2026-10-14 | 4,277 | 169 | 82 | 115 | 4,643 | 0 (no source changes; first build attempt failed) |
 | CP-04 | 2026-10-14 | 4,277 | 169 | 82 | 118 | 4,646 | +3 (.gitignore rule for generated Kotlin session data) |
 | CP-05 | 2026-10-14 | 6,236 | 169 | 82 | 118 | 6,605 | +1,959 (155 new records in five seed files) |
+| CP-06 | 2026-10-14 | 6,257 | 169 | 82 | 118 | 6,626 | +21 (translation; long strings re-wrapped) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -192,3 +193,32 @@ Going back over my own draft was humbling.
 - Next time I'll search first and write second. I did it the other way round this time, which meant fixing things instead of getting them right the first time.
 - Not verified yet: running on a device or emulator, the new sections in the UI, lint, and the release build.
 - `DEVLOG.txt` is a plain-text copy of this log, and the packed bundle includes it.
+
+## CP-06: everything in English
+
+Status: the app's code, resources, tests, seed data and README are all in English. The build passes and all 14 unit tests pass.
+
+Mood: tedious, then satisfying when the build came back green on the first try.
+
+Date: 2026-10-14. Totals: Kotlin main 6,257 (CP-05: 6,236), Kotlin test 169, XML 82, Gradle and project files 118, total 6,626. The +21 comes from long strings that I re-wrapped, because a Russian sentence and its English version did not fit the same number of lines.
+
+### What changed
+
+- No Cyrillic is left in the app: sources, comments, resources, tests, seed data, code examples and the README. A script checked the whole project folder. The only other matches in the same git repository are in unrelated projects, which I did not touch.
+- UI labels and the app name are English: "Retro Databases", the kind labels (Languages, Systems, Devices, Tools, Practices, Guides, Examples, Projects, Flex, Cross-code) and all the interface strings.
+- The 320 seed records are translated: titles, authors, sections, summaries, details, instructions, comments and string literals inside examples. Each section has one English name, so the grouping in the list works as before. There are 54 section names and no duplicate titles.
+- The database name is "Database 1: 80s coding catalogue".
+- The case-insensitive search test checks Latin letters now. It used to check Cyrillic case folding, which the English data no longer needs.
+- The README is in English, and its counts are updated to 320 records and 181 rare. It still said 165 after CP-05, which was my mistake.
+
+### How I checked it
+
+- Each seed file was translated in chunks and rebuilt. A script compared every file with git HEAD: the same number of records, the same years, kinds and rare flags, and every changed line had Cyrillic before and none after. Where a long string was re-wrapped, the script reports the extra lines as expected.
+- `assembleDebug` passes, and the 14 unit tests pass (AppDatabaseSeedTest 2, RecordFilterTest 5, SeedDataTest 7).
+- The example checker finds examples by title. I mapped the old titles to the new ones using the record order, which did not change, and updated the one check that looked for a Russian section header and Russian output. 32 examples run and pass, 0 fail. The other 288 are still reading-only in this sandbox.
+- The C++ example is not in the checker. I compiled it with g++ again and it still prints 2.
+
+### Notes
+
+- Some names are my own transliteration (Vector-06C, Radio-86RK, Iskra-1030, and the Soviet chip names). Check them against a source if they matter.
+- Not verified yet: running on a device or emulator, the UI itself, lint, and the release build.

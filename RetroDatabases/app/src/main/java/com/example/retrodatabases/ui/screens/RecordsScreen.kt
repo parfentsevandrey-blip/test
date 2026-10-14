@@ -52,8 +52,8 @@ import com.example.retrodatabases.ui.filterRecords
 import com.example.retrodatabases.ui.theme.accent
 
 /**
- * Каталог одной базы: поиск, фильтры по виду, избранному и редким записям,
- * записи сгруппированы по разделам внутри вида.
+ * Catalogue of one database: search, filters by kind, favorites and rare records.
+ * Records are grouped by section within each kind.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,7 +77,7 @@ fun RecordsScreen(
     val visible = remember(records, query, kind, favoritesOnly, rareOnly) {
         filterRecords(records, query, kind, favoritesOnly, rareOnly)
     }
-    // Порядок групп сохраняется: записи уже отсортированы по виду и разделу
+    // Group order is kept: records are already sorted by kind and section
     val groups = remember(visible) { visible.groupBy { it.kind to it.section } }
 
     Scaffold(
@@ -210,7 +210,7 @@ fun RecordsScreen(
     }
 }
 
-/** Заголовок раздела внутри вида: цветная черта, название и число записей. */
+/** Section header inside a kind: a coloured bar, the section name and the record count. */
 @Composable
 private fun SectionHeader(title: String, count: Int, accent: Color) {
     Row(

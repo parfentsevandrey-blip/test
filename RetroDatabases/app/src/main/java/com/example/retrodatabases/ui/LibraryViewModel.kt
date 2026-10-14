@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** Источник данных для всех экранов: списки баз, записи каталога, избранное. */
+/** Data source for all screens: database lists, catalogue records and favorites. */
 class LibraryViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dao = AppDatabase.get(application).libraryDao()
@@ -24,7 +24,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     fun database(databaseId: Long): Flow<DatabaseEntity?> = dao.observeDatabase(databaseId)
 
-    /** Записи базы в порядке каталога: вид, раздел, год, название. */
+    /** Records of a database in catalogue order: kind, section, year, title. */
     fun records(databaseId: Long): Flow<List<RecordEntity>> =
         dao.observeRecords(databaseId).map { records -> records.sortedWith(CatalogOrder) }
 

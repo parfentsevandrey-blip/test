@@ -4,7 +4,7 @@ import android.graphics.Color as AndroidColor
 import androidx.compose.ui.graphics.Color
 import com.example.retrodatabases.data.Kind
 
-/** Цвет вида записи: полоска на карточке, фон ярлыка и заголовок раздела. */
+/** Colour of a record kind: the stripe on a card, the badge background and the section header. */
 fun Kind.accent(): Color = when (this) {
     Kind.LANGUAGE -> Color(0xFF4DD0E1)
     Kind.SYSTEM -> Color(0xFF7986CB)
@@ -18,5 +18,5 @@ fun Kind.accent(): Color = when (this) {
     Kind.CROSS -> Color(0xFFF06292)
 }
 
-/** Переводит строку вида #RRGGBB из базы в цвет Compose. */
+/** Converts a #RRGGBB string from the database into a Compose colour. */
 fun parseHexColor(hex: String): Color = Color(AndroidColor.parseColor(hex))

@@ -35,7 +35,7 @@ import com.example.retrodatabases.data.DatabaseSummary
 import com.example.retrodatabases.ui.LibraryViewModel
 import com.example.retrodatabases.ui.theme.parseHexColor
 
-/** Главный экран: список баз данных. */
+/** Main screen: the list of databases. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatabasesScreen(
@@ -95,7 +95,7 @@ private fun DatabaseCard(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Цветной значок базы с её номером
+            // Coloured badge with the database number
             Box(
                 modifier = Modifier
                     .size(56.dp)

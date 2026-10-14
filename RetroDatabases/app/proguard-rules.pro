@@ -1,2 +1,2 @@
-# Правила ProGuard/R8 для приложения.
-# Сейчас минификация в release выключена (isMinifyEnabled = false), файл оставлен под будущие релизы.
+# ProGuard/R8 rules for the app.
+# Minification is currently off in release (isMinifyEnabled = false); this file is kept for future releases.

@@ -2,7 +2,7 @@ package com.example.retrodatabases.data
 
 import androidx.room.TypeConverter
 
-/** Сохраняет вид записи как текст (имя константы enum) и читает обратно. */
+/** Stores the record kind as text (the enum constant name) and reads it back. */
 class Converters {
 
     @TypeConverter

@@ -3,30 +3,31 @@ package com.example.retrodatabases.data.seed
 import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.RecordEntity
 
-/** Построенные продукты: готовые программы с объяснением устройства и инструкцией запуска. */
+/** Built products: finished programs with an explanation of how they work and instructions for running them. */
 val db1Projects: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.PROJECT,
-        section = "Игры и симуляции",
-        title = "Игра «Жизнь» Конвея на awk",
+        section = "Games and simulations",
+        title = "Game of Life (Conway) on awk",
         originalTitle = "Conway's Game of Life in awk",
-        author = "Джон Конвей (правила), реализация на awk",
+        author = "John Conway (rules), implementation in awk",
         year = 1970,
-        summary = "Клеточный автомат в терминале: поколения рождаются, гаснут и движутся по правилам Конвея.",
-        details = "Клетка выживает, если рядом живут 2 или 3 соседа, и рождается, если соседей ровно 3. Поле замкнуто в тор: " +
-            "край переходит в противоположный. Живые клетки хранятся в ассоциативном массиве cell с ключом «строка, столбец». " +
-            "На каждом шаге программа строит новое поле nxt и копирует его обратно. Глайдер — пять клеток — сдвигается по диагонали.",
+        summary = "A cellular automaton in the terminal: generations are born, die and move according to Conway's rules.",
+        details = "A cell survives if 2 or 3 neighbours are alive, and is born if exactly 3 neighbours are alive. " +
+            "The field wraps around into a torus: the edge leads to the opposite edge. " +
+            "Live cells are stored in the associative array cell, keyed by “row, column”. " +
+            "At each step the program builds a new field nxt and copies it back. The glider, five cells, moves diagonally.",
         instructions = """
-            1. Сохраните код как life.awk.
-            2. Запустите: awk -f life.awk
-            3. Чтобы увидеть больше поколений, увеличьте GENS в блоке BEGIN. Новые фигуры добавляйте в тот же блок: cell[строка, столбец] = 1.
+            1. Save the code as life.awk.
+            2. Run: awk -f life.awk
+            3. To see more generations, increase GENS in the BEGIN block. Add new shapes in the same block: cell[row, column] = 1.
         """,
         example = """
-            # Игра «Жизнь» Конвея. Запуск: awk -f life.awk
+            # Conway's Game of Life. Run: awk -f life.awk
             BEGIN {
                 W = 20; H = 10; GENS = 5
-                # стартовая фигура: глайдер
+                # starting shape: a glider
                 cell[1, 2] = 1; cell[2, 3] = 1
                 cell[3, 1] = 1; cell[3, 2] = 1; cell[3, 3] = 1
                 for (g = 0; g < GENS; g++) {
@@ -72,27 +73,27 @@ val db1Projects: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.PROJECT,
-        section = "Игры и симуляции",
-        title = "Случайный лабиринт в консоли",
+        section = "Games and simulations",
+        title = "Random maze in the console",
         originalTitle = "Maze generator with depth-first backtracking",
-        author = "Практика 80-х, алгоритм поиска с откатом",
+        author = "80s practice, depth-first search with backtracking",
         year = 1980,
-        summary = "Программа вырезает проходы в сетке стен: получается дерево без циклов, где между любыми двумя точками ровно один путь.",
-        details = "Алгоритм поиска в глубину с откатом: из текущей клетки выбираем случайного соседа, которого ещё не посещали, " +
-            "пробиваем стену между ними и продолжаем. Если соседей нет, откатываемся назад. Клетки лежат в нечётных позициях " +
-            "сетки, стены — в чётных, поэтому структура всегда корректна.",
+        summary = "The program carves passages through a grid of walls: the result is a tree without cycles, where there is exactly one path between any two points.",
+        details = "Depth-first search with backtracking: from the current cell we choose a random neighbour that has not been visited yet, " +
+            "knock down the wall between them and continue. If there are no neighbours left, we backtrack. " +
+            "Cells sit at odd positions of the grid and walls at even positions, so the structure is always valid.",
         instructions = """
-            1. Сохраните код как maze.c и соберите: cc -o maze maze.c
-            2. Запустите несколько раз: каждый запуск даёт новый лабиринт, потому что генератор зависит от времени.
-            3. Чтобы сделать лабиринт больше, увеличьте N (число клеток по стороне). N должно быть нечётным.
+            1. Save the code as maze.c and build it: cc -o maze maze.c
+            2. Run it several times: each run gives a new maze, because the generator depends on the time.
+            3. To make the maze bigger, increase N (the number of cells along one side). N must be odd.
         """,
         example = """
             #include <stdio.h>
             #include <stdlib.h>
             #include <time.h>
 
-            #define N 11                     /* число клеток по стороне */
-            #define W (2 * N + 1)            /* полная сетка: клетки и стены между ними */
+            #define N 11                     /* number of cells along one side */
+            #define W (2 * N + 1)            /* full grid: cells and the walls between them */
 
             static char grid[W][W];
             static int visited[N][N];
@@ -107,7 +108,7 @@ val db1Projects: List<RecordEntity> = listOf(
                 visited[cy][cx] = 1;
                 grid[2 * cy + 1][2 * cx + 1] = ' ';
 
-                for (i = 3; i > 0; i--) {    /* перемешиваем направления */
+                for (i = 3; i > 0; i--) {    /* shuffle the directions */
                     j = rand() % (i + 1);
                     tmp = order[i];
                     order[i] = order[j];
@@ -121,7 +122,7 @@ val db1Projects: List<RecordEntity> = listOf(
 
                     if (ny < 0 || ny >= N || nx < 0 || nx >= N || visited[ny][nx])
                         continue;
-                    grid[2 * cy + 1 + dy[d]][2 * cx + 1 + dx[d]] = ' ';   /* пробиваем стену */
+                    grid[2 * cy + 1 + dy[d]][2 * cx + 1 + dx[d]] = ' ';   /* knock down the wall */
                     carve(ny, nx);
                 }
             }
@@ -150,24 +151,24 @@ val db1Projects: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.PROJECT,
-        section = "Утилиты",
-        title = "Записная книжка на sh",
+        section = "Utilities",
+        title = "Address book in sh",
         originalTitle = "Address book in plain sh and awk",
-        author = "Практика shell-скриптов, 1980-е",
+        author = "Shell script practice, 1980s",
         year = 1979,
-        summary = "Телефонная книжка в одном скрипте: добавить запись, найти и показать всё. База данных не нужна.",
-        details = "Записи лежат в текстовом файле book.txt, одна запись в строке, поля разделены табуляцией. Команды add и find — это " +
-            "ветки оболочки, которые вызывают printf, grep и awk. Проект показывает, что многое из того, что делает база данных, " +
-            "можно сделать текстовым файлом с понятным форматом и парой утилит Unix.",
+        summary = "A phone book in one script: add a record, find one, show everything. No database is needed.",
+        details = "The records live in a text file, book.txt: one record per line, fields separated by tabs. " +
+            "The add and find commands are branches of the shell that call printf, grep and awk. " +
+            "The project shows that much of what a database does can be done with a text file in a clear format and a couple of Unix tools.",
         instructions = """
-            1. Сохраните скрипт как book.sh и сделайте его исполняемым: chmod +x book.sh
-            2. Добавьте записи: ./book.sh add Иван 555-1234 и ./book.sh add Мария 555-9876
-            3. Найдите запись: ./book.sh find Иван
-            4. Выведите все записи: ./book.sh list
+            1. Save the script as book.sh and make it executable: chmod +x book.sh
+            2. Add records: ./book.sh add Ivan 555-1234 and ./book.sh add Maria 555-9876
+            3. Find a record: ./book.sh find Ivan
+            4. Show all records: ./book.sh list
         """,
         example = """
             #!/bin/sh
-            # Записная книжка: записи хранятся в book.txt, поля разделены табуляцией
+            # Address book: records are stored in book.txt, fields are separated by tabs
             case "$1" in
               add)  printf '%s\t%s\n' "$2" "$3" >> book.txt ;;
               find) grep -i "$2" book.txt ;;
@@ -179,20 +180,21 @@ val db1Projects: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.PROJECT,
-        section = "Инструменты разработки",
-        title = "Калькулятор на yacc",
+        section = "Development tools",
+        title = "Calculator with yacc",
         originalTitle = "Calculator with yacc grammar and a hand-written lexer",
-        author = "Стивен Джонсон (yacc, 1975), практика Unix",
+        author = "Stephen Johnson (yacc, 1975), Unix practice",
         year = 1975,
-        summary = "Грамматика вместо ручного разбора: yacc строит парсер из правил, приоритеты задаются строками объявлений.",
-        details = "Файл состоит из трёх частей: объявления (токены и приоритеты операций), правила грамматики с действиями на языке C " +
-            "и код лексера. Приоритет * выше + не нужно кодировать руками: он задан порядком строк %left. " +
-            "Действие $$ = $1 + $3 вычисляет значение выражения. Так в 80-х писали калькуляторы, конфигураторы и компиляторы.",
+        summary = "A grammar instead of hand-written parsing: yacc builds a parser from rules, and precedence is set by the declaration lines.",
+        details = "The file has three parts: declarations (tokens and operator precedence), grammar rules with actions written in C, and the lexer code. " +
+            "You do not code the precedence of * over + by hand: it is set by the order of the %left lines. " +
+            "The action $$ = $1 + $3 computes the value of the expression. " +
+            "This is how calculators, configurators and compilers were written in the 80s.",
         instructions = """
-            1. Сохраните грамматику как calc.y. Лексер находится в третьей части файла, менять его не нужно.
-            2. Сгенерируйте парсер: bison -y -d calc.y (появятся y.tab.c и y.tab.h).
-            3. Соберите: cc -o calc y.tab.c
-            4. Запустите: echo "2 + 3 * (4 - 1)" | ./calc — ответ 11.
+            1. Save the grammar as calc.y. The lexer is in the third part of the file; you do not need to change it.
+            2. Generate the parser: bison -y -d calc.y (this creates y.tab.c and y.tab.h).
+            3. Build: cc -o calc y.tab.c
+            4. Run: echo "2 + 3 * (4 - 1)" | ./calc — the answer is 11.
         """,
         example = """
             %{
@@ -213,7 +215,7 @@ val db1Projects: List<RecordEntity> = listOf(
             %right UMINUS
 
             %%
-            line : /* пусто */
+            line : /* empty */
                  | line expr '\n'         { printf("%g\n", $2); }
                  ;
             expr : expr '+' expr          { $$ = $1 + $3; }

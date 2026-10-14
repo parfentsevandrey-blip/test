@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Ретро-базы</string>
+    <string name="app_name">Retro Databases</string>
 
-    <string name="databases_title">Базы данных</string>
-    <string name="databases_subtitle">Выберите базу, чтобы открыть каталог</string>
-    <string name="records_count">Записей: %1$d</string>
+    <string name="databases_title">Databases</string>
+    <string name="databases_subtitle">Choose a database to open its catalogue</string>
+    <string name="records_count">Records: %1$d</string>
 
-    <string name="search_hint">Поиск: название, автор, год, раздел</string>
-    <string name="filter_all">Все</string>
-    <string name="filter_favorites">Избранное</string>
-    <string name="filter_rare">Редкие</string>
-    <string name="found_count">Найдено: %1$d</string>
-    <string name="nothing_found">Ничего не найдено. Измените запрос или сбросьте фильтры.</string>
-    <string name="rare_badge">Редкое</string>
+    <string name="search_hint">Search: title, author, year, section</string>
+    <string name="filter_all">All</string>
+    <string name="filter_favorites">Favorites</string>
+    <string name="filter_rare">Rare</string>
+    <string name="found_count">Found: %1$d</string>
+    <string name="nothing_found">Nothing found. Change the query or reset the filters.</string>
+    <string name="rare_badge">Rare</string>
 
-    <string name="label_author">Автор</string>
-    <string name="label_year">Год</string>
-    <string name="section_summary">Коротко</string>
-    <string name="section_details">Как это устроено</string>
-    <string name="section_instructions">Инструкция</string>
-    <string name="section_example">Код и примеры</string>
+    <string name="label_author">Author</string>
+    <string name="label_year">Year</string>
+    <string name="section_summary">Summary</string>
+    <string name="section_details">How it works</string>
+    <string name="section_instructions">Instructions</string>
+    <string name="section_example">Code and examples</string>
 
-    <string name="favorite_add">Добавить в избранное</string>
-    <string name="favorite_remove">Убрать из избранного</string>
-    <string name="cd_back">Назад</string>
-    <string name="cd_clear">Очистить поиск</string>
+    <string name="favorite_add">Add to favorites</string>
+    <string name="favorite_remove">Remove from favorites</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_clear">Clear search</string>
 </resources>

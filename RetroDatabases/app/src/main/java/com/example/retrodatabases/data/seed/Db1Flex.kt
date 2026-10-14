@@ -4,26 +4,26 @@ import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.RecordEntity
 
 /**
- * Флекс-проекты: ради показа возможностей максимум выжат из минимума кода.
- * Каждая запись показывает, какой приём доведён до предела и почему это работает.
+ * Flex projects: the maximum is squeezed out of minimal code, just to show what is possible.
+ * Each record shows which trick is pushed to the limit and why it works.
  */
 val db1Flex: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.FLEX,
-        section = "Графика в тексте",
-        title = "Треугольник Серпинского из одного побитового И",
+        section = "Text graphics",
+        title = "Sierpinski triangle from one bitwise AND",
         originalTitle = "Sierpinski pattern with x & y",
-        author = "Практика демосцены и книг по C",
+        author = "Demoscene practice and C books",
         year = 1985,
-        summary = "Один побитовый оператор рисует фрактал: звёздочка ставится там, где биты координат не пересекаются.",
-        details = "Условие (x & y) == 0 даёт узор, похожий на треугольник Серпинского: это клетки Паскаля по модулю 2. " +
-            "Программа не содержит ни одной геометрической формулы — только перебор координат и побитовое И. " +
-            "Такие однострочники любили в демосцене и в книгах по C.",
+        summary = "A single bitwise operator draws a fractal: an asterisk goes where the bits of the coordinates do not overlap.",
+        details = "The condition (x & y) == 0 gives a pattern similar to the Sierpinski triangle: these are Pascal's triangle cells modulo 2. " +
+            "The program has no geometric formulas at all, only a loop over the coordinates and a bitwise AND. " +
+            "One-liners like this were a favorite in the demoscene and in C books.",
         instructions = """
-            1. Сохраните код как sierpinski.c и соберите: cc -o sierpinski sierpinski.c
-            2. Запустите ./sierpinski — на экране 32 строки фрактала.
-            3. Чтобы увидеть больше уровней, замените оба числа 32 на 64.
+            1. Save the code as sierpinski.c and build it: cc -o sierpinski sierpinski.c
+            2. Run ./sierpinski — the screen shows 32 lines of the fractal.
+            3. To see more levels, replace both 32s with 64.
         """,
         example = """
             #include <stdio.h>
@@ -44,20 +44,19 @@ val db1Flex: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.FLEX,
-        section = "Самовоспроизведение",
-        title = "Квайн: программа печатает собственный код",
+        section = "Self-reproduction",
+        title = "Quine: a program that prints its own code",
         originalTitle = "C quine",
-        author = "Классика C-квайнов, 1980-е",
+        author = "Classic C quines, 1980s",
         year = 1984,
-        summary = "Программа без входных данных выводит в точности свой исходный текст.",
-        details = "Строка содержит шаблон всей программы. Функция printf подставляет в шаблон его же текст, а числа 34 — это коды " +
-            "двойной кавычки, поэтому её не нужно экранировать. Так программа знает себя через собственную строку. " +
-            "Тот же приём лежит в основе самовоспроизводящихся компиляторов, о которых Кен Томпсон рассказал в лекции " +
-            "«Размышления о доверии» (1984).",
+        summary = "A program with no input prints its own source text exactly.",
+        details = "The string holds a template of the whole program. printf puts the program's own text into the template, and the numbers 34 are the codes of the double quote, so the quote does not need escaping. " +
+            "This is how the program knows itself through its own string. " +
+            "The same trick lies behind self-reproducing compilers, which Ken Thompson described in his lecture “Reflections on Trusting Trust” (1984).",
         instructions = """
-            1. Сохраните строку программы в файл quine.c (с переводом строки в конце).
-            2. Соберите в старом режиме C: cc -std=gnu89 -w -o quine quine.c
-            3. Запустите ./quine > out.c и сравните: diff quine.c out.c. Различие — только перевод строки в конце файла.
+            1. Save the program's line to a file quine.c (with a newline at the end).
+            2. Build in the old C mode: cc -std=gnu89 -w -o quine quine.c
+            3. Run ./quine > out.c and compare: diff quine.c out.c. The only difference is the newline at the end of the file.
         """,
         example = """
             main(){char*c="main(){char*c=%c%s%c;printf(c,34,c,34);}";printf(c,34,c,34);}
@@ -67,23 +66,24 @@ val db1Flex: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.FLEX,
-        section = "Графика в тексте",
-        title = "Множество Мандельброта на awk",
+        section = "Text graphics",
+        title = "Mandelbrot set in awk",
         originalTitle = "Mandelbrot set in awk",
-        author = "Бенуа Мандельброт (фракталы, 1980)",
+        author = "Benoit Mandelbrot (fractals, 1980)",
         year = 1980,
-        summary = "Фрактал в терминале: арифметика с плавающей точкой и символьная шкала прямо в скриптовом языке.",
-        details = "Для каждой точки c плоскости повторяем z = z² + c и смотрим, уходит ли |z| за 2. Если за заданное число шагов " +
-            "не ушла — точка принадлежит множеству и печатается символом «#». Остальные символы показывают, как быстро точка ушла. " +
-            "Весь «рендерер» — два вложенных цикла и строка-шкала.",
+        summary = "A fractal in the terminal: floating-point arithmetic and a character scale right inside a scripting language.",
+        details = "For every point c of the plane we repeat z = z² + c and check whether |z| leaves the circle of radius 2. " +
+            "If it has not left within the given number of steps, the point belongs to the set and is printed as “#”. " +
+            "The other characters show how fast the point escaped. " +
+            "The whole “renderer” is two nested loops and a string scale.",
         instructions = """
-            1. Сохраните код как mandel.awk.
-            2. Запустите: awk -f mandel.awk
-            3. Чтобы приблизить фрагмент, уменьшите диапазоны x и y, сохранив шаг.
+            1. Save the code as mandel.awk.
+            2. Run: awk -f mandel.awk
+            3. To zoom in on a fragment, reduce the ranges of x and y, keeping the step.
         """,
         example = """
             BEGIN {
-                ramp = " .:-=+*"                  # символы по скорости ухода
+                ramp = " .:-=+*"                  # characters by escape speed
                 for (y = -1.2; y <= 1.2; y += 0.1) {
                     line = ""
                     for (x = -2.1; x <= 0.6; x += 0.04) {
@@ -108,19 +108,19 @@ val db1Flex: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.FLEX,
-        section = "Одна строка",
-        title = "Сжатие повторов в одну строку awk",
+        section = "One-liners",
+        title = "Run-length compression in one awk line",
         originalTitle = "Run-length encoding in one awk line",
-        author = "Практика сжатия, 1980-е",
+        author = "Compression practice, 1980s",
         year = 1985,
-        summary = "Повторы символов записываются как «число и символ»; вся логика помещается в одну строку awk.",
-        details = "Схема run-length encoding использовалась в графических форматах 80-х, например в PCX (1985). " +
-            "Внешний цикл двигается по строке, внутренний считает длину серии. Обратную операцию — распаковку — " +
-            "читатель может написать сам как упражнение.",
+        summary = "Repeated characters are written as “count and character”; all the logic fits on one awk line.",
+        details = "The run-length encoding scheme was used in graphics formats of the 80s, for example in PCX (1985). " +
+            "The outer loop moves along the string, and the inner one counts the length of a run. " +
+            "The reverse operation, decompression, is an exercise for the reader.",
         instructions = """
-            1. Выполните команду из примера.
-            2. Для строки aaabccdddd результат — 3a1b2c4d.
-            3. Попробуйте строку без повторов, например abcdef: результат окажется длиннее исходной строки. Так RLE работает только на повторах.
+            1. Run the command from the example.
+            2. For the string aaabccdddd the result is 3a1b2c4d.
+            3. Try a string without repeats, for example abcdef: the result is longer than the input. That is why RLE only helps on repeated data.
         """,
         example = """
             echo aaabccdddd | awk '{ s = $0; o = ""; i = 1; while (i <= length(s)) { c = substr(s, i, 1); r = 1; while (substr(s, i + r, 1) == c) r++; o = o r c; i += r } print o }'
@@ -130,19 +130,19 @@ val db1Flex: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.FLEX,
-        section = "Одна строка",
-        title = "Частоты букв по конвейеру Unix",
+        section = "One-liners",
+        title = "Letter frequencies with a Unix pipeline",
         originalTitle = "Letter frequency pipeline",
-        author = "Практика криптоанализа, 1980-е",
+        author = "Cryptanalysis practice, 1980s",
         year = 1980,
-        summary = "Пять утилит Unix считают частоту букв в тексте — основа частотного криптоанализа.",
-        details = "tr отбрасывает всё, кроме латинских букв, и приводит их к нижнему регистру. fold -w1 разбивает текст по одному " +
-            "символу на строку, sort и uniq -c считают повторы, sort -rn ставит самые частые буквы вверху. В английском тексте " +
-            "лидируют E, T, A — по этой таблице ищут ключевые буквы шифровки.",
+        summary = "Five Unix tools count letter frequencies in a text: the basis of frequency analysis in cryptanalysis.",
+        details = "tr removes everything except Latin letters and lowercases them. fold -w1 splits the text into one character per line, " +
+            "sort and uniq -c count the repeats, and sort -rn puts the most frequent letters on top. " +
+            "In English text E, T and A lead the list. Frequency tables like this one are used to find the key letters of a cipher.",
         instructions = """
-            1. Сохраните английский текст в файл text.txt.
-            2. Выполните команду из примера.
-            3. В выводе — число повторов и буква. Сравните с таблицей частот языка.
+            1. Save an English text as text.txt.
+            2. Run the command from the example.
+            3. The output shows the count and the letter. Compare them with the letter-frequency table for the language.
         """,
         example = """
             tr -cd 'A-Za-z' < text.txt | tr 'A-Z' 'a-z' | fold -w1 | sort | uniq -c | sort -rn | head -5

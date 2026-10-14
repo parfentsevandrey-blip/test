@@ -39,7 +39,7 @@ import com.example.retrodatabases.ui.LibraryViewModel
 import com.example.retrodatabases.ui.components.KindBadge
 import com.example.retrodatabases.ui.components.RareBadge
 
-/** Экран одной записи каталога: год, вид, раздел, пояснение, инструкция и пример кода. */
+/** Screen for one catalogue record: year, kind, section, summary, instructions and a code example. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordDetailScreen(
@@ -163,7 +163,7 @@ private fun InfoSection(title: String, content: @Composable ColumnScope.() -> Un
     }
 }
 
-/** Моноширинный блок кода; длинные строки прокручиваются по горизонтали. */
+/** Monospaced code block; long lines scroll horizontally. */
 @Composable
 private fun CodeBlock(code: String) {
     Surface(

@@ -3,24 +3,24 @@ package com.example.retrodatabases.data.seed
 import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.RecordEntity
 
-/** Пояснения и инструкции: как устроены приёмы 1980-х и как их повторить руками. */
+/** Guides and instructions: how the techniques of the 1980s work and how to repeat them by hand. */
 val db1Guides: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.GUIDE,
-        section = "Как это работает",
-        title = "Как устроен конвейер Unix",
+        section = "How it works",
+        title = "How a Unix pipeline works",
         originalTitle = "How pipes work",
-        author = "Практика Unix, Bell Labs",
+        author = "Unix practice, Bell Labs",
         year = 1973,
-        summary = "Конвейер — это два процесса, соединённые буфером ядра: вывод одного становится вводом другого.",
-        details = "Оболочка создаёт канал вызовом pipe(), порождает процессы через fork() и подменяет стандартные потоки через dup2(). " +
-            "Читатель блокируется, пока писатель не положит данные в канал; когда писатель закрывает свой конец, читатель получает конец файла. " +
-            "Так команда ls | wc -l работает без временных файлов, а каждая программа не знает, с чем она соединена.",
+        summary = "A pipeline is two processes connected by a kernel buffer: the output of one becomes the input of the other.",
+        details = "The shell creates a channel with pipe(), starts processes with fork() and redirects the standard streams with dup2(). " +
+            "The reader blocks until the writer puts data into the channel; when the writer closes its end, the reader gets end-of-file. " +
+            "This is how the command ls | wc -l works without temporary files, and each program does not know what it is connected to.",
         instructions = """
-            1. Сохраните пример как pipeline.c и соберите: cc -o pipeline pipeline.c
-            2. Запустите: ./pipeline
-            3. Программа делает то же, что оболочка делает для команды echo hello | tr a-z A-Z, и выводит HELLO.
+            1. Save the example as pipeline.c and build it: cc -o pipeline pipeline.c
+            2. Run: ./pipeline
+            3. The program does what the shell does for the command echo hello | tr a-z A-Z, and prints HELLO.
         """,
         example = """
             #include <stdio.h>
@@ -37,7 +37,7 @@ val db1Guides: List<RecordEntity> = listOf(
                     return 1;
                 }
 
-                if (fork() == 0) {                  /* первый процесс: echo пишет в конвейер */
+                if (fork() == 0) {                  /* first process: echo writes into the pipe */
                     dup2(fd[1], STDOUT_FILENO);
                     close(fd[0]);
                     close(fd[1]);
@@ -46,7 +46,7 @@ val db1Guides: List<RecordEntity> = listOf(
                     exit(1);
                 }
 
-                if (fork() == 0) {                  /* второй процесс: tr читает из конвейера */
+                if (fork() == 0) {                  /* second process: tr reads from the pipe */
                     dup2(fd[0], STDIN_FILENO);
                     close(fd[0]);
                     close(fd[1]);
@@ -55,7 +55,7 @@ val db1Guides: List<RecordEntity> = listOf(
                     exit(1);
                 }
 
-                close(fd[0]);                       /* родителю концы конвейера не нужны */
+                close(fd[0]);                       /* the parent needs neither end of the pipe */
                 close(fd[1]);
                 wait(NULL);
                 wait(NULL);
@@ -66,20 +66,20 @@ val db1Guides: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.GUIDE,
-        section = "Пошаговые инструкции",
-        title = "Makefile с нуля: инструкция",
+        section = "Step-by-step instructions",
+        title = "Makefile from scratch: step by step",
         originalTitle = "Makefile step by step",
-        author = "Стюарт Фелдман (make), практика 80-х",
+        author = "Stuart Feldman (make), 80s practice",
         year = 1976,
-        summary = "Пошаговое создание Makefile: цели, зависимости и команды, которые выполняются только при изменении файлов.",
-        details = "Правило состоит из цели, списка зависимостей и команд. Команды обязательно начинаются с символа табуляции — это самая частая " +
-            "ошибка новичков. Make сравнивает время изменения цели и зависимостей: если зависимость новее, цель пересобирается. " +
-            "Поэтому после правки одного файла пересборка занимает секунды, а не минуты.",
+        summary = "Creating a Makefile step by step: targets, dependencies and commands that run only when files change.",
+        details = "A rule consists of a target, a list of dependencies and commands. Commands must start with a tab character; " +
+            "this is the most common beginner mistake. Make compares the modification time of the target and its dependencies: " +
+            "if a dependency is newer, the target is rebuilt. So after editing one file, a rebuild takes seconds, not minutes.",
         instructions = """
-            1. Создайте файлы main.c, util.c и util.h с простыми функциями.
-            2. Сохраните пример как Makefile в той же папке. Строки команд должны начинаться с табуляции, а не с пробелов.
-            3. Выполните make: первая цель в файле станет целью по умолчанию.
-            4. Измените util.c и выполните make ещё раз: пересоберутся только util.o и prog.
+            1. Create the files main.c, util.c and util.h with simple functions.
+            2. Save the example as Makefile in the same folder. Command lines must start with a tab, not with spaces.
+            3. Run make: the first target in the file becomes the default target.
+            4. Change util.c and run make again: only util.o and prog are rebuilt.
         """,
         example = """
             prog: main.o util.o
@@ -95,27 +95,27 @@ val db1Guides: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.GUIDE,
-        section = "Как это работает",
-        title = "Рекурсивный спуск: как разбирать выражения",
+        section = "How it works",
+        title = "Recursive descent: how to parse expressions",
         originalTitle = "Recursive descent parsing",
-        author = "Практика компиляторов, 1970–80-е",
+        author = "Compiler practice, 1970s–80s",
         year = 1975,
-        summary = "Каждое правило грамматики становится функцией. Так разбирают выражения вроде 2 + 3 * (4 - 1).",
-        details = "Грамматика: выражение — слагаемые, соединённые знаками + и -; слагаемое — множители, соединённые * и /; " +
-            "множитель — число или выражение в скобках. Каждому нетерминалу соответствует функция, которая читает свою часть строки " +
-            "и возвращает значение. Приоритет операций получается сам собой: умножение разбирается глубже сложения. " +
-            "Этот приём лежит в основе большинства парсеров 80-х.",
+        summary = "Each grammar rule becomes a function. This is how expressions such as 2 + 3 * (4 - 1) are parsed.",
+        details = "The grammar: an expression is terms joined by + and -; a term is factors joined by * and /; " +
+            "a factor is a number or an expression in parentheses. Each nonterminal corresponds to a function that reads its part of the string " +
+            "and returns a value. Operator precedence comes out naturally: multiplication is parsed deeper than addition. " +
+            "Most parsers of the 80s were built on this technique.",
         instructions = """
-            1. Сохраните код как calc.c и соберите: cc -o calc calc.c
-            2. Запустите: ./calc "2 + 3 * (4 - 1)". Ответ: 11.
-            3. Проверьте: ./calc "10 / 4" (ответ 2.5) и ./calc "(1 + 2) * (3 + 4)" (ответ 21).
+            1. Save the code as calc.c and build it: cc -o calc calc.c
+            2. Run: ./calc "2 + 3 * (4 - 1)". The answer is 11.
+            3. Check: ./calc "10 / 4" (the answer is 2.5) and ./calc "(1 + 2) * (3 + 4)" (the answer is 21).
         """,
         example = """
             #include <stdio.h>
             #include <stdlib.h>
             #include <ctype.h>
 
-            static const char *p;                   /* текущая позиция во входной строке */
+            static const char *p;                   /* current position in the input string */
 
             static double expr(void);
 
@@ -125,7 +125,7 @@ val db1Guides: List<RecordEntity> = listOf(
                     p++;
             }
 
-            static double factor(void)              /* множитель: число или (выражение) */
+            static double factor(void)              /* factor: a number or (expression) */
             {
                 double v;
                 char *end;
@@ -144,7 +144,7 @@ val db1Guides: List<RecordEntity> = listOf(
                 return v;
             }
 
-            static double term(void)                /* слагаемое: множители через * и / */
+            static double term(void)                /* term: factors joined by * and / */
             {
                 double v = factor();
 
@@ -162,7 +162,7 @@ val db1Guides: List<RecordEntity> = listOf(
                 }
             }
 
-            static double expr(void)                /* выражение: слагаемые через + и - */
+            static double expr(void)                /* expression: terms joined by + and - */
             {
                 double v = term();
 
@@ -195,48 +195,48 @@ val db1Guides: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.GUIDE,
-        section = "Как это работает",
-        title = "Стек Forth по шагам",
+        section = "How it works",
+        title = "Forth stack step by step",
         originalTitle = "Forth stack trace",
-        author = "Чарльз Мур",
+        author = "Charles Moore",
         year = 1970,
-        summary = "Forth выполняет слова слева направо, а данные лежат в стеке. Пошаговая трассировка показывает каждое состояние.",
-        details = "Число кладёт значение на вершину стека. Слово + снимает два верхних значения и кладёт сумму. " +
-            "Точка «.» снимает вершину и печатает её. Программа — последовательность слов, поэтому отладка сводится к вопросу: " +
-            "что лежит в стеке после этого слова? Мур применял этот подход в системах управления задолго до персональных компьютеров.",
+        summary = "Forth executes words from left to right, and the data lives on a stack. A step-by-step trace shows every state.",
+        details = "A number pushes its value onto the top of the stack. The word + pops the two top values and pushes their sum. " +
+            "The dot “.” pops the top and prints it. A program is a sequence of words, so debugging comes down to one question: " +
+            "what is on the stack after this word? Moore used this approach in control systems long before personal computers.",
         instructions = """
-            1. Установите GNU Forth (пакет gforth) или любой другой Forth-интерпретатор.
-            2. Запустите gforth и введите: 2 3 + 4 * .
-            3. В выводе появится 20. Сверьте таблицу ниже: после каждого слова состояние стека меняется.
+            1. Install GNU Forth (the gforth package) or any other Forth interpreter.
+            2. Run gforth and type: 2 3 + 4 * .
+            3. The output shows 20. Check the table below: after each word the state of the stack changes.
         """,
         example = """
-            Слово   Стек (дно слева, вершина справа)   Комментарий
-            2       2                                  положили число
-            3       2 3                                ещё одно число
-            +       5                                  сняли 2 и 3, положили 5
-            4       5 4                                положили 4
-            *       20                                 сняли 5 и 4, положили 20
-            .       (пусто)                            сняли 20 и напечатали
+            Word    Stack (bottom left, top right)     Comment
+            2       2                                  pushed the number
+            3       2 3                                one more number
+            +       5                                  popped 2 and 3, pushed 5
+            4       5 4                                pushed 4
+            *       20                                 popped 5 and 4, pushed 20
+            .       (empty)                            popped 20 and printed it
         """,
         rare = true,
     ),
 
     entry(
         kind = Kind.GUIDE,
-        section = "Пошаговые инструкции",
-        title = "Как запустить старые программы в эмуляторе",
+        section = "Step-by-step instructions",
+        title = "How to run old programs in an emulator",
         originalTitle = "Running 80s software in emulators",
-        author = "Сообщество ретрокомпьютеров",
+        author = "Retrocomputing community",
         year = 1982,
-        summary = "Старые программы работают в эмуляторе: нужны файл программы, эмулятор и правильная модель машины.",
-        details = "Эмулятор имитирует процессор, память и периферию. Для ZX Spectrum подходит Fuse, для MS-DOS — DOSBox. " +
-            "Программы распространяются образами: .tap и .z80 для Spectrum, .img и .exe для DOS. Многие программы 80-х " +
-            "запускались командой LOAD с пустым именем файла — так же, как на настоящей машине.",
+        summary = "Old programs run in an emulator if you have the program file, an emulator and the right machine model.",
+        details = "An emulator imitates the processor, memory and peripherals. For the ZX Spectrum, Fuse is a good choice; for MS-DOS, DOSBox. " +
+            "Programs are distributed as images: .tap and .z80 for the Spectrum, .img and .exe for DOS. " +
+            "Many 80s programs were started with the LOAD command and an empty file name, just as on a real machine.",
         instructions = """
-            1. Установите эмулятор: Fuse для ZX Spectrum или DOSBox для MS-DOS.
-            2. Откройте файл программы через меню эмулятора (File → Open).
-            3. В эмуляторе Spectrum введите LOAD "" (ключевое слово LOAD и две кавычки), нажмите Enter, затем RUN.
-            4. Если программа не запускается, проверьте модель машины, которую она требует: 48K или 128K.
+            1. Install an emulator: Fuse for the ZX Spectrum or DOSBox for MS-DOS.
+            2. Open the program file through the emulator's menu (File → Open).
+            3. In the Spectrum emulator, type LOAD "" (the keyword LOAD and two quotes), press Enter, then RUN.
+            4. If the program does not start, check the machine model it requires: 48K or 128K.
         """,
     ),
 )

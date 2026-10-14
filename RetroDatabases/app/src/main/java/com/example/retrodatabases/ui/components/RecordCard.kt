@@ -33,7 +33,7 @@ import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.RecordEntity
 import com.example.retrodatabases.ui.theme.accent
 
-/** Ярлык вида записи («Языки», «Системы» и так далее) на фоне цвета вида. */
+/** Kind label ("Languages", "Systems" and so on) on the background of the kind's colour. */
 @Composable
 fun KindBadge(kind: Kind, modifier: Modifier = Modifier) {
     Text(
@@ -48,7 +48,7 @@ fun KindBadge(kind: Kind, modifier: Modifier = Modifier) {
     )
 }
 
-/** Метка для редких и малоизвестных записей. */
+/** Label for rare and little-known records. */
 @Composable
 fun RareBadge(modifier: Modifier = Modifier) {
     Text(
@@ -64,8 +64,8 @@ fun RareBadge(modifier: Modifier = Modifier) {
 }
 
 /**
- * Карточка записи каталога: цветная полоска вида, ярлыки, название, оригинальное название,
- * краткое описание и кнопка избранного.
+ * Catalogue record card: a coloured kind stripe, badges, title, original title,
+ * short description and the favorite button.
  */
 @Composable
 fun RecordCard(

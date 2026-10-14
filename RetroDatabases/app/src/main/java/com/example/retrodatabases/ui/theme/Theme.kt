@@ -7,7 +7,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-/** Тёмная тема в духе терминалов 80-х: тёмный фон и яркие акценты. */
+/** Dark theme in the spirit of 80s terminals: dark background and bright accents. */
 private val DarkColors = darkColorScheme(
     primary = Color(0xFF4DD0E1),
     onPrimary = Color(0xFF00363D),

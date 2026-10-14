@@ -3,24 +3,24 @@ package com.example.retrodatabases.data.seed
 import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.RecordEntity
 
-/** Практики и методы 1980-х: стиль, проектирование, качество, метрики, процессы, оптимизация, данные. */
+/** Practices and methods of the 1980s: style, design, quality, metrics, processes, optimization, data. */
 val db1Practices: List<RecordEntity> = listOf(
 
-    // ---------- Методы и стиль ----------
+    // ---------- Methods and style ----------
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Методы и стиль",
-        title = "Структурное программирование",
+        section = "Methods and style",
+        title = "Structured programming",
         originalTitle = "Structured programming",
-        author = "Дейкстра, Дал, Хоар",
+        author = "Dijkstra, Dahl, Hoare",
         year = 1972,
-        summary = "Программа строится из последовательности, ветвления и цикла, без произвольных переходов.",
-        details = "Теорема Бёма и Якопини (1966) показала, что любой алгоритм можно записать через три базовые конструкции. " +
-            "Книга «Structured Programming» (1972) сделала этот подход нормой. В 80-х Pascal и C поощряли блоки, вложенные " +
-            "if и while, процедуры: код стали читать сверху вниз.",
+        summary = "A program is built from sequence, branching and loops, without arbitrary jumps.",
+        details = "The Böhm–Jacopini theorem (1966) showed that any algorithm can be written with three basic constructs. " +
+            "The book “Structured Programming” (1972) made this approach the norm. In the 80s Pascal and C encouraged blocks, " +
+            "nested if and while, and procedures: code began to be read from top to bottom.",
         example = """
-            { Pascal: считаем пробелы и буквы }
+            { Pascal: count spaces and letters }
             while not eof do
             begin
               read(ch);
@@ -34,41 +34,40 @@ val db1Practices: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Методы и стиль",
-        title = "Отказ от goto",
+        section = "Methods and style",
+        title = "Goto considered harmful",
         originalTitle = "Go To Statement Considered Harmful",
-        author = "Эдсгер Дейкстра",
+        author = "Edsger Dijkstra",
         year = 1968,
-        summary = "Оператор goto вреден: по коду становится непонятно, как программа попала в текущую точку.",
-        details = "Короткое письмо Дейкстры в журнал Communications of the ACM (1968) стало одним из самых известных текстов " +
-            "о программировании. В 80-х выход из цикла делали через break, а обработку ошибок — через одну точку выхода. " +
-            "Позже в ядре Linux goto остался для очистки ресурсов: там он действительно уместен.",
+        summary = "The goto statement is harmful: the code no longer shows how the program reached the current point.",
+        details = "Dijkstra's short letter to Communications of the ACM (1968) became one of the best-known texts about programming. " +
+            "In the 80s a loop was exited with break, and error handling went through a single exit point. " +
+            "Later the Linux kernel kept goto for releasing resources: there it really is appropriate.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Методы и стиль",
-        title = "Пошаговое уточнение",
+        section = "Methods and style",
+        title = "Stepwise refinement",
         originalTitle = "Stepwise refinement",
-        author = "Никлаус Вирт",
+        author = "Niklaus Wirth",
         year = 1971,
-        summary = "Программу пишут сверху вниз: общий набросок, затем уточнение каждого шага до кода.",
-        details = "Вирт описал метод в статье «Program Development by Stepwise Refinement» (1971). Каждый шаг остаётся проверяемым, " +
-            "а лишние детали откладываются на потом.",
+        summary = "A program is written top-down: a general outline first, then each step is refined into code.",
+        details = "Wirth described the method in the article “Program Development by Stepwise Refinement” (1971). " +
+            "Each step stays checkable, and extra details are postponed.",
         rare = true,
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Методы и стиль",
-        title = "Конвейеры Unix",
+        section = "Methods and style",
+        title = "Unix pipelines",
         originalTitle = "Pipes and filters",
-        author = "Дуглас Макилрой",
+        author = "Douglas McIlroy",
         year = 1973,
-        summary = "Каждая программа делает одно дело, а программы соединяются через текстовые потоки.",
-        details = "Макилрой предложил конвейеры ещё в 1964 году, а в Unix они появились в 1973-м. Философия Unix, описанная в " +
-            "Bell System Technical Journal (1978), советует делать одно дело и делать его хорошо, а текст считать универсальным " +
-            "интерфейсом.",
+        summary = "Each program does one job, and programs are connected through text streams.",
+        details = "McIlroy proposed pipelines back in 1964, and they appeared in Unix in 1973. The Unix philosophy, described in the " +
+            "Bell System Technical Journal (1978), advises doing one thing and doing it well, and treating text as a universal interface.",
         example = """
             cat words.txt | sort | uniq -c | sort -rn | head -10
         """,
@@ -76,88 +75,92 @@ val db1Practices: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Методы и стиль",
-        title = "Литературное программирование",
+        section = "Methods and style",
+        title = "Literate programming",
         originalTitle = "Literate programming",
-        author = "Дональд Кнут",
+        author = "Donald Knuth",
         year = 1984,
-        summary = "Программу пишут как документ для человека, а код и документацию из него извлекают автоматически.",
-        details = "Кнут описал подход в статье 1984 года и создал систему WEB. Один файл содержит рассуждения и куски кода; " +
-            "утилита tangle собирает программу, weave — печатное описание. Похожая идея сегодня живёт в блокнотах вроде Jupyter.",
+        summary = "The program is written as a document for people, and the code and documentation are extracted from it automatically.",
+        details = "Knuth described the approach in a 1984 article and created the WEB system. One file holds the reasoning and the pieces of code; " +
+            "the tangle utility assembles the program, and weave produces the printed description. " +
+            "A similar idea lives today in notebooks such as Jupyter.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Методы и стиль",
-        title = "Венгерская нотация",
+        section = "Methods and style",
+        title = "Hungarian notation",
         originalTitle = "Hungarian notation",
-        author = "Чарльз Симони",
+        author = "Charles Simonyi",
         year = 1977,
-        summary = "Префикс в имени переменной подсказывает её тип: lpszName — указатель на строку, iCount — целое.",
-        details = "Соглашение предложил Чарльз Симони, работавший в Xerox PARC и затем в Microsoft. В 80-х его повсеместно " +
-            "использовали в коде Windows и Win32 API. Плюс — тип виден в имени. Минус — при смене типа префикс начинает врать.",
+        summary = "A prefix in a variable name hints at its type: lpszName is a pointer to a string, iCount is an integer.",
+        details = "The convention was proposed by Charles Simonyi, who worked at Xerox PARC and then at Microsoft. " +
+            "In the 80s it was used everywhere in Windows and Win32 API code. The plus: the type is visible in the name. " +
+            "The minus: when the type changes, the prefix starts lying.",
         example = """
-            LPSTR  lpszName;     /* lp: длинный указатель, sz: строка с нулём в конце */
-            int    iCount;       /* i: целое */
-            BOOL   bVisible;     /* b: логическое */
-            HWND   hwndMain;     /* hwnd: дескриптор окна */
+            LPSTR  lpszName;     /* lp: long pointer, sz: zero-terminated string */
+            int    iCount;       /* i: integer */
+            BOOL   bVisible;     /* b: boolean */
+            HWND   hwndMain;     /* hwnd: window handle */
         """,
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Методы и стиль",
-        title = "Стиль программирования",
+        section = "Methods and style",
+        title = "Elements of programming style",
         originalTitle = "The Elements of Programming Style",
-        author = "Брайан Керниган, Ф. Джеймс Плоджер",
+        author = "Brian Kernighan, P. J. Plauger",
         year = 1974,
-        summary = "Код читают чаще, чем пишут: короткие функции, понятные имена, честные комментарии.",
-        details = "Книга разбирала реальные программы и показывала, как переписать запутанный код: убрать лишние переходы, " +
-            "дать переменным понятные имена, разбить длинную функцию. В 80-х эти правила стали основой внутренних стандартов компаний.",
+        summary = "Code is read more often than it is written: short functions, clear names, honest comments.",
+        details = "The book analysed real programs and showed how to rewrite tangled code: remove needless jumps, give variables clear names, " +
+            "split a long function. In the 80s these rules became the basis of internal company standards.",
     ),
 
-    // ---------- Проектирование ----------
+    // ---------- Design ----------
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Проектирование",
-        title = "Модули и сокрытие информации",
+        section = "Design",
+        title = "Modules and information hiding",
         originalTitle = "Modular programming, information hiding",
-        author = "Дэвид Парнас",
+        author = "David Parnas",
         year = 1972,
-        summary = "Систему делят на модули по решениям, которые могут меняться. Наружу торчит только интерфейс.",
-        details = "Парнас показал, что декомпозиция по шагам алгоритма ломается при изменениях, а декомпозиция по скрытым решениям — нет. " +
-            "В 80-х это легло в основу раздельной компиляции и языков Modula-2 и Ada. Та же идея живёт в модулях и классах с закрытыми полями.",
+        summary = "The system is divided into modules by the decisions that may change. Only the interface sticks out.",
+        details = "Parnas showed that decomposition by steps of an algorithm breaks when things change, while decomposition by hidden " +
+            "decisions does not. In the 80s this became the basis of separate compilation and of Modula-2 and Ada. " +
+            "The same idea lives on in modules and classes with private fields.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Проектирование",
+        section = "Design",
         title = "Model-View-Controller",
         originalTitle = "MVC",
-        author = "Трюгве Реенскауг",
+        author = "Trygve Reenskaug",
         year = 1979,
-        summary = "Данные, их показ и обработка ввода разделены, поэтому одни данные можно показать по-разному.",
-        details = "Реенскауг сформулировал идею в 1979 году во время работы над Smalltalk в Xerox PARC. В 80-х MVC стал основой " +
-            "графических интерфейсов Smalltalk, а позже — многих GUI-библиотек и веб-фреймворков. Модель тестируется без окон, " +
-            "а интерфейс меняется без переписывания логики.",
+        summary = "The data, its display and the handling of input are separated, so the same data can be shown in different ways.",
+        details = "Reenskaug formulated the idea in 1979 while working on Smalltalk at Xerox PARC. In the 80s MVC became the basis of the " +
+            "graphical interfaces of Smalltalk, and later of many GUI libraries and web frameworks. The model is tested without windows, " +
+            "and the interface changes without rewriting the logic.",
         example = """
-            Model       — данные и правила: счёт, остаток, список записей
-            View        — показ данных: окно, таблица, график
-            Controller  — ввод: клик, нажатие клавиши, команда
+            Model       — data and rules: an account, a balance, a list of records
+            View        — display of data: a window, a table, a chart
+            Controller  — input: a click, a key press, a command
         """,
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Проектирование",
-        title = "Проектирование по контракту",
+        section = "Design",
+        title = "Design by contract",
         originalTitle = "Design by Contract",
-        author = "Бертран Мейер",
+        author = "Bertrand Meyer",
         year = 1986,
-        summary = "Процедура объявляет, что должно выполняться до вызова (require) и что гарантирует после (ensure).",
-        details = "Мейер ввёл подход вместе с языком Eiffel (первая версия — 1986). Контракт делит ответственность: вызывающий " +
-            "код обязан выполнить предусловие, а процедура — постусловие. Та же мысль сегодня живёт в assert и юнит-тестах.",
+        summary = "A procedure declares what must hold before the call (require) and what it guarantees afterwards (ensure).",
+        details = "Meyer introduced the approach together with the Eiffel language (the first version, 1986). A contract divides responsibility: " +
+            "the calling code must satisfy the precondition, and the procedure must deliver the postcondition. " +
+            "The same thought lives today in assertions and unit tests.",
         example = """
             withdraw (amount: INTEGER)
                 require
@@ -173,82 +176,82 @@ val db1Practices: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Проектирование",
-        title = "Структурный анализ",
+        section = "Design",
+        title = "Structured analysis",
         originalTitle = "Structured analysis, DFD",
-        author = "Том Демарко; Йордан и Константайн",
+        author = "Tom DeMarco; Yourdon and Constantine",
         year = 1978,
-        summary = "Сначала описывают, как данные текут через систему, и только потом пишут код.",
-        details = "Книга Демарко «Structured Analysis and System Specification» (1978) и «Structured Design» Йордана и Константайна (1979) " +
-            "задали язык требований 80-х: диаграммы потоков данных (DFD), словарь данных и мини-спецификации процессов.",
+        summary = "First describe how data flows through the system, and only then write code.",
+        details = "DeMarco's book “Structured Analysis and System Specification” (1978) and Yourdon and Constantine's “Structured Design” (1979) " +
+            "set the requirements language of the 80s: data flow diagrams (DFD), the data dictionary and mini-specifications of processes.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Проектирование",
-        title = "Диаграммы Насси — Шнейдермана",
+        section = "Design",
+        title = "Nassi–Shneiderman diagrams",
         originalTitle = "Nassi–Shneiderman diagrams",
-        author = "Исаак Насси, Бен Шнейдерман",
+        author = "Isaac Nassi, Ben Shneiderman",
         year = 1973,
-        summary = "Алгоритм рисуют вложенными прямоугольниками без стрелок: произвольных переходов не получается.",
-        details = "Схемы появились в 1973 году как ответ на блок-схемы со стрелками, которые поощряли goto. Каждый блок — действие, " +
-            "ветвление или цикл, а вложенность видна по ширине.",
+        summary = "An algorithm is drawn as nested rectangles without arrows: arbitrary jumps are impossible.",
+        details = "The notation appeared in 1973 as an answer to flowcharts with arrows, which encouraged goto. Each block is an action, " +
+            "a branch or a loop, and the nesting is visible by width.",
     ),
 
-    // ---------- Качество и тесты ----------
+    // ---------- Quality and testing ----------
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Качество и тесты",
-        title = "Инспекции программ",
+        section = "Quality and testing",
+        title = "Software inspections",
         originalTitle = "Software inspections",
-        author = "Майкл Фейган, IBM",
+        author = "Michael Fagan, IBM",
         year = 1976,
-        summary = "Код формально проверяет группа по ролям и чек-листу. Ищут дефекты, а не виноватых.",
-        details = "Метод Фейгана (IBM, 1976) — структурированный разбор: планирование, обзор, индивидуальная проверка, собрание " +
-            "с фиксацией дефектов, исправления и контроль. По данным IBM, инспекции находили заметную часть ошибок дешевле тестов. " +
-            "Это прямой предок современного код-ревью.",
+        summary = "A group checks the code formally by roles and a checklist. They look for defects, not for culprits.",
+        details = "Fagan's method (IBM, 1976) is a structured review: planning, overview, individual checking, a meeting that records defects, " +
+            "rework and follow-up. According to IBM, inspections found a notable share of errors more cheaply than tests. " +
+            "It is a direct ancestor of modern code review.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Качество и тесты",
-        title = "Тесты чёрного и белого ящика",
+        section = "Quality and testing",
+        title = "Black-box and white-box testing",
         originalTitle = "Black-box and white-box testing",
-        author = "Глен Майерс",
+        author = "Glenford Myers",
         year = 1979,
-        summary = "Чёрный ящик — тесты по спецификации, белый — тесты по устройству кода.",
-        details = "Майерс в книге «The Art of Software Testing» (1979) разделил два подхода. Тесты чёрного ящика проверяют, что " +
-            "программа делает по описанию. Тесты белого ящика покрывают ветви и пути внутри кода.",
+        summary = "Black box: tests from the specification; white box: tests from the structure of the code.",
+        details = "Myers, in the book “The Art of Software Testing” (1979), separated two approaches. Black-box tests check that the program " +
+            "does what the description says. White-box tests cover the branches and paths inside the code.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Качество и тесты",
-        title = "Граничные значения",
+        section = "Quality and testing",
+        title = "Boundary value analysis",
         originalTitle = "Boundary value analysis",
-        author = "Глен Майерс",
+        author = "Glenford Myers",
         year = 1979,
-        summary = "Ошибки чаще всего сидят на границах диапазонов, поэтому тестируют именно границы.",
-        details = "Если поле принимает значения от 1 до 100, проверяют 0, 1, 2, 99, 100 и 101. Так покрывают внутренность диапазона, " +
-            "его края и значения за пределами. Приём прост и хорошо ловит ошибки «на единицу» (off-by-one).",
+        summary = "Errors most often sit on the boundaries of ranges, so the boundaries themselves are tested.",
+        details = "If a field accepts values from 1 to 100, check 0, 1, 2, 99, 100 and 101. This covers the inside of the range, its edges " +
+            "and the values beyond them. The technique is simple and catches off-by-one errors well.",
         example = """
-            Диапазон: 1..100
-            Тесты:  0 (ниже границы), 1 (нижняя граница), 2,
-                    99, 100 (верхняя граница), 101 (выше границы)
+            Range: 1..100
+            Tests:  0 (below the boundary), 1 (lower boundary), 2,
+                    99, 100 (upper boundary), 101 (above the boundary)
         """,
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Качество и тесты",
-        title = "Логика Хоара",
+        section = "Quality and testing",
+        title = "Hoare logic",
         originalTitle = "Hoare logic",
-        author = "Чарльз Энтони Ричард Хоар",
+        author = "Charles Antony Richard Hoare",
         year = 1969,
-        summary = "Тройка {P} S {Q}: если до команды S верно P, то после неё верно Q. Так доказывают правильность.",
-        details = "Хоар предложил аксиоматический способ доказывать программы (1969). В 80-х это оставалось академическим инструментом, " +
-            "но его идеи вошли в проектирование по контракту и статический анализ.",
+        summary = "The triple {P} S {Q}: if P holds before the statement S, then Q holds after it. This is how correctness is proved.",
+        details = "Hoare proposed an axiomatic way of proving programs (1969). In the 80s it remained an academic tool, " +
+            "but its ideas went into design by contract and static analysis.",
         example = """
             { x >= 0 }   x := x + 1   { x >= 1 }
         """,
@@ -256,187 +259,187 @@ val db1Practices: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Качество и тесты",
+        section = "Quality and testing",
         title = "Cleanroom",
         originalTitle = "Cleanroom software engineering",
-        author = "Харлан Миллз и коллеги, IBM",
+        author = "Harlan Mills and colleagues, IBM",
         year = 1987,
-        summary = "Программу пишут без отладки на компьютере: строгая проверка рассуждением и статистическое тестирование.",
-        details = "Метод предложили в IBM в 1987 году. Ошибки ищут доказательствами и инспекциями, а надёжность оценивают " +
-            "по статистике тестов, которые повторяют реальные сценарии использования.",
+        summary = "The program is written without debugging on a computer: strict verification by reasoning and statistical testing.",
+        details = "The method was proposed at IBM in 1987. Errors are sought by proofs and inspections, and reliability is estimated " +
+            "from statistics of tests that repeat real usage scenarios.",
         rare = true,
     ),
 
-    // ---------- Метрики ----------
+    // ---------- Metrics ----------
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Метрики",
-        title = "Метрики Холстеда",
+        section = "Metrics",
+        title = "Halstead metrics",
         originalTitle = "Software science",
-        author = "Морис Холстед",
+        author = "Maurice Halstead",
         year = 1977,
-        summary = "Программу измеряют числом операторов и операндов: из этого считают «объём» и «сложность».",
-        details = "Холстед опубликовал «Elements of Software Science» (1977). Метрики считались простыми подсчётами, и многие их " +
-            "критиковали, но это был первый количественный подход к сложности кода.",
+        summary = "A program is measured by the number of operators and operands: from these the “volume” and “difficulty” are computed.",
+        details = "Halstead published “Elements of Software Science” (1977). The metrics were computed by simple counts, and many criticised them, " +
+            "but it was the first quantitative approach to code complexity.",
         rare = true,
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Метрики",
-        title = "Цикломатическая сложность",
+        section = "Metrics",
+        title = "Cyclomatic complexity",
         originalTitle = "Cyclomatic complexity",
-        author = "Томас Маккейб",
+        author = "Thomas McCabe",
         year = 1976,
-        summary = "Число независимых путей в графе программы показывает, сколько тестов нужно для полного покрытия.",
-        details = "Маккейб предложил считать сложность по графу потока управления. Значение больше 10 часто считали признаком " +
-            "функции, которую трудно понять и протестировать.",
+        summary = "The number of independent paths in the program's graph shows how many tests are needed for full coverage.",
+        details = "McCabe proposed measuring complexity by the control-flow graph. A value above 10 was often considered a sign of a function " +
+            "that is hard to understand and test.",
         rare = true,
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Метрики",
-        title = "Функциональные точки",
+        section = "Metrics",
+        title = "Function points",
         originalTitle = "Function points",
-        author = "Альберт Альбрехт, IBM",
+        author = "Allan Albrecht, IBM",
         year = 1979,
-        summary = "Размер системы измеряют функциями для пользователя, а не строками кода.",
-        details = "Метод впервые представлен в 1979 году, опубликован в 1983-м. Считают входы, выходы, запросы, файлы и интерфейсы, " +
-            "умножая каждый тип на весовой коэффициент.",
+        summary = "The size of a system is measured by the functions it offers the user, not by lines of code.",
+        details = "The method was first presented in 1979 and published in 1983. Inputs, outputs, queries, files and interfaces are counted, " +
+            "each type multiplied by a weight coefficient.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Метрики",
-        title = "Модель COCOMO",
+        section = "Metrics",
+        title = "COCOMO",
         originalTitle = "COCOMO",
-        author = "Барри Боэм",
+        author = "Barry Boehm",
         year = 1981,
-        summary = "Трудозатраты оценивают по размеру кода в тысячах строк и коэффициентам проекта.",
-        details = "Модель описана в книге «Software Engineering Economics» (1981). Базовая формула: трудозатраты = a·(KLOC)^b, " +
-            "а коэффициенты зависят от типа проекта.",
+        summary = "Labour is estimated from the size of the code in thousands of lines and from project factors.",
+        details = "The model is described in the book “Software Engineering Economics” (1981). The basic formula: effort = a·(KLOC)^b, " +
+            "and the coefficients depend on the type of project.",
     ),
 
-    // ---------- Процессы и команды ----------
+    // ---------- Processes and teams ----------
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Процессы и команды",
-        title = "Водопадная модель",
+        section = "Processes and teams",
+        title = "Waterfall model",
         originalTitle = "Waterfall model",
-        author = "Уинстон Ройс",
+        author = "Winston Royce",
         year = 1970,
-        summary = "Разработка идёт строго по фазам: требования, проект, код, тесты, сопровождение. Назад хода нет.",
-        details = "Статья Ройса (1970) описывала такой порядок, но сам автор предупреждал, что без возврата к предыдущим фазам проект " +
-            "рискует. В 80-х модель закрепили стандарты, например американский DOD-STD-2167 (1985).",
+        summary = "Development goes strictly through phases: requirements, design, code, tests, maintenance. There is no going back.",
+        details = "Royce's article (1970) described this order, but the author himself warned that without returning to earlier phases " +
+            "a project risks failure. In the 80s the model was consolidated by standards, for example the American DOD-STD-2167 (1985).",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Процессы и команды",
-        title = "Спиральная модель",
+        section = "Processes and teams",
+        title = "Spiral model",
         originalTitle = "Spiral model",
-        author = "Барри Боэм",
+        author = "Barry Boehm",
         year = 1986,
-        summary = "Разработка идёт кругами. На каждом витке: цели, оценка рисков, прототип и план следующего витка.",
-        details = "Боэм описал спиральную модель в 1986 году. В отличие от водопада здесь риски разбираются явно, и каждый виток " +
-            "может начинаться с прототипа.",
+        summary = "Development goes in loops. Each loop: objectives, risk assessment, a prototype and a plan for the next loop.",
+        details = "Boehm described the spiral model in 1986. Unlike the waterfall, risks are analysed explicitly here, and each loop " +
+            "may start with a prototype.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Процессы и команды",
-        title = "Быстрое прототипирование",
+        section = "Processes and teams",
+        title = "Rapid prototyping",
         originalTitle = "Rapid prototyping",
-        author = "Практика 80-х",
+        author = "Practice of the 80s",
         year = 1984,
-        summary = "Сначала делают рабочий макет интерфейса, затем по реакции заказчика переделывают систему.",
-        details = "С появлением графических интерфейсов (Macintosh, 1984) и языков четвёртого поколения (4GL) макет экрана стало делать быстро. " +
-            "Заказчик видит почти готовую программу и поправляет требования раньше, чем они превратятся в дорогой код.",
+        summary = "First a working mock-up of the interface is built, then the system is reworked according to the customer's reaction.",
+        details = "With the appearance of graphical interfaces (Macintosh, 1984) and fourth-generation languages (4GL), a screen mock-up " +
+            "became quick to make. The customer sees an almost finished program and corrects the requirements before they turn into expensive code.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Процессы и команды",
-        title = "Мифический человеко-месяц",
+        section = "Processes and teams",
+        title = "The Mythical Man-Month",
         originalTitle = "The Mythical Man-Month",
-        author = "Фред Брукс",
+        author = "Fred Brooks",
         year = 1975,
-        summary = "Добавление людей в отстающий проект делает его ещё более отстающим.",
-        details = "Брукс, руководивший разработкой IBM OS/360, описал закон, который знают все менеджеры: работу нельзя поровну " +
-            "раздать людям, потому что растут затраты на связь и согласование. Отсюда правила: небольшие команды и чёткие интерфейсы.",
+        summary = "Adding people to a late project makes it even later.",
+        details = "Brooks, who led the development of IBM OS/360, described a law that every manager knows: work cannot be divided " +
+            "evenly among people, because the costs of communication and coordination grow. Hence the rules: small teams and clear interfaces.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Процессы и команды",
-        title = "Команда главного программиста",
+        section = "Processes and teams",
+        title = "Chief programmer team",
         originalTitle = "Chief Programmer Team",
-        author = "Терри Бейкер, Харлан Миллз, IBM",
+        author = "Terry Baker, Harlan Mills, IBM",
         year = 1972,
-        summary = "Ведущий программист пишет ключевой код и принимает решения, а команда берёт на себя остальное.",
-        details = "Идея IBM начала 70-х: главный программист, помощник, администратор проекта, библиотекарь исходников и тестировщик. " +
-            "В 80-х такой подход применяли в крупных контрактах, но его критиковали за зависимость от одного специалиста.",
+        summary = "The chief programmer writes the key code and makes the decisions, while the team takes on the rest.",
+        details = "IBM's idea of the early 70s: a chief programmer, an assistant, a project administrator, a source librarian and a tester. " +
+            "In the 80s the approach was used in large contracts, but it was criticised for depending on one specialist.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Процессы и команды",
-        title = "Безличное программирование",
+        section = "Processes and teams",
+        title = "Egoless programming",
         originalTitle = "Egoless programming",
-        author = "Джеральд Вайнберг",
+        author = "Gerald Weinberg",
         year = 1971,
-        summary = "Код — не продолжение личности автора: его спокойно проверяют, критикуют и переписывают.",
-        details = "Термин появился в книге Вайнберга «The Psychology of Computer Programming» (1971). В 80-х эта идея стала " +
-            "культурной основой ревью: критикуют код, а не людей, и ошибка становится поводом улучшить процесс.",
+        summary = "Code is not an extension of its author's personality: it is calmly checked, criticised and rewritten.",
+        details = "The term appeared in Weinberg's book “The Psychology of Computer Programming” (1971). In the 80s this idea became " +
+            "the cultural basis of reviews: the code is criticised, not the people, and a mistake becomes a reason to improve the process.",
     ),
 
-    // ---------- Оптимизация и память ----------
+    // ---------- Optimization and memory ----------
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Оптимизация и память",
-        title = "Оптимизация по тактам процессора",
+        section = "Optimization and memory",
+        title = "Cycle-level optimization",
         originalTitle = "Cycle-level optimization",
-        author = "Программисты игр и демосцены",
+        author = "Game and demoscene programmers",
         year = 1981,
-        summary = "Критичные участки пишут на ассемблере и считают такты: каждый такт процессора был на счету.",
-        details = "В 80-х игры для IBM PC, ZX Spectrum, Commodore 64 и Amiga писали на ассемблере. Типичные приёмы: развёртка циклов, " +
-            "таблицы вместо вычислений, прямой доступ к видеопамяти и строковые команды, которые делают работу за один проход.",
+        summary = "Critical sections are written in assembler and counted in cycles: every processor cycle mattered.",
+        details = "In the 80s games for the IBM PC, ZX Spectrum, Commodore 64 and Amiga were written in assembler. Typical techniques: " +
+            "unrolled loops, tables instead of computation, direct access to video memory, and string instructions that do the work in one pass.",
         example = """
-            ; Очистка текстового экрана 80x25: 2000 ячеек по 2 байта
-            mov ax, 0B800h        ; сегмент видеопамяти (цветной текст)
+            ; Clearing the 80x25 text screen: 2000 cells of 2 bytes each
+            mov ax, 0B800h        ; video memory segment (colour text)
             mov es, ax
-            xor di, di            ; смещение 0
-            mov ax, 0720h         ; 07 — атрибут (белый на чёрном), 20 — пробел
-            mov cx, 2000          ; число слов
-            rep stosw             ; записать AX в ES:DI, CX раз
+            xor di, di            ; offset 0
+            mov ax, 0720h         ; 07 — attribute (white on black), 20 — space
+            mov cx, 2000          ; number of words
+            rep stosw             ; store AX into ES:DI, CX times
         """,
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Оптимизация и память",
-        title = "Арифметика с фиксированной точкой",
+        section = "Optimization and memory",
+        title = "Fixed-point arithmetic",
         originalTitle = "Fixed-point arithmetic",
-        author = "Практика 80-х",
+        author = "Practice of the 80s",
         year = 1980,
-        summary = "Дробные числа хранят как целые с неявным масштабом: сопроцессор был дорогим и не во всех ПК.",
-        details = "Сопроцессор Intel 8087 (1980) стоил дорого и был не в каждом компьютере. Дробные значения записывали в целые: " +
-            "старшие биты — целая часть, младшие — дробная. Сложение остаётся обычным, а после умножения результат сдвигают.",
+        summary = "Fractions are stored as integers with an implicit scale: the coprocessor was expensive and not in every PC.",
+        details = "The Intel 8087 coprocessor (1980) was expensive and not in every computer. Fractional values were written as integers: " +
+            "the high bits are the integer part, the low bits the fraction. Addition stays ordinary, and after multiplication the result is shifted.",
         example = """
             #include <stdio.h>
 
-            typedef int fix8;                  /* формат 8.8: старшие 8 бит — целая часть */
+            typedef int fix8;                  /* 8.8 format: the high 8 bits are the integer part */
             #define FX_ONE 256                 /* 1.0 */
             #define FX_MUL(a, b) (((long)(a) * (b)) >> 8)
 
             int main(void)
             {
                 fix8 x = 384;                  /* 1.5 */
-                fix8 y = FX_MUL(x, x);         /* 2.25, то есть 576 */
+                fix8 y = FX_MUL(x, x);         /* 2.25, that is 576 */
 
                 printf("%d\n", y);
                 return 0;
@@ -446,78 +449,78 @@ val db1Practices: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Оптимизация и память",
-        title = "Двойная буферизация",
+        section = "Optimization and memory",
+        title = "Double buffering",
         originalTitle = "Double buffering, page flipping",
-        author = "Практика 80-х",
+        author = "Practice of the 80s",
         year = 1985,
-        summary = "Кадр рисуют в невидимом буфере и показывают целиком: без мерцания и «рваной» картинки.",
-        details = "Amiga и Atari ST (1985), а также видеорежимы EGA и VGA умели держать несколько видеостраниц. Пока одна страница " +
-            "показана, в другой рисуют следующий кадр, а затем переключают указатель видеопамяти.",
+        summary = "A frame is drawn in an invisible buffer and shown whole: no flicker and no torn picture.",
+        details = "The Amiga and the Atari ST (1985), as well as the EGA and VGA video modes, could hold several video pages. " +
+            "While one page is shown, the next frame is drawn in the other, and then the video memory pointer is switched.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Оптимизация и память",
-        title = "Оверлеи",
+        section = "Optimization and memory",
+        title = "Overlays",
         originalTitle = "Overlays",
-        author = "Практика MS-DOS",
+        author = "MS-DOS practice",
         year = 1981,
-        summary = "Программа больше доступной памяти: её куски по очереди подгружаются с диска на одно и то же место.",
-        details = "В MS-DOS адресовалось 640 КБ, а большие программы — компиляторы, САПР, редакторы — в них не помещались. " +
-            "Их делили на оверлеи: в памяти лежал только текущий кусок. Turbo Pascal имел для этого готовый модуль Overlay.",
+        summary = "A program is bigger than the available memory: its parts are loaded from disk in turn into the same place.",
+        details = "MS-DOS addressed 640 KB, and large programs — compilers, CAD systems, editors — did not fit into it. " +
+            "They were split into overlays: only the current part lay in memory. Turbo Pascal had a ready-made Overlay module for this.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Оптимизация и память",
-        title = "Сборка мусора",
+        section = "Optimization and memory",
+        title = "Garbage collection",
         originalTitle = "Garbage collection",
-        author = "Джон Маккарти",
+        author = "John McCarthy",
         year = 1958,
-        summary = "Среда сама находит и освобождает память, на которую больше нет ссылок.",
-        details = "Сборщик мусора придумали для Lisp (1958). В 80-х его использовали Smalltalk и Lisp-машины, а программисты на PC " +
-            "вручную вызывали malloc и free и часто ошибались: утечки памяти и висячие указатели были бичом эпохи.",
+        summary = "The environment itself finds and frees memory that nothing refers to any more.",
+        details = "The garbage collector was invented for Lisp (1958). In the 80s it was used by Smalltalk and Lisp machines, while PC programmers " +
+            "called malloc and free by hand and often made mistakes: memory leaks and dangling pointers were the plague of the era.",
     ),
 
-    // ---------- Данные и хранение ----------
+    // ---------- Data and storage ----------
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Данные и хранение",
-        title = "Реляционная модель",
+        section = "Data and storage",
+        title = "Relational model",
         originalTitle = "Relational model",
-        author = "Эдгар Ф. Кодд",
+        author = "Edgar F. Codd",
         year = 1970,
-        summary = "Данные лежат в таблицах, связи выражаются значениями ключей, а запрос описывает нужный результат.",
-        details = "Статья Кодда «A Relational Model of Data for Large Shared Data Banks» (1970) отделила логику данных от способа их " +
-            "хранения. В 80-х реляционные СУБД вытеснили иерархические и сетевые базы: проектировать стало проще, а запросы — гибче.",
+        summary = "Data lives in tables, links are expressed by key values, and a query describes the desired result.",
+        details = "Codd's article “A Relational Model of Data for Large Shared Data Banks” (1970) separated the logic of data from the way it is stored. " +
+            "In the 80s relational DBMSs displaced hierarchical and network databases: design became simpler and queries more flexible.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Данные и хранение",
-        title = "Модель «сущность — связь»",
+        section = "Data and storage",
+        title = "Entity-relationship model",
         originalTitle = "Entity-Relationship model",
-        author = "Питер Пин-Шэн Чен",
+        author = "Peter Pin-Shan Chen",
         year = 1976,
-        summary = "Предметную область описывают сущностями, их атрибутами и связями, а затем переводят в таблицы.",
-        details = "Статья Чена «The Entity-Relationship Model — Toward a Unified View of Data» (1976) задала язык проектирования баз. " +
-            "ER-диаграмма на бумаге — короткий путь к схеме таблиц.",
+        summary = "A subject area is described by entities, their attributes and relationships, and then translated into tables.",
+        details = "Chen's article “The Entity-Relationship Model — Toward a Unified View of Data” (1976) set the language of database design. " +
+            "An ER diagram on paper is a short path to a table schema.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Данные и хранение",
-        title = "Нормальные формы",
+        section = "Data and storage",
+        title = "Normal forms",
         originalTitle = "Normal forms: 1NF, 2NF, 3NF, BCNF",
-        author = "Эдгар Ф. Кодд",
+        author = "Edgar F. Codd",
         year = 1970,
-        summary = "Таблицы разбивают так, чтобы каждый факт хранился в одном месте и не дублировался.",
-        details = "Кодд ввёл первую нормальную форму (1970), вторую и третью (1971), а нормальную форму Бойса — Кодда (1974). " +
-            "Дубли кажутся безобидными, пока при смене адреса клиента приходится править сотни строк.",
+        summary = "Tables are split so that each fact is stored in one place and is not duplicated.",
+        details = "Codd introduced the first normal form (1970), the second and third (1971), and the Boyce–Codd normal form (1974). " +
+            "Duplicates seem harmless until, when a client's address changes, hundreds of rows have to be edited.",
         example = """
-            -- Плохо: адрес клиента повторяется в каждом заказе
+            -- Bad: the client's address is repeated in every order
             CREATE TABLE orders_flat (
                 order_id       INTEGER PRIMARY KEY,
                 client_name    TEXT,
@@ -525,7 +528,7 @@ val db1Practices: List<RecordEntity> = listOf(
                 item           TEXT
             );
 
-            -- Лучше: клиент хранится один раз
+            -- Better: the client is stored only once
             CREATE TABLE clients (
                 client_id INTEGER PRIMARY KEY,
                 name      TEXT,
@@ -542,51 +545,51 @@ val db1Practices: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Данные и хранение",
-        title = "B-деревья для индексов",
+        section = "Data and storage",
+        title = "B-trees for indexes",
         originalTitle = "B-tree",
-        author = "Рудольф Байер, Эдвард Макрайт",
+        author = "Rudolf Bayer, Edward McCreight",
         year = 1970,
-        summary = "Сбалансированное дерево для индексов: поиск занимает несколько чтений диска даже при миллионах записей.",
-        details = "Байер и Макрайт предложили B-дерево в 1970 году (статья вышла в 1972-м). Узел сделали размером с блок диска: " +
-            "одно чтение — один узел, а высота дерева остаётся маленькой.",
+        summary = "A balanced tree for indexes: a search takes a few disk reads even with millions of records.",
+        details = "Bayer and McCreight proposed the B-tree in 1970 (the article appeared in 1972). The node was made the size of a disk block: " +
+            "one read — one node, and the height of the tree stays small.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Данные и хранение",
-        title = "Транзакции и ACID",
+        section = "Data and storage",
+        title = "Transactions and ACID",
         originalTitle = "Transactions, ACID",
-        author = "Джим Грей; Тео Хеердер и Андреас Ройтер",
+        author = "Jim Gray; Theo Haerder and Andreas Reuter",
         year = 1981,
-        summary = "Группа операций выполняется целиком или не выполняется вовсе. Так устроены банковские переводы.",
-        details = "Джим Грей описал понятие транзакции в 1981 году. Аббревиатуру ACID для четырёх свойств (атомарность, согласованность, " +
-            "изолированность, долговечность) предложили Хеердер и Ройтер в 1983-м. Без транзакций перевод мог списаться, но не зачислиться.",
+        summary = "A group of operations is executed in full or not at all. This is how bank transfers work.",
+        details = "Jim Gray described the concept of a transaction in 1981. The acronym ACID for the four properties (atomicity, consistency, " +
+            "isolation, durability) was proposed by Haerder and Reuter in 1983. Without transactions a transfer could be debited but not credited.",
     ),
 
-    // ---------- Культура и открытость ----------
+    // ---------- Culture and openness ----------
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Культура и открытость",
+        section = "Culture and openness",
         title = "Shareware",
         originalTitle = "Shareware",
-        author = "Авторы PC-Talk и PC-Write",
+        author = "Authors of PC-Talk and PC-Write",
         year = 1982,
-        summary = "Программу дают попробовать бесплатно, а платят, если она понравилась. Копии ходили по дискетам и BBS.",
-        details = "Программы PC-Talk (1982) и PC-Write (1983) распространялись по этой схеме: копию можно было передать другу, " +
-            "а автор просил перевод, если программа пригодилась. Это была альтернатива дорогим коробочным пакетам.",
+        summary = "The program is given out to try for free, and you pay if you like it. Copies travelled on floppies and BBSs.",
+        details = "PC-Talk (1982) and PC-Write (1983) were distributed this way: a copy could be passed to a friend, and the author asked " +
+            "for payment if the program proved useful. It was an alternative to expensive boxed packages.",
     ),
 
     entry(
         kind = Kind.PRACTICE,
-        section = "Культура и открытость",
-        title = "Свободное ПО: GNU и GPL",
+        section = "Culture and openness",
+        title = "Free software: GNU and GPL",
         originalTitle = "GNU, GPL, copyleft",
-        author = "Ричард Столлман",
+        author = "Richard Stallman",
         year = 1983,
-        summary = "Программу можно читать, менять и передавать дальше. Производные работы тоже остаются свободными.",
-        details = "Проект GNU объявлен в 1983 году, «Манифест GNU» опубликован в 1985-м, а первая лицензия GNU GPL — в 1989-м. " +
-            "Идея copyleft: лицензия не даёт закрыть исходники производной работы. Для 80-х это было непривычно.",
+        summary = "The program can be read, changed and passed on. Derived works also remain free.",
+        details = "The GNU project was announced in 1983, the “GNU Manifesto” was published in 1985, and the first GNU GPL licence appeared in 1989. " +
+            "The idea of copyleft: the licence does not let the source code of a derived work be closed. For the 80s this was unusual.",
     ),
 )

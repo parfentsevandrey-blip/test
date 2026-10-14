@@ -4,8 +4,8 @@ import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.RecordEntity
 
 /**
- * Фильтрация записей на стороне приложения: вид, избранное, редкие и текстовый поиск.
- * Поиск без учёта регистра. SQLite LIKE не понимает регистр кириллицы, поэтому используем lowercase().
+ * Filters records in the app: kind, favorites, rare records and text search.
+ * Search ignores case. SQLite LIKE folds case only for ASCII, so the text is lowercased in Kotlin instead.
  */
 fun filterRecords(
     records: List<RecordEntity>,

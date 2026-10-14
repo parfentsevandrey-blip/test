@@ -5,17 +5,17 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-/** Одна база данных внутри приложения, например «База 1». */
+/** One database inside the app, for example "Database 1". */
 @Entity(tableName = "databases")
 data class DatabaseEntity(
     @PrimaryKey val id: Long,
     val name: String,
     val description: String,
-    /** Акцентный цвет базы в формате #RRGGBB. */
+    /** Accent colour of the database in #RRGGBB format. */
     val colorHex: String,
 )
 
-/** Запись каталога: язык, система, устройство, инструмент, практика, пояснение, проект и т. д. */
+/** Catalogue record: a language, system, device, tool, practice, guide, project and so on. */
 @Entity(
     tableName = "records",
     foreignKeys = [
@@ -31,27 +31,27 @@ data class DatabaseEntity(
 data class RecordEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val databaseId: Long,
-    /** Вид записи: раздел верхнего уровня каталога. */
+    /** Kind of record: the top-level section of the catalogue. */
     val kind: Kind,
-    /** Подраздел внутри вида, например «Императивные и системные» или «Процессоры». */
+    /** Subsection inside the kind, for example "Imperative and system" or "Processors". */
     val section: String,
     val title: String,
     val originalTitle: String,
     val author: String,
     val year: Int,
     val summary: String,
-    /** Подробности: для проектов и пояснений — как всё устроено и работает. */
+    /** Details: for projects and guides, how everything is built and works. */
     val details: String,
-    /** Пошаговая инструкция: как запустить, как пользоваться. Null, если не нужна. */
+    /** Step-by-step instructions: how to run it and how to use it. Null if not needed. */
     val instructions: String?,
-    /** Фрагмент кода (или несколько файлов с заголовками «### имя») или null. */
+    /** Code fragment (or several files with "### name" headings), or null. */
     val example: String?,
-    /** Редкая или малоизвестная запись; есть отдельный фильтр. */
+    /** Rare or little-known record; has its own filter. */
     val rare: Boolean = false,
     val favorite: Boolean = false,
 )
 
-/** Строка экрана списка баз: сама база и число её записей. */
+/** One row of the database list screen: the database itself and its number of records. */
 data class DatabaseSummary(
     val id: Long,
     val name: String,

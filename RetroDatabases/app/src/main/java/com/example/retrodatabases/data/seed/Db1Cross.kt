@@ -4,26 +4,26 @@ import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.RecordEntity
 
 /**
- * Кросс-код эксперименты: технологии и код смешиваются ради опыта.
- * Общий интерфейс у всех этих смесей один — текстовый поток, файл или правила сборки.
+ * Cross-code experiments: technologies and code are mixed for the sake of the experiment.
+ * All these mixes share one interface: a text stream, a file or build rules.
  */
 val db1Cross: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.CROSS,
-        section = "Фильтры и конвейеры",
-        title = "Фильтр на C в конвейере с awk и sed",
+        section = "Filters and pipelines",
+        title = "A C filter in a pipeline with awk and sed",
         originalTitle = "C filter in an awk and sed pipeline",
-        author = "Практика Unix, 1978",
+        author = "Unix practice, 1978",
         year = 1978,
-        summary = "awk готовит данные, C считает быстро, sed оформляет вывод: три языка в одном конвейере без интерфейсов между ними.",
-        details = "Каждая программа читает стандартный ввод и пишет в стандартный вывод, поэтому граница между языками — это труба. " +
-            "Тяжёлые вычисления пишут на C, подготовку данных — на awk, оформление — на sed. Эксперимент показывает: технологии " +
-            "можно смешивать, если у них общий интерфейс — текст.",
+        summary = "awk prepares the data, C computes fast, sed formats the output: three languages in one pipeline with no interfaces between them.",
+        details = "Each program reads standard input and writes standard output, so the boundary between the languages is a pipe. " +
+            "Heavy computation is written in C, data preparation in awk, and formatting in sed. " +
+            "The experiment shows that technologies can be mixed if they share an interface: text.",
         instructions = """
-            1. Сохраните C-фильтр как square.c и соберите: cc -o square square.c
-            2. Выполните конвейер из примера.
-            3. Результат: квадраты 1, 4, 9, 16 и 25, каждый с префиксом «квадрат: ».
+            1. Save the C filter as square.c and build it: cc -o square square.c
+            2. Run the pipeline from the example.
+            3. The result: the squares 1, 4, 9, 16 and 25, each with the prefix “square: ”.
         """,
         example = """
             ### square.c
@@ -38,26 +38,26 @@ val db1Cross: List<RecordEntity> = listOf(
                 return 0;
             }
 
-            ### конвейер (в оболочке)
-            awk 'BEGIN { for (i = 1; i <= 5; i++) print i }' | ./square | sed 's/^/квадрат: /'
+            ### pipeline (in the shell)
+            awk 'BEGIN { for (i = 1; i <= 5; i++) print i }' | ./square | sed 's/^/square: /'
         """,
     ),
 
     entry(
         kind = Kind.CROSS,
-        section = "Генерация кода",
-        title = "Таблица синусов при сборке: make, awk и C",
+        section = "Code generation",
+        title = "Sine table at build time: make, awk and C",
         originalTitle = "Build-time code generation with make, awk and C",
-        author = "Практика make, 1976",
+        author = "make practice, 1976",
         year = 1976,
-        summary = "make запускает awk, который пишет таблицу на C, и только потом собирает программу, которая её использует.",
-        details = "Таблица вычисляется при сборке, а не во время работы программы — приём 80-х, когда каждый такт был дорог. " +
-            "Makefile описывает зависимости: sine.h зависит от gen.awk, программа — от sine.h. Изменили генератор — пересоберётся " +
-            "всё, что от него зависит. Так разные языки связывают правила сборки.",
+        summary = "make runs awk, which writes a table in C, and only then builds the program that uses it.",
+        details = "The table is computed at build time, not while the program runs: a trick of the 80s, when every clock cycle was expensive. " +
+            "The Makefile describes the dependencies: sine.h depends on gen.awk, and the program depends on sine.h. " +
+            "Change the generator and everything that depends on it is rebuilt. This is how build rules tie different languages together.",
         instructions = """
-            1. Создайте файлы gen.awk, Makefile и main.c по блокам из примера. Строки команд в Makefile начинаются с табуляции.
-            2. Выполните make: появятся sine.h и программа prog.
-            3. Запустите ./prog — выведутся значения синуса для восьми углов от 0 до 7π/4.
+            1. Create the files gen.awk, Makefile and main.c from the blocks in the example. Command lines in the Makefile start with a tab.
+            2. Run make: sine.h and the program prog appear.
+            3. Run ./prog — it prints the sine values for eight angles from 0 to 7π/4.
         """,
         example = """
             ### gen.awk
@@ -93,24 +93,25 @@ val db1Cross: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.CROSS,
-        section = "Журналы и отчёты",
-        title = "Конвейер анализа журнала: perl, sed, sort",
+        section = "Logs and reports",
+        title = "Log analysis pipeline: perl, sed, sort",
         originalTitle = "Log analysis with perl, sed, sort and uniq",
-        author = "Практика Perl и Unix",
+        author = "Perl and Unix practice",
         year = 1987,
-        summary = "Perl выбирает поля из журнала, sort и uniq считают, sed оформляет вывод: каждый инструмент делает то, что умеет лучше всего.",
-        details = "Perl в режиме -n читает журнал построчно и печатает первое поле — адрес. Дальше sort и uniq -c считают повторы, " +
-            "sort -rn выстраивает рейтинг, а sed убирает лишние пробелы. Эксперимент показывает, что не нужно выбирать один язык на всё.",
+        summary = "Perl picks fields from the log, sort and uniq count, sed formats the output: each tool does what it does best.",
+        details = "In -n mode, Perl reads the log line by line and prints the first field, the address. " +
+            "Then sort and uniq -c count the repeats, sort -rn builds the ranking, and sed removes the extra spaces. " +
+            "The experiment shows that you do not have to pick one language for everything.",
         instructions = """
-            1. Сохраните пример журнала как access.log. Первое поле каждой строки — адрес:
+            1. Save the sample log as access.log. The first field of each line is an address:
                10.0.0.5 GET /index.html
                10.0.0.7 GET /about.html
                10.0.0.5 GET /c.html
                10.0.0.9 GET /index.html
                10.0.0.5 GET /awk.html
                10.0.0.7 GET /perl.html
-            2. Выполните команду из примера.
-            3. Результат: 3 10.0.0.5, затем 2 10.0.0.7 и 1 10.0.0.9.
+            2. Run the command from the example.
+            3. The result: 3 10.0.0.5, then 2 10.0.0.7 and 1 10.0.0.9.
         """,
         example = """
             perl -ne 'print "$1\n" if /^(\S+)/' access.log | sort | uniq -c | sort -rn | sed 's/^ *//' | head -3
@@ -119,19 +120,19 @@ val db1Cross: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.CROSS,
-        section = "Языки внутри языков",
-        title = "Мини-Forth на C: стек внутри другого языка",
+        section = "Languages inside languages",
+        title = "Mini Forth in C: a stack inside another language",
         originalTitle = "A mini Forth interpreter in C",
-        author = "Эксперимент в духе Чарльза Мура",
+        author = "An experiment in the spirit of Charles Moore",
         year = 1970,
-        summary = "Стековая модель Forth реализована на C: числа уходят в стек, слова-операторы забирают аргументы оттуда.",
-        details = "Интерпретатор — массив-стек и цикл по словам: число кладётся в стек, слово + или * снимает два значения " +
-            "и возвращает результат. Так язык внутри языка получается из нескольких десятков строк. Эксперимент показывает, " +
-            "как устроен любой стековый язык, включая PostScript.",
+        summary = "The stack model of Forth is implemented in C: numbers go onto the stack, operator words take their arguments from it.",
+        details = "The interpreter is an array-stack and a loop over the words: a number is pushed onto the stack, the word + or * pops two values " +
+            "and pushes the result. This way a language inside a language takes a few dozen lines. " +
+            "The experiment shows how any stack-based language works, PostScript included.",
         instructions = """
-            1. Сохраните код как mini4th.c и соберите: cc -o mini4th mini4th.c
-            2. Выполните: echo '2 3 + 4 * .' | ./mini4th — ответ 20.
-            3. Попробуйте: echo '10 2 - .' | ./mini4th — ответ 8.
+            1. Save the code as mini4th.c and build it: cc -o mini4th mini4th.c
+            2. Run: echo '2 3 + 4 * .' | ./mini4th — the answer is 20.
+            3. Try: echo '10 2 - .' | ./mini4th — the answer is 8.
         """,
         example = """
             #include <stdio.h>
@@ -141,7 +142,7 @@ val db1Cross: List<RecordEntity> = listOf(
             #define STACK_MAX 64
 
             static long stack[STACK_MAX];
-            static int sp = 0;                  /* число элементов в стеке */
+            static int sp = 0;                  /* number of elements on the stack */
 
             static void push(long v)
             {
@@ -178,7 +179,7 @@ val db1Cross: List<RecordEntity> = listOf(
                     } else if (strcmp(word, ".") == 0) {
                         printf("%ld\n", pop());
                     } else {
-                        push(strtol(word, NULL, 10));   /* любое другое слово — число */
+                        push(strtol(word, NULL, 10));   /* any other word is a number */
                     }
                 }
                 return 0;
@@ -189,17 +190,18 @@ val db1Cross: List<RecordEntity> = listOf(
 
     entry(
         kind = Kind.CROSS,
-        section = "Вычисления",
-        title = "π с шестьюдесятью знаками: bc и awk",
+        section = "Computation",
+        title = "π to sixty digits: bc and awk",
         originalTitle = "Pi to 60 digits with bc and awk",
-        author = "bc: Лоринда Черри и Роберт Моррис, Bell Labs, 1975",
+        author = "bc: Lorinda Cherry and Robert Morris, Bell Labs, 1975",
         year = 1975,
-        summary = "Калькулятор произвольной точности bc считает π, а awk выводит результат с подписью.",
-        details = "Функция a(1) в bc даёт arctan(1), умножение на 4 — π. Точность задаёт переменная scale. bc работает с числами " +
-            "любой длины, поэтому π можно посчитать с любым числом знаков. awk принимает результат из конвейера и печатает его с подписью.",
+        summary = "The arbitrary-precision calculator bc computes π, and awk prints the result with a label.",
+        details = "The function a(1) in bc gives arctan(1), and multiplying it by 4 gives π. The precision is set by the variable scale. " +
+            "bc works with numbers of any length, so π can be computed to any number of digits. " +
+            "awk takes the result from the pipeline and prints it with a label.",
         instructions = """
-            1. Выполните команду из примера.
-            2. Результат начинается так: pi = 3.141592653589793238462643383279502884197169399375105820974944
+            1. Run the command from the example.
+            2. The result starts like this: pi = 3.141592653589793238462643383279502884197169399375105820974944
         """,
         example = """
             echo "scale=60; 4*a(1)" | bc -l | awk '{ print "pi =", $1 }'

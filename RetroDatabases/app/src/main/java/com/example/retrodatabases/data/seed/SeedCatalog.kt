@@ -3,14 +3,14 @@ package com.example.retrodatabases.data.seed
 import com.example.retrodatabases.data.DatabaseEntity
 
 /**
- * Каталог баз, которые создаются при первом запуске.
- * Чтобы добавить базу: допишите сюда запись и создайте рядом файл с её записями (databaseId = новый id).
+ * Catalogue of databases that are created on the first launch.
+ * To add a database: append an entry here and create a file next to it with its records (databaseId = new id).
  */
 val seedDatabases: List<DatabaseEntity> = listOf(
     DatabaseEntity(
         id = 1,
-        name = "База 1: каталог кодинга 80-х",
-        description = "Языки, системы, устройства, инструменты и практики 1980-х, включая редкие и малоизвестные.",
+        name = "Database 1: 80s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of the 1980s, including rare and little-known items.",
         colorHex = "#4DD0E1",
     ),
 )
