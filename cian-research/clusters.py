@@ -67,6 +67,19 @@ def terms_from_text(desc):
 
 
 BCLS = {}         # класс здания по большинству объявлений
+RES_BLD = set()   # здания, которые хотя бы одна карточка называет жилым/офисно-жилым комплексом
+
+
+def norm_addr(a):
+    a = (a or '').lower().replace('ё', 'е')
+    for x in ('россия', 'москва город', 'москва', 'город', 'вн/тер-г', 'муниципальный округ'):
+        a = a.replace(x, ' ')
+    a = re.sub(r'\bг\.?\s', ' ', a)
+    a = re.sub(r'\bд(ом)?\.?\s*(?=\d)', ' ', a)
+    a = re.sub(r'\bкорпус\s*|\bкорп\.?\s*|\bк\.?\s+(?=\d)', 'к', a)
+    a = re.sub(r'\bстроение\s*|\bстр\.?\s*', 'с', a)
+    a = re.sub(r'\b(ул|улица|пр-кт|проспект|пер|переулок|ш|шоссе|наб|набережная|проезд|пр|туп|тупик|аллея|б-р|бульвар)\b\.?', '', a)
+    return re.sub(r'[^0-9а-яa-z]', '', a)
 
 
 def bkey(r):
@@ -144,6 +157,10 @@ def offplan(r):
 def enrich(r):
     r['cls'] = cls_of(r)
     r['cluster'] = CLUSTER_OVERRIDE.get(r['id']) or cluster_of(r)
+    if r['cluster'] in ('K1', 'K2', 'K3') and not r.get('bc_url') and norm_addr(r.get('address')) in RES_BLD:
+        r['cluster'] = 'K4'          # офис в жилом/офисно-жилом комплексе — не бизнес-центр
+    if (r.get('category') or '').startswith('business'):
+        r['cluster'] = 'K0'          # «готовый бизнес»: в цене может быть стоимость бизнеса
     r['offplan'] = offplan(r)
     # нерыночные условия: торги, банкротство, обременение, доля — в аналоги не берём
     d = (r.get('description') or '').lower()
@@ -216,6 +233,10 @@ def main():
             votes.setdefault(bkey(r), []).append(c)
     BCLS.clear()
     BCLS.update({k: max(set(v), key=v.count) for k, v in votes.items()})
+    RES_BLD.clear()
+    RES_BLD.update(norm_addr(r.get('address')) for r in rows
+                   if r.get('b_type') in RES_TYPES or re.search(r'офисно-жил\w+ комплекс|коммерческ\w+ част\w+ (жк|жил)|в жилом доме',
+                                                                (r.get('description') or '').lower()))
     rows = [enrich(r) for r in rows]
     json.dump(rows, open('commercial-data/offers.json', 'w'), ensure_ascii=False, indent=0)
     R.clear()

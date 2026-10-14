@@ -1,0 +1,56 @@
+[
+ {
+  "params": {
+   "K_BLD": 0.06,
+   "CAP_BLD": 18,
+   "K_LOC": 4,
+   "MAX_GROSS": 0.6,
+   "GEO": false
+  },
+  "sale": {
+   "n_bld": 38,
+   "mae": 22.4,
+   "bias": 8.4,
+   "bias_low": 43.0,
+   "n_low": 8,
+   "bias_high": -4.1,
+   "n_high": 21
+  },
+  "rent": {
+   "n_bld": 89,
+   "mae": 24.3,
+   "bias": 14.2,
+   "bias_low": 45.9,
+   "n_low": 33,
+   "bias_high": -3.5,
+   "n_high": 37
+  }
+ },
+ {
+  "params": {
+   "K_BLD": 0.42,
+   "CAP_BLD": 70,
+   "K_LOC": 5,
+   "MAX_GROSS": 0.9,
+   "GEO": true
+  },
+  "sale": {
+   "n_bld": 38,
+   "mae": 21.7,
+   "bias": -1.2,
+   "bias_low": 1.6,
+   "n_low": 8,
+   "bias_high": 0.3,
+   "n_high": 21
+  },
+  "rent": {
+   "n_bld": 89,
+   "mae": 18.2,
+   "bias": 4.3,
+   "bias_low": 10.7,
+   "n_low": 33,
+   "bias_high": 6.8,
+   "n_high": 37
+  }
+ }
+]

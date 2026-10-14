@@ -32,6 +32,7 @@ import bc_profiles as bp
 
 VAT = 1.22
 BARGAIN = 0.92
+OPEX, UTIL = 5000, 1500    # эксплуатация и коммуналка класса B, ₽/м²/год
 OWNER = 3000                 # ₽/м²/год: налог на имущество, страховка, управление, резерв
 MCD_PENALTY = 4              # мин: МЦД ходит реже метро
 EXCLUDE = {326550288: 'Магистраль Плаза: 532 787 ₽/м² без НДС — вдвое выше соседних лотов того же БЦ (ошибка цены/дубль)',
@@ -126,17 +127,28 @@ def comp_attrs(r):
                 fit=fit_of(r), tenant=tenant_of(r), sep=sep_entrance(r))
 
 
+# Коэффициенты поправок. Калибровка — регрессия по объявлениям в оценённых по фото зданиях (calib.py, один голос на здание):
+# аренда K1–K3: 608 объявлений / 98 зданий — центр −9,6%/км, метро −0,7%/мин, оценка здания +47%/балл;
+# продажа: 129 / 44 — центр −3,8%/км, метро −1,2%/мин, здание +55%/балл. Выбор значений — по обратной проверке на лотах
+# в самих зданиях объектов (backtest.py).
+K_LOC = 5.0          # % за км до центра
+K_METRO = 1.0        # % за минуту пешком
+K_BLD = 0.42         # логарифм множителя за балл оценки здания: +52% за балл вверх, −34% за балл вниз
+CAP_BLD = 70.0       # предел поправки на здание, %
+RENT_BIAS_WEAK = 0.10  # backtest: для зданий с оценкой ≤ 3,25 модель завышает ставку аренды в среднем на ~10% — снимаем
+POS = {'upper': 0, 'lobby': 3, 'street': 10}   # ценность положения: верхний этаж / 1 этаж с входом через холл / с улицы
+
+
 def adjustments(S, u, r, a, deal):
     adj = {}
-    adj['loc'] = max(-20, min(20, 4 * (a['center_km'] - S['center_km'])))
-    adj['metro'] = max(-15, min(15, 1 * (a['walk'] - S['walk'])))
+    adj['loc'] = max(-20, min(20, K_LOC * (a['center_km'] - S['center_km'])))
+    adj['metro'] = max(-15, min(15, K_METRO * (a['walk'] - S['walk'])))
     if a['rating'] is not None and S['rating'] is not None:
-        adj['bld'] = max(-18, min(18, 6 * (S['rating'] - a['rating'])))
-    if u['floor'] == 1:
-        if r['floor'] != 1:
-            adj['fl'] = 10 if u['entrance'] == 'street' else 3
-    elif r['floor'] == 1:
-        adj['fl'] = -10 if a['sep'] else -3
+        adj['bld'] = max(-CAP_BLD, min(CAP_BLD, (math.exp(K_BLD * (S['rating'] - a['rating'])) - 1) * 100))
+    subj_pos = POS[u['entrance']] if u['floor'] == 1 else 0
+    comp_pos = (POS['street'] if a['sep'] else POS['lobby']) if r['floor'] == 1 else 0
+    if subj_pos != comp_pos:
+        adj['fl'] = subj_pos - comp_pos
     k = 3 if deal == 'sale' else 2
     adj['size'] = max(-9, min(9, -k * math.log2(u['area'] / r['area'])))
     fit = 0
@@ -198,9 +210,14 @@ def pool(sk, cl, deal, u):
 SAME_SHARE = 0.4             # доля лотов в самом здании/комплексе объекта, если они есть
 
 
-def reconcile(comps, max_gross=0.6):
+MAX_GROSS = 0.9       # аналоги с суммой поправок больше — не используются
+GEO = True            # среднее геометрическое (False — арифметическое, как в прежней версии)
+
+
+def reconcile(comps, max_gross=None):
     """Рынок: один вес на БЦ (значение БЦ — средневзвешенное его лотов, вес — максимальный вес лота).
     Лоты в самом здании объекта — отдельная группа с долей SAME_SHARE: это прямое свидетельство цены для покупателя."""
+    max_gross = MAX_GROSS if max_gross is None else max_gross
     used = [c for c in comps if c['gross'] <= max_gross]
     for c in comps:
         c['used'] = False
@@ -218,13 +235,15 @@ def reconcile(comps, max_gross=0.6):
         groups.setdefault(g, []).append(c)
     num = den = 0
     for g, cs in groups.items():
-        v = sum(c['adjusted'] * c['weight'] for c in cs) / sum(c['weight'] for c in cs)
+        # среднее геометрическое: цены и ставки скошены вправо, арифметическое среднее систематически их завышает (backtest.py)
+        f, finv = (math.log, math.exp) if GEO else (lambda x: x, lambda x: x)
+        v = finv(sum(f(c['adjusted']) * c['weight'] for c in cs) / sum(c['weight'] for c in cs))
         w = max(c['weight'] for c in cs)
         for c in cs:
             c['group_w'] = round(w / len(cs), 2)
-        num += v * w
+        num += f(v) * w
         den += w
-    market = num / den if den else None
+    market = finv(num / den) if den else None
     same = [c for c in used if c['same']]
     own = sum(c['adjusted'] for c in same) / len(same) if same else None
     if own and market:
@@ -279,31 +298,65 @@ SCENARIOS = {
 MAIN = 'base'
 
 
+def market_yields():
+    """Доходность, по которой рынок продаёт офисы: ставка аренды (чистая) ÷ цена продажи (без НДС) в зданиях, где есть и то и другое.
+    Обе величины — цены предложения. Медиана по зданиям; отдельно для слабых зданий (оценка ≤ 3,25)."""
+    by = {}
+    for r in rows.values():
+        if r['cluster'] not in ('K1', 'K3') or r.get('offplan') or r.get('nonmarket') or not sane(r) or not r.get('bc_url'):
+            continue
+        by.setdefault(r['bc_url'], {'sale': [], 'rent': []})[r['deal']].append(r['ex_vat'] if r['deal'] == 'sale' else r['net'])
+    ys, weak = [], []
+    for url, d in by.items():
+        if d['sale'] and d['rent']:
+            y = st.median(d['rent']) / st.median(d['sale'])
+            if 0.05 <= y <= 0.16:              # отсекаем явно несопоставимые пары (ошибки цены, разные блоки)
+                ys.append(y)
+                if ((RAT.get(url) or {}).get('rating') or 5) <= 3.25:
+                    weak.append(y)
+    return dict(all=st.median(ys), n=len(ys), q1=sorted(ys)[len(ys) // 4], q3=sorted(ys)[3 * len(ys) // 4],
+                weak=st.median(weak) if len(weak) >= 4 else None, n_weak=len(weak))
+
+
+YIELDS = None
+
+
+def weakness(rating):
+    """Насколько здание «слабое»: 1 при оценке ≤ 3,0, 0 при ≥ 3,5, линейно между (без скачка на пороге)."""
+    return min(1.0, max(0.0, (3.5 - (rating if rating is not None else 5)) / 0.5))
+
+
 def unit_value(S, u, comp_v, rent, wc, own_adj, p):
-    """Цена помещения в сценарии: сравнительный (аналоги пересчитаны под торг сценария) + доходный (ставка со скидкой,
-    больший простой, выше требуемая доходность); потолок по соседнему блоку в здании; поправка блока (потолки, балкон)."""
+    """Цена помещения в сценарии: по продажам (аналоги пересчитаны под торг сценария) и по аренде (ставка со скидкой и доп. простоем,
+    делённая на рыночную доходность сделки плюс надбавку сценария); потолок по соседнему блоку в здании; поправка блока."""
     k = (1 - p['bargain']) / BARGAIN
     comp = comp_v * k
     r = rent * (1 - p['rent_disc'])
-    vac = (0.08 if u['area'] < 400 else 0.10) + p['vac_add']
-    cap_rate = S['cap'] + p['cap_add']
-    noi = r * (1 - vac) - OWNER
-    inc = noi / cap_rate
+    w = weakness(S['rating'])
+    y_ask = YIELDS['all'] + w * ((YIELDS['weak'] or YIELDS['all']) - YIELDS['all'])
+    cap_rate = y_ask / BARGAIN + p['cap_add']           # доходность сделки: цена сделки ниже цены предложения на обычный торг
+    eff = r * (1 - p['vac_add'])
+    inc = eff / cap_rate
     per = wc * comp + (1 - wc) * inc
     cap_own = round(own_adj * k * 1.03) if own_adj else None
     capped = bool(cap_own and per > cap_own)
     if capped:
         per = cap_own
     per = round(per * (1 + u.get('extra', 0) / 100) / 1000) * 1000
-    return dict(comp=round(comp), rent=round(r), vac=round(vac, 2), cap_rate=round(cap_rate, 4), noi=round(noi), income=round(inc),
+    return dict(comp=round(comp), rent=round(r), vac=round(p['vac_add'], 2), cap_rate=round(cap_rate, 4), noi=round(eff), income=round(inc),
                 cap_own=cap_own, capped=capped, per_m2=per, total=round(per * u['area']))
 
 
-def main():
+def compute(rating_shift=0.0, drop=None):
+    """Полный расчёт. rating_shift — сдвиг оценки зданий объектов (для чувствительности);
+    drop — функция (sk, comp) → True, чтобы исключить аналог (проверка устойчивости)."""
+    global YIELDS
+    YIELDS = market_yields()
     out = {'params': dict(vat=VAT, bargain=BARGAIN, owner=OWNER, mcd_penalty=MCD_PENALTY), 'exclude': EXCLUDE, 'subjects': {},
-           'scenarios': SCENARIOS, 'main': MAIN}
+           'scenarios': SCENARIOS, 'main': MAIN, 'yields': YIELDS}
     for sk, s in SUBJECTS.items():
         S = dict(s, **subject_attrs(sk, s))
+        S['rating'] = S['rating'] + rating_shift
         S['clusters'] = cluster_raw(sk)
         S['units_val'] = []
         S['comps'] = {}
@@ -314,11 +367,14 @@ def main():
                     if cl == 'K4' and (u['floor'] != 1 or u['entrance'] != 'street'):
                         continue          # ПСН в жилом доме — альтернатива только 1 этажу с уличным входом
                     comps = sorted((comp_row(S, u, i, deal) for i in pool(sk, cl, deal, u)), key=lambda c: -c['weight'])
+                    if drop:
+                        comps = [c for c in comps if not drop(sk, c)]
                     rec = reconcile(comps)
                     res[f'{deal}_{cl}'] = dict(rec, comps=comps)
             S['comps'][u['key']] = res
             comp_v = res['sale_K1']['value']
             rent = res['rent_K1']['value']
+            rent = rent / (1 + RENT_BIAS_WEAK * weakness(S['rating']))
             wc = 0.5 if res['sale_K1']['n_bc'] >= 5 else 0.4
             own_bld = [c for c in res['sale_K1']['comps'] if c['same'] and S.get('url') and c['bc_url'] == S['url']]
             own_adj = sum(c['adjusted'] for c in own_bld) / len(own_bld) if own_bld else None
@@ -332,6 +388,11 @@ def main():
                                        gross_yield=round(b['rent'] / b['per_m2'] * 100, 1), scen=scen,
                                        ref={k: res[k]['value'] for k in res if k != 'sale_K1' and k != 'rent_K1'}))
         out['subjects'][sk] = S
+    return out
+
+
+def main():
+    out = compute()
     json.dump(out, open('commercial-data/valuation.json', 'w'), ensure_ascii=False, indent=1)
     for sk, S in out['subjects'].items():
         print(f"## {S['title']}: метро {S['station']} {S['walk']} мин (эфф.), до центра {S['center_km']} км, оценка здания {S['rating']}")
