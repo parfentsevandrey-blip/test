@@ -15,6 +15,8 @@ Solo development log for the Android app in this folder. Entries are added at ch
 |---|---|---:|---:|---:|---:|---:|---|
 | CP-01 | 2026-10-14 | 4,269 | 0 | 82 | 115 | 4,466 | first measurement |
 | CP-02 | 2026-10-14 | 4,277 | 169 | 82 | 115 | 4,643 | +177 (tests +169, examples +8) |
+| CP-03 | 2026-10-14 | 4,277 | 169 | 82 | 115 | 4,643 | 0 (no source changes; first build attempt failed) |
+| CP-04 | 2026-10-14 | 4,277 | 169 | 82 | 118 | 4,646 | +3 (.gitignore rule for generated Kotlin session data) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -90,3 +92,31 @@ Date: 2026-10-14. Totals unchanged from CP-02: no source files changed since the
 
 - Build through the mirror, record the compile result, fix any compile errors, run the unit tests.
 - Pack the text bundle after the build is green.
+
+## CP-04: first successful build and unit tests
+
+Status: debug APK assembles and all 14 unit tests pass.
+
+Non-blank lines at CP-04: 4,229 (Kotlin 3,911, tests 143, XML 74, Gradle and project files 101).
+
+### What happened
+
+- Dependency downloads were rate-limited (HTTP 429) by Maven Central and by repo1.maven.org in four build attempts. Gradle caches each artifact it downloads, so every retry moved forward, and the fifth attempt finished the dependency phase.
+- Attempt 4 failed at compilation with two unresolved references in `RecordsScreen.kt`: a wrong import of `item` (a member of `LazyListScope`, so it needs no import) and a missing import of `RoundedCornerShape`. Both are fixed in `7e76f19`.
+- Attempt 5 compiled the main sources and assembled the debug APK. The unit-test task then reported one failure: `AppDatabaseSeedTest.firstOpenSeedsDatabaseOneWithEveryRecord` could not download Robolectric's Android runtime (`android-all-instrumented`, 199.5 MB) because of the same rate limit. The second database test passed in that run.
+- A rerun after the runtime finished caching passed all tests. The test task executed in that run, and the result files were written at that time.
+
+### Results
+
+- `assembleDebug`: `app/build/outputs/apk/debug/app-debug.apk`, 10.1 MB.
+- `testDebugUnitTest`: 14 of 14 passed. `SeedDataTest` 7, `RecordFilterTest` 5, `AppDatabaseSeedTest` 2. The database test runs the real seed SQL and Room's schema validation on Robolectric.
+
+### Notes
+
+- Not verified yet: the app running on a device or emulator (no emulator in this sandbox), the UI behaviour, lint, and the release build.
+- The sandbox builds use a per-user Gradle init script that points Maven Central requests at repo1.maven.org. It lives outside the repository and is not committed, so the project files are unchanged.
+- The Kotlin Gradle plugin writes `.kotlin/` session data during builds. `.gitignore` now excludes it (`802d0f1`).
+
+### Next
+
+- Commit the packed source file `RetroDatabases_source.txt` together with this log.
