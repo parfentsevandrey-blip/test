@@ -9,3 +9,7 @@ market-data/gold/*.jpg
 market-data/gold/bench.log
 market-data/gold/eval_*.json
 market-data/gold/server.log
+commercial-data/photos/
+commercial-data/subj/
+commercial-data/stats.json
+reports/*.html
