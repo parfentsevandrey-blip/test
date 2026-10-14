@@ -1,0 +1,1402 @@
+[
+ {
+  "id": 334501196,
+  "link": "/rent/flat/334501196/?mlSearchSessionGuid=13fadcb9bdc77a4d361fc7fa4cbeb719",
+  "title": "96 м², 2-комн., 2/10 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 25%"
+  },
+  "exposition": "5 дней",
+  "status": "published",
+  "dateStart": "2 окт 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/kvartira-moskva-kutuzovskiy-prospekt-2977141896-2.jpg"
+ },
+ {
+  "id": 331558598,
+  "link": "/rent/flat/331558598/?mlSearchSessionGuid=13fadcb9bdc77a4d361fc7fa4cbeb719",
+  "title": "95 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 25%"
+  },
+  "exposition": "97 дней",
+  "status": "published",
+  "dateStart": "1 июл 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2912738975-2.jpg"
+ },
+ {
+  "id": 327404603,
+  "link": "/rent/flat/327404603/?mlSearchSessionGuid=13fadcb9bdc77a4d361fc7fa4cbeb719",
+  "title": "96 м², 2-комн., 2/10 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 25%"
+  },
+  "exposition": "9 дней",
+  "status": "published",
+  "dateStart": "28 сен 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/kvartira-moskva-kutuzovskiy-prospekt-2819724553-2.jpg"
+ },
+ {
+  "id": 333916390,
+  "title": "100 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 380 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "3 дня",
+  "status": "deactivated",
+  "dateStart": "14 сен 2026",
+  "dateEnd": "16 сен 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2964815431-2.jpg?dh=1108363177"
+ },
+ {
+  "id": 333838857,
+  "title": "100 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 380 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "4 дня",
+  "status": "deactivated",
+  "dateStart": "11 сен 2026",
+  "dateEnd": "14 сен 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2963166732-2.jpg?dh=-1168088852"
+ },
+ {
+  "id": 331145101,
+  "title": "43 м², 1-комн., 9/11 этаж",
+  "prices": {
+   "price": "195 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 195 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "59 дней",
+  "status": "deactivated",
+  "dateStart": "17 июн 2026",
+  "dateEnd": "14 авг 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/kvartira-moskva-kutuzovskiy-prospekt-2903202895-2.jpg?dh=795584302"
+ },
+ {
+  "id": 309383841,
+  "title": "46,5 м², 2-комн., 9/11 этаж",
+  "prices": {
+   "price": "207 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 207 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "92 дня",
+  "status": "deactivated",
+  "dateStart": "24 фев 2026",
+  "dateEnd": "28 мая 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/kvartira-moskva-kutuzovskiy-prospekt-2319318206-2.jpg?dh=781246612"
+ },
+ {
+  "id": 302063307,
+  "title": "50 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "250 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 250 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "48 дней",
+  "status": "deactivated",
+  "dateStart": "14 окт 2025",
+  "dateEnd": "30 ноя 2025",
+  "previewPhoto": "https://images.cdn-cian.ru/images/kvartira-moskva-kutuzovskiy-prospekt-2169903979-2.jpg?dh=-1185802760"
+ },
+ {
+  "id": 314901054,
+  "title": "70 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "2 дня",
+  "status": "deactivated",
+  "dateStart": "13 мар 2025",
+  "dateEnd": "14 мар 2025",
+  "previewPhoto": "https://images.cdn-cian.ru/images/kvartira-moskva-kutuzovskiy-prospekt-2427393562-2.jpg?dh=-23552948"
+ },
+ {
+  "id": 333399420,
+  "title": "100 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 380 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "4 дня",
+  "status": "deactivated",
+  "dateStart": "29 авг 2026",
+  "dateEnd": "1 сен 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2953665106-2.jpg?dh=1728032725"
+ },
+ {
+  "id": 331288731,
+  "title": "111 м², 3-комн., 10/11 этаж",
+  "prices": {
+   "price": "280 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 280 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "25 дней",
+  "status": "deactivated",
+  "dateStart": "22 июн 2026",
+  "dateEnd": "16 июл 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2906599901-2.jpg?dh=385403235"
+ },
+ {
+  "id": 329786231,
+  "title": "95 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "60 дней",
+  "status": "deactivated",
+  "dateStart": "7 мая 2026",
+  "dateEnd": "6 июл 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2874062736-2.jpg?dh=1063220355"
+ },
+ {
+  "id": 331651535,
+  "title": "94,3 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 20%"
+  },
+  "exposition": "4 дня",
+  "status": "deactivated",
+  "dateStart": "2 июл 2026",
+  "dateEnd": "5 июл 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2914733172-2.jpg?dh=-1220489554"
+ },
+ {
+  "id": 323307027,
+  "title": "48 м², 2-комн., 8/11 этаж",
+  "prices": {
+   "price": "250 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залога нет",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "33 дня",
+  "status": "deactivated",
+  "dateStart": "30 мая 2026",
+  "dateEnd": "1 июл 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/kvartira-moskva-kutuzovskiy-prospekt-2680195080-2.jpg?dh=-1178801785"
+ },
+ {
+  "id": 330918047,
+  "title": "46,4 м², 1-комн., 8/11 этаж",
+  "prices": {
+   "price": "250 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 250 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "17 дней",
+  "status": "deactivated",
+  "dateStart": "9 июн 2026",
+  "dateEnd": "25 июн 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2897923444-2.jpg?dh=-72372924"
+ },
+ {
+  "id": 327092244,
+  "title": "93 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 25%"
+  },
+  "exposition": "120 дней",
+  "status": "deactivated",
+  "dateStart": "20 фев 2026",
+  "dateEnd": "19 июн 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2811151861-2.jpg?dh=-470058217"
+ },
+ {
+  "id": 329700175,
+  "title": "95 м², 2-комн., 2/12 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 20%"
+  },
+  "exposition": "31 день",
+  "status": "deactivated",
+  "dateStart": "5 мая 2026",
+  "dateEnd": "4 июн 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2872035509-2.jpg?dh=413404873"
+ },
+ {
+  "id": 325720652,
+  "title": "93 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 10%"
+  },
+  "exposition": "134 дня",
+  "status": "deactivated",
+  "dateStart": "13 янв 2026",
+  "dateEnd": "26 мая 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2768761552-2.jpg?dh=1435806364"
+ },
+ {
+  "id": 330307439,
+  "title": "120 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "380 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 380 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "4 дня",
+  "status": "deactivated",
+  "dateStart": "22 мая 2026",
+  "dateEnd": "25 мая 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2885150664-2.jpg?dh=171784852"
+ },
+ {
+  "id": 327405575,
+  "title": "96 м², 2-комн., 2/10 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 25%"
+  },
+  "exposition": "85 дней",
+  "status": "deactivated",
+  "dateStart": "2 мар 2026",
+  "dateEnd": "25 мая 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/kvartira-moskva-kutuzovskiy-prospekt-2819792679-2.jpg?dh=-47899571"
+ },
+ {
+  "id": 329307750,
+  "title": "111 м², 3-комн., 10/11 этаж",
+  "prices": {
+   "price": "280 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 280 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "31 день",
+  "status": "deactivated",
+  "dateStart": "23 апр 2026",
+  "dateEnd": "23 мая 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2862825187-2.jpg?dh=1174564139"
+ },
+ {
+  "id": 327418858,
+  "title": "95 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "62 дня",
+  "status": "deactivated",
+  "dateStart": "3 мар 2026",
+  "dateEnd": "7 мая 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2820128152-2.jpg?dh=-784365316"
+ },
+ {
+  "id": 328171209,
+  "title": "111 м², 3-комн., 10/11 этаж",
+  "prices": {
+   "price": "280 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 280 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "31 день",
+  "status": "deactivated",
+  "dateStart": "24 мар 2026",
+  "dateEnd": "23 апр 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2837203596-2.jpg?dh=-2051901895"
+ },
+ {
+  "id": 326328573,
+  "title": "82 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "62 дня",
+  "status": "deactivated",
+  "dateStart": "29 янв 2026",
+  "dateEnd": "9 апр 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2797207785-2.jpg?dh=97440861"
+ },
+ {
+  "id": 325965496,
+  "title": "76 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 30%"
+  },
+  "exposition": "65 дней",
+  "status": "deactivated",
+  "dateStart": "19 янв 2026",
+  "dateEnd": "24 мар 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2777004804-2.jpg?dh=-890002617"
+ },
+ {
+  "id": 327186106,
+  "title": "76 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 375 000 ₽",
+   "agentBonusPayment": "Комиссия 30%"
+  },
+  "exposition": "26 дней",
+  "status": "deactivated",
+  "dateStart": "24 фев 2026",
+  "dateEnd": "21 мар 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2814009921-2.jpg?dh=1648679967"
+ },
+ {
+  "id": 327129129,
+  "title": "108 м², 3-комн., 6/12 этаж",
+  "prices": {
+   "price": "320 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 320 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "29 дней",
+  "status": "deactivated",
+  "dateStart": "21 фев 2026",
+  "dateEnd": "21 мар 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2812255551-2.jpg?dh=-1073560720"
+ },
+ {
+  "id": 327207581,
+  "title": "95 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 25%"
+  },
+  "exposition": "22 дня",
+  "status": "deactivated",
+  "dateStart": "25 фев 2026",
+  "dateEnd": "18 мар 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2814532873-2.jpg?dh=1457721718"
+ },
+ {
+  "id": 325519794,
+  "title": "95 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "60 дней",
+  "status": "deactivated",
+  "dateStart": "2 янв 2026",
+  "dateEnd": "2 мар 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2756931378-2.jpg?dh=-784365316"
+ },
+ {
+  "id": 326248512,
+  "title": "111 м², 3-комн., 10/11 этаж",
+  "prices": {
+   "price": "280 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 280 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "31 день",
+  "status": "deactivated",
+  "dateStart": "27 янв 2026",
+  "dateEnd": "26 фев 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2786075907-2.jpg?dh=-1003524175"
+ },
+ {
+  "id": 325948329,
+  "title": "80 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "7 дней",
+  "status": "deactivated",
+  "dateStart": "19 янв 2026",
+  "dateEnd": "25 янв 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2776422656-2.jpg?dh=-2058778141"
+ },
+ {
+  "id": 325583827,
+  "title": "80 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "13 дней",
+  "status": "deactivated",
+  "dateStart": "7 янв 2026",
+  "dateEnd": "19 янв 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2761807532-2.jpg?dh=-1192956112"
+ },
+ {
+  "id": 325558384,
+  "title": "93,5 м², 2-комн., 3/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "15 дней",
+  "status": "deactivated",
+  "dateStart": "5 янв 2026",
+  "dateEnd": "19 янв 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2759981054-2.jpg?dh=-270752069"
+ },
+ {
+  "id": 324772661,
+  "title": "80 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "30 дней",
+  "status": "deactivated",
+  "dateStart": "6 дек 2025",
+  "dateEnd": "5 янв 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2745824937-2.jpg?dh=-690794516"
+ },
+ {
+  "id": 324545522,
+  "title": "95 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "26 дней",
+  "status": "deactivated",
+  "dateStart": "1 дек 2025",
+  "dateEnd": "31 дек 2025",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2720882901-2.jpg?dh=-2064000430"
+ },
+ {
+  "id": 324701988,
+  "title": "108 м², 3-комн., 6/12 этаж",
+  "prices": {
+   "price": "320 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 320 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "4 дня",
+  "status": "deactivated",
+  "dateStart": "4 дек 2025",
+  "dateEnd": "7 дек 2025",
+  "previewPhoto": "https://images.cdn-cian.ru/images/2725402984-2.jpg?dh=-3113541"
+ },
+ {
+  "id": 324629251,
+  "title": "95 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "3 дня",
+  "status": "deactivated",
+  "dateStart": "3 дек 2025",
+  "dateEnd": "5 дек 2025"
+ },
+ {
+  "id": 324542699,
+  "title": "93 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "3 дня",
+  "status": "deactivated",
+  "dateStart": "1 дек 2025",
+  "dateEnd": "3 дек 2025"
+ },
+ {
+  "id": 323340963,
+  "title": "95 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "32 дня",
+  "status": "deactivated",
+  "dateStart": "28 окт 2025",
+  "dateEnd": "28 ноя 2025"
+ },
+ {
+  "id": 323237116,
+  "title": "95 м², 3-комн., 6/11 этаж",
+  "prices": {
+   "price": "270 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 270 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "4 дня",
+  "status": "deactivated",
+  "dateStart": "24 окт 2025",
+  "dateEnd": "27 окт 2025"
+ },
+ {
+  "id": 322208635,
+  "title": "133 м², 3-комн., 7/11 этаж",
+  "prices": {
+   "price": "450 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 450 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "29 дней",
+  "status": "deactivated",
+  "dateStart": "24 сен 2025",
+  "dateEnd": "22 окт 2025"
+ },
+ {
+  "id": 322571387,
+  "title": "80 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "375 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 375 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "2 дня",
+  "status": "deactivated",
+  "dateStart": "5 окт 2025",
+  "dateEnd": "6 окт 2025"
+ },
+ {
+  "id": 321687768,
+  "title": "80 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "375 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 375 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "26 дней",
+  "status": "deactivated",
+  "dateStart": "10 сен 2025",
+  "dateEnd": "5 окт 2025"
+ },
+ {
+  "id": 320087768,
+  "title": "76 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "375 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 375 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "51 день",
+  "status": "deactivated",
+  "dateStart": "23 июл 2025",
+  "dateEnd": "11 сен 2025"
+ },
+ {
+  "id": 320061789,
+  "title": "76 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "375 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 375 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "50 дней",
+  "status": "deactivated",
+  "dateStart": "23 июл 2025",
+  "dateEnd": "10 сен 2025"
+ },
+ {
+  "id": 319439822,
+  "title": "46,7 м², 2-комн., 8/11 этаж",
+  "prices": {
+   "price": "270 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 270 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "68 дней",
+  "status": "deactivated",
+  "dateStart": "4 июл 2025",
+  "dateEnd": "9 сен 2025"
+ },
+ {
+  "id": 320204603,
+  "title": "96 м², 3-комн., 9/11 этаж",
+  "prices": {
+   "price": "290 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 290 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "32 дня",
+  "status": "deactivated",
+  "dateStart": "28 июл 2025",
+  "dateEnd": "3 сен 2025"
+ },
+ {
+  "id": 321191895,
+  "title": "92 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 40%"
+  },
+  "exposition": "3 дня",
+  "status": "deactivated",
+  "dateStart": "26 авг 2025",
+  "dateEnd": "28 авг 2025"
+ },
+ {
+  "id": 321170090,
+  "title": "95 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "3 дня",
+  "status": "deactivated",
+  "dateStart": "26 авг 2025",
+  "dateEnd": "28 авг 2025"
+ },
+ {
+  "id": 320444464,
+  "title": "115 м², 3-комн., 6/11 этаж",
+  "prices": {
+   "price": "300 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 300 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "3 дня",
+  "status": "deactivated",
+  "dateStart": "4 авг 2025",
+  "dateEnd": "6 авг 2025"
+ },
+ {
+  "id": 319820409,
+  "title": "76 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "375 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 375 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "17 дней",
+  "status": "deactivated",
+  "dateStart": "16 июл 2025",
+  "dateEnd": "1 авг 2025"
+ },
+ {
+  "id": 318874654,
+  "title": "84 м², 2-комн., 7/11 этаж",
+  "prices": {
+   "price": "280 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 280 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "29 дней",
+  "status": "deactivated",
+  "dateStart": "19 июн 2025",
+  "dateEnd": "17 июл 2025"
+ },
+ {
+  "id": 319524351,
+  "title": "50 м², 2-комн., 7/11 этаж",
+  "prices": {
+   "price": "200 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 200 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "7 дней",
+  "status": "deactivated",
+  "dateStart": "8 июл 2025",
+  "dateEnd": "14 июл 2025"
+ },
+ {
+  "id": 318270723,
+  "title": "50 м², 2-комн., 7/11 этаж",
+  "prices": {
+   "price": "190 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 190 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "17 дней",
+  "status": "deactivated",
+  "dateStart": "2 июн 2025",
+  "dateEnd": "18 июн 2025"
+ },
+ {
+  "id": 317338773,
+  "title": "50 м², 2-комн., 7/11 этаж",
+  "prices": {
+   "price": "170 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 170 000 ₽",
+   "agentBonusPayment": "Комиссия 60%"
+  },
+  "exposition": "13 дней",
+  "status": "deactivated",
+  "dateStart": "10 мая 2025",
+  "dateEnd": "22 мая 2025"
+ },
+ {
+  "id": 316873210,
+  "title": "84 м², 2-комн., 7/11 этаж",
+  "prices": {
+   "price": "239 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 239 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "8 дней",
+  "status": "deactivated",
+  "dateStart": "28 апр 2025",
+  "dateEnd": "6 мая 2025"
+ },
+ {
+  "id": 315870400,
+  "title": "76 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "375 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 375 000 ₽",
+   "agentBonusPayment": "Комиссия 30%"
+  },
+  "exposition": "31 день",
+  "status": "deactivated",
+  "dateStart": "4 апр 2025",
+  "dateEnd": "4 мая 2025"
+ },
+ {
+  "id": 315668134,
+  "title": "76 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "375 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 375 000 ₽",
+   "agentBonusPayment": "Комиссия 30%"
+  },
+  "exposition": "32 дня",
+  "status": "deactivated",
+  "dateStart": "1 апр 2025",
+  "dateEnd": "2 мая 2025"
+ },
+ {
+  "id": 315957487,
+  "title": "50 м², 2-комн., 7/11 этаж",
+  "prices": {
+   "price": "180 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 180 000 ₽",
+   "agentBonusPayment": "Комиссия 60%"
+  },
+  "exposition": "25 дней",
+  "status": "deactivated",
+  "dateStart": "7 апр 2025",
+  "dateEnd": "1 мая 2025"
+ },
+ {
+  "id": 314975360,
+  "title": "83 м², 2-комн., 6/11 этаж",
+  "prices": {
+   "price": "240 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 240 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "31 день",
+  "status": "deactivated",
+  "dateStart": "15 мар 2025",
+  "dateEnd": "14 апр 2025"
+ },
+ {
+  "id": 315644314,
+  "title": "85 м², 3-комн., 7/11 этаж",
+  "prices": {
+   "price": "375 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 375 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "5 дней",
+  "status": "deactivated",
+  "dateStart": "31 мар 2025",
+  "dateEnd": "4 апр 2025"
+ },
+ {
+  "id": 313714747,
+  "title": "92 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "46 дней",
+  "status": "deactivated",
+  "dateStart": "14 фев 2025",
+  "dateEnd": "1 апр 2025"
+ },
+ {
+  "id": 314250863,
+  "title": "85 м², 3-комн., 7/11 этаж",
+  "prices": {
+   "price": "375 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 375 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "30 дней",
+  "status": "deactivated",
+  "dateStart": "27 фев 2025",
+  "dateEnd": "29 мар 2025"
+ },
+ {
+  "id": 314244209,
+  "title": "95 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 20%"
+  },
+  "exposition": "26 дней",
+  "status": "deactivated",
+  "dateStart": "27 фев 2025",
+  "dateEnd": "25 мар 2025"
+ },
+ {
+  "id": 314069725,
+  "title": "50 м², 2-комн., 7/11 этаж",
+  "prices": {
+   "price": "160 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 160 000 ₽",
+   "agentBonusPayment": "Комиссия 60%"
+  },
+  "exposition": "30 дней",
+  "status": "deactivated",
+  "dateStart": "23 фев 2025",
+  "dateEnd": "25 мар 2025"
+ },
+ {
+  "id": 313919137,
+  "title": "94 м², 2-комн., 3/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "33 дня",
+  "status": "deactivated",
+  "dateStart": "19 фев 2025",
+  "dateEnd": "24 мар 2025"
+ },
+ {
+  "id": 313274298,
+  "title": "95 м², 2-комн., 4/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 20%"
+  },
+  "exposition": "47 дней",
+  "status": "deactivated",
+  "dateStart": "5 фев 2025",
+  "dateEnd": "24 мар 2025"
+ },
+ {
+  "id": 311039313,
+  "title": "92 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "92 дня",
+  "status": "deactivated",
+  "dateStart": "9 дек 2024",
+  "dateEnd": "24 мар 2025"
+ },
+ {
+  "id": 313521040,
+  "title": "84 м², 2-комн., 7/11 этаж",
+  "prices": {
+   "price": "239 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 239 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "30 дней",
+  "status": "deactivated",
+  "dateStart": "11 фев 2025",
+  "dateEnd": "13 мар 2025"
+ },
+ {
+  "id": 312924626,
+  "title": "95 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 20%"
+  },
+  "exposition": "31 день",
+  "status": "deactivated",
+  "dateStart": "28 янв 2025",
+  "dateEnd": "27 фев 2025"
+ },
+ {
+  "id": 312005383,
+  "title": "95 м², 2-комн., 4/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 20%"
+  },
+  "exposition": "31 день",
+  "status": "deactivated",
+  "dateStart": "6 янв 2025",
+  "dateEnd": "5 фев 2025"
+ },
+ {
+  "id": 308117072,
+  "title": "46,5 м², студия, 2/11 этаж",
+  "prices": {
+   "price": "200 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 200 000 ₽",
+   "agentBonusPayment": "Комиссия 20%"
+  },
+  "exposition": "118 дней",
+  "status": "deactivated",
+  "dateStart": "3 окт 2024",
+  "dateEnd": "28 янв 2025"
+ },
+ {
+  "id": 310653924,
+  "title": "47 м², 1-комн., 2/10 этаж",
+  "prices": {
+   "price": "200 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 200 000 ₽",
+   "agentBonusPayment": "Комиссия 20%"
+  },
+  "exposition": "50 дней",
+  "status": "deactivated",
+  "dateStart": "30 ноя 2024",
+  "dateEnd": "27 янв 2025"
+ },
+ {
+  "id": 311964953,
+  "title": "47 м², 1-комн., 2/10 этаж",
+  "prices": {
+   "price": "200 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 200 000 ₽",
+   "agentBonusPayment": "Комиссия 20%"
+  },
+  "exposition": "21 день",
+  "status": "deactivated",
+  "dateStart": "4 янв 2025",
+  "dateEnd": "24 янв 2025"
+ },
+ {
+  "id": 311030073,
+  "title": "95 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 20%"
+  },
+  "exposition": "47 дней",
+  "status": "deactivated",
+  "dateStart": "9 дек 2024",
+  "dateEnd": "24 янв 2025"
+ },
+ {
+  "id": 311921968,
+  "title": "86 м², 3-комн., 4/4 этаж",
+  "prices": {
+   "price": "280 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 280 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "20 дней",
+  "status": "deactivated",
+  "dateStart": "2 янв 2025",
+  "dateEnd": "21 янв 2025"
+ },
+ {
+  "id": 310845847,
+  "title": "92 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "41 день",
+  "status": "deactivated",
+  "dateStart": "5 дек 2024",
+  "dateEnd": "14 янв 2025"
+ },
+ {
+  "id": 310861902,
+  "title": "95 м², 2-комн., 4/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 20%"
+  },
+  "exposition": "31 день",
+  "status": "deactivated",
+  "dateStart": "5 дек 2024",
+  "dateEnd": "4 янв 2025"
+ },
+ {
+  "id": 310658671,
+  "title": "50 м², 2-комн., 7/11 этаж",
+  "prices": {
+   "price": "170 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 170 000 ₽",
+   "agentBonusPayment": "Комиссия 60%"
+  },
+  "exposition": "29 дней",
+  "status": "deactivated",
+  "dateStart": "30 ноя 2024",
+  "dateEnd": "28 дек 2024"
+ },
+ {
+  "id": 306523091,
+  "title": "50 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "260 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 260 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "107 дней",
+  "status": "deactivated",
+  "dateStart": "27 авг 2024",
+  "dateEnd": "14 дек 2024"
+ },
+ {
+  "id": 306286914,
+  "title": "55 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "260 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 260 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "105 дней",
+  "status": "deactivated",
+  "dateStart": "21 авг 2024",
+  "dateEnd": "14 дек 2024"
+ },
+ {
+  "id": 303420913,
+  "title": "50 м², 2-комн., 2/11 этаж",
+  "prices": {
+   "price": "260 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 260 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "154 дня",
+  "status": "deactivated",
+  "dateStart": "15 июн 2024",
+  "dateEnd": "7 дек 2024"
+ },
+ {
+  "id": 310717764,
+  "title": "50 м², 1-комн., 2/10 этаж",
+  "prices": {
+   "price": "200 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 200 000 ₽",
+   "agentBonusPayment": "Комиссия 20%"
+  },
+  "exposition": "2 дня",
+  "status": "deactivated",
+  "dateStart": "2 дек 2024",
+  "dateEnd": "3 дек 2024"
+ },
+ {
+  "id": 310416904,
+  "title": "76 м², 3-комн., 5/11 этаж",
+  "prices": {
+   "price": "375 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 375 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "9 дней",
+  "status": "deactivated",
+  "dateStart": "25 ноя 2024",
+  "dateEnd": "3 дек 2024"
+ },
+ {
+  "id": 309392915,
+  "title": "47 м², студия, 2/10 этаж",
+  "prices": {
+   "price": "200 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 200 000 ₽",
+   "agentBonusPayment": "Комиссия 25%"
+  },
+  "exposition": "30 дней",
+  "status": "deactivated",
+  "dateStart": "1 ноя 2024",
+  "dateEnd": "30 ноя 2024"
+ },
+ {
+  "id": 310517359,
+  "title": "86 м², 3-комн., 4/4 этаж",
+  "prices": {
+   "price": "370 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 370 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "3 дня",
+  "status": "deactivated",
+  "dateStart": "27 ноя 2024",
+  "dateEnd": "29 ноя 2024"
+ },
+ {
+  "id": 310044421,
+  "title": "85 м², 3-комн., 7/11 этаж",
+  "prices": {
+   "price": "375 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 375 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "10 дней",
+  "status": "deactivated",
+  "dateStart": "17 ноя 2024",
+  "dateEnd": "26 ноя 2024"
+ },
+ {
+  "id": 309116165,
+  "title": "95 м², 3-комн., 7/11 этаж",
+  "prices": {
+   "price": "375 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 389 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "23 дня",
+  "status": "deactivated",
+  "dateStart": "26 окт 2024",
+  "dateEnd": "17 ноя 2024"
+ },
+ {
+  "id": 306732424,
+  "title": "50 м², 1-комн., 4/10 этаж",
+  "prices": {
+   "price": "199 999 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 199 999 ₽",
+   "agentBonusPayment": "Комиссия 25%"
+  },
+  "exposition": "41 день",
+  "status": "deactivated",
+  "dateStart": "1 сен 2024",
+  "dateEnd": "28 окт 2024"
+ },
+ {
+  "id": 308826879,
+  "title": "87 м², 3-комн., 7/11 этаж",
+  "prices": {
+   "price": "399 999 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 399 999 ₽",
+   "agentBonusPayment": "Комиссия 20%"
+  },
+  "exposition": "8 дней",
+  "status": "deactivated",
+  "dateStart": "19 окт 2024",
+  "dateEnd": "26 окт 2024"
+ },
+ {
+  "id": 308021739,
+  "title": "120 м², 3-комн., 8/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 70%"
+  },
+  "exposition": "19 дней",
+  "status": "deactivated",
+  "dateStart": "1 окт 2024",
+  "dateEnd": "19 окт 2024"
+ },
+ {
+  "id": 305737729,
+  "title": "46,6 м², 2-комн., 9/11 этаж",
+  "prices": {
+   "price": "200 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 200 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "67 дней",
+  "status": "deactivated",
+  "dateStart": "8 авг 2024",
+  "dateEnd": "15 окт 2024",
+  "previewPhoto": "https://images.cdn-cian.ru/images/kvartira-moskva-kutuzovskiy-prospekt-2239180448-2.jpg?dh=-1145755972"
+ },
+ {
+  "id": 319787355,
+  "title": "72 м², 2-комн., 3/11 этаж",
+  "prices": {
+   "price": "290 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 290 000 ₽",
+   "agentBonusPayment": "Комиссия 40%"
+  },
+  "exposition": "61 день",
+  "status": "deactivated",
+  "dateStart": "2 июн 2026",
+  "dateEnd": "1 авг 2026",
+  "previewPhoto": "https://images.cdn-cian.ru/images/kvartira-moskva-kutuzovskiy-prospekt-2569110656-2.jpg?dh=-171493279"
+ },
+ {
+  "id": 323911532,
+  "title": "47 м², 2-комн., 8/11 этаж",
+  "prices": {
+   "price": "220 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 250 000 ₽",
+   "agentBonusPayment": "Комиссия 25%"
+  },
+  "exposition": "31 день",
+  "status": "deactivated",
+  "dateStart": "13 ноя 2025",
+  "dateEnd": "13 дек 2025",
+  "previewPhoto": "https://images.cdn-cian.ru/images/kvartira-moskva-kutuzovskiy-prospekt-2699321731-2.jpg?dh=-473983155"
+ },
+ {
+  "id": 312134902,
+  "title": "95,5 м², 2-комн., 4/11 этаж",
+  "prices": {
+   "price": "400 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 400 000 ₽",
+   "agentBonusPayment": "Комиссии нет"
+  },
+  "exposition": "51 день",
+  "status": "deactivated",
+  "dateStart": "10 янв 2025",
+  "dateEnd": "12 мар 2025",
+  "previewPhoto": "https://images.cdn-cian.ru/images/kvartira-moskva-kutuzovskiy-prospekt-2372038851-2.jpg?dh=-1387578913"
+ },
+ {
+  "id": 312709141,
+  "title": "100 м², 2-комн., 4/11 этаж",
+  "prices": {
+   "price": "350 000 ₽",
+   "priceDiff": "decrease",
+   "deposit": "Залог 350 000 ₽",
+   "agentBonusPayment": "Комиссия 50%"
+  },
+  "exposition": "31 день",
+  "status": "deactivated",
+  "dateStart": "23 янв 2025",
+  "dateEnd": "22 фев 2025",
+  "previewPhoto": "https://images.cdn-cian.ru/images/kvartira-moskva-kutuzovskiy-prospekt-2381047064-2.jpg?dh=-1838833411"
+ },
+ {
+  "id": 308331705,
+  "title": "47 м², студия, 3/11 этаж",
+  "prices": {
+   "price": "200 000 ₽",
+   "priceDiff": "noChange",
+   "deposit": "Залог 200 000 ₽",
+   "agentBonusPayment": "Комиссия 25%"
+  },
+  "exposition": "8 дней",
+  "status": "deactivated",
+  "dateStart": "9 окт 2024",
+  "dateEnd": "16 окт 2024",
+  "previewPhoto": "https://images.cdn-cian.ru/images/kvartira-moskva-kutuzovskiy-prospekt-2290760863-2.jpg?dh=621417513"
+ }
+]

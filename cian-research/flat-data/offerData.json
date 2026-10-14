@@ -1,0 +1,1238 @@
+{
+ "offer": {
+  "category": "flatSale",
+  "status": "published",
+  "dealType": "sale",
+  "offerType": "flat",
+  "geo": {
+   "address": [
+    {
+     "fullName": "Москва",
+     "id": 1,
+     "locationTypeId": 1,
+     "name": "Москва",
+     "shortName": "Москва",
+     "type": "location",
+     "url": "https://www.cian.ru/kupit-3-komnatnuyu-kvartiru/"
+    },
+    {
+     "fullName": "ЗАО",
+     "id": 11,
+     "locationTypeId": -1,
+     "name": "ЗАО",
+     "shortName": "ЗАО",
+     "type": "okrug",
+     "url": "https://www.cian.ru/kupit-3-komnatnuyu-kvartiru-moskva-zao-0411/"
+    },
+    {
+     "fullName": "район Дорогомилово",
+     "id": 113,
+     "locationTypeId": -1,
+     "name": "Дорогомилово",
+     "shortName": "р-н Дорогомилово",
+     "type": "raion",
+     "url": "https://www.cian.ru/kupit-3-komnatnuyu-kvartiru-moskva-dorogomilovo-04113/"
+    },
+    {
+     "fullName": "Кутузовский проспект",
+     "id": 3248,
+     "locationTypeId": -1,
+     "name": "Кутузовский",
+     "shortName": "Кутузовский просп.",
+     "type": "street",
+     "url": "https://www.cian.ru/kupit-3-komnatnuyu-kvartiru-moskva-kutuzovskiy-prospekt-023248/"
+    },
+    {
+     "fullName": "12",
+     "id": 1692873,
+     "locationTypeId": -1,
+     "name": "12",
+     "shortName": "12",
+     "type": "house",
+     "url": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&house%5B0%5D=1692873&offer_type=flat&room3=1"
+    }
+   ],
+   "coordinates": {
+    "lat": 55.748873,
+    "lng": 37.557277
+   },
+   "highways": [],
+   "jk": {
+    "id": 44404,
+    "name": "Кутузовский XII",
+    "house": {
+     "id": 99852,
+     "name": "Кутузовский, 12"
+    },
+    "gaGeo": {
+     "moId": 0,
+     "oblId": 1,
+     "cityId": 1
+    },
+    "fullUrl": "https://www.cian.ru/zhiloy-kompleks-kutuzovskiy-xii-moskva-44404/",
+    "fullUrlTemplate": "{request_scheme}://zhk-kutuzovskiy-xii-i.{host}/",
+    "webSiteUrl": "http://www.kutuzovskiy12.ru"
+   },
+   "railways": [
+    {
+     "id": 693,
+     "directionIds": [
+      14
+     ],
+     "distance": "1.0",
+     "time": 16,
+     "name": "Москва (Киевский вокзал)",
+     "travelType": "byFoot"
+    },
+    {
+     "id": 693,
+     "directionIds": [
+      14
+     ],
+     "distance": "2.0",
+     "time": 6,
+     "name": "Москва (Киевский вокзал)",
+     "travelType": "byCar"
+    },
+    {
+     "id": 707,
+     "directionIds": [
+      11
+     ],
+     "distance": "2.0",
+     "time": 31,
+     "name": "Тестовская",
+     "travelType": "byFoot"
+    },
+    {
+     "id": 708,
+     "directionIds": [
+      11
+     ],
+     "distance": "3.0",
+     "time": 45,
+     "name": "Фили",
+     "travelType": "byFoot"
+    },
+    {
+     "id": 707,
+     "directionIds": [
+      11
+     ],
+     "distance": "4.0",
+     "time": 6,
+     "name": "Тестовская",
+     "travelType": "byCar"
+    },
+    {
+     "id": 708,
+     "directionIds": [
+      11
+     ],
+     "distance": "6.0",
+     "time": 9,
+     "name": "Фили",
+     "travelType": "byCar"
+    }
+   ],
+   "undergrounds": [
+    {
+     "id": 46,
+     "name": "Киевская",
+     "lineColor": "03238B",
+     "travelType": "walk",
+     "travelTime": 15,
+     "url": "https://www.cian.ru/kupit-3-komnatnuyu-kvartiru-moskva-metro-kievskaya-46/",
+     "underConstruction": false
+    },
+    {
+     "id": 35,
+     "name": "Москва-Сити",
+     "lineColor": "009BD5",
+     "travelType": "walk",
+     "travelTime": 15,
+     "url": "https://www.cian.ru/kupit-3-komnatnuyu-kvartiru-moskva-metro-moskva-siti-35/",
+     "underConstruction": false
+    },
+    {
+     "id": 444,
+     "name": "Деловой центр",
+     "lineColor": "7ACDCE",
+     "travelType": "walk",
+     "travelTime": 20,
+     "url": "https://www.cian.ru/kupit-3-komnatnuyu-kvartiru-moskva-metro-delovoy-centr-444/",
+     "underConstruction": false
+    },
+    {
+     "id": 120,
+     "name": "Студенческая",
+     "lineColor": "009BD5",
+     "travelType": "walk",
+     "travelTime": 20,
+     "url": "https://www.cian.ru/kupit-3-komnatnuyu-kvartiru-moskva-metro-studencheskaya-120/",
+     "underConstruction": false
+    }
+   ]
+  },
+  "id": 333127854,
+  "objectGuid": "328bd639-246f-4f71-81a6-2b203967af32",
+  "cianId": 333127854,
+  "userId": 3621921,
+  "publishedUserId": 3621921,
+  "cianUserId": 223502,
+  "description": "ID: 9895\n\nКутузовский XII\n\nКвартира с 2 спальнями в лучшем готовом доме на Кутузовском проспекте рядом с гостиницей Украина.\n\n \n\nДизайнерский премиальный ремонт \"под тапочки\", полностью укомплектованный мебелью и все бытовой техникой.\n\n \n\n- Мастер-спальня со своим санузлом (отдельностоящая ванна и  душевая) и гардеробной комнатой\n\n- Вторая спальня со своей большой гардеробной\n\n- гардеробная в зоне прихожей\n\n- Второй санузел с душевой\n\n- Постирочная.\n\nДом стоит в локации Бадаевского, а это лучшее окружение и инфраструктура: для вас будет длинная прогулочная зона на набережной и парк Русский лес на 6 га, фитнес центр с бассейном и оздоровительный центр с комплексом русских бань, ресторанный комплекс и фудмаркет с деликатесами, крафтовая пивоварня. А детей ждет обширная инфраструктура, детские и спортивные площадки, школа искусств. Пешеходный мост через реку соединит локацию с Пресней.",
+  "photos": [
+   {
+    "id": 2968538809,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968538809-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968538809-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968538809-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968538809-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968538826,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968538826-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968538826-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968538826-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968538826-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968538842,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968538842-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968538842-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968538842-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968538842-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968538870,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968538870-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968538870-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968538870-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968538870-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968538906,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968538906-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968538906-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968538906-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968538906-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968538927,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968538927-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968538927-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968538927-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968538927-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968538936,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968538936-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968538936-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968538936-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968538936-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968538972,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968538972-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968538972-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968538972-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968538972-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968539002,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968539002-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968539002-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968539002-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968539002-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968539014,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968539014-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968539014-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968539014-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968539014-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968539035,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968539035-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968539035-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968539035-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968539035-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968539059,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968539059-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968539059-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968539059-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968539059-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968539075,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968539075-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968539075-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968539075-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968539075-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968539095,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968539095-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968539095-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968539095-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968539095-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968539125,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968539125-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968539125-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968539125-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968539125-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968539133,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968539133-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968539133-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968539133-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968539133-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968539141,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968539141-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968539141-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968539141-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968539141-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968539153,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968539153-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968539153-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968539153-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968539153-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968539168,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968539168-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968539168-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968539168-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968539168-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968539178,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968539178-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968539178-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968539178-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968539178-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968539208,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968539208-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968539208-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968539208-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968539208-3.jpg",
+    "isLayout": false,
+    "isCianLayout": false
+   },
+   {
+    "id": 2968539216,
+    "isDefault": false,
+    "fullUrl": "https://images.cdn-cian.ru/images/2968539216-1.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/2968539216-2.jpg",
+    "thumbnail2Url": "https://images.cdn-cian.ru/images/2968539216-4.jpg",
+    "miniUrl": "https://images.cdn-cian.ru/images/2968539216-3.jpg",
+    "isLayout": true,
+    "isCianLayout": false
+   }
+  ],
+  "phones": [
+   {
+    "countryCode": "+7",
+    "number": "9230759604"
+   }
+  ],
+  "publishTerms": {
+   "terms": [
+    {
+     "services": [
+      "paid"
+     ],
+     "days": 30,
+     "type": "periodical",
+     "tariffIdentificator": {
+      "tariffId": 11949283,
+      "tariffGridType": "servicePackageGroup"
+     }
+    }
+   ],
+   "autoprolong": true
+  },
+  "flatType": "rooms",
+  "roomType": "separate",
+  "isApartments": false,
+  "totalArea": "95.0",
+  "livingArea": "56.0",
+  "kitchenArea": "20.0",
+  "allRoomsArea": "20-20-16",
+  "combinedWcsCount": 2,
+  "repairType": "design",
+  "flags": {
+   "isArchived": false,
+   "isCommercialOwnershipVerified": false
+  },
+  "specialty": {
+   "types": [],
+   "additionalTypes": []
+  },
+  "isNeedHideExactAddress": false,
+  "areaParts": [],
+  "roomsCount": 3,
+  "floorNumber": 6,
+  "bargainTerms": {
+   "price": 145000000,
+   "priceType": "all",
+   "currency": "rur",
+   "mortgageAllowed": true,
+   "saleType": "free",
+   "includedOptions": [],
+   "prices": {
+    "rur": 145000000,
+    "usd": 1728918,
+    "eur": 1546299
+   },
+   "tags": []
+  },
+  "building": {
+   "materialType": "monolith",
+   "floorsCount": 11,
+   "parking": {
+    "type": "underground"
+   },
+   "ceilingHeight": "3.1",
+   "totalArea": "95.0",
+   "liftTypes": [],
+   "cranageTypes": [],
+   "passengerLiftsCount": 1,
+   "cargoLiftsCount": 1,
+   "houseMaterialType": "monolith"
+  },
+  "editDate": "2026-10-13T12:33:05.303000Z",
+  "humanizedEditDate": "вчера, 12:33",
+  "isInCpd": false,
+  "isInHiddenBase": false,
+  "isObjectHidden": false,
+  "isClosedVisibility": false,
+  "videos": [
+   {
+    "id": "456239035",
+    "url": "https://vkvideo.ru/video_ext.php?oid=-14502161&id=456239035&hd=2&hash=76f1449ef5f87d4d",
+    "type": "vk",
+    "previewUrl": "https://iv.okcdn.ru/getVideoPreview?id=14864082274900&idx=2&type=39&tkn=zPbZEvUJrZXedFCEkl7M267mGwI&fn=vid_u"
+   }
+  ],
+  "demolishedInMoscowProgramm": false,
+  "priceTotal": 145000000,
+  "priceTotalRur": 145000000,
+  "exportLinks": {
+   "pdfUrl": "/export/pdf/sale/flat/333127854/",
+   "docxUrl": "/export/docx/sale/flat/333127854/"
+  },
+  "passengerLiftsCount": 1,
+  "cargoLiftsCount": 1,
+  "added": "вчера, 12:33",
+  "valueAddedServices": {
+   "isStandard": false,
+   "isTop3": false,
+   "isPremium": false
+  },
+  "promotion": {
+   "isPerformanceVasPilot": false,
+   "promotionDescription": "",
+   "isCpcAuction": false
+  },
+  "categoriesIds": [
+   1,
+   100,
+   110,
+   111
+  ],
+  "publicationDate": 1787225249,
+  "creationDate": "2026-08-20T14:27:29.573",
+  "recoveryLink": "/razmestit-obyavlenie/333127854/?isFromXML=1",
+  "isFromBuilder": false,
+  "isFromSeller": false,
+  "isFromLeadFactory": false,
+  "trackingData": {
+   "moId": 0,
+   "oblId": 1,
+   "cityId": 1,
+   "fbRegion": "Москва",
+   "fbCity": "Москва"
+  },
+  "editPhoto": "/realty/add2.aspx?id=333127854&isFromXML=1",
+  "newEdit": "/razmestit-obyavlenie/?realty_id=333127854&isFromXML=1",
+  "certificate": "https://www.cian.ru/newobjects/cian/certification/get?announcementId=333127854",
+  "edit": "/realty/add1.aspx?id=333127854&isFromXML=1",
+  "similarOffersLink": "",
+  "similarOffersCount": 0,
+  "buildersIds": [
+   7063
+  ],
+  "builderId": 7063,
+  "isImported": true,
+  "userConfirmedFix": false,
+  "newbuilding": {
+   "id": 44404,
+   "name": "Кутузовский XII",
+   "house": {
+    "isReliable": false,
+    "isFinished": true,
+    "finishDate": {
+     "quarter": 1,
+     "year": 2020
+    },
+    "id": 99852,
+    "name": "Кутузовский, 12"
+   },
+   "isFromDeveloper": false,
+   "isFromBuilder": false,
+   "isFromSeller": false,
+   "isFromLeadFactory": false,
+   "showJkReliableFlag": false,
+   "isFichering": false,
+   "isFicheringPlus": false,
+   "isPremium": false,
+   "newbuildingFeatures": {
+    "imagesCount": 17,
+    "firstImageUrl": "https://images.cdn-cian.ru/images/2/925/398/kutuzovskiy-xii-moskva-jk-893529277-6.jpg",
+    "videosCount": 0,
+    "deadlineInfo": "Сдан"
+   },
+   "isReliable": false,
+   "isTariffPremium": false
+  },
+  "timezone": 3,
+  "isEnabledCallTracking": true,
+  "callTrackingProvider": "mtt",
+  "isRentByParts": false,
+  "isDuplicate": false,
+  "userTrust": "involved",
+  "userTrustLevel": "involved",
+  "showWarningMessage": false,
+  "moderationInfo": {
+   "showContactWarningMessage": false
+  },
+  "isUnique": false,
+  "isUniqueCheckDate": "2026-10-13",
+  "isCianPartner": false,
+  "externalId": "9895",
+  "isIllegalConstruction": false,
+  "amenities": [],
+  "externalOfferUrl": "",
+  "cianLayouts": null
+ },
+ "seoLinks": [],
+ "breadcrumbs": [
+  {
+   "url": "https://www.cian.ru/",
+   "title": "Недвижимость в Москве"
+  },
+  {
+   "url": "https://www.cian.ru/kupit/",
+   "title": "Продажа"
+  },
+  {
+   "url": "https://www.cian.ru/kupit-3-komnatnuyu-kvartiru/",
+   "title": "Продажа 3-комнатных квартир в Москве"
+  },
+  {
+   "url": "https://www.cian.ru/kupit-3-komnatnuyu-kvartiru-moskva-zao-0411/",
+   "title": "ЗАО"
+  },
+  {
+   "url": "https://www.cian.ru/kupit-3-komnatnuyu-kvartiru-moskva-dorogomilovo-04113/",
+   "title": "Дорогомилово"
+  },
+  {
+   "url": "https://www.cian.ru/kupit-3-komnatnuyu-kvartiru-moskva-metro-kievskaya-46/",
+   "title": "метро Киевская"
+  },
+  {
+   "url": "https://www.cian.ru/kupit-3-komnatnuyu-kvartiru-moskva-kutuzovskiy-prospekt-023248/",
+   "title": "Кутузовский проспект"
+  }
+ ],
+ "pageHelmetData": {
+  "title": "",
+  "meta": [
+   {
+    "name": "yandex",
+    "content": "disallow-extended-realty-display"
+   }
+  ],
+  "canonical": "https://www.cian.ru/sale/flat/333127854/"
+ },
+ "similarOffersMapQs": "engine_version=2&deal_type=sale&offer_type=flat&region=1&minprice=123250000&maxprice=166750000&room3=1&room4=1&skipids%5B0%5D=333127854",
+ "similarNewObjects": [
+  {
+   "id": 325686035,
+   "photoUrl": "https://images.cdn-cian.ru/images/2819867967-4.jpg",
+   "roomTitle": "3-комн. кв",
+   "addressStr": "Москва, просп. Академика Сахарова, 7",
+   "floor": 19,
+   "floorn": 19,
+   "kitchenArea": 15.5,
+   "livingArea": 53.4,
+   "priceRur": 125243250,
+   "publishedUserId": 102163700,
+   "totalArea": 89.3,
+   "undergroundInfo": {
+    "lineColor": "CF0000",
+    "name": "Красные ворота",
+    "type": "mow"
+   }
+  },
+  {
+   "id": 334028830,
+   "photoUrl": "https://images.cdn-cian.ru/images/2967031837-4.jpg",
+   "roomTitle": "3-комн. кв",
+   "addressStr": "Москва, Фили Сити жилой комплекс, к4",
+   "floor": 57,
+   "floorn": 57,
+   "kitchenArea": 0,
+   "livingArea": 0,
+   "priceRur": 102848550,
+   "publishedUserId": 133717946,
+   "totalArea": 102.9,
+   "undergroundInfo": {
+    "lineColor": "009BD5",
+    "name": "Фили",
+    "type": "mow"
+   }
+  },
+  {
+   "id": 324172356,
+   "photoUrl": "https://images.cdn-cian.ru/images/2901771230-4.jpg",
+   "roomTitle": "3-комн. кв",
+   "addressStr": "Москва, Краснопресненская наб., 14с3",
+   "floor": 87,
+   "floorn": 11,
+   "kitchenArea": 0,
+   "livingArea": 71.6,
+   "priceRur": 101616018,
+   "publishedUserId": 133161328,
+   "totalArea": 100.59,
+   "undergroundInfo": {
+    "lineColor": "009BD5",
+    "name": "Деловой центр",
+    "type": "mow"
+   }
+  },
+  {
+   "id": 333488504,
+   "photoUrl": "https://images.cdn-cian.ru/images/2985393513-4.jpg",
+   "roomTitle": "3-комн. кв",
+   "addressStr": "Москва, Мосфильмовская ул., 31А",
+   "floor": 15,
+   "floorn": 3,
+   "kitchenArea": 0,
+   "livingArea": 46.9,
+   "priceRur": 140657143,
+   "publishedUserId": 144149702,
+   "totalArea": 109.4,
+   "undergroundInfo": {
+    "lineColor": "FFDF00",
+    "name": "Ломоносовский проспект",
+    "type": "mow"
+   }
+  },
+  {
+   "id": 329442495,
+   "photoUrl": "https://images.cdn-cian.ru/images/2865835553-4.jpg",
+   "roomTitle": "3-комн. кв",
+   "addressStr": "Москва, Кутузовский проезд, 16А/1",
+   "floor": 46,
+   "floorn": 12,
+   "kitchenArea": 4.6,
+   "livingArea": 70.2,
+   "priceRur": 102857359,
+   "publishedUserId": 91647141,
+   "totalArea": 98.1,
+   "undergroundInfo": {
+    "lineColor": "009BD5",
+    "name": "Фили",
+    "type": "mow"
+   }
+  }
+ ],
+ "linkToMap": "https://www.cian.ru/map/?engine_version=2&deal_type=sale&offer_type=flat&region=1&minprice=123250000&maxprice=166750000&room3=1&room4=1&zoom=16&center=55.748873%2C37.557277",
+ "isFavorite": false,
+ "offerFoldersCount": 0,
+ "subscription": {
+  "isSubscribed": false
+ },
+ "priceChanges": [
+  {
+   "changeTime": "2026-09-30T11:42:47.821597Z",
+   "priceData": {
+    "currency": "rur",
+    "price": 145000000
+   }
+  },
+  {
+   "changeTime": "2026-08-20T11:27:30.575420Z",
+   "priceData": {
+    "currency": "rur",
+    "price": 152000000
+   }
+  }
+ ],
+ "newObject": {
+  "name": "Кутузовский XII",
+  "advantages": [],
+  "specifications": [
+   {
+    "title": "Класс",
+    "value": "Премиум"
+   },
+   {
+    "title": "Количество корпусов",
+    "value": "1"
+   },
+   {
+    "title": "Тип дома",
+    "value": "Монолитный"
+   },
+   {
+    "title": "Парковка",
+    "value": "Гостевая"
+   },
+   {
+    "title": "Отделка",
+    "value": "Без отделки"
+   },
+   {
+    "title": "Тип комплекса",
+    "value": "Жилой комплекс",
+    "valueTooltipText": "Один или несколько многоквартирных домов, объединённых общей территорией и инфраструктурой."
+   }
+  ],
+  "promoInfos": [],
+  "decorations": [
+   {
+    "description": "В народе — «коробка». Обычно в таких квартирах:\n\n• установлены окна и входная дверь\n• нет межкомнатных перегородок\n• несущие стены и пол не выровнены\n• подведено электричество, без разводки\n• разведено отопление, есть радиаторы\n• проложены, но не разведены коммуникации — вода, канализация, вентиляция, телефонные и ТВ-кабели\n\nЕсли хотите сами контролировать все этапы ремонта и продумать планировку — это отличный вариант.\n\nВажно: каждый застройщик сам определяет, что включено в этот тип отделки. Чтобы уточнить подробности, свяжитесь с ним по телефону или в чате.",
+    "images": [
+     {
+      "thumbnailUrl": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/13/ca/43b1dfd64bb2f614dd7f67235bdc.png",
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/3a/36/7ee4b6a6573246c8de5637416e2b.png"
+     }
+    ],
+    "shortDescription": "",
+    "title": "Без отделки",
+    "type": "without",
+    "housesIds": [
+     99852
+    ],
+    "searchUrl": "https://cian.ru/cat.php?deal_type=sale&offer_type=flat&engine_version=2&object_type[0]=2&from_developer=1&newobject[0]=44404&decorations_list[0]=without"
+   }
+  ],
+  "newbuildingFeatures": {
+   "videosCount": 0,
+   "reviewsCount": 17,
+   "hasProgressOfConstructions": true
+  },
+  "id": 44404,
+  "url": "/zhiloy-kompleks-kutuzovskiy-xii-moskva-44404/",
+  "status": "Сдан",
+  "totalCountOfferInNewobject": 0,
+  "fullUrlWithSubdomain": "https://zhk-kutuzovskiy-xii-i.cian.ru/",
+  "gaLabel": "/sale/jk/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=0/spec=none/44404/from_developer=1/nv=0/",
+  "nearbyNewbuildingsMapUrl": "https://www.cian.ru/map/?deal_type=sale&engine_version=2&zoom=12&with_newobject=1&newbuildings_search=true&region=1&center=55.748914,37.557304",
+  "comparisonStatus": "available",
+  "newbuildingClass": "premium"
+ },
+ "company": {
+  "buildersAuctionRank": 9105306964,
+  "buildingStatus": [
+   {
+    "count": 37,
+    "housesCount": 76,
+    "statusId": 5004
+   },
+   {
+    "count": 5,
+    "housesCount": 17,
+    "statusId": 5002
+   }
+  ],
+  "categoryId": 2002,
+  "description": "<p>Capital Group — крупная российская девелоперская компания, созданная в 1993 году. Основное направление деятельности компании — строительство многофункциональных комплексов, жилой и коммерческой недвижимости в Москве.</p>\r\n\r\n<p>В портфеле компании – 9 млн кв. м объектов в реализации. Capital Group возводит жилье бизнес, элит и премиум-класса, реализуя сложные и знаковые проекты в сфере высотного строительства, которые неоднократно отмечались профессиональными российскими и международными премиями.</p>\r\n\r\n<p>Среди знаковых проектов компании — жилые комплексы «Бадаевский», «Небо», «Медный 3.14», «Лица», многофункциональные комплексы «Город Столиц» и «ОКО», клубные дома Mon Cher, «Кутузовский 12», White Khamovniki, комплекс небоскребов с квартирами Capital Towers, многофункциональный комплекс The Book, жилой квартал «Золотой», первый в России отель Mandarin Oriental Hotel в Москве, первые в стране брендированные квартиры на Софийской набережной и клубный дом «Узоры» на берегу Москвы-реки.</p>",
+  "fromDeveloperPropsCount": 455,
+  "hasSpecProject": false,
+  "id": 7063,
+  "isTest": false,
+  "locationIds": [
+   1,
+   1223142,
+   420378,
+   462557,
+   199519
+  ],
+  "logoUrl": "/api/get-company-logo/?id=7063&rnd=154357",
+  "maxBet": 190000,
+  "name": "Capital Group",
+  "newobjectsCount": 40,
+  "offersCount": 455,
+  "phones": [],
+  "promoCount": 0,
+  "specProjectNewobjectsCount": 0,
+  "status": 12,
+  "website": "http://capitalgroup.ru/",
+  "yearFoundation": 1993,
+  "reviewStats": {
+   "reviewCount": 544,
+   "reviewCountText": "544 отзыва",
+   "totalRate": 4.6
+  },
+  "advantages": null,
+  "email": null,
+  "emailForRequest": null,
+  "headerImageUrl": null,
+  "isReliable": false,
+  "newbuildingIds": null,
+  "stats": null,
+  "url": "#",
+  "workYears": null
+ },
+ "offences": [],
+ "bti": {
+  "houseData": {
+   "yearRelease": 2020,
+   "houseMaterialType": "monolith",
+   "entrances": 3,
+   "flatCount": 81,
+   "isEmergency": false,
+   "demolishedInMoscowProgramm": false,
+   "houseHeatSupplyType": "itp",
+   "houseOverhaulFundType": "unknown",
+   "houseGasSupplyType": "unknown",
+   "houseOverlapType": "concrete",
+   "lifts": 6,
+   "seriesName": "Индивидуальный проект"
+  }
+ },
+ "stats": {
+  "totalViewsFormattedString": "281 просмотр, 2 за сегодня"
+ },
+ "notes": {},
+ "agent": {
+  "id": 223502,
+  "cianUserId": 223502,
+  "realtyUserId": 3621921,
+  "accountType": "agency",
+  "companyName": "PANDA ESTATE",
+  "creationDate": "2012-04-25T23:43:10Z",
+  "name": "PANDA ESTATE",
+  "isPro": true,
+  "description": "Компания \"Панда групп недвижимость\" (краткое наименование: \"Панда эстейт\")  У нас  работают сотрудники с опытом работы более 20 лет.Наша компания состоит в ассоциации агентов элитной недвижимости AREA.",
+  "phones": [
+   {
+    "confirmed": true
+   },
+   {
+    "confirmed": true
+   },
+   {
+    "confirmed": false
+   }
+  ],
+  "skills": [
+   {
+    "id": 711,
+    "name": "жилая",
+    "parentName": "Продажа недвижимости"
+   },
+   {
+    "id": 712,
+    "name": "жилая",
+    "parentName": "Аренда недвижимости"
+   },
+   {
+    "id": 713,
+    "name": "загородная",
+    "parentName": "Продажа недвижимости"
+   },
+   {
+    "id": 714,
+    "name": "загородная",
+    "parentName": "Аренда недвижимости"
+   },
+   {
+    "id": 717,
+    "name": "коммерческая",
+    "parentName": "Продажа недвижимости"
+   },
+   {
+    "id": 718,
+    "name": "коммерческая",
+    "parentName": "Аренда недвижимости"
+   },
+   {
+    "id": 731,
+    "name": "ипотека",
+    "parentName": "Ипотечное кредитование"
+   },
+   {
+    "id": 744,
+    "name": "строительство",
+    "parentName": "Другие услуги"
+   },
+   {
+    "id": 745,
+    "name": "консультации",
+    "parentName": "Другие услуги"
+   },
+   {
+    "id": 746,
+    "name": "дизайн интерьера",
+    "parentName": "Другие услуги"
+   },
+   {
+    "id": 747,
+    "name": "ремонт",
+    "parentName": "Другие услуги"
+   }
+  ],
+  "absoluteAvatarUrl": "https://www.cian.ru/api/get-avatar/?i=44263&t=2&p=2&timestamp=1779880426",
+  "absoluteMiniAvatarUrl": "https://www.cian.ru/api/get-avatar/?i=44263&t=2&p=1&timestamp=1779880426",
+  "isDeveloper": false,
+  "experience": "с 2017 года",
+  "isRecidivist": false,
+  "isUserOffersHasErrors": false,
+  "offersCount": 59,
+  "offersLink": "https://www.cian.ru/company/223502/",
+  "availableServices": {
+   "isUploadsAvailable": true,
+   "isCallTrackingAvailable": false,
+   "isPhoneChangingAvailable": false,
+   "isServicePackagesAvailable": true,
+   "canUseHiddenBase": true
+  },
+  "userType": "realtor_based",
+  "removeCompetitor": false,
+  "status": "published",
+  "isSubAgent": false,
+  "isMessagingEnabled": false,
+  "isPassportVerified": false,
+  "isSelfEmployed": false,
+  "isPrivateBroker": false,
+  "isCianPartner": false,
+  "canShowOnline": false,
+  "moderationInfo": {
+   "qualityLevelInfo": {
+    "levelSystemName": "max",
+    "levelName": "Суперагент",
+    "levelOrder": 4,
+    "hasVerifiedDocuments": true,
+    "highResponsibility": true,
+    "isSuperAgent": true,
+    "isSuperHost": false,
+    "isBlocked": false,
+    "showSuperHost": false,
+    "showSuperAgent": true,
+    "showHighResponsibility": true
+   },
+   "isUserIdentified": true,
+   "isUserIdentifiedByDocuments": true,
+   "showUserIdentifiedByDocuments": false
+  },
+  "isHidden": false,
+  "metrics": [
+   {
+    "title": "На Циан",
+    "value": "14 лет"
+   },
+   {
+    "title": "Объектов в работе",
+    "value": "59"
+   }
+  ],
+  "agentLists": []
+ },
+ "specialProject": {
+  "id": "pik",
+  "link": "https://www.cian.ru/map/?builder=9&deal_type=2&with_newobject=1&object_type=2&currency=2&center=55.77228091175091,37.581318235024824&zoom=11&engine_version=2&newbuildings_search=true&is_pik_promo=1&region=1"
+ },
+ "user": {
+  "realtyUserId": null,
+  "isAuthenticated": false,
+  "permissions": {
+   "canModerateUsers": false,
+   "canModerateAnnouncements": false,
+   "canModerateAnnouncementsExpert": false,
+   "canViewUsers": false,
+   "canViewAnnouncements": false
+  },
+  "ga": {
+   "type": "",
+   "balance": 0,
+   "packages": [],
+   "emailMd5": ""
+  }
+ },
+ "agentAvailability": {
+  "userId": 3621921,
+  "available": true
+ },
+ "isHiddenByUser": false,
+ "degradationInfo": {},
+ "priceInfo": {
+  "pricePerSquareValue": 1526315
+ },
+ "offersComparisonStatus": {
+  "status": "available",
+  "description": "Добавить к сравнению"
+ },
+ "rosreestrInfoV2": {
+  "showCheckedLabel": false
+ },
+ "factoids": [
+  {
+   "title": "Общая площадь",
+   "icon": "https://images.cdn-cian.ru/imgmobile/icons/offer_card/size.svg",
+   "value": "95 м²"
+  },
+  {
+   "title": "Жилая площадь",
+   "icon": "https://images.cdn-cian.ru/imgmobile/icons/offer_card/plan.svg",
+   "value": "56 м²"
+  },
+  {
+   "title": "Площадь кухни",
+   "icon": "https://images.cdn-cian.ru/imgmobile/icons/offer_card/kitchen.svg",
+   "value": "20 м²"
+  },
+  {
+   "title": "Этаж",
+   "icon": "https://images.cdn-cian.ru/imgmobile/icons/offer_card/floor.svg",
+   "value": "6 из 11"
+  }
+ ],
+ "sidebar": [
+  {
+   "title": "Цена за метр",
+   "value": "1 526 316 ₽/м²"
+  },
+  {
+   "title": "Условия сделки",
+   "value": "свободная продажа"
+  },
+  {
+   "title": "Ипотека",
+   "value": "возможна"
+  }
+ ],
+ "features": [
+  {
+   "title": "О квартире",
+   "id": "aboutFlat",
+   "features": [
+    {
+     "value": "Вторичка",
+     "label": "Тип жилья"
+    },
+    {
+     "value": "95 м²",
+     "label": "Общая площадь"
+    },
+    {
+     "value": "56 м²",
+     "label": "Жилая площадь"
+    },
+    {
+     "value": "20 м²",
+     "label": "Площадь кухни"
+    },
+    {
+     "value": "3,1 м",
+     "label": "Высота потолков"
+    },
+    {
+     "value": "2 совмещенных",
+     "label": "Санузел"
+    },
+    {
+     "value": "Дизайнерский",
+     "label": "Ремонт"
+    }
+   ]
+  },
+  {
+   "title": "О доме",
+   "id": "aboutBuilding",
+   "features": [
+    {
+     "value": "2020",
+     "label": "Год постройки"
+    },
+    {
+     "value": "Индивидуальный проект",
+     "label": "Строительная серия"
+    },
+    {
+     "value": "1 пассажирский, 1 грузовой",
+     "label": "Количество лифтов"
+    },
+    {
+     "value": "Монолитный",
+     "label": "Тип дома"
+    },
+    {
+     "value": "Железобетонные",
+     "label": "Тип перекрытий"
+    },
+    {
+     "value": "3",
+     "label": "Подъезды"
+    },
+    {
+     "value": "Подземная",
+     "label": "Парковка"
+    },
+    {
+     "value": "Индивидуальный тепловой пункт",
+     "label": "Отопление"
+    },
+    {
+     "value": "Нет",
+     "label": "Аварийность"
+    }
+   ]
+  }
+ ],
+ "seoData": {
+  "socialNetworksTitle": {
+   "full": "Продаётся, 3-комнатная квартира, за 145 000 000 ₽, 95.0 м², этаж 6/11",
+   "short": "Продаётся, 3-комн. кв., за 145 000 000 ₽"
+  },
+  "mainTitle": "Купить трехкомнатную квартиру 95.0м² Кутузовский просп., 12, Москва, ЗАО, р-н Дорогомилово м. Киевская - база ЦИАН, объявление 333127854",
+  "description": "➜ Купите трехкомнатную квартиру площадью 95.0м² Кутузовский просп., 12, Москва, ЗАО, р-н Дорогомилово м. Киевская. Цена продажи - 145 000 000 руб. Недвижимость на ЦИАН - объявление 333127854",
+  "micromarking": {
+   "@context": "https://schema.org/",
+   "@type": "Product",
+   "name": "",
+   "image": [
+    "https://images.cdn-cian.ru/images/2968538809-1.jpg",
+    "https://images.cdn-cian.ru/images/2968538826-1.jpg",
+    "https://images.cdn-cian.ru/images/2968538842-1.jpg",
+    "https://images.cdn-cian.ru/images/2968538870-1.jpg",
+    "https://images.cdn-cian.ru/images/2968538906-1.jpg",
+    "https://images.cdn-cian.ru/images/2968538927-1.jpg",
+    "https://images.cdn-cian.ru/images/2968538936-1.jpg",
+    "https://images.cdn-cian.ru/images/2968538972-1.jpg",
+    "https://images.cdn-cian.ru/images/2968539002-1.jpg",
+    "https://images.cdn-cian.ru/images/2968539014-1.jpg",
+    "https://images.cdn-cian.ru/images/2968539035-1.jpg",
+    "https://images.cdn-cian.ru/images/2968539059-1.jpg",
+    "https://images.cdn-cian.ru/images/2968539075-1.jpg",
+    "https://images.cdn-cian.ru/images/2968539095-1.jpg",
+    "https://images.cdn-cian.ru/images/2968539125-1.jpg",
+    "https://images.cdn-cian.ru/images/2968539133-1.jpg",
+    "https://images.cdn-cian.ru/images/2968539141-1.jpg",
+    "https://images.cdn-cian.ru/images/2968539153-1.jpg",
+    "https://images.cdn-cian.ru/images/2968539168-1.jpg",
+    "https://images.cdn-cian.ru/images/2968539178-1.jpg",
+    "https://images.cdn-cian.ru/images/2968539208-1.jpg",
+    "https://images.cdn-cian.ru/images/2968539216-1.jpg"
+   ],
+   "description": "ID 9895Кутузовский XIIКвартира с 2 спальнями в лучшем готовом доме на Кутузовском проспекте рядом с гостиницей Украина. Дизайнерский премиальный ремонт под тапочки, полностью укомплектованный мебелью и все бытовой техникой.  Мастерспальня со своим санузлом отдельностоящая ванна и  душевая и гардеробной комнатой Вторая спальня со своей большой гардеробной гардеробная в зоне прихожей Второй санузел с душевой Постирочная.Дом стоит в локации Бадаевского, а это лучшее окружение и инфраструктура для вас будет длинная прогулочная зона на набережной и парк Русский лес на 6 га, фитнес центр с бассейном и оздоровительный центр с комплексом русских бань, ресторанный комплекс и фудмаркет с деликатесами, крафтовая пивоварня. А детей ждет обширная инфраструктура, детские и спортивные площадки, школа искусств. Пешеходный мост через реку соединит локацию с Пресней.",
+   "sku": 333127854,
+   "brand": {
+    "@type": "Brand",
+    "name": "Циан"
+   },
+   "review": {
+    "@type": "Review",
+    "reviewRating": {
+     "@type": "Rating",
+     "ratingValue": 4.9,
+     "bestRating": 5
+    },
+    "author": {
+     "@type": "Person",
+     "name": "PANDA ESTATE"
+    }
+   },
+   "offers": {
+    "@type": "Offer",
+    "url": "https://www.cian.ru/sale/flat/333127854/",
+    "priceCurrency": "RUB",
+    "availability": "https://schema.org/InStock",
+    "price": 145000000
+   }
+  }
+ },
+ "trackingUrl": "/sale/flat/JK/obl_id=1/city_id=1/object_type=1/ga_obj_type=3/spec=company/333127854/from_developer=0/repres=0/owner=0/pod_snos=0/nv=0/",
+ "amenities": [],
+ "newbuildingRating": 4.9,
+ "offerPrice": "145 000 000 ₽",
+ "newbuildingFlatSaleQueryString": "/cat.php?deal_type=sale&engine_version=2&object_type%5B0%5D=2&offer_type=flat&region=1&from_developer=1&maxprice=150000000&decorations_list%5B0%5D=fine&decorations_list%5B1%5D=fineWithFurniture&decorations_list%5B2%5D=preFine"
+}

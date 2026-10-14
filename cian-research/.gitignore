@@ -17,3 +17,7 @@ commercial-data/cards_full.json
 commercial-data/bcphotos/
 commercial-data/offers_v1.json
 commercial-data/bc_profiles.json
+flat-data/photos/
+flat-data/sheets/
+flat-data/our/
+flat-data/*.log
