@@ -1,10 +1,12 @@
 package com.example.retrodatabases.data.seed
 
 import com.example.retrodatabases.data.DatabaseEntity
+import com.example.retrodatabases.data.RecordEntity
 
 /**
  * Catalogue of databases that are created on the first launch.
- * To add a database: append an entry here and create a file next to it with its records (databaseId = new id).
+ * To add a database: append an entry here, create its record files (databaseId = the new id)
+ * and add their records to [seedRecords]. Installs made before that also need a migration in AppDatabase.
  */
 val seedDatabases: List<DatabaseEntity> = listOf(
     DatabaseEntity(
@@ -13,4 +15,13 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "Languages, systems, devices, tools and practices of the 1980s, including rare and little-known items.",
         colorHex = "#4DD0E1",
     ),
+    DatabaseEntity(
+        id = 2,
+        name = "Database 2: 90s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of the 1990s, including rare and little-known items.",
+        colorHex = "#BA68C8",
+    ),
 )
+
+/** Records of every seeded database. They are inserted together with the databases. */
+val seedRecords: List<RecordEntity> = db1Records + db2Records

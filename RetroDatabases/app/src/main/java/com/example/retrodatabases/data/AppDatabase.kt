@@ -5,13 +5,14 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.seedDatabases
+import com.example.retrodatabases.data.seed.seedRecords
 
 @Database(
     entities = [DatabaseEntity::class, RecordEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -33,50 +34,64 @@ abstract class AppDatabase : RoomDatabase() {
         private fun buildDatabase(appContext: Context): AppDatabase =
             Room.databaseBuilder(appContext, AppDatabase::class.java, FILE_NAME)
                 .addCallback(SeedCallback())
+                .addMigrations(MIGRATION_1_2)
                 .build()
+    }
+}
+
+/**
+ * Version 2 added database 2. Copies created at version 1 get it from this migration,
+ * so their favourites and the records of database 1 stay as they are.
+ */
+internal val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(2L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
     }
 }
 
 /**
  * Fills the databases when the database file is first created.
  * Inserts run as SQL queries directly in onCreate, so there is no need to wait until the Room instance is ready.
- * Databases from the seed lists are added only when the file is created: in copies that are already installed,
- * a new database appears after the database version is raised and a migration is written.
  */
 private class SeedCallback : RoomDatabase.Callback() {
 
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
 
-        seedDatabases.forEach { database ->
-            db.execSQL(
-                "INSERT INTO databases (id, name, description, colorHex) VALUES (?, ?, ?, ?)",
-                arrayOf<Any?>(database.id, database.name, database.description, database.colorHex),
-            )
-        }
-
-        db1Records.forEach { record ->
-            db.execSQL(
-                """
-                INSERT INTO records (databaseId, kind, section, title, originalTitle, author, year,
-                                     summary, details, instructions, example, rare, favorite)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-                """.trimIndent(),
-                arrayOf<Any?>(
-                    record.databaseId,
-                    record.kind.name,
-                    record.section,
-                    record.title,
-                    record.originalTitle,
-                    record.author,
-                    record.year.toLong(),
-                    record.summary,
-                    record.details,
-                    record.instructions,
-                    record.example,
-                    if (record.rare) 1L else 0L,
-                ),
-            )
-        }
+        seedDatabases.forEach { insertDatabase(db, it) }
+        seedRecords.forEach { insertRecord(db, it) }
     }
+}
+
+private fun insertDatabase(db: SupportSQLiteDatabase, database: DatabaseEntity) {
+    db.execSQL(
+        "INSERT INTO databases (id, name, description, colorHex) VALUES (?, ?, ?, ?)",
+        arrayOf<Any?>(database.id, database.name, database.description, database.colorHex),
+    )
+}
+
+private fun insertRecord(db: SupportSQLiteDatabase, record: RecordEntity) {
+    db.execSQL(
+        """
+        INSERT INTO records (databaseId, kind, section, title, originalTitle, author, year,
+                             summary, details, instructions, example, rare, favorite)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+        """.trimIndent(),
+        arrayOf<Any?>(
+            record.databaseId,
+            record.kind.name,
+            record.section,
+            record.title,
+            record.originalTitle,
+            record.author,
+            record.year.toLong(),
+            record.summary,
+            record.details,
+            record.instructions,
+            record.example,
+            if (record.rare) 1L else 0L,
+        ),
+    )
 }

@@ -1,11 +1,11 @@
 ===============================================================================
- Ретро-базы: исходный код Android-приложения одним текстовым файлом
- Файлов в архиве: 55
- Не включены: gradle/wrapper/gradle-wrapper.jar (бинарный, создаётся командой
-   gradle wrapper --gradle-version 8.10.2) и local.properties (путь к вашему SDK).
+ Retro Databases: source code of the Android app in one text file
+ Files in the archive: 66
+ Not included: gradle/wrapper/gradle-wrapper.jar (binary, created by the command
+   gradle wrapper --gradle-version 8.10.2) and local.properties (path to your SDK).
 ===============================================================================
 
-СОДЕРЖАНИЕ:
+CONTENTS:
   .gitignore
   DEVLOG.md
   DEVLOG.txt
@@ -36,6 +36,17 @@
   app/src/main/java/com/example/retrodatabases/data/seed/Db1Projects.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db1Systems.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db1Tools.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db2Catalog.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db2Cross.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db2Devices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db2Examples.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db2Flex.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db2Guides.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db2Languages.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db2Practices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db2Projects.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db2Systems.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db2Tools.kt
   app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
   app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
   app/src/main/java/com/example/retrodatabases/ui/AppNavHost.kt
@@ -63,7 +74,7 @@
   settings.gradle.kts
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/.gitignore
+# FILE: RetroDatabases/.gitignore
 ################################################################################
 # Gradle build output and caches
 build/
@@ -85,7 +96,7 @@ local.properties
 .kotlin/
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/DEVLOG.md
+# FILE: RetroDatabases/DEVLOG.md
 ################################################################################
 # Development log: Retro Databases
 
@@ -108,6 +119,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-04 | 2026-10-14 | 4,277 | 169 | 82 | 118 | 4,646 | +3 (.gitignore rule for generated Kotlin session data) |
 | CP-05 | 2026-10-14 | 6,236 | 169 | 82 | 118 | 6,605 | +1,959 (155 new records in five seed files) |
 | CP-06 | 2026-10-14 | 6,257 | 169 | 82 | 118 | 6,626 | +21 (translation; long strings re-wrapped) |
+| CP-07 | 2026-10-14 | 9,174 | 199 | 82 | 118 | 9,573 | +2,947 (database 2: 142 records in ten files, migration 1→2, tests +30) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -312,8 +324,46 @@ Date: 2026-10-14. Totals: Kotlin main 6,257 (CP-05: 6,236), Kotlin test 169, XML
 - Some names are my own transliteration (Vector-06C, Radio-86RK, Iskra-1030, and the Soviet chip names). Check them against a source if they matter.
 - Not verified yet: running on a device or emulator, the UI itself, lint, and the release build.
 
+## CP-07: database 2, the 1990s
+
+Status: database 2 is in the app: 142 records, a migration for installs made before it, and tests for both databases. The build passes, 15 of 15 unit tests pass, and 27 of the 142 new examples run and pass.
+
+Mood: pleased with most of the content, then annoyed with myself. The example checker hung on a web server it had started and never stopped, and the next run failed for a reason that took me a while to find.
+
+Date: 2026-10-14. Totals: Kotlin main 9,174 (CP-06: 6,257), Kotlin test 199 (169), XML 82, Gradle and project files 118, total 9,573. The +2,947 is mostly the ten new Kotlin files for database 2, which come to 2,884 lines together, plus the seed helper, the catalogue, the database class and the tests (+30).
+
+### What changed
+
+- A second database, "Database 2: 90s coding catalogue", with the same ten kinds. 142 records: languages 20, systems 20, devices 32, tools 24, practices 20, guides 5, examples 7, projects 4, flex 5, cross-code 5. 68 of them are rare.
+- Ten files `Db2*.kt` hold the records. `Db2Catalog.kt` joins them into `db2Records`. `SeedCatalog.kt` lists both databases and combines all the records into `seedRecords`.
+- `entry()` takes a `databaseId`, which defaults to 1, so database 1 is unchanged. I also added a `<DOLLAR>` marker next to `<TAB>`. Perl, PHP and shell examples are full of `$`, and inside a Kotlin raw string `$name` starts a template, so the marker keeps those examples readable. Instructions get both markers too. No instruction in database 1 contains either one.
+- Database version 2. `MIGRATION_1_2` adds database 2 to an install made at version 1 and keeps its favourites and the records of database 1. The insert code is shared by `onCreate` and the migration, so the two cannot drift apart.
+- Tests. `SeedDataTest` checks both databases: ids, titles unique inside each database, years in 1950–1990 for database 1 and 1990–1999 for database 2, every kind in both, and rare records in both. `AppDatabaseSeedTest` checks the record counts of both databases, and it runs the migration on a file where database 2 has been removed.
+
+### Facts checked by web search
+
+- Five entries were checked against sources: FreeBSD 2.0 (announced 22 November 1994); Windows CE 1.0 (released in November 1996, although one page says 1997 and looks wrong); Impulse Tracker (Jeffrey "Pulse" Lim, 1995, freeware with paid extras); NetBeans (started as the student project Xelfi in Prague in 1996, company founded in 1997, Sun bought it in 1999); Net Yaroze (Japan in June 1996, other countries in 1997, so the record uses 1996).
+- Two candidates were dropped. Minix 2: the sources gave 1996 and 1997 for its first release. Scream Tracker 3: the search did not confirm its author.
+- The other 137 records were written from memory, and I have not checked their dates one by one. The ones I would check first: BeOS R3, AmigaOS 3.5, FastTracker 2, Blender, CVS and the first release of Lua.
+
+### How I checked it
+
+- Unit tests: 15 of 15 pass (AppDatabaseSeedTest 3, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL.
+- Examples: a script takes every database 2 example and instruction from the Kotlin source, applies the same markers, and runs whatever this sandbox can run. 27 pass: Java with javac and java, a JNI library built against the JDK headers, Perl (a CGI script with environment variables, a visit counter, a quine, and a small HTTP server checked with curl), PHP, Python, Ruby, JavaScript with Node, C++98 with g++, C with cc, awk, a SQL join in SQLite, a bytecode dump with javap, and a WAD lister that reads a file the script builds itself. The other 115 are reading-only: Turbo Pascal, Visual Basic, DOS, the Windows APIs, Erlang, Lua, Haskell, OCaml and the rest.
+- Cyrillic: none in the code, resources or tests. The bundle's header lines were Russian too, because `pack_sources.sh` wrote them. I translated the header, so the bundle has no Cyrillic either.
+
+### Problems
+
+- The example checker hung. I had written one check that read the server's stderr before deciding whether the answer was right. The server never exits, so the read waited forever. I stopped the checker, but its Perl server kept running and held port 8791. The next run got "address already in use", and curl was answered by the old server, which had lost its folder, so I got a 404 and spent a while wondering why. The fixes: the check reads stderr only when it fails, each run picks a free port, and the old server is gone. Lesson: when I kill a parent process, its children keep running unless I kill them too.
+
+### Notes
+
+- 115 of 142 records are reading-only, so most of database 2 has not been executed. The 27 that run cover the languages and tools that exist in this sandbox.
+- The rare flag covers 68 of 142 records. It's a judgement call again, and I'll review it against the database 1 flags.
+- Not verified yet: the migration on a real device from a version 1 install (the unit test runs the migration on a test file, which is not the same), the UI with two databases in the list and in the filters, lint, and the release build.
+
 ################################################################################
-# ФАЙЛ: RetroDatabases/DEVLOG.txt
+# FILE: RetroDatabases/DEVLOG.txt
 ################################################################################
 # Development log: Retro Databases
 
@@ -336,6 +386,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-04 | 2026-10-14 | 4,277 | 169 | 82 | 118 | 4,646 | +3 (.gitignore rule for generated Kotlin session data) |
 | CP-05 | 2026-10-14 | 6,236 | 169 | 82 | 118 | 6,605 | +1,959 (155 new records in five seed files) |
 | CP-06 | 2026-10-14 | 6,257 | 169 | 82 | 118 | 6,626 | +21 (translation; long strings re-wrapped) |
+| CP-07 | 2026-10-14 | 9,174 | 199 | 82 | 118 | 9,573 | +2,947 (database 2: 142 records in ten files, migration 1→2, tests +30) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -540,16 +591,57 @@ Date: 2026-10-14. Totals: Kotlin main 6,257 (CP-05: 6,236), Kotlin test 169, XML
 - Some names are my own transliteration (Vector-06C, Radio-86RK, Iskra-1030, and the Soviet chip names). Check them against a source if they matter.
 - Not verified yet: running on a device or emulator, the UI itself, lint, and the release build.
 
+## CP-07: database 2, the 1990s
+
+Status: database 2 is in the app: 142 records, a migration for installs made before it, and tests for both databases. The build passes, 15 of 15 unit tests pass, and 27 of the 142 new examples run and pass.
+
+Mood: pleased with most of the content, then annoyed with myself. The example checker hung on a web server it had started and never stopped, and the next run failed for a reason that took me a while to find.
+
+Date: 2026-10-14. Totals: Kotlin main 9,174 (CP-06: 6,257), Kotlin test 199 (169), XML 82, Gradle and project files 118, total 9,573. The +2,947 is mostly the ten new Kotlin files for database 2, which come to 2,884 lines together, plus the seed helper, the catalogue, the database class and the tests (+30).
+
+### What changed
+
+- A second database, "Database 2: 90s coding catalogue", with the same ten kinds. 142 records: languages 20, systems 20, devices 32, tools 24, practices 20, guides 5, examples 7, projects 4, flex 5, cross-code 5. 68 of them are rare.
+- Ten files `Db2*.kt` hold the records. `Db2Catalog.kt` joins them into `db2Records`. `SeedCatalog.kt` lists both databases and combines all the records into `seedRecords`.
+- `entry()` takes a `databaseId`, which defaults to 1, so database 1 is unchanged. I also added a `<DOLLAR>` marker next to `<TAB>`. Perl, PHP and shell examples are full of `$`, and inside a Kotlin raw string `$name` starts a template, so the marker keeps those examples readable. Instructions get both markers too. No instruction in database 1 contains either one.
+- Database version 2. `MIGRATION_1_2` adds database 2 to an install made at version 1 and keeps its favourites and the records of database 1. The insert code is shared by `onCreate` and the migration, so the two cannot drift apart.
+- Tests. `SeedDataTest` checks both databases: ids, titles unique inside each database, years in 1950–1990 for database 1 and 1990–1999 for database 2, every kind in both, and rare records in both. `AppDatabaseSeedTest` checks the record counts of both databases, and it runs the migration on a file where database 2 has been removed.
+
+### Facts checked by web search
+
+- Five entries were checked against sources: FreeBSD 2.0 (announced 22 November 1994); Windows CE 1.0 (released in November 1996, although one page says 1997 and looks wrong); Impulse Tracker (Jeffrey "Pulse" Lim, 1995, freeware with paid extras); NetBeans (started as the student project Xelfi in Prague in 1996, company founded in 1997, Sun bought it in 1999); Net Yaroze (Japan in June 1996, other countries in 1997, so the record uses 1996).
+- Two candidates were dropped. Minix 2: the sources gave 1996 and 1997 for its first release. Scream Tracker 3: the search did not confirm its author.
+- The other 137 records were written from memory, and I have not checked their dates one by one. The ones I would check first: BeOS R3, AmigaOS 3.5, FastTracker 2, Blender, CVS and the first release of Lua.
+
+### How I checked it
+
+- Unit tests: 15 of 15 pass (AppDatabaseSeedTest 3, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL.
+- Examples: a script takes every database 2 example and instruction from the Kotlin source, applies the same markers, and runs whatever this sandbox can run. 27 pass: Java with javac and java, a JNI library built against the JDK headers, Perl (a CGI script with environment variables, a visit counter, a quine, and a small HTTP server checked with curl), PHP, Python, Ruby, JavaScript with Node, C++98 with g++, C with cc, awk, a SQL join in SQLite, a bytecode dump with javap, and a WAD lister that reads a file the script builds itself. The other 115 are reading-only: Turbo Pascal, Visual Basic, DOS, the Windows APIs, Erlang, Lua, Haskell, OCaml and the rest.
+- Cyrillic: none in the code, resources or tests. The bundle's header lines were Russian too, because `pack_sources.sh` wrote them. I translated the header, so the bundle has no Cyrillic either.
+
+### Problems
+
+- The example checker hung. I had written one check that read the server's stderr before deciding whether the answer was right. The server never exits, so the read waited forever. I stopped the checker, but its Perl server kept running and held port 8791. The next run got "address already in use", and curl was answered by the old server, which had lost its folder, so I got a 404 and spent a while wondering why. The fixes: the check reads stderr only when it fails, each run picks a free port, and the old server is gone. Lesson: when I kill a parent process, its children keep running unless I kill them too.
+
+### Notes
+
+- 115 of 142 records are reading-only, so most of database 2 has not been executed. The 27 that run cover the languages and tools that exist in this sandbox.
+- The rare flag covers 68 of 142 records. It's a judgement call again, and I'll review it against the database 1 flags.
+- Not verified yet: the migration on a real device from a version 1 install (the unit test runs the migration on a test file, which is not the same), the UI with two databases in the list and in the filters, lint, and the release build.
+
 ################################################################################
-# ФАЙЛ: RetroDatabases/README.md
+# FILE: RetroDatabases/README.md
 ################################################################################
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside is "Database 1": a catalogue of 80s coding.
+An Android application in Kotlin, Jetpack Compose and Room. Inside are two databases of coding history:
+
+- "Database 1" is a catalogue of 80s coding;
+- "Database 2" is a catalogue of 90s coding.
 
 ## What is inside
 
-The catalogue is split by kind of record:
+The catalogue of database 1 (80s) is split by kind of record:
 
 | Kind | Records | What it is |
 |---|---:|---|
@@ -564,7 +656,22 @@ The catalogue is split by kind of record:
 | Flex | 5 | The maximum from the minimum: a fractal with one operator, a quine, Mandelbrot in awk |
 | Cross-code | 5 | Experiments with mixed languages: C with awk, make with awk, Forth inside C, bc with awk |
 
-In total there are 320 records, 181 of them flagged as rare. Each record has a year, an author, a section, a short summary, details, instructions (for projects and guides) and a code example.
+The catalogue of database 2 (90s) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 20 | Java, Perl, Python, Ruby, PHP/FI, JavaScript, Visual Basic 4, Delphi, C++98, and some forgotten languages |
+| Systems | 20 | Linux, the BSDs, Windows NT and 95, Plan 9, BeOS, Solaris, Oracle 7, PostgreSQL, MySQL, Apache |
+| Devices | 32 | Pentium, PowerPC 601, Alpha, consoles, graphics and sound cards, handhelds, clusters |
+| Tools | 24 | CVS, Perforce, Vim, NetBeans, Cygwin, trackers, Winamp, mIRC, ICQ, zlib and others |
+| Practices | 20 | Extreme Programming, Scrum, design patterns, UML, the CHAOS report, COCOMO II |
+| Guides | 5 | How CGI, Java bytecode, a BSP tree, the mode 13h screen and Winsock work |
+| Examples | 7 | Visit counter, word count with Hashtable, PHP table, SQL join, DOS backup |
+| Projects | 4 | A web server in Perl, an ASCII raycaster, a WAD lister, a BBS door game |
+| Flex | 5 | Mandelbrot in JavaScript, a Perl quine, compile-time primes, plasma and fire |
+| Cross-code | 5 | Java calling C through JNI, PHP calling C, Perl writing a C header, Lua in C, Visual Basic calling a DLL |
+
+In total there are 462 records: 320 in database 1 (181 of them flagged as rare) and 142 in database 2 (68 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
 
 In the app:
 - the list of databases with the number of records;
@@ -591,8 +698,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Structure
 
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself and seeding on first launch.
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of database 1, one file per kind, and the list of databases.
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migration from version 1 to version 2.
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of both databases: `Db1*.kt` and `Db2*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
 - `app/src/test` — tests of the filters, the data and the database itself (Robolectric).
 - `DEVLOG.md` — the development log with the growth of lines of code by checkpoint.
@@ -600,16 +707,18 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it: gcc, g++, mawk, sh, make, perl, bc, bison and SQLite. For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, BASIC and others), the examples were checked only by reading, and this is noted in the development log.
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python and curl. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass; the other records there describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles).
+
+For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml and others), the examples were checked only by reading, and this is noted in the development log.
 
 ## How to add a database
 
-1. Create a file in `data/seed` with the records and the `databaseId` of the new database. The `entry()` function in `SeedEntry.kt` currently fixes `databaseId = 1`: for a second database, add a parameter.
-2. Add the database to `seedDatabases` (file `SeedCatalog.kt`).
-3. Databases from the seed lists are written to the database only when it is created. In copies that are already installed, a new database appears after the database version is raised in `AppDatabase` and a `Migration` is written.
+1. Create files in `data/seed` with the records. Pass the database id to `entry()`, for example `databaseId = 2`; a record without it goes to database 1.
+2. Add the database to `seedDatabases` and its records to `seedRecords` (file `SeedCatalog.kt`).
+3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` is the example: it adds database 2 and keeps the favourites of database 1.
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/build.gradle.kts
+# FILE: RetroDatabases/app/build.gradle.kts
 ################################################################################
 plugins {
     id("com.android.application")
@@ -681,13 +790,13 @@ dependencies {
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/proguard-rules.pro
+# FILE: RetroDatabases/app/proguard-rules.pro
 ################################################################################
 # ProGuard/R8 rules for the app.
 # Minification is currently off in release (isMinifyEnabled = false); this file is kept for future releases.
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/AndroidManifest.xml
+# FILE: RetroDatabases/app/src/main/AndroidManifest.xml
 ################################################################################
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -714,7 +823,7 @@ dependencies {
 </manifest>
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/MainActivity.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/MainActivity.kt
 ################################################################################
 package com.example.retrodatabases
 
@@ -739,7 +848,7 @@ class MainActivity : ComponentActivity() {
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/AppDatabase.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/AppDatabase.kt
 ################################################################################
 package com.example.retrodatabases.data
 
@@ -748,13 +857,14 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.seedDatabases
+import com.example.retrodatabases.data.seed.seedRecords
 
 @Database(
     entities = [DatabaseEntity::class, RecordEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -776,56 +886,70 @@ abstract class AppDatabase : RoomDatabase() {
         private fun buildDatabase(appContext: Context): AppDatabase =
             Room.databaseBuilder(appContext, AppDatabase::class.java, FILE_NAME)
                 .addCallback(SeedCallback())
+                .addMigrations(MIGRATION_1_2)
                 .build()
+    }
+}
+
+/**
+ * Version 2 added database 2. Copies created at version 1 get it from this migration,
+ * so their favourites and the records of database 1 stay as they are.
+ */
+internal val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(2L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
     }
 }
 
 /**
  * Fills the databases when the database file is first created.
  * Inserts run as SQL queries directly in onCreate, so there is no need to wait until the Room instance is ready.
- * Databases from the seed lists are added only when the file is created: in copies that are already installed,
- * a new database appears after the database version is raised and a migration is written.
  */
 private class SeedCallback : RoomDatabase.Callback() {
 
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
 
-        seedDatabases.forEach { database ->
-            db.execSQL(
-                "INSERT INTO databases (id, name, description, colorHex) VALUES (?, ?, ?, ?)",
-                arrayOf<Any?>(database.id, database.name, database.description, database.colorHex),
-            )
-        }
-
-        db1Records.forEach { record ->
-            db.execSQL(
-                """
-                INSERT INTO records (databaseId, kind, section, title, originalTitle, author, year,
-                                     summary, details, instructions, example, rare, favorite)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-                """.trimIndent(),
-                arrayOf<Any?>(
-                    record.databaseId,
-                    record.kind.name,
-                    record.section,
-                    record.title,
-                    record.originalTitle,
-                    record.author,
-                    record.year.toLong(),
-                    record.summary,
-                    record.details,
-                    record.instructions,
-                    record.example,
-                    if (record.rare) 1L else 0L,
-                ),
-            )
-        }
+        seedDatabases.forEach { insertDatabase(db, it) }
+        seedRecords.forEach { insertRecord(db, it) }
     }
 }
 
+private fun insertDatabase(db: SupportSQLiteDatabase, database: DatabaseEntity) {
+    db.execSQL(
+        "INSERT INTO databases (id, name, description, colorHex) VALUES (?, ?, ?, ?)",
+        arrayOf<Any?>(database.id, database.name, database.description, database.colorHex),
+    )
+}
+
+private fun insertRecord(db: SupportSQLiteDatabase, record: RecordEntity) {
+    db.execSQL(
+        """
+        INSERT INTO records (databaseId, kind, section, title, originalTitle, author, year,
+                             summary, details, instructions, example, rare, favorite)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+        """.trimIndent(),
+        arrayOf<Any?>(
+            record.databaseId,
+            record.kind.name,
+            record.section,
+            record.title,
+            record.originalTitle,
+            record.author,
+            record.year.toLong(),
+            record.summary,
+            record.details,
+            record.instructions,
+            record.example,
+            if (record.rare) 1L else 0L,
+        ),
+    )
+}
+
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/Converters.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/Converters.kt
 ################################################################################
 package com.example.retrodatabases.data
 
@@ -842,7 +966,7 @@ class Converters {
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/Entities.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/Entities.kt
 ################################################################################
 package com.example.retrodatabases.data
 
@@ -907,7 +1031,7 @@ data class DatabaseSummary(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/Kind.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/Kind.kt
 ################################################################################
 package com.example.retrodatabases.data
 
@@ -930,7 +1054,7 @@ enum class Kind(val label: String) {
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/LibraryDao.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/LibraryDao.kt
 ################################################################################
 package com.example.retrodatabases.data
 
@@ -968,7 +1092,7 @@ interface LibraryDao {
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Additions.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Additions.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -983,7 +1107,7 @@ val db1Additions: List<RecordEntity> =
     db1ExtraLanguages + db1ExtraSystems + db1ExtraDevices + db1ExtraTools + db1ExtraPractices
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Catalog.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Catalog.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -999,7 +1123,7 @@ val db1Records: List<RecordEntity> =
         db1Guides + db1Examples + db1Projects + db1Flex + db1Cross + db1Additions
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Cross.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Cross.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -1214,7 +1338,7 @@ val db1Cross: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Devices.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Devices.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -1571,7 +1695,7 @@ val db1Devices: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Examples.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Examples.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -1721,7 +1845,7 @@ val db1Examples: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraDevices.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraDevices.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -2613,7 +2737,7 @@ val db1ExtraDevices: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraLanguages.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraLanguages.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -2916,7 +3040,7 @@ val db1ExtraLanguages: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraPractices.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraPractices.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -3191,7 +3315,7 @@ val db1ExtraPractices: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraSystems.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraSystems.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -3507,7 +3631,7 @@ val db1ExtraSystems: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraTools.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1ExtraTools.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -3707,7 +3831,7 @@ val db1ExtraTools: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Flex.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Flex.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -3862,7 +3986,7 @@ val db1Flex: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Guides.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Guides.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -4108,7 +4232,7 @@ val db1Guides: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Languages.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Languages.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -4676,7 +4800,7 @@ val db1Languages: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Practices.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Practices.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -5275,7 +5399,7 @@ val db1Practices: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Projects.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Projects.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -5536,7 +5660,7 @@ val db1Projects: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Systems.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Systems.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -5849,7 +5973,7 @@ val db1Systems: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Tools.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db1Tools.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -6113,15 +6237,2945 @@ val db1Tools: List<RecordEntity> = listOf(
 )
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db2Catalog.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.RecordEntity
+
+/**
+ * All records of database 2: languages, systems, devices, tools and practices of the 1990s,
+ * as well as guides, examples, projects, flex projects and cross-code experiments.
+ */
+val db2Records: List<RecordEntity> =
+    db2Languages + db2Systems + db2Devices + db2Tools + db2Practices +
+        db2Guides + db2Examples + db2Projects + db2Flex + db2Cross
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db2Cross.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Cross-code experiments of the 1990s: technologies mixed on purpose, to see what happens. */
+val db2Cross: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 2,
+        kind = Kind.CROSS,
+        section = "Java and native code",
+        title = "Java calls C through JNI",
+        originalTitle = "Java Native Interface",
+        author = "Sun Microsystems and the JNI team",
+        year = 1997,
+        summary = "A Java program calls a function written in C, which is how Java programs reused old libraries.",
+        details = "The Java Native Interface (JNI), part of JDK 1.1 in 1997, lets a class declare a native method. " +
+            "The C side implements a function with a generated name, and System.loadLibrary loads the shared library at start-up. " +
+            "The Java code stays portable; only the library is built for each platform.",
+        instructions = """
+            1. Save the two files below in one folder. Compile the Java part and generate the C header: javac -h . Native.java
+            2. Build the shared library from the C file: cc -shared -fPIC -I"<DOLLAR>JAVA_HOME/include" -I"<DOLLAR>JAVA_HOME/include/linux" native.c -o libnative.so
+            3. Run the Java program and point it at the library: java -Djava.library.path=. Native
+        """,
+        example = """
+            ### Native.java
+            public class Native {
+                static native int add(int a, int b);
+
+                static {
+                    System.loadLibrary("native");
+                }
+
+                public static void main(String[] args) {
+                    System.out.println("2 + 3 = " + add(2, 3));
+                }
+            }
+            ### native.c
+            #include <jni.h>
+            #include "Native.h"
+
+            JNIEXPORT jint JNICALL Java_Native_add(JNIEnv *env, jclass cls, jint a, jint b)
+            {
+                return a + b;
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.CROSS,
+        section = "Web and processes",
+        title = "PHP runs a C program",
+        originalTitle = "exec() from a PHP page",
+        author = "CGI and PHP practice",
+        year = 1997,
+        summary = "A PHP page calls a compiled C program through the shell and shows its output.",
+        details = "Server-side scripts of the time could start other programs with exec(). " +
+            "The page passes an argument to a small C program, which does the arithmetic, and PHP puts the result into the HTML. " +
+            "The trade-off was speed against safety: anyone who could influence the arguments could run commands.",
+        instructions = """
+            1. Save the two files below in one folder and compile the C program: cc -o square square.c
+            2. Run the page from the command line: php -f page.php
+            3. On a web server the same code works if the server allows the script to run the program.
+        """,
+        example = """
+            ### square.c
+            #include <stdio.h>
+            #include <stdlib.h>
+
+            int main(int argc, char *argv[])
+            {
+                int n = argc > 1 ? atoi(argv[1]) : 10;
+                printf("%d\n", n * n);
+                return 0;
+            }
+            ### page.php
+            <?php
+            <DOLLAR>n = 7;
+            exec("./square <DOLLAR>n", <DOLLAR>output);
+            echo "The square of <DOLLAR>n is <DOLLAR>output[0]\n";
+            ?>
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.CROSS,
+        section = "Build-time generation",
+        title = "Perl writes a C table at build time",
+        originalTitle = "Generated header",
+        author = "Makefile and Perl practice",
+        year = 1995,
+        summary = "A Perl script writes a C header with a table of squares, and the C program includes it when it is built.",
+        details = "Code generators were common in the 90s: a script produced a header or a table from a specification, and the build compiled the result. " +
+            "Here Perl writes the array and the C program only reads it. Changing the script changes the table without touching the C code.",
+        instructions = """
+            1. Save the two files below in one folder.
+            2. Generate the header and build the program: perl gen.pl > table.h, then cc -o main main.c
+            3. Run it: ./main prints 1, 4, 9, 16 and 25.
+        """,
+        example = """
+            ### gen.pl
+            #!/usr/bin/perl
+            # Writes a C array of squares to standard output
+            print "static const int squares[] = {\n";
+            for my <DOLLAR>i (1 .. 5) {
+                print "    <DOLLAR>i * <DOLLAR>i,\n";
+            }
+            print "};\n";
+            print "static const int count = 5;\n";
+            ### main.c
+            #include <stdio.h>
+            #include "table.h"
+
+            int main(void)
+            {
+                int i;
+                for (i = 0; i < count; i++)
+                    printf("%d\n", squares[i]);
+                return 0;
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.CROSS,
+        section = "Embedding",
+        title = "Lua embedded in a C program",
+        originalTitle = "Embedding Lua",
+        author = "PUC-Rio Lua team",
+        year = 1996,
+        summary = "A C host creates a Lua state and runs a script, so the game logic can change without recompiling the engine.",
+        details = "Lua was designed to live inside other programs. The host creates an interpreter state, opens the standard libraries and runs script text or files. " +
+            "Game engines of the late 90s used this pattern to keep level and weapon logic in scripts. " +
+            "The example uses the function names of later Lua versions, but the idea is the one the 90s engines used.",
+        instructions = """
+            1. Install Lua with its development headers.
+            2. Build the host against the Lua library: cc -o host host.c -llua -lm
+            3. Run ./host: the embedded script prints one line.
+        """,
+        example = """
+            #include <stdio.h>
+            #include "lua.h"
+            #include "lauxlib.h"
+            #include "lualib.h"
+
+            int main(void)
+            {
+                lua_State *L = luaL_newstate();
+                luaL_openlibs(L);
+                if (luaL_dostring(L, "print('the game logic runs in Lua')") != 0)
+                    fprintf(stderr, "%s\n", lua_tostring(L, -1));
+                lua_close(L);
+                return 0;
+            }
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.CROSS,
+        section = "Windows API",
+        title = "Visual Basic calls a Windows DLL",
+        originalTitle = "Declare statement",
+        author = "Microsoft Visual Basic practice",
+        year = 1995,
+        summary = "A Visual Basic form calls MessageBox from user32.dll through a Declare statement.",
+        details = "Visual Basic could reach any function in a Windows DLL with a Declare statement, which described the function's parameters. " +
+            "The program was a form in Visual Basic, and the Windows API did the rest. " +
+            "This was how VB programs of the decade used system services that the language itself did not offer.",
+        instructions = """
+            1. Create a form with a button named cmdHello.
+            2. Paste the declaration and the handler into the form's code window.
+            3. Run the program and click the button: a Windows message box appears.
+        """,
+        example = """
+            Private Declare Function MessageBox Lib "user32" Alias "MessageBoxA" _
+                (ByVal hWnd As Long, ByVal lpText As String, ByVal lpCaption As String, ByVal wType As Long) As Long
+
+            Private Sub cmdHello_Click()
+                MessageBox 0, "Hello from a Visual Basic form", "Cross-code", 0
+            End Sub
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db2Devices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Devices of the 1990s: processors, consoles, graphics and sound cards, handhelds, calculators and clusters. */
+val db2Devices: List<RecordEntity> = listOf(
+
+    // ---------- Processors ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "Intel Pentium",
+        originalTitle = "Pentium (P5)",
+        author = "Intel",
+        year = 1993,
+        summary = "Intel's fifth-generation processor with a superscalar core; its floating-point division bug became famous.",
+        details = "The Pentium (1993) was Intel's first processor to carry a name rather than a number, which made the brand easy to protect. " +
+            "In 1994 Thomas Nicely, a number theorist, found an error in floating-point division. " +
+            "Intel first played the problem down, then ran a replacement program for the affected chips.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "PowerPC 601",
+        originalTitle = "PowerPC 601",
+        author = "Apple, IBM and Motorola",
+        year = 1993,
+        summary = "The first chip of the PowerPC alliance, built on the POWER design from IBM and used in the first Power Macintosh.",
+        details = "The 601 (1993) was the first PowerPC processor. The alliance of Apple, IBM and Motorola shared the design, " +
+            "which came from IBM's POWER architecture. Power Macintosh machines were among the first desktop systems to use it.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "DEC Alpha 21064",
+        originalTitle = "Alpha AXP 21064",
+        author = "Digital Equipment Corporation",
+        year = 1992,
+        summary = "A 64-bit RISC processor designed for speed, used in workstations and servers and in early Windows NT ports.",
+        details = "The 21064 (1992) was the first chip of the Alpha family and one of the fastest processors of its day. " +
+            "DEC used it in workstations and servers, and Windows NT ran on Alpha machines as well as on Intel ones.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "AMD K6",
+        originalTitle = "AMD K6",
+        author = "AMD",
+        year = 1997,
+        summary = "A Pentium-class processor that was cheap and fast in integer code, and the start of AMD's comeback.",
+        details = "The K6 (1997) came from NexGen, which AMD had bought, and it fit the same Socket 7 motherboards as the Pentium. " +
+            "The later K6-2 added 3DNow! instructions for 3D games.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "Cyrix 6x86",
+        originalTitle = "Cyrix 6x86 (M1)",
+        author = "Cyrix Corporation",
+        year = 1995,
+        summary = "A fast-for-its-price x86 processor whose floating-point unit was weaker than Intel's.",
+        details = "The 6x86 (1995) ran integer code well and was sold as a cheaper alternative to the Pentium. " +
+            "Its floating-point unit lagged behind, so users of CAD and 3D software noticed the difference.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "Intel Pentium Pro",
+        originalTitle = "Pentium Pro (P6)",
+        author = "Intel",
+        year = 1995,
+        summary = "The P6 core, with out-of-order execution and a second-level cache on the same package, built for servers.",
+        details = "The Pentium Pro (1995) introduced the P6 microarchitecture, which broke x86 instructions into simpler internal operations " +
+            "and ran them out of order. Its second-level cache sat on the same package as the processor.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "ARM7TDMI",
+        originalTitle = "ARM7TDMI",
+        author = "Advanced RISC Machines (ARM)",
+        year = 1994,
+        summary = "A small 32-bit RISC core that ended up in phones, pagers and handhelds made by many companies.",
+        details = "The name lists its features: Thumb (16-bit instructions), Debug, a hardware Multiplier and EmbeddedICE debug logic. " +
+            "Licensees built it into handsets and organisers, and the core remained common in small devices.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Processors",
+        title = "StrongARM SA-110",
+        originalTitle = "StrongARM SA-110",
+        author = "Digital Equipment Corporation (ARM core licensed)",
+        year = 1996,
+        summary = "A low-power 32-bit ARM processor that brought the ARM design to handhelds and set-top devices.",
+        details = "DEC designed the SA-110 (1996) on the ARM architecture. It combined high clock speeds with low power use, which suited handhelds. " +
+            "Intel later bought the line from DEC and sold it as XScale.",
+        rare = true,
+    ),
+
+    // ---------- Game consoles ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Sega Saturn",
+        originalTitle = "Sega Saturn",
+        author = "Sega",
+        year = 1994,
+        summary = "Sega's console with two SH-2 processors and separate video chips, a design that was hard to program for.",
+        details = "The Saturn appeared in Japan in 1994 and in the West in 1995. " +
+            "Its two Hitachi SH-2 processors and separate video chips gave developers many options, and few of them mastered the machine. " +
+            "It lost the 32-bit race to the PlayStation.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Sony PlayStation",
+        originalTitle = "PlayStation (PSX)",
+        author = "Sony Computer Entertainment",
+        year = 1994,
+        summary = "Sony's CD-based console with a 32-bit MIPS processor and a development kit that made C programming possible.",
+        details = "The PlayStation launched in Japan in December 1994 with a 32-bit MIPS CPU and CD-ROM media. " +
+            "Ridge Racer was a launch title, and developers wrote in C with a set of official libraries.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Nintendo 64",
+        originalTitle = "Nintendo 64 (N64)",
+        author = "Nintendo",
+        year = 1996,
+        summary = "A cartridge console with a 64-bit processor, an analogue stick and a Rumble Pak accessory.",
+        details = "The Nintendo 64 (1996) used a 64-bit MIPS-based processor and cartridges. " +
+            "Its controller had an analogue stick as the main way to steer through 3D worlds, and the Rumble Pak made the controller vibrate.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Atari Jaguar",
+        originalTitle = "Atari Jaguar",
+        author = "Atari Corporation",
+        year = 1993,
+        summary = "Atari's console sold with a 64-bit claim and three custom chips that few developers mastered.",
+        details = "The Jaguar (1993) was marketed as a 64-bit console. Its custom chips were hard to program, and few games used the machine fully. " +
+            "Atari left the console market soon after.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "3DO Interactive Multiplayer",
+        originalTitle = "3DO Interactive Multiplayer",
+        author = "The 3DO Company (hardware licensed to Panasonic and others)",
+        year = 1993,
+        summary = "A CD console whose design was licensed to several manufacturers, with a 32-bit RISC processor.",
+        details = "The 3DO (1993) was built by a company that licensed the design to hardware makers, Panasonic first among them. " +
+            "Its 32-bit RISC processor and CD drive looked strong on paper, but the price was high and the console failed in the market.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Virtual Boy",
+        originalTitle = "Nintendo Virtual Boy",
+        author = "Nintendo, designed by Gunpei Yokoi",
+        year = 1995,
+        summary = "A stereoscopic console that showed red images through a headset and sat on a stand, remembered for its strange display.",
+        details = "Gunpei Yokoi led the Virtual Boy (1995), which showed red images in 3D through a headset. " +
+            "Its display caused headaches for many players, and Nintendo discontinued it in 1996.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Net Yaroze",
+        originalTitle = "PlayStation Net Yaroze",
+        author = "Sony Computer Entertainment",
+        year = 1996,
+        summary = "A PlayStation sold to hobbyists with development tools, so owners could write their own games in C.",
+        details = "Net Yaroze launched in Japan in June 1996 and reached other countries in 1997. " +
+            "It was a black PlayStation with a development kit, a C compiler and the official libraries, and owners wrote their own games and demos with it.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Game Boy Color",
+        originalTitle = "Game Boy Color",
+        author = "Nintendo",
+        year = 1998,
+        summary = "A colour version of the Game Boy, with a colour screen, extra video memory and a double-speed mode.",
+        details = "The Game Boy Color (1998) kept the handheld form of the original and added a colour screen, extra video memory and a double-speed CPU mode. " +
+            "Its games were still written for a processor close to the Z80.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Sega Dreamcast",
+        originalTitle = "Sega Dreamcast",
+        author = "Sega",
+        year = 1998,
+        summary = "Sega's last console, with a Hitachi SH-4 processor, a built-in modem and an operating system based on Windows CE.",
+        details = "The Dreamcast launched in Japan in November 1998. Its built-in modem supported online play, " +
+            "and its operating system used a Windows CE base. Sega withdrew the console from sale in 2001.",
+    ),
+
+    // ---------- Graphics and sound ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Graphics and sound",
+        title = "Gravis UltraSound",
+        originalTitle = "Gravis UltraSound (GUS)",
+        author = "Advanced Gravis Computer Technology",
+        year = 1992,
+        summary = "A wavetable sound card with its own memory for samples, loved by tracker musicians and demoscene groups.",
+        details = "The UltraSound (1992) played recorded instrument samples from its own RAM, which made PC music far richer than the FM synthesis of most sound cards. " +
+            "Tracker musicians and demoscene groups wrote music for it.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Graphics and sound",
+        title = "Sound Blaster AWE32",
+        originalTitle = "Sound Blaster AWE32",
+        author = "Creative Technology",
+        year = 1994,
+        summary = "A Sound Blaster with a wavetable synthesizer, 32 voices and SoundFont instrument banks.",
+        details = "The AWE32 (1994) added a wavetable synthesizer with 32 voices and support for SoundFont banks, " +
+            "which let games and tools load their own instruments.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Graphics and sound",
+        title = "3dfx Voodoo Graphics",
+        originalTitle = "Voodoo Graphics",
+        author = "3dfx Interactive",
+        year = 1996,
+        summary = "A separate 3D accelerator card with the Glide API, which games used for their fastest mode in 1997.",
+        details = "The Voodoo card (1996) sat beside the ordinary 2D graphics card and handled only 3D work. " +
+            "Its Glide API let games such as Quake run faster than software rendering, and the card became the standard 3D accelerator of 1997.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Graphics and sound",
+        title = "NVIDIA RIVA 128",
+        originalTitle = "RIVA 128",
+        author = "NVIDIA",
+        year = 1997,
+        summary = "A single chip that did both 2D and 3D acceleration and supported Direct3D and OpenGL drivers.",
+        details = "The RIVA 128 (1997) put 2D and 3D acceleration on one chip, and it sold strongly in mainstream PCs. " +
+            "Its drivers supported Direct3D and OpenGL, which pushed games toward hardware rendering.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Graphics and sound",
+        title = "S3 ViRGE",
+        originalTitle = "S3 ViRGE",
+        author = "S3 Graphics",
+        year = 1995,
+        summary = "A cheap 2D and 3D chip whose 3D speed was often lower than software rendering, which earned it the nickname 3D decelerator.",
+        details = "The ViRGE (1995) was sold as a 3D accelerator, but in many games it ran slower than the CPU alone. " +
+            "Reviewers called it the 3D decelerator, and the name stuck.",
+        rare = true,
+    ),
+
+    // ---------- Home and handheld ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Home and handheld",
+        title = "Amiga CD32",
+        originalTitle = "Amiga CD32",
+        author = "Commodore",
+        year = 1993,
+        summary = "A CD-ROM console built from the Amiga 1200 chipset and sold as a games machine.",
+        details = "Commodore's CD32 (1993) used the AGA chipset of the Amiga 1200 with a double-speed CD drive. " +
+            "Its software was mostly games, and the company's collapse in 1994 ended its life.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Home and handheld",
+        title = "Atari Falcon030",
+        originalTitle = "Atari Falcon030",
+        author = "Atari Corporation",
+        year = 1992,
+        summary = "Atari's last home computer, with a DSP for sound and good built-in MIDI support.",
+        details = "The Falcon030 (1992) combined a Motorola 68030 processor with a 56001 DSP for sound. " +
+            "Its built-in MIDI ports and sampling made it popular with musicians.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Home and handheld",
+        title = "Apple Newton MessagePad",
+        originalTitle = "Newton MessagePad",
+        author = "Apple Computer",
+        year = 1993,
+        summary = "A pen-based handheld with handwriting recognition, an early step toward the personal digital assistant.",
+        details = "The Newton (1993) ran Newton OS on an ARM processor and recognised handwriting. " +
+            "Its recognition was clumsy at first, and the press mocked the device. Its ideas came back in the Palm and Windows CE handhelds.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Home and handheld",
+        title = "Palm Pilot 1000",
+        originalTitle = "PalmPilot 1000",
+        author = "Palm Computing (Jeff Hawkins)",
+        year = 1996,
+        summary = "A pocket organiser with a stylus, a handwriting alphabet and desktop sync, which started the Palm era.",
+        details = "Hawkins' team designed the Pilot (1996) to fit in a pocket and to synchronise with a desktop PC. " +
+            "Its Graffiti alphabet let people write letters with the stylus, and Palm OS later ran on many devices.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Home and handheld",
+        title = "IBM ThinkPad 701",
+        originalTitle = "ThinkPad 701 (Butterfly)",
+        author = "IBM",
+        year = 1995,
+        summary = "A notebook whose keyboard opened like a book and spread the keys to full size, the butterfly design.",
+        details = "The ThinkPad 701 (1995) had a keyboard that opened out and expanded to full size when the lid was raised. " +
+            "It is remembered as one of the most unusual laptop designs of the decade.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Home and handheld",
+        title = "HP 48G",
+        originalTitle = "HP 48G",
+        author = "Hewlett-Packard",
+        year = 1993,
+        summary = "A graphing RPN calculator that ran RPL, a stack-based language that engineers programmed.",
+        details = "The HP 48 series (1990) introduced a graphing calculator with the RPL language. The 48G (1993) brought more memory. " +
+            "Engineers and students wrote games, solvers and utilities in RPL, and many kept a calculator for decades.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Home and handheld",
+        title = "TI-92",
+        originalTitle = "TI-92",
+        author = "Texas Instruments",
+        year = 1995,
+        summary = "A graphing calculator with a full keyboard and a computer algebra system.",
+        details = "The TI-92 (1995) had a QWERTY keyboard and symbolic algebra. " +
+            "Students programmed it in TI-BASIC, and an active community shared programs and games.",
+        rare = true,
+    ),
+
+    // ---------- Clusters and supercomputers ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Clusters and supercomputers",
+        title = "Beowulf cluster",
+        originalTitle = "Beowulf",
+        author = "Donald Becker and Thomas Sterling at NASA's CESDIS",
+        year = 1994,
+        summary = "A cluster of ordinary PCs running Linux and joined by Ethernet, a cheap alternative to a supercomputer.",
+        details = "The first Beowulf (1994) was built at NASA Goddard from commodity PCs and Ethernet. " +
+            "The idea spread quickly to universities, and it made parallel computing affordable for many small groups.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Clusters and supercomputers",
+        title = "Cray T3E",
+        originalTitle = "Cray T3E",
+        author = "Cray Research (a Silicon Graphics company)",
+        year = 1996,
+        summary = "A scalable parallel machine built from Alpha processors and linked in a three-dimensional torus.",
+        details = "The T3E (1996) connected hundreds of Alpha processors in a three-dimensional torus network. " +
+            "It was among the largest parallel systems of its time.",
+        rare = true,
+    ),
+
+    // ---------- Storage and peripherals ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.DEVICE,
+        section = "Storage and peripherals",
+        title = "Iomega Zip drive",
+        originalTitle = "Iomega Zip",
+        author = "Iomega",
+        year = 1995,
+        summary = "A removable 100 MB disk drive that replaced floppies for backups and file exchange in the late 90s.",
+        details = "Iomega launched the Zip drive in 1995, with 100 MB cartridges about the size of a floppy disk. " +
+            "It became popular for backups and file exchange, and the \"click of death\" became the name of its most famous failure.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db2Examples.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Usage examples of the 1990s: short recipes for the everyday problems of the decade. */
+val db2Examples: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 2,
+        kind = Kind.EXAMPLE,
+        section = "Files and state",
+        title = "Visit counter in a file",
+        originalTitle = "Counter kept in counter.txt",
+        author = "Common CGI practice",
+        year = 1996,
+        summary = "A page counter that keeps its value in a text file, so it survives between runs.",
+        details = "Without a database, the usual way to keep state on a 90s web server was a text file. " +
+            "The script reads the number, adds one and writes the new value back. The same trick worked for guest books and polls.",
+        instructions = """
+            1. Save the code as counter.pl.
+            2. Run it: perl counter.pl
+            3. Run it again: the number goes up on every run.
+            4. Delete counter.txt to start from zero.
+        """,
+        example = """
+            #!/usr/bin/perl
+            # Keeps the visit count in counter.txt
+            my <DOLLAR>file = 'counter.txt';
+            my <DOLLAR>count = 0;
+            if (open(my <DOLLAR>in, '<', <DOLLAR>file)) {
+                <DOLLAR>count = <<DOLLAR>in> + 0;
+                close(<DOLLAR>in);
+            }
+            <DOLLAR>count++;
+            open(my <DOLLAR>out, '>', <DOLLAR>file) or die "cannot write <DOLLAR>file: <DOLLAR>!";
+            print <DOLLAR>out "<DOLLAR>count\n";
+            close(<DOLLAR>out);
+            print "Visit number <DOLLAR>count\n";
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.EXAMPLE,
+        section = "Text and collections",
+        title = "Word count with Hashtable",
+        originalTitle = "Hashtable word count (Java 1.0 style)",
+        author = "Java 1.0 practice",
+        year = 1996,
+        summary = "Counting words with java.util.Hashtable in a console program, the way early Java programs did.",
+        details = "The Hashtable class holds the counts, keyed by word. The program reads standard input line by line and splits each line into words with StringTokenizer. " +
+            "Java 1.0 had no generics and no autoboxing, so the counts were wrapped in Integer objects by hand.",
+        instructions = """
+            1. Save the example as WordCount.java.
+            2. Compile it: javac WordCount.java
+            3. Run it with some text: echo "the cat and the hat" | java WordCount
+        """,
+        example = """
+            import java.io.*;
+            import java.util.*;
+
+            public class WordCount {
+                public static void main(String[] args) throws IOException {
+                    Hashtable counts = new Hashtable();
+                    BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+                    String line;
+                    while ((line = in.readLine()) != null) {
+                        StringTokenizer words = new StringTokenizer(line);
+                        while (words.hasMoreTokens()) {
+                            String w = words.nextToken();
+                            Integer n = (Integer) counts.get(w);
+                            counts.put(w, new Integer(n == null ? 1 : n.intValue() + 1));
+                        }
+                    }
+                    Enumeration keys = counts.keys();
+                    while (keys.hasMoreElements()) {
+                        String w = (String) keys.nextElement();
+                        System.out.println(w + " " + counts.get(w));
+                    }
+                }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.EXAMPLE,
+        section = "Web pages",
+        title = "HTML table from a PHP array",
+        originalTitle = "PHP/FI table page",
+        author = "PHP/FI practice",
+        year = 1996,
+        summary = "Build a table from an associative array: the array is the data, and the page is only the view.",
+        details = "PHP/FI pages mixed HTML with blocks of code. An associative array held the data, and a foreach loop printed one table row per entry. " +
+            "A designer could change the markup around the loop without touching the data.",
+        instructions = """
+            1. Save the example as table.php.
+            2. Run it from the command line: php -f table.php
+            3. On a web server the same output reaches the browser.
+        """,
+        example = """
+            <?php
+            <DOLLAR>scores = array("Ann" => 31, "Bob" => 27, "Eve" => 45);
+            <DOLLAR>total = 0;
+            echo "<table border=1>\n<tr><th>Name</th><th>Score</th></tr>\n";
+            foreach (<DOLLAR>scores as <DOLLAR>name => <DOLLAR>score) {
+                echo "<tr><td><DOLLAR>name</td><td><DOLLAR>score</td></tr>\n";
+                <DOLLAR>total += <DOLLAR>score;
+            }
+            echo "<tr><td>total</td><td><DOLLAR>total</td></tr>\n</table>\n";
+            ?>
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.EXAMPLE,
+        section = "Text data",
+        title = "Sorting pairs in Python 1.5 style",
+        originalTitle = "Tuple sorting",
+        author = "Python practice",
+        year = 1997,
+        summary = "A list of tuples sorts itself on the first field, which made many 90s scripts short.",
+        details = "Python compares tuples element by element. Putting the score first sorts the list by score, without writing a comparison function. " +
+            "The loop unpacks each pair into two variables.",
+        instructions = """
+            1. Save the example as sortpairs.py.
+            2. Run it: python sortpairs.py
+        """,
+        example = """
+            import sys
+            people = [(31, "Ann"), (27, "Bob"), (45, "Eve")]
+            people.sort()
+            for score, name in people:
+                sys.stdout.write("%d %s\n" % (score, name))
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.EXAMPLE,
+        section = "Templates and containers",
+        title = "Sorting with a function object (C++98)",
+        originalTitle = "std::sort with a functor",
+        author = "C++98 practice",
+        year = 1998,
+        summary = "A small class with operator() tells std::sort how to order the words.",
+        details = "std::sort takes a comparison object as its third argument. The object is a class with operator(), which the algorithm calls for each pair of elements. " +
+            "Because the object carries its own type, the compiler can inline the comparison, so the code runs as fast as a hand-written loop.",
+        instructions = """
+            1. Save the example as sortwords.cpp.
+            2. Compile it in C++98 mode: g++ -std=c++98 -o sortwords sortwords.cpp
+            3. Run ./sortwords: the words come out from the shortest to the longest.
+        """,
+        example = """
+            #include <algorithm>
+            #include <iostream>
+            #include <string>
+            #include <vector>
+
+            struct ByLength {
+                bool operator()(const std::string& a, const std::string& b) const {
+                    return a.size() < b.size();
+                }
+            };
+
+            int main() {
+                std::vector<std::string> words;
+                words.push_back("compiler");
+                words.push_back("c");
+                words.push_back("linker");
+                std::sort(words.begin(), words.end(), ByLength());
+                for (std::size_t i = 0; i < words.size(); ++i)
+                    std::cout << words[i] << "\n";
+                return 0;
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.EXAMPLE,
+        section = "Databases",
+        title = "Join two tables (SQL-92)",
+        originalTitle = "SQL-92 inner join with GROUP BY",
+        author = "SQL-92 practice",
+        year = 1992,
+        summary = "Two tables joined on a shared key, then grouped to add up the orders of each customer.",
+        details = "The SQL-92 standard made the explicit JOIN ... ON syntax common. The condition after ON ties each order to its customer, " +
+            "and GROUP BY adds the amounts per name. Databases of the 90s ran queries like this on real business tables.",
+        instructions = """
+            1. Save the statements as shop.sql.
+            2. Run them with the SQLite command line: sqlite3 shop.db < shop.sql
+            3. Any SQL-92 database accepts the same SELECT.
+        """,
+        example = """
+            CREATE TABLE customers (id INTEGER, name TEXT);
+            CREATE TABLE orders (id INTEGER, customer_id INTEGER, amount INTEGER);
+            INSERT INTO customers VALUES (1, 'Ann');
+            INSERT INTO customers VALUES (2, 'Bob');
+            INSERT INTO orders VALUES (10, 1, 50);
+            INSERT INTO orders VALUES (11, 2, 20);
+            INSERT INTO orders VALUES (12, 1, 30);
+            SELECT c.name, SUM(o.amount)
+              FROM customers c JOIN orders o ON o.customer_id = c.id
+              GROUP BY c.name;
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.EXAMPLE,
+        section = "DOS batch",
+        title = "Nightly backup with a DOS batch file",
+        originalTitle = "BACKUP.BAT",
+        author = "DOS batch practice",
+        year = 1993,
+        summary = "A three-line batch file copies the work directory to a floppy or a second disk.",
+        details = "MS-DOS batch files ran commands one after another, and xcopy copied whole trees with the /S switch. " +
+            "The /E switch keeps empty directories, and /Y answers the overwrite question without stopping the batch. " +
+            "Many offices ran a file like this at the end of the working day.",
+        instructions = """
+            1. Save the lines as BACKUP.BAT in the root directory.
+            2. Insert a blank floppy disk in drive A:, then run BACKUP.
+            3. Check the copy with DIR A:\BACKUP.
+        """,
+        example = """
+            @echo off
+            echo Backing up C:\WORK to A:\BACKUP ...
+            xcopy C:\WORK A:\BACKUP /S /E /Y
+            echo Done.
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db2Flex.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Flex projects of the 1990s: showpieces that squeeze the most out of a few lines of code. */
+val db2Flex: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 2,
+        kind = Kind.FLEX,
+        section = "Graphics and maths",
+        title = "Mandelbrot set in plain JavaScript",
+        originalTitle = "Mandelbrot in ASCII",
+        author = "Demo-style showpiece",
+        year = 1995,
+        summary = "About twenty lines of JavaScript draw the Mandelbrot set in the console, as ASCII.",
+        details = "The loop iterates z = z * z + c for each character cell. A cell gets a dot, a plus or a hash, depending on how long the value stays bounded. " +
+            "The code uses only the basic features that 1990s browsers supported, so it would have run in a page of the decade.",
+        instructions = """
+            1. Save the code as mandel.js.
+            2. Run it: node mandel.js
+            3. Make the picture larger or move it by changing the numbers in x / 30 and y / 12.
+        """,
+        example = """
+            for (var y = -12; y <= 12; y++) {
+                var line = "";
+                for (var x = -39; x <= 20; x++) {
+                    var cr = x / 30, ci = y / 12;
+                    var zr = 0, zi = 0, n = 0;
+                    while (n < 50 && zr * zr + zi * zi < 4) {
+                        var t = zr * zr - zi * zi + cr;
+                        zi = 2 * zr * zi + ci;
+                        zr = t;
+                        n++;
+                    }
+                    line += n == 50 ? "#" : (n > 5 ? "+" : ".");
+                }
+                console.log(line);
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.FLEX,
+        section = "Tricks",
+        title = "Perl quine",
+        originalTitle = "Quine in Perl",
+        author = "Quine tradition",
+        year = 1995,
+        summary = "A Perl program that prints its own source code, character for character.",
+        details = "A quine is a program whose output is its own text. The string holds a template with three placeholders; " +
+            "printf fills them with the apostrophe character (code 39) and with the template itself. The output is the source, exactly.",
+        instructions = """
+            1. Save the line exactly as shown, without adding a newline at the end, as quine.pl.
+            2. Run it and send the output to a new file: perl quine.pl > copy.pl
+            3. The two files are identical: cmp quine.pl copy.pl prints nothing.
+        """,
+        example = """
+            <DOLLAR>_='<DOLLAR>_=%c%s%c;printf(<DOLLAR>_,39,<DOLLAR>_,39);';printf(<DOLLAR>_,39,<DOLLAR>_,39);
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.FLEX,
+        section = "Templates",
+        title = "Primes decided at compile time (C++98)",
+        originalTitle = "Template metaprogramming",
+        author = "C++ template community",
+        year = 1995,
+        summary = "Primality is computed by the compiler with recursive templates; the program only prints the answers.",
+        details = "A template with two integer parameters recurses over the possible divisors and stops at 1. " +
+            "The result of each test is an enumerator, so the whole computation happens during compilation. " +
+            "This was a showpiece in the mid-90s, when template recursion was new to most programmers.",
+        instructions = """
+            1. Save the code as primes.cpp.
+            2. Compile it in C++98 mode: g++ -std=c++98 -o primes primes.cpp
+            3. Run ./primes: the lines show 2 and 29 as prime and 9 as not prime.
+        """,
+        example = """
+            #include <iostream>
+
+            template <int N, int D>
+            struct NoDivisor {
+                enum { value = (N % D != 0) && NoDivisor<N, D - 1>::value };
+            };
+
+            template <int N>
+            struct NoDivisor<N, 1> {
+                enum { value = 1 };
+            };
+
+            template <int N>
+            struct IsPrime {
+                enum { value = NoDivisor<N, N - 1>::value };
+            };
+
+            int main() {
+                std::cout << "2 prime: " << IsPrime<2>::value << "\n";
+                std::cout << "9 prime: " << IsPrime<9>::value << "\n";
+                std::cout << "29 prime: " << IsPrime<29>::value << "\n";
+                return 0;
+            }
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.FLEX,
+        section = "Graphics and maths",
+        title = "ASCII plasma in C",
+        originalTitle = "Plasma effect",
+        author = "Demoscene practice",
+        year = 1993,
+        summary = "Three sine waves added together give a height, and each height is printed as one of ten ASCII shades.",
+        details = "Plasma was a favourite demoscene effect: the colour of each point depends on the sum of sine waves over the screen. " +
+            "Here the value is printed as a shade character instead of a colour. Changing the frequencies of the waves changes the pattern.",
+        instructions = """
+            1. Save the code as plasma.c.
+            2. Compile it: cc -Wall -o plasma plasma.c -lm
+            3. Run ./plasma: it prints 20 lines of 60 characters.
+        """,
+        example = """
+            #include <math.h>
+            #include <stdio.h>
+
+            int main(void)
+            {
+                const char *shades = " .:-=+*#%@";
+                int x, y;
+                for (y = 0; y < 20; y++) {
+                    for (x = 0; x < 60; x++) {
+                        double v = sin(x / 6.0) + sin(y / 3.0) + sin((x + y) / 6.0);
+                        int level = (int)((v + 3.0) / 6.0 * 9.99);
+                        putchar(shades[level]);
+                    }
+                    putchar('\n');
+                }
+                return 0;
+            }
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.FLEX,
+        section = "Graphics and maths",
+        title = "Fire effect in awk",
+        originalTitle = "Fire effect",
+        author = "Demoscene practice",
+        year = 1994,
+        summary = "Heat rises from the bottom row, cools a little at each step and is printed with ten characters.",
+        details = "Each cell takes the average of the three cells below it and then cools by a random amount. " +
+            "The bottom row is kept hot. After a few steps the heat spreads upward and forms the flames.",
+        instructions = """
+            1. Save the code as fire.awk.
+            2. Run it: awk -f fire.awk
+            3. Change the number of steps in the frame loop to make the flames taller.
+        """,
+        example = """
+            BEGIN {
+                srand(7)
+                W = 40; H = 12
+                palette = " .:-=+*#%@"
+                for (frame = 0; frame < 20; frame++) {
+                    for (x = 1; x <= W; x++) heat[H, x] = 9     # the bottom row is always hot
+                    for (y = 1; y < H; y++)
+                        for (x = 1; x <= W; x++) {
+                            l = (x > 1) ? x - 1 : 1
+                            r = (x < W) ? x + 1 : W
+                            v = (heat[y + 1, x] + heat[y + 1, l] + heat[y + 1, r]) / 3
+                            v -= rand() * 0.6
+                            heat[y, x] = (v < 0) ? 0 : v
+                        }
+                }
+                for (y = 1; y <= H; y++) {
+                    line = ""
+                    for (x = 1; x <= W; x++)
+                        line = line substr(palette, int(heat[y, x]) + 1, 1)
+                    print line
+                }
+            }
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db2Guides.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Guides of the 1990s: how the mechanisms of the decade worked, from CGI to the Doom renderer. */
+val db2Guides: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 2,
+        kind = Kind.GUIDE,
+        section = "Web",
+        title = "How CGI works: from a web form to a script",
+        originalTitle = "Common Gateway Interface",
+        author = "NCSA httpd developers and the CGI drafts",
+        year = 1993,
+        summary = "The browser sends a request, the server starts a program and sends back whatever the program prints.",
+        details = "A browser sends an HTTP request. The server finds the script in the cgi-bin directory, puts the request details into environment variables " +
+            "such as REQUEST_METHOD and QUERY_STRING, and starts the program. The program writes its headers, an empty line and the body to standard output, " +
+            "and the server passes that back to the browser. For a GET form the data arrives in QUERY_STRING; for a POST form it arrives on standard input.",
+        instructions = """
+            1. Save the example as hello.cgi and make it executable on a Unix server.
+            2. Test it from a shell without a web server: REQUEST_METHOD=GET QUERY_STRING="name=Ann" perl hello.cgi
+            3. Compare the output with what a browser would receive: the headers, an empty line, then the HTML.
+        """,
+        example = """
+            #!/usr/bin/perl
+            # Minimal CGI program: reads the form field "name" from QUERY_STRING.
+            my <DOLLAR>query = <DOLLAR>ENV{'QUERY_STRING'} || '';
+            my (<DOLLAR>name) = <DOLLAR>query =~ /name=([^&]*)/;
+            <DOLLAR>name = 'stranger' unless defined <DOLLAR>name;
+            print "Content-type: text/html\n\n";
+            print "<html><body><h1>Hello, <DOLLAR>name!</h1></body></html>\n";
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.GUIDE,
+        section = "Languages and runtimes",
+        title = "How Java bytecode runs: from javac to the JVM",
+        originalTitle = "The Java Virtual Machine",
+        author = "Tim Lindholm and Frank Yellin (JVM specification)",
+        year = 1996,
+        summary = "The compiler writes stack-based bytecode, and the virtual machine checks it and runs it on any host.",
+        details = "javac turns source code into class files that contain bytecode: a compact, stack-based instruction set of about 200 opcodes. " +
+            "The virtual machine loads a class, checks it with the bytecode verifier, and then interprets it or compiles it to native code. " +
+            "Applets in browsers ran the same way, with a security manager limiting what they could reach.",
+        instructions = """
+            1. Save the example as Adder.java and compile it: javac Adder.java
+            2. Show the bytecode of the add method: javap -c Adder
+            3. Find iload_0, iload_1, iadd and ireturn: these are the stack operations that add two numbers.
+        """,
+        example = """
+            public class Adder {
+                static int add(int a, int b) {
+                    return a + b;
+                }
+                public static void main(String[] args) {
+                    System.out.println(add(2, 3));
+                }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.GUIDE,
+        section = "Graphics and games",
+        title = "How a BSP tree draws a Doom level",
+        originalTitle = "Binary space partitioning",
+        author = "The Doom engine (id Software); the BSP idea from Fuchs, Kedem and Naylor (1980)",
+        year = 1993,
+        summary = "A map is split along its walls again and again, so the renderer can draw the walls in a safe order.",
+        details = "A binary space partition splits the map along the line of a wall, and each half is split again until every piece is a convex region. " +
+            "The tree stores these splits. From the player's position the renderer walks the tree and visits the far side first, " +
+            "so nearer walls are drawn over farther ones. The method was described in 1980 by Fuchs, Kedem and Naylor. " +
+            "Doom (1993) used a two-dimensional version of it, which saved sorting every wall on every frame.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.GUIDE,
+        section = "Graphics and games",
+        title = "How the mode 13h screen works: 320x200 with 256 colours",
+        originalTitle = "VGA mode 13h",
+        author = "IBM VGA standard; the favourite mode of DOS games",
+        year = 1990,
+        summary = "A 320 by 200 picture with one byte per pixel, written straight into memory at segment A000h.",
+        details = "VGA (1987) offered a mode with 320 by 200 pixels and 256 colours chosen from 262,144. " +
+            "The frame buffer starts at segment A000h, and pixel (x, y) is at offset y times 320 plus x. " +
+            "DOS games drew into this memory directly, which made them fast, and many copied a whole frame during the vertical blank to avoid flicker.",
+        instructions = """
+            1. Save the example as vram.c and compile it: cc -o vram vram.c
+            2. Run ./vram: it fills the buffer with a pattern and prints one pixel.
+            3. On DOS hardware the array would be a pointer to segment A000h; the rest of the code stays the same.
+        """,
+        example = """
+            #include <stdio.h>
+
+            #define W 320
+            #define H 200
+
+            /* stands in for the VGA segment A000h, one byte per pixel */
+            static unsigned char vram[W * H];
+
+            int main(void)
+            {
+                int x, y;
+                for (y = 0; y < H; y++)
+                    for (x = 0; x < W; x++)
+                        vram[y * W + x] = (unsigned char)(x ^ y);
+                printf("pixel(10,20) = %d\n", vram[20 * W + 10]);
+                return 0;
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.GUIDE,
+        section = "Networking",
+        title = "How Winsock connects a Windows program to the Internet",
+        originalTitle = "Windows Sockets (Winsock) 1.1",
+        author = "The Windows Sockets working group",
+        year = 1993,
+        summary = "A Berkeley-style socket API for Windows, so that TCP/IP programs could be ported from Unix.",
+        details = "Winsock 1.1 (1993) gave Windows programs the Berkeley socket calls: socket, connect, send and recv. " +
+            "A program first starts the library with WSAStartup, then opens a TCP socket, connects to a host and exchanges bytes. " +
+            "Trumpet Winsock and other stacks supplied the TCP/IP layer under the same interface.",
+        example = """
+            WSADATA wsa;
+            SOCKET s;
+            struct sockaddr_in addr;
+
+            WSAStartup(MAKEWORD(1, 1), &wsa);
+            s = socket(AF_INET, SOCK_STREAM, 0);
+            addr.sin_family = AF_INET;
+            addr.sin_port = htons(80);
+            addr.sin_addr.s_addr = inet_addr("192.0.2.10");
+            connect(s, (struct sockaddr *)&addr, sizeof(addr));
+            send(s, "GET / HTTP/1.0\r\n\r\n", 18, 0);
+            closesocket(s);
+            WSACleanup();
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db2Languages.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Programming languages of the 1990s: the mainstream ones of the decade and some almost forgotten ones. */
+val db2Languages: List<RecordEntity> = listOf(
+
+    // ---------- Object-oriented ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Object-oriented",
+        title = "Java",
+        originalTitle = "Java (first called Oak)",
+        author = "James Gosling and the Sun Microsystems team",
+        year = 1995,
+        summary = "A language that compiles to bytecode for a virtual machine, so one program runs on many systems.",
+        details = "Work began in 1991 under the name Oak, and the language was renamed Java in 1995. " +
+            "The promise was write once, run anywhere: javac produced bytecode, and the Java Virtual Machine ran it on Windows, Solaris or Macintosh. " +
+            "There was garbage collection instead of manual memory management, and no pointers. " +
+            "Netscape Navigator began running Java applets in 1995, which made the language famous within a year.",
+        instructions = """
+            1. Save the example as Hello.java.
+            2. Compile it: javac Hello.java
+            3. Run it: java Hello
+        """,
+        example = """
+            public class Hello {
+                public static void main(String[] args) {
+                    java.util.Vector names = new java.util.Vector();
+                    names.addElement("world");
+                    names.addElement("Java 1.0");
+                    for (int i = 0; i < names.size(); i++)
+                        System.out.println("Hello, " + names.elementAt(i) + "!");
+                }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Object-oriented",
+        title = "C++98 (ISO standard)",
+        originalTitle = "C++",
+        author = "Bjarne Stroustrup and the ISO C++ committee",
+        year = 1998,
+        summary = "The first ISO standard for C++: templates, the Standard Template Library and exceptions in one document.",
+        details = "Stroustrup had been building C++ since 1979, when it was still C with Classes. " +
+            "The Standard Template Library, written mainly by Alexander Stepanov and Meng Lee at Hewlett-Packard, entered the standard in 1998. " +
+            "Containers and algorithms became generic, and programmers stopped writing their own linked lists for every project.",
+        example = """
+            #include <iostream>
+            #include <map>
+            #include <string>
+
+            int main() {
+                std::map<std::string, int> age;
+                age["Ann"] = 31;
+                age["Bob"] = 27;
+                for (std::map<std::string, int>::iterator it = age.begin(); it != age.end(); ++it)
+                    std::cout << it->first << " " << it->second << "\n";
+                return 0;
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Object-oriented",
+        title = "Delphi",
+        originalTitle = "Delphi (Object Pascal)",
+        author = "Anders Hejlsberg and the Borland team",
+        year = 1995,
+        summary = "Object Pascal with a visual form designer and native code, so programs start quickly.",
+        details = "Hejlsberg had designed Turbo Pascal earlier. Delphi 1.0 (1995) brought the same fast compiler to Windows, " +
+            "with components dropped onto a form and code attached to their events. " +
+            "The compiler produced native machine code, so an application could be built in seconds.",
+        example = """
+            procedure TForm1.ButtonHelloClick(Sender: TObject);
+            begin
+              ShowMessage('Hello, ' + Edit1.Text);
+            end;
+        """,
+    ),
+
+    // ---------- Web and scripting ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Web and scripting",
+        title = "Perl 5",
+        originalTitle = "Practical Extraction and Report Language",
+        author = "Larry Wall",
+        year = 1994,
+        summary = "A text language for scripts: regular expressions, hashes and CGI programs in one place.",
+        details = "Wall began Perl in 1987 for report processing. Version 5 (1994) added references, modules and objects. " +
+            "Perl became the usual language of CGI scripts, the first server-side programs on the web. " +
+            "Its motto was that there is more than one way to do it, and the CPAN archive of modules took shape in 1995.",
+        example = """
+            my %count;
+            while (<STDIN>) {
+                <DOLLAR>count{<DOLLAR>_}++ for split;
+            }
+            print "<DOLLAR>_ <DOLLAR>count{<DOLLAR>_}\n" for sort keys %count;
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Web and scripting",
+        title = "Python",
+        originalTitle = "Python 1.x",
+        author = "Guido van Rossum",
+        year = 1994,
+        summary = "A readable scripting language in which indentation marks the blocks; the name comes from Monty Python.",
+        details = "Van Rossum began Python in 1989 at CWI in Amsterdam, and version 1.0 appeared in 1994. " +
+            "Blocks are marked by indentation, so the code looks like a clear outline. " +
+            "By version 1.5 the language had modules, exceptions and a growing standard library. " +
+            "The name comes from the BBC show Monty Python's Flying Circus, not from the snake.",
+        example = """
+            # Written in the Python 1.5 style: no list comprehensions and no f-strings
+            import sys
+            total = 0
+            for line in sys.stdin.readlines():
+                fields = line.split(',')
+                if len(fields) > 1:
+                    total = total + float(fields[1])
+            sys.stdout.write("total = %.2f\n" % total)
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Web and scripting",
+        title = "Ruby",
+        originalTitle = "Ruby",
+        author = "Yukihiro Matsumoto",
+        year = 1995,
+        summary = "A scripting language in which every value is an object, and blocks make iteration short.",
+        details = "Matsumoto, known as Matz, began Ruby in 1993 and released it in 1995. " +
+            "The design borrows from Perl, Smalltalk and Lisp. " +
+            "A block passed to a method, such as each, lets a loop read like a sentence.",
+        example = """
+            [1, 2, 3].each { |n| puts n * n }
+            prices = { "tea" => 2, "coffee" => 3, "cake" => 5 }
+            total = 0
+            prices.each { |item, price| total += price }
+            puts "items: #{prices.size}, total: #{total}"
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Web and scripting",
+        title = "PHP/FI",
+        originalTitle = "Personal Home Page Tools / Form Interpreter",
+        author = "Rasmus Lerdorf",
+        year = 1995,
+        summary = "Tags inside HTML pages that run on the server: the first easy way to make a page dynamic.",
+        details = "Lerdorf wrote small tools in 1994 to track visitors to his home page. In 1995 they were released as Personal Home Page Tools, " +
+            "and a form interpreter was added, so the package became PHP/FI. " +
+            "In 1997 Andi Gutmans and Zeev Suraski rewrote the core, and PHP 3 (1998) became the base of PHP as we know it.",
+        example = """
+            <?php
+            <DOLLAR>visits = array("Ann" => 31, "Bob" => 27);
+            echo "<table border=1>\n";
+            foreach (<DOLLAR>visits as <DOLLAR>name => <DOLLAR>age) {
+                echo "<tr><td><DOLLAR>name</td><td><DOLLAR>age</td></tr>\n";
+            }
+            echo "</table>\n";
+            ?>
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Web and scripting",
+        title = "JavaScript",
+        originalTitle = "Mocha, then LiveScript",
+        author = "Brendan Eich at Netscape",
+        year = 1995,
+        summary = "A small scripting language that Netscape put into the browser so that pages could react to the reader.",
+        details = "Eich designed the first version in 1995. The language went through the names Mocha and LiveScript, " +
+            "and it became JavaScript in December 1995, when Netscape and Sun announced the name together. " +
+            "Microsoft answered with JScript, and the standard ECMAScript followed in 1997.",
+        instructions = """
+            1. Save the example as check.js.
+            2. Run it with Node.js: node check.js (the code uses only features of the 1995 language).
+            3. In a 1996 browser, replace console.log with document.write.
+        """,
+        example = """
+            function isEmail(text) {
+                return /^[^@\s]+@[^@\s]+\.[a-z]+$/i.test(text);
+            }
+            var tests = ["ann@example.com", "not an email", "bob@site.org"];
+            for (var i = 0; i < tests.length; i++) {
+                console.log(tests[i] + " -> " + isEmail(tests[i]));
+            }
+        """,
+    ),
+
+    // ---------- Visual and event-driven ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Visual and event-driven",
+        title = "Visual Basic 4",
+        originalTitle = "Visual Basic 4.0",
+        author = "Microsoft",
+        year = 1995,
+        summary = "Draw a window with the mouse, then write the code that runs when a button is clicked.",
+        details = "Visual Basic 1.0 appeared in 1991 and version 4 in 1995, when it added 32-bit programs for Windows 95. " +
+            "Each form and control had properties and events, and a program was a set of event handlers. " +
+            "Visual Basic made desktop programs possible for people with little programming training, and a large share of business software in the 90s was written with it.",
+        example = """
+            Private Sub cmdHello_Click()
+                MsgBox "Hello, " & txtName.Text
+            End Sub
+        """,
+    ),
+
+    // ---------- Embedded and games ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Embedded and games",
+        title = "Tcl/Tk",
+        originalTitle = "Tool Command Language / Toolkit",
+        author = "John Ousterhout at Berkeley",
+        year = 1991,
+        summary = "A command language built on strings, with the Tk toolkit for quick graphical interfaces.",
+        details = "Ousterhout created Tcl in 1988 so that tools could be scripted without writing C. " +
+            "Tk (1991) gave Tcl buttons, menus and canvases, and a working form took only a few lines. " +
+            "Expect, a Tcl tool for automating interactive programs, appeared around 1990.",
+        example = """
+            button .hello -text "Say hello" -command {puts "Hello!"}
+            pack .hello
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Embedded and games",
+        title = "Lua",
+        originalTitle = "Lua (Portuguese for moon)",
+        author = "Roberto Ierusalimschy, Luiz Henrique de Figueiredo and Waldemar Celes",
+        year = 1994,
+        summary = "A small language meant to be embedded in other programs, from games to configuration tools.",
+        details = "Lua was built at PUC-Rio in Rio de Janeiro. Its single data structure, the table, serves as an array, a dictionary and an object. " +
+            "The interpreter was small enough to ship inside a game, and it was embedded in many programs of the decade.",
+        example = """
+            player = { name = "Ann", lives = 3 }
+            function hit(p)
+                p.lives = p.lives - 1
+                print(p.name .. " has " .. p.lives .. " lives")
+            end
+            hit(player)
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Embedded and games",
+        title = "QuakeC",
+        originalTitle = "QuakeC",
+        author = "id Software",
+        year = 1996,
+        summary = "A C-like language that compiled the game rules into a data file, so players could change monsters and weapons.",
+        details = "Quake (1996) kept its game logic in QuakeC. The compiler turned the source into a progs.dat file that the engine loaded at start-up. " +
+            "Mod authors could change weapons and monsters without touching the engine's C code, and many Quake mods were written this way.",
+        example = """
+            void() W_FireRocket =
+            {
+                newmis = spawn();
+                newmis.owner = self;
+                newmis.movetype = MOVETYPE_FLYMISSILE;
+            };
+        """,
+        rare = true,
+    ),
+
+    // ---------- Functional and logic ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Functional and logic",
+        title = "Erlang",
+        originalTitle = "Erlang",
+        author = "Joe Armstrong, Robert Virding and Mike Williams at Ericsson",
+        year = 1998,
+        summary = "A language for telephone switches: light processes that talk by messages and restart when they crash.",
+        details = "Ericsson built Erlang for telecom systems that must not stop. Processes are cheap, share no memory and talk only by messages. " +
+            "A supervisor process restarts a failed one, which is the idea behind the phrase let it crash. " +
+            "The language was released as open source in 1998.",
+        example = """
+            -module(echo).
+            -export([start/0, loop/0]).
+
+            start() -> spawn(echo, loop, []).
+
+            loop() ->
+                receive
+                    {From, Msg} ->
+                        From ! {echo, Msg},
+                        loop()
+                end.
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Functional and logic",
+        title = "Haskell 98",
+        originalTitle = "Haskell 98 Report",
+        author = "The Haskell committee",
+        year = 1998,
+        summary = "A purely functional language with lazy evaluation and type classes, standardised as a common base.",
+        details = "The first Haskell report appeared in 1990, after a committee of researchers merged several lazy languages. " +
+            "Haskell 98 was the stable base that compilers agreed on, and universities used it for teaching. " +
+            "Lazy evaluation means an expression is calculated only when its value is needed, so an infinite list can be written down.",
+        example = """
+            primes = sieve [2..]
+              where sieve (p:xs) = p : sieve [x | x <- xs, x `mod` p /= 0]
+
+            main = print (take 10 primes)
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Functional and logic",
+        title = "OCaml",
+        originalTitle = "Objective Caml",
+        author = "Xavier Leroy and the INRIA team",
+        year = 1996,
+        summary = "A functional language with type inference, a fast native compiler and objects on top of ML.",
+        details = "The ML family grew at INRIA in France, and Caml was its branch. " +
+            "Objective Caml (1996) added classes and objects while keeping the strict type checker. " +
+            "Type inference found many errors before the program ran, and the compiler produced fast native code.",
+        example = """
+            let rec fact n = if n = 0 then 1 else n * fact (n - 1)
+            let () = Printf.printf "%d\n" (fact 10)
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Functional and logic",
+        title = "Standard ML '97",
+        originalTitle = "Standard ML",
+        author = "Robin Milner, Mads Tofte, Robert Harper and David MacQueen",
+        year = 1997,
+        summary = "A typed functional language with modules, defined so precisely that its report is a formal document.",
+        details = "The Definition of Standard ML (1990) fixed the meaning of every construct, and a revised edition appeared in 1997. " +
+            "The module system, with signatures and functors, influenced later languages. " +
+            "Several research compilers ran the language, and many universities taught from it.",
+        example = """
+            fun fact 0 = 1
+              | fact n = n * fact (n - 1);
+            print (Int.toString (fact 10) ^ "\n");
+        """,
+        rare = true,
+    ),
+
+    // ---------- Systems and tools ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Systems and tools",
+        title = "Oberon-2",
+        originalTitle = "Oberon-2",
+        author = "Niklaus Wirth and Hanspeter Mössenböck",
+        year = 1991,
+        summary = "Wirth's successor to Modula-2: type-bound procedures, a clean module system and a compact compiler.",
+        details = "Oberon-2 extended the Oberon language, which Wirth and Jürg Gutknecht designed for the Oberon System (1987). " +
+            "Its type-bound procedures act as methods, so objects can be written without a large class library. " +
+            "The language was used for teaching and for building the Oberon system itself.",
+        example = """
+            TYPE Shape = POINTER TO ShapeDesc;
+              ShapeDesc = RECORD x, y: INTEGER END;
+
+            PROCEDURE (s: Shape) Move (dx, dy: INTEGER);
+            BEGIN
+              s.x := s.x + dx; s.y := s.y + dy
+            END Move;
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Systems and tools",
+        title = "Ada 95",
+        originalTitle = "Ada 95 (ISO/IEC 8652:1995)",
+        author = "ISO working group, based on the Ada 83 design for the US Department of Defense",
+        year = 1995,
+        summary = "The revised Ada standard, which added object-oriented programming and kept the strict checking of the original.",
+        details = "Ada 83 was designed for the US Department of Defense. The 1995 revision added tagged types, inheritance and protected objects. " +
+            "Ada stayed the language of many safety-critical projects, such as avionics, where its checks and packages were valued.",
+        example = """
+            with Ada.Text_IO; use Ada.Text_IO;
+            procedure Hello is
+            begin
+               Put_Line ("Hello, Ada 95");
+            end Hello;
+        """,
+        rare = true,
+    ),
+
+    // ---------- Forgotten and niche ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Forgotten and niche",
+        title = "Euphoria",
+        originalTitle = "Euphoria",
+        author = "Robert Craig",
+        year = 1993,
+        summary = "A small interpreted language for DOS and Windows whose only data structure is the sequence.",
+        details = "Craig released Euphoria in 1993 as a quick way to write programs for the PC. " +
+            "The sequence covers arrays, strings and records, so there is only one structure to learn.",
+        example = """
+            sequence names = {"ann", "bob"}
+            for i = 1 to length(names) do
+                puts(1, names[i] & "\n")
+            end for
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.LANGUAGE,
+        section = "Forgotten and niche",
+        title = "AppleScript",
+        originalTitle = "AppleScript",
+        author = "Apple Computer",
+        year = 1993,
+        summary = "English-like scripting for the Macintosh: a script asks other programs to work through Apple events.",
+        details = "AppleScript came with System 7.1 in 1993. Its sentence-like syntax was meant for people who were not programmers, " +
+            "and a script could drive a word processor or a spreadsheet through the same messages that the user's clicks produced. " +
+            "Many office workflows on the Mac ran on it.",
+        example = """
+            tell application "Finder"
+                open folder "Documents" of startup disk
+            end tell
+        """,
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db2Practices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Methods, design practices, testing, estimation and culture of the 1990s software world. */
+val db2Practices: List<RecordEntity> = listOf(
+
+    // ---------- Process and methods ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Process and methods",
+        title = "Extreme Programming (XP)",
+        originalTitle = "Extreme Programming",
+        author = "Kent Beck and Ward Cunningham, with the Chrysler C3 team",
+        year = 1996,
+        summary = "Short iterations, pair programming, test-first coding and a customer on site, pushed to the extreme.",
+        details = "Beck and Cunningham developed the practices during the Chrysler C3 payroll project in 1996. " +
+            "The book Extreme Programming Explained (1999) gave the method its name and a list of practices. " +
+            "Teams wrote tests before code, integrated many times a day and changed the design whenever it got in the way.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Process and methods",
+        title = "Scrum",
+        originalTitle = "Scrum",
+        author = "Ken Schwaber and Jeff Sutherland",
+        year = 1995,
+        summary = "A framework with sprints, a daily stand-up and a product backlog, presented at OOPSLA 1995.",
+        details = "Schwaber and Sutherland described the process at the OOPSLA 1995 conference, based on how product teams had worked with short iterations. " +
+            "The sprint and the daily meeting became its trademarks, and the backlog kept the list of wanted features.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Process and methods",
+        title = "Rational Unified Process",
+        originalTitle = "RUP",
+        author = "Rational Software (Philippe Kruchten and others)",
+        year = 1998,
+        summary = "An iterative, phased process with disciplines such as requirements and testing, sold as a product.",
+        details = "RUP turned the Rational methods into a documented process with roles, artefacts and templates. " +
+            "Its size scared smaller teams, so many of them adapted it rather than adopting it whole.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Process and methods",
+        title = "Feature-Driven Development",
+        originalTitle = "FDD",
+        author = "Jeff De Luca and Peter Coad",
+        year = 1997,
+        summary = "A process built around small features that the client values, each delivered by a feature team.",
+        details = "FDD grew in Singapore in 1997 out of a large banking project. " +
+            "Its steps were an overall model, a list of features, planning by feature, and design and build by feature.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Process and methods",
+        title = "DSDM (Dynamic Systems Development Method)",
+        originalTitle = "DSDM",
+        author = "DSDM Consortium (UK)",
+        year = 1994,
+        summary = "A UK framework built on fixed time-boxes and the MoSCoW priority list.",
+        details = "The consortium published its method in 1994. Its rules included fixed deadlines, " +
+            "prioritised requirements (must, should, could, won't) and close involvement of the users.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Process and methods",
+        title = "Personal Software Process",
+        originalTitle = "PSP",
+        author = "Watts Humphrey",
+        year = 1995,
+        summary = "A personal discipline: log every minute and every defect, and plan each program before writing it.",
+        details = "Humphrey's book A Discipline for Software Engineering (1995) describes PSP. " +
+            "Engineers recorded time and defects for each program, and they used the data to improve their estimates.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Process and methods",
+        title = "Capability Maturity Model",
+        originalTitle = "CMM v1.1",
+        author = "Software Engineering Institute (Watts Humphrey and others)",
+        year = 1993,
+        summary = "Five levels of process maturity, from ad hoc to optimising, used to rate software contractors.",
+        details = "The SEI published version 1.1 of the model in 1993. Organisations were assessed on key process areas, " +
+            "and government buyers often asked for a certain level. Critics said the model encouraged paperwork.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Process and methods",
+        title = "Daily build",
+        originalTitle = "Daily build and synchronise-and-stabilise",
+        author = "Microsoft product teams",
+        year = 1995,
+        summary = "Building the whole product every night, so that breakage is found the same day.",
+        details = "Cusumano and Selby's book Microsoft Secrets (1995) described the daily build and the synchronise-and-stabilise routine at Microsoft. " +
+            "It was a forerunner of continuous integration.",
+    ),
+
+    // ---------- Design and architecture ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Design and architecture",
+        title = "Design Patterns",
+        originalTitle = "Design Patterns: Elements of Reusable Object-Oriented Software",
+        author = "Erich Gamma, Richard Helm, Ralph Johnson and John Vlissides",
+        year = 1994,
+        summary = "Twenty-three named solutions to recurring design problems, with a shared vocabulary.",
+        details = "The book (1994) described patterns such as Observer, Strategy and Abstract Factory. Its authors became known as the Gang of Four. " +
+            "It gave designers a shared vocabulary, although many developers used the names without reading the book.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Design and architecture",
+        title = "UML 1.0 and 1.1",
+        originalTitle = "Unified Modeling Language",
+        author = "Grady Booch, James Rumbaugh and Ivar Jacobson, submitted to the OMG",
+        year = 1997,
+        summary = "A standard set of diagrams for classes, use cases, sequences and states, adopted by the OMG in 1997.",
+        details = "The three methods of Booch, Rumbaugh and Jacobson were merged into UML. " +
+            "Version 1.1 was adopted as an OMG standard in 1997, and CASE tools began to read and draw the same diagrams.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Design and architecture",
+        title = "Refactoring",
+        originalTitle = "Refactoring: Improving the Design of Existing Code",
+        author = "Martin Fowler, with Kent Beck",
+        year = 1999,
+        summary = "Changing the structure of code in small steps while keeping its behaviour, guided by named code smells.",
+        details = "Fowler's book (1999) catalogued refactorings such as extract method and rename, each with its mechanics. " +
+            "Every step was small and followed by a test run.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Design and architecture",
+        title = "AntiPatterns",
+        originalTitle = "AntiPatterns: Refactoring Software, Architectures, and Projects in Crisis",
+        author = "William Brown, Raphael Malveau, Hays McCormick and Thomas Mowbray",
+        year = 1998,
+        summary = "Named bad habits such as the God Class and Spaghetti Code, with ways to escape them.",
+        details = "The book (1998) recorded common mistakes in object-oriented and architectural work and gave a refactored solution for each. " +
+            "Its names entered the everyday speech of developers.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Design and architecture",
+        title = "Software Architecture (Shaw and Garlan)",
+        originalTitle = "Software Architecture: Perspectives on an Emerging Discipline",
+        author = "Mary Shaw and David Garlan",
+        year = 1996,
+        summary = "A vocabulary of architectural styles: pipes and filters, layers, client-server and repositories.",
+        details = "The 1996 book named the styles that teams already used and separated architecture from implementation. " +
+            "It made architecture a subject of study in its own right.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Design and architecture",
+        title = "Pattern-Oriented Software Architecture",
+        originalTitle = "POSA, Volume 1",
+        author = "Frank Buschmann, Regine Meunier, Hans Rohnert, Peter Sommerlad and Michael Stal",
+        year = 1996,
+        summary = "Patterns for large systems, from Layers and Pipes and Filters to Broker and Reactor.",
+        details = "Volume 1 (1996) described patterns at the scale of whole systems. " +
+            "It took the pattern idea of the Gang of Four and applied it to architecture, which made it useful to system designers as well as programmers.",
+        rare = true,
+    ),
+
+    // ---------- Testing ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Testing",
+        title = "JUnit",
+        originalTitle = "JUnit 3.x",
+        author = "Kent Beck and Erich Gamma",
+        year = 1997,
+        summary = "A small Java framework for unit tests: write test methods, run them on every build, keep them green.",
+        details = "Beck and Gamma wrote JUnit in 1997, reportedly during a flight. It used reflection to find the test methods, " +
+            "and the green bar became a habit for many teams. The idea spread to other languages as the xUnit family.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Testing",
+        title = "Fuzz testing",
+        originalTitle = "Fuzz",
+        author = "Barton Miller, Lars Fredriksen and Bryan So",
+        year = 1990,
+        summary = "Feeding random input to programs to see which ones crash; many standard UNIX tools failed.",
+        details = "The 1990 paper An Empirical Study of the Reliability of UNIX Utilities showed that many standard tools crashed on random input. " +
+            "The method, later called fuzzing, became a standard way to find security bugs.",
+        rare = true,
+    ),
+
+    // ---------- Estimation and reviews ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Estimation and reviews",
+        title = "Software inspections",
+        originalTitle = "Software Inspection",
+        author = "Michael Fagan (1976 method); Tom Gilb and Dorothy Graham (1993 book)",
+        year = 1993,
+        summary = "A structured review meeting with roles, checklists and defect counts, held before testing starts.",
+        details = "Fagan formalised inspections at IBM in 1976. Gilb and Graham's book Software Inspection (1993) made the method common in the 90s, " +
+            "with checklists and measured defect rates.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Estimation and reviews",
+        title = "The CHAOS Report",
+        originalTitle = "The CHAOS Report",
+        author = "The Standish Group",
+        year = 1994,
+        summary = "A survey of thousands of IT projects: only about one in six finished on time and on budget.",
+        details = "The 1994 report examined more than eight thousand projects. Its figures showed that about 16 percent finished " +
+            "on time, on budget and with the planned features, and about a third were cancelled.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Estimation and reviews",
+        title = "COCOMO II",
+        originalTitle = "COCOMO II model",
+        author = "Barry Boehm and the USC Center for Software Engineering",
+        year = 1995,
+        summary = "A cost model that estimates effort in person-months from the size of the code and a set of cost drivers.",
+        details = "COCOMO II was developed in the 1990s as an update of the 1981 COCOMO model. " +
+            "It added drivers for reuse, process maturity and modern tools, and it is still used to estimate projects.",
+        rare = true,
+    ),
+
+    // ---------- Community and culture ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PRACTICE,
+        section = "Community and culture",
+        title = "The Cathedral and the Bazaar",
+        originalTitle = "The Cathedral and the Bazaar",
+        author = "Eric S. Raymond",
+        year = 1997,
+        summary = "An essay comparing closed and open development, which explained why Linux grew the way it did.",
+        details = "Raymond's essay (1997) described the development of Linux as a bazaar: many developers released early and often, and users found the bugs. " +
+            "It became a manifesto of the open-source movement.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db2Projects.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Built products of the 1990s: finished programs with an explanation of how they work and instructions for running them. */
+val db2Projects: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PROJECT,
+        section = "Web and servers",
+        title = "Tiny web server in Perl",
+        originalTitle = "HTTP/1.0 server in about thirty lines",
+        author = "Written from scratch in the style of 1996",
+        year = 1996,
+        summary = "A complete web server in about thirty lines of Perl: it accepts a connection, reads the request and sends a file.",
+        details = "The server is a loop around accept(). Each connection gets one request, which is answered with HTTP/1.0 and then closed. " +
+            "It reads the request line, skips the headers, maps the path to a file in the current folder, and sends either the file or a 404 page. " +
+            "Apache added modules, logs and configuration on top of this same idea.",
+        instructions = """
+            1. Save the code as server.pl and put an index.html file in the same folder.
+            2. Start the server on port 8080: perl server.pl 8080
+            3. In another window request the page: curl http://localhost:8080/
+        """,
+        example = """
+            #!/usr/bin/perl
+            # A minimal HTTP/1.0 server: serves files from the current directory.
+            use strict;
+            use IO::Socket::INET;
+
+            my <DOLLAR>port = shift(@ARGV) || 8080;
+            my <DOLLAR>server = IO::Socket::INET->new(
+                LocalPort => <DOLLAR>port, Listen => 5, Reuse => 1, Proto => 'tcp'
+            ) or die "cannot listen on <DOLLAR>port: <DOLLAR>!";
+            print "listening on <DOLLAR>port\n";
+
+            while (my <DOLLAR>client = <DOLLAR>server->accept()) {
+                my <DOLLAR>request = <<DOLLAR>client>;
+                my (<DOLLAR>method, <DOLLAR>path) = split ' ', <DOLLAR>request;
+                while (my <DOLLAR>header = <<DOLLAR>client>) {    # skip the headers
+                    last if <DOLLAR>header =~ /^\r?\n<DOLLAR>/;
+                }
+                <DOLLAR>path = '/index.html' if <DOLLAR>path eq '/';
+                <DOLLAR>path =~ s{^/}{};
+                if (<DOLLAR>method eq 'GET' and open(my <DOLLAR>file, '<', <DOLLAR>path)) {
+                    binmode <DOLLAR>file;
+                    local <DOLLAR>/;
+                    my <DOLLAR>body = <<DOLLAR>file>;
+                    print <DOLLAR>client "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<DOLLAR>body";
+                } else {
+                    print <DOLLAR>client "HTTP/1.0 404 Not Found\r\nContent-Type: text/plain\r\n\r\nnot found\n";
+                }
+                close <DOLLAR>client;
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PROJECT,
+        section = "Graphics and games",
+        title = "ASCII raycaster in C",
+        originalTitle = "Wolfenstein-style 3D view in text",
+        author = "Written in the style of the 1992 raycasting games",
+        year = 1992,
+        summary = "A Wolfenstein-style 3D view drawn in ASCII: each screen column is a ray that walks the map until it meets a wall.",
+        details = "The map is a grid of cells. For each of the 60 screen columns, the program casts a ray from the player's position in that column's direction " +
+            "and steps along it until the ray enters a wall cell. The distance sets the height of the wall column, so far walls are short. " +
+            "Wolfenstein 3D (1992) used the same idea with textures.",
+        instructions = """
+            1. Save the code as raycast.c.
+            2. Compile it: cc -Wall -o raycast raycast.c -lm
+            3. Run ./raycast: the walls appear as columns of '#', '=' and '.', where '#' is the nearest wall.
+        """,
+        example = """
+            #include <math.h>
+            #include <stdio.h>
+
+            #define MAP_W 8
+            #define MAP_H 8
+            #define SCREEN_W 60
+            #define SCREEN_H 20
+
+            /* '#' is a wall, '.' is floor */
+            static const char map[MAP_H][MAP_W + 1] = {
+                "########",
+                "#......#",
+                "#..##...",
+                "#..#....",
+                "#.....##",
+                "#......#",
+                "#..#...#",
+                "########"
+            };
+
+            int main(void)
+            {
+                double px = 1.5, py = 1.5;          /* player position */
+                double facing = 0.3;                /* viewing direction in radians */
+                double fov = 1.0;                   /* field of view in radians */
+                int top[SCREEN_W], bottom[SCREEN_W];
+                char shade[SCREEN_W];
+                int x, y;
+
+                for (x = 0; x < SCREEN_W; x++) {
+                    double angle = facing - fov / 2 + fov * x / SCREEN_W;
+                    double dx = cos(angle), dy = sin(angle);
+                    double dist = 0.0;
+                    int mx, my, hit = 0;
+                    int height;
+
+                    while (!hit && dist < 20.0) {   /* step along the ray until it meets a wall */
+                        dist += 0.02;
+                        mx = (int)floor(px + dx * dist);
+                        my = (int)floor(py + dy * dist);
+                        if (mx < 0 || my < 0 || mx >= MAP_W || my >= MAP_H || map[my][mx] == '#')
+                            hit = 1;
+                    }
+                    height = (int)(SCREEN_H / dist);
+                    if (height > SCREEN_H)
+                        height = SCREEN_H;
+                    top[x] = (SCREEN_H - height) / 2;
+                    bottom[x] = top[x] + height;
+                    shade[x] = dist < 2.0 ? '#' : (dist < 4.0 ? '=' : '.');
+                }
+
+                for (y = 0; y < SCREEN_H; y++) {
+                    for (x = 0; x < SCREEN_W; x++)
+                        putchar(y >= top[x] && y < bottom[x] ? shade[x] : ' ');
+                    putchar('\n');
+                }
+                return 0;
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PROJECT,
+        section = "Graphics and games",
+        title = "Doom WAD lister in C",
+        originalTitle = "wadlist",
+        author = "Written in the style of the 1993 modding tools",
+        year = 1993,
+        summary = "A tool that reads the directory of a Doom WAD file and lists every lump with its size and position.",
+        details = "A WAD file is a container: a 12-byte header points to a directory, and each 16-byte directory entry names one lump and gives its position and size. " +
+            "Maps, sprites, sounds and music were all lumps. Modders used tools like this one to see what a level was made of before editing it.",
+        instructions = """
+            1. Save the code as wadlist.c and compile it: cc -Wall -o wadlist wadlist.c
+            2. Run it on any WAD file: ./wadlist DOOM1.WAD
+            3. The first line gives the type and the number of lumps; the lines below list each lump with its size and offset.
+        """,
+        example = """
+            #include <stdio.h>
+
+            /* WAD header: type ("IWAD" or "PWAD"), number of lumps, offset of the directory */
+            struct wad_header {
+                char type[4];
+                int lumps;
+                int directory;
+            };
+
+            /* one directory entry: where the lump starts, its size and its name */
+            struct wad_entry {
+                int position;
+                int size;
+                char name[8];
+            };
+
+            int main(int argc, char *argv[])
+            {
+                FILE *f;
+                struct wad_header header;
+                struct wad_entry entry;
+                int i;
+
+                if (argc != 2) {
+                    fprintf(stderr, "usage: wadlist file.wad\n");
+                    return 1;
+                }
+                f = fopen(argv[1], "rb");
+                if (f == NULL) {
+                    perror(argv[1]);
+                    return 1;
+                }
+                if (fread(&header, sizeof header, 1, f) != 1) {
+                    fprintf(stderr, "file is too short\n");
+                    return 1;
+                }
+                printf("%.4s: %d lumps\n", header.type, header.lumps);
+                fseek(f, header.directory, SEEK_SET);
+                for (i = 0; i < header.lumps; i++) {
+                    if (fread(&entry, sizeof entry, 1, f) != 1)
+                        break;
+                    printf("%-8.8s %6d bytes at %d\n", entry.name, entry.size, entry.position);
+                }
+                fclose(f);
+                return 0;
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.PROJECT,
+        section = "Bulletin boards",
+        title = "BBS door game in Turbo Pascal",
+        originalTitle = "A guessing door for a bulletin board",
+        author = "Written in the style of the BBS door games of 1992",
+        year = 1992,
+        summary = "A door game for a bulletin board: the board runs the program, and the game talks to the caller through the terminal.",
+        details = "In the 90s a bulletin board ran external programs called doors. The board wrote a drop file with the caller's name and the time left, " +
+            "and the door read it. This game asks for guesses, answers higher or lower, and counts the tries. " +
+            "It was compiled with Turbo Pascal and started from the board's menu.",
+        instructions = """
+            1. Save the program as DOORGAME.PAS.
+            2. Compile it with Turbo Pascal 7: tpc DOORGAME.PAS (or press F9 in the IDE).
+            3. Add a line to the board's menu that runs DOORGAME.EXE; callers reach the game from the menu.
+        """,
+        example = """
+            program Doorgame;
+            { A guessing game for a BBS door. The BBS starts the program
+              and passes the caller's name in the drop file; this version is a plain game. }
+            uses crt;
+            var
+              secret, guess, tries: integer;
+            begin
+              clrscr;
+              randomize;
+              secret := random(100) + 1;
+              tries := 0;
+              writeln('Welcome, caller! I am thinking of a number from 1 to 100.');
+              repeat
+                write('Your guess: ');
+                readln(guess);
+                tries := tries + 1;
+                if guess < secret then writeln('Higher.')
+                else if guess > secret then writeln('Lower.');
+              until guess = secret;
+              writeln('Correct, after ', tries, ' tries.');
+            end.
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db2Systems.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Operating systems, databases and servers of the 1990s: Unix variants, Windows, desktop systems and research systems. */
+val db2Systems: List<RecordEntity> = listOf(
+
+    // ---------- Unix family ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Unix family",
+        title = "Linux 1.0",
+        originalTitle = "Linux kernel 1.0",
+        author = "Linus Torvalds and contributors",
+        year = 1994,
+        summary = "The free Unix-like kernel that Torvalds began in 1991, released as version 1.0 in 1994.",
+        details = "Torvalds started the kernel in 1991 as a hobby on an Intel 386 PC. " +
+            "Version 1.0 (March 1994) brought networking, TCP/IP and drivers for many devices. " +
+            "Distributions such as Slackware and Debian put it on home computers, and developers from many countries sent patches over the Internet.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Unix family",
+        title = "FreeBSD 2.0",
+        originalTitle = "FreeBSD 2.0",
+        author = "The FreeBSD Project",
+        year = 1994,
+        summary = "A free BSD Unix for PCs, with the 386 and 486 as its main targets.",
+        details = "FreeBSD 2.0 was announced on 22 November 1994. It grew from the 386BSD patch kit and ran on ordinary PCs. " +
+            "Its ports collection and package tools made it a favourite of server administrators and enthusiasts, and the 2.x line lasted for years.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Unix family",
+        title = "NetBSD 1.0",
+        originalTitle = "NetBSD 1.0",
+        author = "The NetBSD Project",
+        year = 1994,
+        summary = "A portable BSD that aimed to run on almost every machine with a processor and some memory.",
+        details = "NetBSD 1.0 appeared in October 1994, descended from 4.4BSD-Lite. " +
+            "Its goal was portability: the same system ran on Amigas, Macintoshes, Suns and many other machines. " +
+            "The slogan \"Of course it runs NetBSD\" became a joke in the Unix community.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Unix family",
+        title = "OpenBSD 1.0",
+        originalTitle = "OpenBSD 1.0",
+        author = "Theo de Raadt and the OpenBSD team",
+        year = 1996,
+        summary = "A BSD forked from NetBSD in 1995, with security as the first priority and audits of its code.",
+        details = "OpenBSD 1.0 was released in October 1996. De Raadt split the project from NetBSD after a dispute with its core team. " +
+            "Security became the trademark: secure defaults, code audits and fast fixes. The project's mascot is a pufferfish.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Unix family",
+        title = "Solaris 2.0",
+        originalTitle = "Solaris 2.0 (SunOS 5)",
+        author = "Sun Microsystems",
+        year = 1992,
+        summary = "Sun's Unix with a System V base and symmetric multiprocessing, the standard Unix of Sun servers.",
+        details = "Solaris 2.0 (1992) replaced SunOS 4 with a kernel based on System V Release 4. " +
+            "Its symmetric multiprocessing support let one machine use several processors, and it became the usual Unix on Sun servers through the decade.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Unix family",
+        title = "IRIX 5",
+        originalTitle = "IRIX 5.x",
+        author = "Silicon Graphics Inc.",
+        year = 1993,
+        summary = "SGI's Unix for MIPS workstations, built around the graphics hardware and OpenGL.",
+        details = "IRIX 5 (1993) ran on the MIPS-based workstations of Silicon Graphics. " +
+            "Its graphics stack was built around OpenGL, which SGI had developed, and some film effects of the period were produced on SGI machines.",
+        rare = true,
+    ),
+
+    // ---------- Windows and DOS ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Windows and DOS",
+        title = "Windows NT 3.1",
+        originalTitle = "Windows NT 3.1",
+        author = "Microsoft, team led by David Cutler",
+        year = 1993,
+        summary = "A 32-bit Windows with protected memory and a portable kernel, for workstations and servers.",
+        details = "NT 3.1 shipped in July 1993 with the Win32 API, a Windows-style desktop and the NTFS file system. " +
+            "David Cutler, who had worked on DEC's VMS, led the design. The system ran on Intel processors and on other architectures, and its security model was part of the design from the start.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Windows and DOS",
+        title = "Windows 95",
+        originalTitle = "Windows 95",
+        author = "Microsoft",
+        year = 1995,
+        summary = "The consumer Windows that added the Start button, the taskbar and long file names, and ran most DOS programs.",
+        details = "Windows 95 arrived in August 1995 with the Start menu, a taskbar, long file names and Plug and Play support. " +
+            "It was still built on the DOS-based Windows 9x kernel, so it ran most DOS games and programs. " +
+            "Its launch was a media event, and the 32-bit API became the standard for new programs.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Windows and DOS",
+        title = "Windows CE 1.0",
+        originalTitle = "Windows CE 1.0",
+        author = "Microsoft",
+        year = 1996,
+        summary = "A small Windows for handheld PCs and embedded devices, with a reduced version of the Win32 API.",
+        details = "Windows CE 1.0 was released in November 1996 for handheld PC hardware. " +
+            "It was a separate code base from desktop Windows, with a subset of the Win32 API, so programs had to be ported to it. " +
+            "The first machines were palmtop-style computers with small keyboards.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Windows and DOS",
+        title = "ReactOS",
+        originalTitle = "ReactOS (begun as FreeWin95)",
+        author = "The ReactOS project",
+        year = 1996,
+        summary = "An open-source attempt to write a Windows-compatible system from scratch, begun in the 90s as FreeWin95.",
+        details = "The project began in 1996 as FreeWin95, an attempt to build a free clone of Windows 95. " +
+            "Its goal is binary compatibility with Windows programs, so that the same applications run without changes. " +
+            "That goal is much harder than it sounds, and the project's history shows why.",
+        rare = true,
+    ),
+
+    // ---------- Desktop and workstations ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Desktop and workstations",
+        title = "OS/2 Warp",
+        originalTitle = "OS/2 Warp 3",
+        author = "IBM",
+        year = 1994,
+        summary = "IBM's 32-bit successor to DOS and Windows 3.1, with multitasking and the Workplace Shell desktop.",
+        details = "OS/2 Warp 3 (1994) came with the object-oriented Workplace Shell and could run Windows 3.1 programs. " +
+            "Banks and large companies adopted it, but drivers and games were scarce, and Windows 95 took most of the market.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Desktop and workstations",
+        title = "BeOS R3",
+        originalTitle = "BeOS Release 3",
+        author = "Be Inc. (Jean-Louis Gassée)",
+        year = 1996,
+        summary = "A multimedia operating system with threads everywhere and a file system that stores attributes.",
+        details = "Be Inc. wrote BeOS for its own BeBox hardware and then for PCs. " +
+            "Every window and driver ran in threads, and the BFS file system kept attributes next to each file, so the system could search files by those attributes.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Desktop and workstations",
+        title = "AmigaOS 3.5",
+        originalTitle = "AmigaOS 3.5",
+        author = "Commodore-Amiga",
+        year = 1994,
+        summary = "The last major Commodore release of the Amiga system: a multitasking desktop with preemptive threads.",
+        details = "Commodore released AmigaOS 3.5 in 1994, when the company was already in financial trouble. " +
+            "The Workbench desktop and the Exec kernel with preemptive multitasking had been ahead of many PCs. " +
+            "Later versions came from other companies.",
+        rare = true,
+    ),
+
+    // ---------- Research systems ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Research systems",
+        title = "Plan 9 from Bell Labs",
+        originalTitle = "Plan 9 from Bell Labs",
+        author = "Rob Pike, Ken Thompson, Dave Presotto, Phil Winterbottom and others at Bell Labs",
+        year = 1992,
+        summary = "A research system in which everything is a file and each process builds its own namespace.",
+        details = "Plan 9 came out of Bell Labs in 1992. Every resource, including network connections and the screen, appears as a file, " +
+            "and each process can mount other machines' files into its own view. " +
+            "In 1992 Ken Thompson and Rob Pike designed UTF-8 for the system, and that encoding later became the standard on the Internet.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Research systems",
+        title = "Inferno",
+        originalTitle = "Inferno",
+        author = "Bell Labs, the Plan 9 group",
+        year = 1996,
+        summary = "A network operating system from the Plan 9 team, with a portable virtual machine and the Limbo language.",
+        details = "Inferno (1996) took the Plan 9 ideas to a portable system. Programs run on a virtual machine, so the same binaries work on many hosts. " +
+            "Its programming language was Limbo, and its protocol family, derived from 9P, let machines share resources as files.",
+        rare = true,
+    ),
+
+    // ---------- Databases ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Databases",
+        title = "Oracle 7",
+        originalTitle = "Oracle7",
+        author = "Oracle Corporation",
+        year = 1992,
+        summary = "A relational database with stored procedures, triggers and distributed queries across several servers.",
+        details = "Oracle 7 (1992) added stored procedures, triggers and distributed queries across servers. " +
+            "It became the database of choice for large corporations, and the company sold its PL/SQL language along with it.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Databases",
+        title = "Postgres95 (PostgreSQL)",
+        originalTitle = "Postgres95",
+        author = "Andrew Yu and Jolly Chen at Berkeley",
+        year = 1995,
+        summary = "An open-source relational database from the Postgres research project at Berkeley, with SQL added in 1995.",
+        details = "The Postgres research project began at Berkeley under Michael Stonebraker in the 1980s. " +
+            "In 1995 Andrew Yu and Jolly Chen added an SQL interface and released the result as Postgres95. " +
+            "It was renamed PostgreSQL in 1996.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Databases",
+        title = "MySQL",
+        originalTitle = "MySQL",
+        author = "Michael Widenius, David Axmark and Allan Larsson (MySQL AB)",
+        year = 1995,
+        summary = "A fast, simple SQL database that became the usual choice behind PHP websites.",
+        details = "Widenius and Axmark began MySQL in the mid-90s to build a fast SQL server for their own data, and MySQL AB was founded in 1995. " +
+            "Its simple design and quick reads made it the usual database behind PHP sites, and it was the M of the LAMP stack that web hosts used.",
+    ),
+
+    // ---------- Networks and web servers ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Networks and web servers",
+        title = "NetWare 4",
+        originalTitle = "NetWare 4.0",
+        author = "Novell Inc.",
+        year = 1993,
+        summary = "The file and print server that ruled office networks, with a global directory service called NDS.",
+        details = "NetWare 4 (1993) introduced Novell Directory Services, a single tree of users, servers and printers for the whole company " +
+            "instead of one user list per server. Before the Web took over the office, most companies shared files and printers through NetWare servers.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.SYSTEM,
+        section = "Networks and web servers",
+        title = "Apache 1.0",
+        originalTitle = "Apache HTTP Server 1.0",
+        author = "The Apache Group (volunteers)",
+        year = 1995,
+        summary = "A web server built from patches to the NCSA httpd code, which soon became the most used server on the Internet.",
+        details = "Apache 1.0 was released in December 1995 by a group of volunteers who had patched the NCSA server. " +
+            "Its modules and plain-text configuration made it flexible, and it soon became the most common web server on the Internet.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db2Tools.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Tools of the 1990s: version control, compilers and IDEs, editors, documentation, music trackers, internet and archivers. */
+val db2Tools: List<RecordEntity> = listOf(
+
+    // ---------- Version control ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Version control",
+        title = "CVS (Concurrent Versions System)",
+        originalTitle = "CVS",
+        author = "Brian Berliner (C version)",
+        year = 1990,
+        summary = "Many people edit one project, and a central server keeps the history and merges their changes.",
+        details = "CVS grew from shell scripts built on top of RCS. Brian Berliner's C version appeared around 1990, " +
+            "and CVS let several developers work on the same files at once. It became the standard open-source version control of the decade.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Version control",
+        title = "Perforce",
+        originalTitle = "Perforce",
+        author = "Christopher Seiwald (Perforce Software)",
+        year = 1995,
+        summary = "A commercial version control system with a central server, built for very large repositories.",
+        details = "Seiwald's system appeared in 1995. Game studios and chip makers used it for huge repositories, " +
+            "where its central server design suited big teams.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Version control",
+        title = "Visual SourceSafe",
+        originalTitle = "Microsoft Visual SourceSafe",
+        author = "Microsoft (bought from One Tree Software)",
+        year = 1994,
+        summary = "Microsoft's file-based source control: easy to set up, and widely criticised for database corruption.",
+        details = "Microsoft bought the product in 1994 and bundled it with its development tools. " +
+            "Its shared-file design was easy to install, but users reported database corruption so often that it became a warning story about version control.",
+        rare = true,
+    ),
+
+    // ---------- Compilers and IDEs ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Compilers and IDEs",
+        title = "Borland C++ 4.5",
+        originalTitle = "Borland C++ 4.5",
+        author = "Borland International",
+        year = 1995,
+        summary = "An IDE with a fast compiler and the ObjectWindows library for Windows programming.",
+        details = "Borland C++ 4.5 (1995) combined a fast compiler, an editor and a debugger in one IDE. " +
+            "The ObjectWindows Library (OWL) wrapped the Windows API in C++ classes, and Borland's compilers were popular with professional Windows developers.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Compilers and IDEs",
+        title = "Visual C++ 2.0",
+        originalTitle = "Microsoft Visual C++ 2.0",
+        author = "Microsoft",
+        year = 1994,
+        summary = "Microsoft's C++ IDE with the Microsoft Foundation Classes for 32-bit Windows applications.",
+        details = "Visual C++ 2.0 (1994) brought 32-bit Windows programming and the Microsoft Foundation Classes into the Microsoft IDE. " +
+            "Its wizards generated the skeleton of a program in a few clicks.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Compilers and IDEs",
+        title = "Turbo Pascal 7 IDE",
+        originalTitle = "Turbo Pascal 7.0",
+        author = "Borland (Anders Hejlsberg)",
+        year = 1992,
+        summary = "A DOS integrated environment: editor, compiler and debugger in one fast program.",
+        details = "Turbo Pascal 7.0 (1992) ran the editor, compiler and debugger inside one screen. " +
+            "Compiles took a fraction of a second, and students used it for years. Hejlsberg's design set the pattern for the integrated environments that followed.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Compilers and IDEs",
+        title = "NetBeans",
+        originalTitle = "Xelfi, then NetBeans",
+        author = "Students of Charles University in Prague",
+        year = 1996,
+        summary = "A Java IDE that began as a student project in Prague, first aimed at a Delphi-style environment for Java.",
+        details = "The project started in 1996 as Xelfi, a student effort at Charles University in Prague. " +
+            "A company was founded in 1997 to develop it commercially, and Sun Microsystems bought it in 1999. Later it was given to the Apache Software Foundation.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Compilers and IDEs",
+        title = "Cygwin",
+        originalTitle = "Cygwin",
+        author = "Cygnus Solutions",
+        year = 1995,
+        summary = "A Unix-like environment on Windows: a POSIX emulation layer with the GNU tools built on top.",
+        details = "Cygnus Solutions began Cygwin in 1995 so that Unix programs could be built on Windows NT. " +
+            "Its DLL emulated a POSIX system, and the GNU tools ran on top of it.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Compilers and IDEs",
+        title = "MinGW",
+        originalTitle = "Minimalist GNU for Windows",
+        author = "Colin Peters and contributors",
+        year = 1998,
+        summary = "Native Windows programs built with GCC, without a POSIX layer or a runtime DLL.",
+        details = "MinGW started in 1998 as a way to build native Windows executables with GCC and the Windows headers. " +
+            "Unlike Cygwin, it needed no runtime DLL, so the programs could be distributed freely.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Compilers and IDEs",
+        title = "NASM",
+        originalTitle = "Netwide Assembler",
+        author = "Simon Tatham and Julian Hall",
+        year = 1996,
+        summary = "An x86 assembler that writes many object formats, including DOS, Win32 and ELF.",
+        details = "The Netwide Assembler began in 1996. One source file could target DOS, Windows or Linux, " +
+            "because the assembler wrote several object formats.",
+        rare = true,
+    ),
+
+    // ---------- Editors ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Editors",
+        title = "Vim",
+        originalTitle = "Vi IMproved",
+        author = "Bram Moolenaar",
+        year = 1991,
+        summary = "A vi-compatible editor with syntax colouring, undo history and scripting.",
+        details = "Moolenaar began Vim in 1988 for the Amiga and released it to the public in 1991. " +
+            "It kept the vi keys and added scripting, undo history and syntax colouring, so programmers carried their editing habits from machine to machine.",
+    ),
+
+    // ---------- Documentation ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Documentation",
+        title = "Doxygen",
+        originalTitle = "Doxygen",
+        author = "Dimitri van Heesch",
+        year = 1997,
+        summary = "Generates documentation from annotated C and C++ source, with graphs of classes and calls.",
+        details = "Van Heesch released Doxygen in 1997. Comments written in a special syntax became HTML, LaTeX and man pages, " +
+            "and the tool drew class diagrams and call graphs from the code.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Documentation",
+        title = "LyX",
+        originalTitle = "LyX",
+        author = "Matthias Ettrich",
+        year = 1995,
+        summary = "A word processor that writes LaTeX underneath: you edit the structure and the result is typeset.",
+        details = "Ettrich started LyX in 1995. The editor shows the document with its structure, and it saves LaTeX code that a typesetter turns into a page. " +
+            "Academic writers used it for papers and theses.",
+        rare = true,
+    ),
+
+    // ---------- Music and graphics ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Music and graphics",
+        title = "Winamp",
+        originalTitle = "Winamp",
+        author = "Justin Frankel at Nullsoft",
+        year = 1997,
+        summary = "A small MP3 player with skins and plugins, which set the look of desktop audio in the late 90s.",
+        details = "Nullsoft released Winamp in 1997. The player was small and fast, and skins let users change its look. " +
+            "Its plugin system made it the default player for many PC users.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Music and graphics",
+        title = "Impulse Tracker",
+        originalTitle = "Impulse Tracker (IT)",
+        author = "Jeffrey 'Pulse' Lim",
+        year = 1995,
+        summary = "A DOS music tracker with a better sample engine and its own module format, used in the demoscene.",
+        details = "Lim wrote Impulse Tracker in assembly language for DOS PCs and released it in 1995 as freeware with paid extras. " +
+            "Scream Tracker was its model, but it added a better sample engine and the IT module format. Its last patch came in 1999.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Music and graphics",
+        title = "FastTracker 2",
+        originalTitle = "FastTracker II",
+        author = "Triton (Fredrik Huss and Magnus Högdahl)",
+        year = 1994,
+        summary = "A PC music tracker with instruments, envelopes and more channels; its XM format spread through the music scene.",
+        details = "FastTracker 2 added instruments with volume and pitch envelopes, and more channels than its predecessors. " +
+            "Its XM module format spread through the demoscene and the wider music scene.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Music and graphics",
+        title = "Blender",
+        originalTitle = "Blender",
+        author = "Ton Roosendaal at NeoGeo",
+        year = 1994,
+        summary = "A 3D suite that started as an in-house tool at the Dutch animation studio NeoGeo.",
+        details = "Blender began in 1994 at NeoGeo, a Dutch animation studio, as an internal tool for its productions. " +
+            "It became open source in 2002.",
+        rare = true,
+    ),
+
+    // ---------- Internet ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Internet",
+        title = "mIRC",
+        originalTitle = "mIRC",
+        author = "Khaled Mardam-Bey",
+        year = 1995,
+        summary = "An IRC client for Windows with a scripting language, popular in chat rooms across the Internet.",
+        details = "mIRC appeared in 1995 and gave Windows users a usable IRC client. " +
+            "Its scripting language let users build bots and automated chat rooms, and much of the early Windows chat culture ran through it.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Internet",
+        title = "ICQ",
+        originalTitle = "I Seek You",
+        author = "Mirabilis (an Israeli start-up)",
+        year = 1996,
+        summary = "An instant messenger that gave each user a number and showed who was online.",
+        details = "ICQ (1996, a pun on the words I seek you) gave each user a number, the UIN, and a list of contacts whose online status it showed. " +
+            "Its success led AOL to buy Mirabilis in 1998.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Internet",
+        title = "Mosaic",
+        originalTitle = "NCSA Mosaic",
+        author = "Marc Andreessen and Eric Bina at NCSA",
+        year = 1993,
+        summary = "The first popular graphical web browser, which showed images inside pages and took the Web to a wider audience.",
+        details = "Mosaic (1993) ran on X Window, Windows and the Macintosh. " +
+            "Andreessen and Bina left NCSA to found Netscape in 1994.",
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Internet",
+        title = "Trumpet Winsock",
+        originalTitle = "Trumpet Winsock",
+        author = "Peter Tattam",
+        year = 1993,
+        summary = "A shareware TCP/IP stack that gave Windows 3.1 PCs their first Internet connection.",
+        details = "Trumpet Winsock let Windows 3.1 users dial in and run TCP/IP programs. " +
+            "Its author distributed it as shareware, and it was the first Internet connection for many home users.",
+        rare = true,
+    ),
+
+    // ---------- Archivers ----------
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Archivers",
+        title = "RAR",
+        originalTitle = "RAR archive",
+        author = "Eugene Roshal",
+        year = 1993,
+        summary = "A proprietary archiver with strong compression and recovery records that could repair damaged archives.",
+        details = "Roshal released RAR in 1993. Its recovery records could repair a damaged archive, " +
+            "and it became common on bulletin boards.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Archivers",
+        title = "zlib",
+        originalTitle = "zlib",
+        author = "Jean-loup Gailly and Mark Adler",
+        year = 1995,
+        summary = "The compression library behind gzip, PNG and many other formats.",
+        details = "zlib appeared in 1995 as a free implementation of the deflate algorithm. " +
+            "Programs and file formats across the Internet used it, including gzip archives and PNG images.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 2,
+        kind = Kind.TOOL,
+        section = "Archivers",
+        title = "bzip2",
+        originalTitle = "bzip2",
+        author = "Julian Seward",
+        year = 1996,
+        summary = "A block-sorting compressor that packed text tighter than gzip.",
+        details = "Seward released bzip2 in 1996. It sorts the input in blocks with the Burrows-Wheeler transform, " +
+            "which made text files smaller than gzip could manage.",
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
 import com.example.retrodatabases.data.DatabaseEntity
+import com.example.retrodatabases.data.RecordEntity
 
 /**
  * Catalogue of databases that are created on the first launch.
- * To add a database: append an entry here and create a file next to it with its records (databaseId = new id).
+ * To add a database: append an entry here, create its record files (databaseId = the new id)
+ * and add their records to [seedRecords]. Installs made before that also need a migration in AppDatabase.
  */
 val seedDatabases: List<DatabaseEntity> = listOf(
     DatabaseEntity(
@@ -6130,10 +9184,19 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "Languages, systems, devices, tools and practices of the 1980s, including rare and little-known items.",
         colorHex = "#4DD0E1",
     ),
+    DatabaseEntity(
+        id = 2,
+        name = "Database 2: 90s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of the 1990s, including rare and little-known items.",
+        colorHex = "#BA68C8",
+    ),
 )
 
+/** Records of every seeded database. They are inserted together with the databases. */
+val seedRecords: List<RecordEntity> = db1Records + db2Records
+
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
 
@@ -6141,9 +9204,12 @@ import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.RecordEntity
 
 /**
- * Builds a record of database 1. databaseId is fixed; Room assigns the id on insert.
+ * Builds one catalogue record. databaseId says which database the record belongs to and defaults to database 1.
+ * Room assigns the record id on insert.
  * Instructions and examples are left-aligned with trimIndent().
- * In example code the <TAB> marker is replaced with a tab character (needed for Makefiles).
+ * Two markers are replaced inside instructions and examples: <TAB> becomes a tab character (needed for Makefiles),
+ * and <DOLLAR> becomes a dollar sign (needed for Perl, PHP and shell code, which would otherwise start a template
+ * inside a raw string).
  */
 internal fun entry(
     kind: Kind,
@@ -6157,8 +9223,9 @@ internal fun entry(
     instructions: String? = null,
     example: String? = null,
     rare: Boolean = false,
+    databaseId: Long = 1,
 ): RecordEntity = RecordEntity(
-    databaseId = 1,
+    databaseId = databaseId,
     kind = kind,
     section = section,
     title = title,
@@ -6167,13 +9234,16 @@ internal fun entry(
     year = year,
     summary = summary,
     details = details,
-    instructions = instructions?.trimIndent(),
-    example = example?.trimIndent()?.replace("<TAB>", "\t"),
+    instructions = instructions?.trimIndent()?.replaceMarkers(),
+    example = example?.trimIndent()?.replaceMarkers(),
     rare = rare,
 )
 
+private fun String.replaceMarkers(): String =
+    replace("<TAB>", "\t").replace("<DOLLAR>", "\$")
+
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/AppNavHost.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/AppNavHost.kt
 ################################################################################
 package com.example.retrodatabases.ui
 
@@ -6228,7 +9298,7 @@ fun AppNavHost() {
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/LibraryViewModel.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/LibraryViewModel.kt
 ################################################################################
 package com.example.retrodatabases.ui
 
@@ -6274,7 +9344,7 @@ private val CatalogOrder: Comparator<RecordEntity> =
         .thenBy { it.title }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/RecordFilter.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/RecordFilter.kt
 ################################################################################
 package com.example.retrodatabases.ui
 
@@ -6307,7 +9377,7 @@ private fun RecordEntity.searchableText(): String =
         .lowercase()
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/components/RecordCard.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/components/RecordCard.kt
 ################################################################################
 package com.example.retrodatabases.ui.components
 
@@ -6446,7 +9516,7 @@ fun RecordCard(
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/screens/DatabasesScreen.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/screens/DatabasesScreen.kt
 ################################################################################
 package com.example.retrodatabases.ui.screens
 
@@ -6587,7 +9657,7 @@ private fun DatabaseCard(
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/screens/RecordDetailScreen.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/screens/RecordDetailScreen.kt
 ################################################################################
 package com.example.retrodatabases.ui.screens
 
@@ -6775,7 +9845,7 @@ private fun CodeBlock(code: String) {
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/screens/RecordsScreen.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/screens/RecordsScreen.kt
 ################################################################################
 package com.example.retrodatabases.ui.screens
 
@@ -7021,7 +10091,7 @@ private fun SectionHeader(title: String, count: Int, accent: Color) {
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/theme/KindColors.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/theme/KindColors.kt
 ################################################################################
 package com.example.retrodatabases.ui.theme
 
@@ -7047,7 +10117,7 @@ fun Kind.accent(): Color = when (this) {
 fun parseHexColor(hex: String): Color = Color(AndroidColor.parseColor(hex))
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/theme/Theme.kt
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/ui/theme/Theme.kt
 ################################################################################
 package com.example.retrodatabases.ui.theme
 
@@ -7107,7 +10177,7 @@ fun RetroDatabasesTheme(
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/res/drawable/ic_launcher_foreground.xml
+# FILE: RetroDatabases/app/src/main/res/drawable/ic_launcher_foreground.xml
 ################################################################################
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Icon: a database cylinder, drawn within the 72dp safe zone of the adaptive icon. -->
@@ -7128,7 +10198,7 @@ fun RetroDatabasesTheme(
 </vector>
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+# FILE: RetroDatabases/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
 ################################################################################
 <?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
@@ -7137,7 +10207,7 @@ fun RetroDatabasesTheme(
 </adaptive-icon>
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/res/values/colors.xml
+# FILE: RetroDatabases/app/src/main/res/values/colors.xml
 ################################################################################
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -7145,7 +10215,7 @@ fun RetroDatabasesTheme(
 </resources>
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/res/values/strings.xml
+# FILE: RetroDatabases/app/src/main/res/values/strings.xml
 ################################################################################
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -7177,7 +10247,7 @@ fun RetroDatabasesTheme(
 </resources>
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/main/res/values/themes.xml
+# FILE: RetroDatabases/app/src/main/res/values/themes.xml
 ################################################################################
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -7186,7 +10256,7 @@ fun RetroDatabasesTheme(
 </resources>
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/test/java/com/example/retrodatabases/AppDatabaseSeedTest.kt
+# FILE: RetroDatabases/app/src/test/java/com/example/retrodatabases/AppDatabaseSeedTest.kt
 ################################################################################
 package com.example.retrodatabases
 
@@ -7194,7 +10264,10 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.example.retrodatabases.data.AppDatabase
 import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.MIGRATION_1_2
 import com.example.retrodatabases.data.seed.db1Records
+import com.example.retrodatabases.data.seed.db2Records
+import com.example.retrodatabases.data.seed.seedDatabases
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -7204,23 +10277,41 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/** Runs the real database: schema validation, the seed SQL in onCreate and the favourite toggle. */
+/** Runs the real database: schema validation, the seed SQL in onCreate, the migration and the favourite toggle. */
 @RunWith(RobolectricTestRunner::class)
 class AppDatabaseSeedTest {
 
     @Test
-    fun firstOpenSeedsDatabaseOneWithEveryRecord() = runBlocking {
+    fun firstOpenSeedsEveryDatabaseWithItsRecords() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val dao = AppDatabase.get(context).libraryDao()
 
         val databases = dao.observeDatabases().first()
-        assertEquals(1, databases.size)
-        assertEquals(db1Records.size, databases.single().recordCount)
+        assertEquals(seedDatabases.size, databases.size)
+        assertEquals(db1Records.size, databases.single { it.id == 1L }.recordCount)
+        assertEquals(db2Records.size, databases.single { it.id == 2L }.recordCount)
 
         val records = dao.observeRecords(1L).first()
         assertEquals(db1Records.size, records.size)
         assertTrue(records.any { it.kind == Kind.PROJECT && it.instructions != null })
         assertTrue(records.any { it.rare })
+    }
+
+    @Test
+    fun migrationRestoresDatabaseTwoAndKeepsDatabaseOne() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 1 has no database 2: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 2")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 2")
+        MIGRATION_1_2.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db2Records.size, dao.observeRecords(2L).first().size)
+        assertEquals(db1Records.size, dao.observeRecords(1L).first().size)
     }
 
     @Test
@@ -7239,7 +10330,7 @@ class AppDatabaseSeedTest {
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/test/java/com/example/retrodatabases/RecordFilterTest.kt
+# FILE: RetroDatabases/app/src/test/java/com/example/retrodatabases/RecordFilterTest.kt
 ################################################################################
 package com.example.retrodatabases
 
@@ -7312,13 +10403,15 @@ class RecordFilterTest {
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/app/src/test/java/com/example/retrodatabases/SeedDataTest.kt
+# FILE: RetroDatabases/app/src/test/java/com/example/retrodatabases/SeedDataTest.kt
 ################################################################################
 package com.example.retrodatabases
 
 import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.seed.db1Records
+import com.example.retrodatabases.data.seed.db2Records
 import com.example.retrodatabases.data.seed.seedDatabases
+import com.example.retrodatabases.data.seed.seedRecords
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -7326,48 +10419,55 @@ import org.junit.Test
 class SeedDataTest {
 
     @Test
-    fun databaseOneExistsAndAllRecordsBelongToIt() {
-        val ids = seedDatabases.map { it.id }.toSet()
-        assertTrue(1L in ids)
+    fun seededDatabasesHaveUniqueIdsAndTheirOwnRecords() {
+        val ids = seedDatabases.map { it.id }
+        assertEquals(ids.size, ids.toSet().size)
+        assertTrue(seedRecords.all { it.databaseId in ids })
         assertTrue(db1Records.all { it.databaseId == 1L })
+        assertTrue(db2Records.all { it.databaseId == 2L })
     }
 
     @Test
-    fun titlesAreUniqueWithinDatabaseOne() {
-        val titles = db1Records.map { it.title }
-        assertEquals(titles.size, titles.toSet().size)
+    fun titlesAreUniqueWithinEachDatabase() {
+        for (records in listOf(db1Records, db2Records)) {
+            val titles = records.map { it.title }
+            assertEquals(titles.size, titles.toSet().size)
+        }
     }
 
     @Test
-    fun yearsAreInTheRangeOfTheCatalogue() {
+    fun yearsAreInTheRangeOfEachCatalogue() {
         assertTrue(db1Records.all { it.year in 1950..1990 })
+        assertTrue(db2Records.all { it.year in 1990..1999 })
     }
 
     @Test
-    fun everyKindHasRecords() {
+    fun everyKindHasRecordsInEachDatabase() {
         assertEquals(Kind.entries.toSet(), db1Records.map { it.kind }.toSet())
+        assertEquals(Kind.entries.toSet(), db2Records.map { it.kind }.toSet())
     }
 
     @Test
     fun everyRecordHasSummaryAndDetails() {
-        assertTrue(db1Records.all { it.summary.isNotBlank() && it.details.isNotBlank() })
+        assertTrue(seedRecords.all { it.summary.isNotBlank() && it.details.isNotBlank() })
     }
 
     @Test
     fun projectsHaveInstructionsAndCode() {
-        val projects = db1Records.filter { it.kind == Kind.PROJECT }
+        val projects = seedRecords.filter { it.kind == Kind.PROJECT }
         assertTrue(projects.isNotEmpty())
         assertTrue(projects.all { !it.instructions.isNullOrBlank() && !it.example.isNullOrBlank() })
     }
 
     @Test
-    fun rareRecordsArePresent() {
+    fun rareRecordsArePresentInEachDatabase() {
         assertTrue(db1Records.count { it.rare } > 0)
+        assertTrue(db2Records.count { it.rare } > 0)
     }
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/build.gradle.kts
+# FILE: RetroDatabases/build.gradle.kts
 ################################################################################
 // Plugin versions are set here; the app module applies them by id.
 plugins {
@@ -7378,7 +10478,7 @@ plugins {
 }
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/gradle.properties
+# FILE: RetroDatabases/gradle.properties
 ################################################################################
 org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
 org.gradle.parallel=true
@@ -7387,7 +10487,7 @@ android.nonTransitiveRClass=true
 kotlin.code.style=official
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/gradle/wrapper/gradle-wrapper.properties
+# FILE: RetroDatabases/gradle/wrapper/gradle-wrapper.properties
 ################################################################################
 distributionBase=GRADLE_USER_HOME
 distributionPath=wrapper/dists
@@ -7398,7 +10498,7 @@ zipStoreBase=GRADLE_USER_HOME
 zipStorePath=wrapper/dists
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/gradlew
+# FILE: RetroDatabases/gradlew
 ################################################################################
 #!/bin/sh
 
@@ -7653,7 +10753,7 @@ eval "set -- $(
 exec "$JAVACMD" "$@"
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/gradlew.bat
+# FILE: RetroDatabases/gradlew.bat
 ################################################################################
 @rem
 @rem Copyright 2015 the original author or authors.
@@ -7751,7 +10851,7 @@ if "%OS%"=="Windows_NT" endlocal
 :omega
 
 ################################################################################
-# ФАЙЛ: RetroDatabases/settings.gradle.kts
+# FILE: RetroDatabases/settings.gradle.kts
 ################################################################################
 pluginManagement {
     repositories {

@@ -4,9 +4,12 @@ import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.RecordEntity
 
 /**
- * Builds a record of database 1. databaseId is fixed; Room assigns the id on insert.
+ * Builds one catalogue record. databaseId says which database the record belongs to and defaults to database 1.
+ * Room assigns the record id on insert.
  * Instructions and examples are left-aligned with trimIndent().
- * In example code the <TAB> marker is replaced with a tab character (needed for Makefiles).
+ * Two markers are replaced inside instructions and examples: <TAB> becomes a tab character (needed for Makefiles),
+ * and <DOLLAR> becomes a dollar sign (needed for Perl, PHP and shell code, which would otherwise start a template
+ * inside a raw string).
  */
 internal fun entry(
     kind: Kind,
@@ -20,8 +23,9 @@ internal fun entry(
     instructions: String? = null,
     example: String? = null,
     rare: Boolean = false,
+    databaseId: Long = 1,
 ): RecordEntity = RecordEntity(
-    databaseId = 1,
+    databaseId = databaseId,
     kind = kind,
     section = section,
     title = title,
@@ -30,7 +34,10 @@ internal fun entry(
     year = year,
     summary = summary,
     details = details,
-    instructions = instructions?.trimIndent(),
-    example = example?.trimIndent()?.replace("<TAB>", "\t"),
+    instructions = instructions?.trimIndent()?.replaceMarkers(),
+    example = example?.trimIndent()?.replaceMarkers(),
     rare = rare,
 )
+
+private fun String.replaceMarkers(): String =
+    replace("<TAB>", "\t").replace("<DOLLAR>", "\$")
