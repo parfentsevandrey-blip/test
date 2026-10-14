@@ -101,18 +101,20 @@ def main():
 
 
 def get(u):
-    req = urllib.request.Request(u, headers={'User-Agent': 'Mozilla/5.0'})
+    req = urllib.request.Request(u, headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                                                           'Chrome/130.0 Safari/537.36', 'Referer': 'https://www.cian.ru/'})
     return urllib.request.urlopen(req, timeout=30).read()
 
 
 def sheets():
-    """Листы для визуальной оценки: БЦ без оценки, у которых есть продажи или ≥2 аренды в локации объектов."""
+    """Листы для визуальной оценки: БЦ класса B (K1/K3) без оценки, у которых есть продажи или ≥2 аренды в локации объектов.
+    Классу A (K2) по умолчанию ставится 4,5 (строящимся — 5): для него оценка — верхний ориентир, а не основной ряд."""
     cl, pages, rat, rows = load()
     todo, seen = [], set()
     for key, res in cl.items():
         for b in res['bcs'].values():
             u = b.get('url')
-            if not u or u in seen or u in rat or not (b['sale'] or len(b['rent']) >= 2):
+            if not u or u in seen or u in rat or b['cluster'] not in ('K1', 'K3') or not (b['sale'] or len(b['rent']) >= 2):
                 continue
             seen.add(u)
             page = pages.get(u, {})

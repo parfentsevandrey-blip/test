@@ -66,7 +66,16 @@ def terms_from_text(desc):
     return opex, util
 
 
+BCLS = {}         # класс здания по большинству объявлений
+
+
+def bkey(r):
+    return r.get('bc_url') or re.sub(r'[^0-9а-яё]', '', (r.get('address') or '').lower().replace('россия', '').replace('москва', ''))[:40]
+
+
 def cls_of(r):
+    if bkey(r) in BCLS:
+        return BCLS[bkey(r)]
     prof = BCP.get(r.get('bc_url') or '') or {}
     if prof.get('cls') in ('A', 'A+', 'B', 'B+', 'B-', 'C'):
         return prof['cls'].replace('-', '−')
@@ -80,6 +89,10 @@ IN_RES = (r'\bв\s+(жилом\s+(доме|комплексе|квартале)|
           r'\bжк\s*[«"]|жилого (дома|комплекса)')
 CLASS_A = r'класса\s*[«"]?a\+?\b|класса\s*[«"]?а\+?[»"]?(\s|,|\.)|класс\s*[«"]?а\+?[»"]?(\s|,|\.)|небоск|премиальн\w+ офисн'
 OFFPLAN = r'строящ|сдача\s+(в\s+)?(\d\s*кв|20(2[7-9]|3\d))|ввод\w*\s+в\s+эксплуатац\w+\s+.{0,20}20(2[7-9]|3\d)|по\s+дду|договор\w*\s+долев'
+# ручные исправления по фото и тексту: офисы в жилых комплексах, ошибочно помеченные как БЦ
+CLUSTER_OVERRIDE = {329563138: 'K4', 331609720: 'K4',     # Ходынский б-р, 2 — этаж в ЖК «Лайнер» (жилой комплекс)
+                    325162467: 'K4',                      # Беговая, 18к2 — 1 этаж 12-этажного жилого дома, свой вход
+                    333315805: 'K4'}                      # Хорошёвское ш., 12к1 — офис в стилобате 37-этажного жилого комплекса
 BCP = {}          # профили БЦ со страниц ЦИАН (bc_pages.json), ключ — url страницы БЦ
 
 
@@ -98,11 +111,13 @@ def cluster_of(r):
         return 'K4'
     if re.search(r'особняк', desc[:300]):
         return 'K3'
-    if c in ('A', 'A+') or (c is None and re.search(CLASS_A, desc)):
+    if c in ('A', 'A+') or (c is None and (year >= 2000 or not year) and re.search(CLASS_A, desc)):
         return 'K2'
-    if title.startswith(('административное', 'особняк', 'здание')) or bt in ADM_TYPES:
+    if title.startswith(('административное', 'особняк', 'здание')) or bt in ADM_TYPES or c == 'C':
         return 'K3'
-    is_bc = bt in BC_TYPES or title.startswith('бизнес') or re.search(r'бизнес[- ]центр|\bбц\b|бизнес[- ]парк|деловой (квартал|кластер)', desc)
+    is_bc = (bt in BC_TYPES or title.startswith('бизнес') or bool(r.get('bc_url')) or
+             re.search(r'(в|на территории|в составе|расположен\w* в)\s+(бизнес[- ]центр\w*|бц\b|бизнес[- ]парк\w*|деловом квартале)|'
+                       r'бизнес[- ]центр\w* класса', desc))
     if is_bc or c in ('B', 'B+', 'B−'):
         if c is None and (year >= 2015 or floors >= 12):
             return 'K2'          # новая офисная башня без указанного класса — по факту класс A
@@ -114,13 +129,21 @@ def cluster_of(r):
     return 'K3' if 'office' in (r.get('category') or '') else 'K0'
 
 
+OFFPLAN_STOP = {'сплит', 'bell', 'mind'}   # названия, совпадающие с обычными словами («сплит-система»)
+OFFPLAN_NAMES = []   # названия строящихся БЦ (год сдачи > 2026 на странице БЦ) — для объявлений без привязки к БЦ
+
+
 def offplan(r):
-    return (r.get('year') or 0) > 2026 or bool(re.search(OFFPLAN, (r.get('description') or '').lower()))
+    d = (r.get('description') or '').lower()
+    prof = BCP.get(r.get('bc_url') or '') or {}
+    py = int(str(prof.get('year'))[:4]) if str(prof.get('year') or '')[:4].isdigit() else 0
+    return ((r.get('year') or 0) > 2026 or py > 2026 or bool(re.search(OFFPLAN, d)) or
+            (not r.get('year') and any(re.search(r'(?<![\wа-яё])' + re.escape(nm) + r'(?![\wа-яё-])', d[:600]) for nm in OFFPLAN_NAMES)))
 
 
 def enrich(r):
     r['cls'] = cls_of(r)
-    r['cluster'] = cluster_of(r)
+    r['cluster'] = CLUSTER_OVERRIDE.get(r['id']) or cluster_of(r)
     r['offplan'] = offplan(r)
     # нерыночные условия: торги, банкротство, обременение, доля — в аналоги не берём
     d = (r.get('description') or '').lower()
@@ -172,7 +195,28 @@ def stats(vals):
 def main():
     if os.path.exists('commercial-data/bc_pages.json'):
         BCP.update(json.load(open('commercial-data/bc_pages.json')))
-    rows = [enrich(r) for r in json.load(open('commercial-data/offers.json'))]
+    for v in BCP.values():
+        y = str(v.get('year') or '')[:4]
+        if y.isdigit() and int(y) > 2026 and v.get('title'):
+            nm = re.sub(r'^(бизнес-центр|деловой центр|офисное здание|бизнес-квартал)\s+', '', v['title'].lower())
+            nm = re.sub(r'\s*\(.*', '', nm).strip(' «»"')
+            if len(nm) >= 4 and nm not in OFFPLAN_STOP:
+                OFFPLAN_NAMES.append(nm)
+    rows = json.load(open('commercial-data/offers.json'))
+    for r in rows:                      # строящиеся БЦ, известные по другим объявлениям
+        if (r.get('year') or 0) > 2026 and r.get('bc'):
+            nm = re.sub(r'\s*\(.*', '', r['bc'].lower()).strip(' «»"')
+            if len(nm) >= 4 and nm not in OFFPLAN_NAMES and nm not in OFFPLAN_STOP:
+                OFFPLAN_NAMES.append(nm)
+    # класс здания — по большинству объявлений того же здания (одиночные ошибки в карточках не перекидывают здание в другой класс)
+    votes = {}
+    for r in rows:
+        c = cls_of(r)
+        if c:
+            votes.setdefault(bkey(r), []).append(c)
+    BCLS.clear()
+    BCLS.update({k: max(set(v), key=v.count) for k, v in votes.items()})
+    rows = [enrich(r) for r in rows]
     json.dump(rows, open('commercial-data/offers.json', 'w'), ensure_ascii=False, indent=0)
     R.clear()
     R.update({r['id']: r for r in rows})

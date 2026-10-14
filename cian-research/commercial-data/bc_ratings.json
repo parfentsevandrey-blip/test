@@ -158,5 +158,418 @@
  "kaleidoscope": {
   "rating": 2.75,
   "note": "B, 1995, оранжевый фасад 1990-х, потолки 2,37–2,57 м, лобби простое; крупный БЦ с охраной и кафе"
+ },
+ "https://www.cian.ru/ofisno-skladskoy-kompleks-korpus-2-moskva-67546/": {
+  "rating": 3,
+  "note": "типовой реконструированный корпус 1984 г., простой фасад, офисы с типовым ремонтом",
+  "name": "Корпус 2"
+ },
+ "https://www.cian.ru/delovoy-kvartal-korpus-2-moskva-196992/": {
+  "rating": 3.5,
+  "note": "краснокирпичный исторический корпус (Столярный пер.), двор-парковка",
+  "name": "Корпус 2"
+ },
+ "https://www.cian.ru/biznes-centr-11s1-moskva-12747/": {
+  "rating": 2.75,
+  "note": "бывший промышленный корпус 1966 г., панельный фасад, двор-парковка",
+  "name": "Бизнес-центр Интерьер (11с1)"
+ },
+ "https://www.cian.ru/biznes-park-stroenie-8-moskva-12410/": {
+  "rating": 3.5,
+  "note": "отреставрированный корпус Трёхгорной мануфактуры, кирпич",
+  "name": "Строение 8"
+ },
+ "https://www.cian.ru/delovoy-kvartal-korpus-5-moskva-5944/": {
+  "rating": 3.5,
+  "note": "реконструированный корпус 1964 г., современный open space",
+  "name": "Корпус 5"
+ },
+ "https://www.cian.ru/ofisnoe-zdanie-na-ulmishina35-moskva-15802/": {
+  "rating": 2.5,
+  "note": "советское административное здание 1967 г.",
+  "name": "на ул. Мишина, 35"
+ },
+ "https://www.cian.ru/delovoy-kvartal-v-holodilnom-pereulke3k1-moskva-5668/": {
+  "rating": 4.5,
+  "note": "лофт-квартал «Холодильный переулок»: премиальные интерьеры (CORE.XP), кирпич, металл",
+  "name": "в Холодильном переулке, 3к1"
+ },
+ "https://www.cian.ru/delovoy-kvartal-v-holodilnom-pereulke3k1s3-moskva-61917/": {
+  "rating": 4,
+  "note": "лофт в отреставрированном кирпичном корпусе 1875 г., современные интерьеры",
+  "name": "в Холодильном переулке, 3к1с3"
+ },
+ "https://www.cian.ru/biznes-centr-17-moskva-43058/": {
+  "rating": 4,
+  "note": "The Loft Club: краснокирпичный лофт 1925 г., ухоженный озеленённый двор",
+  "name": "Бизнес-центр The Loft Club (Зэ Лофт Клаб) (17)"
+ },
+ "https://www.cian.ru/delovoy-kvartal-v-holodilnom-pereulke3k1s6-moskva-61919/": {
+  "rating": 4,
+  "note": "лофт, open space с высокими потолками",
+  "name": "в Холодильном переулке, 3к1с6"
+ },
+ "https://www.cian.ru/biznes-kvartal-v-holodilnom-pereulke3k1s8-moskva-27445/": {
+  "rating": 4,
+  "note": "лофт, open space с высокими потолками",
+  "name": "в Холодильном переулке, 3к1с8"
+ },
+ "https://www.cian.ru/biznes-centr-6k1-moskva-3907/": {
+  "rating": 4.5,
+  "note": "Danilov Plaza: современный корпус 2015 г.",
+  "name": "Бизнес-центр Danilov Plaza (Данилов Плаза) (6к1)"
+ },
+ "https://www.cian.ru/delovoy-kvartal-v-holodilnom-pereulke3k1s2-moskva-61916/": {
+  "rating": 4,
+  "note": "лофт-квартал «Холодильный переулок», корпус 1905 г.",
+  "name": "в Холодильном переулке, 3к1с2"
+ },
+ "https://www.cian.ru/delovoy-kvartal-v-holodilnom-pereulke3k1s4-moskva-19658/": {
+  "rating": 4,
+  "note": "лофт, свежий ремонт white box",
+  "name": "в Холодильном переулке, 3к1с4"
+ },
+ "https://www.cian.ru/delovoy-kvartal-v-holodilnom-pereulke3k1s10-moskva-232260/": {
+  "rating": 4,
+  "note": "лофт-квартал, современный интерьер",
+  "name": "в Холодильном переулке, 3к1с10"
+ },
+ "https://www.cian.ru/biznes-centr-17s11-moskva-29627/": {
+  "rating": 3.5,
+  "note": "The Loft Club 17с11: кирпич 1930 г., ремонт «классика», устаревающий",
+  "name": "Бизнес-центр The Loft Club (Зэ Лофт Клаб) (17с11)"
+ },
+ "https://www.cian.ru/biznes-centr-platinum-moskva-5377/": {
+  "rating": 3,
+  "note": "Платинум: корпус 1980 г. с обновлённым фасадом, удалён от центра",
+  "name": "Бизнес-центр Платинум (Platinum)"
+ },
+ "https://www.cian.ru/delovoy-kvartal-meshcerin-moskva-12661/": {
+  "rating": 4,
+  "note": "Даниловская мануфактура (Мещерин): лофт, качественные интерьеры",
+  "name": "Мещерин"
+ },
+ "https://www.cian.ru/delovoy-kvartal-ryady-soldatenkova2-moskva-79269/": {
+  "rating": 4,
+  "note": "Даниловская мануфактура (Ряды Солдатенкова): красный кирпич, благоустроенная территория",
+  "name": "Ряды Солдатенкова – 2"
+ },
+ "https://www.cian.ru/biznes-centr-na-varshavskom-shosse26c12-moskva-114984/": {
+  "rating": 2.5,
+  "note": "корпус 1990 г., помещения в процессе ремонта",
+  "name": "на Варшавском шоссе, 26c12"
+ },
+ "https://www.cian.ru/biznes-centr-5-moskva-12544/": {
+  "rating": 3,
+  "note": "Гамма: малоэтажный корпус 1928 г., реконструкция «эконом»",
+  "name": "Бизнес-центр Гамма (5)"
+ },
+ "https://www.cian.ru/biznes-centr-stroenie-2-moskva-12583/": {
+  "rating": 4,
+  "note": "Сириус Парк стр. 2: стеклянный корпус 2014 г.",
+  "name": "Бизнес-центр Сириус Парк (Строение 2)"
+ },
+ "https://www.cian.ru/delovoy-kvartal-v-holodilnom-pereulke3s5-moskva-232261/": {
+  "rating": 3.5,
+  "note": "реконструированный корпус 1957 г. в лофт-квартале",
+  "name": "в Холодильном переулке, 3с5"
+ },
+ "https://www.cian.ru/ofisnoe-zdanie-na-varshavskom-shosse11-moskva-29850/": {
+  "rating": 2.5,
+  "note": "кирпичное административное здание XIX в., простой ремонт",
+  "name": "на Варшавском шоссе, 11"
+ },
+ "https://www.cian.ru/biznes-centr-vniineftemash-moskva-5568/": {
+  "rating": 3,
+  "note": "Вниинефтемаш: советская высотка 1974 г. с обновлённым входом",
+  "name": "Вниинефтемаш"
+ },
+ "https://www.cian.ru/delovoy-kvartal-batistovyy-moskva-78620/": {
+  "rating": 4,
+  "note": "Батистовый (Даниловская мануфактура): лофт",
+  "name": "Батистовый"
+ },
+ "https://www.cian.ru/biznes-centr-sim-moskva-7696/": {
+  "rating": 2.5,
+  "note": "класс C, корпус 1990 г., остеклённый 1 этаж",
+  "name": "Сим"
+ },
+ "https://www.cian.ru/biznes-centr-simferopolskiy3-moskva-123809/": {
+  "rating": 2.75,
+  "note": "административное здание 1970 г., облицовка, скромный вход",
+  "name": "Бизнес-центр Симферопольский, 3"
+ },
+ "https://www.cian.ru/biznes-centr-regikon-moskva-23015/": {
+  "rating": 2,
+  "note": "класс C, запущенный вход",
+  "name": "Регикон"
+ },
+ "https://www.cian.ru/biznes-centr-korpus-s-moskva-145457/": {
+  "rating": 4,
+  "note": "Омега-2 (Корпус С): кирпичный корпус 2013 г., лофт-интерьеры",
+  "name": "Бизнес-центр Омега-2 (Корпус С)"
+ },
+ "https://www.cian.ru/biznes-centr-omega-plaza-moskva-19211/": {
+  "rating": 4,
+  "note": "Омега Плаза стр. 6: стеклянный атриум",
+  "name": "Бизнес-центр Омега Плаза (Omega Plaza)"
+ },
+ "https://www.cian.ru/biznes-centr-19-moskva-81742/": {
+  "rating": 3.5,
+  "note": "Омега Плаза: атриум с фонтаном, интерьеры 2000-х",
+  "name": "Бизнес-центр Омега Плаза (Omega Plaza) (19)"
+ },
+ "https://www.cian.ru/delovoy-centr-na-ulleninskaya-sloboda9-moskva-192461/": {
+  "rating": 2.5,
+  "note": "административное здание 1936 г., простой ремонт",
+  "name": "на ул. Ленинская Слобода, 9"
+ },
+ "https://www.cian.ru/biznes-centr-park-legend-moskva-202146/": {
+  "rating": 4,
+  "note": "Парк Легенд: современный БЦ 2017 г., 13 этажей",
+  "name": "Бизнес-центр Парк Легенд"
+ },
+ "https://www.cian.ru/torgovo-ofisnyy-kompleks-na-ulavtozavodskaya19k1-moskva-242896/": {
+  "rating": 2.5,
+  "note": "жилого типа здание 1930 г. с магазинами на 1 этаже",
+  "name": "на ул. Автозаводская, 19к1"
+ },
+ "https://www.cian.ru/torgovyy-centr-roomer-moskva-6180/": {
+  "rating": 3.5,
+  "note": "Roomer: типовой качественный ремонт",
+  "name": "Roomer (Румер)"
+ },
+ "https://www.cian.ru/torgovo-ofisnyy-kompleks-na-ulavtozavodskaya17k1-moskva-3337/": {
+  "rating": 2.5,
+  "note": "сталинский дом с магазинами на 1 этаже",
+  "name": "на ул. Автозаводская, 17к1"
+ },
+ "https://www.cian.ru/biznes-centr-simonov-plaza-moskva-3040/": {
+  "rating": 4.5,
+  "note": "Симонов Плаза: стеклянный БЦ 2015 г., виды на реку",
+  "name": "Бизнес-центр Симонов Плаза"
+ },
+ "https://www.cian.ru/biznes-centr-omega-plaza-moskva-5854/": {
+  "rating": 3.5,
+  "note": "Омега Плаза: смешанные фасады 1990 г., ремонт open space",
+  "name": "Бизнес-центр Омега Плаза (Omega Plaza)"
+ },
+ "https://www.cian.ru/biznes-centr-panorama-moskva-5870/": {
+  "rating": 3,
+  "note": "Панорама: советская высотка 1986 г. после реконструкции, виды",
+  "name": "Бизнес-центр Панорама"
+ },
+ "https://www.cian.ru/otdelno-stoyashcee-zdanie-stroenie-2-moskva-71265/": {
+  "rating": 4,
+  "note": "Nagatino i-land, корпус 2 (2014)",
+  "name": "Строение 2"
+ },
+ "https://www.cian.ru/biznes-centr-na-ulleninskaya-sloboda17-moskva-3706/": {
+  "rating": 2.5,
+  "note": "административное здание 1936 г., ремонт эконом",
+  "name": "Бизнес-центр на ул. Ленинская Слобода, 17"
+ },
+ "https://www.cian.ru/biznes-centr-slobodskoy-moskva-12628/": {
+  "rating": 4,
+  "note": "Слободской: реконструкция с новым стеклянным фасадом, озеленение",
+  "name": "Бизнес-центр Слободской"
+ },
+ "id:327392583": {
+  "rating": 4,
+  "note": "Омега-2, Ленинская Слобода 26: кирпичный корпус 2013 г.",
+  "name": "Москва, ул. Ленинская Слобода, 26"
+ },
+ "id:329217802": {
+  "rating": 4,
+  "note": "Омега-2, Ленинская Слобода 26: кирпичный корпус 2013 г.",
+  "name": "Москва, ул. Ленинская Слобода, 26"
+ },
+ "id:330443008": {
+  "rating": 4,
+  "note": "Омега-2, Ленинская Слобода 26: кирпичный корпус 2013 г.",
+  "name": "Москва, ул. Ленинская Слобода, 26"
+ },
+ "id:331955440": {
+  "rating": 4,
+  "note": "Омега-2, Ленинская Слобода 26: кирпичный корпус 2013 г.",
+  "name": "Москва, ул. Ленинская Слобода, 26"
+ },
+ "id:330009416": {
+  "rating": 3,
+  "note": "«1-й Нагатинский»: советская 9-этажка после ремонта",
+  "name": "Россия, Москва город, улица Нагатинская, дом 1, строение 1"
+ },
+ "id:330010542": {
+  "rating": 3,
+  "note": "«1-й Нагатинский»: советская 9-этажка после ремонта",
+  "name": "Россия, Москва город, улица Нагатинская, дом 1, строение 1"
+ },
+ "id:273384326": {
+  "rating": 3.5,
+  "note": "Варшавское ш. 1с17: современный корпус, лофт-интерьеры",
+  "name": "Россия, Москва, Варшавское шоссе, 1с17"
+ },
+ "id:324260869": {
+  "rating": 3.5,
+  "note": "Варшавское ш. 1с17: современный корпус, лофт-интерьеры",
+  "name": "Россия, Москва, Варшавское шоссе, 1с17"
+ },
+ "https://www.cian.ru/ofisnoe-zdanie-na-ulnagatinskaya3a-moskva-140647/": {
+  "rating": 2.5,
+  "note": "Нагатинская 3А: здание 1953 г., простой ремонт",
+  "name": "на ул. Нагатинская, 3А"
+ },
+ "id:334370023": {
+  "rating": 3,
+  "note": "Варшавское ш. 13Бс1: кирпичный корпус, коридорная планировка",
+  "name": "Россия, Москва, Варшавское шоссе, 13Бс1"
+ },
+ "id:332069598": {
+  "rating": 3.5,
+  "note": "W-Plaza, Варшавское ш. 1с6: современная отделка",
+  "name": "г Москва, Варшавское шоссе, д 1 стр 6"
+ },
+ "id:333534013": {
+  "rating": 3.5,
+  "note": "W-Plaza, Варшавское ш. 1с6: современная отделка",
+  "name": "г Москва, Варшавское шоссе, д 1 стр 6"
+ },
+ "id:334459160": {
+  "rating": 3.5,
+  "note": "W-Plaza, Варшавское ш. 1с6: современная отделка",
+  "name": "г Москва, Варшавское шоссе, д 1 стр 6"
+ },
+ "https://www.cian.ru/otdelno-stoyashcee-zdanie-na-zagorodnom-shosse1k1-moskva-5974/": {
+  "rating": 3,
+  "note": "БЦ «Загородный» 1995 г., стеклянный фасад",
+  "name": "на Загородном шоссе, 1к1"
+ },
+ "id:332312668": {
+  "rating": 2.75,
+  "note": "Нагатинская 1с1: советский корпус 1964 г.",
+  "name": "Москва, ул Нагатинская, 1 стр 1"
+ },
+ "https://www.cian.ru/ofisno-gostinichnyy-kompleks-6k2-moskva-12530/": {
+  "rating": 4.5,
+  "note": "Danilov Plaza (6к2)",
+  "name": "6к2"
+ },
+ "https://www.cian.ru/otdelno-stoyashcee-zdanie-stroenie-25-moskva-71266/": {
+  "rating": 4,
+  "note": "Порт Плаза (Nagatino i-land), 2014",
+  "name": "Строение 25"
+ },
+ "https://www.cian.ru/ofisnyy-centr-na-uldubininskaya71-moskva-70055/": {
+  "rating": 3,
+  "note": "Дубининская 71: здание 1936 г. после ремонта",
+  "name": "на ул. Дубининская, 71"
+ },
+ "id:332870322": {
+  "rating": 4.5,
+  "note": "ЗИЛ Технопарк МФК: новое здание",
+  "name": "115280, г Москва, Даниловский р-н, пр-кт Лихачёва, д 5"
+ },
+ "https://www.cian.ru/ofisno-skladskoy-kompleks-skim-moskva-70526/": {
+  "rating": 2.75,
+  "note": "СКИМ, Варшавское ш. 37А: советская 12-этажка",
+  "name": "СКИМ"
+ },
+ "id:333745787": {
+  "rating": 4,
+  "note": "Nagatino i-land, корпус 16",
+  "name": "Москва, Проектируемый 4062-й проезд., 6с16"
+ },
+ "https://www.cian.ru/delovoy-kvartal-v-holodilnom-pereulke3s4-moskva-68422/": {
+  "rating": 4,
+  "note": "Рябовская мануфактура, лофт",
+  "name": "в Холодильном переулке, 3с4"
+ },
+ "https://www.cian.ru/otdelno-stoyashcee-zdanie-v-4-m-roshcinskom-proezde19s3-moskva-197620/": {
+  "rating": 2.5,
+  "note": "малоэтажный кирпичный корпус",
+  "name": "в 4-м Рощинском проезде, 19с3"
+ },
+ "id:334826073": {
+  "rating": 4.5,
+  "note": "Фарфор (Рябовская мануфактура): лофт со стеклянной кровлей",
+  "name": "Холодильный переулок, д3с5"
+ },
+ "https://www.cian.ru/delovoy-kvartal-v-bolshom-starodanilovskom-per2s9-moskva-64216/": {
+  "rating": 4,
+  "note": "Рябовская мануфактура, реконструкция",
+  "name": "в Большом Староданиловском пер., 2с9"
+ },
+ "id:330010545": {
+  "rating": 2.75,
+  "note": "Нагатинская 1с1: советский корпус 1964 г.",
+  "name": "г Москва, ул Нагатинская, д 1 стр 1"
+ },
+ "https://www.cian.ru/biznes-centr-3as2-moskva-93814/": {
+  "rating": 3.5,
+  "note": "лофт, без отделки",
+  "name": "3Ас2"
+ },
+ "id:324299761": {
+  "rating": 4.5,
+  "note": "МФК «Лица»: атриум, высокий уровень",
+  "name": "Россия, Москва, улица Авиаконструктора Сухого, 2к1"
+ },
+ "id:331492099": {
+  "rating": 4.5,
+  "note": "МФК «Лица»: атриум, высокий уровень",
+  "name": "Россия, Москва, улица Авиаконструктора Сухого, 2к1"
+ },
+ "https://www.cian.ru/delovoy-centr-kozhuhovskiy-moskva-64438/": {
+  "rating": 2.5,
+  "note": "Кожуховский: корпус 1985 г., простой ремонт",
+  "name": "Кожуховский"
+ },
+ "https://www.cian.ru/ofisno-skladskoy-kompleks-v-nagornom-proezde5-moskva-121768/": {
+  "rating": 2.5,
+  "note": "Нагорный пр. 5: здание 1935 г.",
+  "name": "в Нагорном проезде, 5"
+ },
+ "https://www.cian.ru/biznes-centr-delo-moskva-21159/": {
+  "rating": 2.5,
+  "note": "Дело (класс C)",
+  "name": "Дело"
+ },
+ "id:332684176": {
+  "rating": 4,
+  "note": "W-Plaza II, Варшавское ш. 1с1",
+  "name": "Москва г, мо Северное Бутово вн/тер-г, Варшавское ш, 1 стр 17"
+ },
+ "https://www.cian.ru/biznes-centr-5s3-moskva-12545/": {
+  "rating": 3,
+  "note": "Гамма 5с3: корпус 1996 г.",
+  "name": "5с3"
+ },
+ "https://www.cian.ru/mnogofunkcionalnyy-kompleks-19s3-moskva-81744/": {
+  "rating": 3.5,
+  "note": "Омега Плаза 19с3",
+  "name": "19с3"
+ },
+ "https://www.cian.ru/ofisnoe-zdanie-na-ulnagatinskaya1s5-moskva-151172/": {
+  "rating": 2.75,
+  "note": "Нагатинская 1с5: корпус 1994 г.",
+  "name": "на ул. Нагатинская, 1с5"
+ },
+ "id:330962069": {
+  "rating": 3,
+  "note": "Звенигородское ш. 18/20к3: 3-этажный корпус после ремонта",
+  "name": "Россия, Москва, Звенигородское шоссе, 18/20к3"
+ },
+ "id:332370725": {
+  "rating": 3,
+  "note": "Звенигородское ш. 18/20к3: 3-этажный корпус после ремонта",
+  "name": "Россия, Москва, Звенигородское шоссе, 18/20к3"
+ },
+ "id:334481908": {
+  "rating": 4,
+  "note": "W-Plaza, Варшавское ш. 1с17: корпус 2015 г., open space"
+ },
+ "id:322142440": {
+  "rating": 3.5,
+  "note": "комплекс The Yard, строение 11с7: тот же уровень, что ЯРД"
  }
 }
