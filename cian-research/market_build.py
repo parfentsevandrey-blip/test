@@ -2,6 +2,7 @@
 import collections
 import datetime as dt
 import json
+import re
 import os
 import statistics
 
@@ -83,6 +84,10 @@ def cmd_build(a):
                 d0 = json.loads(r['data'] or '{}')
             except Exception:
                 d0 = {}
+            s0 = d0.get('summary') or ''
+            if len(s0) >= 130 and not s0.rstrip().endswith(('.', '!')):   # обрезано лимитом длины схемы
+                s0 = re.sub(r'[^\w)»]+$', '', re.sub(r'[^\u0000-\u04ff\u2010-\u2026]+$', '', s0)).rstrip() + '…'
+            d0['summary'] = s0 or None
             insp[r['cian_id']] = dict(cond=r['condition'], age=r['age'], works=r['works'], model=r['model'],
                                       n_photos=len(json.loads(r['photos'] or '[]')),
                                       issues=d0.get('issues') or d0.get('defects'), extras=d0.get('extras'),
