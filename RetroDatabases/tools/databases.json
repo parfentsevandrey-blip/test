@@ -1,0 +1,442 @@
+[
+  {
+    "id": 1,
+    "from": 1950,
+    "to": 1990,
+    "quota": false,
+    "name": "Database 1: 80s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of the 1980s, including rare and little-known items.",
+    "colorHex": "#4DD0E1",
+    "curated": true
+  },
+  {
+    "id": 2,
+    "from": 1990,
+    "to": 1999,
+    "quota": false,
+    "name": "Database 2: 90s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of the 1990s, including rare and little-known items.",
+    "colorHex": "#BA68C8",
+    "curated": true
+  },
+  {
+    "id": 3,
+    "from": 2000,
+    "to": 2010,
+    "quota": false,
+    "name": "Database 3: 2000s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 2000 to 2010, including rare and little-known items.",
+    "colorHex": "#FF8A65",
+    "curated": true
+  },
+  {
+    "id": 4,
+    "from": 2010,
+    "to": 2020,
+    "quota": false,
+    "name": "Database 4: 2010s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 2010 to 2020, including rare and little-known items.",
+    "colorHex": "#AED581",
+    "curated": true
+  },
+  {
+    "id": 5,
+    "from": 2020,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 5: 2020s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 2020 to 2026, including rare and little-known items.",
+    "colorHex": "#7986CB",
+    "curated": true
+  },
+  {
+    "id": 6,
+    "from": 1950,
+    "to": 1960,
+    "quota": false,
+    "name": "Database 6: 1950s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1950 to 1960, including rare and little-known items.",
+    "colorHex": "#FFD54F",
+    "curated": true
+  },
+  {
+    "id": 7,
+    "from": 1960,
+    "to": 1970,
+    "quota": false,
+    "name": "Database 7: 1960s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1960 to 1970, including rare and little-known items.",
+    "colorHex": "#F06292",
+    "curated": true
+  },
+  {
+    "id": 8,
+    "from": 1970,
+    "to": 1980,
+    "quota": false,
+    "name": "Database 8: 1970s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1970 to 1980, including rare and little-known items.",
+    "colorHex": "#A1887F",
+    "curated": true
+  },
+  {
+    "id": 9,
+    "from": 2026,
+    "to": 2036,
+    "quota": false,
+    "name": "Database 9: 2026 to 2036 forecast",
+    "description": "Forecast of languages, systems, devices, tools and practices of 2026 to 2036, with the long shots marked rare.",
+    "colorHex": "#90A4AE",
+    "curated": true
+  },
+  {
+    "id": 10,
+    "from": 1940,
+    "to": 1950,
+    "quota": false,
+    "name": "Database 10: 1940s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1940 to 1950, including rare and little-known items.",
+    "colorHex": "#4DB6AC",
+    "curated": true
+  },
+  {
+    "id": 11,
+    "from": 1930,
+    "to": 1940,
+    "quota": false,
+    "name": "Database 11: 1930s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1930 to 1940, including rare and little-known items.",
+    "colorHex": "#E57373",
+    "curated": true
+  },
+  {
+    "id": 12,
+    "from": 1920,
+    "to": 1930,
+    "quota": false,
+    "name": "Database 12: 1920s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1920 to 1930, including rare and little-known items.",
+    "colorHex": "#DCE775",
+    "curated": true
+  },
+  {
+    "id": 13,
+    "from": 1910,
+    "to": 1920,
+    "quota": false,
+    "name": "Database 13: 1910s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1910 to 1920, including rare and little-known items.",
+    "colorHex": "#9FA8DA",
+    "curated": true
+  },
+  {
+    "id": 14,
+    "from": 1900,
+    "to": 1910,
+    "quota": false,
+    "name": "Database 14: 1900s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1900 to 1910, including rare and little-known items.",
+    "colorHex": "#FFAB91",
+    "curated": true
+  },
+  {
+    "id": 15,
+    "from": 1890,
+    "to": 1900,
+    "quota": false,
+    "name": "Database 15: 1890s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1890 to 1900, including rare and little-known items.",
+    "colorHex": "#90CAF9",
+    "curated": true
+  },
+  {
+    "id": 16,
+    "from": 1880,
+    "to": 1890,
+    "quota": false,
+    "name": "Database 16: 1880s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1880 to 1890, including rare and little-known items.",
+    "colorHex": "#CE93D8",
+    "curated": true
+  },
+  {
+    "id": 17,
+    "from": 1870,
+    "to": 1880,
+    "quota": false,
+    "name": "Database 17: 1870s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1870 to 1880, including rare and little-known items.",
+    "colorHex": "#FFCC80",
+    "curated": true
+  },
+  {
+    "id": 18,
+    "from": 1860,
+    "to": 1870,
+    "quota": false,
+    "name": "Database 18: 1860s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1860 to 1870, including rare and little-known items.",
+    "colorHex": "#E6EE9C",
+    "curated": true
+  },
+  {
+    "id": 19,
+    "from": 1850,
+    "to": 1860,
+    "quota": false,
+    "name": "Database 19: 1850s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1850 to 1860, including rare and little-known items.",
+    "colorHex": "#EF9A9A",
+    "curated": true
+  },
+  {
+    "id": 20,
+    "from": 1840,
+    "to": 1850,
+    "quota": true,
+    "name": "Database 20: 1840s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1840 to 1850, including rare and little-known items.",
+    "colorHex": "#B0BEC5",
+    "curated": true
+  },
+  {
+    "id": 21,
+    "from": 1830,
+    "to": 1840,
+    "quota": true,
+    "name": "Database 21: 1830s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1830 to 1840, including rare and little-known items.",
+    "colorHex": "#FFF59D",
+    "curated": true
+  },
+  {
+    "id": 22,
+    "from": 1820,
+    "to": 1830,
+    "quota": true,
+    "name": "Database 22: 1820s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1820 to 1830, including rare and little-known items.",
+    "colorHex": "#F8BBD0",
+    "curated": true
+  },
+  {
+    "id": 23,
+    "from": 1810,
+    "to": 1820,
+    "quota": true,
+    "name": "Database 23: 1810s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1810 to 1820, including rare and little-known items.",
+    "colorHex": "#C5CAE9",
+    "curated": true
+  },
+  {
+    "id": 24,
+    "from": 1800,
+    "to": 1810,
+    "quota": true,
+    "name": "Database 24: 1800s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1800 to 1810, including rare and little-known items.",
+    "colorHex": "#DCEDC8",
+    "curated": true
+  },
+  {
+    "id": 25,
+    "from": 1790,
+    "to": 1800,
+    "quota": true,
+    "name": "Database 25: 1790s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1790 to 1800, including rare and little-known items.",
+    "colorHex": "#FFE0B2",
+    "curated": true
+  },
+  {
+    "id": 26,
+    "from": 1780,
+    "to": 1790,
+    "quota": true,
+    "name": "Database 26: 1780s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1780 to 1790, including rare and little-known items.",
+    "colorHex": "#D7CCC8",
+    "curated": true
+  },
+  {
+    "id": 27,
+    "from": 1770,
+    "to": 1780,
+    "quota": true,
+    "name": "Database 27: 1770s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1770 to 1780, including rare and little-known items.",
+    "colorHex": "#80CBC4",
+    "curated": true
+  },
+  {
+    "id": 28,
+    "from": 1760,
+    "to": 1770,
+    "quota": true,
+    "name": "Database 28: 1760s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1760 to 1770, including rare and little-known items.",
+    "colorHex": "#B39DDB",
+    "curated": true
+  },
+  {
+    "id": 29,
+    "from": 1750,
+    "to": 1760,
+    "quota": true,
+    "name": "Database 29: 1750s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1750 to 1760, including rare and little-known items.",
+    "colorHex": "#FFCDD2",
+    "curated": true
+  },
+  {
+    "id": 30,
+    "from": 1740,
+    "to": 1750,
+    "quota": true,
+    "name": "Database 30: 1740s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1740 to 1750, including rare and little-known items.",
+    "colorHex": "#C8E6C9",
+    "curated": true
+  },
+  {
+    "id": 31,
+    "from": 1730,
+    "to": 1740,
+    "quota": true,
+    "name": "Database 31: 1730s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1730 to 1740, including rare and little-known items.",
+    "colorHex": "#B3E5FC",
+    "curated": true
+  },
+  {
+    "id": 32,
+    "from": 1720,
+    "to": 1730,
+    "quota": true,
+    "name": "Database 32: 1720s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1720 to 1730, including rare and little-known items.",
+    "colorHex": "#F0F4C3",
+    "curated": true
+  },
+  {
+    "id": 33,
+    "from": 1710,
+    "to": 1720,
+    "quota": true,
+    "name": "Database 33: 1710s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1710 to 1720, including rare and little-known items.",
+    "colorHex": "#D1C4E9",
+    "curated": true
+  },
+  {
+    "id": 34,
+    "from": 1700,
+    "to": 1710,
+    "quota": true,
+    "name": "Database 34: 1700s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1700 to 1710, including rare and little-known items.",
+    "colorHex": "#FFF9C4",
+    "curated": true
+  },
+  {
+    "id": 35,
+    "from": 1690,
+    "to": 1700,
+    "quota": true,
+    "name": "Database 35: 1690s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1690 to 1700, including rare and little-known items.",
+    "colorHex": "#E0F7FA",
+    "curated": false
+  },
+  {
+    "id": 36,
+    "from": 1680,
+    "to": 1690,
+    "quota": true,
+    "name": "Database 36: 1680s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1680 to 1690, including rare and little-known items.",
+    "colorHex": "#FCE4EC",
+    "curated": false
+  },
+  {
+    "id": 37,
+    "from": 1670,
+    "to": 1680,
+    "quota": true,
+    "name": "Database 37: 1670s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1670 to 1680, including rare and little-known items.",
+    "colorHex": "#E8EAF6",
+    "curated": false
+  },
+  {
+    "id": 38,
+    "from": 1660,
+    "to": 1670,
+    "quota": true,
+    "name": "Database 38: 1660s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1660 to 1670, including rare and little-known items.",
+    "colorHex": "#F1F8E9",
+    "curated": false
+  },
+  {
+    "id": 39,
+    "from": 1650,
+    "to": 1660,
+    "quota": true,
+    "name": "Database 39: 1650s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1650 to 1660, including rare and little-known items.",
+    "colorHex": "#FFF8E1",
+    "curated": false
+  },
+  {
+    "id": 40,
+    "from": 1640,
+    "to": 1650,
+    "quota": true,
+    "name": "Database 40: 1640s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1640 to 1650, including rare and little-known items.",
+    "colorHex": "#EFEBE9",
+    "curated": false
+  },
+  {
+    "id": 41,
+    "from": 1630,
+    "to": 1640,
+    "quota": true,
+    "name": "Database 41: 1630s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1630 to 1640, including rare and little-known items.",
+    "colorHex": "#ECEFF1",
+    "curated": false
+  },
+  {
+    "id": 42,
+    "from": 1620,
+    "to": 1630,
+    "quota": true,
+    "name": "Database 42: 1620s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1620 to 1630, including rare and little-known items.",
+    "colorHex": "#E3F2FD",
+    "curated": false
+  },
+  {
+    "id": 43,
+    "from": 1610,
+    "to": 1620,
+    "quota": true,
+    "name": "Database 43: 1610s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1610 to 1620, including rare and little-known items.",
+    "colorHex": "#FBE9E7",
+    "curated": false
+  },
+  {
+    "id": 44,
+    "from": 1600,
+    "to": 1610,
+    "quota": true,
+    "name": "Database 44: 1600s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1600 to 1610, including rare and little-known items.",
+    "colorHex": "#F5F5F5",
+    "curated": false
+  }
+]
