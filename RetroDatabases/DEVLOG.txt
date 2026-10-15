@@ -25,6 +25,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-10 | 2026-10-15 | 16,206 | 272 | 82 | 118 | 16,678 | +2,005 (database 5: 99 records in eleven files, migration 4→5, tests +23) |
 | CP-11 | 2026-10-15 | 17,552 | 295 | 82 | 118 | 18,047 | +1,369 (database 6: 60 records in eleven files, migration 5→6, tests +23) |
 | CP-12 | 2026-10-15 | 18,903 | 320 | 82 | 118 | 19,423 | +1,376 (database 7: 49 records in eleven files, migration 6→7, tests +25) |
+| CP-13 | 2026-10-15 | 20,288 | 343 | 82 | 118 | 20,831 | +1,408 (database 8: 50 records in eleven files, migration 7→8, tests +23) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -594,3 +595,47 @@ Date: 2026-10-15. Totals: Kotlin main 18,903 (CP-11: 17,552), Kotlin test 320 (2
 
 - 26 of 49 records are rare.
 - Not verified yet: running on a device or emulator, the migration from version 6 on a real device, the UI with seven databases in the list and in the filters, lint, and the release build.
+
+## CP-13: database 8, 1970 to 1980
+
+Status: database 8 is in the app: 50 records, a migration for installs made at version 7, and tests for all eight databases. The build passes, 21 of 21 unit tests pass, and the Kotlin compiler gives no warnings. 20 of the 50 new records have code that runs and passes; the other 30 are languages, systems, devices, tools and practices, which have no code to run.
+
+Mood: mostly calm. The dithering example failed its check on the first run, which I should have expected from one-row bands.
+
+Date: 2026-10-15. Totals: Kotlin main 20,288 (CP-12: 18,903), Kotlin test 343 (320), XML 82, Gradle and project files 118, total 20,831. The +1,408 is the eleven new Kotlin files for database 8 (1,366 lines together), plus the catalogue, the database class and the seed list (main +19), and the tests (+23).
+
+### What changed
+
+- An eighth database, "Database 8: 1970s coding catalogue", with the same ten kinds. 50 records: languages 6, systems 5, devices 10, tools 5, practices 4, guides 5, examples 6, projects 4, flex 3, cross-code 2. 22 of them are rare.
+- Eleven files `Db8*.kt`: ten record files and `Db8Catalog.kt`, which joins them into `db8Records`. `SeedCatalog.kt` lists the eighth database, with the colour #A1887F, and adds its records to `seedRecords`. The colour list already had a green close to the one I first thought of, so I chose brown.
+- Database version 8 with `MIGRATION_7_8`. An install at version 7 gets database 8 from it, and older installs run the earlier migrations first.
+- The years run from 1970 to 1980, both included, so 1970 is shared with database 7, as the other boundary years were. Database 1 has 131 records from these years. I read all their titles before choosing topics, and I did not repeat any of them.
+- Tests cover eight databases. `SeedDataTest` checks the ids of database 8 and that its records fall between 1970 and 1980. `AppDatabaseSeedTest` checks its record count, and it has a new test that removes database 8 and runs `MIGRATION_7_8`. 21 unit tests in total.
+
+### Facts checked by web search
+
+- Searched, and the records were written from the results: System R (1974), INGRES (1973), VM/370 (1972), TENEX (1972), the IBM System/38 (1978), Maple (1980), Ratfor and Pascal-S (both 1975), Smalltalk-72 (1972), the Hunt and McIlroy paper behind diff (1976), N-version programming (1977) and the Monty Hall problem (Selvin's letter, 1975).
+
+### Not searched, from memory
+
+- Everything else: the ten devices, QUEL, Communicating Sequential Processes, Altair BASIC, Structured design, Software Tools, multi-user dungeons, ed, WordStar and VisiCalc. The years of the guides and algorithms: Diffie and Hellman (1976), RSA (1977), Lamport clocks (1978), the relational join (1974), message lookup (1972), Boyer–Moore (1977), Aho–Corasick (1975), Pollard's rho (1975), Miller (1976) and Rabin (1980), Tarjan (1972), Ziv and Lempel (1978), Gosper's hack in HAKMEM (1972) and Floyd and Steinberg (1976). The years of the projects: Mastermind (1970), Zork (1977), the VisiCalc-style spreadsheet (1979) and Rogue (1980). The 1990 Parade column of Marilyn vos Savant.
+
+### How I checked it
+
+- Unit tests: 21 of 21 pass (AppDatabaseSeedTest 9, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the build log has no compiler warnings.
+- Examples: a script takes every database 8 example from the Kotlin source and runs what this sandbox can run. 20 pass. 17 are checked against exact output: the guides on Diffie–Hellman, RSA, Lamport clocks, joins and message lookup, Boyer–Moore, Aho–Corasick, Pollard's rho, Miller–Rabin, Tarjan's components, LZ78, Gosper's hack, Mastermind, the text adventure, the spreadsheet, the C and Python LZ78 round trip and the C and awk factoring pipeline. I worked out the Diffie–Hellman and RSA numbers, the LZ78 tokens and the Mastermind feedback by hand before the run, and they matched. The other three are checked by properties: the dungeon map must be 40 by 12 with one player, the black share of each dithering band must be within 5 percent of its grey level, and the Monty Hall win rates must be within one percentage point of one third and two thirds.
+- The other 30 records have no code, so there was nothing to run.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- The dithering example failed its check on the first run. I had written it with one-row bands, and error diffusion needs more rows than that to settle: the first row came out all black. The example now uses four rows per band and prints 16 lines of 32 characters, and the check compares each band as a whole.
+- Re-reading the records found three wording errors. The code was right in each case. The RSA detail called the modulus "the product of the primes minus one", where it should be (p - 1) times (q - 1). The Lamport detail said the example passes one message, but it passes two. The Gosper detail said the example lists the four-bit numbers, but it prints the first five. I corrected all three.
+- The Monty Hall detail said that a later letter gave the puzzle its name. I could not back that up with a source, so I removed it. The record now says what Selvin's 1975 letter did and names the 1990 column as the point where the puzzle became famous.
+
+### Notes
+
+- 22 of 50 records are rare, a judgement call again, which I'll compare with the other databases before the next release.
+- "Erlang" and "Software inspections" appear in both database 1 and database 2. They were there before this checkpoint. The uniqueness test is per database and passes, so I left them alone.
+- I checked the counting method again on the CP-12 commit first, and it gives exactly the CP-12 numbers.
+- Not verified yet: running on a device or emulator, the migration from version 7 on a real device, the UI with eight databases in the list and in the filters, lint, and the release build.

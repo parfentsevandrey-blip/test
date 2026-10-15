@@ -1,6 +1,6 @@
 ===============================================================================
  Retro Databases: source code of the Android app in one text file
- Files in the archive: 121
+ Files in the archive: 132
  Not included: gradle/wrapper/gradle-wrapper.jar (binary, created by the command
    gradle wrapper --gradle-version 8.10.2) and local.properties (path to your SDK).
 ===============================================================================
@@ -102,6 +102,17 @@ CONTENTS:
   app/src/main/java/com/example/retrodatabases/data/seed/Db7Projects.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db7Systems.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db7Tools.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db8Catalog.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db8Cross.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db8Devices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db8Examples.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db8Flex.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db8Guides.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db8Languages.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db8Practices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db8Projects.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db8Systems.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db8Tools.kt
   app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
   app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
   app/src/main/java/com/example/retrodatabases/ui/AppNavHost.kt
@@ -180,6 +191,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-10 | 2026-10-15 | 16,206 | 272 | 82 | 118 | 16,678 | +2,005 (database 5: 99 records in eleven files, migration 4→5, tests +23) |
 | CP-11 | 2026-10-15 | 17,552 | 295 | 82 | 118 | 18,047 | +1,369 (database 6: 60 records in eleven files, migration 5→6, tests +23) |
 | CP-12 | 2026-10-15 | 18,903 | 320 | 82 | 118 | 19,423 | +1,376 (database 7: 49 records in eleven files, migration 6→7, tests +25) |
+| CP-13 | 2026-10-15 | 20,288 | 343 | 82 | 118 | 20,831 | +1,408 (database 8: 50 records in eleven files, migration 7→8, tests +23) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -749,6 +761,50 @@ Date: 2026-10-15. Totals: Kotlin main 18,903 (CP-11: 17,552), Kotlin test 320 (2
 
 - 26 of 49 records are rare.
 - Not verified yet: running on a device or emulator, the migration from version 6 on a real device, the UI with seven databases in the list and in the filters, lint, and the release build.
+
+## CP-13: database 8, 1970 to 1980
+
+Status: database 8 is in the app: 50 records, a migration for installs made at version 7, and tests for all eight databases. The build passes, 21 of 21 unit tests pass, and the Kotlin compiler gives no warnings. 20 of the 50 new records have code that runs and passes; the other 30 are languages, systems, devices, tools and practices, which have no code to run.
+
+Mood: mostly calm. The dithering example failed its check on the first run, which I should have expected from one-row bands.
+
+Date: 2026-10-15. Totals: Kotlin main 20,288 (CP-12: 18,903), Kotlin test 343 (320), XML 82, Gradle and project files 118, total 20,831. The +1,408 is the eleven new Kotlin files for database 8 (1,366 lines together), plus the catalogue, the database class and the seed list (main +19), and the tests (+23).
+
+### What changed
+
+- An eighth database, "Database 8: 1970s coding catalogue", with the same ten kinds. 50 records: languages 6, systems 5, devices 10, tools 5, practices 4, guides 5, examples 6, projects 4, flex 3, cross-code 2. 22 of them are rare.
+- Eleven files `Db8*.kt`: ten record files and `Db8Catalog.kt`, which joins them into `db8Records`. `SeedCatalog.kt` lists the eighth database, with the colour #A1887F, and adds its records to `seedRecords`. The colour list already had a green close to the one I first thought of, so I chose brown.
+- Database version 8 with `MIGRATION_7_8`. An install at version 7 gets database 8 from it, and older installs run the earlier migrations first.
+- The years run from 1970 to 1980, both included, so 1970 is shared with database 7, as the other boundary years were. Database 1 has 131 records from these years. I read all their titles before choosing topics, and I did not repeat any of them.
+- Tests cover eight databases. `SeedDataTest` checks the ids of database 8 and that its records fall between 1970 and 1980. `AppDatabaseSeedTest` checks its record count, and it has a new test that removes database 8 and runs `MIGRATION_7_8`. 21 unit tests in total.
+
+### Facts checked by web search
+
+- Searched, and the records were written from the results: System R (1974), INGRES (1973), VM/370 (1972), TENEX (1972), the IBM System/38 (1978), Maple (1980), Ratfor and Pascal-S (both 1975), Smalltalk-72 (1972), the Hunt and McIlroy paper behind diff (1976), N-version programming (1977) and the Monty Hall problem (Selvin's letter, 1975).
+
+### Not searched, from memory
+
+- Everything else: the ten devices, QUEL, Communicating Sequential Processes, Altair BASIC, Structured design, Software Tools, multi-user dungeons, ed, WordStar and VisiCalc. The years of the guides and algorithms: Diffie and Hellman (1976), RSA (1977), Lamport clocks (1978), the relational join (1974), message lookup (1972), Boyer–Moore (1977), Aho–Corasick (1975), Pollard's rho (1975), Miller (1976) and Rabin (1980), Tarjan (1972), Ziv and Lempel (1978), Gosper's hack in HAKMEM (1972) and Floyd and Steinberg (1976). The years of the projects: Mastermind (1970), Zork (1977), the VisiCalc-style spreadsheet (1979) and Rogue (1980). The 1990 Parade column of Marilyn vos Savant.
+
+### How I checked it
+
+- Unit tests: 21 of 21 pass (AppDatabaseSeedTest 9, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the build log has no compiler warnings.
+- Examples: a script takes every database 8 example from the Kotlin source and runs what this sandbox can run. 20 pass. 17 are checked against exact output: the guides on Diffie–Hellman, RSA, Lamport clocks, joins and message lookup, Boyer–Moore, Aho–Corasick, Pollard's rho, Miller–Rabin, Tarjan's components, LZ78, Gosper's hack, Mastermind, the text adventure, the spreadsheet, the C and Python LZ78 round trip and the C and awk factoring pipeline. I worked out the Diffie–Hellman and RSA numbers, the LZ78 tokens and the Mastermind feedback by hand before the run, and they matched. The other three are checked by properties: the dungeon map must be 40 by 12 with one player, the black share of each dithering band must be within 5 percent of its grey level, and the Monty Hall win rates must be within one percentage point of one third and two thirds.
+- The other 30 records have no code, so there was nothing to run.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- The dithering example failed its check on the first run. I had written it with one-row bands, and error diffusion needs more rows than that to settle: the first row came out all black. The example now uses four rows per band and prints 16 lines of 32 characters, and the check compares each band as a whole.
+- Re-reading the records found three wording errors. The code was right in each case. The RSA detail called the modulus "the product of the primes minus one", where it should be (p - 1) times (q - 1). The Lamport detail said the example passes one message, but it passes two. The Gosper detail said the example lists the four-bit numbers, but it prints the first five. I corrected all three.
+- The Monty Hall detail said that a later letter gave the puzzle its name. I could not back that up with a source, so I removed it. The record now says what Selvin's 1975 letter did and names the 1990 column as the point where the puzzle became famous.
+
+### Notes
+
+- 22 of 50 records are rare, a judgement call again, which I'll compare with the other databases before the next release.
+- "Erlang" and "Software inspections" appear in both database 1 and database 2. They were there before this checkpoint. The uniqueness test is per database and passes, so I left them alone.
+- I checked the counting method again on the CP-12 commit first, and it gives exactly the CP-12 numbers.
+- Not verified yet: running on a device or emulator, the migration from version 7 on a real device, the UI with eight databases in the list and in the filters, lint, and the release build.
 
 ################################################################################
 # FILE: RetroDatabases/DEVLOG.txt
@@ -780,6 +836,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-10 | 2026-10-15 | 16,206 | 272 | 82 | 118 | 16,678 | +2,005 (database 5: 99 records in eleven files, migration 4→5, tests +23) |
 | CP-11 | 2026-10-15 | 17,552 | 295 | 82 | 118 | 18,047 | +1,369 (database 6: 60 records in eleven files, migration 5→6, tests +23) |
 | CP-12 | 2026-10-15 | 18,903 | 320 | 82 | 118 | 19,423 | +1,376 (database 7: 49 records in eleven files, migration 6→7, tests +25) |
+| CP-13 | 2026-10-15 | 20,288 | 343 | 82 | 118 | 20,831 | +1,408 (database 8: 50 records in eleven files, migration 7→8, tests +23) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -1350,12 +1407,56 @@ Date: 2026-10-15. Totals: Kotlin main 18,903 (CP-11: 17,552), Kotlin test 320 (2
 - 26 of 49 records are rare.
 - Not verified yet: running on a device or emulator, the migration from version 6 on a real device, the UI with seven databases in the list and in the filters, lint, and the release build.
 
+## CP-13: database 8, 1970 to 1980
+
+Status: database 8 is in the app: 50 records, a migration for installs made at version 7, and tests for all eight databases. The build passes, 21 of 21 unit tests pass, and the Kotlin compiler gives no warnings. 20 of the 50 new records have code that runs and passes; the other 30 are languages, systems, devices, tools and practices, which have no code to run.
+
+Mood: mostly calm. The dithering example failed its check on the first run, which I should have expected from one-row bands.
+
+Date: 2026-10-15. Totals: Kotlin main 20,288 (CP-12: 18,903), Kotlin test 343 (320), XML 82, Gradle and project files 118, total 20,831. The +1,408 is the eleven new Kotlin files for database 8 (1,366 lines together), plus the catalogue, the database class and the seed list (main +19), and the tests (+23).
+
+### What changed
+
+- An eighth database, "Database 8: 1970s coding catalogue", with the same ten kinds. 50 records: languages 6, systems 5, devices 10, tools 5, practices 4, guides 5, examples 6, projects 4, flex 3, cross-code 2. 22 of them are rare.
+- Eleven files `Db8*.kt`: ten record files and `Db8Catalog.kt`, which joins them into `db8Records`. `SeedCatalog.kt` lists the eighth database, with the colour #A1887F, and adds its records to `seedRecords`. The colour list already had a green close to the one I first thought of, so I chose brown.
+- Database version 8 with `MIGRATION_7_8`. An install at version 7 gets database 8 from it, and older installs run the earlier migrations first.
+- The years run from 1970 to 1980, both included, so 1970 is shared with database 7, as the other boundary years were. Database 1 has 131 records from these years. I read all their titles before choosing topics, and I did not repeat any of them.
+- Tests cover eight databases. `SeedDataTest` checks the ids of database 8 and that its records fall between 1970 and 1980. `AppDatabaseSeedTest` checks its record count, and it has a new test that removes database 8 and runs `MIGRATION_7_8`. 21 unit tests in total.
+
+### Facts checked by web search
+
+- Searched, and the records were written from the results: System R (1974), INGRES (1973), VM/370 (1972), TENEX (1972), the IBM System/38 (1978), Maple (1980), Ratfor and Pascal-S (both 1975), Smalltalk-72 (1972), the Hunt and McIlroy paper behind diff (1976), N-version programming (1977) and the Monty Hall problem (Selvin's letter, 1975).
+
+### Not searched, from memory
+
+- Everything else: the ten devices, QUEL, Communicating Sequential Processes, Altair BASIC, Structured design, Software Tools, multi-user dungeons, ed, WordStar and VisiCalc. The years of the guides and algorithms: Diffie and Hellman (1976), RSA (1977), Lamport clocks (1978), the relational join (1974), message lookup (1972), Boyer–Moore (1977), Aho–Corasick (1975), Pollard's rho (1975), Miller (1976) and Rabin (1980), Tarjan (1972), Ziv and Lempel (1978), Gosper's hack in HAKMEM (1972) and Floyd and Steinberg (1976). The years of the projects: Mastermind (1970), Zork (1977), the VisiCalc-style spreadsheet (1979) and Rogue (1980). The 1990 Parade column of Marilyn vos Savant.
+
+### How I checked it
+
+- Unit tests: 21 of 21 pass (AppDatabaseSeedTest 9, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the build log has no compiler warnings.
+- Examples: a script takes every database 8 example from the Kotlin source and runs what this sandbox can run. 20 pass. 17 are checked against exact output: the guides on Diffie–Hellman, RSA, Lamport clocks, joins and message lookup, Boyer–Moore, Aho–Corasick, Pollard's rho, Miller–Rabin, Tarjan's components, LZ78, Gosper's hack, Mastermind, the text adventure, the spreadsheet, the C and Python LZ78 round trip and the C and awk factoring pipeline. I worked out the Diffie–Hellman and RSA numbers, the LZ78 tokens and the Mastermind feedback by hand before the run, and they matched. The other three are checked by properties: the dungeon map must be 40 by 12 with one player, the black share of each dithering band must be within 5 percent of its grey level, and the Monty Hall win rates must be within one percentage point of one third and two thirds.
+- The other 30 records have no code, so there was nothing to run.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- The dithering example failed its check on the first run. I had written it with one-row bands, and error diffusion needs more rows than that to settle: the first row came out all black. The example now uses four rows per band and prints 16 lines of 32 characters, and the check compares each band as a whole.
+- Re-reading the records found three wording errors. The code was right in each case. The RSA detail called the modulus "the product of the primes minus one", where it should be (p - 1) times (q - 1). The Lamport detail said the example passes one message, but it passes two. The Gosper detail said the example lists the four-bit numbers, but it prints the first five. I corrected all three.
+- The Monty Hall detail said that a later letter gave the puzzle its name. I could not back that up with a source, so I removed it. The record now says what Selvin's 1975 letter did and names the 1990 column as the point where the puzzle became famous.
+
+### Notes
+
+- 22 of 50 records are rare, a judgement call again, which I'll compare with the other databases before the next release.
+- "Erlang" and "Software inspections" appear in both database 1 and database 2. They were there before this checkpoint. The uniqueness test is per database and passes, so I left them alone.
+- I checked the counting method again on the CP-12 commit first, and it gives exactly the CP-12 numbers.
+- Not verified yet: running on a device or emulator, the migration from version 7 on a real device, the UI with eight databases in the list and in the filters, lint, and the release build.
+
 ################################################################################
 # FILE: RetroDatabases/README.md
 ################################################################################
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside are seven databases of coding history:
+An Android application in Kotlin, Jetpack Compose and Room. Inside are eight databases of coding history:
 
 - "Database 1" is a catalogue of 80s coding;
 - "Database 2" is a catalogue of 90s coding;
@@ -1363,7 +1464,8 @@ An Android application in Kotlin, Jetpack Compose and Room. Inside are seven dat
 - "Database 4" is a catalogue of coding from 2010 to 2020;
 - "Database 5" is a catalogue of coding from 2020 to 2026;
 - "Database 6" is a catalogue of coding from 1950 to 1960;
-- "Database 7" is a catalogue of coding from 1960 to 1970.
+- "Database 7" is a catalogue of coding from 1960 to 1970;
+- "Database 8" is a catalogue of coding from 1970 to 1980.
 
 ## What is inside
 
@@ -1472,7 +1574,22 @@ The catalogue of database 7 (1960 to 1970) has the same ten kinds:
 | Flex | 4 | Bresenham's line, tortoise and hare for cycles, Strassen's seven multiplications and union-find with path halving |
 | Cross-code | 2 | C and Python computing the same shortest paths, and an awk pipeline with a C Bloom filter |
 
-In total there are 920 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare), 60 in database 6 (29 rare) and 49 in database 7 (26 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
+The catalogue of database 8 (1970 to 1980) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Smalltalk-72, Ratfor, Pascal-S, QUEL, Communicating Sequential Processes and Altair BASIC |
+| Systems | 5 | VM/370, TENEX, INGRES, System R and the IBM System/38 |
+| Devices | 10 | Intel 4004, the IBM 23FD floppy disk, Intel 8008, HP-35, Magnavox Odyssey, IBM 3340 Winchester disk, Intel 8080, Motorola 6800, Apple I and TRS-80 Model I |
+| Tools | 5 | ed, diff, WordStar, VisiCalc and Maple |
+| Practices | 4 | Structured design, N-version programming, Software Tools and multi-user dungeons |
+| Guides | 5 | How Diffie–Hellman key agreement, RSA, Lamport clocks, a relational join and message lookup work |
+| Examples | 6 | Boyer–Moore string search, Aho–Corasick, Pollard's rho, Miller–Rabin, Tarjan's strongly connected components and LZ78 |
+| Projects | 4 | Mastermind scoring, a text adventure in the Zork style, a VisiCalc-style spreadsheet and a dungeon generator in the Rogue style |
+| Flex | 3 | Gosper's hack, Floyd–Steinberg dithering and Monty Hall by simulation |
+| Cross-code | 2 | C and Python: an LZ78 round trip, and a factoring pipeline in C and awk |
+
+In total there are 970 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare), 60 in database 6 (29 rare), 49 in database 7 (26 rare) and 50 in database 8 (22 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
 
 In the app:
 - the list of databases with the number of records;
@@ -1499,8 +1616,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Structure
 
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4, 5 and 6 to version 7.
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all seven databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt`, `Db6*.kt` and `Db7*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4, 5, 6 and 7 to version 8.
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all eight databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt`, `Db6*.kt`, `Db7*.kt` and `Db8*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
 - `app/src/test` — tests of the filters, the data and the database itself (Robolectric).
 - `DEVLOG.md` — the development log with the growth of lines of code by checkpoint.
@@ -1508,7 +1625,7 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
 
 For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
 
@@ -1516,7 +1633,7 @@ For languages that are not installed in the build environment (Forth, Prolog, Li
 
 1. Create files in `data/seed` with the records. Pass the database id to `entry()`, for example `databaseId = 3`; a record without it goes to database 1.
 2. Add the database to `seedDatabases` and its records to `seedRecords` (file `SeedCatalog.kt`).
-3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_6_7` are the examples: each adds one database, and an install made at version 1 runs them in order.
+3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_7_8` are the examples: each adds one database, and an install made at version 1 runs them in order.
 
 ################################################################################
 # FILE: RetroDatabases/app/build.gradle.kts
@@ -1665,7 +1782,7 @@ import com.example.retrodatabases.data.seed.seedRecords
 
 @Database(
     entities = [DatabaseEntity::class, RecordEntity::class],
-    version = 7,
+    version = 8,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -1694,6 +1811,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_4_5,
                     MIGRATION_5_6,
                     MIGRATION_6_7,
+                    MIGRATION_7_8,
                 )
                 .build()
     }
@@ -1766,6 +1884,18 @@ internal val MIGRATION_5_6 = object : Migration(5, 6) {
 internal val MIGRATION_6_7 = object : Migration(6, 7) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val added = setOf(7L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 8 added database 8. Copies at version 7 get it from this migration;
+ * older copies run it after the earlier migrations.
+ */
+internal val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(8L)
         seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
         seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
     }
@@ -19884,6 +20014,1416 @@ val db7Tools: List<RecordEntity> = listOf(
 )
 
 ################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db8Catalog.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.RecordEntity
+
+/**
+ * All records of database 8: languages, systems, devices, tools and practices of 1970 to 1980,
+ * as well as guides, examples, projects, flex projects and cross-code experiments.
+ */
+val db8Records: List<RecordEntity> =
+    db8Languages + db8Systems + db8Devices + db8Tools + db8Practices +
+        db8Guides + db8Examples + db8Projects + db8Flex + db8Cross
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db8Cross.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Cross-code experiments of 1970 to 1980: a C encoder checked by Python, and a C factoring program reported by a shell pipeline. */
+val db8Cross: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 8,
+        kind = Kind.CROSS,
+        section = "C and Python",
+        title = "C and Python: an LZ78 round trip",
+        originalTitle = "LZ78 encoding in C, decoding in Python (Ziv and Lempel, 1978)",
+        author = "Written as a teaching example",
+        year = 1978,
+        summary = "A C program encodes text with LZ78, and a Python script decodes the tokens it prints and checks that the original text comes back.",
+        details = "The encoder keeps its dictionary as a trie, a table of child nodes for each character, and prints one token per phrase. The decoder rebuilds the phrases from the tokens. The two programs share only the format of the tokens.",
+        instructions = """
+            1. Save the files below in one folder.
+            2. Compile the encoder: cc -o lz78 lz78.c
+            3. Run the round trip: python3 roundtrip.py
+        """,
+        example = """
+            ### lz78.c
+            #include <stdio.h>
+            #include <string.h>
+
+            #define MAX_NODES 256
+
+            /* LZ78 encoder: one "index character" line per phrase, with a trie of the phrases. */
+            static int child[MAX_NODES][256];
+
+            int main(void) {
+                int next_index = 1;   /* index 0 is the empty phrase */
+                int node = 0;
+                int c;
+                memset(child, 0, sizeof(child));
+                while ((c = getchar()) != EOF) {
+                    if (child[node][c] != 0) {
+                        node = child[node][c];
+                    } else {
+                        printf("%d %c\n", node, c);
+                        child[node][c] = next_index++;
+                        node = 0;
+                    }
+                }
+                return 0;
+            }
+            ### roundtrip.py
+            import subprocess
+
+            text = "abababababab"
+            result = subprocess.run(["./lz78"], input=text, capture_output=True, text=True, check=True)
+            tokens = []
+            for line in result.stdout.splitlines():
+                index, ch = line.split()
+                tokens.append((int(index), ch))
+
+            entries = [""]
+            pieces = []
+            for index, ch in tokens:
+                phrase = entries[index] + ch
+                entries.append(phrase)
+                pieces.append(phrase)
+
+            print("tokens:", tokens)
+            print("round trip ok:", "".join(pieces) == text)
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.CROSS,
+        section = "C and awk",
+        title = "A factoring pipeline: C and awk",
+        originalTitle = "Pollard's rho in C, reported by awk (1975)",
+        author = "Written as a teaching example, after Pollard's method",
+        year = 1975,
+        summary = "A C program factors numbers with Pollard's rho method, and awk turns its output into a report, all in one shell pipeline.",
+        details = "The factoring runs in C with 64-bit arithmetic, and each line of its output is a number with its two factors, smallest first. awk only formats the report, so the work is split between two tools that each do what they are good at.",
+        instructions = """
+            1. Save the files below in one folder.
+            2. Run the pipeline: sh run.sh
+        """,
+        example = """
+            ### factor.c
+            #include <stdio.h>
+
+            static unsigned long long gcd(unsigned long long a, unsigned long long b) {
+                while (b) {
+                    unsigned long long t = a % b;
+                    a = b;
+                    b = t;
+                }
+                return a;
+            }
+
+            static unsigned long long rho(unsigned long long n) {
+                unsigned long long c;
+                for (c = 1; ; c++) {
+                    unsigned long long x = 2, y = 2, d = 1;
+                    while (d == 1) {
+                        x = (x * x + c) % n;
+                        y = (y * y + c) % n;
+                        y = (y * y + c) % n;
+                        d = gcd(x > y ? x - y : y - x, n);
+                    }
+                    if (d != n) {
+                        return d;
+                    }
+                }
+            }
+
+            int main(void) {
+                unsigned long long n;
+                while (scanf("%llu", &n) == 1) {
+                    unsigned long long f = rho(n);
+                    unsigned long long g = n / f;
+                    if (f > g) {
+                        unsigned long long t = f;
+                        f = g;
+                        g = t;
+                    }
+                    printf("%llu %llu %llu\n", n, f, g);
+                }
+                return 0;
+            }
+            ### run.sh
+            printf '8051\n10403\n1000001\n' > numbers.txt
+            cc -O2 -o factor factor.c
+            ./factor < numbers.txt | awk '{ printf "%s = %s x %s\n", $1, $2, $3 }'
+        """,
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db8Devices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Devices of 1970 to 1980: the first microprocessors, a floppy disk, a sealed hard disk, calculators, home video, and the first personal computers. */
+val db8Devices: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 8,
+        kind = Kind.DEVICE,
+        section = "Microprocessors",
+        title = "Intel 4004",
+        originalTitle = "Intel 4004, the first microprocessor",
+        author = "Intel; design credited to Federico Faggin and Ted Hoff",
+        year = 1971,
+        summary = "Intel's 4-bit microprocessor, with about 2,300 transistors, made for the Busicom calculator and announced in November 1971.",
+        details = "It put a whole central processor on one chip, which made the calculator cheaper and the microprocessor an idea that other companies could copy. Its successors, the 8008 and the 8080, followed within three years.",
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.DEVICE,
+        section = "Storage",
+        title = "IBM 23FD floppy disk",
+        originalTitle = "IBM 23FD, the 8-inch floppy disk",
+        author = "IBM",
+        year = 1971,
+        summary = "IBM's 8-inch floppy disk, introduced in 1971, the first flexible magnetic medium that could be carried from one machine to another.",
+        details = "It was first used as a read-only medium for loading programs into System/370 machines. Later floppies could be read and written, and the format spread to the small computers of the late 1970s.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.DEVICE,
+        section = "Microprocessors",
+        title = "Intel 8008",
+        originalTitle = "Intel 8008, an 8-bit microprocessor",
+        author = "Intel",
+        year = 1972,
+        summary = "Intel's 8-bit microprocessor of 1972, with about 3,500 transistors, the first 8-bit chip of the line that led to the 8080.",
+        details = "It was designed for a terminal maker and then offered to other customers, and its speed kept it out of many tasks. Its design was the starting point for the 8080, two years later.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.DEVICE,
+        section = "Calculators",
+        title = "HP-35",
+        originalTitle = "Hewlett-Packard HP-35 scientific pocket calculator",
+        author = "Hewlett-Packard",
+        year = 1972,
+        summary = "The first handheld scientific calculator, launched by Hewlett-Packard in 1972 at about $395, which worked in reverse Polish notation.",
+        details = "Its logarithms and trigonometric functions were built in, so an engineer no longer had to carry tables or a slide rule. The machine was a favourite of engineers, and it sold in large numbers.",
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.DEVICE,
+        section = "Home video",
+        title = "Magnavox Odyssey",
+        originalTitle = "Magnavox Odyssey home video game system",
+        author = "Magnavox, designed by Ralph Baer",
+        year = 1972,
+        summary = "The first home video game console, released by Magnavox in 1972, which played simple games on a television with plastic overlays.",
+        details = "Ralph Baer designed the system over several years. Its games were simple, and the plastic overlays fixed to the television screen supplied the colour and the playing field.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.DEVICE,
+        section = "Storage",
+        title = "IBM 3340 Winchester disk",
+        originalTitle = "IBM 3340 disk storage with sealed heads and platters",
+        author = "IBM",
+        year = 1973,
+        summary = "IBM's disk drive of 1973, with its heads and platters sealed in one unit, the design that gave sealed hard disks the common name Winchester.",
+        details = "The project's code name was Winchester, after the 30-30 rifle, and the name stuck for years. The sealed unit kept dust out, which let the heads fly closer to the disk and store more data on each platter.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.DEVICE,
+        section = "Microprocessors",
+        title = "Intel 8080",
+        originalTitle = "Intel 8080, an 8-bit microprocessor",
+        author = "Intel",
+        year = 1974,
+        summary = "Intel's 8-bit microprocessor of 1974, with about 6,000 transistors, which powered the Altair 8800 and many early microcomputers.",
+        details = "Its instruction set was the base of the 8085 and of the Z80, which is why so many machines of the late 1970s share its ideas. The chip ran at about two megahertz.",
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.DEVICE,
+        section = "Microprocessors",
+        title = "Motorola 6800",
+        originalTitle = "Motorola MC6800, an 8-bit microprocessor",
+        author = "Motorola",
+        year = 1974,
+        summary = "Motorola's 8-bit microprocessor of 1974, a rival to the Intel 8080, with about 4,100 transistors.",
+        details = "Its design was the ancestor of the 6809, and it was used in several early machines, including terminals and industrial controllers.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.DEVICE,
+        section = "Personal computers",
+        title = "Apple I",
+        originalTitle = "Apple Computer Apple I",
+        author = "Steve Wozniak and Steve Jobs",
+        year = 1976,
+        summary = "Steve Wozniak's single-board computer, sold by Apple in 1976 for $666.66 as a kit for hobbyists, with a MOS 6502 processor.",
+        details = "Only a few hundred were made. It had no case, keyboard or display of its own, and buyers connected a terminal, which is why the machine is remembered as a board rather than as a computer.",
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.DEVICE,
+        section = "Personal computers",
+        title = "TRS-80 Model I",
+        originalTitle = "Tandy Radio Shack TRS-80 Model I",
+        author = "Tandy Corporation and Radio Shack",
+        year = 1977,
+        summary = "Radio Shack's first personal computer, released in 1977 at $599, with a Zilog Z80 processor and a keyboard built into the case.",
+        details = "It was sold through the chain's own stores, which put a computer on display where ordinary customers could see it. Its screen showed text only, and its disk drive and printer were add-ons.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db8Examples.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Examples of 1970 to 1980: classic algorithms of the decade, each with a short program that prints a checkable result. */
+val db8Examples: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 8,
+        kind = Kind.EXAMPLE,
+        section = "Strings",
+        title = "Boyer–Moore string search",
+        originalTitle = "A fast string searching algorithm (Boyer and Moore, 1977)",
+        author = "Robert Boyer and J Strother Moore",
+        year = 1977,
+        summary = "A string search that compares from the end of the pattern and skips ahead with a bad-character table, so many characters of the text are never looked at.",
+        details = "Boyer and Moore published the method in 1977. The example uses the bad-character rule only, and prints the positions where the pattern occurs, including overlapping matches.",
+        instructions = """
+            1. Save the example as boyer_moore.py.
+            2. Run it: python3 boyer_moore.py
+        """,
+        example = """
+            def boyer_moore(text, pattern):
+                # Bad-character table: the last position of each letter in the pattern.
+                last = {ch: i for i, ch in enumerate(pattern)}
+                found = []
+                shift = 0
+                while shift <= len(text) - len(pattern):
+                    j = len(pattern) - 1
+                    while j >= 0 and pattern[j] == text[shift + j]:
+                        j -= 1
+                    if j < 0:
+                        found.append(shift)
+                        shift += 1
+                    else:
+                        shift += max(1, j - last.get(text[shift + j], -1))
+                return found
+
+            print(boyer_moore("here is a simple example", "example"))
+            print(boyer_moore("abababa", "aba"))
+        """,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.EXAMPLE,
+        section = "Strings",
+        title = "Aho–Corasick multiple search",
+        originalTitle = "Efficient string matching: an aid to bibliographic search (1975)",
+        author = "Alfred Aho and Margaret Corasick",
+        year = 1975,
+        summary = "A search for many patterns at once: a trie of the patterns with failure links, so the text is read in one pass whatever the number of patterns.",
+        details = "Aho and Corasick published the method in 1975, for searching a bibliography for a set of keywords. The example finds four patterns in one word and prints where each one starts.",
+        instructions = """
+            1. Save the example as aho_corasick.py.
+            2. Run it: python3 aho_corasick.py
+        """,
+        example = """
+            from collections import deque
+
+            def build(patterns):
+                goto = [{}]
+                out = [set()]
+                for p in patterns:
+                    node = 0
+                    for ch in p:
+                        if ch not in goto[node]:
+                            goto.append({})
+                            out.append(set())
+                            goto[node][ch] = len(goto) - 1
+                        node = goto[node][ch]
+                    out[node].add(p)
+                fail = [0] * len(goto)
+                queue = deque()
+                for child in goto[0].values():
+                    queue.append(child)
+                while queue:
+                    node = queue.popleft()
+                    for ch, child in goto[node].items():
+                        queue.append(child)
+                        f = fail[node]
+                        while f and ch not in goto[f]:
+                            f = fail[f]
+                        fail[child] = goto[f].get(ch, 0)
+                        out[child] |= out[fail[child]]
+                return goto, fail, out
+
+            def search(text, patterns):
+                goto, fail, out = build(patterns)
+                matches = []
+                node = 0
+                for i, ch in enumerate(text):
+                    while node and ch not in goto[node]:
+                        node = fail[node]
+                    node = goto[node].get(ch, 0)
+                    for p in out[node]:
+                        matches.append((i - len(p) + 1, p))
+                return sorted(matches)
+
+            print(search("ushers", ["he", "she", "his", "hers"]))
+        """,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.EXAMPLE,
+        section = "Number theory",
+        title = "Pollard's rho factoring",
+        originalTitle = "A Monte Carlo method for factorization (Pollard, 1975)",
+        author = "John Pollard",
+        year = 1975,
+        summary = "A factoring method that runs a pseudo-random sequence modulo the number, and uses a greatest common divisor to catch a factor when two runners meet.",
+        details = "Pollard published the method in 1975. It finds small factors quickly and needs no table of primes. The example factors two numbers, each the product of two primes.",
+        instructions = """
+            1. Save the example as pollard.py.
+            2. Run it: python3 pollard.py
+        """,
+        example = """
+            from math import gcd
+
+            def pollard_rho(n):
+                # Two runners step through x -> x*x + c modulo n; their difference shares a factor with n when they meet.
+                if n % 2 == 0:
+                    return 2
+                c = 1
+                while True:
+                    x = y = 2
+                    d = 1
+                    while d == 1:
+                        x = (x * x + c) % n
+                        y = (y * y + c) % n
+                        y = (y * y + c) % n
+                        d = gcd(abs(x - y), n)
+                    if d != n:
+                        return d
+                    c += 1
+
+            for n in [8051, 10403]:
+                f = pollard_rho(n)
+                print(n, "=", min(f, n // f), "*", max(f, n // f))
+        """,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.EXAMPLE,
+        section = "Number theory",
+        title = "Miller–Rabin primality test",
+        originalTitle = "Miller–Rabin test (Miller, 1976; Rabin, 1980)",
+        author = "Gary Miller and Michael Rabin",
+        year = 1976,
+        summary = "A test that checks whether a number behaves like a prime under powers of several bases; with the fixed bases used here it is reliable for every number in a large range.",
+        details = "Miller described the test in 1976, and Rabin's randomised version followed in 1980. The example uses six fixed bases, which are enough for every number up to about 3.47 times ten to the twelfth.",
+        instructions = """
+            1. Save the example as miller_rabin.py.
+            2. Run it: python3 miller_rabin.py
+        """,
+        example = """
+            def is_prime(n):
+                if n < 2:
+                    return False
+                for p in [2, 3, 5, 7, 11, 13]:
+                    if n % p == 0:
+                        return n == p
+                d, s = n - 1, 0
+                while d % 2 == 0:
+                    d //= 2
+                    s += 1
+                for a in [2, 3, 5, 7, 11, 13]:
+                    x = pow(a, d, n)
+                    if x in (1, n - 1):
+                        continue
+                    for _ in range(s - 1):
+                        x = x * x % n
+                        if x == n - 1:
+                            break
+                    else:
+                        return False
+                return True
+
+            print([n for n in range(2, 50) if is_prime(n)])
+            print(is_prime(1000003), is_prime(1000001))
+        """,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.EXAMPLE,
+        section = "Graphs",
+        title = "Tarjan's strongly connected components",
+        originalTitle = "Depth-first search and linear graph algorithms (Tarjan, 1972)",
+        author = "Robert Tarjan",
+        year = 1972,
+        summary = "Finds the strongly connected components of a directed graph in one depth-first search, using a stack and low-link numbers.",
+        details = "Tarjan published the algorithm in 1972. A component is complete when a node's low-link number equals its own index, and the nodes above it on the stack form the component. The example finds three components in a small graph.",
+        instructions = """
+            1. Save the example as tarjan.py.
+            2. Run it: python3 tarjan.py
+        """,
+        example = """
+            def tarjan(graph):
+                index, low = {}, {}
+                stack, on_stack = [], set()
+                result = []
+                counter = [0]
+
+                def visit(v):
+                    index[v] = low[v] = counter[0]
+                    counter[0] += 1
+                    stack.append(v)
+                    on_stack.add(v)
+                    for w in graph.get(v, []):
+                        if w not in index:
+                            visit(w)
+                            low[v] = min(low[v], low[w])
+                        elif w in on_stack:
+                            low[v] = min(low[v], index[w])
+                    if low[v] == index[v]:
+                        component = []
+                        while True:
+                            w = stack.pop()
+                            on_stack.discard(w)
+                            component.append(w)
+                            if w == v:
+                                break
+                        result.append(sorted(component))
+
+                for v in sorted(graph):
+                    if v not in index:
+                        visit(v)
+                return sorted(result)
+
+            graph = {1: [2], 2: [3], 3: [1, 4], 4: [5], 5: [6], 6: [4], 7: [6]}
+            print(tarjan(graph))
+        """,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.EXAMPLE,
+        section = "Compression",
+        title = "LZ78 compression",
+        originalTitle = "Compression of individual sequences via variable-rate coding (Ziv and Lempel, 1978)",
+        author = "Jacob Ziv and Abraham Lempel",
+        year = 1978,
+        summary = "A compression method that builds a dictionary of phrases as it reads, and writes each new phrase as the index of a known phrase plus one character.",
+        details = "Ziv and Lempel published the method in 1978. The decoder rebuilds the same dictionary from the tokens alone, so no table is sent with the data. The example encodes a repeated text and decodes it back.",
+        instructions = """
+            1. Save the example as lz78.py.
+            2. Run it: python3 lz78.py
+        """,
+        example = """
+            def lz78_encode(text):
+                dictionary = {"": 0}
+                output = []
+                current = ""
+                for ch in text:
+                    if current + ch in dictionary:
+                        current += ch
+                    else:
+                        output.append((dictionary[current], ch))
+                        dictionary[current + ch] = len(dictionary)
+                        current = ""
+                if current:
+                    output.append((dictionary[current], ""))
+                return output
+
+            def lz78_decode(tokens):
+                entries = [""]
+                pieces = []
+                for index, ch in tokens:
+                    phrase = entries[index] + ch
+                    entries.append(phrase)
+                    pieces.append(phrase)
+                return "".join(pieces)
+
+            tokens = lz78_encode("abababababab")
+            print(tokens)
+            print(lz78_decode(tokens) == "abababababab")
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db8Flex.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Flex projects of 1970 to 1980: showpieces that squeeze the most out of a few lines of code, from bit tricks to dithering and a probability puzzle. */
+val db8Flex: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 8,
+        kind = Kind.FLEX,
+        section = "Bits",
+        title = "Gosper's hack",
+        originalTitle = "The HAKMEM memo of 1972: the next number with the same bit count",
+        author = "Bill Gosper",
+        year = 1972,
+        summary = "The next larger integer with the same number of one bits, found with a few bit operations, so every combination of bits can be listed in order.",
+        details = "Gosper's hack appeared in the MIT memo HAKMEM in 1972. The example prints the first five four-bit numbers with two ones, in increasing order.",
+        instructions = """
+            1. Save the example as gosper.py.
+            2. Run it: python3 gosper.py
+        """,
+        example = """
+            def next_same_popcount(x):
+                c = x & -x
+                r = x + c
+                return (((r ^ x) >> 2) // c) | r
+
+            x = 0b0011
+            for _ in range(5):
+                print(format(x, "04b"))
+                x = next_same_popcount(x)
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.FLEX,
+        section = "Graphics",
+        title = "Floyd–Steinberg dithering",
+        originalTitle = "An adaptive algorithm for spatial grey scale (Floyd and Steinberg, 1976)",
+        author = "Robert Floyd and Louis Steinberg",
+        year = 1976,
+        summary = "Dithering that turns a grey image into black and white dots, and pushes each pixel's rounding error onto its unprocessed neighbours.",
+        details = "The method was published in 1976. Its error spreading keeps the average brightness of each area close to the original, so a grey band looks grey from a distance. The example dithers four bands of grey and prints them as text.",
+        instructions = """
+            1. Save the example as dither.py.
+            2. Run it: python3 dither.py
+        """,
+        example = """
+            # Four bands of four rows each, from dark grey to white.
+            WIDTH, HEIGHT = 32, 16
+            image = [[[0.25, 0.5, 0.75, 1.0][y // 4] for _ in range(WIDTH)] for y in range(HEIGHT)]
+            for y in range(HEIGHT):
+                for x in range(WIDTH):
+                    old = image[y][x]
+                    new = 1.0 if old >= 0.5 else 0.0
+                    error = old - new
+                    image[y][x] = new
+                    if x + 1 < WIDTH:
+                        image[y][x + 1] += error * 7 / 16
+                    if y + 1 < HEIGHT:
+                        if x > 0:
+                            image[y + 1][x - 1] += error * 3 / 16
+                        image[y + 1][x] += error * 5 / 16
+                        if x + 1 < WIDTH:
+                            image[y + 1][x + 1] += error * 1 / 16
+            for row in image:
+                print("".join("." if v == 1.0 else "#" for v in row))
+        """,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.FLEX,
+        section = "Probability",
+        title = "Monty Hall by simulation",
+        originalTitle = "The Monty Hall problem (Selvin, 1975)",
+        author = "Steve Selvin, with a simulation written for this database",
+        year = 1975,
+        summary = "A host who opens a losing door makes switching win two times in three, and a simulation of 100,000 games shows it.",
+        details = "Steve Selvin posed the puzzle in a letter to The American Statistician in 1975, and it became famous in 1990, when Marilyn vos Savant answered it in her Parade column. The example runs the game with a fixed seed and prints the win rate of staying and of switching.",
+        instructions = """
+            1. Save the example as monty.py.
+            2. Run it: python3 monty.py
+        """,
+        example = """
+            import random
+
+            random.seed(1975)
+            trials = 100000
+            stay_wins = switch_wins = 0
+            for _ in range(trials):
+                car = random.randrange(3)
+                pick = random.randrange(3)
+                # The host opens a door that is neither the pick nor the car.
+                opened = next(d for d in range(3) if d != pick and d != car)
+                switched = next(d for d in range(3) if d != pick and d != opened)
+                stay_wins += pick == car
+                switch_wins += switched == car
+            print(f"stay: {stay_wins / trials:.3f}")
+            print(f"switch: {switch_wins / trials:.3f}")
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db8Guides.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Guides of 1970 to 1980: how public-key exchange, RSA, logical clocks, joins and message lookup work, each with a small program to try. */
+val db8Guides: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 8,
+        kind = Kind.GUIDE,
+        section = "Cryptography",
+        title = "How Diffie–Hellman key agreement works",
+        originalTitle = "New directions in cryptography (Diffie and Hellman, 1976)",
+        author = "Whitfield Diffie and Martin Hellman",
+        year = 1976,
+        summary = "Two people agree on a secret number over a public channel by exchanging powers of a shared base modulo a prime, without sending the secret itself.",
+        details = "Each side keeps a private exponent and sends the public value that results. Both can then compute the same shared value, while someone who hears only the public values has to solve a discrete logarithm to find it. " +
+            "The example uses a tiny prime so that every step can be checked by hand.",
+        instructions = """
+            1. Save the example as diffie_hellman.py.
+            2. Run it: python3 diffie_hellman.py
+        """,
+        example = """
+            p, g = 23, 5
+            a, b = 6, 15            # private exponents, kept secret
+            A = pow(g, a, p)        # Alice sends A
+            B = pow(g, b, p)        # Bob sends B
+            print("public values:", A, B)
+            print("shared secret seen by Alice:", pow(B, a, p))
+            print("shared secret seen by Bob:", pow(A, b, p))
+        """,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.GUIDE,
+        section = "Cryptography",
+        title = "How RSA works",
+        originalTitle = "RSA public-key cryptosystem (Rivest, Shamir and Adleman, 1977)",
+        author = "Ronald Rivest, Adi Shamir and Leonard Adleman",
+        year = 1977,
+        summary = "Anyone can encrypt with the public exponent and the modulus, but only the holder of the private exponent can decrypt, because that exponent depends on the secret factors.",
+        details = "The modulus is the product of two secret primes. The private exponent is the inverse of the public exponent modulo (p - 1) times (q - 1). " +
+            "The example uses the textbook primes 61 and 53, so the numbers stay small.",
+        instructions = """
+            1. Save the example as rsa.py.
+            2. Run it: python3 rsa.py
+        """,
+        example = """
+            p, q = 61, 53
+            n = p * q
+            phi = (p - 1) * (q - 1)
+            e = 17
+            d = pow(e, -1, phi)
+            message = 65
+            cipher = pow(message, e, n)
+            print(f"n = {n}, phi = {phi}, private exponent d = {d}")
+            print("encrypted", message, "->", cipher)
+            print("decrypted", cipher, "->", pow(cipher, d, n))
+        """,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.GUIDE,
+        section = "Distributed systems",
+        title = "How Lamport clocks order events",
+        originalTitle = "Time, clocks, and the ordering of events in a distributed system (1978)",
+        author = "Leslie Lamport",
+        year = 1978,
+        summary = "Each process counts its events, and messages carry the counter, so that the counts respect cause and effect even without a shared clock.",
+        details = "A process adds one before each event and each send. On receiving a message, it takes the larger of its own counter and the message's counter, then adds one. " +
+            "The example runs three processes, where the first sends to the second and the second sends to the third, and prints the counters.",
+        instructions = """
+            1. Save the example as lamport.py.
+            2. Run it: python3 lamport.py
+        """,
+        example = """
+            clock = {"P1": 0, "P2": 0, "P3": 0}
+
+            def local(p):
+                clock[p] += 1
+                print(f"{p} local event: clock {clock[p]}")
+
+            def send(p):
+                clock[p] += 1
+                print(f"{p} sends with clock {clock[p]}")
+                return clock[p]
+
+            def receive(p, stamp):
+                clock[p] = max(clock[p], stamp) + 1
+                print(f"{p} receives, clock {clock[p]}")
+
+            local("P1")
+            m1 = send("P1")
+            local("P2")
+            receive("P2", m1)
+            m2 = send("P2")
+            receive("P3", m2)
+            local("P3")
+        """,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.GUIDE,
+        section = "Relational databases",
+        title = "How a relational join works",
+        originalTitle = "Nested-loop join, the simplest method in System R",
+        author = "Written as a teaching example",
+        year = 1974,
+        summary = "A join matches the rows of two tables on a shared column. The simplest method checks every pair of rows, and System R's optimiser chose cheaper methods when it could.",
+        details = "The example joins two small tables by checking each employee against each department. The result has one row for each matching pair, with the columns of both tables.",
+        instructions = """
+            1. Save the example as join.py.
+            2. Run it: python3 join.py
+        """,
+        example = """
+            employees = [
+                {"name": "Ann", "dept": 10},
+                {"name": "Bob", "dept": 20},
+                {"name": "Cy", "dept": 10},
+            ]
+            departments = [
+                {"dept": 10, "title": "Research"},
+                {"dept": 20, "title": "Sales"},
+            ]
+
+            def nested_loop_join(left, right, key):
+                # For every row on the left, scan the right table for rows with the same key.
+                result = []
+                for l in left:
+                    for r in right:
+                        if l[key] == r[key]:
+                            result.append({**l, **r})
+                return result
+
+            for row in nested_loop_join(employees, departments, "dept"):
+                print(row["name"], "works in", row["title"])
+        """,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.GUIDE,
+        section = "Object-oriented",
+        title = "How a message finds its method",
+        originalTitle = "Message lookup through the superclass chain (Smalltalk, 1972)",
+        author = "Written as a teaching example",
+        year = 1972,
+        summary = "A message is looked up in the receiver's class, then in its superclass, and so on up the chain, which is how inherited methods are found.",
+        details = "Each class keeps a table of its own methods and a pointer to its superclass. The example builds three classes and sends them messages, and it reports which class answered each one.",
+        instructions = """
+            1. Save the example as lookup.py.
+            2. Run it: python3 lookup.py
+        """,
+        example = """
+            class Cls:
+                def __init__(self, name, superclass=None):
+                    self.name = name
+                    self.superclass = superclass
+                    self.methods = {}
+
+                def lookup(self, selector):
+                    cls = self
+                    while cls is not None:
+                        if selector in cls.methods:
+                            return cls.methods[selector], cls.name
+                        cls = cls.superclass
+                    return None, None
+
+            def send(receiver_class, selector, *args):
+                method, found_in = receiver_class.lookup(selector)
+                if method is None:
+                    return f"{selector} is not understood by {receiver_class.name}"
+                return f"{selector} is answered by {found_in}: {method(*args)}"
+
+            Object = Cls("Object")
+            Number = Cls("Number", Object)
+            Integer = Cls("Integer", Number)
+
+            Object.methods["describe"] = lambda x: "something"
+            Number.methods["double"] = lambda x: x * 2
+            Integer.methods["isEven"] = lambda x: x % 2 == 0
+
+            print(send(Integer, "describe", 4))
+            print(send(Integer, "double", 4))
+            print(send(Integer, "isEven", 4))
+            print(send(Number, "isEven", 4))
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db8Languages.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Programming languages of 1970 to 1980: message-passing Smalltalk, structured preprocessors, a teaching subset of Pascal, a query language and a notation for processes. */
+val db8Languages: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 8,
+        kind = Kind.LANGUAGE,
+        section = "Object-oriented",
+        title = "Smalltalk-72",
+        originalTitle = "Smalltalk, the 1972 version at Xerox PARC",
+        author = "Alan Kay, Dan Ingalls and Adele Goldberg",
+        year = 1972,
+        summary = "Alan Kay's language at Xerox PARC, the first Smalltalk in working form, in which objects exchanged messages and each object decided how to answer them.",
+        details = "The first working version began as a BASIC prototype, moved to a Data General Nova, and reached the Alto through Nova emulation. Kay's design work for it dates from about 1971. " +
+            "Standard references give 1972 as the first appearance and flag the earlier development start as needing a citation.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.LANGUAGE,
+        section = "Preprocessors",
+        title = "Ratfor",
+        originalTitle = "Rational Fortran (Ratfor)",
+        author = "Brian Kernighan at Bell Labs",
+        year = 1975,
+        summary = "A preprocessor that gave Fortran 66 structured control flow, with if, else, while and for, in place of jumps and statement labels.",
+        details = "Kernighan built Ratfor at Bell Labs around 1974 and described it in 1975 in Software: Practice and Experience. Its control statements were borrowed from C. " +
+            "The 1976 book Software Tools put Ratfor to work, and the first Unix manual page for it dates from Version 6.",
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.LANGUAGE,
+        section = "Teaching languages",
+        title = "Pascal-S",
+        originalTitle = "Pascal-S, a teaching subset of Pascal",
+        author = "Niklaus Wirth",
+        year = 1975,
+        summary = "A small teaching subset of Pascal, with a compact compiler, that Wirth designed so that students could read a complete implementation.",
+        details = "Wirth developed Pascal-S in the mid-1970s, and its implementation was small enough for a course to study from start to finish. " +
+            "The subset was the point of the design: a language whose compiler a student could understand.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.LANGUAGE,
+        section = "Database languages",
+        title = "QUEL",
+        originalTitle = "QUEL, the query language of INGRES",
+        author = "Michael Stonebraker, Eugene Wong and colleagues at Berkeley",
+        year = 1976,
+        summary = "The relational query language of the Berkeley INGRES system, which used range variables and its own syntax rather than SQL.",
+        details = "INGRES was built at Berkeley from about 1973, and QUEL was its language for queries and updates. The design paper by Stonebraker, Wong, Kreps and Held dates from 1976, while the language was in use from 1974.",
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.LANGUAGE,
+        section = "Concurrency",
+        title = "Communicating Sequential Processes",
+        originalTitle = "Communicating sequential processes (Hoare, 1978)",
+        author = "Tony Hoare",
+        year = 1978,
+        summary = "Hoare's notation for processes that cooperate by sending messages to each other over named channels, with no shared variables.",
+        details = "Hoare published the notation in 1978. It began as a notation rather than a programming language, and later languages such as occam took its ideas and made them into programs.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.LANGUAGE,
+        section = "Microcomputer BASIC",
+        title = "Altair BASIC",
+        originalTitle = "Microsoft BASIC for the Altair 8800",
+        author = "Bill Gates and Paul Allen",
+        year = 1975,
+        summary = "The BASIC interpreter that Microsoft wrote for the Altair 8800 in 1975, which gave hobbyists a language to run on a microcomputer with little memory.",
+        details = "The interpreter fitted into about four kilobytes and became the base of many later microcomputer BASICs. The Altair was sold as a kit, and the interpreter was among the first programs that buyers loaded into it.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db8Practices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Practices of 1970 to 1980: how programmers designed modules, defended against faults, wrote small tools and built shared worlds. */
+val db8Practices: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 8,
+        kind = Kind.PRACTICE,
+        section = "Design",
+        title = "Structured design",
+        originalTitle = "Structured design (Stevens, Myers and Constantine, 1974)",
+        author = "Wayne Stevens, Glenford Myers and Larry Constantine",
+        year = 1974,
+        summary = "A method for turning data-flow diagrams into hierarchies of modules, judged by the coupling between modules and the cohesion within them.",
+        details = "The method was published in the IBM Systems Journal in 1974. Low coupling and high cohesion became the standard words for a module that can be changed without breaking its neighbours.",
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.PRACTICE,
+        section = "Fault tolerance",
+        title = "N-version programming",
+        originalTitle = "N-version programming (Chen and Avižienis, 1977)",
+        author = "Liming Chen and Algirdas Avižienis",
+        year = 1977,
+        summary = "Several independently written versions of a program run on the same input, and a voter picks the answer that most of them agree on, as a defence against software faults.",
+        details = "The idea was published in 1977 and developed in 1978. Its premise, that independently written versions rarely share the same faults, was questioned later in theoretical work, so the method helps without being a guarantee.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.PRACTICE,
+        section = "Programming style",
+        title = "Software Tools",
+        originalTitle = "Software Tools (Kernighan and Plauger, 1976)",
+        author = "Brian Kernighan and P. J. Plauger",
+        year = 1976,
+        summary = "The book's idea: write small programs that do one job well, and build larger programs by connecting them through text streams.",
+        details = "Kernighan and Plauger taught the method with Ratfor programs that copied the Unix tools. A later edition moved the examples to Pascal, and the idea of reusable filters outlived both languages.",
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.PRACTICE,
+        section = "Online communities",
+        title = "Multi-user dungeons",
+        originalTitle = "MUD1, the multi-user dungeon at Essex University",
+        author = "Roy Trubshaw and Richard Bartle",
+        year = 1978,
+        summary = "A shared text world in which several people explored rooms, fought and talked at the same time, starting with MUD1 at Essex University in 1978.",
+        details = "The first version was written in 1978 by two students, and it connected players over the university's network. Its rules of rooms, objects and commands became the model for later online games and chat systems.",
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db8Projects.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Projects of 1970 to 1980: small programs in the spirit of the decade, with instructions and code to run. */
+val db8Projects: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 8,
+        kind = Kind.PROJECT,
+        section = "Games",
+        title = "Mastermind scoring",
+        originalTitle = "Mastermind, the code-breaking game (1970)",
+        author = "Written as a teaching example; the game was devised in 1970 by Mordecai Meirowitz",
+        year = 1970,
+        summary = "The scoring rule of Mastermind: a black peg means a right colour in the right place, a white peg a right colour in the wrong place, and the guesser reads only these pegs.",
+        details = "Each colour in the code and in the guess is counted once, so repeated colours score correctly. The example plays three guesses against a fixed secret and prints the feedback for each.",
+        instructions = """
+            1. Save the example as mastermind.py.
+            2. Run it: python3 mastermind.py
+            3. Change the secret or the guesses to see other feedback.
+        """,
+        example = """
+            COLOURS = "RGBY"   # red, green, blue, yellow
+
+            def feedback(secret, guess):
+                black = sum(s == g for s, g in zip(secret, guess))
+                # White pegs: right colours in wrong places, counted once for each colour.
+                common = sum(min(secret.count(c), guess.count(c)) for c in COLOURS)
+                return black, common - black
+
+            secret = "RGBY"
+            for guess in ["RRGG", "RGBY", "BBYY"]:
+                black, white = feedback(secret, guess)
+                print(guess, "black", black, "white", white)
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.PROJECT,
+        section = "Games",
+        title = "A text adventure in the Zork style",
+        originalTitle = "Zork, the text adventure (1977)",
+        author = "Written as a teaching example, in the spirit of Zork",
+        year = 1977,
+        summary = "A small text adventure engine with rooms, exits and items, driven by a list of typed commands, in the spirit of Zork.",
+        details = "Zork grew out of Dungeon, a game that MIT students wrote on a PDP-10 in the late 1970s. This engine keeps the same shape: a room describes itself and the things in it, and commands move the player or change the inventory.",
+        instructions = """
+            1. Save the example as adventure.py.
+            2. Run it: python3 adventure.py
+            3. Add rooms to the dictionary, or change the script, to play a different game.
+        """,
+        example = """
+            rooms = {
+                "hall": {"text": "A long hall.", "exits": {"north": "kitchen"}, "items": ["lamp"]},
+                "kitchen": {"text": "A dusty kitchen.", "exits": {"south": "hall"}, "items": ["key"]},
+            }
+            here = "hall"
+            inventory = []
+
+            def look():
+                room = rooms[here]
+                items = ", ".join(room["items"]) or "nothing"
+                print(f"{here}: {room['text']} You see: {items}.")
+
+            def take(item):
+                room = rooms[here]
+                if item in room["items"]:
+                    room["items"].remove(item)
+                    inventory.append(item)
+                    print(f"Taken: {item}.")
+                else:
+                    print(f"There is no {item} here.")
+
+            def go(direction):
+                global here
+                exits = rooms[here]["exits"]
+                if direction in exits:
+                    here = exits[direction]
+                    look()
+                else:
+                    print("You cannot go that way.")
+
+            script = ["look", "take lamp", "take sword", "go north", "take key",
+                      "go west", "go south", "inventory"]
+            for command in script:
+                print("> " + command)
+                verb, _, noun = command.partition(" ")
+                if verb == "look":
+                    look()
+                elif verb == "take":
+                    take(noun)
+                elif verb == "go":
+                    go(noun)
+                elif verb == "inventory":
+                    print("You carry: " + (", ".join(inventory) or "nothing") + ".")
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.PROJECT,
+        section = "Spreadsheets",
+        title = "A VisiCalc-style spreadsheet",
+        originalTitle = "VisiCalc (1979)",
+        author = "Written as a teaching example, in the spirit of VisiCalc",
+        year = 1979,
+        summary = "A tiny spreadsheet: cells hold numbers or formulas, and a formula is evaluated from the cells it names, so a change in one cell flows through the rest.",
+        details = "VisiCalc showed the idea to business users in 1979. This version supports sums and products of cell references and numbers, and it evaluates formulas on demand, so the table always shows the latest value of each cell.",
+        instructions = """
+            1. Save the example as sheet.py.
+            2. Run it: python3 sheet.py
+            3. Add cells or change formulas in the dictionary to build a different table.
+        """,
+        example = """
+            import re
+
+            sheet = {
+                "A1": 10,
+                "A2": 20,
+                "A3": "=A1+A2",
+                "B1": "=A3*2",
+                "B2": "=B1+A1",
+            }
+
+            def evaluate(expression):
+                # Sums of products of integers: only + and * are understood.
+                total = 0
+                for term in expression.split("+"):
+                    product = 1
+                    for factor in term.split("*"):
+                        product *= int(factor)
+                    total += product
+                return total
+
+            def value(cell, seen=()):
+                raw = sheet.get(cell, 0)
+                if not isinstance(raw, str):
+                    return raw
+                if cell in seen:
+                    raise ValueError("circular reference at " + cell)
+                expression = raw[1:]
+                for ref in set(re.findall(r"[A-Z][0-9]+", expression)):
+                    expression = expression.replace(ref, str(value(ref, seen + (cell,))))
+                return evaluate(expression)
+
+            def show(cells):
+                for cell in cells:
+                    print(f"{cell:>3} {value(cell)}")
+
+            show(["A1", "A2", "A3", "B1", "B2"])
+            print("set A1 to 15")
+            sheet["A1"] = 15
+            show(["A1", "A3", "B1", "B2"])
+        """,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.PROJECT,
+        section = "Games",
+        title = "A dungeon generator in the Rogue style",
+        originalTitle = "Rogue (1980)",
+        author = "Written as a teaching example, in the spirit of Rogue",
+        year = 1980,
+        summary = "A dungeon generator in the spirit of Rogue: rooms are placed at random and joined by corridors, and a seed makes the same map appear every time.",
+        details = "Rogue was written by Michael Toy and Glenn Wichman in 1980, and it generated a new dungeon for each game. The example makes one map of 40 by 12 characters, with the player placed in the first room.",
+        instructions = """
+            1. Save the example as dungeon.py.
+            2. Run it: python3 dungeon.py
+            3. Change the seed to see another dungeon, or the number of rooms to make it bigger.
+        """,
+        example = """
+            import random
+
+            random.seed(1980)
+            WIDTH, HEIGHT = 40, 12
+            grid = [["#"] * WIDTH for _ in range(HEIGHT)]
+            rooms = []
+            for _ in range(4):
+                w, h = random.randint(4, 8), random.randint(3, 4)
+                x, y = random.randint(1, WIDTH - w - 1), random.randint(1, HEIGHT - h - 1)
+                rooms.append((x, y, w, h))
+                for row in range(y, y + h):
+                    for col in range(x, x + w):
+                        grid[row][col] = "."
+
+            def centre(room):
+                x, y, w, h = room
+                return x + w // 2, y + h // 2
+
+            for a, b in zip(rooms, rooms[1:]):
+                (x1, y1), (x2, y2) = centre(a), centre(b)
+                for col in range(min(x1, x2), max(x1, x2) + 1):
+                    if grid[y1][col] == "#":
+                        grid[y1][col] = "."
+                for row in range(min(y1, y2), max(y1, y2) + 1):
+                    if grid[row][x2] == "#":
+                        grid[row][x2] = "."
+
+            px, py = centre(rooms[0])
+            grid[py][px] = "@"
+            for line in grid:
+                print("".join(line))
+        """,
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db8Systems.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Systems of 1970 to 1980: virtual machines, a timesharing system with paging, two early relational databases and a commercial machine with an integrated database. */
+val db8Systems: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 8,
+        kind = Kind.SYSTEM,
+        section = "Virtual machines",
+        title = "VM/370",
+        originalTitle = "Virtual Machine/370 with CMS",
+        author = "IBM",
+        year = 1972,
+        summary = "IBM's virtual machine system, which gave each user a copy of the whole computer, with the Conversational Monitor System as the operating system that people used.",
+        details = "IBM unveiled VM/370 on 2 August 1972. It grew out of CP-40 in 1964 and CP-67 in 1967, and its guest system began life as the Cambridge Monitor System. Descendants of the system are still in use.",
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.SYSTEM,
+        section = "Timesharing",
+        title = "TENEX",
+        originalTitle = "TENEX operating system for the PDP-10",
+        author = "Bolt Beranek and Newman (BBN)",
+        year = 1972,
+        summary = "The operating system that BBN built for the PDP-10, with paging and virtual memory, introduced in a Communications of the ACM paper in March 1972.",
+        details = "BBN needed paging for its memory-hungry Lisp work. DEC had declined to add paging to the KA-10, so BBN designed its own pager. DEC's TOPS-20 came from a TENEX variant that BBN licensed. " +
+            "Dates for TENEX itself vary from 1969 to 1972.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.SYSTEM,
+        section = "Relational databases",
+        title = "INGRES",
+        originalTitle = "INGRES, the Interactive Graphics and Retrieval System",
+        author = "Michael Stonebraker, Eugene Wong and their Berkeley group",
+        year = 1973,
+        summary = "The relational database built at Berkeley, which used the QUEL language and became one of the first working relational systems, alongside IBM's System R.",
+        details = "The project began around 1973, when IBM's System R papers drew Stonebraker and Wong into relational research, and a working prototype existed by 1974. " +
+            "Stonebraker led the work until 1985, and Postgres, his successor, became PostgreSQL.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.SYSTEM,
+        section = "Relational databases",
+        title = "System R",
+        originalTitle = "IBM System R, a research relational database",
+        author = "IBM San Jose Research; Donald Chamberlin and Raymond Boyce among others",
+        year = 1974,
+        summary = "IBM's research relational database at San Jose, often credited as the first implementation of SQL, and the source of query-optimisation ideas that later systems used.",
+        details = "Work began in 1974. Phase Zero, in 1975, gave an early SQL interface. Phase One, in 1976 and 1977, built the complete multi-user system, and Phase Two, in 1978 and 1979, tested it with real users at San Jose and at outside sites. " +
+            "Codd's relational model was its basis.",
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.SYSTEM,
+        section = "Commercial systems",
+        title = "IBM System/38",
+        originalTitle = "IBM System/38",
+        author = "IBM",
+        year = 1978,
+        summary = "IBM's System/38, announced on 24 October 1978, with an object-based design, 48-bit addressing and an integrated database. The AS/400 was later built on its architecture.",
+        details = "The design grew out of IBM's Future Systems work of the late 1960s and early 1970s. Standard references give August 1979 for commercial availability, while a 1980 Datapro report lists first delivery as scheduled for July 1980.",
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db8Tools.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Tools of 1970 to 1980: a line editor, the file comparison tool, a word processor, the first spreadsheet and a computer algebra system. */
+val db8Tools: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 8,
+        kind = Kind.TOOL,
+        section = "Editors",
+        title = "ed",
+        originalTitle = "The ed line editor for Unix",
+        author = "Ken Thompson",
+        year = 1971,
+        summary = "Ken Thompson's line editor for Unix, written in 1971 and still shipped with Unix-like systems, where it edits one line at a time with short commands.",
+        details = "Its commands act on line numbers and text patterns, and the same commands can be typed by hand or read from a script.",
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.TOOL,
+        section = "Version control",
+        title = "diff",
+        originalTitle = "Unix diff, with the Hunt and McIlroy algorithm",
+        author = "James Hunt and Doug McIlroy",
+        year = 1976,
+        summary = "The Unix tool that finds the smallest set of line changes between two files, using the longest common subsequence of their lines.",
+        details = "The tool first appeared in the Fifth Edition of Unix in 1974, and the algorithm was described in a 1976 Bell Labs report. " +
+            "Its output could be replayed by the ed editor, so a change could be sent as a short script.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.TOOL,
+        section = "Word processing",
+        title = "WordStar",
+        originalTitle = "WordStar, the word processor for CP/M",
+        author = "Rob Barnaby and MicroPro",
+        year = 1978,
+        summary = "MicroPro's word processor for CP/M machines, which became one of the best-selling programs of its time and was run from the keyboard with control keys.",
+        details = "Its commands used the control key with letters, and users learned them as a set. The program ran on the CP/M machines of the late 1970s.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.TOOL,
+        section = "Spreadsheets",
+        title = "VisiCalc",
+        originalTitle = "VisiCalc, the first electronic spreadsheet",
+        author = "Dan Bricklin and Bob Frankston",
+        year = 1979,
+        summary = "Dan Bricklin and Bob Frankston's electronic spreadsheet, released for the Apple II in 1979, which made the personal computer a business tool.",
+        details = "A cell held a number or a formula, and a change in one cell updated every cell that depended on it. Business users bought Apple IIs to run it, and many histories count that as the start of the business market for microcomputers.",
+    ),
+
+    entry(
+        databaseId = 8,
+        kind = Kind.TOOL,
+        section = "Computer algebra",
+        title = "Maple",
+        originalTitle = "Maple computer algebra system, begun at the University of Waterloo",
+        author = "Keith Geddes, Gaston Gonnet and the Waterloo team",
+        year = 1980,
+        summary = "A computer algebra system begun at the University of Waterloo in 1980, after a team looked for a way to run the Macsyma system on cheaper computers.",
+        details = "The earliest limited build followed within weeks, and a keynote dates the first system to December 1980. Broader adoption came in 1982, and Maple 3.3, the first version sold to customers, reached buyers in 1984. " +
+            "Dates vary with the milestone.",
+        rare = true,
+    ),
+)
+
+################################################################################
 # FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
@@ -19939,11 +21479,17 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "Languages, systems, devices, tools and practices of 1960 to 1970, including rare and little-known items.",
         colorHex = "#F06292",
     ),
+    DatabaseEntity(
+        id = 8,
+        name = "Database 8: 1970s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1970 to 1980, including rare and little-known items.",
+        colorHex = "#A1887F",
+    ),
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
 val seedRecords: List<RecordEntity> =
-    db1Records + db2Records + db3Records + db4Records + db5Records + db6Records + db7Records
+    db1Records + db2Records + db3Records + db4Records + db5Records + db6Records + db7Records + db8Records
 
 ################################################################################
 # FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
@@ -21020,6 +22566,7 @@ import com.example.retrodatabases.data.MIGRATION_3_4
 import com.example.retrodatabases.data.MIGRATION_4_5
 import com.example.retrodatabases.data.MIGRATION_5_6
 import com.example.retrodatabases.data.MIGRATION_6_7
+import com.example.retrodatabases.data.MIGRATION_7_8
 import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.db2Records
 import com.example.retrodatabases.data.seed.db3Records
@@ -21027,6 +22574,7 @@ import com.example.retrodatabases.data.seed.db4Records
 import com.example.retrodatabases.data.seed.db5Records
 import com.example.retrodatabases.data.seed.db6Records
 import com.example.retrodatabases.data.seed.db7Records
+import com.example.retrodatabases.data.seed.db8Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -21055,6 +22603,7 @@ class AppDatabaseSeedTest {
         assertEquals(db5Records.size, databases.single { it.id == 5L }.recordCount)
         assertEquals(db6Records.size, databases.single { it.id == 6L }.recordCount)
         assertEquals(db7Records.size, databases.single { it.id == 7L }.recordCount)
+        assertEquals(db8Records.size, databases.single { it.id == 8L }.recordCount)
 
         val records = dao.observeRecords(1L).first()
         assertEquals(db1Records.size, records.size)
@@ -21165,6 +22714,23 @@ class AppDatabaseSeedTest {
     }
 
     @Test
+    fun migrationRestoresDatabaseEight() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 7 has no database 8: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 8")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 8")
+        MIGRATION_7_8.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db8Records.size, dao.observeRecords(8L).first().size)
+        assertEquals(db7Records.size, dao.observeRecords(7L).first().size)
+    }
+
+    @Test
     fun toggleFavoriteStoresTheChange() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val dao = AppDatabase.get(context).libraryDao()
@@ -21265,6 +22831,7 @@ import com.example.retrodatabases.data.seed.db4Records
 import com.example.retrodatabases.data.seed.db5Records
 import com.example.retrodatabases.data.seed.db6Records
 import com.example.retrodatabases.data.seed.db7Records
+import com.example.retrodatabases.data.seed.db8Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import com.example.retrodatabases.data.seed.seedRecords
 import org.junit.Assert.assertEquals
@@ -21274,7 +22841,7 @@ import org.junit.Test
 class SeedDataTest {
 
     private val catalogues = listOf(
-        db1Records, db2Records, db3Records, db4Records, db5Records, db6Records, db7Records,
+        db1Records, db2Records, db3Records, db4Records, db5Records, db6Records, db7Records, db8Records,
     )
 
     @Test
@@ -21289,6 +22856,7 @@ class SeedDataTest {
         assertTrue(db5Records.all { it.databaseId == 5L })
         assertTrue(db6Records.all { it.databaseId == 6L })
         assertTrue(db7Records.all { it.databaseId == 7L })
+        assertTrue(db8Records.all { it.databaseId == 8L })
     }
 
     @Test
@@ -21308,6 +22876,7 @@ class SeedDataTest {
         assertTrue(db5Records.all { it.year in 2020..2026 })
         assertTrue(db6Records.all { it.year in 1950..1960 })
         assertTrue(db7Records.all { it.year in 1960..1970 })
+        assertTrue(db8Records.all { it.year in 1970..1980 })
     }
 
     @Test

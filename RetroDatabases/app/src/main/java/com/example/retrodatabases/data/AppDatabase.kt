@@ -12,7 +12,7 @@ import com.example.retrodatabases.data.seed.seedRecords
 
 @Database(
     entities = [DatabaseEntity::class, RecordEntity::class],
-    version = 7,
+    version = 8,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -41,6 +41,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_4_5,
                     MIGRATION_5_6,
                     MIGRATION_6_7,
+                    MIGRATION_7_8,
                 )
                 .build()
     }
@@ -113,6 +114,18 @@ internal val MIGRATION_5_6 = object : Migration(5, 6) {
 internal val MIGRATION_6_7 = object : Migration(6, 7) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val added = setOf(7L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 8 added database 8. Copies at version 7 get it from this migration;
+ * older copies run it after the earlier migrations.
+ */
+internal val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(8L)
         seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
         seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
     }

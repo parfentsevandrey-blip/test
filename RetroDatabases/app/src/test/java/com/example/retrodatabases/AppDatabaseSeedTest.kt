@@ -10,6 +10,7 @@ import com.example.retrodatabases.data.MIGRATION_3_4
 import com.example.retrodatabases.data.MIGRATION_4_5
 import com.example.retrodatabases.data.MIGRATION_5_6
 import com.example.retrodatabases.data.MIGRATION_6_7
+import com.example.retrodatabases.data.MIGRATION_7_8
 import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.db2Records
 import com.example.retrodatabases.data.seed.db3Records
@@ -17,6 +18,7 @@ import com.example.retrodatabases.data.seed.db4Records
 import com.example.retrodatabases.data.seed.db5Records
 import com.example.retrodatabases.data.seed.db6Records
 import com.example.retrodatabases.data.seed.db7Records
+import com.example.retrodatabases.data.seed.db8Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -45,6 +47,7 @@ class AppDatabaseSeedTest {
         assertEquals(db5Records.size, databases.single { it.id == 5L }.recordCount)
         assertEquals(db6Records.size, databases.single { it.id == 6L }.recordCount)
         assertEquals(db7Records.size, databases.single { it.id == 7L }.recordCount)
+        assertEquals(db8Records.size, databases.single { it.id == 8L }.recordCount)
 
         val records = dao.observeRecords(1L).first()
         assertEquals(db1Records.size, records.size)
@@ -152,6 +155,23 @@ class AppDatabaseSeedTest {
         assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
         assertEquals(db7Records.size, dao.observeRecords(7L).first().size)
         assertEquals(db6Records.size, dao.observeRecords(6L).first().size)
+    }
+
+    @Test
+    fun migrationRestoresDatabaseEight() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 7 has no database 8: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 8")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 8")
+        MIGRATION_7_8.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db8Records.size, dao.observeRecords(8L).first().size)
+        assertEquals(db7Records.size, dao.observeRecords(7L).first().size)
     }
 
     @Test

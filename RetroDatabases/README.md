@@ -1,6 +1,6 @@
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside are seven databases of coding history:
+An Android application in Kotlin, Jetpack Compose and Room. Inside are eight databases of coding history:
 
 - "Database 1" is a catalogue of 80s coding;
 - "Database 2" is a catalogue of 90s coding;
@@ -8,7 +8,8 @@ An Android application in Kotlin, Jetpack Compose and Room. Inside are seven dat
 - "Database 4" is a catalogue of coding from 2010 to 2020;
 - "Database 5" is a catalogue of coding from 2020 to 2026;
 - "Database 6" is a catalogue of coding from 1950 to 1960;
-- "Database 7" is a catalogue of coding from 1960 to 1970.
+- "Database 7" is a catalogue of coding from 1960 to 1970;
+- "Database 8" is a catalogue of coding from 1970 to 1980.
 
 ## What is inside
 
@@ -117,7 +118,22 @@ The catalogue of database 7 (1960 to 1970) has the same ten kinds:
 | Flex | 4 | Bresenham's line, tortoise and hare for cycles, Strassen's seven multiplications and union-find with path halving |
 | Cross-code | 2 | C and Python computing the same shortest paths, and an awk pipeline with a C Bloom filter |
 
-In total there are 920 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare), 60 in database 6 (29 rare) and 49 in database 7 (26 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
+The catalogue of database 8 (1970 to 1980) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Smalltalk-72, Ratfor, Pascal-S, QUEL, Communicating Sequential Processes and Altair BASIC |
+| Systems | 5 | VM/370, TENEX, INGRES, System R and the IBM System/38 |
+| Devices | 10 | Intel 4004, the IBM 23FD floppy disk, Intel 8008, HP-35, Magnavox Odyssey, IBM 3340 Winchester disk, Intel 8080, Motorola 6800, Apple I and TRS-80 Model I |
+| Tools | 5 | ed, diff, WordStar, VisiCalc and Maple |
+| Practices | 4 | Structured design, N-version programming, Software Tools and multi-user dungeons |
+| Guides | 5 | How Diffie–Hellman key agreement, RSA, Lamport clocks, a relational join and message lookup work |
+| Examples | 6 | Boyer–Moore string search, Aho–Corasick, Pollard's rho, Miller–Rabin, Tarjan's strongly connected components and LZ78 |
+| Projects | 4 | Mastermind scoring, a text adventure in the Zork style, a VisiCalc-style spreadsheet and a dungeon generator in the Rogue style |
+| Flex | 3 | Gosper's hack, Floyd–Steinberg dithering and Monty Hall by simulation |
+| Cross-code | 2 | C and Python: an LZ78 round trip, and a factoring pipeline in C and awk |
+
+In total there are 970 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare), 60 in database 6 (29 rare), 49 in database 7 (26 rare) and 50 in database 8 (22 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
 
 In the app:
 - the list of databases with the number of records;
@@ -144,8 +160,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Structure
 
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4, 5 and 6 to version 7.
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all seven databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt`, `Db6*.kt` and `Db7*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4, 5, 6 and 7 to version 8.
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all eight databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt`, `Db6*.kt`, `Db7*.kt` and `Db8*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
 - `app/src/test` — tests of the filters, the data and the database itself (Robolectric).
 - `DEVLOG.md` — the development log with the growth of lines of code by checkpoint.
@@ -153,7 +169,7 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
 
 For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
 
@@ -161,4 +177,4 @@ For languages that are not installed in the build environment (Forth, Prolog, Li
 
 1. Create files in `data/seed` with the records. Pass the database id to `entry()`, for example `databaseId = 3`; a record without it goes to database 1.
 2. Add the database to `seedDatabases` and its records to `seedRecords` (file `SeedCatalog.kt`).
-3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_6_7` are the examples: each adds one database, and an install made at version 1 runs them in order.
+3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_7_8` are the examples: each adds one database, and an install made at version 1 runs them in order.
