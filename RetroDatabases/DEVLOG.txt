@@ -33,6 +33,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-17 | 2026-10-15 | 43,168 | 768 | 82 | 118 | 44,136 | +8,597 (databases 20 to 26: 350 records in 77 files, migrations 19→20 to 25→26, tests +162) |
 | CP-18 | 2026-10-15 | 52,274 | 953 | 82 | 118 | 53,427 | +9,291 (databases 27 to 34: 400 records in 88 files, migrations 26→27 to 33→34, tests +185) |
 | CP-19 | 2026-10-15 | 62,696 | 222 | 82 | 118 | 63,118 | +9,691 (databases 35 to 44: 500 records in 110 files, migrations 34→35 to 43→44, tests -731) |
+| CP-20 | 2026-10-15 | 73,269 | 222 | 82 | 118 | 73,691 | +10,573 (databases 45 to 54: 500 records in 110 files, migrations 44→45 to 53→54, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -970,3 +971,48 @@ Most other dates and attributions, including the Douay Old Testament and its boo
 
 - Not verified yet: running on a device or emulator, the migrations from version 34 to version 44 on a real device, the UI with forty-four databases in the list and in the filters, lint, and the release build.
 - The 1600s and 1690s are the thinnest decades for "coding" so far. A later pass should first review the device records with approximate dates, and the concentrations of Galileo (four records in 41) and Descartes (six records in 41).
+
+## CP-20: databases 45 to 54, 1500 to 1600 (the next century, back to the 1500s)
+
+Status: ten more databases are in the app, one per decade from the 1590s down to the 1500s: 500 records, migrations from version 44 to version 54, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. The build passes with no compiler warnings, 17 of 17 unit tests pass, and the 200 runnable records (20 per database) pass against their expected output. The quota is ten decades, the same as CP-19, because the request was a century.
+
+Mood: I am glad the build change keeps paying off. The batch needed no code at all, and the generator checked 3,270 records in one run. The content was the hardest so far. The 1500s hold printing, ciphers, reckoning boards, the first books in the vernacular and mathematics texts, and coding in the modern sense is barely there. Most of the time went into repeats: the Vigenère cipher in several records, Porta's camera obscura in four databases, Cardano's grille in four records, the Stationers' charter in three, the reckoning board, the Council of Trent, the golden number, the Taxis post and Henlein's watch. The cross-batch check found them after each round, and database 49 needed three rounds and a set of verified items from search. I would like the next century to come with fewer repeats from the start, and with the cross-batch check run before the helpers finish, not after.
+
+Date: 2026-10-15. Totals: Kotlin main 73,269 (CP-19: 62,696), Kotlin test 222 (222), XML 82, Gradle and project files 118, total 73,691 (CP-19: 63,118). The +10,573 is the 110 new Kotlin files for databases 45 to 54 and the generated catalogue; the database class and the tests did not change.
+
+### What changed
+
+- Ten databases, each with the same ten kinds and 50 records: "Database 45: 1590s coding catalogue" (1590 to 1600), "Database 46: 1580s" (1580 to 1590), "Database 47: 1570s" (1570 to 1580), "Database 48: 1560s" (1560 to 1570), "Database 49: 1550s" (1550 to 1560), "Database 50: 1540s" (1540 to 1550), "Database 51: 1530s" (1530 to 1540), "Database 52: 1520s" (1520 to 1530), "Database 53: 1510s" (1510 to 1520) and "Database 54: 1500s" (1500 to 1510). Their rare flags are 10, 9, 8, 8, 9, 9, 8, 8, 9 and 9, so 87 new rare records and 856 in the whole catalogue.
+- Eleven files per database, 110 in total. Colours are #B2DFDB, #E1BEE7, #F3E5F5, #FFECB3, #CFD8DC, #BCAAA4, #C5E1A5, #FFE082, #B2EBF2 and #D4E157.
+- Spec: tools/databases.json has 54 entries, and the ids run back in time from 45 (1590s) to 54 (1500s). The generator wrote SeedCatalog.kt, the generated part of CATALOGUE.md and the README blocks.
+- Process: one helper per database, ten in parallel, with one brief (database 44 as the template) and a file of suggested topics by decade. The lead then ran the checks and the cross-batch comparison and sent replacement lists. Each helper replaced between one and fourteen records. Database 49 was finished with items the lead verified by search (Mercator's celestial globe, Schissler's compendium, Gemini's astrolabe, Canisius's catechism, the Geneva psalter and the papal cipher office), and its helper wrote the reading-only records and three runnable replacements from those facts.
+
+### Facts checked by web search
+
+The helper reports list their searches. Examples: the Casa da India (sources give 1500, 1501 or 1503; the record uses 1501 and names the dispute); Calepino's dictionary first printed at Reggio in 1502; the Taxis contract of 1505 with Philip I; Stanbridge's Vulgaria dated 1509 (LEME); Recorde's Grounde of Artes (usually 1543; a 1542 facsimile is catalogued); Etxepare's Basque book (Bordeaux, 1545); Apian's Cosmographia (Landshut, 1524) and Instrument Buch (Ingolstadt, 1533); Pagninus's Thesaurus (1529); Werner's conics (Nuremberg, 1522); Cesariano's Vitruvius (Como, 1521); the Complutensian Polyglot (printed 1514 to 1517, publication dates disputed); the Frankfurt book fair catalogue (first issue for the autumn 1564 fair); Juanelo's Toledo contract (1565); Estienne's numbered verses (1551); Trubar's Abecedarium (1550); Mercator's celestial globe (Louvain, 1551); Schissler's compendium (Augsburg, signed and dated 1556); Gemini's astrolabe (London, 1559, at Oxford); Canisius's catechism (first printed Vienna, 1555); the Geneva psalter of 1551 (one account dates it to 1552); Taqi al-Din's observatory (1577 to 1580); the Stationers' charter of 4 May 1557; Gresham's lectures (most accounts 1597, one gives 1579).
+
+### Not searched, from memory
+
+Most other dates and attributions, including Erasmus's Adages and Colloquies, Bomberg's Rabbinic Bibles, Trithemius's Polygraphia, the Lateran bull, the Council of Trent dates, Luther's German Mass, and most dates of the 1550s and 1560s. The helper reports list them. The lead should check the items they flag first.
+
+### Problems
+
+- Thin decades. The 1500s have few devices and practices with a dated first public form. Several device and practice records are dated approximately, and the details say so where a date is uncertain.
+- Single-source or disputed dates: the papal cipher secretary's office by 1555 (one source, JSTOR Daily); Tycho's mural quadrant of 1582 (one abstract, radius disputed); Hondius's globe with twelve southern constellations (1598, single source); Plancius's twelve-year patent of 12 September 1594 (single source); the Lyon clock's 1598 restoration (disputed); Hartmann's letter of 1544 (dates from encyclopedias only, dip or declination disputed, kept as rare); Tartaglia's quadrant (no firm year found, invention disputed).
+- Disputes named in the text: the Stationers' charter (first register entries 1557 or 1554); Canisius's edition counts; the Geneva psalter (1551 or 1552); Juanelo's completion year; the Complutensian publication dates; the Casa da India's start (1500, 1501 or 1503); the Taxis contract's start (1489 or 1490).
+- Repeats found after the first round, each replaced in one copy: Blagrave's staff (45 kept, 46 replaced); the memory palace (45 kept, 46 replaced); Taqi al-Din's observatory (47 kept, 46 replaced); the secant and Mercator's latitudes (48 kept, 45 replaced); Molina's dictionary (47 kept, 49 replaced); Porta's camera obscura (46 and 48 kept, 49 and 50 replaced); Cardano's grille (four records in 49 reduced to two); the Stationers' charter (three records in 49 reduced to two); the Council of Trent days (48 kept, 50 replaced); the Society of Jesus (50 kept, 51 replaced); Apian's Astronomicum Caesareum (50 kept, 51 replaced); Gemma Frisius's clock (51 kept, 52 replaced); the gold alloys and the rule of false position (51 kept, 52 replaced); the golden number (51 kept, 53 and 54 replaced); the heart-shaped maps (51 and 53, the third replaced); the Taxis post (54 kept, 53 replaced); Henlein's watch (53 kept, 54 replaced); Erasmus's Adages (53 kept, 54 replaced); the Reichsregiment (54 kept, 52 replaced); Bomberg's Rabbinic Bibles (53 kept, 52 replaced); the Roman numeral year (35 kept, 48 replaced); the linear equation (48 kept, 49 replaced); the days-in-a-decade exercise (49 kept, 52 replaced); the Latin word index (51 kept, 54 replaced); the degrees and minutes (53 kept, 54 replaced); the Hebrew numerals (52 kept, 54 replaced). The helper reports list the rest.
+- Clusters kept on purpose, each a set of different items: the Latin dictionaries (Thomas, Cooper, Elyot, Estienne, Calepino); the Greek New Testaments (Estienne, Tyndale, Erasmus); Gemma Frisius (a darkened room for an eclipse, a longitude clock, triangulation and arithmetic); Apian's volvelles (three books); the days-between-events exercises (different spans); the universities founded (Helmstedt, Leiden, Königsberg, Marburg); the printing presses (Lima, Mexico City, Nagasaki, Plantin); the cipher books (Vigenère, Porta, Bellaso, Trithemius).
+- Build: the first Gradle run passed with no compile errors. The import and stale-header scans found nothing in the 110 new files.
+
+### How I checked it
+
+- Unit tests: 17 of 17 pass (AppDatabaseSeedTest 4, SeedDataTest 8, RecordFilterTest 5). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the log has no compiler warnings.
+- Examples: each new database has its own verifier with exact expected output; all 200 runnable records pass, 20 in each database. The 300 reading-only records are not executed.
+- Structure: the generator checks all 54 databases and all 3,270 records: 50 per database, kinds exact (6, 5, 8, 6, 5, 5, 6, 4, 3 and 2), rare flags 8 to 10 in each new database (87 in all), years inside each decade, no provenance notes in the record text, no dollar signs or Cyrillic in the record files, and titles unique across all databases.
+- Cross-batch: 500 records in the ten new databases; 86 pairs share two or more significant words, and each was reviewed. The same-item pairs were replaced; the rest are the neighbours listed under Problems.
+- Whole catalogue: 3,270 records. The only titles that repeat are "Erlang" and "Software inspections", as before.
+
+### Notes
+
+- Not verified yet: running on a device or emulator, the migrations from version 44 to version 54 on a real device, the UI with fifty-four databases in the list and in the filters, lint, and the release build.
+- The 1500s are the thinnest decades for "coding" so far: printing, ciphers, reckoning and grammars are adjacent. A later pass should first review the items dated approximately or flagged above, and the Gemma Frisius, Apian and Vigenère clusters.

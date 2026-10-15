@@ -8,7 +8,7 @@ import com.example.retrodatabases.data.RecordEntity
 // (databaseId = the new id, one file per kind) and run python3 tools/build_catalogue.py.
 
 /** Version of the database file: the number of the newest seeded database. */
-const val DATABASE_VERSION = 44
+const val DATABASE_VERSION = 54
 
 /** The catalogue of databases that are created on the first launch, in id order. */
 val seedDatabases: List<DatabaseEntity> = listOf(
@@ -276,6 +276,66 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "Languages, systems, devices, tools and practices of 1600 to 1610, including rare and little-known items.",
         colorHex = "#F5F5F5",
     ),
+    DatabaseEntity(
+        id = 45,
+        name = "Database 45: 1590s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1590 to 1600, including rare and little-known items.",
+        colorHex = "#B2DFDB",
+    ),
+    DatabaseEntity(
+        id = 46,
+        name = "Database 46: 1580s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1580 to 1590, including rare and little-known items.",
+        colorHex = "#E1BEE7",
+    ),
+    DatabaseEntity(
+        id = 47,
+        name = "Database 47: 1570s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1570 to 1580, including rare and little-known items.",
+        colorHex = "#F3E5F5",
+    ),
+    DatabaseEntity(
+        id = 48,
+        name = "Database 48: 1560s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1560 to 1570, including rare and little-known items.",
+        colorHex = "#FFECB3",
+    ),
+    DatabaseEntity(
+        id = 49,
+        name = "Database 49: 1550s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1550 to 1560, including rare and little-known items.",
+        colorHex = "#CFD8DC",
+    ),
+    DatabaseEntity(
+        id = 50,
+        name = "Database 50: 1540s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1540 to 1550, including rare and little-known items.",
+        colorHex = "#BCAAA4",
+    ),
+    DatabaseEntity(
+        id = 51,
+        name = "Database 51: 1530s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1530 to 1540, including rare and little-known items.",
+        colorHex = "#C5E1A5",
+    ),
+    DatabaseEntity(
+        id = 52,
+        name = "Database 52: 1520s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1520 to 1530, including rare and little-known items.",
+        colorHex = "#FFE082",
+    ),
+    DatabaseEntity(
+        id = 53,
+        name = "Database 53: 1510s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1510 to 1520, including rare and little-known items.",
+        colorHex = "#B2EBF2",
+    ),
+    DatabaseEntity(
+        id = 54,
+        name = "Database 54: 1500s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1500 to 1510, including rare and little-known items.",
+        colorHex = "#D4E157",
+    ),
 )
 
 /** Years each seeded catalogue covers. The tests check the records against them. */
@@ -324,6 +384,16 @@ val seedYears: Map<Long, IntRange> = mapOf(
     42L to 1620..1630,
     43L to 1610..1620,
     44L to 1600..1610,
+    45L to 1590..1600,
+    46L to 1580..1590,
+    47L to 1570..1580,
+    48L to 1560..1570,
+    49L to 1550..1560,
+    50L to 1540..1550,
+    51L to 1530..1540,
+    52L to 1520..1530,
+    53L to 1510..1520,
+    54L to 1500..1510,
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
@@ -333,4 +403,5 @@ val seedRecords: List<RecordEntity> =
         db18Records + db19Records + db20Records + db21Records + db22Records + db23Records + db24Records + db25Records +
         db26Records + db27Records + db28Records + db29Records + db30Records + db31Records + db32Records + db33Records +
         db34Records + db35Records + db36Records + db37Records + db38Records + db39Records + db40Records + db41Records +
-        db42Records + db43Records + db44Records
+        db42Records + db43Records + db44Records + db45Records + db46Records + db47Records + db48Records + db49Records +
+        db50Records + db51Records + db52Records + db53Records + db54Records
