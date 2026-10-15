@@ -451,6 +451,13 @@ def loop():
             return
         result = run_once(st)
         st = load_state()
+        hook = HERE / "post_pass_hook.py"           # save progress after every pass (stability first)
+        if hook.exists():
+            try:
+                import subprocess
+                subprocess.run([sys.executable, "-I", str(hook)], timeout=900)
+            except Exception as e:
+                log("post-pass hook failed:", str(e)[:200])
         if result == "preflight_failed":
             return
         if st["cooldown_until"]:
