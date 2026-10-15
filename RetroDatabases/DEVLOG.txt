@@ -24,6 +24,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-09 | 2026-10-14 | 14,224 | 249 | 82 | 118 | 14,673 | +2,449 (database 4: 109 records in eleven files, migration 3→4, tests +23) |
 | CP-10 | 2026-10-15 | 16,206 | 272 | 82 | 118 | 16,678 | +2,005 (database 5: 99 records in eleven files, migration 4→5, tests +23) |
 | CP-11 | 2026-10-15 | 17,552 | 295 | 82 | 118 | 18,047 | +1,369 (database 6: 60 records in eleven files, migration 5→6, tests +23) |
+| CP-12 | 2026-10-15 | 18,903 | 320 | 82 | 118 | 19,423 | +1,376 (database 7: 49 records in eleven files, migration 6→7, tests +25) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -532,3 +533,64 @@ Date: 2026-10-15. Totals: Kotlin main 17,552 (CP-10: 16,206), Kotlin test 295 (2
 - 29 of 60 records are rare, a higher share than database 5 (30 of 99). The 1950s have the fewest sources I could check, and most of its items are little-known.
 - Database 6 starts in 1950, which database 1 also covers. The overlap is deliberate, because the ranges are inclusive, as before.
 - Not verified yet: running on a device or emulator, the migration from version 5 on a real device, the UI with six databases in the list and in the filters, lint, and the release build.
+
+## CP-12: database 7, 1960 to 1970
+
+Status: database 7 is in the app: 49 records, a migration for installs made at version 6, and tests for all seven databases. The build passes, 20 of 20 unit tests pass, and the Kotlin compiler gives no warnings. 19 of the 49 new records have examples that run and pass; the other 30 are only read, or have no code at all.
+
+Mood: the 1960s were easier to check than the 1950s, because more of the material survives in print. The trouble was the firsts. First time-sharing system, first personal computer, first supercomputer, first operating system written in a high-level language, first use of semaphores: every one of them is contested, and the sources disagree about which machine or paper counts. I wrote the disagreements into the records instead of picking a winner. I also cut two things. Dartmouth's time-sharing system sat too close to BASIC in database 1, and I could not confirm a date for the Apollo Guidance Computer hardware, so only its software is in.
+
+Date: 2026-10-15. Totals: Kotlin main 18,903 (CP-11: 17,552), Kotlin test 320 (295), XML 82, Gradle and project files 118, total 19,423. The +1,376 is the eleven new Kotlin files for database 7, plus the catalogue and the database class (main +1,351), and the tests (+25).
+
+### What changed
+
+- A seventh database, "Database 7: 1960s coding catalogue", with the same ten kinds. 49 records: languages 7, systems 5, devices 10, tools 3, practices 4, guides 4, examples 6, projects 4, flex 4, cross-code 2. 26 of them are rare.
+- Eleven files `Db7*.kt`: ten record files and `Db7Catalog.kt`, which joins them into `db7Records`. `SeedCatalog.kt` lists the seventh database, with the colour #F06292, and adds its records to `seedRecords`.
+- Database version 7 with `MIGRATION_6_7`. An install at version 6 gets database 7 from it, and older installs run the earlier migrations first.
+- The years run from 1960 to 1970, both included. Database 6 has IBSYS and SABRE from 1960, so that year is shared by the two databases, as 2010 and 2020 were shared before.
+- Database 1 already has many records from these years (BASIC, PL/I, APL, ALGOL 68, Simula 67, Logo, BCPL, B, Multics, OS/360, System/360, PDP-11, Pascal, Forth and others). I left them where they are and did not repeat any of them.
+- Tests cover seven databases. `SeedDataTest` checks the ids of database 7 and that its records fall between 1960 and 1970. `AppDatabaseSeedTest` checks its record count, and it has a new test that removes database 7 and runs `MIGRATION_6_7`. 20 unit tests in total.
+
+### Facts checked by web search
+
+- CTSS: a prototype in November 1961 on a modified IBM 709 with four terminals, the 7090 from the fall of 1962, service to Computation Center users from the summer of 1963, and the 7094 'red machine' until July 1973.
+- Atlas: the first machine went into service in 1962. The Atlas Supervisor is credited as the earliest system to adopt paging, but that depends on how paging is defined. An IEEE Milestone, dedicated in Manchester in 2022, calls virtual memory the chief innovation.
+- THE: Dijkstra's group built it in 1965 and 1966, and the paper appeared in Communications of the ACM in 1968. Standard references credit it with one of the first uses of semaphores. I have not checked that claim against the paper.
+- ARPANET: the first message went from UCLA to SRI at about 10:30 p.m. on 29 October 1969. The system crashed after 'lo', and the whole word arrived about an hour later. By 5 December 1969 the network had four sites.
+- RFC 1: dated 7 April 1969, titled 'Host Software', written by Steve Crocker. Jon Postel took over as editor in early 1970.
+- Software engineering: the NATO conference at Garmisch in October 1968. Bertrand Meyer argues that the phrase was in use before it.
+- SNOBOL: Farber, Griswold and Polonsky at Bell Labs. The versions ran from 1962 to 1967, and SNOBOL4 was finished on the IBM 360 in 1967. Sources disagree on when SNOBOL4 work started.
+- JOSS: designed by Cliff Shaw between about 1960 and 1963, with a beta run on the JOHNNIAC in May 1963. Some reference works give 1966.
+- MUMPS: built in 1966 and 1967 at Massachusetts General Hospital, first on a PDP-7. Meditech was founded in 1969 with Pappalardo's help, and the standards date from 1976 and 1977.
+- TECO: Dan Murphy named it in 1962, and the work ran into 1963. The first Emacs was written as TECO macros. One Unix history post gives 1964.
+- RUNOFF: Jerome Saltzer wrote it in 1964 for CTSS, in MAD and FAP, with TYPSET alongside. Accounts disagree on how it reached Unix.
+- LINC: the first unit was finished in March 1962. Wesley Clark had the concept and Charles Molnar did the engineering. The project moved to MIT in 1963 and to Washington University in 1964, and DEC sold it from late 1964.
+- CDC 6600: released in September 1964, with about 400,000 transistors, a 100-nanosecond cycle, ten peripheral processors, and the speed lead until the CDC 7600 in 1969.
+- PDP-8: launched on 22 March 1965. The launch price is $18,000 to $18,500, depending on the source.
+- Data General Nova: the company was founded in 1968 and the Nova came out in 1969. Launch prices range from about $8,000 to $9,200.
+- The computer mouse: first shown on 9 December 1968 at the Fall Joint Computer Conference, with NLS running on an SDS 940 at SRI. Bill English built the first prototype in 1964.
+- The Interface Message Processor: built by BBN under a DARPA contract. UCLA's unit was IMP number one.
+- Apollo Guidance Computer software: during the Apollo 11 descent on 20 July 1969 the computer raised 1202 alarms. The 1969 MIT analysis counts four 1202s and one 1201. The waitlist handled brief tasks of about four milliseconds or less.
+- Knuth–Morris–Pratt: the full paper appeared in 1977 in the SIAM Journal on Computing. Wikipedia dates the Morris and Pratt technical report to 1970, and another source puts the conception in 1974.
+- Bresenham: worked out at IBM in 1962 for a plotter driven by an IBM 1401, and published in 1965 in the IBM Systems Journal.
+- Not searched, from memory: the years of GPSS (1961), CPL (1963), ALGOL W and ISWIM (1966), the Burroughs B5000 (1961), the PDP-10 (1966), the Teletype Model 33 (1963), the Backus–Naur form (1960), software components (1968) and the NATO report (1969). Also the algorithm years (quicksort 1961, heapsort 1964, the Kalman filter 1960, Levenshtein 1965, the FFT 1965, tries 1960, Floyd's cycle finding 1967, Strassen 1969, union-find 1964, Gale and Shapley 1962, Floyd and Warshall 1962, the Bloom filter 1970, the dining philosophers 1965, Dijkstra's semaphores 1965) and the ELIZA program (1966).
+
+### How I checked it
+
+- Unit tests: 20 of 20 pass (AppDatabaseSeedTest 8, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the build log has no compiler warnings.
+- Examples: a script takes every database 7 example from the Kotlin source and runs what this sandbox can run. 19 pass, each against an exact expected output: quicksort, heapsort, Levenshtein distance, the Knuth–Morris–Pratt search, the fast Fourier transform, tries, paging, the time-sharing scheduler, the Kalman filter, ELIZA, Gale and Shapley, the TECO-style editor, the dining philosophers, Bresenham's line, Strassen's multiplications, union-find, the C and Python shortest-paths comparison, and the awk pipeline around the C Bloom filter. The tortoise-and-hare program is checked against a brute-force search, not against a number I wrote down.
+- The other 30 are not run here. The sandbox has no compiler for GPSS, SNOBOL, JOSS, CPL, ALGOL W, MUMPS or ISWIM, and no TECO or RUNOFF, so those records, the systems, the devices and the packet guide are only read. The practices are descriptions.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- My hand-calculated shortest paths for the C example were wrong in two rows. Node 2 reaches node 0 more cheaply through node 3 (cost 3) than on the direct edge (cost 5), and I had missed that. The C program and the Python driver agree on the correct matrix, and the verifier now expects it.
+- Several firsts are disputed, and each record names the dispute in its details: the first time-sharing system, the first personal computer (LINC), the first supercomputer (CDC 6600), the first operating system written in a high-level language (B5000), the first use of semaphores (THE) and the origin of the term software engineering.
+- The years of most algorithms and several machines come from memory, as listed above. The verifier checks the output of the examples exactly, but it cannot check the years in the records, so those still need a reader.
+- Knuth–Morris–Pratt has two dates. The record uses 1970, for the Morris and Pratt report, and the details name the 1977 paper.
+- IBSYS and SABRE from database 6 also carry 1960, which is inside this database's range. The overlap is deliberate.
+
+### Notes
+
+- 26 of 49 records are rare.
+- Not verified yet: running on a device or emulator, the migration from version 6 on a real device, the UI with seven databases in the list and in the filters, lint, and the release build.

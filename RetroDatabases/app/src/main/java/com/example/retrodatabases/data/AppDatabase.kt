@@ -12,7 +12,7 @@ import com.example.retrodatabases.data.seed.seedRecords
 
 @Database(
     entities = [DatabaseEntity::class, RecordEntity::class],
-    version = 6,
+    version = 7,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -34,7 +34,14 @@ abstract class AppDatabase : RoomDatabase() {
         private fun buildDatabase(appContext: Context): AppDatabase =
             Room.databaseBuilder(appContext, AppDatabase::class.java, FILE_NAME)
                 .addCallback(SeedCallback())
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                .addMigrations(
+                    MIGRATION_1_2,
+                    MIGRATION_2_3,
+                    MIGRATION_3_4,
+                    MIGRATION_4_5,
+                    MIGRATION_5_6,
+                    MIGRATION_6_7,
+                )
                 .build()
     }
 }
@@ -94,6 +101,18 @@ internal val MIGRATION_4_5 = object : Migration(4, 5) {
 internal val MIGRATION_5_6 = object : Migration(5, 6) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val added = setOf(6L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 7 added database 7. Copies at version 6 get it from this migration;
+ * older copies run it after the earlier migrations.
+ */
+internal val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(7L)
         seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
         seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
     }
