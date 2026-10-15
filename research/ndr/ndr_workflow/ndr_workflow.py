@@ -121,7 +121,7 @@ def session_kwargs(st):
     ses = current_session(st)
     return dict(headless=False, real_chrome=True, locale="ru-RU", timezone_id="Europe/Moscow",
                 google_search=False, user_data_dir=ses["profile"],
-                timeout=90000, retries=1, extra_flags=ses["flags"], additional_args=ses["context"])
+                timeout=90000, retries=3, retry_delay=10, extra_flags=ses["flags"], additional_args=ses["context"])
 
 
 def clearance_cookies(profile_dir):
