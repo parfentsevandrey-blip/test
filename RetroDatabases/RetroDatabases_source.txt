@@ -1,6 +1,6 @@
 ===============================================================================
  Retro Databases: source code of the Android app in one text file
- Files in the archive: 99
+ Files in the archive: 110
  Not included: gradle/wrapper/gradle-wrapper.jar (binary, created by the command
    gradle wrapper --gradle-version 8.10.2) and local.properties (path to your SDK).
 ===============================================================================
@@ -80,6 +80,17 @@ CONTENTS:
   app/src/main/java/com/example/retrodatabases/data/seed/Db5Projects.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db5Systems.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db5Tools.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db6Catalog.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db6Cross.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db6Devices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db6Examples.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db6Flex.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db6Guides.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db6Languages.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db6Practices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db6Projects.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db6Systems.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db6Tools.kt
   app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
   app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
   app/src/main/java/com/example/retrodatabases/ui/AppNavHost.kt
@@ -156,6 +167,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-08 | 2026-10-14 | 11,798 | 226 | 82 | 118 | 12,224 | +2,651 (database 3: 141 records in eleven files, migration 2→3, tests +27) |
 | CP-09 | 2026-10-14 | 14,224 | 249 | 82 | 118 | 14,673 | +2,449 (database 4: 109 records in eleven files, migration 3→4, tests +23) |
 | CP-10 | 2026-10-15 | 16,206 | 272 | 82 | 118 | 16,678 | +2,005 (database 5: 99 records in eleven files, migration 4→5, tests +23) |
+| CP-11 | 2026-10-15 | 17,552 | 295 | 82 | 118 | 18,047 | +1,369 (database 6: 60 records in eleven files, migration 5→6, tests +23) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -588,6 +600,82 @@ Date: 2026-10-15. Totals: Kotlin main 16,206 (CP-09: 14,224), Kotlin test 272 (2
 - 30 of 99 records are rare. That is a judgement call again, and I'll compare it with the other databases before the next release.
 - The 2020 overlap with database 4 is deliberate, because the ranges are inclusive, as they were for 2010.
 - Not verified yet: running on a device or emulator, the migration from version 4 installs on a real device, the UI with five databases in the list and in the filters, lint, and the release build.
+
+## CP-11: database 6, 1950 to 1960
+
+Status: database 6 is in the app: 60 records, a migration for installs made at version 5, and tests for all six databases. The build passes, 19 of 19 unit tests pass, and the Kotlin compiler gives no warnings. 17 of the 60 new examples run and pass; the other 43 are only read, or have no code at all. The Rust example from database 4, which I promised to check at this checkpoint, also compiles and runs now.
+
+Mood: the 1950s were the hardest decade to check so far. Many dates disagree between sources, sometimes by a year, and several hits just repeat the same Wikipedia text. I dropped the Friden Flexowriter and the FORTRAN Monitor System because I could not find a date I trust for either. Database 1 already has FORTRAN, COBOL, ALGOL 60, Lisp, garbage collection and APL, so those stayed out, and a few of the decade's best-known names were not available as a result.
+
+Date: 2026-10-15. Totals: Kotlin main 17,552 (CP-10: 16,206), Kotlin test 295 (272), XML 82, Gradle and project files 118, total 18,047. The +1,369 is the eleven new Kotlin files for database 6, plus the catalogue and the database class (main +1,346), and the tests (+23). I checked the counting method first: run on the CP-10 commit, it gives exactly the CP-10 numbers.
+
+### What changed
+
+- A sixth database, "Database 6: 1950s coding catalogue", with the same ten kinds. 60 records: languages 9, systems 5, devices 17, tools 3, practices 7, guides 6, examples 4, projects 4, flex 3, cross-code 2. 29 of them are rare.
+- Eleven files `Db6*.kt`: ten record files and `Db6Catalog.kt`, which joins them into `db6Records`. `SeedCatalog.kt` lists the sixth database, with the colour #FFD54F, and adds its records to `seedRecords`.
+- Database version 6 with `MIGRATION_5_6`. An install at version 5 gets database 6 from it, and older installs run the earlier migrations first, as before.
+- The years run from 1950 to 1960, both included. The database 1 records from that period stay where they are, so I did not repeat them.
+- Tests cover six databases. `SeedDataTest` checks the ids of database 6 and that its records fall between 1950 and 1960. `AppDatabaseSeedTest` checks its record count, and it has a new test that removes database 6 and runs `MIGRATION_5_6`. 19 unit tests in total.
+- The database 4 Rust example, which was only read until now, was run by hand: `rustc --edition 2021` compiles it and it prints `first: Ann`. That makes 24 runnable examples in database 4, not 23. I did not try the 2024 edition for it.
+
+### Facts checked by web search
+
+- Speedcoding: Backus and IBM, 1953, for the IBM 701. About 310 words of storage, ten to twenty times slower than machine code, described in a 1954 article in the JACM.
+- Glennie's Autocode: the 1952 system for the Manchester Mark 1, with lecture notes dated December 1952. Sources disagree on whether it was a compiler or only a symbolic assembler.
+- Mark 1 Autocode: one source gives March 1954 for the release, another gives 1954 for the planning and 1955 for the development. The record uses 1954.
+- FLOW-MATIC: 1955 in the Wikipedia infobox, while hopl.info dates the B-0 compiler to 1956 and the design to 1957. COBOL took several of its features.
+- IPL: the Logic Theorist of 1956. Start dates range from 1954 to 1956, and the JOHNNIAC proofs began in late 1956 and early 1957.
+- IT: begun at Purdue on a Datatron 205, moved to the IBM 650 at Carnegie Tech. Perlis's essay puts its completion after Thanksgiving 1956, the dictionaries say 1957.
+- COMIT: work ran from 1957 to 1965. Yngve's paper is dated 1957 in one source and 1958 in another, so the record gives the language's year.
+- ALGOL 58: the Zurich meeting of late May and early June 1958. The name ALGOL took about a year to become official.
+- JOVIAL: work began in 1959 at the System Development Corporation under Jules Schwartz. The meaning of the name is disputed.
+- SHARE: delegates of the 704 installations met at RAND in August 1955, and the first manual came out in 1956. SOS for the 709 is dated 1959. IBM stopped supporting it in 1962.
+- SAP: credited to Roy Nutt of United Aircraft. One source gives 1953 for the design, and SHARE's distribution is dated 1956. A 704 needed at least 4K words of 36-bit core to run it.
+- SOAP: 1955 in HOPL. Most references name Stan Poley, but the 1955 IBM bulletin is credited to other people in some bibliographies. Knuth's SOAP III (1958) and SuperSOAP (1959); SOAP III became CASE SOAP III after IBM objected to the name.
+- IBSYS: 1960 only in reference works. I found no primary IBM source for the date, and the record says so.
+- SAGE: the design began in October 1952 as Whirlwind II. The first centre became operational on 1 July 1958, and the full system was complete in 1963. One popular page gives 1957, and it contradicts itself on the same page.
+- SABRE: most sources give 1960 for its first working version.
+- UNIVAC I: the Census Bureau accepted it on 31 March 1951 and the dedication was on 14 June 1951. Sources disagree on when the hardware physically arrived. The memory held 1,000 words of twelve characters, in mercury delay lines.
+- Ferranti Mark 1: the first machine went to Manchester University in February 1951. BINAC and the Z4 were earlier commercial digital machines, each with serious drawbacks.
+- LEO I: a successful trial on 5 September 1951, and the bakery calculations were handed over at the end of November. Another source gives 28 to 30 November for the first complete program.
+- SWAC: Robinson's program found M521 and M607 on 30 January 1952. The Lucas–Lehmer test goes back to Lehmer's design.
+- ILLIAC I: dated to 1952. The Illiac Suite is dated 1957 by most accounts. Some sources give 9 August 1956 for the first performance, by students.
+- MANIAC I: built at Los Alamos in 1952 on the IAS design. The Metropolis paper is from 1953, from my memory: the search did not return the paper itself.
+- IBM 701: announced in 1952 as the Defense Calculator. The 704 replaced it in 1954.
+- IBM 704: introduced in 1954, with April or May given as the announcement month. 36-bit words, magnetic core memory, three index registers.
+- IBM 650: first use in 1954 according to most references. SOAP and IT were both written for it.
+- RAMAC 305: unveiled on 14 September 1956. The 350 disk unit held five million characters on fifty 24-inch platters: 5 MB at eight bits per character, about 3.75 MB at six data bits.
+- TX-0: the MIT Museum and a 1974 history date its design and construction to 1956. Its memory held 65,536 words of 18 bits. The 1958 memory swap left it with a 4,096-word core.
+- Setun: work started in 1956, a working machine existed by late 1958, and about fifty machines came out of a plant in Kazan from 1959. Sources give 1958 or 1959 for the first build.
+- The first integrated circuit: Kilby's demonstration on 12 September 1958, on germanium. Noyce's silicon version came in 1959.
+- IBM 1401: unveiled on 5 October 1959. One source gives 1960 for the first shipments, and estimates of the number built run from about 10,000 to about 15,000.
+- IBM 7090: the transistor version of the 709. SOS was adapted for it.
+- OXO: A. S. Douglas built it on the EDSAC in 1952. Whether it counts as the first video game depends on the definition.
+- Lehmer's multiplicative generator: his 1951 suggestion, checked through secondary sources only. The constants 16807 and 2 to the power 31 minus 1 are the 1988 'minimal standard' choice, not Lehmer's.
+- Gray code: the patent was granted in 1953. The patent number is from my memory.
+- Not searched, from memory: the Lucas (1878) and Lehmer (1930) dates for their test, and the dates of the A-0 compiler (1951 to 1952). The Wilkes, Wheeler and Gill book (1951) was confirmed by search.
+
+### How I checked it
+
+- Unit tests: 19 of 19 pass (AppDatabaseSeedTest 7, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the build log has no compiler warnings.
+- Examples: a script takes every database 6 example from the Kotlin source and runs what this sandbox can run. 17 pass: Newton's square roots, the Monte Carlo estimate of pi (within 0.02 of pi), 36-bit addition, sorting cards by columns, the toy machine's instruction cycle, the octal dump, the drum timing guide, the IPL free list, the Metropolis sampler (the mean energy must fall between 0.45 and 0.55), the drum placement planner, noughts and crosses (the last line must be a draw), the two-pass assembler, the Lucas–Lehmer test, the Gray code, the multiplicative generator, a NASM routine called from C, and a C Monte Carlo loop called from Python through ctypes.
+- The other 43 are not run here. The sandbox has no Fortran, COBOL, Lisp, Algol or Pascal compiler and no Speedcoding interpreter, so those records and the machine descriptions are read only. The checks compare exact output, so a wrong expected line fails the check. The random-number examples check a range instead.
+- Database 4 Rust example: extracted by a script, compiled with `rustc --edition 2021` and run.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- Several dates are disputed between sources: Mark 1 Autocode, FLOW-MATIC, IPL, IT, COMIT, SOAP, SAP, UNIVAC I, LEO I, SAGE, ILLIAC I and the IBM 704 announcement. Each record uses one year and names the dispute in its details.
+- IBSYS has its 1960 date only from reference works, and the record says so.
+- I dropped two candidates because I could not find a date I trust: the Friden Flexowriter, which has no 1950 source, and the FORTRAN Monitor System, which has no date at all.
+- Speedcoding has no example. I did not want to invent a syntax for it, so the record says what the interpreter did instead.
+- The SOAP record and the drum placement project both rest on the same 1955 IBM 650 material, so they are not two independent sources.
+
+### Notes
+
+- 29 of 60 records are rare, a higher share than database 5 (30 of 99). The 1950s have the fewest sources I could check, and most of its items are little-known.
+- Database 6 starts in 1950, which database 1 also covers. The overlap is deliberate, because the ranges are inclusive, as before.
+- Not verified yet: running on a device or emulator, the migration from version 5 on a real device, the UI with six databases in the list and in the filters, lint, and the release build.
 
 ################################################################################
 # FILE: RetroDatabases/DEVLOG.txt
@@ -617,6 +705,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-08 | 2026-10-14 | 11,798 | 226 | 82 | 118 | 12,224 | +2,651 (database 3: 141 records in eleven files, migration 2→3, tests +27) |
 | CP-09 | 2026-10-14 | 14,224 | 249 | 82 | 118 | 14,673 | +2,449 (database 4: 109 records in eleven files, migration 3→4, tests +23) |
 | CP-10 | 2026-10-15 | 16,206 | 272 | 82 | 118 | 16,678 | +2,005 (database 5: 99 records in eleven files, migration 4→5, tests +23) |
+| CP-11 | 2026-10-15 | 17,552 | 295 | 82 | 118 | 18,047 | +1,369 (database 6: 60 records in eleven files, migration 5→6, tests +23) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -1050,18 +1139,95 @@ Date: 2026-10-15. Totals: Kotlin main 16,206 (CP-09: 14,224), Kotlin test 272 (2
 - The 2020 overlap with database 4 is deliberate, because the ranges are inclusive, as they were for 2010.
 - Not verified yet: running on a device or emulator, the migration from version 4 installs on a real device, the UI with five databases in the list and in the filters, lint, and the release build.
 
+## CP-11: database 6, 1950 to 1960
+
+Status: database 6 is in the app: 60 records, a migration for installs made at version 5, and tests for all six databases. The build passes, 19 of 19 unit tests pass, and the Kotlin compiler gives no warnings. 17 of the 60 new examples run and pass; the other 43 are only read, or have no code at all. The Rust example from database 4, which I promised to check at this checkpoint, also compiles and runs now.
+
+Mood: the 1950s were the hardest decade to check so far. Many dates disagree between sources, sometimes by a year, and several hits just repeat the same Wikipedia text. I dropped the Friden Flexowriter and the FORTRAN Monitor System because I could not find a date I trust for either. Database 1 already has FORTRAN, COBOL, ALGOL 60, Lisp, garbage collection and APL, so those stayed out, and a few of the decade's best-known names were not available as a result.
+
+Date: 2026-10-15. Totals: Kotlin main 17,552 (CP-10: 16,206), Kotlin test 295 (272), XML 82, Gradle and project files 118, total 18,047. The +1,369 is the eleven new Kotlin files for database 6, plus the catalogue and the database class (main +1,346), and the tests (+23). I checked the counting method first: run on the CP-10 commit, it gives exactly the CP-10 numbers.
+
+### What changed
+
+- A sixth database, "Database 6: 1950s coding catalogue", with the same ten kinds. 60 records: languages 9, systems 5, devices 17, tools 3, practices 7, guides 6, examples 4, projects 4, flex 3, cross-code 2. 29 of them are rare.
+- Eleven files `Db6*.kt`: ten record files and `Db6Catalog.kt`, which joins them into `db6Records`. `SeedCatalog.kt` lists the sixth database, with the colour #FFD54F, and adds its records to `seedRecords`.
+- Database version 6 with `MIGRATION_5_6`. An install at version 5 gets database 6 from it, and older installs run the earlier migrations first, as before.
+- The years run from 1950 to 1960, both included. The database 1 records from that period stay where they are, so I did not repeat them.
+- Tests cover six databases. `SeedDataTest` checks the ids of database 6 and that its records fall between 1950 and 1960. `AppDatabaseSeedTest` checks its record count, and it has a new test that removes database 6 and runs `MIGRATION_5_6`. 19 unit tests in total.
+- The database 4 Rust example, which was only read until now, was run by hand: `rustc --edition 2021` compiles it and it prints `first: Ann`. That makes 24 runnable examples in database 4, not 23. I did not try the 2024 edition for it.
+
+### Facts checked by web search
+
+- Speedcoding: Backus and IBM, 1953, for the IBM 701. About 310 words of storage, ten to twenty times slower than machine code, described in a 1954 article in the JACM.
+- Glennie's Autocode: the 1952 system for the Manchester Mark 1, with lecture notes dated December 1952. Sources disagree on whether it was a compiler or only a symbolic assembler.
+- Mark 1 Autocode: one source gives March 1954 for the release, another gives 1954 for the planning and 1955 for the development. The record uses 1954.
+- FLOW-MATIC: 1955 in the Wikipedia infobox, while hopl.info dates the B-0 compiler to 1956 and the design to 1957. COBOL took several of its features.
+- IPL: the Logic Theorist of 1956. Start dates range from 1954 to 1956, and the JOHNNIAC proofs began in late 1956 and early 1957.
+- IT: begun at Purdue on a Datatron 205, moved to the IBM 650 at Carnegie Tech. Perlis's essay puts its completion after Thanksgiving 1956, the dictionaries say 1957.
+- COMIT: work ran from 1957 to 1965. Yngve's paper is dated 1957 in one source and 1958 in another, so the record gives the language's year.
+- ALGOL 58: the Zurich meeting of late May and early June 1958. The name ALGOL took about a year to become official.
+- JOVIAL: work began in 1959 at the System Development Corporation under Jules Schwartz. The meaning of the name is disputed.
+- SHARE: delegates of the 704 installations met at RAND in August 1955, and the first manual came out in 1956. SOS for the 709 is dated 1959. IBM stopped supporting it in 1962.
+- SAP: credited to Roy Nutt of United Aircraft. One source gives 1953 for the design, and SHARE's distribution is dated 1956. A 704 needed at least 4K words of 36-bit core to run it.
+- SOAP: 1955 in HOPL. Most references name Stan Poley, but the 1955 IBM bulletin is credited to other people in some bibliographies. Knuth's SOAP III (1958) and SuperSOAP (1959); SOAP III became CASE SOAP III after IBM objected to the name.
+- IBSYS: 1960 only in reference works. I found no primary IBM source for the date, and the record says so.
+- SAGE: the design began in October 1952 as Whirlwind II. The first centre became operational on 1 July 1958, and the full system was complete in 1963. One popular page gives 1957, and it contradicts itself on the same page.
+- SABRE: most sources give 1960 for its first working version.
+- UNIVAC I: the Census Bureau accepted it on 31 March 1951 and the dedication was on 14 June 1951. Sources disagree on when the hardware physically arrived. The memory held 1,000 words of twelve characters, in mercury delay lines.
+- Ferranti Mark 1: the first machine went to Manchester University in February 1951. BINAC and the Z4 were earlier commercial digital machines, each with serious drawbacks.
+- LEO I: a successful trial on 5 September 1951, and the bakery calculations were handed over at the end of November. Another source gives 28 to 30 November for the first complete program.
+- SWAC: Robinson's program found M521 and M607 on 30 January 1952. The Lucas–Lehmer test goes back to Lehmer's design.
+- ILLIAC I: dated to 1952. The Illiac Suite is dated 1957 by most accounts. Some sources give 9 August 1956 for the first performance, by students.
+- MANIAC I: built at Los Alamos in 1952 on the IAS design. The Metropolis paper is from 1953, from my memory: the search did not return the paper itself.
+- IBM 701: announced in 1952 as the Defense Calculator. The 704 replaced it in 1954.
+- IBM 704: introduced in 1954, with April or May given as the announcement month. 36-bit words, magnetic core memory, three index registers.
+- IBM 650: first use in 1954 according to most references. SOAP and IT were both written for it.
+- RAMAC 305: unveiled on 14 September 1956. The 350 disk unit held five million characters on fifty 24-inch platters: 5 MB at eight bits per character, about 3.75 MB at six data bits.
+- TX-0: the MIT Museum and a 1974 history date its design and construction to 1956. Its memory held 65,536 words of 18 bits. The 1958 memory swap left it with a 4,096-word core.
+- Setun: work started in 1956, a working machine existed by late 1958, and about fifty machines came out of a plant in Kazan from 1959. Sources give 1958 or 1959 for the first build.
+- The first integrated circuit: Kilby's demonstration on 12 September 1958, on germanium. Noyce's silicon version came in 1959.
+- IBM 1401: unveiled on 5 October 1959. One source gives 1960 for the first shipments, and estimates of the number built run from about 10,000 to about 15,000.
+- IBM 7090: the transistor version of the 709. SOS was adapted for it.
+- OXO: A. S. Douglas built it on the EDSAC in 1952. Whether it counts as the first video game depends on the definition.
+- Lehmer's multiplicative generator: his 1951 suggestion, checked through secondary sources only. The constants 16807 and 2 to the power 31 minus 1 are the 1988 'minimal standard' choice, not Lehmer's.
+- Gray code: the patent was granted in 1953. The patent number is from my memory.
+- Not searched, from memory: the Lucas (1878) and Lehmer (1930) dates for their test, and the dates of the A-0 compiler (1951 to 1952). The Wilkes, Wheeler and Gill book (1951) was confirmed by search.
+
+### How I checked it
+
+- Unit tests: 19 of 19 pass (AppDatabaseSeedTest 7, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the build log has no compiler warnings.
+- Examples: a script takes every database 6 example from the Kotlin source and runs what this sandbox can run. 17 pass: Newton's square roots, the Monte Carlo estimate of pi (within 0.02 of pi), 36-bit addition, sorting cards by columns, the toy machine's instruction cycle, the octal dump, the drum timing guide, the IPL free list, the Metropolis sampler (the mean energy must fall between 0.45 and 0.55), the drum placement planner, noughts and crosses (the last line must be a draw), the two-pass assembler, the Lucas–Lehmer test, the Gray code, the multiplicative generator, a NASM routine called from C, and a C Monte Carlo loop called from Python through ctypes.
+- The other 43 are not run here. The sandbox has no Fortran, COBOL, Lisp, Algol or Pascal compiler and no Speedcoding interpreter, so those records and the machine descriptions are read only. The checks compare exact output, so a wrong expected line fails the check. The random-number examples check a range instead.
+- Database 4 Rust example: extracted by a script, compiled with `rustc --edition 2021` and run.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- Several dates are disputed between sources: Mark 1 Autocode, FLOW-MATIC, IPL, IT, COMIT, SOAP, SAP, UNIVAC I, LEO I, SAGE, ILLIAC I and the IBM 704 announcement. Each record uses one year and names the dispute in its details.
+- IBSYS has its 1960 date only from reference works, and the record says so.
+- I dropped two candidates because I could not find a date I trust: the Friden Flexowriter, which has no 1950 source, and the FORTRAN Monitor System, which has no date at all.
+- Speedcoding has no example. I did not want to invent a syntax for it, so the record says what the interpreter did instead.
+- The SOAP record and the drum placement project both rest on the same 1955 IBM 650 material, so they are not two independent sources.
+
+### Notes
+
+- 29 of 60 records are rare, a higher share than database 5 (30 of 99). The 1950s have the fewest sources I could check, and most of its items are little-known.
+- Database 6 starts in 1950, which database 1 also covers. The overlap is deliberate, because the ranges are inclusive, as before.
+- Not verified yet: running on a device or emulator, the migration from version 5 on a real device, the UI with six databases in the list and in the filters, lint, and the release build.
+
 ################################################################################
 # FILE: RetroDatabases/README.md
 ################################################################################
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside are five databases of coding history:
+An Android application in Kotlin, Jetpack Compose and Room. Inside are six databases of coding history:
 
 - "Database 1" is a catalogue of 80s coding;
 - "Database 2" is a catalogue of 90s coding;
 - "Database 3" is a catalogue of coding from 2000 to 2010;
 - "Database 4" is a catalogue of coding from 2010 to 2020;
-- "Database 5" is a catalogue of coding from 2020 to 2026.
+- "Database 5" is a catalogue of coding from 2020 to 2026;
+- "Database 6" is a catalogue of coding from 1950 to 1960.
 
 ## What is inside
 
@@ -1140,7 +1306,22 @@ The catalogue of database 5 (2020 to 2026) has the same ten kinds:
 | Flex | 5 | itertools.batched, inserted rows back from SQLite, logical assignment, range over integers in Go, the :has selector |
 | Cross-code | 5 | Python calling Go through a C shared library, Dart calling C with dart:ffi, Node.js calling Rust with napi-rs, Rust in the browser with wasm-bindgen, Bun calling C through bun:ffi |
 
-In total there are 811 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare) and 99 in database 5 (30 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
+The catalogue of database 6 (1950 to 1960) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 9 | Glennie's Autocode, Speedcoding, Mark 1 Autocode, FLOW-MATIC, IPL, IT, COMIT, ALGOL 58 and JOVIAL |
+| Systems | 5 | GM-NAA I/O, the SAGE air defence network, the SHARE Operating System, IBSYS and SABRE reservations |
+| Devices | 17 | SWAC, Ferranti Mark 1, UNIVAC I, LEO I, Whirlwind, ILLIAC I, MANIAC I, IBM 701, magnetic core memory, IBM 650, IBM 704, RAMAC 305, TX-0, Setun, the first integrated circuit, IBM 1401 and IBM 7090 |
+| Tools | 3 | The A-0 system, SOAP and SAP for the IBM 704 |
+| Practices | 7 | Subroutine libraries, index registers, coding sheets, octal core dumps, batch processing, the SHARE user group and patching object decks |
+| Guides | 6 | How core memory and the instruction cycle work, how to read an octal dump, how a drum delivers instructions, why drums need careful placement, how IPL stores lists |
+| Examples | 4 | Square roots by Newton's method, estimating pi by random points, 36-bit addition, sorting cards by columns |
+| Projects | 4 | A Metropolis sampler, a drum placement planner, noughts and crosses after OXO, a two-pass assembler for a toy 704 |
+| Flex | 3 | The Lucas–Lehmer test for Mersenne primes, Gray code, random numbers from a multiplicative generator |
+| Cross-code | 2 | C calling a NASM routine for 36-bit addition, Python calling a C Monte Carlo loop through ctypes |
+
+In total there are 871 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare) and 60 in database 6 (29 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
 
 In the app:
 - the list of databases with the number of records;
@@ -1167,8 +1348,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Structure
 
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3 and 4 to version 5.
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all five databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt` and `Db5*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4 and 5 to version 6.
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all six databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt` and `Db6*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
 - `app/src/test` — tests of the filters, the data and the database itself (Robolectric).
 - `DEVLOG.md` — the development log with the growth of lines of code by checkpoint.
@@ -1176,7 +1357,7 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 23 examples run and pass. In database 5, 21 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all).
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the 1950s languages such as Speedcoding or JOVIAL, which have no compiler there).
 
 For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
 
@@ -1184,7 +1365,7 @@ For languages that are not installed in the build environment (Forth, Prolog, Li
 
 1. Create files in `data/seed` with the records. Pass the database id to `entry()`, for example `databaseId = 3`; a record without it goes to database 1.
 2. Add the database to `seedDatabases` and its records to `seedRecords` (file `SeedCatalog.kt`).
-3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2`, `MIGRATION_2_3`, `MIGRATION_3_4` and `MIGRATION_4_5` are the examples: each adds one database, and an install made at version 1 runs them in order.
+3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_5_6` are the examples: each adds one database, and an install made at version 1 runs them in order.
 
 ################################################################################
 # FILE: RetroDatabases/app/build.gradle.kts
@@ -1333,7 +1514,7 @@ import com.example.retrodatabases.data.seed.seedRecords
 
 @Database(
     entities = [DatabaseEntity::class, RecordEntity::class],
-    version = 5,
+    version = 6,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -1355,7 +1536,7 @@ abstract class AppDatabase : RoomDatabase() {
         private fun buildDatabase(appContext: Context): AppDatabase =
             Room.databaseBuilder(appContext, AppDatabase::class.java, FILE_NAME)
                 .addCallback(SeedCallback())
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 .build()
     }
 }
@@ -1403,6 +1584,18 @@ internal val MIGRATION_3_4 = object : Migration(3, 4) {
 internal val MIGRATION_4_5 = object : Migration(4, 5) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val added = setOf(5L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 6 added database 6. Copies at version 5 get it from this migration;
+ * older copies run it after the earlier migrations.
+ */
+internal val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(6L)
         seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
         seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
     }
@@ -16780,6 +16973,1378 @@ val db5Tools: List<RecordEntity> = listOf(
 )
 
 ################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db6Catalog.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.RecordEntity
+
+/**
+ * All records of database 6: languages, systems, devices, tools and practices of 1950 to 1960,
+ * as well as guides, examples, projects, flex projects and cross-code experiments.
+ */
+val db6Records: List<RecordEntity> =
+    db6Languages + db6Systems + db6Devices + db6Tools + db6Practices +
+        db6Guides + db6Examples + db6Projects + db6Flex + db6Cross
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db6Cross.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Cross-code experiments of 1950 to 1960: an assembly routine called from C, and a C loop driven from Python. */
+val db6Cross: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 6,
+        kind = Kind.CROSS,
+        section = "C and assembly",
+        title = "C calls a NASM routine for 36-bit addition",
+        originalTitle = "System V calling convention on x86-64",
+        author = "Written as a teaching example",
+        year = 1954,
+        summary = "An assembly routine written in NASM, called from a C program, adds two numbers and keeps only the low 36 bits, as the words of the IBM 704 did.",
+        details = "The System V calling convention passes the first two arguments in registers, so the routine reads them from rdi and rsi and returns the result in rax. The mask in the routine keeps the same 36-bit width as the words of the IBM 704.",
+        instructions = """
+            1. Save the files below in one folder.
+            2. Assemble the routine: nasm -f elf64 add36.asm -o add36.o
+            3. Compile and link the program: gcc main.c add36.o -o add36
+            4. Run it: ./add36
+        """,
+        example = """
+            ### add36.asm
+            section .text
+            global add36
+            add36:
+                lea rax, [rdi + rsi]    ; the first two arguments arrive in rdi and rsi
+                mov rdx, 0xFFFFFFFFF    ; 36 one bits
+                and rax, rdx
+                ret
+            ### main.c
+            #include <stdint.h>
+            #include <stdio.h>
+
+            uint64_t add36(uint64_t a, uint64_t b);
+
+            int main(void) {
+                printf("%llu\n", (unsigned long long)add36(5, 7));
+                printf("%llu\n", (unsigned long long)add36(0xFFFFFFFFFULL, 1));
+                return 0;
+            }
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.CROSS,
+        section = "Python and C",
+        title = "Python calls a C Monte Carlo loop through ctypes",
+        originalTitle = "ctypes with a shared library built from C",
+        author = "Written as a teaching example",
+        year = 1953,
+        summary = "A C function counts random points inside a quarter circle, and a Python script calls it through ctypes and prints an estimate of pi.",
+        details = "The loop runs in C, where the random numbers come from the C library's rand function. Python passes in the number of samples and the seed, then reads the count. " +
+            "It gives the same estimate as the Monte Carlo example in this database, with the inner loop moved into C.",
+        instructions = """
+            1. Save the files below in one folder.
+            2. Build the library: cc -shared -fPIC -o libpi.so pi.c
+            3. Run the script: python3 call.py
+        """,
+        example = """
+            ### pi.c
+            #include <stdlib.h>
+
+            /* Counts how many random points fall inside the quarter circle. */
+            long count_inside(long samples, unsigned int seed) {
+                srand(seed);
+                long inside = 0;
+                for (long i = 0; i < samples; i++) {
+                    double x = rand() / (double)RAND_MAX;
+                    double y = rand() / (double)RAND_MAX;
+                    if (x * x + y * y <= 1.0) {
+                        inside++;
+                    }
+                }
+                return inside;
+            }
+            ### call.py
+            import ctypes
+
+            lib = ctypes.CDLL("./libpi.so")
+            lib.count_inside.argtypes = [ctypes.c_long, ctypes.c_uint]
+            lib.count_inside.restype = ctypes.c_long
+
+            samples = 200000
+            inside = lib.count_inside(samples, 1953)
+            print(f"pi is about {4 * inside / samples:.2f}")
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db6Devices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Computers of 1950 to 1960: the first commercial machines, research computers, drum and transistor machines, disks and the first integrated circuit. */
+val db6Devices: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Early machines",
+        title = "SWAC",
+        originalTitle = "Standards Western Automatic Computer (SWAC)",
+        author = "National Bureau of Standards, run at UCLA's Institute for Numerical Analysis",
+        year = 1950,
+        summary = "A government computer that worked at UCLA from 1950 and, in 1952, found new Mersenne primes with the Lucas–Lehmer test.",
+        details = "The SWAC was built for the National Bureau of Standards. On 30 January 1952 a program written by Robinson found two new Mersenne primes, the first of them 2 to the power 521 minus 1. " +
+            "The test it used, the Lucas–Lehmer test, was designed by D. H. Lehmer.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Early commercial machines",
+        title = "Ferranti Mark 1",
+        originalTitle = "Ferranti Mark 1, the Manchester Electronic Computer",
+        author = "Ferranti and the University of Manchester",
+        year = 1951,
+        summary = "The first general-purpose computer offered commercially. The first machine went to Manchester University in February 1951.",
+        details = "Ferranti built the Mark 1 from the Manchester design, and about nine machines were made. " +
+            "Earlier commercial digital machines, such as BINAC and the Z4, existed, but both had serious drawbacks, so the word 'first' depends on the definition.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Early commercial machines",
+        title = "UNIVAC I",
+        originalTitle = "UNIVAC I (Universal Automatic Computer I)",
+        author = "Eckert, Mauchly and Remington Rand",
+        year = 1951,
+        summary = "The business computer that the US Census Bureau accepted in 1951, and the machine that predicted the 1952 presidential election on television.",
+        details = "Its memory used mercury delay lines, in which acoustic pulses travelled through the liquid and were read and rewritten. " +
+            "The bureau accepted the first machine on 31 March 1951, and the dedication took place on 14 June 1951. Sources disagree on when the hardware physically arrived. " +
+            "The memory held 1,000 words of twelve characters each.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Early commercial machines",
+        title = "LEO I",
+        originalTitle = "Lyons Electronic Office I (LEO I)",
+        author = "J. Lyons and Company",
+        year = 1951,
+        summary = "The computer that the British food company J. Lyons built for its own office work. Its first commercial job, a bakery valuation, ran in 1951.",
+        details = "LEO was based on the EDSAC design at Cambridge. A successful trial is recorded on 5 September 1951, and the bakery calculations were handed over at the end of November. " +
+            "Other sources give 28 to 30 November 1951 for the first complete program, so the date of the first run depends on what counts as a trial.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Real-time computers",
+        title = "Whirlwind",
+        originalTitle = "Whirlwind I, the MIT Digital Computer",
+        author = "MIT's Project Whirlwind, led by Jay Forrester",
+        year = 1951,
+        summary = "The first computer built for real-time work, with a cathode-ray display, and the testbed for magnetic core memory.",
+        details = "Project Whirlwind began in 1945 as a flight simulator for the Navy, and the machine was operational in 1951. " +
+            "Its design led to the IBM machine at the heart of SAGE, and the core memory built for it became the standard for a generation of computers.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Research machines",
+        title = "ILLIAC I",
+        originalTitle = "ILLIAC I, the Illinois Automatic Computer",
+        author = "University of Illinois",
+        year = 1952,
+        summary = "The University of Illinois computer on which Lejaren Hiller and Leonard Isaacson made the Illiac Suite, usually described as the first score written by a computer.",
+        details = "ILLIAC I dates to 1952. Hiller and Isaacson used it to generate material for the Illiac Suite, a string quartet that most accounts date to 1957. " +
+            "Some sources give 9 August 1956 for the first performance, by students of the School of Music, so the year varies with the source.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Research machines",
+        title = "MANIAC I",
+        originalTitle = "MANIAC I, the Mathematical Analyzer, Numerical Integrator and Computer",
+        author = "Los Alamos Scientific Laboratory, under Nicholas Metropolis",
+        year = 1952,
+        summary = "The Los Alamos computer of 1952, built on the design of the IAS machine, which ran the calculations behind the Metropolis method.",
+        details = "The machine was built by Metropolis's group at Los Alamos. Its work included the 1953 calculations behind the Metropolis algorithm, a method of sampling that became one of the basic tools of Monte Carlo simulation.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Early mainframes",
+        title = "IBM 701",
+        originalTitle = "IBM 701 Defense Calculator",
+        author = "IBM",
+        year = 1952,
+        summary = "IBM's first commercial scientific computer, announced in 1952 as the Defense Calculator, with its memory built from Williams tubes.",
+        details = "The 701 was announced in 1952, and its first machines were installed in 1952 and 1953. " +
+            "Speedcoding was written for it, and the 704 replaced it in 1954 with a memory of magnetic cores.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Memory",
+        title = "Magnetic core memory",
+        originalTitle = "Magnetic-core memory, first used on Whirlwind",
+        author = "Jay Forrester and the Whirlwind team at MIT",
+        year = 1953,
+        summary = "Tiny ferrite rings that each hold one bit. They were the main memory of most computers for about twenty years.",
+        details = "The Whirlwind team used core memory from 1953, and the IBM 704 of 1954 replaced the 701's Williams-tube memory with cores. " +
+            "Cores keep their contents without power, unlike the tubes and drums they replaced, and they stayed the main memory type until semiconductor chips took over in the 1970s.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Drum computers",
+        title = "IBM 650",
+        originalTitle = "IBM 650 Magnetic Drum Data-Processing Machine",
+        author = "IBM",
+        year = 1954,
+        summary = "A decimal drum computer that IBM sold in large numbers in the mid-1950s, with each program placed on the drum where the machine could reach it in time.",
+        details = "Most references date its first use to 1954. The drum turned past a read head, so the next instruction had to sit where it would arrive just as the previous one finished. " +
+            "That timing problem is why SOAP was written for it, and the Internal Translator was also built for the 650.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Early mainframes",
+        title = "IBM 704",
+        originalTitle = "IBM 704 Electronic Data Processing Machine",
+        author = "IBM",
+        year = 1954,
+        summary = "The mainframe with 36-bit words, magnetic-core memory, three index registers and floating-point hardware, for which FORTRAN was first written.",
+        details = "IBM introduced the 704 in 1954. Sources give April or May as the announcement month. " +
+            "Many early user groups, including SHARE, were formed around 704 installations, and SAP was written for the 704 as well as FORTRAN.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Storage",
+        title = "IBM 305 RAMAC",
+        originalTitle = "IBM 305 RAMAC with the IBM 350 disk storage unit",
+        author = "IBM",
+        year = 1956,
+        summary = "IBM's first disk drive: fifty 24-inch platters on one spindle, holding about five million characters.",
+        details = "IBM unveiled the 305 on 14 September 1956. Its 350 disk unit stored five million characters on fifty platters, which is 5 MB if each character takes eight bits. " +
+            "Counting only the six data bits per character gives about 3.75 MB, so the size depends on the convention. The idea of disk storage is older, and some accounts date it to about 1953.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Transistor computers",
+        title = "TX-0",
+        originalTitle = "TX-0, the Transistorized Experimental Computer Zero",
+        author = "MIT Lincoln Laboratory",
+        year = 1956,
+        summary = "MIT Lincoln Laboratory's all-transistor computer, built to test transistors as logic elements and to try out a large core memory.",
+        details = "Museum records date its design and construction to 1956, though none gives a month for the first run. Its core memory held 65,536 words of 18 bits. " +
+            "In 1958 it moved to MIT's Research Laboratory of Electronics. Together with the PDP-1 it became a base for pioneering computer work and, many say, the origins of hacker culture.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Ternary computers",
+        title = "Setun",
+        originalTitle = "Setun, the Moscow ternary computer",
+        author = "Nikolay Brusentsov and Sergei Sobolev at Moscow State University",
+        year = 1958,
+        summary = "A Soviet computer that worked in balanced ternary digits instead of binary. About fifty machines were built at a plant in Kazan from 1959.",
+        details = "Design work began in 1956 with a small team, and a working machine existed by late 1958. Sources give 1958 or 1959 for the first build. " +
+            "Balanced ternary digits are negative, zero or positive, so no separate sign is needed. Setun-70, built from 1967 to 1970, never reached serial production, and claims about its cost compared with binary machines are not well supported.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Semiconductors",
+        title = "The first integrated circuit",
+        originalTitle = "Kilby's germanium integrated circuit",
+        author = "Jack Kilby at Texas Instruments",
+        year = 1958,
+        summary = "Jack Kilby's first working integrated circuit: a transistor, resistors and a capacitor made on one small germanium chip.",
+        details = "Kilby showed the device to Texas Instruments' management on 12 September 1958. An oscilloscope showed a steady sine wave, so the circuit worked. " +
+            "The chip was less than half an inch long. Robert Noyce at Fairchild made a silicon version in 1959 by another method, and the credit for the invention is usually shared by the two men.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Transistor computers",
+        title = "IBM 1401",
+        originalTitle = "IBM 1401 Data Processing System",
+        author = "IBM",
+        year = 1959,
+        summary = "IBM's transistorized business computer, unveiled on 5 October 1959, which became one of the most widely used machines of the early 1960s.",
+        details = "The 1401 was aimed at businesses that already used punched-card machines. Some sources give 1960 for the first deliveries. " +
+            "Estimates of the number of machines built range from about 10,000 to about 15,000.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.DEVICE,
+        section = "Transistor computers",
+        title = "IBM 7090",
+        originalTitle = "IBM 7090, the transistorized 709",
+        author = "IBM",
+        year = 1959,
+        summary = "The transistor version of the IBM 709, the scientific mainframe that ran the SHARE operating system and then IBSYS.",
+        details = "The 7090 kept the 709's design and replaced its vacuum tubes with transistors. Its operating systems were SHARE's SOS, adapted from the 709, and later IBSYS.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db6Examples.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Examples of 1950 to 1960: short recipes from the early machines, such as square roots, random sampling, word arithmetic and card sorting. */
+val db6Examples: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 6,
+        kind = Kind.EXAMPLE,
+        section = "Numbers",
+        title = "Square roots by Newton's method",
+        originalTitle = "Newton's iteration applied to x squared minus n",
+        author = "Written as a teaching example",
+        year = 1953,
+        summary = "A square root found by repeatedly averaging a guess with the number divided by the guess. Each step roughly doubles the number of correct digits.",
+        details = "The method needs only division, addition and halving, so it suits a machine without a square-root instruction, which most early computers lacked. " +
+            "Six steps are enough for the three numbers in the example to settle to six decimal places.",
+        instructions = """
+            1. Save the example as newton.py.
+            2. Run it: python3 newton.py
+        """,
+        example = """
+            def newton_sqrt(n, steps=6):
+                x = n
+                for _ in range(steps):
+                    x = (x + n / x) / 2
+                return x
+
+            for n in (2, 9, 10):
+                print(n, round(newton_sqrt(n), 6))
+        """,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.EXAMPLE,
+        section = "Random sampling",
+        title = "Estimating pi by random points",
+        originalTitle = "Monte Carlo estimate of pi",
+        author = "Written as a teaching example",
+        year = 1953,
+        summary = "Random points fall into a unit square, and the share that lands inside the quarter circle gives pi divided by four.",
+        details = "Monte Carlo methods were run on the early machines, and the 1953 work on MANIAC used the same kind of random sampling. This small version uses Python's random generator with a fixed seed, so the result is repeatable.",
+        instructions = """
+            1. Save the example as pi_points.py.
+            2. Run it: python3 pi_points.py
+        """,
+        example = """
+            import random
+
+            random.seed(1953)
+            samples = 100000
+            inside = 0
+            for _ in range(samples):
+                x = random.random()
+                y = random.random()
+                if x * x + y * y <= 1.0:
+                    inside += 1
+            estimate = 4 * inside / samples
+            print(f"estimate of pi: {estimate:.2f}")
+        """,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.EXAMPLE,
+        section = "Word arithmetic",
+        title = "36-bit addition in Python",
+        originalTitle = "Fixed-width addition on 36-bit words",
+        author = "Written as a teaching example",
+        year = 1954,
+        summary = "Addition on 36-bit words, where the carry out of the top bit is dropped, as in a fixed-width register of the early machines.",
+        details = "The mask keeps only the low 36 bits, so a sum wraps around the way it does in a fixed-width register. " +
+            "The last line shows 2 to the power 35 plus 2 to the power 35 wrapping to zero, because 2 to the power 36 has no place in a 36-bit word.",
+        instructions = """
+            1. Save the example as add36.py.
+            2. Run it: python3 add36.py
+        """,
+        example = """
+            MASK = (1 << 36) - 1                   # keep only the low 36 bits, as a 36-bit word does
+
+            def add36(a, b):
+                return (a + b) & MASK
+
+            print(add36(5, 7))                     # 12
+            print(add36(MASK, 1))                  # the sum wraps around to 0
+            print(oct(add36(1 << 35, 1 << 35)))    # 2**35 + 2**35 = 2**36, which wraps to 0
+        """,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.EXAMPLE,
+        section = "Sorting",
+        title = "Sorting cards by columns",
+        originalTitle = "Radix sort on punched cards",
+        author = "Written as a teaching example, after the IBM card sorters",
+        year = 1955,
+        summary = "A radix sort that works the way a card sorter did: one pass per column, from the last column to the first.",
+        details = "A card sorter put each card into one of ten pockets according to the digit punched in one column. Repeating the pass for each column, from right to left, sorts the whole deck, because every pass keeps the order that the previous one produced.",
+        instructions = """
+            1. Save the example as cards.py.
+            2. Run it: python3 cards.py
+        """,
+        example = """
+            # Sort three-digit numbers one column at a time, from the last column to the first.
+            def card_sort(numbers, columns=3):
+                for column in range(columns):
+                    pockets = [[] for _ in range(10)]
+                    for number in numbers:
+                        digit = (number // 10 ** column) % 10
+                        pockets[digit].append(number)
+                    numbers = [number for pocket in pockets for number in pocket]
+                return numbers
+
+            deck = [482, 17, 905, 61, 237, 490, 100]
+            print(card_sort(deck))
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db6Flex.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Flex projects of 1950 to 1960: showpieces that squeeze the most out of a few lines of code, from Mersenne primes to Gray codes. */
+val db6Flex: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 6,
+        kind = Kind.FLEX,
+        section = "Number theory",
+        title = "Lucas–Lehmer test for Mersenne primes",
+        originalTitle = "Lucas–Lehmer primality test (SWAC, 1952)",
+        author = "Edouard Lucas, Derrick Henry Lehmer and the SWAC searches",
+        year = 1952,
+        summary = "A short test for whether 2 to the power p minus 1 is prime. The SWAC used it in January 1952 to find new Mersenne primes.",
+        details = "The test squares a number again and again, reducing it modulo the Mersenne number each time. Lucas devised the test in 1878, and D. H. Lehmer put it into its modern form in 1930. " +
+            "The example checks the small exponents and then 521, which the SWAC found to be prime.",
+        instructions = """
+            1. Save the example as lucas.py.
+            2. Run it: python3 lucas.py
+        """,
+        example = """
+            def is_mersenne_prime(p):
+                # Lucas-Lehmer test: 2**p - 1 is prime exactly when the last term is zero.
+                if p == 2:
+                    return True
+                m = (1 << p) - 1
+                s = 4
+                for _ in range(p - 2):
+                    s = (s * s - 2) % m
+                return s == 0
+
+            print([p for p in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31] if is_mersenne_prime(p)])
+            print(is_mersenne_prime(521))
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.FLEX,
+        section = "Codes",
+        title = "Gray code: one bit changes per step",
+        originalTitle = "Reflected binary code (Gray code)",
+        author = "Frank Gray (patent granted 1953)",
+        year = 1953,
+        summary = "The reflected binary code, in which each step changes exactly one bit. Frank Gray's patent on it was granted in 1953.",
+        details = "The code exists so that a reading taken while several bits are changing cannot be far off, which is why it was used for shaft encoders and pulse signals. The example prints the three-bit version as eight words.",
+        instructions = """
+            1. Save the example as gray.py.
+            2. Run it: python3 gray.py
+        """,
+        example = """
+            print(" ".join(format(n ^ (n >> 1), "03b") for n in range(8)))
+        """,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.FLEX,
+        section = "Random numbers",
+        title = "Random numbers from a multiplicative generator",
+        originalTitle = "Multiplicative congruential generator (Lehmer's form)",
+        author = "D. H. Lehmer (1951 form); the constants are from 1988",
+        year = 1951,
+        summary = "One multiplication and one remainder give the next number in a sequence that looks random. Lehmer studied this form in 1951.",
+        details = "The constants in the example, 16807 and 2 to the power 31 minus 1, come from a later choice made in 1988, not from Lehmer's own work. The sequence is completely fixed by its seed, so it can be repeated exactly.",
+        instructions = """
+            1. Save the example as random_values.py.
+            2. Run it: python3 random_values.py
+        """,
+        example = """
+            # Each number is the previous one times 16807, reduced modulo 2**31 - 1.
+            seed = 1
+            values = []
+            for _ in range(5):
+                seed = (16807 * seed) % 2147483647
+                values.append(seed)
+            print(*values)
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db6Guides.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Guides of 1950 to 1960: how core memory, instructions, drums and lists worked, with a small program to try where the sandbox allows. */
+val db6Guides: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 6,
+        kind = Kind.GUIDE,
+        section = "Memory",
+        title = "How a magnetic core remembers a bit",
+        originalTitle = "Coincident-current core memory",
+        author = "Written as a teaching explanation",
+        year = 1953,
+        summary = "A tiny ferrite ring is magnetised one way or the other, and two wires carrying half the current needed to flip it select the one ring to change.",
+        details = "A core memory is a grid of ferrite rings threaded by wires. Current in one x wire and one y wire together is enough to flip the core where they cross, while either wire alone is not. " +
+            "A third sense wire through every core detects whether the core flipped, which is how the bit is read. Reading a core also erases it, so the value is written back afterwards.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.GUIDE,
+        section = "Architecture",
+        title = "How a stored-program computer runs one instruction",
+        originalTitle = "The fetch, decode and execute cycle",
+        author = "Written as a teaching example",
+        year = 1954,
+        summary = "The machine fetches a word from memory, decodes it into an operation and an address, carries the operation out and moves on to the next word.",
+        details = "A stored-program machine keeps its instructions in the same memory as its data. The program below is a toy with 36-bit words, as on the IBM 704, and a 15-bit address field. " +
+            "It runs four instructions: load, add, store and halt. Each pass through the loop is one fetch, one decode and one execution.",
+        instructions = """
+            1. Save the example as cycle.py.
+            2. Run it: python3 cycle.py
+        """,
+        example = """
+            OPCODES = {"HLT": 0, "LDA": 1, "ADD": 2, "STO": 3}
+            NAMES = {code: name for name, code in OPCODES.items()}
+            WORD = (1 << 36) - 1                        # 36-bit words, as on the IBM 704
+
+            def encode(op, address):
+                return (OPCODES[op] << 15) | address    # opcode in the top bits, address in the low 15
+
+            def decode(word):
+                return NAMES[word >> 15], word & 0x7FFF
+
+            memory = [0] * 32
+            memory[0] = encode("LDA", 10)
+            memory[1] = encode("ADD", 11)
+            memory[2] = encode("STO", 12)
+            memory[3] = encode("HLT", 0)
+            memory[10] = 5
+            memory[11] = 7
+
+            accumulator = 0
+            counter = 0
+            while True:
+                word = memory[counter] & WORD           # fetch the word at the counter
+                op, address = decode(word)              # decode it into an operation and an address
+                print(f"{counter}: {op} {address}")
+                counter += 1
+                if op == "HLT":                         # halt
+                    break
+                if op == "LDA":                         # execute
+                    accumulator = memory[address]
+                elif op == "ADD":
+                    accumulator = (accumulator + memory[address]) & WORD
+                elif op == "STO":
+                    memory[address] = accumulator
+            print("accumulator", accumulator, "stored at 12:", memory[12])
+        """,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.GUIDE,
+        section = "Debugging",
+        title = "Reading an octal dump of 36-bit words",
+        originalTitle = "Octal listings of core memory",
+        author = "Written as a teaching example",
+        year = 1955,
+        summary = "A memory printout in octal turns each 36-bit word into twelve digits, and the top bit is the sign.",
+        details = "Octal digits group three bits each, so a 36-bit word becomes twelve octal digits, and programmers read dumps this way on the 704 and its relatives. " +
+            "The example prints five words with their addresses, also in octal, and shows the top bit of each.",
+        instructions = """
+            1. Save the example as dump.py.
+            2. Run it: python3 dump.py
+        """,
+        example = """
+            words = [5, 7, 12, 1 << 35, (1 << 36) - 1]
+            for address, word in enumerate(words):
+                print(f"{address:04o} {word:012o} top bit {word >> 35}")
+        """,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.GUIDE,
+        section = "Storage",
+        title = "How a drum delivers the next instruction",
+        originalTitle = "Rotational timing on a magnetic drum",
+        author = "Written as a teaching example",
+        year = 1955,
+        summary = "The drum turns past a fixed read head, so the next instruction has to be placed where the head will be when the machine needs it.",
+        details = "The example models ten positions around the drum and three time units of execution. Placed one after another, five instructions finish at time 47; placed where the head will be, they finish at time 15. " +
+            "The planned placement is the idea behind SOAP.",
+        instructions = """
+            1. Save the example as drum_guide.py.
+            2. Run it: python3 drum_guide.py
+        """,
+        example = """
+            SLOTS = 10   # positions around the drum
+            EXEC = 3     # time units an instruction needs before the next one can be read
+
+            def read_time(now, slot):
+                # The head passes slot s at every time t where t % SLOTS equals s.
+                t = now
+                while t % SLOTS != slot:
+                    t += 1
+                return t
+
+            def run(slots):
+                now = 0
+                last_read = 0
+                for slot in slots:
+                    last_read = read_time(now, slot)
+                    now = last_read + EXEC
+                return last_read, now
+
+            naive = [0, 1, 2, 3, 4]        # instructions placed one slot after another
+            planned = [0, 3, 6, 9, 2]      # each one placed where the head will be when it is needed
+            for name, slots in [("naive", naive), ("planned", planned)]:
+                last, done = run(slots)
+                print(f"{name}: last read at {last}, finished at {done}")
+        """,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.GUIDE,
+        section = "List processing",
+        title = "How IPL stores a list: cells, links and the free list",
+        originalTitle = "List structures in IPL",
+        author = "Written as a teaching example",
+        year = 1956,
+        summary = "A list is a chain of cells, each holding a value and the address of the next cell. IPL kept its unused cells on a list of their own.",
+        details = "The example stores the cells in an array, takes cells from the free list and pushes words onto a list. Reading the list back gives the words in the reverse of the order they were pushed, because each new cell goes to the front.",
+        instructions = """
+            1. Save the example as ipl.py.
+            2. Run it: python3 ipl.py
+        """,
+        example = """
+            # Memory is a plain array of cells. Each cell holds a value and the index of the next cell.
+            SIZE = 6
+            value = [None] * SIZE
+            link = list(range(1, SIZE)) + [-1]     # every free cell points to the next free one
+            free = 0                               # the free list starts at cell 0
+
+            def new_cell():
+                global free
+                cell = free
+                free = link[cell]
+                return cell
+
+            def push(item, head):
+                cell = new_cell()
+                value[cell] = item
+                link[cell] = head
+                return cell
+
+            def read_list(head):
+                items = []
+                while head != -1:
+                    items.append(value[head])
+                    head = link[head]
+                return items
+
+            head = -1
+            for word in ["ADD", "LOAD", "STORE"]:
+                head = push(word, head)
+            print(read_list(head))
+            print("next free cell:", free)
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.GUIDE,
+        section = "Memory",
+        title = "Why a drum needs careful placement",
+        originalTitle = "Drum memory and access time",
+        author = "Written as a teaching explanation",
+        year = 1955,
+        summary = "A drum memory makes a program wait for the part it needs, so the wait depends on where each word is stored, not only on how fast the drum turns.",
+        details = "A word on the drum can be read only when it passes the head. A program that stores its next instruction in the next slot may have to wait almost a full turn for it. " +
+            "Storing the instructions in the slots the head reaches at the right moment cuts the wait, and this is the reason assemblers for drum machines were built with timing in mind.",
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db6Languages.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Programming languages of 1950 to 1960: the first autocodes, the first list and string languages and the ALGOL family. */
+val db6Languages: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 6,
+        kind = Kind.LANGUAGE,
+        section = "Early autocodes",
+        title = "Glennie's Autocode",
+        originalTitle = "Autocode for the Manchester Mark 1 (1952)",
+        author = "Alick Glennie",
+        year = 1952,
+        summary = "Alick Glennie's symbolic system for the Manchester Mark 1, often called the first autocode, with mnemonic statements in place of raw machine code.",
+        details = "Glennie built the system around 1952 for his own use on the Manchester Mark 1, whose machine code was hard to read. " +
+            "Some historians call it an early compiler and others only a symbolic assembler, so the label depends on the definition. " +
+            "The lecture notes that describe it are dated December 1952, and outside users never received it.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.LANGUAGE,
+        section = "Interpreters",
+        title = "Speedcoding",
+        originalTitle = "Speedcoding interpretive system for the IBM 701",
+        author = "John Backus and the IBM 701 team",
+        year = 1953,
+        summary = "John Backus's interpreter for floating-point arithmetic on the IBM 701. Programs ran ten to twenty times slower than machine code, but they were much quicker to write.",
+        details = "Speedcoding was an interpreter: a program that stayed in the 701's memory carried out each instruction in turn. " +
+            "The interpreter took about 310 words, which the usual account puts at roughly thirty per cent of the machine's storage. " +
+            "Backus described it in a 1954 article in the Journal of the ACM, and it is generally called the earliest high-level language written for IBM hardware.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.LANGUAGE,
+        section = "Early autocodes",
+        title = "Mark 1 Autocode",
+        originalTitle = "Mark 1 Autocode for the Ferranti Mark 1",
+        author = "Brooker and the Manchester group",
+        year = 1954,
+        summary = "The autocode that other users at Manchester could actually run: a compiler for the Ferranti Mark 1 that translated named instructions into machine code.",
+        details = "It came after Glennie's system and was the first autocode for the Ferranti Mark 1 that users outside the team could use. " +
+            "Sources differ on the dates. One gives March 1954 for its release, and another gives 1954 for the planning and 1955 for the development work. The record uses 1954.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.LANGUAGE,
+        section = "Business languages",
+        title = "FLOW-MATIC",
+        originalTitle = "FLOW-MATIC, first called B-0",
+        author = "Grace Hopper and her team at Remington Rand",
+        year = 1955,
+        summary = "The English-like data processing language for the UNIVAC I, in which operations were written as sentences and data layouts were filled in on printed forms.",
+        details = "The team first called the language B-0. Standard references give 1955 as the year it first appeared, while the B-0 compiler is dated to 1956 and the design to 1957 in other sources. " +
+            "Several of its features, including the English-like statements, went into COBOL.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.LANGUAGE,
+        section = "List processing",
+        title = "IPL",
+        originalTitle = "Information Processing Language (IPL-II and IPL-V)",
+        author = "Allen Newell, Cliff Shaw and Herbert Simon",
+        year = 1956,
+        summary = "The first list-processing language, built for the Logic Theorist and the General Problem Solver, with programs and data held as linked lists.",
+        details = "IPL first ran on the JOHNNIAC computer at RAND, and its machine-generated proofs began in late 1956 and early 1957. " +
+            "Simon's autobiography tells how the first version was simulated by hand, with his children acting as the machine. " +
+            "Lisp, which was influenced by IPL, soon replaced it for most work.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.LANGUAGE,
+        section = "Early compilers",
+        title = "IT, the Internal Translator",
+        originalTitle = "Internal Translator (IT)",
+        author = "Perlis, Smith and Van Zoeren",
+        year = 1957,
+        summary = "A compiler for mathematical problems on the IBM 650, begun at Purdue and finished at Carnegie Tech, and the ancestor of a family of later translators.",
+        details = "The work began at Purdue around 1955 on a Datatron 205, and moved to the IBM 650 at Carnegie Tech about 1957. " +
+            "Perlis's own essay places its completion shortly after Thanksgiving 1956, while the dictionaries give 1957. " +
+            "The third version added double-precision floating-point arithmetic. Its successors include RUNCIBLE, GATE and CORRELATE, and Donald Knuth reportedly called it the first really useful compiler.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.LANGUAGE,
+        section = "String processing",
+        title = "COMIT",
+        originalTitle = "COMIT, a string-processing language",
+        author = "Victor Yngve and his group",
+        year = 1957,
+        summary = "The first string-processing language, made for machine translation, in which programs rewrote strings of symbols by rules. SNOBOL grew out of it.",
+        details = "Work on COMIT ran from 1957 to 1965 on IBM 700- and 7000-series machines. " +
+            "Its rules worked on text rather than on numbers, which suited the linguistics of machine translation. " +
+            "The date of Yngve's mechanical-translation paper differs between sources, from 1957 to 1958, but the language itself is dated to 1957 almost everywhere.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.LANGUAGE,
+        section = "The ALGOL family",
+        title = "ALGOL 58",
+        originalTitle = "International Algebraic Language (IAL), later ALGOL 58",
+        author = "A joint committee of GAMM and the ACM, with John Backus and Alan Perlis",
+        year = 1958,
+        summary = "The first report on an international algebraic language, drafted at a meeting in Zurich. It became the base of ALGOL 60 and of JOVIAL.",
+        details = "The committee met at ETH Zurich from late May into early June 1958. The name IAL was replaced by ALGOL 58, though the change took about a year to become official. " +
+            "Alan Perlis reportedly called the name IAL 'unspeakable'. ALGOL 60 grew out of this report.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.LANGUAGE,
+        section = "Military and real-time",
+        title = "JOVIAL",
+        originalTitle = "Jules' Own Version of IAL",
+        author = "Jules Schwartz and the System Development Corporation",
+        year = 1959,
+        summary = "A language based on ALGOL 58, developed from 1959 for military and real-time programs by Jules Schwartz and his group.",
+        details = "The work began in 1959 at the System Development Corporation. The name is usually read as Jules' Own Version of IAL, though a personal history page says the team first read it as 'Just Our Version of IAL'. " +
+            "JOVIAL was used for many military programs over several decades, and its extensions aimed at large real-time systems.",
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db6Practices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Practices of 1950 to 1960: how programmers reused, debugged, scheduled and maintained their programs before compilers did most of the work. */
+val db6Practices: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 6,
+        kind = Kind.PRACTICE,
+        section = "Reuse",
+        title = "Subroutine libraries",
+        originalTitle = "The Preparation of Programs for an Electronic Digital Computer (1951)",
+        author = "Maurice Wilkes, David Wheeler and Stanley Gill",
+        year = 1951,
+        summary = "A library of tested subroutines that a programmer copied into a new program, described in the first book on programming.",
+        details = "The EDSAC at Cambridge kept such a library on tape, and users had its tapes copied by machine onto their own program tapes before the originals went back to storage. " +
+            "The 1951 book by Wilkes, Wheeler and Gill explains how to prepare programs with these routines. A 1950 report by the same three authors came first, in only a few copies.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.PRACTICE,
+        section = "Programming technique",
+        title = "Index registers",
+        originalTitle = "Index registers and address modification",
+        author = "IBM 704 programmers",
+        year = 1954,
+        summary = "A register whose value is added to an address while the program runs, so one loop can walk through a table without changing its instructions.",
+        details = "Before index registers, programmers changed the instructions in memory to step through an array, which was slow and easy to get wrong. " +
+            "The IBM 704 had three index registers, and a tag field in each instruction chose which one to use. The Manchester machine had its B-lines, an earlier form of the same idea.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.PRACTICE,
+        section = "Workflow",
+        title = "Coding sheets and keypunching",
+        originalTitle = "Coding forms and the card punch",
+        author = "Programmers of the early 1950s",
+        year = 1953,
+        summary = "Programmers wrote their code by hand on printed coding forms, one instruction per line, and keypunch operators turned the sheets into cards.",
+        details = "A coding form had columns for the label, the operation and the address. A mistake found after punching meant new cards, so the sheets were checked carefully before they went to the keypunch. " +
+            "The practice lasted until assemblers and compilers took over most of the writing.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.PRACTICE,
+        section = "Debugging",
+        title = "Octal core dumps",
+        originalTitle = "Core dumps and octal listings",
+        author = "Programmers of the 1950s",
+        year = 1955,
+        summary = "Debugging by reading a printout of memory in octal, word by word, because interactive debugging did not yet exist.",
+        details = "When a program failed, the programmer asked for a core dump, a printout of the memory, and worked through the octal values with the listing beside it. " +
+            "Breakpoints and tracing came later. Some consoles had lamps that showed the registers, and the operator read them while the program stopped.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.PRACTICE,
+        section = "Operations",
+        title = "Batch processing with card decks",
+        originalTitle = "Batch processing and job control cards",
+        author = "The computer centres of the 1950s",
+        year = 1955,
+        summary = "Programmers handed in decks of cards and collected the printout later, so the computer ran jobs one after another from a queue.",
+        details = "Control cards between a program and its data told the monitor what to do with each job. The turnaround between handing in a deck and getting the results back could take hours or days, which made every mistake expensive.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.PRACTICE,
+        section = "Community",
+        title = "SHARE user group",
+        originalTitle = "SHARE, the IBM 704 users' group",
+        author = "SHARE members",
+        year = 1955,
+        summary = "The user group of IBM 704 users that exchanged programs and knowledge, often called the earliest organised user group in computing.",
+        details = "Delegates from the 704 installations met at RAND in August 1955, and the group's first big product was a reference manual for the 704 in 1956. " +
+            "SHARE later wrote the SHARE Operating System for the 709, and its software library is counted among the roots of open-source software.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.PRACTICE,
+        section = "Maintenance",
+        title = "Patching object decks",
+        originalTitle = "Patch cards and hand patches",
+        author = "Programmers of the 1950s",
+        year = 1956,
+        summary = "Fixing a program by punching a few replacement cards, or by changing single words in memory, instead of punching the whole deck again.",
+        details = "A patch card carried the address and the new value of one word. Patching was quicker than a new deck, but a patched deck was hard to follow, so a clean copy was punched when the work was done.",
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db6Projects.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Projects of 1950 to 1960: small programs in the spirit of the early machines, with instructions and code to run. */
+val db6Projects: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 6,
+        kind = Kind.PROJECT,
+        section = "Simulation",
+        title = "Metropolis sampler in Python",
+        originalTitle = "Metropolis method (1953)",
+        author = "Nicholas Metropolis and four co-authors",
+        year = 1953,
+        summary = "A random walk that accepts or rejects each move, so that the particle spends its time where the energy is low, with the right weight for each state.",
+        details = "The method was published in 1953 for simulating the states of a fluid, and its calculations ran on MANIAC. The example uses a particle in a harmonic well at temperature one, where the average energy should come out near one half.",
+        instructions = """
+            1. Save the example as metropolis.py.
+            2. Run it: python3 metropolis.py
+            3. Change the number of steps or the seed to see how the average settles.
+        """,
+        example = """
+            import math
+            import random
+
+            # Metropolis sampling of a particle in a harmonic well, at temperature 1.
+            random.seed(7)
+            steps = 200000
+            burn_in = 1000          # the first steps are discarded while the walk settles
+
+            def energy(x):
+                return 0.5 * x * x
+
+            x = 0.0
+            total = 0.0
+            for step in range(steps):
+                trial = x + random.uniform(-1.0, 1.0)
+                change = energy(trial) - energy(x)
+                if change <= 0 or random.random() < math.exp(-change):
+                    x = trial
+                if step >= burn_in:
+                    total += energy(x)
+
+            mean = total / (steps - burn_in)
+            print(f"mean energy: {mean:.2f} (exact value 0.50)")
+        """,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.PROJECT,
+        section = "Assemblers",
+        title = "Drum placement planner",
+        originalTitle = "Optimum placement on a drum, as in SOAP (1955)",
+        author = "Written as a teaching example, after SOAP",
+        year = 1955,
+        summary = "A planner for a drum memory: each instruction goes in the slot where the head will be when it is needed, and the planned order is compared with a naive one.",
+        details = "SOAP did the same job for the IBM 650's drum. The numbers here come from a model with ten slots and three time units of execution, but the idea is the same.",
+        instructions = """
+            1. Save the example as planner.py.
+            2. Run it: python3 planner.py
+            3. Change SLOTS or EXEC to see how the planned slots move.
+        """,
+        example = """
+            SLOTS = 10   # positions around the drum
+            EXEC = 3     # time an instruction needs before the next one can be read
+
+            def read_time(now, slot):
+                t = now
+                while t % SLOTS != slot:
+                    t += 1
+                return t
+
+            def run(slots):
+                now = 0
+                last_read = 0
+                for slot in slots:
+                    last_read = read_time(now, slot)
+                    now = last_read + EXEC
+                return last_read, now
+
+            def plan(count):
+                # Put each instruction in the slot that the head reaches when the CPU is ready for it.
+                slots = []
+                now = 0
+                for _ in range(count):
+                    slot = now % SLOTS
+                    slots.append(slot)
+                    now = read_time(now, slot) + EXEC
+                return slots
+
+            naive = list(range(5))
+            planned = plan(5)
+            print("planned slots:", planned)
+            naive_last, naive_done = run(naive)
+            planned_last, planned_done = run(planned)
+            print(f"naive: last read at {naive_last}, finished at {naive_done}")
+            print(f"planned: last read at {planned_last}, finished at {planned_done}")
+            print(f"time saved: {naive_done - planned_done}")
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.PROJECT,
+        section = "Games",
+        title = "Noughts and crosses after OXO",
+        originalTitle = "OXO, noughts and crosses on EDSAC (1952)",
+        author = "Written as a teaching example, after A. S. Douglas",
+        year = 1952,
+        summary = "A perfect noughts and crosses player built with minimax search. Two copies play each other, and the game always ends in a draw.",
+        details = "A. S. Douglas wrote OXO for the EDSAC at Cambridge in 1952, as part of his research on how people and computers interact. This version searches every position, and a cache of positions keeps the search quick.",
+        instructions = """
+            1. Save the example as oxo.py.
+            2. Run it: python3 oxo.py
+            3. The last line reports the result. Both players are perfect, so it is always a draw.
+        """,
+        example = """
+            from functools import lru_cache
+
+            WINS = [(0, 1, 2), (3, 4, 5), (6, 7, 8), (0, 3, 6), (1, 4, 7), (2, 5, 8), (0, 4, 8), (2, 4, 6)]
+
+            def winner(board):
+                for a, b, c in WINS:
+                    if board[a] != " " and board[a] == board[b] == board[c]:
+                        return board[a]
+                return None
+
+            @lru_cache(maxsize=None)
+            def best(board, player):
+                # Returns (score, move) for the player to move: 1 is a win, 0 a draw, -1 a loss.
+                result = winner(board)
+                if result is not None:
+                    return (1 if result == player else -1), None
+                if " " not in board:
+                    return 0, None
+                other = "O" if player == "X" else "X"
+                best_score, best_move = -2, None
+                for i in range(9):
+                    if board[i] == " ":
+                        score, _ = best(board[:i] + (player,) + board[i + 1:], other)
+                        if -score > best_score:
+                            best_score, best_move = -score, i
+                return best_score, best_move
+
+            board = (" ",) * 9
+            player = "X"
+            while winner(board) is None and " " in board:
+                _, move = best(board, player)
+                board = board[:move] + (player,) + board[move + 1:]
+                player = "O" if player == "X" else "X"
+
+            for row in range(3):
+                print(" ".join(board[row * 3:row * 3 + 3]))
+            print("winner:", winner(board) or "draw")
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.PROJECT,
+        section = "Assemblers",
+        title = "Two-pass assembler for a toy 704",
+        originalTitle = "Two-pass assembly, as in SAP (1956)",
+        author = "Written as a teaching example, after SAP",
+        year = 1956,
+        summary = "A two-pass assembler for a toy machine with 36-bit words, in the spirit of SAP. The first pass finds the labels and the second writes the words.",
+        details = "Early assemblers did this work from punched cards. This one reads a list of lines, resolves the labels and prints each word in octal, the way a listing of the time did.",
+        instructions = """
+            1. Save the example as assemble.py.
+            2. Run it: python3 assemble.py
+            3. A dash in the label column means the line has no label.
+        """,
+        example = """
+            OPCODES = {"HLT": 0, "LDA": 1, "ADD": 2, "STO": 3}
+
+            source = [
+                "START LDA TEN",
+                "- ADD ELEVEN",
+                "- STO SUM",
+                "- HLT 0",
+                "TEN DEC 5",
+                "ELEVEN DEC 7",
+                "SUM DEC 0",
+            ]
+
+            def split(line):
+                label, op, operand = line.split()
+                return (None if label == "-" else label), op, operand
+
+            def assemble(lines):
+                # Pass 1: give every label the address of its line.
+                labels = {}
+                for address, line in enumerate(lines):
+                    label, _, _ = split(line)
+                    if label is not None:
+                        labels[label] = address
+                # Pass 2: encode each line, looking up the labels used as operands.
+                words = []
+                for line in lines:
+                    _, op, operand = split(line)
+                    value = labels[operand] if operand in labels else int(operand)
+                    if op == "DEC":
+                        words.append(value)
+                    else:
+                        words.append((OPCODES[op] << 15) | value)
+                return words
+
+            for address, word in enumerate(assemble(source)):
+                print(f"{address:04o} {word:012o}")
+        """,
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db6Systems.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Operating systems, monitors and large systems of 1950 to 1960: batch monitors, an air defence network and an airline reservation system. */
+val db6Systems: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 6,
+        kind = Kind.SYSTEM,
+        section = "Batch monitors",
+        title = "GM-NAA I/O",
+        originalTitle = "General Motors and North American Aviation Input/Output System",
+        author = "General Motors and North American Aviation, with IBM",
+        year = 1956,
+        summary = "The first operating system for the IBM 704: a monitor that ran jobs one after another and handled their input and output.",
+        details = "General Motors and North American Aviation wrote it for their IBM 704s. It cut the manual work between jobs, so that one program could start as soon as the previous one had finished. " +
+            "The SHARE Operating System of 1959 built on its input and output design.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.SYSTEM,
+        section = "Real-time networks",
+        title = "SAGE air defence network",
+        originalTitle = "Semi-Automatic Ground Environment (SAGE)",
+        author = "MIT Lincoln Laboratory, IBM and the US Air Force",
+        year = 1958,
+        summary = "A continental air defence system in which central computers tracked aircraft in real time and showed the operators what they were tracking.",
+        details = "The central computers, the AN/FSQ-7, were built by IBM from a design that began in October 1952 as Whirlwind II at MIT. " +
+            "The first SAGE centre became operational on 1 July 1958, and the full system was complete only in 1963.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.SYSTEM,
+        section = "Batch monitors",
+        title = "SHARE Operating System",
+        originalTitle = "SHARE Operating System (SOS) for the IBM 709",
+        author = "The SHARE user group",
+        year = 1959,
+        summary = "The operating system that the SHARE user group wrote for the IBM 709 and then adapted to the transistorised 7090.",
+        details = "It was built on the GM-NAA I/O design, and its aim was to make programs easy to exchange between installations. " +
+            "Papers about it appeared in the April 1959 issue of the Journal of the ACM. IBM stopped supporting SOS in 1962, and its successor IBSYS was not compatible with it.",
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.SYSTEM,
+        section = "Batch monitors",
+        title = "IBSYS",
+        originalTitle = "IBSYS monitor for the IBM 7090 and 7094",
+        author = "IBM",
+        year = 1960,
+        summary = "IBM's tape-based monitor for the 709, 7090 and 7094, which read the control cards that stood between each program and its data.",
+        details = "Reference works give 1960 as the first release, and no primary IBM source settles that date. Its lineage is often traced to the FORTRAN Monitor System, though Bell Labs' BESYS is named as the more probable influence. " +
+            "A 1963 article in the IBM Systems Journal describes its design.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.SYSTEM,
+        section = "Commercial systems",
+        title = "SABRE reservations",
+        originalTitle = "SABRE (Semi-Automated Business Research Environment)",
+        author = "IBM and American Airlines",
+        year = 1960,
+        summary = "The airline reservation system that IBM built for American Airlines, handling bookings in real time from terminals.",
+        details = "Most sources date its first working version to 1960, with the planning starting in the late 1950s. " +
+            "It was among the first large real-time transaction systems.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db6Tools.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Tools of 1950 to 1960: the compilers and assemblers that made the first large programs practical. */
+val db6Tools: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 6,
+        kind = Kind.TOOL,
+        section = "Compilers and linkers",
+        title = "A-0 system",
+        originalTitle = "A-0 for the UNIVAC I",
+        author = "Grace Hopper and her team at Remington Rand",
+        year = 1952,
+        summary = "Grace Hopper's A-0 system for the UNIVAC I, which built a program by copying tested subroutines from a library. It is often called the first compiler.",
+        details = "The work on A-0 ran in 1951 and 1952. Instead of translating a language, it assembled a program from the library routines a programmer called, so whether it counts as a compiler depends on the definition. " +
+            "Libraries of tested routines were already in use on EDSAC.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.TOOL,
+        section = "Assemblers",
+        title = "SOAP",
+        originalTitle = "Symbolic Optimal Assembly Program (SOAP)",
+        author = "Stan Poley and IBM; sources differ on the authors",
+        year = 1955,
+        summary = "The optimising assembler for the IBM 650. It placed each instruction on the drum where the machine would reach it just in time.",
+        details = "The 'Optimal' in the name refers to the drum. The assembler put each instruction in the slot the drum would bring under the head right after the previous instruction had finished. " +
+            "Most references name Stan Poley as the developer, but some bibliographies credit other people for the 1955 IBM bulletin. " +
+            "Donald Knuth's variants at Case Institute followed, SOAP III in 1958 and SuperSOAP in 1959. SOAP III was renamed CASE SOAP III after IBM objected to the name.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 6,
+        kind = Kind.TOOL,
+        section = "Assemblers",
+        title = "SAP for the IBM 704",
+        originalTitle = "Symbolic Assembly Program (SAP), first called the Share Assembly Program",
+        author = "Roy Nutt and the SHARE group",
+        year = 1956,
+        summary = "The two-pass assembler for the IBM 704, which SHARE began to circulate in 1956 and which became the default assembler for 704 users.",
+        details = "Credit for the program goes to Roy Nutt of United Aircraft Corporation, and a 704 with at least 4K words of 36-bit core memory was needed to run it. " +
+            "Sources differ on the dates: one gives 1953 for the design, while the 1956 date is for SHARE's distribution. Standard references say its notation became the template for later assembly languages.",
+        rare = true,
+    ),
+)
+
+################################################################################
 # FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
@@ -16823,10 +18388,16 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "Languages, systems, devices, tools and practices of 2020 to 2026, including rare and little-known items.",
         colorHex = "#7986CB",
     ),
+    DatabaseEntity(
+        id = 6,
+        name = "Database 6: 1950s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1950 to 1960, including rare and little-known items.",
+        colorHex = "#FFD54F",
+    ),
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
-val seedRecords: List<RecordEntity> = db1Records + db2Records + db3Records + db4Records + db5Records
+val seedRecords: List<RecordEntity> = db1Records + db2Records + db3Records + db4Records + db5Records + db6Records
 
 ################################################################################
 # FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
@@ -17901,11 +19472,13 @@ import com.example.retrodatabases.data.MIGRATION_1_2
 import com.example.retrodatabases.data.MIGRATION_2_3
 import com.example.retrodatabases.data.MIGRATION_3_4
 import com.example.retrodatabases.data.MIGRATION_4_5
+import com.example.retrodatabases.data.MIGRATION_5_6
 import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.db2Records
 import com.example.retrodatabases.data.seed.db3Records
 import com.example.retrodatabases.data.seed.db4Records
 import com.example.retrodatabases.data.seed.db5Records
+import com.example.retrodatabases.data.seed.db6Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -17932,6 +19505,7 @@ class AppDatabaseSeedTest {
         assertEquals(db3Records.size, databases.single { it.id == 3L }.recordCount)
         assertEquals(db4Records.size, databases.single { it.id == 4L }.recordCount)
         assertEquals(db5Records.size, databases.single { it.id == 5L }.recordCount)
+        assertEquals(db6Records.size, databases.single { it.id == 6L }.recordCount)
 
         val records = dao.observeRecords(1L).first()
         assertEquals(db1Records.size, records.size)
@@ -18005,6 +19579,23 @@ class AppDatabaseSeedTest {
         assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
         assertEquals(db5Records.size, dao.observeRecords(5L).first().size)
         assertEquals(db4Records.size, dao.observeRecords(4L).first().size)
+    }
+
+    @Test
+    fun migrationRestoresDatabaseSix() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 5 has no database 6: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 6")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 6")
+        MIGRATION_5_6.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db6Records.size, dao.observeRecords(6L).first().size)
+        assertEquals(db5Records.size, dao.observeRecords(5L).first().size)
     }
 
     @Test
@@ -18106,6 +19697,7 @@ import com.example.retrodatabases.data.seed.db2Records
 import com.example.retrodatabases.data.seed.db3Records
 import com.example.retrodatabases.data.seed.db4Records
 import com.example.retrodatabases.data.seed.db5Records
+import com.example.retrodatabases.data.seed.db6Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import com.example.retrodatabases.data.seed.seedRecords
 import org.junit.Assert.assertEquals
@@ -18114,7 +19706,7 @@ import org.junit.Test
 
 class SeedDataTest {
 
-    private val catalogues = listOf(db1Records, db2Records, db3Records, db4Records, db5Records)
+    private val catalogues = listOf(db1Records, db2Records, db3Records, db4Records, db5Records, db6Records)
 
     @Test
     fun seededDatabasesHaveUniqueIdsAndTheirOwnRecords() {
@@ -18126,6 +19718,7 @@ class SeedDataTest {
         assertTrue(db3Records.all { it.databaseId == 3L })
         assertTrue(db4Records.all { it.databaseId == 4L })
         assertTrue(db5Records.all { it.databaseId == 5L })
+        assertTrue(db6Records.all { it.databaseId == 6L })
     }
 
     @Test
@@ -18143,6 +19736,7 @@ class SeedDataTest {
         assertTrue(db3Records.all { it.year in 2000..2010 })
         assertTrue(db4Records.all { it.year in 2010..2020 })
         assertTrue(db5Records.all { it.year in 2020..2026 })
+        assertTrue(db6Records.all { it.year in 1950..1960 })
     }
 
     @Test

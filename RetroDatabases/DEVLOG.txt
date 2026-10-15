@@ -23,6 +23,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-08 | 2026-10-14 | 11,798 | 226 | 82 | 118 | 12,224 | +2,651 (database 3: 141 records in eleven files, migration 2→3, tests +27) |
 | CP-09 | 2026-10-14 | 14,224 | 249 | 82 | 118 | 14,673 | +2,449 (database 4: 109 records in eleven files, migration 3→4, tests +23) |
 | CP-10 | 2026-10-15 | 16,206 | 272 | 82 | 118 | 16,678 | +2,005 (database 5: 99 records in eleven files, migration 4→5, tests +23) |
+| CP-11 | 2026-10-15 | 17,552 | 295 | 82 | 118 | 18,047 | +1,369 (database 6: 60 records in eleven files, migration 5→6, tests +23) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -455,3 +456,79 @@ Date: 2026-10-15. Totals: Kotlin main 16,206 (CP-09: 14,224), Kotlin test 272 (2
 - 30 of 99 records are rare. That is a judgement call again, and I'll compare it with the other databases before the next release.
 - The 2020 overlap with database 4 is deliberate, because the ranges are inclusive, as they were for 2010.
 - Not verified yet: running on a device or emulator, the migration from version 4 installs on a real device, the UI with five databases in the list and in the filters, lint, and the release build.
+
+## CP-11: database 6, 1950 to 1960
+
+Status: database 6 is in the app: 60 records, a migration for installs made at version 5, and tests for all six databases. The build passes, 19 of 19 unit tests pass, and the Kotlin compiler gives no warnings. 17 of the 60 new examples run and pass; the other 43 are only read, or have no code at all. The Rust example from database 4, which I promised to check at this checkpoint, also compiles and runs now.
+
+Mood: the 1950s were the hardest decade to check so far. Many dates disagree between sources, sometimes by a year, and several hits just repeat the same Wikipedia text. I dropped the Friden Flexowriter and the FORTRAN Monitor System because I could not find a date I trust for either. Database 1 already has FORTRAN, COBOL, ALGOL 60, Lisp, garbage collection and APL, so those stayed out, and a few of the decade's best-known names were not available as a result.
+
+Date: 2026-10-15. Totals: Kotlin main 17,552 (CP-10: 16,206), Kotlin test 295 (272), XML 82, Gradle and project files 118, total 18,047. The +1,369 is the eleven new Kotlin files for database 6, plus the catalogue and the database class (main +1,346), and the tests (+23). I checked the counting method first: run on the CP-10 commit, it gives exactly the CP-10 numbers.
+
+### What changed
+
+- A sixth database, "Database 6: 1950s coding catalogue", with the same ten kinds. 60 records: languages 9, systems 5, devices 17, tools 3, practices 7, guides 6, examples 4, projects 4, flex 3, cross-code 2. 29 of them are rare.
+- Eleven files `Db6*.kt`: ten record files and `Db6Catalog.kt`, which joins them into `db6Records`. `SeedCatalog.kt` lists the sixth database, with the colour #FFD54F, and adds its records to `seedRecords`.
+- Database version 6 with `MIGRATION_5_6`. An install at version 5 gets database 6 from it, and older installs run the earlier migrations first, as before.
+- The years run from 1950 to 1960, both included. The database 1 records from that period stay where they are, so I did not repeat them.
+- Tests cover six databases. `SeedDataTest` checks the ids of database 6 and that its records fall between 1950 and 1960. `AppDatabaseSeedTest` checks its record count, and it has a new test that removes database 6 and runs `MIGRATION_5_6`. 19 unit tests in total.
+- The database 4 Rust example, which was only read until now, was run by hand: `rustc --edition 2021` compiles it and it prints `first: Ann`. That makes 24 runnable examples in database 4, not 23. I did not try the 2024 edition for it.
+
+### Facts checked by web search
+
+- Speedcoding: Backus and IBM, 1953, for the IBM 701. About 310 words of storage, ten to twenty times slower than machine code, described in a 1954 article in the JACM.
+- Glennie's Autocode: the 1952 system for the Manchester Mark 1, with lecture notes dated December 1952. Sources disagree on whether it was a compiler or only a symbolic assembler.
+- Mark 1 Autocode: one source gives March 1954 for the release, another gives 1954 for the planning and 1955 for the development. The record uses 1954.
+- FLOW-MATIC: 1955 in the Wikipedia infobox, while hopl.info dates the B-0 compiler to 1956 and the design to 1957. COBOL took several of its features.
+- IPL: the Logic Theorist of 1956. Start dates range from 1954 to 1956, and the JOHNNIAC proofs began in late 1956 and early 1957.
+- IT: begun at Purdue on a Datatron 205, moved to the IBM 650 at Carnegie Tech. Perlis's essay puts its completion after Thanksgiving 1956, the dictionaries say 1957.
+- COMIT: work ran from 1957 to 1965. Yngve's paper is dated 1957 in one source and 1958 in another, so the record gives the language's year.
+- ALGOL 58: the Zurich meeting of late May and early June 1958. The name ALGOL took about a year to become official.
+- JOVIAL: work began in 1959 at the System Development Corporation under Jules Schwartz. The meaning of the name is disputed.
+- SHARE: delegates of the 704 installations met at RAND in August 1955, and the first manual came out in 1956. SOS for the 709 is dated 1959. IBM stopped supporting it in 1962.
+- SAP: credited to Roy Nutt of United Aircraft. One source gives 1953 for the design, and SHARE's distribution is dated 1956. A 704 needed at least 4K words of 36-bit core to run it.
+- SOAP: 1955 in HOPL. Most references name Stan Poley, but the 1955 IBM bulletin is credited to other people in some bibliographies. Knuth's SOAP III (1958) and SuperSOAP (1959); SOAP III became CASE SOAP III after IBM objected to the name.
+- IBSYS: 1960 only in reference works. I found no primary IBM source for the date, and the record says so.
+- SAGE: the design began in October 1952 as Whirlwind II. The first centre became operational on 1 July 1958, and the full system was complete in 1963. One popular page gives 1957, and it contradicts itself on the same page.
+- SABRE: most sources give 1960 for its first working version.
+- UNIVAC I: the Census Bureau accepted it on 31 March 1951 and the dedication was on 14 June 1951. Sources disagree on when the hardware physically arrived. The memory held 1,000 words of twelve characters, in mercury delay lines.
+- Ferranti Mark 1: the first machine went to Manchester University in February 1951. BINAC and the Z4 were earlier commercial digital machines, each with serious drawbacks.
+- LEO I: a successful trial on 5 September 1951, and the bakery calculations were handed over at the end of November. Another source gives 28 to 30 November for the first complete program.
+- SWAC: Robinson's program found M521 and M607 on 30 January 1952. The Lucas–Lehmer test goes back to Lehmer's design.
+- ILLIAC I: dated to 1952. The Illiac Suite is dated 1957 by most accounts. Some sources give 9 August 1956 for the first performance, by students.
+- MANIAC I: built at Los Alamos in 1952 on the IAS design. The Metropolis paper is from 1953, from my memory: the search did not return the paper itself.
+- IBM 701: announced in 1952 as the Defense Calculator. The 704 replaced it in 1954.
+- IBM 704: introduced in 1954, with April or May given as the announcement month. 36-bit words, magnetic core memory, three index registers.
+- IBM 650: first use in 1954 according to most references. SOAP and IT were both written for it.
+- RAMAC 305: unveiled on 14 September 1956. The 350 disk unit held five million characters on fifty 24-inch platters: 5 MB at eight bits per character, about 3.75 MB at six data bits.
+- TX-0: the MIT Museum and a 1974 history date its design and construction to 1956. Its memory held 65,536 words of 18 bits. The 1958 memory swap left it with a 4,096-word core.
+- Setun: work started in 1956, a working machine existed by late 1958, and about fifty machines came out of a plant in Kazan from 1959. Sources give 1958 or 1959 for the first build.
+- The first integrated circuit: Kilby's demonstration on 12 September 1958, on germanium. Noyce's silicon version came in 1959.
+- IBM 1401: unveiled on 5 October 1959. One source gives 1960 for the first shipments, and estimates of the number built run from about 10,000 to about 15,000.
+- IBM 7090: the transistor version of the 709. SOS was adapted for it.
+- OXO: A. S. Douglas built it on the EDSAC in 1952. Whether it counts as the first video game depends on the definition.
+- Lehmer's multiplicative generator: his 1951 suggestion, checked through secondary sources only. The constants 16807 and 2 to the power 31 minus 1 are the 1988 'minimal standard' choice, not Lehmer's.
+- Gray code: the patent was granted in 1953. The patent number is from my memory.
+- Not searched, from memory: the Lucas (1878) and Lehmer (1930) dates for their test, and the dates of the A-0 compiler (1951 to 1952). The Wilkes, Wheeler and Gill book (1951) was confirmed by search.
+
+### How I checked it
+
+- Unit tests: 19 of 19 pass (AppDatabaseSeedTest 7, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the build log has no compiler warnings.
+- Examples: a script takes every database 6 example from the Kotlin source and runs what this sandbox can run. 17 pass: Newton's square roots, the Monte Carlo estimate of pi (within 0.02 of pi), 36-bit addition, sorting cards by columns, the toy machine's instruction cycle, the octal dump, the drum timing guide, the IPL free list, the Metropolis sampler (the mean energy must fall between 0.45 and 0.55), the drum placement planner, noughts and crosses (the last line must be a draw), the two-pass assembler, the Lucas–Lehmer test, the Gray code, the multiplicative generator, a NASM routine called from C, and a C Monte Carlo loop called from Python through ctypes.
+- The other 43 are not run here. The sandbox has no Fortran, COBOL, Lisp, Algol or Pascal compiler and no Speedcoding interpreter, so those records and the machine descriptions are read only. The checks compare exact output, so a wrong expected line fails the check. The random-number examples check a range instead.
+- Database 4 Rust example: extracted by a script, compiled with `rustc --edition 2021` and run.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- Several dates are disputed between sources: Mark 1 Autocode, FLOW-MATIC, IPL, IT, COMIT, SOAP, SAP, UNIVAC I, LEO I, SAGE, ILLIAC I and the IBM 704 announcement. Each record uses one year and names the dispute in its details.
+- IBSYS has its 1960 date only from reference works, and the record says so.
+- I dropped two candidates because I could not find a date I trust: the Friden Flexowriter, which has no 1950 source, and the FORTRAN Monitor System, which has no date at all.
+- Speedcoding has no example. I did not want to invent a syntax for it, so the record says what the interpreter did instead.
+- The SOAP record and the drum placement project both rest on the same 1955 IBM 650 material, so they are not two independent sources.
+
+### Notes
+
+- 29 of 60 records are rare, a higher share than database 5 (30 of 99). The 1950s have the fewest sources I could check, and most of its items are little-known.
+- Database 6 starts in 1950, which database 1 also covers. The overlap is deliberate, because the ranges are inclusive, as before.
+- Not verified yet: running on a device or emulator, the migration from version 5 on a real device, the UI with six databases in the list and in the filters, lint, and the release build.
