@@ -10,6 +10,11 @@ import com.example.retrodatabases.data.seed.db6Records
 import com.example.retrodatabases.data.seed.db7Records
 import com.example.retrodatabases.data.seed.db8Records
 import com.example.retrodatabases.data.seed.db9Records
+import com.example.retrodatabases.data.seed.db10Records
+import com.example.retrodatabases.data.seed.db11Records
+import com.example.retrodatabases.data.seed.db12Records
+import com.example.retrodatabases.data.seed.db13Records
+import com.example.retrodatabases.data.seed.db14Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import com.example.retrodatabases.data.seed.seedRecords
 import org.junit.Assert.assertEquals
@@ -20,6 +25,7 @@ class SeedDataTest {
 
     private val catalogues = listOf(
         db1Records, db2Records, db3Records, db4Records, db5Records, db6Records, db7Records, db8Records, db9Records,
+        db10Records, db11Records, db12Records, db13Records, db14Records,
     )
 
     @Test
@@ -36,6 +42,11 @@ class SeedDataTest {
         assertTrue(db7Records.all { it.databaseId == 7L })
         assertTrue(db8Records.all { it.databaseId == 8L })
         assertTrue(db9Records.all { it.databaseId == 9L })
+        assertTrue(db10Records.all { it.databaseId == 10L })
+        assertTrue(db11Records.all { it.databaseId == 11L })
+        assertTrue(db12Records.all { it.databaseId == 12L })
+        assertTrue(db13Records.all { it.databaseId == 13L })
+        assertTrue(db14Records.all { it.databaseId == 14L })
     }
 
     @Test
@@ -57,6 +68,11 @@ class SeedDataTest {
         assertTrue(db7Records.all { it.year in 1960..1970 })
         assertTrue(db8Records.all { it.year in 1970..1980 })
         assertTrue(db9Records.all { it.year in 2026..2036 })
+        assertTrue(db10Records.all { it.year in 1940..1950 })
+        assertTrue(db11Records.all { it.year in 1930..1940 })
+        assertTrue(db12Records.all { it.year in 1920..1930 })
+        assertTrue(db13Records.all { it.year in 1910..1920 })
+        assertTrue(db14Records.all { it.year in 1900..1910 })
     }
 
     @Test

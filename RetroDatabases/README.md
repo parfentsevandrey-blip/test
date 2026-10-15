@@ -1,6 +1,6 @@
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside are nine databases of coding history:
+An Android application in Kotlin, Jetpack Compose and Room. Inside are fourteen databases of coding history:
 
 - "Database 1" is a catalogue of 80s coding;
 - "Database 2" is a catalogue of 90s coding;
@@ -10,7 +10,12 @@ An Android application in Kotlin, Jetpack Compose and Room. Inside are nine data
 - "Database 6" is a catalogue of coding from 1950 to 1960;
 - "Database 7" is a catalogue of coding from 1960 to 1970;
 - "Database 8" is a catalogue of coding from 1970 to 1980;
-- "Database 9" is a forecast of coding from 2026 to 2036.
+- "Database 9" is a forecast of coding from 2026 to 2036;
+- "Database 10" is a catalogue of coding from 1940 to 1950;
+- "Database 11" is a catalogue of coding from 1930 to 1940;
+- "Database 12" is a catalogue of coding from 1920 to 1930;
+- "Database 13" is a catalogue of coding from 1910 to 1920;
+- "Database 14" is a catalogue of coding from 1900 to 1910.
 
 ## What is inside
 
@@ -149,7 +154,82 @@ The catalogue of database 9 (2026 to 2036) is a forecast, not a record. Its lang
 | Flex | 3 | A hash-based one-time signature, reverse-mode differentiation in 30 lines and a Hilbert curve index |
 | Cross-code | 2 | Python and JavaScript merge the same counters, and C and JavaScript compute the same FNV-1a hashes |
 
-In total there are 1,020 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare), 60 in database 6 (29 rare), 49 in database 7 (26 rare), 50 in database 8 (22 rare) and 50 in database 9 (6 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
+The catalogue of database 10 (1940 to 1950) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Plankalkül, Short Code, flow diagrams for planning a program, programming ENIAC with cables and switches, the EDSAC order code and the EDVAC instruction code |
+| Systems | 5 | The Automatic Computing Engine design, the Model V relay computer, the ENIAC master programmer, the IBM 604 electronic calculating punch and Shannon's communication system model |
+| Devices | 8 | ENIAC, the Harvard Mark I, Colossus, the Zuse Z3 and Z4, the Manchester Baby, the IBM SSEC and the Williams–Kilburn tube |
+| Tools | 6 | Paper tape on the Harvard Mark I, the IBM 602 and 603, the Friden Flexowriter, the Creed teleprinter on EDSAC and the Curta pocket calculator |
+| Practices | 5 | Program and data in one store, the Moore School Lectures, the first logged bug, the imitation game as a test of machines and the Annals of the Computation Laboratory |
+| Guides | 5 | How the middle-square method makes random digits, how a Hamming code corrects one bit, how a checked loop catches an off-by-one, how an ENIAC decade ring counts and how a McCulloch–Pitts neuron computes XOR |
+| Examples | 6 | The Manchester Baby's first program simulated, the entropy of a short text, merge sort, matrix inversion by elimination, aliasing and a saddle point of a game |
+| Projects | 4 | Colossus-style counting of agreements, the simplex method for a small linear program, a Hex winner check and Nim with the nim-sum |
+| Flex | 3 | Wald's sequential test, Booth's signed multiplication and Kraft's inequality for prefix codes |
+| Cross-code | 2 | C and Python compute Kaprekar's routine; C and JavaScript add odd numbers to get squares |
+
+The catalogue of database 11 (1930 to 1940) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Lambda calculus, Turing's tables of states and symbols, Post's finite process, Gentzen's sequent calculus, Tarski's formalised languages and the Hilbert–Bernays calculus |
+| Systems | 5 | The differential analyser, the Polish method against the Enigma, plugboard accounting with the IBM 405, the German telex network of 1933 and a Teletype link to a calculator in 1940 |
+| Devices | 8 | The IBM 601 multiplying punch, the Enigma I, Zuse Z1 and Z2, the Atanasoff–Berry Computer, the Bombe, the Model K relay adder and Typex |
+| Tools | 6 | The WPA Mathematical Tables Project, the HP 200A audio oscillator, a table of 100,000 random digits, Zentralblatt für Mathematik, Mathematical Reviews and the IBM 032 printing punch |
+| Practices | 5 | Shannon's switching algebra for relay circuits, Shewhart control charts, Neyman's confidence intervals, Kolmogorov's axioms and Leontief's input–output tables |
+| Guides | 5 | How Church numerals count with functions, how Gödel numbering turns a formula into a number, how a half adder is built from NAND gates, how a Grundy value is found and how a linear program is solved by checking corners |
+| Examples | 6 | Collatz stopping times, Benford's first digits in the powers of two, the five-bit telegraph code ITA2, least roots by unbounded search, a differential analyser step by step and Yates's algorithm for factorial designs |
+| Projects | 4 | A Turing machine that adds one, a three-rotor Enigma round trip, solving linear equations by elimination as the ABC did and multiplying by shifts and adds |
+| Flex | 3 | Ramsey's theorem for six points, a Fisher–Yates shuffle with fixed picks and Turing's diagonal table |
+| Cross-code | 2 | Collatz stopping times in Python and C; Gödel numbers in Python and JavaScript |
+
+The catalogue of database 12 (1920 to 1930) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Leśniewski's ontology, Occidental, Presburger arithmetic, Heyting's intuitionistic logic, Hilbert and Ackermann's Grundzüge and Basic English |
+| Systems | 5 | The Bartlane cable picture system, the Census Bureau tabulating system, Zermelo–Fraenkel set theory, the Radiotelegraph Convention of 1927 and the Signals Intelligence Service |
+| Devices | 8 | Torres Quevedo's arithmometer, Cady's quartz oscillator, the M-94, the commercial Enigma, the Kryha, the Hagelin B-21, the Hellschreiber and the Teletype Model 15 |
+| Tools | 6 | Tippett's random sampling numbers, Otis King's slide rule, Fisher's Statistical Methods for Research Workers, Richardson's forecast factory, the Darmstadt slide rule and Friedman's index of coincidence |
+| Practices | 5 | Randomised field experiments, Yule's nonsense correlation, the Hawthorne lighting experiments, amateur short-wave transatlantic contact and Nyquist's telegraph criterion |
+| Guides | 5 | How Polish notation evaluates an expression, how a tag system runs, how the power method finds the largest eigenvalue, how a Hill cipher encrypts a pair of letters and how a Pólya urn fills |
+| Examples | 6 | Ackermann's function for small inputs, a punched-card encoder for the 80-column card, Sperner's lemma, random walk return probabilities, primitive recursion and a rotor cipher with a stepping rotor |
+| Projects | 4 | A truth-table checker, a combinator reducer with a step limit, a flow process chart in text and a single sampling plan |
+| Flex | 3 | Aitken's delta-squared, Cholesky factorisation and Hartley's measure of information |
+| Cross-code | 2 | Łukasiewicz three-valued tables in Python and C; Borůvka's spanning tree in Python and C |
+
+The catalogue of database 13 (1910 to 1920) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Principia Mathematica notation, the Q code, German diplomatic code 0075, the Sheffer stroke, strict implication and the Simplex telegraphic code |
+| Systems | 5 | Dreyer's fire-control table, the 1910 census tabulators, the first commercial teleprinter service, the 1915 crossbar selector and an opera broadcast of 1910 |
+| Devices | 8 | The Powers punched-card tabulator, El Ajedrecista, Armstrong's regenerative receiver and superheterodyne, Langmuir's pliotron, the Sperry gyrocompass, the Monroe calculator and Kleinschmidt's page printer |
+| Tools | 6 | Pearson's Tables for Statisticians and Biometricians, the stenotype, the Mundaneum card index, a 1913 handbook of chemistry and physics, the Henry Draper Catalogue and the ABC Telegraphic Code |
+| Practices | 5 | Scientific management, the five-dollar day, the Radio Act of 1912, the Army Alpha test and daylight saving time in Germany |
+| Guides | 5 | How maximum likelihood picks a parameter, how a one-time tape cipher hides a message, how ADFGVX works, how the Haar transform splits a signal and how Pocklington's test proves a number prime |
+| Examples | 6 | Carmichael numbers below 1000, Fisher's F statistic for three groups, a card tabulator, blocked calls in a trunk group, highly composite numbers below 100 and Bernstein polynomials |
+| Projects | 4 | A moving assembly line simulator, a Gantt chart in plain text, a Galerkin approximation for a loaded bar and Ramanujan's nested radical |
+| Flex | 3 | The harmonic series without the digit 9, twin primes and the sum of their reciprocals, and the escape test for iterating z squared plus c |
+| Cross-code | 2 | Ramanujan's tau coefficients in Python and C; Ramanujan's partition congruence in Python and C |
+
+The catalogue of database 14 (1900 to 1910) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Peano's Formulario Mathematico, Latino sine flexione, Ido, Peirce's existential graphs, Ricci calculus and Frege's two-dimensional notation |
+| Systems | 5 | Marconi's transatlantic wireless, the All Red Route, Zermelo's axioms for sets, Russell's theory of types and the Eiffel Tower as a radio station |
+| Devices | 8 | The Telegraphone, the Wehnelt cylinder, the Fleming valve, De Forest's Audion, Pickard's crystal detector, Einthoven's string galvanometer, the mercury-arc rectifier and the gyrocompass for ships |
+| Tools | 6 | The Universal Decimal Classification, the Library of Congress Classification and Subject Headings, Chemical Abstracts, Landolt–Börnstein tables and the International Catalogue of Scientific Literature |
+| Practices | 5 | Hilbert's 23 problems, the Engineering Standards Committee, boundary-layer theory, a daylight saving time proposal and the London conference on electrical units |
+| Guides | 5 | How a Runge–Kutta step is computed, how a Lebesgue integral adds up by heights, how a Markov chain settles, how a t-test checks a mean and how Richardson extrapolation removes the leading error |
+| Examples | 6 | Pearson's chi-square for a die, Russell's paradox on a small universe, Gram–Schmidt, Hardy–Weinberg, Planck's peak wavelength and Yule's Q |
+| Projects | 4 | Bachelier's option price, Murray's five-unit code, the Lorenz curve and the Gini index, and tide heights by harmonic terms |
+| Flex | 3 | The Koch snowflake, Wieferich primes below 5000 and complete mappings of Z6 (36 officers) |
+| Cross-code | 2 | Richard's diagonal in Python and C; Morse SOS in Python and C |
+
+In total there are 1,270 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare), 60 in database 6 (29 rare), 49 in database 7 (26 rare), 50 in database 8 (22 rare), 50 in database 9 (6 rare), 50 in database 10 (10 rare), 50 in database 11 (9 rare), 50 in database 12 (7 rare), 50 in database 13 (10 rare) and 50 in database 14 (9 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
 
 In the app:
 - the list of databases with the number of records;
@@ -176,8 +256,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Structure
 
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4, 5, 6, 7 and 8 to version 9.
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all nine databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt`, `Db6*.kt`, `Db7*.kt`, `Db8*.kt` and `Db9*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 and 13 to version 14.
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all fourteen databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt`, `Db6*.kt`, `Db7*.kt`, `Db8*.kt`, `Db9*.kt`, `Db10*.kt`, `Db11*.kt`, `Db12*.kt`, `Db13*.kt` and `Db14*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
 - `app/src/test` — tests of the filters, the data and the database itself (Robolectric).
 - `DEVLOG.md` — the development log with the growth of lines of code by checkpoint.
@@ -185,7 +265,7 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. In database 9, 20 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. In database 9, 20 examples run and pass. In database 10, 20 examples run and pass. In database 11, 20 examples run and pass. In database 12, 20 examples run and pass. In database 13, 20 examples run and pass. In database 14, 20 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
 
 For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
 
@@ -193,4 +273,4 @@ For languages that are not installed in the build environment (Forth, Prolog, Li
 
 1. Create files in `data/seed` with the records. Pass the database id to `entry()`, for example `databaseId = 3`; a record without it goes to database 1.
 2. Add the database to `seedDatabases` and its records to `seedRecords` (file `SeedCatalog.kt`).
-3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_8_9` are the examples: each adds one database, and an install made at version 1 runs them in order.
+3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_13_14` are the examples: each adds one database, and an install made at version 1 runs them in order.

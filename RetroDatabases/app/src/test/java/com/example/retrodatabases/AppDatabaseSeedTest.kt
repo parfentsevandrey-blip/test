@@ -12,6 +12,11 @@ import com.example.retrodatabases.data.MIGRATION_5_6
 import com.example.retrodatabases.data.MIGRATION_6_7
 import com.example.retrodatabases.data.MIGRATION_7_8
 import com.example.retrodatabases.data.MIGRATION_8_9
+import com.example.retrodatabases.data.MIGRATION_9_10
+import com.example.retrodatabases.data.MIGRATION_10_11
+import com.example.retrodatabases.data.MIGRATION_11_12
+import com.example.retrodatabases.data.MIGRATION_12_13
+import com.example.retrodatabases.data.MIGRATION_13_14
 import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.db2Records
 import com.example.retrodatabases.data.seed.db3Records
@@ -21,6 +26,11 @@ import com.example.retrodatabases.data.seed.db6Records
 import com.example.retrodatabases.data.seed.db7Records
 import com.example.retrodatabases.data.seed.db8Records
 import com.example.retrodatabases.data.seed.db9Records
+import com.example.retrodatabases.data.seed.db10Records
+import com.example.retrodatabases.data.seed.db11Records
+import com.example.retrodatabases.data.seed.db12Records
+import com.example.retrodatabases.data.seed.db13Records
+import com.example.retrodatabases.data.seed.db14Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -51,6 +61,11 @@ class AppDatabaseSeedTest {
         assertEquals(db7Records.size, databases.single { it.id == 7L }.recordCount)
         assertEquals(db8Records.size, databases.single { it.id == 8L }.recordCount)
         assertEquals(db9Records.size, databases.single { it.id == 9L }.recordCount)
+        assertEquals(db10Records.size, databases.single { it.id == 10L }.recordCount)
+        assertEquals(db11Records.size, databases.single { it.id == 11L }.recordCount)
+        assertEquals(db12Records.size, databases.single { it.id == 12L }.recordCount)
+        assertEquals(db13Records.size, databases.single { it.id == 13L }.recordCount)
+        assertEquals(db14Records.size, databases.single { it.id == 14L }.recordCount)
 
         val records = dao.observeRecords(1L).first()
         assertEquals(db1Records.size, records.size)
@@ -192,6 +207,91 @@ class AppDatabaseSeedTest {
         assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
         assertEquals(db9Records.size, dao.observeRecords(9L).first().size)
         assertEquals(db8Records.size, dao.observeRecords(8L).first().size)
+    }
+
+    @Test
+    fun migrationRestoresDatabaseTen() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 9 has no database 10: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 10")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 10")
+        MIGRATION_9_10.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db10Records.size, dao.observeRecords(10L).first().size)
+        assertEquals(db9Records.size, dao.observeRecords(9L).first().size)
+    }
+
+    @Test
+    fun migrationRestoresDatabaseEleven() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 10 has no database 11: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 11")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 11")
+        MIGRATION_10_11.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db11Records.size, dao.observeRecords(11L).first().size)
+        assertEquals(db10Records.size, dao.observeRecords(10L).first().size)
+    }
+
+    @Test
+    fun migrationRestoresDatabaseTwelve() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 11 has no database 12: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 12")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 12")
+        MIGRATION_11_12.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db12Records.size, dao.observeRecords(12L).first().size)
+        assertEquals(db11Records.size, dao.observeRecords(11L).first().size)
+    }
+
+    @Test
+    fun migrationRestoresDatabaseThirteen() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 12 has no database 13: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 13")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 13")
+        MIGRATION_12_13.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db13Records.size, dao.observeRecords(13L).first().size)
+        assertEquals(db12Records.size, dao.observeRecords(12L).first().size)
+    }
+
+    @Test
+    fun migrationRestoresDatabaseFourteen() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 13 has no database 14: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 14")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 14")
+        MIGRATION_13_14.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db14Records.size, dao.observeRecords(14L).first().size)
+        assertEquals(db13Records.size, dao.observeRecords(13L).first().size)
     }
 
     @Test

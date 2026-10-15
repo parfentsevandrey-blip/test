@@ -27,6 +27,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-12 | 2026-10-15 | 18,903 | 320 | 82 | 118 | 19,423 | +1,376 (database 7: 49 records in eleven files, migration 6→7, tests +25) |
 | CP-13 | 2026-10-15 | 20,288 | 343 | 82 | 118 | 20,831 | +1,408 (database 8: 50 records in eleven files, migration 7→8, tests +23) |
 | CP-14 | 2026-10-15 | 21,664 | 374 | 82 | 118 | 22,238 | +1,407 (database 9: 50 records in eleven files, migration 8→9, tests +31) |
+| CP-15 | 2026-10-15 | 28,170 | 490 | 82 | 118 | 28,860 | +6,622 (databases 10 to 14: 250 records in 55 files, migrations 9→10 to 13→14, tests +116) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -700,3 +701,59 @@ Date: 2026-10-15. Totals: Kotlin main 21,664 (CP-13: 20,288), Kotlin test 374 (3
 - When a forecast year passes, I want to compare the guess with what happened, so these records should not be edited to match the outcome.
 - The line-count method is the same as at CP-13, which reproduced the CP-12 numbers.
 - Not verified yet: running on a device or emulator, the migration from version 8 on a real device, the UI with nine databases in the list and in the filters, lint, and the release build.
+
+## CP-15: databases 10 to 14, 1900 to 1950
+
+Status: five more databases are in the app, one per decade from the 1900s to the 1940s: 250 records, migrations from version 9 to version 14, and tests for all fourteen databases. The build passes, 28 of 28 unit tests pass, and the Kotlin compiler gives no warnings. The 100 runnable records (20 per database) pass against their expected output.
+
+Mood: the first time I split one job across several helpers. I ran one helper per decade in parallel, wired the catalogue, the migrations and the tests myself, and checked every database before accepting it. Four records repeated topics from other databases and were replaced, and one helper ran out of search budget before it wrote any files, so I resumed it with instructions to finish from memory and flag what it could not check.
+
+Date: 2026-10-15. Totals: Kotlin main 28,170 (CP-14: 21,664), Kotlin test 490 (374), XML 82, Gradle and project files 118, total 28,860. The +6,622 is the 55 new Kotlin files for databases 10 to 14 (6,410 lines together), plus the catalogue, the database class and the seed list (main +96), and the tests (+116).
+
+### What changed
+
+- Five databases, each with the same ten kinds and 50 records: "Database 10: 1940s coding catalogue" (1940 to 1950), "Database 11: 1930s" (1930 to 1940), "Database 12: 1920s" (1920 to 1930), "Database 13: 1910s" (1910 to 1920) and "Database 14: 1900s" (1900 to 1910). The rare flags come to 10, 9, 7, 10 and 9, which makes 45 here and 501 in the whole catalogue.
+- Eleven files per database, 55 in total: ten record files and a catalogue each. Colours are #4DB6AC, #E57373, #DCE775, #9FA8DA and #FFAB91.
+- Version 14 with MIGRATION_9_10 to MIGRATION_13_14. An install at each earlier version gets the new databases from the matching migration, as before.
+- Tests: SeedDataTest checks ids, years and rare records for all fourteen databases, and AppDatabaseSeedTest checks the counts and adds five migration tests. 28 unit tests in total (AppDatabaseSeedTest 15, RecordFilterTest 5, SeedDataTest 8).
+
+### Facts checked by web search
+
+The helpers shared one search budget, which ran out after about 60 searches.
+- 1940s: the Baby's first run on 21 June 1948 (131072), Short Code (1949), Plankalkul (designed 1942 to 1945), Turing's program checking (24 June 1949), EDSAC's first run (6 May 1949), Dantzig's simplex method (1947), the Moore School course (8 July to 31 August 1946; one source says 30 August). Disputed: BINAC's status, the IAS flow diagrams, Colossus's dates, and Kaprekar's routine (1949, 1950 or 1955).
+- 1930s: ITA2 (1932, though some guides say 1930), the Enigma army order (June 1930, 117 machines; earlier use disputed), the IBM 601 (1931), the ABC demonstration (1939, equations disputed), the 1940 teletype demonstration, the German telex network (1933), Typex (1937), the Bombe's first run (14 March 1940), the WPA tables (1938), HP (1939), Zentralblatt (1931), Mathematical Reviews (1940). Z2's completion date is disputed.
+- 1920s: Post's tag systems (1921; printed in 1943), Schoenfinkel (lecture 1920, published 1924), the IBM 80-column card (1928), the Teletype Model 15 (launched 1930; the 1925 machine is the Model 14), Presburger (1929; Britannica says 1930), Basic English (1930), Friedman (written 1920, published 1922), Nyquist (1928), Yule (1926), Hebern (filed 1921, patented 1924), the M-94 (1922), Cady (1921).
+- 1910s: Dreyer (1912 and 1913), Powers (1914), the 1910 census tabulators, Sheffer (1913), Pearson's tables (1914), Armstrong's regenerative receiver (1912; patent October 1914), Carmichael numbers (1910), Fisher (1912 and 1918), Erlang (1917), Ramanujan (1915 and 1916), Pocklington (1914), Haar (1910), Galerkin (1915), Bernstein (1912), Julia (1918), Vernam's patent (1919), ADFGVX (1918), Ford (1913 and 1914), Taylor (1911), the Radio Act (1912), daylight saving (1916), Army Alpha (1917), the Q code (1912), the Henry Draper Catalogue (1918), the Simplex code (1911). Richardson's 1911 paper is only partly confirmed; one source says 1910.
+- 1900s: Richardson's volume (1910 or 1911), the Telegraphone (1900), the Pacific cable (31 October 1902), Wieferich's 1909 paper (1093 and 3511 below 5000), Lorenz (1905), Latino sine flexione (1903), Roberts's tide machine (1906 to 1908), Murray's code (1901), Pickard (1906), the Berlin SOS (1906, in force 1908), Richard's paradox (1905), the UDC (1905), LCSH (1909), Chemical Abstracts (1907), Einthoven (1901), the mercury rectifier (1902), Wehnelt (1903). The gyrocompass, LC classification, Ricci and Tarry dates are disputed, and the details say so.
+
+### Not searched, from memory
+
+- 1940s: the Z4's dates, the IBM 602 (1946), the Curta (1948), the Creed teleprinter (1949), the Model V (1946), the EDVAC draft (30 June 1945), the McCulloch–Pitts paper (1943).
+- 1930s: Church (1932 and 1936), Turing (1936, printed 1937), Gentzen (1934), Tarski (1933), Bush (1931), Rejewski (1932), Shannon (1937), Shewhart (1931), Neyman (1937), Kolmogorov (1933), Leontief (1936), Grundy (1939), Kantorovich (1939), Benford (1938), Yates (1937), Kleene (1936), and the Enigma rotor wirings.
+- 1920s: Fisher's 1.96, Hartley (1928), the claim that Ackermann's function outgrows primitive recursion, and Pólya's full German title.
+- 1910s: Fisher's 1912 title, Armstrong's patent number, Dreyer's full name, Kleinschmidt's first name, Lewis's full name, the Haar transform as the first wavelet basis, and the QRM and QSO meanings.
+- 1900s: Peano (1908), Ido (1907), Frege (1903), Marconi (1901), Zermelo (1908), Russell's types (1908), Fleming (1904), the Audion (1906), Hilbert (1900), Prandtl (1904), Willett (1907), Kutta (1901), Lebesgue (1902), Markov (1906), Student (1908), Pearson (1900), Yule (1900), Planck (1900), Schmidt (1907), Hardy–Weinberg (1908), Bachelier (1900), and Koch (1904).
+- The Enigma test vector in database 11 (AAAAA gives BDZGO) comes from memory. No source was found for it, so it is unconfirmed.
+
+### How I checked it
+
+- Unit tests: 28 of 28 pass (AppDatabaseSeedTest 15, RecordFilterTest 5, SeedDataTest 8). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the build log has no compiler warnings or errors.
+- Examples: each database has its own verifier with exact expected output. All 100 runnable records pass, and I re-ran all five verifiers before committing. The other 150 records are reading-only.
+- Structure: 50 records per database, kinds exact, years inside each range, no dollar signs or Cyrillic, and no title repeated inside a database or across the new ones.
+- Topic overlaps: I searched all new titles by keyword. Four records were replaced: two on Richardson extrapolation (database 12's cross-code record and database 13's flex record, both against database 14's guide), one on Ramsey's theorem (database 12's example, against database 11's flex record), and one on Shewhart's control charts (database 12's guide, against database 11's practice). Neighbouring topics were kept: the census tabulators of 1910 and 1920, the Enigma I (1930) and the commercial Enigma (1923), the Hilbert–Bernays calculus (1934) and the Hilbert–Ackermann Grundzüge (1928), the Principia notation (1910) and the theory of types (1908), and the card tabulator (1914) and the card encoder (1928).
+- Line counts use the same method as before, and the CP-14 numbers reproduce.
+
+### Problems
+
+- Database 12's helper ran out of search budget before it wrote any files. I resumed it with instructions to finish, using memory for anything it could not check and flagging those facts. They are listed above.
+- Database 13 had a flex piece on Richardson extrapolation that duplicated database 14's guide. It was replaced with "The harmonic series without the digit 9" (1914).
+- Database 12 had three topics that duplicated other databases. All three were replaced.
+- Database 13 has four Ramanujan records (tau, the partition congruence, highly composite numbers, and the nested radical). That is by design, but it is a high share for one mathematician, and I may spread them out later.
+- Several single-source dates need rechecking: the 1910 teleprinter service, the 1920 ABC telegraphic code, Kleinschmidt (1916), Monroe (1912), Brun (1919), Vernam (1919), Kaprekar (1949) and the 1950 publication date of Booth's algorithm.
+- Nothing has been run on a device. The Kotlin compiles and the unit tests pass, and that is all.
+
+### Notes
+
+- From this checkpoint the rare flag means little-known, as in databases 1 to 8. In database 9 it marked long shots.
+- The helpers' verifiers and derivation notes are not in the repository.
+- Not verified yet: running on a device or emulator, the migrations from versions 9 to 14 on a real device, the UI with fourteen databases in the list and in the filters, lint, and the release build.
