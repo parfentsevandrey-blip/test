@@ -1,6 +1,6 @@
 ===============================================================================
  Retro Databases: source code of the Android app in one text file
- Files in the archive: 132
+ Files in the archive: 143
  Not included: gradle/wrapper/gradle-wrapper.jar (binary, created by the command
    gradle wrapper --gradle-version 8.10.2) and local.properties (path to your SDK).
 ===============================================================================
@@ -113,6 +113,17 @@ CONTENTS:
   app/src/main/java/com/example/retrodatabases/data/seed/Db8Projects.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db8Systems.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db8Tools.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db9Catalog.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db9Cross.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db9Devices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db9Examples.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db9Flex.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db9Guides.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db9Languages.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db9Practices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db9Projects.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db9Systems.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db9Tools.kt
   app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
   app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
   app/src/main/java/com/example/retrodatabases/ui/AppNavHost.kt
@@ -192,6 +203,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-11 | 2026-10-15 | 17,552 | 295 | 82 | 118 | 18,047 | +1,369 (database 6: 60 records in eleven files, migration 5→6, tests +23) |
 | CP-12 | 2026-10-15 | 18,903 | 320 | 82 | 118 | 19,423 | +1,376 (database 7: 49 records in eleven files, migration 6→7, tests +25) |
 | CP-13 | 2026-10-15 | 20,288 | 343 | 82 | 118 | 20,831 | +1,408 (database 8: 50 records in eleven files, migration 7→8, tests +23) |
+| CP-14 | 2026-10-15 | 21,664 | 374 | 82 | 118 | 22,238 | +1,407 (database 9: 50 records in eleven files, migration 8→9, tests +31) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -805,6 +817,66 @@ Date: 2026-10-15. Totals: Kotlin main 20,288 (CP-12: 18,903), Kotlin test 343 (3
 - "Erlang" and "Software inspections" appear in both database 1 and database 2. They were there before this checkpoint. The uniqueness test is per database and passes, so I left them alone.
 - I checked the counting method again on the CP-12 commit first, and it gives exactly the CP-12 numbers.
 - Not verified yet: running on a device or emulator, the migration from version 7 on a real device, the UI with eight databases in the list and in the filters, lint, and the release build.
+
+## CP-14: database 9, 2026 to 2036 (a forecast)
+
+Status: database 9 is in the app: 50 records, a migration for installs made at version 8, and tests for all nine databases. The build passes, 23 of 23 unit tests pass, and the Kotlin compiler gives no warnings. All 20 records with code run and match their expected output. The other 30 records are the forecast itself (languages, systems, devices, tools and practices), which has no code to run.
+
+Mood: unusual. The request was to guess the next decade, so this is the first database about the future, and nothing in it can be checked against a record yet. Every forecast record says that it is a forecast, and I checked only the dated facts that each basis sentence relies on.
+
+Date: 2026-10-15. Totals: Kotlin main 21,664 (CP-13: 20,288), Kotlin test 374 (343), XML 82, Gradle and project files 118, total 22,238. The +1,407 is the eleven new Kotlin files for database 9 (1,357 lines together), plus the catalogue, the database class and the seed list (main +19), and the tests (+31).
+
+### What changed
+
+- A ninth database, "Database 9: 2026 to 2036 forecast", with the same ten kinds. 50 records: languages 6, systems 5, devices 8, tools 6, practices 5, guides 5, examples 6, projects 4, flex 3, cross-code 2. Six of them are rare, and in this database the rare flag marks a long shot.
+- Eleven files `Db9*.kt`: ten record files and `Db9Catalog.kt`, which joins them into `db9Records`. `SeedCatalog.kt` lists the ninth database, with the colour #90A4AE, and adds its records to `seedRecords`.
+- Database version 9 with `MIGRATION_8_9`. An install at version 8 gets database 9 from it, and older installs run the earlier migrations first.
+- The records are dated 2027 to 2036. Nothing is dated 2026, because that is the year in progress, and its facts are already in database 5.
+- Tests cover nine databases. `SeedDataTest` checks the ids of database 9 and that its records fall between 2026 and 2036, and it has a new test: every forecast record says that it is a forecast. `AppDatabaseSeedTest` checks the record count of database 9, and it has a new test that removes database 9 and runs `MIGRATION_8_9`. 23 unit tests in total.
+
+### Facts checked by web search
+
+- C++26 reflection (P2996): the search found revision 13 from June 2025, addressed to the core and library wording groups, and implementations in an EDG front end and in Bloomberg's Clang fork. It did not establish adoption into the working draft, so the record does not claim adoption.
+- Java value classes (JEP 401): news and blog coverage says the preview targets JDK 28, in March 2027, after JDK 27 in September 2026 without it. One news summary expects the preview to last past JDK 29. These are mostly secondary sources, so the JEP page on openjdk.org needs checking.
+- IBM Starling: the June 2025 roadmap names a fault-tolerant machine in Poughkeepsie for 2029, with 200 logical qubits and 100 million operations. The search found no 2026 progress report.
+- NIST IR 8547: the first public draft is dated 12 November 2024. In the draft, RSA and elliptic-curve schemes are deprecated after 2030 and disallowed after 2035. Vendor write-ups say it was still not final in mid-2026, and none of the results came from nist.gov.
+- EU Cyber Resilience Act: reporting duties apply from 11 September 2026, and the rest of the act from 11 December 2027. Fines can reach 15 million euros or 2.5 per cent of global turnover. The sources are law-firm commentary, not the regulation itself.
+- WASI 0.3: wasi.dev dates the 0.3.0 release to 11 June 2026. Sources disagree on which Wasmtime version switched it on, so the record does not give one.
+- OpenSSL 3.5: released on 8 April 2025, with native ML-KEM, ML-DSA and SLH-DSA. Its default TLS client sends X25519MLKEM768 and X25519 key shares, and the results say ML-DSA is not on by default in TLS. The final release notes did not appear in the results, only the pre-release announcements.
+- Android XR glasses: partners Samsung, XREAL, Warby Parker and Gentle Monster, and a December 2025 article also names Qualcomm. Reports from May 2026 point to a fall 2026 launch window. Pricing and sale dates were unannounced in those reports, and I found no confirmation of sales or shipments.
+- Software Carbon Intensity: version 1.0 in late 2022, and ISO/IEC 21031:2024 with a first edition in March 2024. The Foundation names 1.1 as its latest version, and I did not find a date for it.
+- Carbon: still experimental, with no 1.0 release found. A roadmap copy, which may be from 2024, moved the 0.1 milestone to late 2026, and I found no official 2026 status.
+- RVA23: ratified by RISC-V International in October 2024, with vector and hypervisor support mandatory.
+- Rust in the Linux kernel: reports from December 2025, after the maintainers' summit in Tokyo, say the experimental label no longer applies, and the Rust for Linux project declared the experiment finished.
+
+### Not searched, from memory
+
+- The years of the guides and examples: Lamport's signature (1979), Wengert's derivative method (1964), Hilbert's curve (1891), Dennis and Van Horn (1966), the G-counter paper of Shapiro and collaborators (2011), RFC 5869 (2010), the WebAssembly specification (2019), the local-first essay (2019), and the FNV-1a hash with its published value for "hello".
+- The standards and products: NIST FIPS 204 and 205 (August 2024), NIST SP 800-208 (2020), the JDK long-term-support cadence (JDK 29 in 2027 and JDK 33 in 2029), Firecracker and gVisor, Lean, Dafny and Kani, the Copilot+ PCs of 2024, Loihi 2 and SpiNNaker 2, the wristband shipped with AR glasses, and the humanoid robot preorders.
+- Python's free-threaded build (PEP 779) was already checked in database 5.
+- Every forecast is my guess. The searches checked only the dated facts that a basis sentence relies on.
+
+### How I checked it
+
+- Unit tests: 23 of 23 pass (AppDatabaseSeedTest 10, RecordFilterTest 5, SeedDataTest 8). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the build log has no compiler warnings.
+- Examples: a script takes every database 9 example from the Kotlin source and runs what this sandbox can run. All 20 pass against exact expected output. Two of those values are hash-based and I did not work them out by hand: the hybrid key and the FNV-1a hashes. Before pinning them, I checked the HKDF output against RFC 5869 test case 1 and against Node's crypto module, which gives the same hybrid key as the Python script. The three FNV values come from a C program and a JavaScript program that agree, and the value for "hello" matches the published test value, 4f9f2cab. I worked the other expected lines out by hand before the run (the scheduler's totals, the token bucket's sequence of yes and no, the Hilbert grid, and the failing row of the spec table), and they matched.
+- The other 30 records have no code, so there was nothing to run.
+- Structure: 50 records covering all ten kinds, dated 2027 to 2036. All 30 forecast records say "forecast" in their details, which the new test enforces. No title repeats inside the database, and across the whole catalogue only "Erlang" and "Software inspections" repeat, from databases 1 and 2.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- The first draft stopped at 2033, so the range had no records for 2034 to 2036. I swapped two records for items dated 2035 (post-quantum firmware signing) and 2036 (a wristband for input). The count stayed at 50.
+- The search did not establish that C++26 reflection was adopted into the working draft, so the record describes the proposal's state and does not claim adoption.
+- Carbon's roadmap came from a copy that may be out of date, and the record says so.
+- Two verifier checks started as shape checks, because I had not yet confirmed the hybrid key and the FNV values. After the Node check I pinned the exact values.
+
+### Notes
+
+- In this database the rare flag marks long shots. In the other databases it marks little-known items, so the counts are not directly comparable. The catalogue now has 456 rare records in total, 6 of them here.
+- When a forecast year passes, I want to compare the guess with what happened, so these records should not be edited to match the outcome.
+- The line-count method is the same as at CP-13, which reproduced the CP-12 numbers.
+- Not verified yet: running on a device or emulator, the migration from version 8 on a real device, the UI with nine databases in the list and in the filters, lint, and the release build.
 
 ################################################################################
 # FILE: RetroDatabases/DEVLOG.txt
@@ -837,6 +909,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-11 | 2026-10-15 | 17,552 | 295 | 82 | 118 | 18,047 | +1,369 (database 6: 60 records in eleven files, migration 5→6, tests +23) |
 | CP-12 | 2026-10-15 | 18,903 | 320 | 82 | 118 | 19,423 | +1,376 (database 7: 49 records in eleven files, migration 6→7, tests +25) |
 | CP-13 | 2026-10-15 | 20,288 | 343 | 82 | 118 | 20,831 | +1,408 (database 8: 50 records in eleven files, migration 7→8, tests +23) |
+| CP-14 | 2026-10-15 | 21,664 | 374 | 82 | 118 | 22,238 | +1,407 (database 9: 50 records in eleven files, migration 8→9, tests +31) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -1451,12 +1524,72 @@ Date: 2026-10-15. Totals: Kotlin main 20,288 (CP-12: 18,903), Kotlin test 343 (3
 - I checked the counting method again on the CP-12 commit first, and it gives exactly the CP-12 numbers.
 - Not verified yet: running on a device or emulator, the migration from version 7 on a real device, the UI with eight databases in the list and in the filters, lint, and the release build.
 
+## CP-14: database 9, 2026 to 2036 (a forecast)
+
+Status: database 9 is in the app: 50 records, a migration for installs made at version 8, and tests for all nine databases. The build passes, 23 of 23 unit tests pass, and the Kotlin compiler gives no warnings. All 20 records with code run and match their expected output. The other 30 records are the forecast itself (languages, systems, devices, tools and practices), which has no code to run.
+
+Mood: unusual. The request was to guess the next decade, so this is the first database about the future, and nothing in it can be checked against a record yet. Every forecast record says that it is a forecast, and I checked only the dated facts that each basis sentence relies on.
+
+Date: 2026-10-15. Totals: Kotlin main 21,664 (CP-13: 20,288), Kotlin test 374 (343), XML 82, Gradle and project files 118, total 22,238. The +1,407 is the eleven new Kotlin files for database 9 (1,357 lines together), plus the catalogue, the database class and the seed list (main +19), and the tests (+31).
+
+### What changed
+
+- A ninth database, "Database 9: 2026 to 2036 forecast", with the same ten kinds. 50 records: languages 6, systems 5, devices 8, tools 6, practices 5, guides 5, examples 6, projects 4, flex 3, cross-code 2. Six of them are rare, and in this database the rare flag marks a long shot.
+- Eleven files `Db9*.kt`: ten record files and `Db9Catalog.kt`, which joins them into `db9Records`. `SeedCatalog.kt` lists the ninth database, with the colour #90A4AE, and adds its records to `seedRecords`.
+- Database version 9 with `MIGRATION_8_9`. An install at version 8 gets database 9 from it, and older installs run the earlier migrations first.
+- The records are dated 2027 to 2036. Nothing is dated 2026, because that is the year in progress, and its facts are already in database 5.
+- Tests cover nine databases. `SeedDataTest` checks the ids of database 9 and that its records fall between 2026 and 2036, and it has a new test: every forecast record says that it is a forecast. `AppDatabaseSeedTest` checks the record count of database 9, and it has a new test that removes database 9 and runs `MIGRATION_8_9`. 23 unit tests in total.
+
+### Facts checked by web search
+
+- C++26 reflection (P2996): the search found revision 13 from June 2025, addressed to the core and library wording groups, and implementations in an EDG front end and in Bloomberg's Clang fork. It did not establish adoption into the working draft, so the record does not claim adoption.
+- Java value classes (JEP 401): news and blog coverage says the preview targets JDK 28, in March 2027, after JDK 27 in September 2026 without it. One news summary expects the preview to last past JDK 29. These are mostly secondary sources, so the JEP page on openjdk.org needs checking.
+- IBM Starling: the June 2025 roadmap names a fault-tolerant machine in Poughkeepsie for 2029, with 200 logical qubits and 100 million operations. The search found no 2026 progress report.
+- NIST IR 8547: the first public draft is dated 12 November 2024. In the draft, RSA and elliptic-curve schemes are deprecated after 2030 and disallowed after 2035. Vendor write-ups say it was still not final in mid-2026, and none of the results came from nist.gov.
+- EU Cyber Resilience Act: reporting duties apply from 11 September 2026, and the rest of the act from 11 December 2027. Fines can reach 15 million euros or 2.5 per cent of global turnover. The sources are law-firm commentary, not the regulation itself.
+- WASI 0.3: wasi.dev dates the 0.3.0 release to 11 June 2026. Sources disagree on which Wasmtime version switched it on, so the record does not give one.
+- OpenSSL 3.5: released on 8 April 2025, with native ML-KEM, ML-DSA and SLH-DSA. Its default TLS client sends X25519MLKEM768 and X25519 key shares, and the results say ML-DSA is not on by default in TLS. The final release notes did not appear in the results, only the pre-release announcements.
+- Android XR glasses: partners Samsung, XREAL, Warby Parker and Gentle Monster, and a December 2025 article also names Qualcomm. Reports from May 2026 point to a fall 2026 launch window. Pricing and sale dates were unannounced in those reports, and I found no confirmation of sales or shipments.
+- Software Carbon Intensity: version 1.0 in late 2022, and ISO/IEC 21031:2024 with a first edition in March 2024. The Foundation names 1.1 as its latest version, and I did not find a date for it.
+- Carbon: still experimental, with no 1.0 release found. A roadmap copy, which may be from 2024, moved the 0.1 milestone to late 2026, and I found no official 2026 status.
+- RVA23: ratified by RISC-V International in October 2024, with vector and hypervisor support mandatory.
+- Rust in the Linux kernel: reports from December 2025, after the maintainers' summit in Tokyo, say the experimental label no longer applies, and the Rust for Linux project declared the experiment finished.
+
+### Not searched, from memory
+
+- The years of the guides and examples: Lamport's signature (1979), Wengert's derivative method (1964), Hilbert's curve (1891), Dennis and Van Horn (1966), the G-counter paper of Shapiro and collaborators (2011), RFC 5869 (2010), the WebAssembly specification (2019), the local-first essay (2019), and the FNV-1a hash with its published value for "hello".
+- The standards and products: NIST FIPS 204 and 205 (August 2024), NIST SP 800-208 (2020), the JDK long-term-support cadence (JDK 29 in 2027 and JDK 33 in 2029), Firecracker and gVisor, Lean, Dafny and Kani, the Copilot+ PCs of 2024, Loihi 2 and SpiNNaker 2, the wristband shipped with AR glasses, and the humanoid robot preorders.
+- Python's free-threaded build (PEP 779) was already checked in database 5.
+- Every forecast is my guess. The searches checked only the dated facts that a basis sentence relies on.
+
+### How I checked it
+
+- Unit tests: 23 of 23 pass (AppDatabaseSeedTest 10, RecordFilterTest 5, SeedDataTest 8). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the build log has no compiler warnings.
+- Examples: a script takes every database 9 example from the Kotlin source and runs what this sandbox can run. All 20 pass against exact expected output. Two of those values are hash-based and I did not work them out by hand: the hybrid key and the FNV-1a hashes. Before pinning them, I checked the HKDF output against RFC 5869 test case 1 and against Node's crypto module, which gives the same hybrid key as the Python script. The three FNV values come from a C program and a JavaScript program that agree, and the value for "hello" matches the published test value, 4f9f2cab. I worked the other expected lines out by hand before the run (the scheduler's totals, the token bucket's sequence of yes and no, the Hilbert grid, and the failing row of the spec table), and they matched.
+- The other 30 records have no code, so there was nothing to run.
+- Structure: 50 records covering all ten kinds, dated 2027 to 2036. All 30 forecast records say "forecast" in their details, which the new test enforces. No title repeats inside the database, and across the whole catalogue only "Erlang" and "Software inspections" repeat, from databases 1 and 2.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- The first draft stopped at 2033, so the range had no records for 2034 to 2036. I swapped two records for items dated 2035 (post-quantum firmware signing) and 2036 (a wristband for input). The count stayed at 50.
+- The search did not establish that C++26 reflection was adopted into the working draft, so the record describes the proposal's state and does not claim adoption.
+- Carbon's roadmap came from a copy that may be out of date, and the record says so.
+- Two verifier checks started as shape checks, because I had not yet confirmed the hybrid key and the FNV values. After the Node check I pinned the exact values.
+
+### Notes
+
+- In this database the rare flag marks long shots. In the other databases it marks little-known items, so the counts are not directly comparable. The catalogue now has 456 rare records in total, 6 of them here.
+- When a forecast year passes, I want to compare the guess with what happened, so these records should not be edited to match the outcome.
+- The line-count method is the same as at CP-13, which reproduced the CP-12 numbers.
+- Not verified yet: running on a device or emulator, the migration from version 8 on a real device, the UI with nine databases in the list and in the filters, lint, and the release build.
+
 ################################################################################
 # FILE: RetroDatabases/README.md
 ################################################################################
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside are eight databases of coding history:
+An Android application in Kotlin, Jetpack Compose and Room. Inside are nine databases of coding history:
 
 - "Database 1" is a catalogue of 80s coding;
 - "Database 2" is a catalogue of 90s coding;
@@ -1465,7 +1598,8 @@ An Android application in Kotlin, Jetpack Compose and Room. Inside are eight dat
 - "Database 5" is a catalogue of coding from 2020 to 2026;
 - "Database 6" is a catalogue of coding from 1950 to 1960;
 - "Database 7" is a catalogue of coding from 1960 to 1970;
-- "Database 8" is a catalogue of coding from 1970 to 1980.
+- "Database 8" is a catalogue of coding from 1970 to 1980;
+- "Database 9" is a forecast of coding from 2026 to 2036.
 
 ## What is inside
 
@@ -1589,7 +1723,22 @@ The catalogue of database 8 (1970 to 1980) has the same ten kinds:
 | Flex | 3 | Gosper's hack, Floyd–Steinberg dithering and Monty Hall by simulation |
 | Cross-code | 2 | C and Python: an LZ78 round trip, and a factoring pipeline in C and awk |
 
-In total there are 970 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare), 60 in database 6 (29 rare), 49 in database 7 (26 rare) and 50 in database 8 (22 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
+The catalogue of database 9 (2026 to 2036) is a forecast, not a record. Its languages, systems, devices, tools and practices are guesses, and their details say what they rest on. The guides, examples, projects, flex pieces and cross-code experiments are working code for the techniques behind the forecast. In this database the rare flag marks the long shots. It has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Carbon, static reflection in C++, value classes in Java, the free-threaded Python build, tool calls checked by the compiler and quantum circuits in ordinary compilers |
+| Systems | 5 | Post-quantum key exchange in TLS, WebAssembly components as plug-ins, Rust drivers in the Linux kernel, quantum cloud runtimes and post-quantum firmware signing |
+| Devices | 8 | AR glasses for developers, a fault-tolerant quantum computer with 200 logical qubits, a neural accelerator in every laptop, a humanoid home robot, a neuromorphic PCIe card, a RISC-V laptop, a co-packaged optical switch and a wristband for input |
+| Tools | 6 | Prompt linters and tests in CI, a proof assistant for everyday functions, signed bills of materials checked on install, a carbon meter in CI, post-quantum signatures in package managers and a sandbox for every tool call |
+| Practices | 5 | A crypto inventory and crypto agility, agent access reviews, spec before code with agents, local-first software and carbon budgets for teams |
+| Guides | 5 | How a capability token limits an agent, how a G-counter merges replicas, how a WebAssembly module is loaded, how hybrid key exchange combines two secrets and how a token bucket limits tool calls |
+| Examples | 6 | A post-quantum inventory of settings, an agent loop with a step limit, an exhaustive check of a sort, a spec table turned into tests, a typed check for a tool call and a hash chain for an audit log |
+| Projects | 4 | A to-do list that syncs two replicas, a carbon-aware job scheduler, a permission checker for agents and an SBOM writer for a lock file |
+| Flex | 3 | A hash-based one-time signature, reverse-mode differentiation in 30 lines and a Hilbert curve index |
+| Cross-code | 2 | Python and JavaScript merge the same counters, and C and JavaScript compute the same FNV-1a hashes |
+
+In total there are 1,020 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare), 60 in database 6 (29 rare), 49 in database 7 (26 rare), 50 in database 8 (22 rare) and 50 in database 9 (6 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
 
 In the app:
 - the list of databases with the number of records;
@@ -1616,8 +1765,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Structure
 
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4, 5, 6 and 7 to version 8.
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all eight databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt`, `Db6*.kt`, `Db7*.kt` and `Db8*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4, 5, 6, 7 and 8 to version 9.
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all nine databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt`, `Db6*.kt`, `Db7*.kt`, `Db8*.kt` and `Db9*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
 - `app/src/test` — tests of the filters, the data and the database itself (Robolectric).
 - `DEVLOG.md` — the development log with the growth of lines of code by checkpoint.
@@ -1625,7 +1774,7 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. In database 9, 20 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
 
 For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
 
@@ -1633,7 +1782,7 @@ For languages that are not installed in the build environment (Forth, Prolog, Li
 
 1. Create files in `data/seed` with the records. Pass the database id to `entry()`, for example `databaseId = 3`; a record without it goes to database 1.
 2. Add the database to `seedDatabases` and its records to `seedRecords` (file `SeedCatalog.kt`).
-3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_7_8` are the examples: each adds one database, and an install made at version 1 runs them in order.
+3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_8_9` are the examples: each adds one database, and an install made at version 1 runs them in order.
 
 ################################################################################
 # FILE: RetroDatabases/app/build.gradle.kts
@@ -1782,7 +1931,7 @@ import com.example.retrodatabases.data.seed.seedRecords
 
 @Database(
     entities = [DatabaseEntity::class, RecordEntity::class],
-    version = 8,
+    version = 9,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -1812,6 +1961,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_5_6,
                     MIGRATION_6_7,
                     MIGRATION_7_8,
+                    MIGRATION_8_9,
                 )
                 .build()
     }
@@ -1896,6 +2046,18 @@ internal val MIGRATION_6_7 = object : Migration(6, 7) {
 internal val MIGRATION_7_8 = object : Migration(7, 8) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val added = setOf(8L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 9 added database 9. Copies at version 8 get it from this migration;
+ * older copies run it after the earlier migrations.
+ */
+internal val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(9L)
         seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
         seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
     }
@@ -21424,6 +21586,1407 @@ val db8Tools: List<RecordEntity> = listOf(
 )
 
 ################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db9Catalog.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.RecordEntity
+
+/**
+ * All records of database 9: a forecast of 2026 to 2036 in languages, systems, devices, tools and practices,
+ * and working code for the guides, examples, projects, flex pieces and cross-code experiments behind it.
+ */
+val db9Records: List<RecordEntity> =
+    db9Languages + db9Systems + db9Devices + db9Tools + db9Practices +
+        db9Guides + db9Examples + db9Projects + db9Flex + db9Cross
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db9Cross.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Cross-code experiments of 2026 to 2036: the same result from two languages, checked by a run script. */
+val db9Cross: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 9,
+        kind = Kind.CROSS,
+        section = "Python and JavaScript",
+        title = "Python and JavaScript merge the same counters",
+        originalTitle = "Merging G-counters in two languages",
+        author = "Written as a teaching example",
+        year = 2030,
+        summary = "The same merge is written in Python and in JavaScript, and the two outputs are compared, as a conformance test does.",
+        details = "The two programs share no code. They merge the same counters and print the same line, and the run script checks that the lines are identical.",
+        instructions = """
+            1. Save the files below in one folder.
+            2. Run the script: sh run.sh
+        """,
+        example = """
+            ### merge.py
+            def merge(a, b):
+                # Each slot takes the larger count, so the merge is the same in either order.
+                return {r: max(a.get(r, 0), b.get(r, 0)) for r in set(a) | set(b)}
+
+            a = {"a": 2, "b": 0}
+            b = {"a": 1, "c": 3}
+            merged = merge(a, b)
+            slots = " ".join(f"{r}={v}" for r, v in sorted(merged.items()))
+            print(slots + " total=" + str(sum(merged.values())))
+            ### merge.js
+            function merge(a, b) {
+              const out = {};
+              for (const r of new Set([...Object.keys(a), ...Object.keys(b)])) {
+                out[r] = Math.max(a[r] || 0, b[r] || 0);
+              }
+              return out;
+            }
+
+            const a = { a: 2, b: 0 };
+            const b = { a: 1, c: 3 };
+            const merged = merge(a, b);
+            const slots = Object.keys(merged).sort().map((r) => r + "=" + merged[r]);
+            const total = Object.values(merged).reduce((x, y) => x + y, 0);
+            console.log(slots.join(" ") + " total=" + total);
+            ### run.sh
+            python3 merge.py > python.txt
+            node merge.js > node.txt
+            cat python.txt node.txt
+            diff python.txt node.txt && echo "same result"
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.CROSS,
+        section = "C and JavaScript",
+        title = "C and JavaScript: the same FNV-1a hashes",
+        originalTitle = "FNV-1a hash, by Fowler, Noll and Vo",
+        author = "Glenn Fowler, Landon Curt Noll and Phong Vo",
+        year = 2029,
+        summary = "A hash function written in C and in JavaScript gives the same values for the same words, which is how cross-language conformance tests work.",
+        details = "The C program prints the hash of three words, the JavaScript program prints the same, and the run script compares the two outputs. Known test values anchor the check.",
+        instructions = """
+            1. Save the files below in one folder.
+            2. Run the script: sh run.sh
+        """,
+        example = """
+            ### fnv.c
+            #include <stdint.h>
+            #include <stdio.h>
+
+            /* FNV-1a, 32 bits: xor each byte in, then multiply by the FNV prime. */
+            static uint32_t fnv1a(const char *s) {
+                uint32_t h = 2166136261u;
+                for (; *s; s++) {
+                    h ^= (unsigned char)*s;
+                    h *= 16777619u;
+                }
+                return h;
+            }
+
+            int main(void) {
+                const char *words[] = {"hello", "world", "agent"};
+                for (int i = 0; i < 3; i++) {
+                    printf("%s %08x\n", words[i], fnv1a(words[i]));
+                }
+                return 0;
+            }
+            ### fnv.js
+            // FNV-1a, 32 bits, with 32-bit multiplication so the arithmetic wraps like the C version.
+            function fnv1a(s) {
+              let h = 2166136261;
+              for (const byte of Buffer.from(s, "utf8")) {
+                h ^= byte;
+                h = Math.imul(h, 16777619) >>> 0;
+              }
+              return h >>> 0;
+            }
+
+            for (const word of ["hello", "world", "agent"]) {
+              console.log(word + " " + fnv1a(word).toString(16).padStart(8, "0"));
+            }
+            ### run.sh
+            cc -o fnv fnv.c
+            ./fnv > c.txt
+            node fnv.js > js.txt
+            cat c.txt
+            diff c.txt js.txt && echo "same result"
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db9Devices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Devices of 2026 to 2036, as a forecast: glasses, quantum machines, laptops, robots, chips and networks. */
+val db9Devices: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 9,
+        kind = Kind.DEVICE,
+        section = "Wearables",
+        title = "Lightweight AR glasses as a developer display",
+        originalTitle = "Android XR glasses, with a launch window reported for fall 2026",
+        author = "Forecast written for this database",
+        year = 2030,
+        summary = "Forecast: developers test their apps on AR glasses as easily as on a phone, and the glasses have an app store of their own.",
+        details = "Forecast. Google and its partners, among them Samsung and XREAL, announced Android XR glasses for 2026, with a launch window reported for fall 2026 and a third preview of the SDK. Pricing was still unannounced in the May 2026 reports. The forecast is that glasses become a mainstream test target by 2030, with apps as small as today's watch apps. The year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.DEVICE,
+        section = "Quantum hardware",
+        title = "Fault-tolerant quantum computer with 200 logical qubits",
+        originalTitle = "IBM Starling, on the public roadmap of June 2025",
+        author = "IBM Quantum, roadmap",
+        year = 2029,
+        summary = "Forecast: a quantum computer that corrects its own errors runs circuits on a few hundred logical qubits and is available to users.",
+        details = "Forecast. IBM's public roadmap of June 2025 names Starling as a fault-tolerant machine in Poughkeepsie for 2029, with 200 logical qubits and 100 million operations. The forecast follows that plan, and roadmaps like this one often slip, so the year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.DEVICE,
+        section = "Client hardware",
+        title = "A neural accelerator in every laptop",
+        originalTitle = "Neural processing units in laptop chips, from 2024",
+        author = "Forecast written for this database",
+        year = 2027,
+        summary = "Forecast: a neural accelerator is standard in laptops, and local model inference uses it through one common interface.",
+        details = "Forecast. Laptops with neural processing units have shipped since 2024, and chip vendors now put AI blocks into most laptop lines. The forecast is that by 2027 a laptop without one is unusual, and that apps reach the accelerator through one interface. The year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.DEVICE,
+        section = "Robotics",
+        title = "A humanoid robot for home chores",
+        originalTitle = "Humanoid robots shown in 2024 and 2025",
+        author = "Forecast written for this database",
+        year = 2033,
+        summary = "Forecast: a humanoid robot for home chores is sold in volume and programmed through an SDK that enforces speed and force limits in software.",
+        details = "Forecast. Several companies showed humanoid robots in 2024 and 2025, and a few took preorders for home models. The forecast is that by 2033 a home robot is sold in volume, with its safety limits set in software. Reliability in a home is the main uncertainty, so the year is a guess.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.DEVICE,
+        section = "Chips",
+        title = "Neuromorphic accelerator on a PCIe card",
+        originalTitle = "Loihi 2 and SpiNNaker 2, research chips for spiking networks",
+        author = "Forecast written for this database",
+        year = 2031,
+        summary = "Forecast: a spiking-network chip is sold as a PCIe card and runs small always-on workloads more cheaply than a GPU.",
+        details = "Forecast. Research chips such as Loihi 2 and SpiNNaker 2 run spiking networks at low power, but they are used mostly in labs. The forecast is that a commercial card appears by 2031 and wins only on small, always-on workloads. The year is a guess.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.DEVICE,
+        section = "Client hardware",
+        title = "A RISC-V laptop that runs mainstream Linux",
+        originalTitle = "RVA23, the RISC-V application processor profile",
+        author = "RISC-V International",
+        year = 2029,
+        summary = "Forecast: a RISC-V laptop runs a mainstream Linux distribution at normal speed, and most desktop software is built for it.",
+        details = "Forecast. RISC-V International ratified the RVA23 profile in October 2024, and it makes vector and hypervisor support mandatory for application processors. The forecast is that laptops with RVA23 processors appear by 2029, with software support trailing the hardware. The year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.DEVICE,
+        section = "Networking",
+        title = "Co-packaged optical switch in the data centre",
+        originalTitle = "Co-packaged optics in switch silicon",
+        author = "Forecast written for this database",
+        year = 2030,
+        summary = "Forecast: optical links sit inside the switch chip, so a large training cluster needs fewer electrical cables.",
+        details = "Forecast. Switch vendors have announced co-packaged optics for AI clusters. The forecast is that by 2030 most new large clusters use it for part of the network, which changes how software sees link failures. The year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.DEVICE,
+        section = "Wearables",
+        title = "A wristband for input",
+        originalTitle = "Wristbands that read muscle signals, shipped with AR glasses",
+        author = "Forecast written for this database",
+        year = 2036,
+        summary = "Forecast: a wristband that reads muscle signals becomes the usual input for glasses and phones, and gestures replace most taps.",
+        details = "Forecast. Wristbands that read muscle signals have been shipped with AR glasses. The forecast is that by 2036 such a wristband is the usual input for glasses and phones, and that gestures replace most taps. The year is a guess.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db9Examples.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Examples of 2026 to 2036: short recipes for checks that agents and post-quantum migrations will need. */
+val db9Examples: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 9,
+        kind = Kind.EXAMPLE,
+        section = "Security",
+        title = "A post-quantum inventory of settings",
+        originalTitle = "Inventory of cryptographic algorithms in configuration",
+        author = "Written as a teaching example",
+        year = 2027,
+        summary = "Walks through a list of settings and flags the algorithms that a large quantum computer could break, with the replacement the standards name.",
+        details = "A real inventory reads configuration files and certificates. This example works from a dictionary, so it runs anywhere, and it prints one line for each setting.",
+        instructions = """
+            1. Save the example as pq_inventory.py.
+            2. Run it: python3 pq_inventory.py
+        """,
+        example = """
+            # Algorithms that a large quantum computer could break, with the replacement that the standards name.
+            REPLACEMENTS = {
+                "X25519": "hybrid X25519+ML-KEM-768",
+                "RSA-2048": "ML-DSA-65",
+                "ECDSA-P256": "ML-DSA-65",
+            }
+
+            settings = {
+                "web TLS key exchange": "X25519",
+                "web TLS signature": "RSA-2048",
+                "backup encryption": "AES-256-GCM",
+                "code signing": "ECDSA-P256",
+                "internal RPC": "X25519+ML-KEM-768",
+                "password hashing": "bcrypt",
+            }
+
+            for name, algorithm in settings.items():
+                if algorithm in REPLACEMENTS:
+                    print(f"{name}: replace {algorithm} with {REPLACEMENTS[algorithm]}")
+                elif "ML-" in algorithm:
+                    print(f"{name}: already post-quantum ({algorithm})")
+                else:
+                    print(f"{name}: no known quantum break")
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.EXAMPLE,
+        section = "Agents",
+        title = "An agent loop with a step limit",
+        originalTitle = "Plan, act and observe loop with a budget",
+        author = "Written as a teaching example",
+        year = 2028,
+        summary = "A loop that calls one tool per step and stops at a step limit or when the plan says stop.",
+        details = "A scripted planner stands in for the model, so the example needs no account. It runs the same plan with a generous limit and then with a limit of two, and shows where each run stops.",
+        instructions = """
+            1. Save the example as agent_loop.py.
+            2. Run it: python3 agent_loop.py
+        """,
+        example = """
+            TOOLS = {
+                "search": lambda query: f"3 results for {query}",
+                "read": lambda name: f"contents of {name}",
+            }
+
+            # A scripted planner stands in for a model: it names the next action at each step.
+            SCRIPT = [
+                ("search", "retry policy"),
+                ("read", "retry.md"),
+                ("search", "backoff"),
+                ("stop", "the answer is in retry.md"),
+            ]
+
+            def run(max_steps):
+                for step, (action, argument) in enumerate(SCRIPT, start=1):
+                    if step > max_steps:
+                        print(f"stopped: step limit {max_steps} reached")
+                        return
+                    if action == "stop":
+                        print(f"step {step}: stop, {argument}")
+                        return
+                    print(f"step {step}: {action}({argument!r}) -> {TOOLS[action](argument)}")
+
+            run(max_steps=10)
+            print("---")
+            run(max_steps=2)
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.EXAMPLE,
+        section = "Verification",
+        title = "An exhaustive check of a small sort",
+        originalTitle = "Checking a function on every small input",
+        author = "Written as a teaching example",
+        year = 2027,
+        summary = "Runs a sort on every list of up to four values from a set of three, and compares each result with the sorted list.",
+        details = "Exhaustive checks are a cheap way to test small functions, and draft code can be checked this way before a review. The example also runs a function that does nothing, to show that the check catches a wrong result.",
+        instructions = """
+            1. Save the example as sort_check.py.
+            2. Run it: python3 sort_check.py
+        """,
+        example = """
+            from itertools import product
+
+            def insertion_sort(values):
+                result = list(values)
+                for i in range(1, len(result)):
+                    key = result[i]
+                    j = i - 1
+                    while j >= 0 and result[j] > key:
+                        result[j + 1] = result[j]
+                        j -= 1
+                    result[j + 1] = key
+                return result
+
+            def do_nothing(values):
+                return list(values)
+
+            def failures(sort_function, max_length=4):
+                count = 0
+                for n in range(max_length + 1):
+                    for values in product(range(3), repeat=n):
+                        if sort_function(values) != sorted(values):
+                            count += 1
+                return count
+
+            print(f"lists checked: {sum(3 ** n for n in range(5))}")
+            print(f"insertion sort: {failures(insertion_sort)} failures")
+            print(f"do nothing: {failures(do_nothing)} failures")
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.EXAMPLE,
+        section = "Specs",
+        title = "A spec table turned into tests",
+        originalTitle = "Table-driven tests, written from a spec",
+        author = "Written as a teaching example",
+        year = 2027,
+        summary = "Each row of a spec table is one test case, and the run reports the rows that disagree with the code.",
+        details = "The spec is a table of prices and tax rates in cents. The example keeps the table as data and prints a line for each failing row, so a wrong row in the spec or a wrong function shows up at once.",
+        instructions = """
+            1. Save the example as spec_tests.py.
+            2. Run it: python3 spec_tests.py
+        """,
+        example = """
+            def add_tax(price_cents, rate_percent):
+                return price_cents + price_cents * rate_percent // 100
+
+            # Each row is one test case from the spec: price in cents, rate in percent, expected total in cents.
+            ROWS = [
+                (10000, 20, 12000),
+                (0, 5, 0),
+                (1999, 0, 1999),
+                (250, 10, 275),
+                (500, 10, 510),   # a wrong row in the spec
+            ]
+
+            passed = failed = 0
+            for price, rate, total in ROWS:
+                actual = add_tax(price, rate)
+                if actual == total:
+                    passed += 1
+                else:
+                    failed += 1
+                    print(f"FAIL: {price} at {rate}% should be {total}, got {actual}")
+            print(f"{passed} passed, {failed} failed")
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.EXAMPLE,
+        section = "Agents",
+        title = "A typed check for a tool call",
+        originalTitle = "Checking tool arguments against a schema",
+        author = "Written as a teaching example",
+        year = 2029,
+        summary = "Checks the arguments of a call against a schema: required names, types, allowed values and unknown names.",
+        details = "A runtime that checks a call before it runs saves a failed call and an unclear error. The example prints ok for a good call and lists every problem for the two bad ones.",
+        instructions = """
+            1. Save the example as tool_check.py.
+            2. Run it: python3 tool_check.py
+        """,
+        example = """
+            SCHEMA = {
+                "name": "send_email",
+                "params": {
+                    "to": {"type": str, "required": True},
+                    "subject": {"type": str, "required": True},
+                    "priority": {"type": int, "required": False, "allowed": [1, 2, 3]},
+                },
+            }
+
+            def check_call(schema, arguments):
+                problems = []
+                for name, rule in schema["params"].items():
+                    if name not in arguments:
+                        if rule["required"]:
+                            problems.append(f"missing {name}")
+                        continue
+                    value = arguments[name]
+                    if not isinstance(value, rule["type"]):
+                        problems.append(f"{name} must be {rule['type'].__name__}")
+                    elif "allowed" in rule and value not in rule["allowed"]:
+                        problems.append(f"{name} must be one of {rule['allowed']}")
+                for name in arguments:
+                    if name not in schema["params"]:
+                        problems.append(f"unknown argument {name}")
+                return problems
+
+            calls = [
+                {"to": "ann@example.com", "subject": "Build passed", "priority": 2},
+                {"to": "ann@example.com", "priority": 9},
+                {"to": 42, "subject": "Hi", "cc": "bob@example.com"},
+            ]
+            for arguments in calls:
+                problems = check_call(SCHEMA, arguments)
+                print("ok" if not problems else "rejected: " + "; ".join(problems))
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.EXAMPLE,
+        section = "Audit",
+        title = "A hash chain for an audit log",
+        originalTitle = "Hash-chained logs, an old idea that agent platforms need",
+        author = "Written as a teaching example",
+        year = 2028,
+        summary = "Each log entry includes a hash of the entry before it, so a change to any entry breaks every hash after it.",
+        details = "The example writes three events, verifies the chain, changes one event and verifies again. The second check reports the first broken entry.",
+        instructions = """
+            1. Save the example as hash_chain.py.
+            2. Run it: python3 hash_chain.py
+        """,
+        example = """
+            import hashlib
+
+            def digest(previous, event):
+                return hashlib.sha256((previous + event).encode()).hexdigest()[:8]
+
+            def append(log, event):
+                previous = log[-1]["hash"] if log else "0" * 8
+                log.append({"event": event, "hash": digest(previous, event)})
+
+            def verify(log):
+                previous = "0" * 8
+                for index, entry in enumerate(log):
+                    if entry["hash"] != digest(previous, entry["event"]):
+                        return f"broken at entry {index}"
+                    previous = entry["hash"]
+                return "chain intact"
+
+            log = []
+            for event in ["agent read retry.md", "agent wrote notes.txt", "agent sent report"]:
+                append(log, event)
+            print(verify(log))
+            log[1]["event"] = "agent deleted notes.txt"
+            print(verify(log))
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db9Flex.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Flex pieces of 2026 to 2036: a signature that needs only a hash, a derivative in a few dozen lines, and a space-filling curve. */
+val db9Flex: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 9,
+        kind = Kind.FLEX,
+        section = "Signatures",
+        title = "A hash-based one-time signature",
+        originalTitle = "Constructing digital signatures from a one-way function (Lamport, 1979)",
+        author = "Leslie Lamport",
+        year = 2030,
+        summary = "Signs a message using only a hash function: the key is 512 secret values, and each bit of the message reveals one of them.",
+        details = "Hash-based signatures do not rely on factoring or elliptic curves, so a quantum computer does not break them. This version signs one message per key, and the example checks a signature and then a changed message.",
+        instructions = """
+            1. Save the example as lamport.py.
+            2. Run it: python3 lamport.py
+        """,
+        example = """
+            import hashlib
+
+            def H(data):
+                return hashlib.sha256(data).digest()
+
+            def keygen(seed):
+                # Two secret values per bit of the digest, derived from the seed so the example is repeatable.
+                pairs = []
+                for i in range(256):
+                    zero = H(seed + i.to_bytes(2, "big") + b"0")
+                    one = H(seed + i.to_bytes(2, "big") + b"1")
+                    pairs.append((zero, one))
+                public = [(H(zero), H(one)) for zero, one in pairs]
+                return pairs, public
+
+            def bits(message):
+                digest = H(message)
+                return [(digest[i // 8] >> (7 - i % 8)) & 1 for i in range(256)]
+
+            def sign(secret, message):
+                return [secret[i][bit] for i, bit in enumerate(bits(message))]
+
+            def verify(public, message, signature):
+                return all(H(signature[i]) == public[i][bit] for i, bit in enumerate(bits(message)))
+
+            secret, public = keygen(b"demo seed")
+            signature = sign(secret, b"pay Ann 10")
+            print("valid:", verify(public, b"pay Ann 10", signature))
+            print("changed message:", verify(public, b"pay Ann 1000", signature))
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.FLEX,
+        section = "Autodiff",
+        title = "Reverse-mode differentiation in 30 lines",
+        originalTitle = "Automatic derivative evaluation (Wengert, 1964)",
+        author = "Robert Wengert",
+        year = 2027,
+        summary = "Records each addition and multiplication, then walks the record backwards to get the derivative of the result with respect to each input.",
+        details = "This is the mechanism behind training neural networks, in miniature. The example differentiates a small expression of two inputs and prints the result and both derivatives.",
+        instructions = """
+            1. Save the example as autodiff.py.
+            2. Run it: python3 autodiff.py
+        """,
+        example = """
+            class Value:
+                def __init__(self, data, parents=(), backward=None):
+                    self.data = data
+                    self.grad = 0.0
+                    self.parents = parents
+                    self.backward = backward
+
+                def __add__(self, other):
+                    other = other if isinstance(other, Value) else Value(other)
+                    out = Value(self.data + other.data, (self, other))
+                    def backward():
+                        self.grad += out.grad
+                        other.grad += out.grad
+                    out.backward = backward
+                    return out
+
+                def __mul__(self, other):
+                    other = other if isinstance(other, Value) else Value(other)
+                    out = Value(self.data * other.data, (self, other))
+                    def backward():
+                        self.grad += other.data * out.grad
+                        other.grad += self.data * out.grad
+                    out.backward = backward
+                    return out
+
+                def backprop(self):
+                    order, seen = [], set()
+                    def visit(node):
+                        if id(node) not in seen:
+                            seen.add(id(node))
+                            for parent in node.parents:
+                                visit(parent)
+                            order.append(node)
+                    visit(self)
+                    self.grad = 1.0
+                    for node in reversed(order):
+                        if node.backward:
+                            node.backward()
+
+            x = Value(3.0)
+            y = Value(2.0)
+            f = x * y + y * x          # f = 2xy
+            f.backprop()
+            print("f =", f.data)
+            print("df/dx =", x.grad)
+            print("df/dy =", y.grad)
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.FLEX,
+        section = "Layout",
+        title = "A Hilbert curve index",
+        originalTitle = "Hilbert's 1891 continuous map of a line onto a square",
+        author = "David Hilbert",
+        year = 2032,
+        summary = "Gives each cell of a square grid a position along a curve that keeps neighbouring cells close, which helps spatial indexes and data layout.",
+        details = "The example computes the index of each cell of a four by four grid and prints the grid. Consecutive indexes always sit in neighbouring cells.",
+        instructions = """
+            1. Save the example as hilbert.py.
+            2. Run it: python3 hilbert.py
+        """,
+        example = """
+            def xy2d(n, x, y):
+                # Position of cell (x, y) along the Hilbert curve that fills an n by n grid (n a power of two).
+                d = 0
+                s = n // 2
+                while s > 0:
+                    rx = 1 if x & s else 0
+                    ry = 1 if y & s else 0
+                    d += s * s * ((3 * rx) ^ ry)
+                    if ry == 0:
+                        if rx == 1:
+                            x = n - 1 - x
+                            y = n - 1 - y
+                        x, y = y, x
+                    s //= 2
+                return d
+
+            for y in range(3, -1, -1):
+                print(" ".join(f"{xy2d(4, x, y):2}" for x in range(4)))
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db9Guides.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Guides of 2026 to 2036: the techniques the forecast relies on, each with a small program that runs today. */
+val db9Guides: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 9,
+        kind = Kind.GUIDE,
+        section = "Security",
+        title = "How a capability token limits an agent",
+        originalTitle = "Capability-based security (Dennis and Van Horn, 1966)",
+        author = "Jack Dennis and Earl Van Horn",
+        year = 2027,
+        summary = "A capability is a token that names what its holder may do, so an agent is given only the tools it needs and nothing more.",
+        details = "The token carries a scope and an expiry time, and every tool call checks the token before it runs. The idea dates from 1966. The example runs four calls against one token and prints which are allowed and why the others are refused.",
+        instructions = """
+            1. Save the example as capability_token.py.
+            2. Run it: python3 capability_token.py
+        """,
+        example = """
+            class Token:
+                def __init__(self, holder, scopes, expires_at):
+                    self.holder = holder
+                    self.scopes = set(scopes)
+                    self.expires_at = expires_at
+
+            def check(token, scope, now):
+                # A call is allowed only if the token has not expired and names the scope.
+                if now >= token.expires_at:
+                    return False, "expired"
+                if scope not in token.scopes:
+                    return False, "scope not granted"
+                return True, "ok"
+
+            token = Token("research agent", ["search", "read"], expires_at=100)
+            for now, scope in [(10, "search"), (20, "read"), (30, "send"), (100, "read")]:
+                allowed, reason = check(token, scope, now)
+                print(f"t={now} {scope}: " + ("allowed" if allowed else f"refused ({reason})"))
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.GUIDE,
+        section = "Local-first",
+        title = "How a G-counter merges replicas",
+        originalTitle = "Conflict-free replicated data types (Shapiro and collaborators, 2011)",
+        author = "Marc Shapiro and collaborators",
+        year = 2030,
+        summary = "Copies of a counter change offline and merge without conflict, because each copy counts in its own slot and the merge takes the larger value.",
+        details = "This is the grow-only counter. Each replica increments only its own slot, and a merge takes the maximum of each slot, so merges in any order give the same total. The example merges three replicas in two orders and checks that the results match.",
+        instructions = """
+            1. Save the example as gcounter.py.
+            2. Run it: python3 gcounter.py
+        """,
+        example = """
+            def increment(counter, replica):
+                counter = dict(counter)
+                counter[replica] = counter.get(replica, 0) + 1
+                return counter
+
+            def merge(a, b):
+                # Each replica's slot takes the larger value, so the order of merges does not matter.
+                return {r: max(a.get(r, 0), b.get(r, 0)) for r in set(a) | set(b)}
+
+            def total(counter):
+                return sum(counter.values())
+
+            # Three replicas count while they are apart.
+            a = increment(increment({}, "a"), "a")                       # a: 2
+            b = increment({}, "b")                                       # b: 1
+            c = increment(increment(increment({}, "c"), "c"), "c")       # c: 3
+
+            left = merge(merge(a, b), c)
+            right = merge(c, merge(b, a))
+            print(sorted(left.items()), total(left))
+            print(sorted(right.items()), total(right))
+            print("same result:", left == right)
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.GUIDE,
+        section = "Runtimes",
+        title = "How a WebAssembly module is loaded and called",
+        originalTitle = "WebAssembly Core Specification (W3C, 2019)",
+        author = "W3C WebAssembly Working Group",
+        year = 2028,
+        summary = "A WebAssembly module is a byte format with typed functions. The host checks the bytes and then calls an exported function.",
+        details = "The example writes a 41-byte module by hand: one function that adds two 32-bit integers. Node validates the module and runs it, and the sum wraps at 32 bits, so no compiler is needed.",
+        instructions = """
+            1. Save the example as wasm.js.
+            2. Run it: node wasm.js
+        """,
+        example = """
+            // A WebAssembly module that adds two 32-bit integers, written as raw bytes.
+            const bytes = new Uint8Array([
+              0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,              // magic and version
+              0x01, 0x07, 0x01, 0x60, 0x02, 0x7f, 0x7f, 0x01, 0x7f,        // type: (i32, i32) -> i32
+              0x03, 0x02, 0x01, 0x00,                                      // one function of type 0
+              0x07, 0x07, 0x01, 0x03, 0x61, 0x64, 0x64, 0x00, 0x00,        // export "add"
+              0x0a, 0x09, 0x01, 0x07, 0x00, 0x20, 0x00, 0x20, 0x01, 0x6a, 0x0b // local.get 0, local.get 1, i32.add
+            ]);
+
+            console.log("valid module:", WebAssembly.validate(bytes));
+            const instance = new WebAssembly.Instance(new WebAssembly.Module(bytes));
+            console.log("add(2, 3) =", instance.exports.add(2, 3));
+            console.log("add(40, 2) =", instance.exports.add(40, 2));
+            console.log("add wraps at 32 bits:", instance.exports.add(2147483647, 1));
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.GUIDE,
+        section = "Security",
+        title = "How hybrid key exchange combines two secrets",
+        originalTitle = "HKDF, RFC 5869 (Krawczyk and Eronen, 2010)",
+        author = "Hugo Krawczyk and Pasi Eronen",
+        year = 2028,
+        summary = "A hybrid key exchange runs a classic and a post-quantum exchange and feeds both secrets into one key derivation, so the key holds if either one does.",
+        details = "The example implements HKDF with the standard library and checks it against test case 1 of RFC 5869. Then it derives one 16-byte key from two made-up shared secrets, the way a hybrid handshake combines its two exchanges.",
+        instructions = """
+            1. Save the example as hybrid_key.py.
+            2. Run it: python3 hybrid_key.py
+        """,
+        example = """
+            import hashlib
+            import hmac
+
+            def hkdf(ikm, salt, info, length):
+                # Extract a fixed-length key from the input, then expand it to the length asked for (RFC 5869).
+                prk = hmac.new(salt, ikm, hashlib.sha256).digest()
+                okm = b""
+                block = b""
+                counter = 1
+                while len(okm) < length:
+                    block = hmac.new(prk, block + info + bytes([counter]), hashlib.sha256).digest()
+                    okm += block
+                    counter += 1
+                return okm[:length]
+
+            # Test case 1 of RFC 5869: the output must match the published value.
+            okm = hkdf(bytes([0x0B] * 22), bytes(range(0x00, 0x0D)), bytes(range(0xF0, 0xFA)), 42)
+            expected = "3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865"
+            print("RFC 5869 test case 1 matches:", okm.hex() == expected)
+
+            # Two made-up shared secrets, one from each exchange, combined into one key.
+            classic = hashlib.sha256(b"classic exchange").digest()
+            post_quantum = hashlib.sha256(b"post-quantum exchange").digest()
+            key = hkdf(classic + post_quantum, b"hybrid example", b"tls traffic key", 16)
+            print("hybrid key:", key.hex())
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.GUIDE,
+        section = "Agents",
+        title = "How a token bucket limits tool calls",
+        originalTitle = "Token bucket rate limiting, a classic network technique",
+        author = "Written as a teaching example",
+        year = 2029,
+        summary = "A bucket refills at a fixed rate and each call takes a token, so bursts are allowed up to the bucket size and the average rate stays fixed.",
+        details = "The example runs ten calls at given times and prints which are allowed. Agent platforms use the same idea to cap tool calls per minute, so a runaway loop stops by itself.",
+        instructions = """
+            1. Save the example as token_bucket.py.
+            2. Run it: python3 token_bucket.py
+        """,
+        example = """
+            class TokenBucket:
+                def __init__(self, capacity, refill_per_second):
+                    self.capacity = capacity
+                    self.refill = refill_per_second
+                    self.tokens = capacity
+                    self.last = 0.0
+
+                def allow(self, now):
+                    # Refill for the time since the last call, up to the bucket size, then spend one token.
+                    self.tokens = min(self.capacity, self.tokens + (now - self.last) * self.refill)
+                    self.last = now
+                    if self.tokens >= 1:
+                        self.tokens -= 1
+                        return True
+                    return False
+
+            bucket = TokenBucket(capacity=3, refill_per_second=1.0)
+            calls = [0.0, 0.1, 0.2, 0.3, 1.2, 1.3, 2.5, 2.6, 2.7, 2.8]
+            print(" ".join("yes" if bucket.allow(t) else "no" for t in calls))
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db9Languages.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Languages of 2026 to 2036, as a forecast: each one is a guess, with the basis it rests on. */
+val db9Languages: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 9,
+        kind = Kind.LANGUAGE,
+        section = "C++ successors",
+        title = "Carbon",
+        originalTitle = "Carbon Language, an experimental successor to C++",
+        author = "Google, an experimental project",
+        year = 2030,
+        summary = "Forecast: Carbon, the experimental C++ successor from Google, gets a 1.0 release and is used next to C++ code through interop.",
+        details = "Forecast. Carbon is still marked experimental, and its roadmap, in a copy that may be out of date, put the 0.1 milestone in late 2026. The forecast is that a 1.0 release comes around 2030 and that teams write new code in Carbon where they need memory safety and C++ interop. The year is a guess, and the project may also be stopped.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.LANGUAGE,
+        section = "C++",
+        title = "Static reflection in C++",
+        originalTitle = "Reflection for C++26 (paper P2996)",
+        author = "WG21, the ISO C++ committee",
+        year = 2027,
+        summary = "Forecast: C++ compilers that support C++26 reflect on types at compile time, so serializers and bindings no longer need a separate code generator.",
+        details = "Forecast. The reflection proposal P2996 reached its thirteenth revision in June 2025, addressed to the core and library wording groups, and implementations existed in an EDG front end and in Bloomberg's Clang fork. The forecast is that mainstream compilers ship it in 2027, and that generators for serialization and bindings shrink. The year is a guess, and the wording may still change.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.LANGUAGE,
+        section = "Java",
+        title = "Value classes in Java",
+        originalTitle = "Project Valhalla, JEP 401 (value classes and objects)",
+        author = "OpenJDK Project Valhalla",
+        year = 2029,
+        summary = "Forecast: Java value classes leave preview and become final, so a small object with no identity sits in an array without a heap object for each element.",
+        details = "Forecast. The value classes preview in JEP 401 was reported to target JDK 28, in March 2027, and a news summary expects it to stay in preview past JDK 29. The forecast is that it becomes final in JDK 33, the long-term-support release expected in September 2029. The year is a guess, and the JEP text was still changing.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.LANGUAGE,
+        section = "Python",
+        title = "Python with the free-threaded build as the default",
+        originalTitle = "PEP 703 and PEP 779 (free-threaded CPython)",
+        author = "Python core developers",
+        year = 2031,
+        summary = "Forecast: the Python build without a global interpreter lock becomes the default, so threads run in parallel by default.",
+        details = "Forecast. Python 3.14 supports the free-threaded build officially, under PEP 779, but users still choose it when they build or install Python. The forecast is that the free-threaded build becomes the default around 2031, once the popular packages support it. The year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.LANGUAGE,
+        section = "Agents",
+        title = "Tool calls checked by the compiler",
+        originalTitle = "A category of languages, not one language",
+        author = "Forecast written for this database",
+        year = 2029,
+        summary = "Forecast: a language treats a tool's schema as a type, so a call with a wrong argument fails to compile instead of failing at run time.",
+        details = "Forecast. Tool calls are JSON checked at run time, so a wrong argument shows up only when the call is made. The forecast is that a general-purpose language gives tool schemas a type, and that the compiler rejects a mismatched call. The year is a guess; this may end up as a library rather than a language.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.LANGUAGE,
+        section = "Quantum",
+        title = "Quantum circuits in ordinary compilers",
+        originalTitle = "Qiskit, Q# and CUDA-Q, the existing quantum SDKs",
+        author = "Forecast written for this database",
+        year = 2032,
+        summary = "Forecast: quantum circuits become one more compiler target, and a normal program calls a quantum routine the way it calls a math library.",
+        details = "Forecast. Qiskit, Q# and CUDA-Q let a program build circuits, but the code is written in a separate SDK and runs on a separate service. IBM's public roadmap aims at a fault-tolerant machine with 200 logical qubits in 2029, which is the step this forecast needs. The year is a guess.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db9Practices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Practices of 2026 to 2036, as a forecast: inventories, access reviews, specs, local-first apps and carbon budgets. */
+val db9Practices: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 9,
+        kind = Kind.PRACTICE,
+        section = "Security",
+        title = "A crypto inventory and crypto agility",
+        originalTitle = "NIST IR 8547, the draft transition to post-quantum standards",
+        author = "NIST, draft",
+        year = 2027,
+        summary = "Forecast: every company keeps a list of the cryptographic algorithms in its systems and can replace them without a rewrite.",
+        details = "Forecast. NIST's draft transition report, IR 8547, was first published in November 2024. It proposes deprecating RSA and elliptic-curve schemes after 2030 and disallowing them after 2035. The forecast is that teams keep an inventory of algorithms and certificates by 2027, because auditors will ask for it first. The draft was not final in mid-2026, so the year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.PRACTICE,
+        section = "Agents",
+        title = "Agent access reviews",
+        originalTitle = "Access reviews, a control used for people's accounts",
+        author = "Forecast written for this database",
+        year = 2028,
+        summary = "Forecast: teams review every quarter which tools each agent may call, the way they review user accounts today.",
+        details = "Forecast. Access reviews are a standard control for people, and agents now hold credentials of their own. The forecast is that auditors ask for agent access reviews, with a log of every tool call, by 2028. The year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.PRACTICE,
+        section = "Process",
+        title = "Spec before code with agents",
+        originalTitle = "Spec-first development",
+        author = "Forecast written for this database",
+        year = 2027,
+        summary = "Forecast: a change starts with a written spec and its tests, and the agent is asked to meet them rather than guess at intent.",
+        details = "Forecast. Teams that use coding agents already write a short spec before a task, because a vague request produces vague code. The forecast is that spec-first becomes the default, and that reviews check the spec and the tests before the code. The year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.PRACTICE,
+        section = "Architecture",
+        title = "Local-first software with offline sync",
+        originalTitle = "Local-first software, an essay by Kleppmann and collaborators (2019)",
+        author = "Martin Kleppmann and collaborators",
+        year = 2030,
+        summary = "Forecast: most new collaborative apps keep data on the device first and merge changes later, so they work without a central server.",
+        details = "Forecast. The local-first essay of 2019 described apps that keep working offline and merge changes between devices, using CRDTs. The forecast is that by 2030 many collaborative tools work this way, because users expect them to work on a plane or with a weak signal. The year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.PRACTICE,
+        section = "Green software",
+        title = "Carbon budgets for software teams",
+        originalTitle = "Corporate carbon reporting under the EU's CSRD",
+        author = "Forecast written for this database",
+        year = 2028,
+        summary = "Forecast: a team has a yearly carbon budget for its services, and a release that uses more energy needs a change or an offset.",
+        details = "Forecast. Large companies in the EU already report emissions under the Corporate Sustainability Reporting Directive, and cloud providers publish energy data per region. The forecast is that software teams get per-service budgets, reviewed like cost budgets. The year is a guess, and the method is not agreed yet.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db9Projects.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Projects of 2026 to 2036: small programs for local-first sync, carbon-aware scheduling, agent permissions and bills of materials. */
+val db9Projects: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 9,
+        kind = Kind.PROJECT,
+        section = "Local-first",
+        title = "A to-do list that syncs two replicas",
+        originalTitle = "A last-writer-wins map, as in local-first apps",
+        author = "Written as a teaching example",
+        year = 2030,
+        summary = "Two replicas of a to-do list change offline and merge in either direction, and both end with the same list.",
+        details = "Each item keeps the clock of its last change and whether it is on the list. A merge keeps the newer entry for each item, so the result is the same in either direction. The example runs the scenario and prints both lists.",
+        instructions = """
+            1. Save the example as todo_sync.py.
+            2. Run it: python3 todo_sync.py
+        """,
+        example = """
+            class Replica:
+                def __init__(self, name):
+                    self.name = name
+                    self.items = {}      # item -> (clock of its last change, on the list?)
+                    self.clock = 0
+
+                def set(self, item, on_list):
+                    self.clock += 1
+                    self.items[item] = (self.clock, on_list)
+
+                def merge(self, other):
+                    # The entry with the newer clock wins, whichever replica it came from.
+                    for item, entry in other.items.items():
+                        if item not in self.items or entry > self.items[item]:
+                            self.items[item] = entry
+
+                def todo(self):
+                    return sorted(item for item, (_, on_list) in self.items.items() if on_list)
+
+            phone = Replica("phone")
+            laptop = Replica("laptop")
+
+            phone.set("milk", True)
+            laptop.merge(phone)              # the laptop has seen the milk
+            phone.set("bread", True)         # offline edits from here on
+            phone.set("milk", False)         # bought it
+            laptop.set("eggs", True)
+            laptop.set("tea", True)
+            laptop.set("bread", False)       # crossed off on the laptop
+
+            phone.merge(laptop)
+            laptop.merge(phone)
+            print("phone:", phone.todo())
+            print("laptop:", laptop.todo())
+            print("same:", phone.todo() == laptop.todo())
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.PROJECT,
+        section = "Green software",
+        title = "A carbon-aware job scheduler",
+        originalTitle = "Scheduling jobs into the cleanest hours",
+        author = "Written as a teaching example",
+        year = 2029,
+        summary = "Places each job in the window with the lowest grid carbon intensity that still meets its deadline, then reports the plan.",
+        details = "The example takes 24 hourly intensity values and three jobs with deadlines. It places the heaviest job first, then the others, and prints the start hour and the carbon estimate of each.",
+        instructions = """
+            1. Save the example as scheduler.py.
+            2. Run it: python3 scheduler.py
+        """,
+        example = """
+            # Grid carbon intensity in grams of CO2 per kWh, for each hour of the day starting at midnight.
+            intensity = [400, 380, 300, 260, 240, 230, 250, 290, 360, 400, 420, 430,
+                         410, 390, 350, 310, 280, 270, 300, 350, 400, 420, 430, 440]
+
+            # Each job: name, hours it needs, kWh used per hour, and the hour by which it must finish.
+            jobs = [("report", 1, 0.5, 6), ("backup", 2, 1.5, 8), ("training", 3, 4.0, 24)]
+
+            free = [True] * 24
+            schedule = []
+            total = 0.0
+            for name, hours, kwh, deadline in sorted(jobs, key=lambda job: -job[2]):   # heaviest first
+                best = None
+                for start in range(deadline - hours + 1):
+                    block = range(start, start + hours)
+                    if all(free[h] for h in block):
+                        cost = sum(intensity[h] for h in block) * kwh
+                        if best is None or cost < best[0]:
+                            best = (cost, start)
+                cost, start = best
+                for h in range(start, start + hours):
+                    free[h] = False
+                total += cost
+                schedule.append((name, start, round(cost)))
+
+            for name, start, grams in sorted(schedule, key=lambda entry: entry[1]):
+                print(f"{name}: start at {start:02d}:00, {grams} g CO2")
+            print(f"total: {round(total)} g CO2")
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.PROJECT,
+        section = "Agents",
+        title = "A permission checker for agents",
+        originalTitle = "Deny-first policies for tool calls",
+        author = "Written as a teaching example",
+        year = 2028,
+        summary = "Evaluates tool calls against a policy in which a deny rule always beats an allow rule, and a call with no matching allow is refused.",
+        details = "The policy is a list of rules with a scope. The checker prints the decision and the reason for each request, so the policy can be reviewed like code.",
+        instructions = """
+            1. Save the example as permissions.py.
+            2. Run it: python3 permissions.py
+        """,
+        example = """
+            # Each rule: effect, tool, and scope (None means any scope).
+            POLICY = [
+                ("deny", "send_email", "external"),   # no mail to outside addresses
+                ("allow", "search", None),
+                ("allow", "read_file", "project"),    # only inside the project folder
+                ("allow", "send_email", "internal"),
+                ("allow", "send_email", None),        # a broad allow does not beat a deny
+            ]
+
+            def decide(tool, scope):
+                matches = [effect for effect, rule_tool, rule_scope in POLICY
+                           if rule_tool == tool and rule_scope in (None, scope)]
+                if "deny" in matches:
+                    return "deny: matched a deny rule"
+                if "allow" in matches:
+                    return "allow"
+                return "deny: no rule allows it"
+
+            requests = [
+                ("search", "web"),
+                ("read_file", "project"),
+                ("read_file", "home"),
+                ("send_email", "internal"),
+                ("send_email", "external"),
+                ("delete_file", "project"),
+            ]
+            for tool, scope in requests:
+                print(f"{tool} in {scope}: {decide(tool, scope)}")
+        """,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.PROJECT,
+        section = "Supply chain",
+        title = "An SBOM writer for a lock file",
+        originalTitle = "Writing a CycloneDX bill of materials",
+        author = "Written as a teaching example",
+        year = 2027,
+        summary = "Reads a simplified lock file and writes a CycloneDX bill of materials, sorted by name, with the hash of each component.",
+        details = "The lock file here is a dictionary with placeholder hashes, so the example runs without a network. The output has the shape of a real CycloneDX document, and the example prints the first component in full.",
+        instructions = """
+            1. Save the example as sbom.py.
+            2. Run it: python3 sbom.py
+        """,
+        example = """
+            import json
+
+            # A simplified lock file. The hashes are placeholders, not real digests.
+            LOCK = {
+                "packages": [
+                    {"name": "requests", "version": "2.32.3", "sha256": "ab12"},
+                    {"name": "certifi", "version": "2024.8.30", "sha256": "cd34"},
+                    {"name": "idna", "version": "3.7", "sha256": "ef56"},
+                ]
+            }
+
+            def sbom(lock, project):
+                components = [
+                    {
+                        "type": "library",
+                        "name": package["name"],
+                        "version": package["version"],
+                        "hashes": [{"alg": "SHA-256", "content": package["sha256"]}],
+                    }
+                    for package in sorted(lock["packages"], key=lambda package: package["name"])
+                ]
+                return {
+                    "bomFormat": "CycloneDX",
+                    "specVersion": "1.5",
+                    "metadata": {"component": {"type": "application", "name": project}},
+                    "components": components,
+                }
+
+            bom = sbom(LOCK, "example-app")
+            print(bom["bomFormat"], bom["specVersion"], "with", len(bom["components"]), "components")
+            print(json.dumps(bom["components"][0], sort_keys=True))
+            for component in bom["components"]:
+                print(f"  {component['name']} {component['version']} {component['hashes'][0]['content']}")
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db9Systems.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Systems of 2026 to 2036, as a forecast: security, runtimes, the kernel, quantum services and agent permissions. */
+val db9Systems: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 9,
+        kind = Kind.SYSTEM,
+        section = "Security",
+        title = "Post-quantum key exchange by default in TLS",
+        originalTitle = "OpenSSL 3.5, with ML-KEM, ML-DSA and SLH-DSA",
+        author = "NIST and the OpenSSL project",
+        year = 2028,
+        summary = "Forecast: most TLS connections use a hybrid key exchange with a post-quantum algorithm, and no setting is needed to turn it on.",
+        details = "Forecast. OpenSSL 3.5, released in April 2025, ships ML-KEM, ML-DSA and SLH-DSA, and its default TLS client offers the hybrid group X25519MLKEM768 next to plain X25519. The forecast is that servers and client libraries drop the classic-only offer by 2028, while post-quantum signatures take longer. The year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.SYSTEM,
+        section = "Runtimes",
+        title = "WebAssembly components as the plug-in format",
+        originalTitle = "WASI 0.3, with native async in the component model",
+        author = "Bytecode Alliance and the WebAssembly community",
+        year = 2028,
+        summary = "Forecast: applications load plug-ins as WebAssembly components with a stated list of permissions, and a plug-in runs without a process of its own.",
+        details = "Forecast. WASI 0.3, with native async, was released in June 2026 according to wasi.dev, and runtimes have started to ship it. The forecast is that editors, databases and proxies use components for plug-ins by 2028, because a sandboxed component is cheaper than a process per plug-in. The year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.SYSTEM,
+        section = "Kernel",
+        title = "Rust drivers in the mainline Linux kernel",
+        originalTitle = "Rust for Linux, no longer experimental since December 2025",
+        author = "Rust for Linux project",
+        year = 2029,
+        summary = "Forecast: most new Linux drivers are written in Rust, and C drivers become the exception.",
+        details = "Forecast. In December 2025 the kernel maintainers agreed that Rust is no longer experimental, and the Rust for Linux project declared the experiment finished. The forecast is that most new drivers are in Rust by 2029, although support across build options and hardware is still uneven. The year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.SYSTEM,
+        section = "Quantum",
+        title = "Quantum cloud runtimes",
+        originalTitle = "Quantum services from IBM, Microsoft and Amazon",
+        author = "Forecast written for this database",
+        year = 2030,
+        summary = "Forecast: quantum jobs run on a shared runtime with one job format, so the same program runs on the machines of several vendors.",
+        details = "Forecast. Three large providers already sell access to quantum hardware through their own services, each with its own job format and billing. The forecast is that a common runtime and job format appear by 2030, so a program can move between vendors. The year is a guess.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.SYSTEM,
+        section = "Boot",
+        title = "Post-quantum firmware signing",
+        originalTitle = "Hash-based signature schemes for firmware, NIST SP 800-208 (2020)",
+        author = "NIST and the firmware vendors",
+        year = 2035,
+        summary = "Forecast: phones and laptops check their boot firmware with hash-based post-quantum signatures, so forged firmware cannot be signed with a key that a quantum computer breaks.",
+        details = "Forecast. NIST approved hash-based signature schemes for firmware in 2020, in special publication 800-208. The forecast is that most phones and laptops check boot firmware with such signatures by 2035, the year when classic signatures are expected to be disallowed under the draft transition plan. The year is a guess.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db9Tools.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Tools of 2026 to 2036, as a forecast: prompt checks, proof assistants, signed bills of materials, carbon meters and sandboxes. */
+val db9Tools: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 9,
+        kind = Kind.TOOL,
+        section = "Prompts",
+        title = "Prompt linters and tests in CI",
+        originalTitle = "Evaluation suites for prompts",
+        author = "Forecast written for this database",
+        year = 2027,
+        summary = "Forecast: prompt files get linting, schema checks and regression tests in continuous integration, the way code does today.",
+        details = "Forecast. Teams already keep evaluation suites for prompts, and a few tools lint them. The forecast is that prompt changes get the same review and tests as code changes, and that a broken prompt fails the build. The year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.TOOL,
+        section = "Verification",
+        title = "A proof assistant for everyday functions",
+        originalTitle = "Lean, Dafny and Kani, the existing verifiers",
+        author = "Forecast written for this database",
+        year = 2028,
+        summary = "Forecast: an editor proves small functions correct as the developer writes them, with an assistant that drafts the proof.",
+        details = "Forecast. Lean, Dafny and the Rust checker Kani already prove properties of real code, but writing the proofs takes expert time. The forecast is that assistants draft proofs for short functions, and that the editor shows a check mark when a function meets its spec. The year is a guess.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.TOOL,
+        section = "Supply chain",
+        title = "Signed software bills of materials checked on install",
+        originalTitle = "CycloneDX and SPDX, existing bill-of-materials formats",
+        author = "Forecast written for this database",
+        year = 2027,
+        summary = "Forecast: installing a package also checks its signed bill of materials, and a missing one blocks the install in regulated projects.",
+        details = "Forecast. The EU Cyber Resilience Act has required reporting of exploited vulnerabilities and severe incidents since 11 September 2026, and the rest of the act applies from 11 December 2027. The forecast is that bills of materials are checked on install by default, not only in audits. The year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.TOOL,
+        section = "Green software",
+        title = "A carbon meter in the CI pipeline",
+        originalTitle = "Software Carbon Intensity specification, ISO/IEC 21031:2024",
+        author = "Green Software Foundation",
+        year = 2029,
+        summary = "Forecast: each build reports an estimated carbon figure, and a pull request that goes over its budget fails the check.",
+        details = "Forecast. The Software Carbon Intensity specification reached version 1.0 in late 2022 and became ISO/IEC 21031:2024 in March 2024, and the Foundation now names version 1.1 as its latest. The forecast is that CI systems report a figure like it by default, and that teams set carbon budgets the way they set test time limits. The year is a guess, and the energy figures are estimates.",
+        rare = false,
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.TOOL,
+        section = "Supply chain",
+        title = "Post-quantum signatures in package managers",
+        originalTitle = "FIPS 204 (ML-DSA) and FIPS 205 (SLH-DSA)",
+        author = "NIST",
+        year = 2030,
+        summary = "Forecast: package managers verify ML-DSA signatures next to the classic ones, so a package signed today still checks after quantum computers exist.",
+        details = "Forecast. NIST published ML-DSA and SLH-DSA as FIPS 204 and FIPS 205 in August 2024, and OpenSSL 3.5 already includes them. The forecast is that package managers add them as a second signature, and that classic signatures are retired after the transition deadlines. The year is a guess.",
+    ),
+
+    entry(
+        databaseId = 9,
+        kind = Kind.TOOL,
+        section = "Agents",
+        title = "A sandbox for every tool call an agent makes",
+        originalTitle = "Firecracker microVMs and gVisor, both in production",
+        author = "Forecast written for this database",
+        year = 2027,
+        summary = "Forecast: each tool an agent calls runs in its own microVM, with no network unless the call asks for it.",
+        details = "Forecast. Firecracker runs microVMs for serverless functions, and gVisor isolates containers, and both are in production today. The forecast is that agent platforms run each tool call inside one of these, with the network closed by default. The year is a guess.",
+    ),
+)
+
+################################################################################
 # FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
@@ -21485,11 +23048,17 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "Languages, systems, devices, tools and practices of 1970 to 1980, including rare and little-known items.",
         colorHex = "#A1887F",
     ),
+    DatabaseEntity(
+        id = 9,
+        name = "Database 9: 2026 to 2036 forecast",
+        description = "Forecast of languages, systems, devices, tools and practices of 2026 to 2036, with the long shots marked rare.",
+        colorHex = "#90A4AE",
+    ),
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
 val seedRecords: List<RecordEntity> =
-    db1Records + db2Records + db3Records + db4Records + db5Records + db6Records + db7Records + db8Records
+    db1Records + db2Records + db3Records + db4Records + db5Records + db6Records + db7Records + db8Records + db9Records
 
 ################################################################################
 # FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
@@ -22567,6 +24136,7 @@ import com.example.retrodatabases.data.MIGRATION_4_5
 import com.example.retrodatabases.data.MIGRATION_5_6
 import com.example.retrodatabases.data.MIGRATION_6_7
 import com.example.retrodatabases.data.MIGRATION_7_8
+import com.example.retrodatabases.data.MIGRATION_8_9
 import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.db2Records
 import com.example.retrodatabases.data.seed.db3Records
@@ -22575,6 +24145,7 @@ import com.example.retrodatabases.data.seed.db5Records
 import com.example.retrodatabases.data.seed.db6Records
 import com.example.retrodatabases.data.seed.db7Records
 import com.example.retrodatabases.data.seed.db8Records
+import com.example.retrodatabases.data.seed.db9Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -22604,6 +24175,7 @@ class AppDatabaseSeedTest {
         assertEquals(db6Records.size, databases.single { it.id == 6L }.recordCount)
         assertEquals(db7Records.size, databases.single { it.id == 7L }.recordCount)
         assertEquals(db8Records.size, databases.single { it.id == 8L }.recordCount)
+        assertEquals(db9Records.size, databases.single { it.id == 9L }.recordCount)
 
         val records = dao.observeRecords(1L).first()
         assertEquals(db1Records.size, records.size)
@@ -22731,6 +24303,23 @@ class AppDatabaseSeedTest {
     }
 
     @Test
+    fun migrationRestoresDatabaseNine() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 8 has no database 9: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 9")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 9")
+        MIGRATION_8_9.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db9Records.size, dao.observeRecords(9L).first().size)
+        assertEquals(db8Records.size, dao.observeRecords(8L).first().size)
+    }
+
+    @Test
     fun toggleFavoriteStoresTheChange() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val dao = AppDatabase.get(context).libraryDao()
@@ -22832,6 +24421,7 @@ import com.example.retrodatabases.data.seed.db5Records
 import com.example.retrodatabases.data.seed.db6Records
 import com.example.retrodatabases.data.seed.db7Records
 import com.example.retrodatabases.data.seed.db8Records
+import com.example.retrodatabases.data.seed.db9Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import com.example.retrodatabases.data.seed.seedRecords
 import org.junit.Assert.assertEquals
@@ -22841,7 +24431,7 @@ import org.junit.Test
 class SeedDataTest {
 
     private val catalogues = listOf(
-        db1Records, db2Records, db3Records, db4Records, db5Records, db6Records, db7Records, db8Records,
+        db1Records, db2Records, db3Records, db4Records, db5Records, db6Records, db7Records, db8Records, db9Records,
     )
 
     @Test
@@ -22857,6 +24447,7 @@ class SeedDataTest {
         assertTrue(db6Records.all { it.databaseId == 6L })
         assertTrue(db7Records.all { it.databaseId == 7L })
         assertTrue(db8Records.all { it.databaseId == 8L })
+        assertTrue(db9Records.all { it.databaseId == 9L })
     }
 
     @Test
@@ -22877,6 +24468,7 @@ class SeedDataTest {
         assertTrue(db6Records.all { it.year in 1950..1960 })
         assertTrue(db7Records.all { it.year in 1960..1970 })
         assertTrue(db8Records.all { it.year in 1970..1980 })
+        assertTrue(db9Records.all { it.year in 2026..2036 })
     }
 
     @Test
@@ -22903,6 +24495,14 @@ class SeedDataTest {
         for (records in catalogues) {
             assertTrue(records.count { it.rare } > 0)
         }
+    }
+
+    @Test
+    fun forecastEntriesSayTheyAreForecasts() {
+        val forecastKinds = setOf(Kind.LANGUAGE, Kind.SYSTEM, Kind.DEVICE, Kind.TOOL, Kind.PRACTICE)
+        val forecasts = db9Records.filter { it.kind in forecastKinds }
+        assertTrue(forecasts.isNotEmpty())
+        assertTrue(forecasts.all { it.details.contains("forecast", ignoreCase = true) })
     }
 }
 

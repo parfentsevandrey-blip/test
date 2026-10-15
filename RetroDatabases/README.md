@@ -1,6 +1,6 @@
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside are eight databases of coding history:
+An Android application in Kotlin, Jetpack Compose and Room. Inside are nine databases of coding history:
 
 - "Database 1" is a catalogue of 80s coding;
 - "Database 2" is a catalogue of 90s coding;
@@ -9,7 +9,8 @@ An Android application in Kotlin, Jetpack Compose and Room. Inside are eight dat
 - "Database 5" is a catalogue of coding from 2020 to 2026;
 - "Database 6" is a catalogue of coding from 1950 to 1960;
 - "Database 7" is a catalogue of coding from 1960 to 1970;
-- "Database 8" is a catalogue of coding from 1970 to 1980.
+- "Database 8" is a catalogue of coding from 1970 to 1980;
+- "Database 9" is a forecast of coding from 2026 to 2036.
 
 ## What is inside
 
@@ -133,7 +134,22 @@ The catalogue of database 8 (1970 to 1980) has the same ten kinds:
 | Flex | 3 | Gosper's hack, Floyd–Steinberg dithering and Monty Hall by simulation |
 | Cross-code | 2 | C and Python: an LZ78 round trip, and a factoring pipeline in C and awk |
 
-In total there are 970 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare), 60 in database 6 (29 rare), 49 in database 7 (26 rare) and 50 in database 8 (22 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
+The catalogue of database 9 (2026 to 2036) is a forecast, not a record. Its languages, systems, devices, tools and practices are guesses, and their details say what they rest on. The guides, examples, projects, flex pieces and cross-code experiments are working code for the techniques behind the forecast. In this database the rare flag marks the long shots. It has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Carbon, static reflection in C++, value classes in Java, the free-threaded Python build, tool calls checked by the compiler and quantum circuits in ordinary compilers |
+| Systems | 5 | Post-quantum key exchange in TLS, WebAssembly components as plug-ins, Rust drivers in the Linux kernel, quantum cloud runtimes and post-quantum firmware signing |
+| Devices | 8 | AR glasses for developers, a fault-tolerant quantum computer with 200 logical qubits, a neural accelerator in every laptop, a humanoid home robot, a neuromorphic PCIe card, a RISC-V laptop, a co-packaged optical switch and a wristband for input |
+| Tools | 6 | Prompt linters and tests in CI, a proof assistant for everyday functions, signed bills of materials checked on install, a carbon meter in CI, post-quantum signatures in package managers and a sandbox for every tool call |
+| Practices | 5 | A crypto inventory and crypto agility, agent access reviews, spec before code with agents, local-first software and carbon budgets for teams |
+| Guides | 5 | How a capability token limits an agent, how a G-counter merges replicas, how a WebAssembly module is loaded, how hybrid key exchange combines two secrets and how a token bucket limits tool calls |
+| Examples | 6 | A post-quantum inventory of settings, an agent loop with a step limit, an exhaustive check of a sort, a spec table turned into tests, a typed check for a tool call and a hash chain for an audit log |
+| Projects | 4 | A to-do list that syncs two replicas, a carbon-aware job scheduler, a permission checker for agents and an SBOM writer for a lock file |
+| Flex | 3 | A hash-based one-time signature, reverse-mode differentiation in 30 lines and a Hilbert curve index |
+| Cross-code | 2 | Python and JavaScript merge the same counters, and C and JavaScript compute the same FNV-1a hashes |
+
+In total there are 1,020 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare), 60 in database 6 (29 rare), 49 in database 7 (26 rare), 50 in database 8 (22 rare) and 50 in database 9 (6 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
 
 In the app:
 - the list of databases with the number of records;
@@ -160,8 +176,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Structure
 
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4, 5, 6 and 7 to version 8.
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all eight databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt`, `Db6*.kt`, `Db7*.kt` and `Db8*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4, 5, 6, 7 and 8 to version 9.
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all nine databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt`, `Db6*.kt`, `Db7*.kt`, `Db8*.kt` and `Db9*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
 - `app/src/test` — tests of the filters, the data and the database itself (Robolectric).
 - `DEVLOG.md` — the development log with the growth of lines of code by checkpoint.
@@ -169,7 +185,7 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. In database 9, 20 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
 
 For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
 
@@ -177,4 +193,4 @@ For languages that are not installed in the build environment (Forth, Prolog, Li
 
 1. Create files in `data/seed` with the records. Pass the database id to `entry()`, for example `databaseId = 3`; a record without it goes to database 1.
 2. Add the database to `seedDatabases` and its records to `seedRecords` (file `SeedCatalog.kt`).
-3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_7_8` are the examples: each adds one database, and an install made at version 1 runs them in order.
+3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_8_9` are the examples: each adds one database, and an install made at version 1 runs them in order.

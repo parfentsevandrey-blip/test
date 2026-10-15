@@ -26,6 +26,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-11 | 2026-10-15 | 17,552 | 295 | 82 | 118 | 18,047 | +1,369 (database 6: 60 records in eleven files, migration 5→6, tests +23) |
 | CP-12 | 2026-10-15 | 18,903 | 320 | 82 | 118 | 19,423 | +1,376 (database 7: 49 records in eleven files, migration 6→7, tests +25) |
 | CP-13 | 2026-10-15 | 20,288 | 343 | 82 | 118 | 20,831 | +1,408 (database 8: 50 records in eleven files, migration 7→8, tests +23) |
+| CP-14 | 2026-10-15 | 21,664 | 374 | 82 | 118 | 22,238 | +1,407 (database 9: 50 records in eleven files, migration 8→9, tests +31) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -639,3 +640,63 @@ Date: 2026-10-15. Totals: Kotlin main 20,288 (CP-12: 18,903), Kotlin test 343 (3
 - "Erlang" and "Software inspections" appear in both database 1 and database 2. They were there before this checkpoint. The uniqueness test is per database and passes, so I left them alone.
 - I checked the counting method again on the CP-12 commit first, and it gives exactly the CP-12 numbers.
 - Not verified yet: running on a device or emulator, the migration from version 7 on a real device, the UI with eight databases in the list and in the filters, lint, and the release build.
+
+## CP-14: database 9, 2026 to 2036 (a forecast)
+
+Status: database 9 is in the app: 50 records, a migration for installs made at version 8, and tests for all nine databases. The build passes, 23 of 23 unit tests pass, and the Kotlin compiler gives no warnings. All 20 records with code run and match their expected output. The other 30 records are the forecast itself (languages, systems, devices, tools and practices), which has no code to run.
+
+Mood: unusual. The request was to guess the next decade, so this is the first database about the future, and nothing in it can be checked against a record yet. Every forecast record says that it is a forecast, and I checked only the dated facts that each basis sentence relies on.
+
+Date: 2026-10-15. Totals: Kotlin main 21,664 (CP-13: 20,288), Kotlin test 374 (343), XML 82, Gradle and project files 118, total 22,238. The +1,407 is the eleven new Kotlin files for database 9 (1,357 lines together), plus the catalogue, the database class and the seed list (main +19), and the tests (+31).
+
+### What changed
+
+- A ninth database, "Database 9: 2026 to 2036 forecast", with the same ten kinds. 50 records: languages 6, systems 5, devices 8, tools 6, practices 5, guides 5, examples 6, projects 4, flex 3, cross-code 2. Six of them are rare, and in this database the rare flag marks a long shot.
+- Eleven files `Db9*.kt`: ten record files and `Db9Catalog.kt`, which joins them into `db9Records`. `SeedCatalog.kt` lists the ninth database, with the colour #90A4AE, and adds its records to `seedRecords`.
+- Database version 9 with `MIGRATION_8_9`. An install at version 8 gets database 9 from it, and older installs run the earlier migrations first.
+- The records are dated 2027 to 2036. Nothing is dated 2026, because that is the year in progress, and its facts are already in database 5.
+- Tests cover nine databases. `SeedDataTest` checks the ids of database 9 and that its records fall between 2026 and 2036, and it has a new test: every forecast record says that it is a forecast. `AppDatabaseSeedTest` checks the record count of database 9, and it has a new test that removes database 9 and runs `MIGRATION_8_9`. 23 unit tests in total.
+
+### Facts checked by web search
+
+- C++26 reflection (P2996): the search found revision 13 from June 2025, addressed to the core and library wording groups, and implementations in an EDG front end and in Bloomberg's Clang fork. It did not establish adoption into the working draft, so the record does not claim adoption.
+- Java value classes (JEP 401): news and blog coverage says the preview targets JDK 28, in March 2027, after JDK 27 in September 2026 without it. One news summary expects the preview to last past JDK 29. These are mostly secondary sources, so the JEP page on openjdk.org needs checking.
+- IBM Starling: the June 2025 roadmap names a fault-tolerant machine in Poughkeepsie for 2029, with 200 logical qubits and 100 million operations. The search found no 2026 progress report.
+- NIST IR 8547: the first public draft is dated 12 November 2024. In the draft, RSA and elliptic-curve schemes are deprecated after 2030 and disallowed after 2035. Vendor write-ups say it was still not final in mid-2026, and none of the results came from nist.gov.
+- EU Cyber Resilience Act: reporting duties apply from 11 September 2026, and the rest of the act from 11 December 2027. Fines can reach 15 million euros or 2.5 per cent of global turnover. The sources are law-firm commentary, not the regulation itself.
+- WASI 0.3: wasi.dev dates the 0.3.0 release to 11 June 2026. Sources disagree on which Wasmtime version switched it on, so the record does not give one.
+- OpenSSL 3.5: released on 8 April 2025, with native ML-KEM, ML-DSA and SLH-DSA. Its default TLS client sends X25519MLKEM768 and X25519 key shares, and the results say ML-DSA is not on by default in TLS. The final release notes did not appear in the results, only the pre-release announcements.
+- Android XR glasses: partners Samsung, XREAL, Warby Parker and Gentle Monster, and a December 2025 article also names Qualcomm. Reports from May 2026 point to a fall 2026 launch window. Pricing and sale dates were unannounced in those reports, and I found no confirmation of sales or shipments.
+- Software Carbon Intensity: version 1.0 in late 2022, and ISO/IEC 21031:2024 with a first edition in March 2024. The Foundation names 1.1 as its latest version, and I did not find a date for it.
+- Carbon: still experimental, with no 1.0 release found. A roadmap copy, which may be from 2024, moved the 0.1 milestone to late 2026, and I found no official 2026 status.
+- RVA23: ratified by RISC-V International in October 2024, with vector and hypervisor support mandatory.
+- Rust in the Linux kernel: reports from December 2025, after the maintainers' summit in Tokyo, say the experimental label no longer applies, and the Rust for Linux project declared the experiment finished.
+
+### Not searched, from memory
+
+- The years of the guides and examples: Lamport's signature (1979), Wengert's derivative method (1964), Hilbert's curve (1891), Dennis and Van Horn (1966), the G-counter paper of Shapiro and collaborators (2011), RFC 5869 (2010), the WebAssembly specification (2019), the local-first essay (2019), and the FNV-1a hash with its published value for "hello".
+- The standards and products: NIST FIPS 204 and 205 (August 2024), NIST SP 800-208 (2020), the JDK long-term-support cadence (JDK 29 in 2027 and JDK 33 in 2029), Firecracker and gVisor, Lean, Dafny and Kani, the Copilot+ PCs of 2024, Loihi 2 and SpiNNaker 2, the wristband shipped with AR glasses, and the humanoid robot preorders.
+- Python's free-threaded build (PEP 779) was already checked in database 5.
+- Every forecast is my guess. The searches checked only the dated facts that a basis sentence relies on.
+
+### How I checked it
+
+- Unit tests: 23 of 23 pass (AppDatabaseSeedTest 10, RecordFilterTest 5, SeedDataTest 8). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the build log has no compiler warnings.
+- Examples: a script takes every database 9 example from the Kotlin source and runs what this sandbox can run. All 20 pass against exact expected output. Two of those values are hash-based and I did not work them out by hand: the hybrid key and the FNV-1a hashes. Before pinning them, I checked the HKDF output against RFC 5869 test case 1 and against Node's crypto module, which gives the same hybrid key as the Python script. The three FNV values come from a C program and a JavaScript program that agree, and the value for "hello" matches the published test value, 4f9f2cab. I worked the other expected lines out by hand before the run (the scheduler's totals, the token bucket's sequence of yes and no, the Hilbert grid, and the failing row of the spec table), and they matched.
+- The other 30 records have no code, so there was nothing to run.
+- Structure: 50 records covering all ten kinds, dated 2027 to 2036. All 30 forecast records say "forecast" in their details, which the new test enforces. No title repeats inside the database, and across the whole catalogue only "Erlang" and "Software inspections" repeat, from databases 1 and 2.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- The first draft stopped at 2033, so the range had no records for 2034 to 2036. I swapped two records for items dated 2035 (post-quantum firmware signing) and 2036 (a wristband for input). The count stayed at 50.
+- The search did not establish that C++26 reflection was adopted into the working draft, so the record describes the proposal's state and does not claim adoption.
+- Carbon's roadmap came from a copy that may be out of date, and the record says so.
+- Two verifier checks started as shape checks, because I had not yet confirmed the hybrid key and the FNV values. After the Node check I pinned the exact values.
+
+### Notes
+
+- In this database the rare flag marks long shots. In the other databases it marks little-known items, so the counts are not directly comparable. The catalogue now has 456 rare records in total, 6 of them here.
+- When a forecast year passes, I want to compare the guess with what happened, so these records should not be edited to match the outcome.
+- The line-count method is the same as at CP-13, which reproduced the CP-12 numbers.
+- Not verified yet: running on a device or emulator, the migration from version 8 on a real device, the UI with nine databases in the list and in the filters, lint, and the release build.

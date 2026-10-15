@@ -57,8 +57,14 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "Languages, systems, devices, tools and practices of 1970 to 1980, including rare and little-known items.",
         colorHex = "#A1887F",
     ),
+    DatabaseEntity(
+        id = 9,
+        name = "Database 9: 2026 to 2036 forecast",
+        description = "Forecast of languages, systems, devices, tools and practices of 2026 to 2036, with the long shots marked rare.",
+        colorHex = "#90A4AE",
+    ),
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
 val seedRecords: List<RecordEntity> =
-    db1Records + db2Records + db3Records + db4Records + db5Records + db6Records + db7Records + db8Records
+    db1Records + db2Records + db3Records + db4Records + db5Records + db6Records + db7Records + db8Records + db9Records

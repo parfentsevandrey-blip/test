@@ -9,6 +9,7 @@ import com.example.retrodatabases.data.seed.db5Records
 import com.example.retrodatabases.data.seed.db6Records
 import com.example.retrodatabases.data.seed.db7Records
 import com.example.retrodatabases.data.seed.db8Records
+import com.example.retrodatabases.data.seed.db9Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import com.example.retrodatabases.data.seed.seedRecords
 import org.junit.Assert.assertEquals
@@ -18,7 +19,7 @@ import org.junit.Test
 class SeedDataTest {
 
     private val catalogues = listOf(
-        db1Records, db2Records, db3Records, db4Records, db5Records, db6Records, db7Records, db8Records,
+        db1Records, db2Records, db3Records, db4Records, db5Records, db6Records, db7Records, db8Records, db9Records,
     )
 
     @Test
@@ -34,6 +35,7 @@ class SeedDataTest {
         assertTrue(db6Records.all { it.databaseId == 6L })
         assertTrue(db7Records.all { it.databaseId == 7L })
         assertTrue(db8Records.all { it.databaseId == 8L })
+        assertTrue(db9Records.all { it.databaseId == 9L })
     }
 
     @Test
@@ -54,6 +56,7 @@ class SeedDataTest {
         assertTrue(db6Records.all { it.year in 1950..1960 })
         assertTrue(db7Records.all { it.year in 1960..1970 })
         assertTrue(db8Records.all { it.year in 1970..1980 })
+        assertTrue(db9Records.all { it.year in 2026..2036 })
     }
 
     @Test
@@ -80,5 +83,13 @@ class SeedDataTest {
         for (records in catalogues) {
             assertTrue(records.count { it.rare } > 0)
         }
+    }
+
+    @Test
+    fun forecastEntriesSayTheyAreForecasts() {
+        val forecastKinds = setOf(Kind.LANGUAGE, Kind.SYSTEM, Kind.DEVICE, Kind.TOOL, Kind.PRACTICE)
+        val forecasts = db9Records.filter { it.kind in forecastKinds }
+        assertTrue(forecasts.isNotEmpty())
+        assertTrue(forecasts.all { it.details.contains("forecast", ignoreCase = true) })
     }
 }
