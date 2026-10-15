@@ -12,7 +12,7 @@ import com.example.retrodatabases.data.seed.seedRecords
 
 @Database(
     entities = [DatabaseEntity::class, RecordEntity::class],
-    version = 19,
+    version = 26,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -53,6 +53,13 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_16_17,
                     MIGRATION_17_18,
                     MIGRATION_18_19,
+                    MIGRATION_19_20,
+                    MIGRATION_20_21,
+                    MIGRATION_21_22,
+                    MIGRATION_22_23,
+                    MIGRATION_23_24,
+                    MIGRATION_24_25,
+                    MIGRATION_25_26,
                 )
                 .build()
     }
@@ -269,6 +276,90 @@ internal val MIGRATION_17_18 = object : Migration(17, 18) {
 internal val MIGRATION_18_19 = object : Migration(18, 19) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val added = setOf(19L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 20 added database 20. Copies at version 19 get it from this migration;
+ * older copies run it after the earlier migrations.
+ */
+internal val MIGRATION_19_20 = object : Migration(19, 20) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(20L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 21 added database 21. Copies at version 20 get it from this migration;
+ * older copies run it after the earlier migrations.
+ */
+internal val MIGRATION_20_21 = object : Migration(20, 21) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(21L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 22 added database 22. Copies at version 21 get it from this migration;
+ * older copies run it after the earlier migrations.
+ */
+internal val MIGRATION_21_22 = object : Migration(21, 22) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(22L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 23 added database 23. Copies at version 22 get it from this migration;
+ * older copies run it after the earlier migrations.
+ */
+internal val MIGRATION_22_23 = object : Migration(22, 23) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(23L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 24 added database 24. Copies at version 23 get it from this migration;
+ * older copies run it after the earlier migrations.
+ */
+internal val MIGRATION_23_24 = object : Migration(23, 24) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(24L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 25 added database 25. Copies at version 24 get it from this migration;
+ * older copies run it after the earlier migrations.
+ */
+internal val MIGRATION_24_25 = object : Migration(24, 25) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(25L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 26 added database 26. Copies at version 25 get it from this migration;
+ * older copies run it after the earlier migrations.
+ */
+internal val MIGRATION_25_26 = object : Migration(25, 26) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(26L)
         seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
         seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
     }

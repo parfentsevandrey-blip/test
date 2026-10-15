@@ -20,6 +20,13 @@ import com.example.retrodatabases.data.seed.db16Records
 import com.example.retrodatabases.data.seed.db17Records
 import com.example.retrodatabases.data.seed.db18Records
 import com.example.retrodatabases.data.seed.db19Records
+import com.example.retrodatabases.data.seed.db20Records
+import com.example.retrodatabases.data.seed.db21Records
+import com.example.retrodatabases.data.seed.db22Records
+import com.example.retrodatabases.data.seed.db23Records
+import com.example.retrodatabases.data.seed.db24Records
+import com.example.retrodatabases.data.seed.db25Records
+import com.example.retrodatabases.data.seed.db26Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import com.example.retrodatabases.data.seed.seedRecords
 import org.junit.Assert.assertEquals
@@ -32,6 +39,7 @@ class SeedDataTest {
         db1Records, db2Records, db3Records, db4Records, db5Records, db6Records, db7Records, db8Records, db9Records,
         db10Records, db11Records, db12Records, db13Records, db14Records,
         db15Records, db16Records, db17Records, db18Records, db19Records,
+        db20Records, db21Records, db22Records, db23Records, db24Records, db25Records, db26Records,
     )
 
     @Test
@@ -58,6 +66,13 @@ class SeedDataTest {
         assertTrue(db17Records.all { it.databaseId == 17L })
         assertTrue(db18Records.all { it.databaseId == 18L })
         assertTrue(db19Records.all { it.databaseId == 19L })
+        assertTrue(db20Records.all { it.databaseId == 20L })
+        assertTrue(db21Records.all { it.databaseId == 21L })
+        assertTrue(db22Records.all { it.databaseId == 22L })
+        assertTrue(db23Records.all { it.databaseId == 23L })
+        assertTrue(db24Records.all { it.databaseId == 24L })
+        assertTrue(db25Records.all { it.databaseId == 25L })
+        assertTrue(db26Records.all { it.databaseId == 26L })
     }
 
     @Test
@@ -89,6 +104,13 @@ class SeedDataTest {
         assertTrue(db17Records.all { it.year in 1870..1880 })
         assertTrue(db18Records.all { it.year in 1860..1870 })
         assertTrue(db19Records.all { it.year in 1850..1860 })
+        assertTrue(db20Records.all { it.year in 1840..1850 })
+        assertTrue(db21Records.all { it.year in 1830..1840 })
+        assertTrue(db22Records.all { it.year in 1820..1830 })
+        assertTrue(db23Records.all { it.year in 1810..1820 })
+        assertTrue(db24Records.all { it.year in 1800..1810 })
+        assertTrue(db25Records.all { it.year in 1790..1800 })
+        assertTrue(db26Records.all { it.year in 1780..1790 })
     }
 
     @Test

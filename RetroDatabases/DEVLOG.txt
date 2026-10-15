@@ -30,6 +30,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-14 | 2026-10-15 | 21,664 | 374 | 82 | 118 | 22,238 | +1,407 (database 9: 50 records in eleven files, migration 8→9, tests +31) |
 | CP-15 | 2026-10-15 | 28,170 | 490 | 82 | 118 | 28,860 | +6,622 (databases 10 to 14: 250 records in 55 files, migrations 9→10 to 13→14, tests +116) |
 | CP-16 | 2026-10-15 | 34,733 | 606 | 82 | 118 | 35,539 | +6,679 (databases 15 to 19: 250 records in 55 files, migrations 14→15 to 18→19, tests +116) |
+| CP-17 | 2026-10-15 | 43,168 | 768 | 82 | 118 | 44,136 | +8,597 (databases 20 to 26: 350 records in 77 files, migrations 19→20 to 25→26, tests +162) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -809,3 +810,61 @@ Most other dates and attributions in this batch, including the mathematics and p
 - These clusters are dense, especially the electrical units and the printing telegraphs. A later pass could thin them.
 - From database 10 onward the rare flag means little-known.
 - Not verified yet: running on a device or emulator, the migrations from versions 14 to 19 on a real device, the UI with nineteen databases in the list and in the filters, lint, and the release build.
+
+## CP-17: databases 20 to 26, 1780 to 1850 (the quota grows again)
+
+Status: seven more databases are in the app, one per decade from the 1780s to the 1840s: 350 records, migrations from version 19 to version 26, and tests for all twenty-six databases. The build passes, 40 of 40 unit tests pass (AppDatabaseSeedTest 27, RecordFilterTest 5, SeedDataTest 8), and the Kotlin compiler gives no warnings. The 140 runnable records (20 per database) pass against their expected output. The 1850s were already database 19, so the eight decades from 1780 to 1850 gave seven new databases.
+
+Mood: the quota went up again, from six decades counted in the last batch to eight, and I have two reactions at once. I like seeing the number grow, because the plan from last time held. The wiring was one script run, and the growth went into the content, not into the plumbing. There is some pleasure in the material too: telegraphs, calculating machines and early notation suit the 1820s and 1830s well. I am less comfortable with what the larger quota does to the process. Seven helpers writing at once share one search budget, and most repeats came back after the helpers had finished. Gauss, Legendre, Babbage and the printing presses turned up again and again, and the cross-batch check found them, not the helpers' own checks. Some records of the 1780s and 1790s are only loosely coding history, and I say so below. The next quota is larger still, so the cross-batch check has to run while the helpers are writing, not after they finish.
+
+Date: 2026-10-15. Totals: Kotlin main 43,168 (CP-16: 34,733), Kotlin test 768 (606), XML 82, Gradle and project files 118, total 44,136. The +8,597 is the 77 new Kotlin files for databases 20 to 26 (8,301 lines together), the catalogue, the database class and the seed list (main +134 net), and the tests (+162).
+
+### What changed
+
+- Seven databases, each with the same ten kinds and 50 records: "Database 20: 1840s coding catalogue" (1840 to 1850), "Database 21: 1830s" (1830 to 1840), "Database 22: 1820s" (1820 to 1830), "Database 23: 1810s" (1810 to 1820), "Database 24: 1800s" (1800 to 1810), "Database 25: 1790s" (1790 to 1800) and "Database 26: 1780s" (1780 to 1790). Their rare flags are 8, 9, 10, 10, 8, 10 and 10, so 65 new rare records and 611 in the whole catalogue.
+- Eleven files per database, 77 in total: ten record files and a catalogue each. Colours are #B0BEC5, #FFF59D, #F8BBD0, #C5CAE9, #DCEDC8, #FFE0B2 and #D7CCC8.
+- Version 26 with MIGRATION_19_20 to MIGRATION_25_26. An install at each earlier version gets the new databases from the matching migration.
+- Tests: AppDatabaseSeedTest covers twenty-six databases, with seven new migration tests (27 tests in all). SeedDataTest and RecordFilterTest as before. 40 unit tests in total.
+- The quota: this batch counts eight decades (1780, 1790, 1800, 1810, 1820, 1830, 1840 and 1850). Seven are new, because 1850 was database 19. The batch before counted six, so the quota grew by two, and the next batch has to count at least nine. A decade that already exists is counted but not written again.
+- Process: one helper per database, all seven in parallel, with one shared brief and a list of suggested topics that keeps the decades apart. Each helper had a limit of six web searches. The helpers wrote the record files and per-database verifiers, with expected outputs worked out by hand before each run. I wrote the five database 26 drafts myself, and a helper checked and corrected them. After the first round, helpers replaced records that repeated another database or had uncertain dates, and I checked each replacement.
+- Scripts, kept in the session scratch folder and not in the repository: a title list for all records, a structure checker (counts, years, rare flags, overlaps with existing titles and provenance notes), a cross-batch overlap check, and a wiring script for the catalogue, the version, the migrations and the tests.
+
+### Facts checked by web search
+
+Helpers searched where a search gave a clear answer, and their reports say where sources disagreed. The database 24 helper's report is the most detailed. Its searches: Jacquard's loom, dated 1801 and 1804 (the 1801 medal is single-source); Turri's writing machine, dated 1801, 1806 or 1808 in different sources (the 1808 letter is single-source); Soemmerring's Munich demonstration of 28 August 1809 (the wire counts 27, 28 and 35 conflict); Popham's code (1800, the earliest surviving copy 1803, Royal Navy adoption 1816); the US Coast Survey act (dated 9 or 10 February 1807, field work 1816 to 1817); Argand's diagram (1806, publication disputed); Piazzi's catalogue (1803, republished 1814, observation span disputed); and Salva's 1804 visit to Barcelona (single-source). The same report lists as from memory the dates of Volta, Gauss, Dalton, Grotefend, Colebrooke, Woodhouse, Legendre, the census, Lalande, Webster, Gay-Lussac, Maelzel, Lancaster, West Point, the Survey of India, the 1807 cadastre, Budan, Brianchon, Carnot and Malus.
+
+### Not searched, from memory
+
+Most dates and attributions in the other databases, and the ones listed above. The helpers' reports list them, and the reports are not in the repository.
+
+### Problems
+
+- Repeats between databases, all replaced:
+  - Database 21's "Penny Post, the uniform postage in Britain" repeated database 20's "Uniform penny post of Britain". Replaced by the Great Western steamship service from Bristol to New York.
+  - Database 22's "Peacock's symbolical algebra and the principle of permanence" repeated database 21's Peacock record, and "Legendre symbols mod 11 by Euler's criterion" repeated the Legendre and Euler material of databases 24 and 25. Replaced by Humboldt's study of the Basque language and Carnot's efficiency limit for two heat reservoirs.
+  - Database 23's "Morrison's Chinese dictionary" and "The Royal Astronomical Society" repeated records in database 22. Replaced by Babbage's Principles of Pure D-ism and the University of Berlin, opened 1810.
+  - Database 24 had nine records about Gauss and several repeats. Eight records were replaced: four of the Gauss records, the Euler's criterion guide, the period lengths of 1/p, the gas volumes example and the Sicard record. Five Gauss records remain.
+  - Database 25's "Stanhope's iron printing press" repeated database 24's all-iron press, its "Lacroix's course in the calculus" repeated database 23, and "Legendre's symbol by Euler's criterion" repeated the Legendre symbol material. Replaced by Lebon's thermolamp, the Rosetta Stone and its three scripts, and the continued fraction of pi.
+  - Database 20 had eight records with uncertain dates or titles. They were replaced, and the replacements pass the checks.
+- Anachronism: database 26's record "How the Legendre symbol says whether a number is a square" is dated 1785, but the symbol dates from 1798. I renamed it "Legendre's 1785 memoir on squares modulo a prime" and changed its verifier key to match.
+- Galvani's record is dated 1786 (the experiments), while its originalTitle is the Latin commentary of 1791. The Latin title is kept, and the year difference is noted here.
+- Two titles repeat across the whole catalogue, as before: "Erlang" and "Software inspections", from databases 1 and 2. They are outside this batch and were not changed.
+- Not coding history, strictly: Lebon's thermolamp (25) and the Argand lamp (26) are technology. The helper flagged the thermolamp as off-theme. I kept it, and a later pass can swap it.
+- Descriptive labels: several originalTitle values are descriptive labels rather than printed titles, and the database 24 triangulation example has the label "Survey practice of the period" as its author. These need checking before a release.
+
+### How I checked it
+
+- Unit tests: 40 of 40 pass (AppDatabaseSeedTest 27, RecordFilterTest 5, SeedDataTest 8). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the log has no compiler warnings.
+- Examples: each new database has its own verifier with exact expected output, and all 140 runnable records pass, 20 in each database. The 210 reading-only records are not executed.
+- Structure: 50 records per database, kinds exact (6, 5, 8, 6, 5, 5, 6, 4, 3 and 2), rare flags between 8 and 10, years inside each decade, no provenance notes in the record text, and no dollar signs or Cyrillic in the new files.
+- Whole catalogue: 1,870 records. The only titles that repeat are "Erlang" and "Software inspections", from databases 1 and 2, as before.
+- Cross-batch: 22 pairs of titles across the new databases share two or more significant words, after the replacements. I kept them as neighbours, for the reasons below.
+
+### Notes
+
+- Neighbours kept, because they are different items: Babbage's Difference Engines No. 1 and No. 2 and Muller's design (three machines); Webster's 1828 dictionary and his 1806 Compendious Dictionary (two books); Hutton's 1795 dictionary and his 1785 tables; the presses of Koenig, Stanhope and Hoe; the two survey-triangle records; Gauss's ratio test and Gauss's test for constructible polygons; Lacroix's and Woodhouse's notation for the calculus; Gallaudet's school and L'Epee's signs for the deaf; the electric motors of Jacobi and Barlow; and the four-square count and the three-square theorem, which are different theorems.
+- Clusters, the main weak spot: Gauss (15 records in databases 21 to 25), Jacobi (seven in databases 20 to 22), Bessel (four books and instruments in databases 20 to 23), Babbage (six in databases 20 to 23), Legendre (five in databases 24 to 26), Herschel (four in databases 20 and 26), Lavoisier (four in database 26) and Condorcet (two in database 26). A later pass should thin these.
+- Thin coding content: the 1780s to 1840s had less software to record, so many records are about adjacent science and technology (telegraphs, instruments, surveying, tables and notation). The coding label covers that only loosely.
+- Dates from memory that deserve a recheck: Ronalds's telegraph (1816 or 1823), Gauss's heliotrope (1821), the date and title of Cauchy's residue record, the Gompertz title, the Admiralty shutter station and the Gauss arithmetic-geometric mean guide (1799, uncertain).
+- Process note: the database 24 fix helper used seven searches, one over its limit of six. Its report says so.
+- Not verified yet: running on a device or emulator, the migrations from versions 19 to 26 on a real device, the UI with twenty-six databases in the list and in the filters, lint, and the release build.
