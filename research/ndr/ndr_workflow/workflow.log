@@ -101,3 +101,10 @@
 2026-10-15T22:39:57+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/59506 sold% 55
 2026-10-15T22:40:54+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/66013 sold% 47
 2026-10-15T22:40:55+00:00 pass finished {'started': '2026-10-15T22:19:36+00:00', 'result': 'budget_reached', 'actions': 20, 'xhr_last_min': 3}
+2026-10-15T22:40:59+00:00 next pass in 3 min
+2026-10-15T22:44:27+00:00 preflight {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36", "lang": "ru-RU", "intl": "ru", "tz": "Europe/Moscow", "gl": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)", "dpr": 1}
+2026-10-15T22:44:53+00:00 pass error error: Error: Page.goto: net::ERR_CONNECTION_RESET at https://xn--80az8a.xn--d1aqf.xn--p1ai/
+Call log:
+  - navigating to "https://xn--80az8a.xn--d1aqf.xn--p1ai/", waiting until "load"
+
+2026-10-15T22:44:53+00:00 pass finished {'started': '2026-10-15T22:44:27+00:00', 'result': 'error: Error: Page.goto: net::ERR_CONNECTION_RESET at https://xn--80az8a.xn--d1aqf.xn--p1ai/\nCall log:\n  - navigating to "https://xn--80az8a.xn--d1aqf.xn--p1ai/", waiting until "load"\n', 'actions': 0, 'xhr_last_min': 0}

@@ -84051,6 +84051,12 @@
    "result": "budget_reached",
    "actions": 20,
    "xhr_last_min": 3
+  },
+  {
+   "started": "2026-10-15T22:44:27+00:00",
+   "result": "error: Error: Page.goto: net::ERR_CONNECTION_RESET at https://xn--80az8a.xn--d1aqf.xn--p1ai/\nCall log:\n  - navigating to \"https://xn--80az8a.xn--d1aqf.xn--p1ai/\", waiting until \"load\"\n",
+   "actions": 0,
+   "xhr_last_min": 0
   }
  ],
  "session": {
