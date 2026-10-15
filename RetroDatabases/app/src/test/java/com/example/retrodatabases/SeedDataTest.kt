@@ -27,6 +27,14 @@ import com.example.retrodatabases.data.seed.db23Records
 import com.example.retrodatabases.data.seed.db24Records
 import com.example.retrodatabases.data.seed.db25Records
 import com.example.retrodatabases.data.seed.db26Records
+import com.example.retrodatabases.data.seed.db27Records
+import com.example.retrodatabases.data.seed.db28Records
+import com.example.retrodatabases.data.seed.db29Records
+import com.example.retrodatabases.data.seed.db30Records
+import com.example.retrodatabases.data.seed.db31Records
+import com.example.retrodatabases.data.seed.db32Records
+import com.example.retrodatabases.data.seed.db33Records
+import com.example.retrodatabases.data.seed.db34Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import com.example.retrodatabases.data.seed.seedRecords
 import org.junit.Assert.assertEquals
@@ -40,6 +48,7 @@ class SeedDataTest {
         db10Records, db11Records, db12Records, db13Records, db14Records,
         db15Records, db16Records, db17Records, db18Records, db19Records,
         db20Records, db21Records, db22Records, db23Records, db24Records, db25Records, db26Records,
+        db27Records, db28Records, db29Records, db30Records, db31Records, db32Records, db33Records, db34Records,
     )
 
     @Test
@@ -73,6 +82,14 @@ class SeedDataTest {
         assertTrue(db24Records.all { it.databaseId == 24L })
         assertTrue(db25Records.all { it.databaseId == 25L })
         assertTrue(db26Records.all { it.databaseId == 26L })
+        assertTrue(db27Records.all { it.databaseId == 27L })
+        assertTrue(db28Records.all { it.databaseId == 28L })
+        assertTrue(db29Records.all { it.databaseId == 29L })
+        assertTrue(db30Records.all { it.databaseId == 30L })
+        assertTrue(db31Records.all { it.databaseId == 31L })
+        assertTrue(db32Records.all { it.databaseId == 32L })
+        assertTrue(db33Records.all { it.databaseId == 33L })
+        assertTrue(db34Records.all { it.databaseId == 34L })
     }
 
     @Test
@@ -111,6 +128,14 @@ class SeedDataTest {
         assertTrue(db24Records.all { it.year in 1800..1810 })
         assertTrue(db25Records.all { it.year in 1790..1800 })
         assertTrue(db26Records.all { it.year in 1780..1790 })
+        assertTrue(db27Records.all { it.year in 1770..1780 })
+        assertTrue(db28Records.all { it.year in 1760..1770 })
+        assertTrue(db29Records.all { it.year in 1750..1760 })
+        assertTrue(db30Records.all { it.year in 1740..1750 })
+        assertTrue(db31Records.all { it.year in 1730..1740 })
+        assertTrue(db32Records.all { it.year in 1720..1730 })
+        assertTrue(db33Records.all { it.year in 1710..1720 })
+        assertTrue(db34Records.all { it.year in 1700..1710 })
     }
 
     @Test

@@ -31,6 +31,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-15 | 2026-10-15 | 28,170 | 490 | 82 | 118 | 28,860 | +6,622 (databases 10 to 14: 250 records in 55 files, migrations 9→10 to 13→14, tests +116) |
 | CP-16 | 2026-10-15 | 34,733 | 606 | 82 | 118 | 35,539 | +6,679 (databases 15 to 19: 250 records in 55 files, migrations 14→15 to 18→19, tests +116) |
 | CP-17 | 2026-10-15 | 43,168 | 768 | 82 | 118 | 44,136 | +8,597 (databases 20 to 26: 350 records in 77 files, migrations 19→20 to 25→26, tests +162) |
+| CP-18 | 2026-10-15 | 52,274 | 953 | 82 | 118 | 53,427 | +9,291 (databases 27 to 34: 400 records in 88 files, migrations 26→27 to 33→34, tests +185) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -868,3 +869,52 @@ Most dates and attributions in the other databases, and the ones listed above. T
 - Dates from memory that deserve a recheck: Ronalds's telegraph (1816 or 1823), Gauss's heliotrope (1821), the date and title of Cauchy's residue record, the Gompertz title, the Admiralty shutter station and the Gauss arithmetic-geometric mean guide (1799, uncertain).
 - Process note: the database 24 fix helper used seven searches, one over its limit of six. Its report says so.
 - Not verified yet: running on a device or emulator, the migrations from versions 19 to 26 on a real device, the UI with twenty-six databases in the list and in the filters, lint, and the release build.
+
+## CP-18: databases 27 to 34, 1700 to 1780 (the quota grows to nine decades)
+
+Status: eight more databases are in the app, one per decade from the 1700s to the 1770s: 400 records, migrations from version 26 to version 34, and tests for all thirty-four databases. The build passes, 48 of 48 unit tests pass (AppDatabaseSeedTest 35, RecordFilterTest 5, SeedDataTest 8), and the Kotlin compiler gives no warnings. The 160 runnable records (20 per database) pass against their expected output. The 1780s were already database 26, so the nine decades from 1700 to 1780 gave eight new databases.
+
+Mood: the quota went up again, from eight decades counted in the last batch to nine, and I feel tired and a little proud. The plumbing cost one script run and one test count, so the growth went into the content. The content is the hard part. Before 1780 the coding history is thin: the decades hold mathematics, instruments, grammars, trade and a few automata, and the word "coding" fits them loosely. Most of my time went into repeats. The same machine, book or canal came back in two or three databases, two helpers wrote the same Montmort problem, and the cross-batch check found more than the helpers' own checks did. We needed three rounds of replacements. The next quota will be larger, so the cross-batch check has to run as each database finishes, and each helper needs a list of what the other databases already cover before it writes.
+
+Date: 2026-10-15. Totals: Kotlin main 52,274 (CP-17: 43,168), Kotlin test 953 (768), XML 82, Gradle and project files 118, total 53,427. The +9,291 is the 88 new Kotlin files for databases 27 to 34 (8,953 lines together), the catalogue, the database class and the seed list (main +153 net), and the tests (+185).
+
+### What changed
+
+- Eight databases, each with the same ten kinds and 50 records: "Database 27: 1770s coding catalogue" (1770 to 1780), "Database 28: 1760s" (1760 to 1770), "Database 29: 1750s" (1750 to 1760), "Database 30: 1740s" (1740 to 1750), "Database 31: 1730s" (1730 to 1740), "Database 32: 1720s" (1720 to 1730), "Database 33: 1710s" (1710 to 1720) and "Database 34: 1700s" (1700 to 1710). Their rare flags are 9, 8, 9, 9, 8, 8, 8 and 10, so 69 new rare records and 680 in the whole catalogue.
+- Eleven files per database, 88 in total: ten record files and a catalogue each. Colours are #80CBC4, #B39DDB, #FFCDD2, #C8E6C9, #B3E5FC, #F0F4C3, #D1C4E9 and #FFF9C4.
+- Version 34 with MIGRATION_26_27 to MIGRATION_33_34. An install at each earlier version gets the new databases from the matching migration.
+- Tests: AppDatabaseSeedTest covers thirty-four databases, with eight new migration tests (35 in all). 48 unit tests in total.
+- The quota: nine decades count (1700, 1710, 1720, 1730, 1740, 1750, 1760, 1770 and 1780). Eight are new, because 1780 was database 26. The batch before counted eight, so the quota grew by one, and the next batch has to count at least ten. Boundary years count at both ends, so three records of database 28 are dated 1770.
+- Process: one helper per database, all eight in parallel, with one shared brief, suggested topics and a rule against repeats. Helpers wrote the record files and per-database verifiers, with expected outputs worked out by hand before each run. Each helper had a search budget of six. Helpers were resumed for replacements, first for repeats inside a database and then for repeats across databases that the cross-batch check found. I decided the replacements and ran the final checks. For database 29 I searched six dates myself: Smeaton's waterwheel trials (1759), Mudge's escapement (about 1755), Halley's comet forecast (1758 to 1759), Lagrange's letter of 1755, Michell's treatise of 1750 and Ferguson's orrery. The helpers' reports list every other searched and remembered date; the reports are not in the repository.
+- Scripts, kept in the session scratch folder and not in the repository: a title list for all records, a structure checker (now stops on an empty database), a cross-batch check, and a wiring script. The wiring script stopped once on the layout of the seed test (the names for databases 20 to 26 share one line), so the lines for databases 27 to 34 were added by a short edit that reuses the script's own values.
+
+### Facts checked by web search
+
+Examples from the helper reports: Smeaton's overshot wheel ranked above the undershot one in 1759 (ratio disputed); Mudge's lever escapement about 1755 (sources range from 1754 to 1756); Clairaut's forecast of Halley's comet for mid-April 1759, with perihelion on 13 March 1759 (the forecast day is disputed); Gurney's Brachygraphy in 1750; the Leyden jar of 1745 (the discoverer and the date are disputed); Newton's 1717 mint report (44½ guineas and 62 shillings per troy pound); the Swedish calendar, one day ahead of the Julian calendar from 1700 and an extra 30 February in 1712.
+
+### Not searched, from memory
+
+Most other dates and attributions, including the mathematics of the 1700s and the instruments of the 1750s. The helper reports list them. Several are the weakest facts in this batch (see Problems).
+
+### Problems
+
+- Repeats found after the first round, all replaced: Cugnot's vehicle (27 and 28); the Encyclopaedia Britannica (27 and 28); the Trent and Mersey, or Grand Trunk, canal (27 and 28); Réaumur's and Fahrenheit's conversions (31, 32 and 33); Gravesande's book (32 and 33); Montmort's matchings problem (33 and 34); Cristofori's piano (33 and 34); the Statute of Anne (33 and 34); the Swedish calendar experiment, which had the same title in two databases (33 and 34); Franklin's charge (29 and 30); Cramer's count (29 and 30); Gurney's shorthand (29 and 30); the Pythagorean comma (30 and 31); the flattening of the Earth (30 and 31); and the Copley medal (29 and 31). Inside single databases, several records repeated one machine or one book (a project or an example on the same device or book), for example Hahn, Ramsden, Jaquet-Droz, Arkwright, Hargreaves, Harrison's H4, Graham and Newsham. Most were replaced, with the exceptions below.
+- Kept on purpose, because the 1750s had no further confident items after two requests: six repeats in database 29 (Dollond's achromat powers, Mayer's lunar table and his 360 degrees, Linnaeus's name checker, Johnson's index and the waterwheel work). Database 30 keeps four Euler records, three of them about the number e.
+- Clusters that stay: Franklin (nine records across databases 27 to 30); Harrison (five across databases 28 to 32); Newton (ten across databases 32 to 34); Mayer (four in database 29); Lambert (four in database 28); smallpox inoculation (three records in databases 28, 32 and 33); the calendar (five records in databases 29, 30, 33 and 34); academies (seven, one in each of seven databases, each a different institution).
+- Dates from memory that need a check before a release: Canton's magnets (1751), Boscovich's survey (1755), Black's chalk (1755), Tartini's difference tones (1754), Queen Anne's Bounty (1704), the Sun Fire Office (1710), the Spectator's numbers (1711), Keill's Oxford lectures (1718) and Taylor's perspective (1719).
+- Shuli jingyun: accounts of its dates differ, so the record now says that the dates vary.
+- Several originalTitle values are descriptions, or German and French titles that were not checked (for example the Marggraf and Nollet lines in database 30). The original title of Pell's equation in database 28 is an English gloss.
+
+### How I checked it
+
+- Unit tests: 48 of 48 pass (AppDatabaseSeedTest 35, RecordFilterTest 5, SeedDataTest 8). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the log has no compiler warnings.
+- Examples: each new database has its own verifier with exact expected output, and all 160 runnable records pass, 20 in each database. The 240 reading-only records are not executed.
+- Structure: 50 records per database, kinds exact (6, 5, 8, 6, 5, 5, 6, 4, 3 and 2), rare flags between 8 and 10, years inside each decade (boundary years count at both ends), no provenance notes in the record text, and no dollar signs or Cyrillic in the new files.
+- Whole catalogue: 2,270 records. The only titles that repeat are "Erlang" and "Software inspections", from databases 1 and 2, as before.
+- Cross-batch: 34 pairs of titles across the new databases share two or more significant words. I reviewed each. The same-item pairs were replaced, and the rest are different items on a shared subject, listed under the clusters above.
+
+### Notes
+
+- Items that look alike but are different: Harrison's H1, H3 and H4; the punched-card looms of Bouchon and Falcon; the academies, each a different institution; the smallpox records (Timoni, Montagu and Bernoulli's life table); the Lagrange records on Pell's equation and on the resolvent.
+- These are the thinnest decades for "coding". Many records are about adjacent science, instruments, grammars and trade. A later pass should first thin the Euler and e cluster, the calendar cluster and the Newton cluster.
+- Not verified yet: running on a device or emulator, the migrations from version 26 to 34 on a real device, the UI with thirty-four databases in the list and in the filters, lint, and the release build.

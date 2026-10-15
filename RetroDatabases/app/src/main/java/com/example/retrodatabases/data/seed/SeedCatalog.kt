@@ -165,6 +165,54 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "Languages, systems, devices, tools and practices of 1780 to 1790, including rare and little-known items.",
         colorHex = "#D7CCC8",
     ),
+    DatabaseEntity(
+        id = 27,
+        name = "Database 27: 1770s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1770 to 1780, including rare and little-known items.",
+        colorHex = "#80CBC4",
+    ),
+    DatabaseEntity(
+        id = 28,
+        name = "Database 28: 1760s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1760 to 1770, including rare and little-known items.",
+        colorHex = "#B39DDB",
+    ),
+    DatabaseEntity(
+        id = 29,
+        name = "Database 29: 1750s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1750 to 1760, including rare and little-known items.",
+        colorHex = "#FFCDD2",
+    ),
+    DatabaseEntity(
+        id = 30,
+        name = "Database 30: 1740s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1740 to 1750, including rare and little-known items.",
+        colorHex = "#C8E6C9",
+    ),
+    DatabaseEntity(
+        id = 31,
+        name = "Database 31: 1730s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1730 to 1740, including rare and little-known items.",
+        colorHex = "#B3E5FC",
+    ),
+    DatabaseEntity(
+        id = 32,
+        name = "Database 32: 1720s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1720 to 1730, including rare and little-known items.",
+        colorHex = "#F0F4C3",
+    ),
+    DatabaseEntity(
+        id = 33,
+        name = "Database 33: 1710s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1710 to 1720, including rare and little-known items.",
+        colorHex = "#D1C4E9",
+    ),
+    DatabaseEntity(
+        id = 34,
+        name = "Database 34: 1700s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1700 to 1710, including rare and little-known items.",
+        colorHex = "#FFF9C4",
+    ),
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
@@ -172,4 +220,5 @@ val seedRecords: List<RecordEntity> =
     db1Records + db2Records + db3Records + db4Records + db5Records + db6Records + db7Records + db8Records + db9Records +
         db10Records + db11Records + db12Records + db13Records + db14Records + db15Records + db16Records + db17Records +
         db18Records + db19Records + db20Records + db21Records + db22Records + db23Records + db24Records + db25Records +
-        db26Records
+        db26Records + db27Records + db28Records + db29Records + db30Records + db31Records + db32Records + db33Records +
+        db34Records

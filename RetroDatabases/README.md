@@ -1,6 +1,6 @@
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside are twenty-six databases of coding history:
+An Android application in Kotlin, Jetpack Compose and Room. Inside are thirty-four databases of coding history:
 
 - "Database 1" is a catalogue of 80s coding;
 - "Database 2" is a catalogue of 90s coding;
@@ -27,7 +27,15 @@ An Android application in Kotlin, Jetpack Compose and Room. Inside are twenty-si
 - "Database 23" is a catalogue of coding from 1810 to 1820;
 - "Database 24" is a catalogue of coding from 1800 to 1810;
 - "Database 25" is a catalogue of coding from 1790 to 1800;
-- "Database 26" is a catalogue of coding from 1780 to 1790.
+- "Database 26" is a catalogue of coding from 1780 to 1790;
+- "Database 27" is a catalogue of coding from 1770 to 1780;
+- "Database 28" is a catalogue of coding from 1760 to 1770;
+- "Database 29" is a catalogue of coding from 1750 to 1760;
+- "Database 30" is a catalogue of coding from 1740 to 1750;
+- "Database 31" is a catalogue of coding from 1730 to 1740;
+- "Database 32" is a catalogue of coding from 1720 to 1730;
+- "Database 33" is a catalogue of coding from 1710 to 1720;
+- "Database 34" is a catalogue of coding from 1700 to 1710.
 
 ## What is inside
 
@@ -421,7 +429,127 @@ The catalogue of database 26 (1780 to 1790) has the same ten kinds:
 | Flex | 3 | Montgolfier's balloon, Atwood's pulley with a solid wheel and Goodricke's Algol minima week by week |
 | Cross-code | 2 | Hauy's cube planes counted and Monge's earthwork matching, both in Python and C |
 
-In total there are 1,870 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare), 60 in database 6 (29 rare), 49 in database 7 (26 rare), 50 in database 8 (22 rare), 50 in database 9 (6 rare), 50 in database 10 (10 rare), 50 in database 11 (9 rare), 50 in database 12 (7 rare), 50 in database 13 (10 rare) and 50 in database 14 (9 rare), 50 in database 15 (9 rare), 50 in database 16 (8 rare), 50 in database 17 (10 rare), 50 in database 18 (10 rare), 50 in database 19 (8 rare), 50 in database 20 (8 rare), 50 in database 21 (9 rare), 50 in database 22 (10 rare), 50 in database 23 (10 rare), 50 in database 24 (8 rare), 50 in database 25 (10 rare) and 50 in database 26 (10 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
+The catalogue of database 27 (1770 to 1780) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Euler's symbol i for the square root of minus one, Jones's grammar of the Persian language, Halhed's grammar of the Bengal language, Adelung's dictionary of High German, Heinicke's Leipzig school for the deaf and Herder's essay on the origin of language |
+| Systems | 5 | The Siku Quanshu, the imperial library of the four treasuries, Gribeauval's standard guns and carriages, the Trent and Mersey canal, the continental post under Franklin and the Société royale de médecine in Paris |
+| Devices | 8 | Jaquet-Droz's writing automaton, Kempelen's chess automaton (the Turk), Crompton's spinning mule, Hahn's calculating machine, Ramsden's dividing engine, Cugnot's steam dray, Wilkinson's boring mill for steam cylinders and Volta's electrophorus |
+| Tools | 6 | Waring's Meditationes Algebraicae, Bezout's general theory of algebraic equations, Euler's complete introduction to algebra, the first Encyclopaedia Britannica, Priestley's experiments on different kinds of air and the Paris Academy's yearly volume for 1772 |
+| Practices | 5 | Maskelyne's plumb line at Schiehallion, Buffon's cooling iron balls and the age of the Earth, Ingenhousz's green plants in sunlight, Bergman's affinity tables and Howard's inspection of English prisons |
+| Guides | 5 | How Vandermonde's determinant gives a product of differences, how Wilson's theorem tests a number for primality, how Laplace's probability of causes reverses a chance, how Buffon's needle estimates pi and how Lagrange's equilateral points hold a small body |
+| Examples | 6 | Bode's rule for the spacing of the planets, Reales converted to Spanish dollars at eight to one, Lagrange's subgroups of the integers modulo twelve, days for a post rider on a route, Priestley's mercury calx and the tea chests thrown into Boston harbour in 1773 |
+| Projects | 4 | Basedow's school day in lesson blocks, letters sent wire by wire on Le Sage's telegraph, the present value of three yearly payments and Lichtenberg's figures grown by splitting branches |
+| Flex | 3 | The silver value of Continental paper dollars, the radius of the arch of the Iron Bridge and the water delivered by a hydraulic ram |
+| Cross-code | 2 | Smith's pin factory and the knight's moves on a five by five board, both in Python and C |
+
+The catalogue of database 28 (1760 to 1770) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Priestley's Rudiments of English Grammar, Lowth's Short Introduction to English Grammar, the fourth edition of the French Academy's dictionary, Sheridan's lectures on elocution, Lambert's Neues Organon on the signs of thought and Franklin's scheme for a new alphabet |
+| Systems | 5 | The Bridgewater Canal, the Mason and Dixon line survey, Wedgwood's Etruria works, the Royal Academy of Arts and the Board of Longitude's sea trials of timekeepers |
+| Devices | 8 | Harrison's marine chronometer H4, Hargreaves's spinning jenny, Arkwright's water frame, Watt's separate condenser, Franklin's glass armonica, Polzunov's twin-cylinder steam engine, Nairne's electrical machine and Zumpe's square piano |
+| Tools | 6 | Diderot's Encyclopédie and its engraved plates, Macquer's Dictionnaire de chymie, Priestley's Chart of Biography, Euler's Institutiones calculi integralis, Lalande's Traité d'astronomie and Lambert's Beyträge zum Gebrauche der Mathematik |
+| Practices | 5 | The Equitable Society's premiums of 1762, Bernoulli's life-table estimate for smallpox inoculation, Halley's method for the Sun's distance, Lomonosov's sighting of an atmosphere on Venus and Lloyd's surveyors and ship classes of 1764 |
+| Guides | 5 | How Bayes's uniform prior gives a posterior chance, Euler's step method for y' = y, Lagrange's multiplier rule for a constrained maximum, how Lagrange's inversion gives a power series and how two readings fix an inverse-square power |
+| Examples | 6 | Black's latent heat in an ice and water mixture, Michell's chance of a close pair of stars, Boscovich's least-deviation line through four points, Lagrange's four squares for 7, 15 and 23, compound interest at three per cent over three years and a ship's daily log in the Gulf Stream |
+| Projects | 4 | Lagrange's solutions of Pell's equation by continued fractions, Lambert's cosine law for a tilted surface, a level premium at three per cent from a toy life table and counting the letters a spelling reform must cover |
+| Flex | 3 | Waring's power sums of three numbers, Lagrange's resolvent for a cubic and printer's arithmetic for pages from folded sheets |
+| Cross-code | 2 | Lambert's tangent continued fraction and cotton yarn counted in hanks, both in Python and C |
+
+The catalogue of database 29 (1750 to 1760) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Linnaeus's binomial names in Species Plantarum, Lomonosov's Russian grammar, Diderot's letter on the deaf and dumb, Gurney's brachygraphy shorthand, Franklin's positive and negative electricity and Linnaeus's Systema naturae, tenth edition |
+| Systems | 5 | The British Museum founded by Act of Parliament, Franklin and Hunter's joint post of British America, Moscow University founded by imperial decree, the Holland Society of Sciences at Haarlem and the Académie de marine at Brest |
+| Devices | 8 | Franklin's lightning rod, Dollond's achromatic lens, Harrison's H3 marine timekeeper, Smeaton's overshot waterwheel trials, Mudge's detached lever escapement, Ferguson's all-wood orrery, James Short's reflecting telescope and Smeaton's third Eddystone lighthouse |
+| Tools | 6 | Johnson's Dictionary of the English Language, Baskerville's types, Mayer's Tabulae motuum solis et lunae, Clairaut's lunar theory of 1752, Ferguson's Astronomy Explained and Kant's theory of the heavens |
+| Practices | 5 | Clairaut's prediction of Halley's comet, Canton's method of making artificial magnets, Lacaille's observations at the Cape, the Copley medal for Franklin and Boscovich's survey of the Papal States |
+| Guides | 5 | Cramer's rule for linear equations, Mayer's method of averages for too many equations, how nine points fix a cubic curve, how Halley's 76-year period gives the return years and how the spherical cosine rule gives a lunar distance |
+| Examples | 6 | Euler's polyhedron count, Franklin's charge shared between two connected bodies, Mayer's mean lunar motion table, Michell's inverse-square law for magnetic poles, Black's chalk and fixed air and a waterwheel's work from a flow and a drop |
+| Projects | 4 | The calendar of September 1752 with eleven days missing, Johnson's index of entries by first letter, Linnaeus's binomial name checker and the 1757 lottery of five numbers from ninety |
+| Flex | 3 | Euler's pentagonal number theorem, Dollond's achromat powers from two glasses and Mayer's 360 degrees in whole days |
+| Cross-code | 2 | Tartini's difference tones and the flashes of a lighthouse counted, both in Python and C |
+
+The catalogue of database 30 (1740 to 1750) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Rousseau's numerals for music, Gottsched's grammar of the German language, Larramendi's trilingual dictionary of Basque, the French Academy's dictionary (third edition), Dilworth's spelling book for English schools and the Trévoux dictionary of 1743 |
+| Systems | 5 | The Royal Military Academy at Woolwich, the American Philosophical Society, Sweden's Tabellverket for population tables, the Calendar (New Style) Act of 1750 and the Scottish Ministers' Widows' Fund |
+| Devices | 8 | Vaucanson's silk loom with a perforated drum, the Leyden jar, Robins's ballistic pendulum, Hales's ventilators for ships and prisons, Celsius's centigrade thermometer, Buffon's burning mirrors, Franklin's Pennsylvania fireplace and Bourn's roller spinning machine |
+| Tools | 6 | Fournier's specimen of printing types, the Le Seur and Jacquier commentary on Newton's Principia, Buffon's Natural History (first volumes), Saunderson's Elements of Algebra, Anson's voyage round the world and Wright's Original Theory of the Universe |
+| Practices | 5 | Lind's controlled trial for scurvy, Marggraf's sugar from the white beet, Nollet's chain of monks for the speed of electricity, Sheffield plate and Huntsman's crucible steel |
+| Guides | 5 | Simpson's rule for the area under a curve, d'Alembert's vibrating string, Goldbach's conjecture for even numbers, Clairaut's relation for the flattening of the Earth and Bouguer's metacentre for a box-shaped ship |
+| Examples | 6 | Euler's limit for the number e, Agnesi's witch curve, Simpson's annuity of 1 a year for five years, Maclaurin's series for the sine, Euler's identity (e to the i pi plus one is zero) and Philidor's pawns in a race to promote |
+| Projects | 4 | Maupertuis's least action at a boundary, Euler's binomial series for a square root, Hoyle's whist trick resolver and Bradley's cycle of the lunar node |
+| Flex | 3 | D'Alembert's principle on an inclined plane, Robins's air drag on a ball and Euler's continued fraction for e, from the 1748 Introductio |
+| Cross-code | 2 | D'Alembert's attempt at the fundamental theorem of algebra and Maclaurin's fluxion for a maximum, both in Python and C |
+
+The catalogue of database 31 (1730 to 1740) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Euler's function notation f(x), Linnaeus's rules for botanical terms, Linnaeus's ranks in Systema naturae, Brandt's cobalt as a semimetal of its own, Seba's numbered thesaurus of natural objects and Mattheson's manual for conductors |
+| Systems | 5 | La Condamine's meridian survey in Quito, the Royal Swedish Academy of Sciences, the University of Göttingen, the Great Northern Expedition of Russia and the Dublin Society for improving husbandry |
+| Devices | 8 | Kay's flying shuttle, Hadley's reflecting quadrant, Pitot's tube for flow speed, Vaucanson's digesting duck, Réaumur's alcohol thermometer, Harrison's first marine timekeeper H1, Lewis Paul's roller spinning machine and Vaucanson's flute player |
+| Tools | 6 | Bernoulli's Hydrodynamica, Desaguliers's Course of Experimental Philosophy, Smith's Compleat System of Opticks, Boerhaave's Elementa chemiae, Neidhardt's temperament treatise of 1732 and Belidor's Architecture hydraulique |
+| Practices | 5 | Maupertuis's arc measurement in Lapland, Hales's blood pressure in a mare, Réaumur's insect memoirs, Du Fay's two kinds of electricity and Mairan's compilation of aurora sightings |
+| Guides | 5 | Euler's bridges of Königsberg and the odd-vertex test, De Moivre's normal curve for the central binomial term, Stirling's numbers counting groups of a set, the St Petersburg game with a truncated payout and how Stirling's central differences interpolate a table |
+| Examples | 6 | Stirling's approximation for the factorial, Harrison's longitude error from a clock's daily rate, Berkeley's leftover term in a difference quotient, Smith's thin lens focal length, Neidhardt's Pythagorean comma from twelve fifths and Linnaeus's classes from a count of stamens |
+| Projects | 4 | Bernoulli's tank draining under Torricelli's law, Pitot's river profile of speeds, Maupertuis's degree table against latitude and Mattheson's just intervals as ratios |
+| Flex | 3 | Hadley's double reflection reading, Réaumur's scale in Celsius and Fahrenheit and Lewis Paul's roller draft |
+| Cross-code | 2 | Stirling's group counts and the St Petersburg payout, both in Python and C |
+
+The catalogue of database 32 (1720 to 1730) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Byrom's universal English shorthand, Rameau's theory of harmony, Stahl's phlogiston chemistry, Flamsteed's numbers for stars in the Historia coelestis, Threlkeld's Irish flora and De Jussieu's thunderstones |
+| Systems | 5 | The St Petersburg Academy of Sciences, Lombe's Derby silk mill, Yoshimune's suggestion box for petitions, Bartram's garden near Philadelphia and Jai Singh's stone observatory at Delhi |
+| Devices | 8 | Bouchon's punched paper for a drawloom, Falcon's punched-card loom, Graham's mercury pendulum, Harrison's gridiron pendulum, Newsham's patented fire pump, Hochbrucker's five-pedal harp, Churchman's cocoa-bean grinder and Castel's ocular harpsichord |
+| Tools | 6 | Chambers's Cyclopaedia of arts and sciences, Caslon's types for English books, Gravesande's Newtonian physics with experiments, Fauchard's dental surgery book, Hales's Vegetable Staticks and Freind's History of Physick |
+| Practices | 5 | Bradley's discovery of starlight aberration, Gray's experiments on electrical conduction, Gravesande's falling-ball test of speed and depth, Celsius's weather record at Uppsala and Montagu's smallpox inoculation in London |
+| Guides | 5 | De Moivre's formula for powers of unit complex numbers, Cotes's split of x^6 − 1 into real factors, Ozanam's card square of four by four, how the gridiron rods cancel their expansion and reading latitude from the sun's noon altitude |
+| Examples | 6 | Semitone ratios for a harp's pedals, Bouguer's layers of air that halve the light, Sisson's theodolite, Lombe's spindle twist per metre, Varignon's moments of parallel forces and Saumarez's speed in knots from timed runs |
+| Projects | 4 | Chambers's cross-reference index, Caslon's line justification, Grandjean de Fouchy's analemma points and Switzer's time to empty a vessel through a hole |
+| Flex | 3 | Maraldi's eclipse, Pinchbeck's alloy by mass and Scarlett's eyeglasses with side arms |
+| Cross-code | 2 | The Rotherham plough furrow and Roggeveen's Easter landing, both checked in Python and C |
+
+The catalogue of database 33 (1710 to 1720) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Swift's proposal to fix the English tongue, the Royal Spanish Academy and its motto, Wolff's logic in German, Ziegenbalg's Tamil grammar, the Kangxi Dictionary of characters and the Dutch books admitted to Japan in 1720 |
+| Systems | 5 | The Longitude Act of 1714, Law's Banque générale, Sweden's calendar experiment, Newton's guinea at twenty-one shillings and the South Sea scheme of 1720 |
+| Devices | 8 | Newcomen's atmospheric steam engine, Shore's tuning fork, Cristofori's hammer piano as Maffei described it, Fahrenheit's mercury thermometer, Mill's patent for transcribing letters, Halley's diving bell with air barrels, Graham's dead-beat escapement and Stradivari's Messiah violin |
+| Tools | 6 | Bernoulli's Ars Conjectandi, De Moivre's Doctrine of Chances, Taylor's Methodus incrementorum, Geoffroy's table of chemical affinities, Newton's Principia (second edition) and Keill's astronomy lectures at Oxford |
+| Practices | 5 | The Royal Society's Commercium epistolicum, Timoni's account of smallpox inoculation, the Statute of Anne, Marseille's cordon of 1720 and the Stamp Act of 1712 |
+| Guides | 5 | How Taylor's series builds a function from its derivatives, how Montmort's rencontres count the chance of a match, how Newton's divided differences fit a polynomial through a table, how Boyle's law sets the air left in a diving bell and how a radical index sorts Chinese characters |
+| Examples | 6 | A degree of longitude at each latitude, the atmosphere's force on a Newcomen piston, Kepler's third law in whole numbers, Fahrenheit's fixed points in Celsius, Newton's mint ratio of gold to silver and throws of a die for an even chance of a six |
+| Projects | 4 | Copyright terms under the Statute of Anne, quarantine release dates at Marseille in 1720, notes issued against a metal reserve and the Spectator's numbers counted by day |
+| Flex | 3 | Pascal's rule for combinations in a few lines, days in Queen Anne's reign and Waldegrave's mixed strategy for a card game |
+| Cross-code | 2 | Sunzi's remainder problem and a perspective line's vanishing point, both in Python and C |
+
+The catalogue of database 34 (1700 to 1710) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Leibniz's binary arithmetic, Jones's symbol π for the circle ratio, Feuillet's dance notation, Tournefort's genera of plants, Harris's Lexicon Technicum and the Russian civil script of 1708 |
+| Systems | 5 | The Berlin Academy of Sciences, the Sun Fire Office, the Moscow school of mathematics and navigation, the Collegiate School of Connecticut and the Meissen porcelain manufactory |
+| Devices | 8 | Hauksbee's electrical machine, Savery's Miner's Friend, Papin's paddle-wheel boat on the Fulda, Amontons's air thermometer, Tull's seed drill, Darby's coke furnace at Coalbrookdale, Leibniz's stepped reckoner and the Eddystone lighthouse of 1709 |
+| Tools | 6 | Newton's Opticks, Newton's Arithmetica universalis, Halley's chart of the variation of the compass, Sherwin's Mathematical Tables, Magnitsky's Arithmetic and Halley's Synopsis of the Astronomy of Comets |
+| Practices | 5 | Queen Anne's Bounty, Arbuthnot's argument from christening records, Vauban's tithe proposal, the Ladies' Diary and Peter's New Year on the first of January |
+| Guides | 5 | How compass variation turns a magnetic course into a true course, how a seed drill's gears set the row spacing, how Tournefort's key sorts plants by flower and fruit, how air pressure limits the lift of a suction pump and how Newton's identities give the power sums of roots |
+| Examples | 6 | Newton's colour mixing by centre of gravity, Newton's rings, Arbuthnot's sign test on 82 years of christenings, Amontons's pressure law at fixed volume, polygons that enclose the circle ratio Jones named and Vauban's tenth of parish incomes |
+| Projects | 4 | Julian and Gregorian day numbers around 1700, a dead-reckoning log for three legs, a stepped-drum multiplier by repeated addition and a Feuillet-style count of beats in a dance phrase |
+| Flex | 3 | Is 1700 a leap year, a rule-of-three trade problem in one line and Jones's 22/7 and how far it misses the circle ratio |
+| Cross-code | 2 | Leibniz's binary addition and Arbuthnot's sign test, both in Python and C |
+
+In total there are 2,270 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare), 60 in database 6 (29 rare), 49 in database 7 (26 rare), 50 in database 8 (22 rare), 50 in database 9 (6 rare), 50 in database 10 (10 rare), 50 in database 11 (9 rare), 50 in database 12 (7 rare), 50 in database 13 (10 rare) and 50 in database 14 (9 rare), 50 in database 15 (9 rare), 50 in database 16 (8 rare), 50 in database 17 (10 rare), 50 in database 18 (10 rare), 50 in database 19 (8 rare), 50 in database 20 (8 rare), 50 in database 21 (9 rare), 50 in database 22 (10 rare), 50 in database 23 (10 rare), 50 in database 24 (8 rare), 50 in database 25 (10 rare), 50 in database 26 (10 rare), 50 in database 27 (9 rare), 50 in database 28 (8 rare), 50 in database 29 (9 rare), 50 in database 30 (9 rare), 50 in database 31 (8 rare), 50 in database 32 (8 rare), 50 in database 33 (8 rare) and 50 in database 34 (10 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
 
 In the app:
 - the list of databases with the number of records;
@@ -448,8 +576,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Structure
 
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 and 25 to version 26.
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all twenty-six databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt`, `Db6*.kt`, `Db7*.kt`, `Db8*.kt`, `Db9*.kt`, `Db10*.kt`, `Db11*.kt`, `Db12*.kt`, `Db13*.kt`, `Db14*.kt`, `Db15*.kt`, `Db16*.kt`, `Db17*.kt`, `Db18*.kt`, `Db19*.kt`, `Db20*.kt`, `Db21*.kt`, `Db22*.kt`, `Db23*.kt`, `Db24*.kt`, `Db25*.kt` and `Db26*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 and 33 to version 34.
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all thirty-four databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt`, `Db6*.kt`, `Db7*.kt`, `Db8*.kt`, `Db9*.kt`, `Db10*.kt`, `Db11*.kt`, `Db12*.kt`, `Db13*.kt`, `Db14*.kt`, `Db15*.kt`, `Db16*.kt`, `Db17*.kt`, `Db18*.kt`, `Db19*.kt`, `Db20*.kt`, `Db21*.kt`, `Db22*.kt`, `Db23*.kt`, `Db24*.kt`, `Db25*.kt`, `Db26*.kt`, `Db27*.kt`, `Db28*.kt`, `Db29*.kt`, `Db30*.kt`, `Db31*.kt`, `Db32*.kt`, `Db33*.kt` and `Db34*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
 - `app/src/test` — tests of the filters, the data and the database itself (Robolectric).
 - `DEVLOG.md` — the development log with the growth of lines of code by checkpoint.
@@ -457,7 +585,7 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. In database 9, 20 examples run and pass. In database 10, 20 examples run and pass. In database 11, 20 examples run and pass. In database 12, 20 examples run and pass. In database 13, 20 examples run and pass. In database 14, 20 examples run and pass. In each of databases 15 to 26, 20 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. In database 9, 20 examples run and pass. In database 10, 20 examples run and pass. In database 11, 20 examples run and pass. In database 12, 20 examples run and pass. In database 13, 20 examples run and pass. In database 14, 20 examples run and pass. In each of databases 15 to 34, 20 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
 
 For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
 
@@ -465,4 +593,4 @@ For languages that are not installed in the build environment (Forth, Prolog, Li
 
 1. Create files in `data/seed` with the records. Pass the database id to `entry()`, for example `databaseId = 3`; a record without it goes to database 1.
 2. Add the database to `seedDatabases` and its records to `seedRecords` (file `SeedCatalog.kt`).
-3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_25_26` are the examples: each adds one database, and an install made at version 1 runs them in order.
+3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_33_34` are the examples: each adds one database, and an install made at version 1 runs them in order.
