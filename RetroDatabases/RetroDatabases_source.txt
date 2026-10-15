@@ -1199,8 +1199,8 @@ The catalogue of database 35 (1690 to 1700) has the same ten kinds:
 | Practices | 5 | Halley's life table for Breslau, Amman's method for teaching the deaf to speak, The Million Adventure lottery of 1694, The window tax of 1696 and Ramazzini's study of workers' diseases |
 | Guides | 5 | Bernoulli's brachistochrone and the cycloid's lead over a chord, How l'Hopital's rule settles a limit of zero over zero, Rolle's theorem: a zero slope between two roots, Raphson's iteration for a cubic root and Leibniz's vis viva and the speed of a fall |
 | Examples | 6 | Bernoulli, Huygens and Leibniz on the catenary, The lemniscate of Bernoulli and its area, Amontons's law of friction, 1699, Pressure at the foot of a fire-engine water column, Sauveur's beats between two pipes in a 25 to 24 ratio and The Darien subscription's shortfall of 1696 |
-| Projects | 4 | Sorting headwords for Furetiere's 1690 word list, How high a hose jet rises from its nozzle speed, What the Bank's 1694 loan cost each year and How far a light 30 metres high can be seen over the sea |
-| Flex | 3 | The year 1694 in Roman numerals, The gap between the Act's 1.5 million and the subscription and Years from van der Heyden's 1690 book to Newsham's 1721 fire pump |
+| Projects | 4 | Sorting headwords for Furetiere's 1690 word list, How high a hose jet rises from its nozzle speed, How far a light 30 metres high can be seen over the sea and How large an illustrative planet looks from 100 million kilometres |
+| Flex | 3 | The year 1694 in Roman numerals, Years from van der Heyden's 1690 book to Newsham's 1721 fire pump and The year of Bayle's dictionary in hexadecimal |
 | Cross-code | 2 | Halley's cubic iteration of 1694, in Python and C and Sauveur's beats in Python and C |
 
 The catalogue of database 36 (1680 to 1690) has the same ten kinds:
@@ -1337,6 +1337,156 @@ The catalogue of database 44 (1600 to 1610) has the same ten kinds:
 | Projects | 4 | A giro ledger where every transfer balances, Sorting Bodleian shelfmarks as numbers, The value of a pepper and spice cargo and Sheets for a 300-page book in three formats |
 | Flex | 3 | Five binary signs for twenty-four letters, Days in the Twelve Years' Truce of 1609 and Days from the Bodleian reopening to the Bank's opening |
 | Cross-code | 2 | Bacon's biliteral cipher in Python and C and Weekly issue dates of a news sheet in Python and C |
+
+The catalogue of database 45 (1590 to 1600) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Vieta's letters for unknowns in the Isagoge, Bales's shorthand in The Writing Schoolemaster, Minsheu's Spanish and English dictionary, The Heike monogatari in romanised Japanese, The Clementine Vulgate of 1592 and Florio's Second Frutes of Italian phrases |
+| Systems | 5 | Gresham College, lectures from 1597, The Leiden botanic garden of 1590, The English Poor Relief Act of 1598, Akbar's administration in the Ain-i-Akbari and A States-General patent for Plancius's world map |
+| Devices | 8 | Davis's backstaff in The Seamans Secrets, Hondius's celestial globe of 1598, Blagrave's Familiar Staff for heights and distances, Clavius's astrolabe in the Astrolabium, Tycho's instruments in the Mechanica of 1598, The Lyon cathedral clock restored in 1598, Corneliszoon's crank sawmill, patented in 1593 and The suanpan in Cheng Dawei's arithmetic of 1592 |
+| Tools | 6 | Mercator's Atlas, the book of maps, Kepler's Mysterium cosmographicum, the five solids, Wright's Certaine Errors in Navigation, Hakluyt's Principal Navigations, second edition, Waghenaer's Thresoor der Zeevaerdt and Gerard's Herball of 1597 |
+| Practices | 5 | Vieta's reading of the Spanish cipher, Ricci's memory art in Chinese, Libavius's Alchymia, the chemistry manual, The Bishops' Ban on satires of 1599 and The Jesuit Ratio studiorum of 1599 |
+| Guides | 5 | How Vieta's letters write a quadratic, How a globe's gores divide the equator, How a sounding in fathoms becomes feet and metres, How a memory palace fixes a list to rooms and How a parish rate is shared among households |
+| Examples | 6 | Gerard's plant names sorted by the alphabet, Kepler's nested solids, squared radius ratios, Heights by similar triangles with Blagrave's staff, A crank's stroke in the sawmill, Mixing a solution by weight in Libavius's way and The weekday of 1 January 1598 |
+| Projects | 4 | Gresham's lecture rota for seven professors, A Jesuit school week: hours by subject, Strokes for a shorthand sentence and Mansab ranks summed for three commanders |
+| Flex | 3 | Symbol counts in a cipher message, Vowels and consonants in a Latin phrase and Letters in the Clementine title |
+| Cross-code | 2 | The suanpan carry in Python and C and Vieta's product for pi in Python and C |
+
+The catalogue of database 46 (1580 to 1590) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Stevin's De Thiende, decimal fractions, Vigenere's Traicte des chiffres, the tableau cipher, Bright's Characterie, a sign for each word, Thomas Thomas's Latin and English dictionary, The Ostroh Bible in Church Slavonic and Mulcaster's Elementarie, rules for English spelling |
+| Systems | 5 | The Gregorian calendar, the bull Inter gravissimas, Tycho's observatory Uraniborg on Hven, Hideyoshi's land survey begun in 1582, The Armada beacon chain of 1588 and The Vatican printing house of Sixtus V |
+| Devices | 8 | Galileo's hydrostatic balance, La Bilancetta, William Lee's stocking frame, Ramelli's bookwheel, Norman's dip needle, Blagrave's Mathematical Jewel, Stevin's endless chain of beads, The first printing press in Lima and Dee's obsidian mirror |
+| Tools | 6 | Clavius's Epitome of practical arithmetic, Stevin's tables of interest, the Tafelen van interest, Benedetti's Diversarum speculationum of 1585, Porta's Magia naturalis, the twenty-book edition, Vincenzo Galilei's Dialogo on ancient and modern music and Clavius's Gnomonices, the book of sundials |
+| Practices | 5 | Phelippes's counts in the Babington letters, Chronograms: a year hidden in a Latin motto, Bruno's memory images, De umbris idearum, Finding the dominical letter for weekdays and Watching for the new crescent of the Islamic month |
+| Guides | 5 | How Stevin writes a decimal fraction with place numbers, How a harvest's yield ratio is found from seed and crop, How the rule of three finds an unknown price, How Stevin's inclined plane balances a weight and How the night watch counts hours by bell strokes |
+| Examples | 6 | Knockout matches in a tournament of 16 players, Lifting the Vatican obelisk with a lever, 1586, The 30-year cycle of the Hijri calendar, Porta's camera obscura and the size of an image, Keys of a 26-letter substitution: 26 factorial and Lee's stitch count for a stocking leg |
+| Projects | 4 | A bookwheel that brings shelves to the reader, A striped stocking pattern as rows of loops, A parish register of baptisms by month, totalled and Sorting Thomas Thomas's Latin words |
+| Flex | 3 | Days dropped by the Gregorian reform of 1582, Cards in a pack dealt to four players and Binary digits for 500 word-signs |
+| Cross-code | 2 | Vigenere's autokey cipher in Python and C and A beacon chain's warning time in Python and C |
+
+The catalogue of database 47 (1570 to 1580) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Estienne's Thesaurus of the Greek tongue, 1572, Molina's Nahuatl and Spanish dictionary of 1571, The first book set in Irish type, the Dublin primer of 1571, Bullokar's Booke at large for a new English spelling, 1580, Ortelius's Synonymia of place names, 1578 and Kiliaan's Etymologicum of the Dutch tongue, 1574 |
+| Systems | 5 | Akbar's Ibadat Khana at Fatehpur Sikri, founded in 1575, The Academie de Poesie et de Musique of Paris, founded in 1570, Leiden University, founded in 1575, The University of Helmstedt, founded in 1576 and Taqi al-Din's observatory at Istanbul, built in 1577 |
+| Devices | 8 | Besson's Theatrum of machines and instruments, 1578, The astronomical clock of Strasbourg Cathedral, completed in 1574, Guidobaldo del Monte's planisphere, the Planisphaerium of 1579, Digges's theodelitus, set out in his Pantometria of 1571, Danti's meridian line in San Petronio, Bologna, of 1575, Pare's artificial hands and legs in his collected works of 1575, Ercker's assay furnace in his book on ores, 1574 and Del Monte's Mechanicorum, the book of simple machines, 1577 |
+| Tools | 6 | Ortelius's Theatrum orbis terrarum, the first modern atlas, Commandino's Latin Euclid of 1572, Dee's General and Rare Memorials on the art of navigation, 1577, Palladio's Four Books of Architecture, 1570, Bourne's Regiment for the Sea, a seaman's manual of 1574 and Digges's Perfit Description of the Caelestiall Orbes, 1576 |
+| Practices | 5 | Tycho's naked-eye test of the nova of 1572, in De nova stella, Observing the great comet of 1577 from several towns, Answering Philip II's questionnaire for the relaciones geograficas, 1577, Engraving maps on copper plates for a printed atlas, 1570 and Drawing bird's-eye town views for the Civitates of 1572 |
+| Guides | 5 | How Bombelli's imaginary cube roots give a real root, How a stereographic projection sends the sphere to a plane, How the thirty-two points of the compass divide the circle, How the centre of gravity of a triangle sits at its medians and How a polygon's angles add up, after Euclid's first book |
+| Examples | 6 | Euclid's square of a sum, checked with numbers, Column heights of four orders in Palladio's proportions, Nahuatl number words for 1 to 10, 20 and 400, Greek letter numbers: 572, 27 and 999 spelt out, Fineness of silver from an assay, in parts per thousand and Ortelius's grid index for map sheets of ten degrees |
+| Projects | 4 | Angles of the clock hands at set times on a dial, A lookup of Nahuatl words to Spanish glosses, Counting the syllables of a line of measured verse and Tallying illustrative questionnaire replies from five towns |
+| Flex | 3 | Days in Drake's voyage round the world, 1577 to 1580, Days from the battle of Lepanto to Leiden University's founding and Days from Tycho's first sight of the nova to Leiden University |
+| Cross-code | 2 | Parallax of the Moon and of a distant star in Python and C and Greek letter numbers in Python and C |
+
+The catalogue of database 48 (1560 to 1570) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Porta's cipher book on secret letters, Dee's Monas hieroglyphica, a sign for the cosmos, Cooper's Latin and English thesaurus, Gruffydd Robert's Welsh grammar, Carswell's Gaelic prayer book of 1567 and Ascham's The Scholemaster on teaching Latin |
+| Systems | 5 | The Fugger news letters from 1568, Gresham's Royal Exchange in London, The Accademia del Disegno in Florence, Porta's Academy of Secrets in Naples and The Escorial, the king's monastery and library |
+| Devices | 8 | Juanelo's water lift for Toledo, Barbaro's lens in the camera obscura, The Moscow press that printed the Apostol, Jamnitzer's instrument for drawing solids in perspective, A pillar dial in a woodcut of 1567, Vize Menusier's astronomical compendium of Pau, Quiniet's astrolabe made at Antwerp and Pare's silk ligature for cut arteries |
+| Tools | 6 | Mercator's world map in his projection, Nunes's algebra in Castilian, Cardano's Opus novum on proportions, Ruy Lopez's book of chess openings, The Antwerp polyglot Bible of 1568 and Ramus's mathematics school books |
+| Practices | 5 | The Frankfurt autumn book fair catalogue, Verse numbers in the Geneva Bible, Ramus's method of dividing a subject in pairs, Quipu cords for counting goods in the Inca state and Notched tally sticks in the English Exchequer |
+| Guides | 5 | How a Julian date becomes a Gregorian date in 1564, How a key letter chooses one of thirteen Porta rows, How two planets' periods give the interval between conjunctions, How Mercator's projection stretches the latitudes and How to solve a linear equation by balancing both sides |
+| Examples | 6 | Synthetic division of a cubic with a known root, Non-attacking rooks on a chessboard, Counting the letter pairs of a Porta-style alphabet, Ratios of numbers in Cardano's proportions, Verse counts of three Psalms and Euclid's method on the years 1564 and 1567 |
+| Projects | 4 | Energy for a water lift of one hundred metres, Venetian years for dates in 1563 and 1564, Interest on a loan of a thousand florins and Sorting the decade's records by kind and year |
+| Flex | 3 | Keys of a thirteen-row cipher, lengths one to five, Days from Galileo's birth to Michelangelo's death and Prime factors of three years of the decade |
+| Cross-code | 2 | Porta's cipher round trip in Python and C and Days from the Council of Trent's close to Shakespeare's baptism in Python and C |
+
+The catalogue of database 49 (1550 to 1560) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Trubar's Abecedarium, the first Slovene primer, Bellaso's keyword cipher, La cifra, Peletier's algebra in French, L'algebre, Meigret's French grammar in his phonetic spelling, Gesner's Mithridates, a survey of tongues and Recorde's equals sign in The Whetstone of Witte |
+| Systems | 5 | Camillo's memory theatre, L'idea del theatro, Estienne's numbered verses in the Greek New Testament, Plantin's printing house in Antwerp, The Stationers' Company charter and its register and The Pauline Index of prohibited books |
+| Devices | 8 | Cardano's gimbal in De subtilitate, Cardano's cipher grille, Vicentino's archicembalo, a keyboard with extra keys, Agricola's mine machines in De re metallica, Juanelo Turriano's Cristallino, a planetary clock, Mercator's celestial globe of 1551, Schissler's gilt-brass compendium of 1556 and Gemini's London astrolabe of 1559 |
+| Tools | 6 | Tartaglia's General trattato of numbers and measures, Reinhold's Prutenic Tables of Copernican positions, Recorde's Pathway to Knowledge, geometry in English, Gesner's Historia animalium, the animal encyclopedia, Dodoens's Cruydeboeck, a herbal in Dutch and Rondelet's sea fishes, Libri de piscibus marinis |
+| Practices | 5 | Estienne's critical apparatus of the 1550 Greek Testament, Belon's bird and human skeletons side by side, Canisius's catechism of 1555, Singing the psalms from the Geneva psalter of 1551 and The papal cipher secretary's office, by 1555 |
+| Guides | 5 | How Bellaso's keyed shifts hide a word, How 31 equal steps place a fifth and a third, How the disc of an astrolabe turns through one hour, How Tartaglia's array builds each row from the one above and How a chapter and verse address finds a position |
+| Examples | 6 | The diagonal of Tartaglia's array gives the triangular numbers, Looking up a name in a sorted index, as a censor would, Intervals between three instruments of the 1550s, Each row of Tartaglia's array sums to a power of two, Peletier's square of a sum, with two numbers and Peletier's difference of two squares |
+| Projects | 4 | A printing-house job schedule on two presses, A verse index that sorts references by chapter and verse, A keyed-shift checker that round-trips a list of words and Numbering a catechism section by section |
+| Flex | 3 | Days from the Stationers' charter to 1 January 1560, Bits needed to number the verses of one chapter and Days in the decade from 1 January 1551 to 1 January 1560 |
+| Cross-code | 2 | Cardano's grille in Python and C and Chapter and verse addresses in Python and C |
+
+The catalogue of database 50 (1540 to 1550) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Etxepare's Basque book, the earliest printed in Basque, Agricola's ABC book, the earliest printed in Finnish, Mazvydas's Catechism, the earliest printed in Lithuanian, Oddur's Icelandic New Testament, printed at Roskilde, Du Bellay's defence of the French tongue and Dolet's rules for translating from one tongue to another |
+| Systems | 5 | The Society of Jesus, approved by Pope Paul III in 1540, The Albertina, the university of Konigsberg, founded in 1544, The Council of Trent, first met in December 1545, The Great Debasement of English coin under Henry VIII and The New Laws for the Indies, issued in 1542 |
+| Devices | 8 | Apian's paper volvelles in the Astronomicum Caesareum, Mercator's terrestrial globe of 1541, Nunes's nonius, the fine scale of De crepusculis, The matchlock gun at Tanegashima, the first in Japan, Gemma Frisius's darkened room for watching an eclipse, Hartmann's letter on the compass needle, dated 1544, The Mary Rose's ship's gear, lost in 1545 and Tartaglia's gunner's quadrant, described in his Quesiti |
+| Tools | 6 | Recorde's Grounde of Artes, arithmetic in English, Rheticus's Narratio prima, the first printed account of Copernicus, Copernicus's De revolutionibus, the heliocentric book, Munster's Cosmographia, the world described in German, Cardano's Ars magna, the solution of cubic and quartic equations and Gesner's Bibliotheca universalis, the universal bibliography |
+| Practices | 5 | The public contest of Ferrari and Tartaglia in Milan, 1548, Palatino's copybook for the chancery hand, Dead reckoning from logged courses, as pilots kept it, Silver mining at Potosi, begun in 1545 and Saying the English service from the 1549 prayer book |
+| Guides | 5 | How Ferrari's method reduces a quartic to two quadratics, How Cardano's formula solves x cubed plus px equals q, How half-angle steps build a table of chords, How a distance in German miles turns into degrees and How the first odd numbers add up to squares |
+| Examples | 6 | Cardano's split of 10 into parts with product 40, Glarean's six authentic modes as step patterns, The cube of a sum, the identity behind Cardano's cubic, The moon's age in days, as a moon wheel reads it, The length of a parallel on a globe, by its cosine and Counting books by language in a sample bibliography |
+| Projects | 4 | A ledger of silver bars with the royal fifth, Mixing gunpowder by parts, for a matchlock, Sorting places by longitude, in minutes and A ship's day run from logged watches |
+| Flex | 3 | Days from the Jesuit bull to the Council of Trent, Days in the 1540s, from the first day to the last and Days from the New Laws to the Albertina |
+| Cross-code | 2 | Etxepare's fifteen poems tallied by theme in Python and C and Stifel's exponents in Python and C |
+
+The catalogue of database 51 (1530 to 1540) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Palsgrave's French grammar for English readers, Elyot's Latin-English dictionary of 1538, Luther's complete German Bible of 1534, Oliveira's grammar of the Portuguese language, Estienne's French-Latin dictionary of 1539 and Scaliger's thirteen books on the causes of Latin |
+| Systems | 5 | The Antwerp bourse, the exchange of 1531, The royal lecturers of Paris, founded in 1530, The Court of Augmentations, the English court of monastic lands, The Villers-Cotterets ordinance of 1539, French for the law and The Act of Supremacy of 1534, the king as head of the church |
+| Devices | 8 | Apian's Instrument Buch of paper wheels, Fine's new quadrant in the Protomathesis of 1532, Fine's cross-staff in the Protomathesis of 1532, Fine's sundial woodcuts in the Protomathesis of 1532, Munster's Horologiographia on the making of sundials, Gemma Frisius's clock for finding longitude, Biringuccio's furnaces and bellows for smelting and Juan Pablos's printing press in Mexico City |
+| Tools | 6 | Fine's heart-shaped map of the world, Agrippa's Three Books of Occult Philosophy, Nunes's treatise on the rhumb line of sea charts, Vesalius's six anatomical tables, Cardano's practical arithmetic of 1539 and Brunfels's herbal of living pictures |
+| Practices | 5 | Gemma Frisius's triangulation for mapping, Ganassi's diminutions for the recorder, Palatino's writing manual of 1540, Gerle's lute tablature, Musica teusch and Gemma Frisius's practical arithmetic of 1540 |
+| Guides | 5 | How the golden number of a year is found, How a sundial's shadow follows the sun's height, How carats give the gold in an alloy, How a rhumb's northing follows from its course and How a French -er verb takes its present endings |
+| Examples | 6 | Agrippa's planetary squares and their magic sums, Ganassi's patterns that fill one long note, Triangular numbers counted as rows of bricks, The rule of false position for a number and its parts, The gelosia grid for multiplying two numbers and Shares of an estate reckoned in twelfths |
+| Projects | 4 | A French-Latin word index in alphabetical order, A paper wheel for the days of the year, Mixing two gold alloys to a target carat count and The planetary hours of a Sunday |
+| Flex | 3 | Palindromic years from 1500 to 1600, Days from the Augsburg Confession to the Villers-Cotterets ordinance and Days from the Truce of Nice to the Jesuit bull |
+| Cross-code | 2 | Planetary magic sums in Python and C and Golden numbers of 1530 to 1540 in Python and C |
+
+The catalogue of database 52 (1520 to 1530) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Luther's September Testament of 1522, Tyndale's English New Testament from the Greek, Bembo's rules for the Tuscan tongue, Tory's Champ fleury on the proportion of letters, Pagninus's Thesaurus of the holy tongue and Trissino's new letters for Italian spelling |
+| Systems | 5 | The Council of the Indies, set up in 1524, The Edict of Worms against Luther's books, The Royal Audiencia of New Spain, set up in 1527, The Zurich Prophezei, a school of Bible languages and The University of Marburg, founded in 1527 |
+| Devices | 8 | Duerer's perspective frame, shown in his woodcut, Apian's paper volvelles in the Cosmographia, Ries's counting board of lines, Vitruvius's water clock, the clepsydra of the ninth book, Vitruvius's odometer for counting miles, Ctesibius's water organ in Vitruvius, Vitruvius's screw for raising water and Vitruvius's scorpio, the bolt-throwing engine |
+| Tools | 6 | Duerer's Instruction in Measurement, the geometry book, Apian's Cosmographia, the book of the world, Rudolff's Coss, the German algebra of 1525, Apian's merchant's reckoning in three books, Duerer's four books of human proportion and Werner's book on the twenty-two conic elements |
+| Practices | 5 | Luther's Latin Mass reformed for Wittenberg, 1523, Luther's German Mass, the service in the vernacular, The Wittenberg hymnal of 1524, Luther's Small Catechism of 1529, questions and answers and Cranach's pictures of Christ and Antichrist, 1521 |
+| Guides | 5 | How an estate is divided among heirs by halves and thirds, How a division is proved by multiplying back, How a regular pentagon's diagonal follows from its side, How a company shares its profit by the stakes and How Werner's conic sections give the points of a parabola |
+| Examples | 6 | Exchanging gold and silver pieces at a set rate, Duerer's eight heads for a standing figure, Hebrew letters as numbers, with 15 written tet vav, Years for a sum to double at simple interest, Stones in a wall, course by course and Pecks and bushels of grain, with the remainder |
+| Projects | 4 | A root index of Hebrew words under their roots, The New Testament's chapters, sorted by book, A hymnal index sorted by first line and A grain tithe ledger for three parishes |
+| Flex | 3 | Days in Duerer's life, from birth to death, Days from Luther's theses to the Edict of Worms and Grains in a troy pound, by its parts |
+| Cross-code | 2 | Birds for a hundred coins in Python and C and Heron's steps to a square root in Python and C |
+
+The catalogue of database 53 (1510 to 1520) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Erasmus's Greek New Testament, the Novum Instrumentum, The Complutensian Polyglot, four languages on one page, Trithemius's Polygraphia, a printed book of ciphers, Bomberg's first Rabbinic Bible, the Mikraot Gedolot, The Urbatagirk, the first book printed in Armenian and Potken's Ethiopic Psalter, the first book in Ge'ez type |
+| Systems | 5 | The Royal College of Physicians, chartered in 1518, The Tripartitum, Werboczy's book of customary law, 1517, The Trilingual College at Louvain, Latin, Greek and Hebrew together, King Afonso's request from Kongo for teachers, a letter of 1514 and The Aldine Academy, a Venetian circle that spoke Greek |
+| Devices | 8 | Henlein's Nuremberg egg, a spring-driven pocket watch, Etzlaub's pocket sundial with a road map, 1511, Etzlaub's sundial of 1513 with a chart of Europe and North Africa, Stoeffler's astrolabe, the Elucidatio of 1513, Leonardo's mechanical lion, shown to Francis I in 1515, The wheel lock, a spring-driven spark for guns, about 1510, Kobel's counting table, the board of his 1514 reckoning and Romberch's Congestorium, a mnemonic device for the memory |
+| Tools | 6 | Werner's heart-shaped projection of the sphere, 1514, Stoeffler's Calendarium Romanum magnum, the great Roman almanac, Waldseemuller's Carta marina, the sea chart of 1516, Brunschwig's book on distilling, the German edition of 1512, Erasmus's Adages, the enlarged Basel edition of 1515 and Adam Ries's first reckoning book, dated 1518 |
+| Practices | 5 | Roman-style day counts in humanist letters, Erasmus's Colloquies, Latin speech practised in dialogues, Ugo da Carpi's chiaroscuro woodcut, printed from several blocks, Leonardo's mirror writing in his notebooks and Forecasting a year from the planets, as the almanacs taught |
+| Guides | 5 | How Durer's magic square of 1514 adds to 34, How Trithemius's progressive shift enciphers a word, How the Atbash letter code swaps each Hebrew letter, How the astronomical day begins at noon and How base sixty degrees and minutes add in an astrolabe table |
+| Examples | 6 | Psalm 119, an acrostic of twenty-two stanzas of eight verses, Hebrew leap years between 5270 and 5280, Gematria, the number values of the Hebrew alphabet, How far the Julian year drifts in a decade, Converting 1516 to a Hebrew year counted from creation and Mesrop's thirty-six letters of the Armenian alphabet |
+| Projects | 4 | A page for four columns of a polyglot Bible, A queue of books for prior approval under the Lateran rule, A printer's costing in ducats at a fixed exchange rate and Sorting a press list of 1510s books by year, then title |
+| Flex | 3 | Days from Leonardo's death to Magellan's sailing, Days from the Lateran bull to Luther's theses and Days from Flodden to Marignano |
+| Cross-code | 2 | Trithemius's progressive shift in Python and C and Durer's magic square check in Python and C |
+
+The catalogue of database 54 (1500 to 1510) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Bembo's Petrarch of 1501, the Italian poems, Calepino's Latin dictionary of 1502, Reuchlin's Hebrew grammar and lexicon of 1506, Bembo's dialogues on love in Italian, Lefevre d'Etaples's five Latin Psalters side by side and Stanbridge's Vulgaria, Latin sentences for schoolboys |
+| Systems | 5 | The Casa da India in Lisbon, The Casa de Contratacion at Seville, The Fondaco dei Tedeschi at Venice, The Estado da India, the Portuguese state in Asia and The imperial circles of 1500 |
+| Devices | 8 | Aldus's italic type in the 1501 Virgil, Petrucci's music printed with movable type, Leonardo's gears in the Madrid codex, The half-hour sand-glass at sea, The leather ink ball of the printing shop, Leonardo's flying machine in the Codex on the Flight of Birds, Leonardo's distance counter, the odometer and Aldus's anchor and dolphin device |
+| Tools | 6 | Juan de la Cosa's world map of 1500, The Cantino planisphere of 1502, Waldseemuller's map that gave the name America, The Padron Real, the master chart of Seville, Pacioli's De divina proportione with Leonardo's figures and Copernicus's Commentariolus, the sketch of his system |
+| Practices | 5 | Aldus's small octavo, the pocket book, The papal bull on licences for printed books, Dating by the Venetian year that began on 1 March, Writing sums in Hindu-Arabic figures in merchants' ledgers and Examining pilots at Seville in 1508 |
+| Guides | 5 | How the divine proportion comes from Fibonacci ratios, How apothecaries weigh a dose in grains and drachms, How the courses of a brick wall add up to its height, How a Latin dictionary sorts its headwords and How a Latin noun is declined in the singular |
+| Examples | 6 | Weekdays of New Year's Day from 1500 to 1510, Venetian money of account in denari, Note values in a perfect-time bar of Petrucci's print, Twelve sheets of Waldseemuller's world map on a grid, String lengths of a monochord for the musical intervals and Counting the rhymes of a Petrarchan sonnet |
+| Projects | 4 | Distances along a meridian from latitude differences, Provisioning a ship's crew for a voyage, Easter dates for 1500, 1505 and 1510 by the Julian reckoning and Splitting a voyage's profit between partners |
+| Flex | 3 | Ash Wednesday dates for 1500, 1505 and 1510, Days from Cabral's landing to the new year 1501 and Perfect numbers in Euclid's ninth book |
+| Cross-code | 2 | Relay stages of the Taxis post in Python and C and Euclid's greatest common measure in Python and C |
 <!-- END GENERATED CATALOGUE -->
 
 ################################################################################
@@ -3393,7 +3543,7 @@ An Android application in Kotlin, Jetpack Compose and Room. Inside are databases
 ## What is inside
 
 <!-- BEGIN GENERATED OVERVIEW -->
-Inside are 44 databases of coding history, from 1600 to 2036. The table gives each one's years, records and rare records. The kinds and titles of every database are in [CATALOGUE.md](CATALOGUE.md).
+Inside are 54 databases of coding history, from 1500 to 2036. The table gives each one's years, records and rare records. The kinds and titles of every database are in [CATALOGUE.md](CATALOGUE.md).
 
 | Database | Years | Records | Rare |
 |---|---|---:|---:|
@@ -3441,7 +3591,17 @@ Inside are 44 databases of coding history, from 1600 to 2036. The table gives ea
 | 42 | 1620 to 1630 | 50 | 10 |
 | 43 | 1610 to 1620 | 50 | 9 |
 | 44 | 1600 to 1610 | 50 | 9 |
-| **All** | | **2,770** | **769** |
+| 45 | 1590 to 1600 | 50 | 10 |
+| 46 | 1580 to 1590 | 50 | 9 |
+| 47 | 1570 to 1580 | 50 | 8 |
+| 48 | 1560 to 1570 | 50 | 8 |
+| 49 | 1550 to 1560 | 50 | 9 |
+| 50 | 1540 to 1550 | 50 | 9 |
+| 51 | 1530 to 1540 | 50 | 8 |
+| 52 | 1520 to 1530 | 50 | 8 |
+| 53 | 1510 to 1520 | 50 | 9 |
+| 54 | 1500 to 1510 | 50 | 9 |
+| **All** | | **3,270** | **856** |
 <!-- END GENERATED OVERVIEW -->
 
 
@@ -3471,8 +3631,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 ## Structure
 
 <!-- BEGIN GENERATED STRUCTURE -->
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and one generic migration for each version from 1 to 44 (`seedMigrations`).
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all 44 databases: `Db1*.kt` to `Db44*.kt`, one file per kind; `SeedCatalog.kt`, generated from `tools/databases.json`; the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and one generic migration for each version from 1 to 54 (`seedMigrations`).
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all 54 databases: `Db1*.kt` to `Db54*.kt`, one file per kind; `SeedCatalog.kt`, generated from `tools/databases.json`; the helper that builds a record (`SeedEntry.kt`).
 - `tools` — `databases.json` (the databases, their years and colours) and `build_catalogue.py`, which regenerates `SeedCatalog.kt`, the overview in this file and `CATALOGUE.md`, and checks every record.
 <!-- END GENERATED STRUCTURE -->
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
@@ -78027,7 +78187,7 @@ import com.example.retrodatabases.data.RecordEntity
 // (databaseId = the new id, one file per kind) and run python3 tools/build_catalogue.py.
 
 /** Version of the database file: the number of the newest seeded database. */
-const val DATABASE_VERSION = 44
+const val DATABASE_VERSION = 54
 
 /** The catalogue of databases that are created on the first launch, in id order. */
 val seedDatabases: List<DatabaseEntity> = listOf(
@@ -78295,6 +78455,66 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "Languages, systems, devices, tools and practices of 1600 to 1610, including rare and little-known items.",
         colorHex = "#F5F5F5",
     ),
+    DatabaseEntity(
+        id = 45,
+        name = "Database 45: 1590s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1590 to 1600, including rare and little-known items.",
+        colorHex = "#B2DFDB",
+    ),
+    DatabaseEntity(
+        id = 46,
+        name = "Database 46: 1580s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1580 to 1590, including rare and little-known items.",
+        colorHex = "#E1BEE7",
+    ),
+    DatabaseEntity(
+        id = 47,
+        name = "Database 47: 1570s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1570 to 1580, including rare and little-known items.",
+        colorHex = "#F3E5F5",
+    ),
+    DatabaseEntity(
+        id = 48,
+        name = "Database 48: 1560s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1560 to 1570, including rare and little-known items.",
+        colorHex = "#FFECB3",
+    ),
+    DatabaseEntity(
+        id = 49,
+        name = "Database 49: 1550s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1550 to 1560, including rare and little-known items.",
+        colorHex = "#CFD8DC",
+    ),
+    DatabaseEntity(
+        id = 50,
+        name = "Database 50: 1540s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1540 to 1550, including rare and little-known items.",
+        colorHex = "#BCAAA4",
+    ),
+    DatabaseEntity(
+        id = 51,
+        name = "Database 51: 1530s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1530 to 1540, including rare and little-known items.",
+        colorHex = "#C5E1A5",
+    ),
+    DatabaseEntity(
+        id = 52,
+        name = "Database 52: 1520s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1520 to 1530, including rare and little-known items.",
+        colorHex = "#FFE082",
+    ),
+    DatabaseEntity(
+        id = 53,
+        name = "Database 53: 1510s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1510 to 1520, including rare and little-known items.",
+        colorHex = "#B2EBF2",
+    ),
+    DatabaseEntity(
+        id = 54,
+        name = "Database 54: 1500s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 1500 to 1510, including rare and little-known items.",
+        colorHex = "#D4E157",
+    ),
 )
 
 /** Years each seeded catalogue covers. The tests check the records against them. */
@@ -78343,6 +78563,16 @@ val seedYears: Map<Long, IntRange> = mapOf(
     42L to 1620..1630,
     43L to 1610..1620,
     44L to 1600..1610,
+    45L to 1590..1600,
+    46L to 1580..1590,
+    47L to 1570..1580,
+    48L to 1560..1570,
+    49L to 1550..1560,
+    50L to 1540..1550,
+    51L to 1530..1540,
+    52L to 1520..1530,
+    53L to 1510..1520,
+    54L to 1500..1510,
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
@@ -78352,7 +78582,8 @@ val seedRecords: List<RecordEntity> =
         db18Records + db19Records + db20Records + db21Records + db22Records + db23Records + db24Records + db25Records +
         db26Records + db27Records + db28Records + db29Records + db30Records + db31Records + db32Records + db33Records +
         db34Records + db35Records + db36Records + db37Records + db38Records + db39Records + db40Records + db41Records +
-        db42Records + db43Records + db44Records
+        db42Records + db43Records + db44Records + db45Records + db46Records + db47Records + db48Records + db49Records +
+        db50Records + db51Records + db52Records + db53Records + db54Records
 
 ################################################################################
 # FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
