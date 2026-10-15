@@ -1,0 +1,5 @@
+# browser profiles hold session cookies - never commit
+**/profile*/
+**/session_*/
+**/*.html
+!report/mapsite/map.html

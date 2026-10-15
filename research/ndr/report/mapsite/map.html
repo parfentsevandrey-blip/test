@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU"></script>
+<style>html,body,#map{margin:0;width:1200px;height:760px}</style></head><body><div id="map"></div>
+<script>
+window.READY=false;
+const P=JSON.parse(decodeURIComponent(location.hash.slice(1)));
+ymaps.ready(function(){
+  const m=new ymaps.Map('map',{center:[P.self.lat,P.self.lon],zoom:13,controls:['zoomControl']});
+  const pts=[[P.self.lat,P.self.lon]];
+  P.comps.forEach(function(c,i){
+    pts.push([c.lat,c.lon]);
+    m.geoObjects.add(new ymaps.Placemark([c.lat,c.lon],{iconContent:String(i+1)},{preset:'islands#blueCircleIcon',zIndex:100}));
+  });
+  m.geoObjects.add(new ymaps.Placemark([P.self.lat,P.self.lon],{iconContent:'★ '+P.self.name},{preset:'islands#redStretchyIcon',zIndex:1000}));
+  m.setBounds(ymaps.util.bounds.fromPoints(pts),{checkZoomRange:true,zoomMargin:[70,70,70,70]}).then(function(){
+    setTimeout(function(){window.READY=true},3500);
+  });
+});
+</script></body></html>
