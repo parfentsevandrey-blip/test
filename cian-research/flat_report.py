@@ -25,6 +25,7 @@ def load():
     offers = json.load(open(f'{D}/offers.json'))
     cards = json.load(open(f'{D}/cards.json'))
     reviews = {r['id']: r for r in map(json.loads, open(f'{D}/reviews.jsonl')) if r}
+    blind = json.load(open(f'{D}/blind_ratings.json')) if os.path.exists(f'{D}/blind_ratings.json') else {}
     rows = []
     for u in json.load(open(f'{D}/unique.json')):
         cid = u['id']
@@ -38,7 +39,7 @@ def load():
                  cls=c.get('cls'), ceiling=float(c['ceiling']) if c.get('ceiling') else None, wcs=c.get('wcs'),
                  card_parking=c.get('parking'), price_changes=c.get('price_changes') or [],
                  since=(c.get('created') or x['created'] or '')[:10], parking=pk, parking_note=pk_note,
-                 review=reviews.get(cid))
+                 review=reviews.get(cid), blind=blind.get(str(cid)) or {})
         rows.append(x)
     return rows
 
@@ -109,24 +110,38 @@ def write_xlsx(rows, hist):
             ('Год дома', 7, None), ('Апартаменты', 9, 'Апартаменты обычно дешевле квартир: нет прописки, выше налог и коммуналка'),
             ('Цена, млн ₽', 8, 'Цена в объявлении на 14.10.2026'), ('Млн ₽ за м²', 8, None),
             ('Ремонт по объявлению', 11, None),
-            ('Ремонт по фото, балл', 8, 'Визуальная оценка по первым 16 фото: 1 — без отделки, 5 — отделка застройщика / стандарт, 8 — уровень нашей квартиры, 10 — de luxe'),
-            ('Против нашего', 10, None), ('Стиль', 22, None), ('Возраст ремонта', 11, None), ('Фото', 12, 'Реальные фото или визуализации'),
-            ('Мебель', 9, None), ('Вид', 12, None), ('Комментарий к ремонту', 46, None),
+            ('Ремонт вслепую, балл', 8, 'Среднее двух независимых слепых оценок по фото (без цены и адреса на листе): '
+             '1 — без отделки, 5 — отделка застройщика, 8 — качественный дизайнерский ремонт, 10 — de luxe'),
+            ('Оценщик 1', 6, None), ('Оценщик 2', 6, None), ('Материалы', 7, None), ('Дизайн', 7, None), ('Исполнение', 7, None),
+            ('Комплектность', 8, 'Кухня, санузлы, свет, мебель и техника'),
+            ('Цена по модели, млн ₽/м²', 9, 'Цена м², которую модель ожидает при таком ремонте, районе, типе (квартира/апартаменты), виде, '
+             'этажности и возрасте дома (лист «Модель»)'),
+            ('Цена к модели, %', 8, 'На сколько цена объявления выше (+) или ниже (−) модели'),
+            ('Стиль', 22, None), ('Фото', 12, 'Реальные фото или визуализации'),
+            ('Мебель', 9, None), ('Вид', 12, None), ('Комментарий оценщиков', 52, None),
             ('Машиноместо', 16, 'Из описания объявления: включено в цену / продаётся отдельно / есть, условия не указаны'),
             ('Условия по м/м', 22, None), ('Продавец', 18, None), ('В продаже с', 10, 'Дата публикации текущего объявления'),
             ('Изменения цены', 20, None), ('Ещё объявлений этой квартиры', 9, 'Сколько дублей (другие агенты) найдено')]
+    import flat_value as fv
+    _, _, beta, _ = fv.main()
     order = sorted(rows, key=lambda r: (r['id'] != OUR, r['km_our'] or 99))
     data = []
     for n, r in enumerate(order, 1):
-        rv = r['review'] or {}
+        rv, bl = r['review'] or {}, r['blind']
+        pm = fv.predict(r, bl['overall'], beta) if bl.get('overall') is not None else None
+        notes = ' | '.join(x for x in (bl.get('notes') or []) if x) or rv.get('notes')
+        raters = (bl.get('raters') or []) + [None, None]
         changes = '; '.join(f'{d[8:10]}.{d[5:7]}.{d[2:4]}: {p / 1e6:.1f}' for d, p in r['price_changes']) if len(r['price_changes']) > 1 else ''
         data.append(([n, r['id'], r['jk'], r['raion'], r['address'], r['km_our'], r['km_kremlin'], r['metro'], r['metro_min'],
                       r['area'], r['rooms'], f"{r['floor']}/{r['floors']}" if r['floors'] else r['floor'], r['year'],
                       'да' if r['apart'] else None, round(r['price'] / 1e6, 1), round(r['ppsqm'] / 1e6, 3), r['repair'],
-                      rv.get('score'), rv.get('vs_ours'), rv.get('style'), rv.get('age'), rv.get('photos'), rv.get('furniture'),
-                      rv.get('view'), rv.get('notes'), r['parking'], r['parking_note'] or None, r['seller'], r['since'],
+                      bl.get('overall'), raters[0], raters[1], bl.get('materials'), bl.get('design'), bl.get('execution'),
+                      bl.get('completeness'), round(pm, 3) if pm else None,
+                      round(100 * (r['ppsqm'] / 1e6 / pm - 1)) if pm else None, bl.get('style') or rv.get('style'),
+                      rv.get('photos'), rv.get('furniture'), rv.get('view'), notes, r['parking'], r['parking_note'] or None, r['seller'], r['since'],
                       changes or None, len(r['dups']) or None], r['url']))
-    sheet(ws, cols, data, links=(2,), fmt={10: '0.0', 15: '0.0', 16: '0.000', 6: '0.0', 7: '0.0'},
+    sheet(ws, cols, data, links=(2,), fmt={10: '0.0', 15: '0.0', 16: '0.000', 6: '0.0', 7: '0.0', 18: '0.0#', 25: '0.000',
+                                           26: '+0;-0;0'},
           fill_row=lambda i: order[i]['id'] == OUR)
 
     ws2 = wb.create_sheet('Машиноместа')
@@ -150,6 +165,30 @@ def write_xlsx(rows, hist):
                round(h['ppsqm'] / 1e6, 3), h['change'] or None, h['days']], f"https://www.cian.ru/sale/flat/{h['id']}/") for h in hist]
     sheet(ws3, cols3, data3, links=(1,), fmt={5: '0.0', 8: '0.0', 9: '0.000'}, freeze='B2')
 
+    ws5 = wb.create_sheet('Модель')
+    out = json.load(open(f'{D}/value.json'))
+    cols5 = [('Признак', 28, None), ('Коэффициент (лог. цены м²)', 12, None), ('Ст. ошибка', 9, 'Робастная (HC1)'),
+             ('Влияние на цену м², %', 10, 'exp(коэффициент) − 1')]
+    data5 = [([k, round(v['b'], 3), round(v['se'], 3), round(v['pct'], 1) if k != 'константа' else None], None)
+             for k, v in out['coef'].items()]
+    sheet(ws5, cols5, data5, freeze='A2')
+    r0 = len(data5) + 3
+    ws5.cell(r0, 1, f"Аналогов: {out['n']}, R² = {out['r2']:.2f}. База: квартира в Дорогомилове, дом до 2018 г., без панорамы, "
+                    f"не в башне. Наша квартира: ремонт {out['our_score']:g} → модель {out['pred_ppsqm']:.3f} млн ₽/м², "
+                    f"{out['pred_price']:.1f} млн ₽ за 95 м²; цена объявления на {out['resid_pct']:.0f}% выше.").font = Font(name=F, size=9)
+    ws5.cell(r0 + 2, 1, 'Проверка устойчивости').font = B
+    for k, (h, w) in enumerate([('Вариант', 34), ('Аналогов', 8), ('R²', 6), ('Балл ремонта, % к цене м²', 10),
+                                ('Цена по модели, млн ₽', 10), ('Наша цена выше модели, %', 10)], 1):
+        c = ws5.cell(r0 + 3, k, h)
+        c.font, c.fill, c.border = B, head_fill, border
+        c.alignment = Alignment(wrap_text=True)
+    for n, v in enumerate(fv.variants(), r0 + 4):
+        for k, val in enumerate([v['name'], v['n'], round(float(v['r2']), 2), round(v['point'], 1), round(v['price'], 1),
+                                 round(v['over'], 1)], 1):
+            c = ws5.cell(n, k, val)
+            c.font, c.border = font, border
+    ws5.column_dimensions['A'].width = 34
+
     ws4 = wb.create_sheet('Пояснения')
     ws4.column_dimensions['A'].width = 28
     ws4.column_dimensions['B'].width = 100
@@ -160,8 +199,11 @@ def write_xlsx(rows, hist):
         ('Отбор аналогов', 'ЦАО и Дорогомилово; 80–115 м²; 2–4 комнаты; 90–250 млн ₽; ремонт «дизайнерский» или «евро» по данным '
                            'продавца; дом 2005 г. и новее или современный ЖК; строящиеся дома исключены'),
         ('Дубли', 'Одна квартира, выставленная несколькими агентами, показана одной строкой (одинаковые ЖК, площадь и этаж)'),
-        ('Ремонт по фото', 'Визуальная оценка по первым 16 фото объявления в единой шкале, где наша квартира = 8. '
-                           '«Отделка застройщика» — квартира продаётся с базовой отделкой от девелопера, без дизайн-проекта'),
+        ('Ремонт вслепую', 'Каждую квартиру, включая нашу, независимо оценили два оценщика по листу из первых 16 фото '
+                           'объявления; на листе только код, без цены, адреса и ЖК. Итог — среднее двух оценок. Согласованность '
+                           'оценщиков: корреляция 0,94, средняя разница 0,3 балла. Квартиры без реальных фото интерьера не оценивались'),
+        ('Модель', 'Логарифм цены м² объясняется баллом ремонта, районом, типом (квартира/апартаменты), панорамным видом, '
+                   'башней 30+ этажей и возрастом дома. Коэффициенты и проверки — на листе «Модель»'),
         ('Машиноместа', 'Классы по тексту объявлений: «включено» — продавец прямо пишет, что м/м входит в цену; '
                         '«отдельно» — продаётся за доплату; «есть м/м, условия не указаны» — нужно уточнять у продавца'),
         ('Цены', 'Цены объявлений, а не сделок; итоговая цена сделки обычно ниже за счёт торга'),
@@ -223,7 +265,17 @@ def build_html(rows, hist):
     ad = json.load(open(f'{D}/offerData.json'))
     S = lambda v: escape(str(v)) if v is not None else '—'
     link = lambda r: f'<a href="{r["url"]}">{r["id"]}</a>'
-    score = lambda r: (r['review'] or {}).get('score')
+    score = lambda r: r['blind'].get('overall')
+    sf = lambda v: m(v, 2).rstrip('0').rstrip(',') if v is not None else '—'      # 7,75 / 8 / 7,5
+    import flat_value as fv
+    val = json.load(open(f'{D}/value.json'))
+    var = fv.variants()
+    vlo, vhi = min(v['price'] for v in var), max(v['price'] for v in var)
+    olo, ohi = min(v['over'] for v in var), max(v['over'] for v in var)
+    s_our = score(our)
+    rated = [r for r in rows if score(r) is not None and r['id'] != OUR]
+    higher = [r for r in rated if score(r) > s_our]
+    bl_our = our['blind']
 
     # история нашей квартиры и соседей по дому
     mine = sorted([h for h in hist if h['floor'] == 6 and abs(h['area'] - 95) < 0.6 and h['rooms'] == '3-комн.'],
@@ -237,13 +289,13 @@ def build_html(rows, hist):
     # аналоги того же уровня локации и ремонта
     tier = sorted([r for r in rows if r['raion'] in TIER and (score(r) or 0) >= 7 and r['km_our'] <= 3.5],
                   key=lambda r: r['ppsqm'])
-    shown = [r for r in tier if (score(r) or 0) >= 8 or not r['apart']]     # в записке: квартиры 7+ и апартаменты 8+
-    t8 = [r['ppsqm'] / 1e6 for r in tier if (score(r) or 0) >= 8 and r['id'] != OUR]
-    t8f = [r['ppsqm'] / 1e6 for r in tier if (score(r) or 0) >= 8 and r['id'] != OUR and not r['apart']]
+    shown = [r for r in tier if (score(r) or 0) >= 7.5 or not r['apart']]   # в записке: квартиры 7+ и апартаменты 7,5+
+    t8 = [r['ppsqm'] / 1e6 for r in tier if (score(r) or 0) >= 7.5 and r['id'] != OUR]
+    t8f = [r['ppsqm'] / 1e6 for r in tier if (score(r) or 0) >= 7.5 and r['id'] != OUR and not r['apart']]
     t7f = [r['ppsqm'] / 1e6 for r in tier if r['id'] != OUR and not r['apart']]
-    center = [r for r in rows if r['raion'] not in TIER and (score(r) or 0) >= 8]
+    center = [r for r in rows if r['raion'] not in TIER and (score(r) or 0) >= 7.5]
     cen = [r['ppsqm'] / 1e6 for r in center]
-    dev = [r['ppsqm'] / 1e6 for r in rows if r['raion'] in TIER and score(r) == 5]
+    dev = [r['ppsqm'] / 1e6 for r in rows if r['raion'] in TIER and (r['review'] or {}).get('age') == 'отделка застройщика']
     med = lambda v: st.median(v) if v else None
     ask = our['price'] / 1e6
     net = {p: OFFER - p for p in PARKING_EST}
@@ -263,7 +315,7 @@ def build_html(rows, hist):
         rv = r['review'] or {}
         return (f'<tr class="{extra_cls}"><td>{link(r) if r["id"] != OUR else "наша"}</td><td>{S(r["jk"])}</td>'
                 f'<td class=r>{m(r["area"])}</td><td class=r>{r["floor"]}/{r["floors"]}</td><td>{"апарт." if r["apart"] else "кв."}</td>'
-                f'<td class=r>{m(r["price"] / 1e6)}</td><td class=r>{m(r["ppsqm"] / 1e6, 2)}</td><td class=r>{S(rv.get("score"))}</td>'
+                f'<td class=r>{m(r["price"] / 1e6)}</td><td class=r>{m(r["ppsqm"] / 1e6, 2)}</td><td class=r>{sf(score(r))}</td>'
                 f'<td>{S(rv.get("view")).replace(" Сити/реки", "") if rv.get("view") != "не видно" else ""}</td><td>{r["since"][8:10]}.{r["since"][5:7]}.{r["since"][2:4]}</td>'
                 f'<td>{PK_SHORT.get(r["parking"], "")}</td></tr>')
 
@@ -277,7 +329,7 @@ def build_html(rows, hist):
                       f'<td class=r>{m(h["price"] / 1e6)}</td><td class=r>{m(h["ppsqm"] / 1e6, 2)}</td><td class=r>{S(h["days"])}</td></tr>'
                       for h in [h for h in nb if h['status'] == 'в продаже' or h['start'][-4:] >= '2025'][:8])
     incl_rows = ''.join(f'<tr><td>{link(r)}</td><td>{S(r["jk"])}</td><td>{"апарт." if r["apart"] else "кв."}</td>'
-                        f'<td class=r>{m(r["area"])}</td><td class=r>{m(r["price"] / 1e6)}</td><td class=r>{S(score(r))}</td>'
+                        f'<td class=r>{m(r["area"])}</td><td class=r>{m(r["price"] / 1e6)}</td><td class=r>{sf(score(r))}</td>'
                         f'<td>{S(r["parking_note"])}</td></tr>' for r in incl + sep_price)
     gar_rows = ''.join(f'<tr><td><a href="{g["url"]}">{g["id"]}</a></td><td>{S(g["jk"])}{", " + S(g["address"]) if g["address"] else ""}</td>'
                        f'<td class=r>{m(float(g["area"]))}</td><td class=r>{m(g["price"] / 1e6)}</td></tr>'
@@ -288,7 +340,43 @@ def build_html(rows, hist):
         return f'<figure><img src="file://{p}"><figcaption>{cap}</figcaption></figure>'
     our_figs = ''.join(f'<figure><img src="file://{os.path.abspath(f"{D}/our/{k:02d}.jpg")}"></figure>' for k in OUR_PHOTOS)
     grid = ''.join(fig(cid, k, f'{S(by[cid]["jk"])}, {m(by[cid]["area"], 0)} м², {m(by[cid]["price"] / 1e6, 0)} млн, '
-                               f'ремонт {score(by[cid])}/10') for cid, k in GRID if cid in by)
+                               f'ремонт {sf(score(by[cid]))} из 10') for cid, k in GRID if cid in by)
+
+    coef = val['coef']
+    in_house = [(by[c], fv.predict(by[c], score(by[c]), fv.main()[2])) for c in (329819607, 332125658) if c in by]
+    var_rows = ''.join(f'<tr><td>{escape(v["name"])}</td><td class=r>{v["n"]}</td><td class=r>{m(v["point"], 1)}%</td>'
+                       f'<td class=r>{m(v["price"], 0)}</td><td class=r>+{m(v["over"], 0)}%</td></tr>' for v in var)
+    top = sorted([r for r in rated if r['raion'] in TIER and r['km_our'] <= 3.5 and not r['apart'] and score(r) >= s_our],
+                 key=lambda r: r['ppsqm'])
+    top_rows = ''.join(f'<tr><td>{link(r)}</td><td>{S(r["jk"])}</td><td class=r>{m(r["area"])}</td><td class=r>{m(r["price"] / 1e6)}</td>'
+                       f'<td class=r>{m(r["ppsqm"] / 1e6, 2)}</td><td class=r>{sf(score(r))}</td></tr>' for r in top)
+    value_section = f'''<section><h1 style="margin-top:14px">4. Ремонт и цена: стоит ли квартира 145 млн ₽</h1>
+<p>Все {len(rated) + 1} квартир с реальными фото интерьера, включая вашу, вслепую оценили два независимых оценщика: на листе с фото
+был только код — без цены, адреса и названия ЖК. Оценки почти совпали (корреляция 0,94, средняя разница 0,3 балла).
+Ваша квартира получила {' и '.join(sf(x) for x in bl_our.get('raters', []))}, итог — {sf(s_our)} из 10.
+Выше оценены {len(higher)} квартир из {len(rated)}.</p>
+<figure><img src="file://{os.path.abspath('reports/kutuzovsky12_value.png')}" style="height:auto"></figure>
+<p class=src>Каждая точка — квартира-аналог. Линия — цена по модели для квартиры в Дорогомилове в доме 2018 г. и новее без панорамного вида.</p>
+<p>Модель по {val['n']} аналогам: каждый балл ремонта добавляет к цене м² {m(coef['ремонт, балл']['pct'], 1)}%
+(± {m(100 * coef['ремонт, балл']['se'], 1)}%); Хамовники дороже Дорогомилова на {m(coef['Хамовники']['pct'], 0)}%, апартаменты дешевле квартир
+на {m(-coef['апартаменты']['pct'], 0)}%, башни 30+ этажей — на {m(-coef['башня 30+ этажей']['pct'], 0)}%. Для вашей квартиры модель даёт
+{m(val['pred_ppsqm'], 2)} млн ₽/м², то есть {m(val['pred_price'], 0)} млн ₽. Цена объявления на {m(val['resid_pct'], 0)}% выше;
+дороже модели выставлены {m(100 * val['share_more_expensive'], 0)}% аналогов.</p>
+<table class=t><thead><tr><th>Вариант модели</th><th class=r>Аналогов</th><th class=r>Балл ремонта</th><th class=r>Цена по модели, млн ₽</th>
+<th class=r>Ваша цена выше</th></tr></thead><tbody>{var_rows}</tbody></table>
+<p class=src>Вывод не зависит от выбора аналогов и признаков: во всех вариантах цена 145 млн ₽ выше модели на {m(olo, 0)}–{m(ohi, 0)}%.</p>
+<p>Квартиры в вашем доме тоже выставлены выше модели: 93 м² с ремонтом {sf(score(in_house[0][0]))} — на
+{m(100 * (in_house[0][0]['ppsqm'] / 1e6 / in_house[0][1] - 1), 0)}%, 95 м² с ремонтом {sf(score(in_house[1][0]))} — на
+{m(100 * (in_house[1][0]['ppsqm'] / 1e6 / in_house[1][1] - 1), 0)}%, и обе не продаются месяцами. Даже если признать за домом надбавку
+около 5%, рыночная цена — не больше {m(vhi * 1.05, 0)} млн ₽.</p>
+<h2>Квартиры рядом с ремонтом не хуже вашего</h2>
+<table class=t><thead><tr><th>ID ЦИАН</th><th>ЖК</th><th class=r>м²</th><th class=r>Млн ₽</th><th class=r>Млн ₽/м²</th><th class=r>Ремонт</th></tr></thead>
+<tbody>{top_rows}</tbody></table>
+<p class=src>Только квартиры (не апартаменты) в Дорогомилове и Пресне до 3,5 км с ремонтом {sf(s_our)}+ по слепой оценке.</p>
+<p><b>Ответ:</b> за 145 млн ₽ покупатель получает ремонт уровня {sf(s_our)} из 10, а рядом есть квартиры с ремонтом не хуже
+дешевле за м². Рыночная цена объявления — {m(vlo, 0)}–{m(vhi, 0)} млн ₽ без машиноместа; предложение 140 млн ₽ с машиноместом
+соответствует ей.</p>
+</section>'''
 
     body = f'''
 <div class=head><div class=t1>Квартира на Кутузовском проспекте, 12: цена и аналоги</div>
@@ -296,13 +384,13 @@ def build_html(rows, hist):
 
 <h1>1. Главное</h1>
 <div class=box>
-<p><b>Предложение 140 млн ₽ за квартиру с машиноместом соответствует рынку.</b> Если машиноместо в доме стоит
-{PARKING_EST[0]}–{PARKING_EST[2]} млн ₽, за саму квартиру покупатель даёт {net[PARKING_EST[2]]}–{net[PARKING_EST[0]]} млн ₽,
-или {m(per[PARKING_EST[2]], 2)}–{m(per[PARKING_EST[0]], 2)} млн ₽ за м². Квартиры с ремонтом того же уровня в Дорогомилове и Пресне
-выставлены в медиане за {m(med(t7f), 2)}–{m(med(t8f), 2)} млн ₽/м², а сделки обычно проходят ниже цен объявлений.
-Предложение — это цена объявления минус обычный торг.</p>
-<p>Текущая цена 145 млн ₽ ({m(our['ppsqm'] / 1e6, 2)} млн ₽/м²) на {m(100 * (our['ppsqm'] / 1e6 / med(t8f) - 1), 0)}–{m(100 * (our['ppsqm'] / 1e6 / med(t7f) - 1), 0)}%
-выше этой медианы, и это без машиноместа. Квартира продаётся с
+<p><b>За 145 млн ₽ квартира дороже аналогов; предложение 140 млн ₽ с машиноместом соответствует рынку.</b>
+Ремонт по слепой оценке по фото — {sf(s_our)} из 10: хороший дизайнерский, но не топовый, у {len(higher)} из {len(rated)} оценённых
+аналогов он выше. С учётом ремонта, района, типа жилья, вида и возраста дома рынок выставляет такие квартиры за
+{m(vlo, 0)}–{m(vhi, 0)} млн ₽ (в базовом варианте модели — {m(val['pred_price'], 0)} млн ₽). Ваши 145 млн ₽ на {m(olo, 0)}–{m(ohi, 0)}% выше.
+Если машиноместо стоит {PARKING_EST[0]}–{PARKING_EST[2]} млн ₽, за саму квартиру покупатель даёт {net[PARKING_EST[2]]}–{net[PARKING_EST[0]]} млн ₽ —
+ровно рыночный уровень.</p>
+<p>Квартира продаётся с
 {first['start'] if first else '—'}: цена была 150, 160, 162,5, 152 и 145 млн ₽, покупателя за это время не нашлось.
 В этом же доме два похожих лота тоже стоят без движения: 93 м² с более дорогим ремонтом за {m(better['price'] / 1e6, 0)} млн ₽
 с мая и 95 м² с более простым ремонтом за {m(simpler['price'] / 1e6, 0)} млн ₽ с июля.</p>
@@ -315,8 +403,10 @@ def build_html(rows, hist):
 <ul>
 <li>Все 5 фото санузлов в объявлении — 3D-визуализации, остальные фото реальные. У конкурентов с ремонтом нашего уровня
 санузлы сняты вживую. Реальная фотосъёмка ванных — самое дешёвое улучшение объявления.</li>
-<li>Ремонт — сильная сторона: свежий, дизайнерский, с мебелью и техникой. Из {len(rows) - 1} аналогов ремонт на нашем уровне или выше —
-у {sum(1 for r in rows if (score(r) or 0) >= 8) - 1}. Многие конкуренты в Москва-Сити и у Поклонной ({len(dev)} из
+<li>Ремонт свежий, дизайнерский, с мебелью и техникой, но по материалам уступает лучшим конкурентам: подоценки — материалы
+{sf(bl_our.get('materials'))}, дизайн {sf(bl_our.get('design'))}, исполнение {sf(bl_our.get('execution'))}, комплектность {sf(bl_our.get('completeness'))}
+(керамогранит под мрамор, а не камень). Ремонт выше вашего — в основном в апартаментах башен Сити и в клубных домах центра.
+Многие конкуренты в Москва-Сити и у Поклонной ({len(dev)} из
 {sum(1 for r in rows if r['raion'] in TIER)} в Дорогомилове и Пресне) продаются с отделкой застройщика без мебели, в медиане
 за {m(med(dev), 2)} млн ₽/м².</li>
 <li>Минусы для покупателя: вид во двор и на сталинские дома, а не панорама, как у башен Сити; метро в 15 минутах пешком.</li>
@@ -327,7 +417,8 @@ def build_html(rows, hist):
 <table class=t><tbody>
 <tr><td>Площадь</td><td>95 м²: кухня-гостиная ~29 м², 2 спальни по 16 м², 2 санузла (мастер-санузел с ванной и душем), гардеробные, постирочная</td></tr>
 <tr><td>Этаж, потолки</td><td>6 из 11, 3,1 м</td></tr>
-<tr><td>Ремонт</td><td>Дизайнерский, свежий, в стиле мягкой современной классики; продаётся с мебелью и техникой (8 из 10 по нашей шкале)</td></tr>
+<tr><td>Ремонт</td><td>Дизайнерский, свежий, в стиле мягкой современной классики; продаётся с мебелью и техникой
+({sf(s_our)} из 10 по слепой оценке двух оценщиков: {' и '.join(sf(x) for x in bl_our.get('raters', []))})</td></tr>
 <tr><td>Дом</td><td>«Кутузовский XII», Capital Group, класс «премиум», сдан в 2020 г.; клубный дом на 11 этажей, гранитный фасад, лобби с консьержем,
 подземный паркинг; рейтинг ЖК на ЦИАН {ad.get("newbuildingRating")}</td></tr>
 <tr><td>Локация</td><td>Дорогомилово, внутри ТТК: рядом гостиница «Украина», набережная Тараса Шевченко и квартал «Бадаевский»
@@ -354,26 +445,27 @@ def build_html(rows, hist):
 
 <section class=pb><h1>3. Что можно купить за те же деньги</h1>
 <p>Аналоги того же уровня локации (Дорогомилово и Пресня, до 3,5 км от дома), 85–110 м²: квартиры с ремонтом от 7 баллов
-и апартаменты от 8 баллов по фото. Ремонт оценён по первым 16 фото каждого объявления по шкале, где наша квартира = 8.
+и апартаменты от 7,5 балла. Ремонт оценён вслепую по первым 16 фото каждого объявления (раздел 4).
 Апартаменты обычно дешевле квартир: в них нельзя прописаться, выше налог и коммунальные платежи.</p>
 <table class=t>{head}<tbody>{tier_rows}</tbody></table>
 <p class=src>Цены объявлений на {DATE}. Полный список ({len(rows)} квартир), комментарии к ремонтам и ссылки — в таблице Excel.
 Как отбирали: объявления ЦИАН в ЦАО и Дорогомилове, 80–115 м², 2–4 комнаты, 90–250 млн ₽, ремонт «дизайнерский» или «евро»
 по данным продавца, дома 2005 г. и новее, без строящихся; дубли одной квартиры от разных агентов объединены.</p>
-<p>Медиана цен объявлений: квартиры и апартаменты с ремонтом на 8+ баллов — {m(med(t8), 2)} млн ₽/м², только квартиры на 8+ — {m(med(t8f), 2)},
-квартиры на 7+ — {m(med(t7f), 2)}. В центре — Хамовники, Якиманка, Замоскворечье, Тверской — квартиры с ремонтом нашего уровня
+<p>Медиана цен объявлений: квартиры и апартаменты с ремонтом от 7,5 балла — {m(med(t8), 2)} млн ₽/м², только квартиры от 7,5 — {m(med(t8f), 2)},
+квартиры от 7 — {m(med(t7f), 2)}. В центре — Хамовники, Якиманка, Замоскворечье, Тверской — квартиры с ремонтом нашего уровня
 дороже: медиана {m(med(cen), 2)} млн ₽/м², но это другой уровень локации.</p>
 <div class=figs>{grid}</div>
 <p class=src>Фото из объявлений, по одному кадру интерьера. Первые два — квартиры в нашем доме.</p>
 </section>
 
-<section><h1 style="margin-top:14px">4. Машиноместа</h1>
+{value_section}
+<section><h1 style="margin-top:14px">5. Машиноместа</h1>
 <p>Из {len(rows) - 1} аналогов машиноместо включено в цену только у {len(incl)}. Ещё у {n_sep} место продаётся отдельно,
 у {n_unk} оно есть, но условия не указаны. Цены, которые продавцы пишут в объявлениях: Capital Towers — 10–15 млн ₽ за место,
 Sole Hill — 6 млн ₽, Садовые кварталы — +5 млн ₽ за место с кладовой.</p>
 <table class=t><thead><tr><th>ID ЦИАН</th><th>ЖК</th><th>Тип</th><th class=r>м²</th><th class=r>Млн ₽</th><th class=r>Ремонт</th><th>Условия</th></tr></thead>
 <tbody>{incl_rows}</tbody></table>
-<p class=src>Включают место в цену в основном продавцы квартир с более простым или устаревшим ремонтом (4–6 баллов) — как довод к цене.</p>
+<p class=src>Включают место в цену в основном продавцы квартир с более простым ремонтом — как довод к цене.</p>
 <h2>Цены машиномест рядом</h2>
 <table class=t><thead><tr><th>ID ЦИАН</th><th>ЖК, адрес</th><th class=r>м²</th><th class=r>Млн ₽</th></tr></thead><tbody>{gar_rows}</tbody></table>
 <p>В «Кутузовском XII» сейчас нет машиномест в продаже. Соседний лот (93 м²) предлагает место за отдельную плату без цены.
@@ -385,8 +477,9 @@ Sole Hill — 6 млн ₽, Садовые кварталы — +5 млн ₽ з
 <table class=t><thead><tr><th>Машиноместо стоит</th><th class=r>За квартиру, млн ₽</th><th class=r>Млн ₽/м²</th><th class=r>Скидка к 145 млн</th></tr></thead><tbody>
 {''.join(f'<tr><td>{p} млн ₽</td><td class=r>{net[p]}</td><td class=r>{m(per[p], 2)}</td><td class=r>{m(100 * (1 - net[p] / ask), 0)}%</td></tr>' for p in PARKING_EST)}
 </tbody></table>
-<p>Для сравнения: медиана объявлений квартир с ремонтом того же уровня в Дорогомилове и Пресне — {m(med(t7f), 2)}–{m(med(t8f), 2)} млн ₽/м²,
-то есть {m(med(t7f) * our['area'], 0)}–{m(med(t8f) * our['area'], 0)} млн ₽ за 95 м² без машиноместа. Это цены объявлений, сделки проходят ниже. Каждый месяц ожидания тоже стоит денег:
+<p>Для сравнения: по модели квартира с вашим ремонтом и локацией выставляется за {m(vlo, 0)}–{m(vhi, 0)} млн ₽ без машиноместа,
+медиана объявлений похожих квартир в Дорогомилове и Пресне — {m(med(t7f) * our['area'], 0)}–{m(med(t8f) * our['area'], 0)} млн ₽.
+Это цены объявлений, сделки проходят ниже. Каждый месяц ожидания тоже стоит денег:
 при доходности вклада 10% годовых 140 млн ₽ приносят около 1,2 млн ₽ в месяц.</p>
 
 </section>'''

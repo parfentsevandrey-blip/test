@@ -165,7 +165,7 @@ def cmd_photos(a):
     client()                                    # замок: не качаем фото параллельно с другими запросами к ЦИАН
     cards = json.load(open(f'{OUT}/cards.json'))
     offers = json.load(open(f'{OUT}/offers.json'))
-    ids = json.load(open(f'{OUT}/shortlist.json'))
+    ids = [int(x) for x in a.ids.split(',')] if a.ids else json.load(open(f'{OUT}/shortlist.json'))
     os.makedirs(f'{OUT}/photos', exist_ok=True)
     todo = []
     for cid in ids:
@@ -238,6 +238,7 @@ def main():
     c.add_argument('--ids', default='')
     c = sub.add_parser('photos')
     c.add_argument('--per', type=int, default=24)
+    c.add_argument('--ids', default='')
     a = p.parse_args()
     os.makedirs(OUT, exist_ok=True)
     {'search': cmd_search, 'cards': cmd_cards, 'photos': cmd_photos}[a.cmd](a)
