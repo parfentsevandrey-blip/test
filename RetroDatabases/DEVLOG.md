@@ -22,6 +22,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-07 | 2026-10-14 | 9,174 | 199 | 82 | 118 | 9,573 | +2,947 (database 2: 142 records in ten files, migration 1→2, tests +30) |
 | CP-08 | 2026-10-14 | 11,798 | 226 | 82 | 118 | 12,224 | +2,651 (database 3: 141 records in eleven files, migration 2→3, tests +27) |
 | CP-09 | 2026-10-14 | 14,224 | 249 | 82 | 118 | 14,673 | +2,449 (database 4: 109 records in eleven files, migration 3→4, tests +23) |
+| CP-10 | 2026-10-15 | 16,206 | 272 | 82 | 118 | 16,678 | +2,005 (database 5: 99 records in eleven files, migration 4→5, tests +23) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -369,3 +370,88 @@ Date: 2026-10-14. Totals: Kotlin main 14,224 (CP-08: 11,798), Kotlin test 249 (2
 - 38 of 109 records are rare. That is a judgement call again, and I'll compare it with the other databases before the next release.
 - Not verified yet: running on a device or emulator, the migration chain from version 1, 2 and 3 installs on a real device, the UI with four databases in the list and in the filters, lint, and the release build.
 - Line counts use the same method as before: tracked and untracked files from `git ls-files`, with the README, this log and the bundle left out.
+
+## CP-10: database 5, 2020 to 2026
+
+Status: database 5 is in the app: 99 records, a migration for installs made at version 4, and tests for all five databases. The build passes, 18 of 18 unit tests pass, and the Kotlin compiler gives no warnings. 21 of the 99 new examples run and pass; the other 78 are checked by reading or have no code at all.
+
+Mood: pleased that the catalogue now reaches the current month, with Go 1.26, TypeScript 7 and macOS 27 in it. Less pleased with how much of this period I could only check by search. Two dates from memory were wrong: the Raspberry Pi 500 launched at the end of 2024, not in November, and Playwright's 1.0 date is disputed, so the record gives only the year.
+
+Date: 2026-10-15. Totals: Kotlin main 16,206 (CP-09: 14,224), Kotlin test 272 (249), XML 82, Gradle and project files 118, total 16,678. The +2,005 is mostly the eleven new Kotlin files for database 5, plus the catalogue, the database class and the tests (+23).
+
+### What changed
+
+- A fifth database, "Database 5: 2020s coding catalogue", with the same ten kinds. 99 records: languages 20, systems 15, devices 13, tools 14, practices 11, guides 5, examples 7, projects 4, flex 5, cross-code 5. 30 of them are rare.
+- Eleven files `Db5*.kt`: ten record files and `Db5Catalog.kt`, which joins them into `db5Records`. `SeedCatalog.kt` lists the fifth database, with the colour #7986CB, and adds its records to `seedRecords`.
+- Database version 5 with `MIGRATION_4_5`. An install at version 4 gets database 5 from it, and older installs run the earlier migrations first, as before.
+- The years run from 2020 to 2026, both included. Database 4 already has two records from 2020 (the Apple M1 Mac and macOS Big Sur). I left them there, because the range is inclusive on both sides, as the 2010 overlap between databases 3 and 4 already was.
+- The newest records are from 2026: Linux 7.0 in April, Go 1.26 in February, TypeScript 7 in July, and macOS 27, announced in June.
+- Tests cover five databases. `SeedDataTest` checks that database 5 has its own records and that they fall between 2020 and 2026. `AppDatabaseSeedTest` checks its record count, and it has a new test that removes database 5 and runs `MIGRATION_4_5`. 18 unit tests in total.
+
+### Facts checked by web search
+
+- Python 3.14: generally available on 7 October 2025. The free-threaded build is officially supported but still opt-in (PEP 779). Template strings (PEP 750) and deferred annotations are in the same release.
+- Java 25 LTS: generally available on 16 September 2025, with 18 JEPs. Compact source files, flexible constructor bodies and scoped values are final. Java 26 came out on 17 March 2026 as a short-term release; I did not include it.
+- Go 1.25: released on 12 August 2025 with no new syntax. Go 1.26: released on 10 February 2026, with the expression form of new and self-referential generic types. The sandbox has Go 1.24, so the Go 1.26 record has no example.
+- .NET 10 and C# 14: generally available on 11 November 2025 (several write-ups agree). Microsoft's announcement gives support until 10 November 2028.
+- TypeScript: Microsoft announced the Go port in March 2025. TypeScript 6.0 was the last JavaScript-based release, and 7.0 reached general availability on 8 July 2026 (secondary sources).
+- Rust 1.85.0 shipped on 20 February 2025 and made the 2024 edition stable.
+- Kotlin 2.0: the documentation dates the release to 21 May 2024, while InfoWorld reports the announcement on 23 May. The record uses 21 May.
+- Swift 6: general availability is confirmed, but none of the results gave the date. The record says September 2024 from memory.
+- Dart 3: announced at I/O on 10 May 2023.
+- Gleam 1.0: 4 March 2024 (Wikipedia; InfoQ also dates it to March 2024).
+- Mojo: publicly available in early May 2023 (sources give 2 or 3 May), with a Linux build in September 2023. One source claims a 1.0 release in 2026, which I could not confirm, so the record does not mention it.
+- Nim 2.0: released in early August 2023 (the release article is dated 1 August, and DevClass covered it on 3 August).
+- Typst: became open source in March 2023 under the Apache 2.0 licence (one wiki source). LWN calls that month an early beta.
+- HarmonyOS NEXT: a developer preview in January 2024 and a developer beta around June 2024. The results did not show whether a stable version shipped, so the record stops at the beta.
+- WASI 0.2: the vote is dated 24 January 2024 on the wasi.dev changelog and 25 January by the Bytecode Alliance. One interfaces page says February, so the record says January 2024.
+- Valkey: appeared on 27 to 28 March 2024 as a fork of Redis 7.2.4, under the BSD licence, with the Linux Foundation as steward.
+- OpenTofu: HashiCorp moved Terraform to the Business Source License on 10 August 2023. The fork moved to the Linux Foundation in September 2023, and version 1.6.0 came out on 10 January 2024.
+- Model Context Protocol: published by Anthropic on 25 November 2024. In December 2025 the project moved to the Agentic AI Foundation under the Linux Foundation.
+- Windows 10: support ended on 14 October 2025. Consumers could join an extended security updates programme for one more year.
+- macOS: Tahoe (macOS 26) was announced at WWDC in June 2025 and skipped 16. macOS 27 Golden Gate was announced at WWDC on 8 June 2026, runs only on Apple silicon, and installs from 14 September 2026.
+- Linux 7.0: released on 12 April 2026 after seven release candidates. The major number changed for numbering reasons.
+- XZ Utils: disclosed on 29 March 2024 (CVE-2024-3094, CVSS 10.0, versions 5.6.0 and 5.6.1). Wikipedia's infobox places the discovery on or before 27 March, while the body and most write-ups say 29 March. The record uses 29 March.
+- Git 2.28: the init.defaultBranch setting, announced in a blog post on 27 July 2020. GitHub switched new repositories to main from 1 October 2020, according to a FAQ; GitHub's own post did not turn up.
+- Raspberry Pi Pico 2: unveiled on 8 August 2024 at five dollars. The RP2350 can run Arm Cortex-M33 or RISC-V cores.
+- Raspberry Pi 500: launched in December 2024 with a 15.6-inch monitor (reports dated 9 and 10 December). My memory said November, so the record says the end of 2024.
+- Copilot+ PCs: announced on 20 May 2024 and on sale from 18 June 2024, with Snapdragon X chips and a 45 TOPS NPU (a vendor claim).
+- Framework Laptop 13: first orders shipped in July 2021 (Wikipedia and Framework's blog).
+- Analogue Pocket: shipping began in mid-December 2021, after delays announced in May and October.
+- Raspberry Pi Zero 2 W: announced on 28 October 2021 at fifteen dollars, with a quad-core Cortex-A53 at 1 GHz. The five-fold speed-up is a vendor figure.
+- Playdate: pushed back into 2022 in November 2021 after a battery defect. One result gives 18 April 2022 for the first shipments, and I did not use the day. More than 70,000 units had shipped by February 2024.
+- Matter 1.0: published in early October 2022 (trade press on 5 and 6 October).
+- WebGPU: switched on by default in Chrome 113 in 2023, first on ChromeOS, macOS and Windows. The results gave no day, so the record says 2023.
+- Playwright: the 1.0 date is disputed. One article says May 2020, and others give July 2020 or January 2020. The record gives only the year.
+- Backstage: public launch on 16 March 2020 (Spotify's anniversary post), and a CNCF Sandbox project in September 2020.
+- Cursor: Anysphere was founded in 2022 by four MIT classmates, and Cursor shipped in 2023 as a fork of Visual Studio Code.
+- PyPI trusted publishing: introduced in April 2023 (the launch post is dated 20 April). GitHub Actions was the only provider until April 2024.
+- Bun 1.0: released on 8 September 2023. One result quotes a Wikipedia snapshot describing a company acquisition in December 2025. I found no second source, so the record does not mention it.
+- uv: first public release on 15 or 16 February 2024 (InfoWorld dates its launch story to 16 February).
+- Deno 2: released on 10 October 2024.
+- Codex CLI: released on 16 April 2025 as an open-source tool that runs locally.
+- Gemini CLI: public preview on 25 June 2025, under the Apache 2.0 licence, using Gemini 2.5 Pro.
+- Claude Code: research preview in February 2025 (the MIT agent index gives 24 February), and general availability in May 2025 (Wikipedia).
+- Copilot coding agent: unveiled at Microsoft Build on 19 May 2025.
+- Vibe coding: the term came from a post by Andrej Karpathy on 2 February 2025.
+- Docker Desktop: from 31 August 2021, companies with 250 or more employees, or more than 10 million dollars in revenue, needed a paid plan. The deadline to move was 31 January 2022.
+- Dates I did not search for, from memory: the 2020 to 2023 language releases (C++20, PHP 8.0, Ruby 3.0, Swift 5.5, Python 3.10, Java 17 and 21, Go generics), Windows 11, Android 12, Linux 6.1, Kubernetes 1.24, visionOS, ChatGPT, GitHub Copilot, NIST SP 800-207, Executive Order 14028, Log4Shell, passkeys, WCAG 2.2, the RFCs behind HTTP/3, Git 2.34's SSH signing, and the hardware dates for Quest 2 and 3, Steam Deck, Pi 5 and Vision Pro.
+
+### How I checked it
+
+- Unit tests: 18 of 18 pass (AppDatabaseSeedTest 6, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the compiler gave no warnings.
+- Examples: a script takes every database 5 example from the Kotlin source and runs what this sandbox can run. 21 pass: C++20 with g++ (a ranges pipeline), PHP 8.0 (match and named arguments), Ruby 3.0 (endless methods), Rust 2024 with rustc (let chains), a toy language model that samples words from a small vocabulary (the script checks that every word comes from it), match statements, nested f-string quotes on Python 3.13, records and sealed classes with javac and java, virtual threads on Java 21, top-level await with Node.js, let-else with rustc, strict SQLite tables, a password generator (the script checks the length and the alphabet), itertools.batched, RETURNING in SQLite, logical assignment, range over integers in Go, a Git default branch named main, a TypeScript file run with Bun, a Go c-shared library called from Python, and a C library called from Bun through bun:ffi.
+- The other 78 are not run here. The sandbox has no Swift, Kotlin, Dart or Deno, and its javac is version 21, so the Java 25 compact source file and the Python 3.14 template string are only read. The Playwright, Backstage, GitHub Actions, WIT, ArkTS and visionOS snippets need their frameworks, and the AI tools need accounts.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- Two dates from memory were wrong: the Raspberry Pi 500 launched in December 2024, and Playwright's 1.0 date is disputed. The record gives only the year for Playwright.
+- Several results were vendor pages or third-party blogs. Where sources split on a date, I used the most consistent one and wrote the difference into the record or this log.
+- I only noticed this session that rustc is in the sandbox. That means the database 4 Rust example can now be run, but I have not done that yet. It is the first thing I will check at the next checkpoint.
+
+### Notes
+
+- 30 of 99 records are rare. That is a judgement call again, and I'll compare it with the other databases before the next release.
+- The 2020 overlap with database 4 is deliberate, because the ranges are inclusive, as they were for 2010.
+- Not verified yet: running on a device or emulator, the migration from version 4 installs on a real device, the UI with five databases in the list and in the filters, lint, and the release build.

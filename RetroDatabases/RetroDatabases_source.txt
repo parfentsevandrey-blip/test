@@ -1,6 +1,6 @@
 ===============================================================================
  Retro Databases: source code of the Android app in one text file
- Files in the archive: 88
+ Files in the archive: 99
  Not included: gradle/wrapper/gradle-wrapper.jar (binary, created by the command
    gradle wrapper --gradle-version 8.10.2) and local.properties (path to your SDK).
 ===============================================================================
@@ -69,6 +69,17 @@ CONTENTS:
   app/src/main/java/com/example/retrodatabases/data/seed/Db4Projects.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db4Systems.kt
   app/src/main/java/com/example/retrodatabases/data/seed/Db4Tools.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db5Catalog.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db5Cross.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db5Devices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db5Examples.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db5Flex.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db5Guides.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db5Languages.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db5Practices.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db5Projects.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db5Systems.kt
+  app/src/main/java/com/example/retrodatabases/data/seed/Db5Tools.kt
   app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
   app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
   app/src/main/java/com/example/retrodatabases/ui/AppNavHost.kt
@@ -144,6 +155,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-07 | 2026-10-14 | 9,174 | 199 | 82 | 118 | 9,573 | +2,947 (database 2: 142 records in ten files, migration 1→2, tests +30) |
 | CP-08 | 2026-10-14 | 11,798 | 226 | 82 | 118 | 12,224 | +2,651 (database 3: 141 records in eleven files, migration 2→3, tests +27) |
 | CP-09 | 2026-10-14 | 14,224 | 249 | 82 | 118 | 14,673 | +2,449 (database 4: 109 records in eleven files, migration 3→4, tests +23) |
+| CP-10 | 2026-10-15 | 16,206 | 272 | 82 | 118 | 16,678 | +2,005 (database 5: 99 records in eleven files, migration 4→5, tests +23) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -491,6 +503,91 @@ Date: 2026-10-14. Totals: Kotlin main 14,224 (CP-08: 11,798), Kotlin test 249 (2
 - 38 of 109 records are rare. That is a judgement call again, and I'll compare it with the other databases before the next release.
 - Not verified yet: running on a device or emulator, the migration chain from version 1, 2 and 3 installs on a real device, the UI with four databases in the list and in the filters, lint, and the release build.
 - Line counts use the same method as before: tracked and untracked files from `git ls-files`, with the README, this log and the bundle left out.
+
+## CP-10: database 5, 2020 to 2026
+
+Status: database 5 is in the app: 99 records, a migration for installs made at version 4, and tests for all five databases. The build passes, 18 of 18 unit tests pass, and the Kotlin compiler gives no warnings. 21 of the 99 new examples run and pass; the other 78 are checked by reading or have no code at all.
+
+Mood: pleased that the catalogue now reaches the current month, with Go 1.26, TypeScript 7 and macOS 27 in it. Less pleased with how much of this period I could only check by search. Two dates from memory were wrong: the Raspberry Pi 500 launched at the end of 2024, not in November, and Playwright's 1.0 date is disputed, so the record gives only the year.
+
+Date: 2026-10-15. Totals: Kotlin main 16,206 (CP-09: 14,224), Kotlin test 272 (249), XML 82, Gradle and project files 118, total 16,678. The +2,005 is mostly the eleven new Kotlin files for database 5, plus the catalogue, the database class and the tests (+23).
+
+### What changed
+
+- A fifth database, "Database 5: 2020s coding catalogue", with the same ten kinds. 99 records: languages 20, systems 15, devices 13, tools 14, practices 11, guides 5, examples 7, projects 4, flex 5, cross-code 5. 30 of them are rare.
+- Eleven files `Db5*.kt`: ten record files and `Db5Catalog.kt`, which joins them into `db5Records`. `SeedCatalog.kt` lists the fifth database, with the colour #7986CB, and adds its records to `seedRecords`.
+- Database version 5 with `MIGRATION_4_5`. An install at version 4 gets database 5 from it, and older installs run the earlier migrations first, as before.
+- The years run from 2020 to 2026, both included. Database 4 already has two records from 2020 (the Apple M1 Mac and macOS Big Sur). I left them there, because the range is inclusive on both sides, as the 2010 overlap between databases 3 and 4 already was.
+- The newest records are from 2026: Linux 7.0 in April, Go 1.26 in February, TypeScript 7 in July, and macOS 27, announced in June.
+- Tests cover five databases. `SeedDataTest` checks that database 5 has its own records and that they fall between 2020 and 2026. `AppDatabaseSeedTest` checks its record count, and it has a new test that removes database 5 and runs `MIGRATION_4_5`. 18 unit tests in total.
+
+### Facts checked by web search
+
+- Python 3.14: generally available on 7 October 2025. The free-threaded build is officially supported but still opt-in (PEP 779). Template strings (PEP 750) and deferred annotations are in the same release.
+- Java 25 LTS: generally available on 16 September 2025, with 18 JEPs. Compact source files, flexible constructor bodies and scoped values are final. Java 26 came out on 17 March 2026 as a short-term release; I did not include it.
+- Go 1.25: released on 12 August 2025 with no new syntax. Go 1.26: released on 10 February 2026, with the expression form of new and self-referential generic types. The sandbox has Go 1.24, so the Go 1.26 record has no example.
+- .NET 10 and C# 14: generally available on 11 November 2025 (several write-ups agree). Microsoft's announcement gives support until 10 November 2028.
+- TypeScript: Microsoft announced the Go port in March 2025. TypeScript 6.0 was the last JavaScript-based release, and 7.0 reached general availability on 8 July 2026 (secondary sources).
+- Rust 1.85.0 shipped on 20 February 2025 and made the 2024 edition stable.
+- Kotlin 2.0: the documentation dates the release to 21 May 2024, while InfoWorld reports the announcement on 23 May. The record uses 21 May.
+- Swift 6: general availability is confirmed, but none of the results gave the date. The record says September 2024 from memory.
+- Dart 3: announced at I/O on 10 May 2023.
+- Gleam 1.0: 4 March 2024 (Wikipedia; InfoQ also dates it to March 2024).
+- Mojo: publicly available in early May 2023 (sources give 2 or 3 May), with a Linux build in September 2023. One source claims a 1.0 release in 2026, which I could not confirm, so the record does not mention it.
+- Nim 2.0: released in early August 2023 (the release article is dated 1 August, and DevClass covered it on 3 August).
+- Typst: became open source in March 2023 under the Apache 2.0 licence (one wiki source). LWN calls that month an early beta.
+- HarmonyOS NEXT: a developer preview in January 2024 and a developer beta around June 2024. The results did not show whether a stable version shipped, so the record stops at the beta.
+- WASI 0.2: the vote is dated 24 January 2024 on the wasi.dev changelog and 25 January by the Bytecode Alliance. One interfaces page says February, so the record says January 2024.
+- Valkey: appeared on 27 to 28 March 2024 as a fork of Redis 7.2.4, under the BSD licence, with the Linux Foundation as steward.
+- OpenTofu: HashiCorp moved Terraform to the Business Source License on 10 August 2023. The fork moved to the Linux Foundation in September 2023, and version 1.6.0 came out on 10 January 2024.
+- Model Context Protocol: published by Anthropic on 25 November 2024. In December 2025 the project moved to the Agentic AI Foundation under the Linux Foundation.
+- Windows 10: support ended on 14 October 2025. Consumers could join an extended security updates programme for one more year.
+- macOS: Tahoe (macOS 26) was announced at WWDC in June 2025 and skipped 16. macOS 27 Golden Gate was announced at WWDC on 8 June 2026, runs only on Apple silicon, and installs from 14 September 2026.
+- Linux 7.0: released on 12 April 2026 after seven release candidates. The major number changed for numbering reasons.
+- XZ Utils: disclosed on 29 March 2024 (CVE-2024-3094, CVSS 10.0, versions 5.6.0 and 5.6.1). Wikipedia's infobox places the discovery on or before 27 March, while the body and most write-ups say 29 March. The record uses 29 March.
+- Git 2.28: the init.defaultBranch setting, announced in a blog post on 27 July 2020. GitHub switched new repositories to main from 1 October 2020, according to a FAQ; GitHub's own post did not turn up.
+- Raspberry Pi Pico 2: unveiled on 8 August 2024 at five dollars. The RP2350 can run Arm Cortex-M33 or RISC-V cores.
+- Raspberry Pi 500: launched in December 2024 with a 15.6-inch monitor (reports dated 9 and 10 December). My memory said November, so the record says the end of 2024.
+- Copilot+ PCs: announced on 20 May 2024 and on sale from 18 June 2024, with Snapdragon X chips and a 45 TOPS NPU (a vendor claim).
+- Framework Laptop 13: first orders shipped in July 2021 (Wikipedia and Framework's blog).
+- Analogue Pocket: shipping began in mid-December 2021, after delays announced in May and October.
+- Raspberry Pi Zero 2 W: announced on 28 October 2021 at fifteen dollars, with a quad-core Cortex-A53 at 1 GHz. The five-fold speed-up is a vendor figure.
+- Playdate: pushed back into 2022 in November 2021 after a battery defect. One result gives 18 April 2022 for the first shipments, and I did not use the day. More than 70,000 units had shipped by February 2024.
+- Matter 1.0: published in early October 2022 (trade press on 5 and 6 October).
+- WebGPU: switched on by default in Chrome 113 in 2023, first on ChromeOS, macOS and Windows. The results gave no day, so the record says 2023.
+- Playwright: the 1.0 date is disputed. One article says May 2020, and others give July 2020 or January 2020. The record gives only the year.
+- Backstage: public launch on 16 March 2020 (Spotify's anniversary post), and a CNCF Sandbox project in September 2020.
+- Cursor: Anysphere was founded in 2022 by four MIT classmates, and Cursor shipped in 2023 as a fork of Visual Studio Code.
+- PyPI trusted publishing: introduced in April 2023 (the launch post is dated 20 April). GitHub Actions was the only provider until April 2024.
+- Bun 1.0: released on 8 September 2023. One result quotes a Wikipedia snapshot describing a company acquisition in December 2025. I found no second source, so the record does not mention it.
+- uv: first public release on 15 or 16 February 2024 (InfoWorld dates its launch story to 16 February).
+- Deno 2: released on 10 October 2024.
+- Codex CLI: released on 16 April 2025 as an open-source tool that runs locally.
+- Gemini CLI: public preview on 25 June 2025, under the Apache 2.0 licence, using Gemini 2.5 Pro.
+- Claude Code: research preview in February 2025 (the MIT agent index gives 24 February), and general availability in May 2025 (Wikipedia).
+- Copilot coding agent: unveiled at Microsoft Build on 19 May 2025.
+- Vibe coding: the term came from a post by Andrej Karpathy on 2 February 2025.
+- Docker Desktop: from 31 August 2021, companies with 250 or more employees, or more than 10 million dollars in revenue, needed a paid plan. The deadline to move was 31 January 2022.
+- Dates I did not search for, from memory: the 2020 to 2023 language releases (C++20, PHP 8.0, Ruby 3.0, Swift 5.5, Python 3.10, Java 17 and 21, Go generics), Windows 11, Android 12, Linux 6.1, Kubernetes 1.24, visionOS, ChatGPT, GitHub Copilot, NIST SP 800-207, Executive Order 14028, Log4Shell, passkeys, WCAG 2.2, the RFCs behind HTTP/3, Git 2.34's SSH signing, and the hardware dates for Quest 2 and 3, Steam Deck, Pi 5 and Vision Pro.
+
+### How I checked it
+
+- Unit tests: 18 of 18 pass (AppDatabaseSeedTest 6, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the compiler gave no warnings.
+- Examples: a script takes every database 5 example from the Kotlin source and runs what this sandbox can run. 21 pass: C++20 with g++ (a ranges pipeline), PHP 8.0 (match and named arguments), Ruby 3.0 (endless methods), Rust 2024 with rustc (let chains), a toy language model that samples words from a small vocabulary (the script checks that every word comes from it), match statements, nested f-string quotes on Python 3.13, records and sealed classes with javac and java, virtual threads on Java 21, top-level await with Node.js, let-else with rustc, strict SQLite tables, a password generator (the script checks the length and the alphabet), itertools.batched, RETURNING in SQLite, logical assignment, range over integers in Go, a Git default branch named main, a TypeScript file run with Bun, a Go c-shared library called from Python, and a C library called from Bun through bun:ffi.
+- The other 78 are not run here. The sandbox has no Swift, Kotlin, Dart or Deno, and its javac is version 21, so the Java 25 compact source file and the Python 3.14 template string are only read. The Playwright, Backstage, GitHub Actions, WIT, ArkTS and visionOS snippets need their frameworks, and the AI tools need accounts.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- Two dates from memory were wrong: the Raspberry Pi 500 launched in December 2024, and Playwright's 1.0 date is disputed. The record gives only the year for Playwright.
+- Several results were vendor pages or third-party blogs. Where sources split on a date, I used the most consistent one and wrote the difference into the record or this log.
+- I only noticed this session that rustc is in the sandbox. That means the database 4 Rust example can now be run, but I have not done that yet. It is the first thing I will check at the next checkpoint.
+
+### Notes
+
+- 30 of 99 records are rare. That is a judgement call again, and I'll compare it with the other databases before the next release.
+- The 2020 overlap with database 4 is deliberate, because the ranges are inclusive, as they were for 2010.
+- Not verified yet: running on a device or emulator, the migration from version 4 installs on a real device, the UI with five databases in the list and in the filters, lint, and the release build.
 
 ################################################################################
 # FILE: RetroDatabases/DEVLOG.txt
@@ -519,6 +616,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-07 | 2026-10-14 | 9,174 | 199 | 82 | 118 | 9,573 | +2,947 (database 2: 142 records in ten files, migration 1→2, tests +30) |
 | CP-08 | 2026-10-14 | 11,798 | 226 | 82 | 118 | 12,224 | +2,651 (database 3: 141 records in eleven files, migration 2→3, tests +27) |
 | CP-09 | 2026-10-14 | 14,224 | 249 | 82 | 118 | 14,673 | +2,449 (database 4: 109 records in eleven files, migration 3→4, tests +23) |
+| CP-10 | 2026-10-15 | 16,206 | 272 | 82 | 118 | 16,678 | +2,005 (database 5: 99 records in eleven files, migration 4→5, tests +23) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -867,17 +965,103 @@ Date: 2026-10-14. Totals: Kotlin main 14,224 (CP-08: 11,798), Kotlin test 249 (2
 - Not verified yet: running on a device or emulator, the migration chain from version 1, 2 and 3 installs on a real device, the UI with four databases in the list and in the filters, lint, and the release build.
 - Line counts use the same method as before: tracked and untracked files from `git ls-files`, with the README, this log and the bundle left out.
 
+## CP-10: database 5, 2020 to 2026
+
+Status: database 5 is in the app: 99 records, a migration for installs made at version 4, and tests for all five databases. The build passes, 18 of 18 unit tests pass, and the Kotlin compiler gives no warnings. 21 of the 99 new examples run and pass; the other 78 are checked by reading or have no code at all.
+
+Mood: pleased that the catalogue now reaches the current month, with Go 1.26, TypeScript 7 and macOS 27 in it. Less pleased with how much of this period I could only check by search. Two dates from memory were wrong: the Raspberry Pi 500 launched at the end of 2024, not in November, and Playwright's 1.0 date is disputed, so the record gives only the year.
+
+Date: 2026-10-15. Totals: Kotlin main 16,206 (CP-09: 14,224), Kotlin test 272 (249), XML 82, Gradle and project files 118, total 16,678. The +2,005 is mostly the eleven new Kotlin files for database 5, plus the catalogue, the database class and the tests (+23).
+
+### What changed
+
+- A fifth database, "Database 5: 2020s coding catalogue", with the same ten kinds. 99 records: languages 20, systems 15, devices 13, tools 14, practices 11, guides 5, examples 7, projects 4, flex 5, cross-code 5. 30 of them are rare.
+- Eleven files `Db5*.kt`: ten record files and `Db5Catalog.kt`, which joins them into `db5Records`. `SeedCatalog.kt` lists the fifth database, with the colour #7986CB, and adds its records to `seedRecords`.
+- Database version 5 with `MIGRATION_4_5`. An install at version 4 gets database 5 from it, and older installs run the earlier migrations first, as before.
+- The years run from 2020 to 2026, both included. Database 4 already has two records from 2020 (the Apple M1 Mac and macOS Big Sur). I left them there, because the range is inclusive on both sides, as the 2010 overlap between databases 3 and 4 already was.
+- The newest records are from 2026: Linux 7.0 in April, Go 1.26 in February, TypeScript 7 in July, and macOS 27, announced in June.
+- Tests cover five databases. `SeedDataTest` checks that database 5 has its own records and that they fall between 2020 and 2026. `AppDatabaseSeedTest` checks its record count, and it has a new test that removes database 5 and runs `MIGRATION_4_5`. 18 unit tests in total.
+
+### Facts checked by web search
+
+- Python 3.14: generally available on 7 October 2025. The free-threaded build is officially supported but still opt-in (PEP 779). Template strings (PEP 750) and deferred annotations are in the same release.
+- Java 25 LTS: generally available on 16 September 2025, with 18 JEPs. Compact source files, flexible constructor bodies and scoped values are final. Java 26 came out on 17 March 2026 as a short-term release; I did not include it.
+- Go 1.25: released on 12 August 2025 with no new syntax. Go 1.26: released on 10 February 2026, with the expression form of new and self-referential generic types. The sandbox has Go 1.24, so the Go 1.26 record has no example.
+- .NET 10 and C# 14: generally available on 11 November 2025 (several write-ups agree). Microsoft's announcement gives support until 10 November 2028.
+- TypeScript: Microsoft announced the Go port in March 2025. TypeScript 6.0 was the last JavaScript-based release, and 7.0 reached general availability on 8 July 2026 (secondary sources).
+- Rust 1.85.0 shipped on 20 February 2025 and made the 2024 edition stable.
+- Kotlin 2.0: the documentation dates the release to 21 May 2024, while InfoWorld reports the announcement on 23 May. The record uses 21 May.
+- Swift 6: general availability is confirmed, but none of the results gave the date. The record says September 2024 from memory.
+- Dart 3: announced at I/O on 10 May 2023.
+- Gleam 1.0: 4 March 2024 (Wikipedia; InfoQ also dates it to March 2024).
+- Mojo: publicly available in early May 2023 (sources give 2 or 3 May), with a Linux build in September 2023. One source claims a 1.0 release in 2026, which I could not confirm, so the record does not mention it.
+- Nim 2.0: released in early August 2023 (the release article is dated 1 August, and DevClass covered it on 3 August).
+- Typst: became open source in March 2023 under the Apache 2.0 licence (one wiki source). LWN calls that month an early beta.
+- HarmonyOS NEXT: a developer preview in January 2024 and a developer beta around June 2024. The results did not show whether a stable version shipped, so the record stops at the beta.
+- WASI 0.2: the vote is dated 24 January 2024 on the wasi.dev changelog and 25 January by the Bytecode Alliance. One interfaces page says February, so the record says January 2024.
+- Valkey: appeared on 27 to 28 March 2024 as a fork of Redis 7.2.4, under the BSD licence, with the Linux Foundation as steward.
+- OpenTofu: HashiCorp moved Terraform to the Business Source License on 10 August 2023. The fork moved to the Linux Foundation in September 2023, and version 1.6.0 came out on 10 January 2024.
+- Model Context Protocol: published by Anthropic on 25 November 2024. In December 2025 the project moved to the Agentic AI Foundation under the Linux Foundation.
+- Windows 10: support ended on 14 October 2025. Consumers could join an extended security updates programme for one more year.
+- macOS: Tahoe (macOS 26) was announced at WWDC in June 2025 and skipped 16. macOS 27 Golden Gate was announced at WWDC on 8 June 2026, runs only on Apple silicon, and installs from 14 September 2026.
+- Linux 7.0: released on 12 April 2026 after seven release candidates. The major number changed for numbering reasons.
+- XZ Utils: disclosed on 29 March 2024 (CVE-2024-3094, CVSS 10.0, versions 5.6.0 and 5.6.1). Wikipedia's infobox places the discovery on or before 27 March, while the body and most write-ups say 29 March. The record uses 29 March.
+- Git 2.28: the init.defaultBranch setting, announced in a blog post on 27 July 2020. GitHub switched new repositories to main from 1 October 2020, according to a FAQ; GitHub's own post did not turn up.
+- Raspberry Pi Pico 2: unveiled on 8 August 2024 at five dollars. The RP2350 can run Arm Cortex-M33 or RISC-V cores.
+- Raspberry Pi 500: launched in December 2024 with a 15.6-inch monitor (reports dated 9 and 10 December). My memory said November, so the record says the end of 2024.
+- Copilot+ PCs: announced on 20 May 2024 and on sale from 18 June 2024, with Snapdragon X chips and a 45 TOPS NPU (a vendor claim).
+- Framework Laptop 13: first orders shipped in July 2021 (Wikipedia and Framework's blog).
+- Analogue Pocket: shipping began in mid-December 2021, after delays announced in May and October.
+- Raspberry Pi Zero 2 W: announced on 28 October 2021 at fifteen dollars, with a quad-core Cortex-A53 at 1 GHz. The five-fold speed-up is a vendor figure.
+- Playdate: pushed back into 2022 in November 2021 after a battery defect. One result gives 18 April 2022 for the first shipments, and I did not use the day. More than 70,000 units had shipped by February 2024.
+- Matter 1.0: published in early October 2022 (trade press on 5 and 6 October).
+- WebGPU: switched on by default in Chrome 113 in 2023, first on ChromeOS, macOS and Windows. The results gave no day, so the record says 2023.
+- Playwright: the 1.0 date is disputed. One article says May 2020, and others give July 2020 or January 2020. The record gives only the year.
+- Backstage: public launch on 16 March 2020 (Spotify's anniversary post), and a CNCF Sandbox project in September 2020.
+- Cursor: Anysphere was founded in 2022 by four MIT classmates, and Cursor shipped in 2023 as a fork of Visual Studio Code.
+- PyPI trusted publishing: introduced in April 2023 (the launch post is dated 20 April). GitHub Actions was the only provider until April 2024.
+- Bun 1.0: released on 8 September 2023. One result quotes a Wikipedia snapshot describing a company acquisition in December 2025. I found no second source, so the record does not mention it.
+- uv: first public release on 15 or 16 February 2024 (InfoWorld dates its launch story to 16 February).
+- Deno 2: released on 10 October 2024.
+- Codex CLI: released on 16 April 2025 as an open-source tool that runs locally.
+- Gemini CLI: public preview on 25 June 2025, under the Apache 2.0 licence, using Gemini 2.5 Pro.
+- Claude Code: research preview in February 2025 (the MIT agent index gives 24 February), and general availability in May 2025 (Wikipedia).
+- Copilot coding agent: unveiled at Microsoft Build on 19 May 2025.
+- Vibe coding: the term came from a post by Andrej Karpathy on 2 February 2025.
+- Docker Desktop: from 31 August 2021, companies with 250 or more employees, or more than 10 million dollars in revenue, needed a paid plan. The deadline to move was 31 January 2022.
+- Dates I did not search for, from memory: the 2020 to 2023 language releases (C++20, PHP 8.0, Ruby 3.0, Swift 5.5, Python 3.10, Java 17 and 21, Go generics), Windows 11, Android 12, Linux 6.1, Kubernetes 1.24, visionOS, ChatGPT, GitHub Copilot, NIST SP 800-207, Executive Order 14028, Log4Shell, passkeys, WCAG 2.2, the RFCs behind HTTP/3, Git 2.34's SSH signing, and the hardware dates for Quest 2 and 3, Steam Deck, Pi 5 and Vision Pro.
+
+### How I checked it
+
+- Unit tests: 18 of 18 pass (AppDatabaseSeedTest 6, RecordFilterTest 5, SeedDataTest 7). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the compiler gave no warnings.
+- Examples: a script takes every database 5 example from the Kotlin source and runs what this sandbox can run. 21 pass: C++20 with g++ (a ranges pipeline), PHP 8.0 (match and named arguments), Ruby 3.0 (endless methods), Rust 2024 with rustc (let chains), a toy language model that samples words from a small vocabulary (the script checks that every word comes from it), match statements, nested f-string quotes on Python 3.13, records and sealed classes with javac and java, virtual threads on Java 21, top-level await with Node.js, let-else with rustc, strict SQLite tables, a password generator (the script checks the length and the alphabet), itertools.batched, RETURNING in SQLite, logical assignment, range over integers in Go, a Git default branch named main, a TypeScript file run with Bun, a Go c-shared library called from Python, and a C library called from Bun through bun:ffi.
+- The other 78 are not run here. The sandbox has no Swift, Kotlin, Dart or Deno, and its javac is version 21, so the Java 25 compact source file and the Python 3.14 template string are only read. The Playwright, Backstage, GitHub Actions, WIT, ArkTS and visionOS snippets need their frameworks, and the AI tools need accounts.
+- Cyrillic: none in the code, resources, tests or the bundle.
+
+### Problems
+
+- Two dates from memory were wrong: the Raspberry Pi 500 launched in December 2024, and Playwright's 1.0 date is disputed. The record gives only the year for Playwright.
+- Several results were vendor pages or third-party blogs. Where sources split on a date, I used the most consistent one and wrote the difference into the record or this log.
+- I only noticed this session that rustc is in the sandbox. That means the database 4 Rust example can now be run, but I have not done that yet. It is the first thing I will check at the next checkpoint.
+
+### Notes
+
+- 30 of 99 records are rare. That is a judgement call again, and I'll compare it with the other databases before the next release.
+- The 2020 overlap with database 4 is deliberate, because the ranges are inclusive, as they were for 2010.
+- Not verified yet: running on a device or emulator, the migration from version 4 installs on a real device, the UI with five databases in the list and in the filters, lint, and the release build.
+
 ################################################################################
 # FILE: RetroDatabases/README.md
 ################################################################################
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside are four databases of coding history:
+An Android application in Kotlin, Jetpack Compose and Room. Inside are five databases of coding history:
 
 - "Database 1" is a catalogue of 80s coding;
 - "Database 2" is a catalogue of 90s coding;
 - "Database 3" is a catalogue of coding from 2000 to 2010;
-- "Database 4" is a catalogue of coding from 2010 to 2020.
+- "Database 4" is a catalogue of coding from 2010 to 2020;
+- "Database 5" is a catalogue of coding from 2020 to 2026.
 
 ## What is inside
 
@@ -941,7 +1125,22 @@ The catalogue of database 4 (2010 to 2020) has the same ten kinds:
 | Flex | 5 | The walrus operator, Game of Life in JavaScript, full-text search in SQLite, sorting a dictionary, CSS custom properties |
 | Cross-code | 5 | Go calling C with cgo, a Node.js addon through N-API, a Python module written in Rust, C compiled to WebAssembly, a Git clean filter in Python |
 
-In total there are 712 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare) and 109 in database 4 (38 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
+The catalogue of database 5 (2020 to 2026) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 20 | C++20, PHP 8.0, Ruby 3.0, Swift, Python 3.10, Java 17, Go generics, Dart 3, Java 21, Nim, Mojo, Typst, Gleam, Kotlin 2.0, Python 3.14, Rust 2024, Java 25, C# 14 and Go 1.26 |
+| Systems | 15 | Windows 11, the end of Windows 10 support, Android 12, Linux 6.1 and 7.0, Kubernetes 1.24, Matter, WebGPU, visionOS, HarmonyOS NEXT, WASI 0.2, Valkey, the Model Context Protocol, macOS Tahoe 26 and macOS 27 |
+| Devices | 13 | Quest 2 and Quest 3, Raspberry Pi Pico, Pico 2, Zero 2 W, Pi 5 and Pi 500, Framework Laptop 13, Analogue Pocket, Steam Deck, Playdate, Apple Vision Pro, Copilot+ PCs |
+| Tools | 14 | Playwright, Backstage, GitHub Copilot, ChatGPT, Bun, OpenTofu, Cursor, Deno 2, uv, Codex CLI, Gemini CLI, Claude Code, the Copilot coding agent, TypeScript 7 |
+| Practices | 11 | A default branch named main, zero trust, Docker Desktop licences, the SBOM mandate, Log4Shell, passkeys, WCAG 2.2, trusted publishing, forks after licence changes, the XZ Utils backdoor, vibe coding |
+| Guides | 5 | How HTTP/3 runs over QUIC, how a language model picks the next token, how a signed container image is checked, how Git signs commits with SSH keys, how a container query picks a layout |
+| Examples | 7 | match statements, nested f-string quotes, records and sealed classes, virtual threads, top-level await, let-else, strict SQLite tables |
+| Projects | 4 | A password generator, a Manifest V3 extension, a blinking LED on a Pico, a GitHub Action that comments on pull requests |
+| Flex | 5 | itertools.batched, inserted rows back from SQLite, logical assignment, range over integers in Go, the :has selector |
+| Cross-code | 5 | Python calling Go through a C shared library, Dart calling C with dart:ffi, Node.js calling Rust with napi-rs, Rust in the browser with wasm-bindgen, Bun calling C through bun:ffi |
+
+In total there are 811 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare) and 99 in database 5 (30 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
 
 In the app:
 - the list of databases with the number of records;
@@ -968,8 +1167,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Structure
 
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2 and 3 to version 4.
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all four databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt` and `Db4*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3 and 4 to version 5.
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all five databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt` and `Db5*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
 - `app/src/test` — tests of the filters, the data and the database itself (Robolectric).
 - `DEVLOG.md` — the development log with the growth of lines of code by checkpoint.
@@ -977,15 +1176,15 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git and curl. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 23 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all).
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 23 examples run and pass. In database 5, 21 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all).
 
-For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Rust, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
+For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
 
 ## How to add a database
 
 1. Create files in `data/seed` with the records. Pass the database id to `entry()`, for example `databaseId = 3`; a record without it goes to database 1.
 2. Add the database to `seedDatabases` and its records to `seedRecords` (file `SeedCatalog.kt`).
-3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2`, `MIGRATION_2_3` and `MIGRATION_3_4` are the examples: each adds one database, and an install made at version 1 runs them in order.
+3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2`, `MIGRATION_2_3`, `MIGRATION_3_4` and `MIGRATION_4_5` are the examples: each adds one database, and an install made at version 1 runs them in order.
 
 ################################################################################
 # FILE: RetroDatabases/app/build.gradle.kts
@@ -1134,7 +1333,7 @@ import com.example.retrodatabases.data.seed.seedRecords
 
 @Database(
     entities = [DatabaseEntity::class, RecordEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -1156,7 +1355,7 @@ abstract class AppDatabase : RoomDatabase() {
         private fun buildDatabase(appContext: Context): AppDatabase =
             Room.databaseBuilder(appContext, AppDatabase::class.java, FILE_NAME)
                 .addCallback(SeedCallback())
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
     }
 }
@@ -1192,6 +1391,18 @@ internal val MIGRATION_2_3 = object : Migration(2, 3) {
 internal val MIGRATION_3_4 = object : Migration(3, 4) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val added = setOf(4L)
+        seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
+        seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
+    }
+}
+
+/**
+ * Version 5 added database 5. Copies at version 4 get it from this migration;
+ * older copies run it after the earlier migrations.
+ */
+internal val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        val added = setOf(5L)
         seedDatabases.filter { it.id in added }.forEach { insertDatabase(db, it) }
         seedRecords.filter { it.databaseId in added }.forEach { insertRecord(db, it) }
     }
@@ -14561,6 +14772,2014 @@ val db4Tools: List<RecordEntity> = listOf(
 )
 
 ################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db5Catalog.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.RecordEntity
+
+/**
+ * All records of database 5: languages, systems, devices, tools and practices of 2020 to 2026,
+ * as well as guides, examples, projects, flex projects and cross-code experiments.
+ */
+val db5Records: List<RecordEntity> =
+    db5Languages + db5Systems + db5Devices + db5Tools + db5Practices +
+        db5Guides + db5Examples + db5Projects + db5Flex + db5Cross
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db5Cross.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Cross-code experiments of 2020 to 2026: technologies mixed on purpose, from Go shared libraries and Bun FFI to Rust in Node.js and in the browser. */
+val db5Cross: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 5,
+        kind = Kind.CROSS,
+        section = "Python and Go",
+        title = "Python calls Go through a C shared library",
+        originalTitle = "Go c-shared build mode",
+        author = "The Go team, with ctypes from the Python standard library",
+        year = 2025,
+        summary = "Go code compiled as a C shared library, loaded from Python with ctypes and called like any other C function.",
+        details = "Go can build a C-compatible shared library with the c-shared build mode, and Python's ctypes loads it without an extension module. " +
+            "The mode has existed since Go 1.5, and the example was checked with Go 1.24, released in February 2025.",
+        instructions = """
+            1. Save the files below in one folder.
+            2. Build the library: go build -buildmode=c-shared -o libgreet.so greet.go
+            3. Run the script: python3 call.py
+        """,
+        example = """
+            ### greet.go
+            package main
+
+            import "C"
+
+            //export Sum
+            func Sum(a, b C.int) C.int {
+                return a + b
+            }
+
+            func main() {}
+            ### call.py
+            import ctypes
+
+            lib = ctypes.CDLL("./libgreet.so")
+            lib.Sum.argtypes = [ctypes.c_int, ctypes.c_int]
+            lib.Sum.restype = ctypes.c_int
+            print(lib.Sum(20, 22))
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.CROSS,
+        section = "Dart and native code",
+        title = "Dart calls C through dart:ffi",
+        originalTitle = "dart:ffi",
+        author = "The Dart team",
+        year = 2021,
+        summary = "A Dart program opens a C shared library and looks up a function with a typed signature.",
+        details = "Dart's foreign function interface, dart:ffi, became part of the stable language in 2021. A program opens the library, looks up a symbol " +
+            "and converts it to a Dart function type, so calls look like ordinary function calls.",
+        example = """
+            import 'dart:ffi';
+
+            typedef AddNative = Int32 Function(Int32, Int32);
+            typedef Add = int Function(int, int);
+
+            void main() {
+              final lib = DynamicLibrary.open('libmath.so');
+              final add = lib.lookupFunction<AddNative, Add>('add_ints');
+              print(add(20, 22));
+            }
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.CROSS,
+        section = "Node.js and Rust",
+        title = "Node.js calls Rust with napi-rs",
+        originalTitle = "napi-rs addon",
+        author = "The napi-rs project",
+        year = 2021,
+        summary = "A Rust function exported to JavaScript with a macro, which builds a Node-API module that loads like any other module.",
+        details = "napi-rs is a Rust crate that wraps Node-API, so Rust functions can be exported to Node.js with a macro. Its build step produces a native module " +
+            "that is loaded with require. The example exports one function that adds two numbers.",
+        example = """
+            ### src/lib.rs
+            use napi_derive::napi;
+
+            #[napi]
+            pub fn add(a: i32, b: i32) -> i32 {
+                a + b
+            }
+            ### index.js
+            const { add } = require('./index.js');
+            console.log(add(20, 22));
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.CROSS,
+        section = "Rust and WebAssembly",
+        title = "Rust in the browser with wasm-bindgen",
+        originalTitle = "wasm-bindgen",
+        author = "The wasm-bindgen project",
+        year = 2020,
+        summary = "A Rust function compiled to WebAssembly and called from JavaScript, with wasm-bindgen generating the glue code.",
+        details = "wasm-bindgen generates the JavaScript glue that passes strings and numbers between Rust and the browser. By 2020 it was the usual route from Rust " +
+            "to the web, and the wasm-pack tool wraps the build.",
+        example = """
+            ### src/lib.rs
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            pub fn greet(name: &str) -> String {
+                format!("Hello, {}", name)
+            }
+            ### main.js
+            import init, { greet } from './pkg/hello.js';
+
+            await init();
+            console.log(greet('Ann'));
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.CROSS,
+        section = "JavaScript and native code",
+        title = "Bun calls C through bun:ffi",
+        originalTitle = "bun:ffi",
+        author = "The Bun project",
+        year = 2023,
+        summary = "Bun's built-in FFI module, which loads a C shared library and calls its functions from TypeScript without a binding file.",
+        details = "Bun ships bun:ffi as part of the runtime, so a TypeScript file can load a C shared library and declare the types of its functions. " +
+            "Bun 1.0 came out in September 2023. The example builds a small C library with the system compiler and calls one function from Bun.",
+        instructions = """
+            1. Build the library: cc -shared -fPIC -o libmath.so math.c
+            2. Run the script: bun run ffi.ts
+        """,
+        example = """
+            ### math.c
+            int add_ints(int a, int b) {
+              return a + b;
+            }
+            ### ffi.ts
+            import { dlopen, FFIType } from "bun:ffi";
+
+            const { symbols } = dlopen("./libmath.so", {
+              add_ints: { args: [FFIType.i32, FFIType.i32], returns: FFIType.i32 },
+            });
+            console.log(symbols.add_ints(20, 22));
+        """,
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db5Devices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Devices of 2020 to 2026: headsets, boards, handhelds, laptops and gadgets that programmers wrote code for. */
+val db5Devices: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 5,
+        kind = Kind.DEVICE,
+        section = "Virtual reality",
+        title = "Oculus Quest 2",
+        originalTitle = "Oculus Quest 2",
+        author = "Oculus, then Facebook",
+        year = 2020,
+        summary = "A standalone VR headset that runs its own Android-based system, so apps do not need a PC.",
+        details = "Quest 2 went on sale in October 2020. It runs an Android-based system on its own chip, and developers build apps with the Android-based SDK, " +
+            "with Unity and Unreal Engine as common choices.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.DEVICE,
+        section = "Microcontroller boards",
+        title = "Raspberry Pi Pico",
+        originalTitle = "Raspberry Pi Pico",
+        author = "Raspberry Pi Foundation",
+        year = 2021,
+        summary = "A four-dollar microcontroller board built around the Foundation's RP2040 chip, programmed in MicroPython, C or CircuitPython.",
+        details = "The Pico launched in January 2021 at four dollars. The RP2040 is a dual-core Arm chip designed by the Foundation, " +
+            "and its C SDK and MicroPython port made the board a common first choice for microcontroller classes.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.DEVICE,
+        section = "Laptops",
+        title = "Framework Laptop 13",
+        originalTitle = "Framework Laptop 13 (11th Gen Intel)",
+        author = "Framework Computer",
+        year = 2021,
+        summary = "A laptop built to be repaired and upgraded by its owner, with replaceable ports, memory and storage modules.",
+        details = "The first Framework Laptop 13 orders shipped in July 2021 with an 11th-generation Intel processor. Owners could swap memory, storage and port modules, " +
+            "and iFixit gave the laptop a perfect repairability score.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.DEVICE,
+        section = "Handhelds",
+        title = "Analogue Pocket",
+        originalTitle = "Analogue Pocket",
+        author = "Analogue",
+        year = 2021,
+        summary = "A handheld that runs Game Boy and Game Boy Advance cartridges on FPGA chips that reproduce the original hardware.",
+        details = "Analogue began shipping the Pocket in mid-December 2021 after several delays. Its two FPGA chips are programmed to behave like the original Game Boy processors, " +
+            "so games need no software emulation.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.DEVICE,
+        section = "Single-board computers",
+        title = "Raspberry Pi Zero 2 W",
+        originalTitle = "Raspberry Pi Zero 2 W",
+        author = "Raspberry Pi Foundation",
+        year = 2021,
+        summary = "A Zero-sized Raspberry Pi with a quad-core Arm processor and wireless networking, sold for fifteen dollars.",
+        details = "The Zero 2 W arrived in October 2021 at fifteen dollars. It has four Cortex-A53 cores at 1 GHz and 512 MB of memory in the footprint of the original Zero W, " +
+            "and the Foundation claimed about five times its multi-threaded speed.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.DEVICE,
+        section = "Game consoles",
+        title = "Steam Deck",
+        originalTitle = "Steam Deck (LCD)",
+        author = "Valve",
+        year = 2022,
+        summary = "A handheld PC running SteamOS, a Linux-based system, which plays most Windows games through the Proton compatibility layer.",
+        details = "Valve released the Steam Deck in February 2022. Its SteamOS is based on Arch Linux, and the Proton layer runs most Windows games on it, " +
+            "so developers can ship Linux builds or rely on Proton.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.DEVICE,
+        section = "Handhelds",
+        title = "Playdate",
+        originalTitle = "Playdate handheld",
+        author = "Panic",
+        year = 2022,
+        summary = "A small monochrome handheld with a crank, whose games are written in Lua or C with the free Playdate SDK.",
+        details = "Panic delayed the first Playdate shipments into 2022 after a battery defect. Games are written in Lua or C with the Playdate SDK, and the crank is an input that games can use. " +
+            "The company had shipped tens of thousands of units by early 2024.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.DEVICE,
+        section = "Single-board computers",
+        title = "Raspberry Pi 5",
+        originalTitle = "Raspberry Pi 5",
+        author = "Raspberry Pi Foundation",
+        year = 2023,
+        summary = "A Raspberry Pi with a quad-core Arm processor at 2.4 GHz, a separate chip for input and output, and a PCI Express connector for fast storage.",
+        details = "The Pi 5 arrived in October 2023. Its Cortex-A76 cores run at 2.4 GHz, and a separate RP1 chip handles USB, Ethernet and most input and output. " +
+            "A PCI Express connector lets it use fast storage.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.DEVICE,
+        section = "Virtual reality",
+        title = "Meta Quest 3",
+        originalTitle = "Meta Quest 3",
+        author = "Meta",
+        year = 2023,
+        summary = "A mixed-reality headset with colour passthrough cameras, which runs the same Android-based system as Quest 2.",
+        details = "Quest 3 shipped in October 2023 with colour passthrough cameras and a faster processor. It keeps the Android-based system, " +
+            "so most apps written for Quest 2 run on it with the same SDKs.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.DEVICE,
+        section = "Spatial computing",
+        title = "Apple Vision Pro",
+        originalTitle = "Apple Vision Pro (first generation)",
+        author = "Apple",
+        year = 2024,
+        summary = "A headset with eye and hand input, which runs visionOS and apps written in SwiftUI and RealityKit.",
+        details = "Apple released Vision Pro in February 2024. Input comes from the eyes and hands, so there are no controllers. " +
+            "Developers build windowed apps in SwiftUI and 3D content in RealityKit.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.DEVICE,
+        section = "Microcontroller boards",
+        title = "Raspberry Pi Pico 2",
+        originalTitle = "Raspberry Pi Pico 2 (RP2350)",
+        author = "Raspberry Pi Foundation",
+        year = 2024,
+        summary = "A five-dollar board with the RP2350 chip, whose two cores can run Arm Cortex-M33 or RISC-V code.",
+        details = "The Pico 2 was unveiled on 8 August 2024 at five dollars. The RP2350 chip has two cores that the firmware can set to Arm Cortex-M33 or to RISC-V, " +
+            "and the board kept the Pico's size and pin layout.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.DEVICE,
+        section = "Single-board computers",
+        title = "Raspberry Pi 500",
+        originalTitle = "Raspberry Pi 500 (keyboard computer)",
+        author = "Raspberry Pi Foundation",
+        year = 2024,
+        summary = "A complete computer built into a keyboard, with a Raspberry Pi 5 board inside and a 15.6-inch monitor sold with it.",
+        details = "The Pi 500 launched at the end of 2024 with a Raspberry Pi 5 board, 8 GB of memory and a 32 GB card with the operating system already installed. " +
+            "It was aimed at schools and hobbyists who wanted a computer without a separate case.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.DEVICE,
+        section = "Laptops",
+        title = "Copilot+ PC",
+        originalTitle = "Copilot+ PC (Snapdragon X Elite)",
+        author = "Microsoft and Qualcomm",
+        year = 2024,
+        summary = "The class of Windows laptops with a neural processing unit for on-device AI, first sold with Arm-based Snapdragon X chips.",
+        details = "Microsoft announced Copilot+ PCs in May 2024, and the first machines reached stores in June 2024. The launch models all used Qualcomm's Snapdragon X chips with Arm processors, " +
+            "and Qualcomm rated the NPU at 45 trillion operations per second.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db5Examples.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Small examples of 2020 to 2026: one feature per program, short enough to read in a minute. */
+val db5Examples: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 5,
+        kind = Kind.EXAMPLE,
+        section = "Python",
+        title = "match statements in Python",
+        originalTitle = "PEP 634 (Python 3.10)",
+        author = "Brandt Bucher, Guido van Rossum and the Python core developers",
+        year = 2021,
+        summary = "A match statement that picks a branch by the shape of a dictionary and binds its parts to names, with a guard for extra conditions.",
+        details = "Python 3.10 added match in October 2021 following PEP 634. Each case can match mappings, sequences and literals, and a guard after if adds a condition. " +
+            "The example describes four shapes and falls through to a default for anything else.",
+        instructions = """
+            1. Save the example as shapes.py.
+            2. Run it: python3 shapes.py
+        """,
+        example = """
+            def describe(shape):
+                match shape:
+                    case {"kind": "circle", "radius": r}:
+                        return f"circle with area {3 * r * r}"
+                    case {"kind": "rect", "w": w, "h": h} if w == h:
+                        return f"square of side {w}"
+                    case {"kind": "rect", "w": w, "h": h}:
+                        return f"rectangle {w} by {h}"
+                    case _:
+                        return "unknown shape"
+
+            for item in [{"kind": "circle", "radius": 2}, {"kind": "rect", "w": 3, "h": 3},
+                         {"kind": "rect", "w": 2, "h": 5}, {"kind": "blob"}]:
+                print(describe(item))
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.EXAMPLE,
+        section = "Python",
+        title = "Nested quotes in f-strings",
+        originalTitle = "PEP 701 (Python 3.12)",
+        author = "The Python core developers",
+        year = 2023,
+        summary = "An f-string can now reuse its own quote character inside the braces, so nested strings read naturally.",
+        details = "Before Python 3.12, an f-string could not reuse its own quote character inside a replacement field. PEP 701 removed that limit and let f-strings contain expressions of any kind. " +
+            "The example joins a list inside an f-string, using double quotes at both levels.",
+        instructions = """
+            1. Save the example as nested.py.
+            2. Run it with Python 3.12 or newer: python3 nested.py
+        """,
+        example = """
+            names = ["Ann", "Bob"]
+            print(f"Greeting: {", ".join(f"hi {n.upper()}" for n in names)}")
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.EXAMPLE,
+        section = "Java",
+        title = "Records and sealed classes in Java",
+        originalTitle = "JEP 395 and JEP 409",
+        author = "Oracle and the OpenJDK community",
+        year = 2021,
+        summary = "Records for plain data classes, and sealed interfaces that list every type allowed to implement them.",
+        details = "Records were finalised in Java 16 and sealed classes in Java 17, and both reached the 2021 long-term support release. " +
+            "The example defines a sealed shape interface with two records, then prints each shape and its area.",
+        instructions = """
+            1. Save the example as Shapes.java.
+            2. Compile it: javac Shapes.java
+            3. Run it: java Shapes
+        """,
+        example = """
+            public class Shapes {
+                sealed interface Shape permits Circle, Square {}
+                record Circle(double radius) implements Shape {}
+                record Square(double side) implements Shape {}
+
+                static double area(Shape shape) {
+                    if (shape instanceof Circle c) {
+                        return Math.PI * c.radius() * c.radius();
+                    }
+                    Square square = (Square) shape;
+                    return square.side() * square.side();
+                }
+
+                public static void main(String[] args) {
+                    System.out.println(new Square(3));
+                    System.out.printf("%.2f%n", area(new Circle(1)));
+                    System.out.println(area(new Square(3)));
+                }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.EXAMPLE,
+        section = "Java",
+        title = "Virtual threads in Java 21",
+        originalTitle = "JEP 444 (Java 21)",
+        author = "Oracle and the OpenJDK community (Project Loom)",
+        year = 2023,
+        summary = "A thread that is cheap enough to create by the ten thousand, so blocking code can scale without a thread pool.",
+        details = "Java 21 made virtual threads final. A virtual thread is scheduled onto a few platform threads when it runs, and it gives its platform thread back while it waits. " +
+            "The example starts ten thousand tasks, and each one sleeps for ten milliseconds.",
+        instructions = """
+            1. Save the example as Tasks.java.
+            2. Compile it: javac Tasks.java
+            3. Run it: java Tasks
+        """,
+        example = """
+            import java.util.concurrent.Executors;
+            import java.util.stream.IntStream;
+
+            public class Tasks {
+                public static void main(String[] args) throws Exception {
+                    try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+                        IntStream.range(0, 10_000).forEach(i -> executor.submit(() -> {
+                            Thread.sleep(10);
+                            return i;
+                        }));
+                    }
+                    System.out.println("finished 10000 tasks");
+                }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.EXAMPLE,
+        section = "JavaScript",
+        title = "Top-level await in modules",
+        originalTitle = "ECMAScript 2022 top-level await",
+        author = "TC39 (ECMAScript 2022)",
+        year = 2022,
+        summary = "A module can use await outside any function, so setup code can wait for values at the top of the file.",
+        details = "ECMAScript 2022 allowed await at the top level of a module. Node.js runs such code when the file ends in .mjs or its package declares a module type. " +
+            "The example waits for two timers and adds up their results.",
+        instructions = """
+            1. Save the example as wait.mjs.
+            2. Run it: node wait.mjs
+        """,
+        example = """
+            const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+            console.log("start");
+            await sleep(50);
+            console.log("after the first wait");
+            const values = await Promise.all([sleep(10).then(() => 1), sleep(20).then(() => 2)]);
+            console.log("sum:", values.reduce((a, b) => a + b, 0));
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.EXAMPLE,
+        section = "Rust",
+        title = "Let-else bindings in Rust",
+        originalTitle = "let-else (Rust 1.65)",
+        author = "The Rust team",
+        year = 2022,
+        summary = "A let statement that must match a pattern, with an else block that leaves early, which keeps the main path flat.",
+        details = "Rust 1.65 stabilised let-else in late 2022. When the pattern does not match, the else block must leave the function, with return, break or a panic. " +
+            "The example returns a placeholder when the line is blank.",
+        instructions = """
+            1. Save the example as let_else.rs.
+            2. Compile it: rustc --edition 2021 let_else.rs -o let_else
+            3. Run it: ./let_else
+        """,
+        example = """
+            fn first_word(line: &str) -> &str {
+                let Some(word) = line.split_whitespace().next() else {
+                    return "(empty)";
+                };
+                word
+            }
+
+            fn main() {
+                println!("{}", first_word("  hello there"));
+                println!("{}", first_word("   "));
+            }
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.EXAMPLE,
+        section = "Databases",
+        title = "Strict tables in SQLite",
+        originalTitle = "STRICT tables (SQLite 3.37)",
+        author = "The SQLite project",
+        year = 2021,
+        summary = "A table declaration that refuses values which cannot be stored in the declared column type, instead of quietly converting them.",
+        details = "SQLite 3.37, released in late 2021, added STRICT tables. A STRICT table accepts only the declared types, so text that cannot be an integer is rejected. " +
+            "The example inserts one valid row and then tries one invalid row.",
+        instructions = """
+            1. Save the example as strict.py.
+            2. Run it: python3 strict.py
+        """,
+        example = """
+            import sqlite3
+
+            db = sqlite3.connect(":memory:")
+            db.execute("CREATE TABLE readings (id INTEGER PRIMARY KEY, value INTEGER NOT NULL) STRICT")
+            db.execute("INSERT INTO readings (value) VALUES (42)")
+            try:
+                db.execute("INSERT INTO readings (value) VALUES ('forty-two')")
+            except sqlite3.Error as error:
+                print("rejected:", error)
+            print(db.execute("SELECT id, value FROM readings").fetchall())
+        """,
+        rare = true,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db5Flex.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Flex projects of 2020 to 2026: showpieces that squeeze the most out of a few lines of code. */
+val db5Flex: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 5,
+        kind = Kind.FLEX,
+        section = "Python",
+        title = "Batching with itertools.batched",
+        originalTitle = "itertools.batched (Python 3.12)",
+        author = "The Python core developers",
+        year = 2023,
+        summary = "A function that splits any iterable into fixed-size groups, with a shorter last group when the count does not divide evenly.",
+        details = "Python 3.12 added itertools.batched. It yields tuples of a chosen size from any iterable, so records can be processed in chunks " +
+            "without counting indexes by hand.",
+        instructions = """
+            1. Save the example as batches.py.
+            2. Run it with Python 3.12 or newer: python3 batches.py
+        """,
+        example = """
+            from itertools import batched
+
+            for group in batched(range(1, 11), 4):
+                print(group)
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.FLEX,
+        section = "Databases",
+        title = "Getting inserted rows back from SQLite",
+        originalTitle = "RETURNING clause (SQLite 3.35)",
+        author = "The SQLite project",
+        year = 2021,
+        summary = "An INSERT that returns the values it stored, so the new row's id comes back in the same statement.",
+        details = "SQLite 3.35, released in March 2021, added RETURNING to INSERT, UPDATE and DELETE. The statement hands back the affected rows, " +
+            "so an application can read generated ids without a second query.",
+        example = """
+            import sqlite3
+
+            db = sqlite3.connect(":memory:")
+            db.execute("CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT)")
+            row = db.execute("INSERT INTO tasks (title) VALUES (?) RETURNING id, title", ("write the log",)).fetchone()
+            print(row)
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.FLEX,
+        section = "JavaScript",
+        title = "Logical assignment operators",
+        originalTitle = "ES2021 logical assignment",
+        author = "TC39 (ECMAScript 2021)",
+        year = 2021,
+        summary = "Operators such as ??= and ||= that assign only when a condition on the current value holds.",
+        details = "ECMAScript 2021 added the logical assignment operators. A ??= b assigns only when the left side is null or undefined, while ||= and &&= test for truthiness. " +
+            "They save a line and make defaults easy to read.",
+        example = """
+            const settings = { theme: null, size: 0 };
+            settings.theme ??= "dark";
+            settings.size ||= 12;
+            settings.size &&= settings.size * 2;
+            console.log(settings);
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.FLEX,
+        section = "Go",
+        title = "Range over integers in Go",
+        originalTitle = "Go 1.22 range over int",
+        author = "The Go team",
+        year = 2024,
+        summary = "A for loop that ranges over a number, so counting loops read as range loops.",
+        details = "Go 1.22, released in February 2024, let range take an integer, which counts from zero up to one less than the value. " +
+            "The same release gave each loop iteration its own copy of the loop variable, which fixed a long-standing closure trap.",
+        example = """
+            package main
+
+            import "fmt"
+
+            func main() {
+                for i := range 3 {
+                    fmt.Println("step", i)
+                }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.FLEX,
+        section = "Web styling",
+        title = "The :has selector",
+        originalTitle = "CSS :has() relational pseudo-class",
+        author = "The W3C CSS Working Group",
+        year = 2023,
+        summary = "A selector that matches a parent by what it contains, such as a card that holds an image.",
+        details = ":has() reached Safari and Chrome in 2022 and Firefox in late 2023, so it works in all major browsers from 2024. " +
+            "Styles can now depend on children, which used to need a script or a class added by hand.",
+        example = """
+            /* A card gets a highlighted border only when it contains an image. */
+            .card:has(img) {
+              border: 2px solid #3a7bd5;
+            }
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db5Guides.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Guides of 2020 to 2026: step-by-step explanations of how a mechanism works, with a small program to try it where the sandbox allows. */
+val db5Guides: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 5,
+        kind = Kind.GUIDE,
+        section = "Networking",
+        title = "How HTTP/3 runs over QUIC",
+        originalTitle = "QUIC (RFC 9000) and HTTP/3 (RFC 9114)",
+        author = "The IETF QUIC and HTTP working groups",
+        year = 2022,
+        summary = "HTTP/3 carries requests over QUIC streams on top of UDP, so one lost packet stalls only the stream it belongs to.",
+        details = "QUIC was published as RFC 9000 in May 2021, and HTTP/3 as RFC 9114 in June 2022. Each stream has its own ordering, so a lost packet delays only its own stream. " +
+            "The handshake combines transport setup with TLS 1.3, so a connection can start sooner than with older stacks.",
+        instructions = """
+            1. Use a curl build that supports HTTP/3.
+            2. Run: curl -I --http3 https://example.com
+            3. Look for the HTTP/3 status line in the output.
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.GUIDE,
+        section = "Machine learning",
+        title = "How a language model picks the next token",
+        originalTitle = "Next-token sampling",
+        author = "Written as a teaching example",
+        year = 2023,
+        summary = "A model scores every possible next token, turns the scores into probabilities and samples one, step after step.",
+        details = "A language model outputs one score per token in its vocabulary. A softmax turns the scores into probabilities, and the next token is drawn from them, " +
+            "so the same prompt can give different answers. The program below uses a tiny table of scores to show the loop.",
+        instructions = """
+            1. Save the code as next_token.py.
+            2. Run it: python3 next_token.py
+            3. Change the seed in random.seed to see other sentences.
+        """,
+        example = """
+            import math
+            import random
+
+            vocab = ["the", "cat", "sat", "on", "mat", "."]
+
+            # Scores (logits) for the next token after each word; higher means more likely.
+            logits = {
+                "the": [0.0, 2.0, 0.0, 0.0, 1.5, 0.0],
+                "cat": [0.0, 0.0, 2.5, 0.0, 0.0, 0.5],
+                "sat": [0.0, 0.0, 0.0, 2.0, 0.0, 0.0],
+                "on": [2.0, 0.0, 0.0, 0.0, 2.0, 0.0],
+                "mat": [0.0, 0.0, 0.0, 0.0, 0.0, 2.5],
+            }
+
+            def softmax(scores):
+                top = max(scores)
+                exps = [math.exp(s - top) for s in scores]
+                total = sum(exps)
+                return [e / total for e in exps]
+
+            random.seed(7)
+            word = "the"
+            sentence = [word]
+            for _ in range(6):
+                probs = softmax(logits.get(word, [0.0] * len(vocab)))
+                word = random.choices(vocab, weights=probs)[0]
+                sentence.append(word)
+                if word == ".":
+                    break
+            print(" ".join(sentence))
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.GUIDE,
+        section = "Supply chain",
+        title = "How a signed container image is checked",
+        originalTitle = "Sigstore and cosign signatures",
+        author = "The Sigstore project",
+        year = 2021,
+        summary = "A signature stored with the image lets a registry or cluster check who built it, using short-lived certificates tied to an identity.",
+        details = "Sigstore began in 2021, and its cosign tool signs container images with a key or with a short-lived certificate tied to an identity provider. " +
+            "The signature is stored in the registry next to the image, and a policy engine in the cluster checks it before a pod starts.",
+        instructions = """
+            1. Sign an image after pushing it: cosign sign <image>
+            2. Verify it, naming the identity that should have signed it: cosign verify <image>
+            3. Refuse to run any image whose verification fails.
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.GUIDE,
+        section = "Version control",
+        title = "How Git signs commits with SSH keys",
+        originalTitle = "Git SSH signing (Git 2.34)",
+        author = "The Git project",
+        year = 2021,
+        summary = "Git can sign commits with an SSH key, so the key that logs in to servers can also prove who made a commit.",
+        details = "Git 2.34 added SSH signing in November 2021. The signature is stored in the commit header, and git verify-commit checks it against a list of allowed signers. " +
+            "Teams that already had SSH keys avoided setting up GPG.",
+        instructions = """
+            1. Point Git at SSH signing: git config gpg.format ssh
+            2. Name the key: git config user.signingkey ~/.ssh/id_ed25519.pub
+            3. Commit with git commit -S, then check it with git log --show-signature.
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.GUIDE,
+        section = "Web layout",
+        title = "How a container query picks a layout",
+        originalTitle = "CSS container queries",
+        author = "The W3C CSS Working Group",
+        year = 2023,
+        summary = "A container query styles an element by the width of its nearest container, not by the width of the whole window.",
+        details = "Container queries shipped in Chrome and Safari in 2022 and in Firefox in early 2023. A card can change its layout when the column it sits in gets narrower, " +
+            "so components no longer need to know where on the page they are placed.",
+        example = """
+            .card-list {
+              container-type: inline-size;
+            }
+
+            @container (min-width: 30em) {
+              .card {
+                display: grid;
+                grid-template-columns: 8em 1fr;
+              }
+            }
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db5Languages.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Programming languages of 2020 to 2026: new standards and major releases, from C++20 and Java 17 to Go 1.26 and C# 14. */
+val db5Languages: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "C++20",
+        originalTitle = "C++20 (ISO/IEC 14882:2020)",
+        author = "Bjarne Stroustrup and the ISO C++ committee",
+        year = 2020,
+        summary = "The C++ revision with concepts, ranges, coroutines and modules, approved as an ISO standard at the end of 2020.",
+        details = "The committee finished C++20 in 2020. Concepts let a template state the requirements on its arguments, and ranges let algorithms work on whole pipelines of views. " +
+            "Coroutines and modules were standardised too, but compilers took years to support modules fully.",
+        instructions = """
+            1. Save the example as ranges.cpp.
+            2. Compile it: g++ -std=c++20 -o ranges ranges.cpp
+            3. Run it: ./ranges
+        """,
+        example = """
+            #include <concepts>
+            #include <iostream>
+            #include <ranges>
+            #include <vector>
+
+            template <std::integral T>
+            T twice(T value) {
+                return value * 2;
+            }
+
+            int main() {
+                std::vector<int> numbers{1, 2, 3, 4, 5, 6};
+                auto doubledEvens = numbers
+                    | std::views::filter([](int n) { return n % 2 == 0; })
+                    | std::views::transform([](int n) { return twice(n); });
+                for (int value : doubledEvens) {
+                    std::cout << value << "\n";
+                }
+                return 0;
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Scripting",
+        title = "PHP 8.0",
+        originalTitle = "PHP 8.0",
+        author = "The PHP development team",
+        year = 2020,
+        summary = "The PHP release with a JIT compiler, union types, attributes, named arguments and the match expression.",
+        details = "PHP 8.0 was released in November 2020. Its match expression compares strictly and throws an error when no arm fits, and named arguments make long calls easier to read. " +
+            "The JIT compiler and attributes changed how the engine runs and how libraries annotate their code.",
+        instructions = """
+            1. Save the example as labels.php.
+            2. Run it: php labels.php
+        """,
+        example = """
+            <?php
+            function label(int <DOLLAR>code): string {
+                return match (<DOLLAR>code) {
+                    200 => "ok",
+                    404 => "not found",
+                    500, 503 => "server error",
+                };
+            }
+
+            echo label(200), "\n";
+            echo label(503), "\n";
+            echo str_pad(string: "x", length: 3, pad_string: "-"), "\n";
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Scripting",
+        title = "Ruby 3.0",
+        originalTitle = "Ruby 3.0",
+        author = "Yukihiro Matsumoto and the Ruby core team",
+        year = 2020,
+        summary = "The Ruby release with endless method definitions, separated keyword arguments, experimental Ractors and RBS type signatures.",
+        details = "Ruby 3.0 was released on 25 December 2020. Endless method definitions let a one-line method be written with an equals sign, and keyword arguments were separated from positional hashes. " +
+            "Ractors were added as an experimental way to run code in parallel, and RBS gave Ruby a standard format for type signatures.",
+        instructions = """
+            1. Save the example as square.rb.
+            2. Run it: ruby square.rb
+        """,
+        example = """
+            def square(x) = x * x
+
+            def greet(name:, greeting: "Hello")
+              "#{greeting}, #{name}"
+            end
+
+            puts square(4)
+            puts greet(name: "Ann")
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "Swift async and await",
+        originalTitle = "Swift 5.5 concurrency",
+        author = "Apple and the Swift team",
+        year = 2021,
+        summary = "Built-in async and await, actors and structured tasks, which replaced most callback-based code in Swift.",
+        details = "Apple released Swift 5.5 in September 2021. Functions could be marked async and called with await, and actors protected their state from data races. " +
+            "Structured tasks let a parent wait for its children, which made cancellation easier to follow.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "Python 3.10 pattern matching",
+        originalTitle = "PEP 634 structural pattern matching",
+        author = "Brandt Bucher, Guido van Rossum and the Python core developers",
+        year = 2021,
+        summary = "The match statement, which picks a branch by the shape of a value and binds parts of it to names.",
+        details = "Python 3.10 came out in October 2021 with structural pattern matching, specified in PEP 634. A case can match literals, sequences, mappings and class instances, " +
+            "and a guard can add a condition. Long chains of if statements became shorter and easier to check.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "Java 17 LTS",
+        originalTitle = "Java SE 17",
+        author = "Oracle and the OpenJDK community",
+        year = 2021,
+        summary = "The long-term support release where records and sealed classes became final, so data types and closed hierarchies are short to write.",
+        details = "Java 17 shipped in September 2021 as a long-term support release. Records give immutable data classes with generated accessors, equality and printing, " +
+            "and sealed classes list the only types that may extend a class. Many teams moved their services to 17 in the following years.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "Go generics",
+        originalTitle = "Go 1.18 type parameters",
+        author = "The Go team",
+        year = 2022,
+        summary = "Type parameters for functions and types, which ended years of copied code for each element type.",
+        details = "Go 1.18 came out in March 2022 with type parameters. A function can accept any type that meets a constraint, and a generic type such as a list can hold any element type. " +
+            "The design had been argued over for years, and libraries adopted it gradually.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "Dart 3",
+        originalTitle = "Dart 3.0",
+        author = "Google and the Dart team",
+        year = 2023,
+        summary = "The Dart release with records, pattern matching, class modifiers and sound null safety.",
+        details = "Google announced Dart 3 at I/O on 10 May 2023. Records let a function return several values without a class, and patterns take them apart in a switch or an assignment. " +
+            "Null safety became sound, so a non-nullable type can never hold null at run time.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "Java 21 LTS",
+        originalTitle = "Java SE 21",
+        author = "Oracle and the OpenJDK community",
+        year = 2023,
+        summary = "The long-term support release with virtual threads, record patterns and pattern matching for switch, all of them final.",
+        details = "Java 21 shipped in September 2023. Virtual threads, from Project Loom, made it cheap to run very many blocking tasks, and record patterns and switch patterns take data apart without casts. " +
+            "Each of these had spent time as a preview before it became final.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Systems and scripting",
+        title = "Nim 2.0",
+        originalTitle = "Nim 2.0",
+        author = "Andreas Rumpf and the Nim community",
+        year = 2023,
+        summary = "A statically typed language that compiles to C, C++ or JavaScript, with the ORC memory manager as its default.",
+        details = "Nim 2.0 was released in early August 2023. Its headline change was ORC, a reference-counting memory manager with a cycle collector, which became the default in place of ARC. " +
+            "The release also sharpened type inference, mapped 64-bit integers to BigInt in JavaScript output and improved C++ interop.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Systems and AI",
+        title = "Mojo",
+        originalTitle = "Mojo (Modular)",
+        author = "Modular, led by Chris Lattner",
+        year = 2023,
+        summary = "A language with Python-like syntax and native compilation, aimed at fast AI and systems code.",
+        details = "Modular made Mojo publicly available in early May 2023. Its syntax is close to Python, and it compiles to fast native code, so Python programmers can reach C-like speed in the parts that need it. " +
+            "A Linux build followed later that year.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Documents",
+        title = "Typst",
+        originalTitle = "Typst markup language",
+        author = "Laurenz Mädje, Martin Haug and Typst GmbH",
+        year = 2023,
+        summary = "A markup language for documents with a fast compiler, built as a simpler alternative to LaTeX.",
+        details = "Typst grew out of a university project and became open source in March 2023 under the Apache 2.0 licence. " +
+            "Its markup is simpler than LaTeX, and its compiler is fast enough for a live preview while the author types.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Functional and typed",
+        title = "Gleam 1.0",
+        originalTitle = "Gleam 1.0",
+        author = "Louis Pilfold and the Gleam community",
+        year = 2024,
+        summary = "A type-safe functional language for the Erlang virtual machine, which can call Erlang and Elixir libraries.",
+        details = "Gleam 1.0 was released on 4 March 2024 with a promise of backward compatibility under semantic versioning. " +
+            "It runs on the BEAM, the Erlang virtual machine, and can call Erlang and Elixir libraries, so Gleam code can join an existing system without a rewrite.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "Kotlin 2.0",
+        originalTitle = "Kotlin 2.0.0 with the K2 compiler",
+        author = "JetBrains",
+        year = 2024,
+        summary = "The Kotlin release where the K2 compiler became stable, with a rebuilt front end and faster compilation.",
+        details = "JetBrains released Kotlin 2.0 on 21 May 2024 with the K2 compiler stable for everyone. The front end was rebuilt from scratch, and JetBrains reported build speed-ups of up to twice on some projects. " +
+            "Compose Multiplatform gained first-party backing, and the Compose compiler came with Kotlin itself.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "Swift 6",
+        originalTitle = "Swift 6 language mode",
+        author = "Apple and the Swift team",
+        year = 2024,
+        summary = "The Swift release whose language mode checks for data races at compile time, which turns many old warnings into errors.",
+        details = "Swift 6 arrived in September 2024. Its strict concurrency checking finds data races while the code is compiled, and switching the mode on turns many earlier warnings into errors. " +
+            "Migration usually happens in steps, because flipping everything at once can produce hundreds of diagnostics.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "Python 3.14",
+        originalTitle = "Python 3.14",
+        author = "The Python Software Foundation and the core developers",
+        year = 2025,
+        summary = "The release that made the free-threaded build officially supported, and that added template strings and deferred annotations.",
+        details = "Python 3.14 became generally available on 7 October 2025. The free-threaded build, which runs threads in parallel without the global interpreter lock, is officially supported but still opt-in (PEP 779). " +
+            "Template strings (PEP 750) let libraries process literal text and interpolated values safely, and annotations are evaluated lazily.",
+        example = """
+            name = "Ann"
+            greeting = t"Hello {name}"
+            print(type(greeting))
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "Rust 2024 edition",
+        originalTitle = "Rust 1.85 and the 2024 edition",
+        author = "The Rust team",
+        year = 2025,
+        summary = "The edition shipped with Rust 1.85, with let chains, changed temporary scopes and a required unsafe on extern blocks.",
+        details = "Rust 1.85.0 shipped on 20 February 2025 and made the 2024 edition stable. Breaking changes stay behind an edition switch, so older projects keep building. " +
+            "The edition changed how temporaries live in if-let and tail expressions, and it requires extern blocks to be marked unsafe.",
+        instructions = """
+            1. Save the example as chains.rs.
+            2. Compile it: rustc --edition 2024 chains.rs -o chains
+            3. Run it: ./chains
+        """,
+        example = """
+            fn main() {
+                let scores = [3, 8, 12];
+                if let Some(first) = scores.first() && *first > 2 {
+                    println!("first score {first} is above two");
+                }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "Java 25 LTS",
+        originalTitle = "Java SE 25",
+        author = "Oracle and the OpenJDK community",
+        year = 2025,
+        summary = "The long-term support release with compact source files, flexible constructor bodies and scoped values, all final.",
+        details = "Java 25 became generally available on 16 September 2025 and carries 18 JEPs. Compact source files let a beginner write a complete program without a class around it, " +
+            "and flexible constructor bodies allow checks before the call to super or this. Scoped values replace many uses of ThreadLocal.",
+        example = """
+            void main() {
+                System.out.println("Hello from a compact source file");
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "C# 14 and .NET 10",
+        originalTitle = "C# 14 with .NET 10 LTS",
+        author = "Microsoft and the .NET team",
+        year = 2025,
+        summary = "The C# version that shipped with the .NET 10 long-term support release, with extension members and file-based programs.",
+        details = "Microsoft released .NET 10 as a long-term support version on 11 November 2025, and projects that target it default to C# 14. " +
+            "Extension members add properties and operators to existing types, and a single .cs file can run as a program without a project file.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.LANGUAGE,
+        section = "Standards and revisions",
+        title = "Go 1.26",
+        originalTitle = "Go 1.26",
+        author = "The Go team",
+        year = 2026,
+        summary = "The Go release that lets new take an expression, and let generic types refer to themselves in their own type parameters.",
+        details = "Go 1.26 was released on 10 February 2026. With the expression form of new, a pointer to a starting value takes one call, and a generic type may now refer to itself in its own type parameter list. " +
+            "The Green Tea garbage collector became the default, and the go fix command gained a set of modernizers.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db5Practices.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Practices of 2020 to 2026: working habits, security rules, licensing, supply-chain habits and the new AI-assisted ways of working. */
+val db5Practices: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PRACTICE,
+        section = "Version control",
+        title = "Default branch named main",
+        originalTitle = "init.defaultBranch",
+        author = "The Git project and GitHub",
+        year = 2020,
+        summary = "New repositories start on main instead of master, because Git 2.28 made the first branch name configurable.",
+        details = "Git 2.28 added the init.defaultBranch setting in July 2020, and GitHub began creating new repositories with main from 1 October 2020. " +
+            "Existing repositories kept their names, and many teams renamed their branches over the following years.",
+        instructions = """
+            1. Save the commands below as default.sh.
+            2. Run it: sh default.sh
+            3. The last line prints main.
+        """,
+        example = """
+            git init -q -b main demo
+            cd demo
+            git branch --show-current
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PRACTICE,
+        section = "Security",
+        title = "Zero trust architecture",
+        originalTitle = "NIST SP 800-207",
+        author = "NIST (Rose, Borchert, Mitchell and Connelly)",
+        year = 2020,
+        summary = "A design in which every access request is checked, and no network location is trusted by default.",
+        details = "NIST published SP 800-207 in August 2020. It describes a policy engine that decides each request from the identity, the device and the context. " +
+            "The document became a common reference for security programmes.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PRACTICE,
+        section = "Licences",
+        title = "Docker Desktop licence change",
+        originalTitle = "Docker Desktop subscription rules",
+        author = "Docker, Inc.",
+        year = 2021,
+        summary = "Large companies had to buy a Docker Desktop subscription from 31 August 2021, while small businesses and individuals kept it free.",
+        details = "Companies with 250 or more employees, or more than 10 million dollars in revenue, needed a paid plan. They had until 31 January 2022 to move to one. " +
+            "Some teams began looking at alternatives such as Podman and Colima.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PRACTICE,
+        section = "Supply chain",
+        title = "Software bill of materials mandate",
+        originalTitle = "Executive Order 14028",
+        author = "The US government",
+        year = 2021,
+        summary = "A US executive order asked that software sold to federal agencies come with a software bill of materials.",
+        details = "Executive Order 14028, on improving the nation's cybersecurity, was signed on 12 May 2021. It asked for a software bill of materials, a list of components, " +
+            "for software sold to federal agencies. The requirement spread to other buyers and to many procurement rules.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PRACTICE,
+        section = "Security incidents",
+        title = "Log4Shell response",
+        originalTitle = "CVE-2021-44228",
+        author = "The Apache Logging project and the security community",
+        year = 2021,
+        summary = "The December 2021 flaw in the Log4j logging library, which many teams found only through their dependencies.",
+        details = "CVE-2021-44228 was disclosed around 10 December 2021 and affected Log4j 2 versions that performed lookups in logged messages. " +
+            "Many teams learned that Log4j was inside their software only when they searched their dependencies, which made inventories and scanners part of everyday work.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PRACTICE,
+        section = "Authentication",
+        title = "Passkeys",
+        originalTitle = "Passkeys (WebAuthn)",
+        author = "The FIDO Alliance, Apple, Google and Microsoft",
+        year = 2022,
+        summary = "Sign-in with a key pair stored on the device, so no password is typed and no secret is stored on the server.",
+        details = "In May 2022 Apple, Google and Microsoft announced support for passkeys built on the FIDO Alliance and W3C WebAuthn standards. " +
+            "The private key stays on the device, which makes phishing much harder, and developers add passkey sign-in with the same WebAuthn APIs.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PRACTICE,
+        section = "Accessibility",
+        title = "WCAG 2.2",
+        originalTitle = "Web Content Accessibility Guidelines 2.2",
+        author = "The W3C Web Accessibility Initiative",
+        year = 2023,
+        summary = "The accessibility guideline update that added criteria for focus visibility, dragging and target size.",
+        details = "WCAG 2.2 became a W3C Recommendation on 5 October 2023. It adds nine success criteria, including focus appearance and minimum target size, " +
+            "and it keeps the earlier conformance levels, so existing audits still apply.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PRACTICE,
+        section = "Supply chain",
+        title = "Trusted publishing",
+        originalTitle = "PyPI Trusted Publishers",
+        author = "The PyPI maintainers",
+        year = 2023,
+        summary = "Publish packages from CI with short-lived tokens from an identity provider, so no long-lived upload token is stored.",
+        details = "PyPI introduced Trusted Publishers in April 2023, built on OpenID Connect. GitHub Actions was the only supported provider until April 2024, " +
+            "when GitLab CI/CD, Google Cloud and ActiveState were added. Projects no longer keep an upload token as a secret.",
+        example = """
+            permissions:
+              id-token: write
+            steps:
+              - uses: pypa/gh-action-pypi-publish@release/v1
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PRACTICE,
+        section = "Licensing",
+        title = "Forks after licence changes",
+        originalTitle = "OpenTofu and Valkey",
+        author = "The open-source communities",
+        year = 2024,
+        summary = "When a company changes a project's licence, the community sometimes forks it under a new name, as with OpenTofu and Valkey.",
+        details = "Terraform moved to a source-available licence in August 2023, and OpenTofu was announced as a fork soon after. Redis changed its licence in March 2024, " +
+            "and the Valkey fork began the same spring under the Linux Foundation. Forks gave users a choice of maintainers and licences.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PRACTICE,
+        section = "Supply chain",
+        title = "XZ Utils backdoor",
+        originalTitle = "CVE-2024-3094",
+        author = "An attacker using the name Jia Tan, and the xz maintainers",
+        year = 2024,
+        summary = "A backdoor planted over about two years in the xz compression library, caught by a Microsoft engineer who noticed slow SSH logins.",
+        details = "Andres Freund noticed unusually slow SSH logins and found the backdoor in xz versions 5.6.0 and 5.6.1, which he reported on 29 March 2024. " +
+            "It was rated CVSS 10.0 (CVE-2024-3094). The attacker had gained the project's trust gradually, which made the case a lesson about maintainer security.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PRACTICE,
+        section = "AI-assisted work",
+        title = "Vibe coding",
+        originalTitle = "Vibe coding (term)",
+        author = "Andrej Karpathy, then the wider community",
+        year = 2025,
+        summary = "Building software by describing it to an AI and accepting the output without reading the code closely.",
+        details = "Karpathy coined the term in a post on 2 February 2025. It spread quickly and drifted: some people use it for any AI-assisted coding, " +
+            "while others reserve it for code nobody reviews. Teams argued about where it was safe to use.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db5Projects.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Built products of 2020 to 2026: finished programs with an explanation of how they work and instructions for running them. */
+val db5Projects: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PROJECT,
+        section = "Command-line tools",
+        title = "A password generator with secrets",
+        originalTitle = "Random password generator",
+        author = "Written in the style of the 2021 security guides",
+        year = 2021,
+        summary = "A command-line tool that prints a random password from the operating system's secure random source.",
+        details = "Python's secrets module draws from the operating system's cryptographic random source, unlike the random module, which is meant for simulations. " +
+            "This tool builds a password from letters, digits and symbols, with the length given on the command line.",
+        instructions = """
+            1. Save the code as passgen.py.
+            2. Run it: python3 passgen.py 20
+            3. Each run prints a new password.
+        """,
+        example = """
+            #!/usr/bin/env python3
+            # A password generator built on the secrets module, which uses the operating system's secure random source.
+            import secrets
+            import string
+            import sys
+
+            ALPHABET = string.ascii_letters + string.digits + "!@#%^&*()-_=+"
+
+            def make_password(length):
+                return "".join(secrets.choice(ALPHABET) for _ in range(length))
+
+            if __name__ == "__main__":
+                length = int(sys.argv[1]) if len(sys.argv) > 1 else 16
+                print(make_password(length))
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PROJECT,
+        section = "Browser extensions",
+        title = "A Chrome extension in Manifest V3",
+        originalTitle = "Manifest V3 extension",
+        author = "Written in the style of the 2021 extension guides",
+        year = 2021,
+        summary = "A toolbar button that runs a script in the current page through a service worker, the Manifest V3 model.",
+        details = "Chrome began accepting Manifest V3 extensions in 2021 and was phasing out Manifest V2 after that. Background pages gave way to service workers, " +
+            "and page scripts run through the scripting API rather than through a persistent page. This extension shows an alert on the current tab.",
+        instructions = """
+            1. Put the two files below in one folder.
+            2. Open chrome://extensions, switch on developer mode and choose Load unpacked.
+            3. Click the toolbar button on any web page.
+        """,
+        example = """
+            ### manifest.json
+            {
+              "manifest_version": 3,
+              "name": "Page greeter",
+              "version": "1.0",
+              "action": { "default_title": "Greet this page" },
+              "background": { "service_worker": "background.js" },
+              "permissions": ["scripting", "activeTab"]
+            }
+            ### background.js
+            chrome.action.onClicked.addListener(async (tab) => {
+              await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: () => alert("Hello from the service worker"),
+              });
+            });
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PROJECT,
+        section = "Microcontrollers",
+        title = "A blinking LED on a Raspberry Pi Pico",
+        originalTitle = "MicroPython blink",
+        author = "Written in the style of the 2021 Pico tutorials",
+        year = 2021,
+        summary = "A MicroPython program that toggles the onboard LED every half second, the first program most Pico owners write.",
+        details = "The Pico launched in January 2021 with MicroPython support, so a short script can drive the board's pins. " +
+            "On the original Pico the onboard LED is on GPIO 25. The loop toggles it every half second and never returns.",
+        instructions = """
+            1. Flash the MicroPython firmware from the Raspberry Pi website.
+            2. Copy the code to the board as main.py.
+            3. Reset the board, and the LED starts to blink.
+        """,
+        example = """
+            from machine import Pin
+            import time
+
+            led = Pin(25, Pin.OUT)
+            while True:
+                led.toggle()
+                time.sleep(0.5)
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.PROJECT,
+        section = "Automation",
+        title = "A GitHub Action that comments on new pull requests",
+        originalTitle = "Welcome comment workflow",
+        author = "Written in the style of the 2021 GitHub Actions guides",
+        year = 2021,
+        summary = "A workflow that runs when a pull request opens and posts a welcome comment with the GitHub CLI.",
+        details = "GitHub Actions runs the workflow files in a repository when an event happens. This one listens for opened pull requests, gives its job permission to write comments, " +
+            "and calls the GitHub CLI with the pull request address.",
+        instructions = """
+            1. Save the file below as .github/workflows/welcome.yml.
+            2. Commit and push it.
+            3. Open a pull request and read the new comment.
+        """,
+        example = """
+            name: welcome
+            on:
+              pull_request:
+                types: [opened]
+            jobs:
+              comment:
+                runs-on: ubuntu-latest
+                permissions:
+                  pull-requests: write
+                steps:
+                  - run: gh pr comment "<DOLLAR>PR_URL" --body "Thanks for the pull request!"
+                    env:
+                      PR_URL: <DOLLAR>{{ github.event.pull_request.html_url }}
+                      GH_TOKEN: <DOLLAR>{{ github.token }}
+        """,
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db5Systems.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Systems of 2020 to 2026: operating systems, platforms, system services, standards and cloud tools that changed how code was written and run. */
+val db5Systems: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "Desktop systems",
+        title = "Windows 11",
+        originalTitle = "Windows 11",
+        author = "Microsoft",
+        year = 2021,
+        summary = "The Windows release with a centred taskbar and a new Start menu, and the first to require a TPM 2.0 security chip.",
+        details = "Microsoft released Windows 11 on 5 October 2021. It raised the hardware bar: a TPM 2.0 chip and a supported processor became requirements, " +
+            "which left many older PCs without a free upgrade.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "Mobile systems",
+        title = "Android 12 and Material You",
+        originalTitle = "Android 12",
+        author = "Google and the Android team",
+        year = 2021,
+        summary = "Dynamic colour theming that builds an app palette from the wallpaper, and new privacy indicators.",
+        details = "Android 12 came out in October 2021 with Material You, a colour system that takes its palette from the user's wallpaper. " +
+            "It also showed an indicator when an app used the camera or the microphone.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "Linux",
+        title = "Linux 6.1 and Rust",
+        originalTitle = "Linux kernel 6.1",
+        author = "Linus Torvalds and the kernel community",
+        year = 2022,
+        summary = "The first mainline kernel with Rust support, which let new drivers be written in a memory-safe language, marked as experimental.",
+        details = "Linux 6.1 shipped in December 2022 with Rust support merged into the mainline tree. The support was labelled experimental, " +
+            "and it let kernel developers write new drivers in Rust alongside the C code.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "Cloud and containers",
+        title = "Kubernetes 1.24 and dockershim",
+        originalTitle = "Kubernetes 1.24",
+        author = "The Kubernetes release team",
+        year = 2022,
+        summary = "The release that removed dockershim, so clusters talk to containerd or CRI-O directly instead of through Docker Engine.",
+        details = "Kubernetes 1.24 came out in May 2022 and removed dockershim, the built-in bridge to Docker Engine. The removal had been announced in version 1.20 in December 2020. " +
+            "Clusters moved to a runtime that speaks the Container Runtime Interface, such as containerd or CRI-O.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "Smart home",
+        title = "Matter 1.0",
+        originalTitle = "Matter 1.0 specification",
+        author = "Connectivity Standards Alliance, formerly the Zigbee Alliance",
+        year = 2022,
+        summary = "A smart-home standard that lets devices from different makers work together over Thread, Wi-Fi and Ethernet.",
+        details = "The Connectivity Standards Alliance published Matter 1.0 in early October 2022 after repeated delays. Devices use IP networking, and Bluetooth Low Energy handles setup. " +
+            "Certification opened at the same time, with eight test labs ready to check products.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "Web platforms",
+        title = "WebGPU",
+        originalTitle = "WebGPU in Chrome 113",
+        author = "The W3C GPU for the Web community group and the browser teams",
+        year = 2023,
+        summary = "A web API for modern GPU programming, which Chrome switched on by default in 2023.",
+        details = "Chrome 113 switched WebGPU on by default in 2023, first on ChromeOS, macOS and Windows. Firefox and Safari were still building their own versions at the time. " +
+            "WebGPU succeeds WebGL for rendering, and it adds compute shaders for general-purpose GPU work.",
+        example = """
+            const adapter = await navigator.gpu.requestAdapter();
+            const device = await adapter.requestDevice();
+            console.log(device.limits.maxBufferSize);
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "Spatial computing",
+        title = "visionOS",
+        originalTitle = "visionOS 1",
+        author = "Apple",
+        year = 2024,
+        summary = "Apple's operating system for the Vision Pro headset, where apps are windows and volumes built with SwiftUI and RealityKit.",
+        details = "visionOS came with the Vision Pro in February 2024. Apps use SwiftUI for their windows and RealityKit for 3D content, " +
+            "and compatible iPad apps can run in a window.",
+        example = """
+            import SwiftUI
+
+            struct ContentView: View {
+                var body: some View {
+                    Text("Hello, visionOS")
+                        .font(.largeTitle)
+                }
+            }
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "Mobile systems",
+        title = "HarmonyOS NEXT",
+        originalTitle = "HarmonyOS NEXT",
+        author = "Huawei",
+        year = 2024,
+        summary = "Huawei's operating system without the Android compatibility layer, where apps are written in ArkTS.",
+        details = "Huawei opened a developer preview of HarmonyOS NEXT in early 2024, and a developer beta followed in mid-2024. Without the Android layer, existing Android apps do not run, " +
+            "so developers rewrite them in ArkTS.",
+        example = """
+            @Entry
+            @Component
+            struct Index {
+              build() {
+                Column() {
+                  Text('Hello HarmonyOS')
+                }
+              }
+            }
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "WebAssembly",
+        title = "WASI 0.2",
+        originalTitle = "WASI Preview 2 (WASI 0.2)",
+        author = "The WASI subgroup of the Bytecode Alliance",
+        year = 2024,
+        summary = "The stable WASI release that describes system interfaces as WebAssembly components, written in the WIT language.",
+        details = "The WASI subgroup approved WASI 0.2, also called Preview 2, in January 2024. It is built on the component model, so languages can call each other's components through WIT interfaces. " +
+            "Two worlds ship with it: a command-line profile and an HTTP profile.",
+        example = """
+            package example:greeter;
+
+            world greeter {
+              export greet: func(name: string) -> string;
+            }
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "Databases",
+        title = "Valkey",
+        originalTitle = "Valkey (fork of Redis 7.2.4)",
+        author = "The Linux Foundation and the Valkey contributors",
+        year = 2024,
+        summary = "An open-source fork of Redis under the BSD licence, started after Redis changed its licence in 2024.",
+        details = "Valkey appeared in late March 2024, forked from Redis 7.2.4, after Redis moved to dual source-available licences. The Linux Foundation governs the project, " +
+            "and several large cloud providers backed it from the start.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "AI tooling",
+        title = "Model Context Protocol",
+        originalTitle = "MCP",
+        author = "Anthropic, then the Agentic AI Foundation",
+        year = 2024,
+        summary = "An open protocol that connects AI assistants to tools and data sources through servers with one common interface.",
+        details = "Anthropic published the protocol on 25 November 2024. A server exposes files, databases or APIs, and any client that speaks the protocol can use them. " +
+            "In December 2025 the project moved to the Agentic AI Foundation under the Linux Foundation.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "Desktop systems",
+        title = "Windows 10 reaches end of support",
+        originalTitle = "Windows 10 support end",
+        author = "Microsoft",
+        year = 2025,
+        summary = "The date on which Microsoft ended routine security updates for Windows 10, on 14 October 2025.",
+        details = "Windows 10 stopped receiving routine security updates on 14 October 2025. Consumers could join an extended security updates programme for one more year, " +
+            "and Microsoft advised moving to Windows 11 where the hardware allowed it.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "Desktop systems",
+        title = "macOS Tahoe 26",
+        originalTitle = "macOS 26 Tahoe",
+        author = "Apple",
+        year = 2025,
+        summary = "The macOS release that Apple numbered 26, skipping 16, so every platform now shares a year-based version number.",
+        details = "Apple unveiled macOS Tahoe at WWDC in June 2025. Build tools and scripts had to cope with the new number, " +
+            "and some compiler drivers were changed for the new mapping of Darwin versions.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "Desktop systems",
+        title = "macOS 27 Golden Gate",
+        originalTitle = "macOS 27",
+        author = "Apple",
+        year = 2026,
+        summary = "The macOS release announced in June 2026, which runs only on Macs with Apple silicon.",
+        details = "Apple announced macOS 27 at WWDC on 8 June 2026, under the name Golden Gate. Compatible Macs could install it from 14 September 2026. " +
+            "Intel Macs are no longer supported, so the oldest eligible machines use M1 chips.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.SYSTEM,
+        section = "Linux",
+        title = "Linux 7.0",
+        originalTitle = "Linux kernel 7.0",
+        author = "Linus Torvalds and the kernel community",
+        year = 2026,
+        summary = "The kernel release that moved the major version from 6 to 7, for numbering reasons rather than a change of design.",
+        details = "Linus Torvalds released Linux 7.0 on 12 April 2026 after seven release candidates. He had named it in the announcement of 6.19, and he said the major number would tick over " +
+            "about every three and a half years.",
+    ),
+)
+
+################################################################################
+# FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/Db5Tools.kt
+################################################################################
+package com.example.retrodatabases.data.seed
+
+import com.example.retrodatabases.data.Kind
+import com.example.retrodatabases.data.RecordEntity
+
+/** Tools of 2020 to 2026: AI assistants and agents, runtimes, package managers, testing and platform tools that developers used every day. */
+val db5Tools: List<RecordEntity> = listOf(
+
+    entry(
+        databaseId = 5,
+        kind = Kind.TOOL,
+        section = "Testing",
+        title = "Playwright",
+        originalTitle = "Playwright",
+        author = "Microsoft",
+        year = 2020,
+        summary = "A browser-automation library that drives Chromium, Firefox and WebKit through one API in JavaScript, Python, Java and .NET.",
+        details = "Microsoft released Playwright in 2020. Its tests run headless in continuous integration, and one API covers the three browser engines and four languages. " +
+            "Some write-ups date version 1.0 to May 2020, so the year is the figure to rely on.",
+        example = """
+            import { test, expect } from '@playwright/test';
+
+            test('home page has a heading', async ({ page }) => {
+              await page.goto('https://example.com');
+              await expect(page.getByRole('heading')).toBeVisible();
+            });
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.TOOL,
+        section = "Developer platforms",
+        title = "Backstage",
+        originalTitle = "Backstage developer portal",
+        author = "Spotify, then the Cloud Native Computing Foundation",
+        year = 2020,
+        summary = "An open-source framework for building an internal developer portal with a software catalogue and plugins.",
+        details = "Spotify made Backstage public on 16 March 2020. The Cloud Native Computing Foundation accepted it as a Sandbox project later that year. " +
+            "Companies use its catalogue to list services, owners and documentation.",
+        example = """
+            apiVersion: backstage.io/v1alpha1
+            kind: Component
+            metadata:
+              name: retro-api
+              description: Catalogue service for the retro databases
+            spec:
+              type: service
+              lifecycle: production
+              owner: team-catalogue
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.TOOL,
+        section = "AI assistants",
+        title = "GitHub Copilot",
+        originalTitle = "GitHub Copilot",
+        author = "GitHub and OpenAI",
+        year = 2022,
+        summary = "An AI assistant inside the editor that suggests lines and whole functions while the developer types.",
+        details = "GitHub Copilot began as a technical preview in 2021 and became generally available in June 2022. It suggests code from the comments and the surrounding file. " +
+            "Its training on public code raised questions about licences.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.TOOL,
+        section = "AI assistants",
+        title = "ChatGPT",
+        originalTitle = "ChatGPT",
+        author = "OpenAI",
+        year = 2022,
+        summary = "A chat assistant that explains errors, drafts functions and writes tests for programmers after its public launch.",
+        details = "OpenAI released ChatGPT to the public on 30 November 2022. Many programmers used it to explain stack traces, draft functions and write tests, " +
+            "and it changed how teams asked each other for help.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.TOOL,
+        section = "JavaScript runtimes",
+        title = "Bun 1.0",
+        originalTitle = "Bun 1.0",
+        author = "Jarred Sumner and the Bun community",
+        year = 2023,
+        summary = "A JavaScript runtime with a bundled package manager, test runner and bundler, aimed at running Node.js code faster.",
+        details = "Bun reached version 1.0 on 8 September 2023. It bundles a package manager, a test runner and a bundler in one binary, and it runs TypeScript without a build step. " +
+            "Compatibility with Node.js was not complete at 1.0.",
+        instructions = """
+            1. Save the example as hello.ts.
+            2. Run it: bun run hello.ts
+            3. The output lists the greetings joined with a semicolon.
+        """,
+        example = """
+            // Bun runs TypeScript directly, with no build step.
+            const names: string[] = ["Ann", "Bob"];
+            console.log(names.map((name) => `Hello, <DOLLAR>{name}`).join("; "));
+        """,
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.TOOL,
+        section = "Infrastructure",
+        title = "OpenTofu",
+        originalTitle = "OpenTofu (fork of Terraform)",
+        author = "The OpenTF group, then the Linux Foundation",
+        year = 2023,
+        summary = "A fork of Terraform under the MPL licence, started after HashiCorp moved Terraform to the Business Source License.",
+        details = "HashiCorp moved Terraform to the Business Source License on 10 August 2023. A group of companies announced a fork, which became OpenTofu under the Linux Foundation in September 2023. " +
+            "Its first release, 1.6.0, came out in January 2024.",
+        rare = true,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.TOOL,
+        section = "AI assistants",
+        title = "Cursor",
+        originalTitle = "Cursor (Anysphere)",
+        author = "Anysphere",
+        year = 2023,
+        summary = "An AI-first code editor forked from Visual Studio Code, with chat and inline edits that can read the whole project.",
+        details = "Anysphere was founded in 2022 by four MIT classmates. It shipped Cursor in 2023 as a fork of Visual Studio Code, and its chat and inline edits could draw on the whole project. " +
+            "It became one of the best-known AI editors.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.TOOL,
+        section = "JavaScript runtimes",
+        title = "Deno 2",
+        originalTitle = "Deno 2.0",
+        author = "Ryan Dahl and Deno Land",
+        year = 2024,
+        summary = "The second major version of Deno, which imports npm packages directly and reads package.json and node_modules.",
+        details = "Deno 2 was released on 10 October 2024. Its npm: import specifier brings npm packages into a Deno program, and existing Node projects can run with fewer changes. " +
+            "Large frameworks were not all compatible at launch.",
+        example = """
+            import express from "npm:express@4";
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.TOOL,
+        section = "Python tooling",
+        title = "uv",
+        originalTitle = "uv (Astral)",
+        author = "Astral",
+        year = 2024,
+        summary = "A Python package and project manager written in Rust, which installs packages and Python versions much faster than pip.",
+        details = "Astral released uv in February 2024. It resolves and installs dependencies in parallel and can install Python versions too. " +
+            "Its first version offered pip-style commands, so existing projects could adopt it without changing their files.",
+        example = """
+            uv init demo
+            cd demo
+            uv add requests
+            uv run python main.py
+        """,
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.TOOL,
+        section = "AI coding agents",
+        title = "Codex CLI",
+        originalTitle = "OpenAI Codex CLI",
+        author = "OpenAI",
+        year = 2025,
+        summary = "An open-source coding agent that runs in the terminal, reads and edits files and runs commands on the developer's machine.",
+        details = "OpenAI released Codex CLI on 16 April 2025 alongside its o3 and o4-mini models. The tool runs locally in the terminal, and its approval modes control " +
+            "which edits and commands run without a prompt.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.TOOL,
+        section = "AI coding agents",
+        title = "Gemini CLI",
+        originalTitle = "Gemini CLI (preview)",
+        author = "Google",
+        year = 2025,
+        summary = "An open-source terminal agent built on Gemini models, with search and file tools and support for MCP servers.",
+        details = "Google opened a public preview of Gemini CLI on 25 June 2025 under the Apache 2.0 licence. It uses Gemini 2.5 Pro with a one-million-token context window, " +
+            "and developers can connect MCP servers to it.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.TOOL,
+        section = "AI coding agents",
+        title = "Claude Code",
+        originalTitle = "Claude Code",
+        author = "Anthropic",
+        year = 2025,
+        summary = "A terminal agent from Anthropic that works inside a repository, answers questions and applies code changes with the developer's permission.",
+        details = "Claude Code started as a research preview in February 2025 and became generally available in May 2025. It runs in the terminal on a repository, " +
+            "and the developer approves commands and edits according to the permission mode in use.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.TOOL,
+        section = "AI coding agents",
+        title = "Copilot coding agent",
+        originalTitle = "GitHub Copilot coding agent",
+        author = "GitHub",
+        year = 2025,
+        summary = "An agent inside GitHub that takes an issue, works in a branch and opens a draft pull request for a person to review.",
+        details = "GitHub unveiled the Copilot coding agent at Microsoft Build on 19 May 2025. A developer assigns an issue to Copilot, the agent pushes commits to a draft pull request, " +
+            "and a person must approve the workflow runs before CI starts.",
+    ),
+
+    entry(
+        databaseId = 5,
+        kind = Kind.TOOL,
+        section = "Compilers",
+        title = "TypeScript 7",
+        originalTitle = "TypeScript 7.0 (Go port)",
+        author = "Microsoft and the TypeScript team",
+        year = 2026,
+        summary = "The first TypeScript release with the compiler rewritten in Go, which Microsoft says builds several times faster.",
+        details = "Microsoft announced the Go port in March 2025. TypeScript 6.0 was the last release written in JavaScript, and TypeScript 7.0 reached general availability on 8 July 2026. " +
+            "Type checking is meant to behave as it did in the 6.x line.",
+    ),
+)
+
+################################################################################
 # FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedCatalog.kt
 ################################################################################
 package com.example.retrodatabases.data.seed
@@ -14598,10 +16817,16 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "Languages, systems, devices, tools and practices of 2010 to 2020, including rare and little-known items.",
         colorHex = "#AED581",
     ),
+    DatabaseEntity(
+        id = 5,
+        name = "Database 5: 2020s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 2020 to 2026, including rare and little-known items.",
+        colorHex = "#7986CB",
+    ),
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
-val seedRecords: List<RecordEntity> = db1Records + db2Records + db3Records + db4Records
+val seedRecords: List<RecordEntity> = db1Records + db2Records + db3Records + db4Records + db5Records
 
 ################################################################################
 # FILE: RetroDatabases/app/src/main/java/com/example/retrodatabases/data/seed/SeedEntry.kt
@@ -15675,10 +17900,12 @@ import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.MIGRATION_1_2
 import com.example.retrodatabases.data.MIGRATION_2_3
 import com.example.retrodatabases.data.MIGRATION_3_4
+import com.example.retrodatabases.data.MIGRATION_4_5
 import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.db2Records
 import com.example.retrodatabases.data.seed.db3Records
 import com.example.retrodatabases.data.seed.db4Records
+import com.example.retrodatabases.data.seed.db5Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -15704,6 +17931,7 @@ class AppDatabaseSeedTest {
         assertEquals(db2Records.size, databases.single { it.id == 2L }.recordCount)
         assertEquals(db3Records.size, databases.single { it.id == 3L }.recordCount)
         assertEquals(db4Records.size, databases.single { it.id == 4L }.recordCount)
+        assertEquals(db5Records.size, databases.single { it.id == 5L }.recordCount)
 
         val records = dao.observeRecords(1L).first()
         assertEquals(db1Records.size, records.size)
@@ -15760,6 +17988,23 @@ class AppDatabaseSeedTest {
         assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
         assertEquals(db4Records.size, dao.observeRecords(4L).first().size)
         assertEquals(db3Records.size, dao.observeRecords(3L).first().size)
+    }
+
+    @Test
+    fun migrationRestoresDatabaseFive() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 4 has no database 5: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 5")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 5")
+        MIGRATION_4_5.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db5Records.size, dao.observeRecords(5L).first().size)
+        assertEquals(db4Records.size, dao.observeRecords(4L).first().size)
     }
 
     @Test
@@ -15860,6 +18105,7 @@ import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.db2Records
 import com.example.retrodatabases.data.seed.db3Records
 import com.example.retrodatabases.data.seed.db4Records
+import com.example.retrodatabases.data.seed.db5Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import com.example.retrodatabases.data.seed.seedRecords
 import org.junit.Assert.assertEquals
@@ -15868,7 +18114,7 @@ import org.junit.Test
 
 class SeedDataTest {
 
-    private val catalogues = listOf(db1Records, db2Records, db3Records, db4Records)
+    private val catalogues = listOf(db1Records, db2Records, db3Records, db4Records, db5Records)
 
     @Test
     fun seededDatabasesHaveUniqueIdsAndTheirOwnRecords() {
@@ -15879,6 +18125,7 @@ class SeedDataTest {
         assertTrue(db2Records.all { it.databaseId == 2L })
         assertTrue(db3Records.all { it.databaseId == 3L })
         assertTrue(db4Records.all { it.databaseId == 4L })
+        assertTrue(db5Records.all { it.databaseId == 5L })
     }
 
     @Test
@@ -15895,6 +18142,7 @@ class SeedDataTest {
         assertTrue(db2Records.all { it.year in 1990..1999 })
         assertTrue(db3Records.all { it.year in 2000..2010 })
         assertTrue(db4Records.all { it.year in 2010..2020 })
+        assertTrue(db5Records.all { it.year in 2020..2026 })
     }
 
     @Test

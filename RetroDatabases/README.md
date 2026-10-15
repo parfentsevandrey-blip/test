@@ -1,11 +1,12 @@
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside are four databases of coding history:
+An Android application in Kotlin, Jetpack Compose and Room. Inside are five databases of coding history:
 
 - "Database 1" is a catalogue of 80s coding;
 - "Database 2" is a catalogue of 90s coding;
 - "Database 3" is a catalogue of coding from 2000 to 2010;
-- "Database 4" is a catalogue of coding from 2010 to 2020.
+- "Database 4" is a catalogue of coding from 2010 to 2020;
+- "Database 5" is a catalogue of coding from 2020 to 2026.
 
 ## What is inside
 
@@ -69,7 +70,22 @@ The catalogue of database 4 (2010 to 2020) has the same ten kinds:
 | Flex | 5 | The walrus operator, Game of Life in JavaScript, full-text search in SQLite, sorting a dictionary, CSS custom properties |
 | Cross-code | 5 | Go calling C with cgo, a Node.js addon through N-API, a Python module written in Rust, C compiled to WebAssembly, a Git clean filter in Python |
 
-In total there are 712 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare) and 109 in database 4 (38 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
+The catalogue of database 5 (2020 to 2026) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 20 | C++20, PHP 8.0, Ruby 3.0, Swift, Python 3.10, Java 17, Go generics, Dart 3, Java 21, Nim, Mojo, Typst, Gleam, Kotlin 2.0, Python 3.14, Rust 2024, Java 25, C# 14 and Go 1.26 |
+| Systems | 15 | Windows 11, the end of Windows 10 support, Android 12, Linux 6.1 and 7.0, Kubernetes 1.24, Matter, WebGPU, visionOS, HarmonyOS NEXT, WASI 0.2, Valkey, the Model Context Protocol, macOS Tahoe 26 and macOS 27 |
+| Devices | 13 | Quest 2 and Quest 3, Raspberry Pi Pico, Pico 2, Zero 2 W, Pi 5 and Pi 500, Framework Laptop 13, Analogue Pocket, Steam Deck, Playdate, Apple Vision Pro, Copilot+ PCs |
+| Tools | 14 | Playwright, Backstage, GitHub Copilot, ChatGPT, Bun, OpenTofu, Cursor, Deno 2, uv, Codex CLI, Gemini CLI, Claude Code, the Copilot coding agent, TypeScript 7 |
+| Practices | 11 | A default branch named main, zero trust, Docker Desktop licences, the SBOM mandate, Log4Shell, passkeys, WCAG 2.2, trusted publishing, forks after licence changes, the XZ Utils backdoor, vibe coding |
+| Guides | 5 | How HTTP/3 runs over QUIC, how a language model picks the next token, how a signed container image is checked, how Git signs commits with SSH keys, how a container query picks a layout |
+| Examples | 7 | match statements, nested f-string quotes, records and sealed classes, virtual threads, top-level await, let-else, strict SQLite tables |
+| Projects | 4 | A password generator, a Manifest V3 extension, a blinking LED on a Pico, a GitHub Action that comments on pull requests |
+| Flex | 5 | itertools.batched, inserted rows back from SQLite, logical assignment, range over integers in Go, the :has selector |
+| Cross-code | 5 | Python calling Go through a C shared library, Dart calling C with dart:ffi, Node.js calling Rust with napi-rs, Rust in the browser with wasm-bindgen, Bun calling C through bun:ffi |
+
+In total there are 811 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare) and 99 in database 5 (30 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
 
 In the app:
 - the list of databases with the number of records;
@@ -96,8 +112,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Structure
 
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2 and 3 to version 4.
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all four databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt` and `Db4*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3 and 4 to version 5.
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all five databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt` and `Db5*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
 - `app/src/test` — tests of the filters, the data and the database itself (Robolectric).
 - `DEVLOG.md` — the development log with the growth of lines of code by checkpoint.
@@ -105,12 +121,12 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git and curl. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 23 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all).
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 23 examples run and pass. In database 5, 21 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all).
 
-For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Rust, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
+For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
 
 ## How to add a database
 
 1. Create files in `data/seed` with the records. Pass the database id to `entry()`, for example `databaseId = 3`; a record without it goes to database 1.
 2. Add the database to `seedDatabases` and its records to `seedRecords` (file `SeedCatalog.kt`).
-3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2`, `MIGRATION_2_3` and `MIGRATION_3_4` are the examples: each adds one database, and an install made at version 1 runs them in order.
+3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2`, `MIGRATION_2_3`, `MIGRATION_3_4` and `MIGRATION_4_5` are the examples: each adds one database, and an install made at version 1 runs them in order.

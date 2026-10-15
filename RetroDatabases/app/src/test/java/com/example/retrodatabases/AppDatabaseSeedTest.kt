@@ -7,10 +7,12 @@ import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.MIGRATION_1_2
 import com.example.retrodatabases.data.MIGRATION_2_3
 import com.example.retrodatabases.data.MIGRATION_3_4
+import com.example.retrodatabases.data.MIGRATION_4_5
 import com.example.retrodatabases.data.seed.db1Records
 import com.example.retrodatabases.data.seed.db2Records
 import com.example.retrodatabases.data.seed.db3Records
 import com.example.retrodatabases.data.seed.db4Records
+import com.example.retrodatabases.data.seed.db5Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -36,6 +38,7 @@ class AppDatabaseSeedTest {
         assertEquals(db2Records.size, databases.single { it.id == 2L }.recordCount)
         assertEquals(db3Records.size, databases.single { it.id == 3L }.recordCount)
         assertEquals(db4Records.size, databases.single { it.id == 4L }.recordCount)
+        assertEquals(db5Records.size, databases.single { it.id == 5L }.recordCount)
 
         val records = dao.observeRecords(1L).first()
         assertEquals(db1Records.size, records.size)
@@ -92,6 +95,23 @@ class AppDatabaseSeedTest {
         assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
         assertEquals(db4Records.size, dao.observeRecords(4L).first().size)
         assertEquals(db3Records.size, dao.observeRecords(3L).first().size)
+    }
+
+    @Test
+    fun migrationRestoresDatabaseFive() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = AppDatabase.get(context)
+        val dao = database.libraryDao()
+        val sqlite = database.openHelper.writableDatabase
+
+        // A file made at version 4 has no database 5: remove it, then run the migration.
+        sqlite.execSQL("DELETE FROM records WHERE databaseId = 5")
+        sqlite.execSQL("DELETE FROM databases WHERE id = 5")
+        MIGRATION_4_5.migrate(sqlite)
+
+        assertEquals(seedDatabases.size, dao.observeDatabases().first().size)
+        assertEquals(db5Records.size, dao.observeRecords(5L).first().size)
+        assertEquals(db4Records.size, dao.observeRecords(4L).first().size)
     }
 
     @Test
