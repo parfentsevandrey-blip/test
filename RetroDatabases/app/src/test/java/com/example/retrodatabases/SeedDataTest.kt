@@ -15,6 +15,11 @@ import com.example.retrodatabases.data.seed.db11Records
 import com.example.retrodatabases.data.seed.db12Records
 import com.example.retrodatabases.data.seed.db13Records
 import com.example.retrodatabases.data.seed.db14Records
+import com.example.retrodatabases.data.seed.db15Records
+import com.example.retrodatabases.data.seed.db16Records
+import com.example.retrodatabases.data.seed.db17Records
+import com.example.retrodatabases.data.seed.db18Records
+import com.example.retrodatabases.data.seed.db19Records
 import com.example.retrodatabases.data.seed.seedDatabases
 import com.example.retrodatabases.data.seed.seedRecords
 import org.junit.Assert.assertEquals
@@ -26,6 +31,7 @@ class SeedDataTest {
     private val catalogues = listOf(
         db1Records, db2Records, db3Records, db4Records, db5Records, db6Records, db7Records, db8Records, db9Records,
         db10Records, db11Records, db12Records, db13Records, db14Records,
+        db15Records, db16Records, db17Records, db18Records, db19Records,
     )
 
     @Test
@@ -47,6 +53,11 @@ class SeedDataTest {
         assertTrue(db12Records.all { it.databaseId == 12L })
         assertTrue(db13Records.all { it.databaseId == 13L })
         assertTrue(db14Records.all { it.databaseId == 14L })
+        assertTrue(db15Records.all { it.databaseId == 15L })
+        assertTrue(db16Records.all { it.databaseId == 16L })
+        assertTrue(db17Records.all { it.databaseId == 17L })
+        assertTrue(db18Records.all { it.databaseId == 18L })
+        assertTrue(db19Records.all { it.databaseId == 19L })
     }
 
     @Test
@@ -73,6 +84,11 @@ class SeedDataTest {
         assertTrue(db12Records.all { it.year in 1920..1930 })
         assertTrue(db13Records.all { it.year in 1910..1920 })
         assertTrue(db14Records.all { it.year in 1900..1910 })
+        assertTrue(db15Records.all { it.year in 1890..1900 })
+        assertTrue(db16Records.all { it.year in 1880..1890 })
+        assertTrue(db17Records.all { it.year in 1870..1880 })
+        assertTrue(db18Records.all { it.year in 1860..1870 })
+        assertTrue(db19Records.all { it.year in 1850..1860 })
     }
 
     @Test

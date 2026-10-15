@@ -1,6 +1,6 @@
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside are fourteen databases of coding history:
+An Android application in Kotlin, Jetpack Compose and Room. Inside are nineteen databases of coding history:
 
 - "Database 1" is a catalogue of 80s coding;
 - "Database 2" is a catalogue of 90s coding;
@@ -15,7 +15,12 @@ An Android application in Kotlin, Jetpack Compose and Room. Inside are fourteen 
 - "Database 11" is a catalogue of coding from 1930 to 1940;
 - "Database 12" is a catalogue of coding from 1920 to 1930;
 - "Database 13" is a catalogue of coding from 1910 to 1920;
-- "Database 14" is a catalogue of coding from 1900 to 1910.
+- "Database 14" is a catalogue of coding from 1900 to 1910;
+- "Database 15" is a catalogue of coding from 1890 to 1900;
+- "Database 16" is a catalogue of coding from 1880 to 1890;
+- "Database 17" is a catalogue of coding from 1870 to 1880;
+- "Database 18" is a catalogue of coding from 1860 to 1870;
+- "Database 19" is a catalogue of coding from 1850 to 1860.
 
 ## What is inside
 
@@ -229,7 +234,82 @@ The catalogue of database 14 (1900 to 1910) has the same ten kinds:
 | Flex | 3 | The Koch snowflake, Wieferich primes below 5000 and complete mappings of Z6 (36 officers) |
 | Cross-code | 2 | Richard's diagonal in Python and C; Morse SOS in Python and C |
 
-In total there are 1,270 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare), 60 in database 6 (29 rare), 49 in database 7 (26 rare), 50 in database 8 (22 rare), 50 in database 9 (6 rare), 50 in database 10 (10 rare), 50 in database 11 (9 rare), 50 in database 12 (7 rare), 50 in database 13 (10 rare) and 50 in database 14 (9 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
+The catalogue of database 15 (1890 to 1900) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Gregg shorthand, the constructed languages Veltparl, Dil, Orba and Bolak, and Heaviside's vector notation for electromagnetism |
+| Systems | 5 | Hollerith's tabulating system for the 1890 census, Strowger's automatic telephone exchange, the Monotype keyboard and caster, the first long-distance telephone line from New York to Chicago and the Telefon Hirmondo news service |
+| Devices | 8 | Popov's lightning recorder, Braun's cathode-ray tube, the Brunsviga pinwheel calculator, Tesla's high-frequency coil, Pupin's loading coil, the Kinetoscope, Röntgen's X-ray tube and Duddell's oscillograph |
+| Tools | 6 | Cutter's Expansive Classification, Hilbert's Zahlbericht on number fields, Peirce's Short Table of Integrals, d'Ocagne's Nomographie, the Encyklopädie der mathematischen Wissenschaften and the Dictionary of National Biography |
+| Practices | 5 | Pearson's method of moments, the Mendenhall Order on United States units, the first National Electrical Code, the Zurich congress of mathematicians and the International Cloud Atlas |
+| Guides | 5 | How Heaviside's expansion theorem inverts a rational operator, how a partial Fourier sum overshoots a jump, how a decreasing function shows a rest point is stable, how Hensel's lifting finds a square root modulo 625 and how a Stieltjes integral is summed by weights |
+| Examples | 6 | Cesàro means of Grandi's series, Hadamard's bound on a 3 by 3 determinant, determinants of the Hilbert matrix, Hurwitz quaternion units counted by brute force, Pick's theorem on a small triangle and primitive prime divisors of 2 to the n minus 1 |
+| Projects | 4 | Kempe chain repair on a wheel with five colours, a Bazeries-style disk cipher with four disks, two-colour necklaces counted with Burnside's count and a film strip stepped frame by frame |
+| Flex | 3 | Prime counts against x over ln x, the Betti numbers of a torus from a triangulation and lattice points in convex regions of area above four |
+| Cross-code | 2 | Hurwitz determinants in Python and C; the Bessel function J0 at one by its power series in Python and C |
+
+The catalogue of database 16 (1880 to 1890) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Peirce's algebra of logic and the quantifier sign, Peano's symbols for the natural numbers, Cantor's transfinite ordinals and the symbol omega, Gibbs's vector notation for physics students, Esperanto and the first International Phonetic Alphabet |
+| Systems | 5 | Edison's Pearl Street central station, the Great Barrington alternating-current system, the Gross-Lichterfelde electric tramway, Sprague's Richmond streetcars and the telpher line at Glynde |
+| Devices | 8 | Tesla's electro-magnetic motor, Hammond's typewriter, the photophone, the Kodak roll-film camera, Hertz's spark-gap resonator, the comptometer, Benz's Patent-Motorwagen and Nipkow's scanning disc |
+| Tools | 6 | Carroll's Game of Logic, Thacher's cylindrical slide rule, Michelson's interferometer of 1881, the first part of the Oxford English Dictionary, Rowland's ruling engine for diffraction gratings and Marquand's logic machine |
+| Practices | 5 | Standard time zones and the 1884 meridian conference, the 1880 census counted by hand, Galton's anthropometric laboratory, the electrical units named at Paris in 1881 and Kerckhoffs's six rules for military ciphers |
+| Guides | 5 | How Venn diagrams check a syllogism, how the Michelson–Morley fringe shift is predicted, how Tait's edge colouring of a dual graph is counted, how the greedy rule writes a fraction in unit fractions and how co-relation is computed from paired deviations |
+| Examples | 6 | How the fifteen puzzle's parity decides solvability, how a Linotype line is justified with spacebands, how two perpendicular currents make a rotating field, how an electrolytic meter reads charge, how steam stages share the pressure drop and how series couples add a thermal signal |
+| Projects | 4 | A direct-current feeder with voltage drop, a series primary feeding transformer secondaries, energy from sampled volts and amps and hours worked from time-clock punches |
+| Flex | 3 | Labelled trees counted by Cayley's formula, Heawood's colour bound for surfaces and Peano's space-filling curve on a grid |
+| Cross-code | 2 | Tower of Hanoi moves in Python and C; a keyboard adder with carries in Python and C |
+
+The catalogue of database 17 (1870 to 1880) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Volapük, Phillips Code for press telegraphy, Van 't Hoff's three-dimensional formulas, Tait's quaternion treatise, Reuleaux's kinematic pairs and chains and Schröder's calculus of logic |
+| Systems | 5 | Edison's quadruplex telegraph, Tyer's electric train tablet, the first commercial telephone exchange at New Haven, Brush arc lighting in Cleveland and the Siemens electric railway at the Berlin exhibition |
+| Devices | 8 | Baudot's printing telegraph, Bell's telephone patent, Edison's phonograph, Gramme's ring dynamo, Bell's photophone, Jablochkoff's electric candle, Hughes's carbon microphone and Ritty's cash register |
+| Tools | 6 | Kempe's linkage for a straight line, Tait's tables of knots, Gibbs's graphical method for thermodynamic surfaces, Mance's heliograph, Edison's electric pen and Glaisher's factor tables |
+| Practices | 5 | The Metre Convention, the Bern treaty and the General Postal Union, the Vienna meteorological congress of 1873, Bertillon's identification system and the CGS system of units |
+| Guides | 5 | How Dedekind's cut defines the square root of 2, Klein's Erlangen program, Gibbs's phase rule, Clausius's virial theorem for an oscillator and Cayley's group tables and the group axioms |
+| Examples | 6 | Partial sums of e and the start of Hermite's proof, Boltzmann's H function for a two-state toy, Boltzmann's entropy from counting microstates, the Lipschitz constant of x squared on a grid, Weierstrass's series at x = 0 and Mertens's sums of ln p over p |
+| Projects | 4 | Routh's table for two cubics, Landry's factor of the sixth Fermat number, Galton's quincunx with exact bin counts and Dedekind's ideals in Z[√−5] |
+| Flex | 3 | Sylow's count in the symmetric group S4, a Jordan block for a repeated eigenvalue and the ideal efficiency of Otto's four-stroke cycle |
+| Cross-code | 2 | Clifford product of two generators in Python and C; Cantor's nested intervals in Python and C |
+
+The catalogue of database 18 (1860 to 1870) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Kekulé's structural formulas, the Paris form of the Morse code of 1865, Visible Speech, Myer's wigwag code, Peirce's notation for relatives and Ellis's palaeotype |
+| Systems | 5 | The London pneumatic despatch line from Euston to Holborn, the Russian-American Telegraph by the Bering Strait, the US Military Telegraph, the British telegraphs taken over by the Post Office and the Paris pneumatic post |
+| Devices | 8 | Sholes's typewriter patent of 1868, Malling-Hansen's writing ball, Jevons's logical piano, Reis's telephone of 1861, Calahan's stock ticker, Kelvin's siphon recorder, Marey's sphygmograph and Wheatstone's automatic telegraph with paper tape |
+| Tools | 6 | Mendeleev's periodic table of 1869, Bierens de Haan's tables of definite integrals, Poggendorff's biographical dictionary, the Jahrbuch über die Fortschritte der Mathematik, the Royal Society Catalogue of Scientific Papers and Watts's Dictionary of Chemistry |
+| Practices | 5 | The Karlsruhe Congress on atomic weights, the International Statistical Congress in London, the North German metric law of 1868, the British Association unit of electrical resistance and the International Telegraph Union convention in Paris |
+| Guides | 5 | How Maxwell's governor is tested for stability, how Maxwell's speed distribution gives the share of fast molecules, how Chebyshev's inequality bounds the spread of data, how Chauvenet's criterion rejects a doubtful reading and how Helmholtz's beats between two tones are counted |
+| Examples | 6 | How Kasiski's test finds the key length of a Vigenère cipher, how Mendel's crosses give the 3 to 1 ratio, how Clausius's entropy balances a reversible cycle, how Boltzmann's energy shares fall off with each level, how Smith's normal form reduces an integer matrix and how the Stern–Brocot tree finds a simple gear ratio |
+| Projects | 4 | Maxwell's sorting demon in a small simulation, Meissel's count of primes below a large number, Dase's factor table and Hankel's permanence test on three pair-number systems |
+| Flex | 3 | Jevons's substitution of similars on a chain of classes, Grassmann's exterior product of two vectors in space and Plücker's line coordinates and the test for meeting lines |
+| Cross-code | 2 | The pantelegraph's scan lines in Python and C; Venn's running frequency of successes in Python and C |
+
+The catalogue of database 19 (1850 to 1860) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Boole's algebra of logic, Hamilton's quaternion notation, Couper's bond lines in chemical formulae, De Morgan's syllogistic notation, Schläfli's symbols for regular polytopes and Gerke's revised Morse alphabet |
+| Systems | 5 | The German-Austrian telegraph union, the Dover to Calais telegraph cable, the Boston municipal fire-alarm telegraph, the Atlantic telegraph cable of 1858 and the Indian telegraph from Calcutta to Agra |
+| Devices | 8 | Scheutz's difference engine, Hughes's printing telegraph, Gintl's duplex telegraph, Saxby's interlocking signal frame, Phelps's printing telegraph, Kelvin's mirror galvanometer, Scott's phonautograph and Ruhmkorff's induction coil |
+| Tools | 6 | The Mannheim slide rule, Amsler's polar planimeter, Chebyshev's parallelogram linkage, Vega's logarithm handbook revised by Bremiker, Schron's seven-figure logarithm tables and Thomas de Colmar's arithmometer |
+| Practices | 5 | The Brussels maritime conference of 1853, Weber and Kohlrausch's electrical units, the British Weights and Measures Act of 1855, Braille's six-dot cell and Siemens's mercury unit of resistance |
+| Guides | 5 | How Riemann's zeta function takes negative values, how Chebyshev's prime counts prove Bertrand's postulate, how Kummer's criterion sorts primes below 100, how Boole's summation adds powers of integers and how a four-letter code book is numbered |
+| Examples | 6 | How many tree shapes have n nodes, how Cannizzaro fixes molecular weights from vapour density, which numbers are cubes modulo a prime, the Cayley–Hamilton check for 2 by 2 matrices, Chebyshev's best straight line for x squared and Kelvin's law for signal delay in a cable |
+| Projects | 4 | Shanks's digits of pi by Machin's formula, Kirkman's schoolgirls solved with PG(3,2), Gauss–Legendre rules checked by exact integration and Hamilton's icosian game on the dodecahedron |
+| Flex | 3 | How Chebyshev's recurrence builds T_n, Stern's diatomic sequence and Steiner triple systems on nine points |
+| Cross-code | 2 | Eight queens counted by backtracking in Python and C; Playfair's digraph cipher with the MONARCHY key in Python and C |
+
+In total there are 1,520 records: 320 in database 1 (181 of them flagged as rare), 142 in database 2 (68 rare), 141 in database 3 (56 rare), 109 in database 4 (38 rare), 99 in database 5 (30 rare), 60 in database 6 (29 rare), 49 in database 7 (26 rare), 50 in database 8 (22 rare), 50 in database 9 (6 rare), 50 in database 10 (10 rare), 50 in database 11 (9 rare), 50 in database 12 (7 rare), 50 in database 13 (10 rare) and 50 in database 14 (9 rare), 50 in database 15 (9 rare), 50 in database 16 (8 rare), 50 in database 17 (10 rare), 50 in database 18 (10 rare) and 50 in database 19 (8 rare). Each record has a year, an author, a section, a short summary, details, instructions (for projects, guides and examples) and a code example.
 
 In the app:
 - the list of databases with the number of records;
@@ -256,8 +336,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Structure
 
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 and 13 to version 14.
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all fourteen databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt`, `Db6*.kt`, `Db7*.kt`, `Db8*.kt`, `Db9*.kt`, `Db10*.kt`, `Db11*.kt`, `Db12*.kt`, `Db13*.kt` and `Db14*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and the migrations from versions 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 and 18 to version 19.
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all nineteen databases: `Db1*.kt`, `Db2*.kt`, `Db3*.kt`, `Db4*.kt`, `Db5*.kt`, `Db6*.kt`, `Db7*.kt`, `Db8*.kt`, `Db9*.kt`, `Db10*.kt`, `Db11*.kt`, `Db12*.kt`, `Db13*.kt`, `Db14*.kt`, `Db15*.kt`, `Db16*.kt`, `Db17*.kt`, `Db18*.kt` and `Db19*.kt`, one file per kind; the list of databases and their records (`SeedCatalog.kt`); the helper that builds a record (`SeedEntry.kt`).
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
 - `app/src/test` — tests of the filters, the data and the database itself (Robolectric).
 - `DEVLOG.md` — the development log with the growth of lines of code by checkpoint.
@@ -265,7 +345,7 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. In database 9, 20 examples run and pass. In database 10, 20 examples run and pass. In database 11, 20 examples run and pass. In database 12, 20 examples run and pass. In database 13, 20 examples run and pass. In database 14, 20 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. In database 9, 20 examples run and pass. In database 10, 20 examples run and pass. In database 11, 20 examples run and pass. In database 12, 20 examples run and pass. In database 13, 20 examples run and pass. In database 14, 20 examples run and pass. In each of databases 15 to 19, 20 examples run and pass. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
 
 For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
 
@@ -273,4 +353,4 @@ For languages that are not installed in the build environment (Forth, Prolog, Li
 
 1. Create files in `data/seed` with the records. Pass the database id to `entry()`, for example `databaseId = 3`; a record without it goes to database 1.
 2. Add the database to `seedDatabases` and its records to `seedRecords` (file `SeedCatalog.kt`).
-3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_13_14` are the examples: each adds one database, and an install made at version 1 runs them in order.
+3. A new install writes all seeded databases when the file is created. An install made before that does not get them by itself: raise the version in `AppDatabase` and add a `Migration` that inserts the new database. `MIGRATION_1_2` through `MIGRATION_18_19` are the examples: each adds one database, and an install made at version 1 runs them in order.

@@ -8,6 +8,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 - Counts come from `wc -l` on the working tree. Build output, the generated Gradle wrapper (`gradlew`, `gradlew.bat`, `gradle-wrapper.jar`, `gradle-wrapper.properties`) and this log are excluded from the totals. I count with `wc` because it's boring and I trust it.
 - Deltas are measured against the previous checkpoint.
 - Work before CP-01 was not measured, so the table starts there.
+- From CP-16 the work runs in quotas. A quota is the number of decades in a batch's year range, counted from both ends, and each batch covers more decades than the one before. A decade that already exists is counted in the range but not written again.
 
 ## Growth in lines of code
 
@@ -28,6 +29,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-13 | 2026-10-15 | 20,288 | 343 | 82 | 118 | 20,831 | +1,408 (database 8: 50 records in eleven files, migration 7→8, tests +23) |
 | CP-14 | 2026-10-15 | 21,664 | 374 | 82 | 118 | 22,238 | +1,407 (database 9: 50 records in eleven files, migration 8→9, tests +31) |
 | CP-15 | 2026-10-15 | 28,170 | 490 | 82 | 118 | 28,860 | +6,622 (databases 10 to 14: 250 records in 55 files, migrations 9→10 to 13→14, tests +116) |
+| CP-16 | 2026-10-15 | 34,733 | 606 | 82 | 118 | 35,539 | +6,679 (databases 15 to 19: 250 records in 55 files, migrations 14→15 to 18→19, tests +116) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -757,3 +759,53 @@ The helpers shared one search budget, which ran out after about 60 searches.
 - From this checkpoint the rare flag means little-known, as in databases 1 to 8. In database 9 it marked long shots.
 - The helpers' verifiers and derivation notes are not in the repository.
 - Not verified yet: running on a device or emulator, the migrations from versions 9 to 14 on a real device, the UI with fourteen databases in the list and in the filters, lint, and the release build.
+
+## CP-16: databases 15 to 19, 1850 to 1900 (the first batch by quota)
+
+Status: five more databases are in the app, one per decade from the 1850s to the 1890s: 250 records, migrations from version 14 to version 19, and tests for all nineteen databases. The build passes, 33 of 33 unit tests pass, and the Kotlin compiler gives no warnings. The 100 runnable records (20 per database) pass against their expected output. The 1900s were already database 14, so the six decades from 1850 to 1900 gave five new databases.
+
+Mood: from this checkpoint the work runs by quota, and I have mixed feelings about it. I like the shape a quota gives. Once the size of a batch is known, I can plan the helpers, the checks and the wiring before the first record is written, and one script now adds the catalogue, the migrations and the tests. I am uneasy about the size. Five helpers ran at once on one search budget, so the later ones ran short, and many dates in this batch come from memory. The checks inside each helper missed about a dozen repeats between databases, and only a cross-batch check found them, late. There is some pleasure too: telegraphs, codes and early calculators make good material, and the verifiers caught one integer-division bug in a helper's Clausius program. The next quota will be larger, so the cross-batch check has to run while the helpers are still writing, not after they finish.
+
+Date: 2026-10-15. Totals: Kotlin main 34,733 (CP-15: 28,170), Kotlin test 606 (490), XML 82, Gradle and project files 118, total 35,539. The +6,679 is the 55 new Kotlin files for databases 15 to 19 (6,467 lines together), plus the catalogue, the database class and the seed list (main +96), and the tests (+116).
+
+### What changed
+
+- Five databases, each with the same ten kinds and 50 records: "Database 15: 1890s coding catalogue" (1890 to 1900), "Database 16: 1880s" (1880 to 1890), "Database 17: 1870s" (1870 to 1880), "Database 18: 1860s" (1860 to 1870) and "Database 19: 1850s" (1850 to 1860). Their rare flags are 9, 8, 10, 10 and 8, so 45 new rare records and 546 in the whole catalogue.
+- Eleven files per database, 55 in total: ten record files and a catalogue each. Colours are #90CAF9, #CE93D8, #FFCC80, #E6EE9C and #EF9A9A.
+- Version 19 with MIGRATION_14_15 to MIGRATION_18_19. An install at each earlier version gets the new databases from the matching migration, as before.
+- Tests: SeedDataTest and AppDatabaseSeedTest cover nineteen databases, with five new migration tests. 33 unit tests in total (AppDatabaseSeedTest 20, RecordFilterTest 5, SeedDataTest 8).
+- The quota: a batch's quota is the number of decades in its year range, counted from both ends. This batch counts six decades (1850, 1860, 1870, 1880, 1890 and 1900); five are new, because 1900 was already database 14. The batch before it, 1900 to 1940, counted five, so each batch covers more decades than the one before, and the next one must count at least seven. A decade that already exists is counted but not written again.
+- Process: one helper per decade, all in parallel, with one shared brief and suggested topics that keep the decades apart. Each helper had at most ten web searches. Its report lists which dates were searched, which come from memory and which rest on one source. Those reports are not in the repository.
+- Scripts, kept in the session scratch folder and not in the repository: a title list for all records, a structure checker (counts, years, rare flags, overlaps with existing titles and provenance notes), a cross-batch overlap check, and a wiring script for the catalogue, the version, the migrations and the tests.
+
+### Facts checked by web search
+
+Most dates were checked where a search gave a clear answer, and the helpers were asked to say in the record details when sources disagreed. Some searches ran out, so the rest of the batch went on from memory. Examples that were searched: Gregg shorthand (a 1888 pamphlet and the 1893 American edition), the Brunsviga's first delivery (1892, from one blog), the National Electrical Code (1897), Volapük (the May 1879 outline), Galton's co-relation paper (1888), Tesla's motor patent (filed 12 October 1887, granted 1 May 1888) and Burroughs's patents of 1888, whose filing dates are disputed.
+
+### Not searched, from memory
+
+Most other dates and attributions in this batch, including the mathematics and physics of the 1850s to 1880s (Christoffel's 1858 quadrature, Dedekind, Cayley, Riemann, Boltzmann, Clausius, Kummer and Hamilton), the Bern treaty of 1874, and the telegraph and instrument dates of the 1850s. The helpers' reports list them.
+
+### Problems
+
+- Repeats between databases. The per-database checks could not see them, and the cross-batch check found them. In each pair one record was replaced: Odhner's calculator (16, against the Brunsviga in 15), Schröder's first volume (16, against the Operationskreis in 17), Meissel's 1870 count (17, against the one in 18), the Jordan canonical form (17, against 18), the virial theorem (18, against 17), the 1875 telegraph convention (17, against the Paris convention of 1865 in 18), Tait's quaternion product (18, against the treatise in 17), Cayley's group tables (19, against 17), the Wheatstone telegraph (19, against 18), the 1860 Karlsruhe congress (19, against 18), the pantelegraph (19, against the cross-code record in 18) and the four-colour question for maps (19, against the Heawood and Kempe records of 15 and 16). Two more repeated older records: Dewey's classification (17, against library classification in 14) and Dedekind's recursion (16, against primitive recursion in 12). All were replaced.
+- Records that were not coding history: Foucault's pendulum and Kirchhoff's spectroscope (19), and Stokes's settling speeds for falling spheres (19, which is physics). They were replaced.
+- Provenance notes such as "(memory)" and "search source" had leaked into one helper's record text. They were removed, and the checker now fails on them.
+- About ten records have a descriptive originalTitle rather than a printed title, where the original is in Cyrillic or no printed title was found; for example Popov's recorder, the Brunsviga, the Kinetoscope, the Lumière cinematograph and the Pupin loading coil in database 15, and the Meissel record in database 18. The app shows them as labels, so they need checking before a release.
+- Weak fits: the Encyklopädie and the Dictionary of National Biography in database 15 (both tools), and Ruhmkorff's induction coil in database 19.
+- Single-source dates to recheck: Veltparl (1896), Dil (1893), Orba (1893) and Bolak (1899), each from one list; Galton (1873) and Tyer (1878), the latter from heritage sites only; Meissel (1870, one 2019 thesis); Bierens's dates (catalogue and archive records); Wheatstone (1858, museum dating only); the German-Austrian telegraph union (1850, one timeline); the Hughes patents (dated 1856 to 1859 by one source); and the Gerke alphabet (dates disputed).
+
+### How I checked it
+
+- Unit tests: 33 of 33 pass (AppDatabaseSeedTest 20, RecordFilterTest 5, SeedDataTest 8). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, with no compiler warnings or errors.
+- Examples: each new database has its own verifier with exact expected output, and all 100 runnable records pass, 20 in each database. The 150 reading-only records are not executed.
+- Structure: 50 records per database, kinds exact, rare flags between 8 and 10, years inside each decade, no dollar signs, no Cyrillic, and no provenance notes in the record text.
+- Whole catalogue: 1,520 records. The only titles that repeat are "Erlang" and "Software inspections", from databases 1 and 2, as before.
+- Cross-batch: 17 pairs of titles across the new databases share two or more significant words. I kept them as neighbours, for the reasons below.
+
+### Notes
+
+- Neighbours kept, because they are different items: Hensel's and Dedekind's square roots (different methods); the vector notations of Gibbs and Heaviside (rival notations in one debate); the two congresses of 1860 and 1897; the manual and the automatic telephone exchanges (New Haven and Strowger); Ellis's palaeotype and the International Phonetic Alphabet; the algebras of logic of Boole and Peirce; the electrical units of 1856, 1860, 1863 and 1881 (steps in one story); the printing telegraphs of Hughes, Phelps and Baudot; the two telegraph unions of 1850 and 1865; and Shanks's digits of pi in database 19 against the bc calculation of pi in database 1 (different algorithms and stories).
+- These clusters are dense, especially the electrical units and the printing telegraphs. A later pass could thin them.
+- From database 10 onward the rare flag means little-known.
+- Not verified yet: running on a device or emulator, the migrations from versions 14 to 19 on a real device, the UI with nineteen databases in the list and in the filters, lint, and the release build.
