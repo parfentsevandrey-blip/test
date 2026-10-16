@@ -35,6 +35,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-19 | 2026-10-15 | 62,696 | 222 | 82 | 118 | 63,118 | +9,691 (databases 35 to 44: 500 records in 110 files, migrations 34→35 to 43→44, tests -731) |
 | CP-20 | 2026-10-15 | 73,269 | 222 | 82 | 118 | 73,691 | +10,573 (databases 45 to 54: 500 records in 110 files, migrations 44→45 to 53→54, tests +0) |
 | CP-21 | 2026-10-16 | 83,047 | 222 | 82 | 118 | 83,469 | +9,778 (databases 55 to 64: 461 records in 110 files, migrations 54→55 to 63→64, tests +0) |
+| CP-22 | 2026-10-16 | 92,742 | 222 | 82 | 118 | 93,164 | +9,695 (databases 65 to 74: 444 records in 110 files, migrations 64→65 to 73→74, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -1080,3 +1081,49 @@ The helper reports list the rest. The lead should check first: Clavijo's embassy
 
 - Not verified yet: running on a device or emulator, the migrations from version 54 to version 64 on a real device, the UI with 64 databases in the list and in the filters, lint, and the release build.
 - The 1400s and 1460s are the thinnest decades for "coding" so far: ciphers, printing, calendars and instruments make up most of them. A later pass should first review the approximate dates, the single-source items and the items dated 1450, which the range rule allows in both 59 and 60. This batch keeps each item in one database.
+
+## CP-22: databases 65 to 74, 1300 to 1400 (the fourteenth century, the next century back)
+
+Status: ten more databases are in the app, one per decade from the 1390s down to the 1300s: 444 records, migrations from version 64 to version 74, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. Three decades are complete (the 1350s, the 1320s and the 1310s, at 50 records each). Seven are smaller and are marked "quota": false in tools/databases.json, as the 1410s was: the 1390s with 40 records, the 1380s with 45, the 1370s with 47, the 1360s with 32, the 1340s with 47, the 1330s with 36 and the 1300s with 47. The build passes with no compiler warnings, 17 of 17 unit tests pass, and the 194 runnable records (20 in nine databases and 14 in the 1360s) pass against their expected output.
+
+Mood: This is the thinnest century so far for "coding". The 1300s to the 1390s have clocks, a few instruments, Wang Zhen's machines, Llull's wheels and some law codes, and very little else with a dated first form. Most helpers ran out of verified items in their decade and filled the gap from memory with approximate dates, which I accepted only because the details name the range. When I read the result I found the same kind of project, one about the decade's own records, written into five databases, and twice in some of them. I did not enjoy that, and I am glad the cross-batch check caught it before the commit. Seven honest smaller decades are better than fifty padded records, which is also what you chose for the 1410s, but the count is a real cost, and you may want to decide whether to fill them.
+
+Date: 2026-10-16. Totals: Kotlin main 92,742 (CP-21: 83,047), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 93,164 (CP-21: 83,469). The +9,695 is the 110 new Kotlin files for databases 65 to 74 and the regenerated catalogue; the database class, the migrations and the tests did not change.
+
+### What changed
+
+- Ten databases, from "Database 65: 1390s coding catalogue" (1390 to 1400) to "Database 74: 1300s coding catalogue" (1300 to 1310). Their records are 40, 45, 47, 32, 50, 47, 36, 50, 50 and 47. Their rare flags are 10, 9, 10, 8, 10, 9, 8, 9, 8 and 9, so 90 new rare records and 1,028 in the whole catalogue.
+- Eleven files per database, 110 in total. Colours are #F48FB1, #81D4FA, #80DEEA, #A5D6A7, #FFE57F, #4FC3F7, #9575CD, #FFB74D, #66BB6A and #EC407A.
+- Spec: tools/databases.json has 74 entries. Databases 65, 66, 67, 68, 70, 71 and 74 are marked "quota": false, as database 63 is.
+- Documents: CATALOGUE.md and the README overview and structure blocks are regenerated. The README sentence about examples now lists 20 each in databases 15 to 62 and 64 to 67 and 69 to 74, 14 in database 68, and five in database 63.
+- Process: one helper per database, ten in parallel, with the brief (database 64 as the template) and a file of suggested topics for the 1300s. Several helpers stopped short. Each was resumed with its gap list, and the search budget was extended where a fact had to be checked. Later rounds replaced the repeats that the cross-batch check found.
+
+### Facts checked by web search
+
+Examples from the helper reports (they list the rest): Wang Zhen's Nong shu, dated 1313, with wooden type and a rotating type case (one source; some accounts give about 1303 for the book); the Chetwode quadrant engraved in 1311 (one source); the Teutonic Order's seat moved to Marienburg in 1309; Duccio's Maestà dated 9 October 1308 (a 1980 review disputes it); Dondi's astrarium completed in 1364 (the start date is disputed); the studium generale of Pavia (1361); the bull of Urban V on Pécs (1 September 1367, surviving as a copy); the Halberstadt organ inscription of 1361 (the "earliest organ" claim is disputed); the Gulbenkian Mamluk lamp (about 1354 to 1361); the al-Qawwas astrolabe of 752 AH (1351 to 1352, one auction listing); the Wienhausen spectacles (about 1350, one source); the Quesnoy bombards of 1340 (one chronicle); the Siena bell of 1347 (one source); the Padua clock of 1344 (sources conflict); Lorenzetti's hourglass fresco (1337 to 1339); the Odoric account written at Padua in May 1330; the Libro de buen amor (1330 or 1343); Bradwardine's Geometria speculativa (the date is memory only, and the lead should check it).
+
+### Not searched, from memory
+
+Most other dates and attributions, including the reigns of Philip VI, John II, Edward III, Clement VI, Innocent VI, Urban V and Charles IV, the Garter's companions, the Philobiblon (1345), the Songshi, the Statute of Labourers (1351), the Golden Bull (1356), the Holy Year of 1350, Gower's and Chaucer's dates, the Charles Bridge (begun 1357, 16 arches, 516 metres), the fixed feasts of 1386, the Chinese dynasty lengths, the Florence guilds, the Kokan Shiren chronicle of 1322, the ogham groups, the shield quarters and the Ethiopian calendar offset. The helper reports list them. The lead should check the weakest first: Bradwardine's date, the Quesnoy bombards, the Siena bell, the Padua clock, the Gulbenkian lamp, the al-Qawwas attribution, the Wang Zhen book date, the feast dates and the Charles Bridge figures.
+
+### Problems
+
+- Thin decades. Seven databases are below 50 records, as listed above. The 1360s has 32 records and 14 runnable ones. The other reduced decades stand at 36 to 47 records.
+- Repeated exercise types. A project about the decade's own records was written in five databases and twice in some of them (65, 66, 69, 71 and 72). Each database now keeps one such project, and the rest were replaced. The timeline project is kept in 69, 70, 71 and 72, one per database.
+- Items repeated across databases, found by the cross-batch check and replaced: the 32-point compass guide (47 and 72); the degrees-and-minutes method (53 and 72); the Commedia (57 and 72); the Roman-numeral year (35 and 65); the lunar-year count (56, 62 and 67); the courier-days exercise (27 and 68); Piers Plowman's B and C texts (66 and 67); the Beauvais clock (66 and 74); Mondeville's surgery (72 and 74); the Jubilee of 1350 (69 and 70); the Byzantine year rule (67 and 69); the copper-token tally (71 and 72); the Odoric account (71 and 72); the hour-strike count (66 and 72).
+- Several runnable records still use numbers labelled as illustrative, for example the wage, recipe and drum exercises. Their text says so, and I did not replace them.
+- Facts from memory to check: the fixed feast dates of 1386, the Charles Bridge figures, the reign dates, the Ethiopian calendar offset and the Chinese dynasty lengths.
+- Process: several helpers stopped before writing their files, after spending their searches, and were resumed; the summary above says which decades were reduced.
+
+### How I checked it
+
+- Unit tests: 17 of 17 pass (AppDatabaseSeedTest 4, SeedDataTest 8, RecordFilterTest 5). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the log has no compiler warnings.
+- Examples: each new database has its own verifier with exact expected output, worked out by hand before each run. 194 of 194 runnable records pass: 20 in each of databases 65 to 67 and 69 to 74, and 14 in 68. The 250 reading-only records are not executed.
+- Structure: the generator checks all 74 databases and all 4,175 records. The quota databases keep the exact kind counts (6, 5, 8, 6, 5, 5, 6, 4, 3 and 2) and rare flags from 7 to 10. The reduced databases keep the kinds but have fewer records (quota false, as database 63). Years are inside each range, and the record text has no provenance phrases, dollar signs or Cyrillic.
+- Cross-batch: the final check compares all 74 databases; 1,568 pairs share two or more significant words. I read the pairs that touch the replacements. They are word matches, or the same method applied to different items (the reign counts in 65, 68 and 69; the Julian calendar in 53, 54 and 67).
+- Whole catalogue: 4,175 records. The only titles that repeat are "Erlang" and "Software inspections", as before.
+
+### Notes
+
+- Not verified yet: running on a device or emulator, the migrations from version 64 to version 74 on a real device, the UI with 74 databases in the list and in the filters, lint, and the release build.
+- The 1300s to the 1390s are the thinnest decades in the catalogue for "coding". The next pass should first decide whether to fill the seven smaller databases or keep them smaller, and then check the memory facts listed above.

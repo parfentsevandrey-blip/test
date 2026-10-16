@@ -962,4 +962,154 @@ The catalogue of database 64 (1400 to 1410) has the same ten kinds:
 | Projects | 4 | Copper and tin on hand for a bronze type run, Counting the years of Zheng He's seven voyages, A ledger that pairs kango tallies by their numbers and Days in each month of 1404, a leap year of the kango trade |
 | Flex | 3 | Days from Chaucer's death to the death of Timur, Days from the battle of Ankara to the battle of Grunwald and The years 1400 to 1410 added up |
 | Cross-code | 2 | The rings of a candle clock in Python and C and Weighted votes of the Kutna Hora decree in Python and C |
+
+The catalogue of database 65 (1390 to 1400) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Gower's Confessio Amantis, the English poem of about 1390, The Book of Ballymote, an Irish manuscript of about 1390, The later Wycliffite Bible, a revised English text of about 1395, The Chantilly Codex, a French songbook of about 1390, The Vernon manuscript, a Middle English anthology of about 1390 and Metge's Lo Somni, a Catalan dream dialogue of 1399 |
+| Systems | 5 | The Da Ming lu, the Ming law code of the Hongwu court, The gwajeon land reform of Goryeo Korea, dated 1391, The Statute of Praemunire, against appeals to Rome, The reunion of the Northern and Southern Courts of Japan and The Kalmar Union, three northern crowns under one queen |
+| Devices | 3 | The Wells Cathedral clock, a weight-driven clock of about 1390, The Merton astrolabe dated 1390, a large instrument from Oxford and The painted cards of Charles VI of France, paid for in 1392 |
+| Tools | 3 | Chaucer's Treatise on the Astrolabe, written for his son Lewis, Trevisa's English version of Bartholomaeus Anglicus, finished in 1398 and Deschamps's L'Art de dictier, a French handbook of verse |
+| Practices | 3 | The Menagier de Paris, a household book of 1393 for a young wife, The Twelve Conclusions of the Lollards, posted at Westminster in 1395 and France's withdrawal of obedience from Pope Benedict XIII in 1398 |
+| Guides | 5 | How a rhyme royal stanza is checked for its rhyme scheme, How a perfect long divides into three breves in mensural time, How a recipe from the Menagier is scaled from six guests to nine, How the field shares of a gwajeon grant follow the grades of rank and How a weight-driven clock's running time follows from its drum turns |
+| Examples | 6 | Days in the decade of the 1390s by the Julian rule, Minutes on the limb of a 1390 astrolabe, Strokes in the light and heavy stick grades of the Ming code, Richard II's reign counted in calendar years, Years from Gower's Confessio to the Kalmar Union and Years from the later Wycliffite Bible to the Ming code |
+| Projects | 4 | Counting the dated records of this decade by year, A clock keeper's wages for a month, in pence and shillings, Overlapping reigns of four rulers of the decade, in calendar years and The decade's clocks and cards by age in 1400 |
+| Flex | 3 | Days from the battle of Nicopolis to the deposition of Richard II, Days from the deposition of Richard II to the coronation of Henry IV and Days from the battle of Nicopolis to the Kalmar Union |
+| Cross-code | 2 | Ogham letters by aicme in Python and C and Julian leap years from 1390 to 1400 in Python and C |
+
+The catalogue of database 66 (1380 to 1390) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Benvenuto da Imola's Latin commentary on Dante, finished in 1380, Wyclif's Trialogus, a Latin dialogue of three speakers, Gower's Vox clamantis, a Latin poem on the rising of 1381, Langland's Piers Plowman, the C text of about 1385, Chaucer's Troilus and Criseyde, a long English poem in rhyme royal and The Flateyjarbok, an Icelandic book of kings' sagas begun in 1387 |
+| Systems | 5 | Winchester College, founded by William of Wykeham in 1382, The Cortes of Coimbra, which made John of Aviz king of Portugal in 1385, The University of Heidelberg, opened in 1386, The University of Cologne, founded in 1388 and The Merciless Parliament of 1388, which condemned Richard II's advisers |
+| Devices | 5 | The Salisbury Cathedral clock, about 1386, Dulle Griet, the great iron gun of Ghent, The Bremen cog, a Hanseatic ship built about 1380, The Gros-Horloge of Rouen, a clock of about 1389 and The Jacquemart of Dijon, a bell-striking figure set up in 1383 |
+| Tools | 4 | The Datong calendar of the Ming, issued in 1384, Honore Bovet's Arbre des batailles, a French treatise on war, Gaston Phoebus's Livre de la chasse, a French hunting manual and The Forme of Cury, the cookery book of Richard II's kitchen |
+| Practices | 5 | The Ming yellow registers of households, begun in 1381, The English poll tax of 1380, a flat tax counted by head, The fabbrica of Milan Cathedral, begun in 1386, The indulgences of Bishop Despenser's crusade in Flanders, 1383 and Ars subtilior, the subtle notation of late fourteenth-century music |
+| Guides | 5 | How a tithe is taken from a harvest of sheaves, How a rent is shared among tenants in proportion to their acres, How a miller's toll is taken from a load of grain, How the octave day of a feast is counted and How a widow's third is set aside before an estate is shared |
+| Examples | 6 | Ming copper cash counted in strings of a thousand coins, English money counted in marks, nobles and pence, Florentine pounds and ounces counted as once, Wine measures of tuns, pipes, hogsheads and gallons, Arrows counted by the sheaf of twenty-four and The Jewish year count for 1380 to 1390 in anno mundi |
+| Projects | 4 | The quarter days of the English rent year in 1386, Battles and foundations of the 1380s grouped by country, The dated events of the 1380s grouped by month of the year and The fixed feasts of the church year in 1386, sorted by day |
+| Flex | 3 | Days from Kulikovo to Wat Tyler's death, Days from Sempach to Kosovo and Days from Aljubarrota to Sempach |
+| Cross-code | 2 | Hour strikes of a tower clock in a day, in Python and C and Letters and words of an opening verse line in Python and C |
+
+The catalogue of database 67 (1370 to 1380) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | The Brus, John Barbour's poem of Robert Bruce in Scots, Chaucer's House of Fame, a dream vision of about 1380, John Gower's Mirour de l'omme, a moral poem in Anglo-Norman French, Oresme's French Aristotle, the Livre du ciel et du monde, Sir Gawain and the Green Knight, an alliterative romance of about 1375 and Chaucer's Book of the Duchess, an elegy written about 1370 |
+| Systems | 5 | The Da Ming baochao, Hongwu's paper money of 1375, The University of Erfurt, founded in 1379, The Ming abolition of the chancellery and the chief minister's post, 1380, The Ming civil examinations, first held in 1371 and The Western Schism of 1378, with rival popes at Rome and Avignon |
+| Devices | 5 | Henri de Vic's tower clock for the Palais de la Cite in Paris, A gilded brass astrolabe made at Barcelona, dated 1375, Ibn al-Shatir's sundial on the minaret of the Umayyad Mosque in Damascus, Jikji, the oldest surviving book printed with movable metal type and The Great Bowl-Mouth Tube, a small bronze gun of the Ming, dated 1372 |
+| Tools | 6 | Ibn Khaldun's Muqaddimah, a book of method for history, The Catalan Atlas, a painted set of world maps made on Majorca, Corbechon's French encyclopedia, a translation made for Charles V, Hongwu zhengyun, the Ming rhyme dictionary of 1375, The Louvre inventory of Charles V's books, drawn up in 1373 and Yantraraja, the Sanskrit treatise on the astrolabe of 1370 |
+| Practices | 5 | Ragusa's thirty-day isolation of travellers from plague ports, The cipher ledger of Gabriele de Lavinde, 1379, The English poll tax of 1377, a groat on each adult, The Goryeo office for gunpowder weapons, set up in 1377 and The muwaqqit's post at the Umayyad Mosque, held by Ibn al-Shatir |
+| Guides | 5 | How a fanqie spelling gives the sound of a Chinese syllable, How the seasonal hours of a day are measured from its length, How a long line of alliterative verse is checked for its alliteration, How a Chinese double hour, shichen, is named from the clock and How the afternoon prayer time is found from a shadow's length |
+| Examples | 6 | How old Petrarch, Edward III and Charles V were at their deaths, How many yards a bolt of seventeen English cloth ells measures, Converting a five-guan Ming note into strings of cash, How long a dynasty lasts by three generations of forty years, How old Richard II was at his coronation in 1377 and The Ethiopian year of two Julian dates, 22 June 1377 and 16 September 1380 |
+| Projects | 4 | Books of Charles V's library by subject, from an illustrative shelf list, Ranking an illustrative list of examination candidates by score, Gaps in years between five dated institutions of the decade and Cannon ordered by the Goryeo office in a year, from an illustrative ledger |
+| Flex | 3 | Days from the death of Edward III to the coronation of Richard II, Days from the death of Gregory XI to the election of Urban VI and Days from the death of Petrarch to the death of Boccaccio |
+| Cross-code | 2 | The Byzantine year of a date in Python and C and A year written in Chinese numerals in Python and C |
+
+The catalogue of database 68 (1360 to 1370) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | The Nagarakretagama, a Javanese court poem completed in 1365, Boccaccio's Latin lives of famous women, Machaut's Voir Dit, a French poem with letters, Petrarch's letters arranged as the Familiares, Tao Zongyi's notes written while resting from the fields and The English statute that made pleading in English |
+| Systems | 5 | The University of Pavia, given its studium generale in 1361, The University of Krakow, chartered in 1364, The University of Vienna, founded by Duke Rudolf IV in 1365, The University of Pecs, authorized by Pope Urban V in 1367 and The Statutes of Kilkenny, laws to keep the English apart from the Irish |
+| Devices | 3 | Giovanni de' Dondi's astrarium, a planetary clock finished in 1364, The Halberstadt cathedral organ, completed in 1361 and The imperial kilns of Jingdezhen, set up for the Ming court in 1369 |
+| Tools | 3 | Pizzigani's portolan chart of 1367, a Venetian sea chart, Guy de Chauliac's Chirurgia magna, a surgical handbook of 1363 and Ibn al-Shatir's planetary treatise, known from a copy of 1367 |
+| Practices | 1 | The Statute of Apparel, dress limited by rank in England |
+| Guides | 5 | How a perfect or imperfect breve is divided in mensural notation, How a letter book is indexed by the names of its addressees, How a pulse is counted in beats per minute with a sand-glass, How a list of biographies is grouped by century and How the clauses of a statute are numbered by chapter and clause |
+| Examples | 3 | How many popes reigned during the 1360s, counted by their years, How many firings a kiln makes in a year on a fixed cycle and A papal fee of 1362 paid in three yearly parts |
+| Projects | 1 | A roll of university fees by faculty and year |
+| Flex | 3 | Days from the death of Rudolf IV to the battle of Najera, Days from the battle of Auray to the Vienna charter and Days from the Krakow charter to the Pecs bull |
+| Cross-code | 2 | The one bits of the year 1365 in Python and C and The triangular numbers that stay below 1369 in Python and C |
+
+The catalogue of database 69 (1350 to 1360) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Boccaccio's Decameron, a hundred tales told during the plague, Ibn Battuta's Rihla, the Arabic account of his travels, The Travels of John Mandeville, written in French, Passavanti's Mirror of True Penitence, a treatise in Italian prose, Jean le Bel's chronicle of the wars of Edward III and John II and The Gospels of Tsar Ivan Alexander, an illuminated book in Old Bulgarian |
+| Systems | 5 | The Statute of Labourers, wage limits after the Black Death, The Golden Bull of Charles IV, the imperial electoral law, The Majestas Carolina, Charles IV's law code for Bohemia, The Ordinance of the Staple, the fixed wool markets of England and The Order of the Star, King John II's knightly fellowship |
+| Devices | 8 | The Wienhausen spectacles, a pair of about 1350 from a convent, The first Strasbourg Cathedral clock, with its bellows-driven rooster, Spectacles painted at Treviso in 1352, Enamelled glass mosque lamp of the Mamluk period, about 1354 to 1361, Enamelled glass lamp in the Louvre, inscribed for Sultan Hasan, A brass astrolabe signed by al-Qawwas and dated 752 AH, The great bascinet, a visored helmet of the mid-1300s and An astrolabe in the Oxford History of Science Museum, dated about 1350 |
+| Tools | 6 | Oresme's tract on the configurations of qualities and motions, Swineshead's Book of Calculations, rules for changing qualities, The Gough Map of Britain, one of the earliest maps with roads, Oresme's Algorismus proportionum, rules for ratios and their powers, Buridan's questions on Aristotle's Physics, lectures of the 1340s and 1350s and Albert of Saxony's Perutilis logica, a logic textbook of the Paris schools |
+| Practices | 5 | The chevauchee, a mounted raid of the Hundred Years' War, in 1355, The Zhizheng paper-money reform of the Yuan, about 1350, Free companies, bands of unpaid soldiers in France after 1356, The waqf of Sultan Hasan's mosque-madrasa in Cairo, 1356 to 1363 and The Venetian galley convoys, called mude, on the trade routes |
+| Guides | 5 | How Oresme's graph finds the distance of an evenly speeding body, How a sack of wool is weighed in stones and pounds, How Oresme's grouping shows that the harmonic sum grows without limit, How Buridan's impetus rule compares two thrown stones and How the legs of a route add up to a journey on a route map |
+| Examples | 6 | Counting the tales of the Decameron, ten tellers over ten days, Years from the Wienhausen spectacles to their discovery in 1953, Years from the first Strasbourg clock to the clock of 1574, Years of the fifty-year Holy Year cycle from 1350 to 1500, The span of dates given for Mandeville's French text, 1357 to 1371 and Years of the Yuan dynasty, and how many fell after the 1350 reform |
+| Projects | 4 | A timeline of the 1350s built from dated events, The rulers of the 1350s and the calendar years each held office, Cities of the 1350s sorted from north to south by latitude and The arches of the Charles Bridge in Prague, begun in 1357 |
+| Flex | 3 | Days from the battle of Poitiers to the Jacquerie, Days from the Jacquerie to the treaty of Bretigny and Days from the battle of Poitiers to the treaty of Bretigny |
+| Cross-code | 2 | The Three Kings' bows in one day of a clock, in Python and C and The years Ibn Battuta spent on the road, in Python and C |
+
+The catalogue of database 70 (1340 to 1350) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | The Ayenbite of Inwyt, a Kentish moral treatise of 1340, Boccaccio's Teseida, the first Italian epic in ottava rima, Machaut's Remede de Fortune, a French love poem of about 1340, Giovanni Villani's Nuova Cronica, a history of Florence in the vernacular, The Poema de Alfonso XI, a rhymed chronicle of the battle of the Salado and Konrad von Megenberg's Book of Nature, a natural history in German prose |
+| Systems | 5 | Charles University at Prague, founded in 1348, The Order of the Garter, founded by Edward III in 1348, The Ordinance of Labourers of 1349, a wage freeze after the plague, The Bahmani Sultanate of the Deccan, founded in 1347 and Dusan's Code, the Serbian law book of 1349 |
+| Devices | 5 | The bombards at the siege of Quesnoy, named in a chronicle of 1340, A tower clock at Padua, put up in 1344, Two or three vase-shaped guns the English may have fielded at Crecy in 1346, The catapults that threw plague corpses over the walls of Caffa in 1346 and The first bell hung in the Torre del Mangia at Siena, 1347 |
+| Tools | 6 | Pegolotti's merchant handbook, the Pratica della mercatura, The Philobiblon, Richard de Bury's book on the love of books, The Songshi, the official history of the Song dynasty compiled in 1345, The Paris faculty of medicine's report on the plague, 1348, Ibn al-Khatib's treatise on the dreaded disease, a Granada argument for contagion and Al-Umari's Paths of Sight, an encyclopaedic geography of the Mamluk realms |
+| Practices | 5 | The treasury of merits set out in the bull Unigenitus of 1343, The Bardi and Peruzzi loans to Edward III and the default that broke them, The flagellant processions of 1349 and the pope's ban on them, English manor accounts that listed empty holdings after the Black Death and The jubilee of 1350, when Clement VI shortened the interval to fifty years |
+| Guides | 5 | How the eight lines of an ottava rima stanza rhyme, How an estate divides into three shares in an illustrative will of 1348, How a lance of 1346 is counted: one man-at-arms, two archers and a page, How the royal arms of England were quartered in 1340 and How a Caesar shift turns the Garter's motto into a cipher |
+| Examples | 6 | Founders of the Garter counted, the king with his companions, The twelve books of Villani's Nuova Cronica, counted in a list, The twenty chapters of the Philobiblon, summed by number, The four faculties of Charles University, counted in a list, Years from the Ayenbite of Inwyt to the founding of the Garter and Years of Stefan Dusan's reign and the gap to his code's additions |
+| Projects | 4 | A timeline of the 1340s with the years of each entry sorted, A ledger of loans to a king, with illustrative sums left unpaid, A manor's worker-days before and after the plague, illustratively and Reign lengths of six rulers of the 1340s, sorted from longest to shortest |
+| Flex | 3 | Days from the battle of Crecy to the battle of Neville's Cross, Days from the founding of Charles University to the Garter and Days from the battle of Crecy to the founding of the Garter |
+| Cross-code | 2 | The chapter counts of three Chinese histories in Python and C and Trade-route days between three ports as a table, in Python and C |
+
+The catalogue of database 71 (1330 to 1340) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | Kenko's Essays in Idleness, written in Japanese, Juan Ruiz's Book of Good Love, a Castilian poem of about 1330, Boccaccio's Filostrato, a love poem in ottava rima and The Anglo-Norman captions of the Luttrell Psalter |
+| Systems | 5 | The electors' declaration at Rhense that an elected king needs no papal approval, The Kenmu code of seventeen articles, issued by Ashikaga Takauji, The Vijayanagara kingdom of southern India, traditionally founded in 1336, The university of Cahors, set up under Pope John XXII and The university of Grenoble, created by a papal bull of 1339 |
+| Devices | 4 | The clock of San Gottardo in Milan, described in 1335, The brass astrolabic quadrant made for Damascus, dated 1333 to 1334, The hourglass in Lorenzetti's fresco of Good Government in Siena and Guido da Vigevano's Texaurus, an illustrated book of war machines for Philip VI |
+| Tools | 2 | The 1339 Palma chart of Angelino Dulcert, now in Paris and Odoric of Pordenone's account of his journeys, written down at Padua in 1330 |
+| Practices | 1 | Dating a document by the Spanish era, which began 38 years before the Christian count |
+| Guides | 5 | How the length of a temporal hour follows the daylight, How the lunar mansion of each night is counted, How a scribe rules a page into equal lines, How the days of pardon from an indulgence are added up and How a waka of thirty-one sounds is set in five lines |
+| Examples | 6 | Years of the Kenmu era turned into Christian years, Scale marks on a quadrant at every five minutes of arc, Petrarch's age on the day of his climb of Mont Ventoux, Syllables in ottava rima stanzas of a canto, Hijri years of the 1330s turned into Christian years, roughly and Turns of a sand-glass through a vigil and a sermon |
+| Projects | 4 | A timeline of the 1330s records, sorted by year, Lengths of three long wars in years, from 1337 to 1648, Medieval universities by founding year, from Bologna to Coimbra and Building spans of three cathedrals, from Cologne to Florence |
+| Flex | 3 | Days from Mortimer's execution to Petrarch's climb of Mont Ventoux, Days from the battle of Halidon Hill to the battle of Sluys and Days from Mortimer's execution to the battle of Halidon Hill |
+| Cross-code | 2 | Roman day labels for March 1336 in Python and C and The epact of each year of the 1330s in Python and C |
+
+The catalogue of database 72 (1320 to 1330) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Ockham's Summa logicae, a Latin treatise on terms and arguments, The Zhongyuan yinyun, a rhyme book for northern song lyrics, Marsilius of Padua's Defensor pacis, a Latin treatise on peace, Kokan Shiren's Genko Shakusho, a Buddhist history in Literary Chinese of 1322, The Declaration of Arbroath, a Latin letter to the pope of 1320 and Muntaner's Chronicle, a Catalan account of the Crown of Aragon |
+| Systems | 5 | The studium generale of Florence, set up by the commune in 1321, Michaelhouse, the Cambridge college founded in 1324, University Hall at Cambridge, founded in 1326, Oriel College at Oxford, founded in 1326 and The gold florin of Hungary, first issued in 1325 |
+| Devices | 8 | The Florentine order for a brass gun and its iron shot, 1326, The gun picture in Walter de Milemete's treatise for a young king, 1326, Levi ben Gerson's cross-staff, the Jacob's staff of the Wars of the Lord, A universal astrolabe made at Taza in Morocco, dated 1327/8, The Wimborne Minster astronomical clock, dated by estimate to about 1320, The Glastonbury Abbey clock, reported as made in 1325, Guns reported at the siege of Metz in 1324, known from later chroniclers and Richard of Wallingford's rectangulus, a trigonometric instrument of about 1326 |
+| Tools | 6 | Bradwardine's Treatise on Proportions, written at Oxford in 1328, Abu'l-Fida's Taqwim al-buldan, a geography with the coordinates of places, Sanudo's Book of the Secrets with Vesconte's world map, 1321, The Ars nova, a treatise on new ways of dividing notes, Gersonides's Work of the Calculator, a Hebrew book of arithmetic, 1321 and Bradwardine's Speculative Geometry, a Latin treatise of about 1325 |
+| Practices | 5 | Isorhythm, the repeated talea and color of the 1320s motet, Muhammad bin Tughluq's copper tokens, the Delhi experiment of 1329, Quodlibetal disputations at Oxford in the 1320s, debates on any question, Mansa Musa's gold on the pilgrimage of 1324, a royal display and The Ely octagon, a timber lantern built after the crossing tower fell in 1322 |
+| Guides | 5 | How cloth is measured in ells and quarters, How the four quarters of a shield are numbered, How a disputed question is laid out in the schools, How a date is named by the Kalends, Nones and Ides and How a journey's days are totalled from its stages |
+| Examples | 6 | The year 1321 written in abjad letters, The years of the 1320s counted from the founding of Rome, The guilds of Florence, seven greater and fourteen lesser, The seven liberal arts, counted as trivium and quadrivium, Dante's age at his death in 1321 and The gematria of the name Levi |
+| Projects | 4 | A timeline of thirteen dated items of the 1320s, sorted by year and counted by kind, Gaps between the founding years of four institutions of the 1320s, The lengths of four Chinese dynasties from the Song to the Qing and A merchant partnership's profit shared by capital and months |
+| Flex | 3 | Days from the Declaration of Arbroath to the battle of Muhldorf, Days from the battle of Muhldorf to the battle of Cassel and Days from the death of Dante to the Florentine gun order |
+| Cross-code | 2 | Florentine lire, soldi and denari added in Python and C and The interior angles of the Ely octagon in Python and C |
+
+The catalogue of database 73 (1310 to 1320) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | The Roman de Fauvel, a satire in Old French with music, Marchetto of Padua's Lucidarium, a music treatise of 1317, Shabistari's Gulshan-i raz, a Persian poem of mystical answers, Rashid al-Din's Jami al-tawarikh, a world history in Persian, Dante's Monarchia, a Latin treatise on world government and Dino Compagni's Cronica, a chronicle of Florence in Italian |
+| Systems | 5 | The Council of Ten, set up in Venice after a plot of 1310, The papal bull that dissolved the Knights Templar in 1312, The Ordinances of 1311, limits on the English king's government, The Yuan restoration of the civil examinations in 1313 and The Clementine decretals, the law book of 1317 |
+| Devices | 8 | Wang Zhen's wooden movable type, carved and sawn into pieces, Wang Zhen's revolving case of wooden type, grouped by rhyme, Bellows blown by a waterwheel for an iron furnace, in the Nong shu, The chain pump drawn in Wang Zhen's Nong shu, The Chetwode quadrant, an English horary quadrant of 1311, The winnowing machine in the illustrated implements of the Nong shu, The trip-hammer husking mill of Wang Zhen's Nong shu and The silk reeling wheel of the Nong shu's sericulture pages |
+| Tools | 6 | Pietro d'Abano's Conciliator, a book that reconciles philosophers and physicians, Marchetto of Padua's Pomerium, a music treatise of 1318, Wang Zhen's Nong shu, a treatise on farming with a chapter on printing, Mondino's Anathomia, a teaching text on the parts of the body, John of Gaddesden's Rosa Anglica, an English medical compendium and Pietro Vesconte's portolan chart of 1311, drawn at Genoa |
+| Practices | 5 | Public dissection of a body at Bologna, as Mondino taught it, The papal registers kept at Avignon, begun in 1316, Execrabilis, John XXII's bull against holding several benefices, Quorundam exigit, John XXII's bull on Franciscan poverty and Papal annates, the first year's income of a church office |
+| Guides | 5 | How a three-field farm rotates its fallow field each year, How the twenty-four solar terms fall two to a month, How the five phases generate and overcome one another, How the Mongol decimal army counts its men by tens and How a warp is threaded through the shafts of a loom |
+| Examples | 6 | How many three-member committees a Council of Ten could form, Pieces of wooden type needed for one sentence, The bones of two hands and two feet added up, Paddles lifted by a chain pump in an hour, Strokes of a trip hammer in ten minutes and The years of the decade that are multiples of three |
+| Projects | 4 | A register that numbers its letters afresh in each year, A body tree of organs listed by a walk from the head down, Copies of a lost exemplar counted down a family of manuscripts and Anonymous numbers for candidates' papers, matched back after marking |
+| Flex | 3 | Days from the founding of Venice's Ten to John XXII's election, Days from the founding of Venice's Ten to the fight at Bannockburn and Days from the fight at Bannockburn to John XXII's election |
+| Cross-code | 2 | Pythagorean triples with a hypotenuse up to thirty in Python and C and Ways to pay twelve denari with coins of one, two and four in Python and C |
+
+The catalogue of database 74 (1300 to 1310) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Dante's De vulgari eloquentia, a Latin treatise on the mother tongue, Hugo von Trimberg's Der Renner, a German poem of advice and manners, The Planudean Anthology of Greek epigrams, gathered at Constantinople, The Roll of Caerlaverock, an Anglo-French poem of a siege, Hauksbok, an Icelandic manuscript of sagas and learning and Hayton's Flower of the Histories of the Orient, on the Mongol rulers |
+| Systems | 5 | The assembly of the three estates that Philip IV called in 1302, The Studium Urbis at Rome, set up by Boniface VIII in 1303, The studium of Perugia, made a studium generale in 1308 by Clement V, The Teutonic Order moves its seat to Marienburg in 1309 and The papal court settles at Avignon in 1309 |
+| Devices | 5 | Spectacles in Italy, first described in a Florentine sermon of 1306, Llull's combinatorial figures with rotating circles in the Ars generalis ultima, Edward I's trebuchet, the Warwolf, at Stirling in 1304, The Canon Musique clock at Beauvais, core work from the early 1300s and The spinning wheel in medieval Europe, first recorded in the late 1200s |
+| Tools | 6 | Zhu Shijie's Jade Mirror of the Four Unknowns, a Chinese algebra, Bernard de Gordon's Lilium medicinae, a medical textbook of Montpellier, Henri de Mondeville's Chirurgia, a surgical book begun in 1306, The Hereford Mappa Mundi, a world map of about 1300, The Pisan portolan, a sea drawing for Mediterranean sailors and Llull's Ars brevis, the short book of his combinatory art |
+| Practices | 5 | The Farolfi company's ledger, kept at Nimes in 1299 to 1300, The daily patches of Giotto's frescoes in the Arena Chapel at Padua, Philip IV's sealed orders for the arrest of the Templars, to be opened on one day, The Siena contract for Duccio's Maesta altarpiece of 1308 and Alauddin Khalji's fixed prices in the markets of Delhi |
+| Guides | 5 | How the nine letters of Llull's figures are paired in order, How a spinning wheel's drive ratio sets the bobbin turns, How the power in diopters of a spectacle lens is worked out, How a trebuchet's counterweight balances its sling on the long arm and How catchwords tie the pages of a quire together |
+| Examples | 6 | Years between Perugia's first bull and its later privileges, Span from the Beauvais mechanism's core to its first written trace, Years from the founding of the Teutonic Order to its move to Marienburg, The start of spectacle making, worked out from not yet twenty years, The chapter totals of De vulgari eloquentia, by its two books and Stirling's resistance in 1304, counted as a span of days |
+| Projects | 4 | Gaps between the events of the 1300s, listed by year, Which papal acts of the early 1300s fall inside the decade, The rare titles of this batch in year order, with their count and A range check on record years from 1300 to 1310 |
+| Flex | 3 | Days between Courtrai and the Templar arrests, Days between the first Estates-General and the coronation of Clement V and Days between the coronation of Clement V and the Templar arrests |
+| Cross-code | 2 | The triples of Llull's nine figures, counted by two programs and A table of spectacle diopters in Python and C |
 <!-- END GENERATED CATALOGUE -->
