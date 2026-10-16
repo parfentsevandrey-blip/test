@@ -53,12 +53,13 @@ def suspects():
 def select(db, day):
     n = 0
     bad = suspects()
+    p1_ok = {r["zk"] for r in csv.DictReader(open(HERE / "p1_projects.csv")) if int(r["passed"])} if (HERE / "p1_projects.csv").exists() else set()
     m = json.loads((HERE / "model.json").read_text())
     zk_id = {v: k for d in json.loads((HERE / "pilot_zk.json").read_text()).values() for k, v in d.items()}
     for c in m.get("candidates", []):
         if ("cian", str(c["offer_id"])) in bad:
             continue
-        n += add(db, day, "R1 ниже сопоставимых", "cian", c["offer_id"], c["zk"], zk_id.get(c["zk"]), c["type"],
+        n += add(db, day, "R1 ниже сопоставимых" + ("" if c["zk"] in p1_ok else " (ЖК вне П1)"), "cian", c["offer_id"], c["zk"], zk_id.get(c["zk"]), c["type"],
                  "готовый" if (c.get("finish") or "") < day[:4] else "строится", c.get("house"), c.get("floor"), c.get("area"),
                  c.get("price"), c.get("exit_m2"), c.get("roi_6m"), f"{c.get('status')}: {c.get('check') or ''}".strip(": "))
     c2 = {(r["zk_id"], r["type"], r["stage"]): r for r in csv.DictReader(open(HERE / "c2_signals.csv")) if r["level"] == "ЖК"} \
