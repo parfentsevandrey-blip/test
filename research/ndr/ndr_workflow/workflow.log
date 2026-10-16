@@ -421,3 +421,12 @@ Call log:
 2026-10-16T08:58:55+00:00 network error, retrying once: Page.goto: net::ERR_CONNECTION_RESET at https://xn--80az8a.xn--d1aqf.xn--p1ai/%D
 2026-10-16T08:59:39+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/68964 sold% 39
 2026-10-16T09:07:36+00:00 resumed after restart, first pass in 2 min
+2026-10-16T09:09:44+00:00 preflight {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36", "lang": "ru-RU", "intl": "ru", "tz": "Europe/Moscow", "gl": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)", "dpr": 1}
+2026-10-16T09:12:52+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/69331 sold% 25
+2026-10-16T09:13:53+00:00 network error, retrying once: Page.goto: net::ERR_CONNECTION_RESET at https://xn--80az8a.xn--d1aqf.xn--p1ai/%D
+2026-10-16T09:14:38+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/71567 sold% ?
+2026-10-16T09:15:30+00:00 network error, retrying once: Page.goto: net::ERR_CONNECTION_RESET at https://xn--80az8a.xn--d1aqf.xn--p1ai/%D
+2026-10-16T09:16:10+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/71566 sold% ?
+2026-10-16T09:17:03+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/70951 sold% 81
+2026-10-16T09:18:13+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/65590 sold% 77
+2026-10-16T09:27:51+00:00 resumed after restart, first pass in 0 min
