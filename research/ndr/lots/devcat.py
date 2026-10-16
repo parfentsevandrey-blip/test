@@ -6,11 +6,23 @@ Sources (all paths allowed by each site's robots.txt, checked 16.10.2026; see NO
   forma.ru /market/projects/soul — buildings x rooms: flats on sale, price range, view attributes       (building x rooms)
   donstroy.moscow sitemap-flats.xml — every flat on sale; flat pages for price, area, views            (flat level)
   fsk.ru sitemap/flats/N.xml   — every flat on sale; flat pages for price, area, views                  (flat level)
-Not available: zilart.ru (robots.txt: Disallow: /), dream-riva.ru (no catalog on the site) -> ЦИАН developer window.
+  lsr.ru /msk/kvartiry-v-novostroikah/zilart/?page=N — ZILART (zilart.ru itself is Disallow: /, the developer's main site
+                                 lists every flat; robots.txt: «Allow: *?page*»). Behind a Servicepipe JS check: real browser   (flat level)
+  dreamriva.ru /flats/         — official Dream Riva site (dream-riva.ru is a third-party landing): whole catalog in
+                                 __NEXT_DATA__ with views, sides, options, «Жемчужная коллекция», views today                 (flat level)
 
-Daily run: cheap list pages first (presence of every flat), then up to PAGE_BUDGET flat pages:
-new flats without details first, then the flats whose price is the oldest (weekly refresh).
-Same manners as collector.py: one request every 20-40 s, no captcha solving, stop on 403/429/captcha.
+Special characteristics are kept for every flat where the site shows them (views, sides, options, collections, labels,
+promo, discounts) in info.special; «просмотров сегодня» shown by a site goes to `demand` (С3).
+
+Groups run as separate processes so that sites are walked in parallel, each with its own 20-40 s pace:
+  lists    — one-page catalogs and sitemaps of every developer (presence of every flat every day)
+  lsr      — ZILART list pages (browser)
+  visitor  — Granelle (4 ЖК) and Soul flat by flat: a real browser opens the project page (allowed), follows the site's own
+             link to the project's flats, sorts by price and presses «Показать еще» every 20-40 s like a visitor; we keep
+             the JSON the page itself receives and never call the site's API ourselves (lib/visitor.py)
+  donstroy — Donstroy flat pages (new first, then the oldest price; weekly refresh)
+  fsk      — FSK flat pages (same)
+No captcha solving, stop on 403/429/captcha.
 """
 import json
 import random
@@ -28,7 +40,9 @@ LOG = HERE / "devcat.log"
 NUXT_JS = HERE / "lib" / "nuxt_eval.js"
 MSK = timezone(timedelta(hours=3))
 GAP = (20, 40)
-PAGE_BUDGET = 150              # flat pages per day (Donstroy + FSK)
+GAP_HOST = {"fsk.ru": (60, 100)}   # fsk.ru answered 429 after ~90 pages at 20-40 s on 16.10: slower there
+PAGE_BUDGET = 400              # flat pages per day per site (Donstroy, FSK); each site has its own process and pace
+GROUPS = ("lists", "lsr", "visitor", "donstroy", "fsk")
 PRICE_REFRESH_DAYS = 7         # instruction С1: weekly price list
 MAX_FAILS = 3
 
@@ -45,8 +59,9 @@ ZK = {
     ("fsk", "amber-city"): "4888961",
     ("fsk", "sydney-city"): "2446053",
     ("fsk", "sydney-prime"): "4377697",
+    ("lsr", "zilart"): "7889",
+    ("dreamriva", "dream-riva"): "5340468",
 }
-NOT_COVERED = {"7889": "ЗИЛАРТ: zilart.ru запрещает обход (Disallow: /)", "5340468": "Дрим Рива: на dream-riva.ru нет каталога квартир"}
 
 ALLOWED = [re.compile(p) for p in (
     r"https://highlife\.ru/search$",
@@ -57,6 +72,8 @@ ALLOWED = [re.compile(p) for p in (
     r"https://fsk\.ru/sitemap\.xml$",
     r"https://fsk\.ru/sitemap/flats/\d+\.xml$",
     r"https://fsk\.ru/[a-z0-9\-]+/flats/\d+$",
+    r"https://www\.lsr\.ru/msk/kvartiry-v-novostroikah/zilart/(\?page=\d+)?$",
+    r"https://dreamriva\.ru/flats/$",
 )]
 
 SCHEMA = """
@@ -66,8 +83,10 @@ create table if not exists seen (day text, source text, zk_id text, lot_id text,
                                  primary key (day, source, lot_id));
 create table if not exists info (source text, lot_id text, zk_id text, url text, kind text, seller text, korpus text,
                                  section text, floor int, floors int, rooms int, area real, finish text, views text,
-                                 sides text, completion text, labels text, sold int, updated text,
+                                 sides text, completion text, labels text, sold int, updated text, special text,
                                  primary key (source, lot_id));
+create table if not exists demand (day text, source text, lot_id text, views_today int, primary key (day, source, lot_id));
+create table if not exists gruns (day text, grp text, started text, finished text, status text, primary key (day, grp));
 create table if not exists prices (source text, lot_id text, day text, price real, price_base real, origin text,
                                    primary key (source, lot_id, day, origin));
 create table if not exists agg (day text, source text, zk_id text, building text, rooms int, key text, area_min real,
@@ -95,38 +114,61 @@ class Blocked(Exception):
     pass
 
 
-_last = [0.0]
+_last = {}          # host -> time of the last request (each site keeps its own 20-40 s pace)
+_browser = {}       # one real-browser session per process, opened on first use
 
 
-def fetch(db, url):
+def _browser_get(url):
+    """Real browser (Scrapling StealthySession) for sites behind a JS check that any browser passes (lsr.ru, Servicepipe).
+    No captcha solving: a page that still shows a challenge after loading counts as blocked."""
+    from scrapling.fetchers import StealthySession
+    if "s" not in _browser:
+        _browser["s"] = StealthySession(headless=True, network_idle=False, wait=4000, timeout=120000, google_search=False,
+                                        locale="ru-RU", timezone_id="Europe/Moscow")
+        _browser["s"].__enter__()
+    p = _browser["s"].fetch(url)
+    return p.status, (p.body.decode("utf-8", "replace") if isinstance(p.body, bytes) else str(p.body))
+
+
+def close_browser():
+    if "s" in _browser:
+        _browser.pop("s").__exit__(None, None, None)
+
+
+def fetch(db, url, browser=False):
     from scrapling.fetchers import Fetcher
     if not any(p.match(url) for p in ALLOWED):
         raise ValueError(f"not allowed by robots policy: {url}")
-    wait = random.uniform(*GAP) - (time.time() - _last[0])
+    host = url.split("/")[2]
+    wait = random.uniform(*GAP_HOST.get(host, GAP)) - (time.time() - _last.get(host, 0))
     if wait > 0:
         time.sleep(wait)
-    r = None
+    code, html = None, ""
     for attempt in range(3):
         try:
-            r = Fetcher.get(url, impersonate="chrome", timeout=60, retries=1, stealthy_headers=True, follow_redirects=False,
-                            headers={"Accept-Language": "ru-RU,ru;q=0.9"})
+            if browser:
+                code, html = _browser_get(url)
+            else:
+                r = Fetcher.get(url, impersonate="chrome", timeout=60, retries=1, follow_redirects=False,
+                                headers={"Accept-Language": "ru-RU,ru;q=0.9"})
+                code, html = r.status, (r.body.decode("utf-8", "replace") if isinstance(r.body, bytes) else str(r.body))
             break
         except Exception as e:
             log("network error", attempt + 1, url, str(e)[:120])
             time.sleep(10 * (attempt + 1))
-    _last[0] = time.time()
-    status = "network" if r is None else str(r.status)
-    html = "" if r is None else r.body.decode("utf-8", "replace") if isinstance(r.body, bytes) else str(r.body)
-    # a captcha page has none of the data the page should carry (forma.ru links to the SmartCaptcha notice in every footer)
-    data = any(m in html for m in ("__NEXT_DATA__", "__NUXT__", "<urlset", "<sitemapindex", "var flat_info"))
-    blocked = r is not None and (r.status in (403, 429) or "captcha" in html.lower() and not data)
+    _last[host] = time.time()
+    status = "network" if code is None else str(code)
+    # a captcha / challenge page has none of the data the page should carry (forma.ru links to the SmartCaptcha notice
+    # in every footer; lsr.ru answers a plain client with a Servicepipe check)
+    data = any(m in html for m in ("__NEXT_DATA__", "__NUXT__", "<urlset", "<sitemapindex", "var flat_info", "listingCard"))
+    blocked = code is not None and (code in (403, 429) or ("captcha" in html.lower() or "servicepipe" in html) and not data)
     db.execute("insert into fetches values (?,?,?,?)", (today(), url, "blocked" if blocked else status, now()))
     db.commit()
     if blocked:
-        raise Blocked(f"{r.status} {url}")
-    if r is None:
+        raise Blocked(f"{code} {url}")
+    if code is None:
         return None, status
-    return (html if r.status == 200 else None), status
+    return (html if code == 200 else None), status
 
 
 def next_data(html):
@@ -172,7 +214,10 @@ def highlife(db):
         put_info(db, "highlife", f["id"], zk_id=zk, url="https://highlife.ru/search", kind=f["type"], seller="developer",
                  korpus=f["corpus"], floor=f["floor"], rooms=f["rooms"], area=f["square"], finish=f["finishing"],
                  views=json.dumps(f.get("view_raw") or [], ensure_ascii=False), completion=c.get("term"),
-                 labels=json.dumps(f.get("options") or [], ensure_ascii=False), sold=int(f["status"] == "Продажа"))
+                 labels=json.dumps(f.get("options") or [], ensure_ascii=False), sold=int(f["status"] == "Продажа"),
+                 special=json.dumps({"options": f.get("options"), "views": f.get("view_raw"), "promo": f.get("promo"),
+                                     "type": f.get("type"), "discount_pct": round(100 * (1 - f["price_discount"] / f["price"]), 1)
+                                     if f.get("price") and f.get("price_discount") else None}, ensure_ascii=False))
         put_price(db, "highlife", f["id"], f.get("price_discount") or f.get("price"), f.get("price"), "catalog")
     db.commit()
     return f"highlife {len(data['flats'])}"
@@ -222,6 +267,177 @@ def forma(db, slug="soul"):
             n += r["flatsCount"]
     db.commit()
     return f"forma {n}"
+
+
+DREAMRIVA_COLLECTIONS = {"Жемчужная коллекция": "квартиры с видом на реку и панорамой на 270° (подсказка на сайте)"}
+
+
+def dreamriva(db):
+    html, st = fetch(db, "https://dreamriva.ru/flats/")
+    if not html:
+        return f"dreamriva {st}"
+    fl = next_data(html)["initialState"]["flats"]["entities"]
+    zk, day = ZK[("dreamriva", "dream-riva")], today()
+    for f in fl:
+        db.execute("insert or replace into seen values (?,?,?,?,?,?)", (day, "dreamriva", zk, str(f["id"]), f["status"], f.get("price")))
+        put_info(db, "dreamriva", f["id"], zk_id=zk, url=f"https://dreamriva.ru/flats/{f['id']}/", kind=f.get("type"), seller="developer",
+                 korpus=f.get("corpus"), floor=f.get("floor"), floors=f.get("floorCount"), rooms=f.get("rooms"), area=f.get("area"),
+                 views=json.dumps(f.get("views") or [], ensure_ascii=False), sides=json.dumps([f.get("side")], ensure_ascii=False),
+                 labels=json.dumps(f.get("options") or [], ensure_ascii=False), sold=0,
+                 special=json.dumps({"collection": f.get("pers_type") or None, "collection_note": DREAMRIVA_COLLECTIONS.get(f.get("pers_type")),
+                                     "penthouse": f.get("penthouse"), "options": f.get("options"), "number": f.get("number"),
+                                     "discount_pct": round(100 * (1 - f["price"] / f["oldPrice"]), 1)
+                                     if f.get("oldPrice") and f.get("price") and f["oldPrice"] > f["price"] else None}, ensure_ascii=False))
+        put_price(db, "dreamriva", f["id"], f.get("price"), f.get("oldPrice"), "catalog")
+        if str(f.get("flat_views") or "").isdigit():               # «Сегодня просматривали N человек» (С3)
+            db.execute("insert or replace into demand values (?,?,?,?)", (day, "dreamriva", str(f["id"]), int(f["flat_views"])))
+    db.commit()
+    return f"dreamriva {len(fl)}"
+
+
+LSR_CARD = re.compile(r'class="listingCard listingCard--isFlat[^"]*".*?(?=class="listingCard listingCard--isFlat|data-js-paramsearch-showmore|$)', re.S)
+
+
+def lsr_cards(html):
+    out = []
+    for m in LSR_CARD.finditer(html):
+        c = m.group(0)
+        href = re.search(r'href="/msk/kvartiry-v-novostroikah/([a-z0-9\-]+)/flat/(\d+)/"', c)
+        if not href:
+            continue
+        txt = lambda x: re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", x)).strip()
+        main = re.search(r'listingCard__main">(.*?)</div>', c, re.S)
+        spans = [txt(x) for x in re.findall(r"<span[^>]*>(.*?)</span>", main.group(1), re.S)] if main else []
+        label = [txt(x) for x in re.findall(r"<span[^>]*>(.*?)</span>", (re.search(r'listingCard__label">(.*?)</div>', c, re.S) or [None, ""])[1], re.S)]
+        tags = [txt(x) for x in re.findall(r'<div class="tag[^"]*">\s*<span>(.*?)</span>', c, re.S)]
+        prices = [int(re.sub(r"\D", "", p)) for p in re.findall(r"([\d\s ]{6,})₽", c)]
+        title = spans[0] if spans else ""
+        rooms = 0 if title.lower().startswith("студ") else int(re.match(r"(\d)", title).group(1)) if re.match(r"\d", title) else None
+        fl = re.search(r"эт\.\s*(\d+)\s*/\s*(\d+)", " ".join(label))
+        bar = txt((re.search(r'listingCard__bar[^>]*>(.*?)</div>', c, re.S) or [None, ""])[1])
+        out.append({"id": href[2], "sub": href[1], "promo": "isPromotion" in c[:200], "bar": bar or None, "title": title, "rooms": rooms, "euro": "евро" in title.lower(),
+                    "area": float(re.match(r"([\d.]+)", spans[1])[1]) if len(spans) > 1 and re.match(r"[\d.]+", spans[1]) else None,
+                    "price": min(prices) if prices else None, "price_base": max(prices) if prices else None,
+                    "house": label[0] if label else None, "floor": int(fl[1]) if fl else None, "floors": int(fl[2]) if fl else None,
+                    "tags": tags, "number": (re.search(r"№\s*(\d+)", title) or [None, None])[1]})
+    return out
+
+
+def lsr(db):
+    """ZILART on lsr.ru: list pages ?page=1..N (10 flats each), real browser. Resumes from the last page read today."""
+    zk, day, base = ZK[("lsr", "zilart")], today(), "https://www.lsr.ru/msk/kvartiry-v-novostroikah/zilart/"
+    done = {r[0] for r in db.execute("select url from fetches where day=? and status='200' and url like ?", (day, base + "%"))}
+    page, n, total = 1, 0, None
+    try:
+        while True:
+            url = base if page == 1 else f"{base}?page={page}"
+            if url not in done:
+                html, st = fetch(db, url, browser=True)
+                if not html:
+                    return f"lsr {st} at page {page}"
+                cards = lsr_cards(html)
+                m = re.search(r"Найдено\s+(\d+)\s+квартир", html)
+                total = int(m[1]) if m else total
+                for f in cards:
+                    db.execute("insert or replace into seen values (?,?,?,?,?,?)", (day, "lsr", zk, f["id"], "listed", f["price"]))
+                    completion = next((t for t in f["tags"] if re.search(r"кв\.\s*\d{4}|сдан", t, re.I)), None)
+                    finish = next((t for t in f["tags"] if "отделк" in t.lower()), None)
+                    put_info(db, "lsr", f["id"], zk_id=zk, url=f"https://www.lsr.ru/msk/kvartiry-v-novostroikah/{f['sub']}/flat/{f['id']}/",
+                             kind="flat", seller="developer", korpus=f["house"], floor=f["floor"], floors=f["floors"], rooms=f["rooms"],
+                             area=f["area"], finish=finish, completion=completion, sold=0,
+                             labels=json.dumps([t for t in f["tags"] if t not in (completion, finish)], ensure_ascii=False),
+                             special=json.dumps({"subproject": f["sub"], "euro": f["euro"], "number": f["number"], "tags": f["tags"],
+                                                 "promotion": f["promo"], "promo_label": f["bar"],
+                                                 "discount_pct": round(100 * (1 - f["price"] / f["price_base"]), 1)
+                                                 if f["price"] and f["price_base"] and f["price_base"] > f["price"] else None}, ensure_ascii=False))
+                    put_price(db, "lsr", f["id"], f["price"], f["price_base"], "catalog")
+                db.commit()
+                n += len(cards)
+                if not cards:
+                    break
+            page += 1
+            if total and (page - 1) * 10 >= total:
+                break
+            if page > 200:
+                break
+    finally:
+        close_browser()
+    return f"lsr pages {page}, flats today {db.execute('select count(*) from seen where day=? and source=?', (day, 'lsr')).fetchone()[0]} of {total}"
+
+
+GRANELLE_SLUGS = [s for (src, s) in ZK if src == "granelle"]
+
+
+def granelle_flats(db, slug):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("visitor", HERE / "lib" / "visitor.py")
+    V = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(V)
+    try:
+        got = V.visit(f"https://granelle.ru/objects/{slug}/", f'css:a[href="/flats/?project={slug}"]', r"Показать еще \d+ из",
+                      r"/api/flats/\?", "__NUXT__", sort_clicks=("Сначала дешевле",), gap=GAP, log=log)
+    except V.Challenge as e:
+        raise Blocked(f"challenge {e}")
+    db.execute("insert into fetches values (?,?,?,?)", (today(), f"visitor:granelle:{slug}", "200", now()))
+    zk, day = ZK[("granelle", slug)], today()
+    flats = {f["id"]: f for g in got if isinstance(g, dict) for f in g.get("results", [])}
+    count = max((g.get("count") or 0 for g in got if isinstance(g, dict)), default=0)
+    for f in flats.values():
+        db.execute("insert or replace into seen values (?,?,?,?,?,?)", (day, "granelle", zk, str(f["id"]), str(f.get("status")),
+                                                                      float(f.get("current_price") or f.get("price") or 0) or None))
+        put_info(db, "granelle", f["id"], zk_id=zk, url=f"https://granelle.ru/flats/{slug}/{f['id']}/", kind=f.get("type"), seller="developer",
+                 korpus=f.get("building"), section=str(f.get("section")), floor=f.get("floor"), floors=f.get("floor_count"),
+                 rooms=f.get("rooms"), area=f.get("area"), finish=f.get("finish_type"),
+                 views=json.dumps(f.get("window_views") or [], ensure_ascii=False),
+                 sides=json.dumps(f.get("cardinal_directions") or [], ensure_ascii=False),
+                 completion=f"{f.get('completion_year')}Q{f.get('completion_quarter')}", sold=0,
+                 labels=json.dumps([x for x in (f.get("balconies") or [])] + [x for x in (f.get("layout_characteristic") or [])], ensure_ascii=False),
+                 special=json.dumps({"number": f.get("number"), "euro": f.get("euro"), "balconies": f.get("balconies"),
+                                     "layout": f.get("layout_characteristic"), "layout_type": f.get("layout_type"),
+                                     "ceiling": f.get("ceiling_height"), "relative_discount": f.get("relative_discount"),
+                                     "promo": [k for k in ("black_friday", "cyber_monday", "hot_ten_promo", "mortgage_promo", "new_year_promo",
+                                                           "shopping", "is_property_of_the_day") if f.get(k)],
+                                     "discount_pct": round(100 * (1 - float(f["current_price"]) / f["price"]), 1)
+                                     if f.get("price") and f.get("current_price") and float(f["current_price"]) < f["price"] else None},
+                                    ensure_ascii=False))
+        put_price(db, "granelle", f["id"], f.get("current_price"), f.get("price"), "catalog")
+    db.commit()
+    return f"granelle {slug} {len(flats)} of {count}"
+
+
+def forma_flats(db, slug="soul"):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("visitor", HERE / "lib" / "visitor.py")
+    V = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(V)
+    try:
+        got = V.visit(f"https://forma.ru/market/projects/{slug}", r"Показать \d+ квартир", None, r"manager\.forma\.ru/api/v2/marketplace",
+                      "__NEXT_DATA__", gap=GAP, log=log)
+    except V.Challenge as e:
+        raise Blocked(f"challenge {e}")
+    db.execute("insert into fetches values (?,?,?,?)", (today(), f"visitor:forma:{slug}", "200", now()))
+    zk, day = ZK[("forma", slug)], today()
+    flats = {f["id"]: f for g in got if isinstance(g, dict) for f in g.get("flats", [])}
+    total = max((g.get("total") or 0 for g in got if isinstance(g, dict)), default=0)
+    num = lambda x: float(re.sub(r"[^\d.]", "", str(x))) if x not in (None, "") and re.search(r"\d", str(x)) else None
+    for f in flats.values():
+        b = f.get("bulk") or {}
+        cash = (f.get("benefits") or {}).get("cash") or []
+        best = min(cash, key=lambda c: c.get("benefitPrice") or 1e18) if cash else {}
+        attrs = [k for k, v in (f.get("attributes") or {}).items() if v]
+        db.execute("insert or replace into seen values (?,?,?,?,?,?)", (day, "forma", zk, str(f["id"]), f.get("status"), num(f.get("price"))))
+        put_info(db, "forma", f["id"], zk_id=zk, url=f"https://forma.ru/market/flat/{f['id']}", kind="flat", seller="developer",
+                 korpus=b.get("name"), section=str((f.get("section") or {}).get("number")), floor=f.get("floor"),
+                 floors=(f.get("section") or {}).get("floorsCount"), rooms=0 if f.get("is_studio") else f.get("rooms"), area=f.get("area"),
+                 finish=f.get("finishing"), views=json.dumps([a for a in attrs if a.lower().startswith("vid")], ensure_ascii=False),
+                 completion=b.get("settlement_date"), labels=json.dumps(attrs, ensure_ascii=False), sold=0,
+                 special=json.dumps({"number": f.get("number"), "attributes": attrs, "penthouse": f.get("is_penthouse"),
+                                     "status": f.get("status"), "promo": f.get("promo"), "red_price": f.get("redPrice"),
+                                     "full_payment": {"name": best.get("name"), "price": best.get("benefitPrice"),
+                                                      "discount_pct": best.get("discountPercent")} if best else None}, ensure_ascii=False))
+        put_price(db, "forma", f["id"], num(f.get("price")), num(f.get("base_price")), "catalog")
+    db.commit()
+    return f"forma {slug} {len(flats)} of {total}"
 
 
 def sitemap_locs(xml):
@@ -339,53 +555,86 @@ def fsk_page(db, lot_id, url):
     return st
 
 
-def page_queue(db, day):
-    """Flats listed today: first those never read, then those whose last page price is the oldest."""
+def page_queue(db, day, source):
+    """Flats of `source` listed today: first those never read, then those whose last page price is the oldest."""
     return db.execute("""
-        select s.source, s.lot_id, i.url,
-               (select max(p.day) from prices p where p.source=s.source and p.lot_id=s.lot_id and p.origin='page') last_page,
-               (select max(p.day) from prices p where p.source=s.source and p.lot_id=s.lot_id) last_any
+        select s.lot_id, i.url,
+               (select max(p.day) from prices p where p.source=s.source and p.lot_id=s.lot_id and p.origin='page') last_page
         from seen s join info i on i.source=s.source and i.lot_id=s.lot_id
-        where s.day=? and s.source in ('donstroy','fsk')
-        order by (i.rooms is null) desc, last_any is not null, coalesce(last_page,'0000') , random()""", (day,)).fetchall()
+        where s.day=? and s.source=?
+        order by (i.rooms is null) desc, last_page is not null, coalesce(last_page,'0000'), random()""", (day, source)).fetchall()
 
 
-def run():
-    db = sqlite3.connect(DB, timeout=60)
+def migrate(db):
     db.executescript(SCHEMA)
-    day = today()
-    db.execute("insert or ignore into runs (day, started, status) values (?,?,?)", (day, now(), "running"))
+    cols = {r[1] for r in db.execute("pragma table_info(info)")}
+    if "special" not in cols:
+        db.execute("alter table info add column special text")
     db.commit()
-    done = {r[0] for r in db.execute("select distinct url from fetches where day=? and status='200'", (day,))}
-    try:
-        steps = [("https://highlife.ru/search", highlife)]
+
+
+def run_group(db, grp, day):
+    if grp == "lists":
+        done = {r[0] for r in db.execute("select distinct url from fetches where day=? and status='200'", (day,))}
+        steps = [("https://highlife.ru/search", highlife), ("https://dreamriva.ru/flats/", dreamriva)]
         steps += [(f"https://granelle.ru/objects/{s}/", lambda db, s=s: granelle(db, s)) for (src, s) in ZK if src == "granelle"]
         steps += [("https://forma.ru/market/projects/soul", forma), ("https://donstroy.moscow/sitemap-flats.xml", donstroy_list),
                   ("https://fsk.ru/sitemap.xml", fsk_list)]
         for url, fn in steps:
-            if url in done:
-                continue
-            log("list", fn(db))
-        fails, n = 0, db.execute("""select count(*) from fetches where day=? and url not like '%sitemap%' and
-                                    (url like 'https://donstroy.moscow/objects/%' or url like 'https://fsk.ru/%/flats/%')""", (day,)).fetchone()[0]
-        for source, lot_id, url, last_page, _ in page_queue(db, day):
-            if n >= PAGE_BUDGET:
+            if url not in done:
+                log("list", fn(db))
+    elif grp == "lsr":
+        log("list", lsr(db))
+    elif grp == "visitor":
+        done = {r[0] for r in db.execute("select url from fetches where day=? and url like 'visitor:%'", (day,))}
+        for key, fn in [(f"visitor:granelle:{s}", (lambda s=s: granelle_flats(db, s))) for s in GRANELLE_SLUGS] + \
+                       [("visitor:forma:soul", lambda: forma_flats(db))]:
+            if key not in done:
+                log("list", fn())
+    else:                                             # flat pages of one site
+        if not db.execute("select 1 from seen where day=? and source=? limit 1", (day, grp)).fetchone():
+            log(grp, "today's list is not read yet, waiting for the lists group")
+            return "waiting"
+        like = {"donstroy": "https://donstroy.moscow/objects/%", "fsk": "https://fsk.ru/%/flats/%"}[grp]
+        n = db.execute("select count(*) from fetches where day=? and url like ?", (day, like)).fetchone()[0]
+        fresh = (datetime.now(MSK) - timedelta(days=PRICE_REFRESH_DAYS)).strftime("%Y-%m-%d")
+        fails = 0
+        for lot_id, url, last_page in page_queue(db, day, grp):
+            if n >= PAGE_BUDGET or (last_page and last_page > fresh):
                 break
-            if last_page and last_page > (datetime.now(MSK) - timedelta(days=PRICE_REFRESH_DAYS)).strftime("%Y-%m-%d"):
-                break                                          # everything listed has a fresh price
-            st = (donstroy_page if source == "donstroy" else fsk_page)(db, lot_id, url)
+            st = (donstroy_page if grp == "donstroy" else fsk_page)(db, lot_id, url)
             n += 1
             fails = fails + 1 if st in ("network", "500", "502", "503", "unparsed") else 0
             if fails >= MAX_FAILS:
-                log("too many failures, stopping for today")
+                log(grp, "too many failures, stopping for today")
                 break
-        db.execute("update runs set finished=?, status=? where day=?", (now(), "done", day))
-        db.commit()
-        log("done", status_line(db, day))
+        log(grp, "pages today", n)
+    return "done"
+
+
+def run(grp):
+    db = sqlite3.connect(DB, timeout=60)
+    migrate(db)
+    day = today()
+    db.execute("insert or ignore into runs (day, started, status) values (?,?,?)", (day, now(), "running"))
+    db.execute("insert or ignore into gruns (day, grp, started, status) values (?,?,?,?)", (day, grp, now(), "running"))
+    db.commit()
+    try:
+        if grp != "lists":
+            for _ in range(60):                         # flat-page groups need today's lists; wait up to 30 min
+                if db.execute("select finished from gruns where day=? and grp='lists'", (day,)).fetchone() not in (None, (None,)):
+                    break
+                time.sleep(30)
+        st = run_group(db, grp, day)
+        db.execute("update gruns set finished=?, status=? where day=? and grp=?", (now() if st == "done" else None, st, day, grp))
     except Blocked as e:
-        db.execute("update runs set status=? where day=?", (f"BLOCKED {e}", day))
-        db.commit()
-        log("BLOCKED", e)
+        db.execute("update gruns set status=? where day=? and grp=?", (f"BLOCKED {e}", day, grp))
+        log(grp, "BLOCKED", e)
+    finished = db.execute("select count(*) from gruns where day=? and finished is not null", (day,)).fetchone()[0]
+    if finished == len(GROUPS):
+        db.execute("update runs set finished=?, status=? where day=?", (now(), "done", day))
+        log("done", status_line(db, day))
+    db.commit()
 
 
 def status_line(db, day=None):
@@ -401,8 +650,8 @@ def status_line(db, day=None):
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
     if cmd == "run":
-        run()
+        run(sys.argv[2] if len(sys.argv) > 2 else "lists")
     else:
-        db = sqlite3.connect(DB)
-        db.executescript(SCHEMA)
+        db = sqlite3.connect(DB, timeout=60)
+        migrate(db)
         print(status_line(db))

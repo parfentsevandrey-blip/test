@@ -19,6 +19,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 PILOT = {zk: name for zks in json.loads((HERE / "pilot_zk.json").read_text()).values() for zk, name in zks.items()}
 SELL_DAYS, LEFT_PCT, FEW = 45, 10.0, 3
+FLAT_SOURCES = ("highlife", "donstroy", "fsk", "lsr", "dreamriva", "granelle", "forma")
+ON_SALE = {"highlife": {"Свободно"}, "dreamriva": {"AVAILABLE"}, "forma": {"free"}, "granelle": {"1"}}   # others: listed = on sale
+FULL_STOCK = {"highlife"}            # sites that also show sold flats: the whole stock of a type is known
 ROOMS = {0: "студия", 1: "1к", 2: "2к", 3: "3к"}
 
 
@@ -31,13 +34,13 @@ def dd(a, b):
 
 
 def flat_types(db, day, first_day):
-    """Flat-level sources: highlife, donstroy, fsk."""
+    """Flat-level sources (FLAT_SOURCES)."""
     d28 = (date.fromisoformat(day) - timedelta(days=28)).isoformat()
     d56 = (date.fromisoformat(day) - timedelta(days=56)).isoformat()
     days = [r[0] for r in db.execute("select distinct day from seen order by 1")]
     out = {}
     lots = db.execute("""select i.source, i.lot_id, i.zk_id, i.korpus, i.rooms, i.seller, i.sold, i.kind from info i
-                         where i.source in ('highlife','donstroy','fsk')""").fetchall()
+                         where i.source in (%s)""" % ",".join("'%s'" % x for x in FLAT_SOURCES)).fetchall()
     seen = {}
     for src, lot, d, st in db.execute("select source, lot_id, day, status from seen"):
         seen.setdefault((src, lot), {})[d] = st
@@ -47,14 +50,15 @@ def flat_types(db, day, first_day):
         hist = seen.get((src, lot), {})
         k = (zk, korpus or "?", rname(rooms))
         t = out.setdefault(k, {"zk_id": zk, "zk": PILOT.get(zk, zk), "korpus": korpus or "?", "type": rname(rooms), "source": src,
-                               "on_sale": 0, "total": 0 if src == "highlife" else None, "exits_28d": 0, "new_28d": 0,
+                               "on_sale": 0, "total": 0 if src in FULL_STOCK else None, "exits_28d": 0, "new_28d": 0,
                                "_ages": [], "_dp": []})
-        on_today = src == "highlife" and hist.get(day) == "Свободно" or src != "highlife" and day in hist
-        if src == "highlife":
+        is_on = lambda st: st in ON_SALE[src] if src in ON_SALE else True
+        on_today = day in hist and is_on(hist[day])
+        if src in FULL_STOCK:
             t["total"] += 1
         if on_today:
             t["on_sale"] += 1
-        on_days = [d for d, st in hist.items() if (st == "Свободно" if src == "highlife" else True)]
+        on_days = [d for d, st in hist.items() if is_on(st)]
         if not on_days:
             continue
         first, last = min(on_days), max(on_days)
@@ -67,8 +71,9 @@ def flat_types(db, day, first_day):
             if first > first_day and gone >= d56:
                 t["_ages"].append(dd(gone, first))
     # price change of the same flats over 4 weeks
-    for src, lot, zk, korpus, rooms in db.execute("select source, lot_id, zk_id, korpus, rooms from info where source in ('highlife','donstroy','fsk')"):
-        ps = db.execute("""select day, price from prices where source=? and lot_id=? and day>=? and origin in ('page','catalog','similar')
+    for src, lot, zk, korpus, rooms in db.execute("select source, lot_id, zk_id, korpus, rooms from info where source in (%s)"
+                                                  % ",".join("'%s'" % x for x in FLAT_SOURCES)):
+        ps = db.execute("""select day, price from prices where source=? and lot_id=? and day>=? and origin in ('page','catalog','similar','listed')
                            order by day""", (src, lot, d28)).fetchall()
         k = (zk, korpus or "?", rname(rooms))
         if len(ps) >= 2 and k in out and ps[0][1] and dd(ps[-1][0], ps[0][0]) >= 7:
@@ -80,8 +85,9 @@ def agg_types(db, day):
     """Aggregate sources: granelle (layouts), forma (building × rooms). Exits are net decreases of the counts."""
     d28 = (date.fromisoformat(day) - timedelta(days=28)).isoformat()
     out = {}
-    rows = db.execute("select day, source, zk_id, coalesce(building,'?'), rooms, key, n, price_min from agg where day>=? order by day",
-                      (d28,)).fetchall()
+    flat_level = {(r[0], r[1]) for r in db.execute("select distinct day, source from seen")}   # aggregates only where no flat list
+    rows = [r for r in db.execute("select day, source, zk_id, coalesce(building,'?'), rooms, key, n, price_min from agg where day>=? order by day",
+                                  (d28,)) if (day, r[1]) not in flat_level]
     by_key = {}
     for d, src, zk, b, rooms, key, n, pmin in rows:
         by_key.setdefault((src, zk, key), []).append((d, b, rooms, n, pmin))
