@@ -40,11 +40,24 @@ def add(db, day, rule, source, lot, zk, zk_id, t, stage, house, floor, area, pri
                       (day, rule, source, str(lot), zk, zk_id, t, stage, house, floor, area, price, exit_m2, exit_price, roi, note)).rowcount
 
 
+def suspects():
+    """qa.py findings: ЦИАН offers and site flats labelled qa:suspect in the registry do not enter the journal."""
+    p = HERE / "registry.db"
+    if not p.exists():
+        return set()
+    rg = sqlite3.connect(p)
+    return {(s, i) for s, i in rg.execute("""select x.source, x.source_id from xref x join labels l on l.entity=x.entity
+                                             where l.label='qa:suspect' and x.kind='flat'""")}
+
+
 def select(db, day):
     n = 0
+    bad = suspects()
     m = json.loads((HERE / "model.json").read_text())
     zk_id = {v: k for d in json.loads((HERE / "pilot_zk.json").read_text()).values() for k, v in d.items()}
     for c in m.get("candidates", []):
+        if ("cian", str(c["offer_id"])) in bad:
+            continue
         n += add(db, day, "R1 ниже сопоставимых", "cian", c["offer_id"], c["zk"], zk_id.get(c["zk"]), c["type"],
                  "готовый" if (c.get("finish") or "") < day[:4] else "строится", c.get("house"), c.get("floor"), c.get("area"),
                  c.get("price"), c.get("exit_m2"), c.get("roi_6m"), f"{c.get('status')}: {c.get('check') or ''}".strip(": "))

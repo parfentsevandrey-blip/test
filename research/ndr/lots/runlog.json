@@ -6,15 +6,16 @@
    "сбой https://fsk.ru/: 502 × 1",
    "сбой https://fsk.ru/: blocked × 1",
    "группа devcat «donstroy» не завершена: running",
-   "группа devcat «fsk» не завершена: BLOCKED 429 https://fsk.ru/amber-city/flats/223197"
+   "группа devcat «fsk» не завершена: BLOCKED 429 https://fsk.ru/amber-city/flats/223197",
+   "Q72 granelle:62746: цена в базе 27 645 257  на странице квартиры 32 252 800"
   ],
   "dev": {
    "2812286": {
     "source": "donstroy",
     "collected": 661,
     "on_sale": 661,
-    "with_price": 286,
-    "with_special": 25,
+    "with_price": 293,
+    "with_special": 26,
     "declared": 661,
     "declared_by": "список сайта"
    },
@@ -22,8 +23,8 @@
     "source": "donstroy",
     "collected": 518,
     "on_sale": 518,
-    "with_price": 157,
-    "with_special": 28,
+    "with_price": 175,
+    "with_special": 33,
     "declared": 518,
     "declared_by": "список сайта"
    },
@@ -112,7 +113,7 @@
     "source": "highlife",
     "collected": 1511,
     "on_sale": 199,
-    "with_price": 1511,
+    "with_price": 351,
     "with_special": 1511,
     "declared": 1511,
     "declared_by": "сайт"

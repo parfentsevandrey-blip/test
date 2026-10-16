@@ -5,5 +5,6 @@ for g in lists lsr visitor donstroy fsk; do
   pgrep -f "^python3 -I devcat[.]py run $g\$" >/dev/null || python3 -I devcat.py run "$g" >> devcat.out 2>&1 &
 done
 wait
+python3 -I registry.py >> run_report.out 2>&1; python3 -I qa.py >> run_report.out 2>&1   # registries and the double check
 python3 -I unify.py > /dev/null 2>&1; python3 -I run_report.py >> run_report.out 2>&1   # mandatory run log (RUNLOG.md)
 python3 -I ../ndr_workflow/sync_repo.py "Devcat snapshot $(TZ=Europe/Moscow date +%F): $(python3 -I devcat.py status)" >> devcat.out 2>&1

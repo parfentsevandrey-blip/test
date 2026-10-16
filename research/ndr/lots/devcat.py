@@ -74,6 +74,7 @@ ALLOWED = [re.compile(p) for p in (
     r"https://fsk\.ru/[a-z0-9\-]+/flats/\d+$",
     r"https://www\.lsr\.ru/msk/kvartiry-v-novostroikah/zilart/(\?page=\d+)?$",
     r"https://dreamriva\.ru/flats/$",
+    r"https://granelle\.ru/flats/[a-z0-9\-]+/\d+/$",          # flat pages: qa.py re-reads a sample (allowed: no query)
 )]
 
 SCHEMA = """
@@ -225,7 +226,8 @@ def highlife(db):
                  special=json.dumps({"options": f.get("options"), "views": f.get("view_raw"), "promo": f.get("promo"),
                                      "type": f.get("type"), "discount_pct": round(100 * (1 - f["price_discount"] / f["price"]), 1)
                                      if f.get("price") and f.get("price_discount") else None}, ensure_ascii=False))
-        put_price(db, "highlife", f["id"], f.get("price_discount") or f.get("price"), f.get("price"), "catalog")
+        if f["status"] != "Продажа":                     # L18: sold flats show a placeholder price, not a real one
+            put_price(db, "highlife", f["id"], f.get("price_discount") or f.get("price"), f.get("price"), "catalog")
     put_declared(db, "highlife", zk, len(data["flats"]))
     db.commit()
     return f"highlife {len(data['flats'])}"

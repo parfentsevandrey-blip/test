@@ -41,7 +41,8 @@ def dev_flats(dv, day):
                                           origin='page' desc limit 1) price_base,
                                   (select views_today from demand d where d.source=s.source and d.lot_id=s.lot_id and d.day=s.day) vt
                            from seen s join info i on i.source=s.source and i.lot_id=s.lot_id
-                           where s.day=(select max(day) from seen x where x.source=s.source)"""):
+                           where s.day=(select max(day) from seen x where x.source=s.source)
+                             and coalesce(i.kind,'') not in ('apartments')"""):   # L19: apartments are not flats
         d = dict(zip(("source", "zk_id", "lot_id", "status", "korpus", "floor", "rooms", "area", "finish", "views", "sides", "labels",
                       "special", "seller", "completion", "url", "price", "price_base", "views_today"), r))
         src, st = d["source"], str(d["status"])

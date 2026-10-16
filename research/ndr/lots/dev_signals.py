@@ -41,11 +41,17 @@ def flat_types(db, day, first_day):
     out = {}
     lots = db.execute("""select i.source, i.lot_id, i.zk_id, i.korpus, i.rooms, i.seller, i.sold, i.kind from info i
                          where i.source in (%s)""" % ",".join("'%s'" % x for x in FLAT_SOURCES)).fetchall()
+    suspect = set()                                     # qa.py: flats with a finding stay out of the signals
+    if (HERE / "registry.db").exists():
+        rg = sqlite3.connect(HERE / "registry.db")
+        suspect = {(s, i) for s, i in rg.execute("""select x.source, x.source_id from xref x join labels l on l.entity=x.entity
+                                                     where l.label='qa:suspect' and x.kind='flat'""")}
+    lots = [l for l in lots if (l[0], l[1]) not in suspect]
     seen = {}
     for src, lot, d, st in db.execute("select source, lot_id, day, status from seen"):
         seen.setdefault((src, lot), {})[d] = st
     for src, lot, zk, korpus, rooms, seller, sold, kind in lots:
-        if seller == "owner":
+        if seller == "owner" or (kind or "").lower() in ("apartments", "апартаменты"):   # L19
             continue
         hist = seen.get((src, lot), {})
         k = (zk, korpus or "?", rname(rooms))

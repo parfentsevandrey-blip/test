@@ -112,6 +112,16 @@ def build(day=None):
         sig.append(f"П6 записей: сегодня {pdb.execute('select count(*) from trades where day=?', (day,)).fetchone()[0]}, "
                    f"всего {pdb.execute('select count(*) from trades').fetchone()[0]}")
     t += ["", f"Сигналы и журнал: {'; '.join(sig)}; карточек ЦИАН с просмотрами сегодня: {cards}."]
+    if (HERE / "qa.json").exists():
+        qa = json.loads((HERE / "qa.json").read_text())
+        from collections import Counter
+        cnt = Counter(f["rule"] for f in qa["findings"])
+        t += ["", f"**Двойная проверка** (`qa.py`, `qa.json`): слой 1 — правила по {qa['layer1_records']} записям; слой 2 — перечитано "
+                  f"страниц квартир: {qa['layer2_checked']}. Находки: " + (", ".join(f"{k} × {v}" for k, v in sorted(cnt.items())) or "нет")
+              + ". Квартиры с находками помечены `qa:suspect` и не идут в сигналы и П6."]
+        for f in qa["findings"]:
+            if f["rule"].startswith("S"):
+                anomalies.append(f"{f['id']} {f['where']}: {f['what']}")
     t += ["", "**Аномалии и сбои** (каждую разобрать ниже, итог — урок в `LESSONS.md`):", ""]
     t += [f"- A{i}. {a}" for i, a in enumerate(anomalies, 1)] or ["- нет"]
     t += [f"<!-- /auto R-{day} -->"]
