@@ -36,7 +36,15 @@ def visit(start_url, link_text, more_text, api_part, ok_marker, sort_clicks=(), 
                 if link_text.startswith("css:"):           # a link hidden in a menu: click it the way the menu would
                     pg.evaluate("(css) => document.querySelector(css).click()", link_text[4:])
                 else:
-                    pg.get_by_text(re.compile(link_text)).first.click(timeout=30000)
+                    try:
+                        pg.keyboard.press("Escape")             # close a promo / cookie popup if one covers the page
+                        pg.get_by_text(re.compile(link_text)).first.click(timeout=20000)
+                    except Exception:
+                        ok = pg.evaluate("""(t) => { const re = new RegExp(t);
+                            const e = [...document.querySelectorAll('a, button')].find(x => re.test(x.textContent.trim()));
+                            if (!e) return false; e.click(); return true; }""", link_text)
+                        if not ok:
+                            raise
                 pg.wait_for_timeout(8000)
             pg.wait_for_timeout(3000)
             for r in first:

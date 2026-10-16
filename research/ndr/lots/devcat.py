@@ -327,11 +327,12 @@ def lsr(db):
     """ZILART on lsr.ru: list pages ?page=1..N (10 flats each), real browser. Resumes from the last page read today."""
     zk, day, base = ZK[("lsr", "zilart")], today(), "https://www.lsr.ru/msk/kvartiry-v-novostroikah/zilart/"
     done = {r[0] for r in db.execute("select url from fetches where day=? and status='200' and url like ?", (day, base + "%"))}
-    page, n, total = 1, 0, None
+    have = lambda: db.execute("select count(*) from seen where day=? and source='lsr'", (day,)).fetchone()[0]
+    page, n, total, npass = 1, 0, None, 1
     try:
         while True:
             url = base if page == 1 else f"{base}?page={page}"
-            if url not in done:
+            if url not in done or npass > 1:
                 html, st = fetch(db, url, browser=True)
                 if not html:
                     return f"lsr {st} at page {page}"
@@ -356,13 +357,15 @@ def lsr(db):
                 if not cards:
                     break
             page += 1
-            if total and (page - 1) * 10 >= total:
-                break
-            if page > 200:
+            if total and (page - 1) * 10 >= total or page > 200:
+                if total and have() < total and npass < 3:     # equal prices reorder between pages: walk them again
+                    log("lsr", f"pass {npass}: {have()} of {total}, walking the pages again")
+                    npass, page = npass + 1, 1
+                    continue
                 break
     finally:
         close_browser()
-    return f"lsr pages {page}, flats today {db.execute('select count(*) from seen where day=? and source=?', (day, 'lsr')).fetchone()[0]} of {total}"
+    return f"lsr passes {npass}, flats today {have()} of {total}"
 
 
 GRANELLE_SLUGS = [s for (src, s) in ZK if src == "granelle"]
@@ -382,6 +385,11 @@ def granelle_flats(db, slug):
     zk, day = ZK[("granelle", slug)], today()
     flats = {f["id"]: f for g in got if isinstance(g, dict) for f in g.get("results", [])}
     count = max((g.get("count") or 0 for g in got if isinstance(g, dict)), default=0)
+    if len(flats) < count:                       # equal prices reorder between pages: walk once more from the other end
+        log("visitor", slug, f"{len(flats)} of {count}, second pass «Сначала дороже»")
+        got2 = V.visit(f"https://granelle.ru/objects/{slug}/", f'css:a[href="/flats/?project={slug}"]', r"Показать еще \d+ из",
+                       r"/api/flats/\?", "__NUXT__", sort_clicks=("Сначала дороже",), gap=GAP, log=log)
+        flats.update({f["id"]: f for g in got2 if isinstance(g, dict) for f in g.get("results", [])})
     for f in flats.values():
         db.execute("insert or replace into seen values (?,?,?,?,?,?)", (day, "granelle", zk, str(f["id"]), str(f.get("status")),
                                                                       float(f.get("current_price") or f.get("price") or 0) or None))
@@ -590,7 +598,12 @@ def run_group(db, grp, day):
         for key, fn in [(f"visitor:granelle:{s}", (lambda s=s: granelle_flats(db, s))) for s in GRANELLE_SLUGS] + \
                        [("visitor:forma:soul", lambda: forma_flats(db))]:
             if key not in done:
-                log("list", fn())
+                try:
+                    log("list", fn())
+                except Blocked:
+                    raise
+                except Exception as e:                  # one project failing must not stop the others
+                    log("visitor", key, "failed:", str(e)[:200])
     else:                                             # flat pages of one site
         if not db.execute("select 1 from seen where day=? and source=? limit 1", (day, grp)).fetchone():
             log(grp, "today's list is not read yet, waiting for the lists group")
