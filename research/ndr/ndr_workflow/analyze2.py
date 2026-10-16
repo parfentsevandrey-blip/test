@@ -28,6 +28,8 @@ def norm(name):
 buildings = {}
 for href, o in st["objects"].items():
     n = o.get("next") or {}
+    if not n.get("id"):                              # page came back without an object card (e.g. 64568)
+        continue
     agg = {}
     for b in o.get("api", []):
         if b["url"].endswith("/sales_agg"):
