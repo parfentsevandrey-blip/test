@@ -169,8 +169,9 @@ def build():
         bld_m2, rdy_m2 = med(r["price_m2"] for r in building), med(r["price_m2"] for r in ready)
         res_vpd = med(r["vpd"] for r in res)
         ages = [(date.fromisoformat(day) - date.fromisoformat(r["created"][:10])).days for r in res if r.get("created")]
-        cuts = [r for r in res if r["card"] and len(json.loads(r["card"]["price_changes"] or "[]")) > 1
-                and json.loads(r["card"]["price_changes"])[-1]["priceData"]["price"] < json.loads(r["card"]["price_changes"])[0]["priceData"]["price"]]
+        # ЦИАН lists price changes newest first: a cut is a newer price below the one before it
+        cuts = [r for r in res if r["card"] and any(a["priceData"]["price"] < b["priceData"]["price"] for a, b in
+                                                    zip(json.loads(r["card"]["price_changes"] or "[]"), json.loads(r["card"]["price_changes"] or "[]")[1:]))]
         gone = None
         if prev:
             prev_res = [oid for oid in prev_ids if offers[oid]["zk_id"] == zk and rtype(offers[oid]["rooms"], offers[oid]["flat_type"]) == t
