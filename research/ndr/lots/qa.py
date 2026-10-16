@@ -67,6 +67,18 @@ def rules(dv, lt, rg, day):
             if k in dup:
                 out.append(("V4", where, f"дубль {src}:{dup[k]} (корпус {korpus}, этаж {floor}, №{num})"))
             dup[k] = lot
+    # V6: Донстрой section stock (floor-page data) vs the sitemap: free flats per section should match the flats listed
+    st = dict(dv.execute("select section, sum(available) from stock where day=? and source='donstroy' group by 1", (day,)).fetchall())
+    if st:
+        listed = {}
+        for (url,) in dv.execute("select i.url from seen s join info i on i.source=s.source and i.lot_id=s.lot_id where s.day=? and s.source='donstroy'", (day,)):
+            m = re.search(r"/objects/(\w+)/plans/quarter(\d+)/korpus(\d+)/section(\d+)/", url or "")
+            if m:
+                k = "-".join(m.groups())
+                listed[k] = listed.get(k, 0) + 1
+        for k, free in st.items():
+            if listed.get(k) is not None and abs((free or 0) - listed[k]) > max(2, 0.1 * listed[k]):
+                out.append(("V6", f"donstroy-section:{k}", f"свободно по данным этажей {free}, в карте сайта {listed[k]}"))
     # V5: ЦИАН developer listing vs the developer site, for flats the registry matched
     cday = lt.execute("select max(day) from obs").fetchone()[0]
     for oid, fid in rg.execute("select source_id, entity from xref where source='cian' and kind='flat' and how like 'unique match: building%'"):

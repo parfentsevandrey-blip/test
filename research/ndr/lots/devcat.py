@@ -22,6 +22,9 @@ Groups run as separate processes so that sites are walked in parallel, each with
              the JSON the page itself receives and never call the site's API ourselves (lib/visitor.py)
   donstroy — Donstroy flat pages (new first, then the oldest price; weekly refresh)
   fsk      — FSK flat pages (same)
+  dsections — Донстрой: one floor page per section (51) in a browser; the page loads every flat of the section with its
+             status, sold ones included (found with REA: POST /api/v1/floor/choose_floor/ in a HAR of the visit, NOTES.md) ->
+             table stock: the whole stock of a building, so the share left is exact as for High Life
 No captcha solving, stop on 403/429/captcha.
 """
 import json
@@ -68,6 +71,7 @@ ALLOWED = [re.compile(p) for p in (
     r"https://granelle\.ru/objects/[a-z0-9\-]+/$",
     r"https://forma\.ru/market/projects/[a-z0-9\-]+$",
     r"https://donstroy\.moscow/sitemap-flats\.xml$",
+    r"https://donstroy\.moscow/objects/[a-z0-9\-]+/genplan/quarter\d+/korpus\d+/section\d+/floor\d+/$",
     r"https://donstroy\.moscow/objects/[a-z0-9\-]+/plans/quarter\d+/korpus\d+/section\d+/floor\d+/flat\d+/$",
     r"https://fsk\.ru/sitemap\.xml$",
     r"https://fsk\.ru/sitemap/flats/\d+\.xml$",
@@ -87,6 +91,8 @@ create table if not exists info (source text, lot_id text, zk_id text, url text,
                                  sides text, completion text, labels text, sold int, updated text, special text,
                                  primary key (source, lot_id));
 create table if not exists declared (day text, source text, zk_id text, n int, primary key (day, source, zk_id));
+create table if not exists stock (day text, source text, zk_id text, section text, internal_id text, floor int, available int,
+                                  status text, primary key (day, source, internal_id));
 create table if not exists demand (day text, source text, lot_id text, views_today int, primary key (day, source, lot_id));
 create table if not exists gruns (day text, grp text, started text, finished text, status text, primary key (day, grp));
 create table if not exists prices (source text, lot_id text, day text, price real, price_base real, origin text,
@@ -466,6 +472,58 @@ def forma_flats(db, slug="soul"):
     return f"forma {slug} {len(flats)} of {total}"
 
 
+DON_FLOOR = re.compile(r"https://donstroy\.moscow/objects/(ostrov|simvol)/genplan/quarter(\d+)/korpus(\d+)/section(\d+)/floor(\d+)/$")
+
+
+def donstroy_sections(db, limit=None):
+    """One floor page per section, opened in a real browser; keep the section stock the page itself loads."""
+    day = today()
+    xml, st = fetch(db, "https://donstroy.moscow/sitemap-flats.xml")
+    if not xml:
+        return f"dsections sitemap {st}"
+    first = {}
+    for u in sitemap_locs(xml):
+        m = DON_FLOOR.match(u)
+        if m:
+            first.setdefault(m.groups()[:4], u)
+    done = {r[0] for r in db.execute("select distinct section from stock where day=? and source='donstroy'", (day,))}
+    todo = [(k, u) for k, u in sorted(first.items()) if "-".join(k) not in done][:limit]
+    from patchright.sync_api import sync_playwright
+    n_flats = 0
+    with sync_playwright() as p:
+        b = p.chromium.launch(headless=True)
+        pg = b.new_page(locale="ru-RU", timezone_id="Europe/Moscow")
+        for (obj, q, k, sec), url in todo:
+            wait = random.uniform(*GAP) - (time.time() - _last.get("donstroy.moscow", 0))
+            if wait > 0:
+                time.sleep(wait)
+            try:
+                with pg.expect_response(lambda r: "/api/v1/floor/choose_floor/" in r.url, timeout=60000) as resp:
+                    pg.goto(url, wait_until="domcontentloaded", timeout=90000)
+                data = resp.value.json()
+                status = "200"
+            except Exception as e:
+                data, status = None, f"error {str(e)[:60]}"
+            _last["donstroy.moscow"] = time.time()
+            db.execute("insert into fetches values (?,?,?,?)", (day, "visitor:" + url, status, now()))
+            if data is None:
+                db.commit()
+                if "403" in status or "429" in status:
+                    raise Blocked(status)
+                continue
+            key = "-".join((obj, q, k, sec))
+            zk = ZK[("donstroy", obj)]
+            for fl in data.get("floors") or []:
+                for f in fl.get("flats") or []:
+                    db.execute("insert or replace into stock values (?,?,?,?,?,?,?,?)", (day, "donstroy", zk, key, str(f["id"]),
+                               int(fl.get("num") or 0), int(bool(f.get("available"))), f.get("prop-status-id")))
+                    n_flats += 1
+            db.commit()
+        b.close()
+    tot = db.execute("select count(*), sum(available) from stock where day=? and source='donstroy'", (day,)).fetchone()
+    return f"dsections {len(first)} sections, flats {tot[0]} (available {tot[1]})"
+
+
 def sitemap_locs(xml):
     return re.findall(r"<loc>\s*([^<\s]+)\s*</loc>", xml)
 
@@ -539,6 +597,9 @@ def donstroy_page(db, lot_id, url):
              views=json.dumps(sorted({v for v in (plan.get("sides") or {}).values() if v}), ensure_ascii=False),
              sides=json.dumps({"compass": plan.get("compassDegree"), "sides": plan.get("sides")}, ensure_ascii=False),
              completion=fd.get("quarterName"), labels=json.dumps(labels, ensure_ascii=False), sold=int(bool(fi.get("is_sold"))))
+    m_int = re.search(r"flat_(\d+)___", html)
+    if m_int:
+        put_info(db, "donstroy", lot_id, special=json.dumps({"internal_id": m_int[1]}))
     put_price(db, "donstroy", lot_id, fd.get("price"), fd.get("priceOld") or None, "page")
     for m in SIMILAR.finditer(html[html.find("d-flat-similar"):] if "d-flat-similar" in html else ""):
         put_price(db, "donstroy", m[2], m[5].replace(" ", "").replace(" ", ""), None, "similar")
@@ -611,6 +672,7 @@ def run_group(db, grp, day):
                 log("list", fn(db))
     elif grp == "lsr":
         log("list", lsr(db))
+
     elif grp == "visitor":
         done = {r[0] for r in db.execute("select url from fetches where day=? and url like 'visitor:%'", (day,))}
         for key, fn in [(f"visitor:granelle:{s}", (lambda s=s: granelle_flats(db, s))) for s in GRANELLE_SLUGS] + \
@@ -626,6 +688,8 @@ def run_group(db, grp, day):
         if not db.execute("select 1 from seen where day=? and source=? limit 1", (day, grp)).fetchone():
             log(grp, "today's list is not read yet, waiting for the lists group")
             return "waiting"
+        if grp == "donstroy":                           # section stock first (whole stock, sold included), then flat pages
+            log("list", donstroy_sections(db))
         like = {"donstroy": "https://donstroy.moscow/objects/%", "fsk": "https://fsk.ru/%/flats/%"}[grp]
         n = db.execute("select count(*) from fetches where day=? and url like ?", (day, like)).fetchone()[0]
         fresh = (datetime.now(MSK) - timedelta(days=PRICE_REFRESH_DAYS)).strftime("%Y-%m-%d")

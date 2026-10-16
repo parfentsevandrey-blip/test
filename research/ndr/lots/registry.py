@@ -44,7 +44,8 @@ METHOD = {
                  "order:unstable": "sort + second pass (L6, L11)", "declares:total": "1"},
     "forma": {"method": "visitor in a browser: project page -> «Показать N квартир» (page loads all flats)", "needs:browser": "1",
               "declares:total": "1"},
-    "donstroy": {"method": "sitemap-flats.xml daily + flat pages (details, price) weekly", "robots": "*?* and */api/* closed"},
+    "donstroy": {"method": "sitemap-flats.xml daily + one floor page per section in a browser (whole section stock with statuses, "
+                          "found with REA) + flat pages (details, price) weekly", "needs:browser": "1", "robots": "*?* and */api/* closed"},
     "fsk": {"method": "sitemap/flats/N.xml daily + flat pages (Nuxt) weekly", "gap": "60-100", "robots": "/api/ and ? closed"},
 }
 SITE = {"3202206": ("highlife", "high-life"), "7889": ("lsr", "zilart"), "5340468": ("dreamriva", "dream-riva"),
