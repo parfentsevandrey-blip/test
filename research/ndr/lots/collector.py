@@ -1,8 +1,9 @@
 """Lot collector for the resale pilot: daily snapshot of every listing in the pilot ЖК on cian.ru.
 
-Only paths allowed by https://www.cian.ru/robots.txt are requested: SEO listing pages of a ЖК
-(/kupit-...-zhiloy-kompleks-<slug>-<id>/, taken from the site's own sitemap) and offer cards (/sale/flat/<id>/),
-never URLs with a query string. Gentle pace (15-35 s between pages), one session, stop on any block signal.
+Listing: the site's own search pages for one ЖК (cat.php?...&newobject[0]=<id>&p=N), every page, stable sort by price,
+plus a second pass sorted by date if the first pass missed offers. NOTE: robots.txt of cian.ru disallows /cat.php for
+crawlers; the owner decided to collect these pages anyway (2026-10-16), so this is done like a person browsing: one
+session, 20-40 s between pages, no captcha solving, stop on any block signal. Offer cards: /sale/flat/<id>/ (allowed).
 
 Usage:  python3 -I collector.py run      # resumable daily run: list pages first, then offer cards within budget
         python3 -I collector.py status
@@ -26,8 +27,8 @@ LOG = HERE / "collector.log"
 PILOT = json.loads((HERE / "pilot_zk.json").read_text())
 URLS = json.loads((HERE / "pilot_urls.json").read_text())
 MSK = timezone(timedelta(hours=3))
-GAP = (15, 35)                 # seconds between requests
-CARD_BUDGET = 160              # offer cards per daily run
+GAP = (20, 40)                 # seconds between requests
+CARD_BUDGET = 200              # offer cards per daily run
 CARD_REFRESH_DAYS = 3          # re-read views/price history of a live offer every N days
 MAX_FAILS = 3                  # consecutive failed pages -> stop the run (cooldown until next run)
 
@@ -61,7 +62,18 @@ def log(*a):
         f.write(line + "\n")
 
 
+SEARCH = ("https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&newobject%5B0%5D={zk}&offer_type=flat&sort={sort}&p={page}")
+SEARCH_RE = re.compile(r"https://www\.cian\.ru/cat\.php\?deal_type=sale&engine_version=2&newobject%5B0%5D=\d+&offer_type=flat&sort=(price_object_order|creation_date_desc)&p=\d+$")
+PER_PAGE = 28
+
+
 def allowed(url):
+    if SEARCH_RE.match(url):            # owner-approved search pages (see module docstring)
+        return True
+    return _robots_allowed(url)
+
+
+def _robots_allowed(url):
     """robots.txt of cian.ru: '/*?' and '*=' are disallowed; our two path families are allowed."""
     return "?" not in url and "=" not in url and (
         re.match(r"https://www\.cian\.ru/kupit-[a-z0-9\-]*zhiloy-kompleks-[a-z0-9\-]+-\d+/$", url)
@@ -192,27 +204,41 @@ def run():
     db.commit()
     fails = 0
     try:
-        # 1. listing pages of every ЖК (skip the ones already done today)
+        # 1. every search page of every ЖК; second pass with another sort if offers are missing
         for dev, zks in PILOT.items():
             for zk_id, name in zks.items():
-                for url in dict.fromkeys(URLS.get(zk_id, [])):
-                    if db.execute("select 1 from pages where day=? and url=? and ok=1", (day, url)).fetchone():
-                        continue
-                    html, status = fetch(url)
-                    offers, total = parse_list(html) if html else ([], None)
-                    ok = int(html is not None and total is not None)
-                    for o in offers:
-                        save_offer(db, offer_row(o, zk_id), day)
-                        if o.get("jkUrl") and (o.get("newbuilding") or {}).get("id") == int(zk_id):
-                            db.execute("insert into zk_meta(zk_id, jk_url) values(?,?) on conflict(zk_id) do update set jk_url=excluded.jk_url",
-                                       (zk_id, o["jkUrl"]))
-                    db.execute("insert or replace into pages values(?,?,?,?,?,?,?)", (day, zk_id, url, total, len(offers), ok, now().isoformat()))
-                    db.execute(f"update runs set pages_{'ok' if ok else 'fail'}=pages_{'ok' if ok else 'fail'}+1 where day=?", (day,))
-                    db.commit()
-                    log("page", status, name, url.split("cian.ru/")[1][:60], f"{len(offers)}/{total}")
-                    fails = 0 if ok else fails + 1
-                    if fails >= MAX_FAILS:
-                        raise Blocked(f"{fails} failed pages in a row")
+                for sort in ("price_object_order", "creation_date_desc"):
+                    page, total, seen_before = 1, None, None
+                    while True:
+                        url = SEARCH.format(zk=zk_id, sort=sort, page=page)
+                        row = db.execute("select total, n_offers, ok from pages where day=? and url=?", (day, url)).fetchone()
+                        if row and row[2]:
+                            total = row[0]
+                        else:
+                            html, status = fetch(url)
+                            offers, total = parse_list(html) if html else ([], None)
+                            ok = int(html is not None and total is not None)
+                            for o in offers:
+                                save_offer(db, offer_row(o, zk_id), day)
+                                if o.get("jkUrl") and (o.get("newbuilding") or {}).get("id") == int(zk_id):
+                                    db.execute("insert into zk_meta(zk_id, jk_url) values(?,?) on conflict(zk_id) do update set jk_url=excluded.jk_url",
+                                               (zk_id, o["jkUrl"]))
+                            db.execute("insert or replace into pages values(?,?,?,?,?,?,?)", (day, zk_id, url, total, len(offers), ok, now().isoformat()))
+                            db.execute(f"update runs set pages_{'ok' if ok else 'fail'}=pages_{'ok' if ok else 'fail'}+1 where day=?", (day,))
+                            db.commit()
+                            got = db.execute("select count(*) from obs where day=? and zk_id=?", (day, zk_id)).fetchone()[0]
+                            log("page", status, name, sort[:5], f"p{page}", f"{len(offers)} offers, have {got}/{total}")
+                            fails = 0 if ok else fails + 1
+                            if fails >= MAX_FAILS:
+                                raise Blocked(f"{fails} failed pages in a row")
+                            if not ok:
+                                break
+                        if not total or page * PER_PAGE >= min(total, 54 * PER_PAGE):
+                            break
+                        page += 1
+                    got = db.execute("select count(*) from obs where day=? and zk_id=?", (day, zk_id)).fetchone()[0]
+                    if total is None or got >= 0.97 * min(total, 54 * PER_PAGE):
+                        break                                   # complete enough: no second pass
         # 2. ЖК cards: developer's counts by room type and house
         for zk_id, jk_url in db.execute("select zk_id, jk_url from zk_meta").fetchall():
             if db.execute("select 1 from zk_cards where day=? and zk_id=?", (day, zk_id)).fetchone() or not allowed(jk_url):
@@ -257,8 +283,7 @@ def status_line(db):
     day = today()
     r = db.execute("select pages_ok, pages_fail, cards, finished from runs where day=?", (day,)).fetchone()
     n = db.execute("select count(*) from obs where day=?", (day,)).fetchone()[0]
-    total_pages = sum(len(dict.fromkeys(v)) for v in URLS.values())
-    return f"pages {r[0] if r else 0}/{total_pages} (fail {r[1] if r else 0}), offers today {n}, cards {r[2] if r else 0}, finished {r[3] if r else None}"
+    return f"pages {r[0] if r else 0} (fail {r[1] if r else 0}), offers today {n}, cards {r[2] if r else 0}, finished {r[3] if r else None}"
 
 
 if __name__ == "__main__":
