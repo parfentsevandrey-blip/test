@@ -91,6 +91,19 @@ def project_pace():
     return out
 
 
+NEG = re.compile(r"(без|нет|никак\w*|ни\s*как\w*|ни\s*одн\w*|отсутств\w*|не\s+име\w*|не\s+было|снят\w*|чист\w*)")
+
+
+def mentioned(text, word):
+    """True when the description states the risk; «обременений нет», «без обременений», «ни какого обременения»,
+    «обременения отсутствуют», «снято» are negations, before or after the word (AUDIT 16.10: 4 of 4 flags were false)."""
+    for m in re.finditer(word, text):
+        around = text[max(0, m.start() - 25):m.end() + 30]
+        if not NEG.search(around):
+            return True
+    return False
+
+
 def deal(buy_price, area, exit_m2, via_assignment=True):
     d = DEAL
     if not (buy_price and area and exit_m2):
@@ -250,7 +263,7 @@ def build():
             d = (ex.get("description") or offers[r["offer_id"]].get("descr") or "").lower()   # AUDIT.md: the search page has it too
             for w, label in (("торг", None), ("доля", "доля"), ("аукцион", "торги"), ("обремен", "обременение"), ("арест", "арест"),
                              ("банкрот", "банкротство"), ("без отделки", None), ("апартамент", "апартаменты")):
-                if label and w in d and f"без {w}" not in d and f"нет {w}" not in d and f"никаких {w}" not in d and label not in why:
+                if label and label not in why and mentioned(d, w):
                     why.append(label)
             return why
 
