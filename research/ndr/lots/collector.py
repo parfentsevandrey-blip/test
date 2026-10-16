@@ -272,7 +272,7 @@ def run():
                             break
                         page += 1
                     got = db.execute("select count(*) from obs where day=? and zk_id=?", (day, zk_id)).fetchone()[0]
-                    if total is None or got >= 0.95 * min(total, 54 * PER_PAGE):
+                    if total is None or got >= 0.99 * min(total, 54 * PER_PAGE):   # L14: 0.95 left Символ at 96.3%
                         break                                   # complete enough: no second pass
         # 2. ЖК cards: developer's counts by room type and house
         for zk_id, jk_url in db.execute("select zk_id, jk_url from zk_meta").fetchall():

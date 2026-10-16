@@ -85,6 +85,7 @@ create table if not exists info (source text, lot_id text, zk_id text, url text,
                                  section text, floor int, floors int, rooms int, area real, finish text, views text,
                                  sides text, completion text, labels text, sold int, updated text, special text,
                                  primary key (source, lot_id));
+create table if not exists declared (day text, source text, zk_id text, n int, primary key (day, source, zk_id));
 create table if not exists demand (day text, source text, lot_id text, views_today int, primary key (day, source, lot_id));
 create table if not exists gruns (day text, grp text, started text, finished text, status text, primary key (day, grp));
 create table if not exists prices (source text, lot_id text, day text, price real, price_base real, origin text,
@@ -190,6 +191,12 @@ def put_info(db, source, lot_id, **kw):
                list(kw.values()))
 
 
+def put_declared(db, source, zk, n):
+    """How many flats the site itself says it has on sale today: the yardstick of completeness (RUNLOG.md)."""
+    if n:
+        db.execute("insert or replace into declared values (?,?,?,?)", (today(), source, zk, int(n)))
+
+
 def put_price(db, source, lot_id, price, base=None, origin="page"):
     if price:
         db.execute("insert or replace into prices values (?,?,?,?,?,?)", (source, str(lot_id), today(), float(price),
@@ -219,6 +226,7 @@ def highlife(db):
                                      "type": f.get("type"), "discount_pct": round(100 * (1 - f["price_discount"] / f["price"]), 1)
                                      if f.get("price") and f.get("price_discount") else None}, ensure_ascii=False))
         put_price(db, "highlife", f["id"], f.get("price_discount") or f.get("price"), f.get("price"), "catalog")
+    put_declared(db, "highlife", zk, len(data["flats"]))
     db.commit()
     return f"highlife {len(data['flats'])}"
 
@@ -291,6 +299,7 @@ def dreamriva(db):
         put_price(db, "dreamriva", f["id"], f.get("price"), f.get("oldPrice"), "catalog")
         if str(f.get("flat_views") or "").isdigit():               # «Сегодня просматривали N человек» (С3)
             db.execute("insert or replace into demand values (?,?,?,?)", (day, "dreamriva", str(f["id"]), int(f["flat_views"])))
+    put_declared(db, "dreamriva", zk, len(fl))
     db.commit()
     return f"dreamriva {len(fl)}"
 
@@ -365,6 +374,8 @@ def lsr(db):
                 break
     finally:
         close_browser()
+    put_declared(db, "lsr", zk, total)
+    db.commit()
     return f"lsr passes {npass}, flats today {have()} of {total}"
 
 
@@ -409,6 +420,7 @@ def granelle_flats(db, slug):
                                      if f.get("price") and f.get("current_price") and float(f["current_price"]) < f["price"] else None},
                                     ensure_ascii=False))
         put_price(db, "granelle", f["id"], f.get("current_price"), f.get("price"), "catalog")
+    put_declared(db, "granelle", zk, count)
     db.commit()
     return f"granelle {slug} {len(flats)} of {count}"
 
@@ -444,6 +456,7 @@ def forma_flats(db, slug="soul"):
                                      "full_payment": {"name": best.get("name"), "price": best.get("benefitPrice"),
                                                       "discount_pct": best.get("discountPercent")} if best else None}, ensure_ascii=False))
         put_price(db, "forma", f["id"], num(f.get("price")), num(f.get("base_price")), "catalog")
+    put_declared(db, "forma", zk, total)
     db.commit()
     return f"forma {slug} {len(flats)} of {total}"
 
@@ -632,6 +645,10 @@ def run(grp):
     db.execute("insert or ignore into runs (day, started, status) values (?,?,?)", (day, now(), "running"))
     db.execute("insert or ignore into gruns (day, grp, started, status) values (?,?,?,?)", (day, grp, now(), "running"))
     db.commit()
+    st = db.execute("select status from gruns where day=? and grp=?", (day, grp)).fetchone()[0] or ""
+    if st.startswith("BLOCKED"):                        # a site said 403/429 today: leave it alone until tomorrow
+        log(grp, "blocked earlier today, not resuming:", st)
+        return
     try:
         if grp != "lists":
             for _ in range(60):                         # flat-page groups need today's lists; wait up to 30 min

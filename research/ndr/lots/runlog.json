@@ -1,0 +1,186 @@
+{
+ "2026-10-16": {
+  "anomalies": [
+   "Символ: на ЦИАН собрано 755 из 784 (96.3%)",
+   "ЗИЛАРТ: с сайта собрано 624 из 669 (93.3%)",
+   "сбой https://forma.ru/: blocked × 1",
+   "сбой https://fsk.ru/: 502 × 1",
+   "сбой https://fsk.ru/: blocked × 1",
+   "группа devcat «donstroy» не завершена: running",
+   "группа devcat «fsk» не завершена: BLOCKED 429 https://fsk.ru/amber-city/flats/223197"
+  ],
+  "dev": {
+   "2812286": {
+    "source": "donstroy",
+    "collected": 661,
+    "on_sale": 661,
+    "with_price": 270,
+    "with_special": 23,
+    "declared": 661,
+    "declared_by": "список сайта"
+   },
+   "7231": {
+    "source": "donstroy",
+    "collected": 518,
+    "on_sale": 518,
+    "with_price": 155,
+    "with_special": 28,
+    "declared": 518,
+    "declared_by": "список сайта"
+   },
+   "5340468": {
+    "source": "dreamriva",
+    "collected": 61,
+    "on_sale": 59,
+    "with_price": 61,
+    "with_special": 61,
+    "declared": 61,
+    "declared_by": "сайт"
+   },
+   "4183417": {
+    "source": "forma",
+    "collected": 182,
+    "on_sale": 156,
+    "with_price": 182,
+    "with_special": 182,
+    "declared": 182,
+    "declared_by": "сайт"
+   },
+   "2446053": {
+    "source": "fsk",
+    "collected": 209,
+    "on_sale": 209,
+    "with_price": 102,
+    "with_special": 9,
+    "declared": 209,
+    "declared_by": "список сайта"
+   },
+   "4377697": {
+    "source": "fsk",
+    "collected": 10,
+    "on_sale": 10,
+    "with_price": 0,
+    "with_special": 0,
+    "declared": 10,
+    "declared_by": "список сайта"
+   },
+   "4888961": {
+    "source": "fsk",
+    "collected": 355,
+    "on_sale": 355,
+    "with_price": 161,
+    "with_special": 30,
+    "declared": 355,
+    "declared_by": "список сайта"
+   },
+   "3401924": {
+    "source": "granelle",
+    "collected": 38,
+    "on_sale": 38,
+    "with_price": 38,
+    "with_special": 38,
+    "declared": 38,
+    "declared_by": "сайт"
+   },
+   "4494942": {
+    "source": "granelle",
+    "collected": 203,
+    "on_sale": 203,
+    "with_price": 203,
+    "with_special": 203,
+    "declared": 203,
+    "declared_by": "сайт"
+   },
+   "5221539": {
+    "source": "granelle",
+    "collected": 454,
+    "on_sale": 454,
+    "with_price": 454,
+    "with_special": 454,
+    "declared": 459,
+    "declared_by": "сайт"
+   },
+   "5699304": {
+    "source": "granelle",
+    "collected": 119,
+    "on_sale": 119,
+    "with_price": 119,
+    "with_special": 119,
+    "declared": 119,
+    "declared_by": "сайт"
+   },
+   "3202206": {
+    "source": "highlife",
+    "collected": 1511,
+    "on_sale": 199,
+    "with_price": 1511,
+    "with_special": 1511,
+    "declared": 1511,
+    "declared_by": "сайт"
+   },
+   "7889": {
+    "source": "lsr",
+    "collected": 624,
+    "on_sale": 624,
+    "with_price": 624,
+    "with_special": 624,
+    "declared": 669,
+    "declared_by": "сайт"
+   }
+  },
+  "cian": {
+   "2812286": {
+    "collected": 1222,
+    "site_total": 1240
+   },
+   "7231": {
+    "collected": 755,
+    "site_total": 784
+   },
+   "3401924": {
+    "collected": 69,
+    "site_total": 70
+   },
+   "5699304": {
+    "collected": 123,
+    "site_total": 123
+   },
+   "4494942": {
+    "collected": 220,
+    "site_total": 220
+   },
+   "5221539": {
+    "collected": 91,
+    "site_total": 91
+   },
+   "7889": {
+    "collected": 900,
+    "site_total": 914
+   },
+   "4888961": {
+    "collected": 367,
+    "site_total": 367
+   },
+   "2446053": {
+    "collected": 344,
+    "site_total": 344
+   },
+   "4377697": {
+    "collected": 14,
+    "site_total": 14
+   },
+   "3202206": {
+    "collected": 292,
+    "site_total": 295
+   },
+   "4183417": {
+    "collected": 361,
+    "site_total": 362
+   },
+   "5340468": {
+    "collected": 127,
+    "site_total": 127
+   }
+  }
+ }
+}
