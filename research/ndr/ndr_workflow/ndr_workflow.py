@@ -52,9 +52,9 @@ TARGETS = {
 OBJECT_PATH = "/сервисы/каталог-новостроек/объект/{id}"
 USE_SITE_SEARCH = False
 
-PASS_GAP_MIN = (3, 5)           # minutes between passes (trial step 3, see EXPERIENCE.md)
-MAX_ACTIONS = 20                # page-level actions per run
-ACTION_GAP = (20, 35)           # seconds between page-level actions
+PASS_GAP_MIN = (10, 15)         # minutes between passes: ~30 pages/hour cap (see EXPERIENCE.md F27)
+MAX_ACTIONS = 10                # page-level actions per run
+ACTION_GAP = (30, 50)           # seconds between page-level actions
 XHR_PER_MIN = 15                # rolling budget of XHR/fetch requests to the site
 BACKOFF_START = timedelta(minutes=45)
 BACKOFF_MAX = timedelta(hours=12)
