@@ -25,7 +25,7 @@ DB = HERE / "paper.db"
 SCHEMA = """
 create table if not exists trades (id integer primary key, day text, rule text, source text, lot text, zk text, zk_id text, type text,
     stage text, house text, floor int, area real, entry_price real, exit_m2 real, exit_price real, roi_6m real, note text,
-    unique (day, rule, source, lot));
+    unique (day, source, lot));
 create table if not exists track (trade_id int, day text, lot_listed int, lot_price real, market_sales int, market_m2 real,
     primary key (trade_id, day));
 """
