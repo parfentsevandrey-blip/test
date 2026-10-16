@@ -1,21 +1,21 @@
 {
- "devcat_day": "2026-10-16",
- "cian_day": "2026-10-16",
+ "devcat_day": "2026-10-17",
+ "cian_day": "2026-10-17",
  "projects": {
   "Остров": {
    "zk_id": "2812286",
    "dev_source": "donstroy",
-   "dev_flats_known": 661,
-   "dev_on_sale": 661,
+   "dev_flats_known": 659,
+   "dev_on_sale": 659,
    "dev_booked": 0,
    "dev_sold_visible": 0,
-   "dev_with_price": 286,
-   "dev_with_special": 47,
-   "cian_dev_lots": 597,
-   "cian_dev_matched_to_site": 225,
-   "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 524,
-   "cian_resale_with_same_layout_at_dev": 212
+   "dev_with_price": 391,
+   "dev_with_special": 73,
+   "cian_dev_lots": 10,
+   "cian_dev_matched_to_site": 0,
+   "cian_vs_site_price_median_pct": null,
+   "cian_resale_lots": 20,
+   "cian_resale_with_same_layout_at_dev": 15
   },
   "Символ": {
    "zk_id": "7231",
@@ -24,13 +24,13 @@
    "dev_on_sale": 518,
    "dev_booked": 0,
    "dev_sold_visible": 0,
-   "dev_with_price": 157,
-   "dev_with_special": 43,
-   "cian_dev_lots": 477,
-   "cian_dev_matched_to_site": 161,
-   "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 207,
-   "cian_resale_with_same_layout_at_dev": 85
+   "dev_with_price": 263,
+   "dev_with_special": 79,
+   "cian_dev_lots": 0,
+   "cian_dev_matched_to_site": 0,
+   "cian_vs_site_price_median_pct": null,
+   "cian_resale_lots": 0,
+   "cian_resale_with_same_layout_at_dev": 0
   },
   "Дубровка от Гранель": {
    "zk_id": "3401924",
@@ -41,11 +41,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 38,
    "dev_with_special": 38,
-   "cian_dev_lots": 32,
-   "cian_dev_matched_to_site": 28,
-   "cian_vs_site_price_median_pct": -0.0,
-   "cian_resale_lots": 34,
-   "cian_resale_with_same_layout_at_dev": 4
+   "cian_dev_lots": 0,
+   "cian_dev_matched_to_site": 0,
+   "cian_vs_site_price_median_pct": null,
+   "cian_resale_lots": 0,
+   "cian_resale_with_same_layout_at_dev": 0
   },
   "Нижегородская от Гранель": {
    "zk_id": "5699304",
@@ -56,41 +56,41 @@
    "dev_sold_visible": 0,
    "dev_with_price": 119,
    "dev_with_special": 119,
-   "cian_dev_lots": 119,
-   "cian_dev_matched_to_site": 92,
-   "cian_vs_site_price_median_pct": -0.0,
-   "cian_resale_lots": 3,
-   "cian_resale_with_same_layout_at_dev": 3
+   "cian_dev_lots": 0,
+   "cian_dev_matched_to_site": 0,
+   "cian_vs_site_price_median_pct": null,
+   "cian_resale_lots": 0,
+   "cian_resale_with_same_layout_at_dev": 0
   },
   "Павелецкая от Гранель": {
    "zk_id": "4494942",
    "dev_source": "granelle",
-   "dev_flats_known": 203,
-   "dev_on_sale": 203,
+   "dev_flats_known": 191,
+   "dev_on_sale": 191,
    "dev_booked": 0,
    "dev_sold_visible": 0,
-   "dev_with_price": 203,
-   "dev_with_special": 203,
-   "cian_dev_lots": 177,
-   "cian_dev_matched_to_site": 104,
-   "cian_vs_site_price_median_pct": -0.0,
-   "cian_resale_lots": 18,
-   "cian_resale_with_same_layout_at_dev": 8
+   "dev_with_price": 191,
+   "dev_with_special": 191,
+   "cian_dev_lots": 0,
+   "cian_dev_matched_to_site": 0,
+   "cian_vs_site_price_median_pct": null,
+   "cian_resale_lots": 0,
+   "cian_resale_with_same_layout_at_dev": 0
   },
   "Мнёвники от Гранель": {
    "zk_id": "5221539",
    "dev_source": "granelle",
-   "dev_flats_known": 454,
-   "dev_on_sale": 454,
+   "dev_flats_known": 459,
+   "dev_on_sale": 459,
    "dev_booked": 0,
    "dev_sold_visible": 0,
-   "dev_with_price": 454,
-   "dev_with_special": 454,
-   "cian_dev_lots": 88,
-   "cian_dev_matched_to_site": 35,
-   "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 2,
-   "cian_resale_with_same_layout_at_dev": 2
+   "dev_with_price": 459,
+   "dev_with_special": 459,
+   "cian_dev_lots": 0,
+   "cian_dev_matched_to_site": 0,
+   "cian_vs_site_price_median_pct": null,
+   "cian_resale_lots": 0,
+   "cian_resale_with_same_layout_at_dev": 0
   },
   "ЗИЛАРТ": {
    "zk_id": "7889",
@@ -101,11 +101,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 669,
    "dev_with_special": 669,
-   "cian_dev_lots": 609,
-   "cian_dev_matched_to_site": 342,
-   "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 213,
-   "cian_resale_with_same_layout_at_dev": 129
+   "cian_dev_lots": 0,
+   "cian_dev_matched_to_site": 0,
+   "cian_vs_site_price_median_pct": null,
+   "cian_resale_lots": 0,
+   "cian_resale_with_same_layout_at_dev": 0
   },
   "Amber City": {
    "zk_id": "4888961",
@@ -116,11 +116,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 161,
    "dev_with_special": 30,
-   "cian_dev_lots": 355,
-   "cian_dev_matched_to_site": 156,
-   "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 12,
-   "cian_resale_with_same_layout_at_dev": 10
+   "cian_dev_lots": 0,
+   "cian_dev_matched_to_site": 0,
+   "cian_vs_site_price_median_pct": null,
+   "cian_resale_lots": 0,
+   "cian_resale_with_same_layout_at_dev": 0
   },
   "Sydney City": {
    "zk_id": "2446053",
@@ -131,11 +131,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 102,
    "dev_with_special": 9,
-   "cian_dev_lots": 208,
-   "cian_dev_matched_to_site": 100,
-   "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 122,
-   "cian_resale_with_same_layout_at_dev": 63
+   "cian_dev_lots": 0,
+   "cian_dev_matched_to_site": 0,
+   "cian_vs_site_price_median_pct": null,
+   "cian_resale_lots": 0,
+   "cian_resale_with_same_layout_at_dev": 0
   },
   "Sydney Prime": {
    "zk_id": "4377697",
@@ -146,10 +146,10 @@
    "dev_sold_visible": 0,
    "dev_with_price": 0,
    "dev_with_special": 0,
-   "cian_dev_lots": 10,
+   "cian_dev_lots": 0,
    "cian_dev_matched_to_site": 0,
    "cian_vs_site_price_median_pct": null,
-   "cian_resale_lots": 4,
+   "cian_resale_lots": 0,
    "cian_resale_with_same_layout_at_dev": 0
   },
   "High Life": {
@@ -161,11 +161,11 @@
    "dev_sold_visible": 1160,
    "dev_with_price": 199,
    "dev_with_special": 1511,
-   "cian_dev_lots": 199,
-   "cian_dev_matched_to_site": 127,
-   "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 92,
-   "cian_resale_with_same_layout_at_dev": 43
+   "cian_dev_lots": 0,
+   "cian_dev_matched_to_site": 0,
+   "cian_vs_site_price_median_pct": null,
+   "cian_resale_lots": 0,
+   "cian_resale_with_same_layout_at_dev": 0
   },
   "Soul": {
    "zk_id": "4183417",
@@ -176,11 +176,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 156,
    "dev_with_special": 182,
-   "cian_dev_lots": 170,
-   "cian_dev_matched_to_site": 130,
-   "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 51,
-   "cian_resale_with_same_layout_at_dev": 24
+   "cian_dev_lots": 0,
+   "cian_dev_matched_to_site": 0,
+   "cian_vs_site_price_median_pct": null,
+   "cian_resale_lots": 0,
+   "cian_resale_with_same_layout_at_dev": 0
   },
   "Дрим Рива": {
    "zk_id": "5340468",
@@ -191,11 +191,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 59,
    "dev_with_special": 61,
-   "cian_dev_lots": 59,
-   "cian_dev_matched_to_site": 39,
-   "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 5,
-   "cian_resale_with_same_layout_at_dev": 3
+   "cian_dev_lots": 0,
+   "cian_dev_matched_to_site": 0,
+   "cian_vs_site_price_median_pct": null,
+   "cian_resale_lots": 0,
+   "cian_resale_with_same_layout_at_dev": 0
   }
  }
 }

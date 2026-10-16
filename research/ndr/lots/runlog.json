@@ -182,5 +182,168 @@
     "site_total": 127
    }
   }
+ },
+ "2026-10-17": {
+  "anomalies": [
+   "Остров: на ЦИАН собрано 52 из 1235 (4.2%)",
+   "Остров: на ЦИАН 52 против 1222 в прошлый прогон",
+   "Символ: на ЦИАН 0 против 755 в прошлый прогон",
+   "Дубровка от Гранель: на ЦИАН 0 против 69 в прошлый прогон",
+   "Нижегородская от Гранель: на ЦИАН 0 против 123 в прошлый прогон",
+   "Павелецкая от Гранель: на ЦИАН 0 против 220 в прошлый прогон",
+   "Мнёвники от Гранель: на ЦИАН 0 против 91 в прошлый прогон",
+   "ЗИЛАРТ: нет данных с сайта застройщика за 2026-10-17",
+   "ЗИЛАРТ: на ЦИАН 0 против 900 в прошлый прогон",
+   "Amber City: нет данных с сайта застройщика за 2026-10-17",
+   "Amber City: на ЦИАН 0 против 367 в прошлый прогон",
+   "Sydney City: нет данных с сайта застройщика за 2026-10-17",
+   "Sydney City: на ЦИАН 0 против 344 в прошлый прогон",
+   "Sydney Prime: нет данных с сайта застройщика за 2026-10-17",
+   "Sydney Prime: на ЦИАН 0 против 14 в прошлый прогон",
+   "High Life: на ЦИАН 0 против 292 в прошлый прогон",
+   "Soul: на ЦИАН 0 против 361 в прошлый прогон",
+   "Дрим Рива: на ЦИАН 0 против 127 в прошлый прогон",
+   "сбой visitor:https:/: error Page.goto: net::ERR_PROXY_CONNECTION_FAILED at https://donst × 1",
+   "группа devcat «donstroy» не завершена: running",
+   "группа devcat «fsk» не завершена: paused",
+   "группа devcat «lsr» не завершена: paused"
+  ],
+  "dev": {
+   "2812286": {
+    "source": "donstroy",
+    "collected": 659,
+    "on_sale": 659,
+    "with_price": 391,
+    "with_special": 51,
+    "declared": 659,
+    "declared_by": "список сайта"
+   },
+   "7231": {
+    "source": "donstroy",
+    "collected": 518,
+    "on_sale": 518,
+    "with_price": 263,
+    "with_special": 64,
+    "declared": 518,
+    "declared_by": "список сайта"
+   },
+   "5340468": {
+    "source": "dreamriva",
+    "collected": 61,
+    "on_sale": 59,
+    "with_price": 61,
+    "with_special": 61,
+    "declared": 61,
+    "declared_by": "сайт"
+   },
+   "4183417": {
+    "source": "forma",
+    "collected": 182,
+    "on_sale": 156,
+    "with_price": 182,
+    "with_special": 182,
+    "declared": 182,
+    "declared_by": "сайт"
+   },
+   "3401924": {
+    "source": "granelle",
+    "collected": 38,
+    "on_sale": 38,
+    "with_price": 38,
+    "with_special": 38,
+    "declared": 38,
+    "declared_by": "сайт"
+   },
+   "4494942": {
+    "source": "granelle",
+    "collected": 203,
+    "on_sale": 203,
+    "with_price": 203,
+    "with_special": 203,
+    "declared": 203,
+    "declared_by": "сайт"
+   },
+   "5221539": {
+    "source": "granelle",
+    "collected": 459,
+    "on_sale": 459,
+    "with_price": 459,
+    "with_special": 459,
+    "declared": 459,
+    "declared_by": "сайт"
+   },
+   "5699304": {
+    "source": "granelle",
+    "collected": 119,
+    "on_sale": 119,
+    "with_price": 119,
+    "with_special": 119,
+    "declared": 119,
+    "declared_by": "сайт"
+   },
+   "3202206": {
+    "source": "highlife",
+    "collected": 1511,
+    "on_sale": 199,
+    "with_price": 351,
+    "with_special": 1511,
+    "declared": 1511,
+    "declared_by": "сайт"
+   }
+  },
+  "cian": {
+   "2812286": {
+    "collected": 52,
+    "site_total": 1235
+   },
+   "7231": {
+    "collected": 0,
+    "site_total": null
+   },
+   "3401924": {
+    "collected": 0,
+    "site_total": null
+   },
+   "5699304": {
+    "collected": 0,
+    "site_total": null
+   },
+   "4494942": {
+    "collected": 0,
+    "site_total": null
+   },
+   "5221539": {
+    "collected": 0,
+    "site_total": null
+   },
+   "7889": {
+    "collected": 0,
+    "site_total": null
+   },
+   "4888961": {
+    "collected": 0,
+    "site_total": null
+   },
+   "2446053": {
+    "collected": 0,
+    "site_total": null
+   },
+   "4377697": {
+    "collected": 0,
+    "site_total": null
+   },
+   "3202206": {
+    "collected": 0,
+    "site_total": null
+   },
+   "4183417": {
+    "collected": 0,
+    "site_total": null
+   },
+   "5340468": {
+    "collected": 0,
+    "site_total": null
+   }
+  }
  }
 }
