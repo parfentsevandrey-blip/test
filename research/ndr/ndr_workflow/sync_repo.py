@@ -19,7 +19,7 @@ INCLUDE = {
     "ndr_workflow": ["*.py", "*.sh", "EXPERIENCE.md", "experience.jsonl", "workflow.log", "state.json", "*.csv",
                      "competitors.txt", "report_data.json", "named_competitors.json", "extra_competitors.json"],
     "report": ["*.py", "report.pdf", "report_model.json", "mapsite/map.html", "maps/map_*.png"],
-    "moscow_scan": ["*.py", "*.json", "*.csv"],
+    "moscow_scan": ["*.py", "*.json", "*.csv", "*.pdf"],
     "ndr": ["moscow_map.json"],
     ".": ["tg.py", "tg_propertyinsider.json", "ddu_posts.txt"],
 }
