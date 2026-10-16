@@ -16,10 +16,10 @@
   "09.2026"
  ],
  "coverage": {
-  "buildings_collected_total": 427,
+  "buildings_collected_total": 430,
   "queued_total": 432,
-  "buildings_inside_mkad": 425,
-  "complexes_inside_mkad": 312
+  "buildings_inside_mkad": 428,
+  "complexes_inside_mkad": 313
  },
  "market_by_class": {
   "Бизнес": {
@@ -56,8 +56,8 @@
    ]
   },
   "Комфорт": {
-   "buildings": 74,
-   "flats": 45241,
+   "buildings": 77,
+   "flats": 45488,
    "sold": 28691,
    "monthly_sales": [
     952,
@@ -18375,6 +18375,66 @@
     null,
     null,
     155303
+   ]
+  },
+  {
+   "name": null,
+   "developer": "СЗ МТК",
+   "class": "Комфорт",
+   "district": "Город Заречный, Улица Победы",
+   "metro": "Александровский сад",
+   "lat": 55.7515,
+   "lon": 37.6172,
+   "building_ids": [
+    73809,
+    73810,
+    73808
+   ],
+   "flats": 247,
+   "sold": 0,
+   "sold_pct": 0.0,
+   "remaining": 247,
+   "sales_12m": 0,
+   "jul": 0,
+   "aug": 0,
+   "sep": 0,
+   "pace_per_month": 0.0,
+   "sellout_months": null,
+   "months_to_completion": 11,
+   "on_track": false,
+   "price_m2_q3": null,
+   "price_m2_q4_2025": null,
+   "price_change_pct": null,
+   "bulk_months": [],
+   "completion": "30.09.2027",
+   "published": "05.10.2026",
+   "monthly_sales": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "monthly_price_m2": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
    ]
   }
  ]

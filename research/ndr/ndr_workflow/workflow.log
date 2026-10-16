@@ -430,3 +430,8 @@ Call log:
 2026-10-16T09:17:03+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/70951 sold% 81
 2026-10-16T09:18:13+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/65590 sold% 77
 2026-10-16T09:27:51+00:00 resumed after restart, first pass in 0 min
+2026-10-16T09:28:19+00:00 preflight {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36", "lang": "ru-RU", "intl": "ru", "tz": "Europe/Moscow", "gl": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)", "dpr": 1}
+2026-10-16T09:31:10+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/73809 sold% ?
+2026-10-16T09:32:04+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/73810 sold% ?
+2026-10-16T09:33:09+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/73808 sold% ?
+2026-10-16T09:41:13+00:00 resumed after restart, first pass in 2 min
