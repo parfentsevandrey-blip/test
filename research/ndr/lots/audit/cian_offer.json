@@ -1,0 +1,104 @@
+{
+ "name": "cian_offer",
+ "url": "https://www.cian.ru/sale/flat/294475361/",
+ "title": "Ошибка - Циан",
+ "clicked": null,
+ "requests": 85,
+ "bytes": 2838150,
+ "third_party_requests": 81,
+ "document_bytes": 21570,
+ "embedded_state": [],
+ "captcha_or_check": true,
+ "own_data_responses": [
+  {
+   "method": "POST",
+   "url": "https://sopr-api.cian.ru/newbec/",
+   "bytes": 15,
+   "post": "{\"page\":{\"pageType\":\"VPNBlock\",\"extra\":{\"antibot\":true}},\"cid\":\"noid\",\"dl\":\"https%3A%2F%2Fwww.cian.ru%2Fsale%2Fflat%2F294475361%2F\",\"ea\":\"newpage\",\"ec\":\"page\",\"el\":\"open\",\"event\":\"newpage\",\"join_id\":\"0b3da07a-02d9-44f6-9c08-b73149f78692\",\"referrer\":\"\",\"rid\":\"\",\"t\":\"pageview\",\"ua\":\"Mozilla%2F5.0%20(X",
+   "shape": {
+    "status": "str"
+   }
+  },
+  {
+   "method": "POST",
+   "url": "https://api.cian.ru/ebc-analytics/event-enrichment/",
+   "bytes": 445,
+   "post": "{\"page\":{\"pageType\":\"VPNBlock\",\"extra\":{\"antibot\":true}},\"cid\":\"noid\",\"dl\":\"https%3A%2F%2Fwww.cian.ru%2Fsale%2Fflat%2F294475361%2F\",\"ea\":\"newpage\",\"ec\":\"page\",\"el\":\"open\",\"event\":\"newpage\",\"join_id\":\"0b3da07a-02d9-44f6-9c08-b73149f78692\",\"referrer\":\"\",\"rid\":\"\",\"t\":\"pageview\",\"ua\":\"Mozilla%2F5.0%20(X",
+   "shape": {
+    "page": {
+     "pageType": "str",
+     "extra": {
+      "antibot": "bool"
+     }
+    },
+    "cid": "str",
+    "dl": "str",
+    "ea": "str",
+    "ec": "str",
+    "el": "str",
+    "event": "str",
+    "join_id": "str",
+    "referrer": "str",
+    "rid": "str",
+    "t": "str",
+    "ua": "str",
+    "user": {},
+    "v": "str"
+   }
+  }
+ ],
+ "rea_evidence_id": "ev_2c98e2f05dbc1e87a9adefa2e2e0f734beecfca3dc6e0cdb1355a22fd270e847",
+ "rea_error": null,
+ "rea_api_surface_own": [
+  {
+   "method": "POST",
+   "origin": "https://api.cian.ru",
+   "path": "/ebc-analytics/event-enrichment/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "POST",
+   "origin": "https://sopr-api.cian.ru",
+   "path": "/newbec/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://www.cian.ru",
+   "path": "/sale/flat/{numeric}/",
+   "n": 1,
+   "status": [
+    403
+   ],
+   "type": [
+    "text/html"
+   ],
+   "query": []
+  }
+ ],
+ "rea_api_surface_third_party_origins": [
+  "https://ad.doubleclick.net",
+  "https://analytics.google.com",
+  "https://bobid-ip.hybrid.ai",
+  "https://fpf.hybrid.ai",
+  "https://mc.yandex.com",
+  "https://privacy-cs.mail.ru",
+  "https://wcm.weborama-tech.ru",
+  "https://widget-api.uxfeedback.ru",
+  "https://www.google.com"
+ ]
+}

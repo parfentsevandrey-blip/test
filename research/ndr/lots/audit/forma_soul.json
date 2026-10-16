@@ -1,0 +1,1753 @@
+{
+ "name": "forma_soul",
+ "url": "https://forma.ru/market/projects/soul",
+ "title": "Соул | FORMA",
+ "clicked": null,
+ "requests": 367,
+ "bytes": 32001636,
+ "third_party_requests": 100,
+ "document_bytes": 1320294,
+ "embedded_state": [
+  "Next.js state"
+ ],
+ "captcha_or_check": false,
+ "own_data_responses": [
+  {
+   "method": "GET",
+   "url": "https://manager.forma.ru/api/v2/block",
+   "bytes": 31024,
+   "post": "",
+   "shape": [
+    "list[19]",
+    {
+     "id": "int",
+     "name": "str",
+     "rooms": [
+      "list[1]",
+      "dict"
+     ],
+     "tgLink": "str",
+     "vkLink": "str",
+     "address": "str",
+     "keyDate": "str",
+     "sticker": "str",
+     "district": "str",
+     "location": "str",
+     "max_area": "float",
+     "min_area": "float",
+     "ads_price": "int",
+     "max_price": "int",
+     "min_price": "int",
+     "customName": "str",
+     "minKeyDate": "str",
+     "objectType": "str",
+     "designSpace": "str",
+     "flats_count": "int",
+     "stickerColor": "str",
+     "metroStations": [
+      "list[1]",
+      "dict"
+     ],
+     "designSpaceLat": "str",
+     "designSpaceLng": "str",
+     "settlement_date": "str"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/menu/marketplace-topmenu-new",
+   "bytes": 2105,
+   "post": "",
+   "shape": {
+    "_id": "str",
+    "name": "str",
+    "title": "str",
+    "__v": "int",
+    "menuItems": [
+     "list[5]",
+     {
+      "value": "str",
+      "description": "str",
+      "path": "str",
+      "highlight": "bool",
+      "hide": "bool",
+      "items": "list",
+      "id": "int"
+     }
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem",
+   "bytes": 20862,
+   "post": "",
+   "shape": [
+    "list[16]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem_workplace",
+   "bytes": 15742,
+   "post": "",
+   "shape": [
+    "list[11]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/menu/marketplace-footer-1",
+   "bytes": 612,
+   "post": "",
+   "shape": {
+    "_id": "str",
+    "name": "str",
+    "title": "str",
+    "__v": "int",
+    "menuItems": [
+     "list[5]",
+     {
+      "value": "str",
+      "path": "str",
+      "highlight": "bool",
+      "hide": "bool",
+      "items": "list",
+      "id": "int"
+     }
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=commercial-pave",
+   "bytes": 1046,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=soul",
+   "bytes": 2179,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=pave",
+   "bytes": 1120,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=tatum",
+   "bytes": 1230,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=moments",
+   "bytes": 2246,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=portland",
+   "bytes": 2156,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=indivo",
+   "bytes": 1895,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=nativ",
+   "bytes": 1850,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=forst",
+   "bytes": 1415,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=commercial-portland",
+   "bytes": 1153,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=commercial-moments",
+   "bytes": 1129,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=commercial-soul",
+   "bytes": 906,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=ForstDesign",
+   "bytes": 620,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=PortlandDesign",
+   "bytes": 633,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=MomentsDesign",
+   "bytes": 655,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem?slug=SoulDesign",
+   "bytes": 644,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "description": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/menu/marketplace-burger",
+   "bytes": 1765,
+   "post": "",
+   "shape": {
+    "_id": "str",
+    "title": "str",
+    "name": "str",
+    "__v": "int",
+    "menuItems": [
+     "list[7]",
+     {
+      "value": "str",
+      "path": "str",
+      "highlight": "bool",
+      "hide": "bool",
+      "items": "list",
+      "id": "int"
+     }
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem_workplace?slug=jenga",
+   "bytes": 1330,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem_workplace?slug=lakes²",
+   "bytes": 1438,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem_workplace?slug=gustav",
+   "bytes": 1496,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem_workplace?slug=split",
+   "bytes": 1258,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem_workplace?slug=lavin",
+   "bytes": 1430,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem_workplace?slug=minto",
+   "bytes": 1614,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem_workplace?slug=plane",
+   "bytes": 1545,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem_workplace?slug=mount",
+   "bytes": 1298,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem_workplace?slug=lakes",
+   "bytes": 1319,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem_workplace?slug=frame",
+   "bytes": 1615,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/projectsItem_workplace?slug=porta",
+   "bytes": 1409,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "_id": "str",
+     "title": "str",
+     "title_get_front": "str",
+     "slug": "str",
+     "image": "str",
+     "image_2": "str",
+     "image_3": "str",
+     "image_4": "str",
+     "content": "str",
+     "about_project_short": "str",
+     "about_project_full": "str",
+     "type": "str",
+     "map": {
+      "coordinates": "str",
+      "metro": "str",
+      "info": "str",
+      "category": "str"
+     },
+     "sticker_name": "str",
+     "sticker_img": "str",
+     "finder_synonyms": "str",
+     "status": "bool",
+     "isMainProject": "bool",
+     "priority": "int",
+     "prioritymarket": "int",
+     "condition": {
+      "name": "str",
+      "value": "str"
+     },
+     "hide": "bool"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/menu/marketplace-footer-2",
+   "bytes": 1159,
+   "post": "",
+   "shape": {
+    "_id": "str",
+    "name": "str",
+    "title": "str",
+    "__v": "int",
+    "menuItems": [
+     "list[9]",
+     {
+      "value": "str",
+      "path": "str",
+      "highlight": "bool",
+      "hide": "bool",
+      "items": "list",
+      "id": "int"
+     }
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/commercial-pave/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/soul/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/tatum/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/pave/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/moments/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/indivo/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/nativ/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/forst/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/commercial-portland/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/commercial-moments/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/commercial-soul/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/portland/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/ForstDesign/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/PortlandDesign/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/SoulDesign/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/MomentsDesign/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/menu/marketplace-projects",
+   "bytes": 1819,
+   "post": "",
+   "shape": {
+    "_id": "str",
+    "title": "str",
+    "name": "str",
+    "__v": "int",
+    "menuItems": [
+     "list[8]",
+     {
+      "value": "str",
+      "description": "str",
+      "path": "str",
+      "img": "str",
+      "highlight": "bool",
+      "hide": "bool",
+      "items": "list",
+      "id": "int"
+     }
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/jenga/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/lakes²/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/gustav/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/split/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/lavin/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/minto/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/plane/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/lakes/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/frame/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/porta/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/menu/marketplace-footer-3",
+   "bytes": 727,
+   "post": "",
+   "shape": {
+    "_id": "str",
+    "name": "str",
+    "title": "str",
+    "__v": "int",
+    "menuItems": [
+     "list[6]",
+     {
+      "value": "str",
+      "path": "str",
+      "highlight": "bool",
+      "hide": "bool",
+      "items": "list",
+      "id": "int"
+     }
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/news-v2/mount/1",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/menu/marketplace-projects-workplace",
+   "bytes": 2685,
+   "post": "",
+   "shape": {
+    "_id": "str",
+    "name": "str",
+    "title": "str",
+    "__v": "int",
+    "menuItems": [
+     "list[11]",
+     {
+      "value": "str",
+      "description": "str",
+      "path": "str",
+      "img": "str",
+      "highlight": "bool",
+      "hide": "bool",
+      "items": "list",
+      "id": "int"
+     }
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/menu/marketplace-projects-retail",
+   "bytes": 982,
+   "post": "",
+   "shape": {
+    "_id": "str",
+    "name": "str",
+    "title": "str",
+    "__v": "int",
+    "menuItems": [
+     "list[4]",
+     {
+      "value": "str",
+      "description": "str",
+      "path": "str",
+      "img": "str",
+      "highlight": "bool",
+      "hide": "bool",
+      "items": "list",
+      "id": "int"
+     }
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://forma.ru/api/menu/marketplace-projects-rooms",
+   "bytes": 694,
+   "post": "",
+   "shape": {
+    "_id": "str",
+    "name": "str",
+    "title": "str",
+    "__v": "int",
+    "menuItems": [
+     "list[2]",
+     {
+      "value": "str",
+      "description": "str",
+      "path": "str",
+      "highlight": "bool",
+      "hide": "bool",
+      "items": "list",
+      "id": "int"
+     }
+    ]
+   }
+  }
+ ],
+ "rea_evidence_id": null,
+ "rea_error": "'normalized_result'",
+ "rea_api_surface_own": [],
+ "rea_api_surface_third_party_origins": []
+}

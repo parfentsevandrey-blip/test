@@ -21,10 +21,10 @@ INCLUDE = {
     "report": ["*.py", "report.pdf", "report_model.json", "mapsite/map.html", "maps/map_*.png"],
     "moscow_scan": ["*.py", "*.json", "*.csv", "*.pdf"],
     "ndr": ["moscow_map.json"],
-    "lots": ["*.py", "*.json", "*.sh", "lib/*.py", "lib/*.js", "lots.db", "devcat.db", "paper.db", "registry.db", "collector.log", "devcat.log", "*.md", "*.pdf", "*.csv"],
+    "lots": ["*.py", "*.json", "*.sh", "lib/*.py", "lib/*.js", "audit/*.json", "audit/*.sh", "lots.db", "devcat.db", "paper.db", "registry.db", "collector.log", "devcat.log", "*.md", "*.pdf", "*.csv"],
     ".": ["tg.py", "tg_propertyinsider.json", "ddu_posts.txt"],
 }
-NEVER = ("profile", "session_A", "Cookies", ".html.bak", "/raw/")
+NEVER = ("profile", "session_A", "Cookies", ".html.bak", "/raw/", ".rea.json", ".view_in.json", ".har")   # REA evidence holds request headers and cookies
 
 TRAILER = ("\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n"
            "Claude-Session: https://claude.ai/code/session_01Jwebb6fe4TZTUDWn8VZaVf")

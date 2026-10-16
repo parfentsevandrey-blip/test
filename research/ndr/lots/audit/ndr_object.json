@@ -1,0 +1,19 @@
+{
+ "name": "ndr_object",
+ "url": "https://наш.дом.рф/сервисы/каталог-новостроек/объект/64096",
+ "title": "",
+ "clicked": null,
+ "requests": 1,
+ "bytes": 1333,
+ "third_party_requests": 1,
+ "document_bytes": 1333,
+ "embedded_state": [],
+ "captcha_or_check": false,
+ "own_data_responses": [],
+ "rea_evidence_id": "ev_e65850d97172d53689a521910311b05ee84b36bdf7ffae1549a2e7990477394a",
+ "rea_error": null,
+ "rea_api_surface_own": [],
+ "rea_api_surface_third_party_origins": [
+  "https://xn--80az8a.xn--d1aqf.xn--p1ai"
+ ]
+}

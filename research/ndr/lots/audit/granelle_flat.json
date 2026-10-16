@@ -1,0 +1,731 @@
+{
+ "name": "granelle_flat",
+ "url": "https://granelle.ru/flats/mypriority-paveletskaya/62515/",
+ "title": "Купить 1-комнатную квартиру №229, 54.04 м² в корпусе 2 в ЖК «Павелецкая от Гранель» от застройщика ГК «Гранель»",
+ "clicked": null,
+ "requests": 286,
+ "bytes": 12761784,
+ "third_party_requests": 84,
+ "document_bytes": 755007,
+ "embedded_state": [
+  "Nuxt state",
+  "JSON-LD"
+ ],
+ "captcha_or_check": false,
+ "own_data_responses": [
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/projects/",
+   "bytes": 162445,
+   "post": "",
+   "shape": [
+    "list[23]",
+    {
+     "category": "str",
+     "name": "str",
+     "card_title": "str",
+     "card_subtitle": "str",
+     "slug": "str",
+     "state": "str",
+     "images": [
+      "list[1]",
+      "dict"
+     ],
+     "badges": [
+      "list[0]",
+      null
+     ],
+     "transport_access_points": [
+      "list[2]",
+      "dict"
+     ],
+     "location_on_the_map_image": "str",
+     "tooltip_text": "str",
+     "min_price": "float",
+     "is_coming": "bool",
+     "is_invest_request": "bool",
+     "is_be_first_request": "bool",
+     "be_first_title": "NoneType",
+     "be_first_description": "str",
+     "coords": "str",
+     "apartments_count": "int",
+     "apartments_min_price": "NoneType",
+     "flat_count": "int",
+     "flat_min_price": "int",
+     "residential_count": "int",
+     "residential_min_price": "int",
+     "storage_count": "int"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/favorites/",
+   "bytes": 20,
+   "post": "",
+   "shape": {
+    "count": "int",
+    "ids": [
+     "list[0]",
+     null
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/comparisons/",
+   "bytes": 20,
+   "post": "",
+   "shape": {
+    "count": "int",
+    "ids": [
+     "list[0]",
+     null
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/viewed/flats/",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/socials/",
+   "bytes": 7829,
+   "post": "",
+   "shape": [
+    "list[5]",
+    {
+     "type": "str",
+     "name": "str",
+     "link": "str",
+     "icon": "str",
+     "icon_content": "str",
+     "color": "str"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/notifications/",
+   "bytes": 3740,
+   "post": "",
+   "shape": {
+    "non_viewed_count": "int",
+    "notifications": [
+     "list[8]",
+     {
+      "id": "int",
+      "type": "str",
+      "title": "str",
+      "subtitle": "str",
+      "small_image": "str",
+      "big_image": "str",
+      "url": "str",
+      "order": "int"
+     }
+    ],
+    "viewed_notifications": [
+     "list[0]",
+     null
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/users/",
+   "bytes": 38,
+   "post": "",
+   "shape": {
+    "ok": "bool",
+    "errors": "str"
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/infras/?project=mypriority-paveletskaya&category=",
+   "bytes": 260262,
+   "post": "",
+   "shape": [
+    "list[233]",
+    {
+     "id": "int",
+     "name": "str",
+     "subtitle": "str",
+     "image": "NoneType",
+     "coords": "str",
+     "category_icon": "str",
+     "category_icon_content": "str",
+     "category": "str",
+     "category_color": "str",
+     "category_color_business": "str"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/infras/popular/?project=mypriority-paveletskaya&category=",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/infras_categories/?project=mypriority-paveletskaya",
+   "bytes": 15214,
+   "post": "",
+   "shape": [
+    "list[12]",
+    {
+     "name": "str",
+     "slug": "str",
+     "icon": "str",
+     "icon_content": "str",
+     "color": "str",
+     "color_business": "str",
+     "infra_count": "int"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/projects_content/business/parking_storage_block/?project=mypriority-paveletskaya",
+   "bytes": 687,
+   "post": "",
+   "shape": {
+    "storage_description": "str",
+    "parking_description": "str",
+    "parking_image": "str",
+    "parking_count": "int",
+    "parking_min_price": "int",
+    "parking_images": [
+     "list[0]",
+     null
+    ],
+    "storage_image": "str",
+    "storage_count": "int",
+    "storage_min_price": "NoneType",
+    "storage_images": [
+     "list[0]",
+     null
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/projects_content/business/features_block/?project=mypriority-paveletskaya",
+   "bytes": 12290,
+   "post": "",
+   "shape": {
+    "title": "str",
+    "features": [
+     "list[11]",
+     {
+      "id": "int",
+      "title": "str",
+      "description": "str",
+      "image": "str",
+      "images": "list",
+      "order": "int"
+     }
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/flats/62515/similar/",
+   "bytes": 106992,
+   "post": "",
+   "shape": [
+    "list[4]",
+    {
+     "id": "int",
+     "type": "str",
+     "status": "int",
+     "project": "str",
+     "project_slug": "str",
+     "project_full_name": "str",
+     "project_category": "str",
+     "transport_access_points": [
+      "list[2]",
+      "dict"
+     ],
+     "district": "str",
+     "building": "str",
+     "section": "int",
+     "floor": "int",
+     "floor_count": "int",
+     "floor_plan": "str",
+     "floor_plan_width": "int",
+     "floor_plan_height": "int",
+     "completion_quarter": "str",
+     "completion_year": "str",
+     "commissioned": "bool",
+     "is_coming": "bool",
+     "number": "str",
+     "article": "str",
+     "price": "float",
+     "price_discounted": "str",
+     "current_price": "str"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/projects_content/business/finishes_block/?project=mypriority-paveletskaya",
+   "bytes": 117,
+   "post": "",
+   "shape": {
+    "title": "str",
+    "description": "str",
+    "title_whitebox": "str",
+    "description_whitebox": "str",
+    "title_finish": "str",
+    "description_finish": "str"
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/mortgage/specs/?property_type=flat&project=mypriority-paveletskaya",
+   "bytes": 1275,
+   "post": "",
+   "shape": [
+    "list[4]",
+    {
+     "name": "str",
+     "choices": [
+      "list[0]",
+      null
+     ]
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/mortgage/specs/?price=40508548&deposit=16203419&term=30&property_type=flat&project=mypriority-paveletskaya&order=payment",
+   "bytes": 1464,
+   "post": "",
+   "shape": [
+    "list[4]",
+    {
+     "name": "str",
+     "choices": [
+      "list[3]",
+      "dict"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/mortgage/offers/?price=40508548&deposit=16203419&term=30&property_type=flat&project=mypriority-paveletskaya&order=payment",
+   "bytes": 11099,
+   "post": "",
+   "shape": {
+    "count": "int",
+    "offers": [
+     "list[19]",
+     {
+      "id": "int",
+      "name": "str",
+      "type": "str",
+      "bank_id": "int",
+      "bank_name": "str",
+      "bank_logo": "str",
+      "max_term": "float",
+      "max_credit_cost": "float",
+      "rate": "float",
+      "min_rate": "float",
+      "is_subsidized": "bool",
+      "is_tranche": "bool",
+      "payment": "float",
+      "min_deposit": "float",
+      "min_deposit_rate": "float",
+      "payments_cost": "float",
+      "period_params": "list",
+      "period_info": "str",
+      "period_payments": "list",
+      "program_name": "str"
+     }
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/favorites/flats/",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/favorites/parkings/",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/favorites/storages/",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/favorites/commercials/",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  }
+ ],
+ "rea_evidence_id": "ev_cfec1092ecd34e3e6be1319610e89b1ea4d545b1ddf991d8391ac27fa21c0ad0",
+ "rea_error": null,
+ "rea_api_surface_own": [
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/comparisons/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/favorites/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/favorites/commercials/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/favorites/flats/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/favorites/parkings/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/favorites/storages/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/flats/{numeric}/similar/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/infras/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": [
+    "category",
+    "project"
+   ]
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/infras/popular/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": [
+    "category",
+    "project"
+   ]
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/infras_categories/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": [
+    "project"
+   ]
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/mortgage/offers/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": [
+    "deposit",
+    "order",
+    "price",
+    "project",
+    "property_type",
+    "term"
+   ]
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/mortgage/specs/",
+   "n": 2,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": [
+    "deposit",
+    "order",
+    "price",
+    "project",
+    "property_type",
+    "term"
+   ]
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/notifications/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/projects/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/projects_content/business/features_block/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": [
+    "project"
+   ]
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/projects_content/business/finishes_block/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": [
+    "project"
+   ]
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/projects_content/business/parking_storage_block/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": [
+    "project"
+   ]
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/socials/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/users/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "POST",
+   "origin": "https://granelle.ru",
+   "path": "/api/viewed/",
+   "n": 1,
+   "status": [
+    201
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/viewed/flats/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/flats/mypriority-paveletskaya/{numeric}/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "text/html"
+   ],
+   "query": []
+  }
+ ],
+ "rea_api_surface_third_party_origins": [
+  "https://ab-ct.ru",
+  "https://ad.adriver.ru",
+  "https://app.idachat.ru",
+  "https://core.smartcallback.ru",
+  "https://mc.yandex.com",
+  "https://mod.calltouch.ru",
+  "https://privacy-cs.mail.ru",
+  "https://uaas.yandex.ru"
+ ]
+}

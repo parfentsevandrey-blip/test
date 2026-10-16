@@ -132,7 +132,8 @@ def _browser_get(url):
     from scrapling.fetchers import StealthySession
     if "s" not in _browser:
         _browser["s"] = StealthySession(headless=True, network_idle=False, wait=4000, timeout=120000, google_search=False,
-                                        locale="ru-RU", timezone_id="Europe/Moscow")
+                                        locale="ru-RU", timezone_id="Europe/Moscow",
+                                        disable_resources=True, block_ads=True)   # AUDIT.md: no images, fonts, media, ads
         _browser["s"].__enter__()
     p = _browser["s"].fetch(url)
     return p.status, (p.body.decode("utf-8", "replace") if isinstance(p.body, bytes) else str(p.body))
@@ -376,6 +377,8 @@ def lsr(db):
                 n += len(cards)
                 if not cards:
                     break
+                if npass > 1 and total and have() >= total:      # L27: a repeat pass stops once everything is collected
+                    break
             page += 1
             if total and (page - 1) * 10 >= total or page > 200:
                 if total and have() < total and npass < 3:     # equal prices reorder between pages: walk them again
@@ -493,6 +496,11 @@ def donstroy_sections(db, limit=None):
     with sync_playwright() as p:
         b = p.chromium.launch(headless=True)
         pg = b.new_page(locale="ru-RU", timezone_id="Europe/Moscow")
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("visitor", HERE / "lib" / "visitor.py")
+        V = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(V)
+        V.lean(pg, "donstroy.moscow")                 # no images / fonts / trackers (AUDIT.md)
         for (obj, q, k, sec), url in todo:
             wait = random.uniform(*GAP) - (time.time() - _last.get("donstroy.moscow", 0))
             if wait > 0:

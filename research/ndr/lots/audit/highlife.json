@@ -1,0 +1,77 @@
+{
+ "name": "highlife",
+ "url": "https://highlife.ru/search",
+ "title": "HIGH LIFE - подобрать квартиру по параметрам",
+ "clicked": null,
+ "requests": 123,
+ "bytes": 6606011,
+ "third_party_requests": 37,
+ "document_bytes": 692738,
+ "embedded_state": [
+  "Next.js state"
+ ],
+ "captcha_or_check": false,
+ "own_data_responses": [],
+ "rea_evidence_id": "ev_81bb91812daefda5192ecc9df926aa437656bb977c23ea904cf43192ffc93746",
+ "rea_error": null,
+ "rea_api_surface_own": [
+  {
+   "method": "GET",
+   "origin": "https://highlife.ru",
+   "path": "/_next/static/css/07a098635536dd3e.css",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "text/css"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://highlife.ru",
+   "path": "/_next/static/css/378acb96aecf856c.css",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "text/css"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://highlife.ru",
+   "path": "/_next/static/css/43e5bfb266c374ee.css",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "text/css"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://highlife.ru",
+   "path": "/search",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "text/html"
+   ],
+   "query": []
+  }
+ ],
+ "rea_api_surface_third_party_origins": [
+  "https://ad.doubleclick.net",
+  "https://mc.yandex.com",
+  "https://privacy-cs.mail.ru",
+  "https://www.google.com"
+ ]
+}

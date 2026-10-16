@@ -1,0 +1,31 @@
+{
+ "name": "lsr_zilart_more",
+ "url": "https://www.lsr.ru/msk/kvartiry-v-novostroikah/zilart/",
+ "title": "",
+ "clicked": null,
+ "requests": 1,
+ "bytes": 1296,
+ "third_party_requests": 0,
+ "document_bytes": 1296,
+ "embedded_state": [],
+ "captcha_or_check": false,
+ "own_data_responses": [],
+ "rea_evidence_id": "ev_f033886c0c45d54fd781b1bdd862c5a4e9295bf91bb74cbf83f20b98efe24748",
+ "rea_error": null,
+ "rea_api_surface_own": [
+  {
+   "method": "GET",
+   "origin": "https://www.lsr.ru",
+   "path": "/msk/kvartiry-v-novostroikah/zilart/",
+   "n": 1,
+   "status": [
+    403
+   ],
+   "type": [
+    "text/html"
+   ],
+   "query": []
+  }
+ ],
+ "rea_api_surface_third_party_origins": []
+}

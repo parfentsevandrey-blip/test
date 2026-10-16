@@ -11,6 +11,20 @@ import time
 class Challenge(Exception):
     pass
 
+HEAVY = {"image", "media", "font"}
+
+
+def lean(page, site):
+    """Audit 16.10 (AUDIT.md): a visit pulled 6-32 MB in 120-370 requests, almost all images, video, fonts and third-party
+    trackers. Load only the site's own documents, scripts, styles and data: the same data, a fraction of the load."""
+    def route(r):
+        host = (r.request.url.split("/")[2] if "://" in r.request.url else "")
+        if r.request.resource_type in HEAVY or not (host == site or host.endswith("." + site)):
+            return r.abort()
+        return r.continue_()
+    page.route("**/*", route)
+
+
 
 def visit(start_url, link_text, more_text, api_part, ok_marker, sort_clicks=(), max_clicks=200, gap=(20, 40), log=print):
     from patchright.sync_api import sync_playwright
@@ -18,6 +32,7 @@ def visit(start_url, link_text, more_text, api_part, ok_marker, sort_clicks=(), 
     with sync_playwright() as p:
         b = p.chromium.launch(headless=True)
         pg = b.new_page(locale="ru-RU", timezone_id="Europe/Moscow")
+        lean(pg, ".".join(start_url.split("/")[2].split(".")[-2:]))
 
         first = []                                       # responses before the first click (the page's own initial load)
 

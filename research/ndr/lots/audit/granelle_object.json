@@ -1,0 +1,326 @@
+{
+ "name": "granelle_object",
+ "url": "https://granelle.ru/objects/mypriority-paveletskaya/",
+ "title": "ЖК «Павелецкая от Гранель»: ипотека и выгодные цены на квартиры в новостройке от застройщика | ГК Гранель",
+ "clicked": null,
+ "requests": 282,
+ "bytes": 16522237,
+ "third_party_requests": 67,
+ "document_bytes": 1270704,
+ "embedded_state": [
+  "Nuxt state",
+  "JSON-LD"
+ ],
+ "captcha_or_check": false,
+ "own_data_responses": [
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/projects/",
+   "bytes": 162445,
+   "post": "",
+   "shape": [
+    "list[23]",
+    {
+     "category": "str",
+     "name": "str",
+     "card_title": "str",
+     "card_subtitle": "str",
+     "slug": "str",
+     "state": "str",
+     "images": [
+      "list[1]",
+      "dict"
+     ],
+     "badges": [
+      "list[0]",
+      null
+     ],
+     "transport_access_points": [
+      "list[2]",
+      "dict"
+     ],
+     "location_on_the_map_image": "str",
+     "tooltip_text": "str",
+     "min_price": "float",
+     "is_coming": "bool",
+     "is_invest_request": "bool",
+     "is_be_first_request": "bool",
+     "be_first_title": "NoneType",
+     "be_first_description": "str",
+     "coords": "str",
+     "apartments_count": "int",
+     "apartments_min_price": "NoneType",
+     "flat_count": "int",
+     "flat_min_price": "int",
+     "residential_count": "int",
+     "residential_min_price": "int",
+     "storage_count": "int"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/favorites/",
+   "bytes": 20,
+   "post": "",
+   "shape": {
+    "count": "int",
+    "ids": [
+     "list[0]",
+     null
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/comparisons/",
+   "bytes": 20,
+   "post": "",
+   "shape": {
+    "count": "int",
+    "ids": [
+     "list[0]",
+     null
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/viewed/flats/",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/socials/",
+   "bytes": 7829,
+   "post": "",
+   "shape": [
+    "list[5]",
+    {
+     "type": "str",
+     "name": "str",
+     "link": "str",
+     "icon": "str",
+     "icon_content": "str",
+     "color": "str"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/notifications/",
+   "bytes": 3740,
+   "post": "",
+   "shape": {
+    "non_viewed_count": "int",
+    "notifications": [
+     "list[8]",
+     {
+      "id": "int",
+      "type": "str",
+      "title": "str",
+      "subtitle": "str",
+      "small_image": "str",
+      "big_image": "str",
+      "url": "str",
+      "order": "int"
+     }
+    ],
+    "viewed_notifications": [
+     "list[0]",
+     null
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/users/",
+   "bytes": 38,
+   "post": "",
+   "shape": {
+    "ok": "bool",
+    "errors": "str"
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/menu/properties_statistics/?project=mypriority-paveletskaya",
+   "bytes": 176,
+   "post": "",
+   "shape": {
+    "flat_count": "int",
+    "apartments_count": "int",
+    "residential_count": "int",
+    "with_keys_count": "int",
+    "parking_count": "int",
+    "storage_count": "int",
+    "commercial_count": "int",
+    "released": "bool",
+    "is_coming": "bool"
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://granelle.ru/api/banned_phones/",
+   "bytes": 26,
+   "post": "",
+   "shape": [
+    "list[1]",
+    {
+     "phone": "str"
+    }
+   ]
+  }
+ ],
+ "rea_evidence_id": "ev_8b4ba4027319214c02405ba211884a1211bd7fa8bba62e6b3c966843525ee4d7",
+ "rea_error": null,
+ "rea_api_surface_own": [
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/banned_phones/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/comparisons/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/favorites/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/menu/properties_statistics/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": [
+    "project"
+   ]
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/notifications/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/projects/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/socials/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/users/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/api/viewed/flats/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://granelle.ru",
+   "path": "/objects/mypriority-paveletskaya/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "text/html"
+   ],
+   "query": []
+  }
+ ],
+ "rea_api_surface_third_party_origins": [
+  "https://ab-ct.ru",
+  "https://ad.adriver.ru",
+  "https://app.idachat.ru",
+  "https://core.smartcallback.ru",
+  "https://mc.yandex.com",
+  "https://mod.calltouch.ru",
+  "https://privacy-cs.mail.ru",
+  "https://uaas.yandex.ru"
+ ]
+}

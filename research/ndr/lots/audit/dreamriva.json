@@ -1,0 +1,88 @@
+{
+ "name": "dreamriva",
+ "url": "https://dreamriva.ru/flats/",
+ "title": "Квартиры в ЖК Дрим Рива (Dream Riva) — цены, планировки и купить в Москве",
+ "clicked": null,
+ "requests": 154,
+ "bytes": 10608975,
+ "third_party_requests": 70,
+ "document_bytes": 180181,
+ "embedded_state": [
+  "Next.js state",
+  "JSON-LD"
+ ],
+ "captcha_or_check": false,
+ "own_data_responses": [
+  {
+   "method": "GET",
+   "url": "https://dreamriva.ru/ajax/index.php?cmd=progress",
+   "bytes": 73639,
+   "post": "",
+   "shape": {
+    "albums": {
+     "2026": [
+      "list[9]",
+      "dict"
+     ],
+     "2025": [
+      "list[12]",
+      "dict"
+     ]
+    }
+   }
+  }
+ ],
+ "rea_evidence_id": "ev_10dbdf9146765ad713cc7c89d83a6a9e728b0ddd558aafa1d21003b6758ed849",
+ "rea_error": null,
+ "rea_api_surface_own": [
+  {
+   "method": "GET",
+   "origin": "https://dreamriva.ru",
+   "path": "/_next/static/css/26916c7f798efdec.css",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "text/css"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://dreamriva.ru",
+   "path": "/ajax/index.php",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": [
+    "cmd"
+   ]
+  },
+  {
+   "method": "GET",
+   "origin": "https://dreamriva.ru",
+   "path": "/flats/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "text/html"
+   ],
+   "query": []
+  }
+ ],
+ "rea_api_surface_third_party_origins": [
+  "https://ad.adriver.ru",
+  "https://content.adriver.ru",
+  "https://core.smartcallback.ru",
+  "https://mc.yandex.com",
+  "https://mod.calltouch.ru",
+  "https://privacy-cs.mail.ru"
+ ]
+}

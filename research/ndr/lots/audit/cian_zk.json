@@ -1,0 +1,104 @@
+{
+ "name": "cian_zk",
+ "url": "https://zhk-simvol-i.cian.ru/",
+ "title": "Ошибка - Циан",
+ "clicked": null,
+ "requests": 86,
+ "bytes": 2690672,
+ "third_party_requests": 82,
+ "document_bytes": 21570,
+ "embedded_state": [],
+ "captcha_or_check": true,
+ "own_data_responses": [
+  {
+   "method": "POST",
+   "url": "https://sopr-api.cian.ru/newbec/",
+   "bytes": 15,
+   "post": "{\"page\":{\"pageType\":\"VPNBlock\",\"extra\":{\"antibot\":true}},\"cid\":\"noid\",\"dl\":\"https%3A%2F%2Fzhk-simvol-i.cian.ru%2F\",\"ea\":\"newpage\",\"ec\":\"page\",\"el\":\"open\",\"event\":\"newpage\",\"join_id\":\"2990d0fa-71de-4ad9-b9f7-d2589b2ee9e6\",\"referrer\":\"\",\"rid\":\"\",\"t\":\"pageview\",\"ua\":\"Mozilla%2F5.0%20(X11%3B%20Linux%20x",
+   "shape": {
+    "status": "str"
+   }
+  },
+  {
+   "method": "POST",
+   "url": "https://api.cian.ru/ebc-analytics/event-enrichment/",
+   "bytes": 428,
+   "post": "{\"page\":{\"pageType\":\"VPNBlock\",\"extra\":{\"antibot\":true}},\"cid\":\"noid\",\"dl\":\"https%3A%2F%2Fzhk-simvol-i.cian.ru%2F\",\"ea\":\"newpage\",\"ec\":\"page\",\"el\":\"open\",\"event\":\"newpage\",\"join_id\":\"2990d0fa-71de-4ad9-b9f7-d2589b2ee9e6\",\"referrer\":\"\",\"rid\":\"\",\"t\":\"pageview\",\"ua\":\"Mozilla%2F5.0%20(X11%3B%20Linux%20x",
+   "shape": {
+    "page": {
+     "pageType": "str",
+     "extra": {
+      "antibot": "bool"
+     }
+    },
+    "cid": "str",
+    "dl": "str",
+    "ea": "str",
+    "ec": "str",
+    "el": "str",
+    "event": "str",
+    "join_id": "str",
+    "referrer": "str",
+    "rid": "str",
+    "t": "str",
+    "ua": "str",
+    "user": {},
+    "v": "str"
+   }
+  }
+ ],
+ "rea_evidence_id": "ev_64e4b24905b6c161c90ab50a9b316919ad8f87c08fe907df4e7b7f6183a1d90f",
+ "rea_error": null,
+ "rea_api_surface_own": [
+  {
+   "method": "POST",
+   "origin": "https://api.cian.ru",
+   "path": "/ebc-analytics/event-enrichment/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "POST",
+   "origin": "https://sopr-api.cian.ru",
+   "path": "/newbec/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://zhk-simvol-i.cian.ru",
+   "path": "/",
+   "n": 1,
+   "status": [
+    403
+   ],
+   "type": [
+    "text/html"
+   ],
+   "query": []
+  }
+ ],
+ "rea_api_surface_third_party_origins": [
+  "https://ad.doubleclick.net",
+  "https://analytics.google.com",
+  "https://bobid-ip.hybrid.ai",
+  "https://fpf.hybrid.ai",
+  "https://mc.yandex.com",
+  "https://privacy-cs.mail.ru",
+  "https://wcm.weborama-tech.ru",
+  "https://widget-api.uxfeedback.ru",
+  "https://www.google.com"
+ ]
+}
