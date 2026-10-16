@@ -272,6 +272,7 @@ def run_once(st):
     if st["cooldown_until"] and now() < datetime.fromisoformat(st["cooldown_until"]):
         log("cooldown active until", st["cooldown_until"], "- skipping run")
         return "cooldown"
+    st["cooldown_until"] = None                     # an expired cooldown must not shorten the next pass gap (F28)
     problems = preflight(st)
     if problems:
         log("PREFLIGHT FAILED, not contacting the site:", problems)
@@ -460,7 +461,7 @@ def loop():
                 log("post-pass hook failed:", str(e)[:200])
         if result == "preflight_failed":
             return
-        if st["cooldown_until"]:
+        if st["cooldown_until"] and datetime.fromisoformat(st["cooldown_until"]) > now():
             wait = (datetime.fromisoformat(st["cooldown_until"]) - now()).total_seconds()
         else:
             wait = random.uniform(*PASS_GAP_MIN) * 60   # pause between passes even when all is well

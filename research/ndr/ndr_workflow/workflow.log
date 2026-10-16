@@ -338,3 +338,9 @@ Call log:
 Call log:
   - navigating to "https://xn--80az8a.xn--d1aqf.xn--p1ai/%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D1%8B/%D0%BA%D0%B0%D1%82%D0%B0%D0%BB%D0%BE%D0%B3-%D0%BD%D0%
 2026-10-16T03:16:03+00:00 pass finished {'started': '2026-10-16T03:04:34+00:00', 'result': 'error: TimeoutError: Page.goto: Timeout 90000ms exceeded.\nCall log:\n  - navigating to "https://xn--80az8a.xn--d1aqf.xn--p1ai/%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D1%8B/%D0%BA%D0%B0%D1%82%D0%B0%D0%BB%D0%BE%D0%B3-%D0%BD%D0%', 'actions': 7, 'xhr_last_min': 0}
+2026-10-16T03:16:07+00:00 next pass in -69 min
+2026-10-16T03:17:09+00:00 preflight {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36", "lang": "ru-RU", "intl": "ru", "tz": "Europe/Moscow", "gl": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)", "dpr": 1}
+2026-10-16T03:23:36+00:00 pass error error: TimeoutError: Page.goto: Timeout 90000ms exceeded.
+Call log:
+  - navigating to "https://xn--80az8a.xn--d1aqf.xn--p1ai/%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D1%8B/%D0%BA%D0%B0%D1%82%D0%B0%D0%BB%D0%BE%D0%B3-%D0%BD%D0%
+2026-10-16T03:23:36+00:00 pass finished {'started': '2026-10-16T03:17:09+00:00', 'result': 'error: TimeoutError: Page.goto: Timeout 90000ms exceeded.\nCall log:\n  - navigating to "https://xn--80az8a.xn--d1aqf.xn--p1ai/%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D1%8B/%D0%BA%D0%B0%D1%82%D0%B0%D0%BB%D0%BE%D0%B3-%D0%BD%D0%', 'actions': 1, 'xhr_last_min': 4}
