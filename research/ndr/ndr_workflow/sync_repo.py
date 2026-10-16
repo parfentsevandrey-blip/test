@@ -21,9 +21,10 @@ INCLUDE = {
     "report": ["*.py", "report.pdf", "report_model.json", "mapsite/map.html", "maps/map_*.png"],
     "moscow_scan": ["*.py", "*.json", "*.csv", "*.pdf"],
     "ndr": ["moscow_map.json"],
+    "lots": ["*.py", "*.json", "*.sh", "lib/*.py", "lots.db", "collector.log", "*.md", "*.pdf", "*.csv"],
     ".": ["tg.py", "tg_propertyinsider.json", "ddu_posts.txt"],
 }
-NEVER = ("profile", "session_A", "Cookies", ".html.bak")
+NEVER = ("profile", "session_A", "Cookies", ".html.bak", "/raw/")
 
 TRAILER = ("\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n"
            "Claude-Session: https://claude.ai/code/session_01Jwebb6fe4TZTUDWn8VZaVf")
