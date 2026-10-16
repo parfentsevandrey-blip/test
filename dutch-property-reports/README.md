@@ -553,6 +553,43 @@ python -m reportgen.broker_photos https://www.bijabram.nl/property/mercuriusweg-
 Кадры приводятся к JPEG при загрузке: брокерские сайты отдают WebP, который
 python-docx вставить не умеет.
 
+## Флип-модель
+
+Флип — купить объект без арендатора, сдать и продать сданным инвестору.
+Инструменты лежат в `tools/flip/`, снимок данных первой модели (Kernweg 1,
+Хорн, 16.10.2026) — в `data/flip/kernweg-1-hoorn/`.
+
+```bash
+# выдача funda in business по территориям: продажа, аренда, сданные объекты
+python3 -I tools/flip/scrape.py WORK/data eindhoven ai-schiphol ...
+python3 -I tools/flip/comps.py WORK/data WORK/comps.json          # ставки и цены по территориям
+python3 -I tools/flip/hoorn_comps.py WORK/data WORK/hoorn-comps.json
+python3 -I tools/flip/kernweg.py WORK/kernweg.json                # модель, сценарии, чувствительность
+python3 -I tools/flip/candidates.py WORK/candidates.json          # кандидаты одной моделью
+python3 -I tools/flip/charts_flip.py WORK/kernweg.json WORK/hoorn-comps.json WORK/charts
+python3 -I tools/flip/build_xlsx.py WORK/kernweg.json WORK/hoorn-comps.json WORK/candidates.json WORK/model.xlsx
+python3 -I tools/flip/make_card.py WORK/kernweg.json WORK/hoorn-comps.json WORK/candidates.json .
+```
+
+Правила модели:
+
+- налог на передачу нежилой недвижимости — **10,4 %**, его платит каждый
+  покупатель (k.k.), поэтому флип по цене продавца обычно убыточен;
+  модель всегда показывает потолок цены покупки без убытка и для маржи 10 %;
+- продажа в течение **6 месяцев** после нашей покупки — по статье 13 закона
+  о налогах на сделки покупатель платит налог только с прироста цены;
+  срок считается между датами нотариальных актов;
+- налог на прибыль VPB 2026 — 19 % до € 200.000, 25,8 % сверх;
+- Excel-модель собирается с живыми формулами; после сборки её нужно
+  пересчитать LibreOffice Calc (`soffice --headless --convert-to xlsx`)
+  и сверить «Сводку» с Python — без пересчёта в файле нет готовых значений.
+
+Главы разбора добавляются карточке полем `chapters`: у главы бывают
+`tables` (`columns`, `rows`, `widths`, `align`, `strong`, `highlight`,
+`title`, `note`) и `figures` (`path` от корня проекта, `width_mm`,
+`caption`). Полоса главы должна дойти до нижнего поля — проверка формата
+ловит пустоту больше 26 мм, её добирают строками `rows`.
+
 ## Устройство пакета
 
 | Модуль | Отвечает за |

@@ -1,0 +1,1434 @@
+{
+ "rent": [
+  {
+   "town": "Алкмар",
+   "addr": "Koraalstraat 1",
+   "area": 12137,
+   "rent_m2": 49.4,
+   "year": "1996",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-43318885-koraalstraat-1/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Fluorietweg 29",
+   "area": 8583,
+   "rent_m2": 87.4,
+   "year": "2010",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-43203349-fluorietweg-29/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Хорн",
+   "addr": "Electronplein 1",
+   "area": 5180,
+   "rent_m2": 56.8,
+   "year": "1999",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/hoorn-nh/object-43246991-electronplein-1/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Вирингерверф",
+   "addr": "Westrak 208",
+   "area": 4676,
+   "rent_m2": 61.6,
+   "year": "2006",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/wieringerwerf/object-42189263-westrak-208/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Вирингерверф",
+   "addr": "Westrak 208",
+   "area": 2900,
+   "rent_m2": 60.0,
+   "year": "2006",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/wieringerwerf/object-44528013-westrak-208/",
+   "since": "2 weken"
+  },
+  {
+   "town": "Зваг",
+   "addr": "De Factorij 40",
+   "area": 2710,
+   "rent_m2": 75.3,
+   "year": "1999",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-44560899-de-factorij-40/",
+   "since": "8 weken"
+  },
+  {
+   "town": "Зваг",
+   "addr": "Jelle Zijlstraweg 69",
+   "area": 2695,
+   "rent_m2": 70.1,
+   "year": "2021",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-44589122-jelle-zijlstraweg-69/",
+   "since": "6 weken"
+  },
+  {
+   "town": "Вирингерверф",
+   "addr": "Westrak 208",
+   "area": 1776,
+   "rent_m2": 64.2,
+   "year": "2006",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/wieringerwerf/object-44528014-westrak-208/",
+   "since": "2 weken"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Hazenkoog 2",
+   "area": 1713,
+   "rent_m2": 57.4,
+   "year": "1991",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-43714147-hazenkoog-2/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Visserijweg 67",
+   "area": 1485,
+   "rent_m2": 75.1,
+   "year": "2025",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-43316575-visserijweg-67/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Boomkorstraat 4",
+   "area": 1413,
+   "rent_m2": 78.6,
+   "year": "2022",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-44558293-boomkorstraat-4/",
+   "since": "2 maanden"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Newtonstraat 44",
+   "area": 1308,
+   "rent_m2": 82.6,
+   "year": "2004",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44522402-newtonstraat-44/",
+   "since": "2 oktober 2026"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Nijverheidsstraat 13",
+   "area": 1278,
+   "rent_m2": 56.8,
+   "year": "2001-2010",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44468762-nijverheidsstraat-13/",
+   "since": "4 maanden"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Herculesstraat 57",
+   "area": 1248,
+   "rent_m2": 118.2,
+   "year": "1960",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-43810741-herculesstraat-57/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Ampèrestraat 46",
+   "area": 976,
+   "rent_m2": 153.7,
+   "year": "1990",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44586253-amperestraat-46/",
+   "since": "6 weken"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Newtonstraat 44",
+   "area": 850,
+   "rent_m2": 84.7,
+   "year": "2004",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44458904-newtonstraat-44/",
+   "since": "5 maanden"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "W.M. Dudokweg 11",
+   "area": 762,
+   "rent_m2": 109.4,
+   "year": "1990",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44573588-wm-dudokweg-11/",
+   "since": "6 weken"
+  },
+  {
+   "town": "Медемблик",
+   "addr": "Nijverheidsweg 3-A",
+   "area": 531,
+   "rent_m2": 58.2,
+   "year": "1987",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/medemblik/object-44404684-nijverheidsweg-3-a/",
+   "since": "3 maanden"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Binnenzeestraat 32",
+   "area": 482,
+   "rent_m2": 114.1,
+   "year": "2020",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-44559728-binnenzeestraat-32/",
+   "since": "2 maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "De Corantijn 15-A",
+   "area": 450,
+   "rent_m2": 144.4,
+   "year": "2000",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-80806129-de-corantijn-15-a/",
+   "since": "2 maanden"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Van IJsendijkstraat 180-J",
+   "area": 438,
+   "rent_m2": 99.0,
+   "year": "1983",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-44570556-van-ijsendijkstraat-180-j/",
+   "since": "7 weken"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Fuikstraat 4",
+   "area": 366,
+   "rent_m2": 94.9,
+   "year": "2020",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-89563629-fuikstraat-4/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Вирингерверф",
+   "addr": "Terpstraat 39-a",
+   "area": 365,
+   "rent_m2": 70.7,
+   "year": "1967",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/wieringerwerf/object-43357380-terpstraat-39-a/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "Jelle Zijlstraweg 62-G",
+   "area": 344,
+   "rent_m2": 99.4,
+   "year": "2023",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-43384015-jelle-zijlstraweg-62-g/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Otterkoog 105",
+   "area": 342,
+   "rent_m2": 82.5,
+   "year": "1991-2000",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44545079-otterkoog-105/",
+   "since": "14 oktober 2026"
+  },
+  {
+   "town": "Энкхёйзен",
+   "addr": "Het Witte Hert 4-a",
+   "area": 336,
+   "rent_m2": 64.1,
+   "year": "2000",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/enkhuizen/object-43318323-het-witte-hert-4-a/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "De Marowijne 11",
+   "area": 335,
+   "rent_m2": 95.5,
+   "year": "2010",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-80919475-de-marowijne-11/",
+   "since": "2 maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "Jelle Zijlstraweg 144",
+   "area": 333,
+   "rent_m2": 84.7,
+   "year": "2021",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-80914900-jelle-zijlstraweg-144/",
+   "since": "2 maanden"
+  },
+  {
+   "town": "Энкхёйзен",
+   "addr": "De Zwaan 2",
+   "area": 330,
+   "rent_m2": 75.8,
+   "year": "2013",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/enkhuizen/object-43135139-de-zwaan-2/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "De Corantijn 53-A",
+   "area": 325,
+   "rent_m2": 83.1,
+   "year": "2004",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-80932271-de-corantijn-53-a/",
+   "since": "7 weken"
+  },
+  {
+   "town": "Хорн",
+   "addr": "Breed 41",
+   "area": 311,
+   "rent_m2": 192.9,
+   "year": "1901",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/hoorn-nh/object-89737562-breed-41/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Binnenzeestraat 25",
+   "area": 310,
+   "rent_m2": 97.5,
+   "year": "2019",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-43292862-binnenzeestraat-25/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "W.M. Dudokweg 10",
+   "area": 304,
+   "rent_m2": 112.6,
+   "year": "1991-2000",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44575365-wm-dudokweg-10/",
+   "since": "7 weken"
+  },
+  {
+   "town": "Зваг",
+   "addr": "Jelle Zijlstraweg 60-D",
+   "area": 300,
+   "rent_m2": 108.0,
+   "year": "2023",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-89281452-jelle-zijlstraweg-60-d/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "de Oude Veiling 25-H",
+   "area": 300,
+   "rent_m2": 78.0,
+   "year": "2024",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-44446876-de-oude-veiling-25-h/",
+   "since": "2 maanden"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Volume 46",
+   "area": 292,
+   "rent_m2": 100.1,
+   "year": "2025",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-44406715-volume-46/",
+   "since": "3 maanden"
+  },
+  {
+   "town": "Энкхёйзен",
+   "addr": "De Dolfijn 41",
+   "area": 288,
+   "rent_m2": 58.1,
+   "year": "2001",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/enkhuizen/object-44530779-de-dolfijn-41/",
+   "since": "9 oktober 2026"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Nijverheidsplein 11",
+   "area": 288,
+   "rent_m2": 124.8,
+   "year": "2025",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-89663911-nijverheidsplein-11/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Otterkoog 14-A",
+   "area": 280,
+   "rent_m2": 51.2,
+   "year": "1994",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44494928-otterkoog-14-a/",
+   "since": "3 maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "Jan Penweg 4",
+   "area": 270,
+   "rent_m2": 100.0,
+   "year": "2020",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-43309681-jan-penweg-4/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Weberstraat 74",
+   "area": 267,
+   "rent_m2": 105.2,
+   "year": "2001",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-89611926-weberstraat-74/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "Jan Penweg 6",
+   "area": 264,
+   "rent_m2": 88.6,
+   "year": "2021",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-43304148-jan-penweg-6/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "Jelle Zijlstraweg 258",
+   "area": 261,
+   "rent_m2": 85.1,
+   "year": "2023",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-44484011-jelle-zijlstraweg-258/",
+   "since": "4 maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "David Ricardoweg 16",
+   "area": 249,
+   "rent_m2": 113.3,
+   "year": "2025",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-44410224-david-ricardoweg-16/",
+   "since": "3 maanden"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Nijverheidsplein 83",
+   "area": 240,
+   "rent_m2": 110.0,
+   "year": "2025",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44560302-nijverheidsplein-83/",
+   "since": "8 weken"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Visserijweg 32-U",
+   "area": 222,
+   "rent_m2": 132.4,
+   "year": "2022",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-43229421-visserijweg-32-u/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "De Corantijn 91-B",
+   "area": 210,
+   "rent_m2": 62.9,
+   "year": "2001",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-80980217-de-corantijn-91-b/",
+   "since": "2 weken"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Costerstraat 8-A",
+   "area": 210,
+   "rent_m2": 114.3,
+   "year": "1991-2000",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44574841-costerstraat-8-a/",
+   "since": "6 weken"
+  },
+  {
+   "town": "Зваг",
+   "addr": "De Corantijn 43-R",
+   "area": 200,
+   "rent_m2": 105.0,
+   "year": "2000",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-80807208-de-corantijn-43-r/",
+   "since": "2 maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "De Corantijn 9-B",
+   "area": 200,
+   "rent_m2": 78.0,
+   "year": "1998",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-89755985-de-corantijn-9-b/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "De Corantijn 25",
+   "area": 200,
+   "rent_m2": 88.5,
+   "year": "2002",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-89305788-de-corantijn-25/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Visserijweg 61-02",
+   "area": 198,
+   "rent_m2": 118.2,
+   "year": "2025",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-89284782-visserijweg-61-02/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "de Oude Veiling 79-T",
+   "area": 195,
+   "rent_m2": 85.8,
+   "year": "2000",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-43287082-de-oude-veiling-79-t/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "Jelle Zijlstraweg 76",
+   "area": 195,
+   "rent_m2": 85.2,
+   "year": "2024",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-89418082-jelle-zijlstraweg-76/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Nijenburgerweg 9-A",
+   "area": 190,
+   "rent_m2": 142.1,
+   "year": "2025",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44517637-nijenburgerweg-9-a/",
+   "since": "3 weken"
+  },
+  {
+   "town": "Зваг",
+   "addr": "de Oude Veiling 71-B",
+   "area": 187,
+   "rent_m2": 70.6,
+   "year": "2020",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-44546900-de-oude-veiling-71-b/",
+   "since": "15 oktober 2026"
+  },
+  {
+   "town": "Мидденмер",
+   "addr": "Agriport 5-06",
+   "area": 183,
+   "rent_m2": 78.4,
+   "year": "Momenteel in aanbouw",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/middenmeer/object-44538081-agriport-5-06/",
+   "since": "8 oktober 2026"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Van IJsendijkstraat 180-K",
+   "area": 176,
+   "rent_m2": 101.9,
+   "year": "1983",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-44570546-van-ijsendijkstraat-180-k/",
+   "since": "7 weken"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Salomonstraat 169",
+   "area": 176,
+   "rent_m2": 153.4,
+   "year": "2026",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44591633-salomonstraat-169/",
+   "since": "5 weken"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Salomonstraat 155",
+   "area": 176,
+   "rent_m2": 153.4,
+   "year": "Momenteel in aanbouw",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44591622-salomonstraat-155/",
+   "since": "5 weken"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Einsteinstraat 3-A",
+   "area": 175,
+   "rent_m2": 130.3,
+   "year": "2011",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-80950907-einsteinstraat-3-a/",
+   "since": "5 weken"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Einsteinstraat 42",
+   "area": 171,
+   "rent_m2": 90.9,
+   "year": "1991",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-89602663-einsteinstraat-42/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Salomonstraat 167",
+   "area": 165,
+   "rent_m2": 108.7,
+   "year": "Momenteel in aanbouw",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44479119-salomonstraat-167/",
+   "since": "4 maanden"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Nijverheidsplein 17",
+   "area": 158,
+   "rent_m2": 113.9,
+   "year": "2026",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44530552-nijverheidsplein-17/",
+   "since": "9 oktober 2026"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Pascalstraat 17-017",
+   "area": 152,
+   "rent_m2": 133.8,
+   "year": "Momenteel in aanbouw",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44487279-pascalstraat-17-017/",
+   "since": "4 maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "Jelle Zijlstraweg 50",
+   "area": 150,
+   "rent_m2": 79.6,
+   "year": "2020",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-89659454-jelle-zijlstraweg-50/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Van IJsendijkstraat 164-M",
+   "area": 150,
+   "rent_m2": 78.0,
+   "year": "2007",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-43260693-van-ijsendijkstraat-164-m/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "De Factorij 28-C",
+   "area": 148,
+   "rent_m2": 76.6,
+   "year": "1997",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-43329036-de-factorij-28-c/",
+   "since": "5 maanden"
+  },
+  {
+   "town": "Хорн",
+   "addr": "Neutronweg 49",
+   "area": 144,
+   "rent_m2": 91.7,
+   "year": "2010",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/hoorn-nh/object-44572558-neutronweg-49/",
+   "since": "6 weken"
+  },
+  {
+   "town": "Энкхёйзен",
+   "addr": "De Dolfijn 37-g",
+   "area": 144,
+   "rent_m2": 79.2,
+   "year": "1999",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/enkhuizen/object-44532681-de-dolfijn-37-g/",
+   "since": "12 oktober 2026"
+  },
+  {
+   "town": "Мидденмер",
+   "addr": "Industrieweg 73-d",
+   "area": 140,
+   "rent_m2": 68.1,
+   "year": "2022",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/middenmeer/object-43251125-industrieweg-73-d/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "Jelle Zijlstraweg 80",
+   "area": 140,
+   "rent_m2": 111.4,
+   "year": "2020",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-80899512-jelle-zijlstraweg-80/",
+   "since": "3 maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "De Corantijn 43-L",
+   "area": 140,
+   "rent_m2": 68.1,
+   "year": "2000",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-89278316-de-corantijn-43-l/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Beukenlaan 23-229",
+   "area": 138,
+   "rent_m2": 156.1,
+   "year": "2024",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44413464-beukenlaan-23-229/",
+   "since": "3 maanden"
+  },
+  {
+   "town": "Энкхёйзен",
+   "addr": "De Zwaan 64",
+   "area": 132,
+   "rent_m2": 88.6,
+   "year": "2026",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/enkhuizen/object-44410501-de-zwaan-64/",
+   "since": "3 maanden"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Van IJsendijkstraat 180-H",
+   "area": 131,
+   "rent_m2": 109.5,
+   "year": "1983",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-44570549-van-ijsendijkstraat-180-h/",
+   "since": "7 weken"
+  },
+  {
+   "town": "Зваг",
+   "addr": "Jelle Zijlstraweg 160",
+   "area": 130,
+   "rent_m2": 118.2,
+   "year": "2020",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-89767820-jelle-zijlstraweg-160/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Cantekoogweg 23-J",
+   "area": 123,
+   "rent_m2": 102.4,
+   "year": "2001-2010",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-89718299-cantekoogweg-23-j/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Мидденмер",
+   "addr": "Agriport 3-19",
+   "area": 118,
+   "rent_m2": 86.4,
+   "year": "2024",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/middenmeer/object-89784089-agriport-3-19/",
+   "since": "5 maanden"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Salomonstraat 81",
+   "area": 115,
+   "rent_m2": 153.9,
+   "year": "Momenteel in aanbouw",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44567188-salomonstraat-81/",
+   "since": "8 weken"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Salomonstraat 77",
+   "area": 114,
+   "rent_m2": 157.4,
+   "year": "Momenteel in aanbouw",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44402646-salomonstraat-77/",
+   "since": "3 maanden"
+  },
+  {
+   "town": "Мидденмер",
+   "addr": "Industrieweg 10-a",
+   "area": 110,
+   "rent_m2": 39.6,
+   "year": "1945",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/middenmeer/object-43249876-industrieweg-10-a/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Энкхёйзен",
+   "addr": "De Vijfhoek 10",
+   "area": 110,
+   "rent_m2": 75.8,
+   "year": "2013",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/enkhuizen/object-44432150-de-vijfhoek-10/",
+   "since": "2 maanden"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Nijverheidsplein 45",
+   "area": 110,
+   "rent_m2": 106.4,
+   "year": "2025",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-43238140-nijverheidsplein-45/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Weberstraat 68",
+   "area": 104,
+   "rent_m2": 114.8,
+   "year": "2001",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-89501390-weberstraat-68/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Newtonstraat 45",
+   "area": 102,
+   "rent_m2": 147.1,
+   "year": "2004",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-43274306-newtonstraat-45/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Jan van Goyenstraat 1170-B",
+   "area": 102,
+   "rent_m2": 140.6,
+   "year": "1989",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-43148700-jan-van-goyenstraat-1170-b/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Энкхёйзен",
+   "addr": "De Drie Kronen 149",
+   "area": 100,
+   "rent_m2": 81.0,
+   "year": "2018",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/enkhuizen/object-43371476-de-drie-kronen-149/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "De Compagnie 52-A",
+   "area": 100,
+   "rent_m2": 117.0,
+   "year": "2006",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-80992824-de-compagnie-52-a/",
+   "since": "8 oktober 2026"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Jaagweg 12",
+   "area": 100,
+   "rent_m2": 126.0,
+   "year": "2001",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-89809723-jaagweg-12/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Salomonstraat 24",
+   "area": 100,
+   "rent_m2": 117.0,
+   "year": "2017",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44588425-salomonstraat-24/",
+   "since": "6 weken"
+  },
+  {
+   "town": "Зваг",
+   "addr": "Jelle Zijlstraweg 90",
+   "area": 92,
+   "rent_m2": 88.0,
+   "year": "2020",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-44538366-jelle-zijlstraweg-90/",
+   "since": "8 oktober 2026"
+  },
+  {
+   "town": "Мидденмер",
+   "addr": "Agriport 9-04",
+   "area": 90,
+   "rent_m2": 100.0,
+   "year": "2023",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/middenmeer/object-44521901-agriport-9-04/",
+   "since": "2 oktober 2026"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Bellstraat 53",
+   "area": 88,
+   "rent_m2": 112.5,
+   "year": "2020",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44519684-bellstraat-53/",
+   "since": "3 weken"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Berenkoog 63",
+   "area": 87,
+   "rent_m2": 172.4,
+   "year": "2022",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44552435-berenkoog-63/",
+   "since": "2 maanden"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Otterkoog 31",
+   "area": 85,
+   "rent_m2": 126.4,
+   "year": "1991-2000",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44505616-otterkoog-31/",
+   "since": "4 weken"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Visserijweg 28-17",
+   "area": 84,
+   "rent_m2": 120.7,
+   "year": "2019",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-43378348-visserijweg-28-17/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Magneet 14-R",
+   "area": 82,
+   "rent_m2": 145.6,
+   "year": "2009",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-80949524-magneet-14-r/",
+   "since": "6 weken"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Gildeplein 17",
+   "area": 80,
+   "rent_m2": 90.0,
+   "year": "1998",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-80955563-gildeplein-17/",
+   "since": "5 weken"
+  },
+  {
+   "town": "Энкхёйзен",
+   "addr": "Het Witte Hert 4-f",
+   "area": 74,
+   "rent_m2": 128.9,
+   "year": "2000",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/enkhuizen/object-43355301-het-witte-hert-4-f/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Вирингерверф",
+   "addr": "Westrak 80-b",
+   "area": 70,
+   "rent_m2": 153.4,
+   "year": "2001-2010",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/wieringerwerf/object-44568869-westrak-80-b/",
+   "since": "8 weken"
+  },
+  {
+   "town": "Зваг",
+   "addr": "De Factorij 59-N",
+   "area": 70,
+   "rent_m2": 102.9,
+   "year": "1995",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-80948682-de-factorij-59-n/",
+   "since": "5 weken"
+  },
+  {
+   "town": "Мидденмер",
+   "addr": "Agriport 7-35",
+   "area": 54,
+   "rent_m2": 105.6,
+   "year": "2023",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/middenmeer/object-44528901-agriport-7-35/",
+   "since": "2 weken"
+  },
+  {
+   "town": "Мидденмер",
+   "addr": "Agriport 5-23",
+   "area": 54,
+   "rent_m2": 110.0,
+   "year": "2024",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/middenmeer/object-44498131-agriport-5-23/",
+   "since": "4 maanden"
+  },
+  {
+   "town": "Зваг",
+   "addr": "de Oude Veiling 41",
+   "area": 50,
+   "rent_m2": 144.0,
+   "year": "1950",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-89646104-de-oude-veiling-41/",
+   "since": "6+ maanden"
+  }
+ ],
+ "sale": [
+  {
+   "town": "Медемблик",
+   "addr": "Nijverheidsweg 17",
+   "area": 6200,
+   "price": 139950,
+   "pm2": 23,
+   "status": "Beschikbaar",
+   "year": "Momenteel in aanbouw",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/medemblik/object-43714764-nijverheidsweg-17/",
+   "since": "6+ maanden",
+   "orig": 249000,
+   "plot": null
+  },
+  {
+   "town": "Вирингерверф",
+   "addr": "Westrak 11",
+   "area": 1861,
+   "price": 600000,
+   "pm2": 322,
+   "status": "Beschikbaar",
+   "year": null,
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/wieringerwerf/object-43373573-westrak-11/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": "3.045 m²"
+  },
+  {
+   "town": "Хорн",
+   "addr": "Kernweg 6",
+   "area": 11195,
+   "price": 5700000,
+   "pm2": 509,
+   "status": "Beschikbaar",
+   "year": "1960-1970",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/hoorn-nh/object-89466410-kernweg-6/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": "3.002 m²"
+  },
+  {
+   "town": "Хорн",
+   "addr": "Protonweg 13",
+   "area": 1737,
+   "price": 900000,
+   "pm2": 518,
+   "status": "Onder bod",
+   "year": "1971-1980",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/hoorn-nh/object-89466418-protonweg-13/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": "5.024 m²"
+  },
+  {
+   "town": "Хорн",
+   "addr": "Neutronweg 7",
+   "area": 11289,
+   "price": 6500000,
+   "pm2": 576,
+   "status": "Beschikbaar",
+   "year": "1971-1980",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/hoorn-nh/object-89466413-neutronweg-7/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": null
+  },
+  {
+   "town": "Хорн",
+   "addr": "Electronweg 19-23",
+   "area": 4220,
+   "price": 2795000,
+   "pm2": 662,
+   "status": "Beschikbaar",
+   "year": "1978",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/hoorn-nh/object-43274830-electronweg-19-23/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": "7.188 m²"
+  },
+  {
+   "town": "Хорн",
+   "addr": "Kernweg 1",
+   "area": 2155,
+   "price": 1495000,
+   "pm2": 694,
+   "status": "Beschikbaar",
+   "year": "2007",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/hoorn-nh/object-43955233-kernweg-1/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": "2.640 m²"
+  },
+  {
+   "town": "Вирингерверф",
+   "addr": "Schelphorst 4",
+   "area": 694,
+   "price": 575000,
+   "pm2": 829,
+   "status": "Beschikbaar",
+   "year": "1993",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/wieringerwerf/object-43142682-schelphorst-4/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": "905 m²"
+  },
+  {
+   "town": "Хорн",
+   "addr": "Electronplein 1",
+   "area": 4500,
+   "price": 3750000,
+   "pm2": 833,
+   "status": "Beschikbaar",
+   "year": "1999",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/hoorn-nh/object-43095324-electronplein-1/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": "7.500 m²"
+  },
+  {
+   "town": "Мидденмер",
+   "addr": "Agriport 9-21",
+   "area": 552,
+   "price": 475000,
+   "pm2": 861,
+   "status": "Beschikbaar",
+   "year": "Momenteel in aanbouw",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/middenmeer/object-43145977-agriport-9-21/",
+   "since": "6+ maanden",
+   "orig": 499000,
+   "plot": null
+  },
+  {
+   "town": "Зваг",
+   "addr": "John Kenneth Galbraithweg",
+   "area": 550,
+   "price": 495000,
+   "pm2": 900,
+   "status": "Verkocht onder voorbehoud",
+   "year": "Momenteel in aanbouw",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-89213117-john-kenneth-galbraithweg/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": null
+  },
+  {
+   "town": "Хорн",
+   "addr": "Electronplein 1",
+   "area": 1625,
+   "price": 1499000,
+   "pm2": 922,
+   "status": "Beschikbaar",
+   "year": "1999",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/hoorn-nh/object-44510584-electronplein-1/",
+   "since": "3 weken",
+   "orig": null,
+   "plot": "9.235 m²"
+  },
+  {
+   "town": "Энкхёйзен",
+   "addr": "De Star 5-a",
+   "area": 936,
+   "price": 875000,
+   "pm2": 935,
+   "status": "Beschikbaar",
+   "year": "2023",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/enkhuizen/object-44585555-de-star-5-a/",
+   "since": "6 weken",
+   "orig": null,
+   "plot": "1.215 m²"
+  },
+  {
+   "town": "Хорн",
+   "addr": "Electronplein 1",
+   "area": 1100,
+   "price": 1099000,
+   "pm2": 999,
+   "status": "Beschikbaar",
+   "year": "1999",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/hoorn-nh/object-44504456-electronplein-1/",
+   "since": "3 weken",
+   "orig": null,
+   "plot": "9.235 m²"
+  },
+  {
+   "town": "Хорн",
+   "addr": "Kernweg 4",
+   "area": 11976,
+   "price": 12000000,
+   "pm2": 1002,
+   "status": "Beschikbaar",
+   "year": "1971-1980",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/hoorn-nh/object-89466524-kernweg-4/",
+   "since": "6+ maanden",
+   "orig": 13800000,
+   "plot": null
+  },
+  {
+   "town": "Зваг",
+   "addr": "De Marowijne 45",
+   "area": 2258,
+   "price": 2350000,
+   "pm2": 1041,
+   "status": "Beschikbaar",
+   "year": "2004",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-80854248-de-marowijne-45/",
+   "since": "4 maanden",
+   "orig": null,
+   "plot": "4.353 m²"
+  },
+  {
+   "town": "Вирингерверф",
+   "addr": "Westrak 1",
+   "area": 3000,
+   "price": 3250000,
+   "pm2": 1083,
+   "status": "Beschikbaar",
+   "year": "2026",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/wieringerwerf/object-43924423-westrak-1/",
+   "since": "6+ maanden",
+   "orig": 825000,
+   "plot": "5.323 m²"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Nijverheidsstraat 13-L",
+   "area": 528,
+   "price": 595000,
+   "pm2": 1127,
+   "status": "Beschikbaar",
+   "year": "Na 2020",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44449656-nijverheidsstraat-13-l/",
+   "since": "2 maanden",
+   "orig": null,
+   "plot": null
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Pascalstraat 8",
+   "area": 1628,
+   "price": 1890000,
+   "pm2": 1161,
+   "status": "Beschikbaar",
+   "year": "2005",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44588192-pascalstraat-8/",
+   "since": "6 weken",
+   "orig": null,
+   "plot": "1.759 m²"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Einsteinstraat 74",
+   "area": 462,
+   "price": 545000,
+   "pm2": 1180,
+   "status": "Beschikbaar",
+   "year": "1995",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-80969678-einsteinstraat-74/",
+   "since": "4 weken",
+   "orig": null,
+   "plot": null
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Hertzstraat 2",
+   "area": 471,
+   "price": 592500,
+   "pm2": 1258,
+   "status": "Beschikbaar",
+   "year": "2026",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-43377448-hertzstraat-2/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": null
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Nijverheidsstraat 13-J",
+   "area": 446,
+   "price": 575000,
+   "pm2": 1289,
+   "status": "Verkocht onder voorbehoud",
+   "year": "Na 2020",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44431378-nijverheidsstraat-13-j/",
+   "since": "2 maanden",
+   "orig": null,
+   "plot": null
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Barnsteenstraat 1-F",
+   "area": 869,
+   "price": 1195000,
+   "pm2": 1375,
+   "status": "Beschikbaar",
+   "year": "2007",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44445544-barnsteenstraat-1-f/",
+   "since": "2 maanden",
+   "orig": null,
+   "plot": null
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Volume 128-130",
+   "area": 563,
+   "price": 825000,
+   "pm2": 1465,
+   "status": "Beschikbaar",
+   "year": "1998",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-43571449-volume-128-130/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": null
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Robbenkoog 21-B",
+   "area": 400,
+   "price": 592000,
+   "pm2": 1480,
+   "status": "Beschikbaar",
+   "year": "1996",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-89536024-robbenkoog-21-b/",
+   "since": "6+ maanden",
+   "orig": 692500,
+   "plot": "590 m²"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Herculesstraat 57",
+   "area": 1248,
+   "price": 1850000,
+   "pm2": 1482,
+   "status": "Beschikbaar",
+   "year": "1960",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-43873700-herculesstraat-57/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": "1.297 m²"
+  },
+  {
+   "town": "Зваг",
+   "addr": "John Kenneth Galbraithweg 3",
+   "area": 669,
+   "price": 995000,
+   "pm2": 1487,
+   "status": "Beschikbaar",
+   "year": "2026",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-80999815-john-kenneth-galbraithweg-3/",
+   "since": "6 oktober 2026",
+   "orig": null,
+   "plot": null
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Schermerweg 31",
+   "area": 635,
+   "price": 975000,
+   "pm2": 1535,
+   "status": "Beschikbaar",
+   "year": "1928",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44417065-schermerweg-31/",
+   "since": "3 maanden",
+   "orig": null,
+   "plot": "980 m²"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "Rustenburgerweg 114",
+   "area": 900,
+   "price": 1400000,
+   "pm2": 1556,
+   "status": "Beschikbaar",
+   "year": "1970",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-43353973-rustenburgerweg-114/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": "11.220 m²"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Herculesstraat 57",
+   "area": 725,
+   "price": 1150000,
+   "pm2": 1586,
+   "status": "Beschikbaar",
+   "year": "1960",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-43802915-herculesstraat-57/",
+   "since": "6+ maanden",
+   "orig": 150000,
+   "plot": "1.297 m²"
+  },
+  {
+   "town": "Пюрмеренд",
+   "addr": "Visserijweg 26-A",
+   "area": 1205,
+   "price": 1950000,
+   "pm2": 1618,
+   "status": "Beschikbaar",
+   "year": "2023",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/purmerend/object-44567828-visserijweg-26-a/",
+   "since": "8 weken",
+   "orig": null,
+   "plot": null
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Laanenderweg 30-31",
+   "area": 774,
+   "price": 1345000,
+   "pm2": 1738,
+   "status": "Beschikbaar",
+   "year": "1998",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-43387323-laanenderweg-30-31/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": "847 m²"
+  },
+  {
+   "town": "Херхюговард",
+   "addr": "W.M. Dudokweg 11",
+   "area": 762,
+   "price": 1325000,
+   "pm2": 1739,
+   "status": "Beschikbaar",
+   "year": "1990",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44573735-wm-dudokweg-11/",
+   "since": "6 weken",
+   "orig": null,
+   "plot": "1.530 m²"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Herculesstraat 57",
+   "area": 460,
+   "price": 800000,
+   "pm2": 1739,
+   "status": "Beschikbaar",
+   "year": "1960",
+   "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-43802000-herculesstraat-57/",
+   "since": "6+ maanden",
+   "orig": null,
+   "plot": "1.297 m²"
+  }
+ ],
+ "inv": [
+  {
+   "town": "Алкмар",
+   "addr": "Boterstraat 21",
+   "area": 188,
+   "price": 450000,
+   "rent": 37500,
+   "giy": 8.33,
+   "how": "аренда",
+   "year": "1900",
+   "status": "Beschikbaar",
+   "url": "https://www.fundainbusiness.nl/belegging/alkmaar/object-44581679-boterstraat-21/",
+   "since": "5 weken"
+  },
+  {
+   "town": "Хорн",
+   "addr": "Atoomweg 12",
+   "area": 583,
+   "price": 575000,
+   "rent": 51096,
+   "giy": 8.89,
+   "how": "аренда",
+   "year": "1972",
+   "status": "Beschikbaar",
+   "url": "https://www.fundainbusiness.nl/belegging/hoorn-nh/object-43363688-atoomweg-12/",
+   "since": "6+ maanden"
+  },
+  {
+   "town": "Алкмар",
+   "addr": "Kamerlingh Onnesstraat 27-B",
+   "area": 190,
+   "price": 395000,
+   "rent": 36933,
+   "giy": 9.35,
+   "how": "аренда",
+   "year": "2006",
+   "status": "Beschikbaar",
+   "url": "https://www.fundainbusiness.nl/belegging/alkmaar/object-43201526-kamerlingh-onnesstraat-27-b/",
+   "since": "6+ maanden"
+  }
+ ]
+}

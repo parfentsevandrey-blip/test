@@ -335,6 +335,16 @@
       ]
     },
     {
+      "slug": "kernweg-1-hoorn",
+      "title": "Kernweg 1, Hoorn",
+      "city": "Hoorn",
+      "price": "€ 1.495.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/hoorn-nh/object-43955233-kernweg-1/",
+      "reports": [
+        "report-2026-10-16-flip-kernweg-1-hoorn.json"
+      ]
+    },
+    {
       "slug": "keurenplein-51-53-amsterdam",
       "title": "Keurenplein 51-53, Amsterdam",
       "city": "Amsterdam",
@@ -734,5 +744,5 @@
       ]
     }
   ],
-  "updated": "2026-10-12"
+  "updated": "2026-10-16"
 }

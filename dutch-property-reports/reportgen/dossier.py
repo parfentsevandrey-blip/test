@@ -774,6 +774,90 @@ def _pull_height(text: str) -> float:
             + _mm(8 + 13) + 0.5)
 
 
+ROOT = Path(__file__).resolve().parent.parent
+TABLE_ROW_MM = 6.1          # строка таблицы разбора: 8,4 pt гротеска и поля по 3,2 pt
+TABLE_ALIGN = {"l": WD_ALIGN_PARAGRAPH.LEFT, "r": WD_ALIGN_PARAGRAPH.RIGHT,
+               "c": WD_ALIGN_PARAGRAPH.CENTER}
+
+
+def data_table(doc, spec: dict) -> None:
+    """Таблица разбора: модель, конкуренты, сценарии.
+
+    Набрана как перечни отчёта: шапка капителью, строки гротеском, тонкие
+    линейки между строками, числа по правому краю. Итоговые строки
+    (``strong``) — полужирным, строка объекта среди конкурентов
+    (``highlight``) — на подложке.
+    """
+    columns, rows = spec["columns"], spec["rows"]
+    count = len(columns)
+    widths = spec.get("widths") or [S.CONTENT_W_MM / count] * count
+    align = spec.get("align") or ["l"] + ["r"] * (count - 1)
+    strong, highlight = set(spec.get("strong", [])), set(spec.get("highlight", []))
+    if spec.get("title"):
+        header = par(doc, before=spec.get("before", 11), after=5, lead=S.FS_MICRO + 2)
+        paragraph_border(header, "top", S.BRASS, S.SZ_RULE, space=5)
+        txt(header, spec["title"], font=S.SANS_MEDIUM, size=S.FS_MICRO, color=S.BRASS, caps=True)
+    table = doc.add_table(rows=len(rows) + 1, cols=count)
+    table.alignment = WD_TABLE_ALIGNMENT.LEFT
+    table.autofit = False
+    table_borders(table, {"insideH": (S.RULE_SOFT, S.SZ_HAIRLINE),
+                          "bottom": (S.RULE_SOFT, S.SZ_HAIRLINE)})
+    fixed_layout(table, widths)
+    for r, row in enumerate([columns] + rows):
+        for c, value in enumerate(row):
+            cell = table.rows[r].cells[c]
+            cell.width = Mm(widths[c])
+            cell_margins(cell, top=3.2, bottom=3.2, left=0 if c == 0 else 3,
+                         right=0 if c == count - 1 else 3)
+            if r and (r - 1) in highlight:
+                cell_shading(cell, "ECE6DA")
+            paragraph = cell.paragraphs[0]
+            fmt = paragraph.paragraph_format
+            fmt.space_before, fmt.space_after, fmt.line_spacing = Pt(0), Pt(0), Pt(10.5)
+            paragraph.alignment = TABLE_ALIGN[align[c]]
+            if r == 0:
+                txt(paragraph, str(value), font=S.SANS_MEDIUM, size=6.4, color=S.MUTED, caps=True)
+            else:
+                bold = (r - 1) in strong
+                txt(paragraph, _nbsp(str(value)), font=S.SANS_MEDIUM if bold else S.SANS,
+                    size=8.4, color=S.INK)
+    if spec.get("note"):
+        note = par(doc, before=4, after=0, lead=S.LH_SMALL)
+        txt(note, _nbsp(spec["note"]), size=S.FS_CAPTION, color=S.MUTED)
+
+
+def _table_height(spec: dict) -> float:
+    height = (len(spec["rows"]) + 1) * TABLE_ROW_MM
+    if spec.get("title"):
+        height += _mm(spec.get("before", 11) + 5 + S.FS_MICRO + 2 + 5)
+    if spec.get("note"):
+        width = S.CONTENT_W_MM
+        height += _mm(4) + _mm(S.LH_SMALL) * _lines(spec["note"], width * 0.97,
+                                                     "SourceSans3-Regular", S.FS_CAPTION)
+    return height
+
+
+def figure(doc, spec: dict) -> None:
+    """Рисунок разбора — график или схема во всю ширину набора, без обрезки."""
+    path = ROOT / spec["path"]
+    paragraph = par(doc, before=spec.get("before", 10), after=0)
+    # точный интерлиньяж стиля обрезал бы рисунок по высоте строки
+    paragraph.paragraph_format.line_spacing = 1
+    paragraph.add_run().add_picture(str(path), width=Mm(spec.get("width_mm", S.CONTENT_W_MM)))
+    if spec.get("caption"):
+        caption = par(doc, before=3, after=0, lead=S.LH_SMALL, align=WD_ALIGN_PARAGRAPH.CENTER)
+        txt(caption, spec["caption"], size=S.FS_CAPTION, color=S.MUTED)
+
+
+def _figure_height(spec: dict) -> float:
+    from PIL import Image
+
+    with Image.open(ROOT / spec["path"]) as image:
+        ratio = image.height / image.width
+    height = spec.get("width_mm", S.CONTENT_W_MM) * ratio + _mm(spec.get("before", 10))
+    return height + (_mm(3 + S.LH_SMALL) if spec.get("caption") else 0.0)
+
+
 def object_chapter(doc, obj: dict, chapter: dict, cache: Path, assets: Path,
                    images: list[Path]) -> None:
     """Дополнительная полоса объекта: текст в две колонки, кадр и перечень.
@@ -799,6 +883,14 @@ def object_chapter(doc, obj: dict, chapter: dict, cache: Path, assets: Path,
     if chapter.get("pull"):
         pull_quote(doc, chapter["pull"])
         used += _pull_height(chapter["pull"])
+
+    # таблицы и рисунки разбора идут под текстом, до кадров и перечня
+    for spec in chapter.get("tables", []):
+        data_table(doc, spec)
+        used += _table_height(spec)
+    for spec in chapter.get("figures", []):
+        figure(doc, spec)
+        used += _figure_height(spec)
 
     rows = chapter.get("rows") or []
     if rows:
