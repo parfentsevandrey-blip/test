@@ -511,6 +511,8 @@ def donstroy_sections(db, limit=None):
         V = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(V)
         V.lean(pg, "donstroy.moscow")                 # no images / fonts / trackers (AUDIT.md)
+        _cp().check("https://donstroy.moscow/", "headless", cooldown=False)
+        _cp().shield(pg, "headless", log)            # L37: no embed of a protected site from inside the page
         for (obj, q, k, sec), url in todo:
             wait = random.uniform(*GAP) - (time.time() - _last.get("donstroy.moscow", 0))
             if wait > 0:

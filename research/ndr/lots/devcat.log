@@ -57,3 +57,46 @@
 2026-10-16T23:25:29+03:00 lsr pass 1: 624 of 669, walking the pages again
 2026-10-16T23:42:12+03:00 qa donstroy skipped: collector still running on the site
 2026-10-16T23:43:40+03:00 qa fsk skipped: blocked today
+2026-10-17T01:07:56+03:00 lsr site paused until 2026-10-17T12:00:00+03:00 (L32)
+2026-10-17T01:07:56+03:00 fsk site paused until 2026-10-17T22:30:00+03:00 (L32)
+2026-10-17T01:07:58+03:00 list highlife 1511
+2026-10-17T01:08:00+03:00 list dreamriva 61
+2026-10-17T01:08:02+03:00 list mypriority-dubrovka 38 in 17 layouts
+2026-10-17T01:08:40+03:00 list mypriority-nizhegorodskaya 119 in 78 layouts
+2026-10-17T01:09:21+03:00 list mypriority-paveletskaya 203 in 85 layouts
+2026-10-17T01:09:51+03:00 list mypriority-mnevniki 459 in 169 layouts
+2026-10-17T01:09:54+03:00 list forma 182
+2026-10-17T01:09:54+03:00 list donstroy 1177
+2026-10-17T01:09:54+03:00 list https://fsk.ru/sitemap.xml skipped: site paused 2026-10-17T22:30:00+03:00
+2026-10-17T01:10:34+03:00 visitor sorted: Сначала дешевле https://granelle.ru/api/flats/?project=mypriority-dubrovka&order=price&limit=24
+2026-10-17T01:10:41+03:00 visitor click 1 Показать еще 14 из 14 /?limit=24&offset=24&order=price&project=mypriority-dubrovka
+2026-10-17T01:11:13+03:00 list granelle mypriority-dubrovka 38 of 38
+2026-10-17T01:11:52+03:00 visitor sorted: Сначала дешевле /api/flats/?building=123&project=mypriority-nizhegorodskaya&order=price&limit=24
+2026-10-17T01:12:00+03:00 visitor click 1 Показать еще 24 из 95 =24&offset=24&order=price&project=mypriority-nizhegorodskaya
+2026-10-17T01:12:28+03:00 visitor click 2 Показать еще 24 из 71 =24&offset=48&order=price&project=mypriority-nizhegorodskaya
+2026-10-17T01:13:00+03:00 visitor click 3 Показать еще 24 из 47 =24&offset=72&order=price&project=mypriority-nizhegorodskaya
+2026-10-17T01:13:42+03:00 visitor click 4 Показать еще 23 из 23 =24&offset=96&order=price&project=mypriority-nizhegorodskaya
+2026-10-17T01:14:21+03:00 list granelle mypriority-nizhegorodskaya 119 of 119
+2026-10-17T01:15:01+03:00 visitor sorted: Сначала дешевле ps://granelle.ru/api/flats/?project=mypriority-paveletskaya&order=price&limit=24
+2026-10-17T01:15:08+03:00 visitor click 1 Показать еще 24 из 179 mit=24&offset=24&order=price&project=mypriority-paveletskaya
+2026-10-17T01:15:38+03:00 visitor click 2 Показать еще 24 из 155 mit=24&offset=48&order=price&project=mypriority-paveletskaya
+2026-10-17T01:16:21+03:00 visitor click 3 Показать еще 24 из 131 mit=24&offset=72&order=price&project=mypriority-paveletskaya
+2026-10-17T01:17:06+03:00 visitor click 4 Показать еще 24 из 107 mit=24&offset=96&order=price&project=mypriority-paveletskaya
+2026-10-17T01:17:46+03:00 visitor click 5 Показать еще 24 из 83 it=24&offset=120&order=price&project=mypriority-paveletskaya
+2026-10-17T01:32:30+03:00 lsr site paused until 2026-10-17T12:00:00+03:00 (L32)
+2026-10-17T01:32:30+03:00 list https://fsk.ru/sitemap.xml skipped: site paused 2026-10-17T22:30:00+03:00
+2026-10-17T01:32:30+03:00 fsk site paused until 2026-10-17T22:30:00+03:00 (L32)
+2026-10-17T01:33:13+03:00 visitor sorted: Сначала дешевле ps://granelle.ru/api/flats/?project=mypriority-paveletskaya&order=price&limit=24
+2026-10-17T01:33:20+03:00 visitor click 1 Показать еще 24 из 179 mit=24&offset=24&order=price&project=mypriority-paveletskaya
+2026-10-17T01:33:56+03:00 visitor click 2 Показать еще 24 из 155 mit=24&offset=48&order=price&project=mypriority-paveletskaya
+2026-10-17T01:34:41+03:00 visitor click 3 Показать еще 24 из 131 mit=24&offset=72&order=price&project=mypriority-paveletskaya
+2026-10-17T01:35:23+03:00 visitor click 4 Показать еще 24 из 107 mit=24&offset=96&order=price&project=mypriority-paveletskaya
+2026-10-17T01:35:57+03:00 visitor click 5 Показать еще 24 из 83 it=24&offset=120&order=price&project=mypriority-paveletskaya
+2026-10-17T01:36:37+03:00 visitor click 6 Показать еще 24 из 59 it=24&offset=144&order=price&project=mypriority-paveletskaya
+2026-10-17T01:37:16+03:00 visitor click 7 Показать еще 24 из 35 it=24&offset=168&order=price&project=mypriority-paveletskaya
+2026-10-17T01:37:46+03:00 visitor click 8 Показать еще 11 из 11 it=24&offset=192&order=price&project=mypriority-paveletskaya
+2026-10-17T01:54:22+03:00 list https://fsk.ru/sitemap.xml skipped: site paused 2026-10-17T22:30:00+03:00
+2026-10-17T01:54:22+03:00 lsr site paused until 2026-10-17T12:00:00+03:00 (L32)
+2026-10-17T01:54:22+03:00 fsk site paused until 2026-10-17T22:30:00+03:00 (L32)
+2026-10-17T01:55:03+03:00 visitor sorted: Сначала дешевле ps://granelle.ru/api/flats/?project=mypriority-paveletskaya&order=price&limit=24
+2026-10-17T01:55:10+03:00 visitor click 1 Показать еще 24 из 179 mit=24&offset=24&order=price&project=mypriority-paveletskaya
