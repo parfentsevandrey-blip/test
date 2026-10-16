@@ -47,7 +47,7 @@ TITLE = re.compile(r'title = "([^"]*)"')
 KIND = re.compile(r"kind = Kind\.(\w+)")
 YEAR = re.compile(r"year = (\d{4})")
 DATABASE_ID = re.compile(r"databaseId = (\d+)")
-CYRILLIC = re.compile(r"[Ѐ-ӿ]")
+CYRILLIC = re.compile(r"[\u0400-\u04FF]")
 
 
 def load_spec(problems):

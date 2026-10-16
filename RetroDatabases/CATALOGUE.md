@@ -812,4 +812,154 @@ The catalogue of database 54 (1500 to 1510) has the same ten kinds:
 | Projects | 4 | Distances along a meridian from latitude differences, Provisioning a ship's crew for a voyage, Easter dates for 1500, 1505 and 1510 by the Julian reckoning and Splitting a voyage's profit between partners |
 | Flex | 3 | Ash Wednesday dates for 1500, 1505 and 1510, Days from Cabral's landing to the new year 1501 and Perfect numbers in Euclid's ninth book |
 | Cross-code | 2 | Relay stages of the Taxis post in Python and C and Euclid's greatest common measure in Python and C |
+
+The catalogue of database 55 (1490 to 1500) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Nebrija's grammar of Castilian, Tirant lo Blanc, the Catalan romance in print, Malermi's Italian Bible of 1490, The Suda, a Greek encyclopedic lexicon in print, Reuchlin's dialogue on the wonder-working Hebrew word and The Promptorium parvulorum, an English-Latin wordbook |
+| Systems | 5 | The Aldine press in Venice, The Treaty of Tordesillas and its line across the ocean, The Corvinian Library of Buda, The Medici bank, a network of branches and The Imperial Chamber Court of 1495 |
+| Devices | 8 | Behaim's Erdapfel, the oldest surviving globe, The astronomical clock tower of Venice, Fiol's Cyrillic types at Krakow, The Obod press at Cetinje, A bronze maritime astrolabe from off Oman, Griffo's Greek types for the Aldine press, Woodblocks reused for the towns of the Nuremberg Chronicle and The d'Ortas press at Leiria |
+| Tools | 6 | Calandri's Arithmetica of 1491, the illustrated Italian arithmetic, Schedel's Nuremberg Chronicle with its city views, The Ortus sanitatis, the garden of health from Mainz, Zacuto's Almanach perpetuum of 1496, Ketham's Fasciculus medicinae with its woodcut figures and Gaffurio's Practica musicae of 1496 |
+| Practices | 5 | Pacioli's double-entry bookkeeping in the Summa, Columbus's printed letter of the discovery, within months, Cipher letters from Buda filed beside their decoded copies, Humanist script copied for the Corvinian library and The leaden seal of a papal bull |
+| Guides | 5 | How a binary search finds a case in a sorted docket, How English nouns take their plurals by rule, How a zodiac sign follows from a birth date, How the natural hexachord names a melody's notes and How the pole star's height gives a latitude at sea |
+| Examples | 6 | Turning the Tordesillas line from leagues into degrees, A Greek article quiz for learners, Cyrillic letters as numbers in the Slavonic books, Squares a queen covers on an empty board in Lucena's chess of 1497, Five Hebrew letters that take a final form and Writing three Greek words in Latin letters, letter by letter |
+| Projects | 4 | How long a printed letter takes to cross Europe, Hyphenating Castilian words at a line's end, Chapters of the five books of Moses in a Bible of 1490 and Days needed to read a long romance at a steady pace |
+| Flex | 3 | Fifteen woodcuts for the twenty-two chapters of Revelation, Days from Vasco da Gama's sailing to Calicut and Years from the first build date of Venice's clock to its unveiling |
+| Cross-code | 2 | The eight-tone cycle of the Octoechos in Python and C and A globe's grid of meridians and parallels in Python and C |
+
+The catalogue of database 56 (1480 to 1490) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | The Glagolitic Missal of Venice, Landino's Dante with the Florentine engravings, Homer's Iliad and Odyssey printed at Florence in 1488, Chuquet's Triparty on the science of numbers, Soncino's complete printed Hebrew Bible and Ficino's Latin Plato printed at Florence |
+| Systems | 5 | Anton de Centenera's press at Zamora, The Venetian book trade of the 1480s, Caxton's press at Westminster, Sao Jorge da Mina, the Portuguese gold-trade fort of 1482 and The printing presses of Lyon in the 1480s |
+| Devices | 8 | The Portuguese sea astrolabe, The padrao stone at the mouth of the Congo, Leonardo's armoured car in his letter to Sforza, The sounding lead and its knotted line, Vitruvius's polyspaston, the pulley hoist, The printed pointing hand, the manicule, Chinese counting rods laid out in rows and The compositor's composing stick |
+| Tools | 6 | The Ulm Ptolemy with woodcut maps, Vitruvius's first printed edition at Rome, The Alfonsine tables printed at Venice, Ratdolt's printed Euclid of Venice, Alberti's treatise on building, printed at Florence and Widmann's arithmetic with the first printed plus and minus |
+| Practices | 5 | Ownership woodcuts pasted into books, the first bookplate of 1480, Colouring printed woodcuts by hand, Proof sheets checked against the copy, Abbreviation marks over letters in printed Latin and Sewing printed quires onto cords |
+| Guides | 5 | How Ptolemy's degrees become stadia and miles, How quire signatures label the gatherings of a book, How the lattice method multiplies two numbers, How a long hundred of 120 counts goods and How the quarter-square method multiplies two numbers |
+| Examples | 6 | Counting the vowels of Dante's first tercet, Reading a Hebrew line from right to left, A square pile of round shot, Finding the letter that differs between a copy and its proof, A lunar year of twelve months against the solar year and Searching the years of the decade by halves |
+| Projects | 4 | A running balance with plus and minus signs, Press-days needed for an edition of 1200 copies, Volumes on three shelves of a royal library and Sheets to print with spoiled and spare sheets |
+| Flex | 3 | The remainder of three years on division by seven, The orders of four bound quires and Chuquet's powers multiplied by adding exponents |
+| Cross-code | 2 | The binary digits of three years in Python and C and Sacrobosco's Algorismus of 1488 in Python and C |
+
+The catalogue of database 57 (1470 to 1480) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Caxton's Recuyell of the Histories of Troy, Lascaris's Erotemata, the Greek grammar in Greek type, Dante's Commedia printed at Foligno, Valla's Elegantiae, the rules of refined Latin in print, The Valencian Trobes in praise of the Virgin and A Greek Aesop printed at Milan in 1480 |
+| Systems | 5 | The Vatican Library, founded in 1475, Eberhard's university at Tubingen, founded in 1477, The Florentine catasto of 1480, a survey of property, The Spanish Inquisition, set up in 1478 and The Roman jubilee fixed at twenty-five-year intervals in 1470 |
+| Devices | 8 | Jenson's roman type, cut at Venice in 1470, Andreas Hess's press at Buda, the first in Hungary, Riessinger's press at Naples from 1471, Johann Schussler's press at Augsburg in 1471, Erhard Ratdolt's press at Venice from 1476, The Oxford press of Theodoric Rood, 1478, The Mexica calendar stone, carved about 1479 and The Lyon press of Guillaume Le Roy, 1473 |
+| Tools | 6 | Regiomontanus's Ephemerides for 1475 to 1506, The Treviso Arithmetic, the earliest printed commercial arithmetic, Crescenzi's farming book, printed at Augsburg in 1471, Valturio's De re militari, the book of war machines, Regiomontanus's Calendarium, printed at Venice in 1476 and Pliny's Natural History printed by Jenson in 1472 |
+| Practices | 5 | Leaving spaces for hand-painted initials in printed books, Catchwords at the foot of the page, Florentine family record books, the ricordanze, Cicco Simonetta's thirteen rules for breaking secret writing and Errata lists at the end of a printed book |
+| Guides | 5 | How the Mexica 260-day count pairs numbers with day signs, How a windlass drum turns a load into whole turns, How Greek articles agree with their nouns, How a length in braccia converts to ells and How a library accession number gets a check digit |
+| Examples | 6 | Breaking a long word into hyphenated parts, Counting animals in an illustrative list of fables, Checking brackets in a Latin sentence, The median of illustrative print runs, Finding which quire holds a given leaf and Mixing printer's ink by weight |
+| Projects | 4 | How many generations a family record book spans, A matriculation register for a new university, A loan ledger for manuscripts borrowed from a library and A pedigree of printers' apprentices, drawn as a tree |
+| Flex | 3 | Cantos of the Commedia by canticle, summed, Copernicus's age at death in whole years and Days from Sixtus IV's election to Hess's printing |
+| Cross-code | 2 | The look-and-say sequence, in Python and C and Least common multiple of two cycles, in Python and C |
+
+The catalogue of database 58 (1460 to 1470) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Balbus's Catholicon, the Latin word book of Mainz, The Eltville Latin-German word list of 1467, Boner's Edelstein, German fables with woodcut pictures, Mentelin's German Bible of Strasbourg, Gasparinus's Latin letters, the first book printed at Paris and The Czech Troy chronicle printed at Plzen |
+| Systems | 5 | The University of Basel, opened in 1460, The sack of Mainz and the scattering of its printers, Ficino's Platonic circle at Careggi, Bessarion's gift of Greek books to Venice and Pomponio Leto's Roman Academy, broken up in 1468 |
+| Devices | 8 | Alberti's cipher disk, the first polyalphabetic device, Ulrich Zell's press at Cologne, The Subiaco press of Sweynheym and Pannartz, Zainer's printing house at Augsburg, from 1468, Ruppel's press, the first at Basel, The Dardanelles Gun, an Ottoman bronze bombard, Johann of Speyer's press at Venice, from 1468 and Johann Neumeister's press at Foligno, from 1470 |
+| Tools | 6 | Regiomontanus's De triangulis, the book of triangles, Regiomontanus's Epitome of Ptolemy's Almagest, Torquemada's Meditationes, printed at Subiaco, Filarete's treatise and the ideal city of Sforzinda, Platina's book of honest pleasure and health and Pius II's Asia, a geography of 1461 |
+| Practices | 5 | Monte di Pieta, the pawn bank of Perugia, Relay horses at royal stations, Louis XI's post, Painted covers of Siena's Biccherna account books, Venetian printing privilege for Johann of Speyer, 1469 and Lazzaretto Nuovo, Venice's quarantine island, from 1468 |
+| Guides | 5 | How the sine rule finds a side of a plane triangle, How a recipe scales for a larger table, How a rope's 3-4-5 knots mark a right angle, How guests seat themselves round a table without repeats and How a silver mark splits into ounces and grains |
+| Examples | 6 | A round-robin rota for relay horses at a post station, Shared leading letters of two Latin headwords, Heron's area of a 13-14-15 triangle, The day of the year for the Eltville printing, Gauss's pairing sum of the years 1460 to 1470 and Divisors of 1460 by trial division |
+| Projects | 4 | Gaps between the first dated books of early presses, Shelving Bessarion's Greek books by century, A budget split among Basel's four faculties and A gauge table for cylindrical casks |
+| Flex | 3 | Days from the sack of Mainz to the Eltville word list, Years from Balbus's Catholicon of 1286 to its Mainz edition and Count of days from 4 November 1467 to the start of 1470 |
+| Cross-code | 2 | 1467 in base seven, in Python and C and One-bit counts for the decade in Python and C |
+
+The catalogue of database 59 (1450 to 1460) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Donatus's Ars minor printed with movable type, The Worin seokbo, a Buddhist text in the new Korean alphabet, Textura, the blackletter hand that Gutenberg cut in type, Juan de Segovia's Qur'an in Arabic, Castilian and Latin, The Eulhae type of Chinese characters, cast under King Sejo in 1455 and Valla's Latin Thucydides, made for Pope Nicholas V |
+| Systems | 5 | The bull Romanus Pontifex of 1455 for the Portuguese crown, The bull Dum diversas of 1452 to Afonso V, The University of Greifswald, founded in 1456, The papal sanction of 1455 for a university at Freiburg and The Malatestiana library at Cesena, a municipal library of the 1450s |
+| Devices | 8 | Gutenberg's screw press of about 1450, The adjustable hand mould for casting type, Early Hangeul metal type, dated by estimates to 1455 to 1461, The caravel of the African coast, Orban's great bombard for the siege of Constantinople, The chain across the Golden Horn in the siege of 1453, The compartmented type case of the early press and Cusanus's concave lens for short sight in De beryllo |
+| Tools | 6 | The 42-line Bible, printed at Mainz, The Mainz Psalter with its printed colophon of 1457, The Ars moriendi block book, a woodcut book on dying well, The Biblia pauperum, the Poor Man's Bible as a block book, Durandus's Rationale, printed at Mainz by Fust and Schoeffer in 1459 and Peuerbach's Theoricae novae planetarum, a textbook of planetary theory |
+| Practices | 5 | Oil-based printing ink for metal type, Blanks left on printed indulgences for names and dates, Pulling a proof sheet before the print run, Locking the type in a chase with wooden wedges and Setting type backwards so the printed page reads true |
+| Guides | 5 | How a folio sheet is imposed, with which page goes where, How a south-up map is turned north up, How a scribal bar expands a short word, How a screw press multiplies force through its lever and How a printed line is justified by spreading its spaces |
+| Examples | 6 | Lines on the openings of the 42-line Bible, The range of a stone shot from a great gun at 45 degrees, The area of a lateen sail cut as a triangle, Donatus's eight parts of speech as three-bit codes, Bits needed to address each compartment of a type case and Dividing the 150 psalms of the Psalter over a week |
+| Projects | 4 | Paper stock for an edition of 200 copies, Ordering cast type by the letter counts of a sample line, Sheets pulled by one press in a working week and A scribe's pay for copying by the hundred lines |
+| Flex | 3 | Anagrams of the name Gutenberg, counted with repeated letters, Days of the siege of Constantinople, from 6 April to 29 May 1453 and Days from the bull Dum diversas to the founding of Greifswald University |
+| Cross-code | 2 | Vowels in a grammar-school sentence in Python and C and A line of type read backwards in Python and C |
+
+The catalogue of database 60 (1440 to 1450) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | The Hunminjeongeum letters of Korea, The Dongguk Jeongun, a standard for Sino-Korean readings, The Ileborgh organ tablature of 1448, Seokbo sangjeol, the Buddha's life in Hangul, Tortelli's spelling of words taken from Greek and Juan de Mena's Laberinto de Fortuna, in Castilian verse |
+| Systems | 5 | The public library of San Marco in Florence, The Afonsine Ordinances, the law code of Portugal, Nicholas V's copyists for the papal library, Eton College, founded by Henry VI and The Bursfelde reform of Benedictine houses |
+| Devices | 8 | Coster's movable type at Haarlem, The Korean rain gauge, the cheugugi, Mons Meg, the iron bombard of Mons, Cusanus's balance experiments, the De staticis of 1450, Taccola's diving helmet in De ingeneis, The Visconti-Sforza tarot cards of Milan, The cast mirrors of Strasbourg's pilgrim trade and Sejong's standard rulers of 1446, set by the pitch pipe |
+| Tools | 6 | Valla's proof that the Donation of Constantine is a forgery, Cusanus's De docta ignorantia of 1440, The Chiljeongsan calendar of Joseon, The Zhengtong Daozang, the Ming printed Daoist canon, Fra Mauro's world map of about 1450 and Alberti's plan of ancient Rome |
+| Practices | 5 | The Strasbourg partnership and its secret art, Fust's 1450 loan to a printing partnership in Mainz, The Holy Year of 1450 and its pilgrims, Yongbi eocheonga, the Songs of the Flying Dragons in print and The Latin letters of the Florentine chancery |
+| Guides | 5 | How Hangul builds a syllable block from its letters, How the sixty-year cycle names a year, How a balance's arms weigh an unknown load, How a letter names a key in organ tablature and How a lectern hall numbers its places |
+| Examples | 6 | A text dated by its newest word, after Valla's method, Depth of rain from a gauge's volume and mouth, Average pilgrims per day in a Holy Year, Running totals of invented sample counts, for practice, Cards in a tarot deck, counted by suit and Syllables grouped by their final sound |
+| Projects | 4 | A cross-reference index for a five-book code, Scroll numbers of a canon, from ranges to labels, The first sound of each syllable in a Hangul line and Finding the chapter that holds a page, by binary search |
+| Flex | 3 | Years of Nicholas V's pontificate, from election to death, Digit sums of the years 1440, 1499 and 1517 and Years between Taccola's finish and his last revisions |
+| Cross-code | 2 | Aachen's relic pilgrimage dates in Python and C and Stacked cannonballs of a square pyramid in Python and C |
+
+The catalogue of database 61 (1430 to 1440) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Margery Kempe's book, dictated in English, The Chancery standard of English in London offices, The Libelle of Englyshe Polycye, a verse on English trade, Lydgate's Fall of Princes, Boccaccio in English verse, Santillana's Comedieta de Ponza, a Castilian poem on a naval battle and Duarte's Leal Conselheiro, a treatise on loyalty and good counsel |
+| Systems | 5 | The Council of Basel, convened in 1431, The forty-shilling freehold rule for county voters, 1430, The Florentine balia of 1434, which recalled Cosimo de' Medici, The University of Caen, founded in 1432 and The Joseon royal annals, kept for the reign of Sejong |
+| Devices | 8 | Jagyeongnu, the self-striking clock of Korea, The Ilseongjeongsi, an instrument that told time by sun and stars, Angbuilgu, the bowl-shaped sundial of Seoul, The Gapinja metal type of 1434, Alberti's veil, a grid of threads for drawing in perspective, The honcheonui, a water-driven armillary sphere of 1433, The ganui, a simplified armillary first made of wood in 1432 and The honsang, a Joseon celestial globe of 1435 |
+| Tools | 6 | Alberti's De pictura, the book of linear perspective, Ulugh Beg's Zij, the star tables of Samarkand, Cusanus's Concordantia catholica, a plan for church councils, Hyangyak jipseongbang, Korea's compendium of native medicines of 1433, Gabriel de Vallseca's portolan chart of 1439, a sea chart from Majorca and King Duarte's riding manual, the Livro da ensinanca de bem cavalgar toda sela |
+| Practices | 5 | Cyriac of Ancona copies inscriptions into his notebooks, Oil glazes on the Ghent altarpiece, finished in 1432, The notaries' minutes of Joan of Arc's trial at Rouen, 1431, Dufay's Nuper rosarum flores, a motet for the consecration of Florence cathedral and Prince Henry's yearly voyages, with Gil Eanes past Cape Bojador in 1434 |
+| Guides | 5 | How a day is cut into twelve double hours, How thorn and yogh are written in modern letters, How first differences fill a table of values, How a dictated book is paged, fifty lines to a page and How a regnal year becomes a calendar year |
+| Examples | 6 | Lots drawn in a ring of seven, the Josephus count, Counting the county voters who held forty shillings of land, The year 1437 written in three number bases, The shortest road between three towns of Normandy, Loads of pilgrims carried across a river in a small boat and Squares of every size in a four-by-four grid, as on Alberti's veil |
+| Projects | 4 | Counting a two-thirds majority of nations, Expanding the abbreviations of a Roman inscription, Paying a scribe by the line for a dictated book and A rota of four copyists for a twelve-part chronicle |
+| Flex | 3 | The stem and branch names of the years 1430 to 1440, Happy and unhappy years of the 1430s and The prime years of the 1430s |
+| Cross-code | 2 | The double hours of the day in Python and C and The sexagenary names of the 1430s in Python and C |
+
+The catalogue of database 62 (1420 to 1430) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Bruni's rules for turning Greek into Latin, Guarino's Latin grammar of the Regulae, Christine de Pizan's poem on Joan of Arc, The Shahnama made for Prince Baysunghur, Arithmetic taught in Italian in Florence and The Jistebnice hymnal of the Hussites |
+| Systems | 5 | Jiphyeonjeon, the Hall of Worthies of Korea, Ulugh Beg's observatory at Samarkand, begun in 1420, The Florentine catasto of 1427, The Triple Alliance of the Aztec cities and The Ming court moves to Beijing |
+| Devices | 8 | Brunelleschi's hoist for the dome of Florence, Brunelleschi's panel and mirror for perspective, The Olomouc astronomical clock, The astronomical clock of Lund Cathedral, The Hussite wagon fort, Fontana's rocket-driven bird, The equatorium of Johannes de Lineriis and Brunelleschi's barge for marble |
+| Tools | 6 | Al-Kashi's value of 2 pi to sixteen places, Pizzigano's chart of the islands of Antillia, Al-Kashi's Key to Arithmetic, Parameshvara's planetary computations, Taccola's book of machines and Al-Kashi's Ladder of Heaven |
+| Practices | 5 | The Florentine year that began on 25 March, Herringbone brickwork in the dome of Florence, One vanishing point in Masaccio's Trinity, Communion in both kinds, the Hussite article and Ghiberti's bronze doors for the Baptistery |
+| Guides | 5 | How base sixty digits make a fraction, How a dome's ring radius shrinks with height, How Greek letters stand for numbers, How handshakes among envoys are counted and How the indiction number of a year is found |
+| Examples | 6 | Counting the bricks of herringbone courses, How a tile recedes in perspective, Counting the carts on the ring of a wagon fort, Nineteen years against 235 lunar months, A weekly rota of twelve scholars and The divisors of the year 1420 |
+| Projects | 4 | A catasto tally of declared wealth, A ledger of bricks for the rings of the dome, A cart train for a siege supply and Shelving the books of a royal hall |
+| Flex | 3 | Days from the Treaty of Troyes to Henry V's death, Days from the relief of Orleans to the crowning at Reims and Sixty to the ninth power in decimal digits |
+| Cross-code | 2 | Sharing a tribute of 1000 among three partners in Python and C and Finding a household in a sorted catasto list in Python and C |
+
+The catalogue of database 63 (1410 to 1420) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Hus's treatise on Czech spelling and Horapollo's Hieroglyphica, a Greek book on Egyptian signs |
+| Systems | 1 | The Council of Constance, 1414 to 1418 |
+| Devices | 1 | Prague's astronomical clock, the Orloj |
+| Tools | 1 | Qalqashandi's Subh al-a'sha, an encyclopedia of chancery practice |
+| Practices | 1 | Keeping a merchant house's papers at Prato |
+| Guides | 1 | How many votes a two-thirds majority needed at Constance in 1417 |
+| Examples | 1 | Days from Hus's burning to Martin V's election |
+| Projects | 1 | Decoding a message of picture signs by a table |
+| Flex | 1 | How far the sun moves along the zodiac in one day |
+| Cross-code | 1 | Code points of Czech letters with marks, in Python and C |
+
+The catalogue of database 64 (1400 to 1410) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Chrysoloras's Greek grammar of questions and answers, The Hengwrt Chaucer, a Canterbury Tales copy of about 1400, The Red Book of Hergest, a Welsh manuscript of tales and poems, Christine de Pizan's City of Ladies, written in French, The Siyi guan, the Ming college of translation and Tsongkhapa's Great Treatise on the Stages of the Path |
+| Systems | 5 | The Ottoman interregnum after Ankara, 1402 to 1413, The English statute that allowed heretics to be burned, Zheng He's treasure-fleet voyages from 1405, The Decree of Kutna Hora, a new vote count at Prague and The Council of Pisa, which deposed two rival popes |
+| Devices | 8 | Gyemija, the bronze movable type of 1403, The Yongle Great Bell, a bronze bell of the Ming court, A Paris astrolabe of about 1400, credited to Jean Fusoris, The verge escapement of the church clock, about 1400, The kango tallies, split tokens that checked each trading ship, The water-driven stamping hammer of the paper mill, about 1400, The hand-cannon, a portable gun in use by about 1400 and The magnetic compass in the Ming fleets, in use by 1405 |
+| Tools | 6 | The Kangnido, the Korean world map of 1402, The almanac, a yearly table of moons and feasts, The rutter, written sailing directions for the ports, Madhava's table of sines, computed by series in Kerala, The Book of Hours, the lay prayer book of about 1400 and Clavijo's embassy to the court of Timur at Samarkand |
+| Practices | 5 | Dating a year by the reign of the Yongle emperor, Neumes, the signs of plainchant written over the words, Watermarks, the wire designs that marked the sheet, Numbering the leaves of a manuscript, the old foliation and Candle clocks marked with rings for the hours |
+| Guides | 5 | How the thirty Tibetan consonants are numbered in alphabetical order, How the eight canonical hours divide the day, How a Welsh word changes its first letter by soft mutation, How a verge escapement releases the going train in steps and How a list of years is checked for duplicates |
+| Examples | 6 | Every row of three church bells in change ringing, How many quires of eight leaves a manuscript needs, Electors of 1409 grouped by the pope they followed, Course changes that bring a Mediterranean ship round to a heading, Ranking the panels of a 1401 competition by judges' scores and How many turns pass before two wheels mesh the same teeth again |
+| Projects | 4 | Copper and tin on hand for a bronze type run, Counting the years of Zheng He's seven voyages, A ledger that pairs kango tallies by their numbers and Days in each month of 1404, a leap year of the kango trade |
+| Flex | 3 | Days from Chaucer's death to the death of Timur, Days from the battle of Ankara to the battle of Grunwald and The years 1400 to 1410 added up |
+| Cross-code | 2 | The rings of a candle clock in Python and C and Weighted votes of the Kutna Hora decree in Python and C |
 <!-- END GENERATED CATALOGUE -->

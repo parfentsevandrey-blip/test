@@ -34,6 +34,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-18 | 2026-10-15 | 52,274 | 953 | 82 | 118 | 53,427 | +9,291 (databases 27 to 34: 400 records in 88 files, migrations 26→27 to 33→34, tests +185) |
 | CP-19 | 2026-10-15 | 62,696 | 222 | 82 | 118 | 63,118 | +9,691 (databases 35 to 44: 500 records in 110 files, migrations 34→35 to 43→44, tests -731) |
 | CP-20 | 2026-10-15 | 73,269 | 222 | 82 | 118 | 73,691 | +10,573 (databases 45 to 54: 500 records in 110 files, migrations 44→45 to 53→54, tests +0) |
+| CP-21 | 2026-10-16 | 83,047 | 222 | 82 | 118 | 83,469 | +9,778 (databases 55 to 64: 461 records in 110 files, migrations 54→55 to 63→64, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -1016,3 +1017,66 @@ Most other dates and attributions, including Erasmus's Adages and Colloquies, Bo
 
 - Not verified yet: running on a device or emulator, the migrations from version 44 to version 54 on a real device, the UI with fifty-four databases in the list and in the filters, lint, and the release build.
 - The 1500s are the thinnest decades for "coding" so far: printing, ciphers, reckoning and grammars are adjacent. A later pass should first review the items dated approximately or flagged above, and the Gemma Frisius, Apian and Vigenère clusters.
+
+## CP-21: databases 55 to 64, 1400 to 1500 (the fifteenth century, ten decades again)
+
+Status: ten more databases are in the app, one per decade from the 1490s down to the 1400s: 461 records, migrations from version 54 to version 64, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. The 1410s has 11 records by decision, see below. The build passes with no compiler warnings, 17 of 17 unit tests pass, and the 185 runnable records (20 in each of nine databases and 5 in the 1410s) pass against their expected output. The quota is ten decades, as in CP-19 and CP-20, because the request was another century.
+
+Mood: As a programmer I am glad the quota is now a rule the checker enforces, not a number I keep in my head. The generator says yes or no for 3,731 records in one run, and "fifty records, kinds exact, rare between seven and ten" makes "done" easy to check. The content is harder to like. The 1400s and 1460s hold ciphers, calendars, printing and a few instruments, and devices and practices with a dated first public form are scarce. The 1430s devices are seven Joseon items out of eight, because I found no dated non-Korean device of that decade. I was annoyed that the repeats came back. The Prague clock, Valla's Elegantiae, Tirant lo Blanc and the Corvinian Library were each written into two or three databases by helpers that could not see each other's files, and the first full check across the catalogue found what the per-helper checks had missed. The 1410s is the one decade where I agreed with stopping short: eleven verified records are more honest than fifty padded ones.
+
+Date: 2026-10-16. Totals: Kotlin main 83,047 (CP-20: 73,269), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 83,469 (CP-20: 73,691). The +9,778 is the 110 new Kotlin files for databases 55 to 64 and the regenerated catalogue; the database class, the migrations and the tests did not change. The counter reads 73,340 main lines at the CP-20 commit, 71 more than the figure recorded in CP-20, so the change is measured against the recorded figure.
+
+### What changed
+
+- Ten databases, each with the same ten kinds and 50 records, except the 1410s: "Database 55: 1490s coding catalogue" (1490 to 1500), "Database 56: 1480s" (1480 to 1490), "Database 57: 1470s" (1470 to 1480), "Database 58: 1460s" (1460 to 1470), "Database 59: 1450s" (1450 to 1460), "Database 60: 1440s" (1440 to 1450), "Database 61: 1430s" (1430 to 1440), "Database 62: 1420s" (1420 to 1430), "Database 63: 1410s" (1410 to 1420, 11 records, not a quota database) and "Database 64: 1400s" (1400 to 1410). Their rare flags are 10, 8, 9, 8, 9, 10, 8, 9, 3 and 8, so 82 new rare records and 938 in the whole catalogue.
+- Eleven files per database, 110 in total. Colours are #FFCCBC, #F9FBE7, #E8F5E9, #EDE7F6, #E0F2F1, #FFF3E0, #FAFAFA, #E1F5FE, #FFEBEE and #BBDEFB.
+- Spec: tools/databases.json has 64 entries. Database 63 is marked "quota": false, so the generator does not count its records against the quota; its other checks still apply.
+- Documents: CATALOGUE.md and the README overview and structure blocks are regenerated. The README sentence about examples now reads "15 to 62 and 64", with 20 each, and database 63 has five runnable records, all of which pass.
+- Process: one helper per database, ten in parallel, with one brief (database 44 as the template) and a file of suggested topics by decade. The container restart in the middle of the batch lost the completion reports for databases 55 to 62 and 64. Their files were checked directly, and the unfinished databases were finished by resuming their helpers. Later rounds were one cleanup helper for databases 55, 56, 57 and 62, and resumed helpers for 58, 59, 60, 61 and 64.
+
+### Facts checked by web search
+
+Examples from the helper reports (the reports list the rest): the Prague Orloj completed in 1410 by Mikuláš of Kadaň and Jan Šindel, with older accounts saying about 1490; the Council of Constance (1414 to 1418); Martin V elected on 11 November 1417; Hus burned on 6 July 1415; Datini died on 16 August 1410; Qalqashandi's Subh al-a'sha completed in 1412; Siyi guan founded in 1407; the Kangnido dated 1402; Gyemija cast in 1403, with bronze or copper disputed; the Yongle Great Bell dated 1406, though another account says about 1420; Tsongkhapa's Lam rim chen mo completed in 1402; Juan de Mena's Laberinto de Fortuna submitted to the king on 22 February 1444 (one 2024 study); Tortelli's spelling of words from Greek (1447); Aachen's relic pilgrimage every seven years from 1349; Jagyeongnu's clock of 1434, lost, with the surviving copy dated 1536; the Hyangyak jipseongbang of 1433, 85 volumes; the Leal Conselheiro late in Duarte's reign; the Samarkand observatory begun in the 1420s; the Olomouc clock (1420 or 1422); Fontana's Bellicorum instrumentorum liber (Munich, Cod.icon. 242, about 1420); Jiphyeonjeon founded in the third month of 1420 and dissolved in the sixth month of 1456; the siege of Constantinople (6 April to 29 May 1453); Greifswald founded on 17 October 1456; Dum diversas dated 18 June 1452; Romanus Pontifex dated 5 or 8 January 1455, or 1454; indulgence blanks with the first dated copy at Erfurt on 22 October 1454; the Malatestiana opened on 15 August 1454; the Vocabularius ex quo first printed at Eltville on 4 November 1467; Zell's first dated book in 1466; the Monte di Pietà at Perugia (1462) and its papal approval (1467); Johann of Speyer's press at Venice from 1468 (Cicero's letters, 1469); Neumeister's press at Foligno from 1470; the Dardanelles Gun (1464 or 1465); Homer's Iliad and Odyssey printed at Florence in 1488; Sacrobosco's Algorismus printed at Strasbourg in 1488; the first dated bookplate of 1480 (Brandenburg, Buxheim); Lucena's chess of 1497; Simonetta's thirteen rules (1474); Sao Jorge da Mina (1482).
+
+### Not searched, from memory
+
+The helper reports list the rest. The lead should check first: Clavijo's embassy (1403 to 1406), Chrysoloras's Erotemata (printed 1484), the battle dates in the flex pieces of 1400s, Peuerbach (1454, printed 1472), Valla's Thucydides (1452, approximate), the Donatus fragment dates, the Cusanus lens (1458), the first printing of Filarete (1972), Platina's 1470s date, Torquemada's Subiaco woodcuts, the printed dates of De triangulis (1533) and the Epitome (1496), and most other dates in the 1400s and 1460s.
+
+### Problems
+
+- Thin decades. The 1400s and 1460s have few devices and practices with a dated first public form. Where a date is approximate, the details say so. The Lazzaretto Nuovo quarantine island from 1468 is the weakest date. The 1430s devices are seven Joseon items and one other, for the reason given in the mood above.
+- Single-source or weak dates, as the helper reports list them: the Juan de Mena date (one 2024 study); the Aachen seven-year cycle (one source); the Honcheonui of 1433 (one encyclopedia); the wooden ganui of 1432 (one travel page); Lee Soon-ji's credit for Angbuilgu; the Freiburg sanction of 20 April 1455 and the founding of 1457 or 1458 (one university history page); the Malatestiana opening date (one infobox); the Fusoris astrolabe "about 1400" (one catalogue excerpt); Gyemija's 100,000 pieces (one reference); the cipher letters from Buda (one archive page, whose catalogue gives Vienna as the place of writing).
+- Disputes named in the text: the Dardanelles Gun (1464 or 1465); the Biccherna first cover (1258 or 1263); Romanus Pontifex (1454 or 1455); the Olomouc clock (1420 or 1422); Gyemija (bronze or copper); the 52 or 53 electors at Constance; Datini's letters (150,000 or 120,000); the Yongle Great Bell (1406 or about 1420).
+- An example with invented numbers. One EXAMPLE in 60 counts sample figures that are not history. Its title and summary now say so ("Running totals of invented sample counts, for practice"). That is honest, but it is weaker than the rest of the catalogue.
+- Six records named an encyclopedia in their details (two in 58, one in 56, three in 62). The sentences were rewritten to give the dates and the accounts without the citation, and the generator now fails on the word.
+- Repeats found and replaced. The final check over all 64 databases found these, after the per-helper checks had missed some:
+  - The Promptorium parvulorum: kept in 55 (the 1499 print), removed from 60 and 61.
+  - Valla's Elegantiae: kept in 57, removed from 60 (two records) and 61 (two records).
+  - Tirant lo Blanc: kept in 55, replaced in 56.
+  - The Corvinian Library of Buda: kept in 55, replaced in 56.
+  - Lascaris's Erotemata: kept in 57, replaced in 55.
+  - Hand-painted initials: kept in 57, replaced in 56.
+  - The windlass: kept in 57, replaced in 62.
+  - Braccia into ells: kept in 57, replaced in 55.
+  - The chapters of the five books of Moses: kept in 55, replaced in 56.
+  - The papal lead seals: kept in 55, replaced in 57.
+  - The arctangent series for pi: kept in 37, replaced in 64 (Madhava's series).
+  - The Prague clock: kept in 63, replaced in 64 (two records).
+  - Seven records in 59 (the Holy Year of 1450, Fust's suit, Nicholas V's papal library, Cusanus's balance, two records on Fra Mauro's map, and the syllable blocks): kept in 60 instead.
+  - One EXAMPLE in 61 (the vowels) and two records in 59 (a type-case example and a practice of blank spaces) repeated items in 56 and 57, and were replaced.
+  - In all, 29 records were replaced or removed.
+- Clusters kept on purpose, each a set of different items: binary search (55's docket, 57's quire, 60's chapter); days from a bull or a death to an event (several databases, each a different span); running balances (40's daily register and 56's plus-and-minus ledger); the two Florentine catasti (1427 in 62 and 1480 in 57); regnal-year dating (36, 61 and 64, each a different reign or charter); the two-thirds majority (61's nations and 63's Constance vote); the Ulugh Beg material (61's Zij and 62's observatory); the two Greek Erotemata (57's Lascaris and 64's Chrysoloras); the hand-finishing of printed books (56's initials, colouring and manicule, and 57's blank spaces); the two Ottoman bombards (58's Dardanelles Gun and 59's Orban gun); the Speyer press and privilege (both in 58); two Holy Year records in 60 (a practice and an example).
+- Rule departures, for the next batch to check: database 58's six TOOL records give the composition date where the first printed form falls outside the decade, and the details name the printed form. Database 63 has 11 records by the user's decision. Database 60's Bursfelde example uses invented numbers and says so.
+
+### How I checked it
+
+- Unit tests: 17 of 17 pass (AppDatabaseSeedTest 4, SeedDataTest 8, RecordFilterTest 5). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL in 2 minutes 15 seconds, and the log has no compiler warnings.
+- Examples: each new database has its own verifier with exact expected output, and the expected outputs were worked out by hand before each run. 185 of 185 runnable records pass: 20 in each of databases 55 to 62 and 64, and 5 in 63. The 276 reading-only records are not executed.
+- Structure: the generator checks all 64 databases and all 3,731 records: 50 per database except 63 (11, not a quota database), kinds exact (6, 5, 8, 6, 5, 5, 6, 4, 3 and 2), rare flags from 7 to 10 in each quota database, years inside each range (boundary years count at both ends), no provenance phrases in the record text, and no dollar signs or Cyrillic in the new files.
+- Cross-batch: the final check compares all 64 databases; 955 pairs share two or more significant words. I read the pairs that touch the new databases. The same-item pairs were replaced, and the rest are the neighbours listed under Problems.
+- Whole catalogue: 3,731 records. The only titles that repeat are "Erlang" and "Software inspections", as before.
+
+### Notes
+
+- Not verified yet: running on a device or emulator, the migrations from version 54 to version 64 on a real device, the UI with 64 databases in the list and in the filters, lint, and the release build.
+- The 1400s and 1460s are the thinnest decades for "coding" so far: ciphers, printing, calendars and instruments make up most of them. A later pass should first review the approximate dates, the single-source items and the items dated 1450, which the range rule allows in both 59 and 60. This batch keeps each item in one database.
