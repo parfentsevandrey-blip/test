@@ -28,7 +28,7 @@ PILOT = json.loads((HERE / "pilot_zk.json").read_text())
 URLS = json.loads((HERE / "pilot_urls.json").read_text())
 MSK = timezone(timedelta(hours=3))
 GAP = (20, 40)                 # seconds between requests
-CARD_BUDGET = 200              # offer cards per daily run
+CARD_BUDGET = 80               # offer cards per daily run (each wake-up of the session gives only a few minutes)
 CARD_REFRESH_DAYS = 3          # re-read views/price history of a live offer every N days
 MAX_FAILS = 3                  # consecutive failed pages -> stop the run (cooldown until next run)
 
@@ -280,6 +280,9 @@ def run():
                 continue
             html, status = fetch(jk_url)
             summ = zk_card_summary(html) if html else None
+            if not summ:                                    # other page layout (e.g. ФСК): do not retry today
+                db.execute("insert or replace into zk_cards values(?,?,?)", (day, zk_id, json.dumps({"unparsed": True, "status": status})))
+                db.commit()
             if summ:
                 db.execute("insert or replace into zk_cards values(?,?,?)", (day, zk_id, json.dumps(summ, ensure_ascii=False)))
                 db.execute("update zk_meta set builder=? where zk_id=?", (summ["builder"], zk_id))
