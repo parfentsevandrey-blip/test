@@ -105,6 +105,23 @@ def deal(buy_price, area, exit_m2, via_assignment=True):
     return {"sale": round(sale), "net": round(net), "roi_6m": round(net / buy_price, 3), "gross_spread": round(sale / buy_price - 1, 3)}
 
 
+def break_even():
+    """Discount to the market price needed for the target return, for several costs of money (resale and assignment)."""
+    out = {}
+    for cc in (0.0, 0.10, 0.18):
+        for via in (False, True):
+            lo, hi = 0.0, 0.8
+            for _ in range(40):
+                mid = (lo + hi) / 2
+                saved = DEAL["capital_cost_year"]
+                DEAL["capital_cost_year"] = cc
+                r = deal(1e8 * (1 - mid), 100, 1e6, via_assignment=via)
+                DEAL["capital_cost_year"] = saved
+                lo, hi = (mid, hi) if r["roi_6m"] < DEAL["min_roi_6m"] else (lo, mid)
+            out[f"{int(cc * 100)}%|{'переуступка' if via else 'вторичка'}"] = round(100 * hi, 1)
+    return out
+
+
 def build():
     db = sqlite3.connect(DB)
     db.row_factory = sqlite3.Row
@@ -115,7 +132,7 @@ def build():
     obs = {r["offer_id"]: dict(r) for r in db.execute("select * from obs where day=?", (day,))}
     prev_ids = {r[0] for r in db.execute("select offer_id from obs where day=?", (prev,))} if prev else set()
     cards = {}
-    for r in db.execute("select * from cards order by day"):
+    for r in db.execute("select * from cards order by day"):  # latest card per offer
         cards[r["offer_id"]] = dict(r)
     zkc = {r["zk_id"]: json.loads(r["data"]) for r in db.execute("select zk_id, data from zk_cards where day=(select max(day) from zk_cards z where z.zk_id=zk_cards.zk_id)")}
     meta = {r["zk_id"]: dict(r) for r in db.execute("select * from zk_meta")}
@@ -147,6 +164,9 @@ def build():
         dev_cnt_card = sum((v.get("count") or 0) for k, v in (card.get("rooms") or {}).items() if room_key.get(k) == t) if card else None
         dev_window = card.get("from_dev") if card else None
         dev_m2, res_m2 = med(r["price_m2"] for r in dev), med(r["price_m2"] for r in res)
+        building = [r for r in res if r["category"] != "flatSale"]   # assignments / resale while the house is being built
+        ready = [r for r in res if r["category"] == "flatSale"]      # resale in completed houses
+        bld_m2, rdy_m2 = med(r["price_m2"] for r in building), med(r["price_m2"] for r in ready)
         res_vpd = med(r["vpd"] for r in res)
         ages = [(date.fromisoformat(day) - date.fromisoformat(r["created"][:10])).days for r in res if r.get("created")]
         cuts = [r for r in res if r["card"] and len(json.loads(r["card"]["price_changes"] or "[]")) > 1
@@ -162,7 +182,10 @@ def build():
             "dev_listed": len(dev), "dev_price_m2": round(dev_m2) if dev_m2 else None,
             "resale_listed": len(res), "assignments": sum(1 for r in res if r["seller"] == "assignment"),
             "resale_price_m2": round(res_m2) if res_m2 else None,
-            "premium_pct": round(100 * (res_m2 / dev_m2 - 1), 1) if dev_m2 and res_m2 else None,
+            "resale_building": len(building), "resale_building_m2": round(bld_m2) if bld_m2 else None,
+            "resale_ready": len(ready), "resale_ready_m2": round(rdy_m2) if rdy_m2 else None,
+            "premium_pct": round(100 * (bld_m2 / dev_m2 - 1), 1) if dev_m2 and bld_m2 and len(building) >= 3 else None,
+            "ready_uplift_pct": round(100 * (rdy_m2 / dev_m2 - 1), 1) if dev_m2 and rdy_m2 and len(ready) >= 3 else None,
             "resale_views_day": round(res_vpd, 1) if res_vpd else None,
             "interest_x": round(res_vpd / zk_vpd[zk], 2) if res_vpd and zk_vpd.get(zk) else None,
             "resale_median_age_days": med(ages), "stale_share": round(sum(1 for a in ages if a > 90) / len(ages), 2) if ages else None,
@@ -170,10 +193,12 @@ def build():
             "project_pace_month": (pace.get(zk) or {}).get("pace_q3"), "project_remaining": (pace.get(zk) or {}).get("remaining"),
         }
         flags = []
-        if s["dev_offers_site"] is not None and s["dev_offers_site"] <= 3:
+        if t != "своб." and s["dev_listed"] <= 3 and (s["dev_offers_site"] is None or s["dev_offers_site"] <= 3) and s["resale_listed"] >= 3:
             flags.append("дефицит у застройщика")
         if s["premium_pct"] is not None and s["premium_pct"] >= 5:
-            flags.append("вторичка дороже застройщика")
+            flags.append("переуступки дороже застройщика")
+        if s["ready_uplift_pct"] is not None and s["ready_uplift_pct"] >= 10 and s["dev_listed"]:
+            flags.append("готовое дороже строящегося")
         if s["interest_x"] is not None and s["interest_x"] >= 1.3:
             flags.append("высокий интерес")
         if s["stale_share"] is not None and s["stale_share"] >= 0.5:
@@ -182,26 +207,80 @@ def build():
             flags.append("продавцы снижают цену")
         if s["churn_1d"] is not None and s["churn_1d"] >= 0.05:
             flags.append("быстрое выбытие")
-        score = (2 * ("дефицит у застройщика" in flags) + 2 * ("вторичка дороже застройщика" in flags) + ("высокий интерес" in flags)
+        score = (2 * ("дефицит у застройщика" in flags) + 2 * ("переуступки дороже застройщика" in flags) + ("высокий интерес" in flags)
+                 + ("готовое дороже строящегося" in flags)
                  + ("быстрое выбытие" in flags) - ("вторичка залёживается" in flags) - ("продавцы снижают цену" in flags))
         s["flags"] = "; ".join(flags)
         s["score"] = score
         signals.append(s)
 
-        exit_m2 = res_m2 if res_m2 and len(res) >= 3 else None
+        def comps_m2(r):
+            """Exit price per m²: non-developer offers of the same type and readiness - same house first, then houses
+            completed within a year of it, then the whole ЖК; similar area (±20%) inside each level when there are >= 5."""
+            ready_r = (r["category"] == "flatSale")
+            same = [c for c in res if c is not r and c["price_m2"] and (c["category"] == "flatSale") == ready_r]
+            cond_r = offers[r["offer_id"]].get("cond")
+            if cond_r:                                  # same finishing when it is known for enough comps
+                same_c = [c for c in same if offers[c["offer_id"]].get("cond") == cond_r]
+                if len(same_c) >= 5:
+                    same = same_c
+            year = lambda x: int(x["finish"][:4]) if x.get("finish") and x["finish"][:4].isdigit() else None
+            levels = [("корпус", [c for c in same if r["house_id"] and c["house_id"] == r["house_id"]]),
+                      ("год сдачи", [c for c in same if year(r) and year(c) and abs(year(c) - year(r)) <= 1]),
+                      ("ЖК", same)]
+            for lvl, pool in levels:
+                near = [c for c in pool if c["area"] and abs(c["area"] / r["area"] - 1) <= 0.2]
+                for cand in (near, pool):
+                    if len(cand) >= 5:
+                        return med(c["price_m2"] for c in cand), len(cand), lvl
+            return (med(c["price_m2"] for c in same), len(same), "ЖК") if len(same) >= 3 else (None, len(same), None)
+
+        def risky(r):
+            """Reasons a listing may be cheap for a reason: auction, a share or a room, a note in the description."""
+            why = []
+            f = json.loads(offers[r["offer_id"]].get("flags") or "{}") if offers[r["offer_id"]].get("flags") else {}
+            ex = json.loads(r["card"]["extra"]) if r.get("card") and r["card"].get("extra") else {}
+            if f.get("isAuction") or ex.get("isAuction"):
+                why.append("торги")
+            if f.get("shareAmount") or ex.get("shareAmount"):
+                why.append("доля")
+            if f.get("roomsForSaleCount") or ex.get("roomsForSaleCount"):
+                why.append("комната")
+            d = (ex.get("description") or "").lower()
+            for w, label in (("торг", None), ("доля", "доля"), ("аукцион", "торги"), ("обремен", "обременение"), ("арест", "арест"),
+                             ("банкрот", "банкротство"), ("без отделки", None), ("апартамент", "апартаменты")):
+                if label and w in d and f"без {w}" not in d and f"нет {w}" not in d and f"никаких {w}" not in d and label not in why:
+                    why.append(label)
+            return why
+
         for r in recs:
-            if not exit_m2 or not r["price"] or not r["area"]:
+            if not r["price"] or not r["area"]:
+                continue
+            exit_m2, n_comps, comp_level = comps_m2(r)
+            if not exit_m2:
                 continue
             if r["seller"] == "developer" or (r["price_m2"] and r["price_m2"] < 0.92 * exit_m2):
                 calc = deal(r["price"], r["area"], exit_m2, via_assignment=(r["seller"] != "resale"))
                 if calc and calc["roi_6m"] >= DEAL["min_roi_6m"]:
-                    candidates.append({"offer_id": r["offer_id"], "url": f"https://www.cian.ru/sale/flat/{r['offer_id']}/", "zk": s["zk"],
+                    why = risky(r)
+                    check = why + (["подозрительно дёшево: разрыв > 25%"] if calc["gross_spread"] > 0.25 else [])
+                    candidates.append({"offer_id": r["offer_id"], "url": f"https://www.cian.ru/sale/flat/{r['offer_id']}/", "zk": s["zk"], "comps": n_comps, "comp_level": comp_level,
+                                       "status": "проверить вручную" if check else "кандидат", "check": "; ".join(check),
                                        "developer": s["developer"], "type": t, "seller": r["seller"], "house": r["house_name"],
                                        "finish": r["finish"], "floor": r["floor"], "floors": r["floors"], "area": r["area"],
                                        "decoration": r["decoration"], "price": r["price"], "price_m2": r["price_m2"],
                                        "exit_m2": round(exit_m2), "type_score": score, "type_flags": s["flags"], **calc})
+    # one flat is often listed by several agents: keep the cheapest listing of (ЖК, house, floor, area, rooms)
+    best = {}
+    for c in candidates:
+        k = (c["zk"], c["house"], c["floor"], round(c["area"] or 0), c["type"])
+        if k not in best or c["price"] < best[k]["price"]:
+            best[k] = dict(c, duplicates=(best[k]["duplicates"] + 1) if k in best else 0)
+        else:
+            best[k]["duplicates"] += 1
+    candidates = list(best.values())
     signals.sort(key=lambda s: (-s["score"], -(s["premium_pct"] or -99)))
-    candidates.sort(key=lambda c: (-c["type_score"], -c["roi_6m"]))
+    candidates.sort(key=lambda c: (c["status"] != "кандидат", -c["type_score"], -c["roi_6m"]))
     for name, rows in (("signals.csv", signals), ("candidates.csv", candidates)):
         if rows:
             with open(HERE / name, "w", newline="") as f:
@@ -209,6 +288,7 @@ def build():
                 w.writeheader()
                 w.writerows(rows)
     out = {"day": day, "prev_day": prev, "deal_params": DEAL, "signals": signals, "candidates": candidates,
+           "break_even": break_even(),
            "zk_cards": zkc, "coverage": {zk: {"listed_today": sum(1 for o in obs.values() if offers[o["offer_id"]]["zk_id"] == zk),
                                                "site_total": (zkc.get(zk) or {}).get("props")} for zk in zk_name}}
     (HERE / "model.json").write_text(json.dumps(out, ensure_ascii=False, indent=1, default=str))
@@ -220,5 +300,5 @@ if __name__ == "__main__":
     print("day", out["day"], "prev", out["prev_day"], "signals", len(out["signals"]), "candidates", len(out["candidates"]))
     for s in out["signals"][:25]:
         print(f"{s['zk'][:20]:<20} {s['type']:<6} score {s['score']:>2} dev {s['dev_offers_site']} {s['dev_price_m2']} | res {s['resale_listed']} "
-              f"(уст {s['assignments']}) {s['resale_price_m2']} prem {s['premium_pct']}% vpd {s['resale_views_day']} x{s['interest_x']} "
+              f"(уст {s['assignments']}) {s['resale_price_m2']} prem {s['premium_pct']}% ready+ {s['ready_uplift_pct']}% vpd {s['resale_views_day']} x{s['interest_x']} "
               f"age {s['resale_median_age_days']} stale {s['stale_share']} | {s['flags']}")

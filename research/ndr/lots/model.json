@@ -16,20 +16,431 @@
    "zk_id": "2812286",
    "zk": "Остров",
    "developer": "Донстрой",
+   "type": "3к",
+   "dev_offers_site": 133,
+   "dev_window_share": 0.2,
+   "dev_listed": 133,
+   "dev_price_m2": 718000,
+   "resale_listed": 170,
+   "assignments": 10,
+   "resale_price_m2": 698413,
+   "resale_building": 10,
+   "resale_building_m2": 774076,
+   "resale_ready": 160,
+   "resale_ready_m2": 690530,
+   "premium_pct": 7.8,
+   "ready_uplift_pct": -3.8,
+   "resale_views_day": 8.7,
+   "interest_x": 1.48,
+   "resale_median_age_days": 65.5,
+   "stale_share": 0.4,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 83.7,
+   "project_remaining": 1608,
+   "flags": "переуступки дороже застройщика; высокий интерес",
+   "score": 3
+  },
+  {
+   "zk_id": "4494942",
+   "zk": "Павелецкая от Гранель",
+   "developer": "ГК Гранель",
    "type": "2к",
-   "dev_offers_site": null,
-   "dev_window_share": null,
-   "dev_listed": 11,
-   "dev_price_m2": 716000,
-   "resale_listed": 19,
-   "assignments": 0,
-   "resale_price_m2": 750000,
-   "premium_pct": 4.7,
+   "dev_offers_site": 37,
+   "dev_window_share": 0.18,
+   "dev_listed": 36,
+   "dev_price_m2": 582531,
+   "resale_listed": 5,
+   "assignments": 5,
+   "resale_price_m2": 636590,
+   "resale_building": 5,
+   "resale_building_m2": 636590,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": 9.3,
+   "ready_uplift_pct": null,
+   "resale_views_day": 21.7,
+   "interest_x": 1.0,
+   "resale_median_age_days": 9,
+   "stale_share": 0.2,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 18.0,
+   "project_remaining": 664,
+   "flags": "переуступки дороже застройщика",
+   "score": 2
+  },
+  {
+   "zk_id": "3401924",
+   "zk": "Дубровка от Гранель",
+   "developer": "ГК Гранель",
+   "type": "2к",
+   "dev_offers_site": 1,
+   "dev_window_share": 0.03,
+   "dev_listed": 1,
+   "dev_price_m2": 536805,
+   "resale_listed": 10,
+   "assignments": 1,
+   "resale_price_m2": 523048,
+   "resale_building": 1,
+   "resale_building_m2": 453120,
+   "resale_ready": 9,
+   "resale_ready_m2": 523873,
+   "premium_pct": null,
+   "ready_uplift_pct": -2.4,
    "resale_views_day": null,
    "interest_x": null,
-   "resale_median_age_days": 55,
-   "stale_share": 0.21,
+   "resale_median_age_days": 20.0,
+   "stale_share": 0.2,
    "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 39.3,
+   "project_remaining": 258,
+   "flags": "дефицит у застройщика",
+   "score": 2
+  },
+  {
+   "zk_id": "7231",
+   "zk": "Символ",
+   "developer": "Донстрой",
+   "type": "2к",
+   "dev_offers_site": 141,
+   "dev_window_share": 0.27,
+   "dev_listed": 141,
+   "dev_price_m2": 549000,
+   "resale_listed": 62,
+   "assignments": 2,
+   "resale_price_m2": 594490,
+   "resale_building": 2,
+   "resale_building_m2": 457693,
+   "resale_ready": 60,
+   "resale_ready_m2": 604256,
+   "premium_pct": null,
+   "ready_uplift_pct": 10.1,
+   "resale_views_day": 17.1,
+   "interest_x": 1.41,
+   "resale_median_age_days": 34.0,
+   "stale_share": 0.24,
+   "price_cut_share": 0.02,
+   "churn_1d": null,
+   "project_pace_month": 37.3,
+   "project_remaining": 762,
+   "flags": "готовое дороже строящегося; высокий интерес",
+   "score": 2
+  },
+  {
+   "zk_id": "3202206",
+   "zk": "High Life",
+   "developer": "Pioneer",
+   "type": "3к",
+   "dev_offers_site": 57,
+   "dev_window_share": 0.29,
+   "dev_listed": 57,
+   "dev_price_m2": 950000,
+   "resale_listed": 43,
+   "assignments": 5,
+   "resale_price_m2": 846154,
+   "resale_building": 5,
+   "resale_building_m2": 935829,
+   "resale_ready": 38,
+   "resale_ready_m2": 808942,
+   "premium_pct": -1.5,
+   "ready_uplift_pct": -14.8,
+   "resale_views_day": 16.6,
+   "interest_x": 2.46,
+   "resale_median_age_days": 63,
+   "stale_share": 0.37,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 10.3,
+   "project_remaining": 361,
+   "flags": "высокий интерес",
+   "score": 1
+  },
+  {
+   "zk_id": "2446053",
+   "zk": "Sydney City",
+   "developer": "ГК ФСК",
+   "type": "3к",
+   "dev_offers_site": null,
+   "dev_window_share": null,
+   "dev_listed": 56,
+   "dev_price_m2": 629700,
+   "resale_listed": 26,
+   "assignments": 7,
+   "resale_price_m2": 607890,
+   "resale_building": 7,
+   "resale_building_m2": 590909,
+   "resale_ready": 19,
+   "resale_ready_m2": 650290,
+   "premium_pct": -6.2,
+   "ready_uplift_pct": 3.3,
+   "resale_views_day": 3.9,
+   "interest_x": 1.41,
+   "resale_median_age_days": 53.0,
+   "stale_share": 0.38,
+   "price_cut_share": 0.04,
+   "churn_1d": null,
+   "project_pace_month": 20.3,
+   "project_remaining": 459,
+   "flags": "высокий интерес",
+   "score": 1
+  },
+  {
+   "zk_id": "2446053",
+   "zk": "Sydney City",
+   "developer": "ГК ФСК",
+   "type": "1к",
+   "dev_offers_site": null,
+   "dev_window_share": null,
+   "dev_listed": 27,
+   "dev_price_m2": 773477,
+   "resale_listed": 33,
+   "assignments": 11,
+   "resale_price_m2": 723684,
+   "resale_building": 11,
+   "resale_building_m2": 670391,
+   "resale_ready": 22,
+   "resale_ready_m2": 741896,
+   "premium_pct": -13.3,
+   "ready_uplift_pct": -4.1,
+   "resale_views_day": 40.2,
+   "interest_x": 14.43,
+   "resale_median_age_days": 42,
+   "stale_share": 0.36,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 20.3,
+   "project_remaining": 459,
+   "flags": "высокий интерес",
+   "score": 1
+  },
+  {
+   "zk_id": "7889",
+   "zk": "ЗИЛАРТ",
+   "developer": "Группа ЛСР",
+   "type": "2к",
+   "dev_offers_site": 230,
+   "dev_window_share": 0.34,
+   "dev_listed": 230,
+   "dev_price_m2": 585400,
+   "resale_listed": 65,
+   "assignments": 10,
+   "resale_price_m2": 677831,
+   "resale_building": 10,
+   "resale_building_m2": 479946,
+   "resale_ready": 55,
+   "resale_ready_m2": 688226,
+   "premium_pct": -18.0,
+   "ready_uplift_pct": 17.6,
+   "resale_views_day": 6.3,
+   "interest_x": 0.87,
+   "resale_median_age_days": 46,
+   "stale_share": 0.23,
+   "price_cut_share": 0.02,
+   "churn_1d": null,
+   "project_pace_month": 87.3,
+   "project_remaining": 934,
+   "flags": "готовое дороже строящегося",
+   "score": 1
+  },
+  {
+   "zk_id": "3202206",
+   "zk": "High Life",
+   "developer": "Pioneer",
+   "type": "4к+",
+   "dev_offers_site": 61,
+   "dev_window_share": 0.31,
+   "dev_listed": 61,
+   "dev_price_m2": 854190,
+   "resale_listed": 14,
+   "assignments": 0,
+   "resale_price_m2": 824533,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 14,
+   "resale_ready_m2": 824533,
+   "premium_pct": null,
+   "ready_uplift_pct": -3.5,
+   "resale_views_day": 12.2,
+   "interest_x": 1.81,
+   "resale_median_age_days": 45.0,
+   "stale_share": 0.36,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 10.3,
+   "project_remaining": 361,
+   "flags": "высокий интерес",
+   "score": 1
+  },
+  {
+   "zk_id": "3401924",
+   "zk": "Дубровка от Гранель",
+   "developer": "ГК Гранель",
+   "type": "1к",
+   "dev_offers_site": 24,
+   "dev_window_share": 0.73,
+   "dev_listed": 24,
+   "dev_price_m2": 488648,
+   "resale_listed": 8,
+   "assignments": 2,
+   "resale_price_m2": 625978,
+   "resale_building": 2,
+   "resale_building_m2": 419876,
+   "resale_ready": 6,
+   "resale_ready_m2": 735714,
+   "premium_pct": null,
+   "ready_uplift_pct": 50.6,
+   "resale_views_day": 7.5,
+   "interest_x": 1.16,
+   "resale_median_age_days": 26.5,
+   "stale_share": 0.25,
+   "price_cut_share": 0.12,
+   "churn_1d": null,
+   "project_pace_month": 39.3,
+   "project_remaining": 258,
+   "flags": "готовое дороже строящегося",
+   "score": 1
+  },
+  {
+   "zk_id": "3401924",
+   "zk": "Дубровка от Гранель",
+   "developer": "ГК Гранель",
+   "type": "3к",
+   "dev_offers_site": 1,
+   "dev_window_share": 0.03,
+   "dev_listed": 1,
+   "dev_price_m2": 489874,
+   "resale_listed": 10,
+   "assignments": 0,
+   "resale_price_m2": 438136,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 10,
+   "resale_ready_m2": 438136,
+   "premium_pct": null,
+   "ready_uplift_pct": -10.6,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 93.0,
+   "stale_share": 0.5,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 39.3,
+   "project_remaining": 258,
+   "flags": "дефицит у застройщика; вторичка залёживается",
+   "score": 1
+  },
+  {
+   "zk_id": "3401924",
+   "zk": "Дубровка от Гранель",
+   "developer": "ГК Гранель",
+   "type": "студия",
+   "dev_offers_site": 3,
+   "dev_window_share": 0.09,
+   "dev_listed": 3,
+   "dev_price_m2": 603899,
+   "resale_listed": 4,
+   "assignments": 0,
+   "resale_price_m2": 663438,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 4,
+   "resale_ready_m2": 663438,
+   "premium_pct": null,
+   "ready_uplift_pct": 9.9,
+   "resale_views_day": 5.1,
+   "interest_x": 0.78,
+   "resale_median_age_days": 141.5,
+   "stale_share": 0.5,
+   "price_cut_share": 0.25,
+   "churn_1d": null,
+   "project_pace_month": 39.3,
+   "project_remaining": 258,
+   "flags": "дефицит у застройщика; вторичка залёживается",
+   "score": 1
+  },
+  {
+   "zk_id": "7889",
+   "zk": "ЗИЛАРТ",
+   "developer": "Группа ЛСР",
+   "type": "3к",
+   "dev_offers_site": 11,
+   "dev_window_share": 0.02,
+   "dev_listed": 11,
+   "dev_price_m2": 631775,
+   "resale_listed": 52,
+   "assignments": 1,
+   "resale_price_m2": 635689,
+   "resale_building": 1,
+   "resale_building_m2": 451724,
+   "resale_ready": 51,
+   "resale_ready_m2": 638154,
+   "premium_pct": null,
+   "ready_uplift_pct": 1.0,
+   "resale_views_day": 19.0,
+   "interest_x": 2.61,
+   "resale_median_age_days": 51.0,
+   "stale_share": 0.35,
+   "price_cut_share": 0.02,
+   "churn_1d": null,
+   "project_pace_month": 87.3,
+   "project_remaining": 934,
+   "flags": "высокий интерес",
+   "score": 1
+  },
+  {
+   "zk_id": "4494942",
+   "zk": "Павелецкая от Гранель",
+   "developer": "ГК Гранель",
+   "type": "3к",
+   "dev_offers_site": 31,
+   "dev_window_share": 0.15,
+   "dev_listed": 31,
+   "dev_price_m2": 612211,
+   "resale_listed": 10,
+   "assignments": 10,
+   "resale_price_m2": 619506,
+   "resale_building": 10,
+   "resale_building_m2": 619506,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": 1.2,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 50.5,
+   "stale_share": 0.2,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 18.0,
+   "project_remaining": 664,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "2812286",
+   "zk": "Остров",
+   "developer": "Донстрой",
+   "type": "2к",
+   "dev_offers_site": 168,
+   "dev_window_share": 0.25,
+   "dev_listed": 169,
+   "dev_price_m2": 737000,
+   "resale_listed": 132,
+   "assignments": 14,
+   "resale_price_m2": 696992,
+   "resale_building": 14,
+   "resale_building_m2": 745405,
+   "resale_ready": 118,
+   "resale_ready_m2": 687112,
+   "premium_pct": 1.1,
+   "ready_uplift_pct": -6.8,
+   "resale_views_day": 5.9,
+   "interest_x": 1.0,
+   "resale_median_age_days": 58.5,
+   "stale_share": 0.31,
+   "price_cut_share": 0.01,
    "churn_1d": null,
    "project_pace_month": 83.7,
    "project_remaining": 1608,
@@ -41,18 +452,23 @@
    "zk": "Остров",
    "developer": "Донстрой",
    "type": "4к+",
-   "dev_offers_site": null,
-   "dev_window_share": null,
-   "dev_listed": 34,
-   "dev_price_m2": 764420,
-   "resale_listed": 38,
-   "assignments": 4,
-   "resale_price_m2": 790930,
-   "premium_pct": 3.5,
-   "resale_views_day": null,
-   "interest_x": null,
-   "resale_median_age_days": 64.0,
-   "stale_share": 0.37,
+   "dev_offers_site": 170,
+   "dev_window_share": 0.25,
+   "dev_listed": 182,
+   "dev_price_m2": 766000,
+   "resale_listed": 117,
+   "assignments": 11,
+   "resale_price_m2": 750000,
+   "resale_building": 11,
+   "resale_building_m2": 768574,
+   "resale_ready": 106,
+   "resale_ready_m2": 744857,
+   "premium_pct": 0.3,
+   "ready_uplift_pct": -2.8,
+   "resale_views_day": 5.2,
+   "interest_x": 0.89,
+   "resale_median_age_days": 61,
+   "stale_share": 0.36,
    "price_cut_share": 0.0,
    "churn_1d": null,
    "project_pace_month": 83.7,
@@ -61,22 +477,404 @@
    "score": 0
   },
   {
+   "zk_id": "2446053",
+   "zk": "Sydney City",
+   "developer": "ГК ФСК",
+   "type": "4к+",
+   "dev_offers_site": null,
+   "dev_window_share": null,
+   "dev_listed": 47,
+   "dev_price_m2": 636480,
+   "resale_listed": 11,
+   "assignments": 5,
+   "resale_price_m2": 615655,
+   "resale_building": 5,
+   "resale_building_m2": 615655,
+   "resale_ready": 6,
+   "resale_ready_m2": 593764,
+   "premium_pct": -3.3,
+   "ready_uplift_pct": -6.7,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 27,
+   "stale_share": 0.18,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 20.3,
+   "project_remaining": 459,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "3202206",
+   "zk": "High Life",
+   "developer": "Pioneer",
+   "type": "2к",
+   "dev_offers_site": 46,
+   "dev_window_share": 0.23,
+   "dev_listed": 46,
+   "dev_price_m2": 1046160,
+   "resale_listed": 26,
+   "assignments": 3,
+   "resale_price_m2": 1002431,
+   "resale_building": 3,
+   "resale_building_m2": 1000000,
+   "resale_ready": 23,
+   "resale_ready_m2": 1004862,
+   "premium_pct": -4.4,
+   "ready_uplift_pct": -3.9,
+   "resale_views_day": 4.0,
+   "interest_x": 0.59,
+   "resale_median_age_days": 37.0,
+   "stale_share": 0.42,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 10.3,
+   "project_remaining": 361,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "4494942",
+   "zk": "Павелецкая от Гранель",
+   "developer": "ГК Гранель",
+   "type": "1к",
+   "dev_offers_site": 113,
+   "dev_window_share": 0.56,
+   "dev_listed": 113,
+   "dev_price_m2": 701143,
+   "resale_listed": 4,
+   "assignments": 4,
+   "resale_price_m2": 650851,
+   "resale_building": 4,
+   "resale_building_m2": 650851,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": -7.2,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 26.0,
+   "stale_share": 0.0,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 18.0,
+   "project_remaining": 664,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "4183417",
+   "zk": "Soul",
+   "developer": "FORMA",
+   "type": "3к",
+   "dev_offers_site": 87,
+   "dev_window_share": 0.28,
+   "dev_listed": 87,
+   "dev_price_m2": 637000,
+   "resale_listed": 9,
+   "assignments": 8,
+   "resale_price_m2": 569685,
+   "resale_building": 8,
+   "resale_building_m2": 561189,
+   "resale_ready": 1,
+   "resale_ready_m2": 569685,
+   "premium_pct": -11.9,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 78,
+   "stale_share": 0.22,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 38.7,
+   "project_remaining": 448,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "4183417",
+   "zk": "Soul",
+   "developer": "FORMA",
+   "type": "2к",
+   "dev_offers_site": 74,
+   "dev_window_share": 0.24,
+   "dev_listed": 74,
+   "dev_price_m2": 650500,
+   "resale_listed": 10,
+   "assignments": 6,
+   "resale_price_m2": 572372,
+   "resale_building": 6,
+   "resale_building_m2": 561726,
+   "resale_ready": 4,
+   "resale_ready_m2": 595080,
+   "premium_pct": -13.6,
+   "ready_uplift_pct": -8.5,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 57.5,
+   "stale_share": 0.4,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 38.7,
+   "project_remaining": 448,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "5340468",
+   "zk": "Дрим Рива",
+   "developer": "Regions Development",
+   "type": "2к",
+   "dev_offers_site": 26,
+   "dev_window_share": 0.22,
+   "dev_listed": 26,
+   "dev_price_m2": 806292,
+   "resale_listed": 7,
+   "assignments": 7,
+   "resale_price_m2": 677570,
+   "resale_building": 7,
+   "resale_building_m2": 677570,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": -16.0,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 11,
+   "stale_share": 0.0,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 22.7,
+   "project_remaining": 160,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "2446053",
+   "zk": "Sydney City",
+   "developer": "ГК ФСК",
+   "type": "2к",
+   "dev_offers_site": null,
+   "dev_window_share": null,
+   "dev_listed": 68,
+   "dev_price_m2": 682075,
+   "resale_listed": 64,
+   "assignments": 31,
+   "resale_price_m2": 597657,
+   "resale_building": 31,
+   "resale_building_m2": 567024,
+   "resale_ready": 33,
+   "resale_ready_m2": 645000,
+   "premium_pct": -16.9,
+   "ready_uplift_pct": -5.4,
+   "resale_views_day": 2.2,
+   "interest_x": 0.8,
+   "resale_median_age_days": 59.0,
+   "stale_share": 0.45,
+   "price_cut_share": 0.09,
+   "churn_1d": null,
+   "project_pace_month": 20.3,
+   "project_remaining": 459,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "4183417",
+   "zk": "Soul",
+   "developer": "FORMA",
+   "type": "1к",
+   "dev_offers_site": 121,
+   "dev_window_share": 0.39,
+   "dev_listed": 120,
+   "dev_price_m2": 711000,
+   "resale_listed": 20,
+   "assignments": 17,
+   "resale_price_m2": 591268,
+   "resale_building": 17,
+   "resale_building_m2": 587413,
+   "resale_ready": 3,
+   "resale_ready_m2": 666667,
+   "premium_pct": -17.4,
+   "ready_uplift_pct": -6.2,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 51.5,
+   "stale_share": 0.35,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 38.7,
+   "project_remaining": 448,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "7889",
+   "zk": "ЗИЛАРТ",
+   "developer": "Группа ЛСР",
+   "type": "студия",
+   "dev_offers_site": 121,
+   "dev_window_share": 0.18,
+   "dev_listed": 120,
+   "dev_price_m2": 899876,
+   "resale_listed": 27,
+   "assignments": 11,
+   "resale_price_m2": 745614,
+   "resale_building": 11,
+   "resale_building_m2": 740099,
+   "resale_ready": 16,
+   "resale_ready_m2": 754456,
+   "premium_pct": -17.8,
+   "ready_uplift_pct": -16.2,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 39,
+   "stale_share": 0.3,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 87.3,
+   "project_remaining": 934,
+   "flags": "",
+   "score": 0
+  },
+  {
    "zk_id": "2812286",
    "zk": "Остров",
    "developer": "Донстрой",
-   "type": "3к",
+   "type": "1к",
+   "dev_offers_site": 88,
+   "dev_window_share": 0.13,
+   "dev_listed": 90,
+   "dev_price_m2": 830500,
+   "resale_listed": 85,
+   "assignments": 11,
+   "resale_price_m2": 696050,
+   "resale_building": 11,
+   "resale_building_m2": 662461,
+   "resale_ready": 74,
+   "resale_ready_m2": 697316,
+   "premium_pct": -20.2,
+   "ready_uplift_pct": -16.0,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 52,
+   "stale_share": 0.22,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 83.7,
+   "project_remaining": 1608,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "7889",
+   "zk": "ЗИЛАРТ",
+   "developer": "Группа ЛСР",
+   "type": "1к",
+   "dev_offers_site": 306,
+   "dev_window_share": 0.45,
+   "dev_listed": 306,
+   "dev_price_m2": 678868,
+   "resale_listed": 68,
+   "assignments": 16,
+   "resale_price_m2": 658730,
+   "resale_building": 16,
+   "resale_building_m2": 490500,
+   "resale_ready": 52,
+   "resale_ready_m2": 695218,
+   "premium_pct": -27.7,
+   "ready_uplift_pct": 2.4,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 28.0,
+   "stale_share": 0.19,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 87.3,
+   "project_remaining": 934,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "3202206",
+   "zk": "High Life",
+   "developer": "Pioneer",
+   "type": "1к",
+   "dev_offers_site": 34,
+   "dev_window_share": 0.17,
+   "dev_listed": 34,
+   "dev_price_m2": 1230525,
+   "resale_listed": 10,
+   "assignments": 6,
+   "resale_price_m2": 930204,
+   "resale_building": 6,
+   "resale_building_m2": 779115,
+   "resale_ready": 4,
+   "resale_ready_m2": 1085590,
+   "premium_pct": -36.7,
+   "ready_uplift_pct": -11.8,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 20.0,
+   "stale_share": 0.1,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 10.3,
+   "project_remaining": 361,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "2446053",
+   "zk": "Sydney City",
+   "developer": "ГК ФСК",
+   "type": "студия",
    "dev_offers_site": null,
    "dev_window_share": null,
    "dev_listed": 10,
-   "dev_price_m2": 695500,
-   "resale_listed": 18,
+   "dev_price_m2": 761124,
+   "resale_listed": 1,
    "assignments": 0,
-   "resale_price_m2": 692210,
-   "premium_pct": -0.5,
+   "resale_price_m2": 723684,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 1,
+   "resale_ready_m2": 723684,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
    "resale_views_day": null,
    "interest_x": null,
-   "resale_median_age_days": 73.5,
-   "stale_share": 0.33,
+   "resale_median_age_days": 49,
+   "stale_share": 0.0,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 20.3,
+   "project_remaining": 459,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "2812286",
+   "zk": "Остров",
+   "developer": "Донстрой",
+   "type": "своб.",
+   "dev_offers_site": 0,
+   "dev_window_share": 0.0,
+   "dev_listed": 0,
+   "dev_price_m2": null,
+   "resale_listed": 17,
+   "assignments": 2,
+   "resale_price_m2": 663043,
+   "resale_building": 2,
+   "resale_building_m2": 836972,
+   "resale_ready": 15,
+   "resale_ready_m2": 663043,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 56,
+   "stale_share": 0.29,
    "price_cut_share": 0.0,
    "churn_1d": null,
    "project_pace_month": 83.7,
@@ -89,18 +887,23 @@
    "zk": "Остров",
    "developer": "Донстрой",
    "type": "студия",
-   "dev_offers_site": null,
-   "dev_window_share": null,
-   "dev_listed": 12,
-   "dev_price_m2": 806920,
-   "resale_listed": 16,
+   "dev_offers_site": 106,
+   "dev_window_share": 0.16,
+   "dev_listed": 106,
+   "dev_price_m2": 873000,
+   "resale_listed": 21,
    "assignments": 0,
-   "resale_price_m2": 752193,
-   "premium_pct": -6.8,
+   "resale_price_m2": 750000,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 21,
+   "resale_ready_m2": 750000,
+   "premium_pct": null,
+   "ready_uplift_pct": -14.1,
    "resale_views_day": null,
    "interest_x": null,
-   "resale_median_age_days": 56.5,
-   "stale_share": 0.12,
+   "resale_median_age_days": 55,
+   "stale_share": 0.14,
    "price_cut_share": 0.0,
    "churn_1d": null,
    "project_pace_month": 83.7,
@@ -109,224 +912,4897 @@
    "score": 0
   },
   {
-   "zk_id": "2812286",
-   "zk": "Остров",
-   "developer": "Донстрой",
+   "zk_id": "3202206",
+   "zk": "High Life",
+   "developer": "Pioneer",
+   "type": "своб.",
+   "dev_offers_site": 0,
+   "dev_window_share": 0.0,
+   "dev_listed": 1,
+   "dev_price_m2": 950000,
+   "resale_listed": 0,
+   "assignments": 0,
+   "resale_price_m2": null,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": null,
+   "stale_share": null,
+   "price_cut_share": null,
+   "churn_1d": null,
+   "project_pace_month": 10.3,
+   "project_remaining": 361,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "4183417",
+   "zk": "Soul",
+   "developer": "FORMA",
+   "type": "студия",
+   "dev_offers_site": 16,
+   "dev_window_share": 0.05,
+   "dev_listed": 16,
+   "dev_price_m2": 753018,
+   "resale_listed": 6,
+   "assignments": 0,
+   "resale_price_m2": 749816,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 6,
+   "resale_ready_m2": 749816,
+   "premium_pct": null,
+   "ready_uplift_pct": -0.4,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 24.0,
+   "stale_share": 0.17,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 38.7,
+   "project_remaining": 448,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "4377697",
+   "zk": "Sydney Prime",
+   "developer": "ГК ФСК",
    "type": "1к",
    "dev_offers_site": null,
    "dev_window_share": null,
-   "dev_listed": 11,
-   "dev_price_m2": 714000,
-   "resale_listed": 19,
+   "dev_listed": 0,
+   "dev_price_m2": null,
+   "resale_listed": 1,
    "assignments": 0,
-   "resale_price_m2": 656934,
-   "premium_pct": -8.0,
+   "resale_price_m2": 1019202,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 1,
+   "resale_ready_m2": 1019202,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
    "resale_views_day": null,
    "interest_x": null,
-   "resale_median_age_days": 50,
-   "stale_share": 0.16,
+   "resale_median_age_days": 24,
+   "stale_share": 0.0,
    "price_cut_share": 0.0,
    "churn_1d": null,
-   "project_pace_month": 83.7,
-   "project_remaining": 1608,
+   "project_pace_month": null,
+   "project_remaining": null,
    "flags": "",
    "score": 0
   },
   {
-   "zk_id": "2812286",
-   "zk": "Остров",
+   "zk_id": "4377697",
+   "zk": "Sydney Prime",
+   "developer": "ГК ФСК",
+   "type": "2к",
+   "dev_offers_site": null,
+   "dev_window_share": null,
+   "dev_listed": 4,
+   "dev_price_m2": 1177000,
+   "resale_listed": 2,
+   "assignments": 0,
+   "resale_price_m2": 799718,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 2,
+   "resale_ready_m2": 799718,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 42.0,
+   "stale_share": 0.0,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": null,
+   "project_remaining": null,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "4377697",
+   "zk": "Sydney Prime",
+   "developer": "ГК ФСК",
+   "type": "3к",
+   "dev_offers_site": null,
+   "dev_window_share": null,
+   "dev_listed": 6,
+   "dev_price_m2": 1020000,
+   "resale_listed": 0,
+   "assignments": 0,
+   "resale_price_m2": null,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": null,
+   "stale_share": null,
+   "price_cut_share": null,
+   "churn_1d": null,
+   "project_pace_month": null,
+   "project_remaining": null,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "4377697",
+   "zk": "Sydney Prime",
+   "developer": "ГК ФСК",
+   "type": "4к+",
+   "dev_offers_site": null,
+   "dev_window_share": null,
+   "dev_listed": 0,
+   "dev_price_m2": null,
+   "resale_listed": 1,
+   "assignments": 0,
+   "resale_price_m2": 1300000,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 1,
+   "resale_ready_m2": 1300000,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 51,
+   "stale_share": 0.0,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": null,
+   "project_remaining": null,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "4494942",
+   "zk": "Павелецкая от Гранель",
+   "developer": "ГК Гранель",
+   "type": "4к+",
+   "dev_offers_site": 1,
+   "dev_window_share": 0.0,
+   "dev_listed": 1,
+   "dev_price_m2": 706129,
+   "resale_listed": 0,
+   "assignments": 0,
+   "resale_price_m2": null,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": null,
+   "stale_share": null,
+   "price_cut_share": null,
+   "churn_1d": null,
+   "project_pace_month": 18.0,
+   "project_remaining": 664,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "4494942",
+   "zk": "Павелецкая от Гранель",
+   "developer": "ГК Гранель",
+   "type": "студия",
+   "dev_offers_site": 20,
+   "dev_window_share": 0.1,
+   "dev_listed": 20,
+   "dev_price_m2": 823526,
+   "resale_listed": 0,
+   "assignments": 0,
+   "resale_price_m2": null,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": null,
+   "stale_share": null,
+   "price_cut_share": null,
+   "churn_1d": null,
+   "project_pace_month": 18.0,
+   "project_remaining": 664,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "4888961",
+   "zk": "Amber City",
+   "developer": "ГК ФСК",
+   "type": "1к",
+   "dev_offers_site": null,
+   "dev_window_share": null,
+   "dev_listed": 17,
+   "dev_price_m2": 675250,
+   "resale_listed": 1,
+   "assignments": 1,
+   "resale_price_m2": 581040,
+   "resale_building": 1,
+   "resale_building_m2": 581040,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 9,
+   "stale_share": 0.0,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 37.7,
+   "project_remaining": 1224,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "4888961",
+   "zk": "Amber City",
+   "developer": "ГК ФСК",
+   "type": "3к",
+   "dev_offers_site": null,
+   "dev_window_share": null,
+   "dev_listed": 80,
+   "dev_price_m2": 565731,
+   "resale_listed": 1,
+   "assignments": 1,
+   "resale_price_m2": 500000,
+   "resale_building": 1,
+   "resale_building_m2": 500000,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 14,
+   "stale_share": 0.0,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 37.7,
+   "project_remaining": 1224,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "4888961",
+   "zk": "Amber City",
+   "developer": "ГК ФСК",
+   "type": "4к+",
+   "dev_offers_site": null,
+   "dev_window_share": null,
+   "dev_listed": 31,
+   "dev_price_m2": 565184,
+   "resale_listed": 1,
+   "assignments": 1,
+   "resale_price_m2": 591274,
+   "resale_building": 1,
+   "resale_building_m2": 591274,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 35,
+   "stale_share": 0.0,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 37.7,
+   "project_remaining": 1224,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "5221539",
+   "zk": "Мнёвники от Гранель",
+   "developer": "ГК Гранель",
+   "type": "1к",
+   "dev_offers_site": 49,
+   "dev_window_share": 0.55,
+   "dev_listed": 49,
+   "dev_price_m2": 568361,
+   "resale_listed": 2,
+   "assignments": 2,
+   "resale_price_m2": 482928,
+   "resale_building": 2,
+   "resale_building_m2": 482928,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 9.0,
+   "stale_share": 0.0,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 53.0,
+   "project_remaining": 1490,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "5221539",
+   "zk": "Мнёвники от Гранель",
+   "developer": "ГК Гранель",
+   "type": "2к",
+   "dev_offers_site": 1,
+   "dev_window_share": 0.01,
+   "dev_listed": 1,
+   "dev_price_m2": 571081,
+   "resale_listed": 0,
+   "assignments": 0,
+   "resale_price_m2": null,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": null,
+   "stale_share": null,
+   "price_cut_share": null,
+   "churn_1d": null,
+   "project_pace_month": 53.0,
+   "project_remaining": 1490,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "5221539",
+   "zk": "Мнёвники от Гранель",
+   "developer": "ГК Гранель",
+   "type": "3к",
+   "dev_offers_site": 13,
+   "dev_window_share": 0.15,
+   "dev_listed": 13,
+   "dev_price_m2": 548934,
+   "resale_listed": 0,
+   "assignments": 0,
+   "resale_price_m2": null,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": null,
+   "stale_share": null,
+   "price_cut_share": null,
+   "churn_1d": null,
+   "project_pace_month": 53.0,
+   "project_remaining": 1490,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "5221539",
+   "zk": "Мнёвники от Гранель",
+   "developer": "ГК Гранель",
+   "type": "4к+",
+   "dev_offers_site": 1,
+   "dev_window_share": 0.01,
+   "dev_listed": 1,
+   "dev_price_m2": 552933,
+   "resale_listed": 0,
+   "assignments": 0,
+   "resale_price_m2": null,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": null,
+   "stale_share": null,
+   "price_cut_share": null,
+   "churn_1d": null,
+   "project_pace_month": 53.0,
+   "project_remaining": 1490,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "5221539",
+   "zk": "Мнёвники от Гранель",
+   "developer": "ГК Гранель",
+   "type": "студия",
+   "dev_offers_site": 25,
+   "dev_window_share": 0.28,
+   "dev_listed": 25,
+   "dev_price_m2": 629085,
+   "resale_listed": 0,
+   "assignments": 0,
+   "resale_price_m2": null,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": null,
+   "stale_share": null,
+   "price_cut_share": null,
+   "churn_1d": null,
+   "project_pace_month": 53.0,
+   "project_remaining": 1490,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "5340468",
+   "zk": "Дрим Рива",
+   "developer": "Regions Development",
+   "type": "1к",
+   "dev_offers_site": 18,
+   "dev_window_share": 0.15,
+   "dev_listed": 18,
+   "dev_price_m2": 782796,
+   "resale_listed": 0,
+   "assignments": 0,
+   "resale_price_m2": null,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": null,
+   "stale_share": null,
+   "price_cut_share": null,
+   "churn_1d": null,
+   "project_pace_month": 22.7,
+   "project_remaining": 160,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "5340468",
+   "zk": "Дрим Рива",
+   "developer": "Regions Development",
+   "type": "3к",
+   "dev_offers_site": 38,
+   "dev_window_share": 0.32,
+   "dev_listed": 38,
+   "dev_price_m2": 772200,
+   "resale_listed": 0,
+   "assignments": 0,
+   "resale_price_m2": null,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": null,
+   "stale_share": null,
+   "price_cut_share": null,
+   "churn_1d": null,
+   "project_pace_month": 22.7,
+   "project_remaining": 160,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "5340468",
+   "zk": "Дрим Рива",
+   "developer": "Regions Development",
+   "type": "4к+",
+   "dev_offers_site": 8,
+   "dev_window_share": 0.07,
+   "dev_listed": 8,
+   "dev_price_m2": 881362,
+   "resale_listed": 0,
+   "assignments": 0,
+   "resale_price_m2": null,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": null,
+   "stale_share": null,
+   "price_cut_share": null,
+   "churn_1d": null,
+   "project_pace_month": 22.7,
+   "project_remaining": 160,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "5340468",
+   "zk": "Дрим Рива",
+   "developer": "Regions Development",
+   "type": "студия",
+   "dev_offers_site": 30,
+   "dev_window_share": 0.25,
+   "dev_listed": 30,
+   "dev_price_m2": 715965,
+   "resale_listed": 0,
+   "assignments": 0,
+   "resale_price_m2": null,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": null,
+   "stale_share": null,
+   "price_cut_share": null,
+   "churn_1d": null,
+   "project_pace_month": 22.7,
+   "project_remaining": 160,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "5699304",
+   "zk": "Нижегородская от Гранель",
+   "developer": "ГК Гранель",
+   "type": "1к",
+   "dev_offers_site": 69,
+   "dev_window_share": 0.58,
+   "dev_listed": 70,
+   "dev_price_m2": 509385,
+   "resale_listed": 1,
+   "assignments": 1,
+   "resale_price_m2": 425291,
+   "resale_building": 1,
+   "resale_building_m2": 425291,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 60,
+   "stale_share": 0.0,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 39.7,
+   "project_remaining": 398,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "5699304",
+   "zk": "Нижегородская от Гранель",
+   "developer": "ГК Гранель",
+   "type": "2к",
+   "dev_offers_site": 43,
+   "dev_window_share": 0.36,
+   "dev_listed": 43,
+   "dev_price_m2": 418160,
+   "resale_listed": 1,
+   "assignments": 1,
+   "resale_price_m2": 350225,
+   "resale_building": 1,
+   "resale_building_m2": 350225,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 15,
+   "stale_share": 0.0,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 39.7,
+   "project_remaining": 398,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "5699304",
+   "zk": "Нижегородская от Гранель",
+   "developer": "ГК Гранель",
+   "type": "3к",
+   "dev_offers_site": 5,
+   "dev_window_share": 0.04,
+   "dev_listed": 5,
+   "dev_price_m2": 393323,
+   "resale_listed": 0,
+   "assignments": 0,
+   "resale_price_m2": null,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": null,
+   "stale_share": null,
+   "price_cut_share": null,
+   "churn_1d": null,
+   "project_pace_month": 39.7,
+   "project_remaining": 398,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "5699304",
+   "zk": "Нижегородская от Гранель",
+   "developer": "ГК Гранель",
+   "type": "студия",
+   "dev_offers_site": 2,
+   "dev_window_share": 0.02,
+   "dev_listed": 2,
+   "dev_price_m2": 560019,
+   "resale_listed": 1,
+   "assignments": 1,
+   "resale_price_m2": 427877,
+   "resale_building": 1,
+   "resale_building_m2": 427877,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 43,
+   "stale_share": 0.0,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 39.7,
+   "project_remaining": 398,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "7231",
+   "zk": "Символ",
    "developer": "Донстрой",
+   "type": "1к",
+   "dev_offers_site": 185,
+   "dev_window_share": 0.36,
+   "dev_listed": 186,
+   "dev_price_m2": 637000,
+   "resale_listed": 54,
+   "assignments": 1,
+   "resale_price_m2": 615430,
+   "resale_building": 1,
+   "resale_building_m2": 561813,
+   "resale_ready": 53,
+   "resale_ready_m2": 617284,
+   "premium_pct": null,
+   "ready_uplift_pct": -3.1,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 50.5,
+   "stale_share": 0.35,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 37.3,
+   "project_remaining": 762,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "7231",
+   "zk": "Символ",
+   "developer": "Донстрой",
+   "type": "3к",
+   "dev_offers_site": 83,
+   "dev_window_share": 0.16,
+   "dev_listed": 83,
+   "dev_price_m2": 544000,
+   "resale_listed": 48,
+   "assignments": 1,
+   "resale_price_m2": 569526,
+   "resale_building": 1,
+   "resale_building_m2": 409139,
+   "resale_ready": 47,
+   "resale_ready_m2": 570839,
+   "premium_pct": null,
+   "ready_uplift_pct": 4.9,
+   "resale_views_day": 11.2,
+   "interest_x": 0.92,
+   "resale_median_age_days": 46.0,
+   "stale_share": 0.33,
+   "price_cut_share": 0.02,
+   "churn_1d": null,
+   "project_pace_month": 37.3,
+   "project_remaining": 762,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "7231",
+   "zk": "Символ",
+   "developer": "Донстрой",
+   "type": "4к+",
+   "dev_offers_site": 23,
+   "dev_window_share": 0.04,
+   "dev_listed": 23,
+   "dev_price_m2": 556000,
+   "resale_listed": 25,
+   "assignments": 0,
+   "resale_price_m2": 585540,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 25,
+   "resale_ready_m2": 585540,
+   "premium_pct": null,
+   "ready_uplift_pct": 5.3,
+   "resale_views_day": 12.2,
+   "interest_x": 1.0,
+   "resale_median_age_days": 59,
+   "stale_share": 0.28,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 37.3,
+   "project_remaining": 762,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "7231",
+   "zk": "Символ",
+   "developer": "Донстрой",
+   "type": "своб.",
+   "dev_offers_site": 0,
+   "dev_window_share": 0.0,
+   "dev_listed": 0,
+   "dev_price_m2": null,
+   "resale_listed": 8,
+   "assignments": 0,
+   "resale_price_m2": 618309,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 8,
+   "resale_ready_m2": 618309,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": 0.8,
+   "interest_x": 0.07,
+   "resale_median_age_days": 26.0,
+   "stale_share": 0.0,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 37.3,
+   "project_remaining": 762,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "7231",
+   "zk": "Символ",
+   "developer": "Донстрой",
+   "type": "студия",
+   "dev_offers_site": 87,
+   "dev_window_share": 0.17,
+   "dev_listed": 87,
+   "dev_price_m2": 782000,
+   "resale_listed": 27,
+   "assignments": 0,
+   "resale_price_m2": 737903,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 27,
+   "resale_ready_m2": 737903,
+   "premium_pct": null,
+   "ready_uplift_pct": -5.6,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 34,
+   "stale_share": 0.15,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 37.3,
+   "project_remaining": 762,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "7889",
+   "zk": "ЗИЛАРТ",
+   "developer": "Группа ЛСР",
+   "type": "4к+",
+   "dev_offers_site": 7,
+   "dev_window_share": 0.01,
+   "dev_listed": 7,
+   "dev_price_m2": 724397,
+   "resale_listed": 10,
+   "assignments": 0,
+   "resale_price_m2": 733665,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 10,
+   "resale_ready_m2": 733665,
+   "premium_pct": null,
+   "ready_uplift_pct": 1.3,
+   "resale_views_day": 1.5,
+   "interest_x": 0.21,
+   "resale_median_age_days": 51.5,
+   "stale_share": 0.4,
+   "price_cut_share": 0.1,
+   "churn_1d": null,
+   "project_pace_month": 87.3,
+   "project_remaining": 934,
+   "flags": "",
+   "score": 0
+  },
+  {
+   "zk_id": "4888961",
+   "zk": "Amber City",
+   "developer": "ГК ФСК",
+   "type": "2к",
+   "dev_offers_site": null,
+   "dev_window_share": null,
+   "dev_listed": 161,
+   "dev_price_m2": 623420,
+   "resale_listed": 8,
+   "assignments": 8,
+   "resale_price_m2": 649240,
+   "resale_building": 8,
+   "resale_building_m2": 649240,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": 4.1,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 94.0,
+   "stale_share": 0.5,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 37.7,
+   "project_remaining": 1224,
+   "flags": "вторичка залёживается",
+   "score": -1
+  },
+  {
+   "zk_id": "4183417",
+   "zk": "Soul",
+   "developer": "FORMA",
+   "type": "4к+",
+   "dev_offers_site": 12,
+   "dev_window_share": 0.04,
+   "dev_listed": 12,
+   "dev_price_m2": 776850,
+   "resale_listed": 7,
+   "assignments": 5,
+   "resale_price_m2": 578947,
+   "resale_building": 5,
+   "resale_building_m2": 569867,
+   "resale_ready": 2,
+   "resale_ready_m2": 612935,
+   "premium_pct": -26.6,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 137,
+   "stale_share": 0.71,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 38.7,
+   "project_remaining": 448,
+   "flags": "вторичка залёживается",
+   "score": -1
+  },
+  {
+   "zk_id": "2446053",
+   "zk": "Sydney City",
+   "developer": "ГК ФСК",
    "type": "своб.",
    "dev_offers_site": null,
    "dev_window_share": null,
    "dev_listed": 0,
    "dev_price_m2": null,
-   "resale_listed": 17,
-   "assignments": 2,
-   "resale_price_m2": 663043,
+   "resale_listed": 1,
+   "assignments": 1,
+   "resale_price_m2": 635697,
+   "resale_building": 1,
+   "resale_building_m2": 635697,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
    "premium_pct": null,
+   "ready_uplift_pct": null,
    "resale_views_day": null,
    "interest_x": null,
-   "resale_median_age_days": 56,
-   "stale_share": 0.29,
+   "resale_median_age_days": 373,
+   "stale_share": 1.0,
    "price_cut_share": 0.0,
    "churn_1d": null,
-   "project_pace_month": 83.7,
-   "project_remaining": 1608,
-   "flags": "",
-   "score": 0
+   "project_pace_month": 20.3,
+   "project_remaining": 459,
+   "flags": "вторичка залёживается",
+   "score": -1
+  },
+  {
+   "zk_id": "3401924",
+   "zk": "Дубровка от Гранель",
+   "developer": "ГК Гранель",
+   "type": "4к+",
+   "dev_offers_site": 4,
+   "dev_window_share": 0.12,
+   "dev_listed": 4,
+   "dev_price_m2": 456126,
+   "resale_listed": 4,
+   "assignments": 0,
+   "resale_price_m2": 496136,
+   "resale_building": 0,
+   "resale_building_m2": null,
+   "resale_ready": 4,
+   "resale_ready_m2": 496136,
+   "premium_pct": null,
+   "ready_uplift_pct": 8.8,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 131.5,
+   "stale_share": 0.5,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 39.3,
+   "project_remaining": 258,
+   "flags": "вторичка залёживается",
+   "score": -1
+  },
+  {
+   "zk_id": "4888961",
+   "zk": "Amber City",
+   "developer": "ГК ФСК",
+   "type": "студия",
+   "dev_offers_site": null,
+   "dev_window_share": null,
+   "dev_listed": 66,
+   "dev_price_m2": 742888,
+   "resale_listed": 1,
+   "assignments": 1,
+   "resale_price_m2": 565749,
+   "resale_building": 1,
+   "resale_building_m2": 565749,
+   "resale_ready": 0,
+   "resale_ready_m2": null,
+   "premium_pct": null,
+   "ready_uplift_pct": null,
+   "resale_views_day": null,
+   "interest_x": null,
+   "resale_median_age_days": 217,
+   "stale_share": 1.0,
+   "price_cut_share": 0.0,
+   "churn_1d": null,
+   "project_pace_month": 37.7,
+   "project_remaining": 1224,
+   "flags": "вторичка залёживается",
+   "score": -1
   }
  ],
  "candidates": [
   {
-   "offer_id": 333612151,
-   "url": "https://www.cian.ru/sale/flat/333612151/",
+   "offer_id": 335005838,
+   "url": "https://www.cian.ru/sale/flat/335005838/",
    "zk": "Остров",
+   "comps": 16,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
    "developer": "Донстрой",
    "type": "3к",
    "seller": "resale",
-   "house": "Нижние Мнёвники, 16к6 (Квартал 2 - Корпус 6)",
-   "finish": "2024-Q4",
-   "floor": 3,
-   "floors": 22,
-   "area": 112.0,
+   "house": "Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",
+   "finish": "2025-Q3",
+   "floor": 4,
+   "floors": 12,
+   "area": 82.5,
    "decoration": null,
-   "price": 56500000,
-   "price_m2": 504464,
-   "exit_m2": 692210,
-   "type_score": 0,
-   "type_flags": "",
-   "sale": 75201694,
-   "net": 8903771,
-   "roi_6m": 0.158,
-   "gross_spread": 0.331
+   "price": 44500000,
+   "price_m2": 539394,
+   "exit_m2": 742542,
+   "type_score": 3,
+   "type_flags": "переуступки дороже застройщика; высокий интерес",
+   "sale": 59421884,
+   "net": 7148913,
+   "roi_6m": 0.161,
+   "gross_spread": 0.335,
+   "duplicates": 0
   },
   {
-   "offer_id": 333906721,
-   "url": "https://www.cian.ru/sale/flat/333906721/",
+   "offer_id": 332812037,
+   "url": "https://www.cian.ru/sale/flat/332812037/",
    "zk": "Остров",
+   "comps": 5,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
    "developer": "Донстрой",
-   "type": "4к+",
+   "type": "3к",
    "seller": "resale",
-   "house": "Нижние Мнёвники, 16к2 (Квартал 2 - Корпус 2)",
-   "finish": "2024-Q4",
-   "floor": 22,
-   "floors": 23,
-   "area": 105.4,
+   "house": "Нижние Мнёвники, 9 (Квартал 1 - Корпус 1)",
+   "finish": "2023-Q4",
+   "floor": 13,
+   "floors": 15,
+   "area": 103.0,
    "decoration": null,
-   "price": 60750000,
-   "price_m2": 576376,
-   "exit_m2": 790930,
-   "type_score": 0,
-   "type_flags": "",
-   "sale": 80863050,
-   "net": 9579788,
-   "roi_6m": 0.158,
-   "gross_spread": 0.331
+   "price": 66000000,
+   "price_m2": 640777,
+   "exit_m2": 846154,
+   "type_score": 3,
+   "type_flags": "переуступки дороже застройщика; высокий интерес",
+   "sale": 84539246,
+   "net": 7926935,
+   "roi_6m": 0.12,
+   "gross_spread": 0.281,
+   "duplicates": 0
   },
   {
-   "offer_id": 332463470,
-   "url": "https://www.cian.ru/sale/flat/332463470/",
+   "offer_id": 332991939,
+   "url": "https://www.cian.ru/sale/flat/332991939/",
    "zk": "Остров",
+   "comps": 16,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Донстрой",
+   "type": "3к",
+   "seller": "resale",
+   "house": "Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",
+   "finish": "2025-Q3",
+   "floor": 7,
+   "floors": 22,
+   "area": 83.0,
+   "decoration": null,
+   "price": 46900000,
+   "price_m2": 565060,
+   "exit_m2": 742542,
+   "type_score": 3,
+   "type_flags": "переуступки дороже застройщика; высокий интерес",
+   "sale": 59782016,
+   "net": 5403012,
+   "roi_6m": 0.115,
+   "gross_spread": 0.275,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334088838,
+   "url": "https://www.cian.ru/sale/flat/334088838/",
+   "zk": "Остров",
+   "comps": 36,
+   "comp_level": "ЖК",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Донстрой",
+   "type": "3к",
+   "seller": "resale",
+   "house": null,
+   "finish": null,
+   "floor": 6,
+   "floors": 12,
+   "area": 131.1,
+   "decoration": null,
+   "price": 79800000,
+   "price_m2": 608696,
+   "exit_m2": 790708,
+   "type_score": 3,
+   "type_flags": "переуступки дороже застройщика; высокий интерес",
+   "sale": 100551901,
+   "net": 8344425,
+   "roi_6m": 0.105,
+   "gross_spread": 0.26,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 330264299,
+   "url": "https://www.cian.ru/sale/flat/330264299/",
+   "zk": "Символ",
+   "comps": 5,
+   "comp_level": "год сдачи",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
    "developer": "Донстрой",
    "type": "2к",
    "seller": "resale",
-   "house": "5-й квартал, 3 (Квартал 5 - Корпус 3)",
-   "finish": "2025-Q3",
-   "floor": 13,
+   "house": "Квартал Искренность - Корпус 27",
+   "finish": "2023-Q4",
+   "floor": 11,
    "floors": 22,
-   "area": 58.0,
+   "area": 78.0,
    "decoration": null,
-   "price": 33000000,
-   "price_m2": 568966,
-   "exit_m2": 750000,
-   "type_score": 0,
-   "type_flags": "",
-   "sale": 42195000,
-   "net": 3888750,
-   "roi_6m": 0.118,
-   "gross_spread": 0.279
+   "price": 32100000,
+   "price_m2": 411538,
+   "exit_m2": 568182,
+   "type_score": 2,
+   "type_flags": "готовое дороже строящегося; высокий интерес",
+   "sale": 42988650,
+   "net": 5239988,
+   "roi_6m": 0.163,
+   "gross_spread": 0.339,
+   "duplicates": 0
   },
   {
-   "offer_id": 332586417,
-   "url": "https://www.cian.ru/sale/flat/332586417/",
+   "offer_id": 330229369,
+   "url": "https://www.cian.ru/sale/flat/330229369/",
+   "zk": "Символ",
+   "comps": 10,
+   "comp_level": "год сдачи",
+   "status": "проверить вручную",
+   "check": "обременение; подозрительно дёшево: разрыв > 25%",
+   "developer": "Донстрой",
+   "type": "2к",
+   "seller": "resale",
+   "house": "Квартал Достоинство - Корпус 9",
+   "finish": "2019-Q3",
+   "floor": 12,
+   "floors": 14,
+   "area": 68.7,
+   "decoration": null,
+   "price": 30800000,
+   "price_m2": 448326,
+   "exit_m2": 598004,
+   "type_score": 2,
+   "type_flags": "готовое дороже строящегося; высокий интерес",
+   "sale": 39850422,
+   "net": 3978316,
+   "roi_6m": 0.129,
+   "gross_spread": 0.294,
+   "duplicates": 1
+  },
+  {
+   "offer_id": 334896320,
+   "url": "https://www.cian.ru/sale/flat/334896320/",
+   "zk": "Павелецкая от Гранель",
+   "comps": 4,
+   "comp_level": "ЖК",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "ГК Гранель",
+   "type": "2к",
+   "seller": "assignment",
+   "house": "Корпус 2",
+   "finish": "2028-Q3",
+   "floor": 9,
+   "floors": 24,
+   "area": 68.15,
+   "decoration": "without",
+   "price": 32200000,
+   "price_m2": 472487,
+   "exit_m2": 654834,
+   "type_score": 2,
+   "type_flags": "переуступки дороже застройщика",
+   "sale": 43288096,
+   "net": 3590788,
+   "roi_6m": 0.112,
+   "gross_spread": 0.344,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334865202,
+   "url": "https://www.cian.ru/sale/flat/334865202/",
+   "zk": "Символ",
+   "comps": 9,
+   "comp_level": "год сдачи",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Донстрой",
+   "type": "2к",
+   "seller": "resale",
+   "house": "Квартал Смелость - Корпус 12",
+   "finish": "2021-Q4",
+   "floor": 24,
+   "floors": 28,
+   "area": 60.0,
+   "decoration": null,
+   "price": 33599000,
+   "price_m2": 559983,
+   "exit_m2": 728723,
+   "type_score": 2,
+   "type_flags": "готовое дороже строящегося; высокий интерес",
+   "sale": 42411679,
+   "net": 3548099,
+   "roi_6m": 0.106,
+   "gross_spread": 0.262,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 327668002,
+   "url": "https://www.cian.ru/sale/flat/327668002/",
+   "zk": "Дубровка от Гранель",
+   "comps": 5,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "ГК Гранель",
+   "type": "1к",
+   "seller": "resale",
+   "house": "1-й этап",
+   "finish": "2025-Q4",
+   "floor": 11,
+   "floors": 28,
+   "area": 48.4,
+   "decoration": null,
+   "price": 22500000,
+   "price_m2": 464876,
+   "exit_m2": 742857,
+   "type_score": 1,
+   "type_flags": "готовое дороже строящегося",
+   "sale": 34875650,
+   "net": 7219238,
+   "roi_6m": 0.321,
+   "gross_spread": 0.55,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 331533844,
+   "url": "https://www.cian.ru/sale/flat/331533844/",
+   "zk": "ЗИЛАРТ",
+   "comps": 10,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Группа ЛСР",
+   "type": "3к",
+   "seller": "resale",
+   "house": "ЗИЛАРТ ТАУЭР (Дом 9)",
+   "finish": "2023-Q3",
+   "floor": 22,
+   "floors": 40,
+   "area": 85.0,
+   "decoration": null,
+   "price": 39850000,
+   "price_m2": 468824,
+   "exit_m2": 716114,
+   "type_score": 1,
+   "type_flags": "высокий интерес",
+   "sale": 59043558,
+   "net": 10771169,
+   "roi_6m": 0.27,
+   "gross_spread": 0.482,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 332201742,
+   "url": "https://www.cian.ru/sale/flat/332201742/",
+   "zk": "ЗИЛАРТ",
+   "comps": 21,
+   "comp_level": "год сдачи",
+   "status": "проверить вручную",
+   "check": "обременение; подозрительно дёшево: разрыв > 25%",
+   "developer": "Группа ЛСР",
+   "type": "3к",
+   "seller": "resale",
+   "house": "Дом № 16",
+   "finish": "2022-Q2",
+   "floor": 4,
+   "floors": 7,
+   "area": 86.0,
+   "decoration": null,
+   "price": 36400000,
+   "price_m2": 423256,
+   "exit_m2": 632488,
+   "type_score": 1,
+   "type_flags": "высокий интерес",
+   "sale": 52762149,
+   "net": 8958112,
+   "roi_6m": 0.246,
+   "gross_spread": 0.45,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334390030,
+   "url": "https://www.cian.ru/sale/flat/334390030/",
+   "zk": "High Life",
+   "comps": 5,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Pioneer",
+   "type": "3к",
+   "seller": "resale",
+   "house": "K3 HEART TOWER",
+   "finish": "2025-Q2",
+   "floor": 7,
+   "floors": 32,
+   "area": 75.3,
+   "decoration": null,
+   "price": 49600000,
+   "price_m2": 658699,
+   "exit_m2": 982143,
+   "type_score": 1,
+   "type_flags": "высокий интерес",
+   "sale": 71736707,
+   "net": 12101030,
+   "roi_6m": 0.244,
+   "gross_spread": 0.446,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334156314,
+   "url": "https://www.cian.ru/sale/flat/334156314/",
+   "zk": "ЗИЛАРТ",
+   "comps": 15,
+   "comp_level": "год сдачи",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Группа ЛСР",
+   "type": "2к",
+   "seller": "resale",
+   "house": "Дом № 14",
+   "finish": "2023-Q2",
+   "floor": 14,
+   "floors": 16,
+   "area": 51.3,
+   "decoration": null,
+   "price": 25800000,
+   "price_m2": 502924,
+   "exit_m2": 749079,
+   "type_score": 1,
+   "type_flags": "готовое дороже строящегося",
+   "sale": 37274920,
+   "net": 6246690,
+   "roi_6m": 0.242,
+   "gross_spread": 0.445,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334161422,
+   "url": "https://www.cian.ru/sale/flat/334161422/",
+   "zk": "ЗИЛАРТ",
+   "comps": 19,
+   "comp_level": "год сдачи",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Группа ЛСР",
+   "type": "2к",
+   "seller": "resale",
+   "house": "Дом № 16",
+   "finish": "2022-Q2",
+   "floor": 4,
+   "floors": 16,
+   "area": 55.9,
+   "decoration": null,
+   "price": 26400000,
+   "price_m2": 472272,
+   "exit_m2": 677831,
+   "type_score": 1,
+   "type_flags": "готовое дороже строящегося",
+   "sale": 36754030,
+   "net": 5352023,
+   "roi_6m": 0.203,
+   "gross_spread": 0.392,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334487056,
+   "url": "https://www.cian.ru/sale/flat/334487056/",
+   "zk": "Дубровка от Гранель",
+   "comps": 5,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "ГК Гранель",
+   "type": "1к",
+   "seller": "resale",
+   "house": "1-й этап",
+   "finish": "2025-Q4",
+   "floor": 2,
+   "floors": 30,
+   "area": 44.9,
+   "decoration": null,
+   "price": 23500000,
+   "price_m2": 523385,
+   "exit_m2": 742857,
+   "type_score": 1,
+   "type_flags": "готовое дороже строящегося",
+   "sale": 32353651,
+   "net": 4487738,
+   "roi_6m": 0.191,
+   "gross_spread": 0.377,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 332056677,
+   "url": "https://www.cian.ru/sale/flat/332056677/",
+   "zk": "ЗИЛАРТ",
+   "comps": 21,
+   "comp_level": "год сдачи",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Группа ЛСР",
+   "type": "3к",
+   "seller": "resale",
+   "house": "Дом № 16",
+   "finish": "2022-Q2",
+   "floor": 9,
+   "floors": 16,
+   "area": 87.8,
+   "decoration": null,
+   "price": 39300000,
+   "price_m2": 447608,
+   "exit_m2": 632488,
+   "type_score": 1,
+   "type_flags": "высокий интерес",
+   "sale": 53866473,
+   "net": 7350355,
+   "roi_6m": 0.187,
+   "gross_spread": 0.371,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 332091746,
+   "url": "https://www.cian.ru/sale/flat/332091746/",
+   "zk": "ЗИЛАРТ",
+   "comps": 21,
+   "comp_level": "год сдачи",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Группа ЛСР",
+   "type": "3к",
+   "seller": "resale",
+   "house": "Дом №17",
+   "finish": "2022-Q2",
+   "floor": 4,
+   "floors": 16,
+   "area": 84.4,
+   "decoration": null,
+   "price": 37800000,
+   "price_m2": 447867,
+   "exit_m2": 632488,
+   "type_score": 1,
+   "type_flags": "высокий интерес",
+   "sale": 51780528,
+   "net": 7045896,
+   "roi_6m": 0.186,
+   "gross_spread": 0.37,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 322552952,
+   "url": "https://www.cian.ru/sale/flat/322552952/",
+   "zk": "ЗИЛАРТ",
+   "comps": 9,
+   "comp_level": "год сдачи",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Группа ЛСР",
+   "type": "2к",
+   "seller": "resale",
+   "house": "Дом №6",
+   "finish": "2018-Q4",
+   "floor": 2,
+   "floors": 14,
+   "area": 58.5,
+   "decoration": null,
+   "price": 32000000,
+   "price_m2": 547009,
+   "exit_m2": 750000,
+   "type_score": 1,
+   "type_flags": "готовое дороже строящегося",
+   "sale": 42558750,
+   "net": 5001562,
+   "roi_6m": 0.156,
+   "gross_spread": 0.33,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 333808093,
+   "url": "https://www.cian.ru/sale/flat/333808093/",
+   "zk": "High Life",
+   "comps": 9,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "обременение; подозрительно дёшево: разрыв > 25%",
+   "developer": "Pioneer",
+   "type": "4к+",
+   "seller": "resale",
+   "house": "K1 SOUL TOWER",
+   "finish": "2025-Q2",
+   "floor": 11,
+   "floors": 32,
+   "area": 116.8,
+   "decoration": null,
+   "price": 75999999,
+   "price_m2": 650685,
+   "exit_m2": 874271,
+   "type_score": 1,
+   "type_flags": "высокий интерес",
+   "sale": 99051407,
+   "net": 10411056,
+   "roi_6m": 0.137,
+   "gross_spread": 0.303,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334496620,
+   "url": "https://www.cian.ru/sale/flat/334496620/",
+   "zk": "Sydney City",
+   "comps": 11,
+   "comp_level": "ЖК",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "ГК ФСК",
+   "type": "1к",
+   "seller": "resale",
+   "house": "Корпус 2.2",
+   "finish": "2025-Q1",
+   "floor": 24,
+   "floors": 44,
+   "area": 46.5,
+   "decoration": null,
+   "price": 25600000,
+   "price_m2": 550538,
+   "exit_m2": 737619,
+   "type_score": 1,
+   "type_flags": "высокий интерес",
+   "sale": 33270305,
+   "net": 3411229,
+   "roi_6m": 0.133,
+   "gross_spread": 0.3,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 325980275,
+   "url": "https://www.cian.ru/sale/flat/325980275/",
+   "zk": "Дубровка от Гранель",
+   "comps": 3,
+   "comp_level": "ЖК",
+   "status": "проверить вручную",
+   "check": "обременение; подозрительно дёшево: разрыв > 25%",
+   "developer": "ГК Гранель",
+   "type": "студия",
+   "seller": "resale",
+   "house": "1-й этап",
+   "finish": "2025-Q4",
+   "floor": 20,
+   "floors": 30,
+   "area": 30.2,
+   "decoration": null,
+   "price": 16850000,
+   "price_m2": 557947,
+   "exit_m2": 727626,
+   "type_score": 1,
+   "type_flags": "дефицит у застройщика; вторичка залёживается",
+   "sale": 21315076,
+   "net": 1794807,
+   "roi_6m": 0.107,
+   "gross_spread": 0.265,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334423982,
+   "url": "https://www.cian.ru/sale/flat/334423982/",
+   "zk": "Sydney City",
+   "comps": 15,
+   "comp_level": "год сдачи",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "ГК ФСК",
+   "type": "1к",
+   "seller": "resale",
+   "house": "Корпус 3",
+   "finish": "2023-Q3",
+   "floor": 8,
+   "floors": 29,
+   "area": 38.0,
+   "decoration": null,
+   "price": 22500000,
+   "price_m2": 592105,
+   "exit_m2": 768831,
+   "type_score": 1,
+   "type_flags": "высокий интерес",
+   "sale": 28339111,
+   "net": 2316833,
+   "roi_6m": 0.103,
+   "gross_spread": 0.26,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 332262009,
+   "url": "https://www.cian.ru/sale/flat/332262009/",
+   "zk": "High Life",
+   "comps": 9,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Pioneer",
+   "type": "4к+",
+   "seller": "resale",
+   "house": "K1 SOUL TOWER",
+   "finish": "2025-Q2",
+   "floor": 10,
+   "floors": 24,
+   "area": 119.7,
+   "decoration": null,
+   "price": 80750000,
+   "price_m2": 674603,
+   "exit_m2": 874271,
+   "type_score": 1,
+   "type_flags": "высокий интерес",
+   "sale": 101510732,
+   "net": 8265549,
+   "roi_6m": 0.102,
+   "gross_spread": 0.257,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334426879,
+   "url": "https://www.cian.ru/sale/flat/334426879/",
+   "zk": "ЗИЛАРТ",
+   "comps": 10,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Группа ЛСР",
+   "type": "3к",
+   "seller": "resale",
+   "house": "ЗИЛАРТ ТАУЭР (Дом 9)",
+   "finish": "2023-Q3",
+   "floor": 33,
+   "floors": 40,
+   "area": 86.0,
+   "decoration": null,
+   "price": 47500000,
+   "price_m2": 552326,
+   "exit_m2": 716114,
+   "type_score": 1,
+   "type_flags": "высокий интерес",
+   "sale": 59738188,
+   "net": 4866141,
+   "roi_6m": 0.102,
+   "gross_spread": 0.258,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334525092,
+   "url": "https://www.cian.ru/sale/flat/334525092/",
+   "zk": "High Life",
+   "comps": 8,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Pioneer",
+   "type": "2к",
+   "seller": "resale",
+   "house": "K1 SOUL TOWER",
+   "finish": "2025-Q2",
+   "floor": 6,
+   "floors": 24,
+   "area": 92.0,
+   "decoration": null,
+   "price": 62000000,
+   "price_m2": 673913,
+   "exit_m2": 1014966,
+   "type_score": 0,
+   "type_flags": "",
+   "sale": 90575610,
+   "net": 15814208,
+   "roi_6m": 0.255,
+   "gross_spread": 0.461,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 333584462,
+   "url": "https://www.cian.ru/sale/flat/333584462/",
+   "zk": "High Life",
+   "comps": 8,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Pioneer",
+   "type": "2к",
+   "seller": "resale",
+   "house": "K1 SOUL TOWER",
+   "finish": "2025-Q2",
+   "floor": 2,
+   "floors": 32,
+   "area": 93.0,
+   "decoration": null,
+   "price": 63000000,
+   "price_m2": 677419,
+   "exit_m2": 1014966,
+   "type_score": 0,
+   "type_flags": "",
+   "sale": 91560128,
+   "net": 15712596,
+   "roi_6m": 0.249,
+   "gross_spread": 0.453,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334065093,
+   "url": "https://www.cian.ru/sale/flat/334065093/",
+   "zk": "High Life",
+   "comps": 8,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Pioneer",
+   "type": "2к",
+   "seller": "resale",
+   "house": "K1 SOUL TOWER",
+   "finish": "2025-Q2",
+   "floor": 5,
+   "floors": 24,
+   "area": 90.2,
+   "decoration": null,
+   "price": 63000000,
+   "price_m2": 698448,
+   "exit_m2": 1014966,
+   "type_score": 0,
+   "type_flags": "",
+   "sale": 88803479,
+   "net": 13645109,
+   "roi_6m": 0.217,
+   "gross_spread": 0.41,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 333677502,
+   "url": "https://www.cian.ru/sale/flat/333677502/",
    "zk": "Остров",
+   "comps": 10,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Донстрой",
+   "type": "2к",
+   "seller": "resale",
+   "house": "Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",
+   "finish": "2025-Q3",
+   "floor": 3,
+   "floors": 17,
+   "area": 82.2,
+   "decoration": null,
+   "price": 44000000,
+   "price_m2": 535280,
+   "exit_m2": 775490,
+   "type_score": 0,
+   "type_flags": "",
+   "sale": 61832960,
+   "net": 9377220,
+   "roi_6m": 0.213,
+   "gross_spread": 0.405,
+   "duplicates": 1
+  },
+  {
+   "offer_id": 333693122,
+   "url": "https://www.cian.ru/sale/flat/333693122/",
+   "zk": "Символ",
+   "comps": 38,
+   "comp_level": "ЖК",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
    "developer": "Донстрой",
    "type": "3к",
    "seller": "resale",
-   "house": "Нижние Мнёвники, 7 (Квартал 4 - Корпус 5)",
-   "finish": "2025-Q3",
-   "floor": 6,
-   "floors": 13,
-   "area": 69.4,
+   "house": "Квартал Смелость - Корпус 10",
+   "finish": "2021-Q4",
+   "floor": 12,
+   "floors": 25,
+   "area": 82.0,
    "decoration": null,
-   "price": 36800000,
-   "price_m2": 530259,
-   "exit_m2": 692210,
+   "price": 32500000,
+   "price_m2": 396341,
+   "exit_m2": 573881,
    "type_score": 0,
    "type_flags": "",
-   "sale": 46598193,
-   "net": 3999145,
-   "roi_6m": 0.109,
-   "gross_spread": 0.266
+   "sale": 45646495,
+   "net": 6897371,
+   "roi_6m": 0.212,
+   "gross_spread": 0.405,
+   "duplicates": 0
   },
   {
-   "offer_id": 334071937,
-   "url": "https://www.cian.ru/sale/flat/334071937/",
+   "offer_id": 334344813,
+   "url": "https://www.cian.ru/sale/flat/334344813/",
+   "zk": "Sydney City",
+   "comps": 9,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "ГК ФСК",
+   "type": "2к",
+   "seller": "resale",
+   "house": "Корпус 3",
+   "finish": "2023-Q3",
+   "floor": 7,
+   "floors": 43,
+   "area": 77.0,
+   "decoration": null,
+   "price": 38500000,
+   "price_m2": 500000,
+   "exit_m2": 723077,
+   "type_score": 0,
+   "type_flags": "",
+   "sale": 54006621,
+   "net": 8127466,
+   "roi_6m": 0.211,
+   "gross_spread": 0.403,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334428163,
+   "url": "https://www.cian.ru/sale/flat/334428163/",
    "zk": "Остров",
+   "comps": 12,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
    "developer": "Донстрой",
    "type": "4к+",
    "seller": "resale",
-   "house": "5-й квартал, 8 (Квартал 5 - Корпус 8)",
+   "house": "Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",
    "finish": "2025-Q3",
-   "floor": 3,
-   "floors": 22,
-   "area": 102.0,
+   "floor": 10,
+   "floors": 12,
+   "area": 116.7,
    "decoration": null,
-   "price": 62000000,
-   "price_m2": 607843,
-   "exit_m2": 790930,
+   "price": 64990000,
+   "price_m2": 556898,
+   "exit_m2": 797060,
    "type_score": 0,
    "type_flags": "",
-   "sale": 78254565,
-   "net": 6573424,
-   "roi_6m": 0.106,
-   "gross_spread": 0.262
+   "sale": 90226338,
+   "net": 13040654,
+   "roi_6m": 0.201,
+   "gross_spread": 0.388,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334614799,
+   "url": "https://www.cian.ru/sale/flat/334614799/",
+   "zk": "Символ",
+   "comps": 7,
+   "comp_level": "ЖК",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Донстрой",
+   "type": "своб.",
+   "seller": "resale",
+   "house": "Квартал Свобода - Корпус 2",
+   "finish": "2019-Q2",
+   "floor": 6,
+   "floors": 17,
+   "area": 128.2,
+   "decoration": null,
+   "price": 62700000,
+   "price_m2": 489080,
+   "exit_m2": 663285,
+   "type_score": 0,
+   "type_flags": "",
+   "sale": 82482143,
+   "net": 9156107,
+   "roi_6m": 0.146,
+   "gross_spread": 0.316,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 329148146,
+   "url": "https://www.cian.ru/sale/flat/329148146/",
+   "zk": "Остров",
+   "comps": 12,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Донстрой",
+   "type": "4к+",
+   "seller": "resale",
+   "house": "Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",
+   "finish": "2025-Q3",
+   "floor": 6,
+   "floors": 14,
+   "area": 118.9,
+   "decoration": null,
+   "price": 71000000,
+   "price_m2": 597140,
+   "exit_m2": 797060,
+   "type_score": 0,
+   "type_flags": "",
+   "sale": 91927263,
+   "net": 9267947,
+   "roi_6m": 0.131,
+   "gross_spread": 0.295,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334831386,
+   "url": "https://www.cian.ru/sale/flat/334831386/",
+   "zk": "Символ",
+   "comps": 16,
+   "comp_level": "год сдачи",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Донстрой",
+   "type": "3к",
+   "seller": "resale",
+   "house": "Квартал Смелость - Корпус 16",
+   "finish": "2023-Q3",
+   "floor": 19,
+   "floors": 27,
+   "area": 76.3,
+   "decoration": null,
+   "price": 34000000,
+   "price_m2": 445609,
+   "exit_m2": 590803,
+   "type_score": 0,
+   "type_flags": "",
+   "sale": 43725921,
+   "net": 4196941,
+   "roi_6m": 0.123,
+   "gross_spread": 0.286,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 334530172,
+   "url": "https://www.cian.ru/sale/flat/334530172/",
+   "zk": "Sydney City",
+   "comps": 10,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "ГК ФСК",
+   "type": "2к",
+   "seller": "resale",
+   "house": "Корпус 3",
+   "finish": "2023-Q3",
+   "floor": 18,
+   "floors": 44,
+   "area": 64.0,
+   "decoration": null,
+   "price": 36500000,
+   "price_m2": 570312,
+   "exit_m2": 748636,
+   "type_score": 0,
+   "type_flags": "",
+   "sale": 46475292,
+   "net": 4158969,
+   "roi_6m": 0.114,
+   "gross_spread": 0.273,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 332231370,
+   "url": "https://www.cian.ru/sale/flat/332231370/",
+   "zk": "Остров",
+   "comps": 13,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Донстрой",
+   "type": "2к",
+   "seller": "resale",
+   "house": "Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",
+   "finish": "2025-Q3",
+   "floor": 5,
+   "floors": 10,
+   "area": 38.9,
+   "decoration": null,
+   "price": 22999000,
+   "price_m2": 591234,
+   "exit_m2": 774665,
+   "type_score": 0,
+   "type_flags": "",
+   "sale": 29230434,
+   "net": 2566166,
+   "roi_6m": 0.112,
+   "gross_spread": 0.271,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 322127760,
+   "url": "https://www.cian.ru/sale/flat/322127760/",
+   "zk": "Остров",
+   "comps": 6,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "Донстрой",
+   "type": "4к+",
+   "seller": "resale",
+   "house": "Нижние Мнёвники, 9 (Квартал 1 - Корпус 1)",
+   "finish": "2023-Q4",
+   "floor": 20,
+   "floors": 22,
+   "area": 150.0,
+   "decoration": null,
+   "price": 97500000,
+   "price_m2": 650000,
+   "exit_m2": 847826,
+   "type_score": 0,
+   "type_flags": "",
+   "sale": 123358683,
+   "net": 10581512,
+   "roi_6m": 0.109,
+   "gross_spread": 0.265,
+   "duplicates": 0
+  },
+  {
+   "offer_id": 331211546,
+   "url": "https://www.cian.ru/sale/flat/331211546/",
+   "zk": "Sydney City",
+   "comps": 10,
+   "comp_level": "корпус",
+   "status": "проверить вручную",
+   "check": "подозрительно дёшево: разрыв > 25%",
+   "developer": "ГК ФСК",
+   "type": "2к",
+   "seller": "resale",
+   "house": "Корпус 3",
+   "finish": "2023-Q3",
+   "floor": 21,
+   "floors": 44,
+   "area": 61.5,
+   "decoration": null,
+   "price": 35500000,
+   "price_m2": 577236,
+   "exit_m2": 748636,
+   "type_score": 0,
+   "type_flags": "",
+   "sale": 44659851,
+   "net": 3637388,
+   "roi_6m": 0.102,
+   "gross_spread": 0.258,
+   "duplicates": 0
   }
  ],
- "zk_cards": {},
- "coverage": {
+ "break_even": {
+  "0%|вторичка": 14.4,
+  "0%|переуступка": 17.6,
+  "10%|вторичка": 19.2,
+  "10%|переуступка": 22.9,
+  "18%|вторичка": 22.6,
+  "18%|переуступка": 26.7
+ },
+ "zk_cards": {
   "2812286": {
-   "listed_today": 205,
-   "site_total": null
+   "name": "Остров",
+   "builder": "ДОНСТРОЙ",
+   "class": "Бизнес",
+   "props": 1238,
+   "from_dev": 677,
+   "from_agents": 561,
+   "min_price_m2_dev": 587840,
+   "rooms": {
+    "studio": {
+     "count": 106,
+     "range": "21,5–35,4 млн ₽",
+     "min_area": "От 28 м²",
+     "layouts": [
+      {
+       "offer": 334964100,
+       "house": "Квартал 12.1 - Корпус 2",
+       "area": "31,7 м²",
+       "price": 28022800
+      },
+      {
+       "offer": 334964028,
+       "house": "Квартал 14 - корпус 3",
+       "area": "33,2 м²",
+       "price": 27024800
+      },
+      {
+       "offer": 334963815,
+       "house": "Квартал 12.1 - Корпус 1",
+       "area": "34,5 м²",
+       "price": 28152000
+      },
+      {
+       "offer": 334963872,
+       "house": "Квартал 12.1 - Корпус 1",
+       "area": "37,4 м²",
+       "price": 35417800
+      },
+      {
+       "offer": 334963818,
+       "house": "Квартал 12.1 - Корпус 1",
+       "area": "37,6 м²",
+       "price": 31997600
+      }
+     ]
+    },
+    "oneRoom": {
+     "count": 88,
+     "range": "27,8–47 млн ₽",
+     "min_area": "От 38 м²",
+     "layouts": [
+      {
+       "offer": 334963723,
+       "house": "Квартал 12.1 - Корпус 3",
+       "area": "46,4 м²",
+       "price": 39857600
+      },
+      {
+       "offer": 334963809,
+       "house": "Квартал 12.1 - Корпус 1",
+       "area": "47,4 м²",
+       "price": 38251800
+      },
+      {
+       "offer": 334965210,
+       "house": "Квартал 14 - корпус 6",
+       "area": "47,5 м²",
+       "price": 33012500
+      },
+      {
+       "offer": 334964287,
+       "house": "Квартал 7 - Корпус 7",
+       "area": "50,0 м²",
+       "price": 38148000
+      },
+      {
+       "offer": 334963857,
+       "house": "Квартал 12.1 - Корпус 1",
+       "area": "51,1 м²",
+       "price": 41033300
+      }
+     ]
+    },
+    "twoRoom": {
+     "count": 168,
+     "range": "43,2–86,7 млн ₽",
+     "min_area": "От 58 м²",
+     "layouts": [
+      {
+       "offer": 334964610,
+       "house": "Квартал 12.2 - корпус 1",
+       "area": "89,0 м²",
+       "price": 68263000
+      },
+      {
+       "offer": 334964618,
+       "house": "Квартал 12.2 - корпус 1",
+       "area": "90,1 м²",
+       "price": 69106700
+      },
+      {
+       "offer": 334964701,
+       "house": "Квартал 12.2 - корпус 1",
+       "area": "90,8 м²",
+       "price": 69552800
+      },
+      {
+       "offer": 334963927,
+       "house": "Квартал 7 - Корпус 3",
+       "area": "91,5 м²",
+       "price": 65382240
+      },
+      {
+       "offer": 334964630,
+       "house": "Квартал 12.2 - корпус 1",
+       "area": "97,7 м²",
+       "price": 75717500
+      }
+     ]
+    },
+    "threeRoom": {
+     "count": 133,
+     "range": "48,7–212,7 млн ₽",
+     "min_area": "От 67 м²",
+     "layouts": [
+      {
+       "offer": 334964574,
+       "house": "Квартал 7 - Корпус 7",
+       "area": "127,0 м²",
+       "price": 110530640
+      },
+      {
+       "offer": 334964121,
+       "house": "Квартал 7 - Корпус 1",
+       "area": "128,5 м²",
+       "price": 89220120
+      },
+      {
+       "offer": 334964119,
+       "house": "Квартал 7 - Корпус 1",
+       "area": "129,9 м²",
+       "price": 89391984
+      },
+      {
+       "offer": 334964544,
+       "house": "Квартал 7 - Корпус 7",
+       "area": "147,0 м²",
+       "price": 120175440
+      },
+      {
+       "offer": 334963963,
+       "house": "Квартал 7 - Корпус 2",
+       "area": "191,8 м²",
+       "price": 212706200
+      }
+     ]
+    },
+    "fourRoom": {
+     "count": 121,
+     "range": "72,5–282,9 млн ₽",
+     "min_area": "От 113 м²",
+     "layouts": [
+      {
+       "offer": 334963889,
+       "house": "Квартал 12.2 - корпус 3",
+       "area": "173,3 м²",
+       "price": 282998900
+      },
+      {
+       "offer": 334965338,
+       "house": "Квартал 12.2 - корпус 6",
+       "area": "174,8 м²",
+       "price": 141238400
+      },
+      {
+       "offer": 334963931,
+       "house": "Квартал 7 - Корпус 3",
+       "area": "177,0 м²",
+       "price": 124077000
+      },
+      {
+       "offer": 334965335,
+       "house": "Квартал 12.2 - корпус 6",
+       "area": "195,1 м²",
+       "price": 148861300
+      },
+      {
+       "offer": 334963953,
+       "house": "Квартал 7 - Корпус 2",
+       "area": "209,4 м²",
+       "price": 251908200
+      }
+     ]
+    },
+    "fiveRoom": {
+     "count": 49,
+     "range": "87,4–623,2 млн ₽",
+     "min_area": "От 139 м²",
+     "layouts": [
+      {
+       "offer": 334964114,
+       "house": "Квартал 10 - Корпус 1",
+       "area": "218,5 м²",
+       "price": 526803500
+      },
+      {
+       "offer": 334964160,
+       "house": "Квартал 7 - Корпус 1",
+       "area": "232,1 м²",
+       "price": 234885200
+      },
+      {
+       "offer": 334964115,
+       "house": "Квартал 10 - Корпус 1",
+       "area": "260,4 м²",
+       "price": 410390400
+      },
+      {
+       "offer": 334964116,
+       "house": "Квартал 10 - Корпус 1",
+       "area": "262,4 м²",
+       "price": 545529600
+      },
+      {
+       "offer": 334964118,
+       "house": "Квартал 10 - Корпус 1",
+       "area": "263,4 м²",
+       "price": 623204400
+      }
+     ]
+    },
+    "large": {
+     "count": 12,
+     "range": "128,2–453,3 млн ₽",
+     "min_area": "От 168 м²",
+     "layouts": [
+      {
+       "offer": 334964157,
+       "house": "Квартал 7 - Корпус 1",
+       "area": "172,7 м²",
+       "price": 172700000
+      },
+      {
+       "offer": 334963965,
+       "house": "Квартал 7 - Корпус 2",
+       "area": "176,3 м²",
+       "price": 130941536
+      },
+      {
+       "offer": 334963923,
+       "house": "Квартал 7 - Корпус 3",
+       "area": "180,8 м²",
+       "price": 170675200
+      },
+      {
+       "offer": 334963915,
+       "house": "Квартал 12.2 - корпус 3",
+       "area": "233,4 м²",
+       "price": 367138200
+      },
+      {
+       "offer": 334964229,
+       "house": "Квартал 7 - Корпус 5",
+       "area": "377,5 м²",
+       "price": 453377500
+      }
+     ]
+    }
+   },
+   "houses": [
+    {
+     "id": 7304164,
+     "name": "5-й квартал, 1 (Квартал 5 - Корпус 1)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7304167,
+     "name": "5-й квартал, 2 (Квартал 5 - Корпус 2)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 1,
+     "escrow": false
+    },
+    {
+     "id": 7304169,
+     "name": "5-й квартал, 3 (Квартал 5 - Корпус 3)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7304170,
+     "name": "5-й квартал, 4 (Квартал 5 - Корпус 4)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7304172,
+     "name": "5-й квартал, 5 (Квартал 5 - Корпус 5)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7304173,
+     "name": "5-й квартал, 6 (Квартал 5 - Корпус 6)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7304174,
+     "name": "5-й квартал, 7 (Квартал 5 - Корпус 7)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7304175,
+     "name": "5-й квартал, 8 (Квартал 5 - Корпус 8)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7452871,
+     "name": "6-й квартал, 12к1 (Квартал 6 - Корпус 1)",
+     "finish": "Сдан в 4 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7452872,
+     "name": "6-й квартал, 12к2 (Квартал 6 - Корпус 2)",
+     "finish": "Сдан в 4 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7452873,
+     "name": "6-й квартал, 12к3 (Квартал 6 - Корпус 3)",
+     "finish": "Сдан в 4 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7452875,
+     "name": "6-й квартал, 12к5 (Квартал 6 - Корпус 5)",
+     "finish": "Сдан в 4 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7452876,
+     "name": "6-й квартал, 12к6с1 (Квартал 6 - Корпус 6)",
+     "finish": "Сдан в 4 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 10931622,
+     "name": "6-й квартал, 12к6с4",
+     "finish": "Сдан в 4 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 9797613,
+     "name": "Квартал 7 - Корпус 1",
+     "finish": "Сдача в 1 кв. 2028",
+     "from_dev": 20,
+     "escrow": true
+    },
+    {
+     "id": 9797616,
+     "name": "Квартал 7 - Корпус 2",
+     "finish": "Сдача в 1 кв. 2028",
+     "from_dev": 6,
+     "escrow": true
+    },
+    {
+     "id": 9797634,
+     "name": "Квартал 7 - Корпус 3",
+     "finish": "Сдача в 1 кв. 2028",
+     "from_dev": 12,
+     "escrow": true
+    },
+    {
+     "id": 9797653,
+     "name": "Квартал 7 - Корпус 4",
+     "finish": "Сдача в 1 кв. 2028",
+     "from_dev": 17,
+     "escrow": true
+    },
+    {
+     "id": 9797802,
+     "name": "Квартал 7 - Корпус 5",
+     "finish": "Сдача в 3 кв. 2028",
+     "from_dev": 14,
+     "escrow": true
+    },
+    {
+     "id": 9797805,
+     "name": "Квартал 7 - Корпус 6",
+     "finish": "Сдача в 3 кв. 2028",
+     "from_dev": 2,
+     "escrow": true
+    },
+    {
+     "id": 9797806,
+     "name": "Квартал 7 - Корпус 7",
+     "finish": "Сдача в 3 кв. 2028",
+     "from_dev": 32,
+     "escrow": true
+    },
+    {
+     "id": 8799569,
+     "name": "Квартал 8 - Корпус 1",
+     "finish": "Сдача в 4 кв. 2026",
+     "from_dev": 0,
+     "escrow": true
+    },
+    {
+     "id": 8799570,
+     "name": "Квартал 8 - Корпус 2",
+     "finish": "Сдача в 4 кв. 2026",
+     "from_dev": 0,
+     "escrow": true
+    },
+    {
+     "id": 8884769,
+     "name": "Квартал 10 - Корпус 1",
+     "finish": "Сдача во 2 кв. 2027",
+     "from_dev": 6,
+     "escrow": true
+    },
+    {
+     "id": 10898955,
+     "name": "Квартал 12.1 - Корпус 1",
+     "finish": "Сдача в 1 кв. 2029",
+     "from_dev": 40,
+     "escrow": true
+    },
+    {
+     "id": 10899206,
+     "name": "Квартал 12.1 - Корпус 2",
+     "finish": "Сдача в 1 кв. 2029",
+     "from_dev": 33,
+     "escrow": true
+    },
+    {
+     "id": 10898956,
+     "name": "Квартал 12.1 - Корпус 3",
+     "finish": "Сдача в 1 кв. 2029",
+     "from_dev": 39,
+     "escrow": true
+    },
+    {
+     "id": 10899207,
+     "name": "Квартал 12.1 - Корпус 4",
+     "finish": "Сдача в 1 кв. 2029",
+     "from_dev": 15,
+     "escrow": true
+    },
+    {
+     "id": 10907884,
+     "name": "Квартал 12.2 - корпус 1",
+     "finish": "Сдача в 1 кв. 2029",
+     "from_dev": 58,
+     "escrow": true
+    },
+    {
+     "id": 10907885,
+     "name": "Квартал 12.2 - корпус 2",
+     "finish": "Сдача в 1 кв. 2029",
+     "from_dev": 35,
+     "escrow": true
+    },
+    {
+     "id": 10907886,
+     "name": "Квартал 12.2 - корпус 3",
+     "finish": "Сдача в 1 кв. 2029",
+     "from_dev": 18,
+     "escrow": true
+    },
+    {
+     "id": 10907889,
+     "name": "Квартал 12.2 - корпус 6",
+     "finish": "Сдача в 1 кв. 2029",
+     "from_dev": 17,
+     "escrow": true
+    },
+    {
+     "id": 10915873,
+     "name": "Квартал 14 - корпус 1",
+     "finish": "Сдача во 2 кв. 2029",
+     "from_dev": 146,
+     "escrow": true
+    },
+    {
+     "id": 10915874,
+     "name": "Квартал 14 - корпус 2",
+     "finish": "Сдача во 2 кв. 2029",
+     "from_dev": 28,
+     "escrow": true
+    },
+    {
+     "id": 10915875,
+     "name": "Квартал 14 - корпус 3",
+     "finish": "Сдача во 2 кв. 2029",
+     "from_dev": 36,
+     "escrow": true
+    },
+    {
+     "id": 10915876,
+     "name": "Квартал 14 - корпус 4",
+     "finish": "Сдача во 2 кв. 2029",
+     "from_dev": 32,
+     "escrow": true
+    },
+    {
+     "id": 10915877,
+     "name": "Квартал 14 - корпус 5",
+     "finish": "Сдача во 2 кв. 2029",
+     "from_dev": 38,
+     "escrow": true
+    },
+    {
+     "id": 10915878,
+     "name": "Квартал 14 - корпус 6",
+     "finish": "Сдача во 2 кв. 2029",
+     "from_dev": 32,
+     "escrow": true
+    },
+    {
+     "id": 6859559,
+     "name": "Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6859560,
+     "name": "Нижние Мнёвники, 7 (Квартал 4 - Корпус 2)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6859561,
+     "name": "Нижние Мнёвники, 7 (Квартал 4 - Корпус 3)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6859562,
+     "name": "Нижние Мнёвники, 7 (Квартал 4 - Корпус 4)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6859563,
+     "name": "Нижние Мнёвники, 7 (Квартал 4 - Корпус 5)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6859564,
+     "name": "Нижние Мнёвники, 7 (Квартал 4 - Корпус 6)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6859565,
+     "name": "Нижние Мнёвники, 7 (Квартал 4 - Корпус 7)",
+     "finish": "Сдан в 3 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 5487130,
+     "name": "Нижние Мнёвники, 9 (Квартал 1 - Корпус 1)",
+     "finish": "Сдан в 4 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 5487131,
+     "name": "Нижние Мнёвники, 9 (Квартал 1 - Корпус 2)",
+     "finish": "Сдан в 4 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 5487132,
+     "name": "Нижние Мнёвники, 9 (Квартал 1 - Корпус 3)",
+     "finish": "Сдан в 4 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 5487133,
+     "name": "Нижние Мнёвники, 9 (Квартал 1 - Корпус 4)",
+     "finish": "Сдан в 4 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 5487134,
+     "name": "Нижние Мнёвники, 9 (Квартал 1 - Корпус 5)",
+     "finish": "Сдан в 4 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6295257,
+     "name": "Нижние Мнёвники, 10 (Квартал 3 - Корпус 1)",
+     "finish": "Сдан в 4 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6295280,
+     "name": "Нижние Мнёвники, 10 (Квартал 3 - Корпус 2)",
+     "finish": "Сдан в 4 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7452874,
+     "name": "Нижние Мнёвники, 12 (Квартал 6 - Корпус 4)",
+     "finish": "Сдан в 4 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6438190,
+     "name": "Нижние Мнёвники, 16к1 (Квартал 2 - Корпус 1)",
+     "finish": "Сдан в 4 кв. 2024",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6438192,
+     "name": "Нижние Мнёвники, 16к2 (Квартал 2 - Корпус 2)",
+     "finish": "Сдан в 4 кв. 2024",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6438193,
+     "name": "Нижние Мнёвники, 16к3 (Квартал 2 - Корпус 3)",
+     "finish": "Сдан в 4 кв. 2024",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6438194,
+     "name": "Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",
+     "finish": "Сдан в 4 кв. 2024",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6438195,
+     "name": "Нижние Мнёвники, 16к5 (Квартал 2 - Корпус 5)",
+     "finish": "Сдан в 4 кв. 2024",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6438196,
+     "name": "Нижние Мнёвники, 16к6 (Квартал 2 - Корпус 6)",
+     "finish": "Сдан в 4 кв. 2024",
+     "from_dev": 0,
+     "escrow": false
+    }
+   ]
   },
   "7231": {
-   "listed_today": 0,
-   "site_total": null
+   "name": "Символ",
+   "builder": "ДОНСТРОЙ",
+   "class": "Бизнес",
+   "props": 785,
+   "from_dev": 519,
+   "from_agents": 266,
+   "min_price_m2_dev": 493000,
+   "rooms": {
+    "studio": {
+     "count": 87,
+     "range": "17,8–24,5 млн ₽",
+     "min_area": "От 28 м²",
+     "layouts": [
+      {
+       "offer": 334997832,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "33,4 м²",
+       "price": 20545008
+      },
+      {
+       "offer": 334997830,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "33,6 м²",
+       "price": 20608896
+      },
+      {
+       "offer": 334908442,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "35,3 м²",
+       "price": 23651000
+      },
+      {
+       "offer": 334997834,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "35,7 м²",
+       "price": 20514648
+      },
+      {
+       "offer": 334396341,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "37,4 м²",
+       "price": 24123000
+      }
+     ]
+    },
+    "oneRoom": {
+     "count": 185,
+     "range": "21–31,8 млн ₽",
+     "min_area": "От 36 м²",
+     "layouts": [
+      {
+       "offer": 334396202,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "45,4 м²",
+       "price": 27058400
+      },
+      {
+       "offer": 334396200,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "45,6 м²",
+       "price": 29047200
+      },
+      {
+       "offer": 334396238,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "46,5 м²",
+       "price": 27202500
+      },
+      {
+       "offer": 334396351,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "48,3 м²",
+       "price": 28014000
+      },
+      {
+       "offer": 334396350,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "49,9 м²",
+       "price": 28592700
+      }
+     ]
+    },
+    "twoRoom": {
+     "count": 141,
+     "range": "30,2–44,7 млн ₽",
+     "min_area": "От 52 м²",
+     "layouts": [
+      {
+       "offer": 334396211,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "78,1 м²",
+       "price": 41627300
+      },
+      {
+       "offer": 334396205,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "79,2 м²",
+       "price": 42451200
+      },
+      {
+       "offer": 334396306,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "83,6 м²",
+       "price": 43722800
+      },
+      {
+       "offer": 334396308,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "85,0 м²",
+       "price": 44370000
+      },
+      {
+       "offer": 334396267,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "85,8 м²",
+       "price": 44701800
+      }
+     ]
+    },
+    "threeRoom": {
+     "count": 83,
+     "range": "37,3–63,9 млн ₽",
+     "min_area": "От 75 м²",
+     "layouts": [
+      {
+       "offer": 334396237,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "106,0 м²",
+       "price": 56498000
+      },
+      {
+       "offer": 334396251,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "107,0 м²",
+       "price": 57138000
+      },
+      {
+       "offer": 334396328,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "110,3 м²",
+       "price": 59892900
+      },
+      {
+       "offer": 334396329,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "114,4 м²",
+       "price": 62119200
+      },
+      {
+       "offer": 334396323,
+       "house": "Квартал Гордость - Корпус 36",
+       "area": "116,9 м²",
+       "price": 63827400
+      }
+     ]
+    },
+    "fourRoom": {
+     "count": 23,
+     "range": "52–68,8 млн ₽",
+     "min_area": "От 105 м²",
+     "layouts": [
+      {
+       "offer": 334908710,
+       "house": "Корпус 37",
+       "area": "109,6 м²",
+       "price": 56005600
+      },
+      {
+       "offer": 334908737,
+       "house": "Корпус 37",
+       "area": "111,5 м²",
+       "price": 57868500
+      },
+      {
+       "offer": 334908524,
+       "house": "Корпус 37",
+       "area": "113,3 м²",
+       "price": 67186900
+      },
+      {
+       "offer": 334908771,
+       "house": "Корпус 37",
+       "area": "113,7 м²",
+       "price": 60374700
+      },
+      {
+       "offer": 334908748,
+       "house": "Корпус 37",
+       "area": "124,3 м²",
+       "price": 67619200
+      }
+     ]
+    }
+   },
+   "houses": [
+    {
+     "id": 7750082,
+     "name": "Квартал Вдохновение - Корпус 28",
+     "finish": "Сдан в 4 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7750077,
+     "name": "Квартал Вдохновение - Корпус 29",
+     "finish": "Сдан в 4 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7750078,
+     "name": "Квартал Вдохновение - Корпус 30",
+     "finish": "Сдан в 4 кв. 2025",
+     "from_dev": 1,
+     "escrow": false
+    },
+    {
+     "id": 7750079,
+     "name": "Квартал Вдохновение - Корпус 31",
+     "finish": "Сдан в 4 кв. 2025",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 10905360,
+     "name": "Квартал Гордость - Корпус 36",
+     "finish": "Сдача во 2 кв. 2029",
+     "from_dev": 198,
+     "escrow": true
+    },
+    {
+     "id": 7824,
+     "name": "Квартал Достоинство - Корпус 6",
+     "finish": "Сдан в 1 кв. 2018",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7827,
+     "name": "Квартал Достоинство - Корпус 7",
+     "finish": "Сдан в 4 кв. 2019",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7828,
+     "name": "Квартал Достоинство - Корпус 9",
+     "finish": "Сдан в 3 кв. 2019",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 2549630,
+     "name": "Квартал Искренность - Корпус 21",
+     "finish": "Сдан в 1 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 908521,
+     "name": "Квартал Искренность - Корпус 22",
+     "finish": "Сдан во 2 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 4757859,
+     "name": "Квартал Искренность - Корпус 23",
+     "finish": "Сдан во 2 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6219998,
+     "name": "Квартал Искренность - Корпус 25",
+     "finish": "Сдан в 4 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6219999,
+     "name": "Квартал Искренность - Корпус 26",
+     "finish": "Сдан в 4 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6220000,
+     "name": "Квартал Искренность - Корпус 27",
+     "finish": "Сдан в 4 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7781611,
+     "name": "Квартал Независимость - Корпус 19",
+     "finish": "Сдан в 4 кв. 2024",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7781612,
+     "name": "Квартал Независимость - Корпус 20",
+     "finish": "Сдан в 4 кв. 2024",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7830,
+     "name": "Квартал Свобода - Корпус 1",
+     "finish": "Сдан в 3 кв. 2019",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7825,
+     "name": "Квартал Свобода - Корпус 2",
+     "finish": "Сдан во 2 кв. 2019",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7826,
+     "name": "Квартал Свобода - Корпус 3",
+     "finish": "Сдан в 3 кв. 2019",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7831,
+     "name": "Квартал Свобода - Корпус 4",
+     "finish": "Сдан во 2 кв. 2019",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7832,
+     "name": "Квартал Свобода - Корпус 5",
+     "finish": "Сдан во 2 кв. 2019",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 574902,
+     "name": "Квартал Смелость - Корпус 10",
+     "finish": "Сдан в 4 кв. 2021",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 577397,
+     "name": "Квартал Смелость - Корпус 11",
+     "finish": "Сдан в 4 кв. 2021",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 577946,
+     "name": "Квартал Смелость - Корпус 12",
+     "finish": "Сдан в 4 кв. 2021",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 611264,
+     "name": "Квартал Смелость - Корпус 14",
+     "finish": "Сдан в 4 кв. 2021",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 3440684,
+     "name": "Квартал Смелость - Корпус 15",
+     "finish": "Сдан в 3 кв. 2022",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 5021232,
+     "name": "Квартал Смелость - Корпус 16",
+     "finish": "Сдан в 3 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 5021233,
+     "name": "Квартал Смелость - Корпус 17",
+     "finish": "Сдан в 3 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 5021234,
+     "name": "Квартал Смелость - Корпус 18",
+     "finish": "Сдан в 3 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 9684419,
+     "name": "Корпус 32",
+     "finish": "Сдача в 4 кв. 2027",
+     "from_dev": 0,
+     "escrow": true
+    },
+    {
+     "id": 9684420,
+     "name": "Корпус 33",
+     "finish": "Сдача в 4 кв. 2027",
+     "from_dev": 0,
+     "escrow": true
+    },
+    {
+     "id": 9684421,
+     "name": "Корпус 34",
+     "finish": "Сдача в 4 кв. 2027",
+     "from_dev": 5,
+     "escrow": true
+    },
+    {
+     "id": 10935047,
+     "name": "Корпус 37",
+     "finish": "Сдача во 2 кв. 2030",
+     "from_dev": 169,
+     "escrow": true
+    },
+    {
+     "id": 10916199,
+     "name": "Корпус 39",
+     "finish": "Сдача во 2 кв. 2029",
+     "from_dev": 33,
+     "escrow": true
+    },
+    {
+     "id": 10916198,
+     "name": "Корпус 40",
+     "finish": "Сдача во 2 кв. 2029",
+     "from_dev": 113,
+     "escrow": true
+    }
+   ]
   },
   "5340468": {
-   "listed_today": 0,
-   "site_total": null
+   "name": "Дрим Рива",
+   "builder": "Regions Development",
+   "class": "Премиум",
+   "props": 127,
+   "from_dev": 120,
+   "from_agents": 7,
+   "min_price_m2_dev": 625164,
+   "rooms": {
+    "studio": {
+     "count": 30,
+     "range": "20,3–22,5 млн ₽",
+     "min_area": "От 29 м²",
+     "layouts": [
+      {
+       "offer": 327686217,
+       "house": "Корпус 3 (Аква)",
+       "area": "29,2 м²",
+       "price": 20351132
+      },
+      {
+       "offer": 327686141,
+       "house": "Корпус 2 (Терра)",
+       "area": "29,5 м²",
+       "price": 21163415
+      }
+     ]
+    },
+    "oneRoom": {
+     "count": 18,
+     "range": "31–37,5 млн ₽",
+     "min_area": "От 38 м²",
+     "layouts": [
+      {
+       "offer": 333811437,
+       "house": "Корпус 1 (Ария)",
+       "area": "38,4 м²",
+       "price": 31385733
+      },
+      {
+       "offer": 327686189,
+       "house": "Корпус 2 (Терра)",
+       "area": "42,3 м²",
+       "price": 34707274
+      },
+      {
+       "offer": 333811435,
+       "house": "Корпус 1 (Ария)",
+       "area": "42,8 м²",
+       "price": 32930457
+      },
+      {
+       "offer": 333811446,
+       "house": "Корпус 3 (Аква)",
+       "area": "47,6 м²",
+       "price": 37261092
+      },
+      {
+       "offer": 334976801,
+       "house": "Корпус 1 (Ария)",
+       "area": "50,0 м²",
+       "price": 34800000
+      }
+     ]
+    },
+    "twoRoom": {
+     "count": 26,
+     "range": "39,3–134 млн ₽",
+     "min_area": "От 62 м²",
+     "layouts": [
+      {
+       "offer": 327686018,
+       "house": "Корпус 1 (Ария)",
+       "area": "63,2 м²",
+       "price": 50957685
+      },
+      {
+       "offer": 332966255,
+       "house": "Корпус 3 (Аква)",
+       "area": "64,5 м²",
+       "price": 52457824
+      },
+      {
+       "offer": 327686197,
+       "house": "Корпус 3 (Аква)",
+       "area": "67,0 м²",
+       "price": 42016239
+      },
+      {
+       "offer": 327686058,
+       "house": "Корпус 1 (Ария)",
+       "area": "67,9 м²",
+       "price": 51131482
+      },
+      {
+       "offer": 333087326,
+       "house": "Корпус 2 (Терра)",
+       "area": "121,9 м²",
+       "price": 134014248
+      }
+     ]
+    },
+    "threeRoom": {
+     "count": 38,
+     "range": "57,7–134,8 млн ₽",
+     "min_area": "От 80 м²",
+     "layouts": [
+      {
+       "offer": 327686066,
+       "house": "Корпус 1 (Ария)",
+       "area": "79,7 м²",
+       "price": 60509834
+      },
+      {
+       "offer": 333811430,
+       "house": "Корпус 2 (Терра)",
+       "area": "85,1 м²",
+       "price": 77375162
+      },
+      {
+       "offer": 327686261,
+       "house": "Корпус 3 (Аква)",
+       "area": "87,9 м²",
+       "price": 61054683
+      },
+      {
+       "offer": 333087327,
+       "house": "Корпус 2 (Терра)",
+       "area": "122,7 м²",
+       "price": 134893751
+      }
+     ]
+    },
+    "fourRoom": {
+     "count": 4,
+     "range": "147,3–268,9 млн ₽",
+     "min_area": "От 173 м²",
+     "layouts": [
+      {
+       "offer": 333791864,
+       "house": "Корпус 2 (Терра)",
+       "area": "173,0 м²",
+       "price": 147375098
+      },
+      {
+       "offer": 333103676,
+       "house": "Корпус 2 (Терра)",
+       "area": "244,6 м²",
+       "price": 268907999
+      }
+     ]
+    },
+    "fiveRoom": {
+     "count": 4,
+     "range": "135,3–157,2 млн ₽",
+     "min_area": "От 173 м²",
+     "layouts": [
+      {
+       "offer": 332806889,
+       "house": "Корпус 3 (Аква)",
+       "area": "172,6 м²",
+       "price": 135390060
+      }
+     ]
+    }
+   },
+   "houses": [
+    {
+     "id": 10267694,
+     "name": "Корпус 1 (Ария)",
+     "finish": "Сдача в 3 кв. 2027",
+     "from_dev": 24,
+     "escrow": true
+    },
+    {
+     "id": 10267695,
+     "name": "Корпус 2 (Терра)",
+     "finish": "Сдача в 3 кв. 2027",
+     "from_dev": 38,
+     "escrow": true
+    },
+    {
+     "id": 10267696,
+     "name": "Корпус 3 (Аква)",
+     "finish": "Сдача в 3 кв. 2027",
+     "from_dev": 58,
+     "escrow": true
+    }
+   ]
   },
   "3401924": {
-   "listed_today": 0,
-   "site_total": null
+   "name": "Дубровка от Гранель",
+   "builder": "ГК Гранель",
+   "class": "Бизнес",
+   "props": 70,
+   "from_dev": 33,
+   "from_agents": 37,
+   "min_price_m2_dev": 454745,
+   "rooms": {
+    "studio": {
+     "count": 3,
+     "range": "17,5–17,7 млн ₽",
+     "min_area": "От 29 м²",
+     "layouts": [
+      {
+       "offer": 334783852,
+       "house": "2-й этап",
+       "area": "29,3 м²",
+       "price": 17688189
+      }
+     ]
+    },
+    "oneRoom": {
+     "count": 24,
+     "range": "18,3–21,9 млн ₽",
+     "min_area": "От 37 м²",
+     "layouts": [
+      {
+       "offer": 334784913,
+       "house": "2-й этап",
+       "area": "38,5 м²",
+       "price": 19448984
+      },
+      {
+       "offer": 334784067,
+       "house": "2-й этап",
+       "area": "38,8 м²",
+       "price": 19628506
+      },
+      {
+       "offer": 334784699,
+       "house": "2-й этап",
+       "area": "40,2 м²",
+       "price": 19555042
+      },
+      {
+       "offer": 334783920,
+       "house": "2-й этап",
+       "area": "42,2 м²",
+       "price": 19630124
+      },
+      {
+       "offer": 334783976,
+       "house": "2-й этап",
+       "area": "43,4 м²",
+       "price": 19749611
+      }
+     ]
+    },
+    "twoRoom": {
+     "count": 1,
+     "range": "26 млн ₽",
+     "min_area": "От 48 м²",
+     "layouts": [
+      {
+       "offer": 334785595,
+       "house": "1-й этап",
+       "area": "48,5 м²",
+       "price": 26035057
+      }
+     ]
+    },
+    "threeRoom": {
+     "count": 1,
+     "range": "30,5 млн ₽",
+     "min_area": "От 62 м²",
+     "layouts": [
+      {
+       "offer": 334785269,
+       "house": "1-й этап",
+       "area": "62,3 м²",
+       "price": 30519175
+      }
+     ]
+    },
+    "fourRoom": {
+     "count": 4,
+     "range": "39,2–45,5 млн ₽",
+     "min_area": "От 86 м²",
+     "layouts": [
+      {
+       "offer": 334785530,
+       "house": "1-й этап",
+       "area": "86,2 м²",
+       "price": 39227180
+      },
+      {
+       "offer": 334785310,
+       "house": "1-й этап",
+       "area": "93,8 м²",
+       "price": 43773889
+      },
+      {
+       "offer": 334785468,
+       "house": "1-й этап",
+       "area": "100,2 м²",
+       "price": 45598184
+      }
+     ]
+    }
+   },
+   "houses": [
+    {
+     "id": 6657015,
+     "name": "1-й этап",
+     "finish": "Сдан в 4 кв. 2025",
+     "from_dev": 6,
+     "escrow": false
+    },
+    {
+     "id": 7633379,
+     "name": "2-й этап",
+     "finish": "Сдача в 3 кв. 2028",
+     "from_dev": 27,
+     "escrow": true
+    }
+   ]
   },
   "5699304": {
-   "listed_today": 0,
-   "site_total": null
+   "name": "Нижегородская от Гранель",
+   "builder": "ГК Гранель",
+   "class": "Бизнес",
+   "props": 122,
+   "from_dev": 119,
+   "from_agents": 3,
+   "min_price_m2_dev": 389293,
+   "rooms": {
+    "studio": {
+     "count": 2,
+     "range": "16,8–17,2 млн ₽",
+     "min_area": "От 30 м²",
+     "layouts": [
+      {
+       "offer": 334758874,
+       "house": "Секция 7",
+       "area": "29,9 м²",
+       "price": 16836733
+      },
+      {
+       "offer": 334758858,
+       "house": "Секция 7",
+       "area": "30,9 м²",
+       "price": 17204477
+      }
+     ]
+    },
+    "oneRoom": {
+     "count": 69,
+     "range": "16,9–26,5 млн ₽",
+     "min_area": "От 35 м²",
+     "layouts": [
+      {
+       "offer": 334758927,
+       "house": "Секция 6",
+       "area": "37,6 м²",
+       "price": 21297214
+      },
+      {
+       "offer": 334758861,
+       "house": "Секция 7",
+       "area": "40,0 м²",
+       "price": 19063956
+      },
+      {
+       "offer": 334758849,
+       "house": "Секция 7",
+       "area": "40,6 м²",
+       "price": 19849751
+      },
+      {
+       "offer": 334758885,
+       "house": "Секция 6",
+       "area": "44,2 м²",
+       "price": 24468850
+      },
+      {
+       "offer": 334758895,
+       "house": "Секция 6",
+       "area": "45,3 м²",
+       "price": 26520766
+      }
+     ]
+    },
+    "twoRoom": {
+     "count": 43,
+     "range": "20,3–28,5 млн ₽",
+     "min_area": "От 50 м²",
+     "layouts": [
+      {
+       "offer": 334758884,
+       "house": "Секция 6",
+       "area": "56,0 м²",
+       "price": 28442049
+      },
+      {
+       "offer": 334758925,
+       "house": "Секция 6",
+       "area": "56,6 м²",
+       "price": 27663260
+      },
+      {
+       "offer": 334759024,
+       "house": "Секция 4",
+       "area": "59,3 м²",
+       "price": 24046399
+      },
+      {
+       "offer": 334758855,
+       "house": "Секция 7",
+       "area": "60,6 м²",
+       "price": 23790008
+      },
+      {
+       "offer": 334758958,
+       "house": "Секция 5",
+       "area": "61,6 м²",
+       "price": 25194388
+      }
+     ]
+    },
+    "threeRoom": {
+     "count": 5,
+     "range": "31,5–39,7 млн ₽",
+     "min_area": "От 81 м²",
+     "layouts": [
+      {
+       "offer": 334759018,
+       "house": "Секция 4",
+       "area": "80,7 м²",
+       "price": 31566833
+      },
+      {
+       "offer": 334758872,
+       "house": "Секция 7",
+       "area": "85,1 м²",
+       "price": 33456026
+      },
+      {
+       "offer": 334758856,
+       "house": "Секция 7",
+       "area": "86,1 м²",
+       "price": 33502620
+      },
+      {
+       "offer": 334759016,
+       "house": "Секция 4",
+       "area": "95,2 м²",
+       "price": 39729261
+      },
+      {
+       "offer": 334759020,
+       "house": "Секция 4",
+       "area": "95,7 м²",
+       "price": 37725542
+      }
+     ]
+    }
+   },
+   "houses": [
+    {
+     "id": 10902618,
+     "name": "Секция 4",
+     "finish": "Сдача в 3 кв. 2028",
+     "from_dev": 17,
+     "escrow": true
+    },
+    {
+     "id": 10902619,
+     "name": "Секция 5",
+     "finish": "Сдача в 3 кв. 2028",
+     "from_dev": 37,
+     "escrow": true
+    },
+    {
+     "id": 10902620,
+     "name": "Секция 6",
+     "finish": "Сдача в 3 кв. 2028",
+     "from_dev": 38,
+     "escrow": true
+    },
+    {
+     "id": 10902621,
+     "name": "Секция 7",
+     "finish": "Сдача в 3 кв. 2028",
+     "from_dev": 27,
+     "escrow": true
+    }
+   ]
   },
   "4494942": {
-   "listed_today": 0,
-   "site_total": null
+   "name": "Павелецкая от Гранель",
+   "builder": "ГК Гранель",
+   "class": "Бизнес",
+   "props": 220,
+   "from_dev": 202,
+   "from_agents": 18,
+   "min_price_m2_dev": 561957,
+   "rooms": {
+    "studio": {
+     "count": 20,
+     "range": "21,9–39,7 млн ₽",
+     "min_area": "От 26 м²",
+     "layouts": [
+      {
+       "offer": 334758755,
+       "house": "Корпус 1",
+       "area": "36,0 м²",
+       "price": 29021739
+      },
+      {
+       "offer": 334758744,
+       "house": "Корпус 1",
+       "area": "43,0 м²",
+       "price": 32767617
+      },
+      {
+       "offer": 334758759,
+       "house": "Корпус 1",
+       "area": "44,0 м²",
+       "price": 34188991
+      },
+      {
+       "offer": 334758752,
+       "house": "Корпус 1",
+       "area": "53,0 м²",
+       "price": 39292473
+      },
+      {
+       "offer": 334758761,
+       "house": "Корпус 1",
+       "area": "54,0 м²",
+       "price": 39716151
+      }
+     ]
+    },
+    "oneRoom": {
+     "count": 113,
+     "range": "27,6–39,2 млн ₽",
+     "min_area": "От 38 м²",
+     "layouts": [
+      {
+       "offer": 334756236,
+       "house": "Корпус 2",
+       "area": "52,0 м²",
+       "price": 34607044
+      },
+      {
+       "offer": 334756077,
+       "house": "Корпус 2",
+       "area": "53,0 м²",
+       "price": 33038308
+      },
+      {
+       "offer": 334756573,
+       "house": "Корпус 2",
+       "area": "54,0 м²",
+       "price": 34721612
+      },
+      {
+       "offer": 334758627,
+       "house": "Корпус 2",
+       "area": "55,0 м²",
+       "price": 34534820
+      },
+      {
+       "offer": 334756118,
+       "house": "Корпус 2",
+       "area": "58,0 м²",
+       "price": 36494969
+      }
+     ]
+    },
+    "twoRoom": {
+     "count": 37,
+     "range": "38,1–55,5 млн ₽",
+     "min_area": "От 67 м²",
+     "layouts": [
+      {
+       "offer": 334756622,
+       "house": "Корпус 2",
+       "area": "76,0 м²",
+       "price": 46142387
+      },
+      {
+       "offer": 334758738,
+       "house": "Корпус 2",
+       "area": "76,6 м²",
+       "price": 45340082
+      },
+      {
+       "offer": 334756958,
+       "house": "Корпус 2",
+       "area": "83,0 м²",
+       "price": 50261488
+      },
+      {
+       "offer": 334758656,
+       "house": "Корпус 2",
+       "area": "92,0 м²",
+       "price": 54790371
+      },
+      {
+       "offer": 334758644,
+       "house": "Корпус 2",
+       "area": "94,0 м²",
+       "price": 55525329
+      }
+     ]
+    },
+    "threeRoom": {
+     "count": 31,
+     "range": "46,4–56,1 млн ₽",
+     "min_area": "От 69 м²",
+     "layouts": [
+      {
+       "offer": 334758742,
+       "house": "Корпус 2",
+       "area": "85,5 м²",
+       "price": 52350176
+      },
+      {
+       "offer": 334758640,
+       "house": "Корпус 2",
+       "area": "87,0 м²",
+       "price": 53278923
+      },
+      {
+       "offer": 334757243,
+       "house": "Корпус 2",
+       "area": "88,0 м²",
+       "price": 54033757
+      },
+      {
+       "offer": 334756163,
+       "house": "Корпус 2",
+       "area": "89,0 м²",
+       "price": 54594998
+      },
+      {
+       "offer": 334758626,
+       "house": "Корпус 2",
+       "area": "90,0 м²",
+       "price": 52790521
+      }
+     ]
+    },
+    "fourRoom": {
+     "count": 1,
+     "range": "72,7 млн ₽",
+     "min_area": "От 103 м²",
+     "layouts": [
+      {
+       "offer": 334758745,
+       "house": "Корпус 1",
+       "area": "103,0 м²",
+       "price": 72731321
+      }
+     ]
+    }
+   },
+   "houses": [
+    {
+     "id": 8765341,
+     "name": "Корпус 1",
+     "finish": "Сдача в 4 кв. 2026",
+     "from_dev": 26,
+     "escrow": true
+    },
+    {
+     "id": 10895271,
+     "name": "Корпус 2",
+     "finish": "Сдача в 3 кв. 2028",
+     "from_dev": 176,
+     "escrow": true
+    }
+   ]
   },
   "5221539": {
-   "listed_today": 0,
-   "site_total": null
+   "name": "Мнёвники от Гранель",
+   "builder": "ГК Гранель",
+   "class": "Бизнес",
+   "props": 91,
+   "from_dev": 89,
+   "from_agents": 2,
+   "min_price_m2_dev": 504390,
+   "rooms": {
+    "studio": {
+     "count": 25,
+     "range": "17,2–20,6 млн ₽",
+     "min_area": "От 28 м²",
+     "layouts": [
+      {
+       "offer": 334787621,
+       "house": "Секция 1",
+       "area": "28,4 м²",
+       "price": 17572691
+      },
+      {
+       "offer": 334785856,
+       "house": "Секция 1",
+       "area": "29,8 м²",
+       "price": 17669802
+      }
+     ]
+    },
+    "oneRoom": {
+     "count": 49,
+     "range": "20,7–28,5 млн ₽",
+     "min_area": "От 38 м²",
+     "layouts": [
+      {
+       "offer": 334785739,
+       "house": "Секция 1",
+       "area": "42,6 м²",
+       "price": 23570605
+      },
+      {
+       "offer": 334785680,
+       "house": "Секция 1",
+       "area": "43,5 м²",
+       "price": 26195361
+      },
+      {
+       "offer": 334787207,
+       "house": "Секция 1",
+       "area": "48,6 м²",
+       "price": 26251915
+      },
+      {
+       "offer": 334785616,
+       "house": "Секция 1",
+       "area": "50,0 м²",
+       "price": 28054748
+      },
+      {
+       "offer": 334786116,
+       "house": "Секция 1",
+       "area": "52,2 м²",
+       "price": 27267590
+      }
+     ]
+    },
+    "twoRoom": {
+     "count": 1,
+     "range": "35 млн ₽",
+     "min_area": "От 61 м²",
+     "layouts": [
+      {
+       "offer": 334787486,
+       "house": "Секция 1",
+       "area": "61,4 м²",
+       "price": 35035801
+      }
+     ]
+    },
+    "threeRoom": {
+     "count": 13,
+     "range": "35,8–42 млн ₽",
+     "min_area": "От 65 м²",
+     "layouts": [
+      {
+       "offer": 334786854,
+       "house": "Секция 1",
+       "area": "65,2 м²",
+       "price": 35870227
+      },
+      {
+       "offer": 334786824,
+       "house": "Секция 1",
+       "area": "65,5 м²",
+       "price": 36386272
+      },
+      {
+       "offer": 334786808,
+       "house": "Секция 1",
+       "area": "66,8 м²",
+       "price": 36294768
+      },
+      {
+       "offer": 334787374,
+       "house": "Секция 1",
+       "area": "71,3 м²",
+       "price": 39514935
+      },
+      {
+       "offer": 334785645,
+       "house": "Секция 1",
+       "area": "75,0 м²",
+       "price": 41191972
+      }
+     ]
+    },
+    "fiveRoom": {
+     "count": 1,
+     "range": "66,8 млн ₽",
+     "min_area": "От 121 м²",
+     "layouts": [
+      {
+       "offer": 334785910,
+       "house": "Секция 1",
+       "area": "121,0 м²",
+       "price": 66882753
+      }
+     ]
+    }
+   },
+   "houses": [
+    {
+     "id": 10048636,
+     "name": "Секция 1",
+     "finish": "Сдача в 4 кв. 2028",
+     "from_dev": 89,
+     "escrow": true
+    },
+    {
+     "id": 10917882,
+     "name": "Секция 4",
+     "finish": "Сдача в 4 кв. 2028",
+     "from_dev": 0,
+     "escrow": true
+    }
+   ]
   },
   "7889": {
-   "listed_today": 0,
-   "site_total": null
+   "name": "ЗИЛАРТ",
+   "builder": "Группа ЛСР",
+   "class": "Бизнес",
+   "props": 916,
+   "from_dev": 675,
+   "from_agents": 241,
+   "min_price_m2_dev": 502652,
+   "rooms": {
+    "studio": {
+     "count": 121,
+     "range": "17,1–23,1 млн ₽",
+     "min_area": "От 18 м²",
+     "layouts": [
+      {
+       "offer": 325478884,
+       "house": "ЗИЛАРТ СПАРК (Дом 21)",
+       "area": "26,5 м²",
+       "price": 22080754
+      },
+      {
+       "offer": 325480025,
+       "house": "ЗИЛАРТ МАРК (дом 33)",
+       "area": "28,2 м²",
+       "price": 20768961
+      },
+      {
+       "offer": 325480047,
+       "house": "ЗИЛАРТ МАРК (дом 33)",
+       "area": "28,6 м²",
+       "price": 19926992
+      },
+      {
+       "offer": 325479905,
+       "house": "ЗИЛАРТ МАРК (дом 33)",
+       "area": "30,1 м²",
+       "price": 22505950
+      },
+      {
+       "offer": 325480118,
+       "house": "ЗИЛАРТ МАРК (дом 33)",
+       "area": "32,0 м²",
+       "price": 22181504
+      }
+     ]
+    },
+    "oneRoom": {
+     "count": 306,
+     "range": "21,8–34,8 млн ₽",
+     "min_area": "От 33 м²",
+     "layouts": [
+      {
+       "offer": 325479524,
+       "house": "ЗИЛАРТ СПАРК (Дом 21)",
+       "area": "41,1 м²",
+       "price": 27584634
+      },
+      {
+       "offer": 325479649,
+       "house": "ЗИЛАРТ ГРАНД (Дом 18)",
+       "area": "41,5 м²",
+       "price": 26955287
+      },
+      {
+       "offer": 325479727,
+       "house": "ЗИЛАРТ ГРАНД (Дом 18)",
+       "area": "43,5 м²",
+       "price": 34871296
+      },
+      {
+       "offer": 325478927,
+       "house": "ЗИЛАРТ СПАРК (Дом 21)",
+       "area": "45,3 м²",
+       "price": 27037486
+      },
+      {
+       "offer": 325479139,
+       "house": "ЗИЛАРТ СПАРК (Дом 21)",
+       "area": "46,3 м²",
+       "price": 29151869
+      }
+     ]
+    },
+    "twoRoom": {
+     "count": 230,
+     "range": "30,9–46,6 млн ₽",
+     "min_area": "От 51 м²",
+     "layouts": [
+      {
+       "offer": 325478857,
+       "house": "ЗИЛАРТ СПАРК (Дом 21)",
+       "area": "72,2 м²",
+       "price": 43288954
+      },
+      {
+       "offer": 325478944,
+       "house": "ЗИЛАРТ СПАРК (Дом 21)",
+       "area": "73,2 м²",
+       "price": 44899635
+      },
+      {
+       "offer": 325478599,
+       "house": "ЗИЛАРТ СПАРК (Дом 21)",
+       "area": "73,5 м²",
+       "price": 41008369
+      },
+      {
+       "offer": 325478643,
+       "house": "ЗИЛАРТ СПАРК (Дом 21)",
+       "area": "74,5 м²",
+       "price": 41710911
+      },
+      {
+       "offer": 325480264,
+       "house": "ЗИЛАРТ МАРК (дом 33)",
+       "area": "76,8 м²",
+       "price": 46687180
+      }
+     ]
+    },
+    "threeRoom": {
+     "count": 11,
+     "range": "44,8–68,9 млн ₽",
+     "min_area": "От 72 м²",
+     "layouts": [
+      {
+       "offer": 325480088,
+       "house": "ЗИЛАРТ МАРК (дом 33)",
+       "area": "71,6 м²",
+       "price": 44924417
+      },
+      {
+       "offer": 325480066,
+       "house": "ЗИЛАРТ МАРК (дом 33)",
+       "area": "80,5 м²",
+       "price": 55896141
+      },
+      {
+       "offer": 335011406,
+       "house": "ЗИЛАРТ ГРАНД (Дом 18)",
+       "area": "82,8 м²",
+       "price": 50937980
+      },
+      {
+       "offer": 332014684,
+       "house": "ЗИЛАРТ МАРК (дом 33)",
+       "area": "87,8 м²",
+       "price": 68945125
+      }
+     ]
+    },
+    "fourRoom": {
+     "count": 7,
+     "range": "76,7–95,1 млн ₽",
+     "min_area": "От 110 м²",
+     "layouts": [
+      {
+       "offer": 325479513,
+       "house": "ЗИЛАРТ СПАРК (Дом 21)",
+       "area": "109,7 м²",
+       "price": 76700813
+      },
+      {
+       "offer": 325478765,
+       "house": "ЗИЛАРТ СПАРК (Дом 21)",
+       "area": "112,4 м²",
+       "price": 85892370
+      },
+      {
+       "offer": 325479508,
+       "house": "ЗИЛАРТ СПАРК (Дом 21)",
+       "area": "117,3 м²",
+       "price": 84965082
+      },
+      {
+       "offer": 333508665,
+       "house": "ЗИЛАРТ СПАРК (Дом 21)",
+       "area": "120,5 м²",
+       "price": 95171984
+      }
+     ]
+    }
+   },
+   "houses": [
+    {
+     "id": 577955,
+     "name": "Дом 15",
+     "finish": "Сдан во 2 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 41492,
+     "name": "Дом №1",
+     "finish": "Сдан в 3 кв. 2019",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 11873,
+     "name": "Дом №3",
+     "finish": "Сдан в 4 кв. 2018",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6659,
+     "name": "Дом №4",
+     "finish": "Сдан в 4 кв. 2018",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 6660,
+     "name": "Дом №5",
+     "finish": "Сдан в 4 кв. 2018",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 11869,
+     "name": "Дом №6",
+     "finish": "Сдан в 4 кв. 2018",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 7366,
+     "name": "Дом №7",
+     "finish": "Сдан в 3 кв. 2019",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 39657,
+     "name": "Дом №8",
+     "finish": "Сдан во 2 кв. 2020",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 40940,
+     "name": "Дом №17",
+     "finish": "Сдан во 2 кв. 2022",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 110383,
+     "name": "Дом № 11",
+     "finish": "Сдан в 3 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 574543,
+     "name": "Дом № 12",
+     "finish": "Сдан в 3 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 574549,
+     "name": "Дом № 13",
+     "finish": "Сдан в 3 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 575457,
+     "name": "Дом № 14",
+     "finish": "Сдан во 2 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 577959,
+     "name": "Дом № 16",
+     "finish": "Сдан во 2 кв. 2022",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 8801411,
+     "name": "ЗИЛАРТ ГРАНД (Дом 18)",
+     "finish": "Сдан во 2 кв. 2026",
+     "from_dev": 58,
+     "escrow": false
+    },
+    {
+     "id": 579674,
+     "name": "ЗИЛАРТ ДАИМОНД (Дом 10)",
+     "finish": "Сдан в 3 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 10910477,
+     "name": "ЗИЛАРТ МАРК (дом 33)",
+     "finish": "Сдача в 4 кв. 2027",
+     "from_dev": 239,
+     "escrow": true
+    },
+    {
+     "id": 9364826,
+     "name": "ЗИЛАРТ СПАРК (Дом 21)",
+     "finish": "Сдача в 4 кв. 2027",
+     "from_dev": 378,
+     "escrow": true
+    },
+    {
+     "id": 579304,
+     "name": "ЗИЛАРТ ТАУЭР (Дом 9)",
+     "finish": "Сдан в 3 кв. 2023",
+     "from_dev": 0,
+     "escrow": false
+    }
+   ]
+  },
+  "4183417": {
+   "name": "СОУЛ",
+   "builder": "FORMA",
+   "class": "Бизнес",
+   "props": 362,
+   "from_dev": 310,
+   "from_agents": 52,
+   "min_price_m2_dev": 455223,
+   "rooms": {
+    "studio": {
+     "count": 16,
+     "range": "18,6–26,9 млн ₽",
+     "min_area": "От 27 м²",
+     "layouts": [
+      {
+       "offer": 319305114,
+       "house": "Корпус 3",
+       "area": "26,8 м²",
+       "price": 21564244
+      },
+      {
+       "offer": 329497952,
+       "house": "Корпус 8",
+       "area": "28,8 м²",
+       "price": 18658886
+      },
+      {
+       "offer": 319304819,
+       "house": "Корпус 5",
+       "area": "29,8 м²",
+       "price": 22165836
+      }
+     ]
+    },
+    "oneRoom": {
+     "count": 121,
+     "range": "23,5–42,1 млн ₽",
+     "min_area": "От 36 м²",
+     "layouts": [
+      {
+       "offer": 323031574,
+       "house": "Корпус 7",
+       "area": "51,8 м²",
+       "price": 27796553
+      },
+      {
+       "offer": 319304976,
+       "house": "Корпус 6",
+       "area": "53,2 м²",
+       "price": 30850892
+      },
+      {
+       "offer": 326229930,
+       "house": "Корпус 7",
+       "area": "53,8 м²",
+       "price": 29437315
+      },
+      {
+       "offer": 323031598,
+       "house": "Корпус 7",
+       "area": "54,8 м²",
+       "price": 38206560
+      },
+      {
+       "offer": 331276076,
+       "house": "Корпус 7",
+       "area": "55,6 м²",
+       "price": 42122560
+      }
+     ]
+    },
+    "twoRoom": {
+     "count": 74,
+     "range": "36,6–91,5 млн ₽",
+     "min_area": "От 59 м²",
+     "layouts": [
+      {
+       "offer": 332923505,
+       "house": "Корпус 8",
+       "area": "75,0 м²",
+       "price": 43897500
+      },
+      {
+       "offer": 329573633,
+       "house": "Корпус 9",
+       "area": "77,6 м²",
+       "price": 46522907
+      },
+      {
+       "offer": 331276066,
+       "house": "Корпус 7",
+       "area": "80,8 м²",
+       "price": 50023280
+      },
+      {
+       "offer": 323031661,
+       "house": "Корпус 7",
+       "area": "85,8 м²",
+       "price": 42123681
+      },
+      {
+       "offer": 319305063,
+       "house": "Корпус 6",
+       "area": "107,0 м²",
+       "price": 91578732
+      }
+     ]
+    },
+    "threeRoom": {
+     "count": 87,
+     "range": "38,8–114,4 млн ₽",
+     "min_area": "От 81 м²",
+     "layouts": [
+      {
+       "offer": 326568239,
+       "house": "Корпус 7",
+       "area": "107,7 м²",
+       "price": 70414260
+      },
+      {
+       "offer": 319304811,
+       "house": "Корпус 5",
+       "area": "114,1 м²",
+       "price": 81026517
+      },
+      {
+       "offer": 319304893,
+       "house": "Корпус 4",
+       "area": "137,2 м²",
+       "price": 109220529
+      },
+      {
+       "offer": 319304898,
+       "house": "Корпус 4",
+       "area": "138,8 м²",
+       "price": 110494238
+      },
+      {
+       "offer": 319305127,
+       "house": "Корпус 3",
+       "area": "152,8 м²",
+       "price": 114438643
+      }
+     ]
+    },
+    "fourRoom": {
+     "count": 12,
+     "range": "82,1–128,9 млн ₽",
+     "min_area": "От 110 м²",
+     "layouts": [
+      {
+       "offer": 331275986,
+       "house": "Корпус 8",
+       "area": "113,9 м²",
+       "price": 89719030
+      },
+      {
+       "offer": 329573664,
+       "house": "Корпус 7",
+       "area": "128,8 м²",
+       "price": 98660800
+      },
+      {
+       "offer": 330838742,
+       "house": "Корпус 6",
+       "area": "130,4 м²",
+       "price": 82141046
+      },
+      {
+       "offer": 331276068,
+       "house": "Корпус 7",
+       "area": "140,7 м²",
+       "price": 128909340
+      },
+      {
+       "offer": 319304816,
+       "house": "Корпус 5",
+       "area": "159,4 м²",
+       "price": 111013173
+      }
+     ]
+    }
+   },
+   "houses": [
+    {
+     "id": 8185912,
+     "name": "Корпус 1",
+     "finish": "Сдан в 1 кв. 2026",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 8185913,
+     "name": "Корпус 2",
+     "finish": "Сдан в 1 кв. 2026",
+     "from_dev": 0,
+     "escrow": false
+    },
+    {
+     "id": 8797597,
+     "name": "Корпус 3",
+     "finish": "Сдача во 2 кв. 2027",
+     "from_dev": 4,
+     "escrow": true
+    },
+    {
+     "id": 8854113,
+     "name": "Корпус 4",
+     "finish": "Сдача во 2 кв. 2027",
+     "from_dev": 18,
+     "escrow": true
+    },
+    {
+     "id": 8854114,
+     "name": "Корпус 5",
+     "finish": "Сдача во 2 кв. 2027",
+     "from_dev": 12,
+     "escrow": true
+    },
+    {
+     "id": 8854115,
+     "name": "Корпус 6",
+     "finish": "Сдача во 2 кв. 2027",
+     "from_dev": 16,
+     "escrow": true
+    },
+    {
+     "id": 10909990,
+     "name": "Корпус 7",
+     "finish": "Сдача в 1 кв. 2029",
+     "from_dev": 147,
+     "escrow": true
+    },
+    {
+     "id": 10909991,
+     "name": "Корпус 8",
+     "finish": "Сдача в 1 кв. 2029",
+     "from_dev": 50,
+     "escrow": true
+    },
+    {
+     "id": 10909992,
+     "name": "Корпус 9",
+     "finish": "Сдача в 1 кв. 2029",
+     "from_dev": 63,
+     "escrow": true
+    }
+   ]
+  },
+  "3202206": {
+   "name": "HIGH LIFE (ХАЙ ЛАЙФ)",
+   "builder": "PIONEER",
+   "class": "Премиум",
+   "props": 296,
+   "from_dev": 199,
+   "from_agents": 97,
+   "min_price_m2_dev": 622370,
+   "rooms": {
+    "oneRoom": {
+     "count": 34,
+     "range": "28,4–44,7 млн ₽",
+     "min_area": "От 24 м²",
+     "layouts": [
+      {
+       "offer": 333699477,
+       "house": "K5 MIND TOWER",
+       "area": "24,5 м²",
+       "price": 30312135
+      },
+      {
+       "offer": 333699425,
+       "house": "K5 MIND TOWER",
+       "area": "25,7 м²",
+       "price": 31954095
+      },
+      {
+       "offer": 333699741,
+       "house": "K6 FAITH TOWER",
+       "area": "35,2 м²",
+       "price": 34905024
+      },
+      {
+       "offer": 333699774,
+       "house": "K6 FAITH TOWER",
+       "area": "37,0 м²",
+       "price": 37697968
+      },
+      {
+       "offer": 333699665,
+       "house": "K6 FAITH TOWER",
+       "area": "38,3 м²",
+       "price": 39245052
+      }
+     ]
+    },
+    "twoRoom": {
+     "count": 46,
+     "range": "42,8–81,3 млн ₽",
+     "min_area": "От 35 м²",
+     "layouts": [
+      {
+       "offer": 333699684,
+       "house": "K6 FAITH TOWER",
+       "area": "59,8 м²",
+       "price": 63087804
+      },
+      {
+       "offer": 333699709,
+       "house": "K6 FAITH TOWER",
+       "area": "60,7 м²",
+       "price": 67838320
+      },
+      {
+       "offer": 335016808,
+       "house": "K6 FAITH TOWER",
+       "area": "62,2 м²",
+       "price": 61074180
+      },
+      {
+       "offer": 333699590,
+       "house": "K4 SENSE TOWER",
+       "area": "62,7 м²",
+       "price": 57964896
+      },
+      {
+       "offer": 333699559,
+       "house": "K4 SENSE TOWER",
+       "area": "65,7 м²",
+       "price": 55132812
+      }
+     ]
+    },
+    "threeRoom": {
+     "count": 57,
+     "range": "64,9–162,4 млн ₽",
+     "min_area": "От 67 м²",
+     "layouts": [
+      {
+       "offer": 333699613,
+       "house": "K4 SENSE TOWER",
+       "area": "96,3 м²",
+       "price": 92806236
+      },
+      {
+       "offer": 333699748,
+       "house": "K6 FAITH TOWER",
+       "area": "127,0 м²",
+       "price": 125215650
+      },
+      {
+       "offer": 333699467,
+       "house": "K5 MIND TOWER",
+       "area": "128,6 м²",
+       "price": 162498960
+      },
+      {
+       "offer": 333699514,
+       "house": "K3 HEART TOWER",
+       "area": "148,3 м²",
+       "price": 140885000
+      },
+      {
+       "offer": 334266194,
+       "house": "K3 HEART TOWER",
+       "area": "153,1 м²",
+       "price": 145445000
+      }
+     ]
+    },
+    "fourRoom": {
+     "count": 60,
+     "range": "75–212 млн ₽",
+     "min_area": "От 104 м²",
+     "layouts": [
+      {
+       "offer": 333699627,
+       "house": "K4 SENSE TOWER",
+       "area": "169,1 м²",
+       "price": 146148057
+      },
+      {
+       "offer": 335016801,
+       "house": "K4 SENSE TOWER",
+       "area": "171,3 м²",
+       "price": 147879864
+      },
+      {
+       "offer": 335016804,
+       "house": "K4 SENSE TOWER",
+       "area": "172,9 м²",
+       "price": 147689451
+      },
+      {
+       "offer": 333699640,
+       "house": "K1 SOUL TOWER",
+       "area": "193,2 м²",
+       "price": 183540000
+      },
+      {
+       "offer": 334266191,
+       "house": "K3 HEART TOWER",
+       "area": "223,2 м²",
+       "price": 212040000
+      }
+     ]
+    },
+    "fiveRoom": {
+     "count": 1,
+     "range": "205,6 млн ₽",
+     "min_area": "От 138 м²",
+     "layouts": [
+      {
+       "offer": 333699705,
+       "house": "K6 FAITH TOWER",
+       "area": "138,5 м²",
+       "price": 205617100
+      }
+     ]
+    },
+    "openPlan": {
+     "count": 1,
+     "range": "305,3 млн ₽",
+     "min_area": "От 321 м²",
+     "layouts": [
+      {
+       "offer": 333699645,
+       "house": "K2 FEEL TOWER",
+       "area": "321,4 м²",
+       "price": 305330000
+      }
+     ]
+    }
+   },
+   "houses": [
+    {
+     "id": 6260473,
+     "name": "K1 SOUL TOWER",
+     "finish": "Сдан во 2 кв. 2025",
+     "from_dev": 3,
+     "escrow": false
+    },
+    {
+     "id": 6260474,
+     "name": "K2 FEEL TOWER",
+     "finish": "Сдан во 2 кв. 2025",
+     "from_dev": 5,
+     "escrow": false
+    },
+    {
+     "id": 6260475,
+     "name": "K3 HEART TOWER",
+     "finish": "Сдан во 2 кв. 2025",
+     "from_dev": 3,
+     "escrow": false
+    },
+    {
+     "id": 6260476,
+     "name": "K4 SENSE TOWER",
+     "finish": "Сдача в 4 кв. 2027",
+     "from_dev": 55,
+     "escrow": true
+    },
+    {
+     "id": 6260477,
+     "name": "K5 MIND TOWER",
+     "finish": "Сдача в 4 кв. 2027",
+     "from_dev": 53,
+     "escrow": true
+    },
+    {
+     "id": 6260478,
+     "name": "K6 FAITH TOWER",
+     "finish": "Сдача в 4 кв. 2027",
+     "from_dev": 80,
+     "escrow": true
+    }
+   ]
+  }
+ },
+ "coverage": {
+  "2812286": {
+   "listed_today": 1222,
+   "site_total": 1238
+  },
+  "7231": {
+   "listed_today": 755,
+   "site_total": 785
+  },
+  "3401924": {
+   "listed_today": 69,
+   "site_total": 70
+  },
+  "5699304": {
+   "listed_today": 123,
+   "site_total": 122
+  },
+  "4494942": {
+   "listed_today": 220,
+   "site_total": 220
+  },
+  "5221539": {
+   "listed_today": 91,
+   "site_total": 91
+  },
+  "7889": {
+   "listed_today": 900,
+   "site_total": 916
   },
   "4888961": {
-   "listed_today": 0,
+   "listed_today": 367,
    "site_total": null
   },
   "2446053": {
-   "listed_today": 0,
+   "listed_today": 344,
    "site_total": null
   },
   "4377697": {
-   "listed_today": 0,
-   "site_total": null
-  },
-  "4183417": {
-   "listed_today": 0,
+   "listed_today": 14,
    "site_total": null
   },
   "3202206": {
-   "listed_today": 0,
-   "site_total": null
+   "listed_today": 292,
+   "site_total": 296
+  },
+  "4183417": {
+   "listed_today": 361,
+   "site_total": 362
+  },
+  "5340468": {
+   "listed_today": 127,
+   "site_total": 127
   }
  }
 }

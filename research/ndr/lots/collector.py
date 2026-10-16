@@ -127,6 +127,23 @@ def parse_list(html):
     return res.get("offers") or [], res.get("totalOffers")
 
 
+COND = (("без ремонт", "без ремонта"), ("без отделк", "без ремонта"), ("чернов", "без ремонта"), ("white box", "white box"),
+        ("вайт бокс", "white box"), ("предчистов", "white box"), ("дизайнерск", "с ремонтом"), ("с ремонтом", "с ремонтом"),
+        ("с мебелью", "с ремонтом"), ("евроремонт", "с ремонтом"), ("чистов", "с ремонтом"))
+
+
+def condition(o):
+    """Finishing of the flat: developer's field for new-building offers, keywords of the description for resale."""
+    dec = o.get("decoration")
+    if dec:
+        return {"without": "без ремонта", "rough": "без ремонта", "preFine": "white box", "fine": "с ремонтом"}.get(dec, dec)
+    d = (o.get("description") or "").lower()
+    for k, v in COND:
+        if k in d:
+            return v
+    return None
+
+
 def offer_row(o, zk_id):
     nb = o.get("newbuilding") or {}
     house = nb.get("house") or {}
@@ -146,6 +163,9 @@ def offer_row(o, zk_id):
         "price": price, "price_m2": round(price / area) if price and area else None,
         "discount": json.dumps(o.get("discount"), ensure_ascii=False) if o.get("discount") else None,
         "booked": int(bool(o.get("isBookedFromDeveloper"))),
+        "cond": condition(o), "descr": (o.get("description") or "")[:600],
+        "flags": json.dumps({k: o.get(k) for k in ("isAuction", "shareAmount", "roomsForSaleCount", "isInHiddenBase", "isApartments")
+                             if o.get(k)}, ensure_ascii=False) or None,
     }
 
 
@@ -177,6 +197,7 @@ def save_offer(db, r, day):
                   :decoration, :category, :sale_type, :from_developer, :by_owner, :seller, :account_type, :is_apartments, :created)
                   on conflict(offer_id) do update set last_seen=:day, sale_type=:sale_type, seller=:seller, decoration=:decoration""",
                dict(r, day=day))
+    db.execute("update offers set flags=?, cond=?, descr=? where offer_id=?", (r.get("flags"), r.get("cond"), r.get("descr"), r["offer_id"]))
     db.execute("insert or replace into obs values(?,?,?,?,?,?,?)",
                (day, r["offer_id"], r["zk_id"], r["price"], r["price_m2"], r["discount"], r["booked"]))
 
@@ -192,13 +213,24 @@ def parse_card(html):
     m = VIEWS.search(s)
     total = int(m.group(1).replace(" ", "").replace("\xa0", "")) if m else None
     today_v = int(m.group(2).replace(" ", "").replace("\xa0", "")) if m and m.group(2) else (0 if m else None)
-    return {"status": off.get("status"), "views_total": total, "views_today": today_v,
+    extra = {"description": (off.get("description") or "")[:1500], "isAuction": off.get("isAuction"), "shareAmount": off.get("shareAmount"),
+             "roomsForSaleCount": off.get("roomsForSaleCount"), "decoration": off.get("decoration"),
+             "saleType": (off.get("bargainTerms") or {}).get("saleType"), "isApartments": off.get("isApartments")}
+    return {"extra": json.dumps(extra, ensure_ascii=False), "status": off.get("status"), "views_total": total, "views_today": today_v,
             "price_changes": json.dumps(od.get("priceChanges") or [], ensure_ascii=False), "publication_date": off.get("publicationDate")}
+
+
+def migrate(db):
+    for table, col in (("offers", "flags text"), ("cards", "extra text"), ("offers", "cond text"), ("offers", "descr text")):
+        cols = [r[1] for r in db.execute(f"pragma table_info({table})")]
+        if col.split()[0] not in cols:
+            db.execute(f"alter table {table} add column {col}")
 
 
 def run():
     db = sqlite3.connect(DB)
     db.executescript(SCHEMA)
+    migrate(db)
     day = today()
     db.execute("insert or ignore into runs(day, started, pages_ok, pages_fail, cards) values(?,?,0,0,0)", (day, now().isoformat()))
     db.commit()
@@ -208,7 +240,8 @@ def run():
         for dev, zks in PILOT.items():
             for zk_id, name in zks.items():
                 for sort in ("price_object_order", "creation_date_desc"):
-                    page, total, seen_before = 1, None, None
+                    page, total, no_gain = 1, None, 0
+                    got = db.execute("select count(*) from obs where day=? and zk_id=?", (day, zk_id)).fetchone()[0]
                     while True:
                         url = SEARCH.format(zk=zk_id, sort=sort, page=page)
                         row = db.execute("select total, n_offers, ok from pages where day=? and url=?", (day, url)).fetchone()
@@ -226,18 +259,20 @@ def run():
                             db.execute("insert or replace into pages values(?,?,?,?,?,?,?)", (day, zk_id, url, total, len(offers), ok, now().isoformat()))
                             db.execute(f"update runs set pages_{'ok' if ok else 'fail'}=pages_{'ok' if ok else 'fail'}+1 where day=?", (day,))
                             db.commit()
+                            before = got if page > 1 else None
                             got = db.execute("select count(*) from obs where day=? and zk_id=?", (day, zk_id)).fetchone()[0]
+                            no_gain = no_gain + 1 if (sort != "price_object_order" and before is not None and got == before) else 0
                             log("page", status, name, sort[:5], f"p{page}", f"{len(offers)} offers, have {got}/{total}")
                             fails = 0 if ok else fails + 1
                             if fails >= MAX_FAILS:
                                 raise Blocked(f"{fails} failed pages in a row")
                             if not ok:
                                 break
-                        if not total or page * PER_PAGE >= min(total, 54 * PER_PAGE):
+                        if not total or page * PER_PAGE >= min(total, 54 * PER_PAGE) or no_gain >= 3:
                             break
                         page += 1
                     got = db.execute("select count(*) from obs where day=? and zk_id=?", (day, zk_id)).fetchone()[0]
-                    if total is None or got >= 0.97 * min(total, 54 * PER_PAGE):
+                    if total is None or got >= 0.95 * min(total, 54 * PER_PAGE):
                         break                                   # complete enough: no second pass
         # 2. ЖК cards: developer's counts by room type and house
         for zk_id, jk_url in db.execute("select zk_id, jk_url from zk_meta").fetchall():
@@ -256,12 +291,19 @@ def run():
                              on c.offer_id=o.offer_id where o.last_seen=? and (c.d is null or c.d <= date(?, ?))
                              order by c.d is not null, c.d, o.from_developer""",
                           (day, day, f"-{CARD_REFRESH_DAYS} day")).fetchall()
+        try:
+            first = [c["offer_id"] for c in json.loads((HERE / "model.json").read_text()).get("candidates", [])]
+        except Exception:
+            first = []
+        have = {r[0] for r in db.execute("select offer_id from cards where day=?", (day,))}
+        todo = [(oid,) for oid in first if oid not in have] + [x for x in todo if x[0] not in set(first)]
         for (oid,) in todo[:max(CARD_BUDGET - done, 0)]:
             html, status = fetch(f"https://www.cian.ru/sale/flat/{oid}/")
             if html:
                 c = parse_card(html)
-                db.execute("insert or replace into cards values(?,?,?,?,?,?,?)",
-                           (oid, day, c["status"], c["views_total"], c["views_today"], c["price_changes"], c["publication_date"]))
+                db.execute("insert or replace into cards(offer_id, day, status, views_total, views_today, price_changes, publication_date, extra) "
+                           "values(?,?,?,?,?,?,?,?)", (oid, day, c["status"], c["views_total"], c["views_today"], c["price_changes"],
+                                                       c["publication_date"], c["extra"]))
                 db.execute("update runs set cards=cards+1 where day=?", (day,))
                 db.commit()
                 fails = 0
