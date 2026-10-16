@@ -120,6 +120,19 @@ def main():
                        "p12": a["profit"], "m12": a["margin"], "p6": b["profit"], "m6": b["margin"],
                        "irr12": a["irr"], "irr6": b["irr"]})
     out["ladder"] = ladder
+    # цена покупки → прибыль: ступени для графика, с точкой «в ноль» и ценой для € 10 на € 100 затрат
+    steps = []
+    for price, tag in ((ASK, "цена продавца"), (1_400_000, ""), (bids["12"]["breakeven"], "в ноль"),
+                       (1_250_000, ""), (1_200_000, ""), (bids["12"]["m10"], "€ 10 на каждые € 100 затрат"),
+                       (PRICE, "наше предложение"), (1_100_000, "")):
+        a, b = F.run(BASE, price=price), F.run(BASE, price=price, **FAST)
+        steps.append({"price": price, "tag": tag, "disc": price / ASK - 1, "p12": a["profit"], "p6": b["profit"]})
+    out["price_steps"] = steps
+    # что если: инвестор хочет другую доходность, аренда другая
+    out["sens_bar"] = [{"bar": bar, "sale": F.run(BASE, exit_bar=bar)["sale"], "profit": F.run(BASE, exit_bar=bar)["profit"]}
+                       for bar in bars]
+    out["sens_rent"] = [{"k": k, "rent": RENT * k, "sale": F.run(BASE, rent_m2=RENT * k / AREA)["sale"],
+                         "profit": F.run(BASE, rent_m2=RENT * k / AREA)["profit"]} for k in rents]
     Path(sys.argv[1]).write_text(json.dumps(out, ensure_ascii=False, indent=1, default=float))
 
     def pct(x):

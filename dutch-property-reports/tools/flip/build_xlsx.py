@@ -395,8 +395,45 @@ for l in K["ladder"]:
 
 # ---------------------------------------------------------------- чувствительность
 SE = wb.create_sheet("Чувствительность")
-title(SE, "Чувствительность прибыли до налога", "Продажа через 12 месяцев; остальные допущения базовые")
-SE.column_dimensions["A"].width = 30
+title(SE, "Что будет, если расчёт не сойдётся",
+      "Покупка за € 1.150.000, продажа через 12 месяцев; меняется одно допущение, остальные — как в базовом расчёте")
+SE.column_dimensions["A"].width = 34
+
+
+def simple(top, caption, cols, rows, fmts, base_row=None):
+    SE.cell(row=top, column=1, value=caption).font = Font(bold=True, color=OCHRE, size=11)
+    for j, v in enumerate(cols, start=1):
+        c = SE.cell(row=top + 1, column=j, value=v)
+        c.font, c.fill = F_HEAD, FILL_HEAD
+        c.alignment = Alignment(wrap_text=True, vertical="center")
+    for i, rec in enumerate(rows):
+        for j, (v, fmt) in enumerate(zip(rec, fmts), start=1):
+            c = SE.cell(row=top + 2 + i, column=j, value=v)
+            if fmt:
+                c.number_format = fmt
+            if base_row == i:
+                c.fill, c.font = FILL_KEY, F_BOLD
+    return top + 3 + len(rows)
+
+
+top = simple(4, "Если инвестор захочет другую доходность (аренда в год / доходность = цена, которую он заплатит)",
+             ["Инвестор хочет получать в год", "Значит, заплатит за здание", "Наша прибыль за 12 месяцев"],
+             [[r["bar"], r["sale"], r["profit"]] for r in K["sens_bar"]], [PCT2, EUR, EUR],
+             base_row=[r["bar"] for r in K["sens_bar"]].index(0.0825))
+top = simple(top, "Если аренда окажется другой", ["Аренда к нашей оценке", "Аренда в год", "Инвестор заплатит",
+                                                  "Наша прибыль за 12 месяцев"],
+             [[r["k"] - 1, r["rent"], r["sale"], r["profit"]] for r in K["sens_rent"]], ["+0%;-0%;0%", EUR, EUR, EUR],
+             base_row=[r["k"] for r in K["sens_rent"]].index(1.0))
+gl0 = K["grid_lease_sale"]
+lease_simple = []
+for lm, row in zip(gl0["leases"], gl0["cells"]):
+    cells = dict(zip(gl0["sales"], row))
+    lease_simple.append([f"на {lm}-м месяце"] + [cells[sm]["profit"] if cells.get(sm) else None for sm in (9, 12, 15, 18)])
+top = simple(top, "Если арендатор въедет позже: прибыль до налога", ["Арендатор въезжает", "Продаём через 9 месяцев",
+                                                                     "через 12", "через 15", "через 18"],
+             lease_simple, [None, EUR, EUR, EUR, EUR], base_row=1)
+SE.cell(row=top, column=1, value="Те же расчёты сеткой: прибыль в евро, когда меняются сразу два допущения").font = F_SUB
+top += 2
 
 
 def grid(top, caption, row_label, row_vals, row_fmt, cols, col_fmt, cells):
@@ -420,7 +457,7 @@ def grid(top, caption, row_label, row_vals, row_fmt, cols, col_fmt, cells):
 
 
 g = K["grid_price_bar"]
-top = grid(4, "Прибыль: цена покупки (строки) и доходность, которую требует инвестор (столбцы)", "Цена \\ доходность", g["prices"], EUR, g["bars"], PCT2,
+top = grid(top, "Прибыль: цена покупки (строки) и доходность, которую требует инвестор (столбцы)", "Цена \\ доходность", g["prices"], EUR, g["bars"], PCT2,
            g["profit"])
 g = K["grid_rent_bar"]
 top = grid(top + 1, "Прибыль: аренда выше или ниже оценки (строки) и доходность для инвестора (столбцы)", "Аренда \\ доходность", g["rents"], "0%",

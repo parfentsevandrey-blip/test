@@ -214,46 +214,56 @@ def bridge():
 
 # ------------------------------------------------------------------ лестница цены
 def ladder():
-    h = 70
+    """Столбики: сколько заработаем при разной цене покупки, через 12 и через 6 месяцев."""
+    rows = K["price_steps"]
+    row_mm = 10.5
+    h = 20 + len(rows) * row_mm + 4
     img, d = canvas(h)
-    caption(d, "Прибыль до налога в зависимости от цены покупки")
-    L = sorted(K["ladder"], key=lambda r: r["price"])
-    xs = [r["price"] for r in L]
-    lo = min(min(r["p12"], r["p6"]) for r in L)
-    hi = max(max(r["p12"], r["p6"]) for r in L)
-    lo, hi = lo * 1.15, hi * 1.25
-    x0, x1 = 22 * MM, (W - 6) * MM
-    y0, y1 = 12 * MM, (h - 12) * MM
+    caption(d, "Сколько заработаем до налога при разной цене покупки")
+    lo = min(min(r["p12"], r["p6"]) for r in rows)
+    hi = max(max(r["p12"], r["p6"]) for r in rows)
+    x0, x1 = 58 * MM, (W - 2) * MM
+    span = hi - lo
+    left, right = lo - span * 0.22, hi + span * 0.22
 
-    def X(p):
-        return x0 + (x1 - x0) * (p - xs[0]) / (xs[-1] - xs[0])
-
-    def Y(v):
-        return y1 - (y1 - y0) * (v - lo) / (hi - lo)
-    hairline(d, x0, Y(0), x1, Y(0), INK, 0.3)
-    tick = font(SANS, 6.2)
-    d.text((0, Y(0) - 1.6 * MM), "€ 0", font=tick, fill=GREY)
-    for v in (-200_000, 200_000):
-        dashed_h(d, x0, x1, Y(v), (224, 219, 208))
-        d.text((0, Y(v) - 1.6 * MM), eur(v, True), font=tick, fill=GREY)
-    for p in xs:
-        t = f"{p / 1e6:.2f}".replace(".", ",") + " млн"
-        d.text((X(p) - d.textlength(t, font=tick) / 2, y1 + 2.2 * MM), t, font=tick, fill=GREY)
-    for key, col, label in (("p12", BAR_INK, "12 месяцев"), ("p6", GOLD, "6 месяцев")):
-        pts = [(X(r["price"]), Y(r[key])) for r in L]
-        d.line(pts, fill=col, width=int(0.55 * MM))
-        for x, y in pts:
-            d.ellipse((x - 0.9 * MM, y - 0.9 * MM, x + 0.9 * MM, y + 0.9 * MM), fill=col)
-        x, y = pts[0]
-        d.text((x + 1 * MM, y + (-6.5 if key == "p6" else 8.5) * MM), label, font=font(SANS_MED, 6.6), fill=col)
-    for p, text in ((K["price"], "наше предложение"), (K["ask"], "цена продавца")):
-        x = X(p)
-        for y in range(int(y0), int(y1), int(2.2 * MM)):
-            d.line((x, y, x, y + 1.1 * MM), fill=GOLD, width=max(1, int(0.3 * MM)))
-        w = d.textlength(text, font=font(SANS, 6.2))
-        tx = x + 1.5 * MM if x + 1.5 * MM + w < x1 else x - 1.5 * MM - w
-        d.text((tx, y0 - 1 * MM), text, font=font(SANS, 6.2), fill=GOLD)
-    tracked(d, (x0, h * MM - 4.5 * MM), "ЦЕНА ПОКУПКИ, €", font(SANS_MED, 5.8), GREY)
+    def X(v):
+        return x0 + (x1 - x0) * (v - left) / (right - left)
+    top = 19 * MM
+    # подпись цветов
+    d.rectangle((x0, 9.0 * MM, x0 + 3.5 * MM, 11.4 * MM), fill=BAR_INK)
+    d.text((x0 + 5 * MM, 8.6 * MM), "продажа через 12 месяцев", font=font(SANS, 6.4), fill=GREY)
+    d.rectangle((x0 + 45 * MM, 9.0 * MM, x0 + 48.5 * MM, 11.4 * MM), fill=GOLD)
+    d.text((x0 + 50 * MM, 8.6 * MM), "через 6 месяцев", font=font(SANS, 6.4), fill=GREY)
+    zx = X(0)
+    d.line((zx, top - 2 * MM, zx, top + len(rows) * row_mm * MM - 1 * MM), fill=INK, width=max(1, int(0.3 * MM)))
+    d.text((zx - 9 * MM, top - 5.6 * MM), "← убыток", font=font(SANS, 6.0), fill=GREY)
+    d.text((zx + 1.5 * MM, top - 5.6 * MM), "прибыль →", font=font(SANS, 6.0), fill=GREY)
+    for i, r in enumerate(rows):
+        y = top + i * row_mm * MM
+        mine = r["tag"] == "наше предложение"
+        d.text((0, y + 0.2 * MM), eur(round(r["price"] / 100) * 100), font=font(SANS_MED, 7.4),
+               fill=GOLD if mine else INK)
+        note = r["tag"] or (f"на {abs(r['disc']) * 100:.0f} % ниже цены продавца")
+        if r["tag"] == "в ноль":
+            note = "прибыль 0 через 12 месяцев"
+        if r["tag"] and r["tag"] != "цена продавца":
+            note += f", на {abs(r['disc']) * 100:.0f} % ниже"
+        d.text((0, y + 4.2 * MM), note, font=font(SANS, 6.0), fill=GOLD if mine else GREY)
+        for j, (key, col) in enumerate((("p12", BAR_INK), ("p6", GOLD))):
+            v = r[key]
+            by = y + (0.4 + j * 4.4) * MM
+            a_, b_ = sorted((X(0), X(v)))
+            colour = col if v >= 0 else (RED if key == "p12" else (196, 140, 128))
+            d.rectangle((a_, by, max(b_, a_ + 0.4 * MM), by + 3.4 * MM), fill=colour)
+            if abs(v) < 500:
+                text = "0"
+            else:
+                text = ("+" if v > 0 else "−") + f"€ {abs(v) / 1000:,.0f} тыс.".replace(",", ".")
+            f = font(SANS_MED if key == "p12" else SANS, 6.4)
+            w = d.textlength(text, font=f)
+            tx = X(v) + 1.4 * MM if v >= 0 else X(v) - 1.4 * MM - w
+            d.text((tx, by - 0.3 * MM), text, font=f, fill=INK if key == "p12" else GREY)
+        hairline(d, 0, y + row_mm * MM - 1.2 * MM, x1, y + row_mm * MM - 1.2 * MM, (230, 226, 218), 0.2)
     img.save(OUT / "ladder.png")
 
 
