@@ -668,6 +668,22 @@ def migrate(db):
     db.commit()
 
 
+def _cd():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("cooldown", HERE / "lib" / "cooldown.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def site_of(url):
+    h = url.split("/")[2] if "://" in url else url
+    return ".".join(h.split(".")[-2:])
+
+
+GROUP_SITE = {"lsr": "lsr.ru", "fsk": "fsk.ru", "donstroy": "donstroy.moscow"}
+
+
 def run_group(db, grp, day):
     if grp == "lists":
         done = {r[0] for r in db.execute("select distinct url from fetches where day=? and status='200'", (day,))}
@@ -676,8 +692,12 @@ def run_group(db, grp, day):
         steps += [("https://forma.ru/market/projects/soul", forma), ("https://donstroy.moscow/sitemap-flats.xml", donstroy_list),
                   ("https://fsk.ru/sitemap.xml", fsk_list)]
         for url, fn in steps:
-            if url not in done:
-                log("list", fn(db))
+            if url in done:
+                continue
+            if _cd().active(site_of(url)):                 # L32: the site is paused after a block
+                log("list", url, "skipped: site paused", _cd().active(site_of(url))["until"])
+                continue
+            log("list", fn(db))
     elif grp == "lsr":
         log("list", lsr(db))
 
@@ -726,6 +746,11 @@ def run(grp):
     if st.startswith("BLOCKED"):                        # a site said 403/429 today: leave it alone until tomorrow
         log(grp, "blocked earlier today, not resuming:", st)
         return
+    if GROUP_SITE.get(grp) and _cd().active(GROUP_SITE[grp]):
+        log(grp, "site paused until", _cd().active(GROUP_SITE[grp])["until"], "(L32)")
+        db.execute("update gruns set status=? where day=? and grp=?", ("paused", day, grp))
+        db.commit()
+        return
     try:
         if grp != "lists":
             for _ in range(60):                         # flat-page groups need today's lists; wait up to 30 min
@@ -737,6 +762,9 @@ def run(grp):
     except Blocked as e:
         db.execute("update gruns set status=? where day=? and grp=?", (f"BLOCKED {e}", day, grp))
         log(grp, "BLOCKED", e)
+        m = re.search(r"https?://([^/\s]+)", str(e))
+        if m:
+            _cd().set_block(site_of(m[1]), 24, f"devcat {grp}: {e}")
     finished = db.execute("select count(*) from gruns where day=? and finished is not null", (day,)).fetchone()[0]
     if finished == len(GROUPS):
         db.execute("update runs set finished=?, status=? where day=?", (now(), "done", day))

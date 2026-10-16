@@ -23,9 +23,11 @@ sys.exit(0 if r and r[0] else 1)
 PY
 }
 
-resume() {  # resume <label> <script.py> <db> <runner.sh>
-  local label=$1 py=$2 db=$3 runner=$4
+resume() {  # resume <label> <script.py> <db> <runner.sh> [site paused after a block -> skip, L32]
+  local label=$1 py=$2 db=$3 runner=$4 site=${5:-}
   [ -f "$py" ] || return 0
+  if [ -n "$site" ] && ! python3 -I lib/cooldown.py check "$site" >/dev/null 2>&1; then
+    echo "$label: $site paused ($(python3 -I lib/cooldown.py check "$site" | head -c 120))"; return 0; fi
   if pgrep -f "^python3 -I ${py%.py}[.]py run" >/dev/null; then echo "$label: collecting ($(python3 -I "$py" status))"; return 0; fi
   if finished "$db"; then echo "$label: today's snapshot done ($(python3 -I "$py" status))"; return 0; fi
   setsid nohup "./$runner" > /dev/null 2>&1 < /dev/null 9>&- &
@@ -33,6 +35,6 @@ resume() {  # resume <label> <script.py> <db> <runner.sh>
   echo "$label: snapshot started/resumed for $DAY"
 }
 
-resume lots collector.py lots.db run_lots.sh
+resume lots collector.py lots.db run_lots.sh cian.ru
 resume devcat devcat.py devcat.db run_devcat.sh
 exit 0

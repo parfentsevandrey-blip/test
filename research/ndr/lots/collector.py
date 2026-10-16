@@ -227,7 +227,18 @@ def migrate(db):
             db.execute(f"alter table {table} add column {col}")
 
 
+def _cd():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("cooldown", HERE / "lib" / "cooldown.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
 def run():
+    if _cd().active("cian.ru"):                            # L32: paused after a block
+        log("ЦИАН paused until", _cd().active("cian.ru")["until"])
+        return
     db = sqlite3.connect(DB)
     db.executescript(SCHEMA)
     migrate(db)
@@ -331,6 +342,7 @@ def run():
         db.execute("update runs set note=? where day=?", (f"stopped: {e}", day))
         db.commit()
         log("BLOCKED / stopped:", e)
+        _cd().set_block("cian.ru", 24, f"collector: {e}")
 
 
 def status_line(db):
