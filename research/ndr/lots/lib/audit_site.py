@@ -3,8 +3,11 @@ group the page's requests into an API surface, and summarise what the page loads
 own-origin data response (JSON shape: keys and list sizes). Output: <out_dir>/<name>.json (+ the HAR and REA evidence).
 
 usage: audit_site.py <name> <url> <out_dir> [click-text]
+       audit_site.py <name> <url> <out_dir> --har <file.har>     (read a saved HAR again: no visit, no request to the site)
+Readers of the HAR: own-site JSON responses (every 2xx, L34), REA api-surface, mitmproxy2swagger endpoints with schemas (W25).
 """
 import base64
+import importlib.util
 import json
 import re
 import subprocess
@@ -46,16 +49,19 @@ def _policy():
     return m
 
 
-def main(name, url, out, click=None):
+def main(name, url, out, click=None, har_in=None):
     out = Path(out).resolve()                         # REA wants absolute paths
     out.mkdir(parents=True, exist_ok=True)
     har = out / f"{name}.har"
+    if har_in:
+        return analyse(name, url, out, Path(har_in).resolve(), None, None)
     cp = _policy()
     cp.check(url, "headless")       # ЦИАН, наш.дом.рф, lsr.ru: never with this browser (L28, L29 — the 403 of 17.10 00:02)
     with sync_playwright() as p:
         b = p.chromium.launch(headless=True)
         ctx = b.new_context(locale="ru-RU", timezone_id="Europe/Moscow", record_har_path=str(har), record_har_content="embed")
         cp.shield(ctx, "headless", print)                # embeds of protected sites (dreamriva.ru -> api.cian.ru, L37)
+        ctx.route("**/*", lambda r: r.abort() if r.request.resource_type in ("image", "media", "font") else r.fallback())  # L30
         pg = ctx.new_page()
         pg.goto(url, wait_until="domcontentloaded", timeout=90000)
         pg.wait_for_timeout(8000)
@@ -71,6 +77,10 @@ def main(name, url, out, click=None):
         title = pg.title()
         ctx.close()
         b.close()
+    return analyse(name, url, out, har, title, clicked)
+
+
+def analyse(name, url, out, har, title, clicked):
     h = json.loads(har.read_text())
     host = urllib.parse.urlsplit(url).hostname
     site = ".".join(host.split(".")[-2:])
@@ -83,7 +93,7 @@ def main(name, url, out, click=None):
         u = e["request"]["url"]
         uh = urllib.parse.urlsplit(u).hostname or ""
         mime = (e["response"].get("content", {}).get("mimeType") or "").lower()
-        if not uh.endswith(site) or "json" not in mime or e["response"]["status"] != 200:
+        if not uh.endswith(site) or "json" not in mime or not 200 <= e["response"]["status"] < 300:   # 201 too (L34)
             continue
         t = body(e)
         try:
@@ -117,17 +127,32 @@ def main(name, url, out, click=None):
         evidence_id = evd.get("evidence_id")
     except Exception as e:
         rea_err, evidence_id = f"{e}: {ev.stdout[:300]} {ev.stderr[:200]}", None
+    origins = sorted({f"{urllib.parse.urlsplit(e['request']['url']).scheme}://{urllib.parse.urlsplit(e['request']['url']).hostname}"
+                      for e in entries if (urllib.parse.urlsplit(e["request"]["url"]).hostname or "").endswith(site)})
+    spec = importlib.util.spec_from_file_location("m2s", Path(__file__).resolve().parent / "m2s.py")
+    M = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(M)
+    m2s = M.surface(har, origins, out)                # second reader of the same HAR (W25)
     res = {"name": name, "url": url, "title": title, "clicked": clicked, "requests": len(entries), "bytes": total_bytes,
            "third_party_requests": sum(1 for e in entries if not (urllib.parse.urlsplit(e["request"]["url"]).hostname or "").endswith(site)),
            "document_bytes": len(html or ""), "embedded_state": [v for k, v in STATE.items() if k in (html or "")],
            "captcha_or_check": any(x in (html or "").lower() for x in ("captcha", "servicepipe", "vpnblock")) and not any(k in (html or "") for k in STATE),
            "own_data_responses": data, "rea_evidence_id": evidence_id, "rea_error": rea_err,
            "rea_api_surface_own": [s for s in surface if (urllib.parse.urlsplit(s["origin"]).hostname or "").endswith(site)],
-           "rea_api_surface_third_party_origins": sorted({s["origin"] for s in surface if not (urllib.parse.urlsplit(s["origin"]).hostname or "").endswith(site)})}
+           "rea_api_surface_third_party_origins": sorted({s["origin"] for s in surface if not (urllib.parse.urlsplit(s["origin"]).hostname or "").endswith(site)}),
+           "m2s_endpoints": m2s["endpoints"], "m2s_error": m2s["error"],
+           "complete": not rea_err and not m2s["error"]}          # a reader that failed makes the audit incomplete (L34)
     (out / f"{name}.json").write_text(json.dumps(res, ensure_ascii=False, indent=1))
     print(f"{name}: {res['requests']} requests, {round(res['bytes'] / 1e6, 1)} MB, document {round(res['document_bytes'] / 1e3)} KB, "
-          f"state {res['embedded_state']}, own JSON {len(data)}, REA groups own {len(res['rea_api_surface_own'])}, check {res['captcha_or_check']}")
+          f"state {res['embedded_state']}, own JSON {len(data)}, REA groups own {len(res['rea_api_surface_own'])}, "
+          f"m2s endpoints {len(m2s['endpoints'])}, complete {res['complete']}, check {res['captcha_or_check']}")
+    return res
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:4], sys.argv[4] if len(sys.argv) > 4 else None)
+    a = sys.argv[1:]
+    if "--har" in a:
+        i = a.index("--har")
+        main(*a[:3], har_in=a[i + 1])
+    else:
+        main(*a[:3], a[3] if len(a) > 3 else None)
