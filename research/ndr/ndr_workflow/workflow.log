@@ -269,3 +269,4 @@ Call log:
 2026-10-16T01:22:14+00:00 pass finished {'started': '2026-10-16T01:07:14+00:00', 'result': 'blocked', 'actions': 14, 'xhr_last_min': 4}
 2026-10-16T01:22:23+00:00 next pass in 45 min
 2026-10-16T01:23:12+00:00 cooldown active until 2026-10-16T02:07:14+00:00 - skipping run
+2026-10-16T01:23:15+00:00 next pass in 44 min
