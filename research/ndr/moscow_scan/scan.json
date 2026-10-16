@@ -16,10 +16,10 @@
   "09.2026"
  ],
  "coverage": {
-  "buildings_collected_total": 420,
+  "buildings_collected_total": 422,
   "queued_total": 432,
-  "buildings_inside_mkad": 418,
-  "complexes_inside_mkad": 306
+  "buildings_inside_mkad": 420,
+  "complexes_inside_mkad": 308
  },
  "market_by_class": {
   "Бизнес": {
@@ -56,40 +56,40 @@
    ]
   },
   "Комфорт": {
-   "buildings": 71,
-   "flats": 44547,
-   "sold": 28370,
+   "buildings": 72,
+   "flats": 44806,
+   "sold": 28483,
    "monthly_sales": [
     952,
     948,
-    1218,
-    872,
-    483,
-    470,
-    529,
-    598,
-    747,
-    599,
-    616,
-    631
+    1241,
+    901,
+    492,
+    476,
+    537,
+    600,
+    752,
+    607,
+    633,
+    637
    ],
    "monthly_price_m2": [
     361950,
     380768,
-    375838,
-    399011,
-    383887,
-    386588,
-    392347,
-    402335,
-    413476,
-    427559,
-    439144,
-    430424
+    370865,
+    389637,
+    378773,
+    382972,
+    388628,
+    401567,
+    411376,
+    422681,
+    428136,
+    426687
    ]
   },
   "Типовой": {
-   "buildings": 29,
+   "buildings": 30,
    "flats": 11422,
    "sold": 7879,
    "monthly_sales": [
@@ -18026,6 +18026,122 @@
     null,
     null,
     null
+   ]
+  },
+  {
+   "name": "Советник",
+   "developer": "СЗ САРМАТ",
+   "class": "Типовой",
+   "district": "Город Уфа, Улица Коммунистическая",
+   "metro": "Александровский сад",
+   "lat": 55.7515,
+   "lon": 37.6172,
+   "building_ids": [
+    70149
+   ],
+   "flats": 0,
+   "sold": 0,
+   "sold_pct": null,
+   "remaining": 0,
+   "sales_12m": 0,
+   "jul": 0,
+   "aug": 0,
+   "sep": 0,
+   "pace_per_month": 0.0,
+   "sellout_months": null,
+   "months_to_completion": 2,
+   "on_track": false,
+   "price_m2_q3": null,
+   "price_m2_q4_2025": null,
+   "price_change_pct": null,
+   "bulk_months": [],
+   "completion": "31.12.2026",
+   "published": "03.02.2026",
+   "monthly_sales": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "monthly_price_m2": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "name": "ЖК \"ЮЖНЫЙ КВАРТАЛ\"",
+   "developer": "СЗ СТРОЙКОНТИНЕНТ",
+   "class": "Комфорт",
+   "district": "Город Ставрополь",
+   "metro": "Александровский сад",
+   "lat": 55.7515,
+   "lon": 37.6172,
+   "building_ids": [
+    68964
+   ],
+   "flats": 259,
+   "sold": 113,
+   "sold_pct": 43.6,
+   "remaining": 146,
+   "sales_12m": 113,
+   "jul": 8,
+   "aug": 17,
+   "sep": 6,
+   "pace_per_month": 10.3,
+   "sellout_months": 14,
+   "months_to_completion": 50,
+   "on_track": true,
+   "price_m2_q3": 95155,
+   "price_m2_q4_2025": 88374,
+   "price_change_pct": 7.7,
+   "bulk_months": [],
+   "completion": "31.12.2030",
+   "published": "25.11.2025",
+   "monthly_sales": [
+    0,
+    0,
+    23,
+    29,
+    9,
+    6,
+    8,
+    2,
+    5,
+    8,
+    17,
+    6
+   ],
+   "monthly_price_m2": [
+    null,
+    null,
+    88374,
+    100110,
+    104062,
+    98728,
+    102282,
+    106967,
+    105276,
+    98190,
+    92720,
+    98235
    ]
   }
  ]
