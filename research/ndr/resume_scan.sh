@@ -59,7 +59,7 @@ if [ -n "$missing" ]; then echo "ndr scan: NOT started, missing:$missing"; exit 
 # 4. Start detached; the loop itself keeps the pass gap after a restart and commits after every pass.
 cd "$WORK/ndr_workflow" || exit 0
 echo "$(date -u +%FT%T+00:00) resume_scan: starting loop" >> loop.out
-setsid nohup ./run.sh loop >> loop.out 2>&1 < /dev/null &
+setsid nohup ./run.sh loop >> loop.out 2>&1 < /dev/null 9>&- &   # 9>&-: the loop must not hold the lock
 sleep 2
 if pgrep -f '^python3 -I ndr_workflow[.]py loop' >/dev/null; then
   echo "ndr scan: resumed ($got/$total collected, $left left) in $WORK"
