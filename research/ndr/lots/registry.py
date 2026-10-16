@@ -145,14 +145,21 @@ class Reg:
     def ndr(self):
         """наш.дом.рф objects (one permit = one or a few buildings): completion, flats, monthly sales — the П1 inputs."""
         rows = list(csv.DictReader(open(HERE.parent / "moscow_scan" / "buildings.csv")))
+        word = lambda k, s: re.search(r"(?<!\w)" + re.escape(k.lower()) + r"(?!\w)", (s or "").lower())  # «остров» ≠ «Лосиноостровский» (L33)
+        keep = set()
         for pid, zk in self.db.execute("select id, cian_zk_id from projects").fetchall():
             for r in rows:
-                if any(k.lower() in (r["name"] or "").lower() for k in NDR_NAME[zk]):
+                if any(word(k, r["name"]) for k in NDR_NAME[zk]):
+                    keep.add(r["id"])
                     bid = self.xref("ndr", r["id"], "ndr_object")
                     if not bid:
                         self.link("ndr", r["id"], pid, "ndr_object", "name match")
                     self.label(f"{pid}:ndr:{r['id']}", "completion", r["completion"])
                     self.label(f"{pid}:ndr:{r['id']}", "flats", r["flats"])
+        for sid, pid in self.db.execute("select source_id, entity from xref where source='ndr' and kind='ndr_object'").fetchall():
+            if sid not in keep:  # a link made by an older, looser rule
+                self.db.execute("delete from xref where source='ndr' and kind='ndr_object' and source_id=?", (sid,))
+                self.db.execute("delete from labels where entity=?", (f"{pid}:ndr:{sid}",))
 
     # --- flats -------------------------------------------------------------------------------------------------------------
     def flats(self, dv, lots):
