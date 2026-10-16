@@ -1,0 +1,49 @@
+# Движок рынка новостроек: настройки. Все пороги — ПРЕДЛОЖЕНИЕ, статус pending до решения владельца.
+# После утверждения: status: approved, дата и коммит решения. Изменение утверждённых порогов — только решением владельца.
+status: pending          # pending | approved
+proposed: 2026-10-17
+
+modern_filter:           # «только современные»: применяется ДО сбора; не прошедшие → таблица excluded (MODERN_FILTER.md)
+  MIN_START_YEAR: 2016           # старт продаж (публикация декларации) или разрешение на строительство не раньше
+  MIN_COMMISSION_YEAR: 2019      # либо ввод не раньше (для сданных домов и вторички в них)
+  classes_in: [Бизнес, Элитный]  # проходят без условий (класс по наш.дом.рф, сверка с классом ЖК на ЦИАН)
+  classes_conditional: [Комфорт, Типовой]   # проходят только при медиане цены сделок ≥ порога (комфорт+)
+  COMFORT_PLUS_MIN_M2: 400000    # ₽/м², медиана цены сделок за 12 мес. по наш.дом.рф
+  gray_zone: manual              # класс комфорт/типовой без цены сделок → ручная проверка, не в мусорку
+  region: [Москва]               # объект без координат и с адресом в другом городе → мусорка (L35)
+  exclude_developers_re: "ФОНД РЕНОВАЦИИ"           # дома для переселения, не продажа
+  exclude_names_re: "общежит|реконструкц|приспособлен"  # старый фонд, бывшие общежития
+  exclude_no_flats: true         # объекты без квартир (апартаменты, офисы, паркинг)
+  panel_series_re: "П-44|П44Т|П3М|ПД-4|И-155|КОПЭ|ДСК-1|панел"  # по описанию ЖК и карточке дома ЦИАН
+  cian_search_filters:           # отсечение вторички в старых домах на стороне выдачи ЦИАН, до скачивания
+    min_house_year: 2016         # параметр выдачи проверить на одной странице перед включением
+    exclude_apartments: true
+  review: monthly                # пересмотр мусорки раз в месяц
+  review_sample: 20              # выборка исключённых на ручную проверку
+
+onboarding:
+  probation_days: 5              # испытательный срок, ежедневные циклы подряд (ONBOARDING.md)
+  completeness_tolerance: 0.02   # адаптер против объявленного сайтом и декларации
+  accuracy_sample: 30            # лотов перечитывается другим путём, совпадение 100%
+  cian_match_min: 0.95           # доля сверенных лотов, которые есть на ЦИАН
+  adapter_max_requests: 50       # запросов на весь каталог
+  manual_first_n_per_site_type: 3
+  spot_check_every: 10
+
+cycle:
+  max_hours: 3                   # полный дневной цикл
+  priority_every_hours: 1
+  package_window_hours: 1        # сайт и ЦИАН одного ЖК собраны в пределах часа
+  package_match_min: 0.95
+
+domains:                         # один домен — один поток; паузы из EXPERIENCE.md и LESSONS.md
+  cian.ru:            {gap_s: [20, 40], max_per_hour: 100}
+  donstroy.moscow:    {gap_s: [20, 40]}
+  fsk.ru:             {gap_s: [60, 100]}           # L7
+  lsr.ru:             {gap_s: [20, 40], browser: stealthy}
+  granelle.ru:        {gap_s: [20, 40], browser: visitor}
+  forma.ru:           {gap_s: [20, 40], browser: visitor}
+  highlife.ru:        {gap_s: [20, 40]}
+  dreamriva.ru:       {gap_s: [20, 40]}
+  xn--80az8a.xn--d1aqf.xn--p1ai: {pages_per_hour: 30, pass_pages: 10, pass_gap_min: [10, 15]}   # наш.дом.рф, F27
+on_block: {hours: 24}            # 403/429/капча → пауза сайта (cooldown.json, L32)
