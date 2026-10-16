@@ -63,6 +63,9 @@ setsid nohup ./run.sh loop >> loop.out 2>&1 < /dev/null 9>&- &   # 9>&-: the loo
 sleep 2
 if pgrep -f '^python3 -I ndr_workflow[.]py loop' >/dev/null; then
   echo "ndr scan: resumed ($got/$total collected, $left left) in $WORK"
+  # a pass cut short by the container never reaches the post-pass commit: save what it collected now
+  (python3 ../moscow_scan/scan_export.py && python3 sync_repo.py "MKAD scan progress: $got/$total pages collected") \
+    >> loop.out 2>&1 < /dev/null 9>&- &
 else
   echo "ndr scan: start failed, see $WORK/ndr_workflow/loop.out"; tail -3 loop.out
 fi

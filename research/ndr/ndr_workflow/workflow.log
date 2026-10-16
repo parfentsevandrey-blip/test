@@ -370,3 +370,21 @@ Call log:
 2026-10-16T06:07:57+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/45298 sold% ?
 2026-10-16T06:09:05+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/60564 sold% 44
 2026-10-16T06:09:06+00:00 pass finished {'started': '2026-10-16T05:56:08+00:00', 'result': 'budget_reached', 'actions': 10, 'xhr_last_min': 3}
+2026-10-16T06:09:11+00:00 next pass in 15 min
+2026-10-16T06:09:23+00:00 resumed after restart, first pass in 10 min
+2026-10-16T06:18:14+00:00 resumed after restart, first pass in 1 min
+2026-10-16T06:19:11+00:00 preflight {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36", "lang": "ru-RU", "intl": "ru", "tz": "Europe/Moscow", "gl": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)", "dpr": 1}
+2026-10-16T06:22:03+00:00 network error, retrying once: Page.goto: net::ERR_CONNECTION_RESET at https://xn--80az8a.xn--d1aqf.xn--p1ai/%D
+2026-10-16T06:22:49+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/62789 sold% 34
+2026-10-16T06:30:04+00:00 resumed after restart, first pass in 3 min
+2026-10-16T06:32:54+00:00 preflight {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36", "lang": "ru-RU", "intl": "ru", "tz": "Europe/Moscow", "gl": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)", "dpr": 1}
+2026-10-16T06:41:15+00:00 preflight {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36", "lang": "ru-RU", "intl": "ru", "tz": "Europe/Moscow", "gl": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)", "dpr": 1}
+2026-10-16T06:42:42+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/54577 sold% 93
+2026-10-16T06:43:38+00:00 network error, retrying once: Page.goto: net::ERR_CONNECTION_RESET at https://xn--80az8a.xn--d1aqf.xn--p1ai/%D
+2026-10-16T06:44:25+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/55103 sold% 30
+2026-10-16T06:45:32+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/58281 sold% 98
+2026-10-16T07:00:43+00:00 preflight {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36", "lang": "ru-RU", "intl": "ru", "tz": "Europe/Moscow", "gl": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)", "dpr": 1}
+2026-10-16T07:03:42+00:00 network error, retrying once: Page.goto: net::ERR_CONNECTION_RESET at https://xn--80az8a.xn--d1aqf.xn--p1ai/%D
+2026-10-16T07:04:28+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/60880 sold% 93
+2026-10-16T07:05:34+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/56842 sold% 57
+2026-10-16T07:31:05+00:00 preflight {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36", "lang": "ru-RU", "intl": "ru", "tz": "Europe/Moscow", "gl": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)", "dpr": 1}
