@@ -439,3 +439,5 @@ Call log:
 2026-10-16T09:46:12+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/68641 sold% 72
 2026-10-16T09:47:11+00:00 object скан МКАД /сервисы/каталог-новостроек/объект/73807 sold% ?
 2026-10-16T09:47:11+00:00 pass finished {'started': '2026-10-16T09:43:14+00:00', 'result': 'ok', 'actions': 2, 'xhr_last_min': 3}
+2026-10-16T09:47:15+00:00 next pass in 12 min
+2026-10-16T09:56:56+00:00 all targets collected (432/432, loop stopped by hand during the pass gap)
