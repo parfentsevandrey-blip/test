@@ -21,7 +21,7 @@ INCLUDE = {
     "report": ["*.py", "report.pdf", "report_model.json", "mapsite/map.html", "maps/map_*.png"],
     "moscow_scan": ["*.py", "*.json", "*.csv", "*.pdf"],
     "ndr": ["moscow_map.json"],
-    "lots": ["*.py", "*.json", "*.sh", "lib/*.py", "lib/*.js", "lots.db", "devcat.db", "collector.log", "devcat.log", "*.md", "*.pdf", "*.csv"],
+    "lots": ["*.py", "*.json", "*.sh", "lib/*.py", "lib/*.js", "lots.db", "devcat.db", "paper.db", "collector.log", "devcat.log", "*.md", "*.pdf", "*.csv"],
     ".": ["tg.py", "tg_propertyinsider.json", "ddu_posts.txt"],
 }
 NEVER = ("profile", "session_A", "Cookies", ".html.bak", "/raw/")

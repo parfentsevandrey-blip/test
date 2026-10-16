@@ -288,8 +288,11 @@ def dreamriva(db):
     zk, day = ZK[("dreamriva", "dream-riva")], today()
     for f in fl:
         db.execute("insert or replace into seen values (?,?,?,?,?,?)", (day, "dreamriva", zk, str(f["id"]), f["status"], f.get("price")))
-        put_info(db, "dreamriva", f["id"], zk_id=zk, url=f"https://dreamriva.ru/flats/{f['id']}/", kind=f.get("type"), seller="developer",
-                 korpus=f.get("corpus"), floor=f.get("floor"), floors=f.get("floorCount"), rooms=f.get("rooms"), area=f.get("area"),
+        put_info(db, "dreamriva", f["id"], zk_id=zk, url=f"https://dreamriva.ru/flats/{f['id']}/",
+                 kind="penthouse" if f.get("penthouse") else f.get("type"), seller="developer",
+                 korpus=f.get("corpus"), floor=f.get("floor"), floors=f.get("floorCount"),
+                 rooms=None if f.get("penthouse") and not f.get("rooms") else f.get("rooms"),   # L15: penthouses come as 0 rooms
+                 area=f.get("area"),
                  views=json.dumps(f.get("views") or [], ensure_ascii=False), sides=json.dumps([f.get("side")], ensure_ascii=False),
                  labels=json.dumps(f.get("options") or [], ensure_ascii=False), sold=0,
                  special=json.dumps({"collection": f.get("pers_type") or None, "collection_note": DREAMRIVA_COLLECTIONS.get(f.get("pers_type")),

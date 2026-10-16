@@ -28,7 +28,7 @@ PILOT = json.loads((HERE / "pilot_zk.json").read_text())
 URLS = json.loads((HERE / "pilot_urls.json").read_text())
 MSK = timezone(timedelta(hours=3))
 GAP = (20, 40)                 # seconds between requests
-CARD_BUDGET = 80               # offer cards per daily run (each wake-up of the session gives only a few minutes)
+CARD_BUDGET = 300              # offer cards per daily run: views per lot for С3 (one offer per lot, resale/assignment first)
 CARD_REFRESH_DAYS = 3          # re-read views/price history of a live offer every N days
 MAX_FAILS = 3                  # consecutive failed pages -> stop the run (cooldown until next run)
 
@@ -290,10 +290,19 @@ def run():
                 log("zk card", summ["name"], summ["builder"], f"dev {summ['from_dev']} agents {summ['from_agents']}")
         # 3. offer cards: new offers first, then the oldest-read live offers, within the daily budget
         done = db.execute("select count(*) from cards where day=?", (day,)).fetchone()[0]
-        todo = db.execute("""select o.offer_id from offers o left join (select offer_id, max(day) d from cards group by offer_id) c
-                             on c.offer_id=o.offer_id where o.last_seen=? and (c.d is null or c.d <= date(?, ?))
-                             order by c.d is not null, c.d, o.from_developer""",
-                          (day, day, f"-{CARD_REFRESH_DAYS} day")).fetchall()
+        # [С3] one offer per lot (a flat listed by several sellers), resale/assignment before developer listings,
+        # never-read lots first, then the oldest read
+        rows = db.execute("""select o.offer_id, o.zk_id, o.house_name, o.floor, round(o.area, 1), o.rooms,
+                                    (o.from_developer=1 or o.sale_type='fz214') dev, c.d
+                             from offers o left join (select offer_id, max(day) d from cards group by offer_id) c on c.offer_id=o.offer_id
+                             where o.last_seen=? and (c.d is null or c.d <= date(?, ?))
+                             order by dev, c.d is not null, c.d""", (day, day, f"-{CARD_REFRESH_DAYS} day")).fetchall()
+        seen_lot, todo = set(), []
+        for oid, zk, house, floor, area, rooms, dev, d in rows:
+            k = (zk, house, floor, area, rooms)
+            if k not in seen_lot:
+                seen_lot.add(k)
+                todo.append((oid,))
         try:
             first = [c["offer_id"] for c in json.loads((HERE / "model.json").read_text()).get("candidates", [])]
         except Exception:

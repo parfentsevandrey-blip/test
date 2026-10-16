@@ -101,6 +101,17 @@ def build(day=None):
                  f"{d['with_special'] if d else '—'} | {('+' if delta and delta > 0 else '') + str(delta) if delta is not None else '—'} | "
                  f"{c['collected']} / {c['site_total'] or '—'} | {cian_c if cian_c is not None else '—'}% | "
                  + (f"{cv.get('cian_dev_matched_to_site')} из {cv.get('cian_dev_lots')}" if cv else "—") + " |")
+    sig = []
+    for f, label, key in (("c2_signals.json", "С2 сигналов", "signal"), ("dev_signals.json", "С1 сигналов", "signal"),
+                          ("c3_signals.json", "С3 дефицитных типов", "deficit")):
+        if (HERE / f).exists():
+            sig.append(f"{label}: {sum(int(x.get(key) or 0) for x in json.loads((HERE / f).read_text())['types'])}")
+    cards = lt.execute("select count(*) from cards where day=?", (day,)).fetchone()[0]
+    if (HERE / "paper.db").exists():
+        pdb = sqlite3.connect(HERE / "paper.db")
+        sig.append(f"П6 записей: сегодня {pdb.execute('select count(*) from trades where day=?', (day,)).fetchone()[0]}, "
+                   f"всего {pdb.execute('select count(*) from trades').fetchone()[0]}")
+    t += ["", f"Сигналы и журнал: {'; '.join(sig)}; карточек ЦИАН с просмотрами сегодня: {cards}."]
     t += ["", "**Аномалии и сбои** (каждую разобрать ниже, итог — урок в `LESSONS.md`):", ""]
     t += [f"- A{i}. {a}" for i, a in enumerate(anomalies, 1)] or ["- нет"]
     t += [f"<!-- /auto R-{day} -->"]

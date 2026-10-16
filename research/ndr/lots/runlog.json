@@ -2,7 +2,6 @@
  "2026-10-16": {
   "anomalies": [
    "Символ: на ЦИАН собрано 755 из 784 (96.3%)",
-   "ЗИЛАРТ: с сайта собрано 624 из 669 (93.3%)",
    "сбой https://forma.ru/: blocked × 1",
    "сбой https://fsk.ru/: 502 × 1",
    "сбой https://fsk.ru/: blocked × 1",
@@ -14,8 +13,8 @@
     "source": "donstroy",
     "collected": 661,
     "on_sale": 661,
-    "with_price": 270,
-    "with_special": 23,
+    "with_price": 285,
+    "with_special": 25,
     "declared": 661,
     "declared_by": "список сайта"
    },
@@ -23,7 +22,7 @@
     "source": "donstroy",
     "collected": 518,
     "on_sale": 518,
-    "with_price": 155,
+    "with_price": 157,
     "with_special": 28,
     "declared": 518,
     "declared_by": "список сайта"
@@ -120,10 +119,10 @@
    },
    "7889": {
     "source": "lsr",
-    "collected": 624,
-    "on_sale": 624,
-    "with_price": 624,
-    "with_special": 624,
+    "collected": 669,
+    "on_sale": 669,
+    "with_price": 669,
+    "with_special": 669,
     "declared": 669,
     "declared_by": "сайт"
    }
