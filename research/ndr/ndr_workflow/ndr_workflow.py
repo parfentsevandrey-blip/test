@@ -444,7 +444,23 @@ def done(st):
     return all(it["href"] in st["objects"] for items in st["searches"].values() for it in items)
 
 
+def last_page_at():
+    """Time of the last page fetched, from the log (a pass killed by a container restart never reaches st['runs'])."""
+    try:
+        for line in reversed(LOG_FILE.read_text().splitlines()[-500:]):
+            if " object " in line:
+                return datetime.fromisoformat(line.split(" ", 1)[0])
+    except Exception:
+        pass
+    return None
+
+
 def loop():
+    last = last_page_at()                            # restart must not shorten the pass gap (F29)
+    if last and (now() - last).total_seconds() < PASS_GAP_MIN[0] * 60:
+        wait = PASS_GAP_MIN[0] * 60 - (now() - last).total_seconds()
+        log(f"resumed after restart, first pass in {wait/60:.0f} min")
+        time.sleep(wait)
     while True:
         st = load_state()
         if done(st):
