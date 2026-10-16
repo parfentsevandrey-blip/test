@@ -25,7 +25,7 @@ EURIBOR = 0.02628                     # 3M, 14.10.2026
 MARGIN = 0.0275
 
 BASE = dict(price=PRICE, area=AREA, rent_m2=RENT / AREA, exit_bar=0.0825, capex_m2=20,
-            lease_month=5, rent_free=3, ltv=0.5, rate=EURIBOR + MARGIN, sale_month=12)
+            lease_month=5, rent_free=3, ltv=0.0, rate=EURIBOR + MARGIN, sale_month=12)   # покупка за свои средства
 FAST = dict(lease_month=3, rent_free=2, sale_month=6)       # ускоренный вариант по ст. 13
 
 SCEN = {
@@ -102,7 +102,7 @@ def main():
     out["art13_share"] = [(s, F.run(BASE, art13_share=s, **FAST)["profit"]) for s in (0, 0.25, 0.5, 0.75, 1.0)]
 
     # план Б
-    out["hold"] = F.hold(base)
+    out["hold"] = F.hold(base, refi_ltv=0.0)     # держим без кредита
     out["split"] = F.split_sale(base)
     out["split_low"] = F.split_sale(base, price_m2=750)
     # продать пустым обратно, если не сдали: по цене покупки через 12 месяцев

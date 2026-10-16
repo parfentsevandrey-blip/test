@@ -75,7 +75,7 @@ def cash():
         return y1 - (y1 - y0) * (v - lo) / (hi - lo)
     hairline(d, x0, Y(0), x1, Y(0), INK, 0.3)
     tick = font(SANS, 6.2)
-    for v in (-800_000, -400_000):
+    for v in (-1_200_000, -800_000, -400_000):
         if v > lo:
             dashed_h(d, x0, x1, Y(v), (224, 219, 208))
             d.text((0, Y(v) - 1.6 * MM), eur(v, True), font=tick, fill=GREY)
@@ -107,7 +107,7 @@ def cash():
     pm, pv = min(pts, key=lambda t: t[1])
     for k, line in enumerate((f"больше всего своих денег — {eur(-pv, True)}",
                               f"на {pm}-м месяце: цена, налог 10,4 %,",
-                              "расходы и ремонт минус кредит 50 %")):
+                              "расходы на сделку, ремонт, содержание")):
         d.text((X(6.5), Y(pv) - (20 - 3.6 * k) * MM), line, font=font(SANS, 6.2), fill=GREY)
     img.save(OUT / "cash.png")
 
@@ -169,10 +169,9 @@ def bridge():
         ("Аренда до продажи", t["rent"], "in"),
         ("Цена покупки", -acq["Цена покупки"], "out"),
         ("Налог на передачу 10,4 %", -acq["Налог на передачу 10,4 %"], "out"),
-        ("Нотариус, проверка, консультант, банк", -other, "out"),
+        ("Нотариус, проверка, консультант", -other, "out"),
         ("Ремонт с НДС", t["capex"], "out"),
         ("Брокер по аренде и реклама", t["letting"], "out"),
-        ("Проценты по кредиту", t["interest"], "out"),
         ("Содержание и простой", t["hold"] + t["void"], "out"),
         ("Брокер и юрист на продаже", t["sale_cost"], "out"),
         ("Прибыль до налога", b["profit"], "res"),
