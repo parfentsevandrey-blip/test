@@ -16,10 +16,10 @@
   "09.2026"
  ],
  "coverage": {
-  "buildings_collected_total": 430,
+  "buildings_collected_total": 432,
   "queued_total": 432,
-  "buildings_inside_mkad": 428,
-  "complexes_inside_mkad": 313
+  "buildings_inside_mkad": 430,
+  "complexes_inside_mkad": 314
  },
  "market_by_class": {
   "Бизнес": {
@@ -56,36 +56,36 @@
    ]
   },
   "Комфорт": {
-   "buildings": 77,
-   "flats": 45488,
-   "sold": 28691,
+   "buildings": 79,
+   "flats": 45679,
+   "sold": 28797,
    "monthly_sales": [
     952,
     948,
-    1241,
-    901,
-    492,
-    477,
-    561,
-    616,
-    779,
-    635,
-    654,
-    656
+    1248,
+    913,
+    498,
+    481,
+    572,
+    627,
+    786,
+    648,
+    663,
+    678
    ],
    "monthly_price_m2": [
     361950,
     380768,
-    370865,
-    389637,
-    378773,
-    382524,
-    378419,
-    394374,
-    400424,
-    409317,
-    416636,
-    415698
+    369555,
+    386870,
+    376386,
+    380664,
+    374001,
+    390785,
+    398422,
+    404570,
+    413548,
+    408330
    ]
   },
   "Типовой": {
@@ -18388,25 +18388,26 @@
    "building_ids": [
     73809,
     73810,
-    73808
+    73808,
+    73807
    ],
-   "flats": 247,
+   "flats": 292,
    "sold": 0,
    "sold_pct": 0.0,
-   "remaining": 247,
+   "remaining": 292,
    "sales_12m": 0,
    "jul": 0,
    "aug": 0,
    "sep": 0,
    "pace_per_month": 0.0,
    "sellout_months": null,
-   "months_to_completion": 11,
+   "months_to_completion": 5,
    "on_track": false,
    "price_m2_q3": null,
    "price_m2_q4_2025": null,
    "price_change_pct": null,
    "bulk_months": [],
-   "completion": "30.09.2027",
+   "completion": "31.03.2027",
    "published": "05.10.2026",
    "monthly_sales": [
     0,
@@ -18435,6 +18436,64 @@
     null,
     null,
     null
+   ]
+  },
+  {
+   "name": "ЖК Тургенев",
+   "developer": "СЗ ЖИЛИЩНАЯ ИНИЦИАТИВА",
+   "class": "Комфорт",
+   "district": "Город Барнаул, Улица Чеглецова, д. 25а, корпус 1",
+   "metro": "Александровский сад",
+   "lat": 55.7515,
+   "lon": 37.6172,
+   "building_ids": [
+    68641
+   ],
+   "flats": 146,
+   "sold": 106,
+   "sold_pct": 72.6,
+   "remaining": 40,
+   "sales_12m": 102,
+   "jul": 13,
+   "aug": 9,
+   "sep": 22,
+   "pace_per_month": 14.7,
+   "sellout_months": 3,
+   "months_to_completion": 8,
+   "on_track": true,
+   "price_m2_q3": 162099,
+   "price_m2_q4_2025": 153646,
+   "price_change_pct": 5.5,
+   "bulk_months": [],
+   "completion": "30.06.2027",
+   "published": "31.10.2025",
+   "monthly_sales": [
+    0,
+    0,
+    7,
+    12,
+    6,
+    4,
+    11,
+    11,
+    7,
+    13,
+    9,
+    22
+   ],
+   "monthly_price_m2": [
+    null,
+    null,
+    153646,
+    162050,
+    161592,
+    155562,
+    153230,
+    160582,
+    162047,
+    160007,
+    161269,
+    163750
    ]
   }
  ]
