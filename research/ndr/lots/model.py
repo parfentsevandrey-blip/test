@@ -247,7 +247,7 @@ def build():
                 why.append("доля")
             if f.get("roomsForSaleCount") or ex.get("roomsForSaleCount"):
                 why.append("комната")
-            d = (ex.get("description") or "").lower()
+            d = (ex.get("description") or offers[r["offer_id"]].get("descr") or "").lower()   # AUDIT.md: the search page has it too
             for w, label in (("торг", None), ("доля", "доля"), ("аукцион", "торги"), ("обремен", "обременение"), ("арест", "арест"),
                              ("банкрот", "банкротство"), ("без отделки", None), ("апартамент", "апартаменты")):
                 if label and w in d and f"без {w}" not in d and f"нет {w}" not in d and f"никаких {w}" not in d and label not in why:

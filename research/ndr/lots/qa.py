@@ -79,6 +79,12 @@ def rules(dv, lt, rg, day):
         for k, free in st.items():
             if listed.get(k) is not None and abs((free or 0) - listed[k]) > max(2, 0.1 * listed[k]):
                 out.append(("V6", f"donstroy-section:{k}", f"свободно по данным этажей {free}, в карте сайта {listed[k]}"))
+    # V7: fields the analysis relies on must be filled for today's ЦИАН offers (AUDIT.md: description and risk flags)
+    cday0 = lt.execute("select max(day) from obs").fetchone()[0]
+    n, nd = lt.execute("""select count(*), sum(o.descr is not null and o.descr != '') from obs b join offers o using(offer_id)
+                          where b.day=?""", (cday0,)).fetchone()
+    if n and (nd or 0) < 0.9 * n:
+        out.append(("V7", "cian:all", f"описание есть у {nd or 0} из {n} объявлений {cday0}: признаки риска считаются только по карточкам"))
     # V5: ЦИАН developer listing vs the developer site, for flats the registry matched
     cday = lt.execute("select max(day) from obs").fetchone()[0]
     for oid, fid in rg.execute("select source_id, entity from xref where source='cian' and kind='flat' and how like 'unique match: building%'"):
