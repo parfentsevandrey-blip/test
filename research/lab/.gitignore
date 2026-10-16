@@ -1,0 +1,6 @@
+.venv/
+bin/
+*.har
+profiles/
+runs/
+trawl/.env
