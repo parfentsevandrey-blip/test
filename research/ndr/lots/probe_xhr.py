@@ -1,10 +1,16 @@
 import json, sys, time
+import importlib.util
+from pathlib import Path
 from playwright.sync_api import sync_playwright
+spec = importlib.util.spec_from_file_location("clientpolicy", Path(__file__).resolve().parent / "lib" / "clientpolicy.py")
+cp = importlib.util.module_from_spec(spec); spec.loader.exec_module(cp)
 url = sys.argv[1]
+cp.check(url, "headless")                     # L28, L29, L32
 reqs = []
 with sync_playwright() as p:
     b = p.chromium.launch(headless=True)
     ctx = b.new_context(locale="ru-RU", viewport={"width": 1600, "height": 1000})
+    cp.shield(ctx, "headless", print)         # L37
     pg = ctx.new_page()
     def on_req(r):
         if r.resource_type in ("xhr", "fetch"):

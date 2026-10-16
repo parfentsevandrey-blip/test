@@ -88,10 +88,20 @@ class Blocked(Exception):
 _last = [0.0]
 
 
+def _cp():
+    if "m" not in _cp.__dict__:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("clientpolicy", HERE / "lib" / "clientpolicy.py")
+        _cp.m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_cp.m)
+    return _cp.m
+
+
 def fetch(url):
     from scrapling.fetchers import Fetcher
     if not allowed(url):
         raise ValueError(f"not allowed by robots policy: {url}")
+    _cp().check(url, "fetcher", cooldown=False)          # only curl_cffi reaches ЦИАН (L29, L37); pauses: run()
     wait = random.uniform(*GAP) - (time.time() - _last[0])
     if wait > 0:
         time.sleep(wait)

@@ -26,13 +26,26 @@ def lean(page, site):
 
 
 
+def _policy():
+    """lib/clientpolicy.py: which client may contact which site (L28, L29, L37)."""
+    import importlib.util
+    from pathlib import Path as _P
+    spec = importlib.util.spec_from_file_location("clientpolicy", _P(__file__).resolve().parent / "clientpolicy.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
 def visit(start_url, link_text, more_text, api_part, ok_marker, sort_clicks=(), max_clicks=200, gap=(20, 40), log=print):
     from patchright.sync_api import sync_playwright
+    cp = _policy()
+    cp.check(start_url, "headless")                      # never a protected site, never a paused one (L29, L32)
     got = []
     with sync_playwright() as p:
         b = p.chromium.launch(headless=True)
         pg = b.new_page(locale="ru-RU", timezone_id="Europe/Moscow")
         lean(pg, ".".join(start_url.split("/")[2].split(".")[-2:]))
+        cp.shield(pg, "headless", log)                   # and no embed of a protected site from inside the page (L37)
 
         first = []                                       # responses before the first click (the page's own initial load)
 

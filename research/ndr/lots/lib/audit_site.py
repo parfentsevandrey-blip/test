@@ -36,13 +36,26 @@ def body(e):
     return base64.b64decode(t).decode("utf-8", "replace") if c.get("encoding") == "base64" else t
 
 
+def _policy():
+    """lib/clientpolicy.py: which client may contact which site (L28, L29, L37)."""
+    import importlib.util
+    from pathlib import Path as _P
+    spec = importlib.util.spec_from_file_location("clientpolicy", _P(__file__).resolve().parent / "clientpolicy.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
 def main(name, url, out, click=None):
     out = Path(out).resolve()                         # REA wants absolute paths
     out.mkdir(parents=True, exist_ok=True)
     har = out / f"{name}.har"
+    cp = _policy()
+    cp.check(url, "headless")       # ЦИАН, наш.дом.рф, lsr.ru: never with this browser (L28, L29 — the 403 of 17.10 00:02)
     with sync_playwright() as p:
         b = p.chromium.launch(headless=True)
         ctx = b.new_context(locale="ru-RU", timezone_id="Europe/Moscow", record_har_path=str(har), record_har_content="embed")
+        cp.shield(ctx, "headless", print)                # embeds of protected sites (dreamriva.ru -> api.cian.ru, L37)
         pg = ctx.new_page()
         pg.goto(url, wait_until="domcontentloaded", timeout=90000)
         pg.wait_for_timeout(8000)
