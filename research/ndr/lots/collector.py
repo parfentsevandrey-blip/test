@@ -249,7 +249,8 @@ def run():
     if _cd().active("cian.ru"):                            # L32: paused after a block
         log("ЦИАН paused until", _cd().active("cian.ru")["until"])
         return
-    db = sqlite3.connect(DB)
+    db = sqlite3.connect(DB, timeout=300)
+    db.execute("pragma journal_mode=WAL")                 # readers never block the collector (L38)
     db.executescript(SCHEMA)
     migrate(db)
     day = today()
@@ -367,6 +368,6 @@ if __name__ == "__main__":
     if cmd == "run":
         run()
     else:
-        db = sqlite3.connect(DB)
+        db = sqlite3.connect(DB, timeout=300)
         db.executescript(SCHEMA)
         print(status_line(db))

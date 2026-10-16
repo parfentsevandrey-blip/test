@@ -417,6 +417,7 @@ def granelle_flats(db, slug):
     except V.Challenge as e:
         raise Blocked(f"challenge {e}")
     db.execute("insert into fetches values (?,?,?,?)", (today(), f"visitor:granelle:{slug}", "200", now()))
+    db.commit()                                        # never hold the write lock through the second visit (L38)
     zk, day = ZK[("granelle", slug)], today()
     flats = {f["id"]: f for g in got if isinstance(g, dict) for f in g.get("results", [])}
     count = max((g.get("count") or 0 for g in got if isinstance(g, dict)), default=0)
@@ -747,8 +748,15 @@ def run_group(db, grp, day):
     return "done"
 
 
+def connect():
+    """Readers (registry, qa, unify, reports) must not block a collector's write (L38): WAL + a 5-minute busy wait."""
+    db = sqlite3.connect(DB, timeout=300)
+    db.execute("pragma journal_mode=WAL")
+    return db
+
+
 def run(grp):
-    db = sqlite3.connect(DB, timeout=60)
+    db = connect()
     migrate(db)
     day = today()
     db.execute("insert or ignore into runs (day, started, status) values (?,?,?)", (day, now(), "running"))
@@ -799,6 +807,6 @@ if __name__ == "__main__":
     if cmd == "run":
         run(sys.argv[2] if len(sys.argv) > 2 else "lists")
     else:
-        db = sqlite3.connect(DB, timeout=60)
+        db = connect()
         migrate(db)
         print(status_line(db))

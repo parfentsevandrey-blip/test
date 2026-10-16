@@ -5,6 +5,7 @@ Browser profiles (session cookies, ~700 MB) and raw HTML dumps are never copied.
 """
 import fnmatch
 import shutil
+import sqlite3
 import subprocess
 import sys
 import time
@@ -41,7 +42,21 @@ def copy_all():
             if any(fnmatch.fnmatch(rel, pat) for pat in patterns):
                 out = DST / sub / rel if sub != "." else DST / rel
                 out.parent.mkdir(parents=True, exist_ok=True)
-                if not out.exists() or out.stat().st_mtime < p.stat().st_mtime or out.stat().st_size != p.stat().st_size:
+                if p.suffix == ".db":                     # WAL databases: a consistent snapshot, WAL pages included (L38)
+                    if p.name.endswith(("-wal", "-shm")):
+                        continue
+                    tmp = out.with_suffix(".db.tmp")
+                    src = sqlite3.connect(p, timeout=300)
+                    dst = sqlite3.connect(tmp)
+                    src.backup(dst)
+                    dst.execute("pragma journal_mode=DELETE")
+                    dst.close(); src.close()
+                    if not out.exists() or tmp.read_bytes() != out.read_bytes():
+                        tmp.replace(out)
+                        n += 1
+                    else:
+                        tmp.unlink()
+                elif not out.exists() or out.stat().st_mtime < p.stat().st_mtime or out.stat().st_size != p.stat().st_size:
                     shutil.copy2(p, out)
                     n += 1
     DST.mkdir(parents=True, exist_ok=True)
