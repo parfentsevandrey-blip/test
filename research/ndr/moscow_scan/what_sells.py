@@ -94,9 +94,13 @@ def flat_mix(href):
 
 # ---------- buildings (inside MKAD, market developers) ----------
 B = {}
+NO_FLATS = []
 known = []
 for bid, b in E.inside_b.items():
     if any(x in (b["dev"] or "") for x in EXCLUDE_DEV) or len(b["real"]) != 12:
+        continue
+    if not b["total"]:                                  # no flats at all: apartments, offices, parking - not this market
+        NO_FLATS.append(bid)
         continue
     href = A.OBJECT_PATH.format(id=bid) if hasattr(A, "OBJECT_PATH") else f"/сервисы/каталог-новостроек/объект/{bid}"
     clean = [c if (c and r / c >= 5 and r >= 10) else r for r, c in zip(b["real"], b["contr"])]
@@ -252,7 +256,8 @@ DEAL_M2 = [round(sum(b["area"][i] for b in ACTIVE.values()) / max(sum(b["real"][
 DEVS = by(lambda b: b["dev"])
 
 out = {"months": M, "note": "inside MKAD, without ФОНД РЕНОВАЦИИ; bulk months counted as deals",
-       "market": group_metrics(list(ACTIVE.values())) | {"idle_buildings": len(B) - len(ACTIVE)}, "classes": CLASSES, "okrugs": OKRUGS, "districts": DISTRICTS,
+       "market": group_metrics(list(ACTIVE.values())) | {"idle_buildings": len(B) - len(ACTIVE), "no_flats_objects": len(NO_FLATS),
+                                                      "idle_not_started": sum(1 for k, b in B.items() if k not in ACTIVE and b["not_started"])}, "classes": CLASSES, "okrugs": OKRUGS, "districts": DISTRICTS,
        "distance": KM_BANDS, "stage": STAGE, "price_bands": PRICE, "mix": MIX, "small_share": SMALL, "deal_m2_by_month": DEAL_M2,
        "complexes": sorted(ZK, key=lambda z: -z["p25"]), "developers": DEVS}
 (HERE / "what_sells.json").write_text(json.dumps(out, ensure_ascii=False, indent=1, default=str))

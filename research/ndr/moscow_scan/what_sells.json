@@ -49,7 +49,9 @@
   "deal_m2": 53.4,
   "bulk_flats": 501,
   "buildings": 271,
-  "idle_buildings": 146
+  "idle_buildings": 70,
+  "no_flats_objects": 76,
+  "idle_not_started": 56
  },
  "classes": {
   "Элитный": {
@@ -88,7 +90,7 @@
    "bulk_flats": 106,
    "buildings": 100,
    "zk": 86,
-   "idle_buildings": 56
+   "idle_buildings": 27
   },
   "Бизнес": {
    "sum": 19192,
@@ -126,7 +128,7 @@
    "bulk_flats": 334,
    "buildings": 114,
    "zk": 83,
-   "idle_buildings": 46
+   "idle_buildings": 13
   },
   "Типовой": {
    "sum": 2363,
@@ -164,7 +166,7 @@
    "bulk_flats": 0,
    "buildings": 16,
    "zk": 13,
-   "idle_buildings": 17
+   "idle_buildings": 9
   },
   "Комфорт": {
    "sum": 8414,
@@ -202,7 +204,7 @@
    "bulk_flats": 61,
    "buildings": 41,
    "zk": 29,
-   "idle_buildings": 27
+   "idle_buildings": 21
   }
  },
  "okrugs": {
@@ -242,7 +244,7 @@
    "bulk_flats": 0,
    "buildings": 17,
    "zk": 13,
-   "idle_buildings": 11
+   "idle_buildings": 1
   },
   "САО": {
    "sum": 5844,
@@ -280,7 +282,7 @@
    "bulk_flats": 65,
    "buildings": 36,
    "zk": 27,
-   "idle_buildings": 20
+   "idle_buildings": 11
   },
   "СЗАО": {
    "sum": 4651,
@@ -318,7 +320,7 @@
    "bulk_flats": 323,
    "buildings": 32,
    "zk": 21,
-   "idle_buildings": 8
+   "idle_buildings": 2
   },
   "ЮАО": {
    "sum": 6721,
@@ -356,7 +358,7 @@
    "bulk_flats": 72,
    "buildings": 40,
    "zk": 27,
-   "idle_buildings": 7
+   "idle_buildings": 2
   },
   "ЮЗАО": {
    "sum": 793,
@@ -394,7 +396,7 @@
    "bulk_flats": 9,
    "buildings": 6,
    "zk": 6,
-   "idle_buildings": 4
+   "idle_buildings": 3
   },
   "ВАО": {
    "sum": 4281,
@@ -432,7 +434,7 @@
    "bulk_flats": 0,
    "buildings": 24,
    "zk": 20,
-   "idle_buildings": 23
+   "idle_buildings": 18
   },
   "ЗАО": {
    "sum": 4257,
@@ -470,7 +472,7 @@
    "bulk_flats": 0,
    "buildings": 40,
    "zk": 29,
-   "idle_buildings": 18
+   "idle_buildings": 6
   },
   "ЦАО": {
    "sum": 1542,
@@ -508,7 +510,7 @@
    "bulk_flats": 32,
    "buildings": 45,
    "zk": 39,
-   "idle_buildings": 45
+   "idle_buildings": 20
   },
   "ЮВАО": {
    "sum": 5726,
@@ -546,7 +548,7 @@
    "bulk_flats": 0,
    "buildings": 31,
    "zk": 22,
-   "idle_buildings": 10
+   "idle_buildings": 7
   }
  },
  "districts": {
@@ -624,7 +626,7 @@
    "bulk_flats": 65,
    "buildings": 12,
    "zk": 6,
-   "idle_buildings": 6
+   "idle_buildings": 4
   },
   "Хорошёво-Мнёвники": {
    "sum": 2203,
@@ -662,7 +664,7 @@
    "bulk_flats": 0,
    "buildings": 16,
    "zk": 11,
-   "idle_buildings": 5
+   "idle_buildings": 1
   },
   "Донской": {
    "sum": 224,
@@ -776,7 +778,7 @@
    "bulk_flats": 0,
    "buildings": 5,
    "zk": 4,
-   "idle_buildings": 2
+   "idle_buildings": 0
   },
   "Обручевский": {
    "sum": 434,
@@ -852,7 +854,7 @@
    "bulk_flats": 0,
    "buildings": 23,
    "zk": 14,
-   "idle_buildings": 4
+   "idle_buildings": 1
   },
   "Марфино": {
    "sum": 219,
@@ -966,7 +968,7 @@
    "bulk_flats": 0,
    "buildings": 4,
    "zk": 3,
-   "idle_buildings": 2
+   "idle_buildings": 1
   },
   "Нагатино-Садовники": {
    "sum": 494,
@@ -1118,7 +1120,7 @@
    "bulk_flats": 0,
    "buildings": 4,
    "zk": 4,
-   "idle_buildings": 4
+   "idle_buildings": 0
   },
   "Щукино": {
    "sum": 459,
@@ -1232,7 +1234,7 @@
    "bulk_flats": 0,
    "buildings": 14,
    "zk": 10,
-   "idle_buildings": 10
+   "idle_buildings": 5
   },
   "Мещанский": {
    "sum": 21,
@@ -1270,7 +1272,7 @@
    "bulk_flats": 0,
    "buildings": 3,
    "zk": 2,
-   "idle_buildings": 5
+   "idle_buildings": 4
   },
   "Беговой": {
    "sum": 155,
@@ -1346,7 +1348,7 @@
    "bulk_flats": 0,
    "buildings": 1,
    "zk": 1,
-   "idle_buildings": 4
+   "idle_buildings": 2
   },
   "Нагатинский Затон": {
    "sum": 311,
@@ -1460,7 +1462,7 @@
    "bulk_flats": 0,
    "buildings": 10,
    "zk": 7,
-   "idle_buildings": 3
+   "idle_buildings": 0
   },
   "Раменки": {
    "sum": 764,
@@ -1498,7 +1500,7 @@
    "bulk_flats": 0,
    "buildings": 10,
    "zk": 8,
-   "idle_buildings": 6
+   "idle_buildings": 2
   },
   "Крылатское": {
    "sum": 103,
@@ -1612,7 +1614,7 @@
    "bulk_flats": 0,
    "buildings": 6,
    "zk": 6,
-   "idle_buildings": 9
+   "idle_buildings": 4
   },
   "Замоскворечье": {
    "sum": 288,
@@ -1650,7 +1652,7 @@
    "bulk_flats": 32,
    "buildings": 6,
    "zk": 5,
-   "idle_buildings": 6
+   "idle_buildings": 1
   },
   "Покровское-Стрешнево": {
    "sum": 1540,
@@ -1688,7 +1690,7 @@
    "bulk_flats": 0,
    "buildings": 10,
    "zk": 6,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "Зябликово": {
    "sum": 11,
@@ -1878,7 +1880,7 @@
    "bulk_flats": 0,
    "buildings": 2,
    "zk": 2,
-   "idle_buildings": 4
+   "idle_buildings": 3
   },
   "Лефортово": {
    "sum": 803,
@@ -1916,7 +1918,7 @@
    "bulk_flats": 0,
    "buildings": 5,
    "zk": 3,
-   "idle_buildings": 2
+   "idle_buildings": 1
   },
   "Богородское": {
    "sum": 397,
@@ -1992,7 +1994,7 @@
    "bulk_flats": 0,
    "buildings": 3,
    "zk": 3,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "Дорогомилово": {
    "sum": 413,
@@ -2030,7 +2032,7 @@
    "bulk_flats": 0,
    "buildings": 4,
    "zk": 3,
-   "idle_buildings": 3
+   "idle_buildings": 1
   },
   "Нижегородский": {
    "sum": 930,
@@ -2144,7 +2146,7 @@
    "bulk_flats": 0,
    "buildings": 9,
    "zk": 7,
-   "idle_buildings": 3
+   "idle_buildings": 1
   },
   "Очаково-Матвеевское": {
    "sum": 1416,
@@ -2372,7 +2374,7 @@
    "bulk_flats": 0,
    "buildings": 4,
    "zk": 4,
-   "idle_buildings": 3
+   "idle_buildings": 1
   },
   "Строгино": {
    "sum": 271,
@@ -2410,7 +2412,7 @@
    "bulk_flats": 0,
    "buildings": 3,
    "zk": 1,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "Войковский": {
    "sum": 897,
@@ -2448,7 +2450,7 @@
    "bulk_flats": 0,
    "buildings": 2,
    "zk": 2,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "Гагаринский": {
    "sum": 4,
@@ -2562,7 +2564,7 @@
    "bulk_flats": 0,
    "buildings": 2,
    "zk": 2,
-   "idle_buildings": 4
+   "idle_buildings": 3
   },
   "Текстильщики": {
    "sum": 296,
@@ -2638,7 +2640,7 @@
    "bulk_flats": 0,
    "buildings": 3,
    "zk": 2,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "Отрадное": {
    "sum": 175,
@@ -2676,7 +2678,7 @@
    "bulk_flats": 0,
    "buildings": 1,
    "zk": 1,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "Южнопортовый": {
    "sum": 535,
@@ -2828,7 +2830,7 @@
    "bulk_flats": 0,
    "buildings": 1,
    "zk": 1,
-   "idle_buildings": 2
+   "idle_buildings": 1
   },
   "Марьино": {
    "sum": 671,
@@ -2904,7 +2906,7 @@
    "bulk_flats": 0,
    "buildings": 3,
    "zk": 3,
-   "idle_buildings": 2
+   "idle_buildings": 1
   },
   "Рязанский": {
    "sum": 572,
@@ -2942,7 +2944,7 @@
    "bulk_flats": 0,
    "buildings": 2,
    "zk": 2,
-   "idle_buildings": 3
+   "idle_buildings": 1
   },
   "Головинский": {
    "sum": 712,
@@ -3132,7 +3134,7 @@
    "bulk_flats": 0,
    "buildings": 5,
    "zk": 5,
-   "idle_buildings": 10
+   "idle_buildings": 8
   }
  },
  "distance": {
@@ -3172,7 +3174,7 @@
    "bulk_flats": 0,
    "buildings": 56,
    "zk": 46,
-   "idle_buildings": 32
+   "idle_buildings": 15
   },
   "6–10 км": {
    "sum": 11877,
@@ -3210,7 +3212,7 @@
    "bulk_flats": 74,
    "buildings": 82,
    "zk": 58,
-   "idle_buildings": 33
+   "idle_buildings": 13
   },
   "10+ км (к МКАД)": {
    "sum": 18494,
@@ -3248,7 +3250,7 @@
    "bulk_flats": 395,
    "buildings": 105,
    "zk": 74,
-   "idle_buildings": 43
+   "idle_buildings": 20
   },
   "до 3 км (≈Садовое)": {
    "sum": 642,
@@ -3286,7 +3288,7 @@
    "bulk_flats": 32,
    "buildings": 28,
    "zk": 26,
-   "idle_buildings": 38
+   "idle_buildings": 22
   }
  },
  "stage": {
@@ -3326,7 +3328,7 @@
    "bulk_flats": 0,
    "buildings": 32,
    "zk": 32,
-   "idle_buildings": 23
+   "idle_buildings": 20
   },
   "18–36 мес": {
    "sum": 11894,
@@ -3364,7 +3366,7 @@
    "bulk_flats": 93,
    "buildings": 80,
    "zk": 64,
-   "idle_buildings": 28
+   "idle_buildings": 13
   },
   "6–18 мес": {
    "sum": 13812,
@@ -3402,7 +3404,7 @@
    "bulk_flats": 85,
    "buildings": 100,
    "zk": 94,
-   "idle_buildings": 41
+   "idle_buildings": 20
   },
   "сдача ≤ 6 мес": {
    "sum": 8016,
@@ -3440,7 +3442,7 @@
    "bulk_flats": 323,
    "buildings": 59,
    "zk": 50,
-   "idle_buildings": 54
+   "idle_buildings": 17
   }
  },
  "price_bands": {
@@ -13182,7 +13184,7 @@
    "bulk_flats": 0,
    "buildings": 1,
    "zk": 1,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "СЗ ЛАРГО": {
    "sum": 23,
@@ -13942,7 +13944,7 @@
    "bulk_flats": 0,
    "buildings": 2,
    "zk": 2,
-   "idle_buildings": 2
+   "idle_buildings": 1
   },
   "СЗ ЛСР. ПРОСТРАНСТВО": {
    "sum": 354,
@@ -15272,7 +15274,7 @@
    "bulk_flats": 0,
    "buildings": 1,
    "zk": 1,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "СЗ ПАРК РАЗВЛЕЧЕНИЙ": {
    "sum": 311,
@@ -15994,7 +15996,7 @@
    "bulk_flats": 0,
    "buildings": 2,
    "zk": 1,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "СЗ АГАТ": {
    "sum": 300,
@@ -16336,7 +16338,7 @@
    "bulk_flats": 0,
    "buildings": 2,
    "zk": 1,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "СЗ САМАН": {
    "sum": 217,
@@ -16450,7 +16452,7 @@
    "bulk_flats": 0,
    "buildings": 3,
    "zk": 1,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "КВАРТАЛ ГЕРЦЕНА": {
    "sum": 763,
@@ -16678,7 +16680,7 @@
    "bulk_flats": 0,
    "buildings": 2,
    "zk": 2,
-   "idle_buildings": 3
+   "idle_buildings": 0
   },
   "СЗ ВРАЖСКИЙ": {
    "sum": 3,
@@ -17628,7 +17630,7 @@
    "bulk_flats": 0,
    "buildings": 2,
    "zk": 1,
-   "idle_buildings": 2
+   "idle_buildings": 0
   },
   "СЗ ОКТЯБРЬ-ДЕВЕЛОПМЕНТ": {
    "sum": 11,
@@ -17742,7 +17744,7 @@
    "bulk_flats": 0,
    "buildings": 1,
    "zk": 1,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "НИИДАР-НЕДВИЖИМОСТЬ (СЗ).": {
    "sum": 298,
@@ -17818,7 +17820,7 @@
    "bulk_flats": 0,
    "buildings": 1,
    "zk": 1,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "СЗ ГЕРМЕССТРОЙ": {
    "sum": 69,
@@ -18350,7 +18352,7 @@
    "bulk_flats": 0,
    "buildings": 1,
    "zk": 1,
-   "idle_buildings": 2
+   "idle_buildings": 1
   },
   "СЗ САМОЛЕТ-ДОНЕЦКАЯ": {
    "sum": 232,
@@ -18540,7 +18542,7 @@
    "bulk_flats": 0,
    "buildings": 1,
    "zk": 1,
-   "idle_buildings": 3
+   "idle_buildings": 0
   },
   "СЗ СЕЛИГЕРСКИЙ": {
    "sum": 312,
@@ -19490,7 +19492,7 @@
    "bulk_flats": 0,
    "buildings": 1,
    "zk": 1,
-   "idle_buildings": 4
+   "idle_buildings": 3
   },
   "СЗ К11": {
    "sum": 241,
@@ -19642,7 +19644,7 @@
    "bulk_flats": 0,
    "buildings": 2,
    "zk": 1,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "СЗ ЛЕВЕЛ НИЖЕГОРОДСКАЯ": {
    "sum": 56,
@@ -19832,7 +19834,7 @@
    "bulk_flats": 0,
    "buildings": 1,
    "zk": 1,
-   "idle_buildings": 1
+   "idle_buildings": 0
   },
   "СЗ САМОЛЕТ-ВЕРЕЙСКАЯ": {
    "sum": 41,
