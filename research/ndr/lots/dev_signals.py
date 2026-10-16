@@ -124,7 +124,7 @@ def finish(t, span_days):
 
 def main():
     db = sqlite3.connect(HERE / "devcat.db")
-    days = [r[0] for r in db.execute("select day from runs where finished is not null order by 1")]
+    days = [r[0] for r in db.execute("select distinct day from seen order by 1")]
     if not days:
         print("no finished devcat runs yet")
         return

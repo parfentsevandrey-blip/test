@@ -29,5 +29,5 @@
 
 ## Автозапуск
 
-- `.claude/hooks/session-start.sh` возобновляет скан наш.дом.рф (`research/ndr/resume_scan.sh`) и дневной снимок лотов (`research/lots_resume.sh`).
+- `.claude/hooks/session-start.sh` возобновляет скан наш.дом.рф (`research/ndr/resume_scan.sh`) и дневные снимки (`research/lots_resume.sh`): лоты ЦИАН (`collector.py`) и каталоги застройщиков [С1] (`devcat.py`).
 - Сбор идёт только пока сессия активна.

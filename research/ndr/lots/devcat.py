@@ -116,14 +116,16 @@ def fetch(db, url):
             time.sleep(10 * (attempt + 1))
     _last[0] = time.time()
     status = "network" if r is None else str(r.status)
-    db.execute("insert into fetches values (?,?,?,?)", (today(), url, status, now()))
+    html = "" if r is None else r.body.decode("utf-8", "replace") if isinstance(r.body, bytes) else str(r.body)
+    # a captcha page has none of the data the page should carry (forma.ru links to the SmartCaptcha notice in every footer)
+    data = any(m in html for m in ("__NEXT_DATA__", "__NUXT__", "<urlset", "<sitemapindex", "var flat_info"))
+    blocked = r is not None and (r.status in (403, 429) or "captcha" in html.lower() and not data)
+    db.execute("insert into fetches values (?,?,?,?)", (today(), url, "blocked" if blocked else status, now()))
     db.commit()
+    if blocked:
+        raise Blocked(f"{r.status} {url}")
     if r is None:
         return None, status
-    html = r.body.decode("utf-8", "replace") if isinstance(r.body, bytes) else str(r.body)
-    low = html[:20000].lower()
-    if r.status in (403, 429) or "smartcaptcha" in low or "captcha" in low and "<form" in low:
-        raise Blocked(f"{r.status} {url}")
     return (html if r.status == 200 else None), status
 
 
@@ -292,7 +294,7 @@ def donstroy_page(db, lot_id, url):
     plan = next((v for v in fd.get("views") or [] if v.get("sides")), {})
     put_info(db, "donstroy", lot_id, kind="flat", rooms=fi.get("rooms"), area=float(fd["area"]) if fd.get("area") else None,
              seller="owner" if "От собственника" in labels else "developer",       # Donstroy also lists owners' resale flats
-             views=json.dumps(sorted(set((plan.get("sides") or {}).values())), ensure_ascii=False),
+             views=json.dumps(sorted({v for v in (plan.get("sides") or {}).values() if v}), ensure_ascii=False),
              sides=json.dumps({"compass": plan.get("compassDegree"), "sides": plan.get("sides")}, ensure_ascii=False),
              completion=fd.get("quarterName"), labels=json.dumps(labels, ensure_ascii=False), sold=int(bool(fi.get("is_sold"))))
     put_price(db, "donstroy", lot_id, fd.get("price"), fd.get("priceOld") or None, "page")
