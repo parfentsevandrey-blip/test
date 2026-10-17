@@ -23,6 +23,7 @@ PROTECTED = {                                   # site -> clients allowed
     "cdn-cian.ru": {"fetcher"},
     "xn--80az8a.xn--d1aqf.xn--p1ai": {"ndr_workflow"},   # наш.дом.рф: only the headful session with clearance (W1, W12, F2)
     "lsr.ru": {"stealthy", "fetcher"},          # plain headless -> 403 (L28)
+    "pik.ru": {"stealthy"},                     # Qrator: Fetcher gets 401 (JS check), a real browser passes like a visitor (L41)
 }
 NEVER = {"api.cian.ru"}                         # robots Disallow: / and the owner's rule — no client at all
 CLIENTS = {"fetcher", "stealthy", "headless", "ndr_workflow"}
