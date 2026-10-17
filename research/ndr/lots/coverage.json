@@ -71,11 +71,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 191,
    "dev_with_special": 191,
-   "cian_dev_lots": 43,
-   "cian_dev_matched_to_site": 21,
+   "cian_dev_lots": 135,
+   "cian_dev_matched_to_site": 72,
    "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 4,
-   "cian_resale_with_same_layout_at_dev": 3
+   "cian_resale_lots": 12,
+   "cian_resale_with_same_layout_at_dev": 6
   },
   "Мнёвники от Гранель": {
    "zk_id": "5221539",
