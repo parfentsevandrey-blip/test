@@ -185,6 +185,8 @@
  },
  "2026-10-17": {
   "anomalies": [
+   "сбой https://donstroy.moscow/: network × 1",
+   "сбой https://granelle.ru/: network × 2",
    "сбой visitor:https:/: error Page.goto: net::ERR_PROXY_CONNECTION_FAILED at https://donst × 1"
   ],
   "dev": {
@@ -272,7 +274,7 @@
   },
   "cian": {
    "2812286": {
-    "collected": 1211,
+    "collected": 1212,
     "site_total": 1235
    },
    "7231": {

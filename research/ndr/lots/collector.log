@@ -451,3 +451,5 @@
 2026-10-17T11:18:56+03:00 network error 2 Failed to perform, curl: (7) Failed to connect to www.cian.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
 2026-10-17T11:20:40+03:00 page 200 Остров creat p5 28 offers, have 1211/1232
 2026-10-17T11:21:16+03:00 page 200 Остров creat p6 28 offers, have 1211/1232
+2026-10-17T11:21:56+03:00 page 200 Остров creat p7 28 offers, have 1212/1232
+2026-10-17T11:22:24+03:00 page 200 Остров creat p8 28 offers, have 1212/1232
