@@ -131,11 +131,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 102,
    "dev_with_special": 9,
-   "cian_dev_lots": 122,
-   "cian_dev_matched_to_site": 54,
+   "cian_dev_lots": 199,
+   "cian_dev_matched_to_site": 92,
    "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 91,
-   "cian_resale_with_same_layout_at_dev": 45
+   "cian_resale_lots": 123,
+   "cian_resale_with_same_layout_at_dev": 63
   },
   "Sydney Prime": {
    "zk_id": "4377697",
