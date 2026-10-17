@@ -191,11 +191,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 59,
    "dev_with_special": 61,
-   "cian_dev_lots": 14,
-   "cian_dev_matched_to_site": 4,
+   "cian_dev_lots": 58,
+   "cian_dev_matched_to_site": 38,
    "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 0,
-   "cian_resale_with_same_layout_at_dev": 0
+   "cian_resale_lots": 5,
+   "cian_resale_with_same_layout_at_dev": 3
   }
  }
 }
