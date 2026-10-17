@@ -1001,3 +1001,7 @@
 2026-10-17T22:35:38+03:00 lsr pass 1: 669 of 673, walking the pages again
 2026-10-17T22:35:47+03:00 visitor click 1 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
 2026-10-17T22:36:22+03:00 visitor click 2 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-17T22:38:29+03:00 list fsk 571
+2026-10-17T22:38:31+03:00 qa donstroy skipped: already re-read today (L40)
+2026-10-17T22:38:31+03:00 qa granelle skipped: already re-read today (L40)
+2026-10-17T22:38:31+03:00 qa fsk skipped: collector still running on the site
