@@ -1,6 +1,6 @@
 zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layout_m2,vs_dev_same_layout_pct,views_today,views,sides,special,on_cian,url
 Остров,застройщик,donstroy,330302035,on_sale,2-2,6,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter2/korpus2/section2/floor6/flat330302035/
-Остров,застройщик,donstroy,330502093,on_sale,5-2,15,2,68.8,55940000.0,,,,,"[""Ландшафтный двор"", ""Территория квартала""]","{""compass"": 60, ""sides"": {""top"": ""Территория квартала"", ""right"": ""Ландшафтный двор"", ""bottom"": ""Территория квартала"", ""left"": ""Территория квартала""}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter5/korpus2/section1/floor15/flat330502093/
+Остров,застройщик,donstroy,330502093,on_sale,5-2,15,2,68.8,55940000.0,,,,,"[""Ландшафтный двор"", ""Территория квартала""]","{""compass"": 60, ""sides"": {""top"": ""Территория квартала"", ""right"": ""Ландшафтный двор"", ""bottom"": ""Территория квартала"", ""left"": ""Территория квартала""}}",,1,https://donstroy.moscow/objects/ostrov/plans/quarter5/korpus2/section1/floor15/flat330502093/
 Остров,застройщик,donstroy,331001001,on_sale,10-1,2,6,215.1,337491900.0,,,,,[],"{""compass"": 32, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter10/korpus1/section1/floor2/flat331001001/
 Остров,застройщик,donstroy,331001002,on_sale,10-1,2,6,260.4,410390400.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter10/korpus1/section1/floor2/flat331001002/
 Остров,застройщик,donstroy,331001006,on_sale,10-1,4,6,263.4,623204400.0,,,,,[],"{""compass"": 73, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""96774""}",0,https://donstroy.moscow/objects/ostrov/plans/quarter10/korpus1/section1/floor4/flat331001006/
@@ -86,8 +86,8 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,застройщик,donstroy,330704109,on_sale,7-4,15,6,168.3,151638300.0,,,,,[],"{""compass"": 284, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter7/korpus4/section3/floor15/flat330704109/
 Остров,застройщик,donstroy,330706051,on_sale,7-6,3,5,168.0,120456000.0,,,,,[],"{""compass"": 65, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter7/korpus6/section2/floor3/flat330706051/
 Остров,застройщик,donstroy,330706048,on_sale,7-6,18,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter7/korpus6/section1/floor18/flat330706048/
-Остров,застройщик,donstroy,330707173,on_sale,7-7,18,2,64.2,54801120.0,62274000.0,,,,"[""""]","{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter7/korpus7/section1/floor18/flat330707173/
-Остров,застройщик,donstroy,330707183,on_sale,7-7,19,2,64.2,55931040.0,63558000.0,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter7/korpus7/section1/floor19/flat330707183/
+Остров,застройщик,donstroy,330707173,on_sale,7-7,18,2,64.2,54801120.0,62274000.0,,,,"[""""]","{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,1,https://donstroy.moscow/objects/ostrov/plans/quarter7/korpus7/section1/floor18/flat330707173/
+Остров,застройщик,donstroy,330707183,on_sale,7-7,19,2,64.2,55931040.0,63558000.0,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,1,https://donstroy.moscow/objects/ostrov/plans/quarter7/korpus7/section1/floor19/flat330707183/
 Остров,застройщик,donstroy,330707171,on_sale,7-7,18,5,142.0,113600000.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter7/korpus7/section1/floor18/flat330707171/
 Остров,застройщик,donstroy,330707181,on_sale,7-7,19,5,142.0,117292000.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter7/korpus7/section1/floor19/flat330707181/
 Остров,застройщик,donstroy,330707362,on_sale,7-7,14,4,121.0,90387000.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter7/korpus7/section2/floor14/flat330707362/
@@ -105,10 +105,10 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,застройщик,donstroy,331201010,on_sale,12-1,3,2,74.6,50056600.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus1/section1/floor3/flat331201010/
 Остров,застройщик,donstroy,331201044,on_sale,12-1,6,3,94.7,63543700.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus1/section1/floor6/flat331201044/
 Остров,застройщик,donstroy,331201029,on_sale,12-1,5,2,76.0,51376000.0,,,,,,,,1,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus1/section1/floor5/flat331201029/
-Остров,застройщик,donstroy,331201047,on_sale,12-1,7,2,74.6,51623200.0,,,,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]","{""compass"": 0, ""sides"": {""top"": ""Мневниковская пойма"", ""right"": """", ""bottom"": ""Ландшафтный двор"", ""left"": ""Территория квартала""}}",,1,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus1/section1/floor7/flat331201047/
+Остров,застройщик,donstroy,331201047,on_sale,12-1,7,2,74.6,51623200.0,,,,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]","{""compass"": 0, ""sides"": {""top"": ""Мневниковская пойма"", ""right"": """", ""bottom"": ""Ландшафтный двор"", ""left"": ""Территория квартала""}}",,2,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus1/section1/floor7/flat331201047/
 Остров,застройщик,donstroy,331201194,on_sale,12-1,14,1,44.7,40364100.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus1/section2/floor14/flat331201194/
 Остров,застройщик,donstroy,331201142,on_sale,12-1,8,2,66.7,48624300.0,,,,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]","{""compass"": 0, ""sides"": {""top"": ""Мневниковская пойма"", ""right"": """", ""bottom"": ""Ландшафтный двор"", ""left"": ""Территория квартала""}}",,2,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus1/section2/floor8/flat331201142/
-Остров,застройщик,donstroy,331201084,on_sale,12-1,2,2,81.0,54351000.0,,,,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]","{""compass"": 0, ""sides"": {""top"": ""Мневниковская пойма"", ""right"": """", ""bottom"": ""Ландшафтный двор"", ""left"": ""Территория квартала""}}","{""internal_id"": ""109180""}",0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus1/section2/floor2/flat331201084/
+Остров,застройщик,donstroy,331201084,on_sale,12-1,2,2,81.0,54351000.0,,,,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]","{""compass"": 0, ""sides"": {""top"": ""Мневниковская пойма"", ""right"": """", ""bottom"": ""Ландшафтный двор"", ""left"": ""Территория квартала""}}","{""internal_id"": ""109180""}",1,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus1/section2/floor2/flat331201084/
 Остров,застройщик,donstroy,331201058,on_sale,12-1,8,2,77.9,52972000.0,,,,,,,,1,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus1/section1/floor8/flat331201058/
 Остров,застройщик,donstroy,331201067,on_sale,12-1,9,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus1/section1/floor9/flat331201067/
 Остров,застройщик,donstroy,331201012,on_sale,12-1,3,2,76.7,51465700.0,,,,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]","{""compass"": 0, ""sides"": {""top"": ""Мневниковская пойма"", ""right"": """", ""bottom"": ""Ландшафтный двор"", ""left"": ""Территория квартала""}}",,1,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus1/section1/floor3/flat331201012/
@@ -167,21 +167,21 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,застройщик,donstroy,331202217,on_sale,12-2,4,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus2/section1/floor4/flat331202217/
 Остров,застройщик,donstroy,331202300,on_sale,12-2,16,2,69.8,49976800.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,1,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus2/section1/floor16/flat331202300/
 Остров,застройщик,donstroy,331202219,on_sale,12-2,4,2,70.8,48285600.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""109583""}",1,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus2/section1/floor4/flat331202219/
-Остров,застройщик,donstroy,331202313,on_sale,12-2,18,2,71.2,56960000.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""109590""}",0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus2/section1/floor18/flat331202313/
+Остров,застройщик,donstroy,331202313,on_sale,12-2,18,2,71.2,56960000.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""109590""}",1,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus2/section1/floor18/flat331202313/
 Остров,застройщик,donstroy,331202291,on_sale,12-2,14,3,104.0,83512000.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus2/section1/floor14/flat331202291/
 Остров,застройщик,donstroy,331202211,on_sale,12-2,3,2,70.8,48002400.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""109621""}",0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus2/section1/floor3/flat331202211/
 Остров,застройщик,donstroy,331203430,on_sale,12-3,17,1,42.6,33952200.0,,,,,"[""Ландшафтный двор"", ""Река""]","{""compass"": 0, ""sides"": {""top"": ""Река"", ""right"": ""Река"", ""bottom"": """", ""left"": ""Ландшафтный двор""}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor17/flat331203430/
 Остров,застройщик,donstroy,331203444,on_sale,12-3,19,3,100.2,80661000.0,,,,,"[""Ландшафтный двор"", ""Река""]","{""compass"": 0, ""sides"": {""top"": ""Река"", ""right"": ""Река"", ""bottom"": """", ""left"": ""Ландшафтный двор""}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor19/flat331203444/
 Остров,застройщик,donstroy,331203448,on_sale,12-3,20,1,42.6,34804200.0,,,,,,,,1,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor20/flat331203448/
 Остров,застройщик,donstroy,331203399,on_sale,12-3,12,3,101.8,108824200.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor12/flat331203399/
-Остров,застройщик,donstroy,331203459,on_sale,12-3,21,3,67.2,55507200.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor21/flat331203459/
+Остров,застройщик,donstroy,331203459,on_sale,12-3,21,3,67.2,55507200.0,,,,,,,,1,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor21/flat331203459/
 Остров,застройщик,donstroy,331203406,on_sale,12-3,13,2,74.7,60133500.0,,,,,"[""Ландшафтный двор"", ""Река""]","{""compass"": 0, ""sides"": {""top"": ""Река"", ""right"": ""Река"", ""bottom"": """", ""left"": ""Ландшафтный двор""}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor13/flat331203406/
 Остров,застройщик,donstroy,331203362,on_sale,12-3,7,2,65.5,48404500.0,,,,,"[""Ландшафтный двор"", ""Река""]","{""compass"": 0, ""sides"": {""top"": ""Река"", ""right"": ""Река"", ""bottom"": """", ""left"": ""Ландшафтный двор""}}","{""internal_id"": ""109650""}",1,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor7/flat331203362/
 Остров,застройщик,donstroy,331203458,on_sale,12-3,21,2,73.7,63676800.0,,,,,"[""Ландшафтный двор"", ""Река""]","{""compass"": 0, ""sides"": {""top"": ""Река"", ""right"": ""Река"", ""bottom"": """", ""left"": ""Ландшафтный двор""}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor21/flat331203458/
 Остров,застройщик,donstroy,331203367,on_sale,12-3,8,4,113.4,92421000.0,,,,,"["""", ""Ландшафтный двор"", ""Река""]","{""compass"": 0, ""sides"": {""top"": ""Река"", ""right"": ""Река"", ""bottom"": """", ""left"": ""Ландшафтный двор""}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor8/flat331203367/
 Остров,застройщик,donstroy,331203385,on_sale,12-3,10,3,88.0,70576000.0,,,,,"["""", ""Ландшафтный двор"", ""Река""]","{""compass"": 0, ""sides"": {""top"": ""Река"", ""right"": ""Река"", ""bottom"": """", ""left"": ""Ландшафтный двор""}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor10/flat331203385/
 Остров,застройщик,donstroy,331203436,on_sale,12-3,18,1,42.6,34463400.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor18/flat331203436/
-Остров,застройщик,donstroy,331203447,on_sale,12-3,19,3,67.2,54163200.0,,,,,"[""Ландшафтный двор"", ""Река""]","{""compass"": 0, ""sides"": {""top"": ""Река"", ""right"": ""Река"", ""bottom"": """", ""left"": ""Ландшафтный двор""}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor19/flat331203447/
+Остров,застройщик,donstroy,331203447,on_sale,12-3,19,3,67.2,54163200.0,,,,,"[""Ландшафтный двор"", ""Река""]","{""compass"": 0, ""sides"": {""top"": ""Река"", ""right"": ""Река"", ""bottom"": """", ""left"": ""Ландшафтный двор""}}",,1,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor19/flat331203447/
 Остров,застройщик,donstroy,331203425,on_sale,12-3,16,2,73.9,52173400.0,,,,,"[""Ландшафтный двор"", ""Река""]","{""compass"": 0, ""sides"": {""top"": ""Река"", ""right"": ""Река"", ""bottom"": """", ""left"": ""Ландшафтный двор""}}","{""internal_id"": ""109677""}",1,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor16/flat331203425/
 Остров,застройщик,donstroy,331203457,on_sale,12-3,21,1,44.3,47090900.0,,,,,"[""Ландшафтный двор"", ""Река""]","{""compass"": 0, ""sides"": {""top"": ""Река"", ""right"": ""Река"", ""bottom"": """", ""left"": ""Ландшафтный двор""}}",,2,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor21/flat331203457/
 Остров,застройщик,donstroy,331203338,on_sale,12-3,4,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus3/section1/floor4/flat331203338/
@@ -351,7 +351,7 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,застройщик,donstroy,331306454,on_sale,122-6,9,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter122/korpus6/section1/floor9/flat331306454/
 Остров,застройщик,donstroy,331306479,on_sale,122-6,17,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter122/korpus6/section1/floor17/flat331306479/
 Остров,застройщик,donstroy,331403148,on_sale,14-3,11,4,126.9,82485000.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus3/section1/floor11/flat331403148/
-Остров,застройщик,donstroy,331403132,on_sale,14-3,9,2,76.2,56921400.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115002""}",0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus3/section1/floor9/flat331403132/
+Остров,застройщик,donstroy,331403132,on_sale,14-3,9,2,76.2,56921400.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115002""}",2,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus3/section1/floor9/flat331403132/
 Остров,застройщик,donstroy,331403085,on_sale,14-3,3,4,112.9,77336500.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus3/section1/floor3/flat331403085/
 Остров,застройщик,donstroy,331403128,on_sale,14-3,8,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus3/section1/floor8/flat331403128/
 Остров,застройщик,donstroy,331403160,on_sale,14-3,13,4,126.9,82738800.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus3/section1/floor13/flat331403160/
@@ -390,7 +390,7 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,застройщик,donstroy,331404195,on_sale,14-4,2,3,88.8,61183200.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor2/flat331404195/
 Остров,застройщик,donstroy,331404307,on_sale,14-4,16,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor16/flat331404307/
 Остров,застройщик,donstroy,331404208,on_sale,14-4,4,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor4/flat331404208/
-Остров,застройщик,donstroy,331404310,on_sale,14-4,17,2,70.3,56310300.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115157""}",0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor17/flat331404310/
+Остров,застройщик,donstroy,331404310,on_sale,14-4,17,2,70.3,56310300.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115157""}",2,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor17/flat331404310/
 Остров,застройщик,donstroy,331404254,on_sale,14-4,10,0,29.1,24938700.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115163""}",1,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor10/flat331404254/
 Остров,застройщик,donstroy,331404308,on_sale,14-4,17,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor17/flat331404308/
 Остров,застройщик,donstroy,331404192,on_sale,14-4,2,3,88.4,61084400.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor2/flat331404192/
@@ -400,12 +400,12 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,застройщик,donstroy,331404348,on_sale,14-4,23,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor23/flat331404348/
 Остров,застройщик,donstroy,331404341,on_sale,14-4,22,3,101.4,86595600.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115187""}",0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor22/flat331404341/
 Остров,застройщик,donstroy,331404288,on_sale,14-4,14,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor14/flat331404288/
-Остров,застройщик,donstroy,331404339,on_sale,14-4,22,2,76.1,56694500.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor22/flat331404339/
+Остров,застройщик,donstroy,331404339,on_sale,14-4,22,2,76.1,56694500.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,2,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor22/flat331404339/
 Остров,застройщик,donstroy,331404268,on_sale,14-4,11,1,46.5,35340000.0,,,,,,,,1,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor11/flat331404268/
 Остров,застройщик,donstroy,331404247,on_sale,14-4,9,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor9/flat331404247/
 Остров,застройщик,donstroy,331404340,on_sale,14-4,22,1,44.1,39116700.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115218""}",0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor22/flat331404340/
 Остров,застройщик,donstroy,331404191,on_sale,14-4,2,2,66.6,45421200.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115222""}",0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor2/flat331404191/
-Остров,застройщик,donstroy,331404322,on_sale,14-4,19,2,70.0,57610000.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor19/flat331404322/
+Остров,застройщик,donstroy,331404322,on_sale,14-4,19,2,70.0,57610000.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,1,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor19/flat331404322/
 Остров,застройщик,donstroy,331404343,on_sale,14-4,22,1,42.6,35869200.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor22/flat331404343/
 Остров,застройщик,donstroy,331404338,on_sale,14-4,22,2,69.6,48789600.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor22/flat331404338/
 Остров,застройщик,donstroy,331404318,on_sale,14-4,18,2,73.0,52195000.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115236""}",1,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus4/section1/floor18/flat331404318/
@@ -422,7 +422,7 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,застройщик,donstroy,331405382,on_sale,14-5,5,4,112.8,77155200.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus5/section1/floor5/flat331405382/
 Остров,застройщик,donstroy,331405356,on_sale,14-5,2,3,88.2,58212000.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus5/section1/floor2/flat331405356/
 Остров,застройщик,donstroy,331405357,on_sale,14-5,2,2,71.1,47210400.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus5/section1/floor2/flat331405357/
-Остров,застройщик,donstroy,331405380,on_sale,14-5,5,3,87.5,58537500.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus5/section1/floor5/flat331405380/
+Остров,застройщик,donstroy,331405380,on_sale,14-5,5,3,87.5,58537500.0,,,,,,,,1,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus5/section1/floor5/flat331405380/
 Остров,застройщик,donstroy,331405363,on_sale,14-5,3,2,66.1,44485300.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,1,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus5/section1/floor3/flat331405363/
 Остров,застройщик,donstroy,331405366,on_sale,14-5,3,4,112.8,76591200.0,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus5/section1/floor3/flat331405366/
 Остров,застройщик,donstroy,331405379,on_sale,14-5,5,2,66.1,44815800.0,,,,,[],"{""compass"": 0, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115296""}",1,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus5/section1/floor5/flat331405379/
@@ -494,7 +494,7 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,застройщик,donstroy,331406626,on_sale,14-6,23,1,42.6,35698800.0,,,,,[],"{""compass"": -23, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,1,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus6/section1/floor23/flat331406626/
 Остров,застройщик,donstroy,331406576,on_sale,14-6,15,0,29.1,27295800.0,,,,,[],"{""compass"": -23, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}",,1,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus6/section1/floor15/flat331406576/
 Остров,застройщик,donstroy,331406578,on_sale,14-6,15,1,46.6,38771200.0,,,,,[],"{""compass"": -23, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115608""}",1,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus6/section1/floor15/flat331406578/
-Остров,застройщик,donstroy,331406579,on_sale,14-6,15,2,75.8,56395200.0,,,,,[],"{""compass"": -23, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115611""}",0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus6/section1/floor15/flat331406579/
+Остров,застройщик,donstroy,331406579,on_sale,14-6,15,2,75.8,56395200.0,,,,,[],"{""compass"": -23, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115611""}",1,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus6/section1/floor15/flat331406579/
 Остров,застройщик,donstroy,331406628,on_sale,14-6,23,3,99.2,67257600.0,,,,,[],"{""compass"": -23, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115619""}",0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus6/section1/floor23/flat331406628/
 Остров,застройщик,donstroy,331406537,on_sale,14-6,10,1,42.6,33568800.0,,,,,[],"{""compass"": -23, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115622""}",1,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus6/section1/floor10/flat331406537/
 Остров,застройщик,donstroy,331406531,on_sale,14-6,9,3,90.3,61313700.0,,,,,[],"{""compass"": -23, ""sides"": {""top"": """", ""right"": """", ""bottom"": """", ""left"": """"}}","{""internal_id"": ""115623""}",0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus6/section1/floor9/flat331406531/
@@ -659,17 +659,21 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,застройщик,donstroy,331401143,on_sale,14-1,2,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus1/section2/floor2/flat331401143/
 Остров,застройщик,donstroy,331401182,on_sale,14-1,4,,,,,,,,,,,0,https://donstroy.moscow/objects/ostrov/plans/quarter14/korpus1/section2/floor4/flat331401182/
 Остров,ЦИАН resale,cian,317037059,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",4,2,46.3,32300000,,,,,[],,,,https://www.cian.ru/sale/flat/317037059/
+Остров,ЦИАН assignment,cian,322415238,строится,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 5)",3,2,71.9,57000000,,724000,9.5,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/322415238/
 Остров,ЦИАН resale,cian,"322623845,334733427",готовый,"Нижние Мнёвники, 9 (Квартал 1 - Корпус 1)",7,2,46.0,37000000,,,,,[],,,,https://www.cian.ru/sale/flat/322623845/
 Остров,ЦИАН resale,cian,324227807,готовый,"Нижние Мнёвники, 9 (Квартал 1 - Корпус 1)",9,0,32.6,25500000,,,,,[],,,,https://www.cian.ru/sale/flat/324227807/
 Остров,ЦИАН assignment,cian,324380710,строится,Квартал 8 - Корпус 2,5,3,66.8,51500000,,816000,-5.5,,"[""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/324380710/
+Остров,ЦИАН resale,cian,325687294,готовый,"Нижние Мнёвники, 16к5 (Квартал 2 - Корпус 5)",17,2,64.4,55000000,,790300,8.1,,"[""""]",,,,https://www.cian.ru/sale/flat/325687294/
 Остров,ЦИАН resale,cian,325687298,готовый,"Нижние Мнёвники, 16к6 (Квартал 2 - Корпус 6)",8,3,77.4,45900000,,,,,[],,,,https://www.cian.ru/sale/flat/325687298/
 Остров,ЦИАН resale,cian,326498708,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",9,3,70.4,44000000,,,,,[],,,,https://www.cian.ru/sale/flat/326498708/
+Остров,ЦИАН resale,cian,326581406,готовый,"Нижние Мнёвники, 16к6 (Квартал 2 - Корпус 6)",17,3,69.0,57000000,,,,,[],,,,https://www.cian.ru/sale/flat/326581406/
 Остров,ЦИАН resale,cian,326614253,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",3,0,28.6,21500000,,867000,-13.3,,[],,,,https://www.cian.ru/sale/flat/326614253/
 Остров,ЦИАН resale,cian,"326615923,332502762",готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 6)",10,1,35.5,23000000,,,,,[],,,,https://www.cian.ru/sale/flat/326615923/
 Остров,ЦИАН resale,cian,327100515,готовый,"Нижние Мнёвники, 16к5 (Квартал 2 - Корпус 5)",7,3,64.7,51000000,,,,,[],,,,https://www.cian.ru/sale/flat/327100515/
 Остров,ЦИАН assignment,cian,327114669,строится,Квартал 8 - Корпус 2,11,2,66.3,48500000,,680000,7.6,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/327114669/
 Остров,ЦИАН resale,cian,327358921,готовый,"6-й квартал, 12к5 (Квартал 6 - Корпус 5)",4,1,45.4,28500000,,926000,-32.2,,"[""""]",,,,https://www.cian.ru/sale/flat/327358921/
 Остров,ЦИАН resale,cian,327614404,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",2,2,70.7,39000000,,701000,-21.3,,"[""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/327614404/
+Остров,ЦИАН resale,cian,328101077,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",3,2,71.9,57000000,,724000,9.5,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/328101077/
 Остров,ЦИАН resale,cian,328162549,готовый,"6-й квартал, 12к1 (Квартал 6 - Корпус 1)",7,2,68.0,44000000,,693000,-6.6,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/328162549/
 Остров,ЦИАН resale,cian,328165193,готовый,,7,2,47.0,31500000,,,,,[],,,,https://www.cian.ru/sale/flat/328165193/
 Остров,ЦИАН resale,cian,328326490,готовый,"5-й квартал, 3 (Квартал 5 - Корпус 3)",19,3,63.9,43132500,,,,,[],,,,https://www.cian.ru/sale/flat/328326490/
@@ -685,12 +689,17 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,ЦИАН resale,cian,329627249,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",13,3,77.0,50000000,,,,,[],,,,https://www.cian.ru/sale/flat/329627249/
 Остров,ЦИАН resale,cian,329627251,готовый,"6-й квартал, 12к2 (Квартал 6 - Корпус 2)",12,2,59.0,40700000,,,,,[],,,,https://www.cian.ru/sale/flat/329627251/
 Остров,ЦИАН resale,cian,329694006,готовый,"Нижние Мнёвники, 12 (Квартал 6 - Корпус 4)",5,2,42.4,29000000,,,,,[],,,,https://www.cian.ru/sale/flat/329694006/
+Остров,ЦИАН resale,cian,329700993,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 7)",13,3,81.2,55200000,,,,,[],,,,https://www.cian.ru/sale/flat/329700993/
 Остров,ЦИАН resale,cian,329859198,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",11,1,50.5,32850000,,807480,-19.4,,"["""", ""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/329859198/
 Остров,ЦИАН resale,cian,329859340,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",13,1,49.0,32450000,,,,,[],,,,https://www.cian.ru/sale/flat/329859340/
 Остров,ЦИАН resale,cian,"330019046,334950765",готовый,"6-й квартал, 12к6с1 (Квартал 6 - Корпус 6)",16,1,38.8,31500000,,853000,-4.8,,[],,,,https://www.cian.ru/sale/flat/330019046/
 Остров,ЦИАН resale,cian,330077479,готовый,"6-й квартал, 12к1 (Квартал 6 - Корпус 1)",9,1,43.0,27500000,,817000,-21.7,,"["""", ""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/330077479/
+Остров,ЦИАН resale,cian,330099141,готовый,"Нижние Мнёвники, 9 (Квартал 1 - Корпус 3)",8,3,68.5,54500000,,,,,[],,,,https://www.cian.ru/sale/flat/330099141/
 Остров,ЦИАН resale,cian,330129182,готовый,"5-й квартал, 1 (Квартал 5 - Корпус 1)",5,1,41.4,27500000,,,,,[],,,,https://www.cian.ru/sale/flat/330129182/
 Остров,ЦИАН resale,cian,330303062,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",2,3,85.6,50000000,,,,,[],,,,https://www.cian.ru/sale/flat/330303062/
+Остров,ЦИАН resale,cian,330440476,готовый,"6-й квартал, 12к1 (Квартал 6 - Корпус 1)",15,3,81.4,55000000,,,,,[],,,,https://www.cian.ru/sale/flat/330440476/
+Остров,ЦИАН resale,cian,330488397,готовый,"Нижние Мнёвники, 16к2 (Квартал 2 - Корпус 2)",15,2,82.3,53900000,,1046400,-37.4,,[],,,,https://www.cian.ru/sale/flat/330488397/
+Остров,ЦИАН resale,cian,330588530,готовый,"6-й квартал, 12к6с1 (Квартал 6 - Корпус 6)",7,3,81.4,54500000,,,,,[],,,,https://www.cian.ru/sale/flat/330588530/
 Остров,ЦИАН resale,cian,330664875,готовый,"5-й квартал, 2 (Квартал 5 - Корпус 2)",6,2,70.1,45000000,,716000,-10.3,,"[""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/330664875/
 Остров,ЦИАН resale,cian,330729962,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",18,2,70.3,45500000,,707500,-8.5,,"[""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/330729962/
 Остров,ЦИАН resale,cian,330748032,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",18,3,70.3,47500000,,,,,[],,,,https://www.cian.ru/sale/flat/330748032/
@@ -699,16 +708,26 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,ЦИАН assignment,cian,330968657,строится,"Нижние Мнёвники, 9 (Квартал 1 - Корпус 1)",11,3,66.0,47000000,,,,,[],,,,https://www.cian.ru/sale/flat/330968657/
 Остров,ЦИАН resale,cian,330986686,готовый,"Нижние Мнёвники, 9 (Квартал 1 - Корпус 3)",10,3,76.0,51950000,,,,,[],,,,https://www.cian.ru/sale/flat/330986686/
 Остров,ЦИАН resale,cian,"331019556,331541092",готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",9,1,45.0,29500000,,914500,-28.3,,"[""""]",,,,https://www.cian.ru/sale/flat/331019556/
+Остров,ЦИАН assignment,cian,"331070299,331492638",строится,Квартал 7 - Корпус 2,13,2,77.8,57000000,,680000,7.7,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Река"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/331070299/
 Остров,ЦИАН resale,cian,331120400,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",4,1,39.5,24400000,,831500,-25.7,,[],,,,https://www.cian.ru/sale/flat/331120400/
+Остров,ЦИАН resale,cian,331151755,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",6,2,84.8,54990000,,770000,-15.8,,"[""Ландшафтный двор"", ""Река"", ""Река, Крылатское"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/331151755/
 Остров,ЦИАН resale,cian,331155084,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",4,1,40.0,25000000,,,,,[],,,,https://www.cian.ru/sale/flat/331155084/
+Остров,ЦИАН resale,cian,331159949,готовый,"5-й квартал, 6 (Квартал 5 - Корпус 6)",16,3,71.4,58000000,,,,,[],,,,https://www.cian.ru/sale/flat/331159949/
+Остров,ЦИАН resale,cian,"331192101,333336687,333685780",готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",17,3,75.0,58400000,,,,,[],,,,https://www.cian.ru/sale/flat/331192101/
+Остров,ЦИАН resale,cian,331223476,готовый,"Нижние Мнёвники, 9 (Квартал 1 - Корпус 1)",7,2,76.0,54000000,,744500,-4.6,,"[""Ландшафтный двор"", ""Река, Крылатское""]",,,,https://www.cian.ru/sale/flat/331223476/
+Остров,ЦИАН resale,cian,331253748,готовый,"Нижние Мнёвники, 16к6 (Квартал 2 - Корпус 6)",5,2,74.8,54500000,,774000,-5.9,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Река"", ""Река, Крылатское"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/331253748/
 Остров,ЦИАН assignment,cian,331283091,строится,Квартал 8 - Корпус 1,3,2,47.7,35500000,,,,,[],,,,https://www.cian.ru/sale/flat/331283091/
+Остров,ЦИАН resale,cian,331298092,готовый,"Нижние Мнёвники, 10 (Квартал 3 - Корпус 2)",2,2,76.0,58000000,,744500,2.5,,"[""Ландшафтный двор"", ""Река, Крылатское""]",,,,https://www.cian.ru/sale/flat/331298092/
 Остров,ЦИАН assignment,cian,331299818,строится,Квартал 10 - Корпус 1,3,2,47.7,31500000,,,,,[],,,,https://www.cian.ru/sale/flat/331299818/
+Остров,ЦИАН resale,cian,331444053,готовый,"6-й квартал, 12к3 (Квартал 6 - Корпус 3)",13,2,73.0,55000000,,708000,6.4,,"[""""]",,,,https://www.cian.ru/sale/flat/331444053/
 Остров,ЦИАН assignment,cian,331472391,строится,Квартал 8 - Корпус 2,13,,49.0,31500000,,,,,[],,,,https://www.cian.ru/sale/flat/331472391/
+Остров,ЦИАН resale,cian,331475466,готовый,"Нижние Мнёвники, 9 (Квартал 1 - Корпус 1)",7,2,70.3,55500000,,707500,11.6,,"[""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/331475466/
 Остров,ЦИАН assignment,cian,331502935,строится,Квартал 8 - Корпус 2,5,2,66.3,47000000,,680000,4.2,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/331502935/
 Остров,ЦИАН resale,cian,331560803,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",3,1,38.9,24200000,,853000,-27.1,,[],,,,https://www.cian.ru/sale/flat/331560803/
 Остров,ЦИАН resale,cian,331564194,готовый,"Нижние Мнёвники, 12 (Квартал 6 - Корпус 4)",12,2,59.0,38990000,,,,,[],,,,https://www.cian.ru/sale/flat/331564194/
 Остров,ЦИАН resale,cian,331590520,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 7)",4,1,38.8,25200000,,853000,-23.9,,[],,,,https://www.cian.ru/sale/flat/331590520/
 Остров,ЦИАН resale,cian,331727137,готовый,,10,1,51.0,35630000,,827500,-15.6,,"["""", ""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/331727137/
+Остров,ЦИАН resale,cian,331737365,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 6)",10,2,83.6,55000000,,,,,[],,,,https://www.cian.ru/sale/flat/331737365/
 Остров,ЦИАН resale,cian,331774652,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",3,1,50.2,33500000,,762960,-12.5,,[],,,,https://www.cian.ru/sale/flat/331774652/
 Остров,ЦИАН assignment,cian,331821098,строится,Квартал 12.1 - Корпус 4,5,1,45.5,27700000,,854000,-28.7,,[],,,,https://www.cian.ru/sale/flat/331821098/
 Остров,ЦИАН resale,cian,331903584,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 6)",5,3,70.0,44500000,,,,,[],,,,https://www.cian.ru/sale/flat/331903584/
@@ -734,6 +753,7 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,ЦИАН resale,cian,332211231,готовый,"Нижние Мнёвники, 16к5 (Квартал 2 - Корпус 5)",7,2,69.2,48500000,,716000,-2.1,,"[""Ландшафтный двор"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/332211231/
 Остров,ЦИАН resale,cian,332231370,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",5,2,38.9,22999000,,,,,[],,,,https://www.cian.ru/sale/flat/332231370/
 Остров,ЦИАН resale,cian,"332234312,334158502",готовый,"Нижние Мнёвники, 16к3 (Квартал 2 - Корпус 3)",20,1,41.1,27000000,,,,,[],,,,https://www.cian.ru/sale/flat/332234312/
+Остров,ЦИАН resale,cian,332276100,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",12,3,96.7,58500000,,676000,-10.5,,[],,,,https://www.cian.ru/sale/flat/332276100/
 Остров,ЦИАН resale,cian,332281108,готовый,"Нижние Мнёвники, 16к1 (Квартал 2 - Корпус 1)",22,2,64.0,46000000,,790300,-9.1,,"[""""]",,,,https://www.cian.ru/sale/flat/332281108/
 Остров,ЦИАН resale,cian,332326484,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 7)",12,2,82.3,50000000,,1046400,-41.9,,[],,,,https://www.cian.ru/sale/flat/332326484/
 Остров,ЦИАН assignment,cian,332370389,строится,Квартал 12.1 - Корпус 1,9,1,45.0,27500000,,914500,-33.2,,"[""""]",,,,https://www.cian.ru/sale/flat/332370389/
@@ -743,12 +763,15 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,ЦИАН resale,cian,332448472,готовый,"5-й квартал, 4 (Квартал 5 - Корпус 4)",6,,46.5,29000000,,,,,[],,,,https://www.cian.ru/sale/flat/332448472/
 Остров,ЦИАН resale,cian,332463470,готовый,"5-й квартал, 3 (Квартал 5 - Корпус 3)",13,2,58.0,33000000,,759000,-25.0,,[],,,,https://www.cian.ru/sale/flat/332463470/
 Остров,ЦИАН resale,cian,332493704,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",18,0,29.2,20000000,,862000,-20.5,,[],,,,https://www.cian.ru/sale/flat/332493704/
+Остров,ЦИАН resale,cian,332509386,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 3)",15,3,79.9,55000000,,,,,[],,,,https://www.cian.ru/sale/flat/332509386/
 Остров,ЦИАН resale,cian,332512366,готовый,"Нижние Мнёвники, 9 (Квартал 1 - Корпус 1)",6,1,42.8,39000000,,815000,11.8,,"["""", ""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/332512366/
 Остров,ЦИАН resale,cian,332513846,готовый,,8,0,27.0,28000000,,,,,[],,,,https://www.cian.ru/sale/flat/332513846/
 Остров,ЦИАН resale,cian,332516853,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",7,2,43.8,37000000,,,,,[],,,,https://www.cian.ru/sale/flat/332516853/
+Остров,ЦИАН assignment,cian,332541956,строится,Квартал 8 - Корпус 2,19,2,66.5,58800000,,678000,30.4,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/332541956/
 Остров,ЦИАН resale,cian,332577232,готовый,"Нижние Мнёвники, 12 (Квартал 6 - Корпус 4)",22,2,58.0,39950000,,759000,-9.2,,[],,,,https://www.cian.ru/sale/flat/332577232/
 Остров,ЦИАН resale,cian,332586417,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 5)",6,3,69.4,36800000,,,,,[],,,,https://www.cian.ru/sale/flat/332586417/
 Остров,ЦИАН resale,cian,332604450,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",11,1,41.6,29000000,,,,,[],,,,https://www.cian.ru/sale/flat/332604450/
+Остров,ЦИАН resale,cian,332610402,готовый,"Нижние Мнёвники, 16к5 (Квартал 2 - Корпус 5)",17,3,64.6,55000000,,,,,[],,,,https://www.cian.ru/sale/flat/332610402/
 Остров,ЦИАН resale,cian,332629466,готовый,"Нижние Мнёвники, 16к3 (Квартал 2 - Корпус 3)",17,2,62.5,45000000,,731000,-1.5,,[],,,,https://www.cian.ru/sale/flat/332629466/
 Остров,ЦИАН resale,cian,332662545,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",10,0,29.0,19900000,,862000,-20.4,,[],,,,https://www.cian.ru/sale/flat/332662545/
 Остров,ЦИАН resale,cian,332682785,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 7)",6,1,39.0,24500000,,853000,-26.4,,[],,,,https://www.cian.ru/sale/flat/332682785/
@@ -760,7 +783,10 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,ЦИАН resale,cian,332874337,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",9,1,44.6,28900000,,831000,-22.0,,"["""", ""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/332874337/
 Остров,ЦИАН resale,cian,332885169,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 5)",3,0,28.8,24500000,,863000,-1.4,,[],,,,https://www.cian.ru/sale/flat/332885169/
 Остров,ЦИАН assignment,cian,332903814,строится,Квартал 8 - Корпус 2,9,2,66.5,49990000,,678000,10.9,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/332903814/
+Остров,ЦИАН assignment,cian,332903818,строится,Квартал 8 - Корпус 2,17,2,73.0,54500000,,708000,5.4,,"[""""]",,,,https://www.cian.ru/sale/flat/332903818/
+Остров,ЦИАН resale,cian,332911383,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",8,2,71.5,53000000,,711000,4.3,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/332911383/
 Остров,ЦИАН resale,cian,332938281,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",18,1,46.2,42500000,,803000,14.6,,[],,,,https://www.cian.ru/sale/flat/332938281/
+Остров,ЦИАН resale,cian,332945655,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 6)",10,3,83.3,53900000,,,,,[],,,,https://www.cian.ru/sale/flat/332945655/
 Остров,ЦИАН resale,cian,332991939,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",7,3,83.0,46900000,,,,,[],,,,https://www.cian.ru/sale/flat/332991939/
 Остров,ЦИАН resale,cian,332993933,готовый,"6-й квартал, 12к6с1 (Квартал 6 - Корпус 6)",12,3,71.0,44000000,,,,,[],,,,https://www.cian.ru/sale/flat/332993933/
 Остров,ЦИАН resale,cian,332994611,готовый,"5-й квартал, 3 (Квартал 5 - Корпус 3)",7,0,28.0,19990000,,873000,-18.2,,"[""""]",,,,https://www.cian.ru/sale/flat/332994611/
@@ -768,6 +794,7 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,ЦИАН resale,cian,333051998,готовый,"Нижние Мнёвники, 9 (Квартал 1 - Корпус 1)",2,1,44.3,37500000,,828500,2.2,,"[""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/333051998/
 Остров,ЦИАН resale,cian,333059297,готовый,"6-й квартал, 12к6с4",7,2,42.1,29950000,,,,,[],,,,https://www.cian.ru/sale/flat/333059297/
 Остров,ЦИАН resale,cian,333076302,готовый,"6-й квартал, 12к6с1 (Квартал 6 - Корпус 6)",4,2,39.3,32000000,,,,,[],,,,https://www.cian.ru/sale/flat/333076302/
+Остров,ЦИАН resale,cian,333084858,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 7)",13,4,81.2,55200000,,,,,[],,,,https://www.cian.ru/sale/flat/333084858/
 Остров,ЦИАН resale,cian,333089036,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 6)",10,1,35.3,23000000,,,,,[],,,,https://www.cian.ru/sale/flat/333089036/
 Остров,ЦИАН resale,cian,333096601,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",5,0,28.5,21500000,,872000,-13.5,,"[""""]",,,,https://www.cian.ru/sale/flat/333096601/
 Остров,ЦИАН resale,cian,333096603,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",9,0,28.8,21500000,,863000,-13.5,,[],,,,https://www.cian.ru/sale/flat/333096603/
@@ -802,21 +829,26 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,ЦИАН resale,cian,333537334,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",6,1,40.4,26000000,,,,,[],,,,https://www.cian.ru/sale/flat/333537334/
 Остров,ЦИАН resale,cian,333557010,готовый,"Нижние Мнёвники, 16к2 (Квартал 2 - Корпус 2)",15,2,75.5,47565000,,745000,-15.4,,"[""Ландшафтный двор"", ""Река, Крылатское""]",,,,https://www.cian.ru/sale/flat/333557010/
 Остров,ЦИАН resale,cian,333569879,готовый,"Нижние Мнёвники, 16к5 (Квартал 2 - Корпус 5)",15,3,61.5,52000000,,,,,[],,,,https://www.cian.ru/sale/flat/333569879/
+Остров,ЦИАН resale,cian,333612151,готовый,"Нижние Мнёвники, 16к6 (Квартал 2 - Корпус 6)",3,3,112.0,56500000,,,,,[],,,,https://www.cian.ru/sale/flat/333612151/
 Остров,ЦИАН resale,cian,333647518,готовый,"Нижние Мнёвники, 9 (Квартал 1 - Корпус 1)",3,3,66.1,51400000,,,,,[],,,,https://www.cian.ru/sale/flat/333647518/
 Остров,ЦИАН resale,cian,"333677502,334063808",готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",3,2,82.2,44000000,,1046400,-48.8,,[],,,,https://www.cian.ru/sale/flat/333677502/
 Остров,ЦИАН assignment,cian,333683764,строится,"5-й квартал, 8 (Квартал 5 - Корпус 8)",12,1,44.3,30900000,,828500,-15.8,,"[""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/333683764/
 Остров,ЦИАН resale,cian,333712903,готовый,"5-й квартал, 4 (Квартал 5 - Корпус 4)",11,3,58.5,39900000,,,,,[],,,,https://www.cian.ru/sale/flat/333712903/
+Остров,ЦИАН resale,cian,333764358,готовый,,4,0,76.0,57000000,,,,,[],,,,https://www.cian.ru/sale/flat/333764358/
 Остров,ЦИАН resale,cian,333765803,готовый,"Нижние Мнёвники, 16к3 (Квартал 2 - Корпус 3)",21,2,71.2,45500000,,706000,-9.5,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/333765803/
 Остров,ЦИАН resale,cian,333775363,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 6)",9,2,69.9,47000000,,716000,-6.1,,"[""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/333775363/
 Остров,ЦИАН resale,cian,333838679,готовый,"Нижние Мнёвники, 12 (Квартал 6 - Корпус 4)",18,3,62.0,36490000,,,,,[],,,,https://www.cian.ru/sale/flat/333838679/
 Остров,ЦИАН resale,cian,333860519,готовый,"Нижние Мнёвники, 12 (Квартал 6 - Корпус 4)",17,0,29.6,20000000,,857000,-21.2,,[],,,,https://www.cian.ru/sale/flat/333860519/
+Остров,ЦИАН resale,cian,333877781,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 5)",3,2,80.0,53000000,,743000,-10.8,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/333877781/
 Остров,ЦИАН resale,cian,333916451,готовый,"Нижние Мнёвники, 16к3 (Квартал 2 - Корпус 3)",5,1,46.8,30000000,,774000,-17.2,,[],,,,https://www.cian.ru/sale/flat/333916451/
 Остров,ЦИАН resale,cian,333917727,готовый,"5-й квартал, 1 (Квартал 5 - Корпус 1)",8,2,66.7,44000000,,678000,-2.7,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/333917727/
 Остров,ЦИАН resale,cian,333920692,готовый,"Нижние Мнёвники, 16к2 (Квартал 2 - Корпус 2)",9,2,75.6,46000000,,745000,-18.3,,"[""Ландшафтный двор"", ""Река, Крылатское""]",,,,https://www.cian.ru/sale/flat/333920692/
 Остров,ЦИАН resale,cian,333957186,готовый,"5-й квартал, 4 (Квартал 5 - Корпус 4)",16,2,75.0,47000000,,848500,-26.1,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Река"", ""Река, Крылатское"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/333957186/
 Остров,ЦИАН resale,cian,333987104,готовый,"Нижние Мнёвники, 9 (Квартал 1 - Корпус 1)",4,2,70.3,51000000,,707500,2.5,,"[""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/333987104/
 Остров,ЦИАН resale,cian,334003137,готовый,"Нижние Мнёвники, 16к6 (Квартал 2 - Корпус 6)",8,0,32.6,26100000,,,,,[],,,,https://www.cian.ru/sale/flat/334003137/
+Остров,ЦИАН resale,cian,334007655,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",17,2,74.6,57790000,,774000,0.1,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Река"", ""Река, Крылатское"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/334007655/
 Остров,ЦИАН resale,cian,334020419,готовый,"5-й квартал, 3 (Квартал 5 - Корпус 3)",10,3,70.0,44000000,,,,,[],,,,https://www.cian.ru/sale/flat/334020419/
+Остров,ЦИАН resale,cian,334028424,готовый,"6-й квартал, 12к1 (Квартал 6 - Корпус 1)",15,,80.0,56900000,,,,,[],,,,https://www.cian.ru/sale/flat/334028424/
 Остров,ЦИАН resale,cian,334028426,готовый,"6-й квартал, 12к2 (Квартал 6 - Корпус 2)",14,2,39.0,30500000,,,,,[],,,,https://www.cian.ru/sale/flat/334028426/
 Остров,ЦИАН resale,cian,334036200,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",10,1,47.0,37990000,,760000,6.4,,[],,,,https://www.cian.ru/sale/flat/334036200/
 Остров,ЦИАН resale,cian,334053473,готовый,"5-й квартал, 1 (Квартал 5 - Корпус 1)",12,2,66.0,44300000,,678000,-1.0,,"[""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/334053473/
@@ -825,6 +857,7 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,ЦИАН resale,cian,334092457,готовый,,20,1,42.5,39000000,,815000,12.6,,"["""", ""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/334092457/
 Остров,ЦИАН resale,cian,334114735,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 5)",6,2,69.4,39000000,,716000,-21.5,,[],,,,https://www.cian.ru/sale/flat/334114735/
 Остров,ЦИАН resale,cian,334117079,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",9,3,75.7,52990000,,,,,[],,,,https://www.cian.ru/sale/flat/334117079/
+Остров,ЦИАН resale,cian,334135459,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",12,3,74.7,56000000,,,,,[],,,,https://www.cian.ru/sale/flat/334135459/
 Остров,ЦИАН assignment,cian,334137658,строится,Квартал 7 - Корпус 7,17,1,45.5,37800000,,854000,-2.7,,[],,,,https://www.cian.ru/sale/flat/334137658/
 Остров,ЦИАН resale,cian,334157723,готовый,,8,0,29.2,20800000,,862000,-17.4,,[],,,,https://www.cian.ru/sale/flat/334157723/
 Остров,ЦИАН resale,cian,334159140,готовый,"Нижние Мнёвники, 16к2 (Квартал 2 - Корпус 2)",22,2,48.0,30500000,,,,,[],,,,https://www.cian.ru/sale/flat/334159140/
@@ -843,11 +876,14 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,ЦИАН resale,cian,334301238,готовый,"Нижние Мнёвники, 16к6 (Квартал 2 - Корпус 6)",7,3,82.1,50000000,,,,,[],,,,https://www.cian.ru/sale/flat/334301238/
 Остров,ЦИАН resale,cian,334308415,готовый,"Нижние Мнёвники, 16к3 (Квартал 2 - Корпус 3)",7,2,46.0,43500000,,,,,[],,,,https://www.cian.ru/sale/flat/334308415/
 Остров,ЦИАН resale,cian,334317092,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",6,1,44.0,36250000,,756000,9.0,,"[""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/334317092/
+Остров,ЦИАН resale,cian,334333721,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",6,3,84.0,53000000,,,,,[],,,,https://www.cian.ru/sale/flat/334333721/
 Остров,ЦИАН resale,cian,334366829,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",9,3,84.0,48600000,,,,,[],,,,https://www.cian.ru/sale/flat/334366829/
 Остров,ЦИАН resale,cian,334386781,готовый,"5-й квартал, 3 (Квартал 5 - Корпус 3)",10,1,40.6,28000000,,,,,[],,,,https://www.cian.ru/sale/flat/334386781/
 Остров,ЦИАН resale,cian,334406066,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",14,2,71.6,51000000,,711000,0.2,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/334406066/
+Остров,ЦИАН resale,cian,334427600,готовый,"6-й квартал, 12к6с4",9,3,82.0,53000000,,,,,[],,,,https://www.cian.ru/sale/flat/334427600/
 Остров,ЦИАН resale,cian,334435819,готовый,"5-й квартал, 1 (Квартал 5 - Корпус 1)",11,2,43.0,37495000,,,,,[],,,,https://www.cian.ru/sale/flat/334435819/
 Остров,ЦИАН resale,cian,334444854,готовый,"6-й квартал, 12к2 (Квартал 6 - Корпус 2)",18,2,66.2,48000000,,680000,6.6,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/334444854/
+Остров,ЦИАН resale,cian,334489339,готовый,"Нижние Мнёвники, 16к5 (Квартал 2 - Корпус 5)",12,3,62.0,57000000,,,,,[],,,,https://www.cian.ru/sale/flat/334489339/
 Остров,ЦИАН resale,cian,334505540,готовый,"Нижние Мнёвники, 16к3 (Квартал 2 - Корпус 3)",13,3,86.5,52888555,,,,,[],,,,https://www.cian.ru/sale/flat/334505540/
 Остров,ЦИАН resale,cian,334517505,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",8,1,38.0,31990000,,787240,6.9,,[],,,,https://www.cian.ru/sale/flat/334517505/
 Остров,ЦИАН assignment,cian,334532321,строится,Квартал 12.1 - Корпус 2,10,1,31.7,21000000,,,,,[],,,,https://www.cian.ru/sale/flat/334532321/
@@ -856,6 +892,7 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,ЦИАН resale,cian,334561468,готовый,"Нижние Мнёвники, 16к5 (Квартал 2 - Корпус 5)",21,1,43.9,35500000,,756000,7.0,,"[""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/334561468/
 Остров,ЦИАН resale,cian,334572138,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",9,1,49.2,43000000,,,,,[],,,,https://www.cian.ru/sale/flat/334572138/
 Остров,ЦИАН resale,cian,334572400,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 7)",12,1,35.3,29500000,,,,,[],,,,https://www.cian.ru/sale/flat/334572400/
+Остров,ЦИАН resale,cian,334575457,готовый,,8,3,85.0,54000000,,,,,[],,,,https://www.cian.ru/sale/flat/334575457/
 Остров,ЦИАН resale,cian,334575458,готовый,,10,2,43.4,28800000,,,,,[],,,,https://www.cian.ru/sale/flat/334575458/
 Остров,ЦИАН resale,cian,334575462,готовый,,11,2,43.6,28000000,,,,,[],,,,https://www.cian.ru/sale/flat/334575462/
 Остров,ЦИАН resale,cian,334575464,готовый,,12,2,43.6,28000000,,,,,[],,,,https://www.cian.ru/sale/flat/334575464/
@@ -864,16 +901,23 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,ЦИАН resale,cian,334575475,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",13,2,40.4,27800000,,,,,[],,,,https://www.cian.ru/sale/flat/334575475/
 Остров,ЦИАН resale,cian,334575479,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",19,2,45.7,31800000,,,,,[],,,,https://www.cian.ru/sale/flat/334575479/
 Остров,ЦИАН resale,cian,334575483,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",19,2,46.5,32800000,,,,,[],,,,https://www.cian.ru/sale/flat/334575483/
+Остров,ЦИАН resale,cian,334585732,готовый,,8,2,82.5,57500000,,1046400,-33.4,,[],,,,https://www.cian.ru/sale/flat/334585732/
 Остров,ЦИАН resale,cian,334615514,готовый,"5-й квартал, 4 (Квартал 5 - Корпус 4)",17,1,38.4,33500000,,854000,2.2,,[],,,,https://www.cian.ru/sale/flat/334615514/
 Остров,ЦИАН resale,cian,334623362,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",11,1,43.0,36950000,,817000,5.2,,"["""", ""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/334623362/
+Остров,ЦИАН assignment,cian,334638874,строится,Квартал 12.1 - Корпус 2,9,3,89.9,58000000,,713000,-9.5,,[],,,,https://www.cian.ru/sale/flat/334638874/
+Остров,ЦИАН resale,cian,334643085,готовый,"Нижние Мнёвники, 16к5 (Квартал 2 - Корпус 5)",17,3,64.4,55000000,,,,,[],,,,https://www.cian.ru/sale/flat/334643085/
 Остров,ЦИАН resale,cian,334643150,готовый,"Нижние Мнёвники, 16к3 (Квартал 2 - Корпус 3)",16,3,74.0,46500000,,,,,[],,,,https://www.cian.ru/sale/flat/334643150/
 Остров,ЦИАН resale,cian,334655728,готовый,"6-й квартал, 12к6с1 (Квартал 6 - Корпус 6)",3,2,57.8,36900000,,777000,-17.8,,[],,,,https://www.cian.ru/sale/flat/334655728/
 Остров,ЦИАН resale,cian,334659500,готовый,"Нижние Мнёвники, 16к6 (Квартал 2 - Корпус 6)",14,2,47.8,31000000,,,,,[],,,,https://www.cian.ru/sale/flat/334659500/
+Остров,ЦИАН assignment,cian,334662018,строится,Квартал 7 - Корпус 3,5,2,79.1,55300000,,800500,-12.7,,"[""Ландшафтный двор"", ""Река"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/334662018/
 Остров,ЦИАН resale,cian,334664314,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",8,0,29.2,20990000,,862000,-16.6,,[],,,,https://www.cian.ru/sale/flat/334664314/
+Остров,ЦИАН resale,cian,334668994,готовый,"6-й квартал, 12к6с1 (Квартал 6 - Корпус 6)",10,2,81.0,55000000,,767000,-11.5,,"[""Ландшафтный двор"", ""Мневниковская пойма"", ""Река"", ""Река, Крылатское"", ""Территория квартала""]",,,,https://www.cian.ru/sale/flat/334668994/
 Остров,ЦИАН resale,cian,334696097,готовый,"5-й квартал, 8 (Квартал 5 - Корпус 8)",11,1,46.7,31500000,,774000,-12.9,,[],,,,https://www.cian.ru/sale/flat/334696097/
+Остров,ЦИАН resale,cian,334698107,готовый,"6-й квартал, 12к3 (Квартал 6 - Корпус 3)",9,3,81.9,53000000,,,,,[],,,,https://www.cian.ru/sale/flat/334698107/
 Остров,ЦИАН resale,cian,334828134,готовый,"5-й квартал, 3 (Квартал 5 - Корпус 3)",6,3,62.3,35950000,,,,,[],,,,https://www.cian.ru/sale/flat/334828134/
 Остров,ЦИАН resale,cian,334829139,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",20,1,44.6,34500000,,831000,-6.9,,"["""", ""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/334829139/
 Остров,ЦИАН resale,cian,334840391,готовый,"Нижние Мнёвники, 16к2 (Квартал 2 - Корпус 2)",22,1,48.0,30500000,,,,,[],,,,https://www.cian.ru/sale/flat/334840391/
+Остров,ЦИАН resale,cian,334842916,готовый,"Нижние Мнёвники, 16к5 (Квартал 2 - Корпус 5)",18,3,67.4,58000000,,816000,5.5,,"[""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/334842916/
 Остров,ЦИАН resale,cian,334857228,готовый,"6-й квартал, 12к6с4",17,2,57.6,36990000,,,,,[],,,,https://www.cian.ru/sale/flat/334857228/
 Остров,ЦИАН resale,cian,334858128,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",3,1,38.0,28000000,,787240,-6.4,,[],,,,https://www.cian.ru/sale/flat/334858128/
 Остров,ЦИАН resale,cian,334867346,готовый,"5-й квартал, 7 (Квартал 5 - Корпус 7)",7,1,40.6,21900000,,,,,[],,,,https://www.cian.ru/sale/flat/334867346/
@@ -884,6 +928,8 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 Остров,ЦИАН resale,cian,334876036,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 7)",8,1,39.4,29900000,,836000,-9.2,,[],,,,https://www.cian.ru/sale/flat/334876036/
 Остров,ЦИАН assignment,cian,334890407,строится,"6-й квартал, 12к2 (Квартал 6 - Корпус 2)",6,1,46.7,29990000,,774000,-17.0,,[],,,,https://www.cian.ru/sale/flat/334890407/
 Остров,ЦИАН resale,cian,334890590,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",10,0,29.0,25500000,,862000,2.0,,[],,,,https://www.cian.ru/sale/flat/334890590/
+Остров,ЦИАН resale,cian,334898849,готовый,"6-й квартал, 12к6с1 (Квартал 6 - Корпус 6)",7,3,88.5,53568000,,681000,-11.1,,"["""", ""Ландшафтный двор"", ""Река""]",,,,https://www.cian.ru/sale/flat/334898849/
+Остров,ЦИАН resale,cian,334919846,готовый,"Нижние Мнёвники, 7 (Квартал 4 - Корпус 1)",7,3,85.0,54900000,,,,,[],,,,https://www.cian.ru/sale/flat/334919846/
 Остров,ЦИАН resale,cian,334950646,готовый,"6-й квартал, 12к6с1 (Квартал 6 - Корпус 6)",8,0,32.6,26200000,,,,,[],,,,https://www.cian.ru/sale/flat/334950646/
 Остров,ЦИАН resale,cian,334954372,готовый,"6-й квартал, 12к6с1 (Квартал 6 - Корпус 6)",9,0,32.6,26200000,,,,,[],,,,https://www.cian.ru/sale/flat/334954372/
 Остров,ЦИАН resale,cian,334977712,готовый,"Нижние Мнёвники, 16к4 (Квартал 2 - Корпус 4)",9,1,46.7,30000000,,774000,-17.0,,[],,,,https://www.cian.ru/sale/flat/334977712/
