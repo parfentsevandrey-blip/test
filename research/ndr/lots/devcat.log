@@ -964,3 +964,9 @@
 2026-10-17T11:12:23+03:00 list dsections 51 sections, flats 5115 (available 1177)
 2026-10-17T11:12:23+03:00 donstroy pages today 808
 2026-10-17T11:12:32+03:00 qa fsk skipped: collector still running on the site
+2026-10-17T11:14:13+03:00 list https://fsk.ru/sitemap.xml skipped: site paused 2026-10-17T22:30:00+03:00
+2026-10-17T11:14:13+03:00 fsk site paused until 2026-10-17T22:30:00+03:00 (L32)
+2026-10-17T11:14:13+03:00 lsr site paused until 2026-10-17T12:00:00+03:00 (L32)
+2026-10-17T11:14:15+03:00 list dsections 51 sections, flats 5115 (available 1177)
+2026-10-17T11:14:15+03:00 donstroy pages today 811
+2026-10-17T11:14:22+03:00 qa fsk skipped: collector still running on the site
