@@ -131,8 +131,8 @@
    "dev_sold_visible": 0,
    "dev_with_price": 102,
    "dev_with_special": 9,
-   "cian_dev_lots": 199,
-   "cian_dev_matched_to_site": 92,
+   "cian_dev_lots": 208,
+   "cian_dev_matched_to_site": 100,
    "cian_vs_site_price_median_pct": 0.0,
    "cian_resale_lots": 123,
    "cian_resale_with_same_layout_at_dev": 63
@@ -146,10 +146,10 @@
    "dev_sold_visible": 0,
    "dev_with_price": 0,
    "dev_with_special": 0,
-   "cian_dev_lots": 0,
+   "cian_dev_lots": 10,
    "cian_dev_matched_to_site": 0,
    "cian_vs_site_price_median_pct": null,
-   "cian_resale_lots": 0,
+   "cian_resale_lots": 4,
    "cian_resale_with_same_layout_at_dev": 0
   },
   "High Life": {
@@ -161,11 +161,11 @@
    "dev_sold_visible": 1160,
    "dev_with_price": 199,
    "dev_with_special": 1511,
-   "cian_dev_lots": 0,
-   "cian_dev_matched_to_site": 0,
-   "cian_vs_site_price_median_pct": null,
-   "cian_resale_lots": 0,
-   "cian_resale_with_same_layout_at_dev": 0
+   "cian_dev_lots": 47,
+   "cian_dev_matched_to_site": 27,
+   "cian_vs_site_price_median_pct": 0.0,
+   "cian_resale_lots": 9,
+   "cian_resale_with_same_layout_at_dev": 4
   },
   "Soul": {
    "zk_id": "4183417",
