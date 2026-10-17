@@ -464,3 +464,11 @@
 2026-10-17T08:35:00+03:00 fsk site paused until 2026-10-17T22:30:00+03:00 (L32)
 2026-10-17T08:35:00+03:00 lsr site paused until 2026-10-17T12:00:00+03:00 (L32)
 2026-10-17T08:35:00+03:00 list https://fsk.ru/sitemap.xml skipped: site paused 2026-10-17T22:30:00+03:00
+2026-10-17T08:35:02+03:00 list dsections 51 sections, flats 5115 (available 1177)
+2026-10-17T08:35:02+03:00 donstroy pages today 559
+2026-10-17T08:37:02+03:00 fsk site paused until 2026-10-17T22:30:00+03:00 (L32)
+2026-10-17T08:37:02+03:00 lsr site paused until 2026-10-17T12:00:00+03:00 (L32)
+2026-10-17T08:37:02+03:00 list https://fsk.ru/sitemap.xml skipped: site paused 2026-10-17T22:30:00+03:00
+2026-10-17T08:37:04+03:00 list dsections 51 sections, flats 5115 (available 1177)
+2026-10-17T08:37:04+03:00 donstroy pages today 562
+2026-10-17T08:37:04+03:00 qa fsk skipped: collector still running on the site
