@@ -56,8 +56,8 @@
    "dev_sold_visible": 0,
    "dev_with_price": 119,
    "dev_with_special": 119,
-   "cian_dev_lots": 80,
-   "cian_dev_matched_to_site": 53,
+   "cian_dev_lots": 118,
+   "cian_dev_matched_to_site": 91,
    "cian_vs_site_price_median_pct": -0.0,
    "cian_resale_lots": 3,
    "cian_resale_with_same_layout_at_dev": 3
@@ -71,11 +71,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 191,
    "dev_with_special": 191,
-   "cian_dev_lots": 0,
-   "cian_dev_matched_to_site": 0,
-   "cian_vs_site_price_median_pct": null,
-   "cian_resale_lots": 0,
-   "cian_resale_with_same_layout_at_dev": 0
+   "cian_dev_lots": 43,
+   "cian_dev_matched_to_site": 21,
+   "cian_vs_site_price_median_pct": 0.0,
+   "cian_resale_lots": 4,
+   "cian_resale_with_same_layout_at_dev": 3
   },
   "Мнёвники от Гранель": {
    "zk_id": "5221539",
