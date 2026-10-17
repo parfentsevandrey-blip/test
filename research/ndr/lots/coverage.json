@@ -41,11 +41,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 38,
    "dev_with_special": 38,
-   "cian_dev_lots": 21,
-   "cian_dev_matched_to_site": 17,
+   "cian_dev_lots": 32,
+   "cian_dev_matched_to_site": 28,
    "cian_vs_site_price_median_pct": -0.0,
-   "cian_resale_lots": 7,
-   "cian_resale_with_same_layout_at_dev": 2
+   "cian_resale_lots": 36,
+   "cian_resale_with_same_layout_at_dev": 4
   },
   "Нижегородская от Гранель": {
    "zk_id": "5699304",
