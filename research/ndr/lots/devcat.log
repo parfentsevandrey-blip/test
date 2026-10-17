@@ -985,3 +985,6 @@
 2026-10-17T11:20:46+03:00 list dsections 51 sections, flats 5115 (available 1177)
 2026-10-17T11:20:46+03:00 donstroy pages today 814
 2026-10-17T11:22:50+03:00 qa fsk skipped: collector still running on the site
+2026-10-17T11:35:40+03:00 qa donstroy skipped: already re-read today (L40)
+2026-10-17T11:35:40+03:00 qa granelle skipped: already re-read today (L40)
+2026-10-17T11:35:40+03:00 qa fsk skipped: collector still running on the site

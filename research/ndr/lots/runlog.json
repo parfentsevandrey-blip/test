@@ -185,6 +185,7 @@
  },
  "2026-10-17": {
   "anomalies": [
+   "Символ: на ЦИАН собрано 758 из 782 (96.9%)",
    "сбой https://donstroy.moscow/: network × 1",
    "сбой https://granelle.ru/: network × 2",
    "сбой visitor:https:/: error Page.goto: net::ERR_PROXY_CONNECTION_FAILED at https://donst × 1"
