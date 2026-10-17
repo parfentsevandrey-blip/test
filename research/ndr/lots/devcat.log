@@ -146,3 +146,6 @@
 2026-10-17T02:21:12+03:00 list https://fsk.ru/sitemap.xml skipped: site paused 2026-10-17T22:30:00+03:00
 2026-10-17T02:21:12+03:00 fsk site paused until 2026-10-17T22:30:00+03:00 (L32)
 2026-10-17T02:21:21+03:00 qa fsk skipped: collector still running on the site
+2026-10-17T02:32:59+03:00 list dsections 51 sections, flats 5115 (available 1177)
+2026-10-17T05:02:20+03:00 donstroy pages today 400
+2026-10-17T05:04:25+03:00 qa fsk skipped: collector still running on the site

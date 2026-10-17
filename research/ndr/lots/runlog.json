@@ -204,17 +204,17 @@
    "Soul: на ЦИАН 0 против 361 в прошлый прогон",
    "Дрим Рива: на ЦИАН 0 против 127 в прошлый прогон",
    "сбой visitor:https:/: error Page.goto: net::ERR_PROXY_CONNECTION_FAILED at https://donst × 1",
-   "группа devcat «donstroy» не завершена: running",
    "группа devcat «fsk» не завершена: paused",
-   "группа devcat «lsr» не завершена: paused"
+   "группа devcat «lsr» не завершена: paused",
+   "Q2 donstroy:330705042: цена в базе 152 233 600  на странице квартиры 133 965 568"
   ],
   "dev": {
    "2812286": {
     "source": "donstroy",
     "collected": 659,
     "on_sale": 659,
-    "with_price": 391,
-    "with_special": 51,
+    "with_price": 536,
+    "with_special": 189,
     "declared": 659,
     "declared_by": "список сайта"
    },
@@ -222,8 +222,8 @@
     "source": "donstroy",
     "collected": 518,
     "on_sale": 518,
-    "with_price": 263,
-    "with_special": 64,
+    "with_price": 402,
+    "with_special": 202,
     "declared": 518,
     "declared_by": "список сайта"
    },
