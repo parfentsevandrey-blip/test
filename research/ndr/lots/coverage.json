@@ -101,11 +101,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 669,
    "dev_with_special": 669,
-   "cian_dev_lots": 592,
-   "cian_dev_matched_to_site": 334,
+   "cian_dev_lots": 601,
+   "cian_dev_matched_to_site": 341,
    "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 188,
-   "cian_resale_with_same_layout_at_dev": 129
+   "cian_resale_lots": 217,
+   "cian_resale_with_same_layout_at_dev": 132
   },
   "Amber City": {
    "zk_id": "4888961",
