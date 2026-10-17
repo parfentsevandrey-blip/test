@@ -185,8 +185,7 @@
  },
  "2026-10-17": {
   "anomalies": [
-   "сбой visitor:https:/: error Page.goto: net::ERR_PROXY_CONNECTION_FAILED at https://donst × 1",
-   "Q2 donstroy:330705042: цена в базе 152 233 600  на странице квартиры 133 965 568"
+   "сбой visitor:https:/: error Page.goto: net::ERR_PROXY_CONNECTION_FAILED at https://donst × 1"
   ],
   "dev": {
    "2812286": {
@@ -273,7 +272,7 @@
   },
   "cian": {
    "2812286": {
-    "collected": 52,
+    "collected": 214,
     "site_total": 1235
    },
    "7231": {

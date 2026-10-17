@@ -1,19 +1,6 @@
 {
  "day": "2026-10-17",
  "layer1_records": 3750,
- "layer2_checked": 6,
- "findings": [
-  {
-   "id": "Q1",
-   "rule": "V1",
-   "where": "donstroy:331001007",
-   "what": "комнат 8"
-  },
-  {
-   "id": "Q2",
-   "rule": "S1",
-   "where": "donstroy:330705042",
-   "what": "цена в базе 152 233 600  на странице квартиры 133 965 568"
-  }
- ]
+ "layer2_checked": 7,
+ "findings": []
 }
