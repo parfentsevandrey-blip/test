@@ -1009,3 +1009,9 @@
 2026-10-17T22:42:27+03:00 visitor done today at 22:35 — not repeated (L42)
 2026-10-17T22:42:27+03:00 donstroy done today at 12:06 — not repeated (L42)
 2026-10-17T22:42:42+03:00 list fsk tree amber-city 352
+2026-10-17T22:44:33+03:00 list fsk tree sydney-city 209
+2026-10-17T22:45:59+03:00 list fsk tree sydney-prime 10
+2026-10-17T22:47:35+03:00 fsk pages today 2
+2026-10-17T22:47:35+03:00 done flats listed {'donstroy': 1177, 'dreamriva': 61, 'forma': 182, 'fsk': 571, 'granelle': 819, 'highlife': 1511, 'lsr': 669}, layouts/buildings on sale {'forma': 182, 'granelle': 819}, requests 1523, finished 2026-10-17T22:47:35+03:00
+2026-10-17T22:47:36+03:00 qa donstroy skipped: already re-read today (L40)
+2026-10-17T22:47:36+03:00 qa granelle skipped: already re-read today (L40)

@@ -188,8 +188,7 @@
    "Символ: на ЦИАН собрано 758 из 782 (96.9%)",
    "сбой https://donstroy.moscow/: network × 1",
    "сбой https://granelle.ru/: network × 2",
-   "сбой visitor:https:/: error Page.goto: net::ERR_PROXY_CONNECTION_FAILED at https://donst × 1",
-   "группа devcat «fsk» не завершена: waiting"
+   "сбой visitor:https:/: error Page.goto: net::ERR_PROXY_CONNECTION_FAILED at https://donst × 1"
   ],
   "dev": {
    "2812286": {
@@ -232,8 +231,8 @@
     "source": "fsk",
     "collected": 209,
     "on_sale": 209,
-    "with_price": 102,
-    "with_special": 9,
+    "with_price": 208,
+    "with_special": 0,
     "declared": 209,
     "declared_by": "список сайта"
    },
@@ -241,7 +240,7 @@
     "source": "fsk",
     "collected": 10,
     "on_sale": 10,
-    "with_price": 0,
+    "with_price": 10,
     "with_special": 0,
     "declared": 10,
     "declared_by": "список сайта"
@@ -250,8 +249,8 @@
     "source": "fsk",
     "collected": 352,
     "on_sale": 352,
-    "with_price": 160,
-    "with_special": 30,
+    "with_price": 352,
+    "with_special": 0,
     "declared": 352,
     "declared_by": "список сайта"
    },
