@@ -47,6 +47,7 @@ GAP_HOST = {"fsk.ru": (60, 100)}   # fsk.ru answered 429 after ~90 pages at 20-4
 PAGE_BUDGET = 400              # flat pages per day per site (Donstroy, FSK); each site has its own process and pace
 GROUPS = ("lists", "lsr", "visitor", "donstroy", "fsk")
 PRICE_REFRESH_DAYS = 7         # instruction С1: weekly price list
+FSK_TREE = True                # engine step 2: ФСК catalogue page loads /api/v3/flats/tree itself — the whole project in one response
 DON_SEARCH = True              # engine step 2: Donstroy prices from the page /full-search/ loads itself (old path: flat pages)
 MAX_FAILS = 3
 
@@ -681,6 +682,41 @@ def fsk_flat_row(db, f, origin):
     put_price(db, "fsk", f["externalId"], f.get("price"), f.get("priceWoDiscount"), origin)
 
 
+def fsk_tree(db, slug):
+    """Engine step 2 (ADAPTERS.md): one visit of the allowed catalogue page /<project>/flats; the page itself loads
+    /api/v3/flats/tree with every flat for sale (price, price before discount, area, rooms, корпус, section, floor, number,
+    status). 17.10, Amber City: 352 of 352 sitemap flats, 38 of 38 prices equal to the flat pages."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("visitor", HERE / "lib" / "visitor.py")
+    V = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(V)
+    try:
+        got = V.visit(f"https://fsk.ru/{slug}/flats", None, None, r"/api/v3/flats/tree\?", "__NUXT__", gap=GAP_HOST["fsk.ru"], log=log)
+    except V.Challenge as e:
+        raise Blocked(f"challenge {e}")
+    db.execute("insert into fetches values (?,?,?,?)", (today(), f"visitor:fsk:tree:{slug}", "200" if got else "empty", now()))
+    db.commit()
+    return fsk_tree_store(db, slug, got)
+
+
+def fsk_tree_store(db, slug, got):
+    n = 0
+    for tree in got:
+        for b in tree if isinstance(tree, list) else []:
+            for s in b.get("sections") or []:
+                for fl in s.get("floors") or []:
+                    for f in (fl.get("flats") or []) if isinstance(fl, dict) else []:
+                        if not f.get("externalId"):
+                            continue
+                        f.setdefault("project", {"slug": slug})
+                        if not (f.get("project") or {}).get("slug"):
+                            f["project"] = {"slug": slug}
+                        fsk_flat_row(db, f, "catalog")
+                        n += 1
+    db.commit()
+    return f"fsk tree {slug} {n}"
+
+
 def fsk_page(db, lot_id, url):
     html, st = fetch(db, url)
     if not html:
@@ -778,9 +814,18 @@ def run_group(db, grp, day):
         n = db.execute("select count(*) from fetches where day=? and url like ?", (day, like)).fetchone()[0]
         fresh = (datetime.now(MSK) - timedelta(days=PRICE_REFRESH_DAYS)).strftime("%Y-%m-%d")
         fails = 0
+        tree_done = bool(db.execute("select 1 from fetches where day=? and url like 'visitor:fsk:tree:%' and status='200'", (day,)).fetchone())
+        if grp == "fsk" and FSK_TREE and not tree_done:
+            for slug in [s for (src, s) in ZK if src == "fsk"]:   # one catalogue visit per project, 60-100 s apart (L7)
+                log("list", fsk_tree(db, slug))
+                time.sleep(random.uniform(*GAP_HOST["fsk.ru"]))
         for lot_id, url, last_page in page_queue(db, day, grp):
             if n >= PAGE_BUDGET or (last_page and last_page > fresh):
                 break
+            if grp == "fsk" and FSK_TREE:                    # the tree gives every field: a flat page only for a missing one
+                r = db.execute("select rooms, area from info where source='fsk' and lot_id=?", (lot_id,)).fetchone()
+                if r and r[0] is not None and r[1]:
+                    continue
             if grp == "donstroy" and DON_SEARCH:             # prices come from the search list: a page only for missing details
                 r = db.execute("select rooms, area from info where source='donstroy' and lot_id=?", (lot_id,)).fetchone()
                 if r and r[0] is not None and r[1]:

@@ -1005,3 +1005,7 @@
 2026-10-17T22:38:31+03:00 qa donstroy skipped: already re-read today (L40)
 2026-10-17T22:38:31+03:00 qa granelle skipped: already re-read today (L40)
 2026-10-17T22:38:31+03:00 qa fsk skipped: collector still running on the site
+2026-10-17T22:42:27+03:00 lsr done today at 12:47 — not repeated (L42)
+2026-10-17T22:42:27+03:00 visitor done today at 22:35 — not repeated (L42)
+2026-10-17T22:42:27+03:00 donstroy done today at 12:06 — not repeated (L42)
+2026-10-17T22:42:42+03:00 list fsk tree amber-city 352

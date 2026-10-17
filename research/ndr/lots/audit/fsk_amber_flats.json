@@ -1,0 +1,391 @@
+{
+ "name": "fsk_amber_flats",
+ "url": "https://fsk.ru/amber-city/flats",
+ "title": "Купить квартиру в ЖК Амбер Сити в Москве от застройщика, цены в новостройке - Продажа от ГК ФСК",
+ "clicked": "Показать еще 20 из\n            333",
+ "requests": 493,
+ "bytes": 19099293,
+ "third_party_requests": 319,
+ "document_bytes": 625933,
+ "embedded_state": [
+  "Nuxt state",
+  "JSON-LD"
+ ],
+ "captcha_or_check": false,
+ "own_data_responses": [
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/splash-bars?path=/amber-city/flats",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/user/favorites/short",
+   "bytes": 2,
+   "post": "",
+   "shape": [
+    "list[0]",
+    null
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/offers/all?limit=25",
+   "bytes": 161304,
+   "post": "",
+   "shape": [
+    "list[25]",
+    {
+     "_id": "str",
+     "title": "str",
+     "announcement": "str",
+     "projects": [
+      "list[2]",
+      "dict"
+     ],
+     "slug": "str",
+     "src": "str",
+     "pin": "bool",
+     "pinDsk": "bool",
+     "kind": [
+      "list[0]",
+      null
+     ],
+     "description": "str",
+     "textBanner": "bool",
+     "isBanner": "bool",
+     "bannerLink": "str"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/flats/tree?project_slug=amber-city",
+   "bytes": 1427733,
+   "post": "",
+   "shape": [
+    "list[7]",
+    {
+     "_id": "str",
+     "dateDelivery": "str",
+     "number": "str",
+     "minFloor": "int",
+     "maxFloor": "int",
+     "sections": [
+      "list[1]",
+      "dict"
+     ]
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/flats?offset=19&limit=20&sort=price&order=1&project_slug=amber-city&outlet=false",
+   "bytes": 76119,
+   "post": "",
+   "shape": {
+    "total": "int",
+    "limit": "int",
+    "totalPages": "int",
+    "page": "int",
+    "pagingCounter": "int",
+    "hasPrevPage": "bool",
+    "hasNextPage": "bool",
+    "nextPage": "int",
+    "items": [
+     "list[20]",
+     {
+      "price": "int",
+      "discount": "int",
+      "preDiscountPrice": "int",
+      "preDiscount": "int",
+      "priceWoDiscount": "int",
+      "prePrice": "bool",
+      "priceOnRequest": "bool",
+      "mortgagePayment": "int",
+      "mortgagePaymentSubsidized": "int",
+      "mortgagePaymentFamily": "int",
+      "mortgageFirstPaymentSubsidized": "int",
+      "investProfit": "int",
+      "pricePerMeter": "int",
+      "_id": "str",
+      "externalId": "str",
+      "areaTotal": "float",
+      "kind": "str",
+      "propertyType": "int",
+      "number": "str",
+      "status": "int",
+      "rooms": "int",
+      "floorNumber": "int",
+      "numberOnFloor": "int",
+      "finishing": "int",
+      "furniture": "bool"
+     }
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/flat-groups?offset=0&limit=0&project_slug=amber-city&outlet=false&sort=minPrice&order=1",
+   "bytes": 754384,
+   "post": "",
+   "shape": {
+    "total": "int",
+    "limit": "int",
+    "totalPages": "int",
+    "page": "int",
+    "pagingCounter": "int",
+    "hasPrevPage": "bool",
+    "hasNextPage": "bool",
+    "nextPage": "int",
+    "items": [
+     "list[25]",
+     {
+      "_id": "str",
+      "complex": "dict",
+      "plan": "str",
+      "planProject": "str",
+      "planShowcase": "str",
+      "items": "list"
+     }
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/flats/recommendations?project_slug=amber-city",
+   "bytes": 22,
+   "post": "",
+   "shape": {
+    "recommendations": [
+     "list[0]",
+     null
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/flats?offset=19&limit=20&sort=price&order=1&project_slug=amber-city&outlet=false",
+   "bytes": 76119,
+   "post": "",
+   "shape": {
+    "total": "int",
+    "limit": "int",
+    "totalPages": "int",
+    "page": "int",
+    "pagingCounter": "int",
+    "hasPrevPage": "bool",
+    "hasNextPage": "bool",
+    "nextPage": "int",
+    "items": [
+     "list[20]",
+     {
+      "price": "int",
+      "discount": "int",
+      "preDiscountPrice": "int",
+      "preDiscount": "int",
+      "priceWoDiscount": "int",
+      "prePrice": "bool",
+      "priceOnRequest": "bool",
+      "mortgagePayment": "int",
+      "mortgagePaymentSubsidized": "int",
+      "mortgagePaymentFamily": "int",
+      "mortgageFirstPaymentSubsidized": "int",
+      "investProfit": "int",
+      "pricePerMeter": "int",
+      "_id": "str",
+      "externalId": "str",
+      "areaTotal": "float",
+      "kind": "str",
+      "propertyType": "int",
+      "number": "str",
+      "status": "int",
+      "rooms": "int",
+      "floorNumber": "int",
+      "numberOnFloor": "int",
+      "finishing": "int",
+      "furniture": "bool"
+     }
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/flat-groups?offset=0&limit=0&project_slug=amber-city&outlet=false&sort=minPrice&order=1",
+   "bytes": 754384,
+   "post": "",
+   "shape": {
+    "total": "int",
+    "limit": "int",
+    "totalPages": "int",
+    "page": "int",
+    "pagingCounter": "int",
+    "hasPrevPage": "bool",
+    "hasNextPage": "bool",
+    "nextPage": "int",
+    "items": [
+     "list[25]",
+     {
+      "_id": "str",
+      "complex": "dict",
+      "plan": "str",
+      "planProject": "str",
+      "planShowcase": "str",
+      "items": "list"
+     }
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/flats/recommendations?project_slug=amber-city",
+   "bytes": 22,
+   "post": "",
+   "shape": {
+    "recommendations": [
+     "list[0]",
+     null
+    ]
+   }
+  }
+ ],
+ "rea_evidence_id": null,
+ "rea_error": "'normalized_result': {\"evidence_id\":\"ev_91410b3bfe29bf7cb66e38d9b2653919438479afe3cc2ba403d54e5afe78929c\",\"subject\":{\"name\":\"fsk_amber_flats.clean.har\",\"digest\":{\"sha256\":\"815f56f019faeae5638e43248df5b416ab94b5aa3c9b20eb0d45556c20af3817\"},\"local_path\":\"/tmp/claude-0/-home-user-test/ea57c60a-b461-5b01-9fed-bf21bf3c9920/s ",
+ "rea_api_surface_own": [],
+ "rea_api_surface_third_party_origins": [],
+ "m2s_endpoints": [
+  {
+   "method": "POST",
+   "url": "https://fsk.ru/api/v3/rum",
+   "params": [
+    "apiclient",
+    "version"
+   ],
+   "body_fields": [
+    "events"
+   ],
+   "response_fields": []
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/splash-bars",
+   "params": [
+    "path"
+   ],
+   "body_fields": [],
+   "response_fields": []
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/user/favorites/short",
+   "params": [],
+   "body_fields": [],
+   "response_fields": []
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/offers/all",
+   "params": [
+    "limit"
+   ],
+   "body_fields": [],
+   "response_fields": [
+    "_id",
+    "title",
+    "announcement",
+    "projects",
+    "slug",
+    "src",
+    "pin",
+    "pinDsk",
+    "kind",
+    "description",
+    "textBanner",
+    "isBanner",
+    "bannerLink"
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/flats/tree",
+   "params": [
+    "project_slug"
+   ],
+   "body_fields": [],
+   "response_fields": [
+    "_id",
+    "dateDelivery",
+    "number",
+    "minFloor",
+    "maxFloor",
+    "sections"
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/flats",
+   "params": [
+    "offset",
+    "limit",
+    "sort",
+    "order",
+    "project_slug",
+    "outlet"
+   ],
+   "body_fields": [],
+   "response_fields": [
+    "total",
+    "limit",
+    "totalPages",
+    "page",
+    "pagingCounter",
+    "hasPrevPage",
+    "hasNextPage",
+    "nextPage",
+    "items"
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/flat-groups",
+   "params": [
+    "offset",
+    "limit",
+    "project_slug",
+    "outlet",
+    "sort",
+    "order"
+   ],
+   "body_fields": [],
+   "response_fields": [
+    "total",
+    "limit",
+    "totalPages",
+    "page",
+    "pagingCounter",
+    "hasPrevPage",
+    "hasNextPage",
+    "nextPage",
+    "items"
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://fsk.ru/api/v3/flats/recommendations",
+   "params": [
+    "project_slug"
+   ],
+   "body_fields": [],
+   "response_fields": [
+    "recommendations"
+   ]
+  }
+ ],
+ "m2s_error": null,
+ "complete": false
+}
