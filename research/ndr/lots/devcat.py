@@ -771,8 +771,8 @@ def run_group(db, grp, day):
         if grp == "donstroy":                           # section stock first (whole stock, sold included), then flat pages
             log("list", donstroy_sections(db))
             week = (datetime.now(MSK) - timedelta(days=PRICE_REFRESH_DAYS - 1)).strftime("%Y-%m-%d")
-            if DON_SEARCH and not db.execute("select 1 from prices where source='donstroy' and origin='catalog' and day>=? limit 1",
-                                             (week,)).fetchone():
+            if DON_SEARCH and not db.execute("select 1 from fetches where url='visitor:donstroy:full-search' and day>=? limit 1",
+                                             (week,)).fetchone():     # only a completed pass counts (the marker is written at its end)
                 log("list", donstroy_search(db))           # weekly price list in ≈160 portions (engine step 2)
         like = {"donstroy": "https://donstroy.moscow/objects/%", "fsk": "https://fsk.ru/%/flats/%"}[grp]
         n = db.execute("select count(*) from fetches where day=? and url like ?", (day, like)).fetchone()[0]
@@ -809,7 +809,11 @@ def run(grp):
     db.execute("insert or ignore into runs (day, started, status) values (?,?,?)", (day, now(), "running"))
     db.execute("insert or ignore into gruns (day, grp, started, status) values (?,?,?,?)", (day, grp, now(), "running"))
     db.commit()
-    st = db.execute("select status from gruns where day=? and grp=?", (day, grp)).fetchone()[0] or ""
+    st, fin = db.execute("select status, finished from gruns where day=? and grp=?", (day, grp)).fetchone()
+    st = st or ""
+    if fin and st == "done" and grp != "lists":         # finished today: a restart must not walk the site again (L42)
+        log(grp, "done today at", fin[11:16], "— not repeated (L42)")
+        return
     if st.startswith("BLOCKED"):                        # a site said 403/429 today: leave it alone until tomorrow
         log(grp, "blocked earlier today, not resuming:", st)
         return
