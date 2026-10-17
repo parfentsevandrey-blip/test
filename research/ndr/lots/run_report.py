@@ -20,6 +20,16 @@ LOG = HERE / "RUNLOG.md"
 PILOT = {z: n for d in json.loads((HERE / "pilot_zk.json").read_text()).values() for z, n in d.items()}
 ON_SALE = {"highlife": ("Свободно",), "dreamriva": ("AVAILABLE",), "forma": ("free",), "granelle": ("1",)}
 COMPLETE, DROP = 98.0, 15.0          # % collected of declared; % fall of a count vs the previous run
+SITE = {"lsr": "lsr.ru", "fsk": "fsk.ru", "donstroy": "donstroy.moscow", "granelle": "granelle.ru", "forma": "forma.ru",
+        "highlife": "highlife.ru", "dreamriva": "dreamriva.ru"}
+
+
+def _cooldown():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("cooldown", HERE / "lib" / "cooldown.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
 
 
 def dev_numbers(dv, day):
@@ -62,18 +72,30 @@ def build(day=None):
     dev, dev_p = dev_numbers(dv, day), dev_numbers(dv, prev_d) if prev_d else {}
     cian, cian_p = cian_numbers(lt, day), cian_numbers(lt, prev_c) if prev_c else {}
     cov = json.loads((HERE / "coverage.json").read_text())["projects"] if (HERE / "coverage.json").exists() else {}
-    anomalies, rows = [], []
+    anomalies, rows, notes = [], [], []
+    cd = _cooldown()
+    cian_run = lt.execute("select finished from runs where day=?", (day,)).fetchone()
+    cian_open = not (cian_run and cian_run[0])            # today's ЦИАН snapshot not finished: no comparison (L39)
+    if cian_open:
+        p = cd.active("cian.ru")
+        notes.append(f"ЦИАН за {day} не завершён" + (f": пауза до {p['until'][11:16]} ({p['why'][:60]})" if p else " — сбор идёт"))
     for zk, name in PILOT.items():
         d, c, dp, cp = dev.get(zk), cian[zk], dev_p.get(zk), cian_p.get(zk)
         dev_c = pct(d["collected"], d["declared"]) if d else None
         cian_c = pct(c["collected"], c["site_total"])
         rows.append((name, d, dev_c, c, cian_c, (cov.get(name) or {})))
-        if not d:
+        src = (d or dp or {}).get("source")
+        paused = cd.active(SITE.get(src, "")) if src else None
+        if not d and paused:
+            notes.append(f"{name}: сайт {SITE[src]} на паузе до {paused['until'][5:16]} (L32)")
+        elif not d:
             anomalies.append(f"{name}: нет данных с сайта застройщика за {day}")
         elif dev_c is not None and dev_c < COMPLETE:
             anomalies.append(f"{name}: с сайта собрано {d['collected']} из {d['declared']} ({dev_c}%)")
         if d and dp and dp["collected"] and d["collected"] < dp["collected"] * (1 - DROP / 100):
             anomalies.append(f"{name}: на сайте {d['collected']} против {dp['collected']} в прошлый прогон (−{round(100 - pct(d['collected'], dp['collected']), 1)}%) — разбор сайта или реальное выбытие?")
+        if cian_open:
+            continue
         if cian_c is not None and cian_c < COMPLETE:
             anomalies.append(f"{name}: на ЦИАН собрано {c['collected']} из {c['site_total']} ({cian_c}%)")
         if cp and cp["collected"] and c["collected"] < cp["collected"] * (1 - DROP / 100):
@@ -85,7 +107,9 @@ def build(day=None):
         anomalies.append(f"сбой {h}: {st} × {n}")
     groups = dv.execute("select grp, status, finished from gruns where day=? order by grp", (day,)).fetchall()
     for g, st, fin in groups:
-        if not fin:
+        if not fin and st == "paused":
+            notes.append(f"группа devcat «{g}» на паузе")
+        elif not fin:
             anomalies.append(f"группа devcat «{g}» не завершена: {st}")
 
     t = [f"<!-- auto R-{day} -->", f"## R-{day}", "",
@@ -122,6 +146,8 @@ def build(day=None):
         for f in qa["findings"]:
             if f["rule"].startswith("S"):
                 anomalies.append(f"{f['id']} {f['where']}: {f['what']}")
+    if notes:
+        t += ["", "**Паузы и незавершённое (не аномалии):** " + "; ".join(notes) + "."]
     t += ["", "**Аномалии и сбои** (каждую разобрать ниже, итог — урок в `LESSONS.md`):", ""]
     t += [f"- A{i}. {a}" for i, a in enumerate(anomalies, 1)] or ["- нет"]
     t += [f"<!-- /auto R-{day} -->"]

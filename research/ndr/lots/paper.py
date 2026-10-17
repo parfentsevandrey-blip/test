@@ -71,7 +71,7 @@ def select(db, day):
                 continue
             ref = next((v for (z, t, s), v in c2.items() if z == r["zk_id"] and t == r["type"]), None)
             lot = dv.execute("""select s.source, s.lot_id, i.area, i.floor, (select price from prices p where p.source=s.source and p.lot_id=s.lot_id
-                                order by day desc limit 1) pr from seen s join info i on i.source=s.source and i.lot_id=s.lot_id
+                                order by day desc, origin='page' desc limit 1) pr from seen s join info i on i.source=s.source and i.lot_id=s.lot_id
                                 where s.day=(select max(day) from seen) and s.zk_id=? and i.korpus=? order by pr limit 1""",
                              (r["zk_id"], r["korpus"])).fetchone()
             if lot and ref and ref.get("m2"):

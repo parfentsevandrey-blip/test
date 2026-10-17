@@ -35,7 +35,7 @@ def load(name):
 def rules(dv, lt, rg, day):
     out = []
     rows = dv.execute("""select s.source, s.lot_id, i.zk_id, i.korpus, i.floor, i.floors, i.rooms, i.area, i.kind, i.special,
-                                (select price from prices p where p.source=s.source and p.lot_id=s.lot_id order by p.day desc limit 1)
+                                (select price from prices p where p.source=s.source and p.lot_id=s.lot_id order by p.day desc, p.origin='page' desc limit 1)
                          from seen s join info i on i.source=s.source and i.lot_id=s.lot_id where s.day=?""", (day,)).fetchall()
     rows = [r for r in rows if (r[8] or "") != "apartments"]              # L19
     by_bld = {}
@@ -52,7 +52,7 @@ def rules(dv, lt, rg, day):
             out.append(("V1", where, f"{round(price / area):,} ₽/м²".replace(",", " ")))
         if floor and floors and floor > floors:
             out.append(("V1", where, f"этаж {floor} из {floors} (так на сайте: особенность источника, не разбора)"))
-        if rooms is not None and not 0 <= rooms <= 7:
+        if rooms is not None and (rooms < 0 or (rooms > 7 and not (area and area >= 30 * rooms))):   # 8к на 540 м² — реальная (L39)
             out.append(("V1", where, f"комнат {rooms}"))
         if rooms == 0 and area and area > 45 and kind != "penthouse":
             out.append(("V2", where, f"студия {area} м²"))
@@ -104,7 +104,7 @@ def rules(dv, lt, rg, day):
 def resample(dv, day, log):
     """Layer 2: open a random sample of today's flats on their own pages and compare."""
     dc = load("devcat")
-    out, checked = [], 0
+    out, checked, reread = [], 0, set()
     random.seed(day)
     for src, n in SAMPLE.items():
         if dv.execute("select status from gruns where day=? and grp=?", (day, src if src != "granelle" else "visitor")).fetchone() in (None,) \
@@ -119,36 +119,57 @@ def resample(dv, day, log):
             log("qa", src, "skipped: collector still running on the site")
             continue
         lots = dv.execute("""select s.lot_id, i.url, i.area, i.floor,
-                                    (select price from prices p where p.source=s.source and p.lot_id=s.lot_id order by p.day desc limit 1)
+                                    (select price from prices p where p.source=s.source and p.lot_id=s.lot_id order by p.day desc,
+                                            p.origin='page' desc limit 1),
+                                    (select origin from prices p where p.source=s.source and p.lot_id=s.lot_id order by p.day desc,
+                                            p.origin='page' desc limit 1)
                              from seen s join info i on i.source=s.source and i.lot_id=s.lot_id
                              where s.day=? and s.source=? and i.area is not null and i.url is not null""", (day, src)).fetchall()
         prev = qa_prev_suspects(src)                               # yesterday's S findings are re-read first (L23)
         pick = [l for l in lots if l[0] in prev] + random.sample([l for l in lots if l[0] not in prev], min(n, len(lots)))
-        for lot, url, area, floor, price in pick:
+        for lot, url, area, floor, price, origin in pick:
             try:
                 got = page_values(dc, dv, src, url)
             except dc.Blocked as e:
                 log("qa", src, "blocked:", e)
                 break
             checked += 1
+            reread.add(f"{src}:{lot}")
             if got is None:
                 out.append(("S0", f"{src}:{lot}", f"страница квартиры не открылась или не разобралась: {url}"))
                 continue
             gp, ga, gf = got
-            if gp and price and abs(gp / price - 1) > 0.005:
+            if gp and price and abs(gp / price - 1) > 0.005 and origin == "similar":   # L39: the «похожие» price was before a discount
+                dc.put_price(dv, src, lot, gp, None, "page")
+                dv.commit()
+                log("qa", src, lot, f"исправлено: цена «похожие» {price:,.0f} → страница {gp:,.0f} (L39)")
+            elif gp and price and abs(gp / price - 1) > 0.005:
                 out.append(("S1", f"{src}:{lot}", f"цена в базе {price:,.0f}, на странице квартиры {gp:,.0f}".replace(",", " ")))
             if ga and area and abs(ga - area) > 0.15:
                 out.append(("S1", f"{src}:{lot}", f"площадь в базе {area}, на странице {ga}"))
             if gf is not None and floor is not None and int(gf) != int(floor):
                 out.append(("S1", f"{src}:{lot}", f"этаж в базе {floor}, на странице {gf}"))
+    op = qa_open()
+    for w in reread:                                            # re-read and nothing found: closed
+        if w in op and not any(f[1] == w and f[0].startswith("S") for f in out):
+            op.pop(w)
+    for r, w, what in out:
+        if r.startswith("S"):
+            op.setdefault(w, {"since": day, "rule": r})
+            op[w]["last"] = what
+    OPEN.write_text(json.dumps(op, ensure_ascii=False, indent=1))
     return out, checked
 
 
+OPEN =HERE / "qa_open.json"      # S findings stay open until a re-read matches (L39); qa.json is rewritten by every run
+
+
+def qa_open():
+    return json.loads(OPEN.read_text()) if OPEN.exists() else {}
+
+
 def qa_prev_suspects(src):
-    p = HERE / "qa.json"
-    if not p.exists():
-        return set()
-    return {f["where"].split(":", 1)[1] for f in json.loads(p.read_text())["findings"] if f["rule"].startswith("S") and f["where"].startswith(src + ":")}
+    return {w.split(":", 1)[1] for w in qa_open() if w.startswith(src + ":")}
 
 
 def page_values(dc, dv, src, url):

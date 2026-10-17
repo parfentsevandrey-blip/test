@@ -79,8 +79,12 @@ def flat_types(db, day, first_day):
     # price change of the same flats over 4 weeks
     for src, lot, zk, korpus, rooms in db.execute("select source, lot_id, zk_id, korpus, rooms from info where source in (%s)"
                                                   % ",".join("'%s'" % x for x in FLAT_SOURCES)):
-        ps = db.execute("""select day, price from prices where source=? and lot_id=? and day>=? and origin in ('page','catalog','similar','listed')
-                           order by day""", (src, lot, d28)).fetchall()
+        rows = db.execute("""select origin, day, price from prices where source=? and lot_id=? and day>=? and origin in ('page','catalog','listed')
+                             order by day""", (src, lot, d28)).fetchall()     # «похожие» may show the price before a discount (L39)
+        by_o = {}
+        for o, d_, p_ in rows:
+            by_o.setdefault(o, []).append((d_, p_))
+        ps = max(by_o.values(), key=len) if by_o else []                 # one origin: never compare a list price with a page price
         k = (zk, korpus or "?", rname(rooms))
         if len(ps) >= 2 and k in out and ps[0][1] and dd(ps[-1][0], ps[0][0]) >= 7:
             out[k]["_dp"].append(100 * (ps[-1][1] / ps[0][1] - 1))

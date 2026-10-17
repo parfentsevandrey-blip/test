@@ -72,7 +72,7 @@ def dev_lot_views(dv):
     for src, lot, vt, zk, korpus, rooms, area, floor in dv.execute("""
             select d.source, d.lot_id, d.views_today, i.zk_id, i.korpus, i.rooms, i.area, i.floor from demand d
             join info i on i.source=d.source and i.lot_id=d.lot_id where d.day=?""", (day,)):
-        p = dv.execute("select price from prices where source=? and lot_id=? order by day desc limit 1", (src, lot)).fetchone()
+        p = dv.execute("select price from prices where source=? and lot_id=? order by day desc, origin='page' desc limit 1", (src, lot)).fetchone()
         t = "пентхаус" if rooms is None else "студия" if rooms == 0 else {1: "1к", 2: "2к", 3: "3к"}.get(rooms, "4к+")
         out.append({"zk_id": zk, "zk": PILOT.get(zk, zk), "house": korpus, "floor": floor, "area": area, "type": t, "stage": "строится",
                     "seller": "developer", "price": p[0] if p else None, "m2": (p[0] / area) if p and area else None,
