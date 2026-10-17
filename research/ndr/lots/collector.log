@@ -439,3 +439,15 @@
 2026-10-17T08:44:51+03:00 zk card ЗИЛАРТ Группа ЛСР dev 667 agents 243
 2026-10-17T08:47:13+03:00 zk card СОУЛ FORMA dev 310 agents 52
 2026-10-17T08:47:51+03:00 zk card HIGH LIFE (ХАЙ ЛАЙФ) PIONEER dev 199 agents 100
+2026-10-17T11:15:36+03:00 network error 1 Failed to perform, curl: (7) Failed to connect to www.cian.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
+2026-10-17T11:15:46+03:00 network error 2 Failed to perform, curl: (7) Failed to connect to www.cian.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
+2026-10-17T11:16:06+03:00 network error 3 Failed to perform, curl: (7) Failed to connect to www.cian.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
+2026-10-17T11:16:36+03:00 card failed network 330997264
+2026-10-17T11:17:06+03:00 network error 1 Failed to perform, curl: (7) Failed to connect to www.cian.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
+2026-10-17T11:17:16+03:00 network error 2 Failed to perform, curl: (7) Failed to connect to www.cian.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
+2026-10-17T11:17:36+03:00 network error 3 Failed to perform, curl: (7) Failed to connect to www.cian.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
+2026-10-17T11:18:06+03:00 card failed network 331007573
+2026-10-17T11:18:46+03:00 network error 1 Failed to perform, curl: (7) Failed to connect to www.cian.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
+2026-10-17T11:18:56+03:00 network error 2 Failed to perform, curl: (7) Failed to connect to www.cian.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
+2026-10-17T11:20:40+03:00 page 200 Остров creat p5 28 offers, have 1211/1232
+2026-10-17T11:21:16+03:00 page 200 Остров creat p6 28 offers, have 1211/1232

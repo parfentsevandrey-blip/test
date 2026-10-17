@@ -106,7 +106,12 @@ def resample(dv, day, log):
     dc = load("devcat")
     out, checked, reread = [], 0, set()
     random.seed(day)
+    mark = HERE / f".qa_resampled_{day}"                    # one re-reading per site per day, however often qa runs (L40)
+    done = set(mark.read_text().split()) if mark.exists() else set()
     for src, n in SAMPLE.items():
+        if src in done:
+            log("qa", src, "skipped: already re-read today (L40)")
+            continue
         if dv.execute("select status from gruns where day=? and grp=?", (day, src if src != "granelle" else "visitor")).fetchone() in (None,) \
                 and src != "granelle":
             pass
@@ -127,6 +132,8 @@ def resample(dv, day, log):
                              where s.day=? and s.source=? and i.area is not null and i.url is not null""", (day, src)).fetchall()
         prev = qa_prev_suspects(src)                               # yesterday's S findings are re-read first (L23)
         pick = [l for l in lots if l[0] in prev] + random.sample([l for l in lots if l[0] not in prev], min(n, len(lots)))
+        done.add(src)
+        mark.write_text(" ".join(sorted(done)))
         for lot, url, area, floor, price, origin in pick:
             try:
                 got = page_values(dc, dv, src, url)

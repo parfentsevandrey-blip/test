@@ -970,3 +970,17 @@
 2026-10-17T11:14:15+03:00 list dsections 51 sections, flats 5115 (available 1177)
 2026-10-17T11:14:15+03:00 donstroy pages today 811
 2026-10-17T11:14:22+03:00 qa fsk skipped: collector still running on the site
+2026-10-17T11:15:21+03:00 network error 1 https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus2/section1/floor10/flat331202265/ Failed to perform, curl: (7) Failed to connect to donstroy.moscow:443 over proxy 127.0.0.1 after 0 ms: Could not connect
+2026-10-17T11:15:31+03:00 network error 2 https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus2/section1/floor10/flat331202265/ Failed to perform, curl: (7) Failed to connect to donstroy.moscow:443 over proxy 127.0.0.1 after 0 ms: Could not connect
+2026-10-17T11:15:51+03:00 network error 3 https://donstroy.moscow/objects/ostrov/plans/quarter12/korpus2/section1/floor10/flat331202265/ Failed to perform, curl: (7) Failed to connect to donstroy.moscow:443 over proxy 127.0.0.1 after 0 ms: Could not connect
+2026-10-17T11:16:21+03:00 network error 1 https://granelle.ru/flats/mypriority-mnevniki/50475/ Failed to perform, curl: (7) Failed to connect to granelle.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
+2026-10-17T11:16:31+03:00 network error 2 https://granelle.ru/flats/mypriority-mnevniki/50475/ Failed to perform, curl: (7) Failed to connect to granelle.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
+2026-10-17T11:16:51+03:00 network error 3 https://granelle.ru/flats/mypriority-mnevniki/50475/ Failed to perform, curl: (7) Failed to connect to granelle.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
+2026-10-17T11:17:42+03:00 network error 1 https://granelle.ru/flats/mypriority-mnevniki/48822/ Failed to perform, curl: (7) Failed to connect to granelle.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
+2026-10-17T11:17:52+03:00 network error 2 https://granelle.ru/flats/mypriority-mnevniki/48822/ Failed to perform, curl: (7) Failed to connect to granelle.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
+2026-10-17T11:18:12+03:00 network error 3 https://granelle.ru/flats/mypriority-mnevniki/48822/ Failed to perform, curl: (7) Failed to connect to granelle.ru:443 over proxy 127.0.0.1 after 0 ms: Could not connect to 
+2026-10-17T11:20:39+03:00 lsr site paused until 2026-10-17T12:00:00+03:00 (L32)
+2026-10-17T11:20:39+03:00 fsk site paused until 2026-10-17T22:30:00+03:00 (L32)
+2026-10-17T11:20:40+03:00 list https://fsk.ru/sitemap.xml skipped: site paused 2026-10-17T22:30:00+03:00
+2026-10-17T11:20:46+03:00 list dsections 51 sections, flats 5115 (available 1177)
+2026-10-17T11:20:46+03:00 donstroy pages today 814

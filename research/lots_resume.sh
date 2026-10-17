@@ -12,14 +12,26 @@ flock -n 9 || { echo "lots: another resume in progress"; exit 0; }
 cd "$WORK/lots" || exit 0
 DAY=$(TZ=Europe/Moscow date +%F)
 
-finished() {  # finished <db>: today's run row has a finish time
+finished() {  # finished <db>: today's run row has a finish time; devcat: every group done, blocked, or paused by a pause still on (L40)
 python3 - "$1" "$DAY" <<'PY'
-import sqlite3, sys
+import importlib.util, sqlite3, sys
+db, day = sys.argv[1], sys.argv[2]
 try:
-    r = sqlite3.connect(sys.argv[1]).execute("select finished from runs where day=?", (sys.argv[2],)).fetchone()
+    c = sqlite3.connect(db)
+    r = c.execute("select finished from runs where day=?", (day,)).fetchone()
+    if r and r[0]:
+        sys.exit(0)
+    if db.endswith("devcat.db"):
+        spec = importlib.util.spec_from_file_location("cooldown", "lib/cooldown.py")
+        cd = importlib.util.module_from_spec(spec); spec.loader.exec_module(cd)
+        site = {"lsr": "lsr.ru", "fsk": "fsk.ru", "donstroy": "donstroy.moscow"}
+        groups = c.execute("select grp, status, finished from gruns where day=?", (day,)).fetchall()
+        open_ = [g for g, st, fin in groups if not fin and not (st or "").startswith("BLOCKED")
+                 and not (st == "paused" and cd.active(site.get(g, "")))]
+        sys.exit(0 if groups and not open_ else 1)
 except sqlite3.OperationalError:
-    r = None
-sys.exit(0 if r and r[0] else 1)
+    pass
+sys.exit(1)
 PY
 }
 
