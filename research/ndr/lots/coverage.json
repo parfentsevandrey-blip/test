@@ -116,11 +116,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 161,
    "dev_with_special": 30,
-   "cian_dev_lots": 191,
-   "cian_dev_matched_to_site": 79,
+   "cian_dev_lots": 297,
+   "cian_dev_matched_to_site": 128,
    "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 5,
-   "cian_resale_with_same_layout_at_dev": 4
+   "cian_resale_lots": 11,
+   "cian_resale_with_same_layout_at_dev": 9
   },
   "Sydney City": {
    "zk_id": "2446053",
