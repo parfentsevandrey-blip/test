@@ -71,11 +71,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 191,
    "dev_with_special": 191,
-   "cian_dev_lots": 135,
-   "cian_dev_matched_to_site": 72,
+   "cian_dev_lots": 179,
+   "cian_dev_matched_to_site": 102,
    "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 12,
-   "cian_resale_with_same_layout_at_dev": 6
+   "cian_resale_lots": 17,
+   "cian_resale_with_same_layout_at_dev": 7
   },
   "Мнёвники от Гранель": {
    "zk_id": "5221539",
@@ -86,11 +86,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 459,
    "dev_with_special": 459,
-   "cian_dev_lots": 0,
-   "cian_dev_matched_to_site": 0,
-   "cian_vs_site_price_median_pct": null,
-   "cian_resale_lots": 0,
-   "cian_resale_with_same_layout_at_dev": 0
+   "cian_dev_lots": 53,
+   "cian_dev_matched_to_site": 18,
+   "cian_vs_site_price_median_pct": -0.0,
+   "cian_resale_lots": 2,
+   "cian_resale_with_same_layout_at_dev": 2
   },
   "ЗИЛАРТ": {
    "zk_id": "7889",
