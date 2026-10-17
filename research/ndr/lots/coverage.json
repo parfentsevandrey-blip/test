@@ -86,9 +86,9 @@
    "dev_sold_visible": 0,
    "dev_with_price": 459,
    "dev_with_special": 459,
-   "cian_dev_lots": 53,
-   "cian_dev_matched_to_site": 18,
-   "cian_vs_site_price_median_pct": -0.0,
+   "cian_dev_lots": 88,
+   "cian_dev_matched_to_site": 35,
+   "cian_vs_site_price_median_pct": 0.0,
    "cian_resale_lots": 2,
    "cian_resale_with_same_layout_at_dev": 2
   },
@@ -101,11 +101,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 669,
    "dev_with_special": 669,
-   "cian_dev_lots": 0,
-   "cian_dev_matched_to_site": 0,
-   "cian_vs_site_price_median_pct": null,
-   "cian_resale_lots": 0,
-   "cian_resale_with_same_layout_at_dev": 0
+   "cian_dev_lots": 18,
+   "cian_dev_matched_to_site": 7,
+   "cian_vs_site_price_median_pct": 0.0,
+   "cian_resale_lots": 32,
+   "cian_resale_with_same_layout_at_dev": 27
   },
   "Amber City": {
    "zk_id": "4888961",
