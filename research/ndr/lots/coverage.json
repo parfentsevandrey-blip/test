@@ -11,11 +11,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 536,
    "dev_with_special": 211,
-   "cian_dev_lots": 353,
-   "cian_dev_matched_to_site": 176,
+   "cian_dev_lots": 401,
+   "cian_dev_matched_to_site": 201,
    "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 375,
-   "cian_resale_with_same_layout_at_dev": 182
+   "cian_resale_lots": 408,
+   "cian_resale_with_same_layout_at_dev": 195
   },
   "Символ": {
    "zk_id": "7231",
