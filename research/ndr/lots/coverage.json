@@ -161,11 +161,11 @@
    "dev_sold_visible": 1160,
    "dev_with_price": 199,
    "dev_with_special": 1511,
-   "cian_dev_lots": 113,
-   "cian_dev_matched_to_site": 71,
+   "cian_dev_lots": 185,
+   "cian_dev_matched_to_site": 115,
    "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 54,
-   "cian_resale_with_same_layout_at_dev": 28
+   "cian_resale_lots": 93,
+   "cian_resale_with_same_layout_at_dev": 44
   },
   "Soul": {
    "zk_id": "4183417",
