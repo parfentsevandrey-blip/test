@@ -3664,7 +3664,7 @@ zk,side,source,lot,state,korpus,floor,rooms,area,price,price_base,dev_same_layou
 ЗИЛАРТ,ЦИАН resale,cian,335002539,готовый,Дом № 16,15,2,55.4,41499000,,617175,21.4,,[],,,,https://www.cian.ru/sale/flat/335002539/
 ЗИЛАРТ,ЦИАН resale,cian,335031586,готовый,Дом № 16,2,3,88.0,63850000,,785252,-7.6,,[],,,,https://www.cian.ru/sale/flat/335031586/
 Amber City,застройщик,fsk,230786,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230786
-Amber City,застройщик,fsk,230780,on_sale,6,34,4,89.9,52690390.0,52690390.0,,,,[],,,0,https://fsk.ru/amber-city/flats/230780
+Amber City,застройщик,fsk,230780,on_sale,6,34,4,89.9,52690390.0,52690390.0,,,,[],,,1,https://fsk.ru/amber-city/flats/230780
 Amber City,застройщик,fsk,230774,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230774
 Amber City,застройщик,fsk,230768,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230768
 Amber City,застройщик,fsk,230759,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230759
@@ -3694,7 +3694,7 @@ Amber City,застройщик,fsk,230719,on_sale,,,,,,,,,,,,,0,https://fsk.ru/
 Amber City,застройщик,fsk,230717,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230717
 Amber City,застройщик,fsk,230716,on_sale,6,30,2,46.5,27061605.0,28485900.0,,,,[],,,2,https://fsk.ru/amber-city/flats/230716
 Amber City,застройщик,fsk,230714,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230714
-Amber City,застройщик,fsk,230711,on_sale,6,30,3,75.1,45540640.0,45540640.0,,,,"[""город"", ""Москва-Сити""]",,,0,https://fsk.ru/amber-city/flats/230711
+Amber City,застройщик,fsk,230711,on_sale,6,30,3,75.1,45540640.0,45540640.0,,,,"[""город"", ""Москва-Сити""]",,,1,https://fsk.ru/amber-city/flats/230711
 Amber City,застройщик,fsk,230708,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230708
 Amber City,застройщик,fsk,230707,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230707
 Amber City,застройщик,fsk,230704,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230704
@@ -3733,7 +3733,7 @@ Amber City,застройщик,fsk,230588,on_sale,,,,,,,,,,,,,0,https://fsk.ru/
 Amber City,застройщик,fsk,230587,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230587
 Amber City,застройщик,fsk,230586,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230586
 Amber City,застройщик,fsk,230580,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230580
-Amber City,застройщик,fsk,230575,on_sale,6,22,3,74.7,44158905.0,44158905.0,,,,"[""город"", ""Москва-Сити""]",,,0,https://fsk.ru/amber-city/flats/230575
+Amber City,застройщик,fsk,230575,on_sale,6,22,3,74.7,44158905.0,44158905.0,,,,"[""город"", ""Москва-Сити""]",,,1,https://fsk.ru/amber-city/flats/230575
 Amber City,застройщик,fsk,230473,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230473
 Amber City,застройщик,fsk,230466,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230466
 Amber City,застройщик,fsk,230453,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230453
@@ -3746,7 +3746,7 @@ Amber City,застройщик,fsk,230427,on_sale,,,,,,,,,,,,,0,https://fsk.ru/
 Amber City,застройщик,fsk,230420,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230420
 Amber City,застройщик,fsk,230419,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230419
 Amber City,застройщик,fsk,230416,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230416
-Amber City,застройщик,fsk,230270,on_sale,6,4,4,88.9,47125890.0,47125890.0,,,,[],,,0,https://fsk.ru/amber-city/flats/230270
+Amber City,застройщик,fsk,230270,on_sale,6,4,4,88.9,47125890.0,47125890.0,,,,[],,,1,https://fsk.ru/amber-city/flats/230270
 Amber City,застройщик,fsk,230268,on_sale,6,4,0,32.1,20576100.0,20576100.0,,,,[],,,0,https://fsk.ru/amber-city/flats/230268
 Amber City,застройщик,fsk,230263,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230263
 Amber City,застройщик,fsk,230262,on_sale,6,4,3,64.8,34045920.0,34045920.0,,,,[],,,0,https://fsk.ru/amber-city/flats/230262
@@ -3802,10 +3802,10 @@ Amber City,застройщик,fsk,230152,on_sale,5,50,2,60.5,33285648.0,504328
 Amber City,застройщик,fsk,230151,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230151
 Amber City,застройщик,fsk,230145,on_sale,5,49,2,55.8,34347411.0,49067730.0,,,,[],,,1,https://fsk.ru/amber-city/flats/230145
 Amber City,застройщик,fsk,230138,on_sale,5,49,0,33.4,23654715.0,33792450.0,,,,[],,,1,https://fsk.ru/amber-city/flats/230138
-Amber City,застройщик,fsk,230185,on_sale,5,53,3,72.3,44003154.0,66671445.0,,,,"[""город""]",,,0,https://fsk.ru/amber-city/flats/230185
+Amber City,застройщик,fsk,230185,on_sale,5,53,3,72.3,44003154.0,66671445.0,,,,"[""город""]",,,1,https://fsk.ru/amber-city/flats/230185
 Amber City,застройщик,fsk,230231,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230231
 Amber City,застройщик,fsk,230230,on_sale,5,56,2,51.5,33169605.0,47385150.0,,,,[],,,1,https://fsk.ru/amber-city/flats/230230
-Amber City,застройщик,fsk,230227,on_sale,5,56,4,94.6,88039301.0,129469560.0,,,,"[""город"", ""Москва-Сити""]",,,0,https://fsk.ru/amber-city/flats/230227
+Amber City,застройщик,fsk,230227,on_sale,5,56,4,94.6,88039301.0,129469560.0,,,,"[""город"", ""Москва-Сити""]",,,1,https://fsk.ru/amber-city/flats/230227
 Amber City,застройщик,fsk,230225,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230225
 Amber City,застройщик,fsk,230223,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230223
 Amber City,застройщик,fsk,230220,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230220
@@ -3813,15 +3813,15 @@ Amber City,застройщик,fsk,230217,on_sale,5,55,2,55.8,35499681.0,507138
 Amber City,застройщик,fsk,230210,on_sale,5,55,0,33.4,24812025.0,35445750.0,,,,[],,,1,https://fsk.ru/amber-city/flats/230210
 Amber City,застройщик,fsk,230202,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230202
 Amber City,застройщик,fsk,230136,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230136
-Amber City,застройщик,fsk,230131,on_sale,5,48,4,94.6,83793653.0,123225960.0,,,,[],,,0,https://fsk.ru/amber-city/flats/230131
+Amber City,застройщик,fsk,230131,on_sale,5,48,4,94.6,83793653.0,123225960.0,,,,[],,,1,https://fsk.ru/amber-city/flats/230131
 Amber City,застройщик,fsk,230128,on_sale,5,48,2,60.5,33026103.0,50039550.0,,,,[],,,1,https://fsk.ru/amber-city/flats/230128
 Amber City,застройщик,fsk,230127,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230127
 Amber City,застройщик,fsk,230125,on_sale,5,48,3,72.3,43227736.0,65496570.0,,,,[],,,1,https://fsk.ru/amber-city/flats/230125
 Amber City,застройщик,fsk,229963,on_sale,5,34,3,70.1,39737867.0,60208890.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229963
-Amber City,застройщик,fsk,229957,on_sale,5,33,4,86.9,46903754.0,73287115.0,,,,[],,,0,https://fsk.ru/amber-city/flats/229957
+Amber City,застройщик,fsk,229957,on_sale,5,33,4,86.9,46903754.0,73287115.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229957
 Amber City,застройщик,fsk,229932,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/229932
 Amber City,застройщик,fsk,230009,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/230009
-Amber City,застройщик,fsk,230004,on_sale,5,37,3,66.1,44087940.0,63895565.0,,,,[],,,0,https://fsk.ru/amber-city/flats/230004
+Amber City,застройщик,fsk,230004,on_sale,5,37,3,66.1,44087940.0,63895565.0,,,,[],,,1,https://fsk.ru/amber-city/flats/230004
 Amber City,застройщик,fsk,230003,on_sale,5,37,0,28.2,23041515.0,32916450.0,,,,[],,,1,https://fsk.ru/amber-city/flats/230003
 Amber City,застройщик,fsk,229997,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/229997
 Amber City,застройщик,fsk,229995,on_sale,5,36,2,47.2,29491504.0,42130720.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229995
@@ -3849,16 +3849,16 @@ Amber City,застройщик,fsk,229866,on_sale,,,,,,,,,,,,,0,https://fsk.ru/
 Amber City,застройщик,fsk,229856,on_sale,5,26,2,58.3,39619048.0,55026455.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229856
 Amber City,застройщик,fsk,229843,on_sale,5,25,2,58.3,39619048.0,55026455.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229843
 Amber City,застройщик,fsk,229841,on_sale,5,25,3,71.6,39773012.0,60262140.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229841
-Amber City,застройщик,fsk,229840,on_sale,5,24,4,86.7,46005101.0,71882970.0,,,,"[""город""]",,,0,https://fsk.ru/amber-city/flats/229840
+Amber City,застройщик,fsk,229840,on_sale,5,24,4,86.7,46005101.0,71882970.0,,,,"[""город""]",,,1,https://fsk.ru/amber-city/flats/229840
 Amber City,застройщик,fsk,229831,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/229831
 Amber City,застройщик,fsk,229824,on_sale,5,23,2,54.8,32561886.0,46516980.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229824
 Amber City,застройщик,fsk,229820,on_sale,5,23,3,69.8,38819200.0,58816970.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229820
 Amber City,застройщик,fsk,229815,on_sale,5,23,3,71.6,39583988.0,59975740.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229815
-Amber City,застройщик,fsk,229749,on_sale,5,16,4,86.7,45949613.0,71796270.0,,,,[],,,0,https://fsk.ru/amber-city/flats/229749
+Amber City,застройщик,fsk,229749,on_sale,5,16,4,86.7,45949613.0,71796270.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229749
 Amber City,застройщик,fsk,229748,on_sale,5,16,2,47.1,32330382.0,46186260.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229748
 Amber City,застройщик,fsk,229747,on_sale,5,16,2,50.6,32891012.0,46987160.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229747
 Amber City,застройщик,fsk,229737,on_sale,5,16,3,71.6,39524918.0,59886240.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229737
-Amber City,застройщик,fsk,229723,on_sale,5,13,4,86.0,45207104.0,70636100.0,,,,[],,,0,https://fsk.ru/amber-city/flats/229723
+Amber City,застройщик,fsk,229723,on_sale,5,13,4,86.0,45207104.0,70636100.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229723
 Amber City,застройщик,fsk,229715,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/229715
 Amber City,застройщик,fsk,229714,on_sale,5,13,2,59.5,31527920.0,47769575.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229714
 Amber City,застройщик,fsk,229614,on_sale,5,4,3,64.7,40709952.0,58999930.0,,,,[],,,0,https://fsk.ru/amber-city/flats/229614
@@ -3892,7 +3892,7 @@ Amber City,застройщик,fsk,229725,on_sale,5,14,0,32.7,23015895.0,328798
 Amber City,застройщик,fsk,229756,on_sale,5,17,0,28.2,23377095.0,33395850.0,,,,[],,,1,https://fsk.ru/amber-city/flats/229756
 Amber City,застройщик,fsk,223208,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/223208
 Amber City,застройщик,fsk,223197,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/223197
-Amber City,застройщик,fsk,223147,on_sale,4,37,3,84.4,48501979.0,67363860.0,,,,"[""город"", ""Москва-Сити"", ""бульвар""]",,,0,https://fsk.ru/amber-city/flats/223147
+Amber City,застройщик,fsk,223147,on_sale,4,37,3,84.4,48501979.0,67363860.0,,,,"[""город"", ""Москва-Сити"", ""бульвар""]",,,1,https://fsk.ru/amber-city/flats/223147
 Amber City,застройщик,fsk,223143,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/223143
 Amber City,застройщик,fsk,223140,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/223140
 Amber City,застройщик,fsk,223139,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/223139
@@ -3901,15 +3901,15 @@ Amber City,застройщик,fsk,223134,on_sale,,,,,,,,,,,,,0,https://fsk.ru/
 Amber City,застройщик,fsk,223133,on_sale,4,36,3,78.3,41919549.0,60752970.0,,,,[],,,2,https://fsk.ru/amber-city/flats/223133
 Amber City,застройщик,fsk,223187,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/223187
 Amber City,застройщик,fsk,223126,on_sale,4,35,2,59.5,33103956.0,44735075.0,,,,[],,,0,https://fsk.ru/amber-city/flats/223126
-Amber City,застройщик,fsk,223123,on_sale,4,35,3,84.4,48106987.0,66815260.0,,,,[],,,0,https://fsk.ru/amber-city/flats/223123
+Amber City,застройщик,fsk,223123,on_sale,4,35,3,84.4,48106987.0,66815260.0,,,,[],,,1,https://fsk.ru/amber-city/flats/223123
 Amber City,застройщик,fsk,223122,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/223122
 Amber City,застройщик,fsk,223120,on_sale,4,35,2,60.0,33293340.0,44991000.0,,,,[],,,0,https://fsk.ru/amber-city/flats/223120
-Amber City,застройщик,fsk,223119,on_sale,4,35,3,82.5,44153876.0,63991125.0,,,,[],,,0,https://fsk.ru/amber-city/flats/223119
-Amber City,застройщик,fsk,223117,on_sale,4,34,4,88.7,51297428.0,68396570.0,,,,[],,,0,https://fsk.ru/amber-city/flats/223117
+Amber City,застройщик,fsk,223119,on_sale,4,35,3,82.5,44153876.0,63991125.0,,,,[],,,1,https://fsk.ru/amber-city/flats/223119
+Amber City,застройщик,fsk,223117,on_sale,4,34,4,88.7,51297428.0,68396570.0,,,,[],,,1,https://fsk.ru/amber-city/flats/223117
 Amber City,застройщик,fsk,223116,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/223116
 Amber City,застройщик,fsk,223174,on_sale,4,41,2,59.5,33918511.0,45835825.0,,,,"[""город"", ""бульвар""]",,,1,https://fsk.ru/amber-city/flats/223174
 Amber City,застройщик,fsk,223170,on_sale,4,41,3,78.2,43660116.0,63275530.0,,,,"[""город"", ""Москва-Сити""]",,,1,https://fsk.ru/amber-city/flats/223170
-Amber City,застройщик,fsk,223165,on_sale,4,39,4,88.7,52511509.0,70015345.0,,,,[],,,0,https://fsk.ru/amber-city/flats/223165
+Amber City,застройщик,fsk,223165,on_sale,4,39,4,88.7,52511509.0,70015345.0,,,,[],,,1,https://fsk.ru/amber-city/flats/223165
 Amber City,застройщик,fsk,223163,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/223163
 Amber City,застройщик,fsk,223089,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/223089
 Amber City,застройщик,fsk,223057,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/223057
@@ -3930,7 +3930,7 @@ Amber City,застройщик,fsk,222947,on_sale,,,,,,,,,,,,,0,https://fsk.ru/
 Amber City,застройщик,fsk,222945,on_sale,4,19,2,59.1,34543300.0,46680135.0,,,,"[""город""]",,,1,https://fsk.ru/amber-city/flats/222945
 Amber City,застройщик,fsk,222942,on_sale,4,19,0,33.5,26264586.0,36992375.0,,,,[],,,1,https://fsk.ru/amber-city/flats/222942
 Amber City,застройщик,fsk,222936,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/222936
-Amber City,застройщик,fsk,222934,on_sale,4,18,3,83.4,45270187.0,62875260.0,,,,[],,,0,https://fsk.ru/amber-city/flats/222934
+Amber City,застройщик,fsk,222934,on_sale,4,18,3,83.4,45270187.0,62875260.0,,,,[],,,1,https://fsk.ru/amber-city/flats/222934
 Amber City,застройщик,fsk,222933,on_sale,4,18,3,77.4,39995753.0,57964860.0,,,,[],,,1,https://fsk.ru/amber-city/flats/222933
 Amber City,застройщик,fsk,222902,on_sale,4,16,1,43.6,31636814.0,40046600.0,,,,[],,,1,https://fsk.ru/amber-city/flats/222902
 Amber City,застройщик,fsk,222897,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/222897
@@ -3964,7 +3964,7 @@ Amber City,застройщик,fsk,222893,on_sale,,,,,,,,,,,,,0,https://fsk.ru/
 Amber City,застройщик,fsk,222892,on_sale,4,15,2,58.7,42653621.0,56871495.0,,,,[],,,1,https://fsk.ru/amber-city/flats/222892
 Amber City,застройщик,fsk,222886,on_sale,4,15,0,33.8,25283414.0,33267650.0,,,,"[""город""]",,,1,https://fsk.ru/amber-city/flats/222886
 Amber City,застройщик,fsk,222884,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/222884
-Amber City,застройщик,fsk,222814,on_sale,4,9,3,82.9,44536201.0,61855835.0,,,,[],,,0,https://fsk.ru/amber-city/flats/222814
+Amber City,застройщик,fsk,222814,on_sale,4,9,3,82.9,44536201.0,61855835.0,,,,[],,,1,https://fsk.ru/amber-city/flats/222814
 Amber City,застройщик,fsk,222809,on_sale,4,9,2,52.4,34414565.0,43562740.0,,,,[],,,1,https://fsk.ru/amber-city/flats/222809
 Amber City,застройщик,fsk,222808,on_sale,4,9,0,28.6,23672864.0,29965650.0,,,,[],,,0,https://fsk.ru/amber-city/flats/222808
 Amber City,застройщик,fsk,222807,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/222807
@@ -3976,7 +3976,7 @@ Amber City,застройщик,fsk,217028,on_sale,,,,,,,,,,,,,0,https://fsk.ru/
 Amber City,застройщик,fsk,217026,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/217026
 Amber City,застройщик,fsk,217025,on_sale,4,42,2,59.5,35118328.0,47457200.0,,,,[],,,0,https://fsk.ru/amber-city/flats/217025
 Amber City,застройщик,fsk,217022,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/217022
-Amber City,застройщик,fsk,217020,on_sale,4,42,3,78.3,44215697.0,64080720.0,,,,[],,,0,https://fsk.ru/amber-city/flats/217020
+Amber City,застройщик,fsk,217020,on_sale,4,42,3,78.3,44215697.0,64080720.0,,,,[],,,1,https://fsk.ru/amber-city/flats/217020
 Amber City,застройщик,fsk,217019,on_sale,4,42,2,60.0,35324640.0,47736000.0,,,,"[""город""]",,,0,https://fsk.ru/amber-city/flats/217019
 Amber City,застройщик,fsk,217018,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/217018
 Amber City,застройщик,fsk,217015,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/217015
@@ -3985,22 +3985,22 @@ Amber City,застройщик,fsk,217010,on_sale,,,,,,,,,,,,,0,https://fsk.ru/
 Amber City,застройщик,fsk,217008,on_sale,4,40,3,78.3,42621900.0,61770870.0,,,,[],,,1,https://fsk.ru/amber-city/flats/217008
 Amber City,застройщик,fsk,217007,on_sale,4,40,2,60.0,34014840.0,45966000.0,,,,[],,,1,https://fsk.ru/amber-city/flats/217007
 Amber City,застройщик,fsk,217006,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/217006
-Amber City,застройщик,fsk,217005,on_sale,4,40,4,103.1,54387312.0,77696160.0,,,,[],,,0,https://fsk.ru/amber-city/flats/217005
-Amber City,застройщик,fsk,217040,on_sale,4,44,4,88.7,56187015.0,74916020.0,,,,"[""город"", ""бульвар""]",,,0,https://fsk.ru/amber-city/flats/217040
+Amber City,застройщик,fsk,217005,on_sale,4,40,4,103.1,54387312.0,77696160.0,,,,[],,,1,https://fsk.ru/amber-city/flats/217005
+Amber City,застройщик,fsk,217040,on_sale,4,44,4,88.7,56187015.0,74916020.0,,,,"[""город"", ""бульвар""]",,,1,https://fsk.ru/amber-city/flats/217040
 Amber City,застройщик,fsk,217039,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/217039
 Amber City,застройщик,fsk,217038,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/217038
 Amber City,застройщик,fsk,217037,on_sale,4,44,2,59.5,36197063.0,48914950.0,,,,[],,,2,https://fsk.ru/amber-city/flats/217037
 Amber City,застройщик,fsk,217035,on_sale,4,44,2,47.3,31981280.0,41534130.0,,,,[],,,1,https://fsk.ru/amber-city/flats/217035
 Amber City,застройщик,fsk,217034,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/217034
 Amber City,застройщик,fsk,217033,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/217033
-Amber City,застройщик,fsk,217032,on_sale,4,44,3,78.3,45539358.0,65999070.0,,,,[],,,0,https://fsk.ru/amber-city/flats/217032
+Amber City,застройщик,fsk,217032,on_sale,4,44,3,78.3,45539358.0,65999070.0,,,,[],,,2,https://fsk.ru/amber-city/flats/217032
 Amber City,застройщик,fsk,217031,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/217031
 Amber City,застройщик,fsk,217030,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/217030
 Amber City,застройщик,fsk,217029,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/217029
 Amber City,застройщик,fsk,216985,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/216985
 Amber City,застройщик,fsk,216981,on_sale,4,32,2,52.6,32873369.0,41611860.0,,,,"[""город""]",,,1,https://fsk.ru/amber-city/flats/216981
 Amber City,застройщик,fsk,216978,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/216978
-Amber City,застройщик,fsk,217004,on_sale,4,38,4,88.7,52162253.0,69549670.0,,,,[],,,0,https://fsk.ru/amber-city/flats/217004
+Amber City,застройщик,fsk,217004,on_sale,4,38,4,88.7,52162253.0,69549670.0,,,,[],,,1,https://fsk.ru/amber-city/flats/217004
 Amber City,застройщик,fsk,217001,on_sale,4,38,2,59.5,33533248.0,45315200.0,,,,[],,,0,https://fsk.ru/amber-city/flats/217001
 Amber City,застройщик,fsk,216998,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/216998
 Amber City,застройщик,fsk,216997,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/216997
@@ -4012,10 +4012,10 @@ Amber City,застройщик,fsk,216964,on_sale,,,,,,,,,,,,,0,https://fsk.ru/
 Amber City,застройщик,fsk,216952,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/216952
 Amber City,застройщик,fsk,216950,on_sale,4,26,0,28.6,23972234.0,30344600.0,,,,[],,,1,https://fsk.ru/amber-city/flats/216950
 Amber City,застройщик,fsk,216897,on_sale,4,5,2,46.5,31650876.0,40064400.0,,,,[],,,1,https://fsk.ru/amber-city/flats/216897
-Amber City,застройщик,fsk,216896,on_sale,4,5,3,82.9,44013931.0,61130460.0,,,,[],,,0,https://fsk.ru/amber-city/flats/216896
+Amber City,застройщик,fsk,216896,on_sale,4,5,3,82.9,44013931.0,61130460.0,,,,[],,,1,https://fsk.ru/amber-city/flats/216896
 Amber City,застройщик,fsk,216895,on_sale,4,5,3,76.8,39023309.0,56555520.0,,,,[],,,1,https://fsk.ru/amber-city/flats/216895
 Amber City,застройщик,fsk,216893,on_sale,4,5,0,33.8,24711856.0,32515600.0,,,,[],,,1,https://fsk.ru/amber-city/flats/216893
-Amber City,застройщик,fsk,216887,on_sale,4,3,4,87.1,46909883.0,62546510.0,,,,[],,,0,https://fsk.ru/amber-city/flats/216887
+Amber City,застройщик,fsk,216887,on_sale,4,3,4,87.1,46909883.0,62546510.0,,,,[],,,1,https://fsk.ru/amber-city/flats/216887
 Amber City,застройщик,fsk,216876,on_sale,4,3,2,52.4,33886766.0,42894640.0,,,,[],,,1,https://fsk.ru/amber-city/flats/216876
 Amber City,застройщик,fsk,216937,on_sale,,,,,,,,,,,,,0,https://fsk.ru/amber-city/flats/216937
 Amber City,ЦИАН assignment,cian,324383493,строится,Корпус 5,10,2,54.6,37999999,,584832,19.0,,[],,,,https://www.cian.ru/sale/flat/324383493/
@@ -4059,7 +4059,7 @@ Sydney City,застройщик,fsk,218726,on_sale,,,,,,,,,,,,,0,https://fsk.ru
 Sydney City,застройщик,fsk,218709,on_sale,6.3,26,1,39.0,28516566.0,34776300.0,,,,"[""Москва-Сити"", ""Москва-река""]",,,0,https://fsk.ru/sydney-city/flats/218709
 Sydney City,застройщик,fsk,218470,on_sale,,,,,,,,,,,,,0,https://fsk.ru/sydney-city/flats/218470
 Sydney City,застройщик,fsk,218468,on_sale,6.3,6,2,49.8,32775372.0,39018300.0,,,,[],,,0,https://fsk.ru/sydney-city/flats/218468
-Sydney City,застройщик,fsk,218443,on_sale,6.3,4,1,37.3,26283072.0,32853840.0,,,,[],,,0,https://fsk.ru/sydney-city/flats/218443
+Sydney City,застройщик,fsk,218443,on_sale,6.3,4,1,37.3,26283072.0,32853840.0,,,,[],,,1,https://fsk.ru/sydney-city/flats/218443
 Sydney City,застройщик,fsk,218440,on_sale,6.3,4,4,90.8,56593824.0,67373600.0,,,,[],,,0,https://fsk.ru/sydney-city/flats/218440
 Sydney City,застройщик,fsk,218438,on_sale,6.3,4,2,57.4,35089194.0,42791700.0,,,,"[""бульвар""]",,,0,https://fsk.ru/sydney-city/flats/218438
 Sydney City,застройщик,fsk,218437,on_sale,,,,,,,,,,,,,0,https://fsk.ru/sydney-city/flats/218437
@@ -4103,7 +4103,7 @@ Sydney City,застройщик,fsk,218425,on_sale,,,,,,,,,,,,,0,https://fsk.ru
 Sydney City,застройщик,fsk,218424,on_sale,6.3,2,3,66.2,41022419.0,50027340.0,,,,[],,,0,https://fsk.ru/sydney-city/flats/218424
 Sydney City,застройщик,fsk,218423,on_sale,6.3,2,2,43.8,30517825.0,37216860.0,,,,[],,,0,https://fsk.ru/sydney-city/flats/218423
 Sydney City,застройщик,fsk,218422,on_sale,,,,,,,,,,,,,0,https://fsk.ru/sydney-city/flats/218422
-Sydney City,застройщик,fsk,218419,on_sale,6.3,2,1,37.7,26444288.0,33055360.0,,,,[],,,0,https://fsk.ru/sydney-city/flats/218419
+Sydney City,застройщик,fsk,218419,on_sale,6.3,2,1,37.7,26444288.0,33055360.0,,,,[],,,1,https://fsk.ru/sydney-city/flats/218419
 Sydney City,застройщик,fsk,218418,on_sale,6.3,2,2,45.8,31911333.0,38916260.0,,,,[],,,0,https://fsk.ru/sydney-city/flats/218418
 Sydney City,застройщик,fsk,218412,on_sale,6.2,27,3,65.7,50553588.0,65654010.0,,,,[],,,0,https://fsk.ru/sydney-city/flats/218412
 Sydney City,застройщик,fsk,218411,on_sale,,,,,,,,,,,,,0,https://fsk.ru/sydney-city/flats/218411
@@ -4238,6 +4238,24 @@ Sydney City,застройщик,fsk,153267,on_sale,,,,,,,,,,,,,0,https://fsk.ru
 Sydney City,застройщик,fsk,153187,on_sale,2.1,10,3,84.2,56361628.0,64783480.0,,,,[],,,0,https://fsk.ru/sydney-city/flats/153187
 Sydney City,застройщик,fsk,142650,on_sale,2,23,4,111.2,78291472.0,111844960.0,,,,[],,,0,https://fsk.ru/sydney-city/flats/142650
 Sydney City,застройщик,fsk,142447,on_sale,,,,,,,,,,,,,0,https://fsk.ru/sydney-city/flats/142447
+Sydney City,ЦИАН assignment,cian,322692419,строится,Корпус 5.1,14,,40.9,26000000,,,,,[],,,,https://www.cian.ru/sale/flat/322692419/
+Sydney City,ЦИАН resale,cian,326903043,готовый,Корпус 2,14,1,37.4,24500000,,729440,-10.2,,"[""Москва-Сити"", ""Москва-река""]",,,,https://www.cian.ru/sale/flat/326903043/
+Sydney City,ЦИАН assignment,cian,327490325,строится,Корпус 5.1,14,1,40.9,22500000,,,,,[],,,,https://www.cian.ru/sale/flat/327490325/
+Sydney City,ЦИАН resale,cian,331007573,готовый,Корпус 1,24,1,32.3,26500000,,,,,[],,,,https://www.cian.ru/sale/flat/331007573/
+Sydney City,ЦИАН assignment,cian,331029427,строится,Корпус 6.2,26,1,35.8,24000000,,752159,-10.9,,[],,,,https://www.cian.ru/sale/flat/331029427/
+Sydney City,ЦИАН assignment,cian,331523865,строится,Корпус 6.1,14,1,35.5,23999000,,768094,-12.0,,[],,,,https://www.cian.ru/sale/flat/331523865/
+Sydney City,ЦИАН assignment,cian,331747699,строится,Корпус 6.3,3,2,40.0,26500000,,,,,[],,,,https://www.cian.ru/sale/flat/331747699/
+Sydney City,ЦИАН assignment,cian,332615445,строится,Корпус 6.3,36,2,43.0,25888000,,820533,-26.6,,[],,,,https://www.cian.ru/sale/flat/332615445/
+Sydney City,ЦИАН assignment,cian,333246054,строится,Корпус 6.2,9,1,46.7,26490000,,,,,[],,,,https://www.cian.ru/sale/flat/333246054/
+Sydney City,ЦИАН assignment,cian,333831391,строится,Корпус 6.1,8,1,36.0,21200000,,750184,-21.5,,[],,,,https://www.cian.ru/sale/flat/333831391/
+Sydney City,ЦИАН resale,cian,334423982,готовый,Корпус 3,8,1,38.0,22500000,,701440,-15.6,,[],,,,https://www.cian.ru/sale/flat/334423982/
+Sydney City,ЦИАН resale,cian,334423985,готовый,Корпус 3,19,1,38.0,23500000,,701440,-11.8,,[],,,,https://www.cian.ru/sale/flat/334423985/
+Sydney City,ЦИАН resale,cian,334496620,готовый,Корпус 2.2,24,1,46.5,25600000,,,,,[],,,,https://www.cian.ru/sale/flat/334496620/
+Sydney City,ЦИАН assignment,cian,334539793,строится,Корпус 6.3,28,2,54.5,25400000,,,,,[],,,,https://www.cian.ru/sale/flat/334539793/
+Sydney City,ЦИАН resale,cian,334852116,готовый,Корпус 1,24,1,33.0,26899000,,,,,[],,,,https://www.cian.ru/sale/flat/334852116/
+Sydney City,ЦИАН assignment,cian,334857844,строится,Корпус 6.3,32,1,37.0,23090000,,779400,-19.9,,"[""Москва-Сити"", ""Москва-река""]",,,,https://www.cian.ru/sale/flat/334857844/
+Sydney City,ЦИАН assignment,cian,334875986,строится,Корпус 6.1,16,1,35.5,26000000,,768094,-4.6,,[],,,,https://www.cian.ru/sale/flat/334875986/
+Sydney City,ЦИАН resale,cian,"334941558,334943394",готовый,Корпус 2,7,1,36.1,25750000,,752159,-5.2,,[],,,,https://www.cian.ru/sale/flat/334941558/
 Sydney Prime,застройщик,fsk,162434,on_sale,,,,,,,,,,,,,0,https://fsk.ru/sydney-prime/flats/162434
 Sydney Prime,застройщик,fsk,162401,on_sale,,,,,,,,,,,,,0,https://fsk.ru/sydney-prime/flats/162401
 Sydney Prime,застройщик,fsk,162395,on_sale,,,,,,,,,,,,,0,https://fsk.ru/sydney-prime/flats/162395
