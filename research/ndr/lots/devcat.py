@@ -47,6 +47,7 @@ GAP_HOST = {"fsk.ru": (60, 100)}   # fsk.ru answered 429 after ~90 pages at 20-4
 PAGE_BUDGET = 400              # flat pages per day per site (Donstroy, FSK); each site has its own process and pace
 GROUPS = ("lists", "lsr", "visitor", "donstroy", "fsk")
 PRICE_REFRESH_DAYS = 7         # instruction С1: weekly price list
+DON_SEARCH = True              # engine step 2: Donstroy prices from the page /full-search/ loads itself (old path: flat pages)
 MAX_FAILS = 3
 
 # developer site project -> ЦИАН newobject id used in lots.db / pilot_zk.json
@@ -571,6 +572,44 @@ def donstroy_list(db):
     return f"donstroy {n}"
 
 
+def donstroy_search(db, max_clicks=200):
+    """Engine step 2 (ADAPTERS.md): /full-search/ loads `choose_params_api_flats` itself, 12 flats per «Показать еще» with price,
+    price before discount, area, rooms, корпус, section, floor and the flat link (= our lot id). ≈160 portions instead of 1 179 pages."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("visitor", HERE / "lib" / "visitor.py")
+    V = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(V)
+    try:
+        got = V.visit("https://donstroy.moscow/full-search/", None, r"(Показать|Загрузить)\s*(ещё|еще|больше)", r"choose_params_api_flats",
+                      "Расширенный подбор", max_clicks=max_clicks, gap=GAP, log=log)
+    except V.Challenge as e:
+        raise Blocked(f"challenge {e}")
+    db.execute("insert into fetches values (?,?,?,?)", (today(), "visitor:donstroy:full-search", "200", now()))
+    db.commit()
+    return donstroy_search_store(db, got)
+
+
+def donstroy_search_store(db, got):
+    flats = {f["id"]: f for g in got if isinstance(g, dict) for f in g.get("flats") or [] if f.get("link")}
+    total = max((g.get("total_flats") or 0 for g in got if isinstance(g, dict)), default=0)
+    n, others = 0, {}
+    for f in flats.values():
+        m = DON.match("https://donstroy.moscow" + f["link"])
+        if not m:
+            continue
+        if ("donstroy", m[1]) not in ZK:                  # other Donstroy projects: discovery for the engine (ADAPTERS.md)
+            others[m[1]] = others.get(m[1], 0) + 1
+            continue
+        lot = m[6]
+        put_info(db, "donstroy", lot, zk_id=ZK[("donstroy", m[1])], url="https://donstroy.moscow" + f["link"], korpus=f"{m[2]}-{m[3]}",
+                 section=m[4], floor=int(m[5]), rooms=f.get("rooms"), area=float(f["area"]) if f.get("area") else None)
+        if f.get("price") and not f.get("price_request"):
+            put_price(db, "donstroy", lot, f["price"], f.get("price_old") or None, "catalog")
+        n += 1
+    db.commit()
+    return f"dsearch {len(flats)} of {total}: pilot {n}, other projects {others}"
+
+
 def fsk_list(db):
     idx, st = fetch(db, "https://fsk.ru/sitemap.xml")
     if not idx:
@@ -731,6 +770,10 @@ def run_group(db, grp, day):
             return "waiting"
         if grp == "donstroy":                           # section stock first (whole stock, sold included), then flat pages
             log("list", donstroy_sections(db))
+            week = (datetime.now(MSK) - timedelta(days=PRICE_REFRESH_DAYS - 1)).strftime("%Y-%m-%d")
+            if DON_SEARCH and not db.execute("select 1 from prices where source='donstroy' and origin='catalog' and day>=? limit 1",
+                                             (week,)).fetchone():
+                log("list", donstroy_search(db))           # weekly price list in ≈160 portions (engine step 2)
         like = {"donstroy": "https://donstroy.moscow/objects/%", "fsk": "https://fsk.ru/%/flats/%"}[grp]
         n = db.execute("select count(*) from fetches where day=? and url like ?", (day, like)).fetchone()[0]
         fresh = (datetime.now(MSK) - timedelta(days=PRICE_REFRESH_DAYS)).strftime("%Y-%m-%d")
@@ -738,6 +781,10 @@ def run_group(db, grp, day):
         for lot_id, url, last_page in page_queue(db, day, grp):
             if n >= PAGE_BUDGET or (last_page and last_page > fresh):
                 break
+            if grp == "donstroy" and DON_SEARCH:             # prices come from the search list: a page only for missing details
+                r = db.execute("select rooms, area from info where source='donstroy' and lot_id=?", (lot_id,)).fetchone()
+                if r and r[0] is not None and r[1]:
+                    continue
             st = (donstroy_page if grp == "donstroy" else fsk_page)(db, lot_id, url)
             n += 1
             fails = fails + 1 if st in ("network", "500", "502", "503", "unparsed") else 0
