@@ -176,11 +176,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 156,
    "dev_with_special": 182,
-   "cian_dev_lots": 35,
-   "cian_dev_matched_to_site": 26,
-   "cian_vs_site_price_median_pct": -18.5,
-   "cian_resale_lots": 23,
-   "cian_resale_with_same_layout_at_dev": 14
+   "cian_dev_lots": 90,
+   "cian_dev_matched_to_site": 62,
+   "cian_vs_site_price_median_pct": -16.0,
+   "cian_resale_lots": 37,
+   "cian_resale_with_same_layout_at_dev": 20
   },
   "Дрим Рива": {
    "zk_id": "5340468",
