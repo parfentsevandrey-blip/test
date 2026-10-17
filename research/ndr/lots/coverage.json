@@ -26,11 +26,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 402,
    "dev_with_special": 217,
-   "cian_dev_lots": 162,
-   "cian_dev_matched_to_site": 62,
+   "cian_dev_lots": 245,
+   "cian_dev_matched_to_site": 111,
    "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 66,
-   "cian_resale_with_same_layout_at_dev": 36
+   "cian_resale_lots": 97,
+   "cian_resale_with_same_layout_at_dev": 52
   },
   "Дубровка от Гранель": {
    "zk_id": "3401924",
