@@ -161,11 +161,11 @@
    "dev_sold_visible": 1160,
    "dev_with_price": 199,
    "dev_with_special": 1511,
-   "cian_dev_lots": 185,
-   "cian_dev_matched_to_site": 115,
+   "cian_dev_lots": 199,
+   "cian_dev_matched_to_site": 127,
    "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 93,
-   "cian_resale_with_same_layout_at_dev": 44
+   "cian_resale_lots": 95,
+   "cian_resale_with_same_layout_at_dev": 45
   },
   "Soul": {
    "zk_id": "4183417",
@@ -176,11 +176,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 156,
    "dev_with_special": 182,
-   "cian_dev_lots": 0,
-   "cian_dev_matched_to_site": 0,
-   "cian_vs_site_price_median_pct": null,
-   "cian_resale_lots": 0,
-   "cian_resale_with_same_layout_at_dev": 0
+   "cian_dev_lots": 35,
+   "cian_dev_matched_to_site": 26,
+   "cian_vs_site_price_median_pct": -18.5,
+   "cian_resale_lots": 23,
+   "cian_resale_with_same_layout_at_dev": 14
   },
   "Дрим Рива": {
    "zk_id": "5340468",
