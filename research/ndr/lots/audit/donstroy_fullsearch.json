@@ -1,0 +1,362 @@
+{
+ "name": "donstroy_fullsearch",
+ "url": "https://donstroy.moscow/full-search/",
+ "title": "Расширенный подбор - Донстрой",
+ "clicked": null,
+ "requests": 135,
+ "bytes": 8037589,
+ "third_party_requests": 99,
+ "document_bytes": 39275,
+ "embedded_state": [
+  "JSON-LD"
+ ],
+ "captcha_or_check": false,
+ "own_data_responses": [
+  {
+   "method": "GET",
+   "url": "https://donstroy.moscow/find_tag/distinct/?_=1792202888803",
+   "bytes": 1321,
+   "post": "",
+   "shape": [
+    "list[12]",
+    {
+     "id": "int",
+     "url": "str",
+     "name": "str"
+    }
+   ]
+  },
+  {
+   "method": "POST",
+   "url": "https://donstroy.moscow/api/v1/flatssearch/choose_params_specs/",
+   "bytes": 17197,
+   "post": "{\"projects\":[],\"quarters\":[],\"buildings\":[],\"price\":[0,0],\"area\":[0,0],\"floor_number\":[0,0],\"rooms\":[],\"category\":null,\"region\":[],\"district\":[],\"floor_first_last\":false,\"flat_with_view\":false,\"advantages\":[],\"options\":[],\"uniq_params\":[],\"discount\":false,\"furnish\":false,\"apartments\":false,\"secondar",
+   "shape": {
+    "specs": {
+     "projects": [
+      "list[10]",
+      "dict"
+     ],
+     "rooms": [
+      "list[5]",
+      "dict"
+     ],
+     "price": {
+      "min": "float",
+      "max": "float"
+     },
+     "furnish": "bool",
+     "floor_number": {
+      "min": "int",
+      "max": "int"
+     },
+     "floor_first_last": "bool",
+     "discount": "bool",
+     "category": [
+      "list[3]",
+      "dict"
+     ],
+     "region": [
+      "list[4]",
+      "dict"
+     ],
+     "district": [
+      "list[7]",
+      "dict"
+     ],
+     "area": {
+      "min": "int",
+      "max": "int"
+     },
+     "advantages": [
+      "list[6]",
+      "dict"
+     ],
+     "options": [
+      "list[2]",
+      "dict"
+     ],
+     "uniq_params": [
+      "list[4]",
+      "dict"
+     ],
+     "sides": "NoneType"
+    },
+    "_dbg_": {
+     "r": {
+      "request": "str"
+     },
+     "p": [
+      "list[0]",
+      null
+     ],
+     "ii": {
+      "projects": "list",
+      "quarters": "list",
+      "buildings": "list",
+      "price": "list",
+      "area": "list",
+      "floor_number": "list",
+      "rooms": "list",
+      "category": "NoneType",
+      "region": "list",
+      "district": "list",
+      "floor_first_last": "bool",
+      "flat_with_view": "bool",
+      "advantages": "list",
+      "options": "list",
+      "uniq_params": "list",
+      "discount": "bool",
+      "furnish": "bool",
+      "apartments": "bool",
+      "secondary": "bool",
+      "profit_house": "bool"
+     }
+    }
+   }
+  },
+  {
+   "method": "GET",
+   "url": "https://donstroy.moscow/api/v1/flatssearch/choose_filter_params/",
+   "bytes": 1614,
+   "post": "",
+   "shape": {
+    "facets": {
+     "projects": [
+      "list[0]",
+      null
+     ],
+     "price": {
+      "min": "float",
+      "max": "float"
+     },
+     "area": {
+      "min": "int",
+      "max": "float"
+     },
+     "floor_number": {
+      "min": "int",
+      "max": "int"
+     },
+     "advantages": [
+      "list[5]",
+      "str"
+     ],
+     "category": [
+      "list[3]",
+      "dict"
+     ],
+     "region": [
+      "list[4]",
+      "str"
+     ],
+     "district": [
+      "list[7]",
+      "str"
+     ],
+     "floor_first_last": "bool",
+     "discount": "bool",
+     "furnish": "bool",
+     "districts": [
+      "list[6]",
+      "int"
+     ],
+     "purposes": [
+      "list[4]",
+      "int"
+     ],
+     "options": [
+      "list[15]",
+      "str"
+     ],
+     "uniq_params": [
+      "list[4]",
+      "str"
+     ],
+     "sides": "NoneType"
+    }
+   }
+  }
+ ],
+ "rea_evidence_id": "ev_345babbd31e14d9e97cb06ff915dbf24ac479407848e7e2bd5215d9574dd73e3",
+ "rea_error": null,
+ "rea_api_surface_own": [
+  {
+   "method": "GET",
+   "origin": "https://donstroy.moscow",
+   "path": "/api/v1/flatssearch/choose_filter_params/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "POST",
+   "origin": "https://donstroy.moscow",
+   "path": "/api/v1/flatssearch/choose_params_api_flats/",
+   "n": 2,
+   "status": [
+    -1
+   ],
+   "type": [],
+   "query": []
+  },
+  {
+   "method": "POST",
+   "origin": "https://donstroy.moscow",
+   "path": "/api/v1/flatssearch/choose_params_specs/",
+   "n": 2,
+   "status": [
+    -1,
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": []
+  },
+  {
+   "method": "POST",
+   "origin": "https://donstroy.moscow",
+   "path": "/bitrix/tools/conversion/ajax_counter.php",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "text/html"
+   ],
+   "query": []
+  },
+  {
+   "method": "GET",
+   "origin": "https://donstroy.moscow",
+   "path": "/find_tag/distinct/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "application/json"
+   ],
+   "query": [
+    "_"
+   ]
+  },
+  {
+   "method": "GET",
+   "origin": "https://donstroy.moscow",
+   "path": "/full-search/",
+   "n": 1,
+   "status": [
+    200
+   ],
+   "type": [
+    "text/html"
+   ],
+   "query": []
+  }
+ ],
+ "rea_api_surface_third_party_origins": [
+  "https://ab-ct.ru",
+  "https://api.sales-ninja.me",
+  "https://code.jivosite.com",
+  "https://mc.yandex.com",
+  "https://mod.calltouch.ru",
+  "https://node-sber1-az2-20.jivosite.com",
+  "https://privacy-cs.mail.ru",
+  "https://smartcaptcha.cloud.yandex.ru"
+ ],
+ "m2s_endpoints": [
+  {
+   "method": "GET",
+   "url": "https://donstroy.moscow/find_tag/distinct/",
+   "params": [
+    "_"
+   ],
+   "body_fields": [],
+   "response_fields": [
+    "id",
+    "url",
+    "name"
+   ]
+  },
+  {
+   "method": "POST",
+   "url": "https://donstroy.moscow/api/v1/flatssearch/choose_params_specs/",
+   "params": [],
+   "body_fields": [
+    "projects",
+    "quarters",
+    "buildings",
+    "price",
+    "area",
+    "floor_number",
+    "rooms",
+    "category",
+    "region",
+    "district",
+    "floor_first_last",
+    "flat_with_view",
+    "advantages",
+    "options",
+    "uniq_params",
+    "discount",
+    "furnish",
+    "apartments",
+    "secondary",
+    "profit_house"
+   ],
+   "response_fields": [
+    "specs",
+    "_dbg_"
+   ]
+  },
+  {
+   "method": "GET",
+   "url": "https://donstroy.moscow/api/v1/flatssearch/choose_filter_params/",
+   "params": [],
+   "body_fields": [],
+   "response_fields": [
+    "facets"
+   ]
+  },
+  {
+   "method": "POST",
+   "url": "https://donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/",
+   "params": [],
+   "body_fields": [
+    "price",
+    "area",
+    "floor_number",
+    "rooms",
+    "projects",
+    "quarters",
+    "buildings",
+    "advantages",
+    "options",
+    "uniq_params",
+    "floor_first_last",
+    "flat_with_view",
+    "discount",
+    "furnish",
+    "apartments",
+    "secondary",
+    "profit_house",
+    "category",
+    "region",
+    "district",
+    "sort",
+    "view_type",
+    "page"
+   ],
+   "response_fields": []
+  }
+ ],
+ "m2s_error": null,
+ "complete": true
+}
