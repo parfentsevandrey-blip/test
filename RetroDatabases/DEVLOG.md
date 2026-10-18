@@ -37,6 +37,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-21 | 2026-10-16 | 83,047 | 222 | 82 | 118 | 83,469 | +9,778 (databases 55 to 64: 461 records in 110 files, migrations 54→55 to 63→64, tests +0) |
 | CP-22 | 2026-10-16 | 92,742 | 222 | 82 | 118 | 93,164 | +9,695 (databases 65 to 74: 444 records in 110 files, migrations 64→65 to 73→74, tests +0) |
 | CP-23 | 2026-10-18 | 99,282 | 222 | 82 | 118 | 99,704 | +6,540 (databases 75 to 84: 295 records in 110 files, migrations 74→75 to 83→84, tests +0) |
+| CP-24 | 2026-10-18 | 105,281 | 222 | 82 | 118 | 105,703 | +5,999 (databases 85 to 94: 266 records in 110 files, migrations 84→85 to 93→94, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -1173,3 +1174,51 @@ Most other dates and attributions, including the Summa (119, 114, 189 and 90 que
 
 - Not verified yet: running on a device or emulator, the migrations from version 74 to version 84 on a real device, the UI with 84 databases in the list, lint, and the release build.
 - The 1200s to the 1290s are the thinnest decades of the catalogue for "coding". The next step is to decide whether they stay smaller, or whether the quota of 50 is kept for this century with a note that the material is thin.
+
+## CP-24: databases 85 to 94, 1100 to 1200 (the twelfth century, the next century back)
+
+Status: ten more databases are in the app, one per decade from the 1190s down to the 1100s: 266 records, migrations from version 84 to version 94, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. None of the ten reaches 50 records: 1190s 29, 1180s 26, 1170s 25, 1160s 23, 1150s 38, 1140s 31, 1130s 23, 1120s 26, 1110s 23 and 1100s 22. All ten are marked "quota": false in tools/databases.json. The build passes, 17 of 17 unit tests pass, and the 99 runnable records (12, 9, 7, 9, 20, 11, 8, 9, 7 and 7) pass against their expected output. Every kind is present in every database, which the unit tests require.
+
+Mood: The twelfth century is the thinnest stretch of the catalogue so far for things with a dated first public form. Most of what is dated here is a book, and a device or a practice needs a source that gives its range. Several helpers could not fill a kind until a range and a dispute were named. The 1100s, at 22 records, are the emptiest decade so far, and I did not like filling their empty kinds from memory. What went well is that the cross-batch check found four real repeats, and I removed them instead of replacing them with items I could not verify here. Ten small databases with no padding are the honest result, the same choice as for the 1410s.
+
+Date: 2026-10-18. Totals: Kotlin main 105,281 (CP-23: 99,282), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 105,703 (CP-23: 99,704). The +5,999 is the 110 new Kotlin files for databases 85 to 94, net of the four records removed below, and the regenerated catalogue. The database class, the migrations and the tests did not change.
+
+### What changed
+
+- Ten databases, from "Database 85: 1190s coding catalogue" (1190 to 1200) to "Database 94: 1100s coding catalogue" (1100 to 1110). Their records are 29, 26, 25, 23, 38, 31, 23, 26, 23 and 22: 266 new records and 4,736 in the whole catalogue. The new rare records number 87, so the whole catalogue has 1,204.
+- Eleven files per database, 110 in total. Colours are #7E57C2, #26C6DA, #FF7043, #8D6E63, #78909C, #5C6BC0, #C62828, #1565C0, #2E7D32 and #6A1B9A.
+- Spec: tools/databases.json has 94 entries. All ten new databases are marked "quota": false.
+- Documents: CATALOGUE.md and the README overview and structure blocks are regenerated. The README sentence about examples gives the runnable counts for 75 to 94: 76 and 89 have 20 each, 79 has 19, 81 has 14, 83 has 13, 85 has 12, 90 has 11, 75 has 10, 82, 86, 88 and 92 have 9 each, 77, 78, 80 and 91 have 8 each, and 84, 87, 93 and 94 have 7 each.
+- Four records removed after the cross-batch check. The Japanese era conversion of the 1160s (88 GUIDE) repeated the era conversion of the 1140s kept as a CROSS in 90. The 1140s conversion was also an EXAMPLE in 90, the same computation as that CROSS, so that EXAMPLE went. The broken bamboo was both a CROSS and an EXAMPLE in 90, and the EXAMPLE went. Bhaskara's pulverizer (90 GUIDE) repeated the congruence in the 86 CROSS, so the GUIDE went. The matching checks were removed from the verifiers, and the headers of 88 Guides, 90 Examples and 90 Guides no longer name them.
+- Process: one helper per database, ten in parallel, from the brief and the topic file for the 1100s. Several helpers stopped short and were resumed. Kinds with no record were filled before the build.
+
+### Facts checked by web search
+
+None is recorded for databases 85 to 94. This batch has no search record in the log.
+
+### Not searched, from memory
+
+The dates and attributions of these ten databases were written from memory. The ones to check first are the Jayrun water clock (89 DEVICE), Laudabiliter (89 SYSTEM, 1155), the scutage of 1159 (89 SYSTEM), Caffaro's Annals of Genoa (89 LANGUAGE, the years they cover), Glanvill's treatise (86 TOOL, about 1187 to 1189), the Assize of Northampton (87 SYSTEM, 1176), Maimonides's Mishneh Torah (87 LANGUAGE, 1180) and the Jin state proclaimed in 1115 (93 SYSTEM).
+
+### Problems
+
+- Thin decades. All ten are below 50 records, as listed above. The 1100s are the thinnest, at 22.
+- Empty kinds. Several databases had a kind with no record, which the unit tests reject. Each got one record of that kind before the build, often from memory with its range named.
+- Approximate dates. Many records give a range or "about", and the details name the dispute where there is one.
+- Same book, different kinds, left in place. Scivias in 89 (LANGUAGE, EXAMPLE and FLEX), the Policraticus and the Metalogicon in 89, Caffaro's Annals in 89 (LANGUAGE and EXAMPLE), the Assize of Clarendon in 88 (SYSTEM and GUIDE), the Assize of Northampton in 87 (SYSTEM and EXAMPLE), Glanvill in 86 (TOOL and PRACTICE), Maimonides's Guide in 85 (LANGUAGE and EXAMPLE), the Samguk sagi in 90 (LANGUAGE and EXAMPLE), Quantum praedecessores in 90 (PRACTICE and FLEX) and the Treaty of Zamora in 90 (SYSTEM and FLEX). Each pair uses one item from two angles, as earlier batches did. These are the first candidates to thin if one record per item is wanted.
+- Two named texts of one treatise. Bhaskara's Bijaganita (89 TOOL) and Lilavati (90 TOOL) are two parts of the Siddhanta Shiromani. Both are kept because each is a named text. If the treatise counts as one item, the 89 record is the one to replace.
+- Two Pipe Rolls. The roll of 1155 (89) and the roll of 1130 (92) are different documents in one series.
+- Julian and Gregorian conversions appear in 34, 48, 75 and 88 as one method with different dates. Kept.
+
+### How I checked it
+
+- Unit tests: 17 of 17 pass (AppDatabaseSeedTest 4, SeedDataTest 8, RecordFilterTest 5). The Gradle run ended with BUILD SUCCESSFUL, with no failures and no compiler warnings.
+- Examples: each new database has a verifier with exact expected output, worked out by hand before each run. 99 of 99 runnable records pass. The verifiers for 88 (9 records) and 90 (11 records) were run again after the four removals. The other eight passed before the removals, and their databases did not change.
+- Structure: the generator checks all 94 databases and all 4,736 records. The new databases are quota false and keep every kind. Years are inside each range, and the record text has no provenance phrases, dollar signs or Cyrillic.
+- Cross-batch: the cross-batch run over all 94 databases was read for the pairs touching the new databases. A rare-word check (a title word that appears in at most three records of the catalogue) was then run on every pair involving them. After the four removals it shows no pair for the removed items. The pairs it still shows are word matches, such as "Heike" in a sutra and in a romance.
+- Whole catalogue: 4,736 records. The only titles that repeat are "Erlang" and "Software inspections", as before.
+
+### Notes
+
+- Not verified yet: running on a device, the migrations from version 84 to version 94 on a device, the UI with 94 databases in the list, lint and the release build.
+- The 1100s and the 1110s are the thinnest decades of the catalogue for "coding". The question is the same as before: keep them smaller, or fill them.

@@ -1262,4 +1262,154 @@ The catalogue of database 84 (1200 to 1210) has the same ten kinds:
 | Projects | 1 | Checking that the early sultans of Delhi reigned in turn |
 | Flex | 3 | Years from Philip Augustus's privilege of 1200 to the Delhi Sultanate, Years from the first English patent rolls to the Mongol Empire and Years from the Venetian grosso to Gottfried's Tristan |
 | Cross-code | 1 | The strike times of al-Jazari's pegged drum in Python and C |
+
+The catalogue of database 85 (1190 to 1200) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Maimonides's Guide for the Perplexed, written in Judeo-Arabic, Gerald of Wales's Journey through Wales, a Latin account of 1191, Nizami's Haft Paykar, the Seven Beauties, a Persian verse poem, Walter Map's Courtiers' Trifles, a Latin book of court satire, Richard of Devizes's chronicle of the first years of Richard I and Raimon Vidal's Razos de trobar, an early treatise on Occitan poetry |
+| Systems | 5 | The bailiffs of Philip Augustus, first recorded in 1190, The general eyre of 1194, royal justices sent round the counties, The Choe military regime that ruled Goryeo Korea from 1196, The kingdom of Armenian Cilicia, crowned in 1198 under Leo I and Hubert Walter's office of chief justiciar, from 1193 |
+| Devices | 1 | Alexander Neckam's sea compass in De naturis rerum, about 1190 |
+| Tools | 3 | Al-Bitruji's On the Principles of Astronomy, an Arabic critique of Ptolemy, Bernard of Pavia's Breviarium of papal letters, a handbook for lawyers and The Suzhou stone star chart, carved at Suzhou in 1193 |
+| Practices | 2 | Oberto Scriba de Mercato's register of Genoese contracts, 1190 to 1192 and The carucage of 1194, a tax on plough-land for Richard I's ransom |
+| Guides | 4 | How a leonine verse rhymes its middle with its end, How an Arabic astronomer reads a sine table between its entries, How zakat on silver is reckoned once the threshold is reached and How the six feet of a Latin hexameter are told apart |
+| Examples | 2 | The chapters of Maimonides's Guide, counted in its three parts and Seven gold dinars and ten silver dirhams of equal weight |
+| Projects | 2 | Deaths of five rulers from 1189 to 1199, in date order and Coronations of three English kings, counted in days |
+| Flex | 3 | Years from Maimonides's Guide to its Hebrew translation, Days from Saladin's death to the death of Henry VI and Days from the death of Henry VI to the death of Richard I |
+| Cross-code | 1 | Days from Frederick Barbarossa's death to the surrender of Acre, in Python and C |
+
+The catalogue of database 86 (1180 to 1190) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Chretien's Perceval, the French story of the Grail left unfinished, The Lay of Igor's Campaign, a poem of a princes' raid in 1185, Gerald of Wales's Topography of Ireland, a Latin account of the island, Layla and Majnun, Nizami's verse tale of thwarted love, Heinrich von Veldeke's Eneit, the first courtly romance in German and Ibn Jubayr's Rihla, an Arabic travel account from Granada to Mecca |
+| Systems | 4 | The Assize of Arms of 1181, which set the weapons each free man kept, The Peace of Constance of 1183 between the emperor and the Lombard cities, The Assize of Woodstock of 1184, Henry II's law of the royal forests and The Saladin tithe of 1188, a tenth of movable goods for the Third Crusade |
+| Devices | 2 | The windmill at Weedley in Yorkshire, named in a list of 1185 and Joseph's Well in the Cairo Citadel, a deep well with animal-turned lifts |
+| Tools | 4 | Glanvill's treatise on the laws and customs of England, about 1188, Huguccio's Summa, a Bologna commentary on the canon law of the schools, Zhu Xi's Introduction to the Study of the Changes, a Chinese primer of 1186 and Andreas Capellanus's De amore, a Latin handbook of courtly love |
+| Practices | 1 | Trial by battle, the judicial duel that Glanvill's treatise describes |
+| Guides | 3 | How a seven-year cycle marks the sabbatical years of the Jewish law, How two sums are added by carrying counters on the lines of an abacus and How a cube root is found digit by digit |
+| Examples | 1 | How many bouts an eight-knight knockout tournament needs |
+| Projects | 1 | The deaths of eight rulers in the 1180s, counted by year |
+| Flex | 3 | Days from the battle of Hattin to the surrender of Jerusalem, Days from the death of Henry II to the coronation of Richard I and Days from the surrender of Jerusalem to the drowning of Barbarossa |
+| Cross-code | 1 | Solving 13x = 3 modulo 25 by the pulverizer in Python and C |
+
+The catalogue of database 87 (1170 to 1180) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Nizami's Makhzan al-Asrar, the Treasury of Secrets, a Persian poem of moral tales, Maimonides's Mishneh Torah, a Hebrew code of Jewish law written in Egypt, Marie de France's twelve Lais, short verse tales of about 1170, Chretien de Troyes's Cliges, an Old French romance of Constantinople and Arthur's court, Guernes de Pont-Sainte-Maxence's Life of Saint Thomas the Martyr, an Old French verse life of Becket and Zhou Qufei's Lingwai daida, a Chinese account of the southern lands and their trade |
+| Systems | 5 | The Assize of Northampton of 1176, which sent judges out on six circuits, The Ayyubid sultanate of Egypt, founded when Saladin ended the Fatimid caliphate in 1171, The military regime of Goryeo, begun by the coup of 1170, The Military Order of Santiago, founded in Leon about 1170 to fight on the frontier and The cathedral school of Notre-Dame in Paris, a teaching centre of the 1170s |
+| Devices | 1 | The mangonel, a sling-arm siege engine named in twelfth-century chronicles |
+| Tools | 3 | Gerard of Cremona's Latin Almagest, made from Arabic at Toledo, Herrad of Landsberg's Hortus deliciarum, an illustrated Latin encyclopedia for nuns and The Magnus liber organi, the two-part organum book of Notre-Dame in Paris |
+| Practices | 3 | The Grand Assize of 1179, a royal option that moved land cases out of feudal courts, The short-cross penny of 1180, the English silver coin Henry II reissued and The hot-iron ordeal, a judicial test still used in English courts in the 1170s |
+| Guides | 1 | How the twelve whole-sign houses of a horoscope follow the rising sign |
+| Examples | 1 | Judges sent out by the Assize of Northampton, six circuits of three judges |
+| Projects | 1 | Counting the days of a pilgrimage road to Santiago, stage by stage |
+| Flex | 3 | Days between Becket's murder and the Lombard victory at Legnano, Days between Legnano and the Byzantine defeat at Myriokephalon and Days between Myriokephalon and the Christian victory at Montgisard |
+| Cross-code | 1 | Perfect consonances in a two-part organum, counted in Python and C |
+
+The catalogue of database 88 (1160 to 1170) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 5 | Benoit de Sainte-Maure's Roman de Troie, a French romance of the Trojan War, Wace's Roman de Rou, a verse history of the dukes of Normandy, Abraham ibn Daud's Book of Tradition, a Hebrew chronicle of the sages, Maimonides's Commentary on the Mishnah, written in Arabic for readers of the oral law and The Roman d'Eneas, an anonymous Old French Aeneid |
+| Systems | 5 | The Assize of Clarendon, sworn juries of presentment for each county, The Constitutions of Clarendon, sixteen customs on the church and the courts, Henry II's ban of 1167 that sent English scholars from Paris to Oxford, The Lombard League of 1167, an alliance of cities against Frederick Barbarossa and The Longxing peace between the Song and Jin courts, a settlement of 1164 |
+| Devices | 2 | Gunpowder-and-lime thunderclap bombs thrown at the battle of Caishi, 1161 and The Woodbridge tide mill, first documented on its site about 1170 |
+| Tools | 1 | Rufinus's Summa on Gratian's Decretum, a canon-law handbook from Bologna |
+| Practices | 1 | The Heike nokyo, a set of sutras copied out and dedicated in 1164 |
+| Guides | 1 | How the Assize of Clarendon sets the size of its presenting juries |
+| Examples | 1 | The Julian date of Becket's death, counted in the Gregorian calendar |
+| Projects | 3 | The popes and antipopes of the 1160s, counted year by year, The emperors Nijo, Rokujo and Takakura, and their years in the 1160s and Three rulers who came to power in the 1160s, and the length of their reigns |
+| Flex | 3 | Days from Henry II's coronation to Becket's death, Days from the death of Victor IV to the death of Empress Matilda and Days from the death of Paschal III to the death of Becket |
+| Cross-code | 1 | The water held by a tide mill's pond in Python and C |
+
+The catalogue of database 89 (1150 to 1160) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Hildegard of Bingen's Scivias, a book of twenty-six visions, The First Grammatical Treatise, an Icelandic study of sounds and spelling, Wace's Roman de Brut, a French verse history of Britain, John of Salisbury's Metalogicon, a defence of grammar and logic, Caffaro's Annals of Genoa, a chronicle given to the city archive and The Deeds of Frederick Barbarossa, Otto of Freising's unfinished history |
+| Systems | 5 | The Privilegium Minus, the charter that made Austria a duchy, Go-Shirakawa's insei, the rule of a retired emperor from a monastery, The Roncaglia decrees of 1158, which listed the imperial regalia, Laudabiliter, the papal letter said to grant Ireland to Henry II and The scutage of 1159, shield money paid in place of knight service |
+| Devices | 1 | The Jayrun water clock by the Umayyad Mosque in Damascus |
+| Tools | 4 | Al-Idrisi's Tabula Rogeriana, the world map made for King Roger II, Bhaskara II's Bijaganita, the algebra part of the Siddhanta Shiromani, Peter Lombard's Sentences, the textbook of theology in the schools and John of Salisbury's Policraticus, a handbook for rulers and courtiers |
+| Practices | 2 | Giovanni Scriba's Genoese cartulary, the oldest surviving notarial register and The Pipe Roll of 1155, the first of Henry II's yearly accounts |
+| Guides | 5 | How the Indian digit method finds the whole square root of a number, How the rules of signs give the product of two negative numbers, How the ropes of a pulley block share the load of a water clock, How the seven climates and ten sections number the squares of a world map and How Bhaskara's lotus problem gives the depth of a lake |
+| Examples | 6 | The visions of Scivias counted by book, The distinctions in the four books of Peter Lombard's Sentences, The years that Caffaro's Annals of Genoa cover, The books of John of Salisbury's Policraticus and Metalogicon, The two recorded weights of Roger II's silver plate and The dating window of the First Grammatical Treatise |
+| Projects | 4 | Stones for the arches of a Romanesque arcade, Panes for the windows of a church with three lights, Loaves baked in a monastery kitchen for a week and Rope lengths for the buckets of a row of wells |
+| Flex | 3 | Days from Roger II's death to Henry II's coronation, Years from the first Pipe Roll to the Roncaglia decrees and Years from the Scivias to the Metalogicon |
+| Cross-code | 2 | The peacock flock of Bhaskara's riddle in Python and C and The primes of the years 1150 to 1160 in Python and C |
+
+The catalogue of database 90 (1140 to 1150) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | The Codex Calixtinus, a Latin book of Santiago's liturgy, miracles and pilgrim guide, Robert of Ketton's Latin Qur'an, the Lex Mahumet pseudoprophete, Kim Busik's Samguk sagi, a history of the Three Kingdoms of Korea, Anna Komnene's Alexiad, a history of her father's reign, Kalhana's Rajatarangini, a chronicle of the kings of Kashmir and The Kaiserchronik, a German rhymed history of the Roman emperors |
+| Systems | 5 | The Council of Sens, which condemned Abelard's teaching in 1141, The Treaty of Shaoxing, the peace between the Song and the Jin, The Treaty of Zamora, which recognised the Portuguese king, The refounding of Lubeck and its grant of settlers' rights and The Almohad taking of Marrakesh and the rise of the Almohad caliphate |
+| Devices | 1 | The organistrum, a bowed drone instrument shown in the Codex Calixtinus |
+| Tools | 5 | Robert of Chester's Latin algebra of al-Khwarizmi, William of Conches's Dragmaticon, a dialogue on natural philosophy, Hermann of Carinthia's De essentiis, a Latin treatise on the nature of things, Bhaskara's Lilavati, arithmetic taught in verse and Robert of Chester's Latin book of the composition of alchemy |
+| Practices | 3 | Quantum praedecessores, the papal bull that called the Second Crusade, The stained glass that Abbot Suger set in the choir of Saint-Denis and The glosses that Bologna's lawyers wrote on Justinian's law books |
+| Guides | 3 | How Bhaskara's cyclic method finds a solution of x squared minus 2 y squared equals 1, How the zigzag gomutrika rule multiplies two numbers by their digits and How the stopped points of a drone string give an octave, a fifth and a fourth |
+| Examples | 2 | The books of Justinian's three law collections, added up and The volumes of the Samguk sagi, counted by kind |
+| Projects | 1 | Reign lengths of six rulers who held power in the 1140s, summed and ranked |
+| Flex | 3 | Days from the crusade bull Quantum praedecessores to the fall of Lisbon, Days from the death of Innocent II to the siege of Damascus and Years from the Treaty of Zamora to the taking of Marrakesh |
+| Cross-code | 2 | A broken bamboo of Bhaskara's kind in Python and C and Japanese era years of the 1140s in Python and C |
+
+The catalogue of database 91 (1130 to 1140) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Someshvara's Manasollasa, a Sanskrit encyclopedia of arts and sciences, Geoffrey of Monmouth's History of the Kings of Britain, a Latin prose history, Judah Halevi's Kuzari, a dialogue on the conversion of the Khazar king, Abelard's Story of My Misfortunes, a Latin letter of about 1132, Sanai's Garden of Truth, a Persian poem of mystical verse and The Jurchen small script, a second writing system of the Jin introduced in 1138 |
+| Systems | 5 | The trilingual chancery of Roger II of Sicily, which wrote in Latin, Greek and Arabic, The testament of Boleslaw III, which set up Poland's seniorate in 1138, The Second Lateran Council of 1139 and its canons on clergy and warfare, The Assizes of Ariano, Roger II's law code for the kingdom of Sicily and The Shaoxing reign era, from 1131, under which the Southern Song counted its years |
+| Devices | 2 | The fire lance at the siege of De'an, the earliest recorded battle use in 1132 and The crossbow, which the Second Lateran Council of 1139 barred against Christians |
+| Tools | 1 | Li Qingzhao's Jinshi lu, a catalogue of bronze and stone inscriptions |
+| Practices | 1 | Lay brothers who farmed the Cistercian granges in the 1130s |
+| Guides | 1 | How a count of paces is turned into Roman miles |
+| Examples | 1 | The Saros of 223 lunations, counted in days from the mean month |
+| Projects | 1 | The first daughter houses of Citeaux and the years they were founded |
+| Flex | 3 | Days from Roger II's coronation to the death of Henry I of England, Days from the death of Henry I to the coronation of Stephen and Days from the death of Henry I to the death of Louis VI of France |
+| Cross-code | 2 | The Roman mile from a count of paces in Python and C and The Saros of 223 lunations in Python and C |
+
+The catalogue of database 92 (1120 to 1130) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Hugh of St Victor's Didascalicon, a guide to the arts and to reading, William of Malmesbury's Deeds of the English Kings, first finished in 1125, The Peterborough Chronicle, its English annals from 1121, Benedeit's Voyage of St Brendan, a French verse voyage of about 1121, Ari the Learned's Islendingabok, a history of Iceland in Icelandic and Xu Jing's Illustrated Account of the Koryo mission, finished in 1124 |
+| Systems | 5 | The Premonstratensian canons, founded at Premontre in 1120, The Concordat of Worms, the settlement of the investiture dispute in 1122, The First Lateran Council of 1123, which confirmed the Concordat of Worms, The Pactum Warmundi, Venetian trading privileges in Jerusalem, 1123 and The Rule of the Knights Templar, approved at the Council of Troyes in 1129 |
+| Devices | 1 | Al-Khazini's hydrostatic balance in the Book of the Balance of Wisdom, 1121 |
+| Tools | 4 | Adelard of Bath's Latin version of al-Khwarizmi's astronomical tables, about 1126, Lambert of St Omer's Liber floridus, a Latin book of gathered learning, Hugh of St Victor's Practica geometriae, a manual of practical measurement and The Xuanhe Bogu tu, an illustrated catalogue of ancient bronzes of 1123 |
+| Practices | 1 | The Pipe Roll of 1130, the oldest surviving English royal account roll |
+| Guides | 1 | How Hugh of St Victor sorts the arts into four parts and seven mechanical crafts |
+| Examples | 1 | The years of the Peterborough annals, counted by continuation |
+| Projects | 3 | The popes of the 1120s, with each pontificate counted in years, The Japanese eras of the 1120s, with the years each one lasted and The Song emperors through the 1120s, with each reign counted in years |
+| Flex | 3 | Days from the Concordat of Worms to the Council of Troyes, Days from the White Ship to the Concordat of Worms and Days from the death of Callixtus II to the death of Honorius II |
+| Cross-code | 1 | Acres from square perches in Python and C |
+
+The catalogue of database 93 (1110 to 1120) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | The large Jurchen script, devised for the Jin state from Chinese and Khitan signs, The Liber Maiolichinus, a Latin verse history of Pisa's Balearic expedition, The Primary Chronicle of Kiev, the Tale of Bygone Years, Guibert of Nogent's account of his own life, the De vita sua, Orderic Vitalis's Ecclesiastical History, begun in Normandy in 1114 and The Leges Henrici Primi, an anonymous Latin law book of England |
+| Systems | 5 | The Jin state of the Jurchen, proclaimed in 1115 by Aguda, The cathedral school at Laon, taught by Anselm of Laon in the 1110s, The pact of 1111 between Henry V and Pope Paschal II, which collapsed, Pope Paschal II's bull Pie postulatio voluntatis for the Hospitallers and The Poor Fellow-Soldiers of Christ, known as the Templars, founded about 1119 |
+| Devices | 1 | Zhu Yu's magnetized needle at sea, noted in the Pingzhou Ketan |
+| Tools | 3 | Honorius Augustodunensis's Imago mundi, a Latin description of the world, Abraham bar Hiyya's Treatise on Measurement and Calculation, in Hebrew and The Zhenghe edition of Tang Shenwei's classified materia medica |
+| Practices | 1 | The cursus, the stress rhythm that closed sentences in papal letters |
+| Guides | 1 | How a sailor picks a guide by the weather, in Zhu Yu's account |
+| Examples | 1 | The flavour and nature pairs of a classified materia medica, counted |
+| Projects | 1 | Ordering the decade's dated events and counting the days between them |
+| Flex | 3 | Days from the Field of Blood to the battle of Bremule, Days from Henry V's marriage to the battle of Welfesholz and Days from the death of Alexios I to the loss of the White Ship |
+| Cross-code | 1 | The sailor's guide rule in Python and C |
+
+The catalogue of database 94 (1100 to 1110) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | The Gesta Francorum, a Latin account of the First Crusade, The Book of the Dun Cow, an Irish manuscript from Clonmacnoise, Petrus Alfonsi's Disciplina clericalis, Latin tales for clerks, Anselm's De concordia, a Latin treatise on grace and free will, Eadmer's Historia novorum, a Latin history of recent events in England and Stephen Harding's corrected Latin Bible of Citeaux |
+| Systems | 5 | Henry I's Coronation Charter, a charter of liberties of 1100, The Latin kingdom of Jerusalem, crowned at Bethlehem under Baldwin I, Fontevraud, a double monastery for monks and nuns under an abbess, The Three Halls of Song schools, with promotion by tests and The abbey of Saint-Victor in Paris, a house of canons founded in 1108 |
+| Devices | 1 | The Sun Dagger of Fajada Butte, a sunlit marker in Chaco Canyon |
+| Tools | 2 | Nathan ben Jehiel's Arukh, a dictionary of the words of the Talmud and Li Jie's Yingzao Fashi, the Song building manual of standard measures |
+| Practices | 1 | The Concordat of London, Henry I's settlement of the investiture dispute |
+| Guides | 1 | How canon law counts degrees of kinship from a common ancestor |
+| Examples | 1 | Turning zhang, chi and cun into fen, the decimal lengths of Song building |
+| Projects | 1 | The six orders of the Mishnah, with their tractate counts totalled |
+| Flex | 3 | Days from Godfrey's death to Baldwin I's coronation at Bethlehem, Days from Henry I's coronation to the battle of Tinchebrai and Days from Baldwin I's coronation to the death of Anselm |
+| Cross-code | 1 | Days from Henry I's coronation to Anselm's death in Python and C |
 <!-- END GENERATED CATALOGUE -->
