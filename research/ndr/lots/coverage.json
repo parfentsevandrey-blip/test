@@ -9,13 +9,13 @@
    "dev_on_sale": 657,
    "dev_booked": 0,
    "dev_sold_visible": 0,
-   "dev_with_price": 535,
+   "dev_with_price": 614,
    "dev_with_special": 211,
    "cian_dev_lots": 586,
-   "cian_dev_matched_to_site": 322,
+   "cian_dev_matched_to_site": 317,
    "cian_vs_site_price_median_pct": 0.0,
    "cian_resale_lots": 531,
-   "cian_resale_with_same_layout_at_dev": 246
+   "cian_resale_with_same_layout_at_dev": 247
   },
   "Символ": {
    "zk_id": "7231",
@@ -24,13 +24,13 @@
    "dev_on_sale": 516,
    "dev_booked": 0,
    "dev_sold_visible": 0,
-   "dev_with_price": 409,
+   "dev_with_price": 511,
    "dev_with_special": 217,
    "cian_dev_lots": 473,
    "cian_dev_matched_to_site": 291,
    "cian_vs_site_price_median_pct": 0.0,
    "cian_resale_lots": 209,
-   "cian_resale_with_same_layout_at_dev": 108
+   "cian_resale_with_same_layout_at_dev": 109
   },
   "Дубровка от Гранель": {
    "zk_id": "3401924",
@@ -104,8 +104,8 @@
    "cian_dev_lots": 604,
    "cian_dev_matched_to_site": 342,
    "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 214,
-   "cian_resale_with_same_layout_at_dev": 129
+   "cian_resale_lots": 216,
+   "cian_resale_with_same_layout_at_dev": 130
   },
   "Amber City": {
    "zk_id": "4888961",
