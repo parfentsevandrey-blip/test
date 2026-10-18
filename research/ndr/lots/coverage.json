@@ -9,13 +9,13 @@
    "dev_on_sale": 657,
    "dev_booked": 0,
    "dev_sold_visible": 0,
-   "dev_with_price": 614,
+   "dev_with_price": 651,
    "dev_with_special": 211,
    "cian_dev_lots": 586,
-   "cian_dev_matched_to_site": 317,
+   "cian_dev_matched_to_site": 330,
    "cian_vs_site_price_median_pct": 0.0,
    "cian_resale_lots": 531,
-   "cian_resale_with_same_layout_at_dev": 247
+   "cian_resale_with_same_layout_at_dev": 250
   },
   "Символ": {
    "zk_id": "7231",
