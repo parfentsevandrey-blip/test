@@ -32,10 +32,39 @@ enum ROMFinder {
                 }
                 return .notFound
 
+            case .eos:
+                for codename in codenames {
+                    let builds = try await eosBuilds(codename: codename)
+                    if !builds.isEmpty {
+                        return .available(await attachingLineageRecovery(builds, codenames: codenames))
+                    }
+                }
+                return .notFound
+
+            case .directoryIndex(let template):
+                for codename in codenames {
+                    let url = URL(string: template.replacingOccurrences(of: "{codename}", with: codename))!
+                    let builds = try await directoryBuilds(url: url, romID: project.id)
+                    if !builds.isEmpty {
+                        return .available(await attachingLineageRecovery(builds, codenames: codenames))
+                    }
+                }
+                return .notFound
+
             case .manual(let guide):
-                let codename = codenames.first ?? ""
-                let url = URL(string: guide.replacingOccurrences(of: "{codename}", with: codename)) ?? project.website
-                return .manual(url)
+                // Не показываем мёртвую ссылку: сначала проверяем, что страница
+                // устройства существует. Если нет — честно «нет для устройства».
+                for codename in codenames {
+                    let url = URL(string: guide.replacingOccurrences(of: "{codename}", with: codename))!
+                    if guide.contains("{codename}") {
+                        if try await isReachable(url) { return .manual(url) }
+                    } else {
+                        // В ссылке нет кодового имени — проверить поддержку нельзя,
+                        // просто ведём на общую страницу установки.
+                        return .manual(url)
+                    }
+                }
+                return .notFound
             }
         } catch {
             return .failed(error.localizedDescription)
@@ -186,12 +215,101 @@ enum ROMFinder {
         )
     }
 
+    // MARK: - /e/OS (images.ecloud.global)
+
+    private struct EOSResponse: Decodable {
+        struct Build: Decodable {
+            struct File: Decodable {
+                let ftype: String
+                let filename: String
+                let url: URL
+                let size: Int64?
+                let sha256: String?
+            }
+            let display_version: String?
+            let version: String?
+            let android_version: Int?
+            let type: String?
+            let datetime: TimeInterval?
+            let files: [File]
+        }
+        let builds: [Build]
+    }
+
+    static func eosBuilds(codename: String) async throws -> [ROMBuild] {
+        let url = URL(string: "https://images.ecloud.global/api/v2/devices/\(codename)/downloads")!
+        guard let data = try await fetch(url, accept: "application/json") else { return [] }
+        guard let response = try? JSONDecoder().decode(EOSResponse.self, from: data) else { return [] }
+        return response.builds.compactMap { build in
+            guard let ota = build.files.first(where: { $0.ftype.uppercased() == "OTA" }) else { return nil }
+            return ROMBuild(
+                romID: "eos",
+                version: "/e/OS \(build.version ?? build.display_version ?? "")",
+                androidVersion: build.android_version.map(String.init),
+                date: build.datetime.map { Date(timeIntervalSince1970: $0) },
+                channel: build.type?.capitalized,
+                kind: .sideloadZip,
+                package: BuildFile(fileName: ota.filename, url: ota.url, size: ota.size, sha256: ota.sha256)
+            )
+        }
+    }
+
+    // MARK: - Каталог-листинг с ZIP'ами (LineageOS for microG)
+
+    static func directoryBuilds(url: URL, romID: String) async throws -> [ROMBuild] {
+        guard let data = try await fetch(url) else { return [] }
+        let html = String(decoding: data, as: UTF8.self)
+        // Вытаскиваем href="...zip" из листинга каталога.
+        var builds: [ROMBuild] = []
+        var seen: Set<String> = []
+        let pattern = #"href="([^"]+\.zip)""#
+        let regex = try NSRegularExpression(pattern: pattern)
+        for match in regex.matches(in: html, range: NSRange(html.startIndex..., in: html)) {
+            guard let range = Range(match.range(at: 1), in: html) else { continue }
+            let href = String(html[range])
+            let fileURL = URL(string: href, relativeTo: url)?.absoluteURL ?? url
+            let fileName = fileURL.lastPathComponent
+            guard seen.insert(fileName).inserted else { continue }
+            builds.append(ROMBuild(
+                romID: romID,
+                version: fileName.replacingOccurrences(of: ".zip", with: ""),
+                androidVersion: androidVersion(fromFileName: fileName),
+                date: date(fromFileName: fileName),
+                channel: fileName.contains("microG") ? "microG" : nil,
+                kind: .sideloadZip,
+                package: BuildFile(fileName: fileName, url: fileURL)
+            ))
+        }
+        // Новые сверху.
+        return builds.sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
+    }
+
+    /// «lineage-23.2-20260901-microG-alioth.zip» → дата сборки.
+    private static func date(fromFileName name: String) -> Date? {
+        guard let match = name.range(of: #"20\d{6}"#, options: .regularExpression) else { return nil }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd"
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        return formatter.date(from: String(name[match]))
+    }
+
     // MARK: - Сеть
 
+    /// Проверяет, существует ли страница устройства (без скачивания тела).
+    static func isReachable(_ url: URL) async throws -> Bool {
+        var request = URLRequest(url: url, timeoutInterval: 15)
+        request.httpMethod = "HEAD"
+        request.setValue("ROMForge/1.0 (macOS)", forHTTPHeaderField: "User-Agent")
+        guard let (_, response) = try? await URLSession.shared.data(for: request),
+              let http = response as? HTTPURLResponse else { return false }
+        return (200..<400).contains(http.statusCode)
+    }
+
     /// nil — если ресурса нет (404): для конкретного устройства это нормально.
-    private static func fetch(_ url: URL) async throws -> Data? {
+    private static func fetch(_ url: URL, accept: String? = nil) async throws -> Data? {
         var request = URLRequest(url: url, timeoutInterval: 20)
         request.setValue("ROMForge/1.0 (macOS)", forHTTPHeaderField: "User-Agent")
+        if let accept { request.setValue(accept, forHTTPHeaderField: "Accept") }
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else { return nil }
         if http.statusCode == 404 { return nil }

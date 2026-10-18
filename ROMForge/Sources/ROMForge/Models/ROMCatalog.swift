@@ -76,7 +76,7 @@ enum ROMCatalog {
             basedOn: "LineageOS + microG",
             features: ["microG вместо Google", "Облако Murena", "App Lounge", "Оценка приватности приложений"],
             tags: [.degoogled, .privacy],
-            source: .manual(guide: "https://doc.e.foundation/devices/{codename}/install")
+            source: .eos
         ),
         ROMProject(
             id: "lineage-microg",
@@ -89,7 +89,7 @@ enum ROMCatalog {
             basedOn: "LineageOS",
             features: ["microG", "F-Droid", "Подписанные сборки", "Обновления по воздуху"],
             tags: [.degoogled, .stock],
-            source: .manual(guide: "https://download.lineage.microg.org/{codename}/")
+            source: .directoryIndex(template: "https://download.lineage.microg.org/{codename}/")
         ),
         ROMProject(
             id: "calyxos",

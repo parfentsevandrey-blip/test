@@ -45,7 +45,13 @@ enum ROMSource: Hashable, Sendable {
     case otaJSON(templates: [String])
     /// releases.grapheneos.org — заводские образы с flash-all.sh.
     case grapheneOS
-    /// Сборки только на сайте проекта; приложение ведёт по шагам и ставит выбранный ZIP.
+    /// API /e/OS (images.ecloud.global): автоматическая установка с recovery проекта.
+    case eos
+    /// Каталог-листинг с ZIP'ами (LineageOS for microG). `{codename}` подставляется;
+    /// recovery берётся от LineageOS того же устройства.
+    case directoryIndex(template: String)
+    /// Сборки только на сайте проекта. Приложение сперва проверяет, поддерживается ли
+    /// устройство (страница существует), и лишь тогда предлагает ссылку и установку из файла.
     case manual(guide: String)
 }
 
