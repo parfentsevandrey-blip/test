@@ -36,6 +36,9 @@ def test_matrix():
     assert not refused("https://www.lsr.ru/msk/kvartiry-v-novostroikah/zilart/", "stealthy")
     assert not refused("https://granelle.ru/objects/x/", "headless")
     assert not refused("https://dreamriva.ru/flats/", "fetcher")
+    assert refused("https://www.pik.ru/projects", "fetcher")                    # impersonated Fetcher: 401 (L41)
+    assert not refused("https://www.pik.ru/projects", "fetcher_plain")         # honest client (L46)
+    assert refused("https://www.cian.ru/cat.php?p=1", "fetcher_plain")          # ЦИАН stays Fetcher-only
 
 
 def test_cooldown_is_honoured():

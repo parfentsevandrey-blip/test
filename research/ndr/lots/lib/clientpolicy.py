@@ -1,6 +1,7 @@
 """Which client may contact which site — lessons L28, L29, L37 as code. Every tool that goes to the network asks here first.
 
-Clients: fetcher (Scrapling Fetcher / curl_cffi with a Chrome TLS fingerprint), stealthy (Scrapling StealthySession),
+Clients: fetcher (Scrapling Fetcher / curl_cffi with a Chrome TLS fingerprint), fetcher_plain (the same Fetcher with
+         impersonate=None: plain curl fingerprint, no faked browser), stealthy (Scrapling StealthySession),
          headless (plain Playwright/Patchright Chromium: audit, HAR visits, the «visitor»), ndr_workflow (headful real Chrome
          with a clearance profile, ndr_workflow.py).
 Protected sites recognise a headless browser and answer 403 / VPNBlock (ЦИАН, наш.дом.рф: L29; lsr.ru Servicepipe: L28). A 403
@@ -23,10 +24,10 @@ PROTECTED = {                                   # site -> clients allowed
     "cdn-cian.ru": {"fetcher"},
     "xn--80az8a.xn--d1aqf.xn--p1ai": {"ndr_workflow"},   # наш.дом.рф: only the headful session with clearance (W1, W12, F2)
     "lsr.ru": {"stealthy", "fetcher"},          # plain headless -> 403 (L28)
-    "pik.ru": {"stealthy"},                     # Qrator: Fetcher gets 401 (JS check), a real browser passes like a visitor (L41)
+    "pik.ru": {"stealthy", "fetcher_plain"},    # Qrator: impersonated Fetcher and StealthySession got 401 17.10 (L41); plain curl got 200 -> honest client (L46)
 }
 NEVER = {"api.cian.ru"}                         # robots Disallow: / and the owner's rule — no client at all
-CLIENTS = {"fetcher", "stealthy", "headless", "ndr_workflow"}
+CLIENTS = {"fetcher", "fetcher_plain", "stealthy", "headless", "ndr_workflow"}
 
 
 class Refused(Exception):
