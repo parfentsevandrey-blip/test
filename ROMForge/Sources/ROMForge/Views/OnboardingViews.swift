@@ -24,9 +24,16 @@ struct ToolsSetupView: View {
                 case .failed:
                     Label(error ?? "Ошибка", systemImage: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
-                    Button("Повторить") { model.retryTools() }
-                        .prominentButton()
-                        .controlSize(.large)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 480)
+                    HStack {
+                        Button("Указать папку…") { chooseFolder() }
+                            .glassButton()
+                            .controlSize(.large)
+                        Button("Повторить") { model.retryTools() }
+                            .prominentButton()
+                            .controlSize(.large)
+                    }
                 default:
                     ProgressView().controlSize(.large)
                 }
@@ -35,6 +42,17 @@ struct ToolsSetupView: View {
             .glassCard(cornerRadius: 32)
             .padding(40)
         }
+    }
+
+    private func chooseFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.message = "Выберите папку, в которой лежат adb и fastboot (например, platform-tools)"
+        panel.prompt = "Использовать"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        model.tools.useCustomDirectory(url)
+        model.retryTools()
     }
 }
 

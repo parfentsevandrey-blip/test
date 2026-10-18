@@ -53,9 +53,20 @@ final class PlatformTools {
             await startServer(in: directory)
             return directory
         } catch {
-            state = .failed(error.localizedDescription)
+            state = .failed(Self.explain(error))
             throw error
         }
+    }
+
+    private static func explain(_ error: Error) -> String {
+        "Не удалось скачать adb и fastboot с сервера Google (\(error.localizedDescription)). "
+            + "Возможно, загрузка недоступна в вашем регионе. Установите их через Homebrew "
+            + "(brew install android-platform-tools) или укажите папку с adb и fastboot вручную."
+    }
+
+    /// Пользователь указал папку с adb/fastboot вручную.
+    func useCustomDirectory(_ url: URL) {
+        UserDefaults.standard.set(url.path, forKey: "customPlatformToolsPath")
     }
 
     private static func locateExisting() -> URL? {

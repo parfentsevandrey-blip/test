@@ -62,6 +62,7 @@ if [[ "${1:-}" == "--bundle-tools" ]]; then
 fi
 
 echo "▸ Ad-hoc подпись"
-codesign --force --deep --sign - "$APP"
+# Без --deep: вложенные adb/fastboot сохраняют оригинальную подпись Google.
+codesign --force --sign - "$APP"
 
 echo "✓ Готово: $APP"

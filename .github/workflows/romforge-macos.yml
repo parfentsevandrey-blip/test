@@ -27,7 +27,7 @@ jobs:
           swift --version
 
       - name: Build app bundle
-        run: ./scripts/build-app.sh
+        run: ./scripts/build-app.sh --bundle-tools
 
       - name: Package
         run: |
