@@ -49,6 +49,7 @@ GROUPS = ("lists", "lsr", "visitor", "donstroy", "fsk")
 PRICE_REFRESH_DAYS = 7         # instruction С1: weekly price list
 FSK_TREE = True                # engine step 2: ФСК catalogue page loads /api/v3/flats/tree itself — the whole project in one response
 DON_SEARCH = True              # engine step 2: Donstroy prices from the page /full-search/ loads itself (old path: flat pages)
+DON_SEARCH_ENOUGH = 0.95       # a pass cut by a restart counts as done when this week's list priced ≥ 95% of available flats (L44)
 MAX_FAILS = 3
 
 # developer site project -> ЦИАН newobject id used in lots.db / pilot_zk.json
@@ -591,6 +592,14 @@ def donstroy_search(db, max_clicks=200):
     return donstroy_search_store(db, got)
 
 
+def don_search_enough(db, day, week):
+    """(enough, priced, available): this week's search list priced ≥ DON_SEARCH_ENOUGH of today's available flats (L44)."""
+    priced = db.execute("select count(distinct lot_id) from prices where source='donstroy' and origin='catalog' and day>=?",
+                        (week,)).fetchone()[0]
+    avail = db.execute("select sum(available) from stock where day=? and source='donstroy'", (day,)).fetchone()[0] or 0
+    return bool(avail) and priced >= DON_SEARCH_ENOUGH * avail, priced, avail
+
+
 def donstroy_search_store(db, got):
     flats = {f["id"]: f for g in got if isinstance(g, dict) for f in g.get("flats") or [] if f.get("link")}
     total = max((g.get("total_flats") or 0 for g in got if isinstance(g, dict)), default=0)
@@ -810,7 +819,13 @@ def run_group(db, grp, day):
             week = (datetime.now(MSK) - timedelta(days=PRICE_REFRESH_DAYS - 1)).strftime("%Y-%m-%d")
             if DON_SEARCH and not db.execute("select 1 from fetches where url='visitor:donstroy:full-search' and day>=? limit 1",
                                              (week,)).fetchone():     # only a completed pass counts (the marker is written at its end)
-                log("list", donstroy_search(db))           # weekly price list in ≈160 portions (engine step 2)
+                enough, priced, avail = don_search_enough(db, day, week)
+                if enough:                                 # «show more» cannot resume mid-way: no second pass of ≈160 portions
+                    db.execute("insert into fetches values (?,?,?,?)", (day, "visitor:donstroy:full-search", "partial", now()))
+                    db.commit()
+                    log("list", f"dsearch partial pass accepted: {priced} of {avail} available flats priced this week (L44)")
+                else:
+                    log("list", donstroy_search(db))           # weekly price list in ≈160 portions (engine step 2)
         like = {"donstroy": "https://donstroy.moscow/objects/%", "fsk": "https://fsk.ru/%/flats/%"}[grp]
         n = db.execute("select count(*) from fetches where day=? and url like ?", (day, like)).fetchone()[0]
         fresh = (datetime.now(MSK) - timedelta(days=PRICE_REFRESH_DAYS)).strftime("%Y-%m-%d")

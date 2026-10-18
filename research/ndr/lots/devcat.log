@@ -1422,3 +1422,8 @@
 2026-10-18T13:11:55+03:00 qa donstroy skipped: collector still running on the site
 2026-10-18T13:11:55+03:00 qa granelle skipped: already re-read today (L40)
 2026-10-18T13:11:55+03:00 qa fsk skipped: already re-read today (L40)
+2026-10-18T13:12:46+03:00 lsr done today at 07:42 — not repeated (L42)
+2026-10-18T13:12:46+03:00 visitor done today at 07:39 — not repeated (L42)
+2026-10-18T13:12:46+03:00 fsk done today at 07:03 — not repeated (L42)
+2026-10-18T13:12:50+03:00 list dsections 51 sections, flats 5115 (available 1173)
+2026-10-18T13:12:50+03:00 list dsearch partial pass accepted: 1120 of 1173 available flats priced this week (L44)

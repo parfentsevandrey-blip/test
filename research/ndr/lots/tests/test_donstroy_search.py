@@ -27,6 +27,18 @@ def test_store():
     assert p == (17836000.0, None, "catalog"), p
 
 
+def test_enough():
+    db = sqlite3.connect(Path(tempfile.mkdtemp()) / "t.db")
+    D.migrate(db)
+    db.executemany("insert into stock(day, source, section, available) values('2026-10-18','donstroy','s',?)", [(1,)] * 20)
+    for i in range(18):
+        D.put_price(db, "donstroy", str(i), 1000 + i, None, "catalog")
+    assert D.don_search_enough(db, "2026-10-18", "2026-10-12")[0] is False    # 18 of 20 = 90%
+    D.put_price(db, "donstroy", "18", 2000, None, "catalog")
+    assert D.don_search_enough(db, "2026-10-18", "2026-10-12") == (True, 19, 20)
+
+
 if __name__ == "__main__":
     test_store()
-    print("ok test_store")
+    test_enough()
+    print("ok test_store, test_enough")
