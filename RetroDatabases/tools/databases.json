@@ -938,5 +938,105 @@
     "description": "Languages, systems, devices, tools and practices of 1100 to 1110, including rare and little-known items.",
     "colorHex": "#6A1B9A",
     "curated": false
+  },
+  {
+    "id": 95,
+    "from": 1090,
+    "to": 1100,
+    "quota": false,
+    "name": "Database 95: 1090s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1090 to 1100, including rare and little-known items.",
+    "colorHex": "#5D4037",
+    "curated": false
+  },
+  {
+    "id": 96,
+    "from": 1080,
+    "to": 1090,
+    "quota": false,
+    "name": "Database 96: 1080s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1080 to 1090, including rare and little-known items.",
+    "colorHex": "#00897B",
+    "curated": false
+  },
+  {
+    "id": 97,
+    "from": 1070,
+    "to": 1080,
+    "quota": false,
+    "name": "Database 97: 1070s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1070 to 1080, including rare and little-known items.",
+    "colorHex": "#7CB342",
+    "curated": false
+  },
+  {
+    "id": 98,
+    "from": 1060,
+    "to": 1070,
+    "quota": false,
+    "name": "Database 98: 1060s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1060 to 1070, including rare and little-known items.",
+    "colorHex": "#FDD835",
+    "curated": false
+  },
+  {
+    "id": 99,
+    "from": 1050,
+    "to": 1060,
+    "quota": false,
+    "name": "Database 99: 1050s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1050 to 1060, including rare and little-known items.",
+    "colorHex": "#3949AB",
+    "curated": false
+  },
+  {
+    "id": 100,
+    "from": 1040,
+    "to": 1050,
+    "quota": false,
+    "name": "Database 100: 1040s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1040 to 1050, including rare and little-known items.",
+    "colorHex": "#D81B60",
+    "curated": false
+  },
+  {
+    "id": 101,
+    "from": 1030,
+    "to": 1040,
+    "quota": false,
+    "name": "Database 101: 1030s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1030 to 1040, including rare and little-known items.",
+    "colorHex": "#00ACC1",
+    "curated": false
+  },
+  {
+    "id": 102,
+    "from": 1020,
+    "to": 1030,
+    "quota": false,
+    "name": "Database 102: 1020s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1020 to 1030, including rare and little-known items.",
+    "colorHex": "#F4511E",
+    "curated": false
+  },
+  {
+    "id": 103,
+    "from": 1010,
+    "to": 1020,
+    "quota": false,
+    "name": "Database 103: 1010s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1010 to 1020, including rare and little-known items.",
+    "colorHex": "#546E7A",
+    "curated": false
+  },
+  {
+    "id": 104,
+    "from": 1000,
+    "to": 1010,
+    "quota": false,
+    "name": "Database 104: 1000s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1000 to 1010, including rare and little-known items.",
+    "colorHex": "#8E24AA",
+    "curated": false
   }
 ]

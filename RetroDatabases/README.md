@@ -5,7 +5,7 @@ An Android application in Kotlin, Jetpack Compose and Room. Inside are databases
 ## What is inside
 
 <!-- BEGIN GENERATED OVERVIEW -->
-Inside are 94 databases of coding history, from 1100 to 2036. The table gives each one's years, records and rare records. The kinds and titles of every database are in [CATALOGUE.md](CATALOGUE.md).
+Inside are 104 databases of coding history, from 1000 to 2036. The table gives each one's years, records and rare records. The kinds and titles of every database are in [CATALOGUE.md](CATALOGUE.md).
 
 | Database | Years | Records | Rare |
 |---|---|---:|---:|
@@ -103,7 +103,17 @@ Inside are 94 databases of coding history, from 1100 to 2036. The table gives ea
 | 92 | 1120 to 1130 | 26 | 9 |
 | 93 | 1110 to 1120 | 23 | 9 |
 | 94 | 1100 to 1110 | 22 | 10 |
-| **All** | | **4,736** | **1204** |
+| 95 | 1090 to 1100 | 18 | 9 |
+| 96 | 1080 to 1090 | 15 | 7 |
+| 97 | 1070 to 1080 | 21 | 8 |
+| 98 | 1060 to 1070 | 14 | 9 |
+| 99 | 1050 to 1060 | 14 | 8 |
+| 100 | 1040 to 1050 | 16 | 8 |
+| 101 | 1030 to 1040 | 16 | 10 |
+| 102 | 1020 to 1030 | 13 | 9 |
+| 103 | 1010 to 1020 | 21 | 9 |
+| 104 | 1000 to 1010 | 16 | 9 |
+| **All** | | **4,900** | **1290** |
 <!-- END GENERATED OVERVIEW -->
 
 
@@ -133,8 +143,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 ## Structure
 
 <!-- BEGIN GENERATED STRUCTURE -->
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and one generic migration for each version from 1 to 94 (`seedMigrations`).
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all 94 databases: `Db1*.kt` to `Db94*.kt`, one file per kind; `SeedCatalog.kt`, generated from `tools/databases.json`; the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and one generic migration for each version from 1 to 104 (`seedMigrations`).
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all 104 databases: `Db1*.kt` to `Db104*.kt`, one file per kind; `SeedCatalog.kt`, generated from `tools/databases.json`; the helper that builds a record (`SeedEntry.kt`).
 - `tools` — `databases.json` (the databases, their years and colours) and `build_catalogue.py`, which regenerates `SeedCatalog.kt`, the overview in this file and `CATALOGUE.md`, and checks every record.
 <!-- END GENERATED STRUCTURE -->
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
@@ -144,7 +154,7 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. In database 9, 20 examples run and pass. In database 10, 20 examples run and pass. In database 11, 20 examples run and pass. In database 12, 20 examples run and pass. In database 13, 20 examples run and pass. In database 14, 20 examples run and pass. In each of databases 15 to 62 and 64 to 67 and 69 to 74, 20 examples run and pass. Database 68 has 14 runnable records, and all 14 pass. Database 63 has five runnable records, and all five pass. Databases 75 to 94 have fewer runnable records than the earlier ones: 76 and 89 have 20 each, 79 has 19, 81 has 14, 83 has 13, 85 has 12, 90 has 11, 75 has 10, 82, 86, 88 and 92 have 9 each, 77, 78, 80 and 91 have 8 each, and 84, 87, 93 and 94 have 7 each, and every one of them passes. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. In database 9, 20 examples run and pass. In database 10, 20 examples run and pass. In database 11, 20 examples run and pass. In database 12, 20 examples run and pass. In database 13, 20 examples run and pass. In database 14, 20 examples run and pass. In each of databases 15 to 62 and 64 to 67 and 69 to 74, 20 examples run and pass. Database 68 has 14 runnable records, and all 14 pass. Database 63 has five runnable records, and all five pass. Databases 75 to 104 have fewer runnable records than the earlier ones: 76 and 89 have 20 each, 79 has 19, 81 has 14, 83 has 13, 85 has 12, 90 has 11, 75 has 10, 82, 86, 88 and 92 have 9 each, 77, 78, 80 and 91 have 8 each, 84, 87, 93, 94 and 103 have 7 each, 95 and 97 have 6 each, and 96, 98, 99, 100, 101, 102 and 104 have 5 each, and every one of them passes. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
 
 For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
 

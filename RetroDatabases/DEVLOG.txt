@@ -38,6 +38,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-22 | 2026-10-16 | 92,742 | 222 | 82 | 118 | 93,164 | +9,695 (databases 65 to 74: 444 records in 110 files, migrations 64→65 to 73→74, tests +0) |
 | CP-23 | 2026-10-18 | 99,282 | 222 | 82 | 118 | 99,704 | +6,540 (databases 75 to 84: 295 records in 110 files, migrations 74→75 to 83→84, tests +0) |
 | CP-24 | 2026-10-18 | 105,281 | 222 | 82 | 118 | 105,703 | +5,999 (databases 85 to 94: 266 records in 110 files, migrations 84→85 to 93→94, tests +0) |
+| CP-25 | 2026-10-18 | 109,452 | 222 | 82 | 118 | 109,874 | +4,171 (databases 95 to 104: 164 records in 110 files, migrations 94→95 to 103→104, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -1222,3 +1223,90 @@ The dates and attributions of these ten databases were written from memory. The 
 
 - Not verified yet: running on a device, the migrations from version 84 to version 94 on a device, the UI with 94 databases in the list, lint and the release build.
 - The 1100s and the 1110s are the thinnest decades of the catalogue for "coding". The question is the same as before: keep them smaller, or fill them.
+
+## CP-25: databases 95 to 104, 1000 to 1100 (the eleventh century, the century before the 1100s)
+
+Status: ten more databases are in the app, one per decade from the 1090s down to the 1000s: 164 records, migrations from version 94 to version 104, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. Records per database: 1090s 18, 1080s 15, 1070s 21, 1060s 14, 1050s 14, 1040s 16, 1030s 16, 1020s 13, 1010s 21 and 1000s 16. None reaches 50, and all ten are marked "quota": false in tools/databases.json. The build passes (104 databases, 4,900 records), 17 of 17 unit tests pass, and the 54 runnable records (6, 5, 6, 5, 5, 5, 5, 5, 7 and 5) pass against their expected output. Every kind is present in every database, which the unit tests require.
+
+Mood: The eleventh century is the emptiest century of the catalogue so far for things with a dated first public form. Most of its decades have a book and little else. The 1070s and the 1030s had no device or method that I could date without a placement, and I did not like that: four records are placed by convention, and they are the weakest records of the batch. What went well is that the cross-batch check caught several real repeats, and each was fixed rather than padded. The container restart stopped seven helpers in the middle of their work, and they were resumed from their transcripts, so nothing was lost.
+
+Date: 2026-10-18. Totals: Kotlin main 109,452 (CP-24: 105,281), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 109,874 (CP-24: 105,703). The +4,171 is the 110 new Kotlin files for databases 95 to 104 and the regenerated catalogue. The database class, the migrations and the tests did not change; the migrations are generated, with DATABASE_VERSION at 104.
+
+### What changed
+
+- Ten databases, from "Database 95: 1090s coding catalogue" (1090 to 1100) to "Database 104: 1000s coding catalogue" (1000 to 1010). Their records are 18, 15, 21, 14, 14, 16, 16, 13, 21 and 16: 164 new records and 4,900 in the whole catalogue. The new rare records number 86, so the whole catalogue has 1,290.
+- Eleven files per database, 110 in total. Colours are #5D4037, #00897B, #7CB342, #FDD835, #3949AB, #D81B60, #00ACC1, #F4511E, #546E7A and #8E24AA.
+- Spec: tools/databases.json has 104 entries. All ten new databases are marked "quota": false.
+- Documents: CATALOGUE.md and the README overview and structure blocks are regenerated. The README sentence about examples gives the runnable counts for 75 to 104.
+- Process: one helper per database, ten in parallel. Seven were stopped by the restart and resumed. Follow-up helpers completed databases 97 and 101, and repaired the repeats in 95, 100, 101 and 104.
+
+### Placed records
+
+The year of these records is a placement, not the date of a dated making. The details say so.
+
+- 97 DEVICE: Shen Kuo's armillary sphere, gnomon and clepsydra of the Bureau of Astronomy, placed at 1072, the year he took charge of the bureau. The instruments are undated.
+- 101 DEVICE: the astrolabe as al-Biruni described its making and use, in a treatise the sources do not date, placed at 1030. Weak.
+- 101 GUIDE: how the Maya Long Count turns a date into a count of days and back, placed at 1030. Weak: the method is not of the period. No 1030s method was free of repeats, so this was the placement left.
+- 98 DEVICE: the brass astrolabe made at Toledo by Ibrahim ibn Sa'id as-Sahli, dated 1068 by the month of Shawwal that the maker named. The Oxford catalogue record was relayed by a search result and was not opened directly.
+
+### Problems and what was fixed
+
+- 98 had the Kirkdale sundial as its DEVICE, which database 99 also has. 98 now has the Toledo astrolabe.
+- 104 PROJECT on the Danegeld of 991 to 1012 repeated the Danegeld EXAMPLE of 103. It is now a list of events of 1002 to 1010.
+- 104 SYSTEM on Burchard's Decretum included the Corrector of 103 as its book 19. It is now the archbishopric of Gniezno, founded in 1000.
+- 100 had three records on the synod of Sutri and the enthronement of Clement II. The FLEX is now the days from the death of Michael IV to the accession of Constantine IX (1042).
+- 95 PROJECT began at the council of Clermont, which the SYSTEM and FLEX already cover. It now counts the days between Nicaea, Antioch and Jerusalem.
+- 101 GUIDE (sine-table interpolation) repeated database 85, and 101 DEVICE (instruments in the Canon Masudicus) was not supported by any page the helpers could reach. Both were replaced as above. The rule of three was not used, since database 46 has it.
+
+### Repeats left for a decision
+
+Same book or event in more than one record of one database. These are angles, not copies, and they are the first candidates to thin.
+
+- 95: the Clermont council in SYSTEM and FLEX; Su Song's clock tower (DEVICE) and his armillary book (TOOL); Alamut as SYSTEM and EXAMPLE; al-Ghazali as LANGUAGE and PRACTICE.
+- 96: Christmas 1085 in EXAMPLE, PROJECT (weekdays of Christmas, 1080 to 1090) and FLEX; Sima Guang's chronicle in LANGUAGE, PRACTICE and CROSS.
+- 97: the Jalali calendar in SYSTEM, GUIDE and CROSS; Canossa in PRACTICE, EXAMPLE and FLEX; Malik-Shah in two SYSTEM records.
+- 98: the New History of the Tang in LANGUAGE and GUIDE.
+- 100: the Wujing Zongyao's iron fish (DEVICE) and the book (TOOL); Bi Sheng's type in DEVICE and GUIDE.
+- 101 and 103: Cnut in 101 SYSTEM and 103 SYSTEM and CROSS; Yaroslav in 101 PRACTICE and 103 SYSTEM and FLEX.
+- 102: the jiaozi in SYSTEM and PRACTICE; the Ring of the Dove in LANGUAGE and FLEX; Guido in LANGUAGE and CROSS.
+- 103: Ibn al-Haytham's Book of Optics in TOOL and DEVICE; the Fuero de Leon in SYSTEM and FLEX; the Shahnameh in LANGUAGE and FLEX.
+
+Method repeats, the same method applied to different items: Julian and Christmas weekdays (65, 88, 96, 100); pence-to-pounds arithmetic (36, 99, 103); the "days from a death" FLEX family; "summed and ranked" projects; astrolabes (96, 98, 101, 102); the death of rulers (85, 86, 101, 102); dated events sorted (93, 104).
+
+### Facts checked by web search
+
+- Shen Kuo supervised the Bureau of Astronomy from 1072 (a Wei Pu article); Dream Pool Essays usually dated 1088; Shen Kuo died in 1095 (96).
+- Toledan Tables about 1080 (96). Deusdedit's Collection of Canons 1083 to 1087 (96).
+- The Guadalajara astrolabe of 1081/2, by Muhammad ibn Sa'id as-Sabban, on an Oxford exhibit page read with WebFetch (96; single source).
+- Nizam al-Mulk killed 14 October 1092; Malik-Shah died 19 November 1092; the synod of Szabolcs in May 1092; the Liubech congress in 1097; Valencia taken 15 June 1094; El Cid died 10 July 1099; Su Song's book dated 1094 in one archive record (95).
+- The compilers of the Wujing Zongyao, Zeng Gongliang, Ding Du and Yang Weide, and its compilation about 1040 to 1044 (100). Bi Sheng's type in Qingli 1041, from Shen Kuo's account (100; single source). Gesta Chuonradi 1046 (100; one encyclopedia entry).
+- Sutri opened on 20 December 1046; Clement II enthroned on 25 December 1046 (100).
+- The jiaozi office of 1023; fixed denominations of 1024 (102; single source). Micrologus about 1026 (102). The Ring of the Dove 1022 (102). Ibn al-Saffar's astrolabe of Cordoba, 417 AH (102; press coverage). Tafhim 1029 (102).
+- Kirkdale: the inscription names Edward and Tosti, range 1055 to 1065 (98; dropped). The Nizamiyya 1065 or 1067 (98). The Enkyu era from 1069 (98). The Leipian 1039 to 1066 and the Xin Tangshu 1044 to 1060 (98).
+- Papias about 1045 to 1063 (99). Coyanza 1055 by the Coimbra era (99).
+- Gniezno: the meeting of 11 March 1000 (104; two searches). The Dar al-Ilm 1004 or 1005, with the dispute stated (104).
+- Russkaya Pravda about 1017 (103). Ibn al-Haytham's Book of Optics 1011 to 1021 (103). Cnut's Oxford pledge of 1018 (103). The Constitutio de feudis of 28 May 1037 (101). The Tangut script of 1036 (101). Dandanaqan on 23 May 1040 (101).
+
+### Facts from memory, to check
+
+Michael IV died 10 December 1041 and Constantine IX acceded 11 June 1042 (100). Nicaea 19 June 1097, Antioch 3 June 1098 and Jerusalem 15 July 1099 (95). The Clermont council of 27 November 1095 and Ladislas I's death on 29 July 1095 (95). Otto III's death on 24 January 1002, St Brice's Day on 13 November 1002 and Sylvester II's death on 12 May 1003 (104). Stephen I's coronation on 25 December 1000 or 1 January 1001 (104). The Genji about 1005, the Pillow Book about 1002, AElfric's Grammar about 1000 and al-Biruni's Chronology in 1000 (104). Mahmud's reign from 998 to 1030 (102). Canossa on 25 to 28 January 1077 and Gregory VII's election on 22 April 1073 (97). Manzikert on 26 August 1071 (97). The Jalali reform of 1079 (97). Kekaumenos from 1075 to 1078 (97).
+
+### Problems
+
+- Thin decades. All ten are below 50 records, as listed above. The 1000s and the 1030s are the thinnest.
+- Empty kinds. Database 97 had no DEVICE, and database 101 had no DEVICE, GUIDE and PROJECT. They were filled as described above.
+- Placed records. Four records (above) carry a year by convention. They are the first decision for the user.
+- Single sources. The Toledo astrolabe (98), the Guadalajara astrolabe (96), the Coyanza era date (99), Papias (99), the Dar al-Ilm date (104) and the Ibn Hazm date are single-source or one-account dates.
+
+### How I checked it
+
+- Unit tests: 17 of 17 pass. The Gradle run ended with BUILD SUCCESSFUL, no failures and no errors.
+- Examples: each new database has its own verifier with exact expected output, worked out by hand before each run. The 54 runnable records of databases 95 to 104 pass (6, 5, 6, 5, 5, 5, 5, 5, 7 and 5). The verifiers for databases 97 and 101 were run again after their records were added.
+- Structure: the generator checks 104 databases and 4,900 records. The new databases are quota false and keep every kind. Years are inside each range, and the record text has no provenance phrases, dollar signs or Cyrillic.
+- Cross-batch: the rare-word check (a title word that appears in at most three records of the whole catalogue) was run on every pair involving the batch. It shows 248 pairs, 68 of them with both sides in the batch. The repeats above were fixed or listed.
+- Whole catalogue: 4,900 records. The only titles that repeat are "Erlang" and "Software inspections", as before.
+
+### Notes
+
+- Not verified yet: running on a device, the migration from version 94 to version 104 on a device, the UI with 104 databases in the list, lint and the release build.
+- The four placed records and the 98 astrolabe are the first candidates for a decision. The question from earlier batches is open for the thinnest decades: keep them smaller, or fill them.

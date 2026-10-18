@@ -1412,4 +1412,154 @@ The catalogue of database 94 (1100 to 1110) has the same ten kinds:
 | Projects | 1 | The six orders of the Mishnah, with their tractate counts totalled |
 | Flex | 3 | Days from Godfrey's death to Baldwin I's coronation at Bethlehem, Days from Henry I's coronation to the battle of Tinchebrai and Days from Baldwin I's coronation to the death of Anselm |
 | Cross-code | 1 | Days from Henry I's coronation to Anselm's death in Python and C |
+
+The catalogue of database 95 (1090 to 1100) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | Nizam al-Mulk's Siyasatnama, the Persian book of government, Roscelin's teaching that universals are only a breath of the voice, Al-Ghazali's Incoherence of the Philosophers, an Arabic critique of Avicenna and The Chanson de Roland, an Old French epic of the rear guard at Roncevaux |
+| Systems | 5 | The Nizari state of Alamut, taken by Hasan-i Sabbah in 1090, The synod of Szabolcs in Hungary, a church council of May 1092, Durham Cathedral, begun in 1093 by Bishop William de St-Calais, The council of Clermont and Urban II's call to the First Crusade, 1095 and The congress of Liubech, where the princes of Rus agreed that each keeps his patrimony |
+| Devices | 1 | Su Song's water-driven clock tower at Kaifeng, completed in 1092 |
+| Tools | 1 | Su Song's New Design of the Armillary Sphere and Celestial Globe |
+| Practices | 1 | Al-Ghazali's withdrawal from teaching into a Sufi retreat of about ten years |
+| Guides | 1 | How a laisse of an Old French epic is tested for its assonance |
+| Examples | 1 | The years from the taking of Alamut to its fall, counted in code |
+| Projects | 1 | Days between three dated steps of the First Crusade, from Nicaea to Jerusalem |
+| Flex | 2 | Days from the murder of Nizam al-Mulk to the death of Malik-Shah and Days from the death of Ladislas I of Hungary to Urban II's call at Clermont |
+| Cross-code | 1 | Days from El Cid's taking of Valencia to his death in Python and C |
+
+The catalogue of database 96 (1080 to 1090) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | The Dream Pool Essays, a Chinese miscellany of natural knowledge and technical notes, Sima Guang's Comprehensive Mirror to Aid in Government, a chronicle from 403 BC to 959, Qabus-nama, a Persian book of advice a prince wrote for his son and Deusdedit's Collection of Canons, a church-law collection for the papal reform |
+| Systems | 3 | The Domesday survey of England, taken by sworn juries in 1086, The Yuanfeng reform of the Song central offices, 1080 to 1082 and The Carthusian order, founded at the Grande Chartreuse in 1084 |
+| Devices | 1 | The Guadalajara astrolabe of 1081/2, credited to Muhammad ibn Sa'id as-Sabban |
+| Tools | 1 | The Toledan Tables of al-Zarqali, astronomical tables made at Toledo about 1080 |
+| Practices | 1 | Sima Guang's kaoyi notes, which weigh the conflicting accounts of one event |
+| Guides | 1 | How a bow's chord follows from its diameter and sagitta by a right triangle |
+| Examples | 1 | Christmas 1085 in the Julian reckoning, turned into Gregorian dates by a six-day gap |
+| Projects | 1 | The weekdays of Christmas Day in the Julian reckoning for the years 1080 to 1090 |
+| Flex | 1 | Days from the Christmas council at Gloucester in 1085 to the death of William I |
+| Cross-code | 1 | The years from 403 BC to 959 AD covered by Sima Guang's chronicle, in Python and C |
+
+The catalogue of database 97 (1070 to 1080) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Adam of Bremen's history of the bishops of Hamburg, written in Latin, Somadeva's Ocean of the Streams of Story, a Sanskrit collection of tales, The Izbornik of Sviatoslav of 1073, a dated Old Russian anthology, Kekaumenos's Strategikon, a Greek book of advice by a Byzantine general, Yusuf Khass Hajib's Kutadgu Bilig, a Turkic poem of rule and conduct and Zhang Zai's Western Inscription, an essay on Heaven as father and Earth as mother |
+| Systems | 5 | The Song examinations of 1071, which dropped poetry for the classics and policy essays, The Dictatus papae, twenty-seven statements of papal power of 1075, The Fuero de Jaca of 1077, a written charter of town rights in Aragon, The Jalali calendar of Malik-Shah, a solar calendar of 1079 and The Isfahan observatory of Malik-Shah, staffed by Khayyam's astronomers |
+| Devices | 1 | Shen Kuo's armillary sphere, gnomon and clepsydra of the Bureau of Astronomy, from 1072 |
+| Tools | 1 | Omar Khayyam's Treatise on Demonstration of Problems of Algebra |
+| Practices | 2 | Gregory VII's Lenten synod of 1074, which barred simony and married priests and Henry IV's penance at Canossa in January 1077, a public submission to the pope |
+| Guides | 1 | How the 33-year cycle of the Jalali calendar places its leap years |
+| Examples | 1 | The days of Henry IV's penance at Canossa, counted with both ends included |
+| Projects | 1 | Sorting ten Japanese words by the order of the iroha poem |
+| Flex | 2 | Days from the Battle of Manzikert to the election of Gregory VII and Days from Gregory VII's election to Henry IV's penance at Canossa |
+| Cross-code | 1 | The lengths of the Jalali months in a common year and a leap year, in Python and C |
+
+The catalogue of database 98 (1060 to 1070) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | The Sarashina Diary, a Japanese account of a woman's journeys and later years, The New History of the Tang, a Song dynastic history finished in 1060, The Carmen on the battle of Hastings, a Latin poem praising the Norman victory and The Latin life of King Edward who rests at Westminster, written in the 1060s |
+| Systems | 2 | The Nizamiyya of Baghdad, a college for Shafi'i law founded by Nizam al-Mulk and The Norman kingdom of England, begun at William's coronation on Christmas Day 1066 |
+| Devices | 1 | The Toledo astrolabe of Ibrahim ibn Sa'id as-Sahli, dated 1068 by a named month |
+| Tools | 1 | The Leipian, a Song dictionary of Chinese characters sorted under radicals |
+| Practices | 1 | The Enkyu review of estate deeds, in which Go-Sanjo's court tested land claims |
+| Guides | 1 | How a juan of the New History of the Tang is traced to its part of the work |
+| Examples | 1 | The weekdays of Stamford Bridge and Hastings, counted in the Julian calendar |
+| Projects | 1 | The gaps between four dates of 1066, from Harold's crowning to Hastings |
+| Flex | 1 | Years from Alp Arslan's accession to the battle of Manzikert |
+| Cross-code | 1 | Days from Edward the Confessor's death to William's crowning in Python and C |
+
+The catalogue of database 99 (1050 to 1060) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | The Elementarium of Papias, a Latin word book of about 1050 |
+| Systems | 5 | The Great Schism of 1054, when Rome and Constantinople excommunicated each other, Tughril's entry into Baghdad, which gave the Seljuks the sultanate in 1055, The Council of Coyanza, a Leonese assembly whose acts are dated 1055, The 1057 metropolitan examination, marked by Ouyang Xiu for plain prose and In nomine Domini, the 1059 decree that gave papal elections to the cardinal bishops |
+| Devices | 1 | The Kirkdale sundial, an Anglo-Saxon dial whose inscription names Earl Tosti |
+| Tools | 1 | Al-Mawardi's Ordinances of Government, a manual of the caliphate's offices |
+| Practices | 1 | The profession of faith that Berengar of Tours signed at the Roman synod of 1059 |
+| Guides | 1 | How Jia Xian's table of coefficients for extracting roots is built, one row at a time |
+| Examples | 1 | How many pennies made the English pound under Edward the Confessor |
+| Projects | 1 | Three dated events from 1054 to 1066, sorted with the days between them |
+| Flex | 1 | Days from the Great Schism to the battle of Hastings |
+| Cross-code | 1 | Days from the Great Schism to the 1059 papal decree in Python and C |
+
+The catalogue of database 100 (1040 to 1050) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | Wipo's Gesta Chuonradi, a biography of Emperor Conrad II written for Henry III, Wipo's Tetralogus, a Latin poem of praise and advice for the young Henry III and Qushayri's Risala, an Arabic manual of Sufi terms and practice |
+| Systems | 4 | The Qingli reforms of Fan Zhongyan, ten proposals for better government in 1043, The Qingyuan settlement of 1044, a border peace with the Tangut state of Xia, The imperial school at Constantinople, with law and philosophy faculties, founded in 1045 and The synod of Sutri, which dealt with three rival claimants to the papacy in 1046 |
+| Devices | 2 | Bi Sheng's movable type of baked clay, described by Shen Kuo and The south-pointing fish of the Wujing Zongyao, an iron fish that turned south in water |
+| Tools | 1 | The Wujing Zongyao, a Song military compendium with some of the oldest written gunpowder formulas |
+| Practices | 1 | Simony, the sale of the papacy by Benedict IX to Gregory VI in 1045 |
+| Guides | 1 | How a page of clay type is set in a frame, printed and released for the next page |
+| Examples | 1 | The enthronement of Clement II on 25 December 1046, dated in two calendars |
+| Projects | 1 | The Song reign periods Kangding and Qingli, with their calendar years counted |
+| Flex | 1 | Days from the death of Michael IV to the accession of Constantine IX |
+| Cross-code | 1 | The weekdays of Christmas Day from 1040 to 1050, computed in Python and C |
+
+The catalogue of database 101 (1030 to 1040) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | The Tangut script, a writing system issued in 1036 for the Western Xia state, al-Biruni's Kitab al-Hind, an Arabic study of Indian religion, science and customs and The Arjunawiwaha, an Old Javanese kakawin composed at the court of Airlangga |
+| Systems | 5 | Conrad II's Constitutio de feudis, a law that made lesser fiefs in Italy heritable, Li Yuanhao's imperial title and the Tangut state of Western Xia from 1038, The Seljuq victory at Dandanaqan, which ended Ghaznavid rule in Greater Khorasan, The end of the Umayyad caliphate of Cordoba, when its notables deposed Hisham III and Cnut's North Sea realm, which broke apart after his death in 1035 |
+| Devices | 1 | The astrolabe as al-Biruni described its making and use, in a treatise the sources do not date |
+| Tools | 1 | al-Biruni's Mas'udic Canon, an astronomical handbook with tables, dedicated to Mas'ud of Ghazni |
+| Practices | 1 | Yaroslav's school at Novgorod, where three hundred children were set to learn letters |
+| Guides | 1 | How the Maya Long Count turns a date into a count of days and back |
+| Examples | 1 | The Tangut script's roughly 6,000 characters, counted in the bits needed to index them |
+| Projects | 1 | The day of the year on which five rulers of the 1030s died |
+| Flex | 1 | Days from Conrad II's Constitutio de feudis to the battle of Dandanaqan |
+| Cross-code | 1 | Days from the battle of Stiklestad to Conrad II's Constitutio in Python and C |
+
+The catalogue of database 102 (1020 to 1030) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | Ibn Sina's Canon of Medicine, a five-book encyclopedia of medicine, The Ring of the Dove, Ibn Hazm's treatise on love and lovers and Guido of Arezzo's Micrologus, a short treatise on music and chant |
+| Systems | 1 | The Jiaozi office of Sichuan, a state bureau for paper money from 1023 |
+| Devices | 1 | Ibn al-Saffar's brass astrolabe of Cordoba, dated 417 AH |
+| Tools | 1 | al-Biruni's Kitab al-Tafhim, an astrology handbook in Arabic and Persian |
+| Practices | 2 | Sichuan paper notes in fixed denominations from one to ten guan and The burning of heretics at Orleans in 1022 |
+| Guides | 1 | How a hill's height and the dip of the horizon give the Earth's radius |
+| Examples | 1 | Mahmud of Ghazni's reign, 998 to 1030, counted in years |
+| Projects | 1 | Days between three deaths of 1024 and 1025, in date order |
+| Flex | 1 | Years from the Ring of the Dove to the death of Ibn Sina |
+| Cross-code | 1 | The positions of three notes in Guido's gamut, in Python and C |
+
+The catalogue of database 103 (1010 to 1020) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 5 | Ferdowsi's Shahnameh, the Persian Book of Kings, completed in 1010, Thietmar of Merseburg's Chronicon, a Latin history of the Saxon and Ottonian kings, Dudo of Saint-Quentin's history of the first dukes of Normandy, Wulfstan's Sermo Lupi ad Anglos, a sermon to the English in the Danish wars and Ly Thai To's edict moving the capital to Thang Long, 1010 |
+| Systems | 4 | The regency of Fujiwara no Michinaga, which gave the Fujiwara control of the court in 1016, The Russkaya Pravda, the law code of the Rus', begun with the Pravda of Yaroslav, The Fuero de Leon, a charter of town rights granted by Alfonso V in 1017 and Cnut's law code, pledged at Oxford in 1018 and issued as the Winchester laws about 1020 |
+| Devices | 1 | Ibn al-Haytham's dark chamber, a room with a pinhole that throws an image on its wall |
+| Tools | 3 | Al-Karaji's al-Fakhri, an algebra named for the vizier Fakhr al-Mulk, Ibn al-Haytham's Book of Optics, seven books written in Cairo and The Cefu yuangui, a Song encyclopedia of imperial records, completed in 1013 |
+| Practices | 1 | Burchard of Worms's Corrector, a list of questions a confessor put to penitents |
+| Guides | 1 | How al-Karaji's argument shows the cubes of 1 to n add up to a square |
+| Examples | 1 | The Danegeld of 1012 counted in pennies, 48000 pounds at 240 pennies to the pound |
+| Projects | 1 | Reign lengths of Ichijo, Sanjo and Go-Ichijo, emperors of Japan from 986 to 1036 |
+| Flex | 3 | Years from Ferdowsi's Shahnameh of 1010 to his death in 1020 or 1025, Years from the short Pravda of Yaroslav to the expanded code of his sons in 1072 and Years from the Fuero de Leon of 1017 to the Cortes of Leon of 1188 |
+| Cross-code | 1 | Days from Aethelred II's death to Cnut's death in Python and C |
+
+The catalogue of database 104 (1000 to 1010) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | The Tale of Genji, a long prose romance of the Heian court, The Pillow Book of Sei Shonagon, lists and sketches from the Heian court, AElfric's Grammar, a Latin grammar taught in Old English and Al-Zahrawi's Kitab al-Tasrif, a medical encyclopedia that ends with surgery |
+| Systems | 3 | The Dar al-Ilm, a House of Knowledge with a library at Cairo, The coronation of Stephen I of Hungary with a crown sent by Pope Sylvester II and The archbishopric of Gniezno, founded in 1000 at the meeting of Otto III and Boleslaw I |
+| Devices | 1 | The Mokattam observatory said to have been set up for Ibn Yunus near Fustat |
+| Tools | 2 | Al-Biruni's Chronology of Ancient Nations, a survey of calendars and eras and Ibn Yunus's Hakimite Zij, a set of astronomical tables for Cairo |
+| Practices | 1 | Masoretic points and accents, fixed in the Leningrad Codex of 1008 |
+| Guides | 1 | How a product of two cosines becomes half a sum of cosines |
+| Examples | 1 | Leap years of 1000 to 1010 under the Julian rule and under the Gregorian rule |
+| Projects | 1 | Dated events of 1002 to 1010, sorted and spaced by years |
+| Flex | 1 | Days from St Brice's Day to the death of Sylvester II |
+| Cross-code | 1 | Days from the death of Otto III to St Brice's Day in Python and C |
 <!-- END GENERATED CATALOGUE -->
