@@ -45,7 +45,7 @@ ALLOWED_DUPLICATE_TITLES = {"Erlang", "Software inspections"}  # already in data
 ENTRY = re.compile(r"^    entry\(\n(.*?)^    \),", re.S | re.M)
 TITLE = re.compile(r'title = "([^"]*)"')
 KIND = re.compile(r"kind = Kind\.(\w+)")
-YEAR = re.compile(r"year = (\d{4})")
+YEAR = re.compile(r"year = (\d{3,4})")
 DATABASE_ID = re.compile(r"databaseId = (\d+)")
 CYRILLIC = re.compile(r"[\u0400-\u04FF]")
 

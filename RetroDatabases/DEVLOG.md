@@ -39,6 +39,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-23 | 2026-10-18 | 99,282 | 222 | 82 | 118 | 99,704 | +6,540 (databases 75 to 84: 295 records in 110 files, migrations 74→75 to 83→84, tests +0) |
 | CP-24 | 2026-10-18 | 105,281 | 222 | 82 | 118 | 105,703 | +5,999 (databases 85 to 94: 266 records in 110 files, migrations 84→85 to 93→94, tests +0) |
 | CP-25 | 2026-10-18 | 109,452 | 222 | 82 | 118 | 109,874 | +4,171 (databases 95 to 104: 164 records in 110 files, migrations 94→95 to 103→104, tests +0) |
+| CP-26 | 2026-10-18 | 113,927 | 222 | 82 | 118 | 114,349 | +4,475 (databases 105 to 114: 174 records in 110 files, migrations 104→105 to 113→114, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -1310,3 +1311,102 @@ Michael IV died 10 December 1041 and Constantine IX acceded 11 June 1042 (100). 
 
 - Not verified yet: running on a device, the migration from version 94 to version 104 on a device, the UI with 104 databases in the list, lint and the release build.
 - The four placed records and the 98 astrolabe are the first candidates for a decision. The question from earlier batches is open for the thinnest decades: keep them smaller, or fill them.
+
+## CP-26: databases 105 to 114, 900 to 1000 (the tenth century, the century before the 1000s)
+
+Status: ten more databases are in the app, one per decade from the 990s down to the 900s: 174 records, migrations from version 104 to version 114, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. Records per database: 990s 18, 980s 20, 970s 17, 960s 17, 950s 14, 940s 17, 930s 21, 920s 16, 910s 14 and 900s 20. None reaches 50, and all ten are marked "quota": false in tools/databases.json. The build passes (114 databases, 5,074 records), 17 of 17 unit tests pass, and the 71 runnable records (7, 7, 7, 7, 5, 6, 9, 7, 7 and 9) pass against their expected output. Every kind is present in every database, which the unit tests require.
+
+Mood: This is the thinnest century of the catalogue. For the 910s to the 930s almost nothing with a dated first public form turned up for several kinds, and 18 of the 174 new records are placed by an anchor, not dated by their own sources. That is a real change in quality, and I want it in the log plainly: a placed record says where its year comes from, but it is not a fact about the item. The part that went well is the cross-batch check, which found five same-item repeats between neighbouring databases, and each was removed rather than kept for coverage.
+
+Date: 2026-10-18. Totals: Kotlin main 113,927 (CP-25: 109,452), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 114,349 (CP-25: 109,874). The +4,475 is the 110 new Kotlin files for databases 105 to 114 and the regenerated catalogue. The database class and the tests did not change; the migrations are generated, with DATABASE_VERSION at 114.
+
+### What changed
+
+- Ten databases, from "Database 105: 990s coding catalogue" (990 to 1000) to "Database 114: 900s coding catalogue" (900 to 910). Their records are 18, 20, 17, 17, 14, 17, 21, 16, 14 and 20: 174 new records and 5,074 in the whole catalogue. The new rare records number 87, so the whole catalogue has 1,377.
+- Eleven files per database, 110 in total. Colours are #6D4C41, #C0CA33, #880E4F, #004D40, #BF360C, #263238, #1B5E20, #0D47A1, #4A148C and #E65100.
+- Spec: tools/databases.json has 114 entries. All ten new databases are marked "quota": false.
+- Generator: tools/build_catalogue.py read years as four digits only, so the records of the 900s to the 990s (three-digit years) broke it. The year pattern now accepts three or four digits. This is the only tool change in the batch.
+- Documents: CATALOGUE.md and the README overview and structure blocks are regenerated. The README sentence about examples now gives the runnable counts for 75 to 114.
+- Process: one helper per database, ten in parallel. Seven were stopped by a container restart and resumed. Follow-up helpers filled empty kinds (109 DEVICE, 111 DEVICE) and replaced repeated records (112 GUIDE, 114 GUIDE).
+
+### Placed records (18)
+
+The year of these records is an anchor, not the date of a dated making. Each record's details say so.
+
+- 105: Gerbert's armillary sphere, placed at 996 (the year of Richer's account); a list of five reigns of the 990s, placed at 997.
+- 107: a GUIDE on the Song day counted in 100 ke, placed at 977 (the year of Zhang Sixun's instrument, not of the method).
+- 108: the Guangzheng stone classics, placed at 965 (the fall of Later Shu); a GUIDE on sign-degree longitude, placed at 964 (the year of al-Sufi's book).
+- 109: the golden throne with mechanical lions and birds, placed at 959 (the death of Constantine VII); Hywel Dda's laws, placed at 950 (his death); a runic-alphabet GUIDE, placed at 950 (the Jelling stone).
+- 110: the Greek fire siphon, placed at 941 (the Rus attack); al-Farabi's Ihsa al-ulum, placed at 950; Ibn Muqla's rule for six scripts, placed at 940; a GUIDE on farsakh route totals, placed at 947.
+- 111: the aqueducts and underground channels of Madinat al-Zahra, placed at 936 (the founding of the palace city). Excavation, not a dated text, is the source.
+- 112: the Burghal Hidage, placed at 924 (the accession of Athelstan); a GUIDE on kaeriten reading marks, placed at 930 (the death of Emperor Daigo).
+- 113: the palm-leaf ticket pot of Uttiramerur, placed at 919 (the year of the inscription that describes it). Weak: a lot pot is a stretch for "device".
+- 114: the Tang fish tally, placed at 907 (the fall of the Tang); a GUIDE on Thabit ibn Qurra's rule for amicable pairs, placed at 901 (his death).
+
+Weakest first: the 113 pot, the 111 aqueducts, the 112 kaeriten GUIDE and the 110 farsakh GUIDE.
+
+### Problems and what was fixed
+
+- 109 Mahberet and 108 Mahberet (a Hebrew dictionary of about 960) were the same record. The 109 copy was removed.
+- 110 Huajian ji and 111 Huajianji were the same anthology. The 111 copy was removed.
+- 113 and 114 both had the Fatimid caliphate founded in 909 or 910. The 113 copy was removed.
+- 111 PRACTICE on the Law Speaker's recital and 112 GUIDE on the same Althing law recital repeated each other. The 112 GUIDE was replaced by a kaeriten method.
+- 71 and 114 both had a method for counting the sounds of a waka. The 114 GUIDE was replaced by Thabit ibn Qurra's rule for amicable pairs.
+- 112 SOAS astrolabe (927 or 928, 315 AH) rests on one personal web entry whose dating and authenticity were questioned. It is kept as the DEVICE of 112, and it is the first candidate to drop.
+- 107 Zhang Sixun's instrument: the search found a mercury drive, not water, so the record names the instrument without a water drive.
+
+### Repeats left for a decision
+
+Same book, event or person in more than one record of one database. These are angles, not copies, and they are the first candidates to thin.
+
+- 105: al-Khujandi's 994 readings at Rayy (DEVICE, EXAMPLE, CROSS and GUIDE); Richer's Historiae (LANGUAGE and EXAMPLE); Olaf Tryggvason (SYSTEM and FLEX).
+- 106: Ibn Sahl (DEVICE, GUIDE, FLEX); Theophanu's regency (SYSTEM and two FLEX); the Peace of God (PRACTICE and FLEX); the Fihrist (TOOL and CROSS).
+- 107: al-Azhar (SYSTEM, EXAMPLE and FLEX); the Taiping Guangji (LANGUAGE, EXAMPLE and FLEX); Zhang Sixun (DEVICE and FLEX).
+- 108: al-Sufi's Book of the Fixed Stars (TOOL, CROSS and FLEX).
+- 109: the Gosen wakashu (LANGUAGE and EXAMPLE); the gwageo (SYSTEM and FLEX).
+- 110: the Buyid entry into Baghdad and the Khitan take of Kaifeng (SYSTEM and FLEX each).
+- 111: the Althing (SYSTEM, PRACTICE, EXAMPLE, and the 930 founding); Madinat al-Zahra (SYSTEM and DEVICE).
+- 112: Balhae (SYSTEM, CROSS and FLEX); the Engishiki (SYSTEM, PRACTICE and FLEX); Athelstan (FLEX and PROJECT).
+- 113: the Uttiramerur inscriptions (DEVICE, CROSS and EXAMPLE).
+- 114: Former Shu and Later Baekje (SYSTEM, EXAMPLE and FLEX each); the Kokinshu (LANGUAGE and PROJECT).
+
+Method repeats, the same method on different items: the "days from an event" FLEX family; the placed reign and death anchors; the reign-length and anthology projects.
+
+### Facts checked by web search
+
+Helpers checked the dates below in web search (standard mode), and a few by WebFetch. Each is a single source or a summary unless stated.
+
+- 105: al-Khujandi's 994 meridian readings at Rayy (tilt and latitude; one summary); Richer's Historiae about 996; Chunhua Ge Tie compiled 992; All Souls at Cluny disputed (998 most often); Abbo of Fleury abbot 988, killed 1004; Abu'l-Wafa's arithmetic 961 to 976, dropped.
+- 106: Taiping Yulan compiled 977 to 983, 1000 juan; the Fihrist dated 987; Ibn Sahl about 984 (983 to 985 in one account).
+- 107: Codex Vigilanus completed 976; Zhang Sixun's instrument completed 977 or 979, with a mercury drive; the Shu canon 971 to 983; al-Azhar begun 4 April 970; Taiping Guangji 977 to 978.
+- 108: Mahberet, a Hebrew dictionary, dated about 960; Bal'ami's commission dated 963; the Guangzheng stones at Chengdu; al-Sufi's book dated 964 (965 in some accounts).
+- 109: the Nobi angeom beop of 956 or 958 (one page); the Gosen wakashu ordered 951; Hywel Dda died 950; the Jelling stone; al-Uqlidisi's book written at Damascus 952 to 953; Tentoku 4 (960).
+- 110: the Dunhuang star chart dated 649 to 684 (so the 940 plan was dropped); the Huajian ji compiled 940; the Old Book of Tang presented 945; Narshakhi's dedication 943 or 944; Ibn Muqla died 940 (one site).
+- 111: the Althing's traditional founding in 930; Youzhou made Nanjing in 938; Wamyo Ruijusho 931 to 938, dates disputed.
+- 112: the Engishiki completed in 927 with 27 norito in book 8; the Khitan large script 920 (most accounts); the Balhae taken by the Khitan in 926 (one reference gives 936); the SOAS astrolabe 927 or 928 (one personal web entry, weak).
+- 113: the Uttiramerur inscriptions dated 919 and 921 in one account, 920 in another; the Fatimid enthronement at Raqqada on 5 January 910; Mahdia ordered built 916; Ibn Wahshiyya's cipher treatise dated about 1022 (not used).
+- 114: the Fatimid dynasty dated 909, with January 910 in another account; the Later Baekje proclaimed 900 at Wansan; the Later Goguryeo founded 901; Regino of Prum compiled about 906.
+
+### Facts from memory, to check
+
+Michael IV, Constantine VII and the Greek fire episode of 941 (110). The Old Book of Tang and the New Book of Tang dates (110). The Khitan takeover of Kaifeng on 947. Otto I's marriage and the Lechfeld battle of 955 (109). The Althing's Christianity of 999 or 1000 (105). The Venice golden bull of 992 (105). The Kokinshu of 905 with 1,111 poems (114). Thabit ibn Qurra's death in 901 (114). The Burghal Hidage's dating (112). The Chinese Five Dynasties, Later Tang and Later Han dates (110 to 113). Many reign dates for the Samanids, Abbasids, Cordoba emirs and Byzantine emperors.
+
+### Problems
+
+- Thin decades. All ten are below 50 records, as listed above.
+- Empty kinds. Database 109 had no DEVICE, and database 111 had no DEVICE; each was filled with a placed record (above).
+- Placed records. Eighteen records carry an anchor year. They are the first decision for the user.
+- Single sources. The SOAS astrolabe (112), the Uttiramerur date (113), Ibn Muqla's death (110), the Gosen wakashu date (109) and the Hywel Dda and Jelling dates (109) rest on one source or on a summary.
+
+### How I checked it
+
+- Unit tests: 17 of 17 pass. The Gradle run ended with BUILD SUCCESSFUL, no failures and no errors.
+- Examples: each new database has its own verifier with exact expected output, worked out by hand before each run. The 71 runnable records of databases 105 to 114 pass (7, 7, 7, 7, 5, 6, 9, 7, 7 and 9). The verifiers for 112 and 114 were run again after their GUIDE records were replaced.
+- Structure: the generator checks 114 databases and 5,074 records. The new databases are quota false and keep every kind. Years are inside each range, and the record text has no provenance phrases, dollar signs or Cyrillic.
+- Cross-batch: the rare-word check (a title word that appears in at most three records of the whole catalogue) was run on every pair involving the batch. It shows 211 pairs, 76 of them with both sides in the batch. The five same-item repeats were removed or replaced, and the others are listed above.
+- Whole catalogue: 5,074 records. The only titles that repeat are "Erlang" and "Software inspections", as before.
+
+### Notes
+
+- Not verified yet: running on a device, the migration from version 104 to version 114 on a device, the UI with 114 databases in the list, lint and the release build.
+- The 900s to the 990s are the thinnest decades of the catalogue. The question from earlier batches is open: keep them smaller, or fill them, or drop the placed records.

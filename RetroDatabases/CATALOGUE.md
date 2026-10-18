@@ -1562,4 +1562,154 @@ The catalogue of database 104 (1000 to 1010) has the same ten kinds:
 | Projects | 1 | Dated events of 1002 to 1010, sorted and spaced by years |
 | Flex | 1 | Days from St Brice's Day to the death of Sylvester II |
 | Cross-code | 1 | Days from the death of Otto III to St Brice's Day in Python and C |
+
+The catalogue of database 105 (990 to 1000) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | Richer of Reims's Historiae, four books of Frankish history from 888 to 998, Aelfric's Catholic Homilies, the First Series, English sermons for the church year and The Beowulf manuscript, the Nowell Codex, copied in England about 1000 |
+| Systems | 4 | A Byzantine golden bull of 992 lowers the customs duties on Venetian traders, Olaf Tryggvason becomes king of Norway in 995 and presses Christian baptism on his people, Otto III is crowned emperor at Rome in 996 by his cousin Pope Gregory V and Iceland's Althing adopts Christianity on the ruling of the lawspeaker Thorgeir |
+| Devices | 2 | The large instrument at Rayy with which al-Khujandi took meridian readings in 994 and Gerbert's armillary sphere, one of the teaching instruments at Reims |
+| Tools | 1 | The Chunhua Ge Tie, a set of model calligraphy compiled for Emperor Taizong in 992 |
+| Practices | 1 | The 2 November day of prayer for the dead, set at Cluny by Odilo |
+| Guides | 1 | How the sun's noon heights at the two solstices give the tilt of the ecliptic |
+| Examples | 2 | The tilt of the ecliptic read at Rayy in 994, in decimal degrees and in seconds of arc and The years covered by Richer's Historiae, from 888 to 998, counted |
+| Projects | 1 | Reigns of five rulers who held power in the 990s, summed and ranked |
+| Flex | 2 | Years from the battle of Maldon to Olaf Tryggvason's accession in Norway and Years from the start of Basil II's sole reign to the Venetian golden bull |
+| Cross-code | 1 | Rayy's latitude of 35 degrees 34 minutes 38.45 seconds in decimal degrees, in Python and C |
+
+The catalogue of database 106 (980 to 990) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 5 | The Taiping Yulan, a Song encyclopedia of 1000 juan in 55 sections, The Hudud al-'Alam, an anonymous geography of the regions of the world in Persian, Xu Xuan's revised Shuowen jiezi, the dictionary of characters under 540 radicals, The Sanbo-e, a Japanese Buddhist book of tales by Minamoto no Tamenori and Al-Muqaddasi's Best Divisions, a geography of the Islamic lands written in Arabic |
+| Systems | 5 | Theophanu's regency for her son Otto III, from the death of Otto II in 983, Hugh Capet is chosen king of the Franks, and his line rules France for centuries, Rajaraja I comes to the Chola throne of southern India, The baptism of Vladimir of Kiev, dated 988 in the Primary Chronicle and Le Hoan takes the imperial title and founds the Early Le dynasty of Dai Viet |
+| Devices | 1 | Ibn Sahl's treatise on burning mirrors and lenses, a study of curved surfaces that focus light |
+| Tools | 1 | Ibn al-Nadim's Fihrist, a bookseller's catalogue of books in Arabic and other tongues |
+| Practices | 1 | The Peace of God, oath-backed truces proclaimed at Charroux in 989 |
+| Guides | 1 | How a fixed ratio sets the bend of a ray at a surface, in the sine form used today |
+| Examples | 1 | Otto II's sole rule, from 973 to 983, worked out in code |
+| Projects | 1 | The accession years of five rulers of the 980s, put in order with their gaps |
+| Flex | 3 | Years from the start of Theophanu's regency in 983 to Hugh Capet's election in 987, Years from Ibn Sahl's treatise of 984 to the founding of the Ming dynasty in 1368 and Years from the Peace of God at Charroux in 989 to the end of Theophanu's regency in 991 |
+| Cross-code | 1 | The ten sections of the Fihrist, six Islamic and four other, counted in Python and C |
+
+The catalogue of database 107 (970 to 980) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | The Taiping Guangji, a Song collection of 500 scrolls of tales compiled under Li Fang, The Old History of the Five Dynasties, a 150-chapter official history directed by Xue Juzheng and The Codex Vigilanus, a Latin chronicle manuscript completed at Albelda in 976 |
+| Systems | 2 | The al-Azhar mosque at Cairo, begun on 4 April 970 under Jawhar al-Siqilli and opened in 972 and The Jeonsi-gwa, the land system of Goryeo Korea that paid officials with fields and firewood land, set up in 976 |
+| Devices | 1 | Zhang Sixun's clock-tower armillary sphere, completed in 977 or 979 |
+| Tools | 2 | The Kaibao bencao, the revised materia medica that Emperor Taizu of Song ordered in 973 and Ibn Hawqal's Surat al-Ard, a geography of the Islamic lands with regional maps, in its revised form of 977 |
+| Practices | 2 | The Shu canon, a Buddhist canon printed from woodblocks carved at Chengdu from 971 to 983 and The Regularis concordia, the monastic customary drawn up at Winchester about 970 |
+| Guides | 1 | How a Song day counted in 100 ke is read in hours and minutes |
+| Examples | 2 | The building time of al-Azhar, 27 months by one account and about 36 by another, counted in code and The dates given for the Taiping Guangji, 977, 978 and 981, counted in code |
+| Projects | 1 | Four realms absorbed by the Song from 971 to 979, and the years between them |
+| Flex | 2 | Years from the opening of al-Azhar in 972 to the Taiping Guangji in 978 and Years from Zhang Sixun's armillary sphere of 977 to Su Song's clock tower of 1092 |
+| Cross-code | 1 | The years of carving of the Shu canon, 971 to 983, counted in Python and C |
+
+The catalogue of database 108 (960 to 970) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Menahem ibn Saruq's Mahberet, a Hebrew dictionary compiled at Cordoba for Hasdai ibn Shaprut and Bal'ami's Tarikhnama, a Persian history made from al-Tabari's annals for the Samanid court |
+| Systems | 5 | The Song dynasty, founded in 960 when Zhao Kuangyin took the throne from the Later Zhou, Otto I's coronation as emperor at Rome in 962, often taken as the start of the Holy Roman Empire, The Samanid emir Mansur I takes power at Bukhara in 961 and rules until 976, The Northern Song takes Later Shu in 965, ending Meng Chang's kingdom based at Chengdu and The Fatimid conquest of Egypt in 969 and the founding of al-Qahira, the palace city that became Cairo |
+| Devices | 1 | The mechanical throne of the Byzantine emperors, as Liutprand of Cremona described it on his embassy of 968 |
+| Tools | 1 | al-Sufi's Book of the Fixed Stars, a revised star catalogue with pictures of the constellations |
+| Practices | 1 | The Guangzheng stone classics, Confucian texts carved on stone at Chengdu for the Later Shu court |
+| Guides | 1 | How a star's ecliptic longitude is written as a sign, a degree and a minute |
+| Examples | 1 | How many years Otto I ruled as king before his coronation as emperor, counted in code |
+| Projects | 1 | The reigns of three Byzantine emperors from 959 to 976, summed and ranked |
+| Flex | 3 | Years from al-Sufi's Book of the Fixed Stars to its Doha copy dated 1125, Years from the founding of the Song dynasty in 960 to the founding of Cairo in 969 and Years from Otto I's coronation at Rome to Liutprand's embassy to Constantinople |
+| Cross-code | 1 | The stars of al-Sufi's catalogue shared among its 48 constellations, in Python and C |
+
+The catalogue of database 109 (950 to 960) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | The Gosen wakashu, the second imperial anthology of waka, ordered in 951 and Gorm's runestone at Jelling, a memorial to his queen Thyra |
+| Systems | 3 | The Goryeo civil service examination, the gwageo, set up in 958, The Goryeo slave reexamination law of 956, which freed people wrongly held as slaves and The laws of Hywel Dda, the Welsh law book ascribed to King Hywel |
+| Devices | 1 | The golden throne with mechanical lions and birds at the Constantinople court |
+| Tools | 2 | Al-Uqlidisi's Book of Chapters on Indian Arithmetic, written at Damascus and De administrando imperio, a Greek handbook of government for an emperor's son |
+| Practices | 1 | The Tentoku palace poetry match of 960, held beside the Seiryo Hall |
+| Guides | 1 | How a name is spelled with the sixteen runes of the Younger futhark |
+| Examples | 1 | The poems of the Gosen wakashu shared out over its twenty volumes |
+| Projects | 1 | Years between Otto I's marriage, the battle of the Lechfeld and a Byzantine death |
+| Flex | 1 | Years from the gwageo of 958 to its abolition in 1894 |
+| Cross-code | 1 | Multiplying decimal fractions by scaling to whole numbers, in Python and C |
+
+The catalogue of database 110 (940 to 950) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | The Huajian ji, an anthology of about five hundred ci lyrics compiled in Later Shu in 940, The Old Book of Tang, the official history of the Tang dynasty, presented to the Later Jin court in 945, The Meadows of Gold, al-Mas'udi's history and geography of the world, completed around 947 and The history of Bukhara by Narshakhi, dedicated to the Samanid amir Nuh I in 943 or 944 |
+| Systems | 4 | The Khitan Liao state takes Kaifeng in 947 and ends the Later Jin dynasty, Liu Zhiyuan proclaims the Later Han dynasty at Taiyuan in 947, The Buyid commander Ahmad ibn Buya enters Baghdad in 945 and takes the title Mu'izz al-Dawla and The Southern Tang state conquers the Min kingdom of Fujian in 945 |
+| Devices | 1 | The siphon that projected Greek fire from Byzantine ships in the Rus attack of 941 |
+| Tools | 1 | Al-Farabi's catalogue of the sciences, the Ihsa al-ulum |
+| Practices | 1 | Ibn Muqla's rule for the six Arabic scripts, measured by the alif and the diamond dot |
+| Guides | 1 | How a route of farsakhs and miles is totalled in miles |
+| Examples | 1 | The chapters of the Old Book of Tang added up by part: annals, treatises and biographies |
+| Projects | 1 | Reign years of the Samanid amirs Nasr II and Nuh I, summed and ranked |
+| Flex | 2 | Years from the Old Book of Tang to the New Book of Tang and Years from the Buyid entry into Baghdad to the Khitan takeover of Kaifeng |
+| Cross-code | 1 | The chapter parts of the Old Book of Tang as shares of 200, in Python and C |
+
+The catalogue of database 111 (930 to 940) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | The Tosa Diary, a journal written in kana in the voice of a woman, The Battle of Brunanburh, an Old English victory poem entered under 937, Hofudlausn, a skaldic poem of kennings composed by Egil Skallagrimsson in York and The Unique Necklace, an Arabic anthology compiled in Cordoba by Ibn Abd Rabbih |
+| Systems | 5 | The Althing of Iceland, the general assembly of the Icelandic Commonwealth, traditionally founded in 930, Madinat al-Zahra, the palace city built outside Cordoba for Abd al-Rahman III, The Southern Tang state founded at Jinling by Li Bian in 937, Youzhou made the Khitan southern capital Nanjing in 938, the start of the five-capital arrangement and Ngo Quyen's victory on the Bach Dang river and the Ngo dynasty of 939 |
+| Devices | 1 | The aqueducts and underground channels that filled the pools of Madinat al-Zahra |
+| Tools | 1 | Wamyo Ruijusho, a Japanese dictionary sorted by subject, with Chinese-character glosses |
+| Practices | 1 | The Law Speaker's recital, a third of the law each summer over three years |
+| Guides | 2 | How to count the morae of a tanka line written in romaji and How a kenning such as whale-road is unpacked into a plain word |
+| Examples | 2 | Years of the Icelandic Commonwealth from 930 to 1262, counted in code and The five capitals of the Liao, sorted by name in code |
+| Projects | 1 | Reign lengths of three Cordoba rulers, summed and ranked |
+| Flex | 3 | Years from the Althing's traditional start to the Liao southern capital, Years from the Tosa Diary to the Huajianji preface and Years from the Wamyo Ruijusho to the founding of the Southern Tang |
+| Cross-code | 1 | Dotted and undotted letters of the Arabic alphabet counted in Python and C |
+
+The catalogue of database 112 (920 to 930) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | The Khitan large script, a writing system devised under the Khitan ruler Abaoji and The Khitan small script, devised after the large script in the mid 920s |
+| Systems | 4 | The Engishiki, the Japanese code of procedures, completed in the twelfth month of 927, The takeover of Balhae by the Khitan Liao state in 926, The Umayyad caliphate of Cordoba, proclaimed by Abd al-Rahman III in January 929 and The Althing, the assembly of Iceland traditionally founded at Thingvellir in 930 |
+| Devices | 1 | The SOAS astrolabe inscribed 315 AH, a candidate for the earliest dated astrolabe |
+| Tools | 1 | The Burghal Hidage, a list of English fortresses and the hides that supplied their garrisons |
+| Practices | 1 | The Oharae purification, read twice a year from a prayer set down in the Engishiki |
+| Guides | 1 | How the re mark of kaeriten reading marks reorders a line of Chinese |
+| Examples | 1 | The years of Abd al-Rahman III in power, counted as emir and as caliph |
+| Projects | 1 | Reign lengths of Edward the Elder, Athelstan and Edmund I of England, summed and ranked |
+| Flex | 3 | Years from the fall of Balhae in 926 to the Althing in 930, Years from the Khitan large script of 920 to the Engishiki of 927 and Years from the start of Athelstan's reign in 924 to the Cordoba caliphate of 929 |
+| Cross-code | 1 | The span of Balhae from its founding to its fall, counted in Python and C |
+
+The catalogue of database 113 (910 to 920) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Al-Tabari's History of the Prophets and Kings, a universal chronicle in Arabic |
+| Systems | 3 | The treaty of Saint-Clair-sur-Epte, which gave Rollo land on the lower Seine in 911, The Southern Han state, set up at Guangzhou by Liu Yan in 917 and The founding of Goryeo by Wang Geon in 918, with its capital at Songak |
+| Devices | 1 | The pot of palm-leaf tickets used to draw lots at Uttiramerur |
+| Tools | 1 | Honzo wamyo, a Japanese list of the native names of Chinese drugs |
+| Practices | 1 | The charter of Cluny, which freed the abbey from lay and episcopal control |
+| Guides | 1 | How annals file each event under its year and print the years in order |
+| Examples | 1 | The spread of the dates given for the Uttiramerur inscriptions, counted in code |
+| Projects | 1 | Reign lengths of the seven Cordoban emirs before Abd al-Rahman III, summed and ranked |
+| Flex | 3 | Years from the Cluny charter to the founding of Goryeo, Years from the Fatimid enthronement at Raqqada to the order to build Mahdia and Years from the founding of Southern Han in 917 to its surrender in 971 |
+| Cross-code | 1 | A lot drawn from a pot of five tickets, in Python and C |
+
+The catalogue of database 114 (900 to 910) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | The Kokinshu, the first imperial anthology of Japanese poems, The Nihon Sandai Jitsuroku, Japan's sixth official history, written in Chinese and Ibn al-Faqih's Kitab al-Buldan, an Arabic geography of cities, roads and lands |
+| Systems | 5 | Gyeon Hwon's Later Baekje, a kingdom proclaimed at Wansan in 900, Gung Ye's Later Goguryeo, founded in 901 by a Buddhist monk, Wang Jian's Former Shu, a state of Sichuan founded in 907 at Chengdu, The Fatimid caliphate, founded in North Africa by Ubayd Allah al-Mahdi and Wang Shenzhi's Min kingdom of Fujian, set up in 909 with Fuzhou as its seat |
+| Devices | 1 | The Tang fish tally, a split metal fish that proved an official's identity at a gate |
+| Tools | 1 | Regino of Prum's handbook for synods and visitations, dedicated to Hatto of Mainz |
+| Practices | 1 | The charter of Cluny, which left the monks free to elect their own abbot |
+| Guides | 1 | How Thabit ibn Qurra's rule builds the amicable pair 220 and 284 |
+| Examples | 3 | The Tang dynasty's years from its founding in 618 to its fall in 907, The years of Later Baekje from its proclamation in 900 to its fall in 936 and The years of Former Shu from its founding in 907 to its fall in 925 |
+| Projects | 2 | The six national histories of Japan, their volumes and their gaps in years and The imperial anthologies from Ryounshu to Kokinshu, and the gaps between them |
+| Flex | 2 | Years from Later Baekje's proclamation to the Fatimid founding and Years from the founding of Former Shu to the fall of Later Baekje |
+| Cross-code | 1 | The spans of Later Baekje and Later Goguryeo in Python and C |
 <!-- END GENERATED CATALOGUE -->
