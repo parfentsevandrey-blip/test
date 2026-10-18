@@ -36,7 +36,7 @@ def _policy():
     return m
 
 
-def visit(start_url, link_text, more_text, api_part, ok_marker, sort_clicks=(), max_clicks=200, gap=(20, 40), log=print):
+def visit(start_url, link_text, more_text, api_part, ok_marker, sort_clicks=(), max_clicks=200, gap=(20, 40), log=print, sink=None):
     from patchright.sync_api import sync_playwright
     cp = _policy()
     cp.check(start_url, "headless")                      # never a protected site, never a paused one (L29, L32)
@@ -103,6 +103,8 @@ def visit(start_url, link_text, more_text, api_part, ok_marker, sort_clicks=(), 
                         btn.scroll_into_view_if_needed(timeout=10000)
                         btn.click(timeout=15000)              # the page loads the next portion and shows it
                     got.append(resp.value.json())
+                    if sink:                                  # store each portion as it comes: a restart loses nothing (L43)
+                        sink(got[-1])
                     log("visitor", "click", clicks + 1, label, resp.value.url[-60:])
                 except Exception:
                     log("visitor", start_url, "no response after click", clicks, label)

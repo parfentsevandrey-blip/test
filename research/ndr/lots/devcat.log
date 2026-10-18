@@ -1015,3 +1015,243 @@
 2026-10-17T22:47:35+03:00 done flats listed {'donstroy': 1177, 'dreamriva': 61, 'forma': 182, 'fsk': 571, 'granelle': 819, 'highlife': 1511, 'lsr': 669}, layouts/buildings on sale {'forma': 182, 'granelle': 819}, requests 1523, finished 2026-10-17T22:47:35+03:00
 2026-10-17T22:47:36+03:00 qa donstroy skipped: already re-read today (L40)
 2026-10-17T22:47:36+03:00 qa granelle skipped: already re-read today (L40)
+2026-10-18T06:52:42+03:00 list highlife 1511
+2026-10-18T06:52:43+03:00 list dreamriva 61
+2026-10-18T06:52:46+03:00 list mypriority-dubrovka 37 in 17 layouts
+2026-10-18T06:53:21+03:00 list mypriority-nizhegorodskaya 119 in 78 layouts
+2026-10-18T06:53:48+03:00 list mypriority-paveletskaya 199 in 82 layouts
+2026-10-18T06:54:30+03:00 list mypriority-mnevniki 457 in 168 layouts
+2026-10-18T06:54:33+03:00 list forma 182
+2026-10-18T06:54:34+03:00 list donstroy 1173
+2026-10-18T06:57:17+03:00 list fsk 571
+2026-10-18T06:58:28+03:00 list fsk tree amber-city 352
+2026-10-18T06:58:55+03:00 visitor sorted: Сначала дешевле https://granelle.ru/api/flats/?project=mypriority-dubrovka&order=price&limit=24
+2026-10-18T06:59:02+03:00 visitor click 1 Показать еще 13 из 13 /?limit=24&offset=24&order=price&project=mypriority-dubrovka
+2026-10-18T06:59:25+03:00 list granelle mypriority-dubrovka 37 of 37
+2026-10-18T07:00:04+03:00 visitor sorted: Сначала дешевле /api/flats/?building=123&project=mypriority-nizhegorodskaya&order=price&limit=24
+2026-10-18T07:00:05+03:00 list fsk tree sydney-city 209
+2026-10-18T07:00:11+03:00 visitor click 1 Показать еще 24 из 95 =24&offset=24&order=price&project=mypriority-nizhegorodskaya
+2026-10-18T07:00:51+03:00 visitor click 2 Показать еще 24 из 71 =24&offset=48&order=price&project=mypriority-nizhegorodskaya
+2026-10-18T07:01:32+03:00 visitor click 3 Показать еще 24 из 47 =24&offset=72&order=price&project=mypriority-nizhegorodskaya
+2026-10-18T07:01:51+03:00 list fsk tree sydney-prime 10
+2026-10-18T07:02:11+03:00 visitor click 4 Показать еще 23 из 23 =24&offset=96&order=price&project=mypriority-nizhegorodskaya
+2026-10-18T07:02:51+03:00 list granelle mypriority-nizhegorodskaya 119 of 119
+2026-10-18T07:03:26+03:00 visitor sorted: Сначала дешевле ps://granelle.ru/api/flats/?project=mypriority-paveletskaya&order=price&limit=24
+2026-10-18T07:03:30+03:00 fsk pages today 2
+2026-10-18T07:03:33+03:00 visitor click 1 Показать еще 24 из 175 mit=24&offset=24&order=price&project=mypriority-paveletskaya
+2026-10-18T07:03:59+03:00 visitor click 2 Показать еще 24 из 151 mit=24&offset=48&order=price&project=mypriority-paveletskaya
+2026-10-18T07:04:26+03:00 visitor click 3 Показать еще 24 из 127 mit=24&offset=72&order=price&project=mypriority-paveletskaya
+2026-10-18T07:05:13+03:00 visitor click 4 Показать еще 24 из 103 mit=24&offset=96&order=price&project=mypriority-paveletskaya
+2026-10-18T07:05:42+03:00 visitor click 5 Показать еще 24 из 79 it=24&offset=120&order=price&project=mypriority-paveletskaya
+2026-10-18T07:06:15+03:00 visitor click 6 Показать еще 24 из 55 it=24&offset=144&order=price&project=mypriority-paveletskaya
+2026-10-18T07:06:57+03:00 visitor click 7 Показать еще 24 из 31 it=24&offset=168&order=price&project=mypriority-paveletskaya
+2026-10-18T07:07:44+03:00 visitor click 8 Показать еще 7 из 7 it=24&offset=192&order=price&project=mypriority-paveletskaya
+2026-10-18T07:08:24+03:00 list granelle mypriority-paveletskaya 199 of 199
+2026-10-18T07:09:00+03:00 visitor sorted: Сначала дешевле elle.ru/api/flats/?building=112&project=mypriority-mnevniki&order=price&limit=24
+2026-10-18T07:09:07+03:00 visitor click 1 Показать еще 24 из 433 2&limit=24&offset=24&order=price&project=mypriority-mnevniki
+2026-10-18T07:09:48+03:00 visitor click 2 Показать еще 24 из 409 2&limit=24&offset=48&order=price&project=mypriority-mnevniki
+2026-10-18T07:10:22+03:00 visitor click 3 Показать еще 24 из 385 2&limit=24&offset=72&order=price&project=mypriority-mnevniki
+2026-10-18T07:11:08+03:00 visitor click 4 Показать еще 24 из 361 2&limit=24&offset=96&order=price&project=mypriority-mnevniki
+2026-10-18T07:11:46+03:00 visitor click 5 Показать еще 24 из 337 &limit=24&offset=120&order=price&project=mypriority-mnevniki
+2026-10-18T07:12:34+03:00 visitor click 6 Показать еще 24 из 313 &limit=24&offset=144&order=price&project=mypriority-mnevniki
+2026-10-18T07:13:20+03:00 visitor click 7 Показать еще 24 из 289 &limit=24&offset=168&order=price&project=mypriority-mnevniki
+2026-10-18T07:14:10+03:00 visitor click 8 Показать еще 24 из 265 &limit=24&offset=192&order=price&project=mypriority-mnevniki
+2026-10-18T07:14:54+03:00 visitor click 9 Показать еще 24 из 241 &limit=24&offset=216&order=price&project=mypriority-mnevniki
+2026-10-18T07:15:33+03:00 visitor click 10 Показать еще 24 из 217 &limit=24&offset=240&order=price&project=mypriority-mnevniki
+2026-10-18T07:15:33+03:00 visitor https://granelle.ru/objects/mypriority-mnevniki/ clicks 10 Показать еще 24 из 217
+2026-10-18T07:16:16+03:00 visitor click 11 Показать еще 24 из 193 &limit=24&offset=264&order=price&project=mypriority-mnevniki
+2026-10-18T07:17:09+03:00 visitor click 12 Показать еще 24 из 169 &limit=24&offset=288&order=price&project=mypriority-mnevniki
+2026-10-18T07:17:54+03:00 visitor click 13 Показать еще 24 из 145 &limit=24&offset=312&order=price&project=mypriority-mnevniki
+2026-10-18T07:18:42+03:00 visitor click 14 Показать еще 24 из 121 &limit=24&offset=336&order=price&project=mypriority-mnevniki
+2026-10-18T07:19:32+03:00 visitor click 15 Показать еще 24 из 97 &limit=24&offset=360&order=price&project=mypriority-mnevniki
+2026-10-18T07:20:27+03:00 visitor click 16 Показать еще 24 из 73 &limit=24&offset=384&order=price&project=mypriority-mnevniki
+2026-10-18T07:21:18+03:00 visitor click 17 Показать еще 24 из 49 &limit=24&offset=408&order=price&project=mypriority-mnevniki
+2026-10-18T07:22:15+03:00 visitor click 18 Показать еще 24 из 25 &limit=24&offset=432&order=price&project=mypriority-mnevniki
+2026-10-18T07:23:05+03:00 visitor click 19 Показать еще 1 из 1 &limit=24&offset=456&order=price&project=mypriority-mnevniki
+2026-10-18T07:23:57+03:00 visitor mypriority-mnevniki 454 of 457, second pass «Сначала дороже»
+2026-10-18T07:24:33+03:00 visitor sorted: Сначала дороже lle.ru/api/flats/?building=112&project=mypriority-mnevniki&order=-price&limit=24
+2026-10-18T07:24:40+03:00 visitor click 1 Показать еще 24 из 433 &limit=24&offset=24&order=-price&project=mypriority-mnevniki
+2026-10-18T07:25:15+03:00 visitor click 2 Показать еще 24 из 409 &limit=24&offset=48&order=-price&project=mypriority-mnevniki
+2026-10-18T07:25:25+03:00 list dsections 51 sections, flats 5115 (available 1173)
+2026-10-18T07:25:39+03:00 visitor click 1 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:25:56+03:00 visitor click 3 Показать еще 24 из 385 &limit=24&offset=72&order=-price&project=mypriority-mnevniki
+2026-10-18T07:26:24+03:00 visitor click 2 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:26:33+03:00 visitor click 4 Показать еще 24 из 361 &limit=24&offset=96&order=-price&project=mypriority-mnevniki
+2026-10-18T07:27:06+03:00 visitor click 3 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:27:10+03:00 visitor click 5 Показать еще 24 из 337 limit=24&offset=120&order=-price&project=mypriority-mnevniki
+2026-10-18T07:27:45+03:00 visitor click 6 Показать еще 24 из 313 limit=24&offset=144&order=-price&project=mypriority-mnevniki
+2026-10-18T07:27:50+03:00 visitor click 4 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:28:23+03:00 visitor click 5 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:28:34+03:00 visitor click 7 Показать еще 24 из 289 limit=24&offset=168&order=-price&project=mypriority-mnevniki
+2026-10-18T07:28:54+03:00 visitor click 6 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:29:14+03:00 visitor click 8 Показать еще 24 из 265 limit=24&offset=192&order=-price&project=mypriority-mnevniki
+2026-10-18T07:29:29+03:00 visitor click 7 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:29:48+03:00 visitor click 9 Показать еще 24 из 241 limit=24&offset=216&order=-price&project=mypriority-mnevniki
+2026-10-18T07:29:58+03:00 visitor click 8 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:30:25+03:00 visitor click 9 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:30:33+03:00 visitor click 10 Показать еще 24 из 217 limit=24&offset=240&order=-price&project=mypriority-mnevniki
+2026-10-18T07:30:33+03:00 visitor https://granelle.ru/objects/mypriority-mnevniki/ clicks 10 Показать еще 24 из 217
+2026-10-18T07:31:09+03:00 visitor click 10 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:31:09+03:00 visitor https://donstroy.moscow/full-search/ clicks 10 Показать еще
+2026-10-18T07:31:24+03:00 visitor click 11 Показать еще 24 из 193 limit=24&offset=264&order=-price&project=mypriority-mnevniki
+2026-10-18T07:31:55+03:00 visitor click 11 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:32:17+03:00 visitor click 12 Показать еще 24 из 169 limit=24&offset=288&order=-price&project=mypriority-mnevniki
+2026-10-18T07:32:35+03:00 visitor click 12 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:33:02+03:00 visitor click 13 Показать еще 24 из 145 limit=24&offset=312&order=-price&project=mypriority-mnevniki
+2026-10-18T07:33:19+03:00 visitor click 13 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:33:41+03:00 visitor click 14 Показать еще 24 из 121 limit=24&offset=336&order=-price&project=mypriority-mnevniki
+2026-10-18T07:33:51+03:00 visitor click 14 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:34:24+03:00 visitor click 15 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:34:27+03:00 visitor click 15 Показать еще 24 из 97 limit=24&offset=360&order=-price&project=mypriority-mnevniki
+2026-10-18T07:34:52+03:00 visitor click 16 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:35:08+03:00 visitor click 16 Показать еще 24 из 73 limit=24&offset=384&order=-price&project=mypriority-mnevniki
+2026-10-18T07:35:30+03:00 visitor click 17 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:35:57+03:00 visitor click 17 Показать еще 24 из 49 limit=24&offset=408&order=-price&project=mypriority-mnevniki
+2026-10-18T07:36:15+03:00 visitor click 18 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:36:49+03:00 visitor click 18 Показать еще 24 из 25 limit=24&offset=432&order=-price&project=mypriority-mnevniki
+2026-10-18T07:37:02+03:00 visitor click 19 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:37:43+03:00 visitor click 19 Показать еще 1 из 1 limit=24&offset=456&order=-price&project=mypriority-mnevniki
+2026-10-18T07:37:44+03:00 visitor click 20 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:37:44+03:00 visitor https://donstroy.moscow/full-search/ clicks 20 Показать еще
+2026-10-18T07:38:21+03:00 visitor click 21 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:38:26+03:00 list granelle mypriority-mnevniki 457 of 457
+2026-10-18T07:39:01+03:00 visitor click 22 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:39:03+03:00 list forma soul 182 of 182
+2026-10-18T07:39:41+03:00 visitor click 23 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:40:13+03:00 visitor click 24 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:40:48+03:00 visitor click 25 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:41:36+03:00 visitor click 26 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:42:04+03:00 list lsr passes 1, flats today 673 of 673
+2026-10-18T07:42:20+03:00 visitor click 27 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:43:10+03:00 visitor click 28 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:43:55+03:00 visitor click 29 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:44:41+03:00 visitor click 30 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:44:41+03:00 visitor https://donstroy.moscow/full-search/ clicks 30 Показать еще
+2026-10-18T07:45:17+03:00 visitor click 31 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:46:07+03:00 visitor click 32 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:46:50+03:00 visitor click 33 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:47:41+03:00 visitor click 34 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:48:26+03:00 visitor click 35 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:49:12+03:00 visitor click 36 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:49:52+03:00 visitor click 37 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:50:44+03:00 visitor click 38 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:51:24+03:00 visitor click 39 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:52:20+03:00 visitor click 40 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:52:20+03:00 visitor https://donstroy.moscow/full-search/ clicks 40 Показать еще
+2026-10-18T07:53:08+03:00 visitor click 41 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:53:50+03:00 visitor click 42 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:54:39+03:00 visitor click 43 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:55:32+03:00 visitor click 44 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:56:17+03:00 visitor click 45 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:57:16+03:00 visitor click 46 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:58:06+03:00 visitor click 47 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:58:57+03:00 visitor click 48 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T07:59:54+03:00 visitor click 49 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:00:48+03:00 visitor click 50 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:00:48+03:00 visitor https://donstroy.moscow/full-search/ clicks 50 Показать еще
+2026-10-18T08:01:50+03:00 visitor click 51 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:02:49+03:00 visitor click 52 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:03:37+03:00 visitor click 53 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:04:25+03:00 visitor click 54 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:05:20+03:00 visitor click 55 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:06:17+03:00 visitor click 56 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:07:13+03:00 visitor click 57 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:08:06+03:00 visitor click 58 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:09:13+03:00 visitor click 59 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:10:23+03:00 visitor click 60 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:10:23+03:00 visitor https://donstroy.moscow/full-search/ clicks 60 Показать еще
+2026-10-18T08:11:20+03:00 visitor click 61 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:12:27+03:00 visitor click 62 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:13:30+03:00 visitor click 63 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:14:27+03:00 visitor click 64 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:15:27+03:00 visitor click 65 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:16:22+03:00 visitor click 66 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:17:31+03:00 visitor click 67 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:18:43+03:00 visitor click 68 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:19:43+03:00 visitor click 69 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:20:47+03:00 visitor click 70 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:20:47+03:00 visitor https://donstroy.moscow/full-search/ clicks 70 Показать еще
+2026-10-18T08:21:54+03:00 visitor click 71 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:23:07+03:00 visitor click 72 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:24:22+03:00 visitor click 73 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:25:41+03:00 visitor click 74 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:26:49+03:00 visitor click 75 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:28:03+03:00 visitor click 76 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:29:06+03:00 visitor click 77 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:30:19+03:00 visitor click 78 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:31:25+03:00 visitor click 79 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:32:45+03:00 visitor click 80 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:32:45+03:00 visitor https://donstroy.moscow/full-search/ clicks 80 Показать еще
+2026-10-18T08:34:04+03:00 visitor click 81 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:35:09+03:00 visitor click 82 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:36:28+03:00 visitor click 83 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:37:44+03:00 visitor click 84 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:38:53+03:00 visitor click 85 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:40:10+03:00 visitor click 86 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:41:23+03:00 visitor click 87 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:42:50+03:00 visitor click 88 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:44:22+03:00 visitor click 89 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:45:42+03:00 visitor click 90 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:45:42+03:00 visitor https://donstroy.moscow/full-search/ clicks 90 Показать еще
+2026-10-18T08:47:02+03:00 visitor click 91 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:48:31+03:00 visitor click 92 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:49:59+03:00 visitor click 93 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:51:20+03:00 visitor click 94 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:52:45+03:00 visitor click 95 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:54:18+03:00 visitor click 96 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:55:56+03:00 visitor click 97 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:57:35+03:00 visitor click 98 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T08:59:15+03:00 visitor click 99 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:00:56+03:00 visitor click 100 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:00:56+03:00 visitor https://donstroy.moscow/full-search/ clicks 100 Показать еще
+2026-10-18T09:02:37+03:00 visitor click 101 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:04:18+03:00 visitor click 102 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:05:56+03:00 visitor click 103 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:07:35+03:00 visitor click 104 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:09:13+03:00 visitor click 105 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:10:47+03:00 visitor click 106 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:12:26+03:00 visitor click 107 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:14:08+03:00 visitor click 108 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:15:48+03:00 visitor click 109 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:17:35+03:00 visitor click 110 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:17:35+03:00 visitor https://donstroy.moscow/full-search/ clicks 110 Показать еще
+2026-10-18T09:19:27+03:00 visitor click 111 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:21:21+03:00 visitor click 112 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:23:19+03:00 visitor click 113 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:25:17+03:00 visitor click 114 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:27:17+03:00 visitor click 115 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:29:17+03:00 visitor click 116 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:31:16+03:00 visitor click 117 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:33:23+03:00 visitor click 118 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:35:20+03:00 visitor click 119 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:37:29+03:00 visitor click 120 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:37:29+03:00 visitor https://donstroy.moscow/full-search/ clicks 120 Показать еще
+2026-10-18T09:39:48+03:00 visitor click 121 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:41:46+03:00 visitor click 122 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:43:53+03:00 visitor click 123 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:45:53+03:00 visitor click 124 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:47:57+03:00 visitor click 125 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:50:12+03:00 visitor click 126 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:52:26+03:00 visitor click 127 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:54:31+03:00 visitor click 128 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:56:30+03:00 visitor click 129 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:58:24+03:00 visitor click 130 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T09:58:24+03:00 visitor https://donstroy.moscow/full-search/ clicks 130 Показать еще
+2026-10-18T10:00:23+03:00 visitor click 131 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T10:02:34+03:00 visitor click 132 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T10:04:37+03:00 visitor click 133 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T10:07:05+03:00 visitor done today at 07:39 — not repeated (L42)
+2026-10-18T10:07:06+03:00 lsr done today at 07:42 — not repeated (L42)
+2026-10-18T10:07:06+03:00 fsk done today at 07:03 — not repeated (L42)
+2026-10-18T10:07:26+03:00 list dsections 51 sections, flats 5115 (available 1173)
+2026-10-18T10:07:42+03:00 visitor click 1 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T10:07:59+03:00 qa donstroy skipped: collector still running on the site
+2026-10-18T10:08:05+03:00 lsr done today at 07:42 — not repeated (L42)
+2026-10-18T10:08:05+03:00 fsk done today at 07:03 — not repeated (L42)
+2026-10-18T10:08:05+03:00 visitor done today at 07:39 — not repeated (L42)
+2026-10-18T10:08:07+03:00 list dsections 51 sections, flats 5115 (available 1173)
+2026-10-18T10:08:21+03:00 visitor click 1 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T10:08:46+03:00 visitor click 2 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T10:09:18+03:00 visitor click 3 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T10:09:59+03:00 visitor click 4 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/
+2026-10-18T10:10:34+03:00 visitor click 5 Показать еще /donstroy.moscow/api/v1/flatssearch/choose_params_api_flats/

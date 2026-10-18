@@ -582,7 +582,8 @@ def donstroy_search(db, max_clicks=200):
     spec.loader.exec_module(V)
     try:
         got = V.visit("https://donstroy.moscow/full-search/", None, r"(Показать|Загрузить)\s*(ещё|еще|больше)", r"choose_params_api_flats",
-                      "Расширенный подбор", max_clicks=max_clicks, gap=GAP, log=log)
+                      "Расширенный подбор", max_clicks=max_clicks, gap=GAP, log=log,
+                      sink=lambda j: donstroy_search_store(db, [j]))   # each portion stored at once (L43)
     except V.Challenge as e:
         raise Blocked(f"challenge {e}")
     db.execute("insert into fetches values (?,?,?,?)", (today(), "visitor:donstroy:full-search", "200", now()))
