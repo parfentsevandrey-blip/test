@@ -738,5 +738,105 @@
     "description": "Languages, systems, devices, tools and practices of 1300 to 1310, including rare and little-known items.",
     "colorHex": "#EC407A",
     "curated": false
+  },
+  {
+    "id": 75,
+    "from": 1290,
+    "to": 1300,
+    "quota": false,
+    "name": "Database 75: 1290s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1290 to 1300, including rare and little-known items.",
+    "colorHex": "#FFF176",
+    "curated": false
+  },
+  {
+    "id": 76,
+    "from": 1280,
+    "to": 1290,
+    "quota": false,
+    "name": "Database 76: 1280s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1280 to 1290, including rare and little-known items.",
+    "colorHex": "#64B5F6",
+    "curated": false
+  },
+  {
+    "id": 77,
+    "from": 1270,
+    "to": 1280,
+    "quota": false,
+    "name": "Database 77: 1270s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1270 to 1280, including rare and little-known items.",
+    "colorHex": "#81C784",
+    "curated": false
+  },
+  {
+    "id": 78,
+    "from": 1260,
+    "to": 1270,
+    "quota": false,
+    "name": "Database 78: 1260s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1260 to 1270, including rare and little-known items.",
+    "colorHex": "#FFD180",
+    "curated": false
+  },
+  {
+    "id": 79,
+    "from": 1250,
+    "to": 1260,
+    "quota": false,
+    "name": "Database 79: 1250s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1250 to 1260, including rare and little-known items.",
+    "colorHex": "#9CCC65",
+    "curated": false
+  },
+  {
+    "id": 80,
+    "from": 1240,
+    "to": 1250,
+    "quota": false,
+    "name": "Database 80: 1240s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1240 to 1250, including rare and little-known items.",
+    "colorHex": "#FFA726",
+    "curated": false
+  },
+  {
+    "id": 81,
+    "from": 1230,
+    "to": 1240,
+    "quota": false,
+    "name": "Database 81: 1230s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1230 to 1240, including rare and little-known items.",
+    "colorHex": "#29B6F6",
+    "curated": false
+  },
+  {
+    "id": 82,
+    "from": 1220,
+    "to": 1230,
+    "quota": false,
+    "name": "Database 82: 1220s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1220 to 1230, including rare and little-known items.",
+    "colorHex": "#EF5350",
+    "curated": false
+  },
+  {
+    "id": 83,
+    "from": 1210,
+    "to": 1220,
+    "quota": false,
+    "name": "Database 83: 1210s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1210 to 1220, including rare and little-known items.",
+    "colorHex": "#AB47BC",
+    "curated": false
+  },
+  {
+    "id": 84,
+    "from": 1200,
+    "to": 1210,
+    "quota": false,
+    "name": "Database 84: 1200s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 1200 to 1210, including rare and little-known items.",
+    "colorHex": "#26A69A",
+    "curated": false
   }
 ]

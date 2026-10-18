@@ -36,6 +36,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-20 | 2026-10-15 | 73,269 | 222 | 82 | 118 | 73,691 | +10,573 (databases 45 to 54: 500 records in 110 files, migrations 44→45 to 53→54, tests +0) |
 | CP-21 | 2026-10-16 | 83,047 | 222 | 82 | 118 | 83,469 | +9,778 (databases 55 to 64: 461 records in 110 files, migrations 54→55 to 63→64, tests +0) |
 | CP-22 | 2026-10-16 | 92,742 | 222 | 82 | 118 | 93,164 | +9,695 (databases 65 to 74: 444 records in 110 files, migrations 64→65 to 73→74, tests +0) |
+| CP-23 | 2026-10-18 | 99,282 | 222 | 82 | 118 | 99,704 | +6,540 (databases 75 to 84: 295 records in 110 files, migrations 74→75 to 83→84, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -1127,3 +1128,48 @@ Most other dates and attributions, including the reigns of Philip VI, John II, E
 
 - Not verified yet: running on a device or emulator, the migrations from version 64 to version 74 on a real device, the UI with 74 databases in the list and in the filters, lint, and the release build.
 - The 1300s to the 1390s are the thinnest decades in the catalogue for "coding". The next pass should first decide whether to fill the seven smaller databases or keep them smaller, and then check the memory facts listed above.
+
+## CP-23: databases 75 to 84, 1200 to 1300 (the thirteenth century, the next century back)
+
+Status: ten more databases are in the app, one per decade from the 1290s down to the 1200s: 295 records, migrations from version 74 to version 84, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. None of the ten reaches 50 records: 1290s 30, 1280s 37, 1270s 27, 1260s 23, 1250s 35, 1240s 23, 1230s 34, 1220s 28, 1210s 32 and 1200s 26. All ten are marked "quota": false in tools/databases.json. The build passes with no compiler warnings, 17 of 17 unit tests pass, and the 116 runnable records (10, 20, 8, 8, 19, 8, 14, 9, 13 and 7) pass against their expected output. Every kind is present in every database, which the unit tests require.
+
+Mood: The thirteenth century is the thinnest century of the catalogue so far. The helpers found almost no dated devices. In the 1210s the only device is a chain across the Nile at Damietta, which is approximate and is really a barrier, not a machine. Several decades ended with a kind that had no record at all, which the unit tests reject, and each time the fix was one item from memory with its range named. I do not like that I had to accept those. What I do like is that the verification held: every runnable record that was written passed its hand-computed output, and the cross-batch check found the repeats, which were replaced. Ten honest small databases are better than ten padded ones, and you chose the same for the 1410s. Still, 295 records is a clear step down from the earlier centuries, and the next batch should start from the question of whether the 1200s need the same quota at all.
+
+Date: 2026-10-18. Totals: Kotlin main 99,282 (CP-22: 92,742), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 99,704 (CP-22: 93,164). The +6,540 is the 110 new Kotlin files for databases 75 to 84 and the regenerated catalogue; the database class, the migrations and the tests did not change.
+
+### What changed
+
+- Ten databases, from "Database 75: 1290s coding catalogue" (1290 to 1300) to "Database 84: 1200s coding catalogue" (1200 to 1210). Their records are 30, 37, 27, 23, 35, 23, 34, 28, 32 and 26: 295 new records and 4,470 in the whole catalogue. Their rare flags are 10, 9, 8, 8, 9, 8, 9, 9, 10 and 9: 89 new rare records and 1,117 in the whole catalogue.
+- Eleven files per database, 110 in total. Colours are #FFF176, #64B5F6, #81C784, #FFD180, #9CCC65, #FFA726, #29B6F6, #EF5350, #AB47BC and #26A69A.
+- Spec: tools/databases.json has 84 entries. All ten new databases are marked "quota": false.
+- Documents: CATALOGUE.md and the README overview and structure blocks are regenerated. The README sentence about examples also lists the runnable counts for 75 to 84: 76 has 20, 79 has 19, 81 has 14, 83 has 13, 75 has 10, 82 has 9, 77, 78 and 80 have 8 each, and 84 has 7.
+- Process: one helper per database, ten in parallel, with the brief (database 64 as the template) and a file of suggested topics for the 1200s. Every helper stopped short. Several databases had a kind with no record at all, which the unit tests reject. Each was resumed to add one record of that kind, often from memory with its range named.
+
+### Facts checked by web search
+
+Examples from the helper reports (they list the rest): Florence's ban on Arabic numerals (1299); the Ramkhamhaeng stone (1292 or 1293; authenticity disputed); Zhou Daguan at Angkor (1296 to 1297); Lanfranc's Chirurgia magna (completed 1296); Fuero Juzgo (1241); the Lyon sittings of 1245 (the 5 July date is single-source); Innocent IV's pontificate (begun 25 June 1243); the Tusi couple in the 1247 Tahrir; the Tripitaka Koreana carving (about 1236 to 1251; the block count varies); Rubruck at Karakorum (1254); Juvaini's history (completed 1260); the Phags-pa script (commission 1260; edict and completion 1269); Moerbeke's Archimedes (1269); the Oxford astrolabes of AH 618 and AH 621 (single source); Jacques de Vitry's compass passage; the Damietta chain (1218); the Sorbonne list (1290); and the Maragha observatory (begun 1259).
+
+### Not searched, from memory
+
+Most other dates and attributions, including the Summa (119, 114, 189 and 90 questions), Louis IX's crusade (landing 18 July 1270, death 25 August 1270), Frederick II and Innocent IV, the Provisions of Oxford (11 June 1258), Mongke's enthronement and the battle of Ain Jalut, Gulistan (1258), the Fuero Real (1255), Carpini (1247), the qibla from Maragha, the Armenian era, the Florence priors' two-month terms, the Mongol kurultais of 1235 and 1246, the Franciscan Rule of 1223, the Golden Bull (1222), Caesarius (1219 to 1223), Francis's canonization, and the Mongol capture of the Khwarazmian cities. The helper reports list them. The lead should check the weakest first: the Damietta chain, the Lyon sittings of 1245, the Florence priors, the Armenian era, the Summa counts and the Oxford astrolabes.
+
+### Problems
+
+- Thin decades. All ten are below 50 records, as listed above. Their runnable counts are 10, 20, 8, 8, 19, 8, 14, 9, 13 and 7.
+- Empty kinds. Several databases had a kind with no record at all, which the unit tests reject. Each was filled with one record of that kind: EXAMPLE and CROSS in 75 and 77 (75 also GUIDE), EXAMPLE in 78, PRACTICE in 79, PROJECT in 81 and 82, and DEVICE in 83. The DEVICE in 83 is a barrier (the chain across the Nile at Damietta, 1218), not a machine, and its helper flagged it for that reason.
+- Approximate and memory items. Many records in this batch rest on facts from memory, and several dates are approximate, with the range named in the details. The weakest are the Damietta chain, the Florence priors, the Armenian era and the Oxford astrolabes.
+- Repeated exercise types. The "days from X's death to Y" family appears in many of the ten databases, with different events and spans; within 76 it appears twice, both on Alfonso X. Some day counts share a subject with different spans, such as Louis IX (77 and 80) and Frederick II (79 and 80). These are accepted as neighbours with different spans.
+- Repeats across databases, found by the cross-batch check and replaced: Practica geometriae (82 and 83), the Romance of the Rose and the Saxon Mirror (81 and 82), the Shin Kokin Wakashu (83 and 84), the Breviari d'amor (75 and 76), the King's Mirror (78, 79 and 80), Matthew Paris's route map (79 and 80), the Tusi couple (79 and 80), the Fuero (79 and 80), the Mongol kurultai (80, 81 and 82), the Prose Edda (82 and 83), the Juvaini history (79 and 84), the Sorbonne (79 and 83), and the Summa items (77 and 78).
+
+### How I checked it
+
+- Unit tests: 17 of 17 pass (AppDatabaseSeedTest 4, SeedDataTest 8, RecordFilterTest 5). `./gradlew testDebugUnitTest` ended with BUILD SUCCESSFUL, and the log has no compiler warnings. The test that every kind is present in every database passes.
+- Examples: each new database has its own verifier with exact expected output, worked out by hand before each run. 116 of 116 runnable records pass. The 179 reading-only records are not executed.
+- Structure: the generator checks all 84 databases and all 4,470 records. The new databases are quota false and keep every kind. Years are inside each range, and the record text has no provenance phrases, dollar signs or Cyrillic.
+- Cross-batch: the final check compares all 84 databases; 2,313 pairs share two or more significant words. I read the pairs that touch the new databases and searched for the named items of the batch. They are word matches, neighbours with different items, or the same exercise type with different spans.
+- Whole catalogue: 4,470 records. The only titles that repeat are "Erlang" and "Software inspections", as before.
+
+### Notes
+
+- Not verified yet: running on a device or emulator, the migrations from version 74 to version 84 on a real device, the UI with 84 databases in the list, lint, and the release build.
+- The 1200s to the 1290s are the thinnest decades of the catalogue for "coding". The next step is to decide whether they stay smaller, or whether the quota of 50 is kept for this century with a note that the material is thin.

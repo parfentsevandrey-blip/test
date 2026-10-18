@@ -1112,4 +1112,154 @@ The catalogue of database 74 (1300 to 1310) has the same ten kinds:
 | Projects | 4 | Gaps between the events of the 1300s, listed by year, Which papal acts of the early 1300s fall inside the decade, The rare titles of this batch in year order, with their count and A range check on record years from 1300 to 1310 |
 | Flex | 3 | Days between Courtrai and the Templar arrests, Days between the first Estates-General and the coronation of Clement V and Days between the coronation of Clement V and the Templar arrests |
 | Cross-code | 2 | The triples of Llull's nine figures, counted by two programs and A table of spectacle diopters in Python and C |
+
+The catalogue of database 75 (1290 to 1300) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Marco Polo's travel book, written with Rustichello in 1298 to 1299, Jnaneshvari, a Marathi commentary on the Gita finished in 1290, The Ramkhamhaeng inscription, a stone of Sukhothai dated 1292, Zhou Daguan's account of Cambodia after a stay at Angkor, The Codex Manesse, a German songbook begun about 1300 and Matfre Ermengaud's Breviari d'amor, an Occitan verse encyclopedia |
+| Systems | 5 | The Ordinances of Justice of Florence, against the magnates, The Swiss federal charter of 1291, an alliance of three Alpine valleys, The Model Parliament of 1295, with knights and burgesses summoned, The closing of Venice's Great Council to new families, the serrata of 1297 and Boniface VIII's Liber Sextus, a sixth book of papal decretals |
+| Devices | 2 | Huang Daopo's cotton gin, brought to Songjiang about 1295 and The glass furnaces of Murano, moved from Venice by order of 1291 |
+| Tools | 3 | Zhu Shijie's introduction to mathematical studies of 1299, Lanfranc's Chirurgia magna, a surgical handbook completed in Paris in 1296 and Fleta, an English law treatise written in the Fleet prison about 1290 |
+| Practices | 4 | The Taxatio of Pope Nicholas IV, a valuation of church incomes in England and Wales, The Florentine money-changers' 1299 ban on Arabic figures in account books, The first Holy Year, proclaimed by Boniface VIII for 1300 and The Eijin debt-relief decree of the Kamakura shogunate, 1297 |
+| Guides | 1 | How a Florentine two-month term of the priors is found from a month |
+| Examples | 3 | The day of the year for four dates from 1291 to 1300 in the Julian calendar, The Julian day number of New Year's Day 1300 and Saka years of Indian dates turned into Common Era years |
+| Projects | 2 | The thirteen Swiss cantons, counted by the year each joined the league and Dated sieges and battles of the 1290s, counted by year |
+| Flex | 3 | Years from Marco Polo's departure to his return, Days from the fall of Acre to the first Holy Year bull and Days from the death of Nicholas IV to the election of Celestine V |
+| Cross-code | 1 | The Armenian year of four dates from 1291 to 1300 in Python and C |
+
+The catalogue of database 76 (1280 to 1290) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Alfonso X's Cantigas de Santa Maria, songs to the Virgin in Galician-Portuguese, The Zohar, a mystical commentary on the Torah written mostly in Aramaic, The Samguk yusa, Iryeon's memorabilia of the Three Kingdoms of Korea, The Shasekishu, Muju Ichien's collection of Buddhist tales and anecdotes, The Meshal ha-Kadmoni, a Hebrew book of fables by Isaac ibn Sahula and Jacob van Maerlant's Spiegel historiael, a world history in rhymed Dutch |
+| Systems | 5 | The Shoushi calendar of Guo Shoujing, a Yuan calendar of 365.2425 days, The Statute of Rhuddlan, Edward I's English government of conquered Wales, The Statute of Merchants, a register for recording merchants' debts in England, The Zhiyuan chao, the Yuan government's paper money issued from 1287 and The Vinodol Code, a Croatian law of 1288 written in Glagolitic script |
+| Devices | 2 | Guo Shoujing's simplified armillary sphere, a Yuan instrument for the sky and The Heilongjiang hand cannon, an early bronze gun found near Harbin |
+| Tools | 3 | Alfonso X's Libro de los juegos, a book of chess, dice and tables, Franco of Cologne's Ars cantus mensurabilis, a treatise on measured music and John Peckham's Perspectiva communis, an optics textbook of about 1280 |
+| Practices | 1 | The Sorbonne library's chained core and its classification of 1290 |
+| Guides | 5 | How an alfil leaps in medieval chess, How second differences fill a gap in a table of sun positions, How a piece moves round a track of twenty-four points by two dice, How Zhiyuan era years of the Yuan become Western years and How the Hebrew letters are sorted into mothers, doubles and simples |
+| Examples | 6 | Years of Silla from its founding in 57 BC to its fall in 935, Years from the writing of the Samguk yusa to its oldest printing, Years of the Kamakura shogunate, from 1185 or 1192 to 1333, The Shoushi year of 365.2425 days in seconds, Knight jumps counted over a whole chessboard of the medieval game and The Julian year against the Shoushi year over four centuries |
+| Projects | 4 | A debt register under the Statute of Merchants, with the overdue sum, A ledger of Zhiyuan notes issued and burned, with the balance, Chained and loan copies tallied by rank of authority and Offences in an illustrative Vinodol court, tallied by kind |
+| Flex | 3 | Days from the Sicilian Vespers to the death of Llywelyn ap Gruffudd, Days from the death of Llywelyn to the death of Alfonso X and Days from the death of Alfonso X to the battle of Worringen |
+| Cross-code | 2 | Throws of three dice, counted in Python and C and Totals of two dice in the tables game, counted in Python and C |
+
+The catalogue of database 77 (1270 to 1280) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Alfonso X's Libro del saber de astronomia, written in Castilian, Jean de Meun's continuation of the Romance of the Rose, Adam de la Halle's Jeu de la feuillee, a play of Arras, Rumi's Masnavi, six books of rhymed couplets, Aquinas's Summa theologiae, left unfinished in 1274 and Giles of Rome's On the Governance of Rulers, written for a young prince |
+| Systems | 5 | Ubi periculum, the 1274 rules for locking in cardinals at a papal election, Magnus Lagabote's national law of Norway, of 1274, The Statute of Westminster I of 1275, a reform of the common law, The Statute of Gloucester of 1278, a royal statute on lords and courts and The Statute of Mortmain of 1279 on gifts of land to the Church |
+| Devices | 1 | The counterweight trebuchets that helped take Xiangyang in 1273 |
+| Tools | 2 | Yang Hui's Xugu zhaiqi suanfa, a Chinese work on magic figures and Tusi's Ilkhanic zij, a set of astronomical tables made at Maragha |
+| Practices | 5 | The 1279 recoinage of English pennies, The Hundred Rolls, Edward I's inquiry into royal rights from 1274, The Lyons tenth, a six-year crusade levy on church revenue, The Paris condemnation of 219 propositions in March 1277 and Edward I's quo warranto inquiries of 1278 into lordly franchises |
+| Guides | 2 | How an English charter's year changes at Lady Day and How a scholastic article sets out objections and replies |
+| Examples | 1 | How many questions the four parts of Aquinas's Summa theologiae hold |
+| Projects | 1 | How long the papal see stood empty in the 1270s, vacancy by vacancy |
+| Flex | 3 | Rumi's death, then Aquinas's, counted in days, The election at Frankfurt to the Marchfeld, in days and From Aquinas to the Paris condemnation, counted in days |
+| Cross-code | 1 | Louis IX's landing at Carthage to his death at Tunis, in weeks and days |
+
+The catalogue of database 78 (1260 to 1270) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | The Phags-pa script, a square alphabet made for the Mongol empire, Brunetto Latini's Book of the Treasure, an encyclopedia in French, Jacobus de Voragine's Golden Legend, a Latin book of saints' lives and Thomas Aquinas's Summa against the Gentiles, a Latin defence of the faith |
+| Systems | 4 | Hulagu's observatory at Maragha, begun in 1259 under Nasir al-Din al-Tusi, Simon de Montfort's parliament of 1265, held in the name of the king, The Statute of Marlborough, an English law on land, lordship and courts and The Assize of Bread and Ale, set by Henry III in 1266 |
+| Devices | 1 | Peter Peregrinus's pivoted magnetic compass, described in 1269 |
+| Tools | 4 | Roger Bacon's Opus majus, a survey of learning sent to the pope in 1267, Yang Hui's detailed explanations of the Nine Chapters, a Chinese book of 1261, William of Moerbeke's Latin Archimedes, with On Floating Bodies in 1269 and Witelo's Perspectiva, a Latin optics begun about 1270 |
+| Practices | 2 | Etienne Boileau's Book of the Trades, the rules of the Paris crafts in 1268 and Baybars's pigeon post and horse relays for official messages, from about 1260 |
+| Guides | 2 | How Archimedes' rule gives the part of a floating block below water and How Peregrinus marks meridians on a spherical lodestone |
+| Examples | 1 | The qibla bearing from Maragha to Mecca, computed from coordinates |
+| Projects | 1 | Gaps between the Latin translations of Ptolemy, Archimedes and Euclid |
+| Flex | 3 | Days from Conradin's execution to Peter Peregrinus's letter on the lodestone, Days from Charles of Anjou's coronation at Rome to Conradin's execution and Days from the death of Hulagu Khan to Charles of Anjou's coronation |
+| Cross-code | 1 | Letter counts of the Hebrew, Greek and Arabic alphabets in Python and C |
+
+The catalogue of database 79 (1250 to 1260) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | Saadi's Gulistan, a Persian book of stories and verse, The King's Mirror, a Norwegian instruction book in Old Norse, William of Rubruck's report of his journey to the Mongol court, Reynard the Fox in Middle Dutch verse, a Flemish satire, Juvaini's history of the Mongol world conquest, written in Persian and Matthew Paris's Chronica majora, an English chronicle in Latin |
+| Systems | 5 | The Sorbonne, Robert de Sorbon's college for poor masters at Paris, The Provisions of Oxford, a baronial plan for government in England, Alfonso X's Fuero Real, a law code written in Castilian for towns, Zhongtong chao, Kublai Khan's paper money of 1260 and The Franciscan constitutions of Narbonne, a rule for the friars |
+| Devices | 2 | The Tripitaka Koreana woodblocks, carved at Haeinsa in Korea and The silver tree at Karakorum, a drinks fountain for the Khan |
+| Tools | 2 | Matthew Paris's route map from London to Apulia and Vincent of Beauvais's Speculum majus, a Latin encyclopedia |
+| Practices | 1 | Two knights from each shire summoned to Westminster by writ of 1254 |
+| Guides | 5 | How a Tripitaka woodblock side is laid out in lines and characters, How a council of fifteen reaches a majority decision, How a law in a four-book code is cited by its book, title and law, How the four liquors of the silver tree are assigned to its four pipes and How a rhyme pair is tested by its final vowel and consonants |
+| Examples | 6 | Counting every character on the Tripitaka woodblocks, The span of dates given for the King's Mirror, counted in years, The Coptic years of 1250 to 1254 counted from the Era of Martyrs, The chapters of Saadi's Gulistan and Bustan, added up, Ways to match four liquors to the four pipes of the silver tree and Shelving the Tripitaka blocks in cases of one thousand |
+| Projects | 3 | Sorting the dated events of the 1250s into a timeline, Horse changes on a courier route with stations in a row and Three illustrative votes of a council of fifteen |
+| Flex | 3 | Days from the death of Frederick II to the enthronement of Mongke, Days from the death of Innocent IV to the battle of Ain Jalut and Days from the Provisions of Oxford to the death of Mongke |
+| Cross-code | 2 | The Tripitaka block total in Python and C and The Coptic years of 1250 to 1254 in Python and C |
+
+The catalogue of database 80 (1240 to 1250) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | The Sicilian court poets of Frederick II and the sonnet, The celestial element, Li Ye's sign for an unknown quantity and The Fuero Juzgo, the Visigothic law code put into Castilian |
+| Systems | 5 | The Jutland law of 1241, the Danish law of King Valdemar II, The Talmud trial at Paris, with copies burned in 1242, The First Council of Lyon, which deposed Frederick II in 1245, The Mongol kurultai of 1246 that raised Guyuk to the throne and The Mamluk sultanate of Egypt, begun in 1250 |
+| Devices | 1 | The Tusi couple, two rolling circles that turn a circle into a line |
+| Tools | 4 | Qin Jiushao's Mathematical Treatise in Nine Sections, 1247, John of Plano Carpini's report on the Mongols, written in Latin, Tusi's Tahrir al-Majisti, a revision of Ptolemy's Almagest and Frederick II's book on hunting with birds, De arte venandi cum avibus |
+| Practices | 2 | The letters of Innocent IV, copied into papal registers from 1243 and The question-and-article form of the Summa of Alexander of Hales |
+| Guides | 1 | How the celestial element finds the sides of a rectangle |
+| Examples | 1 | Days between the public sittings of the First Council of Lyon |
+| Projects | 2 | A ledger of fines under the Jutland law and A ransom of 400,000 bezants paid in instalments |
+| Flex | 3 | Days from the start of Innocent IV's pontificate to Frederick II's deposition, Days from the deposition of Frederick II to his death and Days from Louis IX's departure on crusade to his capture |
+| Cross-code | 1 | The Tusi couple's straight-line motion in Python and C |
+
+The catalogue of database 81 (1230 to 1240) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 5 | Snorri Sturluson's Heimskringla, the sagas of the kings of Norway, The Carmina Burana songbook, Latin and German songs from Bavaria, Ibn al-Athir's al-Kamil fi al-tarikh, a universal history in Arabic, Dogen's Shobogenzo, the treasury of the true dharma eye, begun in 1231 and The Ogura Hyakunin Isshu, one hundred poems by one hundred poets |
+| Systems | 5 | Frederick II's Liber Augustalis, the law code of the kingdom of Sicily, The Goseibai Shikimoku, the warrior code of the Kamakura shogunate, Gregory IX's Liber Extra, the papal decretal collection of 1234, The Statute of Merton, a law on lords and common land in England and The Mustansiriya school in Baghdad, a college with four law schools |
+| Devices | 2 | The Sangjeong Gogeum Yemun, a Goryeo book reported as printed with metal type in 1234 and The perpetual-motion wheel in Villard's album of machines |
+| Tools | 3 | Villard de Honnecourt's sketchbook of machines, figures and geometry, Hugh of Saint-Cher's concordance of the Latin Bible, made in Paris and Boncompagno da Signa's Rhetorica novissima, a manual for writing letters |
+| Practices | 5 | The Paris strike of 1229 to 1231, ended by the bull Parens scientiarum, The augustale, Frederick II's gold coin of 1231, The Goryeo court's move to Ganghwa island in 1232, The papal inquisition in Languedoc handed to the Dominicans in 1233 and The great kurultai of 1235, the Mongol council that launched the western campaigns |
+| Guides | 4 | How a concordance lists the places of each word, How a pointed arch is struck from two centres, How a medieval letter is set out in five parts and How a mason's mark on each stone counts a cutter's work |
+| Examples | 5 | Years from the start of the Shobogenzo to Dogen's death, The gap from the claimed 1234 Goryeo metal printing to Jikji of 1377, Years the Goryeo court stayed on Ganghwa island, Years from the start of the Mustansiriya's building to its opening and Drawings per leaf in Villard's album, from its usual counts |
+| Projects | 1 | Acres in three strip fields, from their length and width in rods |
+| Flex | 3 | Years from the Liber Augustalis to the Statute of Merton, Years from the 1235 kurultai to the finish of the Tripitaka carving and Years from Hugh of Saint-Cher's concordance to its probable finish |
+| Cross-code | 1 | Blocks per year of the Tripitaka carving under two readings, in Python and C |
+
+The catalogue of database 82 (1220 to 1230) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | The Secret History of the Mongols, a Mongol chronicle of about 1228, The Ancrene Wisse, a rule of life for three women who lived as anchoresses, The Gateless Gate, forty-eight Chan cases compiled by Wumen Huikai in 1228 and Ibn Arabi's Bezels of Wisdom, twenty-seven chapters on the prophets |
+| Systems | 5 | The University of Padua, begun by scholars who left Bologna in 1222, The University of Naples, founded by Frederick II in 1224, The Franciscan Rule of 1223, approved by Pope Honorius III, The kurultai of 1229, which chose Ogedei as Great Khan and The Golden Bull of Hungary, Andrew II's charter of noble rights in 1222 |
+| Devices | 3 | Jacques de Vitry's lodestone needle for sailors, in his Eastern history, The Isfahan astrolabe of 1221/2 by Muhammad ibn Abi Bakr and The astrolabe of AH 621 by Muhammad ibn Fattuh al-Khamairi |
+| Tools | 5 | Sacrobosco's De sphaera, the university textbook of the sphere, Fibonacci's Liber quadratorum, the Book of Squares written for Frederick II in 1225, Caesarius of Heisterbach's Dialogue on Miracles, a store of tales for preachers, Fibonacci's Flos, a Latin book of 1225 on a cubic and other challenges and Grosseteste's De luce, a treatise on light as the first form of bodies |
+| Practices | 2 | The canonization of Francis of Assisi in 1228, two years after his death and Kamakura's jito stewards, placed over estates taken from the court's side in 1221 |
+| Guides | 1 | How a drottkvaett stanza is counted in syllables |
+| Examples | 2 | Checking a square that stays square five above and five below and The weekday of Francis of Assisi's death, counted from a Julian day number |
+| Projects | 1 | The Mongol capture of five Khwarazmian cities, sorted and counted by year |
+| Flex | 3 | Days from the battle of Kalka to the death of Genghis Khan, Days from the Franciscan Rule to the canonization of Francis and Days from Frederick II's crowning to his excommunication |
+| Cross-code | 2 | Days from Dominic's death to Francis's death in Python and C and Days from Louis VIII's death to Francis's canonization in Python and C |
+
+The catalogue of database 83 (1210 to 1220) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 5 | Kamo no Chomei's Hojoki, an essay written from a small hut, Villehardouin's account of the Fourth Crusade, an early long history in French prose, Judah al-Harizi's Tahkemoni, Hebrew tales in rhymed prose, Layamon's Brut, an English chronicle of Britain in long lines and Snorri Sturluson's Prose Edda, a handbook of old myths and poetic words |
+| Systems | 5 | Magna Carta, the charter of liberties sealed at Runnymede, Robert de Courcon's statutes for the University of Paris, The Fourth Lateran Council of 1215 and its seventy canons, The Order of Preachers, approved by Pope Honorius III in 1216 and Salamanca's studium, traditionally dated to 1218 |
+| Devices | 1 | The chain stretched across the Nile at Damietta, 1218 |
+| Tools | 5 | Fibonacci's Practica geometriae, a handbook for land measurers, Kamo no Chomei's Mumyosho, notes on poets and poetry, The Glossa ordinaria on Gratian's Decretum, a standard gloss of canon law, Geoffrey of Vinsauf's Poetria nova, a handbook of Latin composition and Jien's Gukansho, a history of Japan's rulers by a monk |
+| Practices | 3 | The interdict that closed the churches of England, 1208 to 1214, Yearly confession ordered by the Fourth Lateran Council and The Franciscan chapter of mats at the Portiuncula, 1217 |
+| Guides | 4 | How a citation of Gratian's Decretum names its cause, question and canon, How one sentence is restated in several words, as the handbook teaches, How a court anthology lists its poems by season and How the kana of a Japanese opening sentence are counted |
+| Examples | 2 | The ten-foot square hut of the Hojoki in square shaku and metres and Acres in a field of forty by twenty-five rods |
+| Projects | 2 | Gaps between three general councils of the Latin Church and Area of a surveyed field of five corners, by triangles |
+| Flex | 3 | Days from the battle of Bouvines to the sealing of Magna Carta, Days from Magna Carta to the opening of the Fourth Lateran Council and Days from the death of Innocent III to the Dominican bull of 1216 |
+| Cross-code | 2 | Magna Carta clause counts in Python and C and A kenning builder in Python and C |
+
+The catalogue of database 84 (1200 to 1210) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 6 | The Nibelungenlied, a German heroic epic of about 1200, Wolfram's Parzival, a German romance of the Grail, Gottfried's Tristan, a German romance of about 1210, Nizami's Sharafnama, the first part of a Persian romance of Alexander, Jean Bodel's play of Saint Nicholas, a French miracle play from Arras and Alexander's Doctrinale, a Latin grammar in verse for schoolboys |
+| Systems | 5 | Philip Augustus's privilege of 1200 for the scholars of Paris, The Latin Empire of Constantinople, a crusader state of 1204, The Mongol script, adapted from Uyghur writing about 1204, The Delhi Sultanate, founded in 1206 under Qutb al-Din Aibak and The Mongol Empire, proclaimed at the kurultai of 1206 |
+| Devices | 3 | Al-Jazari's elephant clock, a water clock of 1206, Al-Jazari's servant automaton for washing the hands, of 1206 and Al-Jazari's water-raising pump with a crank and a connecting rod |
+| Tools | 2 | Fibonacci's Liber abbaci, the book of calculation of 1202 and Stephen Langton's chapter divisions of the Latin Bible |
+| Practices | 3 | The English patent rolls, copies of open royal letters from 1201, The English close rolls, copies of sealed royal letters from 1204 and The Venetian grosso, a large silver coin struck from 1202 |
+| Guides | 1 | How the Mongol script is laid out in vertical columns |
+| Examples | 1 | Days from the sack of Constantinople to its recovery in 1261 |
+| Projects | 1 | Checking that the early sultans of Delhi reigned in turn |
+| Flex | 3 | Years from Philip Augustus's privilege of 1200 to the Delhi Sultanate, Years from the first English patent rolls to the Mongol Empire and Years from the Venetian grosso to Gottfried's Tristan |
+| Cross-code | 1 | The strike times of al-Jazari's pegged drum in Python and C |
 <!-- END GENERATED CATALOGUE -->
