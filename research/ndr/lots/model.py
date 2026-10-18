@@ -37,6 +37,9 @@ DEAL = {
     "min_roi_6m": 0.10,            # net return on money over the holding period to call a lot a candidate
 }
 ROOMS = {0: "студия", 1: "1к", 2: "2к", 3: "3к"}
+MATCHED_PREMIUM = True     # premium against developer flats of similar area (same корпус first), not the type's median (L45)
+MATCH_AREA = 0.10          # ±10% area
+MATCH_MIN_DEV = 2          # developer flats needed for a match
 NDR_KEYS = {  # ЦИАН ЖК id -> name fragments of the ЖК in the наш.дом.рф scan (project pace)
     "2812286": ["ОСТРОВ"], "7231": ["СИМВОЛ"], "5340468": ["ДРИМ РИВА"], "3401924": ["Дубровка от Гранель"],
     "5699304": ["Нижегородская от Гранель"], "4494942": ["Павелецкая от Гранель"], "5221539": ["Мнёвники от Гранель"],
@@ -181,6 +184,23 @@ def build():
         building = [r for r in res if r["category"] != "flatSale"]   # assignments / resale while the house is being built
         ready = [r for r in res if r["category"] == "flatSale"]      # resale in completed houses
         bld_m2, rdy_m2 = med(r["price_m2"] for r in building), med(r["price_m2"] for r in ready)
+
+        def matched(pool):
+            """(premium % against developer flats of similar area, offers matched, offers whose size the developer does not sell)."""
+            ratios, nomatch = [], 0
+            for r in pool:
+                if not r["price_m2"] or not r["area"]:
+                    continue
+                near = [d for d in dev if d["price_m2"] and d["area"] and abs(d["area"] / r["area"] - 1) <= MATCH_AREA]
+                same = [d for d in near if r["house_id"] and d["house_id"] == r["house_id"]]
+                use = same if len(same) >= MATCH_MIN_DEV else near
+                if len(use) >= MATCH_MIN_DEV:
+                    ratios.append(r["price_m2"] / med(d["price_m2"] for d in use))
+                else:
+                    nomatch += 1
+            return (round(100 * (med(ratios) - 1), 1) if len(ratios) >= 3 else None), len(ratios), nomatch
+        bld_prem, bld_n, bld_nomatch = matched(building) if dev else (None, 0, 0)
+        rdy_prem, rdy_n, rdy_nomatch = matched(ready) if dev else (None, 0, 0)
         res_vpd = med(r["vpd"] for r in res)
         ages = [(date.fromisoformat(day) - date.fromisoformat(r["created"][:10])).days for r in res if r.get("created")]
         # ЦИАН lists price changes newest first: a cut is a newer price below the one before it
@@ -199,15 +219,22 @@ def build():
             "resale_price_m2": round(res_m2) if res_m2 else None,
             "resale_building": len(building), "resale_building_m2": round(bld_m2) if bld_m2 else None,
             "resale_ready": len(ready), "resale_ready_m2": round(rdy_m2) if rdy_m2 else None,
-            "premium_pct": round(100 * (bld_m2 / dev_m2 - 1), 1) if dev_m2 and bld_m2 and len(building) >= 3 else None,
-            "ready_uplift_pct": round(100 * (rdy_m2 / dev_m2 - 1), 1) if dev_m2 and rdy_m2 and len(ready) >= 3 else None,
+            "premium_pct_raw": round(100 * (bld_m2 / dev_m2 - 1), 1) if dev_m2 and bld_m2 and len(building) >= 3 else None,
+            "ready_uplift_pct_raw": round(100 * (rdy_m2 / dev_m2 - 1), 1) if dev_m2 and rdy_m2 and len(ready) >= 3 else None,
+            "premium_matched_n": bld_n, "premium_no_dev_size": bld_nomatch, "ready_matched_n": rdy_n, "ready_no_dev_size": rdy_nomatch,
             "resale_views_day": round(res_vpd, 1) if res_vpd else None,
             "interest_x": round(res_vpd / zk_vpd[zk], 2) if res_vpd and zk_vpd.get(zk) else None,
             "resale_median_age_days": med(ages), "stale_share": round(sum(1 for a in ages if a > 90) / len(ages), 2) if ages else None,
             "price_cut_share": round(len(cuts) / len(res), 2) if res else None, "churn_1d": gone,
             "project_pace_month": (pace.get(zk) or {}).get("pace_q3"), "project_remaining": (pace.get(zk) or {}).get("remaining"),
         }
+        if MATCHED_PREMIUM:
+            s["premium_pct"], s["ready_uplift_pct"] = bld_prem, rdy_prem
+        else:
+            s["premium_pct"], s["ready_uplift_pct"] = s["premium_pct_raw"], s["ready_uplift_pct_raw"]
         flags = []
+        if MATCHED_PREMIUM and dev and bld_nomatch + rdy_nomatch >= 3 and bld_nomatch + rdy_nomatch > bld_n + rdy_n:
+            flags.append("у застройщика такого формата нет")   # resale sizes the developer no longer sells (L45)
         if t != "своб." and s["dev_listed"] <= 3 and (s["dev_offers_site"] is None or s["dev_offers_site"] <= 3) and s["resale_listed"] >= 3:
             flags.append("дефицит у застройщика")
         if s["premium_pct"] is not None and s["premium_pct"] >= 5:
@@ -223,6 +250,7 @@ def build():
         if s["churn_1d"] is not None and s["churn_1d"] >= 0.05:
             flags.append("быстрое выбытие")
         score = (2 * ("дефицит у застройщика" in flags) + 2 * ("переуступки дороже застройщика" in flags) + ("высокий интерес" in flags)
+                 + ("у застройщика такого формата нет" in flags)
                  + ("готовое дороже строящегося" in flags)
                  + ("быстрое выбытие" in flags) - ("вторичка залёживается" in flags) - ("продавцы снижают цену" in flags))
         s["flags"] = "; ".join(flags)
