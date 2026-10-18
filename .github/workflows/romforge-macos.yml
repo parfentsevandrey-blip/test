@@ -30,9 +30,16 @@ jobs:
         run: ./scripts/build-app.sh
 
       - name: Package
-        run: ditto -c -k --keepParent "dist/ROM Forge.app" "dist/ROM-Forge.zip"
+        run: |
+          ditto -c -k --keepParent "dist/ROM Forge.app" "dist/ROM-Forge.zip"
+          ./scripts/make-dmg.sh
 
       - uses: actions/upload-artifact@v4
         with:
           name: ROM-Forge-macOS
           path: ROMForge/dist/ROM-Forge.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ROM-Forge-dmg
+          path: ROMForge/dist/ROM-Forge.dmg

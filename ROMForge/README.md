@@ -32,6 +32,7 @@
 cd ROMForge
 swift run                      # быстрый запуск из терминала
 ./scripts/build-app.sh         # dist/ROM Forge.app (universal, ad-hoc подпись)
+./scripts/make-dmg.sh          # dist/ROM-Forge.dmg для установки перетаскиванием
 ./scripts/build-app.sh --bundle-tools   # то же, но с adb/fastboot внутри .app
 ```
 
