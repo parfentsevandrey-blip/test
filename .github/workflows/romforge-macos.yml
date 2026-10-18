@@ -1,0 +1,38 @@
+name: ROM Forge (macOS)
+
+on:
+  push:
+    paths:
+      - "ROMForge/**"
+      - ".github/workflows/romforge-macos.yml"
+  pull_request:
+    paths:
+      - "ROMForge/**"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: ROMForge
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select newest Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          swift --version
+
+      - name: Build app bundle
+        run: ./scripts/build-app.sh
+
+      - name: Package
+        run: ditto -c -k --keepParent "dist/ROM Forge.app" "dist/ROM-Forge.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ROM-Forge-macOS
+          path: ROMForge/dist/ROM-Forge.zip
