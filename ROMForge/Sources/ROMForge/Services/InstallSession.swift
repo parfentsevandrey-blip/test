@@ -576,7 +576,7 @@ final class InstallSession: Identifiable {
     private func finish() async throws -> String? {
         if build?.kind == .factoryImage, let fastboot = model.fastboot {
             appendLog("fastboot reboot", isCommand: true)
-            try? await fastboot.run(fastbootSerial, ["reboot"])
+            _ = try? await fastboot.run(fastbootSerial, ["reboot"])
         } else if let adb = model.adb, let device = await adbDevice(modes: [.recovery, .sideload]) {
             appendLog("adb reboot", isCommand: true)
             try? await adb.reboot(device.serial)
