@@ -1427,3 +1427,7 @@
 2026-10-18T13:12:46+03:00 fsk done today at 07:03 — not repeated (L42)
 2026-10-18T13:12:50+03:00 list dsections 51 sections, flats 5115 (available 1173)
 2026-10-18T13:12:50+03:00 list dsearch partial pass accepted: 1120 of 1173 available flats priced this week (L44)
+2026-10-18T13:18:23+03:00 donstroy pages today 11
+2026-10-18T13:18:23+03:00 done flats listed {'donstroy': 1173, 'dreamriva': 61, 'forma': 182, 'fsk': 571, 'granelle': 812, 'highlife': 1511, 'lsr': 673}, layouts/buildings on sale {'forma': 182, 'granelle': 812}, requests 160, finished 2026-10-18T13:18:23+03:00
+2026-10-18T13:19:32+03:00 qa granelle skipped: already re-read today (L40)
+2026-10-18T13:19:32+03:00 qa fsk skipped: already re-read today (L40)

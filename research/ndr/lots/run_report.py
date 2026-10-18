@@ -100,7 +100,9 @@ def build(day=None):
             anomalies.append(f"{name}: на ЦИАН собрано {c['collected']} из {c['site_total']} ({cian_c}%)")
         if cp and cp["collected"] and c["collected"] < cp["collected"] * (1 - DROP / 100):
             anomalies.append(f"{name}: на ЦИАН {c['collected']} против {cp['collected']} в прошлый прогон")
-    fail_d = failures(dv, day, "select substr(url,1,instr(substr(url,9),'/')+8), status, count(*) from fetches where day=? and status not in ('200') group by 1,2")
+    fail_d = failures(dv, day, "select substr(url,1,instr(substr(url,9),'/')+8), status, count(*) from fetches where day=? and status not in ('200', 'partial') group by 1,2")
+    for (u,) in dv.execute("select url from fetches where day=? and status='partial'", (day,)):   # a pass accepted as nearly full (L44)
+        notes.append(f"{u.split(':')[1]}: проход списка засчитан как почти полный после рестарта (L44)")
     fail_c = failures(lt, day, "select substr(url,1,40), status, count(*) from pages where day=? and status!='200' group by 1,2") \
         if "status" in [r[1] for r in lt.execute("pragma table_info(pages)")] else []
     for h, st, n in fail_d + fail_c:

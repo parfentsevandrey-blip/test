@@ -366,16 +366,15 @@
  },
  "2026-10-18": {
   "anomalies": [
-   "Символ: на ЦИАН собрано 755 из 777 (97.2%)",
-   "группа devcat «donstroy» не завершена: running"
+   "Символ: на ЦИАН собрано 755 из 777 (97.2%)"
   ],
   "dev": {
    "2812286": {
     "source": "donstroy",
     "collected": 657,
     "on_sale": 657,
-    "with_price": 651,
-    "with_special": 189,
+    "with_price": 657,
+    "with_special": 195,
     "declared": 657,
     "declared_by": "список сайта"
    },
@@ -383,8 +382,8 @@
     "source": "donstroy",
     "collected": 516,
     "on_sale": 516,
-    "with_price": 511,
-    "with_special": 202,
+    "with_price": 516,
+    "with_special": 207,
     "declared": 516,
     "declared_by": "список сайта"
    },
