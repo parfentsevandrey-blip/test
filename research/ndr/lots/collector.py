@@ -28,6 +28,11 @@ PILOT = json.loads((HERE / "pilot_zk.json").read_text())
 URLS = json.loads((HERE / "pilot_urls.json").read_text())
 MSK = timezone(timedelta(hours=3))
 GAP = (20, 40)                 # seconds between requests
+EXTRA_ZK = True                # ЖК beyond the pilot by the owner's decision (ПИК inside MKAD, NOTES 17.10): extra_zk.json
+EXTRA_MAX_PAGES = 150          # their list pages a day, one sort (additions ≤ 250 pages a day, CIAN_EXPANSION.md)
+EXTRA_GAP = (36, 50)           # ≥ 36 s between their pages: ≤ 100 an hour
+EXTRA = json.loads((HERE / "extra_zk.json").read_text()) if EXTRA_ZK and (HERE / "extra_zk.json").exists() else {}
+_gap = [GAP]
 CARD_BUDGET = 300              # offer cards per daily run: views per lot for С3 (one offer per lot, resale/assignment first)
 CARD_REFRESH_DAYS = 3          # re-read views/price history of a live offer every N days
 MAX_FAILS = 3                  # consecutive failed pages -> stop the run (cooldown until next run)
@@ -102,7 +107,7 @@ def fetch(url):
     if not allowed(url):
         raise ValueError(f"not allowed by robots policy: {url}")
     _cp().check(url, "fetcher", cooldown=False)          # only curl_cffi reaches ЦИАН (L29, L37); pauses: run()
-    wait = random.uniform(*GAP) - (time.time() - _last[0])
+    wait = random.uniform(*_gap[0]) - (time.time() - _last[0])
     if wait > 0:
         time.sleep(wait)
     r = None
@@ -259,9 +264,16 @@ def run():
     fails = 0
     try:
         # 1. every search page of every ЖК; second pass with another sort if offers are missing
-        for dev, zks in PILOT.items():
+        extra_ids = {z for zks in EXTRA.values() for z in zks}
+        groups = [(d, z, False) for d, z in PILOT.items()] + [(d, z, True) for d, z in EXTRA.items()]
+        for dev, zks, extra in groups:
+            _gap[0] = EXTRA_GAP if extra else GAP
             for zk_id, name in zks.items():
-                for sort in ("price_object_order", "creation_date_desc"):
+                if extra and db.execute(f"select count(*) from pages where day=? and zk_id in ({','.join('?' * len(extra_ids))})",
+                                        (day, *extra_ids)).fetchone()[0] >= EXTRA_MAX_PAGES:
+                    log("extra ЖК: daily page cap", EXTRA_MAX_PAGES, "reached, the rest tomorrow")
+                    break
+                for sort in (("price_object_order",) if extra else ("price_object_order", "creation_date_desc")):
                     page, total, no_gain = 1, None, 0
                     got = db.execute("select count(*) from obs where day=? and zk_id=?", (day, zk_id)).fetchone()[0]
                     while True:
@@ -296,6 +308,7 @@ def run():
                     got = db.execute("select count(*) from obs where day=? and zk_id=?", (day, zk_id)).fetchone()[0]
                     if total is None or got >= 0.99 * min(total, 54 * PER_PAGE):   # L14: 0.95 left Символ at 96.3%
                         break                                   # complete enough: no second pass
+        _gap[0] = GAP
         # 2. ЖК cards: developer's counts by room type and house
         for zk_id, jk_url in db.execute("select zk_id, jk_url from zk_meta").fetchall():
             if db.execute("select 1 from zk_cards where day=? and zk_id=?", (day, zk_id)).fetchone() or not allowed(jk_url):
@@ -312,13 +325,15 @@ def run():
                 log("zk card", summ["name"], summ["builder"], f"dev {summ['from_dev']} agents {summ['from_agents']}")
         # 3. offer cards: new offers first, then the oldest-read live offers, within the daily budget
         done = db.execute("select count(*) from cards where day=?", (day,)).fetchone()[0]
+        pilot_ids = [z for zks in PILOT.values() for z in zks]
         # [С3] one offer per lot (a flat listed by several sellers), resale/assignment before developer listings,
         # never-read lots first, then the oldest read
         rows = db.execute("""select o.offer_id, o.zk_id, o.house_name, o.floor, round(o.area, 1), o.rooms,
                                     (o.from_developer=1 or o.sale_type='fz214') dev, c.d
                              from offers o left join (select offer_id, max(day) d from cards group by offer_id) c on c.offer_id=o.offer_id
-                             where o.last_seen=? and (c.d is null or c.d <= date(?, ?))
-                             order by dev, c.d is not null, c.d""", (day, day, f"-{CARD_REFRESH_DAYS} day")).fetchall()
+                             where o.last_seen=? and (c.d is null or c.d <= date(?, ?)) and o.zk_id in ({})
+                             order by dev, c.d is not null, c.d""".format(",".join("?" * len(pilot_ids))),
+                          (day, day, f"-{CARD_REFRESH_DAYS} day", *pilot_ids)).fetchall()   # cards: pilot ЖК only, extra ЖК never take its budget
         seen_lot, todo = set(), []
         for oid, zk, house, floor, area, rooms, dev, d in rows:
             k = (zk, house, floor, area, rooms)

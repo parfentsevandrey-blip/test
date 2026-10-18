@@ -1,0 +1,1185 @@
+{
+ "2251726": {
+  "id": "2251726",
+  "name": "Кронштадтский 9",
+  "okrug": "САО",
+  "district": "Головинский",
+  "metro": "Водный стадион",
+  "offers": 108,
+  "status": "Сдача в 1 кв. 2028, есть сданные",
+  "url": "https://zhk-kronshtadtskiy-9-i.cian.ru/",
+  "pages": [
+   "golovinskiy-0428",
+   "metro-vodnyy-stadion-29",
+   "metro-voykovskaya-30",
+   "stanciya-mck-baltiyskaya-293",
+   "stanciya-mck-koptevo-294"
+  ],
+  "ndr": {
+   "name": "Жилой комплекс Кронштадтский 9",
+   "developer": "СЗ К11",
+   "class": "Комфорт",
+   "district": "Головинский район",
+   "lat": 55.8422,
+   "lon": 37.4912,
+   "flats": 611,
+   "remaining": 170,
+   "completion": "31.03.2028"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "OK",
+   "class": "Комфорт",
+   "median_m2_12m": 450863,
+   "published": "30.07.2024"
+  }
+ },
+ "5686240": {
+  "id": "5686240",
+  "name": "Нарвин",
+  "okrug": "САО",
+  "district": "Головинский",
+  "metro": "Водный стадион",
+  "offers": 213,
+  "status": "Сдача в 4 кв. 2028",
+  "url": "https://zhk-narvin-i.cian.ru/",
+  "pages": [
+   "golovinskiy-0428",
+   "metro-streshnevo-422",
+   "metro-vodnyy-stadion-29",
+   "metro-voykovskaya-30",
+   "stanciya-mck-baltiyskaya-293",
+   "stanciya-mck-koptevo-294"
+  ],
+  "ndr": {
+   "name": "Жилой комплекс \"Нарвин\"",
+   "developer": "СЗ ТРАТТА-ЦЕНТР",
+   "class": "Типовой",
+   "district": "Головинский район",
+   "lat": 55.8424,
+   "lon": 37.4987,
+   "flats": 1174,
+   "remaining": 769,
+   "completion": "31.12.2028"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "OK",
+   "class": "Типовой",
+   "median_m2_12m": 473574,
+   "published": "09.06.2025"
+  }
+ },
+ "2616170": {
+  "id": "2616170",
+  "name": "Кронштадтский 14",
+  "okrug": "САО",
+  "district": "Головинский",
+  "metro": "Водный стадион",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-kronshtadtskiy-14-i.cian.ru/",
+  "pages": [
+   "golovinskiy-0428",
+   "metro-streshnevo-422",
+   "metro-vodnyy-stadion-29",
+   "metro-voykovskaya-30",
+   "stanciya-mck-baltiyskaya-293",
+   "stanciya-mck-koptevo-294"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "4726516": {
+  "id": "4726516",
+  "name": "2-й Иртышский",
+  "okrug": "ВАО",
+  "district": "Гольяново",
+  "metro": "Черкизовская",
+  "offers": 278,
+  "status": "Сдача в 2027—2028",
+  "url": "https://zhk-2-y-irtyshskiy-i.cian.ru/",
+  "pages": [
+   "golyanovo-0460",
+   "metro-cherkizovskaya-146",
+   "metro-izmaylovskaya-41",
+   "metro-pervomayskaya-89",
+   "metro-shcelkovskaya-153",
+   "stanciya-mck-lokomotiv-299"
+  ],
+  "ndr": {
+   "name": "2-й Иртышский",
+   "developer": "СЗ Л-ДЕВЕЛОПМЕНТ",
+   "class": "Бизнес/Комфорт",
+   "district": "Район Гольяново",
+   "lat": 55.8145,
+   "lon": 37.766,
+   "flats": 1963,
+   "remaining": 742,
+   "completion": "31.12.2027"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "OK",
+   "class": "Бизнес/Комфорт",
+   "median_m2_12m": 370760,
+   "published": "03.12.2024"
+  }
+ },
+ "1736872": {
+  "id": "1736872",
+  "name": "Амурский парк",
+  "okrug": "ВАО",
+  "district": "Гольяново",
+  "metro": "Черкизовская",
+  "offers": 235,
+  "status": "Сдача в 2 кв. 2029, есть сданные",
+  "url": "https://zhk-amurskiy-park-i.cian.ru/",
+  "pages": [
+   "golyanovo-0460",
+   "metro-cherkizovskaya-146",
+   "metro-partizanskaya-88",
+   "metro-shcelkovskaya-153",
+   "stanciya-mck-izmaylovo-300",
+   "stanciya-mck-lokomotiv-299"
+  ],
+  "ndr": {
+   "name": "Жилой комплекс\"Амурский парк\"",
+   "developer": "СЗ ГЛОРИ",
+   "class": "Комфорт",
+   "district": "Район Гольяново",
+   "lat": 55.8058,
+   "lon": 37.7563,
+   "flats": 1034,
+   "remaining": 632,
+   "completion": "31.03.2029"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "OK",
+   "class": "Комфорт",
+   "median_m2_12m": 409298,
+   "published": "17.07.2025"
+  }
+ },
+ "1656204": {
+  "id": "1656204",
+  "name": "Кутузовский квартал",
+  "okrug": "ЗАО",
+  "district": "Кунцево",
+  "metro": "Кунцевская",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-kutuzovskiy-kvartal-i.cian.ru/",
+  "pages": [
+   "kuncevo-04115",
+   "metro-davydkovo-393",
+   "metro-pionerskaya-93",
+   "metro-rabochiy-poselok-401"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "41881": {
+  "id": "41881",
+  "name": "Академика Павлова",
+  "okrug": "ЗАО",
+  "district": "Кунцево",
+  "metro": "Молодёжная",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-akademika-pavlova-i.cian.ru/",
+  "pages": [
+   "kuncevo-04115",
+   "metro-pionerskaya-93"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "3961302": {
+  "id": "3961302",
+  "name": "Полар",
+  "okrug": "СВАО",
+  "district": "Северное Медведково",
+  "metro": "Алтуфьево",
+  "offers": 173,
+  "status": "Сдача в 2 кв. 2027, есть сданные",
+  "url": "https://zhk-polar-i.cian.ru/",
+  "pages": [
+   "metro-altufevo-6",
+   "metro-babushkinskaya-10",
+   "metro-bibirevo-17",
+   "metro-medvedkovo-69",
+   "metro-sviblovo-111"
+  ],
+  "ndr": {
+   "name": "ЖК Полар",
+   "developer": "СЗ ТМП №20",
+   "class": "Типовой",
+   "district": "Район Северное Медведково",
+   "lat": 55.8929,
+   "lon": 37.645,
+   "flats": 1682,
+   "remaining": 412,
+   "completion": "30.06.2027"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "M5",
+   "class": "Типовой",
+   "median_m2_12m": 397428,
+   "published": "21.07.2023"
+  }
+ },
+ "2346": {
+  "id": "2346",
+  "name": "Ярославский",
+  "okrug": "Мытищи",
+  "district": "Ярославский",
+  "metro": "Алтуфьево",
+  "offers": 315,
+  "status": "Сдача в 1 кв. 2029, есть сданные",
+  "url": "https://zhk-yaroslavskiy-mytishchi-i.cian.ru/",
+  "pages": [
+   "metro-altufevo-6",
+   "metro-babushkinskaya-10",
+   "metro-bibirevo-17",
+   "metro-medvedkovo-69",
+   "metro-sviblovo-111"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "3499138": {
+  "id": "3499138",
+  "name": "Матвеевский парк",
+  "okrug": "ЗАО",
+  "district": "Очаково-Матвеевское",
+  "metro": "Аминьевская",
+  "offers": 119,
+  "status": "Сдача в 2027—2028, есть сданные",
+  "url": "https://zhk-matveevskiy-park-i.cian.ru/",
+  "pages": [
+   "metro-aminevskaya-392",
+   "metro-aminevskaya-507",
+   "metro-davydkovo-393",
+   "metro-michurinskiy-prospekt-361",
+   "metro-michurinskiy-prospekt-447",
+   "ochakovo-matveevskoe-04118"
+  ],
+  "ndr": {
+   "name": "Жилой комплекс \"Матвеевский парк\"",
+   "developer": "СЗ ЦЕНТРПОЛИС",
+   "class": "Комфорт",
+   "district": "Район Очаково-Матвеевское",
+   "lat": 55.6913,
+   "lon": 37.457,
+   "flats": 1533,
+   "remaining": 265,
+   "completion": "30.06.2028"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "OK",
+   "class": "Комфорт",
+   "median_m2_12m": 540294,
+   "published": "03.12.2024"
+  }
+ },
+ "2764045": {
+  "id": "2764045",
+  "name": "Мичуринский парк",
+  "okrug": "ЗАО",
+  "district": "Очаково-Матвеевское",
+  "metro": "Аминьевская",
+  "offers": 267,
+  "status": "Сдача в 2026—2028, есть сданные",
+  "url": "https://zhk-michurinskiy-park-i.cian.ru/",
+  "pages": [
+   "metro-aminevskaya-392",
+   "metro-michurinskiy-prospekt-361",
+   "metro-ozernaya-362",
+   "metro-yugo-zapadnaya-156",
+   "ochakovo-matveevskoe-04118"
+  ],
+  "ndr": {
+   "name": "Жилой комплекс \"Мичуринский парк\"",
+   "developer": "СЗ ОЗЁРНАЯ 44",
+   "class": "Комфорт/Типовой",
+   "district": "Район Очаково-Матвеевское",
+   "lat": 55.6722,
+   "lon": 37.4414,
+   "flats": 2075,
+   "remaining": 784,
+   "completion": "31.12.2026"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "OK",
+   "class": "Комфорт/Типовой",
+   "median_m2_12m": 480660,
+   "published": "06.12.2024"
+  }
+ },
+ "3842780": {
+  "id": "3842780",
+  "name": "Вангарден",
+  "okrug": "ЗАО",
+  "district": "Очаково-Матвеевское",
+  "metro": "Аминьевская",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-vangarden-i.cian.ru/",
+  "pages": [
+   "metro-aminevskaya-392",
+   "metro-aminevskaya-507",
+   "metro-davydkovo-393",
+   "metro-michurinskiy-prospekt-447",
+   "metro-ochakovo-506",
+   "ochakovo-matveevskoe-04118"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "1938730": {
+  "id": "1938730",
+  "name": "Большая Очаковская 2",
+  "okrug": "ЗАО",
+  "district": "Очаково-Матвеевское",
+  "metro": "Аминьевская",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-bolshaya-ochakovskaya-2-i.cian.ru/",
+  "pages": [
+   "metro-aminevskaya-392",
+   "metro-michurinskiy-prospekt-361",
+   "metro-ozernaya-362",
+   "metro-yugo-zapadnaya-156",
+   "ochakovo-matveevskoe-04118"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "3987003": {
+  "id": "3987003",
+  "name": "Новое Очаково",
+  "okrug": "ЗАО",
+  "district": "Очаково-Матвеевское",
+  "metro": "Аминьевская",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-novoe-ochakovo-i.cian.ru/",
+  "pages": [
+   "metro-aminevskaya-392",
+   "metro-aminevskaya-507",
+   "metro-davydkovo-393",
+   "metro-ochakovo-506",
+   "metro-ozernaya-362",
+   "ochakovo-matveevskoe-04118"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "4601606": {
+  "id": "4601606",
+  "name": "Плеханова 11",
+  "okrug": "ВАО",
+  "district": "Перово",
+  "metro": "Авиамоторная",
+  "offers": 13,
+  "status": "Сдача в 3—4 кв. 2026",
+  "url": "https://zhk-plehanova-11-i.cian.ru/",
+  "pages": [
+   "metro-aviamotornaya-443",
+   "metro-perovo-90"
+  ],
+  "ndr": {
+   "name": "Жилой комплекс \"Плеханова 11\"",
+   "developer": "СЗ ЯСЕНЕВЫЙ ПАРК",
+   "class": "Бизнес",
+   "district": "Район Перово",
+   "lat": 55.7523,
+   "lon": 37.7619,
+   "flats": 1509,
+   "remaining": 102,
+   "completion": "31.12.2026"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "OK",
+   "class": "Бизнес",
+   "median_m2_12m": 502560,
+   "published": "21.12.2023"
+  }
+ },
+ "1872143": {
+  "id": "1872143",
+  "name": "Красноказарменная 15",
+  "okrug": "ЮВАО",
+  "district": "Лефортово",
+  "metro": "Авиамоторная",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-krasnokazarmennaya-15-i.cian.ru/",
+  "pages": [
+   "metro-aviamotornaya-443"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "4342353": {
+  "id": "4342353",
+  "name": "Яуза парк",
+  "okrug": "Мытищи",
+  "district": "Яуза Парк ЖК",
+  "metro": "Бабушкинская",
+  "offers": 348,
+  "status": "Сдача в 2027—2028, есть сданные",
+  "url": "https://zhk-yauza-park-mytishchi-i.cian.ru/",
+  "pages": [
+   "metro-babushkinskaya-10",
+   "metro-cherkizovskaya-146",
+   "metro-medvedkovo-69",
+   "metro-sviblovo-111",
+   "stanciya-mck-lokomotiv-299"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "43254": {
+  "id": "43254",
+  "name": "Полярная 25",
+  "okrug": "СВАО",
+  "district": "Южное Медведково",
+  "metro": "Бабушкинская",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-polyarnaya-25-i.cian.ru/",
+  "pages": [
+   "metro-babushkinskaya-10",
+   "metro-bibirevo-17",
+   "metro-medvedkovo-69",
+   "metro-otradnoe-83",
+   "metro-sviblovo-111"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "3015337": {
+  "id": "3015337",
+  "name": "Кольская 8",
+  "okrug": "СВАО",
+  "district": "Бабушкинский",
+  "metro": "Бабушкинская",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-kolskaya-8-i.cian.ru/",
+  "pages": [
+   "metro-babushkinskaya-10",
+   "metro-otradnoe-83",
+   "metro-sviblovo-111",
+   "stanciya-mck-botanicheskiy-sad-21"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "4102935": {
+  "id": "4102935",
+  "name": "Алтуфьевское 53",
+  "okrug": "СВАО",
+  "district": "Алтуфьевский",
+  "metro": "Бескудниково",
+  "offers": 131,
+  "status": "Сдача в 4 кв. 2028, есть сданные",
+  "url": "https://zhk-altufevskoe-53-i.cian.ru/",
+  "pages": [
+   "metro-beskudnikovo-413",
+   "metro-bibirevo-17",
+   "metro-degunino-414",
+   "metro-otradnoe-83",
+   "stanciya-mck-vladykino-28"
+  ],
+  "ndr": {
+   "name": "ЖК \"Алтуфьевское 53\"",
+   "developer": "СЗ ПЕРСПЕКТИВНЫЕ РЕШЕНИЯ",
+   "class": "Комфорт",
+   "district": "Алтуфьевский район",
+   "lat": 55.8722,
+   "lon": 37.5829,
+   "flats": 924,
+   "remaining": 251,
+   "completion": "31.12.2028"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "M5",
+   "class": "Комфорт",
+   "median_m2_12m": 357230,
+   "published": "19.02.2025"
+  }
+ },
+ "26458": {
+  "id": "26458",
+  "name": "Римского-Корсакова 11",
+  "okrug": "СВАО",
+  "district": "Отрадное",
+  "metro": "Бескудниково",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-rimskogo-korsakova-11-i.cian.ru/",
+  "pages": [
+   "metro-beskudnikovo-413",
+   "metro-bibirevo-17",
+   "metro-degunino-414",
+   "metro-otradnoe-83",
+   "otradnoe-0449",
+   "stanciya-mck-vladykino-28"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "50505": {
+  "id": "50505",
+  "name": "Дмитровский парк",
+  "okrug": "САО",
+  "district": "Дмитровский",
+  "metro": "Бескудниково",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-dmitrovskiy-park-i.cian.ru/",
+  "pages": [
+   "metro-beskudnikovo-413",
+   "metro-lianozovo-399",
+   "metro-seligerskaya-354"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "5842": {
+  "id": "5842",
+  "name": "Восточное Бутово",
+  "okrug": "Ленинский городской округ",
+  "district": "Боброво пгт",
+  "metro": "Бульвар Дмитрия Донского",
+  "offers": 308,
+  "status": "Сдача в 2027—2028, есть сданные",
+  "url": "https://zhk-vostochnoe-butovo-vidnoye-i.cian.ru/",
+  "pages": [
+   "metro-bulvar-dmitriya-donskogo-24"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "5237": {
+  "id": "5237",
+  "name": "Бутово парк 2",
+  "okrug": "Ленинский городской округ",
+  "district": "Дрожжино пгт",
+  "metro": "Бульвар Дмитрия Донского",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-butovo-park-2-vidnoye-i.cian.ru/",
+  "pages": [
+   "metro-bulvar-dmitriya-donskogo-24"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "3878522": {
+  "id": "3878522",
+  "name": "Открытый парк",
+  "okrug": "ВАО",
+  "district": "Метрогородок",
+  "metro": "Черкизовская",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-otkrytyy-park-i.cian.ru/",
+  "pages": [
+   "metro-cherkizovskaya-146",
+   "metro-partizanskaya-88",
+   "metro-shcelkovskaya-153",
+   "metrogorodok-0464",
+   "stanciya-mck-bulvar-rokossovskogo-137",
+   "stanciya-mck-lokomotiv-299"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "2163443": {
+  "id": "2163443",
+  "name": "Руставели 14",
+  "okrug": "СВАО",
+  "district": "Бутырский",
+  "metro": "Дмитровская",
+  "offers": 92,
+  "status": "Сдача в 1 кв. 2029, есть сданные",
+  "url": "https://zhk-rustaveli-14-i.cian.ru/",
+  "pages": [
+   "metro-dmitrovskaya-37"
+  ],
+  "ndr": {
+   "name": "Жилой комплекс\"Руставели 14\"",
+   "developer": "СЗ ПЛАМ",
+   "class": "Типовой",
+   "district": "Бутырский район",
+   "lat": 55.8127,
+   "lon": 37.6013,
+   "flats": 506,
+   "remaining": 222,
+   "completion": "31.03.2029"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "OK",
+   "class": "Типовой",
+   "median_m2_12m": 494947,
+   "published": "01.10.2025"
+  }
+ },
+ "49361": {
+  "id": "49361",
+  "name": "Шереметьевский",
+  "okrug": "СВАО",
+  "district": "Марьина роща",
+  "metro": "Дмитровская",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-sheremetevskiy-i.cian.ru/",
+  "pages": [
+   "metro-dmitrovskaya-37"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "4355004": {
+  "id": "4355004",
+  "name": "Ярославский квартал",
+  "okrug": "Мытищи",
+  "district": "Ярославский квартал ЖК",
+  "metro": "Измайловская",
+  "offers": 113,
+  "status": "Сдача в 4 кв. 2027, есть сданные",
+  "url": "https://zhk-yaroslavskiy-kvartal-mytishchi-i.cian.ru/",
+  "pages": [
+   "metro-izmaylovskaya-41",
+   "metro-medvedkovo-69"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "34710": {
+  "id": "34710",
+  "name": "Измайловский лес",
+  "okrug": "Балашиха",
+  "district": "ул. Дорофеева",
+  "metro": "Измайловская",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-izmaylovskiy-les-balashikha-i.cian.ru/",
+  "pages": [
+   "metro-izmaylovskaya-41",
+   "metro-perovo-90",
+   "metro-pervomayskaya-89",
+   "metro-shcelkovskaya-153"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "2279282": {
+  "id": "2279282",
+  "name": "Новохохловская 15",
+  "okrug": "ЮВАО",
+  "district": "Нижегородский",
+  "metro": "Калитники",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-novohohlovskaya-15-i.cian.ru/",
+  "pages": [
+   "metro-kalitniki-426",
+   "nizhegorodskiy-0479",
+   "stanciya-mck-nizhegorodskaya-303",
+   "stanciya-mck-novohohlovskaya-304"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "2616018": {
+  "id": "2616018",
+  "name": "Перовское 2",
+  "okrug": "ЮВАО",
+  "district": "Нижегородский",
+  "metro": "Калитники",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-perovskoe-2-i.cian.ru/",
+  "pages": [
+   "metro-kalitniki-426",
+   "metro-stahanovskaya-376",
+   "nizhegorodskiy-0479",
+   "stanciya-mck-nizhegorodskaya-303",
+   "stanciya-mck-novohohlovskaya-304"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "4958260": {
+  "id": "4958260",
+  "name": "Москворечье",
+  "okrug": "ЮАО",
+  "district": "Москворечье-Сабурово",
+  "metro": "Кантемировская",
+  "offers": 191,
+  "status": "Сдача в 2027—2028",
+  "url": "https://zhk-moskvoreche-i.cian.ru/",
+  "pages": [
+   "metro-kantemirovskaya-43",
+   "metro-kashirskaya-445",
+   "metro-kashirskaya-45",
+   "metro-kavkazskiy-bulvar-571"
+  ],
+  "ndr": {
+   "name": "Жилой комплекс \"Москворечье\"",
+   "developer": "СЗ ИМПУЛЬС",
+   "class": "Бизнес",
+   "district": "Район Москворечье-Сабурово",
+   "lat": 55.6454,
+   "lon": 37.6414,
+   "flats": 2248,
+   "remaining": 390,
+   "completion": "31.12.2028"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "OK",
+   "class": "Бизнес",
+   "median_m2_12m": 426866,
+   "published": "12.07.2024"
+  }
+ },
+ "3804713": {
+  "id": "3804713",
+  "name": "Кавказский бульвар 51",
+  "okrug": "ЮАО",
+  "district": "Царицыно",
+  "metro": "Кантемировская",
+  "offers": 192,
+  "status": "Сдача в 1—2 кв. 2028, есть сданные",
+  "url": "https://zhk-kavkazskiy-bulvar-51-i.cian.ru/",
+  "pages": [
+   "metro-kantemirovskaya-43",
+   "metro-kashirskaya-445",
+   "metro-kashirskaya-45",
+   "metro-kavkazskiy-bulvar-571"
+  ],
+  "ndr": {
+   "name": "Жилой комплекс \"Кавказский бульвар 51\"",
+   "developer": "СЗ ТОРГОВЫЙ ДОМ СПУТНИК",
+   "class": "Комфорт",
+   "district": "Район Царицыно",
+   "lat": 55.6262,
+   "lon": 37.6432,
+   "flats": 1296,
+   "remaining": 367,
+   "completion": "31.03.2028"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "M5",
+   "class": "Комфорт",
+   "median_m2_12m": 380754,
+   "published": "18.12.2024"
+  }
+ },
+ "49046": {
+  "id": "49046",
+  "name": "Жулебино парк",
+  "okrug": "Люберцы",
+  "district": "Городок Б",
+  "metro": "Лермонтовский проспект",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-zhulebino-park-i.cian.ru/",
+  "pages": [
+   "metro-lermontovskiy-prospekt-271"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "49135": {
+  "id": "49135",
+  "name": "Люберцы парк",
+  "okrug": "Люберцы",
+  "district": "Люберцы Парк ЖК",
+  "metro": "Лермонтовский проспект",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-lyubercy-park-lyubertsy-i.cian.ru/",
+  "pages": [
+   "metro-lermontovskiy-prospekt-271"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "2159741": {
+  "id": "2159741",
+  "name": "Бусиновский парк",
+  "okrug": "САО",
+  "district": "Западное Дегунино",
+  "metro": "Лианозово",
+  "offers": 99,
+  "status": "Сдача в 2026—2027, есть сданные",
+  "url": "https://zhk-businovskiy-park-i.cian.ru/",
+  "pages": [
+   "metro-lianozovo-399",
+   "zapadnoe-degunino-0430"
+  ],
+  "ndr": {
+   "name": "Жилой комплекс\"Бусиновский парк\"",
+   "developer": "СЗ ИЖОРСКАЯ",
+   "class": "Комфорт/Типовой",
+   "district": "Район Западное Дегунино",
+   "lat": 55.8815,
+   "lon": 37.5038,
+   "flats": 1287,
+   "remaining": 82,
+   "completion": "31.12.2026"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "OK",
+   "class": "Комфорт/Типовой",
+   "median_m2_12m": 415064,
+   "published": "02.09.2025"
+  }
+ },
+ "7817": {
+  "id": "7817",
+  "name": "Грин парк",
+  "okrug": "СВАО",
+  "district": "Останкинский",
+  "metro": "Отрадное",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-green-park-i.cian.ru/",
+  "pages": [
+   "metro-otradnoe-83",
+   "metro-sviblovo-111",
+   "stanciya-mck-botanicheskiy-sad-21",
+   "stanciya-mck-vladykino-28"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "2171478": {
+  "id": "2171478",
+  "name": "Сигнальный 16",
+  "okrug": "СВАО",
+  "district": "Отрадное",
+  "metro": "Отрадное",
+  "offers": 5,
+  "status": "Сдача в 4 кв. 2026, есть сданные",
+  "url": "https://zhk-signalnyy-16-i.cian.ru/",
+  "pages": [
+   "metro-otradnoe-83",
+   "metro-sviblovo-111",
+   "otradnoe-0449",
+   "stanciya-mck-botanicheskiy-sad-21",
+   "stanciya-mck-lihobory-295",
+   "stanciya-mck-vladykino-28"
+  ],
+  "ndr": {
+   "name": "Жилой Комплекс\"Сигнальный 16\"",
+   "developer": "СЗ РАДУГА",
+   "class": "Типовой",
+   "district": "Район Отрадное",
+   "lat": 55.8506,
+   "lon": 37.6001,
+   "flats": 496,
+   "remaining": 10,
+   "completion": "31.12.2026"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "OK",
+   "class": "Типовой",
+   "median_m2_12m": 438020,
+   "published": "29.01.2025"
+  }
+ },
+ "3663814": {
+  "id": "3663814",
+  "name": "Лосиноостровский парк",
+  "okrug": "ВАО",
+  "district": "Метрогородок",
+  "metro": "Партизанская",
+  "offers": 28,
+  "status": "Сдача в 1 кв. 2028, есть сданные",
+  "url": "https://zhk-losinoostrovskiy-park-i.cian.ru/",
+  "pages": [
+   "metro-partizanskaya-88",
+   "metrogorodok-0464",
+   "stanciya-mck-bulvar-rokossovskogo-137",
+   "stanciya-mck-izmaylovo-300",
+   "stanciya-mck-lokomotiv-299"
+  ],
+  "ndr": {
+   "name": "Жилой комплекс \"Лосиноостровский парк\"",
+   "developer": "СЗ ПЕРСПЕКТИВНЫЕ ИНВЕСТИЦИИ",
+   "class": "Комфорт",
+   "district": "Район Метрогородок",
+   "lat": 55.8164,
+   "lon": 37.7493,
+   "flats": 235,
+   "remaining": 50,
+   "completion": "31.03.2028"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "M5",
+   "class": "Комфорт",
+   "median_m2_12m": 370002,
+   "published": "30.05.2025"
+  }
+ },
+ "8795": {
+  "id": "8795",
+  "name": "Ильинские луга",
+  "okrug": "Красногорск городской округ",
+  "district": "пос. Ильинское-Усово",
+  "metro": "Рабочий посёлок",
+  "offers": 610,
+  "status": "Сдача в 2027—2028, есть сданные",
+  "url": "https://zhk-ilinskie-luga-krasnogorsk-i.cian.ru/",
+  "pages": [
+   "metro-rabochiy-poselok-401",
+   "metro-strogino-228"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "5722062": {
+  "id": "5722062",
+  "name": "Онежский вал",
+  "okrug": "САО",
+  "district": "Западное Дегунино",
+  "metro": "Селигерская",
+  "offers": 130,
+  "status": "Сдача в 4 кв. 2028",
+  "url": "https://zhk-onezhskiy-val-i.cian.ru/",
+  "pages": [
+   "metro-seligerskaya-354",
+   "metro-verhnie-lihobory-353",
+   "stanciya-mck-lihobory-295",
+   "zapadnoe-degunino-0430"
+  ],
+  "ndr": {
+   "name": "Жилой комплекс \"Онежский вал\"",
+   "developer": "СЗ ПРОМЕТЕЙСИТИ",
+   "class": "Комфорт",
+   "district": "Район Западное Дегунино",
+   "lat": 55.8588,
+   "lon": 37.5455,
+   "flats": 585,
+   "remaining": 252,
+   "completion": "31.12.2028"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "OK",
+   "class": "Комфорт",
+   "median_m2_12m": 429011,
+   "published": "24.10.2025"
+  }
+ },
+ "5726981": {
+  "id": "5726981",
+  "name": "Строгино 360",
+  "okrug": "СЗАО",
+  "district": "Строгино",
+  "metro": "Щукинская",
+  "offers": 167,
+  "status": "Сдача в 2028—2029",
+  "url": "https://zhk-strogino-i.cian.ru/",
+  "pages": [
+   "metro-shcukinskaya-154",
+   "metro-strogino-228"
+  ],
+  "ndr": {
+   "name": "ЖК \"Строгино 360\"",
+   "developer": "СЗ ЛУЧ",
+   "class": "Бизнес",
+   "district": "Район Строгино",
+   "lat": 55.792,
+   "lon": 37.3911,
+   "flats": 879,
+   "remaining": 611,
+   "completion": "31.12.2029"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "OK",
+   "class": "Бизнес",
+   "median_m2_12m": 457886,
+   "published": "15.12.2025"
+  }
+ },
+ "1372264": {
+  "id": "1372264",
+  "name": "Волоколамское 24",
+  "okrug": "СЗАО",
+  "district": "Щукино",
+  "metro": "Щукинская",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-volokolamskoe-24-i.cian.ru/",
+  "pages": [
+   "metro-shcukinskaya-154",
+   "metro-streshnevo-422",
+   "metro-voykovskaya-30",
+   "stanciya-mck-streshnevo-292"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "1311961": {
+  "id": "1311961",
+  "name": "Волжский парк",
+  "okrug": "ЮВАО",
+  "district": "Текстильщики",
+  "metro": "Стахановская",
+  "offers": 61,
+  "status": "Сдача в 4 кв. 2026, есть сданные",
+  "url": "https://zhk-volzhskiy-park-i.cian.ru/",
+  "pages": [
+   "metro-stahanovskaya-376",
+   "stanciya-mck-novohohlovskaya-304"
+  ],
+  "ndr": {
+   "name": "Жилой комплекс \"Волжский парк\"",
+   "developer": "СЗ ВОЛЖСКИЙ ПАРК",
+   "class": "Типовой",
+   "district": "Район Текстильщики",
+   "lat": 55.7202,
+   "lon": 37.7213,
+   "flats": 524,
+   "remaining": 102,
+   "completion": "31.12.2026"
+  },
+  "inside_mkad": true,
+  "modern": {
+   "verdict": "OK",
+   "class": "Типовой",
+   "median_m2_12m": 437514,
+   "published": "05.08.2024"
+  }
+ },
+ "1859265": {
+  "id": "1859265",
+  "name": "Митинский лес",
+  "okrug": "СЗАО",
+  "district": "Митино",
+  "metro": "Трикотажная",
+  "offers": 250,
+  "status": "Сдача в 4 кв. 2028, есть сданные",
+  "url": "https://zhk-mitinskiy-les-i.cian.ru/",
+  "pages": [
+   "metro-trikotazhnaya-421"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "5703245": {
+  "id": "5703245",
+  "name": "Квартал Мит",
+  "okrug": "СЗАО",
+  "district": "Митино",
+  "metro": "Трикотажная",
+  "offers": 270,
+  "status": "Сдача в 2 кв. 2029",
+  "url": "https://zhk-kvartal-mit-i.cian.ru/",
+  "pages": [
+   "metro-trikotazhnaya-421"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "1311715": {
+  "id": "1311715",
+  "name": "Холланд парк",
+  "okrug": "СЗАО",
+  "district": "Покровское-Стрешнево",
+  "metro": "Трикотажная",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-holland-park-i.cian.ru/",
+  "pages": [
+   "metro-trikotazhnaya-421",
+   "stanciya-mck-streshnevo-292"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "2029573": {
+  "id": "2029573",
+  "name": "Большая Академическая 85",
+  "okrug": "САО",
+  "district": "Тимирязевский",
+  "metro": "Верхние Лихоборы",
+  "offers": 3,
+  "status": "Сдан",
+  "url": "https://zhk-bolshaya-akademicheskaya-85-i.cian.ru/",
+  "pages": [
+   "metro-verhnie-lihobory-353",
+   "stanciya-mck-lihobory-295",
+   "stanciya-mck-vladykino-28"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ },
+ "3991353": {
+  "id": "3991353",
+  "name": "Первый Дубровский",
+  "okrug": "ЮВАО",
+  "district": "Южнопортовый",
+  "metro": "Новохохловская",
+  "offers": 0,
+  "status": "Сдан",
+  "url": "https://zhk-pervyy-dubrovskiy-i.cian.ru/",
+  "pages": [
+   "stanciya-mck-novohohlovskaya-304"
+  ],
+  "ndr": null,
+  "inside_mkad": false,
+  "modern": null
+ }
+}

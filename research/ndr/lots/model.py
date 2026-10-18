@@ -152,6 +152,7 @@ def build():
     pilot = json.loads((HERE / "pilot_zk.json").read_text())
     zk_name = {z: n for d in pilot.values() for z, n in d.items()}
     zk_dev = {z: dv for dv, d in pilot.items() for z in d}
+    obs = {k: v for k, v in obs.items() if v["zk_id"] in zk_name}   # pilot ЖК only: extra ЖК (extra_zk.json) get their own analysis
     pace = project_pace()
     room_key = {"studio": "студия", "oneRoom": "1к", "twoRoom": "2к", "threeRoom": "3к", "fourRoom": "4к+", "fiveRoom": "4к+", "freeLayout": "своб."}
 

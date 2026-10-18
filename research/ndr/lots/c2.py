@@ -60,7 +60,7 @@ def build():
     lots = {}                                   # lot key -> facts
     for r in db.execute("select day, offer_id, price, price_m2 from obs order by day"):
         o = offers[r["offer_id"]]
-        if o["is_apartments"]:
+        if o["is_apartments"] or o["zk_id"] not in pilot:     # pilot ЖК only: extra ЖК (extra_zk.json) get their own analysis
             continue
         sel = M.seller(o["sale_type"], o["from_developer"])
         t = M.rtype(o["rooms"], o["flat_type"])
