@@ -21,7 +21,7 @@ class StopCaptcha(Exception):
 
 class CianBrowser:
     def __init__(self, profile=os.path.join(ROOT, "data", "cian_profile"), api_gap=(2.5, 4.5), page_gap=(9, 16),
-                 home="https://www.cian.ru/"):
+                 home="https://www.cian.ru/robots.txt"):
         self.profile, self.api_gap, self.page_gap, self.home = profile, api_gap, page_gap, home
         self.last_api = self.last_page = 0.0
         self.on_cian = False
@@ -70,8 +70,10 @@ class CianBrowser:
         self.last_api = time.time()
         r = self.page.evaluate("""async ([u, b]) => {
             try {
+              const ac = new AbortController(); const tm = setTimeout(() => ac.abort(), 30000);
               const x = await fetch(u, b ? {method: 'POST', credentials: 'include', headers: {'content-type': 'application/json'},
-                                            body: JSON.stringify(b)} : {credentials: 'include'});
+                                            body: JSON.stringify(b), signal: ac.signal} : {credentials: 'include', signal: ac.signal});
+              clearTimeout(tm);
               return {status: x.status, body: await x.text()};
             } catch (e) { return {status: 0, body: '', error: String(e).slice(0, 200)}; }
         }""", [url, body])
