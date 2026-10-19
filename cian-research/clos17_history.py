@@ -43,9 +43,9 @@ def parse_card(h):
 class Cards(Spider):
     name = 'cian_clos17_cards'
     concurrent_requests = 1
-    download_delay = 3.0
+    download_delay = 5.0
     autothrottle_enabled = True
-    autothrottle_start_delay = 3.0
+    autothrottle_start_delay = 5.0
     autothrottle_max_delay = 300.0
     max_blocked_retries = 8
     logging_level = 20
@@ -55,7 +55,9 @@ class Cards(Spider):
         super().__init__()
 
     def configure_sessions(self, manager):
-        manager.add('cian', FetcherSession(impersonate='chrome', stealthy_headers=True, retries=2, timeout=40))
+        # без перехода по редиректу: блок — это ответ 302 на /cian-captcha/ или 127.0.0.1, его должен увидеть is_blocked,
+        # а не сетевая ошибка (редирект на 127.0.0.1 HTTP-клиент отвергает как SSRF, и паук не включает AutoThrottle)
+        manager.add('cian', FetcherSession(impersonate='chrome', stealthy_headers=True, retries=1, timeout=40, follow_redirects=False))
 
     async def start_requests(self):
         for cid in self.ids:
@@ -64,6 +66,9 @@ class Cards(Spider):
     async def is_blocked(self, response):
         if response.status in (401, 403, 407, 429, 444, 500, 502, 503, 504):
             return True
+        if response.status in (301, 302, 303, 307):
+            loc = response.headers.get('location') or ''
+            return 'captcha' in loc or '127.0.0.1' in loc
         return 'cian-captcha' in str(response.url) or 'smartcaptcha' in response.html_content[:200000]
 
     async def parse(self, response):
@@ -83,6 +88,15 @@ def main():
     J = json.load(open(f'{D}/jk.json'))
     ids = list(range(321905680, 321905720)) + list(range(321435300, 321435360)) + [int(i) for i in J]
     out = json.load(open(PATH)) if os.path.exists(PATH) else {}
+    cards = json.load(open(f'{D}/cards.json'))       # активные лоты уже собраны сегодня (clos17.py cards)
+    for k, c in cards.items():
+        if k in J and k not in out:
+            x = J[k]
+            out[k] = dict(status='published', category=x['category'], jk=x['jk'], address=x['address'], area=x['area'],
+                          floor=x['floor'], rooms=x['rooms'], price=x['price'], sale_type=x['sale_type'], created=c.get('created'),
+                          archived=None, edited=None, developer=x['developer'], seller=c.get('seller'),
+                          views=(c.get('stats') or {}).get('totalViewsFormattedString'),
+                          price_changes=[tuple(p) for p in c.get('price_changes') or []], id=int(k))
     todo = [i for i in dict.fromkeys(ids) if str(i) not in out]
     print('к загрузке', len(todo))
     res = Cards(todo, out).start()
