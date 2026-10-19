@@ -1,144 +1,193 @@
-"""Сборщик каталога новостроек наш.дом.рф (ЕИСЖС).
+"""Сборщик каталога новостроек наш.дом.рф (ЕИСЖС) — чистый HTTP, без браузера.
 
-Что известно (проверено 2026-10-19, см. docs/research-domrf-cian.md):
-- Сайт закрыт антиботом Servicepipe: первая страница -- JS-челлендж, после него cookie (spid/spsn/...).
-  Без cookie любой путь кроме "/" отдаёт 403 «Доступ заблокирован».
-- С датацентровых/иностранных IP челлендж всегда переходит в слайдер-капчу. Капчу этот скрипт НЕ решает:
-  запускать с российского домашнего/мобильного IP или через такой прокси (DOMRF_PROXY=http://user:pass@host:port).
-- Путь API каталога (/сервисы/api/kn/object, /сервисы/api/object/<id>) взят из открытых источников и вживую
-  отсюда не проверен -- поэтому сначала запустите discover: он запишет реальные запросы SPA.
+Как сайт отдаёт данные (проверено 2026-10-19, см. docs/research-domrf-cian.md):
+- Антибот Servicepipe отсекает Chrome/Firefox-отпечатки (JS-челлендж -> капча), но запросы с TLS-отпечатком
+  Safari к JSON-API пропускает -> curl_cffi impersonate="safari18_0".
+- Закрыт отдельным правилом только /сервисы/api/object/* (карточка); всё нужное есть в открытых методах:
+    GET  /сервисы/api/kn/object?offset&limit<=50&objStatus&place   список объектов (0 строящиеся, 1 проблемные, 2 сданные)
+    GET  /сервисы/api/kn/compare?objectId=..x10&diff=false         характеристики объектов (до 10 за запрос)
+    POST /portal-kn/api/sales/portal/flats {externalIds, limit<=100} квартиры объекта (если застройщик публикует продажи)
+    GET  /portal-kn/api/kn/objects/<objId>/flats?limit&offset        квартиры, краткий вид + total
+    GET  /portal-kn/api/kn/objects/near?objId=                       соседние ЖК с квартирографией
+    GET  /portal-kn/api/kn/places?search=                            регионы (regionCd)
+  Маршруты взяты статическим разбором JS-бандла /сервисы/_next (rea analyze-javascript-application).
 
 Примеры:
-  python collectors/domrf.py discover --out data/domrf-discover         # снять реальные API-запросы
-  python collectors/domrf.py catalog --limit 100 --pages 2 --out data/domrf-objects.jsonl
-  python collectors/domrf.py object --id 56842 --out data/domrf-object-56842.json
-  HEADLESS=0 xvfb-run -a python collectors/domrf.py discover ...       # если headless палится
+  python collectors/domrf.py objects --status 0 --region 77 --pages 2 --details --out data/domrf-objects.jsonl
+  python collectors/domrf.py flats --from data/domrf-objects.jsonl --max-objects 20 --out data/domrf-flats.jsonl
+  python collectors/domrf.py flats --obj-id 73741 --out data/domrf-flats-73741.jsonl
+  python collectors/domrf.py flats --obj-id 73741 --units --out data/domrf-units-73741.jsonl   # вся квартирография
 """
-import argparse, json, os, sys, time
+import argparse, json, os, random, sys, time
 from urllib.parse import quote
 
-from scrapling.fetchers import StealthySession
+from curl_cffi import requests
 
-ROOT = "https://xn--80az8a.xn--d1aqf.xn--p1ai"
-CATALOG = ROOT + quote("/сервисы/каталог-новостроек/список-объектов/список") + "?objStatus=0"
-OBJECT_PAGE = ROOT + quote("/сервисы/каталог-новостроек/объект/") + "{id}"
-API_LIST = quote("/сервисы/api/kn/object") + "?offset={offset}&limit={limit}&sortField=devId.devShortCleanNm&sortType=asc&objStatus=0"
-API_OBJECT = quote("/сервисы/api/object/") + "{id}"
-BLOCK_MARKERS = ("похожи на автоматические", "Доступ заблокирован")
-
-
-def blocked(page):
-    html = page.content()
-    return any(m in html for m in BLOCK_MARKERS)
+H = "https://xn--80az8a.xn--d1aqf.xn--p1ai"
+LIST = quote("/сервисы/api/kn/object")
+COMPARE = quote("/сервисы/api/kn/compare")
+SALES_FLATS = "/portal-kn/api/sales/portal/flats"
+LIST_PAGE, COMPARE_BATCH, FLATS_PAGE = 50, 10, 100
 
 
-def pass_challenge(page, wait_ms=20000):
-    """Ждём, пока JS-челлендж Servicepipe отработает и вернёт на сайт."""
-    page.wait_for_timeout(wait_ms)
-    if blocked(page):
-        page.screenshot(path="domrf-blocked.png")
-        sys.exit("Servicepipe показал капчу/блок (скриншот domrf-blocked.png). "
-                 "Нужен российский домашний/мобильный IP: запустите локально или задайте DOMRF_PROXY.")
+class DomRF:
+    def __init__(self, delay=(0.6, 1.2)):
+        self.delay = delay
+        self._new_session()
 
+    def _new_session(self):
+        proxy = os.environ.get("DOMRF_PROXY")
+        self.s = requests.Session(impersonate="safari18_0", proxies={"https": proxy} if proxy else None)
 
-def api_get(page, path):
-    """GET из контекста страницы -- с теми же cookie, TLS и IP, что прошли челлендж."""
-    return page.evaluate("""async (p) => {
-        const r = await fetch(p, {headers: {'accept': 'application/json'}, credentials: 'include'});
-        return {status: r.status, ct: r.headers.get('content-type'), text: await r.text()};
-    }""", path)
+    def _req(self, method, url, **kw):
+        for attempt in range(5):
+            time.sleep(random.uniform(*self.delay))
+            try:
+                r = self.s.request(method, url, timeout=60, **kw)
+            except Exception as e:
+                print(f"  {e.__class__.__name__} -> retry", file=sys.stderr)
+                self._new_session(); time.sleep(5 * 2 ** attempt); continue
+            if r.status_code in (200, 201):
+                return r.json()
+            if r.status_code == 403 or "servicepipe" in r.text[:3000]:
+                # блок Servicepipe: новая сессия (новое соединение) и пауза
+                print(f"  403/challenge on {url[:90]} -> new session, sleep", file=sys.stderr)
+                self._new_session(); time.sleep(15 * 2 ** attempt); continue
+            if r.status_code >= 500:
+                time.sleep(5 * 2 ** attempt); continue
+            raise RuntimeError(f"{r.status_code} {url}: {r.text[:200]}")
+        raise RuntimeError(f"gave up: {url}")
 
-
-def session():
-    proxy = os.environ.get("DOMRF_PROXY")
-    return StealthySession(headless=os.environ.get("HEADLESS", "1") == "1", locale="ru-RU",
-                           timezone_id="Europe/Moscow", google_search=False, timeout=90000,
-                           proxy=proxy or None)
-
-
-def cmd_discover(a):
-    os.makedirs(a.out, exist_ok=True)
-    seen = []
-
-    def act(page):
-        def on_resp(r):
-            if r.request.resource_type not in ("xhr", "fetch"):
-                return
-            item = {"status": r.status, "method": r.request.method, "url": r.url, "post": r.request.post_data}
-            if "json" in (r.headers.get("content-type") or ""):
-                fn = f"{a.out}/resp-{len(seen):03d}.json"
-                try:
-                    open(fn, "wb").write(r.body())
-                    item["file"] = fn
-                except Exception as e:
-                    item["err"] = str(e)[:80]
-            seen.append(item)
-
-        page.on("response", on_resp)
-        pass_challenge(page)
-        for url in (CATALOG, OBJECT_PAGE.format(id=a.id)):
-            page.goto(url, wait_until="domcontentloaded")
-            page.wait_for_timeout(15000)
-            if blocked(page):
-                sys.exit(f"блок на {url}")
-            page.screenshot(path=f"{a.out}/{len(seen):03d}.png", full_page=True)
-
-    with session() as s:
-        s.fetch(ROOT + "/", page_action=act)
-    json.dump(seen, open(f"{a.out}/requests.json", "w"), ensure_ascii=False, indent=1)
-    for x in seen:
-        print(x["status"], x["method"], x["url"][:160])
-
-
-def cmd_catalog(a):
-    out = open(a.out, "w")
-    n = 0
-
-    def act(page):
-        nonlocal n
-        pass_challenge(page)
-        for p in range(a.pages):
-            r = api_get(page, API_LIST.format(offset=p * a.limit, limit=a.limit))
-            if r["status"] != 200 or "json" not in (r["ct"] or ""):
-                sys.exit(f"API ответил {r['status']} {r['ct']}: {r['text'][:200]} -- запустите discover")
-            data = json.loads(r["text"])
-            items = (data.get("data") or {}).get("list") or []
-            for it in items:
-                out.write(json.dumps(it, ensure_ascii=False) + "\n")
-            n += len(items)
-            print(f"  page {p + 1}: {len(items)} (total {(data.get('data') or {}).get('total')})", file=sys.stderr)
-            if len(items) < a.limit:
+    def objects(self, status=0, region=None, max_pages=None):
+        page = 0
+        while max_pages is None or page < max_pages:
+            qs = f"offset={page * LIST_PAGE}&limit={LIST_PAGE}&sortField=objPublDt&sortType=desc&objStatus={status}"
+            if region:
+                qs += f"&place={region}"
+            data = self._req("GET", f"{H}{LIST}?{qs}")["data"]
+            if page == 0:
+                print(f"  total objects: {data['total']}", file=sys.stderr)
+            yield from data["list"]
+            page += 1
+            if len(data["list"]) < LIST_PAGE:
                 break
-            time.sleep(a.delay)
 
-    with session() as s:
-        s.fetch(ROOT + "/", page_action=act)
-    print(f"wrote {n} rows -> {a.out}", file=sys.stderr)
+    def details(self, obj_ids):
+        """objId -> карточка из /kn/compare (батчи по 10)."""
+        out = {}
+        for i in range(0, len(obj_ids), COMPARE_BATCH):
+            qs = "&".join(f"objectId={x}" for x in obj_ids[i:i + COMPARE_BATCH]) + "&diff=false"
+            for d in self._req("GET", f"{H}{COMPARE}?{qs}")["data"]:
+                out[d["objId"]] = d
+        return out
+
+    def units(self, obj_id):
+        """Полная квартирография дома (в т.ч. не в продаже: status/price = null), краткие поля."""
+        offset = 0
+        while True:
+            d = self._req("GET", f"{H}/portal-kn/api/kn/objects/{obj_id}/flats?limit={FLATS_PAGE}&offset={offset}")
+            for u in d["data"]:
+                yield dict(u, externalId=obj_id)
+            offset += FLATS_PAGE
+            if offset >= d["total"] or not d["data"]:
+                break
+
+    def flats(self, obj_id):
+        offset = 0
+        while True:
+            body = {"externalIds": [obj_id], "sort": "area", "order": "asc", "limit": FLATS_PAGE, "offset": offset}
+            page = self._req("POST", H + SALES_FLATS, json=body)
+            yield from page
+            if len(page) < FLATS_PAGE:
+                break
+            offset += FLATS_PAGE
 
 
-def cmd_object(a):
-    def act(page):
-        pass_challenge(page)
-        r = api_get(page, API_OBJECT.format(id=a.id))
-        if r["status"] != 200:
-            sys.exit(f"API ответил {r['status']}: {r['text'][:200]} -- запустите discover")
-        json.dump(json.loads(r["text"]), open(a.out, "w"), ensure_ascii=False, indent=1)
+def object_row(o, d=None):
+    dev = o.get("developer") or {}
+    d = d or {}
+    return {
+        "source": "domrf", "obj_id": o["objId"], "hobj_id": o.get("hobjId"),
+        "url": f"{H}{quote('/сервисы/каталог-новостроек/объект/')}{o['objId']}",
+        "jk_name": d.get("objCommercNm"), "status": o.get("siteStatus"), "problem": o.get("problemFlag"),
+        "developer": dev.get("shortName"), "developer_group": dev.get("groupName") or d.get("devGroupNm"),
+        "developer_inn": dev.get("devInn"), "developer_id": dev.get("devId"),
+        "region_cd": o.get("rpdRegionCd"), "address": o.get("objAddr"), "lat": o.get("latitude"), "lng": o.get("longitude"),
+        "build_type": o.get("buildType"), "floors_min": o.get("objFloorMin"), "floors_max": o.get("objFloorMax"),
+        "flats_count": o.get("objElemLivingCnt"), "living_area": o.get("objSquareLiving"),
+        "ready_date": o.get("objReady100PercDt"), "keys_date": d.get("objTransferPlanDt"),
+        "escrow": bool(o.get("objGuarantyEscrowFlg")), "guaranty": d.get("objGuaranty"),
+        "rpd_num": o.get("rpdNum"), "pd_id": o.get("pdId"), "published": o.get("objPublDt"),
+        "class": d.get("objLkClassDesc"), "walls": d.get("objWallMaterialShortDesc"), "finish": d.get("objLkFinishTypeDesc"),
+        "entrances": d.get("objLivElemEntrCnt"), "flats_per_floor_avg": d.get("objLivElemEntrFloorAvg"),
+        "parking_places": d.get("parkingCnt"), "price_m2_avg": d.get("objPriceAvg"), "sold_pct": d.get("soldOutPerc"),
+        "energy_class": d.get("objEnergyEffShortDesc"),
+        "metro": [(m.get("metroStationNm"), round(m.get("metroStationDistTime") or 0), "walk" if m.get("isMetroStationDistWalking") else "transport")
+                  for m in d.get("objectTransportInfo") or []],
+        "render_url": o.get("hobjRenderPhotoUrl"), "ai_description": o.get("aiDescription"),
+    }
 
-    with session() as s:
-        s.fetch(ROOT + "/", page_action=act)
-    print(f"wrote {a.out}", file=sys.stderr)
+
+def flat_row(f):
+    return {
+        "source": "domrf", "obj_id": f.get("externalId"), "flat_id": f.get("id"), "ods_id": f.get("odsId"),
+        "number": f.get("number"), "type": f.get("type"), "rooms": f.get("rooms"), "is_studio": f.get("isStudio"),
+        "area_total": f.get("totalArea"), "area_living": f.get("livingArea"), "area_kitchen": f.get("kitchenArea"),
+        "floor": f.get("floor", f.get("floorNumber")), "floors_total": f.get("numberFloors"),
+        "entrance": f.get("entrance", f.get("entranceNumber")),
+        "status": f.get("status"), "price_rub": f.get("price"), "price_m2": f.get("pricePerSquareMeter"),
+        "price_changed": f.get("priceChangeDate"), "finish": f.get("state"), "ceiling": f.get("ceilingHeight"),
+        "layout_images": [f"{H}/api/ext/file/{i['attachmentId']}" for i in f.get("images") or [] if i.get("attachmentId")],
+        "updated": f.get("updatedAt"),
+    }
+
+
+def write_jsonl(rows, path):
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    n = 0
+    with open(path, "w") as fh:
+        for r in rows:
+            fh.write(json.dumps(r, ensure_ascii=False) + "\n")
+            n += 1
+    print(f"wrote {n} rows -> {path}", file=sys.stderr)
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["discover", "catalog", "object"])
-    ap.add_argument("--id", type=int, default=56842, help="objId объекта (для discover/object)")
-    ap.add_argument("--limit", type=int, default=100)
-    ap.add_argument("--pages", type=int, default=1)
-    ap.add_argument("--delay", type=float, default=2.0)
+    ap.add_argument("cmd", choices=["objects", "flats"])
+    ap.add_argument("--status", type=int, default=0, help="0 строящиеся, 1 проблемные, 2 сданные")
+    ap.add_argument("--region", type=int, help="regionCd: 77 Москва, 50 МО, 78 СПб ...")
+    ap.add_argument("--pages", type=int, help="страниц по 50 объектов (по умолчанию все)")
+    ap.add_argument("--details", action="store_true", help="добавить характеристики из /kn/compare")
+    ap.add_argument("--obj-id", type=int)
+    ap.add_argument("--from", dest="src", help="JSONL объектов (из команды objects)")
+    ap.add_argument("--max-objects", type=int)
+    ap.add_argument("--units", action="store_true", help="вся квартирография дома, а не только квартиры в продаже")
+    ap.add_argument("--raw", action="store_true")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
-    {"discover": cmd_discover, "catalog": cmd_catalog, "object": cmd_object}[a.cmd](a)
+    c = DomRF()
+
+    if a.cmd == "objects":
+        objs = list(c.objects(a.status, a.region, a.pages))
+        det = c.details([o["objId"] for o in objs]) if a.details else {}
+        write_jsonl((dict(o, details=det.get(o["objId"])) if a.raw else object_row(o, det.get(o["objId"])) for o in objs), a.out)
+    else:
+        if a.obj_id:
+            ids = [a.obj_id]
+        else:
+            ids = [json.loads(l).get("obj_id") or json.loads(l).get("objId") for l in open(a.src)]
+        ids = ids[:a.max_objects] if a.max_objects else ids
+
+        def gen():
+            for i, oid in enumerate(ids, 1):
+                n = 0
+                for f in (c.units(oid) if a.units else c.flats(oid)):
+                    n += 1
+                    yield f if a.raw else flat_row(f)
+                print(f"  [{i}/{len(ids)}] obj {oid}: {n} flats", file=sys.stderr)
+
+        write_jsonl(gen(), a.out)
 
 
 if __name__ == "__main__":

@@ -50,9 +50,10 @@ cd web-search
 .venv/bin/python collectors/cian.py flats --newobject 4025502 --out data/flats.jsonl       # квартиры ЖК
 .venv/bin/python collectors/cian.py flats --region 1 --new --all --out data/all.jsonl      # весь рынок, нарезка по цене
 
-# наш.дом.рф: только с российского IP (из облака Servicepipe показывает капчу)
-PLAYWRIGHT_BROWSERS_PATH=$PWD/.browsers DOMRF_PROXY=http://user:pass@host:port \
-  .venv/bin/python collectors/domrf.py discover --out data/domrf-discover
+# наш.дом.рф: HTTP с Safari-отпечатком, браузер не нужен
+.venv/bin/python collectors/domrf.py objects --status 0 --region 77 --details --out data/domrf-objects.jsonl
+.venv/bin/python collectors/domrf.py flats --from data/domrf-objects.jsonl --out data/domrf-flats.jsonl   # квартиры в продаже
+.venv/bin/python collectors/domrf.py flats --obj-id 73741 --units --out data/domrf-units.jsonl            # вся квартирография дома
 ```
 
 Результаты тестового прогона: `samples/2026-10-19/`.
