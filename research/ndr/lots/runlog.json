@@ -541,5 +541,181 @@
     "site_total": 125
    }
   }
+ },
+ "2026-10-19": {
+  "anomalies": [],
+  "dev": {
+   "2812286": {
+    "source": "donstroy",
+    "collected": 654,
+    "on_sale": 654,
+    "with_price": 654,
+    "with_special": 194,
+    "declared": 654,
+    "declared_by": "список сайта"
+   },
+   "7231": {
+    "source": "donstroy",
+    "collected": 514,
+    "on_sale": 514,
+    "with_price": 514,
+    "with_special": 206,
+    "declared": 514,
+    "declared_by": "список сайта"
+   },
+   "5340468": {
+    "source": "dreamriva",
+    "collected": 61,
+    "on_sale": 60,
+    "with_price": 61,
+    "with_special": 61,
+    "declared": 61,
+    "declared_by": "сайт"
+   },
+   "4183417": {
+    "source": "forma",
+    "collected": 182,
+    "on_sale": 156,
+    "with_price": 182,
+    "with_special": 182,
+    "declared": 182,
+    "declared_by": "сайт"
+   },
+   "2446053": {
+    "source": "fsk",
+    "collected": 207,
+    "on_sale": 207,
+    "with_price": 206,
+    "with_special": 0,
+    "declared": 207,
+    "declared_by": "список сайта"
+   },
+   "4377697": {
+    "source": "fsk",
+    "collected": 10,
+    "on_sale": 10,
+    "with_price": 10,
+    "with_special": 0,
+    "declared": 10,
+    "declared_by": "список сайта"
+   },
+   "4888961": {
+    "source": "fsk",
+    "collected": 352,
+    "on_sale": 352,
+    "with_price": 352,
+    "with_special": 0,
+    "declared": 352,
+    "declared_by": "список сайта"
+   },
+   "3401924": {
+    "source": "granelle",
+    "collected": 38,
+    "on_sale": 38,
+    "with_price": 38,
+    "with_special": 38,
+    "declared": 38,
+    "declared_by": "сайт"
+   },
+   "4494942": {
+    "source": "granelle",
+    "collected": 198,
+    "on_sale": 198,
+    "with_price": 198,
+    "with_special": 198,
+    "declared": 198,
+    "declared_by": "сайт"
+   },
+   "5221539": {
+    "source": "granelle",
+    "collected": 454,
+    "on_sale": 454,
+    "with_price": 454,
+    "with_special": 454,
+    "declared": 454,
+    "declared_by": "сайт"
+   },
+   "5699304": {
+    "source": "granelle",
+    "collected": 117,
+    "on_sale": 117,
+    "with_price": 117,
+    "with_special": 117,
+    "declared": 117,
+    "declared_by": "сайт"
+   },
+   "3202206": {
+    "source": "highlife",
+    "collected": 1511,
+    "on_sale": 196,
+    "with_price": 351,
+    "with_special": 1511,
+    "declared": 1511,
+    "declared_by": "сайт"
+   },
+   "7889": {
+    "source": "lsr",
+    "collected": 659,
+    "on_sale": 659,
+    "with_price": 659,
+    "with_special": 659,
+    "declared": 659,
+    "declared_by": "сайт"
+   }
+  },
+  "cian": {
+   "2812286": {
+    "collected": 714,
+    "site_total": 1223
+   },
+   "7231": {
+    "collected": 751,
+    "site_total": 771
+   },
+   "3401924": {
+    "collected": 75,
+    "site_total": 75
+   },
+   "5699304": {
+    "collected": 120,
+    "site_total": 120
+   },
+   "4494942": {
+    "collected": 214,
+    "site_total": 215
+   },
+   "5221539": {
+    "collected": 91,
+    "site_total": 91
+   },
+   "7889": {
+    "collected": 391,
+    "site_total": 893
+   },
+   "4888961": {
+    "collected": 0,
+    "site_total": null
+   },
+   "2446053": {
+    "collected": 0,
+    "site_total": null
+   },
+   "4377697": {
+    "collected": 0,
+    "site_total": null
+   },
+   "3202206": {
+    "collected": 0,
+    "site_total": null
+   },
+   "4183417": {
+    "collected": 0,
+    "site_total": null
+   },
+   "5340468": {
+    "collected": 0,
+    "site_total": null
+   }
+  }
  }
 }
