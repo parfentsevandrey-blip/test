@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
-        android:label="Всезнайка"
+        android:label="Mr. Knowitall"
         android:theme="@android:style/Theme.DeviceDefault.Light">
 
         <activity android:name=".MainActivity" android:exported="true">
