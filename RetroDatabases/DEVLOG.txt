@@ -40,6 +40,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-24 | 2026-10-18 | 105,281 | 222 | 82 | 118 | 105,703 | +5,999 (databases 85 to 94: 266 records in 110 files, migrations 84→85 to 93→94, tests +0) |
 | CP-25 | 2026-10-18 | 109,452 | 222 | 82 | 118 | 109,874 | +4,171 (databases 95 to 104: 164 records in 110 files, migrations 94→95 to 103→104, tests +0) |
 | CP-26 | 2026-10-18 | 113,927 | 222 | 82 | 118 | 114,349 | +4,475 (databases 105 to 114: 174 records in 110 files, migrations 104→105 to 113→114, tests +0) |
+| CP-27 | 2026-10-19 | 117,950 | 222 | 82 | 118 | 118,372 | +4,023 (databases 115 to 124: 155 records in 110 files, migrations 114→115 to 123→124, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -1410,3 +1411,142 @@ Michael IV, Constantine VII and the Greek fire episode of 941 (110). The Old Boo
 
 - Not verified yet: running on a device, the migration from version 104 to version 114 on a device, the UI with 114 databases in the list, lint and the release build.
 - The 900s to the 990s are the thinnest decades of the catalogue. The question from earlier batches is open: keep them smaller, or fill them, or drop the placed records.
+
+## CP-27: databases 115 to 124, 800 to 900 (the ninth century, the century before the 900s)
+
+Status: ten more databases are in the app, one per decade from the 890s down to the 800s: 155 records, migrations from version 114 to version 124, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. Records per database: 890s 17, 880s 16, 870s 16, 860s 13, 850s 14, 840s 16, 830s 13, 820s 14, 810s 15 and 800s 21. None reaches 50, and all ten are marked "quota": false in tools/databases.json. The build passes (124 databases, 5,229 records), 17 of 17 unit tests pass, and the 55 runnable records (6, 5, 5, 6, 5, 7, 5, 5, 5 and 6) pass against their expected output. Every kind is present in every database.
+
+Mood: This is the ninth century, and the thinnest yet for things with a dated first public form. The 820s and 830s gave the helpers very little, so 14 records carry an anchor year rather than their own date. What went well is the checking. The search caught a wrong coronation list in 115 (Lambert's coronation of 892 was at Ravenna, and Louis III's of 901 was missing) and a wrong attribution in my own anchors file (the 817 Ordinatio was Louis the Pious's, not Charlemagne's). The rare-word check then found four same-item repeats and one shared coronation, and each was fixed. What I am not happy with is the group of PROJECT and FLEX records that only do arithmetic on reigns and dates. They pass, but they are not coding history, and I would cut them first.
+
+Date: 2026-10-19. Totals: Kotlin main 117,950 (CP-26: 113,927), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 118,372 (CP-26: 114,349). The +4,023 is the 110 new Kotlin seed files for databases 115 to 124 and the regenerated SeedCatalog.kt. The database class and the tests did not change; the migrations are generated, with DATABASE_VERSION at 124.
+
+### What changed
+
+- Ten databases, from "Database 115: 890s coding catalogue" (890 to 900) to "Database 124: 800s coding catalogue" (800 to 810). Their records are 17, 16, 16, 13, 14, 16, 13, 14, 15 and 21: 155 new records and 5,229 in the whole catalogue. The new rare records number 80, so the whole catalogue has 1,457.
+- Eleven files per database, 110 in total. Colours are #AD1457, #00695C, #558B2F, #F9A825, #283593, #5E35B1, #00838F, #D84315, #424242 and #9E9D24.
+- Spec: tools/databases.json has 124 entries. All ten new databases are marked "quota": false.
+- Generator: no change in this batch.
+- Documents: CATALOGUE.md and the README overview and structure blocks are regenerated. The README sentence about examples now gives the runnable counts for 75 to 124.
+- Process: one helper per database, ten in parallel, from the brief, an anchors file for the 800s to the 890s and the verifier template. Each helper reported its own count-only checker problems, which the thin-century rule allows. The lead then corrected the 115 coronation project, the 116 accessions project and the repeats listed below.
+
+### Placed records (14)
+
+The year of these records is an anchor, not the date of a dated making. Each record's details say so.
+
+- 115: LANGUAGE "Al-Baladhuri's Futuh al-buldan" (892, the year of the author's death, not of the book); EXAMPLE "Counting the letters of the Alfred Jewel inscription" (899, within the reign of Alfred).
+- 116: DEVICE "The mechanical model of the heavens credited to Abbas ibn Firnas in Cordoba" (887, his death).
+- 117: DEVICE "The vertical windmills of Sistan" (873); GUIDE "How letter counts break a substitution cipher, as al-Kindi set out" (873, the date of al-Kindi's work is disputed).
+- 118: TOOL "al-Farghani's Elements of Astronomy" (861; no source dates the book).
+- 119: PROJECT "Four dated events of the 850s, sorted, with the gaps between them" (852); CROSS "The sphere and cylinder ratio of the Banu Musa's treatise, in Python and C" (850).
+- 120: DEVICE "The beacon towers of Leo the Mathematician, built in Theophilos's reign" (842); GUIDE "How a chain of narrators is checked, pair by pair, against their lifespans" (850, the end of the mihna). The narrators and dates in its example are invented, and the record says so.
+- 121: DEVICE "The marble quadrant of Mount Qasiyun near Damascus, in al-Ma'mun's observing program" (831, the start of the program).
+- 122: DEVICE "The observing instruments of al-Ma'mun's observatory in the Shammasiyya quarter of Baghdad" (828, the start of the observations).
+- 123: DEVICE "The dust board, a sand tray on which Indian-style numerals were written and wiped out" (813); GUIDE "How the awl rule raises the shares of an Islamic inheritance when they add up to more than one" (820).
+- 124: none.
+
+Weakest first: the 123 dust board, the 120 beacon towers, the 117 windmills, the 121 quadrant and the 122 instruments. Then the 116 Firnas model and the 115 Alfred Jewel count. The FLEX and CROSS records of 124 and 116, and the coronation PROJECT of 115, are arithmetic on dates, and they are next in line.
+
+### Problems and what was fixed
+
+- Kavirajamarga (LANGUAGE) and Mahavira's Ganita-sara-sangraha (TOOL) were in both 119 and 120. The 120 copies were removed, so 120 keeps three LANGUAGE records and one TOOL. The 119 records stay.
+- Historia Brittonum was in 121 and 122. The 121 copy was removed, and 122 keeps it, dated 829 to 830.
+- The Konin kyakushiki was in 122 (EXAMPLE and PROJECT) and in 123 (SYSTEM). The 123 copy was removed. 122 keeps its two records, which are two angles on the same code.
+- Charles the Fat's coronation of 881 was in the coronation project of 115 and in the accessions project of 116. The 116 project now uses Marinus I's election as pope in 882, from memory, with gaps 2, 2 and 1 and a span of 5.
+- The coronation project of 115: the first version listed five coronations at Rome and omitted Lambert (892) and Louis III (901). The search confirmed Louis III's coronation at Rome in February 901 and Guy of Spoleto's at Rome on 21 February 891, and found that Lambert's co-emperor coronation of 892 took place at Ravenna. The list is now six coronations at Rome (875, 881, 891, 896, 901 and 915), with gaps 6, 10, 5, 5 and 14. The longest gap is 14 years, from 901 to 915.
+- The 123 anchor: the 817 Ordinatio imperii was Louis the Pious's plan, not Charlemagne's. The record names Louis. The Konin date is disputed (820 here, 829 in one lecture source), and the record says so.
+- 124: the Charlemagne EXAMPLE had the same count as Otto I's and was changed; the CROSS title copied a "days from a death" pattern and was changed.
+
+### Repeats left for a decision
+
+Same book, event or person in more than one record of one database. These are angles, not copies, and they are the first candidates to thin.
+
+- 115: the Ruiju kokushi (LANGUAGE and FLEX); the Zaydi state (SYSTEM and FLEX); Michizane (FLEX and PRACTICE).
+- 116: Basilika (SYSTEM and FLEX); Choe Chiwon (LANGUAGE and EXAMPLE).
+- 117: the Gwalior tablet (LANGUAGE and EXAMPLE); Huang Chao (SYSTEM and PROJECT); the Tahirid and Tulunid spans (CROSS and SYSTEM); Meerssen and Quierzy (FLEX and SYSTEM each).
+- 118: the Nilometer (DEVICE and EXAMPLE); the Glagolitic alphabet (LANGUAGE and CROSS); Basil I (FLEX and SYSTEM); the Diamond Sutra (FLEX and PRACTICE); the Edict of Pitres (FLEX and SYSTEM).
+- 119: the Banu Musa (DEVICE, GUIDE and CROSS); the Zhenyuan miaodao yaolue (PRACTICE and EXAMPLE); al-Mutawakkil's decree of 850 (SYSTEM and FLEX).
+- 120: the Nihon Koki (LANGUAGE and EXAMPLE); the Treaty of Verdun (SYSTEM and FLEX).
+- 121: the Kaicheng Stone Classics (PRACTICE and CROSS); Samarra (EXAMPLE and FLEX).
+- 122: the Konin kyakushiki (EXAMPLE and PROJECT); Olona (SYSTEM and FLEX).
+- 123: Theophanes (EXAMPLE and LANGUAGE); Louis the Pious's Ordinatio (SYSTEM and FLEX).
+- 124: the Kusuko incident (SYSTEM and FLEX); Nikephoros I (SYSTEM and FLEX); the fall of the Barmakids (SYSTEM and FLEX).
+
+Neighbours across databases, different items, kept:
+
+- Choe Chiwon in 116 (LANGUAGE and EXAMPLE) and 117 (PRACTICE on the Tang examination of 874).
+- The Treaty of Meerssen, a SYSTEM in 117 and an end date in the FLEX of 120.
+- Kukai's Precious Key (121, LANGUAGE) and the initiation Kukai gave Saicho (123, PRACTICE).
+- Otfrid's gospel harmony (117) beside the gospel-harmony GUIDE of 121, and the Heliand (121) beside Otfrid.
+- al-Khwarizmi's Algebra (122) beside Abu Kamil's (115) and Omar Khayyam's (97); the Zij (121) beside Adelard's Latin version (92), with the Arabic originals stated in details.
+- A regnal-year guide in 118 (Xiantong) beside those of 76 (Zhiyuan) and 61 (Henry VI): one method on three rulers, flagged.
+- The Kaicheng Stone Classics (121) beside the Guangzheng stone classics (108).
+- The House of Wisdom (121) beside al-Khazini's Book of the Balance of Wisdom (92).
+- The rulers-who-died PROJECT of 123 beside 85, 86 and 101: one family of project.
+
+### Repeat check result
+
+The rare-word check (scratchpad/same_item_batch.py 115 124) gives 248 pairs over 5,229 records. Every pair that touches the batch was read by hand. Most share one common word (west, jewel, urbis, regis, chant and so on) and are different items. The pairs that share two or more rare words are the ones listed above or in the neighbour list. The whole catalogue still has only two repeated titles: "Erlang" and "Software inspections", as before.
+
+### Facts checked by web search
+
+Helpers checked the facts below with web search (standard mode, six calls each at most). Each is a single source or a summary unless stated.
+
+- 115: the Zaydi state founded in 897 and its founder's death at Sa'dah in 911; the end of the imamate disputed (1962 and 1970 both named); Taktika dated about 900 to 912, the suggested 895 not supported; Michizane's arrival at Dazaifu in 901 and his death in 903; Abbo's poem finished about 897. The lead checked the coronations: Louis III at Rome in February 901 (Benedict IV) and Guy of Spoleto at Rome in February 891 are confirmed; Lambert's co-emperor coronation of 892 was at Ravenna, not Rome.
+- 116: the kampaku's formal title in 887, the informal regency from 884, the dispute ended in June 888; the Gyewon collection of 886 and Choe's return to Silla in 885; the Basilika's completion in 888 or about 892; Eulalia about 880, in the same codex as the Ludwigslied; Notker's letter about 884 (an inference); the Firnas device "often described as a planetarium", attribution reported.
+- 117: the Gwalior tablet (year 933 of a 57 BCE era is 876 CE; zeros in 270 and 50); Otfrid's completion 863 to 871; Nishapur fell in 873 (872 in some accounts); the last Tahirid 862 to 873; al-Kindi composed about 850 and died about 873; Procheiros dated 867 to 879 or 907; Choe Chiwon passed the Tang examination in 874.
+- 118: the Roda Nilometer rebuilt in 861 (inscription dated Rajab 247 AH; patron disputed; first gauge 715); the Edict of Pitres in late June 864; the Glagolitic work from 863 (a request dated 862 in some accounts); the Unicode block U+2C00 to U+2C5F, 96 points; al-Farghani's Elements credited with 20,400 miles, but no source gives 861 for the book.
+- 119: the Book of Ingenious Devices has about a hundred devices; the mihna reversal dates to 847 and its full end to about 851; al-Tabari records the 850 dress decree (235 AH), and accounts differ on the colour of the headgear; the Kavirajamarga dated 850, authorship disputed; Mahavira listed under Amoghavarsha I.
+- 120: Leo's beacon line (single source; tenth-century accounts give 829 to 842); Photios's Myriobiblon about 850 to 855, roughly 280 entries. The Kavirajamarga and Mahavira were removed from 120 after the repeat check.
+- 121: Kaicheng with twelve works and 114 tablets, carved 833 to 837 (some accounts say 830); the House of Wisdom under al-Ma'mun, early 830s on one biography; the Qasiyun program 831 to 833, dates vary; the Ryo no gige dated 833 in two accounts; the Yoro regulations in force in 757; the Zij with no Arabic copy known, and some accounts give 830.
+- 122: the Shammasiyya observations started in 828 (other accounts give 828 to 829 or 829 to 830); the Konin kyakushiki completed 820, begun about 803, covering laws from 701 to 819, in force from 830; the Historia Brittonum composed 829 to 830; the Olona assembly of May 825 near Pavia.
+- 123: Yuanhe xingzuan 812; Theophanes's chronicle covers 284 to 813 and was composed about 810 to 815; the Risala reworked in Baghdad and then in Egypt; the 812 initiation at Takaosan, with the final rite withheld and a disputed 805 rite; the siege of Baghdad from August 812 to late September 813; the Konin era 810 to 824.
+- 124: the Book of Armagh, copied by Ferdomnach about 807 (807 or 808 in accounts); Harun's clock of 807 with twelve brass riders, mechanism disputed; the Propositiones about 800 in some accounts, Alcuin's authorship disputed; the Mecca arrangement of 802, division or succession disputed; Kogo Shui of 807, original language disputed.
+
+### Facts from memory, to check
+
+- 115: Asser's Life of Alfred, 893; the Anglo-Saxon Chronicle about 890; the Ruiju kokushi, 892; al-Baladhuri died 892; the Kletorologion, 899; Abu Kamil, the Musica enchiriadis and Sridhara all about 900; Alfred's warships, 896; the kentoshi, 894; the Alfred Jewel and Edward's accession, 899; the coronations of Arnulf (896) and Berengar I (915) at Rome.
+- 116: the Peace of Alfred and Guthrum about 886 and its boundary; Saucourt, 881; Louis III's death, 882; De ordine palatii, 882; the Nomocanon, 883; Industriae tuae, 880; Choe's departure in 868; the Paris siege from late 885; Koko 884, Leo VI 886 and Uda 887; Marinus I's election in 882.
+- 117: al-Ya'qubi, 872; Otfrid's five books; the Treaty of Meerssen in 869 and August 870; the Capitulary of Quierzy in June 877 and its terms; Charles the Bald's coronation in 875 and death in 877; Huang Chao's dates; the Zanj revolt, 869 to 883; the Tahirid dynasty from 821 and the Tulunid from 868 to 905; the Pratihara attribution of the Gwalior tablet; the Sistan mill descriptions.
+- 118: Basil I's sole rule from September 867 and the dynasty's end in 1056; the Diamond Sutra colophon of 11 May 868, printed by Wang Jie and found at Dunhuang in 1900; the Xiantong era from 860; Nicholas I's Responsa of 866; the reign dates in the PROJECT.
+- 119: the Accounts of China and India, 851, with the 916 addition; the Youyang zazu, 860; the Pseudo-Isidorian Decretals about 850; Mahavira's date about 850; Ibn Hanbal's death in 855; the four events of the PROJECT; Archimedes' two-thirds ratio.
+- 120: the Oaths of Strasbourg, 842; the Treaty of Verdun, 843; the Huichang edict of 845 and the Huichang era, 841 to 846; Ennin's diary, 838 to 847; the Nihon Koki of 840, covering 792 to 833; the Feast of Orthodoxy, 843; Chang Pogo's death in 846 (the least certain); the Abbasid reigns; the Treaty of Meerssen, 870; Theophilos's death, 842; the end of the mihna, 850.
+- 121: Einhard, the Heliand and Hizo's Hoyaku at 830; Samarra, 836 and 892; al-Ma'mun's death in 833; the eight reign dates in the PROJECT; the four-Gospel coverage in the GUIDE.
+- 122: al-Khwarizmi's Algebra about 820; the Royal Frankish Annals, 741 to 829; Ermold, 826 to 828; the Hortulus, 827 to 829; Robert of Chester, 1145; the Hindu reckoning about 825; the St Gall plan about 820; the Utrecht Psalter about 820 to 835; the Taiho code of 701; the Yoro code, 718 and 757; Lothair's death in 855.
+- 123: the Shinsen Shojiroku, 815, and its compilers under Saga; the Risala of about 814 and al-Shafi'i's death in 820; the Konin dates; Louis the Pious's Ordinatio, 817; the Iconoclasm of 815 (with 787 and 843); Li Jifu's gazetteer, 813; the death years in the PROJECT; Louis the Pious's death in 840; Harun's death in 809; al-Ma'mun's accession in 813.
+- 124: Charlemagne's coronation and reign dates; Nikephoros I; the Barmakids; the Capitulare de villis; the oath of 802; Carolingian minuscule; the filioque at Aachen; Chang hen ge; the Book of Kells; the Kusuko incident; the Japanese capital dates; Harun's death.
+
+### Single-source dates
+
+- 115: Abbo's 897 (one academic article); the Taktika range (one review); the Zaydi death in 911 (one article); Dazaifu 901 (one Japanese page).
+- 116: the Basilika's sixty books and the Gyewon's sixty poems (one source each); the Epanagoge 886 (one source, plus memory).
+- 117: Otfrid's Vienna manuscript about 871 (one facsimile listing); Procheiros 867 to 879 (one 1928 edition); Choe's return in 885 (one library profile).
+- 118: the 815 restoration and the 850 flood at the Nilometer (one account); the 715 caliph differs between accounts.
+- 119: the device book's 850 (one blog title); the Zhenyuan miaodao yaolue's 858 (one timeline), with its counts of 34 formulas and three saltpetre recipes.
+- 120: Leo's beacon line (single source; tenth-century accounts give 829 to 842).
+- 121: the Qasiyun radius of 5 metres (al-Biruni, one summary); the Zij at 830.
+- 122: the Konin EXAMPLE's volume counts (one source); the Shammasiyya date of 828 (sources differ); the Historia Brittonum at 829 to 830 (one encyclopedia and one database entry).
+- 123: the Yuanhe xingzuan date and Xianzong's commission; the siege dates (one encyclopedia each).
+- 124: 792 and 799 (one summary of the Mecca article); the Propositiones "about 800" (one blog summary); Armagh's 807 (one summary).
+
+### Problems
+
+- Thin decades. All ten are below 50 records, as listed above. The runnable counts are 6, 5, 5, 6, 5, 7, 5, 5, 5 and 6.
+- Placed records. Fourteen of the 155 carry an anchor year. They are the first decision for the user.
+- Off-subject records. Several PROJECT and FLEX records are arithmetic on reigns and dates rather than items of coding history: the coronation projects of 115 and 116, the reign and death counts of 121, 123 and 124, and the event project of 119. They pass, but I would cut them first.
+- Coding relevance. For the 800s and 810s most records are texts, law codes and instruments of astronomy, with little computing history. The brief allows this, but the user should know it.
+- Single sources. Listed above.
+
+### How I checked it
+
+- Unit tests: 17 of 17 pass. The three XML reports show 17 tests, with no failures, errors or skips. The Gradle run ended with BUILD SUCCESSFUL in 2m 32s; the first Gradle daemon failed on startup and a second attempt started it.
+- Examples: each new database has its own verifier with exact expected output, worked out by hand before each run. All 55 runnable records pass. The coronation project of 115 and the accessions project of 116 were worked out by hand again after their fixes.
+- Structure: the generator checks 124 databases and 5,229 records. The checker reports only the count rules (the 50-record total, the kind targets and the 20 runnable records) for each of the ten databases, which the thin-century rule allows. Title checks, text rules, years and the rare counts (7 to 10) pass.
+- Cross-batch: the rare-word check and the lists above; four same-item repeats and one shared coronation were fixed.
+- Whole catalogue: 5,229 records; the only repeated titles are "Erlang" and "Software inspections", as before.
+- Text: the records have no provenance phrases and no dollar signs, and they pass the ASCII rule of the brief, with the en dash allowed.
+
+### Notes
+
+- Not verified yet: running on a device, the migration from version 114 to version 124 on a device, the UI with 124 databases in the list, lint and the release build.
+- The 800s to the 890s are thin in dated coding history. The question from earlier batches is still open, now for ten more decades: keep them smaller, fill them, or drop the placed records. A second question is new: should the off-subject PROJECT and FLEX records stay?
+- The memory facts above are the list to check first. The three coronations were the only facts I checked myself, beyond the helpers' searches.

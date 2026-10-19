@@ -1712,4 +1712,154 @@ The catalogue of database 114 (900 to 910) has the same ten kinds:
 | Projects | 2 | The six national histories of Japan, their volumes and their gaps in years and The imperial anthologies from Ryounshu to Kokinshu, and the gaps between them |
 | Flex | 2 | Years from Later Baekje's proclamation to the Fatimid founding and Years from the founding of Former Shu to the fall of Later Baekje |
 | Cross-code | 1 | The spans of Later Baekje and Later Goguryeo in Python and C |
+
+The catalogue of database 115 (890 to 900) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 5 | Asser's Life of King Alfred, a Latin biography of the West Saxon king, The Anglo-Saxon Chronicle, begun in King Alfred's circle, The Ruiju kokushi, a Japanese collection of the national histories arranged by topic, Abbo of Saint-Germain's Latin poem on the Viking siege of Paris and Al-Baladhuri's Futuh al-buldan, an Arabic history of the early Muslim conquests |
+| Systems | 2 | The Kletorologion of Philotheos, a Byzantine court list of offices and ranks and The Zaydi state that Yahya al-Hadi founded in Yemen |
+| Devices | 1 | Alfred's long warships of 896, some with sixty oars, from the Anglo-Saxon Chronicle |
+| Tools | 2 | Leo VI's Taktika, a Byzantine handbook of army organization and tactics and Abu Kamil's Book of Algebra, an Arabic algebra that extends al-Khwarizmi's |
+| Practices | 1 | The Japanese embassies to Tang China, ended by Sugawara no Michizane's proposal of 894 |
+| Guides | 1 | How the Musica enchiriadis doubles a chant in parallel organum at the fifth and the fourth |
+| Examples | 1 | Counting the letters of the Alfred Jewel inscription, AELFRED MEC HEHT GEWYRCAN |
+| Projects | 1 | Six imperial coronations at Rome from 875 to 915, with the gaps between them summed |
+| Flex | 2 | Years from the Ruiju kokushi to Michizane's exile and Years from the founding of the Zaydi state to its founder's death at Sa'dah |
+| Cross-code | 1 | Sridhara's rule for a quadratic equation, in Python and C |
+
+The catalogue of database 116 (880 to 890) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | The Sequence of Saint Eulalia, one of the earliest surviving texts in Old French, The Ludwigslied, a German song on King Louis III's victory over the Northmen and Choe Chiwon's Gyewon pilgyong, a Silla collection of prose and verse in Classical Chinese |
+| Systems | 5 | The Peace of Alfred and Guthrum, which fixed the boundary of the Danelaw, The Basilika, Leo VI's Greek codification of Justinian's law in sixty books, The Epanagoge, a Byzantine summary of law issued under Basil I in 886, Hincmar's De ordine palatii, a treatise on the officers of the royal household and The kampaku, the adult regency first held by Fujiwara no Mototsune |
+| Devices | 1 | The mechanical model of the heavens credited to Abbas ibn Firnas in Cordoba |
+| Tools | 1 | Photius's Nomocanon, a handbook that set church canons beside the civil law |
+| Practices | 1 | Pope John VIII's letter Industriae tuae, which allowed the Mass in Slavonic |
+| Guides | 1 | How Notker's sequences set one syllable under each note of a jubilus |
+| Examples | 1 | The years Choe Chiwon spent in the Tang, counted from his departure to his return |
+| Projects | 1 | Four accessions and coronations of 882 to 887, listed in order with their gaps |
+| Flex | 1 | Years from the Norse siege of Paris to Leo VI's Basilika |
+| Cross-code | 1 | The gaps between three Byzantine law books of the 880s, in Python and C |
+
+The catalogue of database 117 (870 to 880) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | Otfrid's Evangelienbuch, a gospel harmony in rhymed Old High German verse, al-Ya'qubi's History, an Arabic universal history from the Creation to about 872 and The Gwalior tablet of 876, an Indian inscription that writes its numbers with a zero |
+| Systems | 5 | The Treaty of Meerssen, which divided the middle kingdom of Lotharingia in 870, Ya'qub ibn al-Layth takes Nishapur in 873 and ends the Tahirid dynasty of Khurasan, Huang Chao's rebellion, which began in 874 and took Chang'an in 880, Charles the Bald is crowned emperor at Rome in 875, two years before his death and The Capitulary of Quierzy, which let a count's son take over his father's office |
+| Devices | 1 | The vertical windmills of Sistan, with sails set around an upright shaft |
+| Tools | 1 | The Procheiros Nomos, a short Greek law handbook issued under Basil I |
+| Practices | 1 | The Tang jinshi examination, which the Silla scholar Choe Chiwon passed in 874 |
+| Guides | 1 | How letter counts break a substitution cipher, as al-Kindi set out |
+| Examples | 1 | The numbers 270 and 50 of the Gwalior tablet, split into place values in code |
+| Projects | 1 | The spans of the Zanj revolt and Huang Chao's rebellion, and the gaps between them |
+| Flex | 1 | Years from the Treaty of Meerssen to the Capitulary of Quierzy |
+| Cross-code | 1 | The spans of the Tahirid and Tulunid dynasties in Python and C |
+
+The catalogue of database 118 (860 to 870) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | The Glagolitic alphabet, the letters made for the mission to Moravia |
+| Systems | 3 | The Edict of Pitres, Charles the Bald's capitulary on coinage and bridge defences, Pope Nicholas I's answers to the Bulgarians, a canon-law reply to a new Christian kingdom and Basil I's sole rule, which began the Macedonian dynasty of Byzantium |
+| Devices | 1 | The Roda Nilometer in Cairo, a stone gauge of the Nile rebuilt in 861 |
+| Tools | 1 | al-Farghani's Elements of Astronomy, a summary of Ptolemaic astronomy |
+| Practices | 1 | The Diamond Sutra, printed from woodblocks and dated 868 in its colophon |
+| Guides | 1 | How a Xiantong reign year becomes a calendar year, so that year 9 is 868 |
+| Examples | 1 | The years between the recorded dates of the Roda Nilometer, counted in code |
+| Projects | 1 | The rulers who held power in 865, looked up in a table of reigns |
+| Flex | 2 | Years from the Edict of Pitres to the printing of the Diamond Sutra and Years from Basil I's sole rule to the death of Theodora, the last Macedonian ruler |
+| Cross-code | 1 | The Glagolitic letters of Unicode, from U+2C00 to U+2C5F, counted in Python and C |
+
+The catalogue of database 119 (850 to 860) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | The Book of Animals by al-Jahiz, a miscellany of zoology, stories and verse, The Accounts of China and India, an Arab merchant's report of the sea route to China, The Kavirajamarga, the earliest surviving Kannada work on poetics and The Youyang zazu, a Tang miscellany of anecdotes, plants, animals and crafts |
+| Systems | 2 | The decree of 850 that set distinctive dress for non-Muslim subjects under al-Mutawakkil and The Pseudo-Isidorian Decretals, a forged collection of church law with papal letters |
+| Devices | 1 | The Book of Ingenious Devices of the Banu Musa, with valves, an automatic flute and a self-trimming lamp |
+| Tools | 1 | Mahavira's Ganita-sara-sangraha, an arithmetic handbook from the court of Amoghavarsha I |
+| Practices | 1 | The saltpetre and realgar blend of the Zhenyuan miaodao yaolue, a Taoist recipe that flared |
+| Guides | 1 | How a float valve from the Book of Ingenious Devices keeps a cistern near a set height |
+| Examples | 1 | Share of saltpetre formulas among the 34 elixirs of the Zhenyuan miaodao yaolue |
+| Projects | 1 | Four dated events of the 850s, sorted, with the gaps between them |
+| Flex | 1 | Years from al-Mutawakkil's decree of 850 to the death of Ahmad ibn Hanbal |
+| Cross-code | 1 | The sphere and cylinder ratio of the Banu Musa's treatise, in Python and C |
+
+The catalogue of database 120 (840 to 850) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | The Oaths of Strasbourg, the earliest surviving text in a Romance language, Ennin's diary of his pilgrimage through Tang China, 838 to 847 and The Nihon Koki, Japan's third national history, written in Chinese |
+| Systems | 3 | The Treaty of Verdun, which divided the Carolingian empire into three kingdoms, The Huichang persecution of Buddhism in Tang China, 845 and Chang Pogo's Cheonghae sea garrison and trade network, ended by his death in 846 |
+| Devices | 1 | The beacon towers of Leo the Mathematician, built in Theophilos's reign |
+| Tools | 1 | Photios's Myriobiblon, summaries of about 280 books read for his brother Tarasios |
+| Practices | 1 | The Feast of Orthodoxy, a yearly feast kept from the restoration of images in 843 |
+| Guides | 1 | How a chain of narrators is checked, pair by pair, against their lifespans |
+| Examples | 2 | The six years of the Huichang era, 841 to 846, and the 845 edict in its fifth year and The years the Nihon Koki covers, from 792 to 833, counted in code |
+| Projects | 1 | Abbasid caliphs from al-Mu'tasim to al-Mutawakkil, their years in power summed and ranked |
+| Flex | 2 | Years from the Treaty of Verdun to the Treaty of Meerssen and Years from the death of Theophilos to the death of Emperor Wuzong of Tang |
+| Cross-code | 1 | Adding two fractions cross-wise without reduction, in Python and C |
+
+The catalogue of database 121 (830 to 840) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | Einhard's Life of Charlemagne, a Latin biography of the Frankish emperor, The Heliand, a gospel poem in Old Saxon alliterative verse, Kukai's Precious Key to the Secret Treasury, a summary of his teaching in Chinese and The Ryo no gige, an official commentary on the administrative regulations of the Yoro code |
+| Systems | 1 | The House of Wisdom in Baghdad, the library and academy of al-Ma'mun |
+| Devices | 1 | The marble quadrant of Mount Qasiyun near Damascus, in al-Ma'mun's observing program |
+| Tools | 1 | Al-Khwarizmi's Zij al-Sindhind, astronomical tables dedicated to al-Ma'mun, known only in later versions |
+| Practices | 1 | The Kaicheng Stone Classics, twelve Confucian texts carved on stone at Chang'an |
+| Guides | 1 | How a gospel harmony shows which of the four gospels tell each episode, counted in code |
+| Examples | 1 | The years Samarra served as the Abbasid capital, from 836 to 892, counted in code |
+| Projects | 1 | Reign lengths of eight rulers who held power in 833, summed and ranked |
+| Flex | 1 | Years from al-Ma'mun's death to the move of the Abbasid court to Samarra |
+| Cross-code | 1 | The Kaicheng stone tablets, their faces and the years of carving, in Python and C |
+
+The catalogue of database 122 (820 to 830) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | The Royal Frankish Annals, the official year-by-year record kept at the Frankish court from 741 to 829, The Historia Brittonum, a Latin history of the Britons traditionally ascribed to Nennius, Ermold the Black's Latin poem in honour of Louis the Pious, written in exile at Strasbourg and Walahfrid Strabo's Hortulus, a Latin poem on the herbs of a monastery garden |
+| Systems | 1 | Lothair's school ordinance from the assembly at Olona, which set up a network of teaching centres in Italy |
+| Devices | 1 | The observing instruments of al-Ma'mun's observatory in the Shammasiyya quarter of Baghdad |
+| Tools | 1 | Al-Khwarizmi's Algebra, the Compendious Book on Calculation by Completion and Balancing |
+| Practices | 2 | The plan of St Gall, a drawn plan of an ideal monastery with its rooms named in Latin and The Utrecht Psalter, whose drawings sit beside the psalm verses they illustrate |
+| Guides | 1 | How al-Khwarizmi's Hindu reckoning adds two numbers column by column, carrying the ten |
+| Examples | 1 | The fifty volumes of the Konin kyakushiki, edicts and regulations, counted in code |
+| Projects | 1 | Japan's early legal codes, from the Taiho code of 701 to the Konin kyakushiki of 820, and the years between them |
+| Flex | 1 | Years from Lothair's school ordinance at Olona in 825 to the death of Lothair I in 855 |
+| Cross-code | 1 | Al-Khwarizmi's rule for a square and ten roots equal to thirty-nine, in Python and in C |
+
+The catalogue of database 123 (810 to 820) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | Yuanhe xingzuan, a Tang book of Chinese surnames and their clans, Shinsen Shojiroku, the Japanese register of the families of the capital and their origins, Theophanes's Chronographia, a Greek chronicle of the years 284 to 813 and Al-Shafi'i's Risala, a treatise on the sources and method of Islamic law |
+| Systems | 3 | The civil war between the Abbasid brothers al-Amin and al-Ma'mun, 811 to 813, Leo V the Armenian restores icon-breaking at a Constantinople council of 815 and Louis the Pious's Ordinatio imperii of 817, the plan that made Lothair co-emperor |
+| Devices | 1 | The dust board, a sand tray on which Indian-style numerals were written and wiped out |
+| Tools | 1 | Li Jifu's Yuanhe Map and Gazetteer of Prefectures and Counties, a Tang reference work |
+| Practices | 1 | The esoteric initiation that Kukai gave Saicho at Takaosan-ji in 812 |
+| Guides | 1 | How the awl rule raises the shares of an Islamic inheritance when they add up to more than one |
+| Examples | 1 | The years of Theophanes's chronicle, from 284 to 813, counted by century |
+| Projects | 1 | Six rulers who died in office in the 810s, counted by the year of their deaths |
+| Flex | 1 | Years from Louis the Pious's Ordinatio of 817 to his death in 840 |
+| Cross-code | 1 | The months of the siege of Baghdad, August 812 to September 813, in Python and C |
+
+The catalogue of database 124 (800 to 810) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | Bai Juyi's Song of Everlasting Sorrow, a narrative poem on Emperor Xuanzong and Yang Guifei, of 806, Kogo Shui, the Inbe family's gleanings from ancient stories, presented to the throne in 807, The Book of Armagh, a Latin New Testament with writings of Saint Patrick, copied at Armagh about 807 and The Book of Kells, an illuminated Latin book of the four gospels dated about 800 |
+| Systems | 5 | Charlemagne's coronation as emperor at Rome on Christmas Day 800, Harun al-Rashid's Mecca arrangement of 802 for his sons al-Amin and al-Ma'mun, Nikephoros I takes the Byzantine throne after deposing the empress Irene in 802, Harun al-Rashid's fall of the Barmakid family in 803, after decades at the head of government and The Kusuko incident of 810, when Emperor Heizei tried to move the capital back to Nara |
+| Devices | 1 | The water clock that Harun al-Rashid sent to Charlemagne, recorded in the Frankish annals for 807 |
+| Tools | 1 | The Propositiones ad acuendos iuvenes, a Latin book of problems to sharpen the young, credited to Alcuin |
+| Practices | 4 | The Capitulare de villis, Charlemagne's rules for the stewards of royal estates, about 800, The oath of loyalty of 802, sworn to Charlemagne by the free men of his realm, The Carolingian minuscule, a clear book hand that spread through Charlemagne's realm about 800 and The Creed sung with the filioque at the Frankish court, confirmed by the council of Aachen in 809 |
+| Guides | 1 | How the wolf, goat and cabbage crossing is solved in seven crossings, checked by a program |
+| Examples | 1 | Charlemagne's reign of 46 years, split at the death of his brother Carloman in 771 |
+| Projects | 1 | Japan's capitals from 710 to 810, the years each one served, summed and ranked |
+| Flex | 2 | Years from the fall of the Barmakids in 803 to the death of Harun al-Rashid in 809 and Years from Nikephoros I's accession in 802 to the Kusuko incident in 810 |
+| Cross-code | 1 | The years between the stages of Harun al-Rashid's succession plan, in Python and C |
 <!-- END GENERATED CATALOGUE -->
