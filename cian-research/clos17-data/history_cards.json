@@ -1152,5 +1152,339 @@
  "321905694": {
   "status": "нет карточки",
   "id": 321905694
+ },
+ "321905696": {
+  "status": "нет карточки",
+  "id": 321905696
+ },
+ "321905698": {
+  "status": "нет карточки",
+  "id": 321905698
+ },
+ "321905702": {
+  "status": "нет карточки",
+  "id": 321905702
+ },
+ "321435310": {
+  "status": "deleted",
+  "category": "newBuildingFlatSale",
+  "jk": "Фамильный дом Люче",
+  "address": "Москва, Крестовоздвиженский, 4",
+  "area": 136.84,
+  "floor": 4,
+  "rooms": 2,
+  "price": 389994000,
+  "sale_type": "fz214",
+  "created": "2025-09-02T19:17:56.313",
+  "archived": null,
+  "edited": "2026-03-15T17:05:03.633000Z",
+  "developer": false,
+  "seller": "MR",
+  "views": "135 просмотров, нет за сегодня",
+  "price_changes": [],
+  "id": 321435310
+ },
+ "321435311": {
+  "status": "нет карточки",
+  "id": 321435311
+ },
+ "321435315": {
+  "status": "нет карточки",
+  "id": 321435315
+ },
+ "321435316": {
+  "status": "нет карточки",
+  "id": 321435316
+ },
+ "321435317": {
+  "status": "deleted",
+  "category": "newBuildingFlatSale",
+  "jk": "Фамильный дом Люче",
+  "address": "Москва, Крестовоздвиженский, 4",
+  "area": 78.34,
+  "floor": 3,
+  "rooms": 1,
+  "price": 207601000,
+  "sale_type": "free",
+  "created": "2025-09-02T19:17:58.943",
+  "archived": null,
+  "edited": "2026-08-19T12:03:18.817000Z",
+  "developer": false,
+  "seller": "MR",
+  "views": "2202 просмотра, нет за сегодня",
+  "price_changes": [],
+  "id": 321435317
+ },
+ "321435318": {
+  "status": "deleted",
+  "category": "newBuildingFlatSale",
+  "jk": "LUCE",
+  "address": "Москва, Крестовоздвиженский, 4",
+  "area": 136.32,
+  "floor": 5,
+  "rooms": 2,
+  "price": 422592000,
+  "sale_type": "fz214",
+  "created": "2025-09-02T19:17:59.53",
+  "archived": null,
+  "edited": "2026-02-13T19:03:47.023000Z",
+  "developer": false,
+  "seller": "MR",
+  "views": "99 просмотров, нет за сегодня",
+  "price_changes": [],
+  "id": 321435318
+ },
+ "321435319": {
+  "status": "нет карточки",
+  "id": 321435319
+ },
+ "321435323": {
+  "status": "нет карточки",
+  "id": 321435323
+ },
+ "321435325": {
+  "status": "нет карточки",
+  "id": 321435325
+ },
+ "321435326": {
+  "status": "нет карточки",
+  "id": 321435326
+ },
+ "321435328": {
+  "status": "deleted",
+  "category": "newBuildingFlatSale",
+  "jk": "LUCE",
+  "address": "Москва, Крестовоздвиженский, 4",
+  "area": 302.61,
+  "floor": 6,
+  "rooms": 4,
+  "price": 1210440000,
+  "sale_type": "fz214",
+  "created": "2025-09-02T19:18:05.61",
+  "archived": null,
+  "edited": "2025-10-12T16:04:07.477000Z",
+  "developer": false,
+  "seller": "MR",
+  "views": "128 просмотров, нет за сегодня",
+  "price_changes": [],
+  "id": 321435328
+ },
+ "321435329": {
+  "status": "нет карточки",
+  "id": 321435329
+ },
+ "321435331": {
+  "status": "deleted",
+  "category": "newBuildingFlatSale",
+  "jk": "LUCE",
+  "address": "Москва, Крестовоздвиженский, 4",
+  "area": 78.34,
+  "floor": 4,
+  "rooms": 1,
+  "price": 219352000,
+  "sale_type": "fz214",
+  "created": "2025-09-02T19:18:07.497",
+  "archived": null,
+  "edited": "2026-02-13T19:02:58.823000Z",
+  "developer": false,
+  "seller": "MR",
+  "views": "138 просмотров, нет за сегодня",
+  "price_changes": [],
+  "id": 321435331
+ },
+ "321435333": {
+  "status": "нет карточки",
+  "id": 321435333
+ },
+ "321435334": {
+  "status": "deleted",
+  "category": "newBuildingFlatSale",
+  "jk": "Фамильный дом Люче",
+  "address": "Москва, Крестовоздвиженский, 4",
+  "area": 144.0,
+  "floor": 3,
+  "rooms": 2,
+  "price": 381600000,
+  "sale_type": "free",
+  "created": "2025-09-02T19:18:08.93",
+  "archived": null,
+  "edited": "2026-08-19T13:03:08.153000Z",
+  "developer": false,
+  "seller": "MR",
+  "views": "401 просмотр, нет за сегодня",
+  "price_changes": [],
+  "id": 321435334
+ },
+ "321435335": {
+  "status": "нет карточки",
+  "id": 321435335
+ },
+ "321435336": {
+  "status": "deleted",
+  "category": "newBuildingFlatSale",
+  "jk": "LUCE",
+  "address": "Москва, Крестовоздвиженский, 4",
+  "area": 79.25,
+  "floor": 5,
+  "rooms": 1,
+  "price": 245675000,
+  "sale_type": "fz214",
+  "created": "2025-09-02T19:18:09.74",
+  "archived": null,
+  "edited": "2026-02-13T19:03:47.053000Z",
+  "developer": false,
+  "seller": "MR",
+  "views": "172 просмотра, нет за сегодня",
+  "price_changes": [],
+  "id": 321435336
+ },
+ "321435337": {
+  "status": "нет карточки",
+  "id": 321435337
+ },
+ "321435340": {
+  "status": "нет карточки",
+  "id": 321435340
+ },
+ "321435344": {
+  "status": "нет карточки",
+  "id": 321435344
+ },
+ "321435346": {
+  "status": "draft",
+  "category": "newBuildingFlatSale",
+  "jk": "Фамильный дом Люче",
+  "address": "Москва, Крестовоздвиженский, 4",
+  "area": 96.59,
+  "floor": 4,
+  "rooms": 1,
+  "price": 284940500,
+  "sale_type": "free",
+  "created": "2025-09-02T19:18:14.987",
+  "archived": null,
+  "edited": "2026-10-05T15:42:10.930222+03:00",
+  "developer": false,
+  "seller": "MR",
+  "views": "549 просмотров, нет за сегодня",
+  "price_changes": [
+   [
+    "2026-09-06",
+    284940500
+   ]
+  ],
+  "id": 321435346
+ },
+ "321435347": {
+  "status": "нет карточки",
+  "id": 321435347
+ },
+ "321435348": {
+  "status": "нет карточки",
+  "id": 321435348
+ },
+ "321435350": {
+  "status": "deleted",
+  "category": "newBuildingFlatSale",
+  "jk": "Фамильный дом Люче",
+  "address": "Москва, Крестовоздвиженский, 4",
+  "area": 148.1,
+  "floor": 3,
+  "rooms": 2,
+  "price": 399870000,
+  "sale_type": "free",
+  "created": "2025-09-02T19:18:16.663",
+  "archived": null,
+  "edited": "2026-05-24T15:05:01.060000Z",
+  "developer": false,
+  "seller": "MR",
+  "views": "118 просмотров, нет за сегодня",
+  "price_changes": [],
+  "id": 321435350
+ },
+ "321435351": {
+  "status": "нет карточки",
+  "id": 321435351
+ },
+ "321435352": {
+  "status": "нет карточки",
+  "id": 321435352
+ },
+ "321905680": {
+  "status": "нет карточки",
+  "id": 321905680
+ },
+ "321905683": {
+  "status": "нет карточки",
+  "id": 321905683
+ },
+ "321905686": {
+  "status": "deleted",
+  "category": "newBuildingFlatSale",
+  "jk": "Кло 17",
+  "address": "Москва, Староваганьковский, 17С4",
+  "area": 154.1,
+  "floor": 5,
+  "rooms": 2,
+  "price": 454595000,
+  "sale_type": "fz214",
+  "created": "2025-09-16T19:04:14.447",
+  "archived": null,
+  "edited": "2026-10-12T02:14:23.337000Z",
+  "developer": false,
+  "seller": "MR",
+  "views": "464 просмотра, нет за сегодня",
+  "price_changes": [
+   [
+    "2025-09-16",
+    452825000
+   ],
+   [
+    "2026-07-09",
+    454595000
+   ]
+  ],
+  "id": 321905686
+ },
+ "321905713": {
+  "status": "deleted",
+  "category": "newBuildingFlatSale",
+  "jk": "Clos 17",
+  "address": "Москва, Староваганьковский, 17С4",
+  "area": 105.9,
+  "floor": 3,
+  "rooms": 1,
+  "price": 270045000,
+  "sale_type": "fz214",
+  "created": "2025-09-16T19:04:28.88",
+  "archived": null,
+  "edited": "2025-11-23T22:05:07.010000Z",
+  "developer": false,
+  "seller": "MR",
+  "views": "44 просмотра, нет за сегодня",
+  "price_changes": [],
+  "id": 321905713
+ },
+ "321905714": {
+  "status": "deleted",
+  "category": "newBuildingFlatSale",
+  "jk": "Кло 17",
+  "address": "Москва, Староваганьковский, 17С4",
+  "area": 153.5,
+  "floor": 4,
+  "rooms": 2,
+  "price": 406775000,
+  "sale_type": "fz214",
+  "created": "2025-09-16T19:04:30.813",
+  "archived": null,
+  "edited": "2026-04-09T19:05:49.537000Z",
+  "developer": false,
+  "seller": "MR",
+  "views": "119 просмотров, нет за сегодня",
+  "price_changes": [],
+  "id": 321905714
+ },
+ "321905715": {
+  "status": "нет карточки",
+  "id": 321905715
  }
 }
