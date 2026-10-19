@@ -2,6 +2,7 @@
 # Resume today's snapshots of the resale pilot after a container restart: ЦИАН lots (collector.py) and
 # developer price lists ([С1] devcat.py). Idempotent, never fails the caller.
 set -uo pipefail
+if [ -f "${CLAUDE_PROJECT_DIR:-/home/user/test}/research/STOP" ]; then echo "stopped by owner (research/STOP): nothing started"; exit 0; fi
 REPO="${CLAUDE_PROJECT_DIR:-/home/user/test}"
 SCRATCH=/tmp/claude-0/-home-user-test/ea57c60a-b461-5b01-9fed-bf21bf3c9920/scratchpad
 WORK="${LOTS_WORK:-$SCRATCH}"
