@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/web-search/setup.sh",
+            "timeout": 600
+          }
+        ]
+      }
+    ]
+  },
+  "enabledMcpjsonServers": ["scrapling", "rea"]
+}

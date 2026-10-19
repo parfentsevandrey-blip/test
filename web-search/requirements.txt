@@ -1,0 +1,2 @@
+scrapling[all]==0.5
+crawl4ai==0.9.5
