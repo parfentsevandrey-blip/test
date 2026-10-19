@@ -83,7 +83,14 @@ class MainActivity : Activity() {
         "Палиндром" to { palindromeScreen() },
         "Факториал" to { factorialScreen() },
         "Простые" to { primesScreen() },
-        "Комплимент" to { complimentScreen() }
+        "Комплимент" to { complimentScreen() },
+        "Анекдот" to { jokeScreen() },
+        "Шар" to { magicBallScreen() },
+        "Дни" to { daysLeftScreen() },
+        "Цвет" to { colorScreen() },
+        "Рейтинг" to { ratingScreen() },
+        "Лайфхак" to { lifehackScreen() },
+        "Клики" to { clickCounterScreen() }
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -1339,6 +1346,182 @@ class MainActivity : Activity() {
         return column().apply {
             addView(text)
             addView(give)
+        }
+    }
+
+    // ---------- Анекдот ----------
+
+    private fun jokeScreen(): View {
+        // Анекдоты хранятся в коде, потому что интернет — это для других приложений
+        val jokes = listOf(
+            "Программист пошёл в магазин. Жена сказала: купи хлеб. Он купил хлеб.",
+            "Почему Android не ест? Потому что его никто не кормил обновлениями.",
+            "Сколько нужно багов, чтобы заменить лампочку? Это не баг, это фича."
+        )
+        val joke = label("Нажмите, чтобы посмеяться", 18f)
+        val next = Button(this).apply { text = "Ещё" }
+        next.setOnClickListener {
+            joke.text = jokes[Random().nextInt(jokes.size)]
+        }
+        return column().apply {
+            addView(joke)
+            addView(next)
+        }
+    }
+
+    // ---------- Магический шар ----------
+
+    private fun magicBallScreen(): View {
+        // Ответы не зависят от вопроса. Вопрос можно не задавать, ответ всё равно придёт.
+        val answers = listOf(
+            "Да", "Нет", "Возможно", "Спросите позже", "Определённо", "Не рассчитывайте",
+            "Звёзды говорят да", "Мне нужно подумать", "Конечно", "Ни за что"
+        )
+        val question = EditText(this).apply { hint = "Вопрос (необязательно)" }
+        val out = label("Шар молчит")
+        val ask = Button(this).apply { text = "Спросить шар" }
+        ask.setOnClickListener {
+            val pick = answers[Random().nextInt(answers.size)]
+            // Вопрос в ответ не вставляем: он нам не нужен. Но пустую строку на всякий случай проверим.
+            out.text = if (question.text.isEmpty()) pick else "$pick (но вопрос был: ${question.text})"
+        }
+        return column().apply {
+            addView(question)
+            addView(ask)
+            addView(out)
+        }
+    }
+
+    // ---------- Дни до события ----------
+
+    private fun daysLeftScreen(): View {
+        // Даты событий зашиты в код. Новые события добавляются релизами, то есть никогда.
+        val events = mapOf(
+            "Новый год" to 1,
+            "Лето" to 6,
+            "Осень" to 9
+        )
+        val out = label("Выберите событие")
+        val buttons = GridLayout(this).apply { columnCount = 3 }
+        events.forEach { (name, month) ->
+            buttons.addView(Button(this).apply {
+                text = name
+                setOnClickListener {
+                    // Считаем дни грубо: месяц умножаем на тридцать и вычитаем текущий день года
+                    val today = (System.currentTimeMillis() / 86_400_000L % 365).toInt()
+                    val target = month * 30
+                    val left = ((target - today) % 365 + 365) % 365
+                    out.text = "До «$name» примерно $left дн."
+                }
+            })
+        }
+        return column().apply {
+            addView(buttons)
+            addView(out)
+        }
+    }
+
+    // ---------- Цвет ----------
+
+    private fun colorScreen(): View {
+        // Цвет генерируется случайными байтами. Контраст с фоном не проверяем.
+        val swatch = label("", 48f)
+        val reroll = Button(this).apply { text = "Другой цвет" }
+        reroll.setOnClickListener {
+            val rnd = Random()
+            val r = rnd.nextInt(256)
+            val g = rnd.nextInt(256)
+            val b = rnd.nextInt(256)
+            val hex = "#%02X%02X%02X".format(r, g, b)
+            swatch.text = hex
+            // Цвет фона ставим на саму надпись, и она может стать невидимой. Это тоже дизайн.
+            swatch.setBackgroundColor(android.graphics.Color.rgb(r, g, b))
+        }
+        return column().apply {
+            addView(swatch)
+            addView(reroll)
+        }
+    }
+
+    // ---------- Рейтинг ----------
+
+    private fun ratingScreen(): View {
+        // Рейтинг приложений, которые мы "проверили". Проверка заключалась в том, что мы на них смотрели.
+        val apps = listOf(
+            "Калькулятор" to 3,
+            "Блокнот" to 2,
+            "Звонилка" to 1,
+            "Всезнайка" to 5
+        )
+        val list = label("")
+        val sort = Button(this).apply { text = "Отсортировать по оценке" }
+        sort.setOnClickListener {
+            // Сортируем вставками вручную, потому что встроенный sortedBy слишком быстрый
+            val rows = apps.toMutableList()
+            for (i in 1 until rows.size) {
+                val key = rows[i]
+                var j = i - 1
+                while (j >= 0 && rows[j].second < key.second) {
+                    rows[j + 1] = rows[j]
+                    j--
+                }
+                rows[j + 1] = key
+            }
+            list.text = rows.joinToString("\n") { "${"★".repeat(it.second)} ${it.first}" }
+        }
+        return column().apply {
+            addView(sort)
+            addView(list)
+        }
+    }
+
+    // ---------- Лайфхаки ----------
+
+    private fun lifehackScreen(): View {
+        // Лайфхаки проверены на одном телефоне, в одну дату, и не повторялись
+        val hacks = listOf(
+            "Чтобы не терять заряд, выключите экран.",
+            "Чтобы найти телефон, позвоните себе с другого.",
+            "Чтобы вспомнить пароль, введите наугад.",
+            "Чтобы ускорить приложение, закройте все остальные."
+        )
+        var index = 0
+        val hack = label(hacks[index], 18f)
+        val next = Button(this).apply { text = "Следующий лайфхак" }
+        next.setOnClickListener {
+            // Идём по кругу, но индекс сдвигаем на случайное число, чтобы было интереснее
+            index = (index + Random().nextInt(hacks.size) + 1) % hacks.size
+            hack.text = hacks[index]
+        }
+        return column().apply {
+            addView(hack)
+            addView(next)
+        }
+    }
+
+    // ---------- Счётчик кликов ----------
+
+    private fun clickCounterScreen(): View {
+        // Счётчик хранится в SharedPreferences и читается заново при каждом открытии вкладки
+        var clicks = Knowitall.prefs.getInt("clicks", 0)
+        val count = label("Кликов: $clicks", 36f)
+        val tap = Button(this).apply { text = "Нажми меня" }
+        tap.setOnClickListener {
+            clicks++
+            // Записываем на каждый клик синхронно, потому что асинхронность — это сложно
+            Knowitall.prefs.edit().putInt("clicks", clicks).commit()
+            count.text = "Кликов: $clicks"
+        }
+        val reset = Button(this).apply { text = "Сбросить" }
+        reset.setOnClickListener {
+            clicks = 0
+            Knowitall.prefs.edit().putInt("clicks", 0).commit()
+            count.text = "Кликов: $clicks"
+        }
+        return column().apply {
+            addView(count)
+            addView(tap)
+            addView(reset)
         }
     }
 }
