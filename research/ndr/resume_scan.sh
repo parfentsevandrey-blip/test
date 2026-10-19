@@ -3,6 +3,7 @@
 # the hourly check-in and by hand at the same time (flock + "already running" check).
 # Never fails the caller: every problem is reported on stdout and the script exits 0.
 set -uo pipefail
+if [ -f "${CLAUDE_PROJECT_DIR:-/home/user/test}/research/STOP" ]; then echo "stopped by owner (research/STOP): nothing started"; exit 0; fi
 
 REPO="${CLAUDE_PROJECT_DIR:-/home/user/test}"
 COPY="$REPO/research/ndr"                                   # committed copy (state.json after every pass)
