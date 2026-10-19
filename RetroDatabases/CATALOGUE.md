@@ -1862,4 +1862,154 @@ The catalogue of database 124 (800 to 810) has the same ten kinds:
 | Projects | 1 | Japan's capitals from 710 to 810, the years each one served, summed and ranked |
 | Flex | 2 | Years from the fall of the Barmakids in 803 to the death of Harun al-Rashid in 809 and Years from Nikephoros I's accession in 802 to the Kusuko incident in 810 |
 | Cross-code | 1 | The years between the stages of Harun al-Rashid's succession plan, in Python and C |
+
+The catalogue of database 125 (790 to 800) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | The Shoku Nihongi, the second of Japan's national histories, completed in 797 and covering the years 697 to 791 and The first Arabic version of Euclid's Elements, attributed to al-Hajjaj ibn Yusuf under Harun al-Rashid, about 800 |
+| Systems | 5 | The Council of Frankfurt of 794, which rejected the image decrees of the Second Council of Nicaea and condemned adoptionism, Irene has her son Constantine VI blinded in 797 and rules the Byzantine empire alone, The Avar treasure, gold and silver taken from the Avar ring and sent to Aachen in 796, Sakanoue no Tamuramaro is named seii taishogun, the great general against the Emishi, in 797 and Pope Leo III is attacked in Rome in 799 and flees to Charlemagne at Paderborn |
+| Devices | 1 | The Viking longship of the Lindisfarne raid of 793, a clinker-built warship of the northern seas |
+| Tools | 1 | Khalil ibn Ahmad's Kitab al-Ayn, an Arabic dictionary whose word lists follow the place where each letter is spoken |
+| Practices | 2 | The Libri Carolini, a Frankish treatise against the image decrees of the Second Council of Nicaea, written in Charlemagne's name about 790 and The first paper mill in Baghdad, set up about 794 under the Barmakid viziers |
+| Guides | 1 | How an Arabic verb is built from a three-letter root set into the pattern fa'ala, in the manner of Sibawayh's grammar |
+| Examples | 1 | The 52 years between the first and last dated letters of the Codex Carolinus, 739 to 791, counted in code |
+| Projects | 1 | Reign lengths of four rulers who held power in 795, summed and ranked |
+| Flex | 1 | Years from the Council of Frankfurt in 794 to the attack on Pope Leo III in 799 |
+| Cross-code | 1 | Three dates before Charlemagne's imperial coronation, 796, 799 and 800, with the years between them in Python and C |
+
+The catalogue of database 126 (780 to 790) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | The Nestorian stele of Xi'an, a Chinese and Syriac monument to the Church of the East in Tang China, erected in 781, Malik ibn Anas's Muwatta, a collection of hadith and legal practice from Medina, first compiled about 780, Kitab al-'Ayn, the first Arabic dictionary, ascribed to al-Khalil ibn Ahmad of Basra and Jinasena's Harivamsa Purana, a Sanskrit Jain history centered on the Tirthankara Neminatha, completed in 783 |
+| Systems | 5 | Yang Yan's two-tax reform of 780, which replaced the old levies with taxes on property paid twice a year, Charlemagne's capitulary for the Saxon lands, which set the death penalty for refusing baptism, The Second Council of Nicaea, which restored the veneration of icons in 787 under the empress Irene, Tassilo III of Bavaria deposed at the Synod of Ingelheim in 788, which ended Bavaria's independent duchy and Charlemagne's Admonitio generalis of 789, the church reform capitulary that called for schools in monasteries and bishoprics |
+| Devices | 1 | The Persian wheel, a bucket wheel that lifted irrigation water in the Abbasid lands, whose first use there is undated |
+| Tools | 1 | Paul the Deacon's Homiliary, a book of sermons for the church year, compiled at Charlemagne's request |
+| Practices | 2 | Lu Yu's Classic of Tea, the Chajing, a book on the growing, making and brewing of tea, usually dated to about 780 and The Hadrianum, the Roman sacramentary of Mass prayers that Pope Hadrian I sent to Charlemagne about 785 |
+| Guides | 1 | How al-Khalil's Kitab al-'Ayn sorts letter strings by articulation, from ayn at the throat to mim at the lips, checked by a program |
+| Examples | 1 | The 146 years from Alopen's arrival in Chang'an in 635 to the Xi'an stele of 781, counted in code |
+| Projects | 1 | The seven first ecumenical councils, from Nicaea I in 325 to Nicaea II in 787, counted by city and by century |
+| Flex | 1 | Years from Charlemagne's Admonitio generalis in 789 to the council of Frankfurt in 794, which condemned the Nicaean decrees |
+| Cross-code | 1 | Greek-era years turned into AD years, as the Syriac date of the Xi'an stele requires, in Python and C |
+
+The catalogue of database 127 (770 to 780) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Beatus of Liebana's Commentary on the Apocalypse, a Latin commentary on Revelation finished in 776 |
+| Systems | 2 | Charlemagne takes Pavia and ends the Lombard kingdom of Italy in 774 and The Herstal capitulary of March 779, Charlemagne's measures on church and state from a meeting at Herstal |
+| Devices | 1 | The first astrolabe made in Islam, credited to Muhammad ibn Ibrahim al-Fazari |
+| Tools | 1 | The Sindhind, Arabic astronomical tables made at Baghdad from Brahmagupta's treatise in the early 770s |
+| Practices | 1 | Offa of Mercia's gold coin of about 774, a Latin-lettered copy of an Abbasid dinar |
+| Guides | 1 | How the 1260 days of Revelation are reckoned as forty-two months of thirty days, checked by a program |
+| Examples | 1 | The Lombard kingdom's 206 years in Italy, split at the years 600 and 700 in code |
+| Projects | 1 | Four rulers in office in 775, their years in power summed, sorted and ranked |
+| Flex | 1 | Years from the Brahmasphutasiddhanta of 628 to its Arabic Sindhind of 771, a gap of 143 years |
+| Cross-code | 1 | The years between the Lombard end, the Herstal assembly and the Tang two-tax, in Python and C |
+
+The catalogue of database 128 (760 to 770) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | The Abrogans, a Latin word list glossed in Old High German, one of the earliest surviving texts in that language |
+| Systems | 2 | The Round City of Baghdad, the circular capital that al-Mansur began building in 762 and The Synod of Gentilly, a Frankish council of Christmas Day 767 that debated the filioque with Byzantine envoys |
+| Devices | 1 | The Tibetan prayer wheel, a cylinder of written prayers turned by hand, with no firm date for its first use |
+| Tools | 1 | The mokkan, wooden message tablets for notes and labels at the Nara palace |
+| Practices | 1 | The Hyakumanto darani, one million miniature pagodas each holding a printed charm, ordered in 764 |
+| Guides | 1 | How a Latin word list is put in alphabetical order by hand, as the Abrogans glossary is arranged |
+| Examples | 1 | The million Hyakumanto pagodas, counted out to ten temples and across six years in code |
+| Projects | 1 | Four events of 763 to 769 from Tibet, Japan and the Franks, sorted and spaced by the years between them |
+| Flex | 1 | Years from the founding of Baghdad in 762 to the completion of the Hyakumanto pagodas in 770 |
+| Cross-code | 1 | The four gates of the Round City placed on a circle, computed in Python and in C |
+
+The catalogue of database 129 (750 to 760) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | The Man'yoshu, a Japanese poetry anthology whose last dated poem is of 759, The Kaifuso, the oldest surviving anthology of Chinese-style poems by Japanese poets, compiled in 751 and Ibn al-Muqaffa's Arabic Kalila wa Dimna, a version of Indian fables made about 750 |
+| Systems | 5 | The battle of the Zab in January 750, which broke the army of the last Umayyad caliph, Marwan II, The Council of Hieria in 754, which condemned the veneration of icons under Constantine V, The An Lushan rebellion, begun at Fanyang in December 755 and ended in 763, The emirate of Cordoba, founded in 756 by Abd al-Rahman I, a surviving Umayyad prince and The Donation of Pepin, a grant of conquered Lombard lands to the papacy in 756 |
+| Devices | 1 | The five-stringed biwa of the Shoso-in, a Nara court lute, placed at the 756 gift of the treasures |
+| Tools | 1 | The bamboo screen mould of Chinese papermaking, placed at 751, the year of the battle of Talas |
+| Practices | 2 | The Pure Light Dharani, a Silla woodblock charm found in the Seokgatap pagoda, printed before 751 and The Register of Donated Articles, the list of Emperor Shomu's objects given to Todai-ji in 756 |
+| Guides | 1 | How a woodblock page is carved in mirror image so the print reads correctly, checked by a program |
+| Examples | 1 | Pepin's rule of 17 years, 751 to 768, divided at the Donation of 756 |
+| Projects | 1 | Three rulers who came to the throne between 754 and 757, ranked by the length of their rule |
+| Flex | 1 | The span from the battle of the Zab in 750 to the emirate of Cordoba in 756 |
+| Cross-code | 1 | The bits needed to number the Man'yoshu poems up to 4516, in Python and C |
+
+The catalogue of database 130 (740 to 750) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | The Chronicle of 741, a Latin history written in al-Andalus that leans towards the Umayyads |
+| Systems | 4 | The Ecloga, a Byzantine law book of Leo III and his son Constantine V, dated 741, Emperor Shomu's decree of 743 to make a giant Vairocana Buddha, later set up at Nara, The Konden Einen Shizaiho of 743, a land law that let newly reclaimed fields stay in private hands for ever and The Concilium Germanicum of 742, the first Frankish reform council that Boniface led under Carloman |
+| Devices | 1 | The foot-operated bellows and furnaces that melted the bronze of the Great Buddha at Nara |
+| Tools | 1 | The sectioned clay moulds, fired in an oven, that shaped the bronze of the Great Buddha at Nara |
+| Practices | 1 | Copying the Golden Light and Lotus sutras for each provincial temple and nunnery, ordered in 741 |
+| Guides | 1 | How a reclaimed field is written in cho and tan, the area units of the Japanese land rules of the 740s |
+| Examples | 1 | The Tang census of 742, households and persons, with the average household size worked out in code |
+| Projects | 1 | The Umayyad caliphs of 724 to 750, each reign counted from one accession to the next |
+| Flex | 2 | Years from the Hirotsugu rebellion of 740 to the Great Buddha decree of 743 and Years from the first year of the Tang Kaiyuan era in 713 to its last year in 741 |
+| Cross-code | 1 | The years between the death of Leo III and two decrees of 743, in Python and C |
+
+The catalogue of database 131 (730 to 740) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | John of Damascus's three treatises on the divine images, written against the iconoclasts about 730, The Izumo fudoki, the gazetteer of Izumo Province presented to the court in 733 and Bede's Ecclesiastical History of the English People, a Latin history completed in 731 |
+| Systems | 4 | Leo III's edict of 730 ordering icons removed from churches, and the deposition of Patriarch Germanos, Gregory III's Roman synod of 731, which condemned the destruction of images, The battle of Tours in 732, in which Charles Martel defeated the Umayyad army under Abd al-Rahman and The Kaiyuan Code of 737, the Tang penal code issued in the reign of Emperor Xuanzong |
+| Devices | 1 | The stirrup in Western cavalry, undated in the sources and placed at the year of Tours |
+| Tools | 1 | The Kaiyuan Shijiao Lu, Zhisheng's catalogue of Buddhist scriptures compiled in 730 |
+| Practices | 1 | Bede's dating of events from the Incarnation in his Ecclesiastical History of 731 |
+| Guides | 1 | How the Tang land statute of 737 splits an adult man's 100 mu into 80 allotted and 20 hereditary mu, in code |
+| Examples | 1 | The twenty grades of the five punishments in the Kaiyuan Code of 737, counted in code |
+| Projects | 1 | The six ministries and twenty-four bureaus of Tang government, from the Liudian of 738, listed in a short program |
+| Flex | 1 | Years from the Izumo fudoki of 733 to the Kaiyuan Code of 737 |
+| Cross-code | 1 | The years between three Kaiyuan books, the catalogue of 730, the code of 737 and the handbook of 738, in Python and C |
+
+The catalogue of database 132 (720 to 730) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | The Nihon Shoki, the first of Japan's six national histories, completed in 720 and The Chronicle to the year 724, an anonymous Syriac world history kept as British Library Add. 14643 |
+| Systems | 1 | The Sanze Isshin no Ho of 723, a Japanese land rule giving reclaimed fields three generations of tenure |
+| Devices | 1 | Yi Xing and Liang Lingzan's water-driven armillary sphere of 725, described with an escapement |
+| Tools | 2 | Yi Xing's Dayan calendar of the Tang, issued by imperial order in 729 and Bede's De temporum ratione, a handbook on the reckoning of time and Easter, written in 725 |
+| Practices | 1 | Yi Xing's survey of 724 and 725, Pole Star heights and gnomon shadows read at sites from Jiaozhou to Lake Baikal |
+| Guides | 1 | How the Tang units li, bu and chi nest, written out as code, the units in which the survey's distances were reckoned |
+| Examples | 1 | The latitude span of Yi Xing's survey, from about 17 to about 50 degrees north, and the average gap between thirteen sites |
+| Projects | 1 | Three Chinese reference compilations from 727 to 983, the years between them counted and ranked |
+| Flex | 1 | Years from Bede's De temporum ratione of 725 to Yi Xing's Dayan calendar of 729 |
+| Cross-code | 1 | The years between the Nihon Shoki, the Sanze law and the Konden law, in Python and C |
+
+The catalogue of database 133 (710 to 720) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | Liu Zhiji's Shitong, a critical treatise on the writing of history, completed in 710, The Kojiki, the oldest chronicle of Japan, completed for the court in 712, The Lindisfarne Gospels, a Northumbrian gospel book with carpet pages, made at Lindisfarne about 715 and Bede's Lives of the Abbots of Wearmouth and Jarrow, which tells of Ceolfrith's journey to Rome in 716 |
+| Systems | 3 | Tariq ibn Ziyad's landing at Gibraltar in 711 and the start of the Arab conquest of Visigothic Spain, Muhammad ibn Qasim's conquest of Sind, begun by the capture of Debal in 711 and The first laws of Liutprand, king of the Lombards, issued in 713, the first year of his legislation |
+| Devices | 1 | The water-driven grain mill, undated in the Umayyad lands and placed at 715 for the death of Walid I |
+| Tools | 1 | The Fudoki, provincial gazetteers that the Japanese court ordered from every province in 713 |
+| Practices | 1 | The copying of a complete Latin Bible at Wearmouth and Jarrow, the Codex Amiatinus, sent toward Rome in 716 |
+| Guides | 1 | How a regulated eight-line Tang poem is tested for line length and for rhyme on its even lines |
+| Examples | 1 | The 46 Old Testament books and 27 New Testament books of the Latin Vulgate, counted in code, placed at 716 |
+| Projects | 1 | The reigns of Walid I, Sulayman and Umar II from 705 to 720, summed and ranked |
+| Flex | 2 | Years from the Shitong of 710 to the Fudoki decree of 713 and Years from Tariq's landing in 711 to the Codex Amiatinus sent toward Rome in 716 |
+| Cross-code | 1 | The years between Liutprand's accession in 712, the Fudoki decree of 713 and the Codex Amiatinus of 716, in Python and C |
+
+The catalogue of database 134 (700 to 710) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Liu Zhiji's Shitong, a treatise on how history should be written, completed in 710 |
+| Systems | 1 | The household registers of 702, the earliest surviving ones, made for Mino and three Kyushu provinces |
+| Devices | 1 | The water clock of the Onmyoryo, kept by two clepsydra scholars under the Taiho code of 701 |
+| Tools | 1 | Aldhelm's Enigmata, a Latin book of riddles in verse, placed at 705 with his bishopric of Sherborne |
+| Practices | 2 | The cremation of the monk Dosho in 700, the first cremation recorded in Japan and The Wado kaichin copper coins, struck from 708, with the era name Wado taken from copper found at Chichibu |
+| Guides | 1 | How a pound of gold was cut into 72 solidi, the Byzantine standard, worked out by a program |
+| Examples | 1 | The Umayyad Great Mosque of Damascus, built from 705 to 715, with its ten years of building counted in code |
+| Projects | 1 | The reigns of Empress Wu, Zhongzong and Ruizong from 690 to 712, summed and ranked by a short program |
+| Flex | 1 | Years from the household registers of 702 to the completion of the Shitong in 710 |
+| Cross-code | 1 | Liu Zhiji's age when the Shitong was completed in 710 and at his death in 721, counted in Python and C |
 <!-- END GENERATED CATALOGUE -->

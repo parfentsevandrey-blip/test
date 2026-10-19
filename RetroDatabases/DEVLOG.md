@@ -41,6 +41,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-25 | 2026-10-18 | 109,452 | 222 | 82 | 118 | 109,874 | +4,171 (databases 95 to 104: 164 records in 110 files, migrations 94→95 to 103→104, tests +0) |
 | CP-26 | 2026-10-18 | 113,927 | 222 | 82 | 118 | 114,349 | +4,475 (databases 105 to 114: 174 records in 110 files, migrations 104→105 to 113→114, tests +0) |
 | CP-27 | 2026-10-19 | 117,950 | 222 | 82 | 118 | 118,372 | +4,023 (databases 115 to 124: 155 records in 110 files, migrations 114→115 to 123→124, tests +0) |
+| CP-28 | 2026-10-19 | 121,722 | 222 | 82 | 118 | 122,144 | +3,772 (databases 125 to 134: 141 records in 110 files, migrations 124→125 to 133→134, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -1550,3 +1551,127 @@ Helpers checked the facts below with web search (standard mode, six calls each a
 - Not verified yet: running on a device, the migration from version 114 to version 124 on a device, the UI with 124 databases in the list, lint and the release build.
 - The 800s to the 890s are thin in dated coding history. The question from earlier batches is still open, now for ten more decades: keep them smaller, fill them, or drop the placed records. A second question is new: should the off-subject PROJECT and FLEX records stay?
 - The memory facts above are the list to check first. The three coronations were the only facts I checked myself, beyond the helpers' searches.
+
+## CP-28: databases 125 to 134, 700 to 800 (the eighth century, the century before the 800s)
+
+Status: ten more databases are in the app, one per decade from the 790s down to the 700s: 141 records, migrations from version 124 to version 134, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. Records per database: 790s 16, 780s 18, 770s 11, 760s 11, 750s 17, 740s 14, 730s 15, 720s 12, 710s 16 and 700s 11. None reaches 50, and all ten are marked "quota": false in tools/databases.json. The build passes (134 databases, 5,370 records), 17 of 17 unit tests pass, and the 52 runnable records (5, 5, 5, 5, 5, 6, 5, 5, 6 and 5) pass against their expected output. Every kind is present in every database.
+
+Mood: This is the thinnest century so far for coding history. Several decades had almost nothing with a dated first public form, so 21 of the 141 records carry an anchor year. The checks did their job: the title check and the rare-word check found three same-item repeats (the Pure Light Dharani in 129 and 130, the two-tax reform of 780 in 126 and 127, and the stirrup in 131 and 133), and each was fixed. What I am unhappy with is how much of the century is history of technology or of administration: Great Buddha casting, Carolingian charters, Japanese court and land objects. The subjects are real, but the link to coding is thin, and I would like the user's view before the next century.
+
+Date: 2026-10-19. Totals: Kotlin main 121,722 (CP-27: 117,950), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 122,144 (CP-27: 118,372). The +3,772 is the 110 new Kotlin seed files for databases 125 to 134 and the regenerated SeedCatalog.kt. The database class and the tests did not change; the migrations are generated, with DATABASE_VERSION at 134.
+
+### What changed
+
+- Ten databases, from "Database 125: 790s coding catalogue" (790 to 800) to "Database 134: 700s coding catalogue" (700 to 710). Their records are 16, 18, 11, 11, 17, 14, 15, 12, 16 and 11: 141 new records and 5,370 in the whole catalogue. The new rare records number 81, so the whole catalogue has 1,538.
+- Eleven files per database, 110 in total. Colours are #E53935, #039BE5, #43A047, #FB8C00, #795548, #FFCA28, #FFEE58, #8BC34A, #1E88E5 and #FFB300, in order from 125 to 134.
+- Spec: tools/databases.json has 134 entries. All ten new databases are marked "quota": false.
+- Generator: no change in this batch.
+- Documents: CATALOGUE.md and the README overview and structure blocks are regenerated. The README sentence about examples now gives the runnable counts for 75 to 134.
+- Process: one helper per database, ten in parallel, from the brief, an anchors file for the 700s to the 790s and the layout templates of database 124. Each helper reported count-only checker problems, which the thin-century rule allows. The lead then fixed the three repeats listed below.
+
+### Placed records (21)
+
+The year of these records is an anchor, not the date of a dated making. Each record's details say so.
+
+- 125: a DEVICE of the Viking longship of the Lindisfarne raid (793); a TOOL, Khalil ibn Ahmad's Kitab al-Ayn (791); a GUIDE on the three-letter Arabic verb pattern fa'ala (796).
+- 126: a DEVICE, the Persian wheel of the Abbasid lands, whose first use is undated (785); a TOOL, Paul the Deacon's Homiliary (789).
+- 127: a DEVICE, the first astrolabe made in Islam, credited to al-Fazari (775, the year of al-Mansur's death); a GUIDE on the 1260 days of Revelation as forty-two months (776, the year of Beatus's commentary).
+- 128: a DEVICE, the Tibetan prayer wheel, with no firm date for its first use (763); a TOOL, the mokkan wooden message tablets of the Nara palace (764).
+- 129: a DEVICE, the five-stringed biwa of the Shoso-in (756, the year of the treasures' gift); a TOOL, the bamboo screen mould of Chinese papermaking (751, the year of the battle of Talas).
+- 130: a DEVICE, the foot-operated bellows of the Great Buddha; a TOOL, the sectioned clay moulds of the Great Buddha; and a GUIDE on cho and tan, the land units of the Japanese land rules. All three are placed at 743, the year of the Great Buddha decree.
+- 131: a DEVICE, the stirrup in Western cavalry (732, the year of Tours).
+- 132: a GUIDE on the Tang units li, bu and chi, as the survey's distances were reckoned (724, the year of the survey).
+- 133: a DEVICE, the water-driven grain mill of the Umayyad lands (715, the year of Walid I's death); an EXAMPLE on the books of the Latin Vulgate (716, the year of the Codex Amiatinus journey).
+- 134: a DEVICE, the water clock of the Onmyoryo (701); a TOOL, Aldhelm's Enigmata (705); a GUIDE on dividing a pound of gold into 72 solidi (705).
+
+Weakest first: the 130 bellows and moulds, the 134 water clock, the 133 mill, the 127 astrolabe and its GUIDE, and the 125 GUIDE and TOOL.
+
+### Problems and what was fixed
+
+- The Pure Light Dharani was in 129 (PRACTICE, the 750s) and in 130 (PRACTICE, the 740s). The 130 copy was removed; 129 keeps it.
+- The two-tax reform of 780 was in 126 (SYSTEM) and 127 (SYSTEM). The 127 copy was removed; 126 keeps it, and 127 keeps two SYSTEM records.
+- The stirrup was in 131 (DEVICE, placed at Tours, 732) and 133 (DEVICE, placed at 714). The 133 record was replaced by a water-driven grain mill placed at 715, so 133 keeps one DEVICE.
+- No kind was empty in any database.
+
+### Repeats left for a decision
+
+- 128: the Hyakumanto darani appears in three records of one database (PRACTICE, EXAMPLE and FLEX). These are angles on one item, and the first candidates to thin.
+- 129: the Donation of Pepin (SYSTEM) and Pepin's reign of 751 to 768 (EXAMPLE).
+- 126: the Nestorian stele of Xi'an (LANGUAGE and CROSS).
+- 133: Bede's Lives of the Abbots (LANGUAGE) and the copying of the Latin Bible at Wearmouth and Jarrow (PRACTICE).
+
+Neighbours across databases, different items, kept:
+
+- Nicaea II (126, 787) beside the Council of Hieria (129, 754): two councils on icons.
+- The Persian wheel (126) beside the water-driven grain mill (133).
+- The Great Buddha's bellows (130) beside Biringuccio's furnaces and bellows (51).
+- Bede's Ecclesiastical History (131) beside Orderic Vitalis's Ecclesiastical History (93).
+- Yi Xing's water-driven armillary sphere (132) beside Su Song's water-driven clock tower (95); Yi Xing's Pole Star survey (132) beside Shen Kuo's gnomon (97).
+
+### Repeat check result
+
+The rare-word check (scratchpad/same_item_batch.py 125 134) gives 226 pairs over 5,370 records. Every pair that touches the batch was read by hand. Most share one common word and are different items. The whole catalogue still has only two repeated titles: "Erlang" and "Software inspections", as before.
+
+### Facts checked by web search
+
+Helpers checked the facts below with web search (standard mode, six calls each at most). Each is a single source or a summary unless stated.
+
+- 125: Tamuramaro's seii taishogun in 797 (the first holder disputed); the first Baghdad paper mill, 794 or 795 (the patron disputed); the first Arabic Euclid about 800; Sibawayh's death about 796 (793 to 796 in one account); the Codex Carolinus letters dated 739 to 791; the Libri Carolini about 790 to 792. The Kitab al-Kharaj was dropped, since 798 is only its author's death year.
+- 126: Kitab al-'Ayn, the first Arabic dictionary, ordered from ayn to mim, with death given as 786 or 791; the Saxon capitulary of 782 (785 in some accounts, 795 in one study); the Hadrianum sent about 785, arriving in 785 or 786; the Nestorian stele of Xi'an dated 781, with Alopen's arrival in 635; the Harivamsa, Saka 705 equal to 783.
+- 127: the Sindhind translation made in the early 770s under al-Mansur by al-Fazari and Ya'qub ibn Tariq (no source pins 771); no source dates or locates the first astrolabe; Offa's gold coin, a copy of an AH 157 (773 to 774) dinar, with some sources dating it after 774; the Herstal capitulary of March 779; the two-tax reform of 780 under Yang Yan and Emperor Dezong (grain or coin disputed).
+- 128: Chang'an taken in 763; the Emi rebellion defeated in 764; Shotoku's second reign from 764; the Hyakumanto ordered in 764, sent to ten temples, finished about 770 (printing method disputed); the Gentilly synod of 25 December 767; the Round City of Baghdad begun in 762, its gates, and its end date (766 to 768); the Abrogans, a St Gall copy from Freising, alphabetised and dated 750 to 775.
+- 129: the Pure Light Dharani found on 13 October 1966 at Seokgatap; the pagoda about 751 and the print before 751 (a 705 to 751 estimate); the Shoso-in gift of about 600 objects in 756 with its register; the Man'yoshu's last dated poem of 759, numbered 4516; Kalila's Arabic in the eighth century, its translator's death about 757 (750 not confirmed); Pepin's reign 751 to 768.
+- 130: the Ecloga dated 741 (726 disputed), with eighteen titles; the Chronicle of 741, a Latin history from al-Andalus, about 741 to 743; the 741 edict for a temple and a nunnery in each province; the Great Buddha plan of 743 and its dedication of 752; Tianbao's first year as 742; the claim that the 742 census returns were distorted (one abstract).
+- 131: Zhisheng's Kaiyuan Shijiao Lu of 730, in twenty fascicles; the 80 mu allotted plus 20 mu hereditary per adult male under the 737 statute, with the 100 mu total dating to 624; the Liudian's bureau names for Personnel and Rites. The Liudian's 738 date was not confirmed.
+- 132: Yi Xing died in 727; the Dayan completion dated 727 or 728 (sources conflict), with imperial issue in 729 (one garbled page); the survey of 724 and 725, with Pole Star and gnomon shadows at sites from about 17 to 50 degrees north (thirteen sites in one account, twenty gnomons in another); a sphere dated 723 or 725 with an escapement (one account); a Syriac chronicle titled 724 (Add. 14643, anonymous); the Sanze law of 723, replaced in 743.
+- 133: the Lindisfarne Gospels about 715 (accounts 700 to 720); Liutprand king from 712, with his first laws dated 713; regulated-verse rules dated from the late seventh century to 707 to 710; Shen Quanqi (656 to 714) and Song Zhiwen (about 660 to 712). A Monkwearmouth sundial with a Ceolfrith inscription was searched twice and not found, so it was dropped.
+- 134: the Shitong completed in 710 by Liu Zhiji (661 to 721), in 52 chapters (39 inner and 13 outer); the 702 registers are the earliest surviving (Mino, Chikuzen, Buzen, Bungo); accounts give the Taiho code as 701, 702 or 703; the Onmyoryo and its clepsydra scholars are confirmed (staffing figures left out).
+
+### Facts from memory, to check
+
+- 125: the Shoku Nihongi (797, covering 697 to 791); Frankfurt in 794 and Felix of Urgel; Irene's blinding of Constantine VI (797); the Avar treasure (796); Leo III's attack on Rome (April 799) and flight to Paderborn; the Lindisfarne raid (793); the Oseberg ship (about 834); Khalil's death (786 or 791); the reign dates of Offa, Alfonso II, Dezong and Kanmu.
+- 126: the two-tax reform of 780; the Classic of Tea and the Muwatta, both about 780; Malik's death in 795; the Nicaea II details and the Frankfurt rejection of 794; Tassilo in 788; the Admonitio of 789; al-Hadi's accession in 785; the Syriac year of the stele (1092) and the Seleucid rule; the kaf, ta, ba order of the Kitab al-'Ayn.
+- 127: Beatus's commentary of 776; the Lombard entry in 568 and Pavia's fall in June 774; Brahmagupta's treatise of 628; the reign dates of Constantine V, al-Mansur, al-Mahdi and Leo IV; Artabasdos's usurpation in 742 and 743.
+- 128: Madinat al-Salam; Abrogans among the earliest Old High German texts; the mokkan inked and found in the palace ruins; Pippin's Aquitaine war ended in 768; the Usa Hachiman oracle of 769.
+- 129: Kaifuso of 751; the Zab in January and August 750; Hieria in 754 and its annulment in 787; the An Lushan dates; Cordoba in 756 and 929; the Donation in 756 and Ravenna in 751; the reigns of al-Mansur, Suzong and Offa; Kalila about 750; Du Huan's Samarkand papermakers; the Shoso-in biwa.
+- 130: the census totals of 9,619,254 households and 52,880,488 people; the Konden law and its rank limits; the Concilium Germanicum of 742 under Carloman; the Golden Light and Lotus assignments; the Shigaraki decree; the Pure Light Dharani details; the cho and tan units; Kaiyuan from 713 to 741; Leo III's death in 741; Hirotsugu's revolt in 740; the Umayyad accession years.
+- 131: Bede's history of 731 (his death in 735); the Izumo fudoki of 733; Leo III's edict of 730 (Theophanes gives 726); the Roman synod of 731; Tours in 732; the Kaiyuan Code of 737; the five punishments in twenty grades; 16 of the 24 bureau names; John of Damascus (726 to 730); Lynn White (1962); Dionysius (525).
+- 132: the Nihon Shoki of 720 in thirty volumes, with Prince Toneri, ending in 697; Bede's De temporum ratione of 725; li equal to 300 bu, bu to 6 chi, chi to 10 cun; the Chuxueji of 727 and the Kaiyuan Zhanjing of 729 (not searched; the PROJECT rests on them); the names Shuiyun hunyi and Dayan li.
+- 133: the Kojiki of 712; Shitong in 710; Tariq in 711; Ibn Qasim at Debal in 711 (the end in 712 or 713); the Fudoki decree of 713; the Codex Amiatinus of 716; Pippin II's death in 714; the Vulgate of about 390 to 405 and its book counts; the Umayyad reigns.
+- 134: the Wado coins struck from 708 with copper from Chichibu; Dosho's death in 700 and his cremation, the first recorded in Japan; the Umayyad Great Mosque of 705 to 715; Aldhelm bishop of Sherborne in 705; 72 solidi to the pound (fourth century); Justinian II back in power in 705; Wu Zetian's Zhou (690 to 705), Zhongzong to 710 and Ruizong (710 to 712).
+
+### Single-source dates
+
+- 125: the Codex's 791 copying directive and Sibawayh's death in 793.
+- 126: the Homiliary's completion near 797 (not in the year field); the Saxon capitulary's 795 (one study).
+- 127: the Herstal date and attendance (one source); the Sindhind's 771 has no source; the coin's 774 is disputed.
+- 128: the first brick on 30 July 762; the Gentilly date and attendance; the Abrogans alphabetisation; six years of labour.
+- 129: the Pure Light print date and its estimate (one search summary); the register's 756; the Man'yoshu's 759; Pepin's 751 to 768.
+- 130: the Great Buddha bellows and mould process (one museum guide; the 745 to 749 casting window not confirmed); the Chronicle of 741; the census distortion claim (one abstract).
+- 131: the Liudian's 738 date (not confirmed); the Roman synod's 731 (one source).
+- 132: the sphere's 725; the Dayan's 729 (one garbled page).
+- 133: Bede's Lives "about 716" (from memory only).
+- 134: the three inner chapters lost and the composition 708 to 710 (a secondary copy).
+
+### Problems
+
+- Thin decades. All ten are below 50 records, as listed above. The runnable counts are 5, 5, 5, 5, 5, 6, 5, 5, 6 and 5.
+- Placed records. Twenty-one of the 141 carry an anchor year. They are the first decision for the user.
+- Off-subject records. Much of the century is history of technology or administration: the Great Buddha casting, the Carolingian charters, Japanese land and court objects. They pass, but the link to coding is thin.
+- Memory dates. Many dates in the list above come from memory. The Liudian's 738 date, the bureau names and the Roman synod's 731 date are the first to check, as the helper flagged.
+- Single sources. Listed above.
+
+### How I checked it
+
+- Unit tests: 17 of 17 pass. The three XML reports show 17 tests, with no failures, errors or skips. The Gradle test task ran, and the build ended with BUILD SUCCESSFUL.
+- Examples: each new database has its own verifier with exact expected output, worked out by hand before each run. All 52 runnable records pass.
+- Structure: the generator checks 134 databases and 5,370 records. The checker reports only the count rules for each of the ten databases, which the thin-century rule allows; the title checks, text rules, years and rare counts (7 to 10) pass.
+- Cross-batch: the rare-word check gives 226 pairs; three same-item repeats were fixed, as listed above.
+- Whole catalogue: 5,370 records; the only repeated titles are "Erlang" and "Software inspections", as before.
+- Text: the records have no provenance phrases and no dollar signs, and they pass the ASCII rule of the brief, with the en dash allowed.
+
+### Notes
+
+- Not verified yet: running on a device, the migration from version 124 to version 134 on a device, the UI with 134 databases in the list, lint and the release build.
+- The 700s to the 790s are thin in dated coding history, and much of the material is not about coding. The question from earlier batches is still open: keep them smaller, fill them, or drop the placed records. A second question is new: should a century be covered at all when the coding link is this weak?
+- The first facts to check before publishing are the Liudian's 738 date, the Chuxueji and Kaiyuan Zhanjing dates in the 132 PROJECT, and the Ibn Qasim end date in 133.
