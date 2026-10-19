@@ -29,6 +29,7 @@ class Cian:
         self.s = requests.Session(impersonate="chrome", proxies={"https": proxy, "http": proxy} if proxy else None)
         self.s.headers.update({"accept-language": "ru-RU,ru;q=0.9", "origin": "https://www.cian.ru", "referer": "https://www.cian.ru/"})
         self.delay = delay
+        self.counts = []  # offerCount каждого первого запроса search() -- для сверки полноты
 
     def _req(self, method, url, expect_json=False, **kw):
         for attempt in range(5):
@@ -83,6 +84,7 @@ class Cian:
         first = self._page(json_query, 1)
         total = first.get("aggregatedCount") or first["offerCount"]
         self.last_offer_count = first["offerCount"]
+        self.counts.append(first["offerCount"])
 
         def gen():
             yield from first["offersSerialized"]
@@ -114,10 +116,14 @@ class Cian:
         yield from self.search_all(json_query, lo, mid)
         yield from self.search_all(json_query, mid + 1, hi)
 
-    def jk_flats(self, jk_id):
-        """Все квартиры ЖК (без свёртки), с нарезкой по цене, если их больше 1512."""
-        yield from self.search_all({"_type": "flatsale", "engine_version": {"type": "term", "value": 2},
-                                    "geo": {"type": "geo", "value": [{"type": "newobject", "id": jk_id}]}})
+    def jk_flats(self, jk_id, new_only=False):
+        """Все квартиры ЖК (без свёртки), с нарезкой по цене, если их больше 1512.
+        new_only -- только новостройки (building_status=2, как фильтр «Новостройка» на сайте), без вторички в ЖК."""
+        q = {"_type": "flatsale", "engine_version": {"type": "term", "value": 2},
+             "geo": {"type": "geo", "value": [{"type": "newobject", "id": jk_id}]}}
+        if new_only:
+            q["building_status"] = {"type": "term", "value": 2}
+        yield from self.search_all(q)
 
     # --- ЖК -----------------------------------------------------------------------------------
     def newbuildings(self, region, max_pages=1):
@@ -240,7 +246,7 @@ def main():
         print(f"wrote {a.out}", file=sys.stderr)
     elif a.by_jk:
         jk_ids = [n["id"] for n in c.newbuildings(a.region, a.pages or 1000)]
-        write_jsonl(by_jk(jk_ids, a.workers, a.raw), a.out)
+        write_jsonl(by_jk(jk_ids, a.workers, a.raw, a.new, a.out + ".jk-stats.jsonl"), a.out)
     else:
         q = {"_type": "flatsale", "engine_version": {"type": "term", "value": 2}}
         if a.newobject:
@@ -270,33 +276,54 @@ def dedup(rows):
             yield r
 
 
-def by_jk(jk_ids, workers, raw):
-    """Квартиры по каждому ЖК; ЖК обрабатываются параллельно, у каждого потока своя сессия."""
+def by_jk(jk_ids, workers, raw, new_only=False, stats_path=None):
+    """Квартиры по каждому ЖК; ЖК обрабатываются параллельно, у каждого потока своя сессия.
+    В stats_path пишется по ЖК: offerCount, собрано, ошибка. Упавшие ЖК повторяются один раз после паузы."""
     from concurrent.futures import ThreadPoolExecutor, as_completed
     local = threading.local()
-    failed = []
+    stats = open(stats_path, "w") if stats_path else None
+    seen = set()
 
     def one(jk):
         if not hasattr(local, "c"):
             local.c = Cian()
-        return jk, list(local.c.jk_flats(jk))
+        local.c.counts = []
+        offers = list(local.c.jk_flats(jk, new_only))
+        return offers, (local.c.counts[0] if local.c.counts else None)
 
-    with ThreadPoolExecutor(workers) as ex:
-        futs = [ex.submit(one, jk) for jk in jk_ids]
-        seen = set()
-        for i, f in enumerate(as_completed(futs), 1):
-            try:
-                jk, offers = f.result()
-            except Exception as e:  # один ЖК не должен ронять весь прогон
-                failed.append(str(e)[:100])
-                continue
-            print(f"  [{i}/{len(jk_ids)}] ЖК {jk}: {len(offers)}", file=sys.stderr)
-            for o in offers:
-                if o["id"] not in seen:
-                    seen.add(o["id"])
+    def run(ids, attempt):
+        failed = []
+        with ThreadPoolExecutor(workers) as ex:
+            futs = {ex.submit(one, jk): jk for jk in ids}
+            for i, f in enumerate(as_completed(futs), 1):
+                jk = futs[f]
+                try:
+                    offers, count = f.result()
+                except Exception as e:  # один ЖК не должен ронять весь прогон
+                    failed.append(jk)
+                    print(f"  [{i}/{len(ids)}] ЖК {jk}: FAILED {str(e)[:100]}", file=sys.stderr)
+                    if stats:
+                        stats.write(json.dumps({"jk_id": jk, "attempt": attempt, "error": str(e)[:200]}) + "\n")
+                    continue
+                new = [o for o in offers if o["id"] not in seen]
+                seen.update(o["id"] for o in new)
+                print(f"  [{i}/{len(ids)}] ЖК {jk}: {len(offers)} из {count}", file=sys.stderr)
+                if stats:
+                    stats.write(json.dumps({"jk_id": jk, "attempt": attempt, "offer_count": count,
+                                            "fetched": len(offers), "new_unique": len(new)}) + "\n")
+                    stats.flush()
+                for o in new:
                     yield o if raw else flat_row(o)
+        return failed
+
+    failed = yield from run(jk_ids, 1)
     if failed:
-        print(f"  FAILED ЖК: {len(failed)}: {failed[:5]}", file=sys.stderr)
+        print(f"  повтор {len(failed)} упавших ЖК через 5 мин: {failed[:10]}", file=sys.stderr)
+        time.sleep(300)
+        failed = yield from run(failed, 2)
+        if failed:
+            print(f"  FAILED ЖК после повтора: {failed}", file=sys.stderr)
+
 
 if __name__ == "__main__":
     main()
