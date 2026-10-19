@@ -14,7 +14,7 @@ from scrapling.fetchers import FetcherSession
 from scrapling.spiders import Request, Spider
 
 D = 'clos17-data'
-PATH = f'{D}/history_cards.json'
+PATH = os.environ.get('CLOS17_HIST', f'{D}/history_cards.json')   # пока идёт сбор, можно писать во временный файл
 JK = {'Кло 17', 'Фамильный дом Люче'}
 
 
