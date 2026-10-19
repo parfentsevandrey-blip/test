@@ -72,7 +72,18 @@ class MainActivity : Activity() {
         "Двоичный" to { binaryScreen() },
         "Помодоро" to { pomodoroScreen() },
         "Римские" to { romanScreen() },
-        "Имена" to { nameScreen() }
+        "Имена" to { nameScreen() },
+        "Гороскоп" to { horoscopeScreen() },
+        "Лотерея" to { lotteryScreen() },
+        "Квиз" to { quizScreen() },
+        "Рецепты" to { recipesScreen() },
+        "Сон" to { sleepScreen() },
+        "Часы" to { clockScreen() },
+        "Коды" to { asciiScreen() },
+        "Палиндром" to { palindromeScreen() },
+        "Факториал" to { factorialScreen() },
+        "Простые" to { primesScreen() },
+        "Комплимент" to { complimentScreen() }
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -1031,6 +1042,303 @@ class MainActivity : Activity() {
         return column().apply {
             addView(result)
             addView(roll)
+        }
+    }
+
+    // ---------- Гороскоп ----------
+
+    private fun horoscopeScreen(): View {
+        // Знаки зодиака и предсказания зашиты в код. Звёзды не консультировались.
+        val signs = listOf(
+            "Овен", "Телец", "Близнецы", "Рак", "Лев", "Дева",
+            "Весы", "Скорпион", "Стрелец", "Козерог", "Водолей", "Рыбы"
+        )
+        val predictions = listOf(
+            "Сегодня всё получится, если не начинать.",
+            "Удача придёт, но не в ту дверь.",
+            "Вам помогут незнакомцы из чата.",
+            "Лучше промолчать, даже если очень хочется."
+        )
+        val picker = EditText(this).apply { hint = "Ваш знак (номер 1–12)" }
+        val out = label("Выберите знак")
+        val read = Button(this).apply { text = "Прочитать" }
+        read.setOnClickListener {
+            val index = (picker.text.toString().toIntOrNull() ?: 1).coerceIn(1, 12) - 1
+            // Предсказание выбираем не по знаку, а по случайному числу. Звёзды ленивы.
+            val prediction = predictions[Random().nextInt(predictions.size)]
+            out.text = "${signs[index]}: $prediction"
+        }
+        return column().apply {
+            addView(picker)
+            addView(read)
+            addView(out)
+        }
+    }
+
+    // ---------- Лотерея ----------
+
+    private fun lotteryScreen(): View {
+        // Лотерея на шесть номеров из сорока девяти. Выигрыш, честно, маловероятен.
+        val ticket = label("Ваш билет: ещё не куплен", 18f)
+        val buy = Button(this).apply { text = "Купить билет" }
+        val draw = Button(this).apply { text = "Тянуть тираж" }
+        val numbers = mutableListOf<Int>()
+        buy.setOnClickListener {
+            numbers.clear()
+            // Выбираем номера, пока не наберём шесть уникальных. Проверку уникальности делаем линейно.
+            val rnd = Random()
+            while (numbers.size < 6) {
+                val n = rnd.nextInt(49) + 1
+                if (!numbers.contains(n)) numbers.add(n)
+            }
+            ticket.text = "Ваш билет: ${numbers.sorted().joinToString(" ")}"
+        }
+        draw.setOnClickListener {
+            if (numbers.isEmpty()) {
+                Toast.makeText(this, "Сначала купите билет", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val winning = (1..49).shuffled(Random(System.currentTimeMillis())).take(6)
+            // Сравниваем вручную двойным циклом, потому что множества — это для слабых
+            var matches = 0
+            for (a in numbers) {
+                for (b in winning) {
+                    if (a == b) matches++
+                }
+            }
+            ticket.text = "Тираж: ${winning.sorted().joinToString(" ")}\nСовпало: $matches"
+        }
+        return column().apply {
+            addView(ticket)
+            addView(buy)
+            addView(draw)
+        }
+    }
+
+    // ---------- Квиз ----------
+
+    private fun quizScreen(): View {
+        // Вопросы зашиты в список троек: текст, варианты, номер правильного
+        val questions = listOf(
+            Triple("Сколько будет 2 + 2?", listOf("3", "4", "22"), 1),
+            Triple("Столица России?", listOf("Москва", "Пекин", "Париж"), 0),
+            Triple("Сколько дней в обычном году?", listOf("360", "365", "400"), 1)
+        )
+        var current = 0
+        var score = 0
+        val question = label(questions[current].first, 18f)
+        val answers = (0..2).map { i -> Button(this).apply { text = "…" } }
+        val status = label("Счёт: 0")
+
+        fun show() {
+            val (text, options, _) = questions[current]
+            question.text = text
+            answers.forEachIndexed { i, button ->
+                button.text = options.getOrElse(i) { "—" }
+            }
+        }
+
+        answers.forEachIndexed { i, button ->
+            button.setOnClickListener {
+                // Проверяем ответ и сразу переходим к следующему, даже если вопросов больше нет
+                if (i == questions[current].third) score++
+                current = (current + 1) % questions.size
+                status.text = "Счёт: $score"
+                show()
+            }
+        }
+        show()
+
+        return column().apply {
+            addView(question)
+            answers.forEach { addView(it) }
+            addView(status)
+        }
+    }
+
+    // ---------- Рецепты ----------
+
+    private fun recipesScreen(): View {
+        // Рецепты короткие и опасные. Пропорции не проверялись.
+        val recipes = mapOf(
+            "Чай" to "Вода, пакетик, подождать до кипения",
+            "Бутерброд" to "Хлеб, масло, всё остальное на ваше усмотрение",
+            "Омлет" to "Яйца, сковорода, огонь, терпение"
+        )
+        val pick = EditText(this).apply { hint = "Название блюда" }
+        val out = label("")
+        val find = Button(this).apply { text = "Найти рецепт" }
+        find.setOnClickListener {
+            val key = pick.text.toString().trim()
+            // Ищем точное совпадение, а если его нет — пробуем все рецепты подряд по подстроке
+            out.text = recipes[key]
+                ?: recipes.entries.firstOrNull { it.key.contains(key, ignoreCase = true) }?.value
+                ?: "Такого блюда нет. Закажите доставку."
+        }
+        return column().apply {
+            addView(pick)
+            addView(find)
+            addView(out)
+        }
+    }
+
+    // ---------- Сон ----------
+
+    private fun sleepScreen(): View {
+        // Записываем часы сна в общий блокнот одной строкой: это же удобно
+        val hours = EditText(this).apply {
+            hint = "Сколько часов спали"
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        }
+        val status = label("Записей пока нет")
+        val save = Button(this).apply { text = "Записать" }
+        save.setOnClickListener {
+            val h = hours.text.toString().toDoubleOrNull() ?: 0.0
+            Knowitall.notes += "\nСон: $h ч"
+            Knowitall.prefs.edit().putString("notes", Knowitall.notes).commit()
+            // Считаем средний сон по всему блокноту заново: ищем все строки со словом «Сон»
+            val entries = Knowitall.notes.split("\n").filter { it.startsWith("Сон:") }
+            var total = 0.0
+            for (e in entries) {
+                total += e.removePrefix("Сон:").removeSuffix("ч").trim().removeSuffix("ч").toDoubleOrNull() ?: 0.0
+            }
+            val avg = if (entries.isEmpty()) 0.0 else total / entries.size
+            status.text = "Записей: ${entries.size}, в среднем %.1f ч".format(avg)
+        }
+        return column().apply {
+            addView(hours)
+            addView(save)
+            addView(status)
+        }
+    }
+
+    // ---------- Часы ----------
+
+    private fun clockScreen(): View {
+        val face = label("", 48f)
+        val refresh = Button(this).apply { text = "Который час?" }
+        refresh.setOnClickListener {
+            // Формат времени собираем вручную из часов, минут и секунд, чтобы не подключать форматтеры
+            val now = System.currentTimeMillis() / 1000
+            val h = (now / 3600 + 3) % 24
+            val m = (now / 60) % 60
+            val s = now % 60
+            face.text = "%02d:%02d:%02d".format(h, m, s)
+        }
+        return column().apply {
+            addView(face)
+            addView(refresh)
+        }
+    }
+
+    // ---------- Коды ----------
+
+    private fun asciiScreen(): View {
+        val letter = EditText(this).apply { hint = "Один символ" }
+        val out = label("")
+        val look = Button(this).apply { text = "Код символа" }
+        look.setOnClickListener {
+            val c = letter.text.toString().firstOrNull()
+            // Берём первый символ, а если строка пустая — показываем код пробела. Пробел тоже символ.
+            out.text = if (c == null) "Пусто, код пробела: ${' '.code}" else "'$c' → ${c.code}"
+        }
+        return column().apply {
+            addView(letter)
+            addView(look)
+            addView(out)
+        }
+    }
+
+    // ---------- Палиндром ----------
+
+    private fun palindromeScreen(): View {
+        val word = EditText(this).apply { hint = "Слово или фраза" }
+        val out = label("")
+        val check = Button(this).apply { text = "Проверить" }
+        check.setOnClickListener {
+            // Убираем всё, кроме букв, и сравниваем с перевёрнутой строкой. Пробелы — наши враги.
+            val clean = word.text.toString().lowercase().filter { it.isLetter() }
+            var reversed = ""
+            for (i in clean.length - 1 downTo 0) reversed += clean[i]
+            out.text = if (clean.isNotEmpty() && clean == reversed) "Палиндром!" else "Нет, это просто слова"
+        }
+        return column().apply {
+            addView(word)
+            addView(check)
+            addView(out)
+        }
+    }
+
+    // ---------- Факториал ----------
+
+    private fun factorialScreen(): View {
+        val n = EditText(this).apply {
+            hint = "Число от 0 до 20"
+            inputType = InputType.TYPE_CLASS_NUMBER
+        }
+        val out = label("")
+        val calc = Button(this).apply { text = "Посчитать" }
+        calc.setOnClickListener {
+            val k = (n.text.toString().toIntOrNull() ?: 0).coerceIn(0, 20)
+            // Рекурсия без хвостовой оптимизации. Для 20 хватит, для 21 — уже Long переполнится, но мы тихие
+            fun fact(x: Long): Long = if (x <= 1) 1 else x * fact(x - 1)
+            out.text = "$k! = ${fact(k.toLong())}"
+        }
+        return column().apply {
+            addView(n)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Простые числа ----------
+
+    private fun primesScreen(): View {
+        val limit = EditText(this).apply {
+            hint = "До какого числа"
+            inputType = InputType.TYPE_CLASS_NUMBER
+        }
+        val out = label("")
+        val find = Button(this).apply { text = "Найти простые" }
+        find.setOnClickListener {
+            val max = limit.text.toString().toIntOrNull() ?: 50
+            val found = mutableListOf<Int>()
+            // Делим каждое число на все меньшие: решето Эратосфена в гостях не бывает
+            for (x in 2..max) {
+                var prime = true
+                for (d in 2 until x) {
+                    if (x % d == 0) {
+                        prime = false
+                        break
+                    }
+                }
+                if (prime) found.add(x)
+            }
+            out.text = found.joinToString(", ")
+        }
+        return scroll(column().apply {
+            addView(limit)
+            addView(find)
+            addView(out)
+        })
+    }
+
+    // ---------- Комплимент ----------
+
+    private fun complimentScreen(): View {
+        // Комплименты генерируются из трёх частей. Все они правда про вас, если вы поверите.
+        val starts = listOf("Вы", "Ваш взгляд", "Ваша улыбка", "Ваш почерк")
+        val middles = listOf("удивительно", "невероятно", "безупречно", "немного")
+        val ends = listOf("умны", "оригинальны", "внимательны", "терпеливы")
+        val text = label("Нажмите, чтобы получить комплимент", 18f)
+        val give = Button(this).apply { text = "Комплимент" }
+        give.setOnClickListener {
+            val rnd = Random()
+            text.text = "${starts[rnd.nextInt(starts.size)]} ${middles[rnd.nextInt(middles.size)]} ${ends[rnd.nextInt(ends.size)]}."
+        }
+        return column().apply {
+            addView(text)
+            addView(give)
         }
     }
 }
