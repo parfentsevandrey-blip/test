@@ -18,7 +18,8 @@
   python collectors/domrf.py flats --obj-id 73741 --out data/domrf-flats-73741.jsonl
   python collectors/domrf.py flats --obj-id 73741 --units --out data/domrf-units-73741.jsonl   # вся квартирография
 """
-import argparse, json, os, random, sys, time
+import argparse, json, os, random, sys, threading, time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import quote
 
 from curl_cffi import requests
@@ -47,9 +48,10 @@ class DomRF:
             except Exception as e:
                 print(f"  {e.__class__.__name__} -> retry", file=sys.stderr)
                 self._new_session(); time.sleep(5 * 2 ** attempt); continue
-            if r.status_code in (200, 201):
+            challenged = "servicepipe" in r.text[:3000] or "заблокирован" in r.text[:3000]
+            if r.status_code in (200, 201) and not challenged:
                 return r.json()
-            if r.status_code == 403 or "servicepipe" in r.text[:3000]:
+            if r.status_code == 403 or challenged:
                 # блок Servicepipe: новая сессия (новое соединение) и пауза
                 print(f"  403/challenge on {url[:90]} -> new session, sleep", file=sys.stderr)
                 self._new_session(); time.sleep(15 * 2 ** attempt); continue
@@ -163,6 +165,7 @@ def main():
     ap.add_argument("--from", dest="src", help="JSONL объектов (из команды objects)")
     ap.add_argument("--max-objects", type=int)
     ap.add_argument("--units", action="store_true", help="вся квартирография дома, а не только квартиры в продаже")
+    ap.add_argument("--workers", type=int, default=1, help="параллельных объектов для flats (стресс-тест: 8 без блоков)")
     ap.add_argument("--raw", action="store_true")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
@@ -178,14 +181,29 @@ def main():
         else:
             ids = [json.loads(l).get("obj_id") or json.loads(l).get("objId") for l in open(a.src)]
         ids = ids[:a.max_objects] if a.max_objects else ids
+        local = threading.local()
+
+        def one(oid):
+            if not hasattr(local, "c"):
+                local.c = DomRF()
+            return [f if a.raw else flat_row(f) for f in (local.c.units(oid) if a.units else local.c.flats(oid))]
 
         def gen():
-            for i, oid in enumerate(ids, 1):
-                n = 0
-                for f in (c.units(oid) if a.units else c.flats(oid)):
-                    n += 1
-                    yield f if a.raw else flat_row(f)
-                print(f"  [{i}/{len(ids)}] obj {oid}: {n} flats", file=sys.stderr)
+            failed = []
+            with ThreadPoolExecutor(a.workers) as ex:
+                futs = {ex.submit(one, oid): oid for oid in ids}
+                for i, fut in enumerate(as_completed(futs), 1):
+                    oid = futs[fut]
+                    try:
+                        rows = fut.result()
+                    except Exception as e:  # один объект не должен ронять весь прогон
+                        failed.append(oid)
+                        print(f"  [{i}/{len(ids)}] obj {oid}: FAILED: {str(e)[:120]}", file=sys.stderr)
+                        continue
+                    print(f"  [{i}/{len(ids)}] obj {oid}: {len(rows)} flats", file=sys.stderr)
+                    yield from rows
+            if failed:
+                print(f"  failed objects ({len(failed)}): {failed} -- перезапустите с --obj-id", file=sys.stderr)
 
         write_jsonl(gen(), a.out)
 
