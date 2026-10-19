@@ -52,6 +52,7 @@ for oid, o in offers.items():
         "finish": {"without": "без отделки", "preFine": "предчистовая", "fine": "чистовая", "rough": "черновая",
                    "design": "дизайнерская"}.get(o.get("decoration"), o.get("decoration") or "н/д"),
         "promo": bool(o.get("isTop3") or o.get("isPremium") or o.get("isColorized") or o.get("isAuction") or o.get("brandingLevel")),
+        "seller": "застройщик" if o.get("fromDeveloper") else "агент/собственник",
         "deadline": "сдан" if (b.get("deadline") or {}).get("isComplete") else str((b.get("deadline") or {}).get("year") or "н/д"),
         "created": created.isoformat(), "total": total, "v7": sum(v for _, v in full), "today": daily[-1][1],
         "daily": [v for _, v in daily],
@@ -69,14 +70,14 @@ for r in rows:
     r["rel_price"] = r["pm2"] / statistics.median(g[(r["jk_id"], r["rooms"])])
 gj = collections.defaultdict(list)
 for r in rows:
-    gj[r["jk_id"]].append(r["vpd"])
+    gj[(r["jk_id"], r["seller"])].append(r["vpd"])
 for r in rows:
-    m = statistics.median(gj[r["jk_id"]])
+    m = statistics.median(gj[(r["jk_id"], r["seller"])])
     r["idx_jk"] = r["vpd"] / m if m else None
 
 # модель: log(vpd+1) ~ признаки (МНК с фиктивными переменными)
-cats = {k: sorted({r[k] for r in rows}) for k in ("jk", "rooms", "floor_band", "finish")}
-names, X = ["const", "log(площадь)", "цена м² к ЖК×комн., +10%", "продвижение"], []
+cats = {k: sorted({r[k] for r in rows}) for k in ("seller", "jk", "rooms", "floor_band", "finish")}
+names, X = ["const", "log(площадь)", "цена м² к ЖК×комн., +10%", "брендирование/продвижение"], []
 for k, vals in cats.items():
     names += [f"{k}={v}" for v in vals[1:]]
 for r in rows:
@@ -115,7 +116,8 @@ SEG = {
     "Этаж": lambda r: r["floor_band"],
     "Отделка": lambda r: r["finish"],
     "Срок сдачи": lambda r: r["deadline"],
-    "Продвижение": lambda r: "платное" if r["promo"] else "нет",
+    "Продвижение": lambda r: "брендирование/продвижение" if r["promo"] else "нет",
+    "Продавец": lambda r: r["seller"],
     "ЖК": lambda r: r["jk"],
 }
 
@@ -138,9 +140,9 @@ def sheet(ws, header, data):
 
 ws = wb.active
 ws.title = "Лоты"
-sheet(ws, ["ЖК", "Корпус", "Комн.", "Площадь", "Этаж", "Цена, ₽", "₽/м²", "Цена к ЖК×комн.", "Отделка", "Продвижение",
+sheet(ws, ["Продавец", "ЖК", "Корпус", "Комн.", "Площадь", "Этаж", "Цена, ₽", "₽/м²", "Цена к ЖК×комн.", "Отделка", "Продвижение",
            "Просм./день (7 дн)", "Просм. сегодня", "Всего просм.", "Интерес к ЖК, раз", "Избыточный интерес, %", "Опубликовано", "Ссылка"],
-      [[r["jk"], r["house"], r["rooms"], r["area"], f'{r["floor"]}/{r["floors"]}', r["price"], round(r["pm2"]), round(r["rel_price"], 3),
+      [[r["seller"], r["jk"], r["house"], r["rooms"], r["area"], f'{r["floor"]}/{r["floors"]}', r["price"], round(r["pm2"]), round(r["rel_price"], 3),
         r["finish"], "да" if r["promo"] else "", round(r["vpd"], 1), r["today"], r["total"],
         round(r["idx_jk"], 2) if r["idx_jk"] else None, round(r["excess"] * 100), r["created"], r["url"]]
        for r in sorted(rows, key=lambda r: -r["excess"])])
@@ -162,12 +164,12 @@ wb.save(path)
 
 print(f"лотов с просмотрами: {len(rows)}, ЖК: {len({r['jk_id'] for r in rows})}, R² модели: {r2:.2f}")
 print("эффекты признаков на просмотры (%):")
-for n, b in zip(names[1:4], beta[1:4]):
+for n, b in [x for x in zip(names, beta) if x[0] != "const" and not x[0].startswith(("jk=", "rooms=", "floor_band=", "finish="))]:
     print(f"  {n}: {(math.exp(b) - 1) * 100:+.0f}%")
-for name in ("Комнатность", "Площадь", "Цена м² к ЖК×комн.", "Этаж", "Отделка", "Продвижение"):
+for name in ("Продавец", "Комнатность", "Площадь", "Цена м² к ЖК×комн.", "Этаж", "Отделка", "Продвижение"):
     print(name + ":", "; ".join(f"{k}: внимание {att}, изб. {ex:+d}%" for k, n, vpd, att, ex in segments(SEG[name])))
 print("топ-5 по избыточному интересу:")
 for r in sorted(rows, key=lambda r: -r["excess"])[:5]:
-    print(f"  {r['jk']} {r['rooms']} {r['area']}м² эт.{r['floor']} {r['price']:,}₽ ({r['rel_price']:.2f} к ЖК) "
+    print(f"  [{r['seller']}] {r['jk']} {r['rooms']} {r['area']}м² эт.{r['floor']} {r['price']:,}₽ ({r['rel_price']:.2f} к ЖК) "
           f"{r['vpd']:.0f}/день, +{r['excess'] * 100:.0f}% к модели {r['url']}")
 print("excel:", path)
