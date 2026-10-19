@@ -309,7 +309,8 @@ def by_jk(jk_ids, workers, raw, new_only=False, stats_path=None, seen=None, appe
         if not hasattr(local, "c"):
             local.c = Cian()
         local.c.counts = []
-        offers = list(local.c.jk_flats(jk, new_only))
+        # сразу в плоские записи: сырое объявление ~150 полей, на крупных ЖК это гигабайты памяти
+        offers = [o if raw else flat_row(o) for o in local.c.jk_flats(jk, new_only)]
         return offers, (local.c.counts[0] if local.c.counts else None)
 
     def run(ids, attempt):
@@ -326,15 +327,18 @@ def by_jk(jk_ids, workers, raw, new_only=False, stats_path=None, seen=None, appe
                     if stats:
                         stats.write(json.dumps({"jk_id": jk, "attempt": attempt, "error": str(e)[:200]}) + "\n")
                     continue
-                new = [o for o in offers if o["id"] not in seen]
-                seen.update(o["id"] for o in new)
+                new = []
+                for o in offers:  # повторы бывают и внутри одной выдачи ЖК (объявление на двух страницах)
+                    k = o["id"] if raw else o["offer_id"]
+                    if k not in seen:
+                        seen.add(k)
+                        new.append(o)
                 print(f"  [{i}/{len(ids)}] ЖК {jk}: {len(offers)} из {count}", file=sys.stderr)
                 if stats:
                     stats.write(json.dumps({"jk_id": jk, "attempt": attempt, "offer_count": count,
                                             "fetched": len(offers), "new_unique": len(new)}) + "\n")
                     stats.flush()
-                for o in new:
-                    yield o if raw else flat_row(o)
+                yield from new
         return failed
 
     failed = yield from run(jk_ids, 1)
