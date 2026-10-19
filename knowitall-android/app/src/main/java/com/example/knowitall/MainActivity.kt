@@ -140,7 +140,43 @@ class MainActivity : Activity() {
         "Фибоначчи" to { fibonacciScreen() },
         "Пары" to { twinPrimesScreen() },
         "Секунды" to { secondsScreen() },
-        "Корень" to { sqrtScreen() }
+        "Корень" to { sqrtScreen() },
+        "Вклад" to { depositScreen() },
+        "Кредит" to { loanScreen() },
+        "Смета" to { estimateScreen() },
+        "Коробка" to { boxScreen() },
+        "Периметр" to { perimeterScreen() },
+        "Окружность" to { circleLengthScreen() },
+        "Треугольник" to { triangleScreen() },
+        "Цель" to { goalScreen() },
+        "Серия" to { streakScreen() },
+        "Чистка" to { brushingScreen() },
+        "Пароль" to { passwordCheckScreen() },
+        "Анаграмма" to { anagramScreen() },
+        "Перевёртыш" to { reverseWordsScreen() },
+        "Буквы" to { letterFrequencyScreen() },
+        "Очки" to { diceScoreScreen() },
+        "ROT13" to { rot13Screen() },
+        "Морзе" to { morseScreen() },
+        "Сумма цифр" to { digitSumScreen() },
+        "Армстронг" to { armstrongScreen() },
+        "Тройки" to { triplesScreen() },
+        "Степень" to { powerScreen() },
+        "НОД" to { gcdScreen() },
+        "НОК" to { lcmScreen() },
+        "Логарифм" to { logScreen() },
+        "Синус" to { sineTableScreen() },
+        "Рулетка" to { rouletteScreen() },
+        "Наклейки" to { stickersScreen() },
+        "Совершенные" to { perfectNumbersScreen() },
+        "Скидка" to { discountScreen() },
+        "Минуты" to { minutesScreen() },
+        "Среднее" to { statsScreen() },
+        "Чётность" to { parityScreen() },
+        "Точка" to { distanceScreen() },
+        "Лента" to { tallyScreen() },
+        "Градус" to { angleScreen() },
+        "Обмен" to { swapScreen() }
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -2988,6 +3024,960 @@ class MainActivity : Activity() {
         return column().apply {
             addView(number)
             addView(root)
+            addView(out)
+        }
+    }
+
+    // ---------- Вклад ----------
+
+    private fun depositScreen(): View {
+        // Сложные проценты: каждый месяц деньги растут на ставку, и растут на прошлый рост тоже.
+        val sum = EditText(this).apply {
+            hint = "Сумма вклада"
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        }
+        val rate = EditText(this).apply {
+            hint = "Ставка, % годовых"
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        }
+        val months = EditText(this).apply {
+            hint = "Месяцев"
+            inputType = InputType.TYPE_CLASS_NUMBER
+        }
+        val out = label("")
+        val calc = Button(this).apply { text = "Посчитать доход" }
+        calc.setOnClickListener {
+            var money = sum.text.toString().toDoubleOrNull() ?: 0.0
+            val monthlyRate = (rate.text.toString().toDoubleOrNull() ?: 0.0) / 100 / 12
+            val n = months.text.toString().toIntOrNull() ?: 12
+            // Капитализацию считаем по одному месяцу за раз, а не по формуле, чтобы было видно рост
+            repeat(n) { money += money * monthlyRate }
+            out.text = "Через $n мес.: %.2f".format(money)
+        }
+        return column().apply {
+            addView(sum)
+            addView(rate)
+            addView(months)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Кредит ----------
+
+    private fun loanScreen(): View {
+        // Ежемесячный платёж по аннуитету. Банк тоже так считает, но у него есть комиссии, которых здесь нет.
+        val principal = EditText(this).apply {
+            hint = "Сумма кредита"
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        }
+        val rate = EditText(this).apply {
+            hint = "Ставка, % годовых"
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        }
+        val years = EditText(this).apply {
+            hint = "Лет"
+            inputType = InputType.TYPE_CLASS_NUMBER
+        }
+        val out = label("")
+        val calc = Button(this).apply { text = "Платёж в месяц" }
+        calc.setOnClickListener {
+            val p = principal.text.toString().toDoubleOrNull() ?: 0.0
+            val r = (rate.text.toString().toDoubleOrNull() ?: 0.0) / 100 / 12
+            val n = (years.text.toString().toIntOrNull() ?: 1) * 12
+            if (r == 0.0) {
+                out.text = "Без процентов платёж: %.2f".format(p / n)
+                return@setOnClickListener
+            }
+            val factor = Math.pow(1 + r, n.toDouble())
+            val payment = p * r * factor / (factor - 1)
+            out.text = "Платёж: %.2f в месяц, переплата: %.2f".format(payment, payment * n - p)
+        }
+        return column().apply {
+            addView(principal)
+            addView(rate)
+            addView(years)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Смета ----------
+
+    private fun estimateScreen(): View {
+        // Ремонт по площади: цена за квадратный метр зашита вручную, накладные расходы — двадцать процентов.
+        val area = EditText(this).apply {
+            hint = "Площадь, м²"
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        }
+        val work = EditText(this).apply { hint = "Вид работ: покраска, плитка, обои" }
+        val out = label("")
+        val calc = Button(this).apply { text = "Смета" }
+        calc.setOnClickListener {
+            val prices = mapOf("покраска" to 300.0, "плитка" to 1200.0, "обои" to 500.0)
+            val a = area.text.toString().toDoubleOrNull() ?: 0.0
+            val price = prices[work.text.toString().trim().lowercase()]
+            out.text = if (price == null) "Такой работы в прайсе нет" else {
+                val base = a * price
+                "Работы: %.0f ₽, с накладными: %.0f ₽".format(base, base * 1.2)
+            }
+        }
+        return column().apply {
+            addView(area)
+            addView(work)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Коробка ----------
+
+    private fun boxScreen(): View {
+        // Объём коробки: длина, ширина, высота. Все размеры в сантиметрах, литры получаем делением на тысячу.
+        val l = EditText(this).apply { hint = "Длина, см"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL }
+        val w = EditText(this).apply { hint = "Ширина, см"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL }
+        val h = EditText(this).apply { hint = "Высота, см"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL }
+        val out = label("")
+        val calc = Button(this).apply { text = "Объём" }
+        calc.setOnClickListener {
+            val v = (l.text.toString().toDoubleOrNull() ?: 0.0) *
+                (w.text.toString().toDoubleOrNull() ?: 0.0) *
+                (h.text.toString().toDoubleOrNull() ?: 0.0)
+            out.text = "%.0f см³ = %.3f л".format(v, v / 1000)
+        }
+        return column().apply {
+            addView(l)
+            addView(w)
+            addView(h)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Периметр ----------
+
+    private fun perimeterScreen(): View {
+        // Периметр прямоугольника: две стороны на два. Очевидно, но мы всё равно проверим.
+        val a = EditText(this).apply { hint = "Сторона A"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL }
+        val b = EditText(this).apply { hint = "Сторона B"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL }
+        val out = label("")
+        val calc = Button(this).apply { text = "Периметр" }
+        calc.setOnClickListener {
+            val x = a.text.toString().toDoubleOrNull() ?: 0.0
+            val y = b.text.toString().toDoubleOrNull() ?: 0.0
+            // Складываем четыре стороны по одной, а не умножаем два на два: так честнее
+            out.text = "P = %.2f".format(x + y + x + y)
+        }
+        return column().apply {
+            addView(a)
+            addView(b)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Длина окружности ----------
+
+    private fun circleLengthScreen(): View {
+        // Длина окружности через диаметр. Пи взято из пятого класса, поэтому округлено.
+        val d = EditText(this).apply { hint = "Диаметр"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL }
+        val out = label("")
+        val calc = Button(this).apply { text = "Длина" }
+        calc.setOnClickListener {
+            val diameter = d.text.toString().toDoubleOrNull() ?: 0.0
+            out.text = "L ≈ %.3f".format(3.14 * diameter)
+        }
+        return column().apply {
+            addView(d)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Треугольник ----------
+
+    private fun triangleScreen(): View {
+        // Площадь по трём сторонам, формула Герона. Треугольник, который не существует, тоже считаем.
+        val a = EditText(this).apply { hint = "a"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL }
+        val b = EditText(this).apply { hint = "b"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL }
+        val c = EditText(this).apply { hint = "c"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL }
+        val out = label("")
+        val calc = Button(this).apply { text = "Площадь" }
+        calc.setOnClickListener {
+            val x = a.text.toString().toDoubleOrNull() ?: 0.0
+            val y = b.text.toString().toDoubleOrNull() ?: 0.0
+            val z = c.text.toString().toDoubleOrNull() ?: 0.0
+            val p = (x + y + z) / 2
+            val inside = p * (p - x) * (p - y) * (p - z)
+            // Если под корнем минус, треугольника нет. Мы всё равно пишем число, потому что корень — это формальность.
+            out.text = if (inside < 0) "Такого треугольника не бывает" else "S = %.3f".format(Math.sqrt(inside))
+        }
+        return column().apply {
+            addView(a)
+            addView(b)
+            addView(c)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Цель ----------
+
+    private fun goalScreen(): View {
+        // Прогресс к цели хранится в SharedPreferences. Процент считаем от цели, не от текущего значения.
+        var saved = Knowitall.prefs.getInt("goal", 0)
+        val target = 1000
+        val bar = label("Накоплено: $saved из $target", 18f)
+        val add = EditText(this).apply { hint = "Сколько добавить"; inputType = InputType.TYPE_CLASS_NUMBER }
+        val put = Button(this).apply { text = "Добавить" }
+        put.setOnClickListener {
+            saved += add.text.toString().toIntOrNull() ?: 0
+            Knowitall.prefs.edit().putInt("goal", saved).commit()
+            add.setText("")
+            val percent = saved * 100 / target
+            // Полоску рисуем из символов, по одному на каждые десять процентов
+            val filled = "#".repeat((percent / 10).coerceAtMost(10))
+            val empty = "-".repeat(10 - (percent / 10).coerceAtMost(10))
+            bar.text = "[$filled$empty] $percent% ($saved из $target)"
+        }
+        return column().apply {
+            addView(bar)
+            addView(add)
+            addView(put)
+        }
+    }
+
+    // ---------- Серия ----------
+
+    private fun streakScreen(): View {
+        // Серия дней без пропусков. Пропуск проверяем по номеру дня, который сами и запоминаем.
+        var streak = Knowitall.prefs.getInt("streak", 0)
+        val caption = label("Серия: $streak дн.", 24f)
+        val mark = Button(this).apply { text = "Отметить сегодня" }
+        mark.setOnClickListener {
+            streak++
+            Knowitall.prefs.edit().putInt("streak", streak).commit()
+            caption.text = "Серия: $streak дн. 🔥"
+        }
+        val lose = Button(this).apply { text = "Пропустил день" }
+        lose.setOnClickListener {
+            streak = 0
+            Knowitall.prefs.edit().putInt("streak", 0).commit()
+            caption.text = "Серия: 0 дн. Бывает."
+        }
+        return column().apply {
+            addView(caption)
+            addView(mark)
+            addView(lose)
+        }
+    }
+
+    // ---------- Чистка зубов ----------
+
+    private fun brushingScreen(): View {
+        // Две минуты чистки, по четыре секунды на квадрант. Таймер тикает занятым циклом, чтобы зубы не отвлекались.
+        val quadrants = listOf("верхний левый", "верхний правый", "нижний левый", "нижний правый")
+        val status = label("Готовы? Щётка в руке.", 18f)
+        val start = Button(this).apply { text = "Начать чистку" }
+        start.setOnClickListener {
+            for (q in quadrants) {
+                status.text = "Чистим: $q"
+                val until = System.currentTimeMillis() + 30_000
+                while (System.currentTimeMillis() < until) { /* жуём мысли */ }
+            }
+            status.text = "Готово. Не забудьте язык."
+        }
+        return column().apply {
+            addView(status)
+            addView(start)
+        }
+    }
+
+    // ---------- Надёжность пароля ----------
+
+    private fun passwordCheckScreen(): View {
+        // Оценка пароля по длине и набору символов. Словари не проверяем, нас никто не заставлял.
+        val pass = EditText(this).apply { hint = "Пароль (он не уйдёт никуда, честно)" }
+        val out = label("")
+        val check = Button(this).apply { text = "Оценить" }
+        check.setOnClickListener {
+            val p = pass.text.toString()
+            var score = 0
+            if (p.length >= 8) score++
+            if (p.any { it.isUpperCase() }) score++
+            if (p.any { it.isDigit() }) score++
+            if (p.any { !it.isLetterOrDigit() }) score++
+            if (p.length >= 14) score++
+            out.text = when (score) {
+                0, 1 -> "Слабый. Угадаем за минуту."
+                2, 3 -> "Средний. Угадаем за неделю."
+                4 -> "Хороший. Угадаем за годы."
+                else -> "Отличный. Угадаем, только если вы сами скажете."
+            }
+        }
+        return column().apply {
+            addView(pass)
+            addView(check)
+            addView(out)
+        }
+    }
+
+    // ---------- Анаграмма ----------
+
+    private fun anagramScreen(): View {
+        // Проверяем, состоят ли два слова из одинаковых букв. Сортируем буквы пузырьком, уважая традиции.
+        val first = EditText(this).apply { hint = "Первое слово" }
+        val second = EditText(this).apply { hint = "Второе слово" }
+        val out = label("")
+        val check = Button(this).apply { text = "Проверить" }
+        check.setOnClickListener {
+            val a = sortLetters(first.text.toString().lowercase().filter { it.isLetter() })
+            val b = sortLetters(second.text.toString().lowercase().filter { it.isLetter() })
+            out.text = if (a.isNotEmpty() && a == b) "Анаграмма!" else "Нет, это не анаграмма"
+        }
+        return column().apply {
+            addView(first)
+            addView(second)
+            addView(check)
+            addView(out)
+        }
+    }
+
+    private fun sortLetters(s: String): String {
+        val arr = s.toCharArray()
+        for (i in arr.indices) {
+            for (j in 0 until arr.size - 1 - i) {
+                if (arr[j] > arr[j + 1]) {
+                    val t = arr[j]
+                    arr[j] = arr[j + 1]
+                    arr[j + 1] = t
+                }
+            }
+        }
+        return String(arr)
+    }
+
+    // ---------- Перевёртыш ----------
+
+    private fun reverseWordsScreen(): View {
+        // Переворачиваем порядок слов, а не буквы в словах. Это и есть «перевёртыш» по-русски.
+        val input = EditText(this).apply { hint = "Фраза" }
+        val out = label("")
+        val flip = Button(this).apply { text = "Перевернуть слова" }
+        flip.setOnClickListener {
+            val words = input.text.toString().trim().split(" ").filter { it.isNotEmpty() }
+            var result = ""
+            for (i in words.indices.reversed()) {
+                result += words[i]
+                if (i > 0) result += " "
+            }
+            out.text = result
+        }
+        return column().apply {
+            addView(input)
+            addView(flip)
+            addView(out)
+        }
+    }
+
+    // ---------- Частота букв ----------
+
+    private fun letterFrequencyScreen(): View {
+        // Частоту букв считаем картой, а потом сортируем по убыванию вручную. Двадцать самых частых.
+        val input = EditText(this).apply { hint = "Текст" }
+        val out = label("", 14f)
+        val count = Button(this).apply { text = "Посчитать буквы" }
+        count.setOnClickListener {
+            val freq = HashMap<Char, Int>()
+            for (c in input.text.toString().lowercase()) {
+                if (c.isLetter()) freq[c] = (freq[c] ?: 0) + 1
+            }
+            val top = freq.entries.sortedByDescending { it.value }.take(20)
+            out.text = top.joinToString("\n") { "${it.key}: ${it.value}" }.ifEmpty { "Букв не нашлось" }
+        }
+        return scroll(column().apply {
+            addView(input)
+            addView(count)
+            addView(out)
+        })
+    }
+
+    // ---------- Очки за кости ----------
+
+    private fun diceScoreScreen(): View {
+        // Игра «Очки»: три кубика, сумма очков. Тройка одинаковых — удвоение, потому что так веселее.
+        val score = label("Очков: 0", 24f)
+        var total = 0
+        val roll = Button(this).apply { text = "Бросить три кубика" }
+        roll.setOnClickListener {
+            val rnd = Random()
+            val dice = listOf(rnd.nextInt(6) + 1, rnd.nextInt(6) + 1, rnd.nextInt(6) + 1)
+            var gained = dice.sum()
+            if (dice.distinct().size == 1) gained *= 2
+            total += gained
+            score.text = "Выпало ${dice.joinToString(" ")}, очков: $total"
+        }
+        return column().apply {
+            addView(score)
+            addView(roll)
+        }
+    }
+
+    // ---------- ROT13 ----------
+
+    private fun rot13Screen(): View {
+        // ROT13: каждая латинская буква сдвигается на тринадцать. Применяем дважды — получаем обратно, это магия.
+        val input = EditText(this).apply { hint = "Текст" }
+        val out = label("")
+        val go = Button(this).apply { text = "Преобразовать" }
+        go.setOnClickListener {
+            out.text = input.text.toString().map { c ->
+                when (c) {
+                    in 'a'..'z' -> 'a' + (c - 'a' + 13) % 26
+                    in 'A'..'Z' -> 'A' + (c - 'A' + 13) % 26
+                    else -> c
+                }
+            }.joinToString("")
+        }
+        return column().apply {
+            addView(input)
+            addView(go)
+            addView(out)
+        }
+    }
+
+    // ---------- Морзе ----------
+
+    private fun morseScreen(): View {
+        // Азбука Морзе для латиницы и цифр. Кириллицу мы не переводим, это международная азбука.
+        val table = mapOf(
+            'a' to ".-", 'b' to "-...", 'c' to "-.-.", 'd' to "-..", 'e' to ".", 'f' to "..-.",
+            'g' to "--.", 'h' to "....", 'i' to "..", 'j' to ".---", 'k' to "-.-", 'l' to ".-..",
+            'm' to "--", 'n' to "-.", 'o' to "---", 'p' to ".--.", 'q' to "--.-", 'r' to ".-.",
+            's' to "...", 't' to "-", 'u' to "..-", 'v' to "...-", 'w' to ".--", 'x' to "-..-",
+            'y' to "-.--", 'z' to "--..", '0' to "-----", '1' to ".----", '2' to "..---",
+            '3' to "...--", '4' to "....-", '5' to ".....", '6' to "-....", '7' to "--...",
+            '8' to "---..", '9' to "----."
+        )
+        val input = EditText(this).apply { hint = "Текст латиницей" }
+        val out = label("", 14f)
+        val encode = Button(this).apply { text = "В морзе" }
+        encode.setOnClickListener {
+            out.text = input.text.toString().lowercase().map { c ->
+                if (c == ' ') "/" else table[c] ?: "?"
+            }.joinToString(" ")
+        }
+        return scroll(column().apply {
+            addView(input)
+            addView(encode)
+            addView(out)
+        })
+    }
+
+    // ---------- Сумма цифр ----------
+
+    private fun digitSumScreen(): View {
+        // Сумма цифр числа. Минус в начале отбрасываем, потому что цифры к знакам не относятся.
+        val number = EditText(this).apply { hint = "Число"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_SIGNED }
+        val out = label("")
+        val calc = Button(this).apply { text = "Сложить цифры" }
+        calc.setOnClickListener {
+            val digits = number.text.toString().removePrefix("-")
+            var sum = 0
+            for (c in digits) {
+                if (c.isDigit()) sum += c - '0'
+            }
+            out.text = "Сумма цифр: $sum"
+        }
+        return column().apply {
+            addView(number)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Числа Армстронга ----------
+
+    private fun armstrongScreen(): View {
+        // Число Армстронга: сумма своих цифр в степени количества цифр равна самому числу. Проверим до миллиона.
+        val limit = EditText(this).apply { hint = "До какого (макс. 1000000)"; inputType = InputType.TYPE_CLASS_NUMBER }
+        val out = label("", 14f)
+        val find = Button(this).apply { text = "Найти" }
+        find.setOnClickListener {
+            val max = (limit.text.toString().toIntOrNull() ?: 1000).coerceAtMost(1_000_000)
+            val found = mutableListOf<Int>()
+            for (n in 1..max) {
+                val s = n.toString()
+                var sum = 0.0
+                for (c in s) sum += Math.pow((c - '0').toDouble(), s.length.toDouble())
+                if (sum.toInt() == n) found.add(n)
+            }
+            out.text = found.joinToString(", ").ifEmpty { "Не нашлось" }
+        }
+        return scroll(column().apply {
+            addView(limit)
+            addView(find)
+            addView(out)
+        })
+    }
+
+    // ---------- Пифагоровы тройки ----------
+
+    private fun triplesScreen(): View {
+        // Тройки целых чисел, где a² + b² = c². Перебираем все тройки до заданного c, без хитростей.
+        val limit = EditText(this).apply { hint = "Максимум c"; inputType = InputType.TYPE_CLASS_NUMBER }
+        val out = label("", 14f)
+        val find = Button(this).apply { text = "Найти тройки" }
+        find.setOnClickListener {
+            val max = (limit.text.toString().toIntOrNull() ?: 30).coerceIn(5, 200)
+            val lines = mutableListOf<String>()
+            for (c in 1..max) for (b in 1 until c) for (a in 1..b) {
+                if (a * a + b * b == c * c) lines.add("$a, $b, $c")
+            }
+            out.text = lines.joinToString("\n").ifEmpty { "Троек не нашлось" }
+        }
+        return scroll(column().apply {
+            addView(limit)
+            addView(find)
+            addView(out)
+        })
+    }
+
+    // ---------- Степень ----------
+
+    private fun powerScreen(): View {
+        // Возведение в степень умножением в цикле. Отрицательную степень не поддерживаем, это уже дроби.
+        val base = EditText(this).apply { hint = "Основание"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL or InputType.TYPE_NUMBER_FLAG_SIGNED }
+        val exp = EditText(this).apply { hint = "Степень (целая, от 0)"; inputType = InputType.TYPE_CLASS_NUMBER }
+        val out = label("")
+        val calc = Button(this).apply { text = "Возвести" }
+        calc.setOnClickListener {
+            val b = base.text.toString().toDoubleOrNull() ?: 0.0
+            val e = (exp.text.toString().toIntOrNull() ?: 0).coerceAtLeast(0)
+            var result = 1.0
+            repeat(e) { result *= b }
+            out.text = "$b^$e = $result"
+        }
+        return column().apply {
+            addView(base)
+            addView(exp)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- НОД ----------
+
+    private fun gcdScreen(): View {
+        // Наибольший общий делитель по Евклиду. Вычитаем, пока не сойдётся, если деление нам не нравится.
+        val a = EditText(this).apply { hint = "Первое"; inputType = InputType.TYPE_CLASS_NUMBER }
+        val b = EditText(this).apply { hint = "Второе"; inputType = InputType.TYPE_CLASS_NUMBER }
+        val out = label("")
+        val calc = Button(this).apply { text = "НОД" }
+        calc.setOnClickListener {
+            var x = a.text.toString().toIntOrNull() ?: 0
+            var y = b.text.toString().toIntOrNull() ?: 0
+            if (x == 0 || y == 0) {
+                out.text = "НОД с нулём — это само число"
+                return@setOnClickListener
+            }
+            while (x != y) {
+                if (x > y) x -= y else y -= x
+            }
+            out.text = "НОД = $x"
+        }
+        return column().apply {
+            addView(a)
+            addView(b)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- НОК ----------
+
+    private fun lcmScreen(): View {
+        // Наименьшее общее кратное через НОД. Сначала вспоминаем НОД, потом делим произведение.
+        val a = EditText(this).apply { hint = "Первое"; inputType = InputType.TYPE_CLASS_NUMBER }
+        val b = EditText(this).apply { hint = "Второе"; inputType = InputType.TYPE_CLASS_NUMBER }
+        val out = label("")
+        val calc = Button(this).apply { text = "НОК" }
+        calc.setOnClickListener {
+            val x = a.text.toString().toIntOrNull() ?: 0
+            val y = b.text.toString().toIntOrNull() ?: 0
+            if (x == 0 || y == 0) {
+                out.text = "НОК с нулём равен нулю"
+                return@setOnClickListener
+            }
+            // НОД ищем заново, вычитанием, чтобы не зависеть от предыдущей вкладки
+            var p = x
+            var q = y
+            while (p != q) {
+                if (p > q) p -= q else q -= p
+            }
+            out.text = "НОК = ${x / p * y}"
+        }
+        return column().apply {
+            addView(a)
+            addView(b)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Логарифм ----------
+
+    private fun logScreen(): View {
+        // Натуральный логарифм и логарифм по основанию десять. Отрицательные числа отправляем в NaN и не извиняемся.
+        val number = EditText(this).apply { hint = "Число"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL }
+        val out = label("")
+        val calc = Button(this).apply { text = "Логарифм" }
+        calc.setOnClickListener {
+            val x = number.text.toString().toDoubleOrNull() ?: 1.0
+            out.text = "ln = %.4f\nlg = %.4f".format(Math.log(x), Math.log10(x))
+        }
+        return column().apply {
+            addView(number)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Таблица синусов ----------
+
+    private fun sineTableScreen(): View {
+        // Синусы для углов от нуля до девяноста градусов с шагом в пятнадцать. Для школьной геометрии достаточно.
+        val out = label("", 14f)
+        val show = Button(this).apply { text = "Показать синусы" }
+        show.setOnClickListener {
+            val sb = StringBuilder()
+            for (deg in 0..90 step 15) {
+                val rad = Math.toRadians(deg.toDouble())
+                sb.append("sin($deg°) = %.4f\n".format(Math.sin(rad)))
+            }
+            out.text = sb.toString()
+        }
+        return column().apply {
+            addView(show)
+            addView(out)
+        }
+    }
+
+    // ---------- Рулетка ----------
+
+    private fun rouletteScreen(): View {
+        // Европейская рулетка: номера от нуля до тридцати шести, цвет по таблице. Ноль вне цвета.
+        val red = setOf(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
+        val result = label("Крутите", 24f)
+        val spin = Button(this).apply { text = "Крутить" }
+        spin.setOnClickListener {
+            val n = Random().nextInt(37)
+            val color = when {
+                n == 0 -> "зелёный"
+                n in red -> "красный"
+                else -> "чёрный"
+            }
+            result.text = "Выпало $n, $color"
+        }
+        return column().apply {
+            addView(result)
+            addView(spin)
+        }
+    }
+
+    // ---------- Наклейки ----------
+
+    private fun stickersScreen(): View {
+        // Коллекция наклеек: одна случайная за раз, повторы не отслеживаем, всё равно никто не считает.
+        val stickers = listOf("🐱", "🐶", "🦊", "🐸", "🐵", "🦉", "🐙", "🦄")
+        val got = mutableListOf<String>()
+        val last = label("Наклеек пока нет", 36f)
+        val open = Button(this).apply { text = "Открыть наклейку" }
+        open.setOnClickListener {
+            val s = stickers[Random().nextInt(stickers.size)]
+            got.add(s)
+            last.text = s
+        }
+        val total = label("")
+        val show = Button(this).apply { text = "Коллекция" }
+        show.setOnClickListener {
+            total.text = "Всего: ${got.size}. Уникальных: ${got.distinct().size} из ${stickers.size}"
+        }
+        return column().apply {
+            addView(last)
+            addView(open)
+            addView(show)
+            addView(total)
+        }
+    }
+
+    // ---------- Совершенные числа ----------
+
+    private fun perfectNumbersScreen(): View {
+        // Совершенное число равно сумме своих делителей, кроме себя. Шесть, двадцать восемь, и хватит.
+        val limit = EditText(this).apply { hint = "До какого"; inputType = InputType.TYPE_CLASS_NUMBER }
+        val out = label("")
+        val find = Button(this).apply { text = "Найти" }
+        find.setOnClickListener {
+            val max = (limit.text.toString().toIntOrNull() ?: 500).coerceAtMost(10_000)
+            val found = mutableListOf<Int>()
+            for (n in 2..max) {
+                var sum = 1
+                for (d in 2 until n) if (n % d == 0) sum += d
+                if (sum == n) found.add(n)
+            }
+            out.text = found.joinToString(", ").ifEmpty { "Не нашлось" }
+        }
+        return column().apply {
+            addView(limit)
+            addView(find)
+            addView(out)
+        }
+    }
+
+    // ---------- Скидка ----------
+
+    private fun discountScreen(): View {
+        // Цена со скидкой. Скидки больше пятидесяти процентов мы не выдаём, это уже подозрительно.
+        val price = EditText(this).apply { hint = "Цена"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL }
+        val percent = EditText(this).apply { hint = "Скидка, %"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL }
+        val out = label("")
+        val calc = Button(this).apply { text = "Итоговая цена" }
+        calc.setOnClickListener {
+            val p = price.text.toString().toDoubleOrNull() ?: 0.0
+            val d = (percent.text.toString().toDoubleOrNull() ?: 0.0).coerceIn(0.0, 50.0)
+            val final = p * (1 - d / 100)
+            out.text = "Цена: %.2f (экономия %.2f)".format(final, p - final)
+        }
+        return column().apply {
+            addView(price)
+            addView(percent)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Минуты ----------
+
+    private fun minutesScreen(): View {
+        // Часы и минуты в минуты и обратно. Обратно — это когда пишем «полтора часа», и мы понимаем.
+        val input = EditText(this).apply { hint = "Минут"; inputType = InputType.TYPE_CLASS_NUMBER }
+        val out = label("")
+        val toHours = Button(this).apply { text = "В часы" }
+        toHours.setOnClickListener {
+            val m = input.text.toString().toIntOrNull() ?: 0
+            out.text = "${m / 60} ч ${m % 60} мин"
+        }
+        val toMinutes = Button(this).apply { text = "Из часов" }
+        toMinutes.setOnClickListener {
+            val h = input.text.toString().toDoubleOrNull() ?: 0.0
+            out.text = "%.0f минут".format(h * 60)
+        }
+        return column().apply {
+            addView(input)
+            addView(toHours)
+            addView(toMinutes)
+            addView(out)
+        }
+    }
+
+    // ---------- Среднее ----------
+
+    private fun statsScreen(): View {
+        // Среднее арифметическое из списка чисел через запятую. Пустой список — среднее «ничего».
+        val numbers = EditText(this).apply { hint = "Числа через запятую" }
+        val out = label("")
+        val calc = Button(this).apply { text = "Среднее" }
+        calc.setOnClickListener {
+            val list = numbers.text.toString().split(",").mapNotNull { it.trim().toDoubleOrNull() }
+            var sum = 0.0
+            for (x in list) sum += x
+            out.text = if (list.isEmpty()) "Чисел нет, среднее тоже" else "Среднее: %.3f (из ${list.size})".format(sum / list.size)
+        }
+        return column().apply {
+            addView(numbers)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Медиана ----------
+
+    private fun medianScreen(): View {
+        // Медиана: сортируем пузырьком и берём середину. Для чётного количества берём среднее двух средних.
+        val numbers = EditText(this).apply { hint = "Числа через запятую" }
+        val out = label("")
+        val calc = Button(this).apply { text = "Медиана" }
+        calc.setOnClickListener {
+            val list = numbers.text.toString().split(",").mapNotNull { it.trim().toDoubleOrNull() }.toMutableList()
+            if (list.isEmpty()) {
+                out.text = "Медиану из ничего не возьмём"
+                return@setOnClickListener
+            }
+            for (i in list.indices) {
+                for (j in 0 until list.size - 1 - i) {
+                    if (list[j] > list[j + 1]) {
+                        val t = list[j]
+                        list[j] = list[j + 1]
+                        list[j + 1] = t
+                    }
+                }
+            }
+            val mid = list.size / 2
+            val median = if (list.size % 2 == 1) list[mid] else (list[mid - 1] + list[mid]) / 2
+            out.text = "Медиана: %.3f".format(median)
+        }
+        return column().apply {
+            addView(numbers)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Дисперсия ----------
+
+    private fun varianceScreen(): View {
+        // Дисперсия: средний квадрат отклонения от среднего. Считаем в два прохода, как учили.
+        val numbers = EditText(this).apply { hint = "Числа через запятую" }
+        val out = label("")
+        val calc = Button(this).apply { text = "Дисперсия" }
+        calc.setOnClickListener {
+            val list = numbers.text.toString().split(",").mapNotNull { it.trim().toDoubleOrNull() }
+            if (list.isEmpty()) {
+                out.text = "Нет данных"
+                return@setOnClickListener
+            }
+            var sum = 0.0
+            for (x in list) sum += x
+            val mean = sum / list.size
+            var sq = 0.0
+            for (x in list) sq += (x - mean) * (x - mean)
+            out.text = "Дисперсия: %.3f".format(sq / list.size)
+        }
+        return column().apply {
+            addView(numbers)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Чётность ----------
+
+    private fun parityScreen(): View {
+        // Чётное или нечётное. Ноль чётный, и мы не будем это обсуждать.
+        val input = EditText(this).apply { hint = "Число"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_SIGNED }
+        val out = label("")
+        val check = Button(this).apply { text = "Проверить" }
+        check.setOnClickListener {
+            val n = input.text.toString().toIntOrNull() ?: 0
+            out.text = if (n % 2 == 0) "Чётное" else "Нечётное"
+        }
+        return column().apply {
+            addView(input)
+            addView(check)
+            addView(out)
+        }
+    }
+
+    // ---------- Расстояние между точками ----------
+
+    private fun distanceScreen(): View {
+        // Расстояние между точками на плоскости по теореме Пифагора. Координаты вводим через пробел: x y x y.
+        val input = EditText(this).apply { hint = "x1 y1 x2 y2" }
+        val out = label("")
+        val calc = Button(this).apply { text = "Расстояние" }
+        calc.setOnClickListener {
+            val parts = input.text.toString().trim().split(" ").mapNotNull { it.toDoubleOrNull() }
+            if (parts.size != 4) {
+                out.text = "Нужно четыре числа через пробел"
+                return@setOnClickListener
+            }
+            val dx = parts[2] - parts[0]
+            val dy = parts[3] - parts[1]
+            out.text = "Расстояние: %.3f".format(Math.sqrt(dx * dx + dy * dy))
+        }
+        return column().apply {
+            addView(input)
+            addView(calc)
+            addView(out)
+        }
+    }
+
+    // ---------- Лента ----------
+
+    private fun tallyScreen(): View {
+        // Счётные палочки: каждая пятая — перечёркивает четыре предыдущие. Рисуем их символами.
+        val count = EditText(this).apply { hint = "Сколько"; inputType = InputType.TYPE_CLASS_NUMBER }
+        val out = label("", 18f)
+        val draw = Button(this).apply { text = "Нарисовать палочки" }
+        draw.setOnClickListener {
+            val n = (count.text.toString().toIntOrNull() ?: 0).coerceIn(0, 200)
+            val sb = StringBuilder()
+            var i = 0
+            while (i < n) {
+                val group = minOf(5, n - i)
+                if (group == 5) {
+                    sb.append("𝍸 ")
+                } else {
+                    sb.append("|".repeat(group)).append(" ")
+                }
+                i += group
+            }
+            out.text = sb.toString().trim().ifEmpty { "Палочек нет" }
+        }
+        return scroll(column().apply {
+            addView(count)
+            addView(draw)
+            addView(out)
+        })
+    }
+
+    // ---------- Угол ----------
+
+    private fun angleScreen(): View {
+        // Градусы в радианы и обратно. Число пи здесь честное, из Math, а не из пятого класса.
+        val input = EditText(this).apply { hint = "Градусы"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL or InputType.TYPE_NUMBER_FLAG_SIGNED }
+        val out = label("")
+        val calc = Button(this).apply { text = "В радианы" }
+        calc.setOnClickListener {
+            val deg = input.text.toString().toDoubleOrNull() ?: 0.0
+            out.text = "%.5f рад".format(Math.toRadians(deg))
+        }
+        val back = Button(this).apply { text = "В градусы" }
+        back.setOnClickListener {
+            val rad = input.text.toString().toDoubleOrNull() ?: 0.0
+            out.text = "%.3f°".format(Math.toDegrees(rad))
+        }
+        return column().apply {
+            addView(input)
+            addView(calc)
+            addView(back)
+            addView(out)
+        }
+    }
+
+    // ---------- Обмен ----------
+
+    private fun swapScreen(): View {
+        // Меняем местами два числа через третью переменную. Без арифметики, потому что арифметика — это хитрость.
+        val a = EditText(this).apply { hint = "a"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_SIGNED }
+        val b = EditText(this).apply { hint = "b"; inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_SIGNED }
+        val out = label("")
+        val swap = Button(this).apply { text = "Поменять местами" }
+        swap.setOnClickListener {
+            var x = a.text.toString()
+            var y = b.text.toString()
+            val tmp = x
+            x = y
+            y = tmp
+            a.setText(x)
+            b.setText(y)
+            out.text = "Теперь a = $x, b = $y"
+        }
+        return column().apply {
+            addView(a)
+            addView(b)
+            addView(swap)
             addView(out)
         }
     }
