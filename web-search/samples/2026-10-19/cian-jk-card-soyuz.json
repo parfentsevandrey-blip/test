@@ -1,0 +1,3159 @@
+{
+ "aeroPhotoTour": {
+  "backgroundImage": {
+   "src": "https://static.cdn-cian.ru/media/images/background-3.jpg",
+   "src2x": "https://static.cdn-cian.ru/media/images/background-3@2x.jpg"
+  },
+  "isModalOpen": false
+ },
+ "common": {
+  "mapApiKey": "b1c99cc7-4b96-413f-9842-10197c687348",
+  "suggestApiKey": "9479f8ea-d2ef-469e-a094-5ad3169e621d"
+ },
+ "experiments": [
+  {
+   "experimentName": "newbuilding_kpn_chats_jk_desktop",
+   "groupName": "B"
+  },
+  {
+   "experimentName": "newbuilding_confident_booking_cardjk_web",
+   "groupName": null
+  }
+ ],
+ "flatTourBooking": null,
+ "flatViewOrder": {
+  "showTooltip": false
+ },
+ "galleryMedia": [
+  {
+   "type": "architecture",
+   "id": "architecture",
+   "title": "Галерея",
+   "media": [
+    {
+     "id": 2986549778,
+     "mediaType": "architecture",
+     "fullUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-2986549778-10.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-2986549778-7.jpg",
+     "alt": "ЖК СОЮЗ"
+    }
+   ]
+  },
+  {
+   "type": "Video",
+   "id": "videos",
+   "title": "Видео",
+   "media": [
+    {
+     "url": "https://youtu.be/Bbz_aWh67hs",
+     "type": "youtube",
+     "fullUrl": "https://img.youtube.com/vi/Bbz_aWh67hs/maxresdefault.jpg"
+    },
+    {
+     "url": "https://youtu.be/zQ3J5kuBE70?si=4rmS_oMvM-MZ3M5f",
+     "type": "youtube",
+     "fullUrl": "https://img.youtube.com/vi/zQ3J5kuBE70/maxresdefault.jpg"
+    }
+   ]
+  }
+ ],
+ "floorPlan": {
+  "isOpened": false,
+  "houseId": null
+ },
+ "newbuilding": {
+  "advantages": [
+   {
+    "title": "Парковка",
+    "description": "Подземный паркинг на 539 мест имеет въезд с пониженной отметки рельефа, без пандуса, что особенно важно для автомобилей с низкой спортивной посадкой.",
+    "images": [
+     {
+      "url": "https://images.cdn-cian.ru/images/2574311503-1.jpg"
+     }
+    ],
+    "characteristics": [],
+    "advantageType": "Parking"
+   },
+   {
+    "title": "Внутренний двор",
+    "description": "6 жилых домов премиум-класса. Квартал с рекордным соотношением площади инфраструктуры к жилой - 7 Га / 2 Га\nОхраняемая территория, полное покрытие видеонаблюдением 24/7  с доступом только для жильцов. Бесключевой доступ осуществляется через RTF метку \nОгороженная закрытая территория для малышей \nДворовая территория без машин\nАРТ-объекты с подсветкой\nФонтан\nОсвещение территории в соответствии с биоритмами/временем суток\nИнтерактивные детские площадки\nЗоны работы outdoor (зеленые кабинеты) с USB розетками\nТочки вызова охраны/УК",
+    "images": [
+     {
+      "url": "https://images.cdn-cian.ru/images/2424771404-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852051212-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852051216-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852051236-1.jpg"
+     }
+    ],
+    "characteristics": [],
+    "advantageType": "Courtyard"
+   },
+   {
+    "title": "Парки",
+    "description": "Вокруг СОЮЗА сформировался один из основных Московских прогулочно-парковых массивов: \nС Южной стороны открываются живописные виды на ВДНХ и Останкинскую башню \nС Запада открываются виды на лесные массивы Леоновской Рощи и Ботанического сада \nС Северной стороны открывается вид на Сад Парк Будущего \nНа Востоке среди пышной зелени располагаются редкие жилые здания",
+    "images": [
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053982-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053996-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053841-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053909-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053978-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053962-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053845-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053888-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053835-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053831-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053848-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053879-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053899-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053926-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053953-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053941-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852054000-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053958-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053986-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852054002-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053989-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053870-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053864-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852053855-1.jpg"
+     }
+    ],
+    "characteristics": [],
+    "advantageType": "Parks"
+   },
+   {
+    "title": "Архитектура",
+    "description": "Архитектурная концепция отталкивается от естественного природного окружения и современного тренда на натуральность и здоровье. Общий образ построен на природо-ориентированном настроении: теплые тона дерева, натуральные цвета, слияние мотивов леса, воды и воздуха. При всех масштабах проекта он остается в согласии с природой, а спортивная часть в своем архитектурном исполнении является продолжением темы земли и неба, выраженной в активном использовании дерева и стекла.",
+    "images": [
+     {
+      "url": "https://images.cdn-cian.ru/images/2986552001-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2986551800-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2986551819-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2986551825-1.jpg"
+     }
+    ],
+    "characteristics": [],
+    "advantageType": "Architecture"
+   },
+   {
+    "title": "Входная группа",
+    "description": "В каждом лобби предусмотрены: \nКолясочная с точками зарядки для электротранспорта\nЛаунж зона\nКофе-пойнт\nСанузел для жителей с зоной матери и ребенка\nСтойка ресепшн с консьержем\nКомната охраны\nАвтоматически открывающиеся двери (для жильцов)\nМузыкальное оформление \nЭлектрический камин в лаунж зоне",
+    "images": [
+     {
+      "url": "https://images.cdn-cian.ru/images/2852054451-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852054489-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852054402-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852054555-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852054616-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852054745-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852054505-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852054574-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/2852054395-1.jpg"
+     }
+    ],
+    "characteristics": [],
+    "advantageType": "InputGroups"
+   },
+   {
+    "title": "Лифт",
+    "description": "Лифты с дизайнерской отделкой. \nВызов лифтов осуществляется через вызывную панель, подняться можно только на свой этаж.\nПредусмотрен приоритетный доступ для пентхаусов.\nКабина с высоким потолком (2400 мм) и дверью высотой 2300 мм.\nВо всех лифтах предусмотрена авторская отделка.\nУсилитель мобильной связи в лифтах.",
+    "images": [
+     {
+      "url": "https://images.cdn-cian.ru/images/46/284/831/1384826424-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/46/284/831/1384826431-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/46/284/831/1384826437-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/46/284/831/1384826439-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/46/284/831/1384826441-1.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/46/284/831/1384826444-1.jpg"
+     }
+    ],
+    "characteristics": [],
+    "advantageType": "Elevator"
+   }
+  ],
+  "backgroundVideo": "https://static.cdn-cian.ru/frontend/feedteam/upload/videos/newbuildings/53/90/1d2f6b4eb59faa1c6fa0b1960759.mp4",
+  "banks": [
+   {
+    "id": 7289,
+    "name": "ВТБ",
+    "seoTitle": "Новостройки, аккредитованные ВТБ",
+    "searchUrl": "https://www.cian.ru/novostroyki-vtb-7289/",
+    "logoUrl": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/banks/32/44/6d0654e963274665d7e72a136b22.jpeg",
+    "secondRoundImageUrl": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/banks/9f/37/c4d8df5f94c8aaf7f85735d0f4ca.jpeg",
+    "secondSquareImageUrl": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/banks/a3/34/fb5f2a53a39d462e0793a083c8b6.jpeg"
+   },
+   {
+    "id": 7290,
+    "name": "Альфа-Банк",
+    "seoTitle": "Новостройки, аккредитованные Альфа-Банк",
+    "searchUrl": "https://www.cian.ru/novostroyki-alfa-bank-7290/",
+    "logoUrl": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/banks/97/24/05682045ee5d9b11fec818b4f33f.jpeg",
+    "secondRoundImageUrl": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/banks/b1/ab/db86d1c5546e8b6e9a5c6af92b44.jpeg",
+    "secondSquareImageUrl": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/banks/a1/81/94c6bfc2c14f9d0d3de635fd534c.jpeg"
+   }
+  ],
+  "breadcrumbs": [
+   {
+    "title": "Недвижимость в Москве",
+    "seoUrl": "/",
+    "fullUrl": "https://www.cian.ru/"
+   },
+   {
+    "title": "Новостройки",
+    "seoUrl": "/novostrojki/",
+    "fullUrl": "https://www.cian.ru/novostrojki/"
+   },
+   {
+    "title": "Новостройки в Москве",
+    "queryString": "deal_type=sale&engine_version=2&offer_type=newobject&region=-1",
+    "seoUrl": "/novostroyki/",
+    "subdomain": "www",
+    "fullUrl": "https://www.cian.ru/novostroyki/"
+   },
+   {
+    "title": "СВАО",
+    "queryString": "deal_type=sale&district%5B0%5D=6&engine_version=2&offer_type=newobject",
+    "seoUrl": "/novostroyki-moskva-svao-046/",
+    "subdomain": "www",
+    "fullUrl": "https://www.cian.ru/novostroyki-moskva-svao-046/"
+   },
+   {
+    "title": "Ростокино",
+    "queryString": "deal_type=sale&district%5B0%5D=50&engine_version=2&offer_type=newobject",
+    "seoUrl": "/novostroyki-moskva-rostokino-0450/",
+    "subdomain": "www",
+    "fullUrl": "https://www.cian.ru/novostroyki-moskva-rostokino-0450/"
+   },
+   {
+    "title": "метро Ботанический сад",
+    "queryString": "deal_type=sale&engine_version=2&metro%5B0%5D=21&offer_type=newobject",
+    "seoUrl": "/novostroyki-moskva-stanciya-mck-botanicheskiy-sad-21/",
+    "subdomain": "www",
+    "fullUrl": "https://www.cian.ru/novostroyki-moskva-stanciya-mck-botanicheskiy-sad-21/"
+   }
+  ],
+  "brochure": null,
+  "builderNewbuildings": [
+   {
+    "newbuildingId": 1444810,
+    "name": "Russian Design District (Рашен Дизайн Дистрикт)",
+    "regionId": -1,
+    "builderIds": [
+     15990
+    ],
+    "priceFromDisplay": "от 40 861 400 ₽",
+    "builderNames": [
+     "Группа Родина"
+    ],
+    "imageUrl": "https://images.cdn-cian.ru/images/25/411/121/russian-design-district-moskva-jk-1211145239-7.jpg",
+    "undergroundName": "Ватутинки",
+    "undergroundColor": "03795F",
+    "undergroundTimeTo": "14 мин.",
+    "address": "Москва, район Троицк, 1-я Ватутинская улица",
+    "buildingStatusInfo": "Сдан",
+    "fullUrl": "https://zhk-russian-design-district-i.cian.ru/",
+    "customUrl": "/sale/jk/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=0/spec=none/1444810/from_developer=1/nv=0/",
+    "transportType": "walk"
+   },
+   {
+    "newbuildingId": 4856397,
+    "name": "Родина Парк",
+    "regionId": -1,
+    "builderIds": [
+     15990
+    ],
+    "priceFromDisplay": "от 25 031 262 ₽",
+    "builderNames": [
+     "Группа Родина"
+    ],
+    "imageUrl": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176081-7.jpg",
+    "undergroundName": "Давыдково",
+    "undergroundColor": "7ACDCE",
+    "undergroundTimeTo": "11 мин.",
+    "address": "Москва, Верейская улица",
+    "buildingStatusInfo": "Сдача в 4 кв. 2026 — 1 кв. 2028",
+    "fullUrl": "https://zhk-rodina-park-i.cian.ru/",
+    "customUrl": "/sale/jk/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=0/spec=none/4856397/from_developer=1/nv=0/",
+    "transportType": "walk"
+   },
+   {
+    "newbuildingId": 5303231,
+    "name": "РОДИНА ПЕРЕДЕЛКИНО",
+    "regionId": -1,
+    "builderIds": [
+     15990
+    ],
+    "priceFromDisplay": "от 13 627 539 ₽",
+    "builderNames": [
+     "Группа Родина"
+    ],
+    "imageUrl": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2851518338-7.jpg",
+    "undergroundName": "Новопеределкино",
+    "undergroundColor": "FFDF00",
+    "undergroundTimeTo": "3 мин.",
+    "address": "Москва, Западный административный округ, район Ново-Переделкино",
+    "buildingStatusInfo": "Сдача в 4 кв. 2027 — 1 кв. 2029",
+    "fullUrl": "https://zhk-rodina-peredelkino-i.cian.ru/",
+    "customUrl": "/sale/jk/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=0/spec=none/5303231/from_developer=1/nv=0/",
+    "transportType": "walk"
+   }
+  ],
+  "builders": [
+   {
+    "id": 15990,
+    "name": "Группа Родина",
+    "website": "https://rodinagroup.com/",
+    "logoUrl": "/api/get-company-logo/?id=15990&rnd=239605",
+    "realtyUserId": 127283499,
+    "isFichering": true,
+    "isFicheringPlus": true,
+    "yearOfFoundation": 2014,
+    "phone": {
+     "countryCode": "+7",
+     "code": "923",
+     "number": "0712079"
+    },
+    "phoneAnalyticsData": {
+     "brand": "15990/developer",
+     "consultant": false,
+     "category": "sale/JK",
+     "dealType": "other",
+     "id": 4025502,
+     "name": "СОЮЗ",
+     "nv": false,
+     "objectType": "JK",
+     "photosCount": 1,
+     "published": true,
+     "quantity": 1,
+     "position": 1
+    },
+    "stats": {
+     "inProgress": {
+      "qs": "https://www.cian.ru/novostroyki-stroitelstvo-ot-zastroishchika-gruppa-rodina-15990/",
+      "housesCount": 16,
+      "text": "16 домов в 3 ЖК",
+      "housesText": "16 домов",
+      "newbuildingText": "в 3 ЖК"
+     },
+     "done": {
+      "qs": "https://www.cian.ru/novostroyki-gotovye-ot-zastroishchika-gruppa-rodina-15990/",
+      "housesCount": 12,
+      "text": "12 домов в 2 ЖК",
+      "housesText": "12 домов",
+      "newbuildingText": "в 2 ЖК"
+     }
+    },
+    "dynamicCalltracking": {
+     "siteBlockId": 15689
+    },
+    "description": "Группа «Родина» — социально-ориентированный девелопер, развивающий городские территории путем создания условий для раскрытия человеческого потенциала и его реализации в новой экономике. Компания создала и воплощает свой авторский формат развития городских территорий «инновационные жилые кластеры».",
+    "profileUrl": "https://www.cian.ru/zastroishchik-gruppa-rodina-15990/",
+    "workTimeInfo": "Офис работает с 09:00 до 21:00",
+    "chat": {
+     "isEnabled": false,
+     "defaultMessage": "",
+     "context": {},
+     "entityId": ""
+    },
+    "isReliable": false,
+    "workTimeDetailed": {
+     "timezone": 3,
+     "callFrom": "09:00",
+     "callTo": "21:00"
+    },
+    "reviewStats": {
+     "totalRate": 4.5,
+     "reviewCountText": "222 отзыва",
+     "reviewCount": 222
+    },
+    "showPhone": true,
+    "isPremium": true,
+    "offersForSale": {
+     "text": "Продаёт 90 квартир в этом ЖК",
+     "url": "https://www.cian.ru/cat.php/?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&newobject%5B0%5D=4025502&id_user=127283499"
+    },
+    "isCallbackAvailableInApps": false,
+    "offersForSaleText": "Продаёт 90 квартир в этом ЖК",
+    "offersForSaleUrl": "https://www.cian.ru/cat.php/?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&newobject%5B0%5D=4025502&id_user=127283499",
+    "rating": "4,5"
+   }
+  ],
+  "constructionProgress": {
+   "images": [
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978722-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978722-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 5, ход строительства от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      7881719
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978722-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978724-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978724-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 5, ход строительства от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      7881719
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978724-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978726-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978726-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 5, ход строительства от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      7881719
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978726-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978728-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978728-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 5, ход строительства от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      7881719
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978728-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978729-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978729-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 5, ход строительства от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      7881719
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978729-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978730-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978730-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 5, ход строительства от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      7881719
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978730-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978733-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978733-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 5, ход строительства от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      7881719
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978733-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978736-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978736-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 5, фото со стройки от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      7881719
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978736-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978738-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978738-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 5, фото от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      7881719
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2977978738-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171946-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171946-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 4, фото от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      8056315
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171946-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171948-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171948-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 4, ход строительства от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      8056315
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171948-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171950-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171950-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 4, фото со стройки от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      8056315
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171950-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171951-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171951-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 4, фото от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      8056315
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171951-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171953-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171953-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 4, фото от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      8056315
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171953-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171954-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171954-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 4, фото со стройки от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      8056315
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171954-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171955-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171955-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 4, фото со стройки от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      8056315
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171955-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171956-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171956-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 4, ход строительства от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      8056315
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978171956-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978201083-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978201083-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 3, ход строительства от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      7881718
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978201083-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978201084-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978201084-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 3, фото от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      7881718
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978201084-8.jpg"
+    },
+    {
+     "url": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978201085-6.jpg",
+     "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978201085-7.jpg",
+     "comment": "",
+     "text": "ЖК \"СОЮЗ\" корпус: Корпус 3, фото со стройки от 1 сентября 2026",
+     "newbuildingHouseIds": [
+      7881718
+     ],
+     "miniUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-hod-stroitelstva-202609-2978201085-8.jpg"
+    }
+   ],
+   "date": "1 сентября 2026",
+   "fullCount": 30,
+   "updateDateTitle": "Обновлено 1 сентября 2026"
+  },
+  "description": "<p>Квартал здоровой жизни СОЮЗ — проект премиум-класса, объединяющий жилую застройку и продуманную спортивную инфраструктуру в сформированном городском районе.&nbsp;</p><p>Окружение проекта формируют масштабные зелёные территории. Главный ботанический сад и ВДНХ становятся частью повседневных маршрутов — здесь удобно гулять, заниматься бегом или просто проводить время на свежем воздухе. Близость природных зон влияет на качество среды, создавая ощущение уединённости при сохранении городского ритма. В пешей доступности от квартала находятся настоящие жемчужины парковых пространств Москвы - Парк Хуамин и “Сад будущего”.</p><p>Архитектура комплекса сочетает современные фасадные решения и функциональное зонирование. Внутренние дворы изолированы от городского трафика и включают пространства для отдыха, общения и досуга. В составе проекта запланированы коммерческие помещения и сервисная инфраструктура, обеспечивающая привычный уровень комфорта: детская игровая, комната для индивидуальных занятий спортом, клуб для подростков с экраном и видеоиграми, а также медиа-комната с кинозалом.</p><p>Отдельное внимание уделено спортивной составляющей. На базе исторического стадиона “Искра” СОЮЗ развивает формат жилого пространства с расширенной инфраструктурой для активного образа жизни: на территории предусмотрен физкультурно-оздоровительный комплекс с ледовой ареной, бассейном, площадками для игры в падел, теннис, баскетбол и другие виде спорта. Концепция ориентирована на широкий спектр активностей — от базового фитнеса до более специализированных направлений. Инновационным решением станет открытие первого в ЖК в Москве центра ресурсного состояния, который откроется с хабом нутрициологии и аллергологии, школой медитации, лабораторией сна и станет персональным проводником к идеальному здоровью.&nbsp;&nbsp;</p>",
+  "displayName": "ЖК «СОЮЗ»",
+  "ecology": [
+   {
+    "distance": "33 мин.",
+    "images": [
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/4c/9a/6fc9b0e968ecca95777406604fa8.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/c9/61/d72cae36bb4189d3db9f1c4cb9e7.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/5e/5f/e2a0184b42055775ffddb9577173.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/5b/d9/198f24a1c0e5a1f3a0b05c215850.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/99/9f/3d08f6060fc71b07928e788487a1.jpeg"
+     }
+    ],
+    "title": "Ботанический сад",
+    "transportType": "walk"
+   },
+   {
+    "distance": "24 мин.",
+    "images": [
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/1c/e5/cec9b99ea914b4bfdebec013390d.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/90/47/34886bc895cc31e83d2e5ddf08f2.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/d5/2a/b58860692b148f314e095496cf43.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/19/06/6eb498cc18e8b1f185d3876d8299.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/2f/04/a241244424c159210216b13fbe76.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/c5/a1/7b5357ae4229e9dadf6de49d6c84.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/c4/a7/280d918950d2578a6b1decf08f45.jpeg"
+     }
+    ],
+    "title": "ВДНХ",
+    "transportType": "walk"
+   },
+   {
+    "distance": "10 мин.",
+    "images": [
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/08/fc/ed6df15fec9149ba7c906a560ff4.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/f0/84/8d8e61f39248ef036e4235ad7d26.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/f1/1f/a795caa2a37de2f47dacc4752aa6.jpeg"
+     }
+    ],
+    "title": "Леоновская роща",
+    "transportType": "walk"
+   },
+   {
+    "distance": "4 мин.",
+    "images": [
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/87/9e/72f1f5cf086c82a357b5d4b4e09b.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/a5/0c/abd9a0db6be2513cfcbb794265b5.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/a7/04/d4163989602fccbae3b9e2ceced0.jpeg"
+     },
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/7e/e2/dff11d301dd50f49011dece39d6e.jpeg"
+     }
+    ],
+    "title": "Парк Сад будущего",
+    "transportType": "walk"
+   }
+  ],
+  "flatViewOrder": {
+   "isEnabled": false,
+   "orderStatus": {
+    "type": "noActive"
+   }
+  },
+  "fromAgentsPropsCount": 29,
+  "fromDevelopersPropsCount": 90,
+  "fullAddress": "Москва, Сельскохозяйственная улица",
+  "fullUrl": "https://zhk-soyuz-i.cian.ru/",
+  "gaGeoLabel": "0-1-1",
+  "gaLabel": "/sale/jk/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=0/spec=none/4025502/from_developer=1/nv=0/",
+  "genplan": {
+   "houses": [
+    {
+     "id": 7881717,
+     "name": "Корпус 2",
+     "polygonPath": "219.6320053788 318.6009014755, 364.4390821223 324.9566329432, 377.85557004 335.5910770423, 375.1905091839 344.8920373683, 383.0543423626 348.753162754, 391.3503948196 352.3111575175, 405.5721990317 352.3111575175, 407.3499245582 371.880128717, 413.8682514888 371.880128717, 417.4237025418 382.5541130076, 427.4974805254 383.1471121348, 452.0715730535 613.2722834489, 433.1925427646 668.97405537, 434.060132079 681.9972057033, 434.9277213935 703.7024562586, 408.0324526454 690.6793059254, 250.998786729 696.7567760809, 192.8703026605 389.4104282168",
+     "tooltipPoint": {
+      "x": 377.18816518769995,
+      "y": 462.87056223325555
+     },
+     "houseInfo": [
+      "Сдан в 3 квартале 2025",
+      "23 этажа"
+     ],
+     "isReliable": false,
+     "stats": {
+      "fromDeveloperRooms": [
+       {
+        "roomType": "studio",
+        "roomTypeDisplay": "Студии от 33 м²",
+        "price2From": "от 21 574 586 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881717&room9=1"
+       },
+       {
+        "roomType": "oneRoom",
+        "roomTypeDisplay": "1-комн. от 45 м²",
+        "price2From": "от 31 723 825 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881717&room1=1"
+       },
+       {
+        "roomType": "twoRoom",
+        "roomTypeDisplay": "2-комн. от 63 м²",
+        "price2From": "от 44 018 867 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881717&room2=1"
+       },
+       {
+        "roomType": "threeRoom",
+        "roomTypeDisplay": "3-комн. от 78 м²",
+        "price2From": "от 53 653 443 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881717&room3=1"
+       },
+       {
+        "roomType": "fourRoom",
+        "roomTypeDisplay": "4-комн. от 159 м²",
+        "price2From": "от 163 013 034 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881717&room4=1"
+       }
+      ],
+      "fromDeveloperPropsCountDisplay": "23 квартиры в продаже",
+      "fromDeveloperPropsCountUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881717"
+     },
+     "isEscrow": false,
+     "isSalesStart": false
+    },
+    {
+     "id": 7881716,
+     "name": "Корпус 1",
+     "polygonPath": "444.5817975323 537.5591610344, 424.5053505862 385.4430249108, 418.7692228873 379.7027933589, 415.9011590379 370.3749170872, 407.2969674896 371.8099749752, 406.5799515272 353.8717513757, 376.4652811081 345.9789329919, 379.3333449575 339.5211724961, 364.276009748 325.1705936165, 326.2741637429 323.0180067846, 315.5189243075 220.4113677955, 405.8629355648 175.2070443248, 487.6027552739 201.0380863081, 488.3197712362 208.9309046918, 496.9239627845 215.3886651877, 500.5090425963 224.7165414594, 507.6792022199 225.4340704034, 507.6792022199 232.6093598432, 521.3025055048 239.784649283, 524.8875853166 249.8300544987, 530.6237130155 257.0053439385, 530.6237130155 264.1806333783, 538.5108886014 271.3559228181, 546.3980641874 353.1542224317, 542.8129843756 421.3194721097, 545.681048225 528.2312847627, 511.9812979941 533.2539873705, 489.7538031609 549.7571530821",
+     "tooltipPoint": {
+      "x": 462.73766600774286,
+      "y": 325.1449675828036
+     },
+     "houseInfo": [
+      "Сдан в 3 квартале 2025",
+      "23 этажа"
+     ],
+     "isReliable": false,
+     "stats": {
+      "fromDeveloperRooms": [
+       {
+        "roomType": "studio",
+        "roomTypeDisplay": "Студии от 31 м²",
+        "price2From": "от 19 671 288 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881716&room9=1"
+       },
+       {
+        "roomType": "oneRoom",
+        "roomTypeDisplay": "1-комн. от 45 м²",
+        "price2From": "от 33 897 410 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881716&room1=1"
+       },
+       {
+        "roomType": "twoRoom",
+        "roomTypeDisplay": "2-комн. от 61 м²",
+        "price2From": "от 39 487 056 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881716&room2=1"
+       },
+       {
+        "roomType": "threeRoom",
+        "roomTypeDisplay": "3-комн. от 97 м²",
+        "price2From": "от 60 241 786 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881716&room3=1"
+       },
+       {
+        "roomType": "fourRoom",
+        "roomTypeDisplay": "4-комн. от 156 м²",
+        "price2From": "от 150 610 544 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881716&room4=1"
+       }
+      ],
+      "fromDeveloperPropsCountDisplay": "17 квартир в продаже",
+      "fromDeveloperPropsCountUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881716"
+     },
+     "isEscrow": false,
+     "isSalesStart": false
+    },
+    {
+     "id": 8056315,
+     "name": "Корпус 4",
+     "polygonPath": "548.62352184 359.382636281, 542.324823417 432.9200251627, 554.9222202629 676.6439425989, 566.4698340383 729.1706489429, 697.6927178497 711.3115687859, 697.6927178497 691.3514203752, 741.7836068103 682.9471473601, 734.4351253169 411.909342625, 705.3370532517 395.2631339993, 702.9416332021 376.1911823111, 691.3940194267 369.8879775498, 689.2944532858 355.1804997735, 674.5974902989 352.0288973929",
+     "tooltipPoint": {
+      "x": 657.5007089884615,
+      "y": 503.3991094737154
+     },
+     "houseInfo": [
+      "Сдача в 4 квартале 2026",
+      "23 этажа"
+     ],
+     "isReliable": false,
+     "stats": {
+      "fromDeveloperRooms": [
+       {
+        "roomType": "studio",
+        "roomTypeDisplay": "Студии от 33 м²",
+        "price2From": "от 22 886 754 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_8056315&room9=1"
+       },
+       {
+        "roomType": "oneRoom",
+        "roomTypeDisplay": "1-комн. от 43 м²",
+        "price2From": "от 29 646 214 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_8056315&room1=1"
+       },
+       {
+        "roomType": "twoRoom",
+        "roomTypeDisplay": "2-комн. от 68 м²",
+        "price2From": "от 48 086 000 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_8056315&room2=1"
+       }
+      ],
+      "fromDeveloperPropsCountDisplay": "5 квартир в продаже",
+      "fromDeveloperPropsCountUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_8056315"
+     },
+     "isEscrow": true,
+     "isSalesStart": false
+    },
+    {
+     "id": 7881718,
+     "name": "Корпус 3",
+     "polygonPath": "784.8272122833 557.1249027013, 772.4423911152 566.257089261, 739.1989237695 555.8203046213, 736.5915929972 412.3145158255, 706.6072891167 395.3547407859, 703.9999583445 377.0903676665, 692.2669698695 369.2627791867, 692.9188025626 354.2599012671, 632.2983621085 356.2167983871, 627.7355332572 240.1075692704, 692.9188025626 202.2742249515, 785.4790449763 227.0615884708, 788.7382084416 239.4552702304, 793.952869986 242.0644663904, 794.6047026791 249.8920548701, 799.8193642235 251.1966529501, 799.8193642235 268.1564279896, 805.0340257679 274.6794183894, 806.3376911541 287.725399189, 817.418846936 297.5098847888, 816.7670142429 505.5932785428, 784.1753795902 536.9036324619",
+     "tooltipPoint": {
+      "x": 753.3614704639954,
+      "y": 353.0146030998909
+     },
+     "houseInfo": [
+      "Сдача в 4 квартале 2026",
+      "24 этажа"
+     ],
+     "isReliable": false,
+     "stats": {
+      "fromDeveloperRooms": [
+       {
+        "roomType": "studio",
+        "roomTypeDisplay": "Студии от 29 м²",
+        "price2From": "от 20 792 240 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881718&room9=1"
+       },
+       {
+        "roomType": "oneRoom",
+        "roomTypeDisplay": "1-комн. от 42 м²",
+        "price2From": "от 31 663 690 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881718&room1=1"
+       },
+       {
+        "roomType": "twoRoom",
+        "roomTypeDisplay": "2-комн. от 60 м²",
+        "price2From": "от 44 378 665 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881718&room2=1"
+       }
+      ],
+      "fromDeveloperPropsCountDisplay": "6 квартир в продаже",
+      "fromDeveloperPropsCountUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881718"
+     },
+     "isEscrow": true,
+     "isSalesStart": false
+    },
+    {
+     "id": 7881720,
+     "name": "Корпус 6",
+     "polygonPath": "904.8464111497 756.9782872814, 870.2035698235 732.8160023631, 868.1040036825 708.6537174449, 833.4611623563 660.3291476084, 839.4810891407 371.9927149199, 986.729490648 355.6742508132, 996.0387860459 369.1656054647, 1004.364222396 368.6755235414, 1009.261537896 375.5366704683, 1014.1588533961 379.4573258551, 1028.3610683462 377.0069162383, 1032.2789207462 381.4176535485, 1030.8097260962 393.6697016323, 1037.1762362462 402.4911762526, 1040.1146255462 419.1539616466, 1048.4400618963 417.6837158765, 1082.2315388465 470.6125635985, 1063.8551013837 722.1052435992",
+     "tooltipPoint": {
+      "x": 982.7731336467888,
+      "y": 481.3011210084945
+     },
+     "houseInfo": [
+      "Сдача в 4 квартале 2026",
+      "23 этажа"
+     ],
+     "isReliable": false,
+     "stats": {
+      "fromDeveloperRooms": [
+       {
+        "roomType": "oneRoom",
+        "roomTypeDisplay": "1-комн. от 45 м²",
+        "price2From": "от 32 967 590 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881720&room1=1"
+       },
+       {
+        "roomType": "threeRoom",
+        "roomTypeDisplay": "3-комн. от 89 м²",
+        "price2From": "от 64 157 395 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881720&room3=1"
+       },
+       {
+        "roomType": "fourRoom",
+        "roomTypeDisplay": "4-комн. от 149 м²",
+        "price2From": "от 161 005 707 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881720&room4=1"
+       }
+      ],
+      "fromDeveloperPropsCountDisplay": "9 квартир в продаже",
+      "fromDeveloperPropsCountUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881720"
+     },
+     "isEscrow": true,
+     "isSalesStart": false
+    },
+    {
+     "id": 7881719,
+     "name": "Корпус 5",
+     "polygonPath": "1082.7207151578 468.8628311099, 1051.1027438876 417.1511926529, 1041.7978444376 417.6925403875, 1038.3697235876 401.2827914986, 1031.0909591516 391.9199691437, 1031.8847754636 379.9049664782, 1027.2243359114 375.2571837497, 1012.7340158536 379.280370759, 1005.8617944993 368.6330822411, 997.5363581493 368.3127888381, 986.9479108372 354.7762745914, 927.6903932868 362.8546307833, 932.7061467608 259.5978498387, 1022.8167519614 216.4706405837, 1111.458162512 255.1871125285, 1111.947894062 264.0085871489, 1119.293867312 266.4589967656, 1119.293867312 286.0622736997, 1134.9652769121 293.41350255, 1136.9242031122 311.546533714, 1150.1469549622 317.9175987176, 1153.0853442623 330.6597287247, 1157.9826597623 336.5407118049, 1138.8439507882 571.1037219596, 1073.0681063072 615.5786565037",
+     "tooltipPoint": {
+      "x": 1063.8997902500041,
+      "y": 360.41898147091996
+     },
+     "houseInfo": [
+      "Сдача в 4 квартале 2026",
+      "23 этажа"
+     ],
+     "isReliable": false,
+     "stats": {
+      "fromDeveloperRooms": [
+       {
+        "roomType": "studio",
+        "roomTypeDisplay": "Студии от 32 м²",
+        "price2From": "от 27 355 730 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881719&room9=1"
+       },
+       {
+        "roomType": "oneRoom",
+        "roomTypeDisplay": "1-комн. от 43 м²",
+        "price2From": "от 31 782 354 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881719&room1=1"
+       },
+       {
+        "roomType": "twoRoom",
+        "roomTypeDisplay": "2-комн. от 62 м²",
+        "price2From": "от 44 922 249 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881719&room2=1"
+       },
+       {
+        "roomType": "threeRoom",
+        "roomTypeDisplay": "3-комн. от 87 м²",
+        "price2From": "от 63 748 720 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881719&room3=1"
+       },
+       {
+        "roomType": "fourRoom",
+        "roomTypeDisplay": "4-комн. от 128 м²",
+        "price2From": "от 91 902 088 ₽",
+        "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881719&room4=1"
+       }
+      ],
+      "fromDeveloperPropsCountDisplay": "30 квартир в продаже",
+      "fromDeveloperPropsCountUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&nb_house_key%5B0%5D=4025502_7881719"
+     },
+     "isEscrow": true,
+     "isSalesStart": false
+    }
+   ],
+   "image": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/21/e5/03950babb09078a4f1aa2dd356e0.jpeg",
+   "isHousesNamesEnabled": true,
+   "genplanInfrastructure": [
+    {
+     "id": 1,
+     "category": "school",
+     "tooltipPoint": {
+      "x": 78.02428244026666,
+      "y": 713.7248735789111
+     },
+     "name": "Учебное заведение"
+    },
+    {
+     "id": 2,
+     "category": "attraction",
+     "tooltipPoint": {
+      "x": 105.44723427711818,
+      "y": 521.8918122142909
+     },
+     "name": "Достопримечательность"
+    },
+    {
+     "id": 3,
+     "category": "school",
+     "tooltipPoint": {
+      "x": 933.242771833975,
+      "y": 126.6081688825
+     },
+     "name": "Учебное заведение"
+    }
+   ],
+   "imagePreviewBig": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/40/88/a316fee9f41b770696a8f1ec5541.jpeg",
+   "imagePreviewSmall": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/12/3b/b5950e17c769612a22e43a9a211d.jpeg"
+  },
+  "geo": {
+   "undergroundInfo": [
+    {
+     "id": 21,
+     "name": "Ботанический сад",
+     "lineId": 5,
+     "lineColor": "FF7F00",
+     "timeWalk": 10,
+     "timeTransport": 4
+    },
+    {
+     "id": 276,
+     "name": "Улица Сергея Эйзенштейна",
+     "lineId": 18,
+     "lineColor": "0177BF",
+     "timeWalk": 18,
+     "timeTransport": 3
+    },
+    {
+     "id": 27,
+     "name": "ВДНХ",
+     "lineId": 5,
+     "lineColor": "FF7F00",
+     "timeWalk": 29,
+     "timeTransport": 5
+    },
+    {
+     "id": 111,
+     "name": "Свиблово",
+     "lineId": 5,
+     "lineColor": "FF7F00",
+     "timeWalk": 30,
+     "timeTransport": 5
+    },
+    {
+     "id": 277,
+     "name": "Выставочный центр",
+     "lineId": 18,
+     "lineColor": "0177BF",
+     "timeWalk": 26,
+     "timeTransport": 6
+    }
+   ],
+   "roadInfo": [],
+   "coordinates": {
+    "lat": 55.838526486879,
+    "lng": 37.6417021070219
+   },
+   "regionId": 1,
+   "mainTownId": 1,
+   "addressDetails": [
+    {
+     "id": 1,
+     "type": "location",
+     "locationTypeId": 1,
+     "fullName": "Москва",
+     "isFormingAddress": true
+    },
+    {
+     "id": 2054,
+     "type": "street",
+     "fullName": "Сельскохозяйственная улица",
+     "isFormingAddress": true
+    }
+   ],
+   "districtInfo": [
+    {
+     "id": 50,
+     "name": "Ростокино",
+     "locationId": 1,
+     "parentId": 6
+    },
+    {
+     "id": 6,
+     "name": "СВАО",
+     "locationId": 1
+    }
+   ],
+   "timezone": 3
+  },
+  "hasFutureObjects": false,
+  "hasMortgage": true,
+  "houses": [
+   {
+    "houseId": 7881716,
+    "houseName": "Корпус 1",
+    "finishStatus": "Сдан в 3 кв. 2025",
+    "isReliable": false,
+    "isSalesStart": false,
+    "fromDeveloperPropsCount": 17,
+    "isEscrow": false,
+    "hasLayouts": true
+   },
+   {
+    "houseId": 7881717,
+    "houseName": "Корпус 2",
+    "finishStatus": "Сдан в 3 кв. 2025",
+    "isReliable": false,
+    "isSalesStart": false,
+    "fromDeveloperPropsCount": 23,
+    "isEscrow": false,
+    "hasLayouts": true
+   },
+   {
+    "houseId": 7881718,
+    "houseName": "Корпус 3",
+    "finishStatus": "Сдача в 4 кв. 2026",
+    "isReliable": false,
+    "isSalesStart": false,
+    "fromDeveloperPropsCount": 6,
+    "isEscrow": true,
+    "hasLayouts": true
+   },
+   {
+    "houseId": 8056315,
+    "houseName": "Корпус 4",
+    "finishStatus": "Сдача в 4 кв. 2026",
+    "isReliable": false,
+    "isSalesStart": false,
+    "fromDeveloperPropsCount": 5,
+    "isEscrow": true,
+    "hasLayouts": true
+   },
+   {
+    "houseId": 7881719,
+    "houseName": "Корпус 5",
+    "finishStatus": "Сдача в 4 кв. 2026",
+    "isReliable": false,
+    "isSalesStart": false,
+    "fromDeveloperPropsCount": 30,
+    "isEscrow": true,
+    "hasLayouts": true
+   },
+   {
+    "houseId": 7881720,
+    "houseName": "Корпус 6",
+    "finishStatus": "Сдача в 4 кв. 2026",
+    "isReliable": false,
+    "isSalesStart": false,
+    "fromDeveloperPropsCount": 9,
+    "isEscrow": true,
+    "hasLayouts": true
+   }
+  ],
+  "housesByTurn": [
+   {
+    "title": "Срок сдачи 1 очереди",
+    "finishDates": [
+     {
+      "date": "3 квартал 2025",
+      "housesNames": "Корпус 1, Корпус 2"
+     }
+    ]
+   },
+   {
+    "title": "Срок сдачи 2 очереди",
+    "finishDates": [
+     {
+      "date": "4 квартал 2026",
+      "housesNames": "Корпус 4, Корпус 3"
+     }
+    ]
+   },
+   {
+    "title": "Срок сдачи 3 очереди",
+    "finishDates": [
+     {
+      "date": "4 квартал 2026",
+      "housesNames": "Корпус 5, Корпус 6"
+     }
+    ]
+   }
+  ],
+  "id": 4025502,
+  "imageSources": [
+   "https://7d9e88a8-f178-4098-bea5-48d960920605.selcdn.net",
+   "https://avatars.mds.yandex.net",
+   "https://b1.m24.ru",
+   "https://i.postimg.cc",
+   "https://img-fotki.yandex.ru",
+   "https://img.localway.ru",
+   "https://img.tourister.ru",
+   "https://s4.stc.all.kpcdn.net",
+   "https://vdnh.ru",
+   "https://www.2do2go.ru"
+  ],
+  "interiorDecoration": [
+   {
+    "type": "without",
+    "description": "В народе — «коробка». Обычно в таких квартирах:\n\n• установлены окна и входная дверь\n• нет межкомнатных перегородок\n• несущие стены и пол не выровнены\n• подведено электричество, без разводки\n• разведено отопление, есть радиаторы\n• проложены, но не разведены коммуникации — вода, канализация, вентиляция, телефонные и ТВ-кабели\n\nЕсли хотите сами контролировать все этапы ремонта и продумать планировку — это отличный вариант.\n\nВажно: каждый застройщик сам определяет, что включено в этот тип отделки. Чтобы уточнить подробности, свяжитесь с ним по телефону или в чате.",
+    "images": [
+     {
+      "url": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/9f/f6/06e2b0232c36d7460075e85c54e9.jpeg",
+      "thumbnailUrl": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/newbuildings/64/27/799ed15271054bef9165a9efbd09.jpeg"
+     }
+    ],
+    "title": "Без отделки",
+    "shortDescription": "",
+    "housesIds": [
+     8056315,
+     7881720,
+     7881719,
+     7881716,
+     7881718,
+     7881717
+    ]
+   }
+  ],
+  "isEscrow": true,
+  "isFavorite": false,
+  "isSalesLeader": false,
+  "isTest": false,
+  "layoutsInfo": {
+   "roomsCountsByHouse": [
+    {
+     "houseName": "Все корпуса",
+     "roomsCountList": [
+      {
+       "roomValue": "studio",
+       "roomTitle": "Студия",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "oneRoom",
+       "roomTitle": "1",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "twoRoom",
+       "roomTitle": "2",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "threeRoom",
+       "roomTitle": "3",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "fourPlusRoom",
+       "roomTitle": "4+",
+       "isAvailable": true
+      }
+     ]
+    },
+    {
+     "houseId": 7881716,
+     "houseName": "Корпус 1",
+     "roomsCountList": [
+      {
+       "roomValue": "studio",
+       "roomTitle": "Студия",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "oneRoom",
+       "roomTitle": "1",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "twoRoom",
+       "roomTitle": "2",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "threeRoom",
+       "roomTitle": "3",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "fourPlusRoom",
+       "roomTitle": "4+",
+       "isAvailable": true
+      }
+     ]
+    },
+    {
+     "houseId": 7881717,
+     "houseName": "Корпус 2",
+     "roomsCountList": [
+      {
+       "roomValue": "studio",
+       "roomTitle": "Студия",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "oneRoom",
+       "roomTitle": "1",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "twoRoom",
+       "roomTitle": "2",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "threeRoom",
+       "roomTitle": "3",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "fourPlusRoom",
+       "roomTitle": "4+",
+       "isAvailable": true
+      }
+     ]
+    },
+    {
+     "houseId": 7881718,
+     "houseName": "Корпус 3",
+     "roomsCountList": [
+      {
+       "roomValue": "studio",
+       "roomTitle": "Студия",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "oneRoom",
+       "roomTitle": "1",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "twoRoom",
+       "roomTitle": "2",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "threeRoom",
+       "roomTitle": "3",
+       "isAvailable": false
+      },
+      {
+       "roomValue": "fourPlusRoom",
+       "roomTitle": "4+",
+       "isAvailable": false
+      }
+     ]
+    },
+    {
+     "houseId": 8056315,
+     "houseName": "Корпус 4",
+     "roomsCountList": [
+      {
+       "roomValue": "studio",
+       "roomTitle": "Студия",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "oneRoom",
+       "roomTitle": "1",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "twoRoom",
+       "roomTitle": "2",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "threeRoom",
+       "roomTitle": "3",
+       "isAvailable": false
+      },
+      {
+       "roomValue": "fourPlusRoom",
+       "roomTitle": "4+",
+       "isAvailable": false
+      }
+     ]
+    },
+    {
+     "houseId": 7881719,
+     "houseName": "Корпус 5",
+     "roomsCountList": [
+      {
+       "roomValue": "studio",
+       "roomTitle": "Студия",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "oneRoom",
+       "roomTitle": "1",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "twoRoom",
+       "roomTitle": "2",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "threeRoom",
+       "roomTitle": "3",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "fourPlusRoom",
+       "roomTitle": "4+",
+       "isAvailable": true
+      }
+     ]
+    },
+    {
+     "houseId": 7881720,
+     "houseName": "Корпус 6",
+     "roomsCountList": [
+      {
+       "roomValue": "studio",
+       "roomTitle": "Студия",
+       "isAvailable": false
+      },
+      {
+       "roomValue": "oneRoom",
+       "roomTitle": "1",
+       "isAvailable": false
+      },
+      {
+       "roomValue": "twoRoom",
+       "roomTitle": "2",
+       "isAvailable": false
+      },
+      {
+       "roomValue": "threeRoom",
+       "roomTitle": "3",
+       "isAvailable": true
+      },
+      {
+       "roomValue": "fourPlusRoom",
+       "roomTitle": "4+",
+       "isAvailable": true
+      }
+     ]
+    }
+   ],
+   "hasTour": true
+  },
+  "media": [
+   {
+    "id": 2986549778,
+    "mediaType": "architecture",
+    "fullUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-2986549778-10.jpg",
+    "thumbnailUrl": "https://images.cdn-cian.ru/images/soyuz-moskva-jk-2986549778-7.jpg",
+    "alt": "ЖК СОЮЗ"
+   }
+  ],
+  "minPrice": "19671288.00",
+  "maxPrice": "212152860.00",
+  "minPriceForMeterFromDeveloperValue": 604654,
+  "name": "СОЮЗ",
+  "nearbyNewbuildingsMapUrl": "https://www.cian.ru/map/?deal_type=sale&engine_version=2&zoom=12&with_newobject=1&newbuildings_search=true&region=1&center=55.838526486879,37.6417021070219",
+  "newbuildingClassName": "Премиум",
+  "newbuildingClass": {
+   "id": 4103,
+   "name": "Премиум"
+  },
+  "newbuildingsFromBuilderLink": "/newobjects/list/?builders[0]=15990&deal_type=sale&engine_version=2&offer_type=newobject&show_old_newobjects=1",
+  "offerTypes": "flatOnly",
+  "panorama": {
+   "type": "default",
+   "url": "https://tour.virtualland.ru/soyuz/"
+  },
+  "priceForMeterFromDeveloperDisplay": "604 655–1 303 951 ₽/м²",
+  "priceForObjectFromDeveloperDisplay": "19,67–212,15 млн ₽",
+  "priceRelevance": {
+   "title": "",
+   "description": "Точную стоимость и наличие квартир уточняйте у застройщика",
+   "type": "warning",
+   "label": "Уточняйте информацию о ценах и наличии"
+  },
+  "promoInfos": [
+   {
+    "authorLogoUrl": "https://www.cian.ru/api/get-company-logo/?id=15990&rnd=303055",
+    "authorName": "«Группа Родина»",
+    "availableJks": [],
+    "bank": null,
+    "banks": [],
+    "companyId": null,
+    "description": "Скидка 12% распространяется на ограниченный пул квартир.\n\nАкция действует до 31.10.26",
+    "end": "До 31.10.26",
+    "features": [],
+    "isFromBank": false,
+    "isFromBuilder": true,
+    "name": "Скидка 12%",
+    "promoId": 34053,
+    "uniquePromoId": "-1_None_15990_34053_discount",
+    "promoType": "discount",
+    "authorRealtyUserId": 127283499,
+    "mortgageParams": null,
+    "availablePurchaseTerms": [],
+    "dialogLabels": []
+   },
+   {
+    "authorLogoUrl": "https://www.cian.ru/api/get-company-logo/?id=15990&rnd=303055",
+    "authorName": "«Группа Родина»",
+    "availableJks": [],
+    "bank": null,
+    "banks": [],
+    "companyId": null,
+    "description": "Предложение действует на ограниченный пул квартир\n\nАкция действует до 31.10.26",
+    "end": "До 31.10.26",
+    "features": [],
+    "isFromBank": false,
+    "isFromBuilder": true,
+    "name": "Квартиры недели со скидкой до 15%",
+    "promoId": 32655,
+    "uniquePromoId": "-1_None_15990_32655_discount",
+    "promoType": "discount",
+    "authorRealtyUserId": 127283499,
+    "mortgageParams": null,
+    "availablePurchaseTerms": [],
+    "dialogLabels": []
+   },
+   {
+    "authorLogoUrl": "https://www.cian.ru/api/get-company-logo/?id=15990&rnd=303055",
+    "authorName": "«Группа Родина»",
+    "availableJks": [],
+    "bank": null,
+    "banks": [],
+    "companyId": null,
+    "description": "Скидка 10% распространяется на ограниченный пул квартир.\n\nАкция действует до 31.10.26",
+    "end": "До 31.10.26",
+    "features": [],
+    "isFromBank": false,
+    "isFromBuilder": true,
+    "name": "Скидка 10% ",
+    "promoId": 24893,
+    "uniquePromoId": "-1_None_15990_24893_discount",
+    "promoType": "discount",
+    "authorRealtyUserId": 127283499,
+    "mortgageParams": null,
+    "availablePurchaseTerms": [],
+    "dialogLabels": []
+   },
+   {
+    "authorLogoUrl": "https://www.cian.ru/api/get-company-logo/?id=15990&rnd=303055",
+    "authorName": "«Группа Родина»",
+    "availableJks": [],
+    "bank": null,
+    "banks": [],
+    "companyId": null,
+    "description": "Скидка 9% распространяется на ограниченный пул квартир.\n\nАкция действует до 31.10.26",
+    "end": "До 31.10.26",
+    "features": [],
+    "isFromBank": false,
+    "isFromBuilder": true,
+    "name": "Скидка 9%",
+    "promoId": 23972,
+    "uniquePromoId": "-1_None_15990_23972_discount",
+    "promoType": "discount",
+    "authorRealtyUserId": 127283499,
+    "mortgageParams": null,
+    "availablePurchaseTerms": [],
+    "dialogLabels": []
+   },
+   {
+    "authorLogoUrl": "https://www.cian.ru/api/get-company-logo/?id=15990&rnd=303055",
+    "authorName": "«Группа Родина»",
+    "availableJks": [],
+    "bank": null,
+    "banks": [],
+    "companyId": null,
+    "description": "Скидка 11% распространяется на ограниченный пул квартир.\n\nАкция действует до 31.10.26",
+    "end": "До 31.10.26",
+    "features": [],
+    "isFromBank": false,
+    "isFromBuilder": true,
+    "name": "Скидка 11%",
+    "promoId": 23973,
+    "uniquePromoId": "-1_None_15990_23973_discount",
+    "promoType": "discount",
+    "authorRealtyUserId": 127283499,
+    "mortgageParams": null,
+    "availablePurchaseTerms": [],
+    "dialogLabels": []
+   },
+   {
+    "authorLogoUrl": "https://www.cian.ru/api/get-company-logo/?id=15990&rnd=303055",
+    "authorName": "«Группа Родина»",
+    "availableJks": [],
+    "bank": null,
+    "banks": [],
+    "companyId": null,
+    "description": "Скидка 7% распространяется на ограниченный пул квартир.\n\nАкция действует до 31.10.26",
+    "end": "До 31.10.26",
+    "features": [],
+    "isFromBank": false,
+    "isFromBuilder": true,
+    "name": "Скидка 7%",
+    "promoId": 23971,
+    "uniquePromoId": "-1_None_15990_23971_discount",
+    "promoType": "discount",
+    "authorRealtyUserId": 127283499,
+    "mortgageParams": null,
+    "availablePurchaseTerms": [],
+    "dialogLabels": []
+   },
+   {
+    "authorLogoUrl": "https://www.cian.ru/api/get-company-logo/?id=15990&rnd=303055",
+    "authorName": "«Группа Родина»",
+    "availableJks": [],
+    "bank": null,
+    "banks": [],
+    "companyId": null,
+    "description": "Скидка 6% распространяется на ограниченный пул квартир.\n\nАкция действует до 31.10.26",
+    "end": "До 31.10.26",
+    "features": [],
+    "isFromBank": false,
+    "isFromBuilder": true,
+    "name": "Скидка 6%",
+    "promoId": 20319,
+    "uniquePromoId": "-1_None_15990_20319_discount",
+    "promoType": "discount",
+    "authorRealtyUserId": 127283499,
+    "mortgageParams": null,
+    "availablePurchaseTerms": [],
+    "dialogLabels": []
+   },
+   {
+    "authorLogoUrl": "https://www.cian.ru/api/get-company-logo/?id=15990&rnd=303055",
+    "authorName": "«Группа Родина»",
+    "availableJks": [],
+    "bank": null,
+    "banks": [],
+    "companyId": null,
+    "description": "Рассрочка с первоначальным платежом 20%. \nОстаток равными платежами  ежеквартально/ежемесячно \n% не начисляются\nДля квартир 2 и 3 очереди остаток 01.12.2026\n\nАкция действует до 31.10.26",
+    "end": "До 31.10.26",
+    "features": [
+     {
+      "name": "Первый взнос",
+      "value": "От 20%"
+     }
+    ],
+    "isFromBank": false,
+    "isFromBuilder": true,
+    "name": "Рассрочка с ПВ 20%",
+    "promoId": 33326,
+    "uniquePromoId": "-1_None_15990_33326_installment",
+    "promoType": "installment",
+    "authorRealtyUserId": 127283499,
+    "mortgageParams": null,
+    "availablePurchaseTerms": [],
+    "dialogLabels": []
+   },
+   {
+    "authorLogoUrl": "https://www.cian.ru/api/get-company-logo/?id=15990&rnd=303055",
+    "authorName": "«Группа Родина»",
+    "availableJks": [],
+    "bank": null,
+    "banks": [],
+    "companyId": null,
+    "description": "Рассрочка по ДКП с ПВ 40% и далее равные ежеквартальные/ежемесячные платежи до 30.04.2027 (дата 1го платежа при ежекв.- до 31.10.2026 г., при ежемес. - до 31.10.2026) (1-я очередь)\n\nАкция действует до 31.10.26",
+    "end": "До 31.10.26",
+    "features": [
+     {
+      "name": "Первый взнос",
+      "value": "От 40%"
+     },
+     {
+      "name": "Срок погашения",
+      "value": "До 30.04.27"
+     }
+    ],
+    "isFromBank": false,
+    "isFromBuilder": true,
+    "name": "Рассрочка 0% на готовые квартиры",
+    "promoId": 23500,
+    "uniquePromoId": "-1_None_15990_23500_installment",
+    "promoType": "installment",
+    "authorRealtyUserId": 127283499,
+    "mortgageParams": null,
+    "availablePurchaseTerms": [],
+    "dialogLabels": []
+   },
+   {
+    "authorLogoUrl": "https://www.cian.ru/api/get-company-logo/?id=15990&rnd=303055",
+    "authorName": "«Группа Родина»",
+    "availableJks": [],
+    "bank": null,
+    "banks": [
+     {
+      "id": 1,
+      "name": "ВТБ",
+      "logoUrl": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/banks/a3/34/fb5f2a53a39d462e0793a083c8b6.jpeg",
+      "isPartner": false
+     },
+     {
+      "id": 1,
+      "name": "Альфа-Банк",
+      "logoUrl": "https://static.cdn-cian.ru/frontend/feedteam/upload/images/banks/a1/81/94c6bfc2c14f9d0d3de635fd534c.jpeg",
+      "isPartner": false
+     }
+    ],
+    "companyId": null,
+    "description": "Средства из материнского капитала могут быть засчитаны в качестве первоначального взноса по ипотеке на ряд ЖК данного застройщика.\nМатеринский капитал можно использовать только при покупке квартир и нельзя использовать при покупке апартаментов.",
+    "end": "Бессрочная",
+    "features": [],
+    "isFromBank": false,
+    "isFromBuilder": true,
+    "name": "Материнский капитал",
+    "promoId": 1270563,
+    "uniquePromoId": "-1_None_15990_None_maternalCapital",
+    "promoType": "maternalCapital",
+    "mortgageParams": null,
+    "availablePurchaseTerms": [],
+    "dialogLabels": []
+   },
+   {
+    "authorLogoUrl": "https://www.cian.ru/api/get-company-logo/?id=15990&rnd=303055",
+    "authorName": "«Группа Родина»",
+    "availableJks": [],
+    "bank": null,
+    "banks": [],
+    "companyId": null,
+    "description": "Покупатель, пришедший по рекомендации должен приобрести квартиру в проектах компании (СОЮЗ, Родина парк, Родина Переделкино). Участник программы получает бонус в размере 100 тыс. руб, которые могут служить скидкой при дальнейшей покупке квартиры в проектах СОЮЗ, Родина парк, Родина Переделкино. Скидка не распространяется на клиентов от агентств недвижимости и привлеченных при помощи рекламы. Акция суммируется со всеми акциями.\n\nАкция действует до 31.10.26",
+    "end": "До 31.10.26",
+    "features": [],
+    "isFromBank": false,
+    "isFromBuilder": true,
+    "name": " Приведи друга!",
+    "promoId": 25525,
+    "uniquePromoId": "-1_None_15990_25525_bonus",
+    "promoType": "bonus",
+    "authorRealtyUserId": 127283499,
+    "mortgageParams": null,
+    "availablePurchaseTerms": [],
+    "dialogLabels": []
+   },
+   {
+    "authorLogoUrl": "https://www.cian.ru/api/get-company-logo/?id=15990&rnd=303055",
+    "authorName": "«Группа Родина»",
+    "availableJks": [],
+    "bank": null,
+    "banks": [],
+    "companyId": null,
+    "description": "Корпуса 1 и 2 введены в эксплуатацию. Покупатели готовых квартир могут получить ключи в день заключения сделки.\n\nАкция действует до 31.10.26",
+    "end": "До 31.10.26",
+    "features": [],
+    "isFromBank": false,
+    "isFromBuilder": true,
+    "name": "Ключи в день покупки",
+    "promoId": 28126,
+    "uniquePromoId": "-1_None_15990_28126_bonus",
+    "promoType": "bonus",
+    "authorRealtyUserId": 127283499,
+    "mortgageParams": null,
+    "availablePurchaseTerms": [],
+    "dialogLabels": []
+   }
+  ],
+  "propsCount": 119,
+  "reliabilityText": "",
+  "reviewsCount": 68,
+  "salesStartHousesString": "",
+  "sellers": [],
+  "seoDescription": "ЖК «СОЮЗ» от застройщика Группа Родина: 🏠 на сайте Циан 120 объявлений | с ценами от 20,5 млн руб. | Срок сдачи | Ипотека в ЖК «СОЮЗ» | Ход строительства с актуальными фото | ЖК находится по адресу Москва, Сельскохозяйственная улица | Акции и скидки от застройщика Группа Родина",
+  "seoKeywords": "ЖК СОЮЗ, Москва, Сельскохозяйственная улица, купить квартиру в ЖК СОЮЗ, ЖК СОЮЗ планировки",
+  "seoTitle": "ЖК «СОЮЗ» акции от официального застройщика Группа Родина -  цены планировки фото ход строительства ипотека и скидки от застройщика— ЖК «СОЮЗ» в Москва, Сельскохозяйственная улица",
+  "specialPromo": {
+   "showNewbuildingsLabel": "Показать ЖК от ПИК",
+   "showNewbuildingsUrl": "https://www.cian.ru/map/?deal_type=2&currency=2&center=55.77228091175091,37.581318235024824&zoom=11&engine_version=2&object_type=2&with_newobject=1&newbuildings_search=true&is_pik_promo=1&region=1&builder=9",
+   "isPik": true,
+   "imageUrl": "https://static.cdn-cian.ru/media/images/pik_orange.svg",
+   "isPreview": false
+  },
+  "specialStatusDisplay": "Сдача в 4 кв. 2026, есть сданные",
+  "specifications": [
+   {
+    "title": "Сдача",
+    "value": "2025–2026",
+    "itemType": "finishDate",
+    "tooltipText": "В ЖК 6 корпусов, у каждого из которых свой срок сдачи."
+   },
+   {
+    "title": "Класс",
+    "value": "Премиум",
+    "itemType": "newbuildingClass"
+   },
+   {
+    "title": "Этажность",
+    "value": "23–24",
+    "itemType": "floors",
+    "tooltipText": "В ЖК 6 корпусов с разной этажностью: от 23 до 24 этажей."
+   },
+   {
+    "title": "Статус помещений",
+    "value": "Квартиры",
+    "itemType": "residentialStatus"
+   },
+   {
+    "title": "Тип дома",
+    "value": "Монолитно-кирпичный",
+    "itemType": "materialType"
+   },
+   {
+    "title": "Потолки",
+    "value": "3,08–4,47 м",
+    "itemType": "ceilingHeight"
+   },
+   {
+    "title": "Отделка",
+    "value": "Без отделки",
+    "itemType": "decorations"
+   },
+   {
+    "title": "Парковка",
+    "value": "Подземная, гостевая",
+    "itemType": "parking"
+   }
+  ],
+  "specificationsDetailed": {
+   "parking": [
+    {
+     "type": "underground",
+     "title": "Подземная",
+     "levels": 1,
+     "lots": 338
+    },
+    {
+     "type": "guest",
+     "title": "Гостевая",
+     "levels": 37
+    }
+   ],
+   "security": [
+    {
+     "type": "perimetr",
+     "title": "Огороженный периметр"
+    },
+    {
+     "type": "camera",
+     "title": "Видеонаблюдение"
+    },
+    {
+     "type": "access",
+     "title": "Пропускная система"
+    },
+    {
+     "type": "fire",
+     "title": "Противопожарная система"
+    },
+    {
+     "type": "aroundTheClock",
+     "title": "Круглосуточная охрана"
+    },
+    {
+     "type": "concierge",
+     "title": "Консьерж"
+    },
+    {
+     "type": "parking",
+     "title": "Охраняемая парковка"
+    },
+    {
+     "type": "signal",
+     "title": "Сигнализация"
+    }
+   ],
+   "shortInfrastructure": [
+    {
+     "type": "children",
+     "title": "Детские площадки"
+    },
+    {
+     "type": "sport",
+     "title": "Спортивные площадки"
+    },
+    {
+     "type": "recreation",
+     "title": "Места для отдыха"
+    },
+    {
+     "type": "supermarket",
+     "title": "Супермаркет"
+    },
+    {
+     "type": "restaurant",
+     "title": "Рестораны"
+    },
+    {
+     "type": "fitness",
+     "title": "Фитнес-центр"
+    },
+    {
+     "type": "spa",
+     "title": "SPA-центр"
+    },
+    {
+     "type": "pool",
+     "title": "Бассейн"
+    },
+    {
+     "type": "domestic",
+     "title": "Пункты бытового обслуживания"
+    },
+    {
+     "type": "commerce",
+     "title": "Коммерческие объекты"
+    }
+   ],
+   "shortSpecifications": [
+    {
+     "title": "Сдача",
+     "value": "2025–2026"
+    },
+    {
+     "title": "Тип комплекса",
+     "value": "Жилой комплекс",
+     "valueTooltipText": "Один или несколько многоквартирных домов, объединённых общей территорией и инфраструктурой."
+    },
+    {
+     "title": "Класс",
+     "value": "Премиум"
+    },
+    {
+     "title": "Этажность",
+     "value": "23–24"
+    },
+    {
+     "title": "Корпуса",
+     "value": "6"
+    },
+    {
+     "title": "Тип дома",
+     "value": "Монолитно-кирпичный"
+    },
+    {
+     "title": "Кол-во лифтов",
+     "value": "4"
+    },
+    {
+     "title": "Потолки",
+     "value": "3,08–4,47 м"
+    },
+    {
+     "title": "Отделка",
+     "value": "Без отделки"
+    }
+   ]
+  },
+  "transportAccessibilityRate": {
+   "transportAccessibility": {
+    "title": "Транспортная доступность",
+    "description": "Показатель развития городской инфраструктуры вокруг ЖК ",
+    "iconUrl": "https://static.cdn-cian.ru/media/images/newbuilding_transport_accessibility_transport_black.svg",
+    "rate": 6.9,
+    "rateDetails": [
+     {
+      "title": "Близость остановок транспорта",
+      "rate": 7
+     },
+     {
+      "title": "Свободные парковки и дороги",
+      "rate": 4.5
+     },
+     {
+      "title": "Близость школ, больниц и МФЦ",
+      "rate": 7.6
+     }
+    ]
+   }
+  },
+  "videos": [
+   {
+    "url": "https://youtu.be/Bbz_aWh67hs",
+    "type": "youtube",
+    "fullUrl": "https://img.youtube.com/vi/Bbz_aWh67hs/maxresdefault.jpg"
+   },
+   {
+    "url": "https://youtu.be/zQ3J5kuBE70?si=4rmS_oMvM-MZ3M5f",
+    "type": "youtube",
+    "fullUrl": "https://img.youtube.com/vi/zQ3J5kuBE70/maxresdefault.jpg"
+   }
+  ],
+  "website": "https://soyuzmoscow.ru/",
+  "reviews": {
+   "title": "68 отзывов и 3 вопроса",
+   "titleListButton": "Все отзывы и вопросы",
+   "rating": 4.5,
+   "ratingText": "Очень хорошо",
+   "reviews": [
+    {
+     "answersCount": "Нет ответов",
+     "answersCountInt": 0,
+     "comment": {
+      "type": "У меня квартира в этом ЖК",
+      "negative": "Для нас больших минусов нет",
+      "positive": "Ходили в банк, нам одобрили ипотеку. Теперь мы стали хозяевами квартиры в этом жк. У нас трое детей, наконец можно будет выделить комнату свою старшей дочке. Она очень давно хотела. Еще очень понравилось, что во дворе много мест для спорта и игр, можно гулять всем самостоятельно. В общем ждем сдачи!!! И в целом район тоже не отдаленный, мужу удобно ездить будет"
+     },
+     "date": "18 февраля 2025",
+     "hasAnswers": false,
+     "hasMoreAnswers": true,
+     "id": "7fa4a31a-e2d8-4961-9239-6b231b3c9620",
+     "isLegacy": false,
+     "isOnModeration": false,
+     "isUseful": true,
+     "labels": [
+      {
+       "color": "#3AC500",
+       "text": "Полезный"
+      }
+     ],
+     "like": {
+      "dislikesCount": 4,
+      "likesCount": 28,
+      "status": "unknown"
+     },
+     "rating": 5,
+     "user": {
+      "avatarUrl": "https://www.cian.ru/img/cian/icon_old/100x100.gif",
+      "id": 127600486,
+      "name": "Иванова Дарья",
+      "type": "regular"
+     },
+     "answers": []
+    },
+    {
+     "answersCount": "Нет ответов",
+     "answersCountInt": 0,
+     "comment": {
+      "type": "Ищу квартиру",
+      "negative": "с продуктовыми магазинами в округе негусто. Впрочем, если живёшь вдвоём и есть машина, можно без труда закупаться на неделю вперёд",
+      "positive": "достойное жильё, расположенное недалеко от ттк. При удалённой работе легко не замкнуться в четырёх стенах: рядом достаточно мест для спорта, а Ботанический сад и вднх находятся буквально поблизости. Всегда есть куда выйти, чем заняться и как поддержать физическую форму"
+     },
+     "date": "4 октября 2026",
+     "hasAnswers": false,
+     "hasMoreAnswers": true,
+     "id": "a6275fe3-1bec-4433-803a-452a93047964",
+     "isLegacy": false,
+     "isOnModeration": false,
+     "isUseful": false,
+     "labels": [
+      {
+       "color": "#737A8E",
+       "text": "Новый"
+      }
+     ],
+     "like": {
+      "dislikesCount": 0,
+      "likesCount": 0,
+      "status": "unknown"
+     },
+     "rating": 5,
+     "user": {
+      "avatarUrl": "https://www.cian.ru/avatar.axd?i=144855716&t=1&p=2",
+      "id": 144855716,
+      "name": "Вальтер Анна",
+      "type": "regular"
+     },
+     "answers": []
+    }
+   ],
+   "reviewsCount": 68,
+   "reviewsCountText": "68 отзывов",
+   "sections": [
+    {
+     "name": "Транспортная доступность",
+     "rating": 4.6,
+     "type": "transportAffordable"
+    },
+    {
+     "name": "Инфраструктура",
+     "rating": 4.5,
+     "type": "infrastructure"
+    },
+    {
+     "name": "Экология",
+     "rating": 4.8,
+     "type": "ecology"
+    },
+    {
+     "name": "Цена / качество",
+     "rating": 4.4,
+     "type": "priceQuality"
+    }
+   ],
+   "questionsCount": 3,
+   "questionsCountText": "3 вопроса",
+   "otherCount": 0,
+   "otherCountText": "Нет отзывов",
+   "disclaimerDialog": {
+    "description": "Рейтинг основан на 68 отзывах пользователей Циан",
+    "moderation": {
+     "link": "https://cdn-p.cian.site/imgmobile/builders/reviews/moderation.pdf",
+     "text": "Правила модерации"
+    },
+    "title": "Как рассчитывается рейтинг?"
+   },
+   "stubs": {
+    "entryNoCian": "Рейтинга пока нет. Оцените ЖК — помогите другим с выбором",
+    "noQuestions": {
+     "description": "Вам ответит застройщик или один из пользователей Циан",
+     "imageUrl": "https://cdn-p.cian.site/imgmobile/builders/reviews/no-questions.png",
+     "title": "Ваш вопрос о ЖК «СОЮЗ» будет первым"
+    },
+    "reviewsNoCian": {
+     "description": "Оцените ЖК — помогите другим с выбором",
+     "imageUrl": "https://cdn-p.cian.site/imgmobile/builders/reviews/no-reviews.png",
+     "title": "Ваш отзыв о ЖК «СОЮЗ» будет первым"
+    },
+    "tabs": {
+     "cian": "Циан",
+     "other": "Другие",
+     "questions": "Вопросы"
+    }
+   },
+   "mlReview": {
+    "title": "Фразы, которые пишут чаще всего",
+    "subtitle": "Алгоритм выделил самое популярное",
+    "pluses": "«Ботанический сад», «Инфраструктура для спорта», «Метро», «Парк»",
+    "minuses": "«Двор», «Детсад», «Инфраструктура», «Мало жилой застройки»"
+   }
+  },
+  "isFloorPlanAvailable": true,
+  "hasLayouts": true,
+  "hasDiscountMortgage": false,
+  "reliableLabel": {
+   "type": "reliable",
+   "title": "Проверено наш.дом.рф"
+  },
+  "markedList": [
+   {
+    "content": "<ul><li>На странице ЖК в блоке «Ход строительства» регулярно размещаются обновления, фотографии и отчеты о текущем статусе работ. </li></ul>",
+    "title": "<h2>Как следить за ходом строительства ЖК «СОЮЗ»?</h2>",
+    "expanded": false
+   }
+  ],
+  "kpnChatEnabled": true,
+  "isNewbuildingBrokerBookingAvailable": true,
+  "comparisonStatus": "available"
+ },
+ "consultantChat": {
+  "isOpen": false
+ },
+ "newbuildingRecommendations": {
+  "allRecommendationsUrl": "/newobjects/list/?deal_type=sale&offer_type=newobject&engine_version=2&newobject%5B0%5D=4856397&newobject%5B1%5D=5303231",
+  "compilations": [],
+  "modelVersion": "",
+  "newbuildings": [
+   {
+    "address": "Москва, Верейская ул.",
+    "builder": {
+     "name": "Группа Родина",
+     "logoUrl": "/api/get-company-logo/?id=15990&rnd=147643"
+    },
+    "contact": {
+     "phone": "+79230779764",
+     "realtyUserId": 143354825,
+     "type": "builder"
+    },
+    "id": 4856397,
+    "media": [
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176081-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176082-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176086-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176089-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176091-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176094-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176096-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176101-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176104-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176106-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176116-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176119-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176123-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176125-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176128-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176130-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176131-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176133-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176135-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176136-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176138-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176142-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176147-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176152-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176158-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176163-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176167-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-park-moskva-jk-2952176169-7.jpg"
+     }
+    ],
+    "minPrice": "от 25,03 млн ₽",
+    "minPriceRaw": 25031262,
+    "name": "Родина Парк",
+    "regionId": 1,
+    "roomsSquareMeter": null,
+    "status": "Сдача в 2026—2028",
+    "underground": {
+     "distance": "11 мин",
+     "transportType": "walk",
+     "undergroundType": "mow",
+     "lineColor": "7ACDCE",
+     "undergroundName": "Давыдково"
+    },
+    "url": "https://zhk-rodina-park-i.cian.ru/"
+   },
+   {
+    "address": "Западный административный округ",
+    "builder": {
+     "name": "Группа Родина",
+     "logoUrl": "/api/get-company-logo/?id=15990&rnd=761644"
+    },
+    "contact": {
+     "phone": "+79230758995",
+     "realtyUserId": 127283499,
+     "type": "builder"
+    },
+    "id": 5303231,
+    "media": [
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2851518338-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2462913458-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2660092581-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2713960382-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2713960890-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2713961413-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2713962066-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2713962643-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2713963349-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2462913561-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2462913608-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2462913649-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2462913675-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2660093855-7.jpg"
+     },
+     {
+      "url": "https://images.cdn-cian.ru/images/rodina-peredelkino-moskva-jk-2660645096-7.jpg"
+     }
+    ],
+    "minPrice": "от 13,62 млн ₽",
+    "minPriceRaw": 13627539,
+    "name": "РОДИНА ПЕРЕДЕЛКИНО",
+    "regionId": 1,
+    "roomsSquareMeter": null,
+    "status": "Сдача в 2027—2029",
+    "underground": {
+     "distance": "3 мин",
+     "transportType": "walk",
+     "undergroundType": "mow",
+     "lineColor": "FFDF00",
+     "undergroundName": "Новопеределкино"
+    },
+    "url": "https://zhk-rodina-peredelkino-i.cian.ru/"
+   }
+  ]
+ },
+ "offers": {
+  "data": {
+   "total": {
+    "propsCountDisplay": "119 квартир",
+    "fromDeveloperPropsCountDisplay": "90 квартир от застройщика",
+    "fromAgentsPropsCountDisplay": "29 квартир",
+    "fromDeveloperRooms": [
+     {
+      "roomType": "studio",
+      "roomTypeDisplay": "Студии",
+      "totalAreaMinDisplay": "От 29 м²",
+      "fromDeveloperPropsCount": 10,
+      "fromDeveloperPropsCountDisplay": "10 предложений",
+      "price2Range": "19,6–27,3 млн ₽",
+      "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&room9=1",
+      "layouts": [
+       {
+        "roomCount": "Студия",
+        "offerUrl": "https://www.cian.ru/sale/flat/313114134/",
+        "houseName": "Корпус 3",
+        "finishDate": "Сдан",
+        "totalArea": "28,8 м²",
+        "priceDisplay": "20,79 млн ₽",
+        "price": 20792240,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/313114134/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 313114134,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919515703-2.jpg"
+       },
+       {
+        "roomCount": "Студия",
+        "offerUrl": "https://www.cian.ru/sale/flat/317842696/",
+        "houseName": "Корпус 1",
+        "finishDate": "Сдан",
+        "totalArea": "31,0 м²",
+        "priceDisplay": "20,68 млн ₽",
+        "price": 20680478,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/317842696/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 317842696,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919515980-2.jpg"
+       },
+       {
+        "roomCount": "Студия",
+        "offerUrl": "https://www.cian.ru/sale/flat/331985006/",
+        "houseName": "Корпус 5",
+        "finishDate": "Сдан",
+        "totalArea": "32,1 м²",
+        "priceDisplay": "27,35 млн ₽",
+        "price": 27355730,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/331985006/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 331985006,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2922413656-2.jpg"
+       },
+       {
+        "roomCount": "Студия",
+        "offerUrl": "https://www.cian.ru/sale/flat/327093242/",
+        "houseName": "Корпус 4",
+        "finishDate": "Сдан",
+        "totalArea": "33,2 м²",
+        "priceDisplay": "22,88 млн ₽",
+        "price": 22886754,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/327093242/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 327093242,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919516353-2.jpg"
+       },
+       {
+        "roomCount": "Студия",
+        "offerUrl": "https://www.cian.ru/sale/flat/317842689/",
+        "houseName": "Корпус 2",
+        "finishDate": "Сдан",
+        "totalArea": "39,0 м²",
+        "priceDisplay": "23,71 млн ₽",
+        "price": 23717057,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/317842689/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 317842689,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919517118-2.jpg"
+       }
+      ]
+     },
+     {
+      "roomType": "oneRoom",
+      "roomTypeDisplay": "1-комнатные",
+      "totalAreaMinDisplay": "От 42 м²",
+      "fromDeveloperPropsCount": 25,
+      "fromDeveloperPropsCountDisplay": "25 предложений",
+      "price2Range": "29,6–39,9 млн ₽",
+      "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&room1=1",
+      "layouts": [
+       {
+        "roomCount": "1-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/314497907/",
+        "houseName": "Корпус 6",
+        "finishDate": "Сдан",
+        "totalArea": "44,7 м²",
+        "priceDisplay": "32,96 млн ₽",
+        "price": 32967590,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/314497907/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 314497907,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919516521-2.jpg"
+       },
+       {
+        "roomCount": "1-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/313114295/",
+        "houseName": "Корпус 5",
+        "finishDate": "Сдан",
+        "totalArea": "47,7 м²",
+        "priceDisplay": "37,13 млн ₽",
+        "price": 37136240,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/313114295/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 313114295,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919516817-2.jpg"
+       },
+       {
+        "roomCount": "1-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/319634975/",
+        "houseName": "Корпус 1",
+        "finishDate": "Сдан",
+        "totalArea": "49,4 м²",
+        "priceDisplay": "37,19 млн ₽",
+        "price": 37199016,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/319634975/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 319634975,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919516146-2.jpg"
+       },
+       {
+        "roomCount": "1-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/313114271/",
+        "houseName": "Корпус 1",
+        "finishDate": "Сдан",
+        "totalArea": "54,1 м²",
+        "priceDisplay": "33,89 млн ₽",
+        "price": 33897410,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/313114271/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 313114271,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919516041-2.jpg"
+       },
+       {
+        "roomCount": "1-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/324182180/",
+        "houseName": "Корпус 2",
+        "finishDate": "Сдан",
+        "totalArea": "54,7 м²",
+        "priceDisplay": "34,26 млн ₽",
+        "price": 34261436,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/324182180/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 324182180,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919517279-2.jpg"
+       }
+      ]
+     },
+     {
+      "roomType": "twoRoom",
+      "roomTypeDisplay": "2-комнатные",
+      "totalAreaMinDisplay": "От 60 м²",
+      "fromDeveloperPropsCount": 26,
+      "fromDeveloperPropsCountDisplay": "26 предложений",
+      "price2Range": "39,4–59,9 млн ₽",
+      "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&room2=1",
+      "layouts": [
+       {
+        "roomCount": "2-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/322734589/",
+        "houseName": "Корпус 3",
+        "finishDate": "Сдан",
+        "totalArea": "70,7 м²",
+        "priceDisplay": "48,65 млн ₽",
+        "price": 48657717,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/322734589/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 322734589,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919515848-2.jpg"
+       },
+       {
+        "roomCount": "2-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/324564867/",
+        "houseName": "Корпус 5",
+        "finishDate": "Сдан",
+        "totalArea": "72,3 м²",
+        "priceDisplay": "53,54 млн ₽",
+        "price": 53548340,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/324564867/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 324564867,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919516995-2.jpg"
+       },
+       {
+        "roomCount": "2-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/313114107/",
+        "houseName": "Корпус 2",
+        "finishDate": "Сдан",
+        "totalArea": "72,8 м²",
+        "priceDisplay": "44,01 млн ₽",
+        "price": 44018867,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/313114107/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 313114107,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919517098-2.jpg"
+       },
+       {
+        "roomCount": "2-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/313909344/",
+        "houseName": "Корпус 2",
+        "finishDate": "Сдан",
+        "totalArea": "73,8 м²",
+        "priceDisplay": "48 млн ₽",
+        "price": 48001438,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/313909344/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 313909344,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919517144-2.jpg"
+       },
+       {
+        "roomCount": "2-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/314497950/",
+        "houseName": "Корпус 2",
+        "finishDate": "Сдан",
+        "totalArea": "74,5 м²",
+        "priceDisplay": "50,66 млн ₽",
+        "price": 50669846,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/314497950/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 314497950,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919517256-2.jpg"
+       }
+      ]
+     },
+     {
+      "roomType": "threeRoom",
+      "roomTypeDisplay": "3-комнатные",
+      "totalAreaMinDisplay": "От 78 м²",
+      "fromDeveloperPropsCount": 22,
+      "fromDeveloperPropsCountDisplay": "22 предложения",
+      "price2Range": "53,6–212,1 млн ₽",
+      "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&room3=1",
+      "layouts": [
+       {
+        "roomCount": "3-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/313909401/",
+        "houseName": "Корпус 1",
+        "finishDate": "Сдан",
+        "totalArea": "97,0 м²",
+        "priceDisplay": "60,24 млн ₽",
+        "price": 60241786,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/313909401/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 313909401,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919516056-2.jpg"
+       },
+       {
+        "roomCount": "3-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/313114297/",
+        "houseName": "Корпус 5",
+        "finishDate": "Сдан",
+        "totalArea": "102,6 м²",
+        "priceDisplay": "77,77 млн ₽",
+        "price": 77771960,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/313114297/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 313114297,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919516839-2.jpg"
+       },
+       {
+        "roomCount": "3-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/313909458/",
+        "houseName": "Корпус 1",
+        "finishDate": "Сдан",
+        "totalArea": "105,2 м²",
+        "priceDisplay": "79,18 млн ₽",
+        "price": 79182291,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/313909458/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 313909458,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919516100-2.jpg"
+       },
+       {
+        "roomCount": "3-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/324564857/",
+        "houseName": "Корпус 6",
+        "finishDate": "Сдан",
+        "totalArea": "105,6 м²",
+        "priceDisplay": "78,77 млн ₽",
+        "price": 78772708,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/324564857/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 324564857,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919516639-2.jpg"
+       },
+       {
+        "roomCount": "3-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/321520370/",
+        "houseName": "Корпус 1",
+        "finishDate": "Сдан",
+        "totalArea": "162,7 м²",
+        "priceDisplay": "212,15 млн ₽",
+        "price": 212152860,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/321520370/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 321520370,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919516211-2.jpg"
+       }
+      ]
+     },
+     {
+      "roomType": "fourRoom",
+      "roomTypeDisplay": "4-комнатные",
+      "totalAreaMinDisplay": "От 128 м²",
+      "fromDeveloperPropsCount": 7,
+      "fromDeveloperPropsCountDisplay": "7 предложений",
+      "price2Range": "91,9–192,6 млн ₽",
+      "offersUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&object_type%5B0%5D=2&newobject%5B0%5D=4025502&room4=1",
+      "layouts": [
+       {
+        "roomCount": "4-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/313114323/",
+        "houseName": "Корпус 5",
+        "finishDate": "Сдан",
+        "totalArea": "127,6 м²",
+        "priceDisplay": "95,36 млн ₽",
+        "price": 95360960,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/313114323/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 313114323,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919516910-2.jpg"
+       },
+       {
+        "roomCount": "4-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/334135258/",
+        "houseName": "Корпус 6",
+        "finishDate": "Сдан",
+        "totalArea": "149,4 м²",
+        "priceDisplay": "161 млн ₽",
+        "price": 161005707,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/334135258/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 334135258,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2969695134-2.jpg"
+       },
+       {
+        "roomCount": "4-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/333186095/",
+        "houseName": "Корпус 1",
+        "finishDate": "Сдан",
+        "totalArea": "156,1 м²",
+        "priceDisplay": "150,61 млн ₽",
+        "price": 150610544,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/333186095/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 333186095,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2948819608-2.jpg"
+       },
+       {
+        "roomCount": "4-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/321520332/",
+        "houseName": "Корпус 2",
+        "finishDate": "Сдан",
+        "totalArea": "159,2 м²",
+        "priceDisplay": "163,01 млн ₽",
+        "price": 163013034,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/321520332/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 321520332,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919517154-2.jpg"
+       },
+       {
+        "roomCount": "4-комнатная",
+        "offerUrl": "https://www.cian.ru/sale/flat/321520354/",
+        "houseName": "Корпус 1",
+        "finishDate": "Сдан",
+        "totalArea": "184,8 м²",
+        "priceDisplay": "192,62 млн ₽",
+        "price": 192627232,
+        "gaLabel": "/sale/flat/mo_id=0/obl_id=1/city_id=1/object_type=2/ga_obj_type=1/spec=company/321520354/from_developer=1/repres=0/owner=0/pod_snos=0/nv=0/",
+        "offerId": 321520354,
+        "layoutImageUrl": "https://images.cdn-cian.ru/images/2919516084-2.jpg"
+       }
+      ]
+     }
+    ],
+    "fromDeveloperMinPrice": 19671288,
+    "fromDeveloperMaxPrice": 212152860,
+    "propsCountUrl": "https://www.cian.ru/kupit-kvartiru-zhiloy-kompleks-soyuz-4025502/",
+    "fromDeveloperPropsCountUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=1&newobject%5B0%5D=4025502",
+    "fromAgentsPropsCountUrl": "https://www.cian.ru/cat.php?deal_type=sale&engine_version=2&offer_type=flat&from_developer=0&newobject%5B0%5D=4025502"
+   }
+  }
+ },
+ "openedPhones": {},
+ "subdomain": "zhk-soyuz-i",
+ "geoSubdomain": "www",
+ "user": null,
+ "userRole": "searcher",
+ "promoInfo": {
+  "isOpen": false,
+  "promo": null
+ },
+ "realtyValuation": {
+  "isFetching": false,
+  "isError": false,
+  "data": {
+   "promo": {
+    "text": "Цены выросли на 1,5% за полгода. В среднем продаётся 19 квартир в месяц.",
+    "diff": "increase"
+   },
+   "lastUpdatedText": "Данные собираются раз в месяц, последнее обновление: сентябрь 2026",
+   "priceDynamics": {
+    "avgPrice": "52,0 млн ₽",
+    "avgPriceSqm": "735 696 ₽/м²",
+    "chart": {
+     "maxChartValue": 53000000,
+     "minChartValue": 49000000,
+     "labelStep": 2000000,
+     "data": {
+      "labels": [
+       "2026-04-01",
+       "2026-05-01",
+       "2026-06-01",
+       "2026-07-01",
+       "2026-08-01",
+       "2026-09-01",
+       "2026-10-01"
+      ],
+      "values": [
+       50165420,
+       50272699,
+       50492305,
+       51547637,
+       51500153,
+       51991922,
+       null
+      ],
+      "valuesFormatted": [
+       "50,2 млн ₽",
+       "50,3 млн ₽",
+       "50,5 млн ₽",
+       "51,5 млн ₽",
+       "51,5 млн ₽",
+       "52,0 млн ₽",
+       null
+      ]
+     }
+    }
+   },
+   "salesDynamics": {
+    "chart": {
+     "maxChartValue": 14,
+     "minChartValue": 0,
+     "labelStep": 7,
+     "data": {
+      "labels": [
+       "2026-04-01",
+       "2026-05-01",
+       "2026-06-01",
+       "2026-07-01",
+       "2026-08-01",
+       "2026-09-01",
+       "2026-10-01"
+      ],
+      "values": [
+       9,
+       6,
+       12,
+       7,
+       4,
+       null,
+       null
+      ],
+      "valuesFormatted": [
+       "9 ₽",
+       "6 ₽",
+       "12 ₽",
+       "7 ₽",
+       "4 ₽",
+       null,
+       null
+      ]
+     }
+    }
+   },
+   "pricesFiltersData": {
+    "options": {
+     "roomCount": [
+      {
+       "name": "1",
+       "value": "oneRoom"
+      },
+      {
+       "name": "2",
+       "value": "twoRoom"
+      },
+      {
+       "name": "3",
+       "value": "threeRoom"
+      },
+      {
+       "name": "4",
+       "value": "fourRoom"
+      }
+     ],
+     "period": [
+      {
+       "name": "Полгода",
+       "value": "halfYear"
+      },
+      {
+       "name": "Год",
+       "value": "year"
+      },
+      {
+       "name": "Всё время",
+       "value": "allTime"
+      }
+     ],
+     "pricesType": [
+      {
+       "name": "За квартиру",
+       "value": "price"
+      },
+      {
+       "name": "За м²",
+       "value": "priceSqm"
+      }
+     ]
+    },
+    "defaultValues": {
+     "roomCount": "twoRoom",
+     "pricesType": "price",
+     "period": "halfYear"
+    }
+   },
+   "salesFiltersData": {
+    "options": {
+     "roomCount": [
+      {
+       "name": "Студии",
+       "value": "studio"
+      },
+      {
+       "name": "1",
+       "value": "oneRoom"
+      },
+      {
+       "name": "2",
+       "value": "twoRoom"
+      },
+      {
+       "name": "3",
+       "value": "threeRoom"
+      },
+      {
+       "name": "4",
+       "value": "fourRoom"
+      }
+     ],
+     "period": [
+      {
+       "name": "Полгода",
+       "value": "halfYear"
+      },
+      {
+       "name": "Год",
+       "value": "year"
+      },
+      {
+       "name": "Всё время",
+       "value": "allTime"
+      }
+     ]
+    },
+    "defaultValues": {
+     "roomCount": "twoRoom",
+     "period": "halfYear"
+    }
+   }
+  },
+  "pricesFiltersState": {
+   "roomCount": "twoRoom",
+   "pricesType": "price",
+   "period": "halfYear"
+  },
+  "salesFiltersState": {
+   "roomCount": "twoRoom",
+   "period": "halfYear"
+  },
+  "tabs": {
+   "tabs": [
+    {
+     "value": "1",
+     "title": "Динамика цен"
+    },
+    {
+     "value": "2",
+     "title": "Динамика продаж"
+    }
+   ],
+   "activeTab": "1"
+  }
+ },
+ "isEcologyBlockEnabled": null,
+ "reliability": {
+  "checkStatus": {
+   "status": "reliable",
+   "title": "Проверено ",
+   "mobileTitle": "Проверено наш.дом.рф",
+   "date": "Обновлено 2 октября 2026"
+  },
+  "details": [
+   {
+    "title": "Нет в реестре проблемных объектов",
+    "iconType": "success",
+    "type": "problemHousesRegistry"
+   },
+   {
+    "title": "Застройщик не банкрот",
+    "iconType": "success",
+    "type": "developerBankruptStatus"
+   },
+   {
+    "title": "Эскроу-счета во всех корпусах",
+    "iconType": "success",
+    "type": "escrow"
+   },
+   {
+    "title": "Актуальные фото стройки",
+    "iconType": "success",
+    "type": "constructionPhoto"
+   },
+   {
+    "title": "Проектная декларация от 30.09.2026",
+    "iconType": "success",
+    "type": "projectDeclaration",
+    "file": "https://наш.дом.рф/files/70726F6A6465636C2E646F63732E697A643AE3779870C7114835870C2E7B5A4C78E3?inline=1"
+   }
+  ],
+  "actions": {
+   "details": "Подробнее о надёжности ЖК",
+   "escrow": "Преимущества эскроу-счёта"
+  },
+  "banner": {
+   "title": "ЖК проверен наш.дом.рф"
+  }
+ },
+ "settings": {},
+ "actualMortgageData": {
+  "banksList": [
+   {
+    "name": "bank-alfa",
+    "hasMortgage": true,
+    "hasPersonalLoan": false,
+    "acceptanceRate": 0.2039
+   },
+   {
+    "hasPersonalLoan": false,
+    "hasMortgage": true,
+    "acceptanceRate": 0.2021,
+    "name": "bank-domrf"
+   },
+   {
+    "name": "bank-mkb",
+    "hasMortgage": true,
+    "hasPersonalLoan": false,
+    "acceptanceRate": 0.21
+   },
+   {
+    "hasPersonalLoan": false,
+    "hasMortgage": true,
+    "acceptanceRate": 0.19,
+    "name": "bank-psb"
+   },
+   {
+    "name": "bank-sovcom",
+    "hasMortgage": true,
+    "hasPersonalLoan": false,
+    "acceptanceRate": 0.06
+   },
+   {
+    "name": "bank-t",
+    "hasMortgage": true,
+    "hasPersonalLoan": false,
+    "acceptanceRate": 0.169
+   },
+   {
+    "name": "bank-uralsib",
+    "hasMortgage": true,
+    "hasPersonalLoan": false,
+    "acceptanceRate": 0.1929
+   },
+   {
+    "name": "bank-vtb-new",
+    "hasMortgage": true,
+    "hasPersonalLoan": false,
+    "acceptanceRate": 0.199
+   },
+   {
+    "name": "bank-absolut",
+    "hasMortgage": true,
+    "hasPersonalLoan": false,
+    "acceptanceRate": 0.0575
+   }
+  ],
+  "creditRate": {
+   "apartments": {
+    "new": {
+     "min": 0.212,
+     "avg": 0.212
+    },
+    "used": {
+     "min": 0.188,
+     "avg": 0.188
+    }
+   },
+   "cottage": {
+    "build": {
+     "min": 0.06,
+     "avg": 0.06
+    },
+    "new": {
+     "min": 0.06,
+     "avg": 0.06
+    },
+    "used": {
+     "min": 0.199,
+     "avg": 0.2031
+    }
+   },
+   "flat": {
+    "new": {
+     "min": 0.0575,
+     "avg": 0.06
+    },
+    "used": {
+     "min": 0.169,
+     "avg": 0.199
+    }
+   },
+   "townhouse": {
+    "new": {
+     "min": 0.06,
+     "avg": 0.06
+    },
+    "used": {
+     "min": 0.215,
+     "avg": 0.215
+    }
+   }
+  }
+ },
+ "builderChat": {
+  "isOpened": false
+ },
+ "consultantCianChat": {
+  "requestStatus": "initial",
+  "chatId": null,
+  "isLoading": false,
+  "isError": false,
+  "isErrorPopupOpened": false,
+  "isEnabled": false,
+  "isOpened": false,
+  "isAutorisationPopupOpened": false
+ },
+ "compareFlightTooltip": {
+  "isCompareFlightTooltipShow": false,
+  "isCompareFlightModalOpen": false
+ }
+}

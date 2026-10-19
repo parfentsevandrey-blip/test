@@ -38,3 +38,21 @@ rea doctor --json
 ```
 
 `last30days` без ключей работает в урезанном режиме (Reddit, HN, Polymarket, GitHub). Для X, YouTube, TikTok нужны ключи вроде `SCRAPECREATORS_API_KEY` или `XAI_API_KEY`; список — в `.claude/skills/last30days/SKILL.md`.
+
+## Сборщики
+
+Исследование, как сайты отдают данные: `docs/research-domrf-cian.md`. Описание всех инструментов и скиллов: `docs/toolkit.md`.
+
+```bash
+cd web-search
+.venv/bin/python collectors/cian.py jk --region 1 --pages 2 --out data/cian-jk.jsonl        # каталог ЖК
+.venv/bin/python collectors/cian.py jk-card --url https://zhk-soyuz-i.cian.ru/ --out data/jk.json
+.venv/bin/python collectors/cian.py flats --newobject 4025502 --out data/flats.jsonl       # квартиры ЖК
+.venv/bin/python collectors/cian.py flats --region 1 --new --all --out data/all.jsonl      # весь рынок, нарезка по цене
+
+# наш.дом.рф: только с российского IP (из облака Servicepipe показывает капчу)
+PLAYWRIGHT_BROWSERS_PATH=$PWD/.browsers DOMRF_PROXY=http://user:pass@host:port \
+  .venv/bin/python collectors/domrf.py discover --out data/domrf-discover
+```
+
+Результаты тестового прогона: `samples/2026-10-19/`.
