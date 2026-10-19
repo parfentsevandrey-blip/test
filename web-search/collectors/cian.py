@@ -23,6 +23,14 @@ PAGE_SIZE, MAX_PAGES = 28, 54
 STATE_RE = re.compile(r"window\._cianConfig\['([a-z-]+)'\] = \(window\._cianConfig\['[a-z-]+'\] \|\| \[\]\)\.concat\(")
 
 
+def egress_ip():
+    """Текущий исходящий IP (диагностика блоков: привязаны ли они к адресу)."""
+    try:
+        return requests.get("https://api.ipify.org", timeout=10).text.strip()
+    except Exception:
+        return "?"
+
+
 class Cian:
     def __init__(self, delay=(1.5, 3.0)):
         proxy = os.environ.get("CIAN_PROXY")
@@ -48,7 +56,7 @@ class Cian:
                     r.raise_for_status()
                 problem = f"{r.status_code} {r.text[:60]!r}"
             wait = 10 * 2 ** attempt
-            print(f"  {problem} on {url[:80]} -> sleep {wait}s", file=sys.stderr)
+            print(f"  {problem} on {url[:80]} -> sleep {wait}s [egress {egress_ip()}]", file=sys.stderr)
             time.sleep(wait)
         raise RuntimeError(f"gave up: {url}")
 
