@@ -263,51 +263,58 @@ def run():
     db.commit()
     fails = 0
     try:
-        # 1. every search page of every ЖК; second pass with another sort if offers are missing
-        extra_ids = {z for zks in EXTRA.values() for z in zks}
-        groups = [(d, z, False) for d, z in PILOT.items()] + [(d, z, True) for d, z in EXTRA.items()]
-        for dev, zks, extra in groups:
-            _gap[0] = EXTRA_GAP if extra else GAP
-            for zk_id, name in zks.items():
-                if extra and db.execute(f"select count(*) from pages where day=? and zk_id in ({','.join('?' * len(extra_ids))})",
-                                        (day, *extra_ids)).fetchone()[0] >= EXTRA_MAX_PAGES:
-                    log("extra ЖК: daily page cap", EXTRA_MAX_PAGES, "reached, the rest tomorrow")
-                    break
-                for sort in (("price_object_order",) if extra else ("price_object_order", "creation_date_desc")):
-                    page, total, no_gain = 1, None, 0
-                    got = db.execute("select count(*) from obs where day=? and zk_id=?", (day, zk_id)).fetchone()[0]
-                    while True:
-                        url = SEARCH.format(zk=zk_id, sort=sort, page=page)
-                        row = db.execute("select total, n_offers, ok from pages where day=? and url=?", (day, url)).fetchone()
-                        if row and row[2]:
-                            total = row[0]
-                        else:
-                            html, status = fetch(url)
-                            offers, total = parse_list(html) if html else ([], None)
-                            ok = int(html is not None and total is not None)
-                            for o in offers:
-                                save_offer(db, offer_row(o, zk_id), day)
-                                if o.get("jkUrl") and (o.get("newbuilding") or {}).get("id") == int(zk_id):
-                                    db.execute("insert into zk_meta(zk_id, jk_url) values(?,?) on conflict(zk_id) do update set jk_url=excluded.jk_url",
-                                               (zk_id, o["jkUrl"]))
-                            db.execute("insert or replace into pages values(?,?,?,?,?,?,?)", (day, zk_id, url, total, len(offers), ok, now().isoformat()))
-                            db.execute(f"update runs set pages_{'ok' if ok else 'fail'}=pages_{'ok' if ok else 'fail'}+1 where day=?", (day,))
-                            db.commit()
-                            before = got if page > 1 else None
-                            got = db.execute("select count(*) from obs where day=? and zk_id=?", (day, zk_id)).fetchone()[0]
-                            no_gain = no_gain + 1 if (sort != "price_object_order" and before is not None and got == before) else 0
-                            log("page", status, name, sort[:5], f"p{page}", f"{len(offers)} offers, have {got}/{total}")
-                            fails = 0 if ok else fails + 1
-                            if fails >= MAX_FAILS:
-                                raise Blocked(f"{fails} failed pages in a row")
-                            if not ok:
+        # 1. every search page of every ЖК; second pass with another sort if offers are missing.
+        # A page that failed (5xx, timeout) cut its ЖК short: the whole step runs once more at the end and re-reads only
+        # the failed pages and what follows them; pages read today are skipped (L47)
+        for round_ in range(2):
+            if round_ and not db.execute("select 1 from pages where day=? and ok=0 limit 1", (day,)).fetchone():
+                break
+            if round_:
+                log("list: re-reading failed pages once (L47)")
+            extra_ids = {z for zks in EXTRA.values() for z in zks}
+            groups = [(d, z, False) for d, z in PILOT.items()] + [(d, z, True) for d, z in EXTRA.items()]
+            for dev, zks, extra in groups:
+                _gap[0] = EXTRA_GAP if extra else GAP
+                for zk_id, name in zks.items():
+                    if extra and db.execute(f"select count(*) from pages where day=? and zk_id in ({','.join('?' * len(extra_ids))})",
+                                            (day, *extra_ids)).fetchone()[0] >= EXTRA_MAX_PAGES:
+                        log("extra ЖК: daily page cap", EXTRA_MAX_PAGES, "reached, the rest tomorrow")
+                        break
+                    for sort in (("price_object_order",) if extra else ("price_object_order", "creation_date_desc")):
+                        page, total, no_gain = 1, None, 0
+                        got = db.execute("select count(*) from obs where day=? and zk_id=?", (day, zk_id)).fetchone()[0]
+                        while True:
+                            url = SEARCH.format(zk=zk_id, sort=sort, page=page)
+                            row = db.execute("select total, n_offers, ok from pages where day=? and url=?", (day, url)).fetchone()
+                            if row and row[2]:
+                                total = row[0]
+                            else:
+                                html, status = fetch(url)
+                                offers, total = parse_list(html) if html else ([], None)
+                                ok = int(html is not None and total is not None)
+                                for o in offers:
+                                    save_offer(db, offer_row(o, zk_id), day)
+                                    if o.get("jkUrl") and (o.get("newbuilding") or {}).get("id") == int(zk_id):
+                                        db.execute("insert into zk_meta(zk_id, jk_url) values(?,?) on conflict(zk_id) do update set jk_url=excluded.jk_url",
+                                                   (zk_id, o["jkUrl"]))
+                                db.execute("insert or replace into pages values(?,?,?,?,?,?,?)", (day, zk_id, url, total, len(offers), ok, now().isoformat()))
+                                db.execute(f"update runs set pages_{'ok' if ok else 'fail'}=pages_{'ok' if ok else 'fail'}+1 where day=?", (day,))
+                                db.commit()
+                                before = got if page > 1 else None
+                                got = db.execute("select count(*) from obs where day=? and zk_id=?", (day, zk_id)).fetchone()[0]
+                                no_gain = no_gain + 1 if (sort != "price_object_order" and before is not None and got == before) else 0
+                                log("page", status, name, sort[:5], f"p{page}", f"{len(offers)} offers, have {got}/{total}")
+                                fails = 0 if ok else fails + 1
+                                if fails >= MAX_FAILS:
+                                    raise Blocked(f"{fails} failed pages in a row")
+                                if not ok:
+                                    break
+                            if not total or page * PER_PAGE >= min(total, 54 * PER_PAGE) or no_gain >= 3:
                                 break
-                        if not total or page * PER_PAGE >= min(total, 54 * PER_PAGE) or no_gain >= 3:
-                            break
-                        page += 1
-                    got = db.execute("select count(*) from obs where day=? and zk_id=?", (day, zk_id)).fetchone()[0]
-                    if total is None or got >= 0.99 * min(total, 54 * PER_PAGE):   # L14: 0.95 left Символ at 96.3%
-                        break                                   # complete enough: no second pass
+                            page += 1
+                        got = db.execute("select count(*) from obs where day=? and zk_id=?", (day, zk_id)).fetchone()[0]
+                        if total is None or got >= 0.99 * min(total, 54 * PER_PAGE):   # L14: 0.95 left Символ at 96.3%
+                            break                                   # complete enough: no second pass
         _gap[0] = GAP
         # 2. ЖК cards: developer's counts by room type and house
         for zk_id, jk_url in db.execute("select zk_id, jk_url from zk_meta").fetchall():

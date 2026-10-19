@@ -1,0 +1,106 @@
+[
+ {
+  "zk": "Остров",
+  "developer": "Донстрой",
+  "site_collected": 654,
+  "site_declared": 654,
+  "cian_collected": 714,
+  "cian_total": 1223
+ },
+ {
+  "zk": "Символ",
+  "developer": "Донстрой",
+  "site_collected": 514,
+  "site_declared": 514,
+  "cian_collected": 751,
+  "cian_total": 771
+ },
+ {
+  "zk": "Дубровка от Гранель",
+  "developer": "ГК Гранель",
+  "site_collected": 38,
+  "site_declared": 38,
+  "cian_collected": 75,
+  "cian_total": 75
+ },
+ {
+  "zk": "Нижегородская от Гранель",
+  "developer": "ГК Гранель",
+  "site_collected": 117,
+  "site_declared": 117,
+  "cian_collected": 120,
+  "cian_total": 120
+ },
+ {
+  "zk": "Павелецкая от Гранель",
+  "developer": "ГК Гранель",
+  "site_collected": 198,
+  "site_declared": 198,
+  "cian_collected": 214,
+  "cian_total": 215
+ },
+ {
+  "zk": "Мнёвники от Гранель",
+  "developer": "ГК Гранель",
+  "site_collected": 454,
+  "site_declared": 454,
+  "cian_collected": 91,
+  "cian_total": 91
+ },
+ {
+  "zk": "ЗИЛАРТ",
+  "developer": "Группа ЛСР",
+  "site_collected": 659,
+  "site_declared": 659,
+  "cian_collected": 886,
+  "cian_total": 893
+ },
+ {
+  "zk": "Amber City",
+  "developer": "ГК ФСК",
+  "site_collected": 352,
+  "site_declared": 352,
+  "cian_collected": 365,
+  "cian_total": 365
+ },
+ {
+  "zk": "Sydney City",
+  "developer": "ГК ФСК",
+  "site_collected": 207,
+  "site_declared": 207,
+  "cian_collected": 342,
+  "cian_total": 343
+ },
+ {
+  "zk": "Sydney Prime",
+  "developer": "ГК ФСК",
+  "site_collected": 10,
+  "site_declared": 10,
+  "cian_collected": 14,
+  "cian_total": 14
+ },
+ {
+  "zk": "High Life",
+  "developer": "Pioneer",
+  "site_collected": 1511,
+  "site_declared": 1511,
+  "cian_collected": 291,
+  "cian_total": 292
+ },
+ {
+  "zk": "Soul",
+  "developer": "FORMA",
+  "site_collected": 182,
+  "site_declared": 182,
+  "cian_collected": 358,
+  "cian_total": 358
+ },
+ {
+  "zk": "Дрим Рива",
+  "developer": "Regions Development",
+  "site_collected": 61,
+  "site_declared": 61,
+  "cian_collected": 126,
+  "cian_total": 127
+ }
+]
