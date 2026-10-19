@@ -945,3 +945,9 @@
 2026-10-19T09:31:00+03:00 zk card ЗИЛАРТ Группа ЛСР dev 656 agents 239
 2026-10-19T09:33:10+03:00 zk card СОУЛ FORMA dev 310 agents 49
 2026-10-19T09:33:43+03:00 zk card HIGH LIFE (ХАЙ ЛАЙФ) PIONEER dev 196 agents 96
+2026-10-19T11:20:29+03:00 network error 1 Failed to perform, curl: (7) Redirect to internal IP 127.0.0.1 rejected (SSRF protection). See https://curl.se/libcurl/c
+2026-10-19T11:25:23+03:00 network error 1 Failed to perform, curl: (7) Redirect to internal IP 127.0.0.1 rejected (SSRF protection). See https://curl.se/libcurl/c
+2026-10-19T11:26:09+03:00 network error 1 Failed to perform, curl: (7) Redirect to internal IP 127.0.0.1 rejected (SSRF protection). See https://curl.se/libcurl/c
+2026-10-19T11:26:52+03:00 network error 1 Failed to perform, curl: (7) Redirect to internal IP 127.0.0.1 rejected (SSRF protection). See https://curl.se/libcurl/c
+2026-10-19T11:27:02+03:00 network error 2 Failed to perform, curl: (7) Redirect to internal IP 127.0.0.1 rejected (SSRF protection). See https://curl.se/libcurl/c
+2026-10-19T11:28:02+03:00 BLOCKED / stopped: 403 https://www.cian.ru/sale/flat/333612151/

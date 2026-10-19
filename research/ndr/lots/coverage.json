@@ -101,11 +101,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 659,
    "dev_with_special": 659,
-   "cian_dev_lots": 268,
-   "cian_dev_matched_to_site": 125,
+   "cian_dev_lots": 593,
+   "cian_dev_matched_to_site": 341,
    "cian_vs_site_price_median_pct": 0.0,
-   "cian_resale_lots": 69,
-   "cian_resale_with_same_layout_at_dev": 54
+   "cian_resale_lots": 214,
+   "cian_resale_with_same_layout_at_dev": 124
   },
   "Amber City": {
    "zk_id": "4888961",
@@ -116,11 +116,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 352,
    "dev_with_special": 0,
-   "cian_dev_lots": 0,
-   "cian_dev_matched_to_site": 0,
-   "cian_vs_site_price_median_pct": null,
-   "cian_resale_lots": 0,
-   "cian_resale_with_same_layout_at_dev": 0
+   "cian_dev_lots": 352,
+   "cian_dev_matched_to_site": 280,
+   "cian_vs_site_price_median_pct": 0.0,
+   "cian_resale_lots": 13,
+   "cian_resale_with_same_layout_at_dev": 11
   },
   "Sydney City": {
    "zk_id": "2446053",
@@ -131,11 +131,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 206,
    "dev_with_special": 0,
-   "cian_dev_lots": 0,
-   "cian_dev_matched_to_site": 0,
-   "cian_vs_site_price_median_pct": null,
-   "cian_resale_lots": 0,
-   "cian_resale_with_same_layout_at_dev": 0
+   "cian_dev_lots": 206,
+   "cian_dev_matched_to_site": 194,
+   "cian_vs_site_price_median_pct": 0.0,
+   "cian_resale_lots": 122,
+   "cian_resale_with_same_layout_at_dev": 68
   },
   "Sydney Prime": {
    "zk_id": "4377697",
@@ -146,10 +146,10 @@
    "dev_sold_visible": 0,
    "dev_with_price": 10,
    "dev_with_special": 0,
-   "cian_dev_lots": 0,
-   "cian_dev_matched_to_site": 0,
-   "cian_vs_site_price_median_pct": null,
-   "cian_resale_lots": 0,
+   "cian_dev_lots": 10,
+   "cian_dev_matched_to_site": 8,
+   "cian_vs_site_price_median_pct": 0.0,
+   "cian_resale_lots": 4,
    "cian_resale_with_same_layout_at_dev": 0
   },
   "High Life": {
@@ -161,11 +161,11 @@
    "dev_sold_visible": 1160,
    "dev_with_price": 196,
    "dev_with_special": 1511,
-   "cian_dev_lots": 0,
-   "cian_dev_matched_to_site": 0,
-   "cian_vs_site_price_median_pct": null,
-   "cian_resale_lots": 0,
-   "cian_resale_with_same_layout_at_dev": 0
+   "cian_dev_lots": 196,
+   "cian_dev_matched_to_site": 124,
+   "cian_vs_site_price_median_pct": 0.0,
+   "cian_resale_lots": 94,
+   "cian_resale_with_same_layout_at_dev": 44
   },
   "Soul": {
    "zk_id": "4183417",
@@ -176,11 +176,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 156,
    "dev_with_special": 182,
-   "cian_dev_lots": 0,
-   "cian_dev_matched_to_site": 0,
-   "cian_vs_site_price_median_pct": null,
-   "cian_resale_lots": 0,
-   "cian_resale_with_same_layout_at_dev": 0
+   "cian_dev_lots": 170,
+   "cian_dev_matched_to_site": 130,
+   "cian_vs_site_price_median_pct": 0.0,
+   "cian_resale_lots": 47,
+   "cian_resale_with_same_layout_at_dev": 22
   },
   "Дрим Рива": {
    "zk_id": "5340468",
@@ -191,11 +191,11 @@
    "dev_sold_visible": 0,
    "dev_with_price": 60,
    "dev_with_special": 61,
-   "cian_dev_lots": 0,
-   "cian_dev_matched_to_site": 0,
-   "cian_vs_site_price_median_pct": null,
-   "cian_resale_lots": 0,
-   "cian_resale_with_same_layout_at_dev": 0
+   "cian_dev_lots": 59,
+   "cian_dev_matched_to_site": 39,
+   "cian_vs_site_price_median_pct": 0.0,
+   "cian_resale_lots": 5,
+   "cian_resale_with_same_layout_at_dev": 3
   }
  }
 }

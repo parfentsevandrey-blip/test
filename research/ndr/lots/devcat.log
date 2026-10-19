@@ -1510,3 +1510,6 @@
 2026-10-19T07:34:55+03:00 list forma soul 182 of 182
 2026-10-19T07:39:34+03:00 list lsr passes 1, flats today 659 of 659
 2026-10-19T07:39:34+03:00 done flats listed {'donstroy': 1168, 'dreamriva': 61, 'forma': 182, 'fsk': 569, 'granelle': 807, 'highlife': 1511, 'lsr': 659}, layouts/buildings on sale {'forma': 182, 'granelle': 807}, requests 137, finished 2026-10-19T07:39:34+03:00
+2026-10-19T11:28:05+03:00 qa donstroy skipped: already re-read today (L40)
+2026-10-19T11:28:05+03:00 qa granelle skipped: already re-read today (L40)
+2026-10-19T11:28:05+03:00 qa fsk skipped: already re-read today (L40)
