@@ -20,6 +20,7 @@ from curl_cffi import requests
 API = "https://api.cian.ru/search-offers/v2/search-offers-desktop/"
 NB_API = "https://api.cian.ru/newbuilding-search/v1/get-newbuildings-for-serp/"
 PAGE_SIZE, MAX_PAGES = 28, 54
+DEFAULT_DELAY = (1.5, 3.0)
 STATE_RE = re.compile(r"window\._cianConfig\['([a-z-]+)'\] = \(window\._cianConfig\['[a-z-]+'\] \|\| \[\]\)\.concat\(")
 
 
@@ -32,7 +33,8 @@ def egress_ip():
 
 
 class Cian:
-    def __init__(self, delay=(1.5, 3.0)):
+    def __init__(self, delay=None):
+        delay = delay or DEFAULT_DELAY
         proxy = os.environ.get("CIAN_PROXY")
         self.s = requests.Session(impersonate="chrome", proxies={"https": proxy, "http": proxy} if proxy else None)
         self.s.headers.update({"accept-language": "ru-RU,ru;q=0.9", "origin": "https://www.cian.ru", "referer": "https://www.cian.ru/"})
@@ -217,10 +219,10 @@ def _f(x):
         return None
 
 
-def write_jsonl(rows, path):
+def write_jsonl(rows, path, append=False):
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     n = 0
-    with open(path, "w") as f:
+    with open(path, "a" if append else "w") as f:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
             n += 1
@@ -239,10 +241,15 @@ def main():
     ap.add_argument("--price-to", type=int)
     ap.add_argument("--all", action="store_true", help="обойти лимит 1512 нарезкой по цене (свёрнутая выдача!)")
     ap.add_argument("--by-jk", action="store_true", help="полный сбор новостроек региона: каталог ЖК -> квартиры каждого ЖК")
-    ap.add_argument("--workers", type=int, default=1, help="параллельных ЖК в режиме --by-jk (безопасно до 4)")
+    ap.add_argument("--workers", type=int, default=1, help="параллельных ЖК в режиме --by-jk")
+    ap.add_argument("--resume", action="store_true", help="--by-jk: пропустить собранные ЖК и дописывать в --out")
+    ap.add_argument("--delay", type=float, nargs=2, metavar=("MIN", "MAX"), help="пауза между запросами, с")
     ap.add_argument("--raw", action="store_true", help="писать сырые объекты Циана")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
+    global DEFAULT_DELAY
+    if a.delay:
+        DEFAULT_DELAY = tuple(a.delay)
     c = Cian()
 
     if a.cmd == "jk":
@@ -254,7 +261,13 @@ def main():
         print(f"wrote {a.out}", file=sys.stderr)
     elif a.by_jk:
         jk_ids = [n["id"] for n in c.newbuildings(a.region, a.pages or 1000)]
-        write_jsonl(by_jk(jk_ids, a.workers, a.raw, a.new, a.out + ".jk-stats.jsonl"), a.out)
+        stats_path, seen = a.out + ".jk-stats.jsonl", set()
+        if a.resume and os.path.exists(stats_path):
+            done = {s["jk_id"] for s in map(json.loads, open(stats_path)) if "error" not in s}
+            seen = {json.loads(l).get("offer_id") or json.loads(l).get("id") for l in open(a.out)} if os.path.exists(a.out) else set()
+            jk_ids = [j for j in jk_ids if j not in done]
+            print(f"  resume: {len(done)} ЖК уже собраны ({len(seen)} квартир), осталось {len(jk_ids)}", file=sys.stderr)
+        write_jsonl(by_jk(jk_ids, a.workers, a.raw, a.new, stats_path, seen, append=a.resume), a.out, append=a.resume)
     else:
         q = {"_type": "flatsale", "engine_version": {"type": "term", "value": 2}}
         if a.newobject:
@@ -284,13 +297,13 @@ def dedup(rows):
             yield r
 
 
-def by_jk(jk_ids, workers, raw, new_only=False, stats_path=None):
+def by_jk(jk_ids, workers, raw, new_only=False, stats_path=None, seen=None, append=False):
     """Квартиры по каждому ЖК; ЖК обрабатываются параллельно, у каждого потока своя сессия.
     В stats_path пишется по ЖК: offerCount, собрано, ошибка. Упавшие ЖК повторяются один раз после паузы."""
     from concurrent.futures import ThreadPoolExecutor, as_completed
     local = threading.local()
-    stats = open(stats_path, "w") if stats_path else None
-    seen = set()
+    stats = open(stats_path, "a" if append else "w") if stats_path else None
+    seen = seen if seen is not None else set()
 
     def one(jk):
         if not hasattr(local, "c"):
