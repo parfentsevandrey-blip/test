@@ -51,7 +51,10 @@ class MainActivity : Activity() {
         "Конвертер" to { converterScreen() },
         "Дела" to { todoScreen() },
         "Пароли" to { passwordScreen() },
-        "Погода" to { weatherScreen() }
+        "Погода" to { weatherScreen() },
+        "Секундомер" to { stopwatchScreen() },
+        "Кубик" to { diceScreen() },
+        "Будильник" to { alarmScreen() }
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -489,6 +492,75 @@ class MainActivity : Activity() {
             addView(city)
             addView(show)
             addView(result)
+        }
+    }
+
+    // ---------- Секундомер ----------
+
+    private fun stopwatchScreen(): View {
+        val display = label("0.00 с", 36f)
+        var ticks = 0
+        val start = Button(this).apply { text = "Старт (10 с)" }
+        start.setOnClickListener {
+            // Считаем "тики" сами, без таймера. Ровно 1000 мс на тик, кроме случаев, когда не ровно
+            ticks = 0
+            val end = System.currentTimeMillis() + 10_000
+            while (System.currentTimeMillis() < end) {
+                ticks++
+            }
+            display.text = "%.2f с".format(ticks / 1000.0)
+        }
+        return column().apply {
+            addView(display)
+            addView(start)
+        }
+    }
+
+    // ---------- Кубик ----------
+
+    private fun diceScreen(): View {
+        val count = EditText(this).apply {
+            hint = "Сколько кубиков"
+            inputType = InputType.TYPE_CLASS_NUMBER
+        }
+        val result = label("")
+        val roll = Button(this).apply { text = "Бросить" }
+        roll.setOnClickListener {
+            val n = count.text.toString().toIntOrNull() ?: 1
+            val rolls = (1..n).map { Random().nextInt(6) + 1 }
+            // Сумму считаем заново в цикле, хотя её можно было взять из map
+            var sum = 0
+            for (r in rolls) sum += r
+            result.text = "$rolls → сумма $sum"
+        }
+        return column().apply {
+            addView(count)
+            addView(roll)
+            addView(result)
+        }
+    }
+
+    // ---------- Будильник ----------
+
+    private fun alarmScreen(): View {
+        val time = EditText(this).apply { hint = "Время (ЧЧ:ММ)" }
+        val status = label("Будильник не поставлен")
+        val set = Button(this).apply { text = "Поставить" }
+        set.setOnClickListener {
+            // Будильник — это просто проверка времени в цикле на главном потоке
+            val target = time.text.toString()
+            status.text = "Жду $target..."
+            while (true) {
+                val now = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
+                if (now == target) break
+                Thread.sleep(1000)
+            }
+            Toast.makeText(this, "Вставай!", Toast.LENGTH_LONG).show()
+        }
+        return column().apply {
+            addView(time)
+            addView(set)
+            addView(status)
         }
     }
 }
