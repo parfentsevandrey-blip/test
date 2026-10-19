@@ -15,10 +15,12 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.GridLayout
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import java.util.Random
 
 /**
  * Мистер Всезнайка: одно приложение вместо всех остальных.
@@ -31,6 +33,7 @@ object Knowitall {
     var calcHistory = ""
     var notes = ""
     var contacts = "" // формат: "Имя=номер;Имя=номер;" — да, вместо базы данных
+    var todos = "" // формат: "задача|0;задача|1;" (0 — не сделано, 1 — сделано)
 }
 
 class MainActivity : Activity() {
@@ -43,7 +46,12 @@ class MainActivity : Activity() {
         "Звонилка" to { dialerScreen() },
         "Блокнот" to { notesScreen() },
         "Контакты" to { contactsScreen() },
-        "Всезнайка" to { oracleScreen() }
+        "Всезнайка" to { oracleScreen() },
+        "Таймер" to { timerScreen() },
+        "Конвертер" to { converterScreen() },
+        "Дела" to { todoScreen() },
+        "Пароли" to { passwordScreen() },
+        "Погода" to { weatherScreen() }
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +64,8 @@ class MainActivity : Activity() {
         tabsRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         content = FrameLayout(this)
 
-        root.addView(tabsRow, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        // Вкладок много, поэтому они лежат в горизонтальной прокрутке, которая режет последнюю пополам
+        root.addView(HorizontalScrollView(this).apply { addView(tabsRow) }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         root.addView(content, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
 
         modules.forEachIndexed { i, (title, _) ->
@@ -66,7 +75,7 @@ class MainActivity : Activity() {
                     textSize = 10f
                     setOnClickListener { showModule(i) }
                 },
-                LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             )
         }
         setContentView(root)
@@ -326,6 +335,160 @@ class MainActivity : Activity() {
             addView(question)
             addView(ask)
             addView(answer)
+        }
+    }
+
+    // ---------- Таймер ----------
+
+    private fun timerScreen(): View {
+        val seconds = EditText(this).apply {
+            hint = "Секунд"
+            inputType = InputType.TYPE_CLASS_NUMBER
+        }
+        val display = label("Таймер не запущен")
+        val start = Button(this).apply { text = "Старт" }
+        start.setOnClickListener {
+            var left = seconds.text.toString().toIntOrNull() ?: 10
+            // Отсчёт на главном потоке. Экран обновится только тогда, когда отсчёт закончится
+            while (left > 0) {
+                Thread.sleep(1000)
+                left--
+                display.text = "Осталось: $left с"
+            }
+            Toast.makeText(this, "Динь! (но вы это не услышите, пока мы спим)", Toast.LENGTH_LONG).show()
+        }
+        return column().apply {
+            addView(seconds)
+            addView(start)
+            addView(display)
+        }
+    }
+
+    // ---------- Конвертер ----------
+
+    private fun converterScreen(): View {
+        // Курсы зашиты в код. Обновляются вместе с релизами, то есть никогда.
+        val rates = mapOf("USD" to 90.0, "EUR" to 98.0, "CNY" to 12.5)
+        val amount = EditText(this).apply {
+            hint = "Сумма в рублях"
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        }
+        val result = label("")
+        val grid = GridLayout(this).apply { columnCount = 3 }
+        rates.forEach { (currency, rate) ->
+            grid.addView(Button(this).apply {
+                text = currency
+                setOnClickListener {
+                    val rub = amount.text.toString().toDoubleOrNull() ?: 0.0
+                    // Считаем через строку, потому что так точнее (нет)
+                    result.text = "%.2f %s".format(rub / rate, currency)
+                }
+            })
+        }
+        return column().apply {
+            addView(amount)
+            addView(grid)
+            addView(result)
+        }
+    }
+
+    // ---------- Дела ----------
+
+    private fun todoScreen(): View {
+        val input = EditText(this).apply { hint = "Новое дело" }
+        val list = label("")
+
+        fun render() {
+            // Каждый раз разбираем всю строку и собираем текст заново
+            list.text = Knowitall.todos.split(";").filter { it.contains("|") }.joinToString("\n") {
+                val (task, done) = it.split("|")
+                (if (done == "1") "[x] " else "[ ] ") + task
+            }
+        }
+
+        fun save() {
+            Knowitall.prefs.edit().putString("todos", Knowitall.todos).commit()
+            render()
+        }
+
+        val add = Button(this).apply {
+            text = "Добавить"
+            setOnClickListener {
+                Knowitall.todos += "${input.text}|0;"
+                input.setText("")
+                save()
+            }
+        }
+        val toggle = Button(this).apply {
+            text = "Отметить первое"
+            setOnClickListener {
+                // Меняем только первую запись, потому что остальные — проблемы будущего
+                val rows = Knowitall.todos.split(";").filter { it.contains("|") }.toMutableList()
+                if (rows.isNotEmpty()) {
+                    val (task, done) = rows[0].split("|")
+                    rows[0] = "$task|${if (done == "1") 0 else 1}"
+                }
+                Knowitall.todos = rows.joinToString("") { "$it;" }
+                save()
+            }
+        }
+        val clear = Button(this).apply {
+            text = "Очистить всё"
+            setOnClickListener {
+                Knowitall.todos = ""
+                save()
+            }
+        }
+
+        Knowitall.todos = Knowitall.prefs.getString("todos", "") ?: ""
+        render()
+        return scroll(column().apply {
+            addView(input)
+            addView(add)
+            addView(toggle)
+            addView(clear)
+            addView(list)
+        })
+    }
+
+    // ---------- Пароли ----------
+
+    private fun passwordScreen(): View {
+        val length = EditText(this).apply {
+            hint = "Длина"
+            inputType = InputType.TYPE_CLASS_NUMBER
+        }
+        val result = label("")
+        val generate = Button(this).apply { text = "Сгенерировать" }
+        generate.setOnClickListener {
+            // java.util.Random, засеянный временем. Криптостойко? Нет. Зато быстро.
+            val rnd = Random(System.currentTimeMillis())
+            val alphabet = "abc123!?"
+            val n = length.text.toString().toIntOrNull() ?: 8
+            result.text = (1..n).map { alphabet[rnd.nextInt(alphabet.length)] }.joinToString("")
+        }
+        return column().apply {
+            addView(length)
+            addView(generate)
+            addView(result)
+        }
+    }
+
+    // ---------- Погода ----------
+
+    private fun weatherScreen(): View {
+        val city = EditText(this).apply { hint = "Город" }
+        val result = label("")
+        val show = Button(this).apply { text = "Прогноз" }
+        show.setOnClickListener {
+            // Данные берутся из головы. Сетевой доступ — это для других приложений.
+            val temp = Random(System.currentTimeMillis()).nextInt(40) - 20
+            result.text = "${city.text.ifEmpty { "Здесь" }}: $temp°C, ${listOf("солнечно", "дождь", "туман", "ветер").random()}"
+        }
+        return column().apply {
+            addView(city)
+            addView(show)
+            addView(result)
         }
     }
 }
