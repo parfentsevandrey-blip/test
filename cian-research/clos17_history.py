@@ -86,7 +86,9 @@ class Cards(Spider):
 
 def main():
     J = json.load(open(f'{D}/jk.json'))
-    ids = list(range(321905680, 321905720)) + list(range(321435300, 321435360)) + [int(i) for i in J]
+    # сначала номера внутри пачек застройщика (между его первым и последним лотом), потом края диапазонов
+    core = list(range(321905687, 321905713)) + list(range(321435309, 321435355))
+    ids = core + list(range(321905680, 321905720)) + list(range(321435300, 321435360)) + [int(i) for i in J]
     out = json.load(open(PATH)) if os.path.exists(PATH) else {}
     cards = json.load(open(f'{D}/cards.json'))       # активные лоты уже собраны сегодня (clos17.py cards)
     for k, c in cards.items():
