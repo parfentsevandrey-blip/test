@@ -543,7 +543,9 @@
   }
  },
  "2026-10-19": {
-  "anomalies": [],
+  "anomalies": [
+   "ЦИАН заблокировал сбор: collector: 403 https://www.cian.ru/sale/flat/333612151/; пауза до 2026-10-20 11:28"
+  ],
   "dev": {
    "2812286": {
     "source": "donstroy",

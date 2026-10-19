@@ -117,6 +117,8 @@ def fetch(url):
                             headers={"Accept-Language": "ru-RU,ru;q=0.9"})
             break
         except Exception as e:                       # network resets through the proxy: retry, then give up
+            if "Redirect to internal IP" in str(e):   # ЦИАН sends a refused client to 127.0.0.1: a block, not a network fault (L48)
+                raise Blocked(f"redirect to 127.0.0.1 {url}")
             log("network error", attempt + 1, str(e)[:120])
             time.sleep(10 * (attempt + 1))
     _last[0] = time.time()

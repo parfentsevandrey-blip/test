@@ -79,6 +79,8 @@ def build(day=None):
     if cian_open:
         p = cd.active("cian.ru")
         notes.append(f"ЦИАН за {day} не завершён" + (f": пауза до {p['until'][11:16]} ({p['why'][:60]})" if p else " — сбор идёт"))
+        if p and p.get("set", "")[:10] == day:            # a block set today is an anomaly to analyse, not just a pause (L48)
+            anomalies.append(f"ЦИАН заблокировал сбор: {p['why'][:80]}; пауза до {p['until'][:16].replace('T', ' ')}")
     for zk, name in PILOT.items():
         d, c, dp, cp = dev.get(zk), cian[zk], dev_p.get(zk), cian_p.get(zk)
         dev_c = pct(d["collected"], d["declared"]) if d else None
