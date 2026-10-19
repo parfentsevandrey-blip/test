@@ -31,6 +31,16 @@ GAP = (20, 40)                 # seconds between requests
 EXTRA_ZK = True                # ЖК beyond the pilot by the owner's decision (ПИК inside MKAD, NOTES 17.10): extra_zk.json
 EXTRA_MAX_PAGES = 150          # their list pages a day, one sort (additions ≤ 250 pages a day, CIAN_EXPANSION.md)
 EXTRA_GAP = (36, 50)           # ≥ 36 s between their pages: ≤ 100 an hour
+CIAN_VISITOR = True            # one visitor-like session per run (L49): cookies kept, Referer of the page it came from,
+                               # redirects not followed blindly, a human pace with breaks; off -> the old stateless Fetcher path
+VISIT_GAP = (25, 55)           # seconds between requests
+VISIT_HOUR_CAP = 80            # requests in any 60 minutes (19.10: 111 in one hour before the block)
+VISIT_BREAK_EVERY = (15, 25)   # requests in a row, then a break of
+VISIT_BREAK_S = (180, 480)     # seconds
+VISIT_CARDS = 200              # offer cards a day (was 300)
+EXTRA_EVERY_DAYS = 2           # extra ЖК (ПИК) every other day
+ZK_CARD_EVERY_DAYS = 7         # ЖК cards (developer counts) once a week
+BLOCK_HOURS = (24, 72)         # pause after a block; 72 h when there was another one in the last 7 days
 EXTRA = json.loads((HERE / "extra_zk.json").read_text()) if EXTRA_ZK and (HERE / "extra_zk.json").exists() else {}
 _gap = [GAP]
 CARD_BUDGET = 300              # offer cards per daily run: views per lot for С3 (one offer per lot, resale/assignment first)
@@ -102,11 +112,73 @@ def _cp():
     return _cp.m
 
 
-def fetch(url):
+_visit = {}
+
+
+def _session():
+    """The run's one ЦИАН session (L49): the same cookies and client from the first page to the last card."""
+    if "s" not in _visit:
+        import importlib.util
+        from scrapling.fetchers import FetcherSession
+        spec = importlib.util.spec_from_file_location("pacer", HERE / "lib" / "pacer.py")
+        pm = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(pm)
+        _visit["pace"] = pm.Pacer(VISIT_GAP, VISIT_HOUR_CAP, VISIT_BREAK_EVERY, VISIT_BREAK_S, log=log)
+        _visit["s"] = FetcherSession(impersonate="chrome", stealthy_headers=True, follow_redirects=False, timeout=60, retries=1)
+        _visit["s"].__enter__()
+    return _visit["s"]
+
+
+def _close_session():
+    if "s" in _visit:
+        try:
+            _visit.pop("s").__exit__(None, None, None)
+        except Exception:
+            pass
+
+
+def fetch_visit(url, referer=None):
+    """A request as one visitor would make it; a redirect off cian.ru or to a local address is a refusal (L48, L49)."""
+    from urllib.parse import urljoin, urlsplit
+    s = _session()
+    _visit["pace"].wait()
+    hdr = {"Accept-Language": "ru-RU,ru;q=0.9"}
+    if referer:
+        hdr["Referer"] = referer
+    r = None
+    for attempt in range(2):
+        try:
+            r = s.get(url, headers=hdr)
+            break
+        except Exception as e:
+            if "Redirect to internal IP" in str(e):
+                raise Blocked(f"redirect to 127.0.0.1 {url}")
+            log("network error", attempt + 1, str(e)[:120])
+            time.sleep(20 * (attempt + 1))
+    if r is None:
+        return None, "network"
+    if r.status in (301, 302, 303, 307, 308):
+        loc = urljoin(url, r.headers.get("location") or r.headers.get("Location") or "")
+        host = (urlsplit(loc).hostname or "").lower()
+        log("redirect", r.status, host, urlsplit(loc).path[:60])
+        if not (host == "cian.ru" or host.endswith(".cian.ru")) or "captcha" in loc.lower():
+            raise Blocked(f"redirect {r.status} to {host or loc[:60]} {url}")
+        hdr["Referer"] = url
+        _visit["pace"].wait()
+        r = s.get(loc, headers=hdr)
+    html = r.body.decode("utf-8", "replace") if isinstance(r.body, bytes) else str(r.body)
+    if r.status in (401, 403, 429) or ("captcha" in html.lower() and "_cianConfig" not in html):
+        raise Blocked(f"{r.status} {url}")
+    return (html if r.status == 200 else None), r.status
+
+
+def fetch(url, referer=None):
     from scrapling.fetchers import Fetcher
     if not allowed(url):
         raise ValueError(f"not allowed by robots policy: {url}")
     _cp().check(url, "fetcher", cooldown=False)          # only curl_cffi reaches ЦИАН (L29, L37); pauses: run()
+    if CIAN_VISITOR:
+        return fetch_visit(url, referer)
     wait = random.uniform(*_gap[0]) - (time.time() - _last[0])
     if wait > 0:
         time.sleep(wait)
@@ -277,6 +349,11 @@ def run():
             groups = [(d, z, False) for d, z in PILOT.items()] + [(d, z, True) for d, z in EXTRA.items()]
             for dev, zks, extra in groups:
                 _gap[0] = EXTRA_GAP if extra else GAP
+                if extra and CIAN_VISITOR and EXTRA_EVERY_DAYS > 1 and db.execute(
+                        f"select 1 from pages where day<? and day>date(?, ?) and zk_id in ({','.join('?' * len(extra_ids))}) limit 1",
+                        (day, day, f"-{EXTRA_EVERY_DAYS} day", *extra_ids)).fetchone():
+                    log("extra ЖК: read", EXTRA_EVERY_DAYS - 1, "day(s) ago — next time", f"(every {EXTRA_EVERY_DAYS} days, L49)")
+                    continue
                 for zk_id, name in zks.items():
                     if extra and db.execute(f"select count(*) from pages where day=? and zk_id in ({','.join('?' * len(extra_ids))})",
                                             (day, *extra_ids)).fetchone()[0] >= EXTRA_MAX_PAGES:
@@ -291,7 +368,9 @@ def run():
                             if row and row[2]:
                                 total = row[0]
                             else:
-                                html, status = fetch(url)
+                                ref = (SEARCH.format(zk=zk_id, sort=sort, page=page - 1) if page > 1 else
+                                       SEARCH.format(zk=zk_id, sort="price_object_order", page=1) if sort != "price_object_order" else None)
+                                html, status = fetch(url, ref)
                                 offers, total = parse_list(html) if html else ([], None)
                                 ok = int(html is not None and total is not None)
                                 for o in offers:
@@ -320,7 +399,8 @@ def run():
         _gap[0] = GAP
         # 2. ЖК cards: developer's counts by room type and house
         for zk_id, jk_url in db.execute("select zk_id, jk_url from zk_meta").fetchall():
-            if db.execute("select 1 from zk_cards where day=? and zk_id=?", (day, zk_id)).fetchone() or not allowed(jk_url):
+            if db.execute("select 1 from zk_cards where day>date(?, ?) and zk_id=?",
+                          (day, f"-{ZK_CARD_EVERY_DAYS if CIAN_VISITOR else 1} day", zk_id)).fetchone() or not allowed(jk_url):
                 continue
             html, status = fetch(jk_url)
             summ = zk_card_summary(html) if html else None
@@ -355,8 +435,10 @@ def run():
             first = []
         have = {r[0] for r in db.execute("select offer_id from cards where day=?", (day,))}
         todo = [(oid,) for oid in first if oid not in have] + [x for x in todo if x[0] not in set(first)]
-        for (oid,) in todo[:max(CARD_BUDGET - done, 0)]:
-            html, status = fetch(f"https://www.cian.ru/sale/flat/{oid}/")
+        budget = VISIT_CARDS if CIAN_VISITOR else CARD_BUDGET
+        for (oid,) in todo[:max(budget - done, 0)]:
+            zk = (db.execute("select zk_id from offers where offer_id=?", (oid,)).fetchone() or [None])[0]
+            html, status = fetch(f"https://www.cian.ru/sale/flat/{oid}/", SEARCH.format(zk=zk, sort="price_object_order", page=1) if zk else None)
             if html:
                 c = parse_card(html)
                 db.execute("insert or replace into cards(offer_id, day, status, views_total, views_today, price_changes, publication_date, extra) "
@@ -377,7 +459,12 @@ def run():
         db.execute("update runs set note=? where day=?", (f"stopped: {e}", day))
         db.commit()
         log("BLOCKED / stopped:", e)
-        _cd().set_block("cian.ru", 24, f"collector: {e}")
+        week = (now() - timedelta(days=7)).isoformat()
+        before = [l for l in LOG.read_text().splitlines()[:-1] if "BLOCKED / stopped" in l and l[:25] >= week[:25]]
+        hours = BLOCK_HOURS[1] if before else BLOCK_HOURS[0]           # a second block within a week: a longer pause (L49)
+        _cd().set_block("cian.ru", hours, f"collector: {e}")
+    finally:
+        _close_session()
 
 
 def status_line(db):
