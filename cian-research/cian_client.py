@@ -6,8 +6,9 @@
 3. Один стабильный отпечаток и одна сессия с cookies на весь запуск, без ротации профилей.
 4. Один процесс на IP: файловый замок не даёт двум сборщикам ходить на ЦИАН одновременно.
 5. Темп: www — не чаще 1 запроса в 1,2 с, API — 1 в 0,3 с (запас относительно проверенных 58–194/мин).
-6. При блокировке (редирект на 127.0.0.1, капча, ответ без данных): пауза, пробный запрос раз в 30 с,
-   продолжение после снятия; если не снимается 15 минут — запуск прерывается, данные остаются в базе.
+6. При блокировке (редирект на 127.0.0.1 или на /cian-captcha/, ответ без данных): пауза с растущим интервалом
+   проб 30 → 60 → 120 → 240 → 300 с (частые пробы продлевают блок SmartCaptcha), продолжение после снятия;
+   если не снимается 30 минут — запуск прерывается, данные остаются в базе.
 """
 import fcntl
 import json
@@ -21,7 +22,7 @@ from scrapling.fetchers import FetcherSession  # noqa: E402
 
 PROFILE = os.environ.get('CIAN_PROFILE', 'chrome')     # проверены: chrome, chrome136, chrome142, safari, safari184
 WWW_INTERVAL, API_INTERVAL = 1.2, 0.3
-PROBE_EVERY, GIVE_UP = 30, 900
+PROBES, GIVE_UP = (30, 60, 120, 240, 300), 1800     # паузы между пробами при блокировке, с
 LOCK_PATH = os.environ.get('CIAN_LOCK', '/tmp/cian-client.lock')
 
 
@@ -67,8 +68,10 @@ class CianClient:
         self.stats['blocks'] += 1
         t0 = time.time()
         self.log(f'[антибот] блокировка {kind}, жду снятия…')
+        n = 0
         while time.time() - t0 < GIVE_UP:
-            time.sleep(PROBE_EVERY)
+            time.sleep(PROBES[min(n, len(PROBES) - 1)])
+            n += 1
             try:
                 if valid(fn()):
                     break
@@ -88,11 +91,16 @@ class CianClient:
                        and ('"offerData"' in r.html_content or r.status == 404))
         return r.html_content
 
+    @staticmethod
+    def _api_ok(r):
+        # при блокировке API отвечает 302 на www.cian.ru/cian-captcha/ — это не данные, а капча Yandex SmartCaptcha
+        return r.status in (200, 400) and 'captcha' not in str(r.url) and r.body[:1] in (b'{', b'[')
+
     def api_get(self, url, params=None):
-        return self._call('api', lambda: self.s.get(url, params=params), lambda r: r.status in (200, 400)).json()
+        return self._call('api', lambda: self.s.get(url, params=params), self._api_ok).json()
 
     def api_post(self, url, payload):
-        return self._call('api', lambda: self.s.post(url, json=payload), lambda r: r.status in (200, 400)).json()
+        return self._call('api', lambda: self.s.post(url, json=payload), self._api_ok).json()
 
     def close(self):
         self.s.__exit__(None, None, None)
