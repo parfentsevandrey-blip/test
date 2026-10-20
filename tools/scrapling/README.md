@@ -90,3 +90,27 @@ SCRAPLING_BIN=../.venv/bin/scrapling ../.venv/bin/python 04_mcp_client.py   # з
 
 > Используйте только в рамках закона, условий сайтов и robots.txt
 > (`robots_txt_obey=True` в спайдере).
+
+## Скрипт: лоты investmoscow.ru
+
+`investmoscow_lot.py` собирает всё по лоту «Имущество от города»: открывает карточку
+в стелс-браузере, нажимает вкладку «Сведения о процедуре», перехватывает все
+JSON-ответы API сайта и вытаскивает цену, задаток, шаг, номер процедуры, сроки и
+характеристики объекта.
+
+```bash
+cd tools/scrapling
+.venv/bin/python investmoscow_lot.py 20208859
+.venv/bin/python investmoscow_lot.py https://investmoscow.ru/tenders/tender/20208859 20208860 -o lots
+.venv/bin/python investmoscow_lot.py 20208859 --proxy http://user:pass@host:port --headful
+```
+
+Результат: `investmoscow_lots/<id>/`
+- `summary.json` — поля со страницы (`from_page`) и из API (`from_api`);
+- `api/*.json` — сырые ответы API (там все поля, даже те, что не попали в сводку);
+- `page.txt`, `page.md` — текст отрисованной карточки.
+
+Для нескольких лотов дополнительно создаётся `all_lots.json`.
+
+> investmoscow.ru обрывает соединения с зарубежных IP. Запускайте из России или через
+> российский прокси (`--proxy`).
