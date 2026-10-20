@@ -353,7 +353,7 @@ final class PlayerEngine {
         // Продолжение просмотра
         let saved = library?.item(id: item.id)?.position ?? 0
         if UserDefaults.standard.bool(forKey: Prefs.resumePlayback), saved > 15, info.duration > 0, saved < info.duration * 0.95 {
-            player.seek(to: CMTime(seconds: saved, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
+            player.seek(to: CMTime(seconds: saved, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero) { _ in }
             currentTime = saved
             resumedFrom = saved
             Task { [weak self] in
