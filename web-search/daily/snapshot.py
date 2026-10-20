@@ -11,7 +11,7 @@
 Поэтому: срезы до SLICE_MAX лотов, первый проход по дате, при недоборе > 0,5% -- второй проход по цене и объединение.
 
 Каждая часть (ценовой срез / ЖК) пишется в raw/ отдельным файлом -> прогон можно продолжить с места остановки.
-Итог: data/daily/DAY/lots.jsonl.gz + snapshot.json (полнота относительно счётчиков Циана).
+Итог: history/DAY/lots.jsonl.gz + snapshot.json (полнота относительно счётчиков Циана).
 usage: python daily/snapshot.py [--day YYYY-MM-DD] [--workers 2] [--only sec|new] [--limit N]
 """
 import argparse, datetime as dt, json, os, sys, time

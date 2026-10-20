@@ -3,3 +3,8 @@
 __pycache__/
 data/
 data/cian_profile/
+# ежедневная история: в git -- итоги дня и состояние опроса, кэши частей и лог -- нет
+history/*/raw/
+history/*/views/
+history/*/run.log
+history/*/*.done

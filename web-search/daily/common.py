@@ -5,7 +5,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "collectors"))
 import cian  # noqa: E402
 
-DATA = os.environ.get("DAILY_DATA") or os.path.join(ROOT, "data", "daily")  # тесты -- в отдельный каталог
+DATA = os.environ.get("DAILY_DATA") or os.path.join(ROOT, "history")  # история в репозитории; тесты -- DAILY_DATA
 GEO = os.path.join(ROOT, "geo")  # полигон МКАД и список ЖК внутри него -- в репозитории
 MKAD = json.load(open(os.path.join(GEO, "mkad.json")))["coordinates"][0]
 # в запрос Циана -- каждая 8-я вершина (~48 точек): длина запроса разумная, отклонение от МКАД < 300 м;

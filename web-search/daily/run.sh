@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.." || exit 1
 DAY=${1:-$(TZ=Europe/Moscow date +%F)}
 PY=.venv/bin/python
 W=${WORKERS:-2}
-D="${DAILY_DATA:-data/daily}/$DAY"
+D="${DAILY_DATA:-history}/$DAY"
 mkdir -p "$D"
 {
   echo "== $(date -Is) start $DAY"

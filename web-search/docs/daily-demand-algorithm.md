@@ -1,6 +1,6 @@
 # Ежедневный мониторинг спроса на Циане в пределах МКАД
 
-Код: `daily/` (`snapshot.py` → `views.py` → `analyze.py`, запуск одной командой `daily/run.sh`). Данные: `data/daily/ДАТА/`.
+Код: `daily/` (`snapshot.py` → `views.py` → `analyze.py`, запуск одной командой `daily/run.sh`). Данные: `history/ДАТА/`.
 
 ## 1. Ежедневный слепок
 
