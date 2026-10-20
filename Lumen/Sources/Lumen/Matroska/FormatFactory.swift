@@ -136,17 +136,35 @@ nonisolated enum FormatFactory {
         let sampleRate: Double
     }
 
-    static func audio(for t: MKVTrack) -> Audio? {
+    static func audio(for t: MKVTrack, firstFrame: Data? = nil) -> Audio? {
         let id = t.codecID
         let rate = t.samplingFrequency > 0 ? t.samplingFrequency : 48000
         if id.hasPrefix("A_AAC") { return aac(t) }
         switch id {
         case "A_AC3": return simple(kAudioFormatAC3, rate: rate, channels: t.channels, frames: 1536)
-        case "A_EAC3": return simple(kAudioFormatEnhancedAC3, rate: rate, channels: t.channels, frames: 1536)
+        case "A_EAC3": return eac3(t, firstFrame: firstFrame)
         case "A_MPEG/L3": return simple(kAudioFormatMPEGLayer3, rate: rate, channels: t.channels, frames: rate <= 24000 ? 576 : 1152)
         case "A_MPEG/L2": return simple(kAudioFormatMPEGLayer2, rate: rate, channels: t.channels, frames: 1152)
         default: return nil
         }
+    }
+
+    private static func eac3(_ t: MKVTrack, firstFrame: Data?) -> Audio? {
+        guard let frame = firstFrame, let h = EAC3Config.header(frame) else {
+            return simple(kAudioFormatEnhancedAC3, rate: t.samplingFrequency, channels: t.channels, frames: 1536)
+        }
+        let frames = h.blocks * 256
+        var asbd = AudioStreamBasicDescription(
+            mSampleRate: h.sampleRate, mFormatID: kAudioFormatEnhancedAC3, mFormatFlags: 0, mBytesPerPacket: 0,
+            mFramesPerPacket: UInt32(frames), mBytesPerFrame: 0, mChannelsPerFrame: UInt32(t.channels),
+            mBitsPerChannel: 0, mReserved: 0)
+        let ext = [kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms: ["dec3": EAC3Config.dec3(h)]] as CFDictionary
+        var fd: CMAudioFormatDescription?
+        let status = CMAudioFormatDescriptionCreate(
+            allocator: kCFAllocatorDefault, asbd: &asbd, layoutSize: 0, layout: nil,
+            magicCookieSize: 0, magicCookie: nil, extensions: ext, formatDescriptionOut: &fd)
+        guard status == noErr, let fd else { return nil }
+        return Audio(format: fd, framesPerPacket: frames, sampleRate: h.sampleRate)
     }
 
     private static func simple(_ id: AudioFormatID, rate: Double, channels: Int, frames: Int) -> Audio? {

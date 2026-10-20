@@ -72,6 +72,7 @@ nonisolated private final class RemuxJob {
         var framesPerPacket = 0
         var sampleRate: Double = 0
         var transcoder: VP9Transcoder?
+        var audioTranscoder: AudioTranscoder?
         var queue: [CMSampleBuffer] = []
         var head = 0
         var exhausted = false
@@ -224,10 +225,14 @@ nonisolated private final class RemuxJob {
                     notes.append("Видео \(codec) не поддерживается — показываю только звук")
                 }
             case .audio:
-                if let a = FormatFactory.audio(for: track) {
+                if let a = FormatFactory.audio(for: track, firstFrame: firstFrame(of: track)) {
                     var out = Output(track: track, format: a.format)
                     out.framesPerPacket = a.framesPerPacket
                     out.sampleRate = a.sampleRate
+                    outputs.append(out)
+                } else if let t = AudioTranscoder(track: track) {
+                    var out = Output(track: track, format: t.pcmFormat.formatDescription)
+                    out.audioTranscoder = t
                     outputs.append(out)
                 } else {
                     notes.append("Звук «\(track.label)» (\(codec)) не поддерживается macOS — дорожка пропущена")
@@ -292,6 +297,8 @@ nonisolated private final class RemuxJob {
             let input: AVAssetWriterInput
             if let transcoder = out.transcoder {
                 input = AVAssetWriterInput(mediaType: .video, outputSettings: transcoder.encoderSettings)
+            } else if let audio = out.audioTranscoder {
+                input = AVAssetWriterInput(mediaType: .audio, outputSettings: audio.outputSettings, sourceFormatHint: out.format)
             } else {
                 input = AVAssetWriterInput(mediaType: mediaType, outputSettings: nil, sourceFormatHint: out.format)
             }
@@ -390,6 +397,15 @@ nonisolated private final class RemuxJob {
 
     private func enqueueAudio(_ block: MKVBlockRef, output o: Int) throws {
         let out = outputs[o]
+        if let transcoder = out.audioTranscoder {
+            let time = CMTime(value: block.time + timeShift, timescale: 1_000_000_000)
+            for range in mkv.frames(of: block) where !range.isEmpty {
+                var packet = out.track.strippedHeader ?? Data()
+                packet.append(mkv.file.data(range.lowerBound, range.count))
+                if let sample = try transcoder.decode(packet, at: time) { outputs[o].queue.append(sample) }
+            }
+            return
+        }
         let packetNs = Double(out.framesPerPacket) / out.sampleRate * 1e9
         let blockNs = Double(block.time + timeShift)
         // Хронометраж аудио считаем по количеству пакетов: миллисекундные метки

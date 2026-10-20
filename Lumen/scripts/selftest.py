@@ -13,7 +13,7 @@ EXPECT = {
     "hevc10_hdr_eac3.mkv": (True, {"videoCodec": "HEVC", "audioTracks": 1}),
     "live_unknown_size.mkv": (True, {"videoCodec": "H.264", "audioTracks": 1}),
     "h264_mp3_ass.mkv": (True, {"audioTracks": 1, "subtitleTracks": 1, "minCues": 1}),
-    "vp9_opus.webm": (True, {"videoCodec": "HEVC", "audioTracks": 0}),
+    "vp9_opus.webm": (True, {"videoCodec": "HEVC", "audioTracks": 1}),
     "av1_aac.mkv": (False, {"videoCodec": "AV1", "audioTracks": 1}),
 }
 
@@ -47,6 +47,7 @@ for name, (required, expect) in EXPECT.items():
           f"{report.get('duration', 0):.1f} с, аудио {report.get('audioTracks')}, субтитры {report.get('subtitleTracks')}"
           f"/{report.get('subtitleCues')}, главы {report.get('chapters')}, "
           f"кадров декодировано {report.get('decodedVideoFrames')}, за {report.get('seconds', 0):.2f} с")
+    print(f"    дорожки: {', '.join(report.get('outputTracks', []))}")
     for note in report.get("notes", []):
         print(f"    · {note}")
     for p in problems:

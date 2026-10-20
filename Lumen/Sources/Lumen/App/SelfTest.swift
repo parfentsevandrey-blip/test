@@ -20,6 +20,7 @@ nonisolated enum SelfTest {
         var decodedVideoFrames = 0
         var decodedAudioBuffers = 0
         var notes: [String] = []
+        var outputTracks: [String] = []
         var seconds: Double = 0
     }
 
@@ -62,6 +63,11 @@ nonisolated enum SelfTest {
             r.videoCodec = info.videoCodec
             r.width = info.displaySize.width
             r.height = info.displaySize.height
+            for track in try await asset.load(.tracks) {
+                let formats = try await track.load(.formatDescriptions)
+                let codes = formats.map { AssetInspector.fourCC(CMFormatDescriptionGetMediaSubType($0)) }
+                r.outputTracks.append("\(track.mediaType.rawValue):\(codes.joined(separator: ","))")
+            }
             let audioTracks = try await asset.loadTracks(withMediaType: .audio)
             r.audioTracks = audioTracks.count
 
