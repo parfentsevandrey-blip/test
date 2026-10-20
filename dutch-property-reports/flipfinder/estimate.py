@@ -102,9 +102,16 @@ def _nearest(pool: list[dict], here: tuple[float, float]) -> list[dict]:
 
 
 def _similar(cards: list[dict], rec: dict, deal: str) -> list[dict]:
+    """Похожие по площади предложения, каждое один раз: одна карточка бывает в выдаче нескольких городов."""
     area = rec.get("area") or 0
-    return [c for c in cards if c["deal"] == deal and c["kind"] == "bedrijfshal" and c.get("area")
-            and C.COMPS_AREA[0] * area <= c["area"] <= C.COMPS_AREA[1] * area and c["url"] != rec["url"]]
+    out, seen = [], {rec["url"]}
+    for c in cards:
+        key = (c["title"], c["area"], c.get("price_text"))
+        if (c["deal"] == deal and c["kind"] == "bedrijfshal" and c.get("area") and c["url"] not in seen
+                and key not in seen and C.COMPS_AREA[0] * area <= c["area"] <= C.COMPS_AREA[1] * area):
+            seen |= {c["url"], key}
+            out.append(c)
+    return out
 
 
 def rent_comps(cards: list[dict], rec: dict, here: tuple[float, float] | None = None) -> list[dict]:

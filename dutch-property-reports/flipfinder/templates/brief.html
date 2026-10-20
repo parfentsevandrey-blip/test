@@ -141,8 +141,8 @@
 {% for chunk in photo_pages %}
 <section class="page">
   <div class="head"><span><b>{{ name }}</b>, фотографии</span><span>{{ loop.index }} из {{ photo_pages | length }}</span></div>
-  <div class="body"><div class="grid6">
-    {% for ph in chunk %}<figure class="shot" style="margin:0"><img src="{{ ph.src }}" alt=""><figcaption class="cap">{{ ph.cap }}</figcaption></figure>{% endfor %}
+  <div class="body"><div class="photos {{ chunk.cls }}">
+    {% for ph in chunk.shots %}<figure class="shot" style="margin:0"><img src="{{ ph.src }}" alt=""><figcaption class="cap">{{ ph.cap }}</figcaption></figure>{% endfor %}
   </div></div>
   <div class="foot"><span>Фото из объявления на funda in business</span><span></span></div>
 </section>

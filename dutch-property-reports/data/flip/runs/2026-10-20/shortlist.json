@@ -1,0 +1,2645 @@
+[
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44549677-televisieweg-141/",
+  "title": "Bedrijfshal Almere | Zoek bedrijfshallen te koop: Televisieweg 141 1322 BE Almere [funda in business]",
+  "address": {
+   "street": "Televisieweg 141",
+   "postcode": "1322 BE",
+   "city": "Almere"
+  },
+  "lat": 52.34988342,
+  "lon": 5.18236716,
+  "slug": "almere",
+  "territory": "ai-amsterdam",
+  "place": {
+   "territory": "ai-amsterdam",
+   "name": "Гойсекант, Алмере",
+   "short": "Гойсекант",
+   "body": "Штаб-квартира **ASM International** — производителя оборудования для нанесения атомарных слоёв и эпитаксии, ключевых шагов в производстве самых современных чипов.",
+   "near": "до вокзала Алмере — 8 минут, до вокзала Амстердама — 26",
+   "whole": false,
+   "metres": 0,
+   "inside": true,
+   "point": [
+    52.35194973488475,
+    5.189552623427383
+   ],
+   "ring": "zone"
+  },
+  "road": {
+   "km": 1.5,
+   "min": 3,
+   "ref": "A6"
+  },
+  "price": 299500,
+  "area": 228,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 15,
+    "effective_area": 228.0,
+    "mezzanine": 0.0,
+    "comps_m2": 122.04081632653062,
+    "ask": null,
+    "rent": 25599.281632653063,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.0725,
+   "exit_notes": [],
+   "year": 1999,
+   "new_build": false,
+   "shell": false,
+   "condition": "mid",
+   "vacant": {
+    "n": 15,
+    "m2": 2020.0
+   },
+   "comps": [
+    {
+     "title": "Televisieweg 103, Almere",
+     "area": 180,
+     "rent_m2": 110.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44521012-televisieweg-103/",
+     "km": 0.1
+    },
+    {
+     "title": "Antennestraat 66, Almere",
+     "area": 330,
+     "rent_m2": 110.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-43261979-antennestraat-66/",
+     "km": 0.2
+    },
+    {
+     "title": "Transistorstraat 151, Almere",
+     "area": 375,
+     "rent_m2": 145.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-89941748-transistorstraat-151/",
+     "km": 0.4
+    },
+    {
+     "title": "Microfoonstraat 16, Almere",
+     "area": 140,
+     "rent_m2": 128.57142857142858,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44519164-microfoonstraat-16/",
+     "km": 0.5
+    },
+    {
+     "title": "Katernstraat 31-E, Almere",
+     "area": 120,
+     "rent_m2": 100.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-43252828-katernstraat-31-e/",
+     "km": 0.5
+    },
+    {
+     "title": "Argonweg 87, Almere",
+     "area": 196,
+     "rent_m2": 122.14285714285714,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44541752-argonweg-87/",
+     "km": 0.9
+    },
+    {
+     "title": "Argonweg 58, Almere",
+     "area": 140,
+     "rent_m2": 137.14285714285714,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44564357-argonweg-58/",
+     "km": 0.9
+    },
+    {
+     "title": "Argonweg 35, Almere",
+     "area": 140,
+     "rent_m2": 102.42857142857143,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-43308579-argonweg-35/",
+     "km": 0.9
+    },
+    {
+     "title": "Argonweg 50, Almere",
+     "area": 200,
+     "rent_m2": 117.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-89754645-argonweg-50/",
+     "km": 0.9
+    },
+    {
+     "title": "Neonweg 96, Almere",
+     "area": 147,
+     "rent_m2": 122.04081632653062,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-43335951-neonweg-96/",
+     "km": 1.2
+    },
+    {
+     "title": "Xenonstraat 77, Almere",
+     "area": 150,
+     "rent_m2": 120.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-43132500-xenonstraat-77/",
+     "km": 1.2
+    },
+    {
+     "title": "Delftstraat 56-58, Almere",
+     "area": 220,
+     "rent_m2": 147.27272727272728,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44583797-delftstraat-56-58/",
+     "km": 2.0
+    },
+    {
+     "title": "Josephine Bakerstraat 77, Almere",
+     "area": 135,
+     "rent_m2": 133.33333333333334,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44516728-josephine-bakerstraat-77/",
+     "km": 2.1
+    },
+    {
+     "title": "De Steiger 183-B, Almere",
+     "area": 139,
+     "rent_m2": 116.54676258992805,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44536487-de-steiger-183-b/",
+     "km": 2.9
+    },
+    {
+     "title": "De Steiger 185-A, Almere",
+     "area": 139,
+     "rent_m2": 142.44604316546761,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-43328820-de-steiger-185-a/",
+     "km": 2.9
+    }
+   ]
+  },
+  "deal": {
+   "ask": 299500,
+   "area": 228,
+   "rent": 25599,
+   "exit_yield": 0.0725,
+   "price": 260000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 294262.88793103455,
+  "breakeven_discount": 0.017486183869667604,
+  "offer": 260000.0,
+  "passes": true,
+  "profit_at_ask": -5865.565517241368,
+  "net_at_offer": 31083.29193103449,
+  "sale": 353089.6551724138
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-80860075-moezelhavenweg-57-59/",
+  "title": "Bedrijfshal Amsterdam | Zoek bedrijfshallen te koop: Moezelhavenweg 57-59 1043 AM Amsterdam [funda in business]",
+  "address": {
+   "street": "Moezelhavenweg 57-59",
+   "postcode": "1043 AM",
+   "city": "Amsterdam"
+  },
+  "lat": 52.39461086,
+  "lon": 4.81937502,
+  "slug": "amsterdam",
+  "territory": "ai-amsterdam",
+  "place": {
+   "territory": "ai-amsterdam",
+   "name": "Слотердейк",
+   "short": "Слотердейк",
+   "body": "По адресу Kingsfordweg 151 зарегистрирована **NVIDIA Dutch B.V.** — нидерландская компания NVIDIA, главного производителя ускорителей для обучения и работы моделей ИИ.",
+   "near": "до вокзала Амстердама — 9 минут, до Схипхола — 17",
+   "whole": false,
+   "metres": 620,
+   "inside": false,
+   "point": [
+    52.39017301429274,
+    4.8394860563256366
+   ],
+   "ring": "zone"
+  },
+  "road": {
+   "km": 1.7,
+   "min": 3,
+   "ref": "A5"
+  },
+  "price": 365000,
+  "area": 180,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 15,
+    "effective_area": 180.0,
+    "mezzanine": 0.0,
+    "comps_m2": 173.68421052631578,
+    "ask": null,
+    "rent": 28762.105263157893,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.07,
+   "exit_notes": [],
+   "year": 2001,
+   "new_build": false,
+   "shell": false,
+   "condition": "mid",
+   "vacant": {
+    "n": 15,
+    "m2": 2473.684210526316
+   },
+   "comps": [
+    {
+     "title": "Nieuw-Zeelandweg 15-A, Amsterdam",
+     "area": 265,
+     "rent_m2": 133.58490566037736,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44528415-nieuw-zeelandweg-15-a/",
+     "km": 1.7
+    },
+    {
+     "title": "Nieuw-Zeelandweg 15-A, Amsterdam",
+     "area": 296,
+     "rent_m2": 109.45945945945945,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-89647808-nieuw-zeelandweg-15-a/",
+     "km": 1.7
+    },
+    {
+     "title": "Jarmuiden 27-B, Amsterdam",
+     "area": 91,
+     "rent_m2": 303.2967032967033,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-80984490-jarmuiden-27-b/",
+     "km": 1.8
+    },
+    {
+     "title": "Jarmuiden 27-E, Amsterdam",
+     "area": 99,
+     "rent_m2": 206.06060606060606,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-80818619-jarmuiden-27-e/",
+     "km": 1.8
+    },
+    {
+     "title": "Jarmuiden 27-B, Amsterdam",
+     "area": 91,
+     "rent_m2": 296.7032967032967,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44458153-jarmuiden-27-b/",
+     "km": 1.8
+    },
+    {
+     "title": "Jarmuiden 35-D, Amsterdam",
+     "area": 119,
+     "rent_m2": 252.10084033613447,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-43299214-jarmuiden-35-d/",
+     "km": 1.8
+    },
+    {
+     "title": "Jarmuiden 29-C, Amsterdam",
+     "area": 103,
+     "rent_m2": 233.0097087378641,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-89604712-jarmuiden-29-c/",
+     "km": 1.8
+    },
+    {
+     "title": "Nieuw-Zeelandweg 6-L, Amsterdam",
+     "area": 315,
+     "rent_m2": 91.42857142857143,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44511754-nieuw-zeelandweg-6-l/",
+     "km": 1.9
+    },
+    {
+     "title": "Nieuw-Zeelandweg 6-C, Amsterdam",
+     "area": 350,
+     "rent_m2": 92.57142857142857,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44529237-nieuw-zeelandweg-6-c/",
+     "km": 1.9
+    },
+    {
+     "title": "Poortland 30, Amsterdam",
+     "area": 155,
+     "rent_m2": 174.11612903225807,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-43244778-poortland-30/",
+     "km": 2.1
+    },
+    {
+     "title": "Bolstoen 12-X, Amsterdam",
+     "area": 132,
+     "rent_m2": 170.45454545454547,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44461512-bolstoen-12-x/",
+     "km": 2.2
+    },
+    {
+     "title": "Pleimuiden 5-D, Amsterdam",
+     "area": 110,
+     "rent_m2": 196.36363636363637,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-43297252-pleimuiden-5-d/",
+     "km": 2.2
+    },
+    {
+     "title": "Bolstoen 12-R, Amsterdam",
+     "area": 132,
+     "rent_m2": 170.45454545454547,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-43375483-bolstoen-12-r/",
+     "km": 2.2
+    },
+    {
+     "title": "Poortland 178, Amsterdam",
+     "area": 136,
+     "rent_m2": 150.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44514887-poortland-178/",
+     "km": 2.3
+    },
+    {
+     "title": "Abberdaan 186, Amsterdam",
+     "area": 190,
+     "rent_m2": 173.68421052631578,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44547687-abberdaan-186/",
+     "km": 2.3
+    }
+   ]
+  },
+  "deal": {
+   "ask": 365000,
+   "area": 180,
+   "rent": 28762,
+   "exit_yield": 0.07,
+   "price": 310000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 347088.8477891156,
+  "breakeven_discount": 0.04907164989283397,
+  "offer": 310000.0,
+  "passes": true,
+  "profit_at_ask": -20060.49047619046,
+  "net_at_offer": 33647.00271428573,
+  "sale": 410885.71428571426
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/wormerveer/object-43281931-roode-wildemanweg-4/",
+  "title": "Bedrijfshal Wormerveer | Zoek bedrijfshallen te koop: Roode Wildemanweg 4 1521 PT Wormerveer [funda in business]",
+  "address": {
+   "street": "Roode Wildemanweg 4",
+   "postcode": "1521 PT",
+   "city": "Wormerveer"
+  },
+  "lat": 52.50295709,
+  "lon": 4.78840966,
+  "slug": "wormerveer",
+  "territory": "ai-amsterdam",
+  "place": {
+   "territory": "ai-amsterdam",
+   "name": "Слотердейк",
+   "short": "Слотердейк",
+   "body": "По адресу Kingsfordweg 151 зарегистрирована **NVIDIA Dutch B.V.** — нидерландская компания NVIDIA, главного производителя ускорителей для обучения и работы моделей ИИ.",
+   "near": "до вокзала Амстердама — 9 минут, до Схипхола — 17",
+   "whole": false,
+   "metres": 12562,
+   "inside": false,
+   "point": [
+    52.39017301429274,
+    4.8394860563256366
+   ],
+   "drive_min": 17,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 4.6,
+   "min": 5,
+   "ref": "A8"
+  },
+  "price": 649000,
+  "area": 705,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 15,
+    "effective_area": 705.0,
+    "mezzanine": 0.0,
+    "comps_m2": 95.61752988047809,
+    "ask": null,
+    "rent": 62017.52988047809,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.07,
+   "exit_notes": [],
+   "year": 2006,
+   "new_build": false,
+   "shell": false,
+   "condition": "mid",
+   "vacant": {
+    "n": 8,
+    "m2": 1786.5693530234303
+   },
+   "comps": [
+    {
+     "title": "Witte Vlinderweg 13, Wormerveer",
+     "area": 392,
+     "rent_m2": 104.08163265306122,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/wormerveer/object-44589411-witte-vlinderweg-13/",
+     "km": 0.1
+    },
+    {
+     "title": "Rosbayerweg 149, Wormerveer",
+     "area": 513,
+     "rent_m2": 105.26315789473684,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/wormerveer/object-44564221-rosbayerweg-149/",
+     "km": 0.3
+    },
+    {
+     "title": "Samsonweg 7, Wormerveer",
+     "area": 760,
+     "rent_m2": 60.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/wormerveer/object-43231917-samsonweg-7/",
+     "km": 0.6
+    },
+    {
+     "title": "Soldaatweg 42-44, Wormerveer",
+     "area": 514,
+     "rent_m2": 128.4046692607004,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/wormerveer/object-44472799-soldaatweg-42-44/",
+     "km": 0.8
+    },
+    {
+     "title": "Industrieweg 59, Wormerveer",
+     "area": 780,
+     "rent_m2": 84.61538461538461,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/wormerveer/object-43325839-industrieweg-59/",
+     "km": 1.6
+    },
+    {
+     "title": "Penningweg 108, Zaandam",
+     "area": 1200,
+     "rent_m2": 70.83333333333333,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44592185-penningweg-108/",
+     "km": 8.1
+    },
+    {
+     "title": "Ducaatstraat 33, Zaandam",
+     "area": 1065,
+     "rent_m2": 134.92957746478874,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44428018-ducaatstraat-33/",
+     "km": 8.2
+    },
+    {
+     "title": "Penningweg 77, Zaandam",
+     "area": 360,
+     "rent_m2": 85.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44401695-penningweg-77/",
+     "km": 8.2
+    },
+    {
+     "title": "Rechte Tocht 2-C1, Zaandam",
+     "area": 455,
+     "rent_m2": 85.71428571428571,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-43226135-rechte-tocht-2-c1/",
+     "km": 8.2
+    },
+    {
+     "title": "Ronde Tocht 34, Zaandam",
+     "area": 652,
+     "rent_m2": 95.0920245398773,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44400121-ronde-tocht-34/",
+     "km": 8.4
+    },
+    {
+     "title": "Dwarstocht 6, Zaandam",
+     "area": 585,
+     "rent_m2": 112.82051282051282,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-43001425-dwarstocht-6/",
+     "km": 8.5
+    },
+    {
+     "title": "Ambacht 26, Oostzaan",
+     "area": 614,
+     "rent_m2": 126.84039087947883,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/oostzaan/object-44457703-ambacht-26/",
+     "km": 9.3
+    },
+    {
+     "title": "Vredeweg 46-D2, Zaandam",
+     "area": 672,
+     "rent_m2": 86.60714285714286,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44509110-vredeweg-46-d2/",
+     "km": 9.4
+    },
+    {
+     "title": "Dukdalfweg 60, Amsterdam",
+     "area": 370,
+     "rent_m2": 123.24324324324324,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-43850714-dukdalfweg-60/",
+     "km": 9.8
+    },
+    {
+     "title": "Sluispolderweg 71, Zaandam",
+     "area": 1004,
+     "rent_m2": 95.61752988047809,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-43020640-sluispolderweg-71/",
+     "km": 10.2
+    }
+   ]
+  },
+  "deal": {
+   "ask": 649000,
+   "area": 705,
+   "rent": 62018,
+   "exit_yield": 0.07,
+   "price": 649000,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 761700.8205782315,
+  "breakeven_discount": -0.17365303633009477,
+  "offer": 649000,
+  "passes": true,
+  "profit_at_ask": 126224.9190476191,
+  "net_at_offer": 102242.18442857146,
+  "sale": 885971.4285714285
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44427362-braspenning-21/",
+  "title": "Bedrijfshal Zaandam | Zoek bedrijfshallen te koop: Braspenning 21 1507 DK Zaandam [funda in business]",
+  "address": {
+   "street": "Braspenning 21",
+   "postcode": "1507 DK",
+   "city": "Zaandam"
+  },
+  "lat": 52.42978917,
+  "lon": 4.79739808,
+  "slug": "zaandam",
+  "territory": "ai-amsterdam",
+  "place": {
+   "territory": "ai-amsterdam",
+   "name": "Слотердейк",
+   "short": "Слотердейк",
+   "body": "По адресу Kingsfordweg 151 зарегистрирована **NVIDIA Dutch B.V.** — нидерландская компания NVIDIA, главного производителя ускорителей для обучения и работы моделей ИИ.",
+   "near": "до вокзала Амстердама — 9 минут, до Схипхола — 17",
+   "whole": false,
+   "metres": 4772,
+   "inside": false,
+   "point": [
+    52.39017301429274,
+    4.8394860563256366
+   ],
+   "drive_min": 13,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 5.0,
+   "min": 7,
+   "ref": "A8"
+  },
+  "price": 197500,
+  "area": 164,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 15,
+    "effective_area": 164.0,
+    "mezzanine": 0.0,
+    "comps_m2": 136.36363636363637,
+    "ask": null,
+    "rent": 20574.545454545456,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.075,
+   "exit_notes": [],
+   "year": 1998,
+   "new_build": false,
+   "shell": false,
+   "condition": "mid",
+   "vacant": {
+    "n": 15,
+    "m2": 1825.153374233129
+   },
+   "comps": [
+    {
+     "title": "Braspenning 26, Zaandam",
+     "area": 327,
+     "rent_m2": 165.13761467889907,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44505159-braspenning-26/",
+     "km": 0.0
+    },
+    {
+     "title": "Penningweg 69-C, Zaandam",
+     "area": 200,
+     "rent_m2": 89.94,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44518822-penningweg-69-c/",
+     "km": 0.1
+    },
+    {
+     "title": "Braspenning 45, Zaandam",
+     "area": 100,
+     "rent_m2": 150.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44425189-braspenning-45/",
+     "km": 0.1
+    },
+    {
+     "title": "Penningweg 16, Zaandam",
+     "area": 95,
+     "rent_m2": 125.6842105263158,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44417413-penningweg-16/",
+     "km": 0.1
+    },
+    {
+     "title": "Tienlingstraat 15-A, Zaandam",
+     "area": 154,
+     "rent_m2": 116.88311688311688,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44445502-tienlingstraat-15-a/",
+     "km": 0.2
+    },
+    {
+     "title": "Penningweg 93, Zaandam",
+     "area": 196,
+     "rent_m2": 85.40816326530613,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44534458-penningweg-93/",
+     "km": 0.4
+    },
+    {
+     "title": "Rechte Tocht 2-A8, Zaandam",
+     "area": 225,
+     "rent_m2": 130.66666666666666,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44545592-rechte-tocht-2-a8/",
+     "km": 0.5
+    },
+    {
+     "title": "Rechte Tocht 2-A7, Zaandam",
+     "area": 225,
+     "rent_m2": 130.66666666666666,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44545596-rechte-tocht-2-a7/",
+     "km": 0.5
+    },
+    {
+     "title": "Rechte Tocht 2-C13, Zaandam",
+     "area": 110,
+     "rent_m2": 141.27272727272728,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44578670-rechte-tocht-2-c13/",
+     "km": 0.5
+    },
+    {
+     "title": "Rechte Tocht 2-A3, Zaandam",
+     "area": 226,
+     "rent_m2": 127.16814159292035,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44564143-rechte-tocht-2-a3/",
+     "km": 0.5
+    },
+    {
+     "title": "Rechte Tocht 2-C8, Zaandam",
+     "area": 110,
+     "rent_m2": 136.36363636363637,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-44479516-rechte-tocht-2-c8/",
+     "km": 0.5
+    },
+    {
+     "title": "Rechte Tocht 2-A8, Zaandam",
+     "area": 225,
+     "rent_m2": 152.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-43330035-rechte-tocht-2-a8/",
+     "km": 0.5
+    },
+    {
+     "title": "Rechte Tocht 2-D4, Zaandam",
+     "area": 114,
+     "rent_m2": 157.89473684210526,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-43333206-rechte-tocht-2-d4/",
+     "km": 0.5
+    },
+    {
+     "title": "Schellingweg 17-E, Zaandam",
+     "area": 150,
+     "rent_m2": 166.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-43348841-schellingweg-17-e/",
+     "km": 0.6
+    },
+    {
+     "title": "Ringweg 229, Zaandam",
+     "area": 88,
+     "rent_m2": 197.72727272727272,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zaandam/object-80987238-ringweg-229/",
+     "km": 0.7
+    }
+   ]
+  },
+  "deal": {
+   "ask": 197500,
+   "area": 164,
+   "rent": 20575,
+   "exit_yield": 0.075,
+   "price": 197500,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 225113.24404761905,
+  "breakeven_discount": -0.13981389391199528,
+  "offer": 197500,
+  "passes": true,
+  "profit_at_ask": 30926.8333333334,
+  "net_at_offer": 25050.735000000055,
+  "sale": 274333.3333333334
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44430101-zandzuigerstraat-83/",
+  "title": "Bedrijfshal Almere | Zoek bedrijfshallen te koop: Zandzuigerstraat 83 1333 MX Almere [funda in business]",
+  "address": {
+   "street": "Zandzuigerstraat 83",
+   "postcode": "1333 MX",
+   "city": "Almere"
+  },
+  "lat": 52.40294827,
+  "lon": 5.26521958,
+  "slug": "almere",
+  "territory": "ai-amsterdam",
+  "place": {
+   "territory": "ai-amsterdam",
+   "name": "Гойсекант, Алмере",
+   "short": "Гойсекант",
+   "body": "Штаб-квартира **ASM International** — производителя оборудования для нанесения атомарных слоёв и эпитаксии, ключевых шагов в производстве самых современных чипов.",
+   "near": "до вокзала Алмере — 8 минут, до вокзала Амстердама — 26",
+   "whole": false,
+   "metres": 7027,
+   "inside": false,
+   "point": [
+    52.35194973488475,
+    5.189552623427383
+   ],
+   "drive_min": 15,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 5.2,
+   "min": 8,
+   "ref": "A6"
+  },
+  "price": 215000,
+  "area": 215,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 15,
+    "effective_area": 215.0,
+    "mezzanine": 0.0,
+    "comps_m2": 110.0,
+    "ask": null,
+    "rent": 21758.0,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 1332.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.0725,
+   "exit_notes": [],
+   "year": 1991,
+   "new_build": false,
+   "shell": false,
+   "condition": "mid",
+   "vacant": {
+    "n": 15,
+    "m2": 1746.031746031746
+   },
+   "comps": [
+    {
+     "title": "Zandzuigerstraat 95-97, Almere",
+     "area": 300,
+     "rent_m2": 78.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-43361116-zandzuigerstraat-95-97/",
+     "km": 0.0
+    },
+    {
+     "title": "Zandzuigerstraat 42, Almere",
+     "area": 175,
+     "rent_m2": 110.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44517088-zandzuigerstraat-42/",
+     "km": 0.2
+    },
+    {
+     "title": "Splijtbakweg 72-G, Almere",
+     "area": 120,
+     "rent_m2": 130.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-43335035-splijtbakweg-72-g/",
+     "km": 0.3
+    },
+    {
+     "title": "Splijtbakweg 72-M, Almere",
+     "area": 120,
+     "rent_m2": 114.5,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-43232401-splijtbakweg-72-m/",
+     "km": 0.3
+    },
+    {
+     "title": "Bakkenzuigerstraat 80, Almere",
+     "area": 320,
+     "rent_m2": 93.75,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-89613480-bakkenzuigerstraat-80/",
+     "km": 0.5
+    },
+    {
+     "title": "Bolderweg 18-B10, Almere",
+     "area": 150,
+     "rent_m2": 96.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-43311630-bolderweg-18-b10/",
+     "km": 0.7
+    },
+    {
+     "title": "Remmingweg 8-A, Almere",
+     "area": 150,
+     "rent_m2": 110.8,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44545320-remmingweg-8-a/",
+     "km": 0.8
+    },
+    {
+     "title": "Vlotbrugweg 4-E, Almere",
+     "area": 150,
+     "rent_m2": 116.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44566127-vlotbrugweg-4-e/",
+     "km": 0.9
+    },
+    {
+     "title": "Bolderweg 36-D, Almere",
+     "area": 122,
+     "rent_m2": 113.11475409836065,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-43224189-bolderweg-36-d/",
+     "km": 1.2
+    },
+    {
+     "title": "Bolderweg 46-C, Almere",
+     "area": 253,
+     "rent_m2": 80.39525691699605,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44428844-bolderweg-46-c/",
+     "km": 1.3
+    },
+    {
+     "title": "Bolderweg 46-F, Almere",
+     "area": 252,
+     "rent_m2": 83.33333333333333,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-43375307-bolderweg-46-f/",
+     "km": 1.3
+    },
+    {
+     "title": "Edvard Munchweg 22-E, Almere",
+     "area": 108,
+     "rent_m2": 150.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44419916-edvard-munchweg-22-e/",
+     "km": 2.9
+    },
+    {
+     "title": "Koningsbeltweg 33-E, Almere",
+     "area": 134,
+     "rent_m2": 94.02985074626865,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44450839-koningsbeltweg-33-e/",
+     "km": 3.4
+    },
+    {
+     "title": "Juan Grisstraat 44, Almere",
+     "area": 165,
+     "rent_m2": 149.96363636363637,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44506699-juan-grisstraat-44/",
+     "km": 3.4
+    },
+    {
+     "title": "Markerkant 10 13-C, Almere",
+     "area": 192,
+     "rent_m2": 105.9375,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44463621-markerkant-10-13-c/",
+     "km": 3.6
+    }
+   ]
+  },
+  "deal": {
+   "ask": 215000,
+   "area": 215,
+   "rent": 21758,
+   "exit_yield": 0.0725,
+   "price": 205000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 1332.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 229550.3037766831,
+  "breakeven_discount": -0.06767583151945633,
+  "offer": 205000.0,
+  "passes": true,
+  "profit_at_ask": 16296.34022988507,
+  "net_at_offer": 22272.03558620691,
+  "sale": 281737.9310344828
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-43351201-artemisweg-145-j/",
+  "title": "Bedrijfshal Lelystad | Zoek bedrijfshallen te koop: Artemisweg 145-J 8239 DD Lelystad [funda in business]",
+  "address": {
+   "street": "Artemisweg 145-J",
+   "postcode": "8239 DD",
+   "city": "Lelystad"
+  },
+  "lat": 52.48106081,
+  "lon": 5.49007299,
+  "slug": "lelystad",
+  "territory": "ai-amsterdam",
+  "place": {
+   "territory": "ai-amsterdam",
+   "name": "Гойсекант, Алмере",
+   "short": "Гойсекант",
+   "body": "Штаб-квартира **ASM International** — производителя оборудования для нанесения атомарных слоёв и эпитаксии, ключевых шагов в производстве самых современных чипов.",
+   "near": "до вокзала Алмере — 8 минут, до вокзала Амстердама — 26",
+   "whole": false,
+   "metres": 24371,
+   "inside": false,
+   "point": [
+    52.35194973488475,
+    5.189552623427383
+   ],
+   "drive_min": 24,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 1.9,
+   "min": 3,
+   "ref": "A6"
+  },
+  "price": 270000,
+  "area": 264,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 13,
+    "effective_area": 264.0,
+    "mezzanine": 0.0,
+    "comps_m2": 115.55555555555556,
+    "ask": null,
+    "rent": 28066.133333333335,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.0825,
+   "exit_notes": [],
+   "year": 2001,
+   "new_build": false,
+   "shell": false,
+   "condition": "good",
+   "vacant": {
+    "n": 15,
+    "m2": 1300.0
+   },
+   "comps": [
+    {
+     "title": "Apolloweg 2-A, Lelystad",
+     "area": 260,
+     "rent_m2": 103.84615384615384,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-43248139-apolloweg-2-a/",
+     "km": 0.5
+    },
+    {
+     "title": "Zaanstraat 6-E, Lelystad",
+     "area": 180,
+     "rent_m2": 100.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-44599308-zaanstraat-6-e/",
+     "km": 0.8
+    },
+    {
+     "title": "Bolderweg 43, Lelystad",
+     "area": 200,
+     "rent_m2": 179.7,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-44534416-bolderweg-43/",
+     "km": 3.4
+    },
+    {
+     "title": "Vijzelweg 64-A, Lelystad",
+     "area": 198,
+     "rent_m2": 118.18181818181819,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-44466507-vijzelweg-64-a/",
+     "km": 3.6
+    },
+    {
+     "title": "Vijzelweg 64-K, Lelystad",
+     "area": 244,
+     "rent_m2": 130.327868852459,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-44493477-vijzelweg-64-k/",
+     "km": 3.6
+    },
+    {
+     "title": "Zuiveringweg 48-C, Lelystad",
+     "area": 203,
+     "rent_m2": 112.3152709359606,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-44533024-zuiveringweg-48-c/",
+     "km": 3.8
+    },
+    {
+     "title": "Vaartweg 45-A1, Lelystad",
+     "area": 140,
+     "rent_m2": 150.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-43046577-vaartweg-45-a1/",
+     "km": 4.1
+    },
+    {
+     "title": "Zeilweg 32-U53, Lelystad",
+     "area": 156,
+     "rent_m2": 103.46153846153847,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-42330054-zeilweg-32-u53/",
+     "km": 4.4
+    },
+    {
+     "title": "Vaartweg 100, Lelystad",
+     "area": 430,
+     "rent_m2": 94.88372093023256,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-43278464-vaartweg-100/",
+     "km": 4.9
+    },
+    {
+     "title": "Chroomstraat 8-17, Lelystad",
+     "area": 135,
+     "rent_m2": 115.55555555555556,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-89767858-chroomstraat-8-17/",
+     "km": 6.5
+    },
+    {
+     "title": "Chroomstraat 8-18, Lelystad",
+     "area": 133,
+     "rent_m2": 124.06015037593986,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-89756397-chroomstraat-8-18/",
+     "km": 6.5
+    },
+    {
+     "title": "Chroomstraat 8, Lelystad",
+     "area": 135,
+     "rent_m2": 120.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-89598915-chroomstraat-8/",
+     "km": 6.5
+    },
+    {
+     "title": "Koperstraat 3, Lelystad",
+     "area": 496,
+     "rent_m2": 66.53225806451613,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-44449342-koperstraat-3/",
+     "km": 7.0
+    }
+   ]
+  },
+  "deal": {
+   "ask": 270000,
+   "area": 264,
+   "rent": 28066,
+   "exit_yield": 0.0825,
+   "price": 250000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 282644.448051948,
+  "breakeven_discount": -0.04683128908128875,
+  "offer": 250000.0,
+  "passes": true,
+  "profit_at_ask": 14161.7818181818,
+  "net_at_offer": 29615.043272727256,
+  "sale": 340193.9393939394
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuwerkerk-aan-den-ijssel/object-44419690-hoogeveenenweg-210/",
+  "title": "Bedrijfshal Nieuwerkerk aan den IJssel | Zoek bedrijfshallen te koop: Hoogeveenenweg 210 2913 LV Nieuwerkerk aan den IJssel [funda in business]",
+  "address": {
+   "street": "Hoogeveenenweg 210",
+   "postcode": "2913 LV",
+   "city": "Nieuwerkerk aan den IJssel"
+  },
+  "lat": 51.97784692,
+  "lon": 4.60664852,
+  "slug": "nieuwerkerk-aan-den-ijssel",
+  "territory": "rotterdam",
+  "place": {
+   "territory": "rotterdam",
+   "name": "Роттердам целиком",
+   "short": "Роттердам целиком",
+   "body": "Роттердам выбран целиком, вне листов файла с картами: подходит объект в любой части муниципалитета, включая порт, Масвлакте и Хук-ван-Холланд.",
+   "whole": true,
+   "metres": 708,
+   "inside": false,
+   "point": [
+    51.921894726260746,
+    4.489273114838015
+   ],
+   "drive_min": 17,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 1.1,
+   "min": 2,
+   "ref": "A20"
+  },
+  "price": 1400000,
+  "area": 1101,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 10,
+    "effective_area": 1101.0,
+    "mezzanine": 0.0,
+    "comps_m2": 119.78994263016114,
+    "ask": null,
+    "rent": 121337.62868894283,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.075,
+   "exit_notes": [],
+   "year": 1998,
+   "new_build": false,
+   "shell": false,
+   "condition": "good",
+   "vacant": {
+    "n": 2,
+    "m2": null
+   },
+   "comps": [
+    {
+     "title": "Cornusbaan 59-71, Capelle aan den IJssel",
+     "area": 582,
+     "rent_m2": 139.71134020618555,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/capelle-aan-den-ijssel/object-89508381-cornusbaan-59-71/",
+     "km": 2.3
+    },
+    {
+     "title": "Anthonetta Kuijlstraat 5-15, Rotterdam",
+     "area": 1181,
+     "rent_m2": 114.30990685859442,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-80862561-anthonetta-kuijlstraat-5-15/",
+     "km": 6.9
+    },
+    {
+     "title": "Veilingweg 5, Rotterdam",
+     "area": 620,
+     "rent_m2": 82.25806451612904,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-80944849-veilingweg-5/",
+     "km": 8.5
+    },
+    {
+     "title": "Overwegwachter 2, Rotterdam",
+     "area": 1095,
+     "rent_m2": 109.34246575342466,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-80895014-overwegwachter-2/",
+     "km": 8.6
+    },
+    {
+     "title": "Boelewerf 25, Ridderkerk",
+     "area": 1804,
+     "rent_m2": 139.68957871396896,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/ridderkerk/object-44569549-boelewerf-25/",
+     "km": 8.8
+    },
+    {
+     "title": "Spoorhaven 106, Berkel en Rodenrijs",
+     "area": 1610,
+     "rent_m2": 145.96273291925465,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/berkel-en-rodenrijs/object-44515103-spoorhaven-106/",
+     "km": 10.0
+    },
+    {
+     "title": "Industrieweg 47-49, Berkel en Rodenrijs",
+     "area": 1389,
+     "rent_m2": 125.26997840172787,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/berkel-en-rodenrijs/object-89660464-industrieweg-47-49/",
+     "km": 10.4
+    },
+    {
+     "title": "Olympiaweg 262, Rotterdam",
+     "area": 1920,
+     "rent_m2": 77.5,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-89611671-olympiaweg-262/",
+     "km": 11.2
+    },
+    {
+     "title": "Wagenmakerstraat 19, Ridderkerk",
+     "area": 964,
+     "rent_m2": 98.96265560165975,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/ridderkerk/object-80924354-wagenmakerstraat-19/",
+     "km": 11.6
+    },
+    {
+     "title": "Florijnstraat 65, Ridderkerk",
+     "area": 760,
+     "rent_m2": 130.92105263157896,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/ridderkerk/object-44540239-florijnstraat-65/",
+     "km": 11.8
+    }
+   ]
+  },
+  "deal": {
+   "ask": 1400000,
+   "area": 1101,
+   "rent": 121338,
+   "exit_yield": 0.075,
+   "price": 1275000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 1411917.6785714289,
+  "breakeven_discount": -0.008512627551020557,
+  "offer": 1275000.0,
+  "passes": true,
+  "profit_at_ask": 13347.800000000047,
+  "net_at_offer": 124211.71800000004,
+  "sale": 1617840.0
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-89723549-karwijstraat-29-d/",
+  "title": "Bedrijfshal Nieuw-Vennep | Zoek bedrijfshallen te koop: Karwijstraat 29-D 2153 GP Nieuw-Vennep [funda in business]",
+  "address": {
+   "street": "Karwijstraat 29-D",
+   "postcode": "2153 GP",
+   "city": "Nieuw-Vennep"
+  },
+  "lat": 52.26469642,
+  "lon": 4.6490647,
+  "slug": "nieuw-vennep",
+  "territory": "ai-schiphol",
+  "place": {
+   "territory": "ai-schiphol",
+   "name": "Бёкенхорст, Хофддорп",
+   "short": "Бёкенхорст",
+   "body": "Головной офис **Interxion** (Scorpius 30) — европейского оператора центров обработки данных; с 2020 года Interxion входит в американскую Digital Realty.",
+   "near": "до терминала Схипхола — 8 минут, до вокзала Амстердама — 24",
+   "whole": false,
+   "metres": 4447,
+   "inside": false,
+   "point": [
+    52.28867471538172,
+    4.712507608402935
+   ],
+   "drive_min": 9,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 5.5,
+   "min": 7,
+   "ref": "A4"
+  },
+  "price": 400000,
+  "area": 310,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 15,
+    "effective_area": 310.0,
+    "mezzanine": 0.0,
+    "comps_m2": 115.0,
+    "ask": null,
+    "rent": 32798.0,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.0725,
+   "exit_notes": [],
+   "year": 2009,
+   "new_build": false,
+   "shell": false,
+   "condition": "good",
+   "vacant": {
+    "n": 15,
+    "m2": 1895.5696202531647
+   },
+   "comps": [
+    {
+     "title": "Boekweitstraat 15, Nieuw-Vennep",
+     "area": 410,
+     "rent_m2": 115.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-80846168-boekweitstraat-15/",
+     "km": 0.1
+    },
+    {
+     "title": "Boekweitstraat 13, Nieuw-Vennep",
+     "area": 414,
+     "rent_m2": 120.07004830917874,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-89528350-boekweitstraat-13/",
+     "km": 0.1
+    },
+    {
+     "title": "Boekweitstraat 90, Nieuw-Vennep",
+     "area": 560,
+     "rent_m2": 112.5,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-43517094-boekweitstraat-90/",
+     "km": 0.3
+    },
+    {
+     "title": "Luzernestraat 48, Nieuw-Vennep",
+     "area": 505,
+     "rent_m2": 78.41584158415841,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-44520914-luzernestraat-48/",
+     "km": 0.4
+    },
+    {
+     "title": "Haverstraat 1-H, Nieuw-Vennep",
+     "area": 158,
+     "rent_m2": 159.49367088607596,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-80890756-haverstraat-1-h/",
+     "km": 0.6
+    },
+    {
+     "title": "Haverstraat 1-B, Nieuw-Vennep",
+     "area": 180,
+     "rent_m2": 26.333333333333332,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-44432013-haverstraat-1-b/",
+     "km": 0.6
+    },
+    {
+     "title": "Haverstraat 6, Nieuw-Vennep",
+     "area": 367,
+     "rent_m2": 106.26702997275204,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-80992759-haverstraat-6/",
+     "km": 0.7
+    },
+    {
+     "title": "Haverstraat 6, Nieuw-Vennep",
+     "area": 285,
+     "rent_m2": 124.21052631578948,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-80992748-haverstraat-6/",
+     "km": 0.7
+    },
+    {
+     "title": "Frankweg 45-C, Nieuw-Vennep",
+     "area": 164,
+     "rent_m2": 146.34146341463415,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-80987664-frankweg-45-c/",
+     "km": 1.7
+    },
+    {
+     "title": "Pesetaweg 123, Nieuw-Vennep",
+     "area": 158,
+     "rent_m2": 129.0379746835443,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-44430630-pesetaweg-123/",
+     "km": 1.7
+    },
+    {
+     "title": "Pesetaweg 129, Nieuw-Vennep",
+     "area": 290,
+     "rent_m2": 107.58620689655173,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-80964831-pesetaweg-129/",
+     "km": 1.8
+    },
+    {
+     "title": "Pesetaweg 77-D, Nieuw-Vennep",
+     "area": 240,
+     "rent_m2": 99.25,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-44442847-pesetaweg-77-d/",
+     "km": 1.8
+    },
+    {
+     "title": "Frankweg 21, Nieuw-Vennep",
+     "area": 194,
+     "rent_m2": 114.43298969072166,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-43314591-frankweg-21/",
+     "km": 1.8
+    },
+    {
+     "title": "Frankweg 37, Nieuw-Vennep",
+     "area": 190,
+     "rent_m2": 116.84210526315789,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-43117933-frankweg-37/",
+     "km": 1.8
+    },
+    {
+     "title": "Drachmeweg 145-L, Nieuw-Vennep",
+     "area": 235,
+     "rent_m2": 138.29787234042553,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-89764462-drachmeweg-145-l/",
+     "km": 2.1
+    }
+   ]
+  },
+  "deal": {
+   "ask": 400000,
+   "area": 310,
+   "rent": 32798,
+   "exit_yield": 0.0725,
+   "price": 340000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 381622.77914614126,
+  "breakeven_discount": 0.04594305213464689,
+  "offer": 340000.0,
+  "passes": true,
+  "profit_at_ask": -20582.487356321828,
+  "net_at_offer": 37760.18524137932,
+  "sale": 452386.20689655177
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/maassluis/object-44508528-govert-van-wijnkade-18/",
+  "title": "Bedrijfshal Maassluis | Zoek bedrijfshallen te koop: Govert van Wijnkade 18 3144 EE Maassluis [funda in business]",
+  "address": {
+   "street": "Govert van Wijnkade 18",
+   "postcode": "3144 EE",
+   "city": "Maassluis"
+  },
+  "lat": 51.91948724,
+  "lon": 4.2497475,
+  "slug": "maassluis",
+  "territory": "rotterdam",
+  "place": {
+   "territory": "rotterdam",
+   "name": "Роттердам целиком",
+   "short": "Роттердам целиком",
+   "body": "Роттердам выбран целиком, вне листов файла с картами: подходит объект в любой части муниципалитета, включая порт, Масвлакте и Хук-ван-Холланд.",
+   "whole": true,
+   "metres": 742,
+   "inside": false,
+   "point": [
+    51.921894726260746,
+    4.489273114838015
+   ],
+   "drive_min": 20,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 1.8,
+   "min": 3,
+   "ref": "A20"
+  },
+  "price": 850000,
+  "area": 529,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 15,
+    "effective_area": 529.0,
+    "mezzanine": 0.0,
+    "comps_m2": 142.4731182795699,
+    "ask": null,
+    "rent": 69338.81720430107,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.075,
+   "exit_notes": [],
+   "year": 1885,
+   "new_build": false,
+   "shell": false,
+   "condition": "good",
+   "vacant": {
+    "n": 7,
+    "m2": 1656.0509554140128
+   },
+   "comps": [
+    {
+     "title": "3e Industriestraat 23-H, Vlaardingen",
+     "area": 333,
+     "rent_m2": 122.52252252252252,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/vlaardingen/object-80906132-3e-industriestraat-23-h/",
+     "km": 5.8
+    },
+    {
+     "title": "Industrieweg 26, Vlaardingen",
+     "area": 314,
+     "rent_m2": 150.95541401273886,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/vlaardingen/object-43348613-industrieweg-26/",
+     "km": 5.8
+    },
+    {
+     "title": "Ir. Herman de Grootweg 4-6, Spijkenisse",
+     "area": 800,
+     "rent_m2": 82.5,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/spijkenisse/object-42372154-ir-herman-de-grootweg-4-6/",
+     "km": 9.1
+    },
+    {
+     "title": "Calandstraat 79, Schiedam",
+     "area": 670,
+     "rent_m2": 98.50746268656717,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/schiedam/object-89754899-calandstraat-79/",
+     "km": 10.4
+    },
+    {
+     "title": "Conradstraat 18, Schiedam",
+     "area": 266,
+     "rent_m2": 145.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/schiedam/object-43237883-conradstraat-18/",
+     "km": 10.6
+    },
+    {
+     "title": "Sevillaweg 104, Rotterdam",
+     "area": 305,
+     "rent_m2": 147.54098360655738,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-44567698-sevillaweg-104/",
+     "km": 10.9
+    },
+    {
+     "title": "Cairostraat 53, Rotterdam",
+     "area": 315,
+     "rent_m2": 107.61904761904762,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-89533442-cairostraat-53/",
+     "km": 10.9
+    },
+    {
+     "title": "Innsbruckweg 45, Rotterdam",
+     "area": 367,
+     "rent_m2": 108.71934604904632,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-43381967-innsbruckweg-45/",
+     "km": 11.5
+    },
+    {
+     "title": "Innsbruckweg 198-200, Rotterdam",
+     "area": 531,
+     "rent_m2": 121.80790960451978,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-80945710-innsbruckweg-198-200/",
+     "km": 11.6
+    },
+    {
+     "title": "Innsbruckweg 122, Rotterdam",
+     "area": 664,
+     "rent_m2": 149.09638554216866,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-44459737-innsbruckweg-122/",
+     "km": 11.6
+    },
+    {
+     "title": "Innsbruckweg 108, Rotterdam",
+     "area": 556,
+     "rent_m2": 157.37410071942446,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-43149377-innsbruckweg-108/",
+     "km": 11.6
+    },
+    {
+     "title": "Innsbruckweg 110, Rotterdam",
+     "area": 558,
+     "rent_m2": 142.4731182795699,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-43149367-innsbruckweg-110/",
+     "km": 11.6
+    },
+    {
+     "title": "Innsbruckweg 112, Rotterdam",
+     "area": 558,
+     "rent_m2": 142.4731182795699,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-43149365-innsbruckweg-112/",
+     "km": 11.6
+    },
+    {
+     "title": "Innsbruckweg 114, Rotterdam",
+     "area": 558,
+     "rent_m2": 142.4731182795699,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-43149252-innsbruckweg-114/",
+     "km": 11.6
+    },
+    {
+     "title": "Innsbruckweg 116, Rotterdam",
+     "area": 556,
+     "rent_m2": 142.98561151079136,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-43149255-innsbruckweg-116/",
+     "km": 11.6
+    }
+   ]
+  },
+  "deal": {
+   "ask": 850000,
+   "area": 529,
+   "rent": 69339,
+   "exit_yield": 0.075,
+   "price": 720000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 801517.7678571428,
+  "breakeven_discount": 0.05703792016806719,
+  "offer": 720000.0,
+  "passes": true,
+  "profit_at_ask": -54300.09999999998,
+  "net_at_offer": 73952.91900000002,
+  "sale": 924520.0
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/schiedam/object-44434847-jan-van-galenstraat-42/",
+  "title": "Bedrijfshal Schiedam | Zoek bedrijfshallen te koop: Jan van Galenstraat 42 3115 JG Schiedam [funda in business]",
+  "address": {
+   "street": "Jan van Galenstraat 42",
+   "postcode": "3115 JG",
+   "city": "Schiedam"
+  },
+  "lat": 51.90559332,
+  "lon": 4.3750866,
+  "slug": "schiedam",
+  "territory": "rotterdam",
+  "place": {
+   "territory": "rotterdam",
+   "name": "Роттердам целиком",
+   "short": "Роттердам целиком",
+   "body": "Роттердам выбран целиком, вне листов файла с картами: подходит объект в любой части муниципалитета, включая порт, Масвлакте и Хук-ван-Холланд.",
+   "whole": true,
+   "metres": 739,
+   "inside": false,
+   "point": [
+    51.921894726260746,
+    4.489273114838015
+   ],
+   "drive_min": 15,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 0.7,
+   "min": 2,
+   "ref": "A4"
+  },
+  "price": 350000,
+  "area": 221,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 15,
+    "effective_area": 221.0,
+    "mezzanine": 0.0,
+    "comps_m2": 142.85714285714286,
+    "ask": null,
+    "rent": 29045.71428571429,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": 2049,
+    "perpetual": false
+   },
+   "exit_yield": 0.075,
+   "exit_notes": [],
+   "year": 2000,
+   "new_build": false,
+   "shell": false,
+   "condition": "good",
+   "vacant": {
+    "n": 15,
+    "m2": 1884.6153846153845
+   },
+   "comps": [
+    {
+     "title": "Mercuriusweg 2-H, Schiedam",
+     "area": 230,
+     "rent_m2": 97.82608695652173,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/schiedam/object-44400453-mercuriusweg-2-h/",
+     "km": 2.7
+    },
+    {
+     "title": "3e Industriestraat 23-H, Vlaardingen",
+     "area": 333,
+     "rent_m2": 122.52252252252252,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/vlaardingen/object-80906132-3e-industriestraat-23-h/",
+     "km": 3.0
+    },
+    {
+     "title": "Industrieweg 26, Vlaardingen",
+     "area": 314,
+     "rent_m2": 150.95541401273886,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/vlaardingen/object-43348613-industrieweg-26/",
+     "km": 3.2
+    },
+    {
+     "title": "Conradstraat 18, Schiedam",
+     "area": 266,
+     "rent_m2": 145.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/schiedam/object-43237883-conradstraat-18/",
+     "km": 3.3
+    },
+    {
+     "title": "Kommiezenlaan 25, Schiedam",
+     "area": 189,
+     "rent_m2": 142.85714285714286,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/schiedam/object-44554733-kommiezenlaan-25/",
+     "km": 3.3
+    },
+    {
+     "title": "Keileweg 28, Rotterdam",
+     "area": 410,
+     "rent_m2": 150.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-44412741-keileweg-28/",
+     "km": 3.8
+    },
+    {
+     "title": "Wilkstraat 17, Rotterdam",
+     "area": 204,
+     "rent_m2": 150.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-80992286-wilkstraat-17/",
+     "km": 3.9
+    },
+    {
+     "title": "Wilkstraat 25, Rotterdam",
+     "area": 208,
+     "rent_m2": 155.76923076923077,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-44572246-wilkstraat-25/",
+     "km": 3.9
+    },
+    {
+     "title": "Sevillaweg 104, Rotterdam",
+     "area": 305,
+     "rent_m2": 147.54098360655738,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-44567698-sevillaweg-104/",
+     "km": 4.2
+    },
+    {
+     "title": "Kiotoweg 337, Rotterdam",
+     "area": 200,
+     "rent_m2": 111.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-80977185-kiotoweg-337/",
+     "km": 4.3
+    },
+    {
+     "title": "Cairostraat 53, Rotterdam",
+     "area": 315,
+     "rent_m2": 107.61904761904762,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-89533442-cairostraat-53/",
+     "km": 4.5
+    },
+    {
+     "title": "Kiotoweg 38, Rotterdam",
+     "area": 230,
+     "rent_m2": 135.65217391304347,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-80980977-kiotoweg-38/",
+     "km": 4.6
+    },
+    {
+     "title": "Innsbruckweg 45, Rotterdam",
+     "area": 367,
+     "rent_m2": 108.71934604904632,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-43381967-innsbruckweg-45/",
+     "km": 5.1
+    },
+    {
+     "title": "Zestienhovensekade 176-A, Rotterdam",
+     "area": 324,
+     "rent_m2": 118.51851851851852,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-80897252-zestienhovensekade-176-a/",
+     "km": 5.5
+    },
+    {
+     "title": "Ambachtsstraat 9-c, Poortugaal",
+     "area": 120,
+     "rent_m2": 165.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/poortugaal/object-43281399-ambachtsstraat-9-c/",
+     "km": 5.6
+    }
+   ]
+  },
+  "deal": {
+   "ask": 350000,
+   "area": 221,
+   "rent": 29046,
+   "exit_yield": 0.075,
+   "price": 290000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 325391.6071428571,
+  "breakeven_discount": 0.07030969387755115,
+  "offer": 290000.0,
+  "passes": true,
+  "profit_at_ask": -27561.400000000023,
+  "net_at_offer": 32107.26599999998,
+  "sale": 387280.0
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-44561285-raasdorperweg-193-b/",
+  "title": "Bedrijfshal Lijnden | Zoek bedrijfshallen te koop en te huur: Raasdorperweg 193-B 1175 KV Lijnden [funda in business]",
+  "address": {
+   "street": "Raasdorperweg 193-B",
+   "postcode": "1175 KV",
+   "city": "Lijnden"
+  },
+  "lat": 52.35994324,
+  "lon": 4.74930197,
+  "slug": "lijnden",
+  "territory": "ai-amsterdam",
+  "place": {
+   "territory": "ai-amsterdam",
+   "name": "Слотердейк",
+   "short": "Слотердейк",
+   "body": "По адресу Kingsfordweg 151 зарегистрирована **NVIDIA Dutch B.V.** — нидерландская компания NVIDIA, главного производителя ускорителей для обучения и работы моделей ИИ.",
+   "near": "до вокзала Амстердама — 9 минут, до Схипхола — 17",
+   "whole": false,
+   "metres": 5664,
+   "inside": false,
+   "point": [
+    52.39017301429274,
+    4.8394860563256366
+   ],
+   "drive_min": 14,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 4.0,
+   "min": 7,
+   "ref": "A200"
+  },
+  "price": 425000,
+  "area": 229,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 15,
+    "effective_area": 229.0,
+    "mezzanine": 0.0,
+    "comps_m2": 154.6875,
+    "ask": 33000,
+    "rent": 32589.5625,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.07,
+   "exit_notes": [],
+   "year": 2011,
+   "new_build": false,
+   "shell": false,
+   "condition": "mid",
+   "vacant": {
+    "n": 15,
+    "m2": 2058.823529411765
+   },
+   "comps": [
+    {
+     "title": "Raasdorperweg 175, Lijnden",
+     "area": 232,
+     "rent_m2": 90.51724137931035,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-43061812-raasdorperweg-175/",
+     "km": 0.1
+    },
+    {
+     "title": "Lijnderdijk 183-D, Lijnden",
+     "area": 346,
+     "rent_m2": 136.9942196531792,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-80859783-lijnderdijk-183-d/",
+     "km": 0.3
+    },
+    {
+     "title": "Raasdorperweg 152-H, Lijnden",
+     "area": 128,
+     "rent_m2": 126.09375,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-43240259-raasdorperweg-152-h/",
+     "km": 0.5
+    },
+    {
+     "title": "Raasdorperweg 154-P, Lijnden",
+     "area": 128,
+     "rent_m2": 154.6875,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-89789594-raasdorperweg-154-p/",
+     "km": 0.6
+    },
+    {
+     "title": "New Yorkstraat 37-39, Lijnden",
+     "area": 176,
+     "rent_m2": 204.54545454545453,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-44419720-new-yorkstraat-37-39/",
+     "km": 1.4
+    },
+    {
+     "title": "Melbournestraat 3, Lijnden",
+     "area": 154,
+     "rent_m2": 175.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-43711455-melbournestraat-3/",
+     "km": 1.7
+    },
+    {
+     "title": "Jan Rebelstraat 10-B, Amsterdam",
+     "area": 335,
+     "rent_m2": 150.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-43240457-jan-rebelstraat-10-b/",
+     "km": 2.5
+    },
+    {
+     "title": "Osdorperweg 452-K, Amsterdam",
+     "area": 152,
+     "rent_m2": 209.21052631578948,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44445101-osdorperweg-452-k/",
+     "km": 2.6
+    },
+    {
+     "title": "Weerenweg 26-U05, Zwanenburg",
+     "area": 273,
+     "rent_m2": 134.06593406593407,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zwanenburg/object-44518972-weerenweg-26-u05/",
+     "km": 2.8
+    },
+    {
+     "title": "Kalkovenplein 3-C, Halfweg",
+     "area": 345,
+     "rent_m2": 245.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/halfweg/object-44531373-kalkovenplein-3-c/",
+     "km": 2.8
+    },
+    {
+     "title": "Hybrideweg 181, Vijfhuizen",
+     "area": 172,
+     "rent_m2": 156.97674418604652,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/vijfhuizen/object-43240454-hybrideweg-181/",
+     "km": 3.5
+    },
+    {
+     "title": "Spaarnwouderweg 1129-M, Vijfhuizen",
+     "area": 132,
+     "rent_m2": 72.27272727272727,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/vijfhuizen/object-43301287-spaarnwouderweg-1129-m/",
+     "km": 3.5
+    },
+    {
+     "title": "Limmerick 40, Amsterdam",
+     "area": 140,
+     "rent_m2": 171.42857142857142,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44443241-limmerick-40/",
+     "km": 3.8
+    },
+    {
+     "title": "Banterij 8, Amsterdam",
+     "area": 260,
+     "rent_m2": 148.3846153846154,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44430119-banterij-8/",
+     "km": 3.8
+    },
+    {
+     "title": "Doblijn 15, Amsterdam",
+     "area": 140,
+     "rent_m2": 184.28571428571428,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44427127-doblijn-15/",
+     "km": 3.8
+    }
+   ]
+  },
+  "deal": {
+   "ask": 425000,
+   "area": 229,
+   "rent": 32590,
+   "exit_yield": 0.07,
+   "price": 355000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 395078.975340136,
+  "breakeven_discount": 0.07040241096438593,
+  "offer": 355000.0,
+  "passes": true,
+  "profit_at_ask": -33511.54761904763,
+  "net_at_offer": 36359.64642857142,
+  "sale": 465571.4285714285
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/wieringerwerf/object-43142682-schelphorst-4/",
+  "title": "Bedrijfshal Wieringerwerf | Zoek bedrijfshallen te koop: Schelphorst 4 1771 SL Wieringerwerf [funda in business]",
+  "address": {
+   "street": "Schelphorst 4",
+   "postcode": "1771 SL",
+   "city": "Wieringerwerf"
+  },
+  "lat": 52.83599247,
+  "lon": 5.01540111,
+  "slug": "wieringerwerf",
+  "territory": "agriport",
+  "place": {
+   "territory": "agriport",
+   "name": "Промзона Мидденмера",
+   "short": "Мидденмер",
+   "body": "Небольшая промзона деревни Мидденмер — ближайшая к серверным залам: до Microsoft 8 км. Компаний ИИ здесь нет; связь с темой — близость к Agriport. В зоне мастерские и склады местных фирм, в том числе строительной Tichem Bouw.",
+   "near": "до Agriport — 12 минут, до вокзала Хорна — 20",
+   "whole": false,
+   "metres": 1660,
+   "inside": false,
+   "point": [
+    52.817490412926006,
+    4.995330078885921
+   ],
+   "drive_min": 5,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 1.3,
+   "min": 2,
+   "ref": "A7"
+  },
+  "price": 575000,
+  "area": 694,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 14,
+    "effective_area": 694.0,
+    "mezzanine": 0.0,
+    "comps_m2": 79.27912662486989,
+    "ask": null,
+    "rent": 50618.13676744693,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.0825,
+   "exit_notes": [],
+   "year": 1993,
+   "new_build": false,
+   "shell": false,
+   "condition": "good",
+   "vacant": {
+    "n": 3,
+    "m2": null
+   },
+   "comps": [
+    {
+     "title": "Agriport 9-21, Middenmeer",
+     "area": 552,
+     "rent_m2": 72.28260869565217,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/middenmeer/object-43145977-agriport-9-21/",
+     "km": null
+    },
+    {
+     "title": "Agriport 11-12, Middenmeer",
+     "area": 379,
+     "rent_m2": 75.98944591029024,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/middenmeer/object-43033929-agriport-11-12/",
+     "km": null
+    },
+    {
+     "title": "W.M. Dudokweg 11, Heerhugowaard",
+     "area": 762,
+     "rent_m2": 109.44881889763779,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44573588-wm-dudokweg-11/",
+     "km": null
+    },
+    {
+     "title": "Newtonstraat 44, Heerhugowaard",
+     "area": 1308,
+     "rent_m2": 82.56880733944953,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44522402-newtonstraat-44/",
+     "km": null
+    },
+    {
+     "title": "Ampèrestraat 46, Heerhugowaard",
+     "area": 976,
+     "rent_m2": 153.68852459016392,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44586253-amperestraat-46/",
+     "km": null
+    },
+    {
+     "title": "Nijverheidsstraat 13, Heerhugowaard",
+     "area": 1278,
+     "rent_m2": 56.798122065727696,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44468762-nijverheidsstraat-13/",
+     "km": null
+    },
+    {
+     "title": "Newtonstraat 44, Heerhugowaard",
+     "area": 850,
+     "rent_m2": 84.70588235294117,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/heerhugowaard/object-44458904-newtonstraat-44/",
+     "km": null
+    },
+    {
+     "title": "De Corantijn 15-A, Zwaag",
+     "area": 450,
+     "rent_m2": 144.44444444444446,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zwaag/object-80806129-de-corantijn-15-a/",
+     "km": null
+    },
+    {
+     "title": "Nijverheidsweg 3-A, Medemblik",
+     "area": 531,
+     "rent_m2": 58.19209039548023,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/medemblik/object-44404684-nijverheidsweg-3-a/",
+     "km": null
+    },
+    {
+     "title": "Robbenkoog 9-A, Alkmaar",
+     "area": 490,
+     "rent_m2": 90.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44540293-robbenkoog-9-a/",
+     "km": null
+    },
+    {
+     "title": "Marconistraat 18, Alkmaar",
+     "area": 1000,
+     "rent_m2": 30.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-44451744-marconistraat-18/",
+     "km": null
+    },
+    {
+     "title": "Berenkoog 49, Alkmaar",
+     "area": 808,
+     "rent_m2": 70.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-89596398-berenkoog-49/",
+     "km": null
+    },
+    {
+     "title": "Berenkoog 38, Alkmaar",
+     "area": 1050,
+     "rent_m2": 70.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-43398109-berenkoog-38/",
+     "km": null
+    },
+    {
+     "title": "Herculesstraat 57, Alkmaar",
+     "area": 1248,
+     "rent_m2": 118.18910256410257,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/alkmaar/object-43810741-herculesstraat-57/",
+     "km": null
+    }
+   ]
+  },
+  "deal": {
+   "ask": 575000,
+   "area": 694,
+   "rent": 50618,
+   "exit_yield": 0.0825,
+   "price": 465000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 519050.2272727272,
+  "breakeven_discount": 0.09730395256917013,
+  "offer": 465000.0,
+  "passes": true,
+  "profit_at_ask": -62663.745454545366,
+  "net_at_offer": 49034.36618181825,
+  "sale": 613551.5151515151
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-44492789-tokyostraat-17-p/",
+  "title": "Bedrijfshal Lijnden | Zoek bedrijfshallen te koop: Tokyostraat 17-P 1175 RB Lijnden [funda in business]",
+  "address": {
+   "street": "Tokyostraat 17-P",
+   "postcode": "1175 RB",
+   "city": "Lijnden"
+  },
+  "lat": 52.34673718,
+  "lon": 4.76274325,
+  "slug": "lijnden",
+  "territory": "ai-amsterdam",
+  "place": {
+   "territory": "ai-amsterdam",
+   "name": "Слотердейк",
+   "short": "Слотердейк",
+   "body": "По адресу Kingsfordweg 151 зарегистрирована **NVIDIA Dutch B.V.** — нидерландская компания NVIDIA, главного производителя ускорителей для обучения и работы моделей ИИ.",
+   "near": "до вокзала Амстердама — 9 минут, до Схипхола — 17",
+   "whole": false,
+   "metres": 5947,
+   "inside": false,
+   "point": [
+    52.39017301429274,
+    4.8394860563256366
+   ],
+   "drive_min": 12,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 0.8,
+   "min": 1,
+   "ref": "A9"
+  },
+  "price": 327500,
+  "area": 151,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 15,
+    "effective_area": 151.0,
+    "mezzanine": 0.0,
+    "comps_m2": 171.42857142857142,
+    "ask": null,
+    "rent": 23814.857142857145,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.0675,
+   "exit_notes": [
+    "здание после 2015 года"
+   ],
+   "year": 2019,
+   "new_build": false,
+   "shell": false,
+   "condition": "good",
+   "vacant": {
+    "n": 15,
+    "m2": 2058.823529411765
+   },
+   "comps": [
+    {
+     "title": "New Yorkstraat 37-39, Lijnden",
+     "area": 176,
+     "rent_m2": 204.54545454545453,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-44419720-new-yorkstraat-37-39/",
+     "km": 0.4
+    },
+    {
+     "title": "Melbournestraat 3, Lijnden",
+     "area": 154,
+     "rent_m2": 175.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-43711455-melbournestraat-3/",
+     "km": 0.4
+    },
+    {
+     "title": "Raasdorperweg 150-F, Lijnden",
+     "area": 100,
+     "rent_m2": 174.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-44545620-raasdorperweg-150-f/",
+     "km": 1.5
+    },
+    {
+     "title": "Raasdorperweg 154-P, Lijnden",
+     "area": 128,
+     "rent_m2": 154.6875,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-89789594-raasdorperweg-154-p/",
+     "km": 1.5
+    },
+    {
+     "title": "Raasdorperweg 152-H, Lijnden",
+     "area": 128,
+     "rent_m2": 126.09375,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-43240259-raasdorperweg-152-h/",
+     "km": 1.5
+    },
+    {
+     "title": "Raasdorperweg 152-N, Lijnden",
+     "area": 106,
+     "rent_m2": 169.81132075471697,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-89482477-raasdorperweg-152-n/",
+     "km": 1.5
+    },
+    {
+     "title": "Raasdorperweg 193-B, Lijnden",
+     "area": 229,
+     "rent_m2": 144.1048034934498,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-44561285-raasdorperweg-193-b/",
+     "km": 1.7
+    },
+    {
+     "title": "Raasdorperweg 175, Lijnden",
+     "area": 232,
+     "rent_m2": 90.51724137931035,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/lijnden/object-43061812-raasdorperweg-175/",
+     "km": 1.8
+    },
+    {
+     "title": "Jan Rebelstraat 19-G13, Amsterdam",
+     "area": 84,
+     "rent_m2": 285.7142857142857,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-80921889-jan-rebelstraat-19-g13/",
+     "km": 2.2
+    },
+    {
+     "title": "Jan Rebelstraat 19-G19, Amsterdam",
+     "area": 84,
+     "rent_m2": 257.14285714285717,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-80963465-jan-rebelstraat-19-g19/",
+     "km": 2.2
+    },
+    {
+     "title": "Osdorperweg 452-K, Amsterdam",
+     "area": 152,
+     "rent_m2": 209.21052631578948,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44445101-osdorperweg-452-k/",
+     "km": 2.5
+    },
+    {
+     "title": "Weerenweg 26-U05, Zwanenburg",
+     "area": 273,
+     "rent_m2": 134.06593406593407,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zwanenburg/object-44518972-weerenweg-26-u05/",
+     "km": 4.5
+    },
+    {
+     "title": "Limmerick 40, Amsterdam",
+     "area": 140,
+     "rent_m2": 171.42857142857142,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44443241-limmerick-40/",
+     "km": 4.9
+    },
+    {
+     "title": "Banterij 8, Amsterdam",
+     "area": 260,
+     "rent_m2": 148.3846153846154,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44430119-banterij-8/",
+     "km": 4.9
+    },
+    {
+     "title": "Doblijn 15, Amsterdam",
+     "area": 140,
+     "rent_m2": 184.28571428571428,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44427127-doblijn-15/",
+     "km": 4.9
+    }
+   ]
+  },
+  "deal": {
+   "ask": 327500,
+   "area": 151,
+   "rent": 23815,
+   "exit_yield": 0.0675,
+   "price": 265000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 295383.3002645502,
+  "breakeven_discount": 0.09806625873419783,
+  "offer": 265000.0,
+  "passes": true,
+  "profit_at_ask": -35970.70370370371,
+  "net_at_offer": 27563.729999999996,
+  "sale": 352814.8148148148
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-89723538-karwijstraat-29-c/",
+  "title": "Bedrijfshal Nieuw-Vennep | Zoek bedrijfshallen te koop: Karwijstraat 29-C 2153 GP Nieuw-Vennep [funda in business]",
+  "address": {
+   "street": "Karwijstraat 29-C",
+   "postcode": "2153 GP",
+   "city": "Nieuw-Vennep"
+  },
+  "lat": 52.26475477,
+  "lon": 4.64914209,
+  "slug": "nieuw-vennep",
+  "territory": "ai-schiphol",
+  "place": {
+   "territory": "ai-schiphol",
+   "name": "Бёкенхорст, Хофддорп",
+   "short": "Бёкенхорст",
+   "body": "Головной офис **Interxion** (Scorpius 30) — европейского оператора центров обработки данных; с 2020 года Interxion входит в американскую Digital Realty.",
+   "near": "до терминала Схипхола — 8 минут, до вокзала Амстердама — 24",
+   "whole": false,
+   "metres": 4439,
+   "inside": false,
+   "point": [
+    52.28867471538172,
+    4.712507608402935
+   ],
+   "drive_min": 9,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 5.5,
+   "min": 7,
+   "ref": "A4"
+  },
+  "price": 425000,
+  "area": 310,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 15,
+    "effective_area": 310.0,
+    "mezzanine": 0.0,
+    "comps_m2": 115.0,
+    "ask": null,
+    "rent": 32798.0,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.0725,
+   "exit_notes": [],
+   "year": 2009,
+   "new_build": false,
+   "shell": false,
+   "condition": "good",
+   "vacant": {
+    "n": 15,
+    "m2": 1895.5696202531647
+   },
+   "comps": [
+    {
+     "title": "Boekweitstraat 15, Nieuw-Vennep",
+     "area": 410,
+     "rent_m2": 115.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-80846168-boekweitstraat-15/",
+     "km": 0.1
+    },
+    {
+     "title": "Boekweitstraat 13, Nieuw-Vennep",
+     "area": 414,
+     "rent_m2": 120.07004830917874,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-89528350-boekweitstraat-13/",
+     "km": 0.1
+    },
+    {
+     "title": "Boekweitstraat 90, Nieuw-Vennep",
+     "area": 560,
+     "rent_m2": 112.5,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-43517094-boekweitstraat-90/",
+     "km": 0.2
+    },
+    {
+     "title": "Luzernestraat 48, Nieuw-Vennep",
+     "area": 505,
+     "rent_m2": 78.41584158415841,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-44520914-luzernestraat-48/",
+     "km": 0.4
+    },
+    {
+     "title": "Haverstraat 1-H, Nieuw-Vennep",
+     "area": 158,
+     "rent_m2": 159.49367088607596,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-80890756-haverstraat-1-h/",
+     "km": 0.6
+    },
+    {
+     "title": "Haverstraat 1-B, Nieuw-Vennep",
+     "area": 180,
+     "rent_m2": 26.333333333333332,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-44432013-haverstraat-1-b/",
+     "km": 0.6
+    },
+    {
+     "title": "Haverstraat 6, Nieuw-Vennep",
+     "area": 367,
+     "rent_m2": 106.26702997275204,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-80992759-haverstraat-6/",
+     "km": 0.7
+    },
+    {
+     "title": "Haverstraat 6, Nieuw-Vennep",
+     "area": 285,
+     "rent_m2": 124.21052631578948,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-80992748-haverstraat-6/",
+     "km": 0.7
+    },
+    {
+     "title": "Pesetaweg 123, Nieuw-Vennep",
+     "area": 158,
+     "rent_m2": 129.0379746835443,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-44430630-pesetaweg-123/",
+     "km": 1.7
+    },
+    {
+     "title": "Frankweg 45-C, Nieuw-Vennep",
+     "area": 164,
+     "rent_m2": 146.34146341463415,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-80987664-frankweg-45-c/",
+     "km": 1.8
+    },
+    {
+     "title": "Pesetaweg 129, Nieuw-Vennep",
+     "area": 290,
+     "rent_m2": 107.58620689655173,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-80964831-pesetaweg-129/",
+     "km": 1.8
+    },
+    {
+     "title": "Pesetaweg 77-D, Nieuw-Vennep",
+     "area": 240,
+     "rent_m2": 99.25,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-44442847-pesetaweg-77-d/",
+     "km": 1.8
+    },
+    {
+     "title": "Frankweg 21, Nieuw-Vennep",
+     "area": 194,
+     "rent_m2": 114.43298969072166,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-43314591-frankweg-21/",
+     "km": 1.8
+    },
+    {
+     "title": "Frankweg 37, Nieuw-Vennep",
+     "area": 190,
+     "rent_m2": 116.84210526315789,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-43117933-frankweg-37/",
+     "km": 1.8
+    },
+    {
+     "title": "Drachmeweg 145-L, Nieuw-Vennep",
+     "area": 235,
+     "rent_m2": 138.29787234042553,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuw-vennep/object-89764462-drachmeweg-145-l/",
+     "km": 2.1
+    }
+   ]
+  },
+  "deal": {
+   "ask": 425000,
+   "area": 310,
+   "rent": 32798,
+   "exit_yield": 0.0725,
+   "price": 340000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 381622.7791461412,
+  "breakeven_discount": 0.10206404906790312,
+  "offer": 340000.0,
+  "passes": true,
+  "profit_at_ask": -48582.48735632183,
+  "net_at_offer": 37760.18524137932,
+  "sale": 452386.20689655177
+ }
+]

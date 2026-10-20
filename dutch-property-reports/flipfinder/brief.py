@@ -26,6 +26,7 @@ from flipfinder import config as C  # noqa: E402
 from flipfinder import fetch, locate  # noqa: E402
 from flipfinder.model import Deal, capex, evaluate, run  # noqa: E402
 from reportgen import maps, media  # noqa: E402
+from reportgen import selection as S  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 FONTS = C.ROOT / "assets" / "fonts"
@@ -62,6 +63,10 @@ FEATURES = {"lichtstraten": "световые фонари", "lichtstraat": "с�
             "goederenlift": "грузовой лифт", "alarminstallatie": "сигнализация", "topkoeling": "охлаждение",
             "zonnepanelen": "солнечные панели", "laadkuil": "погрузочная платформа", "loading dock": "погрузочные доки",
             "cv-ketel": "отопление", "verwarming": "отопление", "camerabewaking": "видеонаблюдение"}
+FLOORS = re.compile(r"(begane grond|1e verdieping|eerste verdieping|2e verdieping|tweede verdieping|entresol)\W{0,6}"
+                    r"(?:ca\.?|circa)?\s*(\d{2,4})\s*m", re.I)
+FLOOR_RU = {"begane grond": "первый этаж", "1e verdieping": "второй этаж", "eerste verdieping": "второй этаж",
+            "2e verdieping": "третий этаж", "tweede verdieping": "третий этаж", "entresol": "антресоль"}
 MONTHS_NL = {"januari": "января", "februari": "февраля", "maart": "марта", "april": "апреля", "mei": "мая",
              "juni": "июня", "juli": "июля", "augustus": "августа", "september": "сентября", "oktober": "октября",
              "november": "ноября", "december": "декабря"}
@@ -125,14 +130,37 @@ def is_plan(path: Path) -> bool:
 
 
 def photos(rec: dict, cache: Path) -> tuple[list[dict], list[dict]]:
+    """Кадры объявления: планировки отдельно; в отчёт идут копии не больше 1600 пикселей по длинной стороне."""
     shots, plans = [], []
+    small = cache.parent / "img-a4"
+    small.mkdir(parents=True, exist_ok=True)
     for url in rec.get("photos") or []:
         try:
             path = media.fetch(url, cache)
         except Exception:                                      # noqa: BLE001 — кадр не загрузился
             continue
-        (plans if is_plan(path) else shots).append({"url": url, "src": path.resolve().as_uri()})
+        out = small / (path.stem + "-q76.jpg")
+        if not out.exists():
+            im = Image.open(path).convert("RGB")
+            im.thumbnail((1600, 1600))
+            im.save(out, "JPEG", quality=76, optimize=True)
+        (plans if is_plan(path) else shots).append({"url": url, "src": out.resolve().as_uri()})
     return shots, plans
+
+
+def photo_pages(shots: list[dict]) -> list[dict]:
+    """Кадры по страницам без пустых хвостов: 14 → 6 + 4 + 4; на странице с меньшим числом кадров они крупнее."""
+    pages = -(-len(shots) // 6)
+    counts = [6] * pages
+    i = pages - 1
+    while sum(counts) > len(shots):
+        counts[i] -= 2 if sum(counts) - len(shots) >= 2 else 1
+        i = i - 1 if i > 0 else pages - 1
+    out, start = [], 0
+    for n in counts:
+        out.append({"cls": f"g{n}", "shots": shots[start:start + n]})
+        start += n
+    return out
 
 
 # ------------------------------------------------------------------ графики: SVG, цвета из токенов страницы
@@ -199,27 +227,30 @@ def features_ru(rec: dict) -> list[str]:
     return found[:9]
 
 
-def investor_comps(listings: list[dict], territory: str, limit: int = 3) -> list[dict]:
-    """Сданные склады и мастерские на продаже в том же районе, где в объявлении есть аренда."""
+BELEGGING_ADDRESS = re.compile(r"te koop: (.+?) (\d{4} ?[A-Z]{2}) (.+?) \[")
+
+
+def investor_comps(listings: list[dict], here: tuple[float, float], limit: int = 3) -> list[dict]:
+    """Сданные склады и мастерские на продаже не дальше 15 км, где в объявлении названа аренда; ближайшие первыми."""
     out = []
     for r in listings:
-        if r.get("kind") != "belegging" or r.get("territory") != territory or not r.get("price"):
+        if r.get("kind") != "belegging" or not r.get("price") or r.get("function") not in ("Belegging", "Bedrijfshal"):
             continue
-        d = (r.get("desc") or "").lower()
-        if not re.search(r"bedrijfsruimte|bedrijfshal|bedrijfspand|loods|magazijn|werkplaats", d):
+        d = re.sub(r"\s+", " ", r.get("desc") or "").lower()
+        if not re.search(r"bedrijfsruimte|bedrijfshal|bedrijfspand|bedrijfsunit|loods|magazijn|werkplaats", d) \
+                or re.search(r"\b(?:woning|woningen|appartement|appartementen|winkelruimte|winkelpand)\b", d):
             continue
         m = re.search(r"(?:huursom|huuropbrengst|huurinkomsten|jaarhuur|huurstroom|huurprijs)[^€]{0,90}€\s*([\d.]+)", d)
-        if not m:
+        a = BELEGGING_ADDRESS.search(r.get("title") or "")
+        if not m or not a:
             continue
-        rent = int(m.group(1).replace(".", ""))
-        if "per maand" in d[m.end():m.end() + 25]:
-            rent *= 12
+        rent = int(m.group(1).replace(".", "")) * (12 if "per maand" in d[m.end():m.end() + 25] else 1)
         y = rent / r["price"]
-        if 0.045 <= y <= 0.12:
-            name = re.search(r"te koop: (.+?) \d{4} ?[A-Z]{2} (.+?) \[", r.get("title") or "")
-            out.append({"name": f"{name.group(1)}, {name.group(2)}" if name else r["title"], "price": r["price"],
-                        "rent": rent, "yield": y})
-    return sorted(out, key=lambda c: c["price"])[:limit]
+        g = locate.geocode(f"{a.group(1)}, {a.group(2)} {a.group(3)}")
+        if 0.045 <= y <= 0.12 and g and locate.km(here, g[:2]) <= 15:
+            out.append({"name": f"{a.group(1)}, {a.group(3)}", "price": r["price"], "rent": rent, "yield": y,
+                        "km": locate.km(here, g[:2])})
+    return sorted(out, key=lambda c: c["km"])[:limit]
 
 
 def neighbours(pick: dict, limit: int = 4) -> list[dict]:
@@ -233,8 +264,21 @@ def neighbours(pick: dict, limit: int = 4) -> list[dict]:
             if r:
                 rows.append({"label": p["label"], "km": r[0], "min": round(r[1]), "about": p["about"]})
         return sorted(rows, key=lambda r: r["min"])[:limit]
-    return [{"label": a["label"], "km": a["km"], "min": a["min"], "about": ""}
-            for a in locate.anchors(lat, lon, pick["territory"], limit) if a["km"] is not None]
+    # в таблицу дорог — только то, что объяснено в описании района: каждая названная компания с пояснением
+    body = pick["place"].get("body") or ""
+    rows = [{"label": a["label"], "km": a["km"], "min": a["min"], "about": about(a["label"], pick["territory"])}
+            for a in locate.anchors(lat, lon, pick["territory"], 8) if a["km"] is not None]
+    return [r for r in rows if r["about"] or f"**{r['label']}**" in body][:limit]
+
+
+def about(label: str, territory: str) -> str:
+    """Пояснение к компании или площадке: предложение из описания района, где она названа именно так."""
+    for e in S.load()[2]["sheets"].get(territory, {}).get("entries", []):
+        for sentence in re.split(r"(?<=[.!?])\s+", e.get("body") or ""):
+            if f"**{label}**" in sentence:
+                sentence = re.sub(r"^(?:Здесь же|Там же|Рядом)\s+", "", sentence)
+                return sentence[0].upper() + sentence[1:]
+    return ""
 
 
 def why_here(pick: dict, near: list[dict]) -> list[str]:
@@ -244,20 +288,24 @@ def why_here(pick: dict, near: list[dict]) -> list[str]:
     body = place.get("body") or ""
     lead = (f"Здание расположено в районе **{place['short']}**." if place["ring"] == "zone" else
             f"Здание расположено в {place.get('drive_min')} минутах от района **{place['short']}**.")
-    return [f"{lead} {body}"]
+    out = [f"{lead} {body}"]
+    for n in near:
+        if n["about"] and n["about"] not in out and f"**{n['label']}**" not in body:
+            out.append(n["about"])
+    return out
 
 
 def checks(pick: dict, rec: dict) -> list[str]:
     info, out = pick["info"], []
     oc = info["owner"]
     if oc["canon"]:
-        out.append(f"**Земля в аренде:** кому платится € {num(oc['canon'])} в год, до какого года право и когда индексация.")
+        out.append(f"**Земля в аренде:** кому платится €\u00a0{num(oc['canon'])} в год, до какого года право и когда индексация.")
     if info.get("year") and info["year"] < 1994:
         out.append(f"**Асбест и кровля:** обследование здания {info['year']} года.")
     label = (rec.get("label") or "").strip()
     if not label or label[0] in "DEFG" or "Niet" in label:
         out.append("**Энергетический класс:** что нужно, чтобы офисная часть получила класс C.")
-    out.append(f"**Спрос:** брокер по аренде подтверждает ставку € {num(pick['deal']['rent'] / pick['area'])} за м² "
+    out.append(f"**Спрос:** брокер по аренде подтверждает ставку €\u00a0{num(pick['deal']['rent'] / pick['area'])} за м² "
                f"для {num(pick['area'])} м².")
     out.append("**План застройки:** разрешён ли вид деятельности будущего арендатора.")
     since = date_ru(rec.get("since"))
@@ -308,9 +356,9 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
         ("**Скидка в пределах порога.**" if ev["passes"] else "**Ближе всех к порогу.**")
         + f" В ноль при цене {eur(ev['breakeven'])}"
         + (f"; следующему кандидату нужно {pct(nxt['breakeven_discount'])}." if nxt else "."),
-        f"**Аренда по рынку.** В модели € {num(rent / area)} за м² в год"
+        f"**Аренда по рынку.** В модели €\u00a0{num(rent / area)} за м² в год"
         + (f": {pct(C.RENT_SAFETY, 0)} от средней ставки {plural(n_comps, 'предложения', 'предложений', 'предложений')} "
-           f"рядом (€ {num(med)})." if med else "."),
+           f"рядом (€\u00a0{num(med)})." if med else "."),
         f"**Дорога.** До магистрали {road['ref']} — {km(road['km'])}, {road['min']} мин"
         + (f"; до {near[0]['label']} — {near[0]['min']} мин." if near else "."),
     ]
@@ -318,40 +366,57 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
 
     # стр. 2
     hall, office = rec.get("hall"), rec.get("office")
-    parts = "; ".join(x for x in [f"зал {num(hall)} м²" if hall else "", f"офисы {num(office)} м²" if office else ""] if x)
+    desc = re.sub(r"\s+", " ", rec.get("desc") or "")
+    floors = [(FLOOR_RU[m.group(1).lower()], int(m.group(2))) for m in FLOORS.finditer(desc)]
+    if len(floors) >= 2 and abs(sum(a for _, a in floors) - area) <= 0.1 * area:
+        parts = ", ".join(f"{name} {num(a)} м²" for name, a in floors)
+    else:
+        parts = "; ".join(x for x in [f"зал {num(hall)} м²" if hall and (office or hall != area) else "",
+                                      f"офисы {num(office)} м²" if office else ""] if x)
+    height = re.sub(r"\s*m$", "\u00a0м", rec.get("height") or "") or "не указана"
     facts = [
         [("Площадь", f"{num(area)} м²" + (f": {parts}" if parts else "")
           + (f" (по описанию; {pick['area_note'].split(', ')[0]})" if pick.get("area_note") else "")),
-         ("Высота зала", rec.get("height") or "не указана"), ("Год постройки", str(year) if year else "не указан"),
+         ("Высота зала", height), ("Год постройки", str(year) if year else "не указан"),
          ("Энергетический класс", label if (label := (rec.get("label") or "").strip()) and "Niet" not in label else "не указан"),
          ("Участок", (f"{num(rec['plot'])} м²" if rec.get("plot") else "не указан")
-          + (", земля в аренде" if oc["canon"] or oc["lease_end"] else ""))],
+          )],
         [("Цена продавца", f"{eur(ask)}, налог 10,4 % за покупателем"), ("Цена за м²", eur(ask / area, 1)),
-         ("Арендатор", "нет, здание свободно"), ("Плата за землю", f"€ {num(oc['canon'])} в год" if oc["canon"] else "нет"),
+         ("Арендатор", "нет, здание свободно"), ("Земля", f"в аренде, €\u00a0{num(oc['canon'])} в год" if oc["canon"] else "в аренде" if oc["lease_end"]
+          else "в собственности, без платы" if re.search(r"eigen grond", desc, re.I) else "не указано"),
          ("На продаже", f"с {since}" if since and re.match(r"\d+ [а-я]", since) else (since or "не указано"))],
     ]
     feats = features_ru(rec)
     blocks = []
     if feats:
         blocks.append(("Оснащение", [(feats[0][0].upper() + feats[0][1:] + (", " + ", ".join(feats[1:]) if len(feats) > 1 else "") + ".")]))
+    cat = re.search(r"(?:milieu)?categorie (\d\.\d|\d)", desc, re.I)
+    if cat:
+        use = (f"По плану застройки здесь разрешены предприятия до категории {cat.group(1).replace('.', ',')} "
+               "по шкале воздействия на соседей (от 1 до 6): склад, мастерская, производство.")
+        if re.search(r"ten hoogste 50\s?%[^.]{0,80}kantoor", desc, re.I):
+            use += " Офисы — не больше половины площади."
+        blocks.append(("Назначение", [use]))
     if oc["canon"] or oc["lease_end"]:
         land = "Участок в эрфпахте — долгосрочной аренде земли"
-        land += f": владелец платит **€ {num(oc['canon'])} в год**." if oc["canon"] else "."
+        land += f": владелец платит **€\u00a0{num(oc['canon'])} в год**." if oc["canon"] else "."
         if oc["lease_end"]:
             land += f" Право на землю действует до {oc['lease_end']} года."
         if oc["bought_off_until"]:
             land += f" Плата внесена вперёд до {oc['bought_off_until']} года."
         blocks.append(("Земля", [land]))
     blocks.append(("Что сделать перед сдачей", [
-        f"**Ремонт:** € {num(C.CAPEX_M2_SHELL if d.shell else C.CAPEX_M2)} за м² и резерв — {eur(b['works'])} без НДС.",
+        f"**Ремонт:** €\u00a0{num(C.CAPEX_M2_SHELL if d.shell else C.CAPEX_M2)} за м² и резерв — {eur(b['works'])} без НДС.",
         f"**Арендатор:** брокер берёт 15 % годовой аренды, арендатор получает {months(d.rent_free)} без платы.",
         "**Договор:** 5 лет, индексация по инфляции, аренда с НДС.",
         "**Покупка:** договор с условием проверки здания и документов."]))
     images = ([{"src": plans[0]["src"], "cls": "plan"}] if plans else []) + \
-             ([{"src": shots[i]["src"], "cls": ""} for i in (3, 4) if len(shots) > i][: 2 - (1 if plans else 0)])
+             [{"src": shots[i]["src"], "cls": ""} for i in (1, 2) if len(shots) > i][: 2 - (1 if plans else 0)]
 
     # стр. 3
     map_png = maps.render(pick["lat"], pick["lon"], work / "map.png", zoom=13, width=1400, height=760)
+    map_jpg = work / "map.jpg"
+    Image.open(map_png).convert("RGB").save(map_jpg, "JPEG", quality=85, optimize=True)
     roads = [{"shield": road["ref"].replace(" ", ""), "label": "въезд на магистраль", "value": f"{km(road['km'])}, {road['min']} мин"}]
     roads += [{"label": n["label"], "value": f"{km(n['km'])}, {n['min']} мин"} for n in near]
     comps = sorted(pick["info"]["comps"], key=lambda c: abs(c["area"] - area))[:6]
@@ -359,7 +424,7 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     comp_rows.append({"name": f"{street}, наша оценка", "area": num(area), "rate": rent / area, "mine": True})
     comp_rows.sort(key=lambda c: -c["rate"])
     for c in comp_rows:
-        c["rate"] = f"€ {num(c['rate'])}"
+        c["rate"] = f"€\u00a0{num(c['rate'])}"
     mezz = pick["info"]["rent"].get("mezzanine")
 
     # стр. 4
@@ -385,24 +450,24 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
                                (f"Аренда, {rent_months} мес.", b["rent_collected"]), ("Продажа", b["sale"]),
                                ("Прибыль", b["profit"])])
     deduct = d.owner_costs
-    eq = (f"(€ {num(rent)} аренды − € {num(deduct)} за землю) ÷ {pct(d.exit_yield, 2)} = {eur(b['sale'])}" if deduct
-          else f"€ {num(rent)} аренды ÷ {pct(d.exit_yield, 2)} = {eur(b['sale'])}")
-    inv = investor_comps(listings, pick["territory"])
-    inv_text = ("Сданные склады на продаже в этом районе: " + "; ".join(
+    eq = (f"(€\u00a0{num(rent)} аренды − €\u00a0{num(deduct)} за землю) ÷ {pct(d.exit_yield, 2)} = {eur(b['sale'])}" if deduct
+          else f"€\u00a0{num(rent)} аренды ÷ {pct(d.exit_yield, 2)} = {eur(b['sale'])}")
+    inv = investor_comps(listings, (pick["lat"], pick["lon"]))
+    inv_text = ("Сданные склады на продаже не дальше 15 км: " + "; ".join(
         f"{c['name']} — {eur(c['price'])} при аренде {eur(c['rent'])}, это {pct(c['yield'], 2)}" for c in inv) + "."
-                if inv else "Сданных складов с указанной арендой в районе сейчас нет; доходность — по ориентирам региона.")
+                if inv else "Сданных складов с указанной арендой рядом сейчас нет; доходность — по ориентирам региона.")
     if pick["info"]["exit_notes"]:
         inv_text += " Поправка: " + ", ".join(pick["info"]["exit_notes"]) + "."
     vac = pick["info"].get("vacant") or {}
     if vac.get("m2"):
-        inv_text += (f" Для сравнения: свободные склады похожей площади рядом выставлены в среднем по € {num(vac['m2'])} "
-                     f"за м², мы продаём сданное здание по € {num(b['sale'] / area)} за м².")
+        inv_text += (f" Для сравнения: свободные склады похожей площади рядом выставлены в среднем по €\u00a0{num(vac['m2'])} "
+                     f"за м², мы продаём сданное здание по €\u00a0{num(b['sale'] / area)} за м².")
     investor = {"intro": (f"Инвестор платит столько, чтобы аренда за год составила {pct(d.exit_yield, 2)} от цены; "
                           "налог 10,4 % он платит сверху. Чем выше аренда и длиннее договор, тем выше цена."),
                 "eq": eq, "comps": inv_text}
 
     # стр. 5
-    prices = sorted({round(ask * k / 5000) * 5000 for k in (1.0, 0.95, 0.9, 0.85, 0.8)} | {offer, round(ev["breakeven"], -2)},
+    prices = sorted({ask, offer, round(ev["breakeven"], -2)} | {round(ask * k / 5000) * 5000 for k in (0.95, 0.9, 0.85, 0.8)},
                     reverse=True)
     lad = [(p, run(d.at(price=p))["profit"]) for p in prices]
     top = max(abs(v) for _, v in lad) or 1
@@ -431,13 +496,13 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
         "picked_note": (f"Посчитано {plural(len(cands), 'здание', 'здания', 'зданий')} на продаже в наших районах и рядом; "
                         f"порог {pct(C.THRESHOLD, 0)} {'прошло' if passed == 1 else 'прошли'} {passed}."),
         "facts": facts, "blocks": blocks, "images": images, "source_url": pick["url"],
-        "map": map_png.resolve().as_uri(), "roads": roads, "why": why_here(pick, near), "comps": comp_rows,
+        "map": map_jpg.resolve().as_uri(), "roads": roads, "why": why_here(pick, near), "comps": comp_rows,
         "comps_note": (f"Ближайшие предложения аренды на funda in business площадью от половины до двойной нашей. Наша ставка — "
                        f"{pct(C.RENT_SAFETY, 0)} от средней" + (", антресоль считается как 30 % площади." if mezz else ".")),
         "steps": steps, "money_out": money_out, "out_total": eur(b["costs"]), "money_in": money_in,
         "in_total": eur(b["income"]), "result": result, "waterfall": waterfall, "investor": investor,
         "ladder": ladder, "what_if": what_if, "checks": checks(pick, rec), "legal": legal,
-        "photo_pages": [shots[i:i + 6] for i in range(0, len(shots), 6)], "plans": plans[:2],
+        "photo_pages": photo_pages(shots), "plans": plans[:2],
         "passes": ev["passes"],
     }
 
@@ -474,12 +539,12 @@ def main(run_dir: Path, rank: int = 1, publish: bool = False) -> None:
     name = f"{ctx['title']} ({date.today().strftime('%d.%m.%y')}).pdf"
     out = (C.ROOT / "output" if publish else work) / name
     overflow = render(ctx, out, work)
-    (work / "photos.json").write_text(json.dumps([{"url": s["url"], "cap": s["cap"]} for c in ctx["photo_pages"] for s in c]
+    (work / "photos.json").write_text(json.dumps([{"url": s["url"], "cap": s["cap"]} for c in ctx["photo_pages"] for s in c["shots"]]
                                                  + [{"url": p["url"], "cap": p["cap"]} for p in ctx["plans"]],
                                                  ensure_ascii=False, indent=1), encoding="utf-8")
     print("PDF:", out)
     print("переполнение страниц:", overflow or "нет")
-    print("фото:", sum(len(c) for c in ctx["photo_pages"]), "планировок:", len(ctx["plans"]), "| подписи:", work / "captions.json")
+    print("фото:", sum(len(c["shots"]) for c in ctx["photo_pages"]), "планировок:", len(ctx["plans"]), "| подписи:", work / "captions.json")
 
 
 if __name__ == "__main__":
