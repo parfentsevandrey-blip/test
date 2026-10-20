@@ -1,6 +1,7 @@
 # Lumen — видеоплеер для macOS 26+
 
 Нативный плеер для Apple Silicon, написанный с нуля на Swift 6 / SwiftUI, с интерфейсом **Liquid Glass**.
+Первое приложение каталога — см. [манифест](../MANIFESTO.md).
 Сторонних библиотек и бинарников внутри нет: только системные фреймворки (AVFoundation, VideoToolbox,
 Core Image, Core Media) и собственный код. Даже Matroska (MKV/WebM) читает свой демультиплексор.
 
