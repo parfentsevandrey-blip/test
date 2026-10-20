@@ -18,7 +18,7 @@ import argparse, datetime as dt, json, os, sys, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import MKAD_QUERY, GEO, cian, client, day_dir, inside_mkad, log, lot_row, read_jsonl, today, write_jsonl
+from common import DATA, MKAD_QUERY, GEO, cian, client, day_dir, inside_mkad, log, lot_row, read_jsonl, today, write_jsonl
 
 BASE = {"_type": "flatsale", "engine_version": {"type": "term", "value": 2}}
 SEC = dict(BASE, geo={"type": "geo", "value": [MKAD_QUERY]}, building_status={"type": "term", "value": 1})
@@ -55,37 +55,44 @@ def leaves(q, ranges):
     return out
 
 
-def offers_union(q, expected):
-    """Лоты среза: проход по дате публикации, при недоборе -- ещё по цене; объединение по id."""
-    rows = {}
+def offers_union(q):
+    """Лоты среза: проход по дате публикации, при недоборе -- ещё по цене; объединение по id.
+    Счётчик берётся с первой страницы прохода (отдельный счётный запрос не нужен). -> (строки, счётчик Циана)"""
+    rows, total = {}, 0
     for sort in SORTS:
-        _, offers = client().search(dict(q, sort={"type": "term", "value": sort}))
+        n, offers = client().search(dict(q, sort={"type": "term", "value": sort}))
+        total = max(total, n)
         for o in offers:
             rows.setdefault(o["id"], lot_row(o))
-        if len(rows) >= expected * 0.995:
+        if len(rows) >= total * 0.995:
             break
-    return list(rows.values())
+    return list(rows.values()), total
 
 
-def plan_sec(raw, workers):
-    """Ценовые срезы вторички (диапазоны сетки размечаются параллельно). План кэшируется на день."""
-    path = os.path.join(raw, "sec-plan.json")
+def plan_sec(workers, max_age_days=7):
+    """Ценовые срезы вторички. План общий на неделю (history/sec-plan.json): срезы размечены с запасом
+    (<= 600 при пределе листания 1512), поэтому дневной прирост объявлений их не переполняет."""
+    path = os.path.join(DATA, "sec-plan.json")
     if os.path.exists(path):
-        return json.load(open(path))
+        plan = json.load(open(path))
+        if plan["day"] >= (dt.date.today() - dt.timedelta(days=max_age_days)).isoformat():
+            return plan["leaves"]
     with ThreadPoolExecutor(workers) as ex:
         parts = ex.map(lambda i: leaves(SEC, [(GRID[i] * 10**6, GRID[i + 1] * 10**6 - 1)]), range(len(GRID) - 1))
         out = [x for p in parts for x in p]
-    json.dump(out, open(path, "w"))
+    json.dump({"day": dt.date.today().isoformat(), "leaves": out}, open(path, "w"))
     log(f"вторичка: {len(out)} ценовых срезов, {sum(x[2] for x in out)} объявлений")
     return out
 
 
-def fetch_sec(raw, lo, hi, n):
+def fetch_sec(raw, lo, hi):
     path = os.path.join(raw, f"sec-{lo}-{hi}.jsonl.gz")
     if not os.path.exists(path):
-        write_jsonl(path, offers_union(price_q(SEC, lo, hi), n))
-    got = sum(1 for _ in read_jsonl(path))
-    return f"{got} из {n}"
+        rows, total = offers_union(price_q(SEC, lo, hi))
+        write_jsonl(os.path.join(raw, f"sec-{lo}-{hi}.count"), [{"expected": total, "got": len(rows)}])
+        write_jsonl(path, rows)
+    c = next(read_jsonl(os.path.join(raw, f"sec-{lo}-{hi}.count")))
+    return f"{c['got']} из {c['expected']}"
 
 
 def fetch_jk(raw, jk):
@@ -93,10 +100,13 @@ def fetch_jk(raw, jk):
     if os.path.exists(path):
         return sum(1 for _ in read_jsonl(path))
     q = dict(BASE, geo={"type": "geo", "value": [{"type": "newobject", "id": jk}]}, building_status={"type": "term", "value": 2})
-    rows, expected = [], 0
-    for lo, hi, n in leaves(q, [(0, 3_000_000_000)]):
-        rows += offers_union(price_q(q, lo, hi), n)
-        expected += n
+    rows, expected = offers_union(q)
+    if expected > LIMIT:  # крупный ЖК: целиком не пролистать -> нарезка по цене
+        rows, expected = [], 0
+        for lo, hi, _ in leaves(q, [(0, 3_000_000_000)]):
+            part, n = offers_union(price_q(q, lo, hi))
+            rows += part
+            expected += n
     rows = list({r["id"]: r for r in rows}.values())
     write_jsonl(os.path.join(raw, f"jk-{jk}.count"), [{"expected": expected, "got": len(rows)}])
     return write_jsonl(path, [r for r in rows if inside_mkad(r["lat"], r["lng"])])
@@ -169,17 +179,17 @@ def main():
     t0, failed, expect = time.time(), [], {}
 
     if a.only != "new":
-        plan = plan_sec(raw, a.workers)[: a.limit]
-        expect["sec"] = sum(x[2] for x in plan)
-        failed += run([(f"sec {lo:,}-{hi:,}", fetch_sec, (raw, lo, hi, n)) for lo, hi, n in plan], a.workers, "вторичка")
+        plan = plan_sec(a.workers)[: a.limit]
+        failed += run([(f"sec {lo:,}-{hi:,}", fetch_sec, (raw, lo, hi)) for lo, hi, _ in plan], a.workers, "вторичка")
     if a.only != "sec":
         jks = jk_list()[: a.limit]
         expect["new_cian_polygon"] = count(NEW)[1]
         failed += run([(f"ЖК {jk}", fetch_jk, (raw, jk)) for jk in jks], a.workers, "новостройки")
 
-    if a.only != "sec":  # полнота по ЖК: сколько Циан насчитал в фильтре ЖК и сколько уникальных собрано
-        cnt = [next(read_jsonl(os.path.join(raw, f))) for f in os.listdir(raw) if f.endswith(".count")]
-        expect["new_by_jk"] = {"expected": sum(c["expected"] for c in cnt), "got": sum(c["got"] for c in cnt)}
+    for kind, prefix in (("sec", "sec-"), ("new_by_jk", "jk-")):  # полнота: счётчики Циана против собранного
+        cnt = [next(read_jsonl(os.path.join(raw, f))) for f in os.listdir(raw) if f.startswith(prefix) and f.endswith(".count")]
+        if cnt:
+            expect[kind] = {"expected": sum(c["expected"] for c in cnt), "got": sum(c["got"] for c in cnt)}
     lots, sec_ids = {}, set()
     for f in sorted(os.listdir(raw)):
         if f.endswith(".jsonl.gz") and (a.only is None or f.startswith(a.only if a.only == "sec" else "jk-")):
@@ -190,7 +200,7 @@ def main():
                     lots[r["id"]] = r
     n = write_jsonl(os.path.join(d, "lots.jsonl.gz"), lots.values())
     if "sec" in expect:
-        expect["sec_got"] = len(sec_ids)
+        expect["sec"]["unique"] = len(sec_ids)
     summary = {"day": a.day, "lots": n, "sec": sum(r["kind"] == "sec" for r in lots.values()),
                "new": sum(r["kind"] == "new" for r in lots.values()), "expected": expect, "failed_parts": failed,
                "minutes": round((time.time() - t0) / 60, 1)}

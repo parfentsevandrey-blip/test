@@ -9,7 +9,7 @@
 Итог: history/DAY/views.jsonl.gz, состояние опроса -- history/views-state.json.
 usage: python daily/views.py [--day YYYY-MM-DD] [--budget 12000] [--workers 2] [--rotate 8]
 """
-import argparse, datetime as dt, json, os, random, re, sys
+import argparse, datetime as dt, json, os, random, re, sys, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -68,6 +68,7 @@ def main():
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--rotate", type=int, default=8, help="раз в сколько дней опрашивать каждый лот (<= 9)")
     ap.add_argument("--delay", type=float, nargs=2)
+    ap.add_argument("--max-minutes", type=int, default=360, help="предел времени этапа; остаток -- завтра")
     a = ap.parse_args()
     if a.delay:
         cian.DEFAULT_DELAY = tuple(a.delay)
@@ -83,22 +84,29 @@ def main():
     todo, backlog = queue(lots, state, hot, a.day, a.rotate, a.budget)
     log(f"просмотры: в слепке {len(lots)}, в очереди {backlog}, сегодня {len(todo)} (горячих {len(hot)})")
 
-    got, failed = {}, 0
+    got, failed, n, t0 = {}, 0, 0, time.time()
     with ThreadPoolExecutor(a.workers) as ex:
-        futs = {ex.submit(fetch, vdir, lots[i]): i for i in todo}
-        for n, f in enumerate(as_completed(futs), 1):
-            try:
-                got[futs[f]] = f.result()
-                state[futs[f]] = a.day
-            except Exception as e:
-                failed += 1
-                log(f"  {futs[f]}: {str(e)[:100]}")
-            if n % 500 == 0:
-                log(f"просмотры: {n}/{len(todo)}")
-                json.dump(state, open(STATE, "w"))
+        for k in range(0, len(todo), 200):  # порциями: по истечении --max-minutes остаток уходит на завтра
+            if time.time() - t0 > a.max_minutes * 60:
+                log(f"просмотры: лимит {a.max_minutes} мин, остаток {len(todo) - k} -- в очередь следующего дня")
+                break
+            futs = {ex.submit(fetch, vdir, lots[i]): i for i in todo[k:k + 200]}
+            for f in as_completed(futs):
+                n += 1
+                try:
+                    got[futs[f]] = f.result()
+                    state[futs[f]] = a.day
+                except Exception as e:
+                    failed += 1
+                    log(f"  {futs[f]}: {str(e)[:100]}")
+                if n % 500 == 0:
+                    log(f"просмотры: {n}/{len(todo)}")
+                    json.dump(state, open(STATE, "w"))
     json.dump(state, open(STATE, "w"))
     write_jsonl(os.path.join(d, "views.jsonl.gz"), [dict(v, day=a.day) for v in got.values()])
     log(f"просмотры: получено {len(got)} из {len(todo)}, не получено {failed}, ещё в очереди {backlog - len(got)}")
+    if failed:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

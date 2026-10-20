@@ -21,6 +21,38 @@ API = "https://api.cian.ru/search-offers/v2/search-offers-desktop/"
 NB_API = "https://api.cian.ru/newbuilding-search/v1/get-newbuildings-for-serp/"
 PAGE_SIZE, MAX_PAGES = 28, 54
 DEFAULT_DELAY = (1.5, 3.0)
+# Общий регулятор темпа для всех потоков и сессий процесса: при отказе площадки пауза для всех потоков
+# (растущая: 30 с ... 15 мин) и замедление темпа в 1,5 раза (до 4x); после каждых 100 чистых ответов темп
+# восстанавливается на 15%. Часть не бросается после пары отказов: запрос ждёт до ~2 часов суммарных пауз.
+COOLDOWNS = (30, 60, 120, 300, 600, 900)
+MAX_ATTEMPTS = 12
+
+
+class _Gate:
+    lock = threading.Lock()
+    until, streak, slow, clean = 0.0, 0, 1.0, 0
+
+    def wait(self):
+        while (left := self.until - time.time()) > 0:
+            time.sleep(min(left, 30))
+
+    def ok(self):
+        with self.lock:
+            self.streak, self.clean = 0, self.clean + 1
+            if self.clean >= 100:
+                self.slow, self.clean = max(1.0, self.slow * .85), 0
+
+    def fail(self):
+        with self.lock:
+            if time.time() < self.until:  # пауза уже объявлена другим потоком
+                return 0
+            self.streak += 1
+            cd = COOLDOWNS[min(self.streak, len(COOLDOWNS)) - 1]
+            self.until, self.slow, self.clean = time.time() + cd, min(4.0, self.slow * 1.5), 0
+            return cd
+
+
+GATE = _Gate()
 STATE_RE = re.compile(r"window\._cianConfig\['([a-z-]+)'\] = \(window\._cianConfig\['[a-z-]+'\] \|\| \[\]\)\.concat\(")
 
 
@@ -42,24 +74,25 @@ class Cian:
         self.counts = []  # offerCount каждого первого запроса search() -- для сверки полноты
 
     def _req(self, method, url, expect_json=False, **kw):
-        for attempt in range(5):
-            time.sleep(random.uniform(*self.delay))
+        for attempt in range(MAX_ATTEMPTS):
+            GATE.wait()
+            time.sleep(random.uniform(*self.delay) * GATE.slow)
             try:
                 r = self.s.request(method, url, timeout=60, **kw)
             except Exception as e:  # обрыв соединения/таймаут
                 problem = e.__class__.__name__
             else:
-                # 200 с HTML вместо JSON или страница капчи с кодом 200 = блок, а не данные
+                # 200 с HTML вместо JSON или страница проверки с кодом 200 = отказ, а не данные
                 captcha = r.status_code == 200 and len(r.text) < 200_000 and \
                     re.search(r"<title>\s*(Captcha|Verification|Ошибка)", r.text[:5000]) is not None
                 if r.status_code == 200 and not captcha and not (expect_json and not r.text.lstrip().startswith("{")):
+                    GATE.ok()
                     return r
                 if r.status_code not in (200, 403, 429, 500, 502, 503, 504):
                     r.raise_for_status()
                 problem = f"{r.status_code} {r.text[:60]!r}"
-            wait = 10 * 2 ** attempt
-            print(f"  {problem} on {url[:80]} -> sleep {wait}s [egress {egress_ip()}]", file=sys.stderr)
-            time.sleep(wait)
+            cd = GATE.fail()
+            print(f"  {problem} on {url[:80]} -> pause {cd}s, tempo x{GATE.slow:.2f} [egress {egress_ip()}]", file=sys.stderr)
         raise RuntimeError(f"gave up: {url}")
 
     def state(self, url, app, key="initialState"):
