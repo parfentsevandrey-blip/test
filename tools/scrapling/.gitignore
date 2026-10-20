@@ -1,0 +1,4 @@
+.venv/
+examples/*.json
+examples/*.md
+examples/*.db
