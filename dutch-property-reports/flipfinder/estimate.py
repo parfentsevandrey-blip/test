@@ -12,19 +12,20 @@ LET = re.compile(r"verhuurd aan|is verhuurd|volledig verhuurd|lopende huuroveree
                  r"huurinkomsten|huuropbrengst|aanvangsrendement|huurder betaalt|zittende huurder|huurstroom|"
                  r"in verhuurde staat")
 STATUS_BAD = re.compile(r"onder bod|onder optie|verkocht|verhuurd", re.I)
-BUILDING = re.compile(r"momenteel in aanbouw|in aanbouw|start bouw|bouw start|bouw (?:is )?gestart|nog te realiseren|op tekening",
-                      re.I)
-# проект из многих юнитов: цена «от», площадь в карточке — другого юнита
-PROJECT = re.compile(r"(?:te koop|prijzen|verkoopprijzen) vanaf €|units variëren|nog (?:enkele|slechts \w+) units|"
-                     r"realiseert [^.]{0,40}\d+ [^.]{0,20}units", re.I)
-# общая площадь из текста: «in totaal een BVO van 308 m²», «totale vloeroppervlakte van ca. 228 m²»
-AREA_TEXT = re.compile(r"(?:in totaal|totaal|totale (?:netto |bruto |verhuurbare )?(?:vloer)?oppervlakte|het geheel betreft)"
-                       r"(?!\s*groot)[^\d]{0,30}?(\d{1,3}(?:\.\d{3})+|\d{2,5})(?:,\d+)?\s*m", re.I)
-NOT_BUSINESS = re.compile(r"woning te bouwen|woonbestemming|transformatie naar wonen|ontwikkellocatie|"
+BUILDING = re.compile(r"momenteel in aanbouw|in aanbouw|start bouw|bouw start|bouw (?:is )?gestart|nog te realiseren|"
+                      r"op tekening|\bverrijst\b", re.I)
+NOT_BUSINESS = re.compile(r"woning te bouwen|woonbestemming|transformatie naar wonen|ontwikkellocatie|(?<!geen )bedrijfswoning|"
                           r"onderdeel (?:uit )?van een (?:buurt)?winkelcentrum|horecapand|restaurant te koop", re.I)
 TENDER = re.compile(r"\binschrijving\b|\bveiling\b|biedingsprocedure|bieden vanaf", re.I)
 SHELL = re.compile(r"\bcasco\b", re.I)
 MEZZ = re.compile(r"(?:ca\.?|circa)?\s*([\d.]+)\s*m²?\s*(?:entresol|insteekvloer|mezzanine)", re.I)
+# проект из многих юнитов: цена «от», площадь в карточке — другого юнита
+PROJECT = re.compile(r"(?:te koop|prijzen|verkoopprijzen|units?) vanaf €|vanaf € ?[\d.]+,?-? (?:v\.o\.n|excl)|"
+                     r"units variëren|nog (?:enkele|slechts \w+|\d+) units|realiseert [^.]{0,40}\d+ [^.]{0,30}units|"
+                     r"\d+ [^.]{0,40}units (?:worden )?gerealiseerd|vloeroppervlakten van (?:ca\. )?\d+ tot \d+", re.I)
+# общая площадь из текста: «in totaal een BVO van 308 m²», «totale vloeroppervlakte van ca. 228 m²»
+AREA_TEXT = re.compile(r"(?:in totaal|totaal|totale (?:netto |bruto |verhuurbare )?(?:vloer)?oppervlakte|het geheel betreft)"
+                       r"(?!\s*groot)[^\d]{0,30}?(\d{1,3}(?:\.\d{3})+|\d{2,5})(?:,\d+)?\s*m", re.I)
 
 
 def year_of(rec: dict) -> int | None:
@@ -89,41 +90,39 @@ def condition(rec: dict) -> str:
     return "mid"
 
 
-def rent_comps(cards: list[dict], rec: dict, here: tuple[float, float] | None = None) -> list[dict]:
-    """Предложения аренды похожего размера: в радиусе COMPS_KM, иначе тот же город, иначе весь район."""
+def _nearest(pool: list[dict], here: tuple[float, float]) -> list[dict]:
+    """COMPS_K ближайших предложений не дальше COMPS_KM по прямой."""
     from flipfinder import locate
-    area = rec.get("area") or 0
-    pool = [c for c in cards if c["deal"] == "huur" and c["kind"] == "bedrijfshal" and c.get("rent_year")
-            and c.get("area") and 0.4 * area <= c["area"] <= 2.5 * area and c["url"] != rec["url"]
-            and c["territory"] == rec["territory"]]
+    near = []
     for c in pool:
-        c["rent_m2"] = c["rent_year"] / c["area"]
+        g = locate.geocode(c["title"])
+        if g and locate.km(here, g[:2]) <= C.COMPS_KM:
+            near.append({**c, "km": round(locate.km(here, g[:2]), 1)})
+    return sorted(near, key=lambda c: c["km"])[:C.COMPS_K]
+
+
+def _similar(cards: list[dict], rec: dict, deal: str) -> list[dict]:
+    area = rec.get("area") or 0
+    return [c for c in cards if c["deal"] == deal and c["kind"] == "bedrijfshal" and c.get("area")
+            and C.COMPS_AREA[0] * area <= c["area"] <= C.COMPS_AREA[1] * area and c["url"] != rec["url"]]
+
+
+def rent_comps(cards: list[dict], rec: dict, here: tuple[float, float] | None = None) -> list[dict]:
+    """Предложения аренды похожей площади: ближайшие к объекту, без адреса — тот же город или район."""
+    pool = [{**c, "rent_m2": c["rent_year"] / c["area"]} for c in _similar(cards, rec, "huur") if c.get("rent_year")]
     pool = [c for c in pool if 25 <= c["rent_m2"] <= 400]
     if here:
-        near = []
-        for c in pool:
-            g = locate.geocode(c["title"])
-            if g and locate.km(here, g[:2]) <= C.COMPS_KM:
-                c["km"] = round(locate.km(here, g[:2]), 1)
-                near.append(c)
+        near = _nearest(pool, here)
         if len(near) >= C.COMPS_MIN:
             return near
     same = [c for c in pool if c["slug"] == rec["slug"]]
-    return same if len(same) >= C.COMPS_MIN else pool
+    return same if len(same) >= C.COMPS_MIN else [c for c in pool if c["territory"] == rec["territory"]]
 
 
 def vacant(cards: list[dict], rec: dict, here: tuple[float, float]) -> dict:
-    """Свободные склады похожей площади на продаже не дальше COMPS_KM: медиана цены за м²."""
-    from flipfinder import locate
-    area = rec.get("area") or 0
-    pool = []
-    for c in cards:
-        if (c["deal"] == "koop" and c["kind"] == "bedrijfshal" and c.get("price") and c.get("area")
-                and 0.4 * area <= c["area"] <= 2.5 * area and c["url"] != rec["url"]):
-            g = locate.geocode(c["title"])
-            if g and locate.km(here, g[:2]) <= C.COMPS_KM:
-                pool.append(c["price"] / c["area"])
-    return {"n": len(pool), "m2": st.median(pool) if len(pool) >= C.COMPS_MIN else None}
+    """Свободные склады похожей площади на продаже рядом: медиана цены за м²."""
+    near = _nearest([c for c in _similar(cards, rec, "koop") if c.get("price")], here)
+    return {"n": len(near), "m2": st.median(c["price"] / c["area"] for c in near) if len(near) >= C.COMPS_MIN else None}
 
 
 def rent(cards: list[dict], rec: dict, here: tuple[float, float] | None = None) -> dict:
@@ -173,7 +172,7 @@ def exit_yield(rec: dict, oc: dict) -> tuple[float, list[str]]:
 def reject(rec: dict, shown: set[str]) -> list[str]:
     """Причины, по которым объект не подходит под флип. Пустой список — подходит."""
     why = []
-    desc = (rec.get("desc") or "").lower()
+    desc = re.sub(r"\s+", " ", rec.get("desc") or "").lower()
     price, area = rec.get("price"), rec.get("area")
     if not price:
         why.append("цена не указана")

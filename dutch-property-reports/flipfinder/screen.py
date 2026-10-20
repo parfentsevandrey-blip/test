@@ -75,6 +75,9 @@ def main(run_dir: Path, include_shown: bool = False) -> None:
             rejected.append({"url": rec["url"], "title": rec["title"], "why": ["адрес не найден"]})
             continue
         lat, lon, _ = geo
+        # район — по карте, город — по адресу объявления, а не по поиску, в выдаче которого оно нашлось
+        rec["territory"] = locate.nearest(lat, lon)["territory"]
+        rec["slug"] = re.search(r"\.nl/[a-z]+/([a-z0-9-]+)/object-", rec["url"]).group(1)
         deal, info = model_for(rec, cards, (lat, lon))
         if not deal:
             rejected.append({"url": rec["url"], "title": rec["title"], "why": ["нет данных об аренде рядом"]})

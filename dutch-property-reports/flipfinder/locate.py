@@ -129,8 +129,8 @@ def metres(here: Point, geom) -> float:
     return S._metres(here, geom)
 
 
-def place(lat: float, lon: float) -> dict:
-    """Ближайшая промзона нашего района: внутри / рядом / поблизости / далеко."""
+def nearest(lat: float, lon: float) -> dict:
+    """Ближайшая промзона наших районов по прямой; её район — район объекта."""
     here = Point(lon, lat)
     best = None
     for z in _zones():
@@ -139,6 +139,12 @@ def place(lat: float, lon: float) -> dict:
         if best is None or m < best["metres"]:
             best = {**{k: v for k, v in z.items() if k != "geom"}, "metres": round(m), "inside": inside,
                     "point": (z["geom"].representative_point().y, z["geom"].representative_point().x)}
+    return best
+
+
+def place(lat: float, lon: float) -> dict:
+    """Ближайшая промзона нашего района: внутри / рядом / поблизости / далеко."""
+    best = nearest(lat, lon)
     if best["inside"] or best["metres"] <= 1500:
         best["ring"] = "zone"
     else:

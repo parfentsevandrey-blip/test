@@ -432,7 +432,7 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
                         f"порог {pct(C.THRESHOLD, 0)} {'прошло' if passed == 1 else 'прошли'} {passed}."),
         "facts": facts, "blocks": blocks, "images": images, "source_url": pick["url"],
         "map": map_png.resolve().as_uri(), "roads": roads, "why": why_here(pick, near), "comps": comp_rows,
-        "comps_note": (f"Предложения аренды на funda in business, площадь 0,4–2,5 от нашей. Наша ставка — "
+        "comps_note": (f"Ближайшие предложения аренды на funda in business площадью от половины до двойной нашей. Наша ставка — "
                        f"{pct(C.RENT_SAFETY, 0)} от средней" + (", антресоль считается как 30 % площади." if mezz else ".")),
         "steps": steps, "money_out": money_out, "out_total": eur(b["costs"]), "money_in": money_in,
         "in_total": eur(b["income"]), "result": result, "waterfall": waterfall, "investor": investor,
