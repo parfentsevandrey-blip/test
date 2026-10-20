@@ -8,3 +8,4 @@ history/*/raw/
 history/*/views/
 history/*/run.log
 history/*/*.done
+history/*.part

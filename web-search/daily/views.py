@@ -87,7 +87,8 @@ def main():
     os.makedirs(vdir, exist_ok=True)
     lots = {r["id"]: r for r in read_jsonl(os.path.join(d, "lots.jsonl.gz"))
             if r.get("created") and r.get("category") in ("flatSale", "newBuildingFlatSale")}
-    state = json.load(open(STATE)) if os.path.exists(STATE) else {}
+    src = STATE + ".part" if os.path.exists(STATE + ".part") else STATE  # продолжение прерванного этапа
+    state = json.load(open(src)) if os.path.exists(src) else {}
     state = {int(k): v for k, v in state.items()}
     hot_path = os.path.join(DATA, "hot.json")
     hot = json.load(open(hot_path)) if os.path.exists(hot_path) else []
@@ -109,10 +110,12 @@ def main():
                 except Exception as e:
                     failed += 1
                     log(f"  {futs[f]}: {str(e)[:100]}")
-                if n % 500 == 0:
+                if n % 500 == 0:  # промежуточное состояние -- в .part (не в git), итог -- в STATE в конце этапа
                     log(f"просмотры: {n}/{len(todo)}")
-                    json.dump(state, open(STATE, "w"))
+                    json.dump(state, open(STATE + ".part", "w"))
     json.dump(state, open(STATE, "w"))
+    if os.path.exists(STATE + ".part"):
+        os.remove(STATE + ".part")
     write_jsonl(os.path.join(d, "views.jsonl.gz"), [dict(v, day=a.day) for v in got.values()])
     log(f"просмотры: получено {len(got)} из {len(todo)}, не получено {failed}, ещё в очереди {backlog - len(got)}")
     if failed:
