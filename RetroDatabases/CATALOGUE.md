@@ -2312,4 +2312,154 @@ The catalogue of database 154 (500 to 510) has the same ten kinds:
 | Projects | 1 | How long four dynasties of the 500s lasted: Liang, Chen, Northern Qi and Northern Zhou, counted in code |
 | Flex | 1 | Years from Liu Xie's Wenxin diaolong of 501 to the Philoxenian New Testament of 508 |
 | Cross-code | 1 | The arithmetic, geometric and harmonic means of 2 and 8, computed in Python and in C |
+
+The catalogue of database 155 (490 to 500) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | Aryabhata's Aryabhatiya, an astronomical treatise in verse of 499, Gelasius I's letter to the emperor Anastasius on the two powers, of 494 and The Bolnisi Sioni inscriptions, Georgian writing dated 493 or 494 |
+| Systems | 3 | The Ostrogothic kingdom of Italy under Theoderic, founded in 493, The Northern Wei court's move to Luoyang, carried out in 494 and Anastasius's monetary reform and the bronze follis, introduced in 498 |
+| Devices | 1 | Standard balance weights of the Constantinople mint, placed at 498 |
+| Tools | 1 | Reed pens and ink pots of the late antique scribe, placed at 493 |
+| Practices | 1 | The Tuoba imperial house takes the Chinese surname Yuan in 496 |
+| Guides | 1 | How Aryabhata's consonant letters stand for the numbers from 1 to 100 |
+| Examples | 1 | The verses of the Aryabhatiya counted by its four parts |
+| Projects | 1 | A timeline of three changes of ruler in the 490s, sorted and counted in code |
+| Flex | 1 | Days from Odoacer's death to the end of Kali year 3600 |
+| Cross-code | 1 | The circumference rule of Aryabhata in Python and in C |
+
+The catalogue of database 156 (480 to 490) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Victor of Vita's History of the Vandal Persecution, a Latin account of the African church |
+| Systems | 3 | Zeno's Henotikon, the imperial decree of union on the faith, issued in 482, Clovis's defeat of the Roman general Syagrius at Soissons in 486 and The Three Elders of the Northern Wei, a system that set household headcounts beside the land grants |
+| Devices | 1 | Childeric's signet ring, inscribed CHILDIRICI REGIS, found in his grave at Tournai in 1653 |
+| Tools | 1 | Zhang Qiujian's Mathematical Classic, an arithmetic handbook of problems written about 466 to 485 |
+| Practices | 1 | Striking a bishop's name from the diptychs, the altar lists, as Acacius did to Felix III in 484 |
+| Guides | 1 | How a household's equal-field grant of land is worked out in mu, by the rule of the Northern Wei |
+| Examples | 1 | The square bu of three fields in mu, by the land rule of the Han and later periods |
+| Projects | 1 | Three dated events of 483 to 489 from Rome, Persia and Italy, put in order with the years between them |
+| Flex | 1 | Years from Zeno's Henotikon of 482 to Clovis's victory at Soissons of 486 |
+| Cross-code | 1 | Years from the Mathematical Classic of Zhang Qiujian to Victor's Vandal history, in Python and C |
+
+The catalogue of database 157 (470 to 480) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Claudianus Mamertus's On the State of the Soul, a Latin treatise against a bodily soul and The Martyrdom of Shushanik, an early Georgian prose account of a Christian woman's death |
+| Systems | 4 | Euric's law code for the Visigoths, among the earliest written Germanic law codes, The fall of Hanseong, the Paekche capital, to Goguryeo in 475, The deposition of Romulus Augustulus, the traditional end of the western Roman emperors and The Southern Qi dynasty founded at Jiankang in 479 |
+| Devices | 1 | The Inariyama sword, an iron blade with gold-inlaid writing from a burial mound in Japan |
+| Tools | 1 | Gold coin dies of the Constantinople mint under Zeno |
+| Practices | 1 | Wergild, the fixed price of a killed man in Germanic law |
+| Guides | 1 | How a king's five-syllable name is spelled with Chinese characters chosen for sound |
+| Examples | 1 | The years of 400 to 600 that share the Inariyama sword's cycle label |
+| Projects | 1 | Four dated events of 472 to 480 from Rome, Constantinople, the Vandals and Dalmatia, sorted in code |
+| Flex | 1 | Years from the deposition of Romulus Augustulus to the murder of Julius Nepos |
+| Cross-code | 1 | The years from the Inariyama sword to the Southern Qi in Python and C |
+
+The catalogue of database 158 (460 to 470) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | The Kahaum pillar, a Sanskrit verse inscription of Gupta year 141 |
+| Systems | 1 | Anthemius, the western emperor chosen by Leo I of the East in 467 |
+| Devices | 1 | The composite bow of the steppe peoples, a laminated bow of horn, sinew and wood, undated in the sources and placed at 465 |
+| Tools | 1 | Hydatius's Chronicon, a Latin continuation of Jerome from 379 to 468 |
+| Practices | 1 | Dating years by the Taishi reign-period name of Liu Song, from 465 to 471 |
+| Guides | 1 | How the syllables of a Sanskrit verse line are counted by their vowels |
+| Examples | 1 | The 90 years of Hydatius's chronicle, 379 to 468, counted in decades |
+| Projects | 1 | Four events of 461 to 468 in the western and eastern empires, sorted and spaced in code |
+| Flex | 1 | Days from Libius Severus's death to Anthemius's accession, 465 to 467 |
+| Cross-code | 1 | Days from Majorian's killing in 461 to Severus's death in 465, in Python and C |
+
+The catalogue of database 159 (450 to 460) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Saint Patrick's Confessio, his own account of his mission to Ireland and Sidonius Apollinaris's verse panegyric on the emperor Avitus, recited at Rome |
+| Systems | 2 | The Council of Chalcedon, which defined the two natures of Christ in 451 and The Roman and Visigothic alliance that turned back Attila at the Catalaunian Plains |
+| Devices | 1 | The chorobates, a levelling frame with a water channel that Roman writers describe, undated in the sources and placed at 455 |
+| Tools | 1 | Victorius of Aquitaine's Easter table of 457, a 532-year table from AD 28 to AD 559 |
+| Practices | 1 | The crowning of Leo I by the patriarch Anatolius, an early patriarchal coronation |
+| Guides | 1 | How the five great sees are put in rank order, with Constantinople second after Rome |
+| Examples | 1 | The fourteen days of the Vandal sack of Rome, counted from 2 June 455 |
+| Projects | 1 | Five events of the early 450s, from Marcian's accession to the murder of Valentinian III |
+| Flex | 2 | Days from the opening of Chalcedon to Sidonius's recitation for Avitus and Days from the murder of Aetius to the sack of Rome by the Vandals |
+| Cross-code | 1 | The reported bishop counts of Chalcedon, summed and ranked in Python and in C |
+
+The catalogue of database 160 (440 to 450) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | Pope Leo I's Tome to Flavian, the letter that set out the two natures of Christ, Salvian's On the Government of God, an eight-book Latin treatise that blamed Rome's sins for its losses and Liu Yiqing's Shishuo xinyu, short anecdotes of gentlemen of the Wei and Jin courts |
+| Systems | 5 | The Vandal kingdom of Carthage, taken in 439 and given Roman recognition by a treaty of 442, The Second Council of Ephesus, the Robber Council of 449 that deposed Flavian of Constantinople, Valentinian III's edict of 445 that gave the rulings of the Roman see a legal footing in the West, Emperor Taiwu's campaign of 446 against Buddhist monasteries and clergy in the Northern Wei and The Burgundians settled in Sapaudia by the Roman general Aetius in 443 |
+| Devices | 1 | The portcullis, a grille of wood or iron that was lowered to close a gateway in a town wall |
+| Tools | 1 | He Chengtian's Yuanjia calendar, proposed in 443 to start each month at the true conjunction of the Moon |
+| Practices | 1 | The palimpsest, a parchment scraped clean and written over, a common economy of late Roman scribes |
+| Guides | 1 | How the eight market letters of a Roman calendar name each day, counted in code |
+| Examples | 1 | The seven books of Socrates Scholasticus's church history and the years from 305 to 439 they cover, counted in code |
+| Projects | 1 | Four dated events from the death of Cyril of Alexandria in 444 to the death of Theodosius II in 450, sorted and spaced in code |
+| Flex | 1 | Nine years from Leo's accession in 440 to the Robber Council of 449 |
+| Cross-code | 1 | Days from the Robber Council to the death of Theodosius II, in Python and C |
+
+The catalogue of database 161 (430 to 440) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 5 | Macrobius's Commentary on the Dream of Scipio, with its five zones of the Earth, Cyril of Alexandria's twelve anathemas against Nestorius, sent in 430, Buddhaghosa's Path of Purification, a Pali handbook of the Buddhist training, Vincent of Lerins's Commonitorium, a rule of belief held everywhere, always and by all and The Formula of Reunion of 433, a creed between Cyril and John of Antioch |
+| Systems | 4 | The Council of Ephesus of 431, which condemned Nestorius, The joint rule of the Hunnic brothers Bleda and Attila from 434, The Theodosian Code, a collection of imperial laws issued in 438 and The Northern Wei conquest of the Northern Liang in 439 |
+| Devices | 1 | The vallus, a reaping machine with teeth that Pliny describes in Gaul |
+| Tools | 1 | Prosper of Aquitaine's Epitome of the Chronicle, a Latin history first drafted in 433 |
+| Practices | 1 | The first ordination of Buddhist nuns in East Asia, held at Nanjing in 434 |
+| Guides | 1 | How Vincent of Lerins's three tests sort a belief |
+| Examples | 3 | The seven purities of the Visuddhimagga, numbered in order, The years from Attila's joint rule to his death, counted by a program and Which of Macrobius's five zones can be lived in, sorted by a program |
+| Projects | 1 | The gaps between six events of 430 to 439, worked out in code |
+| Flex | 2 | Days from the opening of the Council of Ephesus to the Theodosian Code and Days from the death of Augustine of Hippo to the Council of Ephesus |
+| Cross-code | 1 | Three dated days of the 430s, each with its Julian day number, in Python and C |
+
+The catalogue of database 162 (420 to 430) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 5 | Augustine's City of God, twenty-two books on the two cities, finished in 426, Palladius's Lausiac History, Greek lives of desert monks written for the chamberlain Lausus, Buddhabhadra's Flower Garland Sutra in sixty fascicles, a Chinese translation of about 420, Dharmakshema's Chinese Nirvana Sutra, a long translation made at Guzang in 421 and Liu Yiqing's Shishuo xinyu, anecdotes of famous people from the late Han to the Jin, compiled about 430 |
+| Systems | 5 | The Liu Song dynasty, founded in 420 by the general Liu Yu at Jiankang, The synod of Dadisho' in the Persian church, which struck down an appeal to Roman bishops, dated 424, Theodosius II's decree of 425 that set up thirty-one public teaching posts at Constantinople, The Vandals cross from Spain into Africa under Gaiseric in 429, the start of their kingdom in North Africa and The Persian deposition of the last Arsacid king of Armenia in 428, which ended the Armenian monarchy |
+| Devices | 1 | The groma, a Roman surveyor's cross of plumb lines, undated in the sources and placed at 420, the year the Liu Song was founded |
+| Tools | 1 | Augustine's Retractations, a review and correction of his own writings, written about 427 |
+| Practices | 1 | Kou Qianzhi's New Code of the Celestial Masters, revealed in 415 and presented at the Northern Wei court in 424 |
+| Guides | 1 | How a seal is cut in reverse so that its impression reads correctly, placed at 421 for the year Constantius III became co-emperor |
+| Examples | 1 | The twenty-two books of the City of God split at book ten, counted in code |
+| Projects | 1 | Three dated events of 421 to 425 in the western Roman empire, sorted and spaced in code |
+| Flex | 2 | Years from the founding of the Liu Song in 420 to the Vandal crossing in 429 and Years from the death of Honorius in 423 to the death of Augustine in 430 |
+| Cross-code | 1 | The Julian day numbers of 1 January 420 and 1 January 430, and the days between them, in Python and C |
+
+The catalogue of database 163 (410 to 420) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Faxian's Record of Buddhist Kingdoms, an account of his journey to India and The Gwanggaeto stele, a Korean inscription in Chinese characters |
+| Systems | 2 | The Visigothic kingdom of Toulouse, set up under the treaty of 418 and The Council of Carthage of 418 against Pelagius |
+| Devices | 1 | The brass hydroscope that Synesius asked Hypatia to make |
+| Tools | 1 | Martianus Capella's Marriage of Philology and Mercury, a school handbook of learning |
+| Practices | 1 | Buddhabhadra and Faxian's joint rendering of a monastic code |
+| Guides | 1 | How the Roman names of the twelfths of an as are read off, from the uncia to the as |
+| Examples | 1 | The seven books of Orosius's history and the years from 146 BC to AD 417 |
+| Projects | 1 | A timeline of three dated events from 410 to 415, spaced in code |
+| Flex | 1 | Years from the sack of Rome to the death of the emperor Honorius |
+| Cross-code | 1 | Days from the sack of Rome to the death of the emperor Honorius in Python and C |
+
+The catalogue of database 164 (400 to 410) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | Kumarajiva's Chinese translation of the Lotus Sutra, The Notitia Dignitatum, a list of the offices of the late Roman empire, The Jerusalem Talmud, the Talmud of the Land of Israel and Augustine's Confessions, a Latin prayer about the author's life in thirteen books |
+| Systems | 3 | The synod of Mar Isaac at Seleucia-Ctesiphon, which gave the Christians of Persia one church structure, Honorius moves the western court from Milan to Ravenna and The Synod of the Oak at Chalcedon, which deposed John Chrysostom |
+| Devices | 1 | The water-driven stone saw of Hierapolis, a sawmill that cut marble blocks, undated in the sources and placed at 402 |
+| Tools | 1 | Servius's commentary on Virgil, a school aid to reading the poems |
+| Practices | 1 | The White Lotus Society of Mount Lu, a pledge to be reborn in the Western Paradise |
+| Guides | 1 | How many monks make a quorum for an ordination under the Vinaya count |
+| Examples | 1 | The twelve books of Virgil's Aeneid, with their lines added up |
+| Projects | 1 | Pollentia, Verona, the Rhine crossing and Stilicho's death, in order |
+| Flex | 1 | Days from the battle of Pollentia to the Rhine crossing |
+| Cross-code | 1 | Days from the Rhine crossing to Stilicho's death in Python and C |
 <!-- END GENERATED CATALOGUE -->

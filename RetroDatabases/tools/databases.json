@@ -1538,5 +1538,105 @@
     "description": "Languages, systems, devices, tools and practices of 500 to 510, including rare and little-known items.",
     "colorHex": "#388E3C",
     "curated": false
+  },
+  {
+    "id": 155,
+    "from": 490,
+    "to": 500,
+    "quota": false,
+    "name": "Database 155: 490s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 490 to 500, including rare and little-known items.",
+    "colorHex": "#33691E",
+    "curated": false
+  },
+  {
+    "id": 156,
+    "from": 480,
+    "to": 490,
+    "quota": false,
+    "name": "Database 156: 480s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 480 to 490, including rare and little-known items.",
+    "colorHex": "#827717",
+    "curated": false
+  },
+  {
+    "id": 157,
+    "from": 470,
+    "to": 480,
+    "quota": false,
+    "name": "Database 157: 470s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 470 to 480, including rare and little-known items.",
+    "colorHex": "#F57F17",
+    "curated": false
+  },
+  {
+    "id": 158,
+    "from": 460,
+    "to": 470,
+    "quota": false,
+    "name": "Database 158: 460s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 460 to 470, including rare and little-known items.",
+    "colorHex": "#3E2723",
+    "curated": false
+  },
+  {
+    "id": 159,
+    "from": 450,
+    "to": 460,
+    "quota": false,
+    "name": "Database 159: 450s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 450 to 460, including rare and little-known items.",
+    "colorHex": "#311B92",
+    "curated": false
+  },
+  {
+    "id": 160,
+    "from": 440,
+    "to": 450,
+    "quota": false,
+    "name": "Database 160: 440s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 440 to 450, including rare and little-known items.",
+    "colorHex": "#01579B",
+    "curated": false
+  },
+  {
+    "id": 161,
+    "from": 430,
+    "to": 440,
+    "quota": false,
+    "name": "Database 161: 430s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 430 to 440, including rare and little-known items.",
+    "colorHex": "#006064",
+    "curated": false
+  },
+  {
+    "id": 162,
+    "from": 420,
+    "to": 430,
+    "quota": false,
+    "name": "Database 162: 420s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 420 to 430, including rare and little-known items.",
+    "colorHex": "#4E342E",
+    "curated": false
+  },
+  {
+    "id": 163,
+    "from": 410,
+    "to": 420,
+    "quota": false,
+    "name": "Database 163: 410s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 410 to 420, including rare and little-known items.",
+    "colorHex": "#37474F",
+    "curated": false
+  },
+  {
+    "id": 164,
+    "from": 400,
+    "to": 410,
+    "quota": false,
+    "name": "Database 164: 400s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 400 to 410, including rare and little-known items.",
+    "colorHex": "#607D8B",
+    "curated": false
   }
 ]

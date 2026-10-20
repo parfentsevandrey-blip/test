@@ -44,6 +44,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-28 | 2026-10-19 | 121,722 | 222 | 82 | 118 | 122,144 | +3,772 (databases 125 to 134: 141 records in 110 files, migrations 124→125 to 133→134, tests +0) |
 | CP-29 | 2026-10-20 | 125,485 | 222 | 82 | 118 | 125,907 | +3,763 (databases 135 to 144: 139 records in 110 files, migrations 134→135 to 143→144, tests +0) |
 | CP-30 | 2026-10-20 | 128,918 | 222 | 82 | 118 | 129,340 | +3,433 (databases 145 to 154: 121 records in 110 files, migrations 144→145 to 153→154, tests +0) |
+| CP-31 | 2026-10-20 | 132,865 | 222 | 82 | 118 | 133,287 | +3,947 (databases 155 to 164: 145 records in 110 files, migrations 154→155 to 163→164, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -1899,3 +1900,123 @@ The rare-word check (scratchpad/same_item_batch.py 145 154) gives 237 lines. Mos
 - Not verified yet: running on a device, the migration from version 144 to version 154 on a device, the UI with 154 databases in the list, lint and the release build.
 - The 500s to the 590s are the thinnest decades of the catalogue for coding history. The question from earlier batches is still open: keep them smaller, fill them, or drop the placed records. A second question is larger: should the catalogue keep going back at all where the coding link is this weak?
 - The first facts to check before publishing are the dates of Vitalian's revolt and the Acacian schism, Sigebert I's reign, Zu Chongzhi's life dates and the Burgundian code's range.
+
+## CP-31: databases 155 to 164, 400 to 500 (the fifth century, the century before the 500s)
+
+Status: ten more databases are in the app, one per decade from the 490s down to the 400s: 145 records, migrations from version 154 to version 164, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. Records per database: 490s 14, 480s 12, 470s 14, 460s 10, 450s 13, 440s 16, 430s 20, 420s 19, 410s 12 and 400s 15. None reaches 50, and all ten are marked "quota": false in tools/databases.json. There are 55 runnable records (5 in most decades, 6 in the 450s and the 420s, 8 in the 430s), and they all pass against their expected output. The build passes (164 databases, 5,775 records), and the unit tests pass (17 of 17, testDebugUnitTest executed).
+
+Mood: This is the thinnest century of the whole series, and the fifth century has very little dated coding history. Most of what is here is law, councils, chronicles, astronomy and surveying, and 21 of the 145 records carry an anchor year that is not their own date. The useful part was the same-item check. It caught a repeat in almost every pair of neighbouring decades: Synesius's astrolabe letter, the groma, Prosper's chronicle, the nundinal letters and Vitruvius's screw. Each one I could pin to a single object was fixed.
+
+Date: 2026-10-20. Totals: Kotlin main 132,865 (CP-30: 128,918), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 133,287 (CP-30: 129,340). The +3,947 is the 110 new Kotlin seed files for databases 155 to 164 and the regenerated SeedCatalog.kt. The database class and the tests did not change; the migrations are generated, with DATABASE_VERSION at 164.
+
+### What changed
+
+- Ten databases, from "Database 155: 490s coding catalogue" (490 to 500) to "Database 164: 400s coding catalogue" (400 to 410). Their records are 14, 12, 14, 10, 13, 16, 20, 19, 12 and 15: 145 new records and 5,775 in the whole catalogue. The new rare records number 83, so the whole catalogue has 1,793.
+- Eleven files per database, 110 in total. The colours in tools/databases.json are all unused ones; the first picks repeated older colours, and the generator refused them, so they were replaced.
+- Spec: tools/databases.json has 164 entries. All ten new databases are marked "quota": false.
+- Generator: no change. SeedCatalog.kt, CATALOGUE.md and the README tables are regenerated. The README sentence about runnable counts now reads 75 to 164, with 155 to 164 in the right groups.
+- Process: one helper per database for the first pass, from the brief and an anchors file, run in parallel. The lead then integrated the batch: added the missing DEVICE in 158, and replaced the repeats listed below.
+
+### Placed records (21)
+
+The year of these records is an anchor, not the date of the item itself. Each record's details say so.
+
+- 155: a TOOL, reed pens and ink pots (493, the Ostrogothic kingdom); a DEVICE, the standard balance weights, exagia (498, the bronze reform).
+- 156: an EXAMPLE, the square bu of three fields in mu (485); a DEVICE, Childeric's signet ring (481, his death).
+- 157: a TOOL, the gold coin dies of the Constantinople mint (474, Zeno's reign); a PRACTICE, wergild (475, Euric's code).
+- 158: a GUIDE, the Sanskrit vowel count (460, the Kahaum pillar); a DEVICE, the composite bow of the steppe peoples (465, the death of Libius Severus).
+- 159: a LANGUAGE, Patrick's Confessio (450, the start of the second half of the fifth century); a DEVICE, the chorobates, a levelling frame (455, the Vandal sack of Rome).
+- 160: a PRACTICE, the palimpsest (440, Leo's accession); a GUIDE, the nundinal market letters (443, the Yuanjia proposal); a DEVICE, the portcullis (447, the walls after the earthquake).
+- 161: a DEVICE, the vallus, a reaping machine (431, the opening of the Council of Ephesus).
+- 162: a DEVICE, the groma, a surveyor's cross (420, the Liu Song founding); a GUIDE, cutting a seal in reverse (421, Constantius III made co-emperor).
+- 163: a GUIDE, the Roman names of the twelfths of an as (410, the sack of Rome); a DEVICE, Synesius's brass hydroscope (415, Hypatia's death).
+- 164: a DEVICE, the water-driven stone saw of Hierapolis (402, Honorius moves to Ravenna); a GUIDE, the quorum for a Vinaya ordination (402); an EXAMPLE, the lines of the Aeneid (400, Servius's commentary).
+
+Weakest first: the 163 hydroscope (415), the 164 Aeneid lines (400), the 161 vallus (431), the 160 nundinal letters and portcullis, and the 155 reed pens.
+
+### Problems and what was fixed
+
+- 158 had no DEVICE: the helper found no device it could date or place honestly. The composite bow of the steppe peoples was added, placed at 465.
+- Synesius's astrolabe letter was in 163 (the brass hydroscope) and 164 (the planisphere): the same object. The 164 copy was replaced by the Hierapolis saw (402).
+- The groma was in 159 and 162. The 159 copy was replaced by a screw, and then by the chorobates (455), because the screw is Vitruvius's screw, already in database 52.
+- Prosper's chronicle was in 159 (LANGUAGE, 455) and 161 (TOOL, 433): the same chronicle. The 159 copy was removed; 159 keeps two LANGUAGE records.
+- The nundinal market letters were in 160 (GUIDE) and 163 (GUIDE): the same method. The 163 copy was replaced by the Roman names of the twelfths (410).
+- The twelfths guide in 163 is next to database 51's shares of an estate reckoned in twelfths. Different items: names of the parts in one, a share sum in the other. Kept.
+
+### Repeats kept inside one database (for a decision)
+
+- 157: the Inariyama sword is in three records (DEVICE, EXAMPLE and CROSS on its dates).
+- 159: the Council of Chalcedon is in four records (SYSTEM, GUIDE, FLEX and CROSS).
+- 160: the Robber Council of 449 is in three records (SYSTEM, FLEX and CROSS).
+- 164: the Rhine crossing and Stilicho's death are in three records (CROSS, FLEX and PROJECT).
+- 161: Attila's joint rule is in a SYSTEM and an EXAMPLE; Buddhaghosa's book and its seven purities, and Macrobius's book and its zones, are each a LANGUAGE and an EXAMPLE.
+- 162: Augustine's City of God is a LANGUAGE and an EXAMPLE on its book counts.
+- 158: Hydatius's chronicle is a TOOL and an EXAMPLE.
+- Each of these is a book or an event and a computed record about it, so I kept them; the lead may cut one in each case.
+
+### Neighbours across databases, kept
+
+- Victorius's Easter table in 159 beside the 532-year Easter cycle in 152, and the Dionysian table in 152.
+- Patrick's Confessio in 159 beside the Book of Armagh in 124, which copies it.
+- The seal cut in reverse in 162 beside the woodblock carved in mirror image in 129.
+- Aryabhata's consonant numerals in 155 beside the Greek letter numbers in 62.
+- The Ostrogothic kingdom in 155 beside the water clock of Theoderic in 153.
+- The Hierapolis saw in 164 beside the crank sawmill of 1593 in 45.
+
+### Repeat check result
+
+The rare-word check (scratchpad/same_item_batch.py 155 164) gives 195 lines. Most are one shared common word between different items. The same-object pairs are the ones fixed above; the within-database repeats are listed above; the neighbours above are different items.
+
+### Facts checked by search
+
+These come from the helpers' search reports; the record details say what each date rests on.
+
+- 155: Gelasius's letter, 494; the Bolnisi Sioni inscriptions, dated 493 or 494; the Aryabhatiya's 499 (its Kali-yuga date); the follis of 498; the Luoyang move, 494 in most accounts.
+- 156: Zhang Qiujian's Mathematical Classic between about 466 and 485; the equal-field decree of 485; the Henotikon of 482; Victor of Vita's date, disputed between about 484 and 488.
+- 157: the Inariyama sword, dated 471 by most scholars (531 proposed); the Martyrdom of Shushanik, 476 to 483; Euric's code, 475 or 483; Hanseong taken in 475.
+- 158: Hydatius's chronicle resumes at 379 after Jerome; the Kahaum pillar's Gupta year 141 is 460 or 461; the Taishi era, 465 to 471; Anthemius reigned from 467 to 472; Majorian was killed on 7 August 461, and Libius Severus died on 15 August 465.
+- 159: Victorius's table of 457; the Confessio in the second half of the fifth century; Sidonius's panegyric recited on 1 January 456; the Council of Chalcedon opened on 8 October 451 in most accounts.
+- 160: Carthage taken on 19 October 439; the treaty of 442 is read two ways; the Robber Council summoned for August 449 (one source); He Chengtian's calendar proposed in 443; Socrates's history spans 305 to 439; Taiwu's campaign began in 446.
+- 161: the Theodosian Code's constitution of 15 February 438, in force from 1 January 439; the first ordination of nuns in East Asia at Nanjing in 434 (433 in some accounts); Prosper's Epitoma begun in 433.
+- 162: the Avatamsaka sutra's 60 fascicles, completed about 420 (418 to 422 in accounts); Dharmakshema's Nirvana Sutra, 421; Constantinople's teaching posts, 425 with 31 posts; Dadisho's office about 421 to 422; Kou Qianzhi's New Code, revealed in 415 and presented in 424.
+- 163: Faxian's journey, 399 to 412; Orosius's history ends in 417 and Augustine's request is of 416; the Mahasamghika Vinaya rendered jointly by Buddhabhadra and Faxian. The Yixi calendar of 417 was not confirmed and was dropped.
+- 164: Synesius's letter is undated and its addressee is disputed; the Notitia Dignitatum, eastern part about 395 and western part about 420; the Mar Isaac synod in 410 at Seleucia-Ctesiphon; the White Lotus Society in 402 with 123 pledges; Kumarajiva's Lotus translation dated 406 at Chang'an.
+
+### Facts from memory, to check
+
+- The Aryabhata letter values (ka to ma 1 to 25; ya 30 and so on) and the circle rule 62832/20000 (155).
+- Odoacer's death, 493; the Ostrogothic kingdom, 493; Anastasius proclaimed in 491; Kavadh deposed in 496 and restored in 499 (155).
+- Ricimer and Anthemius; Libius Severus; Majorian; Gaiseric's 477; Romulus Augustulus, 476; Nepos's murder, 480; Southern Qi, 479; Zeno, 474 (157 and 158).
+- Honorius's death, 423; Stilicho's death, 22 August 408; Pollentia, 6 April 402; Verona, 403; the Rhine crossing, 31 December 406; the sack of Rome, 24 August 410; Hypatia's death, 415; Constantius III, 421; Valentinian III, 425; Augustine's death, 430 (161 to 164).
+- Liu Song, 420; the Vandals cross, 429; Attila's death, 453; the Catalaunian Plains, 451; Leo I's coronation in 457 by Anatolius; Marcian, 450 (159 and 162).
+
+### Single-source dates
+
+- Synesius's 400 departure from Constantinople (one encyclopedia entry); the letter's addressee is disputed.
+- Kumarajiva's arrival about 401 (one web page); the White Lotus Society's 123 pledges.
+- Bolnisi Sioni as the oldest dated inscription on Georgian soil (one encyclopedia).
+- The Visuddhimagga's 430 (one web source; other sources say the fifth century).
+- The Taishi year two as September 466 (one summary of the Book of Song).
+- Orosius's 417 end and Augustine's 416 request (one encyclopedia).
+- Faxian's return in 412 (one encyclopedia).
+
+### Problems
+
+- Thin decades. All ten are below 50 records. The runnable count is 5 in most decades.
+- Placed records. Twenty-one of the 145 records carry an anchor year, about one in seven. This is the same decision as before: the user chose to keep placed years.
+- Coding relevance. The fifth century has almost no dated coding history. Most items are law, councils, chronicles, astronomy and surveying, and the GUIDE and TOOL records are the thinnest.
+- Memory dates. Many of the dates above come from memory. The first to check are the Aryabhata letter values, the Hierapolis saw's date, the chorobates' use, the Visuddhimagga's 430 and the Dadisho' and Kou Qianzhi dates.
+
+### How I checked it
+
+- Verifiers: 155 5 of 5; 156 5 of 5; 157 5 of 5; 158 5 of 5; 159 6 of 6; 160 5 of 5; 161 8 of 8; 162 6 of 6; 163 5 of 5; 164 5 of 5. That is 55 runnable records, each with expected output worked out by hand before the run.
+- Checker: each database reports only the count rules, which the thin-century rule allows. No title clashes with the 5,630 earlier records, and no text-rule or year problems. The rare counts (7 to 10) are 9, 8, 9, 7, 7, 9, 8, 9, 9 and 8 for 155 to 164.
+- Generator: checks passed for 164 databases and 5,775 records.
+- Unit tests: BUILD SUCCESSFUL; 17 of 17 pass, 0 failures, 0 errors, and the Gradle test task ran.
+- Text: no Cyrillic in the logs, the source pack, the README, CATALOGUE.md or the tools.
+
+### Notes
+
+- Not verified yet: running on a device, the migration from version 154 to version 164 on a device, the UI with 164 databases in the list, lint and the release build.
+- The 400s to the 490s are the thinnest decades of the catalogue for coding history. The question from earlier batches is still open: keep them smaller, fill them, or drop the placed records. A second question is larger: should the catalogue keep going back at all where the coding link is this weak?
+- The first facts to check before publishing are the Aryabhata letter values, the Hierapolis saw's date, the chorobates' use and the Visuddhimagga's 430.
