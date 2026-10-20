@@ -1,24 +1,29 @@
 """Ежедневный слепок всех квартир на продажу на Циане в пределах МКАД.
 
-Вторичка: полигон МКАД + building_status=1, нарезка по цене до срезов <= 1512 (свёртки во вторичке нет).
-Новостройки: обход по ЖК внутри МКАД (geo/jk-in-mkad.json, раз в неделю сверяется с каталогом) с building_status=2 -- на уровне полигона Циан
-сворачивает похожие квартиры ЖК в одну карточку, а внутри ЖК свёртки нет. Лоты за границей МКАД отбрасываются
-по координатам.
+Схема (2026-10-20, после полного прогона постраничным поиском, который оказался в ~6 раз дороже):
+  1. Слой id (daily/idmap.py): все id внутри МКАД через карту Циана -- десятки запросов. Даёт точный ежедневный
+     состав рынка: что снято, что появилось.
+  2. Атрибуты лотов берутся из вчерашнего слепка; карточки докачиваются только для новых id:
+     вторичка -- поиск по полигону МКАД, сортировка по дате публикации (новые сверху), остаток -- по точке дома;
+     новостройки -- по ЖК, сортировка по дате.
+  3. Цены и флаги обновляются ротацией: каждый день 1/ROTATE ценовых срезов вторички и ЖК, плюс ЖК с горячими лотами
+     застройщиков -- ежедневно. Поле checked -- дата последней сверки карточки.
+  Первый день (вчерашнего слепка нет): атрибуты из постраничного сбора этого дня (raw/) и полного сбора новостроек
+  Москвы (data/full), недостающие срезы досбираются.
 
-Полнота листания: при сортировке по цене лоты с одинаковой ценой (ровные 14 000 000 и т. п.) меняются местами между
-страницами -- часть повторяется, часть теряется (тест 2026-10-20: срез 14-15 млн, 844 лота, по цене -- 764-785 уникальных).
-Сортировка по дате публикации совпадений почти не имеет (832 из 844, без повторов), объединение двух сортировок -- 842.
-Поэтому: срезы до SLICE_MAX лотов, первый проход по дате, при недоборе > 0,5% -- второй проход по цене и объединение.
+Полнота листания поиска: при сортировке по цене лоты с одинаковой ценой меняются местами между страницами (тест: срез
+14-15 млн, 844 лота -- 764-785 уникальных); по дате публикации -- 832 без повторов, объединение двух сортировок -- 842.
+Поэтому срезы до SLICE_MAX, проход по дате, при недоборе > 0,5% -- ещё по цене.
 
-Каждая часть (ценовой срез / ЖК) пишется в raw/ отдельным файлом -> прогон можно продолжить с места остановки.
-Итог: history/DAY/lots.jsonl.gz + snapshot.json (полнота относительно счётчиков Циана).
-usage: python daily/snapshot.py [--day YYYY-MM-DD] [--workers 2] [--only sec|new] [--limit N]
+Итог: history/DAY/lots.jsonl.gz + snapshot.json. Части пишутся в raw/ -> прогон продолжается с места остановки.
+usage: python daily/snapshot.py [--day YYYY-MM-DD] [--workers 2]
 """
 import argparse, datetime as dt, json, os, sys, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import DATA, MKAD_QUERY, GEO, cian, client, day_dir, inside_mkad, log, lot_row, read_jsonl, today, write_jsonl
+from common import DATA, MKAD_QUERY, GEO, ROOT, cian, client, day_dir, inside_mkad, log, lot_row, read_jsonl, today, write_jsonl
+from idmap import id_layer
 
 BASE = {"_type": "flatsale", "engine_version": {"type": "term", "value": 2}}
 SEC = dict(BASE, geo={"type": "geo", "value": [MKAD_QUERY]}, building_status={"type": "term", "value": 1})
@@ -26,6 +31,9 @@ NEW = dict(BASE, geo={"type": "geo", "value": [MKAD_QUERY]}, building_status={"t
 LIMIT = cian.PAGE_SIZE * cian.MAX_PAGES
 SLICE_MAX = 600
 SORTS = ("creation_date_desc", "price_object_order")
+DATE_DESC = {"type": "term", "value": "creation_date_desc"}
+ROTATE = 7
+HOUSE_CAP = 600  # сколько домов в день добирать точечно (остаток -- завтра)
 # стартовая сетка цен, млн ₽: срезы, которые всё равно больше 1512, делятся пополам
 GRID = [0, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 24, 26, 28, 30, 33, 36, 40, 45, 50, 57, 65, 75, 90, 110, 140, 200, 350, 100_000]
 
@@ -139,6 +147,92 @@ def jk_list(max_age_days=7):
     return sorted(int(k) for k, v in known["jk"].items() if v)
 
 
+def square(lat, lng, d=0.0004):
+    return {"type": "polygon", "name": "дом", "coordinates": [[str(x), str(y)] for x, y in
+            ((lng - d, lat - d), (lng + d, lat - d), (lng + d, lat + d), (lng - d, lat + d), (lng - d, lat - d))]}
+
+
+def fetch_new_sec(raw, need, layer):
+    """Карточки новых id вторички: свежие публикации сверху выдачи МКАД; кого там нет -- по точке дома."""
+    path = os.path.join(raw, "new-sec.jsonl.gz")
+    if os.path.exists(path):
+        return sum(1 for _ in read_jsonl(path))
+    c, rows, idle = client(), {}, 0
+    for p in range(1, cian.MAX_PAGES + 1):
+        offers = c._page(dict(SEC, sort=DATE_DESC), p)["offersSerialized"]
+        if not offers:
+            break
+        hit = sum(o["id"] in need for o in offers)
+        rows.update((o["id"], lot_row(o)) for o in offers)
+        if need <= rows.keys():
+            break
+        idle = 0 if hit else idle + 1
+        if idle >= 3:
+            break
+    points = {}
+    for i in need - rows.keys():
+        points.setdefault((layer[i]["lat"], layer[i]["lng"]), set()).add(i)
+    for (lat, lng), ids in list(points.items())[:HOUSE_CAP]:
+        q = dict(BASE, geo={"type": "geo", "value": [square(lat, lng)]}, building_status={"type": "term", "value": 1}, sort=DATE_DESC)
+        _, offers = c.search(q, max_pages=3)
+        rows.update((o["id"], lot_row(o)) for o in offers)
+    log(f"вторичка: новых id {len(need)}, карточек получено {len(need & rows.keys())}, домов точечно {min(len(points), HOUSE_CAP)}")
+    return write_jsonl(path, rows.values())
+
+
+def fetch_new_jk(raw, jk, need):
+    """Карточки новых id ЖК: выдача ЖК по дате публикации, пока не найдены все нужные."""
+    path = os.path.join(raw, f"newjk-{jk}.jsonl.gz")
+    if os.path.exists(path):
+        return sum(1 for _ in read_jsonl(path))
+    q = dict(BASE, geo={"type": "geo", "value": [{"type": "newobject", "id": jk}]}, building_status={"type": "term", "value": 2},
+             sort=DATE_DESC)
+    c, rows = client(), {}
+    for p in range(1, cian.MAX_PAGES + 1):
+        offers = c._page(q, p)["offersSerialized"]
+        if not offers:
+            break
+        rows.update((o["id"], lot_row(o)) for o in offers)
+        if need <= rows.keys():
+            break
+    return write_jsonl(path, rows.values())
+
+
+def prev_lots(day):
+    days = sorted(x for x in os.listdir(DATA) if len(x) == 10 and x < day and os.path.exists(os.path.join(DATA, x, "lots.jsonl.gz")))
+    if not days:
+        return {}, None
+    return {r["id"]: r for r in read_jsonl(os.path.join(DATA, days[-1], "lots.jsonl.gz"))}, days[-1]
+
+
+def bootstrap_new():
+    """Первый день: новостройки из полного сбора по Москве (data/full, формат flat_row) -> записи lot_row без
+    полей, которых там нет (они заполнятся при ротационной сверке в течение недели)."""
+    path = os.path.join(ROOT, "data", "full", "cian-moscow-new.dedup.jsonl")
+    if not os.path.exists(path):
+        return {}
+    day = dt.date.fromtimestamp(os.path.getmtime(path)).isoformat()
+    out = {}
+    for f in read_jsonl(path):
+        if not inside_mkad(f.get("lat"), f.get("lng")):
+            continue
+        area, price, metro = f.get("area_total"), f.get("price_rub"), (f.get("metro") or [[None, None, None]])[0]
+        out[f["offer_id"]] = {
+            "id": f["offer_id"], "cian_id": f["offer_id"], "url": f["url"], "kind": "new", "category": "newBuildingFlatSale",
+            "share": None, "price": price, "pm2": round(price / area) if price and area else None, "area": area,
+            "living": f.get("area_living"), "kitchen": f.get("area_kitchen"), "rooms": f.get("rooms"), "flat_type": f.get("flat_type"),
+            "apartments": f.get("is_apartments"), "floor": f.get("floor"), "floors": f.get("floors_total"),
+            "decoration": f.get("decoration"), "furniture": None, "build_year": None, "material": f.get("material"),
+            "deadline": None, "deadline_done": f.get("deadline_done"), "jk_id": f.get("jk_id"), "jk": f.get("jk_name"),
+            "house_id": f.get("house_id"), "house": f.get("house_name"), "okrug": None, "raion": None, "street": None,
+            "address": f.get("address"), "lat": f.get("lat"), "lng": f.get("lng"), "metro": metro[0], "metro_min": metro[1],
+            "metro_by": metro[2], "seller": "developer" if f.get("from_developer") else "agent", "user_id": None,
+            "agency": f.get("seller"), "sale_type": f.get("sale_type"), "mortgage": f.get("mortgage"),
+            "created": (f.get("created") or "")[:19], "added_ts": None, "photos": len(f.get("photos") or []),
+            "layout": bool(f.get("layout_photo")), "descr_len": len(f.get("description") or ""), "checked": day}
+    return out
+
+
 def run(tasks, workers, label):
     """tasks: [(name, fn, args)]. Упавшие части -- повтор через 5 минут, затем ещё раз через 15."""
     for attempt, pause in enumerate((0, 300, 900)):
@@ -167,8 +261,6 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--day", default=today())
     ap.add_argument("--workers", type=int, default=2)
-    ap.add_argument("--only", choices=["sec", "new"])
-    ap.add_argument("--limit", type=int, help="тест: не больше N частей каждого вида")
     ap.add_argument("--delay", type=float, nargs=2, help="пауза между запросами одного потока, с")
     a = ap.parse_args()
     if a.delay:
@@ -176,34 +268,71 @@ def main():
     d = day_dir(a.day)
     raw = os.path.join(d, "raw")
     os.makedirs(raw, exist_ok=True)
-    t0, failed, expect = time.time(), [], {}
+    t0 = time.time()
 
-    if a.only != "new":
-        plan = plan_sec(a.workers)[: a.limit]
-        failed += run([(f"sec {lo:,}-{hi:,}", fetch_sec, (raw, lo, hi)) for lo, hi, _ in plan], a.workers, "вторичка")
-    if a.only != "sec":
-        jks = jk_list()[: a.limit]
-        expect["new_cian_polygon"] = count(NEW)[1]
-        failed += run([(f"ЖК {jk}", fetch_jk, (raw, jk)) for jk in jks], a.workers, "новостройки")
+    # 1. слой id
+    lpath = os.path.join(raw, "idlayer.json")
+    if os.path.exists(lpath):
+        cached = json.load(open(lpath))
+        layer, lstats = {int(k): v for k, v in cached["ids"].items()}, cached["stats"]
+    else:
+        layer, lstats = id_layer(workers=a.workers)
+        json.dump({"ids": layer, "stats": lstats}, open(lpath, "w"))
 
-    for kind, prefix in (("sec", "sec-"), ("new_by_jk", "jk-")):  # полнота: счётчики Циана против собранного
-        cnt = [next(read_jsonl(os.path.join(raw, f))) for f in os.listdir(raw) if f.startswith(prefix) and f.endswith(".count")]
-        if cnt:
-            expect[kind] = {"expected": sum(c["expected"] for c in cnt), "got": sum(c["got"] for c in cnt)}
-    lots, sec_ids = {}, set()
-    for f in sorted(os.listdir(raw)):
-        if f.endswith(".jsonl.gz") and (a.only is None or f.startswith(a.only if a.only == "sec" else "jk-")):
+    # 2. атрибуты: вчерашний слепок (первый день -- постраничный сбор этого дня и полный сбор новостроек)
+    attrs, since = prev_lots(a.day)
+    plan = plan_sec(a.workers)
+    tasks = []
+    if not attrs:
+        attrs = bootstrap_new()
+        tasks += [(f"sec {lo:,}-{hi:,}", fetch_sec, (raw, lo, hi)) for lo, hi, _ in plan
+                  if not os.path.exists(os.path.join(raw, f"sec-{lo}-{hi}.jsonl.gz"))]
+        for f in os.listdir(raw):  # уже собранные сегодня срезы
+            if f.startswith("sec-") and f.endswith(".jsonl.gz"):
+                attrs.update((r["id"], r) for r in read_jsonl(os.path.join(raw, f)))
+        log(f"первый день: атрибуты из готовых сборов -- {len(attrs)} лотов, досбор срезов вторички: {len(tasks)}")
+
+    # 3. новые id -> карточки
+    need = set(layer) - set(attrs)
+    need_sec = {i for i in need if layer[i]["kind"] == "sec"}
+    by_jk = {}
+    for i in need - need_sec:
+        by_jk.setdefault(layer[i]["jk_id"], set()).add(i)
+    by_jk.pop(None, None)
+    if need_sec and not tasks:
+        tasks.append(("новые id вторички", fetch_new_sec, (raw, need_sec, layer)))
+    tasks += [(f"новые id ЖК {jk}", fetch_new_jk, (raw, jk, ids)) for jk, ids in by_jk.items()]
+
+    # 4. ротационная сверка цен + ЖК с горячими лотами застройщиков
+    k = dt.date.fromisoformat(a.day).toordinal() % ROTATE
+    tasks += [(f"сверка sec {lo:,}-{hi:,}", fetch_sec, (raw, lo, hi)) for n, (lo, hi, _) in enumerate(plan)
+              if n % ROTATE == k and not any(t[2][1:3] == (lo, hi) for t in tasks if t[1] is fetch_sec)]
+    hot_path = os.path.join(DATA, "hot.json")
+    hot = json.load(open(hot_path)) if os.path.exists(hot_path) else []
+    hot_jk = list(dict.fromkeys(attrs[i]["jk_id"] for i in hot if i in attrs and attrs[i].get("seller") == "developer" and attrs[i].get("jk_id")))[:30]
+    refresh = sorted({j for j in jk_list() if j % ROTATE == k} | set(hot_jk))
+    tasks += [(f"сверка ЖК {jk}", fetch_jk, (raw, jk)) for jk in refresh]
+    log(f"слой id: {len(layer)}; новых id {len(need)} (вторичка {len(need_sec)}, ЖК {len(by_jk)}); "
+        f"сверка: срезов {sum(1 for t in tasks if str(t[0]).startswith('сверка sec'))}, ЖК {len(refresh)}")
+    failed = run(tasks, a.workers, "слепок")
+
+    # 5. итог дня: состав -- слой id, атрибуты -- свежие карточки дня поверх известных
+    fresh = {}
+    for f in os.listdir(raw):
+        if f.endswith(".jsonl.gz"):
             for r in read_jsonl(os.path.join(raw, f)):
-                if f.startswith("sec-"):
-                    sec_ids.add(r["id"])
-                if inside_mkad(r["lat"], r["lng"]):
-                    lots[r["id"]] = r
-    n = write_jsonl(os.path.join(d, "lots.jsonl.gz"), lots.values())
-    if "sec" in expect:
-        expect["sec"]["unique"] = len(sec_ids)
-    summary = {"day": a.day, "lots": n, "sec": sum(r["kind"] == "sec" for r in lots.values()),
-               "new": sum(r["kind"] == "new" for r in lots.values()), "expected": expect, "failed_parts": failed,
-               "minutes": round((time.time() - t0) / 60, 1)}
+                fresh[r["id"]] = dict(r, checked=a.day)
+    attrs.update(fresh)
+    lots = [dict(attrs[i], lat=attrs[i].get("lat") or v["lat"], lng=attrs[i].get("lng") or v["lng"])
+            for i, v in layer.items() if i in attrs]
+    n = write_jsonl(os.path.join(d, "lots.jsonl.gz"), lots)
+    cnt = [next(read_jsonl(os.path.join(raw, f))) for f in os.listdir(raw) if f.endswith(".count")]
+    summary = {"day": a.day, "id_layer": lstats, "ids": len(layer), "lots_with_card": n,
+               "sec": sum(r["kind"] == "sec" for r in lots), "new": sum(r["kind"] == "new" for r in lots),
+               "no_card_yet": len(layer) - n, "new_ids": len(need), "since": since,
+               "checked_today": sum(1 for i in layer if i in fresh),
+               "refresh_completeness": {"expected": sum(c["expected"] for c in cnt), "got": sum(c["got"] for c in cnt)},
+               "failed_parts": failed, "minutes": round((time.time() - t0) / 60, 1)}
     json.dump(summary, open(os.path.join(d, "snapshot.json"), "w"), ensure_ascii=False, indent=1)
     log("слепок:", json.dumps(summary, ensure_ascii=False))
     sys.exit(1 if failed else 0)
