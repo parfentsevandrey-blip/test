@@ -42,6 +42,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-26 | 2026-10-18 | 113,927 | 222 | 82 | 118 | 114,349 | +4,475 (databases 105 to 114: 174 records in 110 files, migrations 104→105 to 113→114, tests +0) |
 | CP-27 | 2026-10-19 | 117,950 | 222 | 82 | 118 | 118,372 | +4,023 (databases 115 to 124: 155 records in 110 files, migrations 114→115 to 123→124, tests +0) |
 | CP-28 | 2026-10-19 | 121,722 | 222 | 82 | 118 | 122,144 | +3,772 (databases 125 to 134: 141 records in 110 files, migrations 124→125 to 133→134, tests +0) |
+| CP-29 | 2026-10-20 | 125,485 | 222 | 82 | 118 | 125,907 | +3,763 (databases 135 to 144: 139 records in 110 files, migrations 134→135 to 143→144, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -1675,3 +1676,129 @@ Helpers checked the facts below with web search (standard mode, six calls each a
 - Not verified yet: running on a device, the migration from version 124 to version 134 on a device, the UI with 134 databases in the list, lint and the release build.
 - The 700s to the 790s are thin in dated coding history, and much of the material is not about coding. The question from earlier batches is still open: keep them smaller, fill them, or drop the placed records. A second question is new: should a century be covered at all when the coding link is this weak?
 - The first facts to check before publishing are the Liudian's 738 date, the Chuxueji and Kaiyuan Zhanjing dates in the 132 PROJECT, and the Ibn Qasim end date in 133.
+
+## CP-29: databases 135 to 144, 600 to 700 (the seventh century, the century before the 700s)
+
+Status: ten more databases are in the app, one per decade from the 690s down to the 600s: 139 records, migrations from version 134 to version 144, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. Records per database: 690s 17, 680s 13, 670s 13, 660s 14, 650s 14, 640s 15, 630s 15, 620s 13, 610s 13 and 600s 12. None reaches 50, and all ten are marked "quota": false in tools/databases.json. The build passes (144 databases, 5,509 records), 17 of 17 unit tests pass, and the 51 runnable records (6 in the 690s and 5 in each other decade) pass against their expected output. Every kind is present in every database.
+
+Mood: The seventh century is the emptiest stretch of the coding catalogue so far. Most decades give a handful of dated items, and the rest is placed by an anchor: 18 of the 139 records carry a year that is not the year of their own item. The two repeats the checks caught were both real duplicates of one object in neighbouring decades (the Cheomseongdae observatory in 140 and 141, and the Arabic vowel dots in 136 and 137), and each was fixed. What I am not comfortable with is how many records rest on dates from memory. The list below is long, and several of those dates would need a source before anything is published.
+
+Date: 2026-10-20. Totals: Kotlin main 125,485 (CP-28: 121,722), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 125,907 (CP-28: 122,144). The +3,763 is the 110 new Kotlin seed files for databases 135 to 144 and the regenerated SeedCatalog.kt. The database class and the tests did not change; the migrations are generated, with DATABASE_VERSION at 144.
+
+### What changed
+
+- Ten databases, from "Database 135: 690s coding catalogue" (690 to 700) to "Database 144: 600s coding catalogue" (600 to 610). Their records are 17, 13, 13, 14, 14, 15, 15, 13, 13 and 12: 139 new records and 5,509 in the whole catalogue. The new rare records number 86, so the whole catalogue has 1,624.
+- Eleven files per database, 110 in total. Colours are #F44336, #E91E63, #9C27B0, #673AB7, #3F51B5, #2196F3, #03A9F4, #00BCD4, #009688 and #4CAF50, in order from 135 to 144.
+- Spec: tools/databases.json has 144 entries. All ten new databases are marked "quota": false.
+- Generator: no change in this batch.
+- Documents: CATALOGUE.md and the README overview and structure blocks are regenerated. The README sentence about examples now gives the runnable counts for 75 to 144.
+- Process: one helper per database, ten in parallel, from the brief and an anchors file for the 600s to the 690s. Each helper reported count-only checker problems, which the thin-century rule allows. The lead fixed the two same-item repeats listed below.
+
+### Placed records (18)
+
+The year of these records is an anchor, not the date of a dated making. Each record's details say so.
+
+- 135: a DEVICE, a gold pectoral cross linked to St Cuthbert (698); a PRACTICE, the St Cuthbert Gospel (698); a GUIDE on the Roman civil degrees of kinship (692).
+- 136: an EXAMPLE on the chapters of the four Gospels, counted in code (680, the year of the Book of Durrow).
+- 137: a LANGUAGE on the laws of Hlothhere and Eadric of Kent (673); a TOOL, the scribe's penknife (674); a PRACTICE on the red dots that marked the vowels of Arabic writing (673); a GUIDE on three gold tremisses (672).
+- 138: a GUIDE on how one Tang catty nests into taels, mace and fen (660).
+- 139: a GUIDE on finding three grades of grain by elimination, the fangcheng method (656).
+- 140: a DEVICE, the padded horse collar (650); a TOOL, the Kashika-vritti, a Sanskrit grammar commentary (650).
+- 141: a PRACTICE on the Qur'an gathered under Abu Bakr (633); a GUIDE on the camel zakat of the Abu Bakr letter (632).
+- 142: a DEVICE, the Sutton Hoo lyre (624, the usual date of King Raedwald's death).
+- 143: a GUIDE on a Tang weight of jin, liang and qian (618, the Tang founding).
+- 144: a GUIDE on the entering tone of a syllable with a final stop (601, the Qieyun); a PROJECT on the Sui emperors Wen and Yang (604).
+
+Weakest first: the 135 cross and St Cuthbert Gospel, the 140 horse collar, the 142 lyre, the 137 penknife and the 139 grain GUIDE.
+
+### Problems and what was fixed
+
+- The Cheomseongdae observatory was in 140 (DEVICE, 647) and 141 (DEVICE, 633). The 140 copy was replaced by a placed horse collar (650); 141 keeps the observatory.
+- The Arabic vowel dots were in 136 (TOOL, placed at 688) and 137 (PRACTICE, placed at 673). The 136 copy was replaced by Adomnan's De locis sanctis (686, dated from memory); 137 keeps the dots.
+- No kind was empty in any database.
+
+### Repeats left for a decision
+
+- 141: Isidore's Etymologies appear in three records (LANGUAGE, CROSS and FLEX).
+- 136: the Kota Kapur stone (LANGUAGE and CROSS), with the Kedukan Bukit stone beside it as a second Old Malay inscription.
+- 140: the Edict of Rothari (SYSTEM and FLEX) and the Taika reform edict (SYSTEM and FLEX).
+- 143: the Hokke gisho (LANGUAGE and CROSS).
+- 135: Adomnan (CROSS) and his law, the Cain Adomnain (LANGUAGE).
+- 138: the fourteen caliphs of Damascus (EXAMPLE), beside the caliphs' reigns of 724 to 750 in 130 (PROJECT): one family of counts.
+
+Neighbours across databases, different items, kept:
+
+- The Umayyad caliphate at Damascus (138) beside the Umayyad caliphate of Cordoba (112).
+- The siege of Mecca in 683 and its catapults (136) beside the mangonel (87).
+- The Qur'an gathered under Abu Bakr (141) beside the Qur'an text standardised under Uthman (139): two events in the making of the text.
+- The Saka dating GUIDE (136) beside the Indian Saka dates (75).
+- The Gospel-chapters EXAMPLE (136) beside the Vulgate books (133) and the New Testament chapters (52).
+- Greek fire (137) beside the Greek fire siphon (110): the substance and its first use, not the siphon.
+
+### Repeat check result
+
+The rare-word check (scratchpad/same_item_batch.py 135 144) gives 204 pairs over 5,509 records. Every pair that touches the batch was read. Most share one common word and are different items. The whole catalogue still has only two repeated titles: "Erlang" and "Software inspections", as before.
+
+### Facts checked by web search
+
+Helpers checked the facts below with web search (standard mode, six calls each at most; one helper went over by one). Each is a single source or a summary unless stated.
+
+- 135: Cain Adomnain at Birr in 697, with 91 guarantors; Adomnan abbot of Iona from 679 to 704 (no source gives a birth year, so the CROSS uses the abbacy); the Cuthbert binding dated to the late seventh or early eighth century (disputed); Zetian characters proposed in 689 (one account) and used about 690 to 705; the Epinal Glossary manuscript about 700, with about 3,300 entries, composed in the late seventh century (one source). The Monkwearmouth sundial was not found and was dropped.
+- 136: Kota Kapur: 608 Saka is 28 February 686, and the sources agree; Kedukan Bukit is disputed, with 604 Saka as 682 CE (used) or 605 Saka as 683; the Synod of Hatfield dated 680 by the Anglo-Saxon Chronicle (Bede gives no year); the Kiyomihara code promulgated in 689, its penal part disputed; the siege of Mecca from late September to late November 683, with catapults.
+- 137: Greek fire invented about 672 to 673 (Theophanes, Kallinikos), first used in the Arab siege of 674 to 678; the Kogo register of 670, nationwide, no copy surviving; the Hertford synod with ten decrees (672 by the council's own dating, 673 by Bede); the Toledo council opening in 675.
+- 138: the Linde calendar issued in 665, developed in 664 and last used in 728; Li Chunfeng (602 to 670); the Nihon Shoki dates Japan's first water clock to 660; the Mount Tai rite of 666; Xuanzang's 600 fascicles (the 1,335-fascicle total not confirmed and not used).
+- 139: the Naniwa palace completed in 652 (court at Naniwa from 645 in some accounts); Kotoku died in 654, and the return to Asuka is given as 654 or 655; the Qur'an standard text "roughly 650"; the Nihon Shoki's water clock of 660; the Asuka Mizuochi excavations (1981 to 1986); the Liber Iudiciorum issued in 654, revised in 681 and 693 (Britannica; ACLS names only 681); the Ten Canons submitted in 656; the Yonghui era (650 to 655); the Tang Code commentary of 653 (one promotional page).
+- 140: the Jin shu of 130 juan in parts of 10, 20, 70 and 30, completed in 648 in some references and drafted 646 to 648 in one account; the Cheomseongdae reign of 632 to 647 with building dates of 633 or 647; the Kashika-vritti in the seventh century; the Ci'en translation bureau of 648; the Toledo councils of 633, 636, 638, 646 and 653; the Typos of September 647 or 648; the Lateran synod of October 649 and Martin I's arrest in 653 or 654.
+- 141: Cheomseongdae's reign of 632 to 647, its building dates 633 or 647, about 27 layers, and stones dated 362, 356 or 365 in different accounts; the Chronicon Paschale written shortly after 628, its record ending in 628, its author unknown; the Sui shu completed in 636 in 85 juan; the camel zakat bands up to 76, confirmed in Bukhari 1454 and Tirmidhi 621.
+- 142: Nineveh on 12 December 627, with the Persian civil war after it; Bhaskara I's commentary of 629, covering the 33 mathematical verses; the sine rule under Aryabhata's name in the Mahabhaskariya, with some accounts tying it to the 629 commentary; the Chronicon Paschale about 630, its end date disputed (627, 628 or 629); the Sutton Hoo ship burial in the early seventh century, linked to Raedwald, with only the metal escutcheons original; the Constitution of Medina at 622, with 623 as an alternative and its authenticity disputed.
+- 143: the Nihon Shoki's entry for 610 on Docho (the Five Classics, pigments, paper, ink and a grinder that some read as water-powered), with his introduction of papermaking disputed; the Zhubing yuanhou lun completed in 610 by Sui decree, authorship disputed; the Hokke gisho traditionally dated 615, authorship disputed; Egypt: Shahrbaraz sent in 618 and Alexandria held by 619 (accounts give 618 to 621 and 619 to 629); the Wuyin calendar (Fu Renjun, Li Chunfeng's criticism, Linde 665), with one reference giving 619 for its rollout.
+- 144: the Nihon Shoki's entry on Docho's mill and arrival, Suiko 18 equal to 610; Kanroku's calendar books, Suiko 10 equal to 602, with calendar use from 604 in some accounts; the Qieyun of 601 and its five earlier sources; the Textus Roffensis (early twelfth century) and the 602 or 603 dating of the Aethelberht code; the keju of 605 and its abolition in 1905; the Sui census of 609, about 9 million households and 46 to 50 million people.
+
+### Facts from memory, to check
+
+- 135: the palace examination of 690; the Quinisext Council of 691 to 692, with 102 canons and the 85 Apostolic canons accepted; Fujiwara-kyo from 694 to 710; Wihtred's laws of 695; the Umayyad dinar of 696 or 697; the Dome of the Rock of 691 or 692; the reigns of Justinian II, Leontius and Tiberius III; Cuthbert's translation in 698; the Roman kinship count; the date of the cross.
+- 136: the Third Council of Constantinople, 680 to 681, condemning Honorius; the Book of Durrow about 680; Saka plus 78; the Gospel chapter counts (28, 16, 24 and 21) and their thirteenth-century division; the seven monastery founding years; Abu al-Aswad's death in 688 or 689; Kota Kapur on Bangka; De locis sanctis given to King Aldfrith about 686.
+- 137: Wearmouth founded in 674; Ziyad died in 673; Hlothhere and Eadric ruled Kent from 673 to 686; the reigns of Ecgfrith, Tenmu and Wamba; the 678 truce of thirty years; a tremissis as a third of a solidus.
+- 138: Muawiya's proclamation in 660 and the Year of Unity in 661; Whitby in 664 and Bede's third book; the Omi code of 668; the Kogo register of 670; Goguryeo's fall in 668; the Tang weight nesting; Empress Wu's share in 660; the Byzantine reign years; the fourteen caliphs of Damascus.
+- 139: the Yongwei statutes of 651; the Hakuchi era (650 to 654) and its white pheasant; Taika as the first era name; the Wujing zhengyi of 653; Sun Simiao about 652; the Xianqing era from 656; the Nine Chapters grain answers (checked by substitution).
+- 140: the Records completed in 646 in 12 juan; Rothari's edict of 643; Umar's council of 644 and its tie rule (the GUIDE); the Taika edict of 646 and the coup of 645; Taizong's dates, 598 to 649.
+- 141: Isidore (about 630, died 636, twenty books); Aihole (Saka 556 is 634); Sophronius's letter of 634; Yarmouk and al-Qadisiyya in 636; Toledo IV in 633; the Ekthesis of 638 and the Lateran of 649; the Qur'an tradition under Abu Bakr; the camel band endings 35, 45, 60, 75 and 90; the Sui split of 5, 50 and 30; events of 630, 632 and 634.
+- 142: Taizong's killings on 4 July 626 and the August abdication; Heraclius's accession in 610; the 602 war start and the 628 peace; Khosrow II's fall in 628; Badr in 624, Hudaybiyya in 628 and Mecca in 630; Xuanzang's departure in 629 and return in 645; Raedwald's death about 624; the Zhenguan code of 637.
+- 143: Heraclius's accession in 610 and the war's end in 628; Salsu in 612; the Goguryeo mission of Docho; the Wuyin adoption in 618; the Tang weights (16 liang to a jin, 10 qian to a liang); the Lotus Sutra's 28 chapters and the Vimalakirti's 14; Suiko from 593 to 628 (some accounts say 592); Yangdi 604 to 618; Gaozu 618 to 626.
+- 144: the Seventeen-Article Constitution of 604; the Grand Canal begun in 605, with Hangzhou reached about 610; the Sui reigns 581 to 604 and 604 to 618; the Daye 5 (609) attribution; the household total of 8,907,546 (not confirmed by search).
+
+### Single-source dates
+
+- 135: the Zetian characters' 689 and the Epinal composition date.
+- 136: the Kedukan Bukit date of 682 and the Hatfield date of 680.
+- 137: the Hertford date of 672 (the council's own dating) and the Toledo date and attendance of 7 November 675; the Greek fire's Syriac date of 669 or 670.
+- 138: the Linde calendar's end year of 728 (one search summary); the identification of the Asuka clock (one source); Xuanzang's 663, the end of a secondhand 660 to 663 span.
+- 139: Naniwa 652; the Liber Iudiciorum 654; the Ten Canons 656; the Yonghui era 650 to 655; the Tang Code commentary 653.
+- 140: the Ci'en date of 648 (one university timeline); the Toledo dates of 638, 646 and 653 (one table); the Typos dispute (one reference).
+- 141: the Cheomseongdae date of 633; the Sui treatises of 656.
+- 142: the Chronicon Paschale (about 630) and the Medina constitution (622) each rest on one snippet; the Sutton Hoo details rest on one collection record; the Wude code's 624 rests on one article that is itself doubtful.
+- 143: Docho's entry dated 610; the Zhubing yuanhou lun dated 610; Fayun's 70 per cent overlap; the Wuyin 618 against 619.
+- 144: the keju's start of 587 and 606 (one reference each); Yang's reign ending in 617 (one reference); the twelvefold multiple in the Aethelberht code (one snippet).
+
+### Problems
+
+- Thin decades. All ten are below 50 records, as listed above. The runnable counts are 6 in the 690s and 5 in each other decade.
+- Placed records. Eighteen of the 139 carry an anchor year. They are the first decision for the user.
+- Coding relevance. This is the thinnest stretch so far for coding history. Much of it is law, councils, Japanese and Chinese chronicles and Sui and Tang administration. The user should decide whether the catalogue should keep going back where the coding link is this weak.
+- Memory dates. Many dates in the list above come from memory. The first to check are the Quinisext canon count, the Wuyin 618 date, Suiko's start year, the household census figure and De locis sanctis in 686.
+- Single sources. Listed above.
+
+### How I checked it
+
+- Unit tests: 17 of 17 pass. The three XML reports show 17 tests, with no failures, errors or skips. The Gradle test task ran, and the build ended with BUILD SUCCESSFUL in 2m 34s.
+- Examples: each new database has its own verifier with exact expected output, worked out by hand before each run. All 51 runnable records pass.
+- Structure: the generator checks 144 databases and 5,509 records. The checker reports only the count rules for each of the ten databases, which the thin-century rule allows; the title checks, text rules, years and rare counts (7 to 10) pass.
+- Cross-batch: the rare-word check gives 204 pairs; two same-item repeats were fixed, as listed above.
+- Whole catalogue: 5,509 records; the only repeated titles are "Erlang" and "Software inspections", as before.
+- Text: the records have no provenance phrases and no dollar signs, and they pass the ASCII rule of the brief, with the en dash allowed.
+
+### Notes
+
+- Not verified yet: running on a device, the migration from version 134 to version 144 on a device, the UI with 144 databases in the list, lint and the release build.
+- The 600s to the 690s are the thinnest decades of the catalogue for coding history. The question from earlier batches is still open: keep them smaller, fill them, or drop the placed records. A second question is larger: should the catalogue keep going back at all where the coding link is this weak?
+- The first facts to check before publishing are the Quinisext canon count, the Wuyin 618 date, Suiko's start year, the household census figure, and the De locis sanctis date.

@@ -8,7 +8,7 @@ import com.example.retrodatabases.data.RecordEntity
 // (databaseId = the new id, one file per kind) and run python3 tools/build_catalogue.py.
 
 /** Version of the database file: the number of the newest seeded database. */
-const val DATABASE_VERSION = 134
+const val DATABASE_VERSION = 144
 
 /** The catalogue of databases that are created on the first launch, in id order. */
 val seedDatabases: List<DatabaseEntity> = listOf(
@@ -816,6 +816,66 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "Languages, systems, devices, tools and practices of 700 to 710, including rare and little-known items.",
         colorHex = "#FFB300",
     ),
+    DatabaseEntity(
+        id = 135,
+        name = "Database 135: 690s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 690 to 700, including rare and little-known items.",
+        colorHex = "#F44336",
+    ),
+    DatabaseEntity(
+        id = 136,
+        name = "Database 136: 680s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 680 to 690, including rare and little-known items.",
+        colorHex = "#E91E63",
+    ),
+    DatabaseEntity(
+        id = 137,
+        name = "Database 137: 670s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 670 to 680, including rare and little-known items.",
+        colorHex = "#9C27B0",
+    ),
+    DatabaseEntity(
+        id = 138,
+        name = "Database 138: 660s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 660 to 670, including rare and little-known items.",
+        colorHex = "#673AB7",
+    ),
+    DatabaseEntity(
+        id = 139,
+        name = "Database 139: 650s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 650 to 660, including rare and little-known items.",
+        colorHex = "#3F51B5",
+    ),
+    DatabaseEntity(
+        id = 140,
+        name = "Database 140: 640s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 640 to 650, including rare and little-known items.",
+        colorHex = "#2196F3",
+    ),
+    DatabaseEntity(
+        id = 141,
+        name = "Database 141: 630s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 630 to 640, including rare and little-known items.",
+        colorHex = "#03A9F4",
+    ),
+    DatabaseEntity(
+        id = 142,
+        name = "Database 142: 620s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 620 to 630, including rare and little-known items.",
+        colorHex = "#00BCD4",
+    ),
+    DatabaseEntity(
+        id = 143,
+        name = "Database 143: 610s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 610 to 620, including rare and little-known items.",
+        colorHex = "#009688",
+    ),
+    DatabaseEntity(
+        id = 144,
+        name = "Database 144: 600s coding catalogue",
+        description = "Languages, systems, devices, tools and practices of 600 to 610, including rare and little-known items.",
+        colorHex = "#4CAF50",
+    ),
 )
 
 /** Years each seeded catalogue covers. The tests check the records against them. */
@@ -954,6 +1014,16 @@ val seedYears: Map<Long, IntRange> = mapOf(
     132L to 720..730,
     133L to 710..720,
     134L to 700..710,
+    135L to 690..700,
+    136L to 680..690,
+    137L to 670..680,
+    138L to 660..670,
+    139L to 650..660,
+    140L to 640..650,
+    141L to 630..640,
+    142L to 620..630,
+    143L to 610..620,
+    144L to 600..610,
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
@@ -975,4 +1045,5 @@ val seedRecords: List<RecordEntity> =
         db112Records + db113Records + db114Records + db115Records + db116Records + db117Records + db118Records +
         db119Records + db120Records + db121Records + db122Records + db123Records + db124Records + db125Records +
         db126Records + db127Records + db128Records + db129Records + db130Records + db131Records + db132Records +
-        db133Records + db134Records
+        db133Records + db134Records + db135Records + db136Records + db137Records + db138Records + db139Records +
+        db140Records + db141Records + db142Records + db143Records + db144Records

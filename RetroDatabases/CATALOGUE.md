@@ -2012,4 +2012,154 @@ The catalogue of database 134 (700 to 710) has the same ten kinds:
 | Projects | 1 | The reigns of Empress Wu, Zhongzong and Ruizong from 690 to 712, summed and ranked by a short program |
 | Flex | 1 | Years from the household registers of 702 to the completion of the Shitong in 710 |
 | Cross-code | 1 | Liu Zhiji's age when the Shitong was completed in 710 and at his death in 721, counted in Python and C |
+
+The catalogue of database 135 (690 to 700) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | The Zetian characters, the new written forms that Empress Wu ordered for her Zhou dynasty, introduced about 690, Cain Adomnain, the Irish Law of the Innocents, issued at the Synod of Birr in 697 to spare women, clerics and children from war and The Quranic inscriptions of the Dome of the Rock at Jerusalem, put up under Abd al-Malik in 691 or 692 |
+| Systems | 4 | The Quinisext Council of 692, which issued canons for the Byzantine church and is also called the Council in Trullo, Fujiwara-kyo, the Japanese capital from 694 to 710, laid out on a Chinese-style plan, The laws of Wihtred of Kent, a code issued in 695 at a council held at Baccanceld and The Umayyad gold dinar with Arabic inscriptions, begun under Abd al-Malik in 696 or 697 and free of figures |
+| Devices | 1 | The gold pectoral cross linked to St Cuthbert, an Anglo-Saxon object usually dated to the late seventh or early eighth century |
+| Tools | 1 | The Epinal Glossary, a Latin word list of about 3,300 entries with Old English glosses, copied about 700 |
+| Practices | 2 | The palace examination, first held in 690 under Empress Wu, set by the ruler herself in the palace and The St Cuthbert Gospel, a small Latin copy of John's Gospel with the oldest surviving intact European binding |
+| Guides | 1 | How the degree of kinship is counted by the Roman civil method, one step up and one step down, worked out by a program |
+| Examples | 1 | The 102 canons of the Quinisext Council and the 85 Apostolic canons it accepted, counted in code |
+| Projects | 1 | Justinian II's first reign, from 685 to 695, and the reigns of Leontius and Tiberius III to 705, summed and ranked by a short program |
+| Flex | 2 | Years from the first palace examination of 690 to the Synod of Birr of 697 and Years from the Quinisext Council of 692 to the Umayyad gold dinar of 696 |
+| Cross-code | 1 | Adomnan's years as abbot of Iona at the Cain of 697 and at the end of his abbacy in 704, counted in Python and C |
+
+The catalogue of database 136 (680 to 690) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | The Kedukan Bukit stone, one of the earliest dated Old Malay inscriptions, set up in 682 near Palembang and The Kota Kapur stone of 686, an Old Malay curse on those who defy the ruler of Srivijaya |
+| Systems | 3 | The Third Council of Constantinople, held from 680 to 681, which condemned the teaching of one will in Christ, The Synod of Hatfield of 680, at which the English bishops professed the catholic faith and The Asuka Kiyomihara code of 689, one of the earliest ritsuryo codes of Japan |
+| Devices | 1 | The catapults of the Umayyad siege of Mecca in 683, whose fire damaged the Ka'ba |
+| Tools | 1 | Adomnan's De locis sanctis, a Latin guide to the holy places given to King Aldfrith about 686 |
+| Practices | 1 | The Book of Durrow, an Irish gospel book with carpet pages, made about 680 |
+| Guides | 1 | How a Saka date on the Old Malay stones of 682 and 686 becomes a Common Era year, worked out in code |
+| Examples | 1 | The chapters of the four Gospels, 89 in all in the divisions of modern Bibles, counted in code and placed at 680 for the Book of Durrow |
+| Projects | 1 | Seven monasteries founded by Irish and Anglo-Saxon monks, from Iona in 563 to Jarrow in 681, with the gaps between them counted by a program |
+| Flex | 1 | Years from the Synod of Hatfield of 680 to the Asuka Kiyomihara code of 689 |
+| Cross-code | 1 | Years from the siege of Mecca in 683 to the Kota Kapur stone of 686, counted in Python and C |
+
+The catalogue of database 137 (670 to 680) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | The laws of Hlothhere and Eadric of Kent, the second English law code, written in Old English |
+| Systems | 4 | The Kogo household register of 670, Japan's nationwide register of households, of which no copy survives, The Synod of Hertford in 672, which issued ten decrees for the English church under Theodore, The Eleventh Council of Toledo of 675, held under King Wamba of the Visigoths and The Arab siege of Constantinople, 674 to 678, which ended in a truce after the Arab fleet was lost |
+| Devices | 1 | Greek fire, the naval incendiary whose formula was kept secret, devised about 673 and used against the Arab fleet |
+| Tools | 1 | The scribe's penknife, a small blade for cutting quills and scraping parchment |
+| Practices | 1 | The red dots that marked the vowels of Arabic writing, credited to Abu al-Aswad al-Du'ali of Basra |
+| Guides | 1 | How three gold tremisses made one solidus, the Visigothic coin rule, worked out by a program |
+| Examples | 1 | The bishops, deacons and abbots at the Eleventh Council of Toledo of 675, counted in code |
+| Projects | 1 | The reigns of Ecgfrith, Tenmu and Wamba, from 670 to 686, summed and ranked by a short program |
+| Flex | 1 | Years from the Kogo household register of 670 to the Greek fire devised about 673 |
+| Cross-code | 1 | The years of the Arab siege of Constantinople, 674 to 678, counted in Python and C |
+
+The catalogue of database 138 (660 to 670) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Xuanzang's Great Prajnaparamita sutra in 600 fascicles, one of his last and longest translations, made in the 660s |
+| Systems | 5 | Muawiya's Umayyad caliphate at Damascus, begun in 661 after the Year of Unity, The Synod of Whitby in 664, which chose the Roman Easter for the Northumbrian church, The Omi code, a law code that the Nihon Shoki says Tenji issued in 668, whose existence is disputed, The fall of Goguryeo in 668, when Tang and Silla armies took its capital Pyongyang and The Kogo register of 670, the earliest known national household register of Japan, compiled under Emperor Tenji |
+| Devices | 1 | The water clock at Asuka, the first in Japan according to the Nihon Shoki, set up under Empress Saimei in 660 |
+| Tools | 1 | The Linde calendar of the Tang, made by Li Chunfeng and issued in 665, which the Dayan calendar later replaced |
+| Practices | 1 | Emperor Gaozong's feng shan sacrifice on Mount Tai in 666, with rites on the summit and at the foot of the mountain |
+| Guides | 1 | How one Tang catty nests into taels, mace and fen, written out as code, placed at 660 |
+| Examples | 1 | The fourteen Umayyad caliphs of Damascus, from Muawiya I in 661 to Marwan II in 750, counted in code |
+| Projects | 1 | The reigns of Heraclius, Constans II and Constantine IV, from 610 to 685, counted and ranked by a short program |
+| Flex | 1 | Years from the Synod of Whitby of 664 to the Kogo register of 670 |
+| Cross-code | 1 | The years of use of the Linde calendar, from 665 to 728, counted in Python and C |
+
+The catalogue of database 139 (650 to 660) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | The standard Qur'an text of Uthman's committee, fixed about 650 from the manuscript of Hafsa, The Five Classics with their correct meanings, the standard commentaries promulgated by the Tang court in 653 and Sun Simiao's Essential Prescriptions Worth a Thousand Gold, a medical compendium completed about 652 |
+| Systems | 3 | The Hakuchi era name of 650, Japan's second era name, adopted when a white pheasant was presented at court, The Yongwei code of 651, the Tang legal statutes of the Yonghui era and Kotoku's palace at Naniwa, Nagara Toyosaki, completed in 652, where the court sat before its return to Asuka |
+| Devices | 1 | Japan's first water clock, which the Nihon Shoki places in 660, with its possible site at Asuka Mizuochi |
+| Tools | 1 | The Ten Computational Canons, the mathematics textbooks annotated by Li Chunfeng and submitted to the throne in 656 |
+| Practices | 1 | The burning of rival Qur'an codices under Uthman, as the hadith accounts tell it, about 650 |
+| Guides | 1 | How three grades of grain are found by elimination, the fangcheng method of the Nine Chapters, worked out by a program |
+| Examples | 1 | The Liber Iudiciorum of 654 and its revisions of 681 and 693, with the years between them counted in code |
+| Projects | 1 | The Tang era names Yonghui and Xianqing across 650 to 660, the eleven years counted year by year in code |
+| Flex | 1 | Years from the Hakuchi era of 650 to Japan's first water clock of 660 |
+| Cross-code | 1 | The years between the Yongwei code of 651, the Naniwa palace of 652, the Liber Iudiciorum of 654 and the Ten Canons of 656, counted in Python and C |
+
+The catalogue of database 140 (640 to 650) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Xuanzang's Records of the Western Regions, an account of the lands he visited, completed in 646 and The Jin shu, the official history of the Jin dynasty, compiled under Fang Xuanling and completed in 648 in 130 juan |
+| Systems | 5 | The Edict of Rothari, the first written law code of the Lombards, issued at Pavia in 643, Umar's council of six electors, named in 644 to choose a caliph from among its own members, The Taika reform edict of 646 in the Nihon Shoki, with its rules on public land, household registers and taxes, The Typos of Constans II, an imperial decree forbidding debate over Christ's wills, dated 648 and The Lateran synod of 649 under Pope Martin I, which condemned Monothelitism and the Typos |
+| Devices | 1 | The padded horse collar, a harness for draught horses whose first use has no firm date, placed at 650 |
+| Tools | 1 | The Kashika-vritti, a seventh-century commentary on Panini's Sanskrit grammar, placed at 650 |
+| Practices | 1 | Xuanzang's translation bureau at the Da Ci'en temple in Chang'an, set up in 648 with copyists, proofreaders and scholars |
+| Guides | 1 | How a split vote among Umar's six electors of 644 is settled, worked out by a short program |
+| Examples | 1 | The Jin shu's 130 juan, split into annals, treatises, biographies and records of regimes, summed in code |
+| Projects | 1 | The Councils of Toledo from 633 to 653, the gaps between them counted by a short program |
+| Flex | 1 | Years from the Edict of Rothari of 643 to the Taika reform edict of 646 |
+| Cross-code | 1 | The lifespan of Taizong, 598 to 649, computed in Python and C |
+
+The catalogue of database 141 (630 to 640) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | Isidore of Seville's Etymologies, a Latin encyclopedia of words and things in twenty books, completed about 630, The Aihole inscription of 634, a Sanskrit eulogy of Pulakeshin II cut in stone at the Meguti temple and Sophronius's synodical letter of 634, which defended the two wills and energies of Christ against the teaching of one will |
+| Systems | 4 | The battle of Yarmouk in 636, the Byzantine defeat that opened Syria to the Arab conquest, The battle of al-Qadisiyya in 636, which broke the Sasanian army and opened Iraq to the Arab conquest, The Fourth Council of Toledo in 633, which issued canons for the church and the kingdom of the Visigoths and The Ekthesis of 638, the imperial statement of faith that taught one will in Christ and banned debate over his energies |
+| Devices | 1 | Cheomseongdae, the stone tower for watching the sky at Gyeongju, built in Queen Seondeok's reign |
+| Tools | 1 | The Chronicon Paschale, a Greek world chronicle titled for its Easter reckoning and written shortly after 628 |
+| Practices | 1 | The Qur'an gathered from scattered sheets into one written collection under Abu Bakr, placed at 633 |
+| Guides | 1 | How the camel zakat of the Abu Bakr letter is worked out for a herd, written as a program, placed at 632 |
+| Examples | 1 | The Book of Sui, completed in 636 with 85 chapters, counted in code by its annals, biographies and treatises |
+| Projects | 1 | Three dated events of 630 to 634 from China, the Turkish steppe and Arabia, put in order with the years between them |
+| Flex | 1 | Years from Isidore's Etymologies of about 630 to the Ekthesis decree of 638 |
+| Cross-code | 1 | Isidore's twenty books of the Etymologies, counted in Python and C, with the books on words and on things counted apart |
+
+The catalogue of database 142 (620 to 630) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Bhaskara I's commentary on the mathematical verses of Aryabhata's Aryabhatiya, written in 629 |
+| Systems | 4 | The Constitution of Medina, the written agreement of the migrants, the supporters and the Jewish tribes, usually dated to 622, The Wude code, the first law code of the Tang dynasty, promulgated in 624, Taizong's seizure of power at the Xuanwu Gate in 626, when he killed his brothers and took the Tang throne and Heraclius's victory over the Persians at Nineveh on 12 December 627, followed by a civil war in Persia |
+| Devices | 1 | The Sutton Hoo lyre from the ship burial, placed at 624 with the usual date of King Raedwald's death |
+| Tools | 1 | The Chronicon Paschale, a Greek world history whose title comes from the working out of Easter dates, written about 630 |
+| Practices | 1 | Xuanzang's departure from Chang'an for India in 629, made without an official permit |
+| Guides | 1 | How Bhaskara I's rational formula gives the sine of an angle, checked against the true sine by a program |
+| Examples | 1 | The 26 years of war between Byzantium and Persia from 602 to 628, split at Heraclius's accession in 610, counted in code |
+| Projects | 1 | Three events of 624 to 630 in Arabia, the battle of Badr, the truce of Hudaybiyya and the taking of Mecca, sorted and spaced in code |
+| Flex | 1 | Years from Xuanzang's departure for India in 629 to his return to Chang'an in 645 |
+| Cross-code | 1 | The years between the Wude code of 624, Taizong's seizure of power in 626 and Bhaskara I's commentary of 629, counted in Python and C |
+
+The catalogue of database 143 (610 to 620) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | The Zhubing yuanhou lun, a Sui treatise on the causes and symptoms of diseases, completed by decree in 610 and Prince Shotoku's commentary on the Lotus Sutra, the Hokke gisho, traditionally dated 615 |
+| Systems | 3 | Heraclius overthrows the emperor Phocas in October 610 and founds the Heraclian dynasty of Byzantium, The Sasanian conquest of Egypt, with Persian forces holding Alexandria by 619 and The battle of Salsu in 612, when the Goguryeo army broke the first great Sui invasion |
+| Devices | 1 | The grinding mill that the Goguryeo monk Docho built in Japan in 610, as the Nihon Shoki records |
+| Tools | 1 | The Wuyin calendar of Fu Renjun, the calendar adopted in the early Tang, with eclipse forecasts that drew criticism |
+| Practices | 1 | Paper and ink skills credited to the Goguryeo monk Docho in Japan in 610, in the Nihon Shoki's entry for that year |
+| Guides | 1 | How a Tang weight of jin, liang and qian is turned into qian and back, worked out by a program |
+| Examples | 1 | The 28 chapters of the Lotus Sutra and the 14 of the Vimalakirti Sutra, counted in code |
+| Projects | 1 | Spans of three East Asian rulers, from 593 to 628, counted and sorted in a short program |
+| Flex | 1 | Years from Heraclius's accession in 610 to the Sasanian conquest of Egypt in 619 |
+| Cross-code | 1 | The gaps from Docho's entry in 610 to the Hokke gisho of 615 and the Wuyin calendar of 618, counted in Python and C |
+
+The catalogue of database 144 (600 to 610) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Lu Fayan's Qieyun, a rhyme dictionary of 601 that sorted Chinese characters by sound and tone |
+| Systems | 3 | The laws of AEthelberht of Kent, the earliest surviving English law code, usually dated 602 or 603, The Seventeen-Article Constitution attributed to Prince Shotoku, dated 604 and disputed as to its authorship and The Grand Canal of China, begun in 605 under the Sui to join the Yellow and Yangzi river systems |
+| Devices | 1 | The water-powered grinding mill that the Goguryeo monk Docho built in Japan, recorded under 610 |
+| Tools | 1 | The calendar books that the Paekche monk Kanroku brought to the Japanese court in 602 |
+| Practices | 1 | The Sui census of 609, which counted the households and people of the empire |
+| Guides | 1 | How a syllable is placed in the entering tone when its final sound is a stop, p, t or k |
+| Examples | 1 | The Sui examination of 605 and its abolition in 1905, a span of 1300 years counted in code |
+| Projects | 1 | The Sui emperors Wen and Yang, whose two reigns from 581 to 618 are counted and ranked in code |
+| Flex | 1 | Years from Kanroku's calendar books of 602 to Docho's water mill of 610 |
+| Cross-code | 1 | The 609 census written in groups of ten thousand, computed in Python and in C |
 <!-- END GENERATED CATALOGUE -->
