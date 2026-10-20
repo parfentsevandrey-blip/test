@@ -2462,4 +2462,154 @@ The catalogue of database 164 (400 to 410) has the same ten kinds:
 | Projects | 1 | Pollentia, Verona, the Rhine crossing and Stilicho's death, in order |
 | Flex | 1 | Days from the battle of Pollentia to the Rhine crossing |
 | Cross-code | 1 | Days from the Rhine crossing to Stilicho's death in Python and C |
+
+The catalogue of database 165 (390 to 400) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Ammianus Marcellinus's Res Gestae, a Latin history from 96 to 378 and Rufinus's Latin version of Origen's On First Principles, released at Rome |
+| Systems | 3 | Theodosius I's decrees against pagan sacrifice, from 391 to 392, The division of the empire between Arcadius and Honorius at Theodosius's death and The Council of Carthage of 397, which gave a list of the books of scripture |
+| Devices | 1 | The onager, a torsion catapult that Ammianus describes, placed at 390 |
+| Tools | 1 | Jerome's On Illustrious Men, a Latin catalogue of Christian writers |
+| Practices | 1 | The last Olympic games of antiquity, traditionally held in 393 |
+| Guides | 1 | How Augustine's De musica counts the time of a verse foot, a long syllable taking two units |
+| Examples | 1 | The thirty lives of the Historia Augusta, counted in code |
+| Projects | 1 | Three events of 393 to 400 from Hippo to Constantinople, in order by year |
+| Flex | 1 | Days from the battle of the Frigidus to the death of Martin of Tours |
+| Cross-code | 1 | Days from the murder of the praetorian prefect Rufinus to the death of Martin of Tours, in Python and C |
+
+The catalogue of database 166 (380 to 390) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 5 | Wulfila's Gothic Bible and the alphabet made for it, Vegetius's Epitome of military science, a Latin handbook of Roman warfare, Gregory of Nazianzus's five Theological Orations, preached at Constantinople, Jerome's revision of the Latin Gospels, made at Rome for Pope Damasus and Libanius's Oration For the Temples, a plea to spare the pagan shrines |
+| Systems | 5 | The Edict of Thessalonica, which made the Nicene faith the state religion, The First Council of Constantinople, which met in 381 and reaffirmed the Nicene faith, The council of Aquileia of 381, which Ambrose held against two Arian bishops, Gratian's removal of the Altar of Victory from the Senate House at Rome and The execution of Priscillian at Trier, often called the first execution for heresy by a Roman court |
+| Devices | 1 | The battering ram of the late Roman army, a beam swung under a roofed shelter |
+| Tools | 1 | Jerome's Latin Onomasticon, a finding list of the places named in the Bible |
+| Practices | 1 | The daily station services of Jerusalem's churches, as the pilgrim Egeria describes them |
+| Guides | 1 | How an Ambrosian hymn stanza is checked for four lines of eight syllables |
+| Examples | 1 | The seven canons of the council of Constantinople in 381, counted in code |
+| Projects | 1 | A short timeline of four events of 383 to 390, from the Fei River to Thessalonica |
+| Flex | 1 | Years from the removal of the Altar of Victory to the senators' appeal of 384 |
+| Cross-code | 1 | Days from the Edict of Thessalonica to the death of Gratian, in Python and C |
+
+The catalogue of database 167 (370 to 380) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | Ausonius's Mosella, a Latin poem on the river Moselle, Gregory of Nazianzus's Theological Orations, five sermons on the Trinity and Epiphanius's Panarion, a medicine chest against eighty heresies |
+| Systems | 5 | The Gothic crossing of the lower Danube into the Roman empire, The battle of Adrianople and the death of Valens, Fu Jian's Former Qin takes Former Liang and unites most of north China, Goguryeo's Taehak, a state academy founded in 372 and The death of Valentinian I at Brigetio during talks with Quadi envoys |
+| Devices | 1 | The rotary hand-mill, or quern, of the Roman provinces |
+| Tools | 1 | Dao'an's catalogue of Buddhist scriptures, made in his Xiangyang years |
+| Practices | 1 | Basil of Caesarea's Longer Rules, a monastic code in questions and answers |
+| Guides | 1 | How every monk takes the surname Shi, written as a naming rule in code |
+| Examples | 1 | Euclid's thirteen books, with 465 propositions counted by book in code |
+| Projects | 1 | The spans between three dated events of the 370s, counted in code |
+| Flex | 1 | Days from Valentinian I's death to the battle of Adrianople |
+| Cross-code | 1 | Days from the battle of Adrianople to the death of Basil of Caesarea, in Python and C |
+
+The catalogue of database 168 (360 to 370) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 5 | Athanasius's Life of Antony, a Greek life of the Egyptian monk, Hilary of Poitiers's On the Trinity, twelve books written in exile, Julian's Misopogon, his Greek satire on the people of Antioch and his own beard, Julian's Against the Galileans, a Greek attack on the Christian scriptures and The Shangqing revelations of Yang Xi, visions written down from 364 to 370 |
+| Systems | 5 | Julian's school edict of 362, which set rules for who could teach in the cities, The council of Alexandria of 362 and its Tome to the Antiochenes, The death of Julian in Persia on 26 June 363, Jovian's peace with Shapur II, which gave Nisibis to Persia in 363 and Julian's plan to rebuild the Temple at Jerusalem, stopped in 363 |
+| Devices | 1 | The Shichishito, a seven-branched sword whose inscription is read as 369 |
+| Tools | 1 | Eutropius's Breviarium, a ten-book history of Rome written for Valens |
+| Practices | 1 | Athanasius's festal letters, the yearly notices of Easter and Lent sent to Egypt |
+| Guides | 1 | How a Pahlavi heterogram is spelled in Aramaic letters and read as a Persian word |
+| Examples | 1 | The years of Antony's life from 251 to 356, counted in code |
+| Projects | 1 | Three events of 361 to 366 in the Roman world, sorted and spaced in code |
+| Flex | 1 | Days from the death of Julian to the elevation of Valens |
+| Cross-code | 1 | The day of the year for Julian's school edict and his death, in Python and C |
+
+The catalogue of database 169 (350 to 360) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Wang Xizhi's preface to the Lanting poems, Chinese prose on a gathering of 353 |
+| Systems | 2 | The councils of Ariminum and Seleucia, two creed-making synods of 359 and Ran Min's state of Ran Wei, set up in 350 on the ruins of the Later Zhao |
+| Devices | 1 | The Roman pin lock, a bronze lock that a key raised by pins |
+| Tools | 1 | Filocalus's Chronograph of 354, a Roman calendar with lists of consuls and bishops |
+| Practices | 1 | The winding-stream cup game at the Lanting gathering, where guests wrote poems |
+| Guides | 1 | How the forty fasting days of Lent are counted back from Easter |
+| Examples | 1 | Cyril of Jerusalem's Catechetical Lectures, the 24 pieces of the course counted in code |
+| Projects | 1 | The murder of Constans to Constantius's Rome visit, four dated events counted in code |
+| Flex | 1 | Days from the battle of Mursa to the battle of Mons Seleucus |
+| Cross-code | 1 | How a Greek sacred name is cut short to its first and last letters, in Python and C |
+
+The catalogue of database 170 (340 to 350) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Codex Sinaiticus, a Greek Bible on parchment dated about 340 |
+| Systems | 2 | The Council of Serdica, where Western and Eastern bishops split over Athanasius and The second Persian attempt on Nisibis in 346, which the city's walls turned back |
+| Devices | 1 | The shaduf, a counterweighted lever that lifts water from a channel to a field, placed at 340 though far older |
+| Tools | 1 | A pair of dividers for drawing circles, undated in the sources and placed at 343, the year of the Council of Serdica |
+| Practices | 1 | Stichometry, the counting of a Greek book's lines to fix the price of a copy, placed at 341 for the council of Antioch |
+| Guides | 1 | How analysis and synthesis solve a problem, as Pappus sets them out |
+| Examples | 1 | Aphrahat's twenty-three Demonstrations, counted by the years in which they were written |
+| Projects | 1 | Three events of 341 to 346, put in order and spaced by a program |
+| Flex | 1 | Years from the death of Constantine II to the Council of Serdica |
+| Cross-code | 1 | Years from the second Persian attempt on Nisibis to the death of Shi Hu, in Python and C |
+
+The catalogue of database 171 (330 to 340) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | The Bordeaux pilgrim's road book to Jerusalem, a list of stations, Firmicus Maternus's Mathesis, an astrology handbook in eight books, Eusebius's Tricennial Oration in praise of Constantine and Eusebius's Life of the Blessed Emperor Constantine, a Greek biography |
+| Systems | 5 | The dedication of Constantinople as the new imperial capital, The Council of Tyre, which deposed Athanasius of Alexandria, The consecration of Constantine's church over the Holy Sepulchre at Jerusalem, The death of Constantine the Great at Nicomedia and The division of the empire among Constantine's three surviving sons |
+| Devices | 1 | Hero's aeolipile, a hollow sphere that spun on jets of steam |
+| Tools | 1 | The glassblower's blowpipe, a hollow metal tube for gathering and blowing molten glass |
+| Practices | 1 | The Roman calendar entry that names 25 December as the birth of Christ at Bethlehem |
+| Guides | 1 | How a Roman amphora's capacity follows from the cubic foot, with the congius and sextarius |
+| Examples | 1 | The reign of Constantine the Great counted in code, from 306 to his death in 337, a span of 31 years |
+| Projects | 1 | Three dated events of 332 to 340 from the Danube, north China and Aquileia |
+| Flex | 1 | Days from the dedication of Constantinople to the death of Constantine |
+| Cross-code | 1 | The Chi-Rho monogram drawn as text in Python and in C |
+
+The catalogue of database 172 (320 to 330) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | Eusebius's Ecclesiastical History, a Greek church history in ten books, Arius's Thalia, a lost song-book of verse for the people of Alexandria, The Codex Vaticanus, a Greek Bible of the fourth century kept in the Vatican Library and Constantine's letter to Alexander and Arius, asking them to end their quarrel |
+| Systems | 4 | Constantine's Sunday law, which gave city people and craftsmen rest on the venerable day of the sun, The battle of Chrysopolis, which left Constantine sole ruler of the Roman empire in 324, The Council of Nicaea of 325, the first ecumenical council, which condemned Arius and issued a creed and Athanasius's election as bishop of Alexandria in 328, in place of Alexander |
+| Devices | 1 | The Roman screw press for wine and cloth, a timber frame with a turned screw, undated in the sources and placed at 324 |
+| Tools | 1 | Eusebius's ten canon tables, a grid that links parallel passages in the four gospels |
+| Practices | 1 | Pachomius's common life of monks at Tabennisi, with shared prayer and work under one rule |
+| Guides | 1 | How the seven days of the week take their names from the planets, beginning with Saturn's day |
+| Examples | 1 | Sundays in the year of Constantine's Sunday law, counted day by day in code |
+| Projects | 1 | Three dated events of 325 to 328 sorted and spaced in code |
+| Flex | 1 | Days from the battle of Adrianople to the battle of Chrysopolis |
+| Cross-code | 1 | The weekday of the battle of Chrysopolis, computed in Python and C |
+
+The catalogue of database 173 (310 to 320) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | Lactantius's On the Deaths of the Persecutors, a Latin account of the persecuting emperors, Letter II of the Sogdian Ancient Letters, a merchant's letter that reports the sack of Luoyang and Ge Hong's Baopuzi, a Chinese book on alchemy and long life, completed in 317 |
+| Systems | 5 | Galerius's edict of toleration, issued at Serdica, which ended the persecution in his part of the empire, The battle of the Milvian Bridge, where Constantine defeated Maxentius outside Rome, The Edict of Milan, a letter of Licinius on freedom of worship posted at Nicomedia in 313, The Council of Arles, a church council of 314 with three British bishops among its signatories and The Eastern Jin dynasty, founded at Jiankang after the Western Jin capital fell at Chang'an |
+| Devices | 1 | The labarum, a military standard bearing the chi-rho monogram |
+| Tools | 1 | The album, a whitened board on which Roman officials posted edicts |
+| Practices | 2 | Freeing a slave in church before the congregation, allowed by Constantine's law of 316 and Taking a lawsuit to a bishop's court, allowed by Constantine's law of 318 |
+| Guides | 1 | How the strength of a Roman legion is counted from its cohorts and centuries |
+| Examples | 1 | The fifteen books of Eusebius's Preparation for the Gospel, counted in code |
+| Projects | 1 | Four dated events of 311 to 316 in Rome and China, sorted and spaced by a short program |
+| Flex | 1 | Days from the battle of the Milvian Bridge to the Milan letter at Nicomedia |
+| Cross-code | 1 | Days left in 313 after the Milan letter was posted, in Python and C |
+
+The catalogue of database 174 (300 to 310) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | Porphyry's Against the Christians, a fifteen-book Greek attack on the faith, The Apology for Origen, written in prison at Caesarea by Pamphilus and Eusebius and The Latin panegyric of 310 in praise of Constantine, delivered at Trier |
+| Systems | 5 | Diocletian's Edict on Maximum Prices, a ceiling on the prices and wages of the empire, The first edict of the Great Persecution, ordering churches destroyed and sacred books burned, The abdication of Diocletian and Maximian, which made Galerius and Constantius Augusti, Constantine's acclamation as Augustus at York after his father's death and The conference at Carnuntum, which named Licinius Augustus for the west |
+| Devices | 1 | The Roman treadwheel crane, a wheel turned by men walking inside it to lift loads |
+| Tools | 1 | Eusebius's Chronicle, a chronological table of world history in parallel columns |
+| Practices | 1 | Handing the sacred books over to the authorities, the practice called traditio |
+| Guides | 1 | How Porphyry's Enneads divide fifty-four treatises into six sets of nine |
+| Examples | 1 | The seven books of Arnobius's Against the Pagans, counted in code |
+| Projects | 1 | Four dated turns of the Eight Princes war in Western Jin China, 300 to 306, sorted in code |
+| Flex | 2 | Days from the first edict of the Great Persecution to Diocletian's abdication and Days from Diocletian's abdication to Constantine's acclamation at York |
+| Cross-code | 1 | Days from Constantine's acclamation at York to the Carnuntum conference in Python and C |
 <!-- END GENERATED CATALOGUE -->

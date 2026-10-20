@@ -45,6 +45,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-29 | 2026-10-20 | 125,485 | 222 | 82 | 118 | 125,907 | +3,763 (databases 135 to 144: 139 records in 110 files, migrations 134→135 to 143→144, tests +0) |
 | CP-30 | 2026-10-20 | 128,918 | 222 | 82 | 118 | 129,340 | +3,433 (databases 145 to 154: 121 records in 110 files, migrations 144→145 to 153→154, tests +0) |
 | CP-31 | 2026-10-20 | 132,865 | 222 | 82 | 118 | 133,287 | +3,947 (databases 155 to 164: 145 records in 110 files, migrations 154→155 to 163→164, tests +0) |
+| CP-32 | 2026-10-20 | 136,840 | 222 | 82 | 118 | 137,262 | +3,975 (databases 165 to 174: 154 records in 110 files, migrations 164→165 to 173→174, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -2020,3 +2021,113 @@ These come from the helpers' search reports; the record details say what each da
 - Not verified yet: running on a device, the migration from version 154 to version 164 on a device, the UI with 164 databases in the list, lint and the release build.
 - The 400s to the 490s are the thinnest decades of the catalogue for coding history. The question from earlier batches is still open: keep them smaller, fill them, or drop the placed records. A second question is larger: should the catalogue keep going back at all where the coding link is this weak?
 - The first facts to check before publishing are the Aryabhata letter values, the Hierapolis saw's date, the chorobates' use and the Visuddhimagga's 430.
+
+## CP-32: databases 165 to 174, 300 to 400 (the fourth century, the century before the 400s)
+
+Status: ten more databases are in the app, one per decade from the 390s down to the 300s: 154 records, migrations from version 164 to version 174, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. Records per database: 390s 13, 380s 18, 370s 16, 360s 18, 350s 11, 340s 11, 330s 17, 320s 16, 310s 17 and 300s 17. None reaches 50, and all ten are marked "quota": false in tools/databases.json. There are 51 runnable records (5 in nine decades, 6 in the 300s), and they all pass against their expected output. The build passes (174 databases, 5,929 records), and the unit tests pass (17 of 17, testDebugUnitTest executed).
+
+Mood: The fourth century is mostly church councils, emperors, sieges and texts, so the batch reads more like a chronicle than like coding history, and the coding link is the thinnest yet. The dates are at least checkable, and the search results gave most of them a firm footing. The same-item check was useful again: four pairs of neighbouring decades shared one object (the labarum, the battering ram, Aphrahat's demonstrations and the Chi-Rho monogram), and each was fixed. The clusters of several records about one event inside a single database are left for a decision.
+
+Date: 2026-10-20. Totals: Kotlin main 136,840 (CP-31: 132,865), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 137,262 (CP-31: 133,287). The +3,975 is the 110 new Kotlin seed files for databases 165 to 174 and the regenerated SeedCatalog.kt. The database class and the tests did not change; the migrations are generated, with DATABASE_VERSION at 174.
+
+### What changed
+
+- Ten databases, from "Database 165: 390s coding catalogue" (390 to 400) to "Database 174: 300s coding catalogue" (300 to 310). Their records are 13, 18, 16, 18, 11, 11, 17, 16, 17 and 17: 154 new records and 5,929 in the whole catalogue. The new rare records number 90, so the whole catalogue has 1,883.
+- Eleven files per database, 110 in total. The colours are unused ones; the generator refused the first picks, which repeated older colours.
+- Spec: tools/databases.json has 174 entries. All ten new databases are marked "quota": false.
+- Generator: no change. SeedCatalog.kt, CATALOGUE.md and the README tables are regenerated. The README sentence about runnable counts now reads 75 to 174: 165 to 173 are in the group of five each, and 174 in the group of six.
+- Process: one helper per database for the first pass, from the brief and an anchors file in which every named item has one owner database. The lead then replaced four records that repeated an object of a neighbouring database, and checked the runnable records.
+
+### Placed records (26)
+
+The year of these records is an anchor, not the date of the item itself. Each record's details say so.
+
+- 165: a DEVICE, the onager (390, Ammianus's history).
+- 166: a DEVICE, the battering ram (383, the death of Gratian).
+- 167: a DEVICE, the rotary hand-mill (376, the Gothic crossing); an EXAMPLE, Euclid's 465 propositions (379); a PRACTICE, Basil's Longer Rules (370); a GUIDE, the Shi surname rule (379).
+- 168: a GUIDE, the Pahlavi heterograms (363, Jovian's peace); a DEVICE, the Shichishito sword with a dated inscription (369); a LANGUAGE, Hilary's On the Trinity (360); a LANGUAGE, Athanasius's Life of Antony (360).
+- 169: a DEVICE, the Roman pin lock (350); a CROSS, the nomina sacra (350); a GUIDE, the Lent count (350); an EXAMPLE, Cyril's 24 lectures (350, a rounded date).
+- 170: a PRACTICE, stichometry (341); a TOOL, the dividers (343, the Council of Serdica); a DEVICE, the shaduf (340, placed although far older).
+- 171: a CROSS, the Chi-Rho drawn as text (330); a GUIDE, the amphora as one cubic foot (332); a DEVICE, Hero's aeolipile (337); a TOOL, the glassblower's blowpipe (335).
+- 172: a GUIDE, the planetary week (321, Constantine's Sunday law); a DEVICE, the Roman screw press (324, the battle of Chrysopolis).
+- 173: a TOOL, the album (311, Galerius's edict); a GUIDE, the strength of a Roman legion (310).
+- 174: a DEVICE, the treadwheel crane (301, the Edict on Maximum Prices).
+
+Weakest first: the 173 legion GUIDE (trivial code, placed), the 172 screw press, the 170 shaduf (far older than its anchor), the 169 Lent count and Cyril's lectures, and the 167 hand-mill.
+
+### Problems and what was fixed
+
+- The labarum was in 172 (DEVICE, 327) and 173 (DEVICE, 312): the same standard. The 172 copy was replaced by the Roman screw press (324).
+- The battering ram was in 166 (DEVICE, 383) and 170 (DEVICE, 346): the same device. The 170 copy was replaced by the shaduf (340).
+- Aphrahat's Demonstrations were counted in 170 (EXAMPLE, 344) and 171 (EXAMPLE, 337): the same count. The 171 example was replaced by the reign of Constantine the Great, 306 to 337, 31 years counted in code; no other database in 165 to 174 counts that reign.
+- The Chi-Rho monogram was built in 173 (GUIDE) and drawn as text in 171 (CROSS): the same method. The 173 guide was replaced by the strength of a Roman legion (310). The Chi-Rho drawing in 171 and the labarum in 173 stay as different items.
+- Neighbours kept: the shaduf beside Joseph's Well (86) and the drawloom (149); the screw press beside Gutenberg's screw press of about 1450 (59); the weekday computations beside the weekdays of 45, 82 and 100; the planetary week (172) beside the planetary hours of a Sunday (51); the Lent count (169) beside Athanasius's festal letters (168). All are different items.
+
+### Repeats kept inside one database (for a decision)
+
+- 166: the Edict of Thessalonica is a SYSTEM, a CROSS (days to Gratian's death) and part of a PROJECT timeline.
+- 165: Ammianus is a LANGUAGE, and the onager is a DEVICE that his history describes.
+- 167: the battle of Adrianople is a SYSTEM and two computed records on different quantities; Basil's death is a CROSS and his Longer Rules a PRACTICE.
+- 168: Antony's Life is a LANGUAGE and the years of Antony's life an EXAMPLE; Julian's death, the elevation of Valens and Eutropius's Breviarium recur in a FLEX and a TOOL.
+- 169: the Lanting preface is a LANGUAGE and the cup game at the Lanting gathering a PRACTICE.
+- 171: the dedication of Constantinople is a SYSTEM and a FLEX.
+- 172: the battle of Chrysopolis is a SYSTEM, a CROSS and a FLEX; Constantine's Sunday law is a SYSTEM and an EXAMPLE (Sundays in 321); Arius's Thalia, Constantine's letter to Alexander and Arius, and the Council of Nicaea are three records.
+- 173: the Edict of Milan is a SYSTEM and a FLEX; the battle of the Milvian Bridge is a SYSTEM and a FLEX.
+- 174: Diocletian's abdication and Constantine's acclamation at York appear in three SYSTEM records and in a FLEX and a CROSS; the first edict of the Great Persecution is in two FLEX records. This is the heaviest cluster.
+- Each of these is a book, an event or a standard, and a computed record about it; I kept them. The lead may cut one record in each cluster.
+
+### Repeat check result
+
+The same-item check (scratchpad/same_item_batch.py 165 174) gives 229 lines. The four same-object pairs above are fixed. The rest are shared words, the neighbours above, or the within-database clusters above.
+
+### Facts checked by search
+
+These come from the helpers' search reports; the record details say what each date rests on.
+
+- 165: Ammianus's 31 books, covering 96 to 378, with books 14 to 31 surviving; the decrees of 24 February 391 and 392; the 393 Olympic tradition; the Historia Augusta lives; Rufinus's De principiis just after 397.
+- 166: the Edict of Thessalonica dated 27 February 380 (one account gives 28 February); Gratian died at Lyon in 383; Vegetius's Epitoma bracketed between 383 and 450; Egeria's journey about 381 to 384; Symmachus's appeal of 384 failed; the obelisk raised in 390, with no source for the lifting apparatus.
+- 167: Valentinian I died at Brigetio on 17 November 375; Basil of Caesarea died on 1 January 379 (two results agree); Dao'an lived from 312 to 385 and his catalogue of 374 is lost; the Mosella has only an upper bound of 375.
+- 168: the Shichishito's 369 reading; Valens's elevation on 28 March 364; Eutropius's Breviarium at 369 or 370; Julian's death on 26 June 363; the teachers' edict of 17 June 362; Valentinian's acclamation disputed (25 or 26 February 364), so no record uses that day.
+- 169: Cyril's course in Lent 347 or 348; the councils of 359 at Seleucia (27 September) and Ariminum; Mursa on 28 September 351; Mons Seleucus on 3 July 353; Filocalus's Chronograph of 354.
+- 170: Pappus's Collection about 340 (some say the 320s); the Council of Serdica dated 342 to 344; Nisibis attacked in 346; Codex Sinaiticus in the mid-fourth century; Aphrahat's Demonstrations, ten in 337, twelve in 344, and the twenty-third in 344 or 345.
+- 171: the Holy Sepulchre consecrated on 13 September 335; the Tricennial Oration dated 336 (one listing); Firmicus's Mathesis from 334 to 337; Murong Huang's title in November 337; the Chronograph's 25 December entry disputed.
+- 172: the Sunday law dated 7 March 321 in secondary sources; the first edition of Eusebius's history disputed; Pachomius's first house between 318 and 323; Adrianople (3 July 324) and Chrysopolis (18 September 324); Licinius's execution at Thessalonica in 325 (one chronology); the Codex Vaticanus in the first half of the fourth century.
+- 173: the Milan letter posted at Nicomedia on 13 June 313; the Council of Arles in 314, with British bishops; the Eastern Jin dated 317 or 318; Chang'an fell in 316; Sogdian Letter II dated 312 to 314.
+- 174: the Eight Princes' dates; the conference of Carnuntum on 11 November 308; Porphyry's 270 to 305 range; Arnobius's seven books and about 303; the Chronicle's disputed 303 date.
+
+### Facts from memory, to check
+
+- Constantine's death (22 May 337), the division of 337, Constantine II's death (340), Constantius II's death (361), Gratian's death (25 August 383), Valens's death at Adrianople (9 August 378), Julian's death (26 June 363), Mursa (28 September 351), Nicaea (325), Chrysopolis (18 September 324), the Milvian Bridge (28 October 312), Diocletian's abdication (1 May 305), Galerius's edict (April 311), York (25 July 306).
+- The Fei River (383), Priscillian's execution at Trier (385), Gregory of Nazianzus's orations (379 to 380), Jerome's Chronicle (about 380), Libanius's Oration 30 (about 386), the gold inlay of the Shichishito, and the textbook figures of the legion.
+
+### Single-source or judgment dates
+
+- The day of the Edict of Thessalonica (27 or 28 February 380).
+- Dao'an's catalogue (374; the text is lost).
+- The twenty-third of Aphrahat's demonstrations (344 or 345).
+- The Tricennial Oration (336, one listing).
+- The Eight Princes (one timeline).
+- The day of the Sunday law (7 March 321).
+- The Codex Vaticanus date (first half of the fourth century, from weak sources).
+
+### Problems
+
+- Thin decades. All ten are below 50 records. The runnable count is 5 in nine decades and 6 in the 300s.
+- Placed records. Twenty-six of the 154 records carry an anchor year, about one in six. This is the same decision as before: the placed years stay.
+- Coding relevance. The fourth century is church councils, emperors, sieges and texts. The coding link is thin; the GUIDE and TOOL records are the weakest, and one GUIDE (the legion) is trivial code.
+- Clusters inside one database. Several databases have three or more records on one event (see above), so one record of each cluster may be cut.
+- Memory dates. The first to check are the day of the Edict of Thessalonica, the Dao'an catalogue, the Shichishito's 369 reading and the year of the Tricennial Oration.
+
+### How I checked it
+
+- Verifiers: 165 5 of 5; 166 5 of 5; 167 5 of 5; 168 5 of 5; 169 5 of 5; 170 5 of 5; 171 5 of 5; 172 5 of 5; 173 5 of 5; 174 6 of 6. That is 51 runnable records, each with expected output worked out by hand before the run.
+- Checker: each database reports only the count rules, which the thin-century rule allows. No title clashes, text-rule or year problems. The rare counts (7 to 10) are 9, 9, 9, 9, 8, 8, 9, 10, 10 and 9 for 165 to 174.
+- Generator: checks passed for 174 databases and 5,929 records.
+- Unit tests: BUILD SUCCESSFUL; 17 of 17 pass, with 0 failures and 0 errors, and the Gradle test task ran.
+- Text: no Cyrillic in the logs, the source pack, the README, CATALOGUE.md or the tools (checked before the commit).
+
+### Notes
+
+- Not verified yet: running on a device, the migration from version 164 to version 174 on a device, the UI with 174 databases in the list, lint and the release build.
+- The 300s to the 390s are thin for coding history. The question from earlier batches is still open: keep them smaller, fill them, or drop the placed records. A larger question: should the catalogue keep going back at all where the coding link is this weak?
+- The first facts to check before publishing are the day of the Edict of Thessalonica, the Dao'an catalogue, the Shichishito's reading and the year of the Tricennial Oration.
