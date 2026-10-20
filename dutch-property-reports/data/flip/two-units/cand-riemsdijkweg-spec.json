@@ -1,0 +1,16 @@
+{
+ "name": "Van Riemsdijkweg 17, Роттердам",
+ "route": "ovb",
+ "ask": 895000,
+ "area": 717,
+ "exit_bar": 0.075,
+ "parts": [
+  [
+   "unit",
+   717,
+   100
+  ]
+ ],
+ "capex_m2": 20,
+ "hold_fixed": 8666
+}

@@ -40,6 +40,12 @@ BASE = {
     "sale_fee": 0.0125,          # брокер на продаже
     "sale_fixed": 2_500,         # юрист, маркетинг продажи
     "art13_share": 0.5,          # доля экономии покупателя по ст. 13, которую забираем в цене
+    # новое помещение: покупка и продажа с НДС, без налога на передачу (ст. 15 WBR)
+    "vat_route": False,
+    "vat_rate": 0.21,            # НДС с цены покупки: платим у нотариуса, возвращаем декларацией
+    "vat_refund_month": 2,
+    "vat_window": 6,             # продажа не позже 6 месяцев после начала аренды — покупатель без 10,4 %
+    "hold_fixed": 0,             # эрфпахт, взносы ассоциации собственников, € в год
     # налог на прибыль
     "vpb_low": 0.19, "vpb_high": 0.258, "vpb_step": 200_000,
 }
@@ -67,14 +73,18 @@ def run(p_in: dict | None = None, **kw) -> dict:
     rows = []
     for m in range(0, n + 1):
         r = {"m": m, "acq": 0.0, "capex": 0.0, "hold": 0.0, "void": 0.0, "letting": 0.0,
-             "rent": 0.0, "interest": 0.0, "sale": 0.0, "sale_cost": 0.0, "loan": 0.0}
+             "rent": 0.0, "interest": 0.0, "sale": 0.0, "sale_cost": 0.0, "loan": 0.0, "vat": 0.0}
+        if p["vat_route"] and m == 0:
+            r["vat"] -= price * p["vat_rate"]
+        if p["vat_route"] and m == min(p["vat_refund_month"], n):
+            r["vat"] += price * p["vat_rate"]
         if m == 0:
             r["acq"] = -sum(acq.values())
             r["loan"] = loan
         else:
             if m <= p["capex_months"]:
                 r["capex"] = -capex / p["capex_months"]
-            r["hold"] = -price * p["holding_pct"] / 12
+            r["hold"] = -price * p["holding_pct"] / 12 - p["hold_fixed"] / 12
             if m < p["lease_month"]:
                 r["void"] = -p["void_m2"] * area / 12
             if m == p["lease_month"]:
@@ -89,7 +99,12 @@ def run(p_in: dict | None = None, **kw) -> dict:
     # цена продажи: аренда / доходность k.k.; незакончившиеся каникулы покупатель вычитает
     value_let = rent / p["exit_bar"]
     free_left = max(0, first_paid - 1 - n) * rent / 12
-    art13 = n <= 6
+    art13 = n <= 6 and not p["vat_route"]
+    # аренда начинается в начале месяца lease_month: 6 месяцев истекают в конце месяца lease_month − 1 + 6
+    late = p["vat_route"] and n > p["lease_month"] - 1 + p["vat_window"]
+    if late:
+        # акт позже 6 месяцев после начала аренды: инвестор платит 10,4 % и снижает цену на столько же
+        value_let = value_let / 1.104
     # по ст. 13 покупатель платит 10,4 % только с прироста; при той же его полной цене
     # мы можем поднять цену на ovb·P/(1+ovb); забираем долю art13_share
     uplift = p["art13_share"] * p["ovb"] * price / (1 + p["ovb"]) if art13 else 0.0
@@ -117,10 +132,13 @@ def run(p_in: dict | None = None, **kw) -> dict:
     after = flows[:]
     after[-1] -= vpb
     irr_m_after = irr(after)
-    buyer_ovb = p["ovb"] * (sale - price) if art13 else p["ovb"] * sale
+    if p["vat_route"]:
+        buyer_ovb = 0.104 * sale if late else 0.0
+    else:
+        buyer_ovb = p["ovb"] * (sale - price) if art13 else p["ovb"] * sale
     return {
         "p": p, "rows": rows, "acq": acq, "capex": capex, "rent": rent, "first_paid": first_paid,
-        "value_let": value_let, "free_left": free_left, "art13": art13, "uplift": uplift,
+        "value_let": value_let, "free_left": free_left, "art13": art13, "uplift": uplift, "late": late,
         "sale": sale, "sale_cost": sale_cost, "loan": loan, "tot": tot,
         "cost_total": cost_total, "income": income, "profit": profit,
         "margin": profit / cost_total, "vpb": vpb, "profit_after": profit - vpb,

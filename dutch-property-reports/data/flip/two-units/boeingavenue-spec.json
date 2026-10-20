@@ -1,0 +1,5 @@
+{"name": "Boeingavenue 307-N, Schiphol-Rijk", "slug": "boeingavenue-307-n-schiphol-rijk", "route": "vat",
+ "ask": 360000, "area": 193, "exit_bar": 0.0725, "ask_rent": 31845,
+ "parts": [["Производственное помещение, первый этаж, высота 3,7 м", 96.5, 135],
+           ["Офис или мастерская, второй этаж, высота 3 м", 96.5, 165]],
+ "capex_m2": 200, "capex_fixed": 5000, "hold_fixed": 1000, "dd": 3000, "split": null}

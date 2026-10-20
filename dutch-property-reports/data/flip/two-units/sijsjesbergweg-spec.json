@@ -1,0 +1,6 @@
+{"name": "Sijsjesbergweg 4-C2, Amsterdam", "slug": "sijsjesbergweg-4-c2-amsterdam", "route": "vat",
+ "ask": 380000, "area": 162, "exit_bar": 0.07, "ask_rent": 36000,
+ "parts": [["Производственное помещение, первый этаж", 60, 185],
+           ["Помещение под мастерскую или офис, второй этаж", 60, 200],
+           ["Офис на третьем уровне с террасой 17 м²", 42, 215]],
+ "capex_m2": 200, "capex_fixed": 5000, "hold_fixed": 4391, "dd": 3000, "split": null}

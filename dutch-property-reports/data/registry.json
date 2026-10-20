@@ -144,6 +144,16 @@
       ]
     },
     {
+      "slug": "boeingavenue-307-n-schiphol-rijk",
+      "title": "Boeingavenue 307-N, Schiphol-Rijk",
+      "city": "Schiphol-Rijk",
+      "price": "€ 360.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/schiphol-rijk/object-43009847-boeingavenue-307-n/",
+      "reports": [
+        "report-2026-10-20-flip-two-units.json"
+      ]
+    },
+    {
       "slug": "boekhorststraat-42-den-haag",
       "title": "Boekhorststraat 42, Den Haag",
       "city": "Den Haag",
@@ -613,6 +623,16 @@
       ]
     },
     {
+      "slug": "sijsjesbergweg-4-c2-amsterdam",
+      "title": "Sijsjesbergweg 4-C2, Amsterdam",
+      "city": "Amsterdam",
+      "price": "€ 380.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-44558505-sijsjesbergweg-4-c2/",
+      "reports": [
+        "report-2026-10-20-flip-two-units.json"
+      ]
+    },
+    {
       "slug": "st-ludgerusstraat-365-367-utrecht",
       "title": "St.-Ludgerusstraat 365-367, Utrecht",
       "city": "Utrecht",
@@ -744,5 +764,5 @@
       ]
     }
   ],
-  "updated": "2026-10-16"
+  "updated": "2026-10-20"
 }

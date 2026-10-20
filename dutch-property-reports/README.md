@@ -585,6 +585,40 @@ python3 -I tools/flip/make_card.py WORK/kernweg.json WORK/hoorn-comps.json WORK/
   пересчитать LibreOffice Calc (`soffice --headless --convert-to xlsx`)
   и сверить «Сводку» с Python — без пересчёта в файле нет готовых значений.
 
+### Любой объект и схема с НДС
+
+Для любого объекта модель задаётся коротким описанием (spec) — цена, площадь,
+аренда по частям, доходность для инвестора, отделка, постоянные платежи — и
+считается `flipobj.py`. Снимок второй модели (Sijsjesbergweg 4-C2 и
+Boeingavenue 307-N, 20.10.2026) и всех кандидатов отбора — в
+`data/flip/two-units/`.
+
+```bash
+python3 -I tools/flip/refresh.py WORK/data                        # что сейчас в продаже, новые объявления
+python3 -I tools/flip/screen3.py WORK                             # отбор кандидатов одной моделью
+python3 -I tools/flip/flipobj.py SPEC.json MODEL.json             # модель объекта по описанию
+python3 -I tools/flip/charts_obj.py MODEL.json RENTS.json CHART_DIR
+python3 -I tools/flip/make_two.py data/flip/two-units .           # карточки и описание отчёта
+python3 -I tools/flip/make_two_xlsx.py data/flip/two-units output # Excel по каждому объекту
+python3 -I tools/flip/verify_xlsx.py RECALC.xlsx MODEL.json       # сверка пересчитанного Excel с моделью
+```
+
+Главы флип-модели для карточки собирает `flip_chapters.chapters(M, T, chart_dir)`:
+расчётные таблицы берутся из модели, тексты об объекте приходят словарём `T`.
+
+Схема с НДС (`"route": "vat"` в описании) — для нового помещения, которым ещё
+никто не пользовался:
+
+- по статье 15 закона о налогах на сделки такая покупка облагается НДС 21 % и
+  освобождена от налога на передачу; НДС платится у нотариуса и
+  возвращается декларацией, если помещение сдаётся с НДС;
+- инвестор тоже покупает без 10,4 %, если акт подписан в течение
+  **6 месяцев после начала аренды**; аренда начинается в начале месяца въезда,
+  поэтому при въезде на 3-м месяце срок истекает в конце 8-го; базовая
+  продажа — на 7-м месяце, с месяцем запаса;
+- при более поздней продаже инвестор платит 10,4 % и снижает цену на столько
+  же — модель делит стоимость сданного помещения на 1,104.
+
 Главы разбора добавляются карточке полем `chapters`: у главы бывают
 `tables` (`columns`, `rows`, `widths`, `align`, `strong`, `highlight`,
 `title`, `note`) и `figures` (`path` от корня проекта, `width_mm`,
