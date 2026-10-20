@@ -2162,4 +2162,154 @@ The catalogue of database 144 (600 to 610) has the same ten kinds:
 | Projects | 1 | The Sui emperors Wen and Yang, whose two reigns from 581 to 618 are counted and ranked in code |
 | Flex | 1 | Years from Kanroku's calendar books of 602 to Docho's water mill of 610 |
 | Cross-code | 1 | The 609 census written in groups of ten thousand, computed in Python and in C |
+
+The catalogue of database 145 (590 to 600) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | Gregory the Great's Pastoral Rule, a Latin guide for bishops on teaching and correcting their flocks, written about 591, Gregory of Tours's Ten Books of Histories, a Latin history of the Franks completed about 594, Gregory the Great's Dialogues, four Latin books of tales of Italian holy men and miracles, written about 593 and Evagrius Scholasticus's Ecclesiastical History, six Greek books covering the years 431 to 594 |
+| Systems | 2 | Augustine's mission from Rome to Kent in 597, the first Roman mission to the English and Gregory the Great's papal register, yearly papyrus volumes that copied his letters from 590 to 604 |
+| Devices | 1 | The Irish hand-bell rung by hand at services, undated in the sources and placed at 597, the year Columba died on Iona |
+| Tools | 2 | Maurice's Strategikon, a Greek manual of army campaigns in twelve books, dated about 592 and Fei Changfang's Lidai sanbao ji, a catalogue of Buddhist scriptures arranged by dynasty, compiled in 597 |
+| Practices | 1 | Zhiyi's Mohe zhiguan, the method of calm and insight taught in lectures of 594 |
+| Guides | 1 | How Gregory's Pastoral Rule answers each hearer's fault with its contrary, worked out by a short program |
+| Examples | 1 | Evagrius's history, which runs from 431 to 594, measured by a short program |
+| Projects | 1 | Three rulers who held power in 590, Reccared, Authari and Agilulf, sorted by the length of their reigns |
+| Flex | 1 | Years from Gregory the Great's election in 590 to Augustine's landing in Kent in 597 |
+| Cross-code | 1 | The book counts of four works of the 590s, totalled and ranked in Python and in C |
+
+The catalogue of database 146 (580 to 590) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Yan Zhitui's Family Instructions for the Yan Clan, a handbook of learning and conduct written in his last years and The Bugut inscription, a stone in Sogdian script that honors a Turkic khagan on the Mongolian steppe |
+| Systems | 2 | The Kaihuang code of the Sui, a law code of twelve sections and 500 provisions, promulgated in 583 by Emperor Wen and The Third Council of Toledo of 589, which confirmed the Visigothic conversion to the Catholic faith and added the filioque to the creed |
+| Devices | 1 | The shadow gnomon of the Sui court, an upright pole that read the noon shadow of the sun, undated in its sources and placed at 583 |
+| Tools | 1 | Wax-covered writing tablets, the everyday notebooks of Late Antique schools and offices, undated in the sources and placed at 582 |
+| Practices | 1 | Shima, later called Zenshin-ni, taking Buddhist vows as a nun in 584, as the Nihon Shoki records it |
+| Guides | 1 | How the wards of a grid capital such as Daxing are addressed by row and column, worked out by a program |
+| Examples | 1 | The 24 years that the Sui ran without commanderies, from their abolition in 583 to their return in 607, counted in code |
+| Projects | 1 | The reigns of the Sasanian king Hormizd IV and the Byzantine emperor Maurice, 579 to 602, counted and ranked in code |
+| Flex | 1 | Years from the Kaihuang code of 583 to the Third Council of Toledo of 589 |
+| Cross-code | 1 | The 500 provisions of the Kaihuang code divided among its twelve sections, computed in Python and in C |
+
+The catalogue of database 147 (570 to 580) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Burzoe's Middle Persian version of the Indian fables of the Panchatantra, made in the reign of Khosrow I and Agathias's Histories, five Greek books that carry Procopius's account of Justinian's wars on from 552 |
+| Systems | 2 | The Northern Zhou campaign against Buddhism, decreed in 574 and renewed in 577 and Leovigild's revised code of Visigothic law, reported by Isidore of Seville and now lost |
+| Devices | 1 | The steelyard, a lever scale with a sliding weight in the form of the Roman statera |
+| Tools | 1 | Gregory of Tours's De cursu stellarum, a book on the courses of the stars and the times of church services |
+| Practices | 1 | Dating by the Year of the Elephant, an Arab reference year traditionally set at 570 |
+| Guides | 1 | How an Olympiad and its year turn into a date BC or AD, counted from the first Olympiad of 776 BC |
+| Examples | 1 | The reign of Khosrow I of Persia from 531 to 579, 48 years counted in code |
+| Projects | 1 | Three events of 573 to 578 in Persia, China and Byzantium, ordered in code with their gaps |
+| Flex | 1 | Years from Burzoe's Pahlavi version of about 570 to Ibn al-Muqaffa's Arabic version of about 750 |
+| Cross-code | 1 | The Byzantine war with Persia from 572 to 591, counted in years in Python and C |
+
+The catalogue of database 148 (560 to 570) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Corippus's In praise of Justin, a Latin panegyric in four books of hexameter verse for the court of Justin II |
+| Systems | 1 | The Sogdian embassy of Maniakh, which reached Constantinople in 568 to seek an alliance with the Turkic khan Istemi |
+| Devices | 1 | The Roman counting board, a flat board with counters for sums |
+| Tools | 1 | Cassiodorus's Institutions, a handbook of divine and secular learning for the monks of Vivarium |
+| Practices | 1 | Chilperic's added letters for the Latin alphabet, which Gregory of Tours reports the Frankish king introduced |
+| Guides | 1 | How a post-consular year counted from the consulship of Basilius in 541 becomes a calendar year, under the two counts in use |
+| Examples | 1 | The reign of Sigebert I of Austrasia counted in code, from 561 to his death in 575, a span of 14 years |
+| Projects | 1 | Khosrow I, Chilperic I and Justin II, three reigns that touch the 560s, summed and ranked by a short program |
+| Flex | 1 | Years from Justinian's death in 565 to the Sogdian embassy of 568 |
+| Cross-code | 1 | The 168 Novels of the Greek text, counted by emperor in Python and C |
+
+The catalogue of database 149 (550 to 560) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Wei Shou's Book of Wei, the dynastic history of the Northern Wei, completed in 554 and Jordanes's Getica, a Latin history of the Goths written in Constantinople in 551 |
+| Systems | 2 | Narses defeats the Ostrogothic king Totila at Taginae in 552, the battle that broke the Gothic army in Italy and Justinian's Pragmatic Sanction of August 554, which set out the government and law of Italy after the Gothic War |
+| Devices | 1 | The drawloom, a loom that lifts warp threads by pattern for figured silk, undated in Byzantium and placed at 552 |
+| Tools | 1 | Varahamihira's Brihat Samhita, an encyclopedia of astronomy, astrology and architecture, dated to the sixth century and here to 550 |
+| Practices | 1 | The silkworm eggs that two monks brought to Constantinople under Justinian, about 552, as Procopius tells it |
+| Guides | 1 | How the first pitch pipes follow from the yellow bell by thirds, worked out by a short program |
+| Examples | 1 | The 28 days from the first to the last sitting of the Second Council of Constantinople in 553, counted in code |
+| Projects | 1 | The founding years of seven Chinese dynasties of the Northern and Southern period, from 386 to 557, sorted and compared in code |
+| Flex | 1 | Years from the Pragmatic Sanction of 554 to Justinian's death in 565 |
+| Cross-code | 1 | The years from Jordanes's Getica of 551 to the Pragmatic Sanction of 554, with Taginae between, computed in Python and in C |
+
+The catalogue of database 150 (540 to 550) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | The Rule of Saint Benedict, a short Latin rule for monks with a prologue and 73 chapters, written about 540 and Jia Sixie's Qimin yaoshu, a Chinese farming handbook in ten volumes and 92 chapters, completed about 544 |
+| Systems | 1 | The plague of Justinian, which reached Pelusium in Egypt in 541 and Constantinople in 542 |
+| Devices | 1 | The plough and harrow for dry fields in north China, as the Qimin yaoshu describes their use |
+| Tools | 1 | The Chronicle of Edessa, a Syriac local chronicle of the city's bishops and floods, running from 201 to 540 |
+| Practices | 1 | The copying of books by hand at Vivarium, the monastery that Cassiodorus set up in southern Italy about 540 |
+| Guides | 1 | How a measure of grain in sheng is written as dou and sheng, the decimal grain measures of the period, worked out by a program |
+| Examples | 1 | The books of Cosmas Indicopleustes's Christian Topography, which grew from five to ten and then to twelve, counted in code |
+| Projects | 1 | The reigns of Justinian I and Khosrow I of Persia, 527 to 579, counted and ranked in code |
+| Flex | 1 | Years from the plague of Justinian in 541 to Totila's entry into Rome in 546 |
+| Cross-code | 1 | The 73 chapters of the Rule of Benedict and the 92 chapters of the Qimin yaoshu, added in Python and in C |
+
+The catalogue of database 151 (530 to 540) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Cassiodorus's Variae, twelve books of official letters and edicts written in the names of the Ostrogothic kings, collected about 537 and Gildas's On the Ruin of Britain, a Latin sermon-history that rebukes five British kings and the clergy, usually dated about 540 |
+| Systems | 2 | Justinian's Digest and Institutes, the case-law and textbook parts of his law corpus, issued in 533 and The second edition of Justinian's Code, issued on 16 November 534 and in force from 29 December 534 |
+| Devices | 1 | The ship mills that Belisarius moored on the Tiber during the Gothic siege of Rome, after the Goths cut the aqueducts in 537 |
+| Tools | 1 | The chronicle of Marcellinus Comes, a Latin year-by-year record from 379 to 534 for dating events |
+| Practices | 1 | The common life of monks at Monte Cassino under one abbot, with shared prayer and work, placed at 530 for the founding of the house |
+| Guides | 1 | How the Falcidian quarter cuts the legacies of a will so the heir keeps a fourth of the estate, worked out by a program |
+| Examples | 1 | From the opening of Justinian's Gothic War in 535 to its close in 554, 19 years counted in code |
+| Projects | 1 | Five events of 531 to 540 in Persia, Constantinople, Africa and Italy, sorted and spaced by a short program |
+| Flex | 1 | Years from the Nika riot of 532, which burned the old church of Holy Wisdom, to the dedication of Hagia Sophia in 537 |
+| Cross-code | 1 | The years between the Endless Peace of 532 with Persia and the Fifty Years' Peace of 562, computed in Python and in C |
+
+The catalogue of database 152 (520 to 530) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Boethius's Consolation of Philosophy, a Latin work of prose and verse written in prison while its author awaited execution and Li Daoyuan's Commentary on the Water Classic, a gazetteer of rivers, waterways and the places along them |
+| Systems | 2 | The Second Council of Orange of 529, whose twenty-five canons ruled on grace and free will against semi-Pelagian teaching and The first Code of Justinian, a collection of imperial laws published in 529 by a commission led by Tribonian |
+| Devices | 1 | The ivory consular diptych of 521 that announced Justinian's consulship, two panels now in the Metropolitan Museum of Art |
+| Tools | 1 | Dionysius Exiguus's Easter table of 525, which counted its years from the Incarnation of Christ |
+| Practices | 1 | Silla's official robe colours, which marked court rank, set with the law code of 520 |
+| Guides | 1 | How a year counted from the Incarnation becomes a year of Diocletian by subtracting 284 |
+| Examples | 1 | The years of Justinian's reign from 527 to 565, counted in code |
+| Projects | 1 | The Antioch earthquake of 526, the death of Justin I in 527 and the battle of Dara in 530, sorted and spaced in code |
+| Flex | 1 | Years from Dionysius's Easter table of 525 to the Second Council of Orange of 529 |
+| Cross-code | 1 | The 532-year Easter cycle as 28 solar years times 19 lunar years, computed in Python and in C |
+
+The catalogue of database 153 (510 to 520) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | The Zabad lintel of 512, a trilingual inscription in Greek, Syriac and Paleo-Arabic from a martyrium in Syria |
+| Systems | 1 | The Salic law of the Franks, the Pactus Legis Salicae of 65 titles, traditionally dated 507 to 511 under Clovis |
+| Devices | 1 | A water clock among the timekeepers that Theoderic sent to the Burgundian king Gundobad, as Cassiodorus's Variae records |
+| Tools | 2 | Zu Chongzhi's Daming calendar, first presented in 462 and approved by the Liang court in 510 after his son's campaign and Sengyou's Chu sanzang jiji, a catalogue of the Buddhist scriptures translated into Chinese, completed in 515 |
+| Practices | 1 | Dating years by their consuls, the Roman custom that charters of the early sixth century still followed |
+| Guides | 1 | How the Gupta year 191 on the Eran pillar becomes the Common Era year 510, worked out in code |
+| Examples | 1 | The 30 years of Clovis's reign, from 481 to 511, counted in code |
+| Projects | 1 | Four dated turns of 513 to 519 in the eastern Roman world and Rome, sorted and spaced in code |
+| Flex | 1 | Years from Shen Yue's death in 513 to the death of Theoderic in 526, thirteen years |
+| Cross-code | 1 | The 48 years from Zu Chongzhi's Daming calendar of 462 to its approval in 510, counted in Python and in C |
+
+The catalogue of database 154 (500 to 510) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 4 | Boethius's De institutione arithmetica, a two-book Latin text that reworked Nicomachus for Latin readers, Priscian's Institutiones grammaticae in eighteen books, finished before 526 and read in schools for centuries, The Philoxenian Syriac New Testament, a revision of the Peshitta made for Philoxenus of Mabbug about 508 and Liu Xie's Wenxin diaolong, a fifty-chapter handbook of literary craft written about 501 |
+| Systems | 2 | Alaric II's Breviary of Roman law, issued in 506 for the Roman subjects of the Visigothic kingdom and The Council of Agde of 506, a Gallic synod under the Visigothic king Alaric II that issued canons for the church |
+| Devices | 1 | The south-pointing chariot attributed to Zu Chongzhi, a cart whose figure kept its arm pointing south as the cart turned |
+| Tools | 1 | Varahamihira's Panchasiddhantika, a handbook gathering five earlier Indian astronomical treatises, about 505 |
+| Practices | 1 | Compurgation, the oath of an accused man backed by oath-helpers, as the early Germanic law codes describe it |
+| Guides | 1 | How a ratio is named by its species, multiple, superparticular or superpartient, as Nicomachus names them |
+| Examples | 1 | Alaric II's reign from 484 to 507, a span of 23 years counted in code |
+| Projects | 1 | How long four dynasties of the 500s lasted: Liang, Chen, Northern Qi and Northern Zhou, counted in code |
+| Flex | 1 | Years from Liu Xie's Wenxin diaolong of 501 to the Philoxenian New Testament of 508 |
+| Cross-code | 1 | The arithmetic, geometric and harmonic means of 2 and 8, computed in Python and in C |
 <!-- END GENERATED CATALOGUE -->

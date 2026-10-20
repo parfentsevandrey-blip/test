@@ -1438,5 +1438,105 @@
     "description": "Languages, systems, devices, tools and practices of 600 to 610, including rare and little-known items.",
     "colorHex": "#4CAF50",
     "curated": false
+  },
+  {
+    "id": 145,
+    "from": 590,
+    "to": 600,
+    "quota": false,
+    "name": "Database 145: 590s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 590 to 600, including rare and little-known items.",
+    "colorHex": "#D32F2F",
+    "curated": false
+  },
+  {
+    "id": 146,
+    "from": 580,
+    "to": 590,
+    "quota": false,
+    "name": "Database 146: 580s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 580 to 590, including rare and little-known items.",
+    "colorHex": "#C2185B",
+    "curated": false
+  },
+  {
+    "id": 147,
+    "from": 570,
+    "to": 580,
+    "quota": false,
+    "name": "Database 147: 570s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 570 to 580, including rare and little-known items.",
+    "colorHex": "#7B1FA2",
+    "curated": false
+  },
+  {
+    "id": 148,
+    "from": 560,
+    "to": 570,
+    "quota": false,
+    "name": "Database 148: 560s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 560 to 570, including rare and little-known items.",
+    "colorHex": "#512DA8",
+    "curated": false
+  },
+  {
+    "id": 149,
+    "from": 550,
+    "to": 560,
+    "quota": false,
+    "name": "Database 149: 550s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 550 to 560, including rare and little-known items.",
+    "colorHex": "#303F9F",
+    "curated": false
+  },
+  {
+    "id": 150,
+    "from": 540,
+    "to": 550,
+    "quota": false,
+    "name": "Database 150: 540s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 540 to 550, including rare and little-known items.",
+    "colorHex": "#1976D2",
+    "curated": false
+  },
+  {
+    "id": 151,
+    "from": 530,
+    "to": 540,
+    "quota": false,
+    "name": "Database 151: 530s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 530 to 540, including rare and little-known items.",
+    "colorHex": "#0288D1",
+    "curated": false
+  },
+  {
+    "id": 152,
+    "from": 520,
+    "to": 530,
+    "quota": false,
+    "name": "Database 152: 520s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 520 to 530, including rare and little-known items.",
+    "colorHex": "#0097A7",
+    "curated": false
+  },
+  {
+    "id": 153,
+    "from": 510,
+    "to": 520,
+    "quota": false,
+    "name": "Database 153: 510s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 510 to 520, including rare and little-known items.",
+    "colorHex": "#00796B",
+    "curated": false
+  },
+  {
+    "id": 154,
+    "from": 500,
+    "to": 510,
+    "quota": false,
+    "name": "Database 154: 500s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 500 to 510, including rare and little-known items.",
+    "colorHex": "#388E3C",
+    "curated": false
   }
 ]

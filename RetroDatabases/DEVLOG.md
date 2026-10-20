@@ -43,6 +43,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-27 | 2026-10-19 | 117,950 | 222 | 82 | 118 | 118,372 | +4,023 (databases 115 to 124: 155 records in 110 files, migrations 114→115 to 123→124, tests +0) |
 | CP-28 | 2026-10-19 | 121,722 | 222 | 82 | 118 | 122,144 | +3,772 (databases 125 to 134: 141 records in 110 files, migrations 124→125 to 133→134, tests +0) |
 | CP-29 | 2026-10-20 | 125,485 | 222 | 82 | 118 | 125,907 | +3,763 (databases 135 to 144: 139 records in 110 files, migrations 134→135 to 143→144, tests +0) |
+| CP-30 | 2026-10-20 | 128,918 | 222 | 82 | 118 | 129,340 | +3,433 (databases 145 to 154: 121 records in 110 files, migrations 144→145 to 153→154, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -1802,3 +1803,98 @@ Helpers checked the facts below with web search (standard mode, six calls each a
 - Not verified yet: running on a device, the migration from version 134 to version 144 on a device, the UI with 144 databases in the list, lint and the release build.
 - The 600s to the 690s are the thinnest decades of the catalogue for coding history. The question from earlier batches is still open: keep them smaller, fill them, or drop the placed records. A second question is larger: should the catalogue keep going back at all where the coding link is this weak?
 - The first facts to check before publishing are the Quinisext canon count, the Wuyin 618 date, Suiko's start year, the household census figure, and the De locis sanctis date.
+
+## CP-30: databases 145 to 154, 500 to 600 (the sixth century, the century before the 600s)
+
+Status: ten more databases are in the app, one per decade from the 590s down to the 500s: 121 records, migrations from version 144 to version 154, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. Records per database: 590s 15, 580s 12, 570s 12, 560s 10, 550s 12, 540s 11, 530s 12, 520s 12, 510s 11 and 500s 14. None reaches 50, and all ten are marked "quota": false in tools/databases.json. The build passes (154 databases, 5,630 records), 17 of 17 unit tests pass, and the 50 runnable records (5 in each decade) pass against their expected output. Every kind is present in every database.
+
+Mood: This century is thinner still for coding history than the 600s, and it is the part of the quota work I find hardest to make useful. The 500s have almost no dated coding history, so the batch is mostly law, councils, chronicles, grammars and Byzantine administration, and 22 of the 121 records carry an anchor year that is not their own date. I would rather say that plainly than fill the gaps. The checks caught real repeats (a Gregory letter book, Priscian's grammar, the water clock, the Agde council, consular dating and Justinian's reign), and each clear pair was fixed. The reign counts that still repeat across databases are listed below for a decision.
+
+Date: 2026-10-20. Totals: Kotlin main 128,918 (CP-29: 125,485), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 129,340 (CP-29: 125,907). The +3,433 is the 110 new Kotlin seed files for databases 145 to 154 and the regenerated SeedCatalog.kt. The database class and the tests did not change; the migrations are generated, with DATABASE_VERSION at 154.
+
+### What changed
+
+- Ten databases, from "Database 145: 590s coding catalogue" (590 to 600) to "Database 154: 500s coding catalogue" (500 to 510). Their records are 15, 12, 12, 10, 12, 11, 12, 12, 11 and 14: 121 new records and 5,630 in the whole catalogue. The new rare records number 86, so the whole catalogue has 1,710.
+- Eleven files per database, 110 in total. Colours are set in tools/databases.json, from #D32F2F for 145 to #388E3C for 154.
+- Spec: tools/databases.json has 154 entries. All ten new databases are marked "quota": false.
+- Generator: no change in this batch. SeedCatalog.kt, CATALOGUE.md and the README tables are regenerated. The README sentence about runnable counts now reads 75 to 154, with 145 to 154 in the group of five each.
+- Process: one helper per database for the first pass, from the brief and an anchors file. The lead then fixed the repeats below and replaced four records that could not stay.
+
+### Placed records (22)
+
+The year of these records is an anchor, not the date of the item itself. Each record's details say so.
+
+- 145: a DEVICE, the Irish hand-bell (597, the year Columba died on Iona).
+- 146: a DEVICE, the shadow gnomon of the Sui court (583); a TOOL, wax-covered writing tablets (582); a PROJECT on the reigns of Hormizd IV and Maurice (582, Maurice's accession).
+- 147: a DEVICE, the steelyard (578); a GUIDE on the Olympiad count (570); a TOOL, Gregory of Tours's De cursu stellarum (573); a LANGUAGE, Burzoe's Middle Persian Panchatantra (570); a LANGUAGE, Agathias's Histories (575).
+- 148: a DEVICE, the Roman counting board (565); a CROSS, the 168 Novels (565); a PRACTICE, Chilperic's added letters for the Latin alphabet (561); a TOOL, Cassiodorus's Institutions (562).
+- 149: a DEVICE, the drawloom for figured silk (552); a GUIDE on the first pitch pipes (550, the founding of the Northern Qi).
+- 150: a DEVICE, the plough and harrow for dry fields (544); a GUIDE on the decimal grain measures in sheng and dou (544); a PRACTICE, the copying of books by hand at Vivarium (540).
+- 151: a PRACTICE, the common life of monks at Monte Cassino (530).
+- 153: a PRACTICE, dating years by their consuls (510, the year of Boethius's consulship).
+- 154: a DEVICE, the south-pointing chariot attributed to Zu Chongzhi (500, the year he died); a PRACTICE, compurgation, the oath backed by oath-helpers (501).
+
+Weakest first: the 154 compurgation, the 147 Olympiad GUIDE, the 150 grain GUIDE, the 149 pitch-pipe GUIDE and the 154 chariot.
+
+### Problems and what was fixed
+
+- 148 had no DEVICE and no CROSS when its helper reported. Both were added (the counting board and the 168 Novels, both placed at 565).
+- 151's "The Chronicle of Edessa" was repeated in 150. The copy in 151 was replaced by Gildas's On the Ruin of Britain (about 540, from memory).
+- Gregory the Great's register, in 145 and 146: 145 SYSTEM kept; 146 PRACTICE replaced by Shima, later called Zenshin-ni (584, Nihon Shoki).
+- Priscian's Institutiones, in 152 and 154: 154 LANGUAGE kept; 152 LANGUAGE replaced by Li Daoyuan's Commentary on the Water Classic (dated by its author's death in 527).
+- The water clock sent to Gundobad, in 153 and 154: 153 DEVICE kept (511); 154 DEVICE replaced by the south-pointing chariot, placed at 500.
+- The Council of Agde, in 153 and 154: 154 SYSTEM kept; 153 PROJECT (Agde, Orleans and Epaone) replaced by a program of four dated turns from 513 to 519.
+- Consular dating, in 153 and 154: 153 PRACTICE kept; the 154 copy was first replaced by Chinese counting rods, which turned out to be an existing record (database 56), so it was replaced again by compurgation, placed at 501.
+- Justinian's reign counted in code, in 148 and 152: 152 EXAMPLE kept (527 to 565); 148 EXAMPLE replaced by Sigebert I's reign (561 to 575, 14 years).
+- Rejected candidates: a Toledo III creed-at-Mass practice for 146 (Toledo III is already a SYSTEM record there, and the search did not confirm the Mass); an organ that Theoderic sent to Clovis (the search found a letter about a kitharode instead, so nothing was written).
+
+### Repeats left for a decision
+
+- Reign counts repeat across databases. Justinian's reign from 527 to 565 is counted in 150 (a PROJECT on Justinian I and Khosrow I) and in 152 (an EXAMPLE). Khosrow I's reign from 531 to 579 is counted in 147 (an EXAMPLE), in 148 (a PROJECT with Chilperic I and Justin II) and in 150 (the PROJECT with Justinian I). The reign-span family appears in 145, 146, 147, 148, 150, 152, 153 and 154. This is the largest repeat question in the batch, and I did not rewrite these records.
+- Within databases, the book and a computed record about the same book are different items, so I kept them: 145 has several Gregory records and an EXAMPLE on Evagrius's history beside Evagrius's LANGUAGE record; 146 has three Kaihuang records (SYSTEM, CROSS and FLEX); 149 uses the Pragmatic Sanction in three records; 150 has the Rule of Benedict as LANGUAGE and as CROSS; 152 has four Dionysius records (TOOL, FLEX, GUIDE and the 532-year CROSS); 153 has the Daming calendar as TOOL and as CROSS; 154 has three Alaric II records (SYSTEM, EXAMPLE and the Agde SYSTEM).
+- Neighbours across databases, kept: Cassiodorus's Variae (151 LANGUAGE) and the water clock in the Variae (153 DEVICE); Zu Chongzhi's Daming calendar (153) and the chariot attributed to him (154); the Toledo III filioque (146) and the Aachen filioque (124); consular dating (153) and post-consular years (148 GUIDE); compurgation (154) and the oath of 802 (124).
+
+### Repeat check result
+
+The rare-word check (scratchpad/same_item_batch.py 145 154) gives 237 lines. Most are one shared common word between different items. The same-item pairs found in this batch were the ones fixed above; the reign counts listed above are the remaining overlap, and I did not change them.
+
+### Facts checked by search
+
+- Li Daoyuan: death year 527, from a conference abstract by Xiaofei Tian; Wikipedia gives his dates as 466 or 472 to 527. The expanded commentary is said to have 40 juan and about 1,250 waterways (1,252 in one source). No source gave a completion date, so 527 is used as the end of the early sixth-century range.
+- Shima, later Zenshin-ni: the Nihon Shoki's entry for the thirteenth year of Emperor Bidatsu, which is 584. Secondary accounts give her age as about eleven or twelve, and her journey to Korea as 586 or 588.
+- Not confirmed and not used: an organ sent by Theoderic to Clovis (the Variae letter found concerns a kitharode); the Mass recitation of the Nicene Creed in the Toledo III canons (the sources say the Creed was said before the Lord's Prayer at the service).
+- The helpers' own search lists for the other records of this batch are not carried into this log. The details of each record say what its date rests on.
+
+### Facts from memory, to check
+
+- 500s and 510s: Vitalian's revolt (513); Pope Symmachus's death (514); Anastasius's death (518); the end of the Acacian schism (519); Zu Chongzhi's dates (429 to 500); the Burgundian code's range (about 501 to 516); Boethius's consulship (510); the Salic and Burgundian codes' use of oath-helpers.
+- 540s to 580s: Gildas (about 540); the Rule of Benedict (about 540); the Qimin yaoshu (about 544); Monte Cassino (530); Vivarium (about 540); Justin II's death (578); Chlothar I's death (561); Sigebert I's reign (561 to 575); Cassiodorus's death (between 562 and 585 by the accounts); Maurice's accession (582); Columba's death (597).
+
+### Single-source dates
+
+- The Shima date rests on the Nihon Shoki as reported by secondary accounts; her age and the Korea trip are disputed between them.
+- Li Daoyuan's death year rests on one conference abstract, with Wikipedia's range for comparison.
+- The water clock letters are dated 507 to 511 in the record; one online heading gives about 522, and the record names that dispute.
+
+### Problems
+
+- Thin decades. All ten are below 50 records. The runnable count is 5 in each decade.
+- Placed records. Twenty-two of the 121 records carry an anchor year, about one in six, which is more than the batch brief wanted. This is the first decision for the user: keep the placed records, drop the decades that cannot fill, or stop going back.
+- Coding relevance. This is the thinnest stretch for coding history so far. Most of the batch is law, councils, chronicles, grammars and Byzantine administration, and the coding link is weakest in the 500s.
+- Reign counts. The reign-span family repeats across databases (see above). Justinian's reign is counted twice, and Khosrow I's reign three times.
+- Memory dates. Many dates above come from memory. The first to check are Vitalian's revolt, the Acacian schism, Sigebert I's dates, the Burgundian code's range and Zu Chongzhi's life dates.
+
+### How I checked it
+
+- Unit tests: 17 of 17 pass. The three XML reports show 17 tests with no failures, errors or skips, and the Gradle test task ran in the last build (BUILD SUCCESSFUL in 20 seconds).
+- Examples: each new database has its own verifier with exact expected output, worked out by hand before each run. All 50 runnable records pass. The two records changed after the first run (the Sigebert example in 148 and the four-turns program in 153) were verified again.
+- Structure: the generator checks 154 databases and 5,630 records. The checker reports only the count rules for each of the ten databases, which the thin-century rule allows. The title checks, the text rules and the rare counts (7 to 10) pass. The rare counts are 8, 9, 9, 9, 9, 8, 7, 9, 9 and 9 for 145 to 154.
+- Cross-batch: the repeat check was re-run after each replacement. The four first-pass repeats, the consular dating and Justinian's reign are gone. The reign counts are listed for a decision.
+- Whole catalogue: 5,630 records, of which 1,710 are rare. The checker found no repeated titles in the batch against the 5,509 earlier records.
+- Text: the records have no provenance phrases and no dollar signs, and the Cyrillic check is run before the commit.
+
+### Notes
+
+- Not verified yet: running on a device, the migration from version 144 to version 154 on a device, the UI with 154 databases in the list, lint and the release build.
+- The 500s to the 590s are the thinnest decades of the catalogue for coding history. The question from earlier batches is still open: keep them smaller, fill them, or drop the placed records. A second question is larger: should the catalogue keep going back at all where the coding link is this weak?
+- The first facts to check before publishing are the dates of Vitalian's revolt and the Acacian schism, Sigebert I's reign, Zu Chongzhi's life dates and the Burgundian code's range.
