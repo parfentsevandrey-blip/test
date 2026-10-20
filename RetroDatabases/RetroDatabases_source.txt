@@ -3994,7 +3994,7 @@ The catalogue of database 148 (560 to 570) has the same ten kinds:
 | Practices | 1 | Chilperic's added letters for the Latin alphabet, which Gregory of Tours reports the Frankish king introduced |
 | Guides | 1 | How a post-consular year counted from the consulship of Basilius in 541 becomes a calendar year, under the two counts in use |
 | Examples | 1 | The reign of Sigebert I of Austrasia counted in code, from 561 to his death in 575, a span of 14 years |
-| Projects | 1 | Khosrow I, Chilperic I and Justin II, three reigns that touch the 560s, summed and ranked by a short program |
+| Projects | 1 | Four dated events of 561 to 568, from Chlothar's death to the Lombard entry into Italy, spaced in code |
 | Flex | 1 | Years from Justinian's death in 565 to the Sogdian embassy of 568 |
 | Cross-code | 1 | The 168 Novels of the Greek text, counted by emperor in Python and C |
 
@@ -4024,7 +4024,7 @@ The catalogue of database 150 (540 to 550) has the same ten kinds:
 | Practices | 1 | The copying of books by hand at Vivarium, the monastery that Cassiodorus set up in southern Italy about 540 |
 | Guides | 1 | How a measure of grain in sheng is written as dou and sheng, the decimal grain measures of the period, worked out by a program |
 | Examples | 1 | The books of Cosmas Indicopleustes's Christian Topography, which grew from five to ten and then to twelve, counted in code |
-| Projects | 1 | The reigns of Justinian I and Khosrow I of Persia, 527 to 579, counted and ranked in code |
+| Projects | 1 | Four dated events of 536 to 548, the entry into Rome, the lifted siege, the sack of Antioch and the death of Theodora, spaced in code |
 | Flex | 1 | Years from the plague of Justinian in 541 to Totila's entry into Rome in 546 |
 | Cross-code | 1 | The 73 chapters of the Rule of Benedict and the 92 chapters of the Qimin yaoshu, added in Python and in C |
 
@@ -5940,11 +5940,12 @@ Weakest first: the 154 compurgation, the 147 Olympiad GUIDE, the 150 grain GUIDE
 - The Council of Agde, in 153 and 154: 154 SYSTEM kept; 153 PROJECT (Agde, Orleans and Epaone) replaced by a program of four dated turns from 513 to 519.
 - Consular dating, in 153 and 154: 153 PRACTICE kept; the 154 copy was first replaced by Chinese counting rods, which turned out to be an existing record (database 56), so it was replaced again by compurgation, placed at 501.
 - Justinian's reign counted in code, in 148 and 152: 152 EXAMPLE kept (527 to 565); 148 EXAMPLE replaced by Sigebert I's reign (561 to 575, 14 years).
+- Reign repeats, after the review: Justinian's reign was counted in 150 (a PROJECT) and in 152 (an EXAMPLE), and Khosrow I's reign in 147, 148 and 150. The 150 and 148 projects were replaced by event timelines (536 to 548 and 561 to 568), so each reign is counted once.
 - Rejected candidates: a Toledo III creed-at-Mass practice for 146 (Toledo III is already a SYSTEM record there, and the search did not confirm the Mass); an organ that Theoderic sent to Clovis (the search found a letter about a kitharode instead, so nothing was written).
 
 ### Repeats left for a decision
 
-- Reign counts repeat across databases. Justinian's reign from 527 to 565 is counted in 150 (a PROJECT on Justinian I and Khosrow I) and in 152 (an EXAMPLE). Khosrow I's reign from 531 to 579 is counted in 147 (an EXAMPLE), in 148 (a PROJECT with Chilperic I and Justin II) and in 150 (the PROJECT with Justinian I). The reign-span family appears in 145, 146, 147, 148, 150, 152, 153 and 154. This is the largest repeat question in the batch, and I did not rewrite these records.
+- Reign counts repeated across databases: Justinian's reign (150 PROJECT and 152 EXAMPLE) and Khosrow I's reign (147 EXAMPLE, 148 PROJECT and 150 PROJECT). Both were fixed after the review (see the first item under Problems and what was fixed), so each reign is now counted once. The reign family otherwise appears in 145, 146, 147, 148 (Sigebert), 152, 153 and 154, one reign per record.
 - Within databases, the book and a computed record about the same book are different items, so I kept them: 145 has several Gregory records and an EXAMPLE on Evagrius's history beside Evagrius's LANGUAGE record; 146 has three Kaihuang records (SYSTEM, CROSS and FLEX); 149 uses the Pragmatic Sanction in three records; 150 has the Rule of Benedict as LANGUAGE and as CROSS; 152 has four Dionysius records (TOOL, FLEX, GUIDE and the 532-year CROSS); 153 has the Daming calendar as TOOL and as CROSS; 154 has three Alaric II records (SYSTEM, EXAMPLE and the Agde SYSTEM).
 - Neighbours across databases, kept: Cassiodorus's Variae (151 LANGUAGE) and the water clock in the Variae (153 DEVICE); Zu Chongzhi's Daming calendar (153) and the chariot attributed to him (154); the Toledo III filioque (146) and the Aachen filioque (124); consular dating (153) and post-consular years (148 GUIDE); compurgation (154) and the oath of 802 (124).
 
@@ -5975,7 +5976,7 @@ The rare-word check (scratchpad/same_item_batch.py 145 154) gives 237 lines. Mos
 - Thin decades. All ten are below 50 records. The runnable count is 5 in each decade.
 - Placed records. Twenty-two of the 121 records carry an anchor year, about one in six, which is more than the batch brief wanted. This is the first decision for the user: keep the placed records, drop the decades that cannot fill, or stop going back.
 - Coding relevance. This is the thinnest stretch for coding history so far. Most of the batch is law, councils, chronicles, grammars and Byzantine administration, and the coding link is weakest in the 500s.
-- Reign counts. The reign-span family repeats across databases (see above). Justinian's reign is counted twice, and Khosrow I's reign three times.
+- Reign counts. The repeats were fixed after the review: the projects in 148 and 150 that counted the same reigns were replaced by event timelines (561 to 568 in 148, 536 to 548 in 150), so Justinian's and Khosrow I's reigns are each counted once.
 - Memory dates. Many dates above come from memory. The first to check are Vitalian's revolt, the Acacian schism, Sigebert I's dates, the Burgundian code's range and Zu Chongzhi's life dates.
 
 ### How I checked it
@@ -35043,35 +35044,40 @@ package com.example.retrodatabases.data.seed
 import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.RecordEntity
 
-/** One project of 560 to 570: three reigns that touch the 560s, Khosrow I, Chilperic I and Justin II, summed and ranked by a short program. */
+/** One project of 560 to 570: four dated events from 561 to 568, from the death of Chlothar I to the Lombard entry into Italy, spaced by a short program. */
 val db148Projects: List<RecordEntity> = listOf(
 
     entry(
         databaseId = 148,
         kind = Kind.PROJECT,
-        section = "Eurasian rulers",
-        title = "Khosrow I, Chilperic I and Justin II, three reigns that touch the 560s, summed and ranked by a short program",
-        originalTitle = "reign lengths of three rulers",
-        author = "Compilers of the program",
-        year = 565,
-        summary = "Three reigns that overlap the 560s are measured in years, ranked from longest to shortest, and summed by a short program.",
-        details = "Khosrow I of Persia reigned from 531 to 579, Chilperic I of the Franks from 561 to 584, and Justin II of Byzantium from 565 to 578, giving 48, 23 and 13 years. The year 565 is the accession of Justin II, the latest start in the list.",
+        section = "Eurasian events",
+        title = "Four dated events of 561 to 568, from Chlothar's death to the Lombard entry into Italy, spaced in code",
+        originalTitle = "Four dated events of 561 to 568, spaced in code",
+        author = "Compilers of the program, from Gregory of Tours and the Byzantine and Irish sources",
+        year = 568,
+        summary = "Four events of the 560s, from the death of Chlothar I to the Lombard entry into Italy, are set in a short program that prints the gaps between them.",
+        details = "Chlothar I of the Franks died in 561, the Fifty Years' Peace between Byzantium and Persia was made in 562, Columba founded the monastery on Iona in 563, and the Lombards entered Italy in 568. The program prints the gaps of 1, 1 and 5 years, the total of 7, and the longest gap, all of which can be checked by subtraction.",
         rare = true,
         instructions = """
-            1. Save the example as reign_ranking.py.
-            2. Run it: python3 reign_ranking.py
+            1. Save the example as events_560s.py.
+            2. Run it: python3 events_560s.py
         """,
         example = """
-            # Three reigns that touch the 560s, summed and ranked by length
-            REIGNS = {
-                "Khosrow I": (531, 579),
-                "Chilperic I": (561, 584),
-                "Justin II": (565, 578),
-            }
-            lengths = {name: end - start for name, (start, end) in REIGNS.items()}
-            for name, years in sorted(lengths.items(), key=lambda pair: -pair[1]):
-                print(name, years, "years")
-            print("total:", sum(lengths.values()), "years")
+            EVENTS = [
+                ("Chlothar I dies", 561),
+                ("Fifty Years' Peace", 562),
+                ("Columba founds Iona", 563),
+                ("Lombards enter Italy", 568),
+            ]
+
+            gaps = []
+            for (name1, year1), (name2, year2) in zip(EVENTS, EVENTS[1:]):
+                gaps.append((name1, name2, year2 - year1))
+                print(name1, year1, "to", name2, year2, ":", year2 - year1, "years")
+            total = EVENTS[-1][1] - EVENTS[0][1]
+            print("total from Chlothar I dies to Lombards enter Italy:", total, "years")
+            longest = max(gaps, key=lambda gap: gap[2])
+            print("longest gap:", longest[0], "to", longest[1], "(" + str(longest[2]) + " years)")
         """,
     ),
 
@@ -37112,36 +37118,39 @@ package com.example.retrodatabases.data.seed
 import com.example.retrodatabases.data.Kind
 import com.example.retrodatabases.data.RecordEntity
 
-/** One project of 540 to 550: the reigns of Justinian I and Khosrow I, whose lengths and 34-year overlap are counted in code. */
+/** One project of 540 to 550: four dated events from 536 to 548, the entry into Rome, the lifted siege, the sack of Antioch and the death of Theodora, spaced by a short program. */
 val db150Projects: List<RecordEntity> = listOf(
 
     entry(
         databaseId = 150,
         kind = Kind.PROJECT,
-        section = "Byzantine and Persian",
-        title = "The reigns of Justinian I and Khosrow I of Persia, 527 to 579, counted and ranked in code",
-        originalTitle = "Justinian I and Khosrow I",
-        author = "Procopius and Persian chronicles",
-        year = 540,
-        summary = "The reigns of Justinian I and Khosrow I overlapped for 34 years, and a short program counts and ranks their lengths and the overlap.",
-        details = "Justinian I ruled from 527 to 565 and Khosrow I from 531 to 579, and the wars between their states ran through the 540s, including the sack of Antioch in 540. The start and end years are the usual ones for both reigns, and the program only subtracts and compares them.",
+        section = "Byzantine",
+        title = "Four dated events of 536 to 548, the entry into Rome, the lifted siege, the sack of Antioch and the death of Theodora, spaced in code",
+        originalTitle = "Four dated events of 536 to 548, spaced in code",
+        author = "Procopius and the Byzantine chroniclers",
+        year = 548,
+        summary = "Four events of Justinian's wars and court, from Belisarius's entry into Rome to the death of Theodora, are set in a short program that prints the gaps between them.",
+        details = "Belisarius entered Rome in December 536, the Goths lifted their siege of the city in March 538, Khosrow I sacked Antioch in 540, and Theodora died in June 548. The program prints the gaps of 2, 2 and 8 years, their total of 12, and the longest gap, all of which can be checked by subtraction.",
         instructions = """
-            1. Save the example as reign_spans.py.
-            2. Run it: python3 reign_spans.py
+            1. Save the example as events_540s.py.
+            2. Run it: python3 events_540s.py
         """,
         example = """
-            REIGNS = {
-                "Justinian I": (527, 565),
-                "Khosrow I": (531, 579),
-            }
-            lengths = {name: end - start for name, (start, end) in REIGNS.items()}
-            for name, length in sorted(lengths.items(), key=lambda item: item[1], reverse=True):
-                print(name, length, "years")
-            print("total:", sum(lengths.values()), "years")
-            print("longest:", max(lengths, key=lengths.get))
-            latest_start = max(start for start, _ in REIGNS.values())
-            earliest_end = min(end for _, end in REIGNS.values())
-            print("overlap:", earliest_end - latest_start, "years")
+            EVENTS = [
+                ("Belisarius enters Rome", 536),
+                ("Goths lift the siege of Rome", 538),
+                ("Khosrow sacks Antioch", 540),
+                ("Theodora dies", 548),
+            ]
+
+            gaps = []
+            for (name1, year1), (name2, year2) in zip(EVENTS, EVENTS[1:]):
+                gaps.append((name1, name2, year2 - year1))
+                print(name1, year1, "to", name2, year2, ":", year2 - year1, "years")
+            total = EVENTS[-1][1] - EVENTS[0][1]
+            print("total from Belisarius enters Rome to Theodora dies:", total, "years")
+            longest = max(gaps, key=lambda gap: gap[2])
+            print("longest gap:", longest[0], "to", longest[1], "(" + str(longest[2]) + " years)")
         """,
     ),
 

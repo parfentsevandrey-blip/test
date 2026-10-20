@@ -2219,7 +2219,7 @@ The catalogue of database 148 (560 to 570) has the same ten kinds:
 | Practices | 1 | Chilperic's added letters for the Latin alphabet, which Gregory of Tours reports the Frankish king introduced |
 | Guides | 1 | How a post-consular year counted from the consulship of Basilius in 541 becomes a calendar year, under the two counts in use |
 | Examples | 1 | The reign of Sigebert I of Austrasia counted in code, from 561 to his death in 575, a span of 14 years |
-| Projects | 1 | Khosrow I, Chilperic I and Justin II, three reigns that touch the 560s, summed and ranked by a short program |
+| Projects | 1 | Four dated events of 561 to 568, from Chlothar's death to the Lombard entry into Italy, spaced in code |
 | Flex | 1 | Years from Justinian's death in 565 to the Sogdian embassy of 568 |
 | Cross-code | 1 | The 168 Novels of the Greek text, counted by emperor in Python and C |
 
@@ -2249,7 +2249,7 @@ The catalogue of database 150 (540 to 550) has the same ten kinds:
 | Practices | 1 | The copying of books by hand at Vivarium, the monastery that Cassiodorus set up in southern Italy about 540 |
 | Guides | 1 | How a measure of grain in sheng is written as dou and sheng, the decimal grain measures of the period, worked out by a program |
 | Examples | 1 | The books of Cosmas Indicopleustes's Christian Topography, which grew from five to ten and then to twelve, counted in code |
-| Projects | 1 | The reigns of Justinian I and Khosrow I of Persia, 527 to 579, counted and ranked in code |
+| Projects | 1 | Four dated events of 536 to 548, the entry into Rome, the lifted siege, the sack of Antioch and the death of Theodora, spaced in code |
 | Flex | 1 | Years from the plague of Justinian in 541 to Totila's entry into Rome in 546 |
 | Cross-code | 1 | The 73 chapters of the Rule of Benedict and the 92 chapters of the Qimin yaoshu, added in Python and in C |
 

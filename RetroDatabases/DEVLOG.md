@@ -1846,11 +1846,12 @@ Weakest first: the 154 compurgation, the 147 Olympiad GUIDE, the 150 grain GUIDE
 - The Council of Agde, in 153 and 154: 154 SYSTEM kept; 153 PROJECT (Agde, Orleans and Epaone) replaced by a program of four dated turns from 513 to 519.
 - Consular dating, in 153 and 154: 153 PRACTICE kept; the 154 copy was first replaced by Chinese counting rods, which turned out to be an existing record (database 56), so it was replaced again by compurgation, placed at 501.
 - Justinian's reign counted in code, in 148 and 152: 152 EXAMPLE kept (527 to 565); 148 EXAMPLE replaced by Sigebert I's reign (561 to 575, 14 years).
+- Reign repeats, after the review: Justinian's reign was counted in 150 (a PROJECT) and in 152 (an EXAMPLE), and Khosrow I's reign in 147, 148 and 150. The 150 and 148 projects were replaced by event timelines (536 to 548 and 561 to 568), so each reign is counted once.
 - Rejected candidates: a Toledo III creed-at-Mass practice for 146 (Toledo III is already a SYSTEM record there, and the search did not confirm the Mass); an organ that Theoderic sent to Clovis (the search found a letter about a kitharode instead, so nothing was written).
 
 ### Repeats left for a decision
 
-- Reign counts repeat across databases. Justinian's reign from 527 to 565 is counted in 150 (a PROJECT on Justinian I and Khosrow I) and in 152 (an EXAMPLE). Khosrow I's reign from 531 to 579 is counted in 147 (an EXAMPLE), in 148 (a PROJECT with Chilperic I and Justin II) and in 150 (the PROJECT with Justinian I). The reign-span family appears in 145, 146, 147, 148, 150, 152, 153 and 154. This is the largest repeat question in the batch, and I did not rewrite these records.
+- Reign counts repeated across databases: Justinian's reign (150 PROJECT and 152 EXAMPLE) and Khosrow I's reign (147 EXAMPLE, 148 PROJECT and 150 PROJECT). Both were fixed after the review (see the first item under Problems and what was fixed), so each reign is now counted once. The reign family otherwise appears in 145, 146, 147, 148 (Sigebert), 152, 153 and 154, one reign per record.
 - Within databases, the book and a computed record about the same book are different items, so I kept them: 145 has several Gregory records and an EXAMPLE on Evagrius's history beside Evagrius's LANGUAGE record; 146 has three Kaihuang records (SYSTEM, CROSS and FLEX); 149 uses the Pragmatic Sanction in three records; 150 has the Rule of Benedict as LANGUAGE and as CROSS; 152 has four Dionysius records (TOOL, FLEX, GUIDE and the 532-year CROSS); 153 has the Daming calendar as TOOL and as CROSS; 154 has three Alaric II records (SYSTEM, EXAMPLE and the Agde SYSTEM).
 - Neighbours across databases, kept: Cassiodorus's Variae (151 LANGUAGE) and the water clock in the Variae (153 DEVICE); Zu Chongzhi's Daming calendar (153) and the chariot attributed to him (154); the Toledo III filioque (146) and the Aachen filioque (124); consular dating (153) and post-consular years (148 GUIDE); compurgation (154) and the oath of 802 (124).
 
@@ -1881,7 +1882,7 @@ The rare-word check (scratchpad/same_item_batch.py 145 154) gives 237 lines. Mos
 - Thin decades. All ten are below 50 records. The runnable count is 5 in each decade.
 - Placed records. Twenty-two of the 121 records carry an anchor year, about one in six, which is more than the batch brief wanted. This is the first decision for the user: keep the placed records, drop the decades that cannot fill, or stop going back.
 - Coding relevance. This is the thinnest stretch for coding history so far. Most of the batch is law, councils, chronicles, grammars and Byzantine administration, and the coding link is weakest in the 500s.
-- Reign counts. The reign-span family repeats across databases (see above). Justinian's reign is counted twice, and Khosrow I's reign three times.
+- Reign counts. The repeats were fixed after the review: the projects in 148 and 150 that counted the same reigns were replaced by event timelines (561 to 568 in 148, 536 to 548 in 150), so Justinian's and Khosrow I's reigns are each counted once.
 - Memory dates. Many dates above come from memory. The first to check are Vitalian's revolt, the Acacian schism, Sigebert I's dates, the Burgundian code's range and Zu Chongzhi's life dates.
 
 ### How I checked it
