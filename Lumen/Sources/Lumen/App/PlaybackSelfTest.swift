@@ -14,7 +14,7 @@ enum PlaybackSelfTest {
         engine.volume = 0
 
         Task { @MainActor in
-            func report(_ ok: Bool, _ message: String) -> Never {
+            @MainActor func report(_ ok: Bool, _ message: String) -> Never {
                 print("{\"ok\": \(ok), \"message\": \"\(message)\", \"time\": \(engine.currentTime), \"duration\": \(engine.duration)}")
                 exit(ok ? 0 : 1)
             }
