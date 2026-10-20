@@ -468,8 +468,9 @@ final class PlayerEngine {
     func pause() { player.pause() }
 
     func togglePlay() {
-        isPlaying ? pause() : play()
-        flash(isPlaying ? "pause.fill" : "play.fill", isPlaying ? "Пауза" : "Воспроизведение")
+        let willPlay = !isPlaying
+        willPlay ? play() : pause()
+        flash(willPlay ? "play.fill" : "pause.fill", willPlay ? "Воспроизведение" : "Пауза")
     }
 
     func seek(to seconds: Double, precise: Bool = true) {
