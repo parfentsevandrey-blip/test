@@ -1,0 +1,58 @@
+name: Lumen (macOS)
+
+on:
+  push:
+    paths:
+      - "Lumen/**"
+      - ".github/workflows/lumen-macos.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: lumen-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: Lumen
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          echo "Xcode: $XCODE"
+          sw_vers
+          swift --version
+          sysctl -n machdep.cpu.brand_string
+
+      - name: Build Lumen.app + DMG
+        run: ./scripts/build.sh
+
+      # Тестовые файлы генерируются ffmpeg только здесь, в CI. В приложение он не попадает:
+      # Lumen читает Matroska собственным кодом.
+      - name: Generate Matroska fixtures
+        run: |
+          brew install --quiet ffmpeg >/dev/null
+          ./scripts/make-fixtures.sh "$RUNNER_TEMP/fixtures"
+
+      - name: Self-test demuxer on real files
+        run: python3 scripts/selftest.py "dist/Lumen.app/Contents/MacOS/Lumen" "$RUNNER_TEMP/fixtures" "$RUNNER_TEMP/selftest"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Lumen-dmg
+          path: Lumen/dist/Lumen.dmg
+          if-no-files-found: error
+          compression-level: 0
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selftest-report
+          path: ${{ runner.temp }}/selftest/*.json
+          if-no-files-found: ignore
