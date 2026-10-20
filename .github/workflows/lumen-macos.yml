@@ -43,6 +43,15 @@ jobs:
       - name: Self-test demuxer on real files
         run: python3 scripts/selftest.py "dist/Lumen.app/Contents/MacOS/Lumen" "$RUNNER_TEMP/fixtures" "$RUNNER_TEMP/selftest"
 
+      # Настоящее воспроизведение через движок плеера (с «Исполняется», обложкой,
+      # перемоткой и цветокоррекцией) — и для MKV, и для обычного MP4.
+      - name: Self-test playback engine
+        run: |
+          BIN="dist/Lumen.app/Contents/MacOS/Lumen"
+          "$BIN" --selftest-playback "$RUNNER_TEMP/fixtures/h264_aac_ac3_srt.mkv"
+          "$BIN" --selftest-playback "$RUNNER_TEMP/selftest/h264_aac_ac3_srt.mkv.out/media.mp4"
+          "$BIN" --selftest-playback "$RUNNER_TEMP/fixtures/hevc10_hdr_eac3.mkv"
+
       - uses: actions/upload-artifact@v4
         with:
           name: Lumen-dmg

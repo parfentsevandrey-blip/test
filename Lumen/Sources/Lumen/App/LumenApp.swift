@@ -9,6 +9,9 @@ enum Entry {
         if let i = args.firstIndex(of: "--selftest-remux"), args.count > i + 2 {
             exit(SelfTest.run(input: URL(fileURLWithPath: args[i + 1]), output: URL(fileURLWithPath: args[i + 2])))
         }
+        if let i = args.firstIndex(of: "--selftest-playback"), args.count > i + 1 {
+            PlaybackSelfTest.run(URL(fileURLWithPath: args[i + 1]))
+        }
         LumenApp.main()
     }
 }
