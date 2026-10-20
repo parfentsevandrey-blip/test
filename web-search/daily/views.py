@@ -17,6 +17,7 @@ from common import DATA, cian, client, day_dir, log, read_jsonl, today, write_js
 
 STAT = "https://api.cian.ru/offer-card/v1/get-offer-card-statistic/"
 STATE = os.path.join(DATA, "views-state.json")
+DEV_SHARE = .15
 
 
 def interest_first(r):
@@ -45,7 +46,16 @@ def queue(lots, state, hot, day, rotate, budget):
     q += never
     seen.update(never)
     q += sorted((i for i in ids - seen if age(i) >= rotate), key=lambda i: -age(i))
-    return q[:budget], len(q)
+    # лоты застройщиков (40 тыс., медиана 2 просмотра в неделю) -- не больше DEV_SHARE дневного бюджета, кроме горячих:
+    # их спрос надёжнее виден по исходам из ежедневного слоя id (снят, бронь, подорожал), просмотры -- выборкой
+    hot_set, dev_left, out = set(hot), int(budget * DEV_SHARE), []
+    for i in q:
+        if lots[i]["seller"] == "developer" and i not in hot_set:
+            if dev_left <= 0:
+                continue
+            dev_left -= 1
+        out.append(i)
+    return out[:budget], len(q)
 
 
 def fetch(day_views, r):
@@ -64,9 +74,9 @@ def fetch(day_views, r):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--day", default=today())
-    ap.add_argument("--budget", type=int, default=12000)
+    ap.add_argument("--budget", type=int, default=7000)
     ap.add_argument("--workers", type=int, default=2)
-    ap.add_argument("--rotate", type=int, default=8, help="раз в сколько дней опрашивать каждый лот (<= 9)")
+    ap.add_argument("--rotate", type=int, default=9, help="раз в сколько дней опрашивать каждый лот (<= 9)")
     ap.add_argument("--delay", type=float, nargs=2)
     ap.add_argument("--max-minutes", type=int, default=360, help="предел времени этапа; остаток -- завтра")
     a = ap.parse_args()
