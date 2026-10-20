@@ -46,6 +46,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-30 | 2026-10-20 | 128,918 | 222 | 82 | 118 | 129,340 | +3,433 (databases 145 to 154: 121 records in 110 files, migrations 144→145 to 153→154, tests +0) |
 | CP-31 | 2026-10-20 | 132,865 | 222 | 82 | 118 | 133,287 | +3,947 (databases 155 to 164: 145 records in 110 files, migrations 154→155 to 163→164, tests +0) |
 | CP-32 | 2026-10-20 | 136,840 | 222 | 82 | 118 | 137,262 | +3,975 (databases 165 to 174: 154 records in 110 files, migrations 164→165 to 173→174, tests +0) |
+| CP-33 | 2026-10-20 | 140,320 | 222 | 82 | 118 | 140,742 | +3,480 (databases 175 to 184: 115 records in 110 files, migrations 174→175 to 183→184, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -2131,3 +2132,123 @@ These come from the helpers' search reports; the record details say what each da
 - Not verified yet: running on a device, the migration from version 164 to version 174 on a device, the UI with 174 databases in the list, lint and the release build.
 - The 300s to the 390s are thin for coding history. The question from earlier batches is still open: keep them smaller, fill them, or drop the placed records. A larger question: should the catalogue keep going back at all where the coding link is this weak?
 - The first facts to check before publishing are the day of the Edict of Thessalonica, the Dao'an catalogue, the Shichishito's reading and the year of the Tricennial Oration.
+
+## CP-33: databases 175 to 184, 200 to 300 (the third century, the century before the 300s)
+
+Status: ten more databases are in the app, one per decade from the 290s down to the 200s: 115 records, migrations from version 174 to version 184, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. Records per database: 290s 11, 280s 11, 270s 11, 260s 14, 250s 12, 240s 13, 230s 10, 220s 12, 210s 10 and 200s 11. None reaches 50, and all ten are marked "quota": false in tools/databases.json. There are 50 runnable records (5 in each database), and they all pass against their expected output. The build passes (184 databases, 6,044 records), and the unit tests pass (17 of 17, testDebugUnitTest executed).
+
+Mood: This is the first batch that reaches before 300. No record in the catalogue was dated between 100 and 299 before this checkpoint, and the sources give very little coding history for this century, so the batch is the thinnest yet. Of the 115 records, 36 carry an anchor year (about 31 per cent, against 17 per cent in CP-32). Most dates are checkable, and several rest on one source, listed below. The same-item check found the two repeats that mattered: the Roman bronze dodecahedron in three databases and the Shushtar water mills in two. Each was fixed by replacing the copy in the database that did not keep it.
+
+Date: 2026-10-20. Totals: Kotlin main 140,320 (CP-32: 136,840), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 140,742 (CP-32: 137,262). The +3,480 is the 110 new Kotlin seed files for databases 175 to 184 and the regenerated SeedCatalog.kt. The database class and the tests did not change; the migrations are generated, with DATABASE_VERSION at 184.
+
+### What changed
+
+- Ten databases, from "Database 175: 290s coding catalogue" (290 to 300) to "Database 184: 200s coding catalogue" (200 to 210). Their records are 11, 11, 11, 14, 12, 13, 10, 12, 10 and 11: 115 new records and 6,044 in the whole catalogue. The new rare records number 77, so the whole catalogue has 1,960.
+- Eleven files per database, 110 in total. The colours are unused ones, picked from a hue pool so that none repeats.
+- Spec: tools/databases.json has 184 entries. All ten new databases are marked "quota": false.
+- Generator: no change. SeedCatalog.kt, CATALOGUE.md and the README tables are regenerated. The README sentence about runnable counts is updated by hand: databases 75 to 184 have fewer runnable records, and 175 to 184 have five each, all passing.
+- Process: one helper per database for the first pass, from the brief and an anchors file in which every named item has one owner database. The lead then ran the repeat check and sent three repeats back to the helpers that wrote them.
+
+### Placed records (36)
+
+The year of these records is an anchor, not the date of the item itself. Each record's details say so.
+
+- 175: a DEVICE, the hypocaust (293, the tetrarchy); a PRACTICE, the adoratio (293); a GUIDE, Egyptian doubling (293); a TOOL, the Antonine Itinerary (297, the census); an EXAMPLE, the aroura (297).
+- 176: a LANGUAGE, Chen Shou's Records of the Three Kingdoms (280); a DEVICE, Du Yu's linked trip-hammers (280); a GUIDE, the six xun periods (280); a PRACTICE, the qiju zhu (285, Wani).
+- 177: a DEVICE, the Roman bronze dodecahedron (274); a GUIDE, the grain total in modii and sextarii (274); an EXAMPLE, the Saturnalia (274); a TOOL, the portable sundial (275).
+- 178: a DEVICE, the water mills of Shushtar (260); a TOOL, the Sasanian seal stones (262).
+- 179: a SYSTEM, Gallienus's cavalry reform (260); a TOOL, the hipposandal (260); a DEVICE, the atlatl (251, the death of Decius); a GUIDE, the Egyptian civil year (250).
+- 180: a DEVICE, the Baghdad battery (244); a TOOL, the decempeda (244); a GUIDE, the Secular Games interval (248).
+- 181: a PRACTICE, Origen's shorthand writers (231); a GUIDE, the Egyptian civil month and day (231); an EXAMPLE, the Sothic cycle (238, Censorinus's book); a CROSS, the Julian drift in one Sothic cycle (238).
+- 182: a DEVICE, the repeating crossbow (228, Zhuge's campaign); a TOOL, the carpenter's square (226, Cao Rui's accession).
+- 183: a DEVICE, the Barbegal mill (211, the death of Severus); a LANGUAGE, Ulpian's Rules (212); a PRACTICE, military diplomas (212); a GUIDE, the iugerum (216); a TOOL, the Roman strigil (213, Caracalla's Alamanni campaign).
+- 184: a DEVICE, the clay oil lamp (203, the Arch of Septimius Severus); a GUIDE, the rune groups of the Elder futhark (200); a PRACTICE, Hua Tuo's surgery (208, his death).
+
+Weakest first: the atlatl (179), a Mesoamerican device with a Roman anchor; the hypocaust and the adoratio (175), with anchors that do not touch them; the strigil (183) and the oil lamp (184), real objects with anchors that do not touch them; and the Shushtar mills (178).
+
+### Problems and what was fixed
+
+- The Roman bronze dodecahedron was in 177 (DEVICE, 274), 183 (TOOL, 218) and 184 (DEVICE, 200): one object. It stays in 177. Database 183 now has a Roman strigil (213) as its TOOL, and 184 a clay oil lamp (203) as its DEVICE.
+- The Shushtar water mills were in 178 (DEVICE, 260) and 179 (DEVICE, 260): one item. It stays in 178. Database 179 now has the atlatl (251) as its DEVICE.
+- The Ma Jun puppet theatre, assigned to 180, was dropped: its date (226 to 239, under Cao Rui) gives no year inside 240 to 250 that a source supports. It is not in 181 either.
+- The Hexapla is placed at 240, not 230: the sources give its completion before 245 and no start year.
+- Guangya is a LANGUAGE in 181, not a TOOL: the catalogue files dictionaries as LANGUAGE (Shuowen, 106).
+- The Greek letter-numeral CROSS once suggested for 178 was not written, because database 62 covers that method.
+- Items dropped for a documented reason, as the helpers' reports give them: the Shanghan lun (sources date it about 200 to 205, outside 183), a Roman mile GUIDE (91 covers the mile), the Aquincum organ (its plaque dates it to 228), the Jin census figures (no source found), Liu Shao's Renwu zhi (no composition date), and the Gallienus reform's 255 (no year in the sources, so placed at 260).
+
+### Repeats kept inside one database (for a decision)
+
+- 176: Wani's traditional date is in three records: a SYSTEM (the arrival of writing), a FLEX (years from the catalogue to Wani's date) and a PROJECT (a timeline of 280 to 290). Each computes or sorts a different quantity.
+- 178: Shapur I's inscription is a LANGUAGE, and its three versions are compared in a CROSS by line count, a different quantity.
+- 181: the Sothic cycle is an EXAMPLE (days) and a CROSS (the Julian drift in one cycle), both on Censorinus's book.
+- 179: Decius's edict, Decius's death and Valerian's capture recur in a PROJECT, a FLEX and two SYSTEM records.
+- 177 and 180: Plotinus's death (177, in a PROJECT) and Plotinus's seminar at Rome (180, a PRACTICE) are two events of one man.
+- Each of these is a book, an event or a standard, and a computed record about it; I kept them. The lead may cut one record in each cluster.
+
+### Repeat check result
+
+The same-item check (scratchpad/same_item_batch.py 175 184) gives 150 pairs. The two same-object repeats above are gone. The rest are shared words ("hollow", "curved", "hole", "polygon", "begins") or neighbours of the same kind: Porphyry's Isagoge beside his two books of 174; the Liu Hui polygon beside Van Ceulen's polygon of 1615 and the polygon of 47; the commentary on the Nine Chapters beside the grain method of 139; the Antonine Itinerary beside the route maps of 72 and 79.
+
+### Facts checked by search
+
+These come from the helpers' search reports; the record details say what each date rests on.
+
+- 175: Bowuzhi "about 290" only; the census given as 287, 297 and 301 in different sources (297 for Egypt, one source); the adoratio has no year, so it is placed at 293; the Itinerary's surviving form is late third to early fourth century; 1 March 293 is the common tetrarchy date.
+- 176: Xun Xu's classics and philosophy divisions confirmed (the history and poetry divisions from memory); Wani at 285 is the traditional date (Ojin 16), and scholars doubt the account; Du Yu's trip-hammers are credited to him, with earlier Han models; no completion year for Chen Shou, so placed at 280.
+- 177: Bamboo Annals found in 279 (281 in some accounts; the record uses 279); the Isagoge written in Sicily, 268 to 270 (one testimony); the Ticinum officina numbers 1 to 3 in 274 (one catalogue); dodecahedra second to fourth century; medallion sundials 4 to 5 cm, one latitude each.
+- 178: the Haidao manual dated 263; poles of 3 zhang, 1000 bu apart; the withdrawals of 123 and 127 bu; the Western Jin era from 266; Pei Xiu minister of works in 267, with his preface in the Book of Jin, volume 35; Shapur's inscription about 262, with 70, 35 and 30 lines.
+- 179: Diophantus about 250 rests mainly on Psellus's letter, and Knorr gives about 240; the libelli of the 250 edict, totals of 44 or 46; Valerian's edict of August 258; Lawrence's death on 10 August 258 from two sources; the reform has no year, so placed at 260; one Vindolanda hipposandal group bracketed to about 140 to 180.
+- 180: Wang Bi lived 226 to 249; the Zhengshi era ran 240 to 249; the stone classics were cut in ancient, seal and clerical scripts, and their rediscovery is dated variously; the Baghdad jar was found in 1936 at Khujut Rabu, its era Parthian or Sasanian, and its electric reading disputed; Ma Jun's theatre tied to Cao Rui (226 to 239).
+- 181: the Hexapla at Caesarea in six columns; the Guangya about 230; the Jingchu calendar adopted 237, credited to Yang Wei; the wooden oxen 230 or 231 (disputed); Censorinus 238; the Sothic cycle of 1461 Egyptian years and 1460 Julian years.
+- 182: Hippolytus's seven 16-year spans from 222; Africanus's five books to 221, with a regnal-year dispute; Bakhshali's one leaf dated 224 to 383, the other tested leaves near 700 and 900; the Zhoubi text dated no earlier than the Eastern Han; Ardashir's battle at 224 and a dispute about his crowning; the crossbow credited to Zhuge Liang in later histories.
+- 183: Severus died at York on 4 February 211 (two sources); the Constitutio dated 212 by most scholars, with Millar proposing 214; the Giessen papyrus P.Giss. 40, acquired in Egypt in 1902; Barbegal has 16 wheels in two banks of eight, mostly second century; Ulpian died 223 or 228; military diplomas appear to stop about 203.
+- 184: the Vimose comb about 160; the Ovre Stabu later second century or 210 to 240 (accounts differ); the Forma Urbis 203 to 211, with no ancient mention and 150 or 151 slabs; Sextus second or third century; the Manusmriti about 200 BCE to 200 CE; dodecahedra mostly second to fourth century.
+
+### Facts from memory, to check
+
+- 175: Jin Wudi's death (290); the reconquest of Britain (296); Lactantius's ascription of the adoratio; the royal cubit of 0.525 m; Galerius's possible 21 May; the hypocaust and aroura facts.
+- 176: Sun Hao's surrender (280); Carus's death (283); Sima Yan's death (290); Shu (221 to 263); Wu's imperial title (229, or 222 as a kingdom); the Sanguozhi's 65 volumes; the xun names.
+- 177: Plotinus's death (270); Aurelian's Sun temple and the 25 December date in the 354 calendar (274); Aurelian's death (275); Saturnalia 17 to 23 December; 16 sextarii to the modius, 48 to the amphora.
+- 178: Liu Hui's 263 completion and pi values; the Jin code (268) with Jia Chong; Valerian's capture (260); Gallienus killed (268); Pei Xiu's principle names; the seal details.
+- 179: Decius killed at Abritus (251); Cyprian's De unitate (251); Gallienus sole ruler from 260; the Gallic Empire (260 to 274); Diophantus's six surviving Greek books; the Egyptian month names.
+- 180: Origen's Against Celsus (about 248); the Gaoping coup and Cao Shuang's execution (249); the Secular Games (248); Gordian III's death at Misiche and Philip's accession (244); Plotinus at Rome (244); the Jin start (266); the saeculum games of 17 BC, 88 and 204.
+- 181: Zhuge Liang's death (234) and Qishan (231); Severus Alexander's murder (235); Gongsun Yuan's death (238); Cao Rui's death (239); the Gordian revolt (238); Origen's move (231); the seven writers supplied by Ambrose.
+- 182: Chen Qun (220); Zhao Shuang (222); Zhuge's 228 campaign; Cao Rui (226); Liu Bei (221); Elagabalus (222); Sun Quan (229); Varro's 753 BC; the gou and gu names.
+- 183: Papinian's execution (212); the Alexandria massacre (215); the Parthian war (216); Elagabalus (218); the Han end (220); the Julian leap rule; the dodecahedron's details; the iugerum of 240 by 120 feet.
+- 184: Guandu (200); the Red Cliffs (208); Cao Cao's order (210); the Sanguozhi's short life of Hua Tuo; the mafeisan in the fifth-century Book of the Later Han; the aettir names; the Manusmriti yuga figures; the Outlines' three books; the oil lamp's general history.
+
+### Single-source or judgment dates
+
+- 175: the census year (297, Egypt); Galerius's 21 May.
+- 176: Wani at 285 (one course page); Du Yu's third-century date (one encyclopedia page); the Han diary example (one article).
+- 177: the officina numbers (one catalogue); the Bamboo Annals find (279 or 281); the Isagoge's date (one testimony).
+- 178: Shapur's date and line counts; the Jin code's twenty chapters (one secondary summary); the Shushtar attribution (weak pages, hedged).
+- 179: Cyprian's 14 September 258 (EXAMPLE; one genealogy page and memory); Diophantus's 250; the Vindolanda bracket.
+- 180: the stone classics at 241 (single source); Wang Bi's commentary at 240 (a round date).
+- 181: the Jingchu date of 237 (one study group); the wooden oxen 230 or 231; Censorinus's date (one secondary page).
+- 182: Ardashir's crowning at 227 (one timeline site); the battle date of 28 April 224 (one encyclopedia); the Sasanian end at 651 (one exhibit); the Hippolytus heading (one news piece); the Bakhshali leaf dates (news summaries).
+- 183: Caracalla's death on 8 April 217 (the CROSS; one online source); auxiliary diplomas to about 203; Millar's 214.
+- 184: the Vimose buckle near 200; Hua Tuo's death in 208.
+
+### Problems
+
+- Thin decades. All ten are far below 50 records (10 to 14), with 50 runnable records in all.
+- Placed records. 36 of 115, about one in three, the highest share so far. The weakest are listed above.
+- Coding relevance. The third century has almost no coding history in the sources. The batch is the first to reach before 300, and its GUIDE and TOOL records are the weakest links.
+- Clusters inside one database. Several databases have three or more records on one event (see above); one record of each cluster may be cut.
+- Memory dates. The first to check are Cyprian's 14 September 258, Diophantus's 250, the Shushtar attribution, the Hexapla's 240, Hua Tuo's death year and Caracalla's death on 8 April 217.
+
+### How I checked it
+
+- Verifiers: 175 5 of 5; 176 5 of 5; 177 5 of 5; 178 5 of 5; 179 5 of 5; 180 5 of 5; 181 5 of 5; 182 5 of 5; 183 5 of 5; 184 5 of 5. That is 50 runnable records, each with expected output worked out by hand before the run.
+- Checker: each database reports only the count rules, which the thin-century rule allows. No title clashes, text-rule or year problems. The rare counts (7 to 10) are 9, 7, 7, 8, 8, 8, 8, 8, 7 and 7 for 175 to 184.
+- Repeat check: scratchpad/same_item_batch.py 175 184, as in the repeat check result above.
+- Generator: checks passed for 184 databases and 6,044 records.
+- Unit tests: BUILD SUCCESSFUL; 17 of 17 pass, with 0 failures and 0 errors (AppDatabaseSeedTest 4, RecordFilterTest 5, SeedDataTest 8).
+- Text: no Cyrillic in the logs, the source pack, the README, CATALOGUE.md or the tools (checked before the commit).
+
+### Notes
+
+- Not verified yet: running on a device, the migration from version 174 to version 184 on a device, the UI with 184 databases in the list, lint and the release build.
+- Below 300 the coding link is almost gone. The question from earlier checkpoints is still open: should the catalogue keep going back at all?
+- The first facts to check before publishing are Cyprian's 14 September 258, Diophantus's 250, the Shushtar attribution, the Hexapla's 240, Hua Tuo's death year and Caracalla's death date.

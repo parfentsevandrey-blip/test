@@ -2612,4 +2612,154 @@ The catalogue of database 174 (300 to 310) has the same ten kinds:
 | Projects | 1 | Four dated turns of the Eight Princes war in Western Jin China, 300 to 306, sorted in code |
 | Flex | 2 | Days from the first edict of the Great Persecution to Diocletian's abdication and Days from Diocletian's abdication to Constantine's acclamation at York |
 | Cross-code | 1 | Days from Constantine's acclamation at York to the Carnuntum conference in Python and C |
+
+The catalogue of database 175 (290 to 300) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Zhang Hua's Bowuzhi, a Chinese book of marvels, natural things and learned notes |
+| Systems | 2 | The tetrarchy of Diocletian, four rulers in two pairs of senior and junior emperors and Diocletian's census and tax units, the land unit and the head unit |
+| Devices | 1 | The hypocaust, a Roman underfloor heating system for baths and villas |
+| Tools | 1 | The Antonine Itinerary, a list of Roman road stations and distances |
+| Practices | 1 | The adoratio, prostration before the emperor's purple robes at court |
+| Guides | 1 | How an Egyptian scribe multiplies by doubling, written as code |
+| Examples | 1 | The aroura, an Egyptian land square of 100 cubits a side, written as code |
+| Projects | 1 | A timeline of four events from 290 to 298, spaced out in code |
+| Flex | 1 | Years from Zhang Hua's Bowuzhi to the tetrarchy of Diocletian |
+| Cross-code | 1 | Days from the naming of the Caesars to the Roman new year of 294, in Python and C |
+
+The catalogue of database 176 (280 to 290) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Chen Shou's Records of the Three Kingdoms, a history of Wei, Shu and Wu |
+| Systems | 2 | The Jin conquest of Wu, which ended the Three Kingdoms in 280 and The traditional arrival of Chinese writing in Japan through Wani, with the Analects |
+| Devices | 1 | Du Yu's linked trip-hammers, credited to a Jin general of the third century |
+| Tools | 1 | Xun Xu's catalogue of the imperial library, its books arranged in four parts |
+| Practices | 1 | The qiju zhu, a court diary of the ruler's words and conduct kept by palace attendants |
+| Guides | 1 | How the six ten-day xun periods of the Chinese calendar are named |
+| Examples | 1 | The span of the Three Kingdoms, from 220 to 280, counted in code |
+| Projects | 1 | A timeline of 280 to 290: Wu's fall, Carus's death, Wani's arrival and Sima Yan's death |
+| Flex | 1 | Years from Xun Xu's catalogue to Wani's traditional arrival in Japan |
+| Cross-code | 1 | How long Shu and Wu lasted as states of the Three Kingdoms, counted in Python and C |
+
+The catalogue of database 177 (270 to 280) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Porphyry's Isagoge, a Greek introduction to logic with the tree of kinds and The Bamboo Annals, a chronicle written on bamboo slips and found in a tomb |
+| Systems | 1 | Aurelian's festival of the Unconquered Sun on 25 December |
+| Devices | 1 | The Roman bronze dodecahedron, a hollow twelve-faced object of unknown use |
+| Tools | 1 | The Roman portable sundial, a small dial set for one latitude |
+| Practices | 1 | The officina numbers on Roman coins, which name the workshop that struck each piece |
+| Guides | 1 | How a grain total is split into modii and sextarii |
+| Examples | 1 | The Saturnalia, the December feast from 17 to 23 December, counted in code |
+| Projects | 1 | Plotinus's death to the Bamboo find: four dates of the 270s, spaced in code |
+| Flex | 1 | Years from the Isagoge to the find of the Bamboo Annals |
+| Cross-code | 1 | The Julian day number and weekday of 25 December 274, in Python and C |
+
+The catalogue of database 178 (260 to 270) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Liu Hui's commentary on the Nine Chapters on the Mathematical Art and Shapur I's inscription on the Ka'ba-ye Zartosht, in Middle Persian, Parthian and Greek |
+| Systems | 4 | Valerian's capture at Edessa, when Shapur I took a Roman emperor prisoner, The Western Jin dynasty begins in 266 under Sima Yan, The Jin code of 268, the Taishi law of twenty chapters and The murder of Gallienus at Milan in 268 |
+| Devices | 1 | The water mills of Shushtar, undated in the sources and placed at 260 |
+| Tools | 1 | Sasanian seal stones, carved gems that stamped documents and goods, placed at 262 |
+| Practices | 1 | Pei Xiu's six principles of mapmaking, built on a scaled grid |
+| Guides | 1 | How the height of a far island is found from two poles and two sightlines |
+| Examples | 1 | Liu Hui's polygon of 3,072 sides, doubled from a hexagon for the value of pi |
+| Projects | 1 | Four dated events of 260 to 268, sorted and spaced in code |
+| Flex | 1 | Years from Liu Hui's commentary of 263 to the Jin code of 268 |
+| Cross-code | 1 | The lines of Shapur I's three versions, totalled and compared in Python and C |
+
+The catalogue of database 179 (250 to 260) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Diophantus's Arithmetika, problems solved with a symbol for the unknown and Cyprian's On the Unity of the Catholic Church, a Latin treatise of 251 |
+| Systems | 2 | Gallienus's mobile cavalry reform of the 260s and The Gallic Empire of Postumus, a breakaway Roman state from 260 |
+| Devices | 1 | The atlatl, a spear-thrower of the Americas, undated in the sources and placed at 251 |
+| Tools | 1 | The hipposandal, an iron horseshoe-like protector for a horse's hoof |
+| Practices | 1 | The libelli of the Decian sacrifice, certificates of 250 |
+| Guides | 1 | How a day of the Egyptian civil year gets its month, with five days added at the end |
+| Examples | 1 | The day of the year of Cyprian's martyrdom, counted in code |
+| Projects | 1 | Four events of the 250s put in order and spaced in code |
+| Flex | 1 | Years from Decius's edict of 250 to Valerian's capture in 260 |
+| Cross-code | 1 | The weekday of Lawrence's martyrdom on 10 August 258, in Python and C |
+
+The catalogue of database 180 (240 to 250) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | Wang Bi's commentary on the Book of Changes, written in his last decade, The Zhengshi stone classics, Wei texts cut in three scripts and Origen's reply to Celsus, an eight-book Greek defence of the Christian faith |
+| Systems | 1 | Sima Yi's seizure of power at the Gaoping Tombs in 249 |
+| Devices | 1 | The Baghdad battery, a clay jar with a copper cylinder and an iron rod |
+| Tools | 1 | The decempeda, the ten-foot rod that Roman land surveyors measured with |
+| Practices | 2 | Plotinus's seminar at Rome, where pupils read and questioned their teacher and The Secular Games of 248, Rome's thousandth-year festival under Philip the Arab |
+| Guides | 1 | How the 110-year interval of the Secular Games is checked against the dated games |
+| Examples | 1 | Years from the Gaoping coup of 249 to the usual start of the Jin in 266 |
+| Projects | 1 | Four events of 241 to 249 in year order, with the gaps between them counted |
+| Flex | 1 | Years from the death of Gordian III to Sima Yi's coup |
+| Cross-code | 1 | Wang Bi's years of life in plain and sui counts, in Python and C |
+
+The catalogue of database 181 (230 to 240) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Zhang Yi's Guangya, a dictionary of words that extends the Erya |
+| Systems | 1 | The Jingchu calendar of Wei, the Luminous Inception system adopted in 237 |
+| Devices | 1 | Zhuge Liang's wooden oxen and gliding horses, carriers for army supplies |
+| Tools | 1 | Origen's Hexapla, the Old Testament in six columns of Hebrew and Greek texts |
+| Practices | 1 | Origen's shorthand writers at Caesarea, who took down his teaching in turns |
+| Guides | 1 | How an Egyptian civil month and day become a day of the year |
+| Examples | 1 | The Sothic cycle of 1461 Egyptian years counted in days |
+| Projects | 1 | Four dated events of 234 to 239 in China and Rome, sorted and spaced in code |
+| Flex | 1 | Years from the revolt of Gordian I and II in 238 to the death of Gordian III in 244 |
+| Cross-code | 1 | Days the Julian reckoning gains on the Egyptian year in one Sothic cycle, in Python and C |
+
+The catalogue of database 182 (220 to 230) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Julius Africanus's Chronographiai, a world chronology from creation to 221 and The Bakhshali manuscript, a Sanskrit arithmetic on birch bark with a dot for zero |
+| Systems | 2 | Chen Qun's nine-rank system for grading candidates for office and Ardashir I's victory at Hormizdagan and the founding of Sasanian rule |
+| Devices | 1 | The repeating crossbow that later histories credit Zhuge Liang with improving |
+| Tools | 1 | The carpenter's square, whose short and long arms gave the names gou and gu |
+| Practices | 1 | Hippolytus's sixteen-year table of Paschal cycles, dated from 222 |
+| Guides | 1 | How Zhao Shuang's diagram proves the gougu rule with rearranged squares |
+| Examples | 1 | Sasanian rule counted from the battle of 224 and from the crowning of 226 to 651 |
+| Projects | 1 | Four dated events of 221 to 229 in China and Rome, sorted and spaced in code |
+| Flex | 1 | Years from Africanus's chronology of 221 to the Bakhshali date of 224 |
+| Cross-code | 1 | The years of Rome from its founding for AD 220 to 230, counted in Python and C |
+
+The catalogue of database 183 (210 to 220) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Ulpian's Rules, a short Latin handbook of Roman law |
+| Systems | 1 | Caracalla's Constitutio Antoniniana, citizenship for most free people of the empire |
+| Devices | 1 | The Barbegal mill, sixteen water wheels in two banks near Arles |
+| Tools | 1 | The Roman strigil, a curved metal scraper for oil and dirt after bathing |
+| Practices | 1 | Military diplomas, bronze certificates of citizenship for discharged auxiliary soldiers |
+| Guides | 1 | How an iugerum of Roman land, 240 by 120 feet, is turned into square metres |
+| Examples | 1 | The years of the Eastern Han, from 25 to 220, counted in code |
+| Projects | 1 | A timeline of four Roman events from York to Carrhae, 211 to 217, in code |
+| Flex | 1 | Years from the Constitutio Antoniniana to the death of Caracalla |
+| Cross-code | 1 | Days from the death of Severus at York to the death of Caracalla, in Python and C |
+
+The catalogue of database 184 (200 to 210) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Sextus Empiricus's Outlines of Pyrrhonism, the chief surviving account of Greek scepticism and The Elder futhark, the first runic alphabet, with its earliest finds about 200 |
+| Systems | 1 | The Manusmriti, the Laws of Manu, a Sanskrit law book in verse |
+| Devices | 1 | The Roman clay oil lamp, a mould-made lamp with a filling hole and a wick nozzle |
+| Tools | 1 | The Severan marble plan of Rome, a map of the city cut on marble slabs |
+| Practices | 1 | Hua Tuo's surgery under an anaesthetic drink, told in the Book of the Later Han |
+| Guides | 1 | How the twenty-four runes of the Elder futhark are grouped into three aettir of eight |
+| Examples | 1 | The four ages of the Manusmriti added up in divine and human years |
+| Projects | 1 | Four dated events of 200 to 210 from Rome and China, sorted and spaced in code |
+| Flex | 1 | Years from the Severan marble plan to Cao Cao's order |
+| Cross-code | 1 | Years from the battle of Guandu to Cao Cao's order of 210, in Python and C |
 <!-- END GENERATED CATALOGUE -->
