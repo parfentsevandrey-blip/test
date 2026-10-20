@@ -46,6 +46,7 @@ BASE = {
     "vat_refund_month": 2,
     "vat_window": 6,             # продажа не позже 6 месяцев после начала аренды — покупатель без 10,4 %
     "hold_fixed": 0,             # эрфпахт, взносы ассоциации собственников, € в год
+    "exit_deduct": 0,            # что инвестор вычитает из аренды при оценке: плата за эрфпахт, € в год
     # налог на прибыль
     "vpb_low": 0.19, "vpb_high": 0.258, "vpb_step": 200_000,
 }
@@ -97,7 +98,7 @@ def run(p_in: dict | None = None, **kw) -> dict:
         rows.append(r)
 
     # цена продажи: аренда / доходность k.k.; незакончившиеся каникулы покупатель вычитает
-    value_let = rent / p["exit_bar"]
+    value_let = (rent - p["exit_deduct"]) / p["exit_bar"]
     free_left = max(0, first_paid - 1 - n) * rent / 12
     art13 = n <= 6 and not p["vat_route"]
     # аренда начинается в начале месяца lease_month: 6 месяцев истекают в конце месяца lease_month − 1 + 6
@@ -201,7 +202,7 @@ def hold(r: dict, *, years: int = 5, opex_pct: float = 0.125, refi_ltv: float = 
     rate = p["rate"] if rate is None else rate
     rent = r["rent"]
     opex = rent * opex_pct            # налог OZB владельца, страховка, ремонт, управление
-    noi = rent - opex
+    noi = rent - opex - p["hold_fixed"]   # плата за землю и взносы владельца — сверх обычных расходов
     invested = (r["acq"]["Цена покупки"] + r["acq"]["Налог на передачу 10,4 %"]
                 + sum(v for k, v in r["acq"].items() if k not in ("Цена покупки", "Налог на передачу 10,4 %"))
                 + r["capex"] + rent * p["letting_fee"] + p["marketing"])

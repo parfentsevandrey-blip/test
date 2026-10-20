@@ -36,7 +36,7 @@ def model(spec: dict) -> dict:
     vat = spec.get("route") == "vat"
     base0 = dict(price=ask, area=area, rent_m2=rent / area, exit_bar=bar, capex_m2=spec.get("capex_m2", 20),
                  capex_fixed=spec.get("capex_fixed", 2500), lease_month=5, rent_free=3, ltv=0.0, sale_month=12,
-                 hold_fixed=spec.get("hold_fixed", 0), dd=spec.get("dd", 7500))
+                 hold_fixed=spec.get("hold_fixed", 0), exit_deduct=spec.get("exit_deduct", 0), dd=spec.get("dd", 7500))
     if vat:
         # новое помещение: НДС вместо налога на передачу; продажа до 6 месяцев после начала аренды
         base0.update(vat_route=True, ovb=0.0, capex_vat=0.0, notary=0, lease_month=3, rent_free=2, sale_month=7)
@@ -117,14 +117,17 @@ def model(spec: dict) -> dict:
     steps = [(round(ask * 1.05 / 5000) * 5000, "")] if bids["12"]["breakeven"] > ask else []
     steps += [(ask, "цена продавца"), (round(ask * 0.95 / 5000) * 5000, ""),
               (bids["12"]["breakeven"], "в ноль"), (bids["12"]["m10"], "€ 10 на каждые € 100 затрат"),
-              (round(ask * 0.9 / 5000) * 5000, "")]
+              (round(ask * 0.9 / 5000) * 5000, ""), (round(ask * 0.85 / 5000) * 5000, "")]
     if offer != ask:
         steps.append((offer, "наше предложение"))
-    seen, out["price_steps"] = set(), []
-    for price, tag in sorted(steps, key=lambda t: (-round(t[0], -3), t[1] == "")):
-        if round(price, -3) in seen:
-            continue
-        seen.add(round(price, -3))
+    # подписанные шаги остаются все; круглые цены — только если не ближе 1,5 % к уже взятым
+    kept = []
+    for price, tag in sorted(steps, key=lambda t: (t[1] == "", -t[0])):
+        near = [k for k in kept if abs(k[0] - price) < (1000 if tag else 0.015 * ask)]
+        if not near:
+            kept.append((price, tag))
+    out["price_steps"] = []
+    for price, tag in sorted(kept, key=lambda t: -t[0]):
         a, b = F.run(BASE, price=price), F.run(BASE, price=price, **alt)
         out["price_steps"].append({"price": price, "tag": tag, "disc": price / ask - 1, "p12": a["profit"],
                                    "p6": b["profit"]})

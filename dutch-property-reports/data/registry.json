@@ -703,6 +703,16 @@
       "source": "показан заказчику вне этого репозитория"
     },
     {
+      "slug": "van-riemsdijkweg-17-rotterdam",
+      "title": "Van Riemsdijkweg 17, Rotterdam",
+      "city": "Rotterdam",
+      "price": "€ 895.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-44546024-van-riemsdijkweg-17/",
+      "reports": [
+        "report-2026-10-20-flip-van-riemsdijkweg-17.json"
+      ]
+    },
+    {
       "slug": "verrijn-stuartweg-12-diemen",
       "title": "Verrijn Stuartweg 12, Diemen",
       "city": "Diemen",

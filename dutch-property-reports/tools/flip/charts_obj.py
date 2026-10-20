@@ -107,7 +107,7 @@ def cash(M, out):
     pts = curves[0][1]
     pm, pv = min(pts, key=lambda t: t[1])
     note = ("цена, НДС до возврата, отделка" if M["route"] == "vat"
-            else "цена, налог 10,4 %, расходы на сделку")
+            else "цена, налог и ремонт")
     for k, text in enumerate((f"больше всего денег в проекте — {eur(-pv, True)}", f"на {pm}-м месяце: {note}")):
         d.text((X(0.3), Y(pv) - (16 - 3.6 * k) * MM), text, font=font(SANS, 6.2), fill=GREY)
     img.save(out / "cash.png")
