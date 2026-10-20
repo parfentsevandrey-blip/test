@@ -5,7 +5,7 @@ An Android application in Kotlin, Jetpack Compose and Room. Inside are databases
 ## What is inside
 
 <!-- BEGIN GENERATED OVERVIEW -->
-Inside are 194 databases of coding history, from 100 to 2036. The table gives each one's years, records and rare records. The kinds and titles of every database are in [CATALOGUE.md](CATALOGUE.md).
+Inside are 204 databases of coding history, from 0 to 2036. The table gives each one's years, records and rare records. The kinds and titles of every database are in [CATALOGUE.md](CATALOGUE.md).
 
 | Database | Years | Records | Rare |
 |---|---|---:|---:|
@@ -203,7 +203,17 @@ Inside are 194 databases of coding history, from 100 to 2036. The table gives ea
 | 192 | 120 to 130 | 10 | 8 |
 | 193 | 110 to 120 | 10 | 7 |
 | 194 | 100 to 110 | 10 | 9 |
-| **All** | | **6,150** | **2043** |
+| 195 | 90 to 100 | 12 | 8 |
+| 196 | 80 to 90 | 11 | 8 |
+| 197 | 70 to 80 | 11 | 8 |
+| 198 | 60 to 70 | 10 | 7 |
+| 199 | 50 to 60 | 10 | 7 |
+| 200 | 40 to 50 | 10 | 8 |
+| 201 | 30 to 40 | 12 | 7 |
+| 202 | 20 to 30 | 10 | 6 |
+| 203 | 10 to 20 | 10 | 8 |
+| 204 | 0 to 10 | 10 | 7 |
+| **All** | | **6,256** | **2117** |
 <!-- END GENERATED OVERVIEW -->
 
 
@@ -233,8 +243,8 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 ## Structure
 
 <!-- BEGIN GENERATED STRUCTURE -->
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and one generic migration for each version from 1 to 194 (`seedMigrations`).
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all 194 databases: `Db1*.kt` to `Db194*.kt`, one file per kind; `SeedCatalog.kt`, generated from `tools/databases.json`; the helper that builds a record (`SeedEntry.kt`).
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and one generic migration for each version from 1 to 204 (`seedMigrations`).
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all 204 databases: `Db1*.kt` to `Db204*.kt`, one file per kind; `SeedCatalog.kt`, generated from `tools/databases.json`; the helper that builds a record (`SeedEntry.kt`).
 - `tools` — `databases.json` (the databases, their years and colours) and `build_catalogue.py`, which regenerates `SeedCatalog.kt`, the overview in this file and `CATALOGUE.md`, and checks every record.
 <!-- END GENERATED STRUCTURE -->
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
@@ -244,7 +254,7 @@ The `local.properties` file with the SDK path is created by Android Studio autom
 
 ## Examples in the catalogue
 
-The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. In database 9, 20 examples run and pass. In database 10, 20 examples run and pass. In database 11, 20 examples run and pass. In database 12, 20 examples run and pass. In database 13, 20 examples run and pass. In database 14, 20 examples run and pass. In each of databases 15 to 62 and 64 to 67 and 69 to 74, 20 examples run and pass. Database 68 has 14 runnable records, and all 14 pass. Database 63 has five runnable records, and all five pass. Databases 75 to 194 have fewer runnable records than the earlier ones: 76 and 89 have 20 each, 79 has 19, 81 has 14, 83 has 13, 85 has 12, 90 has 11, 75 has 10, 82, 86, 88, 92, 111 and 114 have 9 each, 77, 78, 80, 91 and 161 have 8 each, 84, 87, 93, 94, 103, 105, 106, 107, 108, 112, 113 and 120 have 7 each, 95, 97, 110, 115, 118, 124, 130, 133, 135, 159, 162 and 174 have 6 each, and 96, 98, 99, 100, 101, 102, 104, 109, 116, 117, 119, 121, 122, 123, 125, 126, 127, 128, 129, 131, 132, 134, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 160, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173 and 175 to 194 have 5 each, and every one of them passes. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
+The code in the examples and instructions was checked by running it wherever the build environment had the tools: gcc, g++, mawk, sh, make, perl, bc, bison, SQLite, Java (javac and java), PHP, Node.js, Ruby, Python, Go, Git, curl, rustc, NASM and Bun. In database 1, 32 examples run and pass. In database 2, 27 examples run and pass. In database 3, 19 examples run and pass. In database 4, 24 examples run and pass. In database 5, 21 examples run and pass. In database 6, 17 examples run and pass. In database 7, 19 examples run and pass. In database 8, 20 examples run and pass. In database 9, 20 examples run and pass. In database 10, 20 examples run and pass. In database 11, 20 examples run and pass. In database 12, 20 examples run and pass. In database 13, 20 examples run and pass. In database 14, 20 examples run and pass. In each of databases 15 to 62 and 64 to 67 and 69 to 74, 20 examples run and pass. Database 68 has 14 runnable records, and all 14 pass. Database 63 has five runnable records, and all five pass. Databases 75 to 204 have fewer runnable records than the earlier ones: 76 and 89 have 20 each, 79 has 19, 81 has 14, 83 has 13, 85 has 12, 90 has 11, 75 has 10, 82, 86, 88, 92, 111 and 114 have 9 each, 77, 78, 80, 91 and 161 have 8 each, 84, 87, 93, 94, 103, 105, 106, 107, 108, 112, 113 and 120 have 7 each, 95, 97, 110, 115, 118, 124, 130, 133, 135, 159, 162 and 174 have 6 each, and 96, 98, 99, 100, 101, 102, 104, 109, 116, 117, 119, 121, 122, 123, 125, 126, 127, 128, 129, 131, 132, 134, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 160, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173 and 175 to 204 have 5 each, and every one of them passes. The other records describe things that cannot run in that environment (Turbo Pascal, Visual Basic, DOS, Windows APIs, consoles, hardware and products, which have no code at all, and the early languages such as Speedcoding, JOVIAL or MUMPS, which have no compiler there).
 
 For languages that are not installed in the build environment (Forth, Prolog, Lisp, Smalltalk, Erlang, Lua, Haskell, OCaml, C#, Scala, Swift, Zig, Kotlin, Dart, Elixir, Julia and others), the examples were checked only by reading, and this is noted in the development log.
 

@@ -2912,4 +2912,154 @@ The catalogue of database 194 (100 to 110) has the same ten kinds:
 | Projects | 1 | Four turns of Trajan's Dacian wars from 101 to 106, sorted and spaced in code |
 | Flex | 1 | Years from the start of Trajan's bridge to Cai Lun's paper report |
 | Cross-code | 1 | Days from Pliny's Panegyricus to Trajan's death, in Python and C |
+
+The catalogue of database 195 (90 to 100) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | Quintilian's Institutio oratoria, the Latin textbook of a teacher's whole education, Tacitus's Agricola, a life of his father-in-law and an account of Roman Britain and Ban Zhao's Lessons for Women, a Chinese book of conduct written by a court historian |
+| Systems | 1 | The alimenta, Roman loans on farms that paid for the upbringing of poor children |
+| Devices | 1 | The drum carriage of China, which struck a drum at each li of a journey |
+| Tools | 1 | The Roman juror's ballot tablet, marked A, C and NL for acquittal, condemnation and not clear |
+| Practices | 1 | Binding bamboo slips into ordered bundles with cords that ran through notches in their edges |
+| Guides | 1 | How an AD year becomes a year counted from the founding of Rome, with 96 as the worked case |
+| Examples | 1 | The 32 poems of Statius's Silvae in five books, counted in code |
+| Projects | 1 | Four events of 92 to 98 from Rome and Han China, sorted and spaced in code |
+| Flex | 1 | Years from Quintilian's textbook to Tacitus's Agricola |
+| Cross-code | 1 | Days from Domitian's murder to Nerva's death, in Python and C |
+
+The catalogue of database 196 (80 to 90) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Frontinus's Strategemata, a Latin book of military stratagems and Wang Chong's Lunheng, critical essays that test the claims of his age |
+| Systems | 1 | The numbered arches and seat tickets of the Flavian amphitheatre |
+| Devices | 1 | The sinan, a south-pointing ladle that Wang Chong describes |
+| Tools | 1 | The Roman book-box, a round case that kept a roll safe |
+| Practices | 1 | The parchment codex as a Saturnalia gift in Martial's couplets |
+| Guides | 1 | How a legionary's yearly pay rises by a third with a fourth payday |
+| Examples | 1 | Animals per day in Titus's hundred days of games, on two counts |
+| Projects | 1 | Four dated events of 80 to 89, sorted and spaced in code |
+| Flex | 1 | Years from Wang Chong's Lunheng to Frontinus's Strategemata |
+| Cross-code | 1 | Days from the death of Titus to the death of Domitian, in Python and C |
+
+The catalogue of database 197 (70 to 80) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Pliny the Elder's Natural History in thirty-seven books and Josephus's Jewish War, the revolt against Rome told in seven books |
+| Systems | 1 | The census of Vespasian and Titus as censors, dated 73 to 74 |
+| Devices | 1 | The libella, a Roman level with a plumb line, undated in the sources and placed at 79 |
+| Tools | 1 | The stone-cutter's chisel that cut Roman public inscriptions, undated in the sources and placed at 79 |
+| Practices | 1 | The Jewish tax of two drachmas moved from the Temple to the Capitol after 70 |
+| Guides | 1 | How the twenty-four priestly courses rotate through the weeks of the Temple year |
+| Examples | 1 | The Roman numerals of the years 70 to 80, counted letter by letter |
+| Projects | 1 | Four dated events from 70 to 79 in order, with the years between them |
+| Flex | 1 | Days from the death of Vespasian to the eruption of Vesuvius |
+| Cross-code | 1 | The two dates given for the eruption of 79, the days between them in Python and C |
+
+The catalogue of database 198 (60 to 70) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Columella's De re rustica, a Latin manual of farming written in the 60s |
+| Systems | 1 | Joshua ben Gamla's schools, teachers set in every town to teach boys the Law |
+| Devices | 1 | Hero's dioptra, a sighting tube on a stand for levels and angles |
+| Tools | 1 | Dioscorides's De materia medica, a Greek catalogue of drugs in five books |
+| Practices | 1 | Counting the omer, forty-nine days from Passover to the feast of weeks |
+| Guides | 1 | How a far tower's breadth is found from the width of a sight-rod |
+| Examples | 1 | The Neronia's five-yearly festival years in the 60s, counted in code |
+| Projects | 1 | Four events of 64 to 69, sorted and spaced in code |
+| Flex | 1 | Years from Columella's farm manual to Hero's dioptra |
+| Cross-code | 1 | Days from Galba's death to Vitellius's death, in Python and C |
+
+The catalogue of database 199 (50 to 60) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Paul's letters to the Corinthians, on a weekly collection carried by named men |
+| Systems | 1 | The Meroitic script of Kush, two forms of writing whose language is only partly read |
+| Devices | 1 | The Roman military horn, a bronze instrument whose calls passed orders across a camp |
+| Tools | 1 | A string of counting beads, moved one by one to count recitations |
+| Practices | 1 | Roman pupils copying the alphabet line by line from a written model |
+| Guides | 1 | How Roman inclusive counting names the days of October, with 13 October 54 |
+| Examples | 1 | Counting the seven weeks to Pentecost, the feast 1 Corinthians 16:8 names |
+| Projects | 1 | Four events of the 50s, from Cologne to Agrippina, sorted and spaced in code |
+| Flex | 1 | Years from the founding of Cologne to the murder of Agrippina |
+| Cross-code | 1 | Days from the death of Claudius to the death of Britannicus, in Python and C |
+
+The catalogue of database 200 (40 to 50) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Pomponius Mela's Chorographia, the earliest surviving Latin geography of the world |
+| Systems | 1 | Claudius's census of the Roman citizens, begun in 47 |
+| Devices | 1 | Caligula's lighthouse at Gesoriacum, a tower to guide ships in the Channel |
+| Tools | 1 | The scrinium, a box for rolls and papers kept by Roman clerks, placed at 41 |
+| Practices | 1 | The imperial offices for accounts, letters and petitions, run by Claudius's freedmen |
+| Guides | 1 | How a Roman first name is spelled out from its abbreviation |
+| Examples | 1 | Totalling the donative that Claudius promised each praetorian in 41 |
+| Projects | 1 | Four dated events of 42 to 48 in Dalmatia, Britain, Judea and Lyon, sorted and spaced in code |
+| Flex | 1 | Years from Pomponius Mela's Chorographia to Claudius's census |
+| Cross-code | 1 | Days from the murder of Caligula to the death of Claudius in Python and C |
+
+The catalogue of database 201 (30 to 40) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Velleius Paterculus's Roman history, two books from Troy to 30 and Valerius Maximus's book of memorable deeds and sayings, nine books of examples |
+| Systems | 2 | The Aqua Claudia, a Roman aqueduct begun by Caligula in 38 and finished by Claudius and Caligula's bridge of boats across the bay between Baiae and Puteoli |
+| Devices | 1 | The Han diviners' shipan, a turning heaven plate on an earth plate, undated in the sources and placed at 36 |
+| Tools | 1 | The Roman pumice stone for smoothing writing surfaces, undated in the sources and placed at 37 |
+| Practices | 1 | Tabellarii, the Roman couriers who carried letters, undated in the sources and placed at 37 |
+| Guides | 1 | How many ships a bridge of boats needs across a gap, counted in code |
+| Examples | 1 | The years 30 to 40 written in Roman numerals, with their letters counted in code |
+| Projects | 1 | Four dated events of 31 to 37 in Rome and Chengdu, sorted and spaced in code |
+| Flex | 1 | Years from Velleius's history of 30 to the start of the Aqua Claudia in 38 |
+| Cross-code | 1 | Days from Sejanus's execution to Tiberius's death, in Python and C |
+
+The catalogue of database 202 (20 to 30) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Strabo's Geographica, a Greek geography in seventeen books |
+| Systems | 1 | The yearly statistical reports that Han local offices sent to the capital |
+| Devices | 1 | The bilanx, a Roman two-pan balance for weighing goods |
+| Tools | 1 | The norma, a Roman square for setting out right angles |
+| Practices | 1 | Finger numerals, the way Latin writers counted on the hands |
+| Guides | 1 | How a colony's grid of centuries is measured in code |
+| Examples | 1 | The books of Strabo's Geographica counted by continent |
+| Projects | 1 | Four dated events of 21 to 26, sorted and spaced in code |
+| Flex | 1 | Years from Strabo's Geographica to the accession of Caligula |
+| Cross-code | 1 | The parasang in stades, in Python and C |
+
+The catalogue of database 203 (10 to 20) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Augustus's Res Gestae, the emperor's account of his deeds cut on bronze at Rome |
+| Systems | 1 | Augustus's census of 14, which counted 4,937,000 Roman citizens |
+| Devices | 1 | The potter's wheel of the Roman provinces, a turntable that let a potter throw clay |
+| Tools | 1 | Bronze tweezers from Roman sites, a pair of arms joined at one end |
+| Practices | 1 | Wang Mang's coin reform of 14, which retired the earlier coins and issued the Huo quan |
+| Guides | 1 | How Greek numerals counted in myriads give the census total of 14 |
+| Examples | 1 | The rise in the Roman citizen roll from the census of 28 BC to the census of 14 |
+| Projects | 1 | Four events of 11 to 18 in order, with the years between them, worked out in code |
+| Flex | 1 | Years from Augustus's Res Gestae to the fall of Wang Mang |
+| Cross-code | 1 | Days from the death of Augustus to the death of Germanicus in Python and C |
+
+The catalogue of database 204 (0 to 10) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | The Rites of Zhou, a classic of six offices, undated in the sources and placed at 9 |
+| Systems | 1 | The Han census of 2, whose national totals the Hanshu preserves |
+| Devices | 1 | The warp-weighted loom of the Roman provinces, undated in the sources and placed at 4 |
+| Tools | 1 | The Han scribe's knife for trimming and scraping bamboo slips, undated in the sources and placed at 6 |
+| Practices | 1 | Smoke by day and fire by night, the frontier beacon signals of the Han, undated in the sources and placed at 1 |
+| Guides | 1 | How a gap between two totals is written as a percentage of the stated total |
+| Examples | 1 | The gap between the two accounts of the Han census of 2, counted in code |
+| Projects | 1 | Four events of 4 to 9, from the death of Gaius Caesar to the defeat of Varus, sorted and spaced in code |
+| Flex | 1 | Years from the Han census of 2 to the defeat of Varus in 9 |
+| Cross-code | 1 | The average household size of the Han census of 2 in Python and C |
 <!-- END GENERATED CATALOGUE -->

@@ -48,6 +48,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-32 | 2026-10-20 | 136,840 | 222 | 82 | 118 | 137,262 | +3,975 (databases 165 to 174: 154 records in 110 files, migrations 164→165 to 173→174, tests +0) |
 | CP-33 | 2026-10-20 | 140,320 | 222 | 82 | 118 | 140,742 | +3,480 (databases 175 to 184: 115 records in 110 files, migrations 174→175 to 183→184, tests +0) |
 | CP-34 | 2026-10-20 | 143,689 | 222 | 82 | 118 | 144,111 | +3,369 (databases 185 to 194: 106 records in 110 files, migrations 184→185 to 193→194, tests +0) |
+| CP-35 | 2026-10-20 | 147,071 | 222 | 82 | 118 | 147,493 | +3,382 (databases 195 to 204: 106 records in 110 files, migrations 194→195 to 203→204, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -2375,3 +2376,122 @@ These come from the helpers' search reports and my two searches; the record deta
 - Not verified yet: running on a device, the migration from version 184 to version 194 on a device, the UI with 194 databases in the list, lint and the release build.
 - The second century is the best of the three thin centuries for coding history, but the records are still thin and about a third are placed. The question from earlier checkpoints is still open: how far back should the catalogue go, given that each step back is thinner?
 - The first facts to check before publishing are the day of Trajan's death, Hadrian's accession, Armenia in 114, the Aqua Traiana in 109, the Muratorian date and Himiko's 189.
+
+## CP-35: databases 195 to 204, 0 to 100 (the first century, the century before the 100s)
+
+Status: ten more databases are in the app, one per decade from the 90s down to the 0s: 106 records, migrations from version 194 to version 204. The catalogue, the migrations and the tests are generic; the batch added spec entries and record files, and one generator fix (see What changed). Records per database: 90s 12, 80s 11, 70s 11, 60s 10, 50s 10, 40s 10, 30s 12, 20s 10, 10s 10 and 0s 10. None reaches 50, and all ten are marked "quota": false in tools/databases.json. There are 50 runnable records (5 in each database), and they all pass against their expected output. The build passes (204 databases, 6,256 records), and the unit tests pass (17 of 17, testDebugUnitTest executed).
+
+Mood: This is the first century of the common era, and the thinnest batch so far for coding history. The sources hold censuses, letters, offices, a few instruments and some signals, and most of the records are about Roman and Han administration rather than computing. 32 of the 106 records (about 30 per cent) carry an anchor year. Two things went wrong in the first pass and both are fixed: five records repeated an item of the catalogue, and the generator could not read years below 100. The next step back would be the first century BCE, which has far more coding history (Euclid, Archimedes, Eratosthenes, the Antikythera mechanism, Pingala). Whether to go there is for the user to decide.
+
+Date: 2026-10-20. Totals: Kotlin main 147,071 (CP-34: 143,689), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 147,493 (CP-34: 144,111). The +3,382 is the 110 new Kotlin seed files for databases 195 to 204 and the regenerated SeedCatalog.kt. The database class and the tests did not change; the migrations are generated, with DATABASE_VERSION at 204.
+
+### What changed
+
+- Ten databases, from "Database 195: 90s coding catalogue" (90 to 100) to "Database 204: 0s coding catalogue" (0 to 10). Their records are 12, 11, 11, 10, 10, 10, 12, 10, 10 and 10: 106 new records and 6,256 in the whole catalogue. The new rare records number 74, so the whole catalogue has 2,117.
+- Eleven files per database, 110 in total. The colours are unused ones.
+- Spec: tools/databases.json has 204 entries. All ten new databases are marked "quota": false.
+- Generator: one change. The year pattern accepted only three or four digits, so the first century (years below 100) failed to parse. It now accepts one to four digits; the title-list script changed in the same way. The overview now reads "from 0 to 2036".
+- README: the sentence about runnable counts is updated by hand: databases 75 to 204 have fewer runnable records, and 175 to 204 have five each, all passing.
+- Process: one helper per database for the first pass, from the brief and an anchors file with one owner per named item. The lead ran the repeat check and sent four records back for replacement (see Problems).
+
+### Placed records (32)
+
+The year of these records is an anchor, not the date of the item itself. Each record's details say so.
+
+- 195: a SYSTEM, alimenta (96, Nerva's accession); a DEVICE, the drum carriage (97, Gan Ying's mission); a TOOL, the juror's ballot tablet (98, Nerva's death); a PRACTICE, bamboo-slip cords (97, Trajan's adoption).
+- 196: a DEVICE, the sinan (80, Wang Chong's account); a TOOL, the book-box, the capsa (81, Domitian's succession).
+- 197: a DEVICE, the libella (79, the eruption); a TOOL, the stone-cutter's chisel (79, the eruption).
+- 198: a DEVICE, the dioptra (62, the eclipse account); a SYSTEM, the schools of Joshua ben Gamla (64); a PRACTICE, counting the omer (70, the Temple's destruction).
+- 199: a SYSTEM, the Meroitic script (54, Nero's accession); a DEVICE, the Roman military horn (59, Agrippina's murder); a TOOL, the counting beads (51, Caratacus's capture); a PRACTICE, Roman pupils copying the alphabet (50, Cologne's founding).
+- 200: a PRACTICE, the imperial offices for accounts and letters (41); a TOOL, the scrinium (41).
+- 201: a DEVICE, the Han diviners' shipan (36, Gongsun Shu's death); a PRACTICE, the tabellarii couriers (37, Caligula's accession); a TOOL, the pumice stone for writing surfaces (37, Caligula's accession).
+- 202: a DEVICE, the bilanx (26); a SYSTEM, the yearly reports of Han local offices (25); a TOOL, the norma (21); a PRACTICE, finger numerals (23); a GUIDE, the colony's grid of centuries (23).
+- 203: a DEVICE, the potter's wheel of the Roman provinces (14, Tiberius's accession); a TOOL, the bronze tweezers (15, Germanicus's Rhine campaign).
+- 204: a DEVICE, the warp-weighted loom (4); a LANGUAGE, the Rites of Zhou (9); a PRACTICE, the beacon signals of the Han frontier (1); a TOOL, the Han scribe's knife for bamboo slips (6); a GUIDE, the census year of 2 (2).
+
+Weakest first: the Rites of Zhou (9), the beacon signals (1), the loom (4) and the knife (6), where the anchor has no link to the object; then the sinan (80) and the shipan (36), which are a text date and a death.
+
+### Problems and what was fixed
+
+- The libella was in 197 (DEVICE, 79) and 201 (DEVICE, 37): one object. It stays in 197; 201's DEVICE is now the Han diviners' shipan (36).
+- The capsa was in 196 (TOOL, 81) and 201 (TOOL, 31): one object. It stays in 196; 201's TOOL is now a Roman pumice stone (37).
+- The scrinium was in 199 (DEVICE, 55) and 200 (TOOL, 41): one object. It stays in 200; 199's DEVICE is now a Roman military horn (59).
+- The Julian leap-year EXAMPLE of 195 repeated the Julian leap rule that databases 37, 65 and 104 own. It is now a count of the 32 poems of Statius's Silvae in five books (95; from memory).
+- The Columella EXAMPLE in 198 counted the books of its own LANGUAGE record: one item, one record. It is now the Neronia's five-yearly festival years in the 60s (60; dated from memory, no search).
+- The generator could not read years below 100 (see What changed).
+
+### Repeats kept inside one database (for a decision)
+
+- 199: Cologne's founding (FLEX) and the four events of the 50s (PROJECT) both name Agrippina's murder; different quantities.
+- 197: the census of Vespasian and Titus (SYSTEM) and the days from Vespasian's death to the eruption (FLEX).
+- 196: Titus's hundred days of games (EXAMPLE, animals per day) and the days from Titus's death to Domitian's (CROSS).
+- 204: the Han census of 2 (SYSTEM) and the years to the defeat of Varus in 9 (FLEX, and a PROJECT of four events of 4 to 9).
+- Each is a book or event with a computed record of a different quantity; kept. The lead may cut one record in each cluster.
+
+### Repeat check result
+
+The same-item check (scratchpad/same_item_batch.py 195 204) gives 131 pairs. The five repeats above are gone. The rest are shared words or neighbours: the Neronia beside the festivals of 177 and 180 (festival); the military horn beside the marching camp of 193 (camp); the shipan beside Al-Kashi's Ladder of Heaven (62) and Zhang Zai's Western Inscription (97) (heaven); the Han census of 2 (204) and the Tang census of 742 (130) both average the household size, a different census with the same measure; the libella beside the groma (162) (plumb line).
+
+### Facts checked by search
+
+These come from the helpers' search reports (six searches each); the record details say what each date rests on.
+
+- 195: Ban Zhao's Lessons dated about 100 in most accounts (others 80, and 99 to 105); alimenta with no firm start date; Domitian killed on 18 September 96; Nerva died on 27 January 98; Trajan adopted in October 97; Gan Ying's mission in 97 (Hou Hanshu); the drum carriage undated.
+- 196: four books of the Strategemata, the fourth's authenticity disputed; the Lunheng first published about 80; the Colosseum opened in 80 (81 in some accounts); Titus died on 13 September 81; the Apophoreta dated 84 or 85.
+- 197: the eruption on 24 August (Pliny the Younger), a Pompeii inscription reading 17 October with no year; Vespasian died on 23 or 24 June; the Fiscus Judaicus in Josephus and Suetonius; the Jewish War about 75.
+- 198: the dioptra's sight tube; the eclipse of 13 March 62 (a critique calls it possibly invented); Dioscorides from Anazarbus, dated 60 to 77 by different accounts; Columella in the 60s; Joshua ben Gamla's priesthood about 64.
+- 199: Claudius died on 13 October 54; Britannicus died in February 55 (accounts give 11 or 12 February); First Corinthians about 53 to 55; Second Corinthians about 55 to 56; Cologne founded in 50; Caratacus captured in 51; Agrippina murdered in 59.
+- 200: the census of 47 or 48; Caligula killed on 24 January 41; Claudius died on 13 October 54; the lighthouse rests on one Suetonius passage (popular dates 39 or 40); the freedmen Pallas and Narcissus; the donative of 15,000 sesterces.
+- 201: Velleius's history addressed to Vinicius in 30 (EBSCO, Britannica); the Aqua Claudia begun in 38 and finished in 52 (older texts give 36 and 50); Caligula's bridge at Baiae dated 39; Sejanus executed on 31 October; Tiberius died on 16 March 37; Gongsun Shu killed in 36.
+- 202: Strabo's book division; finger numerals from Plautus to Cicero; the Yinwan slips read as a commandery's annual report (one article); the norma as a carpenter's square (one page).
+- 203: the census of 14 at 4,937,000 (with 4,063,000 for 28 BC and 4,233,000 for 8 BC); the Huo quan and Bu quan reform of 14; the Xin span about 9 to 23; Germanicus died on 10 October 19.
+- 204: about 12.36 million households; 59,594,978 people on one mirror page against about 57.67 million in other accounts (named as disputed); Nanaghat and Hathigumpha dated to the 2nd and 1st centuries BCE; Gaius Caesar's death in 4; the Varus defeat in 9; Ping's death in 6.
+- Lead, before the build: no search was added beyond the helpers' reports.
+
+### Facts from memory, to check
+
+- 195: Quintilian's twelve books and Poggio's 1416 find; Agricola's governorship 77 to 84 and Mons Graupius 83 or 84; Ban Gu's death in 92; the Silvae's 32 poems in five books.
+- 196: Wang Chong 27 to 97; numbered arches and tesserae at the Colosseum; the capsa named by Roman writers; Dio's 9,000 animals (conflicts with the 5,000 figure); the Capitoline Games 86; Yan Mountain 89.
+- 197: Pliny's 37 books and his death at Stabiae in 79; the Temple burned in 70; First Chronicles 24; Titus as co-censor; the libella and chisel descriptions.
+- 198: Columella's 60 to 65 range; Josephus silent on schools; the Great Fire in 64; Seneca's death in 65; Nero's death in 68; Leviticus's omer count; the Neronia founded in 60.
+- 199: Griffith's readings of the script and its use to about the fourth century; scrinium as a document chest; the 108-bead string; Roman school alphabets; the military horn; Leviticus 23's count.
+- 200: the Roman invasion of Britain in 43; Gesoriacum as Boulogne; four sesterces to the denarius; the praenomen sign list.
+- 201: Valerius Maximus (nine books, about 31); Anio Novus; Caligula's accession year; the Xerxes comparison; the libella, capsa and tabellarii descriptions.
+- 202: Strabo's completion in 23 (not confirmed; accounts differ); Eastern Han in 25; Sacrovir's revolt in 21; Drusus's death in 23; Pilate in Judaea in 26; Caligula's accession in 37; the parasang of 30 stades; the centuria of 200 iugera.
+- 203: Augustus died on 19 August 14; the Res Gestae copies at Ancyra, Apollonia and Antioch in Pisidia; Idistaviso in 16; Cappadocia a province in 17; the Red Eyebrows in 18; Wang Mang's fall in 23; the Julian day count of 1878 (checked by hand).
+- 204: the Rites of Zhou's six offices and its date dispute; the Yuanshi era from 1 CE; 12,366,470 households; the slip knife and the character shan; the smoke-by-day and fire-by-night signals; the warp-weighted loom.
+
+### Single-source dates
+
+- 196: the Strategemata (one listing); the Lunheng in 80; the pay of 84 (one coin source).
+- 197: 24 August (Pliny the Younger only); 17 October (one undated graffito); the census of 74 (one search title plus memory).
+- 198: Columella in the 60s (one article); the dioptra's eclipse of 62.
+- 199: Agrippina's year (one reference page plus memory); Britannicus's day (two accounts, named in the details).
+- 200: the census total and the lighthouse date.
+- 201: Sejanus's day and Valerius's date.
+- 202: the Yinwan slips (one 2004 article); the norma (one vocabulary page).
+- 203: Germanicus's campaign of 15 (one timeline); the Greek myriad reading of 493 and 7,000 (one page); the Yellow River shift (accounts differ).
+- 204: 59,594,978 people (one mirror page).
+
+### Problems
+
+- Thin decades. All ten are far below 50 records (10 to 12), with 50 runnable records in all.
+- Placed records. 32 of 106, about 30 per cent. The weakest are listed above.
+- Coding relevance. Almost none in this century: the records describe censuses, letters, offices, instruments and signals. The GUIDE and TOOL records are the thinnest links.
+- Clusters inside one database. See above; one record of each cluster may be cut.
+- Memory dates. The first to check are the census totals of 14 and of 47 or 48, the lighthouse date, Vespasian's death day (23 or 24 June), Britannicus's day (11 or 12 February 55) and the Silvae's count.
+
+### How I checked it
+
+- Verifiers: 195 to 204, 5 of 5 each. That is 50 runnable records, each with expected output worked out by hand before the run.
+- Checker: each database reports only the count rules, which the thin-century rule allows. No title clashes, text-rule or year problems. The rare counts (7 to 10) are 8, 8, 8, 7, 7, 8, 7, 6, 8 and 7 for 195 to 204; the 202 count of 6 is a count-only shortfall.
+- Repeat check: scratchpad/same_item_batch.py 195 204, as in the repeat check result above.
+- Generator: checks passed for 204 databases and 6,256 records, after the year-pattern fix.
+- Unit tests: BUILD SUCCESSFUL; 17 of 17 pass, with 0 failures and 0 errors (AppDatabaseSeedTest 4, RecordFilterTest 5, SeedDataTest 8).
+- Text: no Cyrillic in the logs, the source pack, the README, CATALOGUE.md or the tools (checked before the commit).
+
+### Notes
+
+- Not verified yet: running on a device, the migration from version 194 to version 204 on a device, the UI with 204 databases in the list, lint and the release build.
+- The first century has the least coding history of the batches so far. Going further back would reach the first century BCE, which is far richer; that is for the user to decide.
+- The first facts to check before publishing are the census totals, the lighthouse date, Vespasian's death day, Britannicus's day and the Silvae's count.

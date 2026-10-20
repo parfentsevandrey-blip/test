@@ -1938,5 +1938,105 @@
     "description": "Languages, systems, devices, tools and practices of 100 to 110, including rare and little-known items.",
     "colorHex": "#CC565A",
     "curated": false
+  },
+  {
+    "id": 195,
+    "from": 90,
+    "to": 100,
+    "quota": false,
+    "name": "Database 195: 90s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 90 to 100, including rare and little-known items.",
+    "colorHex": "#D6D267",
+    "curated": false
+  },
+  {
+    "id": 196,
+    "from": 80,
+    "to": 90,
+    "quota": false,
+    "name": "Database 196: 80s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 80 to 90, including rare and little-known items.",
+    "colorHex": "#97D667",
+    "curated": false
+  },
+  {
+    "id": 197,
+    "from": 70,
+    "to": 80,
+    "quota": false,
+    "name": "Database 197: 70s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 70 to 80, including rare and little-known items.",
+    "colorHex": "#67D679",
+    "curated": false
+  },
+  {
+    "id": 198,
+    "from": 60,
+    "to": 70,
+    "quota": false,
+    "name": "Database 198: 60s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 60 to 70, including rare and little-known items.",
+    "colorHex": "#67D6BC",
+    "curated": false
+  },
+  {
+    "id": 199,
+    "from": 50,
+    "to": 60,
+    "quota": false,
+    "name": "Database 199: 50s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 50 to 60, including rare and little-known items.",
+    "colorHex": "#67ADD6",
+    "curated": false
+  },
+  {
+    "id": 200,
+    "from": 40,
+    "to": 50,
+    "quota": false,
+    "name": "Database 200: 40s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 40 to 50, including rare and little-known items.",
+    "colorHex": "#676BD6",
+    "curated": false
+  },
+  {
+    "id": 201,
+    "from": 30,
+    "to": 40,
+    "quota": false,
+    "name": "Database 201: 30s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 30 to 40, including rare and little-known items.",
+    "colorHex": "#A667D6",
+    "curated": false
+  },
+  {
+    "id": 202,
+    "from": 20,
+    "to": 30,
+    "quota": false,
+    "name": "Database 202: 20s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 20 to 30, including rare and little-known items.",
+    "colorHex": "#D667C4",
+    "curated": false
+  },
+  {
+    "id": 203,
+    "from": 10,
+    "to": 20,
+    "quota": false,
+    "name": "Database 203: 10s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 10 to 20, including rare and little-known items.",
+    "colorHex": "#D66781",
+    "curated": false
+  },
+  {
+    "id": 204,
+    "from": 0,
+    "to": 10,
+    "quota": false,
+    "name": "Database 204: 0s coding catalogue",
+    "description": "Languages, systems, devices, tools and practices of 0 to 10, including rare and little-known items.",
+    "colorHex": "#D69067",
+    "curated": false
   }
 ]
