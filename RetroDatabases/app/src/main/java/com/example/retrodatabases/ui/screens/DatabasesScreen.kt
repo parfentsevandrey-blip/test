@@ -13,8 +13,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -40,6 +44,7 @@ import com.example.retrodatabases.ui.theme.parseHexColor
 @Composable
 fun DatabasesScreen(
     onOpenDatabase: (Long) -> Unit,
+    onOpenAssistant: () -> Unit,
     viewModel: LibraryViewModel = viewModel(),
 ) {
     val databases by viewModel.databases.collectAsStateWithLifecycle()
@@ -58,6 +63,14 @@ fun DatabasesScreen(
                             text = stringResource(R.string.databases_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onOpenAssistant) {
+                        Icon(
+                            imageVector = Icons.Filled.Info,
+                            contentDescription = stringResource(R.string.cd_assistant),
                         )
                     }
                 },

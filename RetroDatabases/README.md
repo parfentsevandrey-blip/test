@@ -240,6 +240,16 @@ From the command line:
 
 The `local.properties` file with the SDK path is created by Android Studio automatically.
 
+## The assistant
+
+The first screen has an info button that opens the assistant. It runs on the phone, with no network and no model file. It is a compact statistical model, built from the catalogue the first time it is used:
+
+- **Index** (`assistant/RecordIndex.kt`): a BM25 search index over every record. The title counts most, then the original title, the section and the year, then the author, the kind, the summary and the details.
+- **Intent classifier** (`assistant/IntentClassifier.kt`): a multinomial naive Bayes classifier over words, trained on about fifty example questions in English and Russian when it starts. It knows six intents: find a record, list the databases, say which database covers a year, show runnable examples, explain the app and count the records. A question it does not understand gets a search, or a short "I could not tell" answer.
+- **Answers** (`assistant/Assistant.kt`): reads a database number ("database 12"), a year or a decade such as "1850s" (the Russian form with a hyphen works too) and a kind word from the question, then builds the answer from the index and the catalogue. The answer is in Russian when the question has Cyrillic letters.
+
+The assistant does not generate new text or call a service: it finds the records and writes short answers from them. Its tests (`app/src/test/java/com/example/retrodatabases/assistant`) run on the real seed data.
+
 ## Structure
 
 <!-- BEGIN GENERATED STRUCTURE -->

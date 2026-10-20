@@ -49,6 +49,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-33 | 2026-10-20 | 140,320 | 222 | 82 | 118 | 140,742 | +3,480 (databases 175 to 184: 115 records in 110 files, migrations 174→175 to 183→184, tests +0) |
 | CP-34 | 2026-10-20 | 143,689 | 222 | 82 | 118 | 144,111 | +3,369 (databases 185 to 194: 106 records in 110 files, migrations 184→185 to 193→194, tests +0) |
 | CP-35 | 2026-10-20 | 147,071 | 222 | 82 | 118 | 147,493 | +3,382 (databases 195 to 204: 106 records in 110 files, migrations 194→195 to 203→204, tests +0) |
+| CP-36 | 2026-10-20 | 147,853 | 408 | 88 | 118 | 148,467 | +974 (the on-device assistant: index, classifier, answers, screen and 20 new tests, 37 in all; no record files; DATABASE_VERSION unchanged at 204) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -2495,3 +2496,48 @@ These come from the helpers' search reports (six searches each); the record deta
 - Not verified yet: running on a device, the migration from version 194 to version 204 on a device, the UI with 204 databases in the list, lint and the release build.
 - The first century has the least coding history of the batches so far. Going further back would reach the first century BCE, which is far richer; that is for the user to decide.
 - The first facts to check before publishing are the census totals, the lighthouse date, Vespasian's death day, Britannicus's day and the Silvae's count.
+
+## CP-36: the on-device assistant (a feature, no record files)
+
+Mood: pleased that the model is small enough to read in one sitting, and careful about what it claims. It is a statistical model, a BM25 search index over the records plus a naive Bayes classifier over words. It is not a neural language model, so it cannot write new text: it finds records and writes short answers from them. Its answers are only as good as the records, and it has not been run on a phone or in the emulator.
+
+The app has an on-device assistant behind an info button on the first screen. It answers questions about the catalogue: find a record, list the databases, say which database covers a year, show runnable examples, explain how to use the app, and count the records. It needs no network and no model file. The database version is unchanged (204), there is no migration, and no record changed.
+
+### What changed
+
+- assistant/Tokenizer.kt: splits text into lowercase tokens of any script and folds the letter yo into ye. For search it also drops stop words in English and Russian, including request words such as find and show.
+- assistant/RecordIndex.kt: a BM25 index over every record (k1 1.2, b 0.75). Field weights: title 3, original title 2, section 2, year 2, author 1.5, kind 1, summary 1, details 0.5. Each term keeps two parallel arrays, one of record numbers and one of weights.
+- assistant/IntentClassifier.kt: a multinomial naive Bayes classifier with Laplace smoothing, trained when it is created on 53 example questions in English and Russian. Six intents: FIND, DATABASES, COVERAGE, RUNNABLE, APP_HELP and STATS. Words it never saw are ignored, and a question made only of such words is UNKNOWN.
+- assistant/Assistant.kt: builds the answer. It reads a database number ("database 12"), a year or a decade ("1850s") and a kind word from the question, then fills the answer from the index and the catalogue. A question that opens with a search verb (find, search, look, and their Russian forms) is a search, unless it contains how or its Russian form. A question below 0.4 confidence is searched instead; if nothing matches, the answer says it could not tell. The answer is in Russian when the question has Cyrillic letters, otherwise in English.
+- ui/AssistantViewModel.kt and ui/screens/AssistantScreen.kt: the conversation: a question field, the answers, and the matching records, which open the record screen. The catalogue is read from the database when the screen opens; the index is built on a background thread when the first question is answered.
+- data/LibraryDao.kt: two queries that read every database and every record.
+- ui/screens/DatabasesScreen.kt and ui/AppNavHost.kt: the info button in the top bar, and the route "assistant".
+- res/values/strings.xml: five strings for the screen.
+- README.md: a section "The assistant".
+- app/src/test/java/com/example/retrodatabases/assistant: four test files on the real seed data (tokens, index ranking, classifier, and the answers).
+
+### Problems found and fixed
+
+- An invalid import (androidx.compose.foundation.lazy.item) broke the compile. "item" is a member of the lazy list scope and needs no import, so the import was removed.
+- The classifier read "find commentary in database 178" as a coverage question. A question that opens with a search verb is now a search, and the test restricts that search to database 178.
+- The README had a Russian example, which broke its English-only rule. It was replaced by an English description.
+- Two code comments overstated the code: the search-verb rule checks for "how" anywhere in the question, not only at its start, and a size for the classifier ("a few kilobytes") was never measured. Both comments were corrected.
+
+### Limits, stated plainly
+
+- The model knows six intents and 53 example questions. Other phrasings fall back to a search, or to "I could not tell".
+- Answers are retrieved and filled from templates. The assistant can quote a record, but it cannot explain beyond its text.
+- The index is built in memory from 6,256 records. Its size and build time on a phone were not measured.
+- Russian text is in six files: Assistant.kt (answers), IntentClassifier.kt (training questions), Tokenizer.kt (stop words), and the three tests that use it (AssistantTest.kt, IntentClassifierTest.kt, TokenizerTest.kt). No other source file has Cyrillic, so RetroDatabases_source.txt is no longer Cyrillic-free, and these six files are the only exception. README.md, DEVLOG.md, CATALOGUE.md and tools/ stay Cyrillic-free.
+- A neural on-device model (for example MediaPipe or TensorFlow Lite) would need a model file of tens or hundreds of megabytes. That is a separate decision and is not part of this checkpoint.
+
+### How I checked it
+
+- ./gradlew testDebugUnitTest assembleDebug: BUILD SUCCESSFUL on the final sources. After the two comment fixes, compileDebugKotlin ran and the test task was up to date, so its last run stands: 37 tests, 0 failures, 0 errors, 0 skipped: 17 existing (AppDatabaseSeedTest 4, RecordFilterTest 5, SeedDataTest 8) and 20 new (TokenizerTest 3, RecordIndexTest 4, IntentClassifierTest 4, AssistantTest 9).
+- Cyrillic: a search of the tree found the six files above and the source pack. README.md, DEVLOG.md, CATALOGUE.md and tools/ have none.
+- Seed data: SeedCatalog.kt and the migrations are not touched, so DATABASE_VERSION stays 204.
+
+### Not verified
+
+- Running on a device or in the emulator, the screen layout, lint and the release build.
+- Answer quality beyond the 37 tests: no separate set of questions was written to measure it.

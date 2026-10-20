@@ -25,4 +25,10 @@
     <string name="favorite_remove">Remove from favorites</string>
     <string name="cd_back">Back</string>
     <string name="cd_clear">Clear search</string>
+    <string name="cd_assistant">Open the assistant</string>
+
+    <string name="assistant_title">Assistant</string>
+    <string name="assistant_intro">Ask about the catalogue: find a term, list the databases, say which database covers a year, show runnable examples, count the records or ask how to use the app. Questions in Russian get answers in Russian.</string>
+    <string name="assistant_hint">Ask a question</string>
+    <string name="assistant_send">Send</string>
 </resources>

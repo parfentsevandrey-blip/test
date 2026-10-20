@@ -31,4 +31,12 @@ interface LibraryDao {
 
     @Query("UPDATE records SET favorite = NOT favorite WHERE id = :recordId")
     suspend fun toggleFavorite(recordId: Long)
+
+    /** Every database, for the assistant's index. Read once; the screens use the observe queries above. */
+    @Query("SELECT * FROM databases ORDER BY id")
+    suspend fun allDatabases(): List<DatabaseEntity>
+
+    /** Every record, for the assistant's index. Read once; the screens use the observe queries above. */
+    @Query("SELECT * FROM records")
+    suspend fun allRecords(): List<RecordEntity>
 }

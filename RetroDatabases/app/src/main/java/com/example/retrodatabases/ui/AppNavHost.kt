@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.retrodatabases.ui.screens.AssistantScreen
 import com.example.retrodatabases.ui.screens.DatabasesScreen
 import com.example.retrodatabases.ui.screens.RecordDetailScreen
 import com.example.retrodatabases.ui.screens.RecordsScreen
@@ -14,6 +15,7 @@ private object Route {
     const val DATABASES = "databases"
     const val RECORDS = "records/{databaseId}"
     const val RECORD = "record/{recordId}"
+    const val ASSISTANT = "assistant"
 }
 
 @Composable
@@ -24,6 +26,14 @@ fun AppNavHost() {
         composable(Route.DATABASES) {
             DatabasesScreen(
                 onOpenDatabase = { databaseId -> navController.navigate("records/$databaseId") },
+                onOpenAssistant = { navController.navigate(Route.ASSISTANT) },
+            )
+        }
+
+        composable(Route.ASSISTANT) {
+            AssistantScreen(
+                onBack = { navController.popBackStack() },
+                onOpenRecord = { recordId -> navController.navigate("record/$recordId") },
             )
         }
 
