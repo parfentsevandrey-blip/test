@@ -24,9 +24,11 @@ history/hot.json (горячие лоты -- их просмотры завтр�
   поднятие     -- платное поднятие в окне: без дня поднятия и следующего дня интерес падает более чем вдвое
   платное      -- сейчас включены ТОП-3 / премиум / выделение / аукцион
   приманка     -- агент, цена на 25%+ ниже аналогов и признаки фиктивного объявления (повторный нарушитель,
-                  дублированное описание, меньше 5 фото, не проверен Росреестром)
+                  дублированное описание, меньше 5 фото)
   новизна      -- опубликован менее 3 дней назад: всплеск новой публикации, рано судить
-  цена         -- не накрутка, а объяснение: самый дешёвый среди аналогов и на 10%+ ниже модели
+  цена         -- не накрутка, а объяснение: самый дешёвый среди аналогов и на 10%+ ниже модели, или на 20%+ ниже модели
+  аномальная цена -- на 35%+ ниже модели: торги, обременение, доля, приманка -- интерес не про спрос (жёсткий флаг)
+  люкс         -- от 300 млн: просмотры из любопытства, не ликвидность (информационный)
 Двойная проверка
   1) повтором: горячий лот опрашивается и на следующий день; интерес должен сохраниться, а дни не пересчитаны вниз;
   2) исходом: через 7/14 дней -- снят с публикации без перепубликации, забронирован, подорожал. Таблица «Проверка
@@ -65,6 +67,20 @@ def fingerprint(df):
         + df["area"].round(0).astype(str)
 
 
+def fill_place(df):
+    """Округ и район, где их нет (новостройки из базового сбора): по своему ЖК, иначе по соседним лотам (сетка ~1 км)."""
+    for col in ("okrug", "raion"):
+        known = df[col].notna() & (df[col] != "н/д")
+        by_jk = df[known & df["jk_id"].notna()].groupby("jk_id")[col].agg(lambda s: s.mode().iat[0])
+        cell = (df["lat"] * 100).round().astype("Int64").astype(str) + ":" + (df["lng"] * 60).round().astype("Int64").astype(str)
+        by_cell = df[known].groupby(cell[known])[col].agg(lambda s: s.mode().iat[0])
+        miss = ~known
+        df.loc[miss, col] = df.loc[miss, "jk_id"].map(by_jk)
+        miss = df[col].isna()
+        df.loc[miss, col] = cell[miss].map(by_cell)
+    return df
+
+
 def bands(df):
     rooms = df["rooms"].fillna(-1).astype(int)
     df["rooms_b"] = np.select([(df["flat_type"] == "studio") | (rooms == 0), df["flat_type"] == "openPlan", rooms >= 4],
@@ -82,6 +98,7 @@ def bands(df):
                        labels=["н/д", "до 1960", "1960-79", "1980-99", f"2000-{FRESH_YEAR - 1}", f"{FRESH_YEAR}+"]).astype(str)
     df["metro_b"] = pd.cut(df["metro_min"].fillna(99), [-1, 5, 10, 15, 25, 1000],
                            labels=["до 5 мин", "5-10", "10-15", "15-25", "25+ / н/д"]).astype(str)
+    fill_place(df)
     for c in ("decoration", "material", "okrug", "raion"):
         df[c] = df[c].fillna("н/д").astype(str)
     df["jk_key"] = df["jk_id"].fillna(0).astype(int).astype(str)
@@ -221,12 +238,16 @@ def flags(df):
     f["счётчик"] = df["counter"].fillna(False).astype(bool)
     f["поднятие"] = df["raised"].fillna(False).astype(bool) & (df["vpd_clean"].fillna(0) < .5 * df["vpd_n"]) & (df["v10"] >= 10)
     f["платное"] = df[PAID].fillna(False).any(axis=1)
-    weak = df["recidivist"].fillna(False) | df["dup_descr"].fillna(False) | (df["photos"] < 5) | ~df["rosreestr"].fillna(False)
+    # без «не проверен Росреестром»: таких 93% вторички (20.10), признак не отличает фиктивные объявления
+    weak = df["recidivist"].fillna(False) | df["dup_descr"].fillna(False) | (df["photos"] < 5)
     f["приманка"] = (df["seller"] != "developer") & (df["rel_price"] <= .75) & weak & (df["kind"] == "sec")
     f["новизна"] = df["age_days"].fillna(99) <= 3
-    f["цена"] = df["cheapest"] & (df["rel_price"] <= .9)
+    f["цена"] = (df["cheapest"] & (df["rel_price"] <= .9)) | (df["rel_price"] <= .8)
+    # на 35%+ дешевле аналогов: торги, обременение, доля под видом квартиры или приманка -- интерес не про спрос
+    f["аномальная цена"] = df["rel_price"] <= .65
+    f["люкс"] = df["price"] >= 300e6  # просмотры из любопытства, не ликвидность
     df["flags"] = f.apply(lambda r: ", ".join(k for k, v in r.items() if v), axis=1)
-    hard = f[["всплеск", "счётчик", "поднятие", "платное", "приманка", "новизна"]].any(axis=1)
+    hard = f[["всплеск", "счётчик", "поднятие", "платное", "приманка", "новизна", "аномальная цена"]].any(axis=1)
     df["candidate"] = (df["excess"] >= 1) & (df["idx_peer"] >= 2) & (df["persist"] >= 4) & (df["vpd"] >= 1)
     df["verdict"] = np.select([df["candidate"] & ~hard & f["цена"], df["candidate"] & ~hard, df["candidate"]],
                               ["настоящий (ценовой)", "настоящий", "отсеян"], "")
@@ -352,7 +373,7 @@ def main():
     for c in ("Цена к аналогам", "Просм./день", "Просм./день с поправкой на фон", "Интерес к аналогам, раз"):
         lots[c] = lots[c].astype(float).round(2)
     hotl = lots[lots["Вердикт"] != ""]
-    flip = lots[(lots["Цена к аналогам"] <= .88) & ~lots["Флаги"].str.contains("приманка") &
+    flip = lots[(lots["Цена к аналогам"] <= .88) & ~lots["Флаги"].str.contains("приманка|аномальная цена") &
                 lots["Сегмент"].isin(["свежая вторичка", "вторичка", "переуступка"])].sort_values("Избыточный интерес", ascending=False)
     devhot = lots[(lots["Сегмент"] == "застройщик") & (lots["Интерес к аналогам, раз"] >= 3)]
     path = os.path.join(DATA, a.day, "report.xlsx")
@@ -367,6 +388,7 @@ def main():
         cl.to_excel(xw, sheet_name="Кластеры", index=False)
         hotl.to_excel(xw, sheet_name="Горячие лоты", index=False)
         flip.head(500).to_excel(xw, sheet_name="Под флип", index=False)
+        lots[lots["Флаги"].str.contains("аномальная цена")].head(500).to_excel(xw, sheet_name="Аномальная цена", index=False)
         devhot.head(500).to_excel(xw, sheet_name="Горячие у застройщиков", index=False)
         lots[lots["Флаги"] != ""].head(3000).to_excel(xw, sheet_name="Отсев и флаги", index=False)
         if not ev.empty:
