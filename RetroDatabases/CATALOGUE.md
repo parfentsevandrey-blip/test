@@ -2762,4 +2762,154 @@ The catalogue of database 184 (200 to 210) has the same ten kinds:
 | Projects | 1 | Four dated events of 200 to 210 from Rome and China, sorted and spaced in code |
 | Flex | 1 | Years from the Severan marble plan to Cao Cao's order |
 | Cross-code | 1 | Years from the battle of Guandu to Cao Cao's order of 210, in Python and C |
+
+The catalogue of database 185 (190 to 200) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 3 | The Muratorian fragment, a Latin list of the New Testament books, Tertullian's Apology, a Latin defence of Christians written at Carthage and Ying Shao's Fengsu tongyi, a late Han work on customs |
+| Systems | 1 | Septimius Severus's campaign against the Parthians, begun in 197 |
+| Devices | 1 | The Chinese wheelbarrow, a one-wheeled barrow pushed by hand |
+| Tools | 1 | Astragali, the knucklebones thrown as dice and to cast lots |
+| Practices | 1 | The star compass of Pacific navigators, a memorized ring of rising and setting stars |
+| Guides | 1 | How the six channels of cold damage split into three yang and three yin |
+| Examples | 1 | The five men counted among the emperors of 193, the Year of the Five Emperors |
+| Projects | 1 | Four turning points of 190 to 198 in China and Rome, in order with the years between them |
+| Flex | 1 | Years from the Muratorian fragment to Severus's Parthian campaign |
+| Cross-code | 1 | Days from Commodus's death to the battle of Lugdunum, in Python and C |
+
+The catalogue of database 186 (180 to 190) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | The Xiping stone classics, Confucian texts cut on steles at Luoyang and Irenaeus's Against Heresies, five books against the falsely named knowledge |
+| Systems | 2 | The Yellow Turban rising of 184, followers of the Way of Great Peace in thirty-six sections and The Yamatai kingship of Himiko, a woman ruler chosen after long war in Wa |
+| Devices | 1 | The Roman ship's anchor, a weight with flukes that held a vessel to the bottom |
+| Tools | 1 | Ostraca, potsherds written on in ink in Roman Egypt |
+| Practices | 1 | Stone rubbing, paper pressed on an inscribed stone and inked |
+| Guides | 1 | How thirty-six sections are set out on a six-column grid |
+| Examples | 1 | The smallest and largest totals of the thirty-six Yellow Turban sections |
+| Projects | 1 | From Marcus Aurelius's death to the coalition of 190, four events in year order |
+| Flex | 1 | Years from the request for the stone classics to the Yellow Turban rising |
+| Cross-code | 1 | Steles a year for the Xiping stone classics, from request to completion, in Python and C |
+
+The catalogue of database 187 (170 to 180) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Tatian's Diatessaron, one harmonised text of the four gospels and The letter of the churches of Vienne and Lyon on the persecution under Marcus Aurelius |
+| Systems | 1 | The sale of official posts under Emperor Ling of the Han |
+| Devices | 1 | The talking drum of West Africa, a tuned drum that copies the tones of speech |
+| Tools | 1 | Roman grain tokens, tesserae that let a holder claim a share of the state grain |
+| Practices | 1 | The word dots of Latin inscriptions, points that divide one word from the next |
+| Guides | 1 | How a Greek word list is grouped under subject headings, as in Pollux's Onomasticon |
+| Examples | 1 | The Spartan scytale, a staff that scrambled a message by columns, written as code |
+| Projects | 1 | Four dated events of 175 to 180 sorted and spaced in code |
+| Flex | 1 | Years from Tatian's Diatessaron to the sale of offices under Ling |
+| Cross-code | 1 | The age of Marcus Aurelius at his death, worked out in Python and C |
+
+The catalogue of database 188 (160 to 170) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Gaius's Institutes, a Latin textbook of Roman law in four books |
+| Systems | 1 | The Antonine plague, an epidemic that spread across the Roman world from about 165 |
+| Devices | 1 | The double-acting piston bellows of the Han ironworks, placed at 168 |
+| Tools | 1 | The Roman clay spindle whorl, a weight that steadied the thread |
+| Practices | 1 | Gift tribute at the Han court, the ivory and horn that Roman envoys presented in 166 |
+| Guides | 1 | How a count is written as tally marks in fives |
+| Examples | 1 | The nine years of the Yanxi era, 158 to 166, counted in code |
+| Projects | 1 | Three dated events of 161 to 169, sorted and spaced in code |
+| Flex | 1 | Years from Gaius's Institutes to the Roman embassy of 166 |
+| Cross-code | 1 | Days from the death of Antoninus Pius to the birth of Commodus, in Python and C |
+
+The catalogue of database 189 (150 to 160) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 2 | Ptolemy's Almagest in its original Greek, a book of astronomy and Ptolemy's Guide to Geography, a Greek list of places by latitude and longitude |
+| Systems | 1 | The Coptic alphabet, Greek letters with Demotic signs for the sounds Greek lacked |
+| Devices | 1 | The Roman tessera hospitalis, a split token that proved a guest-host bond |
+| Tools | 1 | Ptolemy's Handy Tables, planetary tables for counting positions from a fixed epoch |
+| Practices | 1 | Keeping Easter on the fourteenth of Nisan, the Quartodeciman practice of Asia Minor |
+| Guides | 1 | How an epicycle carries a planet round its deferent in Ptolemy's model |
+| Examples | 1 | Galen's years from his birth at Pergamon to his post there, counted in code |
+| Projects | 1 | Four dated events of 150 to 159 sorted and spaced in code |
+| Flex | 1 | Years from the Nabonassar epoch of 747 BC to Justin Martyr's First Apology |
+| Cross-code | 1 | Days from the Nabonassar epoch to 1 January 150, in Python and C |
+
+The catalogue of database 190 (140 to 150) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Ptolemy's Harmonics, a Greek treatise on musical intervals as ratios |
+| Systems | 1 | Marcion's canon of scriptures, a list that kept a revised Luke and ten letters of Paul |
+| Devices | 1 | The Roman sitella, an urn for drawing the lots of the assemblies |
+| Tools | 1 | Roman dice of bone, pipped cubes for games of chance |
+| Practices | 1 | Latin lead curse tablets, spells rolled up and buried against rivals |
+| Guides | 1 | How breath counting runs from one to ten and starts again in early Chinese meditation |
+| Examples | 1 | One sowing move on a twelve-pit mancala board, computed in code |
+| Projects | 1 | A timeline of 142 to 148 from a British wall to a Chinese translator, in code |
+| Flex | 1 | Years from Marcion's canon to An Shigao at Luoyang |
+| Cross-code | 1 | Years from the Antonine Wall to Huan's accession, in Python and C |
+
+The catalogue of database 191 (130 to 140) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Theon of Smyrna's Mathematics useful for reading Plato |
+| Systems | 1 | The Edictum perpetuum, the praetor's edict fixed in one text under Hadrian |
+| Devices | 1 | Zhang Heng's seismoscope, a bronze vessel whose falling ball showed the direction of a distant earthquake |
+| Tools | 1 | The Han writing brush and inkstone, the pen and ink of scribes on bamboo and silk |
+| Practices | 1 | Counting forty-nine yarrow stalks to set the lines of a hexagram |
+| Guides | 1 | How an obelus marks a doubtful line that a second copy lacks |
+| Examples | 1 | A line written without spaces, cut into the names Antinoos and Antinoopolis |
+| Projects | 1 | Four events of 132 to 139, sorted by year and timed in code |
+| Flex | 1 | Years from Theon's book to Zhang Heng's seismoscope, counted in code |
+| Cross-code | 1 | Days from Hadrian's accession to his death, in Python and C |
+
+The catalogue of database 192 (120 to 130) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Zhang Heng's Lingxian, a treatise on the celestial sphere of about 120 |
+| Systems | 1 | Hadrian's Wall, the stone and turf frontier across northern Britain, begun in 122 |
+| Devices | 1 | Zhang Heng's armillary sphere, undated in the sources and placed at 120 |
+| Tools | 1 | A bronze hand abacus of the Roman world, undated in the sources and placed at 122 |
+| Practices | 1 | Unit stamps on Roman tiles, undated in the sources and placed at 122 |
+| Guides | 1 | How seven eggs count the laps of a chariot race, placed at 125 |
+| Examples | 1 | The Sixth Legion's move to Britain, dated 119 to 122 by different accounts, sorted in code |
+| Projects | 1 | Three deaths of 121 to 130 in China and Egypt, sorted and spaced in code |
+| Flex | 1 | Years from Emperor Shun's accession to the founding of Antinopolis |
+| Cross-code | 1 | Turves in one metre of a turf rampart, counted in Python and C |
+
+The catalogue of database 193 (110 to 120) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Suetonius's book on grammarians and rhetoricians |
+| Systems | 1 | The Ulpian Library in Trajan's Forum, with separate Greek and Latin halls |
+| Devices | 1 | The bow drill, a bow-turned shaft that bored stone and metal |
+| Tools | 1 | The Yiwen zhi, the book catalogue in Ban Gu's Hanshu |
+| Practices | 1 | Clay seals pressed on the knots of Han documents on wood and bamboo |
+| Guides | 1 | How the streets of a Roman marching camp are named from its gates |
+| Examples | 1 | Figures per turn of Trajan's Column frieze, counted from the stated floor |
+| Projects | 1 | Armenia, Antioch, Ctesiphon and the Yongning era: four dates of 114 to 120 in order |
+| Flex | 1 | Years from the Yiwen zhi of 111 to Hadrian's accession in 117 |
+| Cross-code | 1 | Days from the death of Trajan to the accession of Hadrian, in Python and C |
+
+The catalogue of database 194 (100 to 110) has the same ten kinds:
+
+| Kind | Records | What it is |
+|---|---:|---|
+| Languages | 1 | Nicomachus's Introduction to Arithmetic, a Greek schoolbook of number |
+| Systems | 1 | Trajan's bridge over the Danube at Drobeta, built by Apollodorus of Damascus |
+| Devices | 1 | The calix, a bronze outlet that limited how much water a Roman branch pipe took |
+| Tools | 1 | The Vindolanda tablets, ink letters and accounts written on wood |
+| Practices | 1 | Cai Lun's paper, made from bark, hemp, rags and fishing nets for the Han court |
+| Guides | 1 | Menelaus's rule for a line across a triangle, checked with three ratios |
+| Examples | 1 | The First Great Qiang Rebellion, 107 to 118, counted year by year in code |
+| Projects | 1 | Four turns of Trajan's Dacian wars from 101 to 106, sorted and spaced in code |
+| Flex | 1 | Years from the start of Trajan's bridge to Cai Lun's paper report |
+| Cross-code | 1 | Days from Pliny's Panegyricus to Trajan's death, in Python and C |
 <!-- END GENERATED CATALOGUE -->

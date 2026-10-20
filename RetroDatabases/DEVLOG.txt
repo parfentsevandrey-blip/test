@@ -47,6 +47,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-31 | 2026-10-20 | 132,865 | 222 | 82 | 118 | 133,287 | +3,947 (databases 155 to 164: 145 records in 110 files, migrations 154→155 to 163→164, tests +0) |
 | CP-32 | 2026-10-20 | 136,840 | 222 | 82 | 118 | 137,262 | +3,975 (databases 165 to 174: 154 records in 110 files, migrations 164→165 to 173→174, tests +0) |
 | CP-33 | 2026-10-20 | 140,320 | 222 | 82 | 118 | 140,742 | +3,480 (databases 175 to 184: 115 records in 110 files, migrations 174→175 to 183→184, tests +0) |
+| CP-34 | 2026-10-20 | 143,689 | 222 | 82 | 118 | 144,111 | +3,369 (databases 185 to 194: 106 records in 110 files, migrations 184→185 to 193→194, tests +0) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -2252,3 +2253,125 @@ These come from the helpers' search reports; the record details say what each da
 - Not verified yet: running on a device, the migration from version 174 to version 184 on a device, the UI with 184 databases in the list, lint and the release build.
 - Below 300 the coding link is almost gone. The question from earlier checkpoints is still open: should the catalogue keep going back at all?
 - The first facts to check before publishing are Cyprian's 14 September 258, Diophantus's 250, the Shushtar attribution, the Hexapla's 240, Hua Tuo's death year and Caracalla's death date.
+
+## CP-34: databases 185 to 194, 100 to 200 (the second century, the century before the 200s)
+
+Status: ten more databases are in the app, one per decade from the 190s down to the 100s: 106 records, migrations from version 184 to version 194, and the catalogue, the migrations and the tests are generic, so this batch added spec entries and record files only. Records per database: 190s 12, 180s 12, 170s 11, 160s 10, 150s 11, 140s 10, 130s 10, 120s 10, 110s 10 and 100s 10. None reaches 50, and all ten are marked "quota": false in tools/databases.json. There are 50 runnable records (5 in each database), and they all pass against their expected output. The build passes (194 databases, 6,150 records), and the unit tests pass (17 of 17, testDebugUnitTest executed).
+
+Mood: This is the most coding-relevant of the thin centuries so far: paper (105), Zhang Heng's seismoscope (132) and armillary sphere (about 125), Ptolemy's Almagest, Geography and Handy Tables (about 150), Nicomachus's arithmetic (about 100) and the Han book catalogue (111). The batch is still thin: 10 to 12 records each, and 33 of the 106 records (about 31 per cent) carry an anchor year. The same-item check found three same-object repeats, all with the earlier catalogue or between neighbours, and each was fixed by replacing the later copy. Two single-source dates were checked by search (Commodus and Trajan), and both now have a source.
+
+Date: 2026-10-20. Totals: Kotlin main 143,689 (CP-33: 140,320), Kotlin test 222 (222), XML 82 (82), Gradle and project files 118 (118), total 144,111 (CP-33: 140,742). The +3,369 is the 110 new Kotlin seed files for databases 185 to 194 and the regenerated SeedCatalog.kt. The database class and the tests did not change; the migrations are generated, with DATABASE_VERSION at 194.
+
+### What changed
+
+- Ten databases, from "Database 185: 190s coding catalogue" (190 to 200) to "Database 194: 100s coding catalogue" (100 to 110). Their records are 12, 12, 11, 10, 11, 10, 10, 10, 10 and 10: 106 new records and 6,150 in the whole catalogue. The new rare records number 83, so the whole catalogue has 2,043.
+- Eleven files per database, 110 in total. The colours are unused ones.
+- Spec: tools/databases.json has 194 entries. All ten new databases are marked "quota": false.
+- Generator: no change. SeedCatalog.kt, CATALOGUE.md and the README tables are regenerated. The README sentence about runnable counts is updated by hand: databases 75 to 194 have fewer runnable records, and 175 to 194 have five each, all passing.
+- Process: one helper per database for the first pass, from the brief and an anchors file with one owner per named item. The lead ran the repeat check, checked two dates by search, and sent four records back for replacement (see Problems).
+
+### Placed records (33)
+
+The year of these records is an anchor, not the date of the item itself. Each record's details say so.
+
+- 185: a TOOL, astragali (195, the Fengsu tongyi); a DEVICE, the Chinese wheelbarrow (197, the Parthian campaign); a PRACTICE, the Pacific star compass (190, the Muratorian fragment).
+- 186: a DEVICE, the Roman ship's anchor (185, Perennis's execution); a TOOL, ostraca (180, the death of Marcus Aurelius); a PRACTICE, stone rubbing (183, the Xiping stones).
+- 187: a DEVICE, the talking drum (175, Avidius Cassius's revolt); a TOOL, Roman grain tokens (178, the sale of offices); a PRACTICE, Latin word dots (177, the Lyons persecution); an EXAMPLE, the Spartan scytale (180, the death of Marcus Aurelius).
+- 188: a DEVICE, the Han piston bellows (168); a GUIDE, tally marks in fives (165); a TOOL, the Roman clay spindle whorl (161, the joint accession of Marcus Aurelius and Lucius Verus).
+- 189: a SYSTEM, the Coptic alphabet (155, Justin's First Apology); a DEVICE, the Roman tessera hospitalis (157, Galen's post at Pergamon); a PRACTICE, the Quartodeciman Easter (155, Polycarp's meeting).
+- 190: a TOOL, Roman dice (140, Marcion's arrival at Rome); a PRACTICE, Latin lead curse tablets (144, Marcion's expulsion); a DEVICE, the Roman sitella (142, the start of the Antonine Wall); an EXAMPLE, one sowing move on a mancala board (146, Huan's accession).
+- 191: a LANGUAGE, Theon of Smyrna's Mathematics (130, an estimate, the book is undated); a TOOL, the Han writing brush and inkstone (132); a PRACTICE, counting yarrow stalks (132); a GUIDE, the obelus (130, Antinopolis).
+- 192: a DEVICE, Zhang Heng's armillary sphere (120); a TOOL, the hand abacus (122); a PRACTICE, tile stamps (122); a GUIDE, the seven eggs of a chariot race (125).
+- 193: a LANGUAGE, Suetonius's book on grammarians and rhetoricians (117); a PRACTICE, clay seals pressed on the knots of Han documents (114); a DEVICE, the bow drill (114, Trajan's annexation of Armenia); a GUIDE, the streets of a Roman marching camp (117, Hadrian's accession).
+- 194: a DEVICE, the calix (109, the Aqua Traiana).
+
+Weakest first: the calix (194), the bow drill (193), the mancala sowing (190), the wheelbarrow (185), and the Han piston bellows (188). Each is a real object or method whose year is an anchor with no firm link to it.
+
+### Problems and what was fixed
+
+- The calix was in 193 (DEVICE, 117) and 194 (DEVICE, 109): one object. It stays in 194; database 193 now has a bow drill (114) as its DEVICE.
+- The quipu was in 48 (PRACTICE) and 190 (EXAMPLE, 146): one item. Database 190's EXAMPLE is now a mancala sowing move (146).
+- The notched stick was in 48 (PRACTICE, notched tally sticks in the Exchequer) and 188 (TOOL, 161): one item. Database 188's TOOL is now the Roman clay spindle whorl (161).
+- The Yiwen zhi was a TOOL and a GUIDE about the same book in 193. The GUIDE is now a method for the streets of a Roman camp (117); the FLEX stays, because it computes years.
+- Commodus's birth (31 August 161) was a single-source date in 188's CROSS. A search found Wikipedia giving 31 August 161, with Lanuvium as the birthplace; the record names no place. Kept.
+- Trajan's death (8 August 117, used in the 193 and 194 records): most sources give 8 August 117, Britannica gives 8 or 9 August, and one blog calls the exact day uncertain. Kept, and the day is listed below.
+- The Antinopolis founding (130) is the anchor for 191's EXAMPLE and GUIDE, and an event in 192's FLEX (years from Shun's accession to the founding). These are different items, so kept.
+
+### Repeats kept inside one database (for a decision)
+
+- 186: the Yellow Turban appears in an EXAMPLE (the thirty-six sections), a FLEX (years from the stone classics) and a SYSTEM (184). The Xiping stones are a LANGUAGE and a CROSS (steles a year, a different quantity).
+- 189: the Nabonassar epoch appears in a FLEX, a CROSS (days from the epoch) and the TOOL (the Handy Tables). The epicycle GUIDE and the Almagest LANGUAGE are different quantities.
+- 191: Theon's book is a LANGUAGE and the years to the seismoscope are a FLEX.
+- 190: Marcion's canon is a SYSTEM and the years from it to An Shigao are a FLEX.
+- 192: Hadrian's Wall is a SYSTEM and the turves of a turf rampart are a CROSS.
+- 185: the Muratorian fragment is a LANGUAGE and a FLEX (years to Severus's campaign). 188: Gaius's Institutes is a LANGUAGE and a FLEX. 193: the Yiwen zhi is a TOOL and a FLEX.
+- Each is a book or an event with a computed record of a different quantity; I kept them. The lead may cut one record in each cluster.
+
+### Repeat check result
+
+The same-item check (scratchpad/same_item_batch.py 185 194) gives 142 pairs. The four same-object repeats above are gone. The rest are shared words or neighbours: the two Commodus CROSS records (185 and 188, different events); the astragali (185) and the Roman dice (190), both gaming dice; the grain tokens (187), the tessera hospitalis (189) and the dice (190), three different tokens; Zhang Heng's seismoscope (191) and armillary sphere (192), two devices of one man; the word dots (187) and the spacing of an inscription (191); the Quartodeciman Easter (189) beside the Easter tables; the Muratorian canon (185) beside Marcion's canon (190).
+
+### Facts checked by search
+
+These come from the helpers' search reports and my two searches; the record details say what each date rests on.
+
+- 185: Severus's winter push after Lugdunum; Ctesiphon sacked late 197 or January 198 (disputed); Hatra attempts 198 to 200 (disputed); the Muratorian date range 170 to 200, the copy about the eighth century, Muratori's edition of 1740; Tertullian's Apologeticum about 197; the Fengsu tongyi about 195; the Shanghan lun about 200; Commodus died 31 December 192; Lugdunum on 19 February 197.
+- 186: the Xiping stones requested in 175 and finished in 183 near Luoyang; steles given as 46 or 48 (disputed); the Yellow Turban rising in 184, end dates 185 to 205; Himiko's accession 189 or 190; Perennis executed in 185; Emperor Ling died in 189; the coalition formed in spring 190.
+- 187: Avidius's revolt in spring 175; the Diatessaron about 166 to 180, Syriac favoured; the Lyons letter conventionally 177 (Eusebius's Chronicon gives 166 or 167); the sale of offices 177 or 178; Pollux's Onomasticon before 177 by its dedication.
+- 188: Gaius's Institutes composed about 160 to 162, found as a palimpsest in Verona in 1816; the embassy of 166 (Yanxi 9); Lucius Verus born 15 December 130; the fanqie origin disputed; dated Roman dice from AD 61.
+- 189: the Almagest about 150, 1022 stars in 48 constellations; the Nabonassar epoch on 26 February 747 BC (Julian); the Handy Tables composed in the second century, the oldest witness of the third; the Polycarp–Anicetus clash about 155 (one archive); the Coptic invention dates differ.
+- 190: the Harmonics in three books (1562 and 1682 editions); Marcion's arrival about 140 and expulsion in 144; An Shigao at Luoyang in 148 (a fourth-century catalogue); about 500 Latin curse tablets; sitella urns on coins.
+- 191: Hadrian's reign from 11 August 117 to 10 July 138 (the accession day disputed); Antoninus Pius succeeded in 138; Zhang Heng died in 139; the Edictum commission after 125; the seismoscope's 132 is traditional, the Longxi quake 134 or 138; Theon's career fixed by Ptolemy's observations of 127 to 132.
+- 192: Deng Sui died in April 121; Emperor An's reign ended in 125; Shun's accession 125 or 126; Antinous drowned in October 130; Antinopolis founded in 130 (one source); the Sixth Legion's move to Britain in 119, 121 or 122.
+- 193: Liu Xin's collation began in 26 BCE; Ban Gu died in 92 with the Hanshu unfinished; the Ulpian Library commissioned in 112 and founded in 114; Trajan's Column has 23 turns and more than 2,500 figures (one account gives 2,662); Frontinus on calices and quinariae.
+- 194: Trajan's bridge built 103 to 105 on twenty piers (one account gives 104 for the order); Nicomachus about 100; Menelaus's Sphaerica about 100 (one account gives 110); the Vindolanda birthday letter dated 97 to 103 or about 100; the Qiang revolt 107 to 118; Frontinus's calix (one source, about 98).
+- Lead, by search: Commodus born 31 August 161 (Wikipedia, which names Lanuvium as the birthplace; no source found for Lorium); Trajan died 8 August 117 at Selinus (Wikipedia's AD 117, the Dickinson College commentary and Ancient Rome Live; Britannica gives 8 or 9 August).
+
+### Facts from memory, to check
+
+- 185: the fragment's book list; Tertullian's charges; Dong Zhuo burns Luoyang (190); Pertinax murdered (193); Cao Cao takes the emperor to Xu (196); the five emperors of 193; the faces of astragali; the star compass.
+- 186: Marcus Aurelius died in 180; Irenaeus's Against Heresies about 180; general facts of ostraca and rubbing.
+- 187: Marcus Aurelius born 26 April 121, died 17 March 180; the talking drum; word dots; the scytale in Plutarch.
+- 188: Antoninus Pius's death and Marcus's accession, 7 March 161; Ling's reign from 168; Verus's death in 169; Yanxi from 158; the plague's start about 165.
+- 189: the Geography about 150 in eight books; the Almagest in thirteen books; Galen born 129, post in 157; Yanxi 158; the Liang family destroyed in 159; the Junagadh inscription about 150; Justin's Apology about 155; the epicycle history; the Julian day numbers (checked by hand: 1448638 and 1775846).
+- 190: the Antonine Wall begun in 142; Shun died in 144; Huan took the throne in 146; the Anban shouyi jing; quipu facts; Roman dice of bone.
+- 191: the Yangjia era from 132; the Bar Kokhba revolt in 132 and Betar in 135; Theon's Latin title; the yarrow procedure; the practice of the obelus.
+- 192: Hadrian's Wall begun in 122, about 73 Roman miles; Hadrian in Britain in 122; legion stamps on the Wall tiles; the hand abacus; seven eggs on a circus spina.
+- 193: Trajan died on 8 August 117 and Hadrian acceded on 11 August 117; Armenia 114; the Antioch earthquake 115; Ctesiphon 116; Yuanchu 114; Yongning 120; Suetonius's book and his service under Hadrian; Han clay seals.
+- 194: Cai Lun's report of 105; Western Han paper fragments; the Dacian wars 101 to 102 and 105 to 106; Pliny's Panegyricus delivered on 1 September 100; Trajan's death on 8 August 117; the Aqua Traiana built in 109.
+
+### Single-source dates
+
+- 185: Lugdunum on 19 February 197 (one article); the Fengsu tongyi 195 and the Shanghan lun about 200 (weak references).
+- 186: the stones lost in 190 (one account); the section sizes (one account); Himiko in 189 (one mirror).
+- 187: Pollux in 175 (a round date); the year of the sale of offices is disputed.
+- 188: the Yanxi start year.
+- 189: the 155 clash (one archive); the Handy Tables in 150 (a round date).
+- 190: Marcion in 140; the curse-tablet range; An Shigao in 148.
+- 191: the Edictum's 131 (not used); the seismoscope's 132 rests on tradition.
+- 192: Antinopolis in 130 (one source); Lingxian about 120 (secondary summaries only).
+- 193: 111 for the Hanshu's completion (one summary); 113 for the Column (one entry); the Ulpian Library in 112 to 114.
+- 194: Frontinus's treatise about 98 (the calix details); Apuleius's Latin version of Nicomachus is undated.
+
+### Problems
+
+- Thin decades. All ten are far below 50 records (10 to 12), with 50 runnable records in all.
+- Placed records. 33 of 106, about one in three, as in CP-33. The weakest are listed above.
+- Coding relevance. Higher than the 200s: paper, the seismoscope, the armillary sphere, Ptolemy's tables and the book catalogue are real items with coding links. The GUIDE and TOOL records are still the weakest, and several records (the mancala sowing, the camp streets, the seven eggs) are methods of the period rather than coding in the modern sense.
+- Clusters inside one database: see above; one record of each cluster may be cut.
+- Memory dates. The first to check are Trajan's death (8 or 9 August 117 in one source), Hadrian's accession (11 August 117), Armenia in 114, Antioch in 115, Ctesiphon in 116, the Aqua Traiana in 109 and Trajan's bridge (104 or 105).
+
+### How I checked it
+
+- Verifiers: 185 to 194, 5 of 5 each. That is 50 runnable records, each with expected output worked out by hand before the run.
+- Checker: each database reports only the count rules, which the thin-century rule allows. No title clashes, text-rule or year problems. The rare counts (7 to 10) are 9, 8, 8, 8, 9, 8, 9, 8, 7 and 9 for 185 to 194.
+- Repeat check: scratchpad/same_item_batch.py 185 194, as in the repeat check result above.
+- Generator: checks passed for 194 databases and 6,150 records.
+- Unit tests: BUILD SUCCESSFUL; 17 of 17 pass, with 0 failures and 0 errors (AppDatabaseSeedTest 4, RecordFilterTest 5, SeedDataTest 8).
+- Text: no Cyrillic in the logs, the source pack, the README, CATALOGUE.md or the tools (checked before the commit).
+
+### Notes
+
+- Not verified yet: running on a device, the migration from version 184 to version 194 on a device, the UI with 194 databases in the list, lint and the release build.
+- The second century is the best of the three thin centuries for coding history, but the records are still thin and about a third are placed. The question from earlier checkpoints is still open: how far back should the catalogue go, given that each step back is thinner?
+- The first facts to check before publishing are the day of Trajan's death, Hadrian's accession, Armenia in 114, the Aqua Traiana in 109, the Muratorian date and Himiko's 189.
