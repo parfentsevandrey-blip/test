@@ -353,7 +353,7 @@ final class PlayerEngine {
         // Продолжение просмотра
         let saved = library?.item(id: item.id)?.position ?? 0
         if UserDefaults.standard.bool(forKey: Prefs.resumePlayback), saved > 15, info.duration > 0, saved < info.duration * 0.95 {
-            player.seek(to: CMTime(seconds: saved, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero) { _ in }
+            PlayerCallbacks.seek(player, to: CMTime(seconds: saved, preferredTimescale: 600), tolerance: .zero) { _ in }
             currentTime = saved
             resumedFrom = saved
             Task { [weak self] in
@@ -488,7 +488,7 @@ final class PlayerEngine {
         guard let target = seekTarget else { return }
         seekInFlight = true
         let tolerance = precise ? CMTime.zero : CMTime(seconds: 0.4, preferredTimescale: 600)
-        player.seek(to: target, toleranceBefore: tolerance, toleranceAfter: tolerance) { [weak self] _ in
+        PlayerCallbacks.seek(player, to: target, tolerance: tolerance) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
                 if self.seekTarget == target {
@@ -678,13 +678,7 @@ final class PlayerEngine {
             refreshFrame()
             return
         }
-        let box = adjustmentBox
-        let composition = AVMutableVideoComposition(asset: item.asset) { request in
-            let source = request.sourceImage
-            let output = box.apply(to: source.clampedToExtent()).cropped(to: source.extent)
-            request.finish(with: output, context: nil)
-        }
-        item.videoComposition = composition
+        item.videoComposition = PlayerCallbacks.composition(for: item.asset, applying: adjustmentBox)
         compositionActive = true
         refreshFrame()
     }
@@ -799,6 +793,24 @@ final class PlayerEngine {
             self.artwork = image
             if needsThumbnail { self.library?.setThumbnail(image, for: item.id) }
             self.updateNowPlaying()
+        }
+    }
+}
+
+/// Всё, что система вызывает на своих потоках (завершение перемотки, фильтр кадров
+/// композиции), создаётся здесь — вне главного актора. Иначе Swift 6 считает такие
+/// замыкания изолированными на главном акторе и аварийно останавливает процесс.
+nonisolated enum PlayerCallbacks {
+    static func seek(_ player: AVPlayer, to time: CMTime, tolerance: CMTime,
+                     completion: @escaping @Sendable (Bool) -> Void) {
+        player.seek(to: time, toleranceBefore: tolerance, toleranceAfter: tolerance, completionHandler: completion)
+    }
+
+    static func composition(for asset: AVAsset, applying box: AdjustmentBox) -> AVVideoComposition {
+        AVMutableVideoComposition(asset: asset) { request in
+            let source = request.sourceImage
+            let output = box.apply(to: source.clampedToExtent()).cropped(to: source.extent)
+            request.finish(with: output, context: nil)
         }
     }
 }
