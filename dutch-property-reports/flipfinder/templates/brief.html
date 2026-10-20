@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>{{ title }}</title>
+<style>{{ css }}</style>
+</head>
+<body>
+
+{# ------------------------------------------------------------ 1. решение #}
+<section class="page">
+  <div class="head"><span><b>Флип за 12 месяцев</b>, {{ date }}</span><span>1 из 5</span></div>
+  <div class="body b1">
+    <img class="hero" src="{{ hero }}" alt="">
+    <h1>{{ name }}</h1>
+    <div class="sub">{{ subline }}</div>
+    <p class="lede">{{ verdict | md }}</p>
+    <div class="kpis">
+      {% for k in kpis %}
+      <div class="kpi{% if k.key %} key{% endif %}"><div class="label">{{ k.label }}</div><div class="value">{{ k.value }}</div><div class="hint">{{ k.hint }}</div></div>
+      {% endfor %}
+    </div>
+    <div class="meter">
+      <div class="title">{{ meter.title | md }}</div>
+      {{ meter.svg | safe }}
+    </div>
+    <ul class="reasons">{% for r in reasons %}<li>{{ r | md }}</li>{% endfor %}</ul>
+  </div>
+  <div class="foot"><span>{{ picked_note }}</span><span>funda in business, {{ date }}</span></div>
+</section>
+
+{# ------------------------------------------------------------ 2. здание #}
+<section class="page">
+  <div class="head"><span><b>{{ name }}</b></span><span>2 из 5</span></div>
+  <div class="body b2">
+    <h2>Здание</h2>
+    <div class="facts">
+      {% for col in facts %}
+      <table>{% for label, value in col %}<tr><td>{{ label }}</td><td>{{ value }}</td></tr>{% endfor %}</table>
+      {% endfor %}
+    </div>
+    <div class="two">
+      <div>
+        {% for title, items in blocks %}
+        <h3>{{ title }}</h3>
+        {% if items | length > 1 %}<ul class="todo">{% for t in items %}<li>{{ t | md }}</li>{% endfor %}</ul>
+        {% else %}<p>{{ items[0] | md }}</p>{% endif %}
+        {% endfor %}
+      </div>
+      <div class="side">{% for im in images %}<img class="side-img {{ im.cls }}" src="{{ im.src }}" alt="">{% endfor %}</div>
+    </div>
+  </div>
+  <div class="foot"><span>{{ source_url }}</span><span></span></div>
+</section>
+
+{# ------------------------------------------------------------ 3. место #}
+<section class="page">
+  <div class="head"><span><b>{{ name }}</b></span><span>3 из 5</span></div>
+  <div class="body b3">
+    <h2>Место и арендатор</h2>
+    <img class="map" src="{{ map }}" alt="">
+    <div class="two">
+      <div>
+        <h3>Дорога</h3>
+        <table class="roads">{% for r in roads %}<tr><td>{% if r.shield %}<span class="shield">{{ r.shield }}</span>{% endif %}{{ r.label }}</td><td class="num">{{ r.value }}</td></tr>{% endfor %}</table>
+        <h3>Почему здесь найдётся арендатор</h3>
+        {% for p in why %}<p>{{ p | md }}</p>{% endfor %}
+      </div>
+      <div>
+        <h3>Аренда рядом, € за м² в год</h3>
+        <table>
+          <tr><th>Предложение</th><th class="num">м²</th><th class="num">€ за м²</th></tr>
+          {% for c in comps %}<tr class="{{ 'mine' if c.mine else '' }}"><td>{{ c.name }}</td><td class="num">{{ c.area }}</td><td class="num">{{ c.rate }}</td></tr>{% endfor %}
+        </table>
+        <p class="note" style="margin-top:2mm">{{ comps_note }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Карта: картографические данные © Google. Дорога — по маршруту OSRM.</span><span></span></div>
+</section>
+
+{# ------------------------------------------------------------ 4. деньги #}
+<section class="page">
+  <div class="head"><span><b>{{ name }}</b></span><span>4 из 5</span></div>
+  <div class="body b4">
+    <h2>Деньги за 12 месяцев</h2>
+    <div class="timeline">{% for s in steps %}<div class="step{% if loop.last %} sale{% endif %}"><div class="when">{{ s.when }}</div><div class="what">{{ s.what }}</div><div class="more">{{ s.more }}</div></div>{% endfor %}</div>
+    <div class="two">
+      <div>
+        <table>
+          <tr><th>Вкладываем</th><th class="num"></th></tr>
+          {% for label, value in money_out %}<tr><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}
+          <tr class="sum"><td>Всего</td><td class="num">{{ out_total }}</td></tr>
+          <tr><th style="padding-top:4mm">Получаем</th><th class="num"></th></tr>
+          {% for label, value in money_in %}<tr><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}
+          <tr class="sum"><td>Всего</td><td class="num">{{ in_total }}</td></tr>
+          {% for label, value in result %}<tr class="{{ 'total' if loop.first else ('sum' if loop.index == 3 else '') }}"><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}
+        </table>
+      </div>
+      <div class="chart">
+        <h3 style="margin-top:0">Куда идут деньги и откуда прибыль</h3>
+        {{ waterfall | safe }}
+      </div>
+    </div>
+    <div class="formula">
+      <div><b>Как инвестор считает цену.</b> {{ investor.intro }}</div>
+      <div class="eq">{{ investor.eq }}</div>
+      <div class="note">{{ investor.comps | md }}</div>
+    </div>
+  </div>
+  <div class="foot"><span>Суммы без НДС, округлены до € 100. Покупка за свои средства, без кредита.</span><span></span></div>
+</section>
+
+{# ------------------------------------------------------------ 5. риски и цена #}
+<section class="page">
+  <div class="head"><span><b>{{ name }}</b></span><span>5 из 5</span></div>
+  <div class="body b5">
+    <h2>Сколько платить и что может пойти не так</h2>
+    <h3 style="margin-top:0">Прибыль до налога при разной цене покупки</h3>
+    <table>
+      <tr><th>Платим продавцу</th><th class="num">Скидка</th><th class="bar-cell"></th><th class="num">Прибыль</th></tr>
+      {% for r in ladder %}<tr class="{{ 'mine' if r.mine else '' }}"><td>{{ r.price }}{% if r.tag %} <span class="note">({{ r.tag }})</span>{% endif %}</td><td class="num">{{ r.discount }}</td><td class="bar-cell">{{ r.bar | safe }}</td><td class="num">{{ r.profit }}</td></tr>{% endfor %}
+    </table>
+    <div class="two" style="margin-top:2mm">
+      <div>
+        <h3>Что если</h3>
+        <table>{% for label, value in what_if %}<tr><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}</table>
+      </div>
+      <div>
+        <h3>Проверить до покупки</h3>
+        <ul class="todo">{% for c in checks %}<li>{{ c | md }}</li>{% endfor %}</ul>
+      </div>
+    </div>
+    <h3>Законно уменьшить налоги</h3>
+    <div class="legal">{% for t, body in legal %}<div><b>{{ t }}</b>{{ body }}</div>{% endfor %}</div>
+  </div>
+  <div class="foot"><span>Налоги по закону Нидерландов на 2026 год; схему подтверждает налоговый консультант до подписания договора.</span><span></span></div>
+</section>
+
+{# ------------------------------------------------------------ фотографии #}
+{% for chunk in photo_pages %}
+<section class="page">
+  <div class="head"><span><b>{{ name }}</b>, фотографии</span><span>{{ loop.index }} из {{ photo_pages | length }}</span></div>
+  <div class="body"><div class="grid6">
+    {% for ph in chunk %}<figure class="shot" style="margin:0"><img src="{{ ph.src }}" alt=""><figcaption class="cap">{{ ph.cap }}</figcaption></figure>{% endfor %}
+  </div></div>
+  <div class="foot"><span>Фото из объявления на funda in business</span><span></span></div>
+</section>
+{% endfor %}
+{% if plans %}
+<section class="page">
+  <div class="head"><span><b>{{ name }}</b>, планировка</span><span></span></div>
+  <div class="body"><div class="grid2">
+    {% for ph in plans %}<figure class="shot plan" style="margin:0"><img src="{{ ph.src }}" alt=""><figcaption class="cap">{{ ph.cap }}</figcaption></figure>{% endfor %}
+  </div></div>
+  <div class="foot"><span>Планировки из объявления на funda in business</span><span></span></div>
+</section>
+{% endif %}
+</body>
+</html>

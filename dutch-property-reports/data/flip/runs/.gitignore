@@ -1,0 +1,7 @@
+# пробные прогоны и загруженные кадры не храним: их можно пересобрать из кэша
+test-render/
+*/brief-*/img/
+*/brief-*/*.html
+*/brief-*/*.pdf
+*/brief-*/p-*.png
+*/brief-*/sheet*.png
