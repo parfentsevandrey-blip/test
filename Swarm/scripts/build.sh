@@ -72,6 +72,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>NSDesktopFolderUsageDescription</key><string>Swarm раздаёт и сохраняет файлы на Рабочем столе, если вы выбрали эту папку.</string>
   <key>NSDocumentsFolderUsageDescription</key><string>Swarm раздаёт и сохраняет файлы в «Документах», если вы выбрали эту папку.</string>
   <key>NSRemovableVolumesUsageDescription</key><string>Swarm сохраняет загрузки на внешний диск, если вы выбрали его.</string>
+  <key>NSAppTransportSecurity</key>
+  <dict>
+    <!-- Большинство публичных трекеров работает по обычному HTTP; без этого ATS их блокирует. -->
+    <key>NSAllowsArbitraryLoads</key><true/>
+  </dict>
   <key>NSLocalNetworkUsageDescription</key><string>Swarm обменивается частями файлов с другими участниками раздачи, в том числе в локальной сети.</string>
   <key>CFBundleURLTypes</key>
   <array>

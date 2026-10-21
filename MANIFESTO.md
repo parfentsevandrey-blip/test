@@ -76,6 +76,7 @@
 | Приложение | Что заменяет | Статус |
 |---|---|---|
 | [**Lumen**](Lumen/) — видеоплеер | VLC, IINA, QuickTime | ✅ готов: Liquid Glass, свой демультиплексор MKV/WebM, HDR, живая подсветка |
+| [**Swarm**](Swarm/) — торрент/magnet-клиент | Transmission, qBittorrent, µTorrent | ✅ готов: BitTorrent, DHT, трекеры и magnet написаны с нуля, созвездие роя |
 
 Кандидаты в следующие приложения:
 
