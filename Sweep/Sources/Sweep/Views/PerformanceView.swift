@@ -185,7 +185,7 @@ struct PerformanceView: View {
                             Text(task.title).font(.system(size: 12.5, weight: .semibold))
                             if task.needsAdmin { Image(systemName: "lock.fill").font(.system(size: 9)).foregroundStyle(.secondary) }
                         }
-                        Text(task.explanation).font(.system(size: 11)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        Text(task.explanation).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(4).frame(maxWidth: .infinity, alignment: .leading)
                     }
                     Spacer()
                     if let ok = model.maintenanceResults[task] {

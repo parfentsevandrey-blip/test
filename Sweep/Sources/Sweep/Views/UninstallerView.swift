@@ -286,7 +286,7 @@ struct OrphansPanel: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Остатки удалённых программ").font(.system(size: 17, weight: .bold))
-                        Text(CategoryID.leftovers.explanation).font(.system(size: 11.5)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        Text(CategoryID.leftovers.explanation).font(.system(size: 11.5)).foregroundStyle(.secondary).lineLimit(4).frame(maxWidth: .infinity, alignment: .leading)
                     }
                     Spacer()
                 }

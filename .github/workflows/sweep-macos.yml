@@ -44,10 +44,10 @@ jobs:
       # Настоящее окно в нескольких модулях (сканирование только для чтения) — проверяем раскладку глазами.
       - name: UI screenshots
         run: |
-          for M in smart cleanup uninstaller space performance; do
+          for M in smart cleanup uninstaller clutter space performance; do
             dist/Sweep.app/Contents/MacOS/Sweep --demo-ui $M &
             PID=$!
-            sleep 14
+            sleep 18
             screencapture -x "$RUNNER_TEMP/render/window-$M.png" || echo "screencapture не сработал"
             kill $PID 2>/dev/null || true
             sleep 2

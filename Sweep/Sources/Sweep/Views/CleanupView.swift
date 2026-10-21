@@ -85,7 +85,7 @@ struct CleanupView: View {
                         .shadow(color: id.color.opacity(0.5), radius: 8, y: 3)
                     VStack(alignment: .leading, spacing: 4) {
                         Text(id.title).font(.system(size: 18, weight: .bold))
-                        Text(id.explanation).font(.system(size: 12)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        Text(id.explanation).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(4).frame(maxWidth: .infinity, alignment: .leading)
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 6) {
