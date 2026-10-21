@@ -17,11 +17,11 @@ struct SweepApp: App {
         Window("Sweep", id: "main") {
             RootView()
                 .environment(model)
-                .frame(minWidth: 1040, minHeight: 680)
+                .frame(minWidth: 900, minHeight: 600)
                 .background(WindowAccessor { window in
                     if DemoUI.isOn, let screen = window.screen ?? NSScreen.main {
                         let f = screen.visibleFrame
-                        window.setFrame(NSRect(x: f.minX, y: f.minY, width: min(1280, f.width), height: min(800, f.height)), display: true)
+                        window.setFrame(NSRect(x: f.minX, y: f.minY, width: min(1280, f.width), height: min(820, f.height)), display: true)
                     }
                 })
                 .onAppear { model.start() }

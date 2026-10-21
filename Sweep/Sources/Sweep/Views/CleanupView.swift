@@ -27,7 +27,7 @@ struct CleanupView: View {
                 scanButton
             }
             HStack(alignment: .top, spacing: 16) {
-                categoryList.frame(width: 300)
+                categoryList.frame(width: 250)
                 detail
             }
             .padding(.horizontal, 24)

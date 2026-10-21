@@ -135,7 +135,7 @@ struct ItemRow: View {
             }
             Spacer(minLength: 8)
             if let m = item.modified {
-                Text(Format.relative(m)).font(.system(size: 11)).foregroundStyle(.tertiary).lineLimit(1)
+                Text(Format.relative(m)).font(.system(size: 11)).foregroundStyle(.tertiary).lineLimit(1).layoutPriority(-1)
             }
             Text(Format.bytes(item.size))
                 .font(.system(size: 12.5, weight: .semibold))

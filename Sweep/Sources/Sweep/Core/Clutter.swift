@@ -103,26 +103,28 @@ nonisolated enum ClutterScanner {
                                                          options: [.skipsHiddenFiles, .skipsPackageDescendants],
                                                          errorHandler: { _, _ in true }) else { continue }
             for case let url as URL in e {
-                guard let v = try? url.resourceValues(forKeys: Set(keys)), v.isSymbolicLink != true else { continue }
-                if ctx.isIgnored(url) { e.skipDescendants(); continue }
-                let isPackage = v.isPackage == true || packageExtensions.contains(url.pathExtension.lowercased())
-                if v.isDirectory == true && !isPackage { continue }
-                if Safety.verdict(for: url, home: ctx.home).isForbidden { continue }
-                result.scanned += 1
-                if result.scanned % 500 == 0 { progress(result.scanned) }
-                let size = isPackage && v.isDirectory == true
-                    ? DiskUsage.size(of: url)
-                    : Int64(v.totalFileAllocatedSize ?? v.fileAllocatedSize ?? 0)
-                guard size > 0 else { continue } // файлы iCloud без локальной копии места не занимают
-                let entry = FileEntry(url: url, size: size, modified: v.contentModificationDate, accessed: v.contentAccessDate,
-                                      kind: FileKind.of(url))
-                if size >= largeThreshold { result.large.append(entry) }
-                if size >= 10_000_000, let last = entry.lastUse, last.daysBefore(ctx.now) > oldDays { result.old.append(entry) }
-                if duplicates, !isPackage, v.isRegularFile == true, size >= 1_000_000 {
-                    // Жёсткие ссылки на один и тот же файл — не дубликаты: удаление места не освободит.
-                    var st = stat()
-                    let inode = lstat(url.path, &st) == 0 ? "\(st.st_dev):\(st.st_ino)" : url.path
-                    if seenInodes.insert(inode).inserted { candidates.append(entry) }
+                autoreleasepool {
+                    guard let v = try? url.resourceValues(forKeys: Set(keys)), v.isSymbolicLink != true else { return }
+                    if ctx.isIgnored(url) { e.skipDescendants(); return }
+                    let isPackage = v.isPackage == true || packageExtensions.contains(url.pathExtension.lowercased())
+                    if v.isDirectory == true && !isPackage { return }
+                    if Safety.verdict(for: url, home: ctx.home).isForbidden { return }
+                    result.scanned += 1
+                    if result.scanned % 500 == 0 { progress(result.scanned) }
+                    let size = isPackage && v.isDirectory == true
+                        ? DiskUsage.size(of: url)
+                        : Int64(v.totalFileAllocatedSize ?? v.fileAllocatedSize ?? 0)
+                    guard size > 0 else { return } // файлы iCloud без локальной копии места не занимают
+                    let entry = FileEntry(url: url, size: size, modified: v.contentModificationDate, accessed: v.contentAccessDate,
+                                          kind: FileKind.of(url))
+                    if size >= largeThreshold { result.large.append(entry) }
+                    if size >= 10_000_000, let last = entry.lastUse, last.daysBefore(ctx.now) > oldDays { result.old.append(entry) }
+                    if duplicates, !isPackage, v.isRegularFile == true, size >= 1_000_000 {
+                        // Жёсткие ссылки на один и тот же файл — не дубликаты: удаление места не освободит.
+                        var st = stat()
+                        let inode = lstat(url.path, &st) == 0 ? "\(st.st_dev):\(st.st_ino)" : url.path
+                        if seenInodes.insert(inode).inserted { candidates.append(entry) }
+                    }
                 }
             }
         }
@@ -168,8 +170,11 @@ nonisolated enum ClutterScanner {
         guard let h = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? h.close() }
         var hasher = SHA256()
-        while let chunk = try? h.read(upToCount: 1 << 20), !chunk.isEmpty {
-            hasher.update(data: chunk)
+        var more = true
+        while more {
+            autoreleasepool {
+                if let chunk = try? h.read(upToCount: 1 << 20), !chunk.isEmpty { hasher.update(data: chunk) } else { more = false }
+            }
         }
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }

@@ -51,7 +51,7 @@ struct SpaceLensView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .id(node.id)
                         .transition(.scale(scale: 0.85).combined(with: .opacity))
-                    childList(node).frame(width: 360)
+                    childList(node).frame(width: 310)
                 }
             }
             .animation(.smooth(duration: 0.4), value: current?.id)

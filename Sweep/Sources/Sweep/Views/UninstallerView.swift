@@ -53,7 +53,7 @@ struct UninstallerView: View {
             }
             filters
             HStack(alignment: .top, spacing: 16) {
-                appList.frame(width: 340)
+                appList.frame(width: 290)
                 if filter == .leftovers {
                     OrphansPanel()
                 } else {
@@ -158,6 +158,7 @@ struct Badge: View {
 
     var body: some View {
         Text(text).font(.system(size: 9.5, weight: .bold)).foregroundStyle(color)
+            .lineLimit(1).fixedSize()
             .padding(.horizontal, 5).padding(.vertical, 1)
             .background(Capsule().fill(color.opacity(0.14)))
     }
@@ -194,7 +195,7 @@ struct AppDetailPanel: View {
             FileIcon(url: app.bundle.url, size: 64)
                 .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
             VStack(alignment: .leading, spacing: 5) {
-                Text(app.bundle.name).font(.system(size: 20, weight: .bold))
+                Text(app.bundle.name).font(.system(size: 20, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
                 Text(app.bundle.bundleID).font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary).textSelection(.enabled)
                 HStack(spacing: 6) {
                     if let v = app.bundle.version { Badge(text: "v\(v)", color: .secondary) }
@@ -206,7 +207,7 @@ struct AppDetailPanel: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text(Format.bytes((app.size ?? 0) + model.leftovers.reduce(0) { $0 + $1.size }))
+                Text(app.size == nil ? "…" : Format.bytes((app.size ?? 0) + model.leftovers.reduce(0) { $0 + $1.size }))
                     .font(.system(size: 20, weight: .bold, design: .rounded)).monospacedDigit()
                 Text("программа \(Format.bytes(app.size ?? 0)) + следы \(Format.bytes(model.leftovers.reduce(0) { $0 + $1.size }))")
                     .font(.system(size: 10.5)).foregroundStyle(.secondary)
@@ -255,7 +256,7 @@ struct AppDetailPanel: View {
                 Label("Программа запущена", systemImage: "exclamationmark.circle.fill").font(.system(size: 12)).foregroundStyle(.orange)
                 Button("Завершить") { model.quit(app.bundle) }.buttonStyle(.glass)
             } else {
-                Text("Программа уйдёт в Корзину, следы — по отметкам").font(.system(size: 11.5)).foregroundStyle(.secondary)
+                Text("Программа уйдёт в Корзину").font(.system(size: 11.5)).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer()
             Button { model.uninstall(keepApp: true) } label: { Label("Сбросить", systemImage: "arrow.counterclockwise") }

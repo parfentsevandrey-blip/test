@@ -107,7 +107,7 @@ struct LiquidOrb: View {
             func body(_ top: [CGPoint]) -> Path {
                 var p = Path()
                 p.move(to: CGPoint(x: box.minX, y: box.maxY))
-                p.addLines(top)
+                for point in top { p.addLine(to: point) } // addLines начал бы новый контур — заливка резалась бы по диагонали
                 p.addLine(to: CGPoint(x: box.maxX, y: box.maxY))
                 p.closeSubpath()
                 return p

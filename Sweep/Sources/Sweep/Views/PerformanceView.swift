@@ -28,7 +28,7 @@ struct PerformanceView: View {
     }
 
     private var gauges: some View {
-        HStack(alignment: .top, spacing: 14) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 280), spacing: 14, alignment: .top)], spacing: 14) {
             ContentCard {
                 HStack(spacing: 18) {
                     ZStack {
@@ -48,6 +48,7 @@ struct PerformanceView: View {
                     }
                 }
                 .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             ContentCard {
                 HStack(spacing: 18) {
@@ -67,6 +68,7 @@ struct PerformanceView: View {
                     }
                 }
                 .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             ContentCard {
                 VStack(alignment: .leading, spacing: 6) {
@@ -86,7 +88,7 @@ struct PerformanceView: View {
                     }
                 }
                 .padding(16)
-                .frame(minWidth: 260, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }
@@ -114,7 +116,7 @@ struct PerformanceView: View {
             Text(Format.bytes(value)).monospacedDigit()
         }
         .font(.system(size: 11.5))
-        .frame(width: 170)
+        .frame(maxWidth: 190)
     }
 
     private func section<C: View>(_ title: String, subtitle: String, @ViewBuilder content: () -> C) -> some View {

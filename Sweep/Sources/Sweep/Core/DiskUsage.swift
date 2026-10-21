@@ -29,12 +29,15 @@ nonisolated enum DiskUsage {
         guard let e = FileManager.default.enumerator(at: url, includingPropertiesForKeys: keys, options: [],
                                                      errorHandler: { _, _ in true }) else { return s }
         for case let file as URL in e {
-            guard let v = try? file.resourceValues(forKeys: Set(keys)) else { continue }
-            if v.isDirectory == true && v.isSymbolicLink != true { continue }
-            if let filter, !filter(file, v) { continue }
-            s.size += Int64(v.totalFileAllocatedSize ?? v.fileAllocatedSize ?? 0)
-            s.files += 1
-            if let m = v.contentModificationDate, m > (s.newest ?? .distantPast) { s.newest = m }
+            // Пул на каждый файл: иначе при обходе сотен тысяч файлов временные объекты копятся гигабайтами.
+            autoreleasepool {
+                guard let v = try? file.resourceValues(forKeys: Set(keys)) else { return }
+                if v.isDirectory == true && v.isSymbolicLink != true { return }
+                if let filter, !filter(file, v) { return }
+                s.size += Int64(v.totalFileAllocatedSize ?? v.fileAllocatedSize ?? 0)
+                s.files += 1
+                if let m = v.contentModificationDate, m > (s.newest ?? .distantPast) { s.newest = m }
+            }
         }
         return s
     }
