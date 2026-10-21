@@ -179,7 +179,7 @@ enum SelfTest {
             for t in s.trackers.prefix(3) { print("  трекер \(t.url): \(t.status), сидов \(t.seeders ?? -1)") }
             // Трекер Debian работает по http:// — проверяем, что ATS его не блокирует.
             if !meta.trackers.isEmpty {
-                ok = check(s.trackers.contains { $0.seeders != nil }, "HTTP-трекер ответил") && ok
+                ok = check(s.trackers.contains { $0.status == "Работает" }, "HTTP-трекер ответил") && ok
             }
         }
         await engine.pauseAll()
