@@ -62,9 +62,9 @@ struct InspectorPanel: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(torrent.name)
                     .font(.system(size: 14, weight: .semibold))
-                    .lineLimit(2)
+                    .lineLimit(1)
                     .truncationMode(.middle)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .help(torrent.name)
                 Text("\(Format.bytes(torrent.totalSize)) · \(torrent.status.title)")
                     .font(.system(size: 11.5)).foregroundStyle(.secondary)
             }

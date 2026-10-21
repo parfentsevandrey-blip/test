@@ -18,6 +18,7 @@ struct ConstellationRenderer {
         let cells = ringCells()
         ripples(g, front: false)
         progressRing(g, front: false)
+        ringBand(g, front: false)
         ring(g, cells.filter { $0.depth < 0 })
         let back = scene.nodes.filter { $0.depth < 0 }
         let front = scene.nodes.filter { $0.depth >= 0 }
@@ -26,6 +27,7 @@ struct ConstellationRenderer {
         planet(g)
         progressRing(g, front: true)
         ripples(g, front: true)
+        ringBand(g, front: true)
         ring(g, cells.filter { $0.depth >= 0 })
         links(g, front)
         for n in front { bead(g, n) }
@@ -141,6 +143,37 @@ struct ConstellationRenderer {
         return out
     }
 
+    /// Сама плоскость колец: полупрозрачная лента с щелями, как у Сатурна, — на ней лежат пылинки-куски.
+    private func ringBand(_ g: GraphicsContext, front: Bool) {
+        let inner = ConstellationScene.ringInner - 0.03, outer = ConstellationScene.ringOuter + 0.03
+        let steps = 120
+        var band = Path()
+        var edges = Path()
+        func project(_ r: Double, _ i: Int) -> Camera3D.Projection? {
+            cam.project(RingPlane.point(radius: r, angle: 2 * .pi * Double(i) / Double(steps)))
+        }
+        for i in 0..<steps {
+            guard let a = project(inner, i), let b = project(inner, i + 1),
+                  let c2 = project(outer, i + 1), let d = project(outer, i) else { continue }
+            guard ((a.depth + c2.depth) / 2 >= 0) == front else { continue }
+            band.move(to: a.point)
+            band.addLine(to: b.point)
+            band.addLine(to: c2.point)
+            band.addLine(to: d.point)
+            band.closeSubpath()
+            for r in [inner, 1.06, 1.17, 1.22, outer] {
+                if let p = project(r, i), let q = project(r, i + 1) {
+                    edges.move(to: p.point)
+                    edges.addLine(to: q.point)
+                }
+            }
+        }
+        var glow = g
+        glow.blendMode = .plusLighter
+        glow.fill(band, with: .color(tint.opacity(front ? 0.11 : 0.07)))
+        glow.stroke(edges, with: .color(tint.mix(with: .white, by: 0.6).opacity(front ? 0.22 : 0.12)), lineWidth: 0.7)
+    }
+
     private func ring(_ g: GraphicsContext, _ cells: [Cell]) {
         guard !cells.isEmpty else { return }
         let lit = tint.mix(with: .white, by: 0.35)
@@ -150,7 +183,7 @@ struct ConstellationRenderer {
         var dim = Path(), bright = Path(), working = Path()
         for cell in cells {
             let near = min(1, max(0, (cell.depth + 1.5) / 3))
-            let r = (0.009 + 0.012 * cell.fraction) * cell.k * cam.scale * (0.7 + 0.3 * near)
+            let r = min(3.2, (0.012 + 0.012 * cell.fraction) * cell.k * cam.scale * (0.7 + 0.3 * near))
             let rect = CGRect(x: cell.point.x - r, y: cell.point.y - r, width: r * 2, height: r * 2)
             if cell.fraction > 0.5 { bright.addEllipse(in: rect) }
             else if cell.active { working.addEllipse(in: rect) }
@@ -162,7 +195,7 @@ struct ConstellationRenderer {
                     center: cell.point, startRadius: 0, endRadius: gr))
             }
         }
-        g.fill(dim, with: .color(.white.opacity(0.16)))
+        g.fill(dim, with: .color(.white.opacity(0.3)))
         g.fill(working, with: .color(tint.opacity(0.35 + 0.45 * pulse)))
         glow.fill(bright, with: .color(lit.opacity(0.95)))
     }
@@ -269,7 +302,7 @@ struct ConstellationRenderer {
                 guard let head = samples.last else { continue }
                 let alpha = min(1, u * 5) * (inbound ? 1 : min(1, (1 - u) * 4)) * n.link
                 out.append(Particle(head: head.point, tail: samples.map(\.point),
-                                    radius: (0.018 + 0.022 * k) * head.k * cam.scale,
+                                    radius: min(4, (0.018 + 0.022 * k) * head.k * cam.scale),
                                     color: inbound ? .white : tint.mix(with: .white, by: 0.45), alpha: alpha, position: s))
             }
         }
@@ -340,13 +373,13 @@ struct ConstellationRenderer {
         let blobs = scene.nodes.flatMap { particles($0) }.filter { $0.position > 0.75 && $0.alpha > 0.3 }
         g.drawLayer { liquid in
             liquid.addFilter(.alphaThreshold(min: 0.5, color: tint.mix(with: .white, by: 0.3)))
-            liquid.addFilter(.blur(radius: 5))
+            liquid.addFilter(.blur(radius: max(4, r * 0.12)))
             liquid.drawLayer { b in
                 b.fill(circle(c, r), with: .color(.black))
                 for k in 0..<3 {
                     let a = t * (0.9 + 0.25 * Double(k)) + Double(k) * 2.1
-                    let wobble = r * (0.82 + 0.05 * sin(t * 3 + Double(k)))
-                    b.fill(circle(CGPoint(x: c.x + cos(a) * wobble, y: c.y + sin(a) * wobble), r * 0.28), with: .color(.black))
+                    let wobble = r * (0.72 + 0.04 * sin(t * 3 + Double(k)))
+                    b.fill(circle(CGPoint(x: c.x + cos(a) * wobble, y: c.y + sin(a) * wobble), r * 0.26), with: .color(.black))
                 }
                 for p in blobs { b.fill(circle(p.head, p.radius * 2.2), with: .color(.black)) }
             }
@@ -426,10 +459,10 @@ struct ConstellationRenderer {
             startPoint: CGPoint(x: box.minX, y: box.minY), endPoint: CGPoint(x: box.maxX, y: box.maxY)), lineWidth: 1.2)
 
         // Анаморфный блик через всю сцену — ярче, когда данные идут быстрее.
-        let flareWidth = r * 9, flareHeight = max(1.5, r * 0.07)
+        let flareWidth = r * (4.5 + 2.5 * scene.activity), flareHeight = max(1.2, r * 0.05)
         glow.fill(Path(ellipseIn: CGRect(x: c.x - flareWidth / 2, y: c.y - flareHeight / 2, width: flareWidth, height: flareHeight)),
-                  with: .linearGradient(Gradient(colors: [.clear, tint.opacity(0.35 + 0.35 * scene.activity), .white.opacity(0.5 + 0.3 * scene.activity),
-                                                          tint.opacity(0.35 + 0.35 * scene.activity), .clear]),
+                  with: .linearGradient(Gradient(colors: [.clear, tint.opacity(0.12 + 0.2 * scene.activity), .white.opacity(0.25 + 0.25 * scene.activity),
+                                                          tint.opacity(0.12 + 0.2 * scene.activity), .clear]),
                                         startPoint: CGPoint(x: c.x - flareWidth / 2, y: c.y), endPoint: CGPoint(x: c.x + flareWidth / 2, y: c.y)))
     }
 

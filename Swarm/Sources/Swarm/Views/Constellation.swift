@@ -397,8 +397,8 @@ final class ConstellationMemory {
 
         // Камера: медленный облёт плюс то, что накрутил пользователь.
         let t = now.truncatingRemainder(dividingBy: 86_400)
-        let fit = min(Double(size.width) / (2 * ConstellationScene.shellRadius * 1.12),
-                      Double(size.height) / (2 * ConstellationScene.shellRadius * 0.82))
+        let fit = min(Double(size.width) / (2 * ConstellationScene.shellRadius * 1.15),
+                      Double(size.height) / (2 * ConstellationScene.shellRadius * 1.0))
         let camera = Camera3D(yaw: (settled ? 0.6 : t * 0.07) + yaw, pitch: 0.4 + pitch,
                               center: CGPoint(x: size.width / 2, y: size.height * 0.5), scale: max(20, fit))
 
@@ -436,7 +436,7 @@ final class ConstellationMemory {
         nodes.sort { $0.depth < $1.depth }
 
         let rate = s.downRate + s.upRate
-        let cells = s.pieceCount > 0 ? min(s.pieceCount, max(240, Int(Double(size.width) * 1.7)), 2400) : 420
+        let cells = s.pieceCount > 0 ? min(s.pieceCount, max(300, Int(Double(size.width) * 2.4)), 3000) : 480
         return ConstellationScene(
             camera: camera, now: now, t: t, nodes: nodes,
             ripples: rippleStarts.map { (now - $0) / Self.rippleDuration },

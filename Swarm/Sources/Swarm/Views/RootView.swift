@@ -70,7 +70,7 @@ struct RootView: View {
                 headerBar(labels: false, chart: true)
                 headerBar(labels: false, chart: false)
             }
-            Spacer(minLength: 84)
+            Spacer(minLength: 16) // на широком окне шапка всё равно по центру: свободное место делится поровну
         }
         .padding(.top, 10)
         .padding(.bottom, 8)
