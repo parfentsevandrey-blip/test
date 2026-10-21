@@ -33,41 +33,37 @@ def _cache_path(url: str) -> Path:
     return CACHE / (hashlib.sha1(url.encode()).hexdigest()[:20] + ".html")
 
 
+# Akamai на funda отвечает проверкой на бота по TLS-отпечатку: 21.10.2026 стену получали
+# отпечатки Chrome и Firefox, а Safari проходил. Перебираем отпечатки и запоминаем рабочий.
+IMPERSONATE = ["chrome", "safari", "safari_ios", "edge", "firefox135"]
+_working: list[str] = []
+
+
 def get(url: str, *, max_age_h: float = 24, pause: float = 1.0) -> str | None:
-    """HTML страницы; свежая копия из кэша, иначе загрузка через Scrapling."""
+    """HTML страницы; свежая копия из кэша, иначе Scrapling с подходящим отпечатком браузера,
+    в крайнем случае — reader-прокси (см. README, «Обход стены»)."""
     path = _cache_path(url)
     if path.exists() and time.time() - path.stat().st_mtime < max_age_h * 3600:
         return path.read_text(encoding="utf-8")
     from scrapling.fetchers import Fetcher
-    walled = False
-    for attempt in range(2 if not WALLED else 0):
+    order = _working + [i for i in IMPERSONATE if i not in _working]
+    for attempt, imp in enumerate(order):
         try:
-            r = Fetcher.get(url, timeout=60)
+            r = Fetcher.get(url, timeout=60, impersonate=imp)
             if r.status == 404:
                 return None
             if r.status == 200 and F.WALL not in r.html_content:
+                if not _working or _working[0] != imp:
+                    _working[:] = [imp]
                 return _keep(path, r.html_content, pause)
-            walled = walled or F.WALL in r.html_content
-        except Exception as exc:                      # noqa: BLE001 — сеть, повторяем
-            print("  ошибка загрузки", type(exc).__name__, url, flush=True)
-        time.sleep(3 * (attempt + 1))
-    # стена на нашем адресе: страницу отрисовывает reader-прокси (см. README, «Обход стены»),
-    # дальше в этом запуске сразу идём через него
-    if walled:
-        _wall_seen()
+        except Exception as exc:                      # noqa: BLE001 — сеть или отпечаток не поддержан
+            print("  ошибка загрузки", imp, type(exc).__name__, url, flush=True)
+        time.sleep(1 + attempt)
     try:
         return _keep(path, F.fetch(url, as_html=True, tries=2), pause)
     except Exception as exc:                          # noqa: BLE001
         print("  прокси не отдал страницу", type(exc).__name__, url, flush=True)
         return None
-
-
-WALLED = False
-
-
-def _wall_seen() -> None:
-    global WALLED
-    WALLED = True
 
 
 def _keep(path: Path, html: str, pause: float) -> str:
@@ -138,8 +134,8 @@ def search(slug: str, kind: str, deal: str, *, pages: int = 15, max_age_h: float
 
 
 # ------------------------------------------------------------------ страница объекта
-def listing(url: str) -> dict | None:
-    h = get(url, max_age_h=72)
+def listing(url: str, max_age_h: float = 72) -> dict | None:
+    h = get(url, max_age_h=max_age_h)
     if not h:
         return None
     feat = F.features(h)

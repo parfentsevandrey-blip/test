@@ -565,6 +565,7 @@ RUN=data/flip/runs/$(date +%F)
 python3 -I flipfinder/harvest.py $RUN                     # выдача funda in business и страницы кандидатов
 python3 -I flipfinder/harvest.py $RUN --only=elst-ge      # дособрать отдельные города в тот же прогон
 python3 -I flipfinder/screen.py $RUN                      # фильтры, модель, порог 11 %, список
+python3 -I flipfinder/screen.py $RUN --relaxed            # ослабленные пороги из config.RELAXED
 python3 -I flipfinder/brief.py $RUN 1                     # отчёт по первому в списке — в папку прогона
 python3 -I flipfinder/brief.py $RUN 1 --publish           # то же в output/ и запись в data/registry.json
 python3 -I flipfinder/brief.py $RUN --url=artemisweg-145-j --publish   # отчёт по конкретному объекту
@@ -574,9 +575,14 @@ python3 -I flipfinder/brief.py $RUN --url=artemisweg-145-j --publish   # отч�
   (`ZONES`) и городам вокруг (`NEARBY`). Ставки аренды берутся прямо из
   выдачи, страницы загружаются только для покупки. Кэш — `.cache/funda`
   (страницы) и `.cache/geo.json` (адреса и маршруты).
-- Если funda отвечает страницей проверки на бота, страницы берутся через reader-прокси
-  (см. «Обход стены»); у таких объявлений описание бывает обрезано, они помечаются
-  `desc_partial`, и описание финалистов нужно дочитать.
+- Стена funda («Je bent bijna op de pagina die je zoekt») срабатывает по TLS-отпечатку
+  браузера: 21.10.2026 её получали отпечатки Chrome и Firefox, а Safari проходил.
+  `flipfinder/fetch.py` перебирает отпечатки Scrapling (`impersonate`: chrome, safari,
+  safari_ios, edge, firefox135) и запоминает рабочий. Только если не прошёл ни один,
+  страница берётся через reader-прокси (см. «Обход стены»); у таких объявлений
+  описание бывает обрезано, они помечаются `desc_partial`.
+- `harvest.py --fresh=1 --fresh-pages=1` собирает прогон заново целиком: и выдачу, и
+  страницы объектов старше часа.
 - **screen** отсеивает объекты: не склад, дороже € 2 млн, меньше 150 м²,
   офисов больше половины, сдан, в сделке, торги, жильё, уже показан
   (`data/registry.json`), до магистрали A больше 6 км по дороге, дальше

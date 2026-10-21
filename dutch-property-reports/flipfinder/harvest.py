@@ -7,6 +7,7 @@ RUN_DIR/listings.jsonl (страницы кандидатов на покупк�
 С --only=город,город дособирает только эти города и дописывает их к готовому прогону.
 С --fresh=Ч выдача поиска берётся заново, если копии в кэше больше Ч часов (по умолчанию 24).
 С --no-invest сданные объекты (belegging) не собираются — они нужны только для справки инвестору.
+С --fresh-pages=Ч страницы объектов загружаются заново, если копии в кэше больше Ч часов (по умолчанию 72).
 """
 from __future__ import annotations
 
@@ -28,7 +29,8 @@ def towns(only: set[str] | None = None):
                     yield terr, s, ring
 
 
-def main(run_dir: Path, only: set[str] | None = None, fresh: float = 24, invest: bool = True) -> None:
+def main(run_dir: Path, only: set[str] | None = None, fresh: float = 24, invest: bool = True,
+         fresh_pages: float = 72) -> None:
     old_cards = fetch.load_jsonl(run_dir / "cards.jsonl") if only else []
     old_rows = fetch.load_jsonl(run_dir / "listings.jsonl") if only else []
     all_cards = []
@@ -55,7 +57,7 @@ def main(run_dir: Path, only: set[str] | None = None, fresh: float = 24, invest:
             wanted.setdefault(c["url"], c)
     rows = old_rows
     for i, (url, c) in enumerate(wanted.items(), 1):
-        rec = fetch.listing(url)
+        rec = fetch.listing(url, max_age_h=fresh_pages)
         if rec:
             rec.update({k: c[k] for k in ("territory", "ring", "slug", "kind", "deal")})
             rows.append(rec)
@@ -69,4 +71,5 @@ def main(run_dir: Path, only: set[str] | None = None, fresh: float = 24, invest:
 if __name__ == "__main__":
     only = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--only=")), None)
     fresh = next((float(a.split("=", 1)[1]) for a in sys.argv if a.startswith("--fresh=")), 24)
-    main(Path(sys.argv[1]), set(only.split(",")) if only else None, fresh, "--no-invest" not in sys.argv)
+    fresh_pages = next((float(a.split("=", 1)[1]) for a in sys.argv if a.startswith("--fresh-pages=")), 72)
+    main(Path(sys.argv[1]), set(only.split(",")) if only else None, fresh, "--no-invest" not in sys.argv, fresh_pages)

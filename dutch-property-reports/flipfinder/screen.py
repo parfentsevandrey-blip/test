@@ -1,6 +1,6 @@
 """Шаг 2: отбор и расчёт. Каждое здание на продаже проходит одни и те же фильтры и одну модель.
 
-    python3 -I flipfinder/screen.py RUN_DIR
+    python3 -I flipfinder/screen.py RUN_DIR [--relaxed] [--include-shown]
 
 Порядок в списке: сначала объекты, которым для выхода в ноль нужна скидка не больше
 порога (11 %), а предложение продавцу — не больше 15 % ниже его цены; среди них — отдельные
@@ -57,7 +57,11 @@ def rank_key(c: dict):
     return (0 if c["passes"] else 1, building_first, 0 if C.NEARBY_OVER_ZONE else zone_first, c["breakeven_discount"])
 
 
-def main(run_dir: Path, include_shown: bool = False) -> None:
+def main(run_dir: Path, include_shown: bool = False, relaxed: bool = False) -> None:
+    if relaxed:
+        for key, value in C.RELAXED.items():
+            setattr(C, key, value)
+        print("ослабленный отбор:", ", ".join(f"{k} = {v}" for k, v in C.RELAXED.items()))
     cards = fetch.load_jsonl(run_dir / "cards.jsonl")
     listings = [r for r in fetch.load_jsonl(run_dir / "listings.jsonl") if r.get("kind") == "bedrijfshal"]
     shown = set() if include_shown else shown_slugs()
@@ -138,4 +142,4 @@ def main(run_dir: Path, include_shown: bool = False) -> None:
 
 
 if __name__ == "__main__":
-    main(Path(sys.argv[1]), include_shown="--include-shown" in sys.argv)
+    main(Path(sys.argv[1]), include_shown="--include-shown" in sys.argv, relaxed="--relaxed" in sys.argv)

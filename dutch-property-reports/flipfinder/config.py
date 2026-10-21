@@ -24,6 +24,9 @@ OFFICE_SHARE_MAX = 0.5         # офисов не больше половины
 NEARBY_OVER_ZONE = False
 BUILDINGS_FIRST = True         # отдельное здание выше юнита в комплексе (bedrijfsverzamelgebouw, appartementsrecht, VvE)
 
+# ослабленный отбор (screen.py --relaxed): когда в строгих рамках нет отдельных зданий
+RELAXED = {"THRESHOLD": 0.14, "OFFER_DISCOUNT_MAX": 0.20, "MOTORWAY_KM": 8.0, "NEARBY_MIN": 40}
+
 # ------------------------------------------------------------------ города: наши районы и окрестности
 ZONES = {
     "ai-schiphol": ["hoofddorp", "nieuw-vennep", "schiphol-rijk", "schiphol", "badhoevedorp", "lijnden",
