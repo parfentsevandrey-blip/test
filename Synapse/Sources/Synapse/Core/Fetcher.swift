@@ -36,7 +36,9 @@ nonisolated final class FileFetcher: NSObject, URLSessionDataDelegate, @unchecke
     private var failure: Error?
     private var continuation: CheckedContinuation<Void, Error>?
     private var task: URLSessionDataTask?
-    private lazy var session: URLSession = {
+    private var session: URLSession?
+
+    private func makeSession() -> URLSession {
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 1
         queue.qualityOfService = .userInitiated
@@ -45,7 +47,7 @@ nonisolated final class FileFetcher: NSObject, URLSessionDataDelegate, @unchecke
         c.timeoutIntervalForResource = 60 * 60 * 24
         c.httpAdditionalHeaders = ["User-Agent": "Synapse/1.0 (macOS; local LLM app)"]
         return URLSession(configuration: c, delegate: self, delegateQueue: queue)
-    }()
+    }
 
     init(url: URL, destination: URL, expectedSize: Int64, sha256: String?, onProgress: @escaping @Sendable (Int64) -> Void) {
         self.url = url
@@ -83,7 +85,12 @@ nonisolated final class FileFetcher: NSObject, URLSessionDataDelegate, @unchecke
             return
         }
 
-        defer { session.finishTasksAndInvalidate() }
+        let session = makeSession()
+        self.session = session
+        defer {
+            session.finishTasksAndInvalidate()
+            self.session = nil
+        }
         try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
                 self.continuation = cont

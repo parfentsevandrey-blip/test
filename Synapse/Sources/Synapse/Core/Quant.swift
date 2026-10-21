@@ -43,7 +43,7 @@ nonisolated struct Quant: Sendable, Hashable, Codable, Comparable {
         "IQ1_M": (1.75, 0.6), "IQ1_S": (1.56, 0.55), "TQ1_0": (1.69, 0.5), "TQ2_0": (2.06, 0.55),
     ]
 
-    nonisolated(unsafe) private static let pattern = try! NSRegularExpression(
+    private static let pattern = try! NSRegularExpression(
         pattern: #"(?:^|[-_.])((?:UD-)?(?:IQ\d_(?:XXS|XS|NL|S|M)|Q\d_K(?:_(?:XL|S|M|L))?|Q\d_[01]|MXFP4(?:_MOE)?|BF16|F16|F32|TQ\d_0))(?=[-_.]|$)"#,
         options: [.caseInsensitive])
 

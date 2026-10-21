@@ -1,7 +1,7 @@
 import AppKit
 import Observation
 import SwiftUI
-import UserNotifications
+@preconcurrency import UserNotifications
 
 enum Section: String, CaseIterable, Identifiable {
     case chat, forYou, catalog, feed, library

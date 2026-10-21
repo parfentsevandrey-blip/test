@@ -31,7 +31,7 @@ nonisolated final class HubClient: Sendable {
         return URLSession(configuration: c)
     }()
 
-    nonisolated(unsafe) static let decoder: JSONDecoder = {
+    static let decoder: JSONDecoder = {
         let d = JSONDecoder()
         d.dateDecodingStrategy = .custom { dec in
             let s = try dec.singleValueContainer().decode(String.self)

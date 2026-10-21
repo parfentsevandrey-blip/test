@@ -98,7 +98,7 @@ struct FitBadge: View {
     var compact = false
 
     var body: some View {
-        Label(fit.title, systemImage: fit.level.symbol)
+        Label(fit.title, systemImage: fit.symbol)
             .font(.system(size: compact ? 10 : 11, weight: .semibold))
             .foregroundStyle(fit.level.color)
             .padding(.horizontal, compact ? 6 : 8)
@@ -135,15 +135,15 @@ struct ModelAvatar: View {
 
     static func colors(for lab: String) -> [Color] {
         switch lab.lowercased() {
-        case "qwen": [Color(red: 0.45, green: 0.3, blue: 1), Color(red: 0.25, green: 0.55, blue: 1)]
-        case "google": [Color(red: 0.2, green: 0.55, blue: 1), Color(red: 0.2, green: 0.8, blue: 0.6)]
-        case "openai": [Color(red: 0.15, green: 0.15, blue: 0.2), Color(red: 0.35, green: 0.4, blue: 0.45)]
-        case "mistral ai": [Color(red: 1, green: 0.5, blue: 0.1), Color(red: 0.95, green: 0.25, blue: 0.2)]
-        case "ibm": [Color(red: 0.1, green: 0.35, blue: 0.85), Color(red: 0.3, green: 0.6, blue: 1)]
-        case "nvidia": [Color(red: 0.4, green: 0.75, blue: 0.1), Color(red: 0.2, green: 0.55, blue: 0.1)]
-        case "meta": [Color(red: 0.1, green: 0.45, blue: 1), Color(red: 0.55, green: 0.3, blue: 1)]
-        case "deepseek": [Color(red: 0.3, green: 0.4, blue: 1), Color(red: 0.2, green: 0.25, blue: 0.7)]
-        case "microsoft": [Color(red: 0.95, green: 0.45, blue: 0.15), Color(red: 0.2, green: 0.6, blue: 0.95)]
+        case "qwen": return [Color(red: 0.45, green: 0.3, blue: 1), Color(red: 0.25, green: 0.55, blue: 1)]
+        case "google": return [Color(red: 0.2, green: 0.55, blue: 1), Color(red: 0.2, green: 0.8, blue: 0.6)]
+        case "openai": return [Color(red: 0.15, green: 0.15, blue: 0.2), Color(red: 0.35, green: 0.4, blue: 0.45)]
+        case "mistral ai": return [Color(red: 1, green: 0.5, blue: 0.1), Color(red: 0.95, green: 0.25, blue: 0.2)]
+        case "ibm": return [Color(red: 0.1, green: 0.35, blue: 0.85), Color(red: 0.3, green: 0.6, blue: 1)]
+        case "nvidia": return [Color(red: 0.4, green: 0.75, blue: 0.1), Color(red: 0.2, green: 0.55, blue: 0.1)]
+        case "meta": return [Color(red: 0.1, green: 0.45, blue: 1), Color(red: 0.55, green: 0.3, blue: 1)]
+        case "deepseek": return [Color(red: 0.3, green: 0.4, blue: 1), Color(red: 0.2, green: 0.25, blue: 0.7)]
+        case "microsoft": return [Color(red: 0.95, green: 0.45, blue: 0.15), Color(red: 0.2, green: 0.6, blue: 0.95)]
         default:
             let hue = Double(lab.unicodeScalars.reduce(UInt32(7)) { $0 &* 31 &+ $1.value } % 360) / 360
             return [Color(hue: hue, saturation: 0.65, brightness: 0.9), Color(hue: (hue + 0.12).truncatingRemainder(dividingBy: 1), saturation: 0.7, brightness: 0.75)]
@@ -252,7 +252,7 @@ struct FitExplanation: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            Image(systemName: fit.level.symbol).foregroundStyle(fit.level.color).font(.system(size: 15))
+            Image(systemName: fit.symbol).foregroundStyle(fit.level.color).font(.system(size: 15))
             VStack(alignment: .leading, spacing: 3) {
                 Text(headline).font(.system(size: 12.5, weight: .semibold))
                 ForEach(fit.reasons, id: \.self) { Text($0).font(.system(size: 11.5)).foregroundStyle(.secondary) }
