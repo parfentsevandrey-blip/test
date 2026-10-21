@@ -108,9 +108,9 @@
     <div class="cols">
       <div class="col">
         <table>
-          <tr><th>Тратим</th><th class="num"></th></tr>
+          <tr><th>Расходы</th><th class="num"></th></tr>
           {% for label, value in spend %}<tr><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}
-          <tr class="sum"><td>Всего тратим</td><td class="num">{{ spend_total }}</td></tr>
+          <tr class="sum"><td>Всего расходов</td><td class="num">{{ spend_total }}</td></tr>
         </table>
         <div class="bridge">
           <h3>{{ chart_title }}</h3>
@@ -121,9 +121,9 @@
       </div>
       <div class="col">
         <table>
-          <tr><th>Получаем</th><th class="num"></th></tr>
+          <tr><th>Доходы</th><th class="num"></th></tr>
           {% for label, value in get %}<tr><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}
-          <tr class="sum"><td>Всего получаем</td><td class="num">{{ get_total }}</td></tr>
+          <tr class="sum"><td>Всего доходов</td><td class="num">{{ get_total }}</td></tr>
         </table>
         <div class="panel dark">
           <h3>{{ investor.title }}</h3>
@@ -132,7 +132,7 @@
           <div class="note">{{ investor.note | md }}</div>
         </div>
         <div class="cash">
-          <h3>Сколько наших денег в деле, по месяцам</h3>
+          <h3>Вложенные средства по месяцам</h3>
           <div class="bars" style="--zero: {{ cash.zero }}%">
             {% for c in cash.cols %}<div class="c"><i class="{{ c.cls }}" style="top: {{ c.top }}%; height: {{ c.height }}%"></i><span>{{ c.m }}</span></div>{% endfor %}
           </div>
@@ -141,7 +141,7 @@
         <div class="panel signal result">
           <div>{% for label, value in result_lines %}<div class="line"><span>{{ label }}</span><span>{{ value }}</span></div>{% endfor %}</div>
           <div>
-            <div class="label-total">Остаётся нам</div>
+            <div class="label-total">Чистая прибыль</div>
             <div class="total">{{ result_total }}</div>
             <div class="hint">{{ result_hint }}</div>
           </div>
@@ -149,7 +149,7 @@
       </div>
     </div>
   </div>
-  <div class="foot"><span>Суммы без НДС, округлены до € 100. Покупаем на свои деньги, без кредита.</span><span></span></div>
+  <div class="foot"><span>Суммы без НДС, округлены до € 100. Покупка за собственные средства, без кредита.</span><span></span></div>
 </section>
 
 {# ------------------------------------------------------------ 5. риски и цена #}
@@ -157,9 +157,9 @@
   {{ head(5, "Цена и риски") }}
   <div class="body b5">
     <div class="ladder">
-      <h3>Сколько заработаем при разной цене покупки</h3>
+      <h3>Прибыль при разной цене покупки</h3>
       <table>
-        <tr><th>Покупаем за</th><th class="num">Скидка</th><th class="bar-cell"></th><th class="num">Прибыль до налога</th></tr>
+        <tr><th>Цена покупки</th><th class="num">Скидка</th><th class="bar-cell"></th><th class="num">Прибыль до налога</th></tr>
         {% for r in ladder %}<tr class="{{ 'mine' if r.mine else '' }}"><td>{{ r.price }}{% if r.tag %} <span class="note">({{ r.tag }})</span>{% endif %}</td><td class="num">{{ r.discount }}</td><td class="bar-cell">{{ r.bar | safe }}</td><td class="num">{{ r.profit }}</td></tr>{% endfor %}
       </table>
     </div>
