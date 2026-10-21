@@ -43,8 +43,14 @@ class SeedDataTest {
 
     @Test
     fun everyKindHasRecordsInEachDatabase() {
-        for (records in recordsByDatabase.values) {
-            assertEquals(Kind.entries.toSet(), records.map { it.kind }.toSet())
+        val codingKinds = Kind.entries.toSet() - setOf(Kind.MODEL, Kind.COMPROMISE)
+        for ((databaseId, records) in recordsByDatabase) {
+            val kinds = records.map { it.kind }.toSet()
+            if (databaseId >= 205L) {
+                assertTrue("database $databaseId has a compromise", Kind.COMPROMISE in kinds)
+            } else {
+                assertEquals(codingKinds, kinds)
+            }
         }
     }
 

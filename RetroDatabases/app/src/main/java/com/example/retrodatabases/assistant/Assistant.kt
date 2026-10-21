@@ -184,6 +184,8 @@ class Assistant(
         Kind.PROJECT -> "Проекты"
         Kind.FLEX -> "Flex"
         Kind.CROSS -> "Cross-code"
+        Kind.MODEL -> "Экономические модели"
+        Kind.COMPROMISE -> "Компромиссы"
     }
 
     /** The database number, the years and the kind that a question names. Each one is optional. */
@@ -211,6 +213,8 @@ class Assistant(
                 Kind.PROJECT to listOf("project", "проект"),
                 Kind.FLEX to listOf("flex"),
                 Kind.CROSS to listOf("cross"),
+                Kind.MODEL to listOf("model", "модел", "econom", "экономи"),
+                Kind.COMPROMISE to listOf("compromis", "компромисс"),
             )
 
             fun parse(question: String, databaseIds: Set<Long>): Slots {

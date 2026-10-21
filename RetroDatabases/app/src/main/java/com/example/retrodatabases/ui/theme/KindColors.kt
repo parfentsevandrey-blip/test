@@ -16,6 +16,8 @@ fun Kind.accent(): Color = when (this) {
     Kind.PROJECT -> Color(0xFFA1887F)
     Kind.FLEX -> Color(0xFFE57373)
     Kind.CROSS -> Color(0xFFF06292)
+    Kind.MODEL -> Color(0xFFD4E157)
+    Kind.COMPROMISE -> Color(0xFFB0BEC5)
 }
 
 /** Converts a #RRGGBB string from the database into a Compose colour. */

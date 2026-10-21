@@ -28,11 +28,20 @@ SPEC = ROOT / "tools/databases.json"
 CATALOGUE = ROOT / "CATALOGUE.md"
 README = ROOT / "README.md"
 SEED_CATALOG = SEED / "SeedCatalog.kt"
+ECONOMICS = ROOT / "tools/economics"
+MODELS_SPEC = ECONOMICS / "models.json"
+SPHERES_SPEC = ECONOMICS / "spheres.json"
 
 KINDS = ["LANGUAGE", "SYSTEM", "DEVICE", "TOOL", "PRACTICE", "GUIDE", "EXAMPLE", "PROJECT", "FLEX", "CROSS"]
 KIND_LABELS = {"LANGUAGE": "Languages", "SYSTEM": "Systems", "DEVICE": "Devices", "TOOL": "Tools",
                "PRACTICE": "Practices", "GUIDE": "Guides", "EXAMPLE": "Examples", "PROJECT": "Projects",
-               "FLEX": "Flex", "CROSS": "Cross-code"}
+               "FLEX": "Flex", "CROSS": "Cross-code", "MODEL": "Economic models", "COMPROMISE": "Compromises"}
+ECONOMY_KINDS = ["MODEL", "COMPROMISE"]
+# Words allowed in summary and details, as low and high limits: (summary low, summary high, details low, details high)
+ECONOMY_WORDS = {"MODEL": (12, 70, 25, 110), "COMPROMISE": (20, 90, 40, 170)}
+ECONOMY_YEAR = 2026
+ECONOMY_AUTHOR = "This catalogue, as a proposal (not an established model)"
+COMPROMISE_ORIGINAL = "Compromise proposal"
 QUOTA_COUNTS = {"LANGUAGE": 6, "SYSTEM": 5, "DEVICE": 8, "TOOL": 6, "PRACTICE": 5,
                 "GUIDE": 5, "EXAMPLE": 6, "PROJECT": 4, "FLEX": 3, "CROSS": 2}
 RUNNABLE = {"GUIDE", "EXAMPLE", "PROJECT", "FLEX", "CROSS"}
@@ -225,11 +234,15 @@ def replace_block(text, begin, end, body, path):
 
 
 def overview_block(rows, by_db):
+    coding = [r for r in rows if r.get("group", "coding") == "coding"]
+    economics = [r for r in rows if r.get("group") == "economics"]
     total = sum(len(by_db[r["id"]]) for r in rows)
     rare_total = sum(1 for r in rows for x in by_db[r["id"]] if x["rare"])
-    lines = [f"Inside are {len(rows)} databases of coding history, from {min(r['from'] for r in rows)} "
-             f"to {max(r['to'] for r in rows)}. The table gives each one's years, records and rare records. "
-             "The kinds and titles of every database are in [CATALOGUE.md](CATALOGUE.md).", "",
+    lines = [f"Inside are {len(coding)} databases of coding history, from {min(r['from'] for r in coding)} "
+             f"to {max(r['to'] for r in coding)}, and {len(economics)} databases of economics: for each part of "
+             "society, the best and worst practice of each economic model, and a compromise. The table gives each "
+             "one's years, records and rare records. The kinds and titles of every database are in "
+             "[CATALOGUE.md](CATALOGUE.md).", "",
              "| Database | Years | Records | Rare |", "|---|---|---:|---:|"]
     for r in rows:
         records = by_db[r["id"]]
@@ -246,10 +259,13 @@ def structure_block(rows):
         f"itself, seeding on first launch and one generic migration for each version from 1 to {last} "
         f"(`seedMigrations`).\n"
         f"- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all {last} databases: "
-        f"`Db1*.kt` to `Db{last}*.kt`, one file per kind; `SeedCatalog.kt`, generated from `tools/databases.json`; "
-        f"the helper that builds a record (`SeedEntry.kt`).\n"
-        f"- `tools` — `databases.json` (the databases, their years and colours) and `build_catalogue.py`, which "
-        f"regenerates `SeedCatalog.kt`, the overview in this file and `CATALOGUE.md`, and checks every record.\n")
+        f"`Db1*.kt` to `Db{last}*.kt`. The coding databases have one file per kind; each economics database has one "
+        f"generated file, `Db<id>Economics.kt`. Also `SeedCatalog.kt`, generated from `tools/databases.json`, and the "
+        f"helper that builds a record (`SeedEntry.kt`).\n"
+        f"- `tools` — `databases.json` (the databases, their years and colours), `build_catalogue.py`, which "
+        f"regenerates `SeedCatalog.kt`, the economics files, the overview in this file and `CATALOGUE.md`, and checks "
+        f"every record; and `economics/` (the economic models, the spheres and practices, and one JSON file per "
+        f"economics database).\n")
 
 
 def catalogue_body(rows, by_db):
@@ -257,8 +273,153 @@ def catalogue_body(rows, by_db):
     for row in rows:
         if row["curated"]:
             continue  # written by hand in CATALOGUE.md, above the generated part
-        sections.append(catalogue_section(row, by_db[row["id"]]))
+        if row.get("group") == "economics":
+            sections.append(economy_catalogue_section(row, by_db[row["id"]]))
+        else:
+            sections.append(catalogue_section(row, by_db[row["id"]]))
     return "\n".join(sections)
+
+
+def load_json(path):
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def kotlin_string(text):
+    """A Kotlin string literal. The checks refuse dollar signs and line breaks, the two characters that need care here."""
+    return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def economy_records(row, models, spheres, problems):
+    """The records of one economics database, built from tools/economics/db<id>.json and the two spec files."""
+    n = row["id"]
+    path = ECONOMICS / f"db{n}.json"
+    if not path.exists():
+        problems.append(f"database {n}: missing {path.relative_to(ROOT)}")
+        return []
+    data = load_json(path)
+    records = []
+
+    def add(kind, section, title, original, author, year, summary, details):
+        records.append({"db": n, "kind": kind, "section": section, "title": title, "original": original,
+                        "author": author, "year": year, "summary": summary, "details": details, "rare": False})
+
+    if data.get("database") != n:
+        problems.append(f"database {n}: the file names database {data.get('database')}")
+    if data.get("type") == "spheres":
+        given = data.get("spheres", [])
+        if [item.get("sphere") for item in given] != [s["name"] for s in spheres]:
+            problems.append(f"database {n}: the spheres must be the {len(spheres)} names of spheres.json, in order")
+        for sphere, item in zip(spheres, given):
+            add("COMPROMISE", sphere["name"], f"Compromise: {sphere['name'].lower()}", COMPROMISE_ORIGINAL,
+                ECONOMY_AUTHOR, ECONOMY_YEAR, item.get("summary", ""), item.get("details", ""))
+        common = data.get("common", {})
+        add("COMPROMISE", "All spheres", "Compromise: all spheres", COMPROMISE_ORIGINAL, ECONOMY_AUTHOR,
+            ECONOMY_YEAR, common.get("summary", ""), common.get("details", ""))
+        return records
+    if data.get("type") == "models":
+        short = None
+    elif data.get("type") == "practice":
+        practice = next((p for s in spheres for p in s["practices"] if p["database"] == n), None)
+        if practice is None or data.get("practice") != practice["name"]:
+            problems.append(f"database {n}: the practice must be the one that spheres.json gives this database")
+            return records
+        short = practice["short"]
+    else:
+        problems.append(f"database {n}: unknown type {data.get('type')!r}")
+        return records
+    given = data.get("models", [])
+    if [item.get("model") for item in given] != [m["name"] for m in models]:
+        problems.append(f"database {n}: the models must be the {len(models)} names of models.json, in order")
+    for model, item in zip(models, given):
+        title = model["name"] if short is None else f"{model['name']}: {short}"
+        add("MODEL", model["family"], title, model["original"], model["author"], model["year"],
+            item.get("best", ""), item.get("worst", ""))
+    compromise = data.get("compromise", {})
+    title = "Compromise: general principles" if short is None else f"Compromise: {short}"
+    add("COMPROMISE", "Compromise", title, COMPROMISE_ORIGINAL, ECONOMY_AUTHOR, ECONOMY_YEAR,
+        compromise.get("summary", ""), compromise.get("details", ""))
+    return records
+
+
+def check_economy(row, records, models, spheres, problems):
+    n = row["id"]
+    kinds = collections.Counter(r["kind"] for r in records)
+    if kinds["MODEL"] or not records:
+        if kinds["MODEL"] != len(models) or kinds["COMPROMISE"] != 1:
+            problems.append(f"database {n}: {kinds['MODEL']} model records and {kinds['COMPROMISE']} compromises, "
+                            f"expected {len(models)} and 1")
+    elif kinds["COMPROMISE"] != len(spheres) + 1:
+        problems.append(f"database {n}: {kinds['COMPROMISE']} compromises, expected {len(spheres) + 1}")
+    for title, count in collections.Counter(r["title"] for r in records).items():
+        if count > 1:
+            problems.append(f"database {n}: title {title!r} appears {count} times")
+    for record in records:
+        title = record["title"]
+        text = record["summary"] + " " + record["details"]
+        if not row["from"] <= record["year"] <= row["to"]:
+            problems.append(f"database {n}: {title!r} is dated {record['year']}, outside {row['from']} to {row['to']}")
+        for field in ("summary", "details"):
+            value = record[field]
+            if not value or value != value.strip() or "\n" in value or "  " in value:
+                problems.append(f"database {n}: {title!r} has an empty {field}, extra spaces or a line break")
+        for phrase in FORBIDDEN:
+            if phrase in text.lower():
+                problems.append(f"database {n}: {title!r} contains {phrase!r}")
+        if "$" in text:
+            problems.append(f"database {n}: {title!r} contains a dollar sign")
+        if CYRILLIC.search(text):
+            problems.append(f"database {n}: {title!r} contains Cyrillic")
+        low_s, high_s, low_d, high_d = ECONOMY_WORDS[record["kind"]]
+        for field, low, high in (("summary", low_s, high_s), ("details", low_d, high_d)):
+            count = len(record[field].split())
+            if not low <= count <= high:
+                problems.append(f"database {n}: {title!r} {field} has {count} words, expected {low} to {high}")
+        if "Source:" not in record["details"]:
+            problems.append(f"database {n}: {title!r} has no 'Source:' in its details")
+        if record["kind"] == "COMPROMISE" and ("Keeps:" not in record["details"] or "Blocks:" not in record["details"]):
+            problems.append(f"database {n}: {title!r} must say what it keeps and what it blocks")
+
+
+def economy_entry(n, record):
+    lines = [
+        "    entry(",
+        f"        databaseId = {n},",
+        f"        kind = Kind.{record['kind']},",
+        f"        section = {kotlin_string(record['section'])},",
+        f"        title = {kotlin_string(record['title'])},",
+        f"        originalTitle = {kotlin_string(record['original'])},",
+        f"        author = {kotlin_string(record['author'])},",
+        f"        year = {record['year']},",
+        f"        summary = {kotlin_string(record['summary'])},",
+        f"        details = {kotlin_string(record['details'])},",
+        "    ),",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def economy_file_text(row, records):
+    n = row["id"]
+    entries = "\n".join(economy_entry(n, record) for record in records)
+    return (
+        "package com.example.retrodatabases.data.seed\n\n"
+        "import com.example.retrodatabases.data.Kind\n"
+        "import com.example.retrodatabases.data.RecordEntity\n\n"
+        f"// Generated by tools/build_catalogue.py from tools/economics/db{n}.json. Do not edit by hand.\n\n"
+        f"/** {row['description']} */\n"
+        f"val db{n}Records: List<RecordEntity> = listOf(\n\n"
+        f"{entries})\n"
+    )
+
+
+def economy_catalogue_section(row, records):
+    n = row["id"]
+    lines = [f"The catalogue of database {n} ({row['from']} to {row['to']}): {row['description']}", "",
+             "| Kind | Records | What it is |", "|---|---:|---|"]
+    for kind in ECONOMY_KINDS:
+        titles = [r["title"] for r in records if r["kind"] == kind]
+        if titles:
+            lines.append(f"| {KIND_LABELS[kind]} | {len(titles)} | {sentence_list(titles)} |")
+    return "\n".join(lines) + "\n"
 
 
 def main():
@@ -268,10 +429,25 @@ def main():
 
     problems = []
     rows = load_spec(problems)
-    by_db = {row["id"]: parse_records(row["id"]) for row in rows}
+    models = load_json(MODELS_SPEC)["models"]
+    spheres = load_json(SPHERES_SPEC)["spheres"]
+    by_db = {}
+    economy_text = {}
+    for row in rows:
+        if row.get("group") == "economics":
+            by_db[row["id"]] = economy_records(row, models, spheres, problems)
+            economy_text[row["id"]] = economy_file_text(row, by_db[row["id"]])
+        else:
+            by_db[row["id"]] = parse_records(row["id"])
     all_records = [r for records in by_db.values() for r in records]
     for row in rows:
-        check_database(row, by_db[row["id"]], problems)
+        if row.get("group") == "economics":
+            check_economy(row, by_db[row["id"]], models, spheres, problems)
+            path = SEED / f"Db{row['id']}Economics.kt"
+            if args.check and (not path.exists() or path.read_text(encoding="utf-8") != economy_text[row["id"]]):
+                problems.append(f"database {row['id']}: {path.name} is out of date; run the generator")
+        else:
+            check_database(row, by_db[row["id"]], problems)
     check_catalogue(rows, all_records, problems)
 
     if problems:
@@ -283,6 +459,9 @@ def main():
 
     if args.check:
         return
+    for row in rows:
+        if row.get("group") == "economics":
+            (SEED / f"Db{row['id']}Economics.kt").write_text(economy_text[row["id"]], encoding="utf-8")
     SEED_CATALOG.write_text(seed_catalog_text(rows), encoding="utf-8")
     CATALOGUE.write_text(replace_block(CATALOGUE.read_text(encoding="utf-8"),
                                        "<!-- BEGIN GENERATED CATALOGUE -->", "<!-- END GENERATED CATALOGUE -->",
@@ -293,7 +472,7 @@ def main():
     text = replace_block(text, "<!-- BEGIN GENERATED STRUCTURE -->", "<!-- END GENERATED STRUCTURE -->",
                          structure_block(rows), README)
     README.write_text(text, encoding="utf-8")
-    print("wrote SeedCatalog.kt, the generated part of CATALOGUE.md and the blocks of README.md")
+    print("wrote SeedCatalog.kt, the economics files, the generated part of CATALOGUE.md and the blocks of README.md")
 
 
 if __name__ == "__main__":

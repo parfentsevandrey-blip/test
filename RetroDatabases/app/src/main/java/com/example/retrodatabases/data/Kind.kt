@@ -16,4 +16,6 @@ enum class Kind(val label: String) {
     PROJECT("Projects"),
     FLEX("Flex"),
     CROSS("Cross-code"),
+    MODEL("Economic models"),
+    COMPROMISE("Compromises"),
 }

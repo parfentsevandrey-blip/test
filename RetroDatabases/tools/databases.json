@@ -2038,5 +2038,93 @@
     "description": "Languages, systems, devices, tools and practices of 0 to 10, including rare and little-known items.",
     "colorHex": "#D69067",
     "curated": false
+  },
+  {
+    "id": 205,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 205: economic models and their best and worst practice",
+    "description": "The economic models of humanity, from gift and household economies to market socialism, commons and degrowth. For each model: its best practice and its worst practice, with sources.",
+    "colorHex": "#D96262",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 206,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 206: the compromise across all spheres of society",
+    "description": "One compromise for each sphere of society, from education and medicine to family life and trade, drawn from the models in database 205 and the practice databases.",
+    "colorHex": "#6284D9",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 207,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 207: economics of primary and secondary schooling",
+    "description": "The economic models applied to primary and secondary schooling: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#A7D962",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 208,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 208: economics of higher education",
+    "description": "The economic models applied to higher education: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#D962CA",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 209,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 209: economics of vocational training and apprenticeship",
+    "description": "The economic models applied to vocational training and apprenticeship: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#62D9C5",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 210,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 210: economics of early childhood care and education",
+    "description": "The economic models applied to early childhood care and education: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#D9A262",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 211,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 211: economics of adult and lifelong learning",
+    "description": "The economic models applied to adult and lifelong learning: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#7F62D9",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 212,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 212: economics of teacher pay, training and status",
+    "description": "The economic models applied to the pay, training and status of teachers: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#67D962",
+    "curated": false,
+    "group": "economics"
   }
 ]
