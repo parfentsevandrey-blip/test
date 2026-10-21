@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import html as H
 import json
+import math
 import re
 import sys
 from datetime import date
@@ -164,20 +165,18 @@ def photo_pages(shots: list[dict]) -> list[dict]:
 
 
 # ------------------------------------------------------------------ графики: SVG, цвета из токенов страницы
-def meter_svg(need: float, threshold: float) -> str:
-    top = max(0.20, need + 0.04)
-    w, h, y = 600, 56, 20
+def discount_svg(cut: float) -> str:
+    """Скидка базового сценария на шкале от 0 до 20 % (или дальше, если скидка больше)."""
+    top = max(0.20, math.ceil((cut + 0.03) * 20) / 20)
+    w, h, y = 600, 50, 18
     x = lambda v: 10 + (w - 40) * max(0.0, v) / top          # noqa: E731
-    fill = "var(--gain)" if need <= threshold else "var(--loss)"
     ticks = "".join(f'<text x="{x(t / 100):.1f}" y="{y + 30}" font-size="10" fill="var(--muted)" text-anchor="middle">{t} %</text>'
-                    for t in range(0, int(top * 100) + 1, 5))
+                    for t in range(0, int(round(top * 100)) + 1, 5))
     return (f'<svg viewBox="0 0 {w} {h}">'
-            f'<rect x="10" y="{y}" width="{w - 40}" height="12" rx="4" fill="var(--concrete)"/>'
-            f'<rect x="10" y="{y}" width="{max(0.0, x(need) - 10):.1f}" height="12" rx="4" fill="{fill}"/>'
-            f'<line x1="{x(threshold):.1f}" y1="{y - 6}" x2="{x(threshold):.1f}" y2="{y + 16}" stroke="var(--ink)" stroke-width="2"/>'
-            f'<text x="{x(threshold) + 5:.1f}" y="{y - 8}" font-size="11" fill="var(--ink)">порог {pct(threshold, 0)}</text>'
-            f'<text x="{max(x(need) - 4, 70):.1f}" y="{y - 8}" font-size="11" font-weight="600" fill="var(--ink)" '
-            f'text-anchor="end">нужно {pct(need)}</text>{ticks}</svg>')
+            f'<rect x="10" y="{y}" width="{w - 40}" height="12" fill="var(--concrete)"/>'
+            f'<rect x="10" y="{y}" width="{max(0.0, x(cut) - 10):.1f}" height="12" fill="var(--ink)"/>'
+            f'<text x="{max(x(cut), 60):.1f}" y="{y - 6}" font-size="12" font-weight="600" fill="var(--ink)" '
+            f'text-anchor="end">скидка {pct(cut, 0)}</text>{ticks}</svg>')
 
 
 def waterfall(rows: list[tuple[str, float]]) -> dict:
@@ -198,14 +197,31 @@ def waterfall(rows: list[tuple[str, float]]) -> dict:
             for label, v, a, b, last in spans]}
 
 
-def cash_bars(rows: list[dict]) -> dict:
-    """Сколько наших денег в деле на конец каждого месяца: вниз — вложено, вверх — вернулось с прибылью."""
-    cum = [r["cum"] for r in rows]
-    lo, hi = min(0.0, *cum), max(0.0, *cum)
-    y = lambda v: 100 * (hi - v) / (hi - lo)                # noqa: E731
-    cols = [{"m": r["m"], "top": f"{y(max(0.0, v)):.2f}", "height": f"{max(0.4, abs(v) / (hi - lo) * 100):.2f}",
-             "cls": "up" if v > 0 else "down"} for r, v in zip(rows, cum)]
-    return {"zero": f"{y(0):.2f}", "cols": cols}
+def cash_chart(rows: list[dict]) -> dict:
+    """Сколько денег вложено в сделку на конец каждого месяца: ступенчатая линия с подписями на самом графике.
+    После продажи вложенное возвращается, ниже нуля — прибыль. Координаты — проценты блока графика."""
+    inv = [-r["cum"] for r in rows]
+    n = len(inv)
+    peak, final = max(inv), inv[-1]
+    peak_m = inv.index(peak)
+    top, bottom = peak * 1.5, min(final * 1.9, -peak * 0.16)
+    X = lambda m: 100 * m / n                                  # noqa: E731
+    Y = lambda v: 100 * (top - v) / (top - bottom)             # noqa: E731
+    line = " ".join(f"{X(m):.2f},{Y(v):.2f} {X(m + 1):.2f},{Y(v):.2f}" for m, v in enumerate(inv))
+    pos = [m for m, v in enumerate(inv) if v > 0]
+    area = (f"{X(0):.2f},{Y(0):.2f} " + " ".join(f"{X(m):.2f},{Y(inv[m]):.2f} {X(m + 1):.2f},{Y(inv[m]):.2f}" for m in pos)
+            + f" {X(pos[-1] + 1):.2f},{Y(0):.2f}") if pos else ""
+    labels = [{"style": f"left: 0; top: {Y(inv[0]):.2f}%", "cls": "up", "title": "В день покупки", "value": eur(inv[0])}]
+    if peak_m > 0 and peak > inv[0] * 1.01:
+        labels.append({"style": f"left: {X(peak_m + 0.5):.2f}%; top: {Y(peak):.2f}%", "cls": "up mid",
+                       "title": f"Максимум, месяц {peak_m}", "value": eur(peak)})
+    if final < 0:
+        labels.append({"style": f"right: {100 - X(n - 1) + 1.5:.2f}%; top: {Y(0):.2f}%", "cls": "down end",
+                       "title": "Прибыль после продажи", "value": "+" + eur(-final)})
+    return {"line": line, "area": area, "zero": f"{Y(0):.2f}", "labels": labels,
+            "profit": {"x": f"{X(n - 1):.2f}", "w": f"{X(1):.2f}", "y": f"{Y(0):.2f}", "h": f"{Y(final) - Y(0):.2f}"}
+            if final < 0 else None,
+            "ticks": [{"x": f"{X(m + 0.5):.2f}", "m": m} for m in range(0, n, 3)]}
 
 
 def bar_cell(v: float, top: float) -> str:
@@ -344,28 +360,26 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
                f"ремонт, сдача в аренду на 5 лет и через 12 месяцев продажа вместе с арендатором инвестору "
                f"за **{eur(b['sale'])}**.")
     if not ev["passes"]:
-        verdict += f" Тестовый режим: без убытка здание можно купить только со скидкой {pct(need)}, больше порога."
+        verdict += f" Без убытка здание можно купить только со скидкой от {pct(need)}."
     tag = {"label": "Чистая прибыль за 12 месяцев", "value": eur(b["net"]),
            "hint": f"после налога на прибыль, на вложенные {eur(b['peak'])}"}
     kpis = [{"label": "Цена продавца", "value": eur(ask), "hint": f"{eur(ask / area, 1)} за м²"},
             {"label": "Предложение продавцу", "value": eur(offer), "hint": f"на {cut} меньше"},
             {"label": "Продажа инвестору", "value": eur(b["sale"]), "hint": "через 12 месяцев, с арендатором"}]
-    meter = {"title": (f"Сделка окупается, если продавец уступит хотя бы **{pct(need)}**. "
-                       f"В отбор попадают только объекты, где нужно не больше {pct(C.THRESHOLD, 0)}."),
-             "svg": meter_svg(need, C.THRESHOLD)}
+    meter = {"title": (f"Базовый сценарий: покупка со скидкой **{cut}** от цены продавца — {eur(offer)} "
+                       f"вместо {eur(ask)}."), "svg": discount_svg(1 - offer / ask)}
     med, n_comps = pick["info"]["rent"].get("comps_m2"), pick["info"]["rent"]["n"]
-    nxt = next((c for c in cands if c["url"] != pick["url"]), None)
+    vac = pick["info"].get("vacant") or {}
     reasons = [
-        ("**Нужна небольшая скидка.**" if ev["passes"] else "**Ближе всех к порогу.**")
-        + f" Сделка выходит в ноль при цене {eur(ev['breakeven'])}"
-        + (f". Следующему объекту в списке нужна скидка {pct(nxt['breakeven_discount'])}." if nxt else "."),
+        (f"**Цена ниже рынка.** {eur(ask / area, 1)} за м² по цене продавца; свободные склады такой площади рядом "
+         f"выставлены в среднем по {eur(vac['m2'], 1)}." if vac.get("m2") and vac["m2"] > ask / area else
+         "**Здание свободно.** Ремонт и поиск арендатора можно начать сразу после покупки."),
         f"**Осторожная оценка аренды.** €\u00a0{num(rent / area)} за м² в год"
         + (f" — это {pct(C.RENT_SAFETY, 0)} от средней ставки {plural(n_comps, 'предложения', 'предложений', 'предложений')} "
            f"рядом (€\u00a0{num(med)})." if med else "."),
         f"**Магистраль рядом.** До {road['ref']} — {km(road['km'])}, {road['min']}\u00a0мин"
         + (f"; до {near[0]['label']} — {near[0]['min']}\u00a0мин." if near else "."),
     ]
-    passed = sum(1 for c in cands if c["passes"])
 
     # стр. 2
     hall, office = rec.get("hall"), rec.get("office")
@@ -459,10 +473,8 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
                                ("Покупка и налог", -b["buy_total"]), ("Ремонт и сдача", -(b["works"] + letting)),
                                ("Содержание", -upkeep), ("Расходы на продажу", -b["sale_cost"]),
                                ("Прибыль до налога", b["profit"])])
-    peak_m = min(b["rows"], key=lambda r: r["cum"])["m"]
-    cash = cash_bars(b["rows"])
-    cash_note = (f"Больше всего денег в деле — {eur(b['peak'])} к месяцу {peak_m}. В месяце 12 инвестор платит за здание, "
-                 f"и вложенное возвращается вместе с прибылью.")
+    cash = cash_chart(b["rows"])
+    cash_note = "В 12-м месяце инвестор платит за здание: вложенное возвращается вместе с прибылью."
     chart_title = f"Доходы {eur(b['income'])}, расходы {eur(b['costs'])}, прибыль до налога {eur(b['profit'])}"
     deduct = d.owner_costs
     eq = (f"({eur(rent)} − {eur(deduct)}) ÷ {pct(d.exit_yield, 2)} = {eur(b['sale'])}" if deduct
@@ -472,10 +484,6 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
              + (f", из них {eur(deduct)} уходит на плату за землю" if deduct else "") + ".")
     inv = investor_comps(listings, (pick["lat"], pick["lon"]))
     notes = ["Налог 10,4\u00a0% инвестор платит сверху."]
-    vac = pick["info"].get("vacant") or {}
-    if vac.get("m2"):
-        notes.append(f"Свободные склады такой площади рядом выставлены в среднем по €\u00a0{num(vac['m2'])} за м², "
-                     f"цена продажи этого здания — €\u00a0{num(b['sale'] / area)} за м².")
     if inv:
         notes.append("Сданные склады на продаже рядом: " + "; ".join(
             f"{c['name']} — {eur(c['price'])}, аренда {eur(c['rent'])}, это {pct(c['yield'], 2)}" for c in inv) + ".")
@@ -516,8 +524,6 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
         + f", {num(area)} м², {pick['address']['postcode']} {pick['address']['city']}",
         "hero": shots[0]["src"] if shots else "", "verdict": verdict, "tag": tag, "kpis": kpis, "meter": meter,
         "reasons": reasons,
-        "picked_note": (f"Посчитано {plural(len(cands), 'здание', 'здания', 'зданий')} на продаже в целевых районах и рядом; "
-                        f"порог {pct(C.THRESHOLD, 0)} {'прошло' if passed == 1 else 'прошли'} {passed}."),
         "facts": facts, "blocks": blocks, "todo": todo, "images": images,
         "fill_image": shots[3]["src"] if len(shots) > 3 else None, "source_url": pick["url"],
         "map": map_jpg.resolve().as_uri(), "roads": roads, "why": why_here(pick, near), "comps": comp_rows,

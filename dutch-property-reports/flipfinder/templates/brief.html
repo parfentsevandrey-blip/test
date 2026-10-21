@@ -32,7 +32,7 @@
       <ul class="reasons">{% for r in reasons %}<li>{{ r | md }}</li>{% endfor %}</ul>
     </div>
   </div>
-  <div class="foot"><span>{{ picked_note }}</span><span>funda in business, {{ date }}</span></div>
+  <div class="foot"><span>Данные объявления: funda in business, {{ date }}</span><span></span></div>
 </section>
 
 {# ------------------------------------------------------------ 2. здание #}
@@ -132,10 +132,18 @@
           <div class="note">{{ investor.note | md }}</div>
         </div>
         <div class="cash">
-          <h3>Вложенные средства по месяцам</h3>
-          <div class="bars" style="--zero: {{ cash.zero }}%">
-            {% for c in cash.cols %}<div class="c"><i class="{{ c.cls }}" style="top: {{ c.top }}%; height: {{ c.height }}%"></i><span>{{ c.m }}</span></div>{% endfor %}
+          <h3>Сколько денег вложено в сделку</h3>
+          <div class="plot">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+              {% if cash.area %}<polygon points="{{ cash.area }}" fill="var(--ink)" fill-opacity="0.12"/>{% endif %}
+              {% if cash.profit %}<rect x="{{ cash.profit.x }}" y="{{ cash.profit.y }}" width="{{ cash.profit.w }}" height="{{ cash.profit.h }}" fill="var(--gain)"/>{% endif %}
+              <line x1="0" y1="{{ cash.zero }}" x2="100" y2="{{ cash.zero }}" stroke="var(--axis)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+              <polyline points="{{ cash.line }}" fill="none" stroke="var(--ink)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+            </svg>
+            <span class="zero" style="top: {{ cash.zero }}%">€ 0</span>
+            {% for l in cash.labels %}<div class="lbl {{ l.cls }}" style="{{ l.style }}">{{ l.title }}<b>{{ l.value }}</b></div>{% endfor %}
           </div>
+          <div class="axis">{% for t in cash.ticks %}<span style="left: {{ t.x }}%">{% if loop.first %}месяц {% endif %}{{ t.m }}</span>{% endfor %}</div>
           <div class="note">{{ cash_note }}</div>
         </div>
         <div class="panel signal result">

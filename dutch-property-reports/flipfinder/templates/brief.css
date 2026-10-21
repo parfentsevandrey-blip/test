@@ -139,15 +139,19 @@ h1 { font-family: var(--display); font-weight: 600; font-size: 25pt; line-height
 .step .when { font-size: 8pt; color: var(--steel); }
 .step .more { font-size: 8.3pt; line-height: 1.35; margin-top: 0.8mm; }
 .result { display: flex; flex-direction: column; }
-/* деньги в деле по месяцам: столбики делят ширину, высота — всё свободное место колонки */
-.cash { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 38mm; }
-.cash .bars { flex: 1 1 auto; display: flex; gap: 2mm; position: relative; margin-bottom: 5mm; }
-.cash .bars::before { content: ""; position: absolute; left: 0; right: 0; top: var(--zero); height: 1px; background: var(--axis); }
-.cash .c { flex: 1 1 0; position: relative; }
-.cash .c i { position: absolute; left: 0; right: 0; }
-.cash .c i.down { background: var(--ink); }
-.cash .c i.up { background: var(--gain); }
-.cash .c span { position: absolute; left: 0; right: 0; bottom: -4.6mm; text-align: center; font-size: 7.5pt; color: var(--steel); }
+/* вложенные средства по месяцам: линия и подписи в процентах блока, блок забирает свободную высоту колонки */
+.cash { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 55mm; }
+.cash .plot { flex: 1 1 auto; position: relative; margin: 1mm 0 0 7mm; }
+.cash svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.cash .zero { position: absolute; left: -7mm; transform: translateY(-50%); font-size: 7.5pt; color: var(--steel); }
+.cash .lbl { position: absolute; font-size: 8pt; line-height: 1.25; white-space: nowrap; color: var(--steel); }
+.cash .lbl b { display: block; font-family: var(--display); font-weight: 500; font-size: 10pt; color: var(--ink); }
+.cash .lbl.up { transform: translateY(calc(-100% - 1.5mm)); }
+.cash .lbl.up.mid { transform: translate(-50%, calc(-100% - 1.5mm)); }
+.cash .lbl.down { transform: translateY(calc(-100% - 1.2mm)); text-align: right; }
+.cash .lbl.down b { color: var(--gain); }
+.cash .axis { position: relative; height: 4.5mm; margin: 1mm 0 1.5mm 7mm; font-size: 7.5pt; color: var(--steel); }
+.cash .axis span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
 .result .line { display: flex; justify-content: space-between; font-size: 9pt; padding: 1.3mm 0;
                 border-bottom: 1px solid rgba(16, 48, 79, .2); font-variant-numeric: tabular-nums; }
 .result .label-total { font-weight: 600; font-size: 10pt; margin-top: 3mm; }
