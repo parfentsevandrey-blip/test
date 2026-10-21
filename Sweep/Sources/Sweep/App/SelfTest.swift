@@ -124,7 +124,8 @@ enum SelfTest {
 
         // Файлы для дубликатов и крупных.
         write(H("Documents/a.bin"), size: 1_500_000, random: true)
-        try? fm.copyItem(at: H("Documents/a.bin"), to: H("Downloads/a copy.bin"))
+        try? fm.createDirectory(at: H("Downloads"), withIntermediateDirectories: true)
+        try? Data(contentsOf: H("Documents/a.bin")).write(to: H("Downloads/a copy.bin"))
         write(H("Documents/c.bin"), size: 1_500_000, random: true)
         write(H("Movies/big.mov"), size: 60_000_000)
 
