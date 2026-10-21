@@ -20,6 +20,9 @@
   --on-dark: #F3F1EC;
   --on-dark-2: #A9A69F;
   --accent: #C8F03C;
+  --stone: #E4DED2;
+  --stone-line: #CBC2B2;
+  --stone-muted: #7A7366;
   --display: "Unbounded", "Inter Display", sans-serif;
   --body: "Manrope", "Inter", sans-serif;
 }
@@ -136,6 +139,7 @@ table.cmp { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
 .fact .w { font-size: 8pt; color: var(--ink-2); text-align: right; }
 
 /* ---------- complex (ЖК) ---------- */
+.page.jk { background: var(--stone); }
 .jk-grid { position: absolute; inset: 0; display: grid; grid-template-columns: 148mm 1fr; }
 .jk-photo { position: relative; }
 .jk-photo img { width: 100%; height: 100%; object-fit: cover; }
@@ -145,15 +149,15 @@ table.cmp { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
 .jk-side .topbar { left: 11mm; }
 .jk-side .foot { left: 11mm; }
 .jk-side h2 { font-size: 25pt; font-weight: 400; margin: 2mm 0 2.5mm; }
-.jk-side .dev { color: var(--on-dark-2); font-size: 8.5pt; }
-.jk-side .dev b { color: var(--accent); font-weight: 600; }
-.jk-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin: 6mm 0 5mm; border-top: .3mm solid var(--dark-line); }
-.jk-facts div { padding: 3mm 3mm 3mm 0; border-bottom: .3mm solid var(--dark-line); }
-.jk-facts .k { font-size: 6.5pt; letter-spacing: .12em; text-transform: uppercase; color: var(--on-dark-2); }
+.jk-side .dev { color: var(--ink-2); font-size: 8.5pt; }
+.jk-side .dev b { color: var(--ink); font-weight: 700; background: var(--accent); padding: .3mm 1.8mm; border-radius: 99px; margin-left: 1mm; }
+.jk-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin: 6mm 0 5mm; border-top: .3mm solid var(--ink); }
+.jk-facts div { padding: 3mm 3mm 3mm 0; border-bottom: .3mm solid var(--stone-line); }
+.jk-facts .k { font-size: 6.5pt; letter-spacing: .12em; text-transform: uppercase; color: var(--stone-muted); font-weight: 600; }
 .jk-facts .v { font-family: var(--display); font-size: 10.5pt; margin-top: 1mm; line-height: 1.15; }
-.jk-concept { font-size: 8.6pt; color: #D9D6CF; line-height: 1.5; }
-.jk-arch { font-size: 7.5pt; color: var(--on-dark-2); margin-top: 3mm; }
-.jk-arch b { color: var(--on-dark); font-weight: 600; }
+.jk-concept { font-size: 8.6pt; color: var(--ink-2); line-height: 1.5; }
+.jk-arch { font-size: 7.5pt; color: var(--stone-muted); margin-top: 3mm; }
+.jk-arch b { color: var(--ink); font-weight: 600; }
 .infra { display: flex; flex-wrap: wrap; gap: 1.6mm; margin-top: 4.5mm; }
 .infra .chip { font-size: 7pt; padding: 1mm 2.6mm; }
 .strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5mm; margin-top: auto; padding-top: 4mm; }
@@ -161,7 +165,10 @@ table.cmp { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
 .strip img { width: 100%; height: 100%; object-fit: cover; }
 .strip figcaption { position: absolute; left: 2mm; bottom: 1.6mm; font-size: 6.5pt; font-weight: 600; color: #fff; text-shadow: 0 0 3mm rgba(0,0,0,.8); }
 .jk-in { display: flex; gap: 2mm; margin-top: 4mm; flex-wrap: wrap; }
-.src { font-size: 6pt; color: #6E6B65; margin-top: 2.5mm; word-break: break-all; line-height: 1.35; }
+.jk .eyebrow, .jk .topbar, .jk .foot { color: var(--stone-muted); }
+.jk .chip { background: rgba(255,255,255,.7); border-color: var(--stone-line); }
+.jk .chip.acc { background: var(--accent); border-color: var(--accent); }
+.src { font-size: 6pt; color: var(--stone-muted); margin-top: 2.5mm; word-break: break-all; line-height: 1.35; }
 
 /* ---------- listing: hero ---------- */
 .hero-grid { position: absolute; inset: 0; display: grid; grid-template-columns: 163mm 1fr; }
@@ -333,7 +340,7 @@ table.cmp { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
 {% for g in groups %}
 {# ======================= COMPLEX ======================= #}
 {% set info = g.info %}
-<section class="page dark">
+<section class="page jk">
   <div class="jk-grid">
     <div class="jk-photo">
       <img src="{{ g.hero }}" alt="">
