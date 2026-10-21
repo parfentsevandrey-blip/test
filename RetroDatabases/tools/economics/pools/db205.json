@@ -1,0 +1,100 @@
+{
+  "database": 205,
+  "practice": "",
+  "scope": "The economy as a whole, for the models database.",
+  "note": "Documented cases found by web search on 21 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "G1",
+      "case": "Singapore's public housing (HDB flats)",
+      "years": "1960s onward",
+      "claim": "About 77 per cent of residents live in Housing and Development Board flats, according to government statistics as reported by a secondary source. The homeownership rate is reported at about 91 per cent for 2025, but it is computed from households, not from individuals.",
+      "source": "Secondary web sources summarising government statistics (Smartwealth, 2026; Architecture Lab); check the Department of Statistics (SingStat) before use",
+      "url": "https://smartwealth.sg/housing-household-statistics-singapore/",
+      "caveat": "The sources differ on whether the figures describe residents or households. Use the SingStat figures for any number.",
+      "relevant_to": [
+        "Developmental state",
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "G2",
+      "case": "Yugoslavia's workers' self-management",
+      "years": "1950 to 1965",
+      "claim": "A law of June 1950 placed state-owned firms under their own workforces, acting for society within the state plan. Trial programmes in more than 200 firms were written into the law. Workers' councils held wide powers over output and finance, but state-appointed executives could still block their decisions. Farm output rose through the 1950s, and a 1953 move dissolved collective and state farms, cutting the collectivised share of farmland from about 25 per cent to 9 per cent within three years.",
+      "source": "Yugoslav pamphlet on self-management (Belgrade, 1950), Marxists Internet Archive; CIA, Yugoslavia: Twenty Years of Self-Management",
+      "url": "https://www.marxists.org/subject/yugoslavia/self-management/1950/06/x01.htm",
+      "caveat": "Hard evidence on productivity, wages and unemployment is thin in these results. The 1963 charter is described only in a truncated excerpt.",
+      "relevant_to": [
+        "Market socialism",
+        "Cooperative economy",
+        "Participatory economics"
+      ]
+    },
+    {
+      "id": "G3",
+      "case": "Chile's Chicago-trained economists and the 1982 collapse",
+      "years": "1973 to 1982",
+      "claim": "Chicago-trained economists applied market reforms from 1973, and by 1978 the state had sold almost every firm it had held in 1973. Critics blame the reforms for mass unemployment, lost purchasing power and sharper inequality; defenders point to stable growth. Output fell about 15 per cent by 1982. Eight banks and finance firms failed in November 1981, and the peso lost 18 per cent and then 55 per cent under a free-float decree.",
+      "source": "Christian Science Monitor, Chile's economy and the Chicago Boys (21 December 1982); online encyclopaedia (secondary), Crisis of 1982 (secondary); review of Sebastian Edwards, The Chile Project",
+      "url": "https://www.csmonitor.com/1982/1221/122134.html",
+      "caveat": "The unemployment figures for the period are not in the results. The 1982 causes are contested: an overvalued peso pegged to the dollar, high interest rates and rigid wage indexation are all named.",
+      "relevant_to": [
+        "Monetarist neoliberalism",
+        "Austrian free-market economics"
+      ]
+    },
+    {
+      "id": "G4",
+      "case": "Germany's employment policy and the Four-Year Plan, 1933 to 1939",
+      "years": "1933 to 1939",
+      "claim": "Unemployment stood at about six million in 1933 and fell in official counts, partly through labour service and conscription from 1935. The 1936 Four-Year Plan aimed at self-sufficiency under Hermann Göring. About a third of raw materials still came from abroad in 1939. Armaments rose from about 4 per cent of output in 1933 to about 23 per cent by 1939, and consumer goods were short.",
+      "source": "Secondary study guides (Cognito, Save My Exams, Seneca Learning); to be replaced by an academic economic history before use",
+      "url": "https://cognito.org/courses/alevel/history/aqa/notes/cmRZQUp4Zms/3.8-nazi-economic-policies-1933-1939",
+      "caveat": "This case is weak. The sources are exam-preparation material, and the 1933 baseline and the size of the fall in unemployment are disputed. Do not quote a figure from it without an academic source.",
+      "relevant_to": [
+        "Corporatism and fascist economics",
+        "Developmental state"
+      ]
+    },
+    {
+      "id": "G5",
+      "case": "Hungary's New Economic Mechanism",
+      "years": "1966 to 1973",
+      "claim": "Hungary's leaders endorsed the New Economic Mechanism in 1966, and it went live on 1 January 1968. Firms were judged by profit, not by plan fulfilment, and the state steered them by indirect means. Early results were encouraging: plan targets were met more easily in 1968 to 1970, shoppers had more goods, and unsold stock fell. Firms kept bargaining with officials over allocations, and the reform stalled after Hungary joined the 1968 invasion of Czechoslovakia. A Ukrainian article ties its breakdown in 1972 and 1973 to party opponents.",
+      "source": "World Politics, Hungarian economic reform (1973), summary on Cambridge Core; Ukrainian academic article on the Hungarian reform (1968)",
+      "url": "https://core-prod.cambridgecore.org/core/journals/world-politics/article/hungarian-economic-reform/6094E47D5EC91505331D2F48E36039C3",
+      "caveat": "The results include no output figures for the reform years. Most hits are abstracts, so read the full article before quoting it.",
+      "relevant_to": [
+        "Market socialism",
+        "Chinese market socialism"
+      ]
+    },
+    {
+      "id": "G6",
+      "case": "Shortage in the socialist economies (Kornai)",
+      "years": "1979 to 1992",
+      "claim": "Kornai argued that shortages in socialist economies are frequent, severe and long-lasting, and that they reach consumer goods, housing and producer inputs alike. In a 1979 Econometrica paper he traced shortages to features of the economic mechanism itself. The soft budget constraint meant state enterprises faced no hard financial limit, so losses did not force closures. His 1980 book, Economics of Shortage, is the source of the term.",
+      "source": "Kornai, Resource-constrained versus demand-constrained systems, Econometrica (1979); Kornai, Economics of Shortage (1980)",
+      "url": "https://www.econometricsociety.org/publications/econometrica/1979/07/01/resource-constrained-versus-demand-constrained-systems",
+      "caveat": "The results do not address Gosplan itself. A critic argues that soft budgets do not explain most excess demand; the official preference for fast growth does.",
+      "relevant_to": [
+        "Command socialism",
+        "Marxian communism"
+      ]
+    },
+    {
+      "id": "G7",
+      "case": "The first enslaved Africans in English North America",
+      "years": "1619",
+      "claim": "About twenty captives from present-day Angola came ashore at Old Point Comfort in late August 1619, the earliest recorded arrival of Africans in England's mainland colonies. Early on, white indentured servants filled the labour gap, but their numbers were often inadequate and their service was temporary. Planters gained a workforce of enslaved Africans whom they could own outright and pass to heirs. Full chattel bondage took decades to form.",
+      "source": "Encyclopedia Virginia, Africans in Virginia's first (1619) entry; City of Hampton, The 1619 Landing: Virginia's first Africans",
+      "url": "https://encyclopediavirginia.org/entries/africans-virginias-first/",
+      "caveat": "Sources differ on the ships and the captors (a Dutch or English vessel; Portuguese or Spanish records). The link to tobacco is probable, not certain.",
+      "relevant_to": [
+        "Slave economy",
+        "Mercantilism"
+      ]
+    }
+  ]
+}

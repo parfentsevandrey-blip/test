@@ -1,0 +1,160 @@
+{
+  "database": 207,
+  "practice": "Primary and secondary schooling",
+  "note": "Documented cases found by web search on 21 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "S1",
+      "case": "Finland's comprehensive school reform (peruskoulu)",
+      "years": "1972 to 1977",
+      "claim": "Replaced the two-track system after primary school with a nine-year comprehensive school. Roll-out ran from Lapland in 1972 to Helsinki in 1977. A working paper by Pekkala and co-authors finds that the reform reduced the link between fathers' and sons' incomes by about seven percentage points. It finds a small gain in verbal test scores and no average change in arithmetic or logical reasoning.",
+      "source": "IFAU working paper, Educational policy and intergenerational income mobility: evidence from the Finnish comprehensive school reform (2006)",
+      "url": "https://ifau.se/Forskning/Publikationer/Working-papers/2006/Educational-policy-and-intergenerational-income-mobility-evidence-from-the-Finnish-comprehensive-school-reform",
+      "caveat": "A Yle report on a newer study gives a 23 per cent drop in the father-son income correlation. It uses a different measure, so the two figures are not comparable.",
+      "relevant_to": [
+        "Nordic social democracy",
+        "Keynesian welfare capitalism",
+        "Social market economy",
+        "Fabian socialism"
+      ]
+    },
+    {
+      "id": "S2",
+      "case": "Sweden's free-school reform",
+      "years": "1992 onward",
+      "claim": "Families gained the right to choose schools, and independent schools had to compete for pupils. Research by Bohlmark and Lindahl, summarised by the Swedish institute SNS, finds rising average results in municipalities with more free schools. The gains reached pupils in municipal schools as well, appeared about a decade after the reform, and extended to later secondary and university results. The same summary says the reform added no cost.",
+      "source": "SNS research brief 7, The long-term effects of the free school reform on educational results; Bohlmark and Lindahl, Economica (2015)",
+      "url": "https://www.sns.se/en/publications/sns-research-brief-7-the-long-term-effects-of-the-free-school-reform-on-educational-results",
+      "caveat": "A 2010 study for the Bristol CMPO, as summarised by Full Fact, found small academic gains and tentatively linked the reforms to greater segregation and inequality. The two bodies of evidence disagree on the size and the spread of the effects.",
+      "relevant_to": [
+        "Austrian free-market economics",
+        "Monetarist neoliberalism",
+        "Classical laissez-faire capitalism",
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "S3",
+      "case": "Chile's school voucher reform",
+      "years": "1981 onward",
+      "claim": "Vouchers could be spent at public or private schools whatever the household's income, a design close to Milton Friedman's 1955 proposal. Enrolment in state-run schools fell from 78 per cent in 1980 to below half by 2007. Socio-economic sorting between schools increased, and lower-income pupils fell further behind their middle-income peers on national tests. Scholars at three universities credit the 1981 reforms with a 3.6 per cent rise in high-school graduation.",
+      "source": "New America, school choice in Chile (newamerica.org); Gazmuri, IZA conference paper on school choice in Chile (2019); Future-ed summary of the Chilean case",
+      "url": "https://www.newamerica.org/?p=13956",
+      "caveat": "Sources differ on the cause of the sorting. A later Gazmuri paper, on a different reform, finds that families' preference for wealthier peers accounts for most of the segregation, more than schools' selection. The 3.6 per cent figure comes from a secondary report of the scholars' work.",
+      "relevant_to": [
+        "Monetarist neoliberalism",
+        "Austrian free-market economics",
+        "Classical laissez-faire capitalism"
+      ]
+    },
+    {
+      "id": "S4",
+      "case": "Cuba's 1961 national literacy campaign",
+      "years": "1961",
+      "claim": "A national campaign, led by volunteers, is widely described as cutting adult illiteracy sharply within about a year, from roughly 20 to 25 per cent nationally to a low single-digit rate. Accounts credit more than 700,000 people with learning to read. Accounts differ on the number of volunteers, the start date and the final rate. A follow-up programme, the Battle for the Sixth Grade, is reported to have raised 500,000 adults to sixth-grade level by 1973.",
+      "source": "Rebel Literacy: Cuba's National Literacy Campaign and Critical Global Citizenship (Muse, Johns Hopkins University Press); secondary accounts",
+      "url": "https://muse.jhu.edu/article/412996",
+      "caveat": "The figures come from several accounts that disagree. One of them discloses that it was drafted with AI assistance. A record should quote a number only from the scholarly article, after checking it there.",
+      "relevant_to": [
+        "Command socialism",
+        "Marxian communism",
+        "Chinese market socialism"
+      ]
+    },
+    {
+      "id": "S5",
+      "case": "Robert Owen's infant school at New Lanark",
+      "years": "1816",
+      "claim": "Owen opened Britain's first infant school at New Lanark on 1 January 1816. It took very young children, dropped rewards and punishments, held many lessons outdoors, and included music and dance. Its opening roll is reported as 274 pupils taught by 14 teachers. Infant schools spread across Britain in the 1820s and 1830s.",
+      "source": "Philip McCann, 1983, Rozprawy z dziejow oswiaty 25, pp. 155-165; Britannica, Robert Owen",
+      "url": "https://bazhum.muzhp.pl/media/texts/rozprawy-z-dziejow-oswiaty/1983-tom-25/rozprawy_z_dziejow_oswiaty-r1983-t25-s155-165.pdf",
+      "caveat": "Sources disagree on the age range: one gives one to six years, another 18 months to 10 or 12. Detail on the daily activity is thin.",
+      "relevant_to": [
+        "Utopian socialism",
+        "Cooperative economy",
+        "Mutualism"
+      ]
+    },
+    {
+      "id": "S6",
+      "case": "Japan's Gakusei school system",
+      "years": "1872 onward",
+      "claim": "The 1872 code set out a single national system in two stages: compulsory lower elementary grades, then upper grades. Foreign advisers shaped it, including the American David Murray, invited in 1873. Shortfalls in funding and teachers held it back. Around 1875 one account counts about 24,000 elementary schools, 45,000 teachers and 1.93 million pupils, and enrolment of about 35 per cent of school-age children. The planned university tier was not built.",
+      "source": "Dr Saito, presentation on the Gakusei (Nagoya University, 2014); Benjamin Duke's account of the national school system, as described in that presentation",
+      "url": "https://www.gsid.nagoya-u.ac.jp/syamada/linkpages/openseminar/20141106_drsaito_presentation1.pdf",
+      "caveat": "The enrolment and school figures come from single web sources. Check them against Duke's book before a record quotes any number. The legal basis of the 1872 code is also disputed.",
+      "relevant_to": [
+        "Developmental state",
+        "Mercantilism"
+      ]
+    },
+    {
+      "id": "S7",
+      "case": "Prussia's General Regulation for village and town schools",
+      "years": "1763",
+      "claim": "The regulation of 12 August 1763 made eight years of schooling compulsory for boys and girls, roughly from age five to 13 or 14. It built on a 1717 measure under Frederick William I. Actual attendance was well below full. Sources disagree on whether the schools were paid for by the state or by the towns.",
+      "source": "German History in Documents and Images (GHDI), English text of the 1763 regulation; Cambridge University Press, chapter on Frederickian school reform",
+      "url": "https://germanhistorydocs.org/en/the-holy-roman-empire-1648-1815/friedrich-der-grosse-koeniglich-preussisches-general-land-schul-reglement-1763",
+      "caveat": "The Prussia-specific attendance figure is unclear. A general estimate for the German lands is about a quarter of school-age children.",
+      "relevant_to": [
+        "Mercantilism",
+        "Physiocracy",
+        "Corporatism and fascist economics"
+      ]
+    },
+    {
+      "id": "S8",
+      "case": "Francisco Ferrer's Modern School in Barcelona",
+      "years": "1901 to 1909, then the Modern School movement",
+      "claim": "Ferrer opened an anti-authoritarian school in Barcelona in 1901 to oppose Church control of schooling. The authorities closed it in 1906 after a crackdown. Ferrer was executed in 1909 after the Tragic Week unrest. A Modern School movement followed, including a school in New York in January 1911.",
+      "source": "Albany, Stelton history of the Modern School (albany.edu); Ferrer, The Origin and Ideals of the Modern School (1913), Anarchist Library",
+      "url": "https://albany.edu/talkinghistory/stelton/steltonhistory.html",
+      "caveat": "Sources disagree on the date of the execution (12 or 13 October 1909). The claim does not depend on it.",
+      "relevant_to": [
+        "Anarcho-communism",
+        "Syndicalism",
+        "Mutualism"
+      ]
+    },
+    {
+      "id": "S9",
+      "case": "China's exemption from charges for rural compulsory education",
+      "years": "2006 to 2007",
+      "claim": "Tuition and miscellaneous charges for rural pupils in compulsory education were waived in the western provinces from spring 2006, and in all rural areas from spring 2007. An amendment to the Compulsory Education Law, passed on 29 June 2006 and in force from 1 September, banned tuition and arbitrary fees. Roughly 150 million rural pupils were affected, and the annual cost was about 15 billion yuan. Pupils from migrant families who attended urban schools were not covered.",
+      "source": "US-China Economic and Security Review Commission summaries of State Council documents (cecc.gov); China Daily, 13 December 2006",
+      "url": "https://www.chinadaily.com.cn/china/2006-12/13/content_757325.htm",
+      "caveat": "The number of affected pupils varies between sources, from about 150 million to about 160 million. The sources do not cover outcomes after the 2007 roll-out.",
+      "relevant_to": [
+        "Chinese market socialism",
+        "Command socialism"
+      ]
+    },
+    {
+      "id": "S10",
+      "case": "Early tracking in the German school system",
+      "years": "from the 1950s",
+      "claim": "At about age ten, after four years of primary school, pupils enter one of three tracks: Hauptschule for practical trades, Realschule for intermediate office work, and Gymnasium, about three years longer, which gives direct access to university. Teachers' advice weighs heavily, and how binding it is varies by state. A 2007 CESifo working paper finds that moves between tracks are rare and mostly downward, and that children born later in the year receive Gymnasium recommendations less often.",
+      "source": "CESifo working paper 2007, What Can Go Wrong Will Go Wrong: Birthday Effects and Early Tracking in the German School System",
+      "url": "https://www.cesifo.org/en/publications/2007/working-paper/what-can-go-wrong-will-go-wrong-birthday-effects-and-early-tracking",
+      "caveat": "The 2007 paper predates later reforms in several states, and the rules differ between states.",
+      "relevant_to": [
+        "Social market economy",
+        "Guild economy",
+        "Corporatism and fascist economics"
+      ]
+    },
+    {
+      "id": "S11",
+      "case": "Soviet compulsory schooling and the 1939 census",
+      "years": "1930 to 1939",
+      "claim": "A 1930 measure made four years of schooling compulsory for children aged eight and over, and seven years for industrial cities and workers' settlements. The 1939 census put literacy at roughly 81 to 90 per cent, depending on the source and the age group counted. The census figures are treated as unreliable: miscounting and deliberate manipulation are both cited. The government had already rejected the 1937 census as defective.",
+      "source": "online encyclopaedia (secondary), 1939 Soviet census and Education in the Soviet Union (secondary); a 1969 Soviet publication on public education, which gives 90 per cent for 1939, up from 67 per cent in 1930",
+      "url": "https://en.wikipedia.org/wiki/1939_Soviet_census",
+      "caveat": "The sources are secondary or Soviet-era. Check the figures against the primary census publications before a record quotes one.",
+      "relevant_to": [
+        "Command socialism",
+        "Marxian communism"
+      ]
+    }
+  ]
+}

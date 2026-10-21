@@ -1,0 +1,61 @@
+{
+  "database": 210,
+  "practice": "Early childhood care and education",
+  "note": "Documented cases found by web search on 21 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "E1",
+      "case": "Sweden's fee cap on preschool and after-school care (maxtaxa)",
+      "years": "2002 onward",
+      "claim": "A cap on parental fees was introduced in stages from 2002, tied to household income. The 2000 government bill proposed a ceiling of 3, 2 and 1 per cent of monthly household income for the first, second and third child. Municipalities that charged fees for all twelve months rose from 69 in 1999 to 181 in 2002, and many said incomplete state compensation justified the change. The top one-child fee was about 1,260 kronor a month around 2012 and 1,478 kronor in July 2019.",
+      "source": "Riksdag written question on evaluating the maxtaxa (2004); Swedish government document on maxtaxa and universal preschool; Riksdag bill from 2000 (proposal figures)",
+      "url": "https://www.riksdagen.se/sv/dokument-och-lagar/dokument/skriftlig-fraga/utvardering-av-maxtaxan-i-barnomsorgen_gr111396/",
+      "caveat": "The 2000 figures are proposal-stage figures. The enacted amounts in 2002 are not confirmed by these results. The later amounts come from a secondary snapshot.",
+      "relevant_to": [
+        "Nordic social democracy",
+        "Keynesian welfare capitalism",
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "E2",
+      "case": "Quebec's universal childcare at five dollars a day",
+      "years": "1997 onward",
+      "claim": "A universal low-fee childcare scheme took effect on 1 September 1997, first for four-year-olds, and by 2000 covered every child under five not yet in kindergarten. A 2008 working paper, using quasi-experimental methods, found that it substantially lowered preschoolers' vocabulary test scores, with larger harm for children whose mothers had less schooling. A 2013 working paper finds durable increases in daycare attendance among one- to four-year-olds, stronger cognitive benefits in school than in daycare, and an authors' judgement that the costs probably exceeded the returns.",
+      "source": "Lefebvre, Merrigan and Verstraete, CIRPEE working paper 08-23 (2008); CIRPEE working paper 13-34 (2013)",
+      "url": "https://depot.erudit.org/dspace/bitstream/002780dd/1/CIRPEE08-23.pdf",
+      "caveat": "These are working papers. The 2013 study is non-experimental. A later study covers long-term child well-being and is not summarised in the results, so do not use it without reading it.",
+      "relevant_to": [
+        "Keynesian welfare capitalism",
+        "Monetarist neoliberalism",
+        "Nordic social democracy"
+      ]
+    },
+    {
+      "id": "E3",
+      "case": "Nursery schools of the New Deal (FERA and WPA)",
+      "years": "1933 to 1935",
+      "claim": "Emergency nursery schools were funded from October 1933 under Harry Hopkins. Close to 3,000 centres opened in 1933 and 1934, serving about 64,000 children in 43 states and other territories. In November 1935, 1,913 nursery schools served 76,406 children aged two to five and employed 6,661 people. Families paid nothing; the schools gave meals, medical care and lessons, and gave work to unemployed adults. Many parents with WPA jobs relied on the schools for childcare, although the stated aim was education.",
+      "source": "Living New Deal, The Crisis of Childcare and the profile of Grace Langdon (secondary web sources)",
+      "url": "https://livingnewdeal.org/?p=181890",
+      "caveat": "The figures come from secondary web sources. The results advise checking them against archival material before a record cites a number.",
+      "relevant_to": [
+        "Keynesian welfare capitalism",
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "E4",
+      "case": "The Ferry laws in France and the écoles maternelles",
+      "years": "1881 to 1886",
+      "claim": "Mid-June 1881 legislation abolished fees for primary schooling, and an 1882 statute made attendance compulsory for boys and girls aged six to thirteen. The 1886 Goblet law is linked to the écoles maternelles for younger children, according to one study guide.",
+      "source": "online encyclopaedia (secondary), Jules Ferry laws; one study-guide website for the 1886 link",
+      "url": "https://en.wikipedia.org/wiki/Jules_Ferry_laws",
+      "caveat": "The results do not confirm that the 1881 provision covered children under six, or whether the écoles maternelles charged fees. Do not write either claim without a better source.",
+      "relevant_to": [
+        "Developmental state",
+        "Social market economy"
+      ]
+    }
+  ]
+}

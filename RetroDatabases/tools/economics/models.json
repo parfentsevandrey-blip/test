@@ -1,40 +1,425 @@
 {
+  "note": "Years and authors checked by web search on 21 October 2026: Social market economy (1947, the book; the term first appeared in print in 1946), Market socialism (1938, the book), Islamic economics (1963), Buddhist economics (1966). The other entries are from memory and still need checking.",
   "models": [
-    {"name": "Gift economy", "family": "Traditional and pre-market", "year": 1925, "original": "Essai sur le don", "author": "Marcel Mauss", "core": "Goods move as gifts that create obligations to give and to return; status, alliances and trust are built through exchange rather than through price.", "sources": ["Mauss, The Gift (1925)", "Sahlins, Stone Age Economics (1972)"]},
-    {"name": "Household and peasant economy", "family": "Traditional and pre-market", "year": 1925, "original": "Organizatsiya krestyanskogo khozyaystva", "author": "Alexander Chayanov", "core": "A family farm balances the work it can do against the needs of its household, so production serves consumption and not profit.", "sources": ["Chayanov, The Theory of Peasant Economy (1925)"]},
-    {"name": "Redistributive economy", "family": "Traditional and pre-market", "year": 1957, "original": "Trade and Market in the Early Empires", "author": "Karl Polanyi, Conrad Arensberg, Harry Pearson", "core": "A central authority collects goods as tribute or taxes, stores them and redistributes them to workers and officials, as in temples, palaces and tributary states.", "sources": ["Polanyi, The Great Transformation (1944)", "Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires (1957)"]},
-    {"name": "Slave economy", "family": "Traditional and pre-market", "year": 1619, "original": "Capitalism and Slavery", "author": "Plantation owners and colonial legislatures", "core": "Labour is extracted through the ownership of people; the enslaved are denied education and property, and output is sold through trade.", "sources": ["Williams, Capitalism and Slavery (1944)"]},
-    {"name": "Feudalism", "family": "Feudal and guild", "year": 800, "original": "Capitulare de villis", "author": "Carolingian administrators", "core": "Peasants owe labour services and rents to a lord in return for land, protection and justice; the manor is largely self-supplying.", "sources": ["Bloch, Feudal Society (1939-1940)", "Capitulare de villis (c. 800)"]},
-    {"name": "Guild economy", "family": "Feudal and guild", "year": 1268, "original": "Le Livre des métiers", "author": "Étienne Boileau (compiler)", "core": "Craft guilds regulate entry, training, quality and prices; masters, journeymen and apprentices work under statutes.", "sources": ["Boileau, Le Livre des métiers (c. 1268)", "Epstein, Freedom and Growth (2000)"]},
-    {"name": "Mercantilism", "family": "Early modern", "year": 1664, "original": "England's Treasure by Forraign Trade", "author": "Thomas Mun", "core": "The state aims for a trade surplus, gold and colonies, and regulates production and trade to that end.", "sources": ["Mun, England's Treasure by Forraign Trade (1664)", "Heckscher, Mercantilism (1935)"]},
-    {"name": "Physiocracy", "family": "Early modern", "year": 1758, "original": "Tableau économique", "author": "François Quesnay", "core": "Only agriculture creates a net product; a single tax on the rent of land should fund the state, and the grain trade should be free.", "sources": ["Quesnay, Tableau économique (1758)", "Meek, The Economics of Physiocracy (1962)"]},
-    {"name": "Classical laissez-faire capitalism", "family": "Liberal and market", "year": 1776, "original": "An Inquiry into the Nature and Causes of the Wealth of Nations", "author": "Adam Smith", "core": "Competitive markets, private property and the division of labour create wealth; the state protects property and contracts and otherwise stays out.", "sources": ["Smith, The Wealth of Nations (1776)"]},
-    {"name": "Austrian free-market economics", "family": "Liberal and market", "year": 1871, "original": "Grundsätze der Volkswirthschaftslehre", "author": "Carl Menger; Friedrich Hayek", "core": "Prices carry knowledge that is spread across many people and no planner can gather; state planning and credit expansion distort production.", "sources": ["Menger, Grundsätze der Volkswirthschaftslehre (1871)", "Hayek, The Use of Knowledge in Society (1945)"]},
-    {"name": "Monetarist neoliberalism", "family": "Liberal and market", "year": 1962, "original": "Capitalism and Freedom", "author": "Milton Friedman", "core": "Steady money growth, deregulation, privatisation and open trade, with a smaller state and fewer controls on markets.", "sources": ["Friedman, Capitalism and Freedom (1962)", "Harvey, A Brief History of Neoliberalism (2005)"]},
-    {"name": "Keynesian welfare capitalism", "family": "Mixed economies", "year": 1936, "original": "The General Theory of Employment, Interest and Money", "author": "John Maynard Keynes", "core": "Government spending and taxes manage demand: they rise in slumps and fall in booms, so that employment stays high.", "sources": ["Keynes, The General Theory (1936)", "Beveridge, Social Insurance and Allied Services (1942)"]},
-    {"name": "Social market economy", "family": "Mixed economies", "year": 1947, "original": "Soziale Marktwirtschaft", "author": "Alfred Müller-Armack; Ludwig Erhard", "core": "Competitive markets operate inside a legal order that curbs monopoly, with social insurance and worker representation in firms.", "sources": ["Müller-Armack, Wirtschaftslenkung und Marktwirtschaft (1947)", "Erhard, Wohlstand für Alle (1957)"]},
-    {"name": "Nordic social democracy", "family": "Mixed economies", "year": 1938, "original": "Saltsjöbadsavtalet", "author": "Swedish Social Democrats and trade unions", "core": "Universal public services and active labour-market policy, financed by high taxes, with strong unions and national wage bargaining.", "sources": ["Saltsjöbaden Agreement (1938)", "Esping-Andersen, The Three Worlds of Welfare Capitalism (1990)"]},
-    {"name": "Developmental state", "family": "Mixed economies", "year": 1949, "original": "Tsūshō Sangyō-shō", "author": "Japan's Ministry of International Trade and Industry", "core": "The state directs credit and export targets to chosen industries and disciplines firms by their performance.", "sources": ["Johnson, MITI and the Japanese Miracle (1982)", "Amsden, Asia's Next Giant (1989)"]},
-    {"name": "Georgism", "family": "Liberal and market", "year": 1879, "original": "Progress and Poverty", "author": "Henry George", "core": "Tax the value of land rather than labour and capital, so that the rent of land funds public services and speculation in land falls.", "sources": ["George, Progress and Poverty (1879)"]},
-    {"name": "Utopian socialism", "family": "Socialist and communist", "year": 1825, "original": "A New View of Society", "author": "Robert Owen; Charles Fourier", "core": "Cooperative communities and planned associations, built by example, replace wage competition and private profit.", "sources": ["Owen, A New View of Society (1813)", "Fourier, Le Nouveau Monde industriel (1829)"]},
-    {"name": "Mutualism", "family": "Anarchist", "year": 1840, "original": "Qu'est-ce que la propriété?", "author": "Pierre-Joseph Proudhon", "core": "Mutual credit and free contracts let workers keep the full value of their work; banks lend at cost and rent on property is abolished.", "sources": ["Proudhon, What Is Property? (1840)"]},
-    {"name": "Cooperative economy", "family": "Socialist and communist", "year": 1844, "original": "Rules of the Rochdale Society of Equitable Pioneers", "author": "Rochdale Pioneers", "core": "Members own and control firms and banks, one member one vote, and share the surplus between users and workers.", "sources": ["Rochdale Society of Equitable Pioneers (1844)", "Mondragón cooperatives (from 1956)"]},
-    {"name": "Anarcho-communism", "family": "Anarchist", "year": 1892, "original": "La Conquête du pain", "author": "Peter Kropotkin", "core": "No wages and no state; goods are shared according to need within federated communes, and free association replaces contracts.", "sources": ["Kropotkin, The Conquest of Bread (1892)"]},
-    {"name": "Syndicalism", "family": "Anarchist", "year": 1895, "original": "Syndicalisme", "author": "Fernand Pelloutier; the French CGT", "core": "Trade unions run industry directly through workers' organisations, using strikes and, eventually, a general strike.", "sources": ["Founding of the French CGT (1895)", "Pelloutier, Histoire des Bourses du travail (1902)"]},
-    {"name": "Fabian socialism", "family": "Socialist and communist", "year": 1884, "original": "Fabian Essays in Socialism", "author": "Sidney and Beatrice Webb", "core": "Socialism by democratic and gradual means: municipal and national public enterprise and a national minimum of welfare.", "sources": ["Fabian Essays in Socialism (1889)", "Founding of the Fabian Society (1884)"]},
-    {"name": "Guild socialism", "family": "Socialist and communist", "year": 1917, "original": "Self-Government in Industry", "author": "G. D. H. Cole", "core": "Workers and consumers share control of industry through guild-like councils, with the state as one partner among several.", "sources": ["Cole, Self-Government in Industry (1917)"]},
-    {"name": "Command socialism", "family": "Socialist and communist", "year": 1928, "original": "Pyatiletka (the first Five-Year Plan)", "author": "Soviet planners; Joseph Stalin", "core": "State ownership and central plans set output, prices and investment; the state mobilises labour for rapid industrialisation.", "sources": ["Kornai, The Socialist System (1992)", "First Five-Year Plan (1928-1932)"]},
-    {"name": "Market socialism", "family": "Socialist and communist", "year": 1936, "original": "On the Economic Theory of Socialism", "author": "Oskar Lange; Fred Taylor", "core": "Public ownership with market prices, managers who follow prices, and a central board that sets the rules and the investment.", "sources": ["Lange, On the Economic Theory of Socialism (1936-1937)", "Yugoslav workers' self-management (1950s)"]},
-    {"name": "Marxian communism", "family": "Socialist and communist", "year": 1875, "original": "Kritik des Gothaer Programms", "author": "Karl Marx", "core": "After the state withers away and classes disappear, distribution follows the principle from each according to ability, to each according to need.", "sources": ["Marx, Critique of the Gotha Programme (1875)"]},
-    {"name": "Chinese market socialism", "family": "Socialist and communist", "year": 1978, "original": "Reform and opening up", "author": "Deng Xiaoping and the Chinese leadership", "core": "Public ownership of key sectors alongside markets, special economic zones and gradual price reform under party direction.", "sources": ["Naughton, The Chinese Economy (2007)"]},
-    {"name": "Participatory economics", "family": "Socialist and communist", "year": 1991, "original": "Looking Forward: Participatory Economics for the Twenty-First Century", "author": "Michael Albert; Robin Hahnel", "core": "Workers' and consumers' councils plan through repeated proposals; jobs are balanced in complexity; neither markets nor central planners allocate.", "sources": ["Albert and Hahnel, Looking Forward (1991)"]},
-    {"name": "Corporatism and fascist economics", "family": "Corporatist and fascist", "year": 1934, "original": "Ordinamento corporativo", "author": "Benito Mussolini; Alfredo Rocco", "core": "Employers and unions are organised into state-controlled corporations, and the state directs industry toward national goals, including war.", "sources": ["Italian corporative law (1934)", "Nazi Four-Year Plan (1936)"]},
-    {"name": "Islamic economics", "family": "Religious and ethical", "year": 1963, "original": "Mit Ghamr savings bank", "author": "Ahmad al-Najjar", "core": "Interest (riba) is prohibited; finance shares profit and risk, zakat redistributes wealth, and trust underpins contracts.", "sources": ["Chapra, Towards a Just Monetary System (1985)", "Founding of the Mit Ghamr savings bank (1963)"]},
-    {"name": "Buddhist economics", "family": "Religious and ethical", "year": 1966, "original": "Buddhist Economics", "author": "E. F. Schumacher", "core": "Economic life serves well-being; consumption is moderate, and production is small-scale, local and non-violent.", "sources": ["Schumacher, Small Is Beautiful (1973)"]},
-    {"name": "Distributism", "family": "Religious and ethical", "year": 1891, "original": "Rerum Novarum", "author": "Pope Leo XIII; G. K. Chesterton; Hilaire Belloc", "core": "Widespread private property and small enterprise, a just wage, and subsidiarity so that decisions stay with the smallest competent body.", "sources": ["Leo XIII, Rerum Novarum (1891)", "Belloc, The Servile State (1912)"]},
-    {"name": "Steady-state and degrowth economics", "family": "Post-growth and ecological", "year": 1977, "original": "Steady-State Economics", "author": "Herman Daly; Kate Raworth", "core": "Economic activity stays within planetary limits, with no growth imperative and a social floor under everyone.", "sources": ["Daly, Steady-State Economics (1977)", "Raworth, Doughnut Economics (2017)"]},
-    {"name": "Universal basic income", "family": "Income and money", "year": 1797, "original": "Agrarian Justice", "author": "Thomas Paine", "core": "Every citizen receives an unconditional income, paid for by taxes on land and natural resources.", "sources": ["Paine, Agrarian Justice (1797)", "Van Parijs, Real Freedom for All (1995)"]},
-    {"name": "Modern monetary theory", "family": "Income and money", "year": 2020, "original": "The Deficit Myth", "author": "Stephanie Kelton; L. Randall Wray", "core": "A government that issues its own currency can fund full employment; inflation, not debt, is the real limit.", "sources": ["Kelton, The Deficit Myth (2020)"]},
-    {"name": "Commons governance", "family": "Commons", "year": 1990, "original": "Governing the Commons", "author": "Elinor Ostrom", "core": "Communities that share a resource govern it with rules they design, monitor and enforce, nested in wider institutions.", "sources": ["Ostrom, Governing the Commons (1990)"]}
+    {
+      "name": "Gift economy",
+      "family": "Traditional and pre-market",
+      "year": 1925,
+      "original": "Essai sur le don",
+      "author": "Marcel Mauss",
+      "core": "Goods move as gifts that create obligations to give and to return; status, alliances and trust are built through exchange rather than through price.",
+      "sources": [
+        "Mauss, The Gift (1925)",
+        "Sahlins, Stone Age Economics (1972)"
+      ]
+    },
+    {
+      "name": "Household and peasant economy",
+      "family": "Traditional and pre-market",
+      "year": 1925,
+      "original": "Organizatsiya krestyanskogo khozyaystva",
+      "author": "Alexander Chayanov",
+      "core": "A family farm balances the work it can do against the needs of its household, so production serves consumption and not profit.",
+      "sources": [
+        "Chayanov, The Theory of Peasant Economy (1925)"
+      ]
+    },
+    {
+      "name": "Redistributive economy",
+      "family": "Traditional and pre-market",
+      "year": 1957,
+      "original": "Trade and Market in the Early Empires",
+      "author": "Karl Polanyi, Conrad Arensberg, Harry Pearson",
+      "core": "A central authority collects goods as tribute or taxes, stores them and redistributes them to workers and officials, as in temples, palaces and tributary states.",
+      "sources": [
+        "Polanyi, The Great Transformation (1944)",
+        "Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires (1957)"
+      ]
+    },
+    {
+      "name": "Slave economy",
+      "family": "Traditional and pre-market",
+      "year": 1619,
+      "original": "Capitalism and Slavery",
+      "author": "Plantation owners and colonial legislatures",
+      "core": "Labour is extracted through the ownership of people; the enslaved are denied education and property, and output is sold through trade.",
+      "sources": [
+        "Williams, Capitalism and Slavery (1944)"
+      ]
+    },
+    {
+      "name": "Feudalism",
+      "family": "Feudal and guild",
+      "year": 800,
+      "original": "Capitulare de villis",
+      "author": "Carolingian administrators",
+      "core": "Peasants owe labour services and rents to a lord in return for land, protection and justice; the manor is largely self-supplying.",
+      "sources": [
+        "Bloch, Feudal Society (1939-1940)",
+        "Capitulare de villis (c. 800)"
+      ]
+    },
+    {
+      "name": "Guild economy",
+      "family": "Feudal and guild",
+      "year": 1268,
+      "original": "Le Livre des métiers",
+      "author": "Étienne Boileau (compiler)",
+      "core": "Craft guilds regulate entry, training, quality and prices; masters, journeymen and apprentices work under statutes.",
+      "sources": [
+        "Boileau, Le Livre des métiers (c. 1268)",
+        "Epstein, Freedom and Growth (2000)"
+      ]
+    },
+    {
+      "name": "Mercantilism",
+      "family": "Early modern",
+      "year": 1664,
+      "original": "England's Treasure by Forraign Trade",
+      "author": "Thomas Mun",
+      "core": "The state aims for a trade surplus, gold and colonies, and regulates production and trade to that end.",
+      "sources": [
+        "Mun, England's Treasure by Forraign Trade (1664)",
+        "Heckscher, Mercantilism (1935)"
+      ]
+    },
+    {
+      "name": "Physiocracy",
+      "family": "Early modern",
+      "year": 1758,
+      "original": "Tableau économique",
+      "author": "François Quesnay",
+      "core": "Only agriculture creates a net product; a single tax on the rent of land should fund the state, and the grain trade should be free.",
+      "sources": [
+        "Quesnay, Tableau économique (1758)",
+        "Meek, The Economics of Physiocracy (1962)"
+      ]
+    },
+    {
+      "name": "Classical laissez-faire capitalism",
+      "family": "Liberal and market",
+      "year": 1776,
+      "original": "An Inquiry into the Nature and Causes of the Wealth of Nations",
+      "author": "Adam Smith",
+      "core": "Competitive markets, private property and the division of labour create wealth; the state protects property and contracts and otherwise stays out.",
+      "sources": [
+        "Smith, The Wealth of Nations (1776)"
+      ]
+    },
+    {
+      "name": "Austrian free-market economics",
+      "family": "Liberal and market",
+      "year": 1871,
+      "original": "Grundsätze der Volkswirthschaftslehre",
+      "author": "Carl Menger; Friedrich Hayek",
+      "core": "Prices carry knowledge that is spread across many people and no planner can gather; state planning and credit expansion distort production.",
+      "sources": [
+        "Menger, Grundsätze der Volkswirthschaftslehre (1871)",
+        "Hayek, The Use of Knowledge in Society (1945)"
+      ]
+    },
+    {
+      "name": "Monetarist neoliberalism",
+      "family": "Liberal and market",
+      "year": 1962,
+      "original": "Capitalism and Freedom",
+      "author": "Milton Friedman",
+      "core": "Steady money growth, deregulation, privatisation and open trade, with a smaller state and fewer controls on markets.",
+      "sources": [
+        "Friedman, Capitalism and Freedom (1962)",
+        "Harvey, A Brief History of Neoliberalism (2005)"
+      ]
+    },
+    {
+      "name": "Keynesian welfare capitalism",
+      "family": "Mixed economies",
+      "year": 1936,
+      "original": "The General Theory of Employment, Interest and Money",
+      "author": "John Maynard Keynes",
+      "core": "Government spending and taxes manage demand: they rise in slumps and fall in booms, so that employment stays high.",
+      "sources": [
+        "Keynes, The General Theory (1936)",
+        "Beveridge, Social Insurance and Allied Services (1942)"
+      ]
+    },
+    {
+      "name": "Social market economy",
+      "family": "Mixed economies",
+      "year": 1947,
+      "original": "Soziale Marktwirtschaft",
+      "author": "Alfred Müller-Armack; Ludwig Erhard",
+      "core": "Competitive markets operate inside a legal order that curbs monopoly, with social insurance and worker representation in firms.",
+      "sources": [
+        "Müller-Armack, Wirtschaftslenkung und Marktwirtschaft (1947)",
+        "Erhard, Wohlstand für Alle (1957)"
+      ]
+    },
+    {
+      "name": "Nordic social democracy",
+      "family": "Mixed economies",
+      "year": 1938,
+      "original": "Saltsjöbadsavtalet",
+      "author": "Swedish Social Democrats and trade unions",
+      "core": "Universal public services and active labour-market policy, financed by high taxes, with strong unions and national wage bargaining.",
+      "sources": [
+        "Saltsjöbaden Agreement (1938)",
+        "Esping-Andersen, The Three Worlds of Welfare Capitalism (1990)"
+      ]
+    },
+    {
+      "name": "Developmental state",
+      "family": "Mixed economies",
+      "year": 1949,
+      "original": "Tsūshō Sangyō-shō",
+      "author": "Japan's Ministry of International Trade and Industry",
+      "core": "The state directs credit and export targets to chosen industries and disciplines firms by their performance.",
+      "sources": [
+        "Johnson, MITI and the Japanese Miracle (1982)",
+        "Amsden, Asia's Next Giant (1989)"
+      ]
+    },
+    {
+      "name": "Georgism",
+      "family": "Liberal and market",
+      "year": 1879,
+      "original": "Progress and Poverty",
+      "author": "Henry George",
+      "core": "Tax the value of land rather than labour and capital, so that the rent of land funds public services and speculation in land falls.",
+      "sources": [
+        "George, Progress and Poverty (1879)"
+      ]
+    },
+    {
+      "name": "Utopian socialism",
+      "family": "Socialist and communist",
+      "year": 1825,
+      "original": "A New View of Society",
+      "author": "Robert Owen; Charles Fourier",
+      "core": "Cooperative communities and planned associations, built by example, replace wage competition and private profit.",
+      "sources": [
+        "Owen, A New View of Society (1813)",
+        "Fourier, Le Nouveau Monde industriel (1829)"
+      ]
+    },
+    {
+      "name": "Mutualism",
+      "family": "Anarchist",
+      "year": 1840,
+      "original": "Qu'est-ce que la propriété?",
+      "author": "Pierre-Joseph Proudhon",
+      "core": "Mutual credit and free contracts let workers keep the full value of their work; banks lend at cost and rent on property is abolished.",
+      "sources": [
+        "Proudhon, What Is Property? (1840)"
+      ]
+    },
+    {
+      "name": "Cooperative economy",
+      "family": "Socialist and communist",
+      "year": 1844,
+      "original": "Rules of the Rochdale Society of Equitable Pioneers",
+      "author": "Rochdale Pioneers",
+      "core": "Members own and control firms and banks, one member one vote, and share the surplus between users and workers.",
+      "sources": [
+        "Rochdale Society of Equitable Pioneers (1844)",
+        "Mondragón cooperatives (from 1956)"
+      ]
+    },
+    {
+      "name": "Anarcho-communism",
+      "family": "Anarchist",
+      "year": 1892,
+      "original": "La Conquête du pain",
+      "author": "Peter Kropotkin",
+      "core": "No wages and no state; goods are shared according to need within federated communes, and free association replaces contracts.",
+      "sources": [
+        "Kropotkin, The Conquest of Bread (1892)"
+      ]
+    },
+    {
+      "name": "Syndicalism",
+      "family": "Anarchist",
+      "year": 1895,
+      "original": "Syndicalisme",
+      "author": "Fernand Pelloutier; the French CGT",
+      "core": "Trade unions run industry directly through workers' organisations, using strikes and, eventually, a general strike.",
+      "sources": [
+        "Founding of the French CGT (1895)",
+        "Pelloutier, Histoire des Bourses du travail (1902)"
+      ]
+    },
+    {
+      "name": "Fabian socialism",
+      "family": "Socialist and communist",
+      "year": 1884,
+      "original": "Fabian Essays in Socialism",
+      "author": "Sidney and Beatrice Webb",
+      "core": "Socialism by democratic and gradual means: municipal and national public enterprise and a national minimum of welfare.",
+      "sources": [
+        "Fabian Essays in Socialism (1889)",
+        "Founding of the Fabian Society (1884)"
+      ]
+    },
+    {
+      "name": "Guild socialism",
+      "family": "Socialist and communist",
+      "year": 1917,
+      "original": "Self-Government in Industry",
+      "author": "G. D. H. Cole",
+      "core": "Workers and consumers share control of industry through guild-like councils, with the state as one partner among several.",
+      "sources": [
+        "Cole, Self-Government in Industry (1917)"
+      ]
+    },
+    {
+      "name": "Command socialism",
+      "family": "Socialist and communist",
+      "year": 1928,
+      "original": "Pyatiletka (the first Five-Year Plan)",
+      "author": "Soviet planners; Joseph Stalin",
+      "core": "State ownership and central plans set output, prices and investment; the state mobilises labour for rapid industrialisation.",
+      "sources": [
+        "Kornai, The Socialist System (1992)",
+        "First Five-Year Plan (1928-1932)"
+      ]
+    },
+    {
+      "name": "Market socialism",
+      "family": "Socialist and communist",
+      "year": 1938,
+      "original": "On the Economic Theory of Socialism",
+      "author": "Oskar Lange; Fred Taylor",
+      "core": "Public ownership with market prices, managers who follow prices, and a central board that sets the rules and the investment.",
+      "sources": [
+        "Lange and Taylor, On the Economic Theory of Socialism (1938; Lange's essays date from 1936-1937)",
+        "Yugoslav workers' self-management (1950s)"
+      ]
+    },
+    {
+      "name": "Marxian communism",
+      "family": "Socialist and communist",
+      "year": 1875,
+      "original": "Kritik des Gothaer Programms",
+      "author": "Karl Marx",
+      "core": "After the state withers away and classes disappear, distribution follows the principle from each according to ability, to each according to need.",
+      "sources": [
+        "Marx, Critique of the Gotha Programme (1875)"
+      ]
+    },
+    {
+      "name": "Chinese market socialism",
+      "family": "Socialist and communist",
+      "year": 1978,
+      "original": "Reform and opening up",
+      "author": "Deng Xiaoping and the Chinese leadership",
+      "core": "Public ownership of key sectors alongside markets, special economic zones and gradual price reform under party direction.",
+      "sources": [
+        "Naughton, The Chinese Economy (2007)"
+      ]
+    },
+    {
+      "name": "Participatory economics",
+      "family": "Socialist and communist",
+      "year": 1991,
+      "original": "Looking Forward: Participatory Economics for the Twenty-First Century",
+      "author": "Michael Albert; Robin Hahnel",
+      "core": "Workers' and consumers' councils plan through repeated proposals; jobs are balanced in complexity; neither markets nor central planners allocate.",
+      "sources": [
+        "Albert and Hahnel, Looking Forward (1991)"
+      ]
+    },
+    {
+      "name": "Corporatism and fascist economics",
+      "family": "Corporatist and fascist",
+      "year": 1934,
+      "original": "Ordinamento corporativo",
+      "author": "Benito Mussolini; Alfredo Rocco",
+      "core": "Employers and unions are organised into state-controlled corporations, and the state directs industry toward national goals, including war.",
+      "sources": [
+        "Italian corporative law (1934)",
+        "Nazi Four-Year Plan (1936)"
+      ]
+    },
+    {
+      "name": "Islamic economics",
+      "family": "Religious and ethical",
+      "year": 1963,
+      "original": "Mit Ghamr savings bank",
+      "author": "Ahmad El Najjar",
+      "core": "Interest (riba) is prohibited; finance shares profit and risk, zakat redistributes wealth, and trust underpins contracts.",
+      "sources": [
+        "Chapra, Towards a Just Monetary System (1985)",
+        "Founding of the Mit Ghamr savings bank (1963)"
+      ]
+    },
+    {
+      "name": "Buddhist economics",
+      "family": "Religious and ethical",
+      "year": 1966,
+      "original": "Buddhist Economics",
+      "author": "E. F. Schumacher",
+      "core": "Economic life serves well-being; consumption is moderate, and production is small-scale, local and non-violent.",
+      "sources": [
+        "Schumacher, Buddhist Economics (first published 1966)",
+        "Schumacher, Small Is Beautiful (1973)"
+      ]
+    },
+    {
+      "name": "Distributism",
+      "family": "Religious and ethical",
+      "year": 1891,
+      "original": "Rerum Novarum",
+      "author": "Pope Leo XIII; G. K. Chesterton; Hilaire Belloc",
+      "core": "Widespread private property and small enterprise, a just wage, and subsidiarity so that decisions stay with the smallest competent body.",
+      "sources": [
+        "Leo XIII, Rerum Novarum (1891)",
+        "Belloc, The Servile State (1912)"
+      ]
+    },
+    {
+      "name": "Steady-state and degrowth economics",
+      "family": "Post-growth and ecological",
+      "year": 1977,
+      "original": "Steady-State Economics",
+      "author": "Herman Daly; Kate Raworth",
+      "core": "Economic activity stays within planetary limits, with no growth imperative and a social floor under everyone.",
+      "sources": [
+        "Daly, Steady-State Economics (1977)",
+        "Raworth, Doughnut Economics (2017)"
+      ]
+    },
+    {
+      "name": "Universal basic income",
+      "family": "Income and money",
+      "year": 1797,
+      "original": "Agrarian Justice",
+      "author": "Thomas Paine",
+      "core": "Every citizen receives an unconditional income, paid for by taxes on land and natural resources.",
+      "sources": [
+        "Paine, Agrarian Justice (1797)",
+        "Van Parijs, Real Freedom for All (1995)"
+      ]
+    },
+    {
+      "name": "Modern monetary theory",
+      "family": "Income and money",
+      "year": 2020,
+      "original": "The Deficit Myth",
+      "author": "Stephanie Kelton; L. Randall Wray",
+      "core": "A government that issues its own currency can fund full employment; inflation, not debt, is the real limit.",
+      "sources": [
+        "Kelton, The Deficit Myth (2020)"
+      ]
+    },
+    {
+      "name": "Commons governance",
+      "family": "Commons",
+      "year": 1990,
+      "original": "Governing the Commons",
+      "author": "Elinor Ostrom",
+      "core": "Communities that share a resource govern it with rules they design, monitor and enforce, nested in wider institutions.",
+      "sources": [
+        "Ostrom, Governing the Commons (1990)"
+      ]
+    }
   ]
 }

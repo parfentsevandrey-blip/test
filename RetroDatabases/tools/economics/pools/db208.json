@@ -1,0 +1,61 @@
+{
+  "database": 208,
+  "practice": "Higher education",
+  "note": "Documented cases found by web search on 21 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "H1",
+      "case": "Germany's abolition of university tuition fees",
+      "years": "2000s to the mid-2010s",
+      "claim": "Fees were abolished state by state rather than in one national step, and by 2014 one summary describes every state as having dropped them. Research by Bietenbeck and colleagues (2023) finds that, near a zero price, the net effect of charging fees on attainment is close to zero, and the authors advise against blanket abolition. Wigger (2014) finds no clear negative effect of fees on enrolment, and argues that modest fees backed by loans and exemptions need not deter applicants.",
+      "source": "Bietenbeck and colleagues, Tuition fees and educational attainment (2023); Wigger, Tuition fees had no negative effect on participation in higher education in Germany (2014)",
+      "url": "https://researchonline.lse.ac.uk/id/eprint/118633",
+      "caveat": "The year of the final abolition step is not confirmed by these sources. No study in the results reports enrolment after abolition.",
+      "relevant_to": [
+        "Nordic social democracy",
+        "Social market economy",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "H2",
+      "case": "Chile's 2011 student movement over tuition and debt",
+      "years": "2011",
+      "claim": "A nationwide student campaign that lasted about eight months in 2011 protested high tuition, which had pushed families into debt. The government promised reforms worth about four billion dollars, including scholarships and grants, but rejected universal free higher education and did not restore public funding that the students had demanded. By late 2011 the core demand for more public funding was unmet, and a later report said two years of protest had not restructured the system.",
+      "source": "Associated Press, 21 November 2011 (Washington Times); Al Jazeera, 19 August 2011; Voice of America, 6 July 2011; Americas Quarterly (later blog post)",
+      "url": "https://www.aljazeera.com/news/2011/8/19/chiles-student-protesters-reject-proposal",
+      "caveat": "These sources cover the protests, not the state-backed loan system (CAE) or the later laws. A record should not describe the loan system without a further source.",
+      "relevant_to": [
+        "Monetarist neoliberalism",
+        "Corporatism and fascist economics"
+      ]
+    },
+    {
+      "id": "H3",
+      "case": "Graduate placement in the Soviet Union",
+      "years": "1930s to 1960s",
+      "claim": "Graduates were assigned to posts by the state. Placement was in law by the early 1930s, and graduates were called specialists. In the 1977 account, republic governments drafted placement plans that central planners in Moscow approved, and a commission chaired by each school's director matched graduates to posts. Refusing an assigned post was a legal offence, and under Stalin it was punished by criminal prosecution. The term of compulsory service was five years from the 1930s, and sources disagree on when it was cut to three years (1948 or the 1960s).",
+      "source": "Wilson Center, Grossman, national politics and labor policy (1977); CISRUS, Student placement (2025), which reports that centrally planned placement is returning in Russian higher education",
+      "url": "https://www.wilsoncenter.org/sites/default/files/media/documents/publication/op12_national_politics_labor_policy_grossman_1977.pdf",
+      "caveat": "The search did not confirm that Soviet higher education was free of tuition, so this case says nothing about fees. The 2025 CISRUS piece is an opinion article, not a study.",
+      "relevant_to": [
+        "Command socialism",
+        "Corporatism and fascist economics"
+      ]
+    },
+    {
+      "id": "H4",
+      "case": "Student guilds at the University of Bologna",
+      "years": "from the late 1100s",
+      "claim": "Bologna's studium grew from student initiative. Students from the same homeland formed nations to protect each other against local statutes that imposed group penalties on outsiders. Student-run guild-style bodies governed the school, unlike Paris, where the masters did. Bologna is also credited with first using the word universitas for its association of students and teachers. The traditional founding date of 1088 is disputed: one historian doubts that the institution deserved the title university before the 1150s, perhaps before the 1180s.",
+      "source": "University of Bologna, The birth of the studium and the commune (official history); Alma Mater Studiorum, history of the university since 1088",
+      "url": "https://www.unibo.it/en/university/who-we-are/our-history/nine-centuries-of-history/the-birth-of-the-studium-and-the-commune",
+      "caveat": "The date is disputed, and the official history page links 1088 to a celebratory tradition. Use 'from the late twelfth century' rather than 1088 unless the record gives the dispute.",
+      "relevant_to": [
+        "Guild economy",
+        "Cooperative economy",
+        "Mutualism"
+      ]
+    }
+  ]
+}

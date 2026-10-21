@@ -1,0 +1,62 @@
+{
+  "database": 209,
+  "practice": "Vocational training and apprenticeship",
+  "note": "Documented cases found by web search on 21 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "V1",
+      "case": "Germany's dual vocational training system",
+      "years": "2022 to 2023 figures",
+      "claim": "Employers carry most of the cost of apprenticeships, while the state pays for the vocational schools, where trainees pay nothing. Public authorities spent about 4.4 billion euros on the dual system in 2023, about 3.5 billion of it on some 1,550 vocational schools. Businesses' net outlay was put at about 9.7 billion euros for the 2022/23 training year. Per apprentice, the net cost is estimated at roughly 8,000 to 8,300 euros a year, after the apprentice's productive work is counted. A Konstanz study finds that profits are essentially unaffected when firms take on more apprentices.",
+      "source": "BIBB, Dual vocational education and training pays off (GOVET presentation); University of Konstanz study on apprenticeship costs and profits",
+      "url": "https://bibb.de/govet/en/74323.php",
+      "caveat": "The totals conflict between sources, and the years do not line up. The HR glossary sites in the results give inconsistent figures, so do not use them. BIBB's employer surveys count apprentice pay, trainer time and equipment as costs.",
+      "relevant_to": [
+        "Social market economy",
+        "Developmental state",
+        "Guild economy"
+      ]
+    },
+    {
+      "id": "V2",
+      "case": "Apprenticeship in the medieval and early modern guilds",
+      "years": "1237; later Middle Ages to 1700s",
+      "claim": "Apprenticeship terms were regulated by the guilds. In English and Scottish examples from the later Middle Ages and early modern period, a term of about five to seven years is common, and sources disagree on the norm. Many crafts then required a masterpiece for promotion to master, and promotion needed the approval of all the masters and a payment. Journeymen usually travelled for at least three years and a day. In the town of Arras in 1237, the entry fee to become a master was 14 shillings and for a journeyman 5 shillings.",
+      "source": "online encyclopaedia (secondary), Wandering journeyman; medievalists.net, How medieval craft guilds worked (2026), citing the Arras shearers' records of 1237",
+      "url": "https://en.wikipedia.org/wiki/Wandering_journeyman",
+      "caveat": "The guild rules are a patchwork of regional examples, and many figures come from the 1700s. The Prague statutes in the results are undated. The 1237 figures are the clearest medieval evidence in these results.",
+      "relevant_to": [
+        "Guild economy",
+        "Guild socialism",
+        "Feudalism"
+      ]
+    },
+    {
+      "id": "V3",
+      "case": "England's apprenticeship levy",
+      "years": "from 2017",
+      "claim": "A levy on large employers was introduced in 2017. Starts fell sharply afterwards. The Resolution Foundation reports that the first quarter under the levy had about 43,000 starts, against 117,800 a year earlier, and that lower-level places fell from 298,000 to 161,000 between 2014/15 and 2017/18. The CIPD reports that starts at small and medium employers fell 49 per cent, from 241,000 in 2016/17 to 123,800 in 2020/21. A review for the Association of Colleges by London Economics puts the fall at about a third between 2014/15 and 2022/23.",
+      "source": "Resolution Foundation, Trading up or trading off (2019); CIPD, press release on apprenticeship starts in England since the levy; London Economics review for the Association of Colleges (2024)",
+      "url": "https://www.resolutionfoundation.org/app/uploads/2019/09/Trading-up-or-trading-off.pdf",
+      "caveat": "The percentages use different baselines, so they are not comparable. The National Audit Office finding relayed by a parliamentary committee says almost a third of learners leave without completing. The London Economics URL in the results refers to another project; check the link before citing it.",
+      "relevant_to": [
+        "Monetarist neoliberalism",
+        "Developmental state",
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "V4",
+      "case": "Mondragon's engineering school and vocational centres",
+      "years": "1943 onward",
+      "claim": "The engineering school Mondragon Goi Eskola Politeknikoa was started in 1943 by the priest José María Arizmendiarrieta, and is now a cooperative tied to the Mondragon Corporation and Mondragon University. Partner firms help shape its higher vocational courses, and it offers dual-education options. Five of its engineers founded ULGOR, the first Mondragon cooperative, in 1956. A second centre, Politeknika Txorierri, runs vocational courses and job training for employed and jobless people.",
+      "source": "Mondragon University, About us (faculty of engineering); Mondragon Corporation, description of the cooperative experience",
+      "url": "https://www.mondragon.edu/en/faculty-of-engineering/about-us",
+      "caveat": "The results give no outcome data, such as placement rates. They do not describe training for worker-members inside the cooperative firms, and most of the material is institutional self-description.",
+      "relevant_to": [
+        "Cooperative economy",
+        "Guild socialism"
+      ]
+    }
+  ]
+}

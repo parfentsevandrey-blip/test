@@ -1,0 +1,47 @@
+{
+  "database": 211,
+  "practice": "Adult and lifelong learning",
+  "note": "Documented cases found by web search on 21 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "A1",
+      "case": "ILO Convention 140 on paid educational leave",
+      "years": "1974 onward",
+      "claim": "The International Labour Organization adopted Convention 140 on paid educational leave at its 59th session on 24 June 1974. Germany ratified it in 1976 and it took effect for Germany a year later. Sweden ratified in June 1975, and the convention took effect for Sweden in September 1976. A 2018 essay counts 35 ratifications by 2016, only 13 of them from EU countries.",
+      "source": "ILO documents on the convention (governing body papers, 2001); Swedish government treaty series, Konvention nr 140 (1974); Calafa (2018) essay on ratifications",
+      "url": "https://regeringen.se/contentassets/60e5f02b069848caafcf2a3cd7d17795/konvention-nr-140-om-betald-ledighet-for-studier-geneve-den-24-juni-1974.pdf",
+      "caveat": "The 35-ratification total is the newest count in these results, and it dates to 2016. The live total is in the ILO's NORMLEX database, which the search did not reach.",
+      "relevant_to": [
+        "Nordic social democracy",
+        "Social market economy",
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "A2",
+      "case": "Sweden's municipal adult education (komvux)",
+      "years": "from 1968",
+      "claim": "Municipal adult education began on 1 July 1968. Its original aims were to narrow educational gaps, let people top up their schooling, and give employers a better-educated workforce. The 1980s gave it its own school form and curriculum, and the 1990s moved it towards labour-market policy.",
+      "source": "online encyclopaedia (secondary), Komvux, which the results mark as needing more citations; the Eurydice overview of Swedish developments and current policy priorities (to be read before use)",
+      "url": "https://eurydice.eacea.ec.europa.eu/eurypedia/sweden/developments-and-current-policy-priorities",
+      "caveat": "This case is weak. The start date and aims come from a source that is flagged for missing citations. Read the Riksdag document or the Eurydice overview before a record relies on it. A claim that state funding fell by 25 per cent from 2008 is not confirmed here and must not be used.",
+      "relevant_to": [
+        "Nordic social democracy",
+        "Developmental state"
+      ]
+    },
+    {
+      "id": "A3",
+      "case": "Singapore's SkillsFuture Credit",
+      "years": "from 2015",
+      "claim": "The SkillsFuture Credit, introduced in 2015, has been used widely. A Ministry of Education reply to Parliament in November 2022 counted more than 840,000 users, about 30 per cent of eligible citizens, with the highest rate among people in their thirties. The annual milestone of 500,000 learners was reached by December 2024. An Edge Singapore feature found that many users spent their credits on subjects with little bearing on their current jobs.",
+      "source": "Singapore Ministry of Education, parliamentary reply on SkillsFuture credits (7 November 2022); NTU National Institute of Education news item (December 2024); Edge Singapore feature",
+      "url": "https://www.moe.gov.sg/news/parliamentary-replies/20221107-skillsfuture-credits",
+      "caveat": "These sources report uptake, not effects. An evaluation commissioned by the Singapore Skills Development Fund exists, but its findings are not in the results. The Scottish Government literature review, relaying Webb and colleagues (2018), names funding, needs analysis and subsidies as prerequisites for an adult-learning culture.",
+      "relevant_to": [
+        "Developmental state",
+        "Monetarist neoliberalism"
+      ]
+    }
+  ]
+}
