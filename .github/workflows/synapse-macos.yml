@@ -1,0 +1,81 @@
+name: Synapse (macOS)
+
+on:
+  push:
+    paths:
+      - "Synapse/**"
+      - ".github/workflows/synapse-macos.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: synapse-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 75
+    defaults:
+      run:
+        working-directory: Synapse
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          echo "Xcode: $XCODE"; sw_vers; swift --version; cmake --version | head -1
+
+      # Движок собирается из исходников один раз на версию llama.cpp.
+      - name: Cache llama.cpp engine
+        uses: actions/cache@v4
+        with:
+          path: Synapse/Vendor/llama
+          key: llama-${{ hashFiles('Synapse/ENGINE_VERSION', 'Synapse/scripts/build-engine.sh') }}-${{ runner.os }}-xcode26
+
+      - name: Build Synapse.app + DMG
+        run: ./scripts/build.sh
+
+      - name: Self-test logic (offline)
+        run: dist/Synapse.app/Contents/MacOS/Synapse --selftest-logic
+
+      - name: Self-test Hugging Face + feed (live)
+        run: dist/Synapse.app/Contents/MacOS/Synapse --selftest-hub
+
+      # Настоящая модель: загрузка с обрывом и докачкой, SHA-256, ответы, диалог, остановка, API Ollama/OpenAI.
+      - name: Self-test engine (CPU)
+        run: dist/Synapse.app/Contents/MacOS/Synapse --selftest-engine
+
+      # Виртуальное видеоядро раннера (Metal Paravirtual) — проверка для сведения.
+      - name: Self-test engine (Metal, informational)
+        continue-on-error: true
+        run: dist/Synapse.app/Contents/MacOS/Synapse --selftest-gpu
+
+      - name: Self-test render
+        run: dist/Synapse.app/Contents/MacOS/Synapse --selftest-render "$RUNNER_TEMP/render"
+
+      - name: UI screenshots
+        run: |
+          for S in welcome onboarding foryou catalog detail feed library chat; do
+            dist/Synapse.app/Contents/MacOS/Synapse --demo-ui $S &
+            PID=$!
+            if [ "$S" = chat ]; then sleep 45; else sleep 16; fi
+            screencapture -x "$RUNNER_TEMP/render/window-$S.png" || echo "screencapture не сработал"
+            kill $PID 2>/dev/null || true
+            sleep 2
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Synapse-render
+          path: ${{ runner.temp }}/render
+          compression-level: 0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Synapse-dmg
+          path: Synapse/dist/Synapse.dmg
+          if-no-files-found: error
+          compression-level: 0
