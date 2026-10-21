@@ -1,6 +1,6 @@
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside are databases of coding history and, from database 205, databases of economics, listed under *What is inside*.
+An Android application in Kotlin, Jetpack Compose and Room. Inside are databases of coding history, listed under *What is inside*. Databases of economics are planned; see [ECONOMICS.md](ECONOMICS.md).
 
 ## What is inside
 

@@ -50,6 +50,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-34 | 2026-10-20 | 143,689 | 222 | 82 | 118 | 144,111 | +3,369 (databases 185 to 194: 106 records in 110 files, migrations 184→185 to 193→194, tests +0) |
 | CP-35 | 2026-10-20 | 147,071 | 222 | 82 | 118 | 147,493 | +3,382 (databases 195 to 204: 106 records in 110 files, migrations 194→195 to 203→204, tests +0) |
 | CP-36 | 2026-10-20 | 147,853 | 408 | 88 | 118 | 148,467 | +974 (the on-device assistant: index, classifier, answers, screen and 20 new tests, 37 in all; no record files; DATABASE_VERSION unchanged at 204) |
+| CP-37 | 2026-10-21 | 147,861 | 454 | 88 | 118 | 148,521 | +54 (economics paused at the web-search budget: model and sphere lists, generator support, two record kinds, tests; no economics records yet) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -2541,3 +2542,54 @@ The app has an on-device assistant behind an info button on the first screen. It
 
 - Running on a device or in the emulator, the screen layout, lint and the release build.
 - Answer quality beyond the 37 tests: no separate set of questions was written to measure it.
+
+## CP-37: economics, paused at the web-search budget
+
+Mood: annoyed with myself. The first batch needed far more web searches than the budget allowed, and I learned that only after seven writers had started. The infrastructure is in place and tested. The content is not, and it will stay that way until the budget is raised.
+
+Status: the economics work has its model list, its sphere map, its generator support, its two record kinds and its tests. No economics record exists yet. ECONOMICS.md holds the plan, the writing rules and the steps to resume.
+
+Totals: Kotlin main 147,861 (CP-36: 147,853), Kotlin test 454 (408), XML 88 (88), Gradle and project files 118 (118), total 148,521 (148,467).
+
+### What changed
+
+- `tools/economics/models.json` and `spheres.json`: the 36 models, the 16 spheres and the 75 practices, with scope sentences and database numbers for the six education practices.
+- `tools/build_catalogue.py`: economics databases are read from one JSON file each, checked, and written as `Db<id>Economics.kt`. Their catalogue section and README counts come from the same code. The coding databases are checked as before.
+- `tools/databases.json`: rows 205 to 212, with colours no other database uses.
+- Kotlin: `Kind.MODEL` ("Economic models") and `Kind.COMPROMISE` ("Compromises"), with colours in `KindColors.kt`, the assistant's Russian labels and search words, and `EconomicsSeedTest`.
+- `SeedDataTest`: the test required every kind in every database, which the two new kinds broke. It now checks the ten coding kinds for the coding databases and a compromise for the economics databases.
+- `README.md`: the intro says that the economics databases are planned, with a link to ECONOMICS.md.
+- `ECONOMICS.md`: new. The plan, the record format, the rules, the status and the resume steps.
+
+### Problems
+
+- The web-search budget is shared by the whole turn. Seven writers were started in parallel. Database 212's writer stopped after 20 searches with nothing written, and the other six were stopped by hand before they wrote anything. The budget was spent on the first batch alone.
+- Checking every documented case by search needs many more searches than the coding batches used. That is the real limit of the plan, and it has to be settled before the next batch.
+- Before the work-in-progress commit 785957c, three tests failed: two in `EconomicsSeedTest`, which need the records, and one in `SeedDataTest`, which was wrong and is now corrected. This commit leaves the two `EconomicsSeedTest` count tests failing until the records exist.
+
+### Facts the writers reported as checked
+
+The writer agents reported these as checked by search before they stopped. I have not checked them again, and none of them is in a record. They are listed so that the next search does not start from nothing:
+
+- Third Lateran Council (1179): endowments for teachers.
+- Manorial schooling licences, Norton and Winslow (1300 to 1348).
+- Georgia's teaching ban (1829).
+- Margaret Douglass's arrest (1853).
+- The Brougham inquiry (1818).
+- The Radikalenerlass bans in Germany (1972).
+- Analects 7.7.
+- The Statute of Artificers (1563).
+- WPA nursery schools.
+- The German 2013 entitlement to early childhood places.
+- The Swedish fee cap in early childhood care, and the cost shift of the 1990s, as set out in Ds 2002:32.
+- ILO Convention 140 (paid educational leave), date confirmed.
+
+### How I checked it
+
+- `./gradlew testDebugUnitTest` on commit 785957c: 40 tests, 38 pass. The two failures are the count tests of `EconomicsSeedTest`, which need the records.
+- `python3 tools/build_catalogue.py --check`: fails for databases 205 to 212, which have no JSON file yet, and passes for the 204 coding databases.
+- The line counts come from `count_lines.py` on the working tree.
+
+### Next
+
+The steps are in ECONOMICS.md. The first is to raise the web-search budget, which is the user's decision. Until then, the economics work stays as it is.
