@@ -3,7 +3,8 @@
     python3 -I flipfinder/screen.py RUN_DIR
 
 Порядок в списке: сначала объекты, которым для выхода в ноль нужна скидка не больше
-порога (11 %), среди них — наши районы, затем окрестности; внутри — по размеру скидки.
+порога (11 %), а предложение продавцу — не больше 15 % ниже его цены; среди них — отдельные
+здания, затем юниты в комплексах; наши районы, затем окрестности; внутри — по размеру скидки.
 Пишет RUN_DIR/candidates.json (все посчитанные), RUN_DIR/rejected.json (с причинами)
 и RUN_DIR/shortlist.json (прошедшие порог, лучшие первыми).
 """
@@ -36,13 +37,13 @@ def address(rec: dict) -> dict | None:
     return {"street": m.group(1), "postcode": m.group(2), "city": m.group(3)} if m else None
 
 
-def model_for(rec: dict, cards: list[dict], here=None) -> tuple[Deal | None, dict]:
+def model_for(rec: dict, cards: list[dict], here=None, ring: str = "zone") -> tuple[Deal | None, dict]:
     rent = E.rent(cards, rec, here)
     oc = E.owner_costs(rec.get("desc") or "")
-    ey, notes = E.exit_yield(rec, oc)
+    ey, notes = E.exit_yield(rec, oc, ring)
     info = {"rent": rent, "owner": oc, "exit_yield": ey, "exit_notes": notes, "year": E.year_of(rec),
             "new_build": E.new_build(rec), "shell": bool(E.SHELL.search(rec.get("desc") or "")),
-            "condition": E.condition(rec)}
+            "condition": E.condition(rec), "unit": E.is_unit(rec), "desc_partial": bool(rec.get("desc_partial"))}
     if not rent["rent"]:
         return None, info
     deal = Deal(ask=rec["price"], area=rec["area"], rent=round(rent["rent"]), exit_yield=ey,
@@ -52,7 +53,8 @@ def model_for(rec: dict, cards: list[dict], here=None) -> tuple[Deal | None, dic
 
 def rank_key(c: dict):
     zone_first = 0 if c["place"]["ring"] == "zone" else 1
-    return (0 if c["passes"] else 1, 0 if C.NEARBY_OVER_ZONE else zone_first, c["breakeven_discount"])
+    building_first = 1 if C.BUILDINGS_FIRST and c["info"]["unit"] else 0
+    return (0 if c["passes"] else 1, building_first, 0 if C.NEARBY_OVER_ZONE else zone_first, c["breakeven_discount"])
 
 
 def main(run_dir: Path, include_shown: bool = False) -> None:
@@ -76,9 +78,11 @@ def main(run_dir: Path, include_shown: bool = False) -> None:
             continue
         lat, lon, _ = geo
         # район — по карте, город — по адресу объявления, а не по поиску, в выдаче которого оно нашлось
-        rec["territory"] = locate.nearest(lat, lon)["territory"]
+        zone = locate.nearest(lat, lon)
+        rec["territory"] = zone["territory"]
+        ring = "zone" if zone["inside"] or (not zone["whole"] and zone["metres"] <= 1500) else "nearby"
         rec["slug"] = re.search(r"\.nl/[a-z]+/([a-z0-9-]+)/object-", rec["url"]).group(1)
-        deal, info = model_for(rec, cards, (lat, lon))
+        deal, info = model_for(rec, cards, (lat, lon), ring)
         if not deal:
             rejected.append({"url": rec["url"], "title": rec["title"], "why": ["нет данных об аренде рядом"]})
             continue
@@ -116,7 +120,8 @@ def main(run_dir: Path, include_shown: bool = False) -> None:
             "info": {**info, "rent": {k: v for k, v in info["rent"].items() if k != "comps"},
                      "comps": [{k: c.get(k) for k in ("title", "area", "rent_m2", "url", "km")} for c in info["rent"]["comps"]]},
             "deal": ev["base"]["deal"], "breakeven": ev["breakeven"], "breakeven_discount": ev["breakeven_discount"],
-            "offer": ev["offer"], "passes": ev["passes"], "profit_at_ask": ev["at_ask"]["profit"],
+            "offer": ev["offer"], "offer_discount": 1 - ev["offer"] / rec["price"],
+            "passes": ev["passes"] and 1 - ev["offer"] / rec["price"] <= C.OFFER_DISCOUNT_MAX, "profit_at_ask": ev["at_ask"]["profit"],
             "net_at_offer": ev["base"]["net"], "sale": ev["base"]["sale"],
         })
     done.sort(key=rank_key)
@@ -126,7 +131,8 @@ def main(run_dir: Path, include_shown: bool = False) -> None:
     (run_dir / "shortlist.json").write_text(json.dumps(short, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"страниц {len(seen)}, посчитано {len(done)}, прошли порог {len(short)}, отсеяно {len(rejected)}")
     for c in done[:25]:
-        print(f"{'✓' if c['passes'] else ' '} {c['breakeven_discount'] * 100:5.1f}%  {c['place']['ring']:6} "
+        print(f"{'✓' if c['passes'] else ' '} {c['breakeven_discount'] * 100:5.1f}% / {c['offer_discount'] * 100:4.1f}%  "
+              f"{'юнит  ' if c['info']['unit'] else 'здание'}{'?' if c['info']['desc_partial'] else ' '} {c['place']['ring']:6} "
               f"{c['territory']:12} €{c['price']:>9,} {c['area']:>5} м² аренда €{c['deal']['rent']:>7,} "
               f"BAR {c['deal']['exit_yield'] * 100:.2f}  A {c['road']['km']} км  {c['title'][-70:]}")
 

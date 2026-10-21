@@ -663,6 +663,16 @@
       ]
     },
     {
+      "slug": "televisieweg-141-almere",
+      "title": "Televisieweg 141, Almere",
+      "city": "Almere",
+      "price": "€ 299.500",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/almere/object-44549677-televisieweg-141/",
+      "reports": [
+        "Флип-модель Televisieweg 141 Алмере (21.10.26).pdf"
+      ]
+    },
+    {
       "slug": "tijnmuiden-18a-amsterdam",
       "title": "Tijnmuiden 18-A и 20, Amsterdam",
       "city": "Amsterdam",
@@ -774,5 +784,5 @@
       ]
     }
   ],
-  "updated": "2026-10-20"
+  "updated": "2026-10-21"
 }

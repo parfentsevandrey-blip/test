@@ -18,7 +18,12 @@ NOT_BUSINESS = re.compile(r"woning te bouwen|woonbestemming|transformatie naar w
                           r"onderdeel (?:uit )?van een (?:buurt)?winkelcentrum|horecapand|restaurant te koop", re.I)
 TENDER = re.compile(r"\binschrijving\b|\bveiling\b|biedingsprocedure|bieden vanaf", re.I)
 SHELL = re.compile(r"\bcasco\b", re.I)
-MEZZ = re.compile(r"(?:ca\.?|circa)?\s*([\d.]+)\s*m²?\s*(?:entresol|insteekvloer|mezzanine)", re.I)
+# антресоль: «178 m² entresol» или «Tussenverdieping: ca. 178 m²»
+MEZZ = re.compile(r"(?:ca\.?|circa)?\s*([\d.]+)\s*m²?\s*(?:entresol|insteekvloer|mezzanine|tussenverdieping|tussenvloer)|"
+                  r"(?:entresol|insteekvloer|mezzanine|tussenverdieping|tussenvloer)\W{0,6}(?:ca\.?|circa)?\s*([\d.]+)\s*m", re.I)
+# юнит в комплексе, а не отдельное здание
+UNIT = re.compile(r"bedrijfsverzamel|verzamelgebouw|verzamelcomplex|(?<!geen )(?<!geen sprake van een )appartementsrecht|"
+                  r"\bvve\b|vereniging van eigenaren|\b(?:deze|de|betreft een|een) (?:bedrijfs)?unit\b|bedrijfsunit", re.I)
 # проект из многих юнитов: цена «от», площадь в карточке — другого юнита
 PROJECT = re.compile(r"(?:te koop|prijzen|verkoopprijzen|units?) vanaf €|vanaf € ?[\d.]+,?-? (?:v\.o\.n|excl)|"
                      r"units variëren|nog (?:enkele|slechts \w+|\d+) units|realiseert [^.]{0,40}\d+ [^.]{0,30}units|"
@@ -62,21 +67,26 @@ def owner_costs(desc: str) -> dict:
 
 
 def checked_area(rec: dict) -> tuple[int | None, str | None]:
-    """Площадь из карточки, сверенная с текстом: если текст везде называет заметно меньшую площадь
-    (меньше 80 % карточки), берём её — в карточке бывает площадь с навесом, участком или другим юнитом."""
+    """Площадь из карточки, сверенная с текстом: если описание называет меньшую общую площадь, берём её."""
     area = rec.get("area")
     if not area:
         return area, None
-    found = [int(m.group(1).replace(".", "")) for m in AREA_TEXT.finditer(rec.get("desc") or "")]
+    found = [int(m.group(1).replace(".", "")) for m in AREA_TEXT.finditer(re.sub(r"\s+", " ", rec.get("desc") or ""))]
     found = [v for v in found if 0.3 * area <= v <= 1.5 * area]
-    if not found or any(v >= 0.8 * area for v in found):
+    if not found or max(found) >= area:
         return area, None
+    # описание называет меньшую общую площадь — берём её: в карточке бывает площадь с навесом, участком или другим юнитом
     return max(found), f"в карточке {area} м², в описании {max(found)} м²"
 
 
 def mezzanine(rec: dict) -> float:
-    m = MEZZ.search(rec.get("desc") or "")
-    return float(m.group(1).replace(".", "")) if m else 0.0
+    m = MEZZ.search(re.sub(r"\s+", " ", rec.get("desc") or ""))
+    return float((m.group(1) or m.group(2)).replace(".", "")) if m else 0.0
+
+
+def is_unit(rec: dict) -> bool:
+    """Юнит в комплексе (общий участок, ассоциация владельцев) — в отличие от отдельного здания."""
+    return bool(UNIT.search(re.sub(r"\s+", " ", rec.get("desc") or "")))
 
 
 def condition(rec: dict) -> str:
@@ -157,7 +167,7 @@ def rent(cards: list[dict], rec: dict, here: tuple[float, float] | None = None) 
     return out
 
 
-def exit_yield(rec: dict, oc: dict) -> tuple[float, list[str]]:
+def exit_yield(rec: dict, oc: dict, ring: str = "zone") -> tuple[float, list[str]]:
     base = C.EXIT_YIELD_CITY.get(rec["slug"], C.EXIT_YIELD[rec["territory"]])
     notes = []
     y = year_of(rec)
@@ -170,6 +180,9 @@ def exit_yield(rec: dict, oc: dict) -> tuple[float, list[str]]:
     if (rec.get("area") or 0) >= 2000:
         base += C.EXIT_ADJ["large_2000m2"]
         notes.append("больше 2.000 м²")
+    if ring != "zone":
+        base += C.EXIT_ADJ["nearby"]
+        notes.append("объект вне основных районов")
     if oc["lease_end"] and oc["lease_end"] <= 2060:
         base += C.EXIT_ADJ["lease_ends_2060"]
         notes.append(f"право на землю до {oc['lease_end']} года")

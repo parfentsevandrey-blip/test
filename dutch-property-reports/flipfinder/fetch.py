@@ -39,20 +39,42 @@ def get(url: str, *, max_age_h: float = 24, pause: float = 1.0) -> str | None:
     if path.exists() and time.time() - path.stat().st_mtime < max_age_h * 3600:
         return path.read_text(encoding="utf-8")
     from scrapling.fetchers import Fetcher
-    for attempt in range(3):
+    walled = False
+    for attempt in range(2 if not WALLED else 0):
         try:
             r = Fetcher.get(url, timeout=60)
             if r.status == 404:
                 return None
             if r.status == 200 and F.WALL not in r.html_content:
-                CACHE.mkdir(parents=True, exist_ok=True)
-                path.write_text(r.html_content, encoding="utf-8")
-                time.sleep(pause)
-                return r.html_content
+                return _keep(path, r.html_content, pause)
+            walled = walled or F.WALL in r.html_content
         except Exception as exc:                      # noqa: BLE001 — сеть, повторяем
             print("  ошибка загрузки", type(exc).__name__, url, flush=True)
         time.sleep(3 * (attempt + 1))
-    return None
+    # стена на нашем адресе: страницу отрисовывает reader-прокси (см. README, «Обход стены»),
+    # дальше в этом запуске сразу идём через него
+    if walled:
+        _wall_seen()
+    try:
+        return _keep(path, F.fetch(url, as_html=True, tries=2), pause)
+    except Exception as exc:                          # noqa: BLE001
+        print("  прокси не отдал страницу", type(exc).__name__, url, flush=True)
+        return None
+
+
+WALLED = False
+
+
+def _wall_seen() -> None:
+    global WALLED
+    WALLED = True
+
+
+def _keep(path: Path, html: str, pause: float) -> str:
+    CACHE.mkdir(parents=True, exist_ok=True)
+    path.write_text(html, encoding="utf-8")
+    time.sleep(pause)
+    return html
 
 
 # ------------------------------------------------------------------ выдача поиска
@@ -91,12 +113,12 @@ def cards(html: str) -> list[dict]:
     return out
 
 
-def search(slug: str, kind: str, deal: str, *, pages: int = 15) -> list[dict]:
+def search(slug: str, kind: str, deal: str, *, pages: int = 15, max_age_h: float = 24) -> list[dict]:
     """Все карточки выдачи «kind/slug/deal» (kind: bedrijfshal | belegging, deal: koop | huur)."""
     found, seen = [], set()
     for page in range(1, pages + 1):
         url = f"{BASE}/{kind}/{slug}/{deal}/" + (f"p{page}/" if page > 1 else "")
-        h = get(url)
+        h = get(url, max_age_h=max_age_h)
         if not h:
             break
         new = [c for c in cards(h) if c["url"] not in seen]
@@ -158,6 +180,8 @@ def listing(url: str) -> dict | None:
         m = re.search(r"vrije hoogte[^\d]{0,40}(\d+[.,]?\d*)\s*m", rec["desc"], re.I)
         rec["height"] = f"{m.group(1).replace('.', ',')} м" if m else None
     rec["photos"] = F.business_gallery(h)
+    # reader-прокси отдаёт описание только до кнопки «Lees de volledige omschrijving»
+    rec["desc_partial"] = len(rec["desc"]) < 1500 and "Lees de volledige omschrijving" in rec["desc"]
     return rec
 
 

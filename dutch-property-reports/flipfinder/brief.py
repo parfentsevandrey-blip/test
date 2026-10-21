@@ -345,6 +345,10 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     year, oc, road = pick["info"].get("year"), pick["info"]["owner"], pick["road"]
     shots, plans = photos(rec, work / "img")
     caps = json.loads((work / "captions.json").read_text(encoding="utf-8")) if (work / "captions.json").exists() else {}
+    if caps:
+        # подписанные кадры — отобранные: только они и в порядке подписей (первый — обложка)
+        by_url = {s["url"]: s for s in shots}
+        shots = [by_url[u] for u in caps if u in by_url]
     for i, s in enumerate(shots, 1):
         s["cap"] = caps.get(s["url"], f"Кадр {i}")
     for p in plans:
@@ -559,6 +563,22 @@ def render(ctx: dict, out_pdf: Path, work: Path) -> list[dict]:
     return overflow
 
 
+def register(pick: dict, report: str) -> None:
+    """Записать объект в реестр показанных заказчику, чтобы следующий отбор его пропускал."""
+    from reportgen import registry
+    a = pick["address"]
+    slug = re.sub(r"[^a-z0-9]+", "-", f"{a['street']} {a['city']}".lower()).strip("-")
+    data = registry.load(C.ROOT / "data")
+    entry = next((e for e in data["objects"] if e.get("slug") == slug), None)
+    if entry is None:
+        entry = {"slug": slug, "title": f"{a['street']}, {a['city']}", "city": a["city"],
+                 "price": f"€ {num(pick['price'])}", "url": pick["url"], "reports": []}
+        data["objects"].append(entry)
+    if report not in entry["reports"]:
+        entry["reports"].append(report)
+    registry.save(C.ROOT / "data", data)
+
+
 def main(run_dir: Path, rank: int = 1, publish: bool = False) -> None:
     short = json.loads((run_dir / "shortlist.json").read_text(encoding="utf-8"))
     cands = json.loads((run_dir / "candidates.json").read_text(encoding="utf-8"))
@@ -575,6 +595,8 @@ def main(run_dir: Path, rank: int = 1, publish: bool = False) -> None:
     (work / "photos.json").write_text(json.dumps([{"url": s["url"], "cap": s["cap"]} for c in ctx["photo_pages"] for s in c["shots"]]
                                                  + [{"url": p["url"], "cap": p["cap"]} for p in ctx["plans"]],
                                                  ensure_ascii=False, indent=1), encoding="utf-8")
+    if publish:
+        register(pick, out.name)
     print("PDF:", out)
     print("переполнение страниц:", overflow or "нет")
     print("фото:", sum(len(c["shots"]) for c in ctx["photo_pages"]), "планировок:", len(ctx["plans"]), "| подписи:", work / "captions.json")

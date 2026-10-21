@@ -13,6 +13,7 @@ REGISTRY = ROOT / "data" / "registry.json"
 PRICE_MAX = 2_000_000          # цена продавца, k.k.
 AREA_MIN = 150                 # м²
 THRESHOLD = 0.11               # скидка для выхода в ноль — не больше 11 %
+OFFER_DISCOUNT_MAX = 0.15      # скидка базового сценария (предложение продавцу) — не больше 15 %
 HORIZON = 12                   # продажа через 12 месяцев
 MOTORWAY_KM = 6.0              # до въезда на магистраль A — не дальше, км по дороге
 NEARBY_MIN = 30                # «поблизости»: не дальше 30 минут на машине от наших районов
@@ -21,6 +22,7 @@ OFFICE_SHARE_MAX = 0.5         # офисов не больше половины
 # True — объект поблизости, прошедший порог, ставится выше объекта в наших районах,
 # который тоже прошёл порог, если ему нужна меньшая скидка.
 NEARBY_OVER_ZONE = False
+BUILDINGS_FIRST = True         # отдельное здание выше юнита в комплексе (bedrijfsverzamelgebouw, appartementsrecht, VvE)
 
 # ------------------------------------------------------------------ города: наши районы и окрестности
 ZONES = {
@@ -36,13 +38,16 @@ NEARBY = {
     "ai-schiphol": ["amstelveen", "uithoorn", "haarlem", "zwanenburg", "halfweg", "kudelstaart", "de-kwakel",
                     "cruquius", "vijfhuizen", "hillegom", "lisse"],
     "ai-amsterdam": ["zaandam", "weesp", "duivendrecht", "purmerend", "lelystad", "landsmeer", "wormerveer",
-                     "krommenie", "oostzaan", "muiden", "abcoude"],
+                     "krommenie", "oostzaan", "muiden", "abcoude", "assendelft", "wormer"],
     "eindhoven": ["helmond", "nuenen", "geldrop", "waalre", "oirschot", "valkenswaard", "eersel"],
-    "nijmegen": ["arnhem", "elst-ge", "beuningen-ge", "cuijk", "malden", "groesbeek", "bemmel", "druten"],
+    "nijmegen": ["arnhem", "elst-ge", "beuningen-ge", "cuijk", "malden", "groesbeek", "bemmel", "druten",
+                 "huissen", "duiven", "westervoort", "zevenaar"],
     "agriport": ["heerhugowaard", "schagen", "enkhuizen", "zwaag", "medemblik", "wognum", "alkmaar", "obdam"],
     "rotterdam": ["schiedam", "vlaardingen", "capelle-aan-den-ijssel", "ridderkerk", "barendrecht", "rhoon",
                   "poortugaal", "spijkenisse", "krimpen-aan-den-ijssel", "bleiswijk", "berkel-en-rodenrijs",
-                  "bergschenhoek", "nieuwerkerk-aan-den-ijssel", "hendrik-ido-ambacht", "zwijndrecht", "maassluis"],
+                  "bergschenhoek", "nieuwerkerk-aan-den-ijssel", "hendrik-ido-ambacht", "zwijndrecht", "maassluis",
+                  "dordrecht", "papendrecht", "alblasserdam", "sliedrecht", "oud-beijerland", "delft", "zoetermeer",
+                  "gouda", "waddinxveen", "pijnacker", "naaldwijk"],
 }
 
 # ------------------------------------------------------------------ рынок: доходность, по которой инвестор купит сданное
@@ -54,7 +59,8 @@ EXIT_YIELD = {"ai-amsterdam": 0.070, "ai-schiphol": 0.0725, "rotterdam": 0.075, 
 EXIT_YIELD_CITY = {"almere": 0.0725, "lelystad": 0.0825, "purmerend": 0.0775, "zaandam": 0.0750,
                    "helmond": 0.0800, "arnhem": 0.0825, "alkmaar": 0.0800, "heerhugowaard": 0.0825}
 EXIT_ADJ = {"poor": 0.0025, "after_2015": -0.0025, "large_2000m2": 0.0025,
-            "lease_ends_2060": 0.005}          # земля в аренде до 2060 года и раньше
+            "lease_ends_2060": 0.005,          # земля в аренде до 2060 года и раньше
+            "nearby": 0.0025}                  # объект вне наших районов: инвесторов меньше
 
 # ------------------------------------------------------------------ сделка и содержание
 OVB = 0.104                    # налог на передачу нежилой недвижимости (ст. 14 WBR), платит каждый покупатель
