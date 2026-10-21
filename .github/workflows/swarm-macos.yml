@@ -37,6 +37,18 @@ jobs:
       - name: Self-test render
         run: dist/Swarm.app/Contents/MacOS/Swarm --selftest-render "$RUNNER_TEMP/render"
 
+      # Настоящее окно с демо-раздачами: широкое и узкое — проверяем, что ничего не обрезается.
+      - name: UI screenshots
+        run: |
+          for W in 1280 1000; do
+            dist/Swarm.app/Contents/MacOS/Swarm --demo-ui $W &
+            PID=$!
+            sleep 10
+            screencapture -x "$RUNNER_TEMP/render/window-$W.png" || echo "screencapture не сработал"
+            kill $PID 2>/dev/null || true
+            sleep 2
+          done
+
       - uses: actions/upload-artifact@v4
         with:
           name: Swarm-render

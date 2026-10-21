@@ -20,6 +20,12 @@ struct SwarmApp: App {
                 .background(WindowAccessor { window in
                     window.titlebarAppearsTransparent = true
                     window.isMovableByWindowBackground = true
+                    if DemoUI.isOn, let screen = window.screen ?? NSScreen.main {
+                        let width = min(DemoUI.width ?? 1280, screen.visibleFrame.width)
+                        let height = min(820, screen.visibleFrame.height)
+                        window.setFrame(NSRect(x: screen.visibleFrame.minX, y: screen.visibleFrame.maxY - height,
+                                               width: width, height: height), display: true)
+                    }
                 })
                 .onAppear {
                     model.start()

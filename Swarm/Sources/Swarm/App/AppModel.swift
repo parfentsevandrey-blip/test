@@ -110,6 +110,10 @@ final class AppModel {
 
     func start() {
         guard pollTask == nil else { return }
+        if DemoUI.isOn {
+            startDemo()
+            return
+        }
         let engine = self.engine
         pollTask = Task { [weak self] in
             await engine.start()
@@ -160,6 +164,26 @@ final class AppModel {
     func unwatch(_ id: String) {
         watched[id, default: 1] -= 1
         if watched[id] == 0 { watched[id] = nil }
+    }
+
+    /// `--demo-ui`: окно с выдуманными раздачами без сети — для скриншотов интерфейса в CI.
+    private func startDemo() {
+        torrents = DemoUI.torrents()
+        selectedID = torrents.first?.id
+        pollTask = Task { [weak self] in
+            var i = 0
+            while !Task.isCancelled {
+                i += 1
+                guard let self else { return }
+                let now = Date()
+                let down = 6_900_000 + 2_500_000 * sin(Double(i) / 4)
+                self.history.append(SpeedSample(id: i, date: now, down: down, up: 120_000))
+                if self.history.count > 120 { self.history.removeFirst() }
+                self.torrentHistory[self.torrents[0].id, default: []].append(SpeedSample(id: i, date: now, down: down, up: 120_000))
+                self.dock.update(down: down, progress: 0.37, active: 2)
+                try? await Task.sleep(for: .milliseconds(500))
+            }
+        }
     }
 
     // MARK: - Сводка

@@ -80,7 +80,7 @@ enum RenderSelfTest {
         return s
     }
 
-    private static func sample(progress: Double, now: Date) -> TorrentSnapshot {
+    static func sample(progress: Double, now: Date) -> TorrentSnapshot {
         var generator = SystemRandomNumberGenerator()
         let peers = (0..<26).map { i -> PeerSnapshot in
             let seed = i % 3 != 0
