@@ -9,6 +9,7 @@ enum SelfTest {
         let args = CommandLine.arguments
         guard let mode = args.first(where: { $0.hasPrefix("--selftest-") }) else { return }
         let rest = Array(args.drop { $0 != mode }.dropFirst())
+        setvbuf(stdout, nil, _IOLBF, 0)
         Task {
             var ok = false
             switch mode {

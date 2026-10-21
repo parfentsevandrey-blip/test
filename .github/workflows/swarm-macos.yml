@@ -18,6 +18,8 @@ jobs:
     defaults:
       run:
         working-directory: Swarm
+    env:
+      SWIFT_BACKTRACE: enable=yes,sanitize=no,interactive=no
     steps:
       - uses: actions/checkout@v4
 
@@ -45,6 +47,14 @@ jobs:
           echo "Торрент: $NAME"
           curl -fsSL -o "$RUNNER_TEMP/test.torrent" "$BASE$NAME"
           dist/Swarm.app/Contents/MacOS/Swarm --selftest-internet "$RUNNER_TEMP/test.torrent" "$RUNNER_TEMP/internet"
+
+      - name: Crash reports
+        if: failure()
+        run: |
+          for f in ~/Library/Logs/DiagnosticReports/Swarm*.ips; do
+            [ -f "$f" ] || continue
+            echo "=== $f"; head -c 60000 "$f"
+          done
 
       - uses: actions/upload-artifact@v4
         with:
