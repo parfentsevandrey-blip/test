@@ -209,7 +209,7 @@ struct AppDetailPanel: View {
             VStack(alignment: .trailing, spacing: 2) {
                 Text(app.size == nil ? "…" : Format.bytes((app.size ?? 0) + model.leftovers.reduce(0) { $0 + $1.size }))
                     .font(.system(size: 20, weight: .bold, design: .rounded)).monospacedDigit()
-                Text("программа \(Format.bytes(app.size ?? 0)) + следы \(Format.bytes(model.leftovers.reduce(0) { $0 + $1.size }))")
+                Text(app.size == nil ? "считаю размер…" : "программа \(Format.bytes(app.size ?? 0)) + следы \(Format.bytes(model.leftovers.reduce(0) { $0 + $1.size }))")
                     .font(.system(size: 10.5)).foregroundStyle(.secondary)
                 Text(app.lastUsed.map { "Открывали \(Format.relative($0))" } ?? "Нет данных о запусках")
                     .font(.system(size: 10.5)).foregroundStyle(.secondary)

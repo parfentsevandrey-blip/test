@@ -185,14 +185,17 @@ final class AppModel {
         let visible = bundles.filter { !$0.isSystem }
         apps = visible.map { AppInfo(bundle: $0) }
         appsLoading = false
-        // Размеры и дата последнего запуска — в фоне, по мере готовности.
-        let sized = await Task.detached(priority: .utility) {
-            visible.map { ($0.id, DiskUsage.size(of: $0.url), AppScanner.lastUsed($0.url)) }
-        }.value
-        for (id, size, last) in sized {
-            if let i = apps.firstIndex(where: { $0.id == id }) {
-                apps[i].size = size
-                apps[i].lastUsed = last
+        // Размеры и дата последнего запуска — в фоне, порциями: список оживает сразу, а не после самой большой программы.
+        for start in stride(from: 0, to: visible.count, by: 6) {
+            let chunk = Array(visible[start..<min(start + 6, visible.count)])
+            let sized = await Task.detached(priority: .utility) {
+                JunkScanner.parallelMap(chunk) { ($0.id, DiskUsage.size(of: $0.url), AppScanner.lastUsed($0.url)) }
+            }.value
+            for (id, size, last) in sized {
+                if let i = apps.firstIndex(where: { $0.id == id }) {
+                    apps[i].size = size
+                    apps[i].lastUsed = last
+                }
             }
         }
     }

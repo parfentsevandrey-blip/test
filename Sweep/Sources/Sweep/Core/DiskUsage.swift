@@ -80,6 +80,7 @@ nonisolated enum Format {
 
     static func relative(_ date: Date?, now: Date = Date()) -> String {
         guard let date else { return "—" }
+        if date > now { return "только что" } // у некоторых кэшей даты из будущего
         let f = RelativeDateTimeFormatter()
         f.locale = Locale(identifier: "ru_RU")
         f.unitsStyle = .full
