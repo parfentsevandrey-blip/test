@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Подборка квартир — центр Москвы</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Unbounded:wght@300;400;500;600&display=block" rel="stylesheet">
+<style>
+:root {
+  --paper: #F3F1EC;
+  --card: #FFFFFF;
+  --ink: #121212;
+  --ink-2: #4A4A47;
+  --muted: #8A8781;
+  --line: #DEDAD2;
+  --dark: #121212;
+  --dark-2: #1D1D1B;
+  --dark-line: #333330;
+  --on-dark: #F3F1EC;
+  --on-dark-2: #A9A69F;
+  --accent: #C8F03C;
+  --display: "Unbounded", "Inter Display", sans-serif;
+  --body: "Manrope", "Inter", sans-serif;
+}
+@page { size: 297mm 210mm; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--paper); }
+body {
+  font-family: var(--body); color: var(--ink); font-size: 9.5pt; line-height: 1.45;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  counter-reset: pg;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+.page {
+  width: 297mm; height: 210mm; position: relative; overflow: hidden;
+  background: var(--paper); page-break-after: always; break-after: page;
+  counter-increment: pg;
+}
+.page:last-child { page-break-after: auto; break-after: auto; }
+.dark { background: var(--dark); color: var(--on-dark); }
+img { display: block; }
+.cover-img { width: 100%; height: 100%; object-fit: cover; }
+
+/* chrome */
+.topbar {
+  position: absolute; left: 14mm; right: 14mm; top: 9mm; height: 6mm;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 7pt; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); z-index: 3;
+}
+.dark .topbar { color: var(--on-dark-2); }
+.topbar b { color: var(--ink); font-weight: 600; }
+.dark .topbar b { color: var(--on-dark); }
+.foot {
+  position: absolute; left: 14mm; right: 14mm; bottom: 8mm; display: flex; justify-content: space-between;
+  font-size: 7pt; letter-spacing: .08em; color: var(--muted); z-index: 3;
+}
+.dark .foot { color: var(--on-dark-2); }
+.pnum::before { content: counter(pg, decimal-leading-zero); color: var(--ink); font-weight: 600; margin-right: 1.5mm; }
+.dark .pnum::before { color: var(--on-dark); }
+.body { position: absolute; left: 14mm; right: 14mm; top: 19mm; bottom: 15mm; }
+
+.eyebrow { font-size: 7pt; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.dark .eyebrow { color: var(--on-dark-2); }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: -.02em; line-height: 1.02; }
+.mono { font-variant-numeric: tabular-nums; }
+.chip {
+  display: inline-flex; align-items: center; gap: 1.5mm; padding: 1.2mm 3mm; border-radius: 99px;
+  border: 0.3mm solid var(--line); font-size: 7.5pt; font-weight: 500; white-space: nowrap; background: var(--card);
+}
+.dark .chip { background: transparent; border-color: var(--dark-line); color: var(--on-dark); }
+.chip.solid { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.chip.acc { background: var(--accent); color: var(--ink); border-color: var(--accent); }
+.dot { width: 2.2mm; height: 2.2mm; border-radius: 50%; display: inline-block; flex: none; }
+
+/* ---------- cover ---------- */
+.cover .shade { position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(18,18,18,.96) 0%, rgba(18,18,18,.86) 38%, rgba(18,18,18,.25) 70%, rgba(18,18,18,.1) 100%); }
+.cover .content { position: absolute; left: 16mm; top: 16mm; bottom: 16mm; width: 150mm; display: flex; flex-direction: column; }
+.cover h1 { font-size: 46pt; font-weight: 300; margin-top: auto; }
+.cover h1 em { font-style: normal; color: var(--accent); font-weight: 500; }
+.cover .lead { margin-top: 7mm; font-size: 11pt; color: var(--on-dark-2); max-width: 120mm; }
+.cover .kpis { display: grid; grid-template-columns: repeat(4, auto); gap: 9mm; margin-top: 12mm; padding-top: 6mm; border-top: .3mm solid var(--dark-line); }
+.kpi .v { font-family: var(--display); font-size: 17pt; font-weight: 400; color: var(--on-dark); white-space: nowrap; }
+.kpi .k { font-size: 7pt; letter-spacing: .12em; text-transform: uppercase; color: var(--on-dark-2); margin-top: 1.5mm; }
+.cover .brand { display: flex; align-items: center; gap: 3mm; font-size: 7.5pt; letter-spacing: .16em; text-transform: uppercase; color: var(--on-dark-2); }
+.brand .sq { width: 3.2mm; height: 3.2mm; background: var(--accent); border-radius: .6mm; }
+
+/* ---------- overview ---------- */
+.ov { display: grid; grid-template-columns: 158mm 1fr; grid-template-rows: minmax(0, 1fr); gap: 9mm; height: 100%; }
+.mapbox { position: relative; border-radius: 4mm; overflow: hidden; background: #e8e6e1; }
+.mapbox img { width: 100%; height: 100%; object-fit: cover; }
+.mk {
+  position: absolute; transform: translate(-50%, -50%); width: 7.4mm; height: 7.4mm; border-radius: 50%;
+  background: var(--ink); color: var(--accent); font-family: var(--display); font-size: 7.5pt; font-weight: 500;
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 .8mm #fff, 0 1.5mm 4mm rgba(0,0,0,.35);
+}
+.mk.pill { width: auto; padding: 0 2.4mm; border-radius: 99px; white-space: nowrap; }
+.mk.big { width: 11mm; height: 11mm; font-size: 10pt; }
+.mk.big::after { content: ""; position: absolute; inset: -4.5mm; border-radius: 50%; border: .5mm solid var(--ink); opacity: .35; }
+.ov-list h2 { font-size: 21pt; margin: 2mm 0 5mm; }
+.ov-row { display: grid; grid-template-columns: 9mm 1fr auto; gap: 3mm; align-items: center; padding: 2.35mm 0; border-top: .3mm solid var(--line); }
+.ov-row:last-child { border-bottom: .3mm solid var(--line); }
+.ov-row .n { font-family: var(--display); font-size: 9pt; }
+.ov-row .t { font-weight: 600; font-size: 8.8pt; line-height: 1.2; }
+.ov-row .s { color: var(--muted); font-size: 7.5pt; }
+.ov-row .p { font-family: var(--display); font-size: 9pt; text-align: right; white-space: nowrap; }
+.ov-row .p small { display: block; font-family: var(--body); font-size: 7pt; color: var(--muted); }
+
+/* ---------- comparison ---------- */
+table.cmp { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
+.cmp th { text-align: left; font-weight: 600; font-size: 6.6pt; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 0 2mm 2.5mm; border-bottom: .3mm solid var(--ink); white-space: nowrap; }
+.cmp td { padding: 4.1mm 2mm; border-bottom: .3mm solid var(--line); vertical-align: top; }
+.cmp td.r, .cmp th.r { text-align: right; white-space: nowrap; }
+.cmp .n { font-family: var(--display); font-size: 9pt; }
+.cmp .jk { font-weight: 700; }
+.cmp .sub { color: var(--muted); font-size: 7pt; }
+.cmp .price { font-family: var(--display); font-size: 9pt; }
+.cmp tr.min td { background: rgba(200,240,60,.22); }
+
+.insights { display: grid; grid-template-columns: 172mm 1fr; grid-template-rows: minmax(0, 1fr); gap: 12mm; height: 100%; }
+.chart { background: var(--card); border-radius: 4mm; padding: 8mm 9mm 6mm; }
+.chart h3 { font-size: 12pt; margin-bottom: 1.5mm; }
+.chart .cap { color: var(--muted); font-size: 7.5pt; margin-bottom: 6mm; }
+.chart svg .bar { fill: var(--ink); }
+.chart svg .lbl { font: 600 12px var(--body); fill: var(--ink); }
+.chart svg .lbl .num { font-family: var(--display); font-weight: 500; fill: var(--muted); }
+.chart svg .val { font: 500 11.5px var(--display); fill: var(--ink-2); }
+.chart svg .median { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart svg .median-label { font: 500 10.5px var(--body); fill: var(--muted); }
+.facts { display: flex; flex-direction: column; gap: 0; }
+.fact { padding: 4.2mm 0; border-top: .3mm solid var(--line); display: grid; grid-template-columns: 1fr auto; gap: 2mm 4mm; align-items: baseline; }
+.fact:last-child { border-bottom: .3mm solid var(--line); }
+.fact .k { font-size: 7pt; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; grid-column: 1 / -1; }
+.fact .v { font-family: var(--display); font-size: 15pt; letter-spacing: -.02em; }
+.fact .w { font-size: 8pt; color: var(--ink-2); text-align: right; }
+
+/* ---------- complex (ЖК) ---------- */
+.jk-grid { position: absolute; inset: 0; display: grid; grid-template-columns: 148mm 1fr; }
+.jk-photo { position: relative; }
+.jk-photo img { width: 100%; height: 100%; object-fit: cover; }
+.jk-photo .tag { position: absolute; left: 10mm; bottom: 10mm; display: flex; gap: 2mm; flex-wrap: wrap; }
+.jk-photo .tag .chip { background: rgba(18,18,18,.72); border-color: transparent; color: #fff; backdrop-filter: blur(4px); }
+.jk-side { position: relative; padding: 19mm 14mm 15mm 11mm; display: flex; flex-direction: column; }
+.jk-side .topbar { left: 11mm; }
+.jk-side .foot { left: 11mm; }
+.jk-side h2 { font-size: 25pt; font-weight: 400; margin: 2mm 0 2.5mm; }
+.jk-side .dev { color: var(--on-dark-2); font-size: 8.5pt; }
+.jk-side .dev b { color: var(--accent); font-weight: 600; }
+.jk-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin: 6mm 0 5mm; border-top: .3mm solid var(--dark-line); }
+.jk-facts div { padding: 3mm 3mm 3mm 0; border-bottom: .3mm solid var(--dark-line); }
+.jk-facts .k { font-size: 6.5pt; letter-spacing: .12em; text-transform: uppercase; color: var(--on-dark-2); }
+.jk-facts .v { font-family: var(--display); font-size: 10.5pt; margin-top: 1mm; line-height: 1.15; }
+.jk-concept { font-size: 8.6pt; color: #D9D6CF; line-height: 1.5; }
+.jk-arch { font-size: 7.5pt; color: var(--on-dark-2); margin-top: 3mm; }
+.jk-arch b { color: var(--on-dark); font-weight: 600; }
+.infra { display: flex; flex-wrap: wrap; gap: 1.6mm; margin-top: 4.5mm; }
+.infra .chip { font-size: 7pt; padding: 1mm 2.6mm; }
+.strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5mm; margin-top: auto; padding-top: 4mm; }
+.strip figure { position: relative; height: 25mm; border-radius: 2.5mm; overflow: hidden; }
+.strip img { width: 100%; height: 100%; object-fit: cover; }
+.strip figcaption { position: absolute; left: 2mm; bottom: 1.6mm; font-size: 6.5pt; font-weight: 600; color: #fff; text-shadow: 0 0 3mm rgba(0,0,0,.8); }
+.jk-in { display: flex; gap: 2mm; margin-top: 4mm; flex-wrap: wrap; }
+.src { font-size: 6pt; color: #6E6B65; margin-top: 2.5mm; word-break: break-all; line-height: 1.35; }
+
+/* ---------- listing: hero ---------- */
+.hero-grid { position: absolute; inset: 0; display: grid; grid-template-columns: 163mm 1fr; }
+.hero-photo { position: relative; }
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; }
+.hero-photo .badge {
+  position: absolute; left: 10mm; top: 10mm; width: 19mm; height: 19mm; border-radius: 50%; background: var(--accent);
+  display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: 17pt; font-weight: 500;
+}
+.hero-photo .src-tag { position: absolute; left: 10mm; bottom: 9mm; font-size: 6.5pt; color: rgba(255,255,255,.85); letter-spacing: .1em; text-transform: uppercase; text-shadow: 0 0 3mm rgba(0,0,0,.6); }
+.hero-side { position: relative; padding: 19mm 14mm 15mm 10mm; display: flex; flex-direction: column; }
+.hero-side .topbar, .hero-side .foot { left: 10mm; }
+.hero-side h2 { font-size: 19pt; margin: 2.5mm 0 2mm; }
+.addr { font-size: 8.5pt; color: var(--ink-2); }
+.price { margin-top: 6mm; font-family: var(--display); font-size: 25pt; letter-spacing: -.03em; font-weight: 400; line-height: 1; white-space: nowrap; }
+.ppm { margin-top: 2mm; font-size: 8.5pt; color: var(--ink-2); }
+.ppm b { font-weight: 700; color: var(--ink); }
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2mm; margin-top: 6mm; }
+.tile { background: var(--card); border-radius: 2.6mm; padding: 2.6mm 3mm; }
+.tile .k { font-size: 6.4pt; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.tile .v { font-family: var(--display); font-size: 11pt; margin-top: .8mm; white-space: nowrap; }
+.metro { margin-top: 5mm; }
+.metro .row { display: flex; align-items: center; gap: 2.5mm; padding: 1.6mm 0; border-bottom: .3mm solid var(--line); font-size: 8.5pt; }
+.metro .row:first-child { border-top: .3mm solid var(--line); }
+.metro .row .m { margin-left: auto; color: var(--ink-2); font-size: 8pt; }
+.jkline { margin-top: 5mm; padding: 3.2mm 3.6mm; border-radius: 2.6mm; background: var(--ink); color: var(--paper); }
+.jkline .eyebrow { color: var(--accent); }
+.jkline .jkname { font-family: var(--display); font-size: 11pt; margin-top: 1mm; }
+.jkline .jkmeta { font-size: 7.5pt; color: var(--on-dark-2); margin-top: .8mm; }
+.chips { display: flex; flex-wrap: wrap; gap: 1.6mm; margin-top: auto; padding-top: 4mm; }
+
+/* ---------- listing: plan + specs ---------- */
+.two { display: grid; grid-template-columns: 150mm 1fr; grid-template-rows: minmax(0, 1fr); gap: 10mm; height: 100%; }
+.plan { background: var(--card); border-radius: 4mm; padding: 8mm; display: flex; flex-direction: column; min-height: 0; }
+.plan .imgwrap { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+.plan img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.plan .cap { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4mm; }
+.plan .cap h3 { font-size: 12pt; }
+.plan .none { flex: 1; min-height: 0; position: relative; border-radius: 2.5mm; overflow: hidden; }
+.plan .none img { width: 100%; height: 100%; object-fit: cover; max-height: none; filter: grayscale(.3); }
+.plan .none span { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); background: var(--ink); color: var(--paper); padding: 3mm 5mm; border-radius: 99px; font-size: 8pt; font-weight: 600; white-space: nowrap; }
+.specs h3 { font-size: 12pt; margin-bottom: 1mm; }
+.spec-group { margin-top: 3.4mm; }
+.spec-group .eyebrow { margin-bottom: 1.5mm; }
+.spec { display: flex; justify-content: space-between; gap: 4mm; padding: 1.05mm 0; border-bottom: .3mm solid var(--line); font-size: 7.9pt; line-height: 1.35; }
+.spec span:first-child { color: var(--ink-2); }
+.spec span:last-child { font-weight: 600; text-align: right; }
+
+/* ---------- listing: gallery + location ---------- */
+.gl { display: grid; grid-template-columns: 146mm 1fr; grid-template-rows: minmax(0, 1fr); gap: 9mm; height: 100%; }
+.grid4 { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 2.5mm; height: 100%; }
+.grid4 img, .grid6 img { width: 100%; height: 100%; min-height: 0; object-fit: cover; border-radius: 2.5mm; }
+.grid4.n1 { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr); }
+.grid4.n2 { grid-template-rows: minmax(0, 1fr); }
+.grid4.n3 img:first-child { grid-row: span 2; }
+.loc { display: flex; flex-direction: column; min-height: 0; }
+.loc .mapbox { height: 66mm; flex: none; border-radius: 3mm; }
+.loc h3 { font-size: 12pt; margin: 0 0 3mm; }
+.loc .addr2 { display: flex; justify-content: space-between; gap: 3mm; font-size: 7.5pt; color: var(--ink-2); margin-top: 2.2mm; }
+.desc { margin-top: 5mm; font-size: 7.8pt; line-height: 1.5; color: var(--ink-2); white-space: pre-line; overflow: hidden; flex: 1; min-height: 0; }
+.desc-h { margin-top: 5mm; }
+.grid6 { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 2.5mm; height: 100%; }
+.grid6 img:first-child { grid-column: span 2; }
+.grid6.n3 { grid-template-rows: minmax(0, 1fr); }
+.grid6.n4 { grid-template-columns: 1fr 1fr; }
+.grid6.n3 img:first-child, .grid6.n4 img:first-child { grid-column: auto; }
+</style>
+</head>
+<body>
+
+{# ======================= COVER ======================= #}
+<section class="page dark cover">
+  <img class="cover-img" src="{{ cover }}" alt="">
+  <div class="shade"></div>
+  <div class="content">
+    <div class="brand"><span class="sq"></span>Подборка недвижимости · {{ date }}</div>
+    <h1>Центр<br>Москвы<br><em>10 квартир</em></h1>
+    <p class="lead">Квартиры {{ stats.area[0]|round|int }}–{{ stats.area[1]|round|int }} м² в {{ stats.jk }} клубных домах и ЖК премиум-класса: {{ stats.districts|join(', ') }}. Характеристики, планировки, расположение на карте и справка по каждому комплексу.</p>
+    <div class="kpis">
+      <div class="kpi"><div class="v">{{ stats.count }}</div><div class="k">квартир</div></div>
+      <div class="kpi"><div class="v">{{ stats.jk }}</div><div class="k">жилых комплексов</div></div>
+      <div class="kpi"><div class="v">{{ (stats.price[0]/1e6)|round|int }}–{{ (stats.price[1]/1e6)|round|int }}</div><div class="k">млн ₽</div></div>
+      <div class="kpi"><div class="v">{{ stats.ppm2[2]|mln(2) }}</div><div class="k">медиана ₽ за м²</div></div>
+    </div>
+  </div>
+</section>
+
+{# ======================= OVERVIEW ======================= #}
+<section class="page">
+  <div class="topbar"><span><b>Обзор</b> · расположение</span><span>Яндекс Карты</span></div>
+  <div class="body">
+    <div class="ov">
+      <div class="mapbox">
+        <img src="{{ overview_map }}" alt="Карта объектов">
+        {% for c in maps.overview.clusters %}
+        <div class="mk{% if c.orders|length > 1 %} pill{% endif %}" style="left: {{ c.left }}%; top: {{ c.top }}%">{{ c.orders|join(' · ') }}</div>
+        {% endfor %}
+      </div>
+      <div class="ov-list">
+        <div class="eyebrow">Объекты подборки</div>
+        <h2>10 адресов<br>в пределах ТТК</h2>
+        {% for it in listings %}
+        <div class="ov-row">
+          <div class="n">{{ '%02d' % it.order }}</div>
+          <div><div class="t">{{ it.jkShort }}</div><div class="s">{{ it.kind }} · {{ it.area.total|area }} · {{ it.district|replace('район ', '') }}</div></div>
+          <div class="p">{{ it.price|mln(1) }}<small>{{ it.ppm2|mln(2) }} ₽/м²</small></div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span class="pnum">Подборка · центр Москвы</span><span>Источник: ЦИАН, данные на {{ date }}</span></div>
+</section>
+
+{# ======================= COMPARISON TABLE ======================= #}
+<section class="page">
+  <div class="topbar"><span><b>Сравнение</b> · ключевые параметры</span><span>Цены — по объявлениям</span></div>
+  <div class="body">
+    <table class="cmp">
+      <thead><tr>
+        <th>№</th><th>Комплекс / адрес</th><th>Тип</th><th class="r">Общая</th><th class="r">Кухня</th><th class="r">Этаж</th><th class="r">Потолки</th><th class="r">Год</th><th>Метро</th><th class="r">Цена</th><th class="r">₽ / м²</th>
+      </tr></thead>
+      <tbody>
+      {% for it in listings %}
+      <tr{% if it.id == stats.cheapest.id %} class="min"{% endif %}>
+        <td class="n">{{ '%02d' % it.order }}</td>
+        <td><div class="jk">{{ it.jkShort }}</div><div class="sub">{{ it.address }}</div></td>
+        <td>{{ it.kind|replace('-комнатная', '-комн.')|replace('Свободная планировка', 'Своб. план.') }}<div class="sub">{{ 'Новостройка' if it.isNew else 'Вторичка' }}</div></td>
+        <td class="r">{{ it.area.total|area }}</td>
+        <td class="r">{{ it.area.kitchen|area }}</td>
+        <td class="r">{{ it.floor }} / {{ it.floors }}</td>
+        <td class="r">{% if it.building.ceiling %}{{ ('%.2f' % it.building.ceiling).rstrip('0').rstrip('.').replace('.', ',') }} м{% else %}—{% endif %}</td>
+        <td class="r">{{ it.year or '—' }}</td>
+        <td>{% set m = it.metro[0] %}<span class="dot" style="background: {{ m.color }}"></span> {{ m.name }}<div class="sub">{{ m.minutes }} мин пешком</div></td>
+        <td class="r price">{{ it.price|money }}</td>
+        <td class="r">{{ it.ppm2|money }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="foot"><span class="pnum">Подборка · центр Москвы</span><span>Подсвечен объект с минимальной ценой за м²</span></div>
+</section>
+
+{# ======================= INSIGHTS ======================= #}
+<section class="page">
+  <div class="topbar"><span><b>Аналитика</b> · цена квадратного метра</span><span>{{ stats.count }} объектов</span></div>
+  <div class="body">
+    <div class="insights">
+      <div class="chart">
+        <h3>Цена за м², млн ₽</h3>
+        <div class="cap">По объявлениям на ЦИАН, от дорогих к доступным. Пунктир — медиана подборки.</div>
+        {{ chart|safe }}
+      </div>
+      <div class="facts">
+        <div class="fact"><div class="k">Диапазон цены за м²</div><div class="v">{{ stats.ppm2[0]|mln(2) }} — {{ stats.ppm2[1]|mln(2) }}</div><div class="w">₽/м²</div></div>
+        <div class="fact"><div class="k">Самый доступный м²</div><div class="v">№{{ stats.cheapest.order }}</div><div class="w">{{ stats.cheapest.jkShort }}<br>{{ stats.cheapest.ppm2|money }}/м²</div></div>
+        <div class="fact"><div class="k">Самый дорогой м²</div><div class="v">№{{ stats.priciest.order }}</div><div class="w">{{ stats.priciest.jkShort }}<br>{{ stats.priciest.ppm2|money }}/м²</div></div>
+        <div class="fact"><div class="k">Самая большая площадь</div><div class="v">{{ stats.biggest.area.total|area }}</div><div class="w">№{{ stats.biggest.order }} · {{ stats.biggest.jkShort }}</div></div>
+        <div class="fact"><div class="k">Самая большая кухня</div><div class="v">{{ stats.kitchen.area.kitchen|area }}</div><div class="w">№{{ stats.kitchen.order }} · {{ stats.kitchen.jkShort }}</div></div>
+        <div class="fact"><div class="k">Самые высокие потолки</div><div class="v">{{ ('%.1f' % stats.ceiling.building.ceiling).replace('.', ',') }} м</div><div class="w">№{{ stats.ceiling.order }} · {{ stats.ceiling.jkShort }}<br>возможен второй уровень</div></div>
+        <div class="fact"><div class="k">Ближе всего к метро</div><div class="v">{{ stats.metro.metro[0].minutes }} мин</div><div class="w">№{{ stats.metro.order }} · м. {{ stats.metro.metro[0].name }}</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span class="pnum">Подборка · центр Москвы</span><span>Источник: ЦИАН, данные на {{ date }}</span></div>
+</section>
+
+{% for g in groups %}
+{# ======================= COMPLEX ======================= #}
+{% set info = g.info %}
+<section class="page dark">
+  <div class="jk-grid">
+    <div class="jk-photo">
+      <img src="{{ g.hero }}" alt="">
+      <div class="tag">
+        {% if g.status %}<span class="chip">{{ g.status }}</span>{% endif %}
+        {% for s in g.specs if s.title in ('Класс', 'Тип комплекса') %}<span class="chip">{{ s.value }}</span>{% endfor %}
+      </div>
+    </div>
+    <div class="jk-side">
+      <div class="topbar"><span><b>Жилой комплекс</b> · {{ loop.index }} из {{ groups|length }}</span><span>{{ g.flats|length }} {{ 'квартира' if g.flats|length == 1 else 'квартиры' }} в подборке</span></div>
+      <div class="eyebrow">{{ g.flats[0].district }} · {{ g.flats[0].address }}</div>
+      <h2>{{ g.flats[0].jkShort }}</h2>
+      <div class="dev">Девелопер <b>{{ info.developer or g.jk.developer }}</b></div>
+      <div class="jk-facts">
+        <div><div class="k">Класс</div><div class="v">{{ g.specs|selectattr('title', 'equalto', 'Класс')|map(attribute='value')|first or info.klass or '—' }}</div></div>
+        <div><div class="k">Срок / ввод</div><div class="v">{{ info.year or '—' }}</div></div>
+        <div><div class="k">Этажность</div><div class="v">{{ info.floors or '—' }}</div></div>
+        <div><div class="k">Корпусов</div><div class="v">{{ info.buildings or '—' }}</div></div>
+        <div><div class="k">Квартир</div><div class="v">{{ info.apartments or '—' }}</div></div>
+        <div><div class="k">Рейтинг ЦИАН</div><div class="v">{{ g.jk.rating or '—' }}</div></div>
+      </div>
+      <p class="jk-concept">{{ info.concept }}</p>
+      {% if info.architect %}<p class="jk-arch">Архитектура: <b>{{ info.architect }}</b></p>{% endif %}
+      <div class="infra">{% for x in info.infrastructure %}<span class="chip">{{ x }}</span>{% endfor %}</div>
+      <div class="jk-in">{% for it in g.flats %}<span class="chip acc">№{{ it.order }} · {{ it.kind|replace('-комнатная', '-комн.') }}, {{ it.area.total|area }}</span>{% endfor %}</div>
+      {% if g.strip %}
+      <div class="strip">{% for t, img in g.strip %}<figure><img src="{{ img }}" alt=""><figcaption>{{ t }}</figcaption></figure>{% endfor %}</div>
+      {% endif %}
+      <div class="src">Справка: {{ (info.sources or [])|join(' · ') }}</div>
+      <div class="foot"><span class="pnum">Подборка · центр Москвы</span><span>Фото: ЦИАН</span></div>
+    </div>
+  </div>
+</section>
+
+{% for it in g.flats %}
+{# ======================= LISTING · HERO ======================= #}
+<section class="page">
+  <div class="hero-grid">
+    <div class="hero-photo">
+      <img src="{{ it.hero }}" alt="">
+      <div class="badge">{{ '%02d' % it.order }}</div>
+      <div class="src-tag">ЦИАН · ID {{ it.id }}</div>
+    </div>
+    <div class="hero-side">
+      <div class="topbar"><span><b>Квартира {{ '%02d' % it.order }}</b> · {{ it.jkShort }}</span><span>{{ 'Новостройка' if it.isNew else 'Вторичка' }}</span></div>
+      <div class="eyebrow">{{ it.district }}, {{ it.okrug }}</div>
+      <h2>{{ it.kind }}<br>{{ it.area.total|area }}</h2>
+      <div class="addr">{{ it.address }}, Москва</div>
+      <div class="price">{{ it.price|money }}</div>
+      <div class="ppm"><b>{{ it.ppm2|money }}</b> за м²{% if it.priceChanges|length > 1 %} · цена менялась {{ it.priceChanges|length - 1 }} раз{% endif %}</div>
+      <div class="tiles">
+        <div class="tile"><div class="k">Общая</div><div class="v">{{ it.area.total|area }}</div></div>
+        <div class="tile"><div class="k">Жилая</div><div class="v">{{ it.area.living|area }}</div></div>
+        <div class="tile"><div class="k">Кухня</div><div class="v">{{ it.area.kitchen|area }}</div></div>
+        <div class="tile"><div class="k">Этаж</div><div class="v">{{ it.floor }} из {{ it.floors }}</div></div>
+        <div class="tile"><div class="k">Потолки</div><div class="v">{% if it.building.ceiling %}{{ ('%.2f' % it.building.ceiling).rstrip('0').rstrip('.').replace('.', ',') }} м{% else %}—{% endif %}</div></div>
+        <div class="tile"><div class="k">Год</div><div class="v">{{ it.year or '—' }}</div></div>
+      </div>
+      <div class="metro">
+        {% for m in it.metro %}
+        <div class="row"><span class="dot" style="background: {{ m.color }}"></span>{{ m.name }}<span class="m">{{ m.minutes }} мин {{ 'пешком' if m.by == 'walk' else 'на транспорте' }}</span></div>
+        {% endfor %}
+      </div>
+      {% if it.jk %}
+      <div class="jkline">
+        <div class="eyebrow">Жилой комплекс</div>
+        <div class="jkname">{{ it.jkShort }}</div>
+        <div class="jkmeta">{{ g.info.developer or it.jk.developer }}{% for s in g.specs if s.title == 'Класс' %} · {{ s.value }}-класс{% endfor %}{% if g.info.floors %} · {{ g.info.floors }} эт.{% endif %}{% if g.info.apartments %} · {{ g.info.apartments }} кв.{% endif %}</div>
+      </div>
+      {% endif %}
+      <div class="chips">
+        <span class="chip solid">{{ it.saleType }}</span>
+        {% if it.mortgage %}<span class="chip">Ипотека</span>{% endif %}
+        {% for g2 in it.features %}{% for k, v in g2['items'] if k in ('Ремонт', 'Отделка', 'Парковка') %}<span class="chip">{{ k }}: {{ v|lower }}</span>{% endfor %}{% endfor %}
+      </div>
+      <div class="foot"><span class="pnum">{{ it.url }}</span><span>Обновлено: {{ it.published }}</span></div>
+    </div>
+  </div>
+</section>
+
+{# ======================= LISTING · PLAN + SPECS ======================= #}
+<section class="page">
+  <div class="topbar"><span><b>Квартира {{ '%02d' % it.order }}</b> · планировка и характеристики</span><span>{{ it.jkShort }}</span></div>
+  <div class="body">
+    <div class="two">
+      <div class="plan">
+        <div class="cap"><h3>Планировка</h3><span class="eyebrow">{{ it.kind }} · {{ it.area.total|area }}</span></div>
+        {% if it.layoutsLocal %}
+        <div class="imgwrap"><img src="{{ it.layoutsLocal[0] }}" alt="Планировка"></div>
+        {% else %}
+        <div class="none"><img src="{{ it.photosLocal[-1] }}" alt=""><span>Планировка в объявлении не опубликована</span></div>
+        {% endif %}
+      </div>
+      <div class="specs">
+        <div class="eyebrow">ID {{ it.id }}</div>
+        <h3>Характеристики</h3>
+        {% for grp in it.features %}
+        <div class="spec-group">
+          <div class="eyebrow">{{ grp.title }}</div>
+          {% for k, v in grp['items'] %}<div class="spec"><span>{{ k }}</span><span>{{ v }}</span></div>{% endfor %}
+        </div>
+        {% endfor %}
+        <div class="spec-group">
+          <div class="eyebrow">Сделка</div>
+          <div class="spec"><span>Условия</span><span>{{ it.saleType }}</span></div>
+          <div class="spec"><span>Ипотека</span><span>{{ 'Возможна' if it.mortgage else 'Нет' }}</span></div>
+          <div class="spec"><span>Продавец</span><span>{{ it.seller.name }}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span class="pnum">Подборка · центр Москвы</span><span>Данные объявления ЦИАН</span></div>
+</section>
+
+{# ======================= LISTING · GALLERY + LOCATION ======================= #}
+<section class="page">
+  <div class="topbar"><span><b>Квартира {{ '%02d' % it.order }}</b> · фото и расположение</span><span>{{ it.jkShort }}</span></div>
+  <div class="body">
+    <div class="gl">
+      <div class="grid4 n{{ it.grid|length }}">{% for p in it.grid %}<img src="{{ p }}" alt="">{% endfor %}</div>
+      <div class="loc">
+        <h3>На карте</h3>
+        <div class="mapbox">
+          <img src="{{ it.map }}" alt="Карта">
+          <div class="mk big" style="left: 50%; top: 50%">{{ it.order }}</div>
+        </div>
+        <div class="addr2"><span>{{ it.address }}</span><span>{{ '%.5f' % it.coords.lat }}, {{ '%.5f' % it.coords.lng }}</span></div>
+        <div class="eyebrow desc-h">Из описания продавца</div>
+        <div class="desc">{{ it.descShort }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span class="pnum">Подборка · центр Москвы</span><span>Карта: © Яндекс</span></div>
+</section>
+
+{% if it.more|length >= 3 %}
+{# ======================= LISTING · MORE PHOTOS ======================= #}
+<section class="page">
+  <div class="topbar"><span><b>Квартира {{ '%02d' % it.order }}</b> · галерея</span><span>{{ it.photos|length }} фото в объявлении</span></div>
+  <div class="body">
+    <div class="grid6 n{{ it.more[:5]|length }}">{% for p in it.more[:5] %}<img src="{{ p }}" alt="">{% endfor %}</div>
+  </div>
+  <div class="foot"><span class="pnum">Подборка · центр Москвы</span><span>Фото: ЦИАН</span></div>
+</section>
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+</body>
+</html>
