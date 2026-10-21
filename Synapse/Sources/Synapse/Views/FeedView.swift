@@ -6,12 +6,13 @@ struct FeedView: View {
     @State private var kind: KindFilter = .all
 
     enum KindFilter: String, CaseIterable, Identifiable {
-        case all, ready, release, engine
+        case all, ready, mods, release, engine
         var id: String { rawValue }
         var title: String {
             switch self {
             case .all: "Всё"
             case .ready: "Готово к установке"
+            case .mods: "Модификации"
             case .release: "Новые модели"
             case .engine: "Движок"
             }
@@ -37,7 +38,7 @@ struct FeedView: View {
             Picker("", selection: $kind) { ForEach(KindFilter.allCases) { Text($0.title).tag($0) } }
                 .pickerStyle(.segmented)
                 .labelsHidden()
-                .frame(maxWidth: 560)
+                .frame(maxWidth: 660)
                 .padding(.horizontal, 28)
                 .padding(.bottom, 12)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -62,7 +63,8 @@ struct FeedView: View {
     private var items: [FeedItem] {
         switch kind {
         case .all: model.feed.items
-        case .ready: model.feed.items.filter { $0.kind == .ready }
+        case .ready: model.feed.items.filter { $0.kind == .ready && !$0.finetune }
+        case .mods: model.feed.items.filter { $0.kind == .ready && $0.finetune }
         case .release: model.feed.items.filter { $0.kind == .release }
         case .engine: model.feed.items.filter { $0.kind == .engine }
         }

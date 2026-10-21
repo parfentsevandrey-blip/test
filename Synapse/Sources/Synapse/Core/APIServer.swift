@@ -173,7 +173,8 @@ nonisolated final class APIServer: @unchecked Sendable {
         for try await event in LlamaEngine.shared.generate(turns, settings: settings) {
             switch event {
             case .text(let t):
-                guard stream, let d = delta.push(t) else { continue }
+                let d = delta.push(t)
+                guard stream, let d else { continue }
                 var chunk: [String: Any] = ["model": model.apiName, "created_at": ISO8601DateFormatter().string(from: Date()), "done": false]
                 if generate {
                     chunk["response"] = d.answer
@@ -233,7 +234,8 @@ nonisolated final class APIServer: @unchecked Sendable {
         for try await event in LlamaEngine.shared.generate(turns, settings: settings) {
             switch event {
             case .text(let t):
-                guard stream, let d = delta.push(t) else { continue }
+                let d = delta.push(t)
+                guard stream, let d else { continue }
                 var deltaBody: [String: Any] = [:]
                 if first { deltaBody["role"] = "assistant"; first = false }
                 if !d.answer.isEmpty { deltaBody["content"] = d.answer }

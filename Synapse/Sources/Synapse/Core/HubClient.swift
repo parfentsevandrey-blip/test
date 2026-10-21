@@ -97,10 +97,41 @@ nonisolated final class HubClient: Sendable {
         var prerelease: Bool?
     }
 
+    /// Выпуски llama.cpp: REST API GitHub, а если он ограничил частоту запросов — Atom-лента релизов.
     func llamaReleases() async throws -> [Release] {
-        let url = URL(string: "https://api.github.com/repos/ggml-org/llama.cpp/releases?per_page=12")!
-        let data = try await get(url, cacheKey: "llama-releases", accept: "application/vnd.github+json")
-        return try Self.decoder.decode([Release].self, from: data)
+        do {
+            let url = URL(string: "https://api.github.com/repos/ggml-org/llama.cpp/releases?per_page=12")!
+            let data = try await get(url, cacheKey: "llama-releases", accept: "application/vnd.github+json")
+            return try Self.decoder.decode([Release].self, from: data)
+        } catch {
+            let data = try await get(URL(string: "https://github.com/ggml-org/llama.cpp/releases.atom")!, cacheKey: "llama-releases-atom", accept: "application/atom+xml")
+            let releases = Self.parseAtom(String(decoding: data, as: UTF8.self))
+            if releases.isEmpty { throw error }
+            return releases
+        }
+    }
+
+    static func parseAtom(_ xml: String) -> [Release] {
+        func first(_ pattern: String, in s: String) -> String? {
+            guard let r = s.range(of: pattern, options: .regularExpression) else { return nil }
+            let m = String(s[r])
+            guard let open = m.firstIndex(of: ">"), let close = m.range(of: "</", options: .backwards) else { return nil }
+            return String(m[m.index(after: open)..<close.lowerBound])
+        }
+        func unescape(_ s: String) -> String {
+            s.replacingOccurrences(of: "&lt;", with: "<").replacingOccurrences(of: "&gt;", with: ">")
+                .replacingOccurrences(of: "&quot;", with: "\"").replacingOccurrences(of: "&#39;", with: "'").replacingOccurrences(of: "&amp;", with: "&")
+        }
+        return xml.components(separatedBy: "<entry>").dropFirst().prefix(12).compactMap { entry in
+            guard let title = first(#"<title>[\s\S]*?</title>"#, in: entry) else { return nil }
+            let link = entry.range(of: #"href="[^"]+""#, options: .regularExpression).map { String(entry[$0].dropFirst(6).dropLast()) }
+            let html = unescape(first(#"<content[^>]*>[\s\S]*?</content>"#, in: entry) ?? "")
+            let body = html.replacingOccurrences(of: "<li>", with: "\n").replacingOccurrences(of: "<br>", with: "\n")
+                .replacingOccurrences(of: "<[^>]+>", with: "\n", options: .regularExpression)
+            let tag = link.flatMap { $0.split(separator: "/").last.map(String.init) } ?? title
+            return Release(tag_name: tag, name: title, body: body, html_url: link ?? "https://github.com/ggml-org/llama.cpp/releases",
+                           published_at: first(#"<updated>[^<]+</updated>"#, in: entry).flatMap(parseDate), prerelease: false)
+        }
     }
 
     // MARK: - Сеть с повторами и кэшем
