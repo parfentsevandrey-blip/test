@@ -155,10 +155,10 @@ h1 { font-family: var(--display); font-weight: 600; font-size: 25pt; line-height
 .cash .lbl.down b { color: var(--gain); }
 .cash .axis { position: relative; height: 4.5mm; margin: 1mm 0 1.5mm 7mm; font-size: 7.5pt; color: var(--steel); }
 .cash .axis span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
-.result .line { display: flex; justify-content: space-between; font-size: 9pt; padding: 1.3mm 0;
+.result .line { display: flex; justify-content: space-between; font-size: 9pt; padding: 1mm 0;
                 border-bottom: 1px solid rgba(16, 48, 79, .2); font-variant-numeric: tabular-nums; }
-.result .label-total { font-weight: 600; font-size: 10pt; margin-top: 3mm; }
-.result .total { font-family: var(--display); font-weight: 600; font-size: 26pt; line-height: 1.05; margin: 1.5mm 0 2mm;
+.result .label-total { font-weight: 600; font-size: 10pt; margin-top: 2mm; }
+.result .total { font-family: var(--display); font-weight: 600; font-size: 22pt; line-height: 1.05; margin: 1mm 0 1.5mm;
                  letter-spacing: -0.02em; }
 .result .hint { font-size: 8.6pt; }
 /* «мост»: строки делят высоту колонки поровну */
@@ -173,7 +173,7 @@ h1 { font-family: var(--display); font-weight: 600; font-size: 25pt; line-height
 .bridge .gain { background: var(--gain); }
 .bridge .loss { background: var(--loss); }
 .bridge .val { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.eq { font-family: var(--display); font-weight: 500; font-size: 11pt; margin: 2mm 0 2.4mm; }
+.eq { font-family: var(--display); font-weight: 500; font-size: 10pt; margin: 2mm 0 2.4mm; white-space: nowrap; }
 
 /* ---------- стр. 5 */
 .b5 { gap: 6mm; }
@@ -181,7 +181,7 @@ h1 { font-family: var(--display); font-weight: 600; font-size: 25pt; line-height
 .ladder { flex: 1 1 auto; display: flex; flex-direction: column; }
 .ladder table { flex: 1 1 auto; height: 100%; }
 .ladder td { vertical-align: middle; }
-.bar-cell { width: 38%; }
+.bar-cell { width: 38%; padding-left: 4mm; }
 .legal { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6mm; }
 .legal div { font-size: 8.6pt; line-height: 1.42; border-top: 3px solid var(--ink); padding-top: 2mm; }
 .legal b { display: block; margin-bottom: 0.8mm; font-size: 9.3pt; }

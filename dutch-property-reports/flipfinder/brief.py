@@ -65,10 +65,11 @@ FEATURES = {"lichtstraten": "световые фонари", "lichtstraat": "с�
             "goederenlift": "грузовой лифт", "alarminstallatie": "сигнализация", "topkoeling": "охлаждение",
             "zonnepanelen": "солнечные панели", "laadkuil": "погрузочная платформа", "loading dock": "погрузочные доки",
             "cv-ketel": "отопление", "verwarming": "отопление", "camerabewaking": "видеонаблюдение"}
-FLOORS = re.compile(r"(begane grond|1e verdieping|eerste verdieping|2e verdieping|tweede verdieping|entresol)\W{0,6}"
+FLOORS = re.compile(r"(begane grond|1e verdieping|eerste verdieping|2e verdieping|tweede verdieping|entresol|verdieping)\W{0,6}"
                     r"(?:ca\.?|circa)?\s*(\d{2,4})\s*m", re.I)
 FLOOR_RU = {"begane grond": "первый этаж", "1e verdieping": "второй этаж", "eerste verdieping": "второй этаж",
-            "2e verdieping": "третий этаж", "tweede verdieping": "третий этаж", "entresol": "антресоль"}
+            "2e verdieping": "третий этаж", "tweede verdieping": "третий этаж", "entresol": "антресоль",
+            "verdieping": "второй этаж"}
 MONTHS_NL = {"januari": "января", "februari": "февраля", "maart": "марта", "april": "апреля", "mei": "мая",
              "juni": "июня", "juli": "июля", "augustus": "августа", "september": "сентября", "oktober": "октября",
              "november": "ноября", "december": "декабря"}
@@ -364,8 +365,6 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     verdict = (f"План сделки: покупка свободного склада за **{eur(offer)}** — на {cut} дешевле цены продавца, косметический "
                f"ремонт, сдача в аренду на 5 лет и через 12 месяцев продажа вместе с арендатором инвестору "
                f"за **{eur(b['sale'])}**.")
-    if not ev["passes"]:
-        verdict += f" Без убытка здание можно купить только со скидкой от {pct(need)}."
     tag = {"label": "Чистая прибыль за 12 месяцев", "value": eur(b["net"]),
            "hint": f"после налога на прибыль, на вложенные {eur(b['peak'])}"}
     kpis = [{"label": "Цена продавца", "value": eur(ask), "hint": f"{eur(ask / area, 1)} за м²"},
@@ -390,7 +389,8 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     hall, office = rec.get("hall"), rec.get("office")
     desc = re.sub(r"\s+", " ", rec.get("desc") or "")
     floors = [(FLOOR_RU[m.group(1).lower()], int(m.group(2))) for m in FLOORS.finditer(desc)]
-    if (len(floors) >= 2 and len({n for n, _ in floors}) == len(floors)
+    # этажи — только если в карточке нет разбивки на зал и офисы: она нагляднее
+    if (not office and len(floors) >= 2 and len({n for n, _ in floors}) == len(floors)
             and abs(sum(a for _, a in floors) - area) <= 0.1 * area):
         parts = ", ".join(f"{name} {num(a)} м²" for name, a in floors)
     else:
@@ -408,7 +408,7 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
           )],
         [("Цена продавца", f"{eur(ask)}, налог 10,4\u00a0% за покупателем"), ("Цена за м²", eur(ask / area, 1)),
          ("Арендатор", "нет, здание свободно"), ("Земля", f"в аренде, €\u00a0{num(oc['canon'])} в год" if oc["canon"] else "в аренде" if oc["lease_end"]
-          else "в собственности, без платы" if re.search(r"eigen grond", desc, re.I) else "не указано"),
+          else "в собственности, без платы" if re.search(r"eigen grond|volle eigendom", desc, re.I) else "не указано"),
          ("На продаже", (f"с {since}" if since and re.match(r"\d+ [а-я]", since) else (since or "не указано"))
           + (f"; цена снижена с {eur(orig)}" if orig and orig > ask else ""))],
     ]
@@ -497,8 +497,8 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     inv = investor_comps(listings, (pick["lat"], pick["lon"]))
     notes = ["Налог 10,4\u00a0% инвестор платит сверху."]
     if inv:
-        notes.append("Сданные склады на продаже рядом: " + "; ".join(
-            f"{c['name']} — {eur(c['price'])}, аренда {eur(c['rent'])}, это {pct(c['yield'], 2)}" for c in inv) + ".")
+        notes.append("Сданные склады на продаже рядом и их доходность: " + "; ".join(
+            f"{c['name']}, {eur(c['price'])}, {pct(c['yield'], 2)}" for c in inv) + ".")
     if pick["info"]["exit_notes"]:
         notes.append("Поправка к доходности: " + ", ".join(pick["info"]["exit_notes"]) + ".")
     investor = {"title": f"Почему инвестор заплатит {eur(b['sale'])}", "intro": intro, "eq": eq, "note": " ".join(notes)}
