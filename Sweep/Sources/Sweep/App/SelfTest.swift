@@ -208,6 +208,7 @@ enum SelfTest {
 
         // MARK: Дубликаты и крупные файлы
         let clutter = ClutterScanner.scan(ctx)
+        print("   групп дубликатов: \(clutter.duplicates.map { $0.files.map(\.url.lastPathComponent) })")
         ok = check(clutter.duplicates.count == 1 && clutter.duplicates[0].files.count == 2, "одна группа дубликатов из двух файлов") && ok
         if let group = clutter.duplicates.first {
             ok = check(ClutterScanner.keeper(in: group, home: home)?.url.lastPathComponent == "a.bin", "оставляем оригинал, а не копию из Загрузок") && ok

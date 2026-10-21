@@ -120,7 +120,8 @@ nonisolated enum ClutterScanner {
                 if size >= 10_000_000, let last = entry.lastUse, last.daysBefore(ctx.now) > oldDays { result.old.append(entry) }
                 if duplicates, !isPackage, v.isRegularFile == true, size >= 1_000_000 {
                     // Жёсткие ссылки на один и тот же файл — не дубликаты: удаление места не освободит.
-                    let inode = v.fileResourceIdentifier.map { "\($0)" } ?? url.path
+                    var st = stat()
+                    let inode = lstat(url.path, &st) == 0 ? "\(st.st_dev):\(st.st_ino)" : url.path
                     if seenInodes.insert(inode).inserted { candidates.append(entry) }
                 }
             }

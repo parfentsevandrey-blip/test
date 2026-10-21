@@ -51,13 +51,15 @@ nonisolated enum Leftovers {
         Place(path: "/Library/PreferencePanes", kind: "Панель настроек (система)", style: .idOrName, method: .admin, regenerable: false),
     ]
 
+    /// Настоящие расширения файлов в папках ~/Library. Снимаем ровно одно: «com.foo.app» — это идентификатор,
+    /// и его последний компонент «app» расширением не является.
     static let strippedExtensions: Set<String> = ["plist", "savedstate", "binarycookies", "appex", "plugin", "bundle", "prefpane",
-                                                  "qlgenerator", "mdimporter", "workflow", "log", "service", "app"]
+                                                  "qlgenerator", "mdimporter", "workflow", "log", "service"]
 
     static func stem(_ url: URL) -> String {
-        var name = url.lastPathComponent
-        while let dot = name.lastIndex(of: "."), strippedExtensions.contains(String(name[name.index(after: dot)...]).lowercased()) {
-            name = String(name[..<dot])
+        let name = url.lastPathComponent
+        if let dot = name.lastIndex(of: "."), strippedExtensions.contains(String(name[name.index(after: dot)...]).lowercased()) {
+            return String(name[..<dot])
         }
         return name
     }
