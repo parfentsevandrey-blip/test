@@ -330,7 +330,7 @@ private struct Particle {
     var position: Double
 }
 
-private struct ConstellationRenderer {
+struct ConstellationRenderer {
     let scene: ConstellationScene
     let tint: Color
     let focused: String?

@@ -33,6 +33,16 @@ jobs:
       - name: Self-test core
         run: dist/Swarm.app/Contents/MacOS/Swarm --selftest-core
 
+      # Визуализации в PNG — чтобы посмотреть на них глазами.
+      - name: Self-test render
+        run: dist/Swarm.app/Contents/MacOS/Swarm --selftest-render "$RUNNER_TEMP/render"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Swarm-render
+          path: ${{ runner.temp }}/render
+          compression-level: 0
+
       # Три движка на одной машине: обычная раздача по TCP и magnet через ut_metadata.
       - name: Self-test loopback swarm
         run: dist/Swarm.app/Contents/MacOS/Swarm --selftest-loopback "$RUNNER_TEMP"

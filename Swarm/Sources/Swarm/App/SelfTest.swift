@@ -15,6 +15,7 @@ enum SelfTest {
             switch mode {
             case "--selftest-core": ok = core()
             case "--selftest-loopback": ok = await loopback(URL(fileURLWithPath: rest.first ?? NSTemporaryDirectory()))
+            case "--selftest-render": ok = RenderSelfTest.run(URL(fileURLWithPath: rest.first ?? NSTemporaryDirectory()))
             case "--selftest-internet":
                 ok = rest.count >= 2 ? await internet(URL(fileURLWithPath: rest[0]), URL(fileURLWithPath: rest[1])) : false
             default: print("Неизвестный режим \(mode)")

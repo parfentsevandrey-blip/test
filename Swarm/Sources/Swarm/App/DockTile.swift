@@ -58,7 +58,7 @@ struct DockSpeed {
     }
 }
 
-private struct DockTileView: View {
+struct DockTileView: View {
     let icon: NSImage
     let speed: DockSpeed
     let progress: Double?
