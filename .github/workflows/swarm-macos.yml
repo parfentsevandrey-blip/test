@@ -1,0 +1,54 @@
+name: Swarm (macOS)
+
+on:
+  push:
+    paths:
+      - "Swarm/**"
+      - ".github/workflows/swarm-macos.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: swarm-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: Swarm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          echo "Xcode: $XCODE"; sw_vers; swift --version
+
+      - name: Build Swarm.app + DMG
+        run: ./scripts/build.sh
+
+      - name: Self-test core
+        run: dist/Swarm.app/Contents/MacOS/Swarm --selftest-core
+
+      # Три движка на одной машине: обычная раздача по TCP и magnet через ut_metadata.
+      - name: Self-test loopback swarm
+        run: dist/Swarm.app/Contents/MacOS/Swarm --selftest-loopback "$RUNNER_TEMP"
+
+      # Настоящий рой: свежий торрент netinst Debian, куски с проверкой SHA-1, затем поиск через DHT без трекеров.
+      - name: Self-test real swarm
+        run: |
+          BASE=https://cdimage.debian.org/debian-cd/current/amd64/bt-cd/
+          NAME=$(curl -fsSL "$BASE" | grep -o 'debian-[0-9.]*-amd64-netinst.iso.torrent' | head -1)
+          echo "Торрент: $NAME"
+          curl -fsSL -o "$RUNNER_TEMP/test.torrent" "$BASE$NAME"
+          dist/Swarm.app/Contents/MacOS/Swarm --selftest-internet "$RUNNER_TEMP/test.torrent" "$RUNNER_TEMP/internet"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Swarm-dmg
+          path: Swarm/dist/Swarm.dmg
+          if-no-files-found: error
+          compression-level: 0
