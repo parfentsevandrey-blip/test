@@ -32,7 +32,7 @@ cp "$BIN" "$APP/Contents/MacOS/$NAME"
 strip -x "$APP/Contents/MacOS/$NAME" 2>/dev/null || true
 cp "$ROOT/Vendor/llama/architectures.txt" "$APP/Contents/Resources/architectures.txt"
 cp "$ROOT/Vendor/llama/TAG" "$APP/Contents/Resources/ENGINE_TAG.txt"
-cp "$ROOT/Vendor/llama.cpp-src/LICENSE" "$APP/Contents/Resources/llama.cpp-LICENSE.txt" 2>/dev/null || true
+cp "$ROOT/Vendor/llama/LICENSE" "$APP/Contents/Resources/llama.cpp-LICENSE.txt" 2>/dev/null || true
 
 step "Иконка"
 swift scripts/make-icon.swift "$WORK"

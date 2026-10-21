@@ -76,6 +76,7 @@ du -h "$OUT/lib/libSynapseEngine.a" | sed 's/^/  /'
 # Список архитектур, которые понимает эта сборка — приложение показывает, какие модели запустятся.
 awk '/LLM_ARCH_NAMES = \{/,/^\};/' "$SRC/src/llama-arch.cpp" | grep -oE '"[^"]+"' | tr -d '"' | grep -v '(unknown)' > "$OUT/architectures.txt"
 echo "  архитектур: $(wc -l < "$OUT/architectures.txt" | tr -d ' ')"
+cp "$SRC/LICENSE" "$OUT/LICENSE"
 git -C "$SRC" log -1 --format='%cI' > "$OUT/DATE"
 echo "$TAG" > "$OUT/TAG"
 echo "Готово: $OUT"
