@@ -298,7 +298,7 @@ nonisolated enum SystemStats {
                 }
                 var name = [CChar](repeating: 0, count: 256)
                 proc_name(pid, &name, 256)
-                let title = String(cString: name)
+                let title = String(decoding: name.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)
                 guard !title.isEmpty else { continue }
                 out.append(ProcessStat(pid: pid, name: title, memory: usage.ri_phys_footprint, cpu: cpu))
             }

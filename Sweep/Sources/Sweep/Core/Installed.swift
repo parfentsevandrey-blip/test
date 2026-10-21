@@ -113,14 +113,13 @@ nonisolated enum AppScanner {
         }
         for dir in dirs { walk(dir, depth: 0) }
 
-        let lock = NSLock()
-        var result: [AppBundle] = []
-        DispatchQueue.concurrentPerform(iterations: urls.count) { i in
-            guard let app = read(urls[i], signing: signing) else { return }
-            lock.withLock { result.append(app) }
+        let found = urls
+        let collected = Collector<AppBundle>()
+        DispatchQueue.concurrentPerform(iterations: found.count) { i in
+            if let app = read(found[i], signing: signing) { collected.append(app) }
         }
         var seen = Set<String>()
-        return result
+        return collected.values
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
             .filter { seen.insert($0.url.path).inserted }
     }

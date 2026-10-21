@@ -7,9 +7,9 @@ import Foundation
 /// точное (без «похоже на»), а общие папки производителя («Google», «Microsoft», «Adobe») не трогаются,
 /// если ими пользуется другая установленная программа.
 nonisolated enum Leftovers {
-    nonisolated enum Style { case idOnly, idOrName, groups, launchd }
+    nonisolated enum Style: Sendable { case idOnly, idOrName, groups, launchd }
 
-    nonisolated struct Place {
+    nonisolated struct Place: Sendable {
         let path: String
         let kind: String
         let style: Style
@@ -189,7 +189,7 @@ nonisolated enum Leftovers {
 
     // MARK: - Остатки уже удалённых программ
 
-    nonisolated struct OrphanPlace {
+    nonisolated struct OrphanPlace: Sendable {
         let path: String
         let kind: String
         let method: RemovalMethod

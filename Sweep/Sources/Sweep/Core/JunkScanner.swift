@@ -237,7 +237,7 @@ nonisolated enum JunkScanner {
 
     // MARK: - Разработка
 
-    nonisolated struct DevPlace {
+    nonisolated struct DevPlace: Sendable {
         let path: String
         let title: String
         let detail: String
@@ -420,14 +420,12 @@ nonisolated enum JunkScanner {
 
     // MARK: - Утилиты
 
-    static func parallelMap<T, R>(_ input: [T], _ transform: (T) -> R?) -> [R] {
-        let lock = NSLock()
-        var out: [R?] = Array(repeating: nil, count: input.count)
+    static func parallelMap<T: Sendable, R>(_ input: [T], _ transform: @Sendable (T) -> R?) -> [R] {
+        let out = Collector<R>()
         DispatchQueue.concurrentPerform(iterations: input.count) { i in
-            let r = transform(input[i])
-            lock.withLock { out[i] = r }
+            if let r = transform(input[i]) { out.append(r) }
         }
-        return out.compactMap { $0 }
+        return out.values
     }
 }
 

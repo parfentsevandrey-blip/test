@@ -61,6 +61,15 @@ nonisolated enum DiskUsage {
     }
 }
 
+/// Потокобезопасный сбор результатов из `DispatchQueue.concurrentPerform`.
+nonisolated final class Collector<R>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storage: [R] = []
+
+    func append(_ r: R) { lock.withLock { storage.append(r) } }
+    var values: [R] { lock.withLock { storage } }
+}
+
 nonisolated enum Format {
     static func bytes(_ v: Int64) -> String {
         ByteCountFormatter.string(fromByteCount: max(0, v), countStyle: .file)

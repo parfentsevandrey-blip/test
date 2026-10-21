@@ -135,8 +135,7 @@ nonisolated enum ClutterScanner {
     /// читаются только по 128 КБ, а целиком хешируются лишь настоящие кандидаты.
     static func findDuplicates(_ files: [FileEntry]) -> [DuplicateGroup] {
         let bySize = Dictionary(grouping: files, by: \.size).values.filter { $0.count > 1 }
-        let lock = NSLock()
-        var groups: [DuplicateGroup] = []
+        let groups = Collector<DuplicateGroup>()
         let sizeGroups = Array(bySize)
         DispatchQueue.concurrentPerform(iterations: sizeGroups.count) { i in
             let byPartial = Dictionary(grouping: sizeGroups[i]) { partialHash($0.url) ?? UUID().uuidString }.values.filter { $0.count > 1 }
@@ -144,11 +143,11 @@ nonisolated enum ClutterScanner {
                 let byFull = Dictionary(grouping: partial) { fullHash($0.url) ?? UUID().uuidString }
                 for (hash, same) in byFull where same.count > 1 {
                     let group = DuplicateGroup(id: hash, files: same.sorted { ($0.modified ?? .distantPast) < ($1.modified ?? .distantPast) })
-                    lock.withLock { groups.append(group) }
+                    groups.append(group)
                 }
             }
         }
-        return groups.sorted { $0.wasted > $1.wasted }
+        return groups.values.sorted { $0.wasted > $1.wasted }
     }
 
     static func partialHash(_ url: URL) -> String? {
@@ -207,13 +206,11 @@ nonisolated enum SpaceScanner {
     static func scan(_ root: URL, ctx: ScanContext, depth: Int = 6, progress: @Sendable (Int) -> Void = { _ in }) -> SpaceNode {
         let counter = Counter()
         let top = DiskUsage.children(of: root, hidden: true)
-        let lock = NSLock()
-        var nodes: [SpaceNode] = []
+        let nodes = Collector<SpaceNode>()
         DispatchQueue.concurrentPerform(iterations: top.count) { i in
-            let node = build(top[i], ctx: ctx, depth: depth - 1, counter: counter, progress: progress)
-            lock.withLock { nodes.append(node) }
+            nodes.append(build(top[i], ctx: ctx, depth: depth - 1, counter: counter, progress: progress))
         }
-        return finish(SpaceNode(name: root.lastPathComponent, url: root, size: 0, isDirectory: true), children: nodes)
+        return finish(SpaceNode(name: root.lastPathComponent, url: root, size: 0, isDirectory: true), children: nodes.values)
     }
 
     nonisolated final class Counter: @unchecked Sendable {

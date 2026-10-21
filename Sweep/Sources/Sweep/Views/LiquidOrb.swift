@@ -88,7 +88,7 @@ struct LiquidOrb: View {
         inside.fill(Path(box), with: .radialGradient(Gradient(colors: [Color(red: 0.08, green: 0.1, blue: 0.2).opacity(0.85), Color(red: 0.02, green: 0.03, blue: 0.08).opacity(0.92)]),
                                                      center: CGPoint(x: c.x, y: c.y - r * 0.3), startRadius: 0, endRadius: r * 1.3))
         inside.fill(Path(box), with: .linearGradient(Gradient(colors: [tint.opacity(0.25), .clear]),
-                                                     startPoint: CGPoint(x: c.x, y: box.minY), endPoint: CGPoint(x: c.x, y: c.midY)))
+                                                     startPoint: CGPoint(x: c.x, y: box.minY), endPoint: CGPoint(x: c.x, y: box.midY)))
 
         // Жидкость.
         let lvl = level(now: now)
