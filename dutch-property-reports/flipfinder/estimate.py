@@ -17,7 +17,8 @@ BUILDING = re.compile(r"momenteel in aanbouw|in aanbouw|start bouw|bouw start|bo
                       r"op tekening|\bverrijst\b|sloop van de (?:bestaande )?pand|nieuwbouw van \d+ ", re.I)
 NOT_BUSINESS = re.compile(r"woning te bouwen|woonbestemming|transformatie naar wonen|ontwikkellocatie|(?<!geen )bedrijfswoning|"
                           r"onderdeel (?:uit )?van een (?:buurt)?winkelcentrum|horecapand|restaurant te koop", re.I)
-TENDER = re.compile(r"\binschrijving\b|\bveiling\b|biedingsprocedure|bieden vanaf", re.I)
+TENDER = re.compile(r"\binschrijving|\bveiling\b|biedingsprocedure|bieden vanaf|openbare verkoopprocedure|"
+                    r"verkoop via (?:een )?(?:openbare )?inschrijving", re.I)
 SHELL = re.compile(r"\bcasco\b", re.I)
 # антресоль: «178 m² entresol» или «Tussenverdieping: ca. 178 m²»
 MEZZ = re.compile(r"(?:ca\.?|circa)?\s*([\d.]+)\s*m²?\s*(?:entresol|insteekvloer|mezzanine|tussenverdieping|tussenvloer)|"
