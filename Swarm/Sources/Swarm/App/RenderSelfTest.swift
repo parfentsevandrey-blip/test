@@ -13,7 +13,8 @@ enum RenderSelfTest {
 
         // Кадры одной сцены: вылет пиров, установившийся рой и волна от проверенного куска.
         let memory = ConstellationMemory()
-        for (name, offset, snap) in [("constellation-spawn", 0.3, snapshot), ("constellation", 3.0, snapshot),
+        _ = memory.scene(for: snapshot, size: CGSize(width: 376, height: 280), now: now, settled: false)
+        for (name, offset, snap) in [("constellation-spawn", 0.45, snapshot), ("constellation", 3.0, snapshot),
                                      ("constellation-ripple-start", 3.3, withNewPieces(snapshot)),
                                      ("constellation-ripple", 3.75, withNewPieces(snapshot))] {
             let scene = memory.scene(for: snap, size: CGSize(width: 376, height: 280), now: now + offset, settled: false)

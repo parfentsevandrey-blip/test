@@ -470,7 +470,7 @@ struct ConstellationRenderer {
                 guard k > 0.05 else { continue }
                 let base = n.peer.isSeed ? ConstellationMemory.seedColor : ConstellationMemory.leechColor
                 layer.stroke(path(n), with: .linearGradient(
-                    Gradient(colors: [base.opacity(0.1 * k * n.alpha * n.link), tint.opacity(0.55 * k * n.alpha * n.link)]),
+                    Gradient(colors: [base.opacity(0.1 * k * n.alpha * n.link), tint.opacity(0.42 * k * n.alpha * n.link)]),
                     startPoint: n.point, endPoint: c), lineWidth: 3 + 6 * k)
             }
         }
@@ -490,7 +490,7 @@ struct ConstellationRenderer {
                                                          startPoint: p.tail.first ?? p.head, endPoint: p.head),
                             style: StrokeStyle(lineWidth: p.radius * 1.5, lineCap: .round))
                 glow.fill(circle(p.head, p.radius * 3.2), with: .radialGradient(
-                    Gradient(colors: [tint.opacity(0.55 * p.alpha), .clear]), center: p.head, startRadius: 0, endRadius: p.radius * 3.2))
+                    Gradient(colors: [tint.opacity(0.42 * p.alpha), .clear]), center: p.head, startRadius: 0, endRadius: p.radius * 3.2))
                 g.fill(circle(p.head, p.radius), with: .color(p.color.opacity(p.alpha)))
             }
         }
@@ -515,10 +515,10 @@ struct ConstellationRenderer {
             Gradient(colors: [tint.opacity(0.5 + 0.35 * scene.activity), tint.opacity(0.1), .clear]),
             center: c, startRadius: r * 0.5, endRadius: r * 3.4))
 
-        // Тело сферы — метаболы: ядро, «колыхание» поверхности и подлетающие капли данных сливаются в одну жидкость.
+        // Струи данных — метаболы: подлетающие капли сливаются с поверхностью сферы светящейся жидкостью.
         let blobs = scene.nodes.flatMap { particles($0) }.filter { $0.position > 0.72 && $0.alpha > 0.3 }
         g.drawLayer { liquid in
-            liquid.addFilter(.alphaThreshold(min: 0.5, color: tint.mix(with: .black, by: 0.1)))
+            liquid.addFilter(.alphaThreshold(min: 0.5, color: tint.mix(with: .white, by: 0.3)))
             liquid.addFilter(.blur(radius: 5))
             liquid.drawLayer { b in
                 b.fill(circle(c, r), with: .color(.black))
@@ -534,28 +534,58 @@ struct ConstellationRenderer {
         let box = CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)
         var inside = g
         inside.clip(to: Path(ellipseIn: box))
-        // Пустая часть — светлое стекло.
-        inside.fill(Path(box), with: .linearGradient(
-            Gradient(colors: [tint.mix(with: .white, by: 0.6).opacity(0.9), tint.mix(with: .white, by: 0.3).opacity(0.75)]),
-            startPoint: CGPoint(x: c.x, y: box.minY), endPoint: CGPoint(x: c.x, y: box.maxY)))
-        // Жидкость: уровень — прогресс, по поверхности бегут две волны.
+        // Пустая часть — тёмное прозрачное стекло, сквозь которое видно, сколько ещё осталось.
+        inside.fill(Path(box), with: .color(Color(red: 0.03, green: 0.05, blue: 0.12).opacity(0.94)))
+        inside.fill(Path(box), with: .linearGradient(Gradient(colors: [tint.opacity(0.3), tint.opacity(0.06)]),
+                                                     startPoint: CGPoint(x: c.x, y: box.minY), endPoint: CGPoint(x: c.x, y: box.maxY)))
+
+        // Жидкость: уровень — прогресс. Задняя волна темнее, передняя — яркая, с бликом мениска.
         let level = box.maxY - box.height * scene.progress
-        for (shift, opacity) in [(0.0, 0.55), (1.7, 1.0)] {
-            var wave = Path()
-            wave.move(to: CGPoint(x: box.minX, y: box.maxY))
-            for step in 0...24 {
-                let x = box.minX + box.width * Double(step) / 24
-                let amp = scene.progress > 0.02 && scene.progress < 0.98 ? 2.2 + 1.5 * scene.activity : 0
-                wave.addLine(to: CGPoint(x: x, y: level + sin(x * 0.2 + t * 2.6 + shift) * amp))
+        let amp = scene.progress > 0.02 && scene.progress < 0.98 ? 2.2 + 1.6 * scene.activity : 0
+        func surface(_ shift: Double, _ lift: CGFloat) -> [CGPoint] {
+            (0...28).map { step in
+                let x = box.minX + box.width * Double(step) / 28
+                return CGPoint(x: x, y: level - lift + sin(x * 0.21 + t * 2.6 + shift) * amp)
             }
-            wave.addLine(to: CGPoint(x: box.maxX, y: box.maxY))
-            wave.closeSubpath()
-            inside.fill(wave, with: .linearGradient(
-                Gradient(colors: [tint.mix(with: .white, by: 0.2).opacity(opacity), tint.mix(with: .black, by: 0.3).opacity(opacity)]),
-                startPoint: CGPoint(x: c.x, y: level), endPoint: CGPoint(x: c.x, y: box.maxY)))
+        }
+        func body(_ top: [CGPoint]) -> Path {
+            var p = Path()
+            p.move(to: CGPoint(x: box.minX, y: box.maxY))
+            p.addLines(top)
+            p.addLine(to: CGPoint(x: box.maxX, y: box.maxY))
+            p.closeSubpath()
+            return p
+        }
+        if scene.progress > 0 {
+            let back = surface(2.4, 2)
+            inside.fill(body(back), with: .color(tint.mix(with: .black, by: 0.25).opacity(0.9)))
+            let front = surface(0, 0)
+            inside.fill(body(front), with: .linearGradient(
+                Gradient(colors: [tint.mix(with: .white, by: 0.45), tint, tint.mix(with: .black, by: 0.3)]),
+                startPoint: CGPoint(x: c.x, y: level - amp), endPoint: CGPoint(x: c.x, y: box.maxY)))
+            var shine = inside
+            shine.blendMode = .plusLighter
+            var meniscus = Path()
+            meniscus.addLines(front)
+            shine.stroke(meniscus, with: .linearGradient(Gradient(colors: [.white.opacity(0.1), .white.opacity(0.85), .white.opacity(0.1)]),
+                                                         startPoint: CGPoint(x: box.minX, y: level), endPoint: CGPoint(x: box.maxX, y: level)),
+                         lineWidth: 1.3)
+            // Пузырьки поднимаются со дна, быстрее при высокой скорости.
+            if scene.progress > 0.06 {
+                for i in 0..<7 {
+                    let phase = frac(t * (0.25 + 0.3 * scene.activity) + Double(i) * 0.143)
+                    let x = box.minX + box.width * (0.22 + 0.56 * frac(sin(Double(i) * 91.3) * 437.5)) + sin(t * 2 + Double(i)) * 2
+                    let y = box.maxY - (box.maxY - level) * phase
+                    let br = 0.7 + 1.3 * frac(Double(i) * 0.37)
+                    shine.stroke(circle(CGPoint(x: x, y: y), br), with: .color(.white.opacity(0.55 * (1 - phase))), lineWidth: 0.7)
+                }
+            }
+            // Жидкость светится изнутри.
+            shine.fill(Path(box), with: .radialGradient(Gradient(colors: [tint.opacity(0.45), .clear]),
+                                                        center: CGPoint(x: c.x, y: box.maxY), startRadius: 0, endRadius: r * 1.3))
         }
         // Объём и каустика.
-        inside.fill(Path(box), with: .radialGradient(Gradient(colors: [.clear, .black.opacity(0.35)]),
+        inside.fill(Path(box), with: .radialGradient(Gradient(colors: [.clear, .black.opacity(0.3)]),
                                                      center: CGPoint(x: c.x - r * 0.25, y: c.y - r * 0.3), startRadius: r * 0.3, endRadius: r * 1.35))
         let caustic = CGRect(x: c.x - r * 0.55, y: c.y + r * 0.42, width: r * 1.1, height: r * 0.42)
         inside.fill(Path(ellipseIn: caustic), with: .radialGradient(Gradient(colors: [.white.opacity(0.35), .clear]),
