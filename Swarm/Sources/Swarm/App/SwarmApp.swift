@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 @main
@@ -9,10 +10,97 @@ enum Entry {
 }
 
 struct SwarmApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+    @State private var model = AppModel()
+
     var body: some Scene {
         Window("Swarm", id: "main") {
-            Text("Swarm")
-                .frame(minWidth: 600, minHeight: 400)
+            RootView()
+                .environment(model)
+                .background(WindowAccessor { window in
+                    window.titlebarAppearsTransparent = true
+                    window.isMovableByWindowBackground = true
+                })
+                .onAppear {
+                    model.start()
+                    delegate.attach(model)
+                }
         }
+        .windowStyle(.hiddenTitleBar)
+        .windowToolbarStyle(.unifiedCompact)
+        .defaultSize(width: 1180, height: 760)
+        .commands { SwarmCommands(model: model) }
+
+        MenuBarExtra {
+            MenuBarView().environment(model)
+        } label: {
+            Image(systemName: model.totalDown > 0 ? "arrow.down.circle.dotted" : "point.3.connected.trianglepath.dotted")
+        }
+        .menuBarExtraStyle(.window)
+
+        Settings {
+            SettingsView().environment(model)
+        }
+    }
+}
+
+struct SwarmCommands: Commands {
+    let model: AppModel
+
+    var body: some Commands {
+        CommandGroup(replacing: .newItem) {
+            Button("Открыть .torrent…") { model.presentOpenPanel() }
+                .keyboardShortcut("o")
+            Button("Создать торрент…") { model.presentCreatePanel() }
+                .keyboardShortcut("n")
+        }
+        CommandMenu("Раздачи") {
+            Button("Пауза для всех") { model.pauseAll() }
+                .keyboardShortcut("p", modifiers: [.command, .option])
+            Button("Продолжить все") { model.resumeAll() }
+                .keyboardShortcut("r", modifiers: [.command, .option])
+            Divider()
+            Button("Скопировать magnet-ссылку") { if let t = model.selected { model.copyMagnet(t) } }
+                .keyboardShortcut("c", modifiers: [.command, .shift])
+                .disabled(model.selected == nil)
+            Button("Показать в Finder") { if let t = model.selected { model.reveal(t) } }
+                .keyboardShortcut("r", modifiers: [.command, .shift])
+                .disabled(model.selected == nil)
+        }
+    }
+}
+
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    private var model: AppModel?
+    private var pending: [URL] = []
+    private var savedBeforeQuit = false
+
+    func attach(_ model: AppModel) {
+        guard self.model == nil else { return }
+        self.model = model
+        if !pending.isEmpty {
+            model.open(pending)
+            pending = []
+        }
+    }
+
+    /// magnet:-ссылки и .torrent-файлы, открытые из браузера или Finder.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        if let model { model.open(urls) } else { pending += urls }
+        NSApp.activate()
+    }
+
+    /// Закрытие окна не останавливает загрузки: Swarm продолжает работать из строки меню.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    /// Перед выходом сохраняем прогресс всех раздач, чтобы не перепроверять файлы при запуске.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let model, !savedBeforeQuit else { return .terminateNow }
+        savedBeforeQuit = true
+        Task {
+            await model.saveBeforeQuit()
+            sender.reply(toApplicationShouldTerminate: true)
+        }
+        return .terminateLater
     }
 }

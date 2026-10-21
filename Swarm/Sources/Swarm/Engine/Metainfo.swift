@@ -262,7 +262,7 @@ nonisolated struct Bitfield: Sendable, Equatable {
         let source = [UInt8](data.prefix(bytes.count))
         for i in source.indices { bytes[i] = source[i] }
         // Лишние биты в конце обнуляем.
-        if count % 8 != 0, !bytes.isEmpty { bytes[bytes.count - 1] &= UInt8(0xFF << (8 - count % 8)) }
+        if count % 8 != 0, !bytes.isEmpty { bytes[bytes.count - 1] &= UInt8(truncatingIfNeeded: 0xFF << (8 - count % 8)) }
         setCount = bytes.reduce(0) { $0 + $1.nonzeroBitCount }
     }
 

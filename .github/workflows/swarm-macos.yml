@@ -18,8 +18,6 @@ jobs:
     defaults:
       run:
         working-directory: Swarm
-    env:
-      SWIFT_BACKTRACE: enable=yes,sanitize=no,interactive=no
     steps:
       - uses: actions/checkout@v4
 
@@ -48,13 +46,12 @@ jobs:
           curl -fsSL -o "$RUNNER_TEMP/test.torrent" "$BASE$NAME"
           dist/Swarm.app/Contents/MacOS/Swarm --selftest-internet "$RUNNER_TEMP/test.torrent" "$RUNNER_TEMP/internet"
 
-      - name: Crash reports
+      # При падении повторяем тест петли под lldb, чтобы в логе был стек всех потоков.
+      - name: Backtrace on failure
         if: failure()
         run: |
-          for f in ~/Library/Logs/DiagnosticReports/Swarm*.ips; do
-            [ -f "$f" ] || continue
-            echo "=== $f"; head -c 60000 "$f"
-          done
+          lldb --batch -o run -k "thread backtrace all" -k quit -- \
+            dist/Swarm.app/Contents/MacOS/Swarm --selftest-loopback "$RUNNER_TEMP" 2>&1 | tail -250 || true
 
       - uses: actions/upload-artifact@v4
         with:

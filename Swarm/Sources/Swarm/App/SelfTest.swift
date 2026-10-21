@@ -51,6 +51,9 @@ enum SelfTest {
         var bf = Bitfield(count: 10)
         bf[0] = true; bf[9] = true; bf[9] = true
         ok = check(bf.setCount == 2 && bf.data == Data([0x80, 0x40]), "битовое поле") && ok
+        // Чужое битовое поле: хвостовые биты за пределами числа кусков отбрасываются (65 кусков → маска 0x80).
+        let remote = Bitfield(count: 65, data: Data(repeating: 0xFF, count: 9))
+        ok = check(remote.setCount == 65 && remote.isComplete && remote.data.last == 0x80, "битовое поле от пира") && ok
 
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("swarm-core-\(UUID().uuidString)")
         try? FileManager.default.createDirectory(at: dir.appendingPathComponent("Folder/sub"), withIntermediateDirectories: true)
