@@ -43,19 +43,25 @@ def src_name(url):
 def ensure_src(url):
     path = os.path.join(IMG_SRC, src_name(url))
     if not os.path.exists(path) or os.path.getsize(path) == 0:
-        subprocess.run(["curl", "-sS", "-m", "60", "--retry", "4", "-o", path, url], check=False)
+        subprocess.run(["curl", "-sS", "-m", "60", "--retry", "6", "--retry-all-errors", "--retry-delay", "2", "-o", path, url], check=False)
     return path
 
 
-def trim_margins(im, threshold=200, pad=0.03):
-    """Crop the white margins around a floor plan so it can be shown larger."""
-    mask = im.convert("L").point(lambda v: 255 if v < threshold else 0)
-    box = mask.getbbox()
-    if not box:
+def trim_margins(im, threshold=170, min_dark=3, pad=0.03):
+    """Crop the white margins around a floor plan so it can be shown larger.
+
+    Only rows/columns with a few genuinely dark pixels count, so light dotted
+    backgrounds and stray specks don't stretch the crop box."""
+    gray = im.convert("L")
+    w, h = gray.size
+    px = gray.load()
+    cols = [x for x in range(w) if sum(px[x, y] < threshold for y in range(0, h, 2)) >= min_dark]
+    rows = [y for y in range(h) if sum(px[x, y] < threshold for x in range(0, w, 2)) >= min_dark]
+    if not cols or not rows:
         return im
-    px, py = int(im.width * pad), int(im.height * pad)
-    return im.crop((max(box[0] - px, 0), max(box[1] - py, 0),
-                    min(box[2] + px, im.width), min(box[3] + py, im.height)))
+    px_, py_ = int(w * pad), int(h * pad)
+    return im.crop((max(cols[0] - px_, 0), max(rows[0] - py_, 0),
+                    min(cols[-1] + px_, w), min(rows[-1] + py_, h)))
 
 
 def optimise(url, max_side=1700, quality=84, trim=False):
@@ -171,11 +177,24 @@ def listing(state, order):
     }
 
 
+def warn_duplicates(items):
+    """One flat is often listed by several agents under different ids: flag
+    offers in the same building on the same floor with near-equal area."""
+    for i, a in enumerate(items):
+        for b in items[i + 1:]:
+            if (a["address"] == b["address"] and a["floor"] == b["floor"]
+                    and abs((a["area"]["total"] or 0) - (b["area"]["total"] or 0)) < 1.5):
+                print(f"WARNING: #{a['order']} ({a['id']}) and #{b['order']} ({b['id']}) may be the same flat "
+                      "- compare their layouts")
+
+
 def main():
     os.makedirs(IMG, exist_ok=True)
     os.makedirs(IMG_SRC, exist_ok=True)
-    order = re.findall(r"/flat/(\d+)", open(os.path.join(HERE, "listings.txt")).read())
+    # The same offer pasted twice is kept once, in its first position.
+    order = list(dict.fromkeys(re.findall(r"/flat/(\d+)", open(os.path.join(HERE, "listings.txt")).read())))
     items = [listing(page_state(os.path.join(RAW, f"{cid}.html")), i + 1) for i, cid in enumerate(order)]
+    warn_duplicates(items)
 
     # Some offers omit the newObject block; borrow it from another offer in the same complex.
     by_jk = {it["jk"]["id"]: it["jk"]["newObject"] for it in items if it["jk"] and it["jk"]["newObject"]}

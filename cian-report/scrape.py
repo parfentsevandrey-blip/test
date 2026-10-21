@@ -21,7 +21,7 @@ OUT = os.path.join(HERE, "build", "raw")
 
 def offer_ids(path):
     with open(path, encoding="utf-8") as f:
-        return re.findall(r"/flat/(\d+)", f.read())
+        return list(dict.fromkeys(re.findall(r"/flat/(\d+)", f.read())))
 
 
 def fetch(url):

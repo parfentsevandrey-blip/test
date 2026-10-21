@@ -31,6 +31,14 @@ def area(v):
     return s + NBSP + "м²"
 
 
+def plural(n, one, few, many):
+    if n % 10 == 1 and n % 100 != 11:
+        return one
+    if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14:
+        return few
+    return many
+
+
 def clean_description(text, limit):
     text = re.sub(r"[ \t]+", " ", text)
     text = re.sub(r"\n\s*\n+", "\n", text).strip()
@@ -53,7 +61,9 @@ def map_jpeg(name):
 def bar_chart(items):
     """Horizontal bars of price per m², single series, sorted high to low."""
     rows = sorted(items, key=lambda i: i["ppm2"], reverse=True)
-    w, label_w, value_w, bar_h, gap = 620, 200, 80, 30, 17
+    # Keep the plot the same height whatever the number of bars.
+    row = min(47, 470 / len(rows))
+    w, label_w, value_w, bar_h, gap = 620, 200, 80, round(row * 0.64), row - round(row * 0.64)
     plot_w = w - label_w - value_w
     vmax = max(i["ppm2"] for i in rows)
     h = len(rows) * (bar_h + gap)
@@ -149,10 +159,12 @@ def main():
         "ceiling": max(listings, key=lambda i: i["building"]["ceiling"] or 0),
         "metro": min(listings, key=lambda i: min((m["minutes"] or 99) for m in i["metro"])),
         "districts": sorted({i["district"].replace("район ", "") for i in listings}),
+        "addresses": len({i["address"] for i in listings}),
     }
 
     env = Environment(loader=FileSystemLoader(HERE), autoescape=True, trim_blocks=True, lstrip_blocks=True)
     env.filters.update(money=money, mln=mln, area=area)
+    env.globals.update(plural=plural)
     html = env.get_template("template.html").render(
         listings=listings, groups=groups, stats=stats, maps=maps,
         overview_map=map_jpeg("overview"), chart=bar_chart(listings),

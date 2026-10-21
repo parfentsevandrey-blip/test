@@ -113,6 +113,9 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: -.02
 /* ---------- comparison ---------- */
 table.cmp { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
 .cmp th { text-align: left; font-weight: 600; font-size: 6.6pt; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 0 2mm 2.5mm; border-bottom: .3mm solid var(--ink); white-space: nowrap; }
+.dense .cmp td { padding: 2.25mm 2mm; }
+.dense .ov-row { padding: 1.55mm 0; }
+.dense .ov-list h2 { margin-bottom: 3.5mm; }
 .cmp td { padding: 4.1mm 2mm; border-bottom: .3mm solid var(--line); vertical-align: top; }
 .cmp td.r, .cmp th.r { text-align: right; white-space: nowrap; }
 .cmp .n { font-family: var(--display); font-size: 9pt; }
@@ -237,7 +240,7 @@ table.cmp { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
 .grid6.n3 img:first-child, .grid6.n4 img:first-child { grid-column: auto; }
 </style>
 </head>
-<body>
+<body class="{% if listings|length > 10 %}dense{% endif %}">
 
 {# ======================= COVER ======================= #}
 <section class="page dark cover">
@@ -245,11 +248,11 @@ table.cmp { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
   <div class="shade"></div>
   <div class="content">
     <div class="brand"><span class="sq"></span>Подборка недвижимости · {{ date }}</div>
-    <h1>Центр<br>Москвы<br><em>10 квартир</em></h1>
+    <h1>Центр<br>Москвы<br><em>{{ stats.count }} {{ plural(stats.count, 'квартира', 'квартиры', 'квартир') }}</em></h1>
     <p class="lead">Квартиры {{ stats.area[0]|round|int }}–{{ stats.area[1]|round|int }} м² в {{ stats.jk }} клубных домах и ЖК премиум-класса: {{ stats.districts|join(', ') }}. Характеристики, планировки, расположение на карте и справка по каждому комплексу.</p>
     <div class="kpis">
-      <div class="kpi"><div class="v">{{ stats.count }}</div><div class="k">квартир</div></div>
-      <div class="kpi"><div class="v">{{ stats.jk }}</div><div class="k">жилых комплексов</div></div>
+      <div class="kpi"><div class="v">{{ stats.count }}</div><div class="k">{{ plural(stats.count, 'квартира', 'квартиры', 'квартир') }}</div></div>
+      <div class="kpi"><div class="v">{{ stats.jk }}</div><div class="k">{{ plural(stats.jk, 'жилой комплекс', 'жилых комплекса', 'жилых комплексов') }}</div></div>
       <div class="kpi"><div class="v">{{ (stats.price[0]/1e6)|round|int }}–{{ (stats.price[1]/1e6)|round|int }}</div><div class="k">млн ₽</div></div>
       <div class="kpi"><div class="v">{{ stats.ppm2[2]|mln(2) }}</div><div class="k">медиана ₽ за м²</div></div>
     </div>
@@ -269,7 +272,7 @@ table.cmp { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
       </div>
       <div class="ov-list">
         <div class="eyebrow">Объекты подборки</div>
-        <h2>10 адресов<br>в пределах ТТК</h2>
+        <h2>{{ stats.count }} {{ plural(stats.count, 'квартира', 'квартиры', 'квартир') }}<br>в пределах ТТК</h2>
         {% for it in listings %}
         <div class="ov-row">
           <div class="n">{{ '%02d' % it.order }}</div>
