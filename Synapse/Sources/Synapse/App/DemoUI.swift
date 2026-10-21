@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 
 /// `--demo-ui <экран>`: CI запускает приложение, оно само открывает нужный экран
 /// (а в чате — задаёт вопрос установленной модели), и с окна снимается скриншот.
@@ -21,6 +21,18 @@ enum DemoUI {
 
     static func run(_ model: AppModel) async {
         guard isOn else { return }
+        // Окно — во весь экран раннера и активное (иначе кнопки рисуются приглушёнными).
+        Task {
+            for delay in [0.3, 1.5, 4, 8] {
+                try? await Task.sleep(for: .seconds(delay))
+                NSApp.activate()
+                if let screen = NSScreen.main {
+                    for w in NSApp.windows where w.isVisible && w.canBecomeMain && w.frame != screen.visibleFrame {
+                        w.setFrame(screen.visibleFrame, display: true)
+                    }
+                }
+            }
+        }
         try? await Task.sleep(for: .milliseconds(300))
         switch screen {
         case "foryou": model.section = .forYou

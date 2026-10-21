@@ -122,7 +122,7 @@ struct NeuralOrb: View {
                                                 startPoint: CGPoint(x: center.x - radius, y: center.y - radius * 1.4),
                                                 endPoint: CGPoint(x: center.x + radius, y: center.y + radius * 1.4)), lineWidth: max(1, side * 0.006))
         let highlight = Path(ellipseIn: CGRect(x: center.x - radius * 0.85, y: center.y - radius * 1.32, width: radius * 1.2, height: radius * 0.55))
-        ctx.fill(highlight, with: .linearGradient(Gradient(colors: [.white.opacity(0.32), .white.opacity(0)]),
+        ctx.fill(highlight, with: .linearGradient(Gradient(colors: [.white.opacity(0.2), .white.opacity(0)]),
                                                   startPoint: CGPoint(x: center.x, y: center.y - radius * 1.32),
                                                   endPoint: CGPoint(x: center.x, y: center.y - radius * 0.77)))
         let rim = Path(ellipseIn: CGRect(x: center.x - radius * 0.7, y: center.y + radius * 0.95, width: radius * 1.4, height: radius * 0.36))

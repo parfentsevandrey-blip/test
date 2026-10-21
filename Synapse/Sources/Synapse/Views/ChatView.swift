@@ -176,6 +176,7 @@ struct ChatTopBar: View {
 
     var body: some View {
         HStack(spacing: 12) {
+            if let m = model.selectedModel { ModelAvatar(lab: m.lab, size: 26) }
             Menu {
                 ForEach(model.installed) { m in
                     Button {
@@ -187,10 +188,7 @@ struct ChatTopBar: View {
                 Divider()
                 Button("Установить другие…") { model.section = .forYou }
             } label: {
-                HStack(spacing: 8) {
-                    if let m = model.selectedModel { ModelAvatar(lab: m.lab, size: 22) }
-                    Text(model.selectedModel?.name ?? "Выберите модель").font(.system(size: 13, weight: .semibold))
-                }
+                Text(model.selectedModel.map { "\($0.name) · \($0.quant)" } ?? "Выберите модель").font(.system(size: 13, weight: .semibold))
             }
             .menuStyle(.button)
             .buttonStyle(.glass)

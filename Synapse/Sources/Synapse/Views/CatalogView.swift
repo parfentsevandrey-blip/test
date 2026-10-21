@@ -245,7 +245,7 @@ struct ModelDetailView: View {
                 .padding(.bottom, 24)
             }
         }
-        .frame(width: 720, height: 640)
+        .frame(width: 760, height: 640)
         .background(SectionBackground(section: .catalog, energy: 0.1).opacity(0.6))
         .task { await model.loadVariants(card) }
     }
@@ -298,16 +298,16 @@ struct ModelDetailView: View {
                                 }
                                 Text(v.quant.label).font(.system(size: 11)).foregroundStyle(.secondary)
                             }
-                            .frame(width: 200, alignment: .leading)
+                            .frame(width: 180, alignment: .leading)
                             GlowBar(fraction: max(0, (v.quant.quality - 0.8) / 0.2), colors: Section.catalog.palette)
-                                .frame(width: 90)
+                                .frame(width: 70)
                                 .help("Качество ≈\(Int(v.quant.quality * 100))% от оригинала")
                             Spacer()
                             Text(Format.bytes(v.size) + (v.estimated ? "*" : "")).font(.system(size: 12.5, weight: .medium)).monospacedDigit()
-                                .frame(width: 80, alignment: .trailing)
-                            FitBadge(fit: fit, compact: true).frame(width: 118, alignment: .trailing)
+                                .frame(width: 76, alignment: .trailing)
+                            FitBadge(fit: fit, compact: true).frame(width: 112, alignment: .trailing)
                             InstallButton(card: card, variant: v.estimated ? nil : v, prominent: isBest)
-                                .frame(width: 128, alignment: .trailing)
+                                .frame(width: 122, alignment: .trailing)
                                 .disabled(v.estimated || !fit.runnable && fit.level == .noDisk)
                         }
                         .padding(.horizontal, 14)
