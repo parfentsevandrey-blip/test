@@ -21,8 +21,6 @@
 .card .row.key .lab { color: var(--ink); }
 .card .row.key .val { font-family: var(--display); font-size: 12pt; }
 .intro { font-size: 10pt; line-height: 1.5; margin: 0 0 5mm; }
-.card .status { margin-top: 2mm; padding: 1.4mm 2mm; font-size: 8.6pt; font-weight: 600; background: var(--gain); color: #fff; }
-.card .status.bad { background: var(--loss); }
 </style>
 </head>
 <body>
@@ -34,8 +32,7 @@
       {% for o in objects %}
       <div class="card">
         <div class="photo"><img src="{{ o.hero }}" alt=""><span class="no">{{ loop.index }}</span></div>
-        <div class="name"><b>{{ o.street | nowrap }}</b><span>{{ o.city }}, {{ o.area }}</span>
-          <div class="status {{ '' if o.fits else 'bad' }}">{{ o.status }}</div></div>
+        <div class="name"><b>{{ o.street | nowrap }}</b><span>{{ o.city }}, {{ o.area }}</span></div>
         {% for label, key, cls in rows %}<div class="row {{ cls }}"><span class="lab">{{ label }}</span><span class="val">{{ o[key] }}</span></div>{% endfor %}
       </div>
       {% endfor %}

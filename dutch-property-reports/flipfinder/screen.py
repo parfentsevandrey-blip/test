@@ -105,7 +105,7 @@ def assess(rec: dict, cards: list[dict], area_note: str | None = None, strict: b
         "area_note": area_note,
         "info": {**info, "rent": {k: v for k, v in info["rent"].items() if k != "comps"},
                  "comps": [{k: c.get(k) for k in ("title", "area", "rent_m2", "url", "km")} for c in info["rent"]["comps"]]},
-        "deal": ev["base"]["deal"], "breakeven": ev["breakeven"], "breakeven_discount": ev["breakeven_discount"],
+        "deal": {**ev["base"]["deal"], "exit_yield": ev["market_yield"]}, "breakeven": ev["breakeven"], "breakeven_discount": ev["breakeven_discount"],
         "offer": ev["offer"], "offer_discount": 1 - ev["offer"] / rec["price"], "safe_discount": ev["safe_discount"],
         "passes": ev["passes"] and ev["fits"],
         "profit_at_ask": ev["at_ask"]["profit"], "net_at_offer": ev["base"]["net"], "sale": ev["base"]["sale"],

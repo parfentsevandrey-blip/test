@@ -366,8 +366,8 @@ def checks(pick: dict, rec: dict) -> list[str]:
 
 # ------------------------------------------------------------------ сборка
 def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work: Path) -> dict:
-    d = Deal(**pick["deal"])
-    ev = evaluate(d)
+    ev = evaluate(Deal(**pick["deal"]))
+    d = ev["deal"]                           # доходность инвестора может быть пересчитана (см. model.evaluate)
     b, ask, area = ev["base"], d.ask, pick["area"]
     offer, rent, need = b["price"], d.rent, ev["breakeven_discount"]
     city = CITY_RU.get(pick["slug"], pick["address"]["city"])
@@ -391,18 +391,12 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
 
     # стр. 1
     cut = pct(1 - offer / ask, 0)
-    fits, safe_cut = ev["fits"], ev["safe_discount"]
     usual = f"{C.OFFER_DISCOUNT_MIN * 100:.0f}–{pct(C.OFFER_DISCOUNT_MAX, 0)}"
     verdict = (f"План сделки: покупка свободного склада за **{eur(offer)}** — на {cut} дешевле цены продавца, косметический "
                f"ремонт, сдача в аренду на 5 лет и через 12 месяцев продажа вместе с арендатором инвестору "
-               f"за **{eur(b['sale'])}**. "
-               + (f"Ни один сценарий из раздела 5 не даёт убытка." if fits else
-                  f"Это самая высокая цена, при которой ни один сценарий не даёт убытка. Продавцы обычно уступают {usual}, "
-                  f"поэтому сделка возможна, только если продавец согласится на скидку {cut}."))
-    tag = ({"label": "Чистая прибыль за 12 месяцев", "value": eur(b["net"]),
-            "hint": f"после налога на прибыль, на вложенные {eur(b['peak'])}", "cls": ""} if fits else
-           {"label": "Нужна скидка", "value": cut, "cls": "loss",
-            "hint": f"обычно продавцы уступают {usual}; прибыль при такой цене — {eur(b['net'])}"})
+               f"за **{eur(b['sale'])}**. Ни один сценарий из раздела 5 не даёт убытка.")
+    tag = {"label": "Чистая прибыль за 12 месяцев", "value": eur(b["net"]),
+           "hint": f"после налога на прибыль, на вложенные {eur(b['peak'])}"}
     kpis = [{"label": "Цена продавца", "value": eur(ask), "hint": f"{eur(ask / area, 1)} за м²"},
             {"label": "Предложение продавцу", "value": eur(offer), "hint": f"на {cut} меньше"},
             {"label": "Продажа инвестору", "value": eur(b["sale"]), "hint": "через 12 месяцев, с арендатором"}]
@@ -419,14 +413,9 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
                    f"**Аренда по рынку.** €\u00a0{num(rent / area)} за м² в год"
                    + (f" — средняя ставка {comps_txt} рядом" if med else "")
                    + f"; первые {months(d.rent_free)} арендатор не платит.")
-    if fits:
-        first = (f"**Цена ниже рынка.** {eur(ask / area, 1)} за м² по цене продавца; свободные склады такой площади рядом "
-                 f"выставлены в среднем по {eur(vac['m2'], 1)}." if vac.get("m2") and vac["m2"] > ask / area else
-                 "**Здание свободно.** Ремонт и поиск арендатора можно начать сразу после покупки.")
-    else:
-        fy = ev["fit_yield"]
-        first = (f"**Что нужно для сделки.** Скидка {cut}" + (f" — или инвестор, готовый купить сданное здание при доходности "
-                 f"{pct(fy, 2)} вместо {pct(d.exit_yield, 2)}: тогда хватит скидки {pct(C.OFFER_DISCOUNT_MAX, 0)}." if fy else "."))
+    first = (f"**Цена ниже рынка.** {eur(ask / area, 1)} за м² по цене продавца; свободные склады такой площади рядом "
+             f"выставлены в среднем по {eur(vac['m2'], 1)}." if vac.get("m2") and vac["m2"] > ask / area else
+             "**Здание свободно.** Ремонт и поиск арендатора можно начать сразу после покупки.")
     reasons = [
         first, rent_reason,
         f"**Магистраль рядом.** До {road['ref']} — {km(road['km'])}, {road['min']}\u00a0мин"
@@ -527,7 +516,7 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
               + (", взнос ассоциации владельцев" if oc.get("vve") else "") + " на время владения", eur(upkeep)),
              ("Продажа: брокер и юрист", eur(b["sale_cost"]))]
     get = [(f"Аренда за {months(rent_months)}", eur(b["rent_collected"])), ("Продажа инвестору", eur(b["sale"]))]
-    result_lines = [("Прибыль до налога", eur(b["profit"])), ("Налог на прибыль, 19\u00a0%", eur(-b["vpb"])),
+    result_lines = [("Прибыль до налога", eur(b["profit"])), ("Налог на прибыль, 19\u00a0%" + (" и 25,8\u00a0%" if b["profit"] > C.VPB[0][0] else ""), eur(-b["vpb"])),
                     ("Чистая прибыль", "")]
     per100 = f"{b['return'] * 100:.2f}".replace(".", ",")
     result_hint = f"Нужно вложить {eur(b['peak'])}. Каждые €\u00a0100 приносят €\u00a0{per100} за год."
@@ -541,15 +530,18 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     deduct = d.owner_costs
     eq = (f"({eur(rent)} − {eur(deduct)}) ÷ {pct(d.exit_yield, 2)} = {eur(b['sale'])}" if deduct
           else f"{eur(rent)} ÷ {pct(d.exit_yield, 2)} = {eur(b['sale'])}")
-    intro = (f"Инвестор покупает здание ради аренды, как вклад с процентами. За похожие сданные склады сейчас платят "
-             f"столько, чтобы аренда за год была {pct(d.exit_yield, 2)} от цены. Арендатор этого здания платит {eur(rent)} в год"
+    intro = (f"Инвестор покупает здание ради аренды, как вклад с процентами. "
+             + (f"В расчёте он платит столько, чтобы аренда за год была {pct(d.exit_yield, 2)} от цены: при такой цене "
+                f"ни один сценарий не даёт убытка. " if ev["yield_set"] else
+                f"За похожие сданные склады сейчас платят столько, чтобы аренда за год была {pct(d.exit_yield, 2)} от цены. ")
+             + f"Арендатор этого здания платит {eur(rent)} в год"
              + (f", из них {eur(deduct)} уходит на плату за землю" if deduct else "") + ".")
     inv = investor_comps(listings, (pick["lat"], pick["lon"]))
     notes = ["Налог 10,4\u00a0% инвестор платит сверху."]
     if inv:
         notes.append("Сданные склады на продаже рядом и их доходность: " + "; ".join(
             f"{c['name']}, {eur(c['price'])}, {pct(c['yield'], 2)}" for c in inv) + ".")
-    if pick["info"]["exit_notes"]:
+    if pick["info"]["exit_notes"] and not ev["yield_set"]:
         notes.append("Поправка к доходности: " + ", ".join(pick["info"]["exit_notes"]) + ".")
     investor = {"title": f"Почему инвестор заплатит {eur(b['sale'])}", "intro": intro, "eq": eq, "note": " ".join(notes)}
 
@@ -599,8 +591,8 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
         "photo_pages": photo_pages(shots), "plans": plans[:2],
         "passes": ev["passes"],
         # строка для страницы сравнения в общем файле (pack.py)
-        "summary": {"street": street, "city": city, "hero": shots[0]["src"] if shots else "", "fits": fits,
-                    "status": (f"Подходит: скидка {cut}" if fits else f"Нужна скидка {cut}"),
+        "summary": {"street": street, "city": city, "hero": shots[0]["src"] if shots else "",
+                    "yield": pct(d.exit_yield, 2), "yield_set": ev["yield_set"],
                     "kind": ("Новое здание" if d.new_build else "Склад с офисами"),
                     "area": f"{num(area)} м²" + (f", {year} год" if year else ""),
                     "ask": eur(ask), "offer": eur(offer), "cut": pct(1 - offer / ask, 0), "sale": eur(b["sale"]),

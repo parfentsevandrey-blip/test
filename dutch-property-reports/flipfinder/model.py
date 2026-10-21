@@ -188,14 +188,22 @@ def evaluate(d: Deal) -> dict:
     """Всё, что нужно для отбора и для отчёта: цена «в ноль», предложение, сценарии.
 
     Предложение продавцу — самая высокая цена, при которой ни один сценарий (план, аренда ниже,
-    инвестор строже, арендатор позже, ремонт дороже) не даёт убытка, но со скидкой не меньше
-    OFFER_DISCOUNT_MIN. Объект подходит (fits), если для этого хватает скидки OFFER_DISCOUNT_MAX:
-    больше продавцы не уступают."""
-    breakeven = solve(d)
+    инвестор строже, арендатор позже, ремонт дороже) не даёт убытка, со скидкой от OFFER_DISCOUNT_MIN
+    до OFFER_DISCOUNT_MAX: больше продавцы не уступают. Если по рыночной доходности для этого нужна
+    скидка больше (fits = False), покупка считается с предельной скидкой, а доходность инвестора —
+    самая высокая, при которой ни один сценарий не даёт убытка (с шагом 0,05 п.п. вниз)."""
+    market = d.exit_yield
     safe = safe_price(d)
     safe_discount = (1 - safe / d.ask) if safe else None
-    top = d.ask * (1 - C.OFFER_DISCOUNT_MIN)
-    offer = (min(top, safe) // 5000) * 5000 if safe else math.ceil(d.ask * (1 - C.OFFER_DISCOUNT_MAX) / 5000) * 5000
+    fits = safe_discount is not None and safe_discount <= C.OFFER_DISCOUNT_MAX + 1e-9
+    if fits:
+        offer = (min(d.ask * (1 - C.OFFER_DISCOUNT_MIN), safe) // 5000) * 5000
+    else:
+        fy = fit_yield(d)
+        if fy:
+            d = d.at(exit_yield=math.floor(fy / 0.0005) * 0.0005)
+        offer = math.floor(d.ask * (1 - C.OFFER_DISCOUNT_MAX) / 5000) * 5000
+    breakeven = solve(d)
     at_ask = run(d.at(price=d.ask))
     base = run(d.at(price=offer))
     p = base["price"]
@@ -206,8 +214,8 @@ def evaluate(d: Deal) -> dict:
         ladder.append({"price": r["price"], "discount": 1 - r["price"] / d.ask, "profit": r["profit"], "net": r["net"]})
     return {
         "breakeven": breakeven, "breakeven_discount": (1 - breakeven / d.ask) if breakeven else None,
-        "safe": safe, "safe_discount": safe_discount,
-        "fits": safe_discount is not None and safe_discount <= C.OFFER_DISCOUNT_MAX + 1e-9, "fit_yield": fit_yield(d),
+        "safe": safe, "safe_discount": safe_discount, "fits": fits,
+        "deal": d, "market_yield": market, "yield_set": d.exit_yield != market,
         "offer": offer, "at_ask": at_ask, "base": base, "what_if": what_if, "ladder": ladder,
         "passes": breakeven is not None and (1 - breakeven / d.ask) <= C.THRESHOLD,
     }

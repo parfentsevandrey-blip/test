@@ -95,7 +95,6 @@ h1 { font-family: var(--display); font-weight: 600; font-size: 25pt; line-height
 .tag .value { font-family: var(--display); font-weight: 600; font-size: 23pt; line-height: 1.1; margin: 1.5mm 0 1.2mm;
               letter-spacing: -0.02em; }
 .tag .hint { font-size: 8pt; }
-.tag.loss { background: var(--loss); color: #fff; }
 .cover-main { padding: 7mm var(--pad-x) 0; }
 .lede { font-size: 11pt; line-height: 1.5; max-width: 104mm; min-height: 18mm; margin: 0 0 6mm; }
 .kpis { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1.5px solid var(--ink); margin-bottom: 5mm; }
