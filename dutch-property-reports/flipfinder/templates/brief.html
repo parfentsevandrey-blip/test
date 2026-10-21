@@ -120,19 +120,6 @@
             {% for r in bridge.rows %}<div class="row{% if r.last %} last{% endif %}"><span class="lab">{{ r.label }}</span><span class="track"><i class="{{ r.cls }}" style="left: {{ r.left }}%; width: {{ r.width }}%"></i></span><span class="val">{{ r.value }}</span></div>{% endfor %}
           </div>
         </div>
-      </div>
-      <div class="col">
-        <table>
-          <tr><th>Доходы</th><th class="num"></th></tr>
-          {% for label, value in get %}<tr><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}
-          <tr class="sum"><td>Всего доходов</td><td class="num">{{ get_total }}</td></tr>
-        </table>
-        <div class="panel dark">
-          <h3>{{ investor.title }}</h3>
-          <p>{{ investor.intro }}</p>
-          <div class="eq">{{ investor.eq }}</div>
-          <div class="note">{{ investor.note | md }}</div>
-        </div>
         <div class="cash">
           <h3>Сколько денег вложено в сделку</h3>
           <div class="plot">
@@ -147,6 +134,23 @@
           </div>
           <div class="axis">{% for t in cash.ticks %}<span style="left: {{ t.x }}%">{% if loop.first %}месяц {% endif %}{{ t.m }}</span>{% endfor %}</div>
           <div class="note">{{ cash_note }}</div>
+        </div>
+      </div>
+      <div class="col">
+        <table>
+          <tr><th>Доходы</th><th class="num"></th></tr>
+          {% for label, value in get %}<tr><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}
+          <tr class="sum"><td>Всего доходов</td><td class="num">{{ get_total }}</td></tr>
+        </table>
+        <div class="panel dark">
+          <h3>{{ investor.title }}</h3>
+          <p>{{ investor.intro }}</p>
+          <div class="eq">{{ investor.eq }}</div>
+          <div class="bench">
+            {% for c in investor.compare %}<div class="bench-row {{ c.cls }}"><span class="bl">{{ c.label }}<i>{{ c.hint }}</i></span><span class="bb"><span style="width: {{ c.w }}%"></span></span><span class="bv">{{ c.value }}</span></div>{% endfor %}
+          </div>
+          <p class="bench-note">{{ investor.compare_note }}</p>
+          <div class="note">{{ investor.note | md }}</div>
         </div>
         <div class="panel signal result">
           <div>{% for label, value in result_lines %}<div class="line"><span>{{ label }}</span><span>{{ value }}</span></div>{% endfor %}</div>
@@ -189,7 +193,9 @@
     </div>
     <div class="taxes">
       <h3>Как законно платить меньше налогов</h3>
-      <div class="legal">{% for t, body in legal %}<div><b>{{ t }}</b>{{ body }}</div>{% endfor %}</div>
+      <div class="legal">{% for t, body in legal %}<div><b>{{ t }}</b>{{ body }}</div>{% endfor %}
+        <div class="tax-sum"><b>Налоги в этом расчёте</b>{% for label, value in tax_sum %}<div class="line"><span>{{ label }}</span><span>{{ value }}</span></div>{% endfor %}</div>
+      </div>
     </div>
   </div>
   <div class="foot"><span>Налоги по закону Нидерландов на 2026 год; схему подтверждает налоговый консультант до подписания договора.</span><span></span></div>

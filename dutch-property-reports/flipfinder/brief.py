@@ -402,7 +402,7 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     usual = f"{C.OFFER_DISCOUNT_MIN * 100:.0f}–{pct(C.OFFER_DISCOUNT_MAX, 0)}"
     verdict = (f"План сделки: покупка свободного склада за **{eur(offer)}** — на {cut} дешевле цены продавца, косметический "
                f"ремонт, сдача в аренду на 5 лет и через 12 месяцев продажа вместе с арендатором инвестору "
-               f"за **{eur(b['sale'])}**. Ни один сценарий из раздела 5 не даёт убытка.")
+               f"за **{eur(b['sale'])}**.")
     tag = {"label": "Чистая прибыль за 12 месяцев", "value": eur(b["net"]),
            "hint": f"после налога на прибыль; стоимость владения за год — {eur(b['costs'])}"}
     kpis = [{"label": "Цена продавца", "value": eur(ask), "hint": f"{eur(ask / area, 1)} за м²"},
@@ -543,12 +543,10 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     deduct = d.owner_costs
     eq = (f"({eur(rent)} − {eur(deduct)}) ÷ {pct(d.exit_yield, 2)} = {eur(b['sale'])}" if deduct
           else f"{eur(rent)} ÷ {pct(d.exit_yield, 2)} = {eur(b['sale'])}")
-    intro = (f"Инвестор покупает здание ради аренды, как вклад с процентами. "
-             + (f"В расчёте он платит столько, чтобы аренда за год была {pct(d.exit_yield, 2)} от цены: при такой цене "
-                f"ни один сценарий не даёт убытка. " if ev["yield_set"] else
-                f"За похожие сданные склады сейчас платят столько, чтобы аренда за год была {pct(d.exit_yield, 2)} от цены. ")
-             + f"Арендатор этого здания платит {eur(rent)} в год"
-             + (f", из них {eur(deduct)} уходит на плату за землю" if deduct else "") + ".")
+    intro = (f"Инвестор покупает здание ради аренды, как вклад с процентами: аренда за год — {pct(d.exit_yield, 2)} от цены. "
+             f"Арендатор этого здания платит {eur(rent)} в год"
+             + (f", из них {eur(deduct)} уходит на " + ("плату за землю" if oc["canon"] else "взнос ассоциации владельцев")
+                if deduct else "") + ".")
     inv = investor_comps(listings, (pick["lat"], pick["lon"]))
     notes = ["Налог 10,4\u00a0% инвестор платит сверху."]
     if inv:
@@ -556,10 +554,21 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
             f"{c['name']}, {eur(c['price'])}, {pct(c['yield'], 2)}" for c in inv) + ".")
     if pick["info"]["exit_notes"] and not ev["yield_set"]:
         notes.append("Поправка к доходности: " + ", ".join(pick["info"]["exit_notes"]) + ".")
-    investor = {"title": f"Почему инвестор заплатит {eur(b['sale'])}", "intro": intro, "eq": eq, "note": " ".join(notes)}
+    # с чем инвестор сравнивает: вклад, ставка ЕЦБ, инфляция
+    bench = [("Это здание", d.exit_yield, "плюс рост аренды вместе с инфляцией", "own")] + \
+            [(label, v, src, "") for _, v, label, src in C.BENCHMARKS]
+    top_rate = max(v for _, v, _, _ in bench)
+    compare = [{"label": label, "value": pct(v, 2 if k == "own" else 1), "hint": hint, "cls": k,
+                "w": f"{100 * v / top_rate:.1f}"} for label, v, hint, k in bench]
+    cpi = next(v for k, v, _, _ in C.BENCHMARKS if k == "cpi")
+    dep = next(v for k, v, _, _ in C.BENCHMARKS if k == "deposit")
+    compare_note = (f"Аренда в договоре растёт вместе с инфляцией, поэтому доход здания не обесценивается. Вклад даёт "
+                    f"{pct(dep, 1)} при инфляции {pct(cpi, 1)}" + (" — деньги на нём почти не растут." if dep - cpi < 0.005 else "."))
+    investor = {"title": f"Почему инвестор заплатит {eur(b['sale'])}", "intro": intro, "eq": eq, "note": " ".join(notes),
+                "compare": compare, "compare_note": compare_note}
 
     # стр. 5
-    prices = sorted({ask, offer, round(ev["breakeven"], -2)} | {round(ask * k / 5000) * 5000 for k in (0.95, 0.9, 0.85, 0.8)},
+    prices = sorted({ask, offer, round(ev["breakeven"], -2)} | {round(ask * k / 5000) * 5000 for k in (0.95, 0.9, 0.85)},
                     reverse=True)
     lad = [(p, run(d.at(price=p))["profit"]) for p in prices]
     top = max(abs(v) for _, v in lad) or 1
@@ -576,14 +585,34 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
                ("Ремонт обойдётся вдвое дороже", signed(wi["Ремонт в 2 раза дороже"])),
                ("Арендатор найдётся сразу после покупки", signed(wi["Арендатор уже в 2-м месяце"]))]
     vat_saving = capex(d.at(vat_lease=False)) - capex(d.at(vat_lease=True))
-    legal = [("НДС с ремонта вернётся", f"При сдаче компании-плательщику НДС налоговая возвращает НДС, уплаченный за ремонт и "
-                                        f"услуги: {eur(vat_saving)} в этом расчёте."),
-             ("Продажа без НДС", "Здание с арендатором продаётся как готовый бизнес, поэтому на цену НДС не начисляется."),
-             ("Налог 10,4\u00a0% платит каждый покупатель",
-              "Покупатель здания — при покупке, инвестор — при продаже. Скидка на этот налог бывает только при перепродаже в первые "
-              "6 месяцев, в расчёте её нет." if not d.new_build else
-              "Новое здание покупается без этого налога, с НДС, который потом возвращается. Инвестор через 12 месяцев "
-              "платит налог как обычно.")]
+    resale = C.OVB * offer                   # налог, который инвестор не заплатит при перепродаже в первые 6 месяцев
+    legal = [
+        ("НДС с ремонта вернётся",
+         f"Аренда облагается НДС, если арендатор не меньше чем на 90\u00a0% работает с НДС; это пишется в договоре аренды. "
+         f"Тогда НДС 21\u00a0% за ремонт и услуги возвращается: {eur(vat_saving)} за ремонт в этом расчёте. С банком, "
+         f"страховой, клиникой или школой так нельзя."),
+        ("Продажа без НДС",
+         "Сданное здание с договором аренды продаётся как действующий бизнес (ст. 37d закона об НДС): НДС на цену нет, "
+         "вернувшийся НДС за ремонт отдавать не нужно. Условие: инвестор продолжает сдавать здание, договор продажи "
+         "подписан после начала аренды."),
+        ("Налог на передачу — только со здания",
+         f"10,4\u00a0% с цены здания: {eur(tax)}. Для нежилых зданий ставка в 2026 году та же, 8\u00a0% — только для жилья. "
+         "Стеллажи и оборудование указываются в договоре отдельной ценой по рынку: с них этот налог не платится."
+         if not d.new_build else
+         "Новое здание (до 2 лет после начала использования) покупается без налога на передачу, с НДС 21\u00a0%, который "
+         "возвращается, если здание сдаётся с НДС."),
+        ("Перепродажа в первые 6 месяцев",
+         f"Если инвестор купит здание в первые 6 месяцев, он платит 10,4\u00a0% только с разницы цен (ст. 13 закона о налогах "
+         f"на сделки) и экономит до {eur(resale)} — на эту сумму можно поднять цену. В расчёте продажа через 12 месяцев, "
+         f"без этой экономии."),
+        ("Налог на прибыль — после всех расходов",
+         f"19\u00a0% с прибыли до €\u00a0200.000 и 25,8\u00a0% сверх. Налог на передачу, нотариус, ремонт, брокеры и "
+         f"содержание уменьшают облагаемую прибыль: с {eur(b['profit'])} налог {eur(b['vpb'])}"
+         + (f" ({pct(b['vpb'] / b['profit'], 1)})." if b["profit"] > 0 else ".")),
+    ]
+    tax_sum = [("Налог на передачу, покупка", eur(tax)), ("НДС за ремонт", f"вернётся {eur(vat_saving)}"),
+               ("НДС при продаже", "нет"), ("Налог на прибыль", eur(b["vpb"])),
+               ("Налог на передачу, продажа", f"инвестор, {eur(b['investor_tax'])}")]
 
     return {
         "title": f"Флип-модель {street} {city}", "date": date.today().strftime("%d.%m.%Y"), "name": f"{street}, {city}",
@@ -600,7 +629,7 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
         "steps": steps, "spend": spend, "spend_total": eur(b["costs"]), "get": get, "get_total": eur(b["income"]),
         "result_lines": result_lines[:2], "result_total": eur(b["net"]), "result_hint": result_hint,
         "bridge": bridge, "cash": cash, "cash_note": cash_note, "chart_title": chart_title, "investor": investor,
-        "ladder": ladder, "what_if": what_if, "checks": checks(pick, rec), "legal": legal,
+        "ladder": ladder, "what_if": what_if, "checks": checks(pick, rec), "legal": legal, "tax_sum": tax_sum,
         "photo_pages": photo_pages(shots), "plans": plans[:2],
         "passes": ev["passes"],
         # строка для страницы сравнения в общем файле (pack.py)

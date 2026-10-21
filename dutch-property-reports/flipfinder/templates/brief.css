@@ -180,11 +180,27 @@ h1 { font-family: var(--display); font-weight: 600; font-size: 25pt; line-height
 .b5 .cols { margin-top: 0; }
 .ladder { flex: 1 1 auto; display: flex; flex-direction: column; }
 .ladder table { flex: 1 1 auto; height: 100%; }
-.ladder td { vertical-align: middle; }
+.ladder td { vertical-align: middle; padding-top: 1.1mm; padding-bottom: 1.1mm; }
 .bar-cell { width: 38%; padding-left: 4mm; }
-.legal { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6mm; }
+.legal { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm 6mm; }
 .legal div { font-size: 8.6pt; line-height: 1.42; border-top: 3px solid var(--ink); padding-top: 2mm; }
 .legal b { display: block; margin-bottom: 0.8mm; font-size: 9.3pt; }
+.legal div { font-size: 8pt; line-height: 1.38; }
+.legal .tax-sum { background: var(--ink); color: #fff; border-top-color: var(--signal); padding: 2mm 2.5mm; }
+.legal .tax-sum .line { display: flex; justify-content: space-between; gap: 2mm; border-top: 1px solid rgba(255,255,255,0.18);
+                        padding: 0.9mm 0; font-size: 7.8pt; line-height: 1.3; }
+.legal .tax-sum .line span:last-child { text-align: right; white-space: nowrap; }
+/* с чем инвестор сравнивает доходность здания */
+.bench { margin: 0 0 1.8mm; }
+.bench-row { display: grid; grid-template-columns: 38mm 1fr 11mm; align-items: center; gap: 2mm; padding: 0.7mm 0; font-size: 8pt; }
+.bench-row .bl { line-height: 1.15; }
+.bench-row .bl i { display: block; font-style: normal; font-size: 6.6pt; color: #9FB0C2; }
+.bench-row .bb { height: 2.6mm; background: rgba(255,255,255,0.08); }
+.bench-row .bb span { display: block; height: 100%; background: #8FA3B8; }
+.bench-row.own .bb span { background: var(--signal); }
+.bench-row.own .bl, .bench-row.own .bv { font-weight: 600; }
+.bench-row .bv { text-align: right; font-variant-numeric: tabular-nums; }
+.bench-note { font-size: 8pt; line-height: 1.35; margin: 0 0 1.5mm; }
 
 /* ---------- фотографии: подпись — ярлык на кадре */
 .photos { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; height: 100%; }
