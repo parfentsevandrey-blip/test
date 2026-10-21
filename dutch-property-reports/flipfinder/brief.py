@@ -177,13 +177,16 @@ def photo_pages(shots: list[dict]) -> list[dict]:
 
 # ------------------------------------------------------------------ графики: SVG, цвета из токенов страницы
 def discount_svg(cut: float) -> str:
-    """Скидка базового сценария на шкале от 0 до 20 % (или дальше, если скидка больше)."""
+    """Скидка базового сценария на шкале от 0 до 20 % (или дальше, если скидка больше).
+    Жёлтая полоса под шкалой — скидка, на которую продавцы обычно соглашаются."""
     top = max(0.20, math.ceil((cut + 0.03) * 20) / 20)
     w, h, y = 600, 50, 18
     x = lambda v: 10 + (w - 40) * max(0.0, v) / top          # noqa: E731
     ticks = "".join(f'<text x="{x(t / 100):.1f}" y="{y + 30}" font-size="10" fill="var(--muted)" text-anchor="middle">{t} %</text>'
                     for t in range(0, int(round(top * 100)) + 1, 5))
+    a, b = x(C.OFFER_DISCOUNT_MIN), x(C.OFFER_DISCOUNT_MAX)
     return (f'<svg viewBox="0 0 {w} {h}">'
+            f'<rect x="{a:.1f}" y="{y - 4}" width="{b - a:.1f}" height="20" fill="var(--signal)"/>'
             f'<rect x="10" y="{y}" width="{w - 40}" height="12" fill="var(--concrete)"/>'
             f'<rect x="10" y="{y}" width="{max(0.0, x(cut) - 10):.1f}" height="12" fill="var(--ink)"/>'
             f'<text x="{max(x(cut), 60):.1f}" y="{y - 6}" font-size="12" font-weight="600" fill="var(--ink)" '
@@ -388,25 +391,44 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
 
     # стр. 1
     cut = pct(1 - offer / ask, 0)
+    fits, safe_cut = ev["fits"], ev["safe_discount"]
+    usual = f"{C.OFFER_DISCOUNT_MIN * 100:.0f}–{pct(C.OFFER_DISCOUNT_MAX, 0)}"
     verdict = (f"План сделки: покупка свободного склада за **{eur(offer)}** — на {cut} дешевле цены продавца, косметический "
                f"ремонт, сдача в аренду на 5 лет и через 12 месяцев продажа вместе с арендатором инвестору "
-               f"за **{eur(b['sale'])}**.")
-    tag = {"label": "Чистая прибыль за 12 месяцев", "value": eur(b["net"]),
-           "hint": f"после налога на прибыль, на вложенные {eur(b['peak'])}"}
+               f"за **{eur(b['sale'])}**. "
+               + (f"Ни один сценарий из раздела 5 не даёт убытка." if fits else
+                  f"Это самая высокая цена, при которой ни один сценарий не даёт убытка. Продавцы обычно уступают {usual}, "
+                  f"поэтому сделка возможна, только если продавец согласится на скидку {cut}."))
+    tag = ({"label": "Чистая прибыль за 12 месяцев", "value": eur(b["net"]),
+            "hint": f"после налога на прибыль, на вложенные {eur(b['peak'])}", "cls": ""} if fits else
+           {"label": "Нужна скидка", "value": cut, "cls": "loss",
+            "hint": f"обычно продавцы уступают {usual}; прибыль при такой цене — {eur(b['net'])}"})
     kpis = [{"label": "Цена продавца", "value": eur(ask), "hint": f"{eur(ask / area, 1)} за м²"},
             {"label": "Предложение продавцу", "value": eur(offer), "hint": f"на {cut} меньше"},
             {"label": "Продажа инвестору", "value": eur(b["sale"]), "hint": "через 12 месяцев, с арендатором"}]
     meter = {"title": (f"Базовый сценарий: покупка со скидкой **{cut}** от цены продавца — {eur(offer)} "
-                       f"вместо {eur(ask)}."), "svg": discount_svg(1 - offer / ask)}
+                       f"вместо {eur(ask)}. Жёлтым — скидка, на которую продавцы обычно соглашаются: {usual}."),
+             "svg": discount_svg(1 - offer / ask)}
     med, n_comps = pick["info"]["rent"].get("comps_m2"), pick["info"]["rent"]["n"]
+    by_owner = pick["info"]["rent"].get("basis") == "ставка продавца"
     vac = pick["info"].get("vacant") or {}
+    comps_txt = plural(n_comps, "предложения", "предложений", "предложений")
+    rent_reason = (f"**Аренда по ставке владельца.** €\u00a0{num(rent / area)} за м² в год — столько владелец просит за аренду "
+                   f"здания" + (f"; средняя ставка {comps_txt} рядом — €\u00a0{num(med)}." if med else ".")
+                   if by_owner else
+                   f"**Аренда по рынку.** €\u00a0{num(rent / area)} за м² в год"
+                   + (f" — средняя ставка {comps_txt} рядом" if med else "")
+                   + f"; первые {months(d.rent_free)} арендатор не платит.")
+    if fits:
+        first = (f"**Цена ниже рынка.** {eur(ask / area, 1)} за м² по цене продавца; свободные склады такой площади рядом "
+                 f"выставлены в среднем по {eur(vac['m2'], 1)}." if vac.get("m2") and vac["m2"] > ask / area else
+                 "**Здание свободно.** Ремонт и поиск арендатора можно начать сразу после покупки.")
+    else:
+        fy = ev["fit_yield"]
+        first = (f"**Что нужно для сделки.** Скидка {cut}" + (f" — или инвестор, готовый купить сданное здание при доходности "
+                 f"{pct(fy, 2)} вместо {pct(d.exit_yield, 2)}: тогда хватит скидки {pct(C.OFFER_DISCOUNT_MAX, 0)}." if fy else "."))
     reasons = [
-        (f"**Цена ниже рынка.** {eur(ask / area, 1)} за м² по цене продавца; свободные склады такой площади рядом "
-         f"выставлены в среднем по {eur(vac['m2'], 1)}." if vac.get("m2") and vac["m2"] > ask / area else
-         "**Здание свободно.** Ремонт и поиск арендатора можно начать сразу после покупки."),
-        f"**Осторожная оценка аренды.** €\u00a0{num(rent / area)} за м² в год"
-        + (f" — это {pct(C.RENT_SAFETY, 0)} от средней ставки {plural(n_comps, 'предложения', 'предложений', 'предложений')} "
-           f"рядом (€\u00a0{num(med)})." if med else "."),
+        first, rent_reason,
         f"**Магистраль рядом.** До {road['ref']} — {km(road['km'])}, {road['min']}\u00a0мин"
         + (f"; {near[0]['label']} — {near[0]['min']}\u00a0мин." if near else "."),
     ]
@@ -481,9 +503,11 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     mezz = pick["info"]["rent"].get("mezzanine")
     rent_box = {"month": eur(rent / 12),
                 "text": (f"Это **{eur(rent)} в год**, €\u00a0{num(rent / area)} за м²"
-                         + (f": {pct(C.RENT_SAFETY, 0)} от средней ставки {plural(n_comps, 'предложения', 'предложений', 'предложений')} "
-                            f"рядом. Ставка ниже средней, потому что в объявлениях ставки обычно выше, чем в подписанных договорах."
-                            if med else ".")),
+                         + (f": столько владелец просит за аренду этого здания. Средняя ставка {comps_txt} рядом — "
+                            f"€\u00a0{num(med)}." if by_owner and med else
+                            f": столько владелец просит за аренду этого здания." if by_owner else
+                            f" — средняя ставка {comps_txt} рядом." if med else ".")
+                         + f" Первые {months(d.rent_free)} арендатор не платит — это уступка за новый договор."),
                 "note": ("В таблице — ближайшие предложения аренды на funda in business площадью от половины до двойной площади этого здания."
                          + (" Антресоль учтена как 30\u00a0% площади." if mezz else ""))}
 
@@ -575,7 +599,8 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
         "photo_pages": photo_pages(shots), "plans": plans[:2],
         "passes": ev["passes"],
         # строка для страницы сравнения в общем файле (pack.py)
-        "summary": {"street": street, "city": city, "hero": shots[0]["src"] if shots else "",
+        "summary": {"street": street, "city": city, "hero": shots[0]["src"] if shots else "", "fits": fits,
+                    "status": (f"Подходит: скидка {cut}" if fits else f"Нужна скидка {cut}"),
                     "kind": ("Новое здание" if d.new_build else "Склад с офисами"),
                     "area": f"{num(area)} м²" + (f", {year} год" if year else ""),
                     "ask": eur(ask), "offer": eur(offer), "cut": pct(1 - offer / ask, 0), "sale": eur(b["sale"]),

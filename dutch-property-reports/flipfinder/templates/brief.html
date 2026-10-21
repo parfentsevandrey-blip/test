@@ -21,7 +21,7 @@
         <div class="city">{{ city }}</div>
         <div class="hero-sub">{{ subline }}</div>
       </div>
-      <div class="tag"><div class="label">{{ tag.label }}</div><div class="value">{{ tag.value }}</div><div class="hint">{{ tag.hint }}</div></div>
+      <div class="tag {{ tag.cls }}"><div class="label">{{ tag.label }}</div><div class="value">{{ tag.value }}</div><div class="hint">{{ tag.hint }}</div></div>
     </div>
     <div class="cover-main">
       <p class="lede">{{ verdict | md }}</p>

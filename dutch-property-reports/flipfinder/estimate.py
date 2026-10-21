@@ -179,7 +179,7 @@ def rent(cards: list[dict], rec: dict, here: tuple[float, float] | None = None) 
     return out
 
 
-def exit_yield(rec: dict, oc: dict, ring: str = "zone") -> tuple[float, list[str]]:
+def exit_yield(rec: dict, oc: dict) -> tuple[float, list[str]]:
     base = C.EXIT_YIELD_CITY.get(rec["slug"], C.EXIT_YIELD[rec["territory"]])
     notes = []
     y = year_of(rec)
@@ -192,9 +192,6 @@ def exit_yield(rec: dict, oc: dict, ring: str = "zone") -> tuple[float, list[str
     if (rec.get("area") or 0) >= 2000:
         base += C.EXIT_ADJ["large_2000m2"]
         notes.append("больше 2.000 м²")
-    if ring != "zone" and rec["slug"] not in C.EXIT_YIELD_CITY:     # у города своя доходность — она уже учитывает спрос
-        base += C.EXIT_ADJ["nearby"]
-        notes.append("меньше спроса инвесторов, чем в крупных промзонах")
     if oc["lease_end"] and oc["lease_end"] <= 2060:
         base += C.EXIT_ADJ["lease_ends_2060"]
         notes.append(f"право на землю до {oc['lease_end']} года")

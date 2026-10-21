@@ -21,6 +21,7 @@
 """
 from __future__ import annotations
 
+import math
 from dataclasses import asdict, dataclass, replace
 
 from flipfinder import config as C
@@ -127,27 +128,86 @@ def solve(d: Deal, target: float = 0.0, metric: str = "profit", lo: float = 0.2,
     return d.ask * (lo + hi) / 2
 
 
-def evaluate(d: Deal) -> dict:
-    """Всё, что нужно для отбора и для отчёта: цена «в ноль», предложение, сценарии."""
-    breakeven = solve(d)
-    m10 = solve(d, 0.10, "margin")
-    offer = min(d.ask, (m10 // 5000) * 5000) if m10 else None
-    at_ask = run(d.at(price=d.ask))
-    base = run(d.at(price=offer)) if offer else at_ask
-    p = base["price"]
-    what_if = {
-        "Аренда на 10 % ниже": run(d.at(price=p, rent=d.rent * 0.9))["profit"],
-        "Инвестор хочет на 0,5 % больше": run(d.at(price=p, exit_yield=d.exit_yield + 0.005))["profit"],
-        "Арендатор на 3 месяца позже": run(d.at(price=p, lease_month=d.lease_month + 3))["profit"],
-        "Ремонт в 2 раза дороже": run(d.at(price=p))["profit"] - capex(d),
-        "Арендатор уже в 2-м месяце": run(d.at(price=p, lease_month=2))["profit"],
+def even(d: Deal, field: str, lo: float, hi: float) -> float | None:
+    """Значение параметра сделки (аренда, доходность инвестора), при котором прибыль до налога — ноль."""
+    def f(v):
+        return run(d.at(**{field: v}))["profit"]
+    a, b = f(lo), f(hi)
+    if a * b > 0:
+        return None
+    for _ in range(80):
+        mid = (lo + hi) / 2
+        if a * f(mid) <= 0:
+            hi = mid
+        else:
+            lo, a = mid, f(mid)
+    return (lo + hi) / 2
+
+
+def stress(d: Deal) -> dict:
+    """Прибыль до налога, если что-то пойдёт не по плану (цена покупки — d.price)."""
+    return {
+        "Аренда на 10 % ниже": run(d.at(rent=d.rent * 0.9))["profit"],
+        "Инвестор хочет на 0,5 % больше": run(d.at(exit_yield=d.exit_yield + 0.005))["profit"],
+        "Арендатор на 3 месяца позже": run(d.at(lease_month=d.lease_month + 3))["profit"],
+        "Ремонт в 2 раза дороже": run(d)["profit"] - capex(d),
+        "Арендатор уже в 2-м месяце": run(d.at(lease_month=2))["profit"],
     }
+
+
+def worst(d: Deal) -> float:
+    return min(run(d)["profit"], *stress(d).values())
+
+
+def safe_price(d: Deal, lo: float = 0.2, hi: float = 2.0) -> float | None:
+    """Самая высокая цена покупки, при которой ни один сценарий не даёт убытка."""
+    f = lambda k: worst(d.at(price=d.ask * k))           # noqa: E731 — убывает с ростом цены
+    if f(lo) < 0:
+        return None
+    if f(hi) >= 0:
+        return d.ask * hi
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if f(mid) >= 0 else (lo, mid)
+    return d.ask * lo
+
+
+def fit_yield(d: Deal, lo: float = 0.03) -> float | None:
+    """Самая высокая доходность инвестора, при которой покупка с предельной скидкой не даёт убытка ни в одном сценарии."""
+    at = d.at(price=d.ask * (1 - C.OFFER_DISCOUNT_MAX))
+    hi = max(d.exit_yield, 0.15)
+    if worst(at.at(exit_yield=lo)) < 0:
+        return None
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if worst(at.at(exit_yield=mid)) >= 0 else (lo, mid)
+    return lo
+
+
+def evaluate(d: Deal) -> dict:
+    """Всё, что нужно для отбора и для отчёта: цена «в ноль», предложение, сценарии.
+
+    Предложение продавцу — самая высокая цена, при которой ни один сценарий (план, аренда ниже,
+    инвестор строже, арендатор позже, ремонт дороже) не даёт убытка, но со скидкой не меньше
+    OFFER_DISCOUNT_MIN. Объект подходит (fits), если для этого хватает скидки OFFER_DISCOUNT_MAX:
+    больше продавцы не уступают."""
+    breakeven = solve(d)
+    safe = safe_price(d)
+    safe_discount = (1 - safe / d.ask) if safe else None
+    top = d.ask * (1 - C.OFFER_DISCOUNT_MIN)
+    offer = (min(top, safe) // 5000) * 5000 if safe else math.ceil(d.ask * (1 - C.OFFER_DISCOUNT_MAX) / 5000) * 5000
+    at_ask = run(d.at(price=d.ask))
+    base = run(d.at(price=offer))
+    p = base["price"]
+    what_if = stress(d.at(price=p))
     ladder = []
     for k in (1.0, 0.95, 0.90, 0.85, 0.80):
         r = run(d.at(price=round(d.ask * k / 5000) * 5000))
         ladder.append({"price": r["price"], "discount": 1 - r["price"] / d.ask, "profit": r["profit"], "net": r["net"]})
     return {
         "breakeven": breakeven, "breakeven_discount": (1 - breakeven / d.ask) if breakeven else None,
-        "m10": m10, "offer": offer, "at_ask": at_ask, "base": base, "what_if": what_if, "ladder": ladder,
+        "safe": safe, "safe_discount": safe_discount,
+        "fits": safe_discount is not None and safe_discount <= C.OFFER_DISCOUNT_MAX + 1e-9, "fit_yield": fit_yield(d),
+        "offer": offer, "at_ask": at_ask, "base": base, "what_if": what_if, "ladder": ladder,
         "passes": breakeven is not None and (1 - breakeven / d.ask) <= C.THRESHOLD,
     }

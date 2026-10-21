@@ -48,8 +48,9 @@ def main(run_dir: Path, urls: list[str]) -> None:
             continue
         if cand["breakeven_discount"] is not None and cand["breakeven_discount"] > C.THRESHOLD:
             warn.append(f"для выхода в ноль нужна скидка {cand['breakeven_discount']:.1%}, больше {C.THRESHOLD:.0%}")
-        if cand["offer_discount"] > C.OFFER_DISCOUNT_MAX:
-            warn.append(f"предложение на {cand['offer_discount']:.1%} ниже цены, больше {C.OFFER_DISCOUNT_MAX:.0%}")
+        if cand["safe_discount"] is None or cand["safe_discount"] > C.OFFER_DISCOUNT_MAX:
+            warn.append(f"чтобы ни один сценарий не дал убытка, нужна скидка больше {C.OFFER_DISCOUNT_MAX:.0%}"
+                        + (f" ({cand['safe_discount']:.1%})" if cand["safe_discount"] else ""))
         cand["checks"] = why + warn
         done[url] = cand
         print(f"{cand['title'][-60:]}\n  в ноль {cand['breakeven_discount']:.1%}, предложение {cand['offer']:,.0f} "

@@ -3,7 +3,7 @@
     python3 -I flipfinder/screen.py RUN_DIR [--relaxed] [--include-shown]
 
 Порядок в списке: сначала объекты, которым для выхода в ноль нужна скидка не больше
-порога (11 %), а предложение продавцу — не больше 15 % ниже его цены; среди них — отдельные
+порога (11 %), а ни один сценарий не даёт убытка при скидке до 17 %; среди них — отдельные
 здания, затем юниты в комплексах; наши районы, затем окрестности; внутри — по размеру скидки.
 Пишет RUN_DIR/candidates.json (все посчитанные), RUN_DIR/rejected.json (с причинами)
 и RUN_DIR/shortlist.json (прошедшие порог, лучшие первыми).
@@ -40,7 +40,7 @@ def address(rec: dict) -> dict | None:
 def model_for(rec: dict, cards: list[dict], here=None, ring: str = "zone") -> tuple[Deal | None, dict]:
     rent = E.rent(cards, rec, here)
     oc = E.owner_costs(rec.get("desc") or "")
-    ey, notes = E.exit_yield(rec, oc, ring)
+    ey, notes = E.exit_yield(rec, oc)
     info = {"rent": rent, "owner": oc, "exit_yield": ey, "exit_notes": notes, "year": E.year_of(rec),
             "new_build": E.new_build(rec), "shell": bool(E.SHELL.search(rec.get("desc") or "")),
             "condition": E.condition(rec), "unit": E.is_unit(rec), "desc_partial": bool(rec.get("desc_partial"))}
@@ -106,8 +106,8 @@ def assess(rec: dict, cards: list[dict], area_note: str | None = None, strict: b
         "info": {**info, "rent": {k: v for k, v in info["rent"].items() if k != "comps"},
                  "comps": [{k: c.get(k) for k in ("title", "area", "rent_m2", "url", "km")} for c in info["rent"]["comps"]]},
         "deal": ev["base"]["deal"], "breakeven": ev["breakeven"], "breakeven_discount": ev["breakeven_discount"],
-        "offer": ev["offer"], "offer_discount": 1 - ev["offer"] / rec["price"],
-        "passes": ev["passes"] and 1 - ev["offer"] / rec["price"] <= C.OFFER_DISCOUNT_MAX,
+        "offer": ev["offer"], "offer_discount": 1 - ev["offer"] / rec["price"], "safe_discount": ev["safe_discount"],
+        "passes": ev["passes"] and ev["fits"],
         "profit_at_ask": ev["at_ask"]["profit"], "net_at_offer": ev["base"]["net"], "sale": ev["base"]["sale"],
     }
     return cand, warn
