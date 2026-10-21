@@ -172,7 +172,7 @@ def meter_svg(need: float, threshold: float) -> str:
     ticks = "".join(f'<text x="{x(t / 100):.1f}" y="{y + 30}" font-size="10" fill="var(--muted)" text-anchor="middle">{t} %</text>'
                     for t in range(0, int(top * 100) + 1, 5))
     return (f'<svg viewBox="0 0 {w} {h}">'
-            f'<rect x="10" y="{y}" width="{w - 40}" height="12" rx="4" fill="var(--rule)"/>'
+            f'<rect x="10" y="{y}" width="{w - 40}" height="12" rx="4" fill="var(--concrete)"/>'
             f'<rect x="10" y="{y}" width="{max(0.0, x(need) - 10):.1f}" height="12" rx="4" fill="{fill}"/>'
             f'<line x1="{x(threshold):.1f}" y1="{y - 6}" x2="{x(threshold):.1f}" y2="{y + 16}" stroke="var(--ink)" stroke-width="2"/>'
             f'<text x="{x(threshold) + 5:.1f}" y="{y - 8}" font-size="11" fill="var(--ink)">порог {pct(threshold, 0)}</text>'
@@ -180,8 +180,9 @@ def meter_svg(need: float, threshold: float) -> str:
             f'text-anchor="end">нужно {pct(need)}</text>{ticks}</svg>')
 
 
-def waterfall_svg(rows: list[tuple[str, float]]) -> str:
-    """Горизонтальный «мост»: каждая полоса начинается там, где кончилась предыдущая; последняя — прибыль от нуля."""
+def waterfall(rows: list[tuple[str, float]]) -> dict:
+    """«Мост» от денег к прибыли: каждая полоса начинается там, где кончилась предыдущая; последняя — итог от нуля.
+    Строки — HTML, чтобы график растягивался по высоте страницы, а подписи не искажались."""
     lo, hi, cum, spans = 0.0, 0.0, 0.0, []
     for i, (label, v) in enumerate(rows):
         last = i == len(rows) - 1
@@ -190,20 +191,21 @@ def waterfall_svg(rows: list[tuple[str, float]]) -> str:
         if not last:
             cum += v
         lo, hi = min(lo, a, b), max(hi, a, b)
-    W, row_h, left, right = 292, 40, 106, 46
-    plot = W - left - right
-    x = lambda v: left + plot * (v - lo) / (hi - lo)        # noqa: E731
-    out = [f'<svg viewBox="0 0 {W} {row_h * len(rows) + 4}">',
-           f'<line x1="{x(0):.1f}" y1="2" x2="{x(0):.1f}" y2="{row_h * len(rows)}" stroke="var(--axis)" stroke-width="0.8"/>']
-    for i, (label, v, a, b, last) in enumerate(spans):
-        y = i * row_h + 12
-        color = "var(--gain)" if v >= 0 else "var(--loss)"
-        weight = "600" if last else "400"
-        value = ("+" if v >= 0 else "−") + f"{abs(v) / 1000:,.0f}".replace(",", ".") + " тыс."
-        out.append(f'<text x="0" y="{y + 10}" font-size="9" font-weight="{weight}" fill="var(--ink)">{H.escape(label)}</text>'
-                   f'<rect x="{x(a):.1f}" y="{y - 1}" width="{max(1.5, x(b) - x(a)):.1f}" height="16" rx="2" fill="{color}"/>'
-                   f'<text x="{W}" y="{y + 10}" font-size="9" font-weight="{weight}" fill="var(--ink)" text-anchor="end">{value}</text>')
-    return "".join(out) + "</svg>"
+    x = lambda v: 100 * (v - lo) / (hi - lo)               # noqa: E731
+    return {"zero": f"{x(0):.2f}", "rows": [{"label": label, "left": f"{x(a):.2f}", "width": f"{max(0.6, x(b) - x(a)):.2f}",
+             "cls": "gain" if v >= 0 else "loss", "last": last,
+             "value": ("+" if v >= 0 else "−") + f"{abs(v) / 1000:,.0f}".replace(",", ".") + "\u00a0тыс."}
+            for label, v, a, b, last in spans]}
+
+
+def cash_bars(rows: list[dict]) -> dict:
+    """Сколько наших денег в деле на конец каждого месяца: вниз — вложено, вверх — вернулось с прибылью."""
+    cum = [r["cum"] for r in rows]
+    lo, hi = min(0.0, *cum), max(0.0, *cum)
+    y = lambda v: 100 * (hi - v) / (hi - lo)                # noqa: E731
+    cols = [{"m": r["m"], "top": f"{y(max(0.0, v)):.2f}", "height": f"{max(0.4, abs(v) / (hi - lo) * 100):.2f}",
+             "cls": "up" if v > 0 else "down"} for r, v in zip(rows, cum)]
+    return {"zero": f"{y(0):.2f}", "cols": cols}
 
 
 def bar_cell(v: float, top: float) -> str:
@@ -287,7 +289,7 @@ def why_here(pick: dict, near: list[dict]) -> list[str]:
         return [n["about"] for n in near[:3] if n["about"]]
     body = place.get("body") or ""
     lead = (f"Здание расположено в районе **{place['short']}**." if place["ring"] == "zone" else
-            f"Здание расположено в {place.get('drive_min')} минутах от района **{place['short']}**.")
+            f"Здание расположено в {place.get('drive_min')}\u00a0минутах от района **{place['short']}**.")
     out = [f"{lead} {body}"]
     for n in near:
         if n["about"] and n["about"] not in out and f"**{n['label']}**" not in body:
@@ -337,30 +339,30 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     since = date_ru(rec.get("since"))
 
     # стр. 1
-    verdict = (f"Предлагаем продавцу **{eur(offer)}**, на {pct(1 - offer / ask, 0)} меньше его цены. После ремонта "
-               f"сдаём здание на 5 лет и через 12 месяцев продаём его сданным инвестору за **{eur(b['sale'])}**. "
-               f"Чистая прибыль — **{eur(b['net'])}**.")
+    cut = pct(1 - offer / ask, 0)
+    verdict = (f"Покупаем свободный склад за **{eur(offer)}** — на {cut} дешевле цены продавца. Делаем косметический "
+               f"ремонт, сдаём на 5 лет и через 12 месяцев продаём вместе с арендатором инвестору за **{eur(b['sale'])}**.")
     if not ev["passes"]:
-        verdict += (f" Порог не пройден: без убытка здание можно купить только со скидкой {pct(need)}; "
-                    "отчёт собран в тестовом режиме.")
-    kpis = [{"label": "Цена продавца", "value": eur(ask), "hint": f"{eur(ask / area, 1)} за м², налог за покупателем"},
-            {"label": "Покупаем за", "value": eur(offer), "hint": f"скидка {pct(1 - offer / ask, 0)}"},
-            {"label": "Продаём через 12 месяцев", "value": eur(b["sale"]), "hint": "сданным, инвестору"},
-            {"label": "Чистая прибыль", "value": eur(b["net"]), "hint": f"{pct(b['return'])} на вложенные {eur(b['peak'])}",
-             "key": True}]
-    meter = {"title": (f"Чтобы не уйти в минус, продавец должен уступить **{pct(need)}**. "
-                       f"Мы берём объекты, где это не больше {pct(C.THRESHOLD, 0)}."), "svg": meter_svg(need, C.THRESHOLD)}
+        verdict += f" Тестовый режим: без убытка здание можно купить только со скидкой {pct(need)}, больше порога."
+    tag = {"label": "Остаётся нам через 12 месяцев", "value": eur(b["net"]),
+           "hint": f"после налога на прибыль, на вложенные {eur(b['peak'])}"}
+    kpis = [{"label": "Цена продавца", "value": eur(ask), "hint": f"{eur(ask / area, 1)} за м²"},
+            {"label": "Предлагаем", "value": eur(offer), "hint": f"на {cut} меньше"},
+            {"label": "Продаём инвестору", "value": eur(b["sale"]), "hint": "через 12 месяцев, с арендатором"}]
+    meter = {"title": (f"Сделка окупается, если продавец уступит хотя бы **{pct(need)}**. "
+                       f"Мы берём только объекты, где нужно не больше {pct(C.THRESHOLD, 0)}."),
+             "svg": meter_svg(need, C.THRESHOLD)}
     med, n_comps = pick["info"]["rent"].get("comps_m2"), pick["info"]["rent"]["n"]
     nxt = next((c for c in cands if c["url"] != pick["url"]), None)
     reasons = [
-        ("**Скидка в пределах порога.**" if ev["passes"] else "**Ближе всех к порогу.**")
-        + f" В ноль при цене {eur(ev['breakeven'])}"
-        + (f"; следующему кандидату нужно {pct(nxt['breakeven_discount'])}." if nxt else "."),
-        f"**Аренда по рынку.** В модели €\u00a0{num(rent / area)} за м² в год"
-        + (f": {pct(C.RENT_SAFETY, 0)} от средней ставки {plural(n_comps, 'предложения', 'предложений', 'предложений')} "
+        ("**Нужна небольшая скидка.**" if ev["passes"] else "**Ближе всех к порогу.**")
+        + f" В ноль выходим при цене {eur(ev['breakeven'])}"
+        + (f". Следующему объекту в списке нужна скидка {pct(nxt['breakeven_discount'])}." if nxt else "."),
+        f"**Аренду считаем осторожно.** €\u00a0{num(rent / area)} за м² в год"
+        + (f" — это {pct(C.RENT_SAFETY, 0)} от средней ставки {plural(n_comps, 'предложения', 'предложений', 'предложений')} "
            f"рядом (€\u00a0{num(med)})." if med else "."),
-        f"**Дорога.** До магистрали {road['ref']} — {km(road['km'])}, {road['min']} мин"
-        + (f"; до {near[0]['label']} — {near[0]['min']} мин." if near else "."),
+        f"**Магистраль рядом.** До {road['ref']} — {km(road['km'])}, {road['min']}\u00a0мин"
+        + (f"; до {near[0]['label']} — {near[0]['min']}\u00a0мин." if near else "."),
     ]
     passed = sum(1 for c in cands if c["passes"])
 
@@ -381,7 +383,7 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
          ("Энергетический класс", label if (label := (rec.get("label") or "").strip()) and "Niet" not in label else "не указан"),
          ("Участок", (f"{num(rec['plot'])} м²" if rec.get("plot") else "не указан")
           )],
-        [("Цена продавца", f"{eur(ask)}, налог 10,4 % за покупателем"), ("Цена за м²", eur(ask / area, 1)),
+        [("Цена продавца", f"{eur(ask)}, налог 10,4\u00a0% за покупателем"), ("Цена за м²", eur(ask / area, 1)),
          ("Арендатор", "нет, здание свободно"), ("Земля", f"в аренде, €\u00a0{num(oc['canon'])} в год" if oc["canon"] else "в аренде" if oc["lease_end"]
           else "в собственности, без платы" if re.search(r"eigen grond", desc, re.I) else "не указано"),
          ("На продаже", f"с {since}" if since and re.match(r"\d+ [а-я]", since) else (since or "не указано"))],
@@ -405,11 +407,10 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
         if oc["bought_off_until"]:
             land += f" Плата внесена вперёд до {oc['bought_off_until']} года."
         blocks.append(("Земля", [land]))
-    blocks.append(("Что сделать перед сдачей", [
-        f"**Ремонт:** €\u00a0{num(C.CAPEX_M2_SHELL if d.shell else C.CAPEX_M2)} за м² и резерв — {eur(b['works'])} без НДС.",
-        f"**Арендатор:** брокер берёт 15 % годовой аренды, арендатор получает {months(d.rent_free)} без платы.",
-        "**Договор:** 5 лет, индексация по инфляции, аренда с НДС.",
-        "**Покупка:** договор с условием проверки здания и документов."]))
+    todo = [f"**Ремонт:** покраска, свет, мелкий ремонт — {eur(b['works'])} без НДС.",
+            f"**Арендатор:** ищет брокер за 15\u00a0% годовой аренды; первые {months(d.rent_free)} арендатор не платит.",
+            "**Договор аренды:** на 5 лет, плата растёт вместе с инфляцией.",
+            "**Договор покупки:** с правом отказаться, если проверка здания найдёт серьёзные дефекты."]
     images = ([{"src": plans[0]["src"], "cls": "plan"}] if plans else []) + \
              [{"src": shots[i]["src"], "cls": ""} for i in (1, 2) if len(shots) > i][: 2 - (1 if plans else 0)]
 
@@ -417,8 +418,8 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     map_png = maps.render(pick["lat"], pick["lon"], work / "map.png", zoom=13, width=1400, height=760)
     map_jpg = work / "map.jpg"
     Image.open(map_png).convert("RGB").save(map_jpg, "JPEG", quality=85, optimize=True)
-    roads = [{"shield": road["ref"].replace(" ", ""), "label": "въезд на магистраль", "value": f"{km(road['km'])}, {road['min']} мин"}]
-    roads += [{"label": n["label"], "value": f"{km(n['km'])}, {n['min']} мин"} for n in near]
+    roads = [{"shield": road["ref"].replace(" ", ""), "label": "въезд на магистраль", "value": f"{km(road['km'])}, {road['min']}\u00a0мин"}]
+    roads += [{"label": n["label"], "value": f"{km(n['km'])}, {n['min']}\u00a0мин"} for n in near]
     comps = sorted(pick["info"]["comps"], key=lambda c: abs(c["area"] - area))[:6]
     comp_rows = [{"name": c["title"], "area": num(c["area"]), "rate": c["rent_m2"]} for c in comps]
     comp_rows.append({"name": f"{street}, наша оценка", "area": num(area), "rate": rent / area, "mine": True})
@@ -426,45 +427,60 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     for c in comp_rows:
         c["rate"] = f"€\u00a0{num(c['rate'])}"
     mezz = pick["info"]["rent"].get("mezzanine")
+    rent_box = {"month": eur(rent / 12),
+                "text": (f"Это **{eur(rent)} в год**, €\u00a0{num(rent / area)} за м²"
+                         + (f": {pct(C.RENT_SAFETY, 0)} от средней ставки {plural(n_comps, 'предложения', 'предложений', 'предложений')} "
+                            f"рядом. Берём меньше средней, потому что в объявлениях ставки обычно выше, чем в подписанных договорах."
+                            if med else ".")),
+                "note": ("В таблице — ближайшие предложения аренды на funda in business площадью от половины до двойной нашей."
+                         + (" Антресоль считаем как 30\u00a0% площади." if mezz else ""))}
 
     # стр. 4
     tax = b["buy"]["Налог на передачу 10,4 %"]
     upkeep = -b["tot"]["upkeep"]
     letting = -b["tot"]["letting"]
-    money_out = [("Цена покупки", eur(offer)), ("Налог на передачу 10,4 %", eur(tax)),
-                 ("Нотариус, проверка здания, консультант", eur(b["buy_total"] - offer - tax)),
-                 ("Ремонт", eur(b["works"])), ("Брокер по аренде и реклама", eur(letting)),
-                 ("Содержание за год: налог OZB, страховка" + (", земля" if oc["canon"] else ""), eur(upkeep)),
-                 ("Брокер и юрист на продаже", eur(b["sale_cost"]))]
-    money_in = [(f"Аренда за {months(rent_months)}", eur(b["rent_collected"])), ("Продажа инвестору", eur(b["sale"]))]
-    result = [("Прибыль до налога", eur(b["profit"])), ("Налог на прибыль 19 %", eur(-b["vpb"])),
-              ("Чистая прибыль", eur(b["net"])), ("Больше всего денег в деле", eur(b["peak"])),
-              ("Чистая прибыль на вложенное", pct(b["return"]))]
-    steps = [{"when": "Месяц 0", "what": "Покупка", "more": f"{eur(offer)} и налог"},
-             {"when": "Месяцы 1–2", "what": "Ремонт", "more": eur(b["works"])},
-             {"when": f"Месяц {d.lease_month}", "what": "Въезд арендатора", "more": f"договор на 5 лет, {months(d.rent_free)} без платы"},
-             {"when": f"Месяц {first_rent}", "what": "Первая аренда", "more": f"{eur(rent / 12)} в месяц"},
-             {"when": "Месяц 12", "what": "Продажа инвестору", "more": eur(b["sale"])}]
-    waterfall = waterfall_svg([("Покупка и налог", -b["buy_total"]), ("Ремонт и сдача", -(b["works"] + letting)),
+    steps = [{"what": "Покупаем", "when": "месяц 0", "more": f"{eur(offer)} и налог 10,4\u00a0%"},
+             {"what": "Ремонтируем", "when": "месяцы 1–2", "more": eur(b["works"])},
+             {"what": "Сдаём", "when": f"месяц {d.lease_month}", "more": f"договор на 5 лет, первые {months(d.rent_free)} бесплатно"},
+             {"what": "Получаем аренду", "when": f"с месяца {first_rent}", "more": f"{eur(rent / 12)} в месяц"},
+             {"what": "Продаём", "when": "месяц 12", "more": f"инвестору за {eur(b['sale'])}"}]
+    spend = [("Цена здания", eur(offer)), ("Налог при покупке, 10,4\u00a0%", eur(tax)),
+             ("Нотариус, проверка здания, консультант", eur(b["buy_total"] - offer - tax)),
+             ("Ремонт", eur(b["works"])), ("Поиск арендатора: брокер и реклама", eur(letting)),
+             ("Налоги, страховка" + (", плата за землю" if oc["canon"] else "") + ", пока здание наше", eur(upkeep)),
+             ("Продажа: брокер и юрист", eur(b["sale_cost"]))]
+    get = [(f"Аренда за {months(rent_months)}", eur(b["rent_collected"])), ("Продажа инвестору", eur(b["sale"]))]
+    result_lines = [("Прибыль до налога", eur(b["profit"])), ("Налог на прибыль, 19\u00a0%", eur(-b["vpb"])),
+                    ("Остаётся нам", "")]
+    per100 = f"{b['return'] * 100:.2f}".replace(".", ",")
+    result_hint = f"Нужно вложить {eur(b['peak'])}. Каждые €\u00a0100 приносят €\u00a0{per100} за год."
+    bridge = waterfall([("Продажа", b["sale"]), (f"Аренда, {rent_months} мес.", b["rent_collected"]),
+                               ("Покупка и налог", -b["buy_total"]), ("Ремонт и сдача", -(b["works"] + letting)),
                                ("Содержание", -upkeep), ("Расходы на продажу", -b["sale_cost"]),
-                               (f"Аренда, {rent_months} мес.", b["rent_collected"]), ("Продажа", b["sale"]),
-                               ("Прибыль", b["profit"])])
+                               ("Прибыль до налога", b["profit"])])
+    peak_m = min(b["rows"], key=lambda r: r["cum"])["m"]
+    cash = cash_bars(b["rows"])
+    cash_note = (f"Больше всего денег в деле — {eur(b['peak'])} к месяцу {peak_m}. В месяце 12 инвестор платит за здание, "
+                 f"и вложенное возвращается вместе с прибылью.")
+    chart_title = f"Получаем {eur(b['income'])}, тратим {eur(b['costs'])}: до налога остаётся {eur(b['profit'])}"
     deduct = d.owner_costs
-    eq = (f"(€\u00a0{num(rent)} аренды − €\u00a0{num(deduct)} за землю) ÷ {pct(d.exit_yield, 2)} = {eur(b['sale'])}" if deduct
-          else f"€\u00a0{num(rent)} аренды ÷ {pct(d.exit_yield, 2)} = {eur(b['sale'])}")
+    eq = (f"({eur(rent)} − {eur(deduct)}) ÷ {pct(d.exit_yield, 2)} = {eur(b['sale'])}" if deduct
+          else f"{eur(rent)} ÷ {pct(d.exit_yield, 2)} = {eur(b['sale'])}")
+    intro = (f"Инвестор покупает здание ради аренды, как вклад с процентами. За похожие сданные склады сейчас платят "
+             f"столько, чтобы аренда за год была {pct(d.exit_yield, 2)} от цены. Наш арендатор платит {eur(rent)} в год"
+             + (f", из них {eur(deduct)} уходит на плату за землю" if deduct else "") + ".")
     inv = investor_comps(listings, (pick["lat"], pick["lon"]))
-    inv_text = ("Сданные склады на продаже не дальше 15 км: " + "; ".join(
-        f"{c['name']} — {eur(c['price'])} при аренде {eur(c['rent'])}, это {pct(c['yield'], 2)}" for c in inv) + "."
-                if inv else "Сданных складов с указанной арендой рядом сейчас нет; доходность — по ориентирам региона.")
-    if pick["info"]["exit_notes"]:
-        inv_text += " Поправка: " + ", ".join(pick["info"]["exit_notes"]) + "."
+    notes = ["Налог 10,4\u00a0% инвестор платит сверху."]
     vac = pick["info"].get("vacant") or {}
     if vac.get("m2"):
-        inv_text += (f" Для сравнения: свободные склады похожей площади рядом выставлены в среднем по €\u00a0{num(vac['m2'])} "
-                     f"за м², мы продаём сданное здание по €\u00a0{num(b['sale'] / area)} за м².")
-    investor = {"intro": (f"Инвестор платит столько, чтобы аренда за год составила {pct(d.exit_yield, 2)} от цены; "
-                          "налог 10,4 % он платит сверху. Чем выше аренда и длиннее договор, тем выше цена."),
-                "eq": eq, "comps": inv_text}
+        notes.append(f"Свободные склады такой площади рядом выставлены в среднем по €\u00a0{num(vac['m2'])} за м², "
+                     f"мы продаём по €\u00a0{num(b['sale'] / area)}.")
+    if inv:
+        notes.append("Сданные склады на продаже рядом: " + "; ".join(
+            f"{c['name']} — {eur(c['price'])}, аренда {eur(c['rent'])}, это {pct(c['yield'], 2)}" for c in inv) + ".")
+    if pick["info"]["exit_notes"]:
+        notes.append("Поправка к доходности: " + ", ".join(pick["info"]["exit_notes"]) + ".")
+    investor = {"title": f"Почему инвестор заплатит {eur(b['sale'])}", "intro": intro, "eq": eq, "note": " ".join(notes)}
 
     # стр. 5
     prices = sorted({ask, offer, round(ev["breakeven"], -2)} | {round(ask * k / 5000) * 5000 for k in (0.95, 0.9, 0.85, 0.8)},
@@ -473,34 +489,41 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     top = max(abs(v) for _, v in lad) or 1
     ladder = [{"price": eur(p), "discount": pct(1 - p / ask, 0), "profit": signed(v), "bar": bar_cell(v, top),
                "mine": abs(p - offer) < 1,
-               "tag": ("цена продавца" if p == ask else "наша цена" if abs(p - offer) < 1 else
-                       "в ноль" if abs(p - ev["breakeven"]) < 100 else "")} for p, v in lad]
+               "tag": ("цена продавца" if p == ask else "наше предложение" if abs(p - offer) < 1 else
+                       "без прибыли и убытка" if abs(p - ev["breakeven"]) < 100 else "")} for p, v in lad]
     wi = ev["what_if"]
-    what_if = [("Базовый расчёт", signed(b["profit"])), ("Аренда на 10 % ниже", signed(wi["Аренда на 10 % ниже"])),
-               (f"Инвестору нужно {pct(d.exit_yield + 0.005, 2)} вместо {pct(d.exit_yield, 2)}",
+    what_if = [("Всё по плану", signed(b["profit"])), ("Аренда на 10\u00a0% ниже", signed(wi["Аренда на 10 % ниже"])),
+               (f"Инвестор заплатит меньше: захочет {pct(d.exit_yield + 0.005, 2)} в год вместо {pct(d.exit_yield, 2)}",
                 signed(wi["Инвестор хочет на 0,5 % больше"])),
-               ("Арендатор въезжает на 3 месяца позже", signed(wi["Арендатор на 3 месяца позже"])),
-               ("Ремонт в 2 раза дороже", signed(wi["Ремонт в 2 раза дороже"])),
-               ("Арендатор найден ещё до передачи", signed(wi["Арендатор уже в 2-м месяце"]))]
+               ("Арендатор найдётся на 3 месяца позже", signed(wi["Арендатор на 3 месяца позже"])),
+               ("Ремонт обойдётся вдвое дороже", signed(wi["Ремонт в 2 раза дороже"])),
+               ("Арендатор найдётся сразу после покупки", signed(wi["Арендатор уже в 2-м месяце"]))]
     vat_saving = capex(d.at(vat_lease=False)) - capex(d.at(vat_lease=True))
-    legal = [("Аренда с НДС", f"Если арендатор платит НДС, НДС на ремонт и услуги возвращается: {eur(vat_saving)} в этом расчёте."),
-             ("Продажа сданного здания", "Это передача действующего бизнеса: на цену нет НДС, обязательства по НДС переходят к инвестору."),
-             ("Налог 10,4 %", "Через 12 месяцев инвестор платит его со всей цены; только при продаже в первые 6 месяцев — с прироста."
-              if not d.new_build else "Новое здание покупается без налога 10,4 %; через 12 месяцев инвестор платит его как обычно.")]
+    legal = [("НДС с ремонта вернётся", f"Сдаём компании с НДС. Тогда налоговая возвращает НДС, уплаченный за ремонт и "
+                                        f"услуги: {eur(vat_saving)} в этом расчёте."),
+             ("Продажа без НДС", "Здание с арендатором продаётся как готовый бизнес, поэтому на цену НДС не начисляется."),
+             ("Налог 10,4\u00a0% платит каждый покупатель",
+              "Мы — при покупке, инвестор — при продаже. Скидка на этот налог бывает только при перепродаже в первые "
+              "6 месяцев, в расчёте её нет." if not d.new_build else
+              "Новое здание мы покупаем без этого налога, с НДС, который потом возвращается. Инвестор через 12 месяцев "
+              "платит налог как обычно.")]
 
     return {
         "title": f"Флип-модель {street} {city}", "date": date.today().strftime("%d.%m.%Y"), "name": f"{street}, {city}",
+        "street": street, "city": city,
         "subline": ("Новое здание" if d.new_build else "Склад с офисами") + (f", {year} год" if year else "")
         + f", {num(area)} м², {pick['address']['postcode']} {pick['address']['city']}",
-        "hero": shots[0]["src"] if shots else "", "verdict": verdict, "kpis": kpis, "meter": meter, "reasons": reasons,
+        "hero": shots[0]["src"] if shots else "", "verdict": verdict, "tag": tag, "kpis": kpis, "meter": meter,
+        "reasons": reasons,
         "picked_note": (f"Посчитано {plural(len(cands), 'здание', 'здания', 'зданий')} на продаже в наших районах и рядом; "
                         f"порог {pct(C.THRESHOLD, 0)} {'прошло' if passed == 1 else 'прошли'} {passed}."),
-        "facts": facts, "blocks": blocks, "images": images, "source_url": pick["url"],
+        "facts": facts, "blocks": blocks, "todo": todo, "images": images,
+        "fill_image": shots[3]["src"] if len(shots) > 3 else None, "source_url": pick["url"],
         "map": map_jpg.resolve().as_uri(), "roads": roads, "why": why_here(pick, near), "comps": comp_rows,
-        "comps_note": (f"Ближайшие предложения аренды на funda in business площадью от половины до двойной нашей. Наша ставка — "
-                       f"{pct(C.RENT_SAFETY, 0)} от средней" + (", антресоль считается как 30 % площади." if mezz else ".")),
-        "steps": steps, "money_out": money_out, "out_total": eur(b["costs"]), "money_in": money_in,
-        "in_total": eur(b["income"]), "result": result, "waterfall": waterfall, "investor": investor,
+        "rent": rent_box,
+        "steps": steps, "spend": spend, "spend_total": eur(b["costs"]), "get": get, "get_total": eur(b["income"]),
+        "result_lines": result_lines[:2], "result_total": eur(b["net"]), "result_hint": result_hint,
+        "bridge": bridge, "cash": cash, "cash_note": cash_note, "chart_title": chart_title, "investor": investor,
         "ladder": ladder, "what_if": what_if, "checks": checks(pick, rec), "legal": legal,
         "photo_pages": photo_pages(shots), "plans": plans[:2],
         "passes": ev["passes"],
@@ -518,6 +541,9 @@ def render(ctx: dict, out_pdf: Path, work: Path) -> list[dict]:
         browser = p.chromium.launch(executable_path=CHROME, headless=True)
         tab = browser.new_page()
         tab.goto(page.resolve().as_uri(), wait_until="networkidle")
+        # кадр-заполнитель не нужен, если ему досталось меньше 3 см
+        tab.evaluate("""() => document.querySelectorAll('img.fill').forEach(i => {
+            if (i.getBoundingClientRect().height < 113) i.style.display = 'none'; })""")
         overflow = tab.evaluate("""() => [...document.querySelectorAll('.page .body')].map((b, i) =>
             ({page: i + 1, over: Math.round(b.scrollHeight - b.clientHeight)})).filter(x => x.over > 1)""")
         out_pdf.parent.mkdir(parents=True, exist_ok=True)

@@ -7,47 +7,56 @@
 </head>
 <body>
 
+{% macro head(n, title) %}
+<div class="head"><div class="sec"><span class="no">{{ n }}</span><h2>{{ title }}</h2></div><div class="where">{{ name }}</div></div>
+{% endmacro %}
+
 {# ------------------------------------------------------------ 1. решение #}
-<section class="page">
-  <div class="head"><span><b>Флип за 12 месяцев</b>, {{ date }}</span><span>1 из 5</span></div>
-  <div class="body b1">
-    <img class="hero" src="{{ hero }}" alt="">
-    <h1>{{ name }}</h1>
-    <div class="sub">{{ subline }}</div>
-    <p class="lede">{{ verdict | md }}</p>
-    <div class="kpis">
-      {% for k in kpis %}
-      <div class="kpi{% if k.key %} key{% endif %}"><div class="label">{{ k.label }}</div><div class="value">{{ k.value }}</div><div class="hint">{{ k.hint }}</div></div>
-      {% endfor %}
+<section class="page cover">
+  <div class="body">
+    <div class="hero" style="background-image: url('{{ hero }}')">
+      <div class="hero-top"><span><b>Флип за 12 месяцев</b>, {{ date }}</span><span>1 из 5</span></div>
+      <div class="hero-title">
+        <h1>{{ street }}</h1>
+        <div class="city">{{ city }}</div>
+        <div class="hero-sub">{{ subline }}</div>
+      </div>
+      <div class="tag"><div class="label">{{ tag.label }}</div><div class="value">{{ tag.value }}</div><div class="hint">{{ tag.hint }}</div></div>
     </div>
-    <div class="meter">
-      <div class="title">{{ meter.title | md }}</div>
-      {{ meter.svg | safe }}
+    <div class="cover-main">
+      <p class="lede">{{ verdict | md }}</p>
+      <div class="kpis">
+        {% for k in kpis %}<div class="kpi"><div class="label">{{ k.label }}</div><div class="value">{{ k.value }}</div><div class="hint">{{ k.hint }}</div></div>{% endfor %}
+      </div>
+      <div class="meter"><div class="title">{{ meter.title | md }}</div>{{ meter.svg | safe }}</div>
+      <ul class="reasons">{% for r in reasons %}<li>{{ r | md }}</li>{% endfor %}</ul>
     </div>
-    <ul class="reasons">{% for r in reasons %}<li>{{ r | md }}</li>{% endfor %}</ul>
   </div>
   <div class="foot"><span>{{ picked_note }}</span><span>funda in business, {{ date }}</span></div>
 </section>
 
 {# ------------------------------------------------------------ 2. здание #}
 <section class="page">
-  <div class="head"><span><b>{{ name }}</b></span><span>2 из 5</span></div>
-  <div class="body b2">
-    <h2>Здание</h2>
+  {{ head(2, "Здание") }}
+  <div class="body">
     <div class="facts">
-      {% for col in facts %}
-      <table>{% for label, value in col %}<tr><td>{{ label }}</td><td>{{ value }}</td></tr>{% endfor %}</table>
-      {% endfor %}
+      {% for col in facts %}<table>{% for label, value in col %}<tr><td>{{ label }}</td><td>{{ value }}</td></tr>{% endfor %}</table>{% endfor %}
     </div>
-    <div class="two">
-      <div>
+    <div class="cols">
+      <div class="col">
         {% for title, items in blocks %}
-        <h3>{{ title }}</h3>
-        {% if items | length > 1 %}<ul class="todo">{% for t in items %}<li>{{ t | md }}</li>{% endfor %}</ul>
-        {% else %}<p>{{ items[0] | md }}</p>{% endif %}
+        <div>
+          <h3>{{ title }}</h3>
+          {% if items | length > 1 %}<ul class="todo">{% for t in items %}<li>{{ t | md }}</li>{% endfor %}</ul>{% else %}<p>{{ items[0] | md }}</p>{% endif %}
+        </div>
         {% endfor %}
+        <div class="panel">
+          <h3>Что сделать перед сдачей</h3>
+          <ul class="todo">{% for t in todo %}<li>{{ t | md }}</li>{% endfor %}</ul>
+        </div>
+        {% if fill_image %}<img class="fill" src="{{ fill_image }}" alt="">{% endif %}
       </div>
-      <div class="side">{% for im in images %}<img class="side-img {{ im.cls }}" src="{{ im.src }}" alt="">{% endfor %}</div>
+      <div class="col shots">{% for im in images %}<img class="{{ im.cls }}" src="{{ im.src }}" alt="">{% endfor %}</div>
     </div>
   </div>
   <div class="foot"><span>{{ source_url }}</span><span></span></div>
@@ -55,24 +64,34 @@
 
 {# ------------------------------------------------------------ 3. место #}
 <section class="page">
-  <div class="head"><span><b>{{ name }}</b></span><span>3 из 5</span></div>
-  <div class="body b3">
-    <h2>Место и арендатор</h2>
+  {{ head(3, "Место и арендатор") }}
+  <div class="body">
     <img class="map" src="{{ map }}" alt="">
-    <div class="two">
-      <div>
-        <h3>Дорога</h3>
-        <table class="roads">{% for r in roads %}<tr><td>{% if r.shield %}<span class="shield">{{ r.shield }}</span>{% endif %}{{ r.label }}</td><td class="num">{{ r.value }}</td></tr>{% endfor %}</table>
-        <h3>Почему здесь найдётся арендатор</h3>
-        {% for p in why %}<p>{{ p | md }}</p>{% endfor %}
+    <div class="cols natural">
+      <div class="col">
+        <div>
+          <h3>Дорога</h3>
+          <table class="roads">{% for r in roads %}<tr><td>{% if r.shield %}<span class="shield">{{ r.shield }}</span>{% endif %}{{ r.label }}</td><td class="num">{{ r.value }}</td></tr>{% endfor %}</table>
+        </div>
+        <div>
+          <h3>Кто здесь снимет склад</h3>
+          {% for p in why %}<p>{{ p | md }}</p>{% endfor %}
+        </div>
       </div>
-      <div>
-        <h3>Аренда рядом, € за м² в год</h3>
-        <table>
-          <tr><th>Предложение</th><th class="num">м²</th><th class="num">€ за м²</th></tr>
-          {% for c in comps %}<tr class="{{ 'mine' if c.mine else '' }}"><td>{{ c.name }}</td><td class="num">{{ c.area }}</td><td class="num">{{ c.rate }}</td></tr>{% endfor %}
-        </table>
-        <p class="note" style="margin-top:2mm">{{ comps_note }}</p>
+      <div class="col">
+        <div>
+          <h3>Аренда рядом, € за м² в год</h3>
+          <table>
+            <tr><th>Предложение</th><th class="num">м²</th><th class="num">€ за м²</th></tr>
+            {% for c in comps %}<tr class="{{ 'mine' if c.mine else '' }}"><td>{{ c.name }}</td><td class="num">{{ c.area }}</td><td class="num">{{ c.rate }}</td></tr>{% endfor %}
+          </table>
+        </div>
+        <div class="panel stretch">
+          <h3>Сколько будет платить арендатор</h3>
+          <div class="big">{{ rent.month }} в месяц</div>
+          <p>{{ rent.text | md }}</p>
+          <div class="note">{{ rent.note }}</div>
+        </div>
       </div>
     </div>
   </div>
@@ -81,58 +100,87 @@
 
 {# ------------------------------------------------------------ 4. деньги #}
 <section class="page">
-  <div class="head"><span><b>{{ name }}</b></span><span>4 из 5</span></div>
-  <div class="body b4">
-    <h2>Деньги за 12 месяцев</h2>
-    <div class="timeline">{% for s in steps %}<div class="step{% if loop.last %} sale{% endif %}"><div class="when">{{ s.when }}</div><div class="what">{{ s.what }}</div><div class="more">{{ s.more }}</div></div>{% endfor %}</div>
-    <div class="two">
-      <div>
-        <table>
-          <tr><th>Вкладываем</th><th class="num"></th></tr>
-          {% for label, value in money_out %}<tr><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}
-          <tr class="sum"><td>Всего</td><td class="num">{{ out_total }}</td></tr>
-          <tr><th style="padding-top:4mm">Получаем</th><th class="num"></th></tr>
-          {% for label, value in money_in %}<tr><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}
-          <tr class="sum"><td>Всего</td><td class="num">{{ in_total }}</td></tr>
-          {% for label, value in result %}<tr class="{{ 'total' if loop.first else ('sum' if loop.index == 3 else '') }}"><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}
-        </table>
-      </div>
-      <div class="chart">
-        <h3 style="margin-top:0">Куда идут деньги и откуда прибыль</h3>
-        {{ waterfall | safe }}
-      </div>
+  {{ head(4, "Деньги за 12 месяцев") }}
+  <div class="body">
+    <div class="steps">
+      {% for s in steps %}<div class="step{% if loop.last %} last{% endif %}"><div class="n">{{ loop.index }}</div><div class="what">{{ s.what }}</div><div class="when">{{ s.when }}</div><div class="more">{{ s.more }}</div></div>{% endfor %}
     </div>
-    <div class="formula">
-      <div><b>Как инвестор считает цену.</b> {{ investor.intro }}</div>
-      <div class="eq">{{ investor.eq }}</div>
-      <div class="note">{{ investor.comps | md }}</div>
+    <div class="cols">
+      <div class="col">
+        <table>
+          <tr><th>Тратим</th><th class="num"></th></tr>
+          {% for label, value in spend %}<tr><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}
+          <tr class="sum"><td>Всего тратим</td><td class="num">{{ spend_total }}</td></tr>
+        </table>
+        <div class="bridge">
+          <h3>{{ chart_title }}</h3>
+          <div class="rows" style="--zero: {{ bridge.zero }}%">
+            {% for r in bridge.rows %}<div class="row{% if r.last %} last{% endif %}"><span class="lab">{{ r.label }}</span><span class="track"><i class="{{ r.cls }}" style="left: {{ r.left }}%; width: {{ r.width }}%"></i></span><span class="val">{{ r.value }}</span></div>{% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <table>
+          <tr><th>Получаем</th><th class="num"></th></tr>
+          {% for label, value in get %}<tr><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}
+          <tr class="sum"><td>Всего получаем</td><td class="num">{{ get_total }}</td></tr>
+        </table>
+        <div class="panel dark">
+          <h3>{{ investor.title }}</h3>
+          <p>{{ investor.intro }}</p>
+          <div class="eq">{{ investor.eq }}</div>
+          <div class="note">{{ investor.note | md }}</div>
+        </div>
+        <div class="cash">
+          <h3>Сколько наших денег в деле, по месяцам</h3>
+          <div class="bars" style="--zero: {{ cash.zero }}%">
+            {% for c in cash.cols %}<div class="c"><i class="{{ c.cls }}" style="top: {{ c.top }}%; height: {{ c.height }}%"></i><span>{{ c.m }}</span></div>{% endfor %}
+          </div>
+          <div class="note">{{ cash_note }}</div>
+        </div>
+        <div class="panel signal result">
+          <div>{% for label, value in result_lines %}<div class="line"><span>{{ label }}</span><span>{{ value }}</span></div>{% endfor %}</div>
+          <div>
+            <div class="label-total">Остаётся нам</div>
+            <div class="total">{{ result_total }}</div>
+            <div class="hint">{{ result_hint }}</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="foot"><span>Суммы без НДС, округлены до € 100. Покупка за свои средства, без кредита.</span><span></span></div>
+  <div class="foot"><span>Суммы без НДС, округлены до € 100. Покупаем на свои деньги, без кредита.</span><span></span></div>
 </section>
 
 {# ------------------------------------------------------------ 5. риски и цена #}
 <section class="page">
-  <div class="head"><span><b>{{ name }}</b></span><span>5 из 5</span></div>
+  {{ head(5, "Цена и риски") }}
   <div class="body b5">
-    <h2>Сколько платить и что может пойти не так</h2>
-    <h3 style="margin-top:0">Прибыль до налога при разной цене покупки</h3>
-    <table>
-      <tr><th>Платим продавцу</th><th class="num">Скидка</th><th class="bar-cell"></th><th class="num">Прибыль</th></tr>
-      {% for r in ladder %}<tr class="{{ 'mine' if r.mine else '' }}"><td>{{ r.price }}{% if r.tag %} <span class="note">({{ r.tag }})</span>{% endif %}</td><td class="num">{{ r.discount }}</td><td class="bar-cell">{{ r.bar | safe }}</td><td class="num">{{ r.profit }}</td></tr>{% endfor %}
-    </table>
-    <div class="two" style="margin-top:2mm">
-      <div>
-        <h3>Что если</h3>
-        <table>{% for label, value in what_if %}<tr><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}</table>
+    <div class="ladder">
+      <h3>Сколько заработаем при разной цене покупки</h3>
+      <table>
+        <tr><th>Покупаем за</th><th class="num">Скидка</th><th class="bar-cell"></th><th class="num">Прибыль до налога</th></tr>
+        {% for r in ladder %}<tr class="{{ 'mine' if r.mine else '' }}"><td>{{ r.price }}{% if r.tag %} <span class="note">({{ r.tag }})</span>{% endif %}</td><td class="num">{{ r.discount }}</td><td class="bar-cell">{{ r.bar | safe }}</td><td class="num">{{ r.profit }}</td></tr>{% endfor %}
+      </table>
+    </div>
+    <div class="cols natural">
+      <div class="col">
+        <div>
+          <h3>Если что-то пойдёт не так</h3>
+          <table>{% for label, value in what_if %}<tr class="{{ 'mine' if loop.first else '' }}"><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}</table>
+        </div>
       </div>
-      <div>
-        <h3>Проверить до покупки</h3>
-        <ul class="todo">{% for c in checks %}<li>{{ c | md }}</li>{% endfor %}</ul>
+      <div class="col">
+        <div class="panel stretch">
+          <h3>Проверить до покупки</h3>
+          <ul class="todo">{% for c in checks %}<li>{{ c | md }}</li>{% endfor %}</ul>
+        </div>
       </div>
     </div>
-    <h3>Законно уменьшить налоги</h3>
-    <div class="legal">{% for t, body in legal %}<div><b>{{ t }}</b>{{ body }}</div>{% endfor %}</div>
+    <div class="taxes">
+      <h3>Как законно платить меньше налогов</h3>
+      <div class="legal">{% for t, body in legal %}<div><b>{{ t }}</b>{{ body }}</div>{% endfor %}</div>
+    </div>
   </div>
   <div class="foot"><span>Налоги по закону Нидерландов на 2026 год; схему подтверждает налоговый консультант до подписания договора.</span><span></span></div>
 </section>
@@ -140,18 +188,18 @@
 {# ------------------------------------------------------------ фотографии #}
 {% for chunk in photo_pages %}
 <section class="page">
-  <div class="head"><span><b>{{ name }}</b>, фотографии</span><span>{{ loop.index }} из {{ photo_pages | length }}</span></div>
+  <div class="head"><div class="sec"><h2>Фотографии</h2></div><div class="where">{{ name }}, {{ loop.index }} из {{ photo_pages | length }}</div></div>
   <div class="body"><div class="photos {{ chunk.cls }}">
-    {% for ph in chunk.shots %}<figure class="shot" style="margin:0"><img src="{{ ph.src }}" alt=""><figcaption class="cap">{{ ph.cap }}</figcaption></figure>{% endfor %}
+    {% for ph in chunk.shots %}<figure class="shot"><img src="{{ ph.src }}" alt=""><figcaption class="cap">{{ ph.cap }}</figcaption></figure>{% endfor %}
   </div></div>
   <div class="foot"><span>Фото из объявления на funda in business</span><span></span></div>
 </section>
 {% endfor %}
 {% if plans %}
 <section class="page">
-  <div class="head"><span><b>{{ name }}</b>, планировка</span><span></span></div>
-  <div class="body"><div class="grid2">
-    {% for ph in plans %}<figure class="shot plan" style="margin:0"><img src="{{ ph.src }}" alt=""><figcaption class="cap">{{ ph.cap }}</figcaption></figure>{% endfor %}
+  <div class="head"><div class="sec"><h2>Планировка</h2></div><div class="where">{{ name }}</div></div>
+  <div class="body"><div class="plans">
+    {% for ph in plans %}<figure class="shot plan"><img src="{{ ph.src }}" alt=""><figcaption class="cap">{{ ph.cap }}</figcaption></figure>{% endfor %}
   </div></div>
   <div class="foot"><span>Планировки из объявления на funda in business</span><span></span></div>
 </section>
