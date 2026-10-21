@@ -112,7 +112,7 @@
         <table>
           <tr><th>Расходы</th><th class="num"></th></tr>
           {% for label, value in spend %}<tr><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}
-          <tr class="sum"><td>Всего расходов</td><td class="num">{{ spend_total }}</td></tr>
+          <tr class="sum"><td>Итоговая стоимость владения за год</td><td class="num">{{ spend_total }}</td></tr>
         </table>
         <div class="bridge">
           <h3>{{ chart_title }}</h3>

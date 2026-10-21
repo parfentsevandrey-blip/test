@@ -404,7 +404,7 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
                f"ремонт, сдача в аренду на 5 лет и через 12 месяцев продажа вместе с арендатором инвестору "
                f"за **{eur(b['sale'])}**. Ни один сценарий из раздела 5 не даёт убытка.")
     tag = {"label": "Чистая прибыль за 12 месяцев", "value": eur(b["net"]),
-           "hint": f"после налога на прибыль, на вложенные {eur(b['peak'])}"}
+           "hint": f"после налога на прибыль; стоимость владения за год — {eur(b['costs'])}"}
     kpis = [{"label": "Цена продавца", "value": eur(ask), "hint": f"{eur(ask / area, 1)} за м²"},
             {"label": "Предложение продавцу", "value": eur(offer), "hint": f"на {cut} меньше"},
             {"label": "Продажа инвестору", "value": eur(b["sale"]), "hint": "через 12 месяцев, с арендатором"}]
@@ -530,8 +530,9 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     get = [(f"Аренда за {months(rent_months)}", eur(b["rent_collected"])), ("Продажа инвестору", eur(b["sale"]))]
     result_lines = [("Прибыль до налога", eur(b["profit"])), ("Налог на прибыль, 19\u00a0%" + (" и 25,8\u00a0%" if b["profit"] > C.VPB[0][0] else ""), eur(-b["vpb"])),
                     ("Чистая прибыль", "")]
-    per100 = f"{b['return'] * 100:.2f}".replace(".", ",")
-    result_hint = f"Нужно вложить {eur(b['peak'])}. Каждые €\u00a0100 приносят €\u00a0{per100} за год."
+    # доход на € 100 — от итоговой стоимости владения за год (все расходы с покупкой), как в таблице расходов
+    per100 = f"{b['net'] / b['costs'] * 100:.2f}".replace(".", ",")
+    result_hint = f"Итоговая стоимость владения за год — {eur(b['costs'])}. Каждые €\u00a0100 приносят €\u00a0{per100}."
     bridge = waterfall([("Продажа", b["sale"]), (f"Аренда, {rent_months} мес.", b["rent_collected"]),
                                ("Покупка и налог", -b["buy_total"]), ("Ремонт и сдача", -(b["works"] + letting)),
                                ("Содержание", -upkeep), ("Расходы на продажу", -b["sale_cost"]),
@@ -608,7 +609,7 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
                     "kind": ("Новое здание" if d.new_build else "Склад с офисами"),
                     "area": f"{num(area)} м²" + (f", {year} год" if year else ""),
                     "ask": eur(ask), "offer": eur(offer), "cut": pct(1 - offer / ask, 0), "sale": eur(b["sale"]),
-                    "net": eur(b["net"]), "peak": eur(b["peak"]), "per100": f"€\u00a0{per100}",
+                    "net": eur(b["net"]), "own": eur(b["costs"]), "per100": f"€\u00a0{per100}",
                     "breakeven": eur(ev["breakeven"]), "be_cut": pct(need), "rent": eur(rent / 12),
                     "road": f"{road['ref']}, {km(road['km'])}"},
     }
