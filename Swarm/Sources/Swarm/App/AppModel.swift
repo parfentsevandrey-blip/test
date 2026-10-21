@@ -80,6 +80,8 @@ final class AppModel {
     @ObservationIgnored private var sampleCounter = 0
     @ObservationIgnored private var toastTask: Task<Void, Never>?
     @ObservationIgnored private let dock = DockTileController()
+    /// Раздачи, открытые в отдельных окнах роя (им тоже нужны подробные снимки).
+    @ObservationIgnored private var watched: [String: Int] = [:]
 
     static let supportDirectory: URL = {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Swarm", isDirectory: true)
@@ -127,7 +129,9 @@ final class AppModel {
     }
 
     private func poll() async {
-        let list = await engine.snapshots(detailed: selectedID)
+        var detailed = Set(watched.keys)
+        if let selectedID { detailed.insert(selectedID) }
+        let list = await engine.snapshots(detailed: detailed)
         torrents = list
         sampleCounter += 1
         if sampleCounter % 2 == 0 {
@@ -149,6 +153,13 @@ final class AppModel {
         dock.update(down: list.reduce(0) { $0 + $1.downRate },
                     progress: wanted > 0 ? Double(done) / Double(wanted) : nil,
                     active: downloading.count)
+    }
+
+    func watch(_ id: String) { watched[id, default: 0] += 1 }
+
+    func unwatch(_ id: String) {
+        watched[id, default: 1] -= 1
+        if watched[id] == 0 { watched[id] = nil }
     }
 
     // MARK: - Сводка

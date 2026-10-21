@@ -60,7 +60,11 @@ struct InspectorPanel: View {
         HStack(spacing: 12) {
             KindIcon(kind: ContentKind(torrent), size: 40)
             VStack(alignment: .leading, spacing: 2) {
-                Text(torrent.name).font(.system(size: 14, weight: .semibold)).lineLimit(2)
+                Text(torrent.name)
+                    .font(.system(size: 14, weight: .semibold))
+                    .lineLimit(2)
+                    .truncationMode(.middle)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text("\(Format.bytes(torrent.totalSize)) · \(torrent.status.title)")
                     .font(.system(size: 11.5)).foregroundStyle(.secondary)
             }
@@ -83,6 +87,8 @@ struct InspectorPanel: View {
                 } label: {
                     Label(t.title, systemImage: t.symbol)
                         .font(.system(size: 11.5, weight: .semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
                         .padding(.vertical, 6)
                         .frame(maxWidth: .infinity)
                         .background {
@@ -105,14 +111,14 @@ struct InspectorPanel: View {
     private var overview: some View {
         VStack(spacing: 14) {
             SwarmConstellation(snapshot: torrent, tint: tint)
-                .frame(height: 280)
+                .frame(height: 340)
                 .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: 22, style: .continuous)
                         .strokeBorder(LinearGradient(colors: [.white.opacity(0.35), .white.opacity(0.04), .white.opacity(0.12)],
                                                      startPoint: .top, endPoint: .bottom), lineWidth: 1)
                 }
-                .shadow(color: tint.opacity(0.3), radius: 18, y: 8)
+                .shadow(color: .black.opacity(0.25), radius: 18, y: 8)
 
             section("Скорость") {
                 SpeedChart(samples: model.torrentHistory[torrent.id] ?? [])

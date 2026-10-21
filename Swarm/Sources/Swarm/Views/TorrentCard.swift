@@ -7,7 +7,6 @@ struct TorrentCard: View {
     let torrent: TorrentSnapshot
     let selected: Bool
 
-    @State private var hovering = false
     @State private var confirmRemove = false
 
     private var kind: ContentKind { ContentKind(torrent) }
@@ -50,7 +49,6 @@ struct TorrentCard: View {
                 .strokeBorder(selected ? tint.opacity(0.7) : .primary.opacity(0.06), lineWidth: selected ? 1.5 : 1)
         }
         .contentShape(RoundedRectangle(cornerRadius: 20))
-        .onHover { h in withAnimation(.smooth(duration: 0.2)) { hovering = h } }
         .onTapGesture(count: 2) { model.reveal(torrent) }
         .onTapGesture { withAnimation(.bouncy) { model.selectedID = selected ? nil : torrent.id } }
         .contextMenu { menu }
@@ -122,17 +120,15 @@ struct TorrentCard: View {
     private var actions: some View {
         GlassEffectContainer(spacing: 8) {
             HStack(spacing: 8) {
-                if hovering {
-                    Group {
-                        Button { model.reveal(torrent) } label: { Image(systemName: "folder") }
-                            .help("Показать в Finder")
-                        Button { confirmRemove = true } label: { Image(systemName: "trash") }
-                            .help("Удалить")
-                    }
-                    .buttonStyle(.glass)
-                    .controlSize(.large)
-                    .transition(.scale(scale: 0.6, anchor: .trailing).combined(with: .opacity))
+                // Кнопки всегда на месте — ничего не выпрыгивает при наведении.
+                Group {
+                    Button { model.reveal(torrent) } label: { Image(systemName: "folder") }
+                        .help("Показать в Finder")
+                    Button { confirmRemove = true } label: { Image(systemName: "trash") }
+                        .help("Удалить")
                 }
+                .buttonStyle(.glass)
+                .controlSize(.large)
                 // Главная кнопка видна всегда: крупная, в цвет состояния раздачи.
                 Button { model.toggle(torrent) } label: {
                     Image(systemName: isPaused ? "play.fill" : "pause.fill")

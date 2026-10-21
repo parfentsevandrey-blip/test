@@ -6,7 +6,6 @@ struct RootView: View {
     @Environment(AppModel.self) private var model
     @State private var dropTargeted = false
     @FocusState private var magnetFocused: Bool
-    @Namespace private var glass
 
     var body: some View {
         @Bindable var model = model
@@ -38,7 +37,7 @@ struct RootView: View {
             if dropTargeted { dropOverlay }
         }
         .overlay(alignment: .bottom) { toast }
-        .frame(minWidth: 820, minHeight: 540)
+        .frame(minWidth: model.selected == nil ? 820 : 980, minHeight: 560)
         .dropDestination(for: URL.self) { urls, _ in
             model.open(urls)
             return !urls.isEmpty
@@ -63,51 +62,14 @@ struct RootView: View {
     // MARK: - Шапка
 
     private var header: some View {
-        @Bindable var model = model
-        return HStack(spacing: 0) {
+        HStack(spacing: 0) {
             Spacer(minLength: 84) // место для «светофора»; справа столько же — шапка ровно по центру
-            GlassEffectContainer(spacing: 10) {
-                HStack(spacing: 10) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "link")
-                            .foregroundStyle(.secondary)
-                            .symbolEffect(.bounce, value: magnetFocused)
-                        TextField("Вставьте magnet-ссылку", text: $model.magnetText)
-                            .textFieldStyle(.plain)
-                            .focused($magnetFocused)
-                            .onSubmit { if !model.magnetText.isEmpty { model.addMagnet(model.magnetText) } }
-                        if !model.magnetText.isEmpty {
-                            Button { model.addMagnet(model.magnetText) } label: {
-                                Image(systemName: "arrow.down.circle.fill").font(.system(size: 17))
-                            }
-                            .buttonStyle(.plain)
-                            .foregroundStyle(.tint)
-                            .transition(.scale.combined(with: .opacity))
-                        }
-                    }
-                    .font(.system(size: 13))
-                    .padding(.horizontal, 14)
-                    .frame(height: 36)
-                    .glassEffect(.regular.interactive(), in: .capsule)
-                    .glassEffectID("magnet", in: glass)
-                    .frame(minWidth: 220, idealWidth: 340, maxWidth: 380)
-
-                    Button { model.presentOpenPanel() } label: {
-                        Label("Открыть", systemImage: "doc.badge.plus")
-                    }
-                    .help("Открыть .torrent (⌘O)")
-                    Button { model.presentCreatePanel() } label: {
-                        Label("Создать", systemImage: "square.and.arrow.up.on.square")
-                    }
-                    .help("Создать торрент из файла или папки (⌘N)")
-
-                    speeds
-                }
-                .buttonStyle(.glass)
-                .controlSize(.large)
-                .labelStyle(.titleAndIcon)
+            // Шапка подстраивается под ширину колонки: сначала прячет подписи кнопок, затем график скорости.
+            ViewThatFits(in: .horizontal) {
+                headerBar(labels: true, chart: true)
+                headerBar(labels: false, chart: true)
+                headerBar(labels: false, chart: false)
             }
-            .fixedSize(horizontal: true, vertical: false)
             Spacer(minLength: 84)
         }
         .padding(.top, 10)
@@ -115,7 +77,55 @@ struct RootView: View {
         .animation(.smooth(duration: 0.2), value: model.magnetText.isEmpty)
     }
 
-    private var speeds: some View {
+    private func headerBar(labels: Bool, chart: Bool) -> some View {
+        @Bindable var model = model
+        return GlassEffectContainer(spacing: 10) {
+            HStack(spacing: 10) {
+                HStack(spacing: 8) {
+                    Image(systemName: "link")
+                        .foregroundStyle(.secondary)
+                        .symbolEffect(.bounce, value: magnetFocused)
+                    TextField("Вставьте magnet-ссылку", text: $model.magnetText)
+                        .textFieldStyle(.plain)
+                        .focused($magnetFocused)
+                        .onSubmit { if !model.magnetText.isEmpty { model.addMagnet(model.magnetText) } }
+                    if !model.magnetText.isEmpty {
+                        Button { model.addMagnet(model.magnetText) } label: {
+                            Image(systemName: "arrow.down.circle.fill").font(.system(size: 17))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.tint)
+                        .transition(.scale.combined(with: .opacity))
+                    }
+                }
+                .font(.system(size: 13))
+                .padding(.horizontal, 14)
+                .frame(height: 36)
+                .frame(minWidth: 170, idealWidth: labels ? 330 : 230, maxWidth: 380)
+                .glassEffect(.regular.interactive(), in: .capsule)
+
+                headerButton("Открыть", "doc.badge.plus", labels: labels) { model.presentOpenPanel() }
+                    .help("Открыть .torrent (⌘O)")
+                headerButton("Создать", "square.and.arrow.up.on.square", labels: labels) { model.presentCreatePanel() }
+                    .help("Создать торрент из файла или папки (⌘N)")
+                speeds(chart: chart)
+            }
+            .buttonStyle(.glass)
+            .controlSize(.large)
+        }
+    }
+
+    private func headerButton(_ title: String, _ symbol: String, labels: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            if labels {
+                Label(title, systemImage: symbol).labelStyle(.titleAndIcon).lineLimit(1).fixedSize()
+            } else {
+                Image(systemName: symbol)
+            }
+        }
+    }
+
+    private func speeds(chart: Bool) -> some View {
         HStack(spacing: 10) {
             VStack(alignment: .trailing, spacing: 1) {
                 Label(Format.rate(model.totalDown), systemImage: "arrow.down")
@@ -130,44 +140,62 @@ struct RootView: View {
             .lineLimit(1)
             .fixedSize()
             .frame(minWidth: 74, alignment: .trailing)
-            SpeedChart(samples: model.history, compact: true)
-                .frame(width: 96, height: 26)
+            if chart {
+                SpeedChart(samples: model.history, compact: true)
+                    .frame(width: 96, height: 26)
+            }
         }
         .padding(.horizontal, 12)
         .frame(height: 40)
         .glassEffect(.regular, in: .capsule)
-        .glassEffectID("speeds", in: glass)
     }
 
     // MARK: - Фильтры и список
 
     private var filters: some View {
-        @Bindable var model = model
-        return HStack(spacing: 8) {
-            Spacer(minLength: 0)
-            GlassEffectContainer(spacing: 6) {
-                HStack(spacing: 6) {
-                    ForEach(TorrentFilter.allCases) { f in
-                        FilterChip(title: f.title, count: f == .all ? 0 : model.count(f), selected: model.filter == f) {
-                            withAnimation(.bouncy) { model.filter = f }
-                        }
-                    }
-                }
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) {
+                Spacer(minLength: 0)
+                chips
+                search
+                Spacer(minLength: 0)
             }
-            if model.torrents.count > 3 {
-                HStack(spacing: 6) {
-                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                    TextField("Поиск", text: $model.search).textFieldStyle(.plain).frame(width: 140)
-                }
-                .font(.system(size: 12.5))
-                .padding(.horizontal, 12)
-                .frame(height: 30)
-                .glassEffect(.regular.interactive(), in: .capsule)
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) { chips; search }
+                    .padding(.vertical, 2)
             }
-            Spacer(minLength: 0)
+            .scrollIndicators(.never)
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 6)
+    }
+
+    private var chips: some View {
+        GlassEffectContainer(spacing: 6) {
+            HStack(spacing: 6) {
+                ForEach(TorrentFilter.allCases) { f in
+                    FilterChip(title: f.title, count: f == .all ? 0 : model.count(f), selected: model.filter == f) {
+                        withAnimation(.bouncy) { model.filter = f }
+                    }
+                    .fixedSize()
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var search: some View {
+        @Bindable var model = model
+        if model.torrents.count > 3 {
+            HStack(spacing: 6) {
+                Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                TextField("Поиск", text: $model.search).textFieldStyle(.plain).frame(width: 140)
+            }
+            .font(.system(size: 12.5))
+            .padding(.horizontal, 12)
+            .frame(height: 30)
+            .glassEffect(.regular.interactive(), in: .capsule)
+        }
     }
 
     @ViewBuilder

@@ -208,10 +208,15 @@ actor Engine {
     }
 
     func snapshots(detailed id: String?) async -> [TorrentSnapshot] {
+        await snapshots(detailed: id.map { [$0] } ?? [])
+    }
+
+    /// Подробные снимки (пиры, куски, трекеры) — только для раздач, которые сейчас на экране.
+    func snapshots(detailed ids: Set<String>) async -> [TorrentSnapshot] {
         var result: [TorrentSnapshot] = []
         for hash in order {
             guard let t = torrents[hash] else { continue }
-            result.append(await t.snapshot(detailed: hash.hex == id))
+            result.append(await t.snapshot(detailed: ids.contains(hash.hex)))
         }
         return result
     }

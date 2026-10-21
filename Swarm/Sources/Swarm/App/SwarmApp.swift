@@ -31,6 +31,13 @@ struct SwarmApp: App {
         .defaultSize(width: 1180, height: 760)
         .commands { SwarmCommands(model: model) }
 
+        WindowGroup("Рой", id: "swarm", for: String.self) { $id in
+            SwarmWindowView(torrentID: id)
+                .environment(model)
+        }
+        .windowStyle(.hiddenTitleBar)
+        .defaultSize(width: 1180, height: 800)
+
         MenuBarExtra {
             MenuBarView().environment(model)
         } label: {

@@ -11,26 +11,46 @@ enum RenderSelfTest {
         let snapshot = sample(progress: 0.37, now: Date())
         let tint = Color.blue
 
-        // Кадры одной сцены: вылет пиров, установившийся рой и волна от проверенного куска.
-        let memory = ConstellationMemory()
-        _ = memory.scene(for: snapshot, size: CGSize(width: 376, height: 280), now: now, settled: false)
-        for (name, offset, snap) in [("constellation-spawn", 0.45, snapshot), ("constellation", 3.0, snapshot),
-                                     ("constellation-ripple-start", 3.3, withNewPieces(snapshot)),
-                                     ("constellation-ripple", 3.75, withNewPieces(snapshot))] {
-            let scene = memory.scene(for: snap, size: CGSize(width: 376, height: 280), now: now + offset, settled: false)
-            let view = Canvas { g, size in
-                ConstellationRenderer(scene: scene, tint: tint, focused: scene.nodes.last?.id).draw(&g, size: size)
+        func render(_ scene: ConstellationScene, _ size: CGSize, _ name: String, focus: Bool = false) -> Bool {
+            let view = Canvas { g, sz in
+                ConstellationRenderer(scene: scene, tint: tint, focused: focus ? scene.nodes.last?.id : nil).draw(&g, size: sz)
             }
-            .frame(width: 376, height: 280)
-            ok = save(view, dir.appendingPathComponent("\(name).png")) && ok
+            .frame(width: size.width, height: size.height)
+            return save(view, dir.appendingPathComponent("\(name).png"))
         }
+
+        // Кадры одной сцены в инспекторе: вылет пиров, установившийся рой, волна от проверенного куска, повёрнутая камера.
+        let small = CGSize(width: 376, height: 340)
+        let memory = ConstellationMemory()
+        _ = memory.scene(for: snapshot, size: small, now: now, settled: false)
+        ok = render(memory.scene(for: snapshot, size: small, now: now + 0.5, settled: false), small, "constellation-spawn") && ok
+        ok = render(memory.scene(for: snapshot, size: small, now: now + 3, settled: false), small, "constellation", focus: true) && ok
+        _ = memory.scene(for: withNewPieces(snapshot), size: small, now: now + 3.3, settled: false)
+        ok = render(memory.scene(for: withNewPieces(snapshot), size: small, now: now + 3.8, settled: false), small, "constellation-ripple") && ok
+        ok = render(memory.scene(for: snapshot, size: small, now: now + 4, settled: false, yaw: 1.4, pitch: 0.4), small,
+                    "constellation-rotated") && ok
+
+        // Большое окно роя.
+        let large = CGSize(width: 1180, height: 800)
+        let big = ConstellationMemory()
+        _ = big.scene(for: snapshot, size: large, now: now, settled: false)
+        ok = render(big.scene(for: snapshot, size: large, now: now + 3, settled: false), large, "constellation-window") && ok
+
+        // Как на паузе у пользователя: почти 0%, пиров нет.
+        var paused = sample(progress: 0.004, now: Date())
+        paused.peers = []
+        paused.status = .paused
+        paused.downRate = 0
+        paused.upRate = 0
+        ok = render(ConstellationMemory().scene(for: paused, size: small, now: now + 1, settled: false), small,
+                    "constellation-paused") && ok
 
         var searching = sample(progress: 0, now: Date())
         searching.peers = []
+        searching.pieceCount = 0
         searching.status = .metadata
-        let empty = ConstellationMemory().scene(for: searching, size: CGSize(width: 376, height: 280), now: now + 0.6, settled: false)
-        ok = save(Canvas { g, size in ConstellationRenderer(scene: empty, tint: tint, focused: nil).draw(&g, size: size) }
-            .frame(width: 376, height: 280), dir.appendingPathComponent("constellation-searching.png")) && ok
+        ok = render(ConstellationMemory().scene(for: searching, size: small, now: now + 0.6, settled: false), small,
+                    "constellation-searching") && ok
 
         for (name, rate, progress, active) in [("dock-fast", 10_100_000.0, 0.2, 1), ("dock-slow", 840_000.0, 0.73, 3)] {
             let tile = DockTileView(icon: NSApplication.shared.applicationIconImage, speed: DockSpeed(rate),
@@ -46,6 +66,12 @@ enum RenderSelfTest {
         guard let image = renderer.nsImage, let tiff = image.tiffRepresentation,
               let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else { return false }
         return (try? png.write(to: url)) != nil
+    }
+
+    private static func sampleHave(_ progress: Double) -> Data {
+        var bf = Bitfield(count: 1000)
+        for i in 0..<1000 where frac(sin(Double(i) * 3.77) * 9431.7) < progress { bf[i] = true }
+        return bf.data
     }
 
     private static func withNewPieces(_ s: TorrentSnapshot) -> TorrentSnapshot {
@@ -71,7 +97,7 @@ enum RenderSelfTest {
             metadataProgress: nil, totalSize: 1 << 30, wantedSize: 1 << 30, doneSize: Int64(Double(1 << 30) * progress),
             downRate: peers.reduce(0) { $0 + $1.downRate }, upRate: peers.reduce(0) { $0 + $1.upRate },
             downloadedTotal: 0, uploadedTotal: 0, peersConnected: peers.count, seedsConnected: 17, peersKnown: 144,
-            pieceCount: 1000, pieceLength: 1 << 20, havePieces: Data(count: 125), inProgressPieces: [],
+            pieceCount: 1000, pieceLength: 1 << 20, havePieces: sampleHave(progress), inProgressPieces: Array(400..<412),
             recentPieces: [1: now, 2: now], files: [], peers: peers, trackers: [],
             savePath: URL(fileURLWithPath: "/tmp"), contentURL: nil, isSequential: false, addedAt: now,
             completedAt: nil, magnet: "", isPrivate: false)
