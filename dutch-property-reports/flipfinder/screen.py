@@ -57,6 +57,62 @@ def rank_key(c: dict):
     return (0 if c["passes"] else 1, building_first, 0 if C.NEARBY_OVER_ZONE else zone_first, c["breakeven_discount"])
 
 
+def assess(rec: dict, cards: list[dict], area_note: str | None = None, strict: bool = True) -> tuple[dict | None, list[str]]:
+    """Один объект: адрес, район, аренда, модель, дорога. strict — отсеивать на первом несоблюдённом
+    условии (отбор); иначе считать до конца и вернуть несоблюдённые условия списком (присланные объекты)."""
+    warn = []
+    addr = address(rec)
+    geo = locate.geocode(f"{addr['street']}, {addr['postcode']} {addr['city']}") if addr else None
+    if not geo:
+        return None, ["адрес не найден"]
+    lat, lon, _ = geo
+    # район — по карте, город — по адресу объявления, а не по поиску, в выдаче которого оно нашлось
+    zone = locate.nearest(lat, lon)
+    rec["territory"] = zone["territory"]
+    ring = "zone" if zone["inside"] or (not zone["whole"] and zone["metres"] <= 1500) else "nearby"
+    rec["slug"] = re.search(r"\.nl/[a-z]+/([a-z0-9-]+)/object-", rec["url"]).group(1)
+    deal, info = model_for(rec, cards, (lat, lon), ring)
+    if not deal:
+        return None, ["нет данных об аренде рядом"]
+    ev = evaluate(deal)
+    if ev["breakeven_discount"] is None or ev["breakeven_discount"] > PREFILTER:
+        if strict:
+            return None, [f"нужна скидка больше {PREFILTER:.0%}"]
+        warn.append(f"нужна скидка больше {PREFILTER:.0%}")
+    info["vacant"] = E.vacant(cards, rec, (lat, lon))
+    cap = info["vacant"]["m2"] and C.VACANT_CAP * info["vacant"]["m2"] * rec["area"]
+    if cap and ev["base"]["sale"] > cap:
+        # инвестор не заплатит за сданное здание намного больше, чем стоят свободные рядом
+        deal = deal.at(exit_yield=math.ceil((deal.rent - deal.owner_costs) / cap / 0.0005) * 0.0005)
+        info["exit_yield"] = deal.exit_yield
+        info["exit_notes"].append(f"цена продажи ограничена {C.VACANT_CAP:.0%} цен свободных складов рядом")
+        ev = evaluate(deal)
+        if strict and (ev["breakeven_discount"] is None or ev["breakeven_discount"] > PREFILTER):
+            return None, [f"нужна скидка больше {PREFILTER:.0%}"]
+    place = locate.place(lat, lon)
+    road = locate.motorway(lat, lon)
+    if place["ring"] == "far":
+        if strict:
+            return None, ["далеко от наших районов"]
+        warn.append("далеко от наших районов")
+    if not road or road["km"] > C.MOTORWAY_KM:
+        if strict:
+            return None, [f"до магистрали больше {C.MOTORWAY_KM:.0f} км"]
+        warn.append(f"до магистрали больше {C.MOTORWAY_KM:.0f} км")
+    cand = {
+        "url": rec["url"], "title": rec["title"], "address": addr, "lat": lat, "lon": lon, "slug": rec["slug"],
+        "territory": rec["territory"], "place": place, "road": road, "price": rec["price"], "area": rec["area"],
+        "area_note": area_note,
+        "info": {**info, "rent": {k: v for k, v in info["rent"].items() if k != "comps"},
+                 "comps": [{k: c.get(k) for k in ("title", "area", "rent_m2", "url", "km")} for c in info["rent"]["comps"]]},
+        "deal": ev["base"]["deal"], "breakeven": ev["breakeven"], "breakeven_discount": ev["breakeven_discount"],
+        "offer": ev["offer"], "offer_discount": 1 - ev["offer"] / rec["price"],
+        "passes": ev["passes"] and 1 - ev["offer"] / rec["price"] <= C.OFFER_DISCOUNT_MAX,
+        "profit_at_ask": ev["at_ask"]["profit"], "net_at_offer": ev["base"]["net"], "sale": ev["base"]["sale"],
+    }
+    return cand, warn
+
+
 def main(run_dir: Path, include_shown: bool = False, relaxed: bool = False) -> None:
     if relaxed:
         for key, value in C.RELAXED.items():
@@ -75,59 +131,11 @@ def main(run_dir: Path, include_shown: bool = False, relaxed: bool = False) -> N
         if why:
             rejected.append({"url": rec["url"], "title": rec["title"], "why": why})
             continue
-        addr = address(rec)
-        geo = locate.geocode(f"{addr['street']}, {addr['postcode']} {addr['city']}") if addr else None
-        if not geo:
-            rejected.append({"url": rec["url"], "title": rec["title"], "why": ["адрес не найден"]})
+        cand, why = assess(rec, cards, area_note)
+        if cand is None:
+            rejected.append({"url": rec["url"], "title": rec["title"], "why": why})
             continue
-        lat, lon, _ = geo
-        # район — по карте, город — по адресу объявления, а не по поиску, в выдаче которого оно нашлось
-        zone = locate.nearest(lat, lon)
-        rec["territory"] = zone["territory"]
-        ring = "zone" if zone["inside"] or (not zone["whole"] and zone["metres"] <= 1500) else "nearby"
-        rec["slug"] = re.search(r"\.nl/[a-z]+/([a-z0-9-]+)/object-", rec["url"]).group(1)
-        deal, info = model_for(rec, cards, (lat, lon), ring)
-        if not deal:
-            rejected.append({"url": rec["url"], "title": rec["title"], "why": ["нет данных об аренде рядом"]})
-            continue
-        ev = evaluate(deal)
-        if ev["breakeven_discount"] is None or ev["breakeven_discount"] > PREFILTER:
-            rejected.append({"url": rec["url"], "title": rec["title"],
-                             "why": [f"нужна скидка больше {PREFILTER:.0%}"],
-                             "discount": ev["breakeven_discount"]})
-            continue
-        info["vacant"] = E.vacant(cards, rec, (lat, lon))
-        cap = info["vacant"]["m2"] and C.VACANT_CAP * info["vacant"]["m2"] * rec["area"]
-        if cap and ev["base"]["sale"] > cap:
-            # инвестор не заплатит за сданное здание намного больше, чем стоят свободные рядом
-            deal = deal.at(exit_yield=math.ceil((deal.rent - deal.owner_costs) / cap / 0.0005) * 0.0005)
-            info["exit_yield"] = deal.exit_yield
-            info["exit_notes"].append(f"цена продажи ограничена {C.VACANT_CAP:.0%} цен свободных складов рядом")
-            ev = evaluate(deal)
-            if ev["breakeven_discount"] is None or ev["breakeven_discount"] > PREFILTER:
-                rejected.append({"url": rec["url"], "title": rec["title"], "why": [f"нужна скидка больше {PREFILTER:.0%}"],
-                                 "discount": ev["breakeven_discount"]})
-                continue
-        place = locate.place(lat, lon)
-        road = locate.motorway(lat, lon)
-        if place["ring"] == "far":
-            rejected.append({"url": rec["url"], "title": rec["title"], "why": ["далеко от наших районов"]})
-            continue
-        if not road or road["km"] > C.MOTORWAY_KM:
-            rejected.append({"url": rec["url"], "title": rec["title"],
-                             "why": [f"до магистрали больше {C.MOTORWAY_KM:.0f} км"], "road": road})
-            continue
-        done.append({
-            "url": rec["url"], "title": rec["title"], "address": addr, "lat": lat, "lon": lon, "slug": rec["slug"],
-            "territory": rec["territory"], "place": place, "road": road, "price": rec["price"], "area": rec["area"],
-            "area_note": area_note,
-            "info": {**info, "rent": {k: v for k, v in info["rent"].items() if k != "comps"},
-                     "comps": [{k: c.get(k) for k in ("title", "area", "rent_m2", "url", "km")} for c in info["rent"]["comps"]]},
-            "deal": ev["base"]["deal"], "breakeven": ev["breakeven"], "breakeven_discount": ev["breakeven_discount"],
-            "offer": ev["offer"], "offer_discount": 1 - ev["offer"] / rec["price"],
-            "passes": ev["passes"] and 1 - ev["offer"] / rec["price"] <= C.OFFER_DISCOUNT_MAX, "profit_at_ask": ev["at_ask"]["profit"],
-            "net_at_offer": ev["base"]["net"], "sale": ev["base"]["sale"],
-        })
+        done.append(cand)
     done.sort(key=rank_key)
     (run_dir / "candidates.json").write_text(json.dumps(done, ensure_ascii=False, indent=1), encoding="utf-8")
     (run_dir / "rejected.json").write_text(json.dumps(rejected, ensure_ascii=False, indent=1), encoding="utf-8")

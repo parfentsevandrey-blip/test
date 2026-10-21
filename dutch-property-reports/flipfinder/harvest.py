@@ -6,6 +6,7 @@
 RUN_DIR/listings.jsonl (страницы кандидатов на покупку и сданных объектов).
 С --only=город,город дособирает только эти города и дописывает их к готовому прогону.
 С --fresh=Ч выдача поиска берётся заново, если копии в кэше больше Ч часов (по умолчанию 24).
+С --extra=город,город дособирает разовые города вне наших списков (например, вокруг присланных объектов).
 С --no-invest сданные объекты (belegging) не собираются — они нужны только для справки инвестору.
 С --fresh-pages=Ч страницы объектов загружаются заново, если копии в кэше больше Ч часов (по умолчанию 72).
 """
@@ -21,20 +22,23 @@ from flipfinder import fetch  # noqa: E402
 SEARCHES = (("bedrijfshal", "koop"), ("bedrijfshal", "huur"), ("belegging", "koop"))
 
 
-def towns(only: set[str] | None = None):
+def towns(only: set[str] | None = None, extra: list[str] | None = None):
     for ring, table in (("zone", C.ZONES), ("nearby", C.NEARBY)):
         for terr, slugs in table.items():
             for s in slugs:
-                if not only or s in only:
+                if (not only and not extra) or (only and s in only):
                     yield terr, s, ring
+    for s in extra or []:                       # разовые города вокруг присланных объектов
+        yield "extra", s, "extra"
 
 
 def main(run_dir: Path, only: set[str] | None = None, fresh: float = 24, invest: bool = True,
-         fresh_pages: float = 72) -> None:
-    old_cards = fetch.load_jsonl(run_dir / "cards.jsonl") if only else []
-    old_rows = fetch.load_jsonl(run_dir / "listings.jsonl") if only else []
+         fresh_pages: float = 72, extra: list[str] | None = None) -> None:
+    append = bool(only or extra)
+    old_cards = fetch.load_jsonl(run_dir / "cards.jsonl") if append else []
+    old_rows = fetch.load_jsonl(run_dir / "listings.jsonl") if append else []
     all_cards = []
-    for terr, slug, ring in towns(only):
+    for terr, slug, ring in towns(only, extra):
         for kind, deal in SEARCHES if invest else SEARCHES[:2]:
             found = fetch.search(slug, kind, deal, max_age_h=fresh)
             for c in found:
@@ -72,4 +76,5 @@ if __name__ == "__main__":
     only = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--only=")), None)
     fresh = next((float(a.split("=", 1)[1]) for a in sys.argv if a.startswith("--fresh=")), 24)
     fresh_pages = next((float(a.split("=", 1)[1]) for a in sys.argv if a.startswith("--fresh-pages=")), 72)
-    main(Path(sys.argv[1]), set(only.split(",")) if only else None, fresh, "--no-invest" not in sys.argv, fresh_pages)
+    extra = next((a.split("=", 1)[1].split(",") for a in sys.argv if a.startswith("--extra=")), None)
+    main(Path(sys.argv[1]), set(only.split(",")) if only else None, fresh, "--no-invest" not in sys.argv, fresh_pages, extra)

@@ -34,6 +34,10 @@ FONTS = C.ROOT / "assets" / "fonts"
 CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
 POIS = C.ROOT / "data" / "flip" / "pois.json"
 NEAR_MIN = 35                  # компании и площадки дальше 35 минут в отчёт не идут
+# узлы логистики — для объектов, у которых текст о месте пишет аналитик (why.md): три ближайших по дороге
+HUBS = [("Схипхол", (52.3105, 4.7683)), ("Порт Роттердама, Ваалхавен", (51.8869, 4.4361)),
+        ("Утрехт, центр", (52.0907, 5.1214)), ("Амстердам, центр", (52.3731, 4.8922)), ("Гаага, центр", (52.0705, 4.3007)),
+        ("Эйндховен, центр", (51.4416, 5.4697)), ("Неймеген, центр", (51.8426, 5.8546))]
 
 CITY_RU = {"rotterdam": "Роттердам", "amsterdam": "Амстердам", "almere": "Алмере", "diemen": "Димен",
            "hoofddorp": "Хофддорп", "nieuw-vennep": "Ниу-Веннеп", "schiphol-rijk": "Схипхол-Рейк",
@@ -56,7 +60,12 @@ CITY_RU = {"rotterdam": "Роттердам", "amsterdam": "Амстердам",
            "arnhem": "Арнем", "elst-ge": "Элст", "beuningen-ge": "Бёнинген", "cuijk": "Кёйк", "malden": "Малден",
            "groesbeek": "Хрусбек", "bemmel": "Беммел", "druten": "Друтен", "heerhugowaard": "Херхюговард",
            "schagen": "Схаген", "enkhuizen": "Энкхёйзен", "zwaag": "Зваг", "medemblik": "Медемблик",
-           "wognum": "Вогнюм", "alkmaar": "Алкмар", "obdam": "Обдам"}
+           "wognum": "Вогнюм", "alkmaar": "Алкмар", "obdam": "Обдам", "zoetermeer": "Зутермер", "nieuwegein": "Ниувегейн",
+           "utrecht": "Утрехт", "houten": "Хаутен", "ijsselstein": "Эйсселстейн", "vianen": "Вианен", "dordrecht": "Дордрехт",
+           "papendrecht": "Папендрехт", "alblasserdam": "Алблассердам", "sliedrecht": "Слидрехт",
+           "oud-beijerland": "Ауд-Бейерланд", "delft": "Делфт", "gouda": "Гауда", "waddinxveen": "Ваддинксвен",
+           "pijnacker": "Пейнакер", "naaldwijk": "Нальдвейк", "assendelft": "Ассенделфт", "wormer": "Вормер",
+           "huissen": "Хёйссен", "duiven": "Дёйвен", "westervoort": "Вестерфорт", "zevenaar": "Зевенар"}
 FEATURES = {"lichtstraten": "световые фонари", "lichtstraat": "световые фонари", "elektrische overheaddeur": "электрические ворота",
             "overheaddeuren": "ворота", "overheaddeur": "ворота", "betonvloer": "бетонный пол", "heater": "обогреватель в зале",
             "toilet": "туалет", "airconditioning": "кондиционер", "mechanische ventilatie": "вентиляция",
@@ -291,6 +300,22 @@ def neighbours(pick: dict, limit: int = 4) -> list[dict]:
     return [r for r in rows if r["about"] or f"**{r['label']}**" in body][:limit]
 
 
+def hubs(pick: dict, limit: int = 3) -> list[dict]:
+    rows = []
+    for label, at in HUBS:
+        r = locate.drive((pick["lat"], pick["lon"]), at)
+        if r:
+            rows.append({"label": label, "km": r[0], "min": round(r[1]), "about": ""})
+    return sorted(rows, key=lambda r: r["min"])[:limit]
+
+
+def plot_area(rec: dict, desc: str) -> float | None:
+    """Участок по кадастру из описания, если он там есть: в карточке funda площадь бывает с опечаткой."""
+    m = re.search(r"(?:perceel(?:grootte)?:?\s+(?:van\s+)?|groot\s*\(gezamenlijk\):?\s*)(?:ca\.?\s*|circa\s*)?"
+                  r"(\d{1,3}(?:\.\d{3})+|\d+)\s*m(?:²|2)", desc, re.I)
+    return fetch.num(m.group(1)) if m else rec.get("plot")
+
+
 def about(label: str, territory: str) -> str:
     """Пояснение к компании или площадке: предложение из описания района, где она названа именно так."""
     for e in S.load()[2]["sheets"].get(territory, {}).get("entries", []):
@@ -355,7 +380,8 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
         s["cap"] = caps.get(s["url"], f"Кадр {i}")
     for p in plans:
         p["cap"] = caps.get(p["url"], "Планировка")
-    near = neighbours(pick)
+    why_md = work / "why.md"                 # текст о месте от аналитика — для объектов вне наших районов
+    near = hubs(pick) if why_md.exists() else neighbours(pick)
     first_rent = d.lease_month + d.rent_free
     rent_months = max(0, d.horizon - first_rent + 1)
     since = date_ru(rec.get("since"))
@@ -382,7 +408,7 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
         + (f" — это {pct(C.RENT_SAFETY, 0)} от средней ставки {plural(n_comps, 'предложения', 'предложений', 'предложений')} "
            f"рядом (€\u00a0{num(med)})." if med else "."),
         f"**Магистраль рядом.** До {road['ref']} — {km(road['km'])}, {road['min']}\u00a0мин"
-        + (f"; до {near[0]['label']} — {near[0]['min']}\u00a0мин." if near else "."),
+        + (f"; {near[0]['label']} — {near[0]['min']}\u00a0мин." if near else "."),
     ]
 
     # стр. 2
@@ -404,11 +430,10 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
           + (f" (по описанию; {pick['area_note'].split(', ')[0]})" if pick.get("area_note") else "")),
          ("Высота зала", height), ("Год постройки", str(year) if year else "не указан"),
          ("Энергетический класс", label if (label := (rec.get("label") or "").strip()) and "Niet" not in label else "не указан"),
-         ("Участок", (f"{num(rec['plot'])} м²" if rec.get("plot") else "не указан")
-          )],
+         ("Участок", f"{num(plot)} м²" if (plot := plot_area(rec, desc)) else "не указан")],
         [("Цена продавца", f"{eur(ask)}, налог 10,4\u00a0% за покупателем"), ("Цена за м²", eur(ask / area, 1)),
          ("Арендатор", "нет, здание свободно"), ("Земля", f"в аренде, €\u00a0{num(oc['canon'])} в год" if oc["canon"] else "в аренде" if oc["lease_end"]
-          else "в собственности, без платы" if re.search(r"eigen grond|volle eigendom", desc, re.I) else "не указано"),
+          else "в собственности, без платы" if re.search(r"eigen grond|voll?e? eigendom", desc, re.I) else "не указано"),
          ("На продаже", (f"с {since}" if since and re.match(r"\d+ [а-я]", since) else (since or "не указано"))
           + (f"; цена снижена с {eur(orig)}" if orig and orig > ask else ""))],
     ]
@@ -419,7 +444,7 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
         blocks.append(("Важно", [p.strip() for p in note.read_text(encoding="utf-8").split("\n\n") if p.strip()]))
     if feats:
         blocks.append(("Оснащение", [(feats[0][0].upper() + feats[0][1:] + (", " + ", ".join(feats[1:]) if len(feats) > 1 else "") + ".")]))
-    cat = re.search(r"(?:milieu)?categorie (\d\.\d|\d)", desc, re.I)
+    cat = re.search(r"(?:milieu)?categorie (\d[.,]\d|\d)", desc, re.I)
     if cat:
         use = (f"По плану застройки здесь разрешены предприятия до категории {cat.group(1).replace('.', ',')} "
                "по шкале воздействия на соседей (от 1 до 6): склад, мастерская, производство.")
@@ -474,7 +499,8 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     spend = [("Цена здания", eur(offer)), ("Налог при покупке, 10,4\u00a0%", eur(tax)),
              ("Нотариус, проверка здания, консультант", eur(b["buy_total"] - offer - tax)),
              ("Ремонт", eur(b["works"])), ("Поиск арендатора: брокер и реклама", eur(letting)),
-             ("Налоги и страховка" + (", плата за землю" if oc["canon"] else "") + " на время владения", eur(upkeep)),
+             ("Налоги и страховка" + (", плата за землю" if oc["canon"] else "")
+              + (", взнос ассоциации владельцев" if oc.get("vve") else "") + " на время владения", eur(upkeep)),
              ("Продажа: брокер и юрист", eur(b["sale_cost"]))]
     get = [(f"Аренда за {months(rent_months)}", eur(b["rent_collected"])), ("Продажа инвестору", eur(b["sale"]))]
     result_lines = [("Прибыль до налога", eur(b["profit"])), ("Налог на прибыль, 19\u00a0%", eur(-b["vpb"])),
@@ -508,7 +534,8 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
                     reverse=True)
     lad = [(p, run(d.at(price=p))["profit"]) for p in prices]
     top = max(abs(v) for _, v in lad) or 1
-    ladder = [{"price": eur(p), "discount": pct(1 - p / ask, 0), "profit": signed(v), "bar": bar_cell(v, top),
+    ladder = [{"price": eur(p), "discount": pct(1 - p / ask, 0), "bar": bar_cell(v, top),
+               "profit": eur(0) if abs(p - ev["breakeven"]) < 100 and p != ask and abs(p - offer) >= 1 else signed(v),
                "mine": abs(p - offer) < 1,
                "tag": ("цена продавца" if p == ask else "предложение продавцу" if abs(p - offer) < 1 else
                        "без прибыли и убытка" if abs(p - ev["breakeven"]) < 100 else "")} for p, v in lad]
@@ -538,7 +565,8 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
         "reasons": reasons,
         "facts": facts, "blocks": blocks, "todo": todo, "images": images,
         "fill_image": shots[3]["src"] if len(shots) > 3 else None, "source_url": pick["url"],
-        "map": map_jpg.resolve().as_uri(), "roads": roads, "why": why_here(pick, near), "comps": comp_rows,
+        "map": map_jpg.resolve().as_uri(), "roads": roads, "why": ([p.strip() for p in why_md.read_text(encoding="utf-8").split("\n\n") if p.strip()]
+                if why_md.exists() else why_here(pick, near)), "comps": comp_rows,
         "rent": rent_box,
         "steps": steps, "spend": spend, "spend_total": eur(b["costs"]), "get": get, "get_total": eur(b["income"]),
         "result_lines": result_lines[:2], "result_total": eur(b["net"]), "result_hint": result_hint,
@@ -546,17 +574,25 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
         "ladder": ladder, "what_if": what_if, "checks": checks(pick, rec), "legal": legal,
         "photo_pages": photo_pages(shots), "plans": plans[:2],
         "passes": ev["passes"],
+        # строка для страницы сравнения в общем файле (pack.py)
+        "summary": {"street": street, "city": city, "hero": shots[0]["src"] if shots else "",
+                    "kind": ("Новое здание" if d.new_build else "Склад с офисами"),
+                    "area": f"{num(area)} м²" + (f", {year} год" if year else ""),
+                    "ask": eur(ask), "offer": eur(offer), "cut": pct(1 - offer / ask, 0), "sale": eur(b["sale"]),
+                    "net": eur(b["net"]), "peak": eur(b["peak"]), "per100": f"€\u00a0{per100}",
+                    "breakeven": eur(ev["breakeven"]), "be_cut": pct(need), "rent": eur(rent / 12),
+                    "road": f"{road['ref']}, {km(road['km'])}"},
     }
 
 
-def render(ctx: dict, out_pdf: Path, work: Path) -> list[dict]:
+def render(ctx: dict, out_pdf: Path, work: Path, template: str = "brief.html") -> list[dict]:
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(HERE / "templates"), autoescape=True)
     env.filters["md"] = lambda t: Markup(md(t))
     env.filters["nowrap"] = lambda t: Markup(" ".join(f'<span style="white-space: nowrap">{H.escape(w)}</span>' if "-" in w
                                                       else H.escape(w) for w in str(t).split(" ")))
     css = env.from_string((HERE / "templates" / "brief.css").read_text(encoding="utf-8")).render(fonts=FONTS.resolve().as_uri())
-    page = work / "brief.html"
-    page.write_text(env.get_template("brief.html").render(**ctx, css=Markup(css)), encoding="utf-8")
+    page = work / template
+    page.write_text(env.get_template(template).render(**ctx, css=Markup(css)), encoding="utf-8")
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path=CHROME, headless=True)
@@ -606,9 +642,19 @@ def register(pick: dict, report: str) -> None:
     registry.save(C.ROOT / "data", data)
 
 
+def load_candidates(run_dir: Path) -> list[dict]:
+    """Посчитанные объекты прогона: из отбора и присланные вручную (manual.json)."""
+    out = []
+    for name in ("candidates.json", "manual.json"):
+        path = run_dir / name
+        if path.exists():
+            out += json.loads(path.read_text(encoding="utf-8"))
+    return out
+
+
 def main(run_dir: Path, rank: int = 1, publish: bool = False, url: str | None = None) -> None:
     short = json.loads((run_dir / "shortlist.json").read_text(encoding="utf-8"))
-    cands = json.loads((run_dir / "candidates.json").read_text(encoding="utf-8"))
+    cands = load_candidates(run_dir)
     pick = next(c for c in cands if url in c["url"]) if url else (short or cands)[rank - 1]
     listings = fetch.load_jsonl(run_dir / "listings.jsonl")
     rec = next(r for r in listings if r["url"] == pick["url"])

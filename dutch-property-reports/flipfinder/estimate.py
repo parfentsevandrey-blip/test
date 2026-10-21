@@ -54,10 +54,17 @@ def owner_costs(desc: str) -> dict:
     m = re.search(r"canon[^€]{0,80}€\s*([\d.]+)(?:,(\d+))?[^.]{0,40}?(per jaar|per maand|per kwartaal|p\.j\.|/jaar)?", low)
     if m and "afgekocht" not in low[max(0, m.start() - 60):m.end() + 20]:
         out["canon"] = _per_year(float(m.group(1).replace(".", "")), m.group(3) or "jaar")
-    m = re.search(r"(?:vve|vereniging van eigenaren|servicekosten)[^€]{0,80}€\s*([\d.]+)(?:,\d+)?\s*(?:,-)?\s*"
-                  r"(per maand|per kwartaal|per jaar|p\.m\.|p\.j\.)", low)
+    # взнос ассоциации владельцев: «VvE-bijdrage bedraagt € 111,98 per maand», «VvE … Jaarlijkse bijdrage: € 16.952»
+    m = re.search(r"(?:vve|vereniging van eigena\w+|verenging van eigena\w+)[^€]{0,250}?bijdrage[^€]{0,40}€\s*([\d.]+)(?:,\d+)?"
+                  r"\s*(?:,-)?\s*(per maand|per kwartaal|per jaar|p\.m\.|p\.j\.)?", low)
     if m:
-        out["vve"] = _per_year(float(m.group(1).replace(".", "")), m.group(2))
+        period = m.group(2) or ("jaar" if "jaarlijks" in m.group(0) or not m.group(2) else "maand")
+        out["vve"] = _per_year(float(m.group(1).replace(".", "")), period)
+        # сервисный сбор, который владелец выставляет арендатору, возвращает часть взноса
+        r = re.search(r"servicekosten[^€]{0,120}€\s*([\d.]+)(?:,\d+)?\s*(?:,-)?\s*(per maand|per kwartaal|per jaar)", low)
+        if r and re.search(r"in rekening|huurder|doorbelast", low[max(0, r.start() - 120):r.end() + 60]):
+            out["vve_recovered"] = _per_year(float(r.group(1).replace(".", "")), r.group(2))
+            out["vve"] = max(0.0, out["vve"] - out["vve_recovered"])
     m = re.search(r"afgekocht tot(?: en met)?\s*(?:\d{1,2}[- ][\w-]+[- ])?(20\d\d|21\d\d)", low)
     if m:
         out["bought_off_until"] = int(m.group(1))
@@ -185,7 +192,7 @@ def exit_yield(rec: dict, oc: dict, ring: str = "zone") -> tuple[float, list[str
     if (rec.get("area") or 0) >= 2000:
         base += C.EXIT_ADJ["large_2000m2"]
         notes.append("больше 2.000 м²")
-    if ring != "zone":
+    if ring != "zone" and rec["slug"] not in C.EXIT_YIELD_CITY:     # у города своя доходность — она уже учитывает спрос
         base += C.EXIT_ADJ["nearby"]
         notes.append("меньше спроса инвесторов, чем в крупных промзонах")
     if oc["lease_end"] and oc["lease_end"] <= 2060:

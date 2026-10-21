@@ -1,0 +1,498 @@
+[
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/zoetermeer/object-44532208-kryptonstraat-110/",
+  "title": "Bedrijfshal Zoetermeer | Zoek bedrijfshallen te koop: Kryptonstraat 110 2718 TD Zoetermeer [funda in business]",
+  "address": {
+   "street": "Kryptonstraat 110",
+   "postcode": "2718 TD",
+   "city": "Zoetermeer"
+  },
+  "lat": 52.03305465,
+  "lon": 4.49958736,
+  "slug": "zoetermeer",
+  "territory": "rotterdam",
+  "place": {
+   "territory": "rotterdam",
+   "name": "Роттердам целиком",
+   "short": "Роттердам целиком",
+   "body": "Роттердам выбран целиком, вне листов файла с картами: подходит объект в любой части муниципалитета, включая порт, Масвлакте и Хук-ван-Холланд.",
+   "whole": true,
+   "metres": 6208,
+   "inside": false,
+   "point": [
+    51.921894726260746,
+    4.489273114838015
+   ],
+   "drive_min": 23,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 1.6,
+   "min": 2,
+   "ref": "A12"
+  },
+  "price": 1995000,
+  "area": 1328,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 10,
+    "effective_area": 1229.3,
+    "mezzanine": 141.0,
+    "comps_m2": 106.20188797663725,
+    "ask": null,
+    "rent": 120109.66241850576,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.0775,
+   "exit_notes": [
+    "меньше спроса инвесторов, чем в крупных промзонах"
+   ],
+   "year": 2006,
+   "new_build": false,
+   "shell": false,
+   "condition": "good",
+   "unit": false,
+   "desc_partial": false,
+   "vacant": {
+    "n": 10,
+    "m2": 1457.3565549791317
+   },
+   "comps": [
+    {
+     "title": "Edelgasstraat 250, Zoetermeer",
+     "area": 1941,
+     "rent_m2": 87.58578052550232,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zoetermeer/object-43356601-edelgasstraat-250/",
+     "km": 0.1
+    },
+    {
+     "title": "Kryptonstraat 15, Zoetermeer",
+     "area": 1424,
+     "rent_m2": 94.10393258426966,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zoetermeer/object-43356607-kryptonstraat-15/",
+     "km": 0.1
+    },
+    {
+     "title": "Heliumstraat 290, Zoetermeer",
+     "area": 700,
+     "rent_m2": 114.29142857142857,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zoetermeer/object-44448953-heliumstraat-290/",
+     "km": 0.2
+    },
+    {
+     "title": "Heliumstraat 154, Zoetermeer",
+     "area": 1753,
+     "rent_m2": 119.79463776383344,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zoetermeer/object-44519765-heliumstraat-154/",
+     "km": 0.2
+    },
+    {
+     "title": "Koraalrood 100, Zoetermeer",
+     "area": 1126,
+     "rent_m2": 142.09591474245116,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/zoetermeer/object-43902424-koraalrood-100/",
+     "km": 0.5
+    },
+    {
+     "title": "Ambachtsweg 3, Pijnacker",
+     "area": 2250,
+     "rent_m2": 90.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/pijnacker/object-80800073-ambachtsweg-3/",
+     "km": 4.0
+    },
+    {
+     "title": "Heulweg 47, Pijnacker",
+     "area": 909,
+     "rent_m2": 108.91089108910892,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/pijnacker/object-44594383-heulweg-47/",
+     "km": 4.1
+    },
+    {
+     "title": "Weteringweg 11, Pijnacker",
+     "area": 922,
+     "rent_m2": 44.186550976138825,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/pijnacker/object-43173009-weteringweg-11/",
+     "km": 4.1
+    },
+    {
+     "title": "Leeuwenhoekweg 58, Bergschenhoek",
+     "area": 2319,
+     "rent_m2": 103.49288486416559,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/bergschenhoek/object-80895401-leeuwenhoekweg-58/",
+     "km": 5.0
+    },
+    {
+     "title": "Industrieweg 47-49, Berkel en Rodenrijs",
+     "area": 1389,
+     "rent_m2": 125.26997840172787,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/berkel-en-rodenrijs/object-89660464-industrieweg-47-49/",
+     "km": 6.5
+    }
+   ]
+  },
+  "deal": {
+   "ask": 1995000,
+   "area": 1328,
+   "rent": 120110,
+   "exit_yield": 0.0775,
+   "price": 1215000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 1346370.7181259603,
+  "breakeven_discount": 0.32512745958598477,
+  "offer": 1215000.0,
+  "offer_discount": 0.39097744360902253,
+  "passes": false,
+  "profit_at_ask": -726464.7956989247,
+  "net_at_offer": 119179.515483871,
+  "sale": 1549806.4516129033,
+  "checks": [
+   "нужна скидка больше 25%",
+   "для выхода в ноль нужна скидка 32.5%, больше 11%",
+   "предложение на 39.1% ниже цены, больше 15%"
+  ]
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuwegein/object-89621252-veldwade-14-16/",
+  "title": "Bedrijfshal Nieuwegein | Zoek bedrijfshallen te koop: Veldwade 14-16 3439 LE Nieuwegein [funda in business]",
+  "address": {
+   "street": "Veldwade 14-16",
+   "postcode": "3439 LE",
+   "city": "Nieuwegein"
+  },
+  "lat": 52.04874666,
+  "lon": 5.11503689,
+  "slug": "nieuwegein",
+  "territory": "ai-amsterdam",
+  "place": {
+   "territory": "ai-amsterdam",
+   "name": "Амстел III, Зёйдост",
+   "short": "Амстел III",
+   "body": "Скопление центров обработки данных **Equinix**: AM1 и AM2 на Luttenbergweg, AM5 на Schepenbergweg, AM7 на Kuiperbergweg.",
+   "near": "до вокзала Амстердама — 20 минут, до Схипхола — 19",
+   "whole": false,
+   "metres": 29310,
+   "inside": false,
+   "point": [
+    52.3038555158344,
+    4.938008090399119
+   ],
+   "drive_min": 30,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 1.1,
+   "min": 2,
+   "ref": "A12"
+  },
+  "price": 3150000,
+  "area": 2205,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 9,
+    "effective_area": 2205.0,
+    "mezzanine": 0.0,
+    "comps_m2": 94.91525423728814,
+    "ask": null,
+    "rent": 192545.08474576272,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 0.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false
+   },
+   "exit_yield": 0.075,
+   "exit_notes": [
+    "больше 2.000 м²"
+   ],
+   "year": 1993,
+   "new_build": false,
+   "shell": false,
+   "condition": "good",
+   "unit": false,
+   "desc_partial": false,
+   "vacant": {
+    "n": 4,
+    "m2": 1171.230060562748
+   },
+   "comps": [
+    {
+     "title": "Grote Wade 17-19, Nieuwegein",
+     "area": 1448,
+     "rent_m2": 94.61325966850829,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuwegein/object-43276397-grote-wade-17-19/",
+     "km": 0.2
+    },
+    {
+     "title": "Biezenwade 14, Nieuwegein",
+     "area": 2776,
+     "rent_m2": 102.6657060518732,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuwegein/object-89706541-biezenwade-14/",
+     "km": 0.3
+    },
+    {
+     "title": "Wilgenkade 17, Houten",
+     "area": 1105,
+     "rent_m2": 101.80995475113122,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/houten/object-80992250-wilgenkade-17/",
+     "km": 2.1
+    },
+    {
+     "title": "Brabanthaven 11, Nieuwegein",
+     "area": 3204,
+     "rent_m2": 85.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuwegein/object-89603250-brabanthaven-11/",
+     "km": 3.1
+    },
+    {
+     "title": "Duwboot 89, Houten",
+     "area": 1475,
+     "rent_m2": 94.91525423728814,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/houten/object-43375164-duwboot-89/",
+     "km": 3.6
+    },
+    {
+     "title": "Strawinskylaan 20, Utrecht",
+     "area": 1260,
+     "rent_m2": 109.52380952380952,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/utrecht/object-44575040-strawinskylaan-20/",
+     "km": 4.3
+    },
+    {
+     "title": "Korte Schaft 9, Houten",
+     "area": 2411,
+     "rent_m2": 70.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/houten/object-43332429-korte-schaft-9/",
+     "km": 4.9
+    },
+    {
+     "title": "Kernkade 36, Utrecht",
+     "area": 1500,
+     "rent_m2": 65.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/utrecht/object-42249349-kernkade-36/",
+     "km": 7.0
+    },
+    {
+     "title": "Hudsondreef 7-9, Utrecht",
+     "area": 2258,
+     "rent_m2": 97.43135518157662,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/utrecht/object-80952237-hudsondreef-7-9/",
+     "km": 8.9
+    }
+   ]
+  },
+  "deal": {
+   "ask": 3150000,
+   "area": 2205,
+   "rent": 192545,
+   "exit_yield": 0.075,
+   "price": 2025000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 0.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 2240349.255952381,
+  "breakeven_discount": 0.2887780139833711,
+  "offer": 2025000.0,
+  "offer_discount": 0.3571428571428571,
+  "passes": false,
+  "profit_at_ask": -1018808.833333333,
+  "net_at_offer": 192563.8456666669,
+  "sale": 2567266.666666667,
+  "checks": [
+   "дороже € 2 млн",
+   "нужна скидка больше 25%",
+   "для выхода в ноль нужна скидка 28.9%, больше 11%",
+   "предложение на 35.7% ниже цены, больше 15%"
+  ]
+ },
+ {
+  "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuwegein/object-43276397-grote-wade-17-19/",
+  "title": "Bedrijfshal Nieuwegein | Zoek bedrijfshallen te koop en te huur: Grote Wade 17-19 3439 NX Nieuwegein [funda in business]",
+  "address": {
+   "street": "Grote Wade 17-19",
+   "postcode": "3439 NX",
+   "city": "Nieuwegein"
+  },
+  "lat": 52.0485384,
+  "lon": 5.11276667,
+  "slug": "nieuwegein",
+  "territory": "ai-amsterdam",
+  "place": {
+   "territory": "ai-amsterdam",
+   "name": "Амстел III, Зёйдост",
+   "short": "Амстел III",
+   "body": "Скопление центров обработки данных **Equinix**: AM1 и AM2 на Luttenbergweg, AM5 на Schepenbergweg, AM7 на Kuiperbergweg.",
+   "near": "до вокзала Амстердама — 20 минут, до Схипхола — 19",
+   "whole": false,
+   "metres": 29270,
+   "inside": false,
+   "point": [
+    52.3038555158344,
+    4.938008090399119
+   ],
+   "drive_min": 30,
+   "ring": "nearby"
+  },
+  "road": {
+   "km": 1.5,
+   "min": 2,
+   "ref": "A12"
+  },
+  "price": 1795000,
+  "area": 1448,
+  "area_note": null,
+  "info": {
+   "rent": {
+    "n": 10,
+    "effective_area": 1448.0,
+    "mezzanine": 0.0,
+    "comps_m2": 102.23783040150221,
+    "ask": 137000,
+    "rent": 136197.1481476652,
+    "basis": "сопоставимые"
+   },
+   "owner": {
+    "canon": 0.0,
+    "vve": 3992.0,
+    "lease_end": null,
+    "bought_off_until": null,
+    "perpetual": false,
+    "vve_recovered": 12960.0
+   },
+   "exit_yield": 0.0725,
+   "exit_notes": [],
+   "year": 1997,
+   "new_build": false,
+   "shell": false,
+   "condition": "good",
+   "unit": true,
+   "desc_partial": false,
+   "vacant": {
+    "n": 4,
+    "m2": 1265.695332859512
+   },
+   "comps": [
+    {
+     "title": "Biezenwade 14, Nieuwegein",
+     "area": 2776,
+     "rent_m2": 102.6657060518732,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuwegein/object-89706541-biezenwade-14/",
+     "km": 0.3
+    },
+    {
+     "title": "Eendrachtlaan 100, Utrecht",
+     "area": 774,
+     "rent_m2": 130.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/utrecht/object-80997367-eendrachtlaan-100/",
+     "km": 1.7
+    },
+    {
+     "title": "Australiëlaan 8, Utrecht",
+     "area": 826,
+     "rent_m2": 87.772397094431,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/utrecht/object-44421774-australielaan-8/",
+     "km": 1.9
+    },
+    {
+     "title": "Wilgenkade 17, Houten",
+     "area": 1105,
+     "rent_m2": 101.80995475113122,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/houten/object-80992250-wilgenkade-17/",
+     "km": 2.3
+    },
+    {
+     "title": "Duwboot 89, Houten",
+     "area": 1475,
+     "rent_m2": 94.91525423728814,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/houten/object-43375164-duwboot-89/",
+     "km": 3.7
+    },
+    {
+     "title": "Strawinskylaan 20, Utrecht",
+     "area": 1260,
+     "rent_m2": 109.52380952380952,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/utrecht/object-44575040-strawinskylaan-20/",
+     "km": 4.3
+    },
+    {
+     "title": "Weerschip 1, Houten",
+     "area": 965,
+     "rent_m2": 134.30051813471502,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/houten/object-44548457-weerschip-1/",
+     "km": 4.4
+    },
+    {
+     "title": "Kroonlaan 3-4, IJsselstein",
+     "area": 728,
+     "rent_m2": 116.75824175824175,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/ijsselstein/object-80826391-kroonlaan-3-4/",
+     "km": 4.7
+    },
+    {
+     "title": "Korte Schaft 9, Houten",
+     "area": 2411,
+     "rent_m2": 70.0,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/houten/object-43332429-korte-schaft-9/",
+     "km": 5.0
+    },
+    {
+     "title": "Hagenweg 7-C, Vianen (UT)",
+     "area": 1100,
+     "rent_m2": 56.81818181818182,
+     "url": "https://www.fundainbusiness.nl/bedrijfshal/vianen-ut/object-88613843-hagenweg-7-c/",
+     "km": 6.7
+    }
+   ]
+  },
+  "deal": {
+   "ask": 1795000,
+   "area": 1448,
+   "rent": 136197,
+   "exit_yield": 0.0725,
+   "price": 1430000.0,
+   "new_build": false,
+   "shell": false,
+   "owner_costs": 3992.0,
+   "lease_month": 5,
+   "rent_free": 3,
+   "horizon": 12,
+   "vat_lease": true
+  },
+  "breakeven": 1585180.7820197046,
+  "breakeven_discount": 0.11689092923693334,
+  "offer": 1430000.0,
+  "offer_discount": 0.20334261838440115,
+  "passes": false,
+  "profit_at_ask": -234997.52413793094,
+  "net_at_offer": 140780.00544827594,
+  "sale": 1823517.2413793104,
+  "checks": [
+   "уже был в отчёте",
+   "для выхода в ноль нужна скидка 11.7%, больше 11%",
+   "предложение на 20.3% ниже цены, больше 15%"
+  ]
+ }
+]

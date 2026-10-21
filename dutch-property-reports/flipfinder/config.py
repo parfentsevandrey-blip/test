@@ -60,7 +60,9 @@ NEARBY = {
 EXIT_YIELD = {"ai-amsterdam": 0.070, "ai-schiphol": 0.0725, "rotterdam": 0.075, "eindhoven": 0.0775,
               "nijmegen": 0.085, "agriport": 0.0825}
 EXIT_YIELD_CITY = {"almere": 0.0725, "lelystad": 0.0825, "purmerend": 0.0775, "zaandam": 0.0750,
-                   "helmond": 0.0800, "arnhem": 0.0825, "alkmaar": 0.0800, "heerhugowaard": 0.0825}
+                   "helmond": 0.0800, "arnhem": 0.0825, "alkmaar": 0.0800, "heerhugowaard": 0.0825,
+                   # район Утрехта — по оценке: на 21.10.2026 сданных складов с указанной арендой там почти нет
+                   "utrecht": 0.0700, "nieuwegein": 0.0725, "houten": 0.0725, "ijsselstein": 0.0750, "vianen": 0.0750}
 EXIT_ADJ = {"poor": 0.0025, "after_2015": -0.0025, "large_2000m2": 0.0025,
             "lease_ends_2060": 0.005,          # земля в аренде до 2060 года и раньше
             "nearby": 0.0025}                  # объект вне наших районов: инвесторов меньше

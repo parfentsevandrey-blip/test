@@ -281,7 +281,8 @@
       "price": "€ 1.895.000",
       "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuwegein/object-43276397-grote-wade-17-19/",
       "reports": [
-        "report-2026-09-01-locations.json"
+        "report-2026-09-01-locations.json",
+        "Флип-модель Kryptonstraat 110 Зутермер, Veldwade 14-16 Ниувегейн, Grote Wade 17-19 Ниувегейн (21.10.26).pdf"
       ]
     },
     {
@@ -413,6 +414,16 @@
       "url": "https://www.fundainbusiness.nl/en/belegging/rotterdam/object-80864426-koepelstraat-30-32/",
       "reports": [
         "report-2026-08-24-warehouses.json"
+      ]
+    },
+    {
+      "slug": "kryptonstraat-110-zoetermeer",
+      "title": "Kryptonstraat 110, Zoetermeer",
+      "city": "Zoetermeer",
+      "price": "€ 1.995.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/zoetermeer/object-44532208-kryptonstraat-110/",
+      "reports": [
+        "Флип-модель Kryptonstraat 110 Зутермер, Veldwade 14-16 Ниувегейн, Grote Wade 17-19 Ниувегейн (21.10.26).pdf"
       ]
     },
     {
@@ -760,6 +771,16 @@
       "url": "https://www.fundainbusiness.nl/bedrijfshal/rotterdam/object-44546024-van-riemsdijkweg-17/",
       "reports": [
         "report-2026-10-20-flip-van-riemsdijkweg-17.json"
+      ]
+    },
+    {
+      "slug": "veldwade-14-16-nieuwegein",
+      "title": "Veldwade 14-16, Nieuwegein",
+      "city": "Nieuwegein",
+      "price": "€ 3.150.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/nieuwegein/object-89621252-veldwade-14-16/",
+      "reports": [
+        "Флип-модель Kryptonstraat 110 Зутермер, Veldwade 14-16 Ниувегейн, Grote Wade 17-19 Ниувегейн (21.10.26).pdf"
       ]
     },
     {
