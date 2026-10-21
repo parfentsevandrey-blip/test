@@ -178,8 +178,12 @@ struct CatalogRow: View {
                 }
                 Text("\(card.lab) · \(card.paramsText) параметров · \(card.quantizer)")
                     .font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
-                HStack(spacing: 5) {
-                    ForEach(Array(card.tags.sorted { $0.rawValue < $1.rawValue }.prefix(3)), id: \.self) { TagPill(tag: $0) }
+                // Сколько тегов поместится — столько и показываем, строка не должна раздвигать список.
+                let tags = card.tags.sorted { $0.rawValue < $1.rawValue }
+                ViewThatFits(in: .horizontal) {
+                    ForEach([3, 2, 1, 0], id: \.self) { n in
+                        HStack(spacing: 5) { ForEach(Array(tags.prefix(n)), id: \.self) { TagPill(tag: $0) } }
+                    }
                 }
             }
             Spacer(minLength: 10)
@@ -194,9 +198,9 @@ struct CatalogRow: View {
                 }
             }
             .frame(width: 92, alignment: .trailing)
-            if let fit { FitBadge(fit: fit).frame(width: 128, alignment: .trailing) }
+            if let fit { FitBadge(fit: fit).frame(width: 120, alignment: .trailing) }
             InstallButton(card: card, prominent: false)
-                .frame(width: 128, alignment: .trailing)
+                .frame(width: 122, alignment: .trailing)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 11)
