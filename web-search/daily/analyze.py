@@ -281,10 +281,12 @@ def outcomes(df, day, days):
 
 
 def validation(day, days, df):
-    """Проверка исходом: доля ушедших (снят без перепубликации) за 7 и 14 дней -- у горячих против остальных."""
+    """Проверка исходом: через 1, 7 и 14 дней -- доля ушедших (снят без перепубликации) и забронированных
+    застройщиком у горячих лотов против остальных, по квинтилям excess и вердиктам внутри сегмента."""
     out = []
     cur = set(df.index)
-    for lag in (7, 14):
+    booked_now = df["booked"].eq(True)
+    for lag in (1, 7, 14):
         d0 = (dt.date.fromisoformat(day) - dt.timedelta(days=lag)).isoformat()
         p = os.path.join(DATA, d0, "metrics.jsonl.gz")
         if not os.path.exists(p):
@@ -292,11 +294,16 @@ def validation(day, days, df):
         m = pd.DataFrame(read_jsonl(p)).set_index("id")
         new_fp = set(df.loc[~df.index.isin(m.index), "fp"])
         m["gone"] = ~m.index.isin(cur) & ~m["fp"].isin(new_fp)
+        was = m["booked"].eq(True) if "booked" in m else pd.Series(False, index=m.index)
+        m["booked_new"] = m.index.map(booked_now).fillna(False).astype(bool) & ~was
+        m["verdict"] = m["verdict"].fillna("").replace("", "не кандидат")
         q = np.ceil(m.groupby("seg")["excess"].rank(pct=True) * 5).clip(1, 5).astype(int)  # квинтили внутри сегмента
         m["q"] = q.map({1: "Q1 низкий", 2: "Q2", 3: "Q3", 4: "Q4", 5: "Q5 высокий"})
         for (seg, key), g in [((s, "квинтиль excess " + str(q)), g) for (s, q), g in m.groupby(["seg", "q"], observed=True)] + \
-                [((s, "вердикт " + (v or "не кандидат")), g) for (s, v), g in m.groupby(["seg", "verdict"])]:
-            out.append({"лаг, дн": lag, "сегмент": seg, "группа": key, "лотов": len(g), "ушло, %": round(100 * g["gone"].mean(), 1)})
+                [((s, "вердикт " + v), g) for (s, v), g in m.groupby(["seg", "verdict"])]:
+            out.append({"лаг, дн": lag, "сегмент": seg, "группа": key, "лотов": len(g), "ушло": int(g["gone"].sum()),
+                        "ушло, %": round(100 * g["gone"].mean(), 2), "забронировано": int(g["booked_new"].sum()),
+                        "забронировано, %": round(100 * g["booked_new"].mean(), 2)})
     return pd.DataFrame(out)
 
 
@@ -357,7 +364,7 @@ def main():
     hot = list(dict.fromkeys(list(v[v["candidate"]].sort_values("excess", ascending=False).index) +
                              list(v.sort_values("excess", ascending=False).index)))[: a.hot]
     json.dump([int(i) for i in hot], open(os.path.join(DATA, "hot.json"), "w"))
-    cols = ["id", "seg", "fp", "excess", "idx_peer", "vpd", "vpd_n", "rel_price", "verdict", "flags", "price"]
+    cols = ["id", "seg", "fp", "excess", "idx_peer", "vpd", "vpd_n", "rel_price", "verdict", "flags", "price", "booked"]
     write_jsonl(os.path.join(DATA, a.day, "metrics.jsonl.gz"),
                 (dict(zip(cols, (None if pd.isna(x) else x for x in r))) for r in v[cols].itertuples(index=False)))
 
@@ -392,7 +399,12 @@ def main():
         devhot.head(500).to_excel(xw, sheet_name="Горячие у застройщиков", index=False)
         lots[lots["Флаги"] != ""].head(3000).to_excel(xw, sheet_name="Отсев и флаги", index=False)
         if not ev.empty:
-            ev.join(df[["excess", "verdict"]], how="left").to_excel(xw, sheet_name="События дня")
+            meta = df[["excess", "verdict"]]
+            prev_days = [x for x in days if x < a.day]
+            pm = os.path.join(DATA, prev_days[-1], "metrics.jsonl.gz") if prev_days else ""
+            if os.path.exists(pm):  # снятые лоты: интерес на момент вчерашнего слепка
+                meta = meta.combine_first(pd.DataFrame(read_jsonl(pm)).set_index("id")[["excess", "verdict"]])
+            ev.join(meta, how="left").to_excel(xw, sheet_name="События дня")
         if not val.empty:
             val.to_excel(xw, sheet_name="Проверка исходом", index=False)
         if bg is not None:
