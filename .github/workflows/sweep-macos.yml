@@ -1,0 +1,68 @@
+name: Sweep (macOS)
+
+on:
+  push:
+    paths:
+      - "Sweep/**"
+      - ".github/workflows/sweep-macos.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: sweep-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: Sweep
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          echo "Xcode: $XCODE"; sw_vers; swift --version
+
+      - name: Build Sweep.app + DMG
+        run: ./scripts/build.sh
+
+      # Выдуманный «дом»: мусор и следы программы найдены, всё ценное пережило очистку и удаление программы.
+      - name: Self-test safety
+        run: dist/Sweep.app/Contents/MacOS/Sweep --selftest-safety "$RUNNER_TEMP"
+
+      # Настоящий дом раннера — только сканирование: сводка и инварианты безопасности на живых данных.
+      - name: Self-test real home (read-only)
+        run: dist/Sweep.app/Contents/MacOS/Sweep --selftest-real
+
+      - name: Self-test render
+        run: dist/Sweep.app/Contents/MacOS/Sweep --selftest-render "$RUNNER_TEMP/render"
+
+      # Настоящее окно в нескольких модулях (сканирование только для чтения) — проверяем раскладку глазами.
+      - name: UI screenshots
+        run: |
+          for M in smart cleanup uninstaller space performance; do
+            dist/Sweep.app/Contents/MacOS/Sweep --demo-ui $M &
+            PID=$!
+            sleep 14
+            screencapture -x "$RUNNER_TEMP/render/window-$M.png" || echo "screencapture не сработал"
+            kill $PID 2>/dev/null || true
+            sleep 2
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Sweep-render
+          path: ${{ runner.temp }}/render
+          compression-level: 0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Sweep-dmg
+          path: Sweep/dist/Sweep.dmg
+          if-no-files-found: error
+          compression-level: 0
