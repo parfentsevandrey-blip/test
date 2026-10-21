@@ -73,6 +73,16 @@
       ]
     },
     {
+      "slug": "artemisweg-145-j-lelystad",
+      "title": "Artemisweg 145-J, Lelystad",
+      "city": "Lelystad",
+      "price": "€ 270.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/lelystad/object-43351201-artemisweg-145-j/",
+      "reports": [
+        "Флип-модель Artemisweg 145-J Лелистад (21.10.26).pdf"
+      ]
+    },
+    {
       "slug": "artemisweg-173-lelystad",
       "title": "Artemisweg 173, Lelystad",
       "city": "Lelystad",
@@ -443,6 +453,16 @@
       "url": "https://www.bijabram.nl/property/mercuriusweg-19-waddinxveen-216",
       "reports": [
         "report-2026-08-24-warehouses.json"
+      ]
+    },
+    {
+      "slug": "moezelhavenweg-57-59-amsterdam",
+      "title": "Moezelhavenweg 57-59, Amsterdam",
+      "city": "Amsterdam",
+      "price": "€ 365.000",
+      "url": "https://www.fundainbusiness.nl/bedrijfshal/amsterdam/object-80860075-moezelhavenweg-57-59/",
+      "reports": [
+        "Флип-модель Moezelhavenweg 57-59 Амстердам (21.10.26).pdf"
       ]
     },
     {

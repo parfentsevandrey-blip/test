@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import re
 import statistics as st
+from datetime import date
 
 from flipfinder import config as C
 
@@ -13,7 +14,7 @@ LET = re.compile(r"verhuurd aan|is verhuurd|volledig verhuurd|lopende huuroveree
                  r"in verhuurde staat")
 STATUS_BAD = re.compile(r"onder bod|onder optie|verkocht|verhuurd", re.I)
 BUILDING = re.compile(r"momenteel in aanbouw|in aanbouw|start bouw|bouw start|bouw (?:is )?gestart|nog te realiseren|"
-                      r"op tekening|\bverrijst\b", re.I)
+                      r"op tekening|\bverrijst\b|sloop van de (?:bestaande )?pand|nieuwbouw van \d+ ", re.I)
 NOT_BUSINESS = re.compile(r"woning te bouwen|woonbestemming|transformatie naar wonen|ontwikkellocatie|(?<!geen )bedrijfswoning|"
                           r"onderdeel (?:uit )?van een (?:buurt)?winkelcentrum|horecapand|restaurant te koop", re.I)
 TENDER = re.compile(r"\binschrijving\b|\bveiling\b|biedingsprocedure|bieden vanaf", re.I)
@@ -59,9 +60,12 @@ def owner_costs(desc: str) -> dict:
     m = re.search(r"afgekocht tot(?: en met)?\s*(?:\d{1,2}[- ][\w-]+[- ])?(20\d\d|21\d\d)", low)
     if m:
         out["bought_off_until"] = int(m.group(1))
-    m = re.search(r"erfpacht[^.]{0,120}?(?:eindigt|einddatum|loopt tot|tot en met|tot)\D{0,30}(20\d\d|21\d\d)", low)
+    m = re.search(r"erfpacht[^.]{0,120}?(?:eindigt|einddatum|loopt tot|tot en met|tot)(?:\s+op)?\s*"
+                  r"(?:\d{1,2}[- ][a-z]+[- ])?\D{0,20}?(20\d\d|21\d\d)", low)
     if m and "eeuwigdurend" not in low:
         out["lease_end"] = int(m.group(1))
+    if out["lease_end"] and re.search(r"tot (?:deze|die|die datum|het einde)[^.]{0,20}afgekocht|afgekocht tot het einde", low):
+        out["bought_off_until"] = out["lease_end"]           # «De erfpacht is tot deze datum afgekocht»
     out["perpetual"] = "eeuwigdurend" in low
     return out
 
@@ -182,7 +186,7 @@ def exit_yield(rec: dict, oc: dict, ring: str = "zone") -> tuple[float, list[str
         notes.append("больше 2.000 м²")
     if ring != "zone":
         base += C.EXIT_ADJ["nearby"]
-        notes.append("объект вне основных районов")
+        notes.append("меньше спроса инвесторов, чем в крупных промзонах")
     if oc["lease_end"] and oc["lease_end"] <= 2060:
         base += C.EXIT_ADJ["lease_ends_2060"]
         notes.append(f"право на землю до {oc['lease_end']} года")
@@ -204,7 +208,8 @@ def reject(rec: dict, shown: set[str]) -> list[str]:
         why.append("уже в сделке")
     if LET.search(desc):
         why.append("уже сдан")
-    if BUILDING.search(desc) or BUILDING.search(str(rec.get("year") or "") + str(rec.get("period") or "")):
+    y = year_of(rec)
+    if BUILDING.search(desc) or (y and y > date.today().year):
         why.append("ещё строится")
     if PROJECT.search(desc):
         why.append("проект из многих юнитов: цена «от», площадь другого юнита")

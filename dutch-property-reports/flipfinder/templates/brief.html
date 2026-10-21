@@ -17,7 +17,7 @@
     <div class="hero" style="background-image: url('{{ hero }}')">
       <div class="hero-top"><span><b>Флип за 12 месяцев</b>, {{ date }}</span><span>1 из 5</span></div>
       <div class="hero-title">
-        <h1>{{ street }}</h1>
+        <h1>{{ street | nowrap }}</h1>
         <div class="city">{{ city }}</div>
         <div class="hero-sub">{{ subline }}</div>
       </div>
@@ -68,7 +68,7 @@
   <div class="body">
     <img class="map" src="{{ map }}" alt="">
     <div class="cols natural">
-      <div class="col">
+      <div class="col" id="place-left">
         <div>
           <h3>Дорога</h3>
           <table class="roads">{% for r in roads %}<tr><td>{% if r.shield %}<span class="shield">{{ r.shield }}</span>{% endif %}{{ r.label }}</td><td class="num">{{ r.value }}</td></tr>{% endfor %}</table>
@@ -77,8 +77,9 @@
           <h3>Кто здесь снимет склад</h3>
           {% for p in why %}<p>{{ p | md }}</p>{% endfor %}
         </div>
+        <div class="slot" data-slot="left"></div>
       </div>
-      <div class="col">
+      <div class="col" id="place-right">
         <div>
           <h3>Аренда рядом, € за м² в год</h3>
           <table>
@@ -86,14 +87,15 @@
             {% for c in comps %}<tr class="{{ 'mine' if c.mine else '' }}"><td>{{ c.name }}</td><td class="num">{{ c.area }}</td><td class="num">{{ c.rate }}</td></tr>{% endfor %}
           </table>
         </div>
-        <div class="panel stretch">
-          <h3>Сколько будет платить арендатор</h3>
-          <div class="big">{{ rent.month }} в месяц</div>
-          <p>{{ rent.text | md }}</p>
-          <div class="note">{{ rent.note }}</div>
+        <div class="slot" data-slot="right">
+          <div class="panel rentbox" id="rentbox">
+            <div><h3>Сколько будет платить арендатор</h3><div class="big">{{ rent.month }} в месяц</div></div>
+            <div><p>{{ rent.text | md }}</p><div class="note">{{ rent.note }}</div></div>
+          </div>
         </div>
       </div>
     </div>
+    <div class="slot" data-slot="full"></div>
   </div>
   <div class="foot"><span>Карта: картографические данные © Google. Дорога — по маршруту OSRM.</span><span></span></div>
 </section>

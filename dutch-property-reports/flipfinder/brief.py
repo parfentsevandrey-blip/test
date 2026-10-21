@@ -1,6 +1,6 @@
 """Шаг 3: отчёт по одному объекту — 5 страниц о сделке и фотографии.
 
-    python3 -I flipfinder/brief.py RUN_DIR [МЕСТО_В_СПИСКЕ] [--publish]
+    python3 -I flipfinder/brief.py RUN_DIR [МЕСТО_В_СПИСКЕ] [--publish] [--url=часть_ссылки]
 
 Берёт объект из RUN_DIR/shortlist.json (или candidates.json, если порог не прошёл никто),
 собирает HTML по шаблону templates/brief.html и печатает PDF через Chromium: в папку отчёта,
@@ -33,6 +33,7 @@ HERE = Path(__file__).resolve().parent
 FONTS = C.ROOT / "assets" / "fonts"
 CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
 POIS = C.ROOT / "data" / "flip" / "pois.json"
+NEAR_MIN = 35                  # компании и площадки дальше 35 минут в отчёт не идут
 
 CITY_RU = {"rotterdam": "Роттердам", "amsterdam": "Амстердам", "almere": "Алмере", "diemen": "Димен",
            "hoofddorp": "Хофддорп", "nieuw-vennep": "Ниу-Веннеп", "schiphol-rijk": "Схипхол-Рейк",
@@ -204,7 +205,7 @@ def cash_chart(rows: list[dict]) -> dict:
     n = len(inv)
     peak, final = max(inv), inv[-1]
     peak_m = inv.index(peak)
-    top, bottom = peak * 1.5, min(final * 1.9, -peak * 0.16)
+    top, bottom = peak * 1.8, min(final * 1.9, -peak * 0.16)
     X = lambda m: 100 * m / n                                  # noqa: E731
     Y = lambda v: 100 * (top - v) / (top - bottom)             # noqa: E731
     line = " ".join(f"{X(m):.2f},{Y(v):.2f} {X(m + 1):.2f},{Y(v):.2f}" for m, v in enumerate(inv))
@@ -248,7 +249,7 @@ def features_ru(rec: dict) -> list[str]:
 BELEGGING_ADDRESS = re.compile(r"te koop: (.+?) (\d{4} ?[A-Z]{2}) (.+?) \[")
 
 
-def investor_comps(listings: list[dict], here: tuple[float, float], limit: int = 3) -> list[dict]:
+def investor_comps(listings: list[dict], here: tuple[float, float], limit: int = 2) -> list[dict]:
     """Сданные склады и мастерские на продаже не дальше 15 км, где в объявлении названа аренда; ближайшие первыми."""
     out = []
     for r in listings:
@@ -279,13 +280,13 @@ def neighbours(pick: dict, limit: int = 4) -> list[dict]:
         rows = []
         for p in pois:
             r = locate.drive((lat, lon), tuple(p["at"]))
-            if r:
+            if r and r[1] <= NEAR_MIN:
                 rows.append({"label": p["label"], "km": r[0], "min": round(r[1]), "about": p["about"]})
         return sorted(rows, key=lambda r: r["min"])[:limit]
     # в таблицу дорог — только то, что объяснено в описании района: каждая названная компания с пояснением
     body = pick["place"].get("body") or ""
     rows = [{"label": a["label"], "km": a["km"], "min": a["min"], "about": about(a["label"], pick["territory"])}
-            for a in locate.anchors(lat, lon, pick["territory"], 8) if a["km"] is not None]
+            for a in locate.anchors(lat, lon, pick["territory"], 8) if a["km"] is not None and a["min"] <= NEAR_MIN]
     return [r for r in rows if r["about"] or f"**{r['label']}**" in body][:limit]
 
 
@@ -305,7 +306,7 @@ def why_here(pick: dict, near: list[dict]) -> list[str]:
         return [n["about"] for n in near[:3] if n["about"]]
     body = place.get("body") or ""
     lead = (f"Здание расположено в районе **{place['short']}**." if place["ring"] == "zone" else
-            f"Здание расположено в {place.get('drive_min')}\u00a0минутах от района **{place['short']}**.")
+            f"От здания до промзоны **{place['short']}** — {place.get('drive_min')}\u00a0минут на машине.")
     out = [f"{lead} {body}"]
     for n in near:
         if n["about"] and n["about"] not in out and f"**{n['label']}**" not in body:
@@ -389,12 +390,15 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
     hall, office = rec.get("hall"), rec.get("office")
     desc = re.sub(r"\s+", " ", rec.get("desc") or "")
     floors = [(FLOOR_RU[m.group(1).lower()], int(m.group(2))) for m in FLOORS.finditer(desc)]
-    if len(floors) >= 2 and abs(sum(a for _, a in floors) - area) <= 0.1 * area:
+    if (len(floors) >= 2 and len({n for n, _ in floors}) == len(floors)
+            and abs(sum(a for _, a in floors) - area) <= 0.1 * area):
         parts = ", ".join(f"{name} {num(a)} м²" for name, a in floors)
     else:
         parts = "; ".join(x for x in [f"зал {num(hall)} м²" if hall and (office or hall != area) else "",
                                       f"офисы {num(office)} м²" if office else ""] if x)
     height = re.sub(r"\s*m$", "\u00a0м", rec.get("height") or "") or "не указана"
+    orig_m = re.search(r"€\s*([\d.]+)", rec.get("orig_price") or "")
+    orig = fetch.num(orig_m.group(1)) if orig_m else None
     facts = [
         [("Площадь", f"{num(area)} м²" + (f": {parts}" if parts else "")
           + (f" (по описанию; {pick['area_note'].split(', ')[0]})" if pick.get("area_note") else "")),
@@ -405,10 +409,14 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
         [("Цена продавца", f"{eur(ask)}, налог 10,4\u00a0% за покупателем"), ("Цена за м²", eur(ask / area, 1)),
          ("Арендатор", "нет, здание свободно"), ("Земля", f"в аренде, €\u00a0{num(oc['canon'])} в год" if oc["canon"] else "в аренде" if oc["lease_end"]
           else "в собственности, без платы" if re.search(r"eigen grond", desc, re.I) else "не указано"),
-         ("На продаже", f"с {since}" if since and re.match(r"\d+ [а-я]", since) else (since or "не указано"))],
+         ("На продаже", (f"с {since}" if since and re.match(r"\d+ [а-я]", since) else (since or "не указано"))
+          + (f"; цена снижена с {eur(orig)}" if orig and orig > ask else ""))],
     ]
     feats = features_ru(rec)
     blocks = []
+    note = work / "note.md"                  # заметка аналитика: то, чего нет в таблицах объявления
+    if note.exists():
+        blocks.append(("Важно", [p.strip() for p in note.read_text(encoding="utf-8").split("\n\n") if p.strip()]))
     if feats:
         blocks.append(("Оснащение", [(feats[0][0].upper() + feats[0][1:] + (", " + ", ".join(feats[1:]) if len(feats) > 1 else "") + ".")]))
     cat = re.search(r"(?:milieu)?categorie (\d\.\d|\d)", desc, re.I)
@@ -544,6 +552,8 @@ def context(pick: dict, rec: dict, cands: list[dict], listings: list[dict], work
 def render(ctx: dict, out_pdf: Path, work: Path) -> list[dict]:
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(HERE / "templates"), autoescape=True)
     env.filters["md"] = lambda t: Markup(md(t))
+    env.filters["nowrap"] = lambda t: Markup(" ".join(f'<span style="white-space: nowrap">{H.escape(w)}</span>' if "-" in w
+                                                      else H.escape(w) for w in str(t).split(" ")))
     css = env.from_string((HERE / "templates" / "brief.css").read_text(encoding="utf-8")).render(fonts=FONTS.resolve().as_uri())
     page = work / "brief.html"
     page.write_text(env.get_template("brief.html").render(**ctx, css=Markup(css)), encoding="utf-8")
@@ -552,6 +562,23 @@ def render(ctx: dict, out_pdf: Path, work: Path) -> list[dict]:
         browser = p.chromium.launch(executable_path=CHROME, headless=True)
         tab = browser.new_page()
         tab.goto(page.resolve().as_uri(), wait_until="networkidle")
+        # блок аренды — туда, где колонки стр. 3 выходят ровнее всего: справа, слева или на всю ширину
+        tab.evaluate("""() => {
+            const box = document.getElementById('rentbox');
+            if (!box) return;
+            const L = document.getElementById('place-left'), R = document.getElementById('place-right');
+            const tall = el => { const k = [...el.children].filter(c => c.getBoundingClientRect().height > 0);
+                                 return k.length ? k[k.length - 1].getBoundingClientRect().bottom - k[0].getBoundingClientRect().top : 0; };
+            let best = null;
+            for (const slot of document.querySelectorAll('.slot')) {
+                slot.appendChild(box);
+                box.classList.toggle('wide', slot.dataset.slot === 'full');
+                const diff = Math.abs(tall(L) - tall(R));
+                if (!best || diff < best.diff) best = {slot, diff};
+            }
+            best.slot.appendChild(box);
+            box.classList.toggle('wide', best.slot.dataset.slot === 'full');
+        }""")
         # кадр-заполнитель не нужен, если ему досталось меньше 3 см
         tab.evaluate("""() => document.querySelectorAll('img.fill').forEach(i => {
             if (i.getBoundingClientRect().height < 113) i.style.display = 'none'; })""")
@@ -579,10 +606,10 @@ def register(pick: dict, report: str) -> None:
     registry.save(C.ROOT / "data", data)
 
 
-def main(run_dir: Path, rank: int = 1, publish: bool = False) -> None:
+def main(run_dir: Path, rank: int = 1, publish: bool = False, url: str | None = None) -> None:
     short = json.loads((run_dir / "shortlist.json").read_text(encoding="utf-8"))
     cands = json.loads((run_dir / "candidates.json").read_text(encoding="utf-8"))
-    pick = (short or cands)[rank - 1]
+    pick = next(c for c in cands if url in c["url"]) if url else (short or cands)[rank - 1]
     listings = fetch.load_jsonl(run_dir / "listings.jsonl")
     rec = next(r for r in listings if r["url"] == pick["url"])
     slug = re.search(r"object-\d+-([a-z0-9-]+)/?$", pick["url"]).group(1)
@@ -604,4 +631,5 @@ def main(run_dir: Path, rank: int = 1, publish: bool = False) -> None:
 
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    main(Path(args[0]), int(args[1]) if len(args) > 1 else 1, publish="--publish" in sys.argv)
+    url = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--url=")), None)
+    main(Path(args[0]), int(args[1]) if len(args) > 1 else 1, publish="--publish" in sys.argv, url=url)

@@ -126,6 +126,9 @@ h1 { font-family: var(--display); font-weight: 600; font-size: 25pt; line-height
 .roads td:first-child { width: 62%; }
 .shield { display: inline-block; background: var(--loss); color: #fff; font-weight: 700; font-size: 8pt; line-height: 1;
           padding: 1mm 1.6mm 0.9mm; border-radius: 1mm; margin-right: 1.5mm; }
+.slot:empty { display: none; }
+.slot[data-slot="full"] { margin-top: 5mm; }
+.rentbox.wide { display: grid; grid-template-columns: 80mm 1fr; gap: 8mm; align-items: start; }
 .big { font-family: var(--display); font-weight: 500; font-size: 18pt; line-height: 1.15; letter-spacing: -0.01em; margin: 1mm 0 2mm; }
 
 /* ---------- стр. 4 */
@@ -140,8 +143,8 @@ h1 { font-family: var(--display); font-weight: 600; font-size: 25pt; line-height
 .step .more { font-size: 8.3pt; line-height: 1.35; margin-top: 0.8mm; }
 .result { display: flex; flex-direction: column; }
 /* вложенные средства по месяцам: линия и подписи в процентах блока, блок забирает свободную высоту колонки */
-.cash { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 55mm; }
-.cash .plot { flex: 1 1 auto; position: relative; margin: 1mm 0 0 7mm; }
+.cash { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 38mm; }
+.cash .plot { flex: 1 1 auto; position: relative; margin: 3mm 0 0 7mm; }
 .cash svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .cash .zero { position: absolute; left: -7mm; transform: translateY(-50%); font-size: 7.5pt; color: var(--steel); }
 .cash .lbl { position: absolute; font-size: 8pt; line-height: 1.25; white-space: nowrap; color: var(--steel); }
