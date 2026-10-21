@@ -51,6 +51,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-35 | 2026-10-20 | 147,071 | 222 | 82 | 118 | 147,493 | +3,382 (databases 195 to 204: 106 records in 110 files, migrations 194→195 to 203→204, tests +0) |
 | CP-36 | 2026-10-20 | 147,853 | 408 | 88 | 118 | 148,467 | +974 (the on-device assistant: index, classifier, answers, screen and 20 new tests, 37 in all; no record files; DATABASE_VERSION unchanged at 204) |
 | CP-37 | 2026-10-21 | 147,861 | 454 | 88 | 118 | 148,521 | +54 (economics paused at the web-search budget: model and sphere lists, generator support, two record kinds, tests; no economics records yet) |
+| CP-38 | 2026-10-21 | 151,310 | 457 | 88 | 118 | 151,973 | +3,452 (economics batch 1: databases 205 to 212, 276 records, each file reviewed against its case pool; 49 records name a documented case; generator and tests extended) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -2593,3 +2594,49 @@ The writer agents reported these as checked by search before they stopped. I hav
 ### Next
 
 The steps are in ECONOMICS.md. The first is to raise the web-search budget, which is the user's decision. Until then, the economics work stays as it is.
+
+## CP-38: economics batch 1 (databases 205 to 212)
+
+Mood: relieved that the pipeline works from the case pools to the app, and uneasy about the content. Most records are inferences. The pools are small because the search budget for a turn was small, and every inferred field says so.
+
+Totals: Kotlin main 151,310 (CP-37: 147,861), Kotlin test 457 (454), XML 88 (88), Gradle and project files 118 (118), total 151,973 (148,521).
+
+### What changed
+
+- Eight economics databases are in the app: 205 (the models), 206 (the compromise across the spheres) and 207 to 212 (the six education practices). That is 276 records, in generated files `Db205Economics.kt` to `Db212Economics.kt`. `SeedCatalog.kt` now has version 212, with 6,532 records in all.
+- Case pools for 205 and 207 to 212 under `tools/economics/pools/`: 37 cases in all, 7 for 205, 11 for 207, 4 each for 208, 209, 210 and 212, and 3 for 211.
+- The records themselves are in `tools/economics/db205.json` to `db212.json`, with `db206.json` as the spheres compromise.
+- `tools/economics/models.json`: four entries checked by web search (social market economy 1947, market socialism 1938, Islamic economics 1963, Buddhist economics 1966). Market socialism moved from 1936 to 1938, and the Keynesian core sentence now says that taxes move against spending in slumps.
+- The closing sentence "There is no documented case in the pool." now marks every inferred field, best and worst, in every database. It was applied to 188 fields in one step, on top of the reviewers' own changes.
+- `SeedDataTest`: the rare-records test now checks the coding databases only; the economics databases have no rare records. This is the same kind of fix as the kinds test in CP-37.
+- `README.md`: the introduction names the eight economics databases in the app. `ECONOMICS.md` is rewritten: the status, the method, the weak points, and the two directions for continuing.
+
+### Problems found and fixed
+
+- The first batch of writers ran into the search budget before they wrote any file. The pools were then built separately, and the writers worked from them without searching. The records now cite only pool cases, and everything else is labelled.
+- Reviewers applied the closing sentence differently: some to worst fields only, some to best fields too. It is now applied to every inferred field.
+- A Keynesian sentence in `models.json` said taxes rise in slumps. It is corrected.
+- One record of 209 said that baselines differ between sources. The pool gives that caveat for percentages, not counts, so the sentence was removed.
+- The reviewer of 211 found a compromise sentence with follow-up periods that no pool case gives. It is corrected.
+- Five fields in the pool files named Wikipedia. The generator refuses that word in records, so they now say "online encyclopaedia (secondary)".
+- `SeedDataTest.rareRecordsArePresentInEachDatabase` required rare records in every database, and the economics databases have none. The test now checks the coding databases only.
+
+### Limits, stated plainly
+
+- 49 of the 276 records name a documented case. The rest are principle-based inferences, and each field says so.
+- Models: 34 of the 36 entries in `models.json` are from memory and are not checked. The file says so.
+- Teacher pay (212): no verified figure for the Soviet Union. The pool's pay evidence is four cases, one of them the OECD 2026 average.
+- Several pool cases are weak or caveated, and the records keep the caveats where they use them: the Nazi-economy case, the Komvux case and the London Economics link.
+- The compromises are proposals, not tested policies.
+- No run on a device or in the emulator, no lint and no release build.
+
+### How I checked it
+
+- `./gradlew testDebugUnitTest assembleDebug`: build successful; 40 tests, 0 failures. The three `EconomicsSeedTest` tests pass: each of 205 and 207 to 212 has 36 model records and one compromise, and 206 has 17 compromises. `app-debug.apk` built, 15.3 MB.
+- `python3 tools/build_catalogue.py`: checks passed for 212 databases and 6,532 records; the README counts and the catalogue were regenerated.
+- Each database file was reviewed against its pool by a second agent that could not search; each reviewed version was committed.
+- Line counts from `count_lines.py`, at HEAD and in the working tree.
+
+### Next
+
+`ECONOMICS.md` sets out the two directions: deepen the pools of batch 1, or continue with databases 213 to 281. Both need web searches, and neither is started.

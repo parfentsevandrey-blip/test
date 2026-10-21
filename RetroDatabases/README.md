@@ -1,11 +1,11 @@
 # Retro Databases
 
-An Android application in Kotlin, Jetpack Compose and Room. Inside are databases of coding history, listed under *What is inside*. Databases of economics are planned; see [ECONOMICS.md](ECONOMICS.md).
+An Android application in Kotlin, Jetpack Compose and Room. Inside are databases of coding history, listed under *What is inside*, and the first eight databases of economics (205 to 212): the economic models, a compromise across the spheres, and the education practices. The rest of the economics plan is in [ECONOMICS.md](ECONOMICS.md).
 
 ## What is inside
 
 <!-- BEGIN GENERATED OVERVIEW -->
-Inside are 204 databases of coding history, from 0 to 2036. The table gives each one's years, records and rare records. The kinds and titles of every database are in [CATALOGUE.md](CATALOGUE.md).
+Inside are 204 databases of coding history, from 0 to 2036, and 8 databases of economics: for each part of society, the best and worst practice of each economic model, and a compromise. The table gives each one's years, records and rare records. The kinds and titles of every database are in [CATALOGUE.md](CATALOGUE.md).
 
 | Database | Years | Records | Rare |
 |---|---|---:|---:|
@@ -213,7 +213,15 @@ Inside are 204 databases of coding history, from 0 to 2036. The table gives each
 | 202 | 20 to 30 | 10 | 6 |
 | 203 | 10 to 20 | 10 | 8 |
 | 204 | 0 to 10 | 10 | 7 |
-| **All** | | **6,256** | **2117** |
+| 205 | 800 to 2026 | 37 | 0 |
+| 206 | 800 to 2026 | 17 | 0 |
+| 207 | 800 to 2026 | 37 | 0 |
+| 208 | 800 to 2026 | 37 | 0 |
+| 209 | 800 to 2026 | 37 | 0 |
+| 210 | 800 to 2026 | 37 | 0 |
+| 211 | 800 to 2026 | 37 | 0 |
+| 212 | 800 to 2026 | 37 | 0 |
+| **All** | | **6,532** | **2117** |
 <!-- END GENERATED OVERVIEW -->
 
 
@@ -253,9 +261,9 @@ The assistant does not generate new text or call a service: it finds the records
 ## Structure
 
 <!-- BEGIN GENERATED STRUCTURE -->
-- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and one generic migration for each version from 1 to 204 (`seedMigrations`).
-- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all 204 databases: `Db1*.kt` to `Db204*.kt`, one file per kind; `SeedCatalog.kt`, generated from `tools/databases.json`; the helper that builds a record (`SeedEntry.kt`).
-- `tools` — `databases.json` (the databases, their years and colours) and `build_catalogue.py`, which regenerates `SeedCatalog.kt`, the overview in this file and `CATALOGUE.md`, and checks every record.
+- `app/src/main/java/com/example/retrodatabases/data` — Room: entities, DAO, converters, the database itself, seeding on first launch and one generic migration for each version from 1 to 212 (`seedMigrations`).
+- `app/src/main/java/com/example/retrodatabases/data/seed` — the records of all 212 databases: `Db1*.kt` to `Db212*.kt`. The coding databases have one file per kind; each economics database has one generated file, `Db<id>Economics.kt`. Also `SeedCatalog.kt`, generated from `tools/databases.json`, and the helper that builds a record (`SeedEntry.kt`).
+- `tools` — `databases.json` (the databases, their years and colours), `build_catalogue.py`, which regenerates `SeedCatalog.kt`, the economics files, the overview in this file and `CATALOGUE.md`, and checks every record; and `economics/` (the economic models, the spheres and practices, and one JSON file per economics database).
 <!-- END GENERATED STRUCTURE -->
 - `app/src/main/java/com/example/retrodatabases/ui` — navigation, the ViewModel, filtering, screens and components.
 - `app/src/test` — tests of the filters, the data and the database itself (Robolectric).

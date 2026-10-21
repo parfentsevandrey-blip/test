@@ -8,7 +8,7 @@ import com.example.retrodatabases.data.RecordEntity
 // (databaseId = the new id, one file per kind) and run python3 tools/build_catalogue.py.
 
 /** Version of the database file: the number of the newest seeded database. */
-const val DATABASE_VERSION = 204
+const val DATABASE_VERSION = 212
 
 /** The catalogue of databases that are created on the first launch, in id order. */
 val seedDatabases: List<DatabaseEntity> = listOf(
@@ -1236,6 +1236,54 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "Languages, systems, devices, tools and practices of 0 to 10, including rare and little-known items.",
         colorHex = "#D69067",
     ),
+    DatabaseEntity(
+        id = 205,
+        name = "Database 205: economic models and their best and worst practice",
+        description = "The economic models of humanity, from gift and household economies to market socialism, commons and degrowth. For each model: its best practice and its worst practice, with sources.",
+        colorHex = "#D96262",
+    ),
+    DatabaseEntity(
+        id = 206,
+        name = "Database 206: the compromise across all spheres of society",
+        description = "One compromise for each sphere of society, from education and medicine to family life and trade, drawn from the models in database 205 and the practice databases.",
+        colorHex = "#6284D9",
+    ),
+    DatabaseEntity(
+        id = 207,
+        name = "Database 207: economics of primary and secondary schooling",
+        description = "The economic models applied to primary and secondary schooling: the best and worst practice of each model, and one compromise.",
+        colorHex = "#A7D962",
+    ),
+    DatabaseEntity(
+        id = 208,
+        name = "Database 208: economics of higher education",
+        description = "The economic models applied to higher education: the best and worst practice of each model, and one compromise.",
+        colorHex = "#D962CA",
+    ),
+    DatabaseEntity(
+        id = 209,
+        name = "Database 209: economics of vocational training and apprenticeship",
+        description = "The economic models applied to vocational training and apprenticeship: the best and worst practice of each model, and one compromise.",
+        colorHex = "#62D9C5",
+    ),
+    DatabaseEntity(
+        id = 210,
+        name = "Database 210: economics of early childhood care and education",
+        description = "The economic models applied to early childhood care and education: the best and worst practice of each model, and one compromise.",
+        colorHex = "#D9A262",
+    ),
+    DatabaseEntity(
+        id = 211,
+        name = "Database 211: economics of adult and lifelong learning",
+        description = "The economic models applied to adult and lifelong learning: the best and worst practice of each model, and one compromise.",
+        colorHex = "#7F62D9",
+    ),
+    DatabaseEntity(
+        id = 212,
+        name = "Database 212: economics of teacher pay, training and status",
+        description = "The economic models applied to the pay, training and status of teachers: the best and worst practice of each model, and one compromise.",
+        colorHex = "#67D962",
+    ),
 )
 
 /** Years each seeded catalogue covers. The tests check the records against them. */
@@ -1444,6 +1492,14 @@ val seedYears: Map<Long, IntRange> = mapOf(
     202L to 20..30,
     203L to 10..20,
     204L to 0..10,
+    205L to 800..2026,
+    206L to 800..2026,
+    207L to 800..2026,
+    208L to 800..2026,
+    209L to 800..2026,
+    210L to 800..2026,
+    211L to 800..2026,
+    212L to 800..2026,
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
@@ -1475,4 +1531,5 @@ val seedRecords: List<RecordEntity> =
         db182Records + db183Records + db184Records + db185Records + db186Records + db187Records + db188Records +
         db189Records + db190Records + db191Records + db192Records + db193Records + db194Records + db195Records +
         db196Records + db197Records + db198Records + db199Records + db200Records + db201Records + db202Records +
-        db203Records + db204Records
+        db203Records + db204Records + db205Records + db206Records + db207Records + db208Records + db209Records +
+        db210Records + db211Records + db212Records

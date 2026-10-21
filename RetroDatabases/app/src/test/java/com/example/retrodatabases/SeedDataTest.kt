@@ -68,8 +68,11 @@ class SeedDataTest {
 
     @Test
     fun rareRecordsArePresentInEachDatabase() {
-        for (records in recordsByDatabase.values) {
-            assertTrue(records.count { it.rare } > 0)
+        // The economics databases (205 and up) hold no rare records: rarity belongs to the coding catalogue.
+        for ((databaseId, records) in recordsByDatabase) {
+            if (databaseId < 205L) {
+                assertTrue("database $databaseId has a rare record", records.count { it.rare } > 0)
+            }
         }
     }
 

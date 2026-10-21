@@ -1,67 +1,67 @@
 # Economics databases
 
-This document describes the economics part of the catalogue: what it is, how its records are written, what is done, and what is needed to continue. The coding databases (1 to 204) are described in [README.md](README.md) and [CATALOGUE.md](CATALOGUE.md).
+This document describes the economics part of the catalogue: what it is, how its records are written and checked, what is done, what is weak, and how to continue. The coding databases (1 to 204) are described in [README.md](README.md) and [CATALOGUE.md](CATALOGUE.md).
 
 ## What is planned
 
 The economics databases ask one question for every part of society: what does each economic model of humanity do well and badly there, and what would a compromise between them look like?
 
-- Thirty-six economic models, from gift and household economies to market socialism, the commons and degrowth. `tools/economics/models.json` lists each one with its family, canonical year, original title, author, core idea and key sources.
-- Sixteen spheres of society, with seventy-five practices inside them. `tools/economics/spheres.json` lists them; each practice has a scope sentence that its records must stay inside.
-- Database 205 holds the models: each model's best and worst practice for the economy as a whole, and one general compromise.
-- Database 206 holds one compromise for each sphere, and one that applies to all spheres.
-- Databases 207 to 281 hold one practice each. Each has, for every model, a best and a worst practice for that practice, and one compromise for the practice. Databases 207 to 212 are the six education practices.
+- **Thirty-six economic models**, from gift and household economies to market socialism, the commons and degrowth. `tools/economics/models.json` lists each one with its family, canonical year, original title, author, core idea and sources.
+- **Sixteen spheres of society**, with **seventy-five practices** inside them. `tools/economics/spheres.json` lists them; each practice has a scope sentence that its records must stay inside.
+- **Database 205** holds the models: each model's best and worst practice for the economy as a whole, and one general compromise.
+- **Database 206** holds one compromise for each sphere, and one that applies to all spheres.
+- **Databases 207 to 281** hold one practice each: for every model, a best and a worst practice for that practice, and one compromise for the practice.
 
-The planned size is 77 databases and 2,829 records: 37 in each model or practice database (36 models and one compromise), and 17 in database 206.
+The planned size is 77 databases. Each model or practice database has 37 records (36 models and one compromise); database 206 has 17. That makes 2,829 records in all.
 
-## How a record is written
+## What is done
 
-A model record in a practice database has these fields:
+Batch 1 is written, reviewed and generated: databases **205** (the models), **206** (the compromise across the spheres) and **207 to 212** (the six education practices: schooling, higher education, vocational training, early childhood care, adult learning, and teacher pay). That is 276 records, in the app and in `RetroDatabases_source.txt`.
 
-- **Title**: the model name and the practice's short name, for example "Feudalism: schooling". Database 205 uses the model name alone.
-- **Section**: the model's family. **Year, author and original title** come from `models.json`; the writer does not enter them.
-- **Summary**: the best practice the model gives for the practice, 15 to 70 words. It names a documented case (a place, a law, a programme, a year) when one exists.
-- **Details**: the worst practice or outcome, 25 to 110 words, ending with `Source:` and the author and year of the source. When no documented case exists, the record says so and gives the inference: "Inferred from its principle that ...; no documented case found."
+Databases 213 to 281 are not started.
 
-The compromise record of a practice database has these fields:
+## How the records are built
 
-- **Summary**: the design proposed for the practice, 20 to 90 words.
-- **Details**: `Keeps:` the best practices kept, naming the models they come from; `Blocks:` the worst practices blocked, and the safeguard for each; `Test:` what to measure, and over what period; `Source:` the sources of the principles. 40 to 170 words in all.
+The method has four parts. Each part has its own file or step, so that each claim can be traced.
 
-Rules for every record:
+1. **Models.** `tools/economics/models.json` holds the 36 models. Four entries have been checked by web search: social market economy (1947, the book; the term first appeared in print in 1946), market socialism (1938, the book), Islamic economics (1963) and Buddhist economics (1966). The other entries are from memory, and the file says so.
 
-- Every model gets a best and a worst practice. The same standard applies to every model, whatever its family.
-- Every year, number, name, law and event is checked against a source before it is written. A figure is written only when a cited source gives it. A claim that cannot be checked is removed, not softened.
-- No dollar signs, no Cyrillic letters, no line breaks, and none of the process phrases that the generator refuses.
-- The compromise is a proposal, not an established model. Where it is untested, the record says so.
+2. **Case pools.** `tools/economics/pools/db<id>.json` holds the documented cases for one database. Each case gives what the cited source reports, the source, a caveat, and the models it bears on. Cases are found by web search; a pool has three to eleven cases. Only pool cases may be named in a record as documented facts. Where a source disagrees with another, or gives a figure that is not comparable, the caveat says so, and the record must say so too.
 
-The generator (`tools/build_catalogue.py`) checks word counts, the `Source:` and `Keeps:`/`Blocks:` markers, years inside the database's range, unique titles, and the banned characters and phrases. It does not check facts. Facts are checked by search, before the file is written and again by a second reviewer.
+3. **Records.** Each model record has two fields. The **best practice** (the record's summary) is what the model would produce for the practice. The **worst practice** (the record's details) is what it has produced or would produce, and it ends with a `Source:` line. A field is either:
+   - a named pool case, stated within its claim and caveat; or
+   - an **inference** from the model's core idea. Such a field begins "Inferred from its principle that" and ends "There is no documented case in the pool." Its source is the model's own source in `models.json`.
 
-## Status
+   Each compromise has four parts: `Keeps:` (the best practices it keeps, naming the models they come from), `Blocks:` (the worst practices it blocks, and the safeguard for each), `Test:` (what to measure, and over what period), and `Source:`.
 
-Done and pushed:
+4. **Review.** Every database file was checked against its pool by a second agent that did not write it. The reviewer could not search the web. The reviewer checked that each named case says only what its pool claim says, that each inference states no fact, that the source lines are right, that the balance holds between models, and that every compromise refers to records that exist. Reviewers corrected 205, 207 to 212, and the generator's checks (word limits, banned words and characters) were run on every file.
 
-- The model list, the sphere and practice map, and the spec rows for databases 205 to 212 (`tools/economics`, `tools/databases.json`).
-- Generator support: each economics database is read from one JSON file, checked, and written as `Db<id>Economics.kt`, with its section in `CATALOGUE.md` and its counts in the README overview.
-- Two record kinds: "Economic models" (`MODEL`) and "Compromises" (`COMPROMISE`), with colours, the assistant's labels and its search words.
-- `EconomicsSeedTest`, which checks the record counts and the `Source:` and `Keeps:`/`Blocks:` markers, and a correction to `SeedDataTest`, which had required every kind in every database.
+The generator, `tools/build_catalogue.py`, then writes the Kotlin for each database (`Db205Economics.kt` and so on), the catalogue section and the README counts. It refuses a word count outside its limits, a dollar sign, Cyrillic text, a line break, the word "Wikipedia" and the banned process phrases.
 
-Not done:
+## What batch 1 shows
 
-- No economics record exists. `SeedCatalog.kt` still lists 204 databases, so `EconomicsSeedTest` fails and the generator's check fails for databases 205 to 212, which have no JSON file yet.
-- The JSON files for databases 205 and 207 to 212 are not written. Database 206 depends on the practice compromises, so it is not started.
-- The model list (years, authors and original titles) was written from memory. It has not been checked against sources.
+- **Records:** 276 in batch 1, with 6,532 records in the app overall.
+- **Documented cases:** 49 of the 276 records name a pool case. The rest are inferences, and each says so. The counts by database are: 205, 9; 206, 0; 207, 14; 208, 8; 209, 4; 210, 6; 211, 4; 212, 4.
+- **Compromises:** 205 has one general compromise; 207 to 212 each have one practice compromise; 206 has the education compromise drawn from 207 to 212, fifteen principle-level compromises for the other spheres, and one for all spheres.
 
-Writing stopped at the web-search budget. The budget is shared by the whole turn. The first batch of seven writers used it before any file was written: database 212's writer stopped after 20 searches, and the other six were stopped by hand. The facts those writers reported as checked are recorded in the DEVLOG, not in any record.
+## What is weak
 
-## How to resume
+- **Documented coverage is low.** Only 49 of 276 records name a case. Most of the content is principle-based, not evidence-based. A reader must read the labels.
+- **The pools are small**, three to eleven cases per database, and they cluster on some models. Mixed economies and socialist models have the most cases; several market and religious models have none.
+- **Some sources are weak or unconfirmed.** The Nazi-economy case comes from exam-preparation material; the Komvux case from a source flagged for missing citations; the London Economics link needs checking before it is cited; the Soviet teacher-pay case gives no figure; and most entries in `models.json` are from memory.
+- **Compromises are proposals**, not established models. Their test periods are conditions of the proposal, not findings.
+- **Database 206** is principle-level for fifteen of its sixteen spheres. It has no case pool for them.
 
-1. Raise the web-search budget (`CLAUDE_CODE_MAX_WEB_SEARCHES_PER_SESSION`). Checking every documented case by search needs far more searches than the coding batches did.
-2. Check `tools/economics/models.json` against sources, then write databases 205 and 207 to 212, one JSON file each, following the rules above.
-3. Check every record by search. Give each file to a reviewer who did not write it, and let the reviewer correct the file in place.
-4. Write database 206 last, from the verified compromises of the practice databases and the general compromise of database 205.
-5. Run `python3 tools/build_catalogue.py`. It writes the Kotlin files, the catalogue and the README blocks, and runs the checks.
-6. Run `./gradlew testDebugUnitTest assembleDebug`. All tests should pass, including `EconomicsSeedTest`.
-7. Add a DEVLOG checkpoint, regenerate the source pack, and commit.
+## How to continue
 
-Databases 213 to 281 follow the same steps, in batches of about ten.
+Two directions are open, and the choice is yours:
+
+1. **Deepen batch 1.** Add cases to the pools by web search, then rewrite the records that gain a case, and review them again. Each pool needs several searches per database; the budget for a turn is the limit.
+2. **Continue with databases 213 to 281**, in batches of about ten. For each database:
+   1. Build its case pool by web search (`tools/economics/pools/db<id>.json`).
+   2. Write the 37 records from the pool, with no searching (the writer's rules are in `tools/economics/`).
+   3. Review the file against its pool, with no searching.
+   4. Run `python3 tools/build_catalogue.py`, then `./gradlew testDebugUnitTest assembleDebug`.
+   5. Add a DEVLOG checkpoint, regenerate the source pack, and commit.
+
+Two items apply to either direction: check the 34 entries in `models.json` that are still from memory, and update database 206 when a sphere gets a practice database.
