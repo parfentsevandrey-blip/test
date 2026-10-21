@@ -108,6 +108,22 @@ def _pin(draw: ImageDraw.ImageDraw, x: float, y: float, scale: int) -> None:
     draw.ellipse([cx - ir, cy - ir, cx + ir, cy + ir], fill="white")
 
 
+def _place_label(draw: ImageDraw.ImageDraw, x: float, y: float, text: str, scale: int,
+                 font_path: str | None) -> None:
+    """Точка и подпись крупного города: тёмная плашка под точкой, чтобы не закрыть надпись Google."""
+    try:
+        font = ImageFont.truetype(font_path or "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 15 * scale)
+    except OSError:
+        font = ImageFont.load_default()
+    ink, r = (16, 48, 79), 6 * scale
+    draw.ellipse([x - r, y - r, x + r, y + r], fill=ink, outline="white", width=2 * scale)
+    pad = 6 * scale
+    left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
+    tx, ty = x - (right - left) / 2 - pad, y + r + 14 * scale
+    draw.rectangle([tx, ty, tx + right - left + 2 * pad, ty + bottom - top + 2 * pad], fill=ink)
+    draw.text((tx + pad - left, ty + pad - top), text, fill="white", font=font)
+
+
 def _attribution(canvas: Image.Image, scale: int) -> None:
     draw = ImageDraw.Draw(canvas, "RGBA")
     try:
@@ -164,8 +180,9 @@ def _render_tiles(
     width: int,
     height: int,
     scale: int,
+    label: tuple[tuple[float, float], str, str | None] | None = None,
 ) -> Image.Image:
-    """Сборка карты из тайлов Google (без API-ключа)."""
+    """Сборка карты из тайлов Google (без API-ключа). label — (точка, подпись, шрифт) крупного города."""
     out_w, out_h = width * scale, height * scale
     # тайлы отдаются в размере 256 px, поэтому кадр собирается в 1x и масштабируется
     cx, cy = _project(*center, zoom)
@@ -185,6 +202,10 @@ def _render_tiles(
         canvas.paste(img, (int(tx * TILE_SIZE - origin_x), int(ty * TILE_SIZE - origin_y)))
 
     canvas = canvas.resize((out_w, out_h), Image.LANCZOS)
+    if label:
+        lx, ly = _project(*label[0], zoom)
+        _place_label(ImageDraw.Draw(canvas, "RGBA"), (lx - origin_x) * scale, (ly - origin_y) * scale,
+                     label[1], scale, label[2])
     mx, my = _project(*marker, zoom)
     _pin(
         ImageDraw.Draw(canvas, "RGBA"),
@@ -235,8 +256,11 @@ def render(
     # и в полосе отчёта карта живёт лентой под текстом, а не квадратом
     height: int = 480,
     scale: int = 2,
+    city_label: str | None = None,
+    font: str | None = None,
 ) -> Path:
-    """Карта с меткой объекта; при заданном ``city`` город гарантированно в кадре."""
+    """Карта с меткой объекта; при заданном ``city`` город гарантированно в кадре,
+    а с ``city_label`` его центр отмечен точкой с подписью."""
     if dest.exists() and dest.stat().st_size > 0:
         return dest
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -249,7 +273,8 @@ def render(
     if api_key:
         canvas = _render_static_api(center, (lat, lon), zoom, width, height, api_key)
     else:
-        canvas = _render_tiles(center, (lat, lon), zoom, width, height, scale)
+        canvas = _render_tiles(center, (lat, lon), zoom, width, height, scale,
+                               (city, city_label, font) if city and city_label else None)
 
     canvas.save(dest, "PNG")
     return dest
