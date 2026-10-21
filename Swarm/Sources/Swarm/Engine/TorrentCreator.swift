@@ -22,13 +22,16 @@ nonisolated enum TorrentCreator {
         var entries: [(url: URL, path: [String], size: Int64)] = []
         if isDir.boolValue {
             let keys: [URLResourceKey] = [.isRegularFileKey, .fileSizeKey]
+            // Сравниваем компоненты уже разрешённых путей: /var и /tmp на macOS — симлинки на /private/…
+            let base = source.resolvingSymlinksInPath().pathComponents.count
             let all = (fm.enumerator(at: source, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles])?.allObjects as? [URL]) ?? []
-            for url in all.sorted(by: { $0.path < $1.path }) {
+            for url in all {
                 let values = try url.resourceValues(forKeys: Set(keys))
                 guard values.isRegularFile == true else { continue }
-                let rel = url.path.dropFirst(source.path.count).split(separator: "/").map(String.init)
+                let rel = Array(url.resolvingSymlinksInPath().pathComponents.dropFirst(base))
                 entries.append((url, rel, Int64(values.fileSize ?? 0)))
             }
+            entries.sort { $0.path.lexicographicallyPrecedes($1.path) }
         } else {
             let size = Int64((try source.resourceValues(forKeys: [.fileSizeKey])).fileSize ?? 0)
             entries = [(source, [], size)]

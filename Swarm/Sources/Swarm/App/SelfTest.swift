@@ -125,10 +125,11 @@ enum SelfTest {
     static func same(_ a: URL, _ b: URL) -> Bool {
         let fm = FileManager.default
         let files = (fm.enumerator(at: a, includingPropertiesForKeys: nil)?.allObjects as? [URL]) ?? []
+        let base = a.resolvingSymlinksInPath().pathComponents.count
         var compared = 0
         for f in files where !f.hasDirectoryPath {
-            let rel = f.path.dropFirst(a.path.count)
-            guard let x = try? Data(contentsOf: f), let y = try? Data(contentsOf: URL(fileURLWithPath: b.path + rel)), x == y else {
+            let rel = f.resolvingSymlinksInPath().pathComponents.dropFirst(base).joined(separator: "/")
+            guard let x = try? Data(contentsOf: f), let y = try? Data(contentsOf: b.appendingPathComponent(rel)), x == y else {
                 print("   различается: \(rel)")
                 return false
             }
