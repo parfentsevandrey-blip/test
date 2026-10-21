@@ -34,7 +34,14 @@ struct SwarmApp: App {
         MenuBarExtra {
             MenuBarView().environment(model)
         } label: {
-            Image(systemName: model.totalDown > 0 ? "arrow.down.circle.dotted" : "point.3.connected.trianglepath.dotted")
+            // Скорость прямо в строке меню, пока идёт загрузка.
+            if model.totalDown >= 1000 {
+                Label(Format.rate(model.totalDown), systemImage: "arrow.down.circle.fill")
+                    .labelStyle(.titleAndIcon)
+                    .monospacedDigit()
+            } else {
+                Image(systemName: "point.3.connected.trianglepath.dotted")
+            }
         }
         .menuBarExtraStyle(.window)
 

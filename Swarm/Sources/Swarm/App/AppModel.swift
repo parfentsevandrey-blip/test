@@ -79,6 +79,7 @@ final class AppModel {
     @ObservationIgnored private var pollTask: Task<Void, Never>?
     @ObservationIgnored private var sampleCounter = 0
     @ObservationIgnored private var toastTask: Task<Void, Never>?
+    @ObservationIgnored private let dock = DockTileController()
 
     static let supportDirectory: URL = {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Swarm", isDirectory: true)
@@ -142,8 +143,12 @@ final class AppModel {
                 torrentHistory[t.id] = h
             }
         }
-        let active = list.filter { $0.status == .downloading || $0.status == .metadata }.count
-        NSApp.dockTile.badgeLabel = active > 0 ? "\(active)" : nil
+        let downloading = list.filter { $0.status == .downloading || $0.status == .metadata }
+        let wanted = downloading.reduce(Int64(0)) { $0 + $1.wantedSize }
+        let done = downloading.reduce(Int64(0)) { $0 + $1.doneSize }
+        dock.update(down: list.reduce(0) { $0 + $1.downRate },
+                    progress: wanted > 0 ? Double(done) / Double(wanted) : nil,
+                    active: downloading.count)
     }
 
     // MARK: - Сводка

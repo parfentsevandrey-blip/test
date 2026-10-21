@@ -18,6 +18,14 @@ struct RootView: View {
                     filters
                     content
                 }
+                .frame(maxWidth: .infinity)
+                .overlay(alignment: .bottom) {
+                    if !model.torrents.isEmpty {
+                        ControlIsland()
+                            .padding(.bottom, 18)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                }
                 if let selected = model.selected {
                     InspectorPanel(torrent: selected)
                         .frame(width: 400)
@@ -45,56 +53,63 @@ struct RootView: View {
             model.selectedID = nil
             return .handled
         }
+        .onKeyPress(.space) {
+            guard !magnetFocused, let t = model.selected else { return .ignored }
+            model.toggle(t)
+            return .handled
+        }
     }
 
     // MARK: - Шапка
 
     private var header: some View {
         @Bindable var model = model
-        return GlassEffectContainer(spacing: 10) {
-            HStack(spacing: 10) {
-                HStack(spacing: 8) {
-                    Image(systemName: "link")
-                        .foregroundStyle(.secondary)
-                        .symbolEffect(.bounce, value: magnetFocused)
-                    TextField("Вставьте magnet-ссылку и нажмите ↩", text: $model.magnetText)
-                        .textFieldStyle(.plain)
-                        .focused($magnetFocused)
-                        .onSubmit { if !model.magnetText.isEmpty { model.addMagnet(model.magnetText) } }
-                    if !model.magnetText.isEmpty {
-                        Button { model.addMagnet(model.magnetText) } label: {
-                            Image(systemName: "arrow.down.circle.fill").font(.system(size: 17))
+        return HStack(spacing: 0) {
+            Spacer(minLength: 84) // место для «светофора»; справа столько же — шапка ровно по центру
+            GlassEffectContainer(spacing: 10) {
+                HStack(spacing: 10) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "link")
+                            .foregroundStyle(.secondary)
+                            .symbolEffect(.bounce, value: magnetFocused)
+                        TextField("Вставьте magnet-ссылку", text: $model.magnetText)
+                            .textFieldStyle(.plain)
+                            .focused($magnetFocused)
+                            .onSubmit { if !model.magnetText.isEmpty { model.addMagnet(model.magnetText) } }
+                        if !model.magnetText.isEmpty {
+                            Button { model.addMagnet(model.magnetText) } label: {
+                                Image(systemName: "arrow.down.circle.fill").font(.system(size: 17))
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(.tint)
+                            .transition(.scale.combined(with: .opacity))
                         }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(.tint)
-                        .transition(.scale.combined(with: .opacity))
                     }
-                }
-                .font(.system(size: 13))
-                .padding(.horizontal, 14)
-                .frame(height: 36)
-                .glassEffect(.regular.interactive(), in: .capsule)
-                .glassEffectID("magnet", in: glass)
-                .frame(maxWidth: 520)
+                    .font(.system(size: 13))
+                    .padding(.horizontal, 14)
+                    .frame(height: 36)
+                    .glassEffect(.regular.interactive(), in: .capsule)
+                    .glassEffectID("magnet", in: glass)
+                    .frame(minWidth: 220, idealWidth: 340, maxWidth: 380)
 
-                Button { model.presentOpenPanel() } label: {
-                    Label("Открыть", systemImage: "doc.badge.plus")
-                }
-                .help("Открыть .torrent (⌘O)")
-                Button { model.presentCreatePanel() } label: {
-                    Label("Создать", systemImage: "square.and.arrow.up.on.square")
-                }
-                .help("Создать торрент из файла или папки (⌘N)")
+                    Button { model.presentOpenPanel() } label: {
+                        Label("Открыть", systemImage: "doc.badge.plus")
+                    }
+                    .help("Открыть .torrent (⌘O)")
+                    Button { model.presentCreatePanel() } label: {
+                        Label("Создать", systemImage: "square.and.arrow.up.on.square")
+                    }
+                    .help("Создать торрент из файла или папки (⌘N)")
 
-                Spacer(minLength: 8)
-                speeds
+                    speeds
+                }
+                .buttonStyle(.glass)
+                .controlSize(.large)
+                .labelStyle(.titleAndIcon)
             }
-            .buttonStyle(.glass)
-            .controlSize(.large)
-            .labelStyle(.titleAndIcon)
+            .fixedSize(horizontal: true, vertical: false)
+            Spacer(minLength: 84)
         }
-        .padding(.leading, 84) // место для «светофора»
-        .padding(.trailing, 14)
         .padding(.top, 10)
         .padding(.bottom, 8)
         .animation(.smooth(duration: 0.2), value: model.magnetText.isEmpty)
@@ -112,6 +127,9 @@ struct RootView: View {
             .monospacedDigit()
             .contentTransition(.numericText())
             .labelStyle(.titleAndIcon)
+            .lineLimit(1)
+            .fixedSize()
+            .frame(minWidth: 74, alignment: .trailing)
             SpeedChart(samples: model.history, compact: true)
                 .frame(width: 96, height: 26)
         }
@@ -126,6 +144,7 @@ struct RootView: View {
     private var filters: some View {
         @Bindable var model = model
         return HStack(spacing: 8) {
+            Spacer(minLength: 0)
             GlassEffectContainer(spacing: 6) {
                 HStack(spacing: 6) {
                     ForEach(TorrentFilter.allCases) { f in
@@ -135,7 +154,6 @@ struct RootView: View {
                     }
                 }
             }
-            Spacer()
             if model.torrents.count > 3 {
                 HStack(spacing: 6) {
                     Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
@@ -146,6 +164,7 @@ struct RootView: View {
                 .frame(height: 30)
                 .glassEffect(.regular.interactive(), in: .capsule)
             }
+            Spacer(minLength: 0)
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 6)
@@ -164,8 +183,11 @@ struct RootView: View {
                                                     removal: .opacity))
                     }
                 }
+                .frame(maxWidth: 920)
                 .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                .padding(.top, 8)
+                .padding(.bottom, 120) // под плавающим островом управления
+                .frame(maxWidth: .infinity)
                 .animation(.smooth, value: model.visible.map(\.id))
             }
             .scrollEdgeEffectStyle(.soft, for: .top)
@@ -232,7 +254,7 @@ struct RootView: View {
                 .padding(.horizontal, 18)
                 .padding(.vertical, 11)
                 .glassEffect(.regular, in: .capsule)
-                .padding(.bottom, 22)
+                .padding(.bottom, model.torrents.isEmpty ? 22 : 118)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
         }
     }

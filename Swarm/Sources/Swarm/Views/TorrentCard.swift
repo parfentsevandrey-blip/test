@@ -37,9 +37,7 @@ struct TorrentCard: View {
                 }
                 details
             }
-            if hovering {
-                actions.transition(.scale(scale: 0.8).combined(with: .opacity))
-            }
+            actions
         }
         .padding(14)
         .background {
@@ -122,21 +120,32 @@ struct TorrentCard: View {
     }
 
     private var actions: some View {
-        GlassEffectContainer(spacing: 6) {
-            HStack(spacing: 6) {
+        GlassEffectContainer(spacing: 8) {
+            HStack(spacing: 8) {
+                if hovering {
+                    Group {
+                        Button { model.reveal(torrent) } label: { Image(systemName: "folder") }
+                            .help("Показать в Finder")
+                        Button { confirmRemove = true } label: { Image(systemName: "trash") }
+                            .help("Удалить")
+                    }
+                    .buttonStyle(.glass)
+                    .controlSize(.large)
+                    .transition(.scale(scale: 0.6, anchor: .trailing).combined(with: .opacity))
+                }
+                // Главная кнопка видна всегда: крупная, в цвет состояния раздачи.
                 Button { model.toggle(torrent) } label: {
                     Image(systemName: isPaused ? "play.fill" : "pause.fill")
+                        .font(.system(size: 17, weight: .bold))
                         .contentTransition(.symbolEffect(.replace))
+                        .frame(width: 30, height: 30)
                 }
+                .buttonStyle(.glassProminent)
+                .tint(isPaused ? Color.accentColor : tint)
+                .controlSize(.large)
                 .help(isPaused ? "Продолжить" : "Пауза")
-                Button { model.reveal(torrent) } label: { Image(systemName: "folder") }
-                    .help("Показать в Finder")
-                Button { confirmRemove = true } label: { Image(systemName: "trash") }
-                    .help("Удалить")
             }
-            .buttonStyle(.glass)
             .buttonBorderShape(.circle)
-            .controlSize(.regular)
         }
     }
 

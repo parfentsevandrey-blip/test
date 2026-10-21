@@ -105,9 +105,14 @@ struct InspectorPanel: View {
     private var overview: some View {
         VStack(spacing: 14) {
             SwarmConstellation(snapshot: torrent, tint: tint)
-                .frame(height: 230)
-                .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(.black.opacity(0.18)))
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .frame(height: 280)
+                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .strokeBorder(LinearGradient(colors: [.white.opacity(0.35), .white.opacity(0.04), .white.opacity(0.12)],
+                                                     startPoint: .top, endPoint: .bottom), lineWidth: 1)
+                }
+                .shadow(color: tint.opacity(0.3), radius: 18, y: 8)
 
             section("Скорость") {
                 SpeedChart(samples: model.torrentHistory[torrent.id] ?? [])
