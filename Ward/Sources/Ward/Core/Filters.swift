@@ -104,7 +104,11 @@ nonisolated enum FilterParser {
     ]
     static let allTypes = ["script", "image", "style-sheet", "font", "media", "raw", "ping", "document", "svg-document"]
 
-    static func parse(_ text: String, kind: TrackerKind, into set: inout FilterSet, badfilters: Set<String>) {
+    static func parse(_ text: String, kind: TrackerKind, into target: inout FilterSet, badfilters: Set<String>) {
+        // enumerateLines принимает сбегающее замыкание — inout в него не передать, работаем с копией.
+        var set = target
+        target = FilterSet() // чтобы большие массивы не копировались при изменении
+        defer { target = set }
         text.enumerateLines { raw, _ in
             set.stats.lines += 1
             let line = raw.trimmingCharacters(in: .whitespaces)
