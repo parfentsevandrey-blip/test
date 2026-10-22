@@ -1,0 +1,106 @@
+{
+  "database": 235,
+  "practice": "Social and private insurance",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "IN1",
+      "case": "Japan's mutual life insurers",
+      "years": "1881 onward",
+      "claim": "Japan's first life insurer, Meiji Life, came into being in July 1881 and took the emperor's name. Sources disagree on its legal form: a company-history profile calls it a mutual firm, while an academic paper calls it a stock corporation. Kota Yano's firm, Dai-ichi Life, opened in 1902, and one academic paper treats it as Japan's first mutual life insurer. The search summary says the labels for the 1881 firm and for Dai-ichi do not fit together. A Senshu University paper says Japan's life-insurance market was largely controlled by mutual firms for over 60 years.",
+      "source": "Company-history profiles of Meiji Mutual Life, and academic papers on Japanese life insurance, including a Senshu University paper (years not shown in the results)",
+      "url": "https://senshu-u.repo.nii.ac.jp/record/1890/files/92_11.pdf",
+      "caveat": "The sources disagree on the legal form of Meiji Life and on which firm was Japan's first mutual life insurer, and the search summary settles neither point. The 60-year claim rests on one university paper, and neither its year nor the period it covers is shown. A 1975 Forum article, cited in the search summary as counting 17 of Japan's 21 private life insurers as mutual, has no link in the results, so this case does not use that figure. The company profiles are secondary.",
+      "relevant_to": [
+        "Cooperative economy"
+      ]
+    },
+    {
+      "id": "IN2",
+      "case": "Bismarck's compulsory accident insurance",
+      "years": "1884 to 1914",
+      "claim": "Bismarck's 1884 statute made accident insurance mandatory for industrial firms. Injured workers and their dependents received payouts, but the scheme did not fully curb the growth of workplace accidents. Guinnane and Streb attribute the shortfall to incentive design: the mutual groups rated firms on pooled group experience, so individual firms had little financial reason to improve their own plants. Their empirical work indicates that more consistent use of the available tools could have lowered accident rates sooner.",
+      "source": "Guinnane and Streb, 'Incentives That (Could Have) Saved Lives', Journal of Economic History (2015); first circulated as a 2012 working paper",
+      "url": "https://www.cambridge.org/core/journals/journal-of-economic-history/article/incentives-that-could-have-saved-lives-government-regulation-of-accident-insurance-associations-in-germany-18841914/D5183C23CA8443D08045F5F6CC464414",
+      "caveat": "One study, read only through search snippets. The snippets call the bodies mutual insurance groups or accident insurance associations and do not say who ran or financed them, so this case does not say. The results give two titles for the work (one reads 'Incentives That Saved Lives') and no accident-rate figures.",
+      "relevant_to": [
+        "Corporatism and fascist economics"
+      ]
+    },
+    {
+      "id": "IN3",
+      "case": "Union-run unemployment funds (the Ghent system)",
+      "years": "around 1900 onward; Sweden's 1934 adoption",
+      "claim": "Under the Ghent system, worker organisations rather than public bodies handle most jobless payouts. It began in Ghent, Belgium, around 1900 (one source says 1901). Public money from national or local governments helps finance these voluntary union-run funds. Belgium's present setup is a hybrid 'quasi-Ghent' form in which public authorities pay a large part of the benefits. Researchers disagree on the effect on union membership. One Cambridge-hosted article says the funds greatly raised unionisation rates. A 2017 study by Rasmussen and Pontusson found that the introduction itself had no effect, and tied the later surge to heavier state subsidies and richer benefits in the 1950s and 1960s. For Sweden, one scholarly account says long-term strategy shaped the 1934 adoption, and union density fell from 77% (2006) to 71% (2008) after a 2007 state funding cut.",
+      "source": "A Cambridge-hosted academic article; Rasmussen and Pontusson (2017), a study cited in the results; a scholarly account of Sweden (years not shown)",
+      "url": "https://www.cambridge.org/core/product/3D1554ACE0D5E7F2631910C196232BE1",
+      "caveat": "Built from a search summary of several academic pages. The summary does not say which page gives each figure, so the url is one of the pages it drew on and is not confirmed as the source of every point. The Rasmussen and Pontusson study is reported second-hand here. The Sweden figures apply to Sweden alone. The origin year is given two ways. Denmark is left out because the search gave no Denmark-specific source.",
+      "relevant_to": [
+        "Nordic social democracy"
+      ]
+    },
+    {
+      "id": "IN4",
+      "case": "Friendly societies as approved societies in Britain",
+      "years": "1911 to 1946",
+      "claim": "The National Insurance Act of 1911 gave friendly societies and trade unions a large share of its administration. Most of them had first resisted it until Lloyd George won them over. Workers reached the central fund through approved societies, which ran day-to-day administration and had to pass contributions on; the societies' outlays were repaid twice a year. The Royal Commission on National Health Insurance named friendly societies as the most prominent kind of approved body. 1946 legislation eventually brought the scheme to an end.",
+      "source": "Royal Commission on National Health Insurance, report (year not shown in the result); online history material on the National Insurance Act 1911 (year not shown)",
+      "url": "https://digi.econbiz.de/viewer/fulltext/1740277147/107/eng/",
+      "caveat": "The results describe the 1911 scheme only and say nothing about nineteenth-century sickness insurance by friendly societies. The url is one page of the Royal Commission report, and the result shows no year for it. The search summary adds that the societies' administrative machinery proved essential even though state benefits could threaten their voluntary ethos; that is the summary's paraphrase, not a quotation, so it is left out. No figures are given.",
+      "relevant_to": [
+        "Cooperative economy"
+      ]
+    },
+    {
+      "id": "IN5",
+      "case": "Compulsory sickness funds in the Netherlands",
+      "years": "1941 to 2006",
+      "claim": "Statutory health cover reached the Netherlands only in 1941, through a decree (Ziekenfondsenbesluit, not an act) issued under German occupation. It made cover compulsory for employees earning under a state-set income ceiling. The self-employed and the elderly could enrol voluntarily, and everyone else turned to private cover. Historians have long read the decree as either Dutch or German in origin. Robert Vonk, in a 2012 BMGN article, argues it was a joint Dutch-German product. The Sickness Fund Act (Ziekenfondswet) of 1964 largely enshrined the 1941 framework, which anchored the Dutch system for 65 years until the 2006 Health Insurance Act (Zorgverzekeringswet) officially ended sickness fund insurance. Key features, such as the income limit and mutual risk equalisation, partly survived.",
+      "source": "Robert Vonk, article in the journal BMGN (2012); the 1964 and 2006 dates come from the same search summary and have no separate source",
+      "url": "https://bmgn-lchr.nl/article/view/urn%3Anbn%3Anl%3Aui%3A10-1-109838",
+      "caveat": "The search summary places the Vonk argument in a 2012 BMGN article, but the result shows neither the page's title nor its author, so the url is not confirmed as that article. The 1964 and 2006 facts are not tied to a page. The dispute concerns who shaped the 1941 decree, not its date. The results do not describe the 2006 law as market-based, so the Monetarist neoliberalism link is an inference for the writer to check.",
+      "relevant_to": [
+        "Corporatism and fascist economics",
+        "Social market economy",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "IN6",
+      "case": "US National Flood Insurance Program",
+      "years": "1927 to 1968",
+      "claim": "The National Flood Insurance Act of 1968 (P.L. 90-448) created the federal programme because private insurers were largely unwilling to cover flood risk. Reasons offered in the results include near-certain losses in some low-lying and coastal zones, where homeowners would not pay premiums high enough to cover them; large regional catastrophe exposure that forces insurers to hold big reserves; and adverse selection, since mainly high-risk households buy. Private flood policies existed in the early 1900s, but losses from the 1927 Mississippi River flood hobbled many of those insurers. Rising disaster-relief costs in the 1960s also pushed Congress to act.",
+      "source": "Pew article on how 20th-century events shaped the National Flood Insurance Program (2016), with other US histories from 2005 to 2023 in the same search",
+      "url": "https://www.pew.org/en/research-and-analysis/articles/2016/06/07/how-20th-century-events-shaped-the-national-flood-insurance-program",
+      "caveat": "The result is a search summary drawn from several US pages dated 2005 to 2023, and it does not say which page gives each reason. The url is a 2016 page whose title covers 20th-century events, but it is not confirmed as the source of each point. No loss figures are given, and the summary notes that later changes may not be reflected.",
+      "relevant_to": [
+        "Keynesian welfare capitalism",
+        "Classical laissez-faire capitalism"
+      ]
+    },
+    {
+      "id": "IN7",
+      "case": "Takaful, the first Islamic mutual insurers",
+      "years": "1976 to 1979",
+      "claim": "Several sources date the first takaful company to 1979 and identify it as the Islamic Insurance Company of Sudan. A Malaysian university repository document credits Faisal Islamic Bank in Sudan with that pioneering role instead. Saudi and Dubai precedents from 1976 to 1977 came before Sudan's launch. The concept rests on a mutual guarantee among members with pooled money, and Malaysian insurers ground their products in the tabarru' (donation) and mudarabah (profit-sharing) principles.",
+      "source": "Atlas article (online) on the birth of takaful and its first companies (year not shown); a Malaysian university repository document (year not shown); an Emerald journal article (year not shown)",
+      "url": "https://www.atlas-mag.net/en/article/takaful-insurance/concept-and-first-companies",
+      "caveat": "The founding date and the first company are disputed: one repository document names a different bank. An Emerald article warns that early takaful records are hard to document, so exact dates need primary sources. The 1976 to 1977 precedents appear in the search summary without a source. The Malaysian principles describe current practice, not the history of the first companies.",
+      "relevant_to": [
+        "Islamic economics"
+      ]
+    },
+    {
+      "id": "IN8",
+      "case": "Lloyd's of London and its Names",
+      "years": "late 1980s to 1996",
+      "claim": "Private investors, called Names, supplied Lloyd's capital, and their unlimited liability put their personal wealth at stake. Each Name's practical exposure was capped by the worth of his holdings, and some faced bills as large as £1 million. Asbestos and pollution losses from the late 1980s and early 1990s threatened thousands of Names with ruin, and a US appeals court opinion adds that Lloyd's own survival was in doubt. A corporate group took on, through reinsurance, Lloyd's syndicate liabilities for 1992 and earlier. The results disagree on its founding year: 1995 in one result, 1996 on a vLex page. About 90% of some 34,000 Names endorsed the Equitas proposal, part of Lloyd's Reconstruction and Renewal plan, which made reinsurance compulsory for all members on pre-1993 business. The inherited obligations were put at about £15 billion at net present value, to be settled over as long as four decades.",
+      "source": "Sources named in the results: a vLex legal-database page on Names relieved of further liabilities for 1992 and earlier non-life business (year not shown); Equitas presentation notes (year not shown); a US appeals court opinion (year not shown); online encyclopaedia (secondary) for the High Court and liability-total points",
+      "url": "https://vlex.com/vid/names-further-liabilities-prior-life-60393675",
+      "caveat": "The search summary merges several sources and does not say which gives which figure, so the 34,000 Names, the 90% endorsement, the £15 billion total and the four decades may come from different pages, one of them an encyclopaedia. The 1995 and 1996 dates disagree. The url is the vLex page, the only one tied to a date (1996) and to the release of Names from liabilities. The High Court approval is not dated in the results.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism"
+      ]
+    }
+  ]
+}
