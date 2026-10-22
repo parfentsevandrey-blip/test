@@ -1,0 +1,81 @@
+{
+  "database": 229,
+  "practice": "Unemployment and job security",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "UN1",
+      "case": "Denmark's flexicurity model",
+      "years": "1990s reforms; article published 2022",
+      "claim": "Kreiner and Svarer (2022) argue that easy hiring and firing paired with income security does not suffice on its own, and that mandatory-participation programmes for claimants are needed alongside it. The same article notes that Denmark's spending on active labour-market programmes is higher than that of any other OECD member.",
+      "source": "Kreiner and Svarer, Journal of Economic Perspectives (2022)",
+      "url": "https://www.aeaweb.org/doi/10.1257/jep.36.4.81",
+      "caveat": "Seen only as a search link and summary, not the article text, so the spending comparison and the effectiveness point are unchecked. Credit for the 1994 reform is disputed: a 2006 article by Lang and Jespersen questions whether reforms alone explain the fall in unemployment, and a 2021 student thesis estimates an effect that is not used here.",
+      "relevant_to": [
+        "Nordic social democracy",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "UN2",
+      "case": "Germany's Kurzarbeit short-time work scheme",
+      "years": "study published 2014; crisis years not shown",
+      "claim": "IAB Discussion Paper 17/2014 applied propensity score matching to IAB panel data linked to Federal Employment Agency records and found no sign of a causal effect of Kurzarbeit on firms' employment levels.",
+      "source": "Institute for Employment Research (IAB), discussion paper 17/2014",
+      "url": "https://doku.iab.de/discussionpapers/2014/dp1714.pdf",
+      "caveat": "Seen only as an excerpt, which does not show the crisis years the study covers. 'No sign of a causal effect' is not proof of no effect. The study measures employment levels, not hours. A 2010 IAB short report in the results credits Kurzarbeit and working-time drawdowns as important contributors to the 2009 fall in hours, so the two findings do not conflict.",
+      "relevant_to": [
+        "Social market economy",
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "UN3",
+      "case": "US unemployment insurance under the Social Security Act of 1935",
+      "years": "1935 onwards",
+      "claim": "A Social Security Administration history page on Arthur J. Altmeyer contrasts one federal agency running old-age insurance with 51 sets of unemployment records and state-by-state eligibility rules.",
+      "source": "US Social Security Administration, history page on Arthur J. Altmeyer (year not shown in the results)",
+      "url": "https://ssa.gov/history/aja543.html",
+      "caveat": "Seen only as a link and a summary, and the page's year is not shown. The comparison is a passing point, not a study. The results also mention aims such as protecting jobless workers who had not caused their own layoffs and smoothing recessions, but no link ties those claims to a source, so they are not used here.",
+      "relevant_to": [
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "UN4",
+      "case": "Japan's lifetime employment system",
+      "years": "1982 to 2022 (data period)",
+      "claim": "Kambayashi and Kato push back on the common view that the system has eroded since the 1990s. They report ten-year retention rates that held roughly steady from 1982 to 2022, and say that the dip in job stability for young entrants is temporary, since most people eventually reach long-term jobs. Their data show no overall fall in the core share, unlike an earlier finding by Ono of a decline.",
+      "source": "Kambayashi and Kato, IZA discussion paper 18665 (2026)",
+      "url": "https://docs.iza.org/dp18665.pdf",
+      "caveat": "Seen only as a summary of the paper, and the results do not define 'core' or 'retention'. This is a discussion paper, not a published article. The sources disagree on the trend, and the case gives both views. It concerns job stability in the core workforce, not support after a job is lost, and it does not examine state policy, so the tag to Developmental state is a hint only.",
+      "relevant_to": [
+        "Developmental state"
+      ]
+    },
+    {
+      "id": "UN5",
+      "case": "Finland's basic income trial for unemployed people",
+      "years": "2017 to 2018 (first report 2019)",
+      "claim": "Kela oversaw the trial, which ran from 1 January 2017 to 31 December 2018. A random sample of 2,000 people aged 25 to 58, who had received Kela's jobless benefit in November 2016, got 560 euros a month, tax-free and not conditional on job-seeking or other income. In 2017 the register analysis found no difference in job-finding between recipients and the comparison group, and average time in employment was 49.64 days for recipients and 49.25 days for the comparison group. Recipients' survey answers showed more optimism about the future. The first report appeared on 8 February 2019.",
+      "source": "Social Insurance Institution of Finland (Kela), The Basic Income Experiment 2017-2018 in Finland: Preliminary Results (2019)",
+      "url": "https://tietotarjotin.fi/en/publication/123942/the-basic-income-experiment-2017-2018-in-finland-preliminary-results",
+      "caveat": "Preliminary. The employment figures are register data for 2017 only, and the results contain no final two-year employment figures. A VATT page whose Finnish title says the employment effects stayed small was seen by title only. The figures come from a search summary, not the report text.",
+      "relevant_to": [
+        "Universal basic income"
+      ]
+    },
+    {
+      "id": "UN6",
+      "case": "Shanghai's re-employment service centres for laid-off state workers",
+      "years": "1997",
+      "claim": "In August 1997 four central government agencies circulated an investigative report on how Shanghai carried out re-employment projects and set up re-employment service centres for laid-off staff and workers.",
+      "source": "Four central government agencies of China, notice distributing an investigative report (1997); copy on a Chinese law firm's website",
+      "url": "https://www.lehmanlaw.com/resource-centre/laws-and-regulations/labor/notice-regarding-the-printing-and-distribution-of-the-investigative-report-shanghais-experiences-in-carrying-out-re-employment-projects-and-establishing-re-employment-service-centers-for-staff-and-workers-1997.html",
+      "caveat": "Only a copy on a Chinese law firm's website was found, not the official text, so check it before use. The results give no funding or living-allowance details. Other xiagang facts in the results (1993 State Council rules, 1994 pilot projects) come from academic papers that are not tied to a link, so they are left out.",
+      "relevant_to": [
+        "Chinese market socialism"
+      ]
+    }
+  ]
+}

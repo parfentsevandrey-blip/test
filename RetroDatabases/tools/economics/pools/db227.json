@@ -1,0 +1,92 @@
+{
+  "database": 227,
+  "practice": "Trade unions and worker voice",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "UN1",
+      "case": "US National Labor Relations (Wagner) Act",
+      "years": "1935 to 1940",
+      "claim": "President Roosevelt signed the National Labor Relations Act, named after Senator Robert F. Wagner of New York, on 5 July 1935, and it took effect the next day. It gave a new federal agency, the NLRB, authority to hear workers' complaints about employer misconduct, and made refusing to recognise or bargain with a union an unfair labour practice. In April 1937 the Supreme Court upheld the law by 5 to 4 in NLRB v. Jones & Laughlin Steel. Union membership rose from under 4 million to over 10 million during the decade; by 1940 unions had drawn in roughly a third of the labour force, up from about 6 percent when the Depression began. A textbook chapter credits the surge mainly to grassroots organising sparked by economic hardship, with federal measures contributing too. A book on the Act, Divided Unions by Alexis N. Walker, ties its exclusion of public workers to Wisconsin's 2011 Act 10.",
+      "source": "Macmillan-hosted textbook chapter 'Organized Labor Strikes Back' (year not stated); 'Divided Unions' by Alexis N. Walker, book listed by Penn Press and MIT Press (year not stated)",
+      "url": "https://digfir-published.macmillanusa.com/hewittlawson2e/hewittlawson2e_ch22_24.html",
+      "caveat": "Built from a search summary that does not say which page gives the 1935 signing date, the NLRB's powers, the 1937 vote or the membership figures; only the 'surge' explanation is tied to the textbook named here. The results covered nothing on the statute's text, on how bargaining representatives were chosen, or on the 1947 amendments in depth, and the book's year is not given.",
+      "relevant_to": [
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "UN2",
+      "case": "German works councils and the Works Constitution Act",
+      "years": "1920 to 1972",
+      "claim": "A 1920 statute put works councils on a formal legal footing, but their co-determination powers stayed narrow. The Nazi regime wiped out councils and unions. Allied Control Council Law No. 22 let collective agreements restore councils in 1946, and West German lawmakers adopted the Works Constitution Act (Betriebsverfassungsgesetz) in 1952 despite fierce union opposition. Staff elect the council, which covers every worker at a site regardless of union status, while unions have no standing to direct it. A 1972 reform broadened the council's rights.",
+      "source": "Legal-history article 'A Forward-Looking History of the German Works Constitution', on a Max Planck Society site (year not stated); report on employee representation in Germany by a Japanese labour institute (year not stated)",
+      "url": "https://rg.lhlt.mpg.de/index.php/rg/article/download/170/2725?inline=1",
+      "caveat": "Built from a search summary; the article linked here was not read in full, and the labour institute report was not opened. The sources differ on the day of the 1920 statute (4 or 9 February). The results give no figures for council membership or for how often councils were used, mention a 2001 amendment but nothing later, and do not address board-level co-determination such as the 1976 Codetermination Act.",
+      "relevant_to": [
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "UN3",
+      "case": "Nordic bargaining coverage and falling union density",
+      "years": "2022, with declines over the previous 25 to 35 years",
+      "claim": "A 2022 Fafo paper, as summarised in the search results, puts private-sector collective bargaining coverage at 46 percent in Norway (lowest), 65 percent in Finland, 73 percent in Denmark and 85 percent in Sweden (largest). Counting workers covered by generally applied agreements, Finland's rate rises to 84 percent. The same paper puts the fall in union density at 21 points in Finland, 18 in Sweden, 15 in Denmark and 5 in Norway, and links the decline largely to institutional reforms in the Nordic Ghent systems.",
+      "source": "Fafo, paper on collective bargaining coverage and union density in the Nordic countries (2022)",
+      "url": "https://www.fafo.no/images/pub/2022/10374.pdf",
+      "caveat": "Known only from a search summary of this paper, which was not read in full. Norway's 46 percent covers the private sector only, and a blog piece in the same results puts Swedish private-sector coverage near eight in ten, below the paper's 85 percent, so definitions differ. A Norden report table lists Denmark's 2023 density in two rows, at 68 and 54 percent, and the newest figures in the results run to 2023.",
+      "relevant_to": [
+        "Nordic social democracy"
+      ]
+    },
+    {
+      "id": "UN4",
+      "case": "Fall in union density across OECD countries",
+      "years": "1985 to 2023/24",
+      "claim": "The OECD's September 2025 report on membership of unions and employers' organisations and bargaining coverage shows average union density across OECD countries falling by roughly half between 1985 and 2023/24, from about 30 percent to about 15 percent. Iceland and Belgium are the main exceptions. An older VoxEU column says the falls were sharpest in Central and Eastern Europe after central planning ended, and in Australia, New Zealand and the UK after the 1980s reforms.",
+      "source": "OECD report on membership of unions and employers' organisations and bargaining coverage (2025); older VoxEU column (year not stated)",
+      "url": "https://www.oecd.org/en/publications/membership-of-unions-and-employers-organisations-and-bargaining-coverage_fe47107c-en/full-report.html",
+      "caveat": "Only a search summary of the OECD report was read, not the report, and its figures are rounded. The VoxEU column is older and undated in the result, and its link to the reforms is the column's own reading. A 2017-era commentary in the same results puts the OECD average near 17 percent, so any figure needs its data year.",
+      "relevant_to": [
+        "Monetarist neoliberalism",
+        "Command socialism"
+      ]
+    },
+    {
+      "id": "UN5",
+      "case": "Gdańsk agreement and Solidarity, Poland",
+      "years": "1980",
+      "claim": "On 31 August 1980 government negotiator Mieczysław Jagielski and strike leader Lech Wałęsa signed the agreement that settled the Gdańsk shipyard strike. The agreement opened the way to Solidarity, which the search results describe as the first of its kind in the Soviet bloc.",
+      "source": "HISTORY, 'This Day in History' web feature for 31 August (year not stated)",
+      "url": "https://www.history.com/this-day-in-history/august-31/polish-government-signs-accord-with-gdansk-shipyard-workers",
+      "caveat": "A short popular history feature, so secondary. The search summary gives the signing and the names, but not the agreement's terms or who could join, and it does not say which page gives the 'first of its kind' description. A membership figure above 10 million in the summary is attributed to the European Solidarity Centre in Gdańsk, whose page was not in the results, so it is left out.",
+      "relevant_to": [
+        "Command socialism"
+      ]
+    },
+    {
+      "id": "UN6",
+      "case": "Italy's 1926 Rocco law on strikes and unions",
+      "years": "1920 to 1932",
+      "claim": "A statute of April 1926, the Rocco law, outlawed strikes and lockouts, put industrial relations under collective contracts that labour courts enforced, and gave syndicates public status. It did not suppress the fascist unions. After the October 1925 Palazzo Vidoni accord made employers and fascist unions each other's only representatives, the regime-aligned confederation gained exclusive representation, and the CGdL and the Catholic CIL were left with no real option but to disband in January 1927. Dispute counts fell from 2,086 strikes and lockouts in 1920 to 23 in 1932, a decline the document ties to the 1926 law.",
+      "source": "Trinity College Dublin repository document on the Italian corporate state, by a single author (year not stated)",
+      "url": "https://www.tara.tcd.ie/bitstreams/43fb42d9-1dd2-4de4-8795-6a264c7f3b2b/download",
+      "caveat": "Rests on one document whose author calls the ban a complete success and credits the corporate regime, so the link between the fall in disputes and the law is that author's reading and the verdict is one-sided. No second source for the dispute counts was found, the document's year is not given, and the Italian-language pages it links to were not read.",
+      "relevant_to": [
+        "Corporatism and fascist economics"
+      ]
+    },
+    {
+      "id": "UN7",
+      "case": "Founding of the French CGT at Limoges",
+      "years": "1895 to 1902",
+      "claim": "The CGT traces its formation to a meeting at Limoges on 23 September 1895. Delegates represented 18 Bourses du travail, 28 trade or industry federations (an e-book gives 26) and 126 unaffiliated unions. An encyclopaedia entry credits the Bourses federation, alongside a federation of unions, with initiating the body. Another encyclopaedia entry dates its effective central leadership to the 1902 Montpellier congress.",
+      "source": "Online encyclopaedia (secondary) entries on the CGT; an e-book (year not stated)",
+      "url": "https://www.universalis.fr/encyclopedie/cgt-confederation-generale-du-travail/",
+      "caveat": "Drawn from encyclopaedia summaries and one e-book, not read in full, and most detailed sources in the results are in French. The search summary does not say which entry gives the Limoges date and the delegate counts, and the page giving 28 federations was not identified. The 1902 date is for effective leadership, not for the body's creation.",
+      "relevant_to": [
+        "Syndicalism"
+      ]
+    }
+  ]
+}
