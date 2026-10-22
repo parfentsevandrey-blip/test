@@ -1,0 +1,191 @@
+{
+  "database": 233,
+  "type": "practice",
+  "practice": "Banking and credit",
+  "models": [
+    {
+      "model": "Gift economy",
+      "best": "Inferred from its principle that trust and alliances are built through exchange rather than price, so loans pass within networks of reciprocal ties, and a borrower in need can be helped without a price or a collateral test. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that every gift creates an obligation to return, a loan from a more established household binds the borrower to the lender's favour, so a debt that cannot be repaid becomes a lasting dependence and a claim on the borrower's labour and standing. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics"
+    },
+    {
+      "model": "Household and peasant economy",
+      "best": "Inferred from its principle that a family balances its work against its own needs, so credit is taken in small amounts for seed and tools and repaid from the household's own harvest, with no drive to borrow for profit. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production serves consumption, so a loan repaid out of output beyond the household's needs forces the family to work longer than those needs require, and a poor harvest can leave it unable to repay. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+    },
+    {
+      "model": "Redistributive economy",
+      "best": "Inferred from its principle that the centre stores collected goods, so stocks can be lent out in lean years on fixed terms, and households get seed and food without depending on private lenders. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the centre allocates stores by rank, so loans go mainly to officials and favoured households, and debts to the centre can be called in or set aside at the authority's discretion, leaving ordinary borrowers without recourse. There is no documented case in the pool. Source: Polanyi, The Great Transformation; Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires"
+    },
+    {
+      "model": "Slave economy",
+      "best": "Inferred from its principle that output is sold through trade, so slaveholders can borrow against their holdings, including the enslaved people they own, to finance production before the crop is sold. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the enslaved are denied property and education, so they cannot hold savings, borrow in their own name or offer collateral, and loans taken by slaveholders can be secured on the enslaved themselves as property. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+    },
+    {
+      "model": "Feudalism",
+      "best": "Inferred from its principle that a lord owes protection and justice in return for service, so a tenant short of seed or grain in a bad year can draw on the manor's stores, with the debt settled in service and dues. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that peasants owe labour services and rents, so a debt owed to the lord is repaid in labour on the manor, and a tenant who borrows cannot leave the land or offer labour elsewhere. There is no documented case in the pool. Source: Bloch, Feudal Society; Capitulare de villis"
+    },
+    {
+      "model": "Guild economy",
+      "best": "Inferred from its principle that statutes regulate entry and training, so guild funds or master craftsmen can lend a qualified journeyman the capital to set up as a master, on terms the statutes fix. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that statutes restrict entry and set prices, so credit for starting a trade is open mainly to insiders, a newcomer without a master's backing cannot borrow to set up, and outside lenders who might compete are kept out. There is no documented case in the pool. Source: Boileau, Le Livre des métiers; Epstein, Freedom and Growth"
+    },
+    {
+      "model": "Mercantilism",
+      "best": "Inferred from its principle that the state seeks gold and a trade surplus, so credit is steered toward exporters and trades that bring treasure in, and lenders are encouraged to fund them. There is no documented case in the pool.",
+      "worst": "The case English usury laws and their repeal in 1854 reports that lower legal caps on interest shaped the English economy from the 1500s through the Industrial Revolution. Fixing the price of credit by statute is this model's worst practice in banking, since it puts credit under state control. A University of Toronto working paper argues this without its evidence, and the repeal statute is known only from a summary. Source: An Act to repeal the Laws relating to Usury and to the Enrolment of Annuities (1854), text listed on the vLex legal database; University of Toronto working paper no. 439 (year not shown)"
+    },
+    {
+      "model": "Physiocracy",
+      "best": "Inferred from its principle that only agriculture creates a net product, so credit is advanced to farmers for seed, stock and land improvement, and the single tax on land rent, not interest on loans, funds the state. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that trade and manufacture create no net product, so lending to traders and artisans is treated as unproductive, and credit for trade and craft is left thin while farming borrowers are favoured. There is no documented case in the pool. Source: Quesnay, Tableau économique; Meek, The Economics of Physiocracy"
+    },
+    {
+      "model": "Classical laissez-faire capitalism",
+      "best": "The case English usury laws and their repeal in 1854 reports that the repeal statute erased the legal limits on interest, so lenders and borrowers could agree their own rates. The statute is known from a summary, not its full text.",
+      "worst": "Inferred from its principle that the state stays out of contracts, a lender may set any terms a borrower will accept, so a borrower with no bargaining power, such as one with no collateral, pays what the lender asks, and no legal ceiling on the rate protects them. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
+    },
+    {
+      "model": "Austrian free-market economics",
+      "best": "Inferred from its principle that prices carry knowledge held by many people, so the interest rate should reflect the willingness to save, and loans are funded by real saving rather than by credit created beyond it. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that credit expansion distorts production, so loans beyond real saving draw capital into projects that cannot be sustained, and those projects are later abandoned as the distortion comes to light. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society"
+    },
+    {
+      "model": "Monetarist neoliberalism",
+      "best": "The case US Glass-Steagall Act of 1933 and its repeal in 1999 reports that the 1999 act loosened the 1933 barrier between commercial and investment banking, set up financial holding companies under fresh Federal Reserve oversight, and kept limits such as restrictions on cross-marketing. The sources disagree on how far the repeal went.",
+      "worst": "The case US Glass-Steagall Act of 1933 and its repeal in 1999 reports that opinion remains divided on whether the repeal helped fuel the financial crisis that came less than a decade later. Deregulation that fuelled such a crisis would be this model's worst practice, but the sources give no figure for any link to the crisis, and they disagree on how much of the 1933 barrier was undone. Source: Congressional Research Service, The Glass-Steagall Act: A Legal and Policy Analysis (report R44349, updated 19 January 2016); Federal Reserve History essays on the Banking Act of 1933 and on the Financial Services Modernization Act of 1999"
+    },
+    {
+      "model": "Keynesian welfare capitalism",
+      "best": "The case US Glass-Steagall Act of 1933 and its repeal in 1999 reports that after the 1929 crash the 1933 act built a barrier between commercial and investment banking. The sources disagree on how far the 1999 repeal went.",
+      "worst": "The case Sweden's bank rescue of 1991 to 1993 reports that a case study puts the Bank Support Authority's net burden between 1.5 per cent of 1991 GDP and 2.1 per cent of 1997 GDP. Using public money to rescue lenders at a net cost to the budget is this model's worst practice in banking, though a VoxEU column finds the long-run net hit almost negligible, and net cost depends on the method. Source: Journal of Financial Crises, case study of the Swedish bank support (year not shown); VoxEU column on the Swedish model of resolving the 1991 to 1993 banking crisis (year not shown)"
+    },
+    {
+      "model": "Social market economy",
+      "best": "The case Prussia's 1838 savings-bank regulation and the German Sparkassen reports that the 1838 regulation gave savings banks common rules, a public-law footing and state supervision that covered deposit security. The details come from summaries, not full documents, and are not tied to one page.",
+      "worst": "The case Prussia's 1838 savings-bank regulation and the German Sparkassen reports that founding a new bank needed government approval, and that the framework steered investment toward first mortgages and government securities. Under this model's principle of open competition, state approval to enter and state steering of investment are worst practices, and the details come from summaries not tied to one page. Source: DSGV, the German savings banks' association, its own history document (undated); other German-language history sources in the results (not tied to one page)"
+    },
+    {
+      "model": "Nordic social democracy",
+      "best": "The case Sweden's bank rescue of 1991 to 1993 reports that a Bank Support Authority was planned to handle later aid, and a VoxEU column finds the long-run net hit to public finances almost negligible. Net cost depends on the method, so estimates differ.",
+      "worst": "Inferred from its principle that high taxes fund universal public services, so the saving that households and firms could lend out shrinks as taxes rise, and credit comes to depend more on the state than on private lenders. There is no documented case in the pool. Source: Saltsjöbaden Agreement; Esping-Andersen, The Three Worlds of Welfare Capitalism"
+    },
+    {
+      "model": "Developmental state",
+      "best": "Inferred from its principle that the state directs credit to chosen industries, so banks lend to priority sectors on terms the state sets, and firms that miss export or performance targets lose access to new credit. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state chooses which industries receive credit, so lending follows state choices rather than lenders' judgement of risk, and firms outside the chosen sectors find credit scarce whatever their record. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle; Amsden, Asia's Next Giant"
+    },
+    {
+      "model": "Georgism",
+      "best": "Inferred from its principle that land should be taxed rather than labour and capital, so credit for productive work and investment is left untaxed, and lending for land speculation loses its appeal as rising land values are captured for the public. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that land rent should fund public services, so credit secured on land can finance purchases that bid up prices, and the rise in value goes to landholders and their lenders rather than to the public. There is no documented case in the pool. Source: George, Progress and Poverty"
+    },
+    {
+      "model": "Utopian socialism",
+      "best": "Inferred from its principle that planned associations replace private profit, so a community fund lends to its members without paying a return to outside owners, and any surplus stays within the association. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that communities are built by example, so a community fund's loans rest on members' goodwill and personal trust rather than enforceable terms, and a failing member can leave the fund and its other members exposed. There is no documented case in the pool. Source: Owen, A New View of Society; Fourier, Le Nouveau Monde industriel"
+    },
+    {
+      "model": "Mutualism",
+      "best": "The case Alphonse Desjardins and the caisse populaire in Lévis, Quebec reports that its design used variable capital and limited liability, and that the group describes the caisses as member-controlled. That member control is the mutual credit this model calls for, and the timeline is the institution's own account.",
+      "worst": "Inferred from its principle that banks lend at cost, so a lender keeps no margin above cost to absorb defaults, and a run of bad loans can leave members without credit or savings. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+    },
+    {
+      "model": "Cooperative economy",
+      "best": "The case Grameen Bank and microcredit in Bangladesh reports that borrower delegates have held nine of the twelve board seats, and that borrowers hold 95 per cent of the equity according to the founder's own website. A presentation gives borrowers 90 per cent, so the figures are unaudited and ownership is disputed.",
+      "worst": "Inferred from its principle that members own and control the bank, lending can serve members first, so outsiders and non-member workers may be refused credit, and the surplus can flow to those who hold the votes. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers; Mondragón cooperatives"
+    },
+    {
+      "model": "Anarcho-communism",
+      "best": "Inferred from its principle that goods are shared according to need, so no one needs to borrow to meet a basic need, and a commune's shared stock covers those who are short. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that free association replaces contracts, so a loan for a project has no enforceable terms, and anyone who needs credit depends on the commune's judgement of need and its goodwill. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+    },
+    {
+      "model": "Syndicalism",
+      "best": "Inferred from its principle that workers' organisations run industry, so union-run funds can finance worker-run enterprises directly, without an outside lender setting the terms. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that strikes are the main lever, so a credit system run by unions can be halted by industrial disputes, and savers and borrowers who rely on it are exposed to the timing of strikes. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail"
+    },
+    {
+      "model": "Fabian socialism",
+      "best": "Inferred from its principle that public enterprise grows gradually by democratic means, so municipal and national public banks lend on terms set by elected bodies, and a national minimum of access to credit is guaranteed. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that public enterprise is extended gradually, so private lenders remain in place for years alongside public ones, and public banks answerable to elected councils may lend by political priority rather than by a common test. There is no documented case in the pool. Source: Fabian Essays in Socialism; Founding of the Fabian Society"
+    },
+    {
+      "model": "Guild socialism",
+      "best": "Inferred from its principle that workers and consumers share control through councils, so a bank's lending decisions are taken by a council in which workers, consumers and the state each have a voice. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that several partners share control, so lending decisions can stall while councils and the state reach agreement, and a borrower's application waits on bodies that each must be satisfied. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+    },
+    {
+      "model": "Command socialism",
+      "best": "Inferred from its principle that central plans set investment, so credit is allocated to the plan's priorities, and state banks direct savings to rapid industrial building. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that central plans set investment, so credit to a firm does not depend on its ability to repay, and projects the plan favours keep receiving funds whatever their returns, while households have few lenders other than the state. There is no documented case in the pool. Source: Kornai, The Socialist System; First Five-Year Plan"
+    },
+    {
+      "model": "Market socialism",
+      "best": "Inferred from its principle that managers follow market prices, so public banks price loans at market rates and lend to firms with the best returns, while a central board sets the rules and the overall investment. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a central board sets investment, so the board can direct credit away from the firms that market prices favour, and managers who follow prices may find their lending overridden. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism; Yugoslav workers' self-management"
+    },
+    {
+      "model": "Marxian communism",
+      "best": "Inferred from its principle that distribution follows need, so no one is refused a loan for a basic need on a lender's profit terms, and the return on capital that lenders take falls away once classes disappear. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that distribution follows need, so a loan for an ambitious project depends on an assessment of need that no price tests, and before the state withers away, officials decide who receives credit. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+    },
+    {
+      "model": "Chinese market socialism",
+      "best": "Inferred from its principle that key sectors stay in public ownership while markets are opened gradually, so state banks keep lending to priority firms, while special economic zones and newer lenders test market terms. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that key sectors stay public under party direction, so state banks may keep lending to state firms whatever their repayment record, while private borrowers in other sectors face a two-tier market for credit. There is no documented case in the pool. Source: Naughton, The Chinese Economy"
+    },
+    {
+      "model": "Participatory economics",
+      "best": "Inferred from its principle that councils allocate through repeated proposals, so investment credit is set by the people who would use and repay it, and each proposal is revised until the councils accept the allocation. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that councils plan through repeated rounds of proposals, so an investment loan can take many rounds to approve, and a worthwhile project may wait while proposals are revised. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
+    },
+    {
+      "model": "Corporatism and fascist economics",
+      "best": "Inferred from its principle that the state directs industry toward national goals, so banks lend to sectors the state names as priorities, and employers and unions share credit decisions through state-controlled corporations. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state directs industry toward national goals, including war, so credit is steered toward rearmament and the corporations' priorities, and a lender's own judgement of risk gives way to state direction. There is no documented case in the pool. Source: Italian corporative law; Nazi Four-Year Plan"
+    },
+    {
+      "model": "Islamic economics",
+      "best": "Inferred from its principle that finance shares profit and risk, so a lender takes a share of a venture's returns and losses rather than a fixed interest charge, and contracts rest on trust, with zakat redistributing wealth to those in need. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that interest is prohibited, so a borrower who needs a fixed loan must find a profit-sharing partner instead, and the sharing terms can leave a weak borrower carrying a share of losses it cannot bear. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System; Founding of the Mit Ghamr savings bank"
+    },
+    {
+      "model": "Buddhist economics",
+      "best": "Inferred from its principle that economic life serves well-being, so credit goes to small, local producers and to households with modest needs, and loans are kept small enough to repay from the borrower's own means. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that consumption should be moderate, so credit that pushes households into spending beyond their needs is a worst practice, and a lender that profits from debt-driven spending works against well-being. There is no documented case in the pool. Source: Schumacher, Buddhist Economics; Schumacher, Small Is Beautiful"
+    },
+    {
+      "model": "Distributism",
+      "best": "The case Grameen Bank and microcredit in Bangladesh reports that borrowers belong to five-person groups, that a group does not vouch for any member's loan, and that collateral is waived, which suits this model's aim of widespread property. The terms come from the founder's own website, not an audit.",
+      "worst": "Inferred from its principle that widespread property is the aim, so credit concentrated in a few large banks lends mainly to large owners, and small owners who borrow from distant lenders can lose their property to them. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum; Belloc, The Servile State"
+    },
+    {
+      "model": "Steady-state and degrowth economics",
+      "best": "Inferred from its principle that activity stays within planetary limits, so credit is limited to what the economy can repay without growth, and a social floor guarantees everyone basic access to credit. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there is no growth imperative, so lending that needs ever-larger debt to be repaid is a worst practice, and credit that encourages consumption beyond what the planet can support does harm. There is no documented case in the pool. Source: Daly, Steady-State Economics; Raworth, Doughnut Economics"
+    },
+    {
+      "model": "Universal basic income",
+      "best": "Inferred from its principle that every citizen receives an unconditional income, so no one must borrow on poor terms to meet a basic need, and small loans can be repaid from a secure base of income. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the income is unconditional and secure, so if it can be pledged to lenders, debt could absorb it, and the security it gives lenders could raise the price of credit for those who depend on it most. There is no documented case in the pool. Source: Paine, Agrarian Justice; Van Parijs, Real Freedom for All"
+    },
+    {
+      "model": "Modern monetary theory",
+      "best": "Inferred from its principle that a currency issuer can fund full employment, so the state can back lending in a downturn and keep credit flowing, with inflation rather than debt as the limit that lenders and the state must watch. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that inflation, not debt, is the real limit, so credit creation may outrun the economy's capacity and push prices up, and lenders and savers holding money bear the cost of that inflation. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+    },
+    {
+      "model": "Commons governance",
+      "best": "Inferred from its principle that communities design, monitor and enforce their own rules, so a community lending fund can set its own terms, watch repayment among neighbours, and enforce those terms within wider law. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a shared resource is governed by its users, so a community fund may lend only to members who share its rules and exclude outsiders, and its monitoring can turn into pressure on borrowers who fall short. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+    }
+  ],
+  "compromise": {
+    "summary": "Lending stays mixed: member-owned credit bodies, public savings banks and private banks lend under one statewide rulebook. Deposit-taking stays apart from securities trading, holding companies answer to the central bank, and losses from bank rescues fall on shareholders and creditors before any public money.",
+    "details": "Keeps: a barrier between commercial and investment banking (Keynesian welfare capitalism; US Glass-Steagall Act of 1933 and its repeal in 1999); central bank oversight of holding companies (Monetarist neoliberalism); member control of lenders (Mutualism; Alphonse Desjardins and the caisse populaire in Lévis, Quebec); a public authority for bank aid (Nordic social democracy; Sweden's bank rescue of 1991 to 1993). Blocks: government approval needed to found a bank, safeguarded by licences on published tests (Social market economy); an open-ended guarantee to creditors, safeguarded by a capped fund, with shareholders losing first (Sweden's bank rescue of 1991 to 1993); debt repaid through labour, safeguarded by a ban on such repayment (Gift economy; Feudalism). Test: over ten years, reviewed biennially, measure small loans made without collateral, arrears, refusals and appeals, and the net public cost of each rescue, with its method. Source: Congressional Research Service report R44349; Desjardins's own history timeline; Journal of Financial Crises case study; DSGV history document; Mauss, The Gift; Bloch, Feudal Society."
+  }
+}
