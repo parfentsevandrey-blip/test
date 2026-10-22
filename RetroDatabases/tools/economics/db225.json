@@ -61,7 +61,7 @@
     {
       "model": "Keynesian welfare capitalism",
       "best": "Inferred from its principle that spending rises in slumps, so central grants that let towns and regions spend more when the economy falls keep local works and jobs going. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that spending should fall in booms, so towns that must balance their own budgets every year cut spending in a downturn and deepen the slump they face. There is no documented case in the pool. Source: Keynes, The General Theory"
+      "worst": "Inferred from its principle that spending should rise in slumps, so towns that must balance their own budgets every year cut spending in a downturn and deepen the slump they face. There is no documented case in the pool. Source: Keynes, The General Theory"
     },
     {
       "model": "Social market economy",
@@ -180,7 +180,7 @@
     },
     {
       "model": "Commons governance",
-      "best": "Residents who share a city budget can help set its priorities: a dissertation reports real but uneven results from Participatory budgeting in Porto Alegre, with obstacles that have held back what the budgets could deliver. No quantitative impact study was found, and the evidence is 22 interviews.",
+      "best": "A dissertation reports real but uneven results from Participatory budgeting in Porto Alegre, where residents who share a city budget can help set its priorities, and obstacles have held back what the budgets could deliver. No quantitative impact study was found, and the evidence is 22 interviews.",
       "worst": "Inferred from its principle that local rules need wider institutions to be enforced, so where rule-makers have no backing from larger bodies, insiders can capture the shared resource and outsiders who depend on it have no say. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
     }
   ],
