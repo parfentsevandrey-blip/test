@@ -1,0 +1,106 @@
+name: Veil (macOS)
+
+on:
+  push:
+    paths:
+      - "Veil/**"
+      - ".github/workflows/veil-macos.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: veil-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: Veil
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          echo "Xcode: $XCODE"; sw_vers; swift --version; go version || true
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+
+      # Ядро собирается из исходников один раз на версию Xray.
+      - name: Restore Xray core
+        id: core-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: Veil/Vendor/xray
+          key: veil-xray-${{ hashFiles('Veil/XRAY_VERSION', 'Veil/scripts/build-core.sh') }}-${{ runner.os }}
+
+      - name: Build Xray core from source
+        run: ./scripts/build-core.sh
+
+      - name: Save Xray core
+        if: steps.core-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: Veil/Vendor/xray
+          key: veil-xray-${{ hashFiles('Veil/XRAY_VERSION', 'Veil/scripts/build-core.sh') }}-${{ runner.os }}
+
+      - name: Build Veil.app + DMG
+        run: ./scripts/build.sh
+
+      - name: Self-test logic (offline)
+        run: dist/Veil.app/Contents/MacOS/Veil --selftest-logic
+
+      # Настоящий сервер Xray со всеми протоколами на раннере: подключение по каждой ссылке, задержка,
+      # трафик, подписка по HTTP, базы сайтов runetfreedom и все режимы маршрутизации.
+      - name: Self-test core (end-to-end)
+        env:
+          VEIL_HOME: ${{ runner.temp }}/veil-home
+        run: dist/Veil.app/Contents/MacOS/Veil --selftest-core
+
+      - name: UI screenshots
+        run: |
+          OUT="$RUNNER_TEMP/render"; mkdir -p "$OUT"
+          for S in empty main add share settings settings-routing settings-network log; do
+            VEIL_HOME="$RUNNER_TEMP/demo-$S" dist/Veil.app/Contents/MacOS/Veil --demo-ui $S > "$OUT/demo-$S.log" 2>&1 &
+            PID=$!
+            case $S in main|log) sleep 40;; add|share) sleep 30;; *) sleep 14;; esac
+            screencapture -x "$OUT/window-$S.png" || echo "screencapture не сработал"
+            kill $PID 2>/dev/null || true
+            sleep 2
+          done
+
+      # Помощник с правами root, как после установки: системный прокси, сторож и настоящий TUN.
+      - name: Self-test helper (root, proxy + TUN)
+        env:
+          VEIL_HOME: ${{ runner.temp }}/veil-home
+        run: |
+          sudo mkdir -p /tmp/veil-helper
+          sudo cp dist/Veil.app/Contents/MacOS/xray /tmp/veil-helper/xray
+          sudo dist/Veil.app/Contents/MacOS/VeilHelper --uid "$(id -u)" --socket /tmp/veil-helper.sock --dir /tmp/veil-helper > "$RUNNER_TEMP/helper.log" 2>&1 &
+          sleep 3
+          VEIL_HELPER_SOCKET=/tmp/veil-helper.sock dist/Veil.app/Contents/MacOS/Veil --selftest-helper
+          echo "--- журнал помощника"; cat "$RUNNER_TEMP/helper.log"
+
+      - name: Helper log
+        if: always()
+        run: cat "$RUNNER_TEMP/helper.log" 2>/dev/null || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Veil-render
+          path: ${{ runner.temp }}/render
+          compression-level: 0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Veil-dmg
+          path: Veil/dist/Veil.dmg
+          if-no-files-found: error
+          compression-level: 0
