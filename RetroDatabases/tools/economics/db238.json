@@ -1,0 +1,191 @@
+{
+  "database": 238,
+  "type": "practice",
+  "practice": "Film, music and the arts",
+  "models": [
+    {
+      "model": "Gift economy",
+      "best": "Inferred from its principle that goods circulate as gifts, works of music, film and craft pass between makers, patrons and audiences in exchanges that bind each side to return, so artists gain standing and support through networks of obligation rather than through sales. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a gift creates a duty to return, a patron's gift can bind an artist to the donor's tastes and terms, and newcomers without ties to established patrons may find their work unseen and unsupported. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics"
+    },
+    {
+      "model": "Household and peasant economy",
+      "best": "Inferred from its principle that a household balances its work against its needs, families and villages keep making songs, weaving, carving and other crafts for their own use and for festivals, so skills are passed on without depending on sales. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that work stops once household needs are met, art made in a family unit is limited to the time and surplus the household can spare, so skilled makers may have little time for larger works, training or sales beyond their own village. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+    },
+    {
+      "model": "Redistributive economy",
+      "best": "Inferred from its principle that a central authority collects goods and pays them out to workers and officials, the authority can fund large public works of music, building and performance across a whole population, not only for patrons who can afford them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the authority decides what is collected and paid out, artists depend on the favour of officials, and the styles and subjects the authority values may be funded while other work goes without support. There is no documented case in the pool. Source: Polanyi, The Great Transformation; Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires"
+    },
+    {
+      "model": "Slave economy",
+      "best": "Inferred from its principle that output is sold through trade, crafts and music made under the system could reach buyers far from where they were produced. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the enslaved are denied education and property, artists held in bondage cannot train openly, own their work or keep what it earns, and those who hold them sell what they make. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+    },
+    {
+      "model": "Feudalism",
+      "best": "Inferred from its principle that a lord gives land, protection and justice in return for service and the manor supplies most of its own needs, craftsmen, musicians and painters can be kept on the estate in steady work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that peasants owe labour and rent to a lord, art on the manor is made to the lord's order and in the time left after service, so village makers cannot easily choose their own work, audiences or prices. There is no documented case in the pool. Source: Bloch, Feudal Society; Capitulare de villis"
+    },
+    {
+      "model": "Guild economy",
+      "best": "Inferred from its principle that guilds set rules for training and quality, apprentices and journeymen can learn painting, printing, instrument making or stagecraft under known standards, and buyers can rely on the quality of guild work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that guilds control entry and fix prices, a closed trade can keep new makers and new styles out, so experimental artists may struggle to enter the craft, and buyers may pay more than an open market would charge. There is no documented case in the pool. Source: Boileau, Le Livre des métiers; Epstein, Freedom and Growth"
+    },
+    {
+      "model": "Mercantilism",
+      "best": "Inferred from its principle that the state aims for a trade surplus, national films, recordings and performances can be protected in home markets and promoted abroad, so that their sales bring in foreign money. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state judges trade by its surplus, arts are valued for the money they earn abroad rather than for their own merit, so works that do not sell abroad or serve national aims may go unfunded, and licences may limit who may publish or perform. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade; Heckscher, Mercantilism"
+    },
+    {
+      "model": "Physiocracy",
+      "best": "Inferred from its principle that a single tax on the rent of land should fund the state, public money for the arts can come from land rent rather than from taxes on artists' earnings, sales or the goods they make. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that only agriculture creates a net product, the arts are treated as unproductive and get little public support, so films, music and theatre are left to find private funding, and artists are seen as adding little to national wealth. There is no documented case in the pool. Source: Quesnay, Tableau économique; Meek, The Economics of Physiocracy"
+    },
+    {
+      "model": "Classical laissez-faire capitalism",
+      "best": "Inferred from its principle that competitive markets and private property let artists sell directly to audiences, patrons and publishers, so works are judged by buyers rather than by officials, and firms can specialise in film, recording or publishing. There is no documented case in the pool.",
+      "worst": "France's film support fund (CNC) and its levies: a commentary read through a digest, whose figures are unconfirmed, says Hollywood imports threatened to overwhelm the French film sector, and that a fund paid for by dedicated levies was set up to protect it. Source: Audencia, web article 'The CNC: Backbone of French Exception Culturelle' (undated)"
+    },
+    {
+      "model": "Austrian free-market economics",
+      "best": "Inferred from its principle that prices carry knowledge spread across many people, ticket sales, prices and sponsorship show which films, recordings, shows and artworks audiences want, without a committee having to guess. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that credit expansion and state planning distort production, cheap credit or public money can finance films, recordings and shows that audiences do not want, leading to waves of unsold work and later collapses in funding. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society"
+    },
+    {
+      "model": "Monetarist neoliberalism",
+      "best": "Inferred from its principle that steady money, deregulation and privatisation leave arts funding to ticket sales, private patrons and sponsors, with fewer state controls on markets, so artists and firms decide what is made, priced and shown. There is no documented case in the pool.",
+      "worst": "South Korea halves its screen quota ahead of US trade talks: as 2006 news summaries report, the cut was a precondition Washington set before free-trade talks could begin, and critics argued it would tilt the domestic market toward big-budget Hollywood films. The outcome of the talks is not shown. Source: Bilaterals, news report on the cabinet decision (2006); Korean film news reports (2006)"
+    },
+    {
+      "model": "Keynesian welfare capitalism",
+      "best": "Arts Council of Great Britain, from its 1946 royal charter: substantial public funding was secured through government influence, and the council reported to the Treasury rather than to a minister, an 'arm's-length' principle, as a summary of its history timeline reports.",
+      "worst": "US National Endowment for the Arts (1965): as a summary of the agency's history reports, its early grants were modest and tilted toward professional nonprofit groups, largely in cities, and it drew political fire over specific grants in the 1980s and 1990s, which the summary names without describing. Source: National Endowment for the Arts, 'National Endowment for the Arts: A History 1965-2008' (agency history; year of publication not shown)"
+    },
+    {
+      "model": "Social market economy",
+      "best": "Inferred from its principle that a legal order curbs monopoly, many studios, publishers and labels can compete for audiences, and social insurance can cover artists against illness and gaps in income. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a legal order must curb monopoly, rules on fair competition and insurance can be costly to meet, so small galleries, independent labels and one-person studios may find the paperwork and contributions harder to carry than larger firms do. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft; Erhard, Wohlstand für Alle"
+    },
+    {
+      "model": "Nordic social democracy",
+      "best": "Inferred from its principle that universal public services are paid for by high taxes, theatres, libraries, music schools and galleries can be open to everyone at low or no cost, and national pay bargaining can give artists fair and predictable terms. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that universal services and national wage bargaining set common terms, pay and funding for niche work may not match demand for it, and the arts budget depends on a high-tax settlement that can change when governments change. There is no documented case in the pool. Source: Saltsjöbaden Agreement; Esping-Andersen, The Three Worlds of Welfare Capitalism"
+    },
+    {
+      "model": "Developmental state",
+      "best": "France's film support fund (CNC) and its levies: a commentary read through a digest, whose figures are unconfirmed, says the fund protects French film against Hollywood imports and is paid for by dedicated levies rather than the general budget.",
+      "worst": "Inferred from its principle that the state directs credit and export targets to chosen industries, officials pick favoured films, recordings or theatre companies and judge them by targets such as export sales, so works that fit no chosen target may go unfunded. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle; Amsden, Asia's Next Giant"
+    },
+    {
+      "model": "Georgism",
+      "best": "Inferred from its principle that land value is taxed rather than labour and capital, rising land values near theatres, galleries and parks can help pay for public arts spaces without taxing the work of artists or makers. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that public services are paid for from land values, arts funding would rise and fall with property markets, so a property slump could cut money for theatres, libraries and galleries in the same years when artists most need work. There is no documented case in the pool. Source: George, Progress and Poverty"
+    },
+    {
+      "model": "Utopian socialism",
+      "best": "Inferred from its principle that cooperative communities share work and output, artists can make and show their work in studios, halls and theatres that the community runs together, without wage competition or private profit. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that communities are built by example, arts projects may depend on the commitment of founders and members, so when founders leave, studios and theatres may close, and works may be judged only by the community's own taste. There is no documented case in the pool. Source: Owen, A New View of Society; Fourier, Le Nouveau Monde industriel"
+    },
+    {
+      "model": "Mutualism",
+      "best": "Inferred from its principle that banks lend at cost and rent on property is abolished, artists can borrow for studios, instruments and films at cost, keep the full value of their work and pay no rent on the property they use. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that mutual credit replaces banks and contracts are free to be agreed by the parties, artists with weak bargaining power may accept poor terms from publishers, galleries or promoters, and no body may set minimum standards for pay or credit. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+    },
+    {
+      "model": "Cooperative economy",
+      "best": "Inferred from its principle that members own and control their firms on a one-member, one-vote basis and share the surplus between users and workers, a cooperative label, orchestra, cinema or gallery can share its surplus between its makers and its audience. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that each member has one vote, a majority of members can decide what the cooperative shows, records or exhibits, so minority tastes and new forms may be left out, and members' own work may win the most support. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers; Mondragón cooperatives"
+    },
+    {
+      "model": "Anarcho-communism",
+      "best": "Inferred from its principle that goods are shared according to need, music, theatre, film screenings and craft workshops can be open to everyone in the commune, without tickets, wages or prices. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there are no wages and no state, artists have no guaranteed income, and without a funder or a market test, what is made depends on the goodwill of the commune and the shared taste of its members. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+    },
+    {
+      "model": "Syndicalism",
+      "best": "Inferred from its principle that trade unions run industry through workers' organisations, performers, technicians and musicians can set pay and conditions for their own trades directly, and insist on fair terms for every production they join. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that unions run industry through strikes, a dispute in one trade can halt films, broadcasts, concerts and exhibitions for everyone else, and artists who are not union members may be shut out of work. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail"
+    },
+    {
+      "model": "Fabian socialism",
+      "best": "Arts Council of Great Britain, from its 1946 royal charter: local government was authorised to spend on the arts from 1948, as a summary of the council's history timeline reports.",
+      "worst": "Inferred from its principle that municipal and national public enterprise is run by councils and officials, arts bodies may be shielded from competition and judged by officials' taste, so municipal theatres, orchestras and galleries may lose touch with audiences whose tastes change. There is no documented case in the pool. Source: Fabian Essays in Socialism; Founding of the Fabian Society"
+    },
+    {
+      "model": "Guild socialism",
+      "best": "Inferred from its principle that workers and consumers share control of industry through guild-like councils, the people who make films, music and theatre and the people who watch them can decide programmes, prices and pay together. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state is only one partner among several, decisions about which works to fund can stall between councils and guilds, and disputes over who holds power may delay funding and productions for long periods. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+    },
+    {
+      "model": "Command socialism",
+      "best": "Inferred from its principle that central plans set output and investment, the state can fund music, theatre and film in every region at planned levels, whether or not ticket sales would cover the cost. There is no documented case in the pool.",
+      "worst": "Soviet decree against 'formalism' in music: a Central Committee decree of 10 February 1948, prompted by Muradeli's opera The Great Friendship, branded as 'formalist' any Soviet composer tied to European modernism. A 1949 Partisan Review piece names six composers and a second account names four, and accounts differ on whether the ban was limited to Moscow or applied across Russia, as a digest of several pages reports. The decree text was not found. Source: Partisan Review, 1949 (vol. 16, no. 8); US State Department, Foreign Relations of the United States, 1949 (airgram)"
+    },
+    {
+      "model": "Market socialism",
+      "best": "Inferred from its principle that managers follow market prices inside public ownership, theatres, studios and labels can respond to what audiences buy, while a central board sets the rules and the investment for the whole sector. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a central board sets the rules and the investment, the board can favour some art forms and regions, and managers who follow prices may cut work that sells little, such as opera or experimental film, unless the board steps in. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism; Yugoslav workers' self-management"
+    },
+    {
+      "model": "Marxian communism",
+      "best": "Inferred from its principle that distribution follows need once classes have gone, art, training and performance can be provided to everyone who wants them, with no ticket price and no barrier of means. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that after the state withers away and classes disappear, the model does not say how works would be judged or how pay would follow need, so art may be funded without any clear test of quality or demand. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+    },
+    {
+      "model": "Chinese market socialism",
+      "best": "Inferred from its principle that public ownership of key sectors sits beside markets, state studios and broadcasters can fund large productions, while private firms in special economic zones compete for audiences. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that reform proceeds under party direction, party bodies can decide what films, plays or songs may be made or shown, so works judged unsuitable may be stopped, and private firms may find their choices limited by rules set above them. There is no documented case in the pool. Source: Naughton, The Chinese Economy"
+    },
+    {
+      "model": "Participatory economics",
+      "best": "Inferred from its principle that workers' and consumers' councils plan through repeated proposals, the makers, technicians and audiences of a film, concert or play can jointly decide what is made, shown and paid, with jobs balanced so that no one is stuck with only the least interesting tasks. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that councils propose and revise plans without markets or central planners, decisions about what is made can take a long time and wear out participants, so films, concerts or exhibitions may be delayed or dropped before they reach audiences. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
+    },
+    {
+      "model": "Corporatism and fascist economics",
+      "best": "Inferred from its principle that employers and unions are organised into state-controlled corporations, pay, training and output for the arts can be agreed in one council, and the state can plan how many skilled makers the sector needs. There is no documented case in the pool.",
+      "worst": "Reich Chamber of Culture and compulsory membership: a 1933 US diplomatic dispatch reports that membership was obligatory not only for creative workers but also for those who reproduced, sold or distributed creative output, such as typesetters and music publishers. The claim rests on one dispatch, read only through a summary, and the dispatch text was not opened. Source: US State Department, Foreign Relations of the United States, 1933 (diplomatic dispatch)"
+    },
+    {
+      "model": "Islamic economics",
+      "best": "Inferred from its principle that finance shares profit and risk rather than charging interest, a film, album or exhibition can be funded by partners who share its results, and zakat, which redistributes wealth, can support artists who are in need. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that finance shares profit and risk, backers of a film, album or show also share its losses, so risky or slow-selling work may find it hard to raise money, and trust rather than formal credit records decides who gets funding, which can shut out newcomers without a reputation. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System; Founding of the Mit Ghamr savings bank"
+    },
+    {
+      "model": "Buddhist economics",
+      "best": "Inferred from its principle that economic life serves well-being and production stays small and local, small studios, village theatres, craft workshops and community choirs can thrive, and moderate consumption keeps demand for art from being driven by excess. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production stays small and local, big-budget films, large orchestras and national tours may be discouraged, so artists who need scale to reach wide audiences may find little room to grow. There is no documented case in the pool. Source: Schumacher, Buddhist Economics; Schumacher, Small Is Beautiful"
+    },
+    {
+      "model": "Distributism",
+      "best": "Inferred from its principle that small enterprise is widespread and decisions stay with the smallest competent body, local studios, workshops, galleries and bands can own their work and choose locally what is shown and how it is paid for. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that property and small enterprise are widespread, artists who need large capital for films, recordings or big theatre may be unable to raise it, and a small body may lack the means to fund or promote large works. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum; Belloc, The Servile State"
+    },
+    {
+      "model": "Steady-state and degrowth economics",
+      "best": "Inferred from its principle that there is no growth imperative and everyone has a social floor, artists can make work without chasing ever larger audiences, and everyone has a basic claim to music, libraries and public space. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that activity stays within planetary limits with no growth imperative, funding for new films, recordings and venues may be held back, and costly or ambitious arts work may be treated as optional. There is no documented case in the pool. Source: Daly, Steady-State Economics; Raworth, Doughnut Economics"
+    },
+    {
+      "model": "Universal basic income",
+      "best": "Ireland's Basic Income for the Arts pilot: early figures, as a secondary summary gives them, show recipients about 12 percentage points more likely to make a living from arts work alone than a comparison group, and the share reporting depression or anxiety in the previous four weeks almost ten points lower. The pilot pays a selected group, not every citizen, and no full evaluation is included.",
+      "worst": "Ireland's Basic Income for the Arts pilot: early figures, as a secondary summary gives them, show that recipients cut back their time in other sectors, so the payment can draw people away from other work. The pilot pays a selected group, not every citizen, so it tests only part of the model. Source: Cultural policy summary of the pilot's first review (secondary; undated)"
+    },
+    {
+      "model": "Modern monetary theory",
+      "best": "Inferred from its principle that a government which issues its own currency can fund full employment, public money can pay for film, music and theatre jobs and programmes without first raising taxes or waiting for a budget surplus. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that inflation, not debt, is the real limit, arts spending that adds to demand may push up the cost of studio time, instruments and venues, and public arts budgets may be cut when inflation rises, leaving projects half-funded. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+    },
+    {
+      "model": "Commons governance",
+      "best": "Inferred from its principle that communities which share a resource write, monitor and enforce their own rules, a shared studio, instrument library, archive or local festival can be run by the people who use it, who know what it needs. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the community designs and enforces its own rules, a dominant group within it can set those rules, so minority or new forms of art may be shut out of shared spaces, archives and festivals. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+    }
+  ],
+  "compromise": {
+    "summary": "A public arts fund that sits at arm's length from ministers, is paid for from public budgets, and spreads grants across regions and to individual artists. Membership of creative trades stays voluntary, no official may ban a style, and any cut to a screen quota is reviewed in public.",
+    "details": "Keeps: arm's-length funding (Keynesian welfare capitalism; Arts Council of Great Britain, from its 1946 royal charter, as a summary reports). Blocks: compulsory membership (Corporatism and fascist economics; Reich Chamber of Culture and compulsory membership), safeguard: voluntary membership; official style bans (Command socialism; Soviet decree against 'formalism' in music), safeguard: no style ban, and every funding refusal given in writing; unreviewed protection cuts (Monetarist neoliberalism; South Korea halves its screen quota ahead of US trade talks), safeguard: public review of any cut. Test: over five years, reported yearly, the share of arts money reaching individual artists and regional groups, and the share of artists earning from arts work. Source: Arts Council England, online history timeline for the 1940s (undated); US State Department, Foreign Relations of the United States, 1933 (diplomatic dispatch); Partisan Review, 1949 (vol. 16, no. 8); US State Department, Foreign Relations of the United States, 1949 (airgram); Bilaterals, news report on the cabinet decision (2006); Korean film news reports (2006)"
+  }
+}
