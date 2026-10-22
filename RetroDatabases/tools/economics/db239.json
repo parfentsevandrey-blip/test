@@ -30,13 +30,13 @@
     },
     {
       "model": "Guild economy",
-      "best": "The Statute of Anne (first copyright act) is reported to set fixed terms in statute: fourteen years for a new book, a second fourteen-year term for a living author, and a 21-year term for books already printed. The terms are unconfirmed, as the cited entry was not read in full.",
+      "best": "The Statute of Anne (first copyright act) is reported to set fixed terms in statute: fourteen years for a new book, a second fourteen-year term for a living author, and 21 years for books already printed. The terms are unconfirmed, as the entry was not read in full, and a blog post in the results argues that the act aimed at the book trade's manufacturing side, not creative content.",
       "worst": "Inferred from its principle that masters control entry and statutes fix training, so new makers wait for a place in the trade, and a closed body decides who may publish and copy. There is no documented case in the pool. Source: Boileau, Le Livre des métiers; Epstein, Freedom and Growth"
     },
     {
       "model": "Mercantilism",
       "best": "Inferred from its principle that the state aims for a surplus of gold and trade, so rules on copying are shaped to favour home makers and sellers whose trade brings in wealth. There is no documented case in the pool.",
-      "worst": "The Statute of Anne (first copyright act) is reported to set fixed terms for books. A U.S. Intellectual History blog post argues that it aimed at the manufacturing side of the book trade rather than at creators, so a state that regulates production for trade gains may serve producers ahead of authors. The entry was not read in full, so the terms and that reading are unconfirmed. Source: History of Information online entry on the Statute of Anne, The First Copyright Statute (year not shown)"
+      "worst": "The Statute of Anne (first copyright act) is reported to set fixed terms for books. A U.S. Intellectual History blog post argues that it aimed at the manufacturing side of the book trade rather than creative content. Inferred from its principle that the state regulates production for a trade surplus, producers may be served ahead of authors. The entry was not read in full, so the terms and that reading are unconfirmed. Source: History of Information online entry on the Statute of Anne, The First Copyright Statute (year not shown)"
     },
     {
       "model": "Physiocracy",
@@ -55,8 +55,8 @@
     },
     {
       "model": "Monetarist neoliberalism",
-      "best": "A law review abstract reports that the Berne Convention (1886) sets national treatment and the abolition of formalities, which fit open trade and fewer formal rules. The treaty text was not read, and the abstract's grouping of some provisions under 1886 is loose.",
-      "worst": "Privatised monopolies can be lengthened by statute. The US Copyright Term Extension Act of 1998 lengthened US copyright by twenty years, and a 2002 brief by seventeen economists judged its gains very unlikely to exceed its costs, citing monopoly losses and costlier derivative works. The brief is one side's advocacy, and an article in the Economics Working Paper Archive disputes its economics. Source: Brookings-hosted copy of a 2002 amicus brief by seventeen economists (Eldred v. Ashcroft)"
+      "best": "A law review abstract reports that the Berne Convention (1886) sets national treatment and the abolition of formalities. The treaty text was not read, and the abstract's grouping of some provisions under 1886 is loose.",
+      "worst": "Copyright monopolies can be lengthened by statute. The US Copyright Term Extension Act of 1998 lengthened US copyright by twenty years, and a 2002 brief by seventeen economists judged its gains very unlikely to exceed its costs, citing monopoly losses and costlier derivative works. The brief is one side's advocacy, and an article in the Economics Working Paper Archive disputes its economics. Source: Brookings-hosted copy of a 2002 amicus brief by seventeen economists (Eldred v. Ashcroft)"
     },
     {
       "model": "Keynesian welfare capitalism",
@@ -100,7 +100,7 @@
     },
     {
       "model": "Anarcho-communism",
-      "best": "A&M Records v. Napster concerned a peer-to-peer service that let users find and copy MP3 recordings stored on one another's computers, so copies moved directly between members, though the case entry is a summary, not the opinion, and its description of the service is unconfirmed against the entry.",
+      "best": "A&M Records v. Napster concerned a peer-to-peer service that let users find and copy MP3 recordings stored on one another's computers, so copies moved directly between users, though the case entry is a summary, not the opinion, and its description of the service is unconfirmed against the entry.",
       "worst": "Inferred from its principle that there is no state and no contract, so no body can settle who made a work or enforce rules on copying, and disputes over sharing are left to goodwill alone. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
     },
     {
@@ -186,6 +186,6 @@
   ],
   "compromise": {
     "summary": "Creators hold rights from the moment a work is made, for a fixed and published term that is never extended for works already made. Libraries pay authors for lending, foreign authors are treated as local ones, and more than one licensing body may operate. An independent review reports every year on output, licence fees and creators' income.",
-    "details": "Keeps: fixed, published terms set in statute (Guild economy; Statute of Anne (first copyright act), terms unconfirmed); payment to authors for library lending, with no amounts given (Nordic social democracy; Denmark's public lending right); equal treatment of foreign authors (Classical laissez-faire capitalism and Monetarist neoliberalism; Berne Convention (1886), treaty text not read). Blocks: term extensions for existing works, by applying new terms only to new works after a published cost review (Monetarist neoliberalism; US Copyright Term Extension Act of 1998); one state-approved licensing body, by requiring at least two bodies with open membership (Corporatism and fascist economics; Stagma, state-approved music-rights society in Germany). Test: for ten years after any change, yearly counts of new works published and licensed, licence fees and payments to creators. Source: History of Information online entry on the Statute of Anne; Canadian public lending right history timeline; University of Michigan law review abstract; Brookings-hosted copy of a 2002 amicus brief (Eldred v. Ashcroft); Austria Forum web book."
+    "details": "Keeps: fixed, published terms set in statute (Guild economy; Statute of Anne (first copyright act), terms unconfirmed); payment to authors for library lending, with no amounts given (Nordic social democracy; Denmark's public lending right); equal treatment of foreign authors (Classical laissez-faire capitalism and Monetarist neoliberalism; Berne Convention (1886), treaty text not read). Blocks: term extensions for existing works, by applying new terms only to new works after a published cost review (Monetarist neoliberalism; US Copyright Term Extension Act of 1998); one state-approved licensing body, by requiring more than one body with open membership (Corporatism and fascist economics; Stagma, state-approved music-rights society in Germany). Test: yearly counts of new works published and licensed, licence fees and payments to creators, over a period fixed in statute before any change. Source: History of Information online entry on the Statute of Anne; Canadian public lending right history timeline; University of Michigan law review abstract; Brookings-hosted copy of a 2002 amicus brief (Eldred v. Ashcroft); Austria Forum web book."
   }
 }
