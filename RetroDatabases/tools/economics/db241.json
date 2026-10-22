@@ -1,0 +1,191 @@
+{
+  "database": 241,
+  "type": "practice",
+  "practice": "Games, gambling and lotteries",
+  "models": [
+    {
+      "model": "Gift economy",
+      "best": "Inferred from its principle that games are played as reciprocal gifts among kin and neighbours, with prizes passed on and returned, so stakes stay small and play rests on trust rather than profit. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a gift creates a duty to return, so a player who wins may feel bound to share and a player who loses may be carried by kin, and debts from play can pass to the family and network that owe the favour. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics"
+    },
+    {
+      "model": "Household and peasant economy",
+      "best": "Inferred from its principle that a household plays only as far as its labour and needs allow, so games and fairs follow the farming calendar and stakes stay within what a family can spare. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production serves the household's consumption, so a family that stakes its seed, stock or labour on a game may have to sell land or work for others to recover, and gambling can take the food a farm depends on. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+    },
+    {
+      "model": "Redistributive economy",
+      "best": "Inferred from its principle that a central authority collects levies and redistributes them, so games can be licensed as a public levy whose proceeds are stored and returned to public works and the officials who run them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the centre collects and allocates by rank, so games may become a compulsory levy on players, prizes and proceeds are handed out by office, and favoured households gain while ordinary players have no say over how the stakes are used. There is no documented case in the pool. Source: Polanyi, The Great Transformation; Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires"
+    },
+    {
+      "model": "Slave economy",
+      "best": "Inferred from its principle that output is sold through trade, so games with fixed written rules have counted takings that are easy to tax through the trade's ledgers. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that labour is extracted through ownership, so games are run for owners, enslaved people are denied property and cannot keep winnings, and the stakes are treated as the owners' property with no route to contest the rules. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+    },
+    {
+      "model": "Feudalism",
+      "best": "Inferred from its principle that a lord gives protection and justice in return for service, so games held at the manor or fair are settled by known local rules, and disputes over winnings go to a court that people know. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that services are owed to a lord, so the lord may claim a share of any game or fair, tenants may need leave to play, and disputes over winnings go to a manor court the lord controls, with no appeal to an outside authority. There is no documented case in the pool. Source: Bloch, Feudal Society; Capitulare de villis"
+    },
+    {
+      "model": "Guild economy",
+      "best": "Inferred from its principle that statutes regulate quality and prices, so a guild can set honest dice and cards to a standard and fix published stakes and prizes that its members must keep. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that guilds control entry and prices, so a closed guild can keep out rival game-makers, fix the price of stakes and decide who may run a game, leaving players with fewer choices. There is no documented case in the pool. Source: Boileau, Le Livre des métiers; Epstein, Freedom and Growth"
+    },
+    {
+      "model": "Mercantilism",
+      "best": "Inferred from its principle that the state seeks gold and revenue, so games can be licensed as a levy that keeps the takings within the realm rather than letting them leave for other states. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state regulates production and trade to a national end, so it may grant exclusive licences for games as monopolies, or sell lottery shares for public needs, shifting the costs onto players who cannot choose another game. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade; Heckscher, Mercantilism"
+    },
+    {
+      "model": "Physiocracy",
+      "best": "Inferred from its principle that a single tax on the rent of land funds the state, so the budget would not depend on a levy on games, and public spending would not rest on players' losses. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that only agriculture creates a net product, so games, which the model does not count as producing anything, may be left outside taxation and restriction, and players must rely on private contracts for protection from their losses. There is no documented case in the pool. Source: Quesnay, Tableau économique; Meek, The Economics of Physiocracy"
+    },
+    {
+      "model": "Classical laissez-faire capitalism",
+      "best": "Inferred from its principle that competition, private property and contracts let rival operators offer games, so prices, odds and prizes are set by rivalry and players can take their custom elsewhere. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state protects contracts and otherwise stays out, so operators may offer games with hidden odds or designs that keep people playing, and a player who loses has only the signed terms for protection. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
+    },
+    {
+      "model": "Austrian free-market economics",
+      "best": "Inferred from its principle that prices carry knowledge spread across many people, so the odds and prizes that players accept in open markets show what games are worth to them, and no planner has to guess. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that credit expansion distorts production, so cheap credit for play may fuel gambling debt that spreads through an economy, and a state plan for games may distort the signals that prices give. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society"
+    },
+    {
+      "model": "Monetarist neoliberalism",
+      "best": "Macau ends the single casino franchise: lawmakers approved legislation in July 2001 that ended the single-franchise arrangement, and the tender attracted 21 firms, which fits competitive entry. The sources are second-hand summaries, and they describe the tender rules, not the government's economic thinking, so the link is a hint.",
+      "worst": "Irish Hospitals' Sweepstake, run by a private operator, shows the share of turnover reaching hospitals is contested, with no reconciled figure; the detail is second-hand, and the company's history page is an interested source. The link is an inference. Source: On This Day history blog (entry for 17 November 1930); Marie Coleman's 2009 UCD Press history of the sweep (named in the search summary; text not read); a University of Cumbria research portal review of a book titled The Irish Sweep (author not shown); a company history page from the firm asked to run the sweep (year not shown); an archive catalogue entry (name not shown in results)"
+    },
+    {
+      "model": "Keynesian welfare capitalism",
+      "best": "Inferred from its principle that taxes move against the cycle, so levies on games can be eased in slumps and raised in booms, keeping play-related taxes from deepening a downturn. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that spending rises in slumps, so a state that counts on gambling taxes may find revenue falls just when welfare spending is needed most, because players stake less when incomes fall. There is no documented case in the pool. Source: Keynes, The General Theory; Beveridge, Social Insurance and Allied Services"
+    },
+    {
+      "model": "Social market economy",
+      "best": "UK Gambling Act 2005 and its review sets a legal order for a licensed market: one regulator, the Gambling Commission, and three objectives, including keeping gambling from feeding crime or disorder. The link is a hint, and the detail is second-hand, from council guidance and law-firm updates rather than the statute itself.",
+      "worst": "Inferred from its principle that a legal order curbs monopoly, so licences may be opened to many firms, but the regulator may be too close to the firms it licenses, and protection for vulnerable players may come after harm rather than before it. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft; Erhard, Wohlstand für Alle"
+    },
+    {
+      "model": "Nordic social democracy",
+      "best": "Inferred from its principle that universal public services are financed by high taxes, so a state operator or a levy on games can help fund health and social programmes, and staff who run games are covered by national wage bargaining. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that high taxes fund universal services, so heavy taxes on games may push play to unregulated sites, and a public operator's profits can become a budget target that pulls against limits on play. There is no documented case in the pool. Source: Saltsjöbaden Agreement; Esping-Andersen, The Three Worlds of Welfare Capitalism"
+    },
+    {
+      "model": "Developmental state",
+      "best": "Inferred from its principle that the state directs credit to chosen sectors and judges firms by performance, so game operators can be licensed against targets for tax paid and public benefit, and licences can lapse for operators that miss them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state directs credit to chosen industries, so a favoured game operator may gain cheap credit and an exclusive licence, while firms outside the chosen group lose access to capital, and players face a market shaped by state choice. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle; Amsden, Asia's Next Giant"
+    },
+    {
+      "model": "Georgism",
+      "best": "Inferred from its principle that a tax on the value of land funds public services, so gaming venues pay their share through the land they occupy, and the state need not depend on levies on players' stakes. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that land rent carries the tax, so the state may treat games as a matter for land use and planning alone, leaving their harms to other bodies, and a venue on a valuable site pays the same land tax whatever its takings. There is no documented case in the pool. Source: George, Progress and Poverty"
+    },
+    {
+      "model": "Utopian socialism",
+      "best": "Inferred from its principle that planned communities run shared enterprises, so a game can be held for a common fund, with no private firm taking profit from its losses. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that communities replace competition by example, so a game run by a small community may go without outside rules, and a closed group can set stakes and terms that outsiders cannot challenge. There is no documented case in the pool. Source: Owen, A New View of Society; Fourier, Le Nouveau Monde industriel"
+    },
+    {
+      "model": "Mutualism",
+      "best": "Inferred from its principle that banks lend at cost and free contracts govern dealings, so a mutual fund can return stakes at cost, and no operator earns a rent from the game. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that free contracts govern dealings, so players who sign terms favouring an operator have little protection, and mutual credit used for stakes can spread a group's losses across members who never agreed to the game. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+    },
+    {
+      "model": "Cooperative economy",
+      "best": "Inferred from its principle that members own and control the operator, one member one vote, and share its surplus between users and workers, so a game run as a cooperative returns its surplus to players and staff. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that members own and control the operator and share its surplus, so a members' game may serve a small group, its rules may keep outsiders out, and losses can fall on members who cannot easily leave. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers; Mondragón cooperatives"
+    },
+    {
+      "model": "Anarcho-communism",
+      "best": "Inferred from its principle that goods are shared by need within free communes, so games are played for enjoyment and shared prizes, with no money stakes and no operator who gains from others' losses. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there is no state and free association replaces contracts, so no body is charged with licensing or restricting games, and a commune may have few means to stop harm to members who lose. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+    },
+    {
+      "model": "Syndicalism",
+      "best": "Inferred from its principle that workers' organisations run industry directly, so the staff of a game operator would set its rules, hours and safety, and their union could refuse to run games that harm its members. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that unions run industry and use strikes, so a game run by a union may stop when strikes are called, leaving players and the public without the service, and a union's own interests may shape which games it runs. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail"
+    },
+    {
+      "model": "Fabian socialism",
+      "best": "Inferred from its principle that democratic and gradual public enterprise runs services, so a town or the nation can own a game operator, publish its accounts, and direct its proceeds to a national minimum of welfare. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that public enterprise changes by gradual democratic means, so a municipal or national game may be slow to change its odds, limits or marketing, and the state may come to depend on game profits as a steady source of welfare revenue. There is no documented case in the pool. Source: Fabian Essays in Socialism; Founding of the Fabian Society"
+    },
+    {
+      "model": "Guild socialism",
+      "best": "Inferred from its principle that workers and consumers share control through councils, so a game operator's staff and players' representatives would both shape its rules, prizes and marketing, with the state as one partner among several. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that councils of producers share control with the state, so the staff of a game operator may press to keep games running for jobs, and consumer councils may be too weak to limit play, leaving the balance among partners unsettled. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+    },
+    {
+      "model": "Command socialism",
+      "best": "Inferred from its principle that a central plan sets output and prices, so the state can set one national game, fix its odds and prizes, and direct the proceeds to a planned public purpose. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that central plans set output and mobilise labour, so games may be set as quotas for a planned purpose and pushed to meet targets, while players and staff have no say over odds or limits. There is no documented case in the pool. Source: Kornai, The Socialist System; First Five-Year Plan"
+    },
+    {
+      "model": "Market socialism",
+      "best": "Inferred from its principle that public managers follow market prices under a central board's rules, so a state-owned game can sell at market odds, and the board can publish the odds and the rules that keep them fair. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that managers follow prices and a central board sets the rules and investment, so a state-owned game may be judged on its takings, and the board may set rules that favour revenue over limits on play. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism; Yugoslav workers' self-management"
+    },
+    {
+      "model": "Marxian communism",
+      "best": "Inferred from its principle that once classes disappear no class gains from others' losses, so games are run without private profit, and their proceeds follow need. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state withers away only after classes disappear, so during the transition the state would run games and set their rules, and the principle gives no fixed time or test for ending that control. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+    },
+    {
+      "model": "Chinese market socialism",
+      "best": "China's welfare lottery began in 1987 to channel income toward social welfare, and a 2012 feature reported that its money went to nursing homes, disaster relief and the social security fund. The sources describe a state-run welfare game, not a theory of ownership, so the link is a hint, and only one 2012 feature, with no official figures, supports where the money went.",
+      "worst": "Inferred from its principle that key sectors stay in public hands while markets and special zones run alongside, so state-linked operators may dominate games in the zones, and party direction may set licences and limits with limited public input. There is no documented case in the pool. Source: Naughton, The Chinese Economy"
+    },
+    {
+      "model": "Participatory economics",
+      "best": "Inferred from its principle that workers' and consumers' councils propose and revise plans, so players, staff and the community can agree the odds, limits and uses of game proceeds through repeated proposals. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that councils decide through repeated proposals, without markets or central planners, so a game's rules may change slowly and decisions may stall when councils disagree, leaving stakes and limits unset for long periods. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
+    },
+    {
+      "model": "Corporatism and fascist economics",
+      "best": "Inferred from its principle that employers and unions are organised into corporations, so game operators and their staff agree rules, taxes and stakes within one structure, with the state settling disputes between them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state directs industry toward national goals, including war, so games may be licensed or taxed to fund military spending, and players' objections to limits may be overruled by state-controlled corporations. There is no documented case in the pool. Source: Italian corporative law; Nazi Four-Year Plan"
+    },
+    {
+      "model": "Islamic economics",
+      "best": "Inferred from its principle that finance shares profit and risk rather than paying fixed returns, so games that pay fixed prizes for a stake are treated as outside sound contracts and restricted, while zakat moves wealth without stakes. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that trust underpins contracts, so a game run on the operator's reputation alone gives players few written terms, and where trust fails there may be little formal enforcement, leaving winners and losers without a clear remedy. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System; Founding of the Mit Ghamr savings bank"
+    },
+    {
+      "model": "Buddhist economics",
+      "best": "Inferred from its principle that economic life serves well-being, so games are kept small, local and moderate in stakes, and a community's game nights and fairs are judged by their effect on the people who take part. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that consumption is moderate, so a limit on games may be set too tightly for people who play for pleasure, and a small local operator may lack the scale to run fair odds or to protect vulnerable players. There is no documented case in the pool. Source: Schumacher, Buddhist Economics; Schumacher, Small Is Beautiful"
+    },
+    {
+      "model": "Distributism",
+      "best": "Inferred from its principle that small enterprise and subsidiarity keep decisions with the smallest competent body, so a local operator licensed by the town runs games with stakes and prizes set close to the people they serve. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that small enterprise is widely held, so many small operators may compete for custom with bigger prizes, the just wage may be hard to enforce on small staff, and families of players who lose may have little protection from the law. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum; Belloc, The Servile State"
+    },
+    {
+      "model": "Steady-state and degrowth economics",
+      "best": "Inferred from its principle that activity stays within planetary limits and there is no growth imperative, so games are capped in total stakes and reach, and a social floor protects people from losing essentials to play. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there is no growth imperative, so caps on games may be set too tightly for licensed operators to pay for safer play, while a cap on total play may push demand into unregulated and unmonitored games. There is no documented case in the pool. Source: Daly, Steady-State Economics; Raworth, Doughnut Economics"
+    },
+    {
+      "model": "Universal basic income",
+      "best": "Inferred from its principle that every citizen gets an unconditional income, so people who lose money on games still keep a floor of income, and no one needs games to meet basic needs. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that every citizen receives an unconditional income, so the payment may be spent on games by people who lose it, and restrictions on play may seem unnecessary, since the income is paid whatever the outcome. There is no documented case in the pool. Source: Paine, Agrarian Justice; Van Parijs, Real Freedom for All"
+    },
+    {
+      "model": "Modern monetary theory",
+      "best": "Inferred from its principle that a government which issues its own currency can fund public services without relying on taxes on games, so gambling levies need not balance the budget, and limits on play can rest on public health grounds. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that inflation, not debt, is the real limit, so spending on game-funded programmes could be expanded by issuing money, and the state may not notice the inflation risk until prices rise. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+    },
+    {
+      "model": "Commons governance",
+      "best": "Inferred from its principle that a community sharing a resource sets its own rules, monitors them and enforces them, so local games and fairs can run under rules agreed by the players and the people who watch for harm. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a community designs, monitors and enforces its own rules, so a local game under strong group pressure may hide harm from outsiders, and it may lack the wider institutions in which community rules should be nested. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+    }
+  ],
+  "compromise": {
+    "summary": "Games of chance are licensed to competing operators through fixed-term tenders and overseen by one regulator with three objectives: keep gambling from feeding crime or disorder, keep it fair and open, and protect children and vulnerable people. Proceeds are published and earmarked for named welfare purposes, and public budgets do not count on game revenue.",
+    "details": "Keeps: open tenders for licences (Monetarist neoliberalism, from Macau ends the single casino franchise); one regulator with three objectives (Social market economy, from UK Gambling Act 2005 and its review); welfare earmarks for proceeds (Chinese market socialism, from China's welfare lottery). Blocks: contested proceeds under a private operator, by audited accounts for each beneficiary (from Irish Hospitals' Sweepstake); one operator held for roughly four decades, by fixed-term licences opened to tender (from Macau ends the single casino franchise); budgets resting on game takings that fall in slumps, by budgeting with no game revenue (Keynesian welfare capitalism, inferred). Test: over each full licence term, measure the share of takings paid to named purposes, reported harm, and licences retendered on time, against the period before licensing. Source: History article 'The History and Development of Casino Gaming in Macau'; Ribble Valley and West Lancashire council licensing pages; Al Jazeera, feature 'China catches lottery fever' (2012); On This Day history blog; Keynes, The General Theory."
+  }
+}
