@@ -1,0 +1,83 @@
+{
+  "database": 232,
+  "practice": "Money creation and central banking",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "CB1",
+      "case": "Scottish free banking and its end",
+      "years": "1716 to 1844-45",
+      "claim": "A World Bank policy research paper, 'Free Banking', dates Scottish free banking from 1716, when the Bank of Scotland lost its exclusive right to issue notes, to 1844-45. It argues that the reforms of those years locked out newcomers and turned the sector into a cartel. Rockoff's NBER working paper on the crisis of 1772 reports a wave of notes under £1 issued by banks and individual merchants, and says Bagehot preferred a free banking system along Scottish lines if he could start again. An online economic history book review of Goodspeed's study of the 1772 crisis reports his view that bans on £1 notes, the ban on the optional clause and the usury law helped cause it; the review concludes that Smith was wrong to think his regulations stabilised the system. Commentators disagree on whether Scotland's system was truly free banking: a critical Mises Institute essay argues that free-banking supporters offered no real resistance to the Peel Acts. A NatWest Group heritage page and an online handbook, 'Banking in Scotland', also differ on how far the Scottish rules after 1844 differed from England's.",
+      "source": "World Bank policy research working paper 1536, 'Free Banking' (year not shown in the search result); Hugh Rockoff, 'Adam Smith and the Crisis of 1772', NBER working paper (year not shown in the search result); online economic history book review of Goodspeed's 'Legislating Instability' (year not shown in the search result); Mises Institute essay 'The Myth of Free Banking in Scotland' (year not shown in the search result); NatWest Group heritage page on the Banknotes Bill, 1844 (year not shown in the search result); online handbook 'Banking in Scotland' (year not shown in the search result)",
+      "url": "https://documents1.worldbank.org/curated/en/719951468760530224/pdf/multi_page.pdf",
+      "caveat": "The 19th-century end is thinly covered: the results give 1844-45 as the end but do not describe the Scottish rules in detail, and they disagree on those rules. The World Bank, NBER and review texts are seen only as excerpts, and the Rockoff and Goodspeed views are reported second-hand.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism",
+        "Austrian free-market economics"
+      ]
+    },
+    {
+      "id": "CB2",
+      "case": "German hyperinflation of 1923",
+      "years": "1922 to 1923",
+      "claim": "An arXiv preprint on the German inflation (2024), 'The Debt-Inflation Channel of the German (Hyper-)Inflation', describes a pause from mid-February to mid-April 1923, when foreign-exchange intervention briefly steadied the mark. The intervention was dropped after heavy reserve losses, and prices accelerated from May to October 1923. A Mises Institute essay on the end of German hyperinflation says that debt monetisation stopped on 15 November 1923. A gold dealer's article, 'The Nightmare German Inflation', dates the hyperinflation phase from after July 1922, so the sources disagree on when it began.",
+      "source": "arXiv preprint, 2024 (year taken from its identifier), 'The Debt-Inflation Channel of the German (Hyper-)Inflation'; Mises Institute essay on the end of German hyperinflation (year not shown in the search result); gold dealer's article 'The Nightmare German Inflation' (year not shown in the search result)",
+      "url": "https://arxiv.org/pdf/2405.13296",
+      "caveat": "These are search excerpts only. The arXiv item is a preprint, and the result does not show peer review. The Mises essay's author and exact title are not confirmed by the results, and the gold dealer's article is a commercial source. No peak-inflation or note-count figure is used, because the results did not tie such figures to a named source.",
+      "relevant_to": [
+        "Austrian free-market economics"
+      ]
+    },
+    {
+      "id": "CB3",
+      "case": "Bundesbank independence under the 1957 statute",
+      "years": "1957 onwards; the low-inflation claim covers 1956 to 1998",
+      "claim": "The 1957 statute creating the Deutsche Bundesbank declared the bank independent of instructions from the Federal Government when it uses its statutory powers (section 12). An ECB working paper by Beyer, Gaspar, Gerberding and Issing quotes that section and reports Adenauer's opposition to an autonomous bank. A Bundesbank speech on the bank's 60th anniversary claims the lowest inflation among G7 countries from 1956 to 1998; that is the bank's own self-assessment.",
+      "source": "European Central Bank working paper by Beyer, Gaspar, Gerberding and Issing (year not shown in the search result); Deutsche Bundesbank speech 'Bundesbank at 60' (2017)",
+      "url": "https://www.ecb.europa.eu/pub/pdf/scpwps/ecbwp1020.pdf",
+      "caveat": "Section 12 and Adenauer's opposition come from the ECB paper as summarised in the results, not from the full text. The Act's dates (approval on 4 July 1957, statute dated 26 July, in force from 1 August) are given without a named source, so they are left out. One reading of Mee (2019) treats the Bank's appeals to Weimar hyperinflation as a tactic for autonomy, and the results say that parliament could amend or abolish the Bank by ordinary law.",
+      "relevant_to": [
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "CB4",
+      "case": "China's central bank separated from the state lenders",
+      "years": "1983 to 1984",
+      "claim": "The central bank's own history dates the State Council ruling that began the change to 17 September 1983; the change started on 1 January 1984. An IMF Finance and Development article of March 1996 contends that the credit plan kept after 1984, which assigned quotas to each bank and directed financing to firms, had an inherent expansionary bias that weakened the central bank's control of monetary developments.",
+      "source": "People's Bank of China, 'A Brief History of the People's Bank of China' (year not shown in the search result); IMF, Finance and Development, March 1996, 'Financial Sector Reforms in China'",
+      "url": "https://www.pbc.gov.cn/en/3688066/3688089/index.html",
+      "caveat": "The central bank's history is its own account, and the IMF item is an argument rather than a finding. Accounts differ on how the 1984 change worked: one describes the old bank being split, while an East Asia Forum article says it broke away from the Finance Ministry. The results also disagree on the names of the successor banks, so the record does not name them.",
+      "relevant_to": [
+        "Chinese market socialism",
+        "Command socialism"
+      ]
+    },
+    {
+      "id": "CB5",
+      "case": "Estonia's kroon and its currency board",
+      "years": "1992 to 1993",
+      "claim": "A country studies website credits the June 1992 kroon with much of the stabilisation that followed. Eesti Pank's own history page puts 1992 inflation at about 1,077%. A Bundesbank keynote on the 30th anniversary of Estonia's monetary reform puts 1992 inflation above 1,000% and 1993 inflation at 36%. An IMF working paper on the Estonian currency board (2002) warns that, without a fast drop in inflation, thin reserves would be spent defending an unrealistic exchange rate. An IMF Staff Papers article of 1993 examines the board's first nine months of operation; only its abstract was seen.",
+      "source": "Eesti Pank (Bank of Estonia), history page (year not shown in the search result); country studies website on Estonia (publisher and year not shown in the search result); Deutsche Bundesbank keynote on 30 years of monetary reform in Estonia (2022); IMF working paper 'The Estonian Currency Board' (2002); IMF Staff Papers, 'The Operation of the Estonian Currency Board' (1993)",
+      "url": "https://www.eestipank.ee/en/museum/history-eesti-pank",
+      "caveat": "The results give no peg rate and no account of the board's rules that a source states, so the record does not describe them. The 1993 IMF item is an abstract-level description, the country studies and Eesti Pank items are short official summaries, and the inflation figures agree only in broad terms.",
+      "relevant_to": [
+        "Monetarist neoliberalism",
+        "Austrian free-market economics"
+      ]
+    },
+    {
+      "id": "CB6",
+      "case": "Bank of Japan's current-account target",
+      "years": "2001 to 2006",
+      "claim": "From March 2001 to March 2006 the Bank of Japan steered policy by the balances that commercial banks held in their current accounts at the bank, not by the overnight call rate. The target opened near 5 trillion yen, slightly above about 4 trillion yen of required reserves, and was later raised to a band of 30 to 35 trillion yen, about 6 to 7% of output. The sources disagree on when that step came: the Bank of Japan survey and a Federal Reserve paper (2011) say January 2004, while the San Francisco Fed's Economic Letter (2006) ties the 35 trillion yen ceiling to December 2004. The call rate was restored as the target in March 2006, and it first rose in July 2006.",
+      "source": "Bank of Japan Institute for Monetary and Economic Studies, survey of empirical analyses of the quantitative easing policy (year not shown in the search result); Federal Reserve Board, International Finance Discussion Papers, 'Quantitative Easing and Bank Lending: Evidence from Japan' (2011); Federal Reserve Bank of San Francisco, Economic Letter, 'Did Quantitative Easing by the Bank of Japan Work?' (2006)",
+      "url": "https://www.imes.boj.or.jp/research/papers/english/me25-1-1.pdf",
+      "caveat": "All figures come from search excerpts of three papers, not the full texts. The July 2006 rise and the 6 to 7% share are not tied to a named source in the results, so check them against the full survey before use.",
+      "relevant_to": [
+        "Keynesian welfare capitalism",
+        "Monetarist neoliberalism"
+      ]
+    }
+  ]
+}
