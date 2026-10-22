@@ -399,8 +399,10 @@ extension Advisor {
                   Double(picked.fit.memory) <= limit, picked.fit.tokensPerSecond >= quietSpeed else { continue }
             result.append(Quiet(card: card, variant: picked.variant, fit: picked.fit))
         }
+        // Проверенные Synapse — выше: оценка качества у живых сборок приблизительная.
+        func rank(_ q: Quiet) -> Double { q.card.quality + (q.card.curated ? 8 : 0) }
         return result.sorted { a, b in
-            a.card.quality != b.card.quality ? a.card.quality > b.card.quality : a.fit.tokensPerSecond > b.fit.tokensPerSecond
+            rank(a) != rank(b) ? rank(a) > rank(b) : a.fit.tokensPerSecond > b.fit.tokensPerSecond
         }
     }
 }

@@ -315,12 +315,14 @@ final class AppModel {
 
     /// Модели со зрением: сначала те, что удобно работают на этом Mac, среди них — самые умные.
     var visionModels: [(ModelCard, FitReport?)] {
-        cards.filter { canSee($0) && EngineCatalog.supports($0.architecture) }
+        // Проверенные — выше, модели для программирования — ниже универсальных: картинки им показывают редко.
+        func rank(_ c: ModelCard) -> Double { c.quality + (c.curated ? 8 : 0) - (c.tags.contains(.code) && !c.tags.contains(.chat) ? 12 : 0) }
+        return cards.filter { canSee($0) && EngineCatalog.supports($0.architecture) }
             .map { ($0, fit($0)) }
             .sorted { a, b in
                 let fa = a.1?.comfortable == true, fb = b.1?.comfortable == true
                 if fa != fb { return fa }
-                return a.0.quality != b.0.quality ? a.0.quality > b.0.quality : a.0.downloads > b.0.downloads
+                return rank(a.0) != rank(b.0) ? rank(a.0) > rank(b.0) : a.0.downloads > b.0.downloads
             }
     }
 
