@@ -250,7 +250,6 @@ nonisolated enum Probe {
         c.timeoutIntervalForRequest = timeout
         c.timeoutIntervalForResource = timeout
         c.requestCachePolicy = .reloadIgnoringLocalCacheData
-        c.httpShouldUsePipelining = false
         return URLSession(configuration: c)
     }
 

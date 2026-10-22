@@ -134,7 +134,7 @@ struct AddSheet: View {
                     let codes = QR.read(image)
                     DispatchQueue.main.async {
                         MainActor.assumeIsolated {
-                            Task {
+                            Task { @MainActor in
                                 if codes.isEmpty { model.flash("На картинке нет QR-кода") } else {
                                     let message = await model.importText(codes.joined(separator: "\n"))
                                     model.flash(message)
@@ -148,7 +148,7 @@ struct AddSheet: View {
                     guard let text else { return }
                     DispatchQueue.main.async {
                         MainActor.assumeIsolated {
-                            Task {
+                            Task { @MainActor in
                                 let message = await model.importText(text)
                                 model.flash(message)
                             }

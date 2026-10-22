@@ -74,7 +74,7 @@ nonisolated enum XrayConfig {
         }
     }
 
-    static let sniffing: [String: Any] = ["enabled": true, "destOverride": ["http", "tls", "quic"], "routeOnly": true]
+    static var sniffing: [String: Any] { ["enabled": true, "destOverride": ["http", "tls", "quic"], "routeOnly": true] }
 
     /// Полная конфигурация для подключения.
     static func build(_ server: Server, _ o: CoreOptions, geo: GeoCategories) throws -> [String: Any] {

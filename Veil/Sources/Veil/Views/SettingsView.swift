@@ -111,12 +111,17 @@ struct SettingsView: View {
                 Section("Профиль провайдера") {
                     LabeledContent("Название", value: profile.name)
                     LabeledContent("Остальное", value: profile.globalProxy ? "через VPN" : "напрямую")
-                    LabeledContent("Правил", value: "\(profile.directSites.count + profile.directIP.count + profile.proxySites.count + profile.proxyIP.count + profile.blockSites.count + profile.blockIP.count)")
+                    LabeledContent("Правил", value: "\(ruleCount(profile))")
                     Button("Удалить профиль", role: .destructive) { model.setRouting { $0.profile = nil; if $0.mode == .profile { $0.mode = .smart } } }
                 }
             }
         }
         .formStyle(.grouped)
+    }
+
+    private func ruleCount(_ p: HappRoutingProfile) -> Int {
+        let lists: [[String]] = [p.directSites, p.directIP, p.proxySites, p.proxyIP, p.blockSites, p.blockIP]
+        return lists.reduce(0) { $0 + $1.count }
     }
 
     private func rules(_ title: String, _ key: WritableKeyPath<RoutingSettings, [String]>, _ placeholder: String) -> some View {
