@@ -6,62 +6,62 @@
     {
       "model": "Gift economy",
       "best": "Inferred from its principle that goods move as gifts that create obligations to return, a dealer who cheats loses the standing that keeps exchange going, so conduct is checked by reputation as well as by price. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that obligations and status are built within known networks, so rivals and newcomers outside them find few ways in and open competition is weak. There is no documented case in the pool. Source: Mauss, The Gift (1925)"
+      "worst": "Inferred from its principle that obligations and status are built within known networks, so rivals and newcomers outside them find few ways in and open competition is weak. There is no documented case in the pool. Source: Mauss, The Gift"
     },
     {
       "model": "Household and peasant economy",
       "best": "Inferred from its principle that a family farm produces to meet its household's needs rather than to win market share, so it does not push out neighbours in a race for sales. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that production serves consumption rather than profit, so a household with little labour or land has no push to compete on price, and markets stay thin with little rivalry. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy (1925)"
+      "worst": "Inferred from its principle that production serves consumption rather than profit, so a household with little labour or land has no push to compete on price, and markets stay thin with little rivalry. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
     },
     {
       "model": "Redistributive economy",
       "best": "Inferred from its principle that a central authority collects and stores goods, so it can release stocks in shortage and no single trader can corner the supply. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the centre collects surplus and allocates it by rank, so access to goods and places depends on favour rather than on price or rivalry, and outside suppliers have no route to compete. There is no documented case in the pool. Source: Polanyi, The Great Transformation (1944)"
+      "worst": "Inferred from its principle that the centre collects surplus and allocates it by rank, so access to goods and places depends on favour rather than on price or rivalry, and outside suppliers have no route to compete. There is no documented case in the pool. Source: Polanyi, The Great Transformation"
     },
     {
       "model": "Slave economy",
       "best": "Inferred from its principle that trade in the owners' output runs for profit under the owners' contracts, so merchants dealing with owners face set terms and predictable sales. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that labour is extracted through the ownership of people, so enslaved people have no rights in trade or contract, and the rules protect the owners who set the terms of sale and labour. There is no documented case in the pool. Source: Williams, Capitalism and Slavery (1944)"
+      "worst": "Inferred from its principle that labour is extracted through the ownership of people, so enslaved people have no rights in trade or contract, and the rules protect the owners who set the terms of sale and labour. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
     },
     {
       "model": "Feudalism",
       "best": "Inferred from its principle that a lord gives land, protection and justice in return for services, so local exchange runs under a known authority that keeps order and settles disputes. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the manor is largely self-supplying and that peasants owe services and rents, so trade between manors is thin and outside traders have little access to the local market. There is no documented case in the pool. Source: Bloch, Feudal Society (1939-1940)"
+      "worst": "Inferred from its principle that the manor is largely self-supplying and that peasants owe services and rents, so trade between manors is thin and outside traders have little access to the local market. There is no documented case in the pool. Source: Bloch, Feudal Society"
     },
     {
       "model": "Guild economy",
       "best": "Inferred from its principle that craft guilds regulate training and quality, so buyers can rely on a known standard of work and masters answer for what they sell. There is no documented case in the pool.",
-      "worst": "Entry rules can keep prices high: a 1999 follow-up in the case US airline deregulation and fares tied entry barriers, such as gate-leasing rules and takeoff-and-landing caps, to higher fares in several key markets. That finding is known only from summaries, not the full report, and it concerns airports rather than trades, so the link to guilds is an analogy. Source: GAO (US congressional watchdog), report RCED-96-79 (1996) and report RCED-99-92 (1999); University of Nebraska-Lincoln dissertation (year not shown)"
+      "worst": "Inferred from its principle that craft guilds regulate entry and prices under statutes, so a guild that limits who may enter a trade can keep prices high and shut out outside craftsmen. There is no documented case in the pool. Source: Boileau, Le Livre des métiers"
     },
     {
       "model": "Mercantilism",
       "best": "Inferred from its principle that the state regulates production and trade toward a surplus, so it can keep home industry from losing ground to rivals abroad. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state regulates trade toward gold and colonies, so favoured merchants can be given protected positions and open competition at home is set aside. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade (1664)"
+      "worst": "Inferred from its principle that the state regulates trade toward gold and colonies, so favoured merchants can be given protected positions and open competition at home is set aside. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade"
     },
     {
       "model": "Physiocracy",
       "best": "Inferred from its principle that the grain trade should be free, so food prices follow supply and demand and farmers are not held back by rules on what they may sell. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that only agriculture creates a net product and only land rent is taxed, so profits from trade and industry escape the tax and any concentration of them is left to other rules. There is no documented case in the pool. Source: Quesnay, Tableau économique (1758)"
+      "worst": "Inferred from its principle that only agriculture creates a net product and only land rent is taxed, so profits from trade and industry escape the tax and any concentration of them is left to other rules. There is no documented case in the pool. Source: Quesnay, Tableau économique"
     },
     {
       "model": "Classical laissez-faire capitalism",
       "best": "The case US airline deregulation and fares finds that, with the state kept out of entry and fares, most results point to lower fares after the 1978 deregulation of US airlines; the gains were uneven, and the 1996 review does not state its comparison baseline.",
-      "worst": "Where the state only protects contracts and otherwise stays out, a combination can grow large; the case US Supreme Court orders breakup of Standard Oil turned on the 1890 Sherman Antitrust Act, and the justices deemed the combination of many oil corporations unlawful because it unreasonably limited commerce. Accounts differ on whether the Court directed the split or affirmed a lower court's dissolution order. Source: American Bar Association Journal, article on the 15 May 1911 ruling (year not shown in the result); other popular and reference summaries of the case (years not shown)"
+      "worst": "Inferred from its principle that where the state only protects contracts and otherwise stays out, a combination can grow large. The case US Supreme Court orders breakup of Standard Oil turned on the 1890 Sherman Antitrust Act, and the justices deemed the combination of many oil corporations unlawful because it unreasonably limited commerce. Accounts differ on whether the Court directed the split or affirmed a lower court's dissolution order. Source: American Bar Association Journal, article on the 15 May 1911 ruling (year not shown in the result); other popular and reference summaries of the case (years not shown)"
     },
     {
       "model": "Austrian free-market economics",
-      "best": "The case Rate-of-return regulation and the Averch-Johnson effect records a regulated utility whose allowed profit, tied to invested capital, was pulled toward overbuilding; a free-market approach that keeps such rules out avoids that distortion, though the empirical base is uneven and the claims come from summaries.",
-      "worst": "Inferred from its principle that prices and free entry discipline firms, so a firm that gains a lead through its own conduct faces little check beyond rivals entering the market. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre (1871)"
+      "best": "The case Rate-of-return regulation and the Averch-Johnson effect shows a regulated utility whose allowed profit, tied to invested capital, was pulled toward overbuilding, though the empirical base is uneven and the claims come from summaries. Inferred from its principle that state planning distorts production, a free-market approach that keeps such rules out avoids that distortion.",
+      "worst": "Inferred from its principle that prices and free entry discipline firms, so a firm that gains a lead through its own conduct faces little check beyond rivals entering the market. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre"
     },
     {
       "model": "Monetarist neoliberalism",
-      "best": "The case San Francisco extends rent control in 1994 records a fall in rental availability in buildings brought under the extension, through condo conversions, owner sales and redevelopment; sources disagree on its size. A Monetarist approach of fewer controls on markets keeps such caps off rents, so that loss of supply does not follow.",
+      "best": "The case San Francisco extends rent control in 1994 records a fall in rental availability in buildings brought under the extension, through condo conversions, owner sales and redevelopment; sources disagree on its size, and the results give abstracts and write-ups only. Inferred from its principle that fewer controls on markets keep such caps off rents, so that loss of supply does not follow.",
       "worst": "The case US airline deregulation and fares shows uneven gains: after a wave of bankruptcies and mergers in 1986 to 1988, surviving carriers gained dominance at some airports where prices climbed, and a 1999 follow-up tied entry barriers, such as gate-leasing rules and takeoff-and-landing caps, to higher fares in several key markets. The 1986 to 1988 point and the 1999 findings come from summaries, not the full reports. Source: GAO (US congressional watchdog), report RCED-96-79 (1996) and report RCED-99-92 (1999); University of Nebraska-Lincoln dissertation (year not shown)"
     },
     {
       "model": "Keynesian welfare capitalism",
       "best": "Inferred from its principle that spending rises in slumps and falls in booms, so firms face steadier demand and fewer forced failures that let a few large firms take over. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state manages demand through spending and taxes but leaves market structure largely to firms, so concentration and cartels in key industries are not addressed by the core tool. There is no documented case in the pool. Source: Keynes, The General Theory (1936)"
+      "worst": "Inferred from its principle that the state manages demand through spending and taxes but leaves market structure largely to firms, so concentration and cartels in key industries are not addressed by the core tool. There is no documented case in the pool. Source: Keynes, The General Theory"
     },
     {
       "model": "Social market economy",
@@ -71,121 +71,121 @@
     {
       "model": "Nordic social democracy",
       "best": "Inferred from its principle that national wage bargaining sets pay across firms, so no employer wins custom by cutting wages, and rivalry moves toward productivity and service. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that high taxes fund universal services and active labour-market policy, so large public provision can leave private suppliers little room to enter, and the scale of the state shapes which firms can compete. There is no documented case in the pool. Source: Saltsjöbaden Agreement (1938)"
+      "worst": "Inferred from its principle that high taxes fund universal services and active labour-market policy, so large public provision can leave private suppliers little room to enter, and the scale of the state shapes which firms can compete. There is no documented case in the pool. Source: Saltsjöbaden Agreement"
     },
     {
       "model": "Developmental state",
       "best": "Inferred from its principle that the state disciplines firms by their performance, so credit and export support are withdrawn from firms that miss targets and inefficient holders are pressed to improve. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state picks industries and directs credit to them, so favoured firms may be shielded from rivals, and the state's choices can crowd out entry by others. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle (1982)"
+      "worst": "Inferred from its principle that the state picks industries and directs credit to them, so favoured firms may be shielded from rivals, and the state's choices can crowd out entry by others. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle"
     },
     {
       "model": "Georgism",
       "best": "Inferred from its principle that a tax on the value of land falls on rent rather than on production, so it leaves output untaxed and reduces the gain from holding land idle. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that land rent is taxed to fund services, so other concentrations of market power outside land are not addressed by the tax, and a land tax set low would capture only part of the rent. There is no documented case in the pool. Source: George, Progress and Poverty (1879)"
+      "worst": "Inferred from its principle that land rent is taxed to fund services, so other concentrations of market power outside land are not addressed by the tax, and a land tax set low would capture only part of the rent. There is no documented case in the pool. Source: George, Progress and Poverty"
     },
     {
       "model": "Utopian socialism",
       "best": "Inferred from its principle that cooperative communities replace wage competition and private profit with shared association, so members set prices and output by agreement and rivalry for jobs is reduced. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that communities are built by example rather than by law, so they have no legal means to curb a rival that gains dominance, and small communities can be pushed out by larger competitors. There is no documented case in the pool. Source: Owen, A New View of Society (1813)"
+      "worst": "Inferred from its principle that communities are built by example rather than by law, so they have no legal means to curb a rival that gains dominance, and small communities can be pushed out by larger competitors. There is no documented case in the pool. Source: Owen, A New View of Society"
     },
     {
       "model": "Mutualism",
       "best": "Inferred from its principle that mutual credit and free contracts let workers keep the value of their work and banks lend at cost, so credit is not monopolised and new lenders can enter. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that free contracts replace state rules, so no public rule checks a firm that gains a lead through contract, and disputes over credit and property depend on the parties themselves. There is no documented case in the pool. Source: Proudhon, What Is Property? (1840)"
+      "worst": "Inferred from its principle that free contracts replace state rules, so no public rule checks a firm that gains a lead through contract, and disputes over credit and property depend on the parties themselves. There is no documented case in the pool. Source: Proudhon, What Is Property?"
     },
     {
       "model": "Cooperative economy",
       "best": "Inferred from its principle that members own and control firms and banks, one member one vote, and share the surplus between users and workers, so firms are not run for outside profit alone. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that members control firms by vote and share the surplus, so a cooperative may protect its members' jobs and prices at the expense of outside rivals and new entrants. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers (1844)"
+      "worst": "Inferred from its principle that members control firms by vote and share the surplus, so a cooperative may protect its members' jobs and prices at the expense of outside rivals and new entrants. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers"
     },
     {
       "model": "Anarcho-communism",
       "best": "Inferred from its principle that goods are shared by need within federated communes, with no wages and no contracts, so there is no price rivalry to exploit and no firm gains from a rival's loss. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that free association replaces the state and contracts, so nothing legal checks a federation or large commune that comes to dominate supply, and disputes between communes depend on their own agreement. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread (1892)"
+      "worst": "Inferred from its principle that free association replaces the state and contracts, so nothing legal checks a federation or large commune that comes to dominate supply, and disputes between communes depend on their own agreement. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
     },
     {
       "model": "Syndicalism",
       "best": "Inferred from its principle that trade unions run industry through workers' organisations, so those who know a trade set its conditions, and the threat of a strike holds firms to account. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that unions win control by strikes and eventually a general strike, so a union-run industry can restrict who enters a trade and use its bargaining power against consumers and outside firms. There is no documented case in the pool. Source: Founding of the French CGT (1895)"
+      "worst": "Inferred from its principle that unions win control by strikes and eventually a general strike, so a union-run industry can restrict who enters a trade and use its bargaining power against consumers and outside firms. There is no documented case in the pool. Source: Founding of the French CGT"
     },
     {
       "model": "Fabian socialism",
       "best": "Inferred from its principle that municipal and national public enterprise runs key services and a national minimum sets standards, so essential services are kept open to all rather than priced for profit. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that public enterprise can run a service as a monopoly, so a state-run service may face no rival, and prices and quality may go unchecked without a regulator of its own. There is no documented case in the pool. Source: Fabian Essays in Socialism (1889)"
+      "worst": "Inferred from its principle that public enterprise can run a service as a monopoly, so a state-run service may face no rival, and prices and quality may go unchecked without a regulator of its own. There is no documented case in the pool. Source: Fabian Essays in Socialism"
     },
     {
       "model": "Guild socialism",
       "best": "Inferred from its principle that workers and consumers share control of industry through guild-like councils, so producers and users check each other on prices and quality. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that guild-like councils run each trade for their own members, so they may favour insiders over outside workers and consumers, and the state as one partner among several may not check them. There is no documented case in the pool. Source: Cole, Self-Government in Industry (1917)"
+      "worst": "Inferred from its principle that guild-like councils run each trade for their own members, so they may favour insiders over outside workers and consumers, and the state as one partner among several may not check them. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
     },
     {
       "model": "Command socialism",
       "best": "Inferred from its principle that central plans set output, prices and investment, so the state can direct resources to priority industries and avoid duplicated investment. There is no documented case in the pool.",
-      "worst": "Setting prices by central rule can cut supply: the case San Francisco extends rent control in 1994 records a fall in rental availability in buildings brought under the extension, through condo conversions, owner sales and redevelopment; sources disagree on its size, and the results give abstracts and write-ups only. Source: Diamond, McQuade and Qian, study in the American Economic Review (2019) and NBER working paper (2018); City Observatory piece (year not shown); Stanford GSB insight piece (year not shown)"
+      "worst": "Inferred from its principle that the plan fixes output and prices, a price set too low can cut output, and no rival outside the plan can offer a different price. There is no documented case in the pool. Source: Kornai, The Socialist System"
     },
     {
       "model": "Market socialism",
       "best": "Inferred from its principle that managers follow market prices under public ownership, so firms are guided by price signals rather than by orders from above. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that a central board sets the rules and the investment, so its choices can override what prices signal, and firms may then respond to orders rather than to rivals. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism (1938; Lange's essays date from 1936-1937)"
+      "worst": "Inferred from its principle that a central board sets the rules and the investment, so its choices can override what prices signal, and firms may then respond to orders rather than to rivals. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism"
     },
     {
       "model": "Marxian communism",
       "best": "Inferred from its principle that once classes disappear and the state withers away, distribution follows need and ability, so competition between workers for pay and status gives way to shared provision. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state must first hold and run the economy before it withers away, so while it holds control it can set prices and entry itself, and no independent rival can check that power. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme (1875)"
+      "worst": "Inferred from its principle that the state must first hold and run the economy before it withers away, so while it holds control it can set prices and entry itself, and no independent rival can check that power. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
     },
     {
       "model": "Chinese market socialism",
-      "best": "The case China's Anti-Monopoly Law and state-owned monopolies records the law reaching state firms in early actions: state salt firms in Hubei faced action in late 2010 over abuse of dominance, and China Telecom and China Unicom came under NDRC scrutiny in 2011; these come from a summary of several pages, and the picture stops around 2012.",
+      "best": "The case China's Anti-Monopoly Law and state-owned monopolies records the law reaching state firms in early actions: state salt firms in Hubei faced action in late 2010 over abuse of dominance, and China Telecom and China Unicom came under NDRC scrutiny in 2011; these come from a summary of several pages, and the picture stops around 2012. Sources disagree on whether the law binds state firms equally.",
       "worst": "The case China's Anti-Monopoly Law and state-owned monopolies records Article 7, which tolerates state dominance in strategic sectors while barring consumer abuse; Mondaq says the law shields state-run monopolies in key sectors from review, while an ICAO compendium holds that the majority view applies it equally to state and private firms. The ICAO note is dated January 2012, so the picture stops around then. Source: WilmerHale law-firm article, 'China Enacts National Competition Law' (2007); Mondaq article (year not shown); ICAO compendium on fair competition (note dated January 2012); summaries of enforcement studies (years not shown)"
     },
     {
       "model": "Participatory economics",
       "best": "Inferred from its principle that workers' and consumers' councils plan through repeated proposals, so prices and output are set by the people affected rather than by rival firms or a central planner. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that neither markets nor central planners allocate, so every proposal must pass through councils, and a slow or divided process may respond poorly to a new entrant or to a firm that gains market power. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward (1991)"
+      "worst": "Inferred from its principle that neither markets nor central planners allocate, so every proposal must pass through councils, and a slow or divided process may respond poorly to a new entrant or to a firm that gains market power. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
     },
     {
       "model": "Corporatism and fascist economics",
       "best": "Inferred from its principle that employers and unions are organised into state-controlled corporations, so sectors are coordinated in one place rather than left to rival firms. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that state-controlled corporations set the terms of each sector, so they can fix prices, output and entry for their members and keep outside firms and workers out. There is no documented case in the pool. Source: Italian corporative law (1934)"
+      "worst": "Inferred from its principle that state-controlled corporations set the terms of each sector, so they can fix prices, output and entry for their members and keep outside firms and workers out. There is no documented case in the pool. Source: Italian corporative law"
     },
     {
       "model": "Islamic economics",
       "best": "Inferred from its principle that interest is prohibited and finance shares profit and risk, so lenders are tied to the fortunes of borrowers and fixed charges do not add pressure to exploit them. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that trust underpins contracts, so a firm that gains dominance through contracts faces no rule beyond trust, and disputes over profit-sharing terms may be hard to settle without an enforceable process. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System (1985)"
+      "worst": "Inferred from its principle that trust underpins contracts, so a firm that gains dominance through contracts faces no rule beyond trust, and disputes over profit-sharing terms may be hard to settle without an enforceable process. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System"
     },
     {
       "model": "Buddhist economics",
       "best": "Inferred from its principle that production is small-scale, local and non-violent, so few firms dominate a place and those that operate there answer to their neighbours. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that consumption is moderate and production stays small, so larger firms serving wider markets get less support, and the lower costs that scale can bring may be lost in competition with outside rivals. There is no documented case in the pool. Source: Schumacher, Buddhist Economics (first published 1966)"
+      "worst": "Inferred from its principle that consumption is moderate and production stays small, so larger firms serving wider markets get less support, and the lower costs that scale can bring may be lost in competition with outside rivals. There is no documented case in the pool. Source: Schumacher, Buddhist Economics"
     },
     {
       "model": "Distributism",
       "best": "Inferred from its principle that widespread private property and small enterprise spread economic power, so no single firm dominates a trade, and a just wage limits the exploitation of workers. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that subsidiarity keeps decisions with the smallest competent body, so national rules on competition may be resisted as remote, and the arrangements for large firms that serve wide markets are left unclear. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum (1891)"
+      "worst": "Inferred from its principle that subsidiarity keeps decisions with the smallest competent body, so national rules on competition may be resisted as remote, and the arrangements for large firms that serve wide markets are left unclear. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum"
     },
     {
       "model": "Steady-state and degrowth economics",
       "best": "Inferred from its principle that economic activity stays within planetary limits with no growth imperative, so firms are not pressed to expand at each other's expense, and a social floor bounds what competition can do. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that growth is not required, so consolidation in a shrinking market can leave fewer firms in control, and the limits on growth do not by themselves check that concentration. There is no documented case in the pool. Source: Daly, Steady-State Economics (1977)"
+      "worst": "Inferred from its principle that growth is not required, so consolidation in a shrinking market can leave fewer firms in control, and the limits on growth do not by themselves check that concentration. There is no documented case in the pool. Source: Daly, Steady-State Economics"
     },
     {
       "model": "Universal basic income",
       "best": "Inferred from its principle that every citizen receives an unconditional income, so workers can refuse poor terms and firms must compete on pay and conditions rather than on the lack of other options. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that land and resource taxes fund the income, so the scheme does not by itself curb monopoly or entry barriers in markets, and it does not stop suppliers of basic goods from raising prices. There is no documented case in the pool. Source: Paine, Agrarian Justice (1797)"
+      "worst": "Inferred from its principle that land and resource taxes fund the income, so the scheme does not by itself curb monopoly or entry barriers in markets, and it does not stop suppliers of basic goods from raising prices. There is no documented case in the pool. Source: Paine, Agrarian Justice"
     },
     {
       "model": "Modern monetary theory",
       "best": "Inferred from its principle that a government issuing its own currency can fund full employment, so public spending can open up new suppliers and keep firms from being starved of credit. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that inflation, not debt, is the real limit, so price controls and public contracts may be used to hold prices, and public money may flow to favoured suppliers with little check on competition. There is no documented case in the pool. Source: Kelton, The Deficit Myth (2020)"
+      "worst": "Inferred from its principle that inflation, not debt, is the real limit, so price controls and public contracts may be used to hold prices, and public money may flow to favoured suppliers with little check on competition. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
     },
     {
       "model": "Commons governance",
       "best": "Inferred from its principle that communities sharing a resource design, monitor and enforce their own rules within wider institutions, so use is checked by users who see the resource daily. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that rules are designed and enforced by the users, so a dominant group within a community can capture the rules and exclude outsiders, and wider institutions may be needed when local rules fail. There is no documented case in the pool. Source: Ostrom, Governing the Commons (1990)"
+      "worst": "Inferred from its principle that rules are designed and enforced by the users, so a dominant group within a community can capture the rules and exclude outsiders, and wider institutions may be needed when local rules fail. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
     }
   ],
   "compromise": {
     "summary": "Competition law applied by a standing authority to state and private firms alike, with cartel and monopoly rules, local consumer bodies that settle disputes, open entry, and rent or rate caps and entry barriers reviewed for their effect on supply before they are set.",
-    "details": "Keeps: from Social market economy, a cartel statute with an independent authority (Germany's cartel law and Federal Cartel Office) and monopoly curbs of the kind in US Supreme Court orders breakup of Standard Oil, though accounts differ on the Court's role; consumer bodies that settle disputes (Brazil's consumer code and the Procon agencies); and, from Classical laissez-faire capitalism, open entry that most results link to lower fares (US airline deregulation and fares). Blocks: unchecked combinations, with a standing authority able to order splits; rent and rate caps, with each cap reviewed for supply effects before it is set; entry barriers, with licence and gate rules published and reviewed; state monopolies shielded from review, with one competition law for state and private firms. Test: every five years for twenty years, count firms per market, standard-service prices, rental supply under and outside caps, and consumer complaints settled. Source: American Bar Association Journal; GAO reports RCED-96-79 and RCED-99-92; Diamond, McQuade and Qian; Procon explainers and monograph; WilmerHale and ICAO compendium."
+    "details": "Keeps: from Social market economy, a cartel statute with an independent authority (Germany's cartel law and Federal Cartel Office); and, from Classical laissez-faire capitalism, open entry that most results link to lower fares (US airline deregulation and fares). Blocks: unchecked combinations, with a standing authority able to order splits; price caps set by plan or rule, with each cap reviewed for supply effects before it is set; entry barriers, with licence and gate rules published and reviewed; state monopolies shielded from review, with one competition law for state and private firms; consumer systems whose limits let suppliers resist accountability, with local bodies settling disputes before court. Test: at regular intervals over a full economic cycle or longer, count firms per market, standard-service prices, rental supply under and outside caps, and consumer complaints settled. Source: American Bar Association Journal; Bundeskartellamt speech and German-language study; GAO reports RCED-96-79 and RCED-99-92; Diamond, McQuade and Qian; Procon explainers and monograph; WilmerHale, Mondaq and ICAO compendium; Kornai, The Socialist System."
   }
 }
