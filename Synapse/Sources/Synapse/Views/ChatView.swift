@@ -477,6 +477,14 @@ struct MessageView: View {
                 Text("\(Int(s.tokensPerSecond.rounded())) ток/с · \(s.tokens) ток. · \(Format.duration(s.seconds + s.promptSeconds))")
                     .monospacedDigit()
                 if s.stoppedByLimit { Text("· обрезано по длине").foregroundStyle(.orange) }
+                if s.thinkingCut == true {
+                    Text("· размышления прерваны").foregroundStyle(.orange)
+                        .help("Модель пошла по кругу или превысила предел размышлений — Synapse закрыл размышления, и она ответила по тому, что уже поняла. Настраивается в Настройках → Ответы.")
+                }
+                if s.stoppedByLoop == true {
+                    Text("· остановлено: модель повторялась").foregroundStyle(.orange)
+                        .help("Ответ пошёл по кругу, и Synapse его остановил. Нажмите «Повторить» — или выберите модель посильнее.")
+                }
             }
             if let name = message.model { Text(name).foregroundStyle(.tertiary) }
             Spacer()

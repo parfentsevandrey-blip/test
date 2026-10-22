@@ -50,8 +50,30 @@ nonisolated struct GenerationSettings: Sendable, Codable, Hashable {
     var maxTokens: Int = 8192
     var thinking = true
     var seed: UInt32 = 0xFFFF_FFFF // случайный
+    /// Защита от зацикливания: штраф за повтор цепочек в размышлениях (DRY) и остановка круга.
+    var loopGuard = true
+    /// Предел размышлений в токенах; 0 — без предела.
+    var thinkingBudget = 0
 
     static let precise = GenerationSettings(temperature: 0, maxTokens: 256, thinking: false)
+}
+
+extension GenerationSettings {
+    /// Настройки, сохранённые прошлой версией, читаются: недостающие поля — по умолчанию.
+    nonisolated init(from decoder: Decoder) throws {
+        self.init()
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        temperature = try c.decodeIfPresent(Double.self, forKey: .temperature) ?? temperature
+        topP = try c.decodeIfPresent(Double.self, forKey: .topP) ?? topP
+        topK = try c.decodeIfPresent(Int.self, forKey: .topK) ?? topK
+        minP = try c.decodeIfPresent(Double.self, forKey: .minP) ?? minP
+        repeatPenalty = try c.decodeIfPresent(Double.self, forKey: .repeatPenalty) ?? repeatPenalty
+        maxTokens = try c.decodeIfPresent(Int.self, forKey: .maxTokens) ?? maxTokens
+        thinking = try c.decodeIfPresent(Bool.self, forKey: .thinking) ?? thinking
+        seed = try c.decodeIfPresent(UInt32.self, forKey: .seed) ?? seed
+        loopGuard = try c.decodeIfPresent(Bool.self, forKey: .loopGuard) ?? loopGuard
+        thinkingBudget = try c.decodeIfPresent(Int.self, forKey: .thinkingBudget) ?? thinkingBudget
+    }
 }
 
 nonisolated struct GenerationStats: Sendable, Codable, Hashable {
@@ -61,6 +83,10 @@ nonisolated struct GenerationStats: Sendable, Codable, Hashable {
     var tokens = 0
     var seconds = 0.0
     var stoppedByLimit = false
+    /// Ответ остановлен: модель пошла по кругу.
+    var stoppedByLoop: Bool?
+    /// Размышления закрыты принудительно (круг или предел), модель перешла к ответу.
+    var thinkingCut: Bool?
 
     var tokensPerSecond: Double { seconds > 0 ? Double(tokens) / seconds : 0 }
     var promptPerSecond: Double { promptSeconds > 0 ? Double(promptTokens - reusedTokens) / promptSeconds : 0 }
@@ -421,15 +447,17 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
         }
         stats.promptSeconds = Date().timeIntervalSince(promptStart)
 
-        let sampler = makeSampler(settings, vocab: vocab)
-        defer { llama_sampler_free(sampler) }
+        let samplers = Samplers(settings, vocab: vocab, engine: self)
+        defer { samplers.free() }
+        var guardian = LoopGuard(enabled: settings.loopGuard, budget: settings.thinking ? settings.thinkingBudget : 0,
+                                 startsInReasoning: rendered.startsInReasoning, format: format)
 
         var utf8 = UTF8Accumulator()
         let genStart = Date()
-        while stats.tokens < settings.maxTokens {
+        generation: while stats.tokens < settings.maxTokens {
             if token.isCancelled { break }
             if evaluated.count >= nCtx - 1 { stats.stoppedByLimit = true; break }
-            let next = llama_sampler_sample(sampler, ctx, -1)
+            let next = samplers.sample(ctx, reasoning: guardian.inReasoning)
             if llama_vocab_is_eog(vocab, next) { break }
             let text = utf8.push(piece(next, vocab: vocab))
             if !text.isEmpty { emit(.text(text)) }
@@ -443,6 +471,25 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
                 throw EngineError.decodeFailed(rc)
             }
             evaluated.append(next)
+
+            switch guardian.observe(next, text: text) {
+            case .none: break
+            case .stop:
+                stats.stoppedByLoop = true
+                break generation
+            case .closeThinking(let note, let closing):
+                // Модель «дописывает» конец размышлений — дальше она отвечает.
+                stats.thinkingCut = true
+                emit(.text(utf8.flush() + note))
+                emit(.text(closing))
+                for t in tokenize(closing, special: false) {
+                    var one = [t]
+                    let rc = one.withUnsafeMutableBufferPointer { llama_decode(ctx, llama_batch_get_one($0.baseAddress, 1)) }
+                    if rc != 0 { resync(mem, evaluated); break generation }
+                    evaluated.append(t)
+                    samplers.accept(t)
+                }
+            }
         }
         if stats.tokens >= settings.maxTokens { stats.stoppedByLimit = true }
         let tail = utf8.flush()
@@ -525,34 +572,55 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
         stats.promptSeconds = Date().timeIntervalSince(promptStart)
         emit(.prompt(done: stats.promptTokens, total: stats.promptTokens))
 
-        let sampler = makeSampler(settings, vocab: vocab)
-        defer { llama_sampler_free(sampler) }
+        let samplers = Samplers(settings, vocab: vocab, engine: self)
+        defer { samplers.free() }
+        var guardian = LoopGuard(enabled: settings.loopGuard, budget: settings.thinking ? settings.thinkingBudget : 0,
+                                 startsInReasoning: rendered.startsInReasoning, format: format)
         var batch = llama_batch_init(1, 0, 1)
         defer { llama_batch_free(batch) }
-
-        var utf8 = UTF8Accumulator()
-        let genStart = Date()
-        while stats.tokens < settings.maxTokens {
-            if token.isCancelled { break }
-            if Int(position) >= nCtx - 1 { stats.stoppedByLimit = true; break }
-            let next = llama_sampler_sample(sampler, ctx, -1)
-            if llama_vocab_is_eog(vocab, next) { break }
-            let text = utf8.push(piece(next, vocab: vocab))
-            if !text.isEmpty { emit(.text(text)) }
-            stats.tokens += 1
-
+        func feed(_ t: llama_token) -> Int32 {
             batch.n_tokens = 1
-            batch.token[0] = next
+            batch.token[0] = t
             batch.pos[0] = position
             batch.n_seq_id[0] = 1
             batch.seq_id[0]![0] = 0
             batch.logits[0] = 1
             let rc = llama_decode(ctx, batch)
+            if rc == 0 { position += 1 }
+            return rc
+        }
+
+        var utf8 = UTF8Accumulator()
+        let genStart = Date()
+        generation: while stats.tokens < settings.maxTokens {
+            if token.isCancelled { break }
+            if Int(position) >= nCtx - 1 { stats.stoppedByLimit = true; break }
+            let next = samplers.sample(ctx, reasoning: guardian.inReasoning)
+            if llama_vocab_is_eog(vocab, next) { break }
+            let text = utf8.push(piece(next, vocab: vocab))
+            if !text.isEmpty { emit(.text(text)) }
+            stats.tokens += 1
+
+            let rc = feed(next)
             if rc != 0 {
                 if token.isCancelled || rc == 2 { break }
                 throw EngineError.decodeFailed(rc)
             }
-            position += 1
+
+            switch guardian.observe(next, text: text) {
+            case .none: break
+            case .stop:
+                stats.stoppedByLoop = true
+                break generation
+            case .closeThinking(let note, let closing):
+                stats.thinkingCut = true
+                emit(.text(utf8.flush() + note))
+                emit(.text(closing))
+                for t in tokenize(closing, special: false) {
+                    if feed(t) != 0 { break generation }
+                    samplers.accept(t)
+                }
+            }
         }
         if stats.tokens >= settings.maxTokens { stats.stoppedByLimit = true }
         let tail = utf8.flush()
@@ -593,14 +661,15 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
         return String(decoding: buf.prefix(Int(n)).map { UInt8(bitPattern: $0) }, as: UTF8.self)
     }
 
-    private func tokenize(_ text: String) -> [llama_token] {
+    /// `special: false` — без токена начала текста (BOS): для кусков посреди ответа.
+    private func tokenize(_ text: String, special: Bool = true) -> [llama_token] {
         guard let vocab else { return [] }
         let length = Int32(text.utf8.count)
         var tokens = [llama_token](repeating: 0, count: Int(length) + 16)
-        var n = llama_tokenize(vocab, text, length, &tokens, Int32(tokens.count), true, true)
+        var n = llama_tokenize(vocab, text, length, &tokens, Int32(tokens.count), special, true)
         if n < 0 {
             tokens = [llama_token](repeating: 0, count: Int(-n))
-            n = llama_tokenize(vocab, text, length, &tokens, Int32(tokens.count), true, true)
+            n = llama_tokenize(vocab, text, length, &tokens, Int32(tokens.count), special, true)
         }
         return Array(tokens.prefix(Int(max(0, n))))
     }
@@ -622,8 +691,49 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
         return buf.prefix(Int(max(0, n))).map { UInt8(bitPattern: $0) }
     }
 
-    private func makeSampler(_ s: GenerationSettings, vocab: OpaquePointer) -> UnsafeMutablePointer<llama_sampler> {
+    /// Два набора выбора слов: для размышлений — со штрафом DRY за повтор уже написанных цепочек
+    /// (если включена защита от зацикливания), для ответа — обычный: в ответе повторы бывают законными
+    /// (код, таблицы). Каждый токен показываем обоим, чтобы они помнили весь текст.
+    nonisolated fileprivate final class Samplers {
+        let answer: UnsafeMutablePointer<llama_sampler>
+        let thinking: UnsafeMutablePointer<llama_sampler>?
+
+        init(_ s: GenerationSettings, vocab: OpaquePointer, engine: LlamaEngine) {
+            answer = engine.makeSampler(s, vocab: vocab, dry: false)
+            thinking = s.loopGuard ? engine.makeSampler(s, vocab: vocab, dry: true) : nil
+        }
+
+        func sample(_ ctx: OpaquePointer, reasoning: Bool) -> llama_token {
+            guard let thinking else { return llama_sampler_sample(answer, ctx, -1) }
+            let (used, other) = reasoning ? (thinking, answer) : (answer, thinking)
+            let t = llama_sampler_sample(used, ctx, -1)
+            llama_sampler_accept(other, t)
+            return t
+        }
+
+        func accept(_ t: llama_token) {
+            llama_sampler_accept(answer, t)
+            if let thinking { llama_sampler_accept(thinking, t) }
+        }
+
+        func free() {
+            llama_sampler_free(answer)
+            if let thinking { llama_sampler_free(thinking) }
+        }
+    }
+
+    fileprivate func makeSampler(_ s: GenerationSettings, vocab: OpaquePointer, dry: Bool = false) -> UnsafeMutablePointer<llama_sampler> {
         let chain = llama_sampler_chain_init(llama_sampler_chain_default_params())!
+        if dry {
+            // DRY: чем длиннее повторяемая цепочка, тем сильнее штраф. Разрывы — переносы строк, двоеточия, кавычки.
+            let breakers = ["\n", ":", "\"", "*"].map { strdup($0) }
+            defer { breakers.forEach { free($0) } }
+            var pointers = breakers.map { UnsafePointer<CChar>($0) }
+            let d = pointers.withUnsafeMutableBufferPointer {
+                llama_sampler_init_dry(vocab, 0.8, 1.75, 2, 4096, $0.baseAddress, $0.count)
+            }
+            if let d { llama_sampler_chain_add(chain, d) }
+        }
         if s.temperature <= 0.01 {
             llama_sampler_chain_add(chain, llama_sampler_init_greedy())
             return chain

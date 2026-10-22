@@ -1,3 +1,4 @@
+import CLlama
 import CoreGraphics
 import Foundation
 import ImageIO
@@ -109,6 +110,42 @@ nonisolated enum SelfTest {
         ok = check(qwenOff.text.hasSuffix("<think>\n\n</think>\n\n") && !qwenOff.startsInReasoning, "Qwen без размышлений") && ok
         ok = check(ChatFormat.detect(template: "{{ '<|turn>' }}{{ '<turn|>' }}") == .gemma4, "распознан шаблон Gemma 4") && ok
         ok = check(ChatFormat.detect(template: "<|start|>x<|channel|>") == .harmony, "распознан Harmony") && ok
+
+        print("— Защита от зацикливания")
+        do {
+            // «это V8 нет я перепроверил» по кругу в размышлениях — размышления закрываются.
+            let phrase: [llama_token] = [101, 102, 103, 104, 105, 106, 107]
+            var g = LoopGuard(enabled: true, budget: 0, startsInReasoning: true, format: .chatmlThinking)
+            var action = LoopGuard.Action.none
+            var fed = 0
+            loop: for _ in 0..<20 { for t in phrase { fed += 1; action = g.observe(t, text: "x"); if action != .none { break loop } } }
+            if case .closeThinking(_, let closing) = action {
+                ok = check(closing.contains("</think>") && fed <= phrase.count * 4, "круг в размышлениях замечен через \(fed) токенов — размышления закрываются") && ok
+            } else {
+                ok = check(false, "круг в размышлениях не замечен") && ok
+            }
+            // Обычный ответ без повторов — не трогаем; таблица с разными строками — тоже.
+            var plain = LoopGuard(enabled: true, budget: 0, startsInReasoning: false, format: .chatmlThinking)
+            var calm = true
+            for i in 0..<600 where plain.observe(llama_token(1000 + (i * 7919) % 5000), text: "y") != .none { calm = false }
+            let row: [llama_token] = [5, 6, 7, 8]
+            for r in 0..<40 { for t in row + [llama_token(9000 + r)] where plain.observe(t, text: "|") != .none { calm = false } }
+            ok = check(calm, "обычный ответ и таблица — без ложных срабатываний") && ok
+            // Ответ по кругу — остановка.
+            var answer = LoopGuard(enabled: true, budget: 0, startsInReasoning: false, format: .gemma4)
+            var stopped = false
+            for _ in 0..<10 { for t in phrase where answer.observe(t, text: "z") == .stop { stopped = true } }
+            ok = check(stopped, "ответ по кругу останавливается") && ok
+            // Предел размышлений.
+            var budget = LoopGuard(enabled: false, budget: 50, startsInReasoning: true, format: .gemma4)
+            var cut: LoopGuard.Action = .none
+            for i in 0..<60 where cut == .none { cut = budget.observe(llama_token(2000 + i), text: "w") }
+            if case .closeThinking(_, let closing) = cut { ok = check(closing == "<channel|>", "предел размышлений: Gemma закрывает свой блок") && ok }
+            else { ok = check(false, "предел размышлений не сработал") && ok }
+            // Старые настройки без новых полей читаются, защита включена по умолчанию.
+            let old = try? JSONDecoder().decode(GenerationSettings.self, from: Data(#"{"temperature":0.3,"topP":0.9,"topK":40,"minP":0.05,"repeatPenalty":1,"maxTokens":4096,"thinking":true,"seed":1}"#.utf8))
+            ok = check(old?.temperature == 0.3 && old?.loopGuard == true, "настройки прошлой версии читаются, защита включена") && ok
+        }
 
         print("— HTTP-запрос")
         let raw = "POST /v1/chat/completions?x=1 HTTP/1.1\r\nHost: localhost\r\nContent-Length: 13\r\n\r\n{\"model\":\"a\"}"
