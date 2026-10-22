@@ -1,0 +1,97 @@
+{
+  "database": 244,
+  "practice": "Tourism",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "TM1",
+      "case": "Bhutan's per-night tourism fee",
+      "years": "2022 to 2023",
+      "claim": "Bhutan's per-night Sustainable Development Fee rose from 65 to 200 US dollars when travel resumed in September 2022, according to search summaries. Officials later cut it to 100 US dollars from September 2023, and a Gulf News headline says the daily fee was cut by half to lure more visitors. Skift tied the charge to the kingdom's high-value, low-volume approach and warned that the 200 US dollar level could make visitors doubt their trip's worth.",
+      "source": "Skift (travel industry news), 2023; Gulf News, 2023; Travel Weekly, 2022 or 2023 (year not shown)",
+      "url": "https://skift.com/2023/06/22/bhutan-lowers-sustainable-fee-to-boost-longer-stays-from-tourists/",
+      "caveat": "All sources are trade and news reports from 2022 and 2023, and the figures come from headlines and search summaries. None confirms the rate after 2023, and no official Bhutanese source appeared in the results. Skift's remark on visitor doubts is one outlet's view.",
+      "relevant_to": [
+        "Buddhist economics",
+        "Steady-state and degrowth economics"
+      ]
+    },
+    {
+      "id": "TM2",
+      "case": "Venice's day-visitor access fee, 2024 pilot",
+      "years": "2024 pilot; counts reported in 2024 and 2025",
+      "claim": "Venice's 2024 pilot charged day-visitors a flat 5 euros on 29 test days, in peak hours from 8:30am to 4pm. A city count published in July 2024 recorded 485,000 paying visitors across those days. Associated Press reporting from April 2025 says about 450,000 day-trippers paid the 2024 charge. A news report says the fee brought in 2.4 million euros in 2024, while implementation costs reached 2.7 million euros, which left a shortfall.",
+      "source": "Associated Press, April 2025; Venice city count, July 2024; Al Etihad news report (year not shown)",
+      "url": "https://ny1.com/nyc/all-boroughs/ap-top-news/2025/04/18/venice-expands-its-day-tripper-tax-program-to-combat-overtourism",
+      "caveat": "The two visitor counts disagree (485,000 in July 2024; about 450,000 in April 2025), and the results do not explain the gap. The revenue and cost figures rest on one news report and a search summary, and the fee terms were not checked against the city's own access-fee page. Later seasons are outside this case.",
+      "relevant_to": [
+        "Steady-state and degrowth economics",
+        "Commons governance"
+      ]
+    },
+    {
+      "id": "TM3",
+      "case": "Barcelona's doubled tourist tax, 2026",
+      "years": "2026, from 1 April",
+      "claim": "Barcelona's tourist tax roughly doubled from 1 April 2026. Hotel guests now pay about 10 to 15 euros a night by hotel category, up from 5 to 7.50 euros. The city council's own add-on is 5 euros a night, up from 4 euros, and is due to rise by 1 euro a year to a cap of 8 euros in 2029, with the council able to raise that cap further. Reports say roughly a quarter of the revenue is earmarked for housing.",
+      "source": "Catalan News, 2026; Hotel Online trade news, 2026; Falstaff, 2026; Classic FM, 2026",
+      "url": "https://www.hotel-online.com/news/barcelona-doubles-tourism-tax-to-one-of-highest-in-europe-to-fund-housing-1",
+      "caveat": "Outlets differ on the top 2026 rate: some give about 12 euros per person and others up to 15 euros. One headline in the results gives 7 euros a night for Catalonia, which does not match the hotel-category rates. The sources date from February to April 2026, none gives the total revenue collected, and the housing share is not tied to a revenue figure.",
+      "relevant_to": [
+        "Nordic social democracy",
+        "Georgism"
+      ]
+    },
+    {
+      "id": "TM4",
+      "case": "Berlin's ban on letting whole flats to tourists",
+      "years": "2016 onward; rulings in 2016 and (apparently) 2017",
+      "claim": "Since 2016, Berlin's rules have made it illegal to rent out a whole flat to tourists without approval, though single rooms may still be let. Reported fines reach 100,000 euros. In June 2016 the administrative court dismissed a challenge that the rules infringed property and professional freedoms: the judges held that constitutional property protection does not entitle owners to earn money from a home, and that the housing shortage justified the restriction. A later decision let second-home owners who live elsewhere let those homes to tourists. A later permit ruling set aside a refusal for a Pankow homeowner and suggested he be allowed to rent his home for 182 days a year.",
+      "source": "HMI Online, 2016; Fortune, 2016; The Local, 2016; TechCrunch, 2017 (date inferred)",
+      "url": "https://www.hmi-online.com/news/berlin-court-upholds-ban-on-short-term-rentals-4998732/",
+      "caveat": "Only 2016 and 2017 news reports were found, so the current rules and any later rulings are unverified. The four applicants are described as property owners by one outlet and as property managers by another. The fine figure and the 2017 date rest on search summaries, and the results do not say which report gives each claim.",
+      "relevant_to": [
+        "Social market economy",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "TM5",
+      "case": "Spain's 1963 law on tourist centres and zones",
+      "years": "1963 law; assessed in 2006 and 2014",
+      "claim": "A 1963 statute set up a framework for urban areas designated for tourism, called national tourist centres and zones, with tax perks and looser rules for converting urban land so that developments could be built quickly. A legal dictionary entry describes the statute this way. A 2014 article on tourism and urban law reads it as reflecting the Franco regime's commitment to raise revenue that could offset Spain's trade deficit. A 2006 geography study finds the planning model ambitious and technically sound but largely unrealised, with the centres mostly acting as a legal tool that still shaped some coastal areas and ski resorts. A critical commentary faults the law's overreach, including ministry powers that never met their aims.",
+      "source": "Royal Spanish Academy, legal dictionary entry (year not shown); article on tourism and urban law, 2014 (publisher not shown); University of Alicante geography study, 2006; critical commentary (undated)",
+      "url": "https://dpej.rae.es/lema/centros-y-zonas-de-interés-turístico-nacional",
+      "caveat": "Most sources are Spanish-language legal and academic texts, read only as English paraphrases in the search summary. The results include no figures for public tourism investment and do not cover the 1964 Development Plan; the 1964 date refers to a December 1964 regulation under the 1963 law. The case describes a legal framework and its intended effect, not measured results.",
+      "relevant_to": [
+        "Developmental state",
+        "Corporatism and fascist economics"
+      ]
+    },
+    {
+      "id": "TM6",
+      "case": "Namibia's communal conservancies and tourism income",
+      "years": "2023 figures; 2016 study using data from 1998 to 2013",
+      "claim": "In 2023, tourism brought 111 million Namibian dollars to communal conservancies, out of about 166 million Namibian dollars in total cash and in-kind benefits. Cash received by people living in conservancies came to 90.5 million Namibian dollars, of which joint-venture tourism supplied more than 57.7 million. A 2016 Conservation Biology study of 77 conservancies found that hunting income began within about three years of a conservancy's founding and tourism income took closer to six, that wage work at lodges accounted for most of what tourism delivered to communities, and that the authors argue combining hunting and tourism may give the strongest incentives for conservation on communal land.",
+      "source": "Namibian Sun, 2023, on State of Community Conservation figures; Conservation Biology study, 2016",
+      "url": "https://namibiansun.com/life-style/highest-income-in-kind-benefits-from-conservancies-since-20192023-12-20",
+      "caveat": "The 2023 figures come from a newspaper report on the state of community conservation, not from the report itself. The 2016 study uses data only to 2013. The results give no method for year-to-year changes, such as jobs falling from 3,223 in 2022 to 2,340 in 2023, and do not say whether the counting method changed.",
+      "relevant_to": [
+        "Commons governance"
+      ]
+    },
+    {
+      "id": "TM7",
+      "case": "Cuba's joint-venture hotels and dollar tips, 1990s",
+      "years": "1990 to 2005; a 1992 report",
+      "claim": "After Soviet support ended, Cuba's government went after visitor dollars. A January 1992 Christian Science Monitor article reports a projected 500,000 visitors for 1991, about 50 per cent more than in 1990, and says some foreign-partnered hotels, with partners from Spain, France, Italy, Jamaica, Austria and Finland, were nearing completion. A Columbia Law School document counts 14 joint-venture hotels with 5,000 rooms opened between 1990 and 2005, financed with 500 million CUC. It says foreign partners usually supplied the general manager, the food-and-beverage head and top chefs, while Cubans absorbed the know-how. A Berkeley journalism project reports that people with advanced schooling left low-paid professional posts for tourism jobs that paid dollar tips.",
+      "source": "Christian Science Monitor, January 1992; Columbia Law School document on Cuban tourism (year not shown); Berkeley journalism project (year not shown); Havana Times (undated)",
+      "url": "https://www.csmonitor.com/1992/0113/13061.html",
+      "caveat": "The 1992 article is the only result clearly from the 1990s; the Columbia document and the Berkeley project are undated in the results. The accounts differ in emphasis: the Columbia document calls the management contracts a success, while a Havana Times piece stresses how little foreign capital came in. The results give no 1990s wage or tip figures.",
+      "relevant_to": [
+        "Chinese market socialism",
+        "Command socialism"
+      ]
+    }
+  ]
+}

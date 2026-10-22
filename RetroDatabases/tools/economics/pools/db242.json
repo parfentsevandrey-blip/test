@@ -1,0 +1,87 @@
+{
+  "database": 242,
+  "practice": "Holidays and free time",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "HF1",
+      "case": "France's paid holiday law of 1936",
+      "years": "1936; five weeks standard from 1982",
+      "claim": "Léon Blum's bill cleared the Chamber of Deputies on 11 June 1936, after the Popular Front's election win in May and nationwide general strikes. The Senate had blocked earlier attempts in 1928, 1931 and 1932. The measure was made official on 20 June 1936 with 15 days of leave (12 working days) for employees who had been under contract for a year. Uptake was gradual, with the big rise in holiday-taking mostly from the 1960s, and five weeks has been the standard since 1982. Sources disagree on France's standing: a company blog calls it the first democratic nation to guarantee paid leave, while an INA archive page says England, Germany, Spain and Portugal already had paid holidays by then.",
+      "source": "LCP, French parliamentary channel, article marking 90 years of paid leave (2026); INA, French national audiovisual institute, archive page 'Les congés payés en 1936' (year not shown); Vacation Tracker company blog (year not shown)",
+      "url": "https://lcp.fr/actualites/ces-lois-qui-font-votre-ete-il-y-a-90-ans-les-conges-payes-439778",
+      "caveat": "Taken from search-result summaries of several French pages. The linked article and the INA archive page were not opened, so the page behind each date is not confirmed. The 'first democratic nation' view is a company blog's, and the late-adopter view is from an online encyclopaedia (secondary). No primary text of the 1936 law is in the results.",
+      "relevant_to": ["Syndicalism", "Fabian socialism"]
+    },
+    {
+      "id": "HF2",
+      "case": "Soviet paid annual leave and union rest-home vouchers",
+      "years": "1922 onward; 12 working days until 1967, then 15",
+      "claim": "A 1922 labour code set a paid two-week holiday for workers with about five and a half months of service, and workers under 18 reportedly received a full month. The annual allowance was 12 working days until 1967, when it rose to 15. Vouchers for holiday sanatoriums and rest homes moved down from central trade-union bodies through local branches to factory committees. Distribution was partly based on merit or need, and the rest could be bought at a share of face value. Diane Koenker argues that privileged groups dominated the summer allocations from the 1930s onward, leaving ordinary workers with winter passes. After the Second World War the unions took responsibility for workers' rest, and a 1960 Council of Ministers resolution gave them sanatoriums and rest homes. A 1957 Soviet Life issue said the guest's union covered about 70 per cent of resort bills. Sources disagree on the origin of paid leave: one news feature dates the concept to 1918, while Koenker and a JSTOR Daily article tie the key statute to 1922.",
+      "source": "Diane Koenker, 'Whose right to rest?', Comparative Studies in Society and History (year not shown); JSTOR Daily article 'Workers of the world take PTO' (year not shown); Soviet Life, issue 10 of 1957 (official Soviet magazine); news feature on Soviet holidays (year not shown)",
+      "url": "https://discovery-pp.ucl.ac.uk/10043448/1/Koenker_whose-right-cssh.pdf",
+      "caveat": "Taken from search-result summaries, and the linked pages were not opened; the search does not show which page gives each figure. The 1957 Soviet Life figure reflects official policy, not verified practice. The results say little about how vouchers worked in the 1920s and 1930s, and most trade-union detail is postwar. The 1918 and 1922 origin dates are disputed.",
+      "relevant_to": ["Command socialism"]
+    },
+    {
+      "id": "HF3",
+      "case": "France's 40-hour week of 1936",
+      "years": "1936",
+      "claim": "An online encyclopaedia entry on hours of labour credits France's Popular Front government with setting a 40-hour week in 1936. It says that spreading scarce jobs across more workers ranked among the leading 1930s arguments for shorter hours.",
+      "source": "Online encyclopaedia (secondary), article on hours of labour (year not shown)",
+      "url": "https://www.britannica.com/print/article/326853",
+      "caveat": "Only one line in the results describes France's measure, so the law's terms, date of effect and scope are not confirmed. The source is a secondary encyclopaedia entry, not the legal text, and its date is not shown. The entry's tie between the US benchmark and the 1938 act is disputed by a World Economic Forum timeline (see the US case).",
+      "relevant_to": ["Keynesian welfare capitalism"]
+    },
+    {
+      "id": "HF4",
+      "case": "US Fair Labor Standards Act and the 40-hour limit",
+      "years": "1938 (act); 1940 (40-hour limit effective)",
+      "claim": "An online encyclopaedia (secondary) and a popular-history article tie the 40-hour US benchmark to the Fair Labor Standards Act of 1938. A World Economic Forum timeline (2015) disagrees: it says the 1938 law set a 44-hour limit, and that the 40-hour limit came through a 1940 amendment effective 24 October 1940. The sources disagree on the hour limit the 1938 act set, and the case reports that disagreement rather than settling it.",
+      "source": "World Economic Forum, article on how the 40-hour week became standard (2015); online encyclopaedia (secondary) (year not shown); popular-history article by Dave Roos (year not shown)",
+      "url": "https://weforum.org/agenda/2015/10/how-did-the-40-hour-work-week-become-standard",
+      "caveat": "The 44-hour and 1940 detail comes from one World Economic Forum timeline, set against two secondary pages that tie the benchmark to 1938. The link given is one of two WEF pages in the results, and the summary does not say which one carries the timeline. The 1938 act itself was not opened, and no government source is in the results.",
+      "relevant_to": ["Keynesian welfare capitalism"]
+    },
+    {
+      "id": "HF5",
+      "case": "Germany's federal holiday act of 1963",
+      "years": "1963 onward",
+      "claim": "Sources date Germany's federal holiday act (Bundesurlaubsgesetz) to 1963. As summarised in the results, the statutory floor is 24 working days on a six-day week and 20 on a five-day week. The Local's breakdown runs down to 16 days on a four-day week, 12 on three, 8 on two and 4 on one. Holidays that differ by state sit outside that floor; one source puts them at 9 to 13 days, with Bavaria at the top end. Union contracts usually give 28 to 30 days and apply to roughly half of workers (52 per cent in the west and 45 per cent in the east).",
+      "source": "The Local, online news site, article 'Vacation days in Germany: what to know about your rights as an employee' (2018); HR-software glossary entries (years not shown)",
+      "url": "https://www.thelocal.de/20180619/vacation-days-in-germany-what-to-know-about-your-rights-as-an-employee",
+      "caveat": "Secondary explainers and HR-vendor glossaries, not the statute, and the official text was not opened. No statutory minimum before 1963 is in the results, so the history of German leave law is missing. The state-holiday, union-coverage and east-west figures are not tied to a named page in the summary.",
+      "relevant_to": ["Social market economy"]
+    },
+    {
+      "id": "HF6",
+      "case": "Dutch statutory paid leave law of 1966",
+      "years": "1966; holiday-pay guarantee from 1968",
+      "claim": "Dutch paid-leave rules began on 1 October 1966, under a law dated 14 July 1966 (Staatsblad 1966, 290). A union-history page says the labour movement's campaign for holiday pay as a legal right succeeded in 1966. A union-history page also reports that 80 per cent of workers already had paid holiday by the late 1930s; the base population is not stated. The results report that the 1968 minimum wage law guaranteed full-time staff at least 8 per cent holiday pay, and that the Minimum Wage and Minimum Holiday Allowance Act (Wml) anchors that entitlement today.",
+      "source": "Union-history web pages (year not shown); magazine article on the history of holiday pay (year not shown)",
+      "url": "https://vakbondsverhalen.nl/verhaal/vakantie-een-bevochten-recht",
+      "caveat": "Secondary sources only: union-history pages and a magazine piece, not the 1966 act, which no result reproduces. The dates and the Staatsblad reference come from search summaries, and the pages were not opened. The 80 per cent figure has no stated base, and one union page gives both 1961 and 1962 for a leave-day change. No result supports a Dutch Vakantiewet of 1961; several 'Vakantiewet' results are Belgian or Surinamese laws and are not used.",
+      "relevant_to": ["Nordic social democracy"]
+    },
+    {
+      "id": "HF7",
+      "case": "China's 1999 Golden Week holidays",
+      "years": "1999; changes in 2007",
+      "claim": "A revision dated 18 September 1999 created three extended breaks: Spring Festival, May Day and National Day. Policymakers meant them to lift domestic spending and cushion the economy against the Asian financial crisis. Reported trip counts disagree: about 28 million trips in one account and 29 million travellers in another. The 2000 National Day break drew 59.8 million trips. An academic article citing Wu and colleagues (2012) judges that the holidays did less for consumption than hoped. A December 2007 change shortened the May Day break and made Tomb-Sweeping, Dragon Boat and Mid-Autumn legal holidays.",
+      "source": "Web article on Golden Week (year not shown); academic article citing Wu and colleagues (2012) (year not shown)",
+      "url": "https://fdichina.com/?p=79742",
+      "caveat": "Taken from search-result summaries; the search does not show which page carries each figure, and the linked page was not opened. The two trip counts disagree and are reported as given. The 59.8 million figure and the Wu and colleagues finding are second-hand, from an academic article the search did not open. The 1999 aim is a policy motive as reported, not a measured effect. The results do not cover employee paid annual leave rules.",
+      "relevant_to": ["Chinese market socialism"]
+    },
+    {
+      "id": "HF8",
+      "case": "Strength Through Joy holidays in Nazi Germany",
+      "years": "from late 1933; figures for 1936",
+      "claim": "The Nazi-run leisure scheme Kraft durch Freude (Strength Through Joy) was launched in late 1933 under the German Labour Front. It aimed to narrow class gaps and offered factory-floor sports, cheap concerts and art shows, but its trips and sailings drew the most attention. Roughly 30 million people belonged in 1936, but just 7.4 million took a trip. Informers posed as vacationers from the start, so monitoring went hand in hand with the holidays.",
+      "source": "Educational history website (name and year not shown in the search summary); online collection of German historical documents (year not shown)",
+      "url": "https://germanhistorydocs.org/en/nazi-germany-1933-1945/vacations-during-the-nazi-period-mid-1930s",
+      "caveat": "Search-result summary only; the linked document page was not opened, so it is not confirmed to carry these figures. The 7.4 million trip figure rests on one educational site in the results, and the 30 million membership figure and the informers point have no named source. The first result, an encyclopaedia entry, was not used.",
+      "relevant_to": ["Corporatism and fascist economics"]
+    }
+  ]
+}
