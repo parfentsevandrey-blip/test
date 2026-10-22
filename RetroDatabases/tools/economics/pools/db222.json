@@ -1,0 +1,95 @@
+{
+  "database": 222,
+  "practice": "Ownership of strategic industries",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "SO1",
+      "case": "India's takeover of 14 major banks",
+      "years": "1969 (takeover effective 19 July 1969); the paper is dated 2004",
+      "claim": "A Reserve Bank of India annual report records the takeover of 14 major banks, effective 19 July 1969. Banerjee, Cole and Duflo's 2004 paper on banking reform in India notes that officials justified the move on the ground that banks should serve national goals such as farming, small industry and exports. It says the move captured every bank with nationwide deposits above Rs 500 million, which lifted the government's share of bank branches to 84%. The paper also says that any gains in equity and efficiency depend on credit reaching agriculture and small industry, and that cross-country research cuts against state ownership.",
+      "source": "Banerjee, Cole and Duflo, Banking reform in India (2004), a paper hosted by Brookings; Reserve Bank of India annual report (year not shown in the result)",
+      "url": "https://www.brookings.edu/wp-content/uploads/2016/07/2004_banerjee_cole_duflo.pdf",
+      "caveat": "The search results do not report the paper's lending results, so this case cannot show what happened to credit. The 84% branch share is the figure as the search summary gives it. A student report on Scribd, giving 80 to 85% of branches, deposits and advances, is weaker evidence and is not used.",
+      "relevant_to": [
+        "Developmental state"
+      ]
+    },
+    {
+      "id": "SO2",
+      "case": "State ownership of banks and growth: two views",
+      "years": "data 1995 to 2007; working papers 2009 to 2010",
+      "claim": "Andrianova, Demetriades and Shortland argue that La Porta et al.'s (2002) negative finding on state-owned banks and growth does not hold once institutions and other core growth drivers are added. Using cross-country data for 1995 to 2007, they find that state ownership of banks tracked with stronger long-run growth on average, while conceding that these correlations may not reflect causation. They set a 'developmental' view, in which state banks play a growth-promoting role where information is poor and institutions are weak, against a 'political view', in which politicians steer state banks toward allies, producing bad loans and slower growth.",
+      "source": "Andrianova, Demetriades and Shortland, Government ownership of banks, institutions and economic growth (working papers and conference abstracts, 2009 to 2010)",
+      "url": "https://state-owned-enterprises.worldbank.org/sites/default/files/reports/Government%20Ownership%20of%20Banks%2C%20Institutions%20and%20Economic%20Growth.pdf",
+      "caveat": "These are working papers and conference abstracts by the same authors, with data that stop in 2007, and the search summary calls the finding contested. The original La Porta et al. (2002) paper is not in the results, so its finding is known only as these authors describe it.",
+      "relevant_to": [
+        "Developmental state",
+        "Austrian free-market economics"
+      ]
+    },
+    {
+      "id": "SO3",
+      "case": "Italy's IRI state holding, 1933 to 2002",
+      "years": "1933 to 2002",
+      "claim": "Lenders that had poured money into industrial firms risked collapse as those firms failed. In January 1933 Mussolini's government set up IRI, a state holding, to rescue them. The holding was made permanent in 1937 and at its peak controlled roughly 1,000 subsidiaries. By the 1980s it looked dated as Europe moved to sell off state companies. After the state stopped covering IRI's debt in the early 1990s, divestments began, and the holding was wound up in 2002 after about a decade of piecemeal sales.",
+      "source": "Company history profiles of Istituto per la Ricostruzione Industriale (Funding Universe and company-histories.com; year not shown in the results); bookseller listing for Storia dell'IRI volume 4, Crisi e privatizzazione, covering 1990 to 2002",
+      "url": "https://www.fundinguniverse.com/company-histories/istituto-per-la-ricostruzione-industriale-s-p-a-history/",
+      "caveat": "Thin: the results give no sale-by-sale or financial figures, the dates come from company profiles and a book listing, and one profile still lists IRI as active, which conflicts with the 2002 wind-up. The summary does not show which page gives each date, so check the Italian sources before use.",
+      "relevant_to": [
+        "Corporatism and fascist economics",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "SO4",
+      "case": "Japan's national railway (JNR) privatised",
+      "years": "after privatisation; the sale date is not in these results; the Kobe paper is dated 2005",
+      "claim": "A Kobe University paper, The Effects of Privatization on Productivity and Capital Adjustment, estimates total factor productivity growth at about 3% a year after privatisation, with roughly 1.6 points of that attributable to the reform. A TRID transport research database record on Japan's railway policy debate argues that, a decade on, the focus had shifted to JNR's unresolved legacy debt rather than to efficiency.",
+      "source": "Kobe University repository paper on privatisation, productivity and capital adjustment (2005, from its repository listing); TRID transport research database record on the railway policy debate in Japan and its domination by old debt (year not shown; a database abstract, secondary)",
+      "url": "https://b.kobe-u.ac.jp/papers/2005_05/",
+      "caveat": "The 3% and 1.6-point figures come from an abstract or snippet, not the full paper, and the search summary says to check the linked source first. The TRID entry is a database record, not a study. A 1996 estimate, put at about 29% of productivity growth from privatisation, is left out because no opened page was confirmed as its source.",
+      "relevant_to": [
+        "Monetarist neoliberalism",
+        "Fabian socialism"
+      ]
+    },
+    {
+      "id": "SO5",
+      "case": "Argentina's YPF: privatised, then partly renationalised",
+      "years": "1989 to 2012 (sale to expropriation); 2012 to 2015 (partial renationalisation)",
+      "claim": "Argentina's oil company YPF was privatised in the 1990s. A 2015 CEPAL report (UN Economic Commission for Latin America and the Caribbean) marks three years since Argentina moved to expropriate Repsol's 51% stake in YPF. Its two volumes cover productive performance, labour-market effects and supplier networks, and the fiscal impact in four oil provinces: Chubut, Mendoza, Neuquén and Santa Cruz. A journal article on YPF from 1989 to 2012 (Serrani, Revista de Gestión Pública) says the later takeover had broad public and legislative endorsement. A paper on the 2012 to 2015 partial renationalisation (on the CORE repository) calls it the last major post-neoliberal move of the Kirchnerist cycle, says the push to bring a 'national bourgeoisie' into energy firms fell short, with YPF as an example, and says the company has delivered some gains alongside shortfalls.",
+      "source": "CEPAL (UN Economic Commission for Latin America and the Caribbean), report on YPF's renationalisation (2015, abstract); Serrani, Recent transformations in the Argentine oil industry: the YPF case, 1989 to 2012, Revista de Gestión Pública (year not shown); CORE repository paper on the hybrid renationalisation of YPF, 2012 to 2015 (year not shown)",
+      "url": "https://www.cepal.org/es/publicaciones/39399-impacto-socioeconomico-ypf-su-renacionalizacion-ley-26741-analisis-impacto",
+      "caveat": "The CEPAL volumes are described only by scope; their findings are not in the results. The Serrani and CORE pieces are articles without figures. The sources differ in emphasis, one stressing broad support for the expropriation and the other tensions and a mixed record. No result confirms the 1993 sale date in the search query, so records should say 1990s.",
+      "relevant_to": [
+        "Monetarist neoliberalism",
+        "Developmental state"
+      ]
+    },
+    {
+      "id": "SO6",
+      "case": "Treuhand sales of East German firms",
+      "years": "sale period not stated in these results",
+      "claim": "A collaboration of the ifo and ZEW institutes and a Brussels partner finds that the Treuhandanstalt, the agency that sold off East German firms, disposed of its stronger firms more quickly, for bigger proceeds, and more often to West German bidders. A project funded by the German Research Foundation (DFG), titled The Treuhand Privatizations: Buyer Selection, Regional Consequences, and Political Scarring Effects, reports a rebound for a socialist party at the polls where local firms were sold off or liquidated.",
+      "source": "ifo Institute and ZEW research institutes, web summaries of their Treuhand study (year not shown); DFG project database entry on the Treuhand privatisations (year not shown)",
+      "url": "https://ifo.de/en/node/58096",
+      "caveat": "The search summary gives no year for either finding, and the DFG item is only a project description, not a full study. Two further figures in the summary (West German owners holding a majority in 51% of sampled firms, and a 1995 analysis of growth costs) had no traceable source, so they are left out.",
+      "relevant_to": [
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "SO7",
+      "case": "Hamburg buys back its energy grids",
+      "years": "2013 to 2014",
+      "claim": "In a referendum on 22 September 2013, Hamburg voters won 50.9% support for a measure to take over the city's electricity, gas and district heating grids, despite opposition from most major parties, including the governing SPD and the CDU. The city already held a 25.1% stake in the grids, and the measure told it to create a municipal utility if the current owners refused. The electricity distribution network changed hands in early 2014, at an expected price of about 400 million euros, and Vattenfall went along with the sale only grudgingly.",
+      "source": "Energy Transition website, articles of 2013 and 2014 on the Hamburg grid buy-back; The Local, English-language news for Germany (2014); trade and blog pieces on the grid sale (years not shown)",
+      "url": "https://energytransition.org/2013/10/hamburg-citizens-buy-back-energy-grid/",
+      "caveat": "The figures come from news and blog summaries, not from the city's accounts or the final contract, and the 400 million euro price is an expected figure. The results give no turnout figures, cover events only to about 2017, and say nothing about the grids' later performance or prices.",
+      "relevant_to": [
+        "Fabian socialism"
+      ]
+    }
+  ]
+}
