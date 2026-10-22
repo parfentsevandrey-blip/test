@@ -35,7 +35,7 @@
     },
     {
       "model": "Mercantilism",
-      "best": "Federal assumption of state war debts (United States, 1790) moved debts that individual states had not yet cleared onto the central government, and its revenue plan relied on a tariff, which put trade duties at the heart of how the debt was to be funded. The claims come from merged search summaries, and the linked blog post was not opened.",
+      "best": "Federal assumption of state war debts (United States, 1790) moved debts that individual states had not yet cleared onto the central government, and its revenue plan relied on a tariff and a whiskey excise. The claims come from merged search summaries, and the linked blog post was not opened.",
       "worst": "Inferred from its principle that the state regulates trade for national gain, debts repaid from protective duties fall on buyers of imported goods, who pay higher prices so the treasury can pay its creditors. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade; Heckscher, Mercantilism"
     },
     {
@@ -55,7 +55,7 @@
     },
     {
       "model": "Monetarist neoliberalism",
-      "best": "In Greece's March 2012 exchange of privately held bonds, private creditors, mostly banks, took write-downs through a voluntary exchange backed by collective action clauses, and the European Stability Mechanism puts take-up at about 97% of privately held bonds. The sources disagree on the measures and on who bore the losses.",
+      "best": "In Greece's March 2012 exchange of privately held bonds, private creditors, mostly banks, took write-downs through a voluntary exchange backed by collective action clauses, and the European Stability Mechanism puts take-up at about 97% of privately held bonds. Another account puts take-up at 83.5% of bondholders, the sources disagree on the measures and on who bore the losses, and the claims rest on search excerpts.",
       "worst": "Argentina's currency peg, 2001 default and later restructurings fixed the peso at parity with the US dollar in 1991, which reined in hyperinflation but removed the option of devaluing when outside shocks hit. The arrangement gave way only after the money supply shrank sharply and foreign debt went unpaid, with the default in late December 2001. Only the linked chronology is relied on here. Source: Congressional Research Service, 'The Argentine Financial Crisis: A Chronology of Events' (2002); other search results on the restructurings and the 2016 settlement, namely academic papers and blog or glossary pages (undated)"
     },
     {
@@ -70,7 +70,7 @@
     },
     {
       "model": "Nordic social democracy",
-      "best": "After Sweden's fiscal consolidation and surplus target (1990s), a commentary column reports a surplus of 3.6% of GDP in 2000 and government debt at 37% of GDP by 2011. Those later figures come from that column and a working paper, not official accounts.",
+      "best": "After Sweden's fiscal consolidation and surplus target (1990s), a commentary column reports a surplus of 3.6% of GDP in 2000 and government debt at 37% of GDP by 2011. Those later figures come from that column and a working paper, not official accounts, and the paper's claim of a fall in debt after 1996 does not match the column's figures.",
       "worst": "Inferred from its principle that universal services and high taxes need a steady tax base, a slump that cuts revenue can push public debt up before taxes or spending adjust, so the cost falls on the taxpayers who fund the services. There is no documented case in the pool. Source: Saltsjöbaden Agreement; Esping-Andersen, The Three Worlds of Welfare Capitalism"
     },
     {
@@ -146,7 +146,7 @@
     {
       "model": "Corporatism and fascist economics",
       "best": "Inferred from its principle that employers and unions are organised into state-controlled corporations, public borrowing for strategic industry can be arranged through those bodies on agreed terms, so lenders and firms bargain at one table. There is no documented case in the pool.",
-      "worst": "Mefo bills financing German rearmament off the budget used bills that a dummy company accepted and lenders could cash at the central bank, reaching about 12 billion Reichsmarks by April 1938, while the official 1938 total of 19 billion Reichsmarks excluded them. The record is patchy, the sources disagree on the start date, and the 12 and 19 billion figures are not reconciled. Source: Harvard Law School Nuremberg Trials Project, deposition on Schacht's funding and International Military Tribunal transcript (November 1945); Naked Capitalism blog post by Philip Pilkington (2013); online article 'The Economics of War: MEFO Bills' (undated)"
+      "worst": "Mefo bills financing German rearmament off the budget used bills that a dummy company accepted and lenders could cash at the central bank, reaching about 12 billion Reichsmarks by April 1938, while the official 1938 total of 19 billion Reichsmarks excluded them. The record is patchy, the trial material was seen only in search excerpts, the sources disagree on the start date, and the 12 and 19 billion figures are not reconciled. Source: Harvard Law School Nuremberg Trials Project, deposition on Schacht's funding and International Military Tribunal transcript (November 1945); Naked Capitalism blog post by Philip Pilkington (2013); online article 'The Economics of War: MEFO Bills' (undated)"
     },
     {
       "model": "Islamic economics",
@@ -186,6 +186,6 @@
   ],
   "compromise": {
     "summary": "Keep public debt in one published account, borrow in a currency and exchange regime the state can adjust, retire debt by market buybacks rather than at par, and judge borrowing targets over a full economic cycle rather than year by year.",
-    "details": "Keeps: market buybacks, not redemption at par, from Classical laissez-faire capitalism, as in Pitt's sinking fund for the British consols (1786); a surplus goal set over the cycle, from Keynesian welfare capitalism, as in Sweden's fiscal consolidation and surplus target (1990s). Blocks: off-budget borrowing, as in Mefo bills financing German rearmament off the budget, safeguarded by publishing every obligation; state backstops for bank-funded vehicles, as in China's 2015 swap of local government financing vehicle loans into municipal bonds, safeguarded by counting them as state debt; a currency peg with no way to adjust, as in Argentina's currency peg, 2001 default and later restructurings, safeguarded by an exchange rule that can change. Test: debt service as a share of revenue, and total debt including off-budget liabilities, measured each year over a full economic cycle of at least ten years. Source: Encyclopaedia Britannica, 1823 article; International Monetary Fund public information notice (1997); Harvard Law School Nuremberg Trials Project deposition (November 1945); Asia Times article (March 2015); Congressional Research Service chronology (2002)"
+    "details": "Keeps: market buybacks, not redemption at par, from Classical laissez-faire capitalism, as in Pitt's sinking fund for the British consols (1786); a surplus goal set over the cycle, from Keynesian welfare capitalism, as in Sweden's fiscal consolidation and surplus target (1990s). Blocks: off-budget borrowing, from Corporatism and fascist economics, safeguarded by publishing every obligation; state backstops for bank-funded vehicles, from Chinese market socialism, safeguarded by counting them as state debt; a currency peg with no way to adjust, from Monetarist neoliberalism, safeguarded by an exchange rule that can change. Test: debt service as a share of revenue, and total debt including off-budget liabilities, measured each year over a full economic cycle. Source: Encyclopaedia Britannica, 1823 article (reproduced online); International Monetary Fund public information notice (1997); Harvard Law School Nuremberg Trials Project, deposition on Schacht's funding and International Military Tribunal transcript (November 1945); Asia Times article on the local government debt swap plan (March 2015); Congressional Research Service, 'The Argentine Financial Crisis: A Chronology of Events' (2002)"
   }
 }
