@@ -1,0 +1,93 @@
+{
+  "database": 224,
+  "practice": "Regulation and competition",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "RG1",
+      "case": "US Supreme Court orders breakup of Standard Oil",
+      "years": "1890 (Sherman Act); 1911 (ruling)",
+      "claim": "The Supreme Court's decision of 15 May 1911 in Standard Oil Co. of New Jersey v. United States compelled the trust to dissolve. The case turned on the 1890 Sherman Antitrust Act, and the justices deemed the combination unlawful because it unreasonably limited commerce. Before the split, the company's holdings spanned more than 40 corporations and reportedly accounted for about 90 percent of US oil activity. Spin-offs included Mobil (Standard of New York), Amoco (Standard of Indiana), Chevron (Standard of California) and SOHIO (Standard of Ohio), and the New Jersey core is now known as Exxon.",
+      "source": "American Bar Association Journal, article on the 15 May 1911 ruling (year not shown in the result); other popular and reference summaries of the case (years not shown)",
+      "url": "https://www.abajournal.com/magazine/article/may-15-1911-supreme-court-orders-standard-oil-breakup",
+      "caveat": "Accounts disagree on the Court's role: one says it directed the split, while the ABA Journal abstract says it affirmed a lower court's dissolution order. Sources give 34, 37 or 39 pieces. The count of more than 40 corporations and the 90 percent share come from summaries only, and the results did not include the opinion text, so these figures need checking against it.",
+      "relevant_to": [
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "RG2",
+      "case": "US airline deregulation and fares",
+      "years": "1978 onward; reviews of 1996 and 1999",
+      "claim": "Most results point to lower fares after the 1978 deregulation of US airlines, but the gains were uneven. A 1996 GAO review, a congressional watchdog report, put per-mile fares 8 to 11 percent lower at airports of every size class. The steepest fare rises were in the Southeast and Appalachia, and the biggest falls were in the West and Southwest. A wave of bankruptcies and mergers in 1986 to 1988 let surviving carriers gain dominance at some airports, where prices climbed. A 1999 GAO follow-up tied entry barriers, such as gate-leasing rules and takeoff-and-landing caps, to higher fares in several key markets. A University of Nebraska-Lincoln dissertation reports that real fares fell after deregulation and that short-haul prices gained on long-haul ones.",
+      "source": "GAO (US congressional watchdog), report RCED-96-79 (1996) and report RCED-99-92 (1999); University of Nebraska-Lincoln dissertation (year not shown)",
+      "url": "https://www.govinfo.gov/content/pkg/GAOREPORTS-RCED-96-79/html/GAOREPORTS-RCED-96-79.htm",
+      "caveat": "The 1996 excerpt does not state the comparison baseline for the fare figures. The 1986 to 1988 concentration point and the 1999 findings come from search summaries, not the full reports. The dissertation has no date in the excerpt. Nothing dated after 1999 turned up in the results.",
+      "relevant_to": [
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "RG3",
+      "case": "Rate-of-return regulation and the Averch-Johnson effect",
+      "years": "1962 (paper); 1974 (critique); later empirical tests",
+      "claim": "Harvey Averch and Leland Johnson's 1962 paper, 'Behavior of the Firm Under Regulatory Constraint', shows that a utility whose allowed profit is tied to invested capital is pulled toward overbuilding. Each added asset raises its earnings, and the utility ends up with more capital per worker than cost minimisation would call for. Later empirical work has found an overcapitalisation bias in variants of their model; one study of a regulated generation subsector estimated overcapitalisation of roughly 20 to 30 percent across the plants it sampled. A 1974 critique by Joskow holds that rate-setters attend mostly to nominal prices rather than to returns, so a cap can go unenforced while those prices hold steady.",
+      "source": "Averch and Johnson, 'Behavior of the Firm Under Regulatory Constraint' (1962); Joskow critique (1974); an unnamed empirical study of a regulated generation subsector (year not shown)",
+      "url": "https://gente.itam.mx/rumbos/Doc/AJ.pdf",
+      "caveat": "The claims come from search summaries of several hits, not from the paper or the critiques themselves. The 20 to 30 percent figure is from one unnamed study. A separate working paper by Stephen Law (year not shown) reviewed a non-random sample of 130 journal articles and found that nearly 40 percent did not report results of prerequisite tests, so the empirical base is uneven.",
+      "relevant_to": [
+        "Austrian free-market economics",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "RG4",
+      "case": "San Francisco extends rent control in 1994",
+      "years": "1994 (extension); 2018 and 2019 (study)",
+      "claim": "Rebecca Diamond, Tim McQuade and Franklin Qian treat the 1994 extension of San Francisco rent control to small pre-1980 buildings as a quasi-experiment. Their study, published in the American Economic Review in 2019, finds that rental availability in treated buildings fell roughly 15 percent through condo conversions, owner-occupant sales and redevelopment. The 2018 NBER working paper's abstract attaches a 5.1 percent figure to the resulting citywide rent increase, while the 2019 AER abstract offers only a qualitative claim that the supply loss probably raised market rents. City Observatory cites about a 6 percent supply loss and 7 percent higher rents. A Stanford GSB note says rent-controlled units fell 25 percent from 1994 to 2010.",
+      "source": "Diamond, McQuade and Qian, study in the American Economic Review (2019) and NBER working paper (2018); City Observatory piece (year not shown); Stanford GSB insight piece (year not shown)",
+      "url": "https://inequality.stanford.edu/node/9615",
+      "caveat": "The figures disagree. The supply loss is roughly 15 percent in treated buildings in the study, about 6 percent in the City Observatory piece, and a 25 percent fall in rent-controlled units from 1994 to 2010 in the Stanford GSB note, which covers a different period and measure. The rent effect is 5.1 percent in the 2018 abstract and 7 percent in the City Observatory piece, and the 2019 abstract gives no figure. The results give abstracts and write-ups only, not the full paper.",
+      "relevant_to": [
+        "Austrian free-market economics",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "RG5",
+      "case": "Germany's cartel law and Federal Cartel Office",
+      "years": "1957 or 1958 (statute); 19th century onward (cartels)",
+      "claim": "Sources disagree on when the statute was passed. A 2002 speech by the president of the Bundeskartellamt dates it to 27 July 1957; a bilingual journal abstract says it passed in 1957 and took effect on 1 January 1958; one GWU profile lists 1958. The Bundeskartellamt began on 1 January 1958 under Section 48 of the statute, as an independent federal authority. Cartels had flourished in German industry from the nineteenth century onward, and a 2004 German-language study traces how American Allied influence shaped the statute after 1945.",
+      "source": "Bundeskartellamt president's speech (2002); bilingual journal abstract (year not shown); GWU competition law profile of Germany (year not shown); German-language study (2004)",
+      "url": "https://competition.law.gwu.edu/germany",
+      "caveat": "The enactment year is disputed between 1957 and 1958. The GWU profile was still awaiting the agency's feedback, so its date is unconfirmed. The 2002 speech, the bilingual abstract and the 2004 study are known only through search summaries, and the results do not describe the American influence in detail.",
+      "relevant_to": [
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "RG6",
+      "case": "Brazil's consumer code and the Procon agencies",
+      "years": "1975 to 1990",
+      "claim": "Procon's roots reach back to 1976, when São Paulo's state consumer system came online and later took the name PROCON-SP. A 1983 overhaul reshaped the São Paulo body and launched DECON, a state consumer police department. Federal consumer policy gained a dedicated council, the CNDC, in 1985. The 1990 code (Law 8,078 of 1990) placed state and municipal Procon bodies inside the National Consumer Defense System. Procon now works as a support body to the judiciary, aiming to settle disputes before they reach court; disputes that fail to settle go to the local small-claims court. A university monograph finds Procon indispensable to administrative consumer protection and education, but notes structural and legal limits, especially when suppliers resist accountability.",
+      "source": "Explainer websites on Procon (InfoEscola, Politize and others; years not shown); university monograph (year not shown)",
+      "url": "https://www.infoescola.com/direito/procon/",
+      "caveat": "Built from secondary explainers and a summary of a monograph. The results give no enforcement figures, fines, case volumes or post-1990 data, and no official Procon or statute page. Sources expand the agency's name differently, so the full name should not be given without checking.",
+      "relevant_to": [
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "RG7",
+      "case": "China's Anti-Monopoly Law and state-owned monopolies",
+      "years": "2007 (passed); 2008 to 2018 (enforcement counts); 2010 to 2011 (early actions)",
+      "claim": "Mondaq and an ICAO compendium both date the passage of China's Anti-Monopoly Law to 30 August 2007. WilmerHale summarises Article 7 as tolerating state dominance in strategic sectors while barring consumer abuse. Sources disagree on whether the law binds state firms on equal terms. An ICAO compendium says the majority view applies it equally to state and private firms, despite ambiguous Article 7 wording, while Mondaq says it shields state-run monopolies in key sectors from review. Enforcers handled 164 monopoly-agreement cases and 44 dominance-abuse cases between 2008 and 2018. Early actions reached state firms: state salt firms in Hubei faced action in late 2010 over abuse of dominance, and China Telecom and China Unicom came under NDRC scrutiny in 2011 over suspected dominance abuse through discriminatory broadband interconnection pricing.",
+      "source": "WilmerHale law-firm article, 'China Enacts National Competition Law' (2007); Mondaq article (year not shown); ICAO compendium on fair competition (note dated January 2012); summaries of enforcement studies (years not shown)",
+      "url": "https://www.wilmerhale.com/en/insights/publications/china-enacts-national-competition-law-september-5-2007",
+      "caveat": "The results do not confirm the law's 2008 effective date; they give only the 2007 passage date. The enforcement counts and the Hubei and telecom cases come from a summary of several pages and are not tied to one source here. The ICAO compendium's own note dates its content to January 2012, so the picture stops around then and does not cover later enforcement or amendments.",
+      "relevant_to": [
+        "Chinese market socialism"
+      ]
+    }
+  ]
+}
