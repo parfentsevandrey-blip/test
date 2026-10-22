@@ -2203,5 +2203,71 @@
     "colorHex": "#D96F62",
     "curated": false,
     "group": "economics"
+  },
+  {
+    "id": 220,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 220: economics of elections and political money",
+    "description": "The economic models applied to elections and political money: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#D36969",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 221,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 221: economics of public administration and bureaucracy",
+    "description": "The economic models applied to public administration and bureaucracy: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#69D388",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 222,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 222: economics of ownership of strategic industries",
+    "description": "The economic models applied to ownership of strategic industries: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#A769D3",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 223,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 223: economics of taxation",
+    "description": "The economic models applied to taxation: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#D3C669",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 224,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 224: economics of regulation and competition",
+    "description": "The economic models applied to regulation and competition: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#69C2D3",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 225,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 225: economics of local government and decentralisation",
+    "description": "The economic models applied to local government and decentralisation: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#D369A2",
+    "curated": false,
+    "group": "economics"
   }
 ]
