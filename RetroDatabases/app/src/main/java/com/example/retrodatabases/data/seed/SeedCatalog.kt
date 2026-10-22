@@ -8,7 +8,7 @@ import com.example.retrodatabases.data.RecordEntity
 // (databaseId = the new id, one file per kind) and run python3 tools/build_catalogue.py.
 
 /** Version of the database file: the number of the newest seeded database. */
-const val DATABASE_VERSION = 225
+const val DATABASE_VERSION = 231
 
 /** The catalogue of databases that are created on the first launch, in id order. */
 val seedDatabases: List<DatabaseEntity> = listOf(
@@ -1362,6 +1362,42 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "The economic models applied to local government and decentralisation: the best and worst practice of each model, and one compromise.",
         colorHex = "#D369A2",
     ),
+    DatabaseEntity(
+        id = 226,
+        name = "Database 226: economics of wages and minimum wages",
+        description = "The economic models applied to wages and minimum wages: the best and worst practice of each model, and one compromise.",
+        colorHex = "#D36A69",
+    ),
+    DatabaseEntity(
+        id = 227,
+        name = "Database 227: economics of trade unions and worker voice",
+        description = "The economic models applied to trade unions and worker voice: the best and worst practice of each model, and one compromise.",
+        colorHex = "#69D389",
+    ),
+    DatabaseEntity(
+        id = 228,
+        name = "Database 228: economics of working time and paid leave",
+        description = "The economic models applied to working time and paid leave: the best and worst practice of each model, and one compromise.",
+        colorHex = "#A869D3",
+    ),
+    DatabaseEntity(
+        id = 229,
+        name = "Database 229: economics of unemployment and job security",
+        description = "The economic models applied to unemployment and job security: the best and worst practice of each model, and one compromise.",
+        colorHex = "#D3C769",
+    ),
+    DatabaseEntity(
+        id = 230,
+        name = "Database 230: economics of worker ownership and co-determination",
+        description = "The economic models applied to worker ownership and co-determination: the best and worst practice of each model, and one compromise.",
+        colorHex = "#69C1D3",
+    ),
+    DatabaseEntity(
+        id = 231,
+        name = "Database 231: economics of automation and technological change",
+        description = "The economic models applied to automation and technological change: the best and worst practice of each model, and one compromise.",
+        colorHex = "#82D369",
+    ),
 )
 
 /** Years each seeded catalogue covers. The tests check the records against them. */
@@ -1591,6 +1627,12 @@ val seedYears: Map<Long, IntRange> = mapOf(
     223L to 800..2026,
     224L to 800..2026,
     225L to 800..2026,
+    226L to 800..2026,
+    227L to 800..2026,
+    228L to 800..2026,
+    229L to 800..2026,
+    230L to 800..2026,
+    231L to 800..2026,
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
@@ -1625,4 +1667,5 @@ val seedRecords: List<RecordEntity> =
         db203Records + db204Records + db205Records + db206Records + db207Records + db208Records + db209Records +
         db210Records + db211Records + db212Records + db213Records + db214Records + db215Records + db216Records +
         db217Records + db218Records + db219Records + db220Records + db221Records + db222Records + db223Records +
-        db224Records + db225Records
+        db224Records + db225Records + db226Records + db227Records + db228Records + db229Records + db230Records +
+        db231Records

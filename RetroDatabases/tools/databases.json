@@ -2269,5 +2269,71 @@
     "colorHex": "#D369A2",
     "curated": false,
     "group": "economics"
+  },
+  {
+    "id": 226,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 226: economics of wages and minimum wages",
+    "description": "The economic models applied to wages and minimum wages: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#D36A69",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 227,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 227: economics of trade unions and worker voice",
+    "description": "The economic models applied to trade unions and worker voice: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#69D389",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 228,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 228: economics of working time and paid leave",
+    "description": "The economic models applied to working time and paid leave: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#A869D3",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 229,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 229: economics of unemployment and job security",
+    "description": "The economic models applied to unemployment and job security: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#D3C769",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 230,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 230: economics of worker ownership and co-determination",
+    "description": "The economic models applied to worker ownership and co-determination: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#69C1D3",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 231,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 231: economics of automation and technological change",
+    "description": "The economic models applied to automation and technological change: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#82D369",
+    "curated": false,
+    "group": "economics"
   }
 ]
