@@ -47,6 +47,11 @@ nonisolated final class Dictation: @unchecked Sendable {
     private var joiner = TextJoiner()
     private var utteranceID = 0
     private var finals: [(id: Int, audio: [Float])] = []
+    /// Предыдущая фраза — левый контекст: её звук идёт перед звуком новой, её текст — началом ответа модели.
+    /// Без него модель не узнаёт первые слова фразы: в CI ошибка на стыках фраз была 13%, с ним — 4%,
+    /// как при распознавании всей записи целиком (подсказка одним текстом не помогала).
+    private var previous: (audio: [Float], text: String)?
+    private let contextLimit = 8.0
     private var passRunning = false
     private var lastPassStart = Date.distantPast
     private var passInterval = 0.45
@@ -147,18 +152,23 @@ nonisolated final class Dictation: @unchecked Sendable {
         guard options.engine == .qwen, !passRunning else { return }
         if let job = finals.first {
             if committerID != job.id { committer.reset(); committerID = job.id }
-            // Окончательно — вся фраза заново, без подсказки: так точнее всего и со всеми знаками препинания.
-            run(audio: job.audio, prefix: "", id: job.id, final: true)
+            // Окончательно — вся фраза заново (после предыдущей), без подсказки напечатанного: так точнее всего
+            // и со всеми знаками препинания.
+            run(audio: (previous?.audio ?? []) + job.audio, prefix: previous?.text ?? "", typed: "", own: job.audio, id: job.id, final: true)
             return
         }
         guard vad.speaking, !stopping,
               vad.utteranceSeconds(sampleRate: options.sampleRate) >= 0.7,
               Date().timeIntervalSince(lastPassStart) >= passInterval else { return }
         if committerID != utteranceID { committer.reset(); committerID = utteranceID }
-        run(audio: vad.utterance, prefix: committer.committedText, id: utteranceID, final: false)
+        let typed = committer.committedText
+        run(audio: (previous?.audio ?? []) + vad.utterance, prefix: AsrEngine.join(previous?.text ?? "", typed), typed: typed,
+            own: [], id: utteranceID, final: false)
     }
 
-    private func run(audio: [Float], prefix: String, id: Int, final: Bool) {
+    /// `prefix` — начало ответа модели (текст предыдущей фразы и уже напечатанное из этой), `typed` — его часть
+    /// из этой фразы, `own` — звук самой фразы (станет контекстом для следующей).
+    private func run(audio: [Float], prefix: String, typed: String, own: [Float], id: Int, final: Bool) {
         passRunning = true
         let started = Date()
         lastPassStart = started
@@ -175,8 +185,8 @@ nonisolated final class Dictation: @unchecked Sendable {
                 self.passInterval = max(0.35, min(1.5, elapsed * 1.3))
                 switch result {
                 case .success(let continuation):
-                    let hypothesis = AsrEngine.join(prefix, continuation)
-                    if final { self.finalize(id: id, text: hypothesis) } else { self.partial(id: id, text: hypothesis) }
+                    let hypothesis = AsrEngine.join(typed, typed.isEmpty ? continuation.trimmingCharacters(in: .whitespaces) : continuation)
+                    if final { self.finalize(id: id, text: hypothesis, audio: own) } else { self.partial(id: id, text: hypothesis) }
                 case .failure(let error):
                     if final { self.finals.removeAll { $0.id == id } }
                     self.emit(.error(error.localizedDescription))
@@ -201,7 +211,7 @@ nonisolated final class Dictation: @unchecked Sendable {
         emit(.live(typed: String(joiner.typed.suffix(90)), tail: tail))
     }
 
-    private func finalize(id: Int, text: String) {
+    private func finalize(id: Int, text: String, audio: [Float]? = nil) {
         finals.removeAll { $0.id == id }
         defer {
             committer.reset()
@@ -213,7 +223,11 @@ nonisolated final class Dictation: @unchecked Sendable {
         // Только знаки препинания — модель «услышала» шум.
         guard clean.unicodeScalars.contains(where: { CharacterSet.alphanumerics.contains($0) }) else {
             joiner.closeUtterance()
+            if audio != nil { previous = nil }
             return
+        }
+        if let audio {
+            previous = Double(audio.count) / Double(options.sampleRate) <= contextLimit ? (audio, clean) : nil
         }
         if options.commands, let command = VoiceCommand.match(clean) {
             // Если начало команды уже успело напечататься — стираем его.
