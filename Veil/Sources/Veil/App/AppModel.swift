@@ -125,8 +125,15 @@ final class AppModel {
 
     private func scheduleSave() {
         saveWork?.cancel()
-        let snapshot = saved
-        let work = DispatchWorkItem {
+        let work = Self.saveWork(saved)
+        saveWork = work
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 0.4, execute: work)
+    }
+
+    /// Запись на фоне. Замыкание создаётся вне главного актора: иначе Swift 6 считает его
+    /// принадлежащим главному потоку и останавливает программу, когда оно выполняется на фоновом.
+    nonisolated private static func saveWork(_ snapshot: SavedState) -> DispatchWorkItem {
+        DispatchWorkItem {
             AppPaths.ensure(AppPaths.support)
             let encoder = JSONEncoder()
             encoder.dateEncodingStrategy = .secondsSince1970
@@ -134,8 +141,6 @@ final class AppModel {
                 FileManager.default.createFile(atPath: AppPaths.state.path, contents: data, attributes: [.posixPermissions: 0o600])
             }
         }
-        saveWork = work
-        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 0.4, execute: work)
     }
 
     private func load() {
