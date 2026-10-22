@@ -1,0 +1,191 @@
+{
+  "database": 234,
+  "type": "practice",
+  "practice": "Pensions and retirement",
+  "models": [
+    {
+      "model": "Gift economy",
+      "best": "Inferred from its principle that obligations to give and return bind kin and neighbours, so older people are supported through gifts, duties and standing in the community rather than through a fund. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that support rests on reciprocal duties, so an older person without kin or standing has no claim to income, and dependence on the goodwill of others grows as earnings stop. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics"
+    },
+    {
+      "model": "Household and peasant economy",
+      "best": "Inferred from its principle that a family farm balances work against household needs, so older members keep a place in the household and share its output for as long as they can contribute. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production serves consumption, so when the household's labour falls with age its output falls too, and older members depend on their children with little saved of their own. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+    },
+    {
+      "model": "Redistributive economy",
+      "best": "Inferred from its principle that a central store collects goods and redistributes them on a set schedule, so older officials and workers can be supported from common stocks. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the centre decides who receives from the store, so pensions can be granted by rank and favour, and stocks may be drawn on for other needs when the store runs short. There is no documented case in the pool. Source: Polanyi, The Great Transformation; Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires"
+    },
+    {
+      "model": "Slave economy",
+      "best": "Inferred from its principle that owners bear the upkeep of the labour they own, so the old and infirm may be kept fed and housed on the estate for as long as the owner finds them useful. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the enslaved own no property and hold no savings, so once their labour ends the owner alone decides whether food and shelter continue, and no pension of any kind is owed. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+    },
+    {
+      "model": "Feudalism",
+      "best": "Inferred from its principle that a lord owes protection and land in return for service, so an aged tenant may be kept on the manor and supported under customary obligation. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that services are owed to the lord, so a tenant who can no longer work may lose the holding and its support, and old-age security depends on the lord's discretion. There is no documented case in the pool. Source: Bloch, Feudal Society; Capitulare de villis"
+    },
+    {
+      "model": "Guild economy",
+      "best": "Inferred from its principle that guilds regulate craft and set statutes, so masters who can no longer work may be supported from guild funds under the guild's own rules. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that masters control entry and prices, so the closed body protects the incomes of its members while newcomers and outsiders have no claim to support in old age. There is no documented case in the pool. Source: Boileau, Le Livre des métiers; Epstein, Freedom and Growth"
+    },
+    {
+      "model": "Mercantilism",
+      "best": "Inferred from its principle that the state seeks a trade surplus and gold, so a state reserve built from trade could pay pensions in times of need. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state regulates production toward national gain, so savings may be steered into the goods and colonies the state favours, and old-age income then depends on those choices. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade; Heckscher, Mercantilism"
+    },
+    {
+      "model": "Physiocracy",
+      "best": "Inferred from its principle that a single tax on land rent funds the state, so pensions could be paid from land rent without taxing wages or capital. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that only agriculture creates a net product, so workers outside farming have no claim to a share of it, and their old age rests on savings or charity. There is no documented case in the pool. Source: Quesnay, Tableau économique; Meek, The Economics of Physiocracy"
+    },
+    {
+      "model": "Classical laissez-faire capitalism",
+      "best": "Inferred from its principle that private property and free contracts let people save and insure for old age, with the state protecting those contracts and otherwise staying out. There is no documented case in the pool.",
+      "worst": "Leaving retirement cover to private employers reached few workers: in Singapore's Central Provident Fund case, employer-funded retirement cover was scarce, reaching only civil servants and staff at some larger firms. Its design account comes from search summaries rather than full texts. Source: National Library Board: BiblioAsia article on how the CPF scheme came to be, and Infopedia entry (years not stated); CPF Board anniversary chapter (year not stated); HKCER Letters essay (November 1996 reprint)"
+    },
+    {
+      "model": "Austrian free-market economics",
+      "best": "Inferred from its principle that prices carry knowledge spread across many people, so savers who choose their own funds let prices show which old-age provision people want, with no planner choosing for them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that credit expansion distorts production, so a pension fund that lends cheap money to the state or to favoured projects misdirects savings, and retirees may receive less than was promised. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society"
+    },
+    {
+      "model": "Monetarist neoliberalism",
+      "best": "In Chile's privatised pension system (AFPs), a Dictuc study commissioned by the AFPs reports average rates of 87% for men and 58% for women. Sources disagree widely, and the study is industry-commissioned.",
+      "worst": "In Chile's privatised pension system (AFPs), a Chilean academic study of workers at one state university in the V Region concludes that replacement rates fall well short of initial projections and trail the old pay-as-you-go system. Sources disagree widely, and none of the results tracks long-run outcomes for the 1981 cohort. Source: OECD figure for 2013, as reported in a Diario Financiero article on the AFPs' reply (article year not stated); Dictuc study commissioned by the AFPs (year not stated); La Tercera report on David Bravo's estimates (year not stated); Chilean academic journal article (year not stated); AmCham Chile (year not stated)"
+    },
+    {
+      "model": "Keynesian welfare capitalism",
+      "best": "The United States Social Security Act of 1935, as amended in 1939, moved the first checks forward to 1940 and added benefits for spouses, survivors, young children and dependent parents, widening support for households. The results do not show which page holds each figure.",
+      "worst": "Inferred from its principle that taxes rise in booms and fall in slumps, so a fixed payroll levy that builds a large reserve while benefits lag can draw spending power out of the economy in a slump. There is no documented case in the pool. Source: Keynes, The General Theory; Beveridge, Social Insurance and Allied Services"
+    },
+    {
+      "model": "Social market economy",
+      "best": "Germany's 1957 pension reform, approved on 21 January 1957, replaced saving-based pensions with pay-as-you-go financing and began to track benefit rises with wages. The pension insurer, an interested party, credits the switch with success, and the roughly 60 percent average rise is unattributed in the sources.",
+      "worst": "Germany's 1957 pension reform: a Danish-language blog, an opinion piece whose figures should be checked against official data, argues that the indexing rule became nearly impossible to undo in hard economic times and that demographic costs surfaced decades later. Source: Bundestag text archive, entry on the vote of 21 January 1957; Deutsche Rentenversicherung background text (year not stated); German Historical Institute abstract of a 1959 article (abstract year not stated); Konrad Adenauer Foundation article (year not stated); a Danish-language blog (undated)"
+    },
+    {
+      "model": "Nordic social democracy",
+      "best": "Sweden's notional defined-contribution pension reform put 16 of its 18.5 contribution points into a pay-as-you-go notional tier, with automatic indexation and annuity rules meant to limit future legislation and political meddling. The results include no broad assessment of long-run performance.",
+      "worst": "Sweden's notional defined-contribution pension reform: because longevity feeds into annuity calculations, workers still in the labour force carry more of the demographic risk. Scherman's 2006 NFT analysis reports signs that replacement rates fall short of the 1994 targets, though these are signs rather than measured shortfalls. Source: Scherman (2006), NFT analysis of replacement rates; McGillivray, essay on notional defined-contribution public pensions (year not stated); Qi, Helgertz and Bengtsson, study on NDC and working lives (year not stated); reform timeline from search summaries (year not stated)"
+    },
+    {
+      "model": "Developmental state",
+      "best": "Singapore's Central Provident Fund mandated savings rather than a pension, and over a long stretch nearly all the money went into Singapore government bonds, which gave the state cheap financing for development. Its design account comes from search summaries rather than full texts.",
+      "worst": "Inferred from its principle that the state directs credit to chosen uses, so retirement savings may be steered into state priorities, and savers' returns follow the state's choices rather than their own. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle; Amsden, Asia's Next Giant"
+    },
+    {
+      "model": "Georgism",
+      "best": "Inferred from its principle that land rent funds public services, so a pension could be paid from the rent of land rather than from wages or capital, and workers keep their earnings for their own use. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a land tax must collect the full rent, so pensions funded this way depend on collecting that rent in full, and landowners who resist the tax could leave old-age income short. There is no documented case in the pool. Source: George, Progress and Poverty"
+    },
+    {
+      "model": "Utopian socialism",
+      "best": "Inferred from its principle that cooperative communities share work and output, so members are looked after in old age from the common store as their own labour winds down. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that communities are built by example rather than by law, so pension promises depend on members' goodwill and may fail when a community dissolves, leaving older members with no guaranteed income. There is no documented case in the pool. Source: Owen, A New View of Society; Fourier, Le Nouveau Monde industriel"
+    },
+    {
+      "model": "Mutualism",
+      "best": "Inferred from its principle that mutual credit at cost lets workers keep the full value of their work, so mutual funds can pay old-age income from members' own contributions without rent or interest. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that free contracts govern exchange, so a worker who saves for old age carries alone the risks of illness, inflation and a failed mutual, and no guaranteed income is set. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+    },
+    {
+      "model": "Cooperative economy",
+      "best": "Mondragon's Lagun Aro pension body is presented by the group as a safety-net scheme for co-op members, and its timelines tie its founding to a 1958 ministerial order that pushed members out of Spain's General Social Security System. These are the group's own self-descriptions, and the results give no membership figures.",
+      "worst": "Mondragon's Lagun Aro pension body: a 2009 Tu Lankide article outlines a proposal to give the public part of the mixed pension system more weight, while making updates to Lagun Aro's own pensions depend on the entity's solvency. The results give no outcome for that proposal. Source: Mondragon Group history pages (the group's own timelines; year not stated); Tu Lankide, the group's publication (a 2009 article and a page on Lagun Aro); Gizaekoa, Basque journal (2024 review)"
+    },
+    {
+      "model": "Anarcho-communism",
+      "best": "Inferred from its principle that goods are shared according to need within federated communes, so older members draw what they need from the common store, with no wage record or means test. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that free association replaces contracts, so an older person's claim to support depends on the commune's willingness and capacity, with no contract or fund to enforce it. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+    },
+    {
+      "model": "Syndicalism",
+      "best": "Inferred from its principle that unions run industry through workers' own organisations, so union-run funds could pay retirement benefits to members and keep them in work until a fair age. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that unions win gains by strikes and direct action, so pension rights depend on bargaining strength, and workers in weak trades or outside the unions get little old-age income. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail"
+    },
+    {
+      "model": "Fabian socialism",
+      "best": "Inferred from its principle that a national minimum of welfare is set by democratic means and delivered through public enterprise, so every older citizen can be guaranteed a minimum income. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that change comes gradually through municipal and national enterprise, so a minimum pension may be set low and expanded slowly while the state builds its own schemes. There is no documented case in the pool. Source: Fabian Essays in Socialism; Founding of the Fabian Society"
+    },
+    {
+      "model": "Guild socialism",
+      "best": "Inferred from its principle that workers and consumers share control of industry through guild-like councils, so trade councils could fund old-age pensions for their own members under shared rules. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that pension rights are set by each council, so benefits may vary by trade and by the wealth of the council, and retired people outside the councils have little claim. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+    },
+    {
+      "model": "Command socialism",
+      "best": "Inferred from its principle that central plans set output and investment, so a state pension can be set as a planned entitlement and paid from planned output without market risk. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state mobilises labour for rapid industrialisation, so pensions may be set low to free funds for investment, and older workers may be expected to keep working. There is no documented case in the pool. Source: Kornai, The Socialist System; First Five-Year Plan"
+    },
+    {
+      "model": "Market socialism",
+      "best": "Inferred from its principle that firms follow market prices under public ownership, so public pension funds can invest in those firms and pay benefits as a public entitlement, under rules the central board sets. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the central board sets the rules and the investment, so pension funds depend on that board's choices, and firms that follow prices may cut retirement income when they fail. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism; Yugoslav workers' self-management"
+    },
+    {
+      "model": "Marxian communism",
+      "best": "Inferred from its principle that distribution follows need once classes disappear, so older people draw what they need from the common product, with no test of past contribution. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that distribution waits until the state withers away, so during the transition old-age income depends on the state's plans and priorities rather than on a settled rule. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+    },
+    {
+      "model": "Chinese market socialism",
+      "best": "China's unified urban pension system of 1997, ordered in July 1997, paired a pay-as-you-go basic tier paying flat benefits tied to regional wages with a funded tier of individual accounts. The picture is dated, and its design comes from search summaries with no named source.",
+      "worst": "China's unified urban pension system of 1997: a 2002 analysis by Sun and Maxwell portrays the individual accounts as indebted, with yearly deficits growing, and sees the pooling account in the same bind. The picture is dated, and the linked record is not confirmed to be that analysis. Source: Sun and Maxwell, 2002 analysis (publication not named in the search result); the 1997 design comes from search summaries with no named source"
+    },
+    {
+      "model": "Participatory economics",
+      "best": "Inferred from its principle that councils of workers and consumers plan through repeated proposals, so older members' needs can enter each round, and pensions are set by councils rather than by markets or central planners. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that councils must agree through repeated proposals, so pension decisions can stall while the process runs, and retirees with no council standing have little voice. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
+    },
+    {
+      "model": "Corporatism and fascist economics",
+      "best": "Inferred from its principle that employers and unions are organised into state-controlled corporations, so pension schemes could be run through the corporations and bargained on a stable basis with their members. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state directs industry toward national goals, including war, so pension funds may be turned to state aims, and old-age income set by those goals rather than by saved rights. There is no documented case in the pool. Source: Italian corporative law; Nazi Four-Year Plan"
+    },
+    {
+      "model": "Islamic economics",
+      "best": "Inferred from its principle that finance shares profit and risk and that zakat redistributes wealth, so old-age income can be pooled through profit-sharing funds and zakat, without interest. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that interest is prohibited, so pension savings placed in profit-sharing funds carry the risk of loss, and retirees' income can fall with the results of the enterprise. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System; Founding of the Mit Ghamr savings bank"
+    },
+    {
+      "model": "Buddhist economics",
+      "best": "Inferred from its principle that economic life serves well-being through moderate consumption and small local production, so older people can rely on family, village and local mutual support with little need for large funds. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production should stay small and local, so old-age income depends on local networks that may be thin in mobile or urban settings, and the savings behind them may be too small to protect retirees. There is no documented case in the pool. Source: Schumacher, Buddhist Economics; Schumacher, Small Is Beautiful"
+    },
+    {
+      "model": "Distributism",
+      "best": "Inferred from its principle that widespread private property and small enterprise give families assets to live on, so old age can rest on owned land, workshops and a just wage. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that subsidiarity keeps decisions with the smallest competent body, so pension provision may vary by locality, and small firms may be unable to fund schemes, leaving some older workers without cover. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum; Belloc, The Servile State"
+    },
+    {
+      "model": "Steady-state and degrowth economics",
+      "best": "Inferred from its principle that economic activity stays within planetary limits, with a social floor under everyone and no growth imperative, so a guaranteed basic pension can be paid without relying on growth. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there is no growth imperative, so pension promises may be hard to honour as the number of retirees rises relative to the number of workers. There is no documented case in the pool. Source: Daly, Steady-State Economics; Raworth, Doughnut Economics"
+    },
+    {
+      "model": "Universal basic income",
+      "best": "Inferred from its principle that every citizen receives an unconditional income, so old-age income is paid to everyone without a contribution record, and no one is shut out by an employment history. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the income is paid for by taxes on land and natural resources, so its size depends on those tax bases, and a basic pension may be too small to replace earnings for those who had higher pay. There is no documented case in the pool. Source: Paine, Agrarian Justice; Van Parijs, Real Freedom for All"
+    },
+    {
+      "model": "Modern monetary theory",
+      "best": "Inferred from its principle that a government issuing its own currency can fund full employment, so old-age income can be paid in full without contribution funds being built up first. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that inflation, not debt, is the real limit, so pension payments can lose real value if inflation rises, and the promise of income depends on keeping prices stable. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+    },
+    {
+      "model": "Commons governance",
+      "best": "Inferred from its principle that a community sharing a resource governs it with rules it designs, monitors and enforces, so a shared old-age fund can be run by its members under rules they set. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that such rules are nested in wider institutions, so a commons-run fund may be too small to pool risks across many people, and members who move or leave may lose their claims. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+    }
+  ],
+  "compromise": {
+    "summary": "One pension for every citizen in three tiers: a pay-as-you-go basic tier with wage-linked, rule-based indexation; a funded tier run by an independent board under published investment rules; and a guaranteed minimum for everyone, with longevity risk shared fairly across generations.",
+    "details": "Keeps: pay-as-you-go financing and wage-linked uprating from Social market economy, in Germany's 1957 pension reform; automatic indexation rules and contribution-linked notional accounts from Nordic social democracy, in Sweden's notional defined-contribution pension reform. Blocks: indexing rules nearly impossible to undo in hard times, with a five-yearly review and a supermajority to change them; longevity risk falling on workers still in employment, with a statutory replacement-rate floor. Test: replacement rates for men and women, by education and cohort, measured every five years over forty years. Source: Bundestag text archive, entry on the vote of 21 January 1957; Deutsche Rentenversicherung background text (year not stated); German Historical Institute abstract of a 1959 article (abstract year not stated); Konrad Adenauer Foundation article (year not stated); a Danish-language blog (undated); Scherman (2006), NFT analysis of replacement rates; McGillivray, essay on notional defined-contribution public pensions (year not stated); Qi, Helgertz and Bengtsson, study on NDC and working lives (year not stated); reform timeline from search summaries (year not stated)"
+  }
+}
