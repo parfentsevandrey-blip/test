@@ -32,7 +32,10 @@ enum DemoUI {
             for delay in [0.5, 2.0, 5.0] {
                 try? await Task.sleep(for: .seconds(delay))
                 NSApp.activate()
-                NSApp.windows.first { $0.identifier?.rawValue.contains("main") == true }?.makeKeyAndOrderFront(nil)
+                // Окна настроек и журнала — поверх главного, его не выдвигаем.
+                if !screen.hasPrefix("settings") && screen != "log" {
+                    NSApp.windows.first { $0.identifier?.rawValue.contains("main") == true }?.makeKeyAndOrderFront(nil)
+                }
             }
         }
         if screen == "empty" { return }
@@ -105,9 +108,8 @@ enum DemoUI {
 
         await model.pingAll()
         guard ["main", "share", "log", "add"].contains(screen) else { return }
+        // В CI помощник не ставится, поэтому демо подключается в режиме «Только локальный порт».
         await model.connect()
-        // Подключение в демо — через локальный порт (помощник в CI не ставим); на экране — обычный режим.
-        model.saved.mode = .proxy
         traffic(port: model.options().httpPort)
     }
 

@@ -66,10 +66,10 @@ jobs:
       - name: UI screenshots
         run: |
           OUT="$RUNNER_TEMP/render"; mkdir -p "$OUT"
-          for S in empty main add share settings settings-routing settings-network log; do
+          for S in empty main add share settings settings-routing settings-network; do
             VEIL_HOME="$RUNNER_TEMP/demo-$S" dist/Veil.app/Contents/MacOS/Veil --demo-ui $S > "$OUT/demo-$S.log" 2>&1 &
             PID=$!
-            case $S in main|log) sleep 40;; add|share) sleep 30;; *) sleep 14;; esac
+            case $S in main) sleep 45;; add|share) sleep 30;; *) sleep 16;; esac
             screencapture -x "$OUT/window-$S.png" || echo "screencapture не сработал"
             kill $PID 2>/dev/null || true
             sleep 2
