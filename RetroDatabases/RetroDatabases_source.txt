@@ -1,6 +1,6 @@
 ===============================================================================
  Retro Databases: source code of the Android app in one text file
- Files in the archive: 2415
+ Files in the archive: 2421
  Not included: gradle/wrapper/gradle-wrapper.jar (binary, created by the command
    gradle wrapper --gradle-version 8.10.2) and local.properties (path to your SDK).
 ===============================================================================
@@ -2420,6 +2420,12 @@ CONTENTS:
   tools/economics/pools/db239.json
   tools/economics/pools/db240.json
   tools/economics/pools/db241.json
+  tools/economics/pools/db242.json
+  tools/economics/pools/db243.json
+  tools/economics/pools/db244.json
+  tools/economics/pools/db246.json
+  tools/economics/pools/db248.json
+  tools/economics/pools/db250.json
   tools/economics/spheres.json
 
 ################################################################################
@@ -199856,6 +199862,538 @@ if __name__ == "__main__":
       "caveat": "Both are trade-press briefs based on company results and news reports, seen only as search summaries. The Q2 figure excludes a discontinued arm, so it is not a full-year profit. The fine is only possible, and the results do not say what the Eurojackpot error was. Nothing in the results covers 2026. The operators' ownership is not stated in the results, so the link to Nordic social democracy is a hint about taxing gambling, not a documented policy aim.",
       "relevant_to": [
         "Nordic social democracy"
+      ]
+    }
+  ]
+}
+
+################################################################################
+# FILE: RetroDatabases/tools/economics/pools/db242.json
+################################################################################
+{
+  "database": 242,
+  "practice": "Holidays and free time",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "HF1",
+      "case": "France's paid holiday law of 1936",
+      "years": "1936; five weeks standard from 1982",
+      "claim": "Léon Blum's bill cleared the Chamber of Deputies on 11 June 1936, after the Popular Front's election win in May and nationwide general strikes. The Senate had blocked earlier attempts in 1928, 1931 and 1932. The measure was made official on 20 June 1936 with 15 days of leave (12 working days) for employees who had been under contract for a year. Uptake was gradual, with the big rise in holiday-taking mostly from the 1960s, and five weeks has been the standard since 1982. Sources disagree on France's standing: a company blog calls it the first democratic nation to guarantee paid leave, while an INA archive page says England, Germany, Spain and Portugal already had paid holidays by then.",
+      "source": "LCP, French parliamentary channel, article marking 90 years of paid leave (2026); INA, French national audiovisual institute, archive page 'Les congés payés en 1936' (year not shown); Vacation Tracker company blog (year not shown)",
+      "url": "https://lcp.fr/actualites/ces-lois-qui-font-votre-ete-il-y-a-90-ans-les-conges-payes-439778",
+      "caveat": "Taken from search-result summaries of several French pages. The linked article and the INA archive page were not opened, so the page behind each date is not confirmed. The 'first democratic nation' view is a company blog's, and the late-adopter view is from an online encyclopaedia (secondary). No primary text of the 1936 law is in the results.",
+      "relevant_to": ["Syndicalism", "Fabian socialism"]
+    },
+    {
+      "id": "HF2",
+      "case": "Soviet paid annual leave and union rest-home vouchers",
+      "years": "1922 onward; 12 working days until 1967, then 15",
+      "claim": "A 1922 labour code set a paid two-week holiday for workers with about five and a half months of service, and workers under 18 reportedly received a full month. The annual allowance was 12 working days until 1967, when it rose to 15. Vouchers for holiday sanatoriums and rest homes moved down from central trade-union bodies through local branches to factory committees. Distribution was partly based on merit or need, and the rest could be bought at a share of face value. Diane Koenker argues that privileged groups dominated the summer allocations from the 1930s onward, leaving ordinary workers with winter passes. After the Second World War the unions took responsibility for workers' rest, and a 1960 Council of Ministers resolution gave them sanatoriums and rest homes. A 1957 Soviet Life issue said the guest's union covered about 70 per cent of resort bills. Sources disagree on the origin of paid leave: one news feature dates the concept to 1918, while Koenker and a JSTOR Daily article tie the key statute to 1922.",
+      "source": "Diane Koenker, 'Whose right to rest?', Comparative Studies in Society and History (year not shown); JSTOR Daily article 'Workers of the world take PTO' (year not shown); Soviet Life, issue 10 of 1957 (official Soviet magazine); news feature on Soviet holidays (year not shown)",
+      "url": "https://discovery-pp.ucl.ac.uk/10043448/1/Koenker_whose-right-cssh.pdf",
+      "caveat": "Taken from search-result summaries, and the linked pages were not opened; the search does not show which page gives each figure. The 1957 Soviet Life figure reflects official policy, not verified practice. The results say little about how vouchers worked in the 1920s and 1930s, and most trade-union detail is postwar. The 1918 and 1922 origin dates are disputed.",
+      "relevant_to": ["Command socialism"]
+    },
+    {
+      "id": "HF3",
+      "case": "France's 40-hour week of 1936",
+      "years": "1936",
+      "claim": "An online encyclopaedia entry on hours of labour credits France's Popular Front government with setting a 40-hour week in 1936. It says that spreading scarce jobs across more workers ranked among the leading 1930s arguments for shorter hours.",
+      "source": "Online encyclopaedia (secondary), article on hours of labour (year not shown)",
+      "url": "https://www.britannica.com/print/article/326853",
+      "caveat": "Only one line in the results describes France's measure, so the law's terms, date of effect and scope are not confirmed. The source is a secondary encyclopaedia entry, not the legal text, and its date is not shown. The entry's tie between the US benchmark and the 1938 act is disputed by a World Economic Forum timeline (see the US case).",
+      "relevant_to": ["Keynesian welfare capitalism"]
+    },
+    {
+      "id": "HF4",
+      "case": "US Fair Labor Standards Act and the 40-hour limit",
+      "years": "1938 (act); 1940 (40-hour limit effective)",
+      "claim": "An online encyclopaedia (secondary) and a popular-history article tie the 40-hour US benchmark to the Fair Labor Standards Act of 1938. A World Economic Forum timeline (2015) disagrees: it says the 1938 law set a 44-hour limit, and that the 40-hour limit came through a 1940 amendment effective 24 October 1940. The sources disagree on the hour limit the 1938 act set, and the case reports that disagreement rather than settling it.",
+      "source": "World Economic Forum, article on how the 40-hour week became standard (2015); online encyclopaedia (secondary) (year not shown); popular-history article by Dave Roos (year not shown)",
+      "url": "https://weforum.org/agenda/2015/10/how-did-the-40-hour-work-week-become-standard",
+      "caveat": "The 44-hour and 1940 detail comes from one World Economic Forum timeline, set against two secondary pages that tie the benchmark to 1938. The link given is one of two WEF pages in the results, and the summary does not say which one carries the timeline. The 1938 act itself was not opened, and no government source is in the results.",
+      "relevant_to": ["Keynesian welfare capitalism"]
+    },
+    {
+      "id": "HF5",
+      "case": "Germany's federal holiday act of 1963",
+      "years": "1963 onward",
+      "claim": "Sources date Germany's federal holiday act (Bundesurlaubsgesetz) to 1963. As summarised in the results, the statutory floor is 24 working days on a six-day week and 20 on a five-day week. The Local's breakdown runs down to 16 days on a four-day week, 12 on three, 8 on two and 4 on one. Holidays that differ by state sit outside that floor; one source puts them at 9 to 13 days, with Bavaria at the top end. Union contracts usually give 28 to 30 days and apply to roughly half of workers (52 per cent in the west and 45 per cent in the east).",
+      "source": "The Local, online news site, article 'Vacation days in Germany: what to know about your rights as an employee' (2018); HR-software glossary entries (years not shown)",
+      "url": "https://www.thelocal.de/20180619/vacation-days-in-germany-what-to-know-about-your-rights-as-an-employee",
+      "caveat": "Secondary explainers and HR-vendor glossaries, not the statute, and the official text was not opened. No statutory minimum before 1963 is in the results, so the history of German leave law is missing. The state-holiday, union-coverage and east-west figures are not tied to a named page in the summary.",
+      "relevant_to": ["Social market economy"]
+    },
+    {
+      "id": "HF6",
+      "case": "Dutch statutory paid leave law of 1966",
+      "years": "1966; holiday-pay guarantee from 1968",
+      "claim": "Dutch paid-leave rules began on 1 October 1966, under a law dated 14 July 1966 (Staatsblad 1966, 290). The results say the labour movement's campaign for holiday pay as a legal right succeeded in 1966. A union-history page also reports that 80 per cent of workers already had paid holiday by the late 1930s; the base population is not stated. The results report that the 1968 minimum wage law guaranteed full-time staff at least 8 per cent holiday pay, and that the Minimum Wage and Minimum Holiday Allowance Act (Wml) anchors that entitlement today.",
+      "source": "Union-history web pages (year not shown); magazine article on the history of holiday pay (year not shown)",
+      "url": "https://vakbondsverhalen.nl/verhaal/vakantie-een-bevochten-recht",
+      "caveat": "Secondary sources only: union-history pages and a magazine piece, not the 1966 act, which no result reproduces. The dates and the Staatsblad reference come from search summaries, and the pages were not opened. The 80 per cent figure has no stated base, and one union page gives both 1961 and 1962 for a leave-day change. No result supports a Dutch Vakantiewet of 1961; several 'Vakantiewet' results are Belgian or Surinamese laws and are not used.",
+      "relevant_to": ["Nordic social democracy"]
+    },
+    {
+      "id": "HF7",
+      "case": "China's 1999 Golden Week holidays",
+      "years": "1999; changes in 2007",
+      "claim": "A revision dated 18 September 1999 created three extended breaks: Spring Festival, May Day and National Day. Policymakers meant them to lift domestic spending and cushion the economy against the Asian financial crisis. Reported trip counts disagree: about 28 million trips in one account and 29 million travellers in another. The 2000 National Day break drew 59.8 million trips. An academic article citing Wu and colleagues (2012) judges that the holidays did less for consumption than hoped. A December 2007 change shortened the May Day break and made Tomb-Sweeping, Dragon Boat and Mid-Autumn legal holidays.",
+      "source": "Web article on Golden Week (year not shown); academic article citing Wu and colleagues (2012) (year not shown)",
+      "url": "https://fdichina.com/?p=79742",
+      "caveat": "Taken from search-result summaries; the search does not show which page carries each figure, and the linked page was not opened. The two trip counts disagree and are reported as given. The 59.8 million figure and the Wu and colleagues finding are second-hand, from an academic article the search did not open. The 1999 aim is a policy motive as reported, not a measured effect. The results do not cover employee paid annual leave rules.",
+      "relevant_to": ["Chinese market socialism"]
+    },
+    {
+      "id": "HF8",
+      "case": "Strength Through Joy holidays in Nazi Germany",
+      "years": "from late 1933; figures for 1936",
+      "claim": "The Nazi-run leisure scheme Kraft durch Freude (Strength Through Joy) was launched in late 1933 under the German Labour Front. It aimed to narrow class gaps and offered factory-floor sports, cheap concerts and art shows, but its trips and sailings drew the most attention. Roughly 30 million people belonged in 1936, but just 7.4 million took a trip. Informers posed as vacationers from the start, so monitoring went hand in hand with the holidays.",
+      "source": "Educational history website (name and year not shown in the search summary); online collection of German historical documents (year not shown)",
+      "url": "https://germanhistorydocs.org/en/nazi-germany-1933-1945/vacations-during-the-nazi-period-mid-1930s",
+      "caveat": "Search-result summary only; the linked document page was not opened, so it is not confirmed to carry these figures. The 7.4 million trip figure rests on one educational site in the results, and the 30 million membership figure and the informers point have no named source. The first result, an encyclopaedia entry, was not used.",
+      "relevant_to": ["Corporatism and fascist economics"]
+    }
+  ]
+}
+
+################################################################################
+# FILE: RetroDatabases/tools/economics/pools/db243.json
+################################################################################
+{
+  "database": 243,
+  "practice": "Parks, libraries and public spaces",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "PS1",
+      "case": "England's Public Libraries Act 1850 (Ewart's Act)",
+      "years": "1850 to 1891",
+      "claim": "The Act let English and Welsh boroughs with more than 10,000 inhabitants fund a free public library from a local rate, capped at a halfpenny in the pound. Adoption needed a two-thirds ratepayer majority, and a poll could be demanded. The first version left out money for book purchases, so stock had to come from donations. The 1855 amendment dropped the population floor to 5,000, raised the cap to a penny and allowed book purchases. Uptake was slow: Nantwich did nothing for three decades, and York's ratepayers only signed off in 1891, when 169 towns already ran free libraries. Sources disagree on the first rate: four put it at a halfpenny, while an online encyclopaedia entry on the Manchester library describes a penny under the 1850 Act.",
+      "source": "Public Libraries Act 1850 (statute, 13 and 14 Vict. c. 65, cited but not read); Torbay council library service history (undated); Nantwich Museum (undated); York archive catalogue (undated); British Library blog on 175 years of public libraries (undated); online encyclopaedia (secondary)",
+      "url": "https://www.torbay.gov.uk/media/1836/historylibraryservice.pdf",
+      "caveat": "The terms come from search summaries of council, museum and online pages; the statute itself was not read, so the rate dispute is open. The Nantwich and York examples are local histories.",
+      "relevant_to": [
+        "Fabian socialism"
+      ]
+    },
+    {
+      "id": "PS2",
+      "case": "Carnegie library grants in the United States",
+      "years": "Up to shortly before Carnegie's death in 1919 (start date not in the results)",
+      "claim": "The American share of Carnegie's library spending, roughly 40 million US dollars, funded the construction of 1,670 public buildings in 1,412 communities, and new-building grants stopped shortly before Carnegie's death in 1919. Applicants typically listed a parcel of publicly owned land for the site. Grantees had to budget at least a tenth of the award each year for staff pay and running costs, and recipients also had to supply the book stock. In Lawrence, Kansas, a 27,500 US dollar award obligated 2,750 US dollars a year from the city budget. In Linden, Indiana, the town was asked to furnish the site and show that it could fund upkeep.",
+      "source": "Lawrence, Kansas, public library history exhibit (online, undated); Linden library, Indiana, history page (undated); general online histories of Carnegie's library grants (undated)",
+      "url": "https://lplks.omeka.net/exhibits/show/library-history/early-library/city-library",
+      "caveat": "Most results were local histories or non-US pages, so the national totals rest on a search summary with no list of buildings. The Lawrence and Linden details come from one local source each. The results do not say how many towns met their operating pledges or how the programme wound down.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism",
+        "Distributism"
+      ]
+    },
+    {
+      "id": "PS3",
+      "case": "Central Park land purchase and design contest, 1853 to 1858",
+      "years": "1853 to 1858",
+      "claim": "State officials approved funds to buy the Central Park site on 21 July 1853. The land, from 59th to 106th Streets between Fifth and Eighth Avenues, came into public hands that year through eminent domain. Spending from 1853 into 1856 reached roughly 5 million US dollars, close to triple the original budget. Roughly 1,600 people of limited means lived in makeshift housing on the site, and removal with compensation began in 1855. A design contest launched in October 1857 carried a purse of 2,000 US dollars. Thirty-three submissions came in, the last just before the 31 March 1858 deadline, and the Greensward Plan by Olmsted and Vaux was chosen. The chief architect post later went to Frederick Law Olmsted.",
+      "source": "Central Park official site, history page (undated); general-interest history pages on Central Park (undated)",
+      "url": "https://www.centralparknyc.org/visit/park-history.html",
+      "caveat": "Based on search summaries of general-interest pages, not primary records. The roughly 5 million US dollars is described two ways (money set aside for land in one summary, total spending to 1856 in another), so check it against an archival source. The 1,600 figure is unverified. Sources differ on the northern limit: 106th Street, or 110th Street with the extension in 1863. The results do not say how the purchase was financed, so this case cannot say who paid.",
+      "relevant_to": [
+        "Fabian socialism"
+      ]
+    },
+    {
+      "id": "PS4",
+      "case": "Central Park Conservancy funding split (2016)",
+      "years": "2016",
+      "claim": "A 2016 article in The Architect's Newspaper, headlined around a campaign to raise 300 million US dollars for the Central Park Conservancy, reported that taxpayer money covered only about a quarter of the Conservancy's funding, with donors covering the rest.",
+      "source": "The Architect's Newspaper, 2016 article on the Central Park Conservancy's fundraising",
+      "url": "https://www.archpaper.com/2016/07/central-park-conservancy-raising-300-million/",
+      "caveat": "One article from a single year. The quarter share is the search summary's wording and was not checked against the article. It covers the Conservancy's own funding only, and the results give no later years.",
+      "relevant_to": [
+        "Monetarist neoliberalism",
+        "Commons governance"
+      ]
+    },
+    {
+      "id": "PS5",
+      "case": "Vienna's Lido Kongreßbad under Red Vienna",
+      "years": "1927",
+      "claim": "The 1927 Lido Kongreßbad, by Erich Leischner, was developed by the Vienna municipality under the Social Democratic Red Vienna programme. It emphasised swimming, sunbathing and air bathing, and the project also provided building-trade employment. Spektrum, a German-language magazine, describes Red Vienna's aim of training the body alongside the mind through expanded parks and new sports facilities.",
+      "source": "Modernism in Architecture website, building entry on the Lido Kongreßbad (1927, undated); Spektrum (German-language magazine), article on Red Vienna's aims (undated)",
+      "url": "https://modernism-in-architecture.org/buildings/lido-kongressbad/",
+      "caveat": "One building entry and one magazine article. Neither gives budgets, fees or council decisions, and the results say little about parks. The employment and training points come from a search summary and were not checked on the pages. Whether entry was free is not in the results.",
+      "relevant_to": [
+        "Nordic social democracy",
+        "Fabian socialism"
+      ]
+    },
+    {
+      "id": "PS6",
+      "case": "Waqf endowments for fountains and libraries in Ottoman cities",
+      "years": "Ottoman period (no dates in the results)",
+      "claim": "Several sources say that waqf endowments paid for public fountains and libraries, among other public works. Fountains are the best documented: sultans commissioned some, ordinary savers funded others, many carry inscriptions naming the donor, and several still work. One paper files libraries under education, with schools and madrasas. Sources disagree on the state's role: one says official oversight reached all established foundations, while a York University news item stresses the founders' independence. Parks and gardens are not covered beyond a passing mention of recreation facilities.",
+      "source": "Daily Sabah (newspaper), feature articles of 2015 and 2016; a paper in a university repository (undated); York University news item (undated)",
+      "url": "https://www.dailysabah.com/feature/2015/06/09/waqf-the-backbone-of-ottoman-beneficence/amp",
+      "caveat": "Newspaper features rather than studies, and the results themselves say the specifics need checking against the scholarly items. The library claim is a general statement from several sources, with the fountain details carrying most of the weight. No dates or amounts are given.",
+      "relevant_to": [
+        "Islamic economics",
+        "Commons governance"
+      ]
+    }
+  ]
+}
+
+################################################################################
+# FILE: RetroDatabases/tools/economics/pools/db244.json
+################################################################################
+{
+  "database": 244,
+  "practice": "Tourism",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "TM1",
+      "case": "Bhutan's per-night tourism fee",
+      "years": "2022 to 2023",
+      "claim": "Bhutan's per-night Sustainable Development Fee rose from 65 to 200 US dollars when travel resumed in September 2022, according to search summaries. Officials later cut it to 100 US dollars from September 2023, and a Gulf News headline says the daily fee was cut by half to lure more visitors. Skift tied the charge to the kingdom's high-value, low-volume approach and warned that the 200 US dollar level could make visitors doubt their trip's worth.",
+      "source": "Skift (travel industry news), 2023; Gulf News, 2023; Travel Weekly, 2022 or 2023 (year not shown)",
+      "url": "https://skift.com/2023/06/22/bhutan-lowers-sustainable-fee-to-boost-longer-stays-from-tourists/",
+      "caveat": "All sources are trade and news reports from 2022 and 2023, and the figures come from headlines and search summaries. None confirms the rate after 2023, and no official Bhutanese source appeared in the results. Skift's remark on visitor doubts is one outlet's view.",
+      "relevant_to": [
+        "Buddhist economics",
+        "Steady-state and degrowth economics"
+      ]
+    },
+    {
+      "id": "TM2",
+      "case": "Venice's day-visitor access fee, 2024 pilot",
+      "years": "2024 pilot; counts reported in 2024 and 2025",
+      "claim": "Venice's 2024 pilot charged day-visitors a flat 5 euros on 29 test days, in peak hours from 8:30am to 4pm. A city count published in July 2024 recorded 485,000 paying visitors across those days. Associated Press reporting from April 2025 says about 450,000 day-trippers paid the 2024 charge. A news report says the fee brought in 2.4 million euros in 2024, while implementation costs reached 2.7 million euros, which left a shortfall.",
+      "source": "Associated Press, April 2025; Venice city count, July 2024; Al Etihad news report (year not shown)",
+      "url": "https://ny1.com/nyc/all-boroughs/ap-top-news/2025/04/18/venice-expands-its-day-tripper-tax-program-to-combat-overtourism",
+      "caveat": "The two visitor counts disagree (485,000 in July 2024; about 450,000 in April 2025), and the results do not explain the gap. The revenue and cost figures rest on one news report and a search summary, and the fee terms were not checked against the city's own access-fee page. Later seasons are outside this case.",
+      "relevant_to": [
+        "Steady-state and degrowth economics",
+        "Commons governance"
+      ]
+    },
+    {
+      "id": "TM3",
+      "case": "Barcelona's doubled tourist tax, 2026",
+      "years": "2026, from 1 April",
+      "claim": "Barcelona's tourist tax roughly doubled from 1 April 2026. Hotel guests now pay about 10 to 15 euros a night by hotel category, up from 5 to 7.50 euros. The city council's own add-on is 5 euros a night, up from 4 euros, and is due to rise by 1 euro a year to a cap of 8 euros in 2029, with the council able to raise that cap further. Reports say roughly a quarter of the revenue is earmarked for housing.",
+      "source": "Catalan News, 2026; Hotel Online trade news, 2026; Falstaff, 2026; Classic FM, 2026",
+      "url": "https://www.hotel-online.com/news/barcelona-doubles-tourism-tax-to-one-of-highest-in-europe-to-fund-housing-1",
+      "caveat": "Outlets differ on the top 2026 rate: some give about 12 euros per person and others up to 15 euros. One headline in the results gives 7 euros a night for Catalonia, which does not match the hotel-category rates. The sources date from February to April 2026, none gives the total revenue collected, and the housing share is not tied to a revenue figure.",
+      "relevant_to": [
+        "Nordic social democracy",
+        "Georgism"
+      ]
+    },
+    {
+      "id": "TM4",
+      "case": "Berlin's ban on letting whole flats to tourists",
+      "years": "2016 onward; rulings in 2016 and (apparently) 2017",
+      "claim": "Since 2016, Berlin's rules have made it illegal to rent out a whole flat to tourists without approval, though single rooms may still be let. Reported fines reach 100,000 euros. In June 2016 the administrative court dismissed a challenge that the rules infringed property and professional freedoms: the judges held that constitutional property protection does not entitle owners to earn money from a home, and that the housing shortage justified the restriction. A later decision let second-home owners who live elsewhere let those homes to tourists. A later permit ruling set aside a refusal for a Pankow homeowner and suggested he be allowed to rent his home for 182 days a year.",
+      "source": "HMI Online, 2016; Fortune, 2016; The Local, 2016; TechCrunch, 2017 (date inferred)",
+      "url": "https://www.hmi-online.com/news/berlin-court-upholds-ban-on-short-term-rentals-4998732/",
+      "caveat": "Only 2016 and 2017 news reports were found, so the current rules and any later rulings are unverified. The four applicants are described as property owners by one outlet and as property managers by another. The fine figure and the 2017 date rest on search summaries, and the results do not say which report gives each claim.",
+      "relevant_to": [
+        "Social market economy",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "TM5",
+      "case": "Spain's 1963 law on tourist centres and zones",
+      "years": "1963 law; assessed in 2006 and 2014",
+      "claim": "A 1963 statute set up a framework for urban areas designated for tourism, called national tourist centres and zones, with tax perks and looser rules for converting urban land so that developments could be built quickly. A legal dictionary entry describes the statute this way. A 2014 article on tourism and urban law reads it as reflecting the Franco regime's commitment to raise revenue that could offset Spain's trade deficit. A 2006 geography study finds the planning model ambitious and technically sound but largely unrealised, with the centres mostly acting as a legal tool that still shaped some coastal areas and ski resorts. A critical commentary faults the law's overreach, including ministry powers that never met their aims.",
+      "source": "Royal Spanish Academy, legal dictionary entry (year not shown); article on tourism and urban law, 2014 (publisher not shown); University of Alicante geography study, 2006; critical commentary (undated)",
+      "url": "https://dpej.rae.es/lema/centros-y-zonas-de-interés-turístico-nacional",
+      "caveat": "Most sources are Spanish-language legal and academic texts, read only as English paraphrases in the search summary. The results include no figures for public tourism investment and do not cover the 1964 Development Plan; the 1964 date refers to a December 1964 regulation under the 1963 law. The case describes a legal framework and its intended effect, not measured results.",
+      "relevant_to": [
+        "Developmental state",
+        "Corporatism and fascist economics"
+      ]
+    },
+    {
+      "id": "TM6",
+      "case": "Namibia's communal conservancies and tourism income",
+      "years": "2023 figures; 2016 study using data from 1998 to 2013",
+      "claim": "In 2023, tourism brought 111 million Namibian dollars to communal conservancies, out of about 166 million Namibian dollars in total cash and in-kind benefits. Cash received by people living in conservancies came to 90.5 million Namibian dollars, of which joint-venture tourism supplied more than 57.7 million. A 2016 Conservation Biology study of 77 conservancies found that hunting income began within about three years of a conservancy's founding and tourism income took closer to six, that wage work at lodges accounted for most of what tourism delivered to communities, and that the authors argue combining hunting and tourism may give the strongest incentives for conservation on communal land.",
+      "source": "Namibian Sun, 2023, on State of Community Conservation figures; Conservation Biology study, 2016",
+      "url": "https://namibiansun.com/life-style/highest-income-in-kind-benefits-from-conservancies-since-20192023-12-20",
+      "caveat": "The 2023 figures come from a newspaper report on the state of community conservation, not from the report itself. The 2016 study uses data only to 2013. The results give no method for year-to-year changes, such as jobs falling from 3,223 in 2022 to 2,340 in 2023, and do not say whether the counting method changed.",
+      "relevant_to": [
+        "Commons governance"
+      ]
+    },
+    {
+      "id": "TM7",
+      "case": "Cuba's joint-venture hotels and dollar tips, 1990s",
+      "years": "1990 to 2005; a 1992 report",
+      "claim": "After Soviet support ended, Cuba's government went after visitor dollars. A January 1992 Christian Science Monitor article reports a projected 500,000 visitors for 1991, about 50 per cent more than in 1990, and says some foreign-partnered hotels, with partners from Spain, France, Italy, Jamaica, Austria and Finland, were nearing completion. A Columbia Law School document counts 14 joint-venture hotels with 5,000 rooms opened between 1990 and 2005, financed with 500 million CUC. It says foreign partners usually supplied the general manager, the food-and-beverage head and top chefs, while Cubans absorbed the know-how. A Berkeley journalism project reports that people with advanced schooling left low-paid professional posts for tourism jobs that paid dollar tips.",
+      "source": "Christian Science Monitor, January 1992; Columbia Law School document on Cuban tourism (year not shown); Berkeley journalism project (year not shown); Havana Times (undated)",
+      "url": "https://www.csmonitor.com/1992/0113/13061.html",
+      "caveat": "The 1992 article is the only result clearly from the 1990s; the Columbia document and the Berkeley project are undated in the results. The accounts differ in emphasis: the Columbia document calls the management contracts a success, while a Havana Times piece stresses how little foreign capital came in. The results give no 1990s wage or tip figures.",
+      "relevant_to": [
+        "Chinese market socialism",
+        "Command socialism"
+      ]
+    }
+  ]
+}
+
+################################################################################
+# FILE: RetroDatabases/tools/economics/pools/db246.json
+################################################################################
+{
+  "database": 246,
+  "practice": "Housing and rent",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "HR1",
+      "case": "Red Vienna municipal housing",
+      "years": "1919 to 1934",
+      "claim": "Vienna's Social Democrat city government built municipal housing estates (Gemeindebau) in these years. A Villanova University digital library document reports that the first five-year plan's 25,000 units drew on a sharply graduated tax plus more than half of the city budget. Platform, an online article, reports over 400 housing courts with roughly 60,000 units for 1923 to 1934. A 2021 Cape Breton Spectator article relays Vienna tourism figures of 61,715 apartments in 348 blocks plus 5,227 in 42 terraced-house developments for the same years.",
+      "source": "Villanova University digital library, 'The Construction of Socialism: Public Housing in Red Vienna, 1919-1934' (year not shown); Platform, online article 'The House that Anti-Fascism Built: The Hofs of Red Vienna' (year not shown); Cape Breton Spectator, 2021, relaying Vienna tourism figures",
+      "url": "https://athenavip.library.villanova.edu/files/vudl:486747/MASTER",
+      "caveat": "Sources disagree on the budget share: an architecture firm's blog gives housing roughly 30 per cent of the yearly budget, while the Villanova excerpt gives more than half of the city budget. The housing counts differ, and the sources likely define them differently. Equal Times and a Vienna tourism page describe different tax mixes. No result gives the housing tax's share of construction costs. The url is the Villanova document only; the Platform and Cape Breton figures come from the sources named.",
+      "relevant_to": [
+        "Fabian socialism"
+      ]
+    },
+    {
+      "id": "HR2",
+      "case": "Council housing under the 1919 Addison Act",
+      "years": "from 1919",
+      "claim": "The 1919 Addison Act, named after the minister Christopher Addison, was passed to build new homes after the First World War. Inside Housing says the funding under it was aimed at roughly 500,000 homes over three years.",
+      "source": "Inside Housing, UK housing publication, article on the Addison Act (year not shown)",
+      "url": "https://www.insidehousing.co.uk/addisonact",
+      "caveat": "The 500,000 figure is a target ('aimed at'), not a count of homes built, and no result gives the number built. Only this one page is cited; the Act's loan and grant terms come from search summaries and are not confirmed here.",
+      "relevant_to": [
+        "Fabian socialism"
+      ]
+    },
+    {
+      "id": "HR3",
+      "case": "New York City rent freeze under federal price control",
+      "years": "1943",
+      "claim": "Under the Emergency Price Control Act of 1942, the federal Office of Price Administration first declined to impose mandatory controls in New York City, pointing to a 1940 vacancy rate of 7.5 per cent. After the Harlem riot of August 1943 and tenant threats to withhold rent, it set a freeze effective 1 November 1943 that tied each unit's rent to its level on 1 March 1943.",
+      "source": "New York City Rent Guidelines Board, history of the board and the rent regulation system (year not shown); other results, including a book chapter and tenant-group histories, agree on the core facts",
+      "url": "https://rentguidelinesboard.cityofnewyork.us/wp-content/uploads/2020/01/historyoftheboard.pdf",
+      "caveat": "The freeze dates agree across results. The 7.5 per cent vacancy rate and the riot date were not checked against this page's text. Sources disagree on the state law that took over: a 2011 New York State bill cites chapter 274 of the 1946 laws, while a column in The Real Deal puts the replacement in 1947, so no date is given for that step. No result reports the freeze's effect on rents or supply.",
+      "relevant_to": [
+        "Austrian free-market economics",
+        "Classical laissez-faire capitalism"
+      ]
+    },
+    {
+      "id": "HR4",
+      "case": "Singapore public housing by the Housing and Development Board",
+      "years": "1960 to 1980",
+      "claim": "Docomomo's article 'HDB Public Housing 1960-1980: The First Two Decades' reports that about two-thirds of Singapore's 2.4 million residents were living in HDB flats by March 1980. An Atlantis Press paper puts the share at above four in five residents; its excerpt does not say when it was written.",
+      "source": "Docomomo, heritage article on HDB public housing 1960-1980 (year not shown); Atlantis Press paper (year not shown)",
+      "url": "https://www.docomomo.sg/happenings/hdb-public-housing-1960-1980-the-first-two-decades",
+      "caveat": "A secondary heritage article, read as a search excerpt. The Atlantis Press figure is undated, so it is not clear that it conflicts with the 1980 figure. HDB's own key statistics were in the results, but the excerpts gave building counts, not population shares. A property-agency blog's 1960 share (about 9 per cent) names no data source and is not used.",
+      "relevant_to": [
+        "Developmental state"
+      ]
+    },
+    {
+      "id": "HR5",
+      "case": "Germany's rent brake (Mietpreisbremse)",
+      "years": "2015 to 2016",
+      "claim": "Germany's rent brake, in force since 2015, caps rents on re-letting in designated tight housing markets. In a 2016 weekly report, marking the brake's first anniversary, the German Institute for Economic Research (DIW) compared regulated postal-code districts with unregulated neighbours and found the measure did little to temper rent growth: regulated areas saw steeper rises over the short term. It found small housing-price effects, and the feared hit to construction never showed up.",
+      "source": "German Institute for Economic Research (DIW), weekly report, 2016 (German-language)",
+      "url": "https://www.diw.de/de/diw_01.c.535255.de/publikationen/wochenberichte/2016_22_1/die_mietpreisbremse_wirkt_bisher_nicht.html",
+      "caveat": "A first-year comparison of districts, not a final evaluation: results of the later DIW evaluation for the federal justice ministry (2018) are not in the search. Trade-press listing analyses describe a dampening effect on asking rents in some cities, and some of these pieces are labelled advertorials, so the sources disagree on asking rents.",
+      "relevant_to": [
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "HR6",
+      "case": "Right to Buy council house sales (Housing Act 1980)",
+      "years": "1980 to 2024",
+      "claim": "The Royal Institution of Chartered Surveyors (RICS) reports 1.9 million council homes in England sold to tenants since 1980, with discounts averaging 44 per cent of market value. England's official statistics count 2,029,311 social housing sales under all Right to Buy schemes up to March 2024, of which council tenants made up 94 per cent. A chapter by Alan Murie in the book Right to Buy gives close to 2.7 million UK sales for 1980 to 2015.",
+      "source": "Royal Institution of Chartered Surveyors (RICS), web page on Right to Buy (year not shown); UK government statistics on social housing sales and demolitions in England, 2023-24; Alan Murie, chapter in the book Right to Buy (Cambridge University Press; year not shown)",
+      "url": "https://gov.uk/government/statistics/social-housing-sales-and-demolitions-2023-24-england/social-housing-sales-and-demolitions-2023-24-right-to-buy-sales--3",
+      "caveat": "Totals depend on geography and cut-off date, which is why the figures differ: the RICS and official figures cover England, while the Murie figure covers the UK. The RICS figure has no end date in its excerpt. Press reports of more than two million sales are not used.",
+      "relevant_to": [
+        "Monetarist neoliberalism"
+      ]
+    }
+  ]
+}
+
+################################################################################
+# FILE: RetroDatabases/tools/economics/pools/db248.json
+################################################################################
+{
+  "database": 248,
+  "practice": "Charity, mutual aid and philanthropy",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "CH1",
+      "case": "English friendly societies in the 19th century",
+      "years": "mid to late 19th century",
+      "claim": "A local-history document on the Sawbridgeworth friendly society says that Britain's count of friendly societies peaked at over 27,000 in the mid-to-late nineteenth century. By that document's account, about 200 have survived, and many of the others were absorbed into building societies, banks or insurers.",
+      "source": "Local-history document on the Sawbridgeworth friendly society (year not shown in the search result)",
+      "url": "https://sbwhistory.com/wp-content/uploads/2017/11/friendly-society.pdf",
+      "caveat": "A local-history document, not a statistical series. It gives no source for the count, and the peak is a period rather than a year. Another search result gives a different figure: women's enrolment exceeded 27,000 by 1874. That measures something else and must not be merged with this count.",
+      "relevant_to": [
+        "Cooperative economy",
+        "Mutualism"
+      ]
+    },
+    {
+      "id": "CH2",
+      "case": "Charitable Trusts Act 1853 and the Charity Commission",
+      "years": "1853",
+      "claim": "The Charitable Trusts Act 1853, dated 20 August 1853, set up a standing Board of Charity Commissioners for England and Wales. The Crown could appoint four commissioners, a secretary and two inspectors. The Board could examine how charities were managed, could designate staff as official trustees (subject to Treasury approval), and could refer cases it judged worth pursuing to the Attorney General. Some charities were exempt, among them university, church and friendly-society charities.",
+      "source": "Charitable Trusts Act 1853, legal database copy (year 1853)",
+      "url": "https://vlex.co.uk/vid/charitable-trusts-act-1853-808047769",
+      "caveat": "Based on a search-result description of the Act, which was not read in full. The background (an 1851 proposal and the 1852 change of government) and the later changes (1855, 1860, 1899 and 1944) are left out because this case cites only the Act. The reason for the exemptions is not given.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism"
+      ]
+    },
+    {
+      "id": "CH3",
+      "case": "Carnegie's wealth-giving and the Carnegie Corporation of New York",
+      "years": "1889 to 1912 (the foundation was set up in 1911)",
+      "claim": "Andrew Carnegie set up the Carnegie Corporation of New York in 1911 under a New York State charter, so that he could hand out most of his remaining wealth while alive, with the body continuing to give after his death. His gifts totalled 125 million US dollars in 1911 to 1912, and a further 10 million US dollars reached the Corporation once his estate was wound up. His two 1889 essays, together called The Gospel of Wealth, ran in the North American Review and treat the wealthy as stewards who should live modestly and direct surplus to public purposes; their line 'The man who dies thus rich dies disgraced' drew controversy on both sides of the Atlantic. Sources disagree on motive: a web page from NCFP stresses his Presbyterian upbringing and push for faith-based giving, while a Philanthropy Roundtable piece argues that Carnegie personally was not driven by religious impulses, unlike Rockefeller.",
+      "source": "Carnegie Corporation of New York, history page on its website (year not shown); NCFP web page on The Gospel of Wealth (year not shown); Philanthropy Roundtable article 'The Carnegie Corporation Turns 100' (year not shown)",
+      "url": "https://carnegie.org/about/our-history",
+      "caveat": "The foundation's own history page is an interested source. The gift totals and the 1889 publication details come from search-result summaries, not the full texts, and the cited page is not confirmed as the source of each figure. The sources give no years, and they disagree on Carnegie's motives. The foundation's site says it took the name Andrew Carnegie Foundation in 2026, so check the name used in a record.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism"
+      ]
+    },
+    {
+      "id": "CH4",
+      "case": "Waqf endowments in Ottoman and other Muslim lands",
+      "years": "from the 9th century; estimates for the late 18th and early 19th centuries",
+      "claim": "Waqf (Islamic endowments) took root around the ninth century and spread through Muslim lands, reaching city planning, social welfare and market stability. A cautious early-1800s calculation counts over half of Ottoman property as endowed. Late-18th-century estimates put the yearly income of roughly 20,000 Ottoman endowments at about a third of state revenue, and suggest that endowments may have held between half and two-thirds of farmland. Regional estimates drawn from Amy Singer's book put endowed land at 75 percent of arable land in present-day Turkey, about a fifth in Egypt and half in Algeria.",
+      "source": "Yaqeen Institute essay by Khalil Abdurrashid (year not shown); Amy Singer's book, as cited in the search results (year not shown)",
+      "url": "https://yaqeeninstitute.org/khalil-abdurrashid/financing-kindness-as-a-society-the-rise-fall-of-islamic-philanthropic-institutions-waqfs/",
+      "caveat": "All the shares are rough, secondhand estimates. A critical blog review says the Singer book lacks primary data behind its figures. Adam Mestyan's 2020 essay says research on modern Egyptian land administration is thin and that 19th-century court and survey records are restricted, so the Egyptian figure cannot be checked here. The Yaqeen essay's date is not shown.",
+      "relevant_to": [
+        "Islamic economics"
+      ]
+    },
+    {
+      "id": "CH5",
+      "case": "A Haarlem burial fund that became a life insurer",
+      "years": "1719 (in the insurer's name); no other date given",
+      "claim": "A Radboud University archive description of a Haarlem life insurer says that 'De Onderlinge van 1719' was formerly a burial fund in Haarlem called 'De vrijwillige liefdebeurs' (a voluntary charity fund).",
+      "source": "Radboud University archive description of a Haarlem life insurer (undated)",
+      "url": "https://www.ru.nl/kdc/bladeren/archieven-thema/subpagina-archieven-thema/stands-vakorganisaties/archieven_van/archieven_i/onderlinge",
+      "caveat": "A short archive description with no founding or conversion date for the burial fund and no membership figures; 1719 appears only in the insurer's name. Other Dutch results were only snippets (a 2020 blog post on mutual insurance and a note on burial funds from 1800 to 1850), so they are not used.",
+      "relevant_to": [
+        "Mutualism",
+        "Cooperative economy"
+      ]
+    },
+    {
+      "id": "CH6",
+      "case": "Winterhilfswerk (Winter Relief), a state-party charity in Germany",
+      "years": "1933 to 1945; start date disputed (September 1933 or 1931)",
+      "claim": "The Winterhilfswerk (Winter Relief), organised by the NSV welfare organisation, was an autumn-to-spring collection campaign that ran from 1933 to 1945. The German Historical Museum dates its founding to September 1933, but a museum database entry says the drive began under Brüning in 1931, so sources disagree on the start.",
+      "source": "German Historical Museum, online exhibition text on the Winterhilfswerk (year not shown); a museum database entry on the drive (undated)",
+      "url": "https://www.dhm.de/lemo/kapitel/ns-regime/ns-organisationen/winterhilfswerk.html",
+      "caveat": "The museum page is cited for the founding date; it was not read in full, and the NSV role is taken from search summaries. Search summaries also describe enforced giving, door-to-door collections by Party members and Hitler Youth, and aid limited to people judged racially acceptable, along with a Martin Bormann response that partly corroborated armaments rumours. Those statements are not claimed here because the cited page is not confirmed to say them. No totals of money raised appear in the results.",
+      "relevant_to": [
+        "Corporatism and fascist economics"
+      ]
+    }
+  ]
+}
+
+################################################################################
+# FILE: RetroDatabases/tools/economics/pools/db250.json
+################################################################################
+{
+  "database": 250,
+  "practice": "Religious life and its institutions",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "RL1",
+      "case": "Church tax collected by the state in Germany",
+      "years": "Roots in the 1800s; state collection given legal footing by 1919 legislation (one account)",
+      "claim": "Accounts in the results say that members of recognised churches owe a church tax (Kirchensteuer) and that the state collects it from members; the Federal Agency for Civic Education lexicon describes the state as the collecting body. The tax is calculated from the assessed wage or income tax rather than from income, after allowances and tax breaks are subtracted. The rate is 8 percent of that tax in Bavaria and Baden-Württemberg and 9 percent in the other states, and the sources agree on this split. Non-members, including people who have formally left, owe no church tax; leaving means a formal withdrawal called Kirchenaustritt. Church tax paid may be claimed as a special expense (Sonderausgabe) against income tax under section 10(1) no. 4 EStG, which lowers the income tax due.",
+      "source": "Federal Agency for Civic Education (Bundeszentrale für politische Bildung), legal lexicon entry on Kirchensteuer (year not stated); commercial tax guides and a blog from the same search (years not stated)",
+      "url": "https://www.bpb.de/kurz-knapp/lexika/recht-a-z/323629/kirchensteuer/",
+      "caveat": "Most of the detail comes from commercial tax guides and blogs in the results. The Federal Agency lexicon is the most authoritative text reported there, and the results show only its collection role. The 1919 date rests on one blog. Rates and the deduction were not checked against the tax laws, and the high-income caps are left out because they come from a commercial calculator that was cut off.",
+      "relevant_to": [
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "RL2",
+      "case": "Tithes converted into rent-charges in England and Wales",
+      "years": "1836; later Acts in 1891, 1918 and 1925",
+      "claim": "The Tithe Act 1836, often called the Tithe Commutation Act, replaced payments of tithes in kind with money rent-charges that tracked national corn prices rather than local conditions. Three commissioners based in London oversaw the change. Accounts differ on the averaging: one gives a seven-year average of wheat, barley and oat prices, while another says the figure was revised each year from grain-price averages published in the London Gazette. Owners carried the duty to pay until the Tithe Act 1891. The Tithe Act 1918 froze the sum until 1 January 1926, and a 1925 Act aimed to fix it in place and ultimately end it. The results do not show how the 1925 aims played out.",
+      "source": "Surrey History Centre (Surrey County Council), guide on tithe maps and apportionments (year not stated); online encyclopaedia (secondary) entry on the Tithe Act 1836 (year not stated)",
+      "url": "https://surreycc.gov.uk/culture-and-leisure/history-centre/researchers/guides/tithe-maps",
+      "caveat": "The statute text was not in the results, so the details rest on a county guide and an encyclopaedia entry, and the 1918 and 1925 Acts were not checked against their text. The averaging method is reported in two ways and is not settled here.",
+      "relevant_to": [
+        "Physiocracy",
+        "Georgism"
+      ]
+    },
+    {
+      "id": "RL3",
+      "case": "Church tax and state grant funding the Church of Denmark",
+      "years": "2005 figures, given in a 2006 ministry reply",
+      "claim": "A 2006 ministry reply, published by the Danish Parliament, gives the 2005 income of Folkekirken (the Church of Denmark) as about 6,236 million kroner. About 3,954 million of that came from local church tax (lokal kirkeskat) and about 690 million from the state grant. Legislation governing that grant at the time is given as section 20 of the Folk Church Economy Act (lov om folkekirkens økonomi), together with the annual finance acts.",
+      "source": "Danish Parliament (Folketing), ministry reply on Folkekirken finances (2006)",
+      "url": "https://ft.dk/samling/20061/almdel/kiu/spm/11/svar/291364/324745.pdf",
+      "caveat": "This gives one year's figures from a parliamentary reply, not from full accounts. A 2009 proposal to replace state support with a block grant (bloktilskud) appeared in the same search, but the excerpts do not show whether it was adopted, so it is not described here. A Copenhagen University PhD thesis in another result, with no year given, puts church tax at roughly 80 percent of church income; the figures may use different years or bases.",
+      "relevant_to": [
+        "Nordic social democracy"
+      ]
+    },
+    {
+      "id": "RL4",
+      "case": "US Supreme Court upholds church property-tax exemptions (Walz)",
+      "years": "1970 (decided 4 May 1970)",
+      "claim": "On 4 May 1970 the US Supreme Court rejected a challenge by a Richmond County property owner to New York City's property-tax exemptions for churches, by seven votes to one, with Justice Douglas the only dissenter. The majority said the exemptions were religiously neutral in purpose, favoured no particular faith and fitted a long American tradition. It also warned that assessing and collecting taxes from congregations would itself draw the state into church affairs. Secondary accounts in the results credit the case with introducing the idea of 'excessive entanglement', which Lemon v. Kurtzman later made the third prong of the Lemon test.",
+      "source": "US Supreme Court opinion in Walz v. Tax Commission of the City of New York (1970), as published by Cornell Law School's Legal Information Institute; secondary accounts: an online encyclopaedia (secondary) and case summary pages (years not stated)",
+      "url": "https://www.law.cornell.edu/supremecourt/text/397/664",
+      "caveat": "The facts come from a search summary, and the opinion text itself was not read. The vote, the entanglement point and the link to the Lemon test come from secondary accounts. The results do not say whether this reasoning is still applied, so no current status is given.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism"
+      ]
+    },
+    {
+      "id": "RL5",
+      "case": "Soviet registration of religious communities (1929)",
+      "years": "April 1929 law; changes reported for 1932 and 1975",
+      "claim": "Under the April 1929 RSFSR statute on religious organisations, a congregation could not operate until a local executive committee or municipal soviet had registered it, and a group seeking registration needed at least twenty initiators to petition those bodies. A group refused registration could not meet legally, lease state property or build a prayer house, and church buildings passed into state ownership. Secondary articles in the results say the law was revised slightly in 1932, that a round of changes in 1975 touched nearly half of its 68 articles, and that each of the fifteen republics ran a slightly different version.",
+      "source": "Michigan State University, Soviet history site, text of the 1929 Law on Religious Organizations (1929); secondary articles on Soviet religious policy (names and years not given in the results)",
+      "url": "https://soviethistory.msu.edu/1929/churches-closed/churches-closed-texts/law-on-religious-organizations/",
+      "caveat": "Only excerpts and secondary articles were read, and the full law was not checked. The 1932 and 1975 changes and the fifteen-republic variation come from secondary articles and are not confirmed against the text.",
+      "relevant_to": [
+        "Command socialism"
+      ]
+    },
+    {
+      "id": "RL6",
+      "case": "Pakistan's state collection of zakat and ushr",
+      "years": "Zakat from June 1980; ushr enforceable from March 1983; provincial change April 2010",
+      "claim": "Since June 1980, eleven classes of assets have faced a compulsory 2.5 percent zakat deduction, valued as of the first day of Ramadan, and the sums withheld go to a Central Zakat Fund at the State Bank of Pakistan. The farm-produce levy (ushr) became enforceable only in March 1983. A constitutional change in April 2010 moved legislative authority over zakat and ushr to the provinces, and separate provincial statutes followed. Sources disagree on the administrative home: two accounts place zakat oversight with the Ministry of Religious Affairs, and another places the 1980 ordinance under a Zakat and Ushr Division in the Ministry of Finance. One journal article calls the 1980 ordinance Pakistan's first zakat law, while others cite an earlier 1979 ordinance.",
+      "source": "Khalid Zafar and Associates (Pakistani law firm), summary page on the Zakat and Ushr Ordinance, 1980 (undated); a journal article and other accounts from the same search (names and years not given)",
+      "url": "https://khalidzafar.com/?p=362",
+      "caveat": "The claims come from search summaries and a law-firm page. The 1983 and 2010 dates come from other results, not from the linked page. The case fits this sphere only loosely: it concerns state collection of a religious levy rather than funding of congregations. The ministry and the 1979 or 1980 start date are disputed and not resolved.",
+      "relevant_to": [
+        "Islamic economics"
       ]
     }
   ]
