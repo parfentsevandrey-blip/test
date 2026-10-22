@@ -13,6 +13,8 @@ nonisolated struct ChatMessage: Codable, Identifiable, Sendable, Hashable {
     var error: String?
     /// Сколько секунд модель размышляла.
     var thinkingSeconds: Double?
+    /// Приложенные изображения (имена файлов в папке вложений).
+    var images: [String]?
 }
 
 nonisolated struct Conversation: Codable, Identifiable, Sendable, Hashable {
@@ -31,7 +33,8 @@ nonisolated struct Conversation: Codable, Identifiable, Sendable, Hashable {
         var t: [ChatTurn] = []
         if !systemPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { t.append(ChatTurn(role: .system, content: systemPrompt)) }
         for m in messages where m.error == nil && !(m.role == .assistant && m.text.isEmpty) {
-            t.append(ChatTurn(role: m.role == .user ? .user : .assistant, content: m.text))
+            t.append(ChatTurn(role: m.role == .user ? .user : .assistant, content: m.text,
+                              images: (m.images ?? []).map(ImageInput.path).filter { FileManager.default.fileExists(atPath: $0) }))
         }
         return t
     }

@@ -35,7 +35,7 @@ struct LibraryView: View {
                         }
                     }
                 } else {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 12)], spacing: 12) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 340), spacing: 12)], spacing: 12) {
                         ForEach(model.installed.sorted { ($0.lastUsed ?? $0.installedAt) > ($1.lastUsed ?? $1.installedAt) }) { m in
                             InstalledCard(item: m) { confirmDelete = m }
                         }
@@ -127,8 +127,13 @@ struct InstalledCard: View {
                 }
                 HStack(spacing: 8) {
                     FitBadge(fit: fit, compact: true)
-                    Label(item.verified ? "Проверена SHA-256" : "Без проверки", systemImage: item.verified ? "checkmark.shield.fill" : "shield")
+                    if item.vision {
+                        Label("Видит", systemImage: "eye.fill").font(.system(size: 10.5, weight: .medium)).foregroundStyle(Section.chat.palette[1])
+                            .help("Модель понимает изображения")
+                    }
+                    Label(item.verified ? "SHA-256" : "Без проверки", systemImage: item.verified ? "checkmark.shield.fill" : "shield")
                         .font(.system(size: 10.5)).foregroundStyle(.secondary)
+                        .help(item.verified ? "Файлы проверены по контрольной сумме Hugging Face" : "")
                     Spacer()
                     Text(item.lastUsed.map { "Работала \(Format.relative($0))" } ?? "Ещё не запускалась").font(.system(size: 10.5)).foregroundStyle(.tertiary)
                 }
@@ -139,6 +144,16 @@ struct InstalledCard: View {
                     } label: { Label("Общаться", systemImage: "bubble.left.and.bubble.right.fill") }
                         .buttonStyle(.glassProminent)
                         .tint(Section.chat.tint)
+                    if !item.vision && model.canSee(item.card) {
+                        if model.visionDownloads.contains(item.id) {
+                            ProgressView().controlSize(.small)
+                            Text("Скачиваю зрение…").font(.system(size: 11)).foregroundStyle(.secondary)
+                        } else {
+                            Button { model.addVision(item) } label: { Label("Добавить зрение", systemImage: "eye") }
+                                .buttonStyle(.glass)
+                                .help("Скачать проектор зрения — модель начнёт понимать изображения")
+                        }
+                    }
                     Spacer()
                     Button(role: .destructive, action: onDelete) { Image(systemName: "trash") }
                         .buttonStyle(.glass)

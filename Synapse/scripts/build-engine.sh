@@ -4,7 +4,7 @@
 #   LLAMA_TAG=b11800 ./scripts/build-engine.sh
 #
 # Результат (в .gitignore):
-#   Vendor/llama/include/   — llama.h и заголовки ggml
+#   Vendor/llama/include/   — llama.h, mtmd.h (зрение) и заголовки ggml
 #   Vendor/llama/lib/libSynapseEngine.a — все библиотеки движка одним архивом
 #   Vendor/llama/architectures.txt      — архитектуры моделей, которые понимает эта версия
 #   Vendor/llama/TAG
@@ -17,7 +17,7 @@ SRC="${LLAMA_SRC:-$ROOT/Vendor/llama.cpp-src}"
 
 step() { printf '\n\033[1;35m◆ %s\033[0m\n' "$1"; }
 
-if [[ -f "$OUT/TAG" && "$(cat "$OUT/TAG")" == "$TAG" && -f "$OUT/lib/libSynapseEngine.a" ]]; then
+if [[ -f "$OUT/TAG" && "$(cat "$OUT/TAG")" == "$TAG" && -f "$OUT/lib/libSynapseEngine.a" && -f "$OUT/include/mtmd.h" ]]; then
   echo "Движок llama.cpp $TAG уже собран — пропускаю"
   exit 0
 fi
@@ -48,6 +48,8 @@ cmake -S "$SRC" -B "$BUILD" \
   -DLLAMA_BUILD_SERVER=OFF \
   -DLLAMA_BUILD_APP=OFF \
   -DLLAMA_BUILD_UI=OFF \
+  -DLLAMA_BUILD_MTMD=ON \
+  -DMTMD_VIDEO=OFF \
   -DLLAMA_OPENSSL=OFF \
   -DGGML_METAL=ON \
   -DGGML_METAL_EMBED_LIBRARY=ON \
@@ -67,6 +69,8 @@ rm -rf "$OUT"
 mkdir -p "$OUT/include" "$OUT/lib"
 cp "$SRC/include/llama.h" "$OUT/include/"
 cp "$SRC"/ggml/include/*.h "$OUT/include/"
+# libmtmd — зрение: проектор изображений (mmproj) для мультимодальных моделей.
+cp "$SRC/tools/mtmd/mtmd.h" "$SRC/tools/mtmd/mtmd-helper.h" "$OUT/include/"
 LIBS=$(find "$BUILD" -name '*.a' | sort)
 echo "$LIBS" | sed "s|$BUILD/|  |"
 # Один архив — проще подключать к SwiftPM и нельзя забыть библиотеку.

@@ -69,10 +69,10 @@ jobs:
 
       - name: UI screenshots
         run: |
-          for S in welcome onboarding foryou catalog detail feed library chat; do
+          for S in welcome onboarding foryou catalog detail feed library chat vision; do
             dist/Synapse.app/Contents/MacOS/Synapse --demo-ui $S &
             PID=$!
-            if [ "$S" = chat ]; then sleep 45; else sleep 16; fi
+            if [ "$S" = chat ] || [ "$S" = vision ]; then sleep 50; else sleep 16; fi
             screencapture -x "$RUNNER_TEMP/render/window-$S.png" || echo "screencapture не сработал"
             kill $PID 2>/dev/null || true
             sleep 2

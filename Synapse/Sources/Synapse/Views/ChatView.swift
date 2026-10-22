@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Чат: список разговоров слева, переписка и поле ввода справа.
 struct ChatView: View {
@@ -74,6 +75,7 @@ struct ConversationRow: View {
 struct ChatPane: View {
     @Environment(AppModel.self) private var model
     @State private var draft = ""
+    @State private var dropTargeted = false
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -89,6 +91,61 @@ struct ChatPane: View {
             composer
         }
         .onAppear { focused = true }
+        // Картинку можно просто перетащить в окно чата.
+        .onDrop(of: [.fileURL, .image], isTargeted: $dropTargeted) { providers in
+            accept(providers)
+            return true
+        }
+        .overlay {
+            if dropTargeted {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .strokeBorder(Section.chat.tint, style: StrokeStyle(lineWidth: 3, dash: [10, 8]))
+                    .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Section.chat.tint.opacity(0.08)))
+                    .overlay {
+                        Label(model.visionReady ? "Отпустите — модель посмотрит на изображение" : "Эта модель не видит изображения",
+                              systemImage: model.visionReady ? "photo.badge.plus" : "eye.slash")
+                            .font(.system(size: 16, weight: .semibold))
+                            .padding(.horizontal, 20).padding(.vertical, 12)
+                            .glassEffect(.regular, in: .capsule)
+                    }
+                    .padding(12)
+                    .allowsHitTesting(false)
+            }
+        }
+    }
+
+    private func accept(_ providers: [NSItemProvider]) {
+        let model = model
+        guard model.visionReady else {
+            model.showToast(visionHint)
+            return
+        }
+        for p in providers {
+            if p.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+                _ = p.loadObject(ofClass: URL.self) { url, _ in
+                    guard let url else { return }
+                    Task { @MainActor in model.pendingAttachments += model.attach([url]) }
+                }
+            } else if p.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+                p.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
+                    guard let data else { return }
+                    Task { @MainActor in if let name = ImageInput.storeAttachment(data: data) { model.pendingAttachments.append(name) } }
+                }
+            }
+        }
+    }
+
+    private var visionHint: String {
+        if let m = model.selectedModel, model.canSee(m.card) { return "Добавьте «\(m.name)» зрение в «Моих моделях» — и она увидит картинку" }
+        return "Выбранная модель не видит изображения — возьмите модель с пометкой «Видит картинки»"
+    }
+
+    private func pickImages() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        panel.allowsMultipleSelection = true
+        panel.message = "Выберите изображения — модель посмотрит на них"
+        if panel.runModal() == .OK { model.pendingAttachments += model.attach(panel.urls) }
     }
 
     private func messages(_ chat: Conversation) -> some View {
@@ -118,7 +175,48 @@ struct ChatPane: View {
     }
 
     private var composer: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if !model.pendingAttachments.isEmpty {
+                ScrollView(.horizontal) {
+                    HStack(spacing: 8) {
+                        ForEach(model.pendingAttachments, id: \.self) { name in
+                            AttachmentThumb(name: name, size: 64)
+                                .overlay(alignment: .topTrailing) {
+                                    Button { model.pendingAttachments.removeAll { $0 == name } } label: {
+                                        Image(systemName: "xmark.circle.fill").font(.system(size: 16)).symbolRenderingMode(.palette)
+                                            .foregroundStyle(.white, .black.opacity(0.6))
+                                    }
+                                    .buttonStyle(.plain)
+                                    .offset(x: 5, y: -5)
+                                }
+                        }
+                    }
+                    .padding(.top, 6)
+                    .padding(.trailing, 6)
+                }
+                .scrollIndicators(.never)
+            }
+            composerRow
+        }
+        .padding(.leading, 10)
+        .padding(.trailing, 8)
+        .padding(.vertical, 8)
+        .glassEffect(.regular, in: .rect(cornerRadius: 26))
+        .padding(.horizontal, 24)
+        .padding(.bottom, 16)
+        .padding(.top, 6)
+        .frame(maxWidth: 900)
+    }
+
+    private var composerRow: some View {
         HStack(alignment: .bottom, spacing: 10) {
+            Button(action: pickImages) {
+                Image(systemName: "photo.badge.plus").font(.system(size: 15, weight: .medium)).frame(width: 30, height: 30)
+            }
+            .buttonStyle(.glass)
+            .buttonBorderShape(.circle)
+            .disabled(model.installed.isEmpty || !model.visionReady)
+            .help(model.visionReady ? "Приложить изображение (или перетащите его в окно)" : visionHint)
             TextField(placeholder, text: $draft, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.system(size: 14))
@@ -143,29 +241,24 @@ struct ChatPane: View {
                 .buttonStyle(.glassProminent)
                 .tint(Section.chat.tint)
                 .buttonBorderShape(.circle)
-                .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.installed.isEmpty)
+                .disabled((draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && model.pendingAttachments.isEmpty) || model.installed.isEmpty)
             }
         }
-        .padding(.leading, 18)
-        .padding(.trailing, 8)
-        .padding(.vertical, 8)
-        .glassEffect(.regular, in: .rect(cornerRadius: 26))
-        .padding(.horizontal, 24)
-        .padding(.bottom, 16)
-        .padding(.top, 6)
-        .frame(maxWidth: 900)
     }
 
     private var placeholder: String {
         if model.installed.isEmpty { return "Сначала установите модель" }
+        if !model.pendingAttachments.isEmpty { return "Что сделать с изображением? Например: «Что здесь написано?»" }
         return "Спросите что угодно…  ⏎ — отправить, ⌥⏎ — новая строка"
     }
 
     private func send() {
         let text = draft
-        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !model.isGenerating else { return }
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !model.pendingAttachments.isEmpty, !model.isGenerating else { return }
         draft = ""
-        model.send(text)
+        let images = model.pendingAttachments
+        model.pendingAttachments = []
+        model.send(text, images: images)
     }
 }
 
@@ -229,7 +322,12 @@ struct ChatTopBar: View {
             }
         case .ready:
             if let info = model.modelInfo {
-                Text("\(info.gpu ? "Metal" : "CPU") · контекст \(info.context / 1024)K").font(.system(size: 11)).foregroundStyle(.tertiary)
+                HStack(spacing: 6) {
+                    Text("\(info.gpu ? "Metal" : "CPU") · контекст \(info.context / 1024)K").font(.system(size: 11)).foregroundStyle(.tertiary)
+                    if info.vision {
+                        Label("видит картинки", systemImage: "eye.fill").font(.system(size: 10.5, weight: .medium)).foregroundStyle(Section.chat.palette[1])
+                    }
+                }
             }
         case .failed(let why):
             Label(why, systemImage: "exclamationmark.triangle.fill").font(.system(size: 11)).foregroundStyle(.red).lineLimit(1)
@@ -295,14 +393,21 @@ struct MessageView: View {
         if message.role == .user {
             HStack {
                 Spacer(minLength: 80)
-                Text(message.text)
-                    .font(.system(size: 14))
-                    .textSelection(.enabled)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(LinearGradient(colors: [Section.chat.palette[0].opacity(0.85), Section.chat.palette[1].opacity(0.85)], startPoint: .topLeading, endPoint: .bottomTrailing)))
-                    .foregroundStyle(.white)
+                VStack(alignment: .trailing, spacing: 6) {
+                    if let images = message.images, !images.isEmpty {
+                        HStack(spacing: 6) {
+                            ForEach(images, id: \.self) { AttachmentThumb(name: $0, size: images.count == 1 ? 220 : 120) }
+                        }
+                    }
+                    Text(message.text)
+                        .font(.system(size: 14))
+                        .textSelection(.enabled)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .fill(LinearGradient(colors: [Section.chat.palette[0].opacity(0.85), Section.chat.palette[1].opacity(0.85)], startPoint: .topLeading, endPoint: .bottomTrailing)))
+                        .foregroundStyle(.white)
+                }
             }
         } else {
             HStack(alignment: .top, spacing: 12) {
@@ -490,5 +595,29 @@ struct NoModelState: View {
     private func progressText(_ job: DownloadJob) -> String {
         let eta = job.eta.isFinite ? " · осталось \(Format.duration(job.eta))" : ""
         return "\(Int(job.fraction * 100))% · \(Format.bytes(job.received)) из \(Format.bytes(job.total)) · \(Format.speed(job.speed))\(eta)"
+    }
+}
+
+/// Миниатюра вложенного изображения; по щелчку открывается в Просмотре.
+struct AttachmentThumb: View {
+    let name: String
+    var size: CGFloat = 64
+
+    var body: some View {
+        let path = ImageInput.path(name)
+        Group {
+            if let image = NSImage(contentsOfFile: path) {
+                Image(nsImage: image).resizable().scaledToFill()
+            } else {
+                Image(systemName: "photo").font(.system(size: size * 0.3)).foregroundStyle(.secondary)
+            }
+        }
+        .frame(width: size, height: size)
+        .background(Color.primary.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: min(16, size * 0.18), style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: min(16, size * 0.18), style: .continuous).strokeBorder(.primary.opacity(0.1)))
+        .contentShape(Rectangle())
+        .onTapGesture { NSWorkspace.shared.open(URL(fileURLWithPath: path)) }
+        .help("Открыть изображение")
     }
 }

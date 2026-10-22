@@ -51,7 +51,37 @@ enum DemoUI {
             model.settings.thinking = false
             model.settings.temperature = 0.3
             model.send("Объясни в трёх коротких пунктах, чем полезны нейросети, которые работают прямо на компьютере.")
+        case "vision":
+            model.section = .chat
+            guard !model.installed.isEmpty else { return }
+            model.newChat()
+            for _ in 0..<80 where model.engineState != .ready { try? await Task.sleep(for: .milliseconds(250)) }
+            model.settings.thinking = false
+            model.settings.temperature = 0.2
+            if let name = sceneImage().flatMap(ImageInput.store) {
+                model.send("Какие фигуры и каких цветов ты видишь на картинке?", images: [name])
+            }
         default: break
         }
+    }
+
+    /// Картинка для демонстрации зрения: три цветные фигуры на белом.
+    static func sceneImage() -> CGImage? {
+        let w = 640, h = 400
+        guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+                                  space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        ctx.setFillColor(CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
+        ctx.setFillColor(CGColor(srgbRed: 0.92, green: 0.15, blue: 0.15, alpha: 1))
+        ctx.fillEllipse(in: CGRect(x: 40, y: 110, width: 170, height: 170))
+        ctx.setFillColor(CGColor(srgbRed: 0.1, green: 0.3, blue: 0.95, alpha: 1))
+        ctx.fill(CGRect(x: 240, y: 115, width: 160, height: 160))
+        ctx.setFillColor(CGColor(srgbRed: 0.1, green: 0.75, blue: 0.3, alpha: 1))
+        ctx.move(to: CGPoint(x: 515, y: 290))
+        ctx.addLine(to: CGPoint(x: 600, y: 110))
+        ctx.addLine(to: CGPoint(x: 430, y: 110))
+        ctx.closePath()
+        ctx.fillPath()
+        return ctx.makeImage()
     }
 }

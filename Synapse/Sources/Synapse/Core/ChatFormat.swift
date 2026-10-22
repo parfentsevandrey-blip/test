@@ -5,6 +5,8 @@ nonisolated struct ChatTurn: Sendable, Hashable, Codable {
     enum Role: String, Sendable, Codable { case system, user, assistant }
     var role: Role
     var content: String
+    /// Пути к изображениям, приложенным к реплике (нужна модель с проектором зрения).
+    var images: [String] = []
 }
 
 /// Как превратить диалог в текст для конкретной модели.

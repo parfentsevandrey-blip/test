@@ -101,7 +101,8 @@ nonisolated final class APIServer: @unchecked Sendable {
                 c.json(["models": models.map(ollamaModel)])
             case ("POST", "/api/show"):
                 let model = try await backend.prepare(r.json["model"] as? String ?? r.json["name"] as? String)
-                c.json(["details": details(model), "modelfile": "", "parameters": "", "template": ""])
+                c.json(["details": details(model), "modelfile": "", "parameters": "", "template": "",
+                        "capabilities": model.vision ? ["completion", "vision"] : ["completion"]])
             case ("POST", "/api/chat"):
                 try await ollamaChat(r.json, c, generate: false)
             case ("POST", "/api/generate"):
@@ -128,15 +129,29 @@ nonisolated final class APIServer: @unchecked Sendable {
         ["format": "gguf", "family": m.architecture ?? "", "parameter_size": String(format: "%.1fB", m.params), "quantization_level": m.quant]
     }
 
-    private static func turns(from messages: Any?) -> [ChatTurn] {
+    /// Реплики из запроса. Изображения: Ollama — `images: [base64]`, OpenAI — части `image_url` с data-URL.
+    static func turns(from messages: Any?) -> [ChatTurn] {
         (messages as? [[String: Any]] ?? []).compactMap { m in
             let role = ChatTurn.Role(rawValue: m["role"] as? String ?? "user") ?? (m["role"] as? String == "developer" ? .system : .user)
             var text = m["content"] as? String ?? ""
+            var images: [String] = (m["images"] as? [String] ?? []).compactMap(saveImage)
             if let parts = m["content"] as? [[String: Any]] {
                 text = parts.compactMap { $0["text"] as? String }.joined(separator: "\n")
+                for part in parts where part["type"] as? String == "image_url" || part["type"] as? String == "input_image" {
+                    let url = (part["image_url"] as? [String: Any])?["url"] as? String ?? part["image_url"] as? String ?? ""
+                    if let path = saveImage(url) { images.append(path) }
+                }
             }
-            return ChatTurn(role: role, content: text)
+            return ChatTurn(role: role, content: text, images: images)
         }
+    }
+
+    /// base64 или data:image/…;base64,… → временный файл.
+    private static func saveImage(_ encoded: String) -> String? {
+        let payload = encoded.hasPrefix("data:") ? String(encoded.split(separator: ",", maxSplits: 1).last ?? "") : encoded
+        guard let data = Data(base64Encoded: payload, options: .ignoreUnknownCharacters), !data.isEmpty else { return nil }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("synapse-api-\(UUID().uuidString).img")
+        return (try? data.write(to: url)) != nil ? url.path : nil
     }
 
     private static func settings(_ body: [String: Any], openAI: Bool) -> GenerationSettings {

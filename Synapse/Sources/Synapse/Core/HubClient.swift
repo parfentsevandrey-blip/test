@@ -208,6 +208,12 @@ nonisolated enum AppPaths {
         return dir
     }
 
+    static var attachments: URL {
+        let dir = support.appendingPathComponent("Attachments", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
     static var chats: URL {
         let dir = support.appendingPathComponent("Chats", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)

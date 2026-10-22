@@ -1,4 +1,6 @@
+import CoreGraphics
 import Foundation
+import ImageIO
 
 /// Самопроверки для CI: `Synapse.app/Contents/MacOS/Synapse --selftest-<режим> [папка]`.
 ///
@@ -69,9 +71,11 @@ nonisolated enum SelfTest {
         let groups = ModelVariant.group([
             f("M-Q4_K_M.gguf", 5), f("M-Q8_0.gguf", 9), f("mmproj-F16.gguf", 1), f("MTP/mtp-M-Q8_0.gguf", 1),
             f("BF16/M-BF16-00001-of-00002.gguf", 10), f("BF16/M-BF16-00002-of-00002.gguf", 10), f("README.md", 1),
+            f("mmproj-BF16.gguf", 1), f("mmproj-F32.gguf", 2),
         ])
         ok = check(groups.map(\.quant.name) == ["Q4_K_M", "Q8_0", "BF16"], "варианты: \(groups.map(\.quant.name))") && ok
-        ok = check(groups.last?.files.count == 2 && groups.last?.size == 20, "split-файл собран из двух частей") && ok
+        ok = check(groups.last?.files.count == 2 && groups.last?.weightsSize == 20, "split-файл собран из двух частей") && ok
+        ok = check(groups.first?.projector?.path == "mmproj-F16.gguf" && groups.first?.size == 6, "проектор зрения F16 выбран и входит в размер") && ok
 
         print("— Разбор ответов")
         let r1 = ReplyParser.parse("<think>считаю</think>\n\nОтвет: 4")
@@ -373,9 +377,83 @@ nonisolated enum SelfTest {
             .compactMap { ($0["message"] as? [String: Any])?["content"] as? String }.joined()
         ok = check(lines.count >= 2 && last?["done"] as? Bool == true && streamed.localizedCaseInsensitiveContains("paris"),
                    "POST /api/chat (поток NDJSON): \(lines.count) строк, «\(streamed)»") && ok
+        // 6. Зрение: проектор (mmproj) скачивается, модель отвечает на вопрос про картинку.
+        if let projector = variant.projector {
+            let projectorURL = folder.appendingPathComponent((projector.path as NSString).lastPathComponent)
+            do {
+                let fetcher = FileFetcher(url: HubClient.downloadURL(repo: card.id, path: projector.path), destination: projectorURL,
+                                          expectedSize: projector.bytes, sha256: projector.lfs?.oid) { _ in }
+                try await fetcher.run()
+                ok = check(true, "проектор зрения \(projector.path) (\(Format.bytes(projector.bytes))) скачан и проверен по SHA-256") && ok
+            } catch {
+                ok = check(false, "проектор зрения: \(error.localizedDescription)") && ok
+            }
+            var withVision = installed
+            withVision.projector = projectorURL.lastPathComponent
+            withVision.size += projector.bytes
+            Library.save(Library.load().filter { $0.id != withVision.id } + [withVision])
+
+            do {
+                let visionInfo = try await LlamaEngine.shared.load(path: destination.path, projector: projectorURL.path, context: 4096, gpu: gpu) { _ in }
+                ok = check(visionInfo.vision, "модель загружена со зрением") && ok
+                for (shape, color, cg, expect) in [("circle", "красный", CGColor(srgbRed: 0.9, green: 0.1, blue: 0.1, alpha: 1), "red"),
+                                                   ("square", "синий", CGColor(srgbRed: 0.1, green: 0.25, blue: 0.95, alpha: 1), "blue")] {
+                    guard let image = testImage(shape: shape, color: cg) else { ok = check(false, "тестовая картинка не создана") && ok; continue }
+                    let started = Date()
+                    let turns = [ChatTurn(role: .user, content: "What color is the \(shape) in this image? Answer with one word.", images: [image.path])]
+                    if let result = await ask(turns) {
+                        let (answer, stats) = result
+                        print("  → \(color) \(shape == "circle" ? "круг" : "квадрат"): «\(answer.answer)» · картинка + промпт \(stats.promptTokens) ток. за \(Format.duration(Date().timeIntervalSince(started)))")
+                        ok = check(answer.answer.localizedCaseInsensitiveContains(expect), "модель видит цвет: \(expect)") && ok
+                    } else {
+                        ok = check(false, "ответ про картинку не получен") && ok
+                    }
+                }
+                // После картинки обычный текстовый вопрос — кэш должен сброситься корректно.
+                if let after = await ask([ChatTurn(role: .user, content: "What is the capital of France? Answer with one word.")]) {
+                    ok = check(after.0.answer.localizedCaseInsensitiveContains("paris"), "после картинки текст работает: «\(after.0.answer)»") && ok
+                }
+                // Картинка через API OpenAI (data-URL).
+                if let image = testImage(shape: "circle", color: CGColor(srgbRed: 0.9, green: 0.1, blue: 0.1, alpha: 1)),
+                   let data = try? Data(contentsOf: image) {
+                    let content: [[String: Any]] = [
+                        ["type": "text", "text": "What color is the circle in this image? Answer with one word."],
+                        ["type": "image_url", "image_url": ["url": "data:image/png;base64," + data.base64EncodedString()]],
+                    ]
+                    let response = await post("/v1/chat/completions", ["model": installed.apiName, "messages": [["role": "user", "content": content] as [String: Any]],
+                                                                       "temperature": 0, "max_tokens": 32, "reasoning_effort": "none"])
+                        .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+                    let text = ((response?["choices"] as? [[String: Any]])?.first?["message"] as? [String: Any])?["content"] as? String ?? ""
+                    ok = check(text.localizedCaseInsensitiveContains("red"), "POST /v1/chat/completions с картинкой → «\(text)»") && ok
+                }
+            } catch {
+                print(EngineLog.shared.recent.suffix(20).joined(separator: "\n"))
+                ok = check(false, "загрузка со зрением: \(error.localizedDescription)") && ok
+            }
+        } else {
+            ok = check(false, "у \(card.id) не найден проектор зрения") && ok
+        }
+
         server.stop()
         await LlamaEngine.shared.unload()
         _ = mac
         return ok
+    }
+
+    /// Тестовая картинка: белый фон, одна крупная фигура заданного цвета.
+    static func testImage(shape: String, color: CGColor) -> URL? {
+        let size = 384
+        guard let ctx = CGContext(data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0,
+                                  space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        ctx.setFillColor(CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: size, height: size))
+        ctx.setFillColor(color)
+        let rect = CGRect(x: 72, y: 72, width: 240, height: 240)
+        if shape == "circle" { ctx.fillEllipse(in: rect) } else { ctx.fill(rect) }
+        guard let image = ctx.makeImage() else { return nil }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("synapse-test-\(shape).png")
+        guard let dest = CGImageDestinationCreateWithURL(url as CFURL, "public.png" as CFString, 1, nil) else { return nil }
+        CGImageDestinationAddImage(dest, image, nil)
+        return CGImageDestinationFinalize(dest) ? url : nil
     }
 }

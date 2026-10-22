@@ -15,11 +15,19 @@ nonisolated struct InstalledModel: Codable, Identifiable, Sendable, Hashable {
     var installedAt: Date
     var lastUsed: Date?
     var verified: Bool
+    /// Проектор зрения (mmproj) — с ним модель видит изображения.
+    var projector: String?
 
     var id: String { repo + "#" + quant }
     var folderName: String { repo.replacingOccurrences(of: "/", with: "__") }
     var folder: URL { AppPaths.models.appendingPathComponent(folderName, isDirectory: true) }
     var primaryPath: String { folder.appendingPathComponent(files.first ?? "").path }
+    var projectorPath: String? {
+        guard let projector else { return nil }
+        let path = folder.appendingPathComponent(projector).path
+        return FileManager.default.fileExists(atPath: path) ? path : nil
+    }
+    var vision: Bool { projectorPath != nil }
     var exists: Bool { files.allSatisfy { FileManager.default.fileExists(atPath: folder.appendingPathComponent($0).path) } }
 
     /// Короткое имя для API (как в Ollama): «qwen3.5-9b:q4_k_m».
@@ -51,7 +59,7 @@ nonisolated enum Library {
     /// Удаляет файлы варианта; пустая папка модели уходит вместе с ними.
     static func remove(_ model: InstalledModel) throws {
         let fm = FileManager.default
-        for f in model.files { try? fm.removeItem(at: model.folder.appendingPathComponent(f)) }
+        for f in model.files + (model.projector.map { [$0] } ?? []) { try? fm.removeItem(at: model.folder.appendingPathComponent(f)) }
         let rest = (try? fm.contentsOfDirectory(atPath: model.folder.path))?.filter { !$0.hasPrefix(".") } ?? []
         if rest.isEmpty { try? fm.removeItem(at: model.folder) }
     }

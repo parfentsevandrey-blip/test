@@ -13,6 +13,8 @@ nonisolated struct ModelInfo: Sendable, Equatable {
     var layers: Int
     var format: ChatFormat
     var gpu: Bool
+    /// Подключён проектор зрения — модель понимает изображения.
+    var vision: Bool
 }
 
 nonisolated struct GenerationSettings: Sendable, Codable, Hashable {
@@ -56,6 +58,8 @@ nonisolated enum EngineError: LocalizedError {
     case contextFailed(String)
     case decodeFailed(Int32)
     case promptTooLong(Int, Int)
+    case noVision
+    case badImage(String)
 
     var errorDescription: String? {
         switch self {
@@ -64,6 +68,8 @@ nonisolated enum EngineError: LocalizedError {
         case .contextFailed(let why): "Не хватило памяти для контекста модели. \(why)"
         case .decodeFailed(let code): "Движок остановился с ошибкой \(code)."
         case .promptTooLong(let n, let max): "Сообщение слишком длинное: \(n) токенов при контексте \(max)."
+        case .noVision: "Эта модель не видит изображения. Выберите модель с пометкой «Видит картинки» или добавьте ей зрение в «Моих моделях»."
+        case .badImage(let name): "Не удалось прочитать изображение \(name)."
         }
     }
 }
@@ -120,6 +126,10 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
     private var evaluated: [llama_token] = []
     private var format: ChatFormat = .chatml
     private var nBatch = 2048
+    /// Мультимодальный контекст (проектор зрения), если он есть у модели.
+    private var mtmd: OpaquePointer?
+    /// После запроса с картинками кэш не совпадает со списком токенов — следующий запрос начинается с чистого листа.
+    private var kvDirty = false
 
     // Под `lock`.
     private var _loaded: (path: String, info: ModelInfo)?
@@ -129,6 +139,7 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
 
     private init() {
         llama_log_set(engineLogCallback, nil)
+        mtmd_helper_log_set(engineLogCallback, nil)
         llama_backend_init()
     }
 
@@ -137,10 +148,12 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
     // MARK: - Загрузка
 
     /// Загружает модель и создаёт контекст. `gpu: false` — всё на процессоре (запасной путь).
-    func load(path: String, context: Int, gpu: Bool, progress: @escaping @Sendable (Double) -> Void) async throws -> ModelInfo {
+    /// `projector` — файл mmproj: с ним модель видит изображения.
+    func load(path: String, projector: String? = nil, context: Int, gpu: Bool,
+              progress: @escaping @Sendable (Double) -> Void) async throws -> ModelInfo {
         try await withCheckedThrowingContinuation { cont in
             queue.async {
-                do { cont.resume(returning: try self.loadSync(path: path, context: context, gpu: gpu, progress: progress)) }
+                do { cont.resume(returning: try self.loadSync(path: path, projector: projector, context: context, gpu: gpu, progress: progress)) }
                 catch { cont.resume(throwing: error) }
             }
         }
@@ -160,7 +173,8 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
         init(_ report: @escaping @Sendable (Double) -> Void) { self.report = report }
     }
 
-    private func loadSync(path: String, context: Int, gpu: Bool, progress: @escaping @Sendable (Double) -> Void) throws -> ModelInfo {
+    private func loadSync(path: String, projector: String?, context: Int, gpu: Bool,
+                          progress: @escaping @Sendable (Double) -> Void) throws -> ModelInfo {
         freeAll()
 
         var mparams = llama_model_default_params()
@@ -208,6 +222,19 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
         let template = llama_model_chat_template(model, nil).map { String(cString: $0) }
         self.format = ChatFormat.detect(template: template)
 
+        // Зрение: проектор переводит картинку в «токены», которые понимает языковая модель.
+        if let projector, FileManager.default.fileExists(atPath: projector) {
+            var mp = mtmd_context_params_default()
+            mp.use_gpu = gpu
+            mp.n_threads = Int32(cores)
+            mp.print_timings = false
+            mp.warmup = false
+            mp.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_AUTO
+            mtmd = mtmd_init_from_file(projector, model, mp)
+            if mtmd == nil { EngineLog.shared.append(4, "Проектор зрения не загрузился: \(EngineLog.shared.lastProblem)") }
+            if let m = mtmd, !mtmd_support_vision(m) { mtmd_free(m); mtmd = nil }
+        }
+
         let info = ModelInfo(
             name: meta(model, "general.name") ?? URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent,
             description: describe(model),
@@ -218,13 +245,17 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
             context: Int(llama_n_ctx(ctx)),
             layers: Int(llama_model_n_layer(model)),
             format: format,
-            gpu: gpu
+            gpu: gpu,
+            vision: mtmd != nil
         )
         lock.withLock { _loaded = (path, info) }
         return info
     }
 
     private func freeAll() {
+        if let mtmd { mtmd_free(mtmd) }
+        mtmd = nil
+        kvDirty = false
         if let ctx { llama_free(ctx) }
         if let model { llama_model_free(model) }
         ctx = nil
@@ -279,6 +310,17 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
         guard let ctx, let vocab, model != nil else { throw EngineError.notLoaded }
         let nCtx = Int(llama_n_ctx(ctx))
         let reserve = min(max(256, settings.maxTokens), nCtx / 3)
+
+        if turns.contains(where: { !$0.images.isEmpty }) {
+            guard let mtmd else { throw EngineError.noVision }
+            try generateMultimodal(turns, settings: settings, token: token, ctx: ctx, vocab: vocab, mtmd: mtmd, emit: emit)
+            return
+        }
+        if kvDirty {
+            llama_memory_clear(llama_get_memory(ctx), true)
+            evaluated = []
+            kvDirty = false
+        }
 
         // Длинный диалог: забываем самые старые реплики (системную оставляем), пока не влезет.
         var turns = turns
@@ -348,6 +390,116 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
                 throw EngineError.decodeFailed(rc)
             }
             evaluated.append(next)
+        }
+        if stats.tokens >= settings.maxTokens { stats.stoppedByLimit = true }
+        let tail = utf8.flush()
+        if !tail.isEmpty { emit(.text(tail)) }
+        stats.seconds = Date().timeIntervalSince(genStart)
+        emit(.finished(stats))
+    }
+
+    /// Запрос с изображениями: текст и картинки превращаются в куски (mtmd_tokenize), картинки кодируются
+    /// проектором, всё вместе декодируется (mtmd_helper_eval_chunks берёт на себя позиции M-RoPE и
+    /// некаузальное внимание у Gemma). Дальше генерация как обычно, но с явными позициями.
+    private func generateMultimodal(_ turns: [ChatTurn], settings: GenerationSettings, token: CancelToken,
+                                    ctx: OpaquePointer, vocab: OpaquePointer, mtmd: OpaquePointer,
+                                    emit: (GenerationEvent) -> Void) throws {
+        let nCtx = Int(llama_n_ctx(ctx))
+        let reserve = min(max(256, settings.maxTokens), nCtx / 3)
+        let marker = String(cString: mtmd_default_marker())
+
+        // Картинки декодируем сами (ImageIO) и отдаём проектору как RGB.
+        var bitmaps: [OpaquePointer?] = []
+        defer { bitmaps.forEach { if let b = $0 { mtmd_bitmap_free(b) } } }
+        func prepare(_ turns: [ChatTurn]) throws -> [ChatTurn] {
+            bitmaps.forEach { if let b = $0 { mtmd_bitmap_free(b) } }
+            bitmaps = []
+            return try turns.map { t in
+                guard !t.images.isEmpty else { return t }
+                for path in t.images {
+                    guard let image = ImageInput.rgb(path: path) else { throw EngineError.badImage((path as NSString).lastPathComponent) }
+                    let bitmap = image.pixels.withUnsafeBufferPointer { mtmd_bitmap_init(UInt32(image.width), UInt32(image.height), $0.baseAddress) }
+                    bitmaps.append(bitmap)
+                }
+                var t = t
+                t.content = String(repeating: marker + "\n", count: t.images.count) + t.content
+                return t
+            }
+        }
+
+        var turns = turns
+        var chunks: OpaquePointer?
+        defer { if let chunks { mtmd_input_chunks_free(chunks) } }
+        var rendered = (text: "", startsInReasoning: false)
+        while true {
+            let prepared = try prepare(turns)
+            rendered = render(prepared, thinking: settings.thinking)
+            if let old = chunks { mtmd_input_chunks_free(old) }
+            let fresh = mtmd_input_chunks_init()
+            chunks = fresh
+            let rc = rendered.text.withCString { cstr -> Int32 in
+                var input = mtmd_input_text(text: cstr, text_len: strlen(cstr), add_special: true, parse_special: true)
+                return bitmaps.withUnsafeBufferPointer { mtmd_tokenize(mtmd, fresh, &input, $0.baseAddress, $0.count) }
+            }
+            guard rc == 0 else { throw EngineError.badImage("код \(rc)") }
+            let total = Int(mtmd_helper_get_n_tokens(fresh))
+            // Слишком длинно — забываем старые реплики (последний вопрос с картинкой оставляем).
+            if total > nCtx - reserve, let drop = turns.firstIndex(where: { $0.role != .system }), drop < turns.count - 1 {
+                turns.remove(at: drop)
+                continue
+            }
+            guard total < nCtx - 64 else { throw EngineError.promptTooLong(total, nCtx) }
+            break
+        }
+
+        var stats = GenerationStats()
+        stats.promptTokens = Int(mtmd_helper_get_n_tokens(chunks))
+        emit(.started(startsInReasoning: rendered.startsInReasoning))
+
+        // Кэш начинаем заново: позиции картинок не совпадают с числом токенов.
+        let mem = llama_get_memory(ctx)
+        llama_memory_clear(mem, true)
+        evaluated = []
+        kvDirty = true
+
+        let promptStart = Date()
+        var position: llama_pos = 0
+        let rc = mtmd_helper_eval_chunks(mtmd, ctx, chunks, 0, 0, Int32(nBatch), true, &position)
+        if rc != 0 {
+            if token.isCancelled { emit(.finished(stats)); return }
+            throw EngineError.decodeFailed(rc)
+        }
+        stats.promptSeconds = Date().timeIntervalSince(promptStart)
+        emit(.prompt(done: stats.promptTokens, total: stats.promptTokens))
+
+        let sampler = makeSampler(settings, vocab: vocab)
+        defer { llama_sampler_free(sampler) }
+        var batch = llama_batch_init(1, 0, 1)
+        defer { llama_batch_free(batch) }
+
+        var utf8 = UTF8Accumulator()
+        let genStart = Date()
+        while stats.tokens < settings.maxTokens {
+            if token.isCancelled { break }
+            if Int(position) >= nCtx - 1 { stats.stoppedByLimit = true; break }
+            let next = llama_sampler_sample(sampler, ctx, -1)
+            if llama_vocab_is_eog(vocab, next) { break }
+            let text = utf8.push(piece(next, vocab: vocab))
+            if !text.isEmpty { emit(.text(text)) }
+            stats.tokens += 1
+
+            batch.n_tokens = 1
+            batch.token[0] = next
+            batch.pos[0] = position
+            batch.n_seq_id[0] = 1
+            batch.seq_id[0]![0] = 0
+            batch.logits[0] = 1
+            let rc = llama_decode(ctx, batch)
+            if rc != 0 {
+                if token.isCancelled || rc == 2 { break }
+                throw EngineError.decodeFailed(rc)
+            }
+            position += 1
         }
         if stats.tokens >= settings.maxTokens { stats.stoppedByLimit = true }
         let tail = utf8.flush()

@@ -8,13 +8,14 @@ struct CatalogView: View {
     @State private var sort: Sort = .popular
 
     enum Filter: String, CaseIterable, Identifiable {
-        case all, fits, small, code, reasoning, installed
+        case all, fits, small, vision, code, reasoning, installed
         var id: String { rawValue }
         var title: String {
             switch self {
             case .all: "Все"
             case .fits: "Подходят этому Mac"
             case .small: "Лёгкие"
+            case .vision: "Видят картинки"
             case .code: "Для кода"
             case .reasoning: "Рассуждения"
             case .installed: "Установленные"
@@ -119,6 +120,7 @@ struct CatalogView: View {
         case .small: list = list.filter { $0.0.params < 5 }
         case .code: list = list.filter { $0.0.tags.contains(.code) }
         case .reasoning: list = list.filter { $0.0.tags.contains(.reasoning) }
+        case .vision: list = list.filter { model.canSee($0.0) }
         case .installed: list = list.filter { model.isInstalled($0.0) }
         }
         switch sort {
@@ -238,6 +240,10 @@ struct ModelDetailView: View {
                     Text(card.summary).font(.system(size: 13.5)).frame(maxWidth: .infinity, alignment: .leading)
                     facts
                     if let best = model.bestVariant(for: card) { FitExplanation(fit: best.fit) }
+                    if model.canSee(card) {
+                        Label(visionNote, systemImage: "eye.fill")
+                            .font(.system(size: 12)).foregroundStyle(Section.chat.palette[1])
+                    }
                     if !EngineCatalog.supports(card.architecture) {
                         Label("Архитектура «\(card.architecture ?? "")» появилась позже встроенного движка llama.cpp \(EngineCatalog.version). Модель заработает после обновления Synapse.",
                               systemImage: "exclamationmark.octagon.fill")
@@ -252,6 +258,13 @@ struct ModelDetailView: View {
         .frame(width: 760, height: 640)
         .background(SectionBackground(section: .catalog, energy: 0.1).opacity(0.6))
         .task { await model.loadVariants(card) }
+    }
+
+    private var visionNote: String {
+        if let p = model.variants[card.id]?.first?.projector {
+            return "Видит изображения: проектор зрения (\(Format.bytes(p.bytes))) скачается вместе с моделью — можно спрашивать про фото, скриншоты, схемы и документы."
+        }
+        return "Видит изображения: проектор зрения скачается вместе с моделью."
     }
 
     private var facts: some View {

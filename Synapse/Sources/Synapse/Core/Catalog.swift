@@ -77,14 +77,33 @@ nonisolated struct ModelVariant: Codable, Sendable, Hashable, Identifiable {
     var files: [HubFile]
     /// Оценка без списка файлов (до запроса к Hugging Face).
     var estimated = false
+    /// Проектор зрения (mmproj): с ним модель понимает изображения. Скачивается вместе с весами.
+    var projector: HubFile?
 
     var id: String { quant.name + (files.first?.path ?? "") }
-    var size: Int64 { files.reduce(0) { $0 + $1.bytes } }
+    /// Веса модели.
+    var weightsSize: Int64 { files.reduce(0) { $0 + $1.bytes } }
+    /// Всё, что скачается и займёт память: веса + проектор зрения.
+    var size: Int64 { weightsSize + (projector?.bytes ?? 0) }
     var primary: HubFile? { files.first }
+    var allFiles: [HubFile] { files + (projector.map { [$0] } ?? []) }
+    var vision: Bool { projector != nil }
 
-    /// Группировка файлов репозитория по квантованию. Проекторы зрения (mmproj), MTP-головы,
-    /// черновые модели и imatrix — не модели для чата.
+    /// Лучший проектор зрения в репозитории: F16 работает на любом видеоядре, BF16 — запасной, F32 — крайний случай.
+    static func projector(in files: [HubFile]) -> HubFile? {
+        let all = files.filter { let n = $0.path.lowercased(); return n.contains("mmproj") && n.hasSuffix(".gguf") }
+        for pref in ["f16", "bf16", "q8_0", "f32"] {
+            if let f = all.first(where: { ($0.path as NSString).lastPathComponent.lowercased().contains(pref) && !(pref == "f16" && $0.path.lowercased().contains("bf16")) }) {
+                return f
+            }
+        }
+        return all.first
+    }
+
+    /// Группировка файлов репозитория по квантованию. Проекторы зрения (mmproj) идут отдельно,
+    /// MTP-головы, черновые модели и imatrix — не модели для чата.
     static func group(_ files: [HubFile]) -> [ModelVariant] {
+        let projector = projector(in: files)
         var groups: [String: (Quant, [HubFile])] = [:]
         for f in files where f.path.lowercased().hasSuffix(".gguf") {
             let name = (f.path as NSString).lastPathComponent.lowercased()
@@ -95,7 +114,7 @@ nonisolated struct ModelVariant: Codable, Sendable, Hashable, Identifiable {
             groups[key, default: (q, [])].1.append(f)
         }
         return groups.values
-            .map { ModelVariant(quant: $0.0, files: $0.1.sorted { $0.path < $1.path }) }
+            .map { ModelVariant(quant: $0.0, files: $0.1.sorted { $0.path < $1.path }, projector: projector) }
             .sorted { $0.size < $1.size }
     }
 
@@ -186,49 +205,49 @@ nonisolated struct ModelCard: Codable, Sendable, Hashable, Identifiable {
 nonisolated enum Curated {
     static let cards: [ModelCard] = [
         card("unsloth/Qwen3.5-0.8B-GGUF", "Qwen3.5 0.8B", "Qwen", 0.8, nil, "qwen35", 22,
-             "Крошечная модель Alibaba: мгновенные ответы даже на базовом MacBook Air. Для простых вопросов и проверки, что всё работает.", [.small, .chat, .multilingual]),
+             "Крошечная модель Alibaba: мгновенные ответы даже на базовом MacBook Air. Для простых вопросов и проверки, что всё работает.", [.small, .chat, .multilingual, .vision]),
         card("unsloth/Qwen3.5-2B-GGUF", "Qwen3.5 2B", "Qwen", 1.9, nil, "qwen35", 33,
-             "Лёгкая и шустрая: пересказы, короткие письма, перевод. Умеет размышлять перед ответом.", [.small, .chat, .reasoning, .multilingual]),
+             "Лёгкая и шустрая: пересказы, короткие письма, перевод. Умеет размышлять перед ответом.", [.small, .chat, .reasoning, .multilingual, .vision]),
         card("unsloth/gemma-4-E2B-it-GGUF", "Gemma 4 E2B", "Google", 4.6, nil, "gemma4", 35,
-             "Компактная Gemma 4 от Google для слабых Mac: работает как модель на 2 млрд параметров, знает много языков.", [.small, .chat, .multilingual]),
+             "Компактная Gemma 4 от Google для слабых Mac: работает как модель на 2 млрд параметров, знает много языков.", [.small, .chat, .multilingual, .vision]),
         card("ibm-granite/granite-4.2-3b-GGUF", "Granite 4.2 3B", "IBM", 3.7, nil, "granite", 36,
              "Деловая модель IBM: аккуратные ответы, работа с документами и инструментами. Открытая лицензия Apache 2.0.", [.small, .chat, .agent]),
         card("unsloth/Qwen3.5-4B-GGUF", "Qwen3.5 4B", "Qwen", 4.2, nil, "qwen35", 47,
-             "Лучшая маленькая модель для повседневных задач: быстро, по-русски, с режимом размышлений.", [.chat, .reasoning, .multilingual, .small]),
+             "Лучшая маленькая модель для повседневных задач: быстро, по-русски, с режимом размышлений.", [.chat, .reasoning, .multilingual, .small, .vision]),
         card("unsloth/gemma-4-E4B-it-GGUF", "Gemma 4 E4B", "Google", 7.5, nil, "gemma4", 48,
-             "Gemma 4 «эффективная 4B»: качество заметно выше размера, хороший русский и творческие тексты.", [.chat, .multilingual]),
+             "Gemma 4 «эффективная 4B»: качество заметно выше размера, хороший русский и творческие тексты.", [.chat, .multilingual, .vision]),
         card("mistralai/Ministral-3-8B-Instruct-2512-GGUF", "Ministral 3 8B", "Mistral AI", 8.5, nil, "mistral3", 52,
-             "Европейская модель Mistral: ровный стиль, хорошо следует инструкциям, длинный контекст.", [.chat, .multilingual]),
+             "Европейская модель Mistral: ровный стиль, хорошо следует инструкциям, длинный контекст.", [.chat, .multilingual, .vision]),
         card("ibm-granite/granite-4.2-8b-GGUF", "Granite 4.2 8B", "IBM", 8.8, nil, "granite", 51,
              "Надёжная рабочая лошадка IBM для документов, таблиц и вызова инструментов.", [.chat, .agent]),
         card("unsloth/Qwen3.5-9B-GGUF", "Qwen3.5 9B", "Qwen", 9.0, nil, "qwen35", 61,
-             "Золотая середина для Mac с 16 ГБ: умная, быстрая, отлично пишет по-русски и решает задачи с размышлениями.", [.chat, .reasoning, .code, .multilingual]),
+             "Золотая середина для Mac с 16 ГБ: умная, быстрая, отлично пишет по-русски и решает задачи с размышлениями.", [.chat, .reasoning, .code, .multilingual, .vision]),
         card("unsloth/gemma-4-12b-it-GGUF", "Gemma 4 12B", "Google", 11.9, nil, "gemma4", 63,
-             "Сильная универсальная модель Google: тексты, анализ, перевод, творческие задачи.", [.chat, .multilingual, .reasoning]),
+             "Сильная универсальная модель Google: тексты, анализ, перевод, творческие задачи.", [.chat, .multilingual, .reasoning, .vision]),
         card("mistralai/Ministral-3-14B-Instruct-2512-GGUF", "Ministral 3 14B", "Mistral AI", 13.5, nil, "mistral3", 60,
-             "Старшая Ministral: точнее и глубже, хороша для работы с длинными документами.", [.chat, .multilingual]),
+             "Старшая Ministral: точнее и глубже, хороша для работы с длинными документами.", [.chat, .multilingual, .vision]),
         card("unsloth/gpt-oss-20b-GGUF", "gpt-oss 20B", "OpenAI", 20.9, 3.6, "gpt-oss", 66,
              "Открытая модель OpenAI с размышлениями. Смесь экспертов: на каждый токен работает лишь 3,6 млрд параметров — поэтому быстрая.", [.reasoning, .chat, .agent, .code]),
         card("lmstudio-community/Devstral-Small-2-24B-Instruct-2512-GGUF", "Devstral Small 2 24B", "Mistral AI", 23.6, nil, "mistral3", 68,
-             "Модель для программистов от Mistral: правит код в проектах, понимает задачи целиком.", [.code, .agent]),
+             "Модель для программистов от Mistral: правит код в проектах, понимает задачи целиком.", [.code, .agent, .vision]),
         card("unsloth/gemma-4-26B-A4B-it-GGUF", "Gemma 4 26B A4B", "Google", 25.2, 4, "gemma4", 72,
-             "Большая Gemma 4 со смесью экспертов: качество крупной модели при скорости 4-миллиардной.", [.chat, .reasoning, .multilingual]),
+             "Большая Gemma 4 со смесью экспертов: качество крупной модели при скорости 4-миллиардной.", [.chat, .reasoning, .multilingual, .vision]),
         card("unsloth/Qwen3.8-27B-GGUF", "Qwen3.8 27B", "Qwen", 27.3, nil, "qwen35", 82,
-             "Флагман среди моделей, которые помещаются на Mac с 32 ГБ: глубокие рассуждения, код, длинные тексты.", [.chat, .reasoning, .code, .multilingual, .agent]),
+             "Флагман среди моделей, которые помещаются на Mac с 32 ГБ: глубокие рассуждения, код, длинные тексты.", [.chat, .reasoning, .code, .multilingual, .agent, .vision]),
         card("unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF", "Qwen3 Coder 30B A3B", "Qwen", 30.5, 3.3, "qwen3moe", 66,
              "Специалист по коду: пишет, объясняет и исправляет программы. Быстрая благодаря смеси экспертов.", [.code, .agent]),
         card("ggml-org/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-GGUF", "Nemotron 3.5 Lightning 30B", "NVIDIA", 31.6, 3, "nemotron_h_moe", 72,
              "Гибридная модель NVIDIA: очень быстрая генерация и длинный контекст, сильна в рассуждениях.", [.reasoning, .chat, .agent]),
         card("unsloth/gemma-4-31B-it-GGUF", "Gemma 4 31B", "Google", 30.7, nil, "gemma4", 78,
-             "Старшая плотная Gemma 4: максимум качества от Google для Mac с 32 ГБ и больше.", [.chat, .reasoning, .multilingual]),
+             "Старшая плотная Gemma 4: максимум качества от Google для Mac с 32 ГБ и больше.", [.chat, .reasoning, .multilingual, .vision]),
         card("unsloth/Qwen3.6-35B-A3B-GGUF", "Qwen3.6 35B A3B", "Qwen", 34.7, 3, "qwen35moe", 76,
-             "Умная и при этом очень быстрая: 35 млрд параметров знаний, но на токен работают только 3 млрд.", [.chat, .reasoning, .code, .multilingual, .agent]),
+             "Умная и при этом очень быстрая: 35 млрд параметров знаний, но на токен работают только 3 млрд.", [.chat, .reasoning, .code, .multilingual, .agent, .vision]),
         card("Qwen/Qwen3-Next-80B-A3B-Instruct-GGUF", "Qwen3 Next 80B A3B", "Qwen", 79.7, 3, "qwen3next", 80,
              "Огромные знания при скорости маленькой модели — для Mac с 64 ГБ и больше.", [.chat, .reasoning, .multilingual]),
         card("ggml-org/gpt-oss-120b-GGUF", "gpt-oss 120B", "OpenAI", 116.8, 5.1, "gpt-oss", 85,
              "Старшая открытая модель OpenAI: уровень коммерческих ассистентов, нужен Mac со 96–128 ГБ памяти.", [.reasoning, .chat, .code, .agent]),
         card("unsloth/Qwen3.8-Flash-Next-GGUF", "Qwen3.8 Flash Next", "Qwen", 176.9, 10, "qwen4exp", 90,
-             "Экспериментальный гигант Qwen: для Mac Studio с 192 ГБ и больше.", [.chat, .reasoning, .code, .agent]),
+             "Экспериментальный гигант Qwen: для Mac Studio с 192 ГБ и больше.", [.chat, .reasoning, .code, .agent, .vision]),
     ]
 
     /// Самая маленькая модель — для проверки движка и первых шагов без ожидания.
@@ -327,7 +346,7 @@ nonisolated enum CardBuilder {
         else { parts.append("Универсальная модель") }
         parts[0] += " от \(lab)"
         if let active { parts.append("смесь экспертов: на токен работает \(String(format: "%.0f", active)) млрд параметров — быстрее, чем можно подумать по размеру") }
-        if tags.contains(.vision) { parts.append("умеет и картинки, но здесь работает с текстом") }
+        if tags.contains(.vision) { parts.append("понимает изображения: фото, скриншоты, схемы, документы") }
         return parts.joined(separator: "; ") + "."
     }
 

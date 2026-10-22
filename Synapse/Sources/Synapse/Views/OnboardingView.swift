@@ -233,7 +233,12 @@ struct RecommendationCard: View {
                 ModelAvatar(lab: rec.card.lab, size: 46)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(rec.card.name).font(.system(size: 18, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
-                    Text("\(rec.card.lab) · \(rec.card.paramsText)").font(.system(size: 11.5)).foregroundStyle(.secondary).lineLimit(1)
+                    HStack(spacing: 6) {
+                        Text("\(rec.card.lab) · \(rec.card.paramsText)").font(.system(size: 11.5)).foregroundStyle(.secondary).lineLimit(1)
+                        if rec.card.tags.contains(.vision) {
+                            Image(systemName: "eye.fill").font(.system(size: 10)).foregroundStyle(Section.chat.palette[1]).help("Видит изображения")
+                        }
+                    }
                 }
             }
             Text(rec.card.summary).font(.system(size: 12.5)).foregroundStyle(.secondary).lineLimit(4)

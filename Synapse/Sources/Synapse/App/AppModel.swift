@@ -335,7 +335,7 @@ final class AppModel {
         }
         let folder = AppPaths.models.appendingPathComponent(job.card.id.replacingOccurrences(of: "/", with: "__"), isDirectory: true)
         var done: Int64 = 0
-        for file in job.variant.files {
+        for file in job.variant.allFiles {
             let destination = folder.appendingPathComponent((file.path as NSString).lastPathComponent)
             var attempt = 0
             while true {
@@ -384,7 +384,8 @@ final class AppModel {
         let model = InstalledModel(repo: card.id, name: card.name, lab: card.lab, quant: job.variant.quant.name,
                                    files: job.variant.files.map { ($0.path as NSString).lastPathComponent }, size: job.variant.size,
                                    params: card.params, activeParams: card.activeParams, architecture: card.architecture,
-                                   contextLength: card.contextLength, installedAt: Date(), lastUsed: nil, verified: true)
+                                   contextLength: card.contextLength, installedAt: Date(), lastUsed: nil, verified: true,
+                                   projector: job.variant.projector.map { ($0.path as NSString).lastPathComponent })
         installed.removeAll { $0.id == model.id }
         installed.append(model)
         Library.save(installed)
@@ -396,6 +397,58 @@ final class AppModel {
         if loadedModelID == nil || modelInfo == nil {
             select(model)
             section = .chat
+        }
+    }
+
+    // MARK: - Зрение
+
+    /// Может ли выбранная модель видеть изображения прямо сейчас.
+    var visionReady: Bool { selectedModel?.vision == true }
+
+    /// Есть ли у модели проектор зрения на Hugging Face (по тегу или по списку файлов).
+    func canSee(_ card: ModelCard) -> Bool {
+        if let list = variants[card.id], let first = list.first { return first.projector != nil }
+        return card.tags.contains(.vision)
+    }
+
+    /// Копирует картинки во вложения приложения. Возвращает имена файлов.
+    func attach(_ urls: [URL]) -> [String] {
+        urls.compactMap { ImageInput.storeAttachment(from: $0) }
+    }
+
+    /// Картинки, приложенные к ещё не отправленному сообщению.
+    var pendingAttachments: [String] = []
+
+    /// Докачать проектор зрения к уже установленной модели.
+    var visionDownloads: Set<String> = []
+
+    func addVision(_ model: InstalledModel) {
+        guard !visionDownloads.contains(model.id) else { return }
+        visionDownloads.insert(model.id)
+        Task {
+            defer { visionDownloads.remove(model.id) }
+            await loadVariants(model.card)
+            guard let projector = variants[model.repo]?.first?.projector else {
+                showToast("У «\(model.name)» нет проектора зрения — эта модель работает только с текстом")
+                return
+            }
+            let name = (projector.path as NSString).lastPathComponent
+            let fetcher = FileFetcher(url: HubClient.downloadURL(repo: model.repo, path: projector.path),
+                                      destination: model.folder.appendingPathComponent(name),
+                                      expectedSize: projector.bytes, sha256: projector.lfs?.oid) { _ in }
+            do {
+                try await fetcher.run()
+            } catch {
+                showToast("Зрение не скачалось: \(error.localizedDescription)")
+                return
+            }
+            if let i = installed.firstIndex(where: { $0.id == model.id }) {
+                installed[i].projector = name
+                installed[i].size += projector.bytes
+                Library.save(installed)
+            }
+            showToast("«\(model.name)» теперь видит изображения")
+            if loadedModelID == model.id { await loadSelectedModel() }
         }
     }
 
@@ -432,7 +485,11 @@ final class AppModel {
     @discardableResult
     func loadSelectedModel() async -> Bool {
         guard let model = selectedModel else { return false }
-        if let loaded = LlamaEngine.shared.loaded, loaded.path == model.primaryPath { modelInfo = loaded.info; engineState = .ready; return true }
+        if let loaded = LlamaEngine.shared.loaded, loaded.path == model.primaryPath, loaded.info.vision == model.vision {
+            modelInfo = loaded.info
+            engineState = .ready
+            return true
+        }
         engineState = .loading(0)
         let context = min(Advisor.defaultContext(mac), model.contextLength ?? .max)
         let progress: @Sendable (Double) -> Void = { p in Task { @MainActor [weak self] in
@@ -441,11 +498,13 @@ final class AppModel {
         } }
         do {
             // Виртуальная машина: видеоядро эмулируется — считаем на процессоре.
-            let info = try await LlamaEngine.shared.load(path: model.primaryPath, context: context, gpu: !mac.virtualized, progress: progress)
+            let info = try await LlamaEngine.shared.load(path: model.primaryPath, projector: model.projectorPath, context: context,
+                                                         gpu: !mac.virtualized, progress: progress)
             modelInfo = info
             engineState = .ready
         } catch {
-            if !mac.virtualized, let info = try? await LlamaEngine.shared.load(path: model.primaryPath, context: min(context, 4096), gpu: false, progress: progress) {
+            if !mac.virtualized, let info = try? await LlamaEngine.shared.load(path: model.primaryPath, projector: model.projectorPath,
+                                                                                context: min(context, 4096), gpu: false, progress: progress) {
                 modelInfo = info
                 engineState = .ready
                 showToast("Видеоядро не справилось — модель работает на процессоре")
@@ -488,13 +547,15 @@ final class AppModel {
         if currentChatID == c.id { currentChatID = conversations.first?.id }
     }
 
-    func send(_ text: String) {
-        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty, !isGenerating else { return }
+    /// Отправить вопрос. `images` — имена файлов в папке вложений (см. `attach`).
+    func send(_ text: String, images: [String] = []) {
+        var text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty || !images.isEmpty, !isGenerating else { return }
+        if text.isEmpty { text = "Что на изображении? Опиши подробно." }
         if currentChatID == nil || currentChat == nil { newChat() }
         guard var chat = currentChat else { return }
-        if chat.messages.isEmpty { chat.title = ChatArchive.title(from: text) }
-        chat.messages.append(ChatMessage(role: .user, text: text))
+        if chat.messages.isEmpty { chat.title = ChatArchive.title(from: images.isEmpty ? text : "🖼 " + text) }
+        chat.messages.append(ChatMessage(role: .user, text: text, images: images.isEmpty ? nil : images))
         chat.updated = Date()
         currentChat = chat
         generateReply()
