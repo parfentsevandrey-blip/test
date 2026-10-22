@@ -169,6 +169,12 @@ nonisolated enum SelfTest {
         ok = check(roomy.context == Advisor.defaultContext(pro24) && !roomy.compressKV, "просторная модель: обычный контекст без сжатия") && ok
         let fixed = Advisor.loadPlan(size: 5_000_000_000, params: 8, active: nil, trainContext: 32_768, mac: pro24, context: 65_536, compressKV: true)
         ok = check(fixed.context == 32_768 && fixed.compressKV, "контекст из настроек не больше обученного модели") && ok
+        let (a, b) = Format.gbDistinct(20.4 * Advisor.gb, 19.8 * Advisor.gb)
+        ok = check(a != b, "объёмы в предупреждении не сливаются: «\(a)» и «\(b)»") && ok
+        let shrunk = Advisor.estimate(size: 17_500_000_000, params: 27, active: nil, mac: pro24)
+        ok = check(shrunk.runnable && shrunk.shrunk && shrunk.context == 2048, "почти влезает — «\(shrunk.title)» с контекстом 2K: \(shrunk.reasons.first ?? "")") && ok
+        let installedBig = Advisor.estimate(size: 20_000_000_000, params: 30, active: nil, mac: Hardware.simulated("Apple M4", memoryGB: 64, freeDiskGB: 10), onDisk: true)
+        ok = check(installedBig.level != .noDisk, "уже скачанная модель не требует места на диске") && ok
         let raise = GPUMemory.target(pro24)
         ok = check(raise.map { $0 > pro24.gpuBudget && $0 <= pro24.memory - 4 * 1_073_741_824 } == true,
                    "предел видеоядра на 24 ГБ можно поднять до \(raise.map { Format.gb(Double($0)) } ?? "—"), системе остаётся 4 ГБ") && ok

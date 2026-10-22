@@ -15,6 +15,8 @@ nonisolated struct FitReport: Sendable, Hashable {
     var tokensPerSecond: Double
     var context: Int
     var reasons: [String]
+    /// Поместится только с коротким контекстом (2K) и сжатой памятью контекста.
+    var shrunk = false
 
     var runnable: Bool { level <= .tight }
     var comfortable: Bool { level <= .slow }
@@ -82,13 +84,16 @@ nonisolated enum Advisor {
     }
 
     /// `compressedKV` — память контекста в 8 битах: вдвое меньше.
+    /// `onDisk` — модель уже скачана, место на диске не проверяем.
+    /// `shrink` — если не помещается, проверить запуск с коротким контекстом и сжатой памятью контекста
+    /// (так Synapse и загрузит модель, см. `loadPlan`).
     static func estimate(size: Int64, params: Double, active: Double?, mac: MacProfile, context: Int? = nil,
-                         compressedKV: Bool = false) -> FitReport {
-        let ctx = context ?? defaultContext(mac)
+                         compressedKV: Bool = false, onDisk: Bool = false, shrink: Bool = true) -> FitReport {
+        var ctx = context ?? defaultContext(mac)
         let weights = Double(size)
         let kv = kvPerToken(params: params) * Double(ctx) * (compressedKV ? 0.53 : 1)
         let overhead = 0.35 * gb + weights * 0.04
-        let need = weights + kv + overhead
+        var need = weights + kv + overhead
         let (comfortable, hard) = budget(mac)
 
         // Каждый токен — чтение всех активных весов. У MoE читается только доля экспертов
@@ -99,14 +104,26 @@ nonisolated enum Advisor {
         if mac.virtualized { tps *= 0.25 }
 
         var reasons: [String] = []
+        var shrunk = false
         let level: FitReport.Level
-        if Double(size) > Double(mac.freeDisk) - 3 * gb {
+        // Короткий контекст и 8-битная память контекста — крайний вариант, с которым модель ещё запустится.
+        let shortNeed = weights + kvPerToken(params: params) * 2048 * 0.53 + overhead
+        if !onDisk && Double(size) > Double(mac.freeDisk) - 3 * gb {
             level = .noDisk
-            reasons.append("Нужно \(Format.bytes(size)) на диске, свободно \(Format.bytes(mac.freeDisk)).")
+            reasons.append("Нужно \(Format.bytes(size)) на диске, свободно \(Format.bytes(mac.freeDisk)) (с запасом 3 ГБ для системы).")
+        } else if need > Double(hard) && shrink && ctx > 2048 && shortNeed <= Double(hard) {
+            level = .tight
+            tps *= 0.7
+            need = shortNeed
+            ctx = 2048
+            shrunk = true
+            reasons.append("Поместится только с коротким контекстом: ≈\(Format.gb(need)) из \(Format.gb(Double(hard))), которые можно отдать видеоядру. Synapse сам уменьшит контекст до 2K и сожмёт его память.")
+            reasons.append("Модель будет помнить лишь последние пару страниц разговора. Перед запуском закройте тяжёлые программы.")
         } else if need > Double(hard) {
             level = .tooBig
-            reasons.append("Модели нужно ≈\(Format.gb(need)) памяти, а этому Mac доступно не больше \(Format.gb(Double(hard))).")
-            reasons.append("Она не запустится или будет работать с постоянной подкачкой с диска.")
+            let (needText, hardText) = Format.gbDistinct(need, Double(hard))
+            reasons.append("Модели нужно ≈\(needText) памяти, а этому Mac можно отдать видеоядру не больше \(hardText) — не хватает ≈\(Format.gb(need - Double(hard))).")
+            reasons.append("Она не запустится или будет работать с постоянной подкачкой с диска. Возьмите вариант посильнее сжатый — или загляните в «Выжать максимум».")
         } else if need > Double(comfortable) {
             level = .tight
             tps *= 0.7
@@ -125,29 +142,29 @@ nonisolated enum Advisor {
         if active != nil && level <= .tight {
             reasons.append("Смесь экспертов: на каждый токен работает лишь часть параметров, поэтому быстрее плотной модели того же размера.")
         }
-        return FitReport(level: level, memory: Int64(need), tokensPerSecond: tps, context: ctx, reasons: reasons)
+        return FitReport(level: level, memory: Int64(need), tokensPerSecond: tps, context: ctx, reasons: reasons, shrunk: shrunk)
     }
 
     /// Как загрузить модель, чтобы она поместилась: контекст и сжатие его памяти.
     /// `context` и `compressKV` из Настроек: 0 и `nil` — решаем сами. Если не помещается, уменьшаем контекст
     /// до 2K и сжимаем его память — так запускаются модели «на пределе».
     static func loadPlan(size: Int64, params: Double, active: Double?, trainContext: Int?, mac: MacProfile,
-                         context: Int = 0, compressKV: Bool? = nil) -> (context: Int, compressKV: Bool, fit: FitReport) {
+                         context: Int = 0, compressKV: Bool? = nil, onDisk: Bool = false) -> (context: Int, compressKV: Bool, fit: FitReport) {
         let limit = trainContext ?? .max
+        func fit(_ ctx: Int, _ compress: Bool) -> FitReport {
+            estimate(size: size, params: params, active: active, mac: mac, context: ctx, compressedKV: compress, onDisk: onDisk, shrink: false)
+        }
         if context > 0 {
             let ctx = min(context, limit)
-            let compress = compressKV ?? (estimate(size: size, params: params, active: active, mac: mac, context: ctx).level >= .tight)
-            return (ctx, compress, estimate(size: size, params: params, active: active, mac: mac, context: ctx, compressedKV: compress))
+            let compress = compressKV ?? (fit(ctx, false).level >= .tight)
+            return (ctx, compress, fit(ctx, compress))
         }
         let base = min(defaultContext(mac), limit)
         var options: [(Int, Bool)] = []
         if compressKV != true { options.append((base, false)) }
         if compressKV != false { options.append((base, true)) }
         for ctx in [4096, 2048] where ctx < base { options.append((ctx, compressKV ?? true)) }
-        let plans = options.map { ctx, compress in
-            (context: ctx, compressKV: compress,
-             fit: estimate(size: size, params: params, active: active, mac: mac, context: ctx, compressedKV: compress))
-        }
+        let plans = options.map { ctx, compress in (context: ctx, compressKV: compress, fit: fit(ctx, compress)) }
         // Сначала — без тесноты. Если тесно в любом случае — со сжатой памятью контекста (качество то же,
         // памяти меньше) и самым длинным контекстом, с которым модель запустится.
         return plans.first { $0.fit.level < .tight } ?? plans.first { $0.fit.runnable && $0.compressKV }
@@ -248,7 +265,8 @@ nonisolated enum Advisor {
         func options(upgrade: Bool) -> [Option] {
             cards.compactMap { card in
                 let list = variants[card.id] ?? ModelVariant.estimates(params: card.params)
-                guard let picked = pick(list, card: card, mac: mac, upgrade: upgrade), picked.fit.runnable else { return nil }
+                // В рекомендации — только то, что работает с нормальным контекстом; остальное — в «Выжать максимум».
+                guard let picked = pick(list, card: card, mac: mac, upgrade: upgrade), picked.fit.runnable, !picked.fit.shrunk else { return nil }
                 return (card: card, variant: picked.variant, fit: picked.fit)
             }
         }
@@ -352,5 +370,13 @@ extension Format {
     nonisolated static func gb(_ bytes: Double) -> String {
         let v = bytes / Advisor.gb
         return v < 10 ? String(format: "%.1f ГБ", v).replacingOccurrences(of: ".", with: ",") : "\(Int(v.rounded())) ГБ"
+    }
+
+    /// Два объёма, которые после округления не сливаются: не «нужно 20, доступно 20», а «20,4 и 19,8».
+    nonisolated static func gbDistinct(_ a: Double, _ b: Double) -> (String, String) {
+        let (x, y) = (gb(a), gb(b))
+        guard x == y else { return (x, y) }
+        func precise(_ bytes: Double) -> String { String(format: "%.1f ГБ", bytes / Advisor.gb).replacingOccurrences(of: ".", with: ",") }
+        return (precise(a), precise(b))
     }
 }

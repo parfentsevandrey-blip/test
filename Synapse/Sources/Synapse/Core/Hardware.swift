@@ -68,10 +68,7 @@ nonisolated enum Hardware {
         let gpuCores = gpuCoreCount()
         let virtualized = gpuName.localizedCaseInsensitiveContains("paravirtual") || chip.contains("Virtual")
             || (sysctlInt("kern.hv_vmm_present") ?? 0) == 1
-        var budget = Int64(device?.recommendedMaxWorkingSetSize ?? 0)
-        if budget <= 0 || budget > memory { budget = Int64(Double(memory) * (memory >= 34_000_000_000 ? 0.75 : 0.66)) }
-        // Предел, поднятый в «Выжать максимум» (sysctl iogpu.wired_limit_mb, до перезагрузки).
-        if let raised = GPUMemory.raisedLimit, raised <= memory { budget = max(budget, raised) }
+        let budget = gpuBudget(memory: memory, device: device)
         let (bw, known) = bandwidth(chip: chip, gpuCores: gpuCores)
         let v = ProcessInfo.processInfo.operatingSystemVersion
         return MacProfile(chip: chip, modelID: sysctlString("hw.model") ?? "Mac", memory: memory,
@@ -79,6 +76,23 @@ nonisolated enum Hardware {
                           bandwidth: bw, bandwidthKnown: known, gpuBudget: budget, freeDisk: freeDisk(),
                           gpuName: gpuName, virtualized: virtualized,
                           osVersion: "macOS \(v.majorVersion).\(v.minorVersion)")
+    }
+
+    /// Сколько памяти можно отдать видеоядру сейчас.
+    static func gpuBudget(memory: Int64, device: MTLDevice? = MTLCreateSystemDefaultDevice()) -> Int64 {
+        var budget = Int64(device?.recommendedMaxWorkingSetSize ?? 0)
+        if budget <= 0 || budget > memory { budget = Int64(Double(memory) * (memory >= 34_000_000_000 ? 0.75 : 0.66)) }
+        // Предел, поднятый в «Выжать максимум» (sysctl iogpu.wired_limit_mb, до перезагрузки).
+        if let raised = GPUMemory.raisedLimit, raised <= memory { budget = max(budget, raised) }
+        return budget
+    }
+
+    /// То, что меняется на ходу: свободное место на диске и предел памяти видеоядра. Чип и объём памяти те же.
+    static func refresh(_ mac: MacProfile) -> MacProfile {
+        var m = mac
+        m.freeDisk = freeDisk()
+        if !mac.virtualized { m.gpuBudget = gpuBudget(memory: mac.memory) }
+        return m
     }
 
     static var performanceCores: Int {

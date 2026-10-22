@@ -110,7 +110,7 @@ struct InstalledCard: View {
     let onDelete: () -> Void
 
     var body: some View {
-        let fit = Advisor.estimate(size: item.size, params: item.params, active: item.activeParams, mac: model.mac)
+        let fit = model.loadPlan(item).fit
         let active = model.loadedModelID == item.id
         ContentCard(padding: 16) {
             VStack(alignment: .leading, spacing: 12) {

@@ -188,6 +188,24 @@ final class AppModel {
         }
         applyAPI()
         if section == .chat, loadedModelID != nil { Task { await loadSelectedModel() } }
+        // Свободное место и предел памяти видеоядра меняются, пока приложение открыто: перемеряем
+        // каждые 10 секунд и когда пользователь возвращается в окно.
+        Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(10))
+                refreshMac()
+            }
+        }
+        NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refreshMac() }
+        }
+    }
+
+    /// Перемерить то, что меняется на ходу (свободное место, предел видеоядра).
+    func refreshMac() {
+        guard !DemoUI.isOn else { return }
+        let fresh = Hardware.refresh(mac)
+        if fresh != mac { mac = fresh }
     }
 
     func showToast(_ text: String) {
@@ -314,7 +332,7 @@ final class AppModel {
     /// Как будет загружена установленная модель: контекст и сжатие памяти контекста.
     func loadPlan(_ model: InstalledModel) -> (context: Int, compressKV: Bool, fit: FitReport) {
         Advisor.loadPlan(size: model.size, params: model.params, active: model.activeParams, trainContext: model.contextLength,
-                         mac: mac, context: engineSettings.context, compressKV: engineSettings.compressKV)
+                         mac: mac, context: engineSettings.context, compressKV: engineSettings.compressKV, onDisk: true)
     }
 
     // MARK: - Установка
@@ -444,6 +462,7 @@ final class AppModel {
         installed.append(model)
         Library.save(installed)
         job.state = .done
+        refreshMac()
         NSApp?.dockTile.badgeLabel = nil
         showToast("«\(card.name)» установлена и проверена")
         notify(title: "Модель готова", body: "«\(card.name)» установлена — можно общаться.")
@@ -517,6 +536,7 @@ final class AppModel {
             try? Library.remove(model)
             installed.removeAll { $0.id == model.id }
             Library.save(installed)
+            refreshMac()
             showToast("«\(model.name)» удалена · освобождено \(Format.bytes(model.size))")
         }
     }
