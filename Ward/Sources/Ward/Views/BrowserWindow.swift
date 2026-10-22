@@ -161,15 +161,24 @@ struct WebViewHost: NSViewRepresentable {
 struct WindowAccessor: NSViewRepresentable {
     let onWindow: (NSWindow) -> Void
 
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        Task { @MainActor in
-            if let window = view.window { onWindow(window) }
+    /// Узнаёт окно в момент, когда попадает в него, — не раньше и не позже.
+    final class Probe: NSView {
+        var onWindow: ((NSWindow) -> Void)?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            if let window { onWindow?(window) }
         }
+    }
+
+    func makeNSView(context: Context) -> Probe {
+        let view = Probe()
+        view.onWindow = onWindow
         return view
     }
 
-    func updateNSView(_ view: NSView, context: Context) {
+    func updateNSView(_ view: Probe, context: Context) {
+        view.onWindow = onWindow
         if let window = view.window { onWindow(window) }
     }
 }
