@@ -368,11 +368,23 @@ final class AppModel {
     // MARK: - Установка
 
     func isInstalled(_ card: ModelCard) -> Bool { installed.contains { $0.repo == card.id } }
-    func job(for card: ModelCard) -> DownloadJob? { downloads.last { $0.card.id == card.id && $0.state != .done } }
+    /// Загрузка модели; с `variant` — именно этого варианта сжатия (у каждой строки в карточке модели — своя).
+    func job(for card: ModelCard, variant: ModelVariant? = nil) -> DownloadJob? {
+        downloads.last { job in
+            job.card.id == card.id && job.state != .done && (variant.map { job.variant.quant.name == $0.quant.name } ?? true)
+        }
+    }
 
     /// Установка в один клик: точные файлы, проверка места, загрузка, проверка SHA-256, готово.
+    /// Ставится ровно тот вариант, который выбрали; повторное нажатие не создаёт вторую загрузку.
     func install(_ card: ModelCard, variant: ModelVariant? = nil) {
-        if let existing = job(for: card), existing.isActive { section = .library; return }
+        // Точный вариант из карточки модели — в очередь сразу, без ожидания: так второй щелчок
+        // уже видит эту загрузку и не ставит ещё одну.
+        if let v = variant, !v.estimated, !v.files.isEmpty {
+            enqueue(card, v)
+            return
+        }
+        if let existing = job(for: card), existing.isActive || existing.state == .paused { section = .library; return }
         Task {
             await loadVariants(card)
             var chosen = variant
@@ -385,15 +397,24 @@ final class AppModel {
                 showToast("Не удалось получить список файлов «\(card.name)». Проверьте интернет.")
                 return
             }
-            if installed.contains(where: { $0.repo == card.id && $0.quant == chosen.quant.name }) {
-                showToast("«\(card.name)» уже установлена")
-                return
-            }
-            let job = DownloadJob(card: card, variant: chosen)
-            downloads.append(job)
-            showToast("Скачиваю «\(card.name)» · \(Format.bytes(chosen.size))")
-            pumpDownloads()
+            enqueue(card, chosen)
         }
+    }
+
+    private func enqueue(_ card: ModelCard, _ chosen: ModelVariant) {
+        if let existing = job(for: card, variant: chosen), existing.isActive || existing.state == .paused {
+            if existing.state == .paused { resume(existing) }
+            section = .library
+            return
+        }
+        if installed.contains(where: { $0.repo == card.id && $0.quant == chosen.quant.name }) {
+            showToast("«\(card.name)» \(chosen.quant.name) уже установлена")
+            return
+        }
+        let job = DownloadJob(card: card, variant: chosen)
+        downloads.append(job)
+        showToast("Скачиваю «\(card.name)» \(chosen.quant.name) · \(Format.bytes(chosen.size))")
+        pumpDownloads()
     }
 
     /// Загрузки идут по одной: так каждая модель готова быстрее.

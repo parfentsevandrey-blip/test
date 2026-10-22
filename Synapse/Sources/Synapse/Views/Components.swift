@@ -222,7 +222,8 @@ struct InstallButton: View {
     var prominent = true
 
     var body: some View {
-        if let job = model.job(for: card), job.isActive || job.state == .paused {
+        // Прогресс — только у того варианта, который скачивается, а не у всех строк модели.
+        if let job = model.job(for: card, variant: variant), job.isActive || job.state == .paused {
             Button {
                 model.section = .library
             } label: {
