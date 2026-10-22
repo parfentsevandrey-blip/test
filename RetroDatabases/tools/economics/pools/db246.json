@@ -1,0 +1,80 @@
+{
+  "database": 246,
+  "practice": "Housing and rent",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "HR1",
+      "case": "Red Vienna municipal housing",
+      "years": "1919 to 1934",
+      "claim": "Vienna's Social Democrat city government built municipal housing estates (Gemeindebau) in these years. A Villanova University digital library document reports that the first five-year plan's 25,000 units drew on a sharply graduated tax plus more than half of the city budget. Platform, an online article, reports over 400 housing courts with roughly 60,000 units for 1923 to 1934. A 2021 Cape Breton Spectator article relays Vienna tourism figures of 61,715 apartments in 348 blocks plus 5,227 in 42 terraced-house developments for the same years.",
+      "source": "Villanova University digital library, 'The Construction of Socialism: Public Housing in Red Vienna, 1919-1934' (year not shown); Platform, online article 'The House that Anti-Fascism Built: The Hofs of Red Vienna' (year not shown); Cape Breton Spectator, 2021, relaying Vienna tourism figures",
+      "url": "https://athenavip.library.villanova.edu/files/vudl:486747/MASTER",
+      "caveat": "Sources disagree on the budget share: an architecture firm's blog gives housing roughly 30 per cent of the yearly budget, while the Villanova excerpt gives more than half of the city budget. The housing counts differ, and the sources likely define them differently. Equal Times and a Vienna tourism page describe different tax mixes. No result gives the housing tax's share of construction costs. The url is the Villanova document only; the Platform and Cape Breton figures come from the sources named.",
+      "relevant_to": [
+        "Fabian socialism"
+      ]
+    },
+    {
+      "id": "HR2",
+      "case": "Council housing under the 1919 Addison Act",
+      "years": "from 1919",
+      "claim": "The 1919 Addison Act, named after the minister Christopher Addison, was passed to build new homes after the First World War. Inside Housing says the funding under it was aimed at roughly 500,000 homes over three years.",
+      "source": "Inside Housing, UK housing publication, article on the Addison Act (year not shown)",
+      "url": "https://www.insidehousing.co.uk/addisonact",
+      "caveat": "The 500,000 figure is a target ('aimed at'), not a count of homes built, and no result gives the number built. Only this one page is cited; the Act's loan and grant terms come from search summaries and are not confirmed here.",
+      "relevant_to": [
+        "Fabian socialism"
+      ]
+    },
+    {
+      "id": "HR3",
+      "case": "New York City rent freeze under federal price control",
+      "years": "1943",
+      "claim": "Under the Emergency Price Control Act of 1942, the federal Office of Price Administration first declined to impose mandatory controls in New York City, pointing to a 1940 vacancy rate of 7.5 per cent. After the Harlem riot of August 1943 and tenant threats to withhold rent, it set a freeze effective 1 November 1943 that tied each unit's rent to its level on 1 March 1943.",
+      "source": "New York City Rent Guidelines Board, history of the board and the rent regulation system (year not shown); other results, including a book chapter and tenant-group histories, agree on the core facts",
+      "url": "https://rentguidelinesboard.cityofnewyork.us/wp-content/uploads/2020/01/historyoftheboard.pdf",
+      "caveat": "The freeze dates agree across results. The 7.5 per cent vacancy rate and the riot date were not checked against this page's text. Sources disagree on the state law that took over: a 2011 New York State bill cites chapter 274 of the 1946 laws, while a column in The Real Deal puts the replacement in 1947, so no date is given for that step. No result reports the freeze's effect on rents or supply.",
+      "relevant_to": [
+        "Austrian free-market economics",
+        "Classical laissez-faire capitalism"
+      ]
+    },
+    {
+      "id": "HR4",
+      "case": "Singapore public housing by the Housing and Development Board",
+      "years": "1960 to 1980",
+      "claim": "Docomomo's article 'HDB Public Housing 1960-1980: The First Two Decades' reports that about two-thirds of Singapore's 2.4 million residents were living in HDB flats by March 1980. An Atlantis Press paper puts the share at above four in five residents; its excerpt does not say when it was written.",
+      "source": "Docomomo, heritage article on HDB public housing 1960-1980 (year not shown); Atlantis Press paper (year not shown)",
+      "url": "https://www.docomomo.sg/happenings/hdb-public-housing-1960-1980-the-first-two-decades",
+      "caveat": "A secondary heritage article, read as a search excerpt. The Atlantis Press figure is undated, so it is not clear that it conflicts with the 1980 figure. HDB's own key statistics were in the results, but the excerpts gave building counts, not population shares. A property-agency blog's 1960 share (about 9 per cent) names no data source and is not used.",
+      "relevant_to": [
+        "Developmental state"
+      ]
+    },
+    {
+      "id": "HR5",
+      "case": "Germany's rent brake (Mietpreisbremse)",
+      "years": "2015 to 2016",
+      "claim": "Germany's rent brake, in force since 2015, caps rents on re-letting in designated tight housing markets. In a 2016 weekly report, marking the brake's first anniversary, the German Institute for Economic Research (DIW) compared regulated postal-code districts with unregulated neighbours and found the measure did little to temper rent growth: regulated areas saw steeper rises over the short term. It found small housing-price effects, and the feared hit to construction never showed up.",
+      "source": "German Institute for Economic Research (DIW), weekly report, 2016 (German-language)",
+      "url": "https://www.diw.de/de/diw_01.c.535255.de/publikationen/wochenberichte/2016_22_1/die_mietpreisbremse_wirkt_bisher_nicht.html",
+      "caveat": "A first-year comparison of districts, not a final evaluation: results of the later DIW evaluation for the federal justice ministry (2018) are not in the search. Trade-press listing analyses describe a dampening effect on asking rents in some cities, and some of these pieces are labelled advertorials, so the sources disagree on asking rents.",
+      "relevant_to": [
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "HR6",
+      "case": "Right to Buy council house sales (Housing Act 1980)",
+      "years": "1980 to 2024",
+      "claim": "The Royal Institution of Chartered Surveyors (RICS) reports 1.9 million council homes in England sold to tenants since 1980, with discounts averaging 44 per cent of market value. England's official statistics count 2,029,311 social housing sales under all Right to Buy schemes up to March 2024, of which council tenants made up 94 per cent. A chapter by Alan Murie in the book Right to Buy gives close to 2.7 million UK sales for 1980 to 2015.",
+      "source": "Royal Institution of Chartered Surveyors (RICS), web page on Right to Buy (year not shown); UK government statistics on social housing sales and demolitions in England, 2023-24; Alan Murie, chapter in the book Right to Buy (Cambridge University Press; year not shown)",
+      "url": "https://gov.uk/government/statistics/social-housing-sales-and-demolitions-2023-24-england/social-housing-sales-and-demolitions-2023-24-right-to-buy-sales--3",
+      "caveat": "Totals depend on geography and cut-off date, which is why the figures differ: the RICS and official figures cover England, while the Murie figure covers the UK. The RICS figure has no end date in its excerpt. Press reports of more than two million sales are not used.",
+      "relevant_to": [
+        "Monetarist neoliberalism"
+      ]
+    }
+  ]
+}
