@@ -85,10 +85,10 @@ nonisolated enum ImageInput {
     // MARK: - Буфер обмена
 
     private static let imageTypes: [NSPasteboard.PasteboardType] = [.png, .tiff, .init("public.jpeg"), .init("public.heic"), .init("org.webmproject.webp")]
-    private static let fileOptions: [NSPasteboard.ReadingOptionKey: Any] = [
+    private static var fileOptions: [NSPasteboard.ReadingOptionKey: Any] { [
         .urlReadingFileURLsOnly: true,
         .urlReadingContentsConformToTypes: [UTType.image.identifier],
-    ]
+    ] }
 
     /// В буфере картинка, а не текст: скопированный файл-изображение, снимок экрана, «Скопировать изображение»
     /// в браузере. Если вместе с картинкой есть текст (так копируют, например, из Word), это текст — его
