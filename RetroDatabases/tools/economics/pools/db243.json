@@ -1,0 +1,83 @@
+{
+  "database": 243,
+  "practice": "Parks, libraries and public spaces",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "PS1",
+      "case": "England's Public Libraries Act 1850 (Ewart's Act)",
+      "years": "1850 to 1891",
+      "claim": "The Act let English and Welsh boroughs with more than 10,000 inhabitants fund a free public library from a local rate, capped at a halfpenny in the pound. Adoption needed a two-thirds ratepayer majority, and a poll could be demanded. The first version left out money for book purchases, so stock had to come from donations. The 1855 amendment dropped the population floor to 5,000, raised the cap to a penny and allowed book purchases. Uptake was slow: Nantwich did nothing for three decades, and York's ratepayers only signed off in 1891, when 169 towns already ran free libraries. Sources disagree on the first rate: four put it at a halfpenny, while an online encyclopaedia entry on the Manchester library describes a penny under the 1850 Act.",
+      "source": "Public Libraries Act 1850 (statute, 13 and 14 Vict. c. 65, cited but not read); Torbay council library service history (undated); Nantwich Museum (undated); York archive catalogue (undated); British Library blog on 175 years of public libraries (undated); online encyclopaedia (secondary)",
+      "url": "https://www.torbay.gov.uk/media/1836/historylibraryservice.pdf",
+      "caveat": "The terms come from search summaries of council, museum and online pages; the statute itself was not read, so the rate dispute is open. The Nantwich and York examples are local histories.",
+      "relevant_to": [
+        "Fabian socialism"
+      ]
+    },
+    {
+      "id": "PS2",
+      "case": "Carnegie library grants in the United States",
+      "years": "Up to shortly before Carnegie's death in 1919 (start date not in the results)",
+      "claim": "The American share of Carnegie's library spending, roughly 40 million US dollars, funded the construction of 1,670 public buildings in 1,412 communities, and new-building grants stopped shortly before Carnegie's death in 1919. Applicants typically listed a parcel of publicly owned land for the site. Grantees had to budget at least a tenth of the award each year for staff pay and running costs, and recipients also had to supply the book stock. In Lawrence, Kansas, a 27,500 US dollar award obligated 2,750 US dollars a year from the city budget. In Linden, Indiana, the town was asked to furnish the site and show that it could fund upkeep.",
+      "source": "Lawrence, Kansas, public library history exhibit (online, undated); Linden library, Indiana, history page (undated); general online histories of Carnegie's library grants (undated)",
+      "url": "https://lplks.omeka.net/exhibits/show/library-history/early-library/city-library",
+      "caveat": "Most results were local histories or non-US pages, so the national totals rest on a search summary with no list of buildings. The Lawrence and Linden details come from one local source each. The results do not say how many towns met their operating pledges or how the programme wound down.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism",
+        "Distributism"
+      ]
+    },
+    {
+      "id": "PS3",
+      "case": "Central Park land purchase and design contest, 1853 to 1858",
+      "years": "1853 to 1858",
+      "claim": "State officials approved funds to buy the Central Park site on 21 July 1853. The land, from 59th to 106th Streets between Fifth and Eighth Avenues, came into public hands that year through eminent domain. Spending from 1853 into 1856 reached roughly 5 million US dollars, close to triple the original budget. Roughly 1,600 people of limited means lived in makeshift housing on the site, and removal with compensation began in 1855. A design contest launched in October 1857 carried a purse of 2,000 US dollars. Thirty-three submissions came in, the last just before the 31 March 1858 deadline, and the Greensward Plan by Olmsted and Vaux was chosen. The chief architect post later went to Frederick Law Olmsted.",
+      "source": "Central Park official site, history page (undated); general-interest history pages on Central Park (undated)",
+      "url": "https://www.centralparknyc.org/visit/park-history.html",
+      "caveat": "Based on search summaries of general-interest pages, not primary records. The roughly 5 million US dollars is described two ways (money set aside for land in one summary, total spending to 1856 in another), so check it against an archival source. The 1,600 figure is unverified. Sources differ on the northern limit: 106th Street, or 110th Street with the extension in 1863. The results do not say how the purchase was financed, so this case cannot say who paid.",
+      "relevant_to": [
+        "Fabian socialism"
+      ]
+    },
+    {
+      "id": "PS4",
+      "case": "Central Park Conservancy funding split (2016)",
+      "years": "2016",
+      "claim": "A 2016 article in The Architect's Newspaper, headlined around a campaign to raise 300 million US dollars for the Central Park Conservancy, reported that taxpayer money covered only about a quarter of the Conservancy's funding, with donors covering the rest.",
+      "source": "The Architect's Newspaper, 2016 article on the Central Park Conservancy's fundraising",
+      "url": "https://www.archpaper.com/2016/07/central-park-conservancy-raising-300-million/",
+      "caveat": "One article from a single year. The quarter share is the search summary's wording and was not checked against the article. It covers the Conservancy's own funding only, and the results give no later years.",
+      "relevant_to": [
+        "Monetarist neoliberalism",
+        "Commons governance"
+      ]
+    },
+    {
+      "id": "PS5",
+      "case": "Vienna's Lido Kongreßbad under Red Vienna",
+      "years": "1927",
+      "claim": "The 1927 Lido Kongreßbad, by Erich Leischner, was developed by the Vienna municipality under the Social Democratic Red Vienna programme. It emphasised swimming, sunbathing and air bathing, and the project also provided building-trade employment. Spektrum, a German-language magazine, describes Red Vienna's aim of training the body alongside the mind through expanded parks and new sports facilities.",
+      "source": "Modernism in Architecture website, building entry on the Lido Kongreßbad (1927, undated); Spektrum (German-language magazine), article on Red Vienna's aims (undated)",
+      "url": "https://modernism-in-architecture.org/buildings/lido-kongressbad/",
+      "caveat": "One building entry and one magazine article. Neither gives budgets, fees or council decisions, and the results say little about parks. The employment and training points come from a search summary and were not checked on the pages. Whether entry was free is not in the results.",
+      "relevant_to": [
+        "Nordic social democracy",
+        "Fabian socialism"
+      ]
+    },
+    {
+      "id": "PS6",
+      "case": "Waqf endowments for fountains and libraries in Ottoman cities",
+      "years": "Ottoman period (no dates in the results)",
+      "claim": "Several sources say that waqf endowments paid for public fountains and libraries, among other public works. Fountains are the best documented: sultans commissioned some, ordinary savers funded others, many carry inscriptions naming the donor, and several still work. One paper files libraries under education, with schools and madrasas. Sources disagree on the state's role: one says official oversight reached all established foundations, while a York University news item stresses the founders' independence. Parks and gardens are not covered beyond a passing mention of recreation facilities.",
+      "source": "Daily Sabah (newspaper), feature articles of 2015 and 2016; a paper in a university repository (undated); York University news item (undated)",
+      "url": "https://www.dailysabah.com/feature/2015/06/09/waqf-the-backbone-of-ottoman-beneficence/amp",
+      "caveat": "Newspaper features rather than studies, and the results themselves say the specifics need checking against the scholarly items. The library claim is a general statement from several sources, with the fountain details carrying most of the weight. No dates or amounts are given.",
+      "relevant_to": [
+        "Islamic economics",
+        "Commons governance"
+      ]
+    }
+  ]
+}
