@@ -32,7 +32,8 @@ nonisolated enum Hardware {
         var value: Int32 = 0
         var size = MemoryLayout<Int32>.size
         if sysctlbyname("hw.perflevel0.physicalcpu", &value, &size, nil, 0) == 0, value > 0 { return Int(value) }
-        return max(1, ProcessInfo.processInfo.activeProcessorCount / 2)
+        // Нет деления на производительные и эффективные ядра (виртуальная машина) — все ядра равны.
+        return max(1, ProcessInfo.processInfo.activeProcessorCount)
     }
 
     /// Виртуальная машина (CI): видеоядро эмулируется — считаем на процессоре.
