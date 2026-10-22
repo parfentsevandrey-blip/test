@@ -13,5 +13,5 @@
 1. `python3 tools/fetch_assets.py m <polyhaven_id>…`, `… t <texture_id>…`, `… k <KhronosModel>…` downloads the sources.
 2. `gltf-transform optimize in out.glb --compress meshopt --texture-compress webp --texture-size 1024 --simplify false`
 3. `node tools/set_variant.mjs file.glb champagne` picks the default fabric variant.
-4. `node tools/embed_json.mjs models/*.glb` embeds buffers and images, writing `.json` (the artifact host does not serve `.glb`).
+4. `node tools/pack_json.mjs models/*.json` drops meshopt, quantizes and stores each model as `{"glb": base64}` in a `.json` file: the artifact host does not serve `.glb`, and its CSP blocks fetching `data:` URIs and may block WebAssembly decoders.
 5. Textures are converted to WebP (quality 82) with Pillow.

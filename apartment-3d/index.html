@@ -198,7 +198,6 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 const msg=document.getElementById('msg');
@@ -716,10 +715,24 @@ function buildBed(){
 }
 
 /* ---------- real models (glTF): Khronos glTF-Sample-Assets + Poly Haven ---------- */
-const gltfLoader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+// Модель лежит в .json как GLB в base64: хостинг не отдаёт .glb, а CSP запрещает fetch по data:/blob:.
+// Поэтому GLB разбирается из памяти, а картинки декодируются через createImageBitmap без URL.
+const gltfLoader=new GLTFLoader();
+gltfLoader.register(parser=>{const cache={};
+  parser.loadImageSource=i=>(cache[i]??=parser.getDependency('bufferView',parser.json.images[i].bufferView)
+    .then(bv=>createImageBitmap(new Blob([bv],{type:parser.json.images[i].mimeType}),{imageOrientation:'none',premultiplyAlpha:'none',colorSpaceConversion:'none'}))
+    .then(bmp=>{const t=new THREE.Texture(bmp);t.needsUpdate=true;return t;})).then(t=>t.clone());
+  return {name:'inline-image-bitmaps'};});
 const modelCache={},glowMats=[];
-const loadModel=name=>modelCache[name]??=gltfLoader.loadAsync('models/'+name+'.json').then(g=>{
-  g.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});return g.scene;});
+const loadModel=name=>modelCache[name]??=fetch('models/'+name+'.json').then(r=>{if(!r.ok)throw new Error(r.status);return r.json();})
+  .then(({glb})=>{const bin=Uint8Array.from(atob(glb),c=>c.charCodeAt(0));return gltfLoader.parseAsync(bin.buffer,'');})
+  .then(g=>{g.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});return g.scene;});
+// запасные формы, если модель не загрузилась: [ширина, глубина, высота, цвет] до масштаба
+const FALLBACK={GlamVelvetSofa:[2.1,.95,.8,'#d9cdb8'],coffee_table_round_01:[1.3,1.3,.49,'#e6e3de'],mid_century_lounge_chair:[.9,1,1,'#6b4a35'],
+  dining_chair_02:[.44,.55,.95,'#3a302a'],SheenChair:[.8,.6,.7,'#d9772f'],SpecularSilkPouf:[.6,.6,.2,'#d8c7ad'],potted_plant_02:[.6,.6,.85,'#5d7b58']};
+function fallback(name,px,py,{y=0,rot=0,s=1}={}){const f=FALLBACK[name];if(!f)return;
+  const o=new THREE.Mesh(new RoundedBoxGeometry(f[0]*s,f[2]*s,f[1]*s,3,.04),M(f[3],{roughness:.9}));
+  o.position.set(X(px),y+f[2]*s/2,Z(py));o.rotation.y=rot;o.castShadow=o.receiveShadow=true;furn.add(o);pickables.push(o);cutList.push({o,y0:y,y1:y+f[2]*s,k:'hide'});}
 async function place(name,px,py,{y=0,rot=0,s=1,tint=null,glow=null,top=null}={}){
   const o=(await loadModel(name)).clone(true);
   o.scale.setScalar(s);o.rotation.y=rot;o.position.set(X(px),y,Z(py));
@@ -752,7 +765,7 @@ const MODELS=[ // имя, px, py, параметры
 ];
 async function buildModels(){
   setMsg('Загружаю мебель…');
-  await Promise.all(MODELS.map(([n,x,y,o])=>place(n,x,y,o).catch(e=>console.warn('model',n,e))));
+  await Promise.all(MODELS.map(([n,x,y,o])=>place(n,x,y,o).catch(e=>{console.warn('model',n,e);fallback(n,x,y,o);})));
   applyCut(mode==='walk'?H:cutH);applyWeather();
 }
 
