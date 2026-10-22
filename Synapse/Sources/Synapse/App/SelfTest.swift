@@ -189,12 +189,44 @@ nonisolated enum SelfTest {
                    "предел видеоядра на 24 ГБ можно поднять до \(raise.map { Format.gb(Double($0)) } ?? "—"), системе остаётся 4 ГБ") && ok
         ok = check(GPUMemory.target(macs[0].1) == nil, "на 8 ГБ предел не трогаем") && ok
 
+        print("— Модели переживают обновление")
+        ok = library() && ok
+
         print("— Это железо")
         let mac = Hardware.scan()
         print("  \(mac.chip) · \(mac.modelID) · \(Int(mac.memoryGB)) ГБ · P\(mac.performanceCores)+E\(mac.efficiencyCores) · GPU \(mac.gpuCores) ядер (\(mac.gpuName)) · \(Int(mac.bandwidth)) ГБ/с · бюджет GPU \(Format.gb(Double(mac.gpuBudget))) · свободно \(Format.bytes(mac.freeDisk)) · VM: \(mac.virtualized)")
         ok = check(mac.memory > 0 && mac.performanceCores > 0, "железо определено") && ok
         let recs = Advisor.recommend(cards: Curated.cards, variants: [:], mac: mac)
         print("  Рекомендации: " + recs.map { "\($0.role.title): \($0.card.name)" }.joined(separator: ", "))
+        return ok
+    }
+
+    /// Список моделей потерян, повреждён или записан другой версией — модели всё равно на месте.
+    static func library() -> Bool {
+        var ok = true
+        let saved = AppPaths.override
+        let home = FileManager.default.temporaryDirectory.appendingPathComponent("synapse-library-\(UUID().uuidString)")
+        AppPaths.override = home
+        defer {
+            AppPaths.override = saved
+            try? FileManager.default.removeItem(at: home)
+        }
+        let folder = AppPaths.models.appendingPathComponent("unsloth__Qwen3.5-0.8B-GGUF")
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        for name in ["Qwen3.5-0.8B-Q4_K_M.gguf", "mmproj-F16.gguf", "Qwen3.5-0.8B-Q8_0.gguf.part"] {
+            FileManager.default.createFile(atPath: folder.appendingPathComponent(name).path, contents: Data(repeating: 7, count: 4096))
+        }
+        let found = Library.load()
+        ok = check(found.count == 1 && found.first?.name == "Qwen3.5 0.8B" && found.first?.quant == "Q4_K_M" && found.first?.vision == true,
+                   "без списка модели найдены в папке: \(found.map { "\($0.name) \($0.quant)\($0.vision ? " +зрение" : "")" })") && ok
+        try? Data("{испорчено".utf8).write(to: Library.manifest)
+        ok = check(Library.load().count == 1, "повреждённый список — восстановлен из запасной копии") && ok
+        try? FileManager.default.removeItem(at: Library.backup)
+        let entry = String(decoding: (try? JSONEncoder.iso.encode(found)) ?? Data("[]".utf8), as: UTF8.self)
+        let mixed = "[{\"будущее поле\": 1}, " + entry.dropFirst()
+        try? Data(mixed.utf8).write(to: Library.manifest)
+        let afterMixed = Library.load()
+        ok = check(afterMixed.count == 1 && afterMixed.first?.lastUsed == nil, "непонятная запись не стирает остальные") && ok
         return ok
     }
 

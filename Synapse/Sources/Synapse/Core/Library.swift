@@ -43,17 +43,68 @@ nonisolated struct InstalledModel: Codable, Identifiable, Sendable, Hashable {
     }
 }
 
+/// Модели хранятся отдельно от программы — в ~/Library/Application Support/Synapse/Models. Обновление
+/// Synapse (новая версия поверх старой) эту папку не трогает. Чтобы модели не «пропали» и тогда, когда
+/// список повреждён или записан другой версией, список читается по одной записи, хранится в двух копиях,
+/// а модели, которые лежат в папке, но не попали в список, находятся заново.
 nonisolated enum Library {
     static var manifest: URL { AppPaths.models.appendingPathComponent("library.json") }
+    static var backup: URL { AppPaths.models.appendingPathComponent("library.backup.json") }
 
     static func load() -> [InstalledModel] {
-        guard let data = try? Data(contentsOf: manifest),
-              let list = try? JSONDecoder.iso.decode([InstalledModel].self, from: data) else { return [] }
-        return list.filter(\.exists)
+        var list = (decode(manifest) ?? decode(backup) ?? []).filter(\.exists)
+        let found = recover(known: list)
+        if !found.isEmpty {
+            list += found
+            save(list)
+        }
+        return list
     }
 
     static func save(_ models: [InstalledModel]) {
-        if let data = try? JSONEncoder.iso.encode(models) { try? data.write(to: manifest, options: .atomic) }
+        guard let data = try? JSONEncoder.iso.encode(models) else { return }
+        try? data.write(to: manifest, options: .atomic)
+        try? data.write(to: backup, options: .atomic)
+    }
+
+    /// По одной записи: если одна повреждена или из другой версии, остальные не теряются.
+    private static func decode(_ url: URL) -> [InstalledModel]? {
+        guard let data = try? Data(contentsOf: url),
+              let items = try? JSONDecoder.iso.decode([Lossy<InstalledModel>].self, from: data) else { return nil }
+        return items.compactMap(\.value)
+    }
+
+    /// Модели, которые лежат в папке, но не записаны в список: восстанавливаем по именам файлов.
+    static func recover(known: [InstalledModel]) -> [InstalledModel] {
+        let fm = FileManager.default
+        guard let folders = try? fm.contentsOfDirectory(at: AppPaths.models, includingPropertiesForKeys: [.isDirectoryKey, .creationDateKey]) else { return [] }
+        var result: [InstalledModel] = []
+        for folder in folders where (try? folder.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true {
+            let names = (try? fm.contentsOfDirectory(atPath: folder.path)) ?? []
+            // Недокачанные части (.part) не считаются: у них другое окончание.
+            let files = names.filter { $0.lowercased().hasSuffix(".gguf") }.map { name in
+                let size = (try? fm.attributesOfItem(atPath: folder.appendingPathComponent(name).path)[.size] as? NSNumber)?.int64Value ?? 0
+                return HubFile(type: "file", path: name, size: size, lfs: nil)
+            }
+            let repo = folder.lastPathComponent.replacingOccurrences(of: "__", with: "/")
+            let org = String(repo.split(separator: "/").first ?? "")
+            let curated = Curated.cards.first { $0.id.caseInsensitiveCompare(repo) == .orderedSame }
+            let created = (try? folder.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? Date()
+            for v in ModelVariant.group(files) {
+                let paths = v.files.map(\.path)
+                if known.contains(where: { $0.folderName == folder.lastPathComponent && $0.files.first == paths.first }) { continue }
+                let params = curated?.params ?? Double(v.weightsSize) * 8 / v.quant.bits / 1e9
+                result.append(InstalledModel(
+                    repo: curated?.id ?? repo,
+                    name: curated?.name ?? CardBuilder.prettyName(String(repo.split(separator: "/").last ?? Substring(repo))),
+                    lab: curated?.lab ?? CardBuilder.labs[org.lowercased()] ?? org,
+                    quant: v.quant.name, files: paths, size: v.size, params: params,
+                    activeParams: curated?.activeParams ?? CardBuilder.activeParams(in: repo),
+                    architecture: curated?.architecture, contextLength: nil, installedAt: created, lastUsed: nil,
+                    verified: false, projector: v.projector?.path))
+            }
+        }
+        return result
     }
 
     /// Удаляет файлы варианта; пустая папка модели уходит вместе с ними.
@@ -83,4 +134,10 @@ extension JSONDecoder {
         d.dateDecodingStrategy = .iso8601
         return d
     }
+}
+
+/// Элемент списка, который не ломает весь список, если сам не читается.
+nonisolated struct Lossy<T: Decodable>: Decodable {
+    let value: T?
+    init(from decoder: Decoder) throws { value = try? T(from: decoder) }
 }

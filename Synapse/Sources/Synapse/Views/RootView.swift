@@ -187,7 +187,10 @@ struct SettingsView: View {
 
     private var storage: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Модели хранятся в папке приложения").font(.system(size: 13, weight: .semibold))
+            Text("Модели хранятся отдельно от программы").font(.system(size: 13, weight: .semibold))
+            Label("Обновление Synapse их не трогает: ставьте новую версию поверх старой — все скачанные модели, чаты и настройки останутся на месте. Даже если список моделей повредится, Synapse найдёт файлы в этой папке и восстановит их сам.",
+                  systemImage: "checkmark.shield.fill")
+                .font(.system(size: 11.5)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             Text(AppPaths.models.path).font(.system(size: 11, design: .monospaced)).textSelection(.enabled).foregroundStyle(.secondary)
             HStack {
                 Button("Показать в Finder") { NSWorkspace.shared.open(AppPaths.models) }
