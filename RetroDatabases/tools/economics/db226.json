@@ -45,7 +45,7 @@
     },
     {
       "model": "Classical laissez-faire capitalism",
-      "best": "The case New Jersey's 1992 minimum wage rise and fast-food jobs reports a 1994 study that found no sign of job cuts, and a 2000 critique by Neumark and Wascher that argued different data show job losses. The sources give no verdict on the dispute, so pay set by competition with no legal floor is best only if the critique holds.",
+      "best": "The case New Jersey's 1992 minimum wage rise and fast-food jobs reports a 1994 study, in one comparison region, that found no sign of job cuts, and a 2000 critique by Neumark and Wascher that argued different data show job losses. The sources, which summarise the study, give no verdict on the dispute, so pay set by competition with no legal floor is best only if the critique holds.",
       "worst": "Inferred from its principle that the state stays out, so pay is left to bargaining between each worker and each employer, and low-paid workers have no floor if they lack other offers. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
     },
     {
@@ -55,13 +55,13 @@
     },
     {
       "model": "Monetarist neoliberalism",
-      "best": "The case New Jersey's 1992 minimum wage rise and fast-food jobs reports that a 2000 critique by Neumark and Wascher argued that different data show job losses, while a 1994 study found no sign of job cuts. The sources give no verdict, so pay left to markets, with no legal floor, is best if the critique is right.",
+      "best": "The case New Jersey's 1992 minimum wage rise and fast-food jobs reports that a 2000 critique by Neumark and Wascher argued that different data show job losses, while a 1994 study, in one comparison region, found no sign of job cuts. The sources, which summarise the study, give no verdict, so pay left to markets, with no legal floor, is best if the critique is right.",
       "worst": "Inferred from its principle that steady money, deregulation and privatisation leave pay to markets, so workers with little bargaining power can face low pay with no floor and no public body to check it. There is no documented case in the pool. Source: Friedman, Capitalism and Freedom; Harvey, A Brief History of Neoliberalism"
     },
     {
       "model": "Keynesian welfare capitalism",
       "best": "Inferred from its principle that public spending rises in slumps, so demand and jobs are kept up when the economy turns down, and pay is less likely to fall sharply. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that spending falls in booms, so public pay and wage support can be held down in strong years and cut in slumps, leaving workers to bear the swing of the cycle. There is no documented case in the pool. Source: Keynes, The General Theory; Beveridge, Social Insurance and Allied Services"
+      "worst": "Inferred from its principle that spending falls in booms, so public pay and wage support can be held down in strong years, leaving workers to bear the swing of the cycle. There is no documented case in the pool. Source: Keynes, The General Theory; Beveridge, Social Insurance and Allied Services"
     },
     {
       "model": "Social market economy",
@@ -120,7 +120,7 @@
     },
     {
       "model": "Command socialism",
-      "best": "The case Soviet industrial wage structure: stated reform goals reports that a 1977 paper described the goals as a more consistent basic wage structure and equal pay for equal work, with consolidated scales and base rates pulled closer together. The sources give stated goals, not outcomes, and say nothing about later decades.",
+      "best": "The case Soviet industrial wage structure: stated reform goals reports that a 1977 paper described the goals as a more consistent basic wage structure and equal pay for equal work, with consolidated scales and base rates pulled closer together. The paper gives stated goals, not outcomes, and says nothing about later decades.",
       "worst": "Inferred from its principle that central plans set output, prices and investment, so pay scales are fixed from above and cannot easily track local shortages, skills or workers' own choices. There is no documented case in the pool. Source: Kornai, The Socialist System; First Five-Year Plan"
     },
     {
@@ -186,7 +186,6 @@
   ],
   "compromise": {
     "summary": "A legal minimum wage in low-paid trades, set by a public council of unions, employers and independent members, with pay bargained above it by sector. The floor is a minimum, never a cap, and each rise is tested for its effect on jobs before it is made permanent.",
-    "details": "Keeps: a legal floor set by trade boards in low-paid trades, from Fabian socialism and the Trade Boards Act case; pay bargained between unions and employers through a joint council, from Nordic social democracy and the Saltsjöbaden Agreement case; small to moderate effects in most studies, from Social market economy and the Germany case. Blocks: a cap disguised as a floor, from Mercantilism, with a legal rule that a floor is never a cap; job losses among the least skilled, from the China case, with a jobs test before each rise. Test: hourly pay at the bottom, and jobs in affected trades, against similar areas, for two years after each change and again at five. Source: University of Warwick digitised collection on the Trade Boards (year not given); University of Alberta business school page on the 1938 basic agreement (year not given); University of Exeter labour-history web page (year not given); IAB, Bossler and Gerner (2016); Fang and Lin, IZA conference paper (2014)"
+    "details": "Keeps: a legal floor set by trade boards, from Fabian socialism and the case Trade Boards Act: binding minimum pay in sweated trades; joint pay bargaining, from Nordic social democracy and the case Saltsjöbaden Agreement: pay bargained by unions and employers; small to moderate effects (abstracts and snippets), from Social market economy and the case Germany's 2015 minimum wage and employment. Blocks: pay fixed from above and possibly capped, from Mercantilism, with a floor that is never a cap; job losses among the least skilled, from Chinese market socialism (one conference paper), with a jobs test before each rise. Test: hourly pay at the bottom, and jobs in affected trades, against similar areas, for several years after each change. Source: University of Warwick digitised collection on the Trade Boards (year not given); University of Alberta business school page on the 1938 basic agreement (year not given); University of Exeter labour-history web page (year not given); IAB, Bossler and Gerner (2016); Fang and Lin, IZA conference paper (2014)"
   }
 }
-
