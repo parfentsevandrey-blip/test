@@ -31,7 +31,8 @@ nonisolated final class EngineLog: @unchecked Sendable {
             lines.append(level >= 3 ? "⚠️ " + line : line)
             if lines.count > 300 { lines.removeFirst(lines.count - 300) }
         }
-        if echo || level >= 4 { FileHandle.standardError.write(Data(("[llama] " + line + "\n").utf8)) }
+        // 4 — ошибка (5 — продолжение строки, им llama.cpp рисует точки прогресса).
+        if echo || level == 4 { FileHandle.standardError.write(Data(("[llama] " + line + "\n").utf8)) }
     }
 
     var lastProblem: String { lock.withLock { lines.last(where: { $0.hasPrefix("⚠️") }).map { String($0.dropFirst(2)) } ?? "" } }

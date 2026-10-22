@@ -120,6 +120,13 @@ nonisolated enum SelfTest {
         ok = check(TextJoiner.decapitalize("МГУ") == "МГУ" && TextJoiner.decapitalize("Это") == "это", "аббревиатуры не трогаем") && ok
         let (_, erase) = j.apply(.deleteLast)
         ok = check(erase == " Завтра начнём.".count, "«удали это» стирает последнюю фразу: \(erase) символов") && ok
+        var k = TextJoiner()
+        _ = k.append(["Отправляю", "итоги", "встречи", "релиз"])
+        let fix = k.settle(["Отправляю", "итоги", "встречи:", "релиз", "переносим."])
+        ok = check(fix.backspaces == " релиз".count && fix.text == ": релиз переносим." && k.typed == "Отправляю итоги встречи: релиз переносим.",
+                   "окончательный вариант фразы правится с места расхождения: −\(fix.backspaces) +«\(fix.text)»") && ok
+        let undo = k.settle([])
+        ok = check(undo.backspaces == "Отправляю итоги встречи: релиз переносим.".count && k.typed.isEmpty, "команда стирает успевшее напечататься начало") && ok
 
         print("— Голосовые команды")
         ok = check(VoiceCommand.match("Новая строка.") == .newLine && VoiceCommand.match("новый абзац") == .newParagraph
@@ -241,7 +248,8 @@ nonisolated enum SelfTest {
         print("  → напечатано: «\(output.value)»")
         let w2 = wer(reference, output.value)
         ok = check(finished.value, "диктовка завершилась") && ok
-        ok = check(w2 <= 0.2, "потоковая диктовка: ошибка слов \(Int(w2 * 100))%") && ok
+        ok = check(w2 <= 0.1, "потоковая диктовка: ошибка слов \(Int(w2 * 100))%, окончательным распознаванием поправлено \(dictation.corrected) символов") && ok
+        ok = check(output.value.filter { $0 == "." }.count >= 3, "все три предложения закончены точкой") && ok
         let early = commits.value.filter { $0.0 < seconds - 0.2 }.reduce(0) { $0 + $1.1 }
         let total = Committer.words(output.value).count
         ok = check(early > 0, "слова печатаются во время речи: \(early) из \(total) появились, пока звучала речь (проходов: \(dictation.passCount))") && ok

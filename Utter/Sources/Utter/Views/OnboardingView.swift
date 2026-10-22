@@ -15,6 +15,7 @@ struct OnboardingView: View {
                     Text("Utter — диктовка в любое поле").font(.system(size: 24, weight: .bold))
                     Text("Нажмите \(model.shortcut.display), говорите по-русски — текст печатается там, где стоит курсор. Всё распознаётся на этом Mac.")
                         .font(.system(size: 13)).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .padding(.top, 18)
@@ -77,7 +78,7 @@ struct OnboardingView: View {
         let m = model.asrModel
         switch model.modelState {
         case .downloading(let p): return "\(m.title) — \(Int(p * 100))% из \(Format.bytes(m.size)). Подобрана под ваш Mac (\(Int(Hardware.memoryGB.rounded())) ГБ памяти)."
-        case .ready: return "\(m.title) готова: распознаёт на видеоядре Mac, без интернета."
+        case .ready: return "\(m.title) готова: распознаёт \(Hardware.virtualized ? "на процессоре" : "на видеоядре") Mac, без интернета."
         case .loading: return "\(m.title) загружается в память…"
         case .failed(let why): return why
         case .missing: return "\(m.title) · \(Format.bytes(m.size)). \(m.summary)"

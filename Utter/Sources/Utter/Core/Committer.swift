@@ -82,23 +82,43 @@ nonisolated struct TextJoiner {
     /// Слова текущей фразы → текст для печати.
     mutating func append(_ words: [String]) -> String {
         guard !words.isEmpty else { return "" }
-        var text = ""
-        if !utteranceOpen {
+        let text: String
+        if utteranceOpen {
+            text = " " + words.joined(separator: " ")
+        } else {
             utteranceOpen = true
             current = 0
-            if let last = typed.last, !last.isWhitespace { text += " " }
-        } else {
-            text += " "
+            text = Self.render(words, after: typed.last)
         }
-        var words = words
-        if current == 0, let last = typed.last, !".!?…\n".contains(last) {
-            // Пауза посреди предложения: модель начнёт фразу с заглавной — возвращаем строчную.
-            words[0] = Self.decapitalize(words[0])
-        }
-        text += words.joined(separator: " ")
         typed += text
         current += text.count
         return text
+    }
+
+    /// Окончательный вариант фразы: что стереть и что допечатать, чтобы напечатанная фраза стала такой.
+    /// Правка минимальная — стирается только хвост после первого расхождения (обычно — знак препинания).
+    mutating func settle(_ words: [String]) -> (text: String, backspaces: Int) {
+        let old = utteranceOpen ? String(typed.suffix(current)) : ""
+        let base = String(typed.dropLast(old.count))
+        let rendered = Self.render(words, after: base.last)
+        let common = zip(old, rendered).prefix(while: { $0 == $1 }).count
+        typed = base + rendered
+        utteranceOpen = !rendered.isEmpty
+        current = rendered.count
+        return (String(rendered.dropFirst(common)), old.count - common)
+    }
+
+    /// Фраза в тексте: пробел перед ней и строчная буква, если пауза пришлась посреди предложения
+    /// (модель начинает каждую фразу с заглавной).
+    static func render(_ words: [String], after last: Character?) -> String {
+        guard !words.isEmpty else { return "" }
+        var words = words
+        var text = ""
+        if let last {
+            if !last.isWhitespace { text = " " }
+            if !".!?…\n".contains(last) { words[0] = decapitalize(words[0]) }
+        }
+        return text + words.joined(separator: " ")
     }
 
     mutating func closeUtterance() {

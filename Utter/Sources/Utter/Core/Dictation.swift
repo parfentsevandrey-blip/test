@@ -62,6 +62,8 @@ nonisolated final class Dictation: @unchecked Sendable {
     /// Статистика для самопроверки: сколько слов напечатано до конца фразы (потоково).
     private(set) var streamedWords = 0
     private(set) var passCount = 0
+    /// Сколько символов поправлено окончательным распознаванием фраз.
+    private(set) var corrected = 0
 
     init(options: Options, emit: @escaping @Sendable (Event) -> Void) {
         self.options = options
@@ -145,7 +147,8 @@ nonisolated final class Dictation: @unchecked Sendable {
         guard options.engine == .qwen, !passRunning else { return }
         if let job = finals.first {
             if committerID != job.id { committer.reset(); committerID = job.id }
-            run(audio: job.audio, prefix: committer.committedText, id: job.id, final: true)
+            // Окончательно — вся фраза заново, без подсказки: так точнее всего и со всеми знаками препинания.
+            run(audio: job.audio, prefix: "", id: job.id, final: true)
             return
         }
         guard vad.speaking, !stopping,
@@ -212,14 +215,22 @@ nonisolated final class Dictation: @unchecked Sendable {
             joiner.closeUtterance()
             return
         }
-        if options.commands, committer.committed.isEmpty, let command = VoiceCommand.match(clean) {
+        if options.commands, let command = VoiceCommand.match(clean) {
+            // Если начало команды уже успело напечататься — стираем его.
+            let (_, undo) = joiner.settle([])
             let (insert, erase) = joiner.apply(command)
-            if erase > 0 { emit(.backspace(erase)) }
+            if undo + erase > 0 { emit(.backspace(undo + erase)) }
             if !insert.isEmpty { emit(.type(insert)) }
             return
         }
-        let rest = committer.finalize(clean)
-        if !rest.isEmpty { emit(.type(joiner.append(rest))) }
+        // Напечатанное по ходу речи приводится к окончательному варианту: обычно это лишь знаки
+        // препинания на стыках слов, иногда — слово, которое по обрывку звука было не разобрать.
+        let (insert, erase) = joiner.settle(Committer.words(clean))
+        if erase > 0 {
+            corrected += erase
+            emit(.backspace(erase))
+        }
+        if !insert.isEmpty { emit(.type(insert)) }
         joiner.closeUtterance()
     }
 

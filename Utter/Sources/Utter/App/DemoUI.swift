@@ -31,12 +31,22 @@ enum DemoUI {
 
     static func run(_ model: AppModel) async {
         guard isOn else { return }
+        // Окна — активные (иначе кнопки рисуются приглушёнными): у программы из строки меню фокус приходится просить.
+        Task {
+            for delay in [0.4, 1.5, 3.5, 6] {
+                try? await Task.sleep(for: .seconds(delay))
+                NSApp.activate()
+                NSApp.windows.first { $0.isVisible && $0.alphaValue > 0 && $0.canBecomeKey && !($0 is NSPanel) }?.makeKeyAndOrderFront(nil)
+            }
+        }
         try? await Task.sleep(for: .milliseconds(300))
         switch screen {
         case "menu":
             show(MenuView().environment(model), title: "Utter", size: NSSize(width: 360, height: 420), glass: true)
         case "settings", "settings-recognition", "settings-input":
-            show(SettingsView().environment(model), title: "Настройки Utter", size: NSSize(width: 560, height: 470))
+            // Настоящее окно настроек (сцена Settings) — с панелью вкладок; открывается действием SwiftUI.
+            show(SettingsOpener(), title: "", size: NSSize(width: 1, height: 1))
+            windows.last?.alphaValue = 0
         case "onboarding":
             model.showOnboarding()
         case "hud":
@@ -105,6 +115,11 @@ enum DemoUI {
         model.sounds = false
         model.begin(feeding: samples)
     }
+}
+
+private struct SettingsOpener: View {
+    @Environment(\.openSettings) private var openSettings
+    var body: some View { Color.clear.frame(width: 1, height: 1).onAppear { openSettings() } }
 }
 
 /// Окно «чужой программы» для демонстрации: текст появляется так же, как в любом поле ввода.
