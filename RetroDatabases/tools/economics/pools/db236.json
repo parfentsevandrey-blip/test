@@ -1,0 +1,87 @@
+{
+  "database": 236,
+  "practice": "Public debt",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "PD1",
+      "case": "Federal assumption of state war debts (United States, 1790)",
+      "years": "1790",
+      "claim": "The federal government took over Revolutionary War debts that individual states had not yet cleared, through the Funding Act of 1790 and related measures. Four statutes passed between 4 and 12 August 1790 carried out the plan. The House first rejected assumption 31 to 29 in April 1790, and by late July both chambers had accepted a funding measure that included it. A deal among Hamilton, Jefferson and Madison tied assumption to placing the permanent capital in the South. Hamilton's revenue plan relied on a tariff and a whiskey excise, which western farmers later resisted violently in the Whiskey Rebellion.",
+      "source": "National Archives, Prologue blog post 'The Compromise of 1790' (2015), with other search results on the Funding Act of 1790",
+      "url": "https://prologue.blogs.archives.gov/2015/05/31/the-compromise-of-1790",
+      "caveat": "The claims come from search summaries that merge several pages, so the summaries do not show which page states which fact, and the linked blog post was not opened. No total for the debt assumed is given: a dealer's listing gives one but does not explain its scope, so it is left out. The Whiskey Rebellion is background, not evidence on the debt.",
+      "relevant_to": ["Mercantilism"]
+    },
+    {
+      "id": "PD2",
+      "case": "Pitt's sinking fund for the British consols (1786)",
+      "years": "1786 (Pitt's fund); earlier fund dated to 1716 or the 1720s",
+      "claim": "Pitt's sinking fund of 1786 committed 1 million pounds a year, to compound until the fund reached 4 million pounds, after which its returns could be diverted to tax relief or other purposes. Pitt's approach used tax income to buy back consols in the market, not to redeem them at the 100 pound par, because redeeming at par would have enriched holders. By the end of the Napoleonic wars the scheme was being financed by borrowing from the same markets. An earlier sinking fund is dated to 1716 in an 1823 Britannica article and to the 1720s by a history website. The sources disagree on the size of the debt in 1786, so this case gives no figure for it.",
+      "source": "Encyclopaedia Britannica, 1823 article (reproduced online); history website on Pitt's sinking fund (undated)",
+      "url": "https://historyhome.co.uk/c-eight/pitt/sinkpitt.htm",
+      "caveat": "The claims rest on search excerpts of an old encyclopaedia article and a general history website, not on a modern study or on the full pages, and the excerpts do not show which page gives which figure. The sources disagree on the 1786 debt total and on the date of the earlier fund. The results say little about the years after the Napoleonic wars.",
+      "relevant_to": ["Classical laissez-faire capitalism"]
+    },
+    {
+      "id": "PD3",
+      "case": "Heavily Indebted Poor Countries (HIPC) debt relief",
+      "years": "1996 (launch); 1999 and 2005 (enhancements); totals to May 2024",
+      "claim": "The HIPC initiative began in 1996 and brought multilateral lenders, Paris Club members and other official and commercial creditors into one coordinated effort to bring poor countries' external debt down to sustainable levels. Pressure came from major industrial nations, and creditors such as the United States feared that existing relief left some debts beyond repayment. Eligibility depended on low income and on debt that stayed unsustainable even after Naples-terms relief from the Paris Club. A 1999 overhaul made relief sooner, wider and deeper, provided the savings went to poverty reduction. A 2005 add-on let countries that complete the process obtain full forgiveness of qualifying obligations to the IMF, World Bank and African Development Fund. A World Bank brief dated May 2024 reports that more than 100 billion US dollars has been cut from the debts of 37 participating countries, 31 of them in Africa, and warns that some may slide back into unsustainable debt. An IMF fact sheet says social-sector spending now runs at about five times debt service, where before the initiative debt service slightly outweighed health and education spending combined.",
+      "source": "World Bank brief on HIPC debt relief (May 2024); International Monetary Fund fact sheet on HIPC debt relief (year not shown in the results)",
+      "url": "https://www.worldbank.org/en/topic/debt/brief/hipc",
+      "caveat": "Both sources are the lenders' own publications, so they report the programme's results without independent evaluation. The newest totals are from May 2024 and may be out of date. The spending comparison is a single ratio from a fact sheet, with no table behind it in the results, and the results do not show how the savings were spent in each country.",
+      "relevant_to": ["Monetarist neoliberalism"]
+    },
+    {
+      "id": "PD4",
+      "case": "Argentina's currency peg, 2001 default and later restructurings",
+      "years": "1991 to 2016",
+      "claim": "Argentina fixed the peso at parity with the US dollar in 1991. That reined in hyperinflation but removed the option of devaluing when outside shocks hit. The arrangement gave way only after the money supply shrank sharply, payments broke down and foreign debt went unpaid. In June 2001 officials offered creditors a voluntary exchange of about 29.5 billion US dollars of debt, pushing maturities further out in return for higher yields. The default came in late December 2001, shortly after de la Rúa stepped down and despite repeated IMF support. A Congressional Research Service chronology puts the defaulted amount at 151 billion US dollars. The peg was dropped in January 2002, and the peso fell by roughly seven-tenths against the dollar over the following months. In 2005, under Néstor Kirchner, the restructuring offered about 30 cents for each dollar of face value, and roughly 76% of holders accepted. Uptake rose to about 93% after a 2010 reopening. Elliott Management's NML Capital pressed holdout claims in US courts until a 2016 deal under Mauricio Macri closed the matter, with holdouts receiving roughly 9.3 billion US dollars.",
+      "source": "Congressional Research Service, 'The Argentine Financial Crisis: A Chronology of Events' (2002); other search results on the restructurings and the 2016 settlement, namely academic papers and blog or glossary pages (undated)",
+      "url": "https://www.everycrsreport.com/reports/RS21130.html",
+      "caveat": "Only the Congressional Research Service chronology is linked. The 2005 to 2016 details come from other search excerpts that were not opened, some of them from blog and glossary pages. Pages disagree on how fast the peso fell: one says almost at once, a glossary says within months. The 151 billion figure comes from one chronology, and the 2016 settlement amount is from an excerpt, not from a court or government record.",
+      "relevant_to": ["Monetarist neoliberalism", "Modern monetary theory"]
+    },
+    {
+      "id": "PD5",
+      "case": "Greece's March 2012 exchange of privately held bonds",
+      "years": "2012",
+      "claim": "In March 2012 private creditors, mostly banks, took write-downs on Greek bonds through a voluntary exchange backed by collective action clauses. The European Stability Mechanism puts take-up at about 97% of privately held bonds, with holders accepting a 53.5% cut in face value that reduced Greece's debt stock by roughly 107 billion euros. International Financing Review, a trade publication, estimates a cut of about 75% in accounting value on holdings of 206 billion euros. Another account puts take-up at 83.5% of bondholders, and the measures are not directly comparable. A critical piece by Nouriel Roubini argues that official lenders bore most of the losses, because about 130 billion euros of extra official debt offset the 110 billion euro private write-down.",
+      "source": "European Stability Mechanism explainer on the March 2012 private sector debt restructuring (undated); International Financing Review article 'Greek tragedy averted' (undated); critical piece by Nouriel Roubini, 'Greece's Private Creditors Are the Lucky Ones', on the NYU Stern site (undated)",
+      "url": "https://www.esm.europa.eu/content/what-was-private-sector-debt-restructuring-march-2012",
+      "caveat": "The sources give different measures of the same exchange (face value, accounting value, share of holders) and disagree on who bore the losses. The 75% figure is a trade publication estimate, the 83.5% figure comes from an account not named in the results, and the Roubini piece is an argument, not a measurement. The claims rest on search excerpts, and the trade publication article was not opened.",
+      "relevant_to": ["Modern monetary theory"]
+    },
+    {
+      "id": "PD6",
+      "case": "Mefo bills financing German rearmament off the budget",
+      "years": "1934 to April 1938 (start and end dates disputed)",
+      "claim": "A statutory cap of 100 million Reichsmarks on direct Reichsbank lending to the state pushed the government toward an off-budget route. Contractors were paid in bills of exchange that a dummy company called MEFO accepted. Lenders could cash them at the central bank, with a Reich guarantee lasting five years. Issuance reached about 12 billion Reichsmarks by April 1938. The official 1938 total of 19 billion Reichsmarks excluded these bills. One account dates Hjalmar Schacht's scheme to 1934. Another says issuance ran through the whole regime and calls the records imprecise. Nuremberg trial records say the financing ended in April 1938.",
+      "source": "Harvard Law School Nuremberg Trials Project, deposition on Schacht's funding and International Military Tribunal transcript (November 1945); Naked Capitalism blog post by Philip Pilkington (2013); online article 'The Economics of War: MEFO Bills' (undated)",
+      "url": "https://nuremberg.law.harvard.edu/documents/2138-deposition-on-schachts-funding?mode=text",
+      "caveat": "The record is patchy. The sources disagree on the start date and on whether issuance continued past April 1938, and one account calls the records imprecise. The 12 billion and 19 billion Reichsmarks figures are not reconciled in the results, so this case gives no total for the debt. The blog and the online article are secondary, and the trial material was seen only in search excerpts.",
+      "relevant_to": ["Corporatism and fascist economics"]
+    },
+    {
+      "id": "PD7",
+      "case": "China's 2015 swap of local government financing vehicle loans into municipal bonds",
+      "years": "2009 to 2015",
+      "claim": "After the 2009 stimulus, localities leaned heavily on bank-funded local government financing vehicles (LGFVs) for infrastructure. In March 2015 Beijing authorised a quota of 1 trillion yuan to refinance LGFV loans into cheaper municipal notes. Fitch noted that the swapped bonds could run no more than 30% above comparable central government bonds. Official projections put 2015 debt-servicing savings at 40 to 50 billion yuan. Reported conversions reached about 3.2 trillion yuan that year, well above the initial quota. Standard Chartered said future LGFV bonds would not be treated as local government contingent liabilities, while one analysis noted that the central government still acted as lender of last resort in some cases.",
+      "source": "Asia Times article on the local government debt swap plan (March 2015); other news and commentary pages in the same search, including Fitch commentary and a Standard Chartered analysis as they are reported there",
+      "url": "https://asiatimes.com/2015/03/chinese-bank-credit-quality-rises-with-local-government-debt-swap-plan/",
+      "caveat": "All sources are news or commentary from about 2015, which the search summary calls older articles rather than official accounts or later data. The excerpts do not explain why conversions far exceeded the 1 trillion yuan quota. The Fitch and Standard Chartered statements and the 40 to 50 billion yuan saving are not tied to a named page, and the status of the swap after 2015 was not checked.",
+      "relevant_to": ["Chinese market socialism"]
+    },
+    {
+      "id": "PD8",
+      "case": "Sweden's fiscal consolidation and surplus target (1990s)",
+      "years": "1990 to 2011",
+      "claim": "Gross public debt rose from about 41% of GDP in 1990 to nearly three-quarters by 1996, according to a CEPR column. A CEPR discussion paper puts the 1993 deficit peak at 13% of GDP, while the column gives 11% for that year, and the paper says net debt peaked at only 27% of GDP in 1996. The sources describe a consolidation path set to stay fixed whatever the economy did, with a net-lending surplus goal and a multi-year spending cap. An International Monetary Fund public information notice of 1997 records a medium-term surplus goal of 2% of GDP over the cycle, with interim goals of 0.5% for 1999 and 1.5% for 2000, and forecasts a 1997 deficit of about 2% of GDP with budget balance projected for 1998. The CEPR paper says the budget was in surplus by 1998. The column reports a surplus of 3.6% of GDP in 2000 and government debt at 37% of GDP by 2011.",
+      "source": "International Monetary Fund public information notice (1997); Centre for Economic Policy Research (CEPR) column on lessons from Sweden on fiscal discipline (undated); CEPR discussion paper on Swedish debt (undated)",
+      "url": "https://www.imf.org/external/np/sec/pn/1997/pn9724.htm",
+      "caveat": "The sources disagree on the 1993 deficit peak (13% of GDP in the paper, 11% in the column). The paper says debt fell by more than 50 points after 1996, which does not match the column's figures. The later figures come from a commentary column and a working paper, not official accounts, and the IMF figures for 1997 and 1998 are forecasts.",
+      "relevant_to": ["Nordic social democracy", "Keynesian welfare capitalism"]
+    }
+  ]
+}

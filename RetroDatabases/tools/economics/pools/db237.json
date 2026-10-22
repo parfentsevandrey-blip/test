@@ -1,0 +1,87 @@
+{
+  "database": 237,
+  "practice": "Media ownership and public broadcasting",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "MO1",
+      "case": "BBC licence fee and advert-free broadcasting",
+      "years": "1923 to 2015",
+      "claim": "A licence fee on radio sets was charged from 1923 at 10 shillings. Advertising was ruled out for the early BBC, so listeners paid the licence instead, and from 1927 nearly all licence income went to the BBC. About 2.5 million licences were in circulation by 1928. In 1946 one £2 charge covered both radio and television, and colour sets needed an extra licence from 1968. A 2015 deal required £800 million in savings by 2021/22 and moved the cost of free licences for people over 75 onto the BBC; the BBC later limited that benefit to over-75s on pension credit.",
+      "source": "Irish News, 'A history of the TV licence fee' (2020)",
+      "url": "https://www.irishnews.com/magazine/entertainment/2020/02/05/news/a-history-of-the-tv-licence-fee-1834667/",
+      "caveat": "A newspaper history piece, read through a search summary that merges several pages; the cited page was not opened. Other titles carried the same headline in the results, and the results quote different fee amounts for different years, so no fee is given here. The 2015 deal and the pension-credit change are not checked against a primary document, and a 2020 article cannot show later changes.",
+      "relevant_to": ["Fabian socialism", "Nordic social democracy"]
+    },
+    {
+      "id": "MO2",
+      "case": "NHK household fee upheld as a legal duty",
+      "years": "1950 to 2017",
+      "claim": "NHK, Japan's public broadcaster, is financed by a fee paid per household rather than by advertising. In December 2017 the country's top court upheld the 1950 Broadcast Law and ruled that paying the fee is a legal obligation for anyone who owns a television. Skeptics are reported to doubt that the guaranteed income is justified.",
+      "source": "Advanced Television, news item on the ruling (2017)",
+      "url": "https://www.advanced-television.com/2017/12/07/japan-tv-viewers-must-pay-licence-fee/",
+      "caveat": "A 2017 news item, read through a search summary that also drew on a second 2017 item (not named here); the cited page was not opened. The results give no current fee and no later reform. Sources conflict on penalties for non-payment (one says there are none), and the fee amounts quoted differ, so none is used. A 2017 report cited in the results says about one household in five was not paying, but its source is not named, so that figure is left out.",
+      "relevant_to": ["Nordic social democracy", "Monetarist neoliberalism"]
+    },
+    {
+      "id": "MO3",
+      "case": "Germany's household licence fee and the dispute over its rise",
+      "years": "2010 to 2027",
+      "claim": "The states agreed in 2010 to replace the per-device licence fee with a household-based fee, scheduled to start in 2013. The fee is €18.36 a month, and in December 2024 the states decided to keep it stable. A rise to €18.94 that the KEF commission sought for 2025 never took effect because several states objected, and ARD and ZDF filed a constitutional complaint in November 2024 to force it. The KEF commission's 25th report, in February 2026, backed a rise of 28 cents to €18.64 from January 2027, under half the 58 cents its previous report had asked for. Changes agreed in December 2024 could remove the need for approval by all 16 states, but a 2026 summary still describes that requirement.",
+      "source": "European Audiovisual Observatory, IRIS Merlin legal updates (2025 and 2026); The Local, news reports (2010 and 2024)",
+      "url": "https://merlin.obs.coe.int/article/10501",
+      "caveat": "Legal updates and news reports, read through a search summary and not in full. The 2010 agreement and the €18.36 level come from news pages other than the cited update. The sources disagree on approval: the December 2024 changes could remove it, but the 2026 update still describes it. A six-state plan in one German-language report is undated and is left out.",
+      "relevant_to": ["Social market economy"]
+    },
+    {
+      "id": "MO4",
+      "case": "Italy's 1975 reform of the state broadcaster RAI",
+      "years": "1975 to 1990",
+      "claim": "Law 103 of 14 April 1975 reformed RAI, the state broadcaster. Oversight moved from the executive to Parliament, and RAI's legal status changed from state-run to public. National broadcasting stayed reserved to the state, while locally based private operators could broadcast with government approval, and that state reserve formally ended only with Law 223 of 1990. According to an overview by Eli Noam, a secret pact between the Christian Democrats and the Socialists split control of RAI's two channels; RAI became more pluralistic and less censored, though patronage deepened.",
+      "source": "Eli Noam, overview of broadcasting in Italy, Columbia Business School (year not shown); other Italian sources in the results for the law details",
+      "url": "https://business.columbia.edu/sites/default/files-efs/imce-uploads/CITI/Articles/Broadcasting%20in%20Italy%20An%20Overview.pdf",
+      "caveat": "Read through a search summary, not in full. The law's number is given as 104 in one source, and a 1976 chronology dates the RAI reform to 30 January 1976, so the number and date conflict. The pact and patronage claims rest on one author's overview. The results do not explain how parliamentary oversight worked in practice, and the overview's year is not shown.",
+      "relevant_to": ["Corporatism and fascist economics", "Monetarist neoliberalism"]
+    },
+    {
+      "id": "MO5",
+      "case": "Public Broadcasting Act of 1967 and federal funding",
+      "years": "1967 to 2007",
+      "claim": "A 1967 statute created the Corporation for Public Broadcasting as a private nonprofit, yet federal appropriations supply virtually all of its money, and Congress has long funded it two years ahead through advance appropriations. For fiscal 2007 Congress kept 400 million US dollars in funding alive through a stopgap spending bill, while the administration's fiscal 2008 budget proposed a 50 million US dollar cut and an end to advance appropriations. Two editions frame the funding share differently: a 2005 edition attaches a figure of around 15 percent to CPB's own budget, while a 2007 edition says CPB draws all its funding from federal appropriations.",
+      "source": "Congressional Research Service, report on the Corporation for Public Broadcasting, 2005 and 2007 editions",
+      "url": "https://www.everycrsreport.com/files/20070601_RS22168_b57fa6feb1c1ebd39ec8d745449f1168b72e1685.html",
+      "caveat": "Congressional Research Service editions, read through a search summary and not in full; the dollar figures come from that summary. The results include editions up to 2015, but the summary reports no federal funding decision after 2007, so a record must not say how federal funding later ended. The share figure is disputed between editions, and the 2005 edition is not the cited page.",
+      "relevant_to": ["Keynesian welfare capitalism", "Monetarist neoliberalism"]
+    },
+    {
+      "id": "MO6",
+      "case": "Newspaper ownership concentration and content variety",
+      "years": "1993 to 1999 (data); published 2001",
+      "claim": "Lisa George's 2001 study of daily newspaper markets used newsroom assignment records from 1993 to 1999. It found that greater ownership concentration went with more varied content, and that readership rose alongside the added variety. The results are said to cut against the antitrust assumption that mergers narrow what papers cover.",
+      "source": "Lisa George, preprint on arXiv (2001)",
+      "url": "https://arxiv.org/abs/cs/0108014",
+      "caveat": "A single preprint, read through a search summary of its abstract or excerpt; the full text was not read, and the country and sample are not stated in the result. Other studies in the results point the other way: a University of Missouri master's thesis links chain ownership to less original news on front pages.",
+      "relevant_to": ["Classical laissez-faire capitalism", "Social market economy"]
+    },
+    {
+      "id": "MO7",
+      "case": "FTC case against Meta over Instagram and WhatsApp",
+      "years": "2012 to 2026",
+      "claim": "Meta bought Instagram in 2012 and WhatsApp in 2014. The Federal Trade Commission says the purchases were made to snuff out rising rivals, and sued in 2020; it asks a court to order a split that would strip Meta of both apps. A judge let the core claims head toward trial in April 2025. A later 2025 ruling threw the case out, and as of January 2026 the agency was still pushing to revive it. Meta argues that regulators examined the deals when they happened and that YouTube, TikTok, X and iMessage are rivals.",
+      "source": "News reports from several outlets, including Storyboard18 and The Globe and Mail (2025 and 2026)",
+      "url": "https://www.storyboard18.com/amp/social-media/ftc-moves-to-revive-antitrust-challenge-against-meta-over-instagram-whatsapp-acquisitions-87999.htm",
+      "caveat": "News reports, read through a search summary and not opened; the cited page is one of several behind the summary. The results do not explain how the case moved from trial to dismissal, so its current status is not settled here. The results report no sale or spin-off, so the claim that Meta still owns both apps is an inference, not a reported fact.",
+      "relevant_to": ["Social market economy", "Classical laissez-faire capitalism"]
+    },
+    {
+      "id": "MO8",
+      "case": "China Media Group and state control of broadcasters",
+      "years": "2018",
+      "claim": "A March 2018 reform plan set out merging CCTV, China National Radio and China Radio International into China Media Group. The group answers to the Central Propaganda Department of the Chinese Communist Party, and ownership is shared between that department and the State Council. The former press and broadcasting regulator was dissolved, and its news, publishing and film oversight moved to the propaganda department. The network formally reports to the State Council as a public institution, though the propaganda department steers it in practice. The declared aims are tighter domestic thought control and a friendlier image overseas.",
+      "source": "China Media Project, article on the 2018 reform (2018); Safeguard Defenders, blog post on the ownership and control of Chinese media (year not shown)",
+      "url": "https://chinamediaproject.org/2018/03/22/when-reform-means-tighter-controls/",
+      "caveat": "Secondary commentary, read through a search summary and not in full. The results cover the 2018 restructuring only and show no later change. The shared-ownership detail comes from the Safeguard Defenders blog, not the cited article, and the results do not explain how that shared ownership works in practice.",
+      "relevant_to": ["Chinese market socialism"]
+    }
+  ]
+}

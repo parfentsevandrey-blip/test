@@ -1,0 +1,84 @@
+{
+  "database": 233,
+  "practice": "Banking and credit",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "CR1",
+      "case": "US Glass-Steagall Act of 1933 and its repeal in 1999",
+      "years": "1933 and 1999",
+      "claim": "The Banking Act of 1933, known as the Glass-Steagall Act, built a barrier between commercial and investment banking after the 1929 crash. The Gramm-Leach-Bliley Act, also called the Financial Services Modernization Act of 1999, was enacted in November 1999 and dismantled much of that divide. It set up financial holding companies that gave the Federal Reserve fresh oversight, while keeping limits such as restrictions on cross-marketing. Opinion remains divided on whether the repeal helped fuel the financial crisis that came less than a decade later.",
+      "source": "Congressional Research Service, The Glass-Steagall Act: A Legal and Policy Analysis (report R44349, updated 19 January 2016); Federal Reserve History essays on the Banking Act of 1933 and on the Financial Services Modernization Act of 1999",
+      "url": "https://www.congress.gov/crs-product/R44349",
+      "caveat": "Official overviews, a congressional research report and Federal Reserve History essays, not the statute's text. The results give no vote counts, no date beyond the November 1999 enactment and no figure for any link to the crisis. The sources disagree on how much of the 1933 separation the 1999 act undid, so this record must not say how much was undone. Advocacy and opinion pages in the results were not used.",
+      "relevant_to": [
+        "Keynesian welfare capitalism",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "CR2",
+      "case": "Sweden's bank rescue of 1991 to 1993",
+      "years": "1991 to 1993",
+      "claim": "In autumn 1992 two of the biggest lenders came under state control. Creditors, though not shareholders, were protected by an open-ended pledge, and the state also received warrants as part of the deal. A Bank Support Authority was planned to handle later aid. A Journal of Financial Crises case study measures the Authority's net burden at between 1.5 per cent of 1991 GDP and 2.1 per cent of 1997 GDP, around SEK 35 billion. A VoxEU column finds that the long-run net hit to public finances was almost negligible.",
+      "source": "Journal of Financial Crises, case study of the Swedish bank support (year not shown); VoxEU column on the Swedish model of resolving the 1991 to 1993 banking crisis (year not shown)",
+      "url": "https://elischolar.library.yale.edu/journal-of-financial-crises/vol3/iss3/29",
+      "caveat": "Net cost depends on the method. A gross outlay of roughly 4 per cent of GDP appears without a named source, and a 2008 figure appears only in reposts on blogs and forums, so it is left out. The 1992 takeovers and the warrants are not tied to a named page, and the results do not name the two banks. The publication years of the case study and the column are not shown.",
+      "relevant_to": [
+        "Nordic social democracy",
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "CR3",
+      "case": "Grameen Bank and microcredit in Bangladesh",
+      "years": "1976 to 1983 and after",
+      "claim": "Muhammad Yunus, a professor at the University of Chittagong, began action research in 1976 in Jobra, a village next to the university, and in neighbouring villages, and extended it to Tangail district in 1979. The Grameen Bank gained its own legal status in 1983 under a special ordinance and moved its headquarters from Chittagong to Dhaka. The founder's website says borrowers hold 95 per cent of the equity and the government 5 per cent, that borrower delegates have held nine of the twelve board seats since 1987, and that borrowers belong to five-person groups, although a group does not vouch for any member's loan and collateral is waived. A presentation drawing on 2002 data gives borrowers 90 per cent and the government 10 per cent, and an older profile says state ownership fell from an initial majority to 25 per cent. An older company profile reports repayment above 97 per cent while the bank lent more than 500 million US dollars a year, and the presentation gives repayment above 95 per cent.",
+      "source": "The founder's own website, Grameen Bank at a Glance (undated); Funding Universe, Grameen Bank History (undated); a presentation drawing on 2002 data (undated); online encyclopaedia (secondary)",
+      "url": "https://muhammadyunus.org/post/370/grameen-bank-at-a-glance",
+      "caveat": "The ownership, board and repayment figures are the bank's, its founder's and profile writers' own statements, not audited figures, and they disagree on ownership. Critics' reports that borrowers repay old loans with new ones have no source in the results, so they are left out. The 1976 and 1983 dates are not tied to one page. The results do not say whether early loans carried joint liability, so the record must not say so.",
+      "relevant_to": [
+        "Cooperative economy",
+        "Distributism"
+      ]
+    },
+    {
+      "id": "CR4",
+      "case": "Alphonse Desjardins and the caisse populaire in Lévis, Quebec",
+      "years": "1900 to 1920",
+      "claim": "Alphonse Desjardins, a stenographer in the Commons, became aware of abusive lending practices and spent roughly three years on research, including correspondence with European cooperative founders. His blueprint blended several European models, among them German cooperative banks and an Italian people's bank. The launch is recorded as 6 December 1900 in Lévis, Quebec, with Alphonse and Dorimène Desjardins named as co-founders. Most accounts treat it as the continent's earliest cooperative of this kind. Its design used variable capital and limited liability, and the group describes the caisses as member-controlled. Accounts differ on the start: about a dozen people put in the initial capital of 26.40 Canadian dollars, while the group's own timeline says about 100 residents endorsed the bylaws on the founding night. Membership reportedly passed 700 in the first year. Formal legal recognition came only in 1906, after about six years of operating without it. In 1908 a parish in Manchester, New Hampshire, backed the credit union now known as St. Mary's Bank. By 1920, when Desjardins died, he had helped create 164 caisses and credit unions, most of them in Quebec.",
+      "source": "Desjardins, its own history timeline (undated web page); Funding Universe, company history of the Mouvement des Caisses Desjardins (undated); online encyclopaedia (secondary)",
+      "url": "https://www.desjardins.com/ca/about-us/desjardins/who-we-are/our-history-museum/timeline/index.jsp",
+      "caveat": "The founding figures conflict: about a dozen investors in one account, about 100 bylaw endorsers in the group's own timeline. The results do not say whether these are different counts. The timeline is the institution's own account, and no page shows a date. The 1906, 1908, 164 caisses and 700 members figures are not tied to a named page, and the 700 figure is reported only as reportedly passing that number. The claim that this was the earliest cooperative of its kind is a view most accounts share, not a settled fact.",
+      "relevant_to": [
+        "Cooperative economy",
+        "Mutualism"
+      ]
+    },
+    {
+      "id": "CR5",
+      "case": "Prussia's 1838 savings-bank regulation and the German Sparkassen",
+      "years": "1778 to 1900",
+      "claim": "Hamburg's savings institution of 1778 is often credited with pioneering modern savings banking. Prussia's 1838 Sparkassenreglement is described as its first statewide savings-bank law. It gave the banks common rules and a public-law footing, with state supervision that reached the municipal banks and covered deposit security, and founding a new bank needed government approval. The framework steered investment toward first mortgages and government securities, while still letting banks lend in their home towns. The German savings banks' association's own history gives about 2,700 savings banks in Germany by 1900. Early counts conflict: one source puts Prussia at 234 in 1838, another says Prussia alone had at least 80 savings banks at that time, and another gives 234 for 1850. A German-language source gives 281 for all of Germany in 1836.",
+      "source": "DSGV, the German savings banks' association, its own history document (undated); other German-language history sources in the results (not tied to one page)",
+      "url": "https://www.dsgv.de/_download_gallery/Material/Geschichte_SFG_DSGV.pdf",
+      "caveat": "Built from search summaries, not the full documents. The savings banks' own association is a trade-body source. The 1838 details and the early counts are not tied to one page, and the counts conflict. Municipal ownership, which the scope asks about, appears only in an AI-generated encyclopaedia and an advocacy paper, so it is left out. The cooperative banks (Raiffeisen and Schulze-Delitzsch) are not covered, because no result confirms them. The 2001 EU point on state guarantees appears only in a guest blog, so it is left out.",
+      "relevant_to": [
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "CR6",
+      "case": "English usury laws and their repeal in 1854",
+      "years": "1500s to 1854",
+      "claim": "A University of Toronto working paper argues that the lower legal caps on interest shaped the English economy from the 1500s through the Industrial Revolution. The 1854 repeal statute, An Act to repeal the Laws relating to Usury and to the Enrolment of Annuities (17 and 18 Victoria, chapter 90), erased the limits on interest by striking down twenty named enactments and any remaining usury laws. Earlier dealings were shielded from the change, and pawnbrokers were carved out. The Act took effect on 10 August 1854.",
+      "source": "An Act to repeal the Laws relating to Usury and to the Enrolment of Annuities (1854), text listed on the vLex legal database; University of Toronto working paper no. 439 (year not shown)",
+      "url": "https://vlex.co.uk/vid/861261827",
+      "caveat": "The results give the Act's title and a summary, not the full text, so the list of repealed enactments and the pawnbrokers' carve-out are not checked against the statute, and the commencement date comes from a search summary. The working paper's argument is reported without its evidence, and its year is not shown. The earlier cap history is not tied to a named source, so it is left out. Adam Smith's discussion of interest is not in the results, so it is not used.",
+      "relevant_to": [
+        "Mercantilism",
+        "Classical laissez-faire capitalism"
+      ]
+    }
+  ]
+}
