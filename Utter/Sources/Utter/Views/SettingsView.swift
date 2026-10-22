@@ -60,7 +60,9 @@ struct SettingsView: View {
                     ForEach(Trigger.allCases) { Text($0.title).tag($0) }
                 }
                 Text(model.trigger.hint).font(.system(size: 11)).foregroundStyle(.secondary)
-                Toggle("Также — удерживать правый ⌥ (как рацию)", isOn: $model.rightOption)
+                Toggle("Также — правая клавиша ⌥", isOn: $model.rightOption)
+                Text("Нажмите правый ⌥ — диктовка началась, нажмите ещё раз — закончилась. Или удерживайте его, пока говорите, как рацию: отпустили — конец. Левый ⌥ и сочетания вроде ⌥+буква не мешают.")
+                    .font(.system(size: 11)).foregroundStyle(.secondary)
                 Text("Esc во время диктовки — закончить.").font(.system(size: 11)).foregroundStyle(.secondary)
             }
             Section("Удобство") {

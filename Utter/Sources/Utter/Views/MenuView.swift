@@ -37,7 +37,7 @@ struct MenuView: View {
         case .finishing: return "Дописываю последнюю фразу…"
         case .idle:
             if model.hotkeyConflict { return "Сочетание \(model.shortcut.display) занято другой программой — выберите другое" }
-            return "Диктовка по \(model.shortcut.display)" + (model.rightOption ? " или удержанию правого ⌥" : "")
+            return "Диктовка по \(model.shortcut.display)" + (model.rightOption ? " или правому ⌥" : "")
         }
     }
 

@@ -71,6 +71,8 @@ nonisolated final class HotkeyCenter: @unchecked Sendable {
     /// Удержание правого ⌥: начало и конец.
     var onHoldStart: (@MainActor () -> Void)?
     var onHoldEnd: (@MainActor () -> Void)?
+    /// Короткое нажатие правого ⌥ (без других клавиш): начать или закончить диктовку.
+    var onTap: (@MainActor () -> Void)?
 
     private var mainRef: EventHotKeyRef?
     private var escRef: EventHotKeyRef?
@@ -78,6 +80,10 @@ nonisolated final class HotkeyCenter: @unchecked Sendable {
     private var monitors: [Any] = []
     private var rightOptionTimer: Timer?
     private var rightOptionActive = false
+    private var rightOptionDown: Date?
+    /// Пока ⌥ был нажат, нажали другую клавишу — это сочетание (⌥+буква), а не нажатие ⌥.
+    private var rightOptionSpoiled = false
+    private var rightOptionEnabled = false
 
     private static let signature: OSType = 0x5554_5452 // 'UTTR'
 
@@ -140,9 +146,13 @@ nonisolated final class HotkeyCenter: @unchecked Sendable {
         }
     }
 
-    /// Удержание правого ⌥ (полсекунды без других клавиш) — диктовка, отпустили — стоп.
+    /// Правый ⌥: короткое нажатие — начать или закончить диктовку; удержание (дольше трети секунды
+    /// без других клавиш) — диктовка, отпустили — стоп, как рация.
     @MainActor
     func setRightOption(_ enabled: Bool) {
+        // Уже следим (или уже не следим) — не переустанавливаем: иначе можно пропустить нажатие.
+        if enabled == rightOptionEnabled && (!enabled || !monitors.isEmpty) { return }
+        rightOptionEnabled = enabled
         monitors.forEach { NSEvent.removeMonitor($0) }
         monitors = []
         guard enabled else { return }
@@ -165,6 +175,8 @@ nonisolated final class HotkeyCenter: @unchecked Sendable {
         }
         let down = event.modifierFlags.contains(.option)
         if down {
+            rightOptionDown = Date()
+            rightOptionSpoiled = false
             rightOptionTimer?.invalidate()
             rightOptionTimer = Timer.scheduledTimer(withTimeInterval: 0.35, repeats: false) { [weak self] _ in
                 MainActor.assumeIsolated {
@@ -174,12 +186,16 @@ nonisolated final class HotkeyCenter: @unchecked Sendable {
                 }
             }
         } else {
+            let wasTimer = rightOptionTimer != nil
             rightOptionTimer?.invalidate()
             rightOptionTimer = nil
             if rightOptionActive {
                 rightOptionActive = false
                 onHoldEnd?()
+            } else if wasTimer, !rightOptionSpoiled, let downAt = rightOptionDown, Date().timeIntervalSince(downAt) < 0.35 {
+                onTap?()
             }
+            rightOptionDown = nil
         }
     }
 
@@ -187,5 +203,6 @@ nonisolated final class HotkeyCenter: @unchecked Sendable {
     private func cancelRightOption() {
         rightOptionTimer?.invalidate()
         rightOptionTimer = nil
+        rightOptionSpoiled = true
     }
 }

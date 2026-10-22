@@ -118,6 +118,8 @@ final class AppModel {
     var trigger = Trigger(rawValue: UserDefaults.standard.string(forKey: "trigger") ?? "") ?? .auto {
         didSet { UserDefaults.standard.set(trigger.rawValue, forKey: "trigger") }
     }
+    /// Диктовку начало удержание правого ⌥ — его отпускание её и закончит.
+    private var holdStarted = false
     var rightOption = UserDefaults.standard.object(forKey: "rightOption") as? Bool ?? true {
         didSet {
             UserDefaults.standard.set(rightOption, forKey: "rightOption")
@@ -192,8 +194,18 @@ final class AppModel {
         center.onPress = { [weak self] in self?.hotkeyPressed() }
         center.onRelease = { [weak self] in self?.hotkeyReleased() }
         center.onEscape = { [weak self] in self?.finish() }
-        center.onHoldStart = { [weak self] in self?.begin() }
-        center.onHoldEnd = { [weak self] in self?.finish() }
+        // Удержание правого ⌥ — как рация (только если диктовка ещё не идёт), короткое нажатие — вкл/выкл.
+        center.onHoldStart = { [weak self] in
+            guard let self, self.phase == .idle else { return }
+            self.holdStarted = true
+            self.begin()
+        }
+        center.onHoldEnd = { [weak self] in
+            guard let self, self.holdStarted else { return }
+            self.holdStarted = false
+            self.finish()
+        }
+        center.onTap = { [weak self] in self?.toggle() }
         registerHotkey()
         center.setRightOption(rightOption)
         refreshPermissions()
