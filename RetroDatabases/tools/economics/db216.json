@@ -30,8 +30,8 @@
     },
     {
       "model": "Guild economy",
-      "best": "The Royal College of Physicians, from Henry VIII's charter of 1518, let six founders license qualified practitioners and bring prosecutions against malpractice, a body of practitioners that controls entry and polices quality. Sources disagree on whether Parliament passed the charter in 1518 or only confirmed it in 1523.",
-      "worst": "The Royal College of Physicians, from Henry VIII's charter of 1518, had an initial remit of the City of London and a seven-mile radius for licensing and prosecution, so control over who may practise stopped at that boundary until an Act of Parliament in 1523 widened its reach across England. Sources disagree on whether Parliament passed the charter in 1518 or only confirmed it in 1523. Source: Royal College of Physicians, history of the college; The History Press, 500 years of the Royal College of Physicians (secondary)"
+      "best": "The Royal College of Physicians, from Henry VIII's charter of 1518, let six founders license qualified practitioners and bring prosecutions against malpractice, a body of practitioners that controls entry and polices quality. Sources disagree on whether Parliament passed the charter in 1518 or only confirmed it in 1523, and the college's full name postdates the charter.",
+      "worst": "The Royal College of Physicians, from Henry VIII's charter of 1518, had an initial remit of the City of London and a seven-mile radius for licensing and prosecution, so control over who may practise stopped at that boundary until an Act of Parliament in 1523 widened its reach across England. Sources disagree on whether Parliament passed the charter in 1518 or only confirmed it in 1523, and the college's full name postdates the charter. Source: Royal College of Physicians, history of the college; The History Press, 500 years of the Royal College of Physicians (secondary)"
     },
     {
       "model": "Mercantilism",
@@ -46,7 +46,7 @@
     {
       "model": "Classical laissez-faire capitalism",
       "best": "Inferred from its principle that competition and the division of labour create wealth, so open competition among schools and practitioners should widen who trains as a doctor and keep the cost of training in check. There is no documented case in the pool.",
-      "worst": "The case Cuba's free medical training and doctors per head reports 23 Americans who came for its free tuition and were avoiding debt of 150,000 to 200,000 US dollars from a US medical degree, a debt that a market for training, paid by fees, would pass to the student. Sources disagree on Cuba's per-head doctor figures, which this record does not use. Source: Canadian Centre for Policy Alternatives, Fast facts on revolutionary health care (secondary); Vassar College blog on Cuba's commitment to international healthcare (2012); Kaieteur News (2013)"
+      "worst": "The case Cuba's free medical training and doctors per head reports 23 Americans who came for its free tuition and were avoiding debt of 150,000 to 200,000 US dollars from a US medical degree. Inferred from its principle that a market for training, paid by fees, would pass that debt to the student. Sources disagree on Cuba's per-head doctor figures, which this record does not use. Source: Canadian Centre for Policy Alternatives, Fast facts on revolutionary health care (secondary); Vassar College blog on Cuba's commitment to international healthcare (2012); Kaieteur News (2013)"
     },
     {
       "model": "Austrian free-market economics",
@@ -56,12 +56,12 @@
     {
       "model": "Monetarist neoliberalism",
       "best": "Inferred from its principle that deregulation and fewer controls on markets let more trained practitioners enter and compete, which can widen access to care. There is no documented case in the pool.",
-      "worst": "The case Cuba's free medical training and doctors per head reports 23 Americans who came for its free tuition and were avoiding debt of 150,000 to 200,000 US dollars from a US medical degree, the kind of fee-paid cost that privatised training would pass to students. Sources disagree on Cuba's per-head doctor figures, which this record does not use. Source: Canadian Centre for Policy Alternatives, Fast facts on revolutionary health care (secondary); Vassar College blog on Cuba's commitment to international healthcare (2012); Kaieteur News (2013)"
+      "worst": "The case Cuba's free medical training and doctors per head reports 23 Americans who came for its free tuition and were avoiding debt of 150,000 to 200,000 US dollars from a US medical degree. Inferred from its principle that privatised training would pass such fee-paid costs to students. Sources disagree on Cuba's per-head doctor figures, which this record does not use. Source: Canadian Centre for Policy Alternatives, Fast facts on revolutionary health care (secondary); Vassar College blog on Cuba's commitment to international healthcare (2012); Kaieteur News (2013)"
     },
     {
       "model": "Keynesian welfare capitalism",
       "best": "Inferred from its principle that government spending rises in slumps, so public money for training places and posts keeps doctors employed when private demand falls, and taxes that rise in booms help pay for it. There is no documented case in the pool.",
-      "worst": "Under budgets that set how many specialty training places are funded, the case Specialty training places in the NHS, 2024 to 2026 reports about 4.7 applicants per post against 1.9 in 2019, and a mid-2025 BMA survey found 52 per cent of second-year foundation respondents had no confirmed August post. That 52 per cent is a survey share, and the BMA's warning that up to 20,000 doctors could be shut out is a projection, not an official count. Source: The Doctor (BMA), Specialty training squeeze (2025); BMA, Urgent call to expand training places; Workplace Journal, Half of resident doctors face joblessness as training bottlenecks deepen (July 2025)"
+      "worst": "Inferred from its principle that public budgets set how many places are funded. The case Specialty training places in the NHS, 2024 to 2026 reports about 4.7 applicants per post against 1.9 in 2019, and a mid-2025 BMA survey found 52 per cent of second-year foundation respondents had no confirmed August post. That 52 per cent is a survey share, and the BMA's warning that up to 20,000 doctors could be shut out is a projection, not an official count. Source: The Doctor (BMA), Specialty training squeeze; BMA, Urgent call to expand training places; Workplace Journal, Half of resident doctors face joblessness as training bottlenecks deepen"
     },
     {
       "model": "Social market economy",
@@ -70,8 +70,8 @@
     },
     {
       "model": "Nordic social democracy",
-      "best": "Cuba's free medical training and doctors per head shows training without tuition fees, from one medical school in 1959 to 24 by 2012 to 2013, the kind of universal service that Nordic social democracy funds through taxes. Sources disagree on Cuba's per-head doctor figures, which this record does not use.",
-      "worst": "Universal services paid for from taxes can ration places through fixed budgets. The case Specialty training places in the NHS, 2024 to 2026 reports about 4.7 applicants per post against 1.9 in 2019, and a mid-2025 BMA survey found 52 per cent of second-year foundation respondents had no confirmed August post. That 52 per cent is a survey share, and the BMA's warning that up to 20,000 doctors could be shut out is a projection, not an official count. Source: The Doctor (BMA), Specialty training squeeze (2025); BMA, Urgent call to expand training places; Workplace Journal, Half of resident doctors face joblessness as training bottlenecks deepen (July 2025)"
+      "best": "Cuba's free medical training and doctors per head shows training without tuition fees, from one medical school in 1959 to 24 by 2012 to 2013. Sources disagree on Cuba's per-head doctor figures, which this record does not use.",
+      "worst": "Inferred from its principle that tax-funded universal services can ration places through fixed budgets. The case Specialty training places in the NHS, 2024 to 2026 reports about 4.7 applicants per post against 1.9 in 2019, and a mid-2025 BMA survey found 52 per cent of second-year foundation respondents had no confirmed August post. That 52 per cent is a survey share, and the BMA's warning that up to 20,000 doctors could be shut out is a projection, not an official count. Source: The Doctor (BMA), Specialty training squeeze; BMA, Urgent call to expand training places; Workplace Journal, Half of resident doctors face joblessness as training bottlenecks deepen"
     },
     {
       "model": "Developmental state",
@@ -110,27 +110,27 @@
     },
     {
       "model": "Fabian socialism",
-      "best": "Cuba's free medical training and doctors per head shows training without tuition fees, from one medical school in 1959 to 24 by 2012 to 2013, the kind of national provision that a national minimum of welfare calls for. Sources disagree on Cuba's per-head doctor figures, which this record does not use.",
-      "worst": "Public enterprise funded from budgets can cap training places below the number of applicants. The case Specialty training places in the NHS, 2024 to 2026 reports about 59,700 applications for 12,743 posts in 2024, and a mid-2025 BMA survey found 52 per cent of second-year foundation respondents had no confirmed August post. That 52 per cent is a survey share, and the 20,000 is a projection, not an official count. Source: The Doctor (BMA), Specialty training squeeze (2025); BMA, Urgent call to expand training places; Workplace Journal, Half of resident doctors face joblessness as training bottlenecks deepen (July 2025)"
+      "best": "Cuba's free medical training and doctors per head shows training without tuition fees, from one medical school in 1959 to 24 by 2012 to 2013. Sources disagree on Cuba's per-head doctor figures, which this record does not use.",
+      "worst": "Inferred from its principle that budget-funded public enterprise can cap training places short of applicants. The case Specialty training places in the NHS, 2024 to 2026 reports about 59,700 applications for 12,743 posts in 2024, and a mid-2025 BMA survey found 52 per cent of second-year foundation respondents had no confirmed August post. That 52 per cent is a survey share, and the BMA's warning that up to 20,000 doctors could be shut out is a projection, not an official count. Source: The Doctor (BMA), Specialty training squeeze; BMA, Urgent call to expand training places; Workplace Journal, Half of resident doctors face joblessness as training bottlenecks deepen"
     },
     {
       "model": "Guild socialism",
-      "best": "The Royal College of Physicians, from Henry VIII's charter of 1518, shows a body of practitioners that can set entry and police quality: its six founders could license qualified practitioners and bring prosecutions against malpractice. Sources disagree on whether Parliament passed the charter in 1518 or only confirmed it in 1523.",
+      "best": "The Royal College of Physicians, from Henry VIII's charter of 1518, shows a body of practitioners that can set entry and police quality: its six founders could license qualified practitioners and bring prosecutions against malpractice. Sources disagree on whether Parliament passed the charter in 1518 or only confirmed it in 1523, and the college's full name postdates the charter.",
       "worst": "Inferred from its principle that workers and consumers share control through guild-like councils, so councils of insiders may protect their own members and slow new entrants, while patients and the state may have less say. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
     },
     {
       "model": "Command socialism",
-      "best": "Cuba's free medical training and doctors per head shows tuition-free training expanded at scale, from one medical school in 1959 to 24 by 2012 to 2013, with doctors trained without tuition fees, the kind of capacity a central plan can set. Sources disagree on Cuba's per-head doctor figures, which this record does not use.",
+      "best": "Cuba's free medical training and doctors per head shows tuition-free training expanded at scale, from one medical school in 1959 to 24 by 2012 to 2013, with doctors trained without tuition fees. Sources disagree on Cuba's per-head doctor figures, which this record does not use.",
       "worst": "Inferred from its principle that central plans set output and investment, so training numbers, posts and pay are fixed in advance and do not follow applicants or need, and shortages can persist until the next plan. There is no documented case in the pool. Source: Kornai, The Socialist System"
     },
     {
       "model": "Market socialism",
       "best": "Inferred from its principle that managers follow market prices within public ownership, so pay and training places can respond to prices, while a central board sets the rules and the investment. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that a central board sets the rules and the investment, so training capacity may be slow to follow demand, and managers' price signals may not show where doctors are short. There is no documented case in the pool. Source: Yugoslav workers' self-management"
+      "worst": "Inferred from its principle that a central board sets the rules and the investment, so training capacity may be slow to follow demand, and managers' price signals may not show where doctors are short. There is no documented case in the pool. Source: Yugoslav workers' self-management (1950s)"
     },
     {
       "model": "Marxian communism",
-      "best": "Cuba's free medical training and doctors per head shows training without tuition fees, from one medical school in 1959 to 24 by 2012 to 2013, which is the kind of provision by need that this model asks for. Sources disagree on Cuba's per-head doctor figures, which this record does not use.",
+      "best": "Cuba's free medical training and doctors per head shows training without tuition fees, from one medical school in 1959 to 24 by 2012 to 2013. Sources disagree on Cuba's per-head doctor figures, which this record does not use.",
       "worst": "Inferred from its principle that distribution follows ability and need only after the state withers away, so during the transition the state must plan training and pay, and places may be set before need is measured. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
     },
     {
@@ -186,6 +186,6 @@
   ],
   "compromise": {
     "summary": "One national design for doctors and nurses: tuition-free training with places set each year from applications and posts, licensing by a practitioners' body with national reach, pay set within a public framework, and a regional allowance so that trained staff reach every region.",
-    "details": "Keeps: tuition-free training, from Cuba's free medical training and doctors per head, kept by Command socialism, Marxian communism, Nordic social democracy and Fabian socialism; licensing that sets entry and polices malpractice, from the Royal College of Physicians, kept by Guild economy and Guild socialism. Blocks: capped places, shown by Specialty training places in the NHS, 2024 to 2026, blocked by yearly places set from applications; fee-paid debt, shown by Cuba's case, blocked by tuition-free places; a licence limited to one region, blocked by national licensing; central plans fixing numbers, blocked by regional demand counts. Cuba's per-head figures and Parliament's role in the 1518 charter are disputed and unused; the NHS 52 per cent is a survey share. Test: over five years, measure applicants per funded place, graduates with a confirmed August post, and staff per region against population. Source: Canadian Centre for Policy Alternatives, Fast facts on revolutionary health care; Royal College of Physicians, history of the college; The Doctor (BMA), Specialty training squeeze (2025); Kornai, The Socialist System."
+    "details": "Keeps: tuition-free training, from Cuba's free medical training and doctors per head, kept by Command socialism, Marxian communism, Nordic social democracy and Fabian socialism; licensing, from the Royal College of Physicians, kept by Guild economy and Guild socialism. Blocks: capped places, shown by Specialty training places in the NHS, 2024 to 2026, blocked by yearly places set from applications; fee-paid debt, shown by Cuba's case, blocked by tuition-free places. Cuba's per-head figures are disputed. Test: over a training course, measure applicants per funded place, graduates with a confirmed August post, and staff per region. Source: Canadian Centre for Policy Alternatives, Fast facts on revolutionary health care (secondary); Vassar College blog on Cuba's commitment to international healthcare (2012); Kaieteur News (2013); Royal College of Physicians, history of the college; The History Press, 500 years of the Royal College of Physicians (secondary); The Doctor (BMA), Specialty training squeeze (2025); BMA, Urgent call to expand training places; Workplace Journal, Half of resident doctors face joblessness as training bottlenecks deepen (July 2025)"
   }
 }
